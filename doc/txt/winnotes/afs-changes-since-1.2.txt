@@ -1,3 +1,33 @@
+Since 1.5.68
+ * Prevent an empty directory Btree from being created and
+   marked as valid if cm_BPlusDirBuildTree fails.
+
+ * cm_BPlusEnumAlloc should not fail if the enumeration
+   contains zero entries.
+
+ * In cm_BPlusXXX functions, return ENOMEM if malloc() fails.
+
+ * Do not leak the cm_scache_t dirlock if cm_BPlusDirBuildTree
+   fails.
+
+ * fs examine should report owner and group ids as signed values.
+
+ * Protect buffers in smb_WriteData from simultaneous writes.
+
+ * Query network interface MTU values from the registry because
+   the IP Helper GetAdapterAddresses() fails to report a manually
+   configured MTU.
+
+ * Improve performance by not dropping and reacquiring the rx_call
+   lock in rx_WriteProc* and rx_ReadProc*.
+
+ * When configuring the rx library, the network interface MTU
+   must be applied to both the maximum send size as well as the
+   maximum receive size as is done when rx_SetMaxMTU is called
+   by the application.
+
+There was no 1.5.67 release
+
 Since 1.5.66
  * Convert afsauthent.dll to use the xdr_alloc and xdr_free
    routines from afsrpc.dll in place of malloc and free.
