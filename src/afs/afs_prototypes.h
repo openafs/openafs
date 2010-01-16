@@ -701,6 +701,11 @@ extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 # endif
 #endif
 
+#if defined(AFS_LINUX26_ENV)
+extern afs_int32 osi_get_group_pag(afs_ucred_t *cred);
+#endif
+
+
 
 /* ARCH/osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
