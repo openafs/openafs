@@ -992,7 +992,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
     /* We need to cast here, in order to avoid issues if *alength is
      * negative. Some, older, fileservers can return a negative length,
      * which the rest of the code deals correctly with. */
-    if (*alength > (afs_int32) size) {
+    if (code == 0 && *alength > (afs_int32) size) {
 	/* The fileserver told us it is going to send more data than we
 	 * requested. It shouldn't do that, and accepting that much data
 	 * can make us take up more cache space than we're supposed to,
