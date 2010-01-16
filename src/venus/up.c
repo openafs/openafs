@@ -60,7 +60,6 @@ short preserveDate = 1;
 short preserveMountPoints = 0;
 short forceOverwrite = 0;
 
-int pageSize;
 short setacl = 1;
 short oldAcl = 0;
 char file1[MAXPATHLEN], file2[MAXPATHLEN];
@@ -104,9 +103,6 @@ main(int argc, char *argv[])
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
-#endif
-#if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
-    pageSize = getpagesize();
 #endif
     ScanArgs(argc, argv);
 
