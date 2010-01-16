@@ -2209,7 +2209,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 		    }
 #endif /* AFS_64BIT_CLIENT */
 
-		    if (length > size) {
+		    if (code == 0 && length > size) {
 			/* The fileserver told us it is going to send more data
 			 * than we requested. It shouldn't do that, and
 			 * accepting that much data can make us take up more
