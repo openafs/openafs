@@ -40,6 +40,8 @@ fi
 
 PKGROOT=$CURDIR/pkgroot
 PKGRES=$CURDIR/pkgres
+DPKGROOT=$CURDIR/dpkgroot
+DPKGRES=$CURDIR/dpkgres
 if [ $majorvers -ge 7 ]; then
     SEP=:
     package=/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker
@@ -138,6 +140,19 @@ if [ $firstpass = yes ]; then
     fi
     cp afs.conf $PKGROOT/private/var/db/openafs/etc/config/afs.conf.sample
 
+    cp decode-panic $PKGROOT/Library/OpenAFS/Tools/tools
+    chmod a+x $PKGROOT/Library/OpenAFS/Tools/tools/decode-panic
+
+    if [ $majorvers -ge 9 ]; then
+	rm -rf $DPKGROOT
+	mkdir $DPKGROOT
+	mkdir -p $DPKGROOT/Library/OpenAFS/Debug
+	mv $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext.dSYM $DPKGROOT/Library/OpenAFS/Debug
+	cp -RP $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext $DPKGROOT/Library/OpenAFS/Debug
+	chown -R root${SEP}wheel $DPKGROOT/Library/OpenAFS/Debug
+	chmod -R og-w $DPKGROOT/Library/OpenAFS/Debug
+    fi
+
     strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
     cp -RP $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext $PKGROOT/private/var/db/openafs/etc
@@ -189,6 +204,23 @@ fi
 if [ $secondpass = yes ]; then
     rm -rf $PKGRES
     mkdir $PKGRES
+    cd $RESSRC
+    if [ $majorvers -ge 9 ]; then
+	rm -rf $DPKGRES
+	mkdir $DPKGRES
+	cp License.rtf $DPKGRES
+	cp InstallationCheck.$majorvers $DPKGRES/InstallationCheck
+	mkdir -p $DPKGRES/English.lproj
+	cp InstallationCheck.$majorvers $DPKGRES/English.lproj/InstallationCheck
+	chmod a+x $DPKGRES/InstallationCheck
+	cp background.jpg $DPKGRES/background.jpg
+	chown -R root${SEP}wheel $DPKGRES
+	rm -rf $CURDIR/OpenAFS-debug-extension.pkg
+	echo $package -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
+	    -i OpenAFS-debug.Info.plist -d OpenAFS-debug.Description.plist
+	$package -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
+	    -i OpenAFS-debug.Info.plist -d OpenAFS-debug.Description.plist
+    fi
 
     cd $RESSRC
     if [ $majorvers -ge 7 ]; then
@@ -242,7 +274,7 @@ if [ $secondpass = yes ]; then
     fi
 
     rm -rf $PKGROOT $PKGRES
-
+    rm -rf $DPKGROOT $DPKGRES
     # here we want to build installer plugin and install
     # for Tiger and later only
     if [ $majorvers -ge 8 ]; then
@@ -261,6 +293,9 @@ if [ $secondpass = yes ]; then
 
     mkdir $CURDIR/dmg
     mv $CURDIR/OpenAFS.pkg $CURDIR/dmg
+    if [ $majorvers -ge 8 ]; then
+	mv $CURDIR/OpenAFS-debug-extension.pkg $CURDIR/dmg
+    fi
     rm -rf $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
     cp Uninstall $CURDIR/dmg/Uninstall.command
     cp DS_Store $CURDIR/dmg/.DS_Store
