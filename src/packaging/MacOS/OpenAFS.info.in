@@ -1,6 +1,6 @@
 Title OpenAFS
 Version @VERSION@
-Description The OpenAFS distributed filesystem. This package installs an almost-ready-to-run client for OpenAFS. see http://www.openafs.org for more information.
+Description The OpenAFS distributed filesystem. This package installs a ready-to-run client for OpenAFS. See http://www.openafs.org for more information.
 DefaultLocation /
 Diskname (null)
 DeleteWarning 

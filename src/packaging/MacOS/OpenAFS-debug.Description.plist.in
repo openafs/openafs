@@ -5,10 +5,10 @@
 	<key>IFPkgDescriptionDeleteWarning</key>
 	<string></string>
 	<key>IFPkgDescriptionDescription</key>
-	<string>Mac OS X version of OpenAFS client and server.</string>
+	<string>Mac OS X debug symbols for OpenAFS client.</string>
 	<key>IFPkgDescriptionTitle</key>
-	<string>OpenAFS</string>
+	<string>OpenAFS debug extension</string>
 	<key>IFPkgDescriptionVersion</key>
-	<string>1.2.10</string>
+	<string>@VERSION@</string>
 </dict>
 </plist>

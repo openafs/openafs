@@ -131,32 +131,56 @@ INST_LIBAFS = ${DESTDIR}${afskerneldir}/afs-nfs.kext
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/afs.kext
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/afs-nfs.kext
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/afs.kext
+<all -ppc_darwin_90 -x86_darwin_90 -x86_darwin_100>
+LIBAFSDSYM =
+LIBAFSNONFSDSYM =
+INST_LIBAFSDSYM =
+INST_LIBAFSNONFSDSYM =
+DEST_LIBAFSDSYM =
+DEST_LIBAFSNONFSDSYM =
+<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+LIBAFSDSYM = libafs.o.dSYM
+LIBAFSNONFSDSYM = libafs.nonfs.o.dSYM
+INST_LIBAFSDSYM = ${DESTDIR}${afskerneldir}/afs-nfs.kext.dSYM
+INST_LIBAFSNONFSDSYM = ${DESTDIR}${afskerneldir}/afs.kext.dSYM
+DEST_LIBAFSDSYM =  ${DEST}/root.client/usr/vice/etc/afs-nfs.kext.dSYM
+DEST_LIBAFSNONFSDSYM = ${DEST}/root.client/usr/vice/etc/afs.kext.dSYM
+<all>
 
-
-libafs: $(LIBAFSNONFS) ;
-install_libafs: $(LIBAFSNONFS) ;
+libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
+install_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 	-mkdir -p ${INST_LIBAFSNONFS}
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents
 	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -m 644 ${LIBAFSNONFS} ${INST_LIBAFSNONFS}/Contents/MacOS/afs
+<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+	-mkdir -p ${INST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Info.plist ${INST_LIBAFSNONFSDSYM}/Contents
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Resources/DWARF/${LIBAFSNONFS} ${INST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+<all>
 
-dest_libafs: $(LIBAFSNONFS) ;
+dest_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 	-mkdir -p ${DEST_LIBAFSNONFS}
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents
 	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -m 644 ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}/Contents/MacOS/afs
-
+<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+	-mkdir -p ${DEST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Info.plist ${DEST_LIBAFSNONFSDSYM}/Contents
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Resources/DWARF/${LIBAFSNONFS} ${DEST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+<all>
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(MODLD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
-<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
-	dsymutil -o ${LIBAFS}.dSYM ${LIBAFS}
-<all>
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext
+
 <ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+$(LIBAFSDSYM): ${LIBAFS}
+	dsymutil -o ${LIBAFS}.dSYM ${LIBAFS}
+${LIBAFSNONFSDSYM}: ${LIBAFSNONFS}
 	dsymutil -o ${LIBAFSNONFS}.dSYM ${LIBAFSNONFS}
 <all>
