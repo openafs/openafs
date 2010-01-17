@@ -60,14 +60,14 @@ static afs_int32 *xdrmem_inline();
 static void xdrmem_destroy();
 
 static struct xdr_ops xdrmem_ops = {
-    xdrmem_getint32,
-    xdrmem_putint32,
-    xdrmem_getbytes,
-    xdrmem_putbytes,
-    xdrmem_getpos,
-    xdrmem_setpos,
-    xdrmem_inline,
-    xdrmem_destroy
+    .x_getint32 = xdrmem_getint32,
+    .x_putint32 = xdrmem_putint32,
+    .x_getbytes = xdrmem_getbytes,
+    .x_putbytes = xdrmem_putbytes,
+    .x_getpos = xdrmem_getpos,
+    .x_setpos = xdrmem_setpos,
+    .x_inline = xdrmem_inline,
+    .x_destroy = xdrmem_destroy
 };
 
 /*

@@ -58,14 +58,14 @@ static void xdrstdio_destroy();
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrstdio_ops = {
-    xdrstdio_getint32,		/* deserialize an afs_int32 */
-    xdrstdio_putint32,		/* serialize an afs_int32 */
-    xdrstdio_getbytes,		/* deserialize counted bytes */
-    xdrstdio_putbytes,		/* serialize counted bytes */
-    xdrstdio_getpos,		/* get offset in the stream */
-    xdrstdio_setpos,		/* set offset in the stream */
-    xdrstdio_inline,		/* prime stream for inline macros */
-    xdrstdio_destroy		/* destroy stream */
+    .x_getint32 = xdrstdio_getint32,	/* deserialize an afs_int32 */
+    .x_putint32 = xdrstdio_putint32,	/* serialize an afs_int32 */
+    .x_getbytes = xdrstdio_getbytes,	/* deserialize counted bytes */
+    .x_putbytes = xdrstdio_putbytes,	/* serialize counted bytes */
+    .x_getpos = xdrstdio_getpos,	/* get offset in the stream */
+    .x_setpos = xdrstdio_setpos,	/* set offset in the stream */
+    .x_inline = xdrstdio_inline,	/* prime stream for inline macros */
+    .x_destroy = xdrstdio_destroy	/* destroy stream */
 };
 
 /*
