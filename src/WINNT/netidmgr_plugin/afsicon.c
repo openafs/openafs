@@ -4,6 +4,8 @@
 #include "AFS_component_version_number.h"
 #include <tchar.h>
 #include <shellapi.h>
+#include <shlwapi.h>
+#include <htmlhelp.h>
 #include <strsafe.h>
 #include <assert.h>
 
@@ -14,6 +16,119 @@ static volatile BOOL notification_icon_added = FALSE;
 #define TOKEN_ICON_ID 1
 #define TOKEN_MESSAGE_ID WM_USER
 
+static khm_int32
+get_default_notifier_action(void)
+{
+    khm_int32 cmd = KHUI_ACTION_OPEN_APP;
+
+    khc_read_int32(NULL, L"CredWindow\\NotificationAction", &cmd);
+
+    return cmd;
+}
+
+static BOOL
+get_release_notes(wchar_t rpath[MAX_PATH])
+{
+    BOOL rv  = FALSE;
+    HKEY hk_client = NULL;
+    wchar_t cpath[MAX_PATH];
+    DWORD cb_data;
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     L"Software\\TransarcCorporation\\AFS Client\\CurrentVersion",
+                     0, KEY_READ, &hk_client) != ERROR_SUCCESS)
+        return FALSE;
+
+    cb_data = sizeof(cpath);
+    if (RegQueryValueEx(hk_client, L"PathName", NULL, NULL, (LPBYTE) cpath, &cb_data) != ERROR_SUCCESS)
+        goto done;
+
+    cpath[min(cb_data, MAX_PATH - 1)] = L'\0';
+
+    if (!PathRemoveFileSpec(cpath))
+        goto done;
+
+    if (!PathAppend(cpath, L"Documentation"))
+        goto done;
+
+    if (!PathAppend(cpath, L"ReleaseNotes.chm"))
+        goto done;
+
+    if (!PathCanonicalize(rpath, cpath))
+        goto done;
+
+    if (!PathFileExists(rpath))
+        goto done;
+
+    rv = TRUE;
+
+ done:
+    if (hk_client)
+        RegCloseKey(hk_client);
+
+    return rv;
+}
+
+static void
+handle_select(void)
+{
+    NOTIFYICONDATA idata;
+    khm_int32 cmd;
+
+    cmd = get_default_notifier_action();
+
+    khui_action_trigger(cmd, NULL);
+
+    ZeroMemory(&idata, sizeof(idata));
+
+    Shell_NotifyIcon(NIM_SETFOCUS, &idata);
+}
+
+static void
+prepare_context_menu(HMENU hmenu)
+{
+    khm_int32 cmd;
+    wchar_t caption[128];
+    wchar_t relnotes[MAX_PATH];
+
+    cmd = get_default_notifier_action();
+
+    if (cmd == KHUI_ACTION_NEW_CRED)
+        LoadString(hResModule, IDS_ACT_NEW, caption, ARRAYLENGTH(caption));
+    else
+        LoadString(hResModule, IDS_ACT_OPEN, caption, ARRAYLENGTH(caption));
+
+    ModifyMenu(hmenu, ID_DEFAULT, MF_STRING|MF_BYCOMMAND, ID_DEFAULT, caption);
+    SetMenuDefaultItem(hmenu, ID_DEFAULT, FALSE);
+
+    if (!get_release_notes(relnotes))
+        RemoveMenu(hmenu, ID_RELEASENOTES, MF_BYCOMMAND);
+}
+
+static void
+handle_context_menu(void)
+{
+    POINT pt;
+    HMENU hMenu;
+    HMENU hMenuBar;
+
+    GetCursorPos(&pt);
+
+    hMenuBar = LoadMenu(hResModule, MAKEINTRESOURCE(IDR_CTXMENU));
+    hMenu = GetSubMenu(hMenuBar, 0);
+
+    if (hMenu) {
+        prepare_context_menu(hMenu);
+        TrackPopupMenu(hMenu, TPM_NONOTIFY, pt.x, pt.y, 0, notifier_window, NULL);
+    }
+
+    {
+        NOTIFYICONDATA idata;
+        ZeroMemory(&idata, sizeof(idata));
+        Shell_NotifyIcon(NIM_SETFOCUS, &idata);
+    }
+}
+
 static LRESULT CALLBACK
 notifier_wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -22,22 +137,43 @@ notifier_wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case NIN_SELECT:
         case NIN_KEYSELECT:
 
-            {
-                NOTIFYICONDATA idata;
-                khm_int32 cmd = KHUI_ACTION_OPEN_APP;
+            handle_select();
+            return TRUE;
 
-                khc_read_int32(NULL, L"CredWindow\\NotificationAction", &cmd);
-
-                khui_action_trigger(cmd, NULL);
-
-                ZeroMemory(&idata, sizeof(idata));
-
-                Shell_NotifyIcon(NIM_SETFOCUS, &idata);
-            }
-            return 0;
+        case WM_CONTEXTMENU:
+            handle_context_menu();
+            return TRUE;
 
         default:
-            return 0;
+            return FALSE;
+        }
+    }
+    else if (uMsg == WM_COMMAND) {
+        switch (LOWORD(wParam)) {
+        case ID_DEFAULT:
+            {
+                khm_int32 cmd;
+
+                cmd = get_default_notifier_action();
+
+                khui_action_trigger(cmd, NULL);
+            }
+            return TRUE;
+
+        case ID_SHOWHELP:
+            {
+                afs_html_help(notifier_window, L"::/html/welcome.htm", HH_DISPLAY_TOPIC, 0);
+            }
+            return TRUE;
+
+        case ID_RELEASENOTES:
+            {
+                wchar_t relnotes[MAX_PATH];
+
+                if (get_release_notes(relnotes))
+                    HtmlHelp(GetDesktopWindow(), relnotes, HH_DISPLAY_TOC, 0);
+            }
+            return TRUE;
         }
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -53,7 +189,7 @@ initialize_if_necessary(void)
             notifier_wnd_proc,  /* lpfnWndProc */
             0,                  /* cbClsExtra */
             0,                  /* cbWndExtra */
-            hInstance,          /* hinstance */
+            NULL,               /* hinstance */
             NULL,               /* hIcon */
             NULL,               /* hCursor */
             NULL,               /* hbrBackground */
@@ -62,6 +198,7 @@ initialize_if_necessary(void)
             NULL,                             /* hIconSm */
         };
 
+        c.hInstance = hInstance;
         message_window_class = RegisterClassEx(&c);
     }
 
@@ -105,7 +242,6 @@ void
 afs_remove_icon(void)
 {
     NOTIFYICONDATA idata;
-    wchar_t buf[ARRAYLENGTH(idata.szTip)];
 
     ZeroMemory(&idata, sizeof(idata));
 
@@ -213,6 +349,8 @@ set_state_from_ui_thread(HWND hwnd_main, void * stuff)
     default:
         assert(FALSE);
     }
+
+    (void) hwnd_main;           /* unreferenced */
 
     return KHM_ERROR_SUCCESS;
 }
