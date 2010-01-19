@@ -158,6 +158,7 @@ void set_staticaddrs(void);
 #ifdef AFS_DARWIN_ENV
 #ifdef AFS_DARWIN80_ENV
 #include <sys/ioctl.h>
+#include <sys/xattr.h>
 #endif
 #include <mach/mach.h>
 #ifndef AFS_DARWIN100_ENV
@@ -794,6 +795,24 @@ CreateCacheSubDir(char *basename, int dirNum)
     return (0);
 }
 
+static void
+SetNoBackupAttr(char *fullpn)
+{
+#ifdef AFS_DARWIN80_ENV
+    int ret;
+
+    ret = setxattr(fullpn, "com.apple.metadata:com_apple_backup_excludeItem",
+		   "com.apple.backupd", strlen("com.apple.backupd"), 0,
+		   XATTR_CREATE);
+    if(ret < 0)
+    {
+	if(errno != EEXIST)
+	    fprintf(stderr, "afsd: Warning: failed to set attribute to preclude cache backup: %s\n", strerror(errno));
+    }
+#endif
+    return;
+}
+
 static int
 MoveCacheFile(char *basename, int fromDir, int toDir, int cacheFile, 
 	      int maxDir)
@@ -827,6 +846,7 @@ MoveCacheFile(char *basename, int fromDir, int toDir, int cacheFile,
 	       from, to, ret, errno);
 	return -1;
     }
+    SetNoBackupAttr(to);
 
     /* Reset directory pointer; fix file counts */
     dir_for_V[cacheFile] = toDir;
@@ -1072,16 +1092,19 @@ doSweepAFSCache(int *vFilesFound,
 	     * Found the file holding the dcache entries.
 	     */
 	    missing_DCacheFile = 0;
+	    SetNoBackupAttr(fullpn_DCacheFile);
 	} else if (dirNum < 0 && strcmp(currp->d_name, VOLINFOFILE) == 0) {
 	    /*
 	     * Found the file holding the volume info.
 	     */
 	    missing_VolInfoFile = 0;
+	    SetNoBackupAttr(fullpn_VolInfoFile);
 	} else if (dirNum < 0 && strcmp(currp->d_name, CELLINFOFILE) == 0) {
 	    /*
 	     * Found the file holding the cell info.
 	     */
 	    missing_CellInfoFile = 0;
+	    SetNoBackupAttr(fullpn_CellInfoFile);
 	} else if ((strcmp(currp->d_name, ".") == 0)
 		   || (strcmp(currp->d_name, "..") == 0) ||
 #ifdef AFS_DECOSF_ENV
@@ -1161,6 +1184,7 @@ doSweepAFSCache(int *vFilesFound,
 			cache_dir_list[thisDir]++;
 			(*vFilesFound)++;
 		    }
+		    SetNoBackupAttr(fullpn_VFile);
 		}
 
 	    } else if (dir_for_V[vFileNum] >= maxDir
