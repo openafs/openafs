@@ -9,10 +9,10 @@
 
 <h1>Token Acquisition Methods</h1>
 
-<p>AFS tokens can be obtained via several different methods.  Each of
-the methods that are natively supported by the OpenAFS plug-in is
-described below.  Note that, additional plug-ins may define other
-acquisition methods that are not listed here.
+<p>AFS tokens can be obtained via several different methods. Each of the methods 
+that are natively supported by the OpenAFS provider is described below. Note 
+that the OpenAFS provider is extensible and other
+acquisition methods may be available other than those listed here.
 </p>
 
 <h4>Contents</h4>
@@ -46,13 +46,12 @@ resulting Kerberos 4 ticket is used to construct the AFS token.
 to construct the AFS token.  In order to use this method, the identity
 must be be configured to obtain Kerberos 4 tickets when obtaining and
 renewing credentials.  Otherwise a Kerberos 4 TGT (ticket granting
-ticket) will not be available to obtain the service ticket with.
-</p>
+ticket) will not be available to obtain the service ticket with.</p>
 
 <a name="auto"/>
 <h3>Automatic method selection</h3>
 
-<p>When the OpenAFS plug-in is configured to use automatic method
+<p>When the OpenAFS provider is configured to use automatic method
 selection for obtaining an AFS token, it iterates through the Kerberos
 5, Kerberos 524 and Kerberos 4 methods until one of them succeeds.  If
 a realm for the service ticket is specified, then the realm will be
@@ -63,8 +62,8 @@ used for all methods.
 configuration of the AFS cell and the associated Kerberos realm.  In
 most cases, automatic method selection will determine the correct
 realm.  However, other cases, the method will have to be specified
-explicitly.
-</p>
+explicitly.&nbsp; Contact your AFS cell administrator to find out which token 
+acquisition methods are supported.</p>
 
 </body>
 </html>
