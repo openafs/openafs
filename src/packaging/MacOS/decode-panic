@@ -17,10 +17,12 @@ use strict;
 my $panic_file = "/Library/Logs/panic.log";
 my %crash_info;
 my $backtrace;
+my $debugkit = "";
+my $archive = "";
+my $dmgutil = "";
 my $kextload   = "/sbin/kextload";
 my $kextutil   = "/usr/bin/kextutil";
 my $kextprog;
-my $kernel     = "/mach_kernel";
 my $gdb        = "/usr/bin/gdb";
 my $gdbarch    = "";
 my $kextarch   = "";
@@ -28,12 +30,19 @@ my $gdb_file   = "gdb.input";
 my $temp_dir   = tempdir( "afsdebugXXXXXX", DIR => File::Spec->tmpdir,
 			  TMPDIR => 1, CLEANUP => 1 );
 my $dump_file  = "/var/db/openafs/logs/crash.dump";
+my $kernel = "/mach_kernel";
+my $kextpath = "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/";
 
 my $option_quiet;
+my $option_verbose;
 my $option_help;
 my $result = GetOptions ("input=s"  => \$panic_file,
                          "output=s" => \$dump_file,
 			 "kernel=s" => \$kernel,
+			 "debugkit=s" => \$debugkit,
+			 "archive=s"=> \$archive,
+			 "util=s"   => \$dmgutil,
+			 "verbose"  => \$option_verbose,
                          "quiet"    => \$option_quiet,
                          "help"     => \$option_help
                      );
@@ -91,14 +100,95 @@ if ($crash_info{"kernel_version"} =~ /X86_64/ ) {
     }
 }
 
-generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir, $kextarch );
+if (-d $debugkit && -f $dmgutil ) {
+    extract_kernel( $crash_info{"kernel_version"}, $temp_dir, $debugkit, $dmgutil );
+    $kernel = "$temp_dir/mach_kernel";
+}
+
+if (-d $archive && -f $dmgutil ) {
+    extract_openafs( $crash_info{"afs_info"}, $temp_dir, $archive, $crash_info{"kernel_version"}, $dmgutil );
+    if (-d "$temp_dir/Library/OpenAFS/Debug/afs.kext" ) {
+	$kextpath = "$temp_dir/Library/OpenAFS/Debug/afs.kext";
+    } else {
+	$kextpath = "$temp_dir/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext";
+    }
+}
+
+generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir, $kextarch , $kernel, $kextpath);
 
 write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
 
+if ($option_verbose) {
+    print "$gdb $gdbarch $kernel -batch -x $temp_dir/$gdb_file\n";
+}
 my $gdb_output = `$gdb $gdbarch $kernel -batch -x $temp_dir/$gdb_file`;
 croak "gdb failed!\n" if $CHILD_ERROR;
 
 write_dump_file( $dump_file, \%crash_info, $gdb_output );
+
+sub extract_openafs {
+    my $oversion = shift;
+    my $tempdir = shift;
+    my $oarchive = shift;
+    my $kversion = shift;
+    my $hdutil = shift;
+
+    $kversion =~ /Darwin Kernel Version ([0-9]+).[0-9]+.[0-9]+:/;
+    my $major = $1;
+    $major -= 4;
+
+    $oversion =~ /org.openafs.filesystems.afs\(([0-9.]+)\)/;
+    my $vers = $1;
+    my $odmg = "$oarchive/$vers/macos-10.${major}/OpenAFS-$vers-\*.dmg";
+    if ($option_verbose) {
+	print "$hdutil $odmg extractall OpenAFS.pkg $tempdir/OpenAFS.pkg\n"; 
+    }
+    `$hdutil $odmg extractall OpenAFS.pkg $tempdir/OpenAFS.pkg`;
+    if ($option_verbose) {
+	print "cd $tempdir && gzcat $tempdir/OpenAFS.pkg/Contents/Archive.pax.gz | pax -r ./Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext\n";
+    }
+    `cd $tempdir && gzcat $tempdir/OpenAFS.pkg/Contents/Archive.pax.gz | pax -r ./Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext`;
+    if ($option_verbose) {
+	print "$hdutil $odmg extractall OpenAFS-debug-extension.pkg $tempdir/OpenAFS-debug-extension.pkg\n";
+    }
+    `$hdutil $odmg extractall OpenAFS-debug-extension.pkg $tempdir/OpenAFS-debug-extension.pkg`;
+    if (-f "$tempdir/OpenAFS-debug-extension.pkg/Contents/Archive.pax.gz" ) {
+	if ($option_verbose) {
+	    print "cd $tempdir && gzcat $tempdir/OpenAFS-debug-extension.pkg/Contents/Archive.pax.gz | pax -r ./Library/OpenAFS/Debug/afs.kext.dSYM\n";
+	}
+	`cd $tempdir && gzcat $tempdir/OpenAFS-debug-extension.pkg/Contents/Archive.pax.gz | pax -r ./Library/OpenAFS/Debug/afs.kext.dSYM`;
+	if ($option_verbose) {
+	    print "cd $tempdir && gzcat $tempdir/OpenAFS-debug-extension.pkg/Contents/Archive.pax.gz | pax -r ./Library/OpenAFS/Debug/afs.kext\n";
+	}
+	`cd $tempdir && gzcat $tempdir/OpenAFS-debug-extension.pkg/Contents/Archive.pax.gz | pax -r ./Library/OpenAFS/Debug/afs.kext`;
+    }
+}
+
+sub extract_kernel {
+    my $kversion = shift;
+    my $tempdir = shift;
+    my $debugarchive = shift;
+    my $hdutil = shift;
+    
+    $kversion =~ /Darwin Kernel Version ([0-9]+).([0-9]+).[0-9]+:/;
+    my $minor = $2;
+    my $major = $1;
+    $major -= 4;
+    my $kdk = "$debugarchive/kernel_debug_kit_10.${major}.${minor}_\*.dmg";
+    if ($option_verbose) {
+	print "$hdutil $kdk extractall System.kext $tempdir/System.kext\n";
+    }
+    `$hdutil $kdk extractall System.kext $tempdir/System.kext`;
+    if ($option_verbose) {
+	print "$hdutil $kdk extractall mach_kernel.dSYM $tempdir/mach_kernel.dSYM\n";
+    }
+    `$hdutil $kdk extractall mach_kernel.dSYM $tempdir/mach_kernel.dSYM`;
+    if ($option_verbose) {
+	print "$hdutil $kdk extract mach_kernel $tempdir/mach_kernel\n";
+    }
+    `$hdutil $kdk extract mach_kernel $tempdir/mach_kernel`;
+}
+
 
 # read the panic file and parse out the addresses
 sub read_panic {
@@ -212,13 +302,32 @@ sub generate_symbol_files {
     my $kernel_address   = shift;
     my $symbol_write_dir = shift;
     my $kextarch = shift;
+    my $kernel = shift;
+    my $kext = shift;
 
-    system( $kextprog,
-	    "-k", $kernel,
-	    "-s", $temp_dir,
-	    "-arch", $kextarch,
-	    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
-	    "-n", "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/" );
+    if ($kernel eq "/mach_kernel") {
+	if ($option_verbose) {
+	    print "$kextprog -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kernel_address} -n $kext\n";
+	}
+	system( $kextprog,
+		"-k", $kernel,
+		"-s", $temp_dir,
+		"-arch", $kextarch,
+		"-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+		"-n", $kext );
+    } else {
+	if ($option_verbose) {
+	    print "$kextprog -c -e -r $temp_dir -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kernel_address} -n $kext\n";
+	}
+	system( $kextprog,
+		"-c", "-e",
+		"-r", $temp_dir,
+		"-k", $kernel,
+		"-s", $temp_dir,
+		"-arch", $kextarch,
+		"-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+		"-n", $kext );
+    }
     
     if ( $CHILD_ERROR ) {
         # error
@@ -292,19 +401,23 @@ This documentation refers to decode-panic version $Revision$
 
 =head1 SYNOPSIS
  
-   decode-panic [-i <input panic log>] [-o <output dump file>] [-k <kernel file>] [-q]
+   decode-panic [-i <input panic log>] [-o <output dump file>] [-k <kernel file>] [-d <kernel debug kit archive>] [-a <openafs package archive>] [-u <path to hdutil>] [-q] [-v]
 
 =head1 OPTIONS
 
    -i The path to the panic log that should be read
    -o The path to where the decoded panic log should be written
    -k The path to the kernel image corresponding to the panic
+   -d The path to a directory containing kernel debug kit dmgs
+   -a The path to an archive of OpenAFS installer dmgs
+   -u The path to the hdutil dmg utility program
    -q Quiet mode - don't complain if there is a problem.
+   -v Verbose mode - print all commands.
    -h print full help
 
 =head1 DESCRIPTION
 
-It parses the panic log for Mac OS X kernel panics that are caused by
+This tool parses the panic log for Mac OS X kernel panics that are caused by
 openafs in order to produce a human-readable backtrace.
 
 This program uses crash isolation procedure as outlined in
@@ -326,14 +439,18 @@ and /Library/Logs/DiagnosticReports/Kernel_YYYY-MM-DD-HHMMSS.panic in 10.6
 
 This program needs gdb and kextload; Starting in SnowLeopard, it needs kextutil.
 
+Batch decoding requires a directory of Kernel Debug Kit DMGs, a directory of
+OpenAFS installer DMGs, and the DMG extraction utility currently available
+in source form at http://www.dementia.org/~shadow/dmgutil-0.1.tar.gz
+
 =head1 BUGS AND LIMITATIONS
 
 decode-panic clobbers the output file.
 
 =head1 AUTHOR
 
-Copyright 2008. Jason Edgecombe <jason@rampaginggeek.com>
+Copyright 2008-2010. Jason Edgecombe <jason@rampaginggeek.com> and others.
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file in the OpenAFS source tree. This program was written by
-Jason Edgecombe for OpenAFS.
+doc/LICENSE file in the OpenAFS source tree. This program was originally
+written by Jason Edgecombe for OpenAFS.
