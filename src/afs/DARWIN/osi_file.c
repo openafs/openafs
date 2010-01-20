@@ -156,26 +156,11 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 #ifdef AFS_CACHE_VNODE_PATH
-    if (ainode->ufs < 0) {
-	switch (ainode->ufs) {
-	case AFS_CACHE_CELLS_INODE:
-	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CellItems");
-	    break;
-	case AFS_CACHE_ITEMS_INODE:
-	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CacheItems");
-	    break;
-	case AFS_CACHE_VOLUME_INODE:
-	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "VolumeItems");
-	    break;
-	default:
-	    osi_Panic("Invalid negative inode");
-	}
-    } else {
-	dummy = ainode->ufs / afs_numfilesperdir;
-	snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode->ufs);
+    if (!ainode->ufs) {
+	osi_Panic("No cache inode\n");
     }
 
-    code = vnode_open(fname, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
+    code = vnode_open(ainode->ufs, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
 #else
 #ifndef AFS_DARWIN80_ENV
     if (afs_CacheFSType == AFS_APPL_HFS_CACHE)

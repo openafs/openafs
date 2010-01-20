@@ -264,7 +264,11 @@ afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode, struct vnode *
     code = gop_lookupname(filename, AFS_UIOSYS, 0, &filevp);
     if (code)
 	return code;
+#ifdef AFS_CACHE_VNODE_PATH
+    *inode = afs_strdup(filename);
+#else
     *inode = afs_vnodeToInumber(filevp);
+#endif
     if (fvpp)
 	*fvpp = filevp;
     else {
@@ -281,11 +285,7 @@ afs_InitCellInfo(char *afile)
     afs_dcache_id_t inode;
     int code = 0;
     
-#ifdef AFS_CACHE_VNODE_PATH
-    inode.ufs = AFS_CACHE_CELLS_INODE;
-#else
     code = afs_LookupInodeByPath(afile, &inode.ufs, NULL);
-#endif
     return afs_cellname_init(&inode, code);
 }
 
@@ -327,8 +327,6 @@ afs_InitVolumeInfo(char *afile)
      * it in the cache...
      */
     code = afs_LookupInodeByPath(afile, &volumeInode.ufs, &volumeVnode);
-#elif defined(AFS_CACHE_VNODE_PATH)
-    volumeInode.ufs = AFS_CACHE_VOLUME_INODE;
 #else
     code = afs_LookupInodeByPath(afile, &volumeInode.ufs, NULL);
 #endif
@@ -469,7 +467,7 @@ afs_InitCacheInfo(register char *afile)
 #endif
     cacheInode.ufs = afs_vnodeToInumber(filevp);
 #else
-    cacheInode.ufs = AFS_CACHE_ITEMS_INODE;
+    afs_LookupInodeByPath(afile, &cacheInode.ufs, NULL);
 #endif
     cacheDev.dev = afs_vnodeToDev(filevp);
 #endif /* AFS_LINUX20_ENV */
@@ -686,7 +684,7 @@ shutdown_cache(void)
 {
     AFS_STATCNT(shutdown_cache);
     afs_WriteThroughDSlots();
-    if (afs_cold_shutdown) {
+    if (1/*afs_cold_shutdown*/) {
 	afs_cacheinit_flag = 0;
 	shutdown_dcache();
 	shutdown_vcache();
@@ -701,6 +699,12 @@ shutdown_cache(void)
 	if (cacheDev.held_vnode) {
 	    vrele(cacheDev.held_vnode);
 	    cacheDev.held_vnode = NULL;
+	}
+#endif
+#ifdef AFS_CACHE_VNODE_PATH
+	if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
+	    afs_osi_FreeStr(cacheInode.ufs);
+	    afs_osi_FreeStr(volumeInode.ufs);
 	}
 #endif
 	afs_reset_inode(&cacheInode);

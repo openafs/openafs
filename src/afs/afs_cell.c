@@ -1053,6 +1053,11 @@ shutdown_cell(void)
     struct afs_q *cq, *tq;
     struct cell *tc;
 
+#ifdef AFS_CACHE_VNODE_PATH
+    if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
+	afs_osi_FreeStr(afs_cellname_inode.ufs);
+    }
+#endif
     AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {

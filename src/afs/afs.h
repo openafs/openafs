@@ -1039,7 +1039,9 @@ struct afs_fheader {
     afs_int32 otherCSize;
 };
 
-#if defined(AFS_CACHE_VNODE_PATH) || defined(UKERNEL)
+#if defined(AFS_CACHE_VNODE_PATH)
+typedef char *afs_ufs_dcache_id_t;
+#elif defined(UKERNEL)
 typedef afs_int32 afs_ufs_dcache_id_t;
 #elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile

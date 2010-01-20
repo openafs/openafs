@@ -1539,9 +1539,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     static char rn[] = "afsd";	/*Name of this routine */
     afs_int32 code;		/*Result of fork() */
     int i;
-#ifndef AFS_CACHE_VNODE_PATH
     int currVFile;		/*Current AFS cache file number passed in */
-#endif
     int mountFlags;		/*Flags passed to mount() */
     int lookupResult;		/*Result of GetLocalCellName() */
     int cacheIteration;		/*How many times through cache verification */
@@ -2163,23 +2161,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
 		     rn, vFilesFound, cacheFiles, cacheIteration);
 	} while ((vFilesFound < cacheFiles)
 		 && (cacheIteration < MAX_CACHE_LOOPS));
-#ifdef AFS_CACHE_VNODE_PATH
-	if (afsd_debug)
-	    printf
-		("%s: Calling AFSOP_CACHEBASEDIR with '%s'\n",
-		 rn, cacheBaseDir);
-	call_syscall(AFSOP_CACHEBASEDIR, cacheBaseDir);
-	if (afsd_debug)
-	    printf
-		("%s: Calling AFSOP_CACHEDIRS with %d dirs\n",
-		 rn, nFilesPerDir);
-	call_syscall(AFSOP_CACHEDIRS, nFilesPerDir);
-	if (afsd_debug)
-	    printf
-		("%s: Calling AFSOP_CACHEFILES with %d files\n",
-		 rn, cacheFiles);
-	call_syscall(AFSOP_CACHEFILES, cacheFiles);
-#endif
     } else if (afsd_verbose)
 	printf("%s: Using memory cache, not swept\n", rn);
 
@@ -2322,7 +2303,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
 	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
-#ifndef AFS_CACHE_VNODE_PATH
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
      * disk.
@@ -2338,7 +2318,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 			 (afs_uint32) (inode_for_V[currVFile] >> 32),
 			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
 #else
-#if defined(LINUX_USE_FH)
+#if defined(LINUX_USE_FH) || defined(AFS_CACHE_VNODE_PATH)
 	    sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
 	    call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
 #else
@@ -2346,7 +2326,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #endif
 #endif
 	}
-#endif
 
     /*end for */
     /*

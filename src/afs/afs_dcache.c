@@ -2884,7 +2884,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	}
     } else {
 	/* Add any other 'complex' inode types here ... */
-#if defined(UKERNEL) || !defined(LINUX_USE_FH)
+#if defined(UKERNEL) || !(defined(LINUX_USE_FH) || defined(AFS_CACHE_VNODE_PATH))
 	tdc->f.inode.ufs = ainode;
 #else
 	osi_Panic("Can't init cache with inode numbers when complex inodes are "
@@ -3120,6 +3120,18 @@ void
 shutdown_dcache(void)
 {
     int i;
+
+#ifdef AFS_CACHE_VNODE_PATH
+    if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
+	struct dcache *tdc;
+	for (i = 0; i < afs_cacheFiles; i++) {
+	    tdc = afs_indexTable[i];
+	    if (tdc) {
+		afs_osi_FreeStr(tdc->f.inode.ufs);
+	    }
+	}
+    }
+#endif
 
     afs_osi_Free(afs_dvnextTbl, afs_cacheFiles * sizeof(afs_int32));
     afs_osi_Free(afs_dcnextTbl, afs_cacheFiles * sizeof(afs_int32));
