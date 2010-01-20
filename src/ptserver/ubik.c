@@ -27,7 +27,7 @@ struct ubik_dbase *dbase;
 
 int
 ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
-                char *pathName, struct ubik_dbase **dbase)
+                const char *pathName, struct ubik_dbase **dbase)
 {
     return (0);
 }

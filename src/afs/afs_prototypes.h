@@ -22,6 +22,7 @@ extern struct axscache *afs_SlowFindAxs(struct axscache **cachep,
 extern struct axscache *axs_Alloc(void);
 extern void afs_RemoveAxs(struct axscache **headp, struct axscache *axsp);
 extern void afs_FreeAllAxs(struct axscache **headp);
+extern void shutdown_xscache(void);
 
 /* afs_buffer.c */
 extern void DInit(int abuffers);
@@ -42,9 +43,13 @@ extern void afs_FlushCBs(void);
 extern int afs_CheckInit(void);
 extern void afs_shutdown(void);
 extern void shutdown_afstest(void);
-extern void afs_shutdown_BKG(void);
 extern int afs_syscall_call(long parm, long parm2, long parm3,
 			    long parm4, long parm5, long parm6);
+#if defined(AFS_DARWIN100_ENV)
+extern int afs_syscall64_call(user_addr_t parm, user_addr_t parm2,
+			      user_addr_t parm3, user_addr_t parm4,
+			      user_addr_t parm5, user_addr_t parm6);
+#endif
 
 
 /* afs_callback.c */
@@ -121,10 +126,8 @@ extern void afs_DequeueCallback(struct vcache *avc);
 /* afs_cell.c */
 extern afs_int32 afs_cellindex;
 extern afs_rwlock_t afs_xcell;
-#ifdef AFS_AFSDB_ENV
 extern afs_rwlock_t afsdb_client_lock;
 extern afs_rwlock_t afsdb_req_lock;
-#endif
 extern struct afs_q CellLRU;           
 
 extern void afs_CellInit(void);
@@ -205,7 +208,7 @@ extern void afs_Daemon(void);
 extern struct brequest *afs_BQueue(register short aopcode,
 				   register struct vcache *avc,
 				   afs_int32 dontwait, afs_int32 ause,
-				   struct AFS_UCRED *acred,
+				   afs_ucred_t *acred,
 				   afs_size_t asparm0, afs_size_t asparm1,
 				   void *apparm0);
 extern void afs_SetCheckServerNATmode(int isnat);
@@ -260,7 +263,7 @@ extern int afs_HashOutDCache(struct dcache *adc, int zap);
 extern int afs_MaybeFreeDiscardedDCache(void);
 extern int afs_RefDCache(struct dcache *adc);
 extern void afs_TryToSmush(register struct vcache *avc,
-			   struct AFS_UCRED *acred, int sync);
+			   afs_ucred_t *acred, int sync);
 extern void updateV2DC(int lockVc, struct vcache *v, struct dcache *d,
 		       int src);
 extern void afs_WriteThroughDSlots(void);
@@ -300,9 +303,9 @@ extern int afs_DynrootNewVnode(struct vcache *avc,
 extern int afs_InitDynroot(void);
 extern int afs_SetDynrootEnable(int enable);
 extern int afs_GetDynrootEnable(void);
-extern int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred,
+extern int afs_DynrootVOPRemove(struct vcache *avc, afs_ucred_t *acred,
 				char *aname);
-extern int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred,
+extern int afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
 				 char *aname, char *atargetName);
 
 /* afs_error.c */
@@ -333,6 +336,7 @@ extern int afs_UFSCacheStoreProc(struct rx_call *, struct osi_file *,
 /* afs_icl.c */
 extern struct afs_icl_set *afs_icl_allSets;
 extern int afs_icl_InitLogs(void);
+extern void shutdown_icl(void);
 extern int afs_icl_CreateLog(char *name, afs_int32 logSize,
 			     struct afs_icl_log **outLogpp);
 extern int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize,
@@ -405,7 +409,10 @@ extern void afs_icl_AppendRecord(register struct afs_icl_log *logp,
 				 long p2, long p3, long p4);
 extern int Afscall_icl(long opcode, long p1, long p2, long p3, long p4,
 		       long *retval);
-
+#ifdef AFS_DARWIN100_ENV
+extern int Afscall64_icl(int opcode, user_addr_t p1, user_addr_t p2,
+		       user_addr_t p3, user_addr_t p4, int *retval);
+#endif
 
 /* afs_init.c */
 extern struct cm_initparams cm_initParams;
@@ -474,6 +481,17 @@ extern void afs_MarinerLog(register char *astring,
 			   register struct vcache *avc);
 extern void shutdown_mariner(void);
 
+/* afs_fetchstore.c */
+extern int afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
+				struct vrequest *areq,
+				int sync, unsigned int minj,
+				unsigned int high, unsigned int moredata,
+				afs_hyper_t *anewDV,
+                                 afs_size_t *amaxStoredLength);
+extern int afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP,
+				afs_size_t abase, struct dcache *adc,
+				struct vcache *avc, afs_int32 size,
+				struct afs_FetchOutput *tsmall);
 
 /* afs_memcache.c */
 extern int afs_InitMemCache(int blkCount, int blkSize, int flags);
@@ -491,18 +509,6 @@ extern int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
-extern int afs_CacheStoreProc(register struct rx_call *acall,
-				 register struct osi_file *fP,
-				 register afs_int32 alen, struct vcache *avc,
-				 int *shouldWake, afs_size_t * abytesToXferP,
-				 afs_size_t * abytesXferredP);
-extern int afs_MemCacheFetchProc(register struct rx_call *acall,
-				 register struct osi_file *fP,
-				 afs_size_t abase, struct dcache *adc,
-				 struct vcache *avc,
-				 afs_size_t * abytesToXferP,
-				 afs_size_t * abytesXferredP,
-				 afs_int32 lengthFound);
 extern void shutdown_memcache(void);
 
 
@@ -511,7 +517,7 @@ extern struct afs_exporter *afs_nfsexported;
 extern struct afs_exporter *afs_nfsexporter;
 extern void afs_nfsclient_init(void);
 extern int afs_nfsclient_reqhandler(struct afs_exporter *exporter,
-				    struct AFS_UCRED **cred,
+				    afs_ucred_t **cred,
 				    afs_int32 host, afs_int32 *pagparam,
 				    struct afs_exporter **outexporter);
 extern void shutdown_nfsclnt(void);
@@ -533,8 +539,8 @@ extern void shutdown_osi(void);
 extern void shutdown_osinet(void);
 extern int afs_osi_suser(void *credp);
 extern void afs_osi_TraverseProcTable(void);
-#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
-extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
+#if defined(KERNEL) && !defined(UKERNEL)
+extern const afs_ucred_t *afs_osi_proc2cred(afs_proc_t * pr);
 #endif
 
 /* afs_osi_alloc.c */
@@ -560,30 +566,24 @@ extern void shutdown_osinet(void);
 
 /* afs_osi_pag.c */
 #if defined(AFS_SUN5_ENV)
-extern int afs_setpag(struct AFS_UCRED **credpp);
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int afs_setpag(struct proc *p, void *args, int *retval);
+extern int afs_setpag(afs_ucred_t **credpp);
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+extern int afs_setpag(afs_proc_t *p, void *args, int *retval);
 #else
 extern int afs_setpag(void);
 #endif
 	
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp);
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+extern int AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp);
 #else
-extern int AddPag(afs_int32 aval, struct AFS_UCRED **credpp);
+extern int AddPag(afs_int32 aval, afs_ucred_t **credpp);
 #endif
-extern int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred);
-#if defined(UKERNEL)
+extern int afs_InitReq(register struct vrequest *av, afs_ucred_t *acred);
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
-#else
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-extern afs_uint32 afs_get_pag_from_groups(struct group_info *gi);
-#endif
-#endif
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
-extern afs_int32 PagInCred(struct AFS_UCRED *cred);
+extern afs_int32 PagInCred(afs_ucred_t *cred);
 
 /* afs_osi_uio.c */
 extern int afsio_copy(struct uio *ainuio, struct uio *aoutuio,
@@ -594,14 +594,19 @@ extern int afsio_skip(struct uio *auio, afs_int32 asize);
 /* afs_osi_vm.c */
 extern int osi_Active(register struct vcache *avc);
 extern void osi_FlushPages(register struct vcache *avc,
-			   struct AFS_UCRED *credp);
+			   afs_ucred_t *credp);
 extern void osi_FlushText_really(register struct vcache *vp);
 extern int osi_VMDirty_p(struct vcache *avc);
 #ifndef UKERNEL
-extern void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred);
+extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 #endif
 
 
+/* LINUX/osi_fetchstore.c */
+#ifdef AFS_LINUX26_ENV
+extern int afs_linux_storeproc(struct storeOps *, void *, struct dcache *,
+			       int *, afs_size_t *);
+#endif
 
 /* ARCH/osi_misc.c */
 extern void afs_osi_SetTime(osi_timeval_t * atv);
@@ -645,15 +650,15 @@ extern int afs_osi_SleepSig(void *event);
 /* ARCH/osi_inode.c */
 #ifdef AFS_SUN5_ENV
 extern int afs_syscall_icreate(dev_t, long, long, long, long, long, 
-		               rval_t *, struct AFS_UCRED *);
-extern int afs_syscall_iopen(dev_t, int, int, rval_t *, struct AFS_UCRED *);
+		               rval_t *, afs_ucred_t *);
+extern int afs_syscall_iopen(dev_t, int, int, rval_t *, afs_ucred_t *);
 extern int afs_syscall_iincdec(dev_t, int, int, int, rval_t *, 
-			       struct AFS_UCRED *);
+			       afs_ucred_t *);
 #elif defined(AFS_SGI65_ENV)
 extern int afs_syscall_icreate(afs_uint32, afs_uint32, afs_uint32, afs_uint32, afs_uint32, afs_uint32, rval_t *);
 extern int afs_syscall_iopen(int, ino_t, int, rval_t *);
 extern int afs_syscall_iincdec(int, int, int, int);
-#elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_syscall_icreate(long, long, long, long, long, long, long*);
 extern int afs_syscall_iopen(int dev, int inode, int usrmod, long *retval);
 extern int afs_syscall_iincdec(int dev, int inode, int inode_p1, int amount);
@@ -685,26 +690,31 @@ extern void shutdown_osifile(void);
 
 /* ARCH/osi_groups.c */
 #if defined(UKERNEL)
-extern int usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue,
+extern int usr_setpag(afs_ucred_t **cred, afs_uint32 pagvalue,
 		      afs_uint32 * newpag, int change_parent);
 #else
 # if defined AFS_XBSD_ENV
 #  if !defined(AFS_DFBSD_ENV)
-extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
 #  endif
 # endif
 #endif
 
+#if defined(AFS_LINUX26_ENV)
+extern afs_int32 osi_get_group_pag(afs_ucred_t *cred);
+#endif
+
+
 
 /* ARCH/osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
 extern void osi_VM_StoreAllSegments(struct vcache *avc);
-extern void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred,
+extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,
 			      int sync);
-extern void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp);
+extern void osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp);
 extern void osi_VM_Truncate(struct vcache *avc, int alen,
-			    struct AFS_UCRED *acred);
+			    afs_ucred_t *acred);
 extern void osi_VM_TryReclaim(struct vcache *avc, int *slept);
 extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
 extern int osi_VM_Setup(struct vcache *avc, int force);
@@ -712,24 +722,13 @@ extern int osi_VM_Setup(struct vcache *avc, int force);
 #ifdef AFS_SUN5_ENV
 extern int osi_VM_GetDownD(struct vcache *avc, struct dcache *adc);
 extern void osi_VM_PreTruncate(struct vcache *avc, int alen,
-			       struct AFS_UCRED *acred);
+			       afs_ucred_t *acred);
 #endif
 
 
 /* ARCH/osi_vnodeops.c */
 extern struct vnodeops Afs_vnodeops;
-#if defined(AFS_OSF_ENV)
-#if defined(AFS_OSF30_ENV)
-extern int max_vnodes;		/* number of total system vnodes */
-#else
-extern int nvnode;		/* number of total system vnodes */
-extern int numvnodes;		/* number vnodes in use now */
-#endif
-#ifdef AFS_DUX40_ENV
-extern struct vfs_ubcops afs_ubcops;
-#endif
-#endif
-extern int afs_inactive(struct vcache *avc, struct AFS_UCRED *acred);
+extern int afs_inactive(struct vcache *avc, afs_ucred_t *acred);
 
 /* afs_osifile.c */
 
@@ -738,7 +737,7 @@ extern afs_uint32 pag_epoch;
 extern afs_uint32 pagCounter;
 
 /* OS/osi_vfsops.c */
-#if defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 extern struct mount *afs_globalVFS;
 #else
 extern struct vfs *afs_globalVFS;
@@ -764,11 +763,11 @@ extern void afspag_Shutdown(void);
 extern afs_rwlock_t afs_xpagcell;
 extern afs_rwlock_t afs_xpagsys;
 extern int afspag_PUnlog(char *ain, afs_int32 ainSize,
-			 struct AFS_UCRED **acred);
+			 afs_ucred_t **acred);
 extern int afspag_PSetTokens(char *ain, afs_int32 ainSize,
-			     struct AFS_UCRED **acred);
+			     afs_ucred_t **acred);
 extern int afspag_PSetSysName(char *ain, afs_int32 ainSize,
-                              struct AFS_UCRED **acred);
+                              afs_ucred_t **acred);
 
 /* afs_pioctl.c */
 extern struct VenusFid afs_rootFid;
@@ -776,12 +775,17 @@ extern afs_int32 afs_waitForever;
 extern short afs_waitForeverCount;
 extern afs_int32 afs_showflags;
 extern int afs_defaultAsynchrony;
+#if defined(AFS_DARWIN100_ENV)
+extern int afs_syscall64_pioctl(user_addr_t path, unsigned int com,
+				user_addr_t cmarg, int follow, \
+				afs_ucred_t *credp);
+#endif
 #ifdef AFS_SUN5_ENV
 extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, 
-			      int follow, rval_t *rvp, struct AFS_UCRED *credp);
+			      int follow, rval_t *rvp, afs_ucred_t *credp);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, 
-			      int follow, struct AFS_UCRED *credp);
+			      int follow, afs_ucred_t *credp);
 #else
 extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg,
 			      int follow);
@@ -799,7 +803,7 @@ extern int afs_ExtendSegments(struct vcache *avc,
 			      afs_size_t alen, struct vrequest *areq);
 extern int afs_TruncateAllSegments(register struct vcache *avc,
 				   afs_size_t alen, struct vrequest *areq,
-				   struct AFS_UCRED *acred);
+				   afs_ucred_t *acred);
 
 /* afs_server.c */
 extern afs_rwlock_t afs_xsrvAddr;
@@ -837,7 +841,6 @@ void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
 #endif
 #endif
 extern int afs_HaveCallBacksFrom(struct server *aserver);
-extern void shutdown_server(void);
 extern void afs_RemoveAllConns(void);
 extern void afs_MarkAllServersUp(void);
 
@@ -870,7 +873,22 @@ extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #endif
 
 /* afs_syscall.c */
+#ifdef AFS_DARWIN100_ENV
+extern int copyin_afs_ioctl(user_addr_t cmarg, struct afs_ioctl *dst);
+#else
 extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
+#endif
+
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#ifdef AFS_DARWIN100_ENV
+extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
+#elif defined(AFS_FBSD50_ENV)
+extern int afs3_syscall(struct thread *p, void *args, long *retval);
+#else
+extern int afs3_syscall(afs_proc_t *p, void *args, long *retval);
+#endif
+#endif
+
 #ifdef UKERNEL
 extern int Afs_syscall(void);
 #endif
@@ -879,7 +897,7 @@ extern int Afs_syscall(void);
 #ifdef UKERNEL
 extern void uafs_Shutdown(void);
 extern void osi_ReleaseVM(struct vcache *avc, int len,
-			  struct usr_ucred *credp);
+			  afs_ucred_t *credp);
 extern int osi_GetTime(struct timeval *tv);
 extern int iodone(struct usr_buf *bp);
 extern int usr_ioctl(void);
@@ -887,7 +905,7 @@ extern int lookupname(char *fnamep, int segflg, int followlink,
 		      struct usr_vnode **compvpp);
 extern int usr_uiomove(char *kbuf, int n, int rw, struct usr_uio *uio);
 extern int afs_osi_VOP_RDWR(struct usr_vnode *vnodeP, struct usr_uio *uioP,
-		            int rw, int flags, struct usr_ucred *credP);
+		            int rw, int flags, afs_ucred_t *credP);
 
 #endif
 
@@ -900,7 +918,7 @@ extern struct unixuser *afs_GetUser(register afs_int32 auid, afs_int32 acell,
 				    afs_int32 locktype);
 #if AFS_GCPAGS
 extern afs_int32 afs_GCPAGs(afs_int32 * ReleasedCount);
-extern void afs_GCPAGs_perproc_func(AFS_PROC * pproc);
+extern void afs_GCPAGs_perproc_func(afs_proc_t * pproc);
 #endif /* AFS_GCPAGS */
 extern void afs_ComputePAGStats(void);
 extern void afs_PutUser(register struct unixuser *au, afs_int32 locktype);
@@ -980,7 +998,7 @@ extern afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 				 struct AFSFetchStatus *Outsp);
 
 extern afs_int32 afs_FlushVCBs(afs_int32 lockit);
-extern void afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred);
+extern void afs_InactiveVCache(struct vcache *avc, afs_ucred_t *acred);
 extern struct vcache *afs_LookupVCache(struct VenusFid *afid,
 				       struct vrequest *areq,
 				       afs_int32 * cached, struct vcache *adp,
@@ -1014,7 +1032,7 @@ extern int afs_RemoteLookup(register struct VenusFid *afid,
 			    struct AFSCallBack *CallBackp,
 			    struct server **serverp,
 			    struct AFSVolSync *tsyncp);
-extern void afs_ResetVCache(struct vcache *, struct AFS_UCRED *);
+extern void afs_ResetVCache(struct vcache *, afs_ucred_t *);
 extern afs_int32 afs_NFSFindVCache(struct vcache **avcp,
 				   struct VenusFid *afid);
 extern void afs_vcacheInit(int astatSize);
@@ -1030,49 +1048,45 @@ extern int afs_AccessOK(struct vcache *avc, afs_int32 arights,
 			struct vrequest *areq, afs_int32 check_mode_bits);
 #if defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
 extern int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, int flags,
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #else
 extern int afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #endif
 extern int afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights,
-			 struct AFS_UCRED *acred);
+			 afs_ucred_t *acred);
 
 /* VNOPS/afs_vnop_attrs.c */
 extern int afs_CopyOutAttrs(register struct vcache *avc,
 			    register struct vattr *attrs);
 #if     defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 extern int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags,
-		       struct AFS_UCRED *acred);
+		       afs_ucred_t *acred);
 #else
 extern int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs,
-		       struct AFS_UCRED *acred);
+		       afs_ucred_t *acred);
 #endif
 extern int afs_VAttrToAS(register struct vcache *avc,
 			 register struct vattr *av,
 			 register struct AFSStoreStatus *as);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 extern int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
-		       int flags, struct AFS_UCRED *acred);
+		       int flags, afs_ucred_t *acred);
 #else
 extern int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
-		       struct AFS_UCRED *acred);
+		       afs_ucred_t *acred);
 #endif
 
 /* VNOPS/afs_vnop_create.c */
-#ifdef  AFS_OSF_ENV
-extern int afs_create(struct nameidata *ndp, struct vattr *attrs);
-#else /* AFS_OSF_ENV */
 #ifdef AFS_SGI64_ENV
 extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		      int flags, int amode, struct vcache **avcp,
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #else /* AFS_SGI64_ENV */
 extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		      enum vcexcl aexcl, int amode, struct vcache **avcp,
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #endif /* AFS_SGI64_ENV */
-#endif /* AFS_OSF_ENV */
 extern int afs_LocalHero(register struct vcache *avc,
 			 register struct dcache *adc,
 			 register AFSFetchStatus * astat, register int aincr);
@@ -1080,12 +1094,12 @@ extern int afs_LocalHero(register struct vcache *avc,
 /* VNOPS/afs_vnop_dirops.c */
 
 extern int afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-		     register struct vcache **avcp, struct AFS_UCRED *acred);
+		     register struct vcache **avcp, afs_ucred_t *acred);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 extern int afs_rmdir(OSI_VC_DECL(adp), char *aname, struct vnode *cdirp, 
-		     struct AFS_UCRED *acred);
+		     afs_ucred_t *acred);
 #else
-extern int afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred);
+extern int afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred);
 #endif
 
 struct fid;
@@ -1093,7 +1107,7 @@ struct fid;
 #if !defined(AFS_ATHENA_ENV)
 #ifdef AFS_AIX41_ENV
 int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp);
-#elif defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
+#elif defined(AFS_SUN54_ENV)
 int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp);
 #else
 int afs_fid(OSI_VC_DECL(avc), struct fid **fidpp);
@@ -1108,24 +1122,21 @@ extern void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp,
 extern int HandleFlock(register struct vcache *avc, int acom,
 		       struct vrequest *areq, pid_t clid, int onlymine);
 
-#ifdef AFS_OSF_ENV
-extern int afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
-		       struct AFS_UCRED * acred, pid_t clid, off_t offset);
-#elif defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
-		       struct AFS_UCRED * acred, pid_t clid);
+		       afs_ucred_t * acred, pid_t clid);
 #else
 extern int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
-		       struct AFS_UCRED * acred);
+		       afs_ucred_t * acred);
 #endif
 
 /* VNOPS/afs_vnop_link.c */
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 extern int afs_link(OSI_VC_DECL(adp), struct vcache *avc, char *aname, 
-		    struct AFS_UCRED *acred);
+		    afs_ucred_t *acred);
 #else
 extern int afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname, 
-		    struct AFS_UCRED *acred);
+		    afs_ucred_t *acred);
 #endif
 
 /* VNOPS/afs_vnop_lookup.c */
@@ -1147,82 +1158,77 @@ extern int Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 		      struct sysname_info *state);
 extern int afs_DoBulkStat(struct vcache *adp, long dirCookie,
 			  struct vrequest *areqp);
-#ifdef AFS_OSF_ENV
-extern int afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, 
-		      struct AFS_UCRED *acred, int opflag, int wantparent);
-#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 extern int afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, 
 		      struct pathname *pnp, int flags, struct vnode *rdir, 
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #elif defined(UKERNEL)
 extern int afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, 
-		      struct AFS_UCRED *acred, int flags);
+		      afs_ucred_t *acred, int flags);
 #else
 extern int afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, 
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #endif
 	
 /* VNOPS/afs_vnop_open.c */
 #ifdef AFS_SGI64_ENV
 extern int afs_open(bhv_desc_t * bhv, struct vcache **avcp, afs_int32 aflags,
-		    struct AFS_UCRED *acred);
+		    afs_ucred_t *acred);
 #else
 extern int afs_open(struct vcache **avcp, afs_int32 aflags,
-		    struct AFS_UCRED *acred);
+		    afs_ucred_t *acred);
 #endif
 
 
 /* VNOPS/afs_vnop_read.c */
-extern afs_int32 maxIHint;
-extern afs_int32 nihints;
-extern afs_int32 usedihint;
 extern int afs_MemRead(register struct vcache *avc, struct uio *auio,
-		       struct AFS_UCRED *acred, daddr_t albn,
+		       afs_ucred_t *acred, daddr_t albn,
 		       struct buf **abpp, int noLock);
 extern int afs_UFSRead(register struct vcache *avc, struct uio *auio,
-		       struct AFS_UCRED *acred, daddr_t albn,
+		       afs_ucred_t *acred, daddr_t albn,
 		       struct buf **abpp, int noLock);
 extern void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
-			      struct AFS_UCRED *acred, struct vrequest *areq);
+			      afs_ucred_t *acred, struct vrequest *areq);
 
 
 /* VNOPS/afs_vnop_readdir.c */
 extern int afs_rd_stash_i;
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_readdir(OSI_VC_DECL(avc), struct uio *auio, 
-		       struct AFS_UCRED *acred, int *eofp);
+		       afs_ucred_t *acred, int *eofp);
 #elif defined(AFS_HPUX100_ENV)
 extern int afs_readdir2(OSI_VC_DECL(avc), struct uio *auio, 
-		        struct AFS_UCRED *acred);
+		        afs_ucred_t *acred);
 #else
 extern int afs_readdir(OSI_VC_DECL(avc), struct uio *auio, 
-		       struct AFS_UCRED *acred);
+		       afs_ucred_t *acred);
 #endif
 
 /* VNOPS/afs_vnop_remove.c */
 extern int afsremove(register struct vcache *adp, register struct dcache *tdc,
 		     register struct vcache *tvc, char *aname,
-		     struct AFS_UCRED *acred, struct vrequest *treqp);
+		     afs_ucred_t *acred, struct vrequest *treqp);
 extern int afs_remunlink(register struct vcache *avc, register int doit);
-extern int afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred);
+extern int afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred);
 extern char *afs_newname(void);
 
 /* VNOPS/afs_vnop_rename.c */
 extern int afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
-		     char *aname2, struct AFS_UCRED *acred,
+		     char *aname2, afs_ucred_t *acred,
 		     struct vrequest *areq);
 #ifdef AFS_SGI_ENV
 extern int afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, 
 		      char *aname2, struct pathname *npnp, 
-		      struct AFS_UCRED *acred);
+		      afs_ucred_t *acred);
 #else
 extern int afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, 
-		      char *aname2, struct AFS_UCRED *acred);
+		      char *aname2, afs_ucred_t *acred);
 #endif
 	
 /* VNOPS/afs_vnop_strategy.c */
-#if defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int afs_ustrategy(register struct buf *adp, struct AFS_UCRED *credp);
+#if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+extern int afs_ustrategy(register struct buf *adp, afs_ucred_t *credp);
 #else
 extern int afs_ustrategy(register struct buf *adp);
 #endif
@@ -1234,50 +1240,47 @@ extern int afs_UFSHandleLink(register struct vcache *avc,
 			     struct vrequest *areq);
 extern int afs_symlink(OSI_VC_DECL(adp), char *aname, 
 		       struct vattr *attrs, char *atargetName, 
-		       struct AFS_UCRED *acred);
+		       afs_ucred_t *acred);
 extern int afs_readlink(OSI_VC_DECL(avc), struct uio *auio,
-			struct AFS_UCRED *acred);
+			afs_ucred_t *acred);
 
 /* VNOPS/afs_vnop_write.c */
 extern int afs_MemWrite(register struct vcache *avc, struct uio *auio,
-			int aio, struct AFS_UCRED *acred, int noLock);
+			int aio, afs_ucred_t *acred, int noLock);
 extern int afs_StoreOnLastReference(register struct vcache *avc,
 				    register struct vrequest *treq);
 extern int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
-			int aio, struct AFS_UCRED *acred, int noLock);
+			int aio, afs_ucred_t *acred, int noLock);
 extern int afs_DoPartialWrite(register struct vcache *avc,
 			      struct vrequest *areq);
 extern int afs_closex(register struct file *afd);
 
 #ifdef AFS_SGI65_ENV
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags, 
-		     lastclose_t lastclose, struct AFS_UCRED *acred);
+		     lastclose_t lastclose, afs_ucred_t *acred);
 #elif defined(AFS_SGI64_ENV)
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags, 
 		     lastclose_t lastclose, off_t offset, 
-		     struct AFS_UCRED *acred, struct flid *flp);
+		     afs_ucred_t *acred, struct flid *flp);
 #elif defined(AFS_SGI_ENV)
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags, 
 		     lastclose_t lastclose, off_t offset,
-		     struct AFS_UCRED *acred);
+		     afs_ucred_t *acred);
 #elif defined(AFS_SUN5_ENV)
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, 
-		     offset_t offset, struct AFS_UCRED *acred);
+		     offset_t offset, afs_ucred_t *acred);
 #else
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,  
-		     struct AFS_UCRED *acred);
+		     afs_ucred_t *acred);
 #endif
 
-#ifdef AFS_OSF_ENV
-extern int afs_fsync(OSI_VC_DECL(avc), int fflags, struct AFS_UCRED *acred, 
-		     int waitfor);
-#elif defined(AFS_SGI65_ENV)
-extern int afs_fsync(OSI_VC_DECL(avc), int flags, struct AFS_UCRED *acred, 
+#if defined(AFS_SGI65_ENV)
+extern int afs_fsync(OSI_VC_DECL(avc), int flags, afs_ucred_t *acred, 
 		     off_t start, off_t stop);
 #elif defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
-extern int afs_fsync(OSI_VC_DECL(avc), int flag, struct AFS_UCRED *acred);
+extern int afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred);
 #else
-extern int afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred);
+extern int afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred);
 #endif
 		
 
@@ -1311,7 +1314,6 @@ extern struct volume *afs_GetVolumeByName(register char *aname,
 extern struct volume *afs_UFSGetVolSlot(void);
 extern void afs_CheckVolumeNames(int flags);
 
-
 /* Prototypes for generated files that aren't really in src/afs/ */
 
 /* afs_uuid.c */
@@ -1322,7 +1324,7 @@ extern void afs_ntohuuid(afsUUID * uuidp);
 extern afs_int32 afs_uuid_create(afsUUID * uuid);
 extern u_short afs_uuid_hash(afsUUID * uuid);
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV) || defined(AFS_OSF_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV)
 #include "osi_prototypes.h"
 #endif
 

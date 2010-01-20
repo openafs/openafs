@@ -68,7 +68,7 @@
 #include <afs/stds.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 
 /* System include files */
 #ifndef KERNEL
@@ -77,7 +77,7 @@
 #include <errno.h>
 
 /* Application include files */
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 #include "des_prototypes.h"
 

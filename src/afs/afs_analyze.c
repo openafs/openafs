@@ -248,7 +248,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
     if (afid) {
 	tvp = afs_FindVolume(afid, READ_LOCK);
 	if (tvp) {
-	    for (i = 0; i < MAXHOSTS; i++) {
+	    for (i = 0; i < AFS_MAXHOSTS; i++) {
 		if (tvp->serverHost[i] == tsp) {
 		    areq->skipserver[i] = 1;
 		}
@@ -259,7 +259,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		}
 	    }
 	    afs_PutVolume(tvp, READ_LOCK);
-	    for (i = 0; i < MAXHOSTS; i++) {
+	    for (i = 0; i < AFS_MAXHOSTS; i++) {
 	        if (tvp->serverHost[i] && areq->skipserver[i] == 0) {
 		    serversleft = 1;
 		    break;
@@ -356,7 +356,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 			   && tvp->serverHost[0]->cell) ? tvp->serverHost[0]->
 			  cell->cellName : ""));
 
-	    for (i = 0; i < MAXHOSTS; i++) {
+	    for (i = 0; i < AFS_MAXHOSTS; i++) {
 		if (tvp->status[i] != not_busy && tvp->status[i] != offline) {
 		    tvp->status[i] = not_busy;
 		}
@@ -435,7 +435,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	if (areq->volumeError) {
 	    tvp = afs_FindVolume(afid, READ_LOCK);
 	    if (tvp) {
-		for (i = 0; i < MAXHOSTS; i++) {
+		for (i = 0; i < AFS_MAXHOSTS; i++) {
 		    if (tvp->serverHost[i] == tsp) {
 			tvp->status[i] = not_busy;
 		    }
@@ -495,7 +495,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 
 	tvp = afs_FindVolume(afid, READ_LOCK);
 	if (tvp) {
-	    for (i = 0; i < MAXHOSTS; i++) {
+	    for (i = 0; i < AFS_MAXHOSTS; i++) {
 		if (tvp->serverHost[i] == tsp) {
 		    tvp->status[i] = rdwr_busy;	/* can't tell which yet */
 		    /* to tell which, have to look at the op code. */
@@ -601,7 +601,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    same = VLDB_Same(afid, areq);
 	    tvp = afs_FindVolume(afid, READ_LOCK);
 	    if (tvp) {
-		for (i = 0; i < MAXHOSTS && tvp->serverHost[i]; i++) {
+		for (i = 0; i < AFS_MAXHOSTS && tvp->serverHost[i]; i++) {
 		    if (tvp->serverHost[i] == tsp) {
 			if (tvp->status[i] == end_not_busy)
 			    tvp->status[i] = offline;

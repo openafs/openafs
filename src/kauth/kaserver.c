@@ -45,6 +45,7 @@
 #include <ubik.h>
 #include <sys/stat.h>
 #include "kauth.h"
+#include "kauth_internal.h"
 #include "kautils.h"
 #include "kaserver.h"
 #include "kadatabase.h"
@@ -322,7 +323,7 @@ main(int argc, char *argv[])
 
     code =
 	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
-				    &cellinfo, &clones);
+				    &cellinfo, clones);
     if (servers) {
 	if ((code = ubik_ParseServerList(argc, argv, &myHost, serverList))) {
 	    afs_com_err(whoami, code, "Couldn't parse server list");

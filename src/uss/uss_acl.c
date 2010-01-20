@@ -35,9 +35,9 @@
 #include <afs/afsint.h>
 #include <afs/prs_fs.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 
 #define MAXNAME 100
-#define	MAXSIZE	2048
 
 #undef USS_ACL_DB
 
@@ -498,8 +498,8 @@ static char *
 AclToString(struct Acl *a_acl)
 {				/*AclToString */
 
-    static char mydata[MAXSIZE];
-    char tstring[MAXSIZE];
+    static char mydata[AFS_PIOCTL_MAXSIZE];
+    char tstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
 
     /*
@@ -551,8 +551,8 @@ uss_acl_SetAccess(char *a_access, int a_clear, int a_negative)
     char *externalizedACL;
     int plusp;
     afs_int32 rights;
-    char tmp_str[MAXSIZE];
-    char path_field[MAXSIZE], user_field[64], rights_field[64], *tp;
+    char tmp_str[AFS_PIOCTL_MAXSIZE];
+    char path_field[AFS_PIOCTL_MAXSIZE], user_field[64], rights_field[64], *tp;
     int overflow;
 
     plusp = !a_negative;
@@ -563,7 +563,7 @@ uss_acl_SetAccess(char *a_access, int a_clear, int a_negative)
     tp = uss_common_FieldCp(path_field, a_access, ' ', sizeof(path_field),
 			    &overflow);
     if (overflow) {
-	fprintf(stderr, "%s: * Pathname field too long (max is %lu chars)\n",
+	fprintf(stderr, "%s: * Pathname field too long (max is %" AFS_SIZET_FMT " chars)\n",
 		uss_whoami, sizeof(path_field));
 	return (-1);
     }
@@ -572,7 +572,7 @@ uss_acl_SetAccess(char *a_access, int a_clear, int a_negative)
      * Ask the Cache Manager to give us the externalized ACL for the
      * given directory.
      */
-    code = uss_fs_GetACL(path_field, tmp_str, MAXSIZE);
+    code = uss_fs_GetACL(path_field, tmp_str, AFS_PIOCTL_MAXSIZE);
     if (code) {
 	afs_com_err(uss_whoami, code, "while getting access list for %s",
 		path_field);
@@ -674,7 +674,7 @@ uss_acl_SetDiskQuota(char *a_path, int a_q)
     uss_VolumeStatus_t *status;
     char *name, *motd, *offmsg;
     char *input;
-    char tmp_str[MAXSIZE];
+    char tmp_str[AFS_PIOCTL_MAXSIZE];
 
     if (uss_verbose)
 	fprintf(stderr,

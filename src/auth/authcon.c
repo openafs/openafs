@@ -20,14 +20,14 @@
 #include "afsincludes.h"
 #include "afs/stds.h"
 #include "afs/pthread_glock.h"
-#include "des/des.h"
-#include "des/des_prototypes.h"
 #include "rx/rxkad.h"
 #include "rx/rx.h"
 #include "afs/cellconfig.h"
 #include "afs/keys.h"
 #include "afs/auth.h"
 #include "afs/pthread_glock.h"
+#include "des.h"
+#include "des_prototypes.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -107,8 +107,8 @@ GenericAuth(struct afsconf_dir *adir,
     }
 
     /* next create random session key, using key for seed to good random */
-    des_init_random_number_generator(&key);
-    code = des_random_key(&session);
+    des_init_random_number_generator(ktc_to_cblock(&key));
+    code = des_random_key(ktc_to_cblock(&session));
     if (code) {
 	return QuickAuth(astr, aindex);
     }

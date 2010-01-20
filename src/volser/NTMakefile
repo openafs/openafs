@@ -18,6 +18,7 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
 INCFILES = \
 	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\volser_internal.h \
 	$(INCFILEDIR)\vsutils_prototypes.h \
 	$(INCFILEDIR)\lockprocs_prototypes.h \
 	$(INCFILEDIR)\volser.h \
@@ -27,6 +28,7 @@ INCFILES = \
 LOCAL_INCFILES = \
 	volser.h \
 	volint.h
+
 
 ############################################################################
 # Build volser library.
@@ -102,6 +104,7 @@ $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Build vos
@@ -129,6 +132,7 @@ $(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(CL_VOS_EXEFILE): $(RS_VOS_EXEFILE)
 	$(COPY)  $** $@

@@ -57,6 +57,7 @@
 
 /*! \name ubik client flags */
 #define UPUBIKONLY 	    1	/*!< only check servers presumed functional */
+#define UBIK_CALL_NEW 	    2	/*!< use the semantics of ubik_Call_New */
 /*\}*/
 
 /*! \name RX services types */
@@ -439,6 +440,7 @@ extern int uvote_Init(void);
 extern void ubik_vprint(const char *format, va_list ap);
 extern void ubik_print(const char *format, ...);
 extern void ubik_dprint(const char *format, ...);
+extern void ubik_dprint_25(const char *format, ...);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */
@@ -453,10 +455,11 @@ extern afs_int32 ubik_nBuffers;
 struct afsconf_cell;
 extern int ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
 				 struct afsconf_cell *info, char clones[],
-				 char *pathName, struct ubik_dbase **dbase);
+				 const char *pathName,
+				 struct ubik_dbase **dbase);
 extern int ubik_ServerInit(afs_int32 myHost, short myPort, 
 			   afs_int32 serverList[],
-			   char *pathName, struct ubik_dbase **dbase);
+			   const char *pathName, struct ubik_dbase **dbase);
 extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
 			   afs_int32 transMode, struct ubik_trans **transPtr);
 extern int ubik_BeginTransReadAny(register struct ubik_dbase *dbase,
@@ -499,8 +502,12 @@ extern afs_int32 ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
 			       long p3, long p4, long p5, long p6, long p7,
 			       long p8, long p9, long p10, long p11, long p12,
 			       long p13, long p14, long p15, long p16);
+extern afs_int32 ubik_Call_New(int (*aproc) (), register struct ubik_client
+			       *aclient, afs_int32 aflags, long p1, long p2,
+			       long p3, long p4, long p5, long p6, long p7,
+			       long p8, long p9, long p10, long p11, long p12,
+			       long p13, long p14, long p15, long p16);
 #endif
-
 /*\}*/
 
 /* \name ubikcmd.c */
@@ -511,8 +518,8 @@ extern int ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost,
 /* \name uinit.c */
 
 struct rx_securityClass;
-extern afs_int32 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName,
-				 afs_int32 sauth, 
+extern afs_int32 ugen_ClientInit(int noAuthFlag, const char *confDir,
+				 char *cellName, afs_int32 sauth,
 				 struct ubik_client **uclientp,
 				 int (*secproc) (struct rx_securityClass *sc,
 					 	 afs_int32 scIndex), 

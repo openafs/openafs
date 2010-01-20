@@ -56,14 +56,13 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#include "volser.h"
 #include <errno.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
 #include "volser.h"
 #include "volint.h"
-#include "volser_prototypes.h"
+#include "volser_internal.h"
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 /*@printflike@*/ extern void Abort(const char *format, ...);
@@ -102,7 +101,7 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 int
 threadNum(void)
 {
-    return (int)pthread_getspecific(rx_thread_id_key);
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -169,6 +168,7 @@ BKGLoop(void *unused)
 
 /* Background daemon for sleeping so the volserver does not become I/O bound */
 afs_int32 TTsleep, TTrun;
+#ifndef AFS_PTHREAD_ENV
 static void *
 BKGSleep(void *unused)
 {
@@ -183,13 +183,17 @@ BKGSleep(void *unused)
 #endif
 	    VTRANS_LOCK;
 	    for (tt = TransList(); tt; tt = tt->next) {
+                VTRANS_OBJ_LOCK(tt);
 		if ((strcmp(tt->lastProcName, "DeleteVolume") == 0)
 		    || (strcmp(tt->lastProcName, "Clone") == 0)
 		    || (strcmp(tt->lastProcName, "ReClone") == 0)
 		    || (strcmp(tt->lastProcName, "Forward") == 0)
 		    || (strcmp(tt->lastProcName, "Restore") == 0)
-		    || (strcmp(tt->lastProcName, "ForwardMulti") == 0))
+		    || (strcmp(tt->lastProcName, "ForwardMulti") == 0)) {
+                    VTRANS_OBJ_UNLOCK(tt);
 		    break;
+                }
+                VTRANS_OBJ_UNLOCK(tt);
 	    }
 	    if (tt) {
 	        VTRANS_UNLOCK;
@@ -200,6 +204,7 @@ BKGSleep(void *unused)
     }
     return NULL;
 }
+#endif
 
 #ifndef AFS_NT40_ENV
 int
@@ -246,6 +251,7 @@ main(int argc, char **argv)
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
     char *auditFileName = NULL;
+    VolumePackageOptions opts;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -330,7 +336,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
@@ -415,11 +421,15 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
-    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage can
+    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage2 can
        log, so we need to do this here */
     OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
 
-    VInitVolumePackage(volumeUtility, 0, 0, CONNECT_FS, 0);
+    VOptDefaults(volumeServer, &opts);
+    if (VInitVolumePackage2(volumeServer, &opts)) {
+	Log("Shutting down: errors encountered initializing volume package\n");
+	exit(1);
+    }
     /* For nuke() */
     Lock_Init(&localLock);
     DInit(40);

@@ -59,7 +59,7 @@ main(int argc, char **argv)
     struct sigaction intaction, oldaction;
     struct cmd_syndesc *cptr;
 
-    memset((char *)&intaction, 0, sizeof(intaction));
+    memset(&intaction, 0, sizeof(intaction));
     intaction.sa_handler = quitFms;
 
     sigaction(SIGINT, &intaction, &oldaction);

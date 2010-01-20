@@ -62,11 +62,13 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/vol_prototypes.h>
+#include <afs/errors.h>
 
 #include "volser.h"
+#include "voltrans_inline.h"
 #include "volint.h"
 
-#include "volser_prototypes.h"
+#include "volser_internal.h"
 #include "physio.h"
 #include "dumpstuff.h"
 
@@ -212,12 +214,70 @@ ConvertPartition(int apartno, char *aname, int asize)
     return 0;
 }
 
+static struct Volume *
+VAttachVolumeByName_retry(Error *ec, char *partition, char *name, int mode)
+{
+    struct Volume *vp;
+
+    *ec = 0;
+    vp = VAttachVolumeByName(ec, partition, name, mode);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    {
+        int i;
+        /*
+         * The fileserver will take care of keeping track of how many
+         * demand-salvages have been performed, and will force the volume to
+         * ERROR if we've done too many. The limit on This loop is just a
+         * failsafe to prevent trying to salvage forever. We want to attempt
+         * attachment at least SALVAGE_COUNT_MAX times, since we want to
+         * avoid prematurely exiting this loop, if we can.
+         */
+        for (i = 0; i < SALVAGE_COUNT_MAX*2 && *ec == VSALVAGING; i++) {
+            sleep(SALVAGE_PRIO_UPDATE_INTERVAL);
+            vp = VAttachVolumeByName(ec, partition, name, mode);
+        }
+
+        if (*ec == VSALVAGING) {
+            *ec = VSALVAGE;
+        }
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    return vp;
+}
+
+static struct Volume *
+VAttachVolume_retry(Error *ec, afs_uint32 avolid, int amode)
+{
+    struct Volume *vp;
+
+    *ec = 0;
+    vp = VAttachVolume(ec, avolid, amode);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    {
+        int i;
+        /* see comment above in VAttachVolumeByName_retry */
+        for (i = 0; i < SALVAGE_COUNT_MAX*2 && *ec == VSALVAGING; i++) {
+            sleep(SALVAGE_PRIO_UPDATE_INTERVAL);
+            vp = VAttachVolume(ec, avolid, amode);
+        }
+
+        if (*ec == VSALVAGING) {
+            *ec = VSALVAGE;
+        }
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    return vp;
+}
+
 /* the only attach function that takes a partition is "...ByName", so we use it */
-struct Volume *
+static struct Volume *
 XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 {
     char pbuf[30], vbuf[20];
-    register struct Volume *tv;
 
     if (ConvertPartition(apartid, pbuf, sizeof(pbuf))) {
 	*error = EINVAL;
@@ -227,8 +287,8 @@ XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 	*error = EINVAL;
 	return NULL;
     }
-    tv = VAttachVolumeByName((Error *)error, pbuf, vbuf, amode);
-    return tv;
+
+    return VAttachVolumeByName_retry((Error *)error, pbuf, vbuf, amode);
 }
 
 /* Adapted from the file server; create a root directory for this volume */
@@ -237,7 +297,7 @@ ViceCreateRoot(Volume *vp)
 {
     DirHandle dir;
     struct acl_accessList *ACL;
-    ViceFid did;
+    AFSFid did;
     Inode inodeNumber, nearInode;
     struct VnodeDiskObject *vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
@@ -498,12 +558,13 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 	VDetachVolume(&junk, vp);	/* rather return the real error code */
 	return error;
     }
+    VTRANS_OBJ_LOCK(tt);
     tt->volume = vp;
     *atrans = tt->tid;
-    strcpy(tt->lastProcName, "CreateVolume");
-    tt->rxCallPtr = acid;
+    TSetRxCall_r(tt, acid, "CreateVolume");
+    VTRANS_OBJ_UNLOCK(tt);
     Log("1 Volser: CreateVolume: volume %u (%s) created\n", volumeID, aname);
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
     return 0;
@@ -539,12 +600,13 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
     }
     if (DoLogging)
 	Log("%s is executing Delete Volume %u\n", caller, tt->volid);
-    strcpy(tt->lastProcName, "DeleteVolume");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "DeleteVolume");
     VPurgeVolume(&error, tt->volume);	/* don't check error code, it is not set! */
     V_destroyMe(tt->volume) = DESTROY_ME; /* so endtrans does the right fssync opcode */
+    VTRANS_OBJ_LOCK(tt);
     tt->vflags |= VTDeleted;	/* so we know not to do anything else to it */
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall_r(tt);
+    VTRANS_OBJ_UNLOCK(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -619,12 +681,11 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	TRELE(tt);
 	return VOLSERVOLBUSY;
     }
-    strcpy(tt->lastProcName, "Clone");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "Clone");
 
 
     if (purgeId) {
-	purgevp = VAttachVolume(&error, purgeId, V_VOLUPD);
+	purgevp = VAttachVolume_retry(&error, purgeId, V_VOLUPD);
 	if (error) {
 	    Log("1 Volser: Clone: Could not attach 'purge' volume %u; clone aborted\n", purgeId);
 	    goto fail;
@@ -725,7 +786,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	LogError(error);
 	goto fail;
     }
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt)) {
 	tt = (struct volser_trans *)0;
 	error = VOLSERTRELE_ERROR;
@@ -740,7 +801,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     if (newvp)
 	VDetachVolume(&code, newvp);
     if (tt) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
     }
     if (ttc)
@@ -791,8 +852,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	TRELE(tt);
 	return VOLSERVOLBUSY;
     }
-    strcpy(tt->lastProcName, "ReClone");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "ReClone");
 
     originalvp = tt->volume;
     if ((V_type(originalvp) == backupVolume)
@@ -808,7 +868,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	goto fail;
     }
 
-    clonevp = VAttachVolume(&error, cloneId, V_VOLUPD);
+    clonevp = VAttachVolume_retry(&error, cloneId, V_VOLUPD);
     if (error) {
 	Log("1 Volser: can't attach clone %d\n", cloneId);
 	goto fail;
@@ -892,7 +952,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	LogError(error);
 	goto fail;
     }
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt)) {
 	tt = (struct volser_trans *)0;
 	error = VOLSERTRELE_ERROR;
@@ -911,7 +971,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     if (clonevp)
 	VDetachVolume(&code, clonevp);
     if (tt) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
     }
     if (ttc)
@@ -976,11 +1036,13 @@ VolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
 	DeleteTrans(tt, 1);
 	return error;
     }
+    VTRANS_OBJ_LOCK(tt);
     tt->volume = tv;
     *ttid = tt->tid;
     tt->iflags = iflags;
     tt->vflags = 0;
-    strcpy(tt->lastProcName, "TransCreate");
+    TSetRxCall_r(tt, NULL, "TransCreate");
+    VTRANS_OBJ_UNLOCK(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -1036,10 +1098,9 @@ VolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "GetFlags");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "GetFlags");
     *aflags = tt->vflags;
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -1081,8 +1142,7 @@ VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "SetFlags");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "SetFlags");
     vp = tt->volume;		/* pull volume out of transaction */
 
     /* check if we're allowed to make any updates */
@@ -1104,8 +1164,10 @@ VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
 	V_inService(vp) = 1;
     }
     VUpdateVolume(&error, vp);
+    VTRANS_OBJ_LOCK(tt);
     tt->vflags = aflags;
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall_r(tt);
+    VTRANS_OBJ_UNLOCK(tt);
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
 
@@ -1160,7 +1222,7 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	return ENOENT;
     }
     vp = tt->volume;
-    strcpy(tt->lastProcName, "Forward");
+    TSetRxCall(tt, NULL, "Forward");
 
     /* get auth info for the this connection (uses afs from ticket file) */
     code = afsconf_ClientAuth(tdir, &securityObject, &securityIndex);
@@ -1175,12 +1237,12 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 			 htons(destination->destPort), VOLSERVICE_ID,
 			 securityObject, securityIndex);
     if (!tcon) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
 	return ENOTCONN;
     }
     tcall = rx_NewCall(tcon);
-    tt->rxCallPtr = tcall;
+    TSetRxCall(tt, tcall, "Forward");
     /* start restore going.  fromdate == 0 --> doing an incremental dump/restore */
     code = StartAFSVolRestore(tcall, destTrans, (fromDate ? 1 : 0), cookie);
     if (code) {
@@ -1192,7 +1254,7 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     if (code)
 	goto fail;
     EndAFSVolRestore(tcall);	/* probably doesn't do much */
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     code = rx_EndCall(tcall, 0);
     rx_DestroyConnection(tcon);	/* done with the connection */
     tcon = NULL;
@@ -1209,7 +1271,7 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	rx_DestroyConnection(tcon);
     }
     if (tt) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
     }
     return code;
@@ -1260,7 +1322,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
 	return ENOENT;
     }
     vp = tt->volume;
-    strcpy(tt->lastProcName, "ForwardMulti");
+    TSetRxCall(tt, NULL, "ForwardMulti");
 
     /* (fromDate == 0) ==> full dump */
     is_incremental = (fromDate ? 1 : 0);
@@ -1336,7 +1398,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
     free(tcalls);
 
     if (tt) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	if (TRELE(tt) && !code)	/* return the first code if it's set */
 	    return VOLSERTRELE_ERROR;
     }
@@ -1383,16 +1445,15 @@ VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "Dump");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "Dump");
     code = DumpVolume(acid, tt->volume, fromDate, (flags & VOLDUMPV2_OMITDIRS)
 		      ? 0 : 1);	/* squirt out the volume's data, too */
     if (code) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
 	return code;
     }
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
 
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
@@ -1432,14 +1493,13 @@ VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "Restore");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "Restore");
 
     DFlushVolume(V_parentId(tt->volume)); /* Ensure dir buffers get dropped */
 
     code = RestoreVolume(acid, tt->volume, (aflags & 1), cookie);	/* last is incrementalp */
     FSYNC_VolOp(tt->volid, NULL, FSYNC_VOL_BREAKCBKS, 0l, NULL);
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     tcode = TRELE(tt);
 
     return (code ? code : tcode);
@@ -1503,13 +1563,12 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "SetForwarding");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "SetForwarding");
     if (volutil_PartitionName2_r(tt->partition, partName, sizeof(partName)) != 0) {
 	partName[0] = '\0';
     }
     FSYNC_VolOp(tt->volid, partName, FSYNC_VOL_MOVE, anewsite, NULL);
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -1545,11 +1604,10 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "GetStatus");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "GetStatus");
     tv = tt->volume;
     if (!tv) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1571,7 +1629,7 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
     astatus->expirationDate = td->expirationDate;
     astatus->backupDate = td->backupDate;
     astatus->copyDate = td->copyDate;
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -1609,11 +1667,10 @@ VolSetInfo(struct rx_call *acid, afs_int32 atrans,
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "SetStatus");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "SetStatus");
     tv = tt->volume;
     if (!tv) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1633,7 +1690,7 @@ VolSetInfo(struct rx_call *acid, afs_int32 atrans,
     if (astatus->spare2 != -1)
 	td->volUpdateCounter = (unsigned int)astatus->spare2;
     VUpdateVolume(&error, tv);
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
     return 0;
@@ -1670,11 +1727,10 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "GetName");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "GetName");
     tv = tt->volume;
     if (!tv) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1682,13 +1738,13 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
     td = &tv->header->diskstuff;
     len = strlen(td->name) + 1;	/* don't forget the null */
     if (len >= SIZE) {
-	tt->rxCallPtr = (struct rx_call *)0;
+        TClearRxCall(tt);
 	TRELE(tt);
 	return E2BIG;
     }
     *aname = (char *)realloc(*aname, len);
     strcpy(*aname, td->name);
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -1753,7 +1809,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
     char namehead[9];
     struct partList partList;
     struct DiskPartition64 *dp;
-    int i, j = 0, k;
+    int i, j = 0;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */
 
@@ -1766,6 +1822,8 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 	    namehead[6] = i + 'a';
 	    namehead[7] = '\0';
 	} else {
+	    int k;
+
 	    k = i - 26;
 	    namehead[6] = 'a' + (k / 26);
 	    namehead[7] = 'a' + (k % 26);
@@ -1997,7 +2055,7 @@ FillVolInfo(Volume * vp, volint_info_handle_t * handle)
 	 * Copy out the stat fields in a single operation.
 	 */
 	if ((now - hdr->dayUseDate) > OneDay) {
-	    memset((char *)&(handle->volinfo_ptr.ext->stat_reads[0]),
+	    memset(&(handle->volinfo_ptr.ext->stat_reads[0]),
 		   0, numStatBytes);
 	} else {
 	    memcpy((char *)&(handle->volinfo_ptr.ext->stat_reads[0]),
@@ -2116,7 +2174,7 @@ GetVolInfo(afs_uint32 partId,
     }
 
     /* Get volume from volserver */
-    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+    tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n", 
 	    volumeId, pname, volname, error);
@@ -2153,7 +2211,8 @@ GetVolInfo(afs_uint32 partId,
 
 #ifdef AFS_DEMAND_ATTACH_FS
     /* If using DAFS, get volume from fsserver */
-    if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK) {
+    if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK || fs_tv == NULL) {
+
 	goto drop;
     }
 
@@ -2701,7 +2760,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 {
     transDebugInfo *pntr;
     afs_int32 allocSize = 50;
-    struct volser_trans *tt, *allTrans;
+    struct volser_trans *tt, *nt, *allTrans;
 
     transInfo->transDebugEntries_val =
 	(transDebugInfo *) malloc(allocSize * sizeof(transDebugInfo));
@@ -2709,10 +2768,14 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	return ENOMEM;
     pntr = transInfo->transDebugEntries_val;
     transInfo->transDebugEntries_len = 0;
+
+    VTRANS_LOCK;
     allTrans = TransList();
     if (allTrans == (struct volser_trans *)0)
-	return 0;		/*no active transactions */
-    for (tt = allTrans; tt; tt = tt->next) {	/*copy relevant info into pntr */
+	goto done;		/*no active transactions */
+    for (tt = allTrans; tt; tt = nt) {	/*copy relevant info into pntr */
+	nt = tt->next;
+        VTRANS_OBJ_LOCK(tt);
 	pntr->tid = tt->tid;
 	pntr->time = tt->time;
 	pntr->creationTime = tt->creationTime;
@@ -2731,6 +2794,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	    pntr->lastSendTime = tt->rxCallPtr->lastSendTime;
 	    pntr->lastReceiveTime = tt->rxCallPtr->lastReceiveTime;
 	}
+        VTRANS_OBJ_UNLOCK(tt);
 	pntr++;
 	transInfo->transDebugEntries_len += 1;
 	if ((allocSize - transInfo->transDebugEntries_len) < 5) {	/*alloc some more space */
@@ -2748,6 +2812,8 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	}
 
     }
+done:
+    VTRANS_UNLOCK;
 
     return 0;
 }
@@ -2789,8 +2855,7 @@ VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "SetIdsTypes");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "SetIdsTypes");
     tv = tt->volume;
 
     V_type(tv) = type;
@@ -2804,13 +2869,13 @@ VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
 	LogError(error);
 	goto fail;
     }
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
 
     return error;
   fail:
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
     return error;
@@ -2846,8 +2911,7 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "SetDate");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "SetDate");
     tv = tt->volume;
 
     V_creationDate(tv) = cdate;
@@ -2857,13 +2921,13 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
 	LogError(error);
 	goto fail;
     }
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
 
     return error;
   fail:
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
     return error;
@@ -2947,10 +3011,9 @@ SAFSVolGetSize(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	TRELE(tt);
 	return ENOENT;
     }
-    strcpy(tt->lastProcName, "GetSize");
-    tt->rxCallPtr = acid;
+    TSetRxCall(tt, acid, "GetSize");
     code = SizeDumpVolume(acid, tt->volume, fromDate, 1, size);	/* measure volume's data */
-    tt->rxCallPtr = (struct rx_call *)0;
+    TClearRxCall(tt);
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
@@ -3012,9 +3075,11 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
         VDetachVolume(&code2, newvol);
         return VOLSERVOLBUSY;
     } 
+    VTRANS_OBJ_LOCK(tt);
     tt->iflags = ITBusy;
     tt->vflags = 0;
-    strcpy(tt->lastProcName, "SplitVolume");
+    TSetRxCall_r(tt, NULL, "SplitVolume");
+    VTRANS_OBJ_UNLOCK(tt);
 
     tt2 = NewTrans(new, V_device(newvol));
     if (!tt2) {
@@ -3027,9 +3092,11 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
         VDetachVolume(&code2, newvol);
         return VOLSERVOLBUSY;
     } 
+    VTRANS_OBJ_LOCK(tt2);
     tt2->iflags = ITBusy;
     tt2->vflags = 0;
-    strcpy(tt2->lastProcName, "SplitVolume");
+    TSetRxCall_r(tt2, NULL, "SplitVolume");
+    VTRANS_OBJ_UNLOCK(tt2);
 
     code = split_volume(acall, vol, newvol, where, verbose);
 

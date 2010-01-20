@@ -13,42 +13,64 @@ commands in the suite:
 =item *
 
 Commands to copy data from AFS volumes to tape or a backup data file, and
-to restore it to the file system: B<backup diskrestore>, B<backup dump>,
-B<backup volrestore>, and B<backup volsetrestore>.
+to restore it to the file system:
+L<B<backup diskrestore>|backup_diskrestore(8)>,
+L<B<backup dump>|backup_dump(8)>,
+L<B<backup volrestore>|backup_volrestore(8)>,
+and L<B<backup volsetrestore>|backup_volsetrestore(8)>.
 
 =item *
 
-Commands to administer the records in the Backup Database: B<backup
-adddump>, B<backup addhost>, B<backup addvolentry>, B<backup addvolset>,
-B<backup deldump>, B<backup deletedump>, B<backup delhost>, B<backup
-delvolentry>, B<backup delvolset>, B<backup dumpinfo>, B<backup
-listdumps>, B<backup listhosts>, B<backup listvolsets>, B<backup
-scantape>, B<backup setexp>, and B<backup volinfo>.
+Commands to administer the records in the Backup Database:
+L<B<backup adddump>|backup_adddump(8)>,
+L<B<backup addhost>|backup_addhost(8)>,
+L<B<backup addvolentry>|backup_addvolentry(8)>,
+L<B<backup addvolset>|backup_addvolset(8)>,
+L<B<backup deldump>|backup_deldump(8)>,
+L<B<backup deletedump>|backup_deletedump(8)>,
+L<B<backup delhost>|backup_delhost(8)>,
+L<B<backup delvolentry>|backup_delvolentry(8)>,
+L<B<backup delvolset>|backup_delvolset(8)>,
+L<B<backup dumpinfo>|backup_dumpinfo(8)>,
+L<B<backup listdumps>|backup_listdumps(8)>,
+L<B<backup listhosts>|backup_listhosts(8)>,
+L<B<backup listvolsets>|backup_listvolsets(8)>,
+L<B<backup scantape>|backup_scantape(8)>,
+L<B<backup setexp>|backup_setexp(8)>,
+and L<B<backup volinfo>|backup_volinfo(8)>.
 
 =item *
 
-Commands to write and read tape labels: B<backup labeltape> and B<backup
-readlabel>.
+Commands to write and read tape labels:
+L<B<backup labeltape>|backup_labeltape(8)>
+and L<B<backup readlabel>|backup_readlabel(8)>.
 
 =item *
 
 Commands to list and change the status of backup operations and the
-machines performing them: B<backup jobs>, B<backup kill>, and B<backup
-status>.
+machines performing them:
+L<B<backup jobs>|backup_jobs(8)>,
+L<B<backup kill>|backup_kill(8)>,
+and L<B<backup status>|backup_status(8)>.
 
 =item *
 
-Commands to enter and leave interactive mode: B<backup interactive> and
-B<backup quit>.
+Commands to enter and leave interactive mode:
+L<B<backup interactive>|backup_interactive(8)>
+and L<B<backup quit>|backup_quit(8)>.
 
 =item *
 
 Commands to check for and repair corruption in the Backup Database:
-B<backup dbverify>, B<backup restoredb>, and B<backup savedb>.
+L<B<backup dbverify>|backup_dbverify(8)>,
+L<B<backup restoredb>|backup_restoredb(8)>,
+and L<B<backup savedb>|backup_savedb(8)>.
 
 =item *
 
-Commands to obtain help: B<backup apropos> and B<backup help>.
+Commands to obtain help:
+L<B<backup apropos>|backup_apropos(8)>
+and L<B<backup help>|backup_help(8)>.
 
 =back
 
@@ -86,8 +108,10 @@ information used to automate its operation.
 In addition to the standard command line interface, the B<backup> command
 suite provides an I<interactive> interface, which has several useful
 features described in L<backup_interactive(8)>.  Three of the commands in
-the suite are available only in interactive mode: B<backup jobs>, B<backup
-kill>, and B<backup quit>.
+the suite are available only in interactive mode:
+L<B<backup jobs>|backup_jobs(8)>,
+L<B<backup kill>|backup_kill(8)>,
+and L<B<backup quit>|backup_quit(8)>
 
 =head1 OPTIONS
 
@@ -209,8 +233,10 @@ simultaneously is 64.
 
 The maximum number of tape devices that can work together on a restore
 operation is 128 (that is the maximum number of values that can be
-provided for the B<-portoffset> argument to the B<backup diskrestore>,
-B<backup volrestore>, or B<backup volsetrestore> command).
+provided for the B<-portoffset> argument to the
+L<B<backup diskrestore>|backup_diskrestore(8)>,
+L<B<backup volrestore>|backup_volrestore(8)>,
+or L<B<backup volsetrestore>|backup_volsetrestore(8)> command).
 
 =back
 
@@ -254,6 +280,7 @@ L<backup_adddump(8)>,
 L<backup_addhost(8)>,
 L<backup_addvolentry(8)>,
 L<backup_addvolset(8)>,
+L<backup_apropos(8)>,
 L<backup_dbverify(8)>,
 L<backup_deldump(8)>,
 L<backup_deletedump(8)>,

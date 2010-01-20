@@ -106,7 +106,7 @@ rcmd(ahost, rport, locuser, remuser, cmd, fd2p)
     struct hostent *hp;
     fd_set reads;
 
-    memset((char *)someSignals, 0, sizeof(someSignals));
+    memset(someSignals, 0, sizeof(someSignals));
     someSignals[0] = 1 << (SIGURG - 1);
     sigBlock = *((sigset_t *) someSignals);
 

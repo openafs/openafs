@@ -20,6 +20,7 @@
 #include <netinet/in.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
+#include <afs/afs_consts.h>
 
 #ifdef notdef
 #include <afs/vice.h>
@@ -32,12 +33,11 @@
 #endif
 #include <strings.h>
 
-#define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 
 
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 static int MaxServers[2] = { 30, 254 };	/* max server # permitted in this version */
 
 #ifdef notdef			/* postpone this... */
@@ -114,7 +114,7 @@ InAFS(apath)
     register afs_int32 code;
 
     blob.in_size = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -157,7 +157,7 @@ ListQuotaCmd(register struct cmd_syndesc *as, void *arock)
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);

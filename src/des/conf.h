@@ -15,7 +15,7 @@
 
 #ifndef _CONF_H_
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 
 #include "andrew-conf.h"
 

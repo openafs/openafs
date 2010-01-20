@@ -43,6 +43,13 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 #
+# When we build this file, we're using a .c file that's in the object directory,
+# so we need to add the source directory to the includes to pick up local headers.
+#
+error_table.o: error_table.c
+	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ -c $<
+
+#
 # Installation targets
 #
 install: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a

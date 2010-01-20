@@ -13,13 +13,18 @@
 
 #include <afs/param.h>
 #include <afs/afsint.h>
+#define FSINT_COMMON_XG 1
+#include <afs/afscbint.h>
 #include <sys/ioctl.h>
 #include <afs/venus.h>
 #include <afs/cellconfig.h>
-#include <afs/afs.h>
+#include <afs/sys_prototypes.h>
+
+#include <afs/afs_const.h>
 
 /*#include <rx/rxkad.h>*/
 #include <rx/rx_null.h>
+#include <rx/rx_prototypes.h>
 
 /*#include <krb.h>*/
 #include <afs/com_err.h>
@@ -35,11 +40,11 @@ statfile(char *path, char *cellname, afs_uint32 * server, struct AFSFid *f)
 
     struct ViceIoctl v;
     struct VenusFid vf;
-    afs_int32 srvbuf[MAXHOSTS];
+    afs_int32 srvbuf[AFS_MAXHOSTS];
     int code;
 
     if (!strncmp(path, "@afs:", 5)) {
-	char *pdup, *p, *host, *id;
+	char *pdup, *p;
 	struct hostent *he;
 
 	pdup = strdup(path);
@@ -118,7 +123,7 @@ statfile(char *path, char *cellname, afs_uint32 * server, struct AFSFid *f)
 struct rx_securityClass *sc;
 
 extern int
-start_cb_server()
+start_cb_server(void)
 {
     struct rx_service *s;
 
@@ -145,7 +150,7 @@ do_rx_Init(void)
     }
 
     len = sizeof(struct sockaddr_in);
-    if (getsockname(rx_socket, &s, &len)) {
+    if (getsockname(rx_socket, (struct sockaddr *)&s, (socklen_t *)&len)) {
 	perror("getsockname");
 	return 1;
     }
@@ -191,7 +196,7 @@ main(int argc, char **argv)
 {
     char scell[MAXCELLCHARS], dcell[MAXCELLCHARS];
     afs_uint32 ssrv, dsrv;
-    char *databuffer, *srcf, *destd, *destf, *destpath;
+    char *databuffer, *srcf = NULL, *destd = NULL, *destf = NULL, *destpath = NULL;
     struct stat statbuf;
 
     struct AFSStoreStatus sst;
@@ -200,17 +205,17 @@ main(int argc, char **argv)
     struct AFSCallBack scb, dcb;
     struct AFSFid sf, dd, df;
 
-    int filesz;
+    int filesz = 0;
     int ch, blksize, bytesremaining, bytes;
     struct timeval start, finish;
     struct timezone tz;
     struct rx_securityClass *ssc = 0, *dsc = 0;
     int sscindex, dscindex;
-    struct rx_connection *sconn, *dconn;
-    struct rx_call *scall, *dcall;
-    int code, fetchcode, storecode, printcallerrs;
-    int slcl = 0, dlcl = 0;
-    int sfd, dfd, unauth = 0;
+    struct rx_connection *sconn = NULL, *dconn = NULL;
+    struct rx_call *scall = NULL, *dcall = NULL;
+    int code = 0, fetchcode, storecode, printcallerrs = 0;
+    int slcl = 0, dlcl = 0, unlock = 0;
+    int sfd = 0, dfd = 0, unauth = 0;
 
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
@@ -218,7 +223,7 @@ main(int argc, char **argv)
 
     blksize = 8 * 1024;
 
-    while ((ch = getopt(argc, argv, "ioub:")) != -1) {
+    while ((ch = getopt(argc, argv, "iouUb:")) != -1) {
 	switch (ch) {
 	case 'b':
 	    blksize = atoi(optarg);
@@ -232,6 +237,9 @@ main(int argc, char **argv)
 	case 'u':
 	    unauth = 1;
 	    break;
+	case 'U':
+	    unlock = 1;
+	    break;
 	default:
 	    printf("Unknown option '%c'\n", ch);
 	    exit(1);
@@ -239,37 +247,41 @@ main(int argc, char **argv)
     }
 
 
-    if (argc - optind < 2) {
+    if (argc - optind + unlock < 2) {
 	fprintf(stderr,
-		"Usage: afscp [-i|-o]] [-b xfersz] [-u] source dest\n");
+		"Usage: afscp [-i|-o]] [-b xfersz] [-u] [-U] source [dest]\n");
 	fprintf(stderr, "  -b   Set block size\n");
 	fprintf(stderr, "  -i   Source is local (copy into AFS)\n");
 	fprintf(stderr, "  -o   Dest is local (copy out of AFS)\n");
 	fprintf(stderr, "  -u   Run unauthenticated\n");
+	fprintf(stderr, "  -U   Send an unlock request for source. (dest path not required)\n");
 	fprintf(stderr, "source and dest can be paths or specified as:\n");
 	fprintf(stderr, "     @afs:cellname:servername:volume:vnode:uniq\n");
 	exit(1);
     }
     srcf = argv[optind++];
-    destpath = argv[optind++];
-    destd = strdup(destpath);
-    if (!destd) {
-	perror("strdup");
-	exit(1);
+    if (!unlock) {
+	destpath = argv[optind++];
+	destd = strdup(destpath);
+	if (!destd) {
+	    perror("strdup");
+	    exit(1);
+	}
+	if ((destf = strrchr(destd, '/'))) {
+	    *destf++ = 0;
+	} else {
+	    destf = destd;
+	    destd = ".";
+	}
+    } else if (slcl) {
+	fprintf(stderr, "-i and -U cannot be used together\n");
     }
-    if ((destf = strrchr(destd, '/'))) {
-	*destf++ = 0;
-    } else {
-	destf = destd;
-	destd = ".";
-    }
-
 
     if (!slcl && statfile(srcf, scell, &ssrv, &sf)) {
 	fprintf(stderr, "Cannot get attributes of %s\n", srcf);
 	exit(1);
     }
-    if (!dlcl && statfile(destd, dcell, &dsrv, &dd)) {
+    if (!unlock && !dlcl && statfile(destd, dcell, &dsrv, &dd)) {
 	fprintf(stderr, "Cannot get attributes of %s\n", destd);
 	exit(1);
     }
@@ -308,7 +320,7 @@ main(int argc, char **argv)
 	}
     }
 
-    if (!dlcl) {
+    if (!dlcl && !unlock) {
 	if (!slcl && ssrv == dsrv) {
 	    dconn = sconn;
 	    dsc = NULL;
@@ -343,7 +355,7 @@ main(int argc, char **argv)
 
     memset(&sst, 0, sizeof(struct AFSStoreStatus));
 
-    if (dlcl) {
+    if (dlcl && !unlock) {
 	dfd = open(destpath, O_RDWR | O_CREAT | O_EXCL, 0666);
 	if (dfd < 0 && errno == EEXIST) {
 	    printf("%s already exists, overwriting\n", destpath);
@@ -358,7 +370,7 @@ main(int argc, char **argv)
 		    afs_error_message(errno));
 	    goto Fail_dconn;
 	}
-    } else {
+    } else if (!unlock) {
 	if ((code =
 	     RXAFS_CreateFile(dconn, &dd, destf, &sst, &df, &fst, &dfst, &dcb,
 			      &vs))) {
@@ -410,11 +422,24 @@ main(int argc, char **argv)
     printcallerrs = 0;
     fetchcode = 0;
     storecode = 0;
-    if (!slcl)
+    if (!slcl && !unlock)
 	scall = rx_NewCall(sconn);
-    if (!dlcl)
+    if (!dlcl && !unlock)
 	dcall = rx_NewCall(dconn);
     gettimeofday(&start, &tz);
+    if (unlock) {
+	if (fst.lockCount) {
+	    printf("Sending 1 unlock for %s (%d locks)\n", srcf, fst.lockCount);
+	    if ((code = RXAFS_ReleaseLock(sconn, &sf, &vs))) {
+		printf("Unable to unlock %s (%s)\n", srcf,
+		       afs_error_message(code));
+	    }
+	} else {
+	    printf("No locks for %s\n", srcf);
+	}
+	fetchcode = code;
+	goto Finish;
+    }
 
     if (!slcl) {
 	if ((code = StartRXAFS_FetchData(scall, &sf, 0, filesz))) {
@@ -448,7 +473,7 @@ main(int argc, char **argv)
     if (slcl) {
 	bytesremaining = statbuf.st_size;
     } else {
-	rx_Read(scall, &bytesremaining, sizeof(afs_int32));
+	rx_Read(scall, (char *)&bytesremaining, sizeof(afs_int32));
 	bytesremaining = ntohl(bytesremaining);
     }
 
@@ -504,12 +529,12 @@ main(int argc, char **argv)
     if (dlcl) {
 	if (close(dfd) && !storecode)
 	    storecode = errno;
-    } else {
+    } else if (!unlock) {
 	storecode = rx_EndCall(dcall, storecode);
     }
     if (storecode && printcallerrs)
 	printf("Error returned from store: %s\n", afs_error_message(storecode));
-
+Finish:
     gettimeofday(&finish, &tz);
 
     if (!slcl) {
@@ -540,7 +565,7 @@ main(int argc, char **argv)
 	code = fetchcode;
 
   Fail_dconn:
-    if (!dlcl && (slcl || dconn != sconn))
+    if (!dlcl && !unlock && (slcl || dconn != sconn))
 	rx_DestroyConnection(dconn);
   Fail_sconn:
     if (!slcl)
@@ -554,14 +579,14 @@ main(int argc, char **argv)
     rx_Finalize();
 
     free(databuffer);
-    if (printcallerrs) {
+    if (printcallerrs && !unlock) {
 	double rate, size, time;
 	if (finish.tv_sec == start.tv_sec) {
 	    printf("Copied %d bytes in %d microseconds\n", filesz,
 		   finish.tv_usec - start.tv_usec);
 	} else {
 	    printf("Copied %d bytes in %d seconds\n", filesz,
-		   finish.tv_sec - start.tv_sec);
+		   (int)(finish.tv_sec - start.tv_sec));
 	}
 
 	size = filesz / 1024.0;

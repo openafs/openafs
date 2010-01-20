@@ -137,10 +137,10 @@ osi_FreeLargeSpace(void *adata)
 
     AFS_STATCNT(osi_FreeLargeSpace);
     afs_stats_cmperf.LargeBlocksActive--;
-    MObtainWriteLock(&osi_flplock, 322);
+    ObtainWriteLock(&osi_flplock, 322);
     ((struct osi_packet *)adata)->next = freePacketList;
     freePacketList = adata;
-    MReleaseWriteLock(&osi_flplock);
+    ReleaseWriteLock(&osi_flplock);
 }
 
 void
@@ -151,10 +151,10 @@ osi_FreeSmallSpace(void *adata)
 
     AFS_STATCNT(osi_FreeSmallSpace);
     afs_stats_cmperf.SmallBlocksActive--;
-    MObtainWriteLock(&osi_fsplock, 323);
+    ObtainWriteLock(&osi_fsplock, 323);
     ((struct osi_packet *)adata)->next = freeSmallList;
     freeSmallList = adata;
-    MReleaseWriteLock(&osi_fsplock);
+    ReleaseWriteLock(&osi_fsplock);
 }
 
 
@@ -185,11 +185,11 @@ osi_AllocLargeSpace(size_t size)
 #endif
 	return p;
     }
-    MObtainWriteLock(&osi_flplock, 324);
+    ObtainWriteLock(&osi_flplock, 324);
     tp = freePacketList;
     if (tp)
 	freePacketList = tp->next;
-    MReleaseWriteLock(&osi_flplock);
+    ReleaseWriteLock(&osi_flplock);
     return (char *)tp;
 }
 
@@ -214,11 +214,11 @@ osi_AllocSmallSpace(size_t size)
         return (char *)tp;
     }
     afs_stats_cmperf.SmallBlocksActive++;
-    MObtainWriteLock(&osi_fsplock, 327);
+    ObtainWriteLock(&osi_fsplock, 327);
     tp = freeSmallList;
     if (tp)
 	freeSmallList = tp->next;
-    MReleaseWriteLock(&osi_fsplock);
+    ReleaseWriteLock(&osi_fsplock);
     return (char *)tp;
 }
 

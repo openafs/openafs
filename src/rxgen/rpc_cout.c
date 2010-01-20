@@ -50,6 +50,7 @@ static void print_header(definition * def);
 static void print_trailer(void);
 static void print_ifopen(int indent, char *name);
 static void print_ifarg(char *arg);
+static void print_ifarg_with_cast(int ptr_to, char *type, char *arg);
 static void print_ifsizeof(char *prefix, char *type);
 static void print_ifclose(int indent);
 static void space(void);
@@ -160,6 +161,12 @@ print_ifarg(char *arg)
 
 
 static void
+print_ifarg_with_cast(int ptr_to, char *type, char *arg)
+{
+    f_print(fout, ptr_to ? ", (%s *) %s" : ", (%s) %s", type, arg);
+}
+
+static void
 print_ifsizeof(char *prefix, char *type)
 {
     if (streq(type, "bool")) {
@@ -194,12 +201,12 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	     char *objname, char *name)
 {
     char *alt = NULL;
+    char *altcast = NULL;
 
     switch (rel) {
     case REL_POINTER:
 	print_ifopen(indent, "pointer");
-	print_ifarg("(char **)");
-	f_print(fout, "%s", objname);
+	print_ifarg_with_cast(1, "char *", objname);
 	print_ifsizeof(prefix, type);
 	break;
     case REL_VECTOR:
@@ -207,14 +214,18 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	    alt = "string";
 	} else if (streq(type, "opaque")) {
 	    alt = "opaque";
+            altcast = "caddr_t";
 	}
 	if (alt) {
 	    print_ifopen(indent, alt);
-	    print_ifarg(objname);
+            if (altcast) {
+                print_ifarg_with_cast(0, altcast, objname);
+            } else {
+                print_ifarg(objname);
+            }
 	} else {
 	    print_ifopen(indent, "vector");
-	    print_ifarg("(char *)");
-	    f_print(fout, "%s", objname);
+	    print_ifarg_with_cast(1, "char", objname);
 	}
 	print_ifarg(amax);
 	if (!alt) {
@@ -233,10 +244,11 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	} else {
 	    if (alt) {
 		print_ifopen(indent, alt);
+                print_ifarg("(char **)");
 	    } else {
 		print_ifopen(indent, "array");
+                print_ifarg("(caddr_t *)");
 	    }
-	    print_ifarg("(char **)");
 	    if (*objname == '&') {
 		f_print(fout, "%s.%s_val, (u_int *)%s.%s_len", objname, name,
 			objname, name);
@@ -252,7 +264,7 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	break;
     case REL_ALIAS:
 	print_ifopen(indent, type);
-	print_ifarg(objname);
+        print_ifarg_with_cast(1, type, objname);
 	break;
     }
     print_ifclose(indent);

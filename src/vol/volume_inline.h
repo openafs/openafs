@@ -11,6 +11,81 @@
 #define _AFS_VOL_VOLUME_INLINE_H 1
 
 #include "volume.h"
+/**
+ * tell caller whether the given program type represents a salvaging
+ * program.
+ *
+ * @param type  program type enumeration
+ *
+ * @return whether program state is a salvager
+ *   @retval 0  type is a non-salvaging program
+ *   @retval 1  type is a salvaging program
+ */
+static_inline int
+VIsSalvager(ProgramType type)
+{
+    switch(type) {
+    case salvager:
+    case salvageServer:
+    case volumeSalvager:
+	return 1;
+    default:
+	return 0;
+    }
+}
+
+/**
+ * tells caller whether or not we need to lock the entire partition when
+ * attaching a volume.
+ *
+ * @return whether or not we need to lock the partition
+ *  @retval 0  no, we do not
+ *  @retval 1  yes, we do
+ */
+static_inline int
+VRequiresPartLock(void)
+{
+    switch (programType) {
+    case volumeServer:
+    case volumeUtility:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+/**
+ * tells caller whether we should check the inUse field in the volume
+ * header when attaching a volume.
+ *
+ * If we check inUse, that generally means we will salvage the volume
+ * (or put it in an error state) if we detect that another program
+ * claims to be using the volume when we try to attach. We don't always
+ * want to do that, since sometimes we know that the volume may be in
+ * use by another program, e.g. when we are attaching with V_PEEK, and
+ * we don't care.
+ *
+ * @param mode  the mode of attachment for the volume
+ *
+ * @return whether or not we should check inUse
+ *  @retval 0  no, we should not check inUse
+ *  @retval 1  yes, we should check inUse
+ */
+static_inline int
+VShouldCheckInUse(int mode)
+{
+    if (programType == fileServer) {
+       return 1;
+    }
+    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
+       /* If we can FSSYNC, we assume we checked out the volume from
+        * the fileserver, so inUse should not be set. If we checked out
+        * with V_SECRETLY or V_PEEK, though, we didn't ask the
+        * fileserver, so don't check inUse. */
+       return 1;
+    }
+    return 0;
+}
 
 /***************************************************/
 /* demand attach fs state machine routines         */
@@ -45,9 +120,11 @@ VIsExclusiveState(VolState state)
     case VOL_STATE_VNODE_GET:
     case VOL_STATE_VNODE_CLOSE:
     case VOL_STATE_VNODE_RELEASE:
+    case VOL_STATE_VLRU_ADD:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**
@@ -68,8 +145,9 @@ VIsErrorState(VolState state)
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**
@@ -91,8 +169,9 @@ VIsOfflineState(VolState state)
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**

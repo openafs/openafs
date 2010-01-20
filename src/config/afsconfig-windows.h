@@ -33,6 +33,9 @@
 /* Define as the return type of signal handlers (int or void).  */
 #undef RETSIGTYPE
 
+/* The size of `long', as computed by sizeof. */
+#define SIZEOF_LONG 4
+
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 //#undef size_t unsigned int 
 
@@ -45,20 +48,8 @@
 /* Define if you have the connect function.  */
 #undef HAVE_CONNECT
 
-/* Define if you have the getdtablesize function.  */
-#undef HAVE_GETDTABLESIZE
-
 /* Define if you have the gethostbyname function.  */
 #define HAVE_GETHOSTBYNAME
-
-/* Define if you have the random function.  */
-#define HAVE_RANDOM
-
-/* Define if you have the re_comp function.  */
-#undef HAVE_RE_COMP
-
-/* Define if you have the re_exec function.  */
-#undef HAVE_RE_EXEC
 
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
@@ -69,12 +60,6 @@
 /* Define if you have the socket function.  */
 #define HAVE_SOCKET
 
-/* Define if you have the srandom function.  */
-#undef HAVE_SRANDOM
-
-/* Define if you have the utimes function.  */
-#define HAVE_UTIMES
-
 /* Define if you have the <direct.h> header file.  */
 #undef HAVE_DIRECT_H
 
@@ -83,12 +68,6 @@
 
 /* Define if you have the <fcntl.h> header file.  */
 #define HAVE_FCNTL_H
-
-/* Define if you have the <io.h> header file.  */
-#define HAVE_IO_H
-
-/* Define if you have the <malloc.h> header file.  */
-#define HAVE_MALLOC_H
 
 /* Define if you have the <mntent.h> header file.  */
 #undef HAVE_MNTENT_H
@@ -104,9 +83,6 @@
 
 /* Define if you have the <security/pam_modules.h> header file.  */
 #undef HAVE_SECURITY_PAM_MODULES_H
-
-/* Define if you have the <siad.h> header file.  */
-#undef HAVE_SIAD_H
 
 /* Define if you have the <signal.h> header file.  */
 #define HAVE_SIGNAL_H
@@ -159,9 +135,6 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the <usersec.h> header file.  */
-#undef HAVE_USERSEC_H
-
 /* Define if you have the <windows.h> header file.  */
 #define HAVE_WINDOWS_H
 
@@ -207,10 +180,7 @@
 # endif
 #endif
 
-/*#undef AFS_AFSDB_ENV*/
-#define AFS_AFSDB_ENV 1
 #undef AFS_NAMEI_ENV
-#define BOS_RESTRICTED_MODE
 
 #undef FAST_RESTART
 #undef BITMAP_LATER
@@ -225,9 +195,6 @@
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 #include "redhat-fix.h"
 #endif
-
-/* include all of the vos listvol options */
-#define FULL_LISTVOL_SWITCH 1
 
 /* Windows does not provide socklen_t */
 typedef unsigned int socklen_t;

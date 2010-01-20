@@ -1,0 +1,89 @@
+#
+# This is a dot (http://www.graphviz.org) description of the various
+# states volumes can be in for DAFS (Demand Attach File Server).
+#
+# Author: Tom Keiser
+# Date: 2008-06-03
+#
+
+digraph VolumeStates {
+	size="11,17"
+	graph [
+		rankdir = "TB"
+	];
+
+	subgraph clusterKey {
+		rankdir="LR";
+		shape = "rectangle";
+
+	s1 [ shape=plaintext, label = "VAllocVnode",
+			fontcolor="brown" ];
+	s2 [ shape=plaintext, label = "VGetVnode",
+			fontcolor="blue" ];
+	s3 [ shape=plaintext, label = "VPutVnode",
+			fontcolor="purple" ];
+	s4 [ shape=plaintext, label = "Error States",
+			fontcolor="red" ];
+	s5 [ shape=plaintext, label = "VVnodeWriteToRead",
+			fontcolor="green" ];
+	s6 [ shape=ellipse, label = "re-entrant" ];
+	s7 [ shape=ellipse, peripheries=2, label="non re-entrant" ];
+	s8 [ shape=ellipse, color="red", label="Error States" ];
+
+	s6->s7->s8->s1->s2->s3->s5->s4 [style="invis"];
+
+	}
+
+	node [ peripheries = "2" ] \
+		RELEASING ALLOC LOADING EXCLUSIVE STORE ;
+	node [ shape = "ellipse", peripheries = "1" ];
+	node [ color = "red" ] ERROR ;
+
+	node [ color = "black" ]; // default back to black
+
+
+	// node descriptions
+	INVALID [ label = "Vn_state(vnp) == VN_STATE_INVALID\n(vnode cache entry is invalid)" ];
+	RELEASING [ label = "Vn_state(vnp) == VN_STATE_RELEASING\n(vnode is busy releasing its inode handle ref)" ];
+	ALLOC [ label = "Vn_state(vnp) == VN_STATE_ALLOC\n(vnode is busy allocating disk entry)" ];
+	ALLOC_read [ label = "reading stale vnode from disk\nto verify inactive state" ];
+	ALLOC_extend [ label = "extending vnode index file" ];
+	ONLINE [ label = "Vn_state(vnp) == VN_STATE_ONLINE\n(vnode is a valid cache entry)" ];
+	LOADING [ label = "Vn_state(vnp) == VN_STATE_LOAD\n(vnode is busy loading from disk)" ];
+	EXCLUSIVE [ label = "Vn_state(vnp) == VN_STATE_EXCLUSIVE\n(vnode is owned exclusively by an external caller)" ];
+	STORE [ label = "Vn_state(vnp) == VN_STATE_STORE\n(vnode is busy writing to disk)" ];
+	READ [ label = "Vn_state(vnp) == VN_STATE_READ\n(vnode is shared by several external callers)" ];
+	ERROR [ label = "Vn_state(vnp) == VN_STATE_ERROR\n(vnode hard error state)" ];
+
+
+	ONLINE->RELEASING [ label = "VGetFreeVnode_r()" ];
+	RELEASING->INVALID [ label = "VGetFreeVnode_r()" ];
+
+	INVALID->ALLOC [ color="brown", label="vnode not in cache; allocating" ];
+	ONLINE->EXCLUSIVE [ color="brown", label="vnode in cache" ];
+	ALLOC->ALLOC_read [ color="brown", label="vnode index is within present file size" ];
+	ALLOC->ALLOC_extend [ color="brown", label="vnode index is beyond end of file" ];
+	ALLOC_read->EXCLUSIVE [ color="brown" ];
+	ALLOC_extend->EXCLUSIVE [ color="brown" ];
+	ALLOC_read->INVALID [ color="red", label="I/O error; invalidating vnode\nand scheduling salvage" ];
+	ALLOC_extend->INVALID [ color="red", label="I/O error; invalidating vnode\nand scheduling salvage" ];
+
+	INVALID->LOADING [ color="blue", label="vnode not cached" ];
+	LOADING->INVALID [ color="red", label="I/O error; invalidating vnode\nand scheduling salvage" ];
+	LOADING->ONLINE [ color="blue" ];
+	ONLINE->READ [ color="blue", label="caller requested read lock" ];
+	ONLINE->EXCLUSIVE [ color="blue", label="caller requested write lock" ];
+
+	EXCLUSIVE->READ [ color="green", label="vnode not changed" ];
+	EXCLUSIVE->STORE [ color="green", label="vnode changed" ];
+	EXCLUSIVE->ONLINE [ color="purple", label="vnode not changed" ];
+	EXCLUSIVE->STORE [ color="purple", label="vnode changed" ];
+
+	STORE->READ [ color="green" ];
+	STORE->ONLINE [ color="purple" ];
+	STORE->ERROR [ color="red", label="I/O error; scheduling salvage" ];
+
+	READ->READ [ color="blue", label="Vn_readers(vnp) > 0" ];
+	READ->READ [ color="purple", label="Vn_readers(vnp) > 1" ];
+	READ->ONLINE [ color="purple", label="Vn_readers(vnp) == 1" ];
+}

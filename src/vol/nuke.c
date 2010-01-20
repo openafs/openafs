@@ -33,7 +33,6 @@
 
 #include <afs/afsutil.h>
     
-#include <afs/assert.h>
 #include "nfs.h"
 #include "lwp.h"
 #include "lock.h"

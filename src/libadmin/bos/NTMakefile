@@ -46,6 +46,7 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 	$(MAKECYGLIB) --input-def bosadmin.def
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp

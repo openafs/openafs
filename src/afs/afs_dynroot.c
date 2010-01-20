@@ -87,7 +87,7 @@ static int
 afs_dynrootCellInit(void)
 {
     if (!afs_dynrootCell) {
-	afs_int32 cellHosts[MAXCELLHOSTS];
+	afs_int32 cellHosts[AFS_MAXCELLHOSTS];
 	struct cell *tc;
 	int code;
 
@@ -789,7 +789,7 @@ afs_GetDynrootEnable(void)
  * Remove a temporary symlink entry from /afs.
  */
 int
-afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname)
+afs_DynrootVOPRemove(struct vcache *avc, afs_ucred_t *acred, char *aname)
 {
     struct afs_dynSymlink **tpps;
     struct afs_dynSymlink *tps;
@@ -798,7 +798,7 @@ afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname)
 #if defined(AFS_SUN510_ENV)
     if (crgetruid(acred))
 #else
-    if (acred->cr_uid)
+    if (afs_cr_uid(acred))
 #endif
 	return EPERM;
 
@@ -833,12 +833,12 @@ afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname)
  * Create a temporary symlink entry in /afs.
  */
 int
-afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred,
+afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
 		      char *aname, char *atargetName)
 {
     struct afs_dynSymlink *tps;
 
-    if (acred->cr_uid)
+    if (afs_cr_uid(acred))
 	return EPERM;
     if (afs_CellOrAliasExists(aname))
 	return EEXIST;

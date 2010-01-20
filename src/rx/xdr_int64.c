@@ -73,9 +73,9 @@ xdr_afs_uint64(XDR * xdrs, afs_uint64 * ulp)
     afs_uint32 low;
 
     if (xdrs->x_op == XDR_DECODE) {
-	if (!XDR_GETINT32(xdrs, (afs_uint32 *) & high))
+	if (!XDR_GETINT32(xdrs, (afs_int32 *) & high))
 	    return (FALSE);
-	if (!XDR_GETINT32(xdrs, (afs_uint32 *) & low))
+	if (!XDR_GETINT32(xdrs, (afs_int32 *) & low))
 	    return (FALSE);
 	*ulp = high;
 	*ulp <<= 32;
@@ -85,9 +85,9 @@ xdr_afs_uint64(XDR * xdrs, afs_uint64 * ulp)
     if (xdrs->x_op == XDR_ENCODE) {
 	high = (afs_uint32) (*ulp >> 32);
 	low = (afs_uint32) (*ulp & 0xFFFFFFFFL);
-	if (!XDR_PUTINT32(xdrs, (afs_uint32 *) & high))
+	if (!XDR_PUTINT32(xdrs, (afs_int32 *) & high))
 	    return (FALSE);
-	return (XDR_PUTINT32(xdrs, (afs_uint32 *) & low));
+	return (XDR_PUTINT32(xdrs, (afs_int32 *) & low));
     }
     if (xdrs->x_op == XDR_FREE)
 	return (TRUE);

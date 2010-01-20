@@ -69,6 +69,9 @@
 #include <sys/un.h>
 #endif
 
+#ifndef WCOREDUMP
+#define WCOREDUMP(x)    ((x) & 0200)
+#endif
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
@@ -108,7 +111,6 @@ static int AddToSalvageQueue(struct SalvageQueueNode * node);
 static void DeleteFromSalvageQueue(struct SalvageQueueNode * node);
 static void AddToPendingQueue(struct SalvageQueueNode * node);
 static void DeleteFromPendingQueue(struct SalvageQueueNode * node);
-static struct SalvageQueueNode * LookupPendingCommand(SALVSYNC_command_hdr * qry);
 static struct SalvageQueueNode * LookupPendingCommandByPid(int pid);
 static void UpdateCommandPrio(struct SalvageQueueNode * node);
 static void HandlePrio(struct SalvageQueueNode * clone, 
@@ -123,7 +125,6 @@ static struct SalvageQueueNode * LookupNode(VolumeId vid, char * partName,
 static struct SalvageQueueNode * LookupNodeByCommand(SALVSYNC_command_hdr * qry,
 						     struct SalvageQueueNode ** parent);
 static void AddNodeToHash(struct SalvageQueueNode * node);
-static void DeleteNodeFromHash(struct SalvageQueueNode * node);
 
 static afs_int32 SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res);
 static afs_int32 SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res);
@@ -189,6 +190,9 @@ static struct QueueHead pendingQueue;  /* volumes being salvaged */
  */
 static int partition_salvaging[VOLMAXPARTS+1];
 
+static int HandlerFD[MAXHANDLERS];
+static void (*HandlerProc[MAXHANDLERS]) (int);
+
 #define VSHASH_SIZE 64
 #define VSHASH_MASK (VSHASH_SIZE-1)
 #define VSHASH(vid) ((vid)&VSHASH_MASK)
@@ -247,6 +251,7 @@ AddNodeToHash(struct SalvageQueueNode * node)
     SalvageHashTable[idx].len++;
 }
 
+#if 0
 static void
 DeleteNodeFromHash(struct SalvageQueueNode * node)
 {
@@ -259,6 +264,7 @@ DeleteNodeFromHash(struct SalvageQueueNode * node)
     queue_Remove(&node->hash_chain);
     SalvageHashTable[idx].len--;
 }
+#endif
 
 void
 SALVSYNC_salvInit(void)
@@ -292,17 +298,34 @@ SALVSYNC_salvInit(void)
     assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
 }
 
+static void
+CleanFDs(void)
+{
+    int i;
+    for (i = 0; i < MAXHANDLERS; ++i) {
+	if (HandlerFD[i] >= 0) {
+	    SALVSYNC_Drop(HandlerFD[i]);
+	}
+    }
+
+    /* just in case we were in AcceptOff mode, and thus this fd wouldn't
+     * have a handler */
+    close(salvsync_server_state.fd);
+    salvsync_server_state.fd = -1;
+}
 
 static fd_set SALVSYNC_readfds;
 
 static void *
 SALVSYNC_syncThread(void * args)
 {
-    int on = 1;
     int code;
-    int numTries;
-    int tid;
     SYNC_server_state_t * state = &salvsync_server_state;
+
+    /* when we fork, the child needs to close the salvsync server sockets,
+     * otherwise, it may get salvsync requests, instead of the parent
+     * salvageserver */
+    assert(pthread_atfork(NULL, NULL, CleanFDs) == 0);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -339,7 +362,9 @@ SALVSYNC_newconnection(int afd)
 #else  /* USE_UNIX_SOCKETS */
     struct sockaddr_in other;
 #endif
-    int junk, fd;
+    int fd;
+    socklen_t junk;
+
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == -1) {
@@ -362,6 +387,12 @@ SALVSYNC_com(osi_socket fd)
     SALVSYNC_command scom;
     SALVSYNC_response sres;
     SYNC_PROTO_BUF_DECL(buf);
+
+    memset(&com, 0, sizeof(com));
+    memset(&res, 0, sizeof(res));
+    memset(&scom, 0, sizeof(scom));
+    memset(&sres, 0, sizeof(sres));
+    memset(&sres_hdr, 0, sizeof(sres_hdr));
     
     com.payload.buf = (void *)buf;
     com.payload.len = SYNC_PROTO_MAX_LEN;
@@ -402,7 +433,10 @@ SALVSYNC_com(osi_socket fd)
     if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
 	res.hdr.response = SYNC_OK;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
-	goto respond;
+
+	/* don't respond, just drop; senders of SYNC_COM_CHANNEL_CLOSE
+	 * never wait for a response. */
+	goto done;
     }
 
     if (com.recv_len != (sizeof(com.hdr) + sizeof(SALVSYNC_command_hdr))) {
@@ -450,6 +484,8 @@ SALVSYNC_com(osi_socket fd)
 
  respond:
     SYNC_putRes(&salvsync_server_state, fd, &res);
+
+ done:
     if (res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN) {
 	SALVSYNC_Drop(fd);
     }
@@ -758,9 +794,6 @@ AcceptOff(void)
 
 /* The multiple FD handling code. */
 
-static int HandlerFD[MAXHANDLERS];
-static void (*HandlerProc[MAXHANDLERS]) (int);
-
 static void
 InitHandler(void)
 {
@@ -983,6 +1016,8 @@ HandlePrio(struct SalvageQueueNode * clone,
     case SALVSYNC_STATE_UNKNOWN:
 	node->command.sop.prio = 0;
 	break;
+    default:
+	break;
     }
 
     if (new_prio < clone->command.sop.prio) {
@@ -1068,6 +1103,7 @@ DeleteFromPendingQueue(struct SalvageQueueNode * node)
     }
 }
 
+#if 0
 static struct SalvageQueueNode *
 LookupPendingCommand(SALVSYNC_command_hdr * qry)
 {
@@ -1084,6 +1120,7 @@ LookupPendingCommand(SALVSYNC_command_hdr * qry)
 	np = NULL;
     return np;
 }
+#endif
 
 static struct SalvageQueueNode *
 LookupPendingCommandByPid(int pid)
@@ -1136,10 +1173,10 @@ UpdateCommandPrio(struct SalvageQueueNode * node)
 struct SalvageQueueNode * 
 SALVSYNC_getWork(void)
 {
-    int i, ret;
+    int i;
     struct DiskPartition64 * dp = NULL, * fdp;
     static afs_int32 next_part_sched = 0;
-    struct SalvageQueueNode *node = NULL, *np;
+    struct SalvageQueueNode *node = NULL;
 
     VOL_LOCK;
 
@@ -1218,7 +1255,6 @@ SALVSYNC_getWork(void)
 	}
     }
 
- bail:
     VOL_UNLOCK;
     return node;
 }

@@ -155,10 +155,11 @@
 typedef unsigned int fsblkcnt_t;
 #endif
 
-#ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
+#ifdef HAVE_ARPA_NAMESER_COMPAT_H
+#include <arpa/nameser_compat.h>
+#endif
 #include <resolv.h>
-#endif /* AFS_AFSDB_ENV */
 
 /* glibc 2.2 has pthread_attr_setstacksize */
 #if (defined(AFS_LINUX22_ENV) && !defined(AFS_USR_LINUX22_ENV)) || (defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2))
@@ -220,9 +221,9 @@ typedef unsigned int fsblkcnt_t;
 #define vattr			usr_vattr
 #define buf			usr_buf
 #define statfs			usr_statfs
-#define ucred			usr_ucred
+/* #define ucred		usr_ucred */
 #define user			usr_user
-#define proc			usr_proc
+/* #define proc			usr_proc */
 #define file			usr_file
 #define dirent			usr_dirent
 #define flock			usr_flock
@@ -253,6 +254,7 @@ typedef unsigned int fsblkcnt_t;
 #define offset_t		usr_offset_t
 #define getpid()		usr_getpid()
 #define setpag(A,B,C,D)		usr_setpag((A),(B),(C),(D))
+#define osi_getpid()	        afs_pointer_to_int(usr_thread_self())
 #ifdef pid_t
 #undef pid_t
 #endif
@@ -840,7 +842,7 @@ enum usr_uio_rw { USR_UIO_READ, USR_UIO_WRITE };
 #endif
 #define NBPG			4096
 
-#define panic(S)		do{fprintf(stderr, S);assert(0);}while(0)
+#define panic(S)		do{fprintf(stderr, "%s", S);assert(0);}while(0)
 #define abort()			assert(0)
 #define usr_assert(A)		assert(A)
 
@@ -1221,44 +1223,44 @@ struct usr_socket {
 ((sizeof (struct usr_dirent)+4 - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 
 struct vcache;
-#define AFS_UCRED usr_ucred
+#define afs_ucred_t struct usr_ucred
 #define AFS_FLOCK       flock
 
 
 struct usr_vnodeops {
-    int (*vn_open) (struct vcache **, afs_int32, struct AFS_UCRED *);
-    int (*vn_close) (struct vcache *, afs_int32, struct AFS_UCRED *);
+    int (*vn_open) (struct vcache **, afs_int32, afs_ucred_t *);
+    int (*vn_close) (struct vcache *, afs_int32, afs_ucred_t *);
     int (*vn_rdwr) (struct usr_vnode *avc, struct usr_uio *uio, 
 		    int rw, int io, struct usr_ucred *cred);
     int (*vn_ioctl) (void);
     int (*vn_select) (void);
-    int (*vn_getattr) (struct vcache *avc, struct vattr *, struct AFS_UCRED *);
-    int (*vn_setattr) (struct vcache *avc, struct vattr *, struct AFS_UCRED *);
-    int (*vn_access) (struct vcache *avc, afs_int32, struct AFS_UCRED *);
+    int (*vn_getattr) (struct vcache *avc, struct vattr *, afs_ucred_t *);
+    int (*vn_setattr) (struct vcache *avc, struct vattr *, afs_ucred_t *);
+    int (*vn_access) (struct vcache *avc, afs_int32, afs_ucred_t *);
     int (*vn_lookup) (struct vcache *adp, char *, struct vcache **, 
-		      struct AFS_UCRED *, int);
+		      afs_ucred_t *, int);
     int (*vn_create) (struct vcache *adp, char *, struct vattr *, 
-		      enum vcexcl, int, struct vcache **, struct AFS_UCRED *);
-    int (*vn_remove) (struct vcache *adp, char *, struct AFS_UCRED *);
+		      enum vcexcl, int, struct vcache **, afs_ucred_t *);
+    int (*vn_remove) (struct vcache *adp, char *, afs_ucred_t *);
     int (*vn_link) (struct vcache *avc, struct vcache *adp, char *, 
-		    struct AFS_UCRED *);
+		    afs_ucred_t *);
     int (*vn_rename) (struct vcache *aodp, char *, struct vcache *, char *,
-		      struct AFS_UCRED *);
+		      afs_ucred_t *);
     int (*vn_mkdir) (struct vcache *adp, char *, struct vattr *, 
-		     struct vcache **, struct AFS_UCRED *);
-    int (*vn_rmdir) (struct vcache *adp, char *, struct AFS_UCRED *);
-    int (*vn_readdir) (struct vcache *avc, struct uio *, struct AFS_UCRED *);
+		     struct vcache **, afs_ucred_t *);
+    int (*vn_rmdir) (struct vcache *adp, char *, afs_ucred_t *);
+    int (*vn_readdir) (struct vcache *avc, struct uio *, afs_ucred_t *);
     int (*vn_symlink) (struct vcache *adp, char *, struct vattr *, char *,
-		       struct AFS_UCRED *);
-    int (*vn_readlink) (struct vcache *avc, struct uio *, struct AFS_UCRED *);
-    int (*vn_fsync) (struct vcache *avc, struct AFS_UCRED *);
-    int (*vn_inactive) (struct vcache *avc, struct AFS_UCRED *acred);
+		       afs_ucred_t *);
+    int (*vn_readlink) (struct vcache *avc, struct uio *, afs_ucred_t *);
+    int (*vn_fsync) (struct vcache *avc, afs_ucred_t *);
+    int (*vn_inactive) (struct vcache *avc, afs_ucred_t *acred);
     int (*vn_bmap) (void);
     int (*vn_strategy) (void);
     int (*vn_bread) (void);
     int (*vn_brelse) (void);
     int (*vn_lockctl) (struct vcache *, struct AFS_FLOCK *, int,
-		       struct AFS_UCRED *);
+		       afs_ucred_t *);
     int (*vn_fid) (struct vcache *avc, struct fid **);
 };
 
@@ -1278,7 +1280,7 @@ extern struct usr_mount *getmp(unsigned long);
 typedef long usr_whymountroot_t;
 
 struct usr_vfsops {
-    int (*vfs_mount) (struct vfs *, char *, struct vfs *);
+    int (*vfs_mount) (struct vfs *, char *, void *);
     int (*vfs_unmount) (struct vfs *);
     int (*vfs_root) (struct vfs *, struct vnode **);
     int (*vfs_statfs) (struct vfs *, struct statfs *);
@@ -1348,7 +1350,7 @@ extern long V;
 #endif /* UKERNEL */
 
 struct min_direct {
-#if defined(AFS_OFS_ENV) || defined(AFS_USR_OSF_ENV)
+#if defined(AFS_USR_OSF_ENV)
     unsigned int d_fileno;
 #else				/* AFS_OFS_ENV || AFS_USR_OSF_ENV */
     unsigned long d_fileno;

@@ -6,7 +6,7 @@
 #include <time.h>
 #include <string.h>
 #include <errno.h>
-#include <asn1_err.h>
+#include "asn1_err.h"
 
 #define BACK if (e) return e; p -= l; len -= l; ret += l
 

@@ -17,11 +17,13 @@ $(OUT)\dirpath_test.exe: $(OUT)\dirpath_test.obj $(LIBS)
 	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\snprintf_test.exe: $(OUT)\snprintf_test.obj $(LIBS)
 	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 test tests: $(OUT)\dirpath_test.exe  $(OUT)\snprintf_test.exe
 

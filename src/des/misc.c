@@ -14,11 +14,11 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #ifndef KERNEL
 #include <stdio.h>
 #endif
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 #include "des_prototypes.h"
 

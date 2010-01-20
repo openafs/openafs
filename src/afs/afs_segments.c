@@ -134,8 +134,6 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 
 }				/*afs_StoreMini */
 
-unsigned int storeallmissing = 0;
-#define lmin(a,b) (((a) < (b)) ? (a) : (b))
 /*
  * afs_StoreAllSegments
  *
@@ -165,21 +163,13 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     register afs_int32 code = 0;
     register afs_int32 index;
     register afs_int32 origCBs, foreign = 0;
-    int hash, stored;
+    int hash;
     afs_hyper_t newDV, oldDV;	/* DV when we start, and finish, respectively */
-    struct dcache **dcList, **dclist;
+    struct dcache **dcList;
     unsigned int i, j, minj, moredata, high, off;
     afs_size_t tlen;
     afs_size_t maxStoredLength;	/* highest offset we've written to server. */
     int safety;
-#ifndef AFS_NOSTATS
-    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
-      xferStopTime;		/*FS xfer stop time */
-    afs_size_t bytesToXfer;	/* # bytes to xfer */
-    afs_size_t bytesXferred;	/* # bytes actually xferred */
-#endif /* AFS_NOSTATS */
-
 
     AFS_STATCNT(afs_StoreAllSegments);
 
@@ -248,13 +238,13 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     minj = 0;
 
     do {
-	memset((char *)dcList, 0, NCHUNKSATONCE * sizeof(struct dcache *));
+	memset(dcList, 0, NCHUNKSATONCE * sizeof(struct dcache *));
 	high = 0;
 	moredata = FALSE;
 
 	/* lock and start over from beginning of hash chain 
 	 * in order to avoid a race condition. */
-	MObtainWriteLock(&afs_xdcache, 284);
+	ObtainWriteLock(&afs_xdcache, 284);
 	index = afs_dvhashTbl[hash];
 
 	for (j = 0; index != NULLIDX;) {
@@ -292,357 +282,16 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    }
 	    index = afs_dvnextTbl[index];
 	}
-	MReleaseWriteLock(&afs_xdcache);
+	ReleaseWriteLock(&afs_xdcache);
 
 	/* this guy writes chunks, puts back dcache structs, and bumps newDV */
 	/* "moredata" just says "there are more dirty chunks yet to come".
 	 */
 	if (j) {
-#ifdef AFS_NOSTATS
-	    static afs_uint32 lp1 = 10000, lp2 = 10000;
-#endif
-	    struct AFSStoreStatus InStatus;
-	    struct AFSFetchStatus OutStatus;
-	    int doProcessFS = 0;
-	    afs_size_t base, bytes;
-	    afs_uint32 nchunks;
-	    int nomore;
-	    unsigned int first = 0;
-	    int *shouldwake;
-	    struct afs_conn *tc;
-	    struct osi_file *tfile;
-	    struct rx_call *tcall;
-	    XSTATS_DECLS;
-	    for (bytes = 0, j = 0; !code && j <= high; j++) {
-		if (dcList[j]) {
-		    ObtainSharedLock(&(dcList[j]->lock), 629);
-		    if (!bytes)
-			first = j;
-		    bytes += dcList[j]->f.chunkBytes;
-		    if ((dcList[j]->f.chunkBytes < afs_OtherCSize)
-			&& (dcList[j]->f.chunk - minj < high)
-			&& dcList[j + 1]) {
-			int sbytes = afs_OtherCSize - dcList[j]->f.chunkBytes;
-			bytes += sbytes;
-		    }
-		}
-		if (bytes && (j == high || !dcList[j + 1])) {
-		    /* base = AFS_CHUNKTOBASE(dcList[first]->f.chunk); */
-		    base = AFS_CHUNKTOBASE(first + minj);
-		    /*
-		     * 
-		     * take a list of dcache structs and send them all off to the server
-		     * the list must be in order, and the chunks contiguous.
-		     * Note - there is no locking done by this code currently.  For
-		     * safety's sake, xdcache could be locked over the entire call.
-		     * However, that pretty well ties up all the threads.  Meantime, all
-		     * the chunks _MUST_ have their refcounts bumped.
-		     * The writes done before a store back will clear setuid-ness
-		     * in cache file.
-		     * We can permit CacheStoreProc to wake up the user process IFF we 
-		     * are doing the last RPC for this close, ie, storing back the last 
-		     * set of contiguous chunks of a file.
-		     */
-
-		    dclist = &dcList[first];
-		    nchunks = 1 + j - first;
-		    nomore = !(moredata || (j != high));
-		    InStatus.ClientModTime = avc->f.m.Date;
-		    InStatus.Mask = AFS_SETMODTIME;
-		    if (sync & AFS_SYNC) {
-			InStatus.Mask |= AFS_FSYNC;
-		    }
-		    tlen = lmin(avc->f.m.Length, avc->f.truncPos);
-		    afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64,
-			       ICL_TYPE_FID, &avc->f.fid.Fid, ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(base), ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(bytes), ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(tlen));
-
-		    do {
-			stored = 0;
-			tc = afs_Conn(&avc->f.fid, areq, 0);
-			if (tc) {
-#ifdef AFS_64BIT_CLIENT
-			  restart:
-#endif
-			    RX_AFS_GUNLOCK();
-			    tcall = rx_NewCall(tc->id);
-#ifdef AFS_64BIT_CLIENT
-			    if (!afs_serverHasNo64Bit(tc)) {
-				code =
-				    StartRXAFS_StoreData64(tcall,
-							   (struct AFSFid *)
-							   &avc->f.fid.Fid,
-							   &InStatus, base,
-							   bytes, tlen);
-			    } else {
-				if (tlen > 0xFFFFFFFF) {
-				    code = EFBIG;
-				} else {
-				    afs_int32 t1, t2, t3;
-				    t1 = base;
-				    t2 = bytes;
-				    t3 = tlen;
-				    code =
-					StartRXAFS_StoreData(tcall,
-							     (struct AFSFid *)
-							     &avc->f.fid.Fid,
-							     &InStatus, t1,
-							     t2, t3);
-				}
-			    }
-#else /* AFS_64BIT_CLIENT */
-			    code =
-				StartRXAFS_StoreData(tcall,
-						     (struct AFSFid *)&avc->
-						     f.fid.Fid, &InStatus, base,
-						     bytes, tlen);
-#endif /* AFS_64BIT_CLIENT */
-			    RX_AFS_GLOCK();
-			} else {
-			    code = -1;
-			    tcall = NULL;
-			}
-			if (!code) {
-			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
-			    avc->f.truncPos = AFS_NOTRUNC;
-			}
-			for (i = 0; i < nchunks && !code; i++) {
-			    tdc = dclist[i];
-			    if (!tdc) {
-				afs_warn("afs: missing dcache!\n");
-				storeallmissing++;
-				continue;	/* panic? */
-			    }
-			    afs_Trace4(afs_iclSetp, CM_TRACE_STOREALL2,
-				       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
-				       tdc->f.chunk, ICL_TYPE_INT32,
-				       tdc->index, ICL_TYPE_INT32,
-				       afs_inode2trace(&tdc->f.inode));
-			    shouldwake = 0;
-			    if (nomore) {
-				if (avc->asynchrony == -1) {
-				    if (afs_defaultAsynchrony >
-					(bytes - stored)) {
-					shouldwake = &nomore;
-				    }
-				} else if ((afs_uint32) avc->asynchrony >=
-					   (bytes - stored)) {
-				    shouldwake = &nomore;
-				}
-			    }
-			    tfile = afs_CFileOpen(&tdc->f.inode);
-#ifndef AFS_NOSTATS
-			    xferP =
-				&(afs_stats_cmfullperf.rpc.
-				  fsXferTimes
-				  [AFS_STATS_FS_XFERIDX_STOREDATA]);
-			    osi_GetuTime(&xferStartTime);
-
-			    code =
-				afs_CacheStoreProc(tcall, tfile,
-						   tdc->f.chunkBytes, avc,
-						   shouldwake, &bytesToXfer,
-						   &bytesXferred);
-
-			    osi_GetuTime(&xferStopTime);
-			    (xferP->numXfers)++;
-			    if (!code) {
-				(xferP->numSuccesses)++;
-				afs_stats_XferSumBytes
-				    [AFS_STATS_FS_XFERIDX_STOREDATA] +=
-				    bytesXferred;
-				(xferP->sumBytes) +=
-				    (afs_stats_XferSumBytes
-				     [AFS_STATS_FS_XFERIDX_STOREDATA] >> 10);
-				afs_stats_XferSumBytes
-				    [AFS_STATS_FS_XFERIDX_STOREDATA] &= 0x3FF;
-				if (bytesXferred < xferP->minBytes)
-				    xferP->minBytes = bytesXferred;
-				if (bytesXferred > xferP->maxBytes)
-				    xferP->maxBytes = bytesXferred;
-
-				/*
-				 * Tally the size of the object.  Note: we tally the actual size,
-				 * NOT the number of bytes that made it out over the wire.
-				 */
-				if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
-				    (xferP->count[0])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET1)
-				    (xferP->count[1])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET2)
-				    (xferP->count[2])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET3)
-				    (xferP->count[3])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET4)
-				    (xferP->count[4])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET5)
-				    (xferP->count[5])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET6)
-				    (xferP->count[6])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET7)
-				    (xferP->count[7])++;
-				else
-				    (xferP->count[8])++;
-
-				afs_stats_GetDiff(elapsedTime, xferStartTime,
-						  xferStopTime);
-				afs_stats_AddTo((xferP->sumTime),
-						elapsedTime);
-				afs_stats_SquareAddTo((xferP->sqrTime),
-						      elapsedTime);
-				if (afs_stats_TimeLessThan
-				    (elapsedTime, (xferP->minTime))) {
-				    afs_stats_TimeAssign((xferP->minTime),
-							 elapsedTime);
-				}
-				if (afs_stats_TimeGreaterThan
-				    (elapsedTime, (xferP->maxTime))) {
-				    afs_stats_TimeAssign((xferP->maxTime),
-							 elapsedTime);
-				}
-			    }
-#else
-			    code =
-				afs_CacheStoreProc(tcall, tfile,
-						   tdc->f.chunkBytes, avc,
-						   shouldwake, &lp1, &lp2);
-#endif /* AFS_NOSTATS */
-			    afs_CFileClose(tfile);
-			    if ((tdc->f.chunkBytes < afs_OtherCSize)
-				&& (i < (nchunks - 1)) && code == 0) {
-				int bsent, tlen, sbytes =
-				    afs_OtherCSize - tdc->f.chunkBytes;
-				char *tbuffer =
-				    osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-
-				while (sbytes > 0) {
-				    tlen =
-					(sbytes >
-					 AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ :
-					 sbytes);
-				    memset(tbuffer, 0, tlen);
-				    RX_AFS_GUNLOCK();
-				    bsent = rx_Write(tcall, tbuffer, tlen);
-				    RX_AFS_GLOCK();
-
-				    if (bsent != tlen) {
-					code = -33;	/* XXX */
-					break;
-				    }
-				    sbytes -= tlen;
-				}
-				osi_FreeLargeSpace(tbuffer);
-			    }
-			    stored += tdc->f.chunkBytes;
-
-			    /* ideally, I'd like to unlock the dcache and turn
-			     * off the writing bit here, but that would
-			     * require being able to retry StoreAllSegments in
-			     * the event of a failure. It only really matters
-			     * if user can't read from a 'locked' dcache or
-			     * one which has the writing bit turned on. */
-			}
-			if (!code) {
-			    struct AFSVolSync tsync;
-			    RX_AFS_GUNLOCK();
-			    code =
-				EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
-			    RX_AFS_GLOCK();
-			    hadd32(newDV, 1);
-			    XSTATS_END_TIME;
-			    if (!code)
-				doProcessFS = 1;	/* Flag to run afs_ProcessFS() later on */
-			}
-			if (tcall) {
-			    afs_int32 code2;
-			    RX_AFS_GUNLOCK();
-			    code2 = rx_EndCall(tcall, code);
-			    RX_AFS_GLOCK();
-			    if (code2)
-				code = code2;
-			}
-#ifdef AFS_64BIT_CLIENT
-			if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
-			    afs_serverSetNo64Bit(tc);
-			    goto restart;
-			}
-#endif /* AFS_64BIT_CLIENT */
-		    } while (afs_Analyze
-			     (tc, code, &avc->f.fid, areq,
-			      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,
-			      NULL));
-
-		    /* put back all remaining locked dcache entries */
-		    for (i = 0; i < nchunks; i++) {
-			tdc = dclist[i];
-			if (!code) {
-			    if (afs_indexFlags[tdc->index] & IFDataMod) {
-				/*
-				 * LOCKXXX -- should hold afs_xdcache(W) when
-				 * modifying afs_indexFlags.
-				 */
-				afs_indexFlags[tdc->index] &= ~IFDataMod;
-				afs_stats_cmperf.cacheCurrDirtyChunks--;
-				afs_indexFlags[tdc->index] &= ~IFDirtyPages;
-				if (sync & AFS_VMSYNC_INVAL) {
-				    /* since we have invalidated all the pages of this
-				     ** vnode by calling osi_VM_TryToSmush, we can
-				     ** safely mark this dcache entry as not having
-				     ** any pages. This vnode now becomes eligible for
-				     ** reclamation by getDownD.
-				     */
-				    afs_indexFlags[tdc->index] &= ~IFAnyPages;
-				}
-			    }
-			}
-			UpgradeSToWLock(&tdc->lock, 628);
-			tdc->f.states &= ~DWriting;	/* correct? */
-			tdc->dflags |= DFEntryMod;
-			ReleaseWriteLock(&tdc->lock);
-			afs_PutDCache(tdc);
-			/* Mark the entry as released */
-			dclist[i] = NULL;
-		    }
-
-		    if (doProcessFS) {
-			/* Now copy out return params */
-			UpgradeSToWLock(&avc->lock, 28);	/* keep out others for a while */
-			afs_ProcessFS(avc, &OutStatus, areq);
-			/* Keep last (max) size of file on server to see if
-			 * we need to call afs_StoreMini to extend the file.
-			 */
-			if (!moredata)
-			    maxStoredLength = OutStatus.Length;
-			ConvertWToSLock(&avc->lock);
-			doProcessFS = 0;
-		    }
-
-		    if (code) {
-			for (j++; j <= high; j++) {
-			    if (dcList[j]) {
-				ReleaseSharedLock(&(dcList[j]->lock));
-				afs_PutDCache(dcList[j]);
-				/* Releasing entry */
-				dcList[j] = NULL;
-			    }
-			}
-		    }
-
-		    afs_Trace2(afs_iclSetp, CM_TRACE_STOREALLDCDONE,
-			       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
-		    bytes = 0;
-		}
-	    }
-
+	    code =
+		afs_CacheStoreVCache(dcList, avc, areq, sync,
+				   minj, high, moredata,
+				   &newDV, &maxStoredLength);
 	    /* Release any zero-length dcache entries in our interval
 	     * that we locked but didn't store back above.
 	     */
@@ -690,11 +339,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 	do {
 	    moredata = FALSE;
-	    memset((char *)dcList, 0,
+	    memset(dcList, 0,
 		   NCHUNKSATONCE * sizeof(struct dcache *));
 
 	    /* overkill, but it gets the lock in case GetDSlot needs it */
-	    MObtainWriteLock(&afs_xdcache, 285);
+	    ObtainWriteLock(&afs_xdcache, 285);
 
 	    for (j = 0, safety = 0, index = afs_dvhashTbl[hash];
 		 index != NULLIDX && safety < afs_cacheFiles + 2;) {
@@ -725,7 +374,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 		index = afs_dvnextTbl[index];
 	    }
-	    MReleaseWriteLock(&afs_xdcache);
+	    ReleaseWriteLock(&afs_xdcache);
 
 	    for (i = 0; i < j; i++) {
 		/* Iterate over the dcache entries we collected above */
@@ -853,13 +502,13 @@ afs_InvalidateAllSegments(struct vcache *avc)
     /* Blow away pages; for now, only for Solaris */
 #if	(defined(AFS_SUN5_ENV))
     if (WriteLocked(&avc->lock))
-	osi_ReleaseVM(avc, (struct AFS_UCRED *)0);
+	osi_ReleaseVM(avc, (afs_ucred_t *)0);
 #endif
     /*
      * Block out others from screwing with this table; is a read lock
      * sufficient?
      */
-    MObtainWriteLock(&afs_xdcache, 286);
+    ObtainWriteLock(&afs_xdcache, 286);
     dcListMax = 0;
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
@@ -898,7 +547,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	}
 	index = afs_dvnextTbl[index];
     }
-    MReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     for (i = 0; i < dcListCount; i++) {
 	tdc = dcList[i];
@@ -992,7 +641,7 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
  */
 int
 afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
-			struct vrequest *areq, struct AFS_UCRED *acred)
+			struct vrequest *areq, afs_ucred_t *acred)
 {
     register struct dcache *tdc;
     register afs_int32 code;
@@ -1050,7 +699,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     code = DVHash(&avc->f.fid);
 
     /* block out others from screwing with this table */
-    MObtainWriteLock(&afs_xdcache, 287);
+    ObtainWriteLock(&afs_xdcache, 287);
 
     dcCount = 0;
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
@@ -1089,7 +738,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	index = afs_dvnextTbl[index];
     }
 
-    MReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     /* Now we loop over the array of dcache entries and truncate them */
     for (index = 0; index < dcPos; index++) {

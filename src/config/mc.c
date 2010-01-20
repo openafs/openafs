@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <afsconfig.h>
+#include "afsconfig.h"
 #include <string.h>
 
 #define TOK_DONTUSE 1		/* Don't copy if match and this flag is set. */

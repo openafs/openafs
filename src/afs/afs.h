@@ -14,10 +14,20 @@
  */
 #ifdef KDUMP_KERNEL
 #include <afs/afs_args.h>
+#include <afs/afs_consts.h>
 #else
 #include "afs/afs_args.h"
+#include "afs/afs_consts.h"
 #endif
 
+/*
+ * afs_fsfragsize cannot be less than 1023, or some cache-tracking
+ * calculations will be incorrect (since we track cache usage in kb).
+ * Some filesystems have fundamental blocksizes less than 1k, and
+ * normally we would tune afs_fsfragsize to be fragsize-1, but we must
+ * make sure to check that afs_fsfragsize does not go below this value.
+ */
+#define AFS_MIN_FRAGSIZE 1023
 
 /* Upper bound on number of iovecs out uio routines will deal with. */
 #define	AFS_MAXIOVCNT	    16
@@ -61,9 +71,6 @@ extern int afs_shuttingdown;
 
 /* The basic defines for the Andrew file system
     better keep things powers of two so "& (foo-1)" hack works for masking bits */
-#define	MAXHOSTS	13	/* max hosts per single volume */
-#define	OMAXHOSTS	 8	/* backwards compatibility */
-#define MAXCELLHOSTS	 8	/* max vldb servers per cell */
 #define	NBRS		15	/* max number of queued daemon requests */
 #define	NUSERS		16	/* hash table size for unixuser table */
 #define	NSERVERS	16	/* hash table size for server table */
@@ -138,7 +145,7 @@ struct sysname_info {
 #define	BUWAIT		4	/* someone is waiting for BUVALID */
 struct brequest {
     struct vcache *vc;		/* vnode to use, with vrefcount bumped */
-    struct AFS_UCRED *cred;	/* credentials to use for operation */
+    afs_ucred_t *cred;	/* credentials to use for operation */
     afs_size_t size_parm[BPARMS];	/* random parameters */
     void *ptr_parm[BPARMS];	/* pointer parameters */
     afs_int32 code;		/* return code */
@@ -232,7 +239,7 @@ struct vrequest {
     char permWriteError;	/* fileserver returns permenent error. */
     char tokenError;            /* a token error other than expired. */
     char idleError;             /* the server idled too long */
-    char skipserver[MAXHOSTS];
+    char skipserver[AFS_MAXHOSTS];
 };
 #define VOLMISSING 1
 #define VOLBUSY 2
@@ -265,7 +272,7 @@ struct cell {
     char *cellName;		/* char string name of cell */
     afs_int32 cellIndex;	/* sequence number */
     afs_int32 cellNum;		/* semi-permanent cell number */
-    struct server *cellHosts[MAXCELLHOSTS];	/* volume *location* hosts */
+    struct server *cellHosts[AFS_MAXCELLHOSTS];	/* volume *location* hosts */
     struct cell *lcellp;	/* Associated linked cell */
     u_short fsport;		/* file server port */
     u_short vlport;		/* volume server port */
@@ -506,8 +513,8 @@ struct volume {
     afs_rwlock_t lock;		/* the lock for this structure */
     afs_int32 volume;		/* This volume's ID number. */
     char *name;			/* This volume's name, or 0 if unknown */
-    struct server *serverHost[MAXHOSTS];	/* servers serving this volume */
-    enum repstate status[MAXHOSTS];	/* busy, offline, etc */
+    struct server *serverHost[AFS_MAXHOSTS];	/* servers serving this volume */
+    enum repstate status[AFS_MAXHOSTS];	/* busy, offline, etc */
     struct VenusFid dotdot;	/* dir to access as .. */
     struct VenusFid mtpoint;	/* The mount point for this volume. */
     afs_int32 rootVnode, rootUnique;	/* Volume's root fid */
@@ -556,19 +563,15 @@ struct SimpleLocks {
 #define CNSHARE		0x00000100	/* support O_NSHARE semantics */
 #define CLied		0x00000200
 #define CTruth		0x00000400
-#ifdef	AFS_OSF_ENV
-#define CWired		0x00000800	/* OSF hack only */
-#else
-#ifdef AFS_DARWIN80_ENV
+
+#if defined(AFS_DARWIN80_ENV)
 #define CDeadVnode        0x00000800
-#else
-#ifdef AFS_DARWIN_ENV
+#elif defined(AFS_DARWIN_ENV)
 #define CUBCinit        0x00000800
 #else
 #define CWRITE_IGN	0x00000800	/* Next OS hack only */
 #endif
-#endif
-#endif
+
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
 #define CForeign	0x00002000	/* this is a non-afs vcache */
 #define CReadDir	0x00004000	/* readdir in progress */
@@ -840,9 +843,12 @@ struct vcache {
     struct bhv_desc vc_bhv_desc;	/* vnode's behavior data. */
 #endif
 #endif				/* AFS_SGI_ENV */
+#if defined(AFS_LINUX26_ENV)
+    cred_t *cred;		/* last writer's cred */
+#endif
     afs_int32 vc_error;		/* stash write error for this vnode. */
     int xlatordv;		/* Used by nfs xlator */
-    struct AFS_UCRED *uncred;
+    afs_ucred_t *uncred;
     int asynchrony;		/* num kbytes to store behind */
 #ifdef AFS_SUN5_ENV
     short multiPage;		/* count of multi-page getpages in progress */
@@ -982,9 +988,21 @@ struct cm_initparams {
 #define	IFAnyPages	32
 #define	IFDiscarded	64	/* index entry in discardDCList */
 
+#ifdef AFS_DARWIN100_ENV
+typedef user_addr_t iparmtype; /* 64 bit */
+typedef user_addr_t uparmtype; /* 64 bit */
+#else
+typedef char * uparmtype;
+#ifdef AFS_SGI65_ENV
+typedef afs_uint32 iparmtype;
+#else
+typedef long iparmtype;
+#endif
+#endif
+
 struct afs_ioctl {
-    char *in;			/* input buffer */
-    char *out;			/* output buffer */
+    uparmtype in;		/* input buffer */
+    uparmtype out;		/* output buffer */
     short in_size;		/* Size of input buffer <= 2K */
     short out_size;		/* Maximum size of output buffer, <= 2K */
 };
@@ -1051,7 +1069,6 @@ typedef union {
     afs_mem_dcache_id_t mem;
 } afs_dcache_id_t;
 
-#ifdef KERNEL
 /* it does not compile outside kernel */
 struct buffer {
   afs_int32 fid;              /* is adc->index, the cache file number */
@@ -1064,9 +1081,6 @@ struct buffer {
   char lockers;
   char dirty;
   char hashIndex;
-#if defined(AFS_USEBUFFERS)
-  struct buf *bufp;
-#endif
   afs_rwlock_t lock;          /* the lock for this structure */
 };
 
@@ -1080,7 +1094,6 @@ struct fcache {
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
 };
-#endif
 
 /* magic numbers to specify the cache type */
 
@@ -1137,6 +1150,12 @@ struct memCacheEntry {
   int dataSize;               /* size of allocated data area */
   afs_lock_t afs_memLock;
   char *data;                 /* bytes */
+};
+
+struct afs_FetchOutput {
+    struct AFSVolSync tsync;
+    struct AFSFetchStatus OutStatus;
+    struct AFSCallBack CallBack;
 };
 
 /* macro to mark a dcache entry as bad */
@@ -1313,11 +1332,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToInumber(V) VnodeToIno(V)
 #else
-#ifdef AFS_DECOSF_ENV
-#define afs_vnodeToInumber(V) osi_vnodeToInumber(V)
-#else
 #define afs_vnodeToInumber(V) (VTOI(V)->i_number)
-#endif /* AFS_DECOSF_ENV */
 #endif /* AFS_SGI62_ENV */
 #endif
 
@@ -1325,28 +1340,26 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #ifndef afs_vnodeToDev
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToDev(V) VnodeToDev(V)
-#elif defined(AFS_DECOSF_ENV)
-#define afs_vnodeToDev(V) osi_vnodeToDev(V)
 #else
 #define afs_vnodeToDev(V) (VTOI(V)->i_dev)
 #endif
 #endif
 
-
-/* Note: this should agree with the definition in kdump.c */
-#if     defined(AFS_OSF_ENV)
-#if     !defined(UKERNEL)
-#define AFS_USEBUFFERS  1
-#endif
-#endif
-
-#if !defined(UKERNEL) && !defined(HAVE_STRUCT_BUF)
 /* declare something so that prototypes don't flip out */
 /* appears struct buf stuff is only actually passed around as a pointer, 
    except with libuafs, in which case it is actually defined */
 
 struct buf;
-#endif
+
+struct rxfs_storeVariables {
+    struct rx_call *call;
+    struct vcache *vcache;
+    char *tbuffer;
+    struct iovec *tiov;
+    afs_int32 tnio;
+    afs_int32 hasNo64bit;
+    struct AFSStoreStatus InStatus;
+};
 
 struct storeOps {
     int (*prepare)(void *rock, afs_uint32 size, afs_uint32 *bytestoxfer);
@@ -1354,6 +1367,21 @@ struct storeOps {
         afs_uint32 tlen, afs_uint32 *bytesread);
     int (*write)(void *rock, afs_uint32 tlen, afs_uint32 *byteswritten);
     int (*status)(void *rock);
+    int (*padd)(void *rock, afs_uint32 tlen);
+    int (*close)(void *rock, struct AFSFetchStatus *OutStatus,
+        afs_int32 *doProcessFS);
+    int (*destroy)(void **rock, afs_int32 error);
+    int (*storeproc)(struct storeOps *, void *, struct dcache *, int *,
+		     afs_size_t *);
+};
+
+struct fetchOps {
+    int (*more)(void *rock, afs_int32 *length, afs_uint32 *moredata);
+    int (*read)(void *rock, afs_uint32 tlen, afs_uint32 *bytesread);
+    int (*write)(void *rock, struct osi_file *fp, afs_uint32 offset,
+        afs_uint32 tlen, afs_uint32 *byteswritten);
+    int (*close)(void *rock, struct vcache *avc, struct dcache *adc,
+        struct afs_FetchOutput *Outputs);
     int (*destroy)(void **rock, afs_int32 error);
 };
 
@@ -1368,4 +1396,39 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
+
+#ifdef AFS_MAXVCOUNT_ENV
+extern int afsd_dynamic_vcaches;
+#else
+#define afsd_dynamic_vcaches 0
+#endif
+
+/*
+ * Wrappers for access to credentials structure members
+ * Linux uses the kernel cred structure if available, with the
+ * wrappers defined in LINUX/osi_machdep.h
+ */
+#if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED))
+#define afs_cr_uid(cred) ((cred)->cr_uid)
+#define afs_cr_gid(cred) ((cred)->cr_gid)
+#define afs_cr_ruid(cred) ((cred)->cr_ruid)
+#define afs_cr_rgid(cred) ((cred)->cr_rgid)
+
+static_inline void
+afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
+    cred->cr_uid = uid;
+}
+static_inline void
+afs_set_cr_gid(afs_ucred_t *cred, gid_t gid) {
+    cred->cr_gid = gid;
+}
+static_inline void
+afs_set_cr_ruid(afs_ucred_t *cred, uid_t uid) {
+    cred->cr_ruid = uid;
+}
+static_inline void
+afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
+    cred->cr_rgid = gid;
+}
+#endif
 #endif /* _AFS_H_ */

@@ -181,6 +181,7 @@ ConstructLocalLogPath(const char *cpath,
 #ifdef AFS_DARWIN_ENV
 #define AFSDIR_ALTERNATE_CLIENT_VICE_DIRPATH    "/var/db/openafs"
 #define AFSDIR_ALTERNATE_CLIENT_ETC_DIR         "/var/db/openafs/etc"
+#define AFSDIR_ALTERNATE_CLIENT_DATA_DIR         "/var/db/openafs/etc"
 #endif
 
 #define AFSDIR_CANONICAL_SERVER_BIN_DIRPATH \

@@ -126,7 +126,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
  * re-obtained.
  */
 void
-osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV)
@@ -144,7 +144,7 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
  * Locking:  No lock is held, not even the global lock.
  */
 void
-osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
     extern int afs_pvn_vptrunc;
 
@@ -161,7 +161,7 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * be called first, since it causes a pagein.
  */
 void
-osi_VM_PreTruncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+osi_VM_PreTruncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 {
     page_t *pp;
     int pageOffset = (alen & PAGEOFFSET);
@@ -187,7 +187,7 @@ osi_VM_PreTruncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
  * Pageins are blocked (activeV is raised).
  */
 void
-osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 {
     /*
      * It's OK to specify afs_putapage here, even though we aren't holding

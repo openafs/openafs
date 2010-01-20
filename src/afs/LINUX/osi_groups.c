@@ -24,17 +24,97 @@
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/nfsclient.h"
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
+#include "osi_compat.h"
+
+#include <linux/smp_lock.h>
 
 #ifdef AFS_LINUX26_ONEGROUP_ENV
-#define NUMPAGGROUPS 1
+# define NUMPAGGROUPS 1
+
+static afs_uint32
+afs_linux_pag_from_groups(struct group_info *group_info) {
+    afs_uint32 g0 = 0;
+    afs_uint32 i;
+
+    if (group_info->ngroups < NUMPAGGROUPS)
+	return NOPAG;
+
+    for (i = 0; (i < group_info->ngroups &&
+		 (g0 = GROUP_AT(group_info, i)) != (gid_t) NOGROUP); i++) {
+	if (((g0 >> 24) & 0xff) == 'A')
+	    return g0;
+    }
+    return NOPAG;
+}
+
+static inline void
+afs_linux_pag_to_groups(afs_uint32 newpag,
+			struct group_info *old, struct group_info **new) {
+    int need_space = 0;
+    int i;
+    int j;
+
+    if (afs_linux_pag_from_groups(old) == NOPAG)
+	need_space = NUMPAGGROUPS;
+
+    *new = groups_alloc(old->ngroups + need_space);
+
+    for (i = 0, j = 0; i < old->ngroups; ++i) {
+	int ths = GROUP_AT(old, i);
+	int last = i > 0 ? GROUP_AT(old, i-1) : 0;
+	if ((ths >> 24) == 'A')
+	    continue;
+	if (last <= newpag && ths > newpag) {
+	   GROUP_AT(*new, j) = newpag;
+	   j++;
+	}
+	GROUP_AT(*new, j) = ths;
+	j++;
+    }
+    if (j != i + need_space)
+        GROUP_AT(*new, j) = newpag;
+}
+
 #else
-#define NUMPAGGROUPS 2
+# define NUMPAGGROUPS 2
+
+static inline afs_uint32
+afs_linux_pag_from_groups(struct group_info *group_info) {
+
+    if (group_info->ngroups < NUMPAGGROUPS)
+	return NOPAG;
+
+    return afs_get_pag_from_groups(GROUP_AT(group_info, 0), GROUP_AT(group_info, 1));
+}
+
+static inline void
+afs_linux_pag_to_groups(afs_uint32 newpag,
+			struct group_info *old, struct group_info *new) {
+    int need_space = 0;
+    int i;
+    gid_t g0;
+    gid_t g1;
+
+    if (afs_linux_pag_from_groups(old) == NOPAG)
+	need_space = NUMPAGGGROUPS;
+
+    *new = groups_alloc(old->ngroups + need_space);
+
+    for (i = 0; i < old->ngroups; ++i)
+          GROUP_AT(new, i + need_space) = GROUP_AT(old, i);
+
+    afs_get_groups_from_pag(newpag, &g0, g1);
+    GROUP_AT(new, 0) = g0;
+    GROUP_AT(new, 1) = g1;
+}
 #endif
 
-#if defined(AFS_LINUX26_ENV)
+afs_int32
+osi_get_group_pag(afs_ucred_t *cred) {
+    return afs_linux_pag_from_groups(afs_cr_group_info(cred));
+}
+
+
 static int
 afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 {
@@ -42,9 +122,9 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     AFS_STATCNT(afs_setgroups);
 
-    old_info = (*cr)->cr_group_info;
+    old_info = afs_cr_group_info(*cr);
     get_group_info(group_info);
-    (*cr)->cr_group_info = group_info;
+    afs_set_cr_group_info(*cr, group_info);
     put_group_info(old_info);
 
     crset(*cr);
@@ -60,162 +140,22 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     return (0);
 }
-#else
-static int
-afs_setgroups(cred_t **cr, int ngroups, gid_t * gidset, int change_parent)
-{
-    int ngrps;
-    int i;
-    gid_t *gp;
 
-    AFS_STATCNT(afs_setgroups);
-
-    if (ngroups > NGROUPS)
-	return EINVAL;
-
-    gp = (*cr)->cr_groups;
-    if (ngroups < NGROUPS)
-	gp[ngroups] = (gid_t) NOGROUP;
-
-    for (i = ngroups; i > 0; i--) {
-	*gp++ = *gidset++;
-    }
-
-    (*cr)->cr_ngroups = ngroups;
-    crset(*cr);
-    return (0);
-}
-#endif
-
-#if defined(AFS_LINUX26_ENV)
-static struct group_info *
-afs_getgroups(cred_t * cr)
-{
-    AFS_STATCNT(afs_getgroups);
-
-    get_group_info(cr->cr_group_info);
-    return cr->cr_group_info;
-}
-#else
-/* Returns number of groups. And we trust groups to be large enough to
- * hold all the groups.
- */
-static int
-afs_getgroups(cred_t *cr, gid_t *groups)
-{
-    int i;
-    int n;
-    gid_t *gp;
-
-    AFS_STATCNT(afs_getgroups);
-
-    gp = cr->cr_groups;
-    n = cr->cr_ngroups;
-
-    for (i = 0; (i < n) && (*gp != (gid_t) NOGROUP); i++)
-	*groups++ = *gp++;
-    return i;
-}
-#endif
-
-#if !defined(AFS_LINUX26_ENV)
-/* Only propogate the PAG to the parent process. Unix's propogate to 
- * all processes sharing the cred.
- */
-int
-set_pag_in_parent(int pag, int g0, int g1)
-{
-    int i;
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
-    gid_t *gp = current->parent->groups;
-    int ngroups = current->parent->ngroups;
-#else
-    gid_t *gp = current->p_pptr->groups;
-    int ngroups = current->p_pptr->ngroups;
-#endif
-
-    if ((ngroups < 2) || (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG)) {
-	/* We will have to shift grouplist to make room for pag */
-	if (ngroups + 2 > NGROUPS) {
-	    return EINVAL;
-	}
-	for (i = ngroups - 1; i >= 0; i--) {
-	    gp[i + 2] = gp[i];
-	}
-	ngroups += 2;
-    }
-    gp[0] = g0;
-    gp[1] = g1;
-    if (ngroups < NGROUPS)
-	gp[ngroups] = NOGROUP;
-
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
-    current->parent->ngroups = ngroups;
-#else
-    current->p_pptr->ngroups = ngroups;
-#endif
-    return 0;
-}
-#endif
-
-#if defined(AFS_LINUX26_ENV)
 int
 __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
          int change_parent)
 {
     struct group_info *group_info;
-#ifndef AFS_LINUX26_ONEGROUP_ENV
-    gid_t g0, g1;
-#endif
     struct group_info *tmp;
-    int i;
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-    int j;
-#endif
-    int need_space = 0;
 
-    group_info = afs_getgroups(*cr);
-    if (group_info->ngroups < NUMPAGGROUPS
-	||  afs_get_pag_from_groups(
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-	    group_info
-#else
-	    GROUP_AT(group_info, 0) ,GROUP_AT(group_info, 1)
-#endif
-				    ) == NOPAG) 
-	/* We will have to make sure group_info is big enough for pag */
-	need_space = NUMPAGGROUPS;
+    get_group_info(afs_cr_group_info(*cr));
+    group_info = afs_cr_group_info(*cr);
 
-    tmp = groups_alloc(group_info->ngroups + need_space);
-    
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-    for (i = 0, j = 0; i < group_info->ngroups; ++i) {
-	int ths = GROUP_AT(group_info, i);
-	int last = i > 0 ? GROUP_AT(group_info, i-1) : 0;
-	if ((ths >> 24) == 'A')
-	    continue;
-	if (last <= *newpag && ths > *newpag) {
-	   GROUP_AT(tmp, j) = *newpag;
-	   j++;
-	}
-	GROUP_AT(tmp, j) = ths;
-	j++;
-    }
-    if (j != i + need_space)
-        GROUP_AT(tmp, j) = *newpag;
-#else
-    for (i = 0; i < group_info->ngroups; ++i)
-      GROUP_AT(tmp, i + need_space) = GROUP_AT(group_info, i);
-#endif
+    afs_linux_pag_to_groups(*newpag, group_info, &tmp);
+
     put_group_info(group_info);
     group_info = tmp;
-
-#ifndef AFS_LINUX26_ONEGROUP_ENV
-    afs_get_groups_from_pag(*newpag, &g0, &g1);
-    GROUP_AT(group_info, 0) = g0;
-    GROUP_AT(group_info, 1) = g1;
-#endif
 
     afs_setgroups(cr, group_info, change_parent);
 
@@ -233,7 +173,6 @@ install_session_keyring(struct key *keyring)
 {
     struct key *old;
     char desc[20];
-    unsigned long not_in_quota;
     int code = -EINVAL;
 
     if (!__key_type_keyring)
@@ -242,25 +181,14 @@ install_session_keyring(struct key *keyring)
     if (!keyring) {
 
 	/* create an empty session keyring */
-	not_in_quota = KEY_ALLOC_IN_QUOTA;
 	sprintf(desc, "_ses.%u", current->tgid);
 
-#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
-	keyring = key_alloc(__key_type_keyring, desc,
-			    current_uid(), current_gid(), current,
-			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
-#elif defined(KEY_ALLOC_NEEDS_CRED)
-	keyring = key_alloc(__key_type_keyring, desc,
-			    current_uid(), current_gid(), current_cred(),
-			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
-#else
-	keyring = key_alloc(__key_type_keyring, desc,
+	keyring = afs_linux_key_alloc(
+			    __key_type_keyring, desc,
 			    current_uid(), current_gid(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
-#endif
+			    KEY_ALLOC_IN_QUOTA);
+
 	if (IS_ERR(keyring)) {
 	    code = PTR_ERR(keyring);
 	    goto out;
@@ -288,46 +216,6 @@ out:
 }
 #endif /* LINUX_KEYRING_SUPPORT */
 
-#else
-int
-__setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-         int change_parent)
-{
-    gid_t *gidset;
-    afs_int32 ngroups, code = 0;
-    int j;
-
-    gidset = (gid_t *) osi_Alloc(NGROUPS * sizeof(gidset[0]));
-    ngroups = afs_getgroups(*cr, gidset);
-
-    if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
-	/* We will have to shift grouplist to make room for pag */
-	if (ngroups + 2 > NGROUPS) {
-	    osi_Free((char *)gidset, NGROUPS * sizeof(int));
-	    return EINVAL;
-	}
-	for (j = ngroups - 1; j >= 0; j--) {
-	    gidset[j + 2] = gidset[j];
-	}
-	ngroups += 2;
-    }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
-    afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
-    code = afs_setgroups(cr, ngroups, gidset, change_parent);
-
-    /* If change_parent is set, then we should set the pag in the parent as
-     * well.
-     */
-    if (change_parent && !code) {
-	code = set_pag_in_parent(*newpag, gidset[0], gidset[1]);
-    }
-
-    osi_Free((char *)gidset, NGROUPS * sizeof(int));
-    return code;
-}
-#endif
-
-
 int
 setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
        int change_parent)
@@ -339,7 +227,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     code = __setpag(cr, pagvalue, newpag, change_parent);
 
 #ifdef LINUX_KEYRING_SUPPORT
-    if (code == 0 && (*cr)->cr_rgid != NFSXLATOR_CRED) {
+    if (code == 0 && afs_cr_rgid(*cr) != NFSXLATOR_CRED) {
 	(void) install_session_keyring(NULL);
 
 	if (current_session_keyring()) {
@@ -349,13 +237,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    perm = KEY_POS_VIEW | KEY_POS_SEARCH;
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
-#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current, perm, 1);
-#elif defined(KEY_ALLOC_NEEDS_CRED)
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current_cred(), perm, 1);
-#else
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
-#endif
+	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
 
 	    if (!IS_ERR(key)) {
 		key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
@@ -403,7 +285,6 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
     return (-code);
 }
 
-#if defined(AFS_LINUX24_ENV)
 /* Intercept the standard uid32 system call. */
 extern asmlinkage long (*sys_setgroups32p) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
@@ -437,7 +318,6 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-#endif
 
 #if defined(AFS_PPC64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
@@ -507,7 +387,6 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     return (-code);
 }
 
-#ifdef AFS_LINUX24_ENV
 /* Intercept the uid32 system call as used by 32bit programs. */
 extern long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
@@ -541,7 +420,6 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     return (-code);
 }
 #endif
-#endif
 
 
 #ifdef LINUX_KEYRING_SUPPORT
@@ -556,9 +434,6 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
 {
     int code;
     afs_uint32 *userpag, pag = NOPAG;
-#ifndef AFS_LINUX26_ONEGROUP_ENV
-    int g0, g1;
-#endif
 
     if (key->uid != 0 || key->gid != 0)
 	return -EPERM;
@@ -569,18 +444,9 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     if (datalen != sizeof(afs_uint32) || !data)
 	goto error;
 
-    if (current_group_info()->ngroups < NUMPAGGROUPS)
-	goto error;
-
     /* ensure key being set matches current pag */
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-    pag = afs_get_pag_from_groups(current_group_info());
-#else
-    g0 = GROUP_AT(current_group_info(), 0);
-    g1 = GROUP_AT(current_group_info(), 1);
+    pag = afs_linux_pag_from_groups(current_group_info());
 
-    pag = afs_get_pag_from_groups(g0, g1);
-#endif
     if (pag == NOPAG)
 	goto error;
 
@@ -683,6 +549,33 @@ void osi_keyring_init(void)
 void osi_keyring_shutdown(void)
 {
     unregister_key_type(&key_type_afs_pag);
+}
+
+afs_int32
+osi_get_keyring_pag(afs_ucred_t *cred)
+{
+    struct key *key;
+    afs_uint32 newpag;
+    afs_int32 keyring_pag = NOPAG;
+
+    if (afs_cr_rgid(cred) != NFSXLATOR_CRED) {
+	key = afs_linux_search_keyring(cred, &key_type_afs_pag);
+
+	if (!IS_ERR(key)) {
+	    if (key_validate(key) == 0 && key->uid == 0) {      /* also verify in the session keyring? */
+		keyring_pag = key->payload.value;
+		/* Only set PAG in groups if needed,
+		 * and the creds are from the current process */
+		if (afs_linux_cred_is_current(cred) &&
+                    ((keyring_pag >> 24) & 0xff) == 'A' &&
+		    keyring_pag != afs_linux_pag_from_groups(current_group_info())) {
+			__setpag(&cred, keyring_pag, &newpag, 0);
+		}
+	    }
+	    key_put(key);
+	}
+    }
+    return keyring_pag;
 }
 
 #else

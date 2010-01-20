@@ -85,7 +85,9 @@
  * therefore obsolescent.
  *
  * OSF/1 Locking:  VN_LOCK has been called.
- * XXX - should FreeBSD have done this, too?  Certainly looks like it.
+ * We do not lock the vnode here, but instead require that it be exclusive
+ * locked by code calling osi_VM_StoreAllSegments directly, or scheduling it
+ * from the bqueue - Matt
  * Maybe better to just call vnode_pager_setsize()?
  */
 int
@@ -159,13 +161,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
      */
     do {
 	anyio = 0;
-#ifdef AFS_FBSD80_ENV
-	lock_vnode(vp);
-#endif
 	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
-#ifdef AFS_FBSD80_ENV
-	    unlock_vnode(vp);
-#endif
 #ifdef AFS_FBSD50_ENV
 	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY, curthread)) {
 #else
@@ -180,10 +176,6 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 		    vput(vp);
 		}
 	    }
-#ifdef AFS_FBSD80_ENV
-	    else
-		unlock_vnode(vp);
-#endif
     } while (anyio && (--tries > 0));
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 94);
@@ -199,11 +191,10 @@ osi_VM_StoreAllSegments(struct vcache *avc)
  * be some pages around when we return, newly created by concurrent activity.
  */
 void
-osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     struct vnode *vp;
-    struct vm_object *obj;
-    int anyio, tries, code;
+    int tries, code;
 
     SPLVAR;
 
@@ -211,7 +202,7 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 
     if (vp->v_iflag & VI_DOOMED) {
       USERPRI;
-      return 0;
+      return;
     }
 
     if (vp->v_bufobj.bo_object != NULL) {
@@ -235,9 +226,9 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
     }
 
     tries = 5;
-    code = vinvalbuf(vp, V_SAVE, curthread, PCATCH, 0);
+    code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
     while (code && (tries > 0)) {
-      code = vinvalbuf(vp, V_SAVE, curthread, PCATCH, 0);
+      code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
       --tries;
     }
     USERPRI;
@@ -248,7 +239,7 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
  * Locking:  No lock is held, not even the global lock.
  */
 void
-osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
     struct vnode *vp;
     struct vm_object *obj;
@@ -270,7 +261,7 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 {
     vnode_pager_setsize(AFSTOV(avc), alen);
 }

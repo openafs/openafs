@@ -88,7 +88,7 @@ CheckSignal(void *unused)
 
     if ((errorcode =
 	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
-	return (void *)errorcode;
+	return (void *)(intptr_t)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
 	HashNDump(trans, i);
@@ -97,7 +97,7 @@ CheckSignal(void *unused)
     for (i = 0; i < HASHSIZE; i++) {
 	HashIdDump(trans, i);
     }
-    return ((void *)ubik_EndTrans(trans));
+    return ((void *)(intptr_t)ubik_EndTrans(trans));
 }				/*CheckSignal */
 
 
@@ -195,7 +195,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++index]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
@@ -304,7 +304,7 @@ main(int argc, char **argv)
     /* get list of servers */
     code =
 	afsconf_GetExtendedCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info,
-				    &clones);
+				    clones);
     if (code) {
 	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
 	exit(2);

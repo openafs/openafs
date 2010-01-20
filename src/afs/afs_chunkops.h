@@ -59,20 +59,10 @@ struct afs_cacheOps {
 		   afs_int32 len);
     int (*close) (struct osi_file * fp);
     int (*vread) (register struct vcache * avc, struct uio * auio,
-		  struct AFS_UCRED * acred, daddr_t albn, struct buf ** abpp,
+		  afs_ucred_t * acred, daddr_t albn, struct buf ** abpp,
 		  int noLock);
     int (*vwrite) (register struct vcache * avc, struct uio * auio, int aio,
-		   struct AFS_UCRED * acred, int noLock);
-    int (*FetchProc) (register struct rx_call * acall,
-		      struct osi_file * afile, afs_size_t abase,
-		      struct dcache * adc, struct vcache * avc,
-		      afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
-		      afs_int32 lengthFound);
-    int (*StoreProc) (register struct rx_call * acall,
-		      struct osi_file * afile, register afs_int32 alen,
-		      struct vcache * avc, int *shouldWake,
-		      afs_size_t * abytesToXferP,
-		      afs_size_t * abytesXferredP);
+		   afs_ucred_t * acred, int noLock);
     struct dcache *(*GetDSlot) (register afs_int32 aslot,
 				register struct dcache * tmpdc);
     struct volume *(*GetVolSlot) (void);
@@ -88,9 +78,6 @@ struct afs_cacheOps {
 #define	afs_GetDSlot(slot, adc)		(*(afs_cacheType->GetDSlot))(slot, adc)
 #define	afs_GetVolSlot()		(*(afs_cacheType->GetVolSlot))()
 #define	afs_HandleLink(avc, areq)	(*(afs_cacheType->HandleLink))(avc, areq)
-
-#define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered, length) \
-          (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
 
 /* These memcpys should get optimised to simple assignments when afs_dcache_id_t 
  * is simple */

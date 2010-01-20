@@ -26,8 +26,8 @@
 extern long time;
 #define osi_Time() (time)
 
-#define	AFS_UCRED	ucred
-#define	AFS_PROC	struct proc
+typedef struct ucred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #define afs_bufferpages v.v_bufhw
 
@@ -41,6 +41,10 @@ extern long time;
 #define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
 	lookupvp((fnamep), (followlink), (compvpp), &afs_osi_cred)
 
+#undef gop_lookupname_user
+#define	gop_lookupname_user(fnamep,segflg,followlink,compvpp) \
+	lookupvp((fnamep), (followlink), (compvpp), &afs_osi_cred)
+
 #undef afs_suser
 
 #undef setuerror
@@ -49,7 +53,6 @@ extern long time;
 #include <ulimit.h>
 #define get_ulimit()		(ulimit(GET_FSIZE, 0) << UBSHIFT)
 
-#ifdef KERNEL
 #include <sys/lockl.h>
 #include <sys/lock_def.h>
 #include <sys/lock_alloc.h>
@@ -70,7 +73,17 @@ extern simple_lock_data afs_global_lock;
 			} while(0)
 #define ISAFS_GLOCK()	lock_mine((void *)&afs_global_lock)
 
-#define ifnet_flags(x) (x?(x)->if_flags:0)
+#if defined(AFS_AIX41_ENV)
+#define osi_InitGlock() \
+	do {								\
+	    lock_alloc((void *)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);	\
+	    simple_lock_init((void *)&afs_global_lock);			\
+	} while(0)
+#else
+#define osi_InitGlock() \
+	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 #endif
+
+#define ifnet_flags(x) (x?(x)->if_flags:0)
 
 #endif /* _OSI_MACHDEP_H_ */

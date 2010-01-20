@@ -41,19 +41,26 @@ KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.framework/Headers
 
 <ppc_darwin_80 x86_darwin_80>
 KOPTS_DBUG=-g
-<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+<ppc_darwin_90 x86_darwin_90
 KOPTS_DBUG=-ggdb
+< x86_darwin_100>
+KOPTS_DBUG=-gdwarf-2
 <ppc_darwin_80 x86_darwin_80 ppc_darwin_90 x86_darwin_90 x86_darwin_100>
 KOPTS_ppc=-static -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -mcpu=750 -mmultiple -fschedule-insns -force_cpusubtype_ALL
 KOPTS_x86=-static -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED -march=i686 -mpreferred-stack-boundary=2 -falign-functions=4
-KOPTS_amd64=-static -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch x86_64 -Damd64 -DAMD64 -D__AMD64__ -DPAGE_SIZE_FIXED -march=x86-64 -mpreferred-stack-boundary=4 -falign-functions=4
+KOPTS_amd64=-static -nostdinc -nostdlib -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch x86_64 -Damd64 -DAMD64 -D__AMD64__ -DPAGE_SIZE_FIXED -march=x86-64 -mpreferred-stack-boundary=4 -falign-functions=4 -m64 -mkernel -mno-red-zone
 ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w ppc && echo yes)
 ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w i386 && echo yes)
 ARCH_amd64=$(shell echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w x86_64 && echo yes)
 OBJ_ppc=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "$@.ppc")
 OBJ_x86=$(shell echo "${ARCH_x86}" | grep -q -w yes && echo "$@.x86")
 OBJ_amd64=$(shell echo "${ARCH_amd64}" | grep -q -w yes && echo "$@.amd64")
+
+<x86_darwin_100>
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS) -Xlinker -kext
+<all -x86_darwin_100>
 MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS)
+<all>
 
 CFLAGS_ppc=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc) $(KOPTS_DBUG)
 CFLAGS_x86=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86) $(KOPTS_DBUG)
@@ -124,32 +131,56 @@ INST_LIBAFS = ${DESTDIR}${afskerneldir}/afs-nfs.kext
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/afs.kext
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/afs-nfs.kext
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/afs.kext
+<all -ppc_darwin_90 -x86_darwin_90 -x86_darwin_100>
+LIBAFSDSYM =
+LIBAFSNONFSDSYM =
+INST_LIBAFSDSYM =
+INST_LIBAFSNONFSDSYM =
+DEST_LIBAFSDSYM =
+DEST_LIBAFSNONFSDSYM =
+<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+LIBAFSDSYM = libafs.o.dSYM
+LIBAFSNONFSDSYM = libafs.nonfs.o.dSYM
+INST_LIBAFSDSYM = ${DESTDIR}${afskerneldir}/afs-nfs.kext.dSYM
+INST_LIBAFSNONFSDSYM = ${DESTDIR}${afskerneldir}/afs.kext.dSYM
+DEST_LIBAFSDSYM =  ${DEST}/root.client/usr/vice/etc/afs-nfs.kext.dSYM
+DEST_LIBAFSNONFSDSYM = ${DEST}/root.client/usr/vice/etc/afs.kext.dSYM
+<all>
 
-
-libafs: $(LIBAFSNONFS) ;
-install_libafs: $(LIBAFSNONFS) ;
+libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
+install_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 	-mkdir -p ${INST_LIBAFSNONFS}
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents
 	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -m 644 ${LIBAFSNONFS} ${INST_LIBAFSNONFS}/Contents/MacOS/afs
+<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+	-mkdir -p ${INST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Info.plist ${INST_LIBAFSNONFSDSYM}/Contents
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Resources/DWARF/${LIBAFSNONFS} ${INST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+<all>
 
-dest_libafs: $(LIBAFSNONFS) ;
+dest_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 	-mkdir -p ${DEST_LIBAFSNONFS}
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents
 	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -m 644 ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}/Contents/MacOS/afs
-
+<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+	-mkdir -p ${DEST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Info.plist ${DEST_LIBAFSNONFSDSYM}/Contents
+	$(INSTALL) ${LIBAFSNONFSDSYM}/Contents/Resources/DWARF/${LIBAFSNONFS} ${DEST_LIBAFSNONFSDSYM}/Contents/Resources/DWARF
+<all>
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(MODLD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
-<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
-	dsymutil -o ${LIBAFS}.dSYM ${LIBAFS}
-<all>
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext
+
 <ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+$(LIBAFSDSYM): ${LIBAFS}
+	dsymutil -o ${LIBAFS}.dSYM ${LIBAFS}
+${LIBAFSNONFSDSYM}: ${LIBAFSNONFS}
 	dsymutil -o ${LIBAFSNONFS}.dSYM ${LIBAFSNONFS}
 <all>

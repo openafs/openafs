@@ -1581,6 +1581,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
     vd.id = vd.parentId;
     vd.type = RWVOL;
     vd.dontSalvage = 0;
+    vd.inUse = 0;
     vd.uniquifier += 5000;	/* just in case there are still file copies from
 				 * the old RW volume around */
     p = strrchr(vd.name, '.');
@@ -1641,7 +1642,6 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     char headername[16];
-    afs_int32 error = 0;
 
     (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
@@ -1807,8 +1807,10 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
         return EIO;
     }
     close(fd);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
+    (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     if (unlink(oldpath) < 0) {
-        Log("1 namei_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", error);
+        Log("1 namei_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", errno);
     }
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);

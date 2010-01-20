@@ -8,6 +8,7 @@
  */
 
 package SAMPLE_
+prefix S
 
 const	UMAXNAMELEN = 	255;
 typedef string sampleName<UMAXNAMELEN>;

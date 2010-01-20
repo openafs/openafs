@@ -22,8 +22,8 @@ intermediate state), there is no need to repeat the internal steps that
 brought them there. Idempotency does not apply if the command issuer
 explicitly interrupts the operation with the Ctrl-C command or another
 interrupt signal. In that case, the volume is left locked and the
-administrator must use the B<vos unlock> command to unlock it before
-proceeding.
+administrator must use the L<B<vos unlock>|vos_unlock(1)> command to
+unlock it before proceeding.
 
 It is important that the VLDB accurately indicate the status of the
 volumes on file server machines at all times. L<vldb.DB0(5)> and
@@ -32,7 +32,8 @@ volume headers, respectively. If a B<vos> command changes volume status,
 it automatically records the change in the corresponding VLDB entry. The
 most common cause of discrepancies between the VLDB and volume status on
 file server machines is interrupted operations; to restore consistency,
-use the B<vos syncserv> and B<vos syncvldb> commands.
+use the L<B<vos syncserv>|vos_syncserv(1)> and
+L<B<vos syncvldb>|vos_syncvldb(1)> commands.
 
 There are several categories of commands in the vos command suite:
 
@@ -40,61 +41,87 @@ There are several categories of commands in the vos command suite:
 
 =item *
 
-Commands to create, move, and rename volumes: B<vos backup>, B<vos
-backupsys>, B<vos changeloc>, B<vos create>, B<vos move>, and B<vos
-rename>.
+Commands to create, move, and rename volumes:
+L<B<vos backup>|vos_backup(1)>,
+L<B<vos backupsys>|vos_backupsys(1)>,
+L<B<vos changeloc>|vos_changeloc(1)>,
+L<B<vos create>|vos_create(1)>,
+L<B<vos move>|vos_move(1)>,
+and L<B<vos rename>|vos_rename(1)>.
 
 =item *
 
-Commands to remove VLDB volume records or volumes or both: B<vos
-delentry>, B<vos remove>, and B<vos zap>.
+Commands to remove VLDB volume records or volumes or both:
+L<B<vos delentry>|vos_delentry(1)>,
+L<B<vos remove>|vos_remove(1)>,
+and L<B<vos zap>|vos_zap(1)>.
 
 =item *
 
-Commands to edit or display VLDB server entries: B<vos changeaddr> and
-B<vos listaddrs>.
+Commands to edit or display VLDB server entries:
+L<B<vos changeaddr>|vos_changeaddr(1)>
+and L<B<vos listaddrs>|vos_listaddrs(1)>.
 
 =item *
 
-Commands to create, size, and restore dump files: B<vos dump>, B<vos
-restore>, and B<vos size>.
+Commands to create, size, and restore dump files:
+L<B<vos dump>|vos_dump(1)>,
+L<B<vos restore>|vos_restore(1)>,
+and L<B<vos size>|vos_size(1)>.
 
 =item *
 
-Commands to administer replicated volumes: B<vos addsite>, B<vos release>,
-and B<vos remsite>.
+Commands to administer replicated volumes:
+L<B<vos addsite>|vos_addsite(1)>,
+L<B<vos release>|vos_release(1)>,
+and L<B<vos remsite>|vos_remsite(1)>.
 
 =item *
 
-Commands to display VLDB records, volume headers, or both: B<vos examine>,
-B<vos listvldb>, and B<vos listvol>.
+Commands to display VLDB records, volume headers, or both:
+L<B<vos examine>|vos_examine(1)>,
+L<B<vos listvldb>|vos_listvldb(1)>,
+and L<B<vos listvol>|vos_listvol(1)>.
 
 =item *
 
-Commands to display information about partitions that house volumes: B<vos
-listpart> and B<vos partinfo>.
+Commands to display information about partitions that house volumes:
+L<B<vos listpart>|vos_listpart(1)>
+and L<B<vos partinfo>|vos_partinfo(1)>.
 
 =item *
 
-Commands to restore consistency between the VLDB and volume headers: B<vos
-syncserv> and B<vos syncvldb>.
+Commands to restore consistency between the VLDB and volume headers:
+L<B<vos syncserv>|vos_syncserv(1)>
+and L<B<vos syncvldb>|vos_syncvldb(1)>.
 
 =item *
 
-Commands to lock and unlock VLDB entries: B<vos lock>, B<vos unlock>, and
-B<vos unlockvldb>.
+Commands to lock and unlock VLDB entries:
+L<B<vos lock>|vos_lock(1)>,
+L<B<vos unlock>|vos_unlock(1)>,
+and L<B<vos unlockvldb>|vos_unlockvldb(1)>.
 
 =item *
 
-A command to report Volume Server status: B<vos status>.
+A command to report Volume Server status:
+L<B<vos status>|vos_status(1)>.
 
 =item *
 
-A command to change volume fields: B<vos setfields>.
+A command to end Volume Server transactions:
+L<B<vos endtrans>|vos_endtrans(1)>.
 
 =item *
 
-Commands to obtain help: B<vos apropos> and B<vos help>.
+A command to change volume fields:
+L<B<vos setfields>|vos_setfields(1)>.
+
+=item *
+
+Commands to obtain help:
+L<B<vos apropos>|vos_apropos(1)>
+and L<B<vos help>|vos_help(1)>.
 
 =back
 
@@ -173,11 +200,12 @@ Establishes an unauthenticated connection to the Volume Server and VL
 Server, in which the servers treat the issuer as the unprivileged user
 C<anonymous>. It is useful only when authorization checking is disabled on
 the server machine (during the installation of a file server machine or
-when the B<bos setauth> command has been used during other unusual
-circumstances). In normal circumstances, the servers allow only privileged
-users to issue commands that change the status of a volume or VLDB record,
-and refuses to perform such an action even if the B<-noauth> flag is
-provided. Do not combine the B<-noauth> and B<-localauth> flags.
+when the L<B<bos setauth>|bos_setauth(8)> command has been used during
+other unusual circumstances). In normal circumstances, the servers allow
+only privileged users to issue commands that change the status of a volume
+or VLDB record, and refuses to perform such an action even if the
+B<-noauth> flag is provided. Do not combine the B<-noauth> and
+B<-localauth> flags.
 
 =item B<-partition> <I<partition name>>
 
@@ -198,8 +226,8 @@ and so on through
 
    /vicepiv    =     vicepiv     =      iv     =      255
 
-The B<-frompartition> and B<-topartition> arguments to the B<vos move>
-command also accept this notation.
+The B<-frompartition> and B<-topartition> arguments to the
+L<B<vos move>|vos_move(1)> command also accept this notation.
 
 =item B<-server> <I<machine name>>
 
@@ -212,8 +240,8 @@ abbreviated form depends on the availability of a name resolution service
 (such as the Domain Name Service or a local host table) at the time the
 command is issued.
 
-The B<-fromserver> and B<-toserver> arguments to the B<vos move> command
-also accept these name formats.
+The B<-fromserver> and B<-toserver> arguments to the
+L<B<vos move>|vos_move(1)> command also accept these name formats.
 
 =item B<-noresolve>
 
@@ -245,8 +273,6 @@ required.
 
 =head1 SEE ALSO
 
-L<CellServDB(5)>,
-L<UserList(5)>,
 L<vos_addsite(1)>,
 L<vos_apropos(1)>,
 L<vos_backup(1)>,
@@ -258,6 +284,7 @@ L<vos_copy(1)>,
 L<vos_create(1)>,
 L<vos_delentry(1)>,
 L<vos_dump(1)>,
+L<vos_endtrans(1)>,
 L<vos_examine(1)>,
 L<vos_help(1)>,
 L<vos_listaddrs(1)>,
@@ -280,7 +307,9 @@ L<vos_syncserv(1)>,
 L<vos_syncvldb(1)>,
 L<vos_unlock(1)>,
 L<vos_unlockvldb(1)>,
-L<vos_zap(1)>
+L<vos_zap(1)>,
+L<CellServDB(5)>,
+L<UserList(5)>
 
 =head1 COPYRIGHT
 

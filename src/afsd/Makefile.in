@@ -27,7 +27,7 @@ all: afsd vsys
 AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
 
 afsd: afsd.o $(AFSLIBS) $(AFSD_LIBS)
-	${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
+	${CC} ${CFLAGS} -o afsd afsd.o @CFLAGS_NOERROR@ $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
 
 vsys: vsys.o
 	${CC} ${CFLAGS} -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
@@ -36,6 +36,7 @@ vsys: vsys.o
 # Objects
 #
 afsd.o: afsd.c AFS_component_version_number.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 vsys.o: vsys.c AFS_component_version_number.c
 

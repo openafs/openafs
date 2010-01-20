@@ -13,7 +13,6 @@
  * afs_MemWrite
  * afs_StoreOnLastReference
  * afs_close
- * afs_closex
  * afs_fsync
  */
 
@@ -59,7 +58,7 @@ afs_StoreOnLastReference(register struct vcache *avc,
 	avc->opens--;
 	avc->execsOrWriters--;
 	AFS_RELE(AFSTOV(avc));	/* VN_HOLD at set CCore(afs_FakeClose) */
-	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
+	crfree((afs_ucred_t *)avc->linkData);	/* "crheld" in afs_FakeClose */
 	avc->linkData = NULL;
     }
 
@@ -97,7 +96,7 @@ afs_StoreOnLastReference(register struct vcache *avc,
 
 int
 afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
-	     struct AFS_UCRED *acred, int noLock)
+	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -309,7 +308,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 /* called on writes */
 int
 afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
-	     struct AFS_UCRED *acred, int noLock)
+	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -485,16 +484,6 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
 	avc->f.states &= ~CWritingUFS;
 	AFS_GLOCK();
-#elif defined(AFS_OSF_ENV)
-	{
-	    struct ucred *tmpcred = u.u_cred;
-	    u.u_cred = afs_osi_credp;
-	    tuio.uio_rw = UIO_WRITE;
-	    AFS_GUNLOCK();
-	    VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp, code);
-	    AFS_GLOCK();
-	    u.u_cred = tmpcred;
-	}
 #elif defined(AFS_HPUX100_ENV)
 	{
 	    AFS_GUNLOCK();
@@ -659,92 +648,22 @@ afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
     return code;
 }
 
-#ifdef AFS_OSF_ENV
-#ifdef AFS_DUX50_ENV
-#define vno_close(X) vn_close((X), 0, NOCRED)
-#elif defined(AFS_DUX40_ENV)
-#define      vno_close       vn_close
-#endif
-/* We don't need this for AIX since: 
- * (1) aix doesn't use fileops and it call close directly intead
- * (where the unlocking should be done) and 
- * (2) temporarily, the aix lockf isn't supported yet.
- *
- *  this stupid routine is used to release the flocks held on a
- *  particular file descriptor.  Sun doesn't pass file descr. info
- *  through to the vnode layer, and yet we must unlock flocked files
- *  on the *appropriate* (not first, as in System V) close call.  Thus
- *  this code.
- * How does this code get invoked? The afs AFS_FLOCK plugs in the new afs
- * file ops structure into any afs file when it gets flocked. 
- * N.B: Intercepting close syscall doesn't trap aborts or exit system
- * calls.
-*/
-int
-afs_closex(register struct file *afd)
-{
-    struct vrequest treq;
-    struct vcache *tvc;
-    afs_int32 flags;
-    int closeDone;
-    afs_int32 code = 0;
-    struct afs_fakestat_state fakestat;
-
-    AFS_STATCNT(afs_closex);
-    /* setup the credentials */
-    if ((code = afs_InitReq(&treq, u.u_cred)))
-	return code;
-    afs_InitFakeStat(&fakestat);
-
-    closeDone = 0;
-    /* we're the last one.  If we're an AFS vnode, clear the flags,
-     * close the file and release the lock when done.  Otherwise, just
-     * let the regular close code work.      */
-    if (afd->f_type == DTYPE_VNODE) {
-	tvc = VTOAFS(afd->f_data);
-	if (IsAfsVnode(AFSTOV(tvc))) {
-	    code = afs_EvalFakeStat(&tvc, &fakestat, &treq);
-	    if (code) {
-		afs_PutFakeStat(&fakestat);
-		return code;
-	    }
-	    VN_HOLD(AFSTOV(tvc));
-	    flags = afd->f_flag & (FSHLOCK | FEXLOCK);
-	    afd->f_flag &= ~(FSHLOCK | FEXLOCK);
-	    code = vno_close(afd);
-	    if (flags)
-		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid,
-			    1 /*onlymine */ );
-	    AFS_RELE(AFSTOV(tvc));
-	    closeDone = 1;
-	}
-    }
-    /* now, if close not done, do it */
-    if (!closeDone) {
-	code = vno_close(afd);
-    }
-    afs_PutFakeStat(&fakestat);
-    return code;		/* return code from vnode layer */
-}
-#endif
-
-
 /* handle any closing cleanup stuff */
 int
 #if defined(AFS_SGI65_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
-	  struct AFS_UCRED *acred)
+	  afs_ucred_t *acred)
 #elif defined(AFS_SGI64_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
-	  off_t offset, struct AFS_UCRED *acred, struct flid *flp)
+	  off_t offset, afs_ucred_t *acred, struct flid *flp)
 #elif defined(AFS_SGI_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose
-	  off_t offset, struct AFS_UCRED *acred)
+	  off_t offset, afs_ucred_t *acred)
 #elif defined(AFS_SUN5_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, offset_t offset, 
-	 struct AFS_UCRED *acred)
+	 afs_ucred_t *acred)
 #else
-afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
     register afs_int32 code;
@@ -782,36 +701,34 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
     }
     /* unlock any locks for pid - could be wrong for child .. */
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
-#ifdef AFS_SGI65_ENV
+# ifdef AFS_SGI65_ENV
     get_current_flid(&flid);
     cleanlocks((vnode_t *) avc, flid.fl_pid, flid.fl_sysid);
     HandleFlock(avc, LOCK_UN, &treq, flid.fl_pid, 1 /*onlymine */ );
-#else
-#ifdef AFS_SGI64_ENV
+# else
+#  ifdef AFS_SGI64_ENV
     cleanlocks((vnode_t *) avc, flp);
-#else /* AFS_SGI64_ENV */
+#  else /* AFS_SGI64_ENV */
     cleanlocks((vnode_t *) avc, u.u_procp->p_epid, u.u_procp->p_sysid);
-#endif /* AFS_SGI64_ENV */
+#  endif /* AFS_SGI64_ENV */
     HandleFlock(avc, LOCK_UN, &treq, OSI_GET_CURRENT_PID(), 1 /*onlymine */ );
-#endif /* AFS_SGI65_ENV */
+# endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
     afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
-#elif	defined(AFS_SUN5_ENV)
+#elif defined(AFS_SUN5_ENV)
     if (count > 1) {
-	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
+	/* The vfs layer may call this repeatedly with higher "count"; only
+	 * on the last close (i.e. count = 1) we should actually proceed
+	 * with the close. */
 	afs_PutFakeStat(&fakestat);
 	AFS_DISCON_UNLOCK();
 	return 0;
     }
-#else /* AFS_SGI_ENV */
-    if (avc->flockCount) {	/* Release Lock */
-#if	defined(AFS_OSF_ENV) 
-	HandleFlock(avc, LOCK_UN, &treq, u.u_procp->p_pid, 1 /*onlymine */ );
 #else
+    if (avc->flockCount) {	/* Release Lock */
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1 /*onlymine */ );
-#endif
     }
-#endif /* AFS_SGI_ENV */
+#endif
     if (aflags & (FWRITE | FTRUNC)) {
 	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred)) || AFS_IS_DISCONNECTED) {
 	    /* do it yourself if daemons are all busy */
@@ -828,7 +745,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
 	    /* at least one daemon is idle, so ask it to do the store.
 	     * Also, note that  we don't lock it any more... */
 	    tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred,
-			    (afs_size_t) acred->cr_uid, (afs_size_t) 0,
+			    (afs_size_t) afs_cr_uid(acred), (afs_size_t) 0,
 			    (void *)0);
 	    /* sleep waiting for the store to start, then retrieve error code */
 	    while ((tb->flags & BUVALID) == 0) {
@@ -899,11 +816,6 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
 	avc->opens--;
 	ReleaseWriteLock(&avc->lock);
     }
-#ifdef	AFS_OSF_ENV
-    if ((VREFCOUNT(avc) <= 2) && (avc->f.states & CUnlinked)) {
-	afs_remunlink(avc, 1);	/* ignore any return code */
-    }
-#endif
     AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestat);
     code = afs_CheckCode(code, &treq, 5);
@@ -912,19 +824,15 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
 
 
 int
-#ifdef	AFS_OSF_ENV
-afs_fsync(OSI_VC_DECL(avc), int fflags, struct AFS_UCRED *acred, int waitfor)
-#else				/* AFS_OSF_ENV */
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
-afs_fsync(OSI_VC_DECL(avc), int flag, struct AFS_UCRED *acred
-#ifdef AFS_SGI65_ENV
+afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred
+# ifdef AFS_SGI65_ENV
 	  , off_t start, off_t stop
-#endif /* AFS_SGI65_ENV */
+# endif /* AFS_SGI65_ENV */
     )
-#else /* !OSF && !SUN53 && !SGI */
-afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
+#else /* !SUN53 && !SGI */
+afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 #endif 
-#endif
 {
     register afs_int32 code;
     struct vrequest treq;

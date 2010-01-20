@@ -1,3 +1,275 @@
+Since 1.5.68
+ * Prevent an empty directory Btree from being created and
+   marked as valid if cm_BPlusDirBuildTree fails.
+
+ * cm_BPlusEnumAlloc should not fail if the enumeration
+   contains zero entries.
+
+ * In cm_BPlusXXX functions, return ENOMEM if malloc() fails.
+
+ * Do not leak the cm_scache_t dirlock if cm_BPlusDirBuildTree
+   fails.
+
+ * fs examine should report owner and group ids as signed values.
+
+ * Protect buffers in smb_WriteData from simultaneous writes.
+
+ * Query network interface MTU values from the registry because
+   the IP Helper GetAdapterAddresses() fails to report a manually
+   configured MTU.
+
+ * Improve performance by not dropping and reacquiring the rx_call
+   lock in rx_WriteProc* and rx_ReadProc*.
+
+ * When configuring the rx library, the network interface MTU
+   must be applied to both the maximum send size as well as the
+   maximum receive size as is done when rx_SetMaxMTU is called
+   by the application.
+
+There was no 1.5.67 release
+
+Since 1.5.66
+ * Convert afsauthent.dll to use the xdr_alloc and xdr_free
+   routines from afsrpc.dll in place of malloc and free.
+   This permits the two libraries to be built with different
+   C runtime libraries without crashing.
+
+ * Set the DOS Readonly attribute on a file/directory 
+   whenever the unix mode combined with the mask 0200 
+   is true.  Previously there was a discrepency between
+   the mask used for testing for readonly behavior and
+   that used for setting the attribute.
+
+ * Disable AFSVolSync based .readonly "whole-volume callback"
+   support because the all file servers prior to 1.5.67
+   (and perhaps 1.4.12) do not properly assign a value to
+   the AFSVolSync structure in bulk status RPC responses.
+
+ * Improve the error output from aklog to output the value
+   from krb5 error_message() if the afs_com_err output
+   indicates an unknown value.
+
+ * Hold a lock on the cm_scache_t object when the smb
+   server is assigning a new clientModTime value.
+
+ * Permit custom build version numbers to be set
+   without modifying the src/config/NTMakefile.<platform>
+   files.
+
+ * Add support for binary code signing with cross-signed
+   certificates and arbitrary versions of signtool.exe.
+
+ * Convert VBUSY and VRESTARTING to CM_ERROR_ALLBUSY and
+   do not permit them to be exposed to the smb redirector.
+
+ * Convert STATUS_TIMEOUT responses to STATUS_IO_TIMEOUT
+   to avoid confusion within the smb redirector.
+
+ * Fix the byte order assigned to port numbers associated
+   with AFSDB record lookups.  They must be network byte 
+   order not host byte order.
+
+ * Add dynamic server ranking based on RPC round trip
+   time measurements.
+
+Since 1.5.65
+ * Official support for Windows 7 and Server 2008 R2
+
+ * Improved Rx RTT computation following the lessons
+   learned by TCP.
+
+ * Prevent a file server bug (FetchData returning an
+   invalid length instead of zero) from causing an
+   "unexpected network error" when writing to files.
+
+ * Promote DNS SRV records as superior to DNS AFSDB
+   records.  Support arbitrary port numbers for vldb
+   servers.
+
+ * Add "fs listacl -cmd" support.
+
+ * Add AFSVolSync based .readonly "whole-volume callback"
+   support.  With this functionality, multiple objects from
+   a .readonly volume can have their status validated by
+   issuing a single RXAFS_FetchStatus RPC.
+
+ * Remove drive mapping functionality and service start/stop
+   from afscreds.exe.
+
+ * Remove drive mapping functionality from afs_config.exe.
+
+ * Adjust SMB error return codes to avoid returning 
+   STATUS_TIMEOUT which results in the SMB redirector
+   disconnecting.
+
+ * Network Identity Manager OpenAFS Provider now provides its
+   own "AFS lock" notification icon to report the status of
+   "have tokens, have no tokens, service not started, service
+   started but inaccessible".  Hovering over the icon lists the
+   cells for which tokens exist (if any) and the OpenAFS version
+   number.  Double-clicking executes the Network Identity Manager
+   default action.
+
+ * When merging the current status for an AFS object, ensure
+   that the volume status for that object is set to 'vl_online'.
+
+ * Permit cm_Analyze to request a retry even when the cm_req_t is
+   flagged CM_REQ_NORETRY if the RPC failed due to RX_CALL_DEAD.
+   The retry will force the use of a new connection.
+
+ * Add digital signatures to resource only dlls as required by
+   Windows 7.
+
+ * Prevent pioctl calls from retrying indefinitely when a sharing
+   violation error occurs.
+
+ * Add {HKLM,HKCU}\SOFTWARE\OpenAFS\Client  DWORD  "ShowMountTab"
+   to restore access to drive mapping functionality in afscreds.exe
+   and afs_config.exe.
+
+ * Permit Rx minimum peer timeout, maximum receive window size and
+   maximum send window size to be configured via the registry.
+
+ * The MSI installer now sets the ARPINSTALLLOCATION as required by
+   Windows 7.
+
+ * DNS lookups set the port numbers in network byte order within
+   the cache manager.
+
+ * Replace use of the 16-bit compatibility API WinExec with
+   ShellExecuteEx in afs_config.exe and afscreds.exe.  WinExec
+   is incompatible with Windows 7 / Server 2008 R2 UAC 
+   functionality.
+
+Since 1.5.64
+ * Short circuit background volume checks if a shutdown
+   or suspend request is received.
+
+ * Avoid contacting the file server in order to allocate
+   an empty buffer beyond the current length of the file.
+
+ * When a request for streams on a directory or mount 
+   point object is received, do not offer a default stream.
+   This was affecting the saving of roaming profiles.
+
+Since 1.5.63
+ * Fix Windows 2000 compatibility.  Do not call rand_s() 
+   even if it is compatible with the C run time library
+   version.
+
+ * Fix a data consistency error between the output of 
+   NetWkstaGetInfo and NetServerGetInfo RPCs, specify the Lan 
+   workstation group name "AFS", and report server name as 
+   "AFS" instead of "\\AFS" when the caller asks for "\\AFS".
+
+ * Enable executables to be run from \\AFS on Windows 7.  
+   Return "Name not found" instead of "File not found" when 
+   a directory or file name cannot be found.
+
+ * Prevent cache manager from marking file server "down" when 
+   the data returned in response to either RXAFS_FetchData64 
+   or RXAFS_StoreData64 is invalid.
+
+ * Add pioctl data validation to the AFS Explorer Shell extension.
+
+Since 1.5.62
+ * After 1.5.62 afslogon.dll would no longer crash but it 
+   also would not load "domain" specific configurations.
+   Fixed.
+
+ * An uninitialized variable was present in the symlink
+   recursion detection loop.
+
+ * Reverse addition of unique per file GUID during 
+   Create/Open responses. Inclusion of the GUID prevents 
+   Cygwin applications (and others) from accessing //afs.
+
+ * Treat "filename::$DATA" as a synonym for "filename".  
+   This addresses the recent report of roaming profiles 
+   failing to save back to the file server.
+
+ * When given a choice between an error from rx_Write() 
+   or RXAFS_EndStoreData(), use the rx_Write() error.  
+   This ensures that over quota and access denied errors 
+   are acted upon.
+
+ * If an error occurs during RXAFS_StoreData operations, 
+   apply that error to all of the buffers in the BIOD. 
+   This ensures that failures will not be retried if they 
+   will only fail again.
+
+ * Do not perform a DNS lookup for a cellname if the 
+   cellname prefix is _._AFS_IOCTL_._.  This will avoid 
+   DNS lookups when the query is for 
+   _._AFS_IOCTL_._.F7E5F580200909010061TTTTNT7TT.{10E39A49-4531-4496-A08E-842D4C440D20}.
+
+ * Fix Freelance root.afs volume object callback processing.  
+   Object synchronization and status merging bugs.
+
+ * Fix Explorer Shell "invalid parameter" bug introduced 
+   in 1.5.62.
+
+ * Log RXKAD errors to the trace log.
+
+ * Prevent simultaneous pioctl calls from multiple processes 
+   from stepping on each other's data.
+
+ * Prevent simultaneous pioctl calls from crashing the 
+   afsd_service.
+
+ * Add data validation to pioctl output processing in 
+   ktc_GetToken and ktc_ListTokens.
+
+ * Add data validation to pioctl output processing in 
+   fs.exe and symlink.exe.
+
+Since 1.5.61
+ * IMPORTANT: New support for DCE RPC Services: SRVSVC and WKSSVC.
+   No longer will browsing \\AFS produce truncated share names.
+
+ * Registry specified server preferences did not result in
+   the CM_SERVERFLAG_PREF_SET flag being applied to the
+   cm_server_t object.  
+
+ * Avoid unnecessary DNS lookups of share names as cells
+   when it is known that the name cannot be a cell name.
+   Any name that does not contain a dot is skipped.
+
+ * When processing Dfs Referral requests, do not return an
+   error if the server is down or busy; if the volume is
+   offline; the cell vldb cannot be reached; etc.
+   These paths are still \\AFS paths and so the client 
+   should not be sent to search elsewhere for resolution.
+
+ * CRITICAL: Prevent the cm_Daemon thread from terminating when
+   the machine enters the suspend state.  IF the cm_Daemon thread
+   dies, there is nothing to execute down server checks.
+
+ * Prevent use of smb_StartedLock before initialization which
+   can result in a panic in the lock package.
+
+ * Improve error checking in afslogon.dll in order to prevent
+   NULL pointer dereferences within GetLogonDomainOptions()
+   if the Lsa operations fail.
+
+ * Add support to the build system to automatically update
+   a Microsoft Symbol Store.
+
+ * Do not access the cm_conn_t after executing the cm_Analyze
+   loops.  Doing so can result in an access to memory that has
+   been freed.
+
+ * CRITICAL: If a StoreData request offset is not aligned on the 
+   buffer module blockSize, (offset % blockSize) bytes of dirty
+   data will not be written to the file server.
+
+ * CRITICAL: If a StoreData64 request is sent to a file server
+   that does not support large files (>2GB) and the client is 
+   unaware that the server has no large file support, the first 
+   chunksize worth of data will not be written to the file server.
+   This bug was introduced in 1.5.3.   It affects all IBM AFS file
+   servers and all OpenAFS file servers older than 1.4.0.
+
 Since 1.5.60
  * If a file server becomes inaccessible while the cache manager has 
    dirty buffers to write, the afsd_service buf_IncrSync thread can 

@@ -32,12 +32,12 @@
 #ifdef AFS_SGI64_ENV
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags,
-	   int amode, struct vcache **avcp, struct AFS_UCRED *acred)
+	   int amode, struct vcache **avcp, afs_ucred_t *acred)
 #else /* AFS_SGI64_ENV */
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	   enum vcexcl aexcl, int amode, struct vcache **avcp,
-	   struct AFS_UCRED *acred)
+	   afs_ucred_t *acred)
 #endif				/* AFS_SGI64_ENV */
 {
     afs_int32 origCBs, origZaps, finalZaps;
@@ -271,7 +271,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = osi_Time();
-    InStatus.Group = (afs_int32) acred->cr_gid;
+    InStatus.Group = (afs_int32) afs_cr_gid(acred);
     if (AFS_NFSXLATORREQ(acred)) {
 	/*
 	 * XXX The following is mainly used to fix a bug in the HP-UX
@@ -330,22 +330,18 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    	afs_PutDCache(tdc);
 	    }
 	    ReleaseWriteLock(&adp->lock);
-#if !(defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV))
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+
+
 #if defined(AFS_SGI64_ENV)
 	    code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp,
 				  NULL, 0, NULL, acred);
-#else
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 	    code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
-#endif /* AFS_SGI64_ENV */
-#else /* SUN5 || SGI */
-#if defined(UKERNEL)
+#elif defined(UKERNEL)
 	    code = afs_lookup(adp, aname, avcp, acred, 0);
-#else /* UKERNEL */
+#elif !defined(AFS_DARWIN_ENV)
 	    code = afs_lookup(adp, aname, avcp, acred);
-#endif /* UKERNEL */
-#endif /* SUN5 || SGI */
-#endif /* !(AFS_OSF_ENV || AFS_DARWIN_ENV) */
+#endif
 	goto done;
         }
 
@@ -497,10 +493,6 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	/* return the new status in vattr */
 	afs_CopyOutAttrs(*avcp, attrs);
     }
-#ifdef	AFS_OSF_ENV
-    if (!code && !strcmp(aname, "core"))
-	tvc->f.states |= CCore1;
-#endif
 
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 20);

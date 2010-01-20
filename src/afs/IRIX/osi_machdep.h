@@ -27,10 +27,14 @@ extern time_t time;
 #define osi_Time() (time)
 
 /* This gets redefined from ucred to cred in osi_vfs.h, just do it right */
-#define	AFS_UCRED	cred
+typedef struct cred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #undef gop_lookupname
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp), NULL)
+
+#undef gop_lookupname_user
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp), NULL)
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
@@ -190,7 +194,13 @@ extern long afs_global_owner;
 
 #endif /* KERNEL  */
 
-
+#if defined(AFS_SGI62_ENV)
+# define osi_InitGlock() \
+	mutex_init(&afs_global_lock, MUTEX_DEFAULT, "afs_global_lock");
+#else
+# define osi_InitGlock() \
+        mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
+#endif
 
 #ifdef AFS_SGI64_ENV
 #define gop_rdwr(rw,gp,base,len,offset,segflg,ioflag,ulimit,cr,aresid) \

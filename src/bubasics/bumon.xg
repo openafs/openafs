@@ -8,6 +8,7 @@
  */
 
 package BC_
+prefix S
 statindex 3
 
 /* this junk structure forces the creation of an .xdr.c file,

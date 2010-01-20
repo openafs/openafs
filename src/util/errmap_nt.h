@@ -23,17 +23,57 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define EWOULDBLOCK        WSAEWOULDBLOCK
 #endif
 
-#define ETIMEDOUT          WSAETIMEDOUT
-#define EDQUOT		   WSAEDQUOT
-#define ELOOP              WSAELOOP
-#define EOPNOTSUPP         WSAEOPNOTSUPP
-#define ENOTSOCK           WSAENOTSOCK
-#define ECONNREFUSED       WSAECONNREFUSED
-#define ESTALE		   WSAESTALE
+#define EINPROGRESS             WSAEINPROGRESS
+#define EALREADY                WSAEALREADY
+#define ENOTSOCK                WSAENOTSOCK
+#define EDESTADDRREQ            WSAEDESTADDRREQ
+#define EMSGSIZE                WSAEMSGSIZE
+#define EPROTOTYPE              WSAEPROTOTYPE
+#define ENOPROTOOPT             WSAENOPROTOOPT
+#define EPROTONOSUPPORT         WSAEPROTONOSUPPORT
+#define ESOCKTNOSUPPORT         WSAESOCKTNOSUPPORT
+#define EOPNOTSUPP              WSAEOPNOTSUPP
+#define EPFNOSUPPORT            WSAEPFNOSUPPORT
+#define EAFNOSUPPORT            WSAEAFNOSUPPORT
+#define EADDRINUSE              WSAEADDRINUSE
+#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
+#define ENETDOWN                WSAENETDOWN
+#define ENETUNREACH             WSAENETUNREACH
+#define ENETRESET               WSAENETRESET
+#define ECONNABORTED            WSAECONNABORTED
+#define ECONNRESET              WSAECONNRESET
+#define ENOBUFS                 WSAENOBUFS
+#define EISCONN                 WSAEISCONN
+#define ENOTCONN                WSAENOTCONN
+#define ESHUTDOWN               WSAESHUTDOWN
+#define ETOOMANYREFS            WSAETOOMANYREFS
+#define ETIMEDOUT               WSAETIMEDOUT
+#define ECONNREFUSED            WSAECONNREFUSED
+#ifdef ELOOP
+#undef ELOOP
+#endif
+#define ELOOP                   WSAELOOP
+#ifdef ENAMETOOLONG
+#undef ENAMETOOLONG
+#endif
+#define ENAMETOOLONG            WSAENAMETOOLONG
+#define EHOSTDOWN               WSAEHOSTDOWN
+#define EHOSTUNREACH            WSAEHOSTUNREACH
+#ifdef ENOTEMPTY
+#undef ENOTEMPTY
+#endif 
+#define ENOTEMPTY               WSAENOTEMPTY
+#define EPROCLIM                WSAEPROCLIM
+#define EUSERS                  WSAEUSERS
+#define EDQUOT                  WSAEDQUOT
+#define ESTALE                  WSAESTALE
+#define EREMOTE                 WSAEREMOTE
 
-
-/* New codes */
-#define AFS_NT_ERRNO_BASE  WSABASEERR + 1000
+/* 
+ * New codes 
+ * Highest known value is WSA_QOS_RESERVED_PETYPE (WSABASEERR + 1031)
+ */
+#define AFS_NT_ERRNO_BASE  WSABASEERR + 1100
 
 #define EOVERFLOW          (AFS_NT_ERRNO_BASE + 0)
 #define ENOMSG             (AFS_NT_ERRNO_BASE + 1)
@@ -41,3 +81,4 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define ENOTBLK		   (AFS_NT_ERRNO_BASE + 3)
 
 #endif /* OPENAFS_ERRMAP_NT_H  */
+

@@ -529,7 +529,6 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     while ((def = get_definition())) {
 	print_datadef(def);
     }
-    printf("Printing ex_req\n");
     h_Proc_CodeGeneration();
     h_opcode_stats();
     hflag = 0;

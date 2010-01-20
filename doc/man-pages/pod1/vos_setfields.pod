@@ -8,14 +8,16 @@ vos_setfields - Sets the quota or clear the access counter on a volume.
 <div class="synopsis">
 
 B<vos setfields> S<<< B<-id> <I<volume name or ID>> >>>
-    S<<< B<-maxquota> <I<quota>> >>> [B<-clearuse>]
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [b<-noresolve>] [B<-help>]
+    S<<< B<-maxquota> <I<quota (KB)>> >>>
+    [B<-clearuse>] [B<-clearVolUpCounter>]
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos se> S<<< B<-id> <I<volume name or ID>> >>>
-    S<<< B<-maxquota> <I<quota>> >>> [B<-clearuse>]
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [b<-noresolve>] [B<-help>]
+    S<<< B<-m> <I<quota (KB)>> >>> [B<-cl>]
+    S<<< [B<-ce> <I<cell name>>] >>>
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
@@ -55,8 +57,15 @@ the volume's size.
 
 =item B<-clearuse>
 
-Clears the access counter on a volumes, which is shown as C<X accesses in
+Clears the access counter on a volume, which is shown as C<X accesses in
 the past day (i.e., vnode references)> in the B<vos examine> output.
+
+=item B<-clearVolUpCounter>
+
+Clears the modification counter on a volume. The modification counter
+will increment with time and stop updating when it reaches the maximum
+value. This option will reset it to 0. This option is available in OpenAFS
+version 1.5.0 or later.
 
 =item B<-cell> <I<cell name>>
 
@@ -77,23 +86,24 @@ to the Volume Server and Volume Location Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument or
 B<-noauth> flag. For more details, see L<vos(1)>.
 
-=item B<-encrypt>
-
-Encrypts the command so that the operation's results are not transmitted
-across the network in clear text.
-
-=item B<-noresolve>
-
-Shows all servers as IP addresses instead of the DNS name. This is very
-useful when the server address is registered as 127.0.0.1 or when dealing
-with multi-homed servers. The B<-noresolve> option is available in OpenAFS
-versions 1.4.8 or later and 1.5.35 or later.
-
 =item B<-verbose>
 
 Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text. This option is available in OpenAFS
+versions 1.4.11 or later and 1.5.60 or later.
+
+=item B<-noresolve>
+
+Shows all servers as IP addresses instead of the DNS name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. This option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
 
 =item B<-help>
 

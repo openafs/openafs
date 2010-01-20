@@ -90,7 +90,7 @@ extern int clock_nUpdates;
 #if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
 #define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)cv)
 #else
-#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || (defined(AFS_DARWIN100_ENV) && defined(__amd64__))
 #define        clock_GetTime(cv)                               \
     BEGIN                                              \
        struct timeval tv;                              \
@@ -133,7 +133,10 @@ extern int clock_nUpdates;
 	(c1)->sec += (c2)->sec;					\
     END
 
+#define USEC(cp)        ((cp->sec * 1000000) + cp->usec)
 #define MSEC(cp)	((cp->sec * 1000) + (cp->usec / 1000))
+#define _4THMSEC(cp)    ((cp->sec * 4000) + (cp->usec / 250))
+#define _8THMSEC(cp)    ((cp->sec * 8000) + (cp->usec / 125))
 
 /* Add ms milliseconds to time c1.  Both ms and c1 must be positive */
 #define	clock_Addmsec(c1, ms)					 \

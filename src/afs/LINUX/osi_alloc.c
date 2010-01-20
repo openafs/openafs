@@ -17,8 +17,8 @@
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "h/mm.h"
-#include "h/slab.h"
+#include <linux/mm.h>
+#include <linux/slab.h>
 
 #include "afs_atomlist.h"
 #include "afs_lhash.h"
@@ -49,14 +49,7 @@ unsigned int afs_linux_hash_verify_count = 0;	/* used by hash_verify */
 struct afs_lhash_stat afs_linux_lsb;	/* hash table statistics */
 unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN];	/* bucket population distribution in our hash table */
 
-#if defined(AFS_LINUX24_ENV)
-#include "h/vmalloc.h"
-#else
-/* externs : can we do this in a better way. Including vmalloc.h causes other
- * problems.*/
-extern void vfree(void *addr);
-extern void *vmalloc(unsigned long size);
-#endif
+#include <linux/vmalloc.h>
 
 /* Allocator support functions (static) */
 
@@ -86,13 +79,7 @@ linux_alloc(unsigned int asize, int drop_glock)
     /*  if we can use kmalloc use it to allocate the required memory. */
     while (!new && max_retry) {
 	if (asize <= MAX_KMALLOC_SIZE) {
-	    new = (void *)(unsigned long)kmalloc(asize,
-#ifdef GFP_NOFS
-						 GFP_NOFS
-#else
-						 GFP_KERNEL
-#endif
-		);
+	    new = (void *)(unsigned long)kmalloc(asize, GFP_NOFS);
 	    if (new)		/* piggy back alloc type */
 		new = (void *)(KM_TYPE | (unsigned long)new);
 	} else {
@@ -284,11 +271,7 @@ get_hash_stats(void)
 
 /************** Linux memory allocator interface functions **********/
 
-#if defined(AFS_LINUX24_ENV)
 DECLARE_MUTEX(afs_linux_alloc_sem);
-#else
-struct semaphore afs_linux_alloc_sem = MUTEX;
-#endif
 
 void *
 osi_linux_alloc(unsigned int asize, int drop_glock)

@@ -16,8 +16,11 @@
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/stds.h"
 static struct axscache *afs_axsfreelist = NULL;
+
+#define NAXSs (1000 / sizeof(struct axscache))
 static struct xfreelist {
     struct xfreelist *next;
+    struct axscache data[NAXSs];
 } *xfreemallocs = 0;
 static int afs_xaxscnt = 0;
 afs_rwlock_t afs_xaxs;
@@ -52,24 +55,25 @@ afs_SlowFindAxs(struct axscache **cachep, afs_int32 id)
 }
 
 
-#define NAXSs (1000 / sizeof(struct axscache))
 struct axscache *
 axs_Alloc(void)
 {
-    register struct axscache *i, *j, *xsp;
-    struct axscache *h;
+    struct axscache *i, *j;
+    struct xfreelist *h, *xsp;
     int k;
 
     ObtainWriteLock(&afs_xaxs, 174);
-    if ((h = afs_axsfreelist)) {
-	afs_axsfreelist = h->next;
+    if ((i = afs_axsfreelist)) {
+	afs_axsfreelist = i->next;
+	ReleaseWriteLock(&afs_xaxs);
+	return i;
     } else {
-	h = i = j =
-	    (struct axscache *)afs_osi_Alloc(NAXSs * sizeof(struct axscache));
+	h = afs_osi_Alloc(sizeof(struct xfreelist));
 	afs_xaxscnt++;
-	xsp = (struct axscache *)xfreemallocs;
-	xfreemallocs = (struct xfreelist *)h;
-	xfreemallocs->next = (struct xfreelist *)xsp;
+	xsp = xfreemallocs;
+	xfreemallocs = h;
+	xfreemallocs->next = xsp;
+	i = j = h->data;
 	for (k = 0; k < NAXSs - 1; k++, i++) {
 	    i->uid = -2;
 	    i->axess = 0;
@@ -78,10 +82,10 @@ axs_Alloc(void)
 	i->uid = -2;
 	i->axess = 0;
 	i->next = NULL;
-	afs_axsfreelist = h->next;
+	afs_axsfreelist = (h->data)->next;
     }
     ReleaseWriteLock(&afs_xaxs);
-    return (h);
+    return (h->data);
 }
 
 
@@ -165,8 +169,7 @@ afs_FreeAllAxs(struct axscache **headp)
 
 
 /* doesn't appear to be used at all */
-#if 0
-static void
+void
 shutdown_xscache(void)
 {
     struct xfreelist *xp, *nxp;
@@ -175,10 +178,9 @@ shutdown_xscache(void)
     xp = xfreemallocs;
     while (xp) {
 	nxp = xp->next;
-	afs_osi_Free((char *)xp, NAXSs * sizeof(struct axscache));
+	afs_osi_Free(xp, sizeof(struct xfreelist));
 	xp = nxp;
     }
     afs_axsfreelist = NULL;
     xfreemallocs = NULL;
 }
-#endif

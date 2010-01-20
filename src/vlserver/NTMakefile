@@ -95,6 +95,7 @@ $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # generate versioninfo resources
@@ -143,6 +144,7 @@ $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # build local vlclient
@@ -154,6 +156,7 @@ $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCL
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 
 ############################################################################

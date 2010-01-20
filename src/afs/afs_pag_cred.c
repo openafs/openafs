@@ -88,7 +88,7 @@ void afspag_SetPrimaryCell(char *acell)
 }
 
 
-int afspag_PUnlog(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
+int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     register afs_int32 i;
     register struct unixuser *tu;
@@ -99,7 +99,7 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
 	return EIO;		/* Inappropriate ioctl for device */
 
     pag = PagInCred(*acred);
-    uid = (pag == NOPAG) ? (*acred)->cr_uid : pag;
+    uid = (pag == NOPAG) ? afs_cr_uid(*acred) : pag;
     i = UHash(uid);
     ObtainWriteLock(&afs_xuser, 823);
     for (tu = afs_users[i]; tu; tu = tu->next) {
@@ -107,7 +107,7 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
 	    /* security is not having to say you're sorry */
-	    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 #ifdef UKERNEL
 	    /* set the expire times to 0, causes
 	     * afs_GCUserData to remove this entry
@@ -122,7 +122,7 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
 }
 
 
-int afspag_PSetTokens(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
+int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     afs_int32 i;
     register struct unixuser *tu;
@@ -172,26 +172,22 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
     if (!tcell) return ESRCH;
     if (set_parent_pag) {
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_DARWIN_ENV)
-	struct proc *p = current_proc();	/* XXX */
-#else
-	struct proc *p = curproc;	/* XXX */
-#endif
-#ifndef AFS_DARWIN80_ENV
+# if defined(AFS_DARWIN_ENV)
+	afs_proc_t *p = current_proc();	/* XXX */
+# else
+	afs_proc_t *p = curproc;	/* XXX */
+# endif
+# ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
 		p->p_pid, p->p_comm);
-#endif
+# endif
 	setpag(p, acred, -1, &pag, 1);
-#else
-#ifdef	AFS_OSF_ENV
-	setpag(u.u_procp, acred, -1, &pag, 1);	/* XXX u.u_procp is a no-op XXX */
 #else
 	setpag(acred, -1, &pag, 1);
 #endif
-#endif
     }
     pag = PagInCred(*acred);
-    uid = (pag == NOPAG) ? (*acred)->cr_uid : pag;
+    uid = (pag == NOPAG) ? afs_cr_uid(*acred) : pag;
     /* now we just set the tokens */
     tu = afs_GetUser(uid, tcell->cellnum, WRITE_LOCK);
     if (!tu->cellinfo)
@@ -313,7 +309,7 @@ out:
 }
 
 
-int afspag_PSetSysName(char *ain, afs_int32 ainSize, struct AFS_UCRED **acred)
+int afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     int setsysname, count, t;
     char *cp, *setp;

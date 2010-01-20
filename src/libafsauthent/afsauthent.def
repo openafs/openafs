@@ -139,3 +139,4 @@ EXPORTS
         ubik_PR_UpdateEntry				@137
         ubik_PR_ListEntries				@138
         ubik_PR_ListSuperGroups				@139
+        ugen_ClientInit                                 @140

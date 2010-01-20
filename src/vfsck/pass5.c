@@ -100,7 +100,7 @@ pass5()
     struct cg *ocg = (struct cg *)buf;
 #endif /* AFS_NEWCG_ENV */
 
-    memset((char *)newcg, 0, (int)fs->fs_cgsize);
+    memset(newcg, 0, (int)fs->fs_cgsize);
     newcg->cg_niblk = fs->fs_ipg;
 #ifdef AFS_NEWCG_ENV
     postype = (int)fs->fs_postblformat;
@@ -154,10 +154,10 @@ pass5()
 #endif /* AFS_NEWCG_ENV */
 
     }
-    memset((char *)&idesc[0], 0, sizeof idesc);
+    memset(&idesc[0], 0, sizeof idesc);
     for (i = 0; i < 3; i++)
 	idesc[i].id_type = ADDR;
-    memset((char *)&cstotal, 0, sizeof(struct csum));
+    memset(&cstotal, 0, sizeof(struct csum));
     (void)time(&now);
 #ifdef notdef
     /* this is the original from UCB/McKusick, but it is clearly wrong.  It is
@@ -213,14 +213,14 @@ pass5()
 	    newcg->cg_irotor = cg->cg_irotor;
 	else
 	    newcg->cg_irotor = 0;
-	memset((char *)&newcg->cg_frsum[0], 0, sizeof newcg->cg_frsum);
+	memset(&newcg->cg_frsum[0], 0, sizeof newcg->cg_frsum);
 #ifdef AFS_NEWCG_ENV
-	memset((char *)&cg_blktot(newcg)[0], 0, sumsize + mapsize);
+	memset(&cg_blktot(newcg)[0], 0, sumsize + mapsize);
 #else /* AFS_NEWCG_ENV */
-	memset((char *)newcg->cg_btot, 0, sizeof(newcg->cg_btot));
-	memset((char *)newcg->cg_b, 0, sizeof(newcg->cg_b));
-	memset((char *)newcg->cg_iused, 0, sizeof(newcg->cg_iused));
-	memset((char *)newcg->cg_free, 0, howmany(fs->fs_fpg, NBBY));
+	memset(newcg->cg_btot, 0, sizeof(newcg->cg_btot));
+	memset(newcg->cg_b, 0, sizeof(newcg->cg_b));
+	memset(newcg->cg_iused, 0, sizeof(newcg->cg_iused));
+	memset(newcg->cg_free, 0, howmany(fs->fs_fpg, NBBY));
 #endif /* AFS_NEWCG_ENV */
 #ifdef AFS_NEWCG_ENV
 	if (fs->fs_postblformat == FS_42POSTBLFMT)

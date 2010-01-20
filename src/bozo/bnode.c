@@ -38,9 +38,8 @@
 #include "bnode.h"
 #include "bosprototypes.h"
 
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
-/* All known versions of AIX lack WCOREDUMP but this works */
-#define WCOREDUMP(x) ((x) & 0x80)
+#ifndef WCOREDUMP
+#define WCOREDUMP(x) ((x) & 0200)
 #endif
 
 #define BNODE_LWP_STACKSIZE	(16 * 1024)
@@ -819,9 +818,9 @@ void
 bnode_Int(int asignal)
 {
     if (asignal == SIGQUIT) {
-	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *) asignal);
+	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *)(intptr_t)asignal);
     } else {
-	IOMGR_SoftSig(bnode_SoftInt, (void *) asignal);
+	IOMGR_SoftSig(bnode_SoftInt, (void *)(intptr_t)asignal);
     }
 }
 
@@ -846,7 +845,7 @@ bnode_Init(void)
 			     "bnode-manager", &bproc_pid);
     if (code)
 	return code;
-    memset((char *)&newaction, 0, sizeof(newaction));
+    memset(&newaction, 0, sizeof(newaction));
     newaction.sa_handler = bnode_Int;
     code = sigaction(SIGCHLD, &newaction, NULL);
     if (code)

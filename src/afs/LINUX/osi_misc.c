@@ -16,52 +16,27 @@
 
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
-#if defined(AFS_LINUX26_ENV)
-#include "h/dcache.h"
-#include "h/namei.h"
-#include "h/kthread.h"
-#endif
+#include <linux/dcache.h>
+#include <linux/namei.h>
+#include <linux/kthread.h>
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#if defined(AFS_LINUX24_ENV)
-#include "h/smp_lock.h"
-#endif
+#include <linux/smp_lock.h>
 
 int afs_osicred_initialized = 0;
-struct AFS_UCRED afs_osi_cred;
+afs_ucred_t afs_osi_cred;
 
 void
 afs_osi_SetTime(osi_timeval_t * tvp)
 {
-#if defined(AFS_LINUX24_ENV)
-
-#if defined(AFS_LINUX26_ENV)
     struct timespec tv;
     tv.tv_sec = tvp->tv_sec;
     tv.tv_nsec = tvp->tv_usec * NSEC_PER_USEC;
-#else
-    struct timeval tv;
-    tv.tv_sec = tvp->tv_sec;
-    tv.tv_usec = tvp->tv_usec;
-#endif
 
     AFS_STATCNT(osi_SetTime);
 
     do_settimeofday(&tv);
-#else
-    extern int (*sys_settimeofdayp) (struct timeval * tv,
-				     struct timezone * tz);
-
-    KERNEL_SPACE_DECL;
-
-    AFS_STATCNT(osi_SetTime);
-
-    TO_USER_SPACE();
-    if (sys_settimeofdayp)
-	(void)(*sys_settimeofdayp) (tvp, NULL);
-    TO_KERNEL_SPACE();
-#endif
 }
 
 void
@@ -73,7 +48,6 @@ osi_linux_mask(void)
     SIG_UNLOCK(current);
 }
 
-#if defined(AFS_LINUX24_ENV)
 /* LOOKUP_POSITIVE is becoming the default */
 #ifndef LOOKUP_POSITIVE
 #define LOOKUP_POSITIVE 0
@@ -90,12 +64,7 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 
     if (followlink)
        flags |= LOOKUP_FOLLOW;
-#if defined(AFS_LINUX26_ENV)
     code = path_lookup(aname, flags, &nd);
-#else
-    if (path_init(aname, flags, &nd))
-        code = path_walk(aname, &nd);
-#endif
 
     if (!code) {
 #if defined(STRUCT_NAMEIDATA_HAS_PATH)
@@ -112,9 +81,10 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
     }
     return code;
 }
+
 int
 osi_lookupname(char *aname, uio_seg_t seg, int followlink, 
-			struct dentry **dpp)
+	       struct dentry **dpp)
 {
     int code;
     char *tname;
@@ -132,37 +102,7 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink,
     }
     return code;
 }
-#else
-int
-osi_lookupname(char *aname, uio_seg_t seg, int followlink, struct dentry **dpp)
-{
-    struct dentry *dp = NULL;
-    int code;
 
-    code = ENOENT;
-    if (seg == AFS_UIOUSER) {
-	dp = followlink ? namei(aname) : lnamei(aname);
-    } else {
-	dp = lookup_dentry(aname, NULL, followlink ? 1 : 0);
-    }
-
-    if (dp && !IS_ERR(dp)) {
-	if (dp->d_inode) {
-	    *dpp = dp;
-	    code = 0;
-	} else
-	    dput(dp);
-    }
-
-    return code;
-}
-#endif
-
-
-#ifdef AFS_LINUX26_ENV
-/* This is right even for Linux 2.4, but on that version d_path is inline
- * and implemented in terms of __d_path, which is not exported.
- */
 int osi_abspath(char *aname, char *buf, int buflen,
 		int followlink, char **pathp)
 {
@@ -215,4 +155,3 @@ void afs_start_thread(void (*proc)(void), char *name)
 {
     kthread_run(afs_thread_wrapper, proc, "%s", name);
 }
-#endif

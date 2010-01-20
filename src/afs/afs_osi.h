@@ -68,7 +68,6 @@ struct osi_file {
 #endif
     int (*proc) (struct osi_file * afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
     char *rock;			/* rock passed to proc */
-    ino_t inum;			/* guarantee validity of hint */
 #if defined(UKERNEL)
     int fd;			/* file descriptor for user space files */
 #endif				/* defined(UKERNEL) */
@@ -122,34 +121,17 @@ struct afs_osi_WaitHandle {
 #endif
 
 /*
- * Vnode related macros
+ * Default vnode related macros
+ *
+ * Darwin, all of the BSDs, and Linux have their own
  */
-#if defined(AFS_DARWIN80_ENV)
-#define vType(vc)               vnode_vtype(AFSTOV(vc))
-#define vSetVfsp(vc, vfsp)      
-#define vSetType(vc, type)      (vc)->f.m.Type = (type)
-extern int afs_vfs_typenum;
-#define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
-#define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX22_ENV)
-#define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
-#define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
-#define vType(vc)               AFSTOV(vc)->v_type
-#else
-#define	vType(vc)	    (vc)->v.v_type
-#define	vSetType(vc,type)   (vc)->v.v_type = (type)
-#define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
-#endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int (**afs_vnodeop_p) ();
-#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
-#define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
-#else
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_LINUX20_ENV)
+# define	vType(vc)	    (vc)->v.v_type
+# define	vSetType(vc,type)   (vc)->v.v_type = (type)
+# define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
 extern struct vnodeops *afs_ops;
-#define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
-#define	SetAfsVnode(v)	    (v)->v_op = afs_ops
-#endif
+# define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
+# define	SetAfsVnode(v)	    (v)->v_op = afs_ops
 #endif
 
 /*
@@ -191,9 +173,9 @@ typedef struct timeval32 osi_timeval_t;
 typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
 
+#ifndef UKERNEL
 #define osi_getpid() 		getpid()
-
-#define osi_getpid() 		getpid()
+#endif
 
 /*
  * osi_ThreadUnique() should yield a value that can be found in ps
@@ -204,12 +186,12 @@ typedef struct timeval osi_timeval_t;
 #ifdef AFS_FBSD50_ENV
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	curproc
-#else
-#ifdef AFS_LINUX_ENV
+#elif defined(AFS_LINUX_ENV)
 #define osi_ThreadUnique()	(current->pid)
+#elif defined(UKERNEL)
+#define osi_ThreadUnique()	osi_getpid()
 #else
 #define osi_ThreadUnique()	getpid()
-#endif
 #endif
 
 
@@ -279,7 +261,7 @@ typedef struct timeval osi_timeval_t;
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
-#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL)
+#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL) && !defined(AFS_DARWIN100_ENV)
 #define __U(X) CAST_USER_ADDR_T((X))
 #else
 #define __U(X) (X)
@@ -291,7 +273,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyin(__U((SRC)),(DST),(LEN));			\
+	    CODE = copyin(__U((SRC)),(DST),(LEN));	\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
@@ -328,7 +310,7 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 #else
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -375,20 +357,18 @@ typedef struct timeval osi_timeval_t;
 	    uio_setrw((UIO),(RW));				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#else
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    CODE = uiomove((SRC),(LEN),(RW),(UIO));		\
 	} while(0)
-#endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
-#endif /* AFS_DARWIN80_ENV */
+#endif
 
 #endif /* AFS_GLOBAL_SUNLOCK */
 
@@ -441,7 +421,7 @@ typedef struct timeval osi_timeval_t;
 /* Declare any structures which use these macros after the OSI implementation
  * has had the opportunity to redefine them.
  */
-extern struct AFS_UCRED afs_osi_cred, *afs_osi_credp;
+extern afs_ucred_t afs_osi_cred, *afs_osi_credp;
 
 #ifndef osi_curcred
 #define osi_curcred() (u.u_cred)

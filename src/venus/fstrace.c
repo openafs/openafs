@@ -689,7 +689,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
 	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset((char *)lip, 0, sizeof(*lip));
+	    memset(lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = (char *)malloc(strlen(tname) + 1);
@@ -707,7 +707,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
 	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset((char *)lip, 0, sizeof(*lip));
+	    memset(lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = (char *)malloc(strlen(tname) + 1);
@@ -1135,7 +1135,7 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 #endif
     /* Linux can only handle 5 arguments in the actual syscall. */
     if (call == AFSCALL_ICL) {
-	rval = proc_afs_syscall(call, parm0, parm1, parm2, eparm, &code);
+	rval = proc_afs_syscall(call, parm0, parm1, parm2, (long)eparm, &code);
 	if (rval)
 	    code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, eparm);
     } else {
@@ -1662,7 +1662,7 @@ GetBulkSetInfo(void)
 	    exit(1);
 	}
     }
-    memset((char *)setInfo, 0, infoSize);
+    memset(setInfo, 0, infoSize);
 
     return setInfo;
 }
@@ -1684,7 +1684,7 @@ GetBulkLogInfo(void)
 	}
     }
 
-    memset((char *)logInfo, 0, infoSize);
+    memset(logInfo, 0, infoSize);
     return logInfo;
 }
 

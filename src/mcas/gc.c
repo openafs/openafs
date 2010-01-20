@@ -43,6 +43,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "portable_defns.h"
 #include "gc.h"
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <afs/afsutil.h>
+
 /*#define MINIMAL_GC*/
 /*#define YIELD_TO_HELP_PROGRESS*/
 #define PROFILE_GC
@@ -51,8 +55,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INVALID_BYTE 0
 #define INITIALISE_NODES(_p,_c) memset((_p), INVALID_BYTE, (_c));
 
-/* Number of unique block sizes we can deal with. */
-#define MAX_SIZES 20
+/* Number of unique block sizes we can deal with. Equivalently, the
+ * number of unique object caches which can be created. */
+#define MAX_SIZES 30
 
 #define MAX_HOOKS 4
 
@@ -108,6 +113,10 @@ static struct gc_global_st
     VOLATILE unsigned int inreclaim;
     CACHE_PAD(2);
 
+
+    /* Allocator caches currently defined */
+    long n_allocators;
+
     /*
      * RUN-TIME CONSTANTS (to first approximation)
      */
@@ -118,6 +127,9 @@ static struct gc_global_st
     /* Node sizes (run-time constants). */
     int nr_sizes;
     int blk_sizes[MAX_SIZES];
+
+    /* tags (trace support) */
+    char *tags[MAX_SIZES];
 
     /* Registered epoch hooks. */
     int nr_hooks;
@@ -172,13 +184,15 @@ struct gc_st
     chunk_t *hook[NR_EPOCHS][MAX_HOOKS];
 };
 
+/* XXX generalize */
+#ifndef KERNEL
 
-#define MEM_FAIL(_s)                                                         \
-do {                                                                         \
+#define MEM_FAIL(_s) \
+do { \
     fprintf(stderr, "OUT OF MEMORY: %d bytes at line %d\n", (_s), __LINE__); \
-    exit(1);                                                                 \
+    abort(); \
 } while ( 0 )
-
+#endif
 
 /* Allocate more empty chunks from the heap. */
 #define CHUNKS_PER_ALLOC 1000
@@ -186,6 +200,9 @@ static chunk_t *alloc_more_chunks(void)
 {
     int i;
     chunk_t *h, *p;
+
+    ViceLog(11, ("GC: alloc_more_chunks alloc %lu chunks\n",
+        CHUNKS_PER_ALLOC));
 
     h = p = ALIGNED_ALLOC(CHUNKS_PER_ALLOC * sizeof(*h));
     if ( h == NULL ) MEM_FAIL(CHUNKS_PER_ALLOC * sizeof(*h));
@@ -339,9 +356,13 @@ static void gc_reclaim(void)
     unsigned long curr_epoch;
     chunk_t      *ch, *t;
     int           two_ago, three_ago, i, j;
+
+    ViceLog(11, ("GC: gc_reclaim enter\n"));
  
     /* Barrier to entering the reclaim critical section. */
     if ( gc_global.inreclaim || CASIO(&gc_global.inreclaim, 0, 1) ) return;
+
+    ViceLog(11, ("GC: gc_reclaim after inreclaim barrier\n"));
 
     /*
      * Grab first ptst structure *before* barrier -- prevent bugs
@@ -356,6 +377,9 @@ static void gc_reclaim(void)
     {
         if ( (ptst->count > 1) && (ptst->gc->epoch != curr_epoch) ) goto out;
     }
+
+
+    ViceLog(11, ("GC: gc_reclaim all-threads see current epoch\n"));
 
     /*
      * Three-epoch-old garbage lists move to allocation lists.
@@ -392,6 +416,30 @@ static void gc_reclaim(void)
             gc->garbage_tail[three_ago][i]->next = ch;
             gc->garbage_tail[three_ago][i] = t;
             t->next = t;
+
+			/* gc inst: compute and log size of returned list */
+			{
+				chunk_t *ch_head, *ch_next;
+				int r_ix, r_len, r_size;
+				r_ix = 0;
+				r_len = 0;
+				r_size = 0;
+
+				/* XXX: nonfatal, may be missing multiplier */
+				ch_head = ch;
+			    do {
+					r_len++;
+				} while (ch->next && (ch->next != ch_head)
+						 && (ch_next = ch->next));
+
+				ViceLog(11, ("GC: return %d chunks of size %d to "
+							 "gc_global.alloc[%d]\n",
+							 r_len,
+							 gc_global.blk_sizes[i],
+							 i));
+			}
+
+
             add_chunks_to_list(ch, gc_global.alloc[i]);
         }
 
@@ -406,11 +454,32 @@ static void gc_reclaim(void)
             do { for ( j = 0; j < t->i; j++ ) fn(our_ptst, t->blk[j]); }
             while ( (t = t->next) != ch );
 
+			/* gc inst: compute and log size of returned list */
+			{
+				chunk_t *ch_head, *ch_next;
+				int r_ix, r_len, r_size;
+				r_ix = 0;
+				r_len = 0;
+
+				/* XXX: nonfatal, may be missing multiplier */
+				ch_head = ch;
+			    do {
+					r_len++;
+				} while (ch->next && (ch->next != ch_head)
+						 && (ch_next = ch->next));
+
+				ViceLog(11, ("GC: return %d chunks to gc_global.free_chunks\n",
+							 r_len));
+			}
+
             add_chunks_to_list(ch, gc_global.free_chunks);
         }
     }
 
     /* Update current epoch. */
+    ViceLog(11, ("GC: gc_reclaim epoch transition (leaving %lu)\n",
+				 curr_epoch));
+
     WMB();
     gc_global.current = (curr_epoch+1) % NR_EPOCHS;
 
@@ -447,6 +516,17 @@ void *gc_alloc(ptst_t *ptst, int alloc_id)
     return ch->blk[--ch->i];
 }
 
+int
+gc_get_blocksize(int alloc_id)
+{
+    return (gc_global.blk_sizes[alloc_id]);
+}
+
+int
+gc_get_tag(int alloc_id)
+{
+    return (gc_global.tags[alloc_id]);
+}
 
 static chunk_t *chunk_from_cache(gc_t *gc)
 {
@@ -617,11 +697,26 @@ gc_t *gc_init(void)
 }
 
 
-int gc_add_allocator(int alloc_size)
+int
+gc_add_allocator(int alloc_size, char *tag)
 {
-    int ni, i = gc_global.nr_sizes;
-    while ( (ni = CASIO(&gc_global.nr_sizes, i, i+1)) != i ) i = ni;
-    gc_global.blk_sizes[i]  = alloc_size;
+    int ni, i;
+
+    RMB();
+    FASPO(&gc_global.n_allocators, gc_global.n_allocators + 1);
+    if (gc_global.n_allocators > MAX_SIZES) {
+	/* critical error */
+#if !defined(KERNEL)
+	printf("MCAS gc max allocators exceeded, aborting\n");
+#endif
+	abort();
+    }
+
+    i = gc_global.nr_sizes;
+    while ((ni = CASIO(&gc_global.nr_sizes, i, i + 1)) != i)
+	i = ni;
+    gc_global.blk_sizes[i] = alloc_size;
+    gc_global.tags[i] = strdup(tag);
     gc_global.alloc_size[i] = ALLOC_CHUNKS_PER_LIST;
     gc_global.alloc[i] = get_filled_chunks(ALLOC_CHUNKS_PER_LIST, alloc_size);
     return i;

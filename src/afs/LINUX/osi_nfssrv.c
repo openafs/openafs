@@ -21,7 +21,7 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "nfsclient.h"
-#include "h/smp_lock.h"
+#include <linux/smp_lock.h>
 #include <linux/sunrpc/svc.h>
 #include <linux/sunrpc/svcauth.h>
 
@@ -94,7 +94,7 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
 {
     struct nfs_server_thread *ns;
     struct afs_exporter *outexp;
-    struct AFS_UCRED *credp;
+    afs_ucred_t *credp;
     struct sockaddr_in *addr;
     int code;
 
@@ -120,14 +120,14 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
     ns->code		= EACCES;
     ns->client_addr	= *addr;
     ns->client_addrlen	= rqstp->rq_addrlen;
-    ns->client_uid	= rqstp->rq_cred.cr_uid;
-    ns->client_gid	= rqstp->rq_cred.cr_gid;
-    if (rqstp->rq_cred.cr_group_info->ngroups > 0)
-	ns->client_g0	= GROUP_AT(rqstp->rq_cred.cr_group_info, 0);
+    ns->client_uid	= afs_cr_uid(&rqstp->rq_cred);
+    ns->client_gid	= afs_cr_gid(&rqstp->rq_cred);
+    if (cr_group_info(&rqstp->rq_cred)->ngroups > 0)
+	ns->client_g0	= GROUP_AT(cr_group_info(&rqstp->rq_cred), 0);
     else
 	ns->client_g0	= -1;
-    if (rqstp->rq_cred.cr_group_info->ngroups > 1)
-	ns->client_g1	= GROUP_AT(rqstp->rq_cred.cr_group_info, 1);
+    if (cr_group_info(&rqstp->rq_cred)->ngroups > 1)
+	ns->client_g1	= GROUP_AT(cr_group_info(&rqstp->rq_cred), 1);
     else
 	ns->client_g1	= -1;
 
@@ -138,15 +138,15 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
     }
 
     credp = crget();
-    credp->cr_uid = rqstp->rq_cred.cr_uid;
-    credp->cr_gid = rqstp->rq_cred.cr_gid;
-    get_group_info(rqstp->rq_cred.cr_group_info);
-    credp->cr_group_info = rqstp->rq_cred.cr_group_info;
+    afs_set_cr_uid(credp, afs_cr_uid(&rqstp->rq_cred));
+    afs_set_cr_gid(credp, afs_cr_gid(&rqstp->rq_cred));
+    get_group_info(cr_group_info(&rqstp->rq_cred));
+    set_cr_group_info(credp, cr_group_info(&rqstp->rq_cred));
 
     /* avoid creating wildcard entries by mapping anonymous
      * clients to afs_nobody */
-    if (credp->cr_uid == -1)
-	credp->cr_uid = -2;
+    if (afs_cr_uid(credp) == -1)
+	afs_set_cr_uid(credp, -2);
     code = afs_nfsclient_reqhandler(0, &credp, addr->sin_addr.s_addr,
 				    &ns->uid, &outexp);
     if (!code && outexp) EXP_RELE(outexp);
@@ -181,7 +181,7 @@ svcauth_afs_release(struct svc_rqst *rqstp)
 #endif
 
 
-int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr, int *code)
+int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr, int *code)
 {
     struct nfs_server_thread *ns;
 
@@ -191,7 +191,7 @@ int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr, int *code)
 
     *code = ns->code;
     if (!ns->code) {
-	cr->cr_ruid = NFSXLATOR_CRED;
+	afs_cr_ruid(cr) = NFSXLATOR_CRED;
 	av->uid = ns->uid;
     }
     return 1;

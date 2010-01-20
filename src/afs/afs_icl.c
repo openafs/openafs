@@ -32,9 +32,9 @@
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
 
-#if defined(AFS_OSF_ENV) || defined(AFS_SGI61_ENV)
+#if defined(AFS_SGI61_ENV)
 /* For SGI 6.2, this can is changed to 1 if it's a 32 bit kernel. */
-#if defined(AFS_SGI62_ENV) && defined(KERNEL) && !defined(_K64U64)
+#if defined(AFS_SGI62_ENV) && !defined(_K64U64)
 int afs_icl_sizeofLong = 1;
 #else
 int afs_icl_sizeofLong = 2;
@@ -55,6 +55,33 @@ afs_icl_Init(void)
 {
     afs_icl_inited = 1;
     return 0;
+}
+
+/* Function called at shutdown - zap everything */
+void
+shutdown_icl(void)
+{
+    struct afs_icl_log *logp;
+    struct afs_icl_set *setp;
+
+    setp = afs_icl_FindSet("cm");
+    if (setp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_SetFree(setp);
+	afs_icl_SetFree(setp);
+    }
+    setp = afs_icl_FindSet("cmlongterm");
+    if (setp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_SetFree(setp);
+	afs_icl_SetFree(setp);
+    }
+    logp = afs_icl_FindLog("cmfx");
+    if (logp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_LogFree(logp);
+	afs_icl_LogFree(logp);
+    }
 }
 
 int
@@ -81,8 +108,28 @@ struct afs_icl_log *afs_icl_FindLog(char *);
 struct afs_icl_set *afs_icl_FindSet(char *);
 
 
+#ifdef AFS_DARWIN100_ENV
+#define AFSKPTR(X) k ## X
 int
 Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
+{
+    return Afscall64_icl(opcode,
+			 CAST_USER_ADDR_T((p1)),
+			 CAST_USER_ADDR_T((p2)),
+			 CAST_USER_ADDR_T((p3)),
+			 CAST_USER_ADDR_T((p4)),
+			 retval);
+}
+#else
+#define AFSKPTR(X) ((caddr_t)X)
+#endif
+
+int
+#ifdef AFS_DARWIN100_ENV
+Afscall64_icl(int opcode, user_addr_t kp1, user_addr_t kp2, user_addr_t kp3, user_addr_t kp4, int *retval)
+#else
+Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
+#endif
 {
     afs_int32 *lp, elts, flags;
     register afs_int32 code;
@@ -101,6 +148,12 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     afs_int32 startCookie;
     afs_int32 allocated;
     struct afs_icl_log *tlp;
+#ifdef AFS_DARWIN100_ENV
+    afs_uint32 p1 = (afs_uint32)kp1;
+    afs_uint32 p2 = (afs_uint32)kp2;
+    afs_uint32 p3 = (afs_uint32)kp3;
+    afs_uint32 p4 = (afs_uint32)kp4;
+#endif
 
 #ifdef	AFS_SUN5_ENV
     if (!afs_suser(CRED())) {	/* only root can run this code */
@@ -124,10 +177,10 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	 * updates cookie to updated start (not end) if we had to
 	 * skip some records.
 	 */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
-	AFS_COPYIN((char *)p4, (char *)&startCookie, sizeof(afs_int32), code);
+	AFS_COPYIN(AFSKPTR(p4), (char *)&startCookie, sizeof(afs_int32), code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
@@ -146,10 +199,10 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	    osi_FreeLargeSpace((struct osi_buffer *)lp);
 	    break;
 	}
-	AFS_COPYOUT((char *)lp, (char *)p2, elts * sizeof(afs_int32), code);
+	AFS_COPYOUT((char *)lp, AFSKPTR(p2), elts * sizeof(afs_int32), code);
 	if (code)
 	    goto done;
-	AFS_COPYOUT((char *)&startCookie, (char *)p4, sizeof(afs_int32),
+	AFS_COPYOUT((char *)&startCookie, AFSKPTR(p4), sizeof(afs_int32),
 		    code);
 	if (code)
 	    goto done;
@@ -177,9 +230,9 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	temp = strlen(tlp->name) + 1;
 	if (temp > p3)
 	    return EINVAL;
-	AFS_COPYOUT(tlp->name, (char *)p2, temp, code);
+	AFS_COPYOUT(tlp->name, AFSKPTR(p2), temp, code);
 	if (!code)		/* copy out size of log */
-	    AFS_COPYOUT((char *)&tlp->logSize, (char *)p4, sizeof(afs_int32),
+	    AFS_COPYOUT((char *)&tlp->logSize, AFSKPTR(p4), sizeof(afs_int32),
 			code);
 	break;
 
@@ -187,7 +240,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	/* enumerate logs: p1=setname, p2=index, p3=&name, p4=sizeof(name).
 	 * return 0 for success, otherwise error.
 	 */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
@@ -200,12 +253,12 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	temp = strlen(tlp->name) + 1;
 	if (temp > p4)
 	    return EINVAL;
-	AFS_COPYOUT(tlp->name, (char *)p3, temp, code);
+	AFS_COPYOUT(tlp->name, AFSKPTR(p3), temp, code);
 	break;
 
     case ICL_OP_CLRLOG:	/* clear specified log */
 	/* zero out the specified log: p1=logname */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
@@ -217,7 +270,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 
     case ICL_OP_CLRSET:	/* clear specified set */
 	/* zero out the specified set: p1=setname */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
@@ -259,15 +312,15 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	temp = strlen(setp->name) + 1;
 	if (temp > p3)
 	    return EINVAL;
-	AFS_COPYOUT(setp->name, (char *)p2, temp, code);
+	AFS_COPYOUT(setp->name, AFSKPTR(p2), temp, code);
 	if (!code)		/* copy out size of log */
-	    AFS_COPYOUT((char *)&setp->states, (char *)p4, sizeof(afs_int32),
+	    AFS_COPYOUT((char *)&setp->states, AFSKPTR(p4), sizeof(afs_int32),
 			code);
 	break;
 
     case ICL_OP_SETSTAT:	/* set status on a set */
 	/* activate the specified set: p1=setname, p2=op */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
@@ -298,7 +351,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 
     case ICL_OP_SETLOGSIZE:	/* set size of log */
 	/* set the size of the specified log: p1=logname, p2=size (in words) */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
@@ -310,30 +363,30 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 
     case ICL_OP_GETLOGINFO:	/* get size of log */
 	/* zero out the specified log: p1=logname, p2=&logSize, p3=&allocated */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
 	if (!logp)
 	    return ENOENT;
 	allocated = !!logp->datap;
-	AFS_COPYOUT((char *)&logp->logSize, (char *)p2, sizeof(afs_int32),
+	AFS_COPYOUT((char *)&logp->logSize, AFSKPTR(p2), sizeof(afs_int32),
 		    code);
 	if (!code)
-	    AFS_COPYOUT((char *)&allocated, (char *)p3, sizeof(afs_int32),
+	    AFS_COPYOUT((char *)&allocated, AFSKPTR(p3), sizeof(afs_int32),
 			code);
 	afs_icl_LogRele(logp);
 	break;
 
     case ICL_OP_GETSETINFO:	/* get state of set */
 	/* zero out the specified set: p1=setname, p2=&state */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
 	if (!setp)
 	    return ENOENT;
-	AFS_COPYOUT((char *)&setp->states, (char *)p2, sizeof(afs_int32),
+	AFS_COPYOUT((char *)&setp->states, AFSKPTR(p2), sizeof(afs_int32),
 		    code);
 	afs_icl_SetRele(setp);
 	break;
@@ -487,16 +540,16 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
         (lp)->logElements++; \
     MACRO_END
 
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
 #define ICL_APPENDLONG(lp, x) \
     MACRO_BEGIN \
 	ICL_APPENDINT32((lp), ((x) >> 32) & 0xffffffffL); \
 	ICL_APPENDINT32((lp), (x) & 0xffffffffL); \
     MACRO_END
 
-#else /* AFS_OSF_ENV */
+#else
 #define ICL_APPENDLONG(lp, x) ICL_APPENDINT32((lp), (x))
-#endif /* AFS_OSF_ENV */
+#endif
 
 /* routine to tell whether we're dealing with the address or the
  * object itself
@@ -641,10 +694,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t1 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p1);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p1);
     }
@@ -681,10 +734,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t2 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p2);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p2);
     }
@@ -721,10 +774,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t3 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p3);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p3);
     }
@@ -761,10 +814,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t4 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p4);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p4);
     }
@@ -1218,7 +1271,7 @@ afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     if (flags & ICL_CRSET_FLAG_PERSISTENT)
 	states |= ICL_SETF_PERSISTENT;
 
-    setp = (struct afs_icl_set *)afs_osi_Alloc(sizeof(struct afs_icl_set));
+    setp = (struct afs_icl_set *)osi_AllocSmallSpace(sizeof(struct afs_icl_set));
     memset((caddr_t) setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)

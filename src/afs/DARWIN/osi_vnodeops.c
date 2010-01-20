@@ -745,7 +745,7 @@ afs_vop_read(ap)
     if (vnode_isdir(ap->a_vp)) 
 	return EISDIR;
 #ifdef AFS_DARWIN80_ENV
-    ubc_sync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_PUSHDIRTY);
+    ubc_msync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_PUSHDIRTY);
 #else
     if (UBCINFOEXISTS(ap->a_vp)) {
 	ubc_clean(ap->a_vp, 0);
@@ -886,7 +886,7 @@ afs_vop_write(ap)
     struct vcache *avc = VTOAFS(ap->a_vp);
     void *object;
 #ifdef AFS_DARWIN80_ENV
-    ubc_sync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_INVALIDATE);
+    ubc_msync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_INVALIDATE);
 #else
     if (UBCINFOEXISTS(ap->a_vp)) {
 	ubc_clean(ap->a_vp, 1);
@@ -1423,7 +1423,7 @@ afs_vop_rename(ap)
 	 * run mv as the user, thus:
 	 */
 	printf("su %d -c /bin/mv /afs/.:mount/%d:%d:%d:%d/%s /afs/.:mount/%d:%d:%d:%d/%s\n",
-	       (cn_cred(tcnp))->cr_uid, fvc->f.fid.Cell, fvc->f.fid.Fid.Volume,
+	       afs_cr_uid(cn_cred(tcnp)), fvc->f.fid.Cell, fvc->f.fid.Fid.Volume,
 	       fvc->f.fid.Fid.Vnode, fvc->f.fid.Fid.Unique, fname, 
 	       tvc->f.fid.Cell, tvc->f.fid.Fid.Volume, tvc->f.fid.Fid.Vnode, 
 	       tvc->f.fid.Fid.Unique, tname);

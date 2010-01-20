@@ -13,11 +13,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <mit-cpyright.h>
-#include <des.h>
 
 #include <stdio.h>
+#include <des.h>
+#include <des_prototypes.h>
 #ifdef	BSDUNIX
 #include <strings.h>
 #include <sys/ioctl.h>
@@ -67,8 +67,9 @@ des_read_password(C_Block *k, char *prompt, int verify)
     ok = read_pw_string(key_string, BUFSIZ, prompt, verify);
     if (ok == 0)
 	string_to_key(key_string, k);
-
+#ifdef BSDUNIX
   lose:
+#endif
     memset(key_string, 0, sizeof(key_string));
     return ok;
 }
@@ -162,7 +163,7 @@ read_pw_string(char *s, int max, char *prompt, int verify)
 #endif
 
     while (!ok) {
-	printf(prompt);
+	printf("%s", prompt);
 	fflush(stdout);
 #ifdef	CROSSMSDOS
 	h19line(s, sizeof(s), 0);
@@ -196,7 +197,9 @@ read_pw_string(char *s, int max, char *prompt, int verify)
 	ok = 1;
     }
 
+#ifdef BSDUNIX
   lose:
+#endif
     if (!ok)
 	memset(s, 0, max);
 #ifdef	BSDUNIX

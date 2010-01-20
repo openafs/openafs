@@ -82,11 +82,7 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				 * by wakeup calls; wait will not return until
 				 * it changes */
-#if defined(AFS_LINUX24_ENV)
     wait_queue_head_t cond;
-#else
-    struct wait_queue *cond;
-#endif
 } afs_event_t;
 
 #define HASHSIZE 128
@@ -146,11 +142,7 @@ afs_addevent(char *event)
     afs_evhashcnt++;
     newp->next = afs_evhasht[hashcode];
     afs_evhasht[hashcode] = newp;
-#if defined(AFS_LINUX24_ENV)
     init_waitqueue_head(&newp->cond);
-#else
-    init_waitqueue(&newp->cond);
-#endif
     newp->seq = 0;
     newp->event = &dummyV;	/* Dummy address for new events */
     newp->refcount = 0;
@@ -194,7 +186,6 @@ afs_osi_SleepSig(void *event)
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 	schedule();
-#ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
 	if (
 #ifdef PF_FREEZE
@@ -215,7 +206,6 @@ afs_osi_SleepSig(void *event)
 	    refrigerator(PF_FREEZE);
 #else
 	    refrigerator();
-#endif
 #endif
 #endif
 	AFS_GLOCK();
@@ -296,7 +286,6 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 	    code = EINTR;
     } else
 	schedule_timeout(ticks);
-#ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
     if (
 #ifdef PF_FREEZE
@@ -317,7 +306,6 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 	refrigerator(PF_FREEZE);
 #else
 	refrigerator();
-#endif
 #endif
 #endif
 

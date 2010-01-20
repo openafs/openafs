@@ -406,7 +406,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     rxkad_SetLevel(aconn, sconn->level);
     INC_RXKAD_STATS(responses[rxkad_LevelIndex(sconn->level)]);
     /* now compute endpoint-specific info used for computing 16 bit checksum */
-    rxkad_DeriveXORInfo(aconn, sconn->keysched, sconn->ivec, sconn->preSeq);
+    rxkad_DeriveXORInfo(aconn, &sconn->keysched, (char *)sconn->ivec, (char *)sconn->preSeq);
 
     /* otherwise things are ok */
     sconn->expirationTime = end;
@@ -470,7 +470,7 @@ afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
         if (currentValue) {
             *((afs_uint32 *)currentValue) = private->flags;
         } else { 
-            private->flags = (afs_uint32) avalue;
+            private->flags = (intptr_t)avalue;
         }
         break;
     default:

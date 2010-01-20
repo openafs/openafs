@@ -322,14 +322,9 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
-    MUTEX_EXIT(&call->lock);
-    USERPRI;
 
     /*
      * Most common case, all of the data is in the current iovec.
-     * We do not need the lock because this is the only thread that
-     * updates the curlen, curpos, nLeft fields.
-     *
      * We are relying on nLeft being zero unless the call is in receive mode.
      */
     tcurlen = call->curlen;
@@ -343,19 +338,13 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 
         if (!call->nLeft && call->currentPacket != NULL) {
             /* out of packet.  Get another one. */
-            NETPRI;
-            MUTEX_ENTER(&call->lock);
             rxi_FreePacket(call->currentPacket);
             call->currentPacket = (struct rx_packet *)0;
-            MUTEX_EXIT(&call->lock);
-            USERPRI;
         }
-	return nbytes;
-    }
+	bytes = nbytes;
+    } else
+        bytes = rxi_ReadProc(call, buf, nbytes);
 
-    NETPRI;
-    MUTEX_ENTER(&call->lock);
-    bytes = rxi_ReadProc(call, buf, nbytes);
     MUTEX_EXIT(&call->lock);
     USERPRI;
     return bytes;
@@ -380,14 +369,9 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
-    MUTEX_EXIT(&call->lock);
-    USERPRI;
 
     /*
      * Most common case, all of the data is in the current iovec.
-     * We do not need the lock because this is the only thread that
-     * updates the curlen, curpos, nLeft fields.
-     *
      * We are relying on nLeft being zero unless the call is in receive mode.
      */
     tcurlen = call->curlen;
@@ -401,19 +385,13 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
 	call->nLeft = (u_short)(tnLeft - sizeof(afs_int32));
         if (!call->nLeft && call->currentPacket != NULL) {
             /* out of packet.  Get another one. */
-            NETPRI;
-            MUTEX_ENTER(&call->lock);
             rxi_FreePacket(call->currentPacket);
             call->currentPacket = (struct rx_packet *)0;
-            MUTEX_EXIT(&call->lock);
-            USERPRI;
         }
-	return sizeof(afs_int32);
-    }
+	bytes = sizeof(afs_int32);
+    } else
+        bytes = rxi_ReadProc(call, (char *)value, sizeof(afs_int32));
 
-    NETPRI;
-    MUTEX_ENTER(&call->lock);
-    bytes = rxi_ReadProc(call, (char *)value, sizeof(afs_int32));
     MUTEX_EXIT(&call->lock);
     USERPRI;
     return bytes;
@@ -885,14 +863,9 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
-    MUTEX_EXIT(&call->lock);
-    USERPRI;
 
     /*
      * Most common case: all of the data fits in the current iovec.
-     * We do not need the lock because this is the only thread that
-     * updates the curlen, curpos, nFree fields.
-     *
      * We are relying on nFree being zero unless the call is in send mode.
      */
     tcurlen = (int)call->curlen;
@@ -903,12 +876,10 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 	call->curpos = tcurpos + nbytes;
 	call->curlen = (u_short)(tcurlen - nbytes);
 	call->nFree = (u_short)(tnFree - nbytes);
-	return nbytes;
-    }
+	bytes = nbytes;
+    } else
+        bytes = rxi_WriteProc(call, buf, nbytes);
 
-    NETPRI;
-    MUTEX_ENTER(&call->lock);
-    bytes = rxi_WriteProc(call, buf, nbytes);
     MUTEX_EXIT(&call->lock);
     USERPRI;
     return bytes;
@@ -933,14 +904,9 @@ rx_WriteProc32(struct rx_call *call, afs_int32 * value)
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
-    MUTEX_EXIT(&call->lock);
-    USERPRI;
 
     /*
      * Most common case: all of the data fits in the current iovec.
-     * We do not need the lock because this is the only thread that
-     * updates the curlen, curpos, nFree fields.
-     *
      * We are relying on nFree being zero unless the call is in send mode.
      */
     tcurlen = call->curlen;
@@ -956,12 +922,10 @@ rx_WriteProc32(struct rx_call *call, afs_int32 * value)
 	call->curpos = tcurpos + sizeof(afs_int32);
 	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
 	call->nFree = (u_short)(tnFree - sizeof(afs_int32));
-	return sizeof(afs_int32);
-    }
+	bytes = sizeof(afs_int32);
+    } else
+        bytes = rxi_WriteProc(call, (char *)value, sizeof(afs_int32));
 
-    NETPRI;
-    MUTEX_ENTER(&call->lock);
-    bytes = rxi_WriteProc(call, (char *)value, sizeof(afs_int32));
     MUTEX_EXIT(&call->lock);
     USERPRI;
     return bytes;
@@ -984,7 +948,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     int nextio;
     /* Temporary values, real work is done in rxi_WritevProc */
     int tnFree;
-    int tcurvec;
+    unsigned int tcurvec;
     char *tcurpos;
     int tcurlen;
 
@@ -1021,7 +985,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     tcurpos = call->curpos;
     tcurlen = call->curlen;
     do {
-	unsigned int t;
+	int t;
 
 	if (tnFree == 0) {
 	    /* current packet is full, allocate a new one */

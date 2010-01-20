@@ -25,10 +25,12 @@
             goto abort_exit;                                    \
         }
 
-/*need conversion to varargs*//*extern void ELog(afs_int32 task, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);
-extern void ErrorLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);
-extern void TLog(afs_int32 task, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);
-extern void TapeLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);*/
+extern void ErrorLog(int debug, afs_int32 task, afs_int32 error1,
+		     afs_int32 error2, char *fmt, ...);
+extern void TapeLog(int debug, afs_int32 task, afs_int32 error1,
+		    afs_int32 error2, char *fmt, ...);
+extern void TLog(afs_int32 task, char *fmt, ...);
+
 
 extern void FreeNode(afs_int32 taskID);
 extern void CreateNode(struct dumpNode **newNode);

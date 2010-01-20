@@ -11,14 +11,13 @@
  * Implements:
  * afs_fid
  *
- * afs_vptofh (DUX) is now in DUX/osi_vfsops.c
  */
 
 #include <afsconfig.h>
 #include "afs/param.h"
 
 
-#if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -69,7 +68,7 @@ extern int afs_NFSRootOnly;	/* 1 => only allow NFS mounts of /afs. */
 int
 #ifdef AFS_AIX41_ENV
 afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp)
-#elif defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
+#elif defined(AFS_SUN54_ENV)
 afs_fid(OSI_VC_DECL(avc), struct fid *fidpp)
 #else
 afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
@@ -154,4 +153,4 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 #endif
 
 
-#endif /* !AFS_DUX40_ENV && !AFS_LINUX20_ENV */
+#endif /* !AFS_LINUX20_ENV */

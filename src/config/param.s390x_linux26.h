@@ -23,6 +23,7 @@
 #define AFS_S390X_LINUX26_ENV	1
 
 #define AFS_64BITPOINTER_ENV	1
+#define AFS_64BITUSERPOINTER_ENV	1
 #define AFS_64BIT_KERNEL	1
 
 #else /* !defined(UKERNEL) */
@@ -35,6 +36,7 @@
 #define AFS_S390X_LINUX26_ENV	1
 
 #define AFS_64BITPOINTER_ENV	1
+#define AFS_64BITUSERPOINTER_ENV	1
 
 #endif /* !defined(UKERNEL) */
 

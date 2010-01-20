@@ -171,6 +171,8 @@ int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
 	rxkad_stats->des_encrypts[1] += thr_stats->des_encrypts[1];
 	rxkad_stats->des_key_scheds += thr_stats->des_key_scheds;
 	rxkad_stats->des_randoms += thr_stats->des_randoms;
+	rxkad_stats->clientObjects += thr_stats->clientObjects;
+	rxkad_stats->serverObjects += thr_stats->serverObjects;
 	rxkad_stats->spares[0] += thr_stats->spares[0];
 	rxkad_stats->spares[1] += thr_stats->spares[1];
 	rxkad_stats->spares[2] += thr_stats->spares[2];
@@ -179,8 +181,6 @@ int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
 	rxkad_stats->spares[5] += thr_stats->spares[5];
 	rxkad_stats->spares[6] += thr_stats->spares[6];
 	rxkad_stats->spares[7] += thr_stats->spares[7];
-	rxkad_stats->spares[8] += thr_stats->spares[8];
-	rxkad_stats->spares[9] += thr_stats->spares[9];
     }
     RXKAD_GLOBAL_STATS_UNLOCK;
     return 0;

@@ -85,7 +85,7 @@
 #include "viced.h"
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
-#include "softsig.h"
+#include <afs/softsig.h>
 #endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"
@@ -177,6 +177,16 @@ int SawLock;
 #endif
 time_t StartTime;
 
+/**
+ * seconds to wait until forcing a panic during ShutDownAndCore(PANIC)
+ * in case we get stuck.
+ */
+#ifdef AFS_DEMAND_ATTACH_FS
+static int panic_timeout = 2 * 60;
+#else
+static int panic_timeout = 30 * 60;
+#endif
+
 int rxpackets = 150;		/* 100 */
 int nSmallVns = 400;		/* 200 */
 int large = 400;		/* 200 */
@@ -257,7 +267,8 @@ CheckDescriptors(void *unused)
     for (i = 0; i < tsize; i++) {
 	if (afs_fstat(i, &status) != -1) {
 	    printf("%d: dev %x, inode %u, length %u, type/mode %x\n", i,
-		   status.st_dev, status.st_ino, 
+		   (unsigned int) status.st_dev,
+		   (unsigned int) status.st_ino,
 		   (unsigned int) status.st_size,
 		   status.st_mode);
 	}
@@ -352,7 +363,7 @@ ResetCheckDescriptors(void)
 int
 threadNum(void)
 {
-    return (int)pthread_getspecific(rx_thread_id_key);
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -430,7 +441,7 @@ setThreadId(char *s)
     /* set our 'thread-id' so that the host hold table works */
     MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
     ++rxi_pthread_hinum;
-    pthread_setspecific(rx_thread_id_key, (void *)rxi_pthread_hinum);
+    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)rxi_pthread_hinum);
     MUTEX_EXIT(&rx_stats_mutex);
     ViceLog(0,
 	    ("Set thread id %d for '%s'\n",
@@ -661,9 +672,9 @@ ClearXStatValues(void)
     /*
      * Zero all xstat-related structures.
      */
-    memset((char *)(&afs_perfstats), 0, sizeof(struct afs_PerfStats));
+    memset((&afs_perfstats), 0, sizeof(struct afs_PerfStats));
 #if FS_STATS_DETAILED
-    memset((char *)(&afs_FullPerfStats), 0,
+    memset((&afs_FullPerfStats), 0,
 	   sizeof(struct fs_stats_FullPerfStats));
 
     /*
@@ -771,15 +782,41 @@ CheckSignal(void *unused)
     return 0;
 }				/*CheckSignal */
 
+static void *
+ShutdownWatchdogLWP(void *unused)
+{
+    sleep(panic_timeout);
+    ViceLog(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
+                "within %d seconds; forcing panic\n", panic_timeout));
+    assert(0);
+    return NULL;
+}
+
 void
 ShutDownAndCore(int dopanic)
 {
     time_t now = time(0);
     char tbuffer[32];
 
+    if (dopanic) {
+#ifdef AFS_PTHREAD_ENV
+	pthread_t watchdogPid;
+	pthread_attr_t tattr;
+	assert(pthread_attr_init(&tattr) == 0);
+	assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
+#else
+	PROCESS watchdogPid;
+	assert(LWP_CreateProcess
+	       (ShutdownWatchdogLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
+	        NULL, "ShutdownWatchdog", &watchdogPid) == LWP_SUCCESS);
+#endif
+    }
+
     /* do not allows new reqests to be served from now on, all new requests
      * are returned with an error code of RX_RESTARTING ( transient failure ) */
     rx_SetRxTranquil();		/* dhruba */
+
+    VSetTranquil();
 
 #ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_WRLOCK;
@@ -811,22 +848,27 @@ ShutDownAndCore(int dopanic)
 	 * demand attach fs
 	 * save fileserver state to disk */
 
-	/* make sure background threads have finished all of their asynchronous 
-	 * work on host and callback structures */
-	FS_STATE_RDLOCK;
-	while (!fs_state.FiveMinuteLWP_tranquil ||
-	       !fs_state.HostCheckLWP_tranquil ||
-	       !fs_state.FsyncCheckLWP_tranquil) {
-	    FS_LOCK;
-	    FS_STATE_UNLOCK;
-	    ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
-	    assert(pthread_cond_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex) == 0);
-	    FS_UNLOCK;
-	    FS_STATE_RDLOCK;
-	}
+	if (dopanic) {
+	    ViceLog(0, ("Not saving fileserver state; abnormal shutdown\n"));
 
-	/* ok. it should now be fairly safe. let's do the state dump */
-	fs_stateSave();
+	} else {
+	    /* make sure background threads have finished all of their asynchronous
+	     * work on host and callback structures */
+	    FS_STATE_RDLOCK;
+	    while (!fs_state.FiveMinuteLWP_tranquil ||
+	           !fs_state.HostCheckLWP_tranquil ||
+	           !fs_state.FsyncCheckLWP_tranquil) {
+		FS_LOCK;
+		FS_STATE_UNLOCK;
+		ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
+		assert(pthread_cond_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex) == 0);
+		FS_UNLOCK;
+		FS_STATE_RDLOCK;
+	    }
+
+	    /* ok. it should now be fairly safe. let's do the state dump */
+	    fs_stateSave();
+	}
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -900,6 +942,9 @@ FlagMsg(void)
     fputs("[-rxmaxmtu <bytes>] ", stdout);
     fputs("[-rxbind (bind the Rx socket to one address)] ", stdout);
     fputs("[-allow-dotted-principals (disable the rxkad principal name dot check)] ", stdout);
+    fputs("[-vhandle-setaside (fds reserved for non-cache io [default 128])] ", stdout);
+    fputs("[-vhandle-max-cachesize (max open files [default 128])] ", stdout);
+    fputs("[-vhandle-initial-cachesize (fds reserved for cache io [default 128])] ", stdout);
 #ifdef AFS_DEMAND_ATTACH_FS
     fputs("[-fs-state-dont-save (disable state save during shutdown)] ", stdout);
     fputs("[-fs-state-dont-restore (disable state restore during startup)] ", stdout);
@@ -1033,6 +1078,9 @@ max_fileserver_thread(void)
     return MAX_FILESERVER_THREAD;
 }
 
+/* from ihandle.c */
+extern ih_init_params vol_io_params;
+
 static int
 ParseArgs(int argc, char *argv[])
 {
@@ -1119,6 +1167,24 @@ ParseArgs(int argc, char *argv[])
 	    }
 	    vol_attach_threads = atoi(argv[++i]);
 #endif /* AFS_PTHREAD_ENV */
+        } else if (!strcmp(argv[i], "-vhandle-setaside")) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "missing argument for %s\n", argv[i]);
+                return -1;
+	    }
+            vol_io_params.fd_handle_setaside = atoi(argv[++i]);
+        } else if (!strcmp(argv[i], "-vhandle-max-cachesize")) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "missing argument for %s\n", argv[i]);
+                return -1;
+            }
+            vol_io_params.fd_max_cachesize = atoi(argv[++i]);
+        } else if (!strcmp(argv[i], "-vhandle-initial-cachesize")) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "missing argument for %s\n", argv[i]);
+                return -1;
+            }
+            vol_io_params.fd_initial_cachesize = atoi(argv[++i]);
 #ifdef AFS_DEMAND_ATTACH_FS
 	} else if (!strcmp(argv[i], "-fs-state-dont-save")) {
 	    fs_state.options.fs_state_save = 0;
@@ -1293,7 +1359,7 @@ ParseArgs(int argc, char *argv[])
 	    rxMaxMTU = atoi(argv[++i]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d%% invalid; must be between %d-%lu\n",
+		printf("rxMaxMTU %d%% invalid; must be between %d-%" AFS_SIZET_FMT "\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
@@ -1782,6 +1848,7 @@ Do_VLRegisterRPC(void)
 	    ViceLog(0,
 		    ("VL_RegisterAddrs rpc failed; will retry periodically (code=%d, err=%d)\n",
 		     code, errno));
+	    FS_registered = 1;	/* Retry in the gc daemon */
 	}
     } else {
 	FS_registered = 2;	/* So we don't have to retry in the gc daemon */
@@ -1881,6 +1948,7 @@ main(int argc, char *argv[])
     int curLimit;
     time_t t;
     afs_uint32 rx_bindhost;
+    VolumePackageOptions opts;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1905,6 +1973,8 @@ main(int argc, char *argv[])
 #ifndef AFS_QUIETFS_ENV
     console = afs_fopen("/dev/console", "w");
 #endif
+    /* set ihandle package defaults prior to parsing args */
+    ih_PkgDefaults();
 
     if (ParseArgs(argc, argv)) {
 	FlagMsg();
@@ -1967,6 +2037,9 @@ main(int argc, char *argv[])
 #endif
 #endif
     assert(DInit(buffs) == 0);
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_INIT;
+#endif
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -2006,9 +2079,14 @@ main(int argc, char *argv[])
 	    lwps = curLimit;
 	else if (lwps > 16)
 	    lwps = 16;		/* default to a maximum of 16 threads */
+
+        /* tune the ihandle fd cache accordingly */
+        if (vol_io_params.fd_max_cachesize < curLimit)
+            vol_io_params.fd_max_cachesize = curLimit + 1;
+
 	ViceLog(0,
-		("The system supports a max of %d open files and we are starting %d threads\n",
-		 curLimit, lwps));
+		("The system supports a max of %d open files and we are starting %d threads (ihandle fd cache is %d)\n",
+		 curLimit, lwps, vol_io_params.fd_max_cachesize));
     }
 #ifndef AFS_PTHREAD_ENV
     assert(LWP_InitializeProcessSupport(LWP_MAX_PRIORITY - 2, &parentPid) ==
@@ -2121,13 +2199,13 @@ main(int argc, char *argv[])
     ClearXStatValues();
 
     code = InitVL();
-    if (code) {
+    if (code && code != VL_MULTIPADDR) {
 	ViceLog(0, ("Fatal error in library initialization, exiting!!\n"));
 	exit(1);
     }
 
     code = InitPR();
-    if (code) {
+    if (code && code != -1) {
 	ViceLog(0, ("Fatal error in protection initialization, exiting!!\n"));
 	exit(1);
     }
@@ -2177,7 +2255,28 @@ main(int argc, char *argv[])
      * will be available "real soon now".  Worry about whether we can satisfy the 
      * calls in the volume package itself.
      */
-    if (VInitVolumePackage(fileServer, large, nSmallVns, 0, volcache)) {
+    VOptDefaults(fileServer, &opts);
+    opts.nLargeVnodes = large;
+    opts.nSmallVnodes = nSmallVns;
+    opts.volcache = volcache;
+
+    if (VInitVolumePackage2(fileServer, &opts)) {
+	ViceLog(0,
+		("Shutting down: errors encountered initializing volume package\n"));
+	VShutdown();
+	exit(1);
+    }
+
+    /* Install handler to catch the shutdown signal;
+     * bosserver assumes SIGQUIT shutdown
+     */
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    softsig_signal(SIGQUIT, ShutDown_Signal);
+#else
+    (void)signal(SIGQUIT, ShutDown_Signal);
+#endif
+
+    if (VInitAttachVolumes(fileServer)) {
 	ViceLog(0,
 		("Shutting down: errors encountered initializing volume package\n"));
 	VShutdown();
@@ -2202,9 +2301,6 @@ main(int argc, char *argv[])
 
 #ifdef AFS_PTHREAD_ENV
     ViceLog(5, ("Starting pthreads\n"));
-#ifdef AFS_DEMAND_ATTACH_FS
-    FS_STATE_INIT;
-#endif
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
@@ -2263,15 +2359,6 @@ main(int argc, char *argv[])
 		("FileServer %s has address %s (0x%x or 0x%x in host byte order)\n",
 		 FS_HostName, hoststr, FS_HostAddr_NBO, FS_HostAddr_HBO));
     }
-
-    /* Install handler to catch the shutdown signal;
-     * bosserver assumes SIGQUIT shutdown
-     */
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-    softsig_signal(SIGQUIT, ShutDown_Signal);
-#else
-    (void)signal(SIGQUIT, ShutDown_Signal);
-#endif
 
     t = tp.tv_sec;
     ViceLog(0,

@@ -19,26 +19,21 @@
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
 
-#if	(defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV)
+#if	(defined(AFS_SUN5_ENV))
 #define	AFS_NOBOZO_LOCK
 #endif
 
-#if !defined(AFS_OSF20_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_OSF32_ENV)
-    /* We do not instrument locks on osf20 because the vcache structure
-     ** exceeds the maximim possible limit for a vnode.
-     */
 #define INSTRUMENT_LOCKS
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
 #define MAX_LOCK_NUMBER 780
-#endif
 
 struct afs_bozoLock {
     short count;		/* count of excl locks */
     char flags;			/* bit 1: is anyone waiting? */
     char spare;			/* for later */
-    char *proc;			/* process holding the lock, really a struct proc * */
+    char *proc;			/* process holding the lock, really an afs_proc_t * */
 };
 #ifndef	AFS_NOBOZO_LOCK
 typedef struct afs_bozoLock afs_bozoLock_t;
@@ -56,17 +51,6 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #endif
 
 #define	AFS_BOZONWAITING    1	/* someone is waiting for this lock */
-
-#undef MObtainWriteLock		/* Defined also in ../rx/rx_machdep.h" */
-#undef MReleaseWriteLock
-#define MObtainReadLock(lock)	ObtainReadLock(lock)
-#define MObtainWriteLock(lock,src)	ObtainWriteLock(lock,src)
-#define MObtainSharedLock(lock,src)	ObtainSharedLock(lock,src)
-#define MUpgradeSToWLock(lock,src)	UpgradeSToWLock(lock,src)
-#define MConvertWToSLock(lock)	ConvertWToSLock(lock)
-#define MReleaseReadLock(lock)	ReleaseReadLock(lock)
-#define MReleaseWriteLock(lock)	ReleaseWriteLock(lock)
-#define MReleaseSharedLock(lock) ReleaseSharedLock(lock)
 
 #define	AFS_RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
@@ -107,7 +91,7 @@ typedef struct kthread * afs_lock_tracker_t;
 #define MyPidxx (u.u_kthreadp)
 #define MyPidxx2Pid(x) (x ? kt_tid(x) : 0)
 #else
-typedef struct proc * afs_lock_tracker_t;
+typedef afs_proc_t * afs_lock_tracker_t;
 #define MyPidxx (u.u_procp)
 #define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
 #endif
@@ -211,6 +195,9 @@ extern int afs_trclock;
         (lock)->pid_last_reader = MyPidxx; \
    ENDMAC
 
+#define NBObtainReadLock(lock) \
+	(((lock)->excl_locked & WRITE_LOCK) ? EWOULDBLOCK :  (((lock)->readers_reading++), ((lock)->pid_last_reader = MyPidxx), 0))
+
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
 	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
@@ -313,6 +300,9 @@ extern int afs_trclock;
 	else \
 	    Afs_Lock_Obtain(lock, READ_LOCK); \
    ENDMAC
+
+#define NBObtainReadLock(lock) \
+	(((lock)->excl_locked & WRITE_LOCK) ? EWOULDBLOCK : (((lock)->readers_reading++), 0))
 
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \

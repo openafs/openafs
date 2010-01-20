@@ -21,7 +21,7 @@
 
 /* services available on incoming message port */
 int
-BC_Print(struct rx_call *acall, afs_int32 acode, afs_int32 aflags, 
+SBC_Print(struct rx_call *acall, afs_int32 acode, afs_int32 aflags,
 	 char *amessage)
 {
     struct rx_connection *tconn;

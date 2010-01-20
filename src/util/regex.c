@@ -370,7 +370,7 @@ re_exec(const char *p1)
 	braelist[c] = 0;
     }
     if (circf)
-	return ((advance(p1, p2)));
+	return ((advance((char *)p1, p2)));
     /*
      * fast check for first character
      */
@@ -379,7 +379,7 @@ re_exec(const char *p1)
 	do {
 	    if (*p1 != c)
 		continue;
-	    if ((rv = advance(p1, p2)))
+	    if ((rv = advance((char *)p1, p2)))
 		return (rv);
 	} while (*p1++);
 	return (0);
@@ -388,7 +388,7 @@ re_exec(const char *p1)
      * regular algorithm
      */
     do
-	if ((rv = advance(p1, p2)))
+	if ((rv = advance((char *)p1, p2)))
 	    return (rv);
     while (*p1++);
     return (0);

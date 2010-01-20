@@ -141,7 +141,7 @@ kaux_write(afs_int32 to, unsigned int nfailures, afs_uint32 lasttime)
 void
 kaux_inc(afs_int32 to, afs_uint32 locktime)
 {
-    int nfailures;
+    unsigned int nfailures;
     afs_uint32 lasttime, now;
 
     now = time(0);

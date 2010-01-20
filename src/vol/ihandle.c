@@ -77,11 +77,16 @@ FdHandle_t *fdLruHead;
 FdHandle_t *fdLruTail;
 
 int ih_Inited = 0;
+int ih_PkgDefaultsSet = 0;
 
 /* Most of the servers use fopen/fdopen. Since the FILE structure
  * only has eight bits for the file descriptor, the cache size
  * has to be less than 256. The cache can be made larger as long
  * as you are sure you don't need fopen/fdopen. */
+
+/* As noted in ihandle.h, the fileno member of FILE on most platforms
+ * in 2008 is a 16- or 32-bit signed int. -Matt
+ */
 int fdMaxCacheSize = 0;
 int fdCacheSize = 0;
 
@@ -92,6 +97,28 @@ int fdInUseCount = 0;
 IHashBucket_t ihashTable[I_HANDLE_HASH_SIZE];
 
 void *ih_sync_thread(void *);
+
+/* start-time configurable I/O limits */
+ih_init_params vol_io_params;
+
+void ih_PkgDefaults(void)
+{
+    /* once */
+    ih_PkgDefaultsSet = 1;
+
+    /* default to well-known values */
+    vol_io_params.fd_handle_setaside = FD_HANDLE_SETASIDE;
+
+    /* initial fd cachesize.  the only one that will be used if
+     * the application does not call ih_UseLargeCache().  set this
+     * to a value representable in fileno member of the system's
+     * FILE structure (or equivalent). */
+    vol_io_params.fd_initial_cachesize = FD_DEFAULT_CACHESIZE;
+
+    /* fd cache size that will be used if/when ih_UseLargeCache()
+     * is called */
+    vol_io_params.fd_max_cachesize = FD_MAX_CACHESIZE;
+}
 
 #ifdef AFS_PTHREAD_ENV
 /* Initialize the global ihandle mutex */
@@ -116,14 +143,14 @@ ih_Initialize(void)
 	DLL_INIT_LIST(ihashTable[i].ihash_head, ihashTable[i].ihash_tail);
     }
 #if defined(AFS_NT40_ENV)
-    fdMaxCacheSize = FD_MAX_CACHESIZE;
+    fdMaxCacheSize = vol_io_params.fd_max_cachesize;
 #elif defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
     {
 	struct rlimit rlim;
 	assert(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
 	rlim.rlim_cur = rlim.rlim_max;
 	assert(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
-	fdMaxCacheSize = rlim.rlim_cur - FD_HANDLE_SETASIDE;
+	fdMaxCacheSize = rlim.rlim_cur - vol_io_params.fd_handle_setaside;
 #ifdef AFS_NBSD_ENV
 	/* XXX this is to avoid using up all system fd netbsd is
 	 * somewhat broken and have set maximum fd for a root process
@@ -135,7 +162,7 @@ ih_Initialize(void)
 	 */
 	fdMaxCacheSize /= 4;
 #endif
-	fdMaxCacheSize = MIN(fdMaxCacheSize, FD_MAX_CACHESIZE);
+	fdMaxCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
 	assert(fdMaxCacheSize > 0);
     }
 #elif defined(AFS_HPUX_ENV)
@@ -143,11 +170,12 @@ ih_Initialize(void)
     fdMaxCacheSize = 0;
 #else
     {
-	long fdMax = MAX(sysconf(_SC_OPEN_MAX) - FD_HANDLE_SETASIDE, 0);
-	fdMaxCacheSize = (int)MIN(fdMax, FD_MAX_CACHESIZE);
+	long fdMax = MAX(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
+					 0);
+	fdMaxCacheSize = (int)MIN(fdMax, vol_io_params.fd_max_cachesize);
     }
 #endif
-    fdCacheSize = MIN(fdMaxCacheSize, FD_DEFAULT_CACHESIZE);
+    fdCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
 
     {
 #ifdef AFS_PTHREAD_ENV
@@ -155,7 +183,7 @@ ih_Initialize(void)
 	pthread_attr_t tattr;
 
 	pthread_attr_init(&tattr);
-	pthread_attr_setdetachstate(&tattr,PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 
 	pthread_create(&syncer, &tattr, ih_sync_thread, NULL);
 #else /* AFS_PTHREAD_ENV */
@@ -168,14 +196,23 @@ ih_Initialize(void)
 }
 
 /* Make the file descriptor cache as big as possible. Don't this call
- * if the program uses fopen or fdopen. */
+ * if the program uses fopen or fdopen, if fd_max_cachesize cannot be
+ * represented in the fileno member of the system FILE structure (or
+ * equivalent).
+ */
 void
 ih_UseLargeCache(void)
 {
     IH_LOCK;
-    if (!ih_Inited) {
-	ih_Initialize();
+
+    if (!ih_PkgDefaultsSet) {
+        ih_PkgDefaults();
     }
+
+    if (!ih_Inited) {
+        ih_Initialize();
+    }
+
     fdCacheSize = fdMaxCacheSize;
 
     IH_UNLOCK;
@@ -204,9 +241,13 @@ ih_init(int dev, int vid, Inode ino)
     int ihash = IH_HASH(dev, vid, ino);
     IHandle_t *ihP;
 
+    if (!ih_PkgDefaultsSet) {
+        ih_PkgDefaults();
+    }
+
     IH_LOCK;
     if (!ih_Inited) {
-	ih_Initialize();
+        ih_Initialize();
     }
 
     /* Do we already have a handle for this Inode? */

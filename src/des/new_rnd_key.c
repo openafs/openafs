@@ -13,7 +13,7 @@
  * without license from the U.S. Commerce department.
  */
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -22,7 +22,7 @@
 #ifndef KERNEL
 #include <stdio.h>
 #endif
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 #include "des_prototypes.h"
 

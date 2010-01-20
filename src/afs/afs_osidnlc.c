@@ -266,10 +266,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ma_critical_exit();
 	    return 0;
 	}
-#ifdef	AFS_OSF_ENV
-	VN_HOLD((vnode_t *) tvc);
-#else
-#ifdef AFS_DARWIN80_ENV
+#if defined(AFS_DARWIN80_ENV)
 	tvp = AFSTOV(tvc);
 	if (vnode_get(tvp)) {
 	    ReleaseReadLock(&afs_xvcache);
@@ -288,16 +285,13 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ma_critical_exit();
 	    return 0;
 	}
-#else
-#ifdef AFS_FBSD50_ENV
+#elif defined(AFS_FBSD50_ENV)
 	/* can't sleep in a critical section */
 	ma_critical_exit();
 	osi_vnhold(tvc, 0);
 	ma_critical_enter();
 #else
 	osi_vnhold(tvc, 0);
-#endif /* AFS_FBSD80_ENV */
-#endif
 #endif
 	ReleaseReadLock(&afs_xvcache);
 
@@ -516,8 +510,8 @@ osi_dnlc_purge(void)
 	    nameCache[i].dirp = nameCache[i].vp = NULL;
     } else {			/* did get the lock */
 	ncfreelist = NULL;
-	memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
-	memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
+	memset(nameCache, 0, sizeof(struct nc) * NCSIZE);
+	memset(nameHash, 0, sizeof(struct nc *) * NHSIZE);
 	for (i = 0; i < NCSIZE; i++) {
 	    nameCache[i].next = ncfreelist;
 	    ncfreelist = &nameCache[i];
@@ -545,13 +539,13 @@ osi_dnlc_init(void)
     int i;
 
     Lock_Init(&afs_xdnlc);
-    memset((char *)&dnlcstats, 0, sizeof(dnlcstats));
-    memset((char *)dnlctracetable, 0, sizeof(dnlctracetable));
+    memset(&dnlcstats, 0, sizeof(dnlcstats));
+    memset(dnlctracetable, 0, sizeof(dnlctracetable));
     dnlct = 0;
     ObtainWriteLock(&afs_xdnlc, 223);
     ncfreelist = NULL;
-    memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
-    memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
+    memset(nameCache, 0, sizeof(struct nc) * NCSIZE);
+    memset(nameHash, 0, sizeof(struct nc *) * NHSIZE);
     for (i = 0; i < NCSIZE; i++) {
 	nameCache[i].next = ncfreelist;
 	ncfreelist = &nameCache[i];

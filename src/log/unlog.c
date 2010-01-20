@@ -60,8 +60,12 @@ struct tokenInfo {
     int deleted;
 };
 
+static int unlog_ForgetCertainTokens(char **, int);
+static int unlog_NormalizeCellNames(char **, int);
+static int unlog_CheckUnlogList(char **, int, struct ktc_principal *);
+static int unlog_VerifyUnlog(char **, int, struct tokenInfo *, int);
 
-int 
+static int
 CommandProc(struct cmd_syndesc *as, void *arock)
 {
 #define	MAXCELLS 20		/* XXX */
@@ -131,10 +135,11 @@ main(int argc, char *argv[])
  *           then re-register the good ones.  Ugly, but it works.
  */
 
-int
+static int
 unlog_ForgetCertainTokens(char **list, int listSize)
 {
-    unsigned count, index, index2;
+    int index, index2;
+    int count;
     afs_int32 code;
     struct ktc_principal serviceName;
     struct tokenInfo *tokenInfoP;
@@ -220,7 +225,7 @@ unlog_CheckUnlogList(char **list, int count, struct ktc_principal *principal)
 int
 unlog_NormalizeCellNames(char **list, int size)
 {
-    char *newCellName, *lcstring();
+    char *newCellName;
     unsigned index;
     struct afsconf_dir *conf;
     int code;

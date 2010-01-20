@@ -20,6 +20,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include <time.h>
 
 /* allocate externs here */
@@ -931,9 +934,9 @@ Dispatcher(void)
 #endif
 	printf("stackcheck = %u: stack = %u \n", lwp_cpptr->stackcheck,
 	       *(int *)lwp_cpptr->stack);
-	printf("topstack = 0x%x: stackptr = 0x%x: stacksize = 0x%x\n",
-	       (unsigned int)lwp_cpptr->context.topstack, 
-	       (unsigned int)lwp_cpptr->stack,
+	printf("topstack = 0x%" AFS_PTR_FMT ": stackptr = 0x%" AFS_PTR_FMT ": stacksize = 0x%x\n",
+	       (void *)(uintptr_t)lwp_cpptr->context.topstack,
+	       (void *)(uintptr_t)lwp_cpptr->stack,
 	       lwp_cpptr->stacksize);
 
 	switch (lwp_overflowAction) {
@@ -1352,7 +1355,7 @@ lwp_alloc_process(char *name, pthread_startroutine_t ep, pthread_addr_t arg)
 {
     PROCESS lp;
     assert(lp = (PROCESS) malloc(sizeof(*lp)));
-    memset((char *)lp, 0, sizeof(*lp));
+    memset(lp, 0, sizeof(*lp));
     if (!name) {
 	char temp[100];
 	static procnum;

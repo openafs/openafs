@@ -18,6 +18,7 @@
 #define AFS_PPC64_LINUX26_ENV	1
 #define AFS_LINUX_64BIT_KERNEL	1
 #define AFS_64BITPOINTER_ENV	1     /* pointers are 64 bits */
+#define AFS_64BITUSERPOINTER_ENV	1
 
 #else /* !defined(UKERNEL) */
 

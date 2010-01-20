@@ -12,7 +12,9 @@
 
 
 #include <string.h>
-
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include "gtxwindows.h"
 #include "gtxobjects.h"
 #include "gtxtextobj.h"
@@ -30,7 +32,7 @@ static int
 ChangeMenuCmd(void *param1, void *param2)
 {
     struct gwin * awin = (struct gwin *) param1;
-    afs_int32 arock = (afs_int32) param2;
+    afs_int32 arock = (intptr_t)param2;
     
     register struct gtx_frame *tf;
     register afs_int32 code;
@@ -57,7 +59,7 @@ static int
 ChangeListCmd(void *param1, void *param2)
 {
     struct gwin *awin = (struct gwin *) param1;
-    afs_int32 arock = (afs_int32) param2;
+    afs_int32 arock = (intptr_t)param2;
     
     register struct gtx_frame *tf;
     register afs_int32 code;

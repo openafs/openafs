@@ -587,7 +587,7 @@ gator_textcb_Delete(struct gator_textcb_hdr *a_cbhdr)
     a_cbhdr->entry[0].textp = NULL;
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s]: Freeing text entry array at %p (%lu bytes)\n",
+	fprintf(stderr, "[%s]: Freeing text entry array at %p (%" AFS_SIZET_FMT " bytes)\n",
 		rn, a_cbhdr->entry,
 		(a_cbhdr->maxEntriesStored *
 		 sizeof(struct gator_textcb_entry)));

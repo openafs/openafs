@@ -829,8 +829,8 @@ user receives an AFS token when
 
       <para>You make your cell visible to others by advertising your cell name and database server machines. Just like client
       machines in the local cell, the Cache Manager on machines in foreign cells use the information to reach your cell's Volume
-      Location (VL) Servers when they need volume and file location information. Similarly, client-side authentication programs
-      running in foreign cells use the information to contact your cell's authentication service.</para>
+      Location (VL) Servers when they need volume and file location information. For authenticated access, foreign clients
+      must be configured with the necessary Kerberos v5 domain-to-realm mappings and Key Distribution Center location information for both the local and remote Kerberos v5 realms.</para>
 
       <para>There are two places you can make this information available: <itemizedlist>
           <indexterm>
@@ -840,19 +840,26 @@ user receives an AFS token when
           </indexterm>
 
           <indexterm>
-            <primary>CellServDB file maintained by AFS Product Support</primary>
+            <primary>CellServDB file maintained by the AFS Registrar</primary>
 
             <secondary>as global update source</secondary>
           </indexterm>
 
           <listitem>
-            <para>In the global <emphasis role="bold">CellServDB</emphasis> file maintained by the AFS Product Support group. This
-            file lists the name and database server machines of every cell that has agreed to make this information available to
-            other cells.</para>
+            <para>In the
+            global <emphasis role="bold">CellServDB</emphasis> file
+            maintained by the AFS Registrar. This file lists the name and
+            database server machines of every cell that has agreed to make
+            this information available to other cells. This file is
+            available
+            at <ulink url="http://grand.central.org/csdb.html">http://grand.central.org/csdb.html</ulink></para>
 
-            <para>To add or change your cell's listing in this file, have the official support contact at your site call or write to
-            AFS Product Support. Changes to the file are frequent enough that AFS Product Support does not announce each one. It is
-            a good policy to check the file for changes on a regular schedule.</para>
+            <para>To add or change your cell's listing in this file,
+              follow the instructions at
+              <ulink url="http://grand.central.org/csdb.html">http://grand.central.org/csdb.html</ulink>.
+              It is a good policy to check the file for changes on a
+              regular schedule. An updated copy of this file is included
+              with new releases of OpenAFS.</para>
 
             <indexterm>
               <primary>files</primary>
@@ -879,7 +886,7 @@ user receives an AFS token when
       linkend="HDRWQ406">Maintaining Knowledge of Database Server Machines</link>.</para>
 
       <para>Once you have advertised your database server machines, it can be difficult to make your cell invisible again. You can
-      remove the <emphasis role="bold">CellServDB.local</emphasis> file and ask AFS Product Support to remove your entry from the
+      remove the <emphasis role="bold">CellServDB.local</emphasis> file and ask the AFS Registrar to remove your entry from the
       global <emphasis role="bold">CellServDB</emphasis> file, but other cells probably have an entry for your cell in their local
       <emphasis role="bold">CellServDB</emphasis> files already. To make those entries invalid, you must change the names or IP
       addresses of your database server machines.</para>
@@ -916,7 +923,11 @@ user receives an AFS token when
     <sect2 id="HDRWQ39">
       <title>Making Other Cells Visible in Your Cell</title>
 
-      <para>To make a foreign cell's filespace visible on a client machine in your cell, perform the following three steps:
+      <para>To make a foreign cell's filespace visible on a client machine
+      in your cell that is not configured
+      for <emphasis role="bold">Freelance Mode</emphasis>
+      or <emphasis role="bold">Dynamic Root</emphasis> mode, perform the
+      following three steps:
       <orderedlist>
           <listitem>
             <para>Mount the cell's <emphasis role="bold">root.cell</emphasis> volume at the second level in your cell's filespace
@@ -948,6 +959,30 @@ user receives an AFS token when
           </listitem>
         </orderedlist></para>
 
+      <para>Non-windows client machines may
+      enable <emphasis role="bold">Dynamic Root Mode</emphasis> by using
+      the <emphasis role="bold">-dynroot</emphasis> option
+      to <emphasis role="bold">afsd</emphasis>. When this option is
+      enabled, all cells listed in
+      the <emphasis role="bold">CellServDB</emphasis> file will appear in
+      the <emphasis role="bold">/afs</emphasis> directory. The contents of
+      the <emphasis role="bold">root.afs</emphasis> volume will be ignored.
+      </para>
+
+      <para>Windows client machines may
+      enable <emphasis role="bold">Freelance Mode</emphasis> during client
+      installation or by setting
+      the <emphasis role="bold">FreelanceClient</emphasis> setting
+      under <emphasis role="bold">Service Parameters</emphasis> in the
+      Windows Registry as mentioned in
+      the <ulink url="http://docs.openafs.org/ReleaseNotesWindows/">Release
+      Notes</ulink>.  When this option is enabled,
+      the <emphasis role="bold">root.afs</emphasis> volume is ignored and
+      a mounpoint for each cell is automatically created in the
+      the <emphasis role="bold">\\AFS</emphasis> directory when the
+      folder <emphasis role="bold">\\AFS\<replaceable>cellname</replaceable></emphasis>
+      is accessed and the foreign Volume Location servers can be reached.
+      </para>
       <para>Note that making a foreign cell visible to client machines does not guarantee that your users can access its filespace.
       The ACLs in the foreign cell must also grant them the necessary permissions.</para>
 
@@ -975,7 +1010,7 @@ user receives an AFS token when
       these permissions are limited to the <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) and
       <emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) permissions.</para>
 
-      <para>There are two ways to grant wider access to foreign users: <itemizedlist>
+      <para>There are three ways to grant wider access to foreign users: <itemizedlist>
           <listitem>
             <para>Grant additional permissions to the <emphasis role="bold">system:anyuser</emphasis> group on certain ACLs. Keep in
             mind, however, that all users can then access that directory in the indicated way (not just specific foreign users you
@@ -983,9 +1018,26 @@ user receives an AFS token when
           </listitem>
 
           <listitem>
-            <para>Create a local authentication account for specific foreign users, by creating entries in the Protection and
-            Authentication Databases and local password file. It is not possible to place foreign usernames on ACLs, nor to
-            authenticate in a foreign cell without having an account in it.</para>
+            <para>Enable automatic registration for users in the foreign
+            cell. This may be done by creating a cross-realm trust in
+            the <emphasis role="bold">Kerberos Database</emphasis>. Then
+            add a PTS group
+            named <emphasis role="bold">system:authuser<replaceable>@FOREIGN.REALM</replaceable></emphasis>
+            and give it a group quota greater than the number of foreign
+            users expected to be registered. After the cross-realm trust
+            and the PTS group are created,
+            the <ulink url="http://docs.openafs.org/Reference/1/aklog.html">aklog</ulink>
+            command will automatically register foreign users as
+            needed. Consult the documentation for
+            your <emphasis role="bold">Kerberos Server</emphasis> for
+            instructions on how to establish a cross-realm trust.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>Create a local authentication account for specific
+            foreign users, by creating entries in the Protection Database,
+            the Kerberos Database, and the local password file.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -1940,14 +1992,14 @@ user receives an AFS token when
       Reboot file server machines as infrequently as possible. For instructions, see <link linkend="HDRWQ139">Rebooting a Server
       Machine</link>.</para>
 
-      <para>By default, the BOS Server on each file server machine stops and immediately restarts all AFS server processes on the
-      machine (including itself) once a week, at 4:00 a.m. on Sunday. This reduces the potential for the core leaks that can develop
-      as any process runs for an extended time.</para>
-
-      <para>The BOS Server also checks each morning at 5:00 a.m. for any newly installed binary files in the <emphasis
+      <para>The BOS Server checks each morning at 5:00 a.m. for any newly installed binary files in the <emphasis
       role="bold">/usr/afs/bin</emphasis> directory. It compares the timestamp on each binary file to the time at which the
       corresponding process last restarted. If the timestamp on the binary is later, the BOS Server restarts the corresponding
       process to start using it.</para>
+
+      <para>The BOS server also supports performing a weekly restart of all AFS server processes, including itself. This functionality
+      is disabled on new installs, but historically it was set to 4:00am on Sunday. Administrators may find that installations predating
+      OpenAFS 1.6.0 have weekly restarts enabled.</para>
 
       <para>The default times are in the early morning hours when the outage that results from restarting a process is likely to
       disturb the fewest number of people. You can display the restart times for each machine with the <emphasis role="bold">bos

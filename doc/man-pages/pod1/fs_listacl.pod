@@ -7,11 +7,11 @@ fs_listacl - Displays ACLs
 =for html
 <div class="synopsis">
 
-B<fs listacl> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-help>]
+B<fs listacl> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-cmd>] [B<-help>]
 
-B<fs la> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-h>]
+B<fs la> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-cmd>] [B<-h>]
 
-B<fs lista> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-h>]
+B<fs lista> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-cmd>] [B<-h>]
 
 =for html
 </div>
@@ -25,7 +25,7 @@ the AFS/DFS Migration Toolkit Protocol Translator to access DFS data (and
 DFS does implement per-file ACLs). To display the ACL of the current
 working directory, omit the B<-path> argument.
 
-To alter an ACL, use the fs setacl command. To copy an ACL from one
+To alter an ACL, use the B<fs setacl> command. To copy an ACL from one
 directory to another, use the B<fs copyacl> command. To remove obsolete
 entries from an ACL, use the B<fs cleanacl> command.
 
@@ -60,6 +60,11 @@ Toolkit Protocol Translator.
 Displays the Initial Object ACL of each DFS directory. This argument is
 supported only on DFS directories accessed via the AFS/DFS Migration
 Toolkit Protocol Translator.
+
+=item B<-cmd>
+
+Outputs an B<fs setacl> command string that can be used to recreate
+the ACL applied to the specified file, directory or symbolic link. 
 
 =item B<-help>
 
@@ -165,6 +170,16 @@ subdirectory.
    Access list for private is
    Normal rights:
       pat rlidwka
+
+The following command generates the B<fs setacl> command required to
+recreate the ACL on the home directory of the user
+C<pat> (the current working directory), and on its C<private>
+subdirectory.
+
+   % fs listacl -path . private -cmd
+   fs setacl -dir . -acl system:authuser rl  pat rlidwka   pat:friends rlid
+   fs setacl -dir . -acl smith rlidwka -negative
+   fs setacl -dir private -acl pat rlidwka
 
 =head1 PRIVILEGE REQUIRED
 

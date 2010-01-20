@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #include <sys/types.h>
 #include <string.h>
@@ -17,6 +20,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <winsock2.h>
+#include <WINNT/afsreg.h>
 #else
 #include <sys/time.h>
 #include <sys/file.h>
@@ -49,12 +53,14 @@
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
+#include <afs/com_err.h>
 #include "dump.h"
 #include "lockdata.h"
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+#include "volser_internal.h"
 #include "volser_prototypes.h"
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"
@@ -99,7 +105,7 @@ static struct tqHead busyHead, notokHead;
 static void
 qInit(struct tqHead *ahead)
 {
-    memset((char *)ahead, 0, sizeof(struct tqHead));
+    memset(ahead, 0, sizeof(struct tqHead));
     return;
 }
 
@@ -283,17 +289,18 @@ SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 #ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
 	fd_set in;
 	FD_ZERO(&in);
-	FD_SET((int)(ufd->handle), &in);
+	FD_SET((intptr_t)(ufd->handle), &in);
 	/* don't timeout if read blocks */
 #if defined(AFS_PTHREAD_ENV)
 	select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
 #else
-	IOMGR_Select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
+	IOMGR_Select(((intptr_t)(ufd->handle)) + 1, &in, 0, 0, 0);
 #endif
 #endif
 	error = USD_READ(ufd, buffer, blksize, &nbytes);
 	if (error) {
-	    fprintf(STDERR, "File system read failed\n");
+	    fprintf(STDERR, "File system read failed: %s\n",
+	            afs_error_message(error));
 	    break;
 	}
 	if (nbytes == 0) {
@@ -337,7 +344,8 @@ WriteData(struct rx_call *call, void *rock)
 	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
 	}
 	if (code) {
-	    fprintf(STDERR, "Could not access file '%s'\n", filename);
+	    fprintf(STDERR, "Could not access file '%s': %s\n", filename,
+	            afs_error_message(code));
 	    error = VOLSERBADOP;
 	    goto wfail;
 	}
@@ -396,18 +404,19 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 #ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
 	    fd_set out;
 	    FD_ZERO(&out);
-	    FD_SET((int)(ufd->handle), &out);
+	    FD_SET((intptr_t)(ufd->handle), &out);
 	    /* don't timeout if write blocks */
 #if defined(AFS_PTHREAD_ENV)
 	    select(((int)(ufd->handle)) + 1, &out, 0, 0, 0);
 #else
-	    IOMGR_Select(((int)(ufd->handle)) + 1, 0, &out, 0, 0);
+	    IOMGR_Select(((intptr_t)(ufd->handle)) + 1, 0, &out, 0, 0);
 #endif
 #endif
 	    error =
 		USD_WRITE(ufd, &buffer[bytesread - bytesleft], bytesleft, &w);
 	    if (error) {
-		fprintf(STDERR, "File system write failed\n");
+		fprintf(STDERR, "File system write failed: %s\n",
+		        afs_error_message(error));
 		ERROR_EXIT(-1);
 	    }
 	}
@@ -446,7 +455,8 @@ DumpFunction(struct rx_call *call, void *rock)
 	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
 	}
 	if (code) {
-	    fprintf(STDERR, "Could not create file '%s'\n", filename);
+	    fprintf(STDERR, "Could not create file '%s': %s\n", filename,
+	            afs_error_message(code));
 	    ERROR_EXIT(VOLSERBADOP);
 	}
     }
@@ -512,7 +522,6 @@ DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
 	    t = pntr->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
 		    ctime(&t));
-#ifdef FULL_LISTVOL_SWITCH
 	    t = pntr->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
 		    ctime(&t));
@@ -528,7 +537,7 @@ DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
 	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
 			ctime(&t));
-#endif
+
 	    t = pntr->updateDate;
 	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
@@ -667,7 +676,7 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	    t = a_xInfoP->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
 		    ctime(&t));
-#ifdef FULL_LISTVOL_SWITCH
+
 	    t = a_xInfoP->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
 		    ctime(&t));
@@ -683,7 +692,7 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
 			ctime(&t));
-#endif
+
 	    t = a_xInfoP->updateDate;
 	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
@@ -822,7 +831,6 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
     }				/*Default listing */
 }				/*XDisplayFormat */
 
-#ifdef FULL_LISTVOL_SWITCH
 /*------------------------------------------------------------------------
  * PRIVATE XDisplayFormat2
  *
@@ -1019,9 +1027,7 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	}			/*Screwed volume */
     }				/*Default listing */
 }				/*XDisplayFormat */
-#endif /*FULL_LISTVOL_SWITCH*/
 
-#ifdef FULL_LISTVOL_SWITCH
 static void
 DisplayFormat2(long server, long partition, volintInfo *pntr)
 {
@@ -1139,7 +1145,6 @@ DisplayVolumes2(long server, long partition, volintInfo *pntr, long count)
     }
     return;
 }
-#endif /* FULL_LISTVOL_SWITCH */
 
 static void
 DisplayVolumes(afs_int32 server, afs_int32 part, volintInfo *pntr,
@@ -1265,7 +1270,7 @@ XDisplayVolumes(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
     }
 
 }				/*XDisplayVolumes */
-#ifdef FULL_LISTVOL_SWITCH
+
 /*------------------------------------------------------------------------
  * PRIVATE XDisplayVolumes2
  *
@@ -1351,7 +1356,6 @@ XDisplayVolumes2(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
     }
 
 }				/*XDisplayVolumes2 */
-#endif /* FULL_LISTVOL_SWITCH */
 
 
 /* set <server> and <part> to the correct values depending on 
@@ -1620,13 +1624,10 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
 	    foundserv = 1;
 	    if (wantExtendedInfo)
 		XVolumeStats(xInfoP, &entry, aserver, apart, voltype);
-	    else
-#ifdef FULL_LISTVOL_SWITCH
-	    if (as->parms[2].items) {
+	    else if (as->parms[2].items) {
 		DisplayFormat2(aserver, apart, pntr);
 		EnumerateEntry(&entry);
 	    } else
-#endif /* FULL_LISTVOL_SWITCH */
 		VolumeStats_int(pntr, &entry, aserver, apart, voltype);
 
 	    if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
@@ -1942,7 +1943,7 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 	    return EINVAL;
 	}
 
-	code = util_GetInt32(as->parms[4].items->data, &volid);
+	code = util_GetUInt32(as->parms[4].items->data, &volid);
 	if (code) {
 	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
 	    return code;
@@ -1956,7 +1957,7 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 	    return EINVAL;
 	}
 
-	code = util_GetInt32(as->parms[5].items->data, &rovolid);
+	code = util_GetUInt32(as->parms[5].items->data, &rovolid);
 	if (code) {
 	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
 	    return code;
@@ -3701,24 +3702,20 @@ ListVolumes(register struct cmd_syndesc *as, void *arock)
 			as->parms[0].items->data, pname,
 			(unsigned long)count);
 	    if (wantExtendedInfo) {
-#ifdef FULL_LISTVOL_SWITCH
 		if (as->parms[6].items)
 		    XDisplayVolumes2(aserver, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		else
-#endif /* FULL_LISTVOL_SWITCH */
-		XDisplayVolumes(aserver, dummyPartList.partId[i], origxInfoP,
+		    XDisplayVolumes(aserver, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		if (xInfoP)
 		    free(xInfoP);
 		xInfoP = (volintXInfo *) 0;
 	    } else {
-#ifdef FULL_LISTVOL_SWITCH
 		if (as->parms[6].items)
 		    DisplayVolumes2(aserver, dummyPartList.partId[i], oldpntr,
 				    count);
 		else
-#endif /* FULL_LISTVOL_SWITCH */
 		    DisplayVolumes(aserver, dummyPartList.partId[i], oldpntr,
 				   count, int32list, fast, quiet);
 		if (pntr)
@@ -5165,7 +5162,7 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 	ip1 = 0xffffffff;
     }
 
-    vcode = ubik_Call_New(VL_ChangeAddr, cstruct, 0, ntohl(ip1), ntohl(ip2));
+    vcode = ubik_VL_ChangeAddr(cstruct, UBIK_CALL_NEW, ntohl(ip1), ntohl(ip2));
     if (vcode) {
 	if (remove) {
 	    fprintf(STDERR, "Could not remove server %s from the VLDB\n",
@@ -5193,12 +5190,11 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
+print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 	    int print)
 {
-    afs_int32 vcode;
+    afs_int32 vcode, m_uniq=0;
     afs_int32 i, j;
-    struct VLCallBack vlcb;
     afs_int32 *addrp;
     bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
@@ -5232,7 +5228,8 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
 		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, m_uuid,
-				      (afs_int32 *)&vlcb, &m_nentries, &m_addrs);
+				      &m_uniq, &m_nentries,
+				      &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -5281,7 +5278,7 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 static int
 ListAddrs(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 vcode;
+    afs_int32 vcode, m_uniq=0;
     afs_int32 i, printuuid = 0;
     struct VLCallBack vlcb;
     afs_int32 nentries;
@@ -5327,8 +5324,8 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
     m_addrs.bulkaddrs_len = 0;
 
     vcode =
-	ubik_Call_New(VL_GetAddrs, cstruct, 0, 0, 0, &vlcb, &nentries,
-		      &m_addrs);
+	ubik_VL_GetAddrs(cstruct, UBIK_CALL_NEW, 0, 0, &vlcb, &nentries,
+			 &m_addrs);
     if (vcode) {
 	fprintf(STDERR, "vos: could not list the server addresses\n");
 	PrintError("", vcode);
@@ -5343,8 +5340,8 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	m_attrs.index = i;
 
 	vcode =
-	    ubik_Call_New(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
-			  &vlcb, &m_nentries, &m_addrs);
+	    ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &m_attrs, &m_uuid,
+			      &m_uniq, &m_nentries, &m_addrs);
 
 	if (vcode == VL_NOENT) {
   	    if (m_attrs.Mask == VLADDR_UUID) {
@@ -5659,6 +5656,39 @@ Sizes(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+static int
+EndTrans(register struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 server, code, tid, rcode;
+    struct rx_connection *aconn;
+
+    server = GetServer(as->parms[0].items->data);
+    if (!server) {
+	fprintf(STDERR, "vos: host '%s' not found in host table\n",
+		as->parms[0].items->data);
+	return EINVAL;
+    }
+
+    code = util_GetInt32(as->parms[1].items->data, &tid);
+    if (code) {
+	fprintf(STDERR, "vos: bad integer specified for transaction ID.\n");
+	return code;
+    }
+
+    aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
+    code = AFSVolEndTrans(aconn, tid, &rcode);
+    if (!code) {
+	code = rcode;
+    }
+
+    if (code) {
+	PrintDiagnostics("endtrans", code);
+	return 1;
+    }
+
+    return 0;
+}
+
 int
 PrintDiagnostics(char *astring, afs_int32 acode)
 {
@@ -5673,6 +5703,29 @@ PrintDiagnostics(char *astring, afs_int32 acode)
     return 0;
 }
 
+
+#ifdef AFS_NT40_ENV
+static DWORD
+win32_enableCrypt(void)
+{
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD cryptall = 0;
+    DWORD code;
+
+    /* Look up configuration parameters in Registry */
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                        0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS) {
+        dummyLen = sizeof(cryptall);
+        RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
+                        (BYTE *) &cryptall, &dummyLen);
+    }
+    RegCloseKey (parmKey);
+
+    return cryptall;
+}
+#endif /* AFS_NT40_ENV */
 
 static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
@@ -5691,7 +5744,11 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	tcell = as->parms[12].items->data;
     if (as->parms[14].items)	/* -serverauth specified */
 	sauth = 1;
-    if (as->parms[16].items)	/* -crypt specified */
+    if (as->parms[16].items     /* -encrypt specified */
+#ifdef AFS_NT40_ENV
+        || win32_enableCrypt()
+#endif /* AFS_NT40_ENV */
+         )
 	vsu_SetCrypt(1);
     if ((code =
 	 vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
@@ -5927,10 +5984,8 @@ main(int argc, char **argv)
 		"generate minimal information");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
-#ifdef FULL_LISTVOL_SWITCH
     cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL,
 		"machine readable format");
-#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("syncvldb", SyncVldb, NULL,
@@ -5953,10 +6008,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
-#ifdef FULL_LISTVOL_SWITCH
     cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL,
 		"machine readable format");
-#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
     cmd_CreateAlias(ts, "volinfo");
 
@@ -6089,6 +6142,13 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL,
 		"Obtain the size of the dump");
     cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_OPTIONAL, "dump from time");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("endtrans", EndTrans, NULL,
+			  "end a volserver transaction");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
+    cmd_AddParm(ts, "-transaction", CMD_SINGLE, 0,
+		"transaction ID");
     COMMONPARMS;
 
     code = cmd_Dispatch(argc, argv);

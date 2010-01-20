@@ -72,6 +72,7 @@
 #include <afs/errors.h>
 #include "daemon_com.h"
 #include "fssync.h"
+#include "salvsync.h"
 #include "lwp.h"
 #include "lock.h"
 #include <afs/afssyscalls.h>
@@ -120,6 +121,23 @@ static SYNC_server_state_t fssync_server_state =
       "FSSYNC",                 /* protocol name string */
     };
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * a queue of volume pointers to salvage in the background.
+ */
+struct fsync_salv_node {
+    struct rx_queue q;
+    Volume *vp;                     /**< volume to salvage */
+    unsigned char update_salv_prio; /**< whether we should update the salvage priority or not */
+};
+static struct {
+    struct rx_queue head;
+    pthread_cond_t cv;
+} fsync_salv;
+
+static void * FSYNC_salvageThread(void *);
+static void FSYNC_backgroundSalvage(Volume *vp);
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 /* Forward declarations */
 static void * FSYNC_sync(void *);
@@ -203,6 +221,12 @@ FSYNC_fsInit(void)
 	   (FSYNC_sync, USUAL_STACK_SIZE, USUAL_PRIORITY, (void *)0,
 	    "FSYNC_sync", &pid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    queue_Init(&fsync_salv.head);
+    assert(pthread_cond_init(&fsync_salv.cv, NULL) == 0);
+    assert(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 #if defined(HAVE_POLL) && defined(AFS_PTHREAD_ENV)
@@ -223,7 +247,15 @@ FSYNC_sync(void * args)
     SYNC_server_state_t * state = &fssync_server_state;
 #ifdef AFS_DEMAND_ATTACH_FS
     VThreadOptions_t * thread_opts;
-#endif
+    int min_vinit = 2;
+#else
+    /*
+     * For non-DAFS, only wait until we begin attaching volumes (instead
+     * of waiting until all volumes are attached), since it can take
+     * awhile until VInit == 2.
+     */
+    int min_vinit = 1;
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -237,13 +269,15 @@ FSYNC_sync(void * args)
     MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
     tid = ++rxi_pthread_hinum;
     MUTEX_EXIT(&rx_stats_mutex);
-    pthread_setspecific(rx_thread_id_key, (void *)tid);
+    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)tid);
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
 
-    while (!VInit) {
-	/* Let somebody else run until level > 0.  That doesn't mean that 
-	 * all volumes have been attached. */
+    while (VInit < min_vinit) {
+	/* Let somebody else run until all volumes have been preattached
+	 * (DAFS), or we have started attaching volumes (non-DAFS). This
+	 * doesn't mean that all volumes have been attached.
+	 */
 #ifdef AFS_PTHREAD_ENV
 	pthread_yield();
 #else /* AFS_PTHREAD_ENV */
@@ -295,6 +329,91 @@ FSYNC_sync(void * args)
     }
     return NULL; /* hush now, little gcc */
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * thread for salvaging volumes in the background.
+ *
+ * Since FSSYNC handlers cannot issue SALVSYNC requests in order to avoid
+ * deadlock issues, this thread exists so code in the FSSYNC handler thread
+ * can hand off volumes to be salvaged in the background.
+ *
+ * @param[in] args  unused
+ *
+ * @note DEMAND_ATTACH_FS only
+ */
+static void *
+FSYNC_salvageThread(void * args)
+{
+    Volume *vp;
+    struct fsync_salv_node *node;
+
+    VOL_LOCK;
+
+    for (;;) {
+	while (queue_IsEmpty(&fsync_salv.head)) {
+	    VOL_CV_WAIT(&fsync_salv.cv);
+	}
+
+	node = queue_First(&fsync_salv.head, fsync_salv_node);
+	queue_Remove(node);
+
+	vp = node->vp;
+	if (node->update_salv_prio) {
+	    if (VUpdateSalvagePriority_r(vp)) {
+		ViceLog(0, ("FSYNC_salvageThread: unable to raise salvage priority "
+		            "for volume %lu\n", afs_printable_uint32_lu(vp->hashid)));
+	    }
+	}
+
+	free(node);
+	node = NULL;
+
+	VCancelReservation_r(vp);
+    }
+
+    VOL_UNLOCK;
+
+    return NULL;
+}
+
+/**
+ * salvage a volume in the background.
+ *
+ * Salvages cannot be scheduled directly from the main FSYNC thread, so
+ * instead call this function to schedule a salvage asynchronously in the
+ * FSYNC_salvageThread thread.
+ *
+ * @param[in] vp  volume to pointer to salvage
+ *
+ * @pre VOL_LOCK held
+ *
+ * @note DEMAND_ATTACH_FS only
+ */
+static void
+FSYNC_backgroundSalvage(Volume *vp)
+{
+    struct fsync_salv_node *node;
+    Error ec;
+
+    VCreateReservation_r(vp);
+
+    node = malloc(sizeof(struct fsync_salv_node));
+    node->vp = vp;
+
+    /* Save this value, to know if we should VUpdateSalvagePriority_r.
+     * We need to save it here, snce VRequestSalvage_r will change it. */
+    node->update_salv_prio = vp->salvage.requested;
+
+    if (VRequestSalvage_r(&ec, vp, SALVSYNC_ERROR, 0)) {
+	ViceLog(0, ("FSYNC_backgroundSalvage: unable to request salvage for volume %lu\n",
+	            afs_printable_uint32_lu(vp->hashid)));
+    }
+
+    queue_Append(&fsync_salv.head, node);
+    assert(pthread_cond_broadcast(&fsync_salv.cv) == 0);
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 static void
 FSYNC_newconnection(osi_socket afd)
@@ -360,7 +479,10 @@ FSYNC_com(osi_socket fd)
     if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
 	res.hdr.response = SYNC_OK;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
-	goto respond;
+
+	/* don't respond, just drop; senders of SYNC_COM_CHANNEL_CLOSE
+	 * never wait for a response. */
+	goto done;
     }
 
     res.hdr.com_seq = com.hdr.com_seq;
@@ -400,6 +522,8 @@ FSYNC_com(osi_socket fd)
 
  respond:
     SYNC_putRes(&fssync_server_state, fd, &res);
+
+ done:
     if (res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN) {
 	FSYNC_Drop(fd);
     }
@@ -503,7 +627,9 @@ static afs_int32
 FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
+#ifndef AFS_DEMAND_ATTACH_FS
     char tvolName[VMAXPATHLEN];
+#endif
     Volume * vp;
     Error error;
 
@@ -625,8 +751,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     Volume * vp;
     Error error;
 #ifdef AFS_DEMAND_ATTACH_FS
-    int reserved = 0;
-    Volume *nvp;
+    Volume *nvp, *rvp = NULL;
 #endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
@@ -683,6 +808,15 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	/* enforce mutual exclusion for volume ops */
 	if (vp->pending_vol_op) {
 	    if (vp->pending_vol_op->com.programType != type) {
+                if (vp->pending_vol_op->com.command == FSYNC_VOL_OFF &&
+                    vp->pending_vol_op->com.reason == FSYNC_SALVAGE) {
+
+                    Log("denying offline request for volume %lu; volume is salvaging\n",
+		        afs_printable_uint32_lu(vp->hashid));
+
+                    res->hdr.reason = FSYNC_SALVAGE;
+                    goto deny;
+                }
 		Log("volume %u already checked out\n", vp->hashid);
 		/* XXX debug */
 		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%u, part='%s' } }\n",
@@ -711,10 +845,16 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    }
 	}
 
+	/* wait for exclusive ops, so we have an accurate picture of the
+	 * vol attach state */
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+	rvp = vp;
+
 	/* filter based upon requestor
 	 *
-	 * volume utilities are not allowed to check out volumes
-	 * which are in an error state
+	 * volume utilities / volserver are not allowed to check out
+	 * volumes which are in an error state
 	 *
 	 * unknown utility programs will be denied on principal
 	 */
@@ -730,12 +870,24 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    break;
 
 	case volumeUtility:
+	case volumeServer:
+            if (V_attachState(vp) == VOL_STATE_SALVAGING ||
+	        vp->salvage.requested) {
+
+                Log("denying offline request for volume %lu; volume is in salvaging state\n",
+		    afs_printable_uint32_lu(vp->hashid));
+                res->hdr.reason = FSYNC_SALVAGE;
+
+		/* the volume hasn't been checked out yet by the salvager,
+		 * but we think the volume is salvaging; schedule a
+		 * a salvage to update the salvage priority */
+		FSYNC_backgroundSalvage(vp);
+
+		goto deny;
+            }
 	    if (VIsErrorState(V_attachState(vp))) {
 		goto deny;
 	    }
-            if (vp->salvage.requested) {
-                goto deny;
-            }
 	    break;
 
 	default:
@@ -764,8 +916,34 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
 	/* convert to heavyweight ref */
 	nvp = VGetVolumeByVp_r(&error, vp);
+	VCancelReservation_r(rvp);
+	rvp = NULL;
 
 	if (!nvp) {
+            /*
+             * It's possible for VGetVolumeByVp_r to have dropped and
+             * re-acquired VOL_LOCK, so volume state may have changed
+             * back to one of the states we tested for above. Since
+             * GetVolume can return NULL in some of those states, just
+             * test for the states again here.
+             */
+            switch (V_attachState(vp)) {
+            case VOL_STATE_UNATTACHED:
+            case VOL_STATE_PREATTACHED:
+            case VOL_STATE_SALVAGING:
+            case VOL_STATE_ERROR:
+                /* register the volume operation metadata with the volume
+                 *
+                 * if the volume is currently pre-attached, attach2()
+                 * will evaluate the vol op metadata to determine whether
+                 * attaching the volume would be safe */
+                VRegisterVolOp_r(vp, &info);
+                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
+                goto done;
+            default:
+                break;
+            }
+
 	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u\n",
 		vcom->vop->volume);
 	    res->hdr.reason = FSYNC_VOL_PKG_ERROR;
@@ -791,6 +969,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		    vcom->hdr->reason == V_CLONE ? "clone" : 
 		    vcom->hdr->reason == V_READONLY ? "readonly" : 
 		    vcom->hdr->reason == V_DUMP ? "dump" : 
+		    vcom->hdr->reason == FSYNC_SALVAGE ? "salvage" :
 		    "UNKNOWN");
 	    }
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -827,12 +1006,18 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    vp = NULL;
 	}
     }
-
- done:
-    return code;
+    goto done;
 
  deny:
-    return SYNC_DENIED;
+    code = SYNC_DENIED;
+
+ done:
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (rvp) {
+        VCancelReservation_r(rvp);
+    }
+#endif
+    return code;
 }
 
 /**
@@ -900,7 +1085,9 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	} else {
 	    res->hdr.reason = FSYNC_WRONG_PART;
 	}
+#ifndef AFS_DEMAND_ATTACH_FS
 	VPutVolume_r(vp);
+#endif /* !AFS_DEMAND_ATTACH_FS */
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
@@ -1031,7 +1218,14 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (FSYNC_partMatch(vcom, vp, 0)) {
 	    /* null out salvsync control state, as it's no longer relevant */
 	    memset(&vp->salvage, 0, sizeof(vp->salvage));
-	    VChangeState_r(vp, VOL_STATE_ERROR);
+            VDeregisterVolOp_r(vp);
+
+            if (vcom->hdr->reason == FSYNC_SALVAGE) {
+		FSYNC_backgroundSalvage(vp);
+            } else {
+	        VChangeState_r(vp, VOL_STATE_ERROR);
+            }
+
 	    code = SYNC_OK;
 	} else {
 	    res->hdr.reason = FSYNC_WRONG_PART;
@@ -1183,17 +1377,17 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		!(V_attachFlags(vp) & VOL_HDR_ATTACHED) ||
 		!(V_attachFlags(vp) & VOL_HDR_LOADED)) {
 		res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
-		goto done;
+		goto cleanup;
 	    }
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    if (!vp || !vp->header) {
 		res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
-		goto done;
+		goto cleanup;
 	    }
 #endif /* !AFS_DEMAND_ATTACH_FS */
 	} else {
 	    res->hdr.reason = FSYNC_WRONG_PART;
-	    goto done;
+	    goto cleanup;
 	}
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
@@ -1202,10 +1396,12 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
     memcpy(res->payload.buf, &V_disk(vp), sizeof(VolumeDiskData));
     res->hdr.response_len += sizeof(VolumeDiskData);
+    code = SYNC_OK;
+
+ cleanup:
 #ifndef AFS_DEMAND_ATTACH_FS
     VPutVolume_r(vp);
 #endif
-    code = SYNC_OK;
 
  done:
     return code;

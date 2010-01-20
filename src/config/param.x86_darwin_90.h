@@ -26,6 +26,7 @@
 #define AFS_DARWIN70_ENV
 #define AFS_DARWIN80_ENV
 #define AFS_DARWIN90_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define AFS_NAMEI_ENV 1
@@ -91,7 +92,6 @@
 #define vfs_vnodecovered mnt_vnodecovered
 #define direct          dirent
 
-#define BIND_8_COMPAT
 
 #endif
 #endif /* AFS_PARAM_H */
@@ -123,6 +123,7 @@
 #define AFS_USR_DARWIN70_ENV
 #define AFS_USR_DARWIN80_ENV
 #define AFS_USR_DARWIN90_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define DARWIN_REFBASE 0
@@ -179,7 +180,6 @@
 #define CMSERVERPREF
 #endif
 
-#define BIND_8_COMPAT
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */

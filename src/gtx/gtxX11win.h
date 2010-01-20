@@ -50,7 +50,7 @@ extern int gator_X11gwin_init(int);
 
 /*X11 window's creation routine*/
 
-extern struct gwin *gator_X11gwin_create(struct gator_X11gwin_params *);
+extern struct gwin *gator_X11gwin_create(void *);
     /*
      * Summary:
      *    Create a X11 window.

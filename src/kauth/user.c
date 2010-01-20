@@ -36,6 +36,8 @@
 #include "afs/afsutil.h"
 #include "afs/ptuser.h"
 #include "des.h"
+#include "des_prototypes.h"
+#include "afs/ktc.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>
@@ -47,6 +49,7 @@
 #include <unistd.h>
 #endif
 #include <string.h>
+#include <stdio.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/ptint.h>
@@ -55,13 +58,14 @@
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
-#include <des.h>
-#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
+#include <afs/ktc.h>
 #endif /* defined(UKERNEL) */
 
 
@@ -160,7 +164,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     struct ktc_encryptionKey key;
     afs_int32 code, dosetpag = 0;
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV) || defined(AFS_FBSD_ENV)
-    sig_t old;
+    void (*old)(int);
 #endif
 
     if (reasonP)
@@ -205,7 +209,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     if (flags & KA_USERAUTH_ONLY_VERIFY) {
 	code = ka_VerifyUserToken(name, instance, realm, &key);
 	if (code == KABADREQUEST) {
-	    des_string_to_key(password, &key);
+	    des_string_to_key(password, ktc_to_cblockptr(&key));
 	    code = ka_VerifyUserToken(name, instance, realm, &key);
 	}
     } else {
@@ -230,44 +234,11 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
 	    GetTickets(name, instance, realm, &key, lifetime,
 		       password_expires, dosetpag);
 	if (code == KABADREQUEST) {
-	    des_string_to_key(password, &key);
+	    des_string_to_key(password, ktc_to_cblockptr(&key));
 	    code =
 		GetTickets(name, instance, realm, &key, lifetime,
 			   password_expires, dosetpag);
 	}
-
-/* By the time 3.3 comes out, these "old-style" passwd programs should be 
- * well and truly obsolete.  Any passwords set with such a program
- * OUGHT to have been changed years ago.  Having 2 -or- 3
- * authentication RPCs generated for every klog plays hob with the
- * "failed login limits" code in the kaserver, and it's hard to
- * explain to admins just how to set the limit properly.  By removing 
- * this function, we can just double it internally in the kaserver, and 
- * not document anything.  kpasswd had the TRUNCATEPASSWORD "feature"
- * disabled on 10/02/90.
- */
-#ifdef OLDCRUFT
-	if ((code == KABADREQUEST) && (strlen(password) > 8)) {
-	    /* try with only the first 8 characters incase they set their password
-	     * with an old style passwd program. */
-	    char pass8[9];
-	    strncpy(pass8, password, 8);
-	    pass8[8] = 0;
-	    ka_StringToKey(pass8, realm, &key);
-	    memset(pass8, 0, sizeof(pass8));
-	    code =
-		GetTickets(name, instance, realm, &key, lifetime,
-			   password_expires, dosetpag);
-	    if (code == 0) {
-		fprintf(stderr, "%s %s\n%s %s\n%s\n",
-			"Warning: you have typed a password longer than 8",
-			"characters, but only the",
-			"first 8 characters were actually significant.  If",
-			"you change your password",
-			"again this warning message will go away.\n");
-	    }
-	}
-#endif /* OLDCRUFT */
     }
 
 #ifndef AFS_NT40_ENV

@@ -7,9 +7,9 @@ backup_kill - Terminates a pending or running operation
 =for html
 <div class="synopsis">
 
-B<kill> S<<< B<-id> <I<job ID or dump set name>> >>> [B<-help>]
+B<backup kill> S<<< B<-id> <I<job ID or dump set name>> >>> [B<-help>]
 
-S<<< B<k -i> <I<job ID or dump set name>> >>> [B<-h>]
+B<backup k> S<<< B<k -i> <I<job ID or dump set name>> >>> [B<-h>]
 
 =for html
 </div>

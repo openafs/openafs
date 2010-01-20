@@ -41,9 +41,9 @@
 #include <afs/osi_inode.h>
 #include <errno.h>
 
-#include <nfs.h>
+#include <afs/nfs.h>
 #include <afs/ihandle.h>
-#include <partition.h>
+#include <afs/partition.h>
 #include <afs/cmd.h>
 #include <stdlib.h>
 #include <unistd.h>

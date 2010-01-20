@@ -7,11 +7,13 @@ fstrace_lslog - Displays information about a log
 =for html
 <div class="synopsis">
 
-B<fstrace lslog> S<<< [B<-set> <I<set name>>+] >>> S<<< [B<-log> <I<log name>>] >>>
+B<fstrace lslog> S<<< [B<-set> <I<set name>>+] >>>
+    S<<< [B<-log> <I<log name>>] >>>
     [B<-long>] [B<-help>]
 
-B<fstrace lsl> S<<< [B<-s> <I<set name>>+] >>> S<<< [B<-log> <I<log name>>] >>> [B<-lon>]
-    [B<-h>]
+B<fstrace lsl> S<<< [B<-s> <I<set name>>+] >>>
+    S<<< [B<-log> <I<log name>>] >>>
+    [B<-lon>] [B<-h>]
 
 =for html
 </div>

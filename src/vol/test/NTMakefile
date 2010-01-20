@@ -30,6 +30,7 @@ $(ILIST): $(OUT)\ilist_nt.obj $(EXEC_LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 
 ############################################################################
@@ -40,6 +41,7 @@ $(LTLIST): $(OUT)\ltlist.obj $(EXEC_LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 mkdir:
 	

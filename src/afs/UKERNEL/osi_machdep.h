@@ -26,7 +26,15 @@
 #define OSI_WAITHASH_SIZE       128	/* must be power of two */
 #define MAX_HOSTADDR            32
 
-#define AFS_UCRED usr_ucred
+/* XXX
+ *
+ * UKERNEL cannot trivially make use of typedef for afs_ucred_t and
+ * afs_proc_t, as in the present design, the types are already introduced
+ * with incorrect reference, so fall back to preprocessor for now
+ */
+
+#define afs_ucred_t struct usr_ucred
+#define afs_proc_t struct usr_proc
 
 #define AFS_KALLOC(A)           afs_osi_Alloc(A)
 
@@ -38,6 +46,8 @@
 
 #undef gop_lookupname
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),(compvpp))
+#undef gop_lookupname_user
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),(compvpp))
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
@@ -66,6 +76,8 @@ extern usr_mutex_t afs_global_lock;
     } while(0)
 #define AFS_ASSERT_GLOCK() \
     do { if (!ISAFS_GLOCK()) { osi_Panic("afs global lock not held"); } } while(0)
+#define osi_GlockInit() \
+    usr_mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 
 extern int afs_bufferpages;
 

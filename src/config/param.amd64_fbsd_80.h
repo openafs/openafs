@@ -25,6 +25,7 @@
 #define AFS_64BIT_ENV 1
 #define AFS_64BIT_CLIENT 1
 #define AFS_64BITPOINTER_ENV 1
+#define AFS_64BITUSERPOINTER_ENV	1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
 #define AFS_FBSD40_ENV 1
@@ -57,6 +58,7 @@
 #define AFS_X86_FBSD71_ENV 1
 #define AFS_X86_FBSD80_ENV 1
 #define AFS_X86_ENV 1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 #define FTRUNC O_TRUNC
 
@@ -168,6 +170,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_USR_FBSD71_ENV	1
 #define AFS_USR_FBSD80_ENV	1
 #define AFS_USR_FBSD_ENV	1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */

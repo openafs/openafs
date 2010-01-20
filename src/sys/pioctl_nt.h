@@ -25,10 +25,10 @@ typedef struct ViceIoctl {
 /* Fake error code since NT errno.h doesn't define it */
 #include <afs/errmap_nt.h>
 
-extern long pioctl(char *pathp, long opcode, struct ViceIoctl *blob,
-		   int follow);
+extern int pioctl(char *pathp, afs_int32 opcode, struct ViceIoctl *blob,
+		  afs_int32 follow);
 
-extern long pioctl_utf8(char *pathp, long opcode, struct ViceIoctl *blob,
-                        int follow);
+extern int pioctl_utf8(char *pathp, afs_int32 opcode, struct ViceIoctl *blob,
+                       afs_int32 follow);
 
 #endif /* OPENAFS_AFS_PIOCTL_H */

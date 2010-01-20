@@ -420,7 +420,6 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
     struct host *thost;
     struct client *tclient;
     int translate = 0;
-    int held;
 
     H_LOCK;
     tclient = h_FindClient_r(aconn);
@@ -430,23 +429,34 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
     if (thost->hostFlags & HERRORTRANS)
 	translate = 1;
     h_ReleaseClient_r(tclient);
-    held = h_Held_r(thost);
-    if (held)
-	h_Release_r(thost);
-    if (ahost && ahost != thost) {
-	char hoststr[16], hoststr2[16];	
-	ViceLog(0, ("CallPostamble: ahost %s:%d (%x) != thost %s:%d (%x)\n",
-		afs_inet_ntoa_r(ahost->host, hoststr), ntohs(ahost->port),
-		ahost, 
-		afs_inet_ntoa_r(thost->host, hoststr2), ntohs(thost->port),
-		thost));
-	h_Release_r(ahost);
-    } else if (!ahost) {
-	char hoststr[16];	
-	ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%x)\n",
-		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
-		thost));
+
+    if (ahost) {
+	    if (ahost != thost) {
+		    /* host/client recycle */
+		    char hoststr[16], hoststr2[16];
+		    ViceLog(0, ("CallPostamble: ahost %s:%d (%x) != thost "
+				"%s:%d (%x)\n",
+				afs_inet_ntoa_r(ahost->host, hoststr),
+				ntohs(ahost->port),
+				ahost,
+				afs_inet_ntoa_r(thost->host, hoststr2),
+				ntohs(thost->port),
+				thost));
+	    }
+	    /* return the reference taken in CallPreamble */
+	    h_Release_r(ahost);
+    } else {
+	    char hoststr[16];
+	    ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%x)\n",
+			afs_inet_ntoa_r(thost->host, hoststr),
+			ntohs(thost->port),
+			thost));
     }
+
+    /* return the reference taken in local h_FindClient_r--h_ReleaseClient_r
+     * does not decrement refcount on client->host */
+    h_Release_r(thost);
+
  busyout:
     H_UNLOCK;
     return (translate ? sys_error_to_et(ret) : ret);
@@ -1348,7 +1358,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	SetDirHandle(&childdir, *targetptr);
 	if (IsEmpty(&childdir) != 0)
 	    return (EEXIST);
-	DZap(&childdir);
+	DZap((afs_int32 *) &childdir);
 	FidZap(&childdir);
 	(*targetptr)->delete = 1;
     } else if ((--(*targetptr)->disk.linkCount) == 0)
@@ -2344,10 +2354,6 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
     afs_sfsize_t tPos, tLen;
 
 #ifdef AFS_64BIT_ENV
-#ifndef AFS_LARGEFILE_ENV
-    if (Pos + Len > 0x7fffffff)
-	return EFBIG;
-#endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_sfsize_t) Pos;
     tLen = (afs_sfsize_t) Len;
 #else /* AFS_64BIT_ENV */
@@ -2631,7 +2637,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			      &rights, &anyrights)))
 	    goto Bad_BulkStatus;
 	/* set volume synchronization information, but only once per call */
-	if (i == nfiles)
+	if (i == 0)
 	    SetVolumeSync(Sync, volptr);
 
 	/* Are we allowed to fetch Fid's status? */
@@ -2792,7 +2798,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	}
 
 	/* set volume synchronization information, but only once per call */
-	if (i == nfiles)
+	if (i == 0)
 	    SetVolumeSync(Sync, volptr);
 
 	/* Are we allowed to fetch Fid's status? */
@@ -3182,10 +3188,6 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
     afs_fsize_t tFileLength;
 
 #ifdef AFS_64BIT_ENV
-#ifndef AFS_LARGEFILE_ENV
-    if (FileLength > 0x7fffffff)
-	return EFBIG;
-#endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_fsize_t) Pos;
     tLength = (afs_fsize_t) Length;
     tFileLength = (afs_fsize_t) FileLength;
@@ -4810,7 +4812,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* Actually create the New directory in the directory package */
     SetDirHandle(&dir, targetptr);
-    assert(!(MakeDir(&dir, OutFid, DirFid)));
+    assert(!(MakeDir(&dir, (afs_int32 *)OutFid, (afs_int32 *)DirFid)));
     DFlush();
     VN_SET_LEN(targetptr, (afs_fsize_t) Length(&dir));
 
@@ -6273,7 +6275,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_uint32 *) malloc(dataBytes);
     dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
-#if defined(AFS_64BIT_ENV) && defined(AFS_LARGEFILE_ENV)
+#if defined(AFS_64BIT_ENV)
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
 #endif
     if (saneacls)
@@ -7027,8 +7029,9 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	Len = 0;
     }
 
-    if (Pos + Len > tlen)
-	Len = tlen - Pos;	/* get length we should send */
+    if (Pos + Len > tlen) /* get length we should send */
+	Len = ((tlen - Pos) < 0) ? 0 : tlen - Pos;
+
     (void)FDH_SEEK(fdP, Pos, 0);
     {
 	afs_int32 high, low;
@@ -7715,7 +7718,7 @@ sys_error_to_et(afs_int32 in)
 	return 0;
     if (in < 0 || in > 511)
 	return in;
-    if (in >= VICE_SPECIAL_ERRORS && in <= VIO || in == VRESTRICTED)
+    if ((in >= VICE_SPECIAL_ERRORS && in <= VIO) || in == VRESTRICTED)
 	return in;
     if (sys2et[in] != 0)
 	return sys2et[in];

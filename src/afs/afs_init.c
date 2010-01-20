@@ -22,6 +22,9 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "rx/rxstat.h"
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+#include <linux/cred.h>
+#endif
 
 #define FSINT_COMMON_XG
 #include "afs/afscbint.h"
@@ -29,7 +32,7 @@
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -51,9 +54,14 @@ static struct vnode *volumeVnode;
 afs_rwlock_t afs_discon_lock;
 extern afs_rwlock_t afs_disconDirtyLock;
 #endif
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+const struct cred *cache_creds;
+#endif
 
 /* This is the kernel side of the dynamic vcache setting */
+#ifdef AFS_MAXVCOUNT_ENV
 int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
+#endif
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -109,10 +117,9 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 #endif /* SYS_NAME_ID */
 
 #ifdef AFS_MAXVCOUNT_ENV
-	afsd_dynamic_vcaches = dynamic_vcaches;
-    printf("%s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
-#else
-	afsd_dynamic_vcaches = 0;
+    afsd_dynamic_vcaches = dynamic_vcaches;
+    printf("%s dynamically allocated vcaches\n",
+	   ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
     printf("Starting AFS cache scan...");
@@ -120,9 +127,6 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	return 0;
     afs_cacheinit_flag = 1;
     cacheInfoModTime = 0;
-    maxIHint = ninodes;
-    nihints = 0;
-    usedihint = 0;
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
     AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
@@ -153,6 +157,16 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     afs_cacheStats = astatSize;
     afs_vcacheInit(astatSize);
     afs_dcacheInit(afiles, ablocks, aDentries, achunk, aflags);
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+    /*
+     * Save current credentials for later access to disk cache files.
+     * If selinux, apparmor or other security modules are enabled,
+     * they might deny access to cache files if the userspace process
+     * is restricted.  Save the credentials used at cache initialisation
+     * for later use when opening cache files.
+     */
+    cache_creds = get_current_cred();
+#endif
 #ifdef AFS_64BIT_CLIENT
 #ifdef AFS_VM_RDWR_ENV
     afs_vmMappingEnd = AFS_CHUNKBASE(0x7fffffff);
@@ -379,8 +393,6 @@ afs_InitCacheInfo(register char *afile)
 	struct k_statvfs st;
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
 	struct statvfs st;
-#elif defined(AFS_DUX40_ENV)
-	struct nstatfs st;
 #elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;
 #else
@@ -396,12 +408,6 @@ afs_InitCacheInfo(register char *afile)
 #endif /* AFS_SGI65_ENV */
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
-#elif defined(AFS_OSF_ENV)
-
-	VFS_STATFS(filevp->v_vfsp, code);
-	/* struct copy */
-	st = filevp->v_vfsp->m_stat;
-	if (code == 0)
 #elif defined(AFS_AIX41_ENV)
 	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
 #elif defined(AFS_LINUX20_ENV)
@@ -417,6 +423,8 @@ afs_InitCacheInfo(register char *afile)
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
 #elif defined(AFS_DARWIN_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
+#elif defined(AFS_FBSD80_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st))
 #elif defined(AFS_FBSD50_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, curthread))
 #elif defined(AFS_XBSD_ENV)
@@ -425,7 +433,17 @@ afs_InitCacheInfo(register char *afile)
 	if (!VFS_STATFS(filevp->v_vfsp, &st))
 #endif /* SGI... */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
-	    afs_fsfragsize = st.f_frsize - 1;
+	    if (strcmp("zfs", st.f_basetype) == 0) {
+		/*
+		 * Files in ZFS can take up to around the next
+		 * recordsize boundary after being truncated. recordsize
+		 * is reported in statvfs by f_bsize, so use that
+		 * instead.
+		 */
+		afs_fsfragsize = st.f_bsize - 1;
+	    } else {
+		afs_fsfragsize = st.f_frsize - 1;
+	    }
 #else
 	    afs_fsfragsize = st.f_bsize - 1;
 #endif
@@ -457,6 +475,9 @@ afs_InitCacheInfo(register char *afile)
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
+    if (afs_fsfragsize < AFS_MIN_FRAGSIZE) {
+	afs_fsfragsize = AFS_MIN_FRAGSIZE;
+    }
     tfile = osi_UFSOpen(&cacheInode);
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
@@ -585,8 +606,8 @@ afs_ResourceInit(int preallocs)
 static void
 afs_procsize_init(void)
 {
-    struct proc *p0;		/* pointer to process 0 */
-    struct proc *pN;		/* pointer to process 0's first child */
+    afs_proc_t *p0;		/* pointer to process 0 */
+    afs_proc_t *pN;		/* pointer to process 0's first child */
 #ifdef AFS_AIX51_ENV
     struct pvproc *pV;
 #endif
@@ -594,13 +615,13 @@ afs_procsize_init(void)
     ptrdiff_t pN_offset;
     int procsize;
 
-    p0 = (struct proc *)v.vb_proc;
+    p0 = (afs_proc_t *)v.vb_proc;
     if (!p0) {
 	afs_gcpags = AFS_GCPAGS_EPROC0;
 	return;
     }
 #ifdef AFS_AIX51_ENV
-    pN = (struct proc *)0;
+    pN = NULL;
     pV = p0->p_pvprocp;
     if (pV) {
 	pV = pV->pv_child;
@@ -672,7 +693,7 @@ shutdown_cache(void)
 
 	afs_cacheStats = 0;
 	afs_cacheFiles = afs_cacheBlocks = 0;
-	pag_epoch = maxIHint = nihints = usedihint = 0;
+	pag_epoch = 0;
 	pagCounter = 0;
 #if defined(AFS_XBSD_ENV)
 	vrele(volumeVnode);	/* let it go, finally. */
@@ -687,10 +708,13 @@ shutdown_cache(void)
 	cacheInfoModTime = 0;
 
 	afs_fsfragsize = 1023;
-	memset((char *)&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
-	memset((char *)&cacheDev, 0, sizeof(struct osi_dev));
+	memset(&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
+	memset(&cacheDev, 0, sizeof(struct osi_dev));
 	osi_dnlc_shutdown();
     }
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+    put_cred(cache_creds);
+#endif
 }				/*shutdown_cache */
 
 
@@ -718,30 +742,91 @@ shutdown_vnodeops(void)
 }
 
 
+static void
+shutdown_server(void)
+{
+    int i;
+    struct afs_conn *tc, *ntc;
+    struct afs_cbr *tcbrp, *tbrp;
+    struct srvAddr *sa;
+
+    for (i = 0; i < NSERVERS; i++) {
+	struct server *ts, *next;
+
+        ts = afs_servers[i];
+        while(ts) {
+	    next = ts->next;
+	    for (sa = ts->addr; sa; sa = sa->next_sa) {
+		if (sa->conns) {
+		    /*
+		     * Free all server's connection structs
+		     */
+		    tc = sa->conns;
+		    while (tc) {
+			ntc = tc->next;
+#if 0
+			/* we should destroy all connections
+			   when shutting down Rx, not here */
+			AFS_GUNLOCK();
+			rx_DestroyConnection(tc->id);
+			AFS_GLOCK();
+#endif
+			afs_osi_Free(tc, sizeof(struct afs_conn));
+			tc = ntc;
+		    }
+		}
+	    }
+	    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
+		/*
+		 * Free all server's callback structs
+		 */
+		tbrp = tcbrp->next;
+		afs_FreeCBR(tcbrp);
+	    }
+	    afs_osi_Free(ts, sizeof(struct server));
+	    ts = next;
+        }
+    }
+
+    for (i = 0; i < NSERVERS; i++) {
+	struct srvAddr *sa, *next;
+
+        sa = afs_srvAddrs[i];
+        while(sa) {
+	    next = sa->next_bkt;
+	    afs_osi_Free(sa, sizeof(struct srvAddr));
+	    sa = next;
+        }
+    }
+}
+
+static void
+shutdown_volume(void)
+{
+    struct volume *tv;
+    int i;
+
+    for (i = 0; i < NVOLS; i++) {
+	for (tv = afs_volumes[i]; tv; tv = tv->next) {
+	    if (tv->name) {
+		afs_osi_Free(tv->name, strlen(tv->name) + 1);
+		tv->name = 0;
+	    }
+	}
+	afs_volumes[i] = 0;
+    }
+}
+
 void
 shutdown_AFS(void)
 {
     int i;
-    register struct srvAddr *sa;
 
     AFS_STATCNT(shutdown_AFS);
     if (afs_cold_shutdown) {
 	afs_resourceinit_flag = 0;
-	/* 
-	 * Free Volumes table allocations 
-	 */
-	{
-	    struct volume *tv;
-	    for (i = 0; i < NVOLS; i++) {
-		for (tv = afs_volumes[i]; tv; tv = tv->next) {
-		    if (tv->name) {
-			afs_osi_Free(tv->name, strlen(tv->name) + 1);
-			tv->name = 0;
-		    }
-		}
-		afs_volumes[i] = 0;
-	    }
-	}
+
+	shutdown_volume();
 
 	/* 
 	 * Free FreeVolList allocations 
@@ -750,13 +835,11 @@ shutdown_AFS(void)
 		     afs_memvolumes * sizeof(struct volume));
 	afs_freeVolList = Initialafs_freeVolList = 0;
 
-	/* XXX HACK fort MEM systems XXX 
+	/* XXX HACK for MEM systems XXX
 	 *
 	 * For -memcache cache managers when we run out of free in memory volumes
 	 * we simply malloc more; we won't be able to free those additional volumes.
 	 */
-
-
 
 	/* 
 	 * Free Users table allocation 
@@ -776,45 +859,6 @@ shutdown_AFS(void)
 	    }
 	}
 
-	/* 
-	 * Free Servers table allocation 
-	 */
-	{
-	    struct server *ts, *nts;
-	    struct afs_conn *tc, *ntc;
-	    register struct afs_cbr *tcbrp, *tbrp;
-
-	    for (i = 0; i < NSERVERS; i++) {
-		for (ts = afs_servers[i]; ts; ts = nts) {
-		    nts = ts->next;
-		    for (sa = ts->addr; sa; sa = sa->next_sa) {
-			if (sa->conns) {
-			    /*
-			     * Free all server's connection structs
-			     */
-			    tc = sa->conns;
-			    while (tc) {
-				ntc = tc->next;
-				AFS_GUNLOCK();
-				rx_DestroyConnection(tc->id);
-				AFS_GLOCK();
-				afs_osi_Free(tc, sizeof(struct afs_conn));
-				tc = ntc;
-			    }
-			}
-		    }
-		    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
-			/*
-			 * Free all server's callback structs
-			 */
-			tbrp = tcbrp->next;
-			afs_FreeCBR(tcbrp);
-		    }
-		    afs_osi_Free(ts, sizeof(struct server));
-		}
-		afs_servers[i] = 0;
-	    }
-	}
 	for (i = 0; i < NFENTRIES; i++)
 	    fvTable[i] = 0;
 	/* Reinitialize local globals to defaults */
@@ -829,7 +873,7 @@ shutdown_AFS(void)
 	afs_FVIndex = -1;
 	afs_server = (struct rx_service *)0;
 	AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
-	memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
+	memset(&afs_rootFid, 0, sizeof(struct VenusFid));
 	AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
 	AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
 	AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");

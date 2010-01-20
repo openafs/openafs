@@ -49,6 +49,7 @@ OBJS = \
 all: \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_INCDIR}/des.h \
+	${TOP_INCDIR}/des/stats.h \
 	${TOP_INCDIR}/des_prototypes.h \
 	${TOP_INCDIR}/des_conf.h \
 	${TOP_INCDIR}/mit-cpyright.h \
@@ -58,6 +59,9 @@ ${TOP_LIBDIR}/libdes.a: libdes.a
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/des.h: des.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/des/stats.h: stats.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/des_prototypes.h: des_prototypes.h

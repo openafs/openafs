@@ -26,41 +26,49 @@ $(OUT)\multiklog.exe: $(OUT)\multiklog.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\test_date.exe: $(OUT)\test_date.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\test_badtix.exe: $(OUT)\test_badtix.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\decode_ticket.exe: $(OUT)\decode_ticket.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\test_interim_ktc.exe: $(OUT)\test_interim_ktc.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\test_rxkad_free: test_rxkad_free.o 
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\test_getticket.exe: $(OUT)\test_getticket.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\background.exe: $(OUT)\background.obj
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 
 test tests all: $(OUT)\multiklog.exe $(OUT)\test_date.exe $(OUT)\test_badtix.exe $(OUT)\decode_ticket.exe \

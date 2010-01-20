@@ -31,7 +31,7 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include "des_internal.h"
 #include <stdio.h>
 

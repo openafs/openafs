@@ -1,9 +1,10 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+
+#define MYBUNDLEID "org.openafs.filesystems.afs"
 #ifdef AFS_DARWIN80_ENV
 static vfstable_t afs_vfstable;
 static struct vfs_fsentry afs_vfsentry;
@@ -11,7 +12,6 @@ extern struct vnodeopv_desc afs_vnodeop_opv_desc;
 extern struct vnodeopv_desc afs_dead_vnodeop_opv_desc;
 static struct vnodeopv_desc *afs_vnodeop_opv_desc_list[2] =
    { &afs_vnodeop_opv_desc, &afs_dead_vnodeop_opv_desc };
-
 
 #include <sys/conf.h>
 #include <miscfs/devfs/devfs.h>
@@ -35,8 +35,6 @@ struct vfsconf afs_vfsconf;
 extern struct vfsops afs_vfsops;
 extern struct mount *afs_globalVFS;
 extern int Afs_xsetgroups();
-extern int afs_xioctl();
-extern int afs3_syscall();
 
 extern int ioctl();
 extern int setgroups();
@@ -53,13 +51,10 @@ afs_modload(struct kmod_info *ki, void *data)
     afs_vfsentry.vfe_vfsops = &afs_vfsops;
     afs_vfsentry.vfe_vopcnt = 2;
     afs_vfsentry.vfe_opvdescs = afs_vnodeop_opv_desc_list;
-    /* We may be 64bit ready too (VFS_TBL64BITREADY) */
-    afs_vfsentry.vfe_flags = VFS_TBLTHREADSAFE|VFS_TBLNOTYPENUM;
+    afs_vfsentry.vfe_flags = VFS_TBLTHREADSAFE|VFS_TBLNOTYPENUM|VFS_TBL64BITREADY;
     if (vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
 	printf("AFS: vfs_fsadd failed. aborting\n");
-	MUTEX_FINISH();
-	lck_mtx_free(afs_global_lock, openafs_lck_grp);
-	return KERN_FAILURE;
+	goto fsadd_out;
     }
     afs_cdev.d_open = &afs_cdev_nop_openclose;
     afs_cdev.d_close = &afs_cdev_nop_openclose;
@@ -67,14 +62,21 @@ afs_modload(struct kmod_info *ki, void *data)
     afs_cdev_major = cdevsw_add(-1, &afs_cdev);
     if (afs_cdev_major == -1) {
 	printf("AFS: cdevsw_add failed. aborting\n");
-        vfs_fsremove(afs_vfstable);
-	MUTEX_FINISH();
-	lck_mtx_free(afs_global_lock, openafs_lck_grp);
-	return KERN_FAILURE;
+	goto cdevsw_out;
     }
     afs_cdev_devfs_handle = devfs_make_node(makedev(afs_cdev_major, 0),
                                             DEVFS_CHAR, UID_ROOT, GID_WHEEL,
                                             0666, "openafs_ioctl", 0);
+    if (!afs_cdev_devfs_handle) {
+	printf("AFS: devfs_make_node failed. aborting\n");
+	cdevsw_remove(afs_cdev_major, &afs_cdev);
+    cdevsw_out:
+	vfs_fsremove(afs_vfstable);
+    fsadd_out:
+	MUTEX_FINISH();
+	lck_mtx_free(afs_global_lock, openafs_lck_grp);
+	return KERN_FAILURE;
+    }
 #else
     memset(&afs_vfsconf, 0, sizeof(struct vfsconf));
     strcpy(afs_vfsconf.vfc_name, "afs");
@@ -90,9 +92,6 @@ afs_modload(struct kmod_info *ki, void *data)
 	return KERN_FAILURE;
     }
     sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
-#if 0
-    sysent[SYS_ioctl].sy_call = afs_xioctl;
-#endif
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
     sysent[AFS_SYSCALL].sy_narg = 5;
     sysent[AFS_SYSCALL].sy_parallel = 0;
@@ -117,12 +116,7 @@ afs_modunload(struct kmod_info * ki, void *data)
     if (vfsconf_del("afs"))
 	return KERN_FAILURE;
     /* give up syscall entries for ioctl & setgroups, which we've stolen */
-#if 0
-    sysent[SYS_ioctl].sy_call = ioctl;
-#endif
-#ifndef AFS_DARWIN80_ENV
     sysent[SYS_setgroups].sy_call = setgroups;
-#endif
     /* give up the stolen syscall entry */
     sysent[AFS_SYSCALL].sy_narg = 0;
     sysent[AFS_SYSCALL].sy_call = nosys;
@@ -134,5 +128,5 @@ afs_modunload(struct kmod_info * ki, void *data)
     return KERN_SUCCESS;
 }
 
-KMOD_EXPLICIT_DECL(org.openafs.filesystems.afs, VERSION, afs_modload,
+KMOD_EXPLICIT_DECL(MYBUNDLEID, VERSION, afs_modload,
 		   afs_modunload)

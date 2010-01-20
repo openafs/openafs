@@ -15,13 +15,6 @@
 #ifndef AFS_LINUX22_ENV
 #include "rpc/types.h"
 #endif
-#ifdef	AFS_OSF_ENV
-#undef kmem_alloc
-#undef kmem_free
-#undef mem_alloc
-#undef mem_free
-#undef register
-#endif /* AFS_OSF_ENV */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
 
@@ -29,7 +22,6 @@
 static struct memCacheEntry *memCache;
 static int memCacheBlkSize = 8192;
 static int memMaxBlkNumber = 0;
-static int memAllocMaySleep = 0;
 
 extern int cacheDiskType;
 
@@ -45,20 +37,13 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
     memMaxBlkNumber = blkCount;
     memCache = (struct memCacheEntry *)
 	afs_osi_Alloc(memMaxBlkNumber * sizeof(struct memCacheEntry));
-    if (flags & AFSCALL_INIT_MEMCACHE_SLEEP) {
-	memAllocMaySleep = 1;
-    }
 
     for (index = 0; index < memMaxBlkNumber; index++) {
 	char *blk;
 	(memCache + index)->size = 0;
 	(memCache + index)->dataSize = memCacheBlkSize;
 	LOCK_INIT(&((memCache + index)->afs_memLock), "afs_memLock");
-	if (memAllocMaySleep) {
-	    blk = afs_osi_Alloc(memCacheBlkSize);
-	} else {
-	    blk = afs_osi_Alloc_NoSleep(memCacheBlkSize);
-	}
+	blk = afs_osi_Alloc(memCacheBlkSize);
 	if (blk == NULL)
 	    goto nomem;
 	(memCache + index)->data = blk;
@@ -111,10 +96,10 @@ afs_MemReadBlk(register struct osi_file *fP, int offset, void *dest,
     register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     int bytesRead;
 
-    MObtainReadLock(&mceP->afs_memLock);
+    ObtainReadLock(&mceP->afs_memLock);
     AFS_STATCNT(afs_MemReadBlk);
     if (offset < 0) {
-	MReleaseReadLock(&mceP->afs_memLock);
+	ReleaseReadLock(&mceP->afs_memLock);
 	return 0;
     }
     /* use min of bytes in buffer or requested size */
@@ -127,7 +112,7 @@ afs_MemReadBlk(register struct osi_file *fP, int offset, void *dest,
     } else
 	bytesRead = 0;
 
-    MReleaseReadLock(&mceP->afs_memLock);
+    ReleaseReadLock(&mceP->afs_memLock);
     return bytesRead;
 }
 
@@ -142,10 +127,10 @@ afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
     int bytesRead;
     int bytesToRead;
 
-    MObtainReadLock(&mceP->afs_memLock);
+    ObtainReadLock(&mceP->afs_memLock);
     AFS_STATCNT(afs_MemReadBlk);
     if (offset < 0) {
-	MReleaseReadLock(&mceP->afs_memLock);
+	ReleaseReadLock(&mceP->afs_memLock);
 	return 0;
     }
     /* use min of bytes in buffer or requested size */
@@ -164,7 +149,7 @@ afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
     } else
 	bytesRead = 0;
 
-    MReleaseReadLock(&mceP->afs_memLock);
+    ReleaseReadLock(&mceP->afs_memLock);
     return bytesRead;
 }
 
@@ -177,53 +162,23 @@ afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
     afs_int32 code;
 
     AFS_STATCNT(afs_MemReadUIO);
-    MObtainReadLock(&mceP->afs_memLock);
+    ObtainReadLock(&mceP->afs_memLock);
     length = (length < AFS_UIO_RESID(uioP)) ? length : AFS_UIO_RESID(uioP);
     AFS_UIOMOVE(mceP->data + AFS_UIO_OFFSET(uioP), length, UIO_READ, uioP, code);
-    MReleaseReadLock(&mceP->afs_memLock);
+    ReleaseReadLock(&mceP->afs_memLock);
     return code;
 }
 
-/*XXX: this extends a block arbitrarily to support big directories */
 int
 afs_MemWriteBlk(register struct osi_file *fP, int offset, void *src,
 		int size)
 {
     register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
-    AFS_STATCNT(afs_MemWriteBlk);
-    MObtainWriteLock(&mceP->afs_memLock, 560);
-    if (size + offset > mceP->dataSize) {
-	char *oldData = mceP->data;
+    struct iovec tiov;
 
-	if (memAllocMaySleep) {
-	    mceP->data = afs_osi_Alloc(size + offset);
-	} else {
-	    mceP->data = afs_osi_Alloc_NoSleep(size + offset);
-	}
-	if (mceP->data == NULL) {	/* no available memory */
-	    mceP->data = oldData;	/* revert back change that was made */
-	    MReleaseWriteLock(&mceP->afs_memLock);
-	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
-		     size + offset);
-	    return -ENOMEM;
-	}
-
-	/* may overlap, but this is OK */
-	AFS_GUNLOCK();
-	memcpy(mceP->data, oldData, mceP->size);
-	AFS_GLOCK();
-	afs_osi_Free(oldData, mceP->dataSize);
-	mceP->dataSize = size + offset;
-    }
-    AFS_GUNLOCK();
-    if (mceP->size < offset)
-	memset(mceP->data + mceP->size, 0, offset - mceP->size);
-    memcpy(mceP->data + offset, src, size);
-    AFS_GLOCK();
-    mceP->size = (size + offset < mceP->size) ? mceP->size : size + offset;
-
-    MReleaseWriteLock(&mceP->afs_memLock);
-    return size;
+    tiov.iov_base = src;
+    tiov.iov_len = size;
+    return afs_MemWritevBlk(mceP, offset, &tiov, 1, size);
 }
 
 /*XXX: this extends a block arbitrarily to support big directories */
@@ -235,14 +190,14 @@ afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
     int bytesWritten;
     int bytesToWrite;
     AFS_STATCNT(afs_MemWriteBlk);
-    MObtainWriteLock(&mceP->afs_memLock, 561);
+    ObtainWriteLock(&mceP->afs_memLock, 561);
     if (offset + size > mceP->dataSize) {
 	char *oldData = mceP->data;
 
 	mceP->data = afs_osi_Alloc(size + offset);
 	if (mceP->data == NULL) {	/* no available memory */
 	    mceP->data = oldData;	/* revert back change that was made */
-	    MReleaseWriteLock(&mceP->afs_memLock);
+	    ReleaseWriteLock(&mceP->afs_memLock);
 	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
 		     size + offset);
 	    return -ENOMEM;
@@ -268,7 +223,7 @@ afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
     mceP->size = (offset < mceP->size) ? mceP->size : offset;
     AFS_GLOCK();
 
-    MReleaseWriteLock(&mceP->afs_memLock);
+    ReleaseWriteLock(&mceP->afs_memLock);
     return bytesWritten;
 }
 
@@ -280,14 +235,14 @@ afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
     afs_int32 code;
 
     AFS_STATCNT(afs_MemWriteUIO);
-    MObtainWriteLock(&mceP->afs_memLock, 312);
+    ObtainWriteLock(&mceP->afs_memLock, 312);
     if (AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP) > mceP->dataSize) {
 	char *oldData = mceP->data;
 
 	mceP->data = afs_osi_Alloc(AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP));
 	if (mceP->data == NULL) {	/* no available memory */
 	    mceP->data = oldData;	/* revert back change that was made */
-	    MReleaseWriteLock(&mceP->afs_memLock);
+	    ReleaseWriteLock(&mceP->afs_memLock);
 	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
 		     AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP));
 	    return -ENOMEM;
@@ -308,7 +263,7 @@ afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
     if (AFS_UIO_OFFSET(uioP) > mceP->size)
 	mceP->size = AFS_UIO_OFFSET(uioP);
 
-    MReleaseWriteLock(&mceP->afs_memLock);
+    ReleaseWriteLock(&mceP->afs_memLock);
     return code;
 }
 
@@ -318,14 +273,14 @@ afs_MemCacheTruncate(register struct osi_file *fP, int size)
     register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     AFS_STATCNT(afs_MemCacheTruncate);
 
-    MObtainWriteLock(&mceP->afs_memLock, 313);
+    ObtainWriteLock(&mceP->afs_memLock, 313);
     /* old directory entry; g.c. */
     if (size == 0 && mceP->dataSize > memCacheBlkSize) {
 	char *oldData = mceP->data;
 	mceP->data = afs_osi_Alloc(memCacheBlkSize);
 	if (mceP->data == NULL) {	/* no available memory */
 	    mceP->data = oldData;
-	    MReleaseWriteLock(&mceP->afs_memLock);
+	    ReleaseWriteLock(&mceP->afs_memLock);
 	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
 		     memCacheBlkSize);
 	} else {
@@ -337,7 +292,7 @@ afs_MemCacheTruncate(register struct osi_file *fP, int size)
     if (size < mceP->size)
 	mceP->size = size;
 
-    MReleaseWriteLock(&mceP->afs_memLock);
+    ReleaseWriteLock(&mceP->afs_memLock);
     return 0;
 }
 

@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 
-static int my_conv(int num_msg, struct pam_message **msg,
+static int my_conv(int num_msg, PAM_CONST struct pam_message **msg,
 		   struct pam_response **response, void *appdata_ptr);
 
 
@@ -97,8 +97,8 @@ main(int argc, char *argv[])
     }
     pam_end(pamh, PAM_SUCCESS);
 
-    putenv(new_envstring);
-    putenv(new_homestring);
+    putenv((char *)new_envstring);
+    putenv((char *)new_homestring);
     chdir("/tmp");
     printf("Type exit to back out.\n");
     execl("/bin/csh", "/bin/csh", NULL);
@@ -106,10 +106,10 @@ main(int argc, char *argv[])
 
 
 static int
-my_conv(int num_msg, struct pam_message **msg, struct pam_response **response,
+my_conv(int num_msg, PAM_CONST struct pam_message **msg, struct pam_response **response,
 	void *appdata_ptr)
 {
-    struct pam_message *m;
+    PAM_CONST struct pam_message *m;
     struct pam_response *r;
     char *p;
 

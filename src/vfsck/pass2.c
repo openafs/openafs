@@ -86,7 +86,7 @@ pass2()
     register struct dinode *dp;
     struct inodesc rootdesc;
 
-    memset((char *)&rootdesc, 0, sizeof(struct inodesc));
+    memset(&rootdesc, 0, sizeof(struct inodesc));
     rootdesc.id_type = ADDR;
     rootdesc.id_func = pass2check;
     rootdesc.id_number = ROOTINO;
@@ -220,7 +220,7 @@ pass2check(idesc)
 	idesc->id_entryno++;
 	lncntp[dirp->d_ino]--;
 	dirp = (struct direct *)((char *)(dirp) + entrysize);
-	memset((char *)dirp, 0, n);
+	memset(dirp, 0, n);
 	dirp->d_reclen = n;
 	if (reply("FIX") == 1)
 	    ret |= ALTERED;
@@ -241,7 +241,7 @@ pass2check(idesc)
 	idesc->id_entryno++;
 	lncntp[dirp->d_ino]--;
 	dirp = (struct direct *)((char *)(dirp) + n);
-	memset((char *)dirp, 0, n);
+	memset(dirp, 0, n);
 	dirp->d_reclen = n;
     }
     if (dirp->d_ino != 0 && strcmp(dirp->d_name, "..") == 0) {

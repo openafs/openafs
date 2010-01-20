@@ -211,8 +211,8 @@ readUbikHeader(struct misc_data *misc)
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
-	       errno);
+	printf("error: read of %" AFS_SIZET_FMT " bytes failed: %d %d\n",
+	       sizeof(uheader), r, errno);
 	return (-1);
     }
 
@@ -402,7 +402,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
     int noErrors = 1;
     int length;			/* length of chain */
 #if defined(SUPERGROUPS)
-    int sgcount;		/* number of sgentrys */
+    int sgcount = 0;		/* number of sgentrys */
     afs_int32 sghead;
 #define g (((struct prentryg *)e))
 #endif
@@ -412,7 +412,6 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	eid = ntohl(e->id);
 	bit = MAP_CONT;
 #if defined(SUPERGROUPS)
-	sgcount = 0;
 	sghead = ntohl(g->next);
 #endif
 	for (i = 0; i < PRSIZE; i++) {
@@ -1510,7 +1509,7 @@ void
 zeromap(struct idused *idmap)
 {
     while (idmap) {
-	memset((char *)idmap->idcount, 0, sizeof idmap->idcount);
+	memset(idmap->idcount, 0, sizeof idmap->idcount);
 	idmap = idmap->idnext;
     }
 }
@@ -1524,7 +1523,7 @@ inccount(struct idused **idmapp, int id)
 	fprintf(stderr, "IDCOUNT must be power of 2!\n");
 	exit(1);
     }
-    while (idmap = *idmapp) {
+    while ((idmap = *idmapp) != NULL) {
 	if (idmap->idstart == (id & ~(IDCOUNT - 1)))
 	    break;
 	idmapp = &idmap->idnext;
@@ -1535,7 +1534,7 @@ inccount(struct idused **idmapp, int id)
 	    perror("idmap");
 	    exit(1);
 	}
-	memset((char *)idmap, 0, sizeof idmap);
+	memset(idmap, 0, sizeof idmap);
 	idmap->idstart = id & ~(IDCOUNT - 1);
 	idmap->idnext = *idmapp;
 	*idmapp = idmap;
@@ -1552,7 +1551,7 @@ idcount(struct idused **idmapp, int id)
 	fprintf(stderr, "IDCOUNT must be power of 2!\n");
 	exit(1);
     }
-    while (idmap = *idmapp) {
+    while ((idmap = *idmapp) != NULL) {
 	if (idmap->idstart == (id & ~(IDCOUNT - 1))) {
 	    return idmap->idcount[id & (IDCOUNT - 1)];
 	}

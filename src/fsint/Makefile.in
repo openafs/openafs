@@ -107,6 +107,8 @@ afsint.h: common.xg afsint.xg
 afscbint.h: common.xg afscbint.xg
 	${RXGEN} -A -x -h -o afscbint.h ${srcdir}/afscbint.xg
 
+afsint.xdr.o: afsint.xdr.c
+
 #
 # Installation targets
 #

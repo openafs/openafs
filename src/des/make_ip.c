@@ -12,10 +12,10 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 
 #define WANT_IP_TABLE
@@ -40,7 +40,7 @@ gen(FILE * stream)
 
 #ifdef AFS_DARWIN80_ENV
   for(j = 0;; j++) {
-    fprintf(stream, _darwin_whichstr[j]);
+    fprintf(stream, "%s", _darwin_whichstr[j]);
     if (j == 2)
 	break;
 #endif /* AFS_DARWIN80_ENV */

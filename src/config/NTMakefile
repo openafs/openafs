@@ -512,16 +512,19 @@ $(OUT)\mkvers.exe : $(OUT)\mkvers.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\touch.exe : $(OUT)\touch.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\util_cr.exe : $(OUT)\util_cr.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 

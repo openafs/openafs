@@ -14,13 +14,26 @@ VERSFILE=AFS_component_version_number
 !ENDIF
 
 $(VERSFILE).c:
-	echo char $(CML_PREFIX)cml_version_number[]="@(#)OpenAFS_$(AFSPRODUCT_VERSION)"; >$(VERSFILE).c
-	echo char* AFSVersion = "OpenAFS_$(AFSPRODUCT_VERSION)";  >>$(VERSFILE).c
+        echo #include "wchar.h" >$(VERSFILE).c
+	echo unsigned char $(CML_PREFIX)cml_version_number[]="@(#)OpenAFS_$(AFSPRODUCT_VERSION)"; >>$(VERSFILE).c
+	echo unsigned char* AFSVersion = "OpenAFS_$(AFSPRODUCT_VERSION)";  >>$(VERSFILE).c
+	echo wchar_t w$(CML_PREFIX)cml_version_number[]=L"@(#)OpenAFS_$(AFSPRODUCT_VERSION)"; >>$(VERSFILE).c
+	echo wchar_t* wAFSVersion = L"OpenAFS_$(AFSPRODUCT_VERSION)";  >>$(VERSFILE).c
 
 $(VERSFILE).h:
 	echo #define AFS_VERINFO_BUILD "OpenAFS_$(AFSPRODUCT_VERSION)" >$(VERSFILE).h
 	echo #define AFS_VERINFO_FILEVER $(AFSPRODUCT_FILE_VERSION) >>$(VERSFILE).h
         echo #define AFSPRODUCT_VERSION "$(AFSPRODUCT_VERSION)" >> $(VERSFILE).h
+        echo #define AFSPRODUCT_VERSION_MAJOR $(AFSPRODUCT_VER_MAJOR) >> $(VERSFILE).h
+        echo #define AFSPRODUCT_VERSION_MINOR $(AFSPRODUCT_VER_MINOR) >> $(VERSFILE).h
+        echo #define AFSPRODUCT_VERSION_PATCH $(AFSPRODUCT_VER_PATCH) >> $(VERSFILE).h
+        echo #define AFSPRODUCT_VERSION_BUILD $(AFSPRODUCT_VER_BUILD) >> $(VERSFILE).h
+        echo #ifdef AFS_VERSION_STRINGS >> $(VERSFILE).h
+        echo extern unsigned char $(CML_PREFIX)cml_version_number[]; >> $(VERSFILE).h
+        echo extern unsigned char* AFSVersion; >> $(VERSFILE).h
+        echo extern wchar_t w$(CML_PREFIX)cml_version_number[]; >> $(VERSFILE).h
+        echo extern wchar_t* wAFSVersion; >> $(VERSFILE).h
+        echo #endif >> $(VERSFILE).h
 
 $(VERSFILE).txt:
 	echo OpenAFS_$(AFSPRODUCT_VERSION)>$(VERSFILE).txt

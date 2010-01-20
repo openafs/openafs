@@ -33,6 +33,10 @@ int ktc_ForgetToken(struct ktc_principal *);
 int ktc_ForgetAllTokens(void);
 afs_uint32 ktc_curpag(void);
 
+#ifdef AFS_KERBEROS_ENV
+int ktc_newpag(void);
+#endif
+
 #ifdef AFS_NT40_ENV
 
 /* Flags for the flag word sent along with a token */

@@ -159,7 +159,7 @@ get_definition(void)
     token tok;
 
     defp = ALLOC(definition);
-    memset((char *)defp, 0, sizeof(definition));
+    memset(defp, 0, sizeof(definition));
     get_token(&tok);
     switch (tok.kind) {
     case TOK_STRUCT:
@@ -878,7 +878,7 @@ analyze_ProcParams(definition * defp, token * tokp)
     do {
 	get_token(tokp);
 	Proc_list = ALLOC(proc1_list);
-	memset((char *)Proc_list, 0, sizeof(proc1_list));
+	memset(Proc_list, 0, sizeof(proc1_list));
 	Proc_list->pl.param_flag = 0;
 	switch (tokp->kind) {
 	case TOK_IN:
@@ -900,7 +900,7 @@ analyze_ProcParams(definition * defp, token * tokp)
 	*Proc_listp = Proc_list;
 	Proc_listp = &Proc_list->next;
 	decls = ALLOC(decl_list);
-	memset((char *)decls, 0, sizeof(decl_list));
+	memset(decls, 0, sizeof(decl_list));
     if (tokp->kind != TOK_RPAREN)
         decls->decl = dec;
 	*tailp = decls;

@@ -31,16 +31,16 @@ COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
 COMPILE_CLEAN  = ${COMPILE_PART2A} clean
 COMPILE_DEPINSTALL  = ${COMPILE_PART2A} depinstall
 
-all: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+all: force
 	$(MAKE) build
 
-all_nolibafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+all_nolibafs: force
 	$(MAKE) build TARGET=finale_nolibafs
 
-only_libafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+only_libafs: force
 	$(MAKE) build TARGET=libafs
 
-only_libafs_tree: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+only_libafs_tree: force
 	$(MAKE) build TARGET=libafs_tree
 
 install: all install_dirs
@@ -84,7 +84,7 @@ packages: dest
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR} ${TOP_JLIBDIR}:
+${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -98,6 +98,7 @@ install_dirs: force
 	mkdir -p ${DESTDIR}${afssrvbindir}
 	mkdir -p ${DESTDIR}${afssrvsbindir}
 	mkdir -p ${DESTDIR}${afssrvlibexecdir}
+	mkdir -p ${DESTDIR}${afsdatadir}/C
 
 dest_dirs: force
 	mkdir -p ${DEST}/bin
@@ -109,7 +110,7 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
-prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR}
 
 project: cmd comerr 
 
@@ -122,10 +123,10 @@ config: prelude
 procmgmt: config
 	+${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: procmgmt des lwp_depinstall
+util: procmgmt des lwp_depinstall rx_depinstall
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
-audit: util rx rxkad
+audit: util rx rxkad fsint
 	+${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util
@@ -295,7 +296,7 @@ tvolser: project tviced usd libafsrpc libafsauthent volser
 	*_darwin_[1-6][0-9])						\
 		echo Not building MT volser for ${SYS_NAME} ;;          \
 	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
-		${COMPILE_PART1} tvolser ${COMPILE_PART2} ;             \
+		${COMPILE_PART1} tvolser ${COMPILE_PART2} &&            \
 		if [ "xyes" = "x$(ENABLE_PTHREADED_UNIK)" ] ; then	\
 			$(MAKE) $(COMPILE_PART2B)_vos;  					\
 		fi;;							\
@@ -370,7 +371,7 @@ aklog: comerr ptserver
 
 authtools: pam tsm41 sgistuff aklog
 
-platform: config
+platform: config cmd vol
 	+${COMPILE_PART1} platform ${COMPILE_PART2}
 
 man-pages: config
@@ -560,7 +561,7 @@ libafsauthent: ubik auth kauth libafsrpc
 # pthread based user space RX library
 shlibafsrpc: rx rxkad des
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*|*nbsd*|*obsd*|*fbsd*) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
@@ -568,7 +569,7 @@ shlibafsrpc: rx rxkad des
 
 shlibafsauthent: ubik auth kauth shlibafsrpc
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*|*nbsd*|*obsd*|*fbsd*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsauthent for ${SYS_NAME} ;; \

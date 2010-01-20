@@ -248,6 +248,13 @@ EXPORTS
         RXAFS_FsCmd                             @253
         rxi_CallError                           @254
         rx_GetLocalPeers			@255
+        xdr_alloc                               @256
+	rx_GetMaxReceiveWindow			@257
+	rx_GetMaxSendWindow			@258
+	rx_SetMaxReceiveWindow			@259
+	rx_SetMaxSendWindow			@260
+	rx_GetMinPeerTimeout			@261
+	rx_SetMinPeerTimeout			@262
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

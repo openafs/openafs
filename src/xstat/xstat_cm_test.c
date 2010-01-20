@@ -18,7 +18,7 @@
 
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
-#include <cmd.h>		/*Command line interpreter */
+#include <afs/cmd.h>		/*Command line interpreter */
 #include <time.h>
 #include <string.h>
 #include <afs/afsutil.h>
@@ -840,12 +840,12 @@ PrintOpTiming(int a_opIdx, char *a_opNames[],
 {				/*PrintOpTiming */
 
     printf
-	("%15s: %d ops (%d OK); sum=%d.%06d, sqr=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	("%15s: %d ops (%d OK); sum=%ld.%06ld, sqr=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	 a_opNames[a_opIdx], a_opTimeP->numOps, a_opTimeP->numSuccesses,
-	 a_opTimeP->sumTime.tv_sec, a_opTimeP->sumTime.tv_usec,
-	 a_opTimeP->sqrTime.tv_sec, a_opTimeP->sqrTime.tv_usec,
-	 a_opTimeP->minTime.tv_sec, a_opTimeP->minTime.tv_usec,
-	 a_opTimeP->maxTime.tv_sec, a_opTimeP->maxTime.tv_usec);
+	 (long)a_opTimeP->sumTime.tv_sec, (long)a_opTimeP->sumTime.tv_usec,
+	 (long)a_opTimeP->sqrTime.tv_sec, (long)a_opTimeP->sqrTime.tv_usec,
+	 (long)a_opTimeP->minTime.tv_sec, (long)a_opTimeP->minTime.tv_usec,
+	 (long)a_opTimeP->maxTime.tv_sec, (long)a_opTimeP->maxTime.tv_usec);
 
 }				/*PrintOpTiming */
 
@@ -877,12 +877,12 @@ PrintXferTiming(int a_opIdx, char *a_opNames[],
 {				/*PrintXferTiming */
 
     printf
-	("%s: %d xfers (%d OK), time sum=%d.%06d, sqr=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	("%s: %d xfers (%d OK), time sum=%ld.%06ld, sqr=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	 a_opNames[a_opIdx], a_xferP->numXfers, a_xferP->numSuccesses,
-	 a_xferP->sumTime.tv_sec, a_xferP->sumTime.tv_usec,
-	 a_xferP->sqrTime.tv_sec, a_xferP->sqrTime.tv_usec,
-	 a_xferP->minTime.tv_sec, a_xferP->minTime.tv_usec,
-	 a_xferP->maxTime.tv_sec, a_xferP->maxTime.tv_usec);
+	 (long)a_xferP->sumTime.tv_sec, (long)a_xferP->sumTime.tv_usec,
+	 (long)a_xferP->sqrTime.tv_sec, (long)a_xferP->sqrTime.tv_usec,
+	 (long)a_xferP->minTime.tv_sec, (long)a_xferP->minTime.tv_usec,
+	 (long)a_xferP->maxTime.tv_sec, (long)a_xferP->maxTime.tv_usec);
     printf("\t[bytes: sum=%d, min=%d, max=%d]\n", a_xferP->sumBytes,
 	   a_xferP->minBytes, a_xferP->maxBytes);
     printf

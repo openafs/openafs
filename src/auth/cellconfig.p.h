@@ -95,11 +95,8 @@ struct afsconf_dir {
     struct afsconf_aliasentry *alias_entries;	/* cell aliases */
 };
 
-struct afsconf_servPair {
-    char *name;
-    int port;
-};
-
+extern afs_int32 afsconf_FindService(const char *aname);
+extern const char *afsconf_FindIANAName(const char *aname);
 extern struct afsconf_dir *afsconf_Open(register const char *adir);
 extern int afsconf_CellApply(struct afsconf_dir *adir,
 			     int (*aproc) (struct afsconf_cell * cell,

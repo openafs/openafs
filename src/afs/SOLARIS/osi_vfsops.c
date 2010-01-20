@@ -37,7 +37,7 @@ int afsfstype = 0;
 
 int
 afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
-	  struct AFS_UCRED *credp)
+	  afs_ucred_t *credp)
 {
 
     AFS_GLOCK();
@@ -71,10 +71,10 @@ afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
 
 #if defined(AFS_SUN58_ENV)
 int
-afs_unmount(struct vfs *afsp, int flag, struct AFS_UCRED *credp)
+afs_unmount(struct vfs *afsp, int flag, afs_ucred_t *credp)
 #else
 int
-afs_unmount(struct vfs *afsp, struct AFS_UCRED *credp)
+afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
 #endif
 {
     AFS_GLOCK();
@@ -199,7 +199,7 @@ afs_statvfs(struct vfs *afsp, struct statvfs *abp)
 }
 
 int
-afs_sync(struct vfs *afsp, short flags, struct AFS_UCRED *credp)
+afs_sync(struct vfs *afsp, short flags, afs_ucred_t *credp)
 {
     return 0;
 }

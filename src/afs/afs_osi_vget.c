@@ -34,9 +34,6 @@ afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
     afs_int32 ret;
 
     memcpy((char *)&Sfid, afidp->fid_data, SIZEOF_SMALLFID);
-#ifdef AFS_OSF_ENV
-    Sfid.Vnode = afidp->fid_reserved;
-#endif
 
     /* Need to extract fid from SmallFid. Will need a wild card option for
      * finding the right vcache entry.

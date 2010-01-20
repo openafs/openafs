@@ -62,7 +62,7 @@
 
 #include "volint.h"
 #include "volser.h"
-#include "volser_prototypes.h"
+#include "volser_internal.h"
 
 static struct volser_trans *allTrans = 0;
 static afs_int32 transCounter = 1;
@@ -98,6 +98,7 @@ NewTrans(afs_int32 avol, afs_int32 apart)
     tt->time = FT_ApproxTime();
     tt->tid = transCounter++;
     tt->next = allTrans;
+    VTRANS_OBJ_LOCK_INIT(tt);
     allTrans = tt;
     VTRANS_UNLOCK;
     return tt;
@@ -147,6 +148,7 @@ DeleteTrans(register struct volser_trans *atrans, afs_int32 lock)
 	    if (tt->rxCallPtr)
 		rxi_CallError(tt->rxCallPtr, RX_CALL_DEAD);
 	    *lt = tt->next;
+            VTRANS_OBJ_LOCK_DESTROY(tt);
 	    free(tt);
 	    if (lock) VTRANS_UNLOCK;
 	    return 0;

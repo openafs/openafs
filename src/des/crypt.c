@@ -84,16 +84,6 @@
 #endif
 
 /*
- * define "LONG_IS_32_BITS" only if sizeof(long)==4.
- * This avoids use of bit fields (your compiler may be sloppy with them).
- */
-
-/* XXX shouldn't this be !AFS_64BIT_ENV ? */
-#if !defined(cray) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV) && !defined(AFS_PPC64_LINUX20_ENV) & !defined(AFS_S390X_LINUX20_ENV)
-#define	LONG_IS_32_BITS
-#endif
-
-/*
  * define "B64" to be the declaration for a 64 bit integer.
  * XXX this feature is currently unused, see "endian" comment below.
  */
@@ -240,7 +230,7 @@ STATIC prtab();
 typedef union {
     unsigned char b[8];
     struct {
-#if defined(LONG_IS_32_BITS)
+#if (SIZEOF_LONG == 4)
 	/* long is often faster than a 32-bit bit field */
 	long i0;
 	long i1;

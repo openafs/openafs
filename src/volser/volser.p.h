@@ -58,6 +58,9 @@ struct volser_trans {
     /* the fields below are useful for debugging */
     char lastProcName[30];	/* name of the last procedure which used transaction */
     struct rx_call *rxCallPtr;	/* pointer to latest associated rx_call */
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t lock;       /* per transaction lock */
+#endif
 
 };
 
@@ -71,6 +74,22 @@ struct volser_dest {
     afs_int32 destPort;
     afs_int32 destSSID;
 };
+
+#ifdef AFS_PTHREAD_ENV
+#define VTRANS_OBJ_LOCK_INIT(tt) \
+  assert(pthread_mutex_init(&((tt)->lock),NULL) == 0)
+#define VTRANS_OBJ_LOCK_DESTROY(tt) \
+  assert(pthread_mutex_destroy(&((tt)->lock)) == 0)
+#define VTRANS_OBJ_LOCK(tt) \
+  assert(pthread_mutex_lock(&((tt)->lock)) == 0)
+#define VTRANS_OBJ_UNLOCK(tt) \
+  assert(pthread_mutex_unlock(&((tt)->lock)) == 0)
+#else
+#define VTRANS_OBJ_LOCK_INIT(tt)
+#define VTRANS_OBJ_LOCK_DESTROY(tt)
+#define VTRANS_OBJ_LOCK(tt)
+#define VTRANS_OBJ_UNLOCK(tt)
+#endif /* AFS_PTHREAD_ENV */
 
 #define	MAXHELPERS	    10
 /* flags for vol helper busyFlags array.  First, VHIdle goes on when a server
@@ -175,7 +194,7 @@ struct partList {		/*used by the backup system */
 struct ubik_client;
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
 extern int vsu_ExtractName(char rname[], char name[]);
-extern afs_int32 vsu_ClientInit(int noAuthFlag, char *confDir,
+extern afs_int32 vsu_ClientInit(int noAuthFlag, const char *confDir,
 				char *cellName, afs_int32 sauth,
 				struct ubik_client **uclientp,
 				int (*secproc)(struct rx_securityClass *, afs_int32));

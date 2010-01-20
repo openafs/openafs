@@ -39,7 +39,7 @@
 #endif
 
 struct afsop_cell {
-    afs_int32 hosts[MAXCELLHOSTS];
+    afs_int32 hosts[AFS_MAXCELLHOSTS];
     char cellName[100];
 };
 
@@ -476,8 +476,30 @@ wait_for_cachedefs(void) {
 #endif
 }
 
+#ifdef AFS_DARWIN100_ENV
+#define AFSKPTR(X) k ## X
 int
-afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long parm6)
+afs_syscall_call(long parm, long parm2, long parm3,
+		 long parm4, long parm5, long parm6)
+{
+    return afs_syscall64_call(CAST_USER_ADDR_T((parm)),
+			      CAST_USER_ADDR_T((parm2)),
+			      CAST_USER_ADDR_T((parm3)),
+			      CAST_USER_ADDR_T((parm4)),
+			      CAST_USER_ADDR_T((parm5)),
+			      CAST_USER_ADDR_T((parm6)));
+}
+#else
+#define AFSKPTR(X) ((caddr_t)X)
+#endif
+int
+#ifdef AFS_DARWIN100_ENV
+afs_syscall64_call(user_addr_t kparm, user_addr_t kparm2, user_addr_t kparm3,
+		 user_addr_t kparm4, user_addr_t kparm5, user_addr_t kparm6)
+#else
+afs_syscall_call(long parm, long parm2, long parm3,
+		 long parm4, long parm5, long parm6)
+#endif
 {
     afs_int32 code = 0;
 #if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -485,6 +507,15 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 #else /* AFS_SGI61_ENV */
     u_int bufferSize;
 #endif /* AFS_SGI61_ENV */
+#ifdef AFS_DARWIN100_ENV
+    /* AFSKPTR macro relies on this name format/mapping */
+    afs_uint32 parm = (afs_uint32)kparm;
+    afs_uint32 parm2 = (afs_uint32)kparm2;
+    afs_uint32 parm3 = (afs_uint32)kparm3;
+    afs_uint32 parm4 = (afs_uint32)kparm4;
+    afs_uint32 parm5 = (afs_uint32)kparm5;
+    afs_uint32 parm6 = (afs_uint32)kparm6;
+#endif
 
     AFS_STATCNT(afs_syscall_call);
     if (
@@ -495,7 +526,7 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 #endif
 		    && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
-#if defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
+#if defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 #endif
@@ -683,14 +714,14 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 
 	code = afs_InitDynroot();
 	if (!code) {
-	    AFS_COPYIN((char *)parm2, (char *)tcell->hosts, sizeof(tcell->hosts),
+	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts, sizeof(tcell->hosts),
 		       code);
 	}
 	if (!code) {
 	    if (parm4 > sizeof(tcell->cellName))
 		code = EFAULT;
 	    else {
-		AFS_COPYIN((char *)parm3, tcell->cellName, parm4, code);
+	      AFS_COPYIN(AFSKPTR(parm3), (caddr_t)tcell->cellName, parm4, code);
 		if (!code)
 		    afs_NewCell(tcell->cellName, tcell->hosts, parm5, NULL, 0,
 				0, 0);
@@ -711,15 +742,15 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 		afs_osi_Sleep(&afs_initState);
 #endif
 
-	    AFS_COPYIN((char *)parm2, (char *)tcell->hosts, sizeof(tcell->hosts),
+	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts, sizeof(tcell->hosts),
 		       code);
 	}
 	if (!code) {
-	    AFS_COPYINSTR((char *)parm3, tbuffer1, AFS_SMALLOCSIZ,
+	    AFS_COPYINSTR(AFSKPTR(parm3), tbuffer1, AFS_SMALLOCSIZ,
 			  &bufferSize, code);
 	    if (!code) {
 		if (parm4 & 4) {
-		    AFS_COPYINSTR((char *)parm5, tbuffer, AFS_SMALLOCSIZ,
+		    AFS_COPYINSTR(AFSKPTR(parm5), tbuffer, AFS_SMALLOCSIZ,
 				  &bufferSize, code);
 		    if (!code) {
 			lcnamep = tbuffer;
@@ -746,11 +777,11 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 
 	code = afs_InitDynroot();
 	if (!code) {
-	    AFS_COPYINSTR((char *)parm2, aliasName, AFS_SMALLOCSIZ, &bufferSize,
+	    AFS_COPYINSTR(AFSKPTR(parm2), aliasName, AFS_SMALLOCSIZ, &bufferSize,
 			  code);
 	}
 	if (!code)
-	    AFS_COPYINSTR((char *)parm3, cellName, AFS_SMALLOCSIZ,
+	    AFS_COPYINSTR(AFSKPTR(parm3), cellName, AFS_SMALLOCSIZ,
 			  &bufferSize, code);
 	if (!code)
 	    afs_NewCellAlias(aliasName, cellName);
@@ -765,7 +796,7 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 
 	code = afs_InitDynroot();
 	if (!code) {
-	    AFS_COPYINSTR((char *)parm2, cell, AFS_SMALLOCSIZ, &bufferSize, code);
+	    AFS_COPYINSTR(AFSKPTR(parm2), cell, AFS_SMALLOCSIZ, &bufferSize, code);
 	}
 	if (!code)
 	    afs_SetPrimaryCell(cell);
@@ -776,7 +807,7 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	if (afs_CacheInit_Done)
 	    goto out;
 
-	AFS_COPYIN((char *)parm2, (caddr_t) & cparms, sizeof(cparms), code);
+	AFS_COPYIN(AFSKPTR(parm2), (caddr_t) & cparms, sizeof(cparms), code);
 	if (code) {
 #if defined(KERNEL_HAVE_UERROR)
 	    setuerror(code);
@@ -824,7 +855,7 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	    afs_osi_Sleep(&afs_initState);
 
 	if (parm2) {
-	    AFS_COPYINSTR((char *)parm2, afs_rootVolumeName,
+	    AFS_COPYINSTR(AFSKPTR(parm2), afs_rootVolumeName,
 			  sizeof(afs_rootVolumeName), &bufferSize, code);
 	    afs_rootVolumeName[sizeof(afs_rootVolumeName) - 1] = 0;
 	} else
@@ -835,7 +866,7 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
 	code = 0;
-	AFS_COPYINSTR((char *)parm2, tbuffer, AFS_SMALLOCSIZ, &bufferSize,
+	AFS_COPYINSTR(AFSKPTR(parm2), tbuffer, AFS_SMALLOCSIZ, &bufferSize,
 		      code);
 	if (code) {
 	    osi_FreeSmallSpace(tbuffer);
@@ -845,7 +876,7 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */
 #ifdef AFS_DARWIN80_ENV
-    get_vfs_context();
+	    get_vfs_context();
 #endif
 	    if (parm == AFSOP_CACHEBASEDIR) {
 		strncpy(afs_cachebasedir, tbuffer, 1024);
@@ -950,39 +981,43 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	    count = AFS_MAX_INTERFACE_ADDR;
 	}
 
-	AFS_COPYIN((char *)parm3, (char *)buffer, count * sizeof(afs_int32),
+	AFS_COPYIN(AFSKPTR(parm3), (caddr_t)buffer, count * sizeof(afs_int32),
 		   code);
-	if (parm4)
-	    AFS_COPYIN((char *)parm4, (char *)maskbuffer,
+	if (parm4 && !code)
+	    AFS_COPYIN(AFSKPTR(parm4), (caddr_t)maskbuffer,
 		       count * sizeof(afs_int32), code);
-	if (parm5)
-	    AFS_COPYIN((char *)parm5, (char *)mtubuffer,
+	if (parm5 && !code)
+	    AFS_COPYIN(AFSKPTR(parm5), (caddr_t)mtubuffer,
 		       count * sizeof(afs_int32), code);
 
-	afs_cb_interface.numberOfInterfaces = count;
-	for (i = 0; i < count; i++) {
-	    afs_cb_interface.addr_in[i] = buffer[i];
+	if (!code) {
+	    afs_cb_interface.numberOfInterfaces = count;
+	    for (i = 0; i < count; i++) {
+		afs_cb_interface.addr_in[i] = buffer[i];
 #ifdef AFS_USERSPACE_IP_ADDR
-	    /* AFS_USERSPACE_IP_ADDR means we have no way of finding the
-	     * machines IP addresses when in the kernel (the in_ifaddr
-	     * struct is not available), so we pass the info in at
-	     * startup. We also pass in the subnetmask and mtu size. The
-	     * subnetmask is used when setting the rank:
-	     * afsi_SetServerIPRank(); and the mtu size is used when
-	     * finding the best mtu size. rxi_FindIfnet() is replaced
-	     * with rxi_Findcbi().
-	     */
-	    afs_cb_interface.subnetmask[i] =
-		(parm4 ? maskbuffer[i] : 0xffffffff);
-	    afs_cb_interface.mtu[i] = (parm5 ? mtubuffer[i] : htonl(1500));
+		/* AFS_USERSPACE_IP_ADDR means we have no way of finding the
+		 * machines IP addresses when in the kernel (the in_ifaddr
+		 * struct is not available), so we pass the info in at
+		 * startup. We also pass in the subnetmask and mtu size. The
+		 * subnetmask is used when setting the rank:
+		 * afsi_SetServerIPRank(); and the mtu size is used when
+		 * finding the best mtu size. rxi_FindIfnet() is replaced
+		 * with rxi_Findcbi().
+		 */
+		afs_cb_interface.subnetmask[i] =
+		    (parm4 ? maskbuffer[i] : 0xffffffff);
+		afs_cb_interface.mtu[i] = (parm5 ? mtubuffer[i] : htonl(1500));
 #endif
-	}
-	rxi_setaddr(buffer[0]);
-	if (!refresh) {
-	    if (rxbind)
-		rx_bindhost = buffer[0];
-	    else
-		rx_bindhost = htonl(INADDR_ANY);
+	    }
+	    rxi_setaddr(buffer[0]);
+	    if (!refresh) {
+		if (rxbind)
+		    rx_bindhost = buffer[0];
+		else
+		    rx_bindhost = htonl(INADDR_ANY);
+	    }
+	} else {
+	    refresh = 0;
 	}
 
 	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -1058,8 +1093,8 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
-	    AFS_COPYOUT((caddr_t) & mtu, (caddr_t) parm3, sizeof(afs_int32),
-			code);
+	    AFS_COPYOUT((caddr_t) & mtu, AFSKPTR(parm3),
+			sizeof(afs_int32), code);
 #ifdef AFS_AIX32_ENV
 /* this is disabled for now because I can't figure out how to get access
  * to these kernel variables.  It's only for supporting user-mode rx
@@ -1096,10 +1131,9 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
-	    AFS_COPYOUT((caddr_t) & mask, (caddr_t) parm3, sizeof(afs_int32),
-			code);
+	    AFS_COPYOUT((caddr_t) & mask, AFSKPTR(parm3),
+			sizeof(afs_int32), code);
     }
-#ifdef AFS_AFSDB_ENV
     else if (parm == AFSOP_AFSDB_HANDLER) {
 	int sizeArg = (int)parm4;
 	int kmsgLen = sizeArg & 0xffff;
@@ -1110,8 +1144,8 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 #ifndef UKERNEL
 	afs_osi_MaskUserLoop();
 #endif
-	AFS_COPYIN((afs_int32 *) parm2, cellname, cellLen, code);
-	AFS_COPYIN((afs_int32 *) parm3, kmsg, kmsgLen, code);
+	AFS_COPYIN(AFSKPTR(parm2), cellname, cellLen, code);
+	AFS_COPYIN(AFSKPTR(parm3), kmsg, kmsgLen, code);
 	if (!code) {
 	    code = afs_AFSDBHandler(cellname, cellLen, kmsg);
 	    if (*cellname == 1)
@@ -1122,11 +1156,10 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	    }
 	}
 	if (!code)
-	    AFS_COPYOUT(cellname, (char *)parm2, cellLen, code);
+	    AFS_COPYOUT(cellname, AFSKPTR(parm2), cellLen, code);
 	afs_osi_Free(kmsg, kmsgLen);
 	afs_osi_Free(cellname, cellLen);
     }
-#endif
     else if (parm == AFSOP_SET_DYNROOT) {
 	code = afs_SetDynrootEnable(parm2);
     } else if (parm == AFSOP_SET_FAKESTAT) {
@@ -1138,9 +1171,10 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	rx_extraPackets = parm2;
 	afscall_set_rxpck_received = 1;
     } else if (parm == AFSOP_SET_RXMAXMTU) {
-    rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
-    } else
+	rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
+    } else {
 	code = EINVAL;
+    }
 
   out:
     AFS_GUNLOCK();
@@ -1196,9 +1230,9 @@ afs_shutdown(void)
 	return;
     afs_shuttingdown = 1;
     if (afs_cold_shutdown)
-	afs_warn("COLD ");
+	afs_warn("afs: COLD ");
     else
-	afs_warn("WARM ");
+	afs_warn("afs: WARM ");
     afs_warn("shutting down of: CB... ");
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
@@ -1206,7 +1240,7 @@ afs_shutdown(void)
 #ifdef AFS_AIX51_ENV
     shutdown_rxkernel();
 #endif
-    /* shutdown_rxkernel(); */
+    /* close rx server connections here? */
     while (afs_termState == AFSOP_STOP_RXCALLBACK)
 	afs_osi_Sleep(&afs_termState);
 
@@ -1233,12 +1267,10 @@ afs_shutdown(void)
 	afs_osi_Wakeup((char *)&afs_CacheTruncateDaemon);
 	afs_osi_Sleep(&afs_termState);
     }
-#ifdef AFS_AFSDB_ENV
     afs_warn("AFSDB... ");
     afs_StopAFSDB();
     while (afs_termState == AFSOP_STOP_AFSDB)
 	afs_osi_Sleep(&afs_termState);
-#endif
 #if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
     afs_warn("RxEvent... ");
     /* cancel rx event daemon */
@@ -1260,47 +1292,47 @@ afs_shutdown(void)
 #else
     afs_termState = AFSOP_STOP_COMPLETE;
 #endif
-    afs_warn("\n");
 
 #ifdef AFS_AIX51_ENV
     shutdown_daemons();
 #endif
-
-#ifdef notdef
     shutdown_CB();
-    shutdown_AFS();
-    shutdown_rxkernel();
-    shutdown_rxevent();
-    shutdown_rx();
-    afs_shutdown_BKG();
-#endif
     shutdown_bufferpackage();
     shutdown_cache();
     shutdown_osi();
-    shutdown_osinet();
-    shutdown_osifile();
-    shutdown_vnodeops();
-    shutdown_memcache();
-#if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)) && !defined(AFS_OSF_ENV)
-    shutdown_exporter();
-    shutdown_nfsclnt();
-#endif
-    shutdown_afstest();
-    /* The following hold the cm stats */
-/*
-    memset(&afs_cmstats, 0, sizeof(struct afs_CMStats));
-    memset(&afs_stats_cmperf, 0, sizeof(struct afs_stats_CMPerf));
-    memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
-*/
-    afs_warn(" ALL allocated tables\n");
-
-    /* Close file only after daemons which can write to it are stopped. */
+    /*
+     * Close file only after daemons which can write to it are stopped.
+     * Need to close before the osinet shutdown to avoid failing check
+     * for dangling memory allocations.
+     */
     if (afs_cacheInodep) {	/* memcache won't set this */
 	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
 	afs_cacheInodep = 0;
     }
+    /*
+     * Shutdown the ICL logs - needed to free allocated memory space and avoid
+     * warnings from shutdown_osinet
+     */
+    shutdown_icl();
+    shutdown_osinet();
+    shutdown_osifile();
+    shutdown_vnodeops();
+    shutdown_memcache();
+    shutdown_xscache();
+#if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV))
+    shutdown_exporter();
+    shutdown_nfsclnt();
+#endif
+    shutdown_afstest();
+    shutdown_AFS();
+    /* The following hold the cm stats */
+    memset(&afs_cmstats, 0, sizeof(struct afs_CMStats));
+    memset(&afs_stats_cmperf, 0, sizeof(struct afs_stats_CMPerf));
+    memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
+    afs_warn(" ALL allocated tables... ");
 
     afs_shuttingdown = 0;
+    afs_warn("done\n");
 
     return;			/* Just kill daemons for now */
 }
@@ -1315,12 +1347,4 @@ shutdown_afstest(void)
     if (afs_cold_shutdown) {
 	*afs_rootVolumeName = 0;
     }
-}
-
-
-/* In case there is a bunch of dynamically build bkg daemons to free */
-void
-afs_shutdown_BKG(void)
-{
-    AFS_STATCNT(shutdown_BKG);
 }

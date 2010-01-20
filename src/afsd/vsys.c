@@ -48,7 +48,7 @@ main(int argc, char **argv)
 	    parms[counter++] = atoi(argv[i]);
 	    numberFlag = 1;
 	} else {
-	    parms[counter++] = (afs_int32) argv[i];
+	    parms[counter++] = (intptr_t)argv[i];
 	    numberFlag = 1;
 	}
     }

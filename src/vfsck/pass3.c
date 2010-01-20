@@ -74,7 +74,7 @@ pass3()
     ino_t inumber, orphan;
     int loopcnt;
 
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     idesc.id_type = DATA;
     for (inumber = ROOTINO; inumber <= lastino; inumber++) {
 #if defined(ACLS) && defined(AFS_HPUX_ENV)

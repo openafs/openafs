@@ -441,7 +441,7 @@ GetStatSourceFromString(const char *type, afs_stat_source_t * src, int *port)
 
 typedef enum {
     AFS_PEER_STATS,
-    AFS_PROCESS_STATS
+    afs_proc_tESS_STATS
 } afs_stat_type_t, *afs_stat_type_p;
 
 static afs_stat_type_t
@@ -452,7 +452,7 @@ GetStatTypeFromString(const char *type)
     if (!strcmp(type, "peer")) {
 	rc = AFS_PEER_STATS;
     } else if (!strcmp(type, "process")) {
-	rc = AFS_PROCESS_STATS;
+	rc = afs_proc_tESS_STATS;
     } else {
 	ERR_EXT("stat_type must be process or peer");
     }

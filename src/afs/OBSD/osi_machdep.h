@@ -87,8 +87,9 @@ extern void osi_obsd_Free(void *p, size_t asize);
 #endif /* AFS_OBSD42_ENV */
 
 /* proc, cred */
-#define	AFS_PROC	struct proc
-#define	AFS_UCRED	ucred
+typedef struct proc afs_proc_t;
+typedef struct ucred afs_ucred_t;
+
 #define afs_suser(x)	afs_osi_suser(osi_curcred())
 #define getpid()	curproc
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
@@ -132,13 +133,15 @@ extern int afs_vget();
 #define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
 	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
+#undef gop_lookupname_user
+#define	gop_lookupname_user(fnamep, segflg, followlink, compvpp) \
+	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
+
 #ifdef AFS_OBSD39_ENV
 #define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i))
 #else
 #define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i), (p))
 #endif
-
-#ifdef KERNEL
 
 #ifdef AFS_OBSD44_ENV
 /* Revert to classical, BSD locks */
@@ -219,6 +222,19 @@ extern struct lock afs_global_lock;
 #define NETPRI splvar=splnet()
 #undef USERPRI
 #define USERPRI splx(splvar)
-#endif /* KERNEL */
+
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
+
+/* vnodes */
+extern int (**afs_vnodeop_p) ();
+#define vType(vc)               AFSTOV(vc)->v_type
+#define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
+#define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
+#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+#define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -77,7 +77,7 @@ pass4()
 #endif /* ACLS */
 
 
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     idesc.id_type = ADDR;
     idesc.id_func = pass4check;
     for (inumber = ROOTINO; inumber <= lastino; inumber++) {

@@ -84,10 +84,11 @@ struct map *sg_found;
  *  so we can always tell if we're writing a group record.
  */
 
-int (*pt_save_dbase_write) ();
+int (*pt_save_dbase_write)(struct ubik_dbase *, afs_int32, void *, afs_int32,
+                           afs_int32);
 
 int
-pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, char *bp, afs_int32 pos, afs_int32 count)
+pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, void *bp, afs_int32 pos, afs_int32 count)
 {
     afs_uint32 headersize = ntohl(cheader.headerSize);
 
@@ -163,7 +164,7 @@ pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, char *bp, afs_int32 pos, afs_i
  */
 
 void 
-pt_hook_write()
+pt_hook_write(void)
 {
     extern struct ubik_dbase *ubik_dbase;
     if (ubik_dbase->write != pt_mywrite) {
@@ -915,7 +916,7 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
     }
 #endif /* SUPERGROUPS */
     nptr = tentry->next;
-    while (nptr != (afs_int32) NULL) {
+    while (nptr != 0) {
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
 	    return PRDBFAIL;
@@ -1036,7 +1037,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
     }
     last = 0;
     nptr = entry->next;
-    while (nptr != (afs_int32) NULL) {
+    while (nptr != 0) {
 	code = pr_ReadCoEntry(tt, 0, nptr, &nentry);
 	if (code != 0)
 	    return code;
@@ -1126,7 +1127,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
     afs_int32 nptr;
     afs_int32 last;		/* addr of last cont. block */
     afs_int32 first = 0;
-    afs_int32 cloc;
+    afs_int32 cloc = 0;
     afs_int32 slot = -1;
 
     if (entry->id == aid)
@@ -1359,7 +1360,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
     }
 
     nptr = tentry->next;
-    while (nptr != (afs_uint32) NULL) {
+    while (nptr != 0) {
 	/* look through cont entries */
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
@@ -1401,7 +1402,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 
     if (!code) {
 	nptr = tentry2->next;
-	while (nptr != (afs_uint32) NULL) {
+	while (nptr != 0) {
 	    /* look through cont entries */
 	    code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	    if (code != 0)
@@ -1747,7 +1748,7 @@ Initdb(void)
     }
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != (afs_uint32) NULL
+	&& ntohl(cheader.eofPtr) != 0
 	&& FindByID(tt, ANONYMOUSID) != 0) {
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);
@@ -1797,7 +1798,7 @@ Initdb(void)
      */
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != (afs_uint32) NULL
+	&& ntohl(cheader.eofPtr) != 0
 	&& FindByID(tt, ANONYMOUSID) != 0) {
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);
@@ -1853,11 +1854,13 @@ afs_int32
 ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs_int32 oid, afs_int32 newid)
 {
     afs_int32 code;
-    afs_int32 i, nptr, pos;
+    afs_int32 i, pos;
 #if defined(SUPERGROUPS)
     afs_int32 nextpos;
-#endif
+#else
+    afs_int32 nptr;
     struct contentry centry;
+#endif
     struct prentry tentry, tent;
     afs_int32 loc;
     afs_int32 oldowner;

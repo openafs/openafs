@@ -35,11 +35,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <afs/sys_prototypes.h>
+#include <afs/afs_consts.h>
 
 #include "kkids.h"
 
 #define MAXNAME 100
-#define MAXSIZE 2048
 
 static int using_child = 0;
 static FILE *childin, *childout;	/* file pointers on pipe to kpwvalid */
@@ -210,10 +210,10 @@ InAFS(register char *apath)
 {
     struct ViceIoctl blob;
     register afs_int32 code;
-    char space[MAXSIZE];
+    char space[AFS_PIOCTL_MAXSIZE];
 
     blob.in_size = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -318,7 +318,7 @@ is_secure(char *dir)
 	if (!InAFS(dir))
 	    continue;
 
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(dir, VIOCGETAL, &blob, 1);

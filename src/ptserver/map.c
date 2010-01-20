@@ -34,12 +34,9 @@
 
 #ifdef SUPERGROUPS
 #include <errno.h>
-#include "map.h"
-#ifdef STDLIB_HAS_MALLOC_PROTOS
+#include <string.h>
 #include <stdlib.h>
-#else
-#include "malloc.h"
-#endif
+#include "map.h"
 
 #undef PRINT_MAP_ERROR
 /* #define MAP_DEBUG */
@@ -160,7 +157,7 @@ add_map(struct map *parm, int node)
 	    return 0;
 	}
 	map->m_page = page;
-	memset((char *) map->m_data, 0, sizeof map->m_data);
+	memset( map->m_data, 0, sizeof map->m_data);
 	if (NEGMAP(parm)) {
 	    int i;
 	    for (i = 0; i < MDATA; ++i)
@@ -715,7 +712,7 @@ read_map(int (*f) (void *), char *arg)
 		    free_map((struct map *)result);
 		return 0;
 	    }
-	    memset((char *) map->m_data, 0, sizeof map->m_data);
+	    memset( map->m_data, 0, sizeof map->m_data);
 	    map->m_page = page;
 	    map->m_next = 0;
 	    *mp = map;

@@ -66,7 +66,7 @@ B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
 =head1 OUTPUT
 
-This command shows the output of each comand in the file as if it were
+This command shows the output of each command in the file as if it were
 run normally.
 
 =head1 EXAMPLES

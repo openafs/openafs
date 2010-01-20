@@ -17,6 +17,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wformat"
+#endif
 
 #include <ctype.h>
 #include <errno.h>
@@ -36,19 +39,20 @@
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include "nfs.h"
+#include <afs/nfs.h>
 #include <afs/errors.h>
-#include "lock.h"
-#include "lwp.h"
+#include <lock.h>
+#include <lwp.h>
 #include <afs/afssyscalls.h>
-#include "ihandle.h"
-#include "vnode.h"
-#include "volume.h"
-#include "partition.h"
-#include "viceinode.h"
+#include <afs/ihandle.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
+#include <afs/partition.h>
+#include <afs/viceinode.h>
 #include <afs/afssyscalls.h>
-#include "acl.h"
+#include <afs/acl.h>
 #include <afs/dir.h>
+#include <afs/com_err.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -68,9 +72,9 @@
 
 #include <dirent.h>
 
-#include "volser/volser.h"
-#include "volser/volint.h"
-#include "volser/dump.h"
+#include "volser.h"
+#include "volint.h"
+#include "dump.h"
 
 #define putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
 #define putshort(p, v) *p++ = v>>8, *p++ = v
@@ -295,8 +299,13 @@ main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
+    VolumePackageOptions opts;
 
-    VInitVolumePackage(volumeUtility, 5, 5, DONT_CONNECT_FS, 0);
+    VOptDefaults(volumeUtility, &opts);
+    if (VInitVolumePackage2(volumeUtility, &opts)) {
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL,
 			  "Dump a volume to a 'vos dump' format file without using volserver");
@@ -553,6 +562,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     afs_int32 offset = 0;
     afs_sfsize_t n, nbytes, howMany, howBig;
     byte *p;
+    afs_uint32 hi, lo;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
@@ -592,19 +602,13 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 		(unsigned int) howBig, (unsigned int) howMany,
 		(unsigned int) size);
 
-#ifdef AFS_LARGEFILE_ENV
-    {
-	afs_uint32 hi, lo;
-	SplitInt64(size, hi, lo);
-	if (hi == 0L) {
-	    code = DumpInt32(dumpfd, 'f', lo);
-	} else {
-	    code = DumpDouble(dumpfd, 'h', hi, lo);
-	}
+    SplitInt64(size, hi, lo);
+    if (hi == 0L) {
+	code = DumpInt32(dumpfd, 'f', lo);
+    } else {
+	code = DumpDouble(dumpfd, 'h', hi, lo);
     }
-#else /* !AFS_LARGEFILE_ENV */
-    code = DumpInt32(dumpfd, 'f', size);
-#endif /* !AFS_LARGEFILE_ENV */
+
     if (code) {
 	return VOLSERDUMPERROR;
     }
@@ -852,7 +856,8 @@ DoMyVolDump(Volume * vp, struct DiskPartition64 *dp, char *dumpfile, int fromtim
 	dumpfd =
 	    afs_open(dumpfile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (dumpfd < 0) {
-	    fprintf(stderr, "Failed to open dump file! Exiting.\n");
+	    fprintf(stderr, "Failed to open dump file: %s. Exiting.\n",
+	            afs_error_message(errno));
 	    exit(1);
 	}
     } else {

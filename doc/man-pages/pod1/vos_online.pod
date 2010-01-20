@@ -7,9 +7,18 @@ vos_online - Brings a volume online
 =for html
 <div class="synopsis">
 
-B<vos online> S<<< B<-server> <I<machine name>> >>> S<<< B<-partition> <I<partition name>> >>> 
-    S<<< B<-id> <I<volume name or ID>> >>> S<<< [B<-bless>] >>> S<<< [B<-cell> <I<cell name>>] >>> 
-    S<<< [B<-noauth>] | B<-localauth>] >>> S<<< [B<-verbose>] >>> S<<< [B<-encrypt>] >>> S<<< [B<-help>] >>>
+B<vos online> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-partition> <I<partition name>> >>> 
+    S<<< B<-id> <I<volume name or ID>> >>>
+    [B<-bless>] S<<< [B<-cell> <I<cell name>>] >>> 
+    [B<-noauth>] B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+
+B<vos on> S<<< B<-s> <I<machine name>> >>>
+    S<<< B<-p> <I<partition name>> >>> 
+    S<<< B<-i> <I<volume name or ID>> >>>
+    [B<-b>] S<<< [B<-c> <I<cell name>>] >>> 
+    [B<-noa>] B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
@@ -80,8 +89,16 @@ appear.
 
 =item B<-encrypt>
 
-Encrypts the command so that the operation's results are
-not transmitted across the network in clear text.
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text. This option is available in OpenAFS
+versions 1.4.11 or later and 1.5.60 or later.
+
+=item B<-noresolve>
+
+Shows all servers as IP addresses instead of the DNS name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. This option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
 
 =item B<-help>
 

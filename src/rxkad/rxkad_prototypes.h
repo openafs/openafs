@@ -14,6 +14,11 @@
 #include "fcrypt.h"
 #include "rx/rx.h"
 
+/* Don't include des.h where it can cause conflict with krb4 headers */
+#if !defined(NO_DES_H_INCLUDE)
+#include <des.h>
+#endif
+
 /* domestic/crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket(const struct rx_connection *conn,
 				     const fc_KeySchedule * schedule,
@@ -129,9 +134,9 @@ extern afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
 /* ticket.c */
 extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 			    struct ktc_encryptionKey *key, char *name,
-			    char *inst, char *cell, char *sessionKey,
-			    afs_int32 * host, afs_int32 * start,
-			    afs_int32 * end);
+			    char *inst, char *cell, struct ktc_encryptionKey *sessionKey,
+			    afs_int32 * host, afs_uint32 * start,
+			    afs_uint32 * end);
 extern int tkt_MakeTicket(char *ticket, int *ticketLen,
 			  struct ktc_encryptionKey *key, char *name,
 			  char *inst, char *cell, afs_uint32 start,
@@ -143,13 +148,35 @@ extern afs_int32 ktohl(char flags, afs_int32 l);
 extern afs_uint32 life_to_time(afs_uint32 start, unsigned char life);
 extern unsigned char time_to_life(afs_uint32 start, afs_uint32 end);
 
+/* crc.c */
+extern void _rxkad_crc_init_table(void);
+extern afs_uint32 _rxkad_crc_update(const char *p, size_t len, afs_uint32 res);
+
 /* ticket5.c */
 extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
-			     int (*get_key) (char *, int,
+			     int (*get_key) (void *, int,
 					     struct ktc_encryptionKey *),
 			     char *get_key_rock, int serv_kvno, char *name,
-			     char *inst, char *cell, char *session_key,
-			     afs_int32 * host, afs_int32 * start,
-			     afs_int32 * end, afs_int32 disableDotCheck);
+			     char *inst, char *cell, struct ktc_encryptionKey *session_key,
+			     afs_int32 * host, afs_uint32 * start,
+			     afs_uint32 * end, afs_int32 disableDotCheck);
+
+#if !defined(NO_DES_H_INCLUDE)
+static_inline unsigned char *
+ktc_to_cblock(struct ktc_encryptionKey *key) {
+    return (unsigned char *)key;
+}
+
+static_inline char *
+ktc_to_charptr(struct ktc_encryptionKey *key) {
+    return (char *)key;
+}
+
+static_inline des_cblock *
+ktc_to_cblockptr(struct ktc_encryptionKey *key) {
+    return (des_cblock *)key;
+}
+#endif
+
 
 #endif

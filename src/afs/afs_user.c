@@ -479,7 +479,7 @@ afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */
-    memset((char *)tu, 0, sizeof(struct unixuser));
+    memset(tu, 0, sizeof(struct unixuser));
     tu->next = afs_users[i];
     afs_users[i] = tu;
     if (RmtUser) {
@@ -593,10 +593,10 @@ static size_t afs_GCPAGs_cred_count = 0;
  */
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
 void
-afs_GCPAGs_perproc_func(AFS_PROC * pproc)
+afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 {
     afs_int32 pag, hash, uid;
-    const struct AFS_UCRED *pcred;
+    const afs_ucred_t *pcred;
 
     afs_GCPAGs_perproc_count++;
 
@@ -608,11 +608,11 @@ afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 
     pag = PagInCred(pcred);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV) || defined(AFS_LINUX22_ENV)
-    uid = (pag != NOPAG ? pag : pcred->cr_uid);
+    uid = (pag != NOPAG ? pag : afs_cr_uid(pcred));
 #elif defined(AFS_SUN510_ENV)
     uid = (pag != NOPAG ? pag : crgetruid(pcred));
 #else
-    uid = (pag != NOPAG ? pag : pcred->cr_ruid);
+    uid = (pag != NOPAG ? pag : afs_cr_ruid(pcred));
 #endif
     hash = UHash(uid);
 

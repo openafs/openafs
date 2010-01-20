@@ -790,7 +790,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
     /* Delete each continuation block as a separate transaction so that no one
      * transaction become to large to complete. */
     nptr = tentry.next;
-    while (nptr != (afs_int32) NULL) {
+    while (nptr != 0) {
 	struct contentry centry;
 	int i;
 
@@ -855,7 +855,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
     {
 	struct prentryg *tentryg = (struct prentryg *)&tentry;
 	nptr = tentryg->nextsg;
-	while (nptr != NULL) {
+	while (nptr != 0) {
 	    struct contentry centry;
 	    int i;
 
@@ -918,7 +918,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
      * transaction, we start a new transaction every 50 entries. */
     count = 0;
     nptr = tentry.owned;
-    while (nptr != (afs_int32) NULL) {
+    while (nptr != 0) {
 	struct prentry nentry;
 
 	code = pr_ReadEntry(tt, 0, nptr, &nentry);

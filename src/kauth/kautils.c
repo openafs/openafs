@@ -143,13 +143,13 @@ afs_int32
 ka_KeyCheckSum(char *key, afs_uint32 * cksumP)
 {
     des_key_schedule s;
-    char block[8];
+    unsigned char block[8];
     afs_uint32 cksum;
     afs_int32 code;
 
     *cksumP = 0;
     memset(block, 0, 8);
-    code = des_key_sched(key, s);
+    code = des_key_sched(charptr_to_cblock(key), s);
     if (code)
 	return KABADKEY;
     des_ecb_encrypt(block, block, s, ENCRYPT);

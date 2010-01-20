@@ -241,7 +241,12 @@ initDirPathArray(void)
 
 #ifndef AFS_NT40_ENV
     pathp = dirPathArray[AFSDIR_CLIENT_DATA_DIRPATH_ID];
-    AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_DATA_DIR);
+#ifdef AFS_DARWIN_ENV
+    if (access(AFSDIR_ALTERNATE_CLIENT_DATA_DIR, F_OK) == 0)
+	AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_ALTERNATE_CLIENT_DATA_DIR);
+    else
+#endif
+	AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_DATA_DIR);
 #endif
 
     /* server file paths */

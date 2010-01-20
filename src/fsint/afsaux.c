@@ -61,40 +61,6 @@ static afs_int32 bslosers = 0;
 #ifdef	AFS_AIXNFS11
 #define	AUTH_DES 1
 #endif
-#if (defined(AFS_AIX_ENV) && !defined(AUTH_DES)) || (!defined(AFS_SUN_ENV)) && !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SUN5_ENV)
-#ifndef	AFS_AIX32_ENV
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-/*
- * XDR chars; from user mode xdr package.
- */
-bool_t
-xdr_char(register XDR * xdrs, char *sp)
-{
-    afs_int32 l;
-
-    switch (xdrs->x_op) {
-
-    case XDR_ENCODE:
-	l = (afs_int32) * sp;
-	return (XDR_PUTINT32(xdrs, &l));
-
-    case XDR_DECODE:
-	if (!XDR_GETINT32(xdrs, &l)) {
-	    return (FALSE);
-	}
-	*sp = (char)l;
-	return (TRUE);
-
-    case XDR_FREE:
-	return (TRUE);
-    }
-    return (FALSE);
-}
-#endif /* AFS_HPUX110_ENV && AFS_LINUX20_ENV */
-#endif
-#endif /* defined(AFS_AIX_ENV) && !defined(AUTH_DES) */
-
-
 /* 
  * Wrapper for xdr_string that can be called directly from 
  * routines like clnt_call; from user-mode xdr package.

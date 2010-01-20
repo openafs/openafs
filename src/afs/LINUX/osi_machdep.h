@@ -103,6 +103,9 @@ static inline time_t osi_Time(void) {
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
+#undef gop_lookupname_user
+#define gop_lookupname_user osi_lookupname
+
 #define osi_vnhold(V, N) do { VN_HOLD(AFSTOV(V)); } while (0)
 #define VN_HOLD(V) osi_Assert(igrab((V)) == (V))
 #define VN_RELE(V) iput((V))
@@ -110,14 +113,10 @@ static inline time_t osi_Time(void) {
 #define afs_suser(x) capable(CAP_SYS_ADMIN)
 #define wakeup afs_osi_Wakeup
 
-#undef vType
 #define vType(V) ((AFSTOV((V)))->i_mode & S_IFMT)
-#undef vSetType
 #define vSetType(V, type) AFSTOV((V))->i_mode = ((type) | (AFSTOV((V))->i_mode & ~S_IFMT))	/* preserve mode */
-
-#undef IsAfsVnode
+#define vSetVfsp(V, vfsp)				/* unused */
 #define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
-#undef SetAfsVnode
 #define SetAfsVnode(V)					/* unnecessary */
 
 /* We often need to pretend we're in user space to get memory transfers
@@ -154,36 +153,65 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define NGROUPS NGROUPS_SMALL
 #endif
 
-/* cred struct */
-typedef struct afs_cred {		/* maps to task field: */
-    int cr_ref;
-    uid_t cr_uid;		/* euid */
-    uid_t cr_ruid;		/* uid */
-    gid_t cr_gid;		/* egid */
-    gid_t cr_rgid;		/* gid */
-#if defined(AFS_LINUX26_ENV)
-    struct group_info *cr_group_info;
-#else
-    gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
-    int cr_ngroups;
-#endif
-    struct afs_cred *cr_next;
-} cred_t;
-#define AFS_UCRED afs_cred
-#define AFS_PROC struct task_struct
-#if !defined(current_cred)
-#define current_gid() (current->gid)
-#define current_uid() (current->uid)
-#define current_fsgid() (current->fsgid)
-#define current_fsuid() (current->fsuid)
-#endif
+typedef struct task_struct afs_proc_t;
+
+/* Credentials.  For newer kernels we use the kernel structure directly. */
 #if defined(STRUCT_TASK_HAS_CRED)
+
+typedef struct cred afs_ucred_t;
+typedef struct cred cred_t;
+
+#define afs_cr_uid(cred) ((cred)->fsuid)
+#define afs_cr_gid(cred) ((cred)->fsgid)
+#define afs_cr_ruid(cred) ((cred)->uid)
+#define afs_cr_rgid(cred) ((cred)->gid)
+#define afs_cr_group_info(cred) ((cred)->group_info)
+#define crhold(c) (get_cred(c))
+static inline void
+afs_set_cr_uid(cred_t *cred, uid_t uid) {
+    cred->fsuid = uid;
+}
+static inline void
+afs_set_cr_gid(cred_t *cred, gid_t gid) {
+    cred->fsgid = gid;
+}
+static inline void
+afs_set_cr_ruid(cred_t *cred, uid_t uid) {
+    cred->uid = uid;
+}
+static inline void
+afs_set_cr_rgid(cred_t *cred, gid_t gid) {
+    cred->gid = gid;
+}
+static inline void
+afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
+    cred->group_info = group_info;
+}
+
 #define current_group_info() (current->cred->group_info)
 #define task_gid(task) (task->cred->gid)
 #define task_user(task) (task->cred->user)
 #define task_session_keyring(task) (task->cred->tgcred->session_keyring)
 #define current_session_keyring() (current->cred->tgcred->session_keyring)
+
 #else
+
+typedef struct afs_cred {
+    atomic_t cr_ref;
+    uid_t cr_uid;
+    uid_t cr_ruid;
+    gid_t cr_gid;
+    gid_t cr_rgid;
+    struct group_info *cr_group_info;
+} cred_t;
+
+typedef struct afs_cred afs_ucred_t;
+#define afs_cr_group_info(cred) ((cred)->cr_group_info)
+static inline void
+afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
+    cred->cr_group_info = group_info;
+}
+
 #define current_group_info() (current->group_info)
 #if !defined(task_gid)
 #define task_gid(task) (task->gid)
@@ -194,8 +222,16 @@ typedef struct afs_cred {		/* maps to task field: */
 #define task_user(task) (task->user)
 #define task_session_keyring(task) (task->signal->session_keyring)
 #define current_session_keyring() (current->signal->session_keyring)
+#define crhold(c) atomic_inc(&(c)->cr_ref)
+
+#endif /* defined(STRUCT_TASK_HAS_CRED) */
+
+#if !defined(current_cred)
+#define current_gid() (current->gid)
+#define current_uid() (current->uid)
+#define current_fsgid() (current->fsgid)
+#define current_fsuid() (current->fsuid)
 #endif
-#define crhold(c) (c)->cr_ref++
 
 /* UIO manipulation */
 typedef enum { AFS_UIOSYS, AFS_UIOUSER } uio_seg_t;
@@ -218,25 +254,11 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
-#ifdef AFS_LINUX26_ENV
 #define OSIFILE_INODE(a) FILE_INODE((a)->filp)
-#else
-#define OSIFILE_INODE(a) FILE_INODE(&(a)->file)
-#endif
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
 #define NEED_IOCTL32
 #endif
-
-/* page offset is obtained and stored here during module initialization 
- * We need a variable to do this because, the PAGE_OFFSET macro defined in
- * include/asm/page.h can change from kernel to kernel and we cannot use
- * the hardcoded version.
- */
-extern unsigned long afs_linux_page_offset;
-
-/* function to help with the page offset stuff */
-#define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__)
 #include <linux/version.h>
@@ -270,6 +292,9 @@ do { \
     afs_global_owner = 0; \
     mutex_unlock(&afs_global_lock); \
 } while (0)
+
+#define osi_InitGlock()
+
 #else
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()

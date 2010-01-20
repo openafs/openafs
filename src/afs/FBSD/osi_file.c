@@ -17,7 +17,7 @@
 
 
 int afs_osicred_initialized = 0;
-struct AFS_UCRED afs_osi_cred;
+afs_ucred_t afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
@@ -59,7 +59,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->size = VTOI(vp)->i_size;
     afile->offset = 0;
     afile->proc = NULL;
-    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 
@@ -69,11 +68,11 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     register afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
 #if defined(AFS_FBSD80_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
     VOP_UNLOCK(afile->vnode, 0);
 #elif defined(AFS_FBSD50_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curthread);
@@ -88,7 +87,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -112,7 +111,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     register afs_int32 code, glocked;
     AFS_STATCNT(osi_Truncate);
 
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     vp = afile->vnode;
     /*
      * This routine only shrinks files, and most systems
@@ -124,7 +123,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
       AFS_GUNLOCK();
 #if defined(AFS_FBSD80_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
 #elif defined(AFS_FBSD50_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
@@ -137,7 +136,9 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV)
+    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp);
+#elif defined(AFS_FBSD50_ENV)
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curthread);
 #else
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curproc);
@@ -153,7 +154,7 @@ out:
 #endif
     if (glocked)
       AFS_GLOCK();
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

@@ -28,6 +28,7 @@ $(TRANSLATE_ET_EXEFILE): $(TRANSLATE_ET_EXEOBJS) $(TRANSLATE_ET_EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Definitions for generating versioninfo resources

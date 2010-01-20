@@ -45,7 +45,7 @@
  * \brief Get the appropriate type of ubik client structure out from the system.
  */
 afs_int32
-ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
+ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
 	       struct ubik_client **uclientp, 
 	       int (*secproc) (struct rx_securityClass *, afs_int32),
 	       char *funcName, afs_int32 gen_rxkad_level, 
@@ -94,7 +94,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 		    "%s: can't find cell %s's hosts in %s/%s\n",
 		    funcName, cellName, AFSDIR_SERVER_ETC_DIRPATH,
 		    AFSDIR_CELLSERVDB_FILE);
-	    exit(1);
+	    return -1;
 	}
     } else {			/* not -localauth */
 	tdir = afsconf_Open(confDir);
@@ -111,7 +111,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 		fprintf(stderr,
 			"%s: can't get local cellname, check %s/%s\n",
 			funcName, confDir, AFSDIR_THISCELL_FILE);
-		exit(1);
+		return -1;
 	    }
 	    cellName = cellstr;
 	}
@@ -122,7 +122,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	    fprintf(stderr,
 		    "%s: can't find cell %s's hosts in %s/%s\n",
 		    funcName, cellName, confDir, AFSDIR_CELLSERVDB_FILE);
-	    exit(1);
+	    return -1;
 	}
 	if (noAuthFlag)		/* -noauth */
 	    scIndex = 0;
@@ -159,7 +159,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	default:
 	    fprintf(stderr, "%s: unsupported security index %d\n",
 		    funcName, scIndex);
-	    exit(1);
+	    return -1;
 	    break;
 	}
     }
@@ -176,7 +176,7 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	    fprintf(stderr,
 		    "%s: info.numServers=%d (> maxservers=%d)\n",
 		    funcName, info.numServers, maxservers);
-	    exit(1);
+	    return -1;
 	}
 	for (i = 0; i < info.numServers; i++) {
 	    serverconns[i] =

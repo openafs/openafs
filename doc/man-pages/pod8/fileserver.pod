@@ -50,6 +50,9 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-fs-state-dont-save>] >>>
     S<<< [B<-fs-state-dont-restore>] >>>
     S<<< [B<-fs-state-verify>] (none | save | restore | both)] >>>
+    S<<< [B<-vhandle-setaside> <I<fds reserved for non-cache io>>] >>>
+    S<<< [B<-vhandle-max-cachesize> <I<max open files>>] >>>
+    S<<< [B<-vhandle-initial-cachesize> <I<fds reserved for non-cache io>>] >>>
     S<<< [B<-vhashsize> <I<log(2) of number of volume hash buckets>>] >>>
     S<<< [B<-vlrudisable>] >>>
     S<<< [B<-vlruthresh> <I<minutes before eligibility for soft detach>>] >>>
@@ -542,6 +545,18 @@ The default is C<both>.
 
 This option is only supported by the demand-attach file server.
 
+=item B<-vhandle-setaside> <I<fds reserved for non-cache io>>
+
+Number of file handles set aside for I/O not in the cache. Defaults to 128.
+
+=item B<-vhandle-max-cachesize> <I<max open files>>
+
+Maximum number of available file handles.
+
+=item B<-vhandle-initial-cachesize> <I<initial open file cache>>
+
+Number of file handles set aside for I/O in the cache. Defaults to 128.
+
 =item B<-vhashsize <I<size>>
 
 The log(2) number of of volume hash buckets.  Default is 8 (i.e., by
@@ -651,7 +666,7 @@ represents a connection that's waiting for a file server thread.
 
 If the blocked connection count is ever above 0, the server is having
 problems replying to clients in a timely fashion.  If it gets above 10,
-roughly, there will be noticable slowness by the user.  The total number of
+roughly, there will be noticeable slowness by the user.  The total number of
 connections is a mostly irrelevant number that goes essentially
 monotonically for as long as the server has been running and then goes back
 down to zero when it's restarted.

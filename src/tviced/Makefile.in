@@ -15,7 +15,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
+CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
@@ -98,7 +98,7 @@ flipbase64.o: ${UTIL}/flipbase64.c
 	${CCRULE}
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE}
+	${CCRULE} -I../util
 
 dirpath.o: ${UTIL}/dirpath.c
 	${CCRULE}
@@ -119,10 +119,10 @@ netprocs.o: ${LIBACL}/netprocs.c
 	${CCRULE}
 
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CCRULE}
+	${CCRULE} -I${srcdir}/../vlserver
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CCRULE}
+	${CCRULE} -I${srcdir}/../vlserver
 
 buffer.o: ${DIR}/buffer.c
 	${CCRULE}
@@ -183,7 +183,7 @@ namei_ops.o: ${VOL}/namei_ops.c
 	${CCRULE}
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE}
+	${CCRULE} -I../fsint
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
 	${CCRULE}

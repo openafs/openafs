@@ -153,13 +153,13 @@ void
 FidZap(DirHandle * file)
 {
     IH_RELEASE(file->dirh_handle);
-    memset((char *)file, 0, sizeof(DirHandle));
+    memset(file, 0, sizeof(DirHandle));
 }
 
 void
 FidZero(DirHandle * file)
 {
-    memset((char *)file, 0, sizeof(DirHandle));
+    memset(file, 0, sizeof(DirHandle));
 }
 
 int

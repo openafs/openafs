@@ -29,7 +29,7 @@
 #endif
 #include <sys/types.h>
 #include <sys/file.h>
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD80_ENV)
 #include <sgtty.h>
 #endif
 #include <stdio.h>
@@ -121,13 +121,13 @@ gator_cursesgwin_init(int adebug)
      */
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %lu bytes for curses window private space in base window\n",
+		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for curses window private space in base window\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
     c_data =
 	(struct gator_cursesgwin *)malloc(sizeof(struct gator_cursesgwin));
     if (c_data == (struct gator_cursesgwin *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %lu bytes for curses window private space in base window\n",
+		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for curses window private space in base window\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
 	return (-1);
     }
@@ -195,22 +195,22 @@ gator_cursesgwin_init(int adebug)
  *------------------------------------------------------------------------*/
 
 struct gwin *
-gator_cursesgwin_create(struct gator_cursesgwin_params *params)
-{				/*gator_cursesgwin_create */
-
+gator_cursesgwin_create(void * rock)
+{
     static char rn[] = "gator_cursesgwin_create";	/*Routine name */
+    struct gator_cursesgwin_params *params = (struct gator_cursesgwin_params *)rock;
     struct gwin *newgwin;	/*Ptr to new curses window */
     struct gator_cursesgwin *c_data;	/*Ptr to curses-specific data */
     WINDOW *newcursgwin;	/*Ptr to new curses window */
 
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %lu bytes for new gwin structure\n", mn,
+		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for new gwin structure\n", mn,
 		rn, sizeof(struct gwin));
     newgwin = (struct gwin *)malloc(sizeof(struct gwin));
     if (newgwin == NULL) {
 	fprintf(stderr,
-		"[%s:%s] Can't malloc() %lu bytes for new gwin structure: Errno is %d\n",
+		"[%s:%s] Can't malloc() %" AFS_SIZET_FMT " bytes for new gwin structure: Errno is %d\n",
 		mn, rn, sizeof(struct gwin), errno);
 	return (NULL);
     }
@@ -226,13 +226,13 @@ gator_cursesgwin_create(struct gator_cursesgwin_params *params)
 
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %lu bytes for curses window private space\n",
+		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for curses window private space\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
     c_data =
 	(struct gator_cursesgwin *)malloc(sizeof(struct gator_cursesgwin));
     if (c_data == (struct gator_cursesgwin *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %lu bytes for curses window private space\n",
+		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for curses window private space\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
 	free(newgwin);
 	return (NULL);

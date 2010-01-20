@@ -7,16 +7,18 @@ vos_create - Creates a read/write volume and associated VLDB entry
 =for html
 <div class="synopsis">
 
-B<vos create> S<<< B<-server> <I<machine name>> >>> S<<< B<-partition> <I<partition name>> >>>
-    S<<< B<-name> <I<volume name>> >>> S<<< [B<-maxquota> <I<initial quota>>] >>>
-    S<<< [B<-id> <I<volume ID>>] >>> S<<< [B<-roid> <I<readonly volume ID>>] >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
-    [B<-help>]
+B<vos create> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-partition> <I<partition name>> >>>
+    S<<< B<-name> <I<volume name>> >>>
+    S<<< [B<-maxquota> <I<initial quota (KB)>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>] [B<-verbose>]
+    [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos cr> S<<< B<-s> <I<machine name>> >>> S<<< B<-p> <I<partition name>> >>>
     S<<< B<-na> <I<volume name>> >>> S<<< [B<-m> <I<initial quota>>] >>>
-    S<<< [B<-i> <I<volume ID>>] >>> S<<< [B<-r> <I<readonly volume ID>>] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-v>] [B<-h>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>] [B<-v>]
+    [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
@@ -128,7 +130,8 @@ manually specified.
 
 As with the B<-id> option, the default allocated volume IDs should be
 sufficient for almost all cases, so you should almost never need to
-specify this option.
+specify them explicitly. This option is available in OpenAFS
+versions 1.5.61 or later.
 
 =item B<-cell> <I<cell name>>
 
@@ -154,6 +157,19 @@ B<-noauth> flag. For more details, see L<vos(1)>.
 Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text. This option is available in OpenAFS
+versions 1.4.11 or later and 1.5.60 or later.
+
+=item B<-noresolve>
+
+Shows all servers as IP addresses instead of the DNS name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. This option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
 
 =item B<-help>
 

@@ -262,7 +262,8 @@ main(int argc, char **argv)
 	|| (sizeof(struct prentryg) != ENTRYSIZE)) {
 	fprintf(stderr,
 		"The structures for the database records are different"
-		" sizes\n" "struct prentry = %d\n" "struct prentryg = %d\n"
+		" sizes\n" "struct prentry = %" AFS_SIZET_FMT "\n"
+                "struct prentryg = %" AFS_SIZET_FMT "\n"
 		"ENTRYSIZE = %d\n", sizeof(struct prentry),
 		sizeof(struct prentryg), ENTRYSIZE);
 	PT_EXIT(1);
@@ -347,7 +348,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++a]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		 (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
 			rxMaxMTU, RX_MIN_PACKET_SIZE,
 			RX_MAX_PACKET_DATA_SIZE);
 		PT_EXIT(1);
@@ -452,7 +453,7 @@ main(int argc, char **argv)
 
     /* get list of servers */
     code =
-	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, &clones);
+	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, clones);
     if (code) {
 	afs_com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
