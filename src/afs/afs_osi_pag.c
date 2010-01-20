@@ -146,7 +146,7 @@ static int afs_pag_sleepcnt = 0;
 static int afs_pag_timewarn = 0;
 
 static int
-afs_pag_sleep(struct AFS_UCRED **acred)
+afs_pag_sleep(afs_ucred_t **acred)
 {
     int rv = 0;
 
@@ -167,7 +167,7 @@ afs_pag_sleep(struct AFS_UCRED **acred)
 }
 
 static int
-afs_pag_wait(struct AFS_UCRED **acred)
+afs_pag_wait(afs_ucred_t **acred)
 {
     if (afs_pag_sleep(acred)) {
 	if (!afs_pag_sleepcnt) {
@@ -190,20 +190,20 @@ afs_pag_wait(struct AFS_UCRED **acred)
 
 int
 #if	defined(AFS_SUN5_ENV)
-afs_setpag(struct AFS_UCRED **credpp)
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag(struct proc *p, void *args, int *retval)
+afs_setpag(afs_ucred_t **credpp)
+#elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+afs_setpag(afs_proc_t *p, void *args, int *retval)
 #else
 afs_setpag(void)
 #endif
 {
 
 #if     defined(AFS_SUN5_ENV)
-    struct AFS_UCRED **acred = *credpp;
+    afs_ucred_t **acred = *credpp;
 #elif  defined(AFS_OBSD_ENV)
-    struct AFS_UCRED **acred = &p->p_ucred;
+    afs_ucred_t **acred = &p->p_ucred;
 #else
-    struct AFS_UCRED **acred = NULL;
+    afs_ucred_t **acred = NULL;
 #endif
 
     int code = 0;
@@ -220,7 +220,7 @@ afs_setpag(void)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(genpag(), credpp);
-#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
+#elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, genpag(), &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
@@ -248,19 +248,19 @@ afs_setpag(void)
     }
 #elif	defined(AFS_LINUX20_ENV)
     {
-	struct AFS_UCRED *credp = crref();
+	afs_ucred_t *credp = crref();
 	code = AddPag(genpag(), &credp);
 	crfree(credp);
     }
 #elif defined(AFS_DARWIN80_ENV)
     {
-	struct ucred *credp = kauth_cred_proc_ref(p);
+	afs_ucred_t *credp = kauth_cred_proc_ref(p);
 	code = AddPag(p, genpag(), &credp);
-	kauth_cred_rele(credp);
+	crfree(credp);
     }
 #elif defined(AFS_DARWIN_ENV)
     {
-	struct ucred *credp = crdup(p->p_cred->pc_ucred);
+	afs_ucred_t *credp = crdup(p->p_cred->pc_ucred);
 	code = AddPag(p, genpag(), &credp);
 	crfree(credp);
     }
@@ -292,20 +292,20 @@ afs_setpag(void)
  */
 int
 #if	defined(AFS_SUN5_ENV)
-afs_setpag_val(struct AFS_UCRED **credpp, int pagval)
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag_val(struct proc *p, void *args, int *retval, int pagval)
+afs_setpag_val(afs_ucred_t **credpp, int pagval)
+#elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+afs_setpag_val(afs_proc_t *p, void *args, int *retval, int pagval)
 #else
 afs_setpag_val(int pagval)
 #endif
 {
 
 #if     defined(AFS_SUN5_ENV)
-    struct AFS_UCRED **acred = *credp;
+    afs_ucred_t **acred = *credp;
 #elif  defined(AFS_OBSD_ENV)
-    struct AFS_UCRED **acred = &p->p_ucred;
+    afs_ucred_t **acred = &p->p_ucred;
 #else
-    struct AFS_UCRED **acred = NULL;
+    afs_ucred_t **acred = NULL;
 #endif
 
     int code = 0;
@@ -321,7 +321,7 @@ afs_setpag_val(int pagval)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
-#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
+#elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, pagval, &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
@@ -349,7 +349,7 @@ afs_setpag_val(int pagval)
     }
 #elif	defined(AFS_LINUX20_ENV)
     {
-	struct AFS_UCRED *credp = crref();
+	afs_ucred_t *credp = crref();
 	code = AddPag(pagval, &credp);
 	crfree(credp);
     }
@@ -379,7 +379,7 @@ int
 afs_getpag_val(void)
 {
     int pagvalue;
-    struct AFS_UCRED *credp = u.u_cred;
+    afs_ucred_t *credp = u.u_cred;
     gid_t gidset0, gidset1;
 #ifdef AFS_SUN510_ENV
     const gid_t *gids;
@@ -399,18 +399,19 @@ afs_getpag_val(void)
 
 
 /* Note - needs to be available on AIX, others can be static - rework this */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
+AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp)
 #else
 int
-AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
+AddPag(afs_int32 aval, afs_ucred_t **credpp)
 #endif
 {
-    afs_int32 newpag, code;
+    afs_int32 code;
+    afs_uint32 newpag;
 
     AFS_STATCNT(AddPag);
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((code = setpag(p, credpp, aval, &newpag, 0)))
 #else
     if ((code = setpag(credpp, aval, &newpag, 0)))
@@ -425,24 +426,17 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 
 
 int
-afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
+afs_InitReq(register struct vrequest *av, afs_ucred_t *acred)
 {
 #if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     int code;
 #endif
-    int i = 0;
 
     AFS_STATCNT(afs_InitReq);
     memset(av, 0, sizeof(*av));
     if (afs_shuttingdown)
 	return EIO;
 
-    av->idleError = 0;
-    av->tokenError = 0;
-    while (i < MAXHOSTS) {
-      av->skipserver[i] = 0;
-      i++;
-    }
 #ifdef AFS_LINUX26_ENV
 #if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
@@ -461,34 +455,17 @@ afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 	if (acred == NOCRED)
 	    av->uid = -2;	/* XXX nobody... ? */
 	else
-	    av->uid = acred->cr_uid;	/* bsd creds don't have ruid */
+	    av->uid = afs_cr_uid(acred);	/* bsd creds don't have ruid */
 #elif defined(AFS_SUN510_ENV)
         av->uid = crgetruid(acred);
 #else
-	av->uid = acred->cr_ruid;	/* default when no pag is set */
+	av->uid = afs_cr_uid(acred);	/* default when no pag is set */
 #endif
     }
-    av->initd = 0;
     return 0;
 }
 
-
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-afs_uint32
-afs_get_pag_from_groups(struct group_info *group_info)
-{
-    afs_uint32 g0 = 0;
-    afs_uint32 i;
-
-    AFS_STATCNT(afs_get_pag_from_groups);
-    for (i = 0; (i < group_info->ngroups && 
-		 (g0 = GROUP_AT(group_info, i)) != (gid_t) NOGROUP); i++) {
-	if (((g0 >> 24) & 0xff) == 'A')
-	    return g0;
-    }
-    return NOPAG;
-}
-#else
+#ifndef AFS_LINUX26_ONEGROUP_ENV
 afs_uint32
 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 {
@@ -505,100 +482,86 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 	h = (g0 >> 14);
 	h = (g1 >> 14) + h + h + h;
 	ret = ((h << 28) | l);
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+# if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
 	return ret;
-#else
+# else
 	/* Additional testing */
 	if (((ret >> 24) & 0xff) == 'A')
 	    return ret;
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+# endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     }
     return NOPAG;
 }
-#endif
 
 void
 afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 {
-#ifndef AFS_LINUX26_ONEGROUP_ENV
     unsigned short g0, g1;
-#endif
-
 
     AFS_STATCNT(afs_get_groups_from_pag);
-#ifdef AFS_LINUX26_ONEGROUP_ENV
     *g0p = pag;
     *g1p = 0;
-#else
-#if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
+# if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
     pag &= 0x7fffffff;
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+# endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     g0 = 0x3fff & (pag >> 14);
     g1 = 0x3fff & pag;
     g0 |= ((pag >> 28) / 3) << 14;
     g1 |= ((pag >> 28) % 3) << 14;
     *g0p = g0 + 0x3f00;
     *g1p = g1 + 0x3f00;
-#endif
 }
-
-
-afs_int32
-PagInCred(struct AFS_UCRED *cred)
+#else
+void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 {
-    afs_int32 pag;
-#if !defined(AFS_LINUX26_ONEGROUP_ENV)
-    gid_t g0, g1;
+    AFS_STATCNT(afs_get_groups_from_pag);
+    *g0p = pag;
+    *g1p = 0;
+}
 #endif
+
+#ifndef AFS_LINUX26_ENV
+static afs_int32
+osi_get_group_pag(afs_ucred_t *cred)
+{
+    afs_int32 pag = NOPAG;
+    gid_t g0, g1;
 #if defined(AFS_SUN510_ENV)
     const gid_t *gids;
     int ngroups;
 #endif
 
-    AFS_STATCNT(PagInCred);
-    if (cred == NULL || cred == afs_osi_credp) {
-	return NOPAG;
-    }
 #if defined(AFS_SUN510_ENV)
     gids = crgetgroups(cred);
     ngroups = crgetngroups(cred);
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    if (cred == NOCRED || cred == FSCRED) {
+    if (cred == NOCRED || cred == FSCRED)
 	return NOPAG;
-    }
     if (cred->cr_ngroups < 3)
 	return NOPAG;
     /* gid is stored in cr_groups[0] */
     g0 = cred->cr_groups[1];
     g1 = cred->cr_groups[2];
 #else
-#if defined(AFS_AIX_ENV)
-    if (cred->cr_ngrps < 2) {
+# if defined(AFS_AIX_ENV)
+    if (cred->cr_ngrps < 2)
+	return NOPAG;
+# elif defined(AFS_LINUX26_ENV)
+    if (afs_cr_group_info(cred)->ngroups < NUMPAGGROUPS)
+	return NOPAG;
+# elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#  if defined(AFS_SUN510_ENV)
+    if (ngroups < 2) {
+#  else
+    if (cred->cr_ngroups < 2) {
+#  endif
 	return NOPAG;
     }
-#elif defined(AFS_LINUX26_ENV)
-    if (cred->cr_group_info->ngroups < NUMPAGGROUPS) {
-	pag = NOPAG;
-	goto out;
-    }
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_SUN510_ENV)
-    if (ngroups < 2) {
-#else
-    if (cred->cr_ngroups < 2) {
-#endif
-	pag = NOPAG;
-	goto out;
-    }
-#endif
-#if defined(AFS_AIX51_ENV)
+# endif
+# if defined(AFS_AIX51_ENV)
     g0 = cred->cr_groupset.gs_union.un_groups[0];
     g1 = cred->cr_groupset.gs_union.un_groups[1];
-#elif defined(AFS_LINUX26_ONEGROUP_ENV)
-#elif defined(AFS_LINUX26_ENV)
-    g0 = GROUP_AT(cred->cr_group_info, 0);
-    g1 = GROUP_AT(cred->cr_group_info, 1);
 #elif defined(AFS_SUN510_ENV)
     g0 = gids[0];
     g1 = gids[1];
@@ -607,31 +570,37 @@ PagInCred(struct AFS_UCRED *cred)
     g1 = cred->cr_groups[1];
 #endif
 #endif
-#if defined(AFS_LINUX26_ONEGROUP_ENV)
-    pag = (afs_int32) afs_get_pag_from_groups(cred->cr_group_info);
-#else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
+    return pag;
+}
 #endif
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
-out:
-#endif
-#if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
-	struct key *key;
-	afs_uint32 upag, newpag;
 
-	key = request_key(&key_type_afs_pag, "_pag", NULL);
-	if (!IS_ERR(key)) {
-	    if (key_validate(key) == 0 && key->uid == 0) {	/* also verify in the session keyring? */
-		upag = (afs_uint32) key->payload.value;
-		if (((upag >> 24) & 0xff) == 'A') {
-		    __setpag(&cred, upag, &newpag, 0);
-		    pag = (afs_int32) upag;
-		}
-	    }
-	    key_put(key);
-	} 
+
+afs_int32
+PagInCred(afs_ucred_t *cred)
+{
+    afs_int32 pag = NOPAG;
+
+    AFS_STATCNT(PagInCred);
+    if (cred == NULL || cred == afs_osi_credp) {
+	return NOPAG;
     }
+#if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
+    /*
+     * If linux keyrings are in use and we carry the session keyring in our credentials
+     * structure, they should be the only criteria for determining
+     * if we're in a PAG.  Groups are updated for legacy reasons only for now,
+     * and should not be used to infer PAG membership
+     * With keyrings but no kernel credentials, look at groups first and fall back
+     * to looking at the keyrings.
+     */
+# if !defined(STRUCT_TASK_HAS_CRED)
+    pag = osi_get_group_pag(cred);
+# endif
+    if (pag == NOPAG)
+	pag = osi_get_keyring_pag(cred);
+#else
+    pag = osi_get_group_pag(cred);
 #endif
     return pag;
 }

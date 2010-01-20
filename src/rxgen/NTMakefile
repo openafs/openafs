@@ -39,6 +39,7 @@ $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 install: AFS_component_version_number.c $(EXEFILE) $(INCFILES)
 

@@ -55,6 +55,7 @@ $(UPSERVER):  $(USVR_OBJS) $(LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # upclient
@@ -72,6 +73,7 @@ $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # generate versioninfo resources

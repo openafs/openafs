@@ -7,9 +7,9 @@ backup_help - Displays help for backup commands
 =for html
 <div class="synopsis">
 
-B<backup help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+B<backup help> S<<< [B<-topic> <I<help string>>+] >>> [B<-admin>] [B<-help>]
 
-B<backup h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+B<backup h> S<<< [B<-t> <I<help string>>+] >>> [B<-a>] [B<-h>]
 
 =for html
 </div>

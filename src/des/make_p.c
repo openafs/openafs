@@ -11,9 +11,9 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include <stdio.h>
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 #include "tables.h"
 #include "des_prototypes.h"

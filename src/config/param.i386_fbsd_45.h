@@ -26,6 +26,7 @@
 #define AFS_X86_FBSD43_ENV 1
 #define AFS_X86_FBSD45_ENV 1
 #define AFS_X86_ENV 1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 #define O_SYNC O_FSYNC
 #define FTRUNC O_TRUNC
@@ -141,6 +142,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_USR_FBSD44_ENV	1
 #define AFS_USR_FBSD45_ENV	1
 #define AFS_USR_FBSD_ENV	1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 
 #define O_SYNC O_FSYNC

@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "rx.h"
 #include "rx_clock.h"
 #endif
@@ -76,7 +77,7 @@ clock_Sync(void)
 	fprintf(stderr, "clock:  could not set interval timer; \
 				aborted(errno=%d)\n", errno);
 	fflush(stderr);
-	exit(1);
+	assert(0);
     }
     if (relclock_epoch.usec + startvalue.usec >= otimer.it_value.tv_usec) {
 	relclock_epoch.sec = relclock_epoch.sec +

@@ -123,10 +123,13 @@ SHELL = /bin/sh
 # Common/standard cflags/paths/etc
 # Cflags defaults, will be overridden later if necessary
 #
-COMMON_INCL=-I${TOP_OBJDIR}/src/config -I. -I${srcdir} -I${TOP_INCDIR} -I${TOP_INCDIR}/afs -I${TOP_INCDIR}/rx -I${TOP_OBJDIR} -I${TOP_SRCDIR} -I${TOP_OBJDIR}/src
+# -I. and -I${srcdir} are only needed for objdir builds - we should
+# conditionalise them on that.
+
+COMMON_INCL=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${srcdir} -I.
 COMMON_CFLAGS=${DBG} ${OPTMZ} ${COMMON_INCL}
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS}
+CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} $(CFLAGS_NOERROR)
 LDFLAGS=${XLDFLAGS} ${ARCHFLAGS}
 
 .c.o:

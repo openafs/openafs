@@ -23,7 +23,7 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
-#include <cmd.h>
+#include <afs/cmd.h>
 #include <signal.h>
 #undef IN
 #include <sys/types.h>
@@ -32,14 +32,14 @@
 #include <netdb.h>
 #include <ctype.h>
 
-#include <gtxwindows.h>		/*Generic window package */
-#include <gtxobjects.h>		/*Object definitions */
-#include <gtxlightobj.h>	/*Light object interface */
-#include <gtxcurseswin.h>	/*Curses window package */
-#include <gtxdumbwin.h>		/*Dumb terminal window package */
-#include <gtxX11win.h>		/*X11 window package */
-#include <gtxframe.h>		/*Frame package */
-#include <gtxinput.h>
+#include <afs/gtxwindows.h>		/*Generic window package */
+#include <afs/gtxobjects.h>		/*Object definitions */
+#include <afs/gtxlightobj.h>	/*Light object interface */
+#include <afs/gtxcurseswin.h>	/*Curses window package */
+#include <afs/gtxdumbwin.h>		/*Dumb terminal window package */
+#include <afs/gtxX11win.h>		/*X11 window package */
+#include <afs/gtxframe.h>		/*Frame package */
+#include <afs/gtxinput.h>
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>
@@ -258,7 +258,9 @@ extern char *cm_categories[];	/* cache manager data category names */
 
 
 
-#ifndef HAVE_STRCASESTR
+#ifdef HAVE_STRCASESTR
+extern char * strcasestr(const char *, const char *);
+#else
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 
@@ -2253,7 +2255,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
 	for (i = 0; i < numFS; i++) {
 	    curr_fsDataP->probeOK = 0;
 	    curr_fsDataP->ovfCount = 0;
-	    memset((char *)curr_fsDataP->data, 0, numBytes);
+	    memset(curr_fsDataP->data, 0, numBytes);
 	    curr_fsDataP++;
 	}
 
@@ -3065,7 +3067,7 @@ save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
 	for (i = 0; i < numCM; i++) {
 	    curr_cmDataP->probeOK = 0;
 	    curr_cmDataP->ovfCount = 0;
-	    memset((char *)curr_cmDataP->data, 0, numBytes);
+	    memset(curr_cmDataP->data, 0, numBytes);
 	    curr_cmDataP++;
 	}
 
@@ -3768,7 +3770,7 @@ afsmon_execute(void)
     }
 
     /* start the gtx input server */
-    code = (int) gtx_InputServer(afsmon_win);
+    code = (intptr_t)gtx_InputServer(afsmon_win);
     if (code) {
 	fprintf(stderr, "[ %s ] Failed to start input server \n", rn);
 	afsmon_Exit(140);

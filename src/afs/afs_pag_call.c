@@ -363,11 +363,11 @@ int
 #ifdef	AFS_SUN5_ENV
 afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
      rval_t *rvp;
-     struct AFS_UCRED *credp;
+     afs_ucred_t *credp;
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_syscall_pioctl(path, com, cmarg, follow, credp)
-     struct AFS_UCRED *credp;
+     afs_ucred_t *credp;
 #else
 afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
@@ -425,7 +425,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     /* Set up credentials */
     memset(&ccred, 0, sizeof(ccred));
     pag = PagInCred(credp);
-    ccred.uid = credp->cr_uid;
+    ccred.uid = afs_cr_uid(credp);
     if (pag != NOPAG) {
 	 afs_get_groups_from_pag(pag, &g0, &g1);
 	 ccred.group0 = g0;

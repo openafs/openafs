@@ -121,7 +121,7 @@ gator_X11gwin_init(int adebug)
  *------------------------------------------------------------------------*/
 
 struct gwin *
-gator_X11gwin_create(struct gator_X11gwin_params *params)
+gator_X11gwin_create(void *rock)
 {				/*gator_X11gwin_create */
 
     static char rn[] = "gator_X11gwin_create";	/*Routine name */

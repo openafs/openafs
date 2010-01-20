@@ -40,6 +40,7 @@
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
+#define AFS_64BITUSERPOINTER_ENV	1
 #define AFS_HAVE_FFS		1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	1	/* System supports statvfs */
 
@@ -91,7 +92,6 @@
 #define	AFS_VFS34		1	/* afs/afs_vfsops.c (afs_vget), afs/afs_vnodeops.c (afs_lockctl, afs_noop) */
 #define	AFS_UIOFMODE		1	/* Only in afs/afs_vnodeops.c (afs_ustrategy) */
 #define	AFS_SYSVLOCK		1	/* sys v locking supported */
-/*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov		uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset
@@ -186,7 +186,6 @@
 #ifdef KERNEL
 #define	AFS_UIOFMODE		1	/* Only in afs/afs_vnodeops.c (afs_ustrategy) */
 #define	AFS_SYSVLOCK		1	/* sys v locking supported */
-/*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset

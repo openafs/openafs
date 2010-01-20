@@ -2721,7 +2721,6 @@ get_vldbupdateentry(struct ubik_trans *trans,
 		    struct nvlentry *VlEntry)
 {
     int i, j, errorcode, serverindex;
-    struct vldbentry checkentry;
     afs_uint32 checkids[MAXTYPES];
 
     /* check if any specified new IDs are already present in the db. Do

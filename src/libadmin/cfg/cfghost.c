@@ -162,7 +162,7 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 	    /* one or more config files appears to be invalid */
 	    serverSt = ADMCFGSERVERBASICINFOINVALID;
 	} else {
-	    struct afsconf_entry *cellentry;
+	    struct afsconf_entry *cellentry = NULL;
 
 	    if (confdir->cellName == NULL || *confdir->cellName == '\0') {
 		/* no cell set for server */

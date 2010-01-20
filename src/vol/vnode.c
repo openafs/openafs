@@ -481,7 +481,7 @@ VGetFreeVnode_r(struct VnodeClassInfo * vcp)
     if (Vn_refcount(vnp) != 0 || CheckLock(&vnp->lock))
 	Abort("VGetFreeVnode_r: locked vnode in lruq");
 #endif
-    VNLog(1, 2, Vn_id(vnp), (afs_int32) vnp, 0, 0);
+    VNLog(1, 2, Vn_id(vnp), (intptr_t)vnp, 0, 0);
 
     /* 
      * it's going to be overwritten soon enough.
@@ -662,7 +662,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
     if (vnp) {
 	/* slot already exists.  May even not be in lruq (consider store file locking a file being deleted)
 	 * so we may have to wait for it below */
-	VNLog(3, 2, vnodeNumber, (afs_int32) vnp, 0, 0);
+	VNLog(3, 2, vnodeNumber, (intptr_t)vnp, 0, 0);
 
 	VnCreateReservation_r(vnp);
 	if (Vn_refcount(vnp) == 1) {
@@ -819,13 +819,13 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 
 	}
     sane:
-	VNLog(4, 2, vnodeNumber, (afs_int32) vnp, 0, 0);
+	VNLog(4, 2, vnodeNumber, (intptr_t)vnp, 0, 0);
 #ifndef AFS_DEMAND_ATTACH_FS
 	AddToVnHash(vnp);
 #endif
     }
 
-    VNLog(5, 1, (afs_int32) vnp, 0, 0, 0);
+    VNLog(5, 1, (intptr_t)vnp, 0, 0, 0);
     memset(&vnp->disk, 0, sizeof(vnp->disk));
     vnp->changed_newTime = 0;	/* set this bit when vnode is updated */
     vnp->changed_oldTime = 0;	/* set this on CopyOnWrite. */
@@ -1167,7 +1167,7 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
     if (vnp) {
 	/* vnode is in cache */
 
-	VNLog(101, 2, vnodeNumber, (afs_int32) vnp, 0, 0);
+	VNLog(101, 2, vnodeNumber, (intptr_t)vnp, 0, 0);
 	VnCreateReservation_r(vnp);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1254,7 +1254,7 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 
     /* Check that the vnode hasn't been removed while we were obtaining
      * the lock */
-    VNLog(102, 2, vnodeNumber, (afs_int32) vnp, 0, 0);
+    VNLog(102, 2, vnodeNumber, (intptr_t) vnp, 0, 0);
     if ((vnp->disk.type == vNull) || (Vn_cacheCheck(vnp) == 0)) {
 	VnUnlock(vnp, locktype);
 	VnCancelReservation_r(vnp);
@@ -1316,7 +1316,7 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
     class = vnodeIdToClass(Vn_id(vnp));
     vcp = &VnodeClassInfo[class];
     assert(vnp->disk.vnodeMagic == vcp->magic);
-    VNLog(200, 2, Vn_id(vnp), (afs_int32) vnp, 0, 0);
+    VNLog(200, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 
 #ifdef AFS_DEMAND_ATTACH_FS
     writeLocked = (Vn_state(vnp) == VN_STATE_EXCLUSIVE);
@@ -1332,7 +1332,7 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 	PROCESS thisProcess;
 	LWP_CurrentProcess(&thisProcess);
 #endif /* AFS_PTHREAD_ENV */
-	VNLog(201, 2, (afs_int32) vnp,
+	VNLog(201, 2, (intptr_t) vnp,
 	      ((vnp->changed_newTime) << 1) | ((vnp->
 						changed_oldTime) << 1) | vnp->
 	      delete, 0, 0);
@@ -1350,7 +1350,7 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		/* No longer any directory entries for this vnode. Free the Vnode */
 		memset(&vnp->disk, 0, sizeof(vnp->disk));
 		/* delete flag turned off further down */
-		VNLog(202, 2, Vn_id(vnp), (afs_int32) vnp, 0, 0);
+		VNLog(202, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 	    } else if (vnp->changed_newTime) {
 		vnp->disk.serverModifyTime = now;
 	    }
@@ -1456,7 +1456,7 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
     class = vnodeIdToClass(Vn_id(vnp));
     vcp = &VnodeClassInfo[class];
     assert(vnp->disk.vnodeMagic == vcp->magic);
-    VNLog(300, 2, Vn_id(vnp), (afs_int32) vnp, 0, 0);
+    VNLog(300, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 
 #ifdef AFS_DEMAND_ATTACH_FS
     writeLocked = (Vn_state(vnp) == VN_STATE_EXCLUSIVE);
@@ -1468,7 +1468,7 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
     }
 
 
-    VNLog(301, 2, (afs_int32) vnp,
+    VNLog(301, 2, (intptr_t) vnp,
 	  ((vnp->changed_newTime) << 1) | ((vnp->
 					    changed_oldTime) << 1) | vnp->
 	  delete, 0, 0);
@@ -1481,7 +1481,7 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 #endif /* AFS_PTHREAD_ENV */
     if (thisProcess != vnp->writer)
 	Abort("VPutVnode: Vnode at 0x%x locked by another process!\n",
-	      (int)vnp);
+	      (intptr_t)vnp);
 
     if (vnp->delete) {
 	return 0;

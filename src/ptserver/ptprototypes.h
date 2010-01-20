@@ -16,6 +16,17 @@ extern afs_int32 IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid,
 			       afs_int32 gid, afs_int32 depth) ;
 #endif /* SUPERGROUPS */
 
+/* ptutils.c */
+#ifdef SUPERGROUPS
+extern afs_int32 AddToSGEntry(struct ubik_trans *tt, struct prentry *entry,
+                              afs_int32 loc, afs_int32 aid);
+extern afs_int32 GetSGList(struct ubik_trans *at, struct prentry *tentry,
+                           prlist *alist);
+extern afs_int32 RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid,
+                                   afs_int32 bid);
+extern void pt_hook_write(void);
+#endif
+
 extern afs_int32 NameHash(register unsigned char *aname);
 extern afs_int32 pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, 
 			  void *buff, afs_int32 len);

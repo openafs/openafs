@@ -15,13 +15,14 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 
 VINCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
-	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h
+	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h \
+	voltrans_inline.h
 
 RINCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
        ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/ubik.h ${TOP_INCDIR}/afs/cmd.h
 
-INTINCLS=volint.h volser.h 
+INTINCLS=volint.h volser.h volser_prototypes.h volser_internal.h
 
 LIBS=\
 	${TOP_LIBDIR}/libaudit.a \
@@ -50,6 +51,7 @@ VOLDUMP_LIBS = \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/liblwp.a  \
 	${TOP_LIBDIR}/libacl.a
@@ -61,10 +63,14 @@ SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
 all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volser.h \
 	${TOP_INCDIR}/afs/vsutils_prototypes.h \
+	${TOP_INCDIR}/afs/volser_prototypes.h \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
 
 ${TOP_INCDIR}/afs/vsutils_prototypes.h: vsutils_prototypes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/volser_prototypes.h: volser_prototypes.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/volser.h: volser.h
@@ -144,7 +150,7 @@ install: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL_PROGRAM} restorevol ${DESTDIR}${sbindir}/restorevol
+	${INSTALL_PROGRAM} restorevol ${DESTDIR}${bindir}/restorevol
 	${INSTALL_PROGRAM} voldump ${DESTDIR}${sbindir}/voldump
 	${INSTALL_DATA} volser.h ${DESTDIR}${includedir}/afs/volser.h
 	${INSTALL_DATA} volint.h ${DESTDIR}${includedir}/afs/volint.h

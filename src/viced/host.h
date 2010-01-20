@@ -42,13 +42,6 @@ extern pthread_key_t viced_uclient_key;
 #define h_HTSPERBLOCK 512	/* Power of 2 */
 #define h_HTSHIFT 9		/* log base 2 of HTSPERBLOCK */
 
-#define h_threadsPerSlot	32	/* bits per afs_int32 */
-#define h_threadsShift		5	/* for multiply/divide */
-#define h_threadsMask		31	/* for remainder */
-
-/* size of the hold array for each host */
-#define h_maxSlots	(((MAX_FILESERVER_THREAD+h_threadsPerSlot-1)>>h_threadsShift)+1)
-
 struct Identity {
     char valid;			/* zero if UUID is unknown */
     afsUUID uuid;
@@ -70,10 +63,7 @@ struct Interface {
 struct host {
     struct host *next, *prev;	/* linked list of all hosts */
     struct rx_connection *callback_rxcon;	/* rx callback connection */
-    afs_int32 holds[h_maxSlots];
-    /* holds on this host; 1 bit per lwp.
-     * A hold prevents this structure and
-     * inferior structures from disappearing */
+    afs_uint32 refCount; /* reference count */
     afs_uint32 host;		/* IP address of host interface that is
 				 * currently being used, in network
 				 * byte order */
@@ -164,30 +154,6 @@ extern int rxcon_client_key;
    for the client, then the client must have a connection */
 /* N.B. h_UserName returns pointer to static data; also relatively expensive */
 extern char *h_UserName(struct client *client);
-
-/* all threads whose thread-id is greater than the size of the hold array,
-** then use the most significant bit in the 'hold' field in the host structure 
-*/
-#ifdef AFS_PTHREAD_ENV
-#define h_lwpIndex() ( ((long)(pthread_getspecific(rx_thread_id_key)) > \
-		        ((h_maxSlots << h_threadsShift)-1)) ? \
-				(h_maxSlots << h_threadsShift) -1 : \
-				(long)(pthread_getspecific(rx_thread_id_key)) )
-#else /* AFS_PTHREAD_ENV */
-#define h_lwpIndex() ( (LWP_Index() > ((h_maxSlots << h_threadsShift)-1)) ? \
-					(h_maxSlots << h_threadsShift) -1 : \
-					LWP_Index() )
-#endif /* AFS_PTHREAD_ENV */
-#define h_holdIndex()( h_lwpIndex() & h_threadsMask)
-#define h_holdSlot() ( h_lwpIndex() >> h_threadsShift)	/*index in 'holds' */
-#define h_holdbit()  ( 1<<h_holdIndex() )
-
-#define h_Hold_r(host)   ((host)->holds[h_holdSlot()] |= h_holdbit())
-extern int h_Release(register struct host *host);
-extern int h_Release_r(register struct host *host);
-
-#define h_Held_r(host)   ((h_holdbit() & (host)->holds[h_holdSlot()]) != 0)
-extern int h_OtherHolds_r(register struct host *host);
 #define h_Lock(host)    ObtainWriteLock(&(host)->lock)
 extern int h_Lock_r(register struct host *host);
 #define h_Unlock(host)  ReleaseWriteLock(&(host)->lock)
@@ -196,6 +162,25 @@ extern int h_Lock_r(register struct host *host);
 #define	AddCallBack(host, fid)	AddCallBack1((host), (fid), (afs_uint32 *)0, 1/*CB_NORMAL*/, 0)
 #define	AddVolCallBack(host, fid) AddCallBack1((host), (fid), (afs_uint32 *)0, 3/*CB_VOLUME*/, 0)
 #define	AddBulkCallBack(host, fid) AddCallBack1((host), (fid), (afs_uint32 *)0, 4/*CB_BULK*/, 0)
+
+/* A simple refCount replaces per-thread hold mechanism.  The former
+ * hold semantics are not different from refcounting, except with respect
+ * to cross-thread assertions.  In this change, refcount is protected by
+ * H_LOCK, just like former hold bitmap.  A future change will replace locks
+ * th lock-free operations.  */
+
+#define h_Hold_r(x) \
+do { \
+	++((x)->refCount); \
+} while(0)
+
+#define h_Release_r(x) \
+do { \
+	--((x)->refCount); \
+	if (((x)->refCount < 1) && \
+		(((x)->hostFlags & HOSTDELETED) || \
+		 ((x)->hostFlags & CLIENTDELETED))) h_TossStuff_r((x));	 \
+} while(0)
 
 /* operations on the global linked list of hosts */
 #define h_InsertList_r(h) 	(h)->next =  hostList;			\
@@ -230,13 +215,14 @@ extern void ShutDownAndCore(int dopanic);
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
-		      int *heldp, struct host **hostp);
+		      struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (struct host *, int, void *), void *param);
 extern void h_Enumerate_r(int (*proc) (struct host *, int, void *), struct host *enumstart, void *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
+extern void h_TossStuff_r(register struct host *host);
 extern struct client *h_ID2Client(afs_int32 vid);
 extern int GetClient(struct rx_connection *tcon, struct client **cp);
 extern int PutClient(struct client **cp);
@@ -255,9 +241,12 @@ extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
 extern void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
 extern int h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern int h_DeleteHostFromUuidHashTable_r(struct host *host);
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
+extern afs_int32 hpr_Initialize(struct ubik_client **);
+extern int hpr_End(struct ubik_client *);
 
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -269,9 +258,9 @@ extern int h_SaveState(void);
 extern int h_RestoreState(void);
 #endif
 
-#define H_ENUMERATE_BAIL(held)        ((held)|0x80000000)
-#define H_ENUMERATE_ISSET_BAIL(held)  ((held)&0x80000000)
-#define H_ENUMERATE_ISSET_HELD(held)  ((held)&0x7FFFFFFF)
+#define H_ENUMERATE_BAIL(flags)        ((flags)|0x80000000)
+#define H_ENUMERATE_ISSET_BAIL(flags)  ((flags)&0x80000000)
+#define H_ENUMERATE_ISSET_HELD(flags)  ((flags)&0x7FFFFFFF)
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */

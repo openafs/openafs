@@ -174,9 +174,17 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     struct clone_rock decRock;
     afs_int32 offset = 0;
     afs_int32 dircloned, inodeinced;
+    afs_int32 filecount = 0, diskused = 0;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
+
+    /* Correct number of files in volume: this assumes indexes are always
+       cloned starting with vLarge */
+    if (ReadWriteOriginal && class != vLarge) {
+	filecount = V_filecount(rwvp);
+	diskused = V_diskused(rwvp);
+    }
 
     /* Open the RW volume's index file and seek to beginning */
     IH_COPY(rwH, rwvp->vnodeIndex[class].handle);
@@ -237,9 +245,14 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	}
 
 	if (rwvnode->type != vNull) {
+	    afs_fsize_t ll;
+
 	    if (rwvnode->vnodeMagic != vcp->magic)
 		ERROR_EXIT(-1);
 	    rwinode = VNDISK_GET_INO(rwvnode);
+	    filecount++;
+	    VNDISK_GET_LEN(ll, rwvnode);
+	    diskused += nBlocks(ll);
 
 	    /* Increment the inode if not already */
 	    if (clinode && (clinode == rwinode)) {
@@ -393,6 +406,10 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	error = code;
     ci_Destroy(&decHead);
 
+    if (ReadWriteOriginal && filecount > 0)
+	V_filecount(rwvp) = filecount;
+    if (ReadWriteOriginal && diskused > 0)
+	V_diskused(rwvp) = diskused;
     return error;
 }
 
@@ -401,6 +418,7 @@ CloneVolume(Error * rerror, Volume * original, Volume * new, Volume * old)
 {
     afs_int32 code, error = 0;
     afs_int32 reclone;
+    afs_int32 filecount = V_filecount(original), diskused = V_diskused(original);
 
     *rerror = 0;
     reclone = ((new == old) ? 1 : 0);
@@ -411,6 +429,9 @@ CloneVolume(Error * rerror, Volume * original, Volume * new, Volume * old)
     code = DoCloneIndex(original, new, vSmall, reclone);
     if (code)
 	ERROR_EXIT(code);
+    if (filecount != V_filecount(original) || diskused != V_diskused(original))
+       Log("Clone %u: filecount %d -> %d diskused %d -> %d\n",
+	    V_id(original), filecount, V_filecount(original), diskused, V_diskused(original));
 
     code = CopyVolumeHeader(&V_disk(original), &V_disk(new));
     if (code)

@@ -491,7 +491,7 @@ rx_InitHost(u_int host, u_int port)
     rxi_nCalls = 0;
     rx_connDeadTime = 12;
     rx_tranquil = 0;		/* reset flag */
-    memset((char *)&rx_stats, 0, sizeof(struct rx_statistics));
+    memset(&rx_stats, 0, sizeof(struct rx_statistics));
     htable = (char *)
 	osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize * sizeof(struct rx_connection *));	/* XXXXX */
@@ -537,7 +537,7 @@ rx_InitHost(u_int host, u_int port)
 #else
 	socklen_t addrlen = sizeof(addr);
 #endif
-	if (getsockname((int)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
+	if (getsockname((intptr_t)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
 	    rx_Finalize();
 	    return -1;
 	}
@@ -763,7 +763,7 @@ rx_StartServer(int donateMe)
 	static int nProcs;
 #ifdef AFS_PTHREAD_ENV
 	pid_t pid;
-	pid = (pid_t) pthread_self();
+	pid = afs_pointer_to_int(pthread_self());
 #else /* AFS_PTHREAD_ENV */
 	PROCESS pid;
 	LWP_CurrentProcess(&pid);
@@ -800,7 +800,8 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n", ntohl(shost), ntohs(sport), sservice, securityObject, serviceSecurityIndex));
+    dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n",
+          ntohl(shost), ntohs(sport), sservice, securityObject, serviceSecurityIndex));
 
     /* Vasilsi said: "NETPRI protects Cid and Alloc", but can this be true in
      * the case of kmem_alloc? */
@@ -1132,7 +1133,7 @@ rx_NewCall(struct rx_connection *conn)
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_NewCall(conn %x)\n", conn));
+    dpf(("rx_NewCall(conn %"AFS_PTR_FMT")\n", conn));
 
     NETPRI;
     clock_GetTime(&queueTime);
@@ -1247,7 +1248,7 @@ rx_NewCall(struct rx_connection *conn)
     MUTEX_EXIT(&call->lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
-    dpf(("rx_NewCall(call %x)\n", call));
+    dpf(("rx_NewCall(call %"AFS_PTR_FMT")\n", call));
     return call;
 }
 
@@ -1733,14 +1734,14 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 #endif
 
 	rxi_calltrace(RX_CALL_START, call);
-	dpf(("rx_GetCall(port=%d, service=%d) ==> call %x\n",
+	dpf(("rx_GetCall(port=%d, service=%d) ==> call %"AFS_PTR_FMT"\n",
 	     call->conn->service->servicePort, call->conn->service->serviceId,
 	     call));
 
 	CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 	MUTEX_EXIT(&call->lock);
     } else {
-	dpf(("rx_GetCall(socketp=0x%x, *socketp=0x%x)\n", socketp, *socketp));
+	dpf(("rx_GetCall(socketp=0x%"AFS_PTR_FMT", *socketp=0x%"AFS_PTR_FMT")\n", socketp, *socketp));
     }
 
     return call;
@@ -1891,7 +1892,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	     call->conn->service->servicePort, call->conn->service->serviceId,
 	     call));
     } else {
-	dpf(("rx_GetCall(socketp=0x%x, *socketp=0x%x)\n", socketp, *socketp));
+	dpf(("rx_GetCall(socketp=0x%"AFS_PTR_FMT", *socketp=0x%"AFS_PTR_FMT")\n", socketp, *socketp));
     }
 
     USERPRI;
@@ -1938,7 +1939,8 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 
 
 
-    dpf(("rx_EndCall(call %x rc %d error %d abortCode %d)\n", call, rc, call->error, call->abortCode));
+    dpf(("rx_EndCall(call %"AFS_PTR_FMT" rc %d error %d abortCode %d)\n",
+          call, rc, call->error, call->abortCode));
 
     NETPRI;
     MUTEX_ENTER(&call->lock);
@@ -2185,7 +2187,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
     struct rx_call *nxp;	/* Next call pointer, for queue_Scan */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
-    dpf(("rxi_NewCall(conn %x, channel %d)\n", conn, channel));
+    dpf(("rxi_NewCall(conn %"AFS_PTR_FMT", channel %d)\n", conn, channel));
 
     /* Grab an existing call structure, or allocate a new one.
      * Existing call structures are assumed to have been left reset by
@@ -2596,7 +2598,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
  * this is the first time the packet has been seen */
     packetType = (np->header.type > 0 && np->header.type < RX_N_PACKET_TYPES)
 	? rx_packetTypes[np->header.type - 1] : "*UNKNOWN*";
-    dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %x",
+    dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %"AFS_PTR_FMT,
 	 np->header.serial, packetType, ntohl(host), ntohs(port), np->header.serviceId,
 	 np->header.epoch, np->header.cid, np->header.callNumber,
 	 np->header.seq, np->header.flags, np));
@@ -2773,7 +2775,10 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0) 
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%0.06d len %d",
+                      np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
+                      np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
+                      np->header.flags, np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -2838,7 +2843,10 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0) 
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%06d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec, np->length));
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%06d len %d",
+                      np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
+                      np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
+                      np->header.flags, np, np->retryTime.sec, np->retryTime.usec, np->length));
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -2986,8 +2994,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	struct rx_peer *peer;
 	peer = conn->peer;
 	if (skew > peer->inPacketSkew) {
-	    dpf(("*** In skew changed from %d to %d\n", peer->inPacketSkew,
-		 skew));
+	    dpf(("*** In skew changed from %d to %d\n",
+                  peer->inPacketSkew, skew));
 	    peer->inPacketSkew = skew;
 	}
     }
@@ -3271,7 +3279,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
             rx_MutexIncrement(rx_stats.noPacketBuffersOnRead, rx_stats_mutex);
 	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
-	dpf(("packet %x dropped on receipt - quota problems", np));
+	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems", np));
 	if (rxi_doreclaim)
 	    rxi_ClearReceiveQueue(call);
 	clock_GetTime(&now);
@@ -3335,7 +3343,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 		&& queue_First(&call->rq, rx_packet)->header.seq == seq) {
                 if (rx_stats_active)
                     rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
-		dpf(("packet %x dropped on receipt - duplicate", np));
+		dpf(("packet %"AFS_PTR_FMT" dropped on receipt - duplicate", np));
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
 		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
@@ -3666,8 +3674,11 @@ rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
 {
     struct rx_peer *peer = call->conn->peer;
 
-    /* Use RTT if not delayed by client. */
-    if (ap->reason != RX_ACK_DELAY)
+    /* Use RTT if not delayed by client and
+     * ignore packets that were retransmitted. */
+    if (!(p->flags & RX_PKTFLAG_ACKED) &&
+        ap->reason != RX_ACK_DELAY &&
+        clock_Eq(&p->timeSent, &p->firstSent))
 	rxi_ComputeRoundTripTime(p, &p->timeSent, peer);
 #ifdef ADAPT_WINDOW
     rxi_ComputeRate(peer, call, p, np, ap->reason);
@@ -3691,6 +3702,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     afs_uint32 skew = 0;
     int nbytes;
     int missing;
+    int backedOff = 0;
     int acked;
     int nNacked = 0;
     int newAckCount = 0;
@@ -3779,9 +3791,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	if (tp->header.seq >= first)
 	    break;
 	call->tfirst = tp->header.seq + 1;
-	if (serial
-	    && (tp->header.serial == serial || tp->firstSerial == serial))
-	    rxi_ComputePeerNetStats(call, tp, ap, np);
+        rxi_ComputePeerNetStats(call, tp, ap, np);
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
 	}
@@ -3841,9 +3851,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	if (tp->header.seq >= first)
 #endif /* RX_ENABLE_LOCKS */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	    if (serial
-		&& (tp->header.serial == serial || tp->firstSerial == serial))
-		rxi_ComputePeerNetStats(call, tp, ap, np);
+            rxi_ComputePeerNetStats(call, tp, ap, np);
 
 	/* Set the acknowledge flag per packet based on the
 	 * information in the ack packet. An acknowlegded packet can
@@ -3877,13 +3885,28 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    missing = 1;
 	}
 
+        /*
+         * Following the suggestion of Phil Kern, we back off the peer's
+         * timeout value for future packets until a successful response
+         * is received for an initial transmission.
+         */
+        if (missing && !backedOff) {
+            struct clock c = peer->timeout;
+            struct clock max_to = {3, 0};
+
+            clock_Add(&peer->timeout, &c);
+            if (clock_Gt(&peer->timeout, &max_to))
+                peer->timeout = max_to;
+            backedOff = 1;
+        }
+
 	/* If packet isn't yet acked, and it has been transmitted at least 
 	 * once, reset retransmit time using latest timeout 
 	 * ie, this should readjust the retransmit timer for all outstanding 
 	 * packets...  So we don't just retransmit when we should know better*/
 
 	if (!(tp->flags & RX_PKTFLAG_ACKED) && !clock_IsZero(&tp->retryTime)) {
-	    tp->retryTime = tp->timeSent;
+            tp->retryTime = tp->timeSent;
 	    clock_Add(&tp->retryTime, &peer->timeout);
 	    /* shift by eight because one quarter-sec ~ 256 milliseconds */
 	    clock_Addmsec(&(tp->retryTime), ((afs_uint32) tp->backoff) << 8);
@@ -3915,7 +3938,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
 	/* If the ack packet has a "recommended" size that is less than 
 	 * what I am using now, reduce my size to match */
-	rx_packetread(np, rx_AckDataSize(ap->nAcks) + sizeof(afs_int32),
+	rx_packetread(np, rx_AckDataSize(ap->nAcks) + (int)sizeof(afs_int32),
 		      (int)sizeof(afs_int32), &tSize);
 	tSize = (afs_uint32) ntohl(tSize);
 	peer->natMTU = rxi_AdjustIfMTU(MIN(tSize, peer->ifMTU));
@@ -3942,7 +3965,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	if (np->length == rx_AckDataSize(ap->nAcks) + 3 * sizeof(afs_int32)) {
 	    /* AFS 3.4a */
 	    rx_packetread(np,
-			  rx_AckDataSize(ap->nAcks) + 2 * sizeof(afs_int32),
+			  rx_AckDataSize(ap->nAcks) + 2 * (int)sizeof(afs_int32),
 			  (int)sizeof(afs_int32), &tSize);
 	    tSize = (afs_uint32) ntohl(tSize);	/* peer's receive window, if it's */
 	    if (tSize < call->twind) {	/* smaller than our send */
@@ -3964,7 +3987,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		   rx_AckDataSize(ap->nAcks) + 4 * sizeof(afs_int32)) {
 	    /* AFS 3.5 */
 	    rx_packetread(np,
-			  rx_AckDataSize(ap->nAcks) + 2 * sizeof(afs_int32),
+			  rx_AckDataSize(ap->nAcks) + 2 * (int)sizeof(afs_int32),
 			  sizeof(afs_int32), &tSize);
 	    tSize = (afs_uint32) ntohl(tSize);
 	    /*
@@ -3986,8 +4009,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	     * larger than the natural MTU.
 	     */
 	    rx_packetread(np,
-			  rx_AckDataSize(ap->nAcks) + 3 * sizeof(afs_int32),
-			  sizeof(afs_int32), &tSize);
+			  rx_AckDataSize(ap->nAcks) + 3 * (int)sizeof(afs_int32),
+			  (int)sizeof(afs_int32), &tSize);
 	    maxDgramPackets = (afs_uint32) ntohl(tSize);
 	    maxDgramPackets = MIN(maxDgramPackets, rxi_nDgramPackets);
 	    maxDgramPackets =
@@ -4459,7 +4482,7 @@ rxi_ClearReceiveQueue(struct rx_call *call)
 #ifdef RXDEBUG_PACKET
         call->rqc -= count;
         if ( call->rqc != 0 ) 
-            dpf(("rxi_ClearReceiveQueue call %x rqc %u != 0", call, call->rqc));
+            dpf(("rxi_ClearReceiveQueue call %"AFS_PTR_FMT" rqc %u != 0", call, call->rqc));
 #endif
 	call->flags &= ~(RX_CALL_RECEIVE_DONE | RX_CALL_HAVE_LAST);
     }
@@ -4568,7 +4591,7 @@ rxi_ConnectionError(struct rx_connection *conn,
     if (error) {
 	int i;
 
-	dpf(("rxi_ConnectionError conn %x error %d", conn, error));
+	dpf(("rxi_ConnectionError conn %"AFS_PTR_FMT" error %d", conn, error));
 
 	MUTEX_ENTER(&conn->conn_data_lock);
 	if (conn->challengeEvent)
@@ -4600,7 +4623,7 @@ rxi_CallError(struct rx_call *call, afs_int32 error)
 #ifdef DEBUG
     osirx_AssertMine(&call->lock, "rxi_CallError");
 #endif
-    dpf(("rxi_CallError call %x error %d call->error %d", call, error, call->error));
+    dpf(("rxi_CallError call %"AFS_PTR_FMT" error %d call->error %d", call, error, call->error));
     if (call->error)
 	error = call->error;
 
@@ -4634,7 +4657,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 #ifdef DEBUG
     osirx_AssertMine(&call->lock, "rxi_ResetCall");
 #endif
-    dpf(("rxi_ResetCall(call %x, newcall %d)\n", call, newcall));
+    dpf(("rxi_ResetCall(call %"AFS_PTR_FMT", newcall %d)\n", call, newcall));
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
     if (call->arrivalProc) {
@@ -4693,7 +4716,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	rxi_ClearTransmitQueue(call, 1);
 	/* why init the queue if you just emptied it? queue_Init(&call->tq); */
 	if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
-	    dpf(("rcall %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
+	    dpf(("rcall %"AFS_PTR_FMT" has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 	}
 	call->flags = 0;
 	while (call->tqWaiters) {
@@ -5335,9 +5358,8 @@ rxi_Start(struct rxevent *event,
 	 * some of them have been retransmitted more times than more
 	 * recent additions.
 	 * Do a dance to avoid blocking after setting now. */
-	clock_Zero(&retryTime);
 	MUTEX_ENTER(&peer->peer_lock);
-	clock_Add(&retryTime, &peer->timeout);
+	retryTime = peer->timeout;
 	MUTEX_EXIT(&peer->peer_lock);
 	clock_GetTime(&now);
 	clock_Add(&retryTime, &now);
@@ -5381,11 +5403,15 @@ rxi_Start(struct rxevent *event,
 		    if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
 			/* We shouldn't be sending packets if a thread is waiting
 			 * to initiate congestion recovery */
+			dpf(("call %d waiting to initiate fast recovery\n",
+			     *(call->callNumber)));
 			break;
 		    }
 		    if ((nXmitPackets)
 			&& (call->flags & RX_CALL_FAST_RECOVER)) {
 			/* Only send one packet during fast recovery */
+			dpf(("call %d restricted to one packet per send during fast recovery\n",
+			     *(call->callNumber)));
 			break;
 		    }
 		    if ((p->flags & RX_PKTFLAG_FREE)
@@ -5415,8 +5441,9 @@ rxi_Start(struct rxevent *event,
 			/* Note: if we're waiting for more window space, we can
 			 * still send retransmits; hence we don't return here, but
 			 * break out to schedule a retransmit event */
-			dpf(("call %d waiting for window",
-			     *(call->callNumber)));
+			dpf(("call %d waiting for window (seq %d, twind %d, nSoftAcked %d, cwind %d)\n",
+			     *(call->callNumber), p->header.seq, call->twind, call->nSoftAcked,
+                             call->cwind));
 			break;
 		    }
 
@@ -5430,6 +5457,11 @@ rxi_Start(struct rxevent *event,
 				     sizeof(struct rx_packet *));
 			    goto restart;
 			}
+                        dpf(("call %d xmit packet %"AFS_PTR_FMT" now %u.%06u retryTime %u.%06u nextRetry %u.%06u\n",
+                              *(call->callNumber), p,
+                              now.sec, now.usec,
+                              p->retryTime.sec, p->retryTime.usec,
+                              retryTime.sec, retryTime.usec));
 			xmitList[nXmitPackets++] = p;
 		    }
 		}
@@ -5451,7 +5483,8 @@ rxi_Start(struct rxevent *event,
 		if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
 		    call->flags &= ~RX_CALL_TQ_BUSY;
 		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
+			dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
+                             call, call->tqWaiters, call->flags));
 #ifdef RX_ENABLE_LOCKS
 			osirx_AssertMine(&call->lock, "rxi_Start start");
 			CV_BROADCAST(&call->cv_tq);
@@ -5470,7 +5503,8 @@ rxi_Start(struct rxevent *event,
                         rx_MutexIncrement(rx_tq_debug.rxi_start_aborted, rx_stats_mutex);
 		    call->flags &= ~RX_CALL_TQ_BUSY;
 		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
+			dpf(("call error %d while xmit %x has %d waiters and flags %d\n",
+                             call, call->error, call->tqWaiters, call->flags));
 #ifdef RX_ENABLE_LOCKS
 			osirx_AssertMine(&call->lock, "rxi_Start middle");
 			CV_BROADCAST(&call->cv_tq);
@@ -5563,7 +5597,8 @@ rxi_Start(struct rxevent *event,
 	     */
 	    call->flags &= ~RX_CALL_TQ_BUSY;
 	    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-		dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
+		dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
+                      call, call->tqWaiters, call->flags));
 #ifdef RX_ENABLE_LOCKS
 		osirx_AssertMine(&call->lock, "rxi_Start end");
 		CV_BROADCAST(&call->cv_tq);
@@ -5951,6 +5986,18 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	return;			/* somebody set the clock back, don't count this time. */
     }
     clock_Sub(rttp, sentp);
+    dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rttp=%d.%06d sec)\n",
+          p->header.callNumber, p, rttp->sec, rttp->usec));
+
+    if (rttp->sec == 0 && rttp->usec == 0) {
+        /*
+         * The actual round trip time is shorter than the
+         * clock_GetTime resolution.  It is most likely 1ms or 100ns.
+         * Since we can't tell which at the moment we will assume 1ms.
+         */
+        rttp->usec = 1000;
+    }
+
     if (rx_stats_active) {
         MUTEX_ENTER(&rx_stats_mutex);
         if (clock_Lt(rttp, &rx_stats.minRtt))
@@ -5978,13 +6025,15 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	 * srtt is stored as fixed point with 3 bits after the binary
 	 * point (i.e., scaled by 8). The following magic is
 	 * equivalent to the smoothing algorithm in rfc793 with an
-	 * alpha of .875 (srtt = rtt/8 + srtt*7/8 in fixed point).
-	 * srtt*8 = srtt*8 + rtt - srtt
-	 * srtt = srtt + rtt/8 - srtt/8
+	 * alpha of .875 (srtt' = rtt/8 + srtt*7/8 in fixed point).
+         * srtt'*8 = rtt + srtt*7
+	 * srtt'*8 = srtt*8 + rtt - srtt
+	 * srtt' = srtt + rtt/8 - srtt/8
+         * srtt' = srtt + (rtt - srtt)/8
 	 */
 
-	delta = MSEC(rttp) - (peer->rtt >> 3);
-	peer->rtt += delta;
+	delta = _8THMSEC(rttp) - peer->rtt;
+	peer->rtt += (delta >> 3);
 
 	/*
 	 * We accumulate a smoothed rtt variance (actually, a smoothed
@@ -5995,16 +6044,20 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	 * rttvar is stored as
 	 * fixed point with 2 bits after the binary point (scaled by
 	 * 4).  The following is equivalent to rfc793 smoothing with
-	 * an alpha of .75 (rttvar = rttvar*3/4 + |delta| / 4).  This
-	 * replaces rfc793's wired-in beta.
+	 * an alpha of .75 (rttvar' = rttvar*3/4 + |delta| / 4).
+         *   rttvar'*4 = rttvar*3 + |delta|
+         *   rttvar'*4 = rttvar*4 + |delta| - rttvar
+         *   rttvar' = rttvar + |delta|/4 - rttvar/4
+         *   rttvar' = rttvar + (|delta| - rttvar)/4
+	 * This replaces rfc793's wired-in beta.
 	 * dev*4 = dev*4 + (|actual - expected| - dev)
 	 */
 
 	if (delta < 0)
 	    delta = -delta;
 
-	delta -= (peer->rtt_dev >> 2);
-	peer->rtt_dev += delta;
+	delta -= (peer->rtt_dev << 1);
+	peer->rtt_dev += (delta >> 3);
     } else {
 	/* I don't have a stored RTT so I start with this value.  Since I'm
 	 * probably just starting a call, and will be pushing more data down
@@ -6012,19 +6065,19 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	 * little, and I set deviance to half the rtt.  In practice,
 	 * deviance tends to approach something a little less than
 	 * half the smoothed rtt. */
-	peer->rtt = (MSEC(rttp) << 3) + 8;
+	peer->rtt = _8THMSEC(rttp) + 8;
 	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
-    /* the timeout is RTT + 4*MDEV + 0.35 sec   This is because one end or
-     * the other of these connections is usually in a user process, and can
-     * be switched and/or swapped out.  So on fast, reliable networks, the
-     * timeout would otherwise be too short.  
-     */
-    rtt_timeout = (peer->rtt >> 3) + peer->rtt_dev + 350;
+    /* the timeout is RTT + 4*MDEV but no less than rx_minPeerTimeout msec.
+     * This is because one end or the other of these connections is usually
+     * in a user process, and can be switched and/or swapped out.  So on fast,
+     * reliable networks, the timeout would otherwise be too short. */
+    rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev), rx_minPeerTimeout);
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 
-    dpf(("rxi_ComputeRoundTripTime(rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n", MSEC(rttp), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
+    dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n",
+          p->header.callNumber, p, MSEC(rttp), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
 }
 
 
@@ -6262,7 +6315,9 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
 	return;
     }
 
-    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %d.%06d, rtt %u, ps %u)", ntohl(peer->host), ntohs(peer->port), (ackReason == RX_ACK_REQUESTED ? "dataack" : "pingack"), xferSize, xferMs, peer->timeout.sec, peer->timeout.usec, peer->smRtt, peer->ifMTU));
+    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %d.%06d, rtt %u, ps %u)",
+          ntohl(peer->host), ntohs(peer->port), (ackReason == RX_ACK_REQUESTED ? "dataack" : "pingack"),
+          xferSize, xferMs, peer->timeout.sec, peer->timeout.usec, peer->smRtt, peer->ifMTU));
 
     /* Track only packets that are big enough. */
     if ((p->length + RX_HEADER_SIZE + call->conn->securityMaxTrailerSize) <
@@ -6308,7 +6363,9 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
      * one packet exchange */
     if (clock_Gt(&newTO, &peer->timeout)) {
 
-	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u, ps %u)", ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec, newTO.sec, newTO.usec, peer->smRtt, peer->packetSize));
+	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u, ps %u)",
+              ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec,
+              newTO.sec, newTO.usec, peer->smRtt, peer->packetSize));
 
 	peer->timeout = newTO;
     }
@@ -6462,7 +6519,7 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 
     if (size != sizeof(struct rx_statistics)) {
 	fprintf(file,
-		"Unexpected size of stats structure: was %d, expected %lud\n",
+		"Unexpected size of stats structure: was %d, expected %" AFS_SIZET_FMT "\n",
 		size, sizeof(struct rx_statistics));
     }
 
@@ -6653,7 +6710,11 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	    }
 	    tv_delta.tv_sec -= tv_now.tv_sec;
 	    
+#ifdef AFS_NT40_ENV
+	    code = select(0, &imask, 0, 0, &tv_delta);
+#else /* AFS_NT40_ENV */
 	    code = select(socket + 1, &imask, 0, 0, &tv_delta);
+#endif /* AFS_NT40_ENV */
 	    if (code == 1 && FD_ISSET(socket, &imask)) {
 		/* now receive a packet */
 		faddrLen = sizeof(struct sockaddr_in);
@@ -8136,20 +8197,31 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
 	return FALSE;
     }
 }
+#endif /* AFS_NT40_ENV */
 
+#ifndef KERNEL
 int rx_DumpCalls(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
-    int zilch;
 #ifdef KDUMP_RX_LOCK
     struct rx_call_rx_lock *c;
 #else
     struct rx_call *c;
 #endif
+#ifdef AFS_NT40_ENV
+    int zilch;
     char output[2048];
+#define RXDPRINTF sprintf
+#define RXDPRINTOUT output
+#else
+#define RXDPRINTF fprintf
+#define RXDPRINTOUT outputFile
+#endif
 
-    sprintf(output, "%s - Start dumping all Rx Calls - count=%u\r\n", cookie, rx_stats.nCallStructs);
+    RXDPRINTF(RXDPRINTOUT, "%s - Start dumping all Rx Calls - count=%u\r\n", cookie, rx_stats.nCallStructs);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 
     for (c = rx_allCallsp; c; c = c->allNextp) {
         u_short rqc, tqc, iovqc;
@@ -8160,7 +8232,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
         queue_Count(&c->tq, p, np, rx_packet, tqc);
         queue_Count(&c->iovq, p, np, rx_packet, iovqc);
 
-        sprintf(output, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
+	RXDPRINTF(RXDPRINTOUT, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
                 "rqc=%u,%u, tqc=%u,%u, iovqc=%u,%u, "
                 "lstatus=%u, rstatus=%u, error=%d, timeout=%u, "
                 "resendEvent=%d, timeoutEvt=%d, keepAliveEvt=%d, delayedAckEvt=%d, delayedAbortEvt=%d, abortCode=%d, abortCount=%d, "
@@ -8188,12 +8260,15 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
                 );
         MUTEX_EXIT(&c->lock);
 
+#ifdef AFS_NT40_ENV
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
     }
-    sprintf(output, "%s - End dumping all Rx Calls\r\n", cookie);
+    RXDPRINTF(RXDPRINTOUT, "%s - End dumping all Rx Calls\r\n", cookie);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 #endif /* RXDEBUG_PACKET */
     return 0;
 }
-#endif /* AFS_NT40_ENV */
-
+#endif

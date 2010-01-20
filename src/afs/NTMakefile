@@ -19,5 +19,5 @@ $(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\unified_afs.h:   unified_afs.et  unifi
    $(COMPILE_ET) unified_afs -h unified_afs
    $(COPY) unified_afs.h $(DESTDIR)\include\afs
 
-install: $(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\afs_stats.h
+install: $(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\afs_stats.h $(INCDIR)\afs\afs_consts.h
 

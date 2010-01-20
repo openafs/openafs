@@ -23,7 +23,7 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_dynroot.h"
-#include "h/smp_lock.h"
+#include <linux/smp_lock.h>
 
 #if !defined(AFS_NONFSTRANS)
 

@@ -46,11 +46,6 @@
   *     -dcache    The number of data cache entries.
   *     -biods     Number of bkg I/O daemons (AIX3.1 only)
   *	-prealloc  Number of preallocated "small" memory blocks
-  *     -pininodes Number of inodes which can be spared from inode[] for 
-  *                pointing at Vfiles.  If this is set too high, you may have
-  *                system problems, which can only be ameliorated by changing
-  *                NINODE (or equivalent) and rebuilding the kernel.
-  *		   This option is now disabled.
   *	-logfile   [OBSOLETE] Place where to put the logfile (default in
   *                <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
@@ -61,6 +56,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
 
 #define VFS 1
 
@@ -138,6 +136,7 @@
 #include <ctype.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 
 #ifdef AFS_SGI61_ENV
 #include <unistd.h>
@@ -312,17 +311,12 @@ static int nBiods = 5;		/* AIX3.1 only */
 static int preallocs = 400;	/* Def # of allocated memory blocks */
 static int enable_peer_stats = 0;	/* enable rx stats */
 static int enable_process_stats = 0;	/* enable rx stats */
-#ifdef AFS_AFSDB_ENV
 static int enable_afsdb = 0;	/* enable AFSDB support */
-#endif
 static int enable_dynroot = 0;	/* enable dynroot support */
 static int enable_fakestat = 0;	/* enable fakestat support */
 static int enable_backuptree = 0;	/* enable backup tree support */
 static int enable_nomount = 0;	/* do not mount */
 static int enable_splitcache = 0;
-#ifdef notdef
-static int inodes = 60;		/* VERY conservative, but has to be */
-#endif
 int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
@@ -619,7 +613,8 @@ ParseCacheInfoFile(void)
 int
 PartSizeOverflow(char *path, int cs)
 {
-    int bsize = -1, totalblks, mint;
+  int bsize = -1;
+  afs_int64 totalblks, mint;
 #if AFS_HAVE_STATVFS
     struct statvfs statbuf;
 
@@ -654,7 +649,7 @@ PartSizeOverflow(char *path, int cs)
     bsize = statbuf.f_bsize;
 #endif
     if (bsize == -1)
-	return 0;		/* sucess */
+	return 0;		/* success */
 
     /* now free and totalblks are in fragment units, but we want them in 1K units */
     if (bsize >= 1024) {
@@ -666,7 +661,7 @@ PartSizeOverflow(char *path, int cs)
     mint = totalblks / 100 * 95;
     if (cs > mint) {
 	printf
-	    ("Cache size (%d) must be less than 95%% of partition size (which is %d). Lower cache size\n",
+	    ("Cache size (%d) must be less than 95%% of partition size (which is %lld). Lower cache size\n",
 	     cs, mint);
 	return 1;
     }
@@ -1430,7 +1425,6 @@ ConfigCellAlias(struct afsconf_cellalias *aca,
     return 0;
 }
 
-#ifdef AFS_AFSDB_ENV
 static void
 AfsdbLookupHandler(void)
 {
@@ -1488,7 +1482,6 @@ AfsdbLookupHandler(void)
 #endif
     exit(1);
 }
-#endif
 
 #ifdef mac2
 #include <sys/ioctl.h>
@@ -1522,7 +1515,9 @@ mainproc(struct cmd_syndesc *as, void *arock)
     static char rn[] = "afsd";	/*Name of this routine */
     afs_int32 code;		/*Result of fork() */
     int i;
+#ifndef AFS_CACHE_VNODE_PATH
     int currVFile;		/*Current AFS cache file number passed in */
+#endif
     int mountFlags;		/*Flags passed to mount() */
     int lookupResult;		/*Result of GetLocalCellName() */
     int cacheIteration;		/*How many times through cache verification */
@@ -1633,12 +1628,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	/* -prealloc */
 	preallocs = atoi(as->parms[16].items->data);
     }
-#ifdef notdef
-    if (as->parms[17].items) {
-	/* -pininodes */
-	inodes = atoi(as->parms[17].items->data);
-    }
-#endif
     strcpy(confDir, AFSDIR_CLIENT_ETC_DIRPATH);
     if (as->parms[17].items) {
 	/* -confdir */
@@ -1677,15 +1666,11 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[23].items) {
 	/* -mem_alloc_sleep */
-	cacheFlags |= AFSCALL_INIT_MEMCACHE_SLEEP;
+	printf("afsd: -mem_alloc_sleep is deprecated -- ignored\n");
     }
     if (as->parms[24].items) {
 	/* -afsdb */
-#ifdef AFS_AFSDB_ENV
 	enable_afsdb = 1;
-#else
-	printf("afsd: No AFSDB support; ignoring -afsdb");
-#endif
     }
     if (as->parms[25].items) {
 	/* -files_per_subdir */
@@ -1774,9 +1759,9 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #endif
 
     /* set -rxmaxmtu */
-    if (as->parms[35].items) {
+    if (as->parms[36].items) {
         /* -rxmaxmtu */
-        rxmaxmtu = atoi(as->parms[35].items->data);
+        rxmaxmtu = atoi(as->parms[36].items->data);
     }
 
     /*
@@ -2074,7 +2059,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-#ifdef AFS_AFSDB_ENV
     if (enable_afsdb) {
 	if (afsd_verbose)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
@@ -2092,7 +2076,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
     }
-#endif
 
     code = call_syscall(AFSOP_BASIC_INIT, 1);
     if (code) {
@@ -2118,9 +2101,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
     cparams.setTimeFlag = cacheSetTime;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-#ifdef notdef
-    cparams.inodes = inodes;
-#endif
     call_syscall(AFSOP_CACHEINIT, &cparams);
 
     /* do it before we init the cache inodes */
@@ -2200,11 +2180,11 @@ mainproc(struct cmd_syndesc *as, void *arock)
     call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
 
     if (rxmaxmtu) {
-    if (afsd_verbose)
-        printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
-    code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
-    if (code)
-        printf("%s: Error seting rxmaxmtu\n", rn);
+	if (afsd_verbose)
+            printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
+	code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+        if (code)
+            printf("%s: Error seting rxmaxmtu\n", rn);
     }
 
     if (enable_dynroot) {
@@ -2442,6 +2422,8 @@ main(int argc, char **argv)
     struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
+
+    /* 0 - 10 */
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
 		"1024 byte blocks in cache");
     cmd_AddParm(ts, "-files", CMD_SINGLE, CMD_OPTIONAL, "files in cache");
@@ -2460,6 +2442,8 @@ main(int argc, char **argv)
 		"display lots of information");
     cmd_AddParm(ts, "-rmtsys", CMD_FLAG, CMD_OPTIONAL,
 		"start NFS rmtsysd program");
+
+    /* 11 - 20 */
     cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL, "display debug info");
     cmd_AddParm(ts, "-chunksize", CMD_SINGLE, CMD_OPTIONAL,
 		"log(2) of chunk size");
@@ -2469,13 +2453,8 @@ main(int argc, char **argv)
 		"number of volume entries");
     cmd_AddParm(ts, "-biods", CMD_SINGLE, CMD_OPTIONAL,
 		"number of bkg I/O daemons (aix vm)");
-
     cmd_AddParm(ts, "-prealloc", CMD_SINGLE, CMD_OPTIONAL,
 		"number of 'small' preallocated blocks");
-#ifdef notdef
-    cmd_AddParm(ts, "-pininodes", CMD_SINGLE, CMD_OPTIONAL,
-		"number of inodes to hog");
-#endif
     cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
 		"configuration directory");
     cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
@@ -2484,6 +2463,7 @@ main(int argc, char **argv)
 		"make close calls synchronous");
     cmd_AddParm(ts, "-shutdown", CMD_FLAG, CMD_OPTIONAL,
 		"Shutdown all afs state");
+    /* 21 - 30 */
     cmd_AddParm(ts, "-enable_peer_stats", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
 		"Collect rpc statistics by peer");
     cmd_AddParm(ts, "-enable_process_stats", CMD_FLAG,
@@ -2491,11 +2471,8 @@ main(int argc, char **argv)
 		"Collect rpc statistics for this process");
     cmd_AddParm(ts, "-mem_alloc_sleep", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE),
 		"Allow sleeps when allocating memory cache");
-    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL
-#ifndef AFS_AFSDB_ENV
-					 | CMD_HIDE
-#endif
-		), "Enable AFSDB support");
+    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL),
+		"Enable AFSDB support");
     cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL,
 		"log(2) of the number of cache files per cache subdirectory");
     cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL,
@@ -2507,6 +2484,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
+    /* 31 - 40 */
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"Bind the Rx socket (one interface only)");
     cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL, "set the time");
@@ -2614,10 +2592,9 @@ HandleMTab(void)
 }
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
-
 int
 call_syscall(long param1, long param2, long param3, long param4, long param5, 
-	     long param6, long  param7)
+	     long param6, long param7)
 {
     int error;
 #ifdef AFS_LINUX20_ENV
@@ -2645,22 +2622,51 @@ call_syscall(long param1, long param2, long param3, long param4, long param5,
 #endif
 #ifdef AFS_DARWIN80_ENV
     struct afssysargs syscall_data;
+    void *ioctldata;
     int fd = open(SYSCALL_DEV_FNAME,O_RDWR);
-    syscall_data.syscall = AFSCALL_CALL;
-    syscall_data.param1 = param1;
-    syscall_data.param2 = param2;
-    syscall_data.param3 = param3;
-    syscall_data.param4 = param4;
-    syscall_data.param5 = param5;
-    syscall_data.param6 = param6;
-    if(fd >= 0) {
-       error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
-       close(fd);
+    int syscallnum;
+#ifdef AFS_DARWIN100_ENV
+    int is64 = 0;
+    struct afssysargs64 syscall64_data;
+    if (sizeof(param1) == 8) {
+	syscallnum = VIOC_SYSCALL64;
+	is64 = 1;
+	ioctldata = &syscall64_data;
+	syscall64_data.syscall = (int)AFSCALL_CALL;
+	syscall64_data.param1 = param1;
+	syscall64_data.param2 = param2;
+	syscall64_data.param3 = param3;
+	syscall64_data.param4 = param4;
+	syscall64_data.param5 = param5;
+	syscall64_data.param6 = param6;
     } else {
-       error = -1;
+#endif
+	syscallnum = VIOC_SYSCALL;
+	ioctldata = &syscall_data;
+	syscall_data.syscall = AFSCALL_CALL;
+	syscall_data.param1 = param1;
+	syscall_data.param2 = param2;
+	syscall_data.param3 = param3;
+	syscall_data.param4 = param4;
+	syscall_data.param5 = param5;
+	syscall_data.param6 = param6;
+#ifdef AFS_DARWIN100_ENV
     }
-    if (!error)
-      error=syscall_data.retval;
+#endif
+    if(fd >= 0) {
+	error = ioctl(fd, syscallnum, ioctldata);
+	close(fd);
+    } else {
+	error = -1;
+    }
+    if (!error) {
+#ifdef AFS_DARWIN100_ENV
+	if (is64)
+	    error=syscall64_data.retval;
+	else
+#endif
+	    error=syscall_data.retval;
+    }
 #else
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,

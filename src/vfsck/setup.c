@@ -739,7 +739,7 @@ readsb(listerr)
 	if (memcmp
 	    ((char *)&sblock.fs_blank[0], (char *)&altsblock.fs_blank[0],
 	     MAXCSBUFS * sizeof(int))) {
-	    memset((char *)sblock.fs_blank, 0, sizeof(sblock.fs_blank));
+	    memset(sblock.fs_blank, 0, sizeof(sblock.fs_blank));
 	} else {
 #endif /* __alpha */
 	    badsb(listerr,

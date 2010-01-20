@@ -13,7 +13,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../../kauth -I${srcdir}/../../kauth
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 KAUTH= ${srcdir}/../../kauth
@@ -52,7 +52,8 @@ libkasadmin.a: ${LIBOBJS}
 	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
-afs_kasAdmin.o: afs_kasAdmin.h
+afs_kasAdmin.o: afs_kasAdmin.c afs_kasAdmin.h
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 kauth.cs.o: ../../kauth/kauth.cs.c
 	${CCRULE}

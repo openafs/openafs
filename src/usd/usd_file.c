@@ -23,7 +23,7 @@
 #ifdef AFS_DARWIN_ENV
 #include <sys/ioccom.h>
 #endif
-#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
+#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV) || (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN100_ENV))
 #include <sys/ioctl.h>
 #endif
 #ifndef AFS_DARWIN100_ENV
@@ -77,7 +77,7 @@ static int
 usd_FileRead(usd_handle_t usd, char *buf, afs_uint32 nbytes,
 	     afs_uint32 * xferdP)
 {
-    int fd = (int)(usd->handle);
+    int fd = (intptr_t)(usd->handle);
     int got;
 
     got = read(fd, buf, nbytes);
@@ -95,7 +95,7 @@ static int
 usd_FileWrite(usd_handle_t usd, char *buf, afs_uint32 nbytes,
 	      afs_uint32 * xferdP)
 {
-    int fd = (int)(usd->handle);
+    int fd = (intptr_t)(usd->handle);
     int sent;
 
     sent = write(fd, buf, nbytes);
@@ -115,7 +115,7 @@ static int
 usd_FileSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
 	     afs_hyper_t * curOffP)
 {
-    int fd = (int)(usd->handle);
+    int fd = (intptr_t)(usd->handle);
     osi_lloff_t lloff;
 
     if (!osi_hFitsInOff(reqOff, lloff))
@@ -134,7 +134,7 @@ usd_FileSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
 static int
 usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 {
-    int fd = (int)(usd->handle);
+    int fd = (intptr_t)(usd->handle);
 #ifdef O_LARGEFILE
     struct stat64 info;
 #else /* O_LARGEFILE */
@@ -290,7 +290,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 static int
 usd_FileClose(usd_handle_t usd)
 {
-    int fd = (int)(usd->handle);
+    int fd = (intptr_t)(usd->handle);
     int code = 0;
     int ccode;
 
@@ -351,7 +351,7 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
 
     usd = (usd_handle_t) malloc(sizeof(*usd));
     memset(usd, 0, sizeof(*usd));
-    usd->handle = (void *)fd;
+    usd->handle = (void *)(intptr_t)fd;
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;
     usd->seek = usd_FileSeek;

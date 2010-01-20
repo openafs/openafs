@@ -134,17 +134,10 @@ typedef afs_int32 afs_size_t;
 typedef afs_uint32 afs_offs_t;
 #endif /* AFS_64BIT_CLIENT */
 
-#ifdef AFS_LARGEFILE_ENV
 typedef afs_int64 afs_foff_t;
 typedef afs_uint64 afs_fsize_t;
 typedef afs_int64 afs_sfsize_t;
 #define SplitOffsetOrSize(t,h,l) SplitInt64(t,h,l)
-#else /* !AFS_LARGEFILE_ENV */
-typedef afs_int32 afs_foff_t;
-typedef afs_uint32 afs_fsize_t;
-typedef afs_int32 afs_sfsize_t;
-#define SplitOffsetOrSize(t,h,l) (h) = 0; (l) = (t);
-#endif /* !AFS_LARGEFILE_ENV */
 
 /* Maximum integer sizes.  Also what is expected by %lld, %llu in
  * afs_snprintf. */
@@ -282,14 +275,20 @@ typedef struct afsUUID afsUUID;
  * windows use a different format string
  */
 #ifdef AFS_NT40_ENV
-#define AFS_INT64_FMT "I64d"
-#define AFS_PTR_FMT   "Ip"
-#define AFS_SIZET_FMT "Iu"
+# define AFS_INT64_FMT "I64d"
+# define AFS_UINT64_FMT "I64u"
+# define AFS_PTR_FMT   "p"
+# define AFS_SIZET_FMT "Iu"
 #else
-#define AFS_INT64_FMT "lld"
-#define AFS_PTR_FMT   "p"
-#define AFS_SIZET_FMT "u"
-#endif
+# define AFS_INT64_FMT "lld"
+# define AFS_UINT64_FMT "llu"
+# define AFS_PTR_FMT   "p"
+# ifdef PRINTF_TAKES_Z_LEN
+#  define AFS_SIZET_FMT "zu"
+# else
+#  define AFS_SIZET_FMT "lu"
+# endif /* PRINTF_TAKES_Z_LEN */
+#endif /* AFS_NT40_ENV */
 
 /* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
  * printf statemements with %ld and %lu
@@ -298,8 +297,10 @@ typedef struct afsUUID afsUUID;
 #define static_inline __inline static
 #define hdr_static_inline(x) __inline static x
 #elif defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV)
-#define static_inline static __inline
-#define hdr_static_inline(x) static __inline x
+/* The HPUX compiler can segfault on 'static __inline', so fall back to
+ * just 'static' so we can at least compile */
+#define static_inline static
+#define hdr_static_inline(x) static x
 #elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
 #define static_inline static
 #define hdr_static_inline(x) static x
@@ -314,5 +315,21 @@ typedef struct afsUUID afsUUID;
 hdr_static_inline(long) afs_printable_int32_ld(afs_int32 d) { return (long) d; }
 
 hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return (unsigned long) d; }
+
+#ifdef AFS_64BITUSERPOINTER_ENV
+#define afs_pointer_to_int(p)      ((afs_uint32)  (afs_uint64) (p))
+#define afs_int_to_pointer(i)     ((void *) (afs_uint64) (i))
+#else
+#define afs_pointer_to_int(p)      ((afs_uint32)   (p))
+#define afs_int_to_pointer(i)      ((void *)  (i))
+#endif
+
+#if !defined(__GNUC__) || __GNUC__ < 2
+#define AFS_UNUSED
+#define AFS_ATTRIBUTE_FORMAT(style,x,y)
+#else
+#define AFS_UNUSED __attribute__((unused))
+#define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
+#endif
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

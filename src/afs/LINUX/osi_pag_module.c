@@ -17,23 +17,18 @@
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "h/unistd.h"		/* For syscall numbers. */
-#include "h/mm.h"
+#include <linux/unistd.h>		/* For syscall numbers. */
+#include <linux/mm.h>
 
 #ifdef AFS_AMD64_LINUX20_ENV
 #include <asm/ia32_unistd.h>
 #endif
-#ifdef AFS_SPARC64_LINUX20_ENV
-#include <linux/ioctl32.h>
-#endif
 
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
 #include <linux/sched.h>
 #include <linux/kernel.h>
-#endif
 
 static unsigned long nfs_server_addr = 0;
 #if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
@@ -51,27 +46,18 @@ MODULE_PARM(this_cell, "s");
 #endif
 MODULE_PARM_DESC(this_cell, "Local cell name");
 
-#if defined(AFS_LINUX24_ENV)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 DEFINE_MUTEX(afs_global_lock);
 #else
 DECLARE_MUTEX(afs_global_lock);
 #endif
 struct proc_dir_entry *openafs_procfs;
-#else
-struct semaphore afs_global_lock = MUTEX;
-#endif
 int afs_global_owner = 0;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 int __init
 afspag_init(void)
-#else
-int
-init_module(void)
-#endif
 {
-#if !defined(EXPORTED_PROC_ROOT_FS) && defined(AFS_LINUX24_ENV)
+#if !defined(EXPORTED_PROC_ROOT_FS)
     char path[64];
 #endif
     int err;
@@ -81,7 +67,6 @@ init_module(void)
     err = osi_syscall_init();
     if (err)
 	return err;
-#ifdef AFS_LINUX24_ENV
 #if defined(EXPORTED_PROC_ROOT_FS)
     openafs_procfs = proc_mkdir(PROC_FSDIRNAME, proc_root_fs);
 #else
@@ -89,7 +74,6 @@ init_module(void)
     openafs_procfs = proc_mkdir(path, NULL);
 #endif
     osi_ioctl_init();
-#endif
 
     afspag_Init(htonl(nfs_server_addr));
     if (this_cell)
@@ -98,22 +82,16 @@ init_module(void)
     return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 void __exit
 afspag_cleanup(void)
-#else
-void
-cleanup_module(void)
-#endif
 {
-#if !defined(EXPORTED_PROC_ROOT_FS) && defined(AFS_LINUX24_ENV)
+#if !defined(EXPORTED_PROC_ROOT_FS)
     char path[64];
 #endif
     osi_syscall_clean();
 
     osi_linux_free_afs_memory();
 
-#ifdef AFS_LINUX24_ENV
     osi_ioctl_clean();
 #if defined(EXPORTED_PROC_ROOT_FS)
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
@@ -121,24 +99,20 @@ cleanup_module(void)
     sprintf(path, "fs/%s", PROC_FSDIRNAME);
     remove_proc_entry(path, NULL);
 #endif
-#endif
     return;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 module_init(afspag_init);
 module_exit(afspag_cleanup);
-#endif
 
-#ifdef AFS_LINUX26_ENV
 /* Hack alert!
  * These will never be called in the standalone PAG manager, because
  * they are only referenced in afs_InitReq, and nothing calls that.
  * However, we need to define them in order to resolve the reference,
  * unless we want to move afs_InitReq out of afs_osi_pag.c.
  */
-int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr, int *code)
+int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr, int *code)
 {
     *code = EACCES;
     return 1;
@@ -146,10 +120,9 @@ int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr, int *code)
 
 int
 afs_nfsclient_reqhandler(struct afs_exporter *exporter,
-			 struct AFS_UCRED **cred,
+			 afs_ucred_t **cred,
 			 afs_int32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
     return EINVAL;
 }
-#endif

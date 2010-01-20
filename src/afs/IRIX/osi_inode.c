@@ -410,7 +410,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 	    }
 	} else
 	    createdDir = 1;
-	memset((char *)&dattr, 0, sizeof(dattr));
+	memset(&dattr, 0, sizeof(dattr));
 	dattr.atd_version = AFS_XFS_ATD_VERS;
 	dattr.atd_volume = rw_vno;
 	AFS_VOP_ATTR_SET(dvp, AFS_XFS_DATTR, (char *)&dattr,
@@ -432,7 +432,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 	return code;
     }
 
-    memset((char *)&attrs, 0, sizeof(attrs));
+    memset(&attrs, 0, sizeof(attrs));
     attrs.at_pino = vattr.va_nodeid;
     VN_RELE(dvp);
 
@@ -1105,7 +1105,7 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo, int datap,
     }
 
     if (!code) {
-	memset((char *)&data, 0, sizeof(data));
+	memset(&data, 0, sizeof(data));
 	data.ili_info.inodeNumber = inode;
 	data.ili_info.byteCount = vattr.va_size;
 	data.ili_info.linkCount = (vattr.va_mode & AFS_XFS_MODE_LINK_MASK);

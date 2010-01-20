@@ -48,7 +48,7 @@
 
 #ifndef	NeXT
 
-#ifdef	KERNEL
+#if defined(KERNEL) && !defined(UKERNEL)
 #include <sys/param.h>
 #ifndef AFS_LINUX20_ENV
 #include <sys/systm.h>
@@ -119,10 +119,10 @@ xdr_u_int(XDR * xdrs, u_int * uip)
 
     case XDR_ENCODE:
 	l = (afs_uint32) * uip;
-	return (XDR_PUTINT32(xdrs, &l));
+	return (XDR_PUTINT32(xdrs, (afs_int32 *) &l));
 
     case XDR_DECODE:
-	if (!XDR_GETINT32(xdrs, &l)) {
+	if (!XDR_GETINT32(xdrs, (afs_int32 *) &l)) {
 	    return (FALSE);
 	}
 	*uip = (u_int) l;
@@ -174,10 +174,10 @@ xdr_u_long(XDR * xdrs, u_long * ulp)
 
     case XDR_ENCODE:
 	l = (afs_uint32) * ulp;
-	return (XDR_PUTINT32(xdrs, &l));
+	return (XDR_PUTINT32(xdrs, (afs_int32 *)&l));
 
     case XDR_DECODE:
-	if (!XDR_GETINT32(xdrs, &l)) {
+	if (!XDR_GETINT32(xdrs, (afs_int32 *)&l)) {
 	    return (FALSE);
 	}
 	*ulp = (u_long) l;
@@ -229,10 +229,10 @@ xdr_u_char(XDR * xdrs, u_char * usp)
 
     case XDR_ENCODE:
 	l = (afs_uint32) * usp;
-	return (XDR_PUTINT32(xdrs, &l));
+	return (XDR_PUTINT32(xdrs, (afs_int32 *)&l));
 
     case XDR_DECODE:
-	if (!XDR_GETINT32(xdrs, &l)) {
+	if (!XDR_GETINT32(xdrs, (afs_int32 *)&l)) {
 	    return (FALSE);
 	}
 	*usp = (u_char) l;
@@ -284,10 +284,10 @@ xdr_u_short(XDR * xdrs, u_short * usp)
 
     case XDR_ENCODE:
 	l = (afs_uint32) * usp;
-	return (XDR_PUTINT32(xdrs, &l));
+	return (XDR_PUTINT32(xdrs, (afs_int32 *)&l));
 
     case XDR_DECODE:
-	if (!XDR_GETINT32(xdrs, &l)) {
+	if (!XDR_GETINT32(xdrs, (afs_int32 *)&l)) {
 	    return (FALSE);
 	}
 	*usp = (u_short) l;
@@ -582,7 +582,13 @@ xdr_wrapstring(XDR * xdrs, char **cpp)
 }
 #endif
 
-void 
+void *
+xdr_alloc(afs_int32 size)
+{
+    return osi_alloc(size);
+}
+
+void
 xdr_free(void *x, afs_int32 size)
 {
     osi_free(x, size);

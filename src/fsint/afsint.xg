@@ -35,8 +35,6 @@ customized struct AFSAccessList {
     char *SeqBody;
 };
 
-typedef AFSFid ViceFid;
-
 typedef afs_int32 ViceDataType;
 
 %#define Invalid 0

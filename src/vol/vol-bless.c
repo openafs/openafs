@@ -32,6 +32,8 @@ handleit(struct cmd_syndesc *as, void *arock)
     Error ec;
     int bless, unbless, nofssync;
     int volumeId;
+    VolumePackageOptions opts;
+    ProgramType pt;
 
     volumeId = atoi(as->parms[0].items->data);
     bless    = !!(as->parms[1].items);
@@ -43,7 +45,16 @@ handleit(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    if (VInitVolumePackage(nofssync ? salvager : volumeUtility, 5, 5, 1, 0)) {
+    if (nofssync) {
+	pt = salvager;
+    } else {
+	pt = volumeUtility;
+    }
+
+    VOptDefaults(pt, &opts);
+    opts.canUseFSSYNC = !nofssync;
+
+    if (VInitVolumePackage2(pt, &opts)) {
 	fprintf(stderr,"Unable to initialize volume package\n");
 	exit(1);
     }

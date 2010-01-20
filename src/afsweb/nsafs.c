@@ -305,8 +305,8 @@ nsafs_set_id_from_ints(int viceid, int group0, int group1)
 
     u.u_viceid = viceid;
     crp = u.u_cred;
-    crp->cr_uid = viceid;
-    crp->cr_ruid = viceid;
+    set_cr_uid(crp, viceid);
+    set_cr_ruid(crp, viceid);
     crp->cr_suid = viceid;
     crp->cr_groups[0] = group0;
     crp->cr_groups[1] = group1;
@@ -331,8 +331,8 @@ nsafs_set_id_from_strings(char *viceid, char *group0, char *group1)
     } else {
 	u.u_viceid = getuid();
 	crp = u.u_cred;
-	crp->cr_uid = getuid();
-	crp->cr_ruid = getuid();
+	set_cr_uid(crp, getuid());
+	set_cr_ruid(crp, getuid());
 	crp->cr_suid = getuid();
 	crp->cr_groups[0] = getgid();
 	crp->cr_ngroups = 1;

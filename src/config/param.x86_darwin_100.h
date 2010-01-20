@@ -16,7 +16,10 @@
 #error Unsupported architecture
 #endif
 #define AFS_VFSINCL_ENV		1
-
+#ifdef __amd64__
+#define AFS_64BITUSERPOINTER_ENV 1
+#endif
+#define AFS_64BIT_SIZEOF 1 /* seriously? */
 #include <afs/afs_sysnames.h>
 
 #define AFS_DARWIN_ENV
@@ -27,11 +30,13 @@
 #define AFS_DARWIN80_ENV
 #define AFS_DARWIN90_ENV
 #define AFS_DARWIN100_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define AFS_NAMEI_ENV 1
 #define DARWIN_REFBASE 3
 #define AFS_CACHE_VNODE_PATH
+#define NEED_IOCTL32 
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
@@ -142,6 +147,9 @@
 #else
 #error Unsupported architecture
 #endif
+#ifdef __amd64__
+#define AFS_64BITUSERPOINTER_ENV 1
+#endif
 
 #include <afs/afs_sysnames.h>
 #define AFS_USERSPACE_ENV
@@ -153,6 +161,7 @@
 #define AFS_USR_DARWIN80_ENV
 #define AFS_USR_DARWIN90_ENV
 #define AFS_USR_DARWIN100_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define DARWIN_REFBASE 0

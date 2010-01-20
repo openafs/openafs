@@ -32,7 +32,7 @@ extern int afs_WriteVCacheDiscon(register struct vcache *avc,
 					register struct AFSStoreStatus *astatus,
 					struct vattr *attrs);
 extern int afs_ResyncDisconFiles(struct vrequest *areq,
-					struct AFS_UCRED *acred);
+					afs_ucred_t *acred);
 extern void afs_RemoveAllConns(void);
 extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, 
 			   int lock);
@@ -52,7 +52,7 @@ extern void afs_UpdateStatus(struct vcache *avc,
 					struct AFSFetchStatus *Outsp,
 					struct AFSCallBack *acb,
 					afs_uint32 start);
-extern void afs_DisconDiscardAll(struct AFS_UCRED *);
+extern void afs_DisconDiscardAll(afs_ucred_t *);
 
 #define AFS_IS_DISCONNECTED (afs_is_disconnected)
 #define AFS_IS_DISCON_RW (afs_is_discon_rw)

@@ -28,7 +28,7 @@
 void
 afs_osi_TraverseProcTable(void)
 {
-    struct proc *prp;
+    afs_proc_t *prp;
     for (prp = practive; prp != NULL; prp = prp->p_next) {
 	afs_GCPAGs_perproc_func(prp);
     }
@@ -99,7 +99,7 @@ SGI_ProcScanFunc(void *p, void *arg, int mode)
 static int
 SGI_ProcScanFunc(proc_t * p, void *arg, int mode)
 {
-    afs_int32(*perproc_func) (struct proc *) = arg;
+    afs_int32(*perproc_func) (afs_proc_t *) = arg;
     int code = 0;
     /* we pass in the function pointer for arg,
      * mode ==0 for startup call, ==1 for each valid proc,
@@ -126,7 +126,7 @@ afs_osi_TraverseProcTable(void)
 void
 afs_osi_TraverseProcTable(void)
 {
-    struct proc *p;
+    afs_proc_t *p;
     int i;
 
     /*
@@ -140,8 +140,8 @@ afs_osi_TraverseProcTable(void)
 #ifndef AFS_AIX51_ENV
     simple_lock(&proc_tbl_lock);
 #endif
-    for (p = (struct proc *)v.vb_proc, i = 0; p < max_proc;
-	 p = (struct proc *)((char *)p + afs_gcpags_procsize), i++) {
+    for (p = (afs_proc_t *)v.vb_proc, i = 0; p < max_proc;
+	 p = (afs_proc_t *)((char *)p + afs_gcpags_procsize), i++) {
 
 #ifdef AFS_AIX51_ENV
 	if (p->p_pvprocp->pv_stat == SNONE)
@@ -181,36 +181,11 @@ afs_osi_TraverseProcTable(void)
 }
 #endif
 
-#if defined(AFS_OSF_ENV)
-
-#ifdef AFS_DUX50_ENV
-extern struct pid_entry *pidtab;
-extern int npid; 
-#endif
-
-void
-afs_osi_TraverseProcTable(void)
-{
-    struct pid_entry *pe;
-#ifdef AFS_DUX50_ENV
-#define pidNPID (pidtab + npid)
-#define PID_LOCK()
-#define PID_UNLOCK()
-#endif
-    PID_LOCK();
-    for (pe = pidtab; pe < pidNPID; ++pe) {
-	if (pe->pe_proc != PROC_NULL)
-	    afs_GCPAGs_perproc_func(pe->pe_proc);
-    }
-    PID_UNLOCK();
-}
-#endif
-
 #if (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)) || defined(AFS_FBSD_ENV)
 void
 afs_osi_TraverseProcTable(void)
 {
-    struct proc *p;
+    afs_proc_t *p;
     LIST_FOREACH(p, &allproc, p_list) {
 	if (p->p_stat == SIDL)
 	    continue;
@@ -282,19 +257,19 @@ afs_osi_TraverseProcTable()
 #endif
 
 /* return a pointer (sometimes a static copy ) to the cred for a
- * given AFS_PROC.
+ * given afs_proc_t.
  * subsequent calls may overwrite the previously returned value.
  */
 
 #if defined(AFS_SGI65_ENV)
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * p)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * p)
 {
     return NULL;
 }
 #elif defined(AFS_HPUX_ENV)
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * p)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * p)
 {
     if (!p)
 	return;
@@ -318,10 +293,10 @@ afs_osi_proc2cred(AFS_PROC * p)
  * around calls to this function.
  */
 
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pproc)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pproc)
 {
-    struct AFS_UCRED *pcred = 0;
+    afs_ucred_t *pcred = 0;
 
     /*
      * pointer to process user structure valid in *our*
@@ -416,7 +391,7 @@ afs_osi_proc2cred(AFS_PROC * pproc)
     /* simple_unlock(&proc_tbl_lock); */
     if (xm == XMEM_SUCC) {
 
-	static struct AFS_UCRED cred;
+	static afs_ucred_t cred;
 
 	/*
 	 * What locking should we use to protect access to the user
@@ -436,28 +411,12 @@ afs_osi_proc2cred(AFS_PROC * pproc)
     return pcred;
 }
 
-#elif defined(AFS_OSF_ENV)
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
-{
-    struct AFS_UCRED *rv = NULL;
-
-    if (pr == NULL) {
-	return NULL;
-    }
-
-    if ((pr->p_stat == SSLEEP) || (pr->p_stat == SRUN)
-	|| (pr->p_stat == SSTOP))
-	rv = pr->p_rcred;
-
-    return rv;
-}
 #elif defined(AFS_DARWIN80_ENV) 
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    struct AFS_UCRED *rv = NULL;
-    static struct AFS_UCRED cr;
+    afs_ucred_t *rv = NULL;
+    static afs_ucred_t cr;
     struct ucred *pcred;
 
     if (pr == NULL) {
@@ -465,18 +424,18 @@ afs_osi_proc2cred(AFS_PROC * pr)
     }
     pcred = proc_ucred(pr);
     cr.cr_ref = 1;
-    cr.cr_uid = pcred->cr_uid;
+    afs_set_cr_uid(&cr, afs_cr_uid(pcred));
     cr.cr_ngroups = pcred->cr_ngroups;
     memcpy(cr.cr_groups, pcred->cr_groups,
            NGROUPS * sizeof(gid_t));
     return &cr;
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    struct AFS_UCRED *rv = NULL;
-    static struct AFS_UCRED cr;
+    afs_ucred_t *rv = NULL;
+    static afs_ucred_t cr;
 
     if (pr == NULL) {
 	return NULL;
@@ -486,7 +445,7 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	|| (pr->p_stat == SSTOP)) {
 	pcred_readlock(pr);
 	cr.cr_ref = 1;
-	cr.cr_uid = pr->p_cred->pc_ucred->cr_uid;
+	afs_set_cr_uid(&cr, afs_cr_uid(pr->p_cred->pc_ucred));
 	cr.cr_ngroups = pr->p_cred->pc_ucred->cr_ngroups;
 	memcpy(cr.cr_groups, pr->p_cred->pc_ucred->cr_groups,
 	       NGROUPS * sizeof(gid_t));
@@ -498,11 +457,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
 }
 #elif defined(AFS_LINUX22_ENV)
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    struct AFS_UCRED *rv = NULL;
-    static struct AFS_UCRED cr;
+    afs_ucred_t *rv = NULL;
+    static afs_ucred_t cr;
 
     if (pr == NULL) {
 	return NULL;
@@ -511,15 +470,18 @@ afs_osi_proc2cred(AFS_PROC * pr)
     if ((pr->state == TASK_RUNNING) || (pr->state == TASK_INTERRUPTIBLE)
 	|| (pr->state == TASK_UNINTERRUPTIBLE)
 	|| (pr->state == TASK_STOPPED)) {
-	cr.cr_ref = 1;
-	cr.cr_uid = task_uid(pr);
+	/* This is dangerous. If anyone ever crfree's the cred that's
+	 * returned from here, we'll go boom, because it's statically
+	 * allocated. */
+	atomic_set(&cr.cr_ref, 1);
+	afs_set_cr_uid(&cr, task_uid(pr));
 #if defined(AFS_LINUX26_ENV)
 #if defined(STRUCT_TASK_HAS_CRED)
 	get_group_info(pr->cred->group_info);
-	cr.cr_group_info = pr->cred->group_info;
+	set_cr_group_info(&cr, pr->cred->group_info);
 #else
 	get_group_info(pr->group_info);
-	cr.cr_group_info = pr->group_info;
+	set_cr_group_info(&cr, pr->group_info);
 #endif
 #else
 	cr.cr_ngroups = pr->ngroups;
@@ -532,10 +494,10 @@ afs_osi_proc2cred(AFS_PROC * pr)
 }
 #endif
 #else
-const struct AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    struct AFS_UCRED *rv = NULL;
+    afs_ucred_t *rv = NULL;
 
     if (pr == NULL) {
 	return NULL;

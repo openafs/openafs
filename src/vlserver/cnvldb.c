@@ -27,7 +27,6 @@
 #include "vlserver.h"
 #include "cnvldb.h"		/* CHANGEME! */
 
-#define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 #define	BADSERVERID	255	/* XXX */
 
 
@@ -110,7 +109,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     read(old, &fromv, sizeof(int));
     fromv = ntohl(fromv);
     if ((fromv < 1) || (fromv > 4)) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Unrecognized VLDB version %d.\n", fromv);
 	exit(-1);
     }
@@ -167,9 +166,9 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     if ((fromvers < 1) || (fromvers > 4)) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": VLDB version %d is not supported.\n", fromvers);
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Only versions 1-4 are currently supported.\n");
 	exit(-1);
     }
@@ -178,15 +177,15 @@ handleit(struct cmd_syndesc *as, void *arock)
 	tovers = fromvers + 1;
 
     if (tovers < 1 || tovers > 4) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": VLDB version %d is not supported.\n", tovers);
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Only versions 1 - 4 are currently supported.\n");
 	exit(-1);
     }
 
     if (mhaddr && (tovers < 3)) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Cannot convert. VLDB contains multihome info.\n");
 	exit(-1);
     }
@@ -334,7 +333,7 @@ printentry(int version, void *addr)
 
 	if (vl3p->flags == VLFREE)
 	    return;
-	printf("%s\tPos=%lu NextIdHash=[%d:%d:%d] NextNameHash=%d\n",
+	printf("%s\tPos=%" AFS_SIZET_FMT " NextIdHash=[%d:%d:%d] NextNameHash=%d\n",
 	       vl3p->name, (oldpos - sizeof(struct vlentry_3)),
 	       vl3p->nextIdHash[0], vl3p->nextIdHash[1], vl3p->nextIdHash[2],
 	       vl3p->nextNameHash);
@@ -824,7 +823,7 @@ convert_vlentry(int new, int fromvers, int tovers,
 	struct vlentry_2 vl;
 	struct vlentry_3 *xnvlentry = (struct vlentry_3 *)vlentryp;
 
-	memset((char *)&vl, 0, sizeof(struct vlentry_2));
+	memset(&vl, 0, sizeof(struct vlentry_2));
 	vl.volumeId[0] = xnvlentry->volumeId[0];
 	vl.volumeId[1] = xnvlentry->volumeId[1];
 	vl.volumeId[2] = xnvlentry->volumeId[2];
@@ -859,7 +858,7 @@ convert_vlentry(int new, int fromvers, int tovers,
 	     1 ? sizeof(struct vlheader_1) : sizeof(struct vlheader_2))
 	    - (fromvers ==
 	       1 ? sizeof(struct vlheader_1) : sizeof(struct vlheader_2));
-	memset((char *)&vl, 0, sizeof(struct vlentry_1));
+	memset(&vl, 0, sizeof(struct vlentry_1));
 	vl.volumeId[0] = xnvlentry->volumeId[0];
 	vl.volumeId[1] = xnvlentry->volumeId[1];
 	vl.volumeId[2] = xnvlentry->volumeId[2];

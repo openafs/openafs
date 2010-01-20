@@ -10,7 +10,8 @@ backup_dump - Creates a dump (dumps a volume set at a particular dump level)
 B<backup dump> S<<< [B<-volumeset> <I<volume set name>>] >>>
     S<<< [B<-dump> <I<dump level name>>] >>> 
     S<<< [B<-portoffset> <I<TC port offset>>] >>>
-    S<<< [B<-at> <I<date/time to start dump>>+] >>> [B<-append>] [B<-n>]
+    S<<< [B<-at> <I<date/time to start dump>>+] >>>
+    [B<-append>] [B<-n>]
     S<<< [B<-file> <I<load file>>] >>> [B<-localauth>] 
     S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 

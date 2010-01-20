@@ -137,6 +137,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_pioctl.o \
 	$(UOBJ)/osi_vfsops.o \
 	$(UOBJ)/afs_usrops.o \
+	$(UOBJ)/xdr.o \
 	$(UOBJ)/xdr_afsuuid.o \
 	$(UOBJ)/afs_uuid.o \
 	$(UOBJ)/assert.o \
@@ -266,6 +267,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_pioctl.o \
 	$(WEBOBJ)/osi_vfsops.o \
 	$(WEBOBJ)/afs_usrops.o \
+	$(WEBOBJ)/xdr.o \
 	$(WEBOBJ)/xdr_afsuuid.o \
 	$(WEBOBJ)/afs_uuid.o \
 	$(WEBOBJ)/assert.o \
@@ -521,6 +523,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_pioctl.o \
 	$(JUAFS)/osi_vfsops.o \
 	$(JUAFS)/afs_usrops.o \
+	$(JUAFS)/xdr.o \
 	$(JUAFS)/xdr_afsuuid.o \
 	$(JUAFS)/afs_uuid.o \
 	$(JUAFS)/assert.o \
@@ -736,7 +739,7 @@ $(UOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(UOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE1)
 $(UOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 $(UOBJ)/xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
 	$(CRULE1)
 $(UOBJ)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
@@ -748,6 +751,8 @@ $(UOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 $(UOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
 $(UOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE1)
+$(UOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULE1)
 $(UOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 	$(CRULE1)
@@ -782,11 +787,11 @@ $(UOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
 $(UOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULE1) -DAFS_NONFSTRANS
+	$(CRULE1) @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
 $(UOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 $(UOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
 	$(CRULE1)
 $(UOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
@@ -1001,7 +1006,7 @@ $(WEBOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(WEBOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE2)
 $(WEBOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE2)
+	$(CRULE2) @CFLAGS_NOERROR@
 $(WEBOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE2)
 $(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
@@ -1009,6 +1014,8 @@ $(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 $(WEBOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
 $(WEBOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE2)
+$(WEBOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULE2)
 $(WEBOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 	$(CRULE2)
@@ -1043,13 +1050,13 @@ $(WEBOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
 $(WEBOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE2) -DAFS_NONFSTRANS
 $(WEBOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULE2) -DAFS_NONFSTRANS
+	$(CRULE2) @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
 $(WEBOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE2) -DAFS_NONFSTRANS
 $(WEBOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULE2)
+	$(CRULE2) @CFLAGS_NOERROR@
 $(WEBOBJ)/ktc.krb.o:	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULE2) -DAFS_KERBEROS_ENV -DMAYBE_NO_KTC 
+	$(CRULE2) -DAFS_KERBEROS_ENV -DMAYBE_NO_KTC @CFLAGS_NOERROR@
 	mv ktc.o ktc.krb.o
 $(WEBOBJ)/securehash.o: $(TOP_SRCDIR)/afsweb/securehash.c
 	$(CRULE2)
@@ -1270,7 +1277,7 @@ $(JUAFS)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(JUAFS)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE1)
 $(JUAFS)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 $(JUAFS)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE1)
 $(JUAFS)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
@@ -1280,6 +1287,8 @@ $(JUAFS)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 $(JUAFS)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
 $(JUAFS)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE1)
+$(JUAFS)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULE1)
 $(JUAFS)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 	$(CRULE1)
@@ -1312,11 +1321,11 @@ $(JUAFS)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
 $(JUAFS)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULE1) -DAFS_NONFSTRANS
+	$(CRULE1) @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
 $(JUAFS)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 $(JUAFS)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
 	$(CRULE1)
 $(JUAFS)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c

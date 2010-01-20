@@ -66,6 +66,11 @@ fs.o: fs.c ${INCLS} AFS_component_version_number.c
 fs: fs.o $(LIBS)
 	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
 
+afsio.o: afsio.c ${INCLS} AFS_component_version_number.c
+
+afsio: afsio.o $(LIBS)
+	${CC} ${CFLAGS} -o afsio afsio.o ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libafsint.a $(LIBS) ${XLIBS}
+
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
 livesys: livesys.c $(LIBS)

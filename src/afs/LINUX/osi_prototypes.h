@@ -28,7 +28,7 @@ extern cred_t *crref(void);
 extern void crset(cred_t * cr);
 
 /* osi_nfssrv.c */
-extern int osi_linux_nfs_initreq(struct vrequest *av, struct AFS_UCRED *cr,
+extern int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr,
                                  int *code);
 extern void osi_linux_nfssrv_init(void);
 extern void osi_linux_nfssrv_shutdown(void);
@@ -38,6 +38,7 @@ extern afs_rwlock_t afs_xnfssrv;
 extern afs_rwlock_t afs_xosi;
 extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
+extern struct file *afs_linux_raw_open(afs_dcache_id_t *ainode);
 
 /* osi_ioctl.c */
 extern void osi_ioctl_init(void);
@@ -70,13 +71,13 @@ extern void osi_sysctl_clean(void);
 
 /* osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
-extern void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred,
+extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,
 			      int sync);
 extern void osi_VM_FSyncInval(struct vcache *avc);
 extern void osi_VM_StoreAllSegments(struct vcache *avc);
-extern void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp);
+extern void osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp);
 extern void osi_VM_Truncate(struct vcache *avc, int alen,
-			    struct AFS_UCRED *acred);
+			    afs_ucred_t *acred);
 
 /* osi_vfsops.c */
 extern void vattr2inode(struct inode *ip, struct vattr *vp);
@@ -93,6 +94,7 @@ extern void osi_keyring_shutdown(void);
 extern int __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 		    int change_parent);
 #ifdef LINUX_KEYRING_SUPPORT
+extern afs_int32 osi_get_keyring_pag(afs_ucred_t *);
 extern struct key_type key_type_afs_pag;
 #endif /* LINUX_KEYRING_SUPPORT */
 

@@ -40,8 +40,6 @@ static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
 	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
 
-extern int afsd_dynamic_vcaches;
-
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags = AFS_GCPAGS;
@@ -129,6 +127,10 @@ afs_CheckServerDaemon(void)
 
 extern int vfs_context_ref;
 
+/* This function always holds the GLOCK whilst it is running. The caller
+ * gets the GLOCK before invoking it, and afs_osi_Sleep drops the GLOCK
+ * whilst we are sleeping, and regains it when we're woken up.
+ */
 void
 afs_Daemon(void)
 {
@@ -212,19 +214,21 @@ afs_Daemon(void)
 					 * tickets */
 	    last3MinCheck = now;
 	}
-#ifdef AFS_MAXVCOUNT_ENV
-    if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
-        /* start with trying to drop us back to our base usage */
-        int anumber;
-        if (afs_maxvcount <= afs_cacheStats) 
-        anumber = VCACHE_FREE;
-        else
-        anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
 
-        afs_ShakeLooseVCaches(anumber);
-        last5MinCheck = now;
-    }
-#endif
+        if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
+            /* start with trying to drop us back to our base usage */
+            int anumber;
+            if (afs_maxvcount <= afs_cacheStats)
+                anumber = VCACHE_FREE;
+            else
+                anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
+
+	    ObtainWriteLock(&afs_xvcache, 734);
+            afs_ShakeLooseVCaches(anumber);
+	    ReleaseWriteLock(&afs_xvcache);
+            last5MinCheck = now;
+        }
+
 	if (!afs_CheckServerDaemonStarted) {
 	    /* Do the check here if the correct afsd is not installed. */
 	    if (!cs_warned) {
@@ -608,13 +612,13 @@ afs_BRelease(register struct brequest *ab)
 {
 
     AFS_STATCNT(afs_BRelease);
-    MObtainWriteLock(&afs_xbrs, 294);
+    ObtainWriteLock(&afs_xbrs, 294);
     if (--ab->refCount <= 0) {
 	ab->flags = 0;
     }
     if (afs_brsWaiters)
 	afs_osi_Wakeup(&afs_brsWaiters);
-    MReleaseWriteLock(&afs_xbrs);
+    ReleaseWriteLock(&afs_xbrs);
 }
 
 /* return true if bkg fetch daemons are all busy */
@@ -629,14 +633,14 @@ afs_BBusy(void)
 
 struct brequest *
 afs_BQueue(register short aopcode, register struct vcache *avc,
-	   afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred,
+	   afs_int32 dontwait, afs_int32 ause, afs_ucred_t *acred,
 	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
 {
     register int i;
     register struct brequest *tb;
 
     AFS_STATCNT(afs_BQueue);
-    MObtainWriteLock(&afs_xbrs, 296);
+    ObtainWriteLock(&afs_xbrs, 296);
     while (1) {
 	tb = afs_brs;
 	for (i = 0; i < NBRS; i++, tb++) {
@@ -663,18 +667,18 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 	    if (afs_brsDaemons > 0) {
 		afs_osi_Wakeup(&afs_brsDaemons);
 	    }
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    return tb;
 	}
 	if (dontwait) {
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    return NULL;
 	}
 	/* no free buffers, sleep a while */
 	afs_brsWaiters++;
-	MReleaseWriteLock(&afs_xbrs);
+	ReleaseWriteLock(&afs_xbrs);
 	afs_osi_Sleep(&afs_brsWaiters);
-	MObtainWriteLock(&afs_xbrs, 301);
+	ObtainWriteLock(&afs_xbrs, 301);
 	afs_brsWaiters--;
     }
 }
@@ -966,7 +970,7 @@ afs_BackgroundDaemon(void)
     /* initialize subsystem */
     if (brsInit == 0) {
 	LOCK_INIT(&afs_xbrs, "afs_xbrs");
-	memset((char *)afs_brs, 0, sizeof(afs_brs));
+	memset(afs_brs, 0, sizeof(afs_brs));
 	brsInit = 1;
 #if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
 	/*
@@ -980,7 +984,7 @@ afs_BackgroundDaemon(void)
     }
     afs_nbrs++;
 
-    MObtainWriteLock(&afs_xbrs, 302);
+    ObtainWriteLock(&afs_xbrs, 302);
     while (1) {
 	int min_ts = 0;
 	struct brequest *min_tb = NULL;
@@ -988,7 +992,7 @@ afs_BackgroundDaemon(void)
 	if (afs_termState == AFSOP_STOP_BKG) {
 	    if (--afs_nbrs <= 0)
 		afs_termState = AFSOP_STOP_TRUNCDAEMON;
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
 	    return;
 	}
@@ -1009,7 +1013,7 @@ afs_BackgroundDaemon(void)
 	if ((tb = min_tb)) {
 	    /* claim and process this request */
 	    tb->flags |= BSTARTED;
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    foundAny = 1;
 	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1, ICL_TYPE_INT32,
 		       tb->opcode);
@@ -1031,17 +1035,17 @@ afs_BackgroundDaemon(void)
 	    }
 	    if (tb->cred) {
 		crfree(tb->cred);
-		tb->cred = (struct AFS_UCRED *)0;
+		tb->cred = (afs_ucred_t *)0;
 	    }
 	    afs_BRelease(tb);	/* this grabs and releases afs_xbrs lock */
-	    MObtainWriteLock(&afs_xbrs, 305);
+	    ObtainWriteLock(&afs_xbrs, 305);
 	}
 	if (!foundAny) {
 	    /* wait for new request */
 	    afs_brsDaemons++;
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Sleep(&afs_brsDaemons);
-	    MObtainWriteLock(&afs_xbrs, 307);
+	    ObtainWriteLock(&afs_xbrs, 307);
 	    afs_brsDaemons--;
 	}
     }
@@ -1055,8 +1059,8 @@ shutdown_daemons(void)
     if (afs_cold_shutdown) {
 	afs_brsDaemons = brsInit = 0;
 	rxepoch_checked = afs_nbrs = 0;
-	memset((char *)afs_brs, 0, sizeof(afs_brs));
-	memset((char *)&afs_xbrs, 0, sizeof(afs_lock_t));
+	memset(afs_brs, 0, sizeof(afs_brs));
+	memset(&afs_xbrs, 0, sizeof(afs_lock_t));
 	afs_brsWaiters = 0;
 #ifdef AFS_AIX41_ENV
 	lock_free(&afs_asyncbuf_lock);

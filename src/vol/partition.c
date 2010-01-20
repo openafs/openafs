@@ -187,7 +187,6 @@ static struct DiskPartition64 *DiskPartitionTable[VOLMAXPARTS+1];
 
 static struct DiskPartition64 * VLookupPartition_r(char * path);
 static void AddPartitionToTable_r(struct DiskPartition64 *);
-static void DeletePartitionFromTable_r(struct DiskPartition64 *);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
@@ -468,6 +467,18 @@ VAttachPartitions(void)
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;
+
+#ifndef AFS_NAMEI_ENV
+	if (hasmntopt(&mnt, "logging") != NULL) {
+	    Log("This program is compiled without AFS_NAMEI_ENV, and "
+	        "partition %s is mounted with the 'logging' option. "
+		"Using the inode fileserver backend with 'logging' UFS "
+		"partitions causes volume corruption, so please either "
+		"mount the partition without logging, or use the namei "
+		"fileserver backend. Aborting...\n", mnt.mnt_mountp);
+	    errors++;
+	}
+#endif /* !AFS_NAMEI_ENV */
 
 	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special) < 0)
 	    errors++;
@@ -1103,7 +1114,7 @@ VLockPartition_r(char *name)
 			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
 	assert(dp->lock_fd != INVALID_FD);
 
-	memset((char *)&lap, 0, sizeof(lap));
+	memset(&lap, 0, sizeof(lap));
 	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
 			0, &lap);
 	assert(rc);
@@ -1118,7 +1129,7 @@ VUnlockPartition_r(char *name)
 
     if (!dp)
 	return;			/* no partition, will fail later */
-    memset((char *)&lap, 0, sizeof(lap));
+    memset(&lap, 0, sizeof(lap));
 
     UnlockFileEx((HANDLE) dp->lock_fd, 0, 1, 0, &lap);
     CloseHandle((HANDLE) dp->lock_fd);
@@ -1318,7 +1329,7 @@ VGetPartitionById_r(afs_int32 id, int abortp)
 struct DiskPartition64 *
 VGetPartitionById(afs_int32 id, int abortp)
 {
-    struct Diskpartition64 * dp;
+    struct DiskPartition64 * dp;
 
     VOL_LOCK;
     dp = VGetPartitionById_r(id, abortp);
@@ -1345,10 +1356,12 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
     DiskPartitionTable[dp->index] = dp;
 }
 
+#if 0
 static void 
 DeletePartitionFromTable_r(struct DiskPartition64 *dp)
 {
     assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
     DiskPartitionTable[dp->index] = NULL;
 }
+#endif
 #endif /* AFS_DEMAND_ATTACH_FS */

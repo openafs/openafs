@@ -180,6 +180,9 @@ vol-salvage.o vutil.o: volinodes.h
 vol-salvage.o salvager.o: vol-salvage.h
 vol-salvage.o: salvsync.h daemon_com.h
 
+salvager.o: salvager.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@
 	$(AR) crv $@ ${VLIBOBJS} AFS_component_version_number.o

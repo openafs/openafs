@@ -89,7 +89,7 @@ main(int argc, char **argv)
 	printf("usage: pxclient <serverHost>\n");
 	exit(1);
     }
-    memset((char *)&host, 0, sizeof(struct sockaddr_in));
+    memset(&host, 0, sizeof(struct sockaddr_in));
     host.sin_family = AF_INET;
     host.sin_addr.s_addr = inet_addr(av[0]);
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN

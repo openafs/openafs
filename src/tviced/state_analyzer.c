@@ -237,10 +237,6 @@ static struct {
     byte cb_valid;
 } cb_cursor;
 
-static struct {
-    void ** cursor;
-} cb_cache;
-
 static void
 usage(char * prog)
 {
@@ -251,7 +247,6 @@ int
 main(int argc, char ** argv)
 {
     banner();
-
     if (argc > 2 || (argc == 2 && !strcmp(argv[1], "-h"))) {
 	usage(argv[0]);
 	return 1;
@@ -263,7 +258,7 @@ main(int argc, char ** argv)
 	if (openFile(argv[1]))
 	    return 1;
     } else {
-	if (openFile(AFSDIR_SERVER_FSSTATE_FILEPATH))
+	if (openFile((char *)AFSDIR_SERVER_FSSTATE_FILEPATH))
 	    return 1;
     }
 
@@ -302,7 +297,7 @@ openFile(char * path)
 	goto done;
     }
 
-    printf("mapped %d bytes at 0x%x\n", map_len, map);
+    printf("mapped %lu bytes at %"AFS_PTR_FMT"\n", (unsigned long)map_len, map);
 
  done:
     if (ret) {
@@ -742,8 +737,8 @@ print_cb_help(void)
     do { \
         char * _p = (char *)addr; \
         char * _m = (char *)map; \
-        printf("loading structure from address 0x%x (offset %u)\n", \
-               addr, _p-_m); \
+        printf("loading structure from address %"AFS_PTR_FMT" (offset %ld)\n", \
+               addr, (long)(_p-_m)); \
     } while (0)
 
 /* structs */
@@ -1346,7 +1341,6 @@ dump_he_interfaces(void)
 static void
 dump_he_hcps(void)
 {
-    char temp_str[40];
     afs_int32 * hcps;
     int len, i;
 
@@ -1434,14 +1428,13 @@ hexdump_map(afs_uint32 offset, afs_uint32 len)
 {
     int i;
     unsigned char * p = (unsigned char *)map;
-    afs_uint32 c32;
 
     if (!len)
 	return;
 
     if ((offset + len) > map_len) {
-	fprintf(stderr, "offset + length exceeds memory map size (%u > %u)\n",
-		offset+len, map_len);
+	fprintf(stderr, "offset + length exceeds memory map size (%u > %lu)\n",
+		offset+len, (unsigned long)map_len);
 	return;
     }
 
@@ -1605,8 +1598,6 @@ get_cb_timeout_hdr(void)
 static int
 get_cb_timeout(void)
 {
-    char * buf;
-
     if (hdrs.timeout)
 	return 0;
 
@@ -1658,8 +1649,6 @@ get_cb_fehash_hdr(void)
 static int
 get_cb_fehash(void)
 {
-    char * buf;
-
     if (hdrs.fehash)
 	return 0;
 
@@ -1861,7 +1850,6 @@ get_fe_entry(void)
 static int
 get_cb(afs_uint32 idx)
 {
-    int i;
     char * p;
 
     if (get_fe(fe_cursor.idx))
@@ -1895,6 +1883,7 @@ get_cb_entry(void)
     return 0;
 }
 
+#if 0
 static int
 find_he_by_index(afs_uint32 idx)
 {
@@ -1919,6 +1908,7 @@ find_he_by_index(afs_uint32 idx)
     }
     return 1;
 }
+#endif
 
 static int
 find_fe_by_index(afs_uint32 idx)

@@ -93,7 +93,7 @@ static vop_setattr_t	afs_vop_setattr;
 static vop_strategy_t	afs_vop_strategy;
 static vop_symlink_t	afs_vop_symlink;
 static vop_write_t	afs_vop_write;
-#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD90_ENV)
+#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD80_ENV)
 static vop_lock1_t      afs_vop_lock;
 static vop_unlock_t     afs_vop_unlock;
 static vop_islocked_t   afs_vop_islocked;
@@ -110,7 +110,10 @@ struct vop_vector afs_vnodeops = {
 	.vop_getpages =		afs_vop_getpages,
 	.vop_inactive =		afs_vop_inactive,
 	.vop_ioctl =		afs_vop_ioctl,
+#if !defined(AFS_FBSD80_ENV)
+	/* removed at least temporarily (NFSv4 flux) */
 	.vop_lease =		VOP_NULL,
+#endif
 	.vop_link =		afs_vop_link,
 	.vop_lookup =		afs_vop_lookup,
 	.vop_mkdir =		afs_vop_mkdir,
@@ -131,7 +134,7 @@ struct vop_vector afs_vnodeops = {
 	.vop_strategy =		afs_vop_strategy,
 	.vop_symlink =		afs_vop_symlink,
 	.vop_write =		afs_vop_write,
-#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD90_ENV)
+#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD80_ENV)
 	.vop_lock1 =            afs_vop_lock,
 	.vop_unlock =           afs_vop_unlock,
 	.vop_islocked =         afs_vop_islocked,
@@ -315,7 +318,7 @@ afs_vop_unlock(ap)
     struct lock *lkp = vp->v_vnlock;
 
 #ifdef AFS_FBSD80_ENV
-    int code;
+    int code = 0;
     u_int op;
     op = ((ap->a_flags) | LK_RELEASE) & LK_TYPE_MASK;
     int glocked = ISAFS_GLOCK();
@@ -686,7 +689,11 @@ afs_vop_access(ap)
 {
     int code;
     AFS_GLOCK();
+#if defined(AFS_FBSD80_ENV)
+    code = afs_access(VTOAFS(ap->a_vp), ap->a_accmode, ap->a_cred);
+#else
     code = afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
+#endif
     AFS_GUNLOCK();
     return code;
 }
@@ -1509,15 +1516,11 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
      */
     if (code)
 	printf("afs_vop_reclaim: afs_FlushVCache failed code %d\n", code);
-#ifdef AFS_FBSD60_ENV
-    else {
-	vnode_destroy_vobject(vp);
-#ifndef AFS_FBSD70_ENV
-	vfs_hash_remove(vp);
-#endif
-	vp->v_data = 0;
-    }
-#endif
+
+    /* basically, it must not fail */
+    vnode_destroy_vobject(vp);
+    vp->v_data = 0;
+
     return 0;
 }
 
@@ -1556,7 +1559,7 @@ afs_vop_strategy(ap)
 {
     int error;
     AFS_GLOCK();
-    error = afs_ustrategy(ap->a_bp, osi_cred());
+    error = afs_ustrategy(ap->a_bp, osi_curcred());
     AFS_GUNLOCK();
     return error;
 }
@@ -1571,17 +1574,10 @@ afs_vop_print(ap)
     register struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->f.states;
 
-#ifdef AFS_FBSD50_ENV
-    printf("tag %s, fid: %d.%x.%x.%x, opens %d, writers %d", vp->v_tag,
+    printf("tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vp->v_tag,
 	   (int)vc->f.fid.Cell, (u_int) vc->f.fid.Fid.Volume,
 	   (u_int) vc->f.fid.Fid.Vnode, (u_int) vc->f.fid.Fid.Unique, vc->opens,
 	   vc->execsOrWriters);
-#else
-    printf("tag %d, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag,
-	   vc->f.fid.Cell, (u_int) vc->f.fid.Fid.Volume,
-	   (u_int) vc->f.fid.Fid.Vnode, (u_int) vc->f.fid.Fid.Unique, vc->opens,
-	   vc->execsOrWriters);
-#endif
     printf("\n  states%s%s%s%s%s", (s & CStatd) ? " statd" : "",
 	   (s & CRO) ? " readonly" : "", (s & CDirty) ? " dirty" : "",
 	   (s & CMAPPED) ? " mapped" : "",

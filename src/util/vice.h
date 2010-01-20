@@ -11,9 +11,11 @@
 #define AFS_VICE_H 1
 
 #include <sys/types.h>
-#ifndef AFS_NT40_ENV
+#if !defined(AFS_NT40_ENV)
+# if !defined(AFS_FBSD80_ENV) || !defined(KERNEL) || defined(UKERNEL)
 #include <sys/ioctl.h>
-#endif
+#endif /* AFS_FBSD80_ENV */
+#endif /* AFS_NT40_ENV */
 #if (defined(__sun) && defined(__SVR4)) || defined(AFS_DFBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
 # include <sys/ioccom.h>
 #endif

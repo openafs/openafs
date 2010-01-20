@@ -594,6 +594,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD dwSize = sizeof(szUser);
     int saveerrno;
     UINT driveType;
+    int sharingViolation;
 
     memset(HostName, '\0', sizeof(HostName));
     gethostname(HostName, sizeof(HostName));
@@ -695,15 +696,20 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
     fflush(stdout);
     /* now open the file */
-    fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-		    FILE_FLAG_WRITE_THROUGH, NULL);
-
-	fflush(stdout);
+    sharingViolation = 0;
+    do {
+        if (sharingViolation)
+            Sleep(100);
+        fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                        FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                        FILE_FLAG_WRITE_THROUGH, NULL);
+        sharingViolation++;
+    } while (fh == INVALID_HANDLE_VALUE &&
+             GetLastError() == ERROR_SHARING_VIOLATION &&
+             sharingViolation < 100);
+    fflush(stdout);
 
     if (fh == INVALID_HANDLE_VALUE) {
-        int  gonext = 0;
-
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
@@ -722,7 +728,13 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                         tbuffer,gle,buf);
             }
             errno = saveerrno;
+            SetLastError(gle);
         }
+    }
+
+    if (fh == INVALID_HANDLE_VALUE &&
+        GetLastError() != ERROR_SHARING_VIOLATION) {
+        int  gonext = 0;
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
 
@@ -771,9 +783,17 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_lsa_principal;
 
-            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_WRITE_THROUGH, NULL);
+            sharingViolation = 0;
+            do {
+                if (sharingViolation)
+                    Sleep(100);
+                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                FILE_FLAG_WRITE_THROUGH, NULL);
+                sharingViolation++;
+            } while (fh == INVALID_HANDLE_VALUE &&
+                     GetLastError() == ERROR_SHARING_VIOLATION &&
+                     sharingViolation < 100);
             fflush(stdout);
             if (fh == INVALID_HANDLE_VALUE) {
                 gle = GetLastError();
@@ -794,13 +814,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
+                    SetLastError(gle);
                 }
             }
         }
     }
 
   try_lsa_principal:
-    if (fh == INVALID_HANDLE_VALUE) {
+    if (fh == INVALID_HANDLE_VALUE &&
+        GetLastError() != ERROR_SHARING_VIOLATION) {
         int  gonext = 0;
 
         dwSize = sizeof(szUser);
@@ -841,9 +863,17 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_sam_compat;
 
-            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_WRITE_THROUGH, NULL);
+            sharingViolation = 0;
+            do {
+                if (sharingViolation)
+                    Sleep(100);
+                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                FILE_FLAG_WRITE_THROUGH, NULL);
+                sharingViolation++;
+            } while (fh == INVALID_HANDLE_VALUE &&
+                     GetLastError() == ERROR_SHARING_VIOLATION &&
+                     sharingViolation < 100);
             fflush(stdout);
             if (fh == INVALID_HANDLE_VALUE) {
                 gle = GetLastError();
@@ -864,14 +894,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
-
+                    SetLastError(gle);
                 }
             }
         }
     }
 
   try_sam_compat:
-    if ( fh == INVALID_HANDLE_VALUE ) {
+    if (fh == INVALID_HANDLE_VALUE &&
+        GetLastError() != ERROR_SHARING_VIOLATION) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
             if ( ioctlDebug ) {
@@ -906,9 +937,17 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 return -1;
             }
 
-            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_WRITE_THROUGH, NULL);
+            sharingViolation = 0;
+            do {
+                if (sharingViolation)
+                    Sleep(100);
+                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                FILE_FLAG_WRITE_THROUGH, NULL);
+                sharingViolation++;
+            } while (fh == INVALID_HANDLE_VALUE &&
+                     GetLastError() == ERROR_SHARING_VIOLATION &&
+                     sharingViolation < 100);
             fflush(stdout);
             if (fh == INVALID_HANDLE_VALUE) {
                 gle = GetLastError();
@@ -937,6 +976,9 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             return -1;
         }
     }
+
+    if (fh == INVALID_HANDLE_VALUE)
+        return -1;
 
     /* return fh and success code */
     *handlep = fh;
@@ -1186,8 +1228,8 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     return 0;
 }
 
-static long
-pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is_utf8)
+static int
+pioctl_int(char *pathp, afs_int32 opcode, struct ViceIoctl *blobp, afs_int32 follow, afs_int32 is_utf8)
 {
     fs_ioctlRequest_t preq;
     long code;
@@ -1274,14 +1316,14 @@ pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is
     return 0;
 }
 
-long
-pioctl_utf8(char * pathp, long opcode, struct ViceIoctl * blobp, int follow)
+int
+pioctl_utf8(char * pathp, afs_int32 opcode, struct ViceIoctl * blobp, afs_int32 follow)
 {
     return pioctl_int(pathp, opcode, blobp, follow, TRUE);
 }
 
-long
-pioctl(char * pathp, long opcode, struct ViceIoctl * blobp, int follow)
+int
+pioctl(char * pathp, afs_int32 opcode, struct ViceIoctl * blobp, afs_int32 follow)
 {
     return pioctl_int(pathp, opcode, blobp, follow, FALSE);
 }

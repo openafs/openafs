@@ -11,5 +11,5 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 int des_debug = 0;

@@ -225,7 +225,7 @@ into server stubs, I<filename>.ss.c, files).
 In addition, B<rxgen> does a little preprocessing of its own.  Any line
 beginning with C<%> is passed directly into the output file, uninterpreted
 by B<rxgen>.  For a more heavy en masse dumping of uninterpreted code, it
-would be adviced to include all such code in an C<#include> file and pass
+would be advised to include all such code in an C<#include> file and pass
 it in preceded by C<%>.  The input interface may also contain any C-style
 comments which are, of course, ignored. Interpretation is token-based,
 thus special line-orientation of separate statements is not necessary.

@@ -104,7 +104,7 @@
 #include <afs/nfs.h>		/* yuck.  This is an abomination. */
 #include <lwp.h>
 #include <rx/rx.h>
-#include <afscbint.h>
+#include <afs/afscbint.h>
 #include <afs/afsutil.h>
 #include <lock.h>
 #include <afs/ihandle.h>
@@ -518,12 +518,13 @@ int
 AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	     int locked)
 {
-    int retVal;
+    int retVal = 0;
     H_LOCK;
     if (!locked) {
 	h_Lock_r(host);
     }
-    retVal = AddCallBack1_r(host, fid, thead, type, 1);
+    if (!(host->hostFlags & HOSTDELETED))
+        retVal = AddCallBack1_r(host, fid, thead, type, 1);
 
     if (!locked) {
 	h_Unlock_r(host);
@@ -564,6 +565,11 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     if (!locked) {
 	h_Lock_r(host);		/* this can yield, so do it before we get any */
 	/* fragile info */
+        if (host->hostFlags & HOSTDELETED) {
+            host->Console &= ~2;
+            h_Unlock_r(host);
+            return 0;
+        }
     }
 
     fe = FindFE(fid);
@@ -745,12 +751,14 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 
 			H_LOCK;
 			h_Lock_r(hp); 
-			hp->hostFlags |= VENUSDOWN;
-		/**
-		  * We always go into AddCallBack1_r with the host locked
-		  */
-			AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
-				       CB_DELAYED, 1);
+                        if (!(hp->hostFlags & HOSTDELETED)) {
+                            hp->hostFlags |= VENUSDOWN;
+                            /**
+                             * We always go into AddCallBack1_r with the host locked
+                             */
+                            AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
+                                           CB_DELAYED, 1);
+                        }
 			h_Unlock_r(hp); 
 			H_UNLOCK;
 		    }
@@ -885,6 +893,7 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     cbstuff.DeleteCallBacks++;
 
     h_Lock_r(host);
+    /* do not care if the host has been HOSTDELETED */
     fe = FindFE(fid);
     if (!fe) {
 	h_Unlock_r(host);
@@ -1116,16 +1125,10 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 
     if (host->hostFlags & VENUSDOWN) {
 	h_Lock_r(host);
-	if (host->hostFlags & HOSTDELETED) {
-	    h_Unlock_r(host);
-	    return 0;		/* Release hold */
-	}
-	ViceLog(8,
-		("BVCB: volume call back for Host %x (%s:%d) failed\n",
-                 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+        /* Do not care if the host is now HOSTDELETED */
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("CB: volume callback for Host %x (%s:%d) failed\n",
+		    ("BVCB: volume callback for Host %x (%s:%d) failed\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
@@ -1474,28 +1477,32 @@ CleanupTimedOutCallBacks_r(void)
 static struct host *lih_host;
 static int lih_host_held;
 
+/* Value of host->refCount that allows us to reliably infer that
+ * host may be held by some other thread */
+#define OTHER_MUSTHOLD_LIH 2
+
 /* This version does not allow 'host' to be selected unless its ActiveCall 
  * is newer than 'hostp' which is the host with the oldest ActiveCall from
  * the last pass (if it is provided).  We filter out any hosts that are
  * are held by other threads.
  */
 static int
-lih0_r(register struct host *host, register int held, void *rock)
+lih0_r(register struct host *host, register int flags, void *rock)
 {
     struct host *hostp = (struct host *) rock;
     if (host->cblist
 	&& (hostp && host != hostp) 
-	&& (!held && !h_OtherHolds_r(host))
+	&& (host->refCount < OTHER_MUSTHOLD_LIH)
 	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
 	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
-	if (lih_host != NULL && lih_host_held) {
-	    h_Release_r(lih_host);
-	}
-	lih_host = host;
-	lih_host_held = !held;
-	held = 1;
+        if (lih_host != NULL && lih_host_held) {
+            h_Release_r(lih_host); /* release prev host */
+        }
+        lih_host = host;
+        lih_host_held = !flags; /* on i==1, this === (lih_host_held = 1) */
+        flags = 1; /* now flags is 1, but at next(i), it will be 0 again */
     }
-    return held;
+    return flags;
 }
 
 /* This version does not allow 'host' to be selected unless its ActiveCall 
@@ -1504,7 +1511,7 @@ lih0_r(register struct host *host, register int held, void *rock)
  * prevent held hosts from being selected.
  */
 static int
-lih1_r(register struct host *host, register int held, void *rock)
+lih1_r(register struct host *host, register int flags, void *rock)
 {
     struct host *hostp = (struct host *) rock;
 
@@ -1512,14 +1519,14 @@ lih1_r(register struct host *host, register int held, void *rock)
 	&& (hostp && host != hostp) 
 	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
 	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
-	if (lih_host != NULL && lih_host_held) {
-	    h_Release_r(lih_host);
-	}
-	lih_host = host;
-	lih_host_held = !held;
-	held = 1;
+	    if (lih_host != NULL && lih_host_held) {
+		    h_Release_r(lih_host); /* really? */
+	    }
+	    lih_host = host;
+	    lih_host_held = !flags; /* see note above */
+	    flags = 1; /* see note above */
     }
-    return held;
+    return flags;
 }
 
 /* This could be upgraded to get more space each time */
@@ -1560,12 +1567,14 @@ GetSomeSpace_r(struct host *hostp, int locked)
 	    int lih_host_held2=lih_host_held;   
 	    cbstuff.GSS4++;
 	    if ((hp != hostp) && !ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
-		if (lih_host_held2)
-		    h_Release_r(hp);
+                if (lih_host_held2)
+                    h_Release_r(hp);
 		return 0;
 	    }
-	    if (lih_host_held2)
-		h_Release_r(hp);
+            if (lih_host_held2) {
+                h_Release_r(hp);
+                hp = NULL;
+            }
 	    hp1 = hp;
 	    hp2 = hostList;
 	} else {
@@ -1603,25 +1612,23 @@ static int
 ClearHostCallbacks_r(struct host *hp, int locked)
 {
     int code;
-    int held = 0;
     char hoststr[16];
     struct rx_connection *cb_conn = NULL;
 
     ViceLog(5,
 	    ("GSS: Delete longest inactive host %x (%s:%d)\n",
              hp, afs_inet_ntoa_r(hp->host, hoststr), ntohs(hp->port)));
-    if (!(held = h_Held_r(hp)))
-	h_Hold_r(hp);
+
+    h_Hold_r(hp);
 
     /** Try a non-blocking lock. If the lock is already held return
       * after releasing hold on hp
       */
     if (!locked) {
-	if (h_NBLock_r(hp)) {
-	    if (!held)
-		h_Release_r(hp);
-	    return 1;
-	}
+        if (h_NBLock_r(hp)) {
+            h_Release_r(hp);
+            return 1;
+        }
     }
     if (hp->Console & 2) {
 	/*
@@ -1638,7 +1645,7 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     DeleteAllCallBacks_r(hp, 1);
     if (hp->hostFlags & VENUSDOWN) {
 	hp->hostFlags &= ~RESETDONE;	/* remember that we must do a reset */
-    } else {
+    } else if (!(hp->hostFlags & HOSTDELETED)) {
 	/* host is up, try a call */
 	hp->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
 	cb_conn = hp->callback_rxcon;
@@ -1664,11 +1671,9 @@ ClearHostCallbacks_r(struct host *hp, int locked)
 	    hp->hostFlags |= RESETDONE;
 	}
     }
-    if (!locked) {
-	h_Unlock_r(hp);
-    }
-    if (!held)
-	h_Release_r(hp);
+    if (!locked)
+        h_Unlock_r(hp);
+    h_Release_r(hp);
 
     return 0;
 }
@@ -1929,7 +1934,6 @@ cb_stateVerify(struct fs_dump_state * state)
 	ret = 1;
     }
 
- done:
     return ret;
 }
 
@@ -1963,7 +1967,6 @@ cb_stateVerifyFEHash(struct fs_dump_state * state)
 	}
     }
 
- done:
     return ret;
 }
 
@@ -1983,7 +1986,6 @@ cb_stateVerifyFE(struct fs_dump_state * state, struct FileEntry * fe)
 	ret = 1;
     }
 
- done:
     return ret;
 }
 
@@ -2141,7 +2143,6 @@ cb_stateVerifyTimeoutQueues(struct fs_dump_state * state)
 	}
     }
 
- done:
     return ret;
 }
 
@@ -2426,7 +2427,6 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     struct CBDiskEntry cbdsk[16];
     struct iovec iov[16];
     struct FileEntry * fe;
-    struct CallBack * cb;
 
     iov[0].iov_base = (char *)&hdr;
     iov[0].iov_len = sizeof(hdr);

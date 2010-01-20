@@ -23,6 +23,7 @@
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
+#include <WINNT/afsreg.h>
 #else
 #include <netinet/in.h>
 #endif
@@ -142,6 +143,29 @@ osi_audit(void)
     return 0;
 }
 
+#ifdef AFS_NT40_ENV
+static DWORD
+win32_enableCrypt(void)
+{
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD cryptall = 0;
+    DWORD code;
+
+    /* Look up configuration parameters in Registry */
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                        0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS) {
+        dummyLen = sizeof(cryptall);
+        RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
+                        (BYTE *) &cryptall, &dummyLen);
+    }
+    RegCloseKey (parmKey);
+
+    return cryptall;
+}
+#endif /* AFS_NT40_ENV */
+
 static int
 GetGlobals(struct cmd_syndesc *as, void *arock)
 {
@@ -182,7 +206,11 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	changed = 1;
 	sec = 1;
     }
-    if (as->parms[22].items) { /* -encrypt */
+    if (as->parms[22].items    /* -encrypt */
+#ifdef AFS_NT40_ENV
+        || win32_enableCrypt()
+#endif /* AFS_NT40_ENV */
+        ) {
 	changed = 1;
 	sec = 3;
     }

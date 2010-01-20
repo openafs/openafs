@@ -668,10 +668,11 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
 	memset(atoken, 0, sizeof *atoken);
 	if (evil) {
+	    size_t elen = enc_part->length;
 	    atoken->kvno = RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
 	    if (afs_krb5_skip_ticket_wrapper(afscred->ticket.data,
 			afscred->ticket.length, &enc_part->data,
-			&enc_part->length)) {
+			&elen)) {
 		afs_com_err(rn, 0, "Can't unwrap %s AFS credential",
 		    cellconfig->name);
 		KLOGEXIT(1);

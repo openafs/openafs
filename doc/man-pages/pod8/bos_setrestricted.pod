@@ -1,0 +1,88 @@
+=head1 NAME
+
+bos_setrestricted - place a server in restricted mode
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<bos setrestricted> S<<< B<-server> <I<machine name>> >>> S<<< B<-mode> 1 >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<bos restricted> command places the server in restricted mode. This
+mode increases the security of the bos server by removing access to a
+number of bos commands that are only used whilst configuring a system.
+
+When a server is in restricted mode, access to B<bos_exec>, B<bos uninstall>,
+B<bos install>, B<bos create>, B<bos install>, B<bos delete>, B<bos prune>
+is denied, and the use of B<bos getlog> is limited.
+
+=head1 CAUTIONS
+
+Once a server has been placed in restricted mode, it may not be opened up
+again using a remote command. That is, B<bos setrestricted> has no method
+of setting an unrestricted mode. Once a server is restricted, it can only
+be opened up again by sending it a SIGFPE, which must be done as root on
+the local machine.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<machine name>>
+
+Indicates the server machine to restrict.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(8)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(8)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged in as the
+local superuser C<root> if the B<-localauth> flag is included.
+
+As noted above, this command cannot be run against servers which are
+already in restricted mode.
+
+=head1 SEE ALSO
+
+L<bos(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2009 Simon wilkinson <simon@sxw.org.uk>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Simon Wilkinson for
+OpenAFS.
+

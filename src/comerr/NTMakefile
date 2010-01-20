@@ -67,6 +67,7 @@ $(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXERES) $(COMPILE_ET_E
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ####################################################################
 install: prep $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE) 

@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -325,8 +328,8 @@ GetDeviceConfig(char *filename, struct tapeConfig *config, afs_int32 portOffset)
     char devName[LINESIZE], tcapacity[LINESIZE], tfmsize[LINESIZE],
 	trest[LINESIZE];
     afs_int32 aport;
-    afs_uint32 capacity;
-    afs_uint32 fmSize;
+    afs_int32 capacity;
+    afs_int32 fmSize;
     afs_int32 code = 0, count;
 
     /* Initialize the config struct */

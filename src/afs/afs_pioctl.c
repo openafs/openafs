@@ -55,7 +55,7 @@ afs_int32 afs_in_sync = 0;
 
 #define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
 	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
-	struct AFS_UCRED **acred)
+	afs_ucred_t **acred)
 
 /* Prototypes for pioctl routines */
 DECL_PIOCTL(PGetFID);
@@ -134,20 +134,20 @@ DECL_PIOCTL(PSetCachingBlkSize);
 /* Prototypes for private routines */
 #ifdef AFS_NEED_CLIENTCONTEXT
 static int HandleClientContext(struct afs_ioctl *ablob, int *com,
-			       struct AFS_UCRED **acred,
-			       struct AFS_UCRED *credp);
+			       afs_ucred_t **acred,
+			       afs_ucred_t *credp);
 #endif
 int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 		struct afs_ioctl *adata);
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		     register struct afs_ioctl *ablob, int afollow,
-		     struct AFS_UCRED **acred);
-static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow,
-		    struct AFS_UCRED *acred);
+		     afs_ucred_t **acred);
+static int Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
+		    afs_ucred_t *acred);
 
 typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
 			       char *, char *, afs_int32, afs_int32 *,
-			       struct AFS_UCRED **);
+			       afs_ucred_t **);
 
 static pioctlFunction VpioctlSw[] = {
     PBogus,			/* 0 */
@@ -315,7 +315,6 @@ HandleIoctl(register struct vcache *avc, register afs_int32 acom,
     return code;		/* so far, none implemented */
 }
 
-
 #ifdef	AFS_AIX_ENV
 /* For aix we don't temporarily bypass ioctl(2) but rather do our
  * thing directly in the vnode layer call, VNOP_IOCTL; thus afs_ioctl
@@ -382,32 +381,32 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
    */
 /* AFS_HPUX102 and up uses VNODE ioctl instead */
 #if !defined(AFS_HPUX102_ENV) && !defined(AFS_DARWIN80_ENV)
-#if !defined(AFS_SGI_ENV)
-#ifdef	AFS_AIX32_ENV
-#ifdef AFS_AIX51_ENV
-#ifdef __64BIT__
+# if !defined(AFS_SGI_ENV)
+#  ifdef	AFS_AIX32_ENV
+#   ifdef AFS_AIX51_ENV
+#    ifdef __64BIT__
 int
 kioctl(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
 	   caddr_t arg3)
-#else /* __64BIT__ */
+#    else /* __64BIT__ */
 int
 kioctl32(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
 	     caddr_t arg3)
-#endif /* __64BIT__ */
-#else
+#    endif /* __64BIT__ */
+#   else
 int
 kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
-#endif
+#   endif
 {
     struct a {
 	int fd, com;
 	caddr_t arg, ext;
-#ifdef AFS_AIX51_ENV
+#   ifdef AFS_AIX51_ENV
 	caddr_t arg2, arg3;
-#endif
+#   endif
     } u_uap, *uap = &u_uap;
-#else
-#if defined(AFS_SUN5_ENV)
+#  else
+#   if defined(AFS_SUN5_ENV)
 
 struct afs_ioctl_sys {
     int fd;
@@ -418,23 +417,14 @@ struct afs_ioctl_sys {
 int 
 afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
-#elif defined(AFS_OSF_ENV)
-int 
-afs_xioctl(struct proc *p, void *args, long *retval)
-{
-    struct a {
-	long fd;
-	u_long com;
-	caddr_t arg;
-    } *uap = (struct a *)args;
-#elif defined(AFS_FBSD50_ENV)
-#define arg data
+#   elif defined(AFS_FBSD50_ENV)
+#    define arg data
 int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap, 
 	   register_t *retval)
 {
-    struct proc *p = td->td_proc;
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+    afs_proc_t *p = td->td_proc;
+#   elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 struct ioctl_args {
     int fd;
     u_long com;
@@ -442,9 +432,9 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(struct proc *p, register struct ioctl_args *uap, register_t *retval)
+afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 {
-#elif defined(AFS_LINUX22_ENV)
+#   elif defined(AFS_LINUX22_ENV)
 struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
@@ -454,7 +444,7 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
     struct afs_ioctl_sys ua, *uap = &ua;
-#else
+#   else
 int
 afs_xioctl(void)
 {
@@ -463,88 +453,84 @@ afs_xioctl(void)
 	int com;
 	caddr_t arg;
     } *uap = (struct a *)u.u_ap;
-#endif /* AFS_SUN5_ENV */
-#endif
-#if defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#   endif /* AFS_SUN5_ENV */
+#  endif
+#  if defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
     struct file *fd;
-#elif !defined(AFS_LINUX22_ENV)
+#  elif !defined(AFS_LINUX22_ENV)
     register struct file *fd;
-#endif
-#if defined(AFS_XBSD_ENV)
+#  endif
+#  if defined(AFS_XBSD_ENV)
     register struct filedesc *fdp;
-#endif
+#  endif
     register struct vcache *tvc;
     register int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
-#if defined(AFS_DARWIN_ENV)
+#  if defined(AFS_DARWIN_ENV)
     if ((code = fdgetf(p, uap->fd, &fd)))
 	return code;
-#elif defined(AFS_XBSD_ENV)
+#  elif defined(AFS_XBSD_ENV)
     fdp = p->p_fd;
     if ((u_int) uap->fd >= fdp->fd_nfiles
 	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
 	return EBADF;
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
 	return EBADF;
-#elif defined(AFS_LINUX22_ENV)
+#  elif defined(AFS_LINUX22_ENV)
     ua.com = com;
     ua.arg = arg;
-#elif defined(AFS_AIX32_ENV)
+#  elif defined(AFS_AIX32_ENV)
     uap->fd = fdes;
     uap->com = com;
     uap->arg = arg;
-#ifdef AFS_AIX51_ENV
+#   ifdef AFS_AIX51_ENV
     uap->arg2 = arg2;
     uap->arg3 = arg3;
-#endif
+#   endif
     if (setuerror(getf(uap->fd, &fd))) {
 	return -1;
     }
-#elif defined(AFS_OSF_ENV)
-    fd = NULL;
-    if (code = getf(&fd, uap->fd, FILE_FLAGS_NULL, &u.u_file_state))
-	return code;
-#elif defined(AFS_SUN5_ENV)
-# if defined(AFS_SUN57_ENV)
+#  elif defined(AFS_SUN5_ENV)
+#   if defined(AFS_SUN57_ENV)
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-# elif defined(AFS_SUN54_ENV)
+#   elif defined(AFS_SUN54_ENV)
     fd = GETF(uap->fd);
     if (!fd)
 	return (EBADF);
-# else
+#   else
     if (code = getf(uap->fd, &fd)) {
 	return (code);
     }
-# endif	/* AFS_SUN57_ENV */
-#else
+#   endif	/* AFS_SUN57_ENV */
+#  else
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-#endif
+#  endif
     /* first determine whether this is any sort of vnode */
-#if defined(AFS_LINUX22_ENV)
+#  if defined(AFS_LINUX22_ENV)
     tvc = VTOAFS(ip);
     {
-#else
-#ifdef AFS_SUN5_ENV
+#  else
+#   ifdef AFS_SUN5_ENV
     if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
-#else
+#   else
     if (fd->f_type == DTYPE_VNODE) {
-#endif
+#   endif
 	/* good, this is a vnode; next see if it is an AFS vnode */
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
+#   if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
 	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
-#elif defined(AFS_OBSD_ENV)
+#   elif defined(AFS_OBSD_ENV)
 	tvc =
 	    IsAfsVnode((struct vnode *)fd->
 		       f_data) ? VTOAFS((struct vnode *)fd->f_data) : NULL;
-#else
+#   else
 	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
-#endif
-#endif /* AFS_LINUX22_ENV */
+#   endif
+#  endif /* AFS_LINUX22_ENV */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
@@ -556,135 +542,102 @@ afs_xioctl(void)
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		    return code;
-#else
-#if	defined(AFS_SUN5_ENV)
-#ifdef	AFS_SUN54_ENV
-		    releasef(uap->fd);
-#else
-		    releasef(fd);
-#endif
-		    return (EFAULT);
-#else
-#ifdef	AFS_OSF_ENV
-#ifdef	AFS_OSF30_ENV
-		    FP_UNREF_ALWAYS(fd);
-#else
-		    FP_UNREF(fd);
-#endif
-		    return code;
-#else /* AFS_OSF_ENV */
-#ifdef	AFS_AIX41_ENV
+#  if defined(AFS_AIX41_ENV)
 		    ufdrele(uap->fd);
-#endif
-#ifdef AFS_LINUX22_ENV
+#  elif defined(AFS_SUN54_ENV)
+		    releasef(uap->fd);
+#  elif defined(AFS_SUN5_ENV)
+		    releasef(fd);
+#  endif
+
+#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+		    return code;
+#  elif defined(AFS_SUN5_ENV)
+		    return (EFAULT);
+#  elif defined(AFS_LINUX22_ENV)
 		    return -code;
-#else
+#  else
 		    return (setuerror(code), code);
-#endif
-#endif
-#endif
-#endif
+#  endif
 		}
 		code = HandleIoctl(tvc, uap->com, datap);
 		osi_FreeSmallSpace(datap);
 		AFS_GUNLOCK();
 		ioctlDone = 1;
-#ifdef	AFS_AIX41_ENV
+#  if defined(AFS_AIX41_ENV)
 		ufdrele(uap->fd);
-#endif
-#ifdef	AFS_OSF_ENV
-#ifdef	AFS_OSF30_ENV
-		FP_UNREF_ALWAYS(fd);
-#else
-		FP_UNREF(fd);
-#endif
-#endif
+#  endif
 	    }
-#if defined(AFS_LINUX22_ENV)
+#  if defined(AFS_LINUX22_ENV)
 	    else
 		code = EINVAL;
-#endif
+#  endif
 	}
     }
 
     if (!ioctlDone) {
-#ifdef	AFS_AIX41_ENV
+#  if defined(AFS_AIX41_ENV)
 	ufdrele(uap->fd);
-#ifdef AFS_AIX51_ENV
-#ifdef __64BIT__
+#   ifdef AFS_AIX51_ENV
+#    ifdef __64BIT__
 	code = okioctl(fdes, com, arg, ext, arg2, arg3);
-#else /* __64BIT__ */
+#    else /* __64BIT__ */
 	code = okioctl32(fdes, com, arg, ext, arg2, arg3);
-#endif /* __64BIT__ */
-#else /* !AFS_AIX51_ENV */
+#    endif /* __64BIT__ */
+#   else /* !AFS_AIX51_ENV */
 	code = okioctl(fdes, com, arg, ext);
-#endif /* AFS_AIX51_ENV */
+#   endif /* AFS_AIX51_ENV */
 	return code;
-#else /* !AFS_AIX41_ENV */
-#ifdef	AFS_AIX32_ENV
+#  elif defined(AFS_AIX32_ENV)
 	okioctl(fdes, com, arg, ext);
-#elif defined(AFS_SUN5_ENV)
-#if defined(AFS_SUN57_ENV)
+#  elif defined(AFS_SUN5_ENV)
+#   if defined(AFS_SUN57_ENV)
 	releasef(uap->fd);
-#elif defined(AFS_SUN54_ENV)
+#   elif defined(AFS_SUN54_ENV)
 	RELEASEF(uap->fd);
-#else
+#   else
 	releasef(fd);
-#endif
+#   endif
 	code = ioctl(uap, rvp);
-#elif defined(AFS_FBSD50_ENV)
+#  elif defined(AFS_FBSD50_ENV)
 	return ioctl(td, uap);
-#elif defined(AFS_FBSD_ENV)
+#  elif defined(AFS_FBSD_ENV)
 	return ioctl(p, uap);
-#elif defined(AFS_OBSD_ENV)
+#  elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
-#elif defined(AFS_DARWIN_ENV)
+#  elif defined(AFS_DARWIN_ENV)
 	return ioctl(p, uap, retval);
-#elif defined(AFS_OSF_ENV)
-	code = ioctl(p, args, retval);
-#ifdef	AFS_OSF30_ENV
-	FP_UNREF_ALWAYS(fd);
-#else
-	FP_UNREF(fd);
-#endif
-	return code;
-#elif !defined(AFS_LINUX22_ENV)
+#  elif !defined(AFS_LINUX22_ENV)
 	ioctl();
-#endif
-#endif
+#  endif
     }
-#ifdef	AFS_SUN5_ENV
+#  ifdef	AFS_SUN5_ENV
     if (ioctlDone)
-#ifdef	AFS_SUN54_ENV
+#   ifdef	AFS_SUN54_ENV
 	releasef(uap->fd);
-#else
+#   else
 	releasef(fd);
-#endif
+#   endif
     return (code);
-#else
-#ifdef AFS_LINUX22_ENV
+#  elif defined(AFS_LINUX22_ENV)
     return -code;
-#else
-#if defined(KERNEL_HAVE_UERROR)
+#  elif defined(KERNEL_HAVE_UERROR)
     if (!getuerror())
 	setuerror(code);
-#if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
+#   if defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
     return (getuerror()? -1 : u.u_ioctlrv);
-#else
+#   else
     return getuerror()? -1 : 0;
-#endif
-#endif
-#endif /* AFS_LINUX22_ENV */
-#endif /* AFS_SUN5_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#   endif
+#  endif
+
+#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     return (code);
-#else
+#  else
     return 0;
-#endif
+#  endif
 }
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
 #endif /* AFS_HPUX102_ENV */
 
 #if defined(AFS_SGI_ENV)
@@ -705,25 +658,11 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
     AFS_GLOCK();
     code = afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow);
     AFS_GUNLOCK();
-#ifdef AFS_SGI64_ENV
+# ifdef AFS_SGI64_ENV
     return code;
-#else
+# else
     return u.u_error;
-#endif
-}
-
-#elif defined(AFS_OSF_ENV)
-afs_pioctl(struct proc *p, void *args, int *retval)
-{
-    struct a {
-	char *path;
-	int cmd;
-	caddr_t cmarg;
-	int follow;
-    } *uap = (struct a *)args;
-
-    AFS_STATCNT(afs_pioctl);
-    return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow));
+# endif
 }
 
 #elif defined(AFS_FBSD50_ENV)
@@ -744,7 +683,7 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs_pioctl(struct proc *p, void *args, int *retval)
+afs_pioctl(afs_proc_t *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -754,15 +693,15 @@ afs_pioctl(struct proc *p, void *args, int *retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     kauth_cred_get()));
-#else
+# else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     p->p_cred->pc_ucred));
-#endif
+# endif
 }
 
 #endif
@@ -777,11 +716,14 @@ afs_pioctl(struct proc *p, void *args, int *retval)
 int
 #ifdef	AFS_SUN5_ENV
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
-		   rval_t *vvp, struct AFS_UCRED *credp)
+		   rval_t *vvp, afs_ucred_t *credp)
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#ifdef AFS_DARWIN100_ENV
+afs_syscall64_pioctl(user_addr_t path, unsigned int com, user_addr_t cmarg,
+		   int follow, afs_ucred_t *credp)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
-		   struct AFS_UCRED *credp)
+		   afs_ucred_t *credp)
 #else
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
@@ -789,10 +731,10 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 {
     struct afs_ioctl data;
 #ifdef AFS_NEED_CLIENTCONTEXT
-    struct AFS_UCRED *tmpcred = NULL;
+    afs_ucred_t *tmpcred = NULL;
 #endif
 #if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    struct AFS_UCRED *foreigncreds = NULL;
+    afs_ucred_t *foreigncreds = NULL;
 #endif
     register afs_int32 code = 0;
     struct vnode *vp = NULL;
@@ -889,11 +831,14 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 		       foreigncreds ? foreigncreds : credp);
 #else
 #ifdef AFS_LINUX22_ENV
-	code = gop_lookupname(path, AFS_UIOUSER, follow, &dp);
+	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &dp);
 	if (!code)
 	    vp = (struct vnode *)dp->d_inode;
 #else
-	code = gop_lookupname(path, AFS_UIOUSER, follow, &vp);
+	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &vp);
+#if defined(AFS_FBSD80_ENV) /* XXX check on 7x */
+	VN_HOLD(vp);
+#endif /* AFS_FBSD80_ENV */
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
@@ -991,6 +936,10 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef AFS_LINUX22_ENV
 	dput(dp);
 #else
+#if defined(AFS_FBSD80_ENV)
+    if (VOP_ISLOCKED(vp))
+	VOP_UNLOCK(vp, 0);
+#endif /* AFS_FBSD80_ENV */
 	AFS_RELE(vp);		/* put vnode back */
 #endif
     }
@@ -1004,13 +953,24 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
 }
 
+#ifdef AFS_DARWIN100_ENV
+int
+afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
+		   int follow, afs_ucred_t *credp)
+{
+    return afs_syscall64_pioctl(CAST_USER_ADDR_T(path), com,
+				CAST_USER_ADDR_T((unsigned int)cmarg), follow,
+				credp);
+}
+#endif
+
 #define MAXPIOCTLTOKENLEN \
 (3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
 
 int
 afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		 register struct afs_ioctl *ablob, int afollow,
-		 struct AFS_UCRED **acred)
+		 afs_ucred_t **acred)
 {
     struct vcache *avc;
     struct vrequest treq;
@@ -1551,24 +1511,20 @@ DECL_PIOCTL(PSetTokens)
     i = tcell->cellNum;
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
-	afs_int32 pag;
+	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_DARWIN_ENV)
-	struct proc *p = current_proc();	/* XXX */
-#else
-	struct proc *p = curproc;	/* XXX */
-#endif
-#ifndef AFS_DARWIN80_ENV
+# if defined(AFS_DARWIN_ENV)
+	afs_proc_t *p = current_proc();	/* XXX */
+# else
+	afs_proc_t *p = curproc;	/* XXX */
+# endif
+# ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
 		p->p_pid, p->p_comm);
-#endif
+# endif
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
-#ifdef	AFS_OSF_ENV
-	if (!setpag(u.u_procp, acred, -1, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 	if (!setpag(acred, -1, &pag, 1)) {
-#endif
 #endif
 	    afs_InitReq(&treq, *acred);
 	    areq = &treq;
@@ -2039,7 +1995,7 @@ DECL_PIOCTL(PUnlog)
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
 	    /* security is not having to say you're sorry */
-	    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
 	    /* We have to drop the lock over the call to afs_ResetUserConns, since
@@ -2276,8 +2232,8 @@ DECL_PIOCTL(PCheckAuth)
 }
 
 static int
-Prefetch(char *apath, struct afs_ioctl *adata, int afollow,
-	 struct AFS_UCRED *acred)
+Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
+	 afs_ucred_t *acred)
 {
     register char *tp;
     register afs_int32 code;
@@ -2333,14 +2289,14 @@ DECL_PIOCTL(PFindVolume)
     tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
     if (tvp) {
 	cp = aout;
-	for (i = 0; i < MAXHOSTS; i++) {
+	for (i = 0; i < AFS_MAXHOSTS; i++) {
 	    ts = tvp->serverHost[i];
 	    if (!ts)
 		break;
 	    memcpy(cp, (char *)&ts->addr->sa_ip, sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
-	if (i < MAXHOSTS) {
+	if (i < AFS_MAXHOSTS) {
 	    /* still room for terminating NULL, add it on */
 	    ainSize = 0;	/* reuse vbl */
 	    memcpy(cp, (char *)&ainSize, sizeof(afs_int32));
@@ -2393,17 +2349,11 @@ DECL_PIOCTL(PViceAccess)
  * \param[in] ain	not in use
  * \param[out] aout	PAG value or NOPAG
  *
- * \retval E2BIG	Error not enough space to copy out value
- *
  * \post get PAG value for the caller's cred
  */
 DECL_PIOCTL(PGetPAG)
 {
     afs_int32 pag;
-
-    if (*aoutSize < sizeof(afs_int32)) {
-	return E2BIG;
-    }
 
     pag = PagInCred(*acred);
 
@@ -2497,7 +2447,7 @@ DECL_PIOCTL(PGetCacheSize)
 	return EINVAL;
     }
     
-    memset((char *)results, 0, sizeof(results));
+    memset(results, 0, sizeof(results));
     results[0] = afs_cacheBlocks;
     results[1] = afs_blocksUsed;
     results[2] = afs_cacheFiles;
@@ -2610,7 +2560,7 @@ DECL_PIOCTL(PRemoveCallBack)
 DECL_PIOCTL(PNewCell)
 {
     /* create a new cell */
-    afs_int32 cellHosts[MAXCELLHOSTS], *lp, magic = 0;
+    afs_int32 cellHosts[AFS_MAXCELLHOSTS], *lp, magic = 0;
     char *newcell = 0, *linkedcell = 0, *tp = ain;
     register afs_int32 code, linkedstate = 0, ls;
     u_short fsport = 0, vlport = 0;
@@ -2628,16 +2578,16 @@ DECL_PIOCTL(PNewCell)
     if (magic != 0x12345678)
 	return EINVAL;
 
-    /* A 3.4 fs newcell command will pass an array of MAXCELLHOSTS
+    /* A 3.4 fs newcell command will pass an array of AFS_MAXCELLHOSTS
      * server addresses while the 3.5 fs newcell command passes
-     * MAXHOSTS. To figure out which is which, check if the cellname
+     * AFS_MAXHOSTS. To figure out which is which, check if the cellname
      * is good.
      */
-    newcell = tp + (MAXCELLHOSTS + 3) * sizeof(afs_int32);
-    scount = ((newcell[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
+    newcell = tp + (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32);
+    scount = ((newcell[0] != '\0') ? AFS_MAXCELLHOSTS : AFS_MAXHOSTS);
 
-    /* MAXCELLHOSTS (=8) is less than MAXHOSTS (=13) */
-    memcpy((char *)cellHosts, tp, MAXCELLHOSTS * sizeof(afs_int32));
+    /* AFS_MAXCELLHOSTS (=8) is less than AFS_MAXHOSTS (=13) */
+    memcpy((char *)cellHosts, tp, AFS_MAXCELLHOSTS * sizeof(afs_int32));
     tp += (scount * sizeof(afs_int32));
 
     lp = (afs_int32 *) tp;
@@ -2712,15 +2662,15 @@ DECL_PIOCTL(PListCells)
     tcell = afs_GetCellByIndex(whichCell, READ_LOCK);
     if (tcell) {
 	cp = aout;
-	memset(cp, 0, MAXCELLHOSTS * sizeof(afs_int32));
-	for (i = 0; i < MAXCELLHOSTS; i++) {
+	memset(cp, 0, AFS_MAXCELLHOSTS * sizeof(afs_int32));
+	for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	    if (tcell->cellHosts[i] == 0)
 		break;
 	    memcpy(cp, (char *)&tcell->cellHosts[i]->addr->sa_ip,
 		   sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
-	cp = aout + MAXCELLHOSTS * sizeof(afs_int32);
+	cp = aout + AFS_MAXCELLHOSTS * sizeof(afs_int32);
 	strcpy(cp, tcell->cellName);
 	cp += strlen(tcell->cellName) + 1;
 	*aoutSize = cp - aout;
@@ -3037,10 +2987,9 @@ DECL_PIOCTL(PFlushVolumeData)
 		    goto loop;
 		}
 #endif
-#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
-#else
-#ifdef AFS_DARWIN80_ENV
+#elif defined(AFS_DARWIN80_ENV)
 		vp = AFSTOV(tvc);
 		if (vnode_get(vp))
 		    continue;
@@ -3050,13 +2999,10 @@ DECL_PIOCTL(PFlushVolumeData)
 		    AFS_GLOCK();
 		    continue;
 		}
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		VREFCOUNT_INC(tvc); /* AIX, apparently */
-#endif
-#endif
 #endif
 		ReleaseReadLock(&afs_xvcache);
 #ifdef AFS_BOZONLOCK_ENV
@@ -3087,7 +3033,7 @@ DECL_PIOCTL(PFlushVolumeData)
     ReleaseReadLock(&afs_xvcache);
 
 
-    MObtainWriteLock(&afs_xdcache, 328);	/* needed if you're going to flush any stuff */
+    ObtainWriteLock(&afs_xdcache, 328);	/* needed if you're going to flush any stuff */
     for (i = 0; i < afs_cacheFiles; i++) {
 	if (!(afs_indexFlags[i] & IFEverUsed))
 	    continue;		/* never had any data */
@@ -3111,7 +3057,7 @@ DECL_PIOCTL(PFlushVolumeData)
 	}
 	afs_PutDCache(tdc);	/* bumped by getdslot */
     }
-    MReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     ObtainReadLock(&afs_xvolume);
     for (i = 0; i < NVOLS; i++) {
@@ -3292,9 +3238,9 @@ DECL_PIOCTL(PSetSysName)
 	ain += t + 1;
 	num = count;
     }
-    if ((*acred)->cr_gid == RMTUSER_REQ ||
-	(*acred)->cr_gid == RMTUSER_REQ_PRIV) {	/* Handles all exporters */
-	if (allpags && (*acred)->cr_gid != RMTUSER_REQ_PRIV) {
+    if (afs_cr_gid(*acred) == RMTUSER_REQ ||
+	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV) {	/* Handles all exporters */
+	if (allpags && afs_cr_gid(*acred) != RMTUSER_REQ_PRIV) {
 	    return EPERM;
 	}
 	pag = PagInCred(*acred);
@@ -3401,7 +3347,7 @@ ReSortCells_cb(struct cell *cell, void *arg)
     for (i = 0; i < s; i++) {
 	if (l[i] == cell->cellNum) {
 	    ObtainWriteLock(&cell->lock, 690);
-	    afs_SortServers(cell->cellHosts, MAXCELLHOSTS);
+	    afs_SortServers(cell->cellHosts, AFS_MAXCELLHOSTS);
 	    ReleaseWriteLock(&cell->lock);
 	}
     }
@@ -3432,7 +3378,7 @@ ReSortCells(int s, afs_int32 * l, int vlonly)
 	    for (k = 0; k < s; k++)
 		if (j->cell == l[k]) {
 		    ObtainWriteLock(&j->lock, 233);
-		    afs_SortServers(j->serverHost, MAXHOSTS);
+		    afs_SortServers(j->serverHost, AFS_MAXHOSTS);
 		    ReleaseWriteLock(&j->lock);
 		    break;
 		}
@@ -3890,7 +3836,7 @@ crget(void)
 {
     cred_t *cr;
     cr = crdup(get_current_cred());
-    memset((char *)cr, 0, sizeof(cred_t));
+    memset(cr, 0, sizeof(cred_t));
 #if CELL || CELL_PREPARE
     cr->cr_id = -1;
 #endif
@@ -3957,16 +3903,19 @@ DECL_PIOCTL(PSetRxkcrypt)
 #define	PIOCTL_HEADER	6
 static int
 HandleClientContext(struct afs_ioctl *ablob, int *com,
-		    struct AFS_UCRED **acred, struct AFS_UCRED *credp)
+		    afs_ucred_t **acred, afs_ucred_t *credp)
 {
     char *ain, *inData;
     afs_uint32 hostaddr;
     afs_int32 uid, g0, g1, i, code, pag, exporter_type, isroot = 0;
     struct afs_exporter *exporter, *outexporter;
-    struct AFS_UCRED *newcred;
+    afs_ucred_t *newcred;
     struct unixuser *au;
     afs_uint32 comp = *com & 0xff00;
     afs_uint32 h, l;
+#if defined(AFS_SUN510_ENV)
+    gid_t gids[2];
+#endif
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -4032,38 +3981,39 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #ifdef	AFS_AIX41_ENV
     setuerror(0);
 #endif
-    newcred->cr_gid = isroot ? RMTUSER_REQ_PRIV : RMTUSER_REQ;
+    afs_set_cr_gid(newcred, isroot ? RMTUSER_REQ_PRIV : RMTUSER_REQ);
 #ifdef AFS_AIX51_ENV
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-    newcred->cr_group_info = groups_alloc(1); /* not that anything sets this */
+# ifdef AFS_LINUX26_ONEGROUP_ENV
+    set_cr_group_info(newcred, groups_alloc(1)); /* not that anything sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
     h = ((g1-0x3f00) >> 14) + h + h + h;
-    GROUP_AT(newcred->cr_group_info, 0) = ((h << 28) | l);
-#else
-    newcred->cr_group_info = groups_alloc(2);
-    GROUP_AT(newcred->cr_group_info, 0) = g0;
-    GROUP_AT(newcred->cr_group_info, 1) = g1;
-#endif
+    GROUP_AT(cr_group_info(newcred), 0) = ((h << 28) | l);
+# else
+    set_cr_group_info(newcred, groups_alloc(2));
+    GROUP_AT(cr_group_info(newcred), 0) = g0;
+    GROUP_AT(cr_group_info(newcred), 1) = g1;
+# endif
+#elif defined(AFS_SUN510_ENV)
+    gids[0] = g0;
+    gids[1] = g1;
+    crsetgroups(newcred, 2, gids);
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
 #endif
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
-#elif !defined(AFS_LINUX26_ENV)
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+#elif !defined(AFS_LINUX26_ENV) && !defined(AFS_SUN510_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
     newcred->cr_ngroups = 2;
-#else
+# else
     for (i = 2; i < NGROUPS; i++)
 	newcred->cr_groups[i] = NOGROUP;
-#endif
-#endif
-#if	!defined(AFS_OSF_ENV) 
-    afs_nfsclient_init();	/* before looking for exporter, ensure one exists */
+# endif
 #endif
     if (!(exporter = exporter_find(exporter_type))) {
 	/* Exporter wasn't initialized or an invalid exporter type */
@@ -4071,15 +4021,15 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	return EINVAL;
     }
     if (exporter->exp_states & EXP_PWSYNC) {
-	if (uid != credp->cr_uid) {
+	if (uid != afs_cr_uid(credp)) {
 	    crfree(newcred);
 	    return ENOEXEC;	/* XXX Find a better errno XXX */
 	}
     }
-    newcred->cr_uid = uid;	/* Only temporary  */
+    afs_set_cr_uid(newcred, uid);	/* Only temporary  */
     code = EXP_REQHANDLER(exporter, &newcred, hostaddr, &pag, &outexporter);
     /* The client's pag is the only unique identifier for it */
-    newcred->cr_uid = pag;
+    afs_set_cr_uid(newcred, pag);
     *acred = newcred;
     if (!code && *com == PSETPAG) {
 	/* Special case for 'setpag' */
@@ -4767,7 +4717,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 	return EINVAL;
     memcpy(&addr, ain, sizeof(afs_int32));
 
-    if ((*acred)->cr_gid == RMTUSER_REQ_PRIV && !addr) {
+    if (afs_cr_gid(*acred) == RMTUSER_REQ_PRIV && !addr) {
 	tu = afs_GetUser(areq->uid, -1, SHARED_LOCK);
 	if (!tu->exporter || !(addr = EXP_GETHOST(tu->exporter))) {
 	    afs_PutUser(tu, SHARED_LOCK);
@@ -4785,7 +4735,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 		tu->vid = UNDEFVID;
 		tu->states &= ~UHasTokens;
 		/* security is not having to say you're sorry */
-		memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+		memset(&tu->ct, 0, sizeof(struct ClearToken));
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);
 		afs_ResetUserConns(tu);

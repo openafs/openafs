@@ -32,8 +32,8 @@
 #define NFSSRV 		"/kernel/misc/nfssrv"
 #define NFSSRV_V9 	"/kernel/misc/sparcv9/nfssrv"
 
-#define AFS_UCRED cred
-#define AFS_PROC struct proc
+typedef struct cred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 /* 
  * Time related macros
@@ -61,6 +61,8 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(ioflag),(ulimit),(cr),(aresid))
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) \
   lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) \
+  lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 
 #if defined(AFS_SUN510_ENV)
@@ -69,7 +71,6 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 #define afs_suser(x)        suser(x)
 #endif
 
-#ifdef KERNEL
 /*
  * Global lock support. 
  */
@@ -79,6 +80,8 @@ extern kmutex_t afs_global_lock;
 #define AFS_GLOCK()	mutex_enter(&afs_global_lock);
 #define AFS_GUNLOCK()	mutex_exit(&afs_global_lock);
 #define ISAFS_GLOCK()	mutex_owned(&afs_global_lock)
+#define osi_InitGlock() \
+	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
 #endif
 
 
@@ -124,5 +127,4 @@ struct afs_ifinfo {
   int         metric;
   ipaddr_t    dstaddr;
 };
-#endif
 #endif /* _OSI_MACHDEP_H_ */

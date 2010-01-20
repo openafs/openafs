@@ -57,6 +57,8 @@ typedef unsigned short etap_event_t;
 #endif
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
+#undef gop_lookupname_user
+#define gop_lookupname_user osi_lookupname_user
 
 #define FTRUNC 0
 
@@ -101,9 +103,17 @@ enum vcexcl { EXCL, NONEXCL };
 
 #define crref kauth_cred_get_with_ref
 #define crhold kauth_cred_ref
+#ifdef AFS_DARWIN100_ENV
+#define crfree(X) kauth_cred_unref(&X)
+#else
 #define crfree kauth_cred_rele
+#endif
 #define crdup kauth_cred_dup
-
+#ifdef AFS_DARWIN100_ENV
+#define ubc_msync_range(X,Y,Z,A) ubc_msync(X,Y,Z,NULL,A)
+#else
+#define ubc_msync_range(X,Y,Z,A) ubc_sync_range(X,Y,Z,A)
+#endif
 extern vfs_context_t afs_osi_ctxtp;
 extern int afs_osi_ctxtp_initialized;
 #endif
@@ -128,9 +138,8 @@ static inline time_t osi_Time(void) {
 extern int hz;
 #endif
 
-#define AFS_UCRED       ucred
-
-#define AFS_PROC        struct proc
+typedef struct ucred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #define osi_vnhold(avc,r)       VN_HOLD(AFSTOV(avc))
 #define VN_HOLD(vp) darwin_vn_hold(vp)
@@ -146,7 +155,6 @@ void darwin_vn_rele(struct vnode *vp);
 
 #undef afs_suser
 
-#ifdef KERNEL
 extern thread_t afs_global_owner;
 /* simple locks cannot be used since sleep can happen at any time */
 #ifdef AFS_DARWIN80_ENV
@@ -165,6 +173,10 @@ extern lck_mtx_t  *afs_global_lock;
 	afs_global_owner = 0; \
         lck_mtx_unlock(afs_global_lock); \
     } while(0)
+#define osi_InitGlock() \
+    do { \
+	afs_global_owner = 0; \
+    } while (0)
 #else
 /* Should probably use mach locks rather than bsd locks, since we use the
    mach thread control api's elsewhere (mach locks not used for consistency
@@ -183,6 +195,11 @@ extern struct lock__bsd__ afs_global_lock;
 	afs_global_owner = 0; \
         lockmgr(&afs_global_lock, LK_RELEASE, 0, current_proc()); \
     } while(0)
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
 #endif
 #define ISAFS_GLOCK() (afs_global_owner == current_thread())
 
@@ -229,6 +246,22 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size);
 #define ifaddr_withnet(x) ifa_ifwithnet(x)
 #endif
 
-#endif /* KERNEL */
+/* Vnode related macros */
+
+#if defined(AFS_DARWIN80_ENV)
+extern int afs_vfs_typenum;
+# define vType(vc)               vnode_vtype(AFSTOV(vc))
+# define vSetVfsp(vc, vfsp)
+# define vSetType(vc, type)      (vc)->f.m.Type = (type)
+# define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
+# define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
+#else
+extern int (**afs_vnodeop_p) ();
+# define vType(vc)               AFSTOV(vc)->v_type
+# define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
+# define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
+# define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+# define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
+#endif
 
 #endif /* _OSI_MACHDEP_H_ */

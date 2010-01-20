@@ -56,6 +56,7 @@
 #define AFS_X86_FBSD71_ENV 1
 #define AFS_X86_FBSD80_ENV 1
 #define AFS_X86_ENV 1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 #define FTRUNC O_TRUNC
 
@@ -167,6 +168,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_USR_FBSD71_ENV	1
 #define AFS_USR_FBSD80_ENV	1
 #define AFS_USR_FBSD_ENV	1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */

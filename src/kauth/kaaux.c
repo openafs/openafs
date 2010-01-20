@@ -16,7 +16,7 @@
 #include "afs/kauth.h"
 #else /* defined(UKERNEL) */
 #include <rx/xdr.h>
-#include "kauth.h"
+#include <afs/kauth.h>
 #endif /* defined(UKERNEL) */
 
 #define MAXBS	2048		/* try to avoid horrible allocs */

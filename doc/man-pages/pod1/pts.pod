@@ -31,37 +31,53 @@ There are several categories of commands in the pts command suite:
 
 =item *
 
-Commands to create and remove Protection Database entries: B<pts
-creategroup>, B<pts createuser>, and B<pts delete>.
+Commands to create and remove Protection Database entries:
+L<B<pts creategroup>|pts_creategroup(1)>,
+L<B<pts createuser>|pts_createuser(1)>,
+and L<B<pts delete>|pts_delete(1)>.
 
 =item *
 
-Commands to administer and display group membership: B<pts adduser>, B<pts
-listowned>, B<pts membership>, and B<pts removeuser>.
+Commands to administer and display group membership:
+L<B<pts adduser>|pts_adduser(1)>,
+L<B<pts listowned>|pts_listowned(1)>,
+L<B<pts membership>|pts_membership(1)>,
+and L<B<pts removeuser>|pts_removeuser(1)>.
 
 =item *
 
 Commands to administer and display properties of user and group entries
-other than membership: B<pts chown>, B<pts examine>, B<pts listentries>,
-B<pts rename>, and B<pts setfields>.
+other than membership:
+L<B<pts chown>|pts_chown(1)>,
+L<B<pts examine>|pts_examine(1)>,
+L<B<pts listentries>|pts_listentries(1)>,
+L<B<pts rename>|pts_rename(1)>,
+and L<B<pts setfields>|pts_setfields(1)>.
 
 =item *
 
 Commands to set and examine the counters used when assigning IDs to users
-and groups: B<pts listmax> and B<pts setmax>.
+and groups:
+L<B<pts listmax>|pts_listmax(1)>
+and L<B<pts setmax>|pts_setmax(1)>.
 
 =item *
 
-Commands to run commands interactively: B<pts interactive>, B<pts
-sleep>, and B<pts quit>.
+Commands to run commands interactively:
+L<B<pts interactive>|pts_interactive(1)>,
+L<B<pts sleep>|pts_sleep(1)>,
+and L<B<pts quit>|pts_quit(1)>.
 
 =item *
 
-A command to run commands from a file: B<pts source>.
+A command to run commands from a file:
+L<B<pts source>|pts_source(1)>.
 
 =item *
 
-Commands to obtain help: B<pts apropos> and B<pts help>.
+Commands to obtain help:
+L<B<pts apropos>|pts_apropos(1)>
+and L<B<pts help>|pts_help(1)>.
 
 =back
 
@@ -123,11 +139,11 @@ Establishes an unauthenticated connection to the Protection Server, in
 which the server treats the issuer as the unprivileged user
 C<anonymous>. It is useful only when authorization checking is disabled on
 the server machine (during the installation of a file server machine or
-when the B<bos setauth> command has been used during other unusual
-circumstances). In normal circumstances, the Protection Server allows only
-privileged users to issue commands that change the Protection Database,
-and refuses to perform such an action even if the B<-noauth> flag is
-provided.
+when the L<B<bos setauth>|bos_setauth(8)> command has been used during
+other unusual circumstances). In normal circumstances, the Protection
+Server allows only privileged users to issue commands that change the
+Protection Database, and refuses to perform such an action even if the
+B<-noauth> flag is provided.
 
 =item B<-encrypt>
 
@@ -167,8 +183,8 @@ on any entry in the Protection Database.
 
 Users who do not belong to the system:administrators group can list
 information about their own entry and any group entries they own. The
-privacy flags set with the B<pts setfields> command control access to
-entries owned by other users.
+privacy flags set with the L<B<pts setfields>|pts_setfields(1)> command
+control access to entries owned by other users.
 
 =head1 SEE ALSO
 

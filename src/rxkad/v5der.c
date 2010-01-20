@@ -329,7 +329,7 @@ decode_enumerated(const unsigned char *p, size_t len, unsigned *num,
     p += l;
     len -= l;
     ret += l;
-    e = der_get_int(p, reallen, num, &l);
+    e = der_get_unsigned(p, reallen, num, &l);
     if (e)
 	return e;
     p += l;

@@ -21,19 +21,28 @@
 
 #ifdef AFS_DARWIN80_ENV
 int
-osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	       struct vnode **vpp) {
-    vfs_context_t ctx;
+osi_lookupname_user(user_addr_t aname, enum uio_seg seg, int followlink,
+		    struct vnode **vpp) {
     char tname[PATHBUFLEN];
-    int code, flags;
     size_t len;
-    
+    int code;
+
     if (seg == AFS_UIOUSER) { /* XXX 64bit */
 	AFS_COPYINSTR(aname, tname, sizeof(tname), &len, code);
 	if (code)
 	    return code;
-	aname=tname;
-    }
+	return osi_lookupname(tname, seg, followlink, vpp);
+    } else
+	return osi_lookupname(CAST_DOWN(char *, aname), seg, followlink, vpp);
+
+}
+
+int
+osi_lookupname(char *aname, enum uio_seg seg, int followlink,
+	       struct vnode **vpp) {
+    vfs_context_t ctx;
+    int code, flags;
+
     flags = 0;
     if (!followlink)
 	flags |= VNODE_LOOKUP_NOFOLLOW;
@@ -94,32 +103,34 @@ afs_suser(void *credp)
 }
 
 #ifdef AFS_DARWIN80_ENV
-uio_t afsio_darwin_partialcopy(uio_t auio, int size) {
-   uio_t res;
-   int i;
-   user_addr_t iovaddr;
-   user_size_t iovsize;
+uio_t
+afsio_darwin_partialcopy(uio_t auio, int size)
+{
+    uio_t res;
+    int i;
+    user_addr_t iovaddr;
+    user_size_t iovsize;
 
-   if (proc_is64bit(current_proc())) {
-       res = uio_create(uio_iovcnt(auio), uio_offset(auio),
-			uio_isuserspace(auio) ? UIO_USERSPACE64 : UIO_SYSSPACE32,
-			uio_rw(auio));
-   } else {
-       res = uio_create(uio_iovcnt(auio), uio_offset(auio),
-			uio_isuserspace(auio) ? UIO_USERSPACE32 : UIO_SYSSPACE32,
-			uio_rw(auio));
-   }
+    if (proc_is64bit(current_proc())) {
+	res = uio_create(uio_iovcnt(auio), uio_offset(auio),
+			 uio_isuserspace(auio) ? UIO_USERSPACE64 : UIO_SYSSPACE32,
+			 uio_rw(auio));
+    } else {
+	res = uio_create(uio_iovcnt(auio), uio_offset(auio),
+			 uio_isuserspace(auio) ? UIO_USERSPACE32 : UIO_SYSSPACE32,
+			 uio_rw(auio));
+    }
 
-   for (i = 0;i < uio_iovcnt(auio) && size > 0;i++) {
-       if (uio_getiov(auio, i, &iovaddr, &iovsize))
-           break;
-       if (iovsize > size)
-          iovsize = size;
-       if (uio_addiov(res, iovaddr, iovsize))
-          break;
-       size -= iovsize;
-   }
-   return res;
+    for (i = 0;i < uio_iovcnt(auio) && size > 0;i++) {
+	if (uio_getiov(auio, i, &iovaddr, &iovsize))
+	    break;
+	if (iovsize > size)
+	    iovsize = size;
+	if (uio_addiov(res, iovaddr, iovsize))
+	    break;
+	size -= iovsize;
+    }
+    return res;
 }
 
 vfs_context_t afs_osi_ctxtp;
@@ -127,84 +138,107 @@ int afs_osi_ctxtp_initialized;
 static thread_t vfs_context_owner;
 static proc_t vfs_context_curproc;
 int vfs_context_ref;
-void get_vfs_context(void) {
-  int isglock = ISAFS_GLOCK();
 
-  if (!isglock)
-     AFS_GLOCK();
-  if (afs_osi_ctxtp_initialized) {
-     if (!isglock)
-        AFS_GUNLOCK();
-      return;
-  }
-  osi_Assert(vfs_context_owner != current_thread());
-  if (afs_osi_ctxtp && current_proc() == vfs_context_curproc) {
-     vfs_context_ref++;
-     vfs_context_owner = current_thread();
-     if (!isglock)
-        AFS_GUNLOCK();
-     return;
-  }
-  while (afs_osi_ctxtp && vfs_context_ref) {
-     afs_osi_Sleep(&afs_osi_ctxtp);
-     if (afs_osi_ctxtp_initialized) {
-       if (!isglock)
-          AFS_GUNLOCK();
-       return;
-     }
-  }
-  vfs_context_rele(afs_osi_ctxtp);
-  vfs_context_ref=1;
-  afs_osi_ctxtp = vfs_context_create(NULL);
-  vfs_context_owner = current_thread();
-  vfs_context_curproc = current_proc();
-  if (!isglock)
-     AFS_GUNLOCK();
+void
+get_vfs_context(void)
+{
+    int isglock = ISAFS_GLOCK();
+
+    if (!isglock)
+	AFS_GLOCK();
+    if (afs_osi_ctxtp_initialized) {
+	if (!isglock)
+	    AFS_GUNLOCK();
+	return;
+    }
+    osi_Assert(vfs_context_owner != current_thread());
+    if (afs_osi_ctxtp && current_proc() == vfs_context_curproc) {
+	vfs_context_ref++;
+	vfs_context_owner = current_thread();
+	if (!isglock)
+	    AFS_GUNLOCK();
+	return;
+    }
+    while (afs_osi_ctxtp && vfs_context_ref) {
+	afs_osi_Sleep(&afs_osi_ctxtp);
+	if (afs_osi_ctxtp_initialized) {
+	    if (!isglock)
+		AFS_GUNLOCK();
+	    return;
+	}
+    }
+    vfs_context_rele(afs_osi_ctxtp);
+    vfs_context_ref=1;
+    afs_osi_ctxtp = vfs_context_create(NULL);
+    vfs_context_owner = current_thread();
+    vfs_context_curproc = current_proc();
+    if (!isglock)
+	AFS_GUNLOCK();
 }
 
-void put_vfs_context(void) {
-  int isglock = ISAFS_GLOCK();
+void
+put_vfs_context(void)
+{
+    int isglock = ISAFS_GLOCK();
 
-  if (!isglock)
-     AFS_GLOCK();
-  if (afs_osi_ctxtp_initialized) {
-     if (!isglock)
-        AFS_GUNLOCK();
-      return;
-  }
-  if (vfs_context_owner == current_thread())
-      vfs_context_owner = (thread_t)0;
-  vfs_context_ref--;
-  afs_osi_Wakeup(&afs_osi_ctxtp);
-     if (!isglock)
+    if (!isglock)
+	AFS_GLOCK();
+    if (afs_osi_ctxtp_initialized) {
+	if (!isglock)
+	    AFS_GUNLOCK();
+	return;
+    }
+    if (vfs_context_owner == current_thread())
+	vfs_context_owner = (thread_t)0;
+    vfs_context_ref--;
+    afs_osi_Wakeup(&afs_osi_ctxtp);
+    if (!isglock)
         AFS_GUNLOCK();
 }
 
-extern int afs3_syscall();
-
-int afs_cdev_nop_openclose(dev_t dev, int flags, int devtype,struct proc *p) {
-  return 0;
+int
+afs_cdev_nop_openclose(dev_t dev, int flags, int devtype,struct proc *p)
+{
+    return 0;
 }
-extern int afs3_syscall(struct proc *p, void *data, unsigned long *retval);
 
 int
 afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
-   unsigned long retval=0;
-   int code;
-   struct afssysargs *a = (struct afssysargs *)data;
-   if (proc_is64bit(p))
-     return EINVAL;
+    unsigned int retval=0;
+    int code, is64 = proc_is64bit(p);
+    struct afssysargs *a = (struct afssysargs *)data;
+    struct afssysargs64 *a64 = (struct afssysargs64 *)data;
 
-  if (cmd != VIOC_SYSCALL) {
-     return EINVAL;
-  }
+    if (((unsigned int)cmd != VIOC_SYSCALL) &&
+	((unsigned int)cmd != VIOC_SYSCALL64))
+	return EINVAL;
 
- code=afs3_syscall(p, data, &retval);
- if (code)
-    return code;
- if (retval && a->syscall != AFSCALL_CALL && a->param1 != AFSOP_CACHEINODE) { printf("SSCall(%d,%d) is returning non-error value %d\n", a->syscall, a->param1, retval); }
- a->retval = retval;
- return 0; 
+    if (((unsigned int)cmd == VIOC_SYSCALL64) && (is64 == 0))
+	return EINVAL;
+
+    if (((unsigned int)cmd == VIOC_SYSCALL) && (is64 != 0))
+	return EINVAL;
+    
+    code=afs3_syscall(p, data, &retval);
+    if (code)
+	return code;
+
+    if ((!is64) && retval && a->syscall != AFSCALL_CALL
+	&& a->param1 != AFSOP_CACHEINODE)
+    {
+	printf("SSCall(%d,%d) is returning non-error value %d\n", a->syscall, a->param1, retval);
+    }
+    if ((is64) && retval && a64->syscall != AFSCALL_CALL
+	&& a64->param1 != AFSOP_CACHEINODE)
+    {
+	printf("SSCall(%d,%llx) is returning non-error value %d\n", a64->syscall, a64->param1, retval);
+    }
+
+    if (!is64)
+	a->retval = retval;
+    else
+	a64->retval = retval;
+    return 0; 
 }
 
 #endif

@@ -1622,7 +1622,7 @@ afs_gn_strategy(struct buf *abp)
 
 int
 afs_inactive(struct vcache *avc, 
-	     struct AFS_UCRED *acred)
+	     afs_ucred_t *acred)
 {
     afs_InactiveVCache(avc, acred);
 }

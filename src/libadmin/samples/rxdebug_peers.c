@@ -16,6 +16,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+ # pragma GCC diagnostic warning "-Wformat"
+#endif
+
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

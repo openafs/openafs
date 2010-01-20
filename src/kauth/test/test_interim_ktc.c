@@ -23,6 +23,7 @@
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
+#include <afs/afs_consts.h>
 #include "kautils.h"
 
 
@@ -296,7 +297,6 @@ CheckAuth2(server)
 /* Stolen from the "fs" command. */
 
 #define MAXNAME 100
-#define	MAXSIZE	2048
 
 static void
 ListCellsCmd()
@@ -305,12 +305,12 @@ ListCellsCmd()
     long i, j;
     char *tcp;
     long clear;
-    char space[MAXSIZE];
+    char space[AFS_PIOCTL_MAXSIZE];
     struct ViceIoctl blob;
 
     for (i = 0; i < 1000; i++) {
 	char *cellname;
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = sizeof(long);
 	blob.in = space;
 	blob.out = space;
@@ -366,8 +366,8 @@ char *
 AclToString(acl)
      struct Acl *acl;
 {
-    static char mydata[MAXSIZE];
-    char tstring[MAXSIZE];
+    static char mydata[AFS_PIOCTL_MAXSIZE];
+    char tstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
     sprintf(mydata, "%d\n%d\n", acl->nplus, acl->nminus);
     for (tp = acl->pluslist; tp; tp = tp->next) {
@@ -485,9 +485,9 @@ AddTester(pathname)
     register long code;
     struct ViceIoctl blob;
     struct Acl *al;
-    char space[MAXSIZE];
+    char space[AFS_PIOCTL_MAXSIZE];
 
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = 0;
     blob.out = space;
     code = pioctl(pathname, VIOCGETAL, &blob, 1);

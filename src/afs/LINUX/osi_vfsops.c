@@ -21,23 +21,17 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#if !defined(AFS_LINUX26_ENV)
-#include "h/locks.h"
-#endif
-#if defined(AFS_LINUX24_ENV)
-#include "h/smp_lock.h"
-#endif
+#include <linux/smp_lock.h>
 
+#include "osi_compat.h"
 
 struct vcache *afs_globalVp = 0;
 struct vfs *afs_globalVFS = 0;
-#if defined(AFS_LINUX24_ENV)
 struct vfsmount *afs_cacheMnt;
-#endif
 int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
 extern struct super_operations afs_sops;
-#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
+#if !defined(AFS_NONFSTRANS)
 extern struct export_operations afs_export_ops;
 #endif
 extern afs_rwlock_t afs_xvcache;
@@ -64,24 +58,19 @@ int afs_fill_super(struct super_block *sb, void *data, int silent);
  * read the "super block" for AFS - roughly eguivalent to struct vfs.
  * dev, covered, s_rd_only, s_dirt, and s_type will be set by read_super.
  */
-#if defined(AFS_LINUX26_ENV)
 #ifdef GET_SB_HAS_STRUCT_VFSMOUNT
-int
+static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data, struct vfsmount *mnt)
+	   const char *dev_name, void *data, struct vfsmount *mnt) {
+    return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
+}
 #else
 static struct superblock *
 afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data)
-#endif
-{
-#ifdef GET_SB_HAS_STRUCT_VFSMOUNT
-    return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
-#else
+	   const char *dev_name, void *data) {
     return get_sb_nodev(fs_type, flags, data, afs_fill_super);
-#endif
 }
-
+#endif
 
 struct file_system_type afs_fs_type = {
     .owner = THIS_MODULE,
@@ -90,29 +79,13 @@ struct file_system_type afs_fs_type = {
     .kill_sb = kill_anon_super,
     .fs_flags = FS_BINARY_MOUNTDATA,
 };
-#elif defined(AFS_LINUX24_ENV)
-DECLARE_FSTYPE(afs_fs_type, "afs", afs_read_super, 0);
-#else
-struct file_system_type afs_fs_type = {
-    "afs",			/* name - used by mount operation. */
-    0,				/* requires_dev - no for network filesystems. mount() will 
-				 * pass us an "unnamed" device. */
-    afs_read_super,		/* wrapper to afs_mount */
-    NULL			/* pointer to next file_system_type once registered. */
-};
-#endif
 
-#if defined(AFS_LINUX26_ENV)
 struct backing_dev_info afs_backing_dev_info = {
-    .ra_pages		= 0, /* disable readahead, afs does prefetch */
+    .ra_pages		= 32,
 };
 
 int
 afs_fill_super(struct super_block *sb, void *data, int silent)
-#else
-struct super_block *
-afs_read_super(struct super_block *sb, void *data, int silent)
-#endif
 {
     int code = 0;
 
@@ -121,25 +94,15 @@ afs_read_super(struct super_block *sb, void *data, int silent)
 	printf
 	    ("You must reload the AFS kernel extensions before remounting AFS.\n");
 	AFS_GUNLOCK();
-#if defined(AFS_LINUX26_ENV)
 	return -EINVAL;
-#else
-	return NULL;
-#endif
     }
     afs_was_mounted = 1;
 
     /* Set basics of super_block */
-#if !defined(AFS_LINUX24_ENV)
-    lock_super(sb);
-#endif
-#if defined(AFS_LINUX26_ENV)
    __module_get(THIS_MODULE);
-#else
-    MOD_INC_USE_COUNT;
-#endif
 
     afs_globalVFS = sb;
+    sb->s_flags |= MS_NOATIME;
     sb->s_blocksize = 1024;
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
@@ -147,7 +110,12 @@ afs_read_super(struct super_block *sb, void *data, int silent)
 #if defined(HAVE_BDI_INIT)
     bdi_init(&afs_backing_dev_info);
 #endif
-#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
+#if defined (STRUCT_SUPER_BLOCK_HAS_S_BDI)
+    sb->s_bdi = &afs_backing_dev_info;
+    /* The name specified here will appear in the flushing thread name - flush-afs */
+    bdi_register(&afs_backing_dev_info, NULL, "afs");
+#endif
+#if !defined(AFS_NONFSTRANS)
     sb->s_export_op = &afs_export_ops;
 #endif
 #if defined(MAX_NON_LFS)
@@ -167,23 +135,12 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     code = afs_root(sb);
     if (code) {
 	afs_globalVFS = NULL;
-#if defined(AFS_LINUX26_ENV)
+	osi_linux_free_inode_pages();
         module_put(THIS_MODULE);
-#else
-        MOD_DEC_USE_COUNT;
-#endif
     }
 
-#if !defined(AFS_LINUX24_ENV)
-    unlock_super(sb);
-#endif
-
     AFS_GUNLOCK();
-#if defined(AFS_LINUX26_ENV)
     return code ? -EINVAL : 0;
-#else
-    return code ? NULL : sb;
-#endif
 }
 
 
@@ -217,11 +174,7 @@ afs_root(struct super_block *afsp)
 
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
-#if defined(AFS_LINUX24_ENV)
 		afsp->s_root = d_alloc_root(ip);
-#else
-		afsp->s_root = d_alloc_root(ip, NULL);
-#endif
 		afsp->s_root->d_op = &afs_dentry_operations;
 	    } else
 		code = ENOENT;
@@ -251,9 +204,7 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
     VATTR_NULL(&vattr);
     iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
 
-#if defined(AFS_LINUX26_ENV)
     lock_kernel();
-#endif
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ip), &vattr, credp);
     if (!code) {
@@ -261,31 +212,21 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 	vattr2inode(ip, &vattr);
     }
     AFS_GUNLOCK();
-#if defined(AFS_LINUX26_ENV)
     unlock_kernel();
-#endif
     crfree(credp);
     return -code;
 }
 
 
 #if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
-#if defined(HAVE_KMEM_CACHE_T)
-static kmem_cache_t *afs_inode_cachep;
-#else
-struct kmem_cache *afs_inode_cachep;
-#endif
+static afs_kmem_cache_t *afs_inode_cachep;
 
 static struct inode *
 afs_alloc_inode(struct super_block *sb)
 {
     struct vcache *vcp;
 
-#if defined(SLAB_KERNEL)
-    vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, SLAB_KERNEL);
-#else
-    vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, GFP_KERNEL);
-#endif
+    vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, KALLOC_TYPE);
     if (!vcp)
 	return NULL;
 
@@ -298,43 +239,25 @@ afs_destroy_inode(struct inode *inode)
     kmem_cache_free(afs_inode_cachep, inode);
 }
 
-static void
-#if defined(HAVE_KMEM_CACHE_T)
-init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
-#else
-#if defined(KMEM_CACHE_INIT)
-init_once(struct kmem_cache * cachep, void * foo)
-#else
-init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
-#endif
-#endif
+void
+init_once(void * foo)
 {
     struct vcache *vcp = (struct vcache *) foo;
 
-#if defined(SLAB_CTOR_VERIFY)
-    if ((flags & (SLAB_CTOR_VERIFY|SLAB_CTOR_CONSTRUCTOR)) ==
-	SLAB_CTOR_CONSTRUCTOR)
-#endif
-	inode_init_once(AFSTOV(vcp));
+    inode_init_once(AFSTOV(vcp));
 }
 
 int
 afs_init_inodecache(void)
 {
-#ifndef SLAB_RECLAIM_ACCOUNT
-#define SLAB_RECLAIM_ACCOUNT 0
-#endif
-
 #if defined(KMEM_CACHE_TAKES_DTOR)
     afs_inode_cachep = kmem_cache_create("afs_inode_cache",
-					 sizeof(struct vcache),
-					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
-					 init_once, NULL);
+		sizeof(struct vcache), 0,
+		SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT, init_once_func, NULL);
 #else
     afs_inode_cachep = kmem_cache_create("afs_inode_cache",
-					 sizeof(struct vcache),
-					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
-					 init_once);
+		sizeof(struct vcache), 0,
+		SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT, init_once_func);
 #endif
     if (afs_inode_cachep == NULL)
 	return -ENOMEM;
@@ -384,21 +307,12 @@ afs_put_super(struct super_block *sbp)
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
-#if !defined(AFS_LINUX26_ENV)
-    if (!suser()) {
-	AFS_GUNLOCK();
-	return;
-    }
-#endif
-
     afs_globalVFS = 0;
     afs_globalVp = 0;
 
     osi_linux_free_inode_pages();	/* invalidate and release remaining AFS inodes. */
     afs_shutdown();
-#if defined(AFS_LINUX24_ENV)
     mntput(afs_cacheMnt);
-#endif
 
     osi_linux_verify_alloced_memory();
 #if defined(HAVE_BDI_INIT)
@@ -407,11 +321,7 @@ afs_put_super(struct super_block *sbp)
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;
-#if defined(AFS_LINUX26_ENV)
     module_put(THIS_MODULE);
-#else
-    MOD_DEC_USE_COUNT;
-#endif
 }
 
 
@@ -419,32 +329,14 @@ afs_put_super(struct super_block *sbp)
  * statp is in user space, so we need to cobble together a statfs, then
  * copy it.
  */
-#if defined(AFS_LINUX26_ENV)
 int
 #if defined(STATFS_TAKES_DENTRY)
 afs_statfs(struct dentry *dentry, struct kstatfs *statp)
 #else
 afs_statfs(struct super_block *sbp, struct kstatfs *statp)
 #endif
-#elif defined(AFS_LINUX24_ENV)
-int
-afs_statfs(struct super_block *sbp, struct statfs *statp)
-#else
-int
-afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
-#endif
 {
-#if !defined(AFS_LINUX24_ENV)
-    struct statfs stat, *statp;
-
-    if (size < sizeof(struct statfs))
-	return;
-
-    memset(&stat, 0, size);
-    statp = &stat;
-#else
     memset(statp, 0, sizeof(*statp));
-#endif
 
     AFS_STATCNT(afs_statfs);
 
@@ -461,9 +353,6 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
     statp->f_fsid.val[1] = AFS_VFSFSID;
     statp->f_namelen = 256;
 
-#if !defined(AFS_LINUX24_ENV)
-    memcpy_tofs(__statp, &stat, size);
-#endif
     return 0;
 }
 
@@ -475,9 +364,6 @@ struct super_operations afs_sops = {
   .clear_inode =	afs_clear_inode,
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,
-#if !defined(AFS_LINUX24_ENV)
-  .notify_change =	afs_notify_change,
-#endif
 };
 
 /************** Support routines ************************/
@@ -498,27 +384,15 @@ iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
     if (iattrp->ia_valid & ATTR_SIZE)
 	vattrp->va_size = iattrp->ia_size;
     if (iattrp->ia_valid & ATTR_ATIME) {
-#if defined(AFS_LINUX26_ENV)
 	vattrp->va_atime.tv_sec = iattrp->ia_atime.tv_sec;
-#else
-	vattrp->va_atime.tv_sec = iattrp->ia_atime;
-#endif
 	vattrp->va_atime.tv_usec = 0;
     }
     if (iattrp->ia_valid & ATTR_MTIME) {
-#if defined(AFS_LINUX26_ENV)
 	vattrp->va_mtime.tv_sec = iattrp->ia_mtime.tv_sec;
-#else
-	vattrp->va_mtime.tv_sec = iattrp->ia_mtime;
-#endif
 	vattrp->va_mtime.tv_usec = 0;
     }
     if (iattrp->ia_valid & ATTR_CTIME) {
-#if defined(AFS_LINUX26_ENV)
 	vattrp->va_ctime.tv_sec = iattrp->ia_ctime.tv_sec;
-#else
-	vattrp->va_ctime.tv_sec = iattrp->ia_ctime;
-#endif
 	vattrp->va_ctime.tv_usec = 0;
     }
 }
@@ -543,7 +417,6 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_uid = vp->va_uid;
     ip->i_gid = vp->va_gid;
     i_size_write(ip, vp->va_size);
-#if defined(AFS_LINUX26_ENV)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
     ip->i_atime.tv_nsec = 0;
     ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
@@ -554,11 +427,6 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_mtime.tv_nsec = afs_sysnamegen;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
     ip->i_ctime.tv_nsec = 0;
-#else
-    ip->i_atime = vp->va_atime.tv_sec;
-    ip->i_mtime = vp->va_mtime.tv_sec;
-    ip->i_ctime = vp->va_ctime.tv_sec;
-#endif
 }
 
 /* osi_linux_free_inode_pages

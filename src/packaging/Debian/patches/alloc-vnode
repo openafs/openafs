@@ -9,7 +9,7 @@ Debian Bug#448380
 +++ openafs/src/volser/volprocs.c
 @@ -210,14 +210,14 @@
      struct acl_accessList *ACL;
-     ViceFid did;
+     AFSFid did;
      Inode inodeNumber, nearInode;
 -    char buf[SIZEOF_LARGEDISKVNODE];
 -    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;

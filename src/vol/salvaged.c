@@ -36,8 +36,8 @@
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
-#define WCOREDUMP(x)	(x & 0200)
+#ifndef WCOREDUMP
+#define WCOREDUMP(x)	((x) & 0200)
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -99,6 +99,7 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
+#include <afs/dir.h>
 #ifndef AFS_NT40_ENV
 #include <syslog.h>
 #endif
@@ -116,7 +117,6 @@
 #include "salvsync.h"
 #include "viceinode.h"
 #include "salvage.h"
-#include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
@@ -158,12 +158,13 @@ static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 static void SalvageServer(void);
 static void SalvageClient(VolumeId vid, char * pname);
 
-static int ChildFailed(int status);
-
 static int Reap_Child(char * prog, int * pid, int * status);
 
 static void * SalvageLogCleanupThread(void *);
 static int SalvageLogCleanup(int pid);
+
+static void * SalvageLogScanningThread(void *);
+static void ScanLogs(struct rx_queue *log_watch_queue);
 
 struct log_cleanup_node {
     struct rx_queue q;
@@ -183,9 +184,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
-    struct DiskPartition64 *partP;
-
+    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -261,7 +260,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     if ((ti = as->parms[15].items)) {	/* -datelogs */
-	TimeStampLogFile(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+	TimeStampLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
     }
 #endif
 
@@ -273,6 +272,11 @@ handleit(struct cmd_syndesc *as, void *arock)
 	if ((ti = as->parms[1].items)) {	/* -volumeid */
 	    seenvol = 1;
 	    vid = atoi(ti->data);
+	}
+
+	if (ShowLog) {
+	    printf("-showlog does not work with -client\n");
+	    exit(-1);
 	}
 
 	if (!seenpart || !seenvol) {
@@ -308,7 +312,6 @@ main(int argc, char **argv)
     int err = 0;
 
     int i;
-    extern char cml_version_number[];
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -417,8 +420,16 @@ SalvageClient(VolumeId vid, char * pname)
     afs_int32 code;
     SYNC_response res;
     SALVSYNC_response_hdr sres;
+    VolumePackageOptions opts;
 
-    VInitVolumePackage(volumeUtility, 5, 5, DONT_CONNECT_FS, 0);
+    VOptDefaults(volumeUtility, &opts);
+    if (VInitVolumePackage2(volumeUtility, &opts)) {
+	/* VInitVolumePackage2 can fail on e.g. partition attachment errors,
+	 * but we don't really care, since all we're doing is trying to use
+	 * SALVSYNC */
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
     SALVSYNC_clientInit();
     
     code = SALVSYNC_SalvageVolume(vid, pname, SALVSYNC_SALVAGE, SALVSYNC_OPERATOR, 0, NULL);
@@ -469,12 +480,13 @@ SalvageServer(void)
     pthread_t tid;
     pthread_attr_t attrs;
     int slot;
+    VolumePackageOptions opts;
 
     /* All entries to the log will be appended.  Useful if there are
      * multiple salvagers appending to the log.
      */
 
-    CheckLogFile(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+    CheckLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
 #ifndef AFS_NT40_ENV
 #ifdef AFS_LINUX20_ENV
     fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
@@ -489,7 +501,7 @@ SalvageServer(void)
     
     /* Get and hold a lock for the duration of the salvage to make sure
      * that no other salvage runs at the same time.  The routine
-     * VInitVolumePackage (called below) makes sure that a file server or
+     * VInitVolumePackage2 (called below) makes sure that a file server or
      * other volume utilities don't interfere with the salvage.
      */
     
@@ -502,10 +514,13 @@ SalvageServer(void)
     child_slot = (int *) malloc(Parallel * sizeof(int));
     assert(child_slot != NULL);
     memset(child_slot, 0, Parallel * sizeof(int));
-	    
+
     /* initialize things */
-    VInitVolumePackage(salvageServer, 5, 5,
-		       1, 0);
+    VOptDefaults(salvageServer, &opts);
+    if (VInitVolumePackage2(salvageServer, &opts)) {
+	Log("Shutting down: errors encountered initializing volume package\n");
+	Exit(1);
+    }
     DInit(10);
     queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);
@@ -523,6 +538,10 @@ SalvageServer(void)
     assert(pthread_create(&tid, 
 			  &attrs, 
 			  &SalvageLogCleanupThread,
+			  NULL) == 0);
+    assert(pthread_create(&tid,
+			  &attrs,
+			  &SalvageLogScanningThread,
 			  NULL) == 0);
 
     /* loop forever serving requests */
@@ -575,7 +594,6 @@ static int
 DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 {
     char childLog[AFSDIR_PATH_MAX];
-    int ret;
     struct DiskPartition64 * partP;
 
     /* do not allow further forking inside salvager */
@@ -617,10 +635,8 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 static void *
 SalvageChildReaperThread(void * args)
 {
-    int slot, pid, status, code, found;
-    struct SalvageQueueNode *qp, *nqp;
+    int slot, pid, status;
     struct log_cleanup_node * cleanup;
-    SALVSYNC_command_info info;
 
     assert(pthread_mutex_lock(&worker_lock) == 0);
 
@@ -744,4 +760,115 @@ SalvageLogCleanup(int pid)
     close(pidlog);
 
     return 0;
+}
+
+/* wake up every five minutes to see if a non-child salvage has finished */
+#define SALVAGE_SCAN_POLL_INTERVAL 300
+
+/**
+ * Thread to look for SalvageLog.$pid files that are not from our child
+ * worker salvagers, and notify SalvageLogCleanupThread to clean them
+ * up. This can happen if we restart during salvages, or the
+ * salvageserver crashes or something.
+ *
+ * @param arg  unused
+ *
+ * @return always NULL
+ */
+static void *
+SalvageLogScanningThread(void * arg)
+{
+    struct rx_queue log_watch_queue;
+
+    queue_Init(&log_watch_queue);
+
+    {
+	DIR *dp;
+	struct dirent *dirp;
+	char prefix[AFSDIR_PATH_MAX];
+	size_t prefix_len;
+
+	afs_snprintf(prefix, sizeof(prefix), "%s.", AFSDIR_SLVGLOG_FILE);
+	prefix_len = strlen(prefix);
+
+	dp = opendir(AFSDIR_LOGS_DIR);
+	assert(dp);
+
+	while ((dirp = readdir(dp)) != NULL) {
+	    pid_t pid;
+	    struct log_cleanup_node *cleanup;
+	    int i;
+
+	    if (strncmp(dirp->d_name, prefix, prefix_len) != 0) {
+		/* not a salvage logfile; skip */
+		continue;
+	    }
+
+	    errno = 0;
+	    pid = strtol(dirp->d_name + prefix_len, NULL, 10);
+
+	    if (errno != 0) {
+		/* file is SalvageLog.<something> but <something> isn't
+		 * a pid, so skip */
+		 continue;
+	    }
+
+	    VOL_LOCK;
+	    for (i = 0; i < Parallel; ++i) {
+		if (pid == child_slot[i]) {
+		    break;
+		}
+	    }
+	    VOL_UNLOCK;
+	    if (i < Parallel) {
+		/* this pid is one of our children, so the reaper thread
+		 * will take care of it; skip */
+		continue;
+	    }
+
+	    cleanup =
+		(struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
+	    cleanup->pid = pid;
+
+	    queue_Append(&log_watch_queue, cleanup);
+	}
+
+	closedir(dp);
+    }
+
+    ScanLogs(&log_watch_queue);
+
+    while (queue_IsNotEmpty(&log_watch_queue)) {
+	sleep(SALVAGE_SCAN_POLL_INTERVAL);
+	ScanLogs(&log_watch_queue);
+    }
+
+    return NULL;
+}
+
+/**
+ * look through log_watch_queue, and if any processes are not still
+ * running, hand them off to the SalvageLogCleanupThread
+ *
+ * @param log_watch_queue  a queue of PIDs that we should clean up if
+ * that PID has died
+ */
+static void
+ScanLogs(struct rx_queue *log_watch_queue)
+{
+    struct log_cleanup_node *cleanup, *next;
+
+    assert(pthread_mutex_lock(&worker_lock) == 0);
+
+    for (queue_Scan(log_watch_queue, cleanup, next, log_cleanup_node)) {
+	/* if a process is still running, assume it's the salvage process
+	 * still going, and keep waiting for it */
+	if (kill(cleanup->pid, 0) < 0 && errno == ESRCH) {
+	    queue_Remove(cleanup);
+	    queue_Append(&log_cleanup_queue, cleanup);
+	    assert(pthread_cond_signal(&log_cleanup_queue.queue_change_cv) == 0);
+	}
+    }
+
+    assert(pthread_mutex_unlock(&worker_lock) == 0);
 }

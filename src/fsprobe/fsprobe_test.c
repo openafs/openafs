@@ -18,7 +18,7 @@
 
 
 #include <string.h>
-#include <fsprobe.h>		/*Interface for fsprobe module */
+#include "fsprobe.h"		/*Interface for fsprobe module */
 #include <afs/afsutil.h>
     
 /*------------------------------------------------------------------------

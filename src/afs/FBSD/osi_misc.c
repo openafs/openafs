@@ -10,8 +10,6 @@
 /* 
  * osi_misc.c
  *
- * Implements:
- * afs_suser
  */
 
 #include <afsconfig.h>

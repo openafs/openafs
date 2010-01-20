@@ -47,6 +47,10 @@
 
 #include <lwp_elf.h>
 	
+#if defined(__linux__) && defined(__ELF__)
+	.section .note.GNU-stack,"",%progbits
+#endif
+
 	.file "process.s"
 	.data
 	.text

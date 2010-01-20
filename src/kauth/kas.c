@@ -30,8 +30,10 @@
 #include <string.h>
 #include <afs/cellconfig.h>
 #include <afs/com_err.h>
+#include <afs/cmd.h>
 
 #include "kauth.h"
+#include "kauth_internal.h"
 #include "kautils.h"
 
 

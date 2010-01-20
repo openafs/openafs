@@ -51,15 +51,6 @@ char2hex(char c)
   return -1;
 }
 
-static int
-hex2char(char c)
-{
-  if (c <= 9)
-    return (c + 48);
-
-  return (c - 10 + 'a');
-}
-
 int
 main(int argc, char *argv[])
 {

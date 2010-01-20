@@ -56,6 +56,8 @@ lsetpag(void)
     
     if(rval)
       errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
+#elif defined(AFS_DARWIN80_ENV)
+    errcode = ioctl_afs_syscall(AFSCALL_SETPAG,0,0,0,0,0,0,&errcode);
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
 #endif

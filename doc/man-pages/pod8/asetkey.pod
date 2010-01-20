@@ -81,7 +81,7 @@ C<ktadd>.
     Entry for principal afs with kvno 3, encryption type DES cbc mode
     with CRC-32 added to keytab WRFILE:/tmp/afs.keytab.
     kadmin:  exit
-    % asetkey 3 /tmp/afs.keytab afs
+    % asetkey add 3 /tmp/afs.keytab afs
 
 You may want to use C<afs/I<cell name>> instead of C<afs>, particularly if
 you may have multiple AFS cells for a single Kerberos realm.

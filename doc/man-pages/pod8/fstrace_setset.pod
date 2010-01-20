@@ -7,10 +7,10 @@ fstrace_setset - Sets the status of an event set
 =for html
 <div class="synopsis">
 
-B<fstrace setset> S<<< [B<-set> <I<set name>>+] >>> [B<-active>] [B<-inactive>]
-    [B<-dormant>] [B<-help>]
+B<fstrace setset> S<<< [B<-set> <I<set name>>+] >>>
+    [B<-active>] [B<-inactive>] [B<-dormant>] [B<-help>]
 
-B<fs set> S<<< [B<-s> <I<set name>>+] >>> [B<-a>] [B<-i>] [B<-d>] [B<-h>]
+B<fs sets> S<<< [B<-s> <I<set name>>+] >>> [B<-a>] [B<-i>] [B<-d>] [B<-h>]
 
 =for html
 </div>

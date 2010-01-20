@@ -1,14 +1,16 @@
 #include <afs/param.h>
 #include <afs/afscbint.h>	/*Callback interface defs */
+#include <afs/afsutil.h>
+#include <afs/afsutil_prototypes.h>
 int afs_cb_inited = 0;
 struct interfaceAddr afs_cb_interface;
 static int
-init_afs_cb()
+init_afs_cb(void)
 {
     int count;
 
     afs_uuid_create(&afs_cb_interface.uuid);
-    count = rx_getAllAddr(&afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
+    count = rx_getAllAddr((afs_uint32 *)&afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
     if (count <= 0)
 	afs_cb_interface.numberOfInterfaces = 0;
     else
@@ -18,11 +20,8 @@ init_afs_cb()
 }
 
 afs_int32
-SRXAFSCB_CallBack(rxcall, Fids_Array, CallBack_Array)
-     struct rx_call *rxcall;
-     AFSCBFids *Fids_Array;
-     AFSCBs *CallBack_Array;
-
+SRXAFSCB_CallBack(struct rx_call *rxcall, AFSCBFids *Fids_Array,
+		  AFSCBs *CallBack_Array)
 {				/*SRXAFSCB_CallBack */
     return (0);
 
@@ -30,87 +29,63 @@ SRXAFSCB_CallBack(rxcall, Fids_Array, CallBack_Array)
 
 
 afs_int32
-SRXAFSCB_InitCallBackState(rxcall)
-     struct rx_call *rxcall;
-
+SRXAFSCB_InitCallBackState(struct rx_call *rxcall)
 {				/*SRXAFSCB_InitCallBackState */
     return (0);
 
 }				/*SRXAFSCB_InitCallBackState */
 
 afs_int32
-SRXAFSCB_Probe(rxcall)
-     struct rx_call *rxcall;
-
+SRXAFSCB_Probe(struct rx_call *rxcall)
 {				/*SRXAFSCB_Probe */
     return (0);
 
 }				/*SRXAFSCB_Probe */
 
-
 afs_int32
-SRXAFSCB_GetCE(rxcall, index, ce)
-     struct rx_call *rxcall;
-     afs_int32 index;
-     AFSDBCacheEntry * ce;
+SRXAFSCB_GetCE(struct rx_call *rxcall, afs_int32 index, AFSDBCacheEntry * ce)
 {				/*SRXAFSCB_GetCE */
     return (0);
 }				/*SRXAFSCB_GetCE */
 
 
 afs_int32
-SRXAFSCB_GetCE64(rxcall, index, ce)
-     struct rx_call *rxcall;
-     afs_int32 index;
-     AFSDBCacheEntry64 *ce;
+SRXAFSCB_GetCE64(struct rx_call *rxcall, afs_int32 index, AFSDBCacheEntry64 *ce)
 {				/*SRXAFSCB_GetCE64 */
     return (0);
 }				/*SRXAFSCB_GetCE64 */
 
 
 afs_int32
-SRXAFSCB_GetLock(rxcall, index, lock)
-     struct rx_call *rxcall;
-     afs_int32 index;
-     AFSDBLock *lock;
+SRXAFSCB_GetLock(struct rx_call *rxcall, afs_int32 index, AFSDBLock *lock)
 {				/*SRXAFSCB_GetLock */
     return (0);
 
 }				/*SRXAFSCB_GetLock */
 
 afs_int32
-SRXAFSCB_XStatsVersion(rxcall, v)
-     struct rx_call *rxcall;
-     afs_int32 *v;
+SRXAFSCB_XStatsVersion(struct rx_call *rxcall, afs_int32 *v)
 {				/*SRXAFSCB_XStatsVersion */
     return (0);
 
 }				/*SRXAFSCB_XStatsVersion */
 
 afs_int32
-SRXAFSCB_GetXStats(rxcall, clientVersionNumber, collectionNumber, srvVersionNumberP, timeP, dataP)
-     struct rx_call *rxcall;
-     afs_int32 clientVersionNumber;
-     afs_int32 collectionNumber;
-     afs_int32 * srvVersionNumberP;
-     afs_int32 * timeP;
-     AFSCB_CollData * dataP;
+SRXAFSCB_GetXStats(struct rx_call *rxcall, afs_int32 clientVersionNumber,
+		   afs_int32 collectionNumber, afs_int32 * srvVersionNumberP,
+		   afs_int32 * timeP, AFSCB_CollData * dataP)
 {				/*SRXAFSCB_GetXStats */
     return (0);
 }				/*SRXAFSCB_GetXStats */
 
 int
-SRXAFSCB_InitCallBackState2(rxcall, addr)
-     struct rx_call *rxcall;
-     struct interfaceAddr *addr;
+SRXAFSCB_InitCallBackState2(struct rx_call *rxcall, struct interfaceAddr *addr)
 {
     return RXGEN_OPCODE;
 }
 
 int
-SRXAFSCB_WhoAreYou(rxcall, addr)
-     struct rx_call *rxcall;
-     struct interfaceAddr *addr;
+SRXAFSCB_WhoAreYou(struct rx_call *rxcall, struct interfaceAddr *addr)
 {
     if (rxcall && addr) {
 	if (!afs_cb_inited)
@@ -121,17 +96,13 @@ SRXAFSCB_WhoAreYou(rxcall, addr)
 }
 
 int
-SRXAFSCB_InitCallBackState3(rxcall, uuidp)
-     struct rx_call *rxcall;
-     afsUUID *uuidp;
+SRXAFSCB_InitCallBackState3(struct rx_call *rxcall, afsUUID *uuidp)
 {
     return (0);
 }
 
 int
-SRXAFSCB_ProbeUuid(rxcall, uuidp)
-     struct rx_call *rxcall;
-     afsUUID *uuidp;
+SRXAFSCB_ProbeUuid(struct rx_call *rxcall, afsUUID *uuidp)
 {
     int code = 0;
     if (!afs_cb_inited)
@@ -142,63 +113,46 @@ SRXAFSCB_ProbeUuid(rxcall, uuidp)
 }
 
 afs_int32
-SRXAFSCB_GetServerPrefs(rxcall, serverIndex, srvrAddr, srvrRank)
-     struct rx_call *rxcall;
-     afs_int32 serverIndex;
-     afs_int32 *srvrAddr;
-     afs_int32 *srvrRank;
+SRXAFSCB_GetServerPrefs(struct rx_call *rxcall, afs_int32 serverIndex,
+			afs_int32 *srvrAddr, afs_int32 *srvrRank)
 {
     return RXGEN_OPCODE;
 }
 
 
 afs_int32
-SRXAFSCB_GetCellServDB(rxcall, cellIndex, cellName, cellHosts)
-     struct rx_call *rxcall;
-     afs_int32 cellIndex;
-     char **cellName;
-     serverList *cellHosts;
+SRXAFSCB_GetCellServDB(struct rx_call *rxcall, afs_int32 cellIndex,
+		       char **cellName, serverList *cellHosts)
 {
     return RXGEN_OPCODE;
 }
 
 
 afs_int32
-SRXAFSCB_GetLocalCell(rxcall, cellName)
-     struct rx_call *rxcall;
-     char **cellName;
+SRXAFSCB_GetLocalCell(struct rx_call *rxcall, char **cellName)
 {
     return RXGEN_OPCODE;
 }
 
 
 afs_int32
-SRXAFSCB_GetCacheConfig(rxcall, callerVersion, serverVersion, configCount,
-			config)
-     struct rx_call *rxcall;
-     afs_uint32 callerVersion;
-     afs_uint32 *serverVersion;
-     afs_uint32 *configCount;
-     cacheConfig *config;
+SRXAFSCB_GetCacheConfig(struct rx_call *rxcall, afs_uint32 callerVersion,
+			afs_uint32 *serverVersion, afs_uint32 *configCount,
+			cacheConfig *config)
 {
     return RXGEN_OPCODE;
 }
 
 afs_int32
-SRXAFSCB_GetCellByNum(rxcall, cellnum, cellname, cellhosts)
-     struct rx_call *rxcall;
-     afs_int32 cellnum;
-     char **cellname;
-     serverList *cellhosts;
+SRXAFSCB_GetCellByNum(struct rx_call *rxcall, afs_int32 cellnum,
+		      char **cellname, serverList *cellhosts)
 {
      return RXGEN_OPCODE;
 }
 
 afs_int32
-SRXAFSCB_TellMeAboutYourself(rxcall, addr, cap)
-     struct rx_call *rxcall;
-     struct interfaceAddr *addr;
-     Capabilities *cap;
+SRXAFSCB_TellMeAboutYourself(struct rx_call *rxcall,
+			     struct interfaceAddr *addr, Capabilities *cap)
 {
      return RXGEN_OPCODE;
 }

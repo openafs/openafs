@@ -86,7 +86,7 @@ local superuser C<root> on the file server machine.
 =head1 SEE ALSO
 
 L<bos_shutdown(8)>,
-L<restorevol(8)>,
+L<restorevol(1)>,
 L<volserver(8)>,
 L<vos_dump(1)>,
 L<vos_restore(1)>

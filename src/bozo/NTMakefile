@@ -74,6 +74,7 @@ $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Build bos.exe
@@ -111,6 +112,7 @@ $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)
 	$(COPY) $** $@

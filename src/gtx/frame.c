@@ -18,7 +18,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include "gtxobjects.h"
 #include "gtxwindows.h"
 #include "gtxcurseswin.h"
@@ -93,7 +95,7 @@ gtxframe_SelfInsertCmd(void *aparam, void *rockparam)
 {
     struct gwin *awindow = (struct gwin *) aparam;
     
-    int arock = (int) rockparam;
+    int arock = (intptr_t)rockparam;
     
     register struct gtx_frame *tframe;
     register int pos;
@@ -139,7 +141,7 @@ SaveMap(struct gtx_frame *aframe)
 	    tstring[0] = i;
 	    tstring[1] = 0;
 	    keymap_BindToString(recursiveMap, tstring, gtxframe_SelfInsertCmd,
-				NULL, (void *)i);
+				NULL, (void *)(intptr_t)i);
 	}
     }
     aframe->savemap = aframe->keymap;

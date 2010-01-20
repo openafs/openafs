@@ -731,7 +731,6 @@ osi_UFSOpen(afs_dcache_id_t *ino)
     }
     fp->size = st.st_size;
     fp->offset = 0;
-    fp->inum = ino->ufs;
     fp->vnode = (struct usr_vnode *)fp;
 
     AFS_GLOCK();
@@ -1030,7 +1029,7 @@ afs_osi_MapStrategy(int (*aproc) (struct usr_buf *), struct usr_buf *bp)
 }
 
 void
-osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
+osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
 {
     ObtainSharedLock(&avc->lock, 555);
     if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
@@ -1301,7 +1300,10 @@ SweepAFSCache(int *vFilesFound)
     for (currp = readdir(cdirp); currp; currp = readdir(cdirp)) {
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
-#if defined(AFS_USR_DFBSD_ENV)
+#if defined(AFS_SGI62_ENV) || defined(AFS_USR_DARWIN100_ENV)
+            printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n",
+		   currp->d_ino, currp->d_reclen, currp->d_name);
+#elif defined(AFS_USR_DFBSD_ENV)
 	    printf("\tinode=%d, name='%s'\n", currp->d_ino,
 		   currp->d_name);
 #else
@@ -1490,12 +1492,12 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	afs_osi_Alloc(sizeof(struct usr_ucred));
     usr_assert(afs_global_ucredp != NULL);
     afs_global_ucredp->cr_ref = 1;
-    afs_global_ucredp->cr_uid = geteuid();
-    afs_global_ucredp->cr_gid = getegid();
-    afs_global_ucredp->cr_ruid = getuid();
-    afs_global_ucredp->cr_rgid = getgid();
-    afs_global_ucredp->cr_suid = afs_global_ucredp->cr_ruid;
-    afs_global_ucredp->cr_sgid = afs_global_ucredp->cr_rgid;
+    afs_set_cr_uid(afs_global_ucredp, geteuid());
+    afs_set_cr_gid(afs_global_ucredp, getegid());
+    afs_set_cr_ruid(afs_global_ucredp, getuid());
+    afs_set_cr_rgid(afs_global_ucredp, getgid());
+    afs_global_ucredp->cr_suid = afs_cr_ruid(afs_global_ucredp);
+    afs_global_ucredp->cr_sgid = afs_cr_rgid(afs_global_ucredp);
     st = getgroups(NGROUPS, &afs_global_ucredp->cr_groups[0]);
     usr_assert(st >= 0);
     afs_global_ucredp->cr_ngroups = (unsigned long)st;
@@ -1509,7 +1511,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     afs_global_procp = (struct usr_proc *)
 	afs_osi_Alloc(sizeof(struct usr_proc));
     usr_assert(afs_global_procp != NULL);
-    afs_global_procp->p_pid = getpid();
+    afs_global_procp->p_pid = osi_getpid();
     afs_global_procp->p_ppid = (pid_t) 1;
     afs_global_procp->p_ucred = afs_global_ucredp;
 
@@ -1980,8 +1982,8 @@ syscallThread(void *argp)
      */
     u.u_viceid = getuid();
     crp = u.u_cred;
-    crp->cr_uid = getuid();
-    crp->cr_ruid = getuid();
+    afs_set_cr_uid(crp, getuid());
+    afs_set_cr_ruid(crp, getuid());
     crp->cr_suid = getuid();
     crp->cr_groups[0] = getgid();
     crp->cr_ngroups = 1;
@@ -2576,8 +2578,8 @@ uafs_mkdir_r(char *path, int mode)
     usr_vattr_null(&attrs);
     attrs.va_type = VREG;
     attrs.va_mode = mode;
-    attrs.va_uid = u.u_cred->cr_uid;
-    attrs.va_gid = u.u_cred->cr_gid;
+    attrs.va_uid = afs_cr_uid(u.u_cred);
+    attrs.va_gid = afs_cr_gid(u.u_cred);
     dirP = NULL;
     code = afs_mkdir(VTOAFS(parentP), nameP, &attrs, &dirP, u.u_cred);
     VN_RELE(parentP);
@@ -2675,8 +2677,8 @@ uafs_open_r(char *path, int flags, int mode)
 	    usr_vattr_null(&attrs);
 	    attrs.va_type = VREG;
 	    attrs.va_mode = mode;
-	    attrs.va_uid = u.u_cred->cr_uid;
-	    attrs.va_gid = u.u_cred->cr_gid;
+	    attrs.va_uid = afs_cr_uid(u.u_cred);
+	    attrs.va_gid = afs_cr_gid(u.u_cred);
 	    if (flags & O_TRUNC) {
 		attrs.va_size = 0;
 	    }
@@ -3502,8 +3504,8 @@ uafs_symlink_r(char *target, char *source)
     usr_vattr_null(&attrs);
     attrs.va_type = VLNK;
     attrs.va_mode = 0777;
-    attrs.va_uid = u.u_cred->cr_uid;
-    attrs.va_gid = u.u_cred->cr_gid;
+    attrs.va_uid = afs_cr_uid(u.u_cred);
+    attrs.va_gid = afs_cr_gid(u.u_cred);
     code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, u.u_cred);
     VN_RELE(dirP);
     if (code != 0) {
@@ -4178,7 +4180,7 @@ uafs_getcellstatus(char *cell, afs_int32 * status)
 	return -1;
     }
 
-    *status = (afs_int32) iob.out;
+    *status = (intptr_t)iob.out;
     return 0;
 }
 

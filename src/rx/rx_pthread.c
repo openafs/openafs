@@ -40,14 +40,6 @@
 #include <rx/rx_pthread.h>
 #include <rx/rx_clock.h>
 
-/*
- * Number of times the event handling thread was signalled because a new
- * event was scheduled earlier than the lastest event.
- *
- * Protected by event_handler_mutex
- */
-static long rx_pthread_n_event_wakeups;
-
 /* Set rx_pthread_event_rescheduled if event_handler should just try
  * again instead of sleeping.
  *
@@ -99,8 +91,7 @@ server_entry(void *argp)
     void (*server_proc) (void *) = (void (*)(void *))argp;
     server_proc(NULL);
     dpf(("rx_pthread.c: server_entry: Server proc returned unexpectedly\n"));
-    exit(1);
-    return NULL;
+    return (void *) -1; /* reused as return value, see pthread(3) */
 }
 
 /*
@@ -115,13 +106,13 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
 
     if (pthread_attr_init(&tattr) != 0) {
 	dpf(("Unable to Create Rx server thread (pthread_attr_init)\n"));
-	exit(1);
+	assert(0);
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
 	dpf
 	    (("Unable to Create Rx server thread (pthread_attr_setdetachstate)\n"));
-	exit(1);
+	assert(0);
     }
 
     /*
@@ -130,7 +121,7 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
     AFS_SIGSET_CLEAR();
     if (pthread_create(&thread, &tattr, server_entry, (void *)proc) != 0) {
 	dpf(("Unable to Create Rx server thread\n"));
-	exit(1);
+	assert(0);
     }
     AFS_SIGSET_RESTORE();
 }
@@ -232,7 +223,7 @@ rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
 	    if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE))) {
 		/* Could this happen with multiple socket listeners? */
 		dpf(("rxi_Listener: no packets!"));	/* Shouldn't happen */
-		exit(1);
+		assert(0);
 	    }
 	}
 
@@ -256,7 +247,7 @@ static void *
 rx_ListenerProc(void *argp)
 {
     int threadID;
-    osi_socket sock = (osi_socket)argp;
+    osi_socket sock = (osi_socket)(intptr_t)argp;
     struct rx_call *newcall;
 
     while (1) {
@@ -266,7 +257,7 @@ rx_ListenerProc(void *argp)
 	/* assert(threadID != -1); */
 	/* assert(newcall != NULL); */
 	sock = OSI_NULLSOCKET;
-	assert(pthread_setspecific(rx_thread_id_key, (void *)threadID) == 0);
+	assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* assert(sock != OSI_NULLSOCKET); */
     }
@@ -310,7 +301,7 @@ rx_ServerProc(void * dummy)
 
     while (1) {
 	sock = OSI_NULLSOCKET;
-	assert(pthread_setspecific(rx_thread_id_key, (void *)threadID) == 0);
+	assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* assert(sock != OSI_NULLSOCKET); */
 	newcall = NULL;
@@ -343,20 +334,20 @@ rxi_StartListener(void)
     if (pthread_attr_init(&tattr) != 0) {
 	dpf
 	    (("Unable to create Rx event handling thread (pthread_attr_init)\n"));
-	exit(1);
+	assert(0);
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
 	dpf
 	    (("Unable to create Rx event handling thread (pthread_attr_setdetachstate)\n"));
-	exit(1);
+	assert(0);
     }
 
     AFS_SIGSET_CLEAR();
     if (pthread_create(&event_handler_thread, &tattr, event_handler, NULL) !=
 	0) {
 	dpf(("Unable to create Rx event handling thread\n"));
-	exit(1);
+	assert(0);
     }
     MUTEX_ENTER(&rx_pthread_mutex);
     ++rxi_pthread_hinum;
@@ -383,19 +374,19 @@ rxi_Listen(osi_socket sock)
     if (pthread_attr_init(&tattr) != 0) {
 	dpf
 	    (("Unable to create socket listener thread (pthread_attr_init)\n"));
-	exit(1);
+	assert(0);
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
 	dpf
 	    (("Unable to create socket listener thread (pthread_attr_setdetachstate)\n"));
-	exit(1);
+	assert(0);
     }
 
     AFS_SIGSET_CLEAR();
-    if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)sock) != 0) {
+    if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)(intptr_t)sock) != 0) {
 	dpf(("Unable to create socket listener thread\n"));
-	exit(1);
+	assert(0);
     }
     MUTEX_ENTER(&rx_pthread_mutex);
     ++rxi_pthread_hinum;

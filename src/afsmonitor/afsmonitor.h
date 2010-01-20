@@ -96,3 +96,6 @@ extern int fs_refresh(int, int);
 extern int cm_refresh(int, int);
 extern int gtx_initialize(void);
 
+/* afsmonitor.c */
+extern int afsmon_Exit(int a_exitVal);
+

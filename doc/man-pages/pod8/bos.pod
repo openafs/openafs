@@ -36,8 +36,8 @@ restart>, B<bos shutdown>, B<bos start>, B<bos startup>, and B<bos stop>.
 =item *
 
 Commands to set and verify server process and server machine status: B<bos
-getlog>, B<bos getrestart>, B<bos setauth>, B<bos setrestart>, and B<bos
-status>.
+getlog>, B<bos getrestart>, B<bos getrestricted>, B<bos setauth>,
+B<bos setrestart>, B<bos setrestricted> and B<bos status>.
 
 =item *
 
@@ -252,6 +252,7 @@ L<bos_exec(8)>,
 L<bos_getdate(8)>,
 L<bos_getlog(8)>,
 L<bos_getrestart(8)>,
+L<bos_getrestricted(8)>,
 L<bos_help(8)>,
 L<bos_install(8)>,
 L<bos_listhosts(8)>,
@@ -266,6 +267,7 @@ L<bos_salvage(8)>,
 L<bos_setauth(8)>,
 L<bos_setcellname(8)>,
 L<bos_setrestart(8)>,
+L<bos_setrestricted(8)>,
 L<bos_shutdown(8)>,
 L<bos_start(8)>,
 L<bos_startup(8)>,

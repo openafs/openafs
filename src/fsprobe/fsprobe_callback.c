@@ -44,7 +44,7 @@ init_afs_cb(void)
     int count;
 
     afs_uuid_create(&afs_cb_interface.uuid);
-    count = rx_getAllAddr(&afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
+    count = rx_getAllAddr((afs_uint32 *) &afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
     if (count <= 0)
 	afs_cb_interface.numberOfInterfaces = 0;
     else
@@ -747,14 +747,9 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
     return (0);
 }
 
-int SRXAFSCB_GetDE(a_call, a_index, addr, inode, flags, time, fileName)
-    struct rx_call *a_call;
-    afs_int32 a_index;
-    afs_int32 addr;
-    afs_int32 inode;
-    afs_int32 flags;
-    afs_int32 time;
-    char ** fileName;
+int SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index,
+		   afs_int32 addr, afs_int32 inode, afs_int32 flags,
+		   afs_int32 time, char ** fileName)
 {
     return RXGEN_OPCODE;
 }

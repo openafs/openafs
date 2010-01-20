@@ -6,9 +6,9 @@ symlink - Introduction to the symlink command suite [Windows only]
 
 The B<symlink> command creates, lists and removes Unix-style symbolic links
 (symlinks) in OpenAFS filespace from a platform that does not support
-symlinks, like Windows.  The B<symlink make> command is equivalent to
-C<ln -s> on a Unix platform.  B<symlink> can manipulate symlinks created
-by C<ln -s> on Unix and vice versa.
+symlinks, like Windows.  The L<B<symlink make>|symlink_make(1)> command is
+equivalent to C<ln -s> on a Unix platform.  B<symlink> can manipulate
+symlinks created by C<ln -s> on Unix and vice versa.
 
 =head1 CAUTIONS
 

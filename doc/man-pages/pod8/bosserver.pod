@@ -9,7 +9,8 @@ bosserver - Initializes the BOS Server
 
 B<bosserver> [B<-noauth>] [B<-log>] [B<-enable_peer_stats>]
     S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
-    [B<-enable_process_stats>] [B<-allow-dotted-principals>] [B<-help>]
+    [B<-enable_process_stats>] [B<-allow-dotted-principals>]
+    [B<-restricted>] [B<-help>]
 
 =for html
 </div>
@@ -50,6 +51,19 @@ server encryption keys, database server machines, and users privileged to
 issue commands from the B<bos> and B<vos> suites.
 
 =back
+
+The BOS Server is configured via the F<BosConfig> configuration file.
+Normally, this file is managed via the B<bos> command suite rather than
+edited directly.  See the L<BosConfig(5)> man page for the syntax of this
+file.
+
+The BOS Server will rewrite B<BosConfig> when shutting down, so changes
+made manually to it will be discarded.  Instead, to change the BOS Server
+configuration only for the next restart of B<bosserver>, create a file
+named F</usr/afs/local/BosConfig.new>.  If B<BosConfig.new> exists when
+B<bosserver> starts, it is renamed to F</usr/afs/local/BosConfig>,
+removing any existing file by that name, before B<bosserver> reads its
+configuration.
 
 The BOS Server logs a default set of important events in the file
 F</usr/afs/logs/BosLog>. To record the name of any user who performs a
@@ -141,6 +155,15 @@ user.admin PTS entry. Sites whose Kerberos realms don't have these collisions
 between principal names may disable this check by starting the server
 with this option.
 
+=item B<-restricted>
+
+In normal operation, the bos server allows a super user to run any command.
+When the bos server is running in restricted mode (either due to this
+command line flag, or when configured by L<bos_setrestricted(8)>) a number
+of commands are unavailable. Note that this flag persists across reboots.
+Once a server has been placed in restricted mode, it can only be opened up
+by sending the SIGFPE signal.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -170,6 +193,7 @@ L<bos_exec(8)>,
 L<bos_getlog(8)>,
 L<bos_getrestart(8)>,
 L<bos_restart(8)>,
+L<bos_setrestricted(8)>,
 L<bos_shutdown(8)>,
 L<bos_start(8)>,
 L<bos_startup(8)>,

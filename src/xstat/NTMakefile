@@ -54,6 +54,7 @@ $(BINDIR)\xstat_fs_test.exe: $(OUT)\xstat_fs_test.obj $(OUT)\xstat_fs_test.res $
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 #
 # Cache Manager data collection
@@ -70,6 +71,7 @@ $(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(OUT)\xstat_cm_test.res $
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 #
 # Misc targets

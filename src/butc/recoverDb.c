@@ -338,7 +338,8 @@ readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr,
 	 struct tapeScanInfo *scanInfoPtr)
 {
     int moreTapes = 1;
-    afs_int32 nbytes, flags, seq;
+    afs_int32 flags, seq;
+    afs_uint32 nbytes = 0;
     int newDump = 1, newTape = 1;
     afs_int32 tapePosition;
     afs_int32 code = 0, tcode;
@@ -765,7 +766,7 @@ ScanDumps(void *param)
     free(ptr);
     setStatus(taskId, TASK_DONE);
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 

@@ -9,7 +9,7 @@
 
 /*
  *
- * DUX OSI header file. Extends afs_osi.h.
+ * NetBSD OSI header file. Extends afs_osi.h.
  *
  * afs_osi.h includes this file, which is the only way this file should
  * be included in a source file. This file can redefine macros declared in
@@ -32,13 +32,15 @@ extern struct timeval time;
 #define osi_Time() (time.tv_sec)
 #define	afs_hz	    hz
 
-#define	AFS_UCRED	ucred
-#define	AFS_PROC	struct proc
+typedef struct ucred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #define afs_bufferpages bufpages
 
 #undef gop_lookupname
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#undef gop_lookupname_user
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 #define osi_vnhold(avc,r)  do { \
        if ((avc)->vrefCount) { VN_HOLD((struct vnode *)(avc)); } \
@@ -49,7 +51,6 @@ extern struct timeval time;
 
 #undef afs_suser
 
-#ifdef KERNEL
 extern struct simplelock afs_global_lock;
 #if 0
 extern thread_t afs_global_owner;
@@ -75,6 +76,11 @@ extern thread_t afs_global_owner;
     do { \
 	simple_unlock(&afs_global_lock); \
     } while(0)
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
 #endif /* 0 */
 
 #undef SPLVAR
@@ -83,6 +89,14 @@ extern thread_t afs_global_owner;
 #define NETPRI
 #undef USERPRI
 #define USERPRI
-#endif /* KERNEL */
+
+/* Vnode related macros */
+
+extern int (**afs_vnodeop_p) ();
+#define vType(vc)               AFSTOV(vc)->v_type
+#define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
+#define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
+#define IsAfsVnode(v)           ((v)->v_op == afs_vnodeop_p)
+#define SetAfsVnode(v)          /* nothing; done in getnewvnode() */
 
 #endif /* _OSI_MACHDEP_H_ */

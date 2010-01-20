@@ -1,7 +1,13 @@
-dafs-fsa.dot is a description of the finite-state machine for volume
-states in the Demand Attach fileserver in Dot (http://www.graphviz.org)
-format.  An invocation like:
+
+- dafs-fsa.dot is a description of the finite-state machine for volume
+states in the Demand Attach fileserver
+- dafs-vnode-fsa.dot is a description of the finite-state machine
+for vnodes in the Demand Attach fileserver.
+
+Both diagrams are in Dot (http://www.graphviz.org) format,
+and can be converted to graphics formats via an
+an invocation like:
 
     dot -Tsvg dafs-fsa.dot > dafs-fsa.svg
 
-will convert the description to an SVG file.
+

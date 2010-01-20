@@ -16,10 +16,10 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include <stdio.h>
 #include <errno.h>
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 #include "des_prototypes.h"
 

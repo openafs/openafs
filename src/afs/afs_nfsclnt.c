@@ -58,12 +58,12 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
     AFS_STATCNT(afs_GetNfsClientPag);
     i = NHash(host);
     now = osi_Time();
-    MObtainWriteLock(&afs_xnfspag, 314);
+    ObtainWriteLock(&afs_xnfspag, 314);
     for (np = afs_nfspags[i]; np; np = np->next) {
 	if (np->uid == uid && np->host == host) {
 	    np->refCount++;
 	    np->lastcall = now;
-	    MReleaseWriteLock(&afs_xnfspag);
+	    ReleaseWriteLock(&afs_xnfspag);
 	    return np;
 	}
     }
@@ -72,12 +72,12 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
 	if (np->uid == NOPAG && np->host == host) {
 	    np->refCount++;
 	    np->lastcall = now;
-	    MReleaseWriteLock(&afs_xnfspag);
+	    ReleaseWriteLock(&afs_xnfspag);
 	    return np;
 	}
     }
     np = (struct nfsclientpag *)afs_osi_Alloc(sizeof(struct nfsclientpag));
-    memset((char *)np, 0, sizeof(struct nfsclientpag));
+    memset(np, 0, sizeof(struct nfsclientpag));
     /* Copy the necessary afs_exporter fields */
     memcpy((char *)np, (char *)afs_nfsexporter, sizeof(struct afs_exporter));
     np->next = afs_nfspags[i];
@@ -86,7 +86,7 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
     np->host = host;
     np->refCount = 1;
     np->lastcall = now;
-    MReleaseWriteLock(&afs_xnfspag);
+    ReleaseWriteLock(&afs_xnfspag);
     return np;
 }
 
@@ -119,13 +119,13 @@ afs_FindNfsClientPag(afs_int32 uid, afs_int32 host, afs_int32 pag)
 #endif
     AFS_STATCNT(afs_FindNfsClientPag);
     i = NHash(host);
-    MObtainWriteLock(&afs_xnfspag, 315);
+    ObtainWriteLock(&afs_xnfspag, 315);
     for (np = afs_nfspags[i]; np; np = np->next) {
 	if (np->host == host) {
 	    if ((pag && pag == np->pag) || (!pag && (uid == np->uid))) {
 		np->refCount++;
 		np->lastcall = osi_Time();
-		MReleaseWriteLock(&afs_xnfspag);
+		ReleaseWriteLock(&afs_xnfspag);
 		return np;
 	    }
 	}
@@ -136,12 +136,12 @@ afs_FindNfsClientPag(afs_int32 uid, afs_int32 host, afs_int32 pag)
 	    if (np->uid == NOPAG) {
 		np->refCount++;
 		np->lastcall = osi_Time();
-		MReleaseWriteLock(&afs_xnfspag);
+		ReleaseWriteLock(&afs_xnfspag);
 		return np;
 	    }
 	}
     }
-    MReleaseWriteLock(&afs_xnfspag);
+    ReleaseWriteLock(&afs_xnfspag);
     return NULL;
 }
 
@@ -174,7 +174,7 @@ afs_nfsclient_init(void)
  */
 int
 afs_nfsclient_reqhandler(struct afs_exporter *exporter,
-			 struct AFS_UCRED **cred,
+			 afs_ucred_t **cred,
 			 afs_int32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
@@ -203,14 +203,10 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 #if defined(AFS_SUN510_ENV)
     uid = crgetuid(*cred);
 #else
-    uid = (*cred)->cr_uid;
+    uid = afs_cr_uid(*cred);
 #endif
     /* Do this early, so pag management knows */
-#ifdef	AFS_OSF_ENV
-    (*cred)->cr_ruid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
-#else
-    (*cred)->cr_rgid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
-#endif
+    afs_set_cr_rgid(*cred, NFSXLATOR_CRED);	/* Identify it as nfs xlator call */
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS) && pag != NOPAG) {
 	uid = pag;
     } else if (pag != NOPAG) {
@@ -230,7 +226,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
     np = afs_FindNfsClientPag(uid, host, 0);
     afs_Trace4(afs_iclSetp, CM_TRACE_NFSREQH, ICL_TYPE_INT32, pag,
-	       ICL_TYPE_LONG, (*cred)->cr_uid, ICL_TYPE_INT32, host,
+	       ICL_TYPE_LONG, afs_cr_uid(*cred), ICL_TYPE_INT32, host,
 	       ICL_TYPE_POINTER, np);
     /* If remote-pags are enabled, we are no longer interested in what PAG
      * they claimed, and from here on we should behave as if they claimed
@@ -246,11 +242,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	 * that the translator rebooted and therefore we ignore all older 
 	 * pag values 
 	 */
-#ifdef	AFS_OSF_ENV
-	if (code = setpag(u.u_procp, cred, -1, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 	if ((code = setpag(cred, -1, &pag, 0))) {
-#endif
 	    if (au)
 		afs_PutUser(au, READ_LOCK);
 /*	    ReleaseWriteLock(&afs_xnfsreq);		*/
@@ -261,14 +253,10 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	}
 	np = afs_GetNfsClientPag(uid, host);
 	np->pag = pag;
-	np->client_uid = (*cred)->cr_uid;
+	np->client_uid = afs_cr_uid(*cred);
     } else {
 	if (pag == NOPAG) {
-#ifdef	AFS_OSF_ENV
-	    if (code = setpag(u.u_procp, cred, np->pag, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 	    if ((code = setpag(cred, np->pag, &pag, 0))) {
-#endif
 		afs_PutNfsClientPag(np);
 /*		ReleaseWriteLock(&afs_xnfsreq);	*/
 #if defined(KERNEL_HAVE_UERROR)
@@ -281,11 +269,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	    tnp = (struct nfsclientpag *)au->exporter;
 	    if (tnp->uid && (tnp->uid != (afs_int32) - 2)) {	/* allow "root" initiators */
 		/* Pag doesn't belong to caller; treat it as an unpaged call too */
-#ifdef	AFS_OSF_ENV
-		if (code = setpag(u.u_procp, cred, np->pag, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 		if ((code = setpag(cred, np->pag, &pag, 0))) {
-#endif
 		    afs_PutNfsClientPag(np);
 		    afs_PutUser(au, READ_LOCK);
 		    /*      ReleaseWriteLock(&afs_xnfsreq);     */
@@ -482,12 +466,12 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
     if (allpags > 0) {
 	/* update every client, not just the one making the request */
 	i = NHash(np->host);
-	MObtainWriteLock(&afs_xnfspag, 315);
+	ObtainWriteLock(&afs_xnfspag, 315);
 	for (tnp = afs_nfspags[i]; tnp; tnp = tnp->next) {
 	    if (tnp != np && tnp->host == np->host)
 		afs_nfsclient_sysname(tnp, inname, outname, num, -1);
 	}
-	MReleaseWriteLock(&afs_xnfspag);
+	ReleaseWriteLock(&afs_xnfspag);
     }
     if (inname) {
 	    for(count=0; count < np->sysnamecount;++count) {
@@ -530,7 +514,7 @@ afs_nfsclient_GC(exporter, pag)
     osi_Assert(ISAFS_GLOCK());
 #endif
     AFS_STATCNT(afs_nfsclient_GC);
-    MObtainWriteLock(&afs_xnfspag, 316);
+    ObtainWriteLock(&afs_xnfspag, 316);
     for (i = 0; i < NNFSCLIENTS; i++) {
 	for (tnp = &afs_nfspags[i], np = *tnp; np; np = nnp) {
 	    nnp = np->next;
@@ -549,7 +533,7 @@ afs_nfsclient_GC(exporter, pag)
 	    }
 	}
     }
-    MReleaseWriteLock(&afs_xnfspag);
+    ReleaseWriteLock(&afs_xnfspag);
 }
 
 
@@ -577,7 +561,7 @@ char *afs_nfs_id = "AFSNFSTRANS";
  */
 int
 afs_iauth_verify(long id, fsid_t * fsidp, long host, int uid,
-		 struct AFS_UCRED *credp, struct exportinfo *exp)
+		 afs_ucred_t *credp, struct exportinfo *exp)
 {
     int code;
     struct nfsclientpag *nfs_pag;
@@ -606,11 +590,12 @@ afs_iauth_verify(long id, fsid_t * fsidp, long host, int uid,
 
     if (code) {
 	/* ensure anonymous cred. */
-	credp->cr_uid = credp->cr_ruid = (uid_t) - 2;	/* anonymous */
+	afs_set_cr_uid(credp, (uid_t) -2;	/* anonymous */
+	afs_set_cr_ruid(credp, (uid_t) -2;
     }
 
     /* Mark this thread as an NFS translator thread. */
-    credp->cr_rgid = NFSXLATOR_CRED;
+    afs_set_cr_rgid(credp, NFSXLATOR_CRED);
 
     AFS_GUNLOCK();
     return 0;

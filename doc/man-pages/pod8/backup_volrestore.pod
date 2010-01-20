@@ -13,12 +13,16 @@ B<backup volrestore> S<<< B<-server> <I<destination machine>> >>>
     S<<< [B<-extension> <I<new volume name extension>>] >>>
     S<<< [B<-date> <I<date from which to restore>>+] >>>
     S<<< [B<-portoffset> <I<TC port offsets>>+] >>> [B<-n>]
+    S<<< [B<-usedump> <I<specify the dumpID to restore from>>] >>>
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup volr> S<<< B<-s> <I<destination machine>> >>>
-    S<<< B<-pa> <I<destination partition>> >>> S<<< B<-v> <I<volume(s) to restore>>+ >>>
+    S<<< B<-pa> <I<destination partition>> >>>
+    S<<< B<-v> <I<volume(s) to restore>>+ >>>
     S<<< [B<-e> <I<new volume name extension>>] >>>
-    S<<< [B<-d> <I<date from which to restore>>+] >>> S<<< [B<-po> <I<TC port offsets>>+] >>>
+    S<<< [B<-d> <I<date from which to restore>>+] >>>
+    S<<< [B<-po> <I<TC port offsets>>+] >>>
+    S<<< [B<-u> <I<specify the dumpID to restore from>>] >>>
     [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html

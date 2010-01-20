@@ -34,9 +34,9 @@
 int
 #ifdef AFS_SGI64_ENV
 afs_open(bhv_desc_t * bhv, struct vcache **avcp, afs_int32 aflags,
-	 struct AFS_UCRED *acred)
+	 afs_ucred_t *acred)
 #else
-afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
+afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
     register afs_int32 code;
@@ -159,7 +159,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     if (writing)
 	tvc->execsOrWriters++;
     tvc->opens++;
-#if defined(AFS_SGI_ENV)
+#if defined(AFS_SGI_ENV) || defined (AFS_LINUX26_ENV)
     if (writing && tvc->cred == NULL) {
 	crhold(acred);
 	tvc->cred = acred;

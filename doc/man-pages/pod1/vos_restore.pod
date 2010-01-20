@@ -7,16 +7,30 @@ vos_restore - Converts an ASCII dump file into an AFS volume
 =for html
 <div class="synopsis">
 
-B<vos restore> S<<< B<-server> <I<machine name>> >>> S<<< B<-partition> <I<partition name>> >>>
-    S<<< B<-name> <I<name of volume to be restored>> >>> S<<< [B<-file> <I<dump file>>] >>>
-    S<<< [B<-id> <I<volume ID>>] >>> S<<< [B<-overwrite> (abort | full | incremental)] >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [-verbose]
-    [B<-help>]
+B<vos restore> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-partition> <I<partition name>> >>>
+    S<<< B<-name> <I<name of volume to be restored>> >>>
+    S<<< [B<-file> <I<dump file>>] >>>
+    S<<< [B<-id> <I<volume ID>>] >>>
+    S<<< [B<-overwrite> (abort | full | incremental)] >>>
+    [B<-offline>] [B<-readonly>]
+    S<<< [B<-creation> (dump | keep | new)] >>>
+    S<<< [B<-lastupdate> (dump | keep | new)] >>>
+    [B<-nodelete>] S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
+    [-verbose] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
-B<vos res> S<<< B<-s> <I<machine name>> >>> S<<< B<-p> <I<partition name>> >>>
-    S<<< B<-na> <I<name of volume to be restored>> >>> S<<< [B<-f> <I<dump file>>] >>>
-    S<<< [B<-i> <I<volume ID>>] >>> S<<< [B<-o> (a | f | i)] >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-l>] [B<-v>] [B<-h>]
+B<vos res> S<<< B<-s> <I<machine name>> >>>
+    S<<< B<-p> <I<partition name>> >>>
+    S<<< B<-na> <I<name of volume to be restored>> >>>
+    S<<< [B<-f> <I<dump file>>] >>>
+    S<<< [B<-i> <I<volume ID>>] >>>
+    S<<< [B<-ov> (a | f | i)] >>>
+    [B<-of>] [B<-r>]
+    S<<< [B<-cr> (d | k | n)] >>>
+    S<<< [B<-la> (d | k | n)] >>>
+    [B<-nod>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] [B<-lo>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
@@ -169,6 +183,20 @@ current site.
 
 This argument is mandatory if the B<-file> argument is not provided.
 
+=item B<-offline>
+
+Leaves the new volume flagged as off-line in the volume database.
+
+=item B<-readonly>
+
+Flags the new volume as read-only in the volume database.
+
+=item B<-nodelete>
+
+This option is available in OpenAFS clients 1.4.7 or
+later and 1.5.31 or later. This option can be used with OpenAFS server
+versions 1.4.1 or later and 1.5.0 or later.
+
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. Do not combine this argument
@@ -193,6 +221,19 @@ B<-noauth> flag. For more details, see L<vos(1)>.
 Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text. This option is available in OpenAFS
+versions 1.4.11 or later and 1.5.60 or later.
+
+=item B<-noresolve>
+
+Shows all servers as IP addresses instead of the DNS name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. This option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
 
 =item B<-help>
 
@@ -221,7 +262,7 @@ logged on to a server machine as the local superuser C<root>.
 
 =head1 SEE ALSO
 
-L<restorevol(8)>,
+L<restorevol(1)>,
 L<vos(1)>,
 L<vos_dump(1)>,
 L<vos_examine(1)>,

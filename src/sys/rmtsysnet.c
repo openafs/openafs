@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
+#include <afs/afs_consts.h>
 
 #include <errno.h>
 #include <sys/param.h>
@@ -38,8 +38,6 @@
  */
 
 #define	MAXNAME		100
-#define	MAXSIZE		2048
-#define	MAXHOSTS	8	/* XXX HARD Limit limitation XXX */
 #define	MAXGCSIZE	16
 
 struct Acl {
@@ -130,7 +128,7 @@ RParseAcl(char *astr)
 void
 RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 {
-    char tstring[MAXSIZE];
+    char tstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
 
 /* No conversion needed since they're in network order in the first place */

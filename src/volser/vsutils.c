@@ -385,7 +385,7 @@ vsu_SetCrypt(int cryptflag)
   Get the appropriate type of ubik client structure out from the system.
 */
 afs_int32
-vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
+vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
                struct ubik_client **uclientp,
 	       int (*secproc)(struct rx_securityClass *, afs_int32))
 {
@@ -425,7 +425,6 @@ vsu_ExtractName(char rname[], char name[])
     }
 }
 
-
 /* returns 0 if failed */
 afs_uint32
 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
@@ -441,7 +440,7 @@ vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
 	char *end;
 	afs_uint32 result;
 	result = strtoul(astring, &end, 10);
-	if (result != ULONG_MAX && *end == '\0')
+	if (result != UINT_MAX && *end == '\0')
 	    return result;
     }
 

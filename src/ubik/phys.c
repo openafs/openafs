@@ -142,7 +142,7 @@ uphys_close(register int afd)
 	return EBADF;
     tfd = fdcache;
     for (i = 0; i < MAXFDCACHE; i++, tfd++) {
-	if (tfd->fd == afd) 
+	if (tfd->fd == afd) {
 	    if (tfd->fileID != -10000) {
 		tfd->refCount--;
 		return 0;
@@ -158,6 +158,7 @@ uphys_close(register int afd)
 		tfd->fd = -1;
 		break;
 	    }
+	}
     }
     return close(afd);
 }

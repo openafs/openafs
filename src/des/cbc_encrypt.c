@@ -17,7 +17,7 @@
  * Originally written 8/85 by Steve Miller, MIT Project Athena.
  */
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -25,7 +25,7 @@
 #include <stdio.h>
 #endif
 
-#include <des.h>
+#include "des.h"
 #include "des_prototypes.h"
 
 

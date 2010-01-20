@@ -39,7 +39,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/assert.h>
-
+#include <afs/dir.h>
 
 #include <fcntl.h>
 
@@ -51,15 +51,15 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 
-#include "nfs.h"
-#include "lwp.h"
-#include "lock.h"
-#include "ihandle.h"
-#include "vnode.h"
-#include "volume.h"
-#include "partition.h"
-#include "daemon_com.h"
-#include "salvsync.h"
+#include <afs/nfs.h>
+#include <lwp.h>
+#include <lock.h>
+#include <afs/ihandle.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
+#include <afs/partition.h>
+#include <afs/daemon_com.h>
+#include <afs/salvsync.h>
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -95,7 +95,6 @@ static int do_salvop(struct state *, afs_int32 command, SYNC_response * res);
 static char * response_code_to_string(afs_int32);
 static char * command_code_to_string(afs_int32);
 static char * reason_code_to_string(afs_int32);
-static char * program_type_to_string(afs_int32);
 static char * state_code_to_string(afs_int32);
 
 
@@ -137,8 +136,6 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-    int i;
-    extern char cml_version_number[];
 
     /* Initialize directory paths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -180,6 +177,7 @@ static int
 common_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
+    VolumePackageOptions opts;
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -187,8 +185,14 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
     }
 #endif
 
-    VInitVolumePackage(debugUtility, 1, 1,
-		       DONT_CONNECT_FS, 0);
+    VOptDefaults(debugUtility, &opts);
+    if (VInitVolumePackage2(debugUtility, &opts)) {
+	/* VInitVolumePackage2 can fail on e.g. partition attachment errors,
+	 * but we don't really care, since all we're doing is trying to use
+	 * SALVSYNC */
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
     DInit(1);
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
@@ -203,6 +207,10 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 	    programType = salvager;
 	} else if (!strcmp(ti->data, "salvageServer")) {
 	    programType = salvageServer;
+	} else if (!strcmp(ti->data, "volumeServer")) {
+	    programType = volumeServer;
+	} else if (!strcmp(ti->data, "volumeSalvager")) {
+	    programType = volumeSalvager;
 	} else {
 	    programType = (ProgramType) atoi(ti->data);
 	}
@@ -217,7 +225,6 @@ static int
 common_salv_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
-    char pname[100], *temp;
 
     state->sop = (struct salv_state *) calloc(1, sizeof(struct salv_state));
     assert(state->sop != NULL);
@@ -293,6 +300,8 @@ do_salvop(struct state * state, afs_int32 command, SYNC_response * res)
     printf("}\n");
 
     VDisconnectSALV();
+
+    return 0;
 }
 
 static char *
@@ -356,6 +365,7 @@ reason_code_to_string(afs_int32 reason)
     }
 }
 
+#if 0
 static char *
 program_type_to_string(afs_int32 type)
 {
@@ -372,6 +382,7 @@ program_type_to_string(afs_int32 type)
 	return "**UNKNOWN**";
     }
 }
+#endif
 
 static char *
 state_code_to_string(afs_int32 state)

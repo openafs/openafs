@@ -137,6 +137,7 @@ $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 
 ############################################################################
@@ -153,6 +154,7 @@ $(FSSYNC_DEBUG): $(FSSYNC_DEBUG_EXEOBJS) $(EXEC_LIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # build volinfo
@@ -163,6 +165,7 @@ $(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # build volinfo
@@ -173,6 +176,7 @@ $(VOLBLESS): $(OUT)\vol-bless.obj $(OUT)\physio.obj $(OUT)\vol-bless.res $(EXEC_
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # generate versioninfo resources

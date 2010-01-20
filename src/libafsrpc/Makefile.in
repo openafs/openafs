@@ -18,8 +18,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 
 CC=${MT_CC}
-CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../rxkad \
-	-I../fsint -DRXDEBUG ${MT_CFLAGS}
+CFLAGS = ${COMMON_CFLAGS} -DRXDEBUG ${MT_CFLAGS}
 
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ${srcdir}/../rx
@@ -158,7 +157,7 @@ rx_pthread.o: ${RX}/rx_pthread.c
 	${CCRULE} ${RX}/rx_pthread.c
 
 rx.o: ${RX}/rx.c
-	${CCRULE} ${RX}/rx.c
+	${CCRULE} @CFLAGS_NOERROR@ ${RX}/rx.c
 
 rx_conncache.o: ${RX}/rx_conncache.c
 	${CCRULE} ${RX}/rx_conncache.c
@@ -190,34 +189,34 @@ rx_multi.o: ${RX}/rx_multi.c
 ${RXOBJS}: ${RX}/rx.h ${RX}/rx_user.h ${RX}/rx_globals.h ${RX}/rx_clock.h ${RX}/rx_queue.h ${RX}/rx_event.h
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
-	${CCRULE} ${RXKAD}/rxkad_client.c
+	${CCRULE} -I../rxkad ${RXKAD}/rxkad_client.c
 
 rxkad_server.o: ${RXKAD}/rxkad_server.c
-	${CCRULE} ${RXKAD}/rxkad_server.c
+	${CCRULE} -I../rxkad ${RXKAD}/rxkad_server.c
 
 rxkad_common.o: ${RXKAD}/rxkad_common.c
-	${CCRULE} ${RXKAD}/rxkad_common.c
+	${CCRULE} -I../rxkad ${RXKAD}/rxkad_common.c
 
 ticket.o: ${RXKAD}/ticket.c
-	${CCRULE} ${RXKAD}/ticket.c
+	${CCRULE} -I../rxkad ${RXKAD}/ticket.c
 
 ticket5.o: ${RXKAD}/ticket5.c
-	${CCRULE} ${RXKAD}/ticket5.c
+	${CCRULE} -I../rxkad -I${RXKAD} ${RXKAD}/ticket5.c
 
 crc.o: ${RXKAD}/crc.c
-	${CCRULE} ${RXKAD}/crc.c
+	${CCRULE} -I../rxkad ${RXKAD}/crc.c
 
 md4.o: ${RXKAD}/md4.c
-	${CCRULE} ${RXKAD}/md4.c
+	${CCRULE} -I../rxkad ${RXKAD}/md4.c
 
 md5.o: ${RXKAD}/md5.c
-	${CCRULE} ${RXKAD}/md5.c
+	${CCRULE} -I../rxkad ${RXKAD}/md5.c
 
 fcrypt.o: ${RXKAD}/domestic/fcrypt.c
-	${CCRULE} ${RXKAD}/domestic/fcrypt.c
+	${CCRULE} -I../rxkad ${RXKAD}/domestic/fcrypt.c
 
 crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
-	${CCRULE} ${RXKAD}/domestic/crypt_conn.c
+	${CCRULE} -I../rxkad ${RXKAD}/domestic/crypt_conn.c
 
 AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 	${CCRULE} ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
@@ -288,11 +287,11 @@ des.o: ${DES}/des.c
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux11*) \
-		set X `echo ${CCRULE} ${DES}/des.c | sed s/-g//`; shift; \
+		set X `echo ${CCRULE} -I../des ${DES}/des.c | sed s/-g//`; shift; \
 		"$$@" \
 		;; \
 	*) \
-		${CCRULE} ${DES}/des.c \
+		${CCRULE} -I../des ${DES}/des.c \
 		;; \
 	esac
 
@@ -312,7 +311,7 @@ new_rnd_key.o: ${DES}/new_rnd_key.c
 	${CCRULE} ${DES}/new_rnd_key.c
 
 key_sched.o: ${DES}/key_sched.c
-	${CCRULE} ${DES}/key_sched.c
+	${CCRULE} -I../des ${DES}/key_sched.c
 
 debug_decl.o: ${DES}/debug_decl.c
 	${CCRULE} ${DES}/debug_decl.c
@@ -321,7 +320,7 @@ quad_cksum.o: ${DES}/quad_cksum.c
 	${CCRULE} ${DES}/quad_cksum.c
 
 key_parity.o: ${DES}/key_parity.c
-	${CCRULE} ${DES}/key_parity.c
+	${CCRULE} -I../des ${DES}/key_parity.c
 
 weak_key.o: ${DES}/weak_key.c
 	${CCRULE} ${DES}/weak_key.c
@@ -410,7 +409,7 @@ afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 	${CCRULE} ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE} ${FSINT}/afsaux.c
+	${CCRULE} -I../fsint ${FSINT}/afsaux.c
 
 install: libafsrpc.a
 	${INSTALL} -d ${DESTDIR}${libdir}

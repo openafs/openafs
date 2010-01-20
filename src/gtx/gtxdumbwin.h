@@ -50,7 +50,7 @@ extern int gator_dumbgwin_init(int);
 
 /*Dumb window's creation routine*/
 
-extern struct gwin *gator_dumbgwin_create(struct gator_dumbgwin_params *);
+extern struct gwin *gator_dumbgwin_create(void *);
     /*
      * Summary:
      *    Create a dumb window.

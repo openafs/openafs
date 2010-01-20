@@ -3459,7 +3459,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           <para>Once the kvno is known, the key can then be extracted using 
           asetkey</para>
 <programlisting>
-   # <emphasis role="bold">asetkey</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">/etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+   # <emphasis role="bold">asetkey add</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">/etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
 </programlisting>
 
           <indexterm>

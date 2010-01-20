@@ -46,26 +46,24 @@
 /* Code to find the Linux syscall table */
 
 #ifdef OSI_PROBE_STANDALONE
-#define OSI_PROBE_DEBUG
+# define OSI_PROBE_DEBUG
 #endif
 #ifndef OSI_PROBE_STANDALONE
-#include <afsconfig.h>
-#include "afs/param.h"
+# include <afsconfig.h>
+# include "afs/param.h"
 #endif
+
 #if defined(ENABLE_LINUX_SYSCALL_PROBING) && defined(EXPORTED_INIT_MM)
-#ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
-#ifdef AFS_LINUX26_ENV
 #include <scsi/scsi.h> /* for scsi_command_size */
-#endif
 #ifndef OSI_PROBE_STANDALONE
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
+# include "afs/sysincludes.h"
+# include "afsincludes.h"
 #endif
 #include <linux/version.h>
 #include <linux/sched.h>
 #ifdef CONFIG_H_EXISTS
-#include <linux/config.h>
+# include <linux/config.h>
 #endif
 #include <linux/linkage.h>
 #include <linux/init.h>
@@ -73,11 +71,11 @@
 #include <linux/mm.h>
 
 #if defined(AFS_PPC64_LINUX26_ENV)
-#include <asm/abs_addr.h>
+# include <asm/abs_addr.h>
 #endif
 
 #ifdef AFS_AMD64_LINUX20_ENV
-#include <asm/ia32_unistd.h>
+# include <asm/ia32_unistd.h>
 #endif
 
 /* number of syscalls */
@@ -240,11 +238,7 @@ extern asmlinkage long sys_close(unsigned int) __attribute__((weak));
 extern asmlinkage long sys_chdir(const char *) __attribute__((weak));
 #endif
 extern asmlinkage ssize_t sys_write(unsigned int, const char *, size_t) __attribute__((weak));
-#ifdef AFS_LINUX26_ENV
 extern asmlinkage long sys_wait4(pid_t, int *, int, struct rusage *) __attribute__((weak));
-#else
-extern asmlinkage long sys_wait4(pid_t, unsigned int *, int, struct rusage *) __attribute__((weak));
-#endif
 extern asmlinkage long sys_exit (int) __attribute__((weak));
 #if defined(EXPORTED_SYS_OPEN)
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
@@ -409,7 +403,6 @@ static int main_zapped_syscalls[] = {
  * The module-loading mechanism changed in Linux 2.6, and insmod's
  * loss is our gain: three new unimplemented system calls! 
  */
-#if defined(AFS_LINUX26_ENV)
 #ifdef __NR_
     __NR_create_module,
 #endif
@@ -419,7 +412,6 @@ static int main_zapped_syscalls[] = {
 #ifdef __NR_get_kernel_syms
     __NR_get_kernel_syms,
 #endif
-#endif /* AFS_LINUX26_ENV */
 
 /* 
  * On IA64, the old module-loading calls are indeed present and
@@ -522,9 +514,6 @@ static probectl main_probe = {
 #elif defined(AFS_AMD64_LINUX26_ENV)
     /* On this platform, it's in a different section! */
     (unsigned long)&generic_ro_fops,
-#elif defined(AFS_AMD64_LINUX20_ENV)
-    /* On this platform, it's in a different section! */
-    (unsigned long)&tasklist_lock,
 #else
     (unsigned long)&init_mm,
 #endif
@@ -549,32 +538,20 @@ static probectl main_probe = {
     (unsigned long)(&generic_ro_fops) - 0x30000,
     0,
     0x6000,
-#elif defined(AFS_AMD64_LINUX20_ENV)
-    (unsigned long)(&tasklist_lock) - 0x30000,
-    0,
-    0x6000,
 #elif defined(AFS_PPC64_LINUX26_ENV)
     (unsigned long)(&do_signal),
     0xfff,
     0x400,
-#elif defined(AFS_PPC_LINUX20_ENV) || defined(AFS_PPC_LINUX20_ENV)
-    (unsigned long)&init_mm,
-    0xffff,
-    16384,
 #else
     (unsigned long)&init_mm,
     0,
     16384,
 #endif
 
-#ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
     (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
     0x40000,
-#else
-    0, 0, 0, 0,
-#endif
 
     /* number and list of unimplemented system calls */
     ((sizeof(main_zapped_syscalls)/sizeof(main_zapped_syscalls[0])) - 1),
@@ -665,14 +642,10 @@ static probectl ia32_probe = {
     0,
     (0x180000 / sizeof(unsigned long *)),
 
-#ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
     (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
     0x40000,
-#else
-    0, 0, 0, 0,
-#endif
 
 
     /* number and list of unimplemented system calls */
@@ -804,14 +777,10 @@ static probectl sct32_probe = {
     16384,
 #endif
 
-#ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
     (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
     0x40000,
-#else
-    0, 0, 0, 0,
-#endif
 
     /* number and list of unimplemented system calls */
     ((sizeof(sct32_zapped_syscalls)/sizeof(sct32_zapped_syscalls[0])) - 1),
@@ -899,14 +868,10 @@ static probectl emu_probe = {
     0xfffff,
     0x20000,
 
-#ifdef AFS_LINUX26_ENV
     (unsigned long)scsi_command_size,
     (unsigned long)scsi_command_size - 0x10000,
     0x3ffff,
     0x40000,
-#else
-    0, 0, 0, 0,
-#endif
 
     /* number and list of unimplemented system calls */
     ((sizeof(emu_zapped_syscalls)/sizeof(emu_zapped_syscalls[0])) - 1),
@@ -1481,7 +1446,7 @@ void osi_probe_exit(void) { }
 module_init(osi_probe_init);
 module_exit(osi_probe_exit);
 #endif
-#endif
+
 #else
 void *osi_find_syscall_table(int which)
 {

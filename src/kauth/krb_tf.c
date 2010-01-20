@@ -63,6 +63,7 @@
 #include <afs/auth.h>
 #include "kauth.h"
 #include "kautils.h"
+#include "kauth_internal.h"
 
 #ifndef WORDS_BIGENDIAN
 /* This was taken from jhutz's patch for heimdal krb4. It only

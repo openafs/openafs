@@ -35,7 +35,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 int
 afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-     register struct vcache **avcp, struct AFS_UCRED *acred)
+     register struct vcache **avcp, afs_ucred_t *acred)
 {
     struct vrequest treq;
     register afs_int32 code;
@@ -99,7 +99,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = osi_Time();
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
-    InStatus.Group = (afs_int32) acred->cr_gid;
+    InStatus.Group = (afs_int32) afs_cr_gid(acred);
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock, 153);
 
@@ -256,9 +256,9 @@ int
 /* don't set CDirty in here because RPC is called synchronously */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_rmdir(OSI_VC_DECL(adp), char *aname, struct vnode *cdirp, 
-	  struct AFS_UCRED *acred)
+	  afs_ucred_t *acred)
 #else
-afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
+afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;

@@ -67,7 +67,7 @@ badEntry(afs_uint32 dbAddr)
 void *
 setupDbDump(void *param)
 {
-    int writeFid = (int)param;
+    int writeFid = (intptr_t)param;
     afs_int32 code = 0;
 
     code = InitRPC(&dumpSyncPtr->ut, LOCKREAD, 1);
@@ -87,7 +87,7 @@ setupDbDump(void *param)
   error_exit:
     if (dumpSyncPtr->ut)
 	ubik_EndTrans(dumpSyncPtr->ut);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 
@@ -173,7 +173,7 @@ DumpDB(struct rx_call *call,
 #else
 	code =
 	    LWP_CreateProcess(setupDbDump, 16384, 1,
-			      (void *)dumpSyncPtr->pipeFid[1],
+			      (void *)(intptr_t)dumpSyncPtr->pipeFid[1],
 			      "Database Dumper", &dumperPid);
 	if (code)
 	    goto error_exit;

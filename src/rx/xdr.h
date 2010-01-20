@@ -63,7 +63,9 @@
 #define mem_free(ptr, bsize)	free(ptr)
 #endif
 
-#if defined(AFS_AMD64_LINUX24_ENV) || defined(AFS_DARWIN_ENV) || (defined(KERNEL) && !defined(UKERNEL))
+#if defined(AFS_AMD64_LINUX24_ENV) || defined(AFS_DARWIN_ENV)
+#define xdr_alloc afs_xdr_alloc
+#define xdr_free afs_xdr_free
 #define xdr_void afs_xdr_void
 #define xdr_int afs_xdr_int
 #define xdr_u_int afs_xdr_u_int
@@ -176,7 +178,7 @@ enum xdr_op {
 typedef bool_t(*xdrproc_t) ();
 #else
 #ifdef AFS_I386_LINUX26_ENV
-typedef bool_t(*xdrproc_t) (void *, caddr_t *, u_int);
+typedef bool_t(*xdrproc_t) (void *, caddr_t, u_int);
 #else
 typedef bool_t(*xdrproc_t) (void *, ...);
 #endif

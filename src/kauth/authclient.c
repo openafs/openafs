@@ -16,6 +16,10 @@
 #include <afs/param.h>
 #endif
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #define UBIK_LEGACY_CALLITER 1
 
@@ -25,11 +29,12 @@
 #include "afs_usrops.h"
 #include "afs/stds.h"
 #include "afs/pthread_glock.h"
+#include "des.h"
+#include "des_prototypes.h"
 #include "rx/rxkad.h"
 #include "afs/cellconfig.h"
 #include "ubik.h"
 #include "afs/auth.h"
-#include "des/des.h"
 #include "afs/afsutil.h"
 
 #include "afs/kauth.h"
@@ -47,11 +52,13 @@
 #include <netinet/in.h>
 #endif
 #include <string.h>
+#include <stdio.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <afs/auth.h>
-#include <des.h>
 #include <afs/afsutil.h>
 #include "kauth.h"
 #include "kautils.h"
@@ -453,11 +460,9 @@ CheckTicketAnswer(ka_BBS * oanswer, afs_int32 challenge,
  * this doesn't handle UNOTSYNC very well, should use ubik_Call if you care
  */
 static afs_int32
-kawrap_ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8)
-     struct ubik_client *aclient;
-     int (*aproc) ();
-     afs_int32 aflags;
-     void *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
+kawrap_ubik_Call(int (*aproc) (), struct ubik_client *aclient,
+                 afs_int32 aflags, void *p1, void *p2, void *p3, void *p4,
+                 void *p5, void *p6, void *p7, void *p8)
 {
     afs_int32 code, lcode;
     int count;
@@ -528,7 +533,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     int version;
 
     LOCK_GLOBAL_MUTEX;
-    if ((code = des_key_sched(key, schedule))) {
+    if ((code = des_key_sched(ktc_to_cblock(key), schedule))) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KABADKEY;
     }
@@ -550,7 +555,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     arequest.SeqLen = sizeof(request);
     arequest.SeqBody = (char *)&request;
     des_pcbc_encrypt(arequest.SeqBody, arequest.SeqBody, arequest.SeqLen,
-		     schedule, key, ENCRYPT);
+		     schedule, ktc_to_cblockptr(key), ENCRYPT);
 
     oanswer.MaxSeqLen = sizeof(answer);
     oanswer.SeqLen = 0;
@@ -559,21 +564,21 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     version = 2;
     code =
 	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance,
-			 start, end, &arequest, &oanswer, 0, 0);
+			 (void*)(uintptr_t)start, (void*)(uintptr_t)end, &arequest, &oanswer, 0, 0);
     if (code == RXGEN_OPCODE) {
 	oanswer.MaxSeqLen = sizeof(answer);
 	oanswer.SeqBody = (char *)&answer;
 	version = 1;
 	code =
-	    ubik_Call(KAA_Authenticate, conn, 0, name, instance, start, end,
-		      &arequest, &oanswer, 0, 0);
+	    ubik_KAA_Authenticate(conn, 0, name, instance, start, end,
+				  &arequest, &oanswer);
 	if (code == RXGEN_OPCODE) {
 	    oanswer.MaxSeqLen = sizeof(answer_old);
 	    oanswer.SeqBody = (char *)&answer_old;
 	    version = 0;
 	    code =
-		ubik_Call(KAA_Authenticate_old, conn, 0, name, instance,
-			  start, end, &arequest, &oanswer);
+		ubik_KAA_Authenticate_old(conn, 0, name, instance,
+					  start, end, &arequest, &oanswer);
 	}
 	if (code == RXGEN_OPCODE) {
 	    code = KAOLDINTERFACE;
@@ -586,7 +591,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	return KAUBIKCALL;
     }
     des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     schedule, key, DECRYPT);
+		     schedule, ktc_to_cblockptr(key), DECRYPT);
 
     switch (version) {
     case 1:
@@ -662,7 +667,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     aticket.SeqLen = auth_token->ticketLen;
     aticket.SeqBody = auth_token->ticket;
 
-    code = des_key_sched(&auth_token->sessionKey, schedule);
+    code = des_key_sched(ktc_to_cblock(&auth_token->sessionKey), schedule);
     if (code) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KABADKEY;
@@ -681,7 +686,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 
     version = 1;
     code =
-	ubik_Call(KAT_GetTicket, conn, 0, auth_token->kvno, auth_domain,
+	ubik_KAT_GetTicket(conn, 0, auth_token->kvno, auth_domain,
 		  &aticket, name, instance, &atimes, &oanswer);
     if (code == RXGEN_OPCODE) {
 	oanswer.SeqLen = 0;	/* this may be set by first call */
@@ -689,7 +694,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 	oanswer.SeqBody = (char *)&answer_old;
 	version = 0;
 	code =
-	    ubik_Call(KAT_GetTicket_old, conn, 0, auth_token->kvno,
+	    ubik_KAT_GetTicket_old(conn, 0, auth_token->kvno,
 		      auth_domain, &aticket, name, instance, &atimes,
 		      &oanswer);
 	if (code == RXGEN_OPCODE) {
@@ -704,7 +709,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     }
 
     des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     schedule, &auth_token->sessionKey, DECRYPT);
+		     schedule, ktc_to_cblockptr(&auth_token->sessionKey), DECRYPT);
 
     switch (version) {
     case 1:
@@ -798,11 +803,10 @@ ka_ChangePassword(char *name, char *instance, struct ubik_client * conn,	/* Ubik
     LOCK_GLOBAL_MUTEX;
 #if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
     code =
-	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, 0,
-		      *newkey);
+	ubik_KAM_SetPassword(conn, UBIK_CALL_NEW, name, instance, 0, 0, *(EncryptionKey *)newkey);
 #else
     code =
-	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, *newkey);
+	ubik_KAM_SetPassword(conn, UBIK_CALL_NEW, name, instance, 0, *(EncryptionKey *)newkey);
 #endif
     UNLOCK_GLOBAL_MUTEX;
     return code;

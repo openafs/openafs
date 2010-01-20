@@ -13,12 +13,11 @@ INCFILEDIR = $(DESTDIR)\include\rx  # header file install directory
 
 INCFILES =\
 	$(INCFILEDIR)\rxkad_prototypes.h \
-	$(INCFILEDIR)\fcrypt.h \
 	$(INCFILEDIR)\asn1_err.h \
-    $(INCFILEDIR)\v5gen.h \
-    $(INCFILEDIR)\hash.h\
-    $(INCFILEDIR)\md4.h \
-    $(INCFILEDIR)\md5.h \
+        $(INCFILEDIR)\v5gen.h \
+        $(INCFILEDIR)\hash.h\
+        $(INCFILEDIR)\md4.h \
+        $(INCFILEDIR)\md5.h \
 	$(INCFILEDIR)\rxkad.h
 
 # build afsrxkad.lib
@@ -32,8 +31,8 @@ LIBOBJS =\
 	$(OUT)\bg-fcrypt.obj \
 	$(OUT)\ticket5.obj \
 	$(OUT)\crc.obj \
-    $(OUT)\md4.obj \
-    $(OUT)\md5.obj \
+        $(OUT)\md4.obj \
+        $(OUT)\md5.obj \
 	$(OUT)\crypt_conn.obj 
 
 $(LIBOBJS):
@@ -48,25 +47,24 @@ $(LIBFILE): $(LIBOBJS)
 
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
+	 $(COPY)  domestic\fcrypt.h $(INCFILEDIR)\.
 
 rxkad.h rxkad_errs.c : rxkad_errs.et rxkad.p.h
 	$(DEL) rxkad_errs.c 
 	$(COMPILE_ET) rxkad_errs -h rxkad
 
-# These sources are kept in a separate directory so that we can use an
-# ACL to comply with source export restrictions.
+$(OUT)\fcrypt.obj: DOMESTIC\fcrypt.c DOMESTIC\fcrypt.h DOMESTIC\sboxes.h DOMESTIC\rxkad.h DOMESTIC\rxkad_prototypes.h
+	$(C2OBJ) DOMESTIC\fcrypt.c
 
-DOMESTIC = crypt_conn.c fcrypt.c fcrypt.h sboxes.h
+$(OUT)\crypt_conn.obj: DOMESTIC\crypt_conn.c DOMESTIC\fcrypt.h private_data.h
+	$(C2OBJ) DOMESTIC\crypt_conn.c
 
-$(DOMESTIC):domestic\$$@
-	$(COPY)  $** .
-
-install: $(DOMESTIC) $(INCFILES) $(LIBFILE)
+install: $(INCFILES) $(LIBFILE)
 
 install9x: install
 
 clean::
-	$(DEL) $(RXKAD_INCFILE) rxkad_errs.c $(INCFILES)
+	$(DEL) rxkad.h rxkad_errs.c $(INCFILES) $(INCFILEDIR)\fcrypt.h
 	$(DEL) $(LIBFILE)
 
 mkdir:

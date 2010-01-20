@@ -46,9 +46,9 @@ afs_InitStats(void)
     /*
      * First step is to zero everything out.
      */
-    memset((char *)(&afs_cmstats), 0, sizeof(struct afs_CMStats));
-    memset((char *)(&afs_stats_cmperf), 0, sizeof(struct afs_stats_CMPerf));
-    memset((char *)(&afs_stats_cmfullperf), 0,
+    memset((&afs_cmstats), 0, sizeof(struct afs_CMStats));
+    memset((&afs_stats_cmperf), 0, sizeof(struct afs_stats_CMPerf));
+    memset((&afs_stats_cmfullperf), 0,
 	   sizeof(struct afs_stats_CMFullPerf));
 
     /*

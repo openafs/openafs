@@ -1,0 +1,27 @@
+Todo List
+
+* Adapt more implementations to take opaque key data and a comparison
+  function, as in set_func.h, skip_cas_func.c
+
+* Adapt implementations for use in various kernels
+
+* Implement key-pointer/comparison function versions of more structures, in 
+  particular, trees
+
+Desired Additions
+
+* It would be attractive to develop an implementation of the priority queue
+  implementation described in 
+
+  H. Sundell and P. Tsigas, “Fast and Lock-Free Concurrent Priority
+	Queues for Multi-Thread Systems,” in Proceedings of the 17th Inter-
+	national Parallel and Distributed Processing Symposium, 11 pp., IEEE
+	press, Apr. 2003.
+
+  (A more up-to-date description is available in the Ph.D. thesis of H°akan
+   Sundell, Ch. 5.) 
+
+* It would be interesting to compare the CAS skiplist implementation here with
+  that in the H°akan Sundell thesis, Ch. 6, which claims to have better 
+  efficiency 
+

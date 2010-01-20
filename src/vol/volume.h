@@ -68,6 +68,7 @@ extern pthread_mutex_t vol_glock_mutex;
 extern pthread_mutex_t vol_trans_mutex;
 extern pthread_cond_t vol_put_volume_cond;
 extern pthread_cond_t vol_sleep_cond;
+extern ih_init_params vol_io_params;
 extern int vol_attach_threads;
 #ifdef VOL_LOCK_DEBUG
 extern pthread_t vol_glock_holder;
@@ -118,11 +119,12 @@ extern pthread_t vol_glock_holder;
  */
 typedef enum {
     fileServer          = 1,    /**< the fileserver process */
-    volumeUtility       = 2,    /**< volserver, or a 
-				 *   single volume salvager (non-dafs) */
+    volumeUtility       = 2,    /**< any miscellaneous volume utility */
     salvager            = 3,    /**< standalone whole-partition salvager */
     salvageServer       = 4,    /**< dafs online salvager */
-    debugUtility        = 5     /**< fssync-debug or similar utility */
+    debugUtility        = 5,    /**< fssync-debug or similar utility */
+    volumeServer        = 6,    /**< the volserver process */
+    volumeSalvager      = 7,    /**< the standalone single-volume salvager */
 } ProgramType;
 extern ProgramType programType;	/* The type of program using the package */
 
@@ -236,6 +238,17 @@ extern VThreadOptions_t VThread_defaults;
 
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+typedef struct VolumePackageOptions {
+    afs_uint32 nLargeVnodes;      /**< size of large vnode cache */
+    afs_uint32 nSmallVnodes;      /**< size of small vnode cache */
+    afs_uint32 volcache;          /**< size of volume header cache */
+
+    afs_int32 canScheduleSalvage; /**< can we schedule salvages? (DAFS) */
+				  /* (if 'no', we will just error out if we
+                                   * find a bad vol) */
+    afs_int32 canUseFSSYNC;       /**< can we use the FSSYNC channel? */
+    afs_int32 canUseSALVSYNC;     /**< can we use the SALVSYNC channel? (DAFS) */
+} VolumePackageOptions;
 
 /* Magic numbers and version stamps for each type of file */
 #define VOLUMEHEADERMAGIC	((bit32)0x88a1bb3c)
@@ -573,6 +586,18 @@ typedef struct VolumeStats {
     afs_uint32 last_vol_op;      /**< unix timestamp of last volume operation */
 } VolumeStats;
 
+
+#define SALVAGE_PRIO_UPDATE_INTERVAL 3      /**< number of seconds between prio updates */
+#define SALVAGE_COUNT_MAX 16                /**< number of online salvages we
+					     *   allow before moving the volume
+					     *   into a permanent error state
+					     *
+					     *   once this threshold is reached,
+					     *   the operator will have to manually
+					     *   issue a 'bos salvage' to bring
+					     *   the volume back online
+					     */
+
 /**
  * DAFS online salvager state.
  */
@@ -763,6 +788,7 @@ extern Volume *VAttachVolumeByName(Error * ec, char *partition, char *name,
 extern Volume *VAttachVolumeByName_r(Error * ec, char *partition, char *name,
 				     int mode);
 extern void VShutdown(void);
+extern void VSetTranquil(void);
 extern void VUpdateVolume(Error * ec, Volume * vp);
 extern void VUpdateVolume_r(Error * ec, Volume * vp, int flags);
 extern void VAddToVolumeUpdateList(Error * ec, Volume * vp);
@@ -779,8 +805,9 @@ extern void VReleaseVnodeFiles_r(Volume * vp);
 extern void VCloseVnodeFiles_r(Volume * vp);
 extern struct DiskPartition64 *VGetPartition(char *name, int abortp);
 extern struct DiskPartition64 *VGetPartition_r(char *name, int abortp);
-extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
-			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
+extern void VOptDefaults(ProgramType pt, VolumePackageOptions * opts);
+extern int VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts);
+extern int VInitAttachVolumes(ProgramType pt);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
@@ -812,15 +839,21 @@ extern void VPrintExtendedCacheStats_r(int flags);
 extern void VLRU_SetOptions(int option, afs_uint32 val);
 extern int VSetVolHashSize(int logsize);
 extern int VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags);
+extern int VUpdateSalvagePriority_r(Volume * vp);
 extern int VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VDeregisterVolOp_r(Volume * vp);
 extern void VCancelReservation_r(Volume * vp);
+extern int VChildProcReconnectFS_r(void);
+extern void VOfflineForVolOp_r(Error *ec, Volume *vp, char *message);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 
 extern void VPurgeVolume(Error * ec, Volume * vp);
 
+extern afs_int32 VCanScheduleSalvage(void);
+extern afs_int32 VCanUseFSSYNC(void);
+extern afs_int32 VCanUseSALVSYNC(void);
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store

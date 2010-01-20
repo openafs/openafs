@@ -130,11 +130,11 @@ is 5:00 a.m.
 
 =back
 
-Although the F<BosConfig> file is in ASCII format, do not use a text
-editor to alter it. Its format is subject to change and incorrectly
-formatted entries can prevent server startup in ways that are difficult to
-diagnose. Instead always use the appropriate commands from the B<bos>
-command suite:
+Although the F<BosConfig> file is in ASCII format, it is normally best not
+to use a text editor to alter it.  The parser is very picky, and
+incorrectly formatted entries can prevent server startup in ways that are
+difficult to diagnose. Instead, use the appropriate commands from the
+B<bos> command suite:
 
 =over 4
 
@@ -197,6 +197,12 @@ The B<bos shutdown> command stops a process.
 The B<bos startup> command starts a process.
 
 =back
+
+When the BOS Server shuts down, it rewrites F<BosConfig>, discarding any
+changes made manually to that file.  To change the configuration for the
+next BOS Server restart, instead write a new file to F<BosConfig.new>.  If
+F<BosConfig.new> exists when the BOS Server starts, it will rename that
+file to F<BosConfig> before reading its configuration.
 
 =head1 SEE ALSO
 

@@ -1367,7 +1367,8 @@ afsclient_MountPointCreate(const void *cellHandle, const char *directory,
      */
 
     if (volCheck == CHECK_VOLUME) {
-	if (!vos_VLDBGet(cellHandle, 0, 0, volumeName, &vldbEntry, &tst)) {
+	if (!vos_VLDBGet(cellHandle, 0, 0, (char *)volumeName, &vldbEntry,
+		         &tst)) {
 	    goto fail_afsclient_MountPointCreate;
 	}
     }
@@ -1499,7 +1500,7 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
     idata.out_size = 2048;
     idata.in_size = 0;
     idata.in = idata.out = old_acl_string;
-    tst = pioctl(directory, VIOCGETAL, &idata, 1);
+    tst = pioctl((char *)directory, VIOCGETAL, &idata, 1);
 
     if (tst != 0) {
 	goto fail_afsclient_ACLEntryAdd;
@@ -1588,7 +1589,7 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
     idata.out_size = 0;
     idata.in_size = strlen(new_acl_string) + 1;
     idata.in = idata.out = new_acl_string;
-    tst = pioctl(directory, VIOCSETAL, &idata, 1);
+    tst = pioctl((char *) directory, VIOCSETAL, &idata, 1);
 
     if (tst != 0) {
 	goto fail_afsclient_ACLEntryAdd;

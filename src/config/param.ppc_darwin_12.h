@@ -12,6 +12,7 @@
 #include <afs/afs_sysnames.h>
 
 #define AFS_DARWIN_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define DARWIN_REFBASE 0
@@ -76,6 +77,7 @@
 #include <afs/afs_sysnames.h>
 #define AFS_USERSPACE_ENV
 #define AFS_USR_DARWIN_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define DARWIN_REFBASE 0

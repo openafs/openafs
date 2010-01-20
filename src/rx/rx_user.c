@@ -9,6 +9,8 @@
 
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
+/* rxi_syscall is currently not prototyped */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -43,6 +45,14 @@
    port numbers to numbers below IPPORT_USERRESERVED...  */
 #define IPPORT_USERRESERVED 5000
 # endif
+
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#include <linux/types.h>
+#include <linux/errqueue.h>
+#ifndef IP_MTU
+#define IP_MTU 14
+#endif
+#endif
 
 #ifndef AFS_NT40_ENV
 # include <sys/time.h>
@@ -99,13 +109,6 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     int recverr=1;
 #else
     int pmtu=IP_PMTUDISC_DONT;
-#endif
-#endif
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
-#include <linux/types.h>
-#include <linux/errqueue.h>
-#ifndef IP_MTU
-#define IP_MTU 14
 #endif
 #endif
 
@@ -323,15 +326,6 @@ rx_getAllAddr(afs_uint32 * buffer, int maxSize)
     /* The IP address list can change so we must query for it */
     rx_GetIFInfo();
 
-#ifdef AFS_DJGPP_ENV
-    /* we don't want to use the loopback adapter which is first */
-    /* this is a bad bad hack.
-     * and doesn't hold true on Windows.
-     */
-    if ( rxi_numNetAddrs > 1 )
-        offset = 1;
-#endif /* AFS_DJGPP_ENV */
-
     for (count = 0; offset < rxi_numNetAddrs && maxSize > 0;
 	 count++, offset++, maxSize--)
 	buffer[count] = htonl(rxi_NetAddrs[offset]);
@@ -352,15 +346,6 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 
     /* The IP address list can change so we must query for it */
     rx_GetIFInfo();
-
-#ifdef AFS_DJGPP_ENV
-    /* we don't want to use the loopback adapter which is first */
-    /* this is a bad bad hack.
-     * and doesn't hold true on Windows.
-     */
-    if ( rxi_numNetAddrs > 1 )
-        offset = 1;
-#endif /* AFS_DJGPP_ENV */
 
     for (count = 0; 
          offset < rxi_numNetAddrs && maxSize > 0;
@@ -417,12 +402,14 @@ rx_GetIFInfo(void)
         maxsize =
             rxi_nRecvFrags * rxsize + (rxi_nRecvFrags - 1) * UDP_HDR_SIZE;
         maxsize = rxi_AdjustMaxMTU(rxsize, maxsize);
-        if (rx_maxReceiveSize < maxsize) {
+        if (rx_maxReceiveSize > maxsize) {
             rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
             rx_maxReceiveSize =
                 MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
         }
-
+        if (rx_MyMaxSendSize > maxsize) {
+            rx_MyMaxSendSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
+        }
     }
     UNLOCK_IF;
 
@@ -459,9 +446,7 @@ fudge_netmask(afs_uint32 addr)
 
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) 
 int
-rxi_syscall(a3, a4, a5)
-     afs_uint32 a3, a4;
-     void *a5;
+rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
     void (*old) (int);

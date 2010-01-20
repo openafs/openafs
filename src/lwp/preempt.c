@@ -92,7 +92,7 @@ PRE_InitPreempt(struct timeval *slice)
     }
 
 #if HAVE_SIGACTION && defined(SA_SIGINFO)
-    memset((char *)&action, 0, sizeof(action));
+    memset(&action, 0, sizeof(action));
     action.sa_sigaction = AlarmHandler;
     action.sa_flags = SA_SIGINFO;
 
@@ -100,7 +100,7 @@ PRE_InitPreempt(struct timeval *slice)
 	|| (setitimer(ITIMER_REAL, &itv, NULL) == -1))
 	return (LWP_ESYSTEM);
 #else
-    memset((char *)&vec, 0, sizeof(vec));
+    memset(&vec, 0, sizeof(vec));
     vec.sv_handler = AlarmHandler;
     vec.sv_mask = vec.sv_onstack = 0;
 
@@ -128,7 +128,7 @@ PRE_EndPreempt()
     itv.it_value.tv_sec = itv.it_value.tv_usec = 0;
 
 #if HAVE_SIGACTION && defined(SA_SIGINFO)
-    memset((char *)&action, 0, sizeof(action));
+    memset(&action, 0, sizeof(action));
     action.sa_handler = SIG_DFL;
 
     if ((setitimer(ITIMER_REAL, &itv, NULL) == -1)
@@ -136,7 +136,7 @@ PRE_EndPreempt()
 	return (LWP_ESYSTEM);
 
 #else
-    memset((char *)&vec, 0, sizeof(vec));
+    memset(&vec, 0, sizeof(vec));
     vec.sv_handler = SIG_DFL;
     vec.sv_mask = vec.sv_onstack = 0;
 

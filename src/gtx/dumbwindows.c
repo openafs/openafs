@@ -117,11 +117,10 @@ gator_dumbgwin_init(int adebug)
  *------------------------------------------------------------------------*/
 
 struct gwin *
-gator_dumbgwin_create(struct gator_dumbgwin_params *params)
+gator_dumbgwin_create(void *rock)
 {				/*gator_dumbgwin_create */
 
     static char rn[] = "gator_dumbgwin_create";	/*Routine name */
-
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 

@@ -38,6 +38,9 @@ AFSCPOBJS =\
 	util.o \
 	vos.o
 
+client.o: client.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	$(CC) $(CFLAGS) -o afscp afscp.o $(AFSCPOBJS) \
 	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)

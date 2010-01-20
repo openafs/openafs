@@ -9,12 +9,14 @@ backup_labeltape - Creates the magnetic label on a tape
 
 B<backup labeltape> S<<< [B<-name> <I<AFS tape name, defaults to NULL>>] >>>
     S<<< [B<-size> <I<tape size in Kbytes, defaults to size in tapeconfig>>] >>>
-    S<<< [B<-portoffset> <I<TC port offset>>] >>> S<<< [B<-pname> <I<permanent tape name>>] >>>
+    S<<< [B<-portoffset> <I<TC port offset>>] >>>
+    S<<< [B<-pname> <I<permanent tape name>>] >>>
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup la> S<<< [B<-n> <I<AFS tape name, defaults to NULL>>] >>>
     S<<< [B<-s> <I<tape size in Kbytes, defaults to size in tapeconfig>>] >>>
-    S<<< [B<-po> <I<TC port offset>>] >>> S<<< [B<-pn> <I<permanent tape name>>] >>>
+    S<<< [B<-po> <I<TC port offset>>] >>>
+    S<<< [B<-pn> <I<permanent tape name>>] >>>
     [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html

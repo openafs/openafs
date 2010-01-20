@@ -18,7 +18,7 @@
 
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
-#include <cmd.h>		/*Command line interpreter */
+#include <afs/cmd.h>		/*Command line interpreter */
 #include <time.h>
 #include <string.h>
 #include <afs/afsutil.h>
@@ -288,12 +288,12 @@ PrintOpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
     avg = fSumTime / ((double)(a_opTimeP->numSuccesses));
 
     printf
-	("%15s: %d ops (%d OK); sum=%d.%06d, sqr=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	("%15s: %d ops (%d OK); sum=%ld.%06ld, sqr=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	 opNames[a_opIdx], a_opTimeP->numOps, a_opTimeP->numSuccesses,
-	 a_opTimeP->sumTime.tv_sec, a_opTimeP->sumTime.tv_usec,
-	 a_opTimeP->sqrTime.tv_sec, a_opTimeP->sqrTime.tv_usec,
-	 a_opTimeP->minTime.tv_sec, a_opTimeP->minTime.tv_usec,
-	 a_opTimeP->maxTime.tv_sec, a_opTimeP->maxTime.tv_usec);
+	 (long)a_opTimeP->sumTime.tv_sec, (long)a_opTimeP->sumTime.tv_usec,
+	 (long)a_opTimeP->sqrTime.tv_sec, (long)a_opTimeP->sqrTime.tv_usec,
+	 (long)a_opTimeP->minTime.tv_sec, (long)a_opTimeP->minTime.tv_usec,
+	 (long)a_opTimeP->maxTime.tv_sec, (long)a_opTimeP->maxTime.tv_usec);
 }
 
 
@@ -329,13 +329,13 @@ PrintXferTiming(int a_opIdx, struct fs_stats_xferData *a_xferP)
     avg = fSumTime / ((double)(a_xferP->numSuccesses));
 
     printf
-	("%s: %d xfers (%d OK), time sum=%d.%06d, sqr=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	("%s: %d xfers (%d OK), time sum=%ld.%06ld, sqr=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	 xferOpNames[a_opIdx], a_xferP->numXfers, a_xferP->numSuccesses,
-	 a_xferP->sumTime.tv_sec, a_xferP->sumTime.tv_usec,
-	 a_xferP->sqrTime.tv_sec, a_xferP->sqrTime.tv_usec,
-	 a_xferP->minTime.tv_sec, a_xferP->minTime.tv_usec,
-	 a_xferP->maxTime.tv_sec, a_xferP->maxTime.tv_usec);
-    printf("\t[bytes: sum=%lu, min=%d, max=%d]\n", a_xferP->sumBytes,
+	 (long)a_xferP->sumTime.tv_sec, (long)a_xferP->sumTime.tv_usec,
+	 (long)a_xferP->sqrTime.tv_sec, (long)a_xferP->sqrTime.tv_usec,
+	 (long)a_xferP->minTime.tv_sec, (long)a_xferP->minTime.tv_usec,
+	 (long)a_xferP->maxTime.tv_sec, (long)a_xferP->maxTime.tv_usec);
+    printf("\t[bytes: sum=%d, min=%d, max=%d]\n", a_xferP->sumBytes,
 	   a_xferP->minBytes, a_xferP->maxBytes);
     printf
 	("\t[buckets: 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, 5: %d, 6: %d, 7: %d, 8: %d]\n",
@@ -369,7 +369,7 @@ PrintDetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
 {
     int currIdx;		/*Loop variable */
 
-    printf("\t%10d epoch\n", a_detP->epoch);
+    printf("\t%10ld epoch\n", (long) a_detP->epoch.tv_sec);
 
     for (currIdx = 0; currIdx < FS_STATS_NUM_RPC_OPS; currIdx++)
 	PrintOpTiming(currIdx, &(a_detP->rpcOpTimes[currIdx]));
@@ -499,7 +499,7 @@ void
 PrintCbCounters(void) {
     int numInt32s = sizeof(CbCounterStrings)/sizeof(char *);
     int i;
-    afs_uint32 *val=xstat_fs_Results.data.AFS_CollData_val;
+    afs_int32 *val=xstat_fs_Results.data.AFS_CollData_val;
 
     if (numInt32s > xstat_fs_Results.data.AFS_CollData_len)
 	numInt32s = xstat_fs_Results.data.AFS_CollData_len;

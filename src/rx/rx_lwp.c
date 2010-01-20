@@ -42,6 +42,7 @@
 # include <sys/ioctl.h>
 # include <sys/time.h>
 #endif
+# include <assert.h>
 # include "rx.h"
 # include "rx_globals.h"
 # include <lwp.h>
@@ -179,7 +180,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
     code = LWP_CurrentProcess(&pid);
     if (code) {
 	fprintf(stderr, "rxi_Listener: Can't get my pid.\n");
-	exit(1);
+	assert(0);
     }
     rx_listenerPid = pid;
     if (swapNameProgram)

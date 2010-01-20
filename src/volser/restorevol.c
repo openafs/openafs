@@ -396,6 +396,7 @@ ReadVNode(afs_int32 count)
     int len;
     afs_int32 vnode;
     afs_int32 mode = 0;
+    afs_uint32 hi, lo;
 
 /*  memset(&vn, 0, sizeof(vn)); */
     vn.dataSize = 0;
@@ -454,16 +455,11 @@ ReadVNode(afs_int32 count)
 	    readdata(vn.acl, 192);	/* Skip ACL data */
 	    break;
 
-#ifdef AFS_LARGEFILE_ENV
 	case 'h':
-	    {
-		afs_uint32 hi, lo;
-		hi = ntohl(readvalue(4));
-		lo = ntohl(readvalue(4));
-		FillInt64(vn.dataSize, hi, lo);
-	    }
+	    hi = ntohl(readvalue(4));
+	    lo = ntohl(readvalue(4));
+	    FillInt64(vn.dataSize, hi, lo);
 	    goto common_vnode;
-#endif /* !AFS_LARGEFILE_ENV */
 
 	case 'f':
 	    vn.dataSize = ntohl(readvalue(4));

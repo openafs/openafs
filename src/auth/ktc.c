@@ -73,6 +73,11 @@
 
 #endif /* defined(UKERNEL) */
 
+#if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
+#include <sys/syscall.h>
+#define KEYCTL_SESSION_TO_PARENT        18
+#endif
+
 /* For malloc() */
 #include <stdlib.h>
 #include "ktc.h"
@@ -415,6 +420,14 @@ OldSetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     }
 #else /* NO_AFS_CLIENT */
     code = PIOCTL(0, VIOCSETTOK, &iob, 0);
+#if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
+    /*
+     * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
+     * is available, use it to copy the session keyring to the parent process
+     */
+    if (flags & AFS_SETTOK_SETPAG)
+	syscall(SYS_keyctl, KEYCTL_SESSION_TO_PARENT);
+#endif
 #endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
@@ -928,13 +941,13 @@ ktc_curpag(void)
 {
     int code;
     struct ViceIoctl iob;
-    afs_int32 pag;
+    afs_uint32 pag;
 
     /* now setup for the pioctl */
     iob.in = NULL;
     iob.in_size = 0;
-    iob.out = &pag;
-    iob.out_size = sizeof(afs_int32);
+    iob.out = (caddr_t) &pag;
+    iob.out_size = sizeof(afs_uint32);
 
     code = PIOCTL(0, VIOC_GETPAG, &iob, 0);
     if (code < 0) {
@@ -949,8 +962,23 @@ ktc_curpag(void)
 	gid_t groups[NGROUPS_MAX];
 	afs_uint32 g0, g1;
 	afs_uint32 h, l, ret;
+	int ngroups;
+#ifdef AFS_LINUX26_ENV
+	int i;
+#endif
 
-	if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
+	ngroups = getgroups(sizeof groups / sizeof groups[0], groups);
+
+#ifdef AFS_LINUX26_ENV
+	/* check for AFS_LINUX26_ONEGROUP_ENV PAGs */
+	for (i = 0; i < ngroups; i++) {
+	    if (((groups[i] >> 24) & 0xff) == 'A') {
+		return groups[i];
+	    }
+	}
+#endif
+
+	if (ngroups < 2)
 	    return 0;
 
 	g0 = groups[0] & 0xffff;

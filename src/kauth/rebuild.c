@@ -29,6 +29,7 @@
 #include <afs/cmd.h>
 #include <des.h>
 #include <des_prototypes.h>
+#include <rx/rxkad.h>
 
 #include <afs/com_err.h>
 
@@ -62,7 +63,7 @@ readUbikHeader(void)
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
+	printf("error: read of %" AFS_SIZET_FMT " bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
 	return (-1);
     }
@@ -330,7 +331,7 @@ CheckHeader(struct kaheader *header)
     if (header->headerSize != sizeof(struct kaheader)) {
 	code++;
 	fprintf(stderr,
-		"HEADER SIZE WRONG: file indicates %d, should be %lu\n",
+		"HEADER SIZE WRONG: file indicates %d, should be %" AFS_SIZET_FMT "\n",
 		header->headerSize, sizeof(struct kaheader));
     }
     if (header->hashsize != HASHSIZE) {
@@ -469,8 +470,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    printf("Entry %d has zero length name\n", i);
 		continue;
 	    }
-	    if (!des_check_key_parity(&entry.key)
-		|| des_is_weak_key(&entry.key)) {
+	    if (!des_check_key_parity(ktc_to_cblock(&entry.key))
+		|| des_is_weak_key(ktc_to_cblock(&entry.key))) {
 		fprintf(stderr, "Entry %d, %s, has bad key\n", i,
 			EntryName(&entry));
 		continue;
@@ -503,7 +504,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    i = NameHash(&entry);
 	    if (i != j) {
 		fprintf(stderr,
-			"Entry %lu, %s, found in hash chain %d (should be %d)\n",
+			"Entry %" AFS_SIZET_FMT ", %s, found in hash chain %d (should be %d)\n",
 			((index -
 			  sizeof(struct kaheader)) / sizeof(struct kaentry)),
 			EntryName(&entry), j, i);

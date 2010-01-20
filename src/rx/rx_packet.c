@@ -189,17 +189,17 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
      * offset only applies to the first iovec.
      */
     r = resid;
-    while ((resid > 0) && (i < packet->niovecs)) {
-	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
+    while ((r > 0) && (i < packet->niovecs)) {
+	j = MIN(r, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
-	resid -= j;
+	r -= j;
         out += j;
   	l += packet->wirevec[i].iov_len;
 	offset = l;
 	i++;
     }
 
-    return (resid ? (r - resid) : r);
+    return (r ? (resid - r) : resid);
 }
 
 
@@ -211,11 +211,11 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
 afs_int32
 rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 {
-    int i, j, l, r;
+    unsigned int i, j, l, o, r;
     char *b;
 
-    for (l = 0, i = 1; i < packet->niovecs; i++) {
-	if (l + packet->wirevec[i].iov_len > offset) {
+    for (l = 0, i = 1, o = offset; i < packet->niovecs; i++) {
+	if (l + packet->wirevec[i].iov_len > o) {
 	    break;
 	}
 	l += packet->wirevec[i].iov_len;
@@ -227,22 +227,22 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
      * offset only applies to the first iovec.
      */
     r = resid;
-    while ((resid > 0) && (i <= RX_MAXWVECS)) {
+    while ((r > 0) && (i <= RX_MAXWVECS)) {
 	if (i >= packet->niovecs)
-	    if (rxi_AllocDataBuf(packet, resid, RX_PACKET_CLASS_SEND_CBUF) > 0)	/* ++niovecs as a side-effect */
+	    if (rxi_AllocDataBuf(packet, r, RX_PACKET_CLASS_SEND_CBUF) > 0)	/* ++niovecs as a side-effect */
 		break;
 
 	b = (char *)(packet->wirevec[i].iov_base) + (offset - l);
-	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
+	j = MIN(r, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(b, in, j);
-	resid -= j;
+	r -= j;
         in += j;
 	l += packet->wirevec[i].iov_len;
 	offset = l;
 	i++;
     }
 
-    return (resid ? (r - resid) : r);
+    return (r ? (resid - r) : resid);
 }
 
 int
@@ -543,7 +543,7 @@ rxi_MorePackets(int apackets)
     osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
     RX_TS_INFO_GET(rx_ts_info);
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
@@ -597,7 +597,7 @@ rxi_MorePackets(int apackets)
     osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -636,7 +636,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     p = (struct rx_packet *)osi_Alloc(getme);
 
     PIN(p, getme);		/* XXXXX */
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
     RX_TS_INFO_GET(rx_ts_info);
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
@@ -701,7 +701,7 @@ rxi_MorePacketsNoLock(int apackets)
             osi_Assert(apackets > 0);
         }
     } while(p == NULL);
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
 
 #ifdef RX_ENABLE_TSFPQ
     RX_TS_INFO_GET(rx_ts_info);
@@ -812,7 +812,7 @@ void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
     struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %lx\n", (unsigned long)p));
+    dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
@@ -824,7 +824,7 @@ rxi_FreePacketNoLock(struct rx_packet *p)
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    dpf(("Free %lx\n", (unsigned long)p));
+    dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_FPQ_MARK_FREE(p);
     rx_nFreePackets++;
@@ -837,7 +837,7 @@ void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
     struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %lx\n", (unsigned long)p));
+    dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
@@ -973,7 +973,7 @@ int rxi_nBadIovecs = 0;
 void
 rxi_RestoreDataBufs(struct rx_packet *p)
 {
-    int i;
+    unsigned int i;
     struct iovec *iov = &p->wirevec[2];
 
     RX_PACKET_IOV_INIT(p);
@@ -1162,7 +1162,7 @@ rxi_AllocPacketNoLock(int class)
 
     RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
 
-    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1220,7 +1220,7 @@ rxi_AllocPacketNoLock(int class)
     queue_Remove(p);
     RX_FPQ_MARK_USED(p);
 
-    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1258,7 +1258,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
 
     RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
 
-    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
      * order to truncate outbound packets.  In the near future, may need 
@@ -1318,7 +1318,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 	    (void)rxi_AllocDataBuf(p, (want - p->length),
 				   RX_PACKET_CLASS_SEND_CBUF);
 
-	if ((unsigned)p->length > mud)
+	if (p->length > mud)
             p->length = mud;
 
 	if (delta >= p->length) {
@@ -1344,7 +1344,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 		(void)rxi_AllocDataBuf(p, (want - p->length),
 				       RX_PACKET_CLASS_SEND_CBUF);
 
-	    if ((unsigned)p->length > mud)
+	    if (p->length > mud)
 		p->length = mud;
 
 	    if (delta >= p->length) {
@@ -1421,9 +1421,9 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	       u_short * port)
 {
     struct sockaddr_in from;
-    int nbytes;
+    unsigned int nbytes;
     afs_int32 rlen;
-    afs_int32 tlen, savelen;
+    afs_uint32 tlen, savelen;
     struct msghdr msg;
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);	/* this is the size of the user data area */
@@ -1449,7 +1449,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     savelen = p->wirevec[p->niovecs - 1].iov_len;
     p->wirevec[p->niovecs - 1].iov_len += RX_EXTRABUFFERSIZE;
 
-    memset((char *)&msg, 0, sizeof(msg));
+    memset(&msg, 0, sizeof(msg));
     msg.msg_name = (char *)&from;
     msg.msg_namelen = sizeof(struct sockaddr_in);
     msg.msg_iov = p->wirevec;
@@ -1459,7 +1459,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     /* restore the vec to its correct state */
     p->wirevec[p->niovecs - 1].iov_len = savelen;
 
-    p->length = (nbytes - RX_HEADER_SIZE);
+    p->length = (u_short)(nbytes - RX_HEADER_SIZE);
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
             if (rx_stats_active)
@@ -1806,7 +1806,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    struct rx_debugStats tstat;
 
 	    /* get basic stats */
-	    memset((char *)&tstat, 0, sizeof(tstat));	/* make sure spares are zero */
+	    memset(&tstat, 0, sizeof(tstat));	/* make sure spares are zero */
 	    tstat.version = RX_DEBUGI_VERSION;
 #ifndef	RX_ENABLE_LOCKS
 	    tstat.waitingForPackets = rx_waitingForPackets;
@@ -1839,7 +1839,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
     case RX_DEBUGI_GETALLCONN:
     case RX_DEBUGI_GETCONN:{
-	    int i, j;
+            unsigned int i, j;
 	    struct rx_connection *tc;
 	    struct rx_call *tcall;
 	    struct rx_debugConn tconn;
@@ -1852,7 +1852,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    if (tl > 0)
 		return ap;
 
-	    memset((char *)&tconn, 0, sizeof(tconn));	/* make sure spares are zero */
+	    memset(&tconn, 0, sizeof(tconn));	/* make sure spares are zero */
 	    /* get N'th (maybe) "interesting" connection info */
 	    for (i = 0; i < rx_hashTableSize; i++) {
 #if !defined(KERNEL)
@@ -1948,7 +1948,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	 */
 
     case RX_DEBUGI_GETPEER:{
-	    int i;
+	    unsigned int i;
 	    struct rx_peer *tp;
 	    struct rx_debugPeer tpeer;
 
@@ -1959,7 +1959,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    if (tl > 0)
 		return ap;
 
-	    memset((char *)&tpeer, 0, sizeof(tpeer));
+	    memset(&tpeer, 0, sizeof(tpeer));
 	    for (i = 0; i < rx_hashTableSize; i++) {
 #if !defined(KERNEL)
 		/* the time complexity of the algorithm used here
@@ -2111,10 +2111,8 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 		    afs_int32 ahost, short aport, afs_int32 istack)
 {
     struct sockaddr_in taddr;
-    int i;
-    int nbytes;
+    unsigned int i, nbytes, savelen = 0;
     int saven = 0;
-    size_t savelen = 0;
 #ifdef KERNEL
     int waslocked = ISAFS_GLOCK();
 #endif
@@ -2311,7 +2309,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%0.3d len %d",
+          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
+          ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
+          p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     if (rx_stats_active)
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
@@ -2494,7 +2495,10 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%0.3d len %d",
+          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
+          ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
+          p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
     if (rx_stats_active)
@@ -2595,7 +2599,7 @@ rxi_EncodePacketHeader(struct rx_packet *p)
 {
     afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
 
-    memset((char *)buf, 0, RX_HEADER_SIZE);
+    memset(buf, 0, RX_HEADER_SIZE);
     *buf++ = htonl(p->header.epoch);
     *buf++ = htonl(p->header.cid);
     *buf++ = htonl(p->header.callNumber);
@@ -2648,8 +2652,8 @@ rxi_PrepareSendPacket(struct rx_call *call,
 		      struct rx_packet *p, int last)
 {
     struct rx_connection *conn = call->conn;
-    int i;
-    ssize_t len;		/* len must be a signed type; it can go negative */
+    unsigned int i;
+    afs_int32 len;		/* len must be a signed type; it can go negative */
 
     p->flags &= ~RX_PKTFLAG_ACKED;
     p->header.cid = (conn->cid | call->channel);
@@ -2758,7 +2762,7 @@ rxi_AdjustDgramPackets(int frags, int mtu)
     return (2 + (maxMTU / (RX_JUMBOBUFFERSIZE + RX_JUMBOHEADERSIZE)));
 }
 
-#ifdef AFS_NT40_ENV
+#ifndef KERNEL
 /* 
  * This function can be used by the Windows Cache Manager
  * to dump the list of all rx packets so that we can determine
@@ -2767,32 +2771,44 @@ rxi_AdjustDgramPackets(int frags, int mtu)
 int rx_DumpPackets(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
-    int zilch;
     struct rx_packet *p;
+#ifdef AFS_NT40_ENV
+    int zilch;
     char output[2048];
+#define RXDPRINTF sprintf
+#define RXDPRINTOUT output
+#else
+#define RXDPRINTF fprintf
+#define RXDPRINTOUT outputFile
+#endif
 
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
-    sprintf(output, "%s - Start dumping all Rx Packets - count=%u\r\n", cookie, rx_packet_id);
+    RXDPRINTF(RXDPRINTOUT, "%s - Start dumping all Rx Packets - count=%u\r\n", cookie, rx_packet_id);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 
     for (p = rx_mallocedP; p; p = p->allNextp) {
-        sprintf(output, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
+        RXDPRINTF(RXDPRINTOUT, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
                 cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec, 
                 p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->backoff, (afs_uint32)p->length,
                 p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.serial,
                 (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus, 
                 (afs_uint32)p->header.securityIndex, (afs_uint32)p->header.serviceId);
+#ifdef AFS_NT40_ENV
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
     }
 
-    sprintf(output, "%s - End dumping all Rx Packets\r\n", cookie);
+    RXDPRINTF(RXDPRINTOUT, "%s - End dumping all Rx Packets\r\n", cookie);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
 #endif /* RXDEBUG_PACKET */
     return 0;
 }
-#endif /* AFS_NT40_ENV */
-
+#endif

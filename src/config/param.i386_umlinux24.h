@@ -20,9 +20,7 @@
 #define AFS_I386_UMLINUX22_ENV	1
 #define AFS_I386_UMLINUX24_ENV	1
 
-#ifdef AFS_LARGEFILE_ENV
 #define _FILE_OFFSET_BITS	64
-#endif
 
 #else /* !defined(UKERNEL) */
 

@@ -7,11 +7,11 @@ backup_status - Reports a Tape Coordinator's status
 =for html
 <div class="synopsis">
 
-B<backup status> S<<< [B<-portoffset> <I<TC port offset>>] >>> [B<-localauth>]
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+B<backup status> S<<< [B<-portoffset> <I<TC port offset>>] >>>
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
-B<backup st> S<<< [B<-p> <I<TC port offset>>] >>> [B<-l>] S<<< [B<-c> <I<cell name>>] >>>
-    [B<-h>]
+B<backup st> S<<< [B<-p> <I<TC port offset>>] >>>
+    [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
 </div>

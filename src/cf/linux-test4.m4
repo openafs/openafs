@@ -151,19 +151,6 @@ printk("%p\n", address);],
       ac_cv_linux_exports_sys_chdir=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_chdir)])
 
-
-AC_DEFUN([LINUX_EXPORTS_SYS_CLOSE], [
-  AC_MSG_CHECKING([for exported sys_close])
-  AC_CACHE_VAL([ac_cv_linux_exports_sys_close], [
-    AC_TRY_KBUILD(
-[extern asmlinkage long sys_close(void) __attribute__((weak));],
-[void *address = &sys_close;
-printk("%p\n", address);],
-      ac_cv_linux_exports_sys_close=yes,
-      ac_cv_linux_exports_sys_close=no)])
-  AC_MSG_RESULT($ac_cv_linux_exports_sys_close)])
-
-
 AC_DEFUN([LINUX_EXPORTS_SYS_OPEN], [
   AC_MSG_CHECKING([for exported sys_open])
   AC_CACHE_VAL([ac_cv_linux_exports_sys_open], [
@@ -174,18 +161,6 @@ printk("%p\n", address);],
       ac_cv_linux_exports_sys_open=yes,
       ac_cv_linux_exports_sys_open=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_open)])
-
-
-AC_DEFUN([LINUX_EXPORTS_SYS_WAIT4], [
-  AC_MSG_CHECKING([for exported sys_wait4])
-  AC_CACHE_VAL([ac_cv_linux_exports_sys_wait4], [
-    AC_TRY_KBUILD(
-[extern asmlinkage long sys_wait4(void) __attribute__((weak));],
-[void *address = &sys_wait4;
-printk("%p\n", address);],
-      ac_cv_linux_exports_sys_wait4=yes,
-      ac_cv_linux_exports_sys_wait4=no)])
-  AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)])
 
 
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE], [
@@ -224,53 +199,6 @@ printk("%d\n", _inode.i_cdev);],
       ac_cv_linux_fs_struct_inode_has_i_cdev=yes,
       ac_cv_linux_fs_struct_inode_has_i_cdev=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_cdev)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DEVICES], [
-  AC_MSG_CHECKING([for i_devices in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_devices], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_devices);],
-      ac_cv_linux_fs_struct_inode_has_i_devices=yes,
-      ac_cv_linux_fs_struct_inode_has_i_devices=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_devices)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS], [
-  AC_MSG_CHECKING([for i_dirty_data_buffers in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_dirty_data_buffers);],
-      ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes,
-      ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK], [
-  AC_MSG_CHECKING([for inotify_lock in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_inotify_lock], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.inotify_lock);],
-      ac_cv_linux_fs_struct_inode_has_inotify_lock=yes,
-      ac_cv_linux_fs_struct_inode_has_inotify_lock=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_lock)])
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM], [
-  AC_MSG_CHECKING([for inotify_sem in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_inotify_sem], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%x\n", _inode.inotify_sem);],
-      ac_cv_linux_fs_struct_inode_has_inotify_sem=yes,
-      ac_cv_linux_fs_struct_inode_has_inotify_sem=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_sem)])
 
 
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD], [
@@ -319,18 +247,6 @@ printk("%d\n", _inode.i_security);],
       ac_cv_linux_fs_struct_inode_has_i_security=yes,
       ac_cv_linux_fs_struct_inode_has_i_security=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST], [
-  AC_MSG_CHECKING([for i_sb_list in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_sb_list], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_sb_list);],
-      ac_cv_linux_fs_struct_inode_has_i_sb_list=yes,
-      ac_cv_linux_fs_struct_inode_has_i_sb_list=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_sb_list)])
 
 
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
@@ -523,17 +439,6 @@ AC_DEFUN([LINUX_KERNEL_HLIST_UNHASHED], [
     CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_kernel_hlist_unhashed)])
 
-AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
-  AC_MSG_CHECKING([for gfp_mask in struct address_space])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_address_space_has_gfp_mask], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct address_space _a;
-printk("%d\n", _a.gfp_mask);],
-      ac_cv_linux_fs_struct_address_space_has_gfp_mask=yes,
-      ac_cv_linux_fs_struct_address_space_has_gfp_mask=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_gfp_mask)])
-
 
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BYTES], [
   AC_MSG_CHECKING([for i_bytes in struct inode])
@@ -559,30 +464,6 @@ printk("%x\n", _i.i_alloc_sem);],
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_alloc_sem)])
 
 
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM], [
-  AC_MSG_CHECKING([for i_truncate_sem in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_truncate_sem], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _i;
-printk("%x\n", _i.i_truncate_sem);],
-      ac_cv_linux_fs_struct_inode_has_i_truncate_sem=yes,
-      ac_cv_linux_fs_struct_inode_has_i_truncate_sem=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_truncate_sem)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK], [
-  AC_MSG_CHECKING([for page_lock in struct address_space])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_address_space_has_page_lock], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct address_space _a_s;
-printk("%x\n", _a_s.page_lock);],
-      ac_cv_linux_fs_struct_address_space_has_page_lock=yes,
-      ac_cv_linux_fs_struct_address_space_has_page_lock=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_page_lock)])
-
-
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE], [
   AC_MSG_CHECKING([for inode_setattr return type])
   AC_CACHE_VAL([ac_cv_linux_func_inode_setattr_returns_int], [
@@ -595,20 +476,6 @@ i = inode_setattr(&_inode, &_iattr);],
       ac_cv_linux_func_inode_setattr_returns_int=yes,
       ac_cv_linux_func_inode_setattr_returns_int=no)])
   AC_MSG_RESULT($ac_cv_linux_func_inode_setattr_returns_int)])
-
-
-AC_DEFUN([LINUX_WRITE_INODE_RETURN_TYPE], [
-  AC_MSG_CHECKING([for write_inode return type])
-  AC_CACHE_VAL([ac_cv_linux_func_write_inode_returns_int], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-struct super_operations _sops;
-int i;
-i = _sops.write_inode(&_inode, 0);],
-      ac_cv_linux_func_write_inode_returns_int=yes,
-      ac_cv_linux_func_write_inode_returns_int=no)])
-  AC_MSG_RESULT($ac_cv_linux_func_write_inode_returns_int)])
 
 
 AC_DEFUN([LINUX_AOP_WRITEBACK_CONTROL], [
@@ -974,6 +841,24 @@ AC_DEFUN([LINUX_KMEM_CACHE_CREATE_TAKES_DTOR], [
       ac_cv_linux_kmem_cache_create_takes_dtor=no)])
   AC_MSG_RESULT($ac_cv_linux_kmem_cache_create_takes_dtor)])
 
+AC_DEFUN([LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID], [
+  AC_MSG_CHECKING([whether kmem_cache_create constructor function takes a void pointer argument])
+  AC_CACHE_VAL([ac_cv_linux_kmem_cache_create_ctor_takes_void], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[void _ctor(void *v) { };
+kmem_cache_create(NULL, 0, 0, 0, _ctor);],
+      ac_cv_linux_kmem_cache_create_ctor_takes_void=yes,
+      ac_cv_linux_kmem_cache_create_ctor_takes_void=no)
+    CPPFLAGS="$save_CPPFLAGS"
+])
+  AC_MSG_RESULT($ac_cv_linux_kmem_cache_create_ctor_takes_void)
+  if test "x$ac_cv_linux_kmem_cache_create_ctor_takes_void" = "xyes"; then
+    AC_DEFINE([KMEM_CACHE_CTOR_TAKES_VOID], 1, [define if kmem_cache_create constructor function takes a single void pointer argument])
+  fi])
+
 AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SENDFILE], [
   AC_MSG_CHECKING([for sendfile in struct file_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_sendfile], [
@@ -1164,7 +1049,8 @@ AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   AC_CACHE_VAL([ac_cv_linux_write_begin], [
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
-[simple_write_begin(NULL, NULL, 0, 0, 0, NULL, NULL);],
+[struct address_space_operations _aop;
+_aop.write_begin = NULL;],
       ac_cv_linux_write_begin=yes,
       ac_cv_linux_write_begin=no)])
   AC_MSG_RESULT($ac_cv_linux_write_begin)
@@ -1183,6 +1069,32 @@ AC_DEFUN([LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], [
   AC_MSG_RESULT($ac_cv_linux_grab_cache_page_write_begin)
   if test "x$ac_cv_linux_grab_cache_page_write_begin" = "xyes"; then
     AC_DEFINE([HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], 1, [define if your kernel has grab_cache_page_write_begin()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_PAGEVEC_LRU_ADD_FILE], [
+  AC_MSG_CHECKING([for linux __pagevec_lru_add_file()])
+  AC_CACHE_VAL([ac_cv_linux_pagevec_add_file], [
+    AC_TRY_KBUILD(
+[#include <linux/pagevec.h>],
+[__pagevec_lru_add_file(NULL);],
+      ac_cv_linux_pagevec_add_file=yes,
+      ac_cv_linux_pagevec_add_file=no)])
+  AC_MSG_RESULT($ac_cv_linux_pagevec_add_file)
+  if test "x$ac_cv_linux_pagevec_add_file" = "xyes"; then
+    AC_DEFINE([HAVE_PAGEVEC_LRU_ADD_FILE], 1, [define if your kernel has __pagevec_lru_add_file()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_SPLICE_DIRECT_TO_ACTOR], [
+  AC_MSG_CHECKING([for linux splice_direct_to_actor()])
+  AC_CACHE_VAL([ac_cv_linux_splice_direct_to_actor], [
+    AC_TRY_KBUILD(
+[#include <linux/splice.h>],
+[splice_direct_to_actor(NULL,NULL,NULL);],
+      ac_cv_linux_splice_direct_to_actor=yes,
+      ac_cv_linux_splice_direct_to_actor=no)])
+  AC_MSG_RESULT($ac_cv_linux_splice_direct_to_actor)
+  if test "x$ac_cv_linux_splice_direct_to_actor" = "xyes"; then
+    AC_DEFINE([HAVE_SPLICE_DIRECT_TO_ACTOR], 1, [define if your kernel has splice_direct_to_actor()])
   fi])
 
 AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
@@ -1262,5 +1174,46 @@ printk("%s", key_type_keyring.name);
   AC_MSG_RESULT($ac_cv_linux_exports_key_type_keyring)
   if test "x$ac_cv_linux_exports_key_type_keyring" = "xyes"; then
     AC_DEFINE([EXPORTED_KEY_TYPE_KEYRING], 1, [define if key_type_keyring is exported])
+  fi])
+
+AC_DEFUN([LINUX_KEYS_HAVE_SESSION_TO_PARENT], [
+  AC_MSG_CHECKING([for KEYCTL_SESSION_TO_PARENT])
+  AC_CACHE_VAL([ac_cv_linux_have_session_to_parent], [
+    AC_TRY_KBUILD(
+[ #include <linux/keyctl.h>],
+[ int i = KEYCTL_SESSION_TO_PARENT;],
+      ac_cv_linux_have_session_to_parent=yes,
+      ac_cv_linux_have_session_to_parent=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_session_to_parent)
+  if test "x$ac_cv_linux_have_session_to_parent" = "xyes"; then
+    AC_DEFINE([HAVE_SESSION_TO_PARENT], 1, [define if keyctl has the KEYCTL_SESSION_TO_PARENT function])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_SUPER_BLOCK_HAS_S_BDI], [
+  AC_MSG_CHECKING([if struct super_block has s_bdi])
+  AC_CACHE_VAL([ac_cv_linux_struct_super_block_has_s_bdi], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct super_block _sb;
+_sb.s_bdi= NULL;],
+      ac_cv_linux_struct_super_block_has_s_bdi=yes,
+      ac_cv_linux_struct_super_block_has_s_bdi=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_super_block_has_s_bdi)
+  if test "x$ac_cv_linux_struct_super_block_has_s_bdi" = "xyes"; then
+    AC_DEFINE([STRUCT_SUPER_BLOCK_HAS_S_BDI], 1, [define if struct super_block has an s_bdi member])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_CTL_TABLE_HAS_CTL_NAME], [
+  AC_MSG_CHECKING([if struct ctl_table has ctl_name])
+  AC_CACHE_VAL([ac_cv_linux_struct_ctl_table_has_ctl_name], [
+    AC_TRY_KBUILD(
+[#include <linux/sysctl.h>],
+[struct ctl_table _t;
+_t.ctl_name = 0;],
+      ac_cv_linux_struct_ctl_table_has_ctl_name=yes,
+      ac_cv_linux_struct_ctl_table_has_ctl_name=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_ctl_table_has_ctl_name)
+  if test "x$ac_cv_linux_struct_ctl_table_has_ctl_name" = "xyes"; then
+    AC_DEFINE([STRUCT_CTL_TABLE_HAS_CTL_NAME], 1, [define if struct ctl_table has a ctl_name member])
   fi])
 

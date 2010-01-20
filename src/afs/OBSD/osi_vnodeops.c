@@ -1082,7 +1082,7 @@ afs_nbsd_pathconf(void *v)
 
 extern int
   afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd,
-	      struct AFS_UCRED *acred, pid_t clid);
+	      afs_ucred_t *acred, pid_t clid);
 
 /*
  * Advisory record locking support (fcntl() POSIX style)

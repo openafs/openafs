@@ -38,8 +38,8 @@
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
-#define WCOREDUMP(x)	(x & 0200)
+#ifndef WCOREDUMP
+#define WCOREDUMP(x)	((x) & 0200)
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -140,11 +140,13 @@ handleit(struct cmd_syndesc *as, void *arock)
     register struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    ProgramType pt;
    
 #ifdef FAST_RESTART
     afs_int32  seenany = 0;
 #endif
     
+    VolumePackageOptions opts;
     struct DiskPartition64 *partP;
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -268,7 +270,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     if ((ti = as->parms[18].items)) {	/* -datelogs */
-	TimeStampLogFile(AFSDIR_SERVER_SLVGLOG_FILEPATH);
+      TimeStampLogFile((char *)AFSDIR_SERVER_SLVGLOG_FILEPATH);
     }
 #endif
 
@@ -314,8 +316,18 @@ handleit(struct cmd_syndesc *as, void *arock)
 	}
     }
 #endif
-    VInitVolumePackage(seenvol ? volumeUtility : salvager, 5, 5,
-		       DONT_CONNECT_FS, 0);
+
+    if (seenvol) {
+	pt = volumeSalvager;
+    } else {
+	pt = salvager;
+    }
+
+    VOptDefaults(pt, &opts);
+    if (VInitVolumePackage2(pt, &opts)) {
+	Log("errors encountered initializing volume package; salvage aborted\n");
+	Exit(1);
+    }
     DInit(10);
 #ifdef AFS_NT40_ENV
     if (myjob.cj_number != NOT_CHILD) {
@@ -410,7 +422,7 @@ main(int argc, char **argv)
 	 * multiple salvagers appending to the log.
 	 */
 
-	CheckLogFile(AFSDIR_SERVER_SLVGLOG_FILEPATH);
+	CheckLogFile((char *)AFSDIR_SERVER_SLVGLOG_FILEPATH);
 #ifndef AFS_NT40_ENV
 #ifdef AFS_LINUX20_ENV
 	fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
@@ -435,7 +447,7 @@ main(int argc, char **argv)
 
 	/* Get and hold a lock for the duration of the salvage to make sure
 	 * that no other salvage runs at the same time.  The routine
-	 * VInitVolumePackage (called below) makes sure that a file server or
+	 * VInitVolumePackage2 (called below) makes sure that a file server or
 	 * other volume utilities don't interfere with the salvage.
 	 */
 	get_salvage_lock = 1;

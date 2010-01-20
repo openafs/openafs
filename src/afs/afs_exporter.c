@@ -36,8 +36,8 @@ exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state,
     }
     length = (size ? size : sizeof(struct afs_exporter));
     ex = (struct afs_exporter *)afs_osi_Alloc(length);
-    memset((char *)ex, 0, length);
-    MObtainWriteLock(&afs_xexp, 308);
+    memset(ex, 0, length);
+    ObtainWriteLock(&afs_xexp, 308);
     for (op = root_exported; op; op = op->exp_next) {
 	if (!op->exp_next)
 	    break;
@@ -46,7 +46,7 @@ exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state,
 	op->exp_next = ex;
     else
 	root_exported = ex;
-    MReleaseWriteLock(&afs_xexp);
+    ReleaseWriteLock(&afs_xexp);
     ex->exp_next = 0;
     ex->exp_op = ops;
     ex->exp_states = state;
@@ -63,14 +63,14 @@ exporter_find(int type)
     struct afs_exporter *op;
 
     AFS_STATCNT(exporter_add);
-    MObtainReadLock(&afs_xexp);
+    ObtainReadLock(&afs_xexp);
     for (op = root_exported; op; op = op->exp_next) {
 	if (op->exp_type == type) {
-	    MReleaseReadLock(&afs_xexp);
+	    ReleaseReadLock(&afs_xexp);
 	    return op;
 	}
     }
-    MReleaseReadLock(&afs_xexp);
+    ReleaseReadLock(&afs_xexp);
     return (struct afs_exporter *)0;
 }
 

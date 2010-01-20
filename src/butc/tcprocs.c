@@ -446,11 +446,11 @@ STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
 	ERROR_EXIT(code);
 
     AFS_SIGSET_CLEAR();
-    code = pthread_create(&pid, &tattr, restoreDbFromTape, (void *)*taskId);
+    code = pthread_create(&pid, &tattr, restoreDbFromTape, (void *)(intptr_t)*taskId);
     AFS_SIGSET_RESTORE();
 #else
     code =
-	LWP_CreateProcess(restoreDbFromTape, 32768, 1, (void *)*taskId,
+	LWP_CreateProcess(restoreDbFromTape, 32768, 1, (void *)(intptr_t)*taskId,
 			  "Db restore", &pid);
 #endif
 

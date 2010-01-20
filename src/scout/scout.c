@@ -21,18 +21,18 @@
 #endif
 #include <string.h>
 #undef IN
-#include <gtxwindows.h>		/*Generic window package */
-#include <gtxobjects.h>		/*Object definitions */
-#include <gtxtextobj.h>		/*Text object interface */
-#include <gtxlightobj.h>	/*Light object interface */
-#include <gtxcurseswin.h>	/*Curses window package */
-#include <gtxdumbwin.h>		/*Dumb terminal window package */
-#include <gtxX11win.h>		/*X11 window package */
-#include <gtxframe.h>		/*Frame package */
-#include <gtxinput.h>
+#include <afs/gtxwindows.h>		/*Generic window package */
+#include <afs/gtxobjects.h>		/*Object definitions */
+#include <afs/gtxtextobj.h>		/*Text object interface */
+#include <afs/gtxlightobj.h>	/*Light object interface */
+#include <afs/gtxcurseswin.h>	/*Curses window package */
+#include <afs/gtxdumbwin.h>		/*Dumb terminal window package */
+#include <afs/gtxX11win.h>		/*X11 window package */
+#include <afs/gtxframe.h>		/*Frame package */
+#include <afs/gtxinput.h>
 #include <stdio.h>		/*Standard I/O stuff */
-#include <cmd.h>		/*Command interpretation library */
-#include <fsprobe.h>		/*Interface for fsprobe module */
+#include <afs/cmd.h>		/*Command interpretation library */
+#include <afs/fsprobe.h>		/*Interface for fsprobe module */
 #include <errno.h>
 #include <afs/afsutil.h>
 #include <netdb.h>
@@ -1781,7 +1781,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 
 	/*Debugging */
 	if (scout_debug)
-	    fprintf(scout_debugfd, "[%s] Scout label is '%s', %lu chars\n", rn,
+	    fprintf(scout_debugfd, "[%s] Scout label is '%s', %" AFS_SIZET_FMT " chars\n", rn,
 		    lightdata->label, strlen(lightdata->label));
     }
 
@@ -1937,7 +1937,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 			     &gxlistener_ID);	/*Returned LWP process ID */
 #endif /* 0 */
 
-    code = (int) gtx_InputServer(scout_gwin);
+    code = (int)(intptr_t)gtx_InputServer(scout_gwin);
     if (code) {
 	fprintf(stderr,
 		"[%s] Error exit from gtx_InputServer(), error is %d\n", rn,

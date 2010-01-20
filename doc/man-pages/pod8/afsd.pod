@@ -173,10 +173,11 @@ Sets the size of each cache I<chunk>, and by implication the amount of
 data that the Cache Manager requests at a time from the File Server (how
 much data per fetch RPC, since AFS uses partial file transfer).
 
-For a disk cache, a chunk is a F<VI<n>> file and this parameter
-sets the maximum size to which each one can expand; the default is 64
-KB. For a memory cache, each chunk is a collection of contiguous memory
-blocks; the default is size is 8 KB.
+For a disk cache, a chunk is a F<VI<n>> file and this parameter sets the
+maximum size to which each one can expand.  For a memory cache, each chunk
+is a collection of contiguous memory blocks. The default for a disk cache
+is between 256 KB and 1 MB depending on the size of the cache. The default
+for a memory cache is 8 KB.
 
 To override the default chunk size for either type of cache, use the
 B<-chunksize> argument to provide an integer to be used as an exponent of
@@ -235,8 +236,8 @@ calculate the cache size by multiplying this value by the chunk size.
 =item *
 
 Sets the number of I<stat> entries available in machine memory for caching
-status information about cached AFS files. The default is 300; use the
-B<-stat> argument to override the default.
+status information about cached AFS files. The default is based on the
+size of the cache. Use the B<-stat> argument to override the default.
 
 =item *
 
@@ -382,7 +383,8 @@ on an firewalls between the client and the server:
    reserved        7006/udp (for future use)
    bosserver       7007/udp
 
-Additionally, for B<klog> to work through the firewall you need to allow
+Clients will also need to be able to contact your Kerberos KDC to
+authenticate.  If you are using B<kaserver> and B<klog>, you need to allow
 inbound and outbound UDP on ports >1024 (probably 1024<port<2048 would
 suffice depending on the number of simultaneous B<klog>s).
 
@@ -440,9 +442,10 @@ F</usr/vice/etc/cacheinfo> file.
 =item B<-chunksize> <I<chunk size>>
 
 Sets the size of each cache chunk. The integer provided, which must be
-from the range C<0> to C<30>, is used as an exponent on the number 2. It
-overrides the default of 16 for a disk cache (2^16 is 64 KB) and 13 for a
-memory cache (2^13 is 8 KB). A value of C<0> or less, or greater than
+from the range C<0> to C<30>, is used as an exponent on the number 2. If not
+supplied, a default chunksize will be determined based on the cache type and
+cache size, and will range from C<13> (8KB) for memory cache and C<18> to
+C<20> (256 KB to 1MB) for disk cache. A value of C<0> or less, or greater than
 C<30>, sets chunk size to the appropriate default. Values less than C<10>
 (which sets chunk size to a 1 KB) are not recommended.  Combining this
 argument with the B<-dcache> argument is not recommended because it
@@ -665,8 +668,9 @@ and 25% to read-only.
 =item B<-stat> <I<number of stat entries>>
 
 Specifies the number of entries to allocate in the machine's memory for
-recording status information about the AFS files in the cache. This value
-overrides the default of C<300>.
+recording status information about the AFS files in the cache. If this value
+is not specified, the number of stat entires will be autotuned based on the
+size of the disk cache.
 
 =item B<-verbose>
 
@@ -676,7 +680,7 @@ standard output stream.
 =item B<-volumes> <I<number of volume entries>>
 
 Specifies the number of memory structures to allocate for storing volume
-location information. The default value is C<50>.
+location information. The default value is C<200>.
 
 =item B<-disable-dynamic-vcaches>
 

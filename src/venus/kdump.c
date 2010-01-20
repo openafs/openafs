@@ -1423,7 +1423,7 @@ print_servers(int pnt)
     int chainCount[NSERVERS];
 
     if (pnt) {
-	memset((char *)chainCount, 0, sizeof(chainCount));
+	memset(chainCount, 0, sizeof(chainCount));
 	printf("\n\nPrinting 'afs_servers' structures...\n");
     }
     findsym("afs_servers", &symoff);
@@ -1461,7 +1461,7 @@ print_servers(int pnt)
 
     /* Verify against afs_totalServers. */
     if (pnt) {
-	memset((char *)chainCount, 0, sizeof(chainCount));
+	memset(chainCount, 0, sizeof(chainCount));
 	if (findsym("afs_totalServers", &symoff)) {
 	    kread(kmem, symoff, (char *)&afs_totalServers, sizeof(afs_int32));
 	    if (afs_totalServers != nServers) {
@@ -2103,13 +2103,11 @@ print_allocs(int pnt)
     T += i;
     printf("%20s:\t%8d bytes\t[%d entries/%d bytes each]\n", "Buffer package",
 	   i, j, sizeof(struct buffer));
-#if	!AFS_USEBUFFERS
 #define	AFS_BUFFER_PAGESIZE 2048
     i = j * AFS_BUFFER_PAGESIZE;
     T += i;
     printf("%20s:\t%8d bytes\t[%d entries/%d bytes each]\n",
 	   "Xtra Buffer pkg area", i, j, AFS_BUFFER_PAGESIZE);
-#endif
 
     Sum_exps = 0;
     Sum_nfssysnames = 0;
@@ -2567,7 +2565,7 @@ print_cell(int kmem, struct cell *clep, struct cell *ptr, int pnt)
 	    printf("\tlinked cellp %lx\n", clep->lcellp);
 #endif
 	printf("\tCell's servers: ");
-	for (i = 0; i < MAXCELLHOSTS; i++) {
+	for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	    if (pretty && (clep->cellHosts[i] == 0))
 		break;
 	    printf("[%lx] ", clep->cellHosts[i]);
@@ -2710,12 +2708,12 @@ print_volume(int kmem, struct volume *vep, struct volume *ptr, int pnt)
 	 vep->states);
 #endif
     printf("\tVolume's statuses: ");
-    for (i = 0; i < MAXHOSTS && vep->serverHost[i]; i++)
+    for (i = 0; i < AFS_MAXHOSTS && vep->serverHost[i]; i++)
 	printf("[%d] ", vep->status[i]);
     printf("\n");
 
     printf("\tVolume's servers: ");
-    for (i = 0; i < MAXHOSTS && vep->serverHost[i]; i++)
+    for (i = 0; i < AFS_MAXHOSTS && vep->serverHost[i]; i++)
 	printf("[%lx] ", vep->serverHost[i]);
     printf("\n");
 

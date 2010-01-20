@@ -19,6 +19,7 @@ $(OUT)\testkey.exe: $(OUT)\test_key.obj $(LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 # test targets
 test testkey: $(TESTKEY)

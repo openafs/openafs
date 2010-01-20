@@ -178,7 +178,7 @@ afs_DequeueCallback(struct vcache *avc)
  */
 
 /* Sanity check on the callback queue. Allow for slop in the computation. */
-#if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX22_ENV)
 #define CBQ_LIMIT (afs_maxvcount + 10)
 #else
 #define CBQ_LIMIT (afs_cacheStats + afs_stats_cmperf.vcacheXAllocs + 10)
@@ -212,7 +212,7 @@ afs_CheckCallbacks(unsigned int secs)
 		    tvc->cbExpires = tvp->expireTime;	/* XXX race here */
 		} else {
 		    int i;
-		    for (i = 0; i < MAXHOSTS && tvp->serverHost[i]; i++) {
+		    for (i = 0; i < AFS_MAXHOSTS && tvp->serverHost[i]; i++) {
 			if (!(tvp->serverHost[i]->flags & SRVR_ISDOWN)) {
 			    /* What about locking xvcache or vrefcount++ or
 			     * write locking tvc? */
@@ -358,7 +358,7 @@ afs_InitCBQueue(int doLockInit)
 {
     register int i;
 
-    memset((char *)cbHashT, 0, CBHTSIZE * sizeof(struct bucket));
+    memset(cbHashT, 0, CBHTSIZE * sizeof(struct bucket));
     for (i = 0; i < CBHTSIZE; i++) {
 	QInit(&(cbHashT[i].head));
 	/* Lock_Init(&(cbHashT[i].lock)); only if you want lots of locks, which 

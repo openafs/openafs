@@ -32,7 +32,7 @@ disabled, the BOS Server creates the zero-length file
 F</usr/afs/local/NoAuth> on its local disk. All AFS server processes
 constantly monitor for the F<NoAuth> file's presence and do not check for
 authorization when it is present. The BOS Server removes the file when
-this command is used to reenable authorization checking.
+this command is used to re-enable authorization checking.
 
 =head1 CAUTIONS
 

@@ -14,6 +14,7 @@
 #include <afs/param.h>
 #endif
 
+#include <stdio.h>
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -21,8 +22,9 @@
 #include "afs/stds.h"
 #include "rx/xdr.h"
 #include "rx/rx.h"
-#include "des/des.h"
 #include "rxkad/lifetimes.h"
+#include "des.h"
+#include "des/des_prototypes.h"
 #include "rx/rxkad.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
@@ -33,9 +35,10 @@
 #include <netinet/in.h>
 #endif
 #include <string.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <des.h>
 #include "lifetimes.h"
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
@@ -113,8 +116,8 @@ decode_athena_ticket(char *ticket, int ticketLen, char *name, char *inst,
 int
 tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 		 struct ktc_encryptionKey *key, char *name, char *inst,
-		 char *cell, char *sessionKey, afs_int32 * host,
-		 afs_int32 * start, afs_int32 * end)
+		 char *cell, struct ktc_encryptionKey *sessionKey, afs_int32 * host,
+		 afs_uint32 * start, afs_uint32 * end)
 {
     char clear_ticket[MAXKTCTICKETLEN];
     char *ticket;
@@ -128,15 +131,15 @@ tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 	((ticketLen) % 8 != 0))	/* enc. part must be (0 mod 8) bytes */
 	return RXKADBADTICKET;
 
-    if (key_sched(key, schedule.schedule))
+    if (key_sched(ktc_to_cblock(key), schedule.schedule))
 	return RXKADBADKEY;
 
     ticket = clear_ticket;
-    pcbc_encrypt(asecret, ticket, ticketLen, schedule.schedule, key, DECRYPT);
+    pcbc_encrypt(asecret, ticket, ticketLen, schedule.schedule, ktc_to_cblockptr(key), DECRYPT);
 
     code =
 	decode_athena_ticket(ticket, ticketLen, name, inst, cell, host,
-			     sessionKey, start, end);
+			     (struct ktc_encryptionKey *)sessionKey, start, end);
 
     if (code)
 	return RXKADBADTICKET;
@@ -226,11 +229,11 @@ tkt_MakeTicket(char *ticket, int *ticketLen, struct ktc_encryptionKey *key,
 	return -1;
 
     /* encrypt ticket */
-    if ((code = key_sched(key, schedule.schedule))) {
+    if ((code = key_sched(ktc_to_cblock(key), schedule.schedule))) {
 	printf("In tkt_MakeTicket: key_sched returned %d\n", code);
 	return RXKADBADKEY;
     }
-    pcbc_encrypt(ticket, ticket, *ticketLen, schedule.schedule, key, ENCRYPT);
+    pcbc_encrypt(ticket, ticket, *ticketLen, schedule.schedule, ktc_to_cblockptr(key), ENCRYPT);
     return 0;
 }
 

@@ -26,13 +26,13 @@
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 #include <afs/sys_prototypes.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
 
-#define	MAXSIZE	2048
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 
 int
 main(int argc, char **argv)
@@ -59,7 +59,7 @@ main(int argc, char **argv)
 
     blob.in = space;
     blob.out = space;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = sizeof(afs_int32);
     memcpy(space, &setp, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);

@@ -515,8 +515,10 @@ osi_config.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_config.c
 	$(CRULE_NOOPT)
 osi_timeout.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
 	$(CRULE_NOOPT)
-
-
+osi_pagecopy.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pagecopy.c
+	$(CRULE_NOOPT)
+osi_fetchstore.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_fetchstore.c
+	$(CRULE_NOOPT)
 
 clean:
 	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)

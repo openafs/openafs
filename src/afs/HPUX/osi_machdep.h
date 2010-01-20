@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -24,13 +25,15 @@
 extern struct timeval time;
 #define osi_Time() (time.tv_sec)
 
-#define	AFS_UCRED	ucred
-#define	AFS_PROC	proc_t
+typedef struct ucred afs_ucred_t;
+typedef proc_t afs_proc_t;
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 #define gop_rdwr(rw,gp,base,len,offset,segflg,unit,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(aresid),0)
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) \
+  lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) \
   lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 #undef	afs_suser
@@ -41,7 +44,6 @@ extern struct timeval time;
 
 #define getppid()               (afs_uint32)p_ppid(u.u_procp)
 
-#ifdef KERNEL
 /*
  * Global lock support. 
  *
@@ -81,7 +83,6 @@ extern void afsHashRelease(tid_t key);
 #define SPLVAR      register ulong_t splvar
 #define NETPRI      NET_SPLNET(splvar)
 #define USERPRI     NET_SPLX(splvar)
-#endif /* KERNEL */
 
 #if !defined(AFS_HPUX110_ENV)
 /* 

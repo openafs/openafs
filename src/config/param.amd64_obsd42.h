@@ -13,6 +13,7 @@
 #define AFS_X86_XBSD_ENV	1
 #define AFS_X86_ENV	        1
 #define AFS_64BITPOINTER_ENV    1
+#define AFS_64BITUSERPOINTER_ENV	1
 #define AFSLITTLE_ENDIAN	1
 
 #endif /* AFS_AMD64_PARAM_H */

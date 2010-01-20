@@ -9,7 +9,7 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include <stdio.h>
 #include "des_internal.h"
 #include "s_table.h"

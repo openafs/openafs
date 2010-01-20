@@ -1941,7 +1941,7 @@ bos_KeyCreate(const void *serverHandle, int keyVersionNumber,
 	goto fail_bos_KeyCreate;
     }
 
-    tst = BOZO_AddKey(b_handle->server_encrypt, keyVersionNumber, key);
+    tst = BOZO_AddKey(b_handle->server_encrypt, keyVersionNumber, kas_to_bozoptr(key));
 
     if (tst == 0) {
 	rc = 1;
@@ -2020,7 +2020,7 @@ GetKeyRPC(void *rpc_specific, int slot, int *last_item,
 
     tst =
 	BOZO_ListKeys(key->server, key->next++,
-		      &key->key[slot].keyVersionNumber, &key->key[slot].key,
+		      &key->key[slot].keyVersionNumber, kas_to_bozoptr(&key->key[slot].key),
 		      &keyInfo);
 
 

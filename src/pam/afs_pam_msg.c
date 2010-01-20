@@ -28,7 +28,7 @@ pam_afs_printf(struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
     char *fmt_msg = NULL;
     int freeit;
     struct pam_message mesg;
-    struct pam_message *mesgp = &mesg;
+    PAM_CONST struct pam_message *mesgp = &mesg;
     struct pam_response *resp = NULL;
     int errcode;
 
@@ -63,7 +63,7 @@ pam_afs_prompt(struct pam_conv *pam_convp, char **response, int echo,
     char *fmt_msg = NULL;
     int freeit;
     struct pam_message mesg;
-    struct pam_message *mesgp = &mesg;
+    PAM_CONST struct pam_message *mesgp = &mesg;
     struct pam_response *resp = NULL;
     int errcode;
 

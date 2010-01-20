@@ -344,7 +344,7 @@ struct rx_packet {
     rx_SlowReadPacket(p, off, len, (char*)(out)) :             \
     ((memcpy((char *)(out), (char*)((p)->wirevec[1].iov_base)+(off), (len))),0))
 
-#define rx_computelen(p,l) { int i; \
+#define rx_computelen(p,l) { unsigned int i; \
    for (l=0, i=1; i < p->niovecs; i++ ) l += p->wirevec[i].iov_len; }
 
 /* return what the actual contiguous space is: should be min(length,size) */

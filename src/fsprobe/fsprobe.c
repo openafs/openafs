@@ -20,11 +20,13 @@
 
 #include <string.h>
 
-#include <fsprobe.h>		/*Interface for this module */
+#include "fsprobe.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
 #include <afs/afsutil.h>
+#include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>
@@ -267,7 +269,7 @@ fsprobe_LWP(void *unused)
 		    RXAFS_GetStatistics64(curr_conn->rxconn, STATS64_VERSION, &stats64);
 		if (*curr_probeOK == RXGEN_OPCODE)
 		    *curr_probeOK =
-			RXAFS_GetStatistics(curr_conn->rxconn, curr_stats);
+			RXAFS_GetStatistics(curr_conn->rxconn, (ViceStatistics *)curr_stats);
 		else if (*curr_probeOK == 0) {
 		    curr_stats->CurrentTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_CURRENTTIME]);
 		    curr_stats->BootTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_BOOTTIME]);
@@ -548,7 +550,7 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	malloc(a_numServers * sizeof(struct fsprobe_ConnectionInfo));
     if (fsprobe_ConnInfo == (struct fsprobe_ConnectionInfo *)0) {
 	fprintf(stderr,
-		"[%s] Can't allocate %d connection info structs (%lu bytes)\n",
+		"[%s] Can't allocate %d connection info structs (%"AFS_SIZET_FMT" bytes)\n",
 		rn, a_numServers,
 		(a_numServers * sizeof(struct fsprobe_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */

@@ -223,6 +223,7 @@ static int
 common_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
+    VolumePackageOptions opts;
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -230,8 +231,14 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
     }
 #endif
 
-    VInitVolumePackage(debugUtility, 1, 1,
-		       DONT_CONNECT_FS, 0);
+    VOptDefaults(debugUtility, &opts);
+    if (VInitVolumePackage2(debugUtility, &opts)) {
+	/* VInitVolumePackage2 can fail on e.g. partition attachment errors,
+	 * but we don't really care, since all we're doing is trying to use
+	 * FSSYNC */
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
     DInit(1);
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
@@ -246,6 +253,10 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 	    programType = salvager;
 	} else if (!strcmp(ti->data, "salvageServer")) {
 	    programType = salvageServer;
+	} else if (!strcmp(ti->data, "volumeServer")) {
+	    programType = volumeServer;
+	} else if (!strcmp(ti->data, "volumeSalvager")) {
+	    programType = volumeSalvager;
 	} else {
 	    programType = (ProgramType) atoi(ti->data);
 	}
@@ -1046,7 +1057,6 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	}
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
-	printf("\twriter          = %u\n", (unsigned int) v.writer);
 	printf("\tvcp             = %p\n", v.vcp);
 	printf("\thandle          = %p\n", v.handle);
 

@@ -136,7 +136,7 @@ mp_afs_create(ndp, attrs)
 mp_afs_open(avcp, aflags, acred)
      struct vcache **avcp;
      afs_int32 aflags;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     int code;
     AFS_GLOCK();
@@ -148,7 +148,7 @@ mp_afs_open(avcp, aflags, acred)
 mp_afs_access(avc, amode, acred)
      struct vcache *avc;
      afs_int32 amode;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     int code;
     AFS_GLOCK();
@@ -172,7 +172,7 @@ mp_afs_close(avc, flags, cred)
 mp_afs_getattr(avc, attrs, acred)
      struct vcache *avc;
      struct vattr *attrs;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     int code;
     AFS_GLOCK();
@@ -184,7 +184,7 @@ mp_afs_getattr(avc, attrs, acred)
 mp_afs_setattr(avc, attrs, acred)
      struct vcache *avc;
      struct vattr *attrs;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     int code;
     AFS_GLOCK();
@@ -196,7 +196,7 @@ mp_afs_setattr(avc, attrs, acred)
 mp_afs_fsync(avc, fflags, acred, waitfor)
      struct vcache *avc;
      int fflags;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
      int waitfor;
 {
     int code;
@@ -273,7 +273,7 @@ mp_afs_symlink(ndp, attrs, atargetName)
 mp_afs_readdir(avc, auio, acred, eofp)
      struct vcache *avc;
      struct uio *auio;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
      int *eofp;
 {
     int code;
@@ -286,7 +286,7 @@ mp_afs_readdir(avc, auio, acred, eofp)
 mp_afs_readlink(avc, auio, acred)
      struct vcache *avc;
      struct uio *auio;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     int code;
     AFS_GLOCK();
@@ -298,7 +298,7 @@ mp_afs_readlink(avc, auio, acred)
 mp_afs_lockctl(avc, af, flag, acred, clid, offset)
      struct vcache *avc;
      struct eflock *af;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
      int flag;
      pid_t clid;
      off_t offset;
@@ -339,7 +339,7 @@ mp_afs_abortop(ndp)
 
 mp_afs_inactive(avc, acred)
      register struct vcache *avc;
-     struct AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     AFS_GLOCK();
     afs_InactiveVCache(avc, acred);

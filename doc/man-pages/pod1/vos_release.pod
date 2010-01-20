@@ -7,12 +7,14 @@ vos_release - Updates read-only volumes to match the read/write source volume
 =for html
 <div class="synopsis">
 
-B<vos release> S<<< B<-id> <I<volume name or ID>> >>> [B<-f>]
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
-    [B<-help>]
+B<vos release> S<<< B<-id> <I<volume name or ID>> >>> [B<-force>]
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
-B<vos rel> S<<< B<-i> <I<volume name or ID>> >>> [B<-f>] S<<< [B<-c> <I<cell name>>] >>>
-    [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+B<vos rel> S<<< B<-i> <I<volume name or ID>> >>>
+    [B<-f>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
@@ -118,7 +120,7 @@ clears all flags after all sites successfully receive it.
 =back
 
 To override the default behavior, forcing the Volume Server to create and
-release a new ReleaseClone to the read-only sites, include the B<-f>
+release a new ReleaseClone to the read-only sites, include the B<-force>
 flag. This is appropriate if, for example, the data at the read/write site
 has changed since the existing ReleaseClone was created during the
 previous release operation.
@@ -132,7 +134,7 @@ previous release operation.
 Specifies either the complete name or volume ID number of a read/write
 volume.
 
-=item B<-f>
+=item B<-force>
 
 Creates a new ReleaseClone and distributes it all read-only sites
 regardless of whether or not any site definitions in the VLDB entry are
@@ -162,6 +164,19 @@ B<-noauth> flag. For more details, see L<vos(1)>.
 Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text. This option is available in OpenAFS
+versions 1.4.11 or later and 1.5.60 or later.
+
+=item B<-noresolve>
+
+Shows all servers as IP addresses instead of the DNS name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. This option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
 
 =item B<-help>
 

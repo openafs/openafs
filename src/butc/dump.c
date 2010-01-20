@@ -10,7 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -36,6 +35,7 @@
 #include <afs/ktime.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 #include <afs/volint.h>
 #include <afs/cellconfig.h>
 #include <afs/bucoord_prototypes.h>
@@ -44,7 +44,6 @@
 #include "error_macros.h"
 #include "butc_xbsa.h"
 #include "afs/butx.h"
-
 
 /* GLOBAL CONFIGURATION PARAMETERS */
 extern int dump_namecheck;
@@ -55,8 +54,6 @@ extern int forcemultiple;
 extern struct ubik_client *cstruct;
 dlqlinkT savedEntries;
 dlqlinkT entries_to_flush;
-
-extern struct rx_connection *UV_Bind();
 
 extern afs_int32 groupId;
 extern afs_int32 BufferSize;
@@ -299,7 +296,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	/* Create and Write the volume header */
 	makeVolumeHeader(&hostVolumeHeader, dparamsPtr, fragmentNumber);
 	hostVolumeHeader.contd = ((fragmentNumber == 1) ? 0 : TC_VOLCONTD);
-	volumeHeader_hton(&hostVolumeHeader, buffer);
+	volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)buffer);
 
 	rc = butm_WriteFileData(tapeInfoPtr, buffer, 1,
 				sizeof(hostVolumeHeader));
@@ -393,7 +390,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 		hostVolumeHeader.contd = (endofvolume ? 0 : TC_VOLCONTD);
 		hostVolumeHeader.magic = TC_VOLENDMAGIC;
 		hostVolumeHeader.endTime = (endofvolume ? time(0) : 0);
-		volumeHeader_hton(&hostVolumeHeader, &buffer[bytesread]);
+		volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)&buffer[bytesread]);
 		bytesread += sizeof(hostVolumeHeader);
 	    }
 
@@ -644,10 +641,10 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     /* Create and Write the volume header */
     makeVolumeHeader(&hostVolumeHeader, dparamsPtr, 1);
     hostVolumeHeader.contd = 0;
-    volumeHeader_hton(&hostVolumeHeader, buffer);
+    volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)buffer);
 
-    rc = xbsa_WriteObjectData(&butxInfo, buffer, sizeof(struct volumeHeader),
-			      &bytesWritten);
+    rc = xbsa_WriteObjectData(&butxInfo, (struct volumeHeader *)buffer,
+			      sizeof(struct volumeHeader), &bytesWritten);
     if (rc != XBSA_SUCCESS) {
 	ErrorLog(1, taskId, rc, 0,
 		 "Unable to write VolumeHeader data to the server\n");
@@ -1381,7 +1378,7 @@ Dumper(void *param)
 
     FreeNode(taskId);		/* free the dump node */
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 #define BELLTIME 60		/* 60 seconds before a bell rings */

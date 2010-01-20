@@ -197,7 +197,7 @@ freeDumpTaskVolumeList(struct bc_volumeDump *vdptr)
 void *
 bc_DmpRstStart(void *param)
 {
-    afs_int32 aindex = (afs_int32) param;
+    afs_int32 aindex = (intptr_t)param;
     register struct bc_dumpTask *tdump;
     register afs_int32 code;
 
@@ -220,7 +220,7 @@ bc_DmpRstStart(void *param)
 	free(tdump->portOffset);
     tdump->flags &= ~BC_DI_INUSE;
 
-    return (void *)code;
+    return (void *)(intptr_t)code;
 }
 
 /* bc_StartDmpRst
@@ -289,7 +289,7 @@ bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname,
 
     code =
 	LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY,
-			  (void *)i, "helper", junk);
+			  (void *)(intptr_t)i, "helper", junk);
     if (code) {
 	bc_HandleMisc(code);
 	afs_com_err(whoami, code, "; Can't start thread");

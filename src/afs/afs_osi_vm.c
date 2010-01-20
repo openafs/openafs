@@ -22,7 +22,7 @@ int
 osi_Active(register struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
-#if defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((avc->opens > 0) || (avc->f.states & CMAPPED))
 	return 1;		/* XXX: Warning, verify this XXX  */
 #elif defined(AFS_SGI_ENV)
@@ -45,7 +45,7 @@ osi_Active(register struct vcache *avc)
    us, of course).
 */
 void
-osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
+osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
 {
 #ifdef AFS_FBSD70_ENV
     int vfslocked;
@@ -130,7 +130,7 @@ osi_FlushText_really(register struct vcache *vp)
     if (hcmp(vp->f.m.DataVersion, vp->flushDV) <= 0)
 	return;
 
-    MObtainWriteLock(&afs_ftf, 317);
+    ObtainWriteLock(&afs_ftf, 317);
     hset(fdv, vp->f.m.DataVersion);
 
     /* why this disgusting code below?
@@ -159,7 +159,7 @@ osi_FlushText_really(register struct vcache *vp)
 	xrele(vp);
 
 	if (vp->v.v_flag & VTEXT) {	/* still has a text object? */
-	    MReleaseWriteLock(&afs_ftf);
+	    ReleaseWriteLock(&afs_ftf);
 	    return;
 	}
     }
@@ -170,7 +170,7 @@ osi_FlushText_really(register struct vcache *vp)
 
     /* finally, record that we've done it */
     hset(vp->flushDV, fdv);
-    MReleaseWriteLock(&afs_ftf);
+    ReleaseWriteLock(&afs_ftf);
 
 }
 #endif /* AFS_TEXT_ENV */
@@ -261,7 +261,7 @@ osi_VMDirty_p(struct vcache *avc)
  * Locking:  the vcache entry lock is held.  It is dropped and re-obtained.
  */
 void
-osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred)
+osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred)
 {
 #ifdef	AFS_SUN5_ENV
     AFS_GUNLOCK();
