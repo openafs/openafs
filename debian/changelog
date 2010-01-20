@@ -31,6 +31,9 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
   * Update init script to require $remote_fs be started first.  This won't
     be the case in the long run, but for now some important boot-time
     options need /usr/bin/fs to set them.
+  * List $syslog in Should-Start for the openafs-client init script, since
+    otherwise if loading the module causes a kernel panic, it won't be
+    logged to disk.
   * Update CellServDB to the new 2009-06-29 version.
   * Add README.source explaining maintenance procedures and a
     debian/import-upstream script to do a Git-aware merge of a new
