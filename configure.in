@@ -107,12 +107,6 @@ src/log/test/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
 src/packaging/Debian/rules \
-src/packaging/MacOS/OpenAFS-debug.Description.plist \
-src/packaging/MacOS/OpenAFS-debug.Info.plist \
-src/packaging/MacOS/OpenAFS.Description.plist \
-src/packaging/MacOS/OpenAFS.Info.plist \
-src/packaging/MacOS/OpenAFS.info \
-src/packaging/MacOS/buildpkg.sh \
 src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/platform/Makefile \

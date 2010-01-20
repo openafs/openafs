@@ -36,7 +36,7 @@ DIROBJS=buffer.o dir.o salvage.o
 
 LWPOBJS=lock.o threadname.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o fstab.o
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \

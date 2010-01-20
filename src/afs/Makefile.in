@@ -47,8 +47,7 @@ depinstall: afszcm.cat AFS_component_version_number.c \
 	${TOP_INCDIR}/afs/afs_stats.h \
 	${TOP_INCDIR}/afs/exporter.h \
 	${TOP_INCDIR}/afs/nfsclient.h \
-	${TOP_INCDIR}/afs/unified_afs.h \
-	${TOP_INCDIR}/afs/sysctl.h
+	${TOP_INCDIR}/afs/unified_afs.h
 
 ${TOP_INCDIR}/afs/afs_consts.h: afs_consts.h
 	${INSTALL_DATA} $? $@
@@ -83,7 +82,6 @@ install: unified_afs.h
 	${INSTALL_DATA} nfsclient.h ${DESTDIR}${includedir}/afs/nfsclient.h
 	${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_inode.h \
 	    ${DESTDIR}${includedir}/afs/osi_inode.h
-	${INSTALL_DATA} sysctl.h ${DESTDIR}${includedir}/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DESTDIR}${includedir}/afs/unified_afs.h
 	case ${SYS_NAME} in \
 	    i386_fbsd*) \
@@ -108,7 +106,6 @@ dest: unified_afs.h
 	${INSTALL_DATA} exporter.h ${DEST}/include/afs/exporter.h
 	${INSTALL_DATA} nfsclient.h ${DEST}/include/afs/nfsclient.h
 	${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_inode.h ${DEST}/include/afs/osi_inode.h
-	${INSTALL_DATA} sysctl.h ${DEST}/include/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DEST}/include/afs/unified_afs.h
 	case ${SYS_NAME} in \
 	    i386_fbsd*) \

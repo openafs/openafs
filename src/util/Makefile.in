@@ -16,7 +16,7 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
-	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
+	 dirpath.o fileutil.o netutils.o flipbase64.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o strnlen.o \
 	 pthread_glock.o daemon.o rxkstats.o ${REGEX_OBJ}
 

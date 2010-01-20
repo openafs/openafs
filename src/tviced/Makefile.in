@@ -43,7 +43,7 @@ DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 fstab.o salvsync-client.o daemon_com.o
+	 salvsync-client.o daemon_com.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
