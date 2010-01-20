@@ -2309,21 +2309,44 @@ mainproc(struct cmd_syndesc *as, void *arock)
      */
     if (afsd_debug)
 	printf
-	    ("%s: Calling AFSOP_CACHEINODE for each of the %d files in '%s'\n",
+	    ("%s: Calling AFSOP_CACHEFILE for each of the %d files in '%s'\n",
 	     rn, cacheFiles, cacheBaseDir);
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))	/* ... and again ... */
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	/* ... and again ... */
+	int nocachefile = 0;
 	for (currVFile = 0; currVFile < cacheFiles; currVFile++) {
+	    if (!nocachefile) {
+		sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
+		code = call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
+		if (code) {
+		    if (currVFile == 0) {
+			if (afsd_debug)
+			    printf
+				("%s: Calling AFSOP_CACHEINODE for each of the %d files in '%s'\n",
+				 rn, cacheFiles, cacheBaseDir);
+			nocachefile = 1;
+		    } else {
+			printf
+			    ("%s: Error calling AFSOP_CACHEFILE for '%s'\n",
+			     rn, fullpn_VFile);
+			exit(1);
+		    }
+		} else {
+		    continue;
+		}
+		/* fall through to setup-by-inode */
+	    }
 #ifdef AFS_SGI62_ENV
 	    call_syscall(AFSOP_CACHEINODE,
 			 (afs_uint32) (inode_for_V[currVFile] >> 32),
 			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
-#else
-#if defined(LINUX_USE_FH) || defined(AFS_CACHE_VNODE_PATH)
-	    sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
-	    call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
-#else
+#elif !(defined(LINUX_USE_FH) || defined(AFS_CACHE_VNODE_PATH))
 	    call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
-#endif
+#else
+	    printf
+		("%s: Error calling AFSOP_CACHEINODE: not configured\n",
+		 rn);
+	    exit(1);
 #endif
 	}
 
