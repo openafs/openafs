@@ -33,6 +33,8 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
     debian/import-upstream script to do a Git-aware merge of a new
     upstream release that will allow us to cherry-pick upstream patches
     and do proper merges.
+  * Stop linking the openafs-fileserver doc directory to openafs-client so
+    that we can provide a separate NEWS.Debian.
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
