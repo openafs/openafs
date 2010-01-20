@@ -118,7 +118,10 @@ static struct xdr_ops xdrrx_ops = {
     .x_getint64 = xdrrx_getint64,
     .x_putint64 = xdrrx_putint64,
 #endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
+#if defined(UKERNEL)
+    .x_getlong = xdrrx_getint32,
+    .x_putlong = xdrrx_putint32,
+#elif !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
     .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
 #endif
