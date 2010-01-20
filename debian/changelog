@@ -28,6 +28,9 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
   * Upstream now installs afszcm.cat and finds it in /usr/share/openafs/C,
     so use the version installed via make install and install it in the
     same location.
+  * Update init script to require $remote_fs be started first.  This won't
+    be the case in the long run, but for now some important boot-time
+    options need /usr/bin/fs to set them.
   * Update CellServDB to the new 2009-06-29 version.
   * Add README.source explaining maintenance procedures and a
     debian/import-upstream script to do a Git-aware merge of a new
