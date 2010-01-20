@@ -84,7 +84,12 @@ Importing a New Upstream Release
        (In other words, including any tildes and the "+dfsg" part, but not
        the dash and the Debian revision.)
 
-    7. Merge the new upstream source into the master branch:
+    7. Commit the tarball to the repository with pristine-tar, using the
+       new local tag as the reference:
+
+           pristine-tar commit <tarball> <local-tag>
+
+    8. Merge the new upstream source into the master branch:
 
            git checkout master
            git merge <local-tag>
@@ -92,7 +97,7 @@ Importing a New Upstream Release
        where <local-tag> is the tag you used above.  You can also just
        merge with the upstream branch; either is equivalent.
 
-    8. Flesh out the changelog entry for the new version with a summary of
+    9. Flesh out the changelog entry for the new version with a summary of
        what changed in that release, and continue as normal with Debian
        packaging.
 
@@ -133,4 +138,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Tue,  5 Jan 2010 16:50:11 -0800
+ -- Russ Allbery <rra@debian.org>, Tue, 19 Jan 2010 20:34:36 -0800
