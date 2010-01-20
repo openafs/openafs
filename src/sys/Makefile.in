@@ -58,7 +58,7 @@ ${TOP_INCDIR}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/sys_prototypes.h: sys_prototypes.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libsys.a: libsys.a
 	${INSTALL_DATA} $? $@

@@ -34,7 +34,7 @@ ${TOP_INCDIR}/afs/afs_utilAdmin.h: afs_utilAdmin.h
 	${INSTALL_DATA} $? $@
 
 afs_AdminBosErrors.c ${DESTDIR}/include/afs/afs_AdminBosErrors.h: afs_AdminBosErrors.et
-	${INSTALL} ${srcdir}/afs_AdminErrors.h ${TOP_INCDIR}/afs
+	${INSTALL_DATA} ${srcdir}/afs_AdminErrors.h ${TOP_INCDIR}/afs
 	$(RM) -f afs_AdminBosErrors.c afs_AdminBosErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminBosErrors.et -h afs_AdminBosErrors
 	cp afs_AdminBosErrors.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h
