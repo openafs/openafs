@@ -23,6 +23,9 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
     should be mode 0600 anyway.  Drop the patch to bosserver to allow more
     restrictive permissions.  bosserver will complain about directory
     permissions after upgrade until the directory is manually changed.
+  * Upstream now installs afszcm.cat and finds it in /usr/share/openafs/C,
+    so use the version installed via make install and install it in the
+    same location.
   * Add README.source explaining maintenance procedures and a
     debian/import-upstream script to do a Git-aware merge of a new
     upstream release that will allow us to cherry-pick upstream patches

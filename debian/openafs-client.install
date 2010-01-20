@@ -31,9 +31,8 @@ debian/tmp/usr/sbin/rmtsysd             usr/sbin
 
 debian/tmp/usr/sbin/afsd                sbin
 
-src/afs/afszcm.cat                      usr/share/openafs
-
-debian/CellServDB                       usr/share/openafs
+debian/CellServDB                                     usr/share/openafs
+debian/tmp/usr/share/openafs/C/afszcm.cat             usr/share/openafs/C
 
 debian/tmp/usr/share/man/man1/afs.1                   usr/share/man/man1
 debian/tmp/usr/share/man/man1/afs-up.1                usr/share/man/man1
