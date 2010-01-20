@@ -133,6 +133,7 @@ debian/tmp/usr/share/man/man1/vos_copy.1              usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_create.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_delentry.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_dump.1              usr/share/man/man1
+debian/tmp/usr/share/man/man1/vos_endtrans.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_examine.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_help.1              usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_listaddrs.1         usr/share/man/man1
@@ -220,6 +221,7 @@ debian/tmp/usr/share/man/man8/bos_exec.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_getdate.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_getlog.8            usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_getrestart.8        usr/share/man/man8
+debian/tmp/usr/share/man/man8/bos_getrestricted.8     usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_help.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_install.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_listhosts.8         usr/share/man/man8
@@ -234,6 +236,7 @@ debian/tmp/usr/share/man/man8/bos_salvage.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_setauth.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_setcellname.8       usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_setrestart.8        usr/share/man/man8
+debian/tmp/usr/share/man/man8/bos_setrestricted.8     usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_shutdown.8          usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_start.8             usr/share/man/man8
 debian/tmp/usr/share/man/man8/bos_startup.8           usr/share/man/man8

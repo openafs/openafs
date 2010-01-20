@@ -9,6 +9,8 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
     - NFS translator clients now work properly on Linux.
     - Client cache readahead.
     - Network performance improvements.
+    - New libkopenafs library providing a kernel PAG manipulation
+      interface (a subset of the API provided by Heimdal's libkafs).
   * Build OpenAFS with demand-attach enabled for the file server, bos
     restricted mode enabled for bosserver, and disconnected mode enabled
     for the client.  Except for demand-attach, these options don't change
