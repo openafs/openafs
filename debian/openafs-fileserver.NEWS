@@ -1,4 +1,4 @@
-openafs (1.5.61+dfsg-1) experimental; urgency=low
+openafs (1.5.69+dfsg-1) experimental; urgency=low
 
   This version of the OpenAFS file server is built with demand-attach.
   Demand-attach completely changes how the file server shuts down and

@@ -1,4 +1,4 @@
-openafs (1.5.61+dfsg-1) experimental; urgency=low
+openafs (1.5.69+dfsg-1) experimental; urgency=low
 
   This version of the OpenAFS client is built with experimental
   disconnected support.  This support should not change the normal
