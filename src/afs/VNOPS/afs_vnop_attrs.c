@@ -220,7 +220,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 #endif
     {
 	if (!(code = afs_InitReq(&treq, acred))) {
-	    if (vType(avc) != VDIR && vType(avc) != VLNK
+	    if (vType(avc) != VDIR && vType(avc) != VLNK &&
 	        !afs_AccessOK(avc, PRSFS_READ, &treq, DONT_CHECK_MODE_BITS)) {
 
 		code = EACCES;
