@@ -114,6 +114,17 @@ static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrrx_ops = {
+#ifdef AFS_NT40_ENV
+    /* Windows does not support labeled assigments */
+    xdrrx_getint32,	/* deserialize an afs_int32 */
+    xdrrx_putint32,	/* serialize an afs_int32 */
+    xdrrx_getbytes,	/* deserialize counted bytes */
+    xdrrx_putbytes,	/* serialize counted bytes */
+    NULL,		/* get offset in the stream: not supported. */
+    NULL,		/* set offset in the stream: not supported. */
+    xdrrx_inline,	/* prime stream for inline macros */
+    NULL		/* destroy stream */
+#else
 #if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
     .x_getint64 = xdrrx_getint64,
     .x_putint64 = xdrrx_putint64,
@@ -135,6 +146,7 @@ static struct xdr_ops xdrrx_ops = {
     .x_control = NULL,
     .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
     .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
+#endif
 #endif
 };
 

@@ -60,6 +60,17 @@ static afs_int32 *xdrmem_inline();
 static void xdrmem_destroy();
 
 static struct xdr_ops xdrmem_ops = {
+#ifdef AFS_NT40_ENV
+    /* Windows does not support labeled assigments */
+    xdrmem_getint32,    /* deserialize an afs_int32 */
+    xdrmem_putint32,    /* serialize an afs_int32 */
+    xdrmem_getbytes,    /* deserialize counted bytes */
+    xdrmem_putbytes,    /* serialize counted bytes */
+    xdrmem_getpos,      /* get offset in the stream: not supported. */
+    xdrmem_setpos,      /* set offset in the stream: not supported. */
+    xdrmem_inline,      /* prime stream for inline macros */
+    xdrmem_destroy      /* destroy stream */
+#else
     .x_getint32 = xdrmem_getint32,
     .x_putint32 = xdrmem_putint32,
     .x_getbytes = xdrmem_getbytes,
@@ -68,6 +79,7 @@ static struct xdr_ops xdrmem_ops = {
     .x_setpos = xdrmem_setpos,
     .x_inline = xdrmem_inline,
     .x_destroy = xdrmem_destroy
+#endif
 };
 
 /*
