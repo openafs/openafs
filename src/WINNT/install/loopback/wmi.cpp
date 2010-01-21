@@ -45,6 +45,11 @@ SOFTWARE.
 
 #include <devguid.h>
 
+/* __RPC__out is not defined in the v6.0 Windows SDK */
+#ifndef __RPC__out
+#define __RPC__out
+#endif
+
 /* These two are from the Windows DDK */
 #include <netcfgx.h>
 #include <netcfgn.h>
