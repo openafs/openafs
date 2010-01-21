@@ -16,6 +16,8 @@ INCFILES = \
         $(DESTDIR)\include\afs\bc.h \
         $(DESTDIR)\include\afs\bucoord_prototypes.h
 
+$(DESTDIR)\include\afs\bc.h: bc.h
+
 ############################################################################
 # build afsbxdb.lib
 
@@ -122,6 +124,9 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 # Local clean target; augments predefined clean target
 
 clean::
+        $(DEL) $(INCFILES)
+        $(DEL) $(LIBFILE)
+        $(DEL) $(EXEFILE)
 	$(DEL) bc.h bucoord_errs.c
 	$(DEL) $(EXERES)
 	$(DEL) AFS_component_version_number.h
