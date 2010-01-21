@@ -13,7 +13,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 #########################################################################
 # install local include file
 INCFILES = \
-        bc.h \
+        $(DESTDIR)\include\afs\bc.h \
         $(DESTDIR)\include\afs\bucoord_prototypes.h
 
 ############################################################################
