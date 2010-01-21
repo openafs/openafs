@@ -1291,6 +1291,19 @@ int main(int argc, char *argv[])
     initialize_ktc_error_table ();
     afs_set_com_err_hook(redirect_errors);
 
+    /*
+     * Enable DES enctypes, which are currently still required for AFS.
+     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
+     * Heimdal.
+     */
+#if defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+    krb5_allow_weak_crypto(context, 1);
+#elif defined(HAVE_KRB5_ENCTYPE_ENABLE)
+    i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
+    if (i)
+        krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
+#endif
+
     /* Initialize list of cells to which we have authenticated */
     (void)ll_init(&authedcells);
 
