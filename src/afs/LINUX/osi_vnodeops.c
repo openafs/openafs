@@ -50,6 +50,9 @@
 #if defined(AFS_LINUX26_ENV)
 #define UnlockPage(pp) unlock_page(pp)
 extern struct backing_dev_info afs_backing_dev_info;
+#if !defined(WRITEPAGE_ACTIVATE)
+#define WRITEPAGE_ACTIVATE AOP_WRITEPAGE_ACTIVATE
+#endif
 #endif
 
 extern struct vcache *afs_globalVp;
@@ -1628,11 +1631,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	crfree(credp);
 	kunmap(pp);
 #ifdef AFS_LINUX26_ENV
-#if defined(WRITEPAGE_ACTIVATE)
 	return WRITEPAGE_ACTIVATE;
-#else
-	return AOP_WRITEPAGE_ACTIVATE;
-#endif
 #else
 	/* should mark it dirty? */
 	return(0); 
@@ -1672,7 +1671,6 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     return code;
 }
 
-
 static int
 #ifdef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
 afs_linux_writepage(struct page *pp, struct writeback_control *wbc)
@@ -1687,13 +1685,8 @@ afs_linux_writepage(struct page *pp)
     long status;
 
 #if defined(AFS_LINUX26_ENV)
-    if (PageReclaim(pp)) {
-# if defined(WRITEPAGE_ACTIVATE)
+    if (PageReclaim(pp))
 	return WRITEPAGE_ACTIVATE;
-# else 
-	return AOP_WRITEPAGE_ACTIVATE;
-# endif
-    }
 #else
     if (PageLaunder(pp)) {
 	return(fail_writepage(pp));
@@ -1715,11 +1708,7 @@ afs_linux_writepage(struct page *pp)
     status = afs_linux_writepage_sync(inode, pp, 0, offset);
     SetPageUptodate(pp);
 #if defined(AFS_LINUX26_ENV)
-#if defined(WRITEPAGE_ACTIVATE)
     if ( status != WRITEPAGE_ACTIVATE )
-#else
-    if ( status != AOP_WRITEPAGE_ACTIVATE )
-#endif
 #endif
 	UnlockPage(pp);
     if (status == offset)
@@ -1823,6 +1812,8 @@ afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 #if !defined(AFS_LINUX26_ENV)
     kunmap(page);
 #endif
+    if (code == WRITEPAGE_ACTIVATE)
+	code = -EIO;
 
     return code;
 }
@@ -1851,9 +1842,11 @@ afs_linux_write_end(struct file *file, struct address_space *mapping,
     unsigned from = pos & (PAGE_CACHE_SIZE - 1);
 
     code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
-                                    from, copied);
+				    from, copied);
     unlock_page(page);
     page_cache_release(page);
+    if (code == WRITEPAGE_ACTIVATE)
+	code = -EIO;
     return code;
 }
 
