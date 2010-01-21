@@ -49,7 +49,6 @@ bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
 bucoord/ubik_db_if.c : strict-proto  : Ubik_Call
 bucoord/commands.c   : all	     : Ubik_Call
 				     : signed vs unsigned for dates
-butc/tcmain.c	     : all	     : prototypes
 butc/tcudbprocs.c    : all	     : ubik_Call
 kauth/admin_tools.c  : all           : ubik_Call nonsense
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
