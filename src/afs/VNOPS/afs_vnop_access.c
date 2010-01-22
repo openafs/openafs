@@ -148,36 +148,15 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 	    /* Avoid this GetVCache call */
 	    tvc = afs_GetVCache(&dirFid, areq, NULL, NULL);
 	    if (tvc) {
-		if ((arights & (PRSFS_READ | PRSFS_WRITE))) {
-		    /* we may need to grant implicit 'rw' rights if we have
-		     * 'i' on the parent dir and we are the owner, so check
-		     * for 'i' rights in addition, here */
-		    dirBits = afs_GetAccessBits(tvc, arights | PRSFS_INSERT, areq);
-		} else {
-		    dirBits = afs_GetAccessBits(tvc, arights, areq);
-		}
+		dirBits = afs_GetAccessBits(tvc, arights, areq);
 		afs_PutVCache(tvc);
 	    }
 	} else
 	    dirBits = 0xffffffff;	/* assume OK; this is a race condition */
-	if (arights & PRSFS_ADMINISTER) {
+	if (arights & PRSFS_ADMINISTER)
 	    fileBits = afs_GetAccessBits(avc, arights, areq);
-
-	} else if ((dirBits & PRSFS_INSERT) &&
-	          ((arights & (PRSFS_READ | PRSFS_WRITE)) & dirBits) !=
-	           (arights & (PRSFS_READ | PRSFS_WRITE))) {
-
-	    /* if we have 'i' rights in the directory, and we are requesting
-	     * read or write access, AND the directory ACL (dirBits) does not
-	     * already give us the requested read or write access, we need to
-	     * find out if we are the owner for the file ('A' bit), for the
-	     * "throw in R and W if we have I and A" check below */
-
-	    fileBits = afs_GetAccessBits(avc, arights | PRSFS_ADMINISTER, areq);
-
-	} else {
+	else
 	    fileBits = 0;	/* don't make call if results don't matter */
-	}
 
 	/* compute basic rights in fileBits, taking A from file bits */
 	fileBits =
@@ -185,8 +164,8 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 
 	/* for files, throw in R and W if have I and A (owner).  This makes
 	 * insert-only dirs work properly */
-	/* note that we know vType(avc) != VDIR from the top-level 'else' */
-	if ((fileBits & (PRSFS_ADMINISTER | PRSFS_INSERT)) ==
+	if (vType(avc) != VDIR
+	    && (fileBits & (PRSFS_ADMINISTER | PRSFS_INSERT)) ==
 	    (PRSFS_ADMINISTER | PRSFS_INSERT))
 	    fileBits |= (PRSFS_READ | PRSFS_WRITE);
 
