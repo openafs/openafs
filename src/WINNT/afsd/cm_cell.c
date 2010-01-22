@@ -288,7 +288,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                       osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname),
                       osi_LogSaveString(afsd_logp,linkedName));
 
-#ifdef AFS_AFSDB_ENV
             if (cm_dnsEnabled) {
                 int ttl;
 
@@ -314,7 +313,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                 }
             } 
             else 
-#endif
             {
                 lock_ObtainMutex(&cp->mx);
                 lock_ObtainWrite(&cm_cellLock);
