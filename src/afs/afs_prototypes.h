@@ -795,7 +795,6 @@ extern int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 
 
 /* afs_segments.c */
-extern int afs_StoreMini(register struct vcache *avc, struct vrequest *areq);
 extern int afs_StoreAllSegments(register struct vcache *avc,
 				struct vrequest *areq, int sync);
 extern int afs_InvalidateAllSegments(struct vcache *avc);
