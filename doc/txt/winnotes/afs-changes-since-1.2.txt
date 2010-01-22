@@ -1,4 +1,11 @@
+Since 1.5.69
+ * Restore use of DNS AFSDB and SRV records which were
+   unintentionally disabled in 1.5.69
+
 Since 1.5.68
+ * Add a context menu to the NetIdMgr AFS Provider 
+   notification icon.
+
  * Prevent an empty directory Btree from being created and
    marked as valid if cm_BPlusDirBuildTree fails.
 
