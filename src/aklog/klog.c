@@ -414,6 +414,19 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	KLOGEXIT(1);
     }
 
+    /*
+     * Enable DES enctypes, which are currently still required for AFS.
+     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
+     * Heimdal.
+     */
+#if defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+    krb5_allow_weak_crypto(k5context, 1);
+#elif defined(HAVE_KRB5_ENCTYPE_ENABLE)
+    i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
+    if (i)
+        krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
+#endif
+
     /* Parse remaining arguments. */
 
     dosetpag = !! as->parms[aSETPAG].items;
