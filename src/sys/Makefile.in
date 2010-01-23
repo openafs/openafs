@@ -152,11 +152,11 @@ Krmtsys.h: rmtsys.xg
 rmtsysd: rmtsysd.o libsys.a
 	${CC} ${CFLAGS} -o rmtsysd rmtsysd.o ${LIBS}
 
-pagsh:	libsys.a AFS_component_version_number.o
+pagsh:	libsys.a AFS_component_version_number.o pagsh.c ${LIBS}
 	${CC} ${CFLAGS} -c ${srcdir}/pagsh.c
 	${CC} ${CFLAGS} -o pagsh pagsh.o ${LIBS}
 
-pagsh.krb: libsys.a
+pagsh.krb: libsys.a pagsh.c ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS}
 	${CC} ${CFLAGS} -o pagsh.krb.o -c ${srcdir}/pagsh.c -DAFS_KERBEROS_ENV
 	${CC} ${CFLAGS} -o pagsh.krb pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS}
 
