@@ -228,9 +228,8 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 
 #ifdef LINUX_KEYRING_SUPPORT
     if (code == 0 && afs_cr_rgid(*cr) != NFSXLATOR_CRED) {
-	(void) install_session_keyring(NULL);
-
-	if (current_session_keyring()) {
+	code = install_session_keyring(NULL);
+	if (code == 0 && current_session_keyring()) {
 	    struct key *key;
 	    key_perm_t perm;
 
@@ -243,6 +242,8 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 		key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
 					 current_session_keyring(), NULL);
 		key_put(key);
+	    } else {
+		code = PTR_ERR(key);
 	    }
 	}
     }
