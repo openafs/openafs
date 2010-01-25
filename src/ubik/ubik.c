@@ -399,13 +399,13 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     pthread_attr_t urecovery_Interact_tattr;
 #else
     PROCESS junk;
+    extern int rx_stackSize;
 #endif
 
     afs_int32 secIndex;
     struct rx_securityClass *secClass;
 
     struct rx_service *tservice;
-    extern int rx_stackSize;
 
     initialize_U_error_table();
 

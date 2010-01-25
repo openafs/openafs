@@ -94,8 +94,8 @@ urecovery_LostServer(void)
 #if !defined(AFS_PTHREAD_ENV)
     /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
-    return 0;
 #endif
+    return 0;
 }
 
 /*!

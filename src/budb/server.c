@@ -80,10 +80,10 @@ int lwps   = 3;
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+static int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
