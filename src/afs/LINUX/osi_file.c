@@ -387,7 +387,8 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     /* seek to the desired position. Return -1 on error. */
     if (filp->f_op->llseek) {
 	if (filp->f_op->llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset)
-	    return -1;
+	    code = -1;
+	    goto out;
     } else
 	filp->f_pos = uiop->uio_offset;
 
@@ -425,6 +426,7 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	code = 0;
     }
 
+out:
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_KERNEL_SPACE();
 
