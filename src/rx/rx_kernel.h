@@ -62,7 +62,7 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #else
 #define rx_ifnet_t ifnet_t
 #define rx_ifaddr_t ifaddr_t
-#define rx_ifaddr_withnet(x) ifaddr_ifwithnet(x)
+#define rx_ifaddr_withnet(x) ifaddr_withnet(x)
 #define rx_ifnet_mtu(x) ifnet_mtu(x)
 #define rx_ifnet_flags(x) ifnet_flags(x)
 #define rx_ifnet_metric(x) ifnet_metric(x)
