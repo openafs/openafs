@@ -686,7 +686,7 @@ rxi_GetIFInfo(void)
     memset(mtus, 0, sizeof(mtus));
 
 #if defined(AFS_DARWIN80_ENV)
-    if (!ifnet_list_get(AF_INET, ifns, &count)) {
+    if (!ifnet_list_get(AF_INET, &ifns, &count)) {
 	for (m = 0; m < count; m++) {
 	    if (!ifnet_get_address_list(ifns[m], &ifads)) {
 		for (j = 0; ifads[j] != NULL && cnt < ADDRSPERSITE; j++) {

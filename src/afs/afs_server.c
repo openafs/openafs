@@ -1478,7 +1478,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	rx_ifaddr_t *ifads;
 	rx_ifnet_t *ifns;
 
-	if (!ifnet_list_get(AF_INET, ifns, &count)) {
+	if (!ifnet_list_get(AF_INET, &ifns, &count)) {
 	    for (m = 0; m < count; m++) {
 		if (!ifnet_get_address_list(ifns[m], &ifads)) {
 		    for (j = 0; ifads[j] != NULL && cnt < ADDRSPERSITE; j++) {
