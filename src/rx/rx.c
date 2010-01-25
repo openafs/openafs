@@ -4711,6 +4711,11 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     if (flags & RX_CALL_TQ_BUSY) {
 	call->flags = RX_CALL_TQ_CLEARME | RX_CALL_TQ_BUSY;
 	call->flags |= (flags & RX_CALL_TQ_WAIT);
+#ifdef RX_ENABLE_LOCKS
+        CV_WAIT(&call->cv_tq, &call->lock);
+#else /* RX_ENABLE_LOCKS */
+        osi_rxSleep(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
     } else
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     {
