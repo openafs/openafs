@@ -148,26 +148,26 @@ vldbint.xdr.o: vldbint.xdr.c
 	${CCRULE}
 
 vldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -u -x -C -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -u -x -C -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.ss.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -x -S -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -S -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -x -c -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -c -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.h: ${VLSERVER}/vldbint.xg
-	${RXGEN} -u -x -h -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -u -x -h -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.cs.c: vldbint.h
 vldbint.ss.c: vldbint.h
 vldbint.xdr.c: vldbint.h
 
 Kvldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -x -k -C -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -k -C -o $@ ${VLSERVER}/vldbint.xg
 
 Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -x -k -c -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -k -c -o $@ ${VLSERVER}/vldbint.xg
 
 vlclient: vlclient.o $(OBJS) $(LIBS) 
 	$(CC) ${LDFLAGS} -o vlclient vlclient.o $(OBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libcmd.a
