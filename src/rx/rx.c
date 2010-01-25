@@ -2219,6 +2219,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
 	CLEAR_CALL_QUEUE_LOCK(call);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* Now, if TQ wasn't cleared earlier, do it now. */
+	rxi_WaitforTQBusy(call);
 	if (call->flags & RX_CALL_TQ_CLEARME) {
 	    rxi_ClearTransmitQueue(call, 1);
 	    /*queue_Init(&call->tq);*/
