@@ -7395,13 +7395,13 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 #else /* AFS_NT40_ENV */
 	    errorCode = rx_Readv(Call, tiov, &tnio, RX_MAXIOVECS, rlen);
 #endif /* AFS_NT40_ENV */
-#if FS_STATS_DETAILED
-	    (*a_bytesStoredP) += errorCode;
-#endif /* FS_STATS_DETAILED */
 	    if (errorCode <= 0) {
 		errorCode = -32;
 		break;
 	    }
+#if FS_STATS_DETAILED
+	    (*a_bytesStoredP) += errorCode;
+#endif /* FS_STATS_DETAILED */
 	    rlen = errorCode;
 #ifdef AFS_NT40_ENV
 	    errorCode = FDH_WRITE(fdP, tbuffer, rlen);
