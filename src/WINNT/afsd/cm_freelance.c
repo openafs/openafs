@@ -141,6 +141,7 @@ void cm_InitFreelance() {
 
     lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock", LOCK_HIERARCHY_FREELANCE_GLOBAL);
 
+    lock_ObtainMutex(&cm_Freelance_Lock);
     // yj: first we make a call to cm_initLocalMountPoints
     // to read all the local mount points from the registry
     cm_InitLocalMountPoints();
@@ -149,6 +150,7 @@ void cm_InitFreelance() {
     // a fake root directory based on the local mount points
     cm_InitFakeRootDir();
     // --- end of yj code
+    lock_ReleaseMutex(&cm_Freelance_Lock);
 
     /* Start the registry monitor */
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceChangeNotifier,
@@ -163,7 +165,7 @@ void cm_InitFreelance() {
 }
 
 /* yj: Initialization of the fake root directory */
-/* to be called while holding freelance lock unless during init. */
+/* to be called while holding freelance lock. */
 void cm_InitFakeRootDir() {
     int i, t1, t2;
     char* currentPos;
@@ -453,7 +455,7 @@ int cm_reInitLocalMountPoints() {
 // yj: open up the registry and read all the local mount 
 // points that are stored there. Part of the initialization
 // process for the freelance client.
-/* to be called while holding freelance lock unless during init. */
+/* to be called while holding freelance lock. */
 long cm_InitLocalMountPoints() {
     FILE *fp;
     int i;
@@ -496,9 +498,11 @@ long cm_InitLocalMountPoints() {
             rootCellName[0] = '.';
             code = cm_GetRootCellName(&rootCellName[1]);
             if (code == 0) {
+                lock_ReleaseMutex(&cm_Freelance_Lock);
                 cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
                 cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
                 cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs.", 1, NULL);
+                lock_ObtainMutex(&cm_Freelance_Lock);
                 dwMountPoints = 3;
             }
         }
@@ -693,9 +697,11 @@ long cm_InitLocalMountPoints() {
         rootCellName[0] = '.';
       	code = cm_GetRootCellName(&rootCellName[1]);
         if (code == 0) {
+            lock_ReleaseMutex(&cm_Freelance_Lock);
             cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
             cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
             cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs.", 1, NULL);
+            lock_ObtainMutex(&cm_Freelance_Lock);
         }
         return 0;
     }
