@@ -78,7 +78,7 @@ static fc_KeySchedule random_int32_schedule;
  */
 
 #include <assert.h>
-pthread_mutex_t rxkad_random_mutex;
+pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define LOCK_RM assert(pthread_mutex_lock(&rxkad_random_mutex)==0)
 #define UNLOCK_RM assert(pthread_mutex_unlock(&rxkad_random_mutex)==0)
 #else

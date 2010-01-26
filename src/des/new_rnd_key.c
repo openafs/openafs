@@ -50,7 +50,7 @@ static int is_inited = 0;
  */
 
 #include <assert.h>
-pthread_mutex_t des_init_mutex;
+pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define LOCK_INIT assert(pthread_mutex_lock(&des_init_mutex)==0)
 #define UNLOCK_INIT assert(pthread_mutex_unlock(&des_init_mutex)==0)
 #else
@@ -189,7 +189,7 @@ static unsigned char sequence_number[8];
  */
 
 #include <assert.h>
-pthread_mutex_t des_random_mutex;
+pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define LOCK_RANDOM assert(pthread_mutex_lock(&des_random_mutex)==0)
 #define UNLOCK_RANDOM assert(pthread_mutex_unlock(&des_random_mutex)==0)
 #else
