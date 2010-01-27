@@ -206,113 +206,52 @@ _VVGC_scan_table_flush(VVGCache_scan_table_t * tbl,
 }
 
 /**
- * read a volume header from disk into a VolumeHeader structure.
+ * record a volume header found by VWalkVolumeHeaders in a VGC scan table.
  *
- * @param[in]  path     absolute path to .vol volume header
- * @param[out] hdr      volume header object
+ * @param[in] dp   the disk partition
+ * @param[in] name full path to the .vol header (unused)
+ * @param[in] hdr  the header data
+ * @param[in] last whether this is the last try or not (unused)
+ * @param[in] rock actually a VVGCache_scan_table_t* to add the volume to
  *
  * @return operation status
- *    @retval 0 success
- *    @retval ENOENT volume header does not exist
- *    @retval EINVAL volume header is invalid
- *
- * @internal
+ *  @retval 0  success
+ *  @retval -1 fatal error adding vol to the scan table
  */
 static int
-_VVGC_read_header(const char *path, struct VolumeHeader *hdr)
+_VVGC_RecordHeader(struct DiskPartition64 *dp, const char *name,
+                   struct VolumeDiskHeader *hdr, int last, void *rock)
 {
-    int fd;
     int code;
-    struct VolumeDiskHeader diskHeader;
+    VVGCache_scan_table_t *tbl;
+    tbl = (VVGCache_scan_table_t *)rock;
 
-    fd = afs_open(path, O_RDONLY);
-    if (fd == -1) {
-        ViceLog(0, ("_VVGC_read_header: could not open %s; error = %d\n",
-            path, errno));
-        return ENOENT;
+    code = _VVGC_scan_table_add(tbl, dp, hdr->id, hdr->parent);
+    if (code) {
+	ViceLog(0, ("VVGC_scan_partition: error %d adding volume %s to scan table\n",
+	             code, name));
+	return -1;
     }
-
-    code = read(fd, &diskHeader, sizeof(diskHeader));
-    close(fd);
-    if (code != sizeof(diskHeader)) {
-        ViceLog(0, ("_VVGC_read_header: could not read disk header from %s; error = %d\n",
-            path, errno));
-        return EINVAL;
-    }
-
-    if (diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-	ViceLog(0, ("_VVGC_read_header: disk header %s has magic %lu, should "
-	            "be %lu\n", path,
-		    afs_printable_uint32_lu(diskHeader.stamp.magic),
-		    afs_printable_uint32_lu(VOLUMEHEADERMAGIC)));
-        return EINVAL;
-    }
-
-    DiskToVolumeHeader(hdr, &diskHeader);
     return 0;
 }
 
 /**
- * determines what to do with a volume header during a VGC scan.
+ * unlink a faulty volume header found by VWalkVolumeHeaders.
  *
- * @param[in] dp        the disk partition object
- * @param[in] node_path the absolute path to the header to handle
- * @param[out] hdr      the header read in from disk
- * @param[out] skip     1 if we should skip the header (pretend it doesn't
- *                      exist), 0 otherwise
- *
- * @return operation status
- *  @retval 0  success
- *  @retval -1 internal error beyond just failing to read the header file
+ * @param[in] dp   the disk partition (unused)
+ * @param[in] name the full path to the .vol header
+ * @param[in] hdr  the header data (unused)
+ * @param[in] rock unused
  */
-static int
-_VVGC_handle_header(struct DiskPartition64 *dp, const char *node_path,
-                    struct VolumeHeader *hdr, int *skip)
+static void
+_VVGC_UnlinkHeader(struct DiskPartition64 *dp, const char *name,
+                   struct VolumeDiskHeader *hdr, void *rock)
 {
-    int code;
-
-    *skip = 1;
-
-    code = _VVGC_read_header(node_path, hdr);
-    if (code) {
-	/* retry while holding a partition write lock, to ensure we're not
-	 * racing a writer/creator of the header */
-
-	if (code == ENOENT) {
-	    /* Ignore ENOENT; it's as if we never got it from readdir in the
-	     * first place. Other error codes means the header exists, but
-	     * there's something wrong with it. */
-	    return 0;
-	}
-
-	code = VPartHeaderLock(dp, WRITE_LOCK);
-	if (code) {
-	    ViceLog(0, ("_VVGC_handle_header: error acquiring partition "
-			"write lock while trying to open %s\n",
-			node_path));
-	    return -1;
-	}
-	code = _VVGC_read_header(node_path, hdr);
-	VPartHeaderUnlock(dp, WRITE_LOCK);
+    ViceLog(0, ("%s is not a legitimate volume header file; deleted\n", name));
+    if (unlink(name)) {
+	ViceLog(0, ("Unable to unlink %s (errno = %d)\n",
+	            name, errno));
     }
-
-    if (code) {
-	if (code != ENOENT) {
-	    ViceLog(0, ("_VVGC_scan_partition: %s does not appear to be a "
-			"legitimate volume header file; deleted\n",
-			node_path));
-
-	    if (unlink(node_path)) {
-		ViceLog(0, ("Unable to unlink %s (errno = %d)\n",
-			    node_path, errno));
-	    }
-	}
-	return 0;
-    }
-
-    /* header is fine; do not skip it, and do not error out */
-    *skip = 0;
-    return 0;
 }
 
 /**
@@ -332,13 +271,10 @@ _VVGC_handle_header(struct DiskPartition64 *dp, const char *node_path,
 static int
 _VVGC_scan_partition(struct DiskPartition64 * part)
 {
-    int code, res, skip;
+    int code, res;
     DIR *dirp = NULL;
-    struct VolumeHeader hdr;
-    struct dirent *dp;
     VVGCache_scan_table_t tbl;
-    char *part_path = NULL, *p;
-    char node_path[MAXPATHLEN];
+    char *part_path = NULL;
 
     code = _VVGC_scan_table_init(&tbl);
     if (code) {
@@ -376,36 +312,10 @@ _VVGC_scan_partition(struct DiskPartition64 * part)
     ViceLog(5, ("VVGC_scan_partition: scanning partition %s for VG cache\n",
                  part_path));
 
-    while ((dp = readdir(dirp))) {
-	p = strrchr(dp->d_name, '.');
-	if (p == NULL || strcmp(p, VHDREXT) != 0) {
-	    continue;
-	}
-	snprintf(node_path,
-		 sizeof(node_path),
-		 "%s/%s",
-		 VPartitionPath(part),
-		 dp->d_name);
-
-	res = _VVGC_handle_header(part, node_path, &hdr, &skip);
-	if (res) {
-	    /* internal error; error out */
-	    code = -1;
-	    goto done;
-	}
-	if (skip) {
-	    continue;
-	}
-
-	res = _VVGC_scan_table_add(&tbl,
-				   part,
-				   hdr.id,
-				   hdr.parent);
-	if (res) {
-	    ViceLog(0, ("VVGC_scan_partition: error %d adding volume %s to scan table\n",
-	        res, node_path));
-	    code = res;
-	}
+    code = VWalkVolumeHeaders(part, part_path, _VVGC_RecordHeader,
+                              _VVGC_UnlinkHeader, &tbl);
+    if (code < 0) {
+	goto done;
     }
 
     _VVGC_scan_table_flush(&tbl, part);

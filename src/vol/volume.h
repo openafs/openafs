@@ -877,6 +877,54 @@ extern afs_int32 VCreateVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 extern afs_int32 VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
 					  VolumeId volid, VolumeId parent);
 
+/**
+ * VWalkVolumeHeaders header callback.
+ *
+ * @param[in] dp   disk partition
+ * @param[in] name full path to the .vol header file
+ * @param[in] hdr  the header data that was read from the .vol header
+ * @param[in] last 1 if this is the last attempt to read the vol header, 0
+ *                 otherwise. DAFS VWalkVolumeHeaders will retry reading the
+ *                 header once, if a non-fatal error occurs when reading the
+ *                 header, or if this function returns a positive error code.
+ *                 So, if there is a problem, this function will be called
+ *                 first with last=0, then with last=1, then the error function
+ *                 callback will be called. For non-DAFS, this is always 1.
+ * @param[in] rock the rock passed to VWalkVolumeHeaders
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval negative a fatal error that should stop the walk immediately
+ *  @retval positive an error with the volume header was encountered; the walk
+ *          should continue, but the error function should be called on this
+ *          header
+ *
+ * @see VWalkVolumeHeaders
+ */
+typedef int (*VWalkVolFunc)(struct DiskPartition64 *dp, const char *name,
+                            struct VolumeDiskHeader *hdr, int last,
+                            void *rock);
+/**
+ * VWalkVolumeHeaders error callback.
+ *
+ * This is called from VWalkVolumeHeaders when an invalid or otherwise
+ * problematic volume header is encountered. It is typically implemented as a
+ * wrapper to unlink the .vol file.
+ *
+ * @param[in] dp   disk partition
+ * @param[in] name full path to the .vol header file
+ * @param[in] hdr  header read in from the .vol file, or NULL if it could not
+ *                 be read
+ * @param[in] rock rock passed to VWalkVolumeHeaders
+ *
+ * @see VWalkVolumeHeaders
+ */
+typedef void (*VWalkErrFunc)(struct DiskPartition64 *dp, const char *name,
+                             struct VolumeDiskHeader *hdr, void *rock);
+extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
+                              VWalkVolFunc volfunc, VWalkErrFunc errfunc,
+                              void *rock);
+
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store
    an inifite number of them; for most files, we give him the inode, vnode,

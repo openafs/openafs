@@ -220,7 +220,7 @@ extern int canfork;
 extern void Exit(int code);
 extern int Fork(void);
 extern int Wait(char *prog);
-extern char *ToString(char *s);
+extern char *ToString(const char *s);
 extern void AskOffline(VolumeId volumeId, char * partition);
 extern void AskOnline(VolumeId volumeId, char *partition);
 extern void CheckLogFile(char * log_path);

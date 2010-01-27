@@ -29,6 +29,7 @@
 #include <sys/file.h>
 #include <unistd.h>
 #endif
+#include <dirent.h>
 #include <sys/stat.h>
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
@@ -674,6 +675,167 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     return code;
 }
 #endif /* FSSYNC_BUILD_CLIENT */
+
+/**
+ * handle a single vol header as part of VWalkVolumeHeaders.
+ *
+ * @param[in] dp      disk partition
+ * @param[in] volfunc function to call when a vol header is successfully read
+ * @param[in] name    full path name to the .vol header
+ * @param[out] hdr    header data read in from the .vol header
+ * @param[in] locked  1 if the partition headers are locked, 0 otherwise
+ * @param[in] rock    the rock to pass to volfunc
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 fatal error, stop scanning
+ *  @retval 1  failed to read header
+ *  @retval 2  volfunc callback indicated error after header read
+ */
+static int
+_VHandleVolumeHeader(struct DiskPartition64 *dp, VWalkVolFunc volfunc,
+                     const char *name, struct VolumeDiskHeader *hdr,
+                     int locked, void *rock)
+{
+    int error = 0;
+    int fd;
+
+    if ((fd = afs_open(name, O_RDONLY)) == -1
+        || read(fd, hdr, sizeof(*hdr))
+        != sizeof(*hdr)
+        || hdr->stamp.magic != VOLUMEHEADERMAGIC) {
+        error = 1;
+    }
+
+    if (fd >= 0) {
+	close(fd);
+    }
+
+#ifdef AFSFS_DEMAND_ATTACH_FS
+    if (locked) {
+	VPartHeaderUnlock(dp);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    if (!error && volfunc) {
+	/* the volume header seems fine; call the caller-supplied
+	 * 'we-found-a-volume-header' function */
+	int last = 1;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (!locked) {
+	    last = 0;
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+	error = (*volfunc) (dp, name, hdr, last, rock);
+	if (error < 0) {
+	    return -1;
+	}
+	if (error) {
+	    error = 2;
+	}
+    }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (error && !locked) {
+	int code;
+	/* retry reading the volume header under the partition
+	 * header lock, just to be safe and ensure we're not
+	 * racing something rewriting the vol header */
+	code = VPartHeaderLock(dp, WRITE_LOCK);
+	if (code) {
+	    Log("Error acquiring partition write lock when "
+		"looking at header %s\n", name);
+	    return -1;
+	}
+
+	return _VHandleVolumeHeader(dp, volfunc, name, hdr, 1, rock);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    return error;
+}
+
+/**
+ * walk through the list of volume headers on a partition.
+ *
+ * This function looks through all of the .vol headers on a partition, reads in
+ * each header, and calls the supplied volfunc function on each one. If the
+ * header cannot be read (or volfunc returns a positive error code), DAFS will
+ * VPartHeaderExLock() and retry. If that fails, or if we are non-DAFS, errfunc
+ * will be called (which typically will unlink the problem volume header).
+ *
+ * If volfunc returns a negative error code, walking the partition will stop
+ * and we will return an error immediately.
+ *
+ * @param[in] dp       partition to walk
+ * @param[in] partpath the path opendir()
+ * @param[in] volfunc  the function to call when a header is encountered, or
+ *                     NULL to just skip over valid headers
+ * @param[in] errfunc  the function to call when a problematic header is
+ *                     encountered, or NULL to just skip over bad headers
+ * @param[in] rock     rock for volfunc and errfunc
+ *
+ * @see VWalkVolFunc
+ * @see VWalkErrFunc
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval negative fatal error, walk did not finish
+ */
+int
+VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
+                   VWalkVolFunc volfunc, VWalkErrFunc errfunc, void *rock)
+{
+    DIR *dirp = NULL;
+    struct dirent *dentry = NULL;
+    int code = 0;
+    struct VolumeDiskHeader diskHeader;
+
+    dirp = opendir(partpath);
+    if (!dirp) {
+	Log("VWalkVolumeHeaders: cannot open directory %s\n", partpath);
+	code = -1;
+	goto done;
+    }
+
+    while ((dentry = readdir(dirp))) {
+	char *p = dentry->d_name;
+	p = strrchr(dentry->d_name, '.');
+	if (p != NULL && strcmp(p, VHDREXT) == 0) {
+	    char name[VMAXPATHLEN];
+
+	    sprintf(name, "%s/%s", partpath, dentry->d_name);
+
+	    code = _VHandleVolumeHeader(dp, volfunc, name, &diskHeader, -1, rock);
+	    if (code < 0) {
+		/* fatal error, stop walking */
+		goto done;
+	    }
+	    if (code && errfunc) {
+		/* error with header; call the caller-supplied vol error
+		 * function */
+
+		struct VolumeDiskHeader *hdr = &diskHeader;
+		if (code == 1) {
+		    /* we failed to read the header at all, so don't pass in
+		     * the header ptr */
+		    hdr = NULL;
+		}
+		(*errfunc) (dp, name, hdr, rock);
+	    }
+	    code = 0;
+	}
+    }
+ done:
+    if (dirp) {
+	closedir(dirp);
+	dirp = NULL;
+    }
+
+    return code;
+}
 
 #ifdef AFS_DEMAND_ATTACH_FS
 

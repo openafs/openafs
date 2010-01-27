@@ -1361,14 +1361,217 @@ AskVolumeSummary(VolumeId singleVolumeNumber)
     return code;
 }
 
+/**
+ * count how many volume headers are found by VWalkVolumeHeaders.
+ *
+ * @param[in] dp   the disk partition (unused)
+ * @param[in] name full path to the .vol header (unused)
+ * @param[in] hdr  the header data (unused)
+ * @param[in] last whether this is the last try or not (unused)
+ * @param[in] rock actually an afs_int32*; the running count of how many
+ *                 volumes we have found
+ *
+ * @retval 0 always
+ */
+static int
+CountHeader(struct DiskPartition64 *dp, const char *name,
+            struct VolumeDiskHeader *hdr, int last, void *rock)
+{
+    afs_int32 *nvols = (afs_int32 *)rock;
+    (*nvols)++;
+    return 0;
+}
+
+/**
+ * parameters to pass to the VWalkVolumeHeaders callbacks when recording volume
+ * data.
+ */
+struct SalvageScanParams {
+    VolumeId singleVolumeNumber; /**< 0 for a partition-salvage, otherwise the
+                                  * vol id of the VG we're salvaging */
+    struct VolumeSummary *vsp;   /**< ptr to the current volume summary object
+                                  * we're filling in */
+    afs_int32 nVolumes;          /**< # of vols we've encountered */
+    afs_int32 totalVolumes;      /**< max # of vols we should encounter (the
+                                  * # of vols we've alloc'd memory for) */
+};
+
+/**
+ * records volume summary info found from VWalkVolumeHeaders.
+ *
+ * Found volumes are also taken offline if they are in the specific volume
+ * group we are looking for.
+ *
+ * @param[in] dp   the disk partition
+ * @param[in] name full path to the .vol header
+ * @param[in] hdr  the header data
+ * @param[in] last 1 if this is the last try to read the header, 0 otherwise
+ * @param[in] rock actually a struct SalvageScanParams*, containing the
+ *                 information needed to record the volume summary data
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval 1 volume header is mis-named and should be deleted
+ */
+static int
+RecordHeader(struct DiskPartition64 *dp, const char *name,
+             struct VolumeDiskHeader *hdr, int last, void *rock)
+{
+    char nameShouldBe[64];
+    struct SalvageScanParams *params;
+    struct VolumeSummary summary;
+    VolumeId singleVolumeNumber;
+
+    params = (struct SalvageScanParams *)rock;
+
+    singleVolumeNumber = params->singleVolumeNumber;
+
+    DiskToVolumeHeader(&summary.header, hdr);
+
+    if (singleVolumeNumber && summary.header.id == singleVolumeNumber
+        && summary.header.parent != singleVolumeNumber) {
+
+	if (programType == salvageServer) {
+#ifdef SALVSYNC_BUILD_CLIENT
+	    Log("fileserver requested salvage of clone %u; scheduling salvage of volume group %u...\n",
+	        summary.header.id, summary.header.parent);
+	    if (SALVSYNC_LinkVolume(summary.header.parent,
+		                    summary.header.id,
+		                    dp->name,
+		                    NULL) != SYNC_OK) {
+		Log("schedule request failed\n");
+	    }
+#endif
+	    Exit(SALSRV_EXIT_VOLGROUP_LINK);
+
+	} else {
+	    Log("%u is a read-only volume; not salvaged\n",
+	        singleVolumeNumber);
+	    Exit(1);
+	}
+    }
+
+    if (!singleVolumeNumber || summary.header.id == singleVolumeNumber
+	|| summary.header.parent == singleVolumeNumber) {
+
+	/* check if the header file is incorrectly named */
+	int badname = 0;
+	const char *base = strrchr(name, '/');
+	if (base) {
+	    base++;
+	} else {
+	    base = name;
+	}
+
+	(void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
+	                   VFORMAT, afs_printable_uint32_lu(summary.header.id));
+
+
+	if (strcmp(nameShouldBe, base)) {
+	    /* .vol file has wrong name; retry/delete */
+	    badname = 1;
+	}
+
+	if (!badname || last) {
+	    /* only offline the volume if the header is good, or if this is
+	     * the last try looking at it; avoid AskOffline'ing the same vol
+	     * multiple times */
+
+	    if (singleVolumeNumber 
+	        && summary.header.id != singleVolumeNumber) {
+		/* don't offline singleVolumeNumber; we already did that
+		 * earlier */
+
+	        AskOffline(summary.header.id, fileSysPartition->name);
+	    }
+	}
+	if (badname) {
+	    if (last && !Showmode) {
+		Log("Volume header file %s is incorrectly named (should be %s "
+		    "not %s); %sdeleted (it will be recreated later, if "
+		    "necessary)\n", name, nameShouldBe, base,
+		    (Testing ? "it would have been " : ""));
+	    }
+	    return 1;
+	}
+
+	summary.fileName = ToString(base);
+	params->nVolumes++;
+
+	if (params->nVolumes > params->totalVolumes) {
+	    /* We found more volumes than we found on the first partition walk;
+	     * apparently something created a volume while we were
+	     * partition-salvaging, or we found more than 20 vols when salvaging a
+	     * particular volume. Abort if we detect this, since other programs
+	     * supposed to not touch the partition while it is partition-salvaging,
+	     * and we shouldn't find more than 20 vols in a VG.
+	     */
+	    Abort("Found %ld vol headers, but should have found at most %ld! "
+	          "Make sure the volserver/fileserver are not running at the "
+		  "same time as a partition salvage\n",
+		  afs_printable_int32_ld(params->nVolumes),
+		  afs_printable_int32_ld(params->totalVolumes));
+	}
+
+	memcpy(params->vsp, &summary, sizeof(summary));
+	params->vsp++;
+    }
+
+    return 0;
+}
+
+/**
+ * possibly unlinks bad volume headers found from VWalkVolumeHeaders.
+ *
+ * If the header could not be read in at all, the header is always unlinked.
+ * If instead RecordHeader said the header was bad (that is, the header file
+ * is mis-named), we only unlink if we are doing a partition salvage, as
+ * opposed to salvaging a specific volume group.
+ *
+ * @param[in] dp   the disk partition
+ * @param[in] name full path to the .vol header
+ * @param[in] hdr  header data, or NULL if the header could not be read
+ * @param[in] rock actually a struct SalvageScanParams*, with some information
+ *                 about the scan
+ */
+static void
+UnlinkHeader(struct DiskPartition64 *dp, const char *name,
+             struct VolumeDiskHeader *hdr, void *rock)
+{
+    struct SalvageScanParams *params;
+    int dounlink = 0;
+
+    params = (struct SalvageScanParams *)rock;
+
+    if (!hdr) {
+	/* no header; header is too bogus to read in at all */
+	if (!Showmode) {
+	    Log("%s is not a legitimate volume header file; %sdeleted\n", name, (Testing ? "it would have been " : ""));
+	}
+	if (!Testing) {
+	    dounlink = 1;
+	}
+
+    } else if (!params->singleVolumeNumber) {
+	/* We were able to read in a header, but RecordHeader said something
+	 * was wrong with it. We only unlink those if we are doing a partition
+	 * salvage. */
+	if (!Testing) {
+	    dounlink = 1;
+	}
+    }
+
+    if (dounlink && unlink(name)) {
+	Log("Error %d while trying to unlink %s\n", errno, name);
+    }
+}
+
 void
 GetVolumeSummary(VolumeId singleVolumeNumber)
 {
-    DIR *dirp = NULL;
     afs_int32 nvols = 0;
-    struct VolumeSummary *vsp, vs;
-    struct VolumeDiskHeader diskHeader;
-    struct dirent *dp;
+    struct SalvageScanParams params;
+    int code;
 
     if (AskVolumeSummary(singleVolumeNumber) == 0) {
 	/* we successfully got the vol information from the fileserver; no
@@ -1376,34 +1579,13 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 	return;
     }
 
-    /* Get headers from volume directory */
-    dirp = opendir(fileSysPath);
-    if (dirp  == NULL)
-	Abort("Can't read directory %s; not salvaged\n", fileSysPath);
     if (!singleVolumeNumber) {
-	while ((dp = readdir(dirp))) {
-	    char *p = dp->d_name;
-	    p = strrchr(dp->d_name, '.');
-	    if (p != NULL && strcmp(p, VHDREXT) == 0) {
-		int fd;
-		char name[64];
-		sprintf(name, "%s/%s", fileSysPath, dp->d_name);
-		if ((fd = afs_open(name, O_RDONLY)) != -1
-		    && read(fd, (char *)&diskHeader, sizeof(diskHeader))
-		    == sizeof(diskHeader)
-		    && diskHeader.stamp.magic == VOLUMEHEADERMAGIC) {
-		    DiskToVolumeHeader(&vs.header, &diskHeader);
-		    nvols++;
-		}
-		close(fd);
-	    }
+	/* Count how many volumes we have in /vicepX */
+	code = VWalkVolumeHeaders(fileSysPartition, fileSysPath, CountHeader,
+	                          NULL, &nvols);
+	if (code < 0) {
+	    Abort("Can't read directory %s; not salvaged\n", fileSysPath);
 	}
-#ifdef AFS_NT40_ENV
-	closedir(dirp);
-	dirp = opendir(".");	/* No rewinddir for NT */
-#else
-	rewinddir(dirp);
-#endif
 	if (!nvols)
 	    nvols = 1;
     } else {
@@ -1413,83 +1595,20 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
     volumeSummaryp = malloc(nvols * sizeof(struct VolumeSummary));
     assert(volumeSummaryp != NULL);
 
-    nVolumes = 0;
-    vsp = volumeSummaryp;
-    while ((dp = readdir(dirp))) {
-	char *p = dp->d_name;
-	p = strrchr(dp->d_name, '.');
-	if (p != NULL && strcmp(p, VHDREXT) == 0) {
-	    int error = 0;
-	    int fd;
-	    char name[64];
-	    sprintf(name, "%s/%s", fileSysPath, dp->d_name);
-	    if ((fd = afs_open(name, O_RDONLY)) == -1
-		|| read(fd, &diskHeader, sizeof(diskHeader))
-		!= sizeof(diskHeader)
-		|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-		error = 1;
-	    }
-	    close(fd);
-	    if (error) {
-		if (!singleVolumeNumber) {
-		    if (!Showmode)
-			Log("%s is not a legitimate volume header file; %sdeleted\n", name, (Testing ? "it would have been " : ""));
-		    if (!Testing) {
-			if (unlink(name)) {
-			    Log("Unable to unlink %s (errno = %d)\n", name, errno);
-			}
-		    }
-		}
-	    } else {
-		char nameShouldBe[64];
-		DiskToVolumeHeader(&vsp->header, &diskHeader);
-		if (singleVolumeNumber && vsp->header.id == singleVolumeNumber
-		    && vsp->header.parent != singleVolumeNumber) {
-		    if (programType == salvageServer) {
-#ifdef SALVSYNC_BUILD_CLIENT
-			Log("fileserver requested salvage of clone %u; scheduling salvage of volume group %u...\n",
-			    vsp->header.id, vsp->header.parent);
-			if (SALVSYNC_LinkVolume(vsp->header.parent,
-						vsp->header.id,
-						fileSysPartition->name,
-						NULL) != SYNC_OK) {
-			    Log("schedule request failed\n");
-			}
-#endif
-			Exit(SALSRV_EXIT_VOLGROUP_LINK);
-		    } else {
-			Log("%u is a read-only volume; not salvaged\n",
-			    singleVolumeNumber);
-			Exit(1);
-		    }
-		}
-		if (!singleVolumeNumber
-		    || (vsp->header.id == singleVolumeNumber
-			|| vsp->header.parent == singleVolumeNumber)) {
-		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-				       VFORMAT, afs_printable_uint32_lu(vsp->header.id));
-		    if (singleVolumeNumber 
-			&& vsp->header.id != singleVolumeNumber)
-			AskOffline(vsp->header.id, fileSysPartition->name);
-		    if (strcmp(nameShouldBe, dp->d_name)) {
-			if (!Showmode)
-			    Log("Volume header file %s is incorrectly named; %sdeleted (it will be recreated later, if necessary)\n", name, (Testing ? "it would have been " : ""));
-			if (!Testing) {
-			    if (unlink(name)) {
-				Log("Unable to unlink %s (errno = %d)\n", name, errno);
-			    }
-			}
-		    } else {
-			vsp->fileName = ToString(dp->d_name);
-			nVolumes++;
-			vsp++;
-		    }
-		}
-	    }
-	    close(fd);
-	}
+    params.singleVolumeNumber = singleVolumeNumber;
+    params.vsp = volumeSummaryp;
+    params.nVolumes = 0;
+    params.totalVolumes = nvols;
+
+    /* walk the partition directory of volume headers and record the info
+     * about them; unlinking invalid headers */
+    code = VWalkVolumeHeaders(fileSysPartition, fileSysPath, RecordHeader,
+                              UnlinkHeader, &params);
+    if (code < 0) {
+	Abort("Failed to get volume header summary\n");
     }
-    closedir(dirp);
+    nVolumes = params.nVolumes;
+
     qsort(volumeSummaryp, nVolumes, sizeof(struct VolumeSummary),
 	  CompareVolumes);
 }
@@ -3901,7 +4020,7 @@ Abort(const char *format, ...)
 }
 
 char *
-ToString(char *s)
+ToString(const char *s)
 {
     register char *p;
     p = (char *)malloc(strlen(s) + 1);
