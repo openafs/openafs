@@ -415,7 +415,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                         serverUUID[j] = uuid;
                     }
 
-                    xdr_free(addrs.bulkaddrs_val, addrs.bulkaddrs_len * sizeof(*addrs.bulkaddrs_val));
+                    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 
                     if (nentries == 0)
                         code = CM_ERROR_INVAL;

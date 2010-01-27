@@ -2018,7 +2018,7 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
         for (n=0; n<sl.serverList_len && n<UTIL_MAX_CELL_HOSTS; n++) {
             t->cell[slot].serverAddr[n] = sl.serverList_val[n];
         }
-        xdr_free(sl.serverList_val, sl.serverList_len);
+        xdr_free((xdrproc_t) xdr_serverList, &sl);
     }
 
     /*

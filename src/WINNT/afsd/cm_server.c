@@ -181,7 +181,7 @@ cm_PingServer(cm_server_t *tsp)
 	/* we currently handle 32-bits of capabilities */
 	if (caps.Capabilities_len > 0) {
 	    tsp->capabilities = caps.Capabilities_val[0];
-	    xdr_free(caps.Capabilities_val, caps.Capabilities_len);
+	    xdr_free((xdrproc_t) xdr_Capabilities, &caps);
 	    caps.Capabilities_len = 0;
 	    caps.Capabilities_val = 0;
 	} else {
@@ -470,7 +470,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                 /* we currently handle 32-bits of capabilities */
                 if (caps[i].Capabilities_len > 0) {
                     tsp->capabilities = caps[i].Capabilities_val[0];
-                    xdr_free(caps[i].Capabilities_val, caps[i].Capabilities_len);
+                    xdr_free((xdrproc_t) xdr_Capabilities, &caps[i]);
                     caps[i].Capabilities_len = 0;
                     caps[i].Capabilities_val = 0;
                 } else {

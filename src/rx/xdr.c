@@ -589,8 +589,11 @@ xdr_alloc(afs_int32 size)
 }
 
 void
-xdr_free(void *x, afs_int32 size)
+xdr_free(xdrproc_t proc, void *obj)
 {
-    osi_free(x, size);
+    XDR x;
+
+    x.x_op = XDR_FREE;
+    (*proc)(&x, obj);
 }
 #endif /* NeXT */
