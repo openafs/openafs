@@ -255,6 +255,8 @@ EXPORTS
 	rx_SetMaxSendWindow			@260
 	rx_GetMinPeerTimeout			@261
 	rx_SetMinPeerTimeout			@262
+        xdr_serverList                          @263
+        xdr_Capabilities                        @264
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
