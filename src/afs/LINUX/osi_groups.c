@@ -348,11 +348,14 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
 #if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current, perm, 1);
+	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current,
+			    perm, KEY_ALLOC_NOT_IN_QUOTA);
 #elif defined(KEY_ALLOC_NEEDS_CRED)
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current_cred(), perm, 1);
+	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current_cred(),
+			    perm, KEY_ALLOC_NOT_IN_QUOTA);
 #else
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
+	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm,
+			    KEY_ALLOC_NOT_IN_QUOTA);
 #endif
 
 	    if (!IS_ERR(key)) {
