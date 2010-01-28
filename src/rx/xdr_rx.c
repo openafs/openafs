@@ -114,7 +114,7 @@ static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrrx_ops = {
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
     /* Windows does not support labeled assigments */
     xdrrx_getint32,	/* deserialize an afs_int32 */
     xdrrx_putint32,	/* serialize an afs_int32 */
