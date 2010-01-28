@@ -4,6 +4,7 @@
 
 /OpenAFS.Info.plist
 /OpenAFS.info
+/OpenAFS.Description.plist
 /buildpkg.sh
 /CellServDB
 .DS_Store
