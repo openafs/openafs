@@ -2349,7 +2349,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 #endif
 	}
-
+    }
     /*end for */
     /*
      * All the necessary info has been passed into the kernel to run an AFS
