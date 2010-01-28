@@ -145,6 +145,13 @@ extern afs_int32 afsconf_ClientAuthSecure(void *arock,
 				          struct rx_securityClass **astr,
 				          afs_int32 * aindex);
 
+/* Flags for this function */
+#define AFSCONF_SEC_OBJS_RXKAD_CRYPT 1
+extern void afsconf_BuildServerSecurityObjects(struct afsconf_dir *,
+					       afs_uint32,
+					       struct rx_securityClass ***,
+					       afs_int32 *);
+
 /* writeconfig.c */
 int afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, const char *apath, 
 				struct afsconf_cell *acellInfo, char clones[]);

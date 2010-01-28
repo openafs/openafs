@@ -367,27 +367,6 @@ threadNum(void)
 }
 #endif
 
-/* proc called by rxkad module to get a key */
-static int
-get_key(void *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
-{
-    /* find the key */
-    static struct afsconf_key tkey;
-    register afs_int32 code;
-
-    if (!confDir) {
-	ViceLog(0, ("conf dir not open\n"));
-	return 1;
-    }
-    code = afsconf_GetKey(confDir, akvno, (struct ktc_encryptionKey *)tkey.key);
-    if (code) {
-	ViceLog(0, ("afsconf_GetKey failure: kvno %d code %d\n", akvno, code));
-	return code;
-    }
-    memcpy(akey, tkey.key, sizeof(tkey.key));
-    return 0;
-}				/*get_key */
-
 #ifndef AFS_NT40_ENV
 int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
@@ -1932,7 +1911,8 @@ main(int argc, char *argv[])
 {
     afs_int32 code;
     char tbuffer[32];
-    struct rx_securityClass *sc[4];
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
     struct rx_service *tservice;
 #ifdef AFS_PTHREAD_ENV
     pthread_t serverPid;
@@ -2143,16 +2123,14 @@ main(int argc, char *argv[])
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);
-    sc[0] = rxnull_NewServerSecurityObject();
-    sc[1] = 0;			/* rxvab_NewServerSecurityObject(key1, 0) */
-    sc[2] = rxkad_NewServerSecurityObject(rxkad_clear, NULL, get_key, NULL);
-    sc[3] = rxkad_NewServerSecurityObject(rxkad_crypt, NULL, get_key, NULL);
+    afsconf_BuildServerSecurityObjects(confDir, AFSCONF_SEC_OBJS_RXKAD_CRYPT,
+				       &securityClasses, &numClasses);
+
     tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */ 
 				 1,	/*service name */
 				 "AFS",
-				 /* security classes */ sc,
-				 /* numb sec classes */
-				 4, RXAFS_ExecuteRequest);
+				 securityClasses, numClasses,
+				 RXAFS_ExecuteRequest);
     if (!tservice) {
 	ViceLog(0,
 		("Failed to initialize RX, probably two servers running.\n"));
@@ -2168,8 +2146,8 @@ main(int argc, char *argv[])
     rx_SetServerIdleDeadErr(tservice, VNOSERVICE);
 
     tservice =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, 4,
-		      RXSTATS_ExecuteRequest);
+	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityClasses,
+		      numClasses, RXSTATS_ExecuteRequest);
     if (!tservice) {
 	ViceLog(0, ("Failed to initialize rpc stat service.\n"));
 	exit(-1);

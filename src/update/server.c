@@ -180,7 +180,8 @@ osi_audit(void)
 int
 main(int argc, char *argv[])
 {
-    struct rx_securityClass *securityObjects[3];
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
     struct rx_service *service;
     afs_uint32 host = htonl(INADDR_ANY);
 
@@ -297,29 +298,17 @@ main(int argc, char *argv[])
     if (rx_InitHost(host, htons(AFSCONF_UPDATEPORT)) < 0)
 	Quit("rx_init");
 
-    /* Create a single security object, in this case the null security object,
-     * for unauthenticated connections, which will be used to control security
-     * on connections made to this server. */
+    afsconf_BuildServerSecurityObjects(cdir, 0, &securityClasses, &numClasses);
 
-    /* WHAT A JOKE!  Let's use rxkad at least so we know who we're talking to,
-     * then sometimes require full encryption. */
-
-    /* rxnull and rxvab are no longer supported */
-    securityObjects[0] = rxnull_NewServerSecurityObject();
-
-    securityObjects[1] = (struct rx_securityClass *)0;
-
-    securityObjects[2] =
-	rxkad_NewServerSecurityObject(rxkad_clear, cdir, afsconf_GetKey, 0);
-    if (securityObjects[2] == (struct rx_securityClass *)0)
+    if (securityClasses[2] == NULL)
 	Quit("rxkad_NewServerSecurityObject");
 
     /* Instantiate a single UPDATE service.  The rxgen-generated procedure
      * which is called to decode requests is passed in here
      * (UPDATE_ExecuteRequest). */
     service =
-	rx_NewServiceHost(host, 0, UPDATE_SERVICEID, "UPDATE", securityObjects,
-			  3, UPDATE_ExecuteRequest);
+	rx_NewServiceHost(host, 0, UPDATE_SERVICEID, "UPDATE", securityClasses,
+			  numClasses, UPDATE_ExecuteRequest);
     if (service == (struct rx_service *)0)
 	Quit("rx_NewService");
     rx_SetMaxProcs(service, 2);

@@ -209,10 +209,8 @@ main(int argc, char **argv)
     register struct hostent *th;
     char hostname[64];
     struct rx_service *tservice;
-    struct rx_securityClass *sc[3];
-#if 0
-    struct ktc_encryptionKey tkey;
-#endif
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
     int kerberosKeys;		/* set if found some keys */
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
@@ -461,14 +459,6 @@ main(int argc, char **argv)
     pr_realmName = info.name;
     pr_realmNameLen = strlen(pr_realmName);
 
-#if 0
-    /* get keys */
-    code = afsconf_GetKey(prdir, 999, &tkey);
-    if (code) {
-	afs_com_err(whoami, code,
-		"couldn't get bcrypt keys from key file, ignoring.");
-    }
-#endif
     {
 	afs_int32 kvno;		/* see if there is a KeyFile here */
 	struct ktc_encryptionKey key;
@@ -532,12 +522,8 @@ main(int argc, char **argv)
     pt_hook_write();
 #endif
 
-    sc[0] = rxnull_NewServerSecurityObject();
-    sc[1] = 0;
-    if (kerberosKeys) {
-	sc[2] = rxkad_NewServerSecurityObject(0, prdir, afsconf_GetKey, NULL);
-    } else
-	sc[2] = sc[0];
+    afsconf_BuildServerSecurityObjects(prdir, 0, &securityClasses,
+				       &numClasses);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
@@ -547,8 +533,8 @@ main(int argc, char **argv)
     }
 
     tservice =
-	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", sc, 3,
-		      PR_ExecuteRequest);
+	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", securityClasses,
+		          numClasses, PR_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	fprintf(stderr, "ptserver: Could not create new rx service.\n");
 	PT_EXIT(3);
@@ -561,8 +547,8 @@ main(int argc, char **argv)
     }
 
     tservice =
-	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
-		      RXSTATS_ExecuteRequest);
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats",
+			  securityClasses, numClasses, RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	fprintf(stderr, "ptserver: Could not create new rx service.\n");
 	PT_EXIT(3);

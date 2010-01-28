@@ -171,3 +171,31 @@ afsconf_ClientAuthSecure(void *arock,
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
+
+/*!
+ * Build a set of security classes suitable for a server accepting
+ * incoming connections
+ */
+#if !defined(UKERNEL)
+void
+afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
+				   afs_uint32 flags,
+			           struct rx_securityClass ***classes,
+			           afs_int32 *numClasses)
+{
+    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+	*numClasses = 4;
+    else
+	*numClasses = 3;
+
+    *classes = calloc(*numClasses, sizeof(**classes));
+
+    (*classes)[0] = rxnull_NewServerSecurityObject();
+    (*classes)[1] = NULL;
+    (*classes)[2] = rxkad_NewServerSecurityObject(0, dir,
+						  afsconf_GetKey, NULL);
+    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+	(*classes)[3] = rxkad_NewServerSecurityObject(rxkad_crypt, dir,
+						      afsconf_GetKey, NULL);
+}
+#endif
