@@ -64,7 +64,6 @@ ubik/beacon.c        : all           : Ubik uses signed/unsigned
 				       interchangably for IP addresses, a 
 				       fix will require API changes.
 ubik/ubikclient.c    : strict-protos : ubik_Call
-uss/uss_vol.c 	     : all             Format issues
 uss/uss_kauth.c      : all	     : ubik_Call
 viced/fsprobe.c      : all	     : ubik_Call
 vol/salvager.c       : all           : consts & undefined variable from header - maybe fixed!

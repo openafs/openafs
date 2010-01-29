@@ -38,6 +38,7 @@
 #include <afs/cellconfig.h>
 #include <rx/rx_globals.h>
 #include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 #include <afs/volint.h>
 #include <afs/keys.h>
 #include <afs/afsutil.h>
@@ -615,7 +616,8 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
     static char rn[] = "uss_vol_CreateVol";	/*Routine name */
 #endif
     afs_int32 pname;		/*Partition name */
-    afs_int32 volid, code;	/*Volume ID, return code */
+    afs_uint32 volid;		/*Volume ID */
+    afs_int32 code;		/*return code */
     afs_int32 saddr;		/*Socket info for server */
     int VolExistFlag = 0;	/*Does the volume exist? */
     int mpExistFlag = 0;	/*Does the mountpoint exist? */
