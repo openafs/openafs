@@ -100,6 +100,18 @@ afs_int32 afs_dcentries;	/*!< In-memory dcache entries */
 int dcacheDisabled = 0;
 
 struct afs_cacheOps afs_UfsCacheOps = {
+#if defined(AFS_SGI_ENV) && !defined(__c99)
+    osi_UFSOpen,
+    osi_UFSTruncate,
+    afs_osi_Read,
+    afs_osi_Write,
+    osi_UFSClose,
+    afs_UFSRead,
+    afs_UFSWrite,
+    afs_UFSGetDSlot,
+    afs_UFSGetVolSlot,
+    afs_UFSHandleLink,
+#else
     .open 	= osi_UFSOpen,
     .truncate	= osi_UFSTruncate,
     .fread	= afs_osi_Read,
@@ -110,9 +122,22 @@ struct afs_cacheOps afs_UfsCacheOps = {
     .GetDSlot	= afs_UFSGetDSlot,
     .GetVolSlot = afs_UFSGetVolSlot,
     .HandleLink	= afs_UFSHandleLink,
+#endif
 };
 
 struct afs_cacheOps afs_MemCacheOps = {
+#if (defined(AFS_SGI_ENV) && !defined(__c99))
+    afs_MemCacheOpen,
+    afs_MemCacheTruncate,
+    afs_MemReadBlk,
+    afs_MemWriteBlk,
+    afs_MemCacheClose,
+    afs_MemRead,
+    afs_MemWrite,
+    afs_MemGetDSlot,
+    afs_MemGetVolSlot,
+    afs_MemHandleLink,
+#else
     .open	= afs_MemCacheOpen,
     .truncate	= afs_MemCacheTruncate,
     .fread	= afs_MemReadBlk,
@@ -123,6 +148,7 @@ struct afs_cacheOps afs_MemCacheOps = {
     .GetDSlot	= afs_MemGetDSlot,
     .GetVolSlot	= afs_MemGetVolSlot,
     .HandleLink	= afs_MemHandleLink,
+#endif
 };
 
 int cacheDiskType;		/*Type of backing disk for cache */

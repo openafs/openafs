@@ -266,6 +266,15 @@ rxfs_storeDestroy(void **r, afs_int32 error)
 
 static
 struct storeOps rxfs_storeUfsOps = {
+#if (defined(AFS_SGI_ENV) && !defined(__c99))
+    rxfs_storeUfsPrepare,
+    rxfs_storeUfsRead,
+    rxfs_storeUfsWrite,
+    rxfs_storeStatus,
+    rxfs_storePadd,
+    rxfs_storeClose,
+    rxfs_storeDestroy
+#else
     .prepare = 	rxfs_storeUfsPrepare,
     .read =	rxfs_storeUfsRead,
     .write =	rxfs_storeUfsWrite,
@@ -276,10 +285,20 @@ struct storeOps rxfs_storeUfsOps = {
 #ifdef AFS_LINUX26_ENV
     .storeproc = afs_linux_storeproc
 #endif
+#endif
 };
 
 static
 struct storeOps rxfs_storeMemOps = {
+#if (defined(AFS_SGI_ENV) && !defined(__c99))
+    rxfs_storeMemPrepare,
+    rxfs_storeMemRead,
+    rxfs_storeMemWrite,
+    rxfs_storeStatus,
+    rxfs_storePadd,
+    rxfs_storeClose,
+    rxfs_storeDestroy
+#else
     .prepare =	rxfs_storeMemPrepare,
     .read = 	rxfs_storeMemRead,
     .write = 	rxfs_storeMemWrite,
@@ -287,6 +306,7 @@ struct storeOps rxfs_storeMemOps = {
     .padd =	rxfs_storePadd,
     .close = 	rxfs_storeClose,
     .destroy =	rxfs_storeDestroy
+#endif
 };
 
 afs_int32
