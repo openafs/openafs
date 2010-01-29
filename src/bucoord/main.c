@@ -52,6 +52,7 @@
 
 #include "bc.h"			/*Backup Coordinator structs and defs */
 #include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
 
 int localauth, interact;
 char tcell[64];
