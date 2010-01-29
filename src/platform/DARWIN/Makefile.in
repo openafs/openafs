@@ -21,7 +21,16 @@ afscell/build/Release/afscell.bundle: afscell
 afscell/InstallerSections.plist: afscell 
 
 OpenAFS.prefPane:
-	xcodebuild -project AFSPreference/OpenAFS.xcodeproj
+	@case ${SYS_NAME} in \
+	*_darwin_100 ) \
+		xcodebuild -sdk macosx10.6 -project AFSPreference/OpenAFS.xcodeproj ;; \
+	*_darwin_90 ) \
+		xcodebuild -sdk macosx10.5 -project AFSPreference/OpenAFS.xcodeproj ;; \
+	*_darwin_80 ) \
+		xcodebuild -sdk macosx10.4 -project AFSPreference/OpenAFS.xcodeproj ;; \
+	* ) \
+		echo Not building AFS prefPane for ${SYS_NAME} ;; \
+	esac
 
 afscell:
 	cd afscell && xcodebuild

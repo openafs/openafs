@@ -844,7 +844,9 @@
 		1DBD214A08BA80EA00186707 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -859,7 +861,9 @@
 		1DBD214D08BA80EA00186707 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_ENABLE_OBJC_GC = supported;
@@ -869,14 +873,16 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
 				SKIP_INSTALL = NO;
-				VALID_ARCHS = "i386 ppc x86_64";
+				VALID_ARCHS = "i386 ppc x86_64 armv6";
 			};
 			name = Debug;
 		};
 		1DBD214E08BA80EA00186707 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_ENABLE_OBJC_GC = supported;
@@ -884,7 +890,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
-				VALID_ARCHS = "i386 ppc x86_64";
+				VALID_ARCHS = "i386 ppc x86_64 armv6";
 			};
 			name = Release;
 		};
