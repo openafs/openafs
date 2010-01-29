@@ -108,9 +108,8 @@ InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
     register afs_int32 code;	/*Return code */
     struct afsconf_dir *tdir;	/*Ptr to conf dir info */
     struct afsconf_cell info;	/*Info about chosen cell */
-    struct ktc_principal sname;	/*Service name */
-    struct ktc_token ttoken;	/*Service ticket */
     afs_int32 scIndex;		/*Chosen security index */
+    afs_int32 secFlags;
     struct rx_securityClass *sc;	/*Generated security object */
     afs_int32 i;		/*Loop index */
 
@@ -158,56 +157,21 @@ InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
 #ifdef USS_VOL_DB
     printf("[%s] Getting tickets if needed\n", rn);
 #endif /* USS_VOL_DB */
-    if (!a_noAuthFlag) {
-	/*
-	 * We don't need tickets for unauthenticated connections.
-	 */
-	strcpy(sname.cell, info.name);
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	if (code) {
-	    fprintf(stderr,
-		    "%s: Couldn't get AFS tokens, running unauthenticated.\n",
-		    uss_whoami);
-	    scIndex = 0;
-	} else {
-	    /*
-	     * We got a ticket, go for an authenticated connection.
-	     */
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
-		scIndex = 2;	/*Kerberos */
-	    else {
-		fprintf(stderr, "%s: Funny kvno (%d) in ticket, proceeding\n",
-			uss_whoami, ttoken.kvno);
-		scIndex = 2;
-	    }
-	}			/*Got a ticket */
-    } /*Authentication desired */
-    else
-	scIndex = 0;
 
-    /*
-     * Generate the appropriate security object for the connection.
-     */
-#ifdef USS_VOL_DB
-    printf("[%s] Generating Rx security object\n", rn);
-#endif /* USS_VOL_DB */
-    switch (scIndex) {
-    case 0:
-	sc = (struct rx_securityClass *)
-	    rxnull_NewClientSecurityObject();
-	break;
+    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+    if (a_noAuthFlag)
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
 
-    case 1:
-	break;
-
-    case 2:
-	sc = (struct rx_securityClass *)
-	    rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					  ttoken.kvno, ttoken.ticketLen,
-					  ttoken.ticket);
-	break;
+    code = afsconf_PickClientSecObj(tdir, secFlags, &info, a_cellName,
+				    &sc, &scIndex, NULL);
+    if (code) {
+	printf("%s: Can't create client security object\n", uss_whoami);
+        exit(1);
+    }
+    if (scIndex == 0 && !a_noAuthFlag) {
+	fprintf(stderr,
+		"%s: Couldn't get AFS tokens, running unauthenticated.\n",
+		uss_whoami);
     }
 
     /*

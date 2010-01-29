@@ -52,15 +52,13 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {
-    afs_int32 code, scIndex, i;
+    afs_int32 code, scIndex, secFlags, i;
     struct afsconf_cell info;
     struct afsconf_dir *tdir;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
     struct rx_securityClass *sc;
     /* This must change if VLDB_MAXSERVERS becomes larger than MAXSERVERS */
     static struct rx_connection *serverconns[MAXSERVERS];
-    char cellstr[64];
+    const char *confdir;
 
     code = rx_Init(0);
     if (code) {
@@ -69,99 +67,38 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
     }
     rx_SetRxDeadTime(deadtime);
 
-    if (sauth) {		/* -localauth */
-	tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
-	if (!tdir) {
-	    fprintf(stderr,
-		    "%s: Could not process files in configuration directory (%s).\n",
-		    funcName, AFSDIR_SERVER_ETC_DIRPATH);
-	    return -1;
-	}
-	code = afsconf_ClientAuth(tdir, &sc, &scIndex);	/* sets sc,scIndex */
-	if (code) {
-	    afsconf_Close(tdir);
-	    fprintf(stderr,
-		    "%s: Could not get security object for -localAuth\n",
-		    funcName);
-	    return -1;
-	}
-	code =
-	    afsconf_GetCellInfo(tdir, tdir->cellName, serviceid,
-				&info);
-	if (code) {
-	    afsconf_Close(tdir);
-	    fprintf(stderr,
-		    "%s: can't find cell %s's hosts in %s/%s\n",
-		    funcName, cellName, AFSDIR_SERVER_ETC_DIRPATH,
-		    AFSDIR_CELLSERVDB_FILE);
-	    return -1;
-	}
-    } else {			/* not -localauth */
-	tdir = afsconf_Open(confDir);
-	if (!tdir) {
-	    fprintf(stderr,
-		    "%s: Could not process files in configuration directory (%s).\n",
-		    funcName, confDir);
-	    return -1;
-	}
+    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+    if (sauth) {
+	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
+	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+    } else {
+	confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+    }
 
-	if (!cellName) {
-	    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
-	    if (code) {
-		fprintf(stderr,
-			"%s: can't get local cellname, check %s/%s\n",
-			funcName, confDir, AFSDIR_THISCELL_FILE);
-		return -1;
-	    }
-	    cellName = cellstr;
-	}
-
-	code =
-	    afsconf_GetCellInfo(tdir, cellName, serviceid, &info);
-	if (code) {
-	    fprintf(stderr,
-		    "%s: can't find cell %s's hosts in %s/%s\n",
-		    funcName, cellName, confDir, AFSDIR_CELLSERVDB_FILE);
-	    return -1;
-	}
-	if (noAuthFlag)		/* -noauth */
-	    scIndex = 0;
-	else {			/* not -noauth */
-	    strcpy(sname.cell, info.name);
-	    sname.instance[0] = 0;
-	    strcpy(sname.name, "afs");
-	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	    if (code) {		/* did not get ticket */
-		fprintf(stderr,
-			"%s: Could not get afs tokens, running unauthenticated.\n",
-			funcName);
-		scIndex = 0;
-	    } else {		/* got a ticket */
-		scIndex = 2;
-		if ((ttoken.kvno < 0) || (ttoken.kvno > 256)) {
-		    fprintf(stderr,
-			    "%s: funny kvno (%d) in ticket, proceeding\n",
-			    funcName, ttoken.kvno);
-		}
-	    }
-	}
-
-	switch (scIndex) {
-	case 0:
-	    sc = rxnull_NewClientSecurityObject();
-	    break;
-	case 2:
-	    sc = rxkad_NewClientSecurityObject(gen_rxkad_level,
-					       &ttoken.sessionKey,
-					       ttoken.kvno, ttoken.ticketLen,
-					       ttoken.ticket);
-	    break;
-	default:
-	    fprintf(stderr, "%s: unsupported security index %d\n",
-		    funcName, scIndex);
-	    return -1;
-	    break;
-	}
+    tdir = afsconf_Open(confdir);
+    if (!tdir) {
+	fprintf(stderr,
+		"%s: Could not process files in configuration directory (%s).\n",
+		funcName, confdir);
+	return -1;
+    }
+    code = afsconf_GetCellInfo(tdir, tdir->cellName, serviceid, &info);
+    if (code) {
+	afsconf_Close(tdir);
+	fprintf(stderr, "%s: can't find cell %s's hosts in %s/%s\n",
+		funcName, cellName, confdir, AFSDIR_CELLSERVDB_FILE);
+	return -1;
+    }
+    code = afsconf_PickClientSecObj(tdir, secFlags, &info, tdir->cellName, &sc,
+				    &scIndex, NULL);
+    if (code) {
+	fprintf(stderr, "%s: can't create client security object", funcName);
+	return -1;
+    }
+    if (scIndex == 0) {
+	fprintf(stderr,
+		"%s: Could not get afs tokens, running unauthenticated.\n",
+		funcName);
     }
 
     afsconf_Close(tdir);

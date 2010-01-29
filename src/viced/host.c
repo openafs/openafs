@@ -266,9 +266,8 @@ hpr_Initialize(struct ubik_client **uclient)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
     struct afsconf_dir *tdir;
-    struct ktc_token ttoken;
     afs_int32 scIndex;
     struct afsconf_cell info;
     afs_int32 i;
@@ -302,55 +301,29 @@ hpr_Initialize(struct ubik_client **uclient)
         return code;
     }
     
-    scIndex = 2;
-    sc[0] = 0;
-    sc[1] = 0;
-    sc[2] = 0;
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
     if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
-        code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
+        code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
         if (code)
 	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
         if (code)
             scIndex = 0;        /* use noauth */
-        if (scIndex != 2)
-            /* if there was a problem, an unauthenticated conn is returned */
-            sc[scIndex] = sc[2];
     } else {
-        struct ktc_principal sname;
-        strcpy(sname.cell, info.name);
-        sname.instance[0] = 0;
-        strcpy(sname.name, "afs");
-        code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-        if (code)
-            scIndex = 0;
-        else {
-            if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
-                /* this is a kerberos ticket, set scIndex accordingly */
-                scIndex = 2;
-            else {
-                ViceLog(0, ("hpr_Initialize: funny kvno (%d) in ticket, proceeding", ttoken.kvno));
-                scIndex = 2;
-            }
-            sc[2] =
-                rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-                                              ttoken.kvno, ttoken.ticketLen,
-                                              ttoken.ticket);
-        }
+	afsconf_ClientAuthToken(&info, 0, &sc, &scIndex, NULL);
     }
-    if ((scIndex == 0) && (sc[0] == 0))
-        sc[0] = rxnull_NewClientSecurityObject();
-    if ((scIndex == 0))
+    if ((scIndex == 0) && (sc == NULL))
+        sc = rxnull_NewClientSecurityObject();
+    if (scIndex == 0)
 	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, running unauthenticated. [%d]", code));
     
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
     for (i = 0; i < info.numServers; i++) {
         serverconns[i] =
             rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-                             info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
-                             scIndex);
+                             info.hostAddr[i].sin_port, PRSRV,
+			     sc, scIndex);
     }
 
     code = ubik_ClientInit(serverconns, uclient);
@@ -358,7 +331,7 @@ hpr_Initialize(struct ubik_client **uclient)
 	ViceLog(0, ("hpr_Initialize: ubik client init failed. [%d]", code));
     }
     afsconf_Close(tdir);
-    code = rxs_Release(sc[scIndex]);
+    code = rxs_Release(sc);
     return code;
 }
 

@@ -62,12 +62,12 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
     static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
-    struct ktc_token ttoken;
     afs_int32 scIndex;
+    afs_int32 secFlags;
     static struct afsconf_cell info;
     afs_int32 i;
 #if !defined(UKERNEL)
@@ -168,65 +168,38 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	return code;
     }
 
-    scIndex = secLevel;
-    sc[0] = 0;
-    sc[1] = 0;
-    sc[2] = 0;
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
     if (secLevel == 2) {
 	code = afsconf_GetLatestKey(tdir, 0, 0);
 	if (code) {
-	    afs_com_err(whoami, code, 
-			"(getting key from local KeyFile)\n");
-	    scIndex = 0; /* use noauth */
+	    afs_com_err(whoami, code, "(getting key from local KeyFile)\n");
 	} else {
 	    /* If secLevel is two assume we're on a file server and use
 	     * ClientAuthSecure if possible. */
-	    code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-	    if (code) {
-		afs_com_err(whoami, code,
-			    "(calling client secure)\n");
-		scIndex = 0;	/* use noauth */
-	    }
+	    code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
+	    if (code)
+		afs_com_err(whoami, code, "(calling client secure)\n");
         }
-	if (scIndex != 2)
-	    /* if there was a problem, an unauthenticated conn is returned */
-	    sc[scIndex] = sc[2];
     } else if (secLevel > 0) {
-	struct ktc_principal sname;
-	strcpy(sname.cell, info.name);
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+	secFlags = 0;
+	if (secLevel > 1)
+	    secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
+
+	code = afsconf_ClientAuthToken(&info, secFlags, &sc, &scIndex, NULL);
 	if (code) {
 	    afs_com_err(whoami, code, "(getting token)");
 	    if (secLevel > 1)
 		return code;
-	    scIndex = 0;
-	} else {
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
-		/* this is a kerberos ticket, set scIndex accordingly */
-		scIndex = 2;
-	    else {
-		fprintf(stderr,
-			"%s: funny kvno (%d) in ticket, proceeding\n",
-			whoami, ttoken.kvno);
-		scIndex = 2;
-	    }
-	    sc[2] =
-		rxkad_NewClientSecurityObject((secLevel > 1) ? rxkad_crypt :
-					      rxkad_clear, &ttoken.sessionKey,
-					      ttoken.kvno, ttoken.ticketLen,
-					      ttoken.ticket);
 	}
     }
 
-    if (scIndex == 1)
-	return PRBADARG;
-    if ((scIndex == 0) && (sc[0] == 0))
-	sc[0] = rxnull_NewClientSecurityObject();
+    if (sc == NULL) {
+	sc = rxnull_NewClientSecurityObject();
+        scIndex = 0;
+    }
+
     if ((scIndex == 0) && (secLevel != 0))
 	fprintf(stderr,
 		"%s: Could not get afs tokens, running unauthenticated\n",
@@ -236,7 +209,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     for (i = 0; i < info.numServers; i++)
 	serverconns[i] =
 	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
+			     info.hostAddr[i].sin_port, PRSRV, sc,
 			     scIndex);
 
     code = ubik_ClientInit(serverconns, &pruclient);
@@ -246,7 +219,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     }
     lastLevel = scIndex;
 
-    code = rxs_Release(sc[scIndex]);
+    code = rxs_Release(sc);
     return code;
 }
 

@@ -39,23 +39,7 @@ pxclient_Initialize(int auth, afs_int32 serverAddr)
     }
     scIndex = 0;
     rx_SetRxDeadTime(50);
-    switch (scIndex) {
-    case 0:
-	sc = rxnull_NewClientSecurityObject();
-	break;
-
-#ifdef notdef			/* security */
-    case 1:
-	sc = rxvab_NewClientSecurityObject(&ttoken.sessionKey, ttoken.ticket,
-					   0);
-	break;
-
-    case 2:
-	sc = rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					   ttoken.kvno, ttoken.ticketLen,
-					   ttoken.ticket);
-#endif /* notdef */
-    }
+    sc = rxnull_NewClientSecurityObject();
     serverconns[0] =
 	rx_NewConnection(serverAddr, htons(7000), 1, sc, scIndex);
 

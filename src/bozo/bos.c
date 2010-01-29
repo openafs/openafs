@@ -160,9 +160,6 @@ DateOf(afs_int32 atime)
     return tbuffer;
 }
 
-/* global stuff from main for communicating with GetConn */
-static struct rx_securityClass *sc[3];
-static int scIndex;
 
 /* use the syntax descr to get a connection, authenticated appropriately.
  * aencrypt is set if we want to encrypt the data on the wire.
@@ -172,15 +169,15 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
 {
     struct hostent *th;
     char *hostname;
+    char *cellname = NULL;
+    const char *confdir;
     register afs_int32 code;
     register struct rx_connection *tconn;
     afs_int32 addr;
-    register struct afsconf_dir *tdir;
-    int encryptLevel;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    int localauth;
-    const char *confdir;
+    struct afsconf_dir *tdir = NULL;
+    afsconf_secflags secFlags;
+    struct rx_securityClass *sc;
+    int scIndex;
 
     hostname = as->parms[0].items->data;
     th = hostutil_GetHostByName(hostname);
@@ -190,94 +187,47 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     }
     memcpy(&addr, th->h_addr, sizeof(afs_int32));
 
-    /* Start with no authentication */
-    sc[0] = rxnull_NewClientSecurityObject();
-    sc[1] = 0;
-    sc[2] = 0;
-    scIndex = 0;
+    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
 
-    if (!as->parms[ADDPARMOFFSET + 1].items) {	/* not -noauth */
-        /* get tokens for making authenticated connections */
-        localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
-        confdir =
-            (localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
-        tdir = afsconf_Open(confdir);
-        if (tdir) {
-            struct afsconf_cell info;
-            char *tname;
+    if (as->parms[ADDPARMOFFSET + 2].items) { /* -localauth */
+	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
+	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+    } else {
+	confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+    }
 
-            if (as->parms[ADDPARMOFFSET].items)
-                tname = as->parms[ADDPARMOFFSET].items->data;
-            else
-                tname = NULL;
-            /* next call expands cell name abbrevs for us and handles looking up
-            * local cell */
-            code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
-            if (code) {
-                afs_com_err("bos", code, "(can't find cell '%s' in cell database)",
-                             (tname ? tname : "<default>"));
-                exit(1);
-            } else
-                strcpy(sname.cell, info.name);
-        } else {
-            printf("bos: can't open cell database (%s)\n", confdir);
-            exit(1);
-        }
-        sname.instance[0] = 0;
-        strcpy(sname.name, "afs");
-
-	if (as->parms[ADDPARMOFFSET + 2].items) {	/* -localauth */
-	    code = afsconf_GetLatestKey(tdir, 0, 0);
-	    if (code)
-		afs_com_err("bos", code, "(getting key from local KeyFile)");
-	    else {
-		if (aencrypt)
-		    code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-		else
-		    code = afsconf_ClientAuth(tdir, &sc[2], &scIndex);
-		if (code)
-		    afs_com_err("bos", code, "(calling ClientAuth)");
-		else if (scIndex != 2)	/* this shouldn't happen */
-		    sc[scIndex] = sc[2];
-	    }
-	} else {		/* not -localauth, check for tickets */
-	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	    if (code == 0) {
-		/* have tickets, will travel */
-		if (ttoken.kvno >= 0 && ttoken.kvno <= 256);
-		else {
-		    fprintf(stderr,
-			    "bos: funny kvno (%d) in ticket, proceeding\n",
-			    ttoken.kvno);
-		}
-		/* kerberos tix */
-		if (aencrypt)
-		    encryptLevel = rxkad_crypt;
-		else
-		    encryptLevel = rxkad_clear;
-		sc[2] = (struct rx_securityClass *)
-		    rxkad_NewClientSecurityObject(encryptLevel,
-						  &ttoken.sessionKey,
-						  ttoken.kvno,
-						  ttoken.ticketLen,
-						  ttoken.ticket);
-		scIndex = 2;
-	    } else
-		afs_com_err("bos", code, "(getting tickets)");
-	}
-	if ((scIndex == 0) || (sc[scIndex] == 0)) {
-	    fprintf(stderr, "bos: running unauthenticated\n");
-	    scIndex = 0;
+    if (as->parms[ADDPARMOFFSET + 1].items) { /* -noauth */
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
+    } else {
+	/* If we're running with -noauth, we don't need a configuration
+	 * directory */
+	tdir = afsconf_Open(confdir);
+	if (tdir == NULL) {
+	    printf("bos: can't open cell database (%s)\n", confdir);
+	    exit(1);
 	}
     }
+
+    if (as->parms[ADDPARMOFFSET].items) /* -cell */
+        cellname = as->parms[ADDPARMOFFSET].items->data;
+
+    code = afsconf_PickClientSecObj(tdir, secFlags, NULL, cellname,
+				    &sc, &scIndex, NULL);
+    if (code) {
+	afs_com_err("bos", code, "(configuring connection security)");
+	exit(1);
+    }
+
+    if (scIndex == 0)
+	fprintf(stderr, "bos: running unauthenticated\n");
+
     tconn =
-	rx_NewConnection(addr, htons(AFSCONF_NANNYPORT), 1, sc[scIndex],
-			 scIndex);
+	rx_NewConnection(addr, htons(AFSCONF_NANNYPORT), 1, sc, scIndex);
     if (!tconn) {
 	fprintf(stderr, "bos: could not create rx connection\n");
 	exit(1);
     }
-    rxs_Release(sc[scIndex]);
+    rxs_Release(sc);
 
     return tconn;
 }
