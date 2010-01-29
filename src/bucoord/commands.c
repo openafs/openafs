@@ -54,7 +54,6 @@ extern struct bc_config *bc_globalConfig;
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 extern struct ubik_client *cstruct;
 extern char *whoami;
-extern struct ktc_token ttoken;
 
 char *loadFile;
 extern afs_int32 lastTaskCode;
@@ -637,6 +636,23 @@ EvalVolumeSet1(struct bc_config *aconfig,
     return (0);
 }				/*EvalVolumeSet1 */
 
+char *
+compactTimeString(time_t *date, char *string, afs_int32 size)
+{
+    struct tm *ltime;
+
+    if (!string)
+	return NULL;
+
+    if (*date == NEVERDATE) {
+	sprintf(string, "NEVER");
+    } else {
+	ltime = localtime(date);
+	strftime(string, size, "%m/%d/%Y %H:%M", ltime);
+    }
+    return (string);
+}
+
 /* compactDateString
  *	print out a date in compact format, 16 chars, format is
  *	mm/dd/yyyy hh:mm
@@ -648,21 +664,10 @@ EvalVolumeSet1(struct bc_config *aconfig,
 char *
 compactDateString(afs_uint32 *date_long, char *string, afs_int32 size)
 {
-    struct tm *ltime;
-
-    if (!string)
-	return 0;
-
-    if (*date_long == NEVERDATE) {
-	sprintf(string, "NEVER");
-    } else {
-        time_t t = *date_long;
-	ltime = localtime(&t);
-	/* prints date in U.S. format of mm/dd/yyyy */
-	strftime(string, size, "%m/%d/%Y %H:%M", ltime);
-    }
-    return (string);
+    time_t t = *date_long;
+    return compactTimeString(&t, string, size);
 }
+
 
 afs_int32
 bc_SafeATOI(char *anum)
@@ -1018,11 +1023,11 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* Print token expiration time */
-	if ((ttoken.endTime > prevTime)
-	    && (ttoken.endTime <= youngest->scheduledDump) && as
-	    && (ttoken.endTime != NEVERDATE)) {
-	    if (ttoken.endTime > time(0)) {
-		compactDateString(&ttoken.endTime, ds, 50);
+	if ((tokenExpires > prevTime)
+	    && (tokenExpires <= youngest->scheduledDump) && as
+	    && (tokenExpires != NEVERDATE)) {
+	    if (tokenExpires > time(0)) {
+		compactTimeString(&tokenExpires, ds, 50);
 		printf("       %16s: TOKEN EXPIRATION\n", ds);
 	    } else {
 		printf("       TOKEN HAS EXPIRED\n");
@@ -1042,11 +1047,11 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
     }
 
     /* Print token expiration time if havn't already */
-    if ((ttoken.endTime == NEVERDATE) && as)
+    if ((tokenExpires == NEVERDATE) && as)
 	printf("     : TOKEN NEVER EXPIRES\n");
-    else if ((ttoken.endTime > prevTime) && as) {
-	if (ttoken.endTime > time(0)) {
-	    compactDateString(&ttoken.endTime, ds, 50);
+    else if ((tokenExpires > prevTime) && as) {
+	if (tokenExpires > time(0)) {
+	    compactTimeString(&tokenExpires, ds, 50);
 	    printf("       %16s: TOKEN EXPIRATION\n", ds);
 	} else {
 	    printf("     : TOKEN HAS EXPIRED\n");
@@ -1835,7 +1840,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 		strcat(statusPtr->cmdLine, " -n");
 
 	    printf("Add scheduled dump as job %d\n", statusPtr->jobNumber);
-	    if ((atTime > ttoken.endTime) && (ttoken.endTime != NEVERDATE))
+	    if ((atTime > tokenExpires) && (tokenExpires != NEVERDATE))
 		afs_com_err(whoami, 0,
 			"Warning: job %d starts after expiration of AFS token",
 			statusPtr->jobNumber);
@@ -2424,7 +2429,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 rcode = 0;
     afs_int32 groupId = 0, havegroupid, sflags, noexecute;
     struct cmd_item *ti;
-    afs_uint32 fromTime = 0, toTime = 0, havetime = 0;
+    afs_int32 fromTime = 0, toTime = 0, havetime = 0;
     char *timeString;
     budb_dumpsList dumps, flags;
     int i;

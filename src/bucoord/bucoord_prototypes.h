@@ -57,7 +57,6 @@ extern afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *,
 extern afs_int32 udbClientInit(int noAuthFlag, int localauth, char *cellName);
 struct ktc_token;
 extern int vldbClientInit(int noAuthFlag, int localauth, char *cellName,
-                          struct ubik_client **cstruct,
-                          struct ktc_token *ttoken);
+                          struct ubik_client **cstruct, time_t *expires);
 #endif
 

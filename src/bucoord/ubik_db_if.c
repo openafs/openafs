@@ -777,7 +777,7 @@ bc_CheckTextVersion(udbClientTextP ctPtr)
 int
 vldbClientInit(int noAuthFlag, int localauth, char *cellName, 
 	       struct ubik_client **cstruct, 
-	       struct ktc_token *ttoken)
+	       time_t *expires)
 {
     afs_int32 code = 0;
     struct afsconf_dir *acdir;
@@ -785,6 +785,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
     afs_int32 i, scIndex = 0;	/* Index of Rx security object - noauth */
     struct afsconf_cell info;
     struct ktc_principal sname;
+    struct ktc_token *ttoken = NULL;
     struct rx_connection *serverconns[VLDB_MAXSERVERS];
 
 
@@ -825,7 +826,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
     /*
      * Grab tickets if we care about authentication.
      */
-    ttoken->endTime = 0;
+    *expires = 0;
     if (localauth) {
 	code = afsconf_GetLatestKey(acdir, 0, 0);
 	if (code) {
@@ -838,7 +839,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 		ERROR(code);
 	    }
 
-	    ttoken->endTime = NEVERDATE;
+	    *expires = NEVERDATE;
 	}
     } else {
 	if (!noAuthFlag) {
@@ -856,7 +857,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 		    afs_com_err(whoami, 0,
 			    "Funny kvno (%d) in ticket, proceeding",
 			    ttoken->kvno);
-
+		*expires = ttoken->endTime;
 		scIndex = 2;
 	    }
 	}
