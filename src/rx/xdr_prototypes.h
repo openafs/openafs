@@ -66,6 +66,9 @@ extern void   xdr_free(xdrproc_t proc, void *obj);
 extern bool_t xdr_float(XDR * xdrs, float *fp);
 extern bool_t xdr_double(XDR * xdrs, double *dp);
 
+/* xdr_len.c */
+extern void xdrlen_create(XDR *xdrs);
+
 /* xdr_mem.c */
 extern void xdrmem_create(XDR * xdrs, caddr_t addr, u_int size,
 			  enum xdr_op op);
