@@ -5472,7 +5472,8 @@ rxi_CheckCall(register struct rx_call *call)
     }
     /* see if we have a non-activity timeout */
     if (call->startWait && conn->idleDeadTime
-	&& ((call->startWait + conn->idleDeadTime) < now)) {
+	&& ((call->startWait + conn->idleDeadTime) < now) &&
+	(call->flags & RX_CALL_READER_WAIT)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
 	    return -1;
