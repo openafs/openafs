@@ -43,21 +43,22 @@
  *
  */
 
-#include "xdr.h"
-#ifndef AFS_NT40_ENV
-#include <netinet/in.h>
-#else
+#include <string.h>
 #include <limits.h>
+#ifndef AFS_NT40_ENV
+# include <netinet/in.h>
 #endif
 
-static bool_t xdrmem_getint32();
-static bool_t xdrmem_putint32();
-static bool_t xdrmem_getbytes();
-static bool_t xdrmem_putbytes();
-static u_int xdrmem_getpos();
-static bool_t xdrmem_setpos();
-static afs_int32 *xdrmem_inline();
-static void xdrmem_destroy();
+#include "xdr.h"
+
+static bool_t xdrmem_getint32(AFS_XDRS_T, afs_int32 *);
+static bool_t xdrmem_putint32(AFS_XDRS_T, afs_int32 *);
+static bool_t xdrmem_getbytes(AFS_XDRS_T, caddr_t, u_int);
+static bool_t xdrmem_putbytes(AFS_XDRS_T, caddr_t, u_int);
+static u_int xdrmem_getpos(AFS_XDRS_T);
+static bool_t xdrmem_setpos(AFS_XDRS_T, u_int);
+static afs_int32 *xdrmem_inline(AFS_XDRS_T, u_int);
+static void xdrmem_destroy(AFS_XDRS_T);
 
 static struct xdr_ops xdrmem_ops = {
 #ifdef AFS_NT40_ENV
@@ -75,8 +76,8 @@ static struct xdr_ops xdrmem_ops = {
     .x_putint32 = xdrmem_putint32,
     .x_getbytes = xdrmem_getbytes,
     .x_putbytes = xdrmem_putbytes,
-    .x_getpos = xdrmem_getpos,
-    .x_setpos = xdrmem_setpos,
+    .x_getpostn = xdrmem_getpos,
+    .x_setpostn = xdrmem_setpos,
     .x_inline = xdrmem_inline,
     .x_destroy = xdrmem_destroy
 #endif
@@ -96,13 +97,15 @@ xdrmem_create(XDR * xdrs, caddr_t addr, u_int size, enum xdr_op op)
 }
 
 static void
-xdrmem_destroy(void)
+xdrmem_destroy(AFS_XDRS_T axdrs)
 {
 }
 
 static bool_t
-xdrmem_getint32(XDR * xdrs, afs_int32 * lp)
+xdrmem_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
     else
@@ -113,8 +116,10 @@ xdrmem_getint32(XDR * xdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrmem_putint32(XDR * xdrs, afs_int32 * lp)
+xdrmem_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
     else
@@ -125,8 +130,10 @@ xdrmem_putint32(XDR * xdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrmem_getbytes(XDR * xdrs, caddr_t addr, u_int len)
+xdrmem_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     if (xdrs->x_handy < len)
 	return (FALSE);
     else
@@ -137,8 +144,10 @@ xdrmem_getbytes(XDR * xdrs, caddr_t addr, u_int len)
 }
 
 static bool_t
-xdrmem_putbytes(XDR * xdrs, caddr_t addr, u_int len)
+xdrmem_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     if (xdrs->x_handy < len)
 	return (FALSE);
     else
@@ -149,14 +158,18 @@ xdrmem_putbytes(XDR * xdrs, caddr_t addr, u_int len)
 }
 
 static u_int
-xdrmem_getpos(XDR * xdrs)
+xdrmem_getpos(AFS_XDRS_T axdrs)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     return ((u_int)(xdrs->x_private - xdrs->x_base));
 }
 
 static bool_t
-xdrmem_setpos(XDR * xdrs, u_int pos)
+xdrmem_setpos(AFS_XDRS_T axdrs, u_int pos)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     caddr_t newaddr = xdrs->x_base + pos;
     caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
 
@@ -168,8 +181,10 @@ xdrmem_setpos(XDR * xdrs, u_int pos)
 }
 
 static afs_int32 *
-xdrmem_inline(XDR * xdrs, int len)
+xdrmem_inline(AFS_XDRS_T axdrs, u_int len)
 {
+    XDR * xdrs = (XDR *)axdrs;
+
     afs_int32 *buf = 0;
 
     if (len >= 0 && xdrs->x_handy >= len) {

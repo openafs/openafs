@@ -55,6 +55,35 @@
 #endif /* !TRUE */
 #define __dontcare__	-1
 
+#if defined(KERNEL)
+/*
+ * kernel version needs to agree with <rpc/xdr.h>
+ * except on Linux which does XDR differently from everyone else
+ */
+# if defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
+#  define AFS_XDRS_T void *
+# else
+#  define AFS_XDRS_T XDR *
+# endif
+# if defined(AFS_SUN57_ENV)
+#  define AFS_RPC_INLINE_T rpc_inline_t
+# elif defined(AFS_DUX40_ENV)
+#  define AFS_RPC_INLINE_T int
+# elif defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
+#  define AFS_RPC_INLINE_T afs_int32
+# elif defined(AFS_LINUX20_ENV)
+#  define AFS_RPC_INLINE_T int32_t *
+# else
+#  define AFS_RPC_INLINE_T long
+# endif
+#else /* KERNEL */
+/*
+ * user version needs to agree with "xdr.h", i.e. <rx/xdr.h>
+ */
+#  define AFS_XDRS_T void *
+#  define AFS_RPC_INLINE_T afs_int32
+#endif /* KERNEL */
+
 #ifndef mem_alloc
 #define mem_alloc(bsize)	malloc(bsize)
 #endif
@@ -91,6 +120,7 @@
 #define xdr_int64 afs_xdr_int64
 #define xdr_uint64 afs_xdr_uint64
 #define xdr_pointer afs_xdr_pointer
+#define xdrmem_create afs_xdrmem_create
 #endif
 
 #ifdef	KERNEL
