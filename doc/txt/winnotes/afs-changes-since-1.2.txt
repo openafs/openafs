@@ -1,3 +1,18 @@
+Since 1.5.70
+
+ * Avoid a potential Freelance deadlock during initial execution 
+   of afsd_service.exe if the old ini file data has to be
+   imported.
+
+ * Three rx library corrections.  (1) Idle data connection
+   processing could timeout if the send window filled and
+   took longer than the idle data timeout period for the
+   transmit window to re-open.  (2) The transmit queue
+   could be emptied prematurely.  A required check for the
+   queue being in use was forgotten.  (3) The function that
+   is supposed to implement a wait for the transmit queue
+   to cease being busy failed to wait.
+
 Since 1.5.69
  * Restore use of DNS AFSDB and SRV records which were
    unintentionally disabled in 1.5.69
