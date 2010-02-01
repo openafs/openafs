@@ -3881,7 +3881,7 @@ DECL_PIOCTL(PNewUuid)
     if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
 	return EACCES;
 
     ObtainWriteLock(&afs_xinterface, 555);
