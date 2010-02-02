@@ -95,7 +95,7 @@ VolSetIdsTypes(), VolSetDate(), VolSetFlags();
 
 /* this call unlocks all of the partition locks we've set */
 int 
-VPFullUnlock()
+VPFullUnlock_r(void)
 {
     register struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
@@ -105,6 +105,16 @@ VPFullUnlock()
 	}
     }
     return 0;
+}
+
+int
+VPFullUnlock(void)
+{
+    int code;
+    VOL_LOCK;
+    code = VPFullUnlock_r();
+    VOL_UNLOCK;
+    return code;
 }
 
 /* get partition id from a name */
