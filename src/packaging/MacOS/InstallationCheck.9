@@ -2,7 +2,6 @@
 majorvers=`uname -r | sed 's/\..*//'`
 echo "InstallationCheck: os release is $majorvers"
 if [ $majorvers -ne 9 ]; then
-echo "InstallationCheck: not ok"
 	exit 112
 fi
 
@@ -18,5 +17,4 @@ if [ -e $tmpcellalias ]; then
     mv -f $tmpcellalias $tmpcellalias.$date
 fi
 
-echo "InstallationCheck: ok"
 exit 0
