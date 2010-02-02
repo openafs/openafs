@@ -594,6 +594,12 @@ xdr_free(xdrproc_t proc, void *obj)
     XDR x;
 
     x.x_op = XDR_FREE;
+
+    /* See note in xdr.h for the method behind this madness */
+#if defined(AFS_I386_LINUX26_ENV) && defined(KERNEL) && !defined(UKERNEL)
+    (*proc)(&x, obj, 0);
+#else
     (*proc)(&x, obj);
+#endif
 }
 #endif /* NeXT */

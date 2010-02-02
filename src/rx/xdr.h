@@ -174,8 +174,17 @@ enum xdr_op {
  * allocate dynamic storage of the appropriate size and return it.
  * bool_t	(*xdrproc_t)(XDR *, caddr_t *);
  */
-typedef bool_t(*xdrproc_t) (void *, ...);
 
+/* We need a different prototype for i386 Linux kernel code, because it 
+ * uses a register (rather than stack) based calling convention. The
+ * normal va_args prototype results in the arguments being placed on the
+ * stack, where they aren't accessible to the 'real' function.
+ */
+#if defined(AFS_I386_LINUX26_ENV) && defined(KERNEL) && !defined(UKERNEL)
+typedef bool_t(*xdrproc_t) (void *, caddr_t, u_int);
+#else
+typedef bool_t(*xdrproc_t) (void *, ...);
+#endif
 
 /*
  * The XDR handle.
