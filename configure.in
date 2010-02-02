@@ -108,7 +108,6 @@ src/lwp/test/Makefile \
 src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
-src/packaging/Debian/rules \
 src/packaging/MacOS/OpenAFS-debug.Description.plist \
 src/packaging/MacOS/OpenAFS-debug.Info.plist \
 src/packaging/MacOS/OpenAFS.Description.plist \
