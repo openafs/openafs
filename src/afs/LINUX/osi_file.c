@@ -61,7 +61,7 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
 #endif
     if (IS_ERR(filp))
 #if defined(LINUX_USE_FH)
-	osi_Panic("Can't open file: %d\n", PTR_ERR(filp));
+	osi_Panic("Can't open file: %d\n", (int) PTR_ERR(filp));
 #else
 	osi_Panic("Can't open inode %d\n", (int) ainode->ufs);
 #endif
