@@ -210,9 +210,10 @@ if [ $secondpass = yes ]; then
 	mkdir $DPKGRES
 	cp License.rtf $DPKGRES
 	cp InstallationCheck.$majorvers $DPKGRES/InstallationCheck
-	mkdir -p $DPKGRES/English.lproj
-	cp InstallationCheck.$majorvers $DPKGRES/English.lproj/InstallationCheck
 	chmod a+x $DPKGRES/InstallationCheck
+	mkdir -p $DPKGRES/English.lproj
+	cp InstallationCheck.strings.$majorvers \
+		$DPKGRES/English.lproj/InstallationCheck.strings
 	cp background.jpg $DPKGRES/background.jpg
 	chown -R root${SEP}wheel $DPKGRES
 	rm -rf $CURDIR/OpenAFS-debug-extension.pkg
@@ -231,7 +232,7 @@ if [ $secondpass = yes ]; then
 	if [ $majorvers -ge 8 ]; then
 	    cp InstallationCheck.$majorvers $PKGRES/InstallationCheck
 	    mkdir -p $PKGRES/English.lproj
-	    cp InstallationCheck.$majorvers $PKGRES/English.lproj/InstallationCheck
+	    cp InstallationCheck.strings.$majorvers $PKGRES/English.lproj/InstallationCheck.strings
 	    chmod a+x $PKGRES/InstallationCheck
 	fi
 	chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade
