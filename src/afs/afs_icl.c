@@ -32,20 +32,14 @@
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
 
-#if defined(AFS_SGI61_ENV)
-/* For SGI 6.2, this can is changed to 1 if it's a 32 bit kernel. */
-#if defined(AFS_SGI62_ENV) && !defined(_K64U64)
-int afs_icl_sizeofLong = 1;
+/* Matches below where ICL_APPENDLONG is 2 INT32s */
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
+#define ICL_LONG 2
 #else
-int afs_icl_sizeofLong = 2;
-#endif /* SGI62 */
-#else
-#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
-int afs_icl_sizeofLong = 2;
-#else
-int afs_icl_sizeofLong = 1;
+#define ICL_LONG 1
 #endif
-#endif
+
+int afs_icl_sizeofLong = ICL_LONG;
 
 int afs_icl_inited = 0;
 
@@ -540,7 +534,7 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
         (lp)->logElements++; \
     MACRO_END
 
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
+#if ICL_LONG == 2
 #define ICL_APPENDLONG(lp, x) \
     MACRO_BEGIN \
 	ICL_APPENDINT32((lp), ((x) >> 32) & 0xffffffffL); \
@@ -600,7 +594,7 @@ afs_icl_AppendOne(struct afs_icl_log *logp, int type, long parm)
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[3]);
 	}
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if ICL_LONG == 2
 	else if (type == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) parm);
 #endif
