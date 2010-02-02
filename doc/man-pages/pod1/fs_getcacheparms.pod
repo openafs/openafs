@@ -7,9 +7,9 @@ fs_getcacheparms - Displays the current size and usage of the cache
 =for html
 <div class="synopsis">
 
-B<fs getcacheparms> [B<-help>]
+B<fs getcacheparms> [B<-help>] [B<-files>] [B<-excessive>]
 
-B<fs getca> [B<-h>]
+B<fs getca> [B<-h>] [B<-files>] [B<-excessive>]
 
 =for html
 </div>
@@ -33,6 +33,16 @@ been used to alter cache size.
 Prints the online help for this command. All other valid options are
 ignored.
 
+=item B<-files>
+
+Displays the current number of cache files in use, and the maximum
+available, as well as displaying the current cache size.
+
+=item B<-excessive>
+
+Displays detailed cache statistics, including the flags set on each
+cache element, and the distribution of cache entries by size.
+
 =back
 
 =head1 OUTPUT
@@ -51,6 +61,33 @@ cache.
 
    % fs getcacheparms
    AFS using 22876 of the cache's available 25000 1K byte blocks.
+
+The following shows the output when asked to show file information.
+
+   % fs getcacheparm -files
+   AFS using     0% of cache blocks (897 of 200000 1k blocks)
+                 1% of the cache files (79 of 6250 files)
+
+And finally, the following detailed information can be obtained by using
+the excessive flag 
+
+   % fs getcacheparm -excessive
+   AFS using     0% of cache blocks (897 of 200000 1k blocks)
+                 1% of the cache files (79 of 6250 files)
+           afs_cacheFiles:       6250
+           IFFree:               6171
+           IFEverUsed:             79
+           IFDataMod:               0
+           IFDirtyPages:            0
+           IFAnyPages:              0
+           IFDiscarded:             1
+           DCentries:        3122
+            0k-   4K:         74
+            4k-  16k:       3045
+           16k-  64k:          2
+           64k- 256k:          0
+          256k-   1M:          1
+                >=1M:          0
 
 =head1 PRIVILEGE REQUIRED
 
