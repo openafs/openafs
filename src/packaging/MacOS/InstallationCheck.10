@@ -1,6 +1,5 @@
 #!/bin/sh
 majorvers=`uname -r | sed 's/\..*//'`
-echo "InstallationCheck: os release is $majorvers"
 if [ $majorvers -ne 10 ]; then
 	exit 112
 fi
