@@ -188,6 +188,9 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "viceinode.h"
 #include "salvage.h"
 #include "volinodes.h"		/* header magic number, etc. stuff */
+#include <afs/acl.h>
+#include <afs/prs_fs.h>
+
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -3459,6 +3462,372 @@ SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
     return;
 }
 
+/**
+ * Get a new FID that can be used to create a new file.
+ *
+ * @param[in] volHeader vol header for the volume
+ * @param[in] class     what type of vnode we'll be creating (vLarge or vSmall)
+ * @param[out] afid     the FID that we can use (only Vnode and Unique are set)
+ * @param[inout] maxunique  max uniquifier for all vnodes in the volume;
+ *                          updated to the new max unique if we create a new
+ *                          vnode
+ */
+static void
+GetNewFID(VolumeDiskData *volHeader, VnodeClass class, AFSFid *afid,
+          Unique *maxunique)
+{
+    int i;
+    for (i = 0; i < vnodeInfo[class].nVnodes; i++) {
+	if (vnodeInfo[class].vnodes[i].type == vNull) {
+	    break;
+	}
+    }
+    if (i == vnodeInfo[class].nVnodes) {
+	/* no free vnodes; make a new one */
+	vnodeInfo[class].nVnodes++;
+	vnodeInfo[class].vnodes = realloc(vnodeInfo[class].vnodes,
+	                                  sizeof(struct VnodeEssence) * (i+1));
+	vnodeInfo[class].vnodes[i].type = vNull;
+    }
+
+    afid->Vnode = bitNumberToVnodeNumber(i, class);
+
+    if (volHeader->uniquifier < (*maxunique + 1)) {
+	/* header uniq is bad; it will get bumped by 2000 later */
+	afid->Unique = *maxunique + 1 + 2000;
+	(*maxunique)++;
+    } else {
+	/* header uniq seems okay; just use that */
+	afid->Unique = *maxunique = volHeader->uniquifier++;
+    }
+}
+
+/**
+ * Create a vnode for a README file explaining not to use a recreated-root vol.
+ *
+ * @param[in] volHeader vol header for the volume
+ * @param[in] alinkH    ihandle for i/o for the volume
+ * @param[in] vid       volume id
+ * @param[inout] maxunique  max uniquifier for all vnodes in the volume;
+ *                          updated to the new max unique if we create a new
+ *                          vnode
+ * @param[out] afid     FID for the new readme vnode
+ * @param[out] ainode   the inode for the new readme file
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval -1 error
+ */
+static int
+CreateReadme(VolumeDiskData *volHeader, IHandle_t *alinkH,
+             VolumeId vid, Unique *maxunique, AFSFid *afid, Inode *ainode)
+{
+    Inode readmeinode;
+    struct VnodeDiskObject *rvnode = NULL;
+    afs_sfsize_t bytes;
+    IHandle_t *readmeH = NULL;
+    struct VnodeEssence *vep;
+    afs_fsize_t length;
+    time_t now = time(NULL);
+
+    /* Try to make the note brief, but informative. Only administrators should
+     * be able to read this file at first, so we can hopefully assume they
+     * know what AFS is, what a volume is, etc. */
+    char readme[] =
+"This volume has been salvaged, but has lost its original root directory.\n"
+"The root directory that exists now has been recreated from orphan files\n"
+"from the rest of the volume. This recreated root directory may interfere\n"
+"with old cached data on clients, and there is no way the salvager can\n"
+"reasonably prevent that. So, it is recommended that you do not continue to\n"
+"use this volume, but only copy the salvaged data to a new volume.\n"
+"Continuing to use this volume as it exists now may cause some clients to\n"
+"behave oddly when accessing this volume.\n"
+"\n\t -- Your friendly neighborhood OpenAFS salvager\n";
+    /* ^ the person reading this probably just lost some data, so they could
+     * use some cheering up. */
+
+    /* -1 for the trailing NUL */
+    length = sizeof(readme) - 1;
+
+    GetNewFID(volHeader, vSmall, afid, maxunique);
+
+    vep = &vnodeInfo[vSmall].vnodes[vnodeIdToBitNumber(afid->Vnode)];
+
+    /* create the inode and write the contents */
+    readmeinode = IH_CREATE(alinkH, fileSysDevice, fileSysPath, 0, vid,
+                            afid->Vnode, afid->Unique, 1);
+    if (!VALID_INO(readmeinode)) {
+	Log("CreateReadme: readme IH_CREATE failed\n");
+	goto error;
+    }
+
+    IH_INIT(readmeH, fileSysDevice, vid, readmeinode);
+    bytes = IH_IWRITE(readmeH, 0, readme, length);
+    IH_RELEASE(readmeH);
+
+    if (bytes != length) {
+	Log("CreateReadme: IWRITE failed (%d/%d)\n", (int)bytes,
+	    (int)sizeof(readme));
+	goto error;
+    }
+
+    /* create the vnode and write it out */
+    rvnode = malloc(SIZEOF_SMALLDISKVNODE);
+    if (!rvnode) {
+	Log("CreateRootDir: error alloc'ing memory\n");
+	goto error;
+    }
+
+    rvnode->type = vFile;
+    rvnode->cloned = 0;
+    rvnode->modeBits = 0777;
+    rvnode->linkCount = 1;
+    VNDISK_SET_LEN(rvnode, length);
+    rvnode->uniquifier = afid->Unique;
+    rvnode->dataVersion = 1;
+    VNDISK_SET_INO(rvnode, readmeinode);
+    rvnode->unixModifyTime = rvnode->serverModifyTime = now;
+    rvnode->author = 0;
+    rvnode->owner = 0;
+    rvnode->parent = 1;
+    rvnode->group = 0;
+    rvnode->vnodeMagic = VnodeClassInfo[vSmall].magic;
+
+    bytes = IH_IWRITE(vnodeInfo[vSmall].handle,
+                      vnodeIndexOffset(&VnodeClassInfo[vSmall], afid->Vnode),
+                      (char*)rvnode, SIZEOF_SMALLDISKVNODE);
+
+    if (bytes != SIZEOF_SMALLDISKVNODE) {
+	Log("CreateReadme: IH_IWRITE failed (%d/%d)\n", (int)bytes,
+	    (int)SIZEOF_SMALLDISKVNODE);
+	goto error;
+    }
+
+    /* update VnodeEssence for new readme vnode */
+    vnodeInfo[vSmall].nAllocatedVnodes++;
+    vep->count = 0;
+    vep->blockCount = nBlocks(length);
+    vnodeInfo[vSmall].volumeBlockCount += vep->blockCount;
+    vep->parent = rvnode->parent;
+    vep->unique = rvnode->uniquifier;
+    vep->modeBits = rvnode->modeBits;
+    vep->InodeNumber = VNDISK_GET_INO(rvnode);
+    vep->type = rvnode->type;
+    vep->author = rvnode->author;
+    vep->owner = rvnode->owner;
+    vep->group = rvnode->group;
+
+    free(rvnode);
+    rvnode = NULL;
+
+    vep->claimed = 1;
+    vep->changed = 0;
+    vep->salvaged = 1;
+    vep->todelete = 0;
+
+    *ainode = readmeinode;
+
+    return 0;
+
+ error:
+    if (IH_DEC(alinkH, readmeinode, vid)) {
+	Log("CreateReadme (recovery): IH_DEC failed\n");
+    }
+
+    if (rvnode) {
+	free(rvnode);
+	rvnode = NULL;
+    }
+
+    return -1;
+}
+
+/**
+ * create a root dir for a volume that lacks one.
+ *
+ * @param[in] volHeader vol header for the volume
+ * @param[in] alinkH    ihandle for disk access for this volume group
+ * @param[in] vid       volume id we're dealing with
+ * @param[out] rootdir  populated with info about the new root dir
+ * @param[inout] maxunique  max uniquifier for all vnodes in the volume;
+ *                          updated to the new max unique if we create a new
+ *                          vnode
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 error
+ */
+static int
+CreateRootDir(VolumeDiskData *volHeader, IHandle_t *alinkH, VolumeId vid,
+              struct DirSummary *rootdir, Unique *maxunique)
+{
+    FileVersion dv;
+    int decroot = 0, decreadme = 0;
+    AFSFid did, readmeid;
+    afs_fsize_t length;
+    Inode rootinode;
+    struct VnodeDiskObject *rootvnode = NULL;
+    struct acl_accessList *ACL;
+    Inode *ip;
+    afs_sfsize_t bytes;
+    struct VnodeEssence *vep;
+    Inode readmeinode;
+    time_t now = time(NULL);
+
+    if (!vnodeInfo[vLarge].vnodes && !vnodeInfo[vSmall].vnodes) {
+	Log("Not creating new root dir; volume appears to lack any vnodes\n");
+	goto error;
+    }
+
+    if (!vnodeInfo[vLarge].vnodes) {
+	/* We don't have any large vnodes in the volume; allocate room
+	 * for one so we can recreate the root dir */
+	vnodeInfo[vLarge].nVnodes = 1;
+	vnodeInfo[vLarge].vnodes = calloc(1, sizeof(struct VnodeEssence));
+	vnodeInfo[vLarge].inodes = calloc(1, sizeof(Inode));
+
+	assert(vnodeInfo[vLarge].vnodes);
+	assert(vnodeInfo[vLarge].inodes);
+    }
+
+    vep = &vnodeInfo[vLarge].vnodes[vnodeIdToBitNumber(1)];
+    ip = &vnodeInfo[vLarge].inodes[vnodeIdToBitNumber(1)];
+    if (vep->type != vNull) {
+	Log("Not creating new root dir; existing vnode 1 is non-null\n");
+	goto error;
+    }
+
+    if (CreateReadme(volHeader, alinkH, vid, maxunique, &readmeid, &readmeinode)) {
+	goto error;
+    }
+    decreadme = 1;
+
+    /* set the DV to a very high number, so it is unlikely that we collide
+     * with a cached DV */
+    dv = 1 << 30;
+
+    rootinode = IH_CREATE(alinkH, fileSysDevice, fileSysPath, 0, vid, 1, 1, dv);
+    if (!VALID_INO(rootinode)) {
+	Log("CreateRootDir: IH_CREATE failed\n");
+	goto error;
+    }
+    decroot = 1;
+
+    SetSalvageDirHandle(&rootdir->dirHandle, vid, fileSysDevice, rootinode);
+    did.Volume = vid;
+    did.Vnode = 1;
+    did.Unique = 1;
+    if (MakeDir(&rootdir->dirHandle, (afs_int32*)&did, (afs_int32*)&did)) {
+	Log("CreateRootDir: MakeDir failed\n");
+	goto error;
+    }
+    if (Create(&rootdir->dirHandle, "README.ROOTDIR", &readmeid)) {
+	Log("CreateRootDir: Create failed\n");
+	goto error;
+    }
+    DFlush();
+    length = Length(&rootdir->dirHandle);
+    DZap((void *)&rootdir->dirHandle);
+
+    /* create the new root dir vnode */
+    rootvnode = malloc(SIZEOF_LARGEDISKVNODE);
+    if (!rootvnode) {
+	Log("CreateRootDir: malloc failed\n");
+	goto error;
+    }
+
+    /* only give 'rl' permissions to 'system:administrators'. We do this to
+     * try to catch the attention of an administrator, that they should not
+     * be writing to this directory or continue to use it. */
+    ACL = VVnodeDiskACL(rootvnode);
+    ACL->size = sizeof(struct acl_accessList);
+    ACL->version = ACL_ACLVERSION;
+    ACL->total = 1;
+    ACL->positive = 1;
+    ACL->negative = 0;
+    ACL->entries[0].id = -204; /* system:administrators */
+    ACL->entries[0].rights = PRSFS_READ | PRSFS_LOOKUP;
+
+    rootvnode->type = vDirectory;
+    rootvnode->cloned = 0;
+    rootvnode->modeBits = 0777;
+    rootvnode->linkCount = 2;
+    VNDISK_SET_LEN(rootvnode, length);
+    rootvnode->uniquifier = 1;
+    rootvnode->dataVersion = dv;
+    VNDISK_SET_INO(rootvnode, rootinode);
+    rootvnode->unixModifyTime = rootvnode->serverModifyTime = now;
+    rootvnode->author = 0;
+    rootvnode->owner = 0;
+    rootvnode->parent = 0;
+    rootvnode->group = 0;
+    rootvnode->vnodeMagic = VnodeClassInfo[vLarge].magic;
+
+    /* write it out to disk */
+    bytes = IH_IWRITE(vnodeInfo[vLarge].handle,
+	      vnodeIndexOffset(&VnodeClassInfo[vLarge], 1),
+	      (char*)rootvnode, SIZEOF_LARGEDISKVNODE);
+
+    if (bytes != SIZEOF_LARGEDISKVNODE) {
+	/* just cast to int and don't worry about printing real 64-bit ints;
+	 * a large disk vnode isn't anywhere near the 32-bit limit */
+	Log("CreateRootDir: IH_IWRITE failed (%d/%d)\n", (int)bytes,
+	    (int)SIZEOF_LARGEDISKVNODE);
+	goto error;
+    }
+
+    /* update VnodeEssence for the new root vnode */
+    vnodeInfo[vLarge].nAllocatedVnodes++;
+    vep->count = 0;
+    vep->blockCount = nBlocks(length);
+    vnodeInfo[vLarge].volumeBlockCount += vep->blockCount;
+    vep->parent = rootvnode->parent;
+    vep->unique = rootvnode->uniquifier;
+    vep->modeBits = rootvnode->modeBits;
+    vep->InodeNumber = VNDISK_GET_INO(rootvnode);
+    vep->type = rootvnode->type;
+    vep->author = rootvnode->author;
+    vep->owner = rootvnode->owner;
+    vep->group = rootvnode->group;
+
+    free(rootvnode);
+    rootvnode = NULL;
+
+    vep->claimed = 0;
+    vep->changed = 0;
+    vep->salvaged = 1;
+    vep->todelete = 0;
+
+    /* update DirSummary for the new root vnode */
+    rootdir->vnodeNumber = 1;
+    rootdir->unique = 1;
+    rootdir->haveDot = 1;
+    rootdir->haveDotDot = 1;
+    rootdir->rwVid = vid;
+    rootdir->copied = 0;
+    rootdir->parent = 0;
+    rootdir->name = strdup(".");
+    rootdir->vname = volHeader->name;
+    rootdir->ds_linkH = alinkH;
+
+    *ip = rootinode;
+
+    return 0;
+
+ error:
+    if (decroot && IH_DEC(alinkH, rootinode, vid)) {
+	Log("CreateRootDir (recovery): IH_DEC (root) failed\n");
+    }
+    if (decreadme && IH_DEC(alinkH, readmeinode, vid)) {
+	Log("CreateRootDir (recovery): IH_DEC (readme) failed\n");
+    }
+    if (rootvnode) {
+	free(rootvnode);
+	rootvnode = NULL;
+    }
+    return -1;
+}
+
 int
 SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 {
@@ -3482,6 +3851,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
     VnodeId LFVnode, ThisVnode;
     Unique LFUnique, ThisUnique;
     char npath[128];
+    int newrootdir = 0;
 
     vid = rwIsp->volSummary->header.id;
     IH_INIT(h, fileSysDevice, vid, rwIsp->volSummary->header.volumeInfo);
@@ -3511,6 +3881,18 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	return 0;
     }
 
+    if (!rootdirfound && (orphans == ORPH_ATTACH) && !Testing) {
+
+	Log("Cannot find root directory for volume %u; attempting to create "
+	    "a new one\n", vid);
+
+	code = CreateRootDir(&volHeader, alinkH, vid, &rootdir, &maxunique);
+	if (code == 0) {
+	    rootdirfound = 1;
+	    newrootdir = 1;
+	}
+    }
+
     /* Parse each vnode looking for orphaned vnodes and
      * connect them to the tree as orphaned (if requested).
      */
@@ -3532,8 +3914,20 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	     */
 	    if (class == vLarge) {	/* directory vnode */
 		pv = vnodeIdToBitNumber(vep->parent);
-		if (vnodeInfo[vLarge].vnodes[pv].unique != 0)
-		    vnodeInfo[vLarge].vnodes[pv].count++;
+		if (vnodeInfo[vLarge].vnodes[pv].unique != 0) {
+		    if (vep->parent == 1 && newrootdir) {
+			/* this vnode's parent was the volume root, and
+			 * we just created the volume root. So, the parent
+			 * dir didn't exist during JudgeEntry, so the link
+			 * count was not inc'd there, so don't dec it here.
+			 */
+
+			 /* noop */
+
+		    } else {
+			vnodeInfo[vLarge].vnodes[pv].count++;
+		    }
+		}
 	    }
 
 	    if (!rootdirfound)
@@ -3729,6 +4123,12 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	 * cached vnodes that have since been deleted
 	 */
 	volHeader.uniquifier = (maxunique + 1 + 2000);
+    }
+
+    if (newrootdir) {
+	Log("*** WARNING: Root directory recreated, but volume is fragile! "
+	    "Only use this salvaged volume to copy data to another volume; "
+	    "do not continue to use this volume (%u) as-is.\n", vid);
     }
 
     /* Turn off the inUse bit; the volume's been salvaged! */
