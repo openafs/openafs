@@ -282,7 +282,7 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 
 #undef ADDBUF
 
-    osi_Panic(buf);
+    osi_Panic("%s", buf);
 }
 #else
 void
