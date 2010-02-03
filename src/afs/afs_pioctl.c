@@ -38,24 +38,185 @@ afs_int32 afs_is_discon_rw;
 afs_int32 afs_in_sync = 0;
 #endif
 
+struct afs_pdata {
+    char *ptr;
+    size_t remaining;
+};
+
+/*
+ * A set of handy little functions for encoding and decoding
+ * pioctls without losing your marbles, or memory integrity
+ */
+
+static_inline int
+afs_pd_alloc(struct afs_pdata *apd, size_t size) {
+
+    if (size > AFS_LRALLOCSIZ)
+	apd->ptr = osi_Alloc(size + 1);
+    else
+	apd->ptr = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+
+    if (apd->ptr == NULL)
+	return ENOMEM;
+
+    apd->remaining = size;
+
+    return 0;
+}
+
+static_inline void
+afs_pd_free(struct afs_pdata *apd) {
+    if (apd->ptr == NULL)
+	return;
+
+    if (apd->remaining > AFS_LRALLOCSIZ)
+	osi_Free(apd->ptr, apd->remaining + 1);
+    else
+	osi_FreeLargeSpace(apd->ptr);
+
+    apd->ptr = NULL;
+    apd->remaining = 0;
+}
+
+static_inline char *
+afs_pd_where(struct afs_pdata *apd) {
+    return apd ? apd->ptr : NULL;
+}
+
+static_inline size_t
+afs_pd_remaining(struct afs_pdata *apd) {
+    return apd ? apd->remaining : 0;
+}
+
+static_inline int
+afs_pd_skip(struct afs_pdata *apd, size_t skip) {
+    if (apd == NULL || apd->remaining < skip)
+	return EINVAL;
+    apd->remaining -= skip;
+    apd->ptr += skip;
+
+    return 0;
+}
+
+static_inline int
+afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val) {
+    if (apd == NULL || apd->remaining < sizeof(afs_int32))
+	return EINVAL;
+    apd->remaining -= sizeof(afs_int32);
+    *val = *(afs_int32 *)apd->ptr;
+    apd->ptr += sizeof(afs_int32);
+    return 0;
+}
+
+static_inline int
+afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val) {
+    return afs_pd_getInt(apd, (afs_int32 *)val);
+}
+
+static_inline int
+afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes) {
+    if (apd == NULL || apd->remaining < bytes)
+	return EINVAL;
+    apd->remaining -= bytes;
+    memcpy(dest, apd->ptr, bytes);
+    apd->ptr += bytes;
+    return 0;
+}
+
+static_inline void *
+afs_pd_inline(struct afs_pdata *apd, size_t bytes) {
+    void *ret;
+
+    if (apd == NULL || apd->remaining < bytes)
+	return NULL;
+
+    ret = apd->ptr;
+
+    apd->remaining -= bytes;
+    apd->ptr += bytes;
+
+    return ret;
+}
+
+static_inline int
+afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen) {
+    size_t len;
+
+    if (apd == NULL || apd->remaining <= 0)
+	return EINVAL;
+    len = strlen(apd->ptr) + 1;
+    if (len > maxLen)
+	return E2BIG;
+    memcpy(str, apd->ptr, len);
+    apd->ptr += len;
+    apd->remaining -= len;
+    return 0;
+}
+
+static_inline int
+afs_pd_getStringPtr(struct afs_pdata *apd, char **str) {
+    size_t len;
+
+    if (apd == NULL || apd->remaining <= 0)
+	return EINVAL;
+    len = strlen(apd->ptr) + 1;
+    *str = apd->ptr;
+    apd->ptr += len;
+    apd->remaining -= len;
+    return 0;
+}
+
+static_inline int
+afs_pd_putInt(struct afs_pdata *apd, afs_int32 val) {
+    if (apd == NULL || apd->remaining < sizeof(afs_int32))
+	return E2BIG;
+    *(afs_int32 *)apd->ptr = val;
+    apd->ptr += sizeof(afs_int32);
+    apd->remaining -= sizeof(afs_int32);
+
+    return 0;
+}
+
+static_inline int
+afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len) {
+    if (apd == NULL || apd->remaining < len)
+	return E2BIG;
+    memcpy(apd->ptr, bytes, len);
+    apd->ptr += len;
+    apd->remaining -= len;
+    return 0;
+}
+
+static_inline int
+afs_pd_putString(struct afs_pdata *apd, char *str) {
+
+    /* Add 1 so we copy the NULL too */
+    return afs_pd_putBytes(apd, str, strlen(str) +1);
+}
+
 /*!
  * \defgroup pioctl Path IOCTL functions
  *
  * DECL_PIOCTL is a macro defined to contain the following parameters for functions:
  *
- * \param[in] avc	the AFS vcache structure in use by pioctl
- * \param[in] afun	not in use
- * \param[in] areq	the AFS vrequest structure
- * \param[in] ain	as defined by the function
- * \param[in] aout	as defined by the function
- * \param[in] ainSize	size of ain
- * \param[in] aoutSize	size of aout
- * \param[in] acred	UNIX credentials structure underlying the operation
+ * \param[in] avc
+ * 	the AFS vcache structure in use by pioctl
+ * \param[in] afun
+ * 	not in use
+ * \param[in] areq
+ * 	the AFS vrequest structure
+ * \param[in] ain
+ * 	an afs_pdata block describing the data received from the caller
+ * \param[in] aout
+ * 	an afs_pdata block describing a pre-allocated block for output
+ * \param[in] acred
+ * 	UNIX credentials structure underlying the operation
  */
 
-#define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
-	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
-	afs_ucred_t **acred)
+#define DECL_PIOCTL(x) \
+	static int x(struct vcache *avc, int afun, struct vrequest *areq, \
+		     struct afs_pdata *ain, struct afs_pdata *aout, \
+		     afs_ucred_t **acred)
 
 /* Prototypes for pioctl routines */
 DECL_PIOCTL(PGetFID);
@@ -146,7 +307,7 @@ static int Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 		    afs_ucred_t *acred);
 
 typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
-			       char *, char *, afs_int32, afs_int32 *,
+			       struct afs_pdata *, struct afs_pdata *,
 			       afs_ucred_t **);
 
 static pioctlFunction VpioctlSw[] = {
@@ -976,25 +1137,30 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     struct vrequest treq;
     register afs_int32 code;
     register afs_int32 function, device;
-    afs_int32 inSize, outSize, outSizeMax;
-    char *inData, *outData;
+    struct afs_pdata input, output;
+    struct afs_pdata copyInput, copyOutput;
+    size_t outSize;
     pioctlFunction *pioctlSw;
     int pioctlSwSize;
     struct afs_fakestat_state fakestate;
+
+    memset(&input, 0, sizeof(input));
+    memset(&output, 0, sizeof(output));
 
     avc = avp ? VTOAFS(avp) : NULL;
     afs_Trace3(afs_iclSetp, CM_TRACE_PIOCTL, ICL_TYPE_INT32, acom & 0xff,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, afollow);
     AFS_STATCNT(HandlePioctl);
-    if ((code = afs_InitReq(&treq, *acred)))
+
+    code = afs_InitReq(&treq, *acred);
+    if (code)
 	return code;
+
     afs_InitFakeStat(&fakestate);
     if (avc) {
 	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
-	if (code) {
-	    afs_PutFakeStat(&fakestate);
-	    return code;
-	}
+	if (code)
+	    goto out;
     }
     device = (acom & 0xff00) >> 8;
     switch (device) {
@@ -1011,79 +1177,62 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 	pioctlSwSize = sizeof(OpioctlSw);
 	break;
     default:
-	afs_PutFakeStat(&fakestate);
-	return EINVAL;
+	code = EINVAL;
+	goto out;
     }
     function = acom & 0xff;
     if (function >= (pioctlSwSize / sizeof(char *))) {
-	afs_PutFakeStat(&fakestate);
-	return EINVAL;		/* out of range */
+	code = EINVAL;
+	goto out;
     }
-    inSize = ablob->in_size;
 
     /* Do all range checking before continuing */
-    if (inSize > MAXPIOCTLTOKENLEN || inSize < 0 || ablob->out_size < 0)
-	return E2BIG;
+    if (ablob->in_size > MAXPIOCTLTOKENLEN ||
+        ablob->in_size < 0 || ablob->out_size < 0) {
+	code = EINVAL;
+	goto out;
+    }
 
-    /* Note that we use osi_Alloc for large allocs and osi_AllocLargeSpace for small ones */
-    if (inSize > AFS_LRALLOCSIZ) {
-	inData = osi_Alloc(inSize + 1);
-    } else {
-	inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    code = afs_pd_alloc(&input, ablob->in_size);
+    if (code)
+	goto out;
+
+    if (ablob->in_size > 0) {
+	AFS_COPYIN(ablob->in, input.ptr, ablob->in_size, code);
+	input.ptr[input.remaining] = '\0';
     }
-    if (!inData)
-	return ENOMEM;
-    if (inSize > 0) {
-	AFS_COPYIN(ablob->in, inData, inSize, code);
-	inData[inSize] = '\0';
-    } else
-	code = 0;
-    if (code) {
-	if (inSize > AFS_LRALLOCSIZ) {
-	    osi_Free(inData, inSize + 1);
-	} else {
-	    osi_FreeLargeSpace(inData);
-	}
-	afs_PutFakeStat(&fakestate);
-	return code;
-    }
+    if (code)
+	goto out;
+
     if (function == 8 && device == 'V') {	/* PGetTokens */
-	outSizeMax = MAXPIOCTLTOKENLEN;
-	outData = osi_Alloc(outSizeMax);
+	code = afs_pd_alloc(&output, MAXPIOCTLTOKENLEN);
     } else {
-	outSizeMax = AFS_LRALLOCSIZ;
-	outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	code = afs_pd_alloc(&output, AFS_LRALLOCSIZ);
     }
-    if (!outData) {
-	if (inSize > AFS_LRALLOCSIZ) {
-	    osi_Free(inData, inSize + 1);
-	} else {
-	    osi_FreeLargeSpace(inData);
-	}
-	afs_PutFakeStat(&fakestate);
-	return ENOMEM;
-    }
-    outSize = 0;
+    if (code)
+	goto out;
+
+    copyInput = input;
+    copyOutput = output;
+
     code =
-	(*pioctlSw[function]) (avc, function, &treq, inData, outData, inSize,
-			       &outSize, acred);
-    if (inSize > AFS_LRALLOCSIZ) {
-	osi_Free(inData, inSize + 1);
-    } else {
-	osi_FreeLargeSpace(inData);
-    }
+	(*pioctlSw[function]) (avc, function, &treq, &copyInput,
+			       &copyOutput, acred);
+
+    outSize = copyOutput.ptr - output.ptr;
+
     if (code == 0 && ablob->out_size > 0) {
 	if (outSize > ablob->out_size) {
 	    code = E2BIG;	/* data wont fit in user buffer */
 	} else if (outSize) {
-	    AFS_COPYOUT(outData, ablob->out, outSize, code);
+	    AFS_COPYOUT(output.ptr, ablob->out, outSize, code);
 	}
     }
-    if (outSizeMax > AFS_LRALLOCSIZ) {
-	osi_Free(outData, outSizeMax);
-    } else {
-	osi_FreeLargeSpace(outData);
-    }
+
+out:
+    afs_pd_free(&input);
+    afs_pd_free(&output);
+
     afs_PutFakeStat(&fakestate);
     return afs_CheckCode(code, &treq, 41);
 }
@@ -1105,8 +1254,8 @@ DECL_PIOCTL(PGetFID)
     AFS_STATCNT(PGetFID);
     if (!avc)
 	return EINVAL;
-    memcpy(aout, (char *)&avc->f.fid, sizeof(struct VenusFid));
-    *aoutSize = sizeof(struct VenusFid);
+    if (afs_pd_putBytes(aout, &avc->f.fid, sizeof(struct VenusFid)) != 0)
+	return EINVAL;
     return 0;
 }
 
@@ -1139,10 +1288,13 @@ DECL_PIOCTL(PSetAcl)
     AFS_STATCNT(PSetAcl);
     if (!avc)
 	return EINVAL;
-    if ((acl.AFSOpaque_len = strlen(ain) + 1) > 1024 /* AFSOPAQUEMAX */)
+
+    if (afs_pd_getStringPtr(ain, &acl.AFSOpaque_val) != 0)
+	return EINVAL;
+    acl.AFSOpaque_len = strlen(acl.AFSOpaque_val) + 1;
+    if (acl.AFSOpaque_len > 1024)
 	return EINVAL;
 
-    acl.AFSOpaque_val = ain;
     do {
 	tconn = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tconn) {
@@ -1189,33 +1341,33 @@ int afs_defaultAsynchrony = 0;
  */
 DECL_PIOCTL(PStoreBehind)
 {
-    afs_int32 code = 0;
-    struct sbstruct *sbr;
+    struct sbstruct sbr;
 
-    sbr = (struct sbstruct *)ain;
-    if (sbr->sb_default != -1) {
+    if (afs_pd_getBytes(ain, &sbr, sizeof(struct sbstruct)) != 0)
+	return EINVAL;
+
+    if (sbr.sb_default != -1) {
 	if (afs_osi_suser(*acred))
-	    afs_defaultAsynchrony = sbr->sb_default;
+	    afs_defaultAsynchrony = sbr.sb_default;
 	else
-	    code = EPERM;
+	    return EPERM;
     }
 
-    if (avc && (sbr->sb_thisfile != -1)) {
+    if (avc && (sbr.sb_thisfile != -1)) {
 	if (afs_AccessOK
 	    (avc, PRSFS_WRITE | PRSFS_ADMINISTER, areq, DONT_CHECK_MODE_BITS))
-	    avc->asynchrony = sbr->sb_thisfile;
+	    avc->asynchrony = sbr.sb_thisfile;
 	else
-	    code = EACCES;
+	    return EACCES;
     }
 
-    *aoutSize = sizeof(struct sbstruct);
-    sbr = (struct sbstruct *)aout;
-    sbr->sb_default = afs_defaultAsynchrony;
+    memset(&sbr, 0, sizeof(sbr));
+    sbr.sb_default = afs_defaultAsynchrony;
     if (avc) {
-	sbr->sb_thisfile = avc->asynchrony;
+	sbr.sb_thisfile = avc->asynchrony;
     }
 
-    return code;
+    return afs_pd_putBytes(aout, &sbr, sizeof(sbr));
 }
 
 /*!
@@ -1281,13 +1433,13 @@ DECL_PIOCTL(PGetAcl)
 	 */
 	if (Fid.Vnode & 0xc0000000)
 	    return ERANGE;
-	Fid.Vnode |= (ainSize << 30);
+	Fid.Vnode |= (ain->remaining << 30);
     }
-    acl.AFSOpaque_val = aout;
+    acl.AFSOpaque_val = aout->ptr;
     do {
 	tconn = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tconn) {
-	    *aout = 0;
+	    acl.AFSOpaque_val[0] = '\0';
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHACL);
 	    RX_AFS_GUNLOCK();
 	    code = RXAFS_FetchACL(tconn->id, &Fid, &acl, &OutStatus, &tsync);
@@ -1300,7 +1452,10 @@ DECL_PIOCTL(PGetAcl)
 	      SHARED_LOCK, NULL));
 
     if (code == 0) {
-	*aoutSize = (acl.AFSOpaque_len == 0 ? 1 : acl.AFSOpaque_len);
+	if (acl.AFSOpaque_len == 0)
+	    afs_pd_skip(aout, 1); /* leave the NULL */
+	else
+	    afs_pd_skip(aout, acl.AFSOpaque_len); /* Length of the ACL */
     }
     return code;
 }
@@ -1356,9 +1511,11 @@ DECL_PIOCTL(PGetFileCell)
     tcell = afs_GetCell(avc->f.fid.Cell, READ_LOCK);
     if (!tcell)
 	return ESRCH;
-    strcpy(aout, tcell->cellName);
+
+    if (afs_pd_putString(aout, tcell->cellName) != 0)
+	return EINVAL;
+
     afs_PutCell(tcell, READ_LOCK);
-    *aoutSize = strlen(aout) + 1;
     return 0;
 }
 
@@ -1386,8 +1543,9 @@ DECL_PIOCTL(PGetWSCell)
     tcell = afs_GetPrimaryCell(READ_LOCK);
     if (!tcell)			/* no primary cell? */
 	return ESRCH;
-    strcpy(aout, tcell->cellName);
-    *aoutSize = strlen(aout) + 1;
+
+    if (afs_pd_putString(aout, tcell->cellName) != 0)
+	return EINVAL;
     afs_PutCell(tcell, READ_LOCK);
     return 0;
 }
@@ -1430,14 +1588,12 @@ DECL_PIOCTL(PGetUserCell)
 	if (!tcell)
 	    return ESRCH;
 	else {
-	    strcpy(aout, tcell->cellName);
+	    if (afs_pd_putString(aout, tcell->cellName) != 0)
+		return E2BIG;
 	    afs_PutCell(tcell, READ_LOCK);
-	    *aoutSize = strlen(aout) + 1;	/* 1 for the null */
 	}
     } else {
 	ReleaseWriteLock(&afs_xuser);
-	*aout = 0;
-	*aoutSize = 1;
     }
     return 0;
 }
@@ -1464,6 +1620,7 @@ DECL_PIOCTL(PSetTokens)
     struct ClearToken clear;
     register struct cell *tcell;
     char *stp;
+    char *cellName;
     int stLen;
     struct vrequest treq;
     afs_int32 flag, set_parent_pag = 0;
@@ -1472,33 +1629,44 @@ DECL_PIOCTL(PSetTokens)
     if (!afs_resourceinit_flag) {
 	return EIO;
     }
-    memcpy((char *)&i, ain, sizeof(afs_int32));
-    ain += sizeof(afs_int32);
-    stp = ain;			/* remember where the ticket is */
-    if (i < 0 || i > MAXKTCTICKETLEN)
-	return EINVAL;		/* malloc may fail */
-    stLen = i;
-    ain += i;			/* skip over ticket */
-    memcpy((char *)&i, ain, sizeof(afs_int32));
-    ain += sizeof(afs_int32);
-    if (i != sizeof(struct ClearToken)) {
+
+    if (afs_pd_getInt(ain, &stLen) != 0)
 	return EINVAL;
-    }
-    memcpy((char *)&clear, ain, sizeof(struct ClearToken));
+
+    stp = afs_pd_where(ain);	/* remember where the ticket is */
+    if (stLen < 0 || stLen > MAXKTCTICKETLEN)
+	return EINVAL;		/* malloc may fail */
+    if (afs_pd_skip(ain, stLen) != 0)
+	return EINVAL;
+
+    if (afs_pd_getInt(ain, &i) != 0)
+	return EINVAL;
+    if (i != sizeof(struct ClearToken))
+	return EINVAL;
+
+    if (afs_pd_getBytes(ain, &clear, sizeof(struct ClearToken)) !=0)
+	return EINVAL;
+
     if (clear.AuthHandle == -1)
 	clear.AuthHandle = 999;	/* more rxvab compat stuff */
-    ain += sizeof(struct ClearToken);
-    if (ainSize != 2 * sizeof(afs_int32) + stLen + sizeof(struct ClearToken)) {
+
+    if (afs_pd_remaining(ain) != 0) {
 	/* still stuff left?  we've got primary flag and cell name.  Set these */
-	memcpy((char *)&flag, ain, sizeof(afs_int32));	/* primary id flag */
-	ain += sizeof(afs_int32);	/* skip id field */
-	/* rest is cell name, look it up */
+
+	if (afs_pd_getInt(ain, &flag) != 0)
+	    return EINVAL;
+
 	/* some versions of gcc appear to need != 0 in order to get this right */
 	if ((flag & 0x8000) != 0) {	/* XXX Use Constant XXX */
 	    flag &= ~0x8000;
 	    set_parent_pag = 1;
 	}
-	tcell = afs_GetCellByName(ain, READ_LOCK);
+
+	if (afs_pd_getStringPtr(ain, &cellName) != 0)
+	    return EINVAL;
+
+	/* rest is cell name, look it up */
+	tcell = afs_GetCellByName(cellName, READ_LOCK);
 	if (!tcell)
 	    goto nocell;
     } else {
@@ -1587,8 +1755,7 @@ DECL_PIOCTL(PGetVolumeStatus)
     register struct afs_conn *tc;
     register afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
-    register char *cp;
-    char *Name, *OfflineMsg, *MOTD;
+    char *Name;
     XSTATS_DECLS;
 
     AFS_STATCNT(PGetVolumeStatus);
@@ -1597,8 +1764,6 @@ DECL_PIOCTL(PGetVolumeStatus)
 	goto out;
     }
     Name = volName;
-    OfflineMsg = offLineMsg;
-    MOTD = motd;
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
@@ -1606,7 +1771,7 @@ DECL_PIOCTL(PGetVolumeStatus)
 	    RX_AFS_GUNLOCK();
 	    code =
 		RXAFS_GetVolumeStatus(tc->id, avc->f.fid.Fid.Volume, &volstat,
-				      &Name, &OfflineMsg, &MOTD);
+				      &Name, &offLineMsg, &motd);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
@@ -1618,16 +1783,14 @@ DECL_PIOCTL(PGetVolumeStatus)
     if (code)
 	goto out;
     /* Copy all this junk into msg->im_data, keeping track of the lengths. */
-    cp = aout;
-    memcpy(cp, (char *)&volstat, sizeof(VolumeStatus));
-    cp += sizeof(VolumeStatus);
-    strcpy(cp, volName);
-    cp += strlen(volName) + 1;
-    strcpy(cp, offLineMsg);
-    cp += strlen(offLineMsg) + 1;
-    strcpy(cp, motd);
-    cp += strlen(motd) + 1;
-    *aoutSize = (cp - aout);
+    if (afs_pd_putBytes(aout, &volstat, sizeof(VolumeStatus)) != 0)
+	return E2BIG;
+    if (afs_pd_putString(aout, volName) != 0)
+	return E2BIG;
+    if (afs_pd_putString(aout, offLineMsg) != 0)
+	return E2BIG;
+    if (afs_pd_putString(aout, motd) != 0)
+	return E2BIG;
   out:
     afs_osi_Free(offLineMsg, 256);
     afs_osi_Free(motd, 256);
@@ -1651,56 +1814,51 @@ DECL_PIOCTL(PGetVolumeStatus)
  */
 DECL_PIOCTL(PSetVolumeStatus)
 {
-    char volName[32];
-    char *offLineMsg = afs_osi_Alloc(256);
-    char *motd = afs_osi_Alloc(256);
+    char *volName;
+    char *offLineMsg;
+    char *motd;
     register struct afs_conn *tc;
     register afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
     struct AFSStoreVolumeStatus storeStat;
     register struct volume *tvp;
-    register char *cp;
     XSTATS_DECLS;
 
     AFS_STATCNT(PSetVolumeStatus);
-    if (!avc) {
-	code = EINVAL;
-	goto out;
-    }
+    if (!avc)
+	return EINVAL;
 
     tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
     if (tvp) {
 	if (tvp->states & (VRO | VBackup)) {
 	    afs_PutVolume(tvp, READ_LOCK);
-	    code = EROFS;
-	    goto out;
+	    return EROFS;
 	}
 	afs_PutVolume(tvp, READ_LOCK);
-    } else {
-	code = ENODEV;
-	goto out;
-    }
-    /* Copy the junk out, using cp as a roving pointer. */
-    cp = ain;
-    memcpy((char *)&volstat, cp, sizeof(AFSFetchVolumeStatus));
-    cp += sizeof(AFSFetchVolumeStatus);
-    if (strlen(cp) >= sizeof(volName)) {
-	code = E2BIG;
-	goto out;
-    }
-    strcpy(volName, cp);
-    cp += strlen(volName) + 1;
-    if (strlen(cp) >= sizeof(offLineMsg)) {
-	code = E2BIG;
-	goto out;
-    }
-    strcpy(offLineMsg, cp);
-    cp += strlen(offLineMsg) + 1;
-    if (strlen(cp) >= sizeof(motd)) {
-	code = E2BIG;
-	goto out;
-    }
-    strcpy(motd, cp);
+    } else
+	return ENODEV;
+
+
+    if (afs_pd_getBytes(ain, &volstat, sizeof(AFSFetchVolumeStatus)) != 0)
+	return EINVAL;
+
+    if (afs_pd_getStringPtr(ain, &volName) != 0)
+	return EINVAL;
+    if (strlen(volName) > 32)
+        return E2BIG;
+
+    if (afs_pd_getStringPtr(ain, &offLineMsg) != 0)
+	return EINVAL;
+    if (strlen(offLineMsg) > 256)
+	return E2BIG;
+
+    if (afs_pd_getStringPtr(ain, &motd) != 0)
+	return EINVAL;
+    if (strlen(motd) > 256)
+	return E2BIG;
+
+    /* Done reading ... */
+
     storeStat.Mask = 0;
     if (volstat.MinQuota != -1) {
 	storeStat.MinQuota = volstat.MinQuota;
@@ -1727,22 +1885,21 @@ DECL_PIOCTL(PSetVolumeStatus)
 	      SHARED_LOCK, NULL));
 
     if (code)
-	goto out;
+	return code;
     /* we are sending parms back to make compat. with prev system.  should
      * change interface later to not ask for current status, just set new status */
-    cp = aout;
-    memcpy(cp, (char *)&volstat, sizeof(VolumeStatus));
-    cp += sizeof(VolumeStatus);
-    strcpy(cp, volName);
-    cp += strlen(volName) + 1;
-    strcpy(cp, offLineMsg);
-    cp += strlen(offLineMsg) + 1;
-    strcpy(cp, motd);
-    cp += strlen(motd) + 1;
-    *aoutSize = cp - aout;
-  out:
-    afs_osi_Free(offLineMsg, 256);
-    afs_osi_Free(motd, 256);
+
+    /* XXX - We really need to check that this doesn't overflow, too, otherwise
+     * bad fileserver status could be _really_ bad */
+    if (afs_pd_putBytes(aout, &volstat, sizeof(VolumeStatus)) != 0)
+	return EINVAL;
+    if (afs_pd_putString(aout, volName) != 0)
+	return EINVAL;
+    if (afs_pd_putString(aout, offLineMsg) != 0)
+	return EINVAL;
+    if (afs_pd_putString(aout, motd) != 0)
+	return EINVAL;
+
     return code;
 }
 
@@ -1796,12 +1953,17 @@ DECL_PIOCTL(PNewStatMount)
     register struct dcache *tdc;
     struct VenusFid tfid;
     char *bufp;
+    char *name;
     struct sysname_info sysState;
     afs_size_t offset, len;
 
     AFS_STATCNT(PNewStatMount);
     if (!avc)
 	return EINVAL;
+
+    if (afs_pd_getStringPtr(ain, &name) != 0)
+	return EINVAL;
+
     code = afs_VerifyVCache(avc, areq);
     if (code)
 	return code;
@@ -1811,7 +1973,7 @@ DECL_PIOCTL(PNewStatMount)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc)
 	return ENOENT;
-    Check_AtSys(avc, ain, &sysState, areq);
+    Check_AtSys(avc, name, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
 	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
@@ -1846,8 +2008,8 @@ DECL_PIOCTL(PNewStatMount)
 		code = EINVAL;
 	    else {
 		/* we have the data */
-		strcpy(aout, tvc->linkData);
-		*aoutSize = strlen(tvc->linkData) + 1;
+		if (afs_pd_putString(aout, tvc->linkData) != 0)
+		    code = EINVAL;
 	    }
 	} else
 	    code = EIO;
@@ -1882,9 +2044,9 @@ DECL_PIOCTL(PGetTokens)
     register struct cell *tcell;
     register afs_int32 i;
     register struct unixuser *tu;
-    register char *cp;
     afs_int32 iterator = 0;
     int newStyle;
+    int code = E2BIG;
 
     AFS_STATCNT(PGetTokens);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -1899,8 +2061,10 @@ DECL_PIOCTL(PGetTokens)
      * tokens, the primary cell indicator (an afs_int32 0) and the cell name
      * at the end, in that order.
      */
-    if ((newStyle = (ainSize > 0))) {
-	memcpy((char *)&iterator, ain, sizeof(afs_int32));
+    newStyle = (afs_pd_remaining(ain) > 0);
+    if (newStyle) {
+	if (afs_pd_getInt(ain, &iterator) != 0)
+	    return EINVAL;
     }
     i = UHash(areq->uid);
     ObtainReadLock(&afs_xuser);
@@ -1932,36 +2096,45 @@ DECL_PIOCTL(PGetTokens)
 	afs_PutUser(tu, READ_LOCK);
 	return ENOTCONN;
     }
-    /* use iterator for temp */
-    cp = aout;
     iterator = tu->stLen;	/* for compat, we try to return 56 byte tix if they fit */
     if (iterator < 56)
 	iterator = 56;		/* # of bytes we're returning */
-    memcpy(cp, (char *)&iterator, sizeof(afs_int32));
-    cp += sizeof(afs_int32);
-    memcpy(cp, tu->stp, tu->stLen);	/* copy out st */
-    cp += iterator;
-    iterator = sizeof(struct ClearToken);
-    memcpy(cp, (char *)&iterator, sizeof(afs_int32));
-    cp += sizeof(afs_int32);
-    memcpy(cp, (char *)&tu->ct, sizeof(struct ClearToken));
-    cp += sizeof(struct ClearToken);
+
+    if (afs_pd_putInt(aout, iterator) != 0)
+	goto out;
+    if (afs_pd_putBytes(aout, tu->stp, tu->stLen) != 0)
+	goto out;
+    if (tu->stLen < 56) {
+	/* Tokens are always 56 bytes or larger */
+	if (afs_pd_skip(aout, iterator - tu->stLen) != 0) {
+	    goto out;
+	}
+    }
+
+    if (afs_pd_putInt(aout, sizeof(struct ClearToken)) != 0)
+	goto out;
+    if (afs_pd_putBytes(aout, &tu->ct, sizeof(struct ClearToken)) != 0)
+	goto out;
+
     if (newStyle) {
 	/* put out primary id and cell name, too */
 	iterator = (tu->states & UPrimary ? 1 : 0);
-	memcpy(cp, (char *)&iterator, sizeof(afs_int32));
-	cp += sizeof(afs_int32);
+	if (afs_pd_putInt(aout, iterator) != 0)
+	    goto out;
 	tcell = afs_GetCell(tu->cell, READ_LOCK);
 	if (tcell) {
-	    strcpy(cp, tcell->cellName);
-	    cp += strlen(tcell->cellName) + 1;
+	    if (afs_pd_putString(aout, tcell->cellName) != 0)
+		goto out;
 	    afs_PutCell(tcell, READ_LOCK);
 	} else
-	    *cp++ = 0;
+	    if (afs_pd_putString(aout, "") != 0)
+		goto out;
     }
-    *aoutSize = cp - aout;
+    /* Got here, all is good */
+    code = 0;
+out:
     afs_PutUser(tu, READ_LOCK);
-    return 0;
+    return code;
 }
 
 /*!
@@ -2046,7 +2219,9 @@ DECL_PIOCTL(PMariner)
     else
 	oldHostAddr = 0xffffffff;	/* disabled */
 
-    memcpy((char *)&newHostAddr, ain, sizeof(afs_int32));
+    if (afs_pd_getInt(ain, &newHostAddr) != 0)
+	return EINVAL;
+
     if (newHostAddr == 0xffffffff) {
 	/* disable mariner operations */
 	afs_mariner = 0;
@@ -2054,8 +2229,10 @@ DECL_PIOCTL(PMariner)
 	afs_mariner = 1;
 	afs_marinerHost = newHostAddr;
     }
-    memcpy(aout, (char *)&oldHostAddr, sizeof(afs_int32));
-    *aoutSize = sizeof(afs_int32);
+
+    if (afs_pd_putInt(aout, oldHostAddr) != 0)
+	return E2BIG;
+
     return 0;
 }
 
@@ -2075,10 +2252,10 @@ DECL_PIOCTL(PMariner)
  */
 DECL_PIOCTL(PCheckServers)
 {
-    register char *cp = 0;
     register int i;
     register struct server *ts;
-    afs_int32 temp, *lp = (afs_int32 *) ain, havecell = 0;
+    afs_int32 temp;
+    char *cellName = NULL;
     struct cell *cellp;
     struct chservinfo *pcheck;
 
@@ -2087,12 +2264,21 @@ DECL_PIOCTL(PCheckServers)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    if (*lp == 0x12345678) {	/* For afs3.3 version */
-	pcheck = (struct chservinfo *)ain;
+    /* This is tricky, because we need to peak at the datastream to see
+     * what we're getting. For now, let's cheat. */
+
+    /* ain contains either an int32 or a string */
+    if (ain->remaining == 0)
+	return EINVAL;
+
+    if (*(afs_int32 *)ain->ptr == 0x12345678) {	/* For afs3.3 version */
+	pcheck = afs_pd_inline(ain, sizeof(*pcheck));
+        if (pcheck == NULL)
+	    return EINVAL;
+
 	if (pcheck->tinterval >= 0) {
-	    cp = aout;
-	    memcpy(cp, (char *)&afs_probe_interval, sizeof(afs_int32));
-	    *aoutSize = sizeof(afs_int32);
+	    if (afs_pd_putInt(aout, afs_probe_interval) != 0)
+		return E2BIG;
 	    if (pcheck->tinterval > 0) {
 		if (!afs_osi_suser(*acred))
 		    return EACCES;
@@ -2100,24 +2286,25 @@ DECL_PIOCTL(PCheckServers)
 	    }
 	    return 0;
 	}
-	if (pcheck->tsize)
-	    havecell = 1;
 	temp = pcheck->tflags;
-	cp = pcheck->tbuffer;
+	if (pcheck->tsize)
+	    cellName = pcheck->tbuffer;
     } else {			/* For pre afs3.3 versions */
-	memcpy((char *)&temp, ain, sizeof(afs_int32));
-	cp = ain + sizeof(afs_int32);
-	if (ainSize > sizeof(afs_int32))
-	    havecell = 1;
+	if (afs_pd_getInt(ain, &temp) != 0)
+	    return EINVAL;
+	if (afs_pd_remaining(ain) > 0) {
+	    if (afs_pd_getStringPtr(ain, &cellName) != 0)
+		return EINVAL;
+	}
     }
 
     /*
      * 1: fast check, don't contact servers.
      * 2: local cell only.
      */
-    if (havecell) {
+    if (cellName) {
 	/* have cell name, too */
-	cellp = afs_GetCellByName(cp, READ_LOCK);
+	cellp = afs_GetCellByName(cellName, READ_LOCK);
 	if (!cellp)
 	    return ENOENT;
     } else
@@ -2131,7 +2318,6 @@ DECL_PIOCTL(PCheckServers)
 	afs_CheckServers(0, cellp);	/* check up servers */
     }
     /* now return the current down server list */
-    cp = aout;
     ObtainReadLock(&afs_xserver);
     for (i = 0; i < NSERVERS; i++) {
 	for (ts = afs_servers[i]; ts; ts = ts->next) {
@@ -2139,15 +2325,13 @@ DECL_PIOCTL(PCheckServers)
 		continue;	/* cell spec'd and wrong */
 	    if ((ts->flags & SRVR_ISDOWN)
 		&& ts->addr->sa_portal != ts->cell->vlport) {
-		memcpy(cp, (char *)&ts->addr->sa_ip, sizeof(afs_int32));
-		cp += sizeof(afs_int32);
+		afs_pd_putInt(aout, ts->addr->sa_ip);
 	    }
 	}
     }
     ReleaseReadLock(&afs_xserver);
     if (cellp)
 	afs_PutCell(cellp, READ_LOCK);
-    *aoutSize = cp - aout;
     return 0;
 }
 
@@ -2226,8 +2410,8 @@ DECL_PIOCTL(PCheckAuth)
 	ReleaseReadLock(&afs_xconn);
 	afs_PutUser(tu, READ_LOCK);
     }
-    memcpy(aout, (char *)&retValue, sizeof(afs_int32));
-    *aoutSize = sizeof(afs_int32);
+    if (afs_pd_putInt(aout, retValue) != 0)
+	return E2BIG;
     return 0;
 }
 
@@ -2281,32 +2465,34 @@ DECL_PIOCTL(PFindVolume)
     register struct volume *tvp;
     register struct server *ts;
     register afs_int32 i;
-    register char *cp;
+    int code = 0;
 
     AFS_STATCNT(PFindVolume);
     if (!avc)
 	return EINVAL;
     tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
-    if (tvp) {
-	cp = aout;
-	for (i = 0; i < AFS_MAXHOSTS; i++) {
-	    ts = tvp->serverHost[i];
-	    if (!ts)
-		break;
-	    memcpy(cp, (char *)&ts->addr->sa_ip, sizeof(afs_int32));
-	    cp += sizeof(afs_int32);
+    if (!tvp)
+	return ENODEV;
+
+    for (i = 0; i < AFS_MAXHOSTS; i++) {
+	ts = tvp->serverHost[i];
+	if (!ts)
+	    break;
+	if (afs_pd_putInt(aout, ts->addr->sa_ip) != 0) {
+	    code = E2BIG;
+	    goto out;
 	}
-	if (i < AFS_MAXHOSTS) {
-	    /* still room for terminating NULL, add it on */
-	    ainSize = 0;	/* reuse vbl */
-	    memcpy(cp, (char *)&ainSize, sizeof(afs_int32));
-	    cp += sizeof(afs_int32);
-	}
-	*aoutSize = cp - aout;
-	afs_PutVolume(tvp, READ_LOCK);
-	return 0;
     }
-    return ENODEV;
+    if (i < AFS_MAXHOSTS) {
+	/* still room for terminating NULL, add it on */
+	if (afs_pd_putInt(aout, 0) != 0) {
+	    code = E2BIG;
+	    goto out;
+	}
+    }
+out:
+    afs_PutVolume(tvp, READ_LOCK);
+    return code;
 }
 
 /*!
@@ -2330,10 +2516,14 @@ DECL_PIOCTL(PViceAccess)
     AFS_STATCNT(PViceAccess);
     if (!avc)
 	return EINVAL;
+
     code = afs_VerifyVCache(avc, areq);
     if (code)
 	return code;
-    memcpy((char *)&temp, ain, sizeof(afs_int32));
+
+    if (afs_pd_getInt(ain, &temp) != 0)
+	return EINVAL;
+
     code = afs_AccessOK(avc, temp, areq, CHECK_MODE_BITS);
     if (code)
 	return 0;
@@ -2357,9 +2547,7 @@ DECL_PIOCTL(PGetPAG)
 
     pag = PagInCred(*acred);
 
-    memcpy(aout, (char *)&pag, sizeof(afs_int32));
-    *aoutSize = sizeof(afs_int32);
-    return 0;
+    return afs_pd_putInt(aout, pag);
 }
 
 DECL_PIOCTL(PPrecache)
@@ -2369,7 +2557,10 @@ DECL_PIOCTL(PPrecache)
     /*AFS_STATCNT(PPrecache);*/
     if (!afs_osi_suser(*acred))
 	return EACCES;
-    memcpy((char *)&newValue, ain, sizeof(afs_int32));
+
+    if (afs_pd_getInt(ain, &newValue) != 0)
+	return EINVAL;
+
     afs_preCache = newValue*1024;
     return 0;
 }
@@ -2395,12 +2586,14 @@ DECL_PIOCTL(PSetCacheSize)
     int waitcnt = 0;
 
     AFS_STATCNT(PSetCacheSize);
+
     if (!afs_osi_suser(*acred))
 	return EACCES;
     /* too many things are setup initially in mem cache version */
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM)
 	return EROFS;
-    memcpy((char *)&newValue, ain, sizeof(afs_int32));
+    if (afs_pd_getInt(ain, &newValue) != 0)
+	return EINVAL;
     if (newValue == 0)
 	afs_cacheBlocks = afs_stats_cmperf.cacheBlocksOrig;
     else {
@@ -2439,9 +2632,9 @@ DECL_PIOCTL(PGetCacheSize)
     
     AFS_STATCNT(PGetCacheSize);
 
-    if (sizeof(afs_int32) == ainSize){
-	memcpy((char *)&flags, ain, sizeof(afs_int32));
-    } else if (0 == ainSize){ 
+    if (afs_pd_remaining(ain) == sizeof(afs_int32)) {
+	afs_pd_getInt(ain, &flags); /* can't error, we just checked size */
+    } else if (afs_pd_remaining(ain) == 0) {
 	flags = 0;
     } else {
 	return EINVAL;
@@ -2478,9 +2671,7 @@ DECL_PIOCTL(PGetCacheSize)
 	    }
         }
     }
-    memcpy(aout, (char *)results, sizeof(results));
-    *aoutSize = sizeof(results);
-    return 0;
+    return afs_pd_putBytes(aout, results, sizeof(results));
 }
 
 /*!
@@ -2559,12 +2750,13 @@ DECL_PIOCTL(PRemoveCallBack)
  */
 DECL_PIOCTL(PNewCell)
 {
-    /* create a new cell */
-    afs_int32 cellHosts[AFS_MAXCELLHOSTS], *lp, magic = 0;
-    char *newcell = 0, *linkedcell = 0, *tp = ain;
-    register afs_int32 code, linkedstate = 0, ls;
-    u_short fsport = 0, vlport = 0;
-    afs_int32 scount;
+    afs_int32 cellHosts[AFS_MAXCELLHOSTS], magic = 0;
+    char *newcell = NULL;
+    char *linkedcell = NULL;
+    afs_int32 code, ls;
+    afs_int32 linkedstate = 0;
+    afs_int32 fsport = 0, vlport = 0;
+    int skip;
 
     AFS_STATCNT(PNewCell);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -2573,8 +2765,8 @@ DECL_PIOCTL(PNewCell)
     if (!afs_osi_suser(*acred))
 	return EACCES;
 
-    memcpy((char *)&magic, tp, sizeof(afs_int32));
-    tp += sizeof(afs_int32);
+    if (afs_pd_getInt(ain, &magic) != 0)
+	return EINVAL;
     if (magic != 0x12345678)
 	return EINVAL;
 
@@ -2582,25 +2774,46 @@ DECL_PIOCTL(PNewCell)
      * server addresses while the 3.5 fs newcell command passes
      * AFS_MAXHOSTS. To figure out which is which, check if the cellname
      * is good.
+     *
+     * This whole logic is bogus, because it relies on the newer command
+     * sending its 12th address as 0.
      */
-    newcell = tp + (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32);
-    scount = ((newcell[0] != '\0') ? AFS_MAXCELLHOSTS : AFS_MAXHOSTS);
+    if ((afs_pd_remaining(ain) < AFS_MAXCELLHOSTS +3) * sizeof(afs_int32))
+	return EINVAL;
+
+    newcell = afs_pd_where(ain) + (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32);
+    if (newcell[0] != '\0') {
+	skip = 0;
+    } else {
+	skip = AFS_MAXHOSTS - AFS_MAXCELLHOSTS;
+    }
 
     /* AFS_MAXCELLHOSTS (=8) is less than AFS_MAXHOSTS (=13) */
-    memcpy((char *)cellHosts, tp, AFS_MAXCELLHOSTS * sizeof(afs_int32));
-    tp += (scount * sizeof(afs_int32));
+    if (afs_pd_getBytes(ain, &cellHosts,
+			AFS_MAXCELLHOSTS * sizeof(afs_int32)) != 0)
+	return EINVAL;
+    if (afs_pd_skip(ain, skip * sizeof(afs_int32)) !=0)
+	return EINVAL;
 
-    lp = (afs_int32 *) tp;
-    fsport = *lp++;
-    vlport = *lp++;
+    if (afs_pd_getInt(ain, &fsport) != 0)
+	return EINVAL;
     if (fsport < 1024)
 	fsport = 0;		/* Privileged ports not allowed */
+
+    if (afs_pd_getInt(ain, &vlport) != 0)
+	return EINVAL;
     if (vlport < 1024)
 	vlport = 0;		/* Privileged ports not allowed */
-    tp += (3 * sizeof(afs_int32));
-    newcell = tp;
-    if ((ls = *lp) & 1) {
-	linkedcell = tp + strlen(newcell) + 1;
+
+    if (afs_pd_getInt(ain, &ls) != 0)
+	return EINVAL;
+
+    if (afs_pd_getStringPtr(ain, &newcell) != 0)
+	return EINVAL;
+
+    if (ls & 1) {
+	if (afs_pd_getStringPtr(ain, &linkedcell) != 0)
+	    return EINVAL;
 	linkedstate |= CLinkedCell;
     }
 
@@ -2614,8 +2827,6 @@ DECL_PIOCTL(PNewCell)
 DECL_PIOCTL(PNewAlias)
 {
     /* create a new cell alias */
-    char *tp = ain;
-    register afs_int32 code;
     char *realName, *aliasName;
 
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -2624,13 +2835,12 @@ DECL_PIOCTL(PNewAlias)
     if (!afs_osi_suser(*acred))
 	return EACCES;
 
-    aliasName = tp;
-    tp += strlen(aliasName) + 1;
-    realName = tp;
+    if (afs_pd_getStringPtr(ain, &aliasName) != 0)
+	return EINVAL;
+    if (afs_pd_getStringPtr(ain, &realName) != 0)
+	return EINVAL;
 
-    code = afs_NewCellAlias(aliasName, realName);
-    *aoutSize = 0;
-    return code;
+    return afs_NewCellAlias(aliasName, realName);
 }
 
 /*!
@@ -2651,65 +2861,66 @@ DECL_PIOCTL(PListCells)
     afs_int32 whichCell;
     register struct cell *tcell = 0;
     register afs_int32 i;
-    register char *cp, *tp = ain;
+    int code;
 
     AFS_STATCNT(PListCells);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    memcpy((char *)&whichCell, tp, sizeof(afs_int32));
-    tp += sizeof(afs_int32);
+    if (afs_pd_getInt(ain, &whichCell) != 0)
+	return EINVAL;
+
     tcell = afs_GetCellByIndex(whichCell, READ_LOCK);
-    if (tcell) {
-	cp = aout;
-	memset(cp, 0, AFS_MAXCELLHOSTS * sizeof(afs_int32));
-	for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
-	    if (tcell->cellHosts[i] == 0)
-		break;
-	    memcpy(cp, (char *)&tcell->cellHosts[i]->addr->sa_ip,
-		   sizeof(afs_int32));
-	    cp += sizeof(afs_int32);
-	}
-	cp = aout + AFS_MAXCELLHOSTS * sizeof(afs_int32);
-	strcpy(cp, tcell->cellName);
-	cp += strlen(tcell->cellName) + 1;
-	*aoutSize = cp - aout;
-	afs_PutCell(tcell, READ_LOCK);
-    }
-    if (tcell)
-	return 0;
-    else
+    if (!tcell)
 	return EDOM;
+
+    code = E2BIG;
+
+    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
+	if (tcell->cellHosts[i] == 0)
+	    break;
+	if (afs_pd_putInt(aout, tcell->cellHosts[i]->addr->sa_ip) != 0)
+	    goto out;
+    }
+    for (;i < AFS_MAXCELLHOSTS; i++) {
+	if (afs_pd_putInt(aout, 0) != 0)
+	    goto out;
+    }
+    if (afs_pd_putString(aout, tcell->cellName) != 0)
+	goto out;
+    code = 0;
+
+out:
+    afs_PutCell(tcell, READ_LOCK);
+    return code;
 }
 
 DECL_PIOCTL(PListAliases)
 {
     afs_int32 whichAlias;
     register struct cell_alias *tcalias = 0;
-    register char *cp, *tp = ain;
+    int code;
 
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
-    if (ainSize < sizeof(afs_int32))
+
+    if (afs_pd_getInt(ain, &whichAlias) != 0)
 	return EINVAL;
 
-    memcpy((char *)&whichAlias, tp, sizeof(afs_int32));
-    tp += sizeof(afs_int32);
-
     tcalias = afs_GetCellAlias(whichAlias);
-    if (tcalias) {
-	cp = aout;
-	strcpy(cp, tcalias->alias);
-	cp += strlen(tcalias->alias) + 1;
-	strcpy(cp, tcalias->cell);
-	cp += strlen(tcalias->cell) + 1;
-	*aoutSize = cp - aout;
-	afs_PutCellAlias(tcalias);
-    }
-    if (tcalias)
-	return 0;
-    else
+    if (tcalias == NULL)
 	return EDOM;
+
+    code = E2BIG;
+    if (afs_pd_putString(aout, tcalias->alias) != 0)
+	goto out;
+    if (afs_pd_putString(aout, tcalias->cell) != 0)
+	goto out;
+
+    code = 0;
+out:
+    afs_PutCellAlias(tcalias);
+    return code;
 }
 
 /*!
@@ -2730,6 +2941,7 @@ DECL_PIOCTL(PRemoveMount)
 {
     register afs_int32 code;
     char *bufp;
+    char *name;
     struct sysname_info sysState;
     afs_size_t offset, len;
     register struct afs_conn *tc;
@@ -2740,12 +2952,14 @@ DECL_PIOCTL(PRemoveMount)
     struct AFSVolSync tsync;
     XSTATS_DECLS;
 
-
     /* "ain" is the name of the file in this dir to remove */
 
     AFS_STATCNT(PRemoveMount);
     if (!avc)
 	return EINVAL;
+    if (afs_pd_getStringPtr(ain, &name) != 0)
+	return EINVAL;
+
     code = afs_VerifyVCache(avc, areq);
     if (code)
 	return code;
@@ -2755,7 +2969,7 @@ DECL_PIOCTL(PRemoveMount)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);	/* test for error below */
     if (!tdc)
 	return ENOENT;
-    Check_AtSys(avc, ain, &sysState, areq);
+    Check_AtSys(avc, name, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
 	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
@@ -2877,20 +3091,23 @@ DECL_PIOCTL(PVenusLogging)
 DECL_PIOCTL(PGetCellStatus)
 {
     register struct cell *tcell;
+    char *cellName;
     afs_int32 temp;
 
     AFS_STATCNT(PGetCellStatus);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    tcell = afs_GetCellByName(ain, READ_LOCK);
+    if (afs_pd_getStringPtr(ain, &cellName) != 0)
+	return EINVAL;
+
+    tcell = afs_GetCellByName(cellName, READ_LOCK);
     if (!tcell)
 	return ENOENT;
     temp = tcell->states;
     afs_PutCell(tcell, READ_LOCK);
-    memcpy(aout, (char *)&temp, sizeof(afs_int32));
-    *aoutSize = sizeof(afs_int32);
-    return 0;
+
+    return afs_pd_putInt(aout, temp);
 }
 
 /*!
@@ -2909,18 +3126,25 @@ DECL_PIOCTL(PGetCellStatus)
 DECL_PIOCTL(PSetCellStatus)
 {
     register struct cell *tcell;
-    afs_int32 temp;
+    char *cellName;
+    afs_int32 flags0, flags1;
 
     if (!afs_osi_suser(*acred))
 	return EACCES;
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    tcell = afs_GetCellByName(ain + 2 * sizeof(afs_int32), WRITE_LOCK);
+    if (afs_pd_getInt(ain, &flags0) != 0)
+	return EINVAL;
+    if (afs_pd_getInt(ain, &flags1) != 0)
+	return EINVAL;
+    if (afs_pd_getStringPtr(ain, &cellName) != 0)
+	return EINVAL;
+
+    tcell = afs_GetCellByName(cellName, WRITE_LOCK);
     if (!tcell)
 	return ENOENT;
-    memcpy((char *)&temp, ain, sizeof(afs_int32));
-    if (temp & CNoSUID)
+    if (flags0 & CNoSUID)
 	tcell->states |= CNoSUID;
     else
 	tcell->states &= ~CNoSUID;
@@ -3134,9 +3358,7 @@ DECL_PIOCTL(PGetVnodeXStatus)
     stat.flockCount = avc->flockCount;
     stat.mvstat = avc->mvstat;
     stat.states = avc->f.states;
-    memcpy(aout, (char *)&stat, sizeof(struct vcxstat));
-    *aoutSize = sizeof(struct vcxstat);
-    return 0;
+    return afs_pd_putBytes(aout, &stat, sizeof(struct vcxstat));
 }
 
 
@@ -3165,9 +3387,7 @@ DECL_PIOCTL(PGetVnodeXStatus2)
     stat.mvstat = avc->mvstat;
     stat.callerAccess = afs_GetAccessBits(avc, ~0, areq);
 
-    memcpy(aout, (char *)&stat, sizeof(struct vcxstat2));
-    *aoutSize = sizeof(struct vcxstat2);
-    return 0;
+    return afs_pd_putBytes(aout, &stat, sizeof(struct vcxstat2));
 }
 
 
@@ -3189,7 +3409,8 @@ DECL_PIOCTL(PGetVnodeXStatus2)
  */
 DECL_PIOCTL(PSetSysName)
 {
-    char *cp, *cp2 = NULL, inname[MAXSYSNAME], outname[MAXSYSNAME];
+    char *inname = NULL;
+    char outname[MAXSYSNAME];
     afs_int32 setsysname;
     int foundname = 0;
     register struct afs_exporter *exporter;
@@ -3197,6 +3418,7 @@ DECL_PIOCTL(PSetSysName)
     register afs_int32 pag, error;
     int t, count, num = 0, allpags = 0;
     char **sysnamelist;
+    struct afs_pdata validate;
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
@@ -3207,9 +3429,8 @@ DECL_PIOCTL(PSetSysName)
 	return (EINVAL);
 #endif
     }
-    memset(inname, 0, MAXSYSNAME);
-    memcpy(&setsysname, ain, sizeof(afs_int32));
-    ain += sizeof(afs_int32);
+    if (afs_pd_getInt(ain, &setsysname) != 0)
+	return EINVAL;
     if (setsysname & 0x8000) {
 	allpags = 1;
 	setsysname &= ~0x8000;
@@ -3219,23 +3440,22 @@ DECL_PIOCTL(PSetSysName)
 	/* Check my args */
 	if (setsysname < 0 || setsysname > MAXNUMSYSNAMES)
 	    return EINVAL;
-	cp2 = ain;
-	for (cp = ain, count = 0; count < setsysname; count++) {
-	    /* won't go past end of ain since maxsysname*num < ain length */
-	    t = strlen(cp);
+	validate = *ain;
+	for (count = 0; count < setsysname; count++) {
+	    if (afs_pd_getStringPtr(&validate, &inname) != 0)
+	        return EINVAL;
+	    t = strlen(inname);
 	    if (t >= MAXSYSNAME || t <= 0)
 		return EINVAL;
 	    /* check for names that can shoot us in the foot */
-	    if (*cp == '.' && (cp[1] == 0 || (cp[1] == '.' && cp[2] == 0)))
+	    if (inname[0] == '.' && (inname[1] == 0
+		|| (inname[1] == '.' && inname[2] == 0)))
 		return EINVAL;
-	    cp += t + 1;
 	}
-	/* args ok */
+	/* args ok, so go back to the beginning of that section */
 
-	/* inname gets first entry in case we're being a translator */
-	t = strlen(ain);
-	memcpy(inname, ain, t + 1);	/* include terminating null */
-	ain += t + 1;
+	if (afs_pd_getStringPtr(ain, &inname) != 0)
+	    return EINVAL;
 	num = count;
     }
     if (afs_cr_gid(*acred) == RMTUSER_REQ ||
@@ -3254,7 +3474,7 @@ DECL_PIOCTL(PSetSysName)
 	    afs_PutUser(au, READ_LOCK);
 	    return EINVAL;	/* Better than panicing */
 	}
-	error = EXP_SYSNAME(exporter, (setsysname ? cp2 : NULL), &sysnamelist,
+	error = EXP_SYSNAME(exporter, inname, &sysnamelist,
 			    &num, allpags);
 	if (error) {
 	    if (error == ENODEV)
@@ -3289,16 +3509,19 @@ DECL_PIOCTL(PSetSysName)
 	    /* clear @sys entries from the dnlc, once afs_lookup can
 	     * do lookups of @sys entries and thinks it can trust them */
 	    /* privs ok, store the entry, ... */
+
+	    if (strlen(inname) >= MAXSYSNAME-1)
+		return EINVAL;
 	    strcpy(afs_sysname, inname);
+
 	    if (setsysname > 1) {	/* ... or list */
-		cp = ain;
 		for (count = 1; count < setsysname; ++count) {
 		    if (!afs_sysnamelist[count])
 			osi_Panic
 			    ("PSetSysName: no afs_sysnamelist entry to write\n");
-		    t = strlen(cp);
-		    memcpy(afs_sysnamelist[count], cp, t + 1);	/* include null */
-		    cp += t + 1;
+		    if (afs_pd_getString(ain, afs_sysnamelist[count],
+					 MAXSYSNAME) != 0)
+			return EINVAL;
 		}
 	    }
 	    afs_sysnamecount = setsysname;
@@ -3306,12 +3529,11 @@ DECL_PIOCTL(PSetSysName)
 	}
     }
     if (!setsysname) {
-	cp = aout;		/* not changing so report back the count and ... */
-	memcpy(cp, (char *)&foundname, sizeof(afs_int32));
-	cp += sizeof(afs_int32);
+	if (afs_pd_putInt(aout, foundname) != 0)
+	    return E2BIG;
 	if (foundname) {
-	    strcpy(cp, outname);	/* ... the entry, ... */
-	    cp += strlen(outname) + 1;
+	    if (afs_pd_putString(aout, outname) != 0)
+		return E2BIG;
 	    for (count = 1; count < foundname; ++count) {	/* ... or list. */
 		if (!sysnamelist[count])
 		    osi_Panic
@@ -3319,11 +3541,10 @@ DECL_PIOCTL(PSetSysName)
 		t = strlen(sysnamelist[count]);
 		if (t >= MAXSYSNAME)
 		    osi_Panic("PSetSysName: sysname entry garbled\n");
-		strcpy(cp, sysnamelist[count]);
-		cp += t + 1;
+		if (afs_pd_putString(aout, sysnamelist[count]) != 0)
+		    return E2BIG;
 	    }
 	}
-	*aoutSize = cp - aout;
     }
     return 0;
 }
@@ -3475,6 +3696,9 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
 DECL_PIOCTL(PSetSPrefs)
 {
     struct setspref *ssp;
+    char *ainPtr;
+    size_t ainSize;
+
     AFS_STATCNT(PSetSPrefs);
 
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -3483,11 +3707,17 @@ DECL_PIOCTL(PSetSPrefs)
     if (!afs_osi_suser(*acred))
 	return EACCES;
 
+    /* The I/O handling here is ghastly, as it relies on overrunning the ends
+     * of arrays. But, i'm not quite brave enough to change it yet. */
+    ainPtr = ain->ptr;
+    ainSize = ain->remaining;
+
     if (ainSize < sizeof(struct setspref))
 	return EINVAL;
 
-    ssp = (struct setspref *)ain;
-    if (ainSize < sizeof(struct spref) * ssp->num_servers)
+    ssp = (struct setspref *)ainPtr;
+    if (ainSize < (sizeof(struct setspref)
+		   + sizeof(struct spref) * ssp->num_servers-1))
 	return EINVAL;
 
     afs_setsprefs(&(ssp->servers[0]), ssp->num_servers,
@@ -3510,7 +3740,6 @@ DECL_PIOCTL(PSetSPrefs)
  */
 DECL_PIOCTL(PSetSPrefs33)
 {
-    struct spref *sp;
     AFS_STATCNT(PSetSPrefs);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
@@ -3519,8 +3748,9 @@ DECL_PIOCTL(PSetSPrefs33)
     if (!afs_osi_suser(*acred))
 	return EACCES;
 
-    sp = (struct spref *)ain;
-    afs_setsprefs(sp, ainSize / (sizeof(struct spref)), 0 /*!vlonly */ );
+    afs_setsprefs((struct spref *)afs_pd_where(ain),
+		  afs_pd_remaining(ain) / sizeof(struct spref),
+		  0 /*!vlonly */ );
     return 0;
 }
 
@@ -3541,7 +3771,7 @@ DECL_PIOCTL(PSetSPrefs33)
  */
 DECL_PIOCTL(PGetSPrefs)
 {
-    struct sprefrequest *spin;	/* input */
+    struct sprefrequest spin;	/* input */
     struct sprefinfo *spout;	/* output */
     struct spref *srvout;	/* one output component */
     int i, j;			/* counters for hash table traversal */
@@ -3554,31 +3784,35 @@ DECL_PIOCTL(PGetSPrefs)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-
-    if (ainSize < sizeof(struct sprefrequest_33)) {
-	return ENOENT;
+    /* Work out from the size whether we've got a new, or old, style pioctl */
+    if (afs_pd_remaining(ain) < sizeof(struct sprefrequest)) {
+	if (afs_pd_getBytes(ain, &spin, sizeof(struct sprefrequest_33)) != 0)
+	   return ENOENT;
+	vlonly = 0;
+	spin.flags = 0;
     } else {
-	spin = ((struct sprefrequest *)ain);
+	if (afs_pd_getBytes(ain, &spin, sizeof(struct sprefrequest)) != 0)
+	   return EINVAL;
+	vlonly = (spin.flags & DBservers);
     }
 
-    if (ainSize > sizeof(struct sprefrequest_33)) {
-	vlonly = (spin->flags & DBservers);
-    } else
-	vlonly = 0;
+    /* This code relies on overflowing arrays. It's ghastly, but I'm not
+     * quite brave enough to tackle it yet ...
+     */
 
     /* struct sprefinfo includes 1 server struct...  that size gets added
      * in during the loop that follows.
      */
-    *aoutSize = sizeof(struct sprefinfo) - sizeof(struct spref);
-    spout = (struct sprefinfo *)aout;
-    spout->next_offset = spin->offset;
+    spout = afs_pd_inline(aout,
+		          sizeof(struct sprefinfo) - sizeof(struct spref));
+    spout->next_offset = spin.offset;
     spout->num_servers = 0;
     srvout = spout->servers;
 
     ObtainReadLock(&afs_xserver);
     for (i = 0, j = 0; j < NSERVERS; j++) {	/* sift through hash table */
 	for (sa = afs_srvAddrs[j]; sa; sa = sa->next_bkt, i++) {
-	    if (spin->offset > (unsigned short)i) {
+	    if (spin.offset > (unsigned short)i) {
 		continue;	/* catch up to where we left off */
 	    }
 	    spout->next_offset++;
@@ -3592,21 +3826,22 @@ DECL_PIOCTL(PGetSPrefs)
 		continue;
 	    }
 
-	    srvout->host.s_addr = sa->sa_ip;
-	    srvout->rank = sa->sa_iprank;
-	    *aoutSize += sizeof(struct spref);
-	    spout->num_servers++;
-	    srvout++;
-
-	    if (*aoutSize > (PIGGYSIZE - sizeof(struct spref))) {
+	    /* Check we've actually got the space we're about to use */
+	    if (afs_pd_inline(aout, sizeof(struct spref)) == NULL) {
 		ReleaseReadLock(&afs_xserver);	/* no more room! */
 		return 0;
 	    }
+
+	    srvout->host.s_addr = sa->sa_ip;
+	    srvout->rank = sa->sa_iprank;
+	    spout->num_servers++;
+	    srvout++;
 	}
     }
     ReleaseReadLock(&afs_xserver);
 
     spout->next_offset = 0;	/* start over from the beginning next time */
+
     return 0;
 }
 
@@ -3635,7 +3870,8 @@ DECL_PIOCTL(PExportAfs)
     register struct afs_exporter *exporter;
 
     AFS_STATCNT(PExportAfs);
-    memcpy((char *)&handleValue, ain, sizeof(afs_int32));
+    if (afs_pd_getInt(ain, &handleValue) != 0)
+	return EINVAL;
     type = handleValue >> 24;
     if (type == 0x71) {
 	newint = 1;
@@ -3663,8 +3899,8 @@ DECL_PIOCTL(PExportAfs)
     }
     if (!changestate) {
 	handleValue = exporter->exp_states;
-	memcpy(aout, (char *)&handleValue, sizeof(afs_int32));
-	*aoutSize = sizeof(afs_int32);
+	if (afs_pd_putInt(aout, handleValue) != 0)
+	    return E2BIG;
     } else {
 	if (!afs_osi_suser(*acred))
 	    return EACCES;	/* Only superuser can do this */
@@ -3709,8 +3945,8 @@ DECL_PIOCTL(PExportAfs)
 		    exporter->exp_states &= ~EXP_CALLBACK;
 	    }
 	    handleValue = exporter->exp_states;
-	    memcpy(aout, (char *)&handleValue, sizeof(afs_int32));
-	    *aoutSize = sizeof(afs_int32);
+	    if (afs_pd_putInt(aout, handleValue) != 0)
+		return E2BIG;
 	} else {
 	    if (export)
 		exporter->exp_states |= EXP_EXPORTED;
@@ -3756,7 +3992,9 @@ DECL_PIOCTL(PGag)
     if (!afs_osi_suser(*acred))
 	return EACCES;
 
-    gagflags = (struct gaginfo *)ain;
+    gagflags = afs_pd_inline(ain, sizeof(*gagflags));
+    if (gagflags == NULL)
+	return EINVAL;
     afs_showflags = gagflags->showflags;
 
     return 0;
@@ -3781,7 +4019,9 @@ DECL_PIOCTL(PTwiddleRx)
     if (!afs_osi_suser(*acred))
 	return EACCES;
 
-    rxp = (struct rxparams *)ain;
+    rxp = afs_pd_inline(ain, sizeof(*rxp));
+    if (rxp == NULL)
+	return EINVAL;
 
     if (rxp->rx_initReceiveWindow)
 	rx_initReceiveWindow = rxp->rx_initReceiveWindow;
@@ -3824,8 +4064,8 @@ DECL_PIOCTL(PGetInitParams)
     if (sizeof(struct cm_initparams) > PIGGYSIZE)
 	return E2BIG;
 
-    memcpy(aout, (char *)&cm_initParams, sizeof(struct cm_initparams));
-    *aoutSize = sizeof(struct cm_initparams);
+    return afs_pd_putBytes(aout, &cm_initParams,
+			   sizeof(struct cm_initparams));
     return 0;
 }
 
@@ -3856,9 +4096,7 @@ crget(void)
  */
 DECL_PIOCTL(PGetRxkcrypt)
 {
-    memcpy(aout, (char *)&cryptall, sizeof(afs_int32));
-    *aoutSize = sizeof(afs_int32);
-    return 0;
+    return afs_pd_putInt(aout, cryptall);
 }
 
 /*!
@@ -3882,9 +4120,8 @@ DECL_PIOCTL(PSetRxkcrypt)
 
     if (!afs_osi_suser(*acred))
 	return EPERM;
-    if (ainSize != sizeof(afs_int32) || ain == NULL)
+    if (afs_pd_getInt(ain, &tmpval) != 0)
 	return EINVAL;
-    memcpy((char *)&tmpval, ain, sizeof(afs_int32));
     /* if new mappings added later this will need to be changed */
     if (tmpval != 0 && tmpval != 1)
 	return EINVAL;
@@ -4084,11 +4321,13 @@ DECL_PIOCTL(PGetCPrefs)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    if (ainSize < sizeof(struct sprefrequest))
+    spin = afs_pd_inline(ain, sizeof(*spin));
+    if (spin == NULL)
 	return EINVAL;
 
-    spin = (struct sprefrequest *)ain;
-    spout = (struct sprefinfo *)aout;
+    /* Output spout relies on writing past the end of arrays. It's horrible,
+     * but I'm not quite brave enough to tackle it yet */
+    spout = (struct sprefinfo *)aout->ptr;
 
     maxNumber = spin->num_servers;	/* max addrs this time */
     srvout = spout->servers;
@@ -4103,7 +4342,7 @@ DECL_PIOCTL(PGetCPrefs)
 	srvout->host.s_addr = afs_cb_interface.addr_in[i];
 
     spout->num_servers = j;
-    *aoutSize = sizeof(struct sprefinfo) + (j - 1) * sizeof(struct spref);
+    aout->ptr += sizeof(struct sprefinfo) + (j - 1) * sizeof(struct spref);
 
     if (i >= afs_cb_interface.numberOfInterfaces)
 	spout->next_offset = 0;	/* start from beginning again */
@@ -4130,6 +4369,8 @@ DECL_PIOCTL(PGetCPrefs)
  */
 DECL_PIOCTL(PSetCPrefs)
 {
+    char *ainPtr;
+    size_t ainSize;
     struct setspref *sin;
     int i;
 
@@ -4137,7 +4378,13 @@ DECL_PIOCTL(PSetCPrefs)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    sin = (struct setspref *)ain;
+    /* Yuck. Input to this function relies on reading past the end of
+     * structures. Bodge it for now.
+     */
+    ainPtr = ain->ptr;
+    ainSize = ain->remaining;
+
+    sin = (struct setspref *)ainPtr;
 
     if (ainSize < sizeof(struct setspref))
 	return EINVAL;
@@ -4178,12 +4425,17 @@ DECL_PIOCTL(PFlushMount)
     register struct dcache *tdc;
     struct VenusFid tfid;
     char *bufp;
+    char *mount;
     struct sysname_info sysState;
     afs_size_t offset, len;
 
     AFS_STATCNT(PFlushMount);
     if (!avc)
 	return EINVAL;
+
+    if (afs_pd_getStringPtr(ain, &mount) != 0)
+	return EINVAL;
+
     code = afs_VerifyVCache(avc, areq);
     if (code)
 	return code;
@@ -4193,7 +4445,7 @@ DECL_PIOCTL(PFlushMount)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc)
 	return ENOENT;
-    Check_AtSys(avc, ain, &sysState, areq);
+    Check_AtSys(avc, mount, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
 	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
@@ -4261,22 +4513,17 @@ DECL_PIOCTL(PFlushMount)
  */
 DECL_PIOCTL(PRxStatProc)
 {
-    int code = 0;
     afs_int32 flags;
 
-    if (!afs_osi_suser(*acred)) {
-	code = EACCES;
-	goto out;
-    }
-    if (ainSize != sizeof(afs_int32)) {
-	code = EINVAL;
-	goto out;
-    }
-    memcpy((char *)&flags, ain, sizeof(afs_int32));
-    if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
-	code = EINVAL;
-	goto out;
-    }
+    if (!afs_osi_suser(*acred))
+	return EACCES;
+
+    if (afs_pd_getInt(ain, &flags) != 0)
+	return EINVAL;
+
+    if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK))
+	return EINVAL;
+
     if (flags & AFSCALL_RXSTATS_ENABLE) {
 	rx_enableProcessRPCStats();
     }
@@ -4286,9 +4533,7 @@ DECL_PIOCTL(PRxStatProc)
     if (flags & AFSCALL_RXSTATS_CLEAR) {
 	rx_clearProcessRPCStats(AFS_RX_STATS_CLEAR_ALL);
     }
-  out:
-    *aoutSize = 0;
-    return code;
+    return 0;
 }
 
 
@@ -4307,22 +4552,17 @@ DECL_PIOCTL(PRxStatProc)
  */
 DECL_PIOCTL(PRxStatPeer)
 {
-    int code = 0;
     afs_int32 flags;
 
-    if (!afs_osi_suser(*acred)) {
-	code = EACCES;
-	goto out;
-    }
-    if (ainSize != sizeof(afs_int32)) {
-	code = EINVAL;
-	goto out;
-    }
-    memcpy((char *)&flags, ain, sizeof(afs_int32));
-    if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
-	code = EINVAL;
-	goto out;
-    }
+    if (!afs_osi_suser(*acred))
+	return EACCES;
+
+    if (afs_pd_getInt(ain, &flags) != 0)
+	return EINVAL;
+
+    if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK))
+	return EINVAL;
+
     if (flags & AFSCALL_RXSTATS_ENABLE) {
 	rx_enablePeerRPCStats();
     }
@@ -4332,15 +4572,13 @@ DECL_PIOCTL(PRxStatPeer)
     if (flags & AFSCALL_RXSTATS_CLEAR) {
 	rx_clearPeerRPCStats(AFS_RX_STATS_CLEAR_ALL);
     }
-  out:
-    *aoutSize = 0;
-    return code;
+    return 0;
 }
 
 DECL_PIOCTL(PPrefetchFromTape)
 {
     register afs_int32 code, code1;
-    afs_int32 bytes;
+    afs_int32 bytes, outval;
     struct afs_conn *tc;
     struct rx_call *tcall;
     struct AFSVolSync tsync;
@@ -4354,10 +4592,10 @@ DECL_PIOCTL(PPrefetchFromTape)
     if (!avc)
 	return EINVAL;
 
-    if (ain && (ainSize == 3 * sizeof(afs_int32)))
-	Fid = (struct AFSFid *)ain;
-    else
+    Fid = afs_pd_inline(ain, sizeof(struct AFSFid));
+    if (Fid == NULL)
 	Fid = &avc->f.fid.Fid;
+
     tfid.Cell = avc->f.fid.Cell;
     tfid.Fid.Volume = Fid->Volume;
     tfid.Fid.Vnode = Fid->Vnode;
@@ -4382,7 +4620,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 		StartRXAFS_FetchData(tcall, (struct AFSFid *)&tvc->f.fid.Fid, 0,
 				     0);
 	    if (!code) {
-		bytes = rx_Read(tcall, (char *)aout, sizeof(afs_int32));
+		bytes = rx_Read(tcall, (char *)&outval, sizeof(afs_int32));
 		code =
 		    EndRXAFS_FetchData(tcall, &OutStatus, &CallBack, &tsync);
 	    }
@@ -4397,10 +4635,10 @@ DECL_PIOCTL(PPrefetchFromTape)
     afs_FetchStatus(tvc, &tfid, areq, &OutStatus);
     afs_PutVCache(tvc);
 
-    if (!code) {
-	*aoutSize = sizeof(afs_int32);
-    }
-    return code;
+    if (code)
+	return code;
+
+    return afs_pd_putInt(aout, outval);
 }
 
 DECL_PIOCTL(PFsCmd)
@@ -4413,12 +4651,16 @@ DECL_PIOCTL(PFsCmd)
     struct VenusFid tfid;
     struct AFSFid *Fid;
 
-    Inputs = (struct FsCmdInputs *)ain;
-    Outputs = (struct FsCmdOutputs *)aout;
     if (!avc)
 	return EINVAL;
-    if (!ain || ainSize != sizeof(struct FsCmdInputs))
+
+    Inputs = afs_pd_inline(ain, sizeof(*Inputs));
+    if (Inputs == NULL)
 	return EINVAL;
+
+    Outputs = afs_pd_inline(aout, sizeof(*Outputs));
+    if (Outputs == NULL)
+	return E2BIG;
 
     Fid = &Inputs->fid;
     if (!Fid->Volume)
@@ -4465,9 +4707,6 @@ DECL_PIOCTL(PFsCmd)
 
     afs_PutVCache(tvc);
 
-    if (!code) {
-	*aoutSize = sizeof(struct FsCmdOutputs);
-    }
     return code;
 }
 
@@ -4491,12 +4730,11 @@ DECL_PIOCTL(PNewUuid)
 
 DECL_PIOCTL(PSetCachingThreshold)
 {
-    afs_int32 getting;
-    afs_int32 setting;
+    afs_int32 getting = 1;
+    afs_int32 setting = 1;
+    afs_int32 threshold;
 
-    setting = getting = 1;
-
-    if (ain == NULL || ainSize < sizeof(afs_int32))
+    if (afs_pd_getInt(ain, &threshold) != 0)
 	setting = 0;
 
     if (aout == NULL)
@@ -4509,23 +4747,17 @@ DECL_PIOCTL(PSetCachingThreshold)
      * If setting, set first, and return the value now in effect
      */
     if (setting) {
-	afs_int32 threshold;
-
 	if (!afs_osi_suser(*acred))
 	    return EPERM;
-	memcpy((char *)&threshold, ain, sizeof(afs_int32));
 	cache_bypass_threshold = threshold;
         afs_warn("Cache Bypass Threshold set to: %d\n", threshold);		
 	/* TODO:  move to separate pioctl, or enhance pioctl */
 	cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
     }
 	
+    /* Return the current size threshold */
     if (getting) {
-	/* Return the current size threshold */
-	afs_int32 oldThreshold = cache_bypass_threshold;
-	memcpy(aout, (char *)&oldThreshold, sizeof(afs_int32));
-	*aoutSize = sizeof(afs_int32);
-    }
+	return afs_pd_putInt32(aout, cache_bypass_threshold);
 
     return(0);
 }
@@ -4551,10 +4783,8 @@ DECL_PIOCTL(PCallBackAddr)
     if (!afs_osi_suser(acred))
 	return EACCES;
 
-    if (ainSize < sizeof(afs_int32))
+    if (afs_pd_getInt(ain, &addr) != 0)
 	return EINVAL;
-
-    memcpy(&addr, ain, sizeof(afs_int32));
 
     ObtainReadLock(&afs_xinterface);
     for (i = 0; (unsigned short)i < afs_cb_interface.numberOfInterfaces; i++) {
@@ -4636,17 +4866,17 @@ DECL_PIOCTL(PDiscon)
     static afs_int32 mode = 1; /* Start up in 'off' */
     afs_int32 force = 0;
     int code = 0;
+    char flags[3];
 
-    if (ainSize) {
-
+    if (afs_pd_getBytes(ain, &flags, 3) == 0) {
 	if (!afs_osi_suser(*acred))
 	    return EPERM;
 
-	if (ain[0])
-	    mode = ain[0] - 1;
-	if (ain[1])
-	    afs_ConflictPolicy = ain[1] - 1;
-	if (ain[2])
+	if (flags[0])
+	    mode = flags[0] - 1;
+	if (flags[1])
+	    afs_ConflictPolicy = flags[1] - 1;
+	if (flags[2])
 	    force = 1;
 
 	/*
@@ -4695,9 +4925,10 @@ DECL_PIOCTL(PDiscon)
 	return EINVAL;
     }
 
-    memcpy(aout, &mode, sizeof(afs_int32));
-    *aoutSize = sizeof(afs_int32);
-    return code;
+    if (code)
+	return code;
+
+    return afs_pd_putInt(aout, mode);
 #else
     return EINVAL;
 #endif
@@ -4713,9 +4944,8 @@ DECL_PIOCTL(PNFSNukeCreds)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    if (ainSize < sizeof(afs_int32))
+    if (afs_pd_getUint(ain, &addr) != 0)
 	return EINVAL;
-    memcpy(&addr, ain, sizeof(afs_int32));
 
     if (afs_cr_gid(*acred) == RMTUSER_REQ_PRIV && !addr) {
 	tu = afs_GetUser(areq->uid, -1, SHARED_LOCK);
