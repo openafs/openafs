@@ -36,14 +36,12 @@
 #include <strings.h>
 #include <afs/com_err.h>
 #include <afs/afs_consts.h>
+#include <afs/sys_prototypes.h>
 
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
 #define VMSGSIZE 128		/* size of msg buf in volume hdr */
 
-static char space[AFS_PIOCTL_MAXSIZE];
-static char tspace[1024];
-static struct ubik_client *uclient;
-
+static void Die(int code, char *filename);
 
 static char pn[] = "fs";
 static int rxInitDone = 0;
@@ -126,9 +124,8 @@ Twiddle(struct cmd_syndesc *as, void *arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
@@ -168,9 +165,8 @@ main(argc, argv)
     exit(code);
 }
 
-Die(code, filename)
-     int code;
-     char *filename;
+static void
+Die(int code, char *filename)
 {				/*Die */
 
     if (errno == EINVAL) {
