@@ -1445,6 +1445,8 @@ AC_CHECK_TYPES([fsblkcnt_t],,,[
 #endif
 ])
 
+OPENAFS_TEST_PACKAGE(libintl,[#include <libintl.h>],[-lintl],,,INTL)
+
 dnl Don't build PAM on IRIX; the interface doesn't work for us.
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
         case $AFS_SYSNAME in

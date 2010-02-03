@@ -27,6 +27,9 @@ struct et_list {
 
 extern char const *afs_error_table_name(afs_int32 num);
 extern void afs_add_to_error_table(struct et_list *new_table);
+extern const char *afs_com_right(struct et_list *list, long code);
+extern const char *afs_com_right_r(struct et_list *list, long code, char *str, size_t len);
+
 #ifdef AFS_OLD_COM_ERR
 #define error_table_name        afs_error_table_name
 #define add_to_error_table(X) afs_add_to_error_table(X)

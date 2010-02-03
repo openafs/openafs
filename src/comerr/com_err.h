@@ -21,6 +21,7 @@ extern void afs_com_err_va(const char *whoami, afs_int32 code, const char *fmt,
 
 extern const char *afs_error_table_name(afs_int32);
 extern const char *afs_error_message(afs_int32);
+extern const char *afs_error_message_localize(afs_int32 code, char *str, size_t len);
 extern
 void (*afs_set_com_err_hook
       (void (*)(const char *, afs_int32, const char *, va_list)))

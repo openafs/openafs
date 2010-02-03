@@ -8,7 +8,7 @@ RXDEBUG="-DRXDEBUG"
 SHLIB_SUFFIX="so"
 CCOBJ="$CC"
 MT_CC="$CC"
-XLIBS="${LIB_AFSDB} ${XBSA_XLIBS}"
+XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} ${LIB_libintl}"
 
 dnl debugging and optimization flag defaults
 dnl Note, these are all the defaults for if debug/optimize turned on, and
@@ -541,6 +541,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_80)
@@ -561,6 +562,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_90)
@@ -579,13 +581,14 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_100)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
-		MT_LIBS="-lresolv"
+		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
@@ -599,6 +602,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	ppc_linux*)
@@ -628,7 +632,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64="#"
@@ -647,7 +651,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64=""
@@ -665,7 +669,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64=""
@@ -683,7 +687,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64=""
@@ -701,7 +705,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="#"
 		AIX64=""
