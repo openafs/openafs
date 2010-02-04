@@ -534,6 +534,12 @@ afs_osi_Wakeup(void *x)
 }
 
 int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
+{
+    return afs_osi_Wait(ams, event, aintok);
+}
+
+int
 afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 {
     int index;

@@ -15,8 +15,6 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-
 static char waitV;
 
 void
@@ -57,7 +55,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     do {
 	AFS_ASSERT_GLOCK();
 	code = 0;
-	code = osi_TimedSleep(&waitV, ams, aintok);
+	code = afs_osi_TimedSleep(&waitV, ams, aintok);
 
 	if (code)
 	    break;		/* if something happened, quit now */
@@ -159,7 +157,7 @@ afs_osi_SleepSig(void *event)
     return code;
 }
 
-/* osi_TimedSleep
+/* afs_osi_TimedSleep
  * 
  * Arguments:
  * event - event to sleep on
@@ -168,8 +166,8 @@ afs_osi_SleepSig(void *event)
  *
  * Returns 0 if timeout and EINTR if signalled.
  */
-static int
-osi_TimedSleep(char *event, afs_int32 ams, int aintok)
+int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     struct afs_event *evp;

@@ -636,6 +636,7 @@ extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);
 extern void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle);
 extern int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle,
 			int aintok);
+extern int afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok);
 #ifndef afs_osi_Wakeup
 extern int afs_osi_Wakeup(void *event);
 #endif
