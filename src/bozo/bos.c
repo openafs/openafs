@@ -177,7 +177,7 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     struct afsconf_dir *tdir = NULL;
     afsconf_secflags secFlags;
     struct rx_securityClass *sc;
-    int scIndex;
+    afs_int32 scIndex;
 
     hostname = as->parms[0].items->data;
     th = hostutil_GetHostByName(hostname);
@@ -218,7 +218,7 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
 	exit(1);
     }
 
-    if (scIndex == 0)
+    if (scIndex == RX_SECIDX_NULL)
 	fprintf(stderr, "bos: running unauthenticated\n");
 
     tconn =

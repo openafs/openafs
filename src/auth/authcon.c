@@ -58,7 +58,7 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
     register struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
     *astr = tc;
-    *aindex = 0;
+    *aindex = RX_SECIDX_NULL;
     return 0;
 }
 
@@ -77,7 +77,7 @@ afsconf_ServerAuth(void *arock,
 	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
-	*aindex = 2;		/* kerberos security index */
+	*aindex = RX_SECIDX_KAD;
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     } else {
@@ -134,7 +134,7 @@ GenericAuth(struct afsconf_dir *adir,
 	rxkad_NewClientSecurityObject(enclevel, &session, kvno, ticketLen,
 				      tbuffer);
     *astr = tclass;
-    *aindex = 2;		/* kerberos security index */
+    *aindex = RX_SECIDX_KAD;
     return 0;
 }
 
@@ -207,7 +207,7 @@ afsconf_ClientAuthToken(struct afsconf_cell *info,
     afs_int32 code;
 
     *sc = NULL;
-    *scIndex = 0;
+    *scIndex = RX_SECIDX_NULL;
 
     strcpy(sname.cell, info->name);
     sname.instance[0] = 0;
@@ -230,7 +230,7 @@ afsconf_ClientAuthToken(struct afsconf_cell *info,
 					    ttoken.kvno,
 					    ttoken.ticketLen,
 					    ttoken.ticket);
-	*scIndex = 2;
+	*scIndex = RX_SECIDX_KAD;
 	if (expires)
 	    *expires = ttoken.endTime;
     }
@@ -314,7 +314,7 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
     afs_int32 code = 0;
 
     *sc = NULL;
-    *scIndex = 0;
+    *scIndex = RX_SECIDX_NULL;
     if (expires)
 	expires = 0;
 
@@ -355,7 +355,7 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
     }
     if (*sc == NULL) {
 	*sc = rxnull_NewClientSecurityObject();
-	*scIndex = 0;
+	*scIndex = RX_SECIDX_NULL;
 	if (expires)
 	    *expires = NEVERDATE;
     }

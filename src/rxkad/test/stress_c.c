@@ -1301,12 +1301,12 @@ rxkst_StartClient(parms)
 	    rxkad_NewClientSecurityObject(parms->authentication, &Ksession,
 					  kvno, ticketLen, ticket);
 	assert(sc);
-	scIndex = 2;		/* kerberos security index */
+	scIndex = RX_SECIDX_KAD;
     } else {
 	/* unauthenticated connection */
 	sc = rxnull_NewClientSecurityObject();
 	assert(sc);
-	scIndex = 0;		/* null security index */
+	scIndex = RX_SECIDX_NULL;
     }
 
     code = 0;

@@ -222,7 +222,7 @@ whoami(struct ktc_token *atoken,
     struct ktc_principal *aclient,
     int *vicep)
 {
-    int scIndex;
+    rx_securityIndex scIndex;
     int code;
     int i;
     struct ubik_client *ptconn = 0;
@@ -234,7 +234,7 @@ whoami(struct ktc_token *atoken,
 
     memset(lnames, 0, sizeof *lnames);
     memset(lids, 0, sizeof *lids);
-    scIndex = 2;
+    scIndex = RX_SECIDX_KAD;
     sc = rxkad_NewClientSecurityObject(rxkad_auth,
 	&atoken->sessionKey, atoken->kvno,
 	atoken->ticketLen, atoken->ticket);

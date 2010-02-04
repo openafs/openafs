@@ -799,7 +799,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
     afs_int32 code = 0;
     struct afsconf_dir *acdir;
     struct rx_securityClass *sc;
-    afs_int32 i, scIndex = 0;	/* Index of Rx security object - noauth */
+    afs_int32 i, scIndex = RX_SECIDX_NULL;
     struct afsconf_cell info;
     struct rx_connection *serverconns[VLDB_MAXSERVERS];
     afsconf_secflags secFlags;
@@ -833,7 +833,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 	afs_com_err(whoami, code, "(configuring connection security)");
 	ERROR(BC_NOCELLCONFIG);
     }
-    if (scIndex == 0 && !noAuthFlag)
+    if (scIndex == RX_SECIDX_NULL && !noAuthFlag)
 	afs_com_err(whoami, 0, "Can't get tokens - running unauthenticated");
 
     /* tell UV module about default authentication */
@@ -907,7 +907,7 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
 	afs_com_err(whoami, code, "(configuring connection security)");
 	ERROR(BC_NOCELLCONFIG);
     }
-    if (&udbHandle.uh_scIndex == 0 && !noAuthFlag)
+    if (&udbHandle.uh_scIndex == RX_SECIDX_NULL && !noAuthFlag)
 	afs_com_err(whoami, 0, "Can't get tokens - running unauthenticated");
 
     if (info.numServers > MAXSERVERS) {
@@ -1166,7 +1166,7 @@ udbLocalInit(void)
 	return (-1);
     }
 
-    udbHandle.uh_scIndex = RX_SCINDEX_NULL;
+    udbHandle.uh_scIndex = RX_SECIDX_NULL;
     udbHandle.uh_secobj = (struct rx_securityClass *)
 	rxnull_NewClientSecurityObject();
 

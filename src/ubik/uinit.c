@@ -52,7 +52,8 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {
-    afs_int32 code, scIndex, secFlags, i;
+    afs_int32 code, secFlags, i;
+    afs_int32 scIndex;
     struct afsconf_cell info;
     struct afsconf_dir *tdir;
     struct rx_securityClass *sc;
@@ -95,7 +96,7 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
 	fprintf(stderr, "%s: can't create client security object", funcName);
 	return -1;
     }
-    if (scIndex == 0) {
+    if (scIndex == RX_SECIDX_NULL) {
 	fprintf(stderr,
 		"%s: Could not get afs tokens, running unauthenticated.\n",
 		funcName);

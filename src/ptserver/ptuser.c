@@ -197,10 +197,10 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 
     if (sc == NULL) {
 	sc = rxnull_NewClientSecurityObject();
-        scIndex = 0;
+        scIndex = RX_SECIDX_NULL;
     }
 
-    if ((scIndex == 0) && (secLevel != 0))
+    if ((scIndex == RX_SECIDX_NULL) && (secLevel != 0))
 	fprintf(stderr,
 		"%s: Could not get afs tokens, running unauthenticated\n",
 		whoami);

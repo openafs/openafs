@@ -168,7 +168,7 @@ InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
 	printf("%s: Can't create client security object\n", uss_whoami);
         exit(1);
     }
-    if (scIndex == 0 && !a_noAuthFlag) {
+    if (scIndex == RX_SECIDX_NULL && !a_noAuthFlag) {
 	fprintf(stderr,
 		"%s: Couldn't get AFS tokens, running unauthenticated.\n",
 		uss_whoami);

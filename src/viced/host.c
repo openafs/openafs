@@ -309,13 +309,13 @@ hpr_Initialize(struct ubik_client **uclient)
         if (code)
 	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
         if (code)
-            scIndex = 0;        /* use noauth */
+            scIndex = RX_SECIDX_NULL;
     } else {
 	afsconf_ClientAuthToken(&info, 0, &sc, &scIndex, NULL);
     }
-    if ((scIndex == 0) && (sc == NULL))
+    if ((scIndex == RX_SECIDX_NULL) && (sc == NULL))
         sc = rxnull_NewClientSecurityObject();
-    if (scIndex == 0)
+    if (scIndex == RX_SECIDX_NULL)
 	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, running unauthenticated. [%d]", code));
     
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */

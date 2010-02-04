@@ -29,7 +29,7 @@ afs_int32
 pxclient_Initialize(int auth, afs_int32 serverAddr)
 {
     afs_int32 code;
-    afs_int32 scIndex;
+    rx_securityIndex scIndex;
     struct rx_securityClass *sc;
 
     code = rx_Init(htons(2115) /*0 */ );
@@ -37,7 +37,7 @@ pxclient_Initialize(int auth, afs_int32 serverAddr)
 	fprintf(stderr, "pxclient_Initialize:  Could not initialize rx.\n");
 	return code;
     }
-    scIndex = 0;
+    scIndex = RX_SECIDX_NULL;
     rx_SetRxDeadTime(50);
     sc = rxnull_NewClientSecurityObject();
     serverconns[0] =

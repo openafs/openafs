@@ -286,7 +286,7 @@ HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
     afs_int32 code;
 
     *sc = NULL;
-    *scIndex = 0;
+    *scIndex = RX_SECIDX_NULL;
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
@@ -1429,7 +1429,7 @@ FindCell(char *cellName)
 #endif
 	code = afsconf_ClientAuthToken(&p->info, 0, &p->sc, &p->scIndex);
 	if (code) {
-	    p->scIndex = 0;
+	    p->scIndex = RX_SECIDX_NULL;
             p->sc = rxnull_NewClientSecurityObject();
 	}
     }

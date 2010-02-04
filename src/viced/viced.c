@@ -1608,7 +1608,8 @@ struct ubik_client *cstruct;
 afs_int32
 vl_Initialize(const char *confDir)
 {
-    afs_int32 code, scIndex = 0, i;
+    afs_int32 code, i;
+    afs_int32 scIndex = RX_SECIDX_NULL;
     struct afsconf_dir *tdir;
     struct rx_securityClass *sc;
     struct afsconf_cell info;
