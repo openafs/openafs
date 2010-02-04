@@ -605,6 +605,15 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
     struct afs_ioctl_sys ua, *uap = &ua;
+#   elif defined(UKERNEL)
+int
+afs_xioctl(void)
+{
+    register struct a {
+	int fd;
+	int com;
+	caddr_t arg;
+    } *uap = (struct a *)get_user_struct()->u_ap;
 #   else
 int
 afs_xioctl(void)
@@ -1063,6 +1072,9 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	}
 #elif defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
+#elif defined(UKERNEL)
+	code = afs_HandlePioctl(vp, com, &data, follow,
+				&(get_user_struct()->u_cred));
 #else
 	code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
 #endif

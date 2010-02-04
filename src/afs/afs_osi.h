@@ -393,8 +393,10 @@ typedef struct timeval osi_timeval_t;
 /*
  * encapsulation of kernel data structure accesses
  */
+#ifndef UKERNEL
 #define setuerror(erval)	u.u_error = (erval)
 #define getuerror()		u.u_error
+#endif
 
 /* Macros for vcache/vnode and vfs arguments to vnode and vfs ops.
  * These are required for IRIX 6.4 and later, which pass behavior pointers.

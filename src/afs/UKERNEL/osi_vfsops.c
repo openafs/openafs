@@ -78,7 +78,7 @@ afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp)
 	    afs_globalVp = NULL;
 	}
 
-	if (!(code = afs_InitReq(&treq, u.u_cred))
+	if (!(code = afs_InitReq(&treq, get_user_struct()->u_cred))
 	    && !(code = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */

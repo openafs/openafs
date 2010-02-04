@@ -1013,7 +1013,7 @@ do { \
     AFS_ASSERT_GLOCK(); \
     usr_assert((vp)->v_count > 0); \
     if (--((vp)->v_count) == 0) \
-	afs_inactive(VTOAFS(vp), u.u_cred); \
+	afs_inactive(VTOAFS(vp), get_user_struct()->u_cred); \
 } while(0)
 
 struct usr_statfs {
@@ -1399,7 +1399,6 @@ struct usr_user {
     } u_r;
 };
 #define u_rval1			u_r.r_val1
-#define u			(*(get_user_struct()))
 
 extern struct usr_user *get_user_struct(void);
 

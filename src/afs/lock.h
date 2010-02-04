@@ -70,7 +70,11 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
 
-#if defined(AFS_SUN57_ENV)
+#if defined(UKERNEL)
+typedef unsigned int afs_lock_tracker_t;
+# define MyPidxx (get_user_struct()->u_procp->p_pid )
+# define MyPidxx2Pid(x) (x)
+#elif defined(AFS_SUN57_ENV)
 typedef kthread_t * afs_lock_tracker_t;
 # define MyPidxx (curthread)
 # define MyPidxx2Pid(x) (x ? ttoproc(x)->p_pid : 0)

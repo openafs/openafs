@@ -83,4 +83,8 @@ extern int afs_bufferpages;
 
 extern int afs_suser(void *credp);
 
+#define setuerror(erval) get_user_struct()->u_error = (erval)
+#define getuerror(erval) get_user_struct()->u_error
+#define osi_curcred()    get_user_struct()->u_cred
+
 #endif /* _OSI_MACHDEP_H_ */
