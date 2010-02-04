@@ -60,6 +60,8 @@ static void PurgeHeader(Volume * vp);
 static void PurgeIndex_r(Volume * vp, VnodeClass class);
 static void PurgeHeader_r(Volume * vp);
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 /* No lock needed. Only the volserver will call this, and only one transaction
  * can have a given volume (volid/partition pair) in use at a time 
  */
@@ -67,7 +69,11 @@ void
 VPurgeVolume(Error * ec, Volume * vp)
 {
     struct DiskPartition64 *tpartp = vp->partition;
-    char purgePath[MAXPATHLEN];
+    VolumeId volid, parent;
+    afs_int32 code;
+
+    volid = V_id(vp);
+    parent = V_parentId(vp);
 
     /* so VCheckDetach doesn't try to update the volume header and
      * dump spurious errors into the logs */
@@ -77,13 +83,17 @@ VPurgeVolume(Error * ec, Volume * vp)
      * volume header. This routine can, under some circumstances, be called
      * when two volumes with the same id exist on different partitions.
      */
-    (void)afs_snprintf(purgePath, sizeof purgePath, "%s/%s",
-		       VPartitionPath(vp->partition),
-		       VolumeExternalName(V_id(vp)));
     PurgeIndex_r(vp, vLarge);
     PurgeIndex_r(vp, vSmall);
     PurgeHeader_r(vp);
-    unlink(purgePath);
+
+    code = VDestroyVolumeDiskHeader(tpartp, volid, parent);
+    if (code) {
+	Log("VPurgeVolume: Error %ld when destroying volume %lu header\n",
+	    afs_printable_int32_ld(code),
+	    afs_printable_uint32_lu(volid));
+    }
+
     /*
      * Call the fileserver to break all call backs for that volume
      */

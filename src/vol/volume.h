@@ -783,6 +783,7 @@ extern void VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,
 			       unsigned bitNumber);
 extern int VolumeNumber(char *name);
 extern char *VolumeExternalName(VolumeId volumeId);
+extern int VolumeExternalName_r(VolumeId volumeId, char *name, size_t len);
 extern Volume *VAttachVolumeByName(Error * ec, char *partition, char *name,
 				   int mode);
 extern Volume *VAttachVolumeByName_r(Error * ec, char *partition, char *name,
@@ -854,6 +855,15 @@ extern void VPurgeVolume(Error * ec, Volume * vp);
 extern afs_int32 VCanScheduleSalvage(void);
 extern afs_int32 VCanUseFSSYNC(void);
 extern afs_int32 VCanUseSALVSYNC(void);
+extern afs_int32 VReadVolumeDiskHeader(VolumeId volid,
+				       struct DiskPartition64 * dp,
+				       VolumeDiskHeader_t * hdr);
+extern afs_int32 VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
+					struct DiskPartition64 * dp);
+extern afs_int32 VCreateVolumeDiskHeader(VolumeDiskHeader_t * hdr,
+					 struct DiskPartition64 * dp);
+extern afs_int32 VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
+					  VolumeId volid, VolumeId parent);
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store

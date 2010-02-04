@@ -1641,22 +1641,6 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
-    char headername[16];
-
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
-    (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
-    fd = open(oldpath, O_RDONLY);
-    if (fd < 0) {
-        Log("1 namei_ConvertROtoRWvolume: Couldn't open header for RO-volume %lu.\n", volumeId);
-        return ENOENT;
-    }
-    if (read(fd, &h, sizeof(h)) != sizeof(h)) {
-        Log("1 namei_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n", volumeId);
-        close(fd);
-        return EIO;
-    }
-    close(fd);
-    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
 
     for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
          partP = partP->next);
@@ -1664,6 +1648,15 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
         Log("1 namei_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
         return EIO;
     }
+
+    if (VReadVolumeDiskHeader(volumeId, partP, &h)) {
+	Log("1 namei_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n",
+	    afs_printable_uint32_lu(volumeId));
+	return EIO;
+    }
+
+    FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
+
     ino = namei_MakeSpecIno(h.parent, VI_LINKTABLE);
     IH_INIT(ih, partP->device, h.parent, ino);
 
@@ -1793,25 +1786,18 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     h.smallVnodeIndex_hi = h.id;
     h.largeVnodeIndex_hi = h.id;
     h.linkTable_hi = h.id;
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(h.id));
-    (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
-    fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
-    if (fd < 0) {
-        Log("1 namei_ConvertROtoRWvolume: Couldn't create header for RW-volume %lu.\n", h.id);
+
+    if (VCreateVolumeDiskHeader(&h, partP)) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't write header for RW-volume %lu\n",
+	    afs_printable_uint32_lu(h.id));
         return EIO;
     }
-    if (write(fd, &h, sizeof(h)) != sizeof(h)) {
-        Log("1 namei_ConvertROtoRWvolume: Couldn't write header for RW-volume\
- %lu.\n", h.id);
-        close(fd);
-        return EIO;
+
+    if (VDestroyVolumeDiskHeader(partP, volumeId, h.parent)) {
+        Log("1 namei_ConvertROtoRWvolume: Couldn't unlink header for RO-volume %lu\n",
+	    afs_printable_uint32_lu(volumeId));
     }
-    close(fd);
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
-    (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
-    if (unlink(oldpath) < 0) {
-        Log("1 namei_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", errno);
-    }
+
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
 #endif
