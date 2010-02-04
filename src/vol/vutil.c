@@ -556,3 +556,419 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     return code;
 }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+
+/**
+ * initialize a struct VLockFile.
+ *
+ * @param[in] lf   struct VLockFile to initialize
+ * @param[in] path Full path to the file to use for locks. The string contents
+ *                 are copied.
+ */
+void
+VLockFileInit(struct VLockFile *lf, const char *path)
+{
+    memset(lf, 0, sizeof(*lf));
+    assert(pthread_mutex_init(&lf->mutex, NULL) == 0);
+    lf->path = strdup(path);
+}
+
+# ifdef AFS_NT40_ENV
+static_inline FD_t
+_VOpenPath(const char *path)
+{
+    HANDLE handle;
+
+    handle = CreateFile(path,
+                        GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL,
+                        OPEN_ALWAYS,
+                        FILE_ATTRIBUTE_HIDDEN,
+                        NULL);
+    if (handle == INVALID_HANDLE_VALUE) {
+	return INVALID_FD;
+    }
+
+    return handle;
+}
+
+static_inline int
+_VLockFd(FD_t handle, afs_uint32 offset, int locktype, int nonblock)
+{
+    DWORD flags = 0;
+    OVERLAPPED lap;
+
+    if (locktype == WRITE_LOCK) {
+	flags |= LOCKFILE_EXCLUSIVE_LOCK;
+    }
+    if (nonblock) {
+	flags |= LOCKFILE_FAIL_IMMEDIATELY;
+    }
+
+    memset(&lap, 0, sizeof(lap));
+    lap.Offset = offset;
+
+    if (!LockFileEx(handle, flags, 0, 1, 0, &lap)) {
+	if (GetLastError() == ERROR_LOCK_VIOLATION) {
+	    CloseHandle(handle);
+	    return EBUSY;
+	}
+	CloseHandle(handle);
+	return EIO;
+    }
+
+    return 0;
+}
+
+static_inline void
+_VUnlockFd(struct VLockFile *lf, afs_uint32 offset)
+{
+    OVERLAPPED lap;
+
+    memset(&lap, 0, sizeof(lap));
+    lap.Offset = offset;
+
+    UnlockFileEx(lf->fd, 0, 1, 0, &lap);
+}
+
+static_inline void
+_VCloseFd(struct VLockFile *lf)
+{
+    CloseHandle(lf->fd);
+}
+
+# else /* !AFS_NT40_ENV */
+
+/**
+ * open a file on the local filesystem suitable for locking
+ *
+ * @param[in] path  abs path of the file to open
+ *
+ * @return file descriptor
+ *  @retval INVALID_FD failure opening file
+ */
+static_inline int
+_VOpenPath(const char *path)
+{
+    int fd;
+
+    fd = open(path, O_RDWR | O_CREAT, 0660);
+    if (fd < 0) {
+	return INVALID_FD;
+    }
+    return fd;
+}
+
+/**
+ * lock an offset in a file descriptor.
+ *
+ * @param[in] fd       file descriptor to lock
+ * @param[in] offset   offset in file to lock
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ * @param[in] nonblock 1 to fail immediately, 0 to wait to acquire lock
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval EBUSY someone else is holding a conflicting lock and nonblock=1 was
+ *                specified
+ *  @retval EIO   error acquiring file lock
+ */
+static_inline int
+_VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
+{
+    int l_type = F_WRLCK;
+    int cmd = F_SETLKW;
+    struct flock sf;
+
+    if (locktype == READ_LOCK) {
+	l_type = F_RDLCK;
+    }
+    if (nonblock) {
+	cmd = F_SETLK;
+    }
+
+    sf.l_start = offset;
+    sf.l_len = 1;
+    sf.l_type = l_type;
+    sf.l_whence = SEEK_SET;
+
+    if (fcntl(fd, cmd, &sf)) {
+	if (nonblock && (errno == EACCES || errno == EAGAIN)) {
+	    /* We asked for a nonblocking lock, and it was already locked */
+	    close(fd);
+	    return EBUSY;
+	}
+	Log("_VLockFd: fcntl failed with error %d when trying to lock "
+	    "fd %d (locktype=%d)\n", errno, fd, locktype);
+	close(fd);
+	return EIO;
+    }
+
+    return 0;
+}
+
+/**
+ * close a file descriptor used for file locking.
+ *
+ * @param[in] fd file descriptor to close
+ */
+static_inline void
+_VCloseFd(int fd)
+{
+    if (close(fd)) {
+	Log("_VCloseFd: error %d closing fd %d\n",
+            errno, fd);
+    }
+}
+
+/**
+ * unlock a file offset in a file descriptor.
+ *
+ * @param[in] fd file descriptor to unlock
+ * @param[in] offset offset to unlock
+ */
+static_inline void
+_VUnlockFd(int fd, afs_uint32 offset)
+{
+    struct flock sf;
+
+    sf.l_start = offset;
+    sf.l_len = 1;
+    sf.l_type = F_UNLCK;
+    sf.l_whence = SEEK_SET;
+
+    if (fcntl(fd, F_SETLK, &sf)) {
+	Log("_VUnlockFd: fcntl failed with error %d when trying to unlock "
+	    "fd %d\n", errno, fd);
+    }
+}
+# endif /* !AFS_NT40_ENV */
+
+/**
+ * lock a file on disk for the process.
+ *
+ * @param[in] lf       the struct VLockFile representing the file to lock
+ * @param[in] offset   the offset in the file to lock
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ * @param[in] nonblock 0 to wait for conflicting locks to clear before
+ *                     obtaining the lock; 1 to fail immediately if a
+ *                     conflicting lock is held by someone else
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval EBUSY someone else is holding a conflicting lock and nonblock=1 was
+ *                specified
+ *  @retval EIO   error acquiring file lock
+ *
+ * @note DAFS only
+ *
+ * @note do not try to lock/unlock the same offset in the same file from
+ * different threads; use VGetDiskLock to protect threads from each other in
+ * addition to other processes
+ */
+int
+VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonblock)
+{
+    int code;
+
+    assert(pthread_mutex_lock(&lf->mutex) == 0);
+
+    if (lf->fd == INVALID_FD) {
+	lf->fd = _VOpenPath(lf->path);
+	if (lf->fd == INVALID_FD) {
+	    assert(pthread_mutex_unlock(&lf->mutex) == 0);
+	    return EIO;
+	}
+    }
+
+    lf->refcount++;
+
+    assert(pthread_mutex_unlock(&lf->mutex) == 0);
+
+    code = _VLockFd(lf->fd, offset, locktype, nonblock);
+
+    if (code) {
+	assert(pthread_mutex_lock(&lf->mutex) == 0);
+	if (--lf->refcount < 1) {
+	    _VCloseFd(lf->fd);
+	    lf->fd = INVALID_FD;
+	}
+	assert(pthread_mutex_unlock(&lf->mutex) == 0);
+    }
+
+    return code;
+}
+
+void
+VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
+{
+    assert(pthread_mutex_lock(&lf->mutex) == 0);
+
+    if (--lf->refcount < 1) {
+	_VCloseFd(lf->fd);
+	lf->fd = INVALID_FD;
+    } else {
+	_VUnlockFd(lf->fd, offset);
+    }
+
+    assert(pthread_mutex_lock(&lf->mutex) == 0);
+}
+
+/**
+ * initialize a struct VDiskLock.
+ *
+ * @param[in] dl struct VDiskLock to initialize
+ * @param[in] lf the struct VLockFile to associate with this disk lock
+ */
+void
+VDiskLockInit(struct VDiskLock *dl, struct VLockFile *lf, afs_uint32 offset)
+{
+    assert(lf);
+    memset(dl, 0, sizeof(*dl));
+    Lock_Init(&dl->rwlock);
+    assert(pthread_mutex_init(&dl->mutex, NULL) == 0);
+    assert(pthread_cond_init(&dl->cv, NULL) == 0);
+    dl->lockfile = lf;
+    dl->offset = offset;
+}
+
+/**
+ * acquire a lock on a file on local disk.
+ *
+ * @param[in] dl       the VDiskLock structure corresponding to the file on disk
+ * @param[in] locktype READ_LOCK if you want a read lock, or WRITE_LOCK if
+ *                     you want a write lock
+ * @param[in] nonblock 0 to wait for conflicting locks to clear before
+ *                     obtaining the lock; 1 to fail immediately if a
+ *                     conflicting lock is held by someone else
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval EBUSY someone else is holding a conflicting lock and nonblock=1 was
+ *                specified
+ *  @retval EIO   error acquiring file lock
+ *
+ * @note DAFS only
+ *
+ * @note while normal fcntl-y locks on Unix systems generally only work per-
+ * process, this interface also deals with locks between threads in the
+ * process in addition to different processes acquiring the lock
+ */
+int
+VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
+{
+    int code = 0;
+    assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+
+    if (nonblock) {
+	if (locktype == READ_LOCK) {
+	    ObtainReadLockNoBlock(&dl->rwlock, code);
+	} else {
+	    ObtainWriteLockNoBlock(&dl->rwlock, code);
+	}
+
+	if (code) {
+	    return EBUSY;
+	}
+
+    } else if (locktype == READ_LOCK) {
+	ObtainReadLock(&dl->rwlock);
+    } else {
+	ObtainWriteLock(&dl->rwlock);
+    }
+
+    assert(pthread_mutex_lock(&dl->mutex) == 0);
+
+    if ((dl->flags & VDISKLOCK_ACQUIRING)) {
+	/* Some other thread is waiting to acquire an fs lock. If nonblock=1,
+	 * we can return immediately, since we know we'll need to wait to
+	 * acquire. Otherwise, wait for the other thread to finish acquiring
+	 * the fs lock */
+	if (nonblock) {
+	    code = EBUSY;
+	} else {
+	    while ((dl->flags & VDISKLOCK_ACQUIRING)) {
+		assert(pthread_cond_wait(&dl->cv, &dl->mutex) == 0);
+	    }
+	}
+    }
+
+    if (code == 0 && !(dl->flags & VDISKLOCK_ACQUIRED)) {
+	/* no other thread holds the lock on the actual file; so grab one */
+
+	/* first try, don't block on the lock to see if we can get it without
+	 * waiting */
+	code = VLockFileLock(dl->lockfile, dl->offset, locktype, 1);
+
+	if (code == EBUSY && !nonblock) {
+
+	    /* mark that we are waiting on the fs lock */
+	    dl->flags |= VDISKLOCK_ACQUIRING;
+
+	    assert(pthread_mutex_unlock(&dl->mutex) == 0);
+	    code = VLockFileLock(dl->lockfile, dl->offset, locktype, nonblock);
+	    assert(pthread_mutex_lock(&dl->mutex) == 0);
+
+	    dl->flags &= ~VDISKLOCK_ACQUIRING;
+
+	    if (code == 0) {
+		dl->flags |= VDISKLOCK_ACQUIRED;
+	    }
+
+	    assert(pthread_cond_broadcast(&dl->cv) == 0);
+	}
+    }
+
+    if (code) {
+	if (locktype == READ_LOCK) {
+	    ReleaseReadLock(&dl->rwlock);
+	} else {
+	    ReleaseWriteLock(&dl->rwlock);
+	}
+    } else {
+	/* successfully got the lock, so inc the number of unlocks we need
+	 * to do before we can unlock the actual file */
+	++dl->lockers;
+    }
+
+    assert(pthread_mutex_unlock(&dl->mutex) == 0);
+
+    return code;
+}
+
+/**
+ * release a lock on a file on local disk.
+ *
+ * @param[in] dl the struct VDiskLock to release
+ * @param[in] locktype READ_LOCK if you are unlocking a read lock, or
+ *                     WRITE_LOCK if you are unlocking a write lock
+ *
+ * @return operation status
+ *  @retval 0 success
+ */
+void
+VReleaseDiskLock(struct VDiskLock *dl, int locktype)
+{
+    assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+
+    assert(pthread_mutex_lock(&dl->mutex) == 0);
+    assert(dl->lockers > 0);
+
+    if (--dl->lockers < 1) {
+	/* no threads are holding this lock anymore, so we can release the
+	 * actual disk lock */
+	VLockFileUnlock(dl->lockfile, dl->offset);
+	dl->flags &= ~VDISKLOCK_ACQUIRED;
+    }
+
+    assert(pthread_mutex_unlock(&dl->mutex) == 0);
+
+    if (locktype == READ_LOCK) {
+	ReleaseReadLock(&dl->rwlock);
+    } else {
+	ReleaseWriteLock(&dl->rwlock);
+    }
+}
+
+#endif /* AFS_DEMAND_ATTACH_FS */

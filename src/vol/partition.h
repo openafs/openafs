@@ -29,6 +29,8 @@
 #define	AFS_RDSKDEV	"/dev/r"
 #endif
 
+#include "lock.h"
+
 
 /* All Vice partitions on a server will have the following name prefix */
 #define VICE_PARTITION_PREFIX	"/vicep"
@@ -42,6 +44,43 @@
 #ifdef AFS_NAMEI_ENV
 #define VICE_ALWAYSATTACH_FILE	"AlwaysAttach"
 #endif
+
+#ifdef AFS_DEMAND_ATTACH_FS
+
+/**
+ * abstraction for files used for file-locking.
+ */
+struct VLockFile {
+    FD_t fd;                /**< fd holding the lock(s) */
+    char *path;             /**< path to the lock file */
+
+    pthread_mutex_t mutex;  /**< lock for the VLockFile struct */
+    int refcount;           /**< how many locks we have on the file */
+};
+
+/*
+ * flag bits for 'flags' in struct VDiskLock.
+ */
+#define VDISKLOCK_ACQUIRING  0x1   /**< is someone waiting for an fs lock? */
+#define VDISKLOCK_ACQUIRED   0x2   /**< we have an fs lock */
+
+/**
+ * on-disk locking mechanism.
+ */
+struct VDiskLock {
+    struct VLockFile *lockfile; /**< file holding the locks */
+    afs_uint32 offset;          /**< what offset we lock in the file */
+
+    struct Lock rwlock;         /**< rw lock for inter-thread locking */
+    pthread_mutex_t mutex;      /**< lock for the DiskLock object itself */
+    pthread_cond_t cv;          /**< cond var for 'acquiring' changes */
+
+    int lockers;                /**< # of callers that have this locked; */
+
+    unsigned int flags;         /**< see above for flag bits */
+};
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 
 /* For NT, the roles of "name" and "devName" are reversed. That is, "name"
  * refers to the drive letter name and "devName" refers to the /vicep style

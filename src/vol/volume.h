@@ -846,6 +846,18 @@ extern int VDeregisterVolOp_r(Volume * vp);
 extern void VCancelReservation_r(Volume * vp);
 extern int VChildProcReconnectFS_r(void);
 extern void VOfflineForVolOp_r(Error *ec, Volume *vp, char *message);
+
+struct VLockFile;
+extern void VLockFileInit(struct VLockFile *lf, const char *path);
+extern int VLockFileLock(struct VLockFile *lf, afs_uint32 offset,
+                         int locktype, int nonblock);
+extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
+
+struct VDiskLock;
+extern void VDiskLockInit(struct VDiskLock *dl, struct VLockFile *lf,
+                          afs_uint32 offset);
+extern int VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock);
+extern void VReleaseDiskLock(struct VDiskLock *dl, int locktype);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
