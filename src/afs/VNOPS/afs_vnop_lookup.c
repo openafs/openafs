@@ -1150,6 +1150,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	    tryEvalOnly = 1;
 	if (strcmp(aname, "Contents") == 0)
 	    tryEvalOnly = 1;
+    }
+    if (afs_fakestat_enable && adp->mvstat == 2) {
 	if (strncmp(aname, "._", 2) == 0)
 	    tryEvalOnly = 1;
     }
@@ -1364,7 +1366,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	ReleaseReadLock(&tdc->lock);
 	afs_PutDCache(tdc);
 
-	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {
+	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry && !tryEvalOnly) {
 	    ReleaseReadLock(&adp->lock);
 	    dynrootRetry = 0;
 	    if (tname[0] == '.')
@@ -1387,7 +1389,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 
 	if (code) {
 	    if (code != ENOENT) {
-		printf("LOOKUP dirLookupOff -> %d\n", code);
+		/*printf("LOOKUP dirLookupOff -> %d\n", code);*/
 	    }
 	    goto done;
 	}
