@@ -53,7 +53,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="223588969">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272761856</int>
-								<string key="NSContents">Lynk Name:</string>
+								<string key="NSContents">Link Name:</string>
 								<object class="NSFont" key="NSSupport" id="26">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">1.100000e+01</double>
