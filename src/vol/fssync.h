@@ -25,6 +25,9 @@
 
 /**
  * FSYNC command codes.
+ *
+ * If you add more command codes here, be sure to add some documentation
+ * in doc/arch/fssync.txt.
  */
 enum FSYNCOpCode {
     FSYNC_VOL_ON              = SYNC_COM_CODE_DECL(0),	/**< bring Volume online */
