@@ -151,6 +151,19 @@ FSYNC_askfs(SYNC_command * com, SYNC_response * res)
     return code;
 }
 
+
+/**
+ *  FSSYNC volume operations client interface.
+ *
+ * @param[in]    volume     volume id
+ * @param[in]    partName   partition name string
+ * @param[in]    com        FSSYNC command code
+ * @param[in]    reason     FSSYNC reason sub-code
+ * @param[out]   res        response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK  success
+ */
 afs_int32
 FSYNC_GenericOp(void * ext_hdr, size_t ext_len,
 	      int command, int reason,
@@ -202,5 +215,139 @@ FSYNC_StatsOp(FSSYNC_StatsOp_hdr * scom, int command, int reason,
     return FSYNC_GenericOp(scom, sizeof(*scom), command, reason, res);
 }
 
+/**
+ * query the volume group cache.
+ *
+ * @param[in]  part     vice partition path
+ * @param[in]  volid    volume id
+ * @param[out] qry      query response object
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCQuery(char * part,
+	     VolumeId volid,
+	     FSSYNC_VGQry_response_t * qry,
+	     SYNC_response *res)
+{
+    SYNC_response lres;
+
+    if (!res) {
+	res = &lres;
+    }
+
+    res->hdr.response_len = sizeof(res->hdr);
+    res->payload.buf = qry;
+    res->payload.len = sizeof(*qry);
+
+    return FSYNC_VolOp(volid, part, FSYNC_VG_QUERY, 0, res);
+}
+
+/**
+ * perform an update operation on the VGC.
+ *
+ * @param[in] parent    rw volume
+ * @param[in] child     volume id to add
+ * @param[in] partition name of vice partition on which this VG resides
+ * @param[in] opcode    FSSYNC VG cache opcode
+ * @param[in] reason    FSSYNC reason code
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *
+ * @internal
+ */
+static afs_int32
+_FSYNC_VGCUpdate(char * partition,
+		 VolumeId parent,
+		 VolumeId child,
+		 int opcode,
+		 int reason,
+		 SYNC_response *res)
+{
+    FSSYNC_VGUpdate_command_t vcom;
+
+    memset(&vcom, 0, sizeof(vcom));
+
+    vcom.parent = parent;
+    vcom.child = child;
+    if (partition)
+	strlcpy(vcom.partName, partition, sizeof(vcom.partName));
+
+    return FSYNC_GenericOp(&vcom, sizeof(vcom), opcode, reason, res);
+}
+
+/**
+ * Add volume to volume group cache.
+ *
+ * @param[in] parent    rw volume
+ * @param[in] child     volume id to add
+ * @param[in] partition name of vice partition on which this VG resides
+ * @param[in] reason    FSSYNC reason code
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCAdd(char * partition,
+	     VolumeId parent,
+	     VolumeId child,
+	     int reason,
+	     SYNC_response *res)
+{
+    return _FSYNC_VGCUpdate(partition, parent, child, FSYNC_VG_ADD, reason, res);
+}
+
+/**
+ * Delete volume from volume group cache.
+ *
+ * @param[in] parent    rw volume
+ * @param[in] child     volume id to add
+ * @param[in] partition name of vice partition on which this VG resides
+ * @param[in] reason    FSSYNC reason code
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCDel(char * partition,
+	     VolumeId parent,
+	     VolumeId child,
+	     int reason,
+	     SYNC_response *res)
+{
+    return _FSYNC_VGCUpdate(partition, parent, child, FSYNC_VG_DEL, reason, res);
+}
+
+/**
+ * perform an asynchronous volume group scan.
+ *
+ * @param[in] partition   vice partition string
+ * @param[in] reason      FSSYNC reason code
+ *
+ * @note if partition is NULL, all vice partitions will be scanned.
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCScan(char * partition, int reason)
+{
+    int command;
+
+    if (partition == NULL) {
+	command = FSYNC_VG_SCAN_ALL;
+	partition = "";
+    } else {
+	command = FSYNC_VG_SCAN;
+    }
+
+    return FSYNC_VolOp(0, partition, command, reason, NULL);
+}
 
 #endif /* FSSYNC_BUILD_CLIENT */

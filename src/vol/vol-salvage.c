@@ -190,6 +190,10 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "vol-salvage.h"
 #include "vol_internal.h"
 
+#ifdef FSSYNC_BUILD_CLIENT
+#include "vg_cache.h"
+#endif
+
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -289,7 +293,7 @@ int inodeFd;			/* File descriptor for inode file */
 struct VnodeInfo vnodeInfo[nVNODECLASSES];
 
 
-struct VolumeSummary *volumeSummaryp;	/* Holds all the volumes in a part */
+struct VolumeSummary *volumeSummaryp = NULL;	/* Holds all the volumes in a part */
 int nVolumes;			/* Number of volumes (read-write and read-only)
 				 * in volume summary */
 
@@ -301,6 +305,7 @@ char *tmpdir = NULL;
 /*@printflike@*/ void Log(const char *format, ...);
 /*@printflike@*/ void Abort(const char *format, ...);
 static int IsVnodeOrphaned(VnodeId vnode);
+static int AskVolumeSummary(VolumeId singleVolumeNumber);
 
 /* Uniquifier stored in the Inode */
 static Unique
@@ -1213,6 +1218,144 @@ CompareVolumes(const void *_p1, const void *_p2)
     return p1->header.id < p2->header.id ? -1 : 1;	/* Both read-only */
 }
 
+/**
+ * Gleans volumeSummary information by asking the fileserver
+ *
+ * @param[in] singleVolumeNumber  the volume we're salvaging. 0 if we're
+ *                                salvaging a whole partition
+ *
+ * @return whether we obtained the volume summary information or not
+ *  @retval 0 success; we obtained the volume summary information
+ *  @retval nonzero we did not get the volume summary information; either the
+ *            fileserver responded with an error, or we are not supposed to
+ *            ask the fileserver for the information (e.g. we are salvaging
+ *            the entire partition or we are not the salvageserver)
+ *
+ * @note for non-DAFS, always returns 1
+ */
+static int
+AskVolumeSummary(VolumeId singleVolumeNumber)
+{
+    afs_int32 code = 1;
+#ifdef FSSYNC_BUILD_CLIENT
+    if (programType == salvageServer) {
+	if (singleVolumeNumber) {
+	    FSSYNC_VGQry_response_t q_res;
+	    SYNC_response res;
+	    struct VolumeSummary *vsp;
+	    int i;
+	    struct VolumeDiskHeader diskHdr;
+
+	    memset(&res, 0, sizeof(res));
+
+	    code = FSYNC_VGCQuery(fileSysPartition->name, singleVolumeNumber, &q_res, &res);
+
+	    /*
+	     * We must wait for the partition to finish scanning before
+	     * can continue, since we will not know if we got the entire
+	     * VG membership unless the partition is fully scanned.
+	     * We could, in theory, just scan the partition ourselves if
+	     * the VG cache is not ready, but we would be doing the exact
+	     * same scan the fileserver is doing; it will almost always
+	     * be faster to wait for the fileserver. The only exceptions
+	     * are if the partition does not take very long to scan, and
+	     * in that case it's fast either way, so who cares?
+	     */
+	    if (code == SYNC_FAILED && res.hdr.reason == FSYNC_PART_SCANNING) {
+		Log("waiting for fileserver to finish scanning partition %s...\n",
+		    fileSysPartition->name);
+
+		for (i = 1; code == SYNC_FAILED && res.hdr.reason == FSYNC_PART_SCANNING; i++) {
+		    /* linearly ramp up from 1 to 10 seconds; nothing fancy,
+		     * just so small partitions don't need to wait over 10
+		     * seconds every time, and large partitions are generally
+		     * polled only once every ten seconds. */
+		    sleep((i > 10) ? (i = 10) : i);
+
+		    code = FSYNC_VGCQuery(fileSysPartition->name, singleVolumeNumber, &q_res, &res);
+		}
+	    }
+
+	    if (code == SYNC_FAILED && res.hdr.reason == FSYNC_UNKNOWN_VOLID) {
+		/* This can happen if there's no header for the volume
+		 * we're salvaging, or no headers exist for the VG (if
+		 * we're salvaging an RW). Act as if we got a response
+		 * with no VG members. The headers may be created during
+		 * salvaging, if there are inodes in this VG. */
+		code = 0;
+		memset(&q_res, 0, sizeof(q_res));
+		q_res.rw = singleVolumeNumber;
+	    }
+
+	    if (code) {
+		Log("fileserver refused VGCQuery request for volume %lu on "
+		    "partition %s, code %ld reason %ld\n",
+		    afs_printable_uint32_lu(singleVolumeNumber),
+		    fileSysPartition->name,
+		    afs_printable_int32_ld(code),
+		    afs_printable_int32_ld(res.hdr.reason));
+		goto done;
+	    }
+
+	    if (q_res.rw != singleVolumeNumber) {
+		Log("fileserver requested salvage of clone %lu; scheduling salvage of volume group %lu...\n",
+		    afs_printable_uint32_lu(singleVolumeNumber),
+		    afs_printable_uint32_lu(q_res.rw));
+#ifdef SALVSYNC_BUILD_CLIENT
+		if (SALVSYNC_LinkVolume(q_res.rw,
+		                       singleVolumeNumber,
+		                       fileSysPartition->name,
+		                       NULL) != SYNC_OK) {
+		    Log("schedule request failed\n");
+		}
+#endif /* SALVSYNC_BUILD_CLIENT */
+		Exit(SALSRV_EXIT_VOLGROUP_LINK);
+	    }
+
+	    volumeSummaryp = malloc(VOL_VG_MAX_VOLS * sizeof(struct VolumeSummary));
+	    assert(volumeSummaryp != NULL);
+
+	    nVolumes = 0;
+	    vsp = volumeSummaryp;
+
+	    for (i = 0; i < VOL_VG_MAX_VOLS; i++) {
+		char name[VMAXPATHLEN];
+
+		if (!q_res.children[i]) {
+		    continue;
+		}
+
+		if (q_res.children[i] != singleVolumeNumber) {
+		    AskOffline(q_res.children[i], fileSysPartition->name);
+		}
+		code = VReadVolumeDiskHeader(q_res.children[i], fileSysPartition, &diskHdr);
+		if (code) {
+		    Log("Cannot read header for %lu; trying to salvage group anyway\n",
+		        afs_printable_uint32_lu(q_res.children[i]));
+		    code = 0;
+		    continue;
+		}
+
+		DiskToVolumeHeader(&vsp->header, &diskHdr);
+		VolumeExternalName_r(q_res.children[i], name, sizeof(name));
+		vsp->fileName = ToString(name);
+		nVolumes++;
+		vsp++;
+	    }
+
+	    qsort(volumeSummaryp, nVolumes, sizeof(struct VolumeSummary),
+	          CompareVolumes);
+	}
+      done:
+	if (code) {
+	    Log("Cannot get volume summary from fileserver; falling back to scanning "
+	        "entire partition\n");
+	}
+    }
+#endif /* FSSYNC_BUILD_CLIENT */
+    return code;
+}
+
 void
 GetVolumeSummary(VolumeId singleVolumeNumber)
 {
@@ -1221,6 +1364,12 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
     struct VolumeSummary *vsp, vs;
     struct VolumeDiskHeader diskHeader;
     struct dirent *dp;
+
+    if (AskVolumeSummary(singleVolumeNumber) == 0) {
+	/* we successfully got the vol information from the fileserver; no
+	 * need to scan the partition */
+	return;
+    }
 
     /* Get headers from volume directory */
     dirp = opendir(fileSysPath);
@@ -1252,12 +1401,11 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 #endif
 	if (!nvols)
 	    nvols = 1;
-	volumeSummaryp =
-	    (struct VolumeSummary *)malloc(nvols *
-					   sizeof(struct VolumeSummary));
-    } else
-	volumeSummaryp =
-	    (struct VolumeSummary *)malloc(20 * sizeof(struct VolumeSummary));
+    } else {
+	nvols = VOL_VG_MAX_VOLS;
+    }
+
+    volumeSummaryp = malloc(nvols * sizeof(struct VolumeSummary));
     assert(volumeSummaryp != NULL);
 
     nVolumes = 0;
@@ -3357,9 +3505,12 @@ void
 AskOffline(VolumeId volumeId, char * partition)
 {
     afs_int32 code, i;
+    SYNC_response res;
+
+    memset(&res, 0, sizeof(res));
 
     for (i = 0; i < 3; i++) {
-	code = FSYNC_VolOp(volumeId, partition, FSYNC_VOL_OFF, FSYNC_SALVAGE, NULL);
+	code = FSYNC_VolOp(volumeId, partition, FSYNC_VOL_OFF, FSYNC_SALVAGE, &res);
 
 	if (code == SYNC_OK) {
 	    break;

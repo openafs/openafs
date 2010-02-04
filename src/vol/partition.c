@@ -183,6 +183,9 @@ int aixlow_water = 8;		/* default 8% */
 struct DiskPartition64 *DiskPartitionList;
 
 #ifdef AFS_DEMAND_ATTACH_FS
+/* file to lock to conceptually "lock" the vol headers on a partition */
+#define AFS_PARTLOCK_FILE ".volheaders.lock"
+
 static struct DiskPartition64 *DiskPartitionTable[VOLMAXPARTS+1];
 
 static struct DiskPartition64 * VLookupPartition_r(char * path);
@@ -240,6 +243,7 @@ static void
 VInitPartition_r(char *path, char *devname, Device dev)
 {
     struct DiskPartition64 *dp, *op;
+
     dp = (struct DiskPartition64 *)malloc(sizeof(struct DiskPartition64));
     /* Add it to the end, to preserve order when we print statistics */
     for (op = DiskPartitionList; op; op = op->next) {
@@ -283,6 +287,13 @@ VInitPartition_r(char *path, char *devname, Device dev)
     assert(pthread_cond_init(&dp->vol_list.cv, NULL) == 0);
     dp->vol_list.len = 0;
     dp->vol_list.busy = 0;
+    {
+	char lockpath[MAXPATHLEN+1];
+	afs_snprintf(lockpath, MAXPATHLEN, "%s/" AFS_PARTLOCK_FILE, dp->name);
+	lockpath[MAXPATHLEN] = '\0';
+	VLockFileInit(&dp->headerLockFile, lockpath);
+    }
+    VDiskLockInit(&dp->headerLock, &dp->headerLockFile, 1);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
 
@@ -1276,6 +1287,47 @@ VUnlockPartition(char *name)
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+
+/* new-style partition locks; these are only to have some mutual exclusion
+ * between the VGC scanner and volume utilies creating/altering vol headers
+ */
+
+/**
+ * lock a partition's vol headers.
+ *
+ * @param[in] dp       the partition to lock
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ *
+ * @return operation status
+ *  @retval 0 success
+ */
+int
+VPartHeaderLock(struct DiskPartition64 *dp, int locktype)
+{
+    int code;
+
+    /* block on acquiring the lock */
+    int nonblock = 0;
+
+    code = VGetDiskLock(&dp->headerLock, locktype, nonblock);
+    if (code) {
+	Log("VPartHeaderLock: error %d locking partititon %s\n", code,
+	    VPartitionPath(dp));
+    }
+    return code;
+}
+
+/**
+ * unlock a partition's vol headers.
+ *
+ * @param[in] dp       the partition to unlock
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ */
+void
+VPartHeaderUnlock(struct DiskPartition64 *dp, int locktype)
+{
+    VReleaseDiskLock(&dp->headerLock, locktype);
+}
 
 /* XXX not sure this will work on AFS_NT40_ENV
  * needs to be tested!

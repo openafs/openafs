@@ -147,6 +147,40 @@ or "inService" fields are not set; this prevents the fileserver from
 trying to attach the volume later, only to find the volume is not
 blessed and take the volume offline.
 
+ -- FSYNC_VG_QUERY (DAFS only)
+
+This queries the fileserver VGC (volume group cache) for the volume
+group of the requested volume. The payload consists of an
+FSSYNC_VGQry_response_t, specifying the volume group and all of the
+volumes in that volume group.
+
+If the VGC for the requested partition is currently being populated,
+this will fail with SYNC_FAILED, and the FSYNC_PART_SCANNING reason
+code. If the VGC for the requested partition is currently completely
+unpopulated, a VGC scan for the partition will be started automatically
+in the background, and FSYNC_PART_SCANNING will still be returned.
+
+The demand-salvager uses this to find out what volumes are in the volume
+group it is salvaging; it can also be used for debugging the VGC.
+
+ -- FSYNC_VG_SCAN (DAFS only)
+
+This discards any information in the VGC for the specified partition,
+and re-scans the partition to populate the VGC in the background. This
+should normally not be needed, since scans start automatically when VGC
+information is requested. This can be used as a debugging tool, or to
+force the VGC to discard incorrect information that somehow got into the
+VGC.
+
+Note that the scan is scheduled in the background, so getting a response
+from this command does not imply that the scan has started; it may start
+sometime in the future.
+
+ -- FSYNC_VG_SCAN_ALL
+
+This is the same as FSYNC_VG_SCAN, but schedules scans for all
+partitions on the fileserver, instead of a particular one.
+
  -- FSYNC_VOL_QUERY_VNODE
 
 Asks the fileserver for information about specific vnode. This takes a
@@ -196,3 +230,24 @@ of a 'struct volume_hdr_LRU_stats'.
 This is intended to retrieve stats for the VLRU generation specified in
 sop->vlru_generation. However, it is not yet implemented and currently
 always results in a SYNC_BAD_COMMAND result from the fileserver.
+
+ -- VGC update FSSYNC commands
+
+FSSYNC commands involving updating the VGC (volume group cache) take an
+FSSYNC_VGUpdate_command struct as their command arguments. The parent
+and child fields specify the (parent,child) entry in the partName VGC to
+add or remove.
+
+ -- FSYNC_VG_ADD (DAFS only)
+
+Adds an entry to the fileserver VGC. This merely adds the specified
+child volume to the specified parent volume group, and creates the
+parent volume group if it does not exist. This is used by programs that
+create new volumes, in order to keep the VGC up to date.
+
+ -- FSYNC_VG_DEL (DAFS only)
+
+Deletes an entry from the fileserver VGC. This merely removes the
+specified child volume from the specified parent volume group, deleting
+the volume group if the last entry was deleted. This is used by programs
+that destroy volumes, in order to keep the VGC up to date.

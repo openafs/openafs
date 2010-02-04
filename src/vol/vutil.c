@@ -80,6 +80,7 @@
    volume header ON:  this means that the volumes will not be attached by the
    file server and WILL BE DESTROYED the next time a system salvage is performed */
 
+#ifdef FSSYNC_BUILD_CLIENT
 static void
 RemoveInodes(Device dev, VolumeId vid)
 {
@@ -298,6 +299,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 
     return (VAttachVolumeByName_r(ec, partname, headerName, V_SECRETLY));
 }
+#endif /* FSSYNC_BUILD_CLIENT */
 
 
 void
@@ -416,6 +418,7 @@ VReadVolumeDiskHeader(VolumeId volid,
     return code;
 }
 
+#ifdef FSSYNC_BUILD_CLIENT
 /**
  * write an existing volume disk header.
  *
@@ -438,6 +441,15 @@ _VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
     afs_int32 code = 0;
     int fd;
     char path[MAXPATHLEN];
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* prevent racing with VGC scanners reading the vol header while we are
+     * writing it */
+    code = VPartHeaderLock(dp, READ_LOCK);
+    if (code) {
+	return EIO;
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     flags |= O_RDWR;
 
@@ -462,6 +474,10 @@ _VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 	}
     }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+    VPartHeaderUnlock(dp, READ_LOCK);
+#endif /* AFS_DEMAND_ATTACH_FS */
+
     return code;
 }
 
@@ -482,10 +498,65 @@ VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 {
     afs_int32 code;
 
+#ifdef AFS_DEMAND_ATTACH_FS
+    VolumeDiskHeader_t oldhdr;
+    int delvgc = 0, addvgc = 0;
+    SYNC_response res;
+
+    /* first, see if anything with the volume IDs have changed; if so, we
+     * need to update the VGC */
+
+    code = VReadVolumeDiskHeader(hdr->id, dp, &oldhdr);
+    if (code == 0 && (oldhdr.id != hdr->id || oldhdr.parent != hdr->parent)) {
+	/* the vol id or parent vol id changed; need to delete the VGC entry
+	 * for the old vol id/parent, and add the new one */
+	delvgc = 1;
+	addvgc = 1;
+
+    } else if (code) {
+	/* couldn't get the old header info; add the new header info to the
+	 * VGC in case it hasn't been added yet */
+	addvgc = 1;
+    }
+
+#endif /* AFS_DEMAND_ATTACH_FS */
+
     code = _VWriteVolumeDiskHeader(hdr, dp, 0);
     if (code) {
 	goto done;
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (delvgc) {
+	memset(&res, 0, sizeof(res));
+	code = FSYNC_VGCDel(dp->name, oldhdr.parent, oldhdr.id, FSYNC_WHATEVER, &res);
+
+	/* unknown vol id is okay; it just further suggests the old header
+	 * data was bogus, which is fine since we're trying to fix it */
+	if (code && res.hdr.reason != FSYNC_UNKNOWN_VOLID) {
+	    Log("VWriteVolumeDiskHeader: FSYNC_VGCDel(%s, %lu, %lu) "
+	        "failed with code %ld reason %ld\n", dp->name,
+	        afs_printable_uint32_lu(oldhdr.parent),
+	        afs_printable_uint32_lu(oldhdr.id),
+	        afs_printable_int32_ld(code),
+	        afs_printable_int32_ld(res.hdr.reason));
+	}
+
+    }
+    if (addvgc) {
+	memset(&res, 0, sizeof(res));
+	code = FSYNC_VGCAdd(dp->name, hdr->parent, hdr->id, FSYNC_WHATEVER, &res);
+	if (code) {
+	    Log("VWriteVolumeDiskHeader: FSYNC_VGCAdd(%s, %lu, %lu) "
+	        "failed with code %ld reason %ld\n", dp->name,
+	        afs_printable_uint32_lu(hdr->parent),
+	        afs_printable_uint32_lu(hdr->id),
+	        afs_printable_int32_ld(code),
+		afs_printable_int32_ld(res.hdr.reason));
+	}
+    }
+
+#endif /* AFS_DEMAND_ATTACH_FS */
 
  done:
     return code;
@@ -509,11 +580,27 @@ VCreateVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 			struct DiskPartition64 * dp)
 {
     afs_int32 code = 0;
+#ifdef AFS_DEMAND_ATTACH_FS
+    SYNC_response res;
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     code = _VWriteVolumeDiskHeader(hdr, dp, O_CREAT | O_EXCL);
     if (code) {
 	goto done;
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    memset(&res, 0, sizeof(res));
+    code = FSYNC_VGCAdd(dp->name, hdr->parent, hdr->id, FSYNC_WHATEVER, &res);
+    if (code) {
+	Log("VCreateVolumeDiskHeader: FSYNC_VGCAdd(%s, %lu, %lu) failed "
+	    "with code %ld reason %ld\n", dp->name,
+	    afs_printable_uint32_lu(hdr->parent),
+	    afs_printable_uint32_lu(hdr->id),
+	    afs_printable_int32_ld(code),
+	    afs_printable_int32_ld(res.hdr.reason));
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 
  done:
     return code;
@@ -542,6 +629,9 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
 {
     afs_int32 code = 0;
     char path[MAXPATHLEN];
+#ifdef AFS_DEMAND_ATTACH_FS
+    SYNC_response res;
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     (void)afs_snprintf(path, sizeof(path),
                        "%s/" VFORMAT,
@@ -552,9 +642,38 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
 	goto done;
     }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+    memset(&res, 0, sizeof(res));
+    if (!parent) {
+	FSSYNC_VGQry_response_t q_res;
+
+	code = FSYNC_VGCQuery(dp->name, volid, &q_res, &res);
+	if (code) {
+	    Log("VDestroyVolumeDiskHeader: FSYNC_VGCQuery(%s, %lu) failed "
+	        "with code %ld, reason %ld\n", dp->name,
+	        afs_printable_uint32_lu(volid), afs_printable_int32_ld(code),
+		afs_printable_int32_ld(res.hdr.reason));
+	    goto done;
+	}
+
+	parent = q_res.rw;
+
+    }
+    code = FSYNC_VGCDel(dp->name, parent, volid, FSYNC_WHATEVER, &res);
+    if (code) {
+	Log("VDestroyVolumeDiskHeader: FSYNC_VGCDel(%s, %lu, %lu) failed "
+	    "with code %ld reason %ld\n", dp->name,
+	    afs_printable_uint32_lu(parent),
+	    afs_printable_uint32_lu(volid),
+	    afs_printable_int32_ld(code),
+	    afs_printable_int32_ld(res.hdr.reason));
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
  done:
     return code;
 }
+#endif /* FSSYNC_BUILD_CLIENT */
 
 #ifdef AFS_DEMAND_ATTACH_FS
 
@@ -812,7 +931,7 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 	_VUnlockFd(lf->fd, offset);
     }
 
-    assert(pthread_mutex_lock(&lf->mutex) == 0);
+    assert(pthread_mutex_unlock(&lf->mutex) == 0);
 }
 
 /**

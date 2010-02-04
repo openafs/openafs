@@ -16,6 +16,9 @@
 
  */
 
+#ifndef AFS_VOL_PARTITION_H
+#define AFS_VOL_PARTITION_H
+
 #include <afs/param.h>
 #include "nfs.h"
 #if	defined(AFS_HPUX_ENV)
@@ -127,6 +130,8 @@ struct DiskPartition64 {
 	int busy;               /* asynch vol list op in progress */
 	pthread_cond_t cv;      /* vol_list.busy change cond var */
     } vol_list;
+    struct VLockFile headerLockFile;
+    struct VDiskLock headerLock; /* lock for the collective headers on the partition */
 #endif /* AFS_DEMAND_ATTACH_FS */
 };
 
@@ -160,6 +165,8 @@ extern struct DiskPartition64 *VGetPartition_r(char * name, int abortp);
 #ifdef AFS_DEMAND_ATTACH_FS
 extern struct DiskPartition64 *VGetPartitionById(afs_int32 index, int abortp);
 extern struct DiskPartition64 *VGetPartitionById_r(afs_int32 index, int abortp);
+extern int VPartHeaderLock(struct DiskPartition64 *dp, int locktype);
+extern void VPartHeaderUnlock(struct DiskPartition64 *dp, int locktype);
 #endif
 extern int VAttachPartitions(void);
 extern void VLockPartition(char *name);
@@ -176,3 +183,5 @@ extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
 extern int VDiskUsage(struct Volume *vp, afs_sfsize_t blocks);
 extern void VPrintDiskStats(void);
 extern int VInitPartitionPackage(void);
+
+#endif /* AFS_VOL_PARTITION_H */

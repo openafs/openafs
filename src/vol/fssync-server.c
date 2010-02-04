@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006-2008 Sine Nomine Associates
+ * Portions Copyright (c) 2006-2010 Sine Nomine Associates
  */
 
 /*
@@ -81,6 +81,7 @@
 #include "volume.h"
 #include "volume_inline.h"
 #include "partition.h"
+#include "vg_cache.h"
 
 #ifdef HAVE_POLL
 #include <sys/poll.h>
@@ -174,6 +175,10 @@ static afs_int32 FSYNC_com_VolQuery(FSSYNC_VolOp_command * com, SYNC_response * 
 static afs_int32 FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
 #ifdef AFS_DEMAND_ATTACH_FS
 static afs_int32 FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VGQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VGUpdate(SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VGScan(FSSYNC_VolOp_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VGScanAll(FSSYNC_VolOp_command * com, SYNC_response * res);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 static afs_int32 FSYNC_com_VnQry(osi_socket fd, SYNC_command * com, SYNC_response * res);
@@ -302,6 +307,9 @@ FSYNC_sync(void * args)
     memcpy(thread_opts, &VThread_defaults, sizeof(VThread_defaults));
     thread_opts->disallow_salvsync = 1;
     assert(pthread_setspecific(VThread_key, thread_opts) == 0);
+
+    code = VVGCache_PkgInit();
+    assert(code == 0);
 #endif
 
     InitHandler();
@@ -502,6 +510,11 @@ FSYNC_com(osi_socket fd)
     case FSYNC_VOL_QUERY:
     case FSYNC_VOL_QUERY_HDR:
     case FSYNC_VOL_QUERY_VOP:
+#ifdef AFS_DEMAND_ATTACH_FS
+    case FSYNC_VG_QUERY:
+    case FSYNC_VG_SCAN:
+    case FSYNC_VG_SCAN_ALL:
+#endif
 	res.hdr.response = FSYNC_com_VolOp(fd, &com, &res);
 	break;
     case FSYNC_VOL_STATS_GENERAL:
@@ -514,6 +527,12 @@ FSYNC_com(osi_socket fd)
     case FSYNC_VOL_QUERY_VNODE:
 	res.hdr.response = FSYNC_com_VnQry(fd, &com, &res);
 	break;
+#ifdef AFS_DEMAND_ATTACH_FS
+    case FSYNC_VG_ADD:
+    case FSYNC_VG_DEL:
+	res.hdr.response = FSYNC_com_VGUpdate(&com, &res);
+	break;
+#endif
     default:
 	res.hdr.response = SYNC_BAD_COMMAND;
 	break;
@@ -590,6 +609,15 @@ FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
 	break;
     case FSYNC_VOL_QUERY_VOP:
 	code = FSYNC_com_VolOpQuery(&vcom, res);
+	break;
+    case FSYNC_VG_QUERY:
+	code = FSYNC_com_VGQuery(&vcom, res);
+	break;
+    case FSYNC_VG_SCAN:
+	code = FSYNC_com_VGScan(&vcom, res);
+	break;
+    case FSYNC_VG_SCAN_ALL:
+	code = FSYNC_com_VGScanAll(&vcom, res);
 	break;
 #endif /* AFS_DEMAND_ATTACH_FS */
     default:
@@ -1429,6 +1457,142 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	}
 	code = SYNC_FAILED;
     }
+    return code;
+}
+
+static afs_int32
+FSYNC_com_VGQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
+{
+    afs_int32 code = SYNC_FAILED;
+    int rc;
+    struct DiskPartition64 * dp;
+
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
+
+    dp = VGetPartition_r(vcom->vop->partName, 0);
+    if (dp == NULL) {
+	res->hdr.reason = FSYNC_BAD_PART;
+	goto done;
+    }
+
+    assert(sizeof(FSSYNC_VGQry_response_t) <= res->payload.len);
+
+    rc = VVGCache_query_r(dp, vcom->vop->volume, res->payload.buf);
+    switch (rc) {
+    case 0:
+	res->hdr.response_len += sizeof(FSSYNC_VGQry_response_t);
+	code = SYNC_OK;
+	break;
+    case EAGAIN:
+	res->hdr.reason = FSYNC_PART_SCANNING;
+	break;
+    case ENOENT:
+	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
+	break;
+    default:
+	break;
+    }
+
+ done:
+    return code;
+}
+
+static afs_int32
+FSYNC_com_VGUpdate(SYNC_command * com, SYNC_response * res)
+{
+    afs_int32 code = SYNC_FAILED;
+    struct DiskPartition64 * dp;
+    FSSYNC_VGUpdate_command_t * vgucom;
+    int rc;
+
+    if (com->recv_len != (sizeof(com->hdr) + sizeof(*vgucom))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	res->hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
+	code = SYNC_COM_ERROR;
+	goto done;
+    }
+
+    vgucom = com->payload.buf;
+
+    if (SYNC_verifyProtocolString(vgucom->partName, sizeof(vgucom->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
+
+    dp = VGetPartition_r(vgucom->partName, 0);
+    if (dp == NULL) {
+	res->hdr.reason = FSYNC_BAD_PART;
+	goto done;
+    }
+
+    switch(com->hdr.command) {
+    case FSYNC_VG_ADD:
+	rc = VVGCache_entry_add_r(dp, vgucom->parent, vgucom->child, NULL);
+	break;
+
+    case FSYNC_VG_DEL:
+	rc = VVGCache_entry_del_r(dp, vgucom->parent, vgucom->child);
+	break;
+
+    default:
+	Log("FSYNC_com_VGUpdate called improperly\n");
+	rc = -1;
+	break;
+    }
+
+    /* EINVAL means the partition VGC doesn't exist at all; not really
+     * an error */
+    if (rc == 0 || rc == EINVAL) {
+	code = SYNC_OK;
+    }
+
+    if (rc == ENOENT) {
+	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
+    } else {
+	res->hdr.reason = FSYNC_WHATEVER;
+    }
+
+ done:
+    return code;
+}
+
+static afs_int32
+FSYNC_com_VGScan(FSSYNC_VolOp_command * vcom, SYNC_response * res)
+{
+    afs_int32 code = SYNC_FAILED;
+    struct DiskPartition64 * dp;
+
+    if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
+	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
+	goto done;
+    }
+
+    dp = VGetPartition_r(vcom->vop->partName, 0);
+    if (dp == NULL) {
+	res->hdr.reason = FSYNC_BAD_PART;
+	goto done;
+    }
+
+    if (VVGCache_scanStart_r(dp) == 0) {
+	code = SYNC_OK;
+    }
+
+ done:
+    return code;
+}
+
+static afs_int32
+FSYNC_com_VGScanAll(FSSYNC_VolOp_command * com, SYNC_response * res)
+{
+    afs_int32 code = SYNC_FAILED;
+
+    if (VVGCache_scanStart_r(NULL) == 0) {
+	code = SYNC_OK;
+    }
+
     return code;
 }
 #endif /* AFS_DEMAND_ATTACH_FS */

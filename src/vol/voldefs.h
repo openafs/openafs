@@ -27,6 +27,9 @@
 
 #define VOLMAXTYPES             3   /* _current_ max number of types */
 
+/* the maximum number of volumes in a volume group that we can handle */
+#define VOL_VG_MAX_VOLS 20
+
 /* maximum numbe of Vice partitions */
 #define	VOLMAXPARTS	255
 
