@@ -476,7 +476,7 @@ HandleIoctl(register struct vcache *avc, register afs_int32 acom,
     return code;		/* so far, none implemented */
 }
 
-#ifdef	AFS_AIX_ENV
+#ifdef AFS_AIX_ENV
 /* For aix we don't temporarily bypass ioctl(2) but rather do our
  * thing directly in the vnode layer call, VNOP_IOCTL; thus afs_ioctl
  * is now called from afs_gn_ioctl.
@@ -500,15 +500,111 @@ afs_ioctl(struct vcache *tvc, int cmd, int arg)
 	return (ENOTTY);
     }
 }
-#endif /* AFS_AIX_ENV */
+# if defined(AFS_AIX32_ENV)
+#  if defined(AFS_AIX51_ENV)
+#   ifdef __64BIT__
+int
+kioctl(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2,
+	   caddr_t arg3)
+#   else /* __64BIT__ */
+int
+kioctl32(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2,
+	     caddr_t arg3)
+#   endif /* __64BIT__ */
+#  else
+int
+kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
+#  endif /* AFS_AIX51_ENV */
+{
+    struct a {
+	int fd, com;
+	caddr_t arg, ext;
+#  ifdef AFS_AIX51_ENV
+	caddr_t arg2, arg3;
+#  endif
+    } u_uap, *uap = &u_uap;
+    struct file *fd;
+    register struct vcache *tvc;
+    register int ioctlDone = 0, code = 0;
 
-#if defined(AFS_SGI_ENV)
+    AFS_STATCNT(afs_xioctl);
+    uap->fd = fdes;
+    uap->com = com;
+    uap->arg = arg;
+#  ifdef AFS_AIX51_ENV
+    uap->arg2 = arg2;
+    uap->arg3 = arg3;
+#  endif
+    if (setuerror(getf(uap->fd, &fd))) {
+	return -1;
+    }
+    if (fd->f_type == DTYPE_VNODE) {
+	/* good, this is a vnode; next see if it is an AFS vnode */
+	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
+	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	    /* This is an AFS vnode */
+	    if (((uap->com >> 8) & 0xff) == 'V') {
+		register struct afs_ioctl *datap;
+		AFS_GLOCK();
+		datap =
+		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		code=copyin_afs_ioctl((char *)uap->arg, datap);
+		if (code) {
+		    osi_FreeSmallSpace(datap);
+		    AFS_GUNLOCK();
+#  if defined(AFS_AIX41_ENV)
+		    ufdrele(uap->fd);
+#  endif
+		    return (setuerror(code), code);
+		}
+		code = HandleIoctl(tvc, uap->com, datap);
+		osi_FreeSmallSpace(datap);
+		AFS_GUNLOCK();
+		ioctlDone = 1;
+#  if defined(AFS_AIX41_ENV)
+		ufdrele(uap->fd);
+#  endif
+	     }
+	}
+    }
+    if (!ioctlDone) {
+#  if defined(AFS_AIX41_ENV)
+	ufdrele(uap->fd);
+#   if defined(AFS_AIX51_ENV)
+#    ifdef __64BIT__
+	code = okioctl(fdes, com, arg, ext, arg2, arg3);
+#    else /* __64BIT__ */
+	code = okioctl32(fdes, com, arg, ext, arg2, arg3);
+#    endif /* __64BIT__ */
+#   else /* !AFS_AIX51_ENV */
+	code = okioctl(fdes, com, arg, ext);
+#   endif /* AFS_AIX51_ENV */
+	return code;
+#  elif defined(AFS_AIX32_ENV)
+	okioctl(fdes, com, arg, ext);
+#  endif
+    }
+#  if defined(KERNEL_HAVE_UERROR)
+    if (!getuerror())
+	setuerror(code);
+#   if !defined(AFS_AIX41_ENV)
+    return (getuerror()? -1 : u.u_ioctlrv);
+#   else
+    return getuerror()? -1 : 0;
+#   endif
+#  endif
+    return 0;
+}
+# endif
+
+#elif defined(AFS_SGI_ENV)
+# if defined(AFS_SGI65_ENV)
 afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
-	  rval_t * rvalp
-#ifdef AFS_SGI65_ENV
-	  , struct vopbd * vbds
-#endif
-    )
+	  rval_t * rvalp, struct vopbd * vbds)
+# else
+afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
+	  rval_t * rvalp, struct vopbd * vbds)
+# endif
 {
     struct afs_ioctl data;
     int error = 0;
@@ -534,41 +630,7 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
 	return (ENOTTY);
     }
 }
-#endif /* AFS_SGI_ENV */
-
-/* unlike most calls here, this one uses u.u_error to return error conditions,
-   since this is really an intercepted chapter 2 call, rather than a vnode
-   interface call.
-   */
-/* AFS_HPUX102 and up uses VNODE ioctl instead */
-#if !defined(AFS_HPUX102_ENV) && !defined(AFS_DARWIN80_ENV)
-# if !defined(AFS_SGI_ENV)
-#  ifdef	AFS_AIX32_ENV
-#   ifdef AFS_AIX51_ENV
-#    ifdef __64BIT__
-int
-kioctl(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
-	   caddr_t arg3)
-#    else /* __64BIT__ */
-int
-kioctl32(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
-	     caddr_t arg3)
-#    endif /* __64BIT__ */
-#   else
-int
-kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
-#   endif
-{
-    struct a {
-	int fd, com;
-	caddr_t arg, ext;
-#   ifdef AFS_AIX51_ENV
-	caddr_t arg2, arg3;
-#   endif
-    } u_uap, *uap = &u_uap;
-#  else
-#   if defined(AFS_SUN5_ENV)
-
+#elif defined(AFS_SUN5_ENV)
 struct afs_ioctl_sys {
     int fd;
     int com;
@@ -578,129 +640,26 @@ struct afs_ioctl_sys {
 int 
 afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
-#   elif defined(AFS_FBSD50_ENV)
-#    define arg data
-int
-afs_xioctl(struct thread *td, register struct ioctl_args *uap, 
-	   register_t *retval)
-{
-    afs_proc_t *p = td->td_proc;
-#   elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-struct ioctl_args {
-    int fd;
-    u_long com;
-    caddr_t arg;
-};
-
-int
-afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
-{
-#   elif defined(AFS_LINUX22_ENV)
-struct afs_ioctl_sys {
-    unsigned int com;
-    unsigned long arg;
-};
-int
-afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
-	   unsigned long arg)
-{
-    struct afs_ioctl_sys ua, *uap = &ua;
-#   elif defined(UKERNEL)
-int
-afs_xioctl(void)
-{
-    register struct a {
-	int fd;
-	int com;
-	caddr_t arg;
-    } *uap = (struct a *)get_user_struct()->u_ap;
-#   else
-int
-afs_xioctl(void)
-{
-    register struct a {
-	int fd;
-	int com;
-	caddr_t arg;
-    } *uap = (struct a *)u.u_ap;
-#   endif /* AFS_SUN5_ENV */
-#  endif
-#  if defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
     struct file *fd;
-#  elif !defined(AFS_LINUX22_ENV)
-    register struct file *fd;
-#  endif
-#  if defined(AFS_XBSD_ENV)
-    register struct filedesc *fdp;
-#  endif
     register struct vcache *tvc;
     register int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
-#  if defined(AFS_DARWIN_ENV)
-    if ((code = fdgetf(p, uap->fd, &fd)))
-	return code;
-#  elif defined(AFS_XBSD_ENV)
-    fdp = p->p_fd;
-    if ((u_int) uap->fd >= fdp->fd_nfiles
-	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
-	return EBADF;
-    if ((fd->f_flag & (FREAD | FWRITE)) == 0)
-	return EBADF;
-#  elif defined(AFS_LINUX22_ENV)
-    ua.com = com;
-    ua.arg = arg;
-#  elif defined(AFS_AIX32_ENV)
-    uap->fd = fdes;
-    uap->com = com;
-    uap->arg = arg;
-#   ifdef AFS_AIX51_ENV
-    uap->arg2 = arg2;
-    uap->arg3 = arg3;
-#   endif
-    if (setuerror(getf(uap->fd, &fd))) {
-	return -1;
-    }
-#  elif defined(AFS_SUN5_ENV)
-#   if defined(AFS_SUN57_ENV)
+# if defined(AFS_SUN57_ENV)
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-#   elif defined(AFS_SUN54_ENV)
+# elif defined(AFS_SUN54_ENV)
     fd = GETF(uap->fd);
     if (!fd)
 	return (EBADF);
-#   else
+# else
     if (code = getf(uap->fd, &fd)) {
 	return (code);
     }
-#   endif	/* AFS_SUN57_ENV */
-#  else
-    fd = getf(uap->fd);
-    if (!fd)
-	return (EBADF);
-#  endif
-    /* first determine whether this is any sort of vnode */
-#  if defined(AFS_LINUX22_ENV)
-    tvc = VTOAFS(ip);
-    {
-#  else
-#   ifdef AFS_SUN5_ENV
+# endif
     if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
-#   else
-    if (fd->f_type == DTYPE_VNODE) {
-#   endif
-	/* good, this is a vnode; next see if it is an AFS vnode */
-#   if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
 	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
-#   elif defined(AFS_OBSD_ENV)
-	tvc =
-	    IsAfsVnode((struct vnode *)fd->
-		       f_data) ? VTOAFS((struct vnode *)fd->f_data) : NULL;
-#   else
-	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
-#   endif
-#  endif /* AFS_LINUX22_ENV */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
@@ -712,102 +671,237 @@ afs_xioctl(void)
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
-#  if defined(AFS_AIX41_ENV)
-		    ufdrele(uap->fd);
-#  elif defined(AFS_SUN54_ENV)
+# if defined(AFS_SUN54_ENV)
 		    releasef(uap->fd);
-#  elif defined(AFS_SUN5_ENV)
+# else
 		    releasef(fd);
-#  endif
-
-#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		    return code;
-#  elif defined(AFS_SUN5_ENV)
+# endif
 		    return (EFAULT);
-#  elif defined(AFS_LINUX22_ENV)
-		    return -code;
-#  else
-		    return (setuerror(code), code);
-#  endif
 		}
 		code = HandleIoctl(tvc, uap->com, datap);
 		osi_FreeSmallSpace(datap);
 		AFS_GUNLOCK();
 		ioctlDone = 1;
-#  if defined(AFS_AIX41_ENV)
-		ufdrele(uap->fd);
-#  endif
 	    }
-#  if defined(AFS_LINUX22_ENV)
-	    else
-		code = EINVAL;
-#  endif
+	}
+    }
+# if defined(AFS_SUN57_ENV)
+    releasef(uap->fd);
+# elif defined(AFS_SUN54_ENV)
+    RELEASEF(uap->fd);
+# else
+    releasef(fd);
+# endif
+    if (!ioctlDone)
+	code = ioctl(uap, rvp);
+
+    return (code);
+}
+#elif defined(AFS_LINUX22_ENV)
+struct afs_ioctl_sys {
+    unsigned int com;
+    unsigned long arg;
+};
+int
+afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
+	   unsigned long arg)
+{
+    struct afs_ioctl_sys ua, *uap = &ua;
+    register struct vcache *tvc;
+    register int ioctlDone = 0, code = 0;
+
+    AFS_STATCNT(afs_xioctl);
+    ua.com = com;
+    ua.arg = arg;
+
+    tvc = VTOAFS(ip);
+    if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	/* This is an AFS vnode */
+	if (((uap->com >> 8) & 0xff) == 'V') {
+	    register struct afs_ioctl *datap;
+	    AFS_GLOCK();
+	    datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+	    code = copyin_afs_ioctl((char *)uap->arg, datap);
+	    if (code) {
+		osi_FreeSmallSpace(datap);
+		AFS_GUNLOCK();
+		return -code;
+	    }
+	    code = HandleIoctl(tvc, uap->com, datap);
+	    osi_FreeSmallSpace(datap);
+	    AFS_GUNLOCK();
+	    ioctlDone = 1;
+	}
+	else
+	    code = EINVAL;
+    }
+    return -code;
+}
+#elif defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
+struct ioctl_args {
+    int fd;
+    u_long com;
+    caddr_t arg;
+};
+
+int
+afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
+{
+    struct file *fd;
+    register struct vcache *tvc;
+    register int ioctlDone = 0, code = 0;
+
+    AFS_STATCNT(afs_xioctl);
+    if ((code = fdgetf(p, uap->fd, &fd)))
+	return code;
+    if (fd->f_type == DTYPE_VNODE) {
+	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
+	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	    /* This is an AFS vnode */
+	    if (((uap->com >> 8) & 0xff) == 'V') {
+		register struct afs_ioctl *datap;
+		AFS_GLOCK();
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		code = copyin_afs_ioctl((char *)uap->arg, datap);
+		if (code) {
+		    osi_FreeSmallSpace(datap);
+		    AFS_GUNLOCK();
+		    return code;
+		}
+		code = HandleIoctl(tvc, uap->com, datap);
+		osi_FreeSmallSpace(datap);
+		AFS_GUNLOCK();
+		ioctlDone = 1;
+	    }
+	}
+    }
+
+    if (!ioctlDone)
+	return ioctl(p, uap, retval);
+
+    return (code);
+}
+#elif defined(AFS_XBSD_ENV)
+# if !defined(AFS_FBSD50_ENV)
+#  define arg data
+int
+afs_xioctl(struct thread *td, register struct ioctl_args *uap,
+	   register_t *retval)
+{
+    afs_proc_t *p = td->td_proc;
+# else
+struct ioctl_args {
+    int fd;
+    u_long com;
+    caddr_t arg;
+};
+
+int
+afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
+{
+# endif
+    register struct filedesc *fdp;
+    register struct vcache *tvc;
+    register int ioctlDone = 0, code = 0;
+
+    AFS_STATCNT(afs_xioctl);
+    fdp = p->p_fd;
+    if ((u_int) uap->fd >= fdp->fd_nfiles
+	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
+	return EBADF;
+    if ((fd->f_flag & (FREAD | FWRITE)) == 0)
+	return EBADF;
+    /* first determine whether this is any sort of vnode */
+    if (fd->f_type == DTYPE_VNODE) {
+	/* good, this is a vnode; next see if it is an AFS vnode */
+# if defined(AFS_OBSD_ENV)
+	tvc =
+	    IsAfsVnode((struct vnode *)fd->
+		       f_data) ? VTOAFS((struct vnode *)fd->f_data) : NULL;
+# else
+	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
+# endif
+	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	    /* This is an AFS vnode */
+	    if (((uap->com >> 8) & 0xff) == 'V') {
+		register struct afs_ioctl *datap;
+		AFS_GLOCK();
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		code = copyin_afs_ioctl((char *)uap->arg, datap);
+		if (code) {
+		    osi_FreeSmallSpace(datap);
+		    AFS_GUNLOCK();
+		    return code;
+		}
+		code = HandleIoctl(tvc, uap->com, datap);
+		osi_FreeSmallSpace(datap);
+		AFS_GUNLOCK();
+		ioctlDone = 1;
+	    }
 	}
     }
 
     if (!ioctlDone) {
-#  if defined(AFS_AIX41_ENV)
-	ufdrele(uap->fd);
-#   ifdef AFS_AIX51_ENV
-#    ifdef __64BIT__
-	code = okioctl(fdes, com, arg, ext, arg2, arg3);
-#    else /* __64BIT__ */
-	code = okioctl32(fdes, com, arg, ext, arg2, arg3);
-#    endif /* __64BIT__ */
-#   else /* !AFS_AIX51_ENV */
-	code = okioctl(fdes, com, arg, ext);
-#   endif /* AFS_AIX51_ENV */
-	return code;
-#  elif defined(AFS_AIX32_ENV)
-	okioctl(fdes, com, arg, ext);
-#  elif defined(AFS_SUN5_ENV)
-#   if defined(AFS_SUN57_ENV)
-	releasef(uap->fd);
-#   elif defined(AFS_SUN54_ENV)
-	RELEASEF(uap->fd);
-#   else
-	releasef(fd);
-#   endif
-	code = ioctl(uap, rvp);
-#  elif defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD50_ENV)
 	return ioctl(td, uap);
-#  elif defined(AFS_FBSD_ENV)
+# elif defined(AFS_FBSD_ENV)
 	return ioctl(p, uap);
-#  elif defined(AFS_OBSD_ENV)
+# elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
-#  elif defined(AFS_DARWIN_ENV)
-	return ioctl(p, uap, retval);
-#  elif !defined(AFS_LINUX22_ENV)
-	ioctl();
-#  endif
+# endif
     }
-#  ifdef	AFS_SUN5_ENV
-    if (ioctlDone)
-#   ifdef	AFS_SUN54_ENV
-	releasef(uap->fd);
-#   else
-	releasef(fd);
-#   endif
-    return (code);
-#  elif defined(AFS_LINUX22_ENV)
-    return -code;
-#  elif defined(KERNEL_HAVE_UERROR)
-    if (!getuerror())
-	setuerror(code);
-#   if defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
-    return (getuerror()? -1 : u.u_ioctlrv);
-#   else
-    return getuerror()? -1 : 0;
-#   endif
-#  endif
 
-#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     return (code);
-#  else
-    return 0;
-#  endif
 }
-# endif /* AFS_SGI_ENV */
+#elif defined(UKERNEL)
+int
+afs_xioctl(void)
+{
+    register struct a {
+	int fd;
+	int com;
+	caddr_t arg;
+    } *uap = (struct a *)get_user_struct()->u_ap;
+    register struct file *fd;
+    register struct vcache *tvc;
+    register int ioctlDone = 0, code = 0;
+
+    AFS_STATCNT(afs_xioctl);
+
+    fd = getf(uap->fd);
+    if (!fd)
+	return (EBADF);
+    /* first determine whether this is any sort of vnode */
+    if (fd->f_type == DTYPE_VNODE) {
+	/* good, this is a vnode; next see if it is an AFS vnode */
+	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
+	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	    /* This is an AFS vnode */
+	    if (((uap->com >> 8) & 0xff) == 'V') {
+		register struct afs_ioctl *datap;
+		AFS_GLOCK();
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		code=copyin_afs_ioctl((char *)uap->arg, datap);
+		if (code) {
+		    osi_FreeSmallSpace(datap);
+		    AFS_GUNLOCK();
+
+		    return (setuerror(code), code);
+		}
+		code = HandleIoctl(tvc, uap->com, datap);
+		osi_FreeSmallSpace(datap);
+		AFS_GUNLOCK();
+		ioctlDone = 1;
+	    }
+	}
+    }
+
+    if (!ioctlDone) {
+	ioctl();
+    }
+
+    return 0;
+}
 #endif /* AFS_HPUX102_ENV */
 
 #if defined(AFS_SGI_ENV)
