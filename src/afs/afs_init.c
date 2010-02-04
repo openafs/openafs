@@ -712,7 +712,6 @@ shutdown_cache(void)
 	cacheInfoModTime = 0;
 
 	afs_fsfragsize = 1023;
-	memset(&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
 	memset(&cacheDev, 0, sizeof(struct osi_dev));
 	osi_dnlc_shutdown();
     }
