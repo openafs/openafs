@@ -312,90 +312,90 @@ typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
 
 static pioctlFunction VpioctlSw[] = {
     PBogus,			/* 0 */
-	PSetAcl,		/* 1 */
-	PGetAcl,		/* 2 */
-	PSetTokens,		/* 3 */
-	PGetVolumeStatus,	/* 4 */
-	PSetVolumeStatus,	/* 5 */
-	PFlush,			/* 6 */
-	PBogus,			/* 7 */
-	PGetTokens,		/* 8 */
-	PUnlog,			/* 9 */
-	PCheckServers,		/* 10 */
-	PCheckVolNames,		/* 11 */
-	PCheckAuth,		/* 12 */
-	PBogus,			/* 13 -- used to be quick check time */
-	PFindVolume,		/* 14 */
-	PBogus,			/* 15 -- prefetch is now special-cased; see pioctl code! */
-	PBogus,			/* 16 -- used to be testing code */
-	PNoop,			/* 17 -- used to be enable group */
-	PNoop,			/* 18 -- used to be disable group */
-	PBogus,			/* 19 -- used to be list group */
-	PViceAccess,		/* 20 */
-	PUnlog,			/* 21 -- unlog *is* unpag in this system */
-	PGetFID,		/* 22 -- get file ID */
-	PBogus,			/* 23 -- used to be waitforever */
-	PSetCacheSize,		/* 24 */
-	PRemoveCallBack,	/* 25 -- flush only the callback */
-	PNewCell,		/* 26 */
-	PListCells,		/* 27 */
-	PRemoveMount,		/* 28 -- delete mount point */
-	PNewStatMount,		/* 29 -- new style mount point stat */
-	PGetFileCell,		/* 30 -- get cell name for input file */
-	PGetWSCell,		/* 31 -- get cell name for workstation */
-	PMariner,		/* 32 - set/get mariner host */
-	PGetUserCell,		/* 33 -- get cell name for user */
-	PVenusLogging,		/* 34 -- Enable/Disable logging */
-	PGetCellStatus,		/* 35 */
-	PSetCellStatus,		/* 36 */
-	PFlushVolumeData,	/* 37 -- flush all data from a volume */
-	PSetSysName,		/* 38 - Set system name */
-	PExportAfs,		/* 39 - Export Afs to remote nfs clients */
-	PGetCacheSize,		/* 40 - get cache size and usage */
-	PGetVnodeXStatus,	/* 41 - get vcache's special status */
-	PSetSPrefs33,		/* 42 - Set CM Server preferences... */
-	PGetSPrefs,		/* 43 - Get CM Server preferences... */
-	PGag,			/* 44 - turn off/on all CM messages */
-	PTwiddleRx,		/* 45 - adjust some RX params       */
-	PSetSPrefs,		/* 46 - Set CM Server preferences... */
-	PStoreBehind,		/* 47 - set degree of store behind to be done */
-	PGCPAGs,		/* 48 - disable automatic pag gc-ing */
-	PGetInitParams,		/* 49 - get initial cm params */
-	PGetCPrefs,		/* 50 - get client interface addresses */
-	PSetCPrefs,		/* 51 - set client interface addresses */
-	PFlushMount,		/* 52 - flush mount symlink data */
-	PRxStatProc,		/* 53 - control process RX statistics */
-	PRxStatPeer,		/* 54 - control peer RX statistics */
-	PGetRxkcrypt,		/* 55 -- Get rxkad encryption flag */
-	PSetRxkcrypt,		/* 56 -- Set rxkad encryption flag */
-	PBogus,			/* 57 -- arla: set file prio */
-	PBogus,			/* 58 -- arla: fallback getfh */
-	PBogus,			/* 59 -- arla: fallback fhopen */
-	PBogus,			/* 60 -- arla: controls xfsdebug */
-	PBogus,			/* 61 -- arla: controls arla debug */
-	PBogus,			/* 62 -- arla: debug interface */
-	PBogus,			/* 63 -- arla: print xfs status */
-	PBogus,			/* 64 -- arla: force cache check */
-	PBogus,			/* 65 -- arla: break callback */
-	PPrefetchFromTape,	/* 66 -- MR-AFS: prefetch file from tape */
-	PFsCmd,			/* 67 -- RXOSD: generic commnd interface */
-	PBogus,			/* 68 -- arla: fetch stats */
-	PGetVnodeXStatus2,	/* 69 - get caller access and some vcache status */
+    PSetAcl,			/* 1 */
+    PGetAcl,			/* 2 */
+    PSetTokens,			/* 3 */
+    PGetVolumeStatus,		/* 4 */
+    PSetVolumeStatus,		/* 5 */
+    PFlush,			/* 6 */
+    PBogus,			/* 7 */
+    PGetTokens,			/* 8 */
+    PUnlog,			/* 9 */
+    PCheckServers,		/* 10 */
+    PCheckVolNames,		/* 11 */
+    PCheckAuth,			/* 12 */
+    PBogus,			/* 13 -- used to be quick check time */
+    PFindVolume,		/* 14 */
+    PBogus,			/* 15 -- prefetch is now special-cased; see pioctl code! */
+    PBogus,			/* 16 -- used to be testing code */
+    PNoop,			/* 17 -- used to be enable group */
+    PNoop,			/* 18 -- used to be disable group */
+    PBogus,			/* 19 -- used to be list group */
+    PViceAccess,		/* 20 */
+    PUnlog,			/* 21 -- unlog *is* unpag in this system */
+    PGetFID,			/* 22 -- get file ID */
+    PBogus,			/* 23 -- used to be waitforever */
+    PSetCacheSize,		/* 24 */
+    PRemoveCallBack,		/* 25 -- flush only the callback */
+    PNewCell,			/* 26 */
+    PListCells,			/* 27 */
+    PRemoveMount,		/* 28 -- delete mount point */
+    PNewStatMount,		/* 29 -- new style mount point stat */
+    PGetFileCell,		/* 30 -- get cell name for input file */
+    PGetWSCell,			/* 31 -- get cell name for workstation */
+    PMariner,			/* 32 - set/get mariner host */
+    PGetUserCell,		/* 33 -- get cell name for user */
+    PVenusLogging,		/* 34 -- Enable/Disable logging */
+    PGetCellStatus,		/* 35 */
+    PSetCellStatus,		/* 36 */
+    PFlushVolumeData,		/* 37 -- flush all data from a volume */
+    PSetSysName,		/* 38 - Set system name */
+    PExportAfs,			/* 39 - Export Afs to remote nfs clients */
+    PGetCacheSize,		/* 40 - get cache size and usage */
+    PGetVnodeXStatus,		/* 41 - get vcache's special status */
+    PSetSPrefs33,		/* 42 - Set CM Server preferences... */
+    PGetSPrefs,			/* 43 - Get CM Server preferences... */
+    PGag,			/* 44 - turn off/on all CM messages */
+    PTwiddleRx,			/* 45 - adjust some RX params       */
+    PSetSPrefs,			/* 46 - Set CM Server preferences... */
+    PStoreBehind,		/* 47 - set degree of store behind to be done */
+    PGCPAGs,			/* 48 - disable automatic pag gc-ing */
+    PGetInitParams,		/* 49 - get initial cm params */
+    PGetCPrefs,			/* 50 - get client interface addresses */
+    PSetCPrefs,			/* 51 - set client interface addresses */
+    PFlushMount,		/* 52 - flush mount symlink data */
+    PRxStatProc,		/* 53 - control process RX statistics */
+    PRxStatPeer,		/* 54 - control peer RX statistics */
+    PGetRxkcrypt,		/* 55 -- Get rxkad encryption flag */
+    PSetRxkcrypt,		/* 56 -- Set rxkad encryption flag */
+    PBogus,			/* 57 -- arla: set file prio */
+    PBogus,			/* 58 -- arla: fallback getfh */
+    PBogus,			/* 59 -- arla: fallback fhopen */
+    PBogus,			/* 60 -- arla: controls xfsdebug */
+    PBogus,			/* 61 -- arla: controls arla debug */
+    PBogus,			/* 62 -- arla: debug interface */
+    PBogus,			/* 63 -- arla: print xfs status */
+    PBogus,			/* 64 -- arla: force cache check */
+    PBogus,			/* 65 -- arla: break callback */
+    PPrefetchFromTape,		/* 66 -- MR-AFS: prefetch file from tape */
+    PFsCmd,			/* 67 -- RXOSD: generic commnd interface */
+    PBogus,			/* 68 -- arla: fetch stats */
+    PGetVnodeXStatus2,		/* 69 - get caller access and some vcache status */
 };
 
 static pioctlFunction CpioctlSw[] = {
-    PBogus,			/* 0 */
-	PNewAlias,		/* 1 -- create new cell alias */
-	PListAliases,		/* 2 -- list cell aliases */
-	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
-	PBogus,			/* 4 */
-	PDiscon,		/* 5 -- get/set discon mode */
-        PBogus,                 /* 6 */
-        PBogus,                 /* 7 */
-        PBogus,                 /* 8 */
-        PNewUuid,               /* 9 */
     PBogus,                     /* 0 */
-    PBogus,                     /* 0 */
+    PNewAlias,                  /* 1 -- create new cell alias */
+    PListAliases,               /* 2 -- list cell aliases */
+    PCallBackAddr,              /* 3 -- request addr for callback rxcon */
+    PBogus,                     /* 4 */
+    PDiscon,                    /* 5 -- get/set discon mode */
+    PBogus,                     /* 6 */
+    PBogus,                     /* 7 */
+    PBogus,                     /* 8 */
+    PNewUuid,                   /* 9 */
+    PBogus,                     /* 10 */
+    PBogus,                     /* 11 */
     PPrecache,                  /* 12 */
     PGetPAG,                    /* 13 */
 };
@@ -1440,10 +1440,15 @@ int afs_defaultAsynchrony = 0;
  * \param[in] ain	sbstruct (store behind structure) input
  * \param[out] aout	resulting sbstruct
  *
- * \retval EPERM	Error if the user doesn't have super-user credentials
- * \retval EACCES	Error if there isn't enough access to not check the mode bits
+ * \retval EPERM
+ * 	Error if the user doesn't have super-user credentials
+ * \retval EACCES
+ * 	Error if there isn't enough access to not check the mode bits
  *
- * \post sets asynchrony based on a file, from a struct sbstruct "I THINK"
+ * \post
+ * 	Changes either the default asynchrony (the amount of data that
+ * 	can remain to be written when the cache manager returns control
+ * 	to the user), or the asyncrony for the specified file.
  */
 DECL_PIOCTL(PStoreBehind)
 {
@@ -1511,7 +1516,10 @@ DECL_PIOCTL(PGCPAGs)
  *
  * \post Obtain the ACL, based on file ID
  *
- * \notes there is a hack to tell which type of ACL is being returned, checks the top 2-bytes to judge what type of ACL it is, only for dfs xlat or ACLs
+ * \notes
+ * 	There is a hack to tell which type of ACL is being returned, checks
+ * 	the top 2-bytes of the input size to judge what type of ACL it is,
+ * 	only for dfs xlator ACLs
  */
 DECL_PIOCTL(PGetAcl)
 {
@@ -1567,11 +1575,18 @@ DECL_PIOCTL(PGetAcl)
 }
 
 /*!
- * PNoop returns success.  Used for functions which are not implemented or are no longer in use.
+ * PNoop returns success.  Used for functions which are not implemented
+ * or are no longer in use.
  *
  * \ingroup pioctl
  *
- * \notes Functions involved in this: 17 (VIOCENGROUP) -- used to be enable group; 18 (VIOCDISGROUP) -- used to be disable group; 2 (?) -- get/set cache-bypass size threshold
+ * \retval Always returns success
+ *
+ * \notes
+ * 	Functions involved in this:
+ * 	17 (VIOCENGROUP) -- used to be enable group;
+ * 	18 (VIOCDISGROUP) -- used to be disable group;
+ * 	2 (?) -- get/set cache-bypass size threshold
  */
 DECL_PIOCTL(PNoop)
 {
@@ -1580,13 +1595,35 @@ DECL_PIOCTL(PNoop)
 }
 
 /*!
- * PBogus returns fail.  Used for functions which are not implemented or are no longer in use.
+ * PBogus returns fail.  Used for functions which are not implemented or
+ * are no longer in use.
  *
  * \ingroup pioctl
  *
- * \retval EINVAL	Error if some of the standard args aren't set
+ * \retval EINVAL	Always returns this value
  *
- * \notes Functions involved in this: 0 (?); 4 (?); 6 (?); 7 (VIOCSTAT); 8 (?); 13 (VIOCGETTIME) -- used to be quick check time; 15 (VIOCPREFETCH) -- prefetch is now special-cased; see pioctl code!; 16 (VIOCNOP) -- used to be testing code; 19 (VIOCLISTGROUPS) -- used to be list group; 23 (VIOCWAITFOREVER) -- used to be waitforever; 57 (VIOC_FPRIOSTATUS) -- arla: set file prio; 58 (VIOC_FHGET) -- arla: fallback getfh; 59 (VIOC_FHOPEN) -- arla: fallback fhopen; 60 (VIOC_XFSDEBUG) -- arla: controls xfsdebug; 61 (VIOC_ARLADEBUG) -- arla: controls arla debug; 62 (VIOC_AVIATOR) -- arla: debug interface; 63 (VIOC_XFSDEBUG_PRINT) -- arla: print xfs status; 64 (VIOC_CALCULATE_CACHE) -- arla: force cache check; 65 (VIOC_BREAKCELLBACK) -- arla: break callback; 68 (?) -- arla: fetch stats;
+ * \notes
+ * 	Functions involved in this:
+ *	0 (?);
+ *	4 (?);
+ *	6 (?);
+ *	7 (VIOCSTAT);
+ *	8 (?);
+ *	13 (VIOCGETTIME) -- used to be quick check time;
+ *	15 (VIOCPREFETCH) -- prefetch is now special-cased; see pioctl code!;
+ *	16 (VIOCNOP) -- used to be testing code;
+ *	19 (VIOCLISTGROUPS) -- used to be list group;
+ *	23 (VIOCWAITFOREVER) -- used to be waitforever;
+ *	57 (VIOC_FPRIOSTATUS) -- arla: set file prio;
+ *	58 (VIOC_FHGET) -- arla: fallback getfh;
+ *	59 (VIOC_FHOPEN) -- arla: fallback fhopen;
+ *	60 (VIOC_XFSDEBUG) -- arla: controls xfsdebug;
+ *	61 (VIOC_ARLADEBUG) -- arla: controls arla debug;
+ *	62 (VIOC_AVIATOR) -- arla: debug interface;
+ *	63 (VIOC_XFSDEBUG_PRINT) -- arla: print xfs status;
+ *	64 (VIOC_CALCULATE_CACHE) -- arla: force cache check;
+ *	65 (VIOC_BREAKCELLBACK) -- arla: break callback;
+ *	68 (?) -- arla: fetch stats;
  */
 DECL_PIOCTL(PBogus)
 {
@@ -1633,8 +1670,10 @@ DECL_PIOCTL(PGetFileCell)
  * \param[in] ain	not in use
  * \param[out] aout	cell name
  *
- * \retval EIO		Error if the afs daemon hasn't started yet
- * \retval ESRCH	Error if the machine isn't part of a cell, for whatever reason
+ * \retval EIO
+ * 	Error if the afs daemon hasn't started yet
+ * \retval ESRCH
+ * 	Error if the machine isn't part of a cell, for whatever reason
  *
  * \post Get the primary cell that the machine is a part of.
  */
@@ -1664,7 +1703,8 @@ DECL_PIOCTL(PGetWSCell)
  * \param[in] ain	not in use (user id found via areq)
  * \param[out] aout	cell name
  *
- * \retval ESRCH	Error if the user id doesn't have a primary cell specified
+ * \retval ESRCH
+ * 	Error if the user id doesn't have a primary cell specified
  *
  * \post Get the primary cell for a certain user, based on the user's uid
  */
@@ -1712,11 +1752,16 @@ DECL_PIOCTL(PGetUserCell)
  * \param[in] ain	the krb tickets from which to set the afs tokens
  * \param[out] aout	not in use
  *
- * \retval EINVAL	Error if the ticket is either too long or too short
- * \retval EIO		Error if the AFS initState is below 101
- * \retval ESRCH	Error if the cell for which the Token is being set can't be found
+ * \retval EINVAL
+ * 	Error if the ticket is either too long or too short
+ * \retval EIO
+ * 	Error if the AFS initState is below 101
+ * \retval ESRCH
+ * 	Error if the cell for which the Token is being set can't be found
  *
- * \post Set the Tokens for a specific cell name, unless there is none set, then default to primary
+ * \post
+ * 	Set the Tokens for a specific cell name, unless there is none set,
+ * 	then default to primary
  *
  */
 DECL_PIOCTL(PSetTokens)
@@ -1757,12 +1802,14 @@ DECL_PIOCTL(PSetTokens)
 	clear.AuthHandle = 999;	/* more rxvab compat stuff */
 
     if (afs_pd_remaining(ain) != 0) {
-	/* still stuff left?  we've got primary flag and cell name.  Set these */
+	/* still stuff left?  we've got primary flag and cell name.
+	 * Set these */
 
 	if (afs_pd_getInt(ain, &flag) != 0)
 	    return EINVAL;
 
-	/* some versions of gcc appear to need != 0 in order to get this right */
+	/* some versions of gcc appear to need != 0 in order to get this
+	 * right */
 	if ((flag & 0x8000) != 0) {	/* XXX Use Constant XXX */
 	    flag &= ~0x8000;
 	    set_parent_pag = 1;
@@ -1851,7 +1898,9 @@ DECL_PIOCTL(PSetTokens)
  *
  * \retval EINVAL	Error if some of the standard args aren't set
  *
- * \post The status of a volume (based on the FID of the volume), or an offline message /motd
+ * \post
+ * 	The status of a volume (based on the FID of the volume), or an
+ * 	offline message /motd
  */
 DECL_PIOCTL(PGetVolumeStatus)
 {
@@ -1908,15 +1957,24 @@ DECL_PIOCTL(PGetVolumeStatus)
  *
  * \ingroup pioctl
  *
- * \param[in] ain	values to set the status at, offline message, message of the day, volume name, minimum quota, maximum quota
- * \param[out] aout	status of a volume, offlines messages, minimum quota, maximumm quota
+ * \param[in] ain
+ * 	values to set the status at, offline message, message of the day,
+ * 	volume name, minimum quota, maximum quota
+ * \param[out] aout
+ * 	status of a volume, offlines messages, minimum quota, maximumm quota
  *
- * \retval EINVAL	Error if some of the standard args aren't set
- * \retval EROFS	Error if the volume is read only, or a backup volume
- * \retval ENODEV	Error if the volume can't be accessed
- * \retval E2BIG	Error if the volume name, offline message, and motd are too big
+ * \retval EINVAL
+ * 	Error if some of the standard args aren't set
+ * \retval EROFS
+ * 	Error if the volume is read only, or a backup volume
+ * \retval ENODEV
+ * 	Error if the volume can't be accessed
+ * \retval E2BIG
+ * 	Error if the volume name, offline message, and motd are too big
  *
- * \post Set the status of a volume, including any offline messages, a minimum quota, and a maximum quota
+ * \post
+ * 	Set the status of a volume, including any offline messages,
+ * 	a minimum quota, and a maximum quota
  */
 DECL_PIOCTL(PSetVolumeStatus)
 {
@@ -1993,10 +2051,9 @@ DECL_PIOCTL(PSetVolumeStatus)
     if (code)
 	return code;
     /* we are sending parms back to make compat. with prev system.  should
-     * change interface later to not ask for current status, just set new status */
+     * change interface later to not ask for current status, just set new
+     * status */
 
-    /* XXX - We really need to check that this doesn't overflow, too, otherwise
-     * bad fileserver status could be _really_ bad */
     if (afs_pd_putBytes(aout, &volstat, sizeof(VolumeStatus)) != 0)
 	return EINVAL;
     if (afs_pd_putString(aout, volName) != 0)
@@ -2043,8 +2100,11 @@ DECL_PIOCTL(PFlush)
  *
  * \ingroup pioctl
  *
- * \param[in] ain	the last component in a path, related to mountpoint that we're looking for information about
- * \param[out] aout	volume, cell, link data 
+ * \param[in] ain
+ * 	the last component in a path, related to mountpoint that we're
+ * 	looking for information about
+ * \param[out] aout
+ * 	volume, cell, link data
  *
  * \retval EINVAL	Error if some of the standard args aren't set
  * \retval ENOTDIR	Error if the 'mount point' argument isn't a directory
@@ -2133,14 +2193,21 @@ DECL_PIOCTL(PNewStatMount)
  *  
  * \ingroup pioctl
  *      
- * \param[in] ain       userid
+ * \param[in] ain       cellid to return tokens for
  * \param[out] aout     token
  * 
- * \retval EIO		Error if the afs daemon hasn't started yet
- * \retval EDOM		Error if the input parameter is out of the bounds of the available tokens
- * \retval ENOTCONN	Error if there aren't tokens for this cell
+ * \retval EIO
+ * 	Error if the afs daemon hasn't started yet
+ * \retval EDOM
+ * 	Error if the input parameter is out of the bounds of the available
+ * 	tokens
+ * \retval ENOTCONN
+ * 	Error if there aren't tokens for this cell
  *  
- * \post If the input paramater exists, get the token that corresponds to the parameter value, if there is no token at this value, get the token for the first cell
+ * \post
+ * 	If the input paramater exists, get the token that corresponds to
+ * 	the parameter value, if there is no token at this value, get the
+ * 	token for the first cell
  *
  * \notes "it's a weird interface (from comments in the code)"
  */
@@ -2277,13 +2344,13 @@ DECL_PIOCTL(PUnlog)
 	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
-	    /* We have to drop the lock over the call to afs_ResetUserConns, since
-	     * it obtains the afs_xvcache lock.  We could also keep the lock, and
-	     * modify ResetUserConns to take parm saying we obtained the lock
-	     * already, but that is overkill.  By keeping the "tu" pointer
-	     * held over the released lock, we guarantee that we won't lose our
-	     * place, and that we'll pass over every user conn that existed when
-	     * we began this call.
+	    /* We have to drop the lock over the call to afs_ResetUserConns,
+	     * since it obtains the afs_xvcache lock.  We could also keep
+	     * the lock, and modify ResetUserConns to take parm saying we
+	     * obtained the lock already, but that is overkill.  By keeping
+	     * the "tu" pointer held over the released lock, we guarantee
+	     * that we won't lose our place, and that we'll pass over
+	     * every user conn that existed when we began this call.
 	     */
 	    afs_ResetUserConns(tu);
 	    tu->refCount--;
@@ -2309,7 +2376,10 @@ DECL_PIOCTL(PUnlog)
  * \param[in] ain	host address to be set
  * \param[out] aout	old host address
  *
- * \post depending on whether or not a variable is set, either get the host for the cache manager monitor, or set the old address and give it a new address
+ * \post
+ * 	depending on whether or not a variable is set, either get the host
+ * 	for the cache manager monitor, or set the old address and give it
+ * 	a new address
  *
  * \notes Errors turn off mariner
  */
@@ -2354,7 +2424,9 @@ DECL_PIOCTL(PMariner)
  * \retval EACCES	Error if the user doesn't have super-user credentials
  * \retval ENOENT	Error if we are unable to obtain the cell
  *
- * \post Either a fast check (where it doesn't contact servers) or a local check (checks local cell only)
+ * \post
+ * 	Either a fast check (where it doesn't contact servers) or a
+ * 	local check (checks local cell only)
  */
 DECL_PIOCTL(PCheckServers)
 {
@@ -2451,7 +2523,10 @@ DECL_PIOCTL(PCheckServers)
  *
  * \retval EIO		Error if the afs daemon hasn't started yet
  *
- * \post Check the root volume, and then check the names if the volume check variable is set to force, has expired, is busy, or if the mount points variable is set
+ * \post
+ * 	Check the root volume, and then check the names if the volume
+ * 	check variable is set to force, has expired, is busy, or if
+ * 	the mount points variable is set
  */
 DECL_PIOCTL(PCheckVolNames)
 {
@@ -2473,9 +2548,13 @@ DECL_PIOCTL(PCheckVolNames)
  * \param[in] ain	not in use
  * \param[out] aout	not in use
  *
- * \retval EACCESS Error if no user is specififed, the user has no tokens set, or if the user's tokens are bad
+ * \retval EACCESS
+ * 	Error if no user is specififed, the user has no tokens set,
+ * 	or if the user's tokens are bad
  *
- * \post check to see if a user has the correct authentication.  If so, allow access.
+ * \post
+ * 	check to see if a user has the correct authentication.
+ * 	If so, allow access.
  *
  * \notes Check the connections to all the servers specified
  */
@@ -2682,9 +2761,12 @@ DECL_PIOCTL(PPrecache)
  * \retval EACCES	Error if the user doesn't have super-user credentials
  * \retval EROFS	Error if the cache is set to be in memory
  *
- * \post Set the cache size based on user input.  If no size is given, set it to the default OpenAFS cache size.
+ * \post
+ * 	Set the cache size based on user input.  If no size is given,
+ * 	set it to the default OpenAFS cache size.
  *
- * \notes recompute the general cache parameters for every single block allocated
+ * \notes
+ * 	recompute the general cache parameters for every single block allocated
  */
 DECL_PIOCTL(PSetCacheSize)
 {
@@ -2791,7 +2873,10 @@ DECL_PIOCTL(PGetCacheSize)
  * \retval EINVAL	Error if some of the standard args aren't set
  * \retval 0		0 returned if the volume is set to read-only
  *
- * \post Flushes callbacks, by setting the length of callbacks to one, setting the next callback to be sent to the CB_DROPPED value, and then dequeues everything else.
+ * \post
+ * 	Flushes callbacks, by setting the length of callbacks to one,
+ * 	setting the next callback to be sent to the CB_DROPPED value,
+ * 	and then dequeues everything else.
  */
 DECL_PIOCTL(PRemoveCallBack)
 {
@@ -2845,8 +2930,12 @@ DECL_PIOCTL(PRemoveCallBack)
  *
  * \ingroup pioctl
  *
- * \param[in] ain	the name of the cell, the hosts that will be a part of the cell, whether or not it's linked with another cell, the other cell it's linked with, the file server port, and the volume server port
- * \param[out] aout	not in use
+ * \param[in] ain
+ * 	the name of the cell, the hosts that will be a part of the cell,
+ * 	whether or not it's linked with another cell, the other cell it's
+ * 	linked with, the file server port, and the volume server port
+ * \param[out] aout
+ * 	not in use
  *
  * \retval EIO		Error if the afs daemon hasn't started yet
  * \retval EACCES	Error if the user doesn't have super-user cedentials
@@ -3037,11 +3126,17 @@ out:
  * \param[in] ain 	the name of the file in this dir to remove
  * \param[out] aout	not in use
  *
- * \retval EINVAL	Error if some of the standard args aren't set
- * \retval ENOTDIR	Error if the argument to remove is not a directory
- * \retval ENOENT	Error if there is no cache to remove the mount point from or if a vcache doesn't exist
+ * \retval EINVAL
+ * 	Error if some of the standard args aren't set
+ * \retval ENOTDIR
+ * 	Error if the argument to remove is not a directory
+ * \retval ENOENT
+ * 	Error if there is no cache to remove the mount point from or
+ * 	if a vcache doesn't exist
  *
- * \post Ensure that everything is OK before deleting the mountpoint.  If not, don't delete.  Delete a mount point based on a file id.
+ * \post
+ * 	Ensure that everything is OK before deleting the mountpoint.
+ * 	If not, don't delete.  Delete a mount point based on a file id.
  */
 DECL_PIOCTL(PRemoveMount)
 {
@@ -3221,13 +3316,18 @@ DECL_PIOCTL(PGetCellStatus)
  *
  * \ingroup pioctl
  *
- * \param[in] ain	The cell you want to set information about, and the values you want to set
- * \param[out] aout	not in use
+ * \param[in] ain
+ * 	The cell you want to set information about, and the values you
+ * 	want to set
+ * \param[out] aout
+ * 	not in use
  *
  * \retval EIO		Error if the afs daemon hasn't started yet
  * \retval EACCES	Error if the user doesn't have super-user credentials
  *
- * \post Set the state of the cell in a defined struct cell, based on whether or not SetUID is allowed
+ * \post
+ * 	Set the state of the cell in a defined struct cell, based on
+ * 	whether or not SetUID is allowed
  */
 DECL_PIOCTL(PSetCellStatus)
 {
@@ -3269,9 +3369,14 @@ DECL_PIOCTL(PSetCellStatus)
  * \retval EINVAL	Error if some of the standard args aren't set
  * \retval EIO		Error if the afs daemon hasn't started yet
  *
- * \post Wipe everything on the volume.  This is done dependent on which platform this is for.
+ * \post
+ * 	Flush all cached contents of a volume.  Exactly what stays and what
+ * 	goes depends on the platform.
  *
- * \notes Does not flush a file that a user has open and is using, because it will be re-created on next write.  Also purges the dnlc, because things are screwed up.
+ * \notes
+ * 	Does not flush a file that a user has open and is using, because
+ * 	it will be re-created on next write.  Also purges the dnlc,
+ * 	because things are screwed up.
  */
 DECL_PIOCTL(PFlushVolumeData)
 {
@@ -3295,8 +3400,8 @@ DECL_PIOCTL(PFlushVolumeData)
     cell = avc->f.fid.Cell;
 
     /*
-     * Clear stat'd flag from all vnodes from this volume; this will invalidate all
-     * the vcaches associated with the volume.
+     * Clear stat'd flag from all vnodes from this volume; this will
+     * invalidate all the vcaches associated with the volume.
      */
  loop:
     ObtainReadLock(&afs_xvcache);
@@ -3363,22 +3468,22 @@ DECL_PIOCTL(PFlushVolumeData)
     ReleaseReadLock(&afs_xvcache);
 
 
-    ObtainWriteLock(&afs_xdcache, 328);	/* needed if you're going to flush any stuff */
+    ObtainWriteLock(&afs_xdcache, 328);	/* needed to flush any stuff */
     for (i = 0; i < afs_cacheFiles; i++) {
 	if (!(afs_indexFlags[i] & IFEverUsed))
 	    continue;		/* never had any data */
 	tdc = afs_GetDSlot(i, NULL);
-	if (tdc->refCount <= 1) {	/* too high, in use by running sys call */
+	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
 	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
 		if (!(afs_indexFlags[i] & IFDataMod)) {
-		    /* if the file is modified, but has a ref cnt of only 1, then
-		     * someone probably has the file open and is writing into it.
-		     * Better to skip flushing such a file, it will be brought back
-		     * immediately on the next write anyway.
+		    /* if the file is modified, but has a ref cnt of only 1,
+		     * then someone probably has the file open and is writing
+		     * into it. Better to skip flushing such a file, it will be
+		     * brought back immediately on the next write anyway.
 		     * 
-		     * If we *must* flush, then this code has to be rearranged to call
-		     * afs_storeAllSegments() first */
+		     * If we *must* flush, then this code has to be rearranged
+		     * to call afs_storeAllSegments() first */
 		    afs_FlushDCache(tdc);
 		}
 	    }
@@ -3412,13 +3517,22 @@ DECL_PIOCTL(PFlushVolumeData)
  *
  * \ingroup pioctl
  *
- * \param[in] ain 	not in use (avc used)
- * \param[out] aout	vcxstat: the file id, the data version, any lock, the parent vnode, the parent unique id, the trunc position, the callback, cbExpires, what access is being made, what files are open, any users executing/writing, the flock ount, the states, the move stat
+ * \param[in] ain
+ * 	not in use (avc used)
+ * \param[out] aout
+ * 	vcxstat: the file id, the data version, any lock, the parent vnode,
+ * 	the parent unique id, the trunc position, the callback, cbExpires,
+ * 	what access is being made, what files are open,
+ * 	any users executing/writing, the flock count, the states,
+ * 	the move stat
  *
- * \retval EINVAL	Error if some of the initial default arguments aren't set
- * \retval EACCES	Error if access to check the mode bits is denied
+ * \retval EINVAL
+ * 	Error if some of the initial default arguments aren't set
+ * \retval EACCES
+ * 	Error if access to check the mode bits is denied
  *
- * \post gets stats for the vnode, a struct listed in vcxstat
+ * \post
+ * 	gets stats for the vnode, a struct listed in vcxstat
  */
 DECL_PIOCTL(PGetVnodeXStatus)
 {
@@ -3448,7 +3562,7 @@ DECL_PIOCTL(PGetVnodeXStatus)
     hset(stat.flushDV, avc->flushDV);
     hset(stat.mapDV, avc->mapDV);
     stat.truncPos = avc->f.truncPos;
-    {				/* just grab the first two - won't break anything... */
+    {			/* just grab the first two - won't break anything... */
 	struct axscache *ac;
 
 	for (i = 0, ac = avc->Access; ac && i < CPSIZE; i++, ac = ac->next) {
@@ -3505,13 +3619,23 @@ DECL_PIOCTL(PGetVnodeXStatus2)
  * \param[in] ain	new value for @sys
  * \param[out] aout	count, entry, list (debug values?)
  *
- * \retval EINVAL	Error if afsd isn't running, the new sysname is too large, the new sysname causes issues (starts with a .0 or ..0), there is no PAG set in the credentials, the user of a PAG can't be found, (!(exporter = au->exporter)) "NOT SURE ON THIS"
- * \retval ENODEV 	Error if there isn't already a system named that ("I THINK")
- * \retval EACCES	Error if the user doesn't have super-user credentials
+ * \retval EINVAL
+ * 	Error if afsd isn't running, the new sysname is too large,
+ * 	the new sysname causes issues (starts with a . or ..),
+ * 	there is no PAG set in the credentials, or the user of a PAG
+ * 	can't be found
+ * \retval EACCES
+ * 	Error if the user doesn't have super-user credentials
  *
- * \post Set the value of @sys if these things work: if the input isn't too long or if input doesn't start with .0 or ..0
+ * \post
+ * 	Set the value of @sys if these things work: if the input isn't
+ * 	too long or if input doesn't start with . or ..
  *
- * \notes We require root for local sysname changes, but not for remote (since we don't really believe remote uids anyway) outname[] shouldn't really be needed- this is left as an exercise for the reader.
+ * \notes
+ * 	We require root for local sysname changes, but not for remote
+ * 	(since we don't really believe remote uids anyway)
+ * 	outname[] shouldn't really be needed- this is left as an
+ * 	exercise for the reader.
  */
 DECL_PIOCTL(PSetSysName)
 {
@@ -3565,7 +3689,7 @@ DECL_PIOCTL(PSetSysName)
 	num = count;
     }
     if (afs_cr_gid(*acred) == RMTUSER_REQ ||
-	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV) {	/* Handles all exporters */
+	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV) {   /* Handles all exporters */
 	if (allpags && afs_cr_gid(*acred) != RMTUSER_REQ_PRIV) {
 	    return EPERM;
 	}
@@ -3624,7 +3748,7 @@ DECL_PIOCTL(PSetSysName)
 		for (count = 1; count < setsysname; ++count) {
 		    if (!afs_sysnamelist[count])
 			osi_Panic
-			    ("PSetSysName: no afs_sysnamelist entry to write\n");
+			   ("PSetSysName: no afs_sysnamelist entry to write\n");
 		    if (afs_pd_getString(ain, afs_sysnamelist[count],
 					 MAXSYSNAME) != 0)
 			return EINVAL;
@@ -3640,7 +3764,7 @@ DECL_PIOCTL(PSetSysName)
 	if (foundname) {
 	    if (afs_pd_putString(aout, outname) != 0)
 		return E2BIG;
-	    for (count = 1; count < foundname; ++count) {	/* ... or list. */
+	    for (count = 1; count < foundname; ++count) {    /* ... or list. */
 		if (!sysnamelist[count])
 		    osi_Panic
 			("PSetSysName: no afs_sysnamelist entry to read\n");
@@ -3793,9 +3917,13 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
  * \param[in] ain	the sprefs value you want the sprefs to be set to
  * \param[out] aout	not in use
  *
- * \retval EIO		Error if the afs daemon hasn't started yet
- * \retval EACCES	Error if the user doesn't have super-user credentials
- * \retval EINVAL	Error if the struct setsprefs is too large or if it multiplied by the number of servers is too large
+ * \retval EIO
+ * 	Error if the afs daemon hasn't started yet
+ * \retval EACCES
+ * 	Error if the user doesn't have super-user credentials
+ * \retval EINVAL
+ * 	Error if the struct setsprefs is too large or if it multiplied
+ * 	by the number of servers is too large
  *
  * \post set the sprefs using the afs_setsprefs() function
  */
@@ -3873,7 +4001,12 @@ DECL_PIOCTL(PSetSPrefs33)
  *
  * \post Get the sprefs
  *
- * \notes in the hash table of server structs, all servers with the same IP address; will be on the same overflow chain; This could be sped slightly in some circumstances by having it cache the immediately previous slot in the hash table and some supporting information; Only reports file servers now.
+ * \notes
+ * 	in the hash table of server structs, all servers with the same
+ * 	IP address; will be on the same overflow chain; This could be
+ * 	sped slightly in some circumstances by having it cache the
+ * 	immediately previous slot in the hash table and some
+ * 	supporting information; Only reports file servers now.
  */
 DECL_PIOCTL(PGetSPrefs)
 {
@@ -3958,20 +4091,24 @@ int afs_NFSRootOnly = 1;
  *
  * \ingroup pioctl
  *
- * \param[in] ain	a struct Vic * EIOctl containing export values needed to change between nfs and afs
- * \param[out] aout	a struct of the exporter states (exporter->exp_states)
+ * \param[in] ain
+ * 	an integer containing the desired exportee flags
+ * \param[out] aout
+ * 	an integer containing the current exporter flags
  *
  * \retval ENODEV	Error if the exporter doesn't exist
  * \retval EACCES	Error if the user doesn't have super-user credentials
  *
- * \post Changes the state of various values to reflect the change of the export values between nfs and afs.
+ * \post
+ * 	Changes the state of various values to reflect the change
+ * 	of the export values between nfs and afs.
  *
  * \notes Legacy code obtained from IBM.
  */
 DECL_PIOCTL(PExportAfs)
 {
-    afs_int32 export, newint =
-	0, type, changestate, handleValue, convmode, pwsync, smounts;
+    afs_int32 export, newint = 0;
+    afs_int32 type, changestate, handleValue, convmode, pwsync, smounts;
     afs_int32 rempags = 0, pagcb = 0;
     register struct afs_exporter *exporter;
 
@@ -4161,7 +4298,8 @@ DECL_PIOCTL(PTwiddleRx)
  * \param[in] ain	not in use
  * \param[out] aout	initial cache manager params
  *
- * \retval E2BIG	Error if the initial parameters are bigger than some PIGGYSIZE
+ * \retval E2BIG
+ * 	Error if the initial parameters are bigger than some PIGGYSIZE
  *
  * \post return the initial cache manager parameters
  */
@@ -4198,7 +4336,7 @@ crget(void)
  * \param[in] ain	not in use
  * \param[out] aout	value of cryptall
  *
- * \post get the value of cryptall (presumably whether or not things should be encrypted)
+ * \post Turns on, or disables, rxkad encryption by setting the cryptall global
  */
 DECL_PIOCTL(PGetRxkcrypt)
 {
@@ -4213,12 +4351,17 @@ DECL_PIOCTL(PGetRxkcrypt)
  * \param[in] ain	the argument whether or not things should be encrypted
  * \param[out] aout	not in use
  *
- * \retval EPERM	Error if the user doesn't have super-user credentials
- * \retval EINVAL	Error if the input is too big, or if the input is outside the bounds of what it can be set to
+ * \retval EPERM
+ * 	Error if the user doesn't have super-user credentials
+ * \retval EINVAL
+ * 	Error if the input is too big, or if the input is outside the
+ * 	bounds of what it can be set to
  *
  * \post set whether or not things should be encrypted
  *
- * \notes may need to be modified at a later date to take into account other values for cryptall (beyond true or false)
+ * \notes
+ * 	may need to be modified at a later date to take into account
+ * 	other values for cryptall (beyond true or false)
  */
 DECL_PIOCTL(PSetRxkcrypt)
 {
@@ -4265,7 +4408,8 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #endif
     AFS_STATCNT(HandleClientContext);
     if (ablob->in_size < PIOCTL_HEADER * sizeof(afs_int32)) {
-	/* Must at least include the PIOCTL_HEADER header words required by the protocol */
+	/* Must at least include the PIOCTL_HEADER header words
+	 * required by the protocol */
 	return EINVAL;		/* Too small to be good  */
     }
     ain = inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
@@ -4286,7 +4430,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     ain += sizeof(g1);
     *com = *((afs_uint32 *) ain);
     ain += sizeof(afs_int32);
-    exporter_type = *((afs_uint32 *) ain);	/* In case we support more than NFS */
+    exporter_type = *((afs_uint32 *) ain);/* In case we support more than NFS */
 
     /*
      * Of course, one must be root for most of these functions, but
@@ -4330,7 +4474,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
 # ifdef AFS_LINUX26_ONEGROUP_ENV
-    set_cr_group_info(newcred, groups_alloc(1)); /* not that anything sets this */
+    set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
     h = ((g1-0x3f00) >> 14) + h + h + h;
@@ -4378,7 +4522,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	/* Special case for 'setpag' */
 	afs_uint32 pagvalue = genpag();
 
-	au = afs_GetUser(pagvalue, -1, WRITE_LOCK);	/* a new unixuser struct */
+	au = afs_GetUser(pagvalue, -1, WRITE_LOCK); /* a new unixuser struct */
 	/*
 	 * Note that we leave the 'outexporter' struct held so it won't
 	 * dissappear on us
@@ -4413,7 +4557,9 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
  * \retval EIO		Error if the afs daemon hasn't started yet
  * \retval EINVAL	Error if some of the standard args aren't set
  *
- * \post get all interface addresses and other information of the client interface
+ * \post
+ * 	get all interface addresses and other information of the client
+ * 	interface
  */
 DECL_PIOCTL(PGetCPrefs)
 {
@@ -4441,7 +4587,7 @@ DECL_PIOCTL(PGetCPrefs)
     ObtainReadLock(&afs_xinterface);
 
     /* copy out the client interface information from the
-     ** kernel data structure "interface" to the output buffer
+     * kernel data structure "interface" to the output buffer
      */
     for (i = spin->offset, j = 0; (i < afs_cb_interface.numberOfInterfaces)
 	 && (j < maxNumber); i++, j++, srvout++)
@@ -4515,14 +4661,21 @@ DECL_PIOCTL(PSetCPrefs)
  *
  * \ingroup pioctl
  *
- * \param[in] ain	the last part of a path to a mount point, which tells us what to flush
- * \param[out] aout	not in use
+ * \param[in] ain
+ * 	the last part of a path to a mount point, which tells us what to flush
+ * \param[out] aout
+ * 	not in use
  *
- * \retval EINVAL	Error if some of the initial arguments aren't set
- * \retval ENOTDIR	Error if the initial argument for the mount point isn't a directory
- * \retval ENOENT	Error if the dcache entry isn't set
+ * \retval EINVAL
+ * 	Error if some of the initial arguments aren't set
+ * \retval ENOTDIR
+ * 	Error if the initial argument for the mount point isn't a directory
+ * \retval ENOENT
+ * 	Error if the dcache entry isn't set
  *
- * \post remove all of the mount data from the dcache regarding a certain mount point
+ * \post
+ * 	remove all of the mount data from the dcache regarding a
+ * 	certain mount point
  */
 DECL_PIOCTL(PFlushMount)
 {
@@ -4615,7 +4768,9 @@ DECL_PIOCTL(PFlushMount)
  * \retval EACCES	Error if the user doesn't have super-user credentials
  * \retval EINVAL	Error if the flag input is too long
  *
- * \post either enable process RPCStats, disable process RPCStats, or clear the process RPCStats
+ * \post
+ * 	either enable process RPCStats, disable process RPCStats,
+ * 	or clear the process RPCStats
  */
 DECL_PIOCTL(PRxStatProc)
 {
@@ -4654,7 +4809,9 @@ DECL_PIOCTL(PRxStatProc)
  * \retval EACCES	Error if the user doesn't have super-user credentials
  * \retval EINVAL	Error if the flag input is too long
  *
- * \post either enable peer RPCStatws, disable peer RPCStats, or clear the peer RPCStats
+ * \post
+ * 	either enable peer RPCStatws, disable peer RPCStats,
+ * 	or clear the peer RPCStats
  */
 DECL_PIOCTL(PRxStatPeer)
 {
@@ -4799,7 +4956,7 @@ DECL_PIOCTL(PFsCmd)
 		  AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK, NULL));
 	/* This call is done to have the callback things handled correctly */
 	afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
-    } else {			/* just a status request, return also link data */
+    } else {		/* just a status request, return also link data */
 	code = 0;
 	Outputs->code = afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
 	Outputs->chars[0] = 0;
