@@ -250,7 +250,6 @@ DECL_PIOCTL(PNewAlias);
 DECL_PIOCTL(PListCells);
 DECL_PIOCTL(PListAliases);
 DECL_PIOCTL(PRemoveMount);
-DECL_PIOCTL(PVenusLogging);
 DECL_PIOCTL(PGetCellStatus);
 DECL_PIOCTL(PSetCellStatus);
 DECL_PIOCTL(PFlushVolumeData);
@@ -345,7 +344,7 @@ static pioctlFunction VpioctlSw[] = {
     PGetWSCell,			/* 31 -- get cell name for workstation */
     PMariner,			/* 32 - set/get mariner host */
     PGetUserCell,		/* 33 -- get cell name for user */
-    PVenusLogging,		/* 34 -- Enable/Disable logging */
+    PBogus,			/* 34 -- Enable/Disable logging */
     PGetCellStatus,		/* 35 */
     PSetCellStatus,		/* 36 */
     PFlushVolumeData,		/* 37 -- flush all data from a volume */
@@ -3260,20 +3259,6 @@ DECL_PIOCTL(PRemoveMount)
     if (sysState.allocked)
 	osi_FreeLargeSpace(bufp);
     return code;
-}
-
-/*!
- * VIOC_VENUSLOG (34) - Enable/Disable venus logging
- *
- * \ingroup pioctl
- *
- * \retval EINVAL	Error if some of the standard args aren't set
- *
- * \notes Obsoleted, perhaps should be PBogus
- */
-DECL_PIOCTL(PVenusLogging)
-{
-    return EINVAL;		/* OBSOLETE */
 }
 
 /*!
