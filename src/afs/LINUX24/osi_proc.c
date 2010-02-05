@@ -169,6 +169,7 @@ static int uu_show(struct seq_file *m, void *p)
 {
     struct cell *tc = 0;
     struct unixuser *tu = p;
+    union tokenUnion *token;
     char *cellname;
 
     if (p == (void *)1) {
@@ -196,9 +197,12 @@ static int uu_show(struct seq_file *m, void *p)
     if (tc) afs_PutCell(tc, READ_LOCK);
 
     if (tu->states & UHasTokens) {
+	token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
 	seq_printf(m, "  %10d %10d %10d %3d",
-		   tu->tokenTime, tu->ct.BeginTimestamp, tu->ct.EndTimestamp,
-		   tu->ct.AuthHandle);
+		   tu->tokenTime,
+		   (token != NULL)?token->rxkad.clearToken.BeginTimestamp:0,
+		   (token != NULL)?token->rxkad.clearToken.EndTimestamp:0,
+		   (token != NULL)?token->rxkad.clearToken.AuthHandle:0);
     } else {
 	seq_printf(m, "  %-36s", "Tokens Not Set");
     }

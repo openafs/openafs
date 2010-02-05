@@ -110,6 +110,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_server.o \
 	$(UOBJ)/afs_stat.o \
 	$(UOBJ)/afs_syscall.o \
+	$(UOBJ)/afs_tokens.o \
 	$(UOBJ)/afs_user.o \
 	$(UOBJ)/afs_util.o \
 	$(UOBJ)/afs_vcache.o \
@@ -246,6 +247,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_server.o \
 	$(WEBOBJ)/afs_stat.o \
 	$(WEBOBJ)/afs_syscall.o \
+	$(WEBOBJ)/afs_tokens.o \
 	$(WEBOBJ)/afs_user.o \
 	$(WEBOBJ)/afs_util.o \
 	$(WEBOBJ)/afs_vcache.o \
@@ -382,6 +384,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_server.o \
 	$(WEBOBJ)/afs_stat.o \
 	$(WEBOBJ)/afs_syscall.o \
+	$(WEBOBJ)/afs_tokens.o \
 	$(WEBOBJ)/afs_user.o \
 	$(WEBOBJ)/afs_util.o \
 	$(WEBOBJ)/afs_vcache.o \
@@ -513,6 +516,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_server.o \
 	$(JUAFS)/afs_stat.o \
 	$(JUAFS)/afs_syscall.o \
+	$(JUAFS)/afs_tokens.o \
 	$(JUAFS)/afs_user.o \
 	$(JUAFS)/afs_util.o \
 	$(JUAFS)/afs_vcache.o \
@@ -657,6 +661,8 @@ $(UOBJ)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 $(UOBJ)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE1)
 $(UOBJ)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
+	$(CRULE1)
+$(UOBJ)/afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
 	$(CRULE1)
 $(UOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE1)
@@ -936,6 +942,8 @@ $(WEBOBJ)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 $(WEBOBJ)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE2)
 $(WEBOBJ)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
+	$(CRULE2)
+$(WEBOBJ)/afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
 	$(CRULE2)
 $(WEBOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE2)
@@ -1219,6 +1227,8 @@ $(JUAFS)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 $(JUAFS)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE1)
 $(JUAFS)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
+	$(CRULE1)
+$(JUAFS)/afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
 	$(CRULE1)
 $(JUAFS)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE1)

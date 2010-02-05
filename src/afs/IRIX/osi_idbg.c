@@ -136,15 +136,23 @@ static char *tab_userstates[] = {
 static void
 idbg_pruser(struct unixuser *tu)
 {
+    union tokenUnion *token;
+
+    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
+
     qprintf("@0x%x nxt 0x%x uid %d (0x%x) cell 0x%x vid 0x%x ref %d\n", tu,
 	    tu->next, tu->uid, tu->uid, tu->cell, tu->vid, tu->refCount);
-    qprintf("time %d stLen %d stp 0x%x exp 0x%x ", tu->tokenTime, tu->stLen,
-	    tu->stp, tu->exporter);
+    qprintf("time %dRX_SECIDX_KADstLen %d stp 0x%x exp 0x%x ", tu->tokenTime,
+	    (token != NULL)?token->rxkad.ticketLen:0,
+	    (token != NULL)?token->rxkad.ticket:NULL,
+	    tu->exporter);
     printflags(tu->states, tab_userstates);
     qprintf("\n");
     qprintf("ClearToken: handle 0x%x ViceID 0x%x Btime %d Etime %d\n",
-	    tu->ct.AuthHandle, tu->ct.ViceId, tu->ct.BeginTimestamp,
-	    tu->ct.EndTimestamp);
+	    (token != NULL)?token->rxkad.clearToken.AuthHandle:0,
+	    tu->vid,
+	    (token != NULL)?token->rxkad.clearToken.BeginTimestamp:0,
+	    (token != NULL)?token->rxkad.clearToken.EndTimestamp:0);
 }
 
 extern struct unixuser *afs_users[NUSERS];

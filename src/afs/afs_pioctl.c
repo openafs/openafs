@@ -1874,16 +1874,9 @@ DECL_PIOCTL(PSetTokens)
     /* now we just set the tokens */
     tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
     tu->vid = clear.ViceId;
-    if (tu->stp != NULL) {
-	afs_osi_Free(tu->stp, tu->stLen);
-    }
-    tu->stp = (char *)afs_osi_Alloc(stLen);
-    if (tu->stp == NULL) {
-	return ENOMEM;
-    }
-    tu->stLen = stLen;
-    memcpy(tu->stp, stp, stLen);
-    tu->ct = clear;
+    /* Set tokens destroys any that are already there */
+    afs_FreeTokens(&tu->tokens);
+    afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
     afs_ComputePAGStats();
@@ -2238,6 +2231,7 @@ DECL_PIOCTL(PGetTokens)
     struct cell *tcell;
     afs_int32 i;
     struct unixuser *tu;
+    union tokenUnion *token;
     afs_int32 iterator = 0;
     int newStyle;
     int code = E2BIG;
@@ -2285,30 +2279,34 @@ DECL_PIOCTL(PGetTokens)
 	return EDOM;
     }
     if (((tu->states & UHasTokens) == 0)
-	|| (tu->ct.EndTimestamp < osi_Time())) {
+	|| !afs_HasUsableTokens(tu->tokens, osi_Time())) {
 	tu->states |= (UTokensBad | UNeedsReset);
 	afs_NotifyUser(tu, UTokensDropped);
 	afs_PutUser(tu, READ_LOCK);
 	return ENOTCONN;
     }
-    iterator = tu->stLen;	/* for compat, we try to return 56 byte tix if they fit */
+    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
+
+    /* for compat, we try to return 56 byte tix if they fit */
+    iterator = token->rxkad.ticketLen;
     if (iterator < 56)
 	iterator = 56;		/* # of bytes we're returning */
 
     if (afs_pd_putInt(aout, iterator) != 0)
 	goto out;
-    if (afs_pd_putBytes(aout, tu->stp, tu->stLen) != 0)
+    if (afs_pd_putBytes(aout, token->rxkad.ticket, token->rxkad.ticketLen) != 0)
 	goto out;
-    if (tu->stLen < 56) {
+    if (token->rxkad.ticketLen < 56) {
 	/* Tokens are always 56 bytes or larger */
-	if (afs_pd_skip(aout, iterator - tu->stLen) != 0) {
+	if (afs_pd_skip(aout, iterator - token->rxkad.ticketLen) != 0) {
 	    goto out;
 	}
     }
 
     if (afs_pd_putInt(aout, sizeof(struct ClearToken)) != 0)
 	goto out;
-    if (afs_pd_putBytes(aout, &tu->ct, sizeof(struct ClearToken)) != 0)
+    if (afs_pd_putBytes(aout, &token->rxkad.clearToken,
+			sizeof(struct ClearToken)) != 0)
 	goto out;
 
     if (newStyle) {
@@ -2362,8 +2360,7 @@ DECL_PIOCTL(PUnlog)
 	if (tu->uid == areq->uid) {
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
-	    /* security is not having to say you're sorry */
-	    memset(&tu->ct, 0, sizeof(struct ClearToken));
+	    afs_FreeTokens(&tu->tokens);
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
 	    afs_NotifyUser(tu, UTokensDropped);
@@ -2382,7 +2379,6 @@ DECL_PIOCTL(PUnlog)
 	    /* set the expire times to 0, causes
 	     * afs_GCUserData to remove this entry
 	     */
-	    tu->ct.EndTimestamp = 0;
 	    tu->tokenTime = 0;
 #endif /* UKERNEL */
 	}
@@ -5240,8 +5236,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 	    if (tu->exporter && EXP_CHECKHOST(tu->exporter, addr)) {
 		tu->vid = UNDEFVID;
 		tu->states &= ~UHasTokens;
-		/* security is not having to say you're sorry */
-		memset(&tu->ct, 0, sizeof(struct ClearToken));
+		afs_FreeTokens(&tu->tokens);
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);
 		afs_ResetUserConns(tu);
@@ -5251,7 +5246,6 @@ DECL_PIOCTL(PNFSNukeCreds)
 		/* set the expire times to 0, causes
 		 * afs_GCUserData to remove this entry
 		 */
-		tu->ct.EndTimestamp = 0;
 		tu->tokenTime = 0;
 #endif /* UKERNEL */
 	    }

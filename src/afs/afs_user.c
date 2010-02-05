@@ -116,11 +116,10 @@ afs_GCUserData(int aforce)
 	    /* Don't garbage collect users in use now (refCount) */
 	    if (tu->refCount == 0) {
 		if (tu->states & UHasTokens) {
-		    /*
-		     * Give ourselves a little extra slack, in case we
-		     * reauthenticate
-		     */
-		    if (tu->ct.EndTimestamp < now - NOTOKTIMEOUT)
+		    /* Need to walk the token stack, and dispose of
+		     * all expired tokens */
+		    afs_DiscardExpiredTokens(&tu->tokens, now);
+		    if (!afs_HasUsableTokens(tu->tokens, now))
 			delFlag = 1;
 		} else {
 		    if (aforce || (tu->tokenTime < now - NOTOKTIMEOUT))
@@ -133,8 +132,8 @@ afs_GCUserData(int aforce)
 #ifndef AFS_PAG_MANAGER
 		RemoveUserConns(tu);
 #endif
-		if (tu->stp)
-		    afs_osi_Free(tu->stp, tu->stLen);
+		afs_FreeTokens(&tu->tokens);
+
 		if (tu->exporter)
 		    EXP_RELE(tu->exporter);
 		afs_osi_Free(tu, sizeof(struct unixuser));
@@ -180,7 +179,7 @@ afs_CheckTokenCache(void)
 	     * check expiration
 	     */
 	    if (!(tu->states & UTokensBad) && tu->vid != UNDEFVID) {
-		if (tu->ct.EndTimestamp < now) {
+		if (!afs_HasUsableTokens(tu->tokens, now)) {
 		    /*
 		     * This token has expired, warn users and reset access
 		     * cache.
@@ -587,7 +586,7 @@ afs_MarkUserExpired(afs_int32 pag)
     ObtainWriteLock(&afs_xuser, 9);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == pag) {
-	    tu->ct.EndTimestamp = 0;
+	    tu->states &= ~UHasTokens;
 	    tu->tokenTime = 0;
 	}
     }
@@ -750,10 +749,8 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
 		 * i.e. nfs translator, etc.
 		 */
 		if (!pu->exporter && afs_gcpags == AFS_GCPAGS_OK) {
-		    /* set the expire times to 0, causes
-		     * afs_GCUserData to remove this entry
-		     */
-		    pu->ct.EndTimestamp = 0;
+		    /* make afs_GCUserData remove this entry  */
+		    pu->states &= ~UHasTokens;
 		    pu->tokenTime = 0;
 
 		    (*ReleasedCount)++;	/* remember how many we marked (info only) */

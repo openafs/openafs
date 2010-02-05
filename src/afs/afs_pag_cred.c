@@ -110,13 +110,11 @@ afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 	if (tu->uid == uid) {
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
-	    /* security is not having to say you're sorry */
-	    memset(&tu->ct, 0, sizeof(struct ClearToken));
+	    afs_FreeTokens(&tu->tokens);
 #ifdef UKERNEL
 	    /* set the expire times to 0, causes
 	     * afs_GCUserData to remove this entry
 	     */
-	    tu->ct.EndTimestamp = 0;
 	    tu->tokenTime = 0;
 #endif /* UKERNEL */
 	}
@@ -194,13 +192,8 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     if (!tu->cellinfo)
 	tu->cellinfo = (void *)tcell;
     tu->vid = clear.ViceId;
-    if (tu->stp != NULL) {
-	afs_osi_Free(tu->stp, tu->stLen);
-    }
-    tu->stp = (char *)afs_osi_Alloc(stLen);
-    tu->stLen = stLen;
-    memcpy(tu->stp, stp, stLen);
-    tu->ct = clear;
+    afs_FreeTokens(&tu->tokens);
+    afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
     afs_ComputePAGStats();
@@ -220,6 +213,7 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
                 CredInfos *a_creds)
 {
     struct unixuser *tu;
+    union tokenUnion *token;
     CredInfo *tci;
     int bucket, count, i = 0, clen;
     char *cellname;
@@ -262,13 +256,16 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 	if (tu->uid == a_uid && tu->cellinfo &&
 	    (tu->states & UHasTokens) && !(tu->states & UTokensBad)) {
 
+	    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
+
 	    tci = &a_creds->CredInfos_val[i];
 	    tci->vid               = tu->vid;
-	    tci->ct.AuthHandle     = tu->ct.AuthHandle;
-	    memcpy(tci->ct.HandShakeKey, tu->ct.HandShakeKey, 8);
-	    tci->ct.ViceId         = tu->ct.ViceId;
-	    tci->ct.BeginTimestamp = tu->ct.BeginTimestamp;
-	    tci->ct.EndTimestamp   = tu->ct.EndTimestamp;
+	    tci->ct.AuthHandle     = token->rxkad.clearToken.AuthHandle;
+	    memcpy(tci->ct.HandShakeKey,
+		   token->rxkad.clearToken.HandShakeKey, 8);
+	    tci->ct.ViceId         = token->rxkad.clearToken.ViceId;
+	    tci->ct.BeginTimestamp = token->rxkad.clearToken.BeginTimestamp;
+	    tci->ct.EndTimestamp   = token->rxkad.clearToken.EndTimestamp;
 
 	    cellname = ((struct afspag_cell *)(tu->cellinfo))->cellname;
 	    clen = strlen(cellname) + 1;
@@ -277,13 +274,14 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 		goto out;
 	    memcpy(tci->cellname, cellname, clen);
 
-	    tci->st.st_len = tu->stLen;
-	    tci->st.st_val = afs_osi_Alloc(tu->stLen);
+	    tci->st.st_len = token->rxkad.ticketLen;
+	    tci->st.st_val = afs_osi_Alloc(token->rxkad.ticketLen);
 	    if (!tci->st.st_val) {
 		afs_osi_Free(tci->cellname, clen);
 		goto out;
 	    }
-	    memcpy(tci->st.st_val, tu->stp, tu->stLen);
+	    memcpy(tci->st.st_val,
+		   token->rxkad.ticket, token->rxkad.ticketLen);
 	    if (tu->states & UPrimary)
 		tci->states |= UPrimary;
 	}

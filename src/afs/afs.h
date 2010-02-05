@@ -337,6 +337,22 @@ extern char afs_cachebasedir[1024];
 extern afs_int32 afs_numcachefiles;
 extern afs_int32 afs_numfilesperdir;
 
+struct rxkadToken {
+    afs_int32 ticketLen;
+    char * ticket;
+    struct ClearToken clearToken;
+};
+
+union tokenUnion {
+    struct rxkadToken rxkad;
+};
+
+struct tokenJar {
+    struct tokenJar *next;
+    int type;
+    union tokenUnion u;
+};
+
 struct unixuser {
     struct unixuser *next;	/* next hash pointer */
     afs_int32 uid;		/* search based on uid and cell */
@@ -345,9 +361,7 @@ struct unixuser {
     short refCount;		/* reference count for allocation */
     char states;		/* flag info */
     afs_int32 tokenTime;	/* last time tokens were set, used for timing out conn data */
-    afs_int32 stLen;		/* ticket length (if kerberos, includes kvno at head) */
-    char *stp;			/* pointer to ticket itself */
-    struct ClearToken ct;
+    struct tokenJar *tokens;
     struct afs_exporter *exporter;	/* more info about the exporter for the remote user */
     void *cellinfo;             /* pointer to cell info (PAG manager only) */
 };

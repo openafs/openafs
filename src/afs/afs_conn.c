@@ -69,16 +69,21 @@ static struct rx_securityClass *
 afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
 {
     struct rx_securityClass *secObj = NULL;
+    union tokenUnion *token;
 
     /* Do we have tokens ? */
     if (conn->user->vid != UNDEFVID) {
-	*secLevel = 2;
-	/* kerberos tickets on channel 2 */
-	secObj = rxkad_NewClientSecurityObject(
-		    cryptall ? rxkad_crypt : rxkad_clear,
-                    (struct ktc_encryptionKey *)conn->user->ct.HandShakeKey,
-		    conn->user->ct.AuthHandle,
-		    conn->user->stLen, conn->user->stp);
+	token = afs_FindToken(conn->user->tokens, RX_SECIDX_KAD);
+	if (token) {
+	    *secLevel = RX_SECIDX_KAD;
+	    /* kerberos tickets on channel 2 */
+	    secObj = rxkad_NewClientSecurityObject(
+			 cryptall ? rxkad_crypt : rxkad_clear,
+                         (struct ktc_encryptionKey *)
+			       token->rxkad.clearToken.HandShakeKey,
+		         token->rxkad.clearToken.AuthHandle,
+		         token->rxkad.ticketLen, token->rxkad.ticket);
+	}
      }
      if (secObj == NULL) {
 	*secLevel = 0;

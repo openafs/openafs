@@ -306,6 +306,8 @@ afs_nfsclient_getcreds(struct unixuser *au)
     struct nfsclientpag *np = (struct nfsclientpag *)(au->exporter);
     struct rx_securityClass *csec;
     struct rx_connection *tconn;
+    struct tokenUnion *tokenPtr;
+    struct rkxadToken *token;
     SysNameList tsysnames;
     CredInfos tcreds;
     CredInfo *tcred;
@@ -378,21 +380,23 @@ afs_nfsclient_getcreds(struct unixuser *au)
 	    tu->exporter = (struct afs_exporter *)np;
 	}
 
-	/* free any old secret token, and keep the new one */
-	if (tu->stp != NULL) {
-	    afs_osi_Free(tu->stp, tu->stLen);
-	}
-	tu->stp = tcred->st.st_val;
-	tu->stLen = tcred->st.st_len;
+	afs_FreeTokens(&tu->tokens);
+
+	/* Add a new rxkad token. Using the afs_AddRxkadToken interface
+	 * would require another copy, so we do this the hard way */
+	tokenptr = afs_AddToken(&tu->tokens, 2);
+	token = &tokenptr->rxkad;
+	token->ticket = tcred->st.st_val;
+	token->ticketLen = tcred->st.st_len;
 
 	/* copy the clear token */
-	memset(&tu->ct, 0, sizeof(tu->ct));
-	memcpy(tu->ct.HandShakeKey, tcred->ct.HandShakeKey, 8);
+	memset(&token->clearToken, 0, sizeof(token->clearToken));
+	memcpy(token->clearToken.HandShakeKey, tcred->ct.HandShakeKey, 8);
 	memset(tcred->ct.HandShakeKey, 0, 8);
-	tu->ct.AuthHandle     = tcred->ct.AuthHandle;
-	tu->ct.ViceId         = tcred->ct.ViceId;
-	tu->ct.BeginTimestamp = tcred->ct.BeginTimestamp;
-	tu->ct.EndTimestamp   = tcred->ct.EndTimestamp;
+	token->clearToken.AuthHandle     = tcred->ct.AuthHandle;
+	token->clearToken.ViceId         = tcred->ct.ViceId;
+	token->clearToken.BeginTimestamp = tcred->ct.BeginTimestamp;
+	token->clearToken.EndTimestamp   = tcred->ct.EndTimestamp;
 
 	/* Set everything else, reset connections, and move on. */
 	tu->vid = tcred->vid;

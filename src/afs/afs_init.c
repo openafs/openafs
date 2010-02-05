@@ -851,8 +851,8 @@ shutdown_AFS(void)
 	    for (i = 0; i < NUSERS; i++) {
 		for (tu = afs_users[i]; tu; tu = ntu) {
 		    ntu = tu->next;
-		    if (tu->stp)
-			afs_osi_Free(tu->stp, tu->stLen);
+		    if (tu->tokens)
+			afs_FreeTokens(&tu->tokens);
 		    if (tu->exporter)
 			EXP_RELE(tu->exporter);
 		    afs_osi_Free(tu, sizeof(struct unixuser));
