@@ -109,13 +109,10 @@ ka_UserAuthenticateGeneral2(afs_int32 flags, char *name, char *instance,
     code = cm_SearchCellRegistry(1, realm, fullRealm, NULL, ka_AddHostProc, NULL);
     if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
         code = cm_SearchCellFile(realm, fullRealm, ka_AddHostProc, NULL);
-
-#ifdef AFS_AFSDB_ENV
     if (code) {
 	code =
 	    cm_SearchCellByDNS(realm, fullRealm, &ttl, ka_AddHostProc, NULL);
     }
-#endif
     if (code) {
 	*reasonP = "specified realm is unknown";
 	return (code);
