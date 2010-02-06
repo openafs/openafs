@@ -157,86 +157,6 @@ static void ktc_LocalCell(void);
 #define PIOCTL pioctl
 #endif
 
-
-#ifdef KERNEL_KTC_COMPAT
-
-#ifndef KTC_SYSCALL
-#define KTC_SYSCALL 	32
-#endif
-
-/* Kernel call opcode definitions */
-#define KTC_OPCODE_BASE		4300
-#define KTC_NO_OP		(0+KTC_OPCODE_BASE)
-#define KTC_SETTOKEN_OP 	(1+KTC_OPCODE_BASE)
-#define KTC_GETTOKEN_OP 	(2+KTC_OPCODE_BASE)
-#define KTC_LISTTOKENS_OP 	(3+KTC_OPCODE_BASE)
-#define KTC_FORGETTOKEN_OP 	(4+KTC_OPCODE_BASE)
-#define KTC_FORGETALLTOKENS_OP  (5+KTC_OPCODE_BASE)
-#define KTC_STATUS_OP		(6+KTC_OPCODE_BASE)
-#define KTC_GC_OP		(7+KTC_OPCODE_BASE)
-
-#define KTC_INTERFACE_VERSION 3
-
-/* We have to determine if the kernel supports the ktc system call.  To do so
- * we attempt to execute its noop function.  If this is successful we use the
- * kernel calls in the future otherwise we let the old code run. */
-
-/* To safely check to see whether a system call exists we have to intercept the
- * SIGSYS signal which is caused by executing a non-existant system call.  If
- * it is ignored the syscall routine returns EINVAL.  The SIGSYS is reset to
- * its old value after the return from syscall.  */
-
-static int kernelKTC = 0;
-
-#ifdef	AFS_DECOSF_ENV
-/*
- * SIGSYS semantics are broken on Dec AXP OSF/1 v1.2 systems.  You need
- * to ignore SIGTRAP too.  It is claimed to be fixed under v1.3, but...
- */
-
-#define CHECK_KERNEL   							\
-    if (kernelKTC == 0) {						\
-	int code, ecode;						\
-	int (*old)();							\
-	int (*old_t)();							\
-	old = (int (*)())signal(SIGSYS, SIG_IGN);			\
-	old_t = (int (*)())signal(SIGTRAP, SIG_IGN);			\
-	code = syscall (KTC_SYSCALL, KTC_NO_OP, 0,0,0,0,0);		\
-	ecode = errno;							\
-	signal(SIGSYS, old);						\
-	signal(SIGTRAP, old_t);						\
-	if (code == 0) kernelKTC = 1;					\
-	else kernelKTC = 2;						\
-/* printf ("returned from KTC_NO_OP kernelKTC <= %d; code=%d, errno=%d\n", kernelKTC, code, errno); */\
-    }
-
-#else /* AFS_DECOSF_ENV */
-
-#define CHECK_KERNEL   							\
-    if (kernelKTC == 0) {						\
-	int code, ecode;						\
-	int (*old)();							\
-	old = (int (*)())signal(SIGSYS, SIG_IGN);			\
-	code = syscall (KTC_SYSCALL, KTC_NO_OP, 0,0,0,0,0);		\
-	ecode = errno;							\
-	signal(SIGSYS, old);						\
-	if (code == 0) kernelKTC = 1;					\
-	else kernelKTC = 2;						\
-/* printf ("returned from KTC_NO_OP kernelKTC <= %d; code=%d, errno=%d\n", kernelKTC, code, errno); */\
-    }
-#endif /* AFS_DECOSF_ENV */
-
-#define TRY_KERNEL(cmd,a1,a2,a3,a4)					\
-{   CHECK_KERNEL;							\
-    if (kernelKTC == 1)							\
-	return syscall (KTC_SYSCALL, cmd,				\
-			KTC_INTERFACE_VERSION, a1,a2,a3,a4);		\
-}
-
-#else
-#define TRY_KERNEL(cmd,a1,a2,a3,a4)
-#endif /* KERNEL_KTC_COMPAT */
-
 #if !defined(UKERNEL)
 /* this is a structure used to communicate with the afs cache mgr, but is
  * otherwise irrelevant */
@@ -262,26 +182,12 @@ static struct {
 0}, {
 0}};
 
-/* new interface routines to the ticket cache.  Only handle afs service right
- * now. */
-
-static int
-NewSetToken(struct ktc_principal *aserver, 
-	    struct ktc_token *atoken, 
-	    struct ktc_principal *aclient, 
-            afs_int32 flags)
-{
-    TRY_KERNEL(KTC_SETTOKEN_OP, aserver, aclient, atoken,
-	       sizeof(struct ktc_token));
-    /* no kernel ticket cache */
-    return EINVAL;
-}
 
 #define MAXPIOCTLTOKENLEN \
 (3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
 
 static int
-OldSetToken(struct ktc_principal *aserver, struct ktc_token *atoken, 
+SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	    struct ktc_principal *aclient, afs_int32 flags)
 {
     struct ViceIoctl iob;
@@ -440,7 +346,7 @@ ktc_SetToken(struct ktc_principal *aserver,
     struct ktc_principal *aclient,
     afs_int32 flags)
 {
-    int ncode, ocode;
+    int code;
 
     LOCK_GLOBAL_MUTEX;
 #ifdef AFS_KERBEROS_ENV
@@ -460,41 +366,36 @@ ktc_SetToken(struct ktc_principal *aserver,
 	    }
 	}
 
-	ncode = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
-	if (ncode == NO_TKT_FIL) {
+	code = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
+	if (code == NO_TKT_FIL) {
 	    (void)afs_tf_create(aclient->name, aclient->instance);
-	    ncode = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
+	    code = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
 	}
 
-	if (!ncode) {
+	if (!code) {
 	    afs_tf_save_cred(aserver, atoken, aclient);
 	}
 	afs_tf_close();
 #ifdef NO_AFS_CLIENT
 	UNLOCK_GLOBAL_MUTEX;
-	return ncode;
+	return code;
 #endif /* NO_AFS_CLIENT */
     }
 #endif
 
 #ifndef NO_AFS_CLIENT
-    ncode = NewSetToken(aserver, atoken, aclient, flags);
-    if (ncode ||		/* new style failed */
-	(strcmp(aserver->name, "afs") == 0)) {	/* for afs tokens do both */
-	ocode = OldSetToken(aserver, atoken, aclient, flags);
-    } else
-	ocode = 0;
-    if (ncode && ocode) {
+    code = SetToken(aserver, atoken, aclient, flags);
+    if (code) {
 	UNLOCK_GLOBAL_MUTEX;
-	if (ocode == -1)
-	    ocode = errno;
-	else if (ocode == KTC_PIOCTLFAIL)
-	    ocode = errno;
-	if (ocode == ESRCH)
+	if (code == -1)
+	    code = errno;
+	else if (code == KTC_PIOCTLFAIL)
+	    code = errno;
+	if (code == ESRCH)
 	    return KTC_NOCELL;
-	if (ocode == EINVAL)
+	if (code == EINVAL)
 	    return KTC_NOPIOCTL;
-	if (ocode == EIO)
+	if (code == EIO)
 	    return KTC_NOCM;
 	return KTC_PIOCTLFAIL;
     }
@@ -525,9 +426,6 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 #endif
 
     LOCK_GLOBAL_MUTEX;
-#ifndef NO_AFS_CLIENT
-    TRY_KERNEL(KTC_GETTOKEN_OP, aserver, aclient, atoken, atokenLen);
-#endif /* NO_AFS_CLIENT */
 
 #ifdef AFS_KERBEROS_ENV
     if (!lcell[0])
@@ -697,8 +595,6 @@ ktc_ForgetToken(struct ktc_principal *aserver)
     int rc;
 
     LOCK_GLOBAL_MUTEX;
-    TRY_KERNEL(KTC_FORGETTOKEN_OP, aserver, 0, 0, 0);
-
     rc = ktc_ForgetAllTokens();	/* bogus, but better */
     UNLOCK_GLOBAL_MUTEX;
     return rc;
@@ -723,9 +619,6 @@ ktc_ListTokens(int aprevIndex,
     memset(tbuffer, 0, sizeof(tbuffer));
 
     LOCK_GLOBAL_MUTEX;
-#ifndef NO_AFS_CLIENT
-    TRY_KERNEL(KTC_LISTTOKENS_OP, aserver, aprevIndex, aindex, 0);
-#endif /* NO_AFS_CLIENT */
 
     index = aprevIndex;
 #ifdef NO_AFS_CLIENT
@@ -859,19 +752,8 @@ ktc_ListTokens(int aprevIndex,
     return 0;
 }
 
-/* discard all tokens from this user's cache */
-
 static int
-NewForgetAll(void)
-{
-#ifndef NO_AFS_CLIENT
-    TRY_KERNEL(KTC_FORGETALLTOKENS_OP, 0, 0, 0, 0);
-#endif /* NO_AFS_CLIENT */
-    return EINVAL;
-}
-
-static int
-OldForgetAll(void)
+ForgetAll(void)
 {
     struct ViceIoctl iob;
     register afs_int32 code;
@@ -895,16 +777,15 @@ OldForgetAll(void)
 int
 ktc_ForgetAllTokens(void)
 {
-    int ncode, ocode;
+    int ocode;
 
     LOCK_GLOBAL_MUTEX;
 #ifdef AFS_KERBEROS_ENV
     (void)afs_tf_dest_tkt();
 #endif
 
-    ncode = NewForgetAll();
-    ocode = OldForgetAll();
-    if (ncode && ocode) {
+    ocode = ForgetAll();
+    if (ocode) {
 	if (ocode == -1)
 	    ocode = errno;
 	else if (ocode == KTC_PIOCTLFAIL)
@@ -924,16 +805,7 @@ ktc_ForgetAllTokens(void)
 int
 ktc_OldPioctl(void)
 {
-    int rc;
-    LOCK_GLOBAL_MUTEX;
-#ifdef	KERNEL_KTC_COMPAT
-    CHECK_KERNEL;
-    rc = (kernelKTC != 1);	/* old style interface */
-#else
-    rc = 1;
-#endif
-    UNLOCK_GLOBAL_MUTEX;
-    return rc;
+    return 1;
 }
 
 afs_uint32
