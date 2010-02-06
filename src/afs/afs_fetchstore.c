@@ -273,7 +273,8 @@ struct storeOps rxfs_storeUfsOps = {
     rxfs_storeStatus,
     rxfs_storePadd,
     rxfs_storeClose,
-    rxfs_storeDestroy
+    rxfs_storeDestroy,
+    afs_GenericStoreProc
 #else
     .prepare = 	rxfs_storeUfsPrepare,
     .read =	rxfs_storeUfsRead,
@@ -284,6 +285,8 @@ struct storeOps rxfs_storeUfsOps = {
     .destroy =	rxfs_storeDestroy,
 #ifdef AFS_LINUX26_ENV
     .storeproc = afs_linux_storeproc
+#else
+    .storeproc = afs_GenericStoreProc
 #endif
 #endif
 };
