@@ -264,6 +264,55 @@ rxfs_storeDestroy(void **r, afs_int32 error)
     return code;
 }
 
+afs_int32
+afs_GenericStoreProc(struct storeOps *ops, void *rock,
+		     struct dcache *tdc, int *shouldwake,
+		     afs_size_t *bytesXferred)
+{
+    struct rxfs_storeVariables *svar = rock;
+    afs_uint32 tlen, bytesread, byteswritten;
+    afs_int32 code;
+    int offset = 0;
+    afs_size_t size;
+    struct osi_file *tfile;
+
+    size = tdc->f.chunkBytes;
+
+    tfile = afs_CFileOpen(&tdc->f.inode);
+
+    while ( size > 0 ) {
+	code = (*ops->prepare)(rock, size, &tlen);
+	if ( code )
+	    break;
+
+	code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
+	if (code)
+	    break;
+
+	tlen = bytesread;
+	code = (*ops->write)(rock, tlen, &byteswritten);
+	if (code)
+	    break;
+#ifndef AFS_NOSTATS
+	*bytesXferred += byteswritten;
+#endif /* AFS_NOSTATS */
+
+	offset += tlen;
+	size -= tlen;
+	/*
+	 * if file has been locked on server, can allow
+	 * store to continue
+	 */
+	if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
+	    *shouldwake = 0;	/* only do this once */
+	    afs_wakeup(svar->vcache);
+	}
+    }
+    afs_CFileClose(tfile);
+
+    return code;
+}
+
 static
 struct storeOps rxfs_storeUfsOps = {
 #if (defined(AFS_SGI_ENV) && !defined(__c99))
@@ -391,56 +440,6 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
     *rock = (void *)v;
     return 0;
 }
-
-afs_int32
-afs_GenericStoreProc(struct storeOps *ops, void *rock,
-		     struct dcache *tdc, int *shouldwake,
-		     afs_size_t *bytesXferred)
-{
-    struct rxfs_storeVariables *svar = rock;
-    afs_uint32 tlen, bytesread, byteswritten;
-    afs_int32 code;
-    int offset = 0;
-    afs_size_t size;
-    struct osi_file *tfile;
-
-    size = tdc->f.chunkBytes;
-
-    tfile = afs_CFileOpen(&tdc->f.inode);
-
-    while ( size > 0 ) {
-	code = (*ops->prepare)(rock, size, &tlen);
-	if ( code )
-	    break;
-
-	code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
-	if (code)
-	    break;
-
-	tlen = bytesread;
-	code = (*ops->write)(rock, tlen, &byteswritten);
-	if (code)
-	    break;
-#ifndef AFS_NOSTATS
-	*bytesXferred += byteswritten;
-#endif /* AFS_NOSTATS */
-
-	offset += tlen;
-	size -= tlen;
-	/*
-	 * if file has been locked on server, can allow
-	 * store to continue
-	 */
-	if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
-	    *shouldwake = 0;	/* only do this once */
-	    afs_wakeup(svar->vcache);
-	}
-    }
-    afs_CFileClose(tfile);
-
-    return code;
-}
-
 unsigned int storeallmissing = 0;
 /*!
  *	Called for each chunk upon store.
