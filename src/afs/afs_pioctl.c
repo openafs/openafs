@@ -5004,8 +5004,8 @@ DECL_PIOCTL(PSetCachingThreshold)
     }
 	
     /* Return the current size threshold */
-    if (getting) {
-	return afs_pd_putInt32(aout, cache_bypass_threshold);
+    if (getting)
+	return afs_pd_putInt(aout, cache_bypass_threshold);
 
     return(0);
 }
