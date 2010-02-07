@@ -15,7 +15,7 @@
 	<key>IFMinorVersion</key>
 	<integer>5</integer>
 	<key>IFPkgFlagAllowBackRev</key>
-	<false/>
+	<true/>
 	<key>IFPkgFlagAuthorizationAction</key>
 	<string>RootAuthorization</string>
 	<key>IFPkgFlagBackgroundAlignment</key>
