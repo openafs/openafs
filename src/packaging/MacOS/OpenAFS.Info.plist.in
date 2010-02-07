@@ -13,9 +13,9 @@
 	<key>IFMajorVersion</key>
 	<integer>1</integer>
 	<key>IFMinorVersion</key>
-	<integer>5</integer>
+	<integer>4</integer>
 	<key>IFPkgFlagAllowBackRev</key>
-	<false/>
+	<true/>
 	<key>IFPkgFlagAuthorizationAction</key>
 	<string>RootAuthorization</string>
 	<key>IFPkgFlagBackgroundAlignment</key>
@@ -31,7 +31,7 @@
 	<key>IFPkgFlagRelocatable</key>
 	<false/>
 	<key>IFPkgFlagRestartAction</key>
-	<string>RecommendedRestart</string>
+	<string>NoRestart</string>
 	<key>IFPkgFlagRootVolumeOnly</key>
 	<true/>
 	<key>IFPkgFlagUpdateInstalledLanguages</key>
