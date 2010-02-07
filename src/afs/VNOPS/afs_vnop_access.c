@@ -79,8 +79,7 @@ afs_GetAccessBits(struct vcache *avc, afs_int32 arights,
 	if (!tu) {
 	    return (arights & avc->f.anyAccess);
 	}
-	if ((tu->vid == UNDEFVID) || !(tu->states & UHasTokens)
-	    || (tu->states & UTokensBad)) {
+	if (!(tu->states & UHasTokens) || (tu->states & UTokensBad)) {
 	    afs_PutUser(tu, READ_LOCK);
 	    return (arights & avc->f.anyAccess);
 	} else {

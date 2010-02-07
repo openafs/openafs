@@ -141,7 +141,7 @@ idbg_pruser(struct unixuser *tu)
     token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
 
     qprintf("@0x%x nxt 0x%x uid %d (0x%x) cell 0x%x vid 0x%x ref %d\n", tu,
-	    tu->next, tu->uid, tu->uid, tu->cell, tu->vid, tu->refCount);
+	    tu->next, tu->uid, tu->uid, tu->cell, tu->viceId, tu->refCount);
     qprintf("time %dRX_SECIDX_KADstLen %d stp 0x%x exp 0x%x ", tu->tokenTime,
 	    (token != NULL)?token->rxkad.ticketLen:0,
 	    (token != NULL)?token->rxkad.ticket:NULL,
@@ -150,7 +150,7 @@ idbg_pruser(struct unixuser *tu)
     qprintf("\n");
     qprintf("ClearToken: handle 0x%x ViceID 0x%x Btime %d Etime %d\n",
 	    (token != NULL)?token->rxkad.clearToken.AuthHandle:0,
-	    tu->vid,
+	    tu->viceId,
 	    (token != NULL)?token->rxkad.clearToken.BeginTimestamp:0,
 	    (token != NULL)?token->rxkad.clearToken.EndTimestamp:0);
 }

@@ -72,7 +72,7 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
     union tokenUnion *token;
 
     /* Do we have tokens ? */
-    if (conn->user->vid != UNDEFVID) {
+    if (conn->user->states & UHasTokens) {
 	token = afs_FindToken(conn->user->tokens, RX_SECIDX_KAD);
 	if (token) {
 	    *secLevel = RX_SECIDX_KAD;
@@ -83,6 +83,8 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
 			       token->rxkad.clearToken.HandShakeKey,
 		         token->rxkad.clearToken.AuthHandle,
 		         token->rxkad.ticketLen, token->rxkad.ticket);
+	    /* We're going to use this token, so populate the viced */
+	    conn->user->viceId = token->rxkad.clearToken.ViceId;
 	}
      }
      if (secObj == NULL) {
@@ -269,7 +271,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (tc->id && (rx_SecurityClassOf(tc->id) != 0)) {
 	    tc->forceConnectFS = 1;	/* force recreation of connection */
 	}
-	tu->vid = UNDEFVID;	/* forcibly disconnect the authentication info */
+	tu->states &= ~UHasTokens;      /* remove the authentication info */
     }
 
     if (tc->forceConnectFS) {
@@ -308,7 +310,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * Will need to be revisited if/when CB gets security.
 	 */
 	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
-	    (tu->vid == UNDEFVID))
+	    (tu->viceId == UNDEFVID))
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */

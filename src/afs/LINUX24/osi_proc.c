@@ -192,7 +192,7 @@ static int uu_show(struct seq_file *m, void *p)
     }
 
     seq_printf(m, "%10d %4d %04x    %-25s %10d",
-	       tu->uid, tu->refCount, tu->states, cellname, tu->vid);
+	       tu->uid, tu->refCount, tu->states, cellname, tu->viceId);
 
     if (tc) afs_PutCell(tc, READ_LOCK);
 

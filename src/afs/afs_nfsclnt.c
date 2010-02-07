@@ -399,7 +399,7 @@ afs_nfsclient_getcreds(struct unixuser *au)
 	token->clearToken.EndTimestamp   = tcred->ct.EndTimestamp;
 
 	/* Set everything else, reset connections, and move on. */
-	tu->vid = tcred->vid;
+	tu->viceId = tcred->vid;
 	tu->states |= UHasTokens;
 	tu->states &= ~UTokensBad;
 	afs_SetPrimary(tu, !!(tcred->states & UPrimary));

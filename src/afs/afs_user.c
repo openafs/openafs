@@ -115,7 +115,7 @@ afs_GCUserData(int aforce)
 	    delFlag = 0;	/* should we delete this dude? */
 	    /* Don't garbage collect users in use now (refCount) */
 	    if (tu->refCount == 0) {
-		if (tu->states & UHasTokens) {
+		if (tu->tokens) {
 		    /* Need to walk the token stack, and dispose of
 		     * all expired tokens */
 		    afs_DiscardExpiredTokens(&tu->tokens, now);
@@ -178,18 +178,12 @@ afs_CheckTokenCache(void)
 	     * If tokens are still good and user has Kerberos tickets,
 	     * check expiration
 	     */
-	    if (!(tu->states & UTokensBad) && tu->vid != UNDEFVID) {
+	    if ((tu->states & UHasTokens) && !(tu->states & UTokensBad)) {
 		if (!afs_HasUsableTokens(tu->tokens, now)) {
 		    /*
 		     * This token has expired, warn users and reset access
 		     * cache.
 		     */
-#ifdef notdef
-		    /* I really hate this message - MLK */
-		    afs_warn
-			("afs: Tokens for user of AFS id %d for cell %s expired now\n",
-			 tu->vid, afs_GetCell(tu->cell)->cellName);
-#endif
 		    tu->states |= (UTokensBad | UNeedsReset);
 		}
 	    }
@@ -202,7 +196,6 @@ afs_CheckTokenCache(void)
     }
     ReleaseReadLock(&afs_xuser);
     ReleaseReadLock(&afs_xvcache);
-
 }				/*afs_CheckTokenCache */
 
 
@@ -352,7 +345,7 @@ afs_ComputePAGStats(void)
 	     * We've found a previously-uncounted PAG.  If it's been deleted
 	     * but just not garbage-collected yet, we step over it.
 	     */
-	    if (currPAGP->vid == UNDEFVID)
+	    if (!(currPAGP->states & UHasTokens))
 		continue;
 
 	    /*
@@ -495,7 +488,7 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
     }
     tu->uid = auid;
     tu->cell = acell;
-    tu->vid = UNDEFVID;
+    tu->viceId = UNDEFVID;
     tu->refCount = 1;
     tu->tokenTime = osi_Time();
     ReleaseWriteLock(&afs_xuser);

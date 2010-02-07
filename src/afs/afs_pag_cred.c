@@ -108,8 +108,8 @@ afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     ObtainWriteLock(&afs_xuser, 823);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == uid) {
-	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
+	    tu->viceId = UNDEFVID;
 	    afs_FreeTokens(&tu->tokens);
 #ifdef UKERNEL
 	    /* set the expire times to 0, causes
@@ -191,7 +191,6 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     tu = afs_GetUser(uid, tcell->cellnum, WRITE_LOCK);
     if (!tu->cellinfo)
 	tu->cellinfo = (void *)tcell;
-    tu->vid = clear.ViceId;
     afs_FreeTokens(&tu->tokens);
     afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
 #ifndef AFS_NOSTATS
@@ -259,7 +258,7 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 	    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
 
 	    tci = &a_creds->CredInfos_val[i];
-	    tci->vid               = tu->vid;
+	    tci->vid		   = token->rxkad.clearToken.ViceId;
 	    tci->ct.AuthHandle     = token->rxkad.clearToken.AuthHandle;
 	    memcpy(tci->ct.HandShakeKey,
 		   token->rxkad.clearToken.HandShakeKey, 8);

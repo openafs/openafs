@@ -545,7 +545,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired (server %d.%d.%d.%d)\n",
-		     tu->vid, aconn->srvr->server->cell->cellName,
+		     tu->viceId, aconn->srvr->server->cell->cellName,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
@@ -555,7 +555,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 		if (serversleft) {
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s: rxkad error=%d (server %d.%d.%d.%d)\n",
-			 tu->vid, aconn->srvr->server->cell->cellName, acode,
+			 tu->viceId, aconn->srvr->server->cell->cellName, acode,
 			 (address >> 24), (address >> 16) & 0xff,
 			 (address >> 8) & 0xff, (address) & 0xff);
 		    shouldRetry = 1;
@@ -566,7 +566,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 		    afs_NotifyUser(tu, UTokensDropped);
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d, server %d.%d.%d.%d)\n",
-			 tu->vid, aconn->srvr->server->cell->cellName, acode,
+			 tu->viceId, aconn->srvr->server->cell->cellName, acode,
 			 (address >> 24), (address >> 16) & 0xff,
 			 (address >> 8) & 0xff, (address) & 0xff);
 		}

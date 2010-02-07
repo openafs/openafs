@@ -357,7 +357,7 @@ struct unixuser {
     struct unixuser *next;	/* next hash pointer */
     afs_int32 uid;		/* search based on uid and cell */
     afs_int32 cell;
-    afs_int32 vid;		/* corresponding vice id in specified cell */
+    afs_int32 viceId;		/* Optional viced ID corresponding to current tokens */
     short refCount;		/* reference count for allocation */
     char states;		/* flag info */
     afs_int32 tokenTime;	/* last time tokens were set, used for timing out conn data */

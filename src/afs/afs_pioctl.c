@@ -1873,7 +1873,6 @@ DECL_PIOCTL(PSetTokens)
     }
     /* now we just set the tokens */
     tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
-    tu->vid = clear.ViceId;
     /* Set tokens destroys any that are already there */
     afs_FreeTokens(&tu->tokens);
     afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
@@ -2278,7 +2277,7 @@ DECL_PIOCTL(PGetTokens)
     if (!tu) {
 	return EDOM;
     }
-    if (((tu->states & UHasTokens) == 0)
+    if (!(tu->states & UHasTokens)
 	|| !afs_HasUsableTokens(tu->tokens, osi_Time())) {
 	tu->states |= (UTokensBad | UNeedsReset);
 	afs_NotifyUser(tu, UTokensDropped);
@@ -2358,7 +2357,6 @@ DECL_PIOCTL(PUnlog)
     ObtainWriteLock(&afs_xuser, 227);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == areq->uid) {
-	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
 	    afs_FreeTokens(&tu->tokens);
 	    tu->refCount++;
@@ -5234,7 +5232,6 @@ DECL_PIOCTL(PNFSNukeCreds)
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
 	    if (tu->exporter && EXP_CHECKHOST(tu->exporter, addr)) {
-		tu->vid = UNDEFVID;
 		tu->states &= ~UHasTokens;
 		afs_FreeTokens(&tu->tokens);
 		tu->refCount++;
