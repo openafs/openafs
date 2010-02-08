@@ -457,9 +457,9 @@ vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
     vsu_ExtractName(volname, astring);
     vcode = VLDB_GetEntryByName(volname, &entry);
     if (!vcode) {
-      if (!strcmp(&astring[total - 9], ".readonly"))
+      if ((total >= 9) && (!strcmp(&astring[total - 9], ".readonly")))
 	return entry.volumeId[ROVOL];
-      else if ((!strcmp(&astring[total - 7], ".backup")))
+      else if ((total >= 7) && (!strcmp(&astring[total - 7], ".backup")))
 	return entry.volumeId[BACKVOL];
       else
 	return (entry.volumeId[RWVOL]);
