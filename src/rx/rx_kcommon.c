@@ -773,6 +773,8 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
     s.sin_addr.s_addr = addr;
 #ifdef AFS_DARWIN80_ENV
     ifad = ifaddr_withnet((struct sockaddr *)&s);
+#elif AFS_OBSD46_ENV
+    ifad = ifa_ifwithnet((struct sockaddr *)&s, 0);
 #else
     ifad = ifa_ifwithnet((struct sockaddr *)&s);
 #endif
