@@ -268,6 +268,13 @@ afs_unmount(afsp, flags, p)
 {
     extern int sys_ioctl(), sys_setgroups();
 
+    struct vnode *vp;
+
+    for (vp = LIST_FIRST(&afsp->mnt_vnodelist); vp != NULL;
+	vp = LIST_NEXT(vp, v_mntvnodes)) {
+	if (vp->v_usecount) return EBUSY;
+    }
+
     AFS_STATCNT(afs_unmount);
 #ifdef AFS_DISCON_ENV
     give_up_cbs();
