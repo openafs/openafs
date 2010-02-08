@@ -52,7 +52,11 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #endif
 #define rx_ifnet_mtu(x) (x)->if_mtu
 #define rx_ifnet_flags(x) (x?(x)->if_flags:0)
+#ifdef AFS_OBSD46_ENV
+#define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0)
+#else
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x)
+#endif
 #define rx_ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
 #define rx_ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
 #define rx_ifaddr_address_family(x) (x)->ifa_addr->sa_family
