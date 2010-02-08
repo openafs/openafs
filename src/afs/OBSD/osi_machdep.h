@@ -154,70 +154,70 @@ extern int afs_vget();
 extern struct lock afs_global_lock;
 extern struct proc *afs_global_owner;
 
-#ifdef AFS_GLOBAL_SUNLOCK
+# ifdef AFS_GLOBAL_SUNLOCK
 
-#if defined(LOCKDEBUG)
+#  if defined(LOCKDEBUG)
 
-#define AFS_GLOCK() \
+#   define AFS_GLOCK() \
   do { \
   _lockmgr(&afs_global_lock, LK_EXCLUSIVE, NULL, __FILE__, __LINE__); \
   } while(0);
-#define AFS_GUNLOCK() \
+#   define AFS_GUNLOCK() \
   do { \
   _lockmgr(&afs_global_lock, LK_RELEASE, NULL, __FILE__, __LINE__); \
   } while(0);
 
-#else
+#  else /* LOCKDEBUG */
 
-#define AFS_GLOCK() \
+#   define AFS_GLOCK() \
   do { \
   lockmgr(&afs_global_lock, LK_EXCLUSIVE, NULL); \
   } while(0);
-#define AFS_GUNLOCK() \
+#   define AFS_GUNLOCK() \
   do { \
   lockmgr(&afs_global_lock, LK_RELEASE, NULL); \
   } while(0);
-#endif /* LOCKDEBUG */
-#define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
-#else
+#  endif /* LOCKDEBUG */
+#  define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
+# else /* AFS_GLOBAL_SUNLOCK */
 extern struct lock afs_global_lock;
-#define AFS_GLOCKP(p)
-#define AFS_GUNLOCKP(p)
-#define AFS_ASSERT_GLOCK()
-#define ISAFS_GLOCK() 1
-#endif
+#  define AFS_GLOCK()
+#  define AFS_GUNLOCK()
+#  define AFS_ASSERT_GLOCK()
+#  define ISAFS_GLOCK() 1
+# endif
 
-#else
+#else /* AFS_OBSD44_ENV */
 /* I don't see doing locks this way for older kernels, either,
  * but, smart folks wrote this
  */
 #define AFS_GLOCK() AFS_GLOCKP(curproc)
 #define AFS_GUNLOCK() AFS_GUNLOCKP(curproc)
-#ifdef AFS_GLOBAL_SUNLOCK
+# ifdef AFS_GLOBAL_SUNLOCK
 extern struct proc *afs_global_owner;
 extern struct lock afs_global_lock;
-#define AFS_GLOCKP(p) \
+#  define AFS_GLOCKP(p) \
     do { \
         osi_Assert(p); \
  	afs_osi_lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, (p)); \
         osi_Assert(afs_global_owner == NULL); \
    	afs_global_owner = (p); \
     } while (0)
-#define AFS_GUNLOCKP(p) \
+#  define AFS_GUNLOCKP(p) \
     do { \
         osi_Assert(p); \
  	osi_Assert(afs_global_owner == (p)); \
         afs_global_owner = NULL; \
         afs_osi_lockmgr(&afs_global_lock, LK_RELEASE, 0, (p)); \
     } while(0)
-#define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
-#else
+#  define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
+# else /* AFS_GLOBAL_SUNLOCK */
 extern struct lock afs_global_lock;
-#define AFS_GLOCKP(p)
-#define AFS_GUNLOCKP(p)
-#define AFS_ASSERT_GLOCK()
-#define ISAFS_GLOCK() 1
-#endif
+#  define AFS_GLOCKP(p)
+#  define AFS_GUNLOCKP(p)
+#  define AFS_ASSERT_GLOCK()
+#  define ISAFS_GLOCK() 1
+# endif
 
 #endif /* AFS_OBSD44_ENV */
 
