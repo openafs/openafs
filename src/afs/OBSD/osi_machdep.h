@@ -23,10 +23,15 @@
 
 #include <sys/lock.h>
 
+#if defined(M_IP6OPT)
+#define M_AFSFID	(M_IP6OPT-1)
+#else
 #define M_AFSFID	(M_TEMP-1)
-#define M_AFSBUFHDR	(M_TEMP-2)
-#define M_AFSBUFFER	(M_TEMP-3)
-#define M_AFSGENERIC	(M_TEMP-4)
+#endif
+
+#define M_AFSBUFHDR	(M_AFSFID-1)
+#define M_AFSBUFFER	(M_AFSFID-2)
+#define M_AFSGENERIC	(M_AFSFID-3)
 
 /* vfs */
 #define osi_vfs		mount
