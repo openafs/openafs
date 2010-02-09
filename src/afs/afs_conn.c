@@ -67,7 +67,7 @@ unsigned int VNOSERVERS = 0;
  */
 static struct rx_securityClass *
 afs_pickSecurityObject(struct afs_conn *conn, int *secLevel) {
-    struct rx_securityClass *secObj;
+    struct rx_securityClass *secObj = NULL;
 
     /* Do we have tokens ? */
     if (conn->user->vid != UNDEFVID) {
