@@ -257,6 +257,7 @@ EXPORTS
 	rx_SetMinPeerTimeout			@262
         xdr_serverList                          @263
         xdr_Capabilities                        @264
+        xdrlen_create                           @265
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
