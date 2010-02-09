@@ -61,7 +61,7 @@ static afs_int32 *xdrmem_inline(AFS_XDRS_T, u_int);
 static void xdrmem_destroy(AFS_XDRS_T);
 
 static struct xdr_ops xdrmem_ops = {
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
     /* Windows does not support labeled assigments */
     xdrmem_getint32,    /* deserialize an afs_int32 */
     xdrmem_putint32,    /* serialize an afs_int32 */

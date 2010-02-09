@@ -87,7 +87,7 @@ xdrlen_inline(AFS_XDRS_T axdrs, u_int len)
 }
 
 static struct xdr_ops xdrlen_ops = {
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
     /* Windows does not support labeled assigments */
     xdrlen_getint32,    /* not supported */
     xdrlen_putint32,    /* serialize an afs_int32 */
