@@ -277,12 +277,7 @@ afs_int32
 HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
 {
     static struct afsconf_dir *tdir = NULL;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    int kvno;
-    struct ktc_encryptionKey key;
     afs_uint32 host = 0;
-    char *cell;
     afs_int32 code;
 
     *sc = NULL;
@@ -294,7 +289,7 @@ HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
 		AFSDIR_SERVER_ETC_DIRPATH);
         return -1;
     }
-    code = afsconf_ClientAuth(tdir, sc, &scIndex);
+    code = afsconf_ClientAuth(tdir, sc, scIndex);
     if (code) {
         fprintf(stderr,"afsconf_ClientAuth returned %d\n", code);
         return -1;
@@ -1388,6 +1383,7 @@ FindCell(char *cellName)
     static struct afsconf_dir *tdir;
     struct ktc_principal sname;
     struct ktc_token ttoken;
+    time_t expires;
     afs_int32 len, code;
 
     if (cellName) {
@@ -1427,7 +1423,7 @@ FindCell(char *cellName)
 	if (code = VLDBInit(1, &p->info))
             fprintf(stderr,"VLDBInit failed for cell %s\n", p->info.name);
 #endif
-	code = afsconf_ClientAuthToken(&p->info, 0, &p->sc, &p->scIndex);
+	code = afsconf_ClientAuthToken(&p->info, 0, &p->sc, &p->scIndex, &expires);
 	if (code) {
 	    p->scIndex = RX_SECIDX_NULL;
             p->sc = rxnull_NewClientSecurityObject();
