@@ -82,6 +82,8 @@ osi_UFSOpen(afs_int32 ainode)
 #if defined(STRUCT_TASK_HAS_CRED)
     /* Use stashed credentials - prevent selinux/apparmor problems  */
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
+    if (IS_ERR(filp))
+	filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
 #else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
