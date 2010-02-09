@@ -422,7 +422,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	 * invalidated. Also discard data if it's a permanent error from the
 	 * fileserver.
 	 */
-	if (areq->permWriteError || (avc->f.states & (CCore1 | CCore))) {
+	if (areq->permWriteError || (avc->f.states & CCore)) {
 	    afs_InvalidateAllSegments(avc);
 	}
     }

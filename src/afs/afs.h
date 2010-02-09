@@ -579,7 +579,6 @@ struct SimpleLocks {
 #define CBulkStat	0x00020000	/* loaded by a bulk stat, and not ref'd since */
 #define CUnlinkedDel	0x00040000
 #define CVFlushed	0x00080000
-#define CCore1		0x00100000	/* osf1 core file; not same as CCore above */
 #ifdef AFS_LINUX22_ENV
 #define CPageWrite      0x00200000      /* to detect vm deadlock - linux */
 #else
