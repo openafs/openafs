@@ -62,7 +62,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc;
+    struct rx_securityClass *sc = NULL;
     static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
