@@ -197,8 +197,13 @@ typedef struct timeval osi_timeval_t;
 
 
 #ifdef AFS_GLOBAL_SUNLOCK
+# if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#define AFS_ASSERT_GLOCK() \
+    do { if (!ISAFS_GLOCK()) osi_Panic("afs global lock not held at %s:%d%s\n", __FILE__, (void *)__LINE__, ""); } while (0)
+# else
 #define AFS_ASSERT_GLOCK() \
     do { if (!ISAFS_GLOCK()) osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__); } while (0)
+# endif /* defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) */
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef RX_ENABLE_LOCKS
