@@ -374,9 +374,9 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 # undef osi_Assert
 # define osi_Assert(expr) \
     do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
-# elif (defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV)) || defined(AFS_SGI_ENV)
+# elif (defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV))
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
-# elif defined(AFS_AIX61_ENV)
+# elif defined(AFS_AIX61_ENV) || defined(AFS_SGI_ENV)
 /* No prototype. Deliberate, since there's no vprintf et al */
 # else
 extern void osi_Panic(char *fmt, ...)
