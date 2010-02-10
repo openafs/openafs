@@ -1308,18 +1308,34 @@ osi_StopListener(void)
 
 #if !defined(AFS_LINUX26_ENV)
 void
-#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_AIX_ENV)
 osi_Panic(char *msg, void *a1, void *a2, void *a3)
 #else
 osi_Panic(char *msg, ...)
 #endif
 {
-#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#ifdef AFS_AIX_ENV
     if (!msg)
-        msg = "Unknown AFS panic";
+	msg = "Unknown AFS panic";
+    /*
+     * we should probably use the errsave facility here. it is not
+     * varargs-aware
+     */
+
     printf(msg, a1, a2, a3);
     panic(msg);
-#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
+#elif defined(AFS_SGI_ENV)
+    va_list ap;
+
+    /* Solaris has vcmn_err, Sol10 01/06 may have issues. Beware. */
+    if (!msg) {
+	cmn_err(CE_PANIC, "Unknown AFS panic");
+    } else {
+	va_start(ap, msg);
+	icmn_err(CE_PANIC, msg, ap);
+	va_end(ap);
+    }
+#elif defined(AFS_DARWIN80_ENV) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
     char buf[256];
     va_list ap;
     if (!msg)
