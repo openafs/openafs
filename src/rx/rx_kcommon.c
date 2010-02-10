@@ -122,46 +122,6 @@ rxi_GetUDPSocket(u_short port)
     return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 }
 
-#if !defined(AFS_LINUX26_ENV)
-void
-#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
-osi_Panic(char *msg, void *a1, void *a2, void *a3)
-#else
-osi_Panic(char *msg, ...)
-#endif
-{
-#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
-    if (!msg)
-        msg = "Unknown AFS panic";
-    printf(msg, a1, a2, a3);
-    panic(msg);
-#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
-    char buf[256];
-    va_list ap;
-    if (!msg)
-	msg = "Unknown AFS panic";
-
-    va_start(ap, msg);
-    vsnprintf(buf, sizeof(buf), msg, ap);
-    va_end(ap);
-    printf(buf);
-    panic(buf);
-#else
-    va_list ap;
-    if (!msg)
-	msg = "Unknown AFS panic";
-
-    va_start(ap, msg);
-    vprintf(msg, ap);
-    va_end(ap);
-# ifdef AFS_LINUX20_ENV
-    * ((char *) 0) = 0; 
-# else
-    panic(msg);
-# endif
-#endif
-}
-
 /*
  * osi_utoa() - write the NUL-terminated ASCII decimal form of the given
  * unsigned long value into the given buffer.  Returns 0 on success,
@@ -232,6 +192,7 @@ osi_utoa(char *buf, size_t len, unsigned long val)
     return 0;
 }
 
+#ifndef AFS_LINUX26_ENV
 /*
  * osi_AssertFailK() -- used by the osi_Assert() macro.
  *
@@ -1074,7 +1035,7 @@ rxk_FreeSocket(struct socket *asocket)
 #endif /* !SUN5 && !LINUX20 */
 
 #if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV)
-#ifdef AFS_DARWIN80_ENV
+#if 0/*def AFS_DARWIN80_ENV*/
 /* Shutting down should wake us up, as should an earlier event. */
 void
 rxi_ReScheduleEvents(void)
@@ -1111,7 +1072,7 @@ afs_rxevent_daemon(void)
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before afs_osi_Wait()");
 #endif
-#ifdef AFS_DARWIN80_ENV
+#if 0/*def AFS_DARWIN80_ENV*/
 	afs_osi_TimedSleep(&afs_termState, ((temp.sec * 1000) +
 					    (temp.usec / 1000)), 0);
 #else
@@ -1343,5 +1304,45 @@ osi_StopListener(void)
 }
 #endif
 #endif /* RXK_LISTENER_ENV */
-
 #endif /* !NCR && !UKERNEL */
+
+#if !defined(AFS_LINUX26_ENV)
+void
+#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+osi_Panic(char *msg, void *a1, void *a2, void *a3)
+#else
+osi_Panic(char *msg, ...)
+#endif
+{
+#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+    if (!msg)
+        msg = "Unknown AFS panic";
+    printf(msg, a1, a2, a3);
+    panic(msg);
+#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
+    char buf[256];
+    va_list ap;
+    if (!msg)
+	msg = "Unknown AFS panic";
+
+    va_start(ap, msg);
+    vsnprintf(buf, sizeof(buf), msg, ap);
+    va_end(ap);
+    printf(buf);
+    panic(buf);
+#else
+    va_list ap;
+    if (!msg)
+	msg = "Unknown AFS panic";
+
+    va_start(ap, msg);
+    vprintf(msg, ap);
+    va_end(ap);
+# ifdef AFS_LINUX20_ENV
+    * ((char *) 0) = 0; 
+# else
+    panic(msg);
+# endif
+#endif
+}
+#endif
