@@ -1072,9 +1072,9 @@ afs_rxevent_daemon(void)
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before afs_osi_Wait()");
 #endif
-#if 0/*def AFS_DARWIN80_ENV*/
-	afs_osi_TimedSleep(&afs_termState, ((temp.sec * 1000) +
-					    (temp.usec / 1000)), 0);
+#ifdef AFS_DARWIN80_ENV
+	afs_osi_TimedSleep(&afs_termState, MAX(500, ((temp.sec * 1000) +
+						     (temp.usec / 1000))), 0);
 #else
 	afs_osi_Wait(500, NULL, 0);
 #endif
