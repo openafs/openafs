@@ -1035,7 +1035,7 @@ rxk_FreeSocket(struct socket *asocket)
 #endif /* !SUN5 && !LINUX20 */
 
 #if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV)
-#if 0/*def AFS_DARWIN80_ENV*/
+#ifdef AFS_DARWIN80_ENV
 /* Shutting down should wake us up, as should an earlier event. */
 void
 rxi_ReScheduleEvents(void)
