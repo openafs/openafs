@@ -1,3 +1,7 @@
+Since 1.5.71
+
+ * Restore use of DNS AFSDB and SRV records by kaserver clients.
+
 Since 1.5.70
 
  * Avoid a potential Freelance deadlock during initial execution 
