@@ -799,8 +799,9 @@ afs_AllocVCache(void)
  *
  * \return The new vcache struct.
  */
-struct vcache *
-afs_NewVCache(struct VenusFid *afid, struct server *serverp)
+
+static_inline struct vcache *
+afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 {
     struct vcache *tvc;
     afs_int32 i, j;
@@ -1049,12 +1050,12 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #endif
 	    panic("afs getnewvnode");	/* can't happen */
 #ifdef AFS_FBSD70_ENV
-    /* XXX verified on 80--TODO check on 7x */
-    if (!vp->v_mount) {
-        vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
-        insmntque(vp, afs_globalVFS);
-        VOP_UNLOCK(vp, 0);
-    }
+	/* XXX verified on 80--TODO check on 7x */
+	if (!vp->v_mount) {
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
+	    insmntque(vp, afs_globalVFS);
+	    VOP_UNLOCK(vp, 0);
+	}
 #endif
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache,339);
@@ -1200,12 +1201,27 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     memset(&(tvc->callsort), 0, sizeof(struct afs_q));
     tvc->slocks = NULL;
     tvc->f.states &=~ CVInit;
+    if (seq) {
+	tvc->f.states |= CBulkFetching;
+	tvc->f.m.Length = seq;
+    }
     afs_osi_Wakeup(&tvc->f.states);
 
     return tvc;
-
 }				/*afs_NewVCache */
 
+
+struct vcache *
+afs_NewVCache(struct VenusFid *afid, struct server *serverp)
+{
+    return afs_NewVCache_int(afid, serverp, 0);
+}
+
+struct vcache *
+afs_NewBulkVCache(struct VenusFid *afid, struct server *serverp, int seq)
+{
+    return afs_NewVCache_int(afid, serverp, seq);
+}
 
 /*!
  * ???

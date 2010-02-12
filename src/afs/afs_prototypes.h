@@ -1012,6 +1012,8 @@ extern struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 					struct volume *tvolp);
 extern struct vcache *afs_NewVCache(struct VenusFid *afid,
 				    struct server *serverp);
+extern struct vcache *afs_NewBulkVCache(struct VenusFid *afid,
+					struct server *serverp, int seq);
 extern int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq);
 extern struct vcache *afs_GetVCache(register struct VenusFid *afid,
 				    struct vrequest *areq, afs_int32 * cached,

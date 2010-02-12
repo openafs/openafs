@@ -750,6 +750,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * and it is safe to set the status information for this file.
      */
     statSeqNo = bulkStatCounter++;
+    /* ensure against wrapping */
+    if (statSeqNo == 0)
+	statSeqNo = bulkStatCounter++;
 
     /* now we have dir data in the cache, so scan the dir page */
     fidIndex = 0;
@@ -799,7 +802,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		}
 	    } while (tvcp && retry);
 	    if (!tvcp) {	/* otherwise, create manually */
-		tvcp = afs_NewVCache(&tfid, hostp);
+		tvcp = afs_NewBulkVCache(&tfid, hostp, statSeqNo);
 		if (tvcp)
 		{
 			ObtainWriteLock(&tvcp->lock, 505);
@@ -836,12 +839,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	     * if the new length will be ignored when afs_ProcessFS is
 	     * called with new stats. */
 #ifdef AFS_SGI_ENV
-	    if (!(tvcp->f.states & (CStatd | CBulkFetching))
+	    if (!(tvcp->f.states & CStatd)
+		&& (!((tvcp->f.states & CBulkFetching) &&
+		      (tvcp->f.m.Length != statSeqNo)))
 		&& (tvcp->execsOrWriters <= 0)
 		&& !afs_DirtyPages(tvcp)
 		&& !AFS_VN_MAPPED((vnode_t *) tvcp))
 #else
-	    if (!(tvcp->f.states & (CStatd | CBulkFetching))
+	    if (!(tvcp->f.states & CStatd)
+		&& (!((tvcp->f.states & CBulkFetching) &&
+		      (tvcp->f.m.Length != statSeqNo)))
 		&& (tvcp->execsOrWriters <= 0)
 		&& !afs_DirtyPages(tvcp))
 #endif
@@ -855,7 +862,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		 * CBulkFetching state bit and the value in the file size.
 		 * It is safe to set the status only if the CBulkFetching
 		 * flag is still set and the value in the file size does
-		 * not change.
+		 * not change. NewBulkVCache sets us up.
 		 *
 		 * Don't fetch status for dirty files. We need to
 		 * preserve the value of the file size. We could
@@ -863,8 +870,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		 */
 		memcpy((char *)(fidsp + fidIndex), (char *)&tfid.Fid,
 		       sizeof(*fidsp));
-		tvcp->f.states |= CBulkFetching;
-		tvcp->f.m.Length = statSeqNo;
 		fidIndex++;
 	    }
 	    afs_PutVCache(tvcp);
