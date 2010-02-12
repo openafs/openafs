@@ -1146,11 +1146,11 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #endif
     vnode_pcache_init(&tvc->v);
 #if defined(DEBUG) && defined(VNODE_INIT_BITLOCK)
-    /* Above define is never true execpt in SGI test kernels. */
-    init_bitlock(&(tvc->v.v_flag, VLOCK, "vnode", tvc->v.v_number);
+    /* Above define is never true except in SGI test kernels. */
+    init_bitlock(&(tvc->v.v_flag, VLOCK, "vnode", tvc->v.v_number));
 #endif
 #ifdef INTR_KTHREADS
-		 AFS_VN_INIT_BUF_LOCK(&(tvc->v));
+    AFS_VN_INIT_BUF_LOCK(&(tvc->v));
 #endif
 #else
     SetAfsVnode(AFSTOV(tvc));
