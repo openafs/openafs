@@ -1021,6 +1021,10 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
  * Needed?  Why not always h_Hold_r and h_Release_r in (*proc), or even -never-
  * h_Hold_r or h_Release_r in (*proc)?
  *
+ * @note Assumes that hostList is only prepended to, that a host is never
+ *       inserted into the middle. Otherwise this would not be guaranteed to
+ *       terminate.
+ *
  * **The proc should return 0 if the host should be released, 1 if it should
  * be held after enumeration.
  */
@@ -1032,12 +1036,19 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
     int flags = 0;
     int nflags = 0;
     int count;
+    int origHostCount;
 
     if (hostCount == 0) {
 	return;
     }
+
     h_Hold_r(enumstart);
-    for (count = 0, host = enumstart; host && count < hostCount; host = next, flags = nflags, count++) {
+
+    /* remember hostCount, lest it change over the potential H_LOCK drop in
+     * h_Release_r */
+    origHostCount = hostCount;
+
+    for (count = 0, host = enumstart; host && count < origHostCount; host = next, flags = nflags, count++) {
 	next = host->next;
 	if (next && !H_ENUMERATE_ISSET_BAIL(flags))
 	    h_Hold_r(next);
@@ -1048,8 +1059,8 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
 	}
 	h_Release_r(host); /* this might free up the host */
     }
-    if (host != NULL) {
-	ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", hostCount));
+    if (host != NULL && count >= origHostCount) {
+	ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", origHostCount));
 	ShutDownAndCore(PANIC);
     }
 }	/*h_Enumerate_r */
