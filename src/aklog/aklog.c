@@ -415,7 +415,6 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     int retry;			  /* round, and round we go ... */
     
     char *local_cell = NULL;
-    static char confname[512] = { 0 };
     krb5_creds *v5cred = NULL;
     struct ktc_principal aserver;
     struct ktc_principal aclient;
@@ -423,11 +422,6 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     struct afsconf_cell cellconf;
 
     memset(realm_of_user, 0, sizeof(realm_of_user));
-
-    if (confname[0] == '\0') {
-	strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
-	confname[sizeof(confname) - 2] = '\0';
-    }
 
     /* NULL or empty cell returns information on local cell */
     if ((status = get_cellconfig(cell, &cellconf, &local_cell)))
@@ -792,8 +786,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 			username, aserver.cell);
 	    }
 
-	    if (!pr_Initialize (0, confname, aserver.cell))
-		    status = pr_SNameToId (username, &viceId);
+	    if (!pr_Initialize (0,  AFSDIR_CLIENT_ETC_DIRPATH, aserver.cell))
+		status = pr_SNameToId (username, &viceId);
 	    
 	    if (dflag) {
 		if (status) 
@@ -833,7 +827,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		 * level
 		 */
 
-		if ((status = pr_Initialize(1L, confname, aserver.cell))) {
+		if ((status = pr_Initialize(1L,  AFSDIR_CLIENT_ETC_DIRPATH,
+					    aserver.cell))) {
 		    printf("Error %d\n", status);
 		}
 
