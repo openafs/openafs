@@ -343,6 +343,16 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
     fflush(stderr);
 }
 
+static void
+dprintf(char *fmt, ...) {
+    va_list ap;
+
+    va_start(ap, fmt);
+    if (dflag)
+	vprintf(fmt, ap);
+    va_end(ap);
+}
+
 static char *
 copy_cellinfo(cellinfo_t *cellinfo)
 {
@@ -478,10 +488,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     }
 
     if (ll_string(&authedcells, ll_s_check, cellconf.name)) {
-	if (dflag) {
-	    printf("Already authenticated to %s (or tried to)\n", 
-		   cellconf.name);
-	}
+	dprintf("Already authenticated to %s (or tried to)\n", cellconf.name);
 	status = AKLOG_SUCCESS;
 	goto out;
     }
@@ -514,10 +521,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     }
 
     if (!noauth) {
-	if (dflag) {
-	    printf("Authenticating to cell %s (server %s).\n",
-		   cellconf.name, cellconf.hostName[0]);
-	}
+	dprintf("Authenticating to cell %s (server %s).\n", cellconf.name,
+		cellconf.hostName[0]);
 
 	if ((status = get_user_realm(context, &realm_of_user))) {
 	    fprintf(stderr, "%s: Couldn't determine realm of user:)",
@@ -555,16 +560,11 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    if (realm && realm[0]) {
 		realm_of_cell = realm;
 		status = AKLOG_TRYAGAIN;
-		if (dflag) {
-		    printf("We were told to authenticate to realm %s.\n", 
-			   realm);
-		}
+		dprintf("We were told to authenticate to realm %s.\n", realm);
 	    } else {
 		/* Initially, try using afs/cell@USERREALM */
-		if (dflag) {
-		    printf("Trying to authenticate to user's realm %s.\n",
-			   realm_of_user);
-		}
+		dprintf("Trying to authenticate to user's realm %s.\n",
+			realm_of_user);
 		
 		realm_of_cell = realm_of_user;
 		status = get_credv5(context, AFSKEY, cellconf.name,
@@ -582,14 +582,12 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		    	exit(AKLOG_MISC);
 	    	    }
 
-		    if (dflag) {
-			if (realm_of_cell[0])
-			    printf("We've deduced that we need to authenticate"
-				   " to realm %s.\n", realm_of_cell);
+		    if (realm_of_cell[0])
+			dprintf("We've deduced that we need to authenticate"
+				" to realm %s.\n", realm_of_cell);
 		    else
-			printf("We've deduced that we need to authenticate "
-			       "using referrals.\n");
-		    }
+			dprintf("We've deduced that we need to authenticate "
+			        "using referrals.\n");
 		}
 	    }
 	
@@ -615,10 +613,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 				    "%s.\n", progname, cellconf.name);
 			    exit(AKLOG_MISC);
 			}
-			if (dflag) {
-			    printf("We've deduced that we need to authenticate"
-			           " to realm %s.\n", realm_of_cell);
-			}
+			dprintf("We've deduced that we need to authenticate"
+				" to realm %s.\n", realm_of_cell);
 		    }
 		    status = get_credv5(context, AFSKEY, cellconf.name,
 				        realm_of_cell, &v5cred);
@@ -649,10 +645,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	} 
 	
 	if (status != 0) {
-	    if (dflag) {
-		printf("Kerberos error code returned by get_cred : %d\n",
-		       status);
-	    }
+	    dprintf("Kerberos error code returned by get_cred : %d\n", status);
 	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		    progname, cellconf.name);
 	    afs_com_err(progname, status, "while getting AFS tickets");
@@ -693,8 +686,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    int len;
 #endif
 
-	    if (dflag)
-	    	printf("Using Kerberos V5 ticket natively\n");
+	    dprintf("Using Kerberos V5 ticket natively\n");
 
 #ifndef HAVE_NO_KRB5_524
 	    status = krb5_524_conv_principal (context, v5cred->client,
@@ -741,8 +733,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	} else {
     	    CREDENTIALS cred;
 
-	    if (dflag)
-	    	printf("Using Kerberos 524 translator service\n");
+	    dprintf("Using Kerberos 524 translator service\n");
 
 	    status = krb5_524_convert_creds(context, v5cred, &cred);
 
@@ -783,9 +774,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
 	    !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) {
 
-	    if (dflag) {
-		printf("Identical tokens already exist; skipping.\n");
-	    }
+	    dprintf("Identical tokens already exist; skipping.\n");
 	    status = AKLOG_SUCCESS;
 	    goto out;
 	}
@@ -795,10 +784,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 #endif
 
 	if (noprdb) {
-	    if (dflag) {
-		printf("Not resolving name %s to id (-noprdb set)\n",
-			username);
-	    }
+	    dprintf("Not resolving name %s to id (-noprdb set)\n", username);
 	}
 	else {
 	    if (strcmp(realm_of_user, realm_of_cell)) {
@@ -806,20 +792,16 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		strcat(username, realm_of_user);
 	    }
 
-	    if (dflag) {
-		printf("About to resolve name %s to id in cell %s.\n", 
-			username, aserver.cell);
-	    }
+	    dprintf("About to resolve name %s to id in cell %s.\n", username,
+		    aserver.cell);
 
 	    if (!pr_Initialize (0,  AFSDIR_CLIENT_ETC_DIRPATH, aserver.cell))
 		status = pr_SNameToId (username, &viceId);
 	    
-	    if (dflag) {
-		if (status) 
-		    printf("Error %d\n", status);
-		else
-		    printf("Id %d\n", (int) viceId);
-	    }
+	    if (status)
+		dprintf("Error %d\n", status);
+	    else
+		dprintf("Id %d\n", (int) viceId);
 	    
 
 	    /*
@@ -830,10 +812,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 #ifdef ALLOW_REGISTER
 	    if ((status == 0) && (viceId == ANONYMOUSID) &&
 	 	(strcmp(realm_of_user, realm_of_cell) != 0)) {
-		if (dflag) {
-		    printf("doing first-time registration of %s "
-			    "at %s\n", username, cellconf.name);
-		}
+		dprintf("doing first-time registration of %s at %s\n",
+			username, cellconf.name);
 		viceId = 0;
 		strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 		strcpy(aclient.instance, "");
@@ -884,9 +864,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    }
 	}
 
-	if (dflag) {
-	    fprintf(stdout, "Set username to %s\n", username);
-	}
+	dprintf("Set username to %s\n", username);
 
 	/* Reset the "aclient" structure before we call ktc_SetToken.
 	 * This structure was first set by the ktc_GetToken call when
@@ -896,10 +874,9 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	strcpy(aclient.instance, "");
 	strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
 
-	if (dflag) {
-	    printf("Setting tokens. %s / %s @ %s \n",
-		    aclient.name, aclient.instance, aclient.cell );
-	}
+	dprintf("Setting tokens. %s / %s @ %s \n", aclient.name,
+		aclient.instance, aclient.cell );
+
 #ifndef AFS_AIX51_ENV
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
 	 * this routine, it will not add the token. It is not clear what 
@@ -915,9 +892,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	}
     }
     else
-	if (dflag) {
-	    printf("Noauth mode; not authenticating.\n");
-	}
+	dprintf("Noauth mode; not authenticating.\n");
 
 out:
     if (local_cell)
@@ -1092,9 +1067,8 @@ add_hosts(char *file)
     vio.in_size = 0;
     vio.out = outbuf;
 
-    if (dflag) {
-	printf("Getting list of hosts for %s\n", file);
-    }
+    dprintf("Getting list of hosts for %s\n", file);
+
     /* Don't worry about errors. */
     if (!pioctl(file, VIOCWHEREIS, &vio, 1)) {
 	phosts = (long *) outbuf;
@@ -1118,15 +1092,11 @@ add_hosts(char *file)
 	for (i = 0; phosts[i]; i++) {
 	    if (hosts) {
 		in.s_addr = phosts[i];
-		if (dflag) {
-		    printf("Got host %s\n", inet_ntoa(in));
-		}
+		dprintf("Got host %s\n", inet_ntoa(in));
 		ll_string(&hostlist, ll_s_add, (char *)inet_ntoa(in));
 	    }
 	    if (zsubs && (hp=gethostbyaddr((char *) &phosts[i],sizeof(long),AF_INET))) {
-		if (dflag) {
-		    printf("Got host %s\n", hp->h_name);
-		}
+		dprintf("Got host %s\n", hp->h_name);
 		ll_string(&zsublist, ll_s_add, hp->h_name);
 	    }
 	}
@@ -1172,9 +1142,7 @@ auth_to_path(krb5_context context, char *path)
     /* Go on to the next level down the path */
     while ((nextpath = next_path(NULL))) {
 	strcpy(pathtocheck, nextpath);
-	if (dflag) {
-	    printf("Checking directory %s\n", pathtocheck);
-	}
+	dprintf("Checking directory %s\n", pathtocheck);
 	/* 
 	 * If this is an afs mountpoint, determine what cell from 
 	 * the mountpoint name which is of the form 
@@ -1266,8 +1234,6 @@ main(int argc, char *argv[])
     cellinfo_t cellinfo;
 
     extern char *progname;	/* Name of this program */
-
-    extern int dflag;		/* Debug mode */
 
     int cmode = FALSE;		/* Cellname mode */
     int pmode = FALSE;		/* Path name mode */
@@ -1451,9 +1417,7 @@ main(int argc, char *argv[])
 	 */
 
 	if (!status && linked && linkedcell != NULL) {
-	    if (dflag) {
-		printf("Linked cell: %s\n", linkedcell);
-	    }
+	    dprintf("Linked cell: %s\n", linkedcell);
 	    status = auth_to_cell(context, linkedcell, NULL, NULL);
 	}
 	if (linkedcell) {
@@ -1478,19 +1442,15 @@ main(int argc, char *argv[])
 	    if ((stat(xlog_path, &sbuf) == 0) &&
 		((f = fopen(xlog_path, "r")) != NULL)) {
 
-		if (dflag) {
-		    printf("Reading %s for cells to authenticate to.\n",
-			   xlog_path);
-		}
+		dprintf("Reading %s for cells to authenticate to.\n",
+			xlog_path);
 
 		while (fgets(fcell, 100, f) != NULL) {
 		    int auth_status;
 
 		    fcell[strlen(fcell) - 1] = '\0';
 
-		    if (dflag) {
-			printf("Found cell %s in %s.\n", fcell, xlog_path);
-		    }
+		    dprintf("Found cell %s in %s.\n", fcell, xlog_path);
 
 		    auth_status = auth_to_cell(context, fcell, NULL, NULL);
 		    if (status == AKLOG_SUCCESS)
@@ -1510,9 +1470,7 @@ main(int argc, char *argv[])
 		somethingswrong++;
 	    else {
 		if (linked && linkedcell != NULL) {
-		    if (dflag) {
-			printf("Linked cell: %s\n", linkedcell);
-                    }
+		    dprintf("Linked cell: %s\n", linkedcell);
 		    if ((status = auth_to_cell(context, linkedcell,
 					       cellinfo.realm, NULL)))
 			somethingswrong++;
@@ -1900,10 +1858,8 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
     krb5_error_code r;
     static krb5_principal client_principal = 0;
 
-    if (dflag) {
-	printf("Getting tickets: %s%s%s@%s\n", name, (inst && inst[0])
-	       ? "/" : "", inst ? inst : "", realm);
-    }
+    dprintf("Getting tickets: %s%s%s@%s\n", name,
+	    (inst && inst[0]) ? "/" : "", inst ? inst : "", realm);
     
     memset(&increds, 0, sizeof(increds));
 /* ANL - instance may be ptr to a null string. Pass null then */
