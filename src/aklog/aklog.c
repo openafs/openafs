@@ -160,7 +160,7 @@ extern char *afs_realm_of_cell(krb5_context, struct afsconf_cell *, int);
 static int isdir(char *, unsigned char *);
 static krb5_error_code get_credv5(krb5_context context, char *, char *,
 				  char *, krb5_creds **);
-static int get_user_realm(krb5_context, char *);
+static int get_user_realm(krb5_context, char **);
 
 #define TRYAGAIN(x) (x == AKLOG_TRYAGAIN || \
 		     x == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || \
@@ -397,6 +397,50 @@ get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char **local_cell)
     return(status);
 }
 
+static char *
+extract_realm(krb5_context context, krb5_principal princ) {
+    int len;
+    char *realm;
+
+    len = realm_len(context, princ);
+    if (len > REALM_SZ-1)
+	len = REALM_SZ-1;
+
+    realm = malloc(sizeof(char) * (len+1));
+    if (realm == NULL)
+	return NULL;
+
+    strncpy(realm, realm_data(context, princ), len);
+    realm[len] = '\0';
+
+    return realm;
+}
+
+static int
+get_realm_from_cred(krb5_context context, krb5_creds *v5cred, char **realm) {
+#if !defined(HEIMDAL) && defined(HAVE_KRB5_DECODE_TICKET)
+    krb5_error_code code;
+    krb5_ticket *ticket;
+
+    *realm = NULL;
+
+    code = krb5_decode_ticket(&v5cred->ticket, &ticket);
+    if (code)
+	return code;
+
+    *realm = extract_realm(context, ticket->server);
+    if (*realm == NULL)
+	code = ENOMEM;
+
+    krb5_free_ticket(context, ticket);
+
+    return code;
+#else
+    *realm = NULL;
+    return 0;
+#endif
+}
+
 /* 
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
@@ -409,10 +453,10 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     char username[BUFSIZ];	/* To hold client username structure */
     afs_int32 viceId;		/* AFS uid of user */
 
-    char realm_of_user[REALM_SZ]; /* Kerberos realm of user */
-    char *realm_from_princ = 0 ;  /* Calculated realm data */
-    char *realm_of_cell = 0;	  /* Pointer to realm we're using */	
-    int retry;			  /* round, and round we go ... */
+    char *realm_of_user = NULL;    /* Kerberos realm of user */
+    char *realm_from_princ = NULL; /* Calculated realm data */
+    char *realm_of_cell = NULL;    /* Pointer to realm we're using */
+    int retry;			   /* round, and round we go ... */
     
     char *local_cell = NULL;
     krb5_creds *v5cred = NULL;
@@ -420,8 +464,6 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
     struct afsconf_cell cellconf;
-
-    memset(realm_of_user, 0, sizeof(realm_of_user));
 
     /* NULL or empty cell returns information on local cell */
     if ((status = get_cellconfig(cell, &cellconf, &local_cell)))
@@ -477,7 +519,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		   cellconf.name, cellconf.hostName[0]);
 	}
 
-	if ((status = get_user_realm(context, realm_of_user))) {
+	if ((status = get_user_realm(context, &realm_of_user))) {
 	    fprintf(stderr, "%s: Couldn't determine realm of user:)",
 		    progname);
 	    afs_com_err(progname, status, " while getting realm");
@@ -634,16 +676,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 			"cell %s.\n",
 			progname, cellconf.name);
 	    } else {
-		int len = realm_len(context, ticket->server);
-		/* This really shouldn't happen. */
-		if (len > REALM_SZ-1)
-		    len = REALM_SZ-1;
-
-		realm_from_princ = (char *) malloc(sizeof(char) * (len+1));
-		
-		strncpy(realm_from_princ, realm_data(context, ticket->server), 
-			len);
-		realm_from_princ[len] = 0;
+		realm_from_princ = extract_realm(context, ticket->server);
 		realm_of_cell = realm_from_princ;
 		
 		krb5_free_ticket(context, ticket);
@@ -897,6 +930,10 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 out:
     if (local_cell)
 	free(local_cell);
+    if (realm_from_princ)
+	free(realm_from_princ);
+    if (realm_of_user)
+	free(realm_of_user);
 
     return(status);
 }
@@ -1928,11 +1965,12 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 
 
 static int
-get_user_realm(krb5_context context, char *realm)
+get_user_realm(krb5_context context, char **realm)
 {
     static krb5_principal client_principal = 0;
-    int i;
     krb5_error_code r = 0;
+
+    *realm = NULL;
 
     if (!_krb425_ccache)
         krb5_cc_default(context, &_krb425_ccache);
@@ -1946,10 +1984,9 @@ get_user_realm(krb5_context context, char *realm)
 	    return r;
     }
 
-    i = realm_len(context, client_principal);
-    if (i > REALM_SZ-1) i = REALM_SZ-1;
-    strncpy(realm,realm_data(context, client_principal), i);
-    realm[i] = 0;
+    *realm = extract_realm(context, client_principal);
+    if (*realm == NULL)
+	return ENOMEM;
 
     return(r);
 }
