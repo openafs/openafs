@@ -248,21 +248,13 @@ darwin_vn_hold(struct vnode *vp)
 	if (vnode_get(vp)) {
            /* being terminated. kernel won't give us a ref. Now what? our
               callers don't expect us to fail */
-#if 1
-           panic("vn_hold on terminating vnode");
-#else           
            if (haveGlock) AFS_GLOCK(); 
            return;
-#endif
         }
 	if (vnode_ref(vp)) {
-#if 1
-	    panic("vn_hold on terminating vnode");
-#else           
 	    vnode_put(vp);
 	    if (haveGlock) AFS_GLOCK(); 
 	    return;
-#endif
 	}
 	vnode_put(vp);
 #else
@@ -1030,9 +1022,8 @@ afs_vop_pageout(ap)
     auio.uio_resid = aiov.iov_len = iosize;
     aiov.iov_base = (caddr_t) ioaddr;
 #endif
-#if 1				/* USV [ */
     {
-	/* 
+	/* USV?
 	 * check for partial page and clear the
 	 * contents past end of the file before
 	 * releasing it in the VM page cache
@@ -1043,7 +1034,6 @@ afs_vop_pageout(ap)
 	    memset((caddr_t) (ioaddr + pl_offset + io), 0, size - io);
 	}
     }
-#endif /* ] USV */
 
     AFS_GLOCK();
     osi_FlushPages(tvc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
