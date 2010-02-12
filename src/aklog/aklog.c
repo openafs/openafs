@@ -89,6 +89,7 @@
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
 #include <afs/dirpath.h>
+#include <afs/afsutil.h>
 
 #include "aklog.h"
 #include "linked_list.h"
@@ -451,6 +452,436 @@ get_realm_from_cred(krb5_context context, krb5_creds *v5cred, char **realm) {
 #endif
 }
 
+/*!
+ * Get a Kerberos service ticket to use as the base of an rxkad token for
+ * a given AFS cell.
+ *
+ * @param[in] context
+ * 	An initialized Kerberos v5 context
+ * @param[in] realm
+ * 	The realm to look in for the service principal. If NULL, then the
+ * 	realm is determined from the cell name or the user's credentials
+ * 	(see below for the heuristics used)
+ * @param[in] cell
+ * 	The cell information for the cell to obtain a ticket for
+ * @param[out] v5cred
+ * 	A Kerberos credentials structure containing the ticket acquired
+ * 	for the cell. This is a dynamically allocated structure, which
+ * 	should be freed by using the appropriate Kerberos API function.
+ * @param[out] realmUsed
+ * 	The realm in which the cell's service principal was located. If
+ * 	unset, then the principal was located in the same realm as the
+ * 	current user. This is a malloc'd string which should be freed
+ * 	by the caller.
+ *
+ * @returns
+ * 	0 on success, an error value upon failure
+ *
+ * @notes
+ *	This code tries principals in the following, much debated,
+ *	order:
+ *
+ *	If the realm is specified on the command line we do
+ *	   - afs/cell@COMMAND-LINE-REALM
+ *	   - afs@COMMAND-LINE-REALM
+ *
+ * 	Otherwise, we do
+ *	   - afs/cell@REALM-FROM-USERS-PRINCIPAL
+ *	   - afs/cell@krb5_get_host_realm(db-server)
+ *	  Then, if krb5_get_host_realm(db-server) is non-empty
+ *	     - afs@ krb5_get_host_realm(db-server)
+ *	  Otherwise
+ *	     - afs/cell@ upper-case-domain-of-db-server
+ *	     - afs@ upper-case-domain-of-db-server
+ *
+ *	In all cases, the 'afs@' variant is only tried where the
+ *	cell and the realm match case-insensitively.
+ */
+
+static int
+rxkad_get_ticket(krb5_context context, char *realm,
+		 struct afsconf_cell *cell,
+		 krb5_creds **v5cred, char **realmUsed) {
+    char *realm_of_cell = NULL;
+    char *realm_of_user = NULL;
+    char *realm_from_princ = NULL;
+    int status;
+    int retry;
+
+    *realmUsed = NULL;
+
+    if ((status = get_user_realm(context, &realm_of_user))) {
+	fprintf(stderr, "%s: Couldn't determine realm of user:", progname);
+	afs_com_err(progname, status, " while getting realm");
+	status = AKLOG_KERBEROS;
+	goto out;
+    }
+
+    retry = 1;
+
+    while(retry) {
+	/* Cell on command line - use that one */
+	if (realm && realm[0]) {
+	    realm_of_cell = realm;
+	    status = AKLOG_TRYAGAIN;
+	    dprintf("We were told to authenticate to realm %s.\n", realm);
+	} else {
+	    /* Initially, try using afs/cell@USERREALM */
+	    dprintf("Trying to authenticate to user's realm %s.\n",
+		    realm_of_user);
+	    realm_of_cell = realm_of_user;
+	    status = get_credv5(context, AFSKEY, cell->name, realm_of_cell,
+			        v5cred);
+
+	    /* If that failed, try to determine the realm from the name of
+	     * one of the DB servers */
+	    if (TRYAGAIN(status)) {
+		realm_of_cell = afs_realm_of_cell(context, cell, FALSE);
+		if (!realm_of_cell) {
+		    fprintf(stderr, "%s: Couldn't figure out realm for cell "
+			    "%s.\n", progname, cell->name);
+		    exit(AKLOG_MISC);
+		}
+
+		if (realm_of_cell[0])
+		    dprintf("We've deduced that we need to authenticate"
+			    " to realm %s.\n", realm_of_cell);
+		    else
+		    dprintf("We've deduced that we need to authenticate "
+			    "using referrals.\n");
+	    }
+	}
+
+	if (TRYAGAIN(status)) {
+	    /* If we've got the full-princ-first option, or we're in a
+	     * different realm from the cell - use the cell name as the
+	     * instance */
+	    if (AFS_TRY_FULL_PRINC ||
+	        strcasecmp(cell->name, realm_of_cell)!=0) {
+		status = get_credv5(context, AFSKEY, cell->name,
+				    realm_of_cell, v5cred);
+
+		/* If we failed & we've got an empty realm, then try
+		 * calling afs_realm_for_cell again. */
+		if (TRYAGAIN(status) && !realm_of_cell[0]) {
+		    /* This time, get the realm by taking the domain
+		     * component of the db server and make it upper case */
+		    realm_of_cell = afs_realm_of_cell(context, cell, TRUE);
+		    if (!realm_of_cell) {
+			fprintf(stderr,
+				"%s: Couldn't figure out realm for cell %s.\n",
+				progname, cell->name);
+			exit(AKLOG_MISC);
+		    }
+		    dprintf("We've deduced that we need to authenticate"
+			    " to realm %s.\n", realm_of_cell);
+		}
+		status = get_credv5(context, AFSKEY, cell->name,
+				    realm_of_cell, v5cred);
+	    }
+
+	    /* If the realm and cell name match, then try without an
+	     * instance, but only if realm is non-empty */
+
+	    if (TRYAGAIN(status) &&
+		strcasecmp(cell->name, realm_of_cell) == 0) {
+	        status = get_credv5(context, AFSKEY, NULL, realm_of_cell,
+				    v5cred);
+		if (!AFS_TRY_FULL_PRINC && TRYAGAIN(status)) {
+		    status = get_credv5(context, AFSKEY, cell->name,
+					realm_of_cell, v5cred);
+		}
+	    }
+	}
+
+	/* Try to find a service principal for this cell.
+	 * Some broken MIT libraries return KRB5KRB_AP_ERR_MSG_TYPE upon
+	 * the first attempt, so we try twice to be sure */
+
+	if (status == KRB5KRB_AP_ERR_MSG_TYPE && retry == 1)
+	    retry++;
+	else
+	    retry = 0;
+    }
+
+    if (status != 0) {
+	dprintf("Kerberos error code returned by get_cred : %d\n", status);
+	fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
+		progname, cell->name);
+	afs_com_err(progname, status, "while getting AFS tickets");
+	status = AKLOG_KERBEROS;
+	goto out;
+    }
+
+    /* If we've got a valid ticket, and we still don't know the realm name
+     * try to figure it out from the contents of the ticket
+     */
+    if (strcmp(realm_of_cell, "") == 0) {
+	status = get_realm_from_cred(context, *v5cred, &realm_from_princ);
+	if (status) {
+	    fprintf(stderr,
+		    "%s: Couldn't decode ticket to determine realm for "
+		    "cell %s.\n",
+		    progname, cell->name);
+	} else {
+	    if (realm_from_princ)
+		realm_of_cell = realm_from_princ;
+	}
+    }
+
+    /* If the realm of the user and cell differ, then we need to use the
+     * realm when we later construct the user's principal */
+    if (realm_of_cell != NULL && strcmp(realm_of_user, realm_of_cell) != 0)
+	*realmUsed = realm_of_user;
+
+out:
+    if (realm_from_princ)
+	free(realm_from_princ);
+    if (realm_of_user && *realmUsed == NULL)
+	free(realm_of_user);
+
+    return status;
+}
+
+/*!
+ * Build an rxkad token from a Kerberos ticket, using only local tools (that
+ * is, without using a 524 conversion service)
+ *
+ * @param[in] context
+ *	An initialised Kerberos 5 context
+ * @param[in] v5cred
+ * 	A Kerberos credentials structure containing a suitable service ticket
+ * @param[out] tokenPtr
+ * 	An AFS token structure containing an rxkad token. This is a malloc'd
+ * 	structure which should be freed by the caller.
+ * @param[out[ userPtr
+ * 	A string containing the principal of the user to whom the token was
+ * 	issued. This is a malloc'd block which should be freed by the caller.
+ *
+ * @returns
+ * 	0 on success, an error value upon failure
+ */
+static int
+rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
+			 struct ktc_token **tokenPtr, char **userPtr) {
+    char k4name[ANAME_SZ];
+    char k4inst[INST_SZ];
+    char k4realm[REALM_SZ];
+    char username[BUFSIZ];
+    struct ktc_token *token;
+    int status;
+#ifdef HAVE_NO_KRB5_524
+    char *p;
+    int len;
+#endif
+
+    dprintf("Using Kerberos V5 ticket natively\n");
+
+    *tokenPtr = NULL;
+    *userPtr = NULL;
+
+#ifndef HAVE_NO_KRB5_524
+    status = krb5_524_conv_principal (context, v5cred->client,
+				      (char *) &k4name,
+				      (char *) &k4inst,
+				      (char *) &k4realm);
+    if (status) {
+	afs_com_err(progname, status, "while converting principal "
+		    "to Kerberos V4 format");
+	return AKLOG_KERBEROS;
+    }
+    strcpy (username, k4name);
+    if (k4inst[0]) {
+	strcat (username, ".");
+	strcat (username, k4inst);
+    }
+#else
+    len = min(get_princ_len(context, v5cred->client, 0),
+	      second_comp(context, v5cred->client) ?
+	      MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
+    strncpy(username, get_princ_str(context, v5cred->client, 0), len);
+    username[len] = '\0';
+
+    if (second_comp(context, v5cred->client)) {
+	strcat(username, ".");
+	p = username + strlen(username);
+	len = min(get_princ_len(context, v5cred->client, 1),
+		  MAXKTCNAMELEN - strlen(username) - 1);
+	strncpy(p, get_princ_str(context, v5cred->client, 1), len);
+	p[len] = '\0';
+    }
+#endif
+
+    token = malloc(sizeof(struct ktc_token));
+    if (token == NULL)
+	return ENOMEM;
+
+    memset(token, 0, sizeof(struct ktc_token));
+
+    token->kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+    token->startTime = v5cred->times.starttime;;
+    token->endTime = v5cred->times.endtime;
+    memcpy(&token->sessionKey, get_cred_keydata(v5cred),
+	   get_cred_keylen(v5cred));
+    token->ticketLen = v5cred->ticket.length;
+    memcpy(token->ticket, v5cred->ticket.data, token->ticketLen);
+
+    *tokenPtr = token;
+    *userPtr = strdup(username);
+
+    return 0;
+}
+
+/*!
+ * Convert a Keberos ticket to an rxkad token, using information obtained
+ * from an external Kerberos 5->4 conversion service. If the code is built
+ * with HAVE_NO_KRB5_524 then this is a stub function which will always
+ * return success without a token.
+ *
+ * @param[in] context
+ *	An initialised Kerberos 5 context
+ * @param[in] v5cred
+ * 	A Kerberos credentials structure containing a suitable service ticket
+ * @param[out] tokenPtr
+ * 	An AFS token structure containing an rxkad token. This is a malloc'd
+ * 	structure which should be freed by the caller.
+ * @param[out[ userPtr
+ * 	A string containing the principal of the user to whom the token was
+ * 	issued. This is a malloc'd block which should be freed by the caller.
+ *
+ * @returns
+ * 	0 on success, an error value upon failure
+ */
+
+#ifdef HAVE_NO_KRB5_524
+static int
+rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
+			  struct ktc_token **tokenPtr, char **userPtr) {
+    *tokenPtr = NULL;
+    *userPtr = NULL;
+
+    return 0;
+}
+#else
+static int
+rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
+			  struct ktc_token **tokenPtr, char **userPtr) {
+    CREDENTIALS cred;
+    char username[BUFSIZ];
+    struct ktc_token *token;
+    int status;
+
+    *tokenPtr = NULL;
+    *userPtr = NULL;
+
+    dprintf("Using Kerberos 524 translator service\n");
+
+    status = krb5_524_convert_creds(context, v5cred, &cred);
+
+    if (status) {
+	afs_com_err(progname, status, "while converting tickets "
+		"to Kerberos V4 format");
+	return AKLOG_KERBEROS;
+    }
+
+    strcpy (username, cred.pname);
+    if (cred.pinst[0]) {
+	strcat (username, ".");
+	strcat (username, cred.pinst);
+    }
+
+    token = malloc(sizeof(struct ktc_token));
+    memset(token, 0, sizeof(struct ktc_token));
+
+    token->kvno = cred.kvno;
+    token->startTime = cred.issue_date;
+    /*
+     * It seems silly to go through a bunch of contortions to
+     * extract the expiration time, when the v5 credentials already
+     * has the exact time!  Let's use that instead.
+     *
+     * Note that this isn't a security hole, as the expiration time
+     * is also contained in the encrypted token
+     */
+    token->endTime = v5cred->times.endtime;
+    memcpy(&token->sessionKey, cred.session, 8);
+    token->ticketLen = cred.ticket_st.length;
+    memcpy(token->ticket, cred.ticket_st.dat, token->ticketLen);
+
+    return 0;
+}
+#endif
+
+/*!
+ * This function gets an rxkad token for a given cell.
+ *
+ * @param[in] context
+ * 	An initialized Kerberos v5 context
+ * @param[in] cell
+ * 	The cell information for the cell which we're obtaining a token for
+ * @param[in] realm
+ * 	The realm to look in for the service principal. If NULL, then the
+ * 	realm is determined from the cell name or the user's credentials
+ * 	(see the documentation for rxkad_get_ticket)
+ * @param[out] token
+ * 	The rxkad token produced. This is a malloc'd structure which should
+ * 	be freed by the caller.
+ * @parma[out] authuser
+ * 	A string containing the principal of the user to whom the token was
+ * 	issued. This is a malloc'd block which should be freed by the caller.
+ * @param[out] foreign
+ * 	Whether the user is considered as 'foreign' to the realm of the cell.
+ *
+ * @returns
+ * 	0 on success, an error value upon failuer
+ */
+static int
+rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
+		struct ktc_token **token, char **authuser, int *foreign) {
+    krb5_creds *v5cred;
+    char *realmUsed = NULL;
+    char *username = NULL;
+    int status;
+    size_t len;
+
+    *token = NULL;
+    *authuser = NULL;
+    *foreign = 0;
+
+    status = rxkad_get_ticket(context, realm, cell, &v5cred, &realmUsed);
+    if (status)
+	return status;
+
+    if (do524)
+	status = rxkad_get_converted_token(context, v5cred, token, &username);
+    else
+	status = rxkad_build_native_token(context, v5cred, token, &username);
+
+    if (status)
+	goto out;
+
+    /* We now have the username, plus the realm name, so stitch them together
+     * to give us the name that the ptserver will know the user by */
+    if (realmUsed == NULL) {
+	*authuser = username;
+	username = NULL;
+	*foreign = 0;
+    } else {
+	len = strlen(username)+strlen(realmUsed)+2;
+	*authuser = malloc(len);
+	afs_snprintf(*authuser, len, "%s@%s", username, realmUsed);
+	*foreign = 1;
+    }
+
+out:
+    if (realmUsed)
+	free(realmUsed);
+    if (username)
+	free(username);
+
+    return status;
+}
+
 /* 
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
@@ -460,19 +891,15 @@ static int
 auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 {
     int status = AKLOG_SUCCESS;
-    char username[BUFSIZ];	/* To hold client username structure */
+    int isForeign = 0;
+    char *username = NULL;	/* To hold client username structure */
     afs_int32 viceId;		/* AFS uid of user */
 
-    char *realm_of_user = NULL;    /* Kerberos realm of user */
-    char *realm_from_princ = NULL; /* Calculated realm data */
-    char *realm_of_cell = NULL;    /* Pointer to realm we're using */
-    int retry;			   /* round, and round we go ... */
-    
     char *local_cell = NULL;
-    krb5_creds *v5cred = NULL;
     struct ktc_principal aserver;
     struct ktc_principal aclient;
-    struct ktc_token atoken, btoken;
+    struct ktc_token *token;
+    struct ktc_token btoken;
     struct afsconf_cell cellconf;
 
     /* NULL or empty cell returns information on local cell */
@@ -524,255 +951,22 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	dprintf("Authenticating to cell %s (server %s).\n", cellconf.name,
 		cellconf.hostName[0]);
 
-	if ((status = get_user_realm(context, &realm_of_user))) {
-	    fprintf(stderr, "%s: Couldn't determine realm of user:)",
-		    progname);
-	    afs_com_err(progname, status, " while getting realm");
-	    status = AKLOG_KERBEROS;
-	    goto out;
-	}
-
-	retry = 1;
-	
-	while(retry) {
-
-	    /* This code tries principals in the following, much debated,
-	     * order:
-	     * 
-	     * If the realm is specified on the command line we do
-	     *    - afs/cell@COMMAND-LINE-REALM
-	     *    - afs@COMMAND-LINE-REALM
-	     * 
-	     * Otherwise, we do
-	     *    - afs/cell@REALM-FROM-USERS-PRINCIPAL
-	     *    - afs/cell@krb5_get_host_realm(db-server)
-	     *   Then, if krb5_get_host_realm(db-server) is non-empty
-	     *      - afs@ krb5_get_host_realm(db-server)
-	     *   Otherwise
-	     *      - afs/cell@ upper-case-domain-of-db-server
-	     *      - afs@ upper-case-domain-of-db-server
-	     * 
-	     * In all cases, the 'afs@' variant is only tried where the
-	     * cell and the realm match case-insensitively.
-	     */
-		
-	    /* Cell on command line - use that one */
-	    if (realm && realm[0]) {
-		realm_of_cell = realm;
-		status = AKLOG_TRYAGAIN;
-		dprintf("We were told to authenticate to realm %s.\n", realm);
-	    } else {
-		/* Initially, try using afs/cell@USERREALM */
-		dprintf("Trying to authenticate to user's realm %s.\n",
-			realm_of_user);
-		
-		realm_of_cell = realm_of_user;
-		status = get_credv5(context, AFSKEY, cellconf.name,
-				    realm_of_cell, &v5cred);
-	    
-		/* If that failed, try to determine the realm from the name of 
-		 * one of the DB servers */
-		if (TRYAGAIN(status)) {
-		    realm_of_cell = afs_realm_of_cell(context, &cellconf,
-				    		      FALSE);
-		    if (!realm_of_cell) {
-			fprintf(stderr, 
-				"%s: Couldn't figure out realm for cell %s.\n",
-				progname, cellconf.name);
-		    	exit(AKLOG_MISC);
-	    	    }
-
-		    if (realm_of_cell[0])
-			dprintf("We've deduced that we need to authenticate"
-				" to realm %s.\n", realm_of_cell);
-		    else
-			dprintf("We've deduced that we need to authenticate "
-			        "using referrals.\n");
-		}
-	    }
-	
-	    if (TRYAGAIN(status)) {
-		/* If we've got the full-princ-first option, or we're in a
-		 * different realm from the cell - use the cell name as the
-		 * instance */
-		if (AFS_TRY_FULL_PRINC || 
-		    strcasecmp(cellconf.name, realm_of_cell)!=0) {
-		    status = get_credv5(context, AFSKEY, cellconf.name,
-				        realm_of_cell, &v5cred);
-
-		    /* If we failed & we've got an empty realm, then try 
-		     * calling afs_realm_for_cell again. */
-		    if (TRYAGAIN(status) && !realm_of_cell[0]) {
-			/* This time, get the realm by taking the domain 
-			 * component of the db server and make it upper case */
-			realm_of_cell = afs_realm_of_cell(context,
-							  &cellconf, TRUE);
-			if (!realm_of_cell) {
-			    fprintf(stderr,
-				    "%s: Couldn't figure out realm for cell "
-				    "%s.\n", progname, cellconf.name);
-			    exit(AKLOG_MISC);
-			}
-			dprintf("We've deduced that we need to authenticate"
-				" to realm %s.\n", realm_of_cell);
-		    }
-		    status = get_credv5(context, AFSKEY, cellconf.name,
-				        realm_of_cell, &v5cred);
-	    	}
-	   
-		/* If the realm and cell name match, then try without an 
-		 * instance, but only if realm is non-empty */
-	        
-		if (TRYAGAIN(status) && 
-		    strcasecmp(cellconf.name, realm_of_cell) == 0) {
-		    status = get_credv5(context, AFSKEY, NULL, 
-				        realm_of_cell, &v5cred);
-    		    if (!AFS_TRY_FULL_PRINC && TRYAGAIN(status)) {
-		        status = get_credv5(context, AFSKEY, cellconf.name,
-				            realm_of_cell, &v5cred);
-		    }
-		}
-	    }
-
-	    /* Try to find a service principal for this cell.
-	     * Some broken MIT libraries return KRB5KRB_AP_ERR_MSG_TYPE upon 
-	     * the first attempt, so we try twice to be sure */
-
-	    if (status == KRB5KRB_AP_ERR_MSG_TYPE && retry == 1)
-		retry++;
-	    else
-		retry = 0;
-	} 
-	
-	if (status != 0) {
-	    dprintf("Kerberos error code returned by get_cred : %d\n", status);
-	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
-		    progname, cellconf.name);
-	    afs_com_err(progname, status, "while getting AFS tickets");
-	    status = AKLOG_KERBEROS;
-	    goto out;
-	}
-	
-	/* If we've got a valid ticket, and we still don't know the realm name
-	 * try to figure it out from the contents of the ticket
-	 */
-	if (strcmp(realm_of_cell, "") == 0) {
-	    status = get_realm_from_cred(context, v5cred, &realm_from_princ);
-	    if (status) {
-		fprintf(stderr,
-			"%s: Couldn't decode ticket to determine realm for "
-			"cell %s.\n",
-			progname, cellconf.name);
-	    } else {
-		if (realm_from_princ)
-		    realm_of_cell = realm_from_princ;
-	    }
-	}
+	status = rxkad_get_token(context, &cellconf, realm, &token,
+				 &username, &isForeign);
+	if (status)
+	    return status;
 
 	strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
 	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
 	strncpy(aserver.cell, cellconf.name, MAXKTCREALMLEN - 1);
 
-	/*
- 	 * The default is to use rxkad2b, which means we put in a full
-	 * V5 ticket.  If the user specifies -524, we talk to the
-	 * 524 ticket converter.
-	 */
-
-	if (! do524) {
-	    char k4name[ANAME_SZ], k4inst[INST_SZ], k4realm[REALM_SZ];
-#ifdef HAVE_NO_KRB5_524
-	    char *p;
-	    int len;
-#endif
-
-	    dprintf("Using Kerberos V5 ticket natively\n");
-
-#ifndef HAVE_NO_KRB5_524
-	    status = krb5_524_conv_principal (context, v5cred->client,
-					      (char *) &k4name,
-					      (char *) &k4inst,
-					      (char *) &k4realm);
-	    if (status) {
-		afs_com_err(progname, status, "while converting principal "
-			"to Kerberos V4 format");
-		status = AKLOG_KERBEROS;
-		goto out;
-	    }
-	    strcpy (username, k4name);
-	    if (k4inst[0]) {
-		strcat (username, ".");
-		strcat (username, k4inst);
-	    }
-#else
-	    len = min(get_princ_len(context, v5cred->client, 0),
-		      second_comp(context, v5cred->client) ?
-		      MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
-	    strncpy(username, get_princ_str(context, v5cred->client, 0), len);
-	    username[len] = '\0';
-	    
-	    if (second_comp(context, v5cred->client)) {
-		strcat(username, ".");
-		p = username + strlen(username);
-		len = min(get_princ_len(context, v5cred->client, 1),
-			  MAXKTCNAMELEN - strlen(username) - 1);
-		strncpy(p, get_princ_str(context, v5cred->client, 1), len);
-		p[len] = '\0';
-	    }
-#endif
-
-	    memset(&atoken, 0, sizeof(atoken));
-	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
-	    atoken.startTime = v5cred->times.starttime;;
-	    atoken.endTime = v5cred->times.endtime;
-	    memcpy(&atoken.sessionKey, get_cred_keydata(v5cred),
-		   get_cred_keylen(v5cred));
-	    atoken.ticketLen = v5cred->ticket.length;
-	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
-#ifndef HAVE_NO_KRB5_524
-	} else {
-    	    CREDENTIALS cred;
-
-	    dprintf("Using Kerberos 524 translator service\n");
-
-	    status = krb5_524_convert_creds(context, v5cred, &cred);
-
-	    if (status) {
-		afs_com_err(progname, status, "while converting tickets "
-			"to Kerberos V4 format");
-		status = AKLOG_KERBEROS;
-		goto out;
-	    }
-
-	    strcpy (username, cred.pname);
-	    if (cred.pinst[0]) {
-		strcat (username, ".");
-		strcat (username, cred.pinst);
-	    }
-
-	    atoken.kvno = cred.kvno;
-	    atoken.startTime = cred.issue_date;
-	    /*
-	     * It seems silly to go through a bunch of contortions to
-	     * extract the expiration time, when the v5 credentials already
-	     * has the exact time!  Let's use that instead.
-	     *
-	     * Note that this isn't a security hole, as the expiration time
-	     * is also contained in the encrypted token
-	     */
-	    atoken.endTime = v5cred->times.endtime;
-	    memcpy(&atoken.sessionKey, cred.session, 8);
-	    atoken.ticketLen = cred.ticket_st.length;
-	    memcpy(atoken.ticket, cred.ticket_st.dat, atoken.ticketLen);
-#endif /* HAVE_NO_KRB5_524 */
-	}
-	
 	if (!force &&
 	    !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
-	    atoken.kvno == btoken.kvno &&
-	    atoken.ticketLen == btoken.ticketLen &&
-	    !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
-	    !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) {
+	    token->kvno == btoken.kvno &&
+	    token->ticketLen == btoken.ticketLen &&
+	    !memcmp(&token->sessionKey, &btoken.sessionKey,
+		    sizeof(token->sessionKey)) &&
+	    !memcmp(token->ticket, btoken.ticket, token->ticketLen)) {
 
 	    dprintf("Identical tokens already exist; skipping.\n");
 	    status = AKLOG_SUCCESS;
@@ -787,11 +981,6 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    dprintf("Not resolving name %s to id (-noprdb set)\n", username);
 	}
 	else {
-	    if (strcmp(realm_of_user, realm_of_cell)) {
-		strcat(username, "@");
-		strcat(username, realm_of_user);
-	    }
-
 	    dprintf("About to resolve name %s to id in cell %s.\n", username,
 		    aserver.cell);
 
@@ -810,15 +999,14 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	     */
 
 #ifdef ALLOW_REGISTER
-	    if ((status == 0) && (viceId == ANONYMOUSID) &&
-	 	(strcmp(realm_of_user, realm_of_cell) != 0)) {
+	    if ((status == 0) && (viceId == ANONYMOUSID) && isForeign) {
 		dprintf("doing first-time registration of %s at %s\n",
 			username, cellconf.name);
 		viceId = 0;
 		strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 		strcpy(aclient.instance, "");
-		strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
-		if ((status = ktc_SetToken(&aserver, &atoken, &aclient, 0))) {
+		strncpy(aclient.cell, cellconf.name, MAXKTCREALMLEN - 1);
+		if ((status = ktc_SetToken(&aserver, token, &aclient, 0))) {
 		    afs_com_err(progname, status,
 				"while obtaining tokens for cell %s",
 		                cellconf.name);
@@ -872,7 +1060,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	 */
 	strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 	strcpy(aclient.instance, "");
-	strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
+	strncpy(aclient.cell, cellconf.name, MAXKTCREALMLEN - 1);
 
 	dprintf("Setting tokens. %s / %s @ %s \n", aclient.name,
 		aclient.instance, aclient.cell );
@@ -885,7 +1073,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	 */
 	write(2,"",0); /* dummy write */
 #endif
-	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
+	if ((status = ktc_SetToken(&aserver, token, &aclient, afssetpag))) {
 	    afs_com_err(progname, status, "while obtaining tokens for cell %s",
 			cellconf.name);
 	    status = AKLOG_TOKEN;
@@ -897,10 +1085,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 out:
     if (local_cell)
 	free(local_cell);
-    if (realm_from_princ)
-	free(realm_from_princ);
-    if (realm_of_user)
-	free(realm_of_user);
+    if (username)
+	free(username);
 
     return(status);
 }
