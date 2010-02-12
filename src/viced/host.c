@@ -1100,6 +1100,10 @@ h_Enumerate(int (*proc) (), char *param)
  * host with respect to this lwp is passed to (*proc) as the param held.
  * The proc should return 0 if the host should be released, 1 if it should
  * be held after enumeration.
+ *
+ * @note Assumes that hostList is only prepended to, that a host is never
+ *       inserted into the middle. Otherwise this would not be guaranteed to
+ *       terminate.
  */
 void
 h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
@@ -1108,13 +1112,18 @@ h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
     int held = 0;
     int nheld = 0;
     int count;
+    int origHostCount;
 
     if (hostCount == 0) {
 	return;
     }
     if (enumstart && !(held = h_Held_r(enumstart)))
 	h_Hold_r(enumstart); 
-    for (count = 0, host = enumstart; host && count < hostCount; host = next, held = nheld, count++) {
+    /* remember hostCount, lest it change over the potential H_LOCK drop in
+     * h_Release_r */
+    origHostCount = hostCount;
+
+    for (count = 0, host = enumstart; host && count < origHostCount; host = next, held = nheld, count++) {
 	next = host->next;
 	if (next && !(nheld = h_Held_r(next)))
 	    h_Hold_r(next);
@@ -1122,8 +1131,8 @@ h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
 	if (!held)
 	    h_Release_r(host); /* this might free up the host */
     }
-    if (host != NULL) {
-	ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", hostCount));
+    if (host != NULL && count >= origHostCount) {
+	ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", origHostCount));
 	ShutDownAndCore(PANIC);
     }
 }				/*h_Enumerate_r */
