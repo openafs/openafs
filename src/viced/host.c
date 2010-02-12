@@ -972,6 +972,7 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     register struct host *host, **list;
     register int *flags;
     register int i, count;
+    int totalCount;
 
     H_LOCK;
     if (hostCount == 0) {
@@ -988,12 +989,18 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
 	ViceLog(0, ("Failed malloc in h_Enumerate (flags)\n"));
 	assert(0);
     }
-    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
-	list[count] = host;
-	h_Hold_r(host);
+    for (totalCount = count = 0, host = hostList;
+         host && totalCount < hostCount;
+	 host = host->next, totalCount++) {
+
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    list[count] = host;
+	    h_Hold_r(host);
+	    count++;
+	}
     }
-    if (count != hostCount) {
-	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", count, hostCount));
+    if (totalCount != hostCount) {
+	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", totalCount, hostCount));
     } else if (host != NULL) {
 	ViceLog(0, ("h_Enumerate found more than %d hosts\n", hostCount));
 	ShutDownAndCore(PANIC);
@@ -1042,6 +1049,31 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
 	return;
     }
 
+    host = enumstart;
+    enumstart = NULL;
+
+    /* find the first non-deleted host, so we know where to actually start
+     * enumerating */
+    for (count = 0; host && count < hostCount; count++) {
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    enumstart = host;
+	    break;
+	}
+	host = host->next;
+    }
+    if (!enumstart) {
+	/* we didn't find a non-deleted host... */
+
+	if (host && count >= hostCount) {
+	    /* ...because we found a loop */
+	    ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", hostCount));
+	    ShutDownAndCore(PANIC);
+	}
+
+	/* ...because the hostList is full of deleted hosts */
+	return;
+    }
+
     h_Hold_r(enumstart);
 
     /* remember hostCount, lest it change over the potential H_LOCK drop in
@@ -1050,12 +1082,25 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
 
     for (count = 0, host = enumstart; host && count < origHostCount; host = next, flags = nflags, count++) {
 	next = host->next;
+
+	/* find the next non-deleted host */
+	while (next && (next->hostFlags & HOSTDELETED)) {
+	    next = next->next;
+	    /* inc count for the skipped-over host */
+	    if (++count > origHostCount) {
+		ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", origHostCount));
+		ShutDownAndCore(PANIC);
+	    }
+	}
 	if (next && !H_ENUMERATE_ISSET_BAIL(flags))
 	    h_Hold_r(next);
-	flags = (*proc) (host, flags, param);
-	if (H_ENUMERATE_ISSET_BAIL(flags)) {
-	    h_Release_r(host); /* this might free up the host */
-	    break;
+
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    flags = (*proc) (host, flags, param);
+	    if (H_ENUMERATE_ISSET_BAIL(flags)) {
+		h_Release_r(host); /* this might free up the host */
+		break;
+	    }
 	}
 	h_Release_r(host); /* this might free up the host */
     }
@@ -2185,7 +2230,9 @@ h_FindClient_r(struct rx_connection *tcon)
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client && client->sid == rxr_CidOf(tcon) 
-	&& client->VenusEpoch == rxr_GetEpoch(tcon)) {
+	&& client->VenusEpoch == rxr_GetEpoch(tcon)
+	&& !(client->host->hostFlags & HOSTDELETED)) {
+
 	client->refCount++;
 	h_Hold_r(client->host);
 	if (!client->deleted && client->prfail != 2) {	
