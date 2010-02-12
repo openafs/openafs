@@ -276,7 +276,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 #ifdef AFS_DARWIN80_ENV
             if (tvp) {
 	        AFS_GUNLOCK();
-                error = afs_darwin_finalizevnode(tvp, NULL, NULL, 1);
+                error = afs_darwin_finalizevnode(tvp, NULL, NULL, 1, 0);
 	        AFS_GLOCK();
                 if (error)
                    tvp = NULL;

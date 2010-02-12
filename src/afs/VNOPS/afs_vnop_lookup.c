@@ -399,7 +399,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 #ifdef AFS_DARWIN80_ENV
         root_vp->f.m.Type = VDIR;
         AFS_GUNLOCK();
-        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0);
+        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0, 0);
         AFS_GLOCK();
         if (code) goto done;
         vnode_ref(AFSTOV(root_vp));
@@ -628,6 +628,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 {
     int nentries;		/* # of entries to prefetch */
     int nskip;			/* # of slots in the LRU queue to skip */
+#ifdef AFS_DARWIN80_ENV
+    struct vnode *lruvp;
+#endif
     struct vcache *lruvcp;	/* vcache ptr of our goal pos in LRU queue */
     struct dcache *dcp;		/* chunk containing the dir block */
     afs_size_t temp;		/* temp for holding chunk length, &c. */
@@ -664,9 +667,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     dotdot.Cell = 0;
     dotdot.Fid.Unique = 0;
     dotdot.Fid.Vnode = 0;
-#ifdef AFS_DARWIN80_ENV
-    panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
-#endif
+
     /* first compute some basic parameters.  We dont want to prefetch more
      * than a fraction of the cache in any given call, and we want to preserve
      * a portion of the LRU queue in any event, so as to avoid thrashing
@@ -824,15 +825,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		goto done;	/* can happen if afs_NewVCache fails */
 	    }
 
-#ifdef AFS_DARWIN80_ENV
-            if (tvcp->f.states & CVInit) {
-                 /* XXX don't have status yet, so creating the vnode is
-                    not yet useful. we would get CDeadVnode set, and the
-                    upcoming PutVCache will cause the vcache to be flushed &
-                    freed, which in turn means the bulkstatus results won't 
-                    be used */
-            }
-#endif
 	    /* WARNING: afs_DoBulkStat uses the Length field to store a
 	     * sequence number for each bulk status request. Under no
 	     * circumstances should afs_DoBulkStat store a sequence number
@@ -974,9 +966,13 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	refpanic("Bulkstat VLRU inconsistent");
     }
     for (tq = VLRU.next; tq != &VLRU; tq = QNext(tq)) {
-	if (--nskip <= 0)
-	    break;
-	else if (QNext(QPrev(tq)) != tq) {
+	if (--nskip <= 0) {
+#ifdef AFS_DARWIN80_ENV
+	    if (!(QTOV(tq)->f.states & CDeadVnode))
+#endif
+		break;
+	}
+	if (QNext(QPrev(tq)) != tq) {
 	    BStvc = QTOV(tq);
 	    refpanic("BulkStat VLRU inconsistent");
 	}
@@ -992,7 +988,20 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * doesn't hurt nearly as much.
      */
     retry = 0;
+#ifdef AFS_DARWIN80_ENV
+    lruvp = AFSTOV(lruvcp);
+    if (vnode_get(lruvp))       /* this bumps ref count */
+	retry = 1;
+    else if (vnode_ref(lruvp)) {
+	AFS_GUNLOCK();
+	/* AFSTOV(lruvcp) may be NULL */
+	vnode_put(lruvp);
+	AFS_GLOCK();
+	retry = 1;
+    }
+#else
     osi_vnhold(lruvcp, &retry);
+#endif
     ReleaseReadLock(&afs_xvcache);	/* could be read lock */
     if (retry)
 	goto reskip;
@@ -1143,6 +1152,23 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		osi_dnlc_purgedp(tvcp);	/* if it (could be) a directory */
 	}
 	ReleaseWriteLock(&afs_xcbhash);
+#ifdef AFS_DARWIN80_ENV
+	/* reclaim->FlushVCache will need xcbhash */
+	if (tvcp->f.states & CDeadVnode) {
+	    /* passing in a parent hangs getting the vnode lock */
+	    code = afs_darwin_finalizevnode(tvcp, NULL, NULL, 0, 1);
+	    if (code) {
+		/* It's gonna get recycled - shouldn't happen */
+		tvcp->callback = 0;
+		tvcp->f.states &= ~(CStatd | CUnique);
+		afs_DequeueCallback(tvcp);
+		if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
+		    osi_dnlc_purgedp(tvcp); /* if it (could be) a directory */
+	    } else
+		/* re-acquire the usecount that finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+	}
+#endif
 
 	ReleaseWriteLock(&tvcp->lock);
 	/* finally, we're done with the entry */
@@ -1150,7 +1176,14 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     }				/* for all files we got back */
 
     /* finally return the pointer into the LRU queue */
+#ifdef AFS_DARWIN80_ENV
+    AFS_GUNLOCK();
+    vnode_put(lruvp);
+    vnode_rele(lruvp);
+    AFS_GLOCK();
+#else
     afs_PutVCache(lruvcp);
+#endif
 
   done:
     /* Be sure to turn off the CBulkFetching flags */
@@ -1194,11 +1227,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-#ifdef AFS_DARWIN80_ENV
-#define AFSDOBULK 0
-#else
 static int AFSDOBULK = 1;
-#endif
 
 int
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)

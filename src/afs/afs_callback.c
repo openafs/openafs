@@ -455,17 +455,17 @@ loop1:
 			    afs_osi_Sleep(&tvc->f.states);
 			    goto loop1;
 			}
-#ifdef AFS_DARWIN80_ENV
-			if (tvc->f.states & CDeadVnode) {
-			    ReleaseReadLock(&afs_xvcache);
-			    afs_osi_Sleep(&tvc->f.states);
-			    goto loop1;
-			}
-#endif
 #if     defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 			VN_HOLD(AFSTOV(tvc));
 #else
 #ifdef AFS_DARWIN80_ENV
+			if (tvc->f.states & CDeadVnode) {
+			    if (!(tvc->f.states & CBulkFetching)) {
+				ReleaseReadLock(&afs_xvcache);
+				afs_osi_Sleep(&tvc->f.states);
+				goto loop1;
+			    }
+			}
 			vp = AFSTOV(tvc);
 			if (vnode_get(vp))
 			    continue;
@@ -474,6 +474,11 @@ loop1:
 			    vnode_put(vp);
 			    AFS_GLOCK();
 			    continue;
+			}
+			if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
+			    AFS_GUNLOCK();
+			    vnode_recycle(AFSTOV(tvc));
+			    AFS_GLOCK();
 			}
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -549,17 +554,17 @@ loop2:
 			afs_osi_Sleep(&tvc->f.states);
 			goto loop2;
 		    }
-#ifdef AFS_DARWIN80_ENV
-		    if (tvc->f.states & CDeadVnode) {
-			ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->f.states);
-			goto loop2;
-		    }
-#endif
 #if     defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		    VN_HOLD(AFSTOV(tvc));
 #else
 #ifdef AFS_DARWIN80_ENV
+		    if (tvc->f.states & CDeadVnode) {
+			if (!(tvc->f.states & CBulkFetching)) {
+			    ReleaseReadLock(&afs_xvcache);
+			    afs_osi_Sleep(&tvc->f.states);
+			    goto loop2;
+			}
+		    }
 		    vp = AFSTOV(tvc);
 		    if (vnode_get(vp))
 			continue;
@@ -568,6 +573,11 @@ loop2:
 			vnode_put(vp);
 			AFS_GLOCK();
 			continue;
+		    }
+		    if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
+			AFS_GUNLOCK();
+			vnode_recycle(AFSTOV(tvc));
+			AFS_GLOCK();
 		    }
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)

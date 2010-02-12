@@ -3401,11 +3401,13 @@ DECL_PIOCTL(PFlushVolumeData)
 		    goto loop;
 		}
 #ifdef AFS_DARWIN80_ENV
-		if (tvc->f.states & CDeadVnode) {
+	    if (tvc->f.states & CDeadVnode) {
+		if (!(tvc->f.states & CBulkFetching)) {
 		    ReleaseReadLock(&afs_xvcache);
 		    afs_osi_Sleep(&tvc->f.states);
 		    goto loop;
 		}
+	    }
 #endif
 #if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
@@ -3418,6 +3420,11 @@ DECL_PIOCTL(PFlushVolumeData)
 		    vnode_put(vp);
 		    AFS_GLOCK();
 		    continue;
+		}
+		if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
+		    AFS_GUNLOCK();
+		    vnode_recycle(AFSTOV(tvc));
+		    AFS_GLOCK();
 		}
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);

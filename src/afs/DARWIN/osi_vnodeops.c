@@ -343,7 +343,7 @@ afs_vop_lookup(ap)
 	return (error);
     }
 #ifdef AFS_DARWIN80_ENV
-    if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
+    if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0, 0))) {
 	DROPNAME();
 	*ap->a_vpp = 0;
 	return error;
@@ -428,7 +428,7 @@ afs_vop_create(ap)
 
     if (vcp) {
 #ifdef AFS_DARWIN80_ENV
-        if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
+      if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0, 0))) {
 	    DROPNAME();
 	    *ap->a_vpp=0;
 	    return error;
@@ -1482,7 +1482,7 @@ afs_vop_mkdir(ap)
     }
     if (vcp) {
 #ifdef AFS_DARWIN80_ENV
-        afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0);
+	afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0, 0);
 #endif
 	*ap->a_vpp = AFSTOV(vcp);
 #ifndef AFS_DARWIN80_ENV /* XXX needed for multi-mount thing, but can't have it yet */
@@ -2010,7 +2010,7 @@ afs_vop_cmap(ap)
 #endif
 
 int
-afs_darwin_getnewvnode(struct vcache *avc)
+afs_darwin_getnewvnode(struct vcache *avc, int recycle)
 {
 #ifdef AFS_DARWIN80_ENV
     vnode_t vp;
@@ -2029,7 +2029,8 @@ afs_darwin_getnewvnode(struct vcache *avc)
       vnode_addfsref(vp);
       vnode_ref(vp);
       avc->v = vp;
-      vnode_recycle(vp); /* terminate as soon as iocount drops */
+      if (recycle)
+	  vnode_recycle(vp); /* terminate as soon as iocount drops */
       avc->f.states |= CDeadVnode;
     }
     return error;
@@ -2046,14 +2047,16 @@ afs_darwin_getnewvnode(struct vcache *avc)
 /* if this fails, then tvc has been unrefed and may have been freed. 
    Don't touch! */
 int 
-afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot)
+afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot, int locked)
 {
     vnode_t ovp;
     vnode_t nvp;
     int error;
     struct vnode_fsparam par;
-    AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,325);
+    if (!locked) {
+	AFS_GLOCK();
+	ObtainWriteLock(&avc->lock,325);
+    }
     ovp = AFSTOV(avc);
     if (!(avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
         AFS_GUNLOCK();
@@ -2066,8 +2069,10 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
 	/* Can end up in reclaim... drop GLOCK */
         vnode_rele(ovp);
 	AFS_GLOCK();
-        ReleaseWriteLock(&avc->lock);
-	AFS_GUNLOCK();
+	if (!locked) {
+	    ReleaseWriteLock(&avc->lock);
+	    AFS_GUNLOCK();
+	}
         return 0;
     }
     if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
@@ -2092,6 +2097,9 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
 	if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
 	    printf("vcache %p should not be CDeadVnode", avc);
 	if (avc->v == ovp) {
+	    if (avc->f.states & CBulkFetching) {
+		vnode_recycle(ovp);
+	    }
 	    if (!(avc->f.states & CVInit)) {
 		vnode_clearfsnode(ovp);
 		vnode_removefsref(ovp);
@@ -2103,10 +2111,12 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
     vnode_put(ovp);
     vnode_rele(ovp);
     AFS_GLOCK();
-    ReleaseWriteLock(&avc->lock);
+    if (!locked)
+	ReleaseWriteLock(&avc->lock);
     if (!error)
 	afs_osi_Wakeup(&avc->f.states);
-    AFS_GUNLOCK();
+    if (!locked)
+	AFS_GUNLOCK();
     return error;
 }
 #endif
