@@ -940,10 +940,12 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 			     ntohs(thishost->port)));
 		    cb->status = CB_DELAYED;
 		} else {
-		    h_Hold_r(thishost);
-		    cba[ncbas].hp = thishost;
-		    cba[ncbas].thead = cb->thead;
-		    ncbas++;
+		    if (!(thishost->hostFlags & HOSTDELETED)) {
+			h_Hold_r(thishost);
+			cba[ncbas].hp = thishost;
+			cba[ncbas].thead = cb->thead;
+			ncbas++;
+		    }
 		    TDel(cb);
 		    HDel(cb);
 		    CDel(cb, 1);	/* Usually first; so this delete 
@@ -1324,11 +1326,14 @@ BreakVolumeCallBacks(afs_uint32 volume)
 		register struct CallBack *cbnext;
 		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
 		    host = h_itoh(cb->hhead);
-		    h_Hold_r(host);
-		    cbnext = itocb(cb->cnext);
-		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
-			tthead = cb->thead;
+
+		    if (!(host->hostFlags & HOSTDELETED)) {
+			h_Hold_r(host);
+			if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
+			    tthead = cb->thead;
+			}
 		    }
+		    cbnext = itocb(cb->cnext);
 		    TDel(cb);
 		    HDel(cb);
 		    FreeCB(cb);
@@ -1475,9 +1480,11 @@ BreakLaterCallBacks(void)
 	    cbnext = itocb(cb->cnext);
 	    host = h_itoh(cb->hhead);
 	    if (cb->status == CB_DELAYED) {
-		h_Hold_r(host);
-		if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
-		    tthead = cb->thead;
+		if (!(host->hostFlags & HOSTDELETED)) {
+		    h_Hold_r(host);
+		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
+			tthead = cb->thead;
+		    }
 		}
 		TDel(cb);
 		HDel(cb);
@@ -1727,6 +1734,14 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     ViceLog(5,
 	    ("GSS: Delete longest inactive host %s\n",
 	     afs_inet_ntoa_r(hp->host, hoststr)));
+
+    if ((hp->hostFlags & HOSTDELETED)) {
+	/* hp could go away after reacquiring H_LOCK in h_NBLock_r, so we can't
+	 * really use it; its callbacks will get cleared anyway when
+	 * h_TossStuff_r gets its hands on it */
+	return 1;
+    }
+
     if (!(held = h_Held_r(hp)))
 	h_Hold_r(hp);
 

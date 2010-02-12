@@ -1054,6 +1054,7 @@ h_Enumerate(int (*proc) (), char *param)
     register struct host *host, **list;
     register int *held;
     register int i, count;
+    int totalCount;
 
     H_LOCK;
     if (hostCount == 0) {
@@ -1070,13 +1071,19 @@ h_Enumerate(int (*proc) (), char *param)
 	ViceLog(0, ("Failed malloc in h_Enumerate\n"));
 	assert(0);
     }
-    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
-	list[count] = host;
-	if (!(held[count] = h_Held_r(host)))
-	    h_Hold_r(host);
+    for (totalCount = count = 0, host = hostList;
+         host && totalCount < hostCount;
+         host = host->next, totalCount++) {
+
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    list[count] = host;
+	    if (!(held[count] = h_Held_r(host)))
+		h_Hold_r(host);
+	    count++;
+	}
     }
-    if (count != hostCount) {
-	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", count, hostCount));
+    if (totalCount != hostCount) {
+	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", totalCount, hostCount));
     } else if (host != NULL) {
 	ViceLog(0, ("h_Enumerate found more than %d hosts\n", hostCount));
 	ShutDownAndCore(PANIC);
@@ -1117,14 +1124,52 @@ h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
     if (hostCount == 0) {
 	return;
     }
+
+    host = enumstart;
+    enumstart = NULL;
+
+    /* find the first non-deleted host, so we know where to actually start
+     * enumerating */
+    for (count = 0; host && count < hostCount; count++) {
+	if (!(host->hostFlags & HOSTDELETED)) {
+	    enumstart = host;
+	    break;
+	}
+	host = host->next;
+    }
+    if (!enumstart) {
+	/* we didn't find a non-deleted host... */
+
+	if (host && count >= hostCount) {
+	    /* ...because we found a loop */
+	    ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", hostCount));
+	    ShutDownAndCore(PANIC);
+	}
+
+	/* ...because the hostList is full of deleted hosts */
+	return;
+    }
+
     if (enumstart && !(held = h_Held_r(enumstart)))
 	h_Hold_r(enumstart); 
+
     /* remember hostCount, lest it change over the potential H_LOCK drop in
      * h_Release_r */
     origHostCount = hostCount;
 
     for (count = 0, host = enumstart; host && count < origHostCount; host = next, held = nheld, count++) {
 	next = host->next;
+
+	/* find the next non-deleted host */
+	while (next && (next->hostFlags & HOSTDELETED)) {
+	    next = next->next;
+	    /* inc count for the skipped-over host */
+	    if (++count > origHostCount) {
+		ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", origHostCount));
+		ShutDownAndCore(PANIC);
+	    }
+	}
+
 	if (next && !(nheld = h_Held_r(next)))
 	    h_Hold_r(next);
 	held = (*proc) (host, held, param);
@@ -2170,7 +2215,9 @@ h_FindClient_r(struct rx_connection *tcon)
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client && client->sid == rxr_CidOf(tcon) 
-	&& client->VenusEpoch == rxr_GetEpoch(tcon)) {
+	&& client->VenusEpoch == rxr_GetEpoch(tcon)
+	&& !(client->host->hostFlags & HOSTDELETED)) {
+
 	client->refCount++;
 	h_Hold_r(client->host);
 	if (!client->deleted && client->prfail != 2) {	
