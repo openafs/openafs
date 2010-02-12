@@ -190,7 +190,8 @@ static int get_user_realm(krb5_context, char *);
 #endif
 
 #if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT) 
-extern krb5_error_code encode_krb5_enc_tkt_part (const krb5_enc_tkt_part *rep, krb5_data **code);
+extern krb5_error_code encode_krb5_enc_tkt_part (const krb5_enc_tkt_part *rep,
+						 krb5_data **code);
 
 krb5_error_code
 krb5_encrypt_tkt_part(krb5_context context,
@@ -345,12 +346,8 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
     fflush(stderr);
 }
 
-/* ANL - CMU lifetime convert routine */
-/* for K5.4.1 don't use this for now. Need to see if it is needed */
-/* maybe needed in the krb524d module as well */
-/* extern unsigned long krb_life_to_time(); */
-
-static char *copy_cellinfo(cellinfo_t *cellinfo)
+static char *
+copy_cellinfo(cellinfo_t *cellinfo)
 {
     cellinfo_t *new_cellinfo;
 
@@ -361,7 +358,9 @@ static char *copy_cellinfo(cellinfo_t *cellinfo)
 }
 
 
-static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
+static int
+get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell,
+	       char *linkedcell)
 {
     int status = AKLOG_SUCCESS;
     struct afsconf_dir *configdir;
@@ -384,16 +383,17 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
     if ((cell == NULL) || (cell[0] == 0))
 	cell = local_cell;
 
-	linkedcell[0] = '\0';
+    linkedcell[0] = '\0';
     if (afsconf_GetCellInfo(configdir, cell, NULL, cellconfig)) {
 	fprintf(stderr, "%s: Can't get information about cell %s.\n",
 		progname, cell);
 	status = AKLOG_AFS;
     }
-	if (cellconfig->linkedCell) 
-		strncpy(linkedcell,cellconfig->linkedCell,MAXCELLCHARS);
 
-    (void) afsconf_Close(configdir);
+    if (cellconfig->linkedCell)
+	strncpy(linkedcell,cellconfig->linkedCell,MAXCELLCHARS);
+
+    afsconf_Close(configdir);
 
     return(status);
 }
@@ -403,7 +403,8 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
  * doing anything.  Otherwise, log to it and mark that it has been logged
  * to.
  */
-static int auth_to_cell(krb5_context context, char *cell, char *realm)
+static int
+auth_to_cell(krb5_context context, char *cell, char *realm)
 {
     int status = AKLOG_SUCCESS;
     char username[BUFSIZ];	/* To hold client username structure */
@@ -416,7 +417,6 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     
     char local_cell[MAXCELLCHARS+1];
     char cell_to_use[MAXCELLCHARS+1]; /* Cell to authenticate to */
-    static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
     krb5_creds *v5cred = NULL;
     struct ktc_principal aserver;
@@ -451,7 +451,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
      * before we try rather than after so that we will not try
      * and fail repeatedly for one cell.
      */
-    (void)ll_string(&authedcells, ll_s_add, cell_to_use);
+    ll_string(&authedcells, ll_s_add, cell_to_use);
 
     /* 
      * Record this cell in the list of zephyr subscriptions.  We may
@@ -783,8 +783,6 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 			username, aserver.cell);
 	    }
 
-	    strcpy(lastcell, aserver.cell);
-
 	    if (!pr_Initialize (0, confname, aserver.cell))
 		    status = pr_SNameToId (username, &viceId);
 	    
@@ -795,20 +793,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		    printf("Id %d\n", (int) viceId);
 	    }
 	    
-		/*
-		 * This is a crock, but it is Transarc's crock, so
-		 * we have to play along in order to get the
-		 * functionality.  The way the afs id is stored is
-		 * as a string in the username field of the token.
-		 * Contrary to what you may think by looking at
-		 * the code for tokens, this hack (AFS ID %d) will
-		 * not work if you change %d to something else.
-		 */
 
-		/*
-		 * This code is taken from cklog -- it lets people
-		 * automatically register with the ptserver in foreign cells
-		 */
+	    /*
+	     * This code is taken from cklog -- it lets people
+	     * automatically register with the ptserver in foreign cells
+	     */
 
 #ifdef ALLOW_REGISTER
 	    if ((status == 0) && (viceId == ANONYMOUSID) &&
@@ -851,6 +840,15 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		}
 	    }
 #endif /* ALLOW_REGISTER */
+
+	    /*
+	     * This is a crock, but it is Transarc's crock, so we have to play
+	     * along in order to get the functionality.  The way the afs id is
+	     * stored is as a string in the username field of the token.
+	     * Contrary to what you may think by looking at the code for
+	     * tokens, this hack (AFS ID %d) will not work if you change %d
+	     * to something else.
+	     */
 
 	    if ((status == 0) && (viceId != ANONYMOUSID)) {
 		sprintf(username, "AFS ID %d", (int) viceId);
@@ -895,10 +893,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     return(status);
 }
 
-static int get_afs_mountpoint(char *file, char *mountpoint, int size)
+static int
+get_afs_mountpoint(char *file, char *mountpoint, int size)
 {
 #ifdef AFS_SUN_ENV
-	char V ='V'; /* AFS has problem on Sun with pioctl */
+    char V ='V'; /* AFS has problem on Sun with pioctl */
 #endif
     char our_file[MAXPATHLEN + 1];
     char *parent_dir;
@@ -952,7 +951,8 @@ static int get_afs_mountpoint(char *file, char *mountpoint, int size)
  * to be descended.  After that, it should be called with the arguemnt
  * NULL.
  */
-static char *next_path(char *origpath)
+static char *
+next_path(char *origpath)
 {
     static char path[MAXPATHLEN + 1];
     static char pathtocheck[MAXPATHLEN + 1];
@@ -1036,40 +1036,11 @@ static char *next_path(char *origpath)
     return(pathtocheck);
 }
 
-#if 0
-/*****************************************/
-int dee_gettokens()
+static void
+add_hosts(char *file)
 {
 #ifdef AFS_SUN_ENV
-	char V = 'V'; /* AFS has problem on SunOS */
-#endif
-   struct ViceIoctl vio;
-   char outbuf[BUFSIZ];
-   long ind;
-   int fd;
-
-   memset(outbuf, 0, sizeof(outbuf));
-
-   vio.out_size = sizeof(outbuf);
-   vio.in_size = sizeof(ind);
-   vio.out = outbuf;
-   vio.in = &ind;
-
-   ind = 0;
-   fd = open("dee.tok",O_WRONLY);
-   while(!pioctl(0,VIOCGETTOK,&vio,0)) {
-	write(fd,&outbuf,sizeof(outbuf)); 
-       ind++;
-   }
-   close(fd);
-}
-/*****************************************/
-#endif
-
-static void add_hosts(char *file)
-{
-#ifdef AFS_SUN_ENV
-	char V = 'V'; /* AFS has problem on SunOS */
+    char V = 'V'; /* AFS has problem on SunOS */
 #endif
     struct ViceIoctl vio;
     char outbuf[BUFSIZ];
@@ -1129,7 +1100,8 @@ static void add_hosts(char *file)
  * This routine descends through a path to a directory, logging to 
  * every cell it encounters along the way.
  */
-static int auth_to_path(krb5_context context, char *path)
+static int
+auth_to_path(krb5_context context, char *path)
 {
     int status = AKLOG_SUCCESS;
     int auth_to_cell_status = AKLOG_SUCCESS;
@@ -1214,7 +1186,8 @@ static int auth_to_path(krb5_context context, char *path)
 
 
 /* Print usage message and exit */
-static void usage(void)
+static void
+usage(void)
 {
     fprintf(stderr, "\nUsage: %s %s%s%s\n", progname,
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
@@ -1245,7 +1218,8 @@ static void usage(void)
     exit(AKLOG_USAGE);
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     krb5_context context;
     int status = AKLOG_SUCCESS;
@@ -1305,7 +1279,7 @@ int main(int argc, char *argv[])
 #endif
 
     /* Initialize list of cells to which we have authenticated */
-    (void)ll_init(&authedcells);
+    ll_init(&authedcells);
 
     /* Parse commandline arguments and make list of what to do. */
     for (i = 1; i < argc; i++) {
@@ -1427,116 +1401,84 @@ int main(int argc, char *argv[])
 	}
     }
 
-    /*
-     * The code that _used_ to be here called setpag().  When you think
-     * about this, doing this makes no sense!  setpag() allocates a PAG
-     * only for the current process, so the token installed would have
-     * not be usable in the parent!  Since ktc_SetToken() now takes a
-     * 4th argument to control whether or not we're going to allocate
-     * a PAG (and since when you do it _that_ way, it modifies the cred
-     * structure of your parent)), why don't we use that instead?
-     */
-
-#if 0
-    if (afssetpag) {
-	   status = setpag();
-	   if (dflag) { 
-	     int i,j;
-		 int gidsetlen = 50;
-         int gidset[50];
-
-		 printf("setpag %d\n",status);
-	     j = getgroups(gidsetlen,gidset);
-         printf("Groups(%d):",j);
-         for (i = 0; i<j; i++) {
-           printf("%d",gidset[i]);
-           if((i+1)<j) printf(",");
-         }
-         printf("\n");
-	   }
-	}
-#endif
     /* If nothing was given, log to the local cell. */
     if ((cells.nelements + paths.nelements) == 0) {
-		struct passwd *pwd;
+	struct passwd *pwd;
 
-		status = auth_to_cell(context, NULL, NULL);
+	status = auth_to_cell(context, NULL, NULL);
 	
-	 	/* If this cell is linked to a DCE cell, and user 
-		 * requested -linked, get tokens for both 
-		 * This is very usefull when the AFS cell is linked to a DFS 
-	         * cell and this system does not also have DFS. 
-	         */
+	/* If this cell is linked to a DCE cell, and user requested -linked,
+	 * get tokens for both. This is very useful when the AFS cell is
+	 * linked to a DFS cell and this system does not also have DFS.
+	 */
 
-		if (!status && linked && linkedcell[0]) {
-				strncpy(linkedcell2,linkedcell,MAXCELLCHARS);
-			    if (dflag) {
-			        printf("Linked cell: %s\n", linkedcell);
-			    }
-				status = auth_to_cell(context, linkedcell2, NULL);
-		}
-
-		/*
-		 * Local hack - if the person has a file in their home
-		 * directory called ".xlog", read that for a list of
-		 * extra cells to authenticate to
-		 */
-
-		if ((pwd = getpwuid(getuid())) != NULL) {
-		    struct stat sbuf;
-		    FILE *f;
-		    char fcell[100], xlog_path[512];
-
-		    strcpy(xlog_path, pwd->pw_dir);
-		    strcat(xlog_path, "/.xlog");
-
-		    if ((stat(xlog_path, &sbuf) == 0) &&
-			((f = fopen(xlog_path, "r")) != NULL)) {
-
-			if (dflag) {
-			    printf("Reading %s for cells to "
-				    "authenticate to.\n", xlog_path);
-			}
-
-			while (fgets(fcell, 100, f) != NULL) {
-			    int auth_status;
-
-			    fcell[strlen(fcell) - 1] = '\0';
-
-			    if (dflag) {
-				printf("Found cell %s in %s.\n",
-					fcell, xlog_path);
-			    }
-
-			    auth_status = auth_to_cell(context, fcell, NULL);
-			    if (status == AKLOG_SUCCESS)
-				status = auth_status;
-			    else
-				status = AKLOG_SOMETHINGSWRONG;
-			}
-		    }
-		}
+	if (!status && linked && linkedcell[0]) {
+	    strncpy(linkedcell2,linkedcell,MAXCELLCHARS);
+	    if (dflag) {
+		printf("Linked cell: %s\n", linkedcell);
+	    }
+	    status = auth_to_cell(context, linkedcell2, NULL);
 	}
+
+	/*
+	 * Local hack - if the person has a file in their home
+	 * directory called ".xlog", read that for a list of
+	 * extra cells to authenticate to
+	 */
+
+	if ((pwd = getpwuid(getuid())) != NULL) {
+	    struct stat sbuf;
+	    FILE *f;
+	    char fcell[100], xlog_path[512];
+
+	    strcpy(xlog_path, pwd->pw_dir);
+	    strcat(xlog_path, "/.xlog");
+
+	    if ((stat(xlog_path, &sbuf) == 0) &&
+		((f = fopen(xlog_path, "r")) != NULL)) {
+
+		if (dflag) {
+		    printf("Reading %s for cells to authenticate to.\n",
+			   xlog_path);
+		}
+
+		while (fgets(fcell, 100, f) != NULL) {
+		    int auth_status;
+
+		    fcell[strlen(fcell) - 1] = '\0';
+
+		    if (dflag) {
+			printf("Found cell %s in %s.\n", fcell, xlog_path);
+		    }
+
+		    auth_status = auth_to_cell(context, fcell, NULL);
+		    if (status == AKLOG_SUCCESS)
+			status = auth_status;
+		    else
+			status = AKLOG_SOMETHINGSWRONG;
+		}
+	    }
+	}
+    }
     else {
 	/* Log to all cells in the cells list first */
 	for (cur_node = cells.first; cur_node; cur_node = cur_node->next) {
 	    memcpy((char *)&cellinfo, cur_node->data, sizeof(cellinfo));
 	    if ((status = auth_to_cell(context, cellinfo.cell, cellinfo.realm)))
 		somethingswrong++;
-		else {
-			if (linked && linkedcell[0]) {
-				strncpy(linkedcell2,linkedcell,MAXCELLCHARS);
-                if (dflag) {
-                    printf("Linked cell: %s\n",
-                        linkedcell);
-                }
-				if ((status = auth_to_cell(context,linkedcell2,
-							 cellinfo.realm)))
-				somethingswrong++;
-			}
+	    else {
+		if (linked && linkedcell[0]) {
+		    strncpy(linkedcell2,linkedcell,MAXCELLCHARS);
+		    if (dflag) {
+			printf("Linked cell: %s\n", linkedcell);
+                    }
+		    if ((status = auth_to_cell(context,linkedcell2,
+					       cellinfo.realm)))
+			somethingswrong++;
 		}
+	    }
 	}
-	
+
 	/* Then, log to all paths in the paths list */
 	for (cur_node = paths.first; cur_node; cur_node = cur_node->next) {
 	    if ((status = auth_to_path(context, cur_node->data)))
@@ -1567,7 +1509,8 @@ int main(int argc, char *argv[])
     exit(status);
 }
 
-static int isdir(char *path, unsigned char *val)
+static int
+isdir(char *path, unsigned char *val)
 {
     struct stat statbuf;
 
@@ -1582,15 +1525,16 @@ static int isdir(char *path, unsigned char *val)
     }  
 }
 
-static krb5_error_code get_credv5_akimpersonate(krb5_context context,
-						char* keytab,
-						krb5_principal service_principal,
-						krb5_principal client_principal,
-						time_t starttime,
-						time_t endtime,
-						int *allowed_enctypes,
-						int *paddress,
-						krb5_creds** out_creds /* out */ )
+static krb5_error_code
+get_credv5_akimpersonate(krb5_context context,
+			 char* keytab,
+			 krb5_principal service_principal,
+			 krb5_principal client_principal,
+			 time_t starttime,
+			 time_t endtime,
+			 int *allowed_enctypes,
+			 int *paddress,
+			 krb5_creds** out_creds /* out */ )
 {
 #if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT) && defined(HAVE_ENCODE_KRB5_TICKET) && defined(HAVE_KRB5_C_ENCRYPT))
     krb5_error_code code;
@@ -1903,9 +1847,9 @@ out:
 }
 
 
-static krb5_error_code get_credv5(krb5_context context, 
-				  char *name, char *inst, char *realm,
-				  krb5_creds **creds)
+static krb5_error_code
+get_credv5(krb5_context context, char *name, char *inst, char *realm,
+	   krb5_creds **creds)
 {
     krb5_creds increds;
     krb5_error_code r;
@@ -1967,7 +1911,8 @@ static krb5_error_code get_credv5(krb5_context context,
 }
 
 
-static int get_user_realm(krb5_context context, char *realm)
+static int
+get_user_realm(krb5_context context, char *realm)
 {
     static krb5_principal client_principal = 0;
     int i;
