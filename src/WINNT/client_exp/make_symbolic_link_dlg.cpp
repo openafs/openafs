@@ -68,9 +68,7 @@ END_MESSAGE_MAP()
 
 void CMakeSymbolicLinkDlg::OnOK() 
 {
-    char space[64];
     UINT code;
-    int i;
     UpdateData(TRUE);
     CString strName;
     CString strTarget;
@@ -79,23 +77,23 @@ void CMakeSymbolicLinkDlg::OnOK()
     if (!IsPathInAfs(m_sBase)) {
         MessageBeep((UINT)-1);
         strTarget+=" - Path is not in AFS directory";
-        AfxMessageBox(strTarget,MB_OK);
+        AfxMessageBox(strTarget,MB_ICONERROR);
         return;
     } 
     if (m_sBase.GetLength()>MAX_PATH-2)
     {
         MessageBeep((UINT)-1);
-        ShowMessageBox(IDS_CURRENT_DIRECTORY_PATH_TOO_LONG,MB_OK,IDS_CURRENT_DIRECTORY_PATH_TOO_LONG);
+        ShowMessageBox(IDS_CURRENT_DIRECTORY_PATH_TOO_LONG,MB_ICONERROR,IDS_CURRENT_DIRECTORY_PATH_TOO_LONG);
     }
     if (!SetCurrentDirectory(m_sBase))
     {
         MessageBeep((UINT)-1);
-        ShowMessageBox(IDS_UNABLE_TO_SET_CURRENT_DIRECTORY,MB_OK,IDS_UNABLE_TO_SET_CURRENT_DIRECTORY);
+        ShowMessageBox(IDS_UNABLE_TO_SET_CURRENT_DIRECTORY,MB_ICONERROR,IDS_UNABLE_TO_SET_CURRENT_DIRECTORY);
         return;
     }
     if ((code=MakeSymbolicLink(strName,strTarget))!=0){
         MessageBeep((UINT)-1);
-        ShowMessageBox(IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK,MB_OK,IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK,code);
+        ShowMessageBox(IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK,MB_ICONERROR,IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK,GetAfsError(code, strName));
         return;
     }
     CDialog::OnOK();
