@@ -1757,7 +1757,7 @@ extern char **environ;
 static void
 ktc_LocalCell(void)
 {
-    int code;
+    int code = 0;
     struct afsconf_dir *conf;
 
     if ((conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))
