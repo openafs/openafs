@@ -882,6 +882,61 @@ out:
     return status;
 }
 
+static int
+get_kernel_token(struct afsconf_cell *cell, struct ktc_token **tokenPtr) {
+    struct ktc_principal client, server;
+    struct ktc_token *token;
+    int ret;
+
+    *tokenPtr = NULL;
+
+    strncpy(server.name, AFSKEY, MAXKTCNAMELEN - 1);
+    strncpy(server.instance, AFSINST, MAXKTCNAMELEN - 1);
+    strncpy(server.cell, cell->name, MAXKTCREALMLEN - 1);
+
+    token = malloc(sizeof(struct ktc_token));
+    if (token == NULL)
+	return ENOMEM;
+
+    memset(token, 0, sizeof(struct ktc_token));
+
+    ret = ktc_GetToken(&server, token, sizeof(struct ktc_token), &client);
+    if (ret) {
+	free(token);
+	return ret;
+    }
+
+    *tokenPtr = token;
+    return 0;
+}
+
+static int
+set_kernel_token(struct afsconf_cell *cell, char *username,
+		 struct ktc_token *token, int setpag)
+{
+    struct ktc_principal client, server;
+
+    strncpy(client.name, username, MAXKTCNAMELEN - 1);
+    strcpy(client.instance, "");
+    strncpy(client.cell, cell->name, MAXKTCREALMLEN - 1);
+
+    strncpy(server.name, AFSKEY, MAXKTCNAMELEN - 1);
+    strncpy(server.instance, AFSINST, MAXKTCNAMELEN - 1);
+    strncpy(server.cell, cell->name, MAXKTCREALMLEN - 1);
+
+    return ktc_SetToken(&server, token, &client, setpag);
+}
+
+static int
+tokens_equal(struct ktc_token *tokenA, struct ktc_token *tokenB) {
+    return (tokenA != NULL && tokenB != NULL &&
+	    tokenA->kvno == tokenB->kvno &&
+	    tokenA->ticketLen == tokenB->ticketLen &&
+	    !memcmp(&tokenA->sessionKey, &tokenB->sessionKey,
+		    sizeof(tokenA->sessionKey)) &&
+	    !memcmp(tokenA->ticket, tokenB->ticket, tokenA->ticketLen));
+}
+
 /* 
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
@@ -896,10 +951,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     afs_int32 viceId;		/* AFS uid of user */
 
     char *local_cell = NULL;
-    struct ktc_principal aserver;
-    struct ktc_principal aclient;
     struct ktc_token *token;
-    struct ktc_token btoken;
+    struct ktc_token *btoken;
     struct afsconf_cell cellconf;
 
     /* NULL or empty cell returns information on local cell */
@@ -956,18 +1009,10 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	if (status)
 	    return status;
 
-	strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
-	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
-	strncpy(aserver.cell, cellconf.name, MAXKTCREALMLEN - 1);
 
 	if (!force &&
-	    !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
-	    token->kvno == btoken.kvno &&
-	    token->ticketLen == btoken.ticketLen &&
-	    !memcmp(&token->sessionKey, &btoken.sessionKey,
-		    sizeof(token->sessionKey)) &&
-	    !memcmp(token->ticket, btoken.ticket, token->ticketLen)) {
-
+	    !get_kernel_token(&cellconf, &btoken) &&
+	    tokens_equal(token, btoken)) {
 	    dprintf("Identical tokens already exist; skipping.\n");
 	    status = AKLOG_SUCCESS;
 	    goto out;
@@ -982,11 +1027,11 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	}
 	else {
 	    dprintf("About to resolve name %s to id in cell %s.\n", username,
-		    aserver.cell);
+		    cellconf.name);
 
-	    if (!pr_Initialize (0,  AFSDIR_CLIENT_ETC_DIRPATH, aserver.cell))
+	    if (!pr_Initialize (0,  AFSDIR_CLIENT_ETC_DIRPATH, cellconf.name))
 		status = pr_SNameToId (username, &viceId);
-	    
+
 	    if (status)
 		dprintf("Error %d\n", status);
 	    else
@@ -1003,10 +1048,9 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		dprintf("doing first-time registration of %s at %s\n",
 			username, cellconf.name);
 		viceId = 0;
-		strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
-		strcpy(aclient.instance, "");
-		strncpy(aclient.cell, cellconf.name, MAXKTCREALMLEN - 1);
-		if ((status = ktc_SetToken(&aserver, token, &aclient, 0))) {
+
+		status = set_kernel_token(&cellconf, username, token, 0);
+		if (status) {
 		    afs_com_err(progname, status,
 				"while obtaining tokens for cell %s",
 		                cellconf.name);
@@ -1021,7 +1065,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		 */
 
 		if ((status = pr_Initialize(1L,  AFSDIR_CLIENT_ETC_DIRPATH,
-					    aserver.cell))) {
+					    cellconf.name))) {
 		    printf("Error %d\n", status);
 		}
 
@@ -1054,26 +1098,18 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 
 	dprintf("Set username to %s\n", username);
 
-	/* Reset the "aclient" structure before we call ktc_SetToken.
-	 * This structure was first set by the ktc_GetToken call when
-	 * we were comparing whether identical tokens already existed.
-	 */
-	strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
-	strcpy(aclient.instance, "");
-	strncpy(aclient.cell, cellconf.name, MAXKTCREALMLEN - 1);
-
-	dprintf("Setting tokens. %s / %s @ %s \n", aclient.name,
-		aclient.instance, aclient.cell );
+	dprintf("Setting tokens. %s @ %s \n", username, cellconf.name);
 
 #ifndef AFS_AIX51_ENV
-	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
+	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
 	 * this routine, it will not add the token. It is not clear what 
 	 * is going on here! So we will do the following operation.
 	 * On AIX 5, it causes the parent program to die, so we won't.
 	 */
 	write(2,"",0); /* dummy write */
 #endif
-	if ((status = ktc_SetToken(&aserver, token, &aclient, afssetpag))) {
+	status = set_kernel_token(&cellconf, username, token, afssetpag);
+	if (status) {
 	    afs_com_err(progname, status, "while obtaining tokens for cell %s",
 			cellconf.name);
 	    status = AKLOG_TOKEN;
