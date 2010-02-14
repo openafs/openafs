@@ -157,7 +157,11 @@ puniondef(definition * def)
     if (decl && !streq(decl->type, "void")) {
 	pdeclaration(name, decl, 2);
     }
-    f_print(fout, "\t} %s_u;\n", name);
+    if (brief_flag) {
+	f_print(fout, "\t} u;\n");
+    } else {
+	f_print(fout, "\t} %s_u;\n", name);
+    }
     f_print(fout, "};\n");
     f_print(fout, "typedef struct %s %s;\n", name, name);
     STOREVAL(&uniondef_defined, def);
@@ -345,7 +349,7 @@ ptypedef(definition * def)
 	if (streq(old, "string")) {
 	    old = "char";
 	    rel = REL_POINTER;
-	} else if (streq(old, "opaque")) {
+	} else if (!brief_flag && streq(old, "opaque")) {
 	    old = "char";
 	} else if (streq(old, "bool")) {
 	    old = "bool_t";
@@ -358,10 +362,21 @@ ptypedef(definition * def)
 	f_print(fout, "typedef ");
 	switch (rel) {
 	case REL_ARRAY:
-	    f_print(fout, "struct %s {\n", name);
-	    f_print(fout, "\tu_int %s_len;\n", name);
-	    f_print(fout, "\t%s%s *%s_val;\n", prefix, old, name);
-	    f_print(fout, "} %s", name);
+	    if (brief_flag) {
+	        if (streq(old, "opaque")) {
+		    f_print(fout, "struct rx_opaque %s", name);
+		} else {
+		    f_print(fout, "struct {\n");
+		    f_print(fout, "\tu_int len;\n");
+		    f_print(fout, "\t%s%s *val;\n", prefix, old);
+		    f_print(fout, "} %s", name);
+		}
+	    } else {
+	        f_print(fout, "struct %s {\n", name);
+		f_print(fout, "\tu_int %s_len;\n", name);
+		f_print(fout, "\t%s%s *%s_val;\n", prefix, old, name);
+	        f_print(fout, "} %s", name);
+	    }
 	    break;
 	case REL_POINTER:
 	    f_print(fout, "%s%s *%s", prefix, old, name);
@@ -422,13 +437,27 @@ pdeclaration(char *name, declaration * dec, int tab)
 	    f_print(fout, "%s%s *%s", prefix, type, dec->name);
 	    break;
 	case REL_ARRAY:
-	    f_print(fout, "struct %s {\n", dec->name);
-	    tabify(fout, tab);
-	    f_print(fout, "\tu_int %s_len;\n", dec->name);
-	    tabify(fout, tab);
-	    f_print(fout, "\t%s%s *%s_val;\n", prefix, type, dec->name);
-	    tabify(fout, tab);
-	    f_print(fout, "} %s", dec->name);
+	    if (brief_flag) {
+		if (streq(dec->type, "opaque")) {
+		    f_print(fout, "struct rx_opaque %s",dec->name);
+		} else {
+		    f_print(fout, "struct {\n");
+		    tabify(fout, tab);
+		    f_print(fout, "\tu_int len;\n");
+		    tabify(fout, tab);
+		    f_print(fout, "\t%s%s *val;\n", prefix, type);
+		    tabify(fout, tab);
+		    f_print(fout, "} %s", dec->name);
+		}
+	    } else {
+		f_print(fout, "struct %s {\n", dec->name);
+		tabify(fout, tab);
+		f_print(fout, "\tu_int %s_len;\n", dec->name);
+		tabify(fout, tab);
+		f_print(fout, "\t%s%s *%s_val;\n", prefix, type, dec->name);
+		tabify(fout, tab);
+		f_print(fout, "} %s", dec->name);
+	    }
 	    break;
 	}
     }
