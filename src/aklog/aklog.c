@@ -63,6 +63,9 @@
 #include <pwd.h>
 
 #include <afs/stds.h>
+#include <afs/ktc.h>
+#include <afs/token.h>
+
 #include <krb5.h>
 #if defined(HAVE_ET_COM_ERR_H)
 #include <et/com_err.h>
@@ -671,9 +674,10 @@ out:
  */
 static int
 rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
-			 struct ktc_token **tokenPtr, char **userPtr) {
+			 struct ktc_tokenUnion **tokenPtr, char **userPtr) {
     char username[BUFSIZ];
-    struct ktc_token *token;
+    struct ktc_tokenUnion *token;
+    struct token_rxkad *rxkadToken;
 #ifdef HAVE_NO_KRB5_524
     char *p;
     int len;
@@ -721,19 +725,28 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     }
 #endif
 
-    token = malloc(sizeof(struct ktc_token));
+    token = malloc(sizeof(struct ktc_tokenUnion));
     if (token == NULL)
 	return ENOMEM;
 
-    memset(token, 0, sizeof(struct ktc_token));
+    memset(token, 0, sizeof(struct ktc_tokenUnion));
 
-    token->kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
-    token->startTime = v5cred->times.starttime;;
-    token->endTime = v5cred->times.endtime;
-    memcpy(&token->sessionKey, get_cred_keydata(v5cred),
+    token->at_type = AFSTOKEN_UNION_KAD;
+    rxkadToken = &token->ktc_tokenUnion_u.at_kad;
+
+    rxkadToken->rk_kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+    rxkadToken->rk_begintime = v5cred->times.starttime;;
+    rxkadToken->rk_endtime = v5cred->times.endtime;
+    memcpy(&rxkadToken->rk_key, get_cred_keydata(v5cred),
 	   get_cred_keylen(v5cred));
-    token->ticketLen = v5cred->ticket.length;
-    memcpy(token->ticket, v5cred->ticket.data, token->ticketLen);
+    rxkadToken->rk_ticket.rk_ticket_len = v5cred->ticket.length;
+    rxkadToken->rk_ticket.rk_ticket_val = malloc(v5cred->ticket.length);
+    if (rxkadToken->rk_ticket.rk_ticket_val == NULL) {
+	free(token);
+	return ENOMEM;
+    }
+    memcpy(rxkadToken->rk_ticket.rk_ticket_val, v5cred->ticket.data,
+	   rxkadToken->rk_ticket.rk_ticket_len);
 
     *tokenPtr = token;
     *userPtr = strdup(username);
@@ -765,7 +778,7 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 #ifdef HAVE_NO_KRB5_524
 static int
 rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
-			  struct ktc_token **tokenPtr, char **userPtr) {
+			  struct ktc_tokenUnion **tokenPtr, char **userPtr) {
     *tokenPtr = NULL;
     *userPtr = NULL;
 
@@ -774,10 +787,11 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
 #else
 static int
 rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
-			  struct ktc_token **tokenPtr, char **userPtr) {
+			  struct ktc_tokenUnion **tokenPtr, char **userPtr) {
     CREDENTIALS cred;
     char username[BUFSIZ];
-    struct ktc_token *token;
+    struct ktc_tokenUnion *token;
+    struct token_rxkad *rxkadToken;
     int status;
 
     *tokenPtr = NULL;
@@ -799,11 +813,16 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
 	strcat (username, cred.pinst);
     }
 
-    token = malloc(sizeof(struct ktc_token));
-    memset(token, 0, sizeof(struct ktc_token));
+    token = malloc(sizeof(struct ktc_tokenUnion));
+    if (token == NULL)
+	return ENOMEM;
+    memset(token, 0, sizeof(struct ktc_tokenUnion));
 
-    token->kvno = cred.kvno;
-    token->startTime = cred.issue_date;
+    token->at_type = AFSTOKEN_UNION_KAD;
+
+    rxkadToken = &token->ktc_tokenUnion_u.at_kad;
+    rxkadToken->rk_kvno = cred.kvno;
+    rxkadToken->rk_begintime = cred.issue_date;
     /*
      * It seems silly to go through a bunch of contortions to
      * extract the expiration time, when the v5 credentials already
@@ -812,10 +831,19 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
      * Note that this isn't a security hole, as the expiration time
      * is also contained in the encrypted token
      */
-    token->endTime = v5cred->times.endtime;
-    memcpy(&token->sessionKey, cred.session, 8);
-    token->ticketLen = cred.ticket_st.length;
-    memcpy(token->ticket, cred.ticket_st.dat, token->ticketLen);
+    rxkadToken->rk_endtime = v5cred->times.endtime;
+    memcpy(&rxkadToken->rk_key, cred.session, 8);
+    rxkadToken->rk_ticket.rk_ticket_len = cred.ticket_st.length;
+    rxkadToken->rk_ticket.rk_ticket_val = malloc(cred.ticket_st.length);
+    if (rxkadToken->rk_ticket.rk_ticket_val == NULL) {
+	free(token);
+	return ENOMEM;
+    }
+    memcpy(rxkadToken->rk_ticket.rk_ticket_val, cred.ticket_st.dat,
+	   rxkadToken->rk_ticket.rk_ticket_len);
+
+    *tokenPtr = token;
+    *userPtr = strdup(username);
 
     return 0;
 }
@@ -846,7 +874,7 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
  */
 static int
 rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
-		struct ktc_token **token, char **authuser, int *foreign) {
+		struct ktc_tokenUnion **token, char **authuser, int *foreign) {
     krb5_creds *v5cred;
     char *realmUsed = NULL;
     char *username = NULL;
@@ -891,6 +919,18 @@ out:
     return status;
 }
 
+/*!
+ * Get the set of tokens for a given cell out of the cache manager
+ *
+ * @param[in] cell
+ * 	The cellconf structure for the cell to retrieve tokens for
+ * @param[out] tokenPtr
+ * 	The tokens held for that cell
+ *
+ * @returns
+ * 	0 on success, otherwise an error code
+ */
+
 static int
 get_kernel_token(struct afsconf_cell *cell, struct ktc_token **tokenPtr) {
     struct ktc_principal client, server;
@@ -919,31 +959,20 @@ get_kernel_token(struct afsconf_cell *cell, struct ktc_token **tokenPtr) {
     return 0;
 }
 
+/**
+ * Return true if a pair of tokens are directly equivalent
+ */
 static int
-set_kernel_token(struct afsconf_cell *cell, char *username,
-		 struct ktc_token *token, int setpag)
-{
-    struct ktc_principal client, server;
-
-    strncpy(client.name, username, MAXKTCNAMELEN - 1);
-    strcpy(client.instance, "");
-    strncpy(client.cell, cell->name, MAXKTCREALMLEN - 1);
-
-    strncpy(server.name, AFSKEY, MAXKTCNAMELEN - 1);
-    strncpy(server.instance, AFSINST, MAXKTCNAMELEN - 1);
-    strncpy(server.cell, cell->name, MAXKTCREALMLEN - 1);
-
-    return ktc_SetToken(&server, token, &client, setpag);
-}
-
-static int
-tokens_equal(struct ktc_token *tokenA, struct ktc_token *tokenB) {
-    return (tokenA != NULL && tokenB != NULL &&
+tokens_equal(struct ktc_setTokenData *tokenA, struct ktc_token *tokenB) {
+   return 0;
+/* Bodge bodge bodge
+   return (tokenA != NULL && tokenB != NULL &&
 	    tokenA->kvno == tokenB->kvno &&
 	    tokenA->ticketLen == tokenB->ticketLen &&
 	    !memcmp(&tokenA->sessionKey, &tokenB->sessionKey,
 		    sizeof(tokenA->sessionKey)) &&
 	    !memcmp(tokenA->ticket, tokenB->ticket, tokenA->ticketLen));
+*/
 }
 
 /*
@@ -960,7 +989,8 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     afs_int32 viceId;		/* AFS uid of user */
 
     char *local_cell = NULL;
-    struct ktc_token *token;
+    struct ktc_tokenUnion *rxkadToken = NULL;
+    struct ktc_setTokenData *token;
     struct ktc_token *btoken;
     struct afsconf_cell cellconf;
 
@@ -1017,11 +1047,24 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	afs_dprintf("Authenticating to cell %s (server %s).\n", cellconf.name,
 		cellconf.hostName[0]);
 
-	status = rxkad_get_token(context, &cellconf, realm, &token,
+	token = token_buildTokenJar(cellconf.name);
+	if (token == NULL) {
+	    status = ENOMEM;
+	    goto out;
+	}
+
+	status = rxkad_get_token(context, &cellconf, realm, &rxkadToken,
 				 &username, &isForeign);
 	if (status)
-	    return status;
+	    goto out;
 
+	/* We need to keep the token structure around so that we can stick
+	 * the viceId into it (once we know it) */
+	status = token_addToken(token, rxkadToken);
+	if (status) {
+	    afs_dprintf("Add Token failed with %d", status);
+	    goto out;
+	}
 
 	if (!force &&
 	    !get_kernel_token(&cellconf, &btoken) &&
@@ -1062,7 +1105,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 			username, cellconf.name);
 		viceId = 0;
 
-		status = set_kernel_token(&cellconf, username, token, 0);
+		status = ktc_SetTokenEx(token);
 		if (status) {
 		    afs_com_err(progname, status,
 				"while obtaining tokens for cell %s",
@@ -1073,7 +1116,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		/*
 		 * In case you're wondering, we don't need to change the
 		 * filename here because we're still connecting to the
-		 * same cell -- we're just using a different authentication
+		 * same cell -- we're just using a different authenticat ion
 		 * level
 		 */
 
@@ -1095,26 +1138,11 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    }
 #endif /* ALLOW_REGISTER */
 
-	    /*
-	     * This is a crock, but it is Transarc's crock, so we have to play
-	     * along in order to get the functionality.  The way the afs id is
-	     * stored is as a string in the username field of the token.
-	     * Contrary to what you may think by looking at the code for
-	     * tokens, this hack (AFS ID %d) will not work if you change %d
-	     * to something else.
-	     */
-
 	    if ((status == 0) && (viceId != ANONYMOUSID)) {
-		free(username);
-		if (afs_asprintf(&username, "AFS ID %d", (int) viceId) < 0) {
-		    status = ENOMEM;
-		    username = NULL;
-		    goto out;
-		}
+		rxkadToken->ktc_tokenUnion_u.at_kad.rk_viceid = viceId;
+		token_replaceToken(token, rxkadToken);
 	    }
 	}
-
-	afs_dprintf("Set username to %s\n", username);
 
 	afs_dprintf("Setting tokens. %s @ %s \n", username, cellconf.name);
 
@@ -1126,9 +1154,10 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	 */
 	write(2,"",0); /* dummy write */
 #endif
-	status = set_kernel_token(&cellconf, username, token, afssetpag);
+	token_setPag(token, afssetpag);
+	status = ktc_SetTokenEx(token);
 	if (status) {
-	    afs_com_err(progname, status, "while obtaining tokens for cell %s",
+	    afs_com_err(progname, status, "while setting tokens for cell %s",
 			cellconf.name);
 	    status = AKLOG_TOKEN;
 	}
@@ -1137,6 +1166,11 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	afs_dprintf("Noauth mode; not authenticating.\n");
 
 out:
+    if (rxkadToken) {
+	free(rxkadToken->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val);
+	free(rxkadToken);
+    }
+
     if (local_cell)
 	free(local_cell);
     if (username)
