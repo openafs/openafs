@@ -52,6 +52,8 @@ XDROBJS =\
 	xdr_array.o \
 	xdr_arrayn.o \
 	xdr_rx.o \
+	xdr_mem.o \
+	xdr_len.o \
 	xdr_int32.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
@@ -238,6 +240,9 @@ xdr_arrayn.o: ${RX}/xdr_arrayn.c
 
 xdr_float.o: ${RX}/xdr_float.c
 	${CCRULE} ${RX}/xdr_float.c
+
+xdr_len.o: ${RX}/xdr_len.c
+	${CCRULE} ${RX}/xdr_len.c
 
 xdr_mem.o: ${RX}/xdr_mem.c
 	${CCRULE} ${RX}/xdr_mem.c
