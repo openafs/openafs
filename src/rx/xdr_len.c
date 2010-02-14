@@ -25,7 +25,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <stdlib.h>
+#ifdef KERNEL
+# include "afs/sysincludes.h"
+#else
+# include <stdlib.h>
+#endif
+
 #include "xdr.h"
 
 static void

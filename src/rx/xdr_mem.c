@@ -29,9 +29,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#ifndef	NeXT
-
 /*
  * xdr_mem.h, XDR implementation using memory buffers.
  *
@@ -43,10 +40,14 @@
  *
  */
 
-#include <string.h>
-#include <limits.h>
-#ifndef AFS_NT40_ENV
-# include <netinet/in.h>
+#ifdef KERNEL
+# include "afs/sysincludes.h"
+#else
+# include <string.h>
+# include <limits.h>
+# ifndef AFS_NT40_ENV
+#  include <netinet/in.h>
+# endif
 #endif
 
 #include "xdr.h"
@@ -194,4 +195,3 @@ xdrmem_inline(AFS_XDRS_T axdrs, u_int len)
     }
     return (buf);
 }
-#endif /* NeXT */
