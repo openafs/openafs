@@ -27,6 +27,7 @@
 #include "afs/vice.h"
 #include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
+#include "token.h"
 
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
@@ -149,6 +150,23 @@ afs_pd_inline(struct afs_pdata *apd, size_t bytes)
     return ret;
 }
 
+static_inline void
+afs_pd_xdrStart(struct afs_pdata *apd, XDR *xdrs, enum xdr_op op) {
+    xdrmem_create(xdrs, apd->ptr, apd->remaining, op);
+}
+
+static_inline void
+afs_pd_xdrEnd(struct afs_pdata *apd, XDR *xdrs) {
+    size_t pos;
+
+    pos = xdr_getpos(xdrs);
+    apd->ptr += pos;
+    apd->remaining -= pos;
+    xdr_destroy(xdrs);
+}
+
+
+
 static_inline int
 afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen)
 {
@@ -245,6 +263,7 @@ DECL_PIOCTL(PGetFileCell);
 DECL_PIOCTL(PGetWSCell);
 DECL_PIOCTL(PGetUserCell);
 DECL_PIOCTL(PSetTokens);
+DECL_PIOCTL(PSetTokens2);
 DECL_PIOCTL(PGetVolumeStatus);
 DECL_PIOCTL(PSetVolumeStatus);
 DECL_PIOCTL(PFlush);
@@ -405,7 +424,7 @@ static pioctlFunction CpioctlSw[] = {
     PDiscon,                    /* 5 -- get/set discon mode */
     PBogus,                     /* 6 */
     PBogus,                     /* 7 */
-    PBogus,                     /* 8 */
+    PSetTokens2,                /* 8 */
     PNewUuid,                   /* 9 */
     PBogus,                     /* 10 */
     PBogus,                     /* 11 */
@@ -1769,6 +1788,47 @@ DECL_PIOCTL(PGetUserCell)
     return 0;
 }
 
+/* Work out which cell we're changing tokens for */
+static_inline int
+_settok_tokenCell(char *cellName, int *cellNum, int *primary) {
+    int t1;
+    struct cell *cell;
+
+    if (cellName && strlen(cellName) > 0) {
+	cell = afs_GetCellByName(cellName, READ_LOCK);
+    } else {
+	cell = afs_GetPrimaryCell(READ_LOCK);
+	if (primary)
+	    *primary = 1;
+    }
+    if (!cell) {
+	t1 = afs_initState;
+	if (t1 < 101)
+	    return EIO;
+	else
+	    return ESRCH;
+    }
+    *cellNum = cell->cellNum;
+    afs_PutCell(cell, READ_LOCK);
+
+    return 0;
+}
+
+
+static_inline int
+_settok_setParentPag(afs_ucred_t **cred) {
+    afs_uint32 pag;
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+    char procname[256];
+    osi_procname(procname, 256);
+    afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
+	         MyPidxx2Pid(MyPidxx), procname);
+    return setpag(osi_curporc(), cred, -1, &pag, 1);
+#else
+    return setpag(cred, -1, &pag, 1);
+#endif
+}
+
 /*!
  * VIOCSETTOK (3) - Set authentication tokens
  *
@@ -1791,10 +1851,11 @@ DECL_PIOCTL(PGetUserCell)
  */
 DECL_PIOCTL(PSetTokens)
 {
-    afs_int32 i;
+    afs_int32 cellNum;
+    afs_int32 size;
+    afs_int32 code;
     struct unixuser *tu;
     struct ClearToken clear;
-    struct cell *tcell;
     char *stp;
     char *cellName;
     int stLen;
@@ -1815,9 +1876,9 @@ DECL_PIOCTL(PSetTokens)
     if (afs_pd_skip(ain, stLen) != 0)
 	return EINVAL;
 
-    if (afs_pd_getInt(ain, &i) != 0)
+    if (afs_pd_getInt(ain, &size) != 0)
 	return EINVAL;
-    if (i != sizeof(struct ClearToken))
+    if (size != sizeof(struct ClearToken))
 	return EINVAL;
 
     if (afs_pd_getBytes(ain, &clear, sizeof(struct ClearToken)) !=0)
@@ -1843,36 +1904,25 @@ DECL_PIOCTL(PSetTokens)
 	if (afs_pd_getStringPtr(ain, &cellName) != 0)
 	    return EINVAL;
 
-	/* rest is cell name, look it up */
-	tcell = afs_GetCellByName(cellName, READ_LOCK);
-	if (!tcell)
-	    goto nocell;
+	code = _settok_tokenCell(cellName, &cellNum, NULL);
+	if (code)
+	    return code;
     } else {
 	/* default to primary cell, primary id */
-	flag = 1;		/* primary id */
-	tcell = afs_GetPrimaryCell(READ_LOCK);
-	if (!tcell)
-	    goto nocell;
+	code = _settok_tokenCell(NULL, &cellNum, &flag);
+	if (code)
+	    return code;
     }
-    i = tcell->cellNum;
-    afs_PutCell(tcell, READ_LOCK);
+
     if (set_parent_pag) {
-	afs_uint32 pag;
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	char procname[256];
-	osi_procname(procname, 256);
-	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
-		     MyPidxx2Pid(MyPidxx), procname);
-	if (!setpag(osi_curproc(), acred, -1, &pag, 1)) {
-#else
-	if (!setpag(acred, -1, &pag, 1)) {
-#endif
+	if (_settok_setParentPag(acred) == 0) {
 	    afs_InitReq(&treq, *acred);
 	    areq = &treq;
 	}
     }
+
     /* now we just set the tokens */
-    tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
+    tu = afs_GetUser(areq->uid, cellNum, WRITE_LOCK);
     /* Set tokens destroys any that are already there */
     afs_FreeTokens(&tu->tokens);
     afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
@@ -1889,16 +1939,6 @@ DECL_PIOCTL(PSetTokens)
     afs_PutUser(tu, WRITE_LOCK);
 
     return 0;
-
-  nocell:
-    {
-	int t1;
-	t1 = afs_initState;
-	if (t1 < 101)
-	    return EIO;
-	else
-	    return ESRCH;
-    }
 }
 
 /*!
@@ -5202,6 +5242,110 @@ DECL_PIOCTL(PDiscon)
 	return code;
 
     return afs_pd_putInt(aout, mode);
+}
+
+#define MAX_PIOCTL_TOKENS 10
+
+DECL_PIOCTL(PSetTokens2)
+{
+    int code =0;
+    int i, cellNum, primaryFlag;
+    XDR xdrs;
+    struct unixuser *tu;
+    struct vrequest treq;
+    struct ktc_setTokenData tokenSet;
+    struct ktc_tokenUnion decodedToken;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
+    AFS_STATCNT(PSetTokens2);
+    if (!afs_resourceinit_flag)
+	return EIO;
+
+    afs_pd_xdrStart(ain, &xdrs, XDR_DECODE);
+
+    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+	afs_pd_xdrEnd(ain, &xdrs);
+	return EINVAL;
+    }
+
+    afs_pd_xdrEnd(ain, &xdrs);
+
+    /* We limit each PAG to 10 tokens to prevent a malicous (or runaway)
+     * process from using up the whole of the kernel memory by allocating
+     * tokens.
+     */
+    if (tokenSet.tokens.tokens_len > MAX_PIOCTL_TOKENS) {
+	xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+	return E2BIG;
+    }
+
+    code = _settok_tokenCell(tokenSet.cell, &cellNum, &primaryFlag);
+    if (code) {
+	xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+	return code;
+    }
+
+    if (tokenSet.flags & AFSTOKEN_EX_SETPAG) {
+	if (_settok_setParentPag(acred) == 0) {
+	    afs_InitReq(&treq, *acred);
+	    areq = &treq;
+	}
+    }
+
+    tu = afs_GetUser(areq->uid, cellNum, WRITE_LOCK);
+    /* Free any tokens that we've already got */
+    afs_FreeTokens(&tu->tokens);
+
+    /* Iterate across the set of tokens we've received, and stuff them
+     * into this user's tokenJar
+     */
+    for (i=0; i < tokenSet.tokens.tokens_len; i++) {
+	xdrmem_create(&xdrs,
+		      tokenSet.tokens.tokens_val[i].token_opaque_val,
+		      tokenSet.tokens.tokens_val[i].token_opaque_len,
+		      XDR_DECODE);
+
+	memset(&decodedToken, 0, sizeof(decodedToken));
+	if (!xdr_ktc_tokenUnion(&xdrs, &decodedToken)) {
+	    xdr_destroy(&xdrs);
+	    code = EINVAL;
+	    goto out;
+	}
+
+	xdr_destroy(&xdrs);
+
+	afs_AddTokenFromPioctl(&tu->tokens, &decodedToken);
+	/* This is untidy - the old token interface supported passing
+	 * the primaryFlag as part of the token interface. Current
+	 * OpenAFS userland never sets this, but it's specified as being
+	 * part of the XG interface, so we should probably still support
+	 * it. Rather than add it to our AddToken interface, just handle
+	 * it here.
+	 */
+	if (decodedToken.at_type == AFSTOKEN_UNION_KAD) {
+	    if (decodedToken.ktc_tokenUnion_u.at_kad.rk_primary_flag)
+		primaryFlag = 1;
+	}
+
+	/* XXX - We should think more about destruction here. It's likely that
+	 * there is key material in what we're about to throw away, which
+	 * we really should zero out before giving back to the allocator */
+	xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &decodedToken);
+    }
+
+    tu->states |= UHasTokens;
+    tu->states &= ~UTokensBad;
+    afs_SetPrimary(tu, primaryFlag);
+    tu->tokenTime = osi_Time();
+
+    xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+
+out:
+    afs_ResetUserConns(tu);
+    afs_PutUser(tu, WRITE_LOCK);
+
+    return code;
 }
 
 DECL_PIOCTL(PNFSNukeCreds)

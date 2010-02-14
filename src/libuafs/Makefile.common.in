@@ -20,11 +20,13 @@ DES	=../des
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
 
+TOP_OBJ_AUTH = ${TOP_OBJDIR}/src/auth
 TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
 TOP_OBJ_RXSTAT = ${TOP_OBJDIR}/src/rxstat
 TOP_OBJ_VLSERVER = ${TOP_OBJDIR}/src/vlserver
 
 TOP_SRC_AFS = ${TOP_SRCDIR}/afs
+TOP_SRC_AUTH = ${TOP_SRCDIR}/auth
 TOP_SRC_RXSTAT = ${TOP_SRCDIR}/rxstat
 TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
 TOP_SRC_RX = ${TOP_SRCDIR}/rx
@@ -49,6 +51,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_OBJDIR}/src/fsint \
         -I${TOP_OBJDIR}/src/vlserver \
 	-I${TOP_OBJDIR}/src/libuafs \
+	-I${TOP_OBJDIR}/src/auth \
         -I${TOP_INCDIR} \
         -I${TOP_INCDIR}/afs @INCLUDE_libintl@
 
@@ -202,7 +205,7 @@ UAFSOBJ = \
 	$(UOBJ)/ptuser.o \
 	$(UOBJ)/pterror.o \
 	$(UOBJ)/ticket.o \
-	$(UOBJ)/token.o \
+	$(UOBJ)/katoken.o \
 	$(UOBJ)/ubik_int.cs.o \
 	$(UOBJ)/ubik_int.xdr.o \
 	$(UOBJ)/ubikclient.o \
@@ -213,6 +216,8 @@ UAFSOBJ = \
 	$(UOBJ)/rxstat.o \
 	$(UOBJ)/xdr_int32.o \
 	$(UOBJ)/xdr_int64.o \
+	$(UOBJ)/token.xdr.o \
+	$(UOBJ)/token.o \
 	$(UOBJ)/xdr_mem.o \
 	$(UOBJ)/xdr_len.o
 
@@ -340,7 +345,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/pterror.o \
 	$(WEBOBJ)/securehash.o \
 	$(WEBOBJ)/ticket.o \
-	$(WEBOBJ)/token.o \
+	$(WEBOBJ)/katoken.o \
 	$(WEBOBJ)/ubik_int.cs.o \
 	$(WEBOBJ)/ubik_int.xdr.o \
 	$(WEBOBJ)/ubikclient.o \
@@ -350,6 +355,8 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
 	$(WEBOBJ)/rxstat.o \
+	$(WEBOBJ)/token.xdr.o \
+	$(WEBOBJ)/token.o \
 	$(WEBOBJ)/xdr_mem.o \
 	$(WEBOBJ)/xdr_len.o
 
@@ -473,7 +480,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/pterror.o \
 	$(WEBOBJ)/securehash.o \
 	$(WEBOBJ)/ticket.o \
-	$(WEBOBJ)/token.o \
+	$(WEBOBJ)/katoken.o \
 	$(WEBOBJ)/ubik_int.cs.o \
 	$(WEBOBJ)/ubik_int.xdr.o \
 	$(WEBOBJ)/ubikclient.o \
@@ -482,6 +489,8 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
 	$(WEBOBJ)/rxstat.o \
+	$(WEBOBJ)/token.xdr.o \
+	$(WEBOBJ)/token.o \
 	$(WEBOBJ)/xdr_mem.o \
 	$(WEBOBJ)/xdr_len.o
 
@@ -607,7 +616,7 @@ JUAFSOBJ = \
 	$(JUAFS)/ptuser.o \
 	$(JUAFS)/pterror.o \
 	$(JUAFS)/ticket.o \
-	$(JUAFS)/token.o \
+	$(JUAFS)/katoken.o \
 	$(JUAFS)/ubik_int.cs.o \
 	$(JUAFS)/ubik_int.xdr.o \
 	$(JUAFS)/ubikclient.o \
@@ -617,6 +626,8 @@ JUAFSOBJ = \
 	$(JUAFS)/Krxstat.xdr.o \
 	$(JUAFS)/rxstat.o \
 	$(JUAFS)/xdr_int64.o \
+	$(JUAFS)/token.xdr.o \
+	$(JUAFS)/token.o \
 	$(JUAFS)/xdr_mem.o \
 	$(JUAFS)/xdr_len.o
 
@@ -856,8 +867,8 @@ $(UOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE1)
 $(UOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE1)
-$(UOBJ)/token.o: $(TOP_SRCDIR)/kauth/token.c
-	$(CRULE1)
+$(UOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/token.c
+	$(CRULE1) -o katoken.o
 $(UOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE1)
 $(UOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
@@ -897,6 +908,10 @@ $(UOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 $(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE1)
+$(UOBJ)/token.xdr.o: $(TOP_OBJ_AUTH)/token.xdr.c
+	$(CRULE1)
+$(UOBJ)/token.o: $(TOP_SRCDIR)/auth/token.c
 	$(CRULE1)
 $(UOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
 	$(CRULE1)
@@ -1140,8 +1155,8 @@ $(WEBOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE2)
 $(WEBOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE2)
-$(WEBOBJ)/token.o: $(TOP_SRCDIR)/kauth/token.c
-	$(CRULE2)
+$(WEBOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/token.c
+	$(CRULE2) -o katoken.o
 $(WEBOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE2)
 $(WEBOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
@@ -1182,6 +1197,10 @@ $(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE2)
 $(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE2)
+$(WEBOBJ)/token.xdr.o: $(TOP_OBJ_AUTH)/token.xdr.c
+	$(CRULE2)
+$(WEBOBJ)/token.o: $(TOP_SRCDIR)/auth/token.c
+	$(CRULE1)
 $(WEBOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
 	$(CRULE2)
 $(WEBOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
@@ -1418,8 +1437,8 @@ $(JUAFS)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE1)
 $(JUAFS)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE1)
-$(JUAFS)/token.o: $(TOP_SRCDIR)/kauth/token.c
-	$(CRULE1)
+$(JUAFS)/katoken.o: $(TOP_SRCDIR)/kauth/token.c
+	$(CRULE1) -o katoken.o
 $(JUAFS)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE1)
 $(JUAFS)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
@@ -1459,6 +1478,10 @@ $(JUAFS)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 $(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE1)
+$(JUAFS)/token.xdr.o: $(TOP_OBJ_AUTH)/token.xdr.c
+	$(CRULE1)
+$(JUAFS)/token.o: $(TOP_SRCDIR)/auth/token.c
 	$(CRULE1)
 $(JUAFS)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
 	$(CRULE1)

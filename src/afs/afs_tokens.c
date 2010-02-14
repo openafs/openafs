@@ -26,6 +26,7 @@
 #include "afs/param.h"
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "token.h"
 
 /* A jar for storing tokens in */
 
@@ -273,3 +274,49 @@ afs_AddRxkadToken(struct tokenJar **tokens, char *ticket, int ticketLen,
     rxkad->clearToken = *clearToken;
 }
 
+static int
+afs_AddRxkadTokenFromPioctl(struct tokenJar **tokens,
+			    struct ktc_tokenUnion *pioctlToken) {
+    struct ClearToken clear;
+
+    clear.AuthHandle = pioctlToken->ktc_tokenUnion_u.at_kad.rk_kvno;
+    clear.ViceId = pioctlToken->ktc_tokenUnion_u.at_kad.rk_viceid;
+    clear.BeginTimestamp = pioctlToken->ktc_tokenUnion_u.at_kad.rk_begintime;
+    clear.EndTimestamp = pioctlToken->ktc_tokenUnion_u.at_kad.rk_endtime;
+    memcpy(clear.HandShakeKey, pioctlToken->ktc_tokenUnion_u.at_kad.rk_key, 8);
+    afs_AddRxkadToken(tokens,
+		      pioctlToken->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
+		      pioctlToken->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len,
+		      &clear);
+
+    /* Security means never having to say you're sorry */
+    memset(clear.HandShakeKey, 0, 8);
+
+    return 0;
+}
+
+
+/*!
+ * Add a token to a token jar based on the input from a new-style
+ * SetToken pioctl
+ *
+ * @param[in] tokens
+ * 	Pointer to the address of a token jar
+ * @param[in] pioctlToken
+ *	The token structure obtained through the pioctl (note this
+ *	is a single, XDR decoded, token)
+ *
+ * @returns
+ * 	0 on success, an error code on failure
+ */
+int
+afs_AddTokenFromPioctl(struct tokenJar **tokens,
+		       struct ktc_tokenUnion *pioctlToken) {
+
+    switch (pioctlToken->at_type) {
+      case RX_SECIDX_KAD:
+	return afs_AddRxkadTokenFromPioctl(tokens, pioctlToken);
+    }
+
+    return EINVAL;
+}

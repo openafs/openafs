@@ -36,7 +36,9 @@ AUTHOBJS = \
 	writeconfig.o \
 	authcon.o \
 	ktc_errors.o \
-	acfg_errors.o
+	acfg_errors.o \
+	token.o \
+	token.xdr.o
 
 KAUTHOBJS = \
 	kauth.xdr.o \
@@ -44,7 +46,7 @@ KAUTHOBJS = \
 	kaaux.o \
 	client.o \
 	authclient.o \
-	token.o \
+	katoken.o \
 	kautils.o \
 	kalocalcell.o \
 	kaerrors.o \
@@ -122,7 +124,13 @@ cellconfig.o: ${AUTH}/cellconfig.c
 	${CCRULE} -I../auth
 
 ktc.o: ${AUTH}/ktc.c
-	${CCRULE}
+	${CCRULE} -I../auth
+
+token.o: ${AUTH}/token.c
+	${CCRULE} -I../auth
+
+token.xdr.o: ${AUTH}/token.xdr.c
+	${CCRULE} -I../auth
 
 userok.o: ${AUTH}/userok.c
 	${CCRULE} -I../auth
@@ -154,8 +162,8 @@ client.o: ${KAUTH}/client.c
 authclient.o: ${KAUTH}/authclient.c
 	${CCRULE} -I../kauth
 
-token.o: ${KAUTH}/token.c
-	${CCRULE} -I../kauth
+katoken.o: ${KAUTH}/token.c
+	${CCRULE} -o katoken.o -I../kauth
 
 kautils.o: ${KAUTH}/kautils.c
 	${CCRULE} -I../kauth

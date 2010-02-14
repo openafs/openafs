@@ -55,6 +55,8 @@
 #include <afs/sys_prototypes.h>
 #endif
 
+#include "token.h"
+
 #if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
 #include <sys/syscall.h>
 #define KEYCTL_SESSION_TO_PARENT        18
@@ -319,6 +321,69 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 #endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
+    return 0;
+}
+
+int
+ktc_SetTokenEx(struct ktc_setTokenData *token) {
+    struct ViceIoctl iob;
+    afs_int32 code;
+    XDR xdrs;
+
+    xdrlen_create(&xdrs);
+    if (!xdr_ktc_setTokenData(&xdrs, token))
+	return EINVAL;
+    iob.in_size = xdr_getpos(&xdrs);
+    xdr_destroy(&xdrs);
+
+    iob.in = malloc(iob.in_size);
+    if (iob.in == NULL)
+	return ENOMEM;
+
+    xdrmem_create(&xdrs, iob.in, iob.in_size, XDR_ENCODE);
+    if (!xdr_ktc_setTokenData(&xdrs, token))
+	return KTC_INVAL;
+    xdr_destroy(&xdrs);
+
+    iob.out = NULL;
+    iob.out_size = 0;
+
+    code = PIOCTL(0, VIOC_SETTOK2, &iob, 0);
+
+    free(iob.in);
+
+    /* If we can't use the new pioctl, then fallback to using the old
+     * one, with just the rxkad portion of the token we're being asked to
+     * set
+     */
+    if (code == -1 && errno == EINVAL) {
+	struct ktc_principal server, client;
+	struct ktc_token *rxkadToken;
+	afs_int32 flags;
+
+	/* With the growth of ticket sizes, a ktc_token is now 12k. Don't
+	 * allocate it on the stack! */
+	rxkadToken = malloc(sizeof(*rxkadToken));
+	if (rxkadToken == NULL)
+	    return ENOMEM;
+
+	code = token_extractRxkad(token, rxkadToken, &flags, &client);
+	if (code) {
+	    free(rxkadToken);
+	    return KTC_INVAL;
+	}
+
+	memset(&server, 0, sizeof(server));
+	strcpy(server.name, "afs");
+	strcpy(server.cell, token->cell);
+	code = ktc_SetToken(&server, rxkadToken, &client, flags);
+	free(rxkadToken);
+	return code;
+    }
+
+    if (code)
+	return KTC_PIOCTLFAIL;
+
     return 0;
 }
 

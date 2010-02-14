@@ -8,3 +8,4 @@
 /copyauth
 /ktc_errors.c
 /setkey
+/token.h

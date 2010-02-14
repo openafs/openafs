@@ -38,6 +38,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_OBJDIR}/src/config \
 	-I${TOP_OBJDIR}/src/fsint \
 	-I${TOP_OBJDIR}/src/vlserver \
+	-I${TOP_OBJDIR}/src/auth \
 	-I${TOP_INCDIR} \
 	-I${TOP_INCDIR}/afs 
 
@@ -165,6 +166,7 @@ AFSAOBJS = \
 	rxkad_common.o	\
 	xdr_afsuuid.o	\
 	xdr.o		\
+	token.xdr.o	\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -230,6 +232,7 @@ AFSPAGOBJS = \
 	AFS_component_version_number.o\
 	xdr_afsuuid.o	\
 	xdr.o		\
+	token.xdr.o	\
 	afs_uuid.o $(AFS_OS_PAGOBJS)
 
 
@@ -338,6 +341,8 @@ xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 xdr_mem.o: $(TOP_SRCDIR)/rx/xdr_mem.c
 	$(CRULE_OPT)
 xdr_len.o: $(TOP_SRCDIR)/rx/xdr_len.c
+	$(CRULE_OPT)
+token.xdr.o: $(TOP_OBJDIR)/src/auth/token.xdr.c
 	$(CRULE_OPT)
 
 # these files are not to be optimized - subject to change.

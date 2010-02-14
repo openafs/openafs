@@ -916,6 +916,7 @@ extern int Afs_syscall(void);
 #endif
 
 /* afs_tokens.c */
+struct ktc_tokenUnion;
 extern union tokenUnion *afs_FindToken(struct tokenJar *, rx_securityIndex);
 extern void afs_FreeTokens(struct tokenJar **);
 extern union tokenUnion *afs_AddToken(struct tokenJar **, rx_securityIndex);
@@ -923,6 +924,7 @@ extern void afs_DiscardExpiredTokens(struct tokenJar **, afs_int32);
 extern int afs_HasUsableTokens(struct tokenJar *, afs_int32);
 extern void afs_AddRxkadToken(struct tokenJar **, char *, int,
 			      struct ClearToken *);
+extern int afs_AddTokenFromPioctl(struct tokenJar **, struct ktc_tokenUnion *);
 
 /* UKERNEL/afs_usrops.c */
 #ifdef UKERNEL
