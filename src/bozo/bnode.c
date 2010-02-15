@@ -817,7 +817,7 @@ bnode_SoftInt(void *param)
 void
 bnode_Int(int asignal)
 {
-    if (asignal == SIGQUIT) {
+    if (asignal == SIGQUIT || asignal == SIGTERM) {
 	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *)(intptr_t)asignal);
     } else {
 	IOMGR_SoftSig(bnode_SoftInt, (void *)(intptr_t)asignal);
@@ -851,6 +851,9 @@ bnode_Init(void)
     if (code)
 	return errno;
     code = sigaction(SIGQUIT, &newaction, NULL);
+    if (code)
+	return errno;
+    code = sigaction(SIGTERM, &newaction, NULL);
     if (code)
 	return errno;
     return code;
