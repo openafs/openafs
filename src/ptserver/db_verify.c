@@ -1201,43 +1201,6 @@ DumpRecreate(char map[], struct misc_data *misc)
 				id);
 #endif
 		}
-#if defined(SUPERGROUPS)
-#define g	(*((struct prentryg *)&e))
-		ng = ntohl(g.nextsg);
-		for (i = 0; i < SGSIZE; i++) {
-		    afs_int32 uid = ntohl(g.supergroup[i]);
-		    if (uid == 0)
-			break;
-		    if (uid == PRBADID)
-			continue;
-		    fprintf(rc, "au %d %d\n", uid, id);
-		    count++;
-		}
-		while (ng) {
-		    struct prentry c;
-		    code = pr_Read(ng, (char *)&c, sizeof(c));
-		    if (code)
-			return code;
-
-		    if ((id == ntohl(c.id)) && (c.flags & htonl(PRCONT))) {
-			for (i = 0; i < COSIZE; i++) {
-			    afs_int32 uid = ntohl(c.entries[i]);
-			    if (uid == 0)
-				break;
-			    if (uid == PRBADID)
-				continue;
-			    fprintf(rc, "au %d %d\n", uid, id);
-			    count++;
-			}
-		    } else {
-			fprintf(stderr, "Skipping continuation block at %d\n",
-				ng);
-			break;
-		    }
-		    ng = ntohl(c.next);
-		}
-#undef g
-#endif /* SUPERGROUPS */
 		na = ntohl(e.next);
 		while (na) {
 		    struct prentry c;
