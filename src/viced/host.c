@@ -843,10 +843,6 @@ h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
 
-    /* if somebody still has this host held */
-    if (host->refCount > 0)
-	return;
-
     /* if somebody still has this host locked */
     if (h_NBLock_r(host) != 0) {
 	char hoststr[16];
@@ -856,6 +852,17 @@ h_TossStuff_r(register struct host *host)
 	return;
     } else {
 	h_Unlock_r(host);
+    }
+
+    /* if somebody still has this host held */
+    /* we must check this _after_ h_NBLock_r, since h_NBLock_r can drop and
+     * reacquire H_LOCK */
+    if (host->refCount > 0) {
+	char hoststr[16];
+	ViceLog(0,
+		("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT " (%s:%d) was held.\n",
+		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+	return;
     }
 
     /* ASSUMPTION: rxi_FreeConnection() does not yield */
