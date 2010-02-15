@@ -252,7 +252,8 @@ extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 por
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern afs_int32 hpr_Initialize(struct ubik_client **);
 extern int hpr_End(struct ubik_client *);
-
+extern int hpr_IdToName(idlist *ids, namelist *names);
+extern int hpr_NameToId(namelist *names, idlist *ids);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*

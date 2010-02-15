@@ -1055,8 +1055,8 @@ RXFetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
 {
     char *eACL;			/* External access list placeholder */
 
-    if (acl_Externalize
-	((targetptr->disk.type ==
+    if (acl_Externalize_pr
+	(hpr_IdToName, (targetptr->disk.type ==
 	  vDirectory ? VVnodeACL(targetptr) :
 	  VVnodeACL(parentwhentargetnotdir)), &eACL) != 0) {
 	return EIO;
@@ -1084,7 +1084,8 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 {
     struct acl_accessList *newACL;	/* PlaceHolder for new access list */
 
-    if (acl_Internalize(AccessList->AFSOpaque_val, &newACL) != 0)
+    if (acl_Internalize_pr(hpr_NameToId, AccessList->AFSOpaque_val, &newACL)
+	!= 0)
 	return (EINVAL);
     if ((newACL->size + 4) > VAclSize(targetptr))
 	return (E2BIG);
