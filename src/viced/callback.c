@@ -37,7 +37,7 @@
  *     Break all call backs for fid, except for the specified host.
  *     Delete all of them.
  * 
- * BreakVolumeCallBacks(volume)
+ * BreakVolumeCallBacksLater(volume)
  *     Break all call backs on volume, using single call to each host
  *     Delete all the call backs.
  * 
@@ -1210,78 +1210,9 @@ MultiBreakVolumeLaterCallBack(struct host *host, int isheld, void *rock)
  * this function is executing.  It is just a temporary state, however,
  * since the callback will be broken later by this same function.
  *
- * Now uses multi-RX for CallBack RPC.  Note that the
- * multiBreakCallBacks routine does not force a reset if the RPC
- * fails, unlike the previous version of this routine, but does create
- * a delayed callback.  Resets will be forced if the host is
- * determined to be down before the RPC is executed.
+ * Now uses multi-RX for CallBack RPC in a different thread,
+ * only marking them here.
  */
-int
-BreakVolumeCallBacks(afs_uint32 volume)
-{
-    struct AFSFid fid;
-    int hash;
-    afs_uint32 *feip;
-    struct CallBack *cb;
-    struct FileEntry *fe;
-    struct host *host;
-    struct VCBParams henumParms;
-    afs_uint32 tthead = 0;	/* zero is illegal value */
-
-    H_LOCK;
-    fid.Volume = volume, fid.Vnode = fid.Unique = 0;
-    for (hash = 0; hash < FEHASH_SIZE; hash++) {
-	for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
-	    if (fe->volid == volume) {
-		register struct CallBack *cbnext;
-		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
-		    host = h_itoh(cb->hhead);
-
-		    if (!(host->hostFlags & HOSTDELETED)) {
-			/* mark this host for notification */
-			host->hostFlags |= HCBREAK;
-			if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
-			    tthead = cb->thead;
-			}
-		    }
-		    cbnext = itocb(cb->cnext);
-		    TDel(cb);
-		    HDel(cb);
-		    FreeCB(cb);
-		    /* leave flag for MultiBreakVolumeCallBack to clear */
-		}
-		*feip = fe->fnext;
-		FreeFE(fe);
-	    } else {
-		feip = &fe->fnext;
-	    }
-	}
-    }
-
-    if (!tthead) {
-	/* didn't find any callbacks, so return right away. */
-	H_UNLOCK;
-	return 0;
-    }
-    henumParms.ncbas = 0;
-    henumParms.fid = &fid;
-    henumParms.thead = tthead;
-    H_UNLOCK;
-    h_Enumerate(MultiBreakVolumeCallBack, &henumParms);
-    H_LOCK;
-    if (henumParms.ncbas) {	/* do left-overs */
-	struct AFSCBFids tf;
-	tf.AFSCBFids_len = 1;
-	tf.AFSCBFids_val = &fid;
-
-	MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0);
-
-	henumParms.ncbas = 0;
-    }
-    H_UNLOCK;
-    return 0;
-}
-
 #ifdef AFS_PTHREAD_ENV
 extern pthread_cond_t fsync_cond;
 #else
