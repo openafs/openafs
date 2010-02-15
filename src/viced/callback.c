@@ -1486,57 +1486,86 @@ CleanupTimedOutCallBacks_r(void)
     return (ntimedout > 0);
 }
 
-static struct host *lih_host;
-static int lih_host_held;
+/**
+ * parameters to pass to lih*_r from h_Enumerate_r when trying to find a host
+ * from which to clear callbacks.
+ */
+struct lih_params {
+    /**
+     * Points to the least interesting host found; try to clear callbacks on
+     * this host after h_Enumerate_r(lih*_r)'ing.
+     */
+    struct host *lih;
+
+    /**
+     * The last host we got from lih*_r, but we couldn't clear its callbacks
+     * for some reason. Choose the next-best host after this one (with the
+     * current lih*_r, this means to only select hosts that have an ActiveCall
+     * newer than lastlih).
+     */
+    struct host *lastlih;
+};
 
 /* Value of host->refCount that allows us to reliably infer that
  * host may be held by some other thread */
 #define OTHER_MUSTHOLD_LIH 2
 
 /* This version does not allow 'host' to be selected unless its ActiveCall 
- * is newer than 'hostp' which is the host with the oldest ActiveCall from
- * the last pass (if it is provided).  We filter out any hosts that are
- * are held by other threads.
+ * is newer than 'params->lastlih' which is the host with the oldest
+ * ActiveCall from the last pass (if it is provided).  We filter out any hosts
+ * that are are held by other threads.
+ *
+ * There is a small problem here, but it may not be easily fixable. Say we
+ * select some host A, and give it back to GetSomeSpace_r. GSS_r for some
+ * reason cannot clear the callbacks on A, and so calls us again with
+ * lastlih = A. Suppose there is another host B that has the same ActiveCall
+ * time as A. We will now skip over host B, since
+ * 'hostB->ActiveCall > hostA->ActiveCall' is not true. This could result in
+ * us prematurely going to the GSS_r 2nd or 3rd pass, and making us a little
+ * inefficient. This should be pretty rare, though, except perhaps in cases
+ * with very small numbers of hosts.
+ *
+ * Also filter out any hosts with HOSTDELETED set. h_Enumerate_r should in
+ * theory not give these to us anyway, but be paranoid.
  */
 static int
 lih0_r(register struct host *host, register int flags, void *rock)
 {
-    struct host *hostp = (struct host *) rock;
+    struct lih_params *params = (struct lih_params *)rock;
+
     if (host->cblist
-	&& (hostp && host != hostp) 
+	&& (!(host->hostFlags & HOSTDELETED))
 	&& (host->refCount < OTHER_MUSTHOLD_LIH)
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
-	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
-        if (lih_host != NULL && lih_host_held) {
-            h_Release_r(lih_host); /* release prev host */
-        }
-        lih_host = host;
-        lih_host_held = !flags; /* on i==1, this === (lih_host_held = 1) */
-        flags = 1; /* now flags is 1, but at next(i), it will be 0 again */
+	&& (!params->lih || host->ActiveCall < params->lih->ActiveCall)
+	&& (!params->lastlih || host->ActiveCall > params->lastlih->ActiveCall)) {
+
+	if (params->lih) {
+	    h_Release_r(params->lih); /* release prev host */
+	}
+
+	h_Hold_r(host);
+	params->lih = host;
     }
     return flags;
 }
 
-/* This version does not allow 'host' to be selected unless its ActiveCall 
- * is newer than 'hostp' which is the host with the oldest ActiveCall from
- * the last pass (if it is provided).  In this second varient, we do not 
- * prevent held hosts from being selected.
- */
+/* same as lih0_r, except we do not prevent held hosts from being selected. */
 static int
 lih1_r(register struct host *host, register int flags, void *rock)
 {
-    struct host *hostp = (struct host *) rock;
+    struct lih_params *params = (struct lih_params *)rock;
 
     if (host->cblist
-	&& (hostp && host != hostp) 
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
-	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
-	    if (lih_host != NULL && lih_host_held) {
-		    h_Release_r(lih_host); /* really? */
-	    }
-	    lih_host = host;
-	    lih_host_held = !flags; /* see note above */
-	    flags = 1; /* see note above */
+	&& (!(host->hostFlags & HOSTDELETED))
+	&& (!params->lih || host->ActiveCall < params->lih->ActiveCall)
+	&& (!params->lastlih || host->ActiveCall > params->lastlih->ActiveCall)) {
+
+	if (params->lih) {
+	    h_Release_r(params->lih); /* release prev host */
+	}
+
+	h_Hold_r(host);
+	params->lih = host;
     }
     return flags;
 }
@@ -1556,7 +1585,8 @@ extern struct host *hostList;
 static int
 GetSomeSpace_r(struct host *hostp, int locked)
 {
-    register struct host *hp, *hp1, *hp2;
+    struct host *hp;
+    struct lih_params params;
     int i = 0;
 
     cbstuff.GotSomeSpaces++;
@@ -1568,38 +1598,39 @@ GetSomeSpace_r(struct host *hostp, int locked)
     }
 
     i = 0;
-    hp1 = NULL;
-    hp2 = hostList;
+    params.lastlih = NULL;
+
     do {
-	lih_host = 0;
-	h_Enumerate_r(i == 0 ? lih0_r : lih1_r, hp2, (char *)hp1);
-	hp = lih_host;
+	params.lih = NULL;
+
+	h_Enumerate_r(i == 0 ? lih0_r : lih1_r, hostList, &params);
+
+	hp = params.lih;
+	if (params.lastlih) {
+	    h_Release_r(params.lastlih);
+	    params.lastlih = NULL;
+	}
+
 	if (hp) {
-	    /* set in lih_r! private copy before giving up H_LOCK */
-	    int lih_host_held2=lih_host_held;   
+	    /* note that 'hp' was held by lih*_r; we will need to release it */
 	    cbstuff.GSS4++;
 	    if ((hp != hostp) && !ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
-                if (lih_host_held2)
-                    h_Release_r(hp);
+                h_Release_r(hp);
 		return 0;
 	    }
-            if (lih_host_held2) {
-                h_Release_r(hp);
-                hp = NULL;
-            }
-	    hp1 = hp;
-	    hp2 = hostList;
+
+	    params.lastlih = hp;
+	    /* params.lastlih will be released on the next iteration, after
+	     * h_Enumerate_r */
+
 	} else {
 	    /*
 	     * Next time try getting callbacks from any host even if
-	     * it's deleted (that's actually great since we can freely
-	     * remove its callbacks) or it's held since the only other
-	     * option is starvation for the file server (i.e. until the
-	     * callback timeout arrives).
+	     * it's held, since the only other option is starvation for
+	     * the file server (i.e. until the callback timeout arrives).
 	     */
 	    i++;
-	    hp1 = NULL;
-	    hp2 = hostList;
+	    params.lastlih = NULL;
 	    cbstuff.GSS1++;
 	    ViceLog(5,
 		    ("GSS: Try harder for longest inactive host cnt= %d\n",
