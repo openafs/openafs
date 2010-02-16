@@ -1500,6 +1500,39 @@ afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname,
 }
 
 int
+afsconf_UpToDate(struct afsconf_dir *adir)
+{
+    char tbuffer[256];
+#ifdef AFS_NT40_ENV
+    char *p;
+#endif
+    struct stat tstat;
+    afs_int32 code = 0; /* default to not up to date */
+    LOCK_GLOBAL_MUTEX;
+#ifdef AFS_NT40_ENV
+    /* NT client config dir has no KeyFile; don't risk attempting open
+     * because there might be a random file of this name if dir is shared.
+     */
+    if (IsClientConfigDirectory(adir->name)) {
+	/* Not a server, nothing to reread */
+	code = 1;
+    } else {
+#endif
+	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_KEY_FILE, NULL);
+
+	/* did file change? */
+	code = stat(tbuffer, &tstat);
+	if ((code == 0) && (tstat.st_mtime <= adir->timeRead)) {
+	    code = 1;
+	}
+#ifdef AFS_NT40_ENV
+    }
+#endif
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
+}
+
+int
 afsconf_Close(struct afsconf_dir *adir)
 {
     LOCK_GLOBAL_MUTEX;

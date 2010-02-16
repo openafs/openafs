@@ -31,6 +31,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsutil.h>
+#include <afs/cellconfig.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -84,13 +85,15 @@ urecovery_ResetState(void)
  * \brief sync site
  *
  * routine called when a non-sync site server goes down; restarts recovery
- * process to send missing server the new db when it comes back up.
+ * process to send missing server the new db when it comes back up for
+ * non-sync site servers.
  *
  * \note This routine should not do anything with variables used by non-sync site servers.
  */
 int
-urecovery_LostServer(void)
+urecovery_LostServer(struct ubik_server *ts)
 {
+    ubeacon_ReinitServer(ts);
 #if !defined(AFS_PTHREAD_ENV)
     /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);

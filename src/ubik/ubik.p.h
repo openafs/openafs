@@ -368,7 +368,7 @@ extern void uphys_invalidate(struct ubik_dbase *adbase,
 
 /*! \name recovery.c */
 extern int urecovery_ResetState(void);
-extern int urecovery_LostServer(void);
+extern int urecovery_LostServer(struct ubik_server *server);
 extern int urecovery_AllBetter(struct ubik_dbase *adbase,
 			       int areadAny);
 extern int urecovery_AbortAll(struct ubik_dbase *adbase);
@@ -417,6 +417,8 @@ extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
 
 /*! \name beacon.c */
 struct afsconf_cell;
+extern void ubeacon_InitSecurityClass(void);
+extern void ubeacon_ReinitServer(struct ubik_server *ts);
 extern void ubeacon_Debug(struct ubik_debug *aparm);
 extern int ubeacon_AmSyncSite(void);
 extern int ubeacon_InitServerListByInfo(afs_uint32 ame,

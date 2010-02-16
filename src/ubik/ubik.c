@@ -163,7 +163,7 @@ ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
 	    ts->currentDB = 0;
 	    ts->beaconSinceDown = 0;
-	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	    urecovery_LostServer(ts);	/* tell recovery to try to resend dbase later */
 	} else {		/* success */
 	    if (!ts->isClone)
 		okcalls++;	/* count up how many worked */
@@ -209,7 +209,7 @@ ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
 	    ts->currentDB = 0;
 	    ts->beaconSinceDown = 0;
-	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	    urecovery_LostServer(ts);	/* tell recovery to try to resend dbase later */
 	} else {		/* success */
 	    if (!ts->isClone)
 		okcalls++;	/* count up how many worked */
@@ -255,7 +255,7 @@ ContactQuorum_DISK_Write(struct ubik_trans *atrans, int aflags,
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
 	    ts->currentDB = 0;
 	    ts->beaconSinceDown = 0;
-	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	    urecovery_LostServer(ts);	/* tell recovery to try to resend dbase later */
 	} else {		/* success */
 	    if (!ts->isClone)
 		okcalls++;	/* count up how many worked */
@@ -301,7 +301,7 @@ ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
 	    ts->currentDB = 0;
 	    ts->beaconSinceDown = 0;
-	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	    urecovery_LostServer(ts);	/* tell recovery to try to resend dbase later */
 	} else {		/* success */
 	    if (!ts->isClone)
 		okcalls++;	/* count up how many worked */
@@ -382,7 +382,7 @@ ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
 	    ts->currentDB = 0;
 	    ts->beaconSinceDown = 0;
-	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	    urecovery_LostServer(ts);	/* tell recovery to try to resend dbase later */
 	} else {		/* success */
 	    if (!ts->isClone)
 		okcalls++;	/* count up how many worked */
@@ -429,7 +429,7 @@ ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
 	    ts->currentDB = 0;
 	    ts->beaconSinceDown = 0;
-	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	    urecovery_LostServer(ts);	/* tell recovery to try to resend dbase later */
 	} else {		/* success */
 	    if (!ts->isClone)
 		okcalls++;	/* count up how many worked */

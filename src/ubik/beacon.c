@@ -31,6 +31,7 @@
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rxkad.h>
 #include <rx/rx_multi.h>
 #include <afs/cellconfig.h>
 #ifndef AFS_NT40_ENV
@@ -172,6 +173,52 @@ ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[])
     return code;
 }
 
+void
+ubeacon_InitSecurityClass(void)
+{
+    int i;
+    /* get the security index to use, if we can */
+    if (ubik_CRXSecurityProc) {
+	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &ubikSecClass,
+				     &ubikSecIndex);
+    } else
+	i = 1;
+    if (i) {
+	/* don't have sec module yet */
+	ubikSecIndex = 0;
+	ubikSecClass = rxnull_NewClientSecurityObject();
+    }
+}
+
+void
+ubeacon_ReinitServer(struct ubik_server *ts)
+{
+    if (!afsconf_UpToDate(ubik_CRXSecurityRock)) {
+	struct rx_connection *disk_rxcid;
+	struct rx_connection *vote_rxcid;
+	struct rx_connection *tmp;
+	ubeacon_InitSecurityClass();
+	disk_rxcid =
+	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->disk_rxcid)),
+			     ubik_callPortal, DISK_SERVICE_ID,
+			     ubikSecClass, ubikSecIndex);
+	if (disk_rxcid) {
+	    tmp = ts->disk_rxcid;
+	    ts->disk_rxcid = disk_rxcid;
+	    rx_PutConnection(tmp);
+	}
+	vote_rxcid =
+	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)),
+			     ubik_callPortal, VOTE_SERVICE_ID,
+			     ubikSecClass, ubikSecIndex);
+	if (vote_rxcid) {
+	    tmp = ts->vote_rxcid;
+	    ts->vote_rxcid = vote_rxcid;
+	    rx_PutConnection(tmp);
+	}
+    }
+}
+
 /*!
  * \brief setup server list
  *
@@ -212,17 +259,8 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     if ((code = verifyInterfaceAddress(&ame, info, aservers)))
 	return code;
 
-    /* get the security index to use, if we can */
-    if (ubik_CRXSecurityProc) {
-	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &ubikSecClass,
-				     &ubikSecIndex);
-    } else
-	i = 1;
-    if (i) {
-	/* don't have sec module yet */
-	ubikSecIndex = 0;
-	ubikSecClass = rxnull_NewClientSecurityObject();
-    }
+    ubeacon_InitSecurityClass();
+
     magicHost = ntohl(ame);	/* do comparisons in host order */
     magicServer = (struct ubik_server *)0;
 
@@ -433,18 +471,26 @@ ubeacon_Interact(void *dummy)
 		 * the vote was computed, *not* the time the vote expires.  We compute
 		 * the latter down below if we got enough votes to go with */
 		if (code > 0) {
-		    ts->lastVoteTime = code;
-		    if (code < oldestYesVote)
-			oldestYesVote = code;
-		    ts->lastVote = 1;
-		    if (!ts->isClone)
-			yesVotes += 2;
-		    if (ts->magic)
-			yesVotes++;	/* the extra epsilon */
-		    ts->up = 1;	/* server is up (not really necessary: recovery does this for real) */
-		    ts->beaconSinceDown = 1;
-		    ubik_dprint("yes vote from host %s\n",
-				afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    if ((code & ~0xff) == ERROR_TABLE_BASE_RXK) {
+			ubik_dprint("token error %d from host %s\n",
+				    code, afs_inet_ntoa_r(ts->addr[0], hoststr));
+			ts->up = 0;
+			ts->beaconSinceDown = 0;
+			urecovery_LostServer(ts);
+		    } else {
+			ts->lastVoteTime = code;
+			if (code < oldestYesVote)
+			    oldestYesVote = code;
+			ts->lastVote = 1;
+			if (!ts->isClone)
+			    yesVotes += 2;
+			if (ts->magic)
+			    yesVotes++;	/* the extra epsilon */
+			ts->up = 1;	/* server is up (not really necessary: recovery does this for real) */
+			ts->beaconSinceDown = 1;
+			ubik_dprint("yes vote from host %s\n",
+				    afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    }
 		} else if (code == 0) {
 		    ts->lastVoteTime = temp;
 		    ts->lastVote = 0;
@@ -454,7 +500,7 @@ ubeacon_Interact(void *dummy)
 		} else if (code < 0) {
 		    ts->up = 0;
 		    ts->beaconSinceDown = 0;
-		    urecovery_LostServer();
+		    urecovery_LostServer(ts);
 		    ubik_dprint("time out from %s\n",
 				afs_inet_ntoa_r(ts->addr[0], hoststr));
 		}
