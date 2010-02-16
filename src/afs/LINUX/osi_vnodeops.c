@@ -49,7 +49,7 @@
 #define MAX_ERRNO 1000L
 #endif
 
-extern struct backing_dev_info afs_backing_dev_info;
+extern struct backing_dev_info *afs_backing_dev_info;
 
 extern struct vcache *afs_globalVp;
 extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
@@ -2463,7 +2463,7 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
     if (vattr)
 	vattr2inode(ip, vattr);
 
-    ip->i_mapping->backing_dev_info = &afs_backing_dev_info;
+    ip->i_mapping->backing_dev_info = afs_backing_dev_info;
 /* Reset ops if symlink or directory. */
     if (S_ISREG(ip->i_mode)) {
 	ip->i_op = &afs_file_iops;
