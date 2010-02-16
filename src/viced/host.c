@@ -503,15 +503,17 @@ h_Release_r(register struct host *host)
 	if (!h_OtherHolds_r(host)) {
 	    /* must avoid masking this until after h_OtherHolds_r runs
 	     * but it should be run before h_TossStuff_r */
-	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
+	    h_Decrement_r(host);
 	    if ((host->hostFlags & HOSTDELETED)
 		|| (host->hostFlags & CLIENTDELETED)) {
 		h_TossStuff_r(host);
 	    }
-	} else
-	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
-    } else
-	(host)->holds[h_holdSlot()] &= ~h_holdbit();
+	} else {
+	    h_Decrement_r(host);
+	}
+    } else {
+	h_Decrement_r(host);
+    }
 
     return 0;
 }
@@ -913,9 +915,18 @@ h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
     int i;
+    int code;
+
+    /* make sure host doesn't go away over h_NBLock_r */
+    h_Hold_r(host);
+
+    code = h_NBLock_r(host);
+
+    /* don't use h_Release_r, since that may call h_TossStuff_r again */
+    h_Decrement_r(host);
 
     /* if somebody still has this host locked */
-    if (h_NBLock_r(host) != 0) {
+    if (code != 0) {
 	char hoststr[16];
 	ViceLog(0,
 		("Warning:  h_TossStuff_r failed; Host %s:%d was locked.\n",

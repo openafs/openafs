@@ -176,6 +176,7 @@ extern char *h_UserName(struct client *client);
 #define h_holdbit()  ( 1<<h_holdIndex() )
 
 #define h_Hold_r(host)   ((host)->holds[h_holdSlot()] |= h_holdbit())
+#define h_Decrement_r(host) ((host)->holds[h_holdSlot()] &= ~h_holdbit())
 extern int h_Release(register struct host *host);
 extern int h_Release_r(register struct host *host);
 
