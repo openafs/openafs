@@ -870,9 +870,9 @@ $(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 $(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
 $(UOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 $(UOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 
 # These files are for the netscape plugin
 
@@ -1144,9 +1144,9 @@ $(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 $(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE2)
 $(WEBOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
-	$(CRULE2)
+	$(CRULE2) @CFLAGS_NOERROR@
 $(WEBOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
-	$(CRULE2)
+	$(CRULE2) @CFLAGS_NOERROR@
 
 # These are for libjuafs.a 
 # Used for linking with libafsauthent and libafsrpc
@@ -1412,9 +1412,9 @@ $(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 $(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
 $(JUAFS)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
-	$(CRULE1)
+	$(CRULE1) @CFLAGS_NOERROR@
 
 clean:
 	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx

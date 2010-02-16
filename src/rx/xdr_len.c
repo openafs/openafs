@@ -31,7 +31,15 @@
 # include <stdlib.h>
 #endif
 
+#ifndef KERNEL
 #include "xdr.h"
+#elif !defined(UKERNEL)
+#include "rx/xdr.h"
+#else
+#include "rpc/types.h"
+#include "rpc/xdr.h"
+#define AFS_XDRS_T XDR *
+#endif
 
 static void
 xdrlen_destroy(AFS_XDRS_T axdrs)
@@ -103,8 +111,13 @@ static struct xdr_ops xdrlen_ops = {
     xdrlen_inline,      /* not supported */
     xdrlen_destroy      /* destroy stream */
 #else
+#if defined(UKERNEL)
+    .x_getlong = xdrlen_getint32,
+    .x_putlong = xdrlen_putint32,
+#else
     .x_getint32 = xdrlen_getint32,
     .x_putint32 = xdrlen_putint32,
+#endif
     .x_getbytes = xdrlen_getbytes,
     .x_putbytes = xdrlen_putbytes,
     .x_getpostn = xdrlen_getpos,
