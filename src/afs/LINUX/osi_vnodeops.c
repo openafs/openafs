@@ -49,7 +49,7 @@
 
 #if defined(AFS_LINUX26_ENV)
 #define UnlockPage(pp) unlock_page(pp)
-extern struct backing_dev_info afs_backing_dev_info;
+extern struct backing_dev_info *afs_backing_dev_info;
 #if !defined(WRITEPAGE_ACTIVATE)
 #define WRITEPAGE_ACTIVATE AOP_WRITEPAGE_ACTIVATE
 #endif
@@ -2002,7 +2002,7 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
 	vattr2inode(ip, vattr);
 
 #if defined(AFS_LINUX26_ENV)
-    ip->i_mapping->backing_dev_info = &afs_backing_dev_info;
+    ip->i_mapping->backing_dev_info = afs_backing_dev_info;
 #endif
 /* Reset ops if symlink or directory. */
     if (S_ISREG(ip->i_mode)) {
