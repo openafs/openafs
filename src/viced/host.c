@@ -842,9 +842,18 @@ void
 h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
+    int code;
+
+    /* make sure host doesn't go away over h_NBLock_r */
+    h_Hold_r(host);
+
+    code = h_NBLock_r(host);
+
+    /* don't use h_Release_r, since that may call h_TossStuff_r again */
+    h_Decrement_r(host);
 
     /* if somebody still has this host locked */
-    if (h_NBLock_r(host) != 0) {
+    if (code != 0) {
 	char hoststr[16];
 	ViceLog(0,
 		("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT " (%s:%d) was locked.\n",

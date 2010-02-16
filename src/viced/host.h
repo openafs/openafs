@@ -174,9 +174,14 @@ do { \
 	++((x)->refCount); \
 } while(0)
 
-#define h_Release_r(x) \
+#define h_Decrement_r(x) \
 do { \
 	--((x)->refCount); \
+} while (0)
+
+#define h_Release_r(x) \
+do { \
+	h_Decrement_r(x); \
 	if (((x)->refCount < 1) && \
 		(((x)->hostFlags & HOSTDELETED) || \
 		 ((x)->hostFlags & CLIENTDELETED))) h_TossStuff_r((x));	 \
