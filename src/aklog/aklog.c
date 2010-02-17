@@ -663,26 +663,18 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	/* If we've got a valid ticket, and we still don't know the realm name
 	 * try to figure it out from the contents of the ticket
 	 */
-#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_DECODE_TICKET)
 	if (strcmp(realm_of_cell, "") == 0) {
-	    krb5_error_code code;
-	    krb5_ticket *ticket;
-
-	    code = krb5_decode_ticket(&v5cred->ticket, &ticket);
-
-	    if (code != 0) {
+	    status = get_realm_from_cred(context, v5cred, &realm_from_princ);
+	    if (status) {
 		fprintf(stderr,
 			"%s: Couldn't decode ticket to determine realm for "
 			"cell %s.\n",
 			progname, cellconf.name);
 	    } else {
-		realm_from_princ = extract_realm(context, ticket->server);
-		realm_of_cell = realm_from_princ;
-		
-		krb5_free_ticket(context, ticket);
+		if (realm_from_princ)
+		    realm_of_cell = realm_from_princ;
 	    }
 	}
-#endif
 
 	strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
 	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
