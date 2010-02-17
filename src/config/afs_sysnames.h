@@ -298,7 +298,7 @@
 #define SYS_NAME_ID_amd64_obsd43        4012
 #define SYS_NAME_ID_amd64_obsd44        4013
 #define SYS_NAME_ID_amd64_obsd45        4014
-#define SYS_NAME_ID_amd64_obsd45        4014
+#define SYS_NAME_ID_amd64_obsd46        4015
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
