@@ -17,6 +17,9 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #else

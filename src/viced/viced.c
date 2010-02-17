@@ -30,6 +30,9 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #include <windows.h>

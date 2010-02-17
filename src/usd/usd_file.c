@@ -34,6 +34,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
+
 #include <afs/debug.h>
 #include "usd.h"
 

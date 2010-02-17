@@ -32,6 +32,9 @@
 #include <des.h>
 #include <afs/afsutil.h>
 #include <des/stats.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include "private_data.h"
 #define XPRT_RXKAD_SERVER
 

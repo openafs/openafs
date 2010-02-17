@@ -85,6 +85,9 @@ extern afs_int32 afs_termState;
 # include <string.h>
 # include <stdarg.h>
 # include <errno.h>
+# ifdef HAVE_STDINT_H
+#  include <stdint.h>
+# endif
 #ifdef AFS_NT40_ENV
 # include <stdlib.h>
 # include <fcntl.h>

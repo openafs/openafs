@@ -16,6 +16,9 @@
 
 #include <sys/types.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>

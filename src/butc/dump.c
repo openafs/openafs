@@ -22,6 +22,9 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>

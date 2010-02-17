@@ -46,6 +46,9 @@
 
 #include <sys/types.h>
 #include <stdio.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <time.h>

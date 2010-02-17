@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <lwp.h>
 #include <afs/com_err.h>
 #include <afs/butm.h>

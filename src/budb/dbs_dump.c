@@ -25,6 +25,9 @@
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <stdio.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
