@@ -121,9 +121,6 @@ extern int afs_osi_ctxtp_initialized;
 /* 
  * Time related macros
  */
-#ifndef AFS_DARWIN60_ENV
-extern struct timeval time;
-#endif
 #ifdef AFS_DARWIN80_ENV
 static inline time_t osi_Time(void) {
     struct timeval _now;

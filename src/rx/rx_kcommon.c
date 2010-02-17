@@ -743,7 +743,7 @@ rxi_GetIFInfo(void)
     return different;
 }
 
-#if defined(AFS_DARWIN60_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 /* Returns ifnet which best matches address */
 rx_ifnet_t
 rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
@@ -762,7 +762,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
     return (ifad ? rx_ifaddr_ifnet(ifad) : NULL);
 }
 
-#else /* DARWIN60 || XBSD */
+#else /* DARWIN || XBSD */
 
 /* Returns ifnet which best matches address */
 rx_ifnet_t
@@ -805,7 +805,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 	*maskp = ifad->ia_subnetmask;
     return (ifad ? ifad->ia_ifp : NULL);
 }
-#endif /* else DARWIN60 || XBSD */
+#endif /* else DARWIN || XBSD */
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !SUN5 && !SGI62 */
 

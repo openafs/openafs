@@ -92,9 +92,9 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
 #elif defined(AFS_DARWIN80_ENV)
     VATTR_RETURN(attrs, va_fsid, vfs_statfs(vnode_mount(AFSTOV(avc)))->f_fsid.val[0]);
-#elif defined(AFS_DARWIN70_ENV)
+#elif defined(AFS_DARWIN_ENV)
     attrs->va_fsid = avc->v->v_mount->mnt_stat.f_fsid.val[0];
-#else /* ! AFS_DARWIN70_ENV */
+#else /* ! AFS_DARWIN_ENV */
     attrs->va_fsid = 1;
 #endif 
     if (avc->mvstat == 2) {

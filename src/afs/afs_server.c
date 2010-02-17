@@ -45,10 +45,10 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* AFS_HPUX110_ENV */
-#ifdef AFS_DARWIN60_ENV
+#ifdef AFS_DARWIN_ENV
 #include <net/if_var.h>
 #endif
 #endif /* !defined(UKERNEL) */
@@ -1137,7 +1137,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
     return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
@@ -1174,7 +1174,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 #endif /* IFF_POINTTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
-#if defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
+#if defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
@@ -1491,7 +1491,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    ifnet_list_free(ifns);
 	}
     }
-#elif defined(AFS_DARWIN60_ENV)
+#elif defined(AFS_DARWIN_ENV)
     {
 	rx_ifnet_t ifn;
 	rx_ifaddr_t ifa;
@@ -1499,7 +1499,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    TAILQ_FOREACH(ifa, &ifn->if_addrhead, ifa_link) {
 		afsi_SetServerIPRank(sa, ifa);
     }}}
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_FBSD_ENV)
     {
 	struct in_ifaddr *ifa;
 	  TAILQ_FOREACH(ifa, &in_ifaddrhead, ia_link) {

@@ -11,9 +11,7 @@
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/ubc.h>
-#if defined(AFS_DARWIN70_ENV)
 #include <vfs/vfs_support.h>
-#endif /* defined(AFS_DARWIN70_ENV) */
 #ifdef AFS_DARWIN80_ENV
 #include <sys/vnode_if.h>
 #include <sys/kauth.h>
@@ -68,9 +66,6 @@ int afs_vop_rmdir(struct VOPPROT(rmdir_args) *);
 int afs_vop_symlink(struct VOPPROT(symlink_args) *);
 int afs_vop_readdir(struct VOPPROT(readdir_args) *);
 int afs_vop_readlink(struct VOPPROT(readlink_args) *);
-#if !defined(AFS_DARWIN70_ENV)
-extern int ufs_abortop(struct vop_abortop_args *);
-#endif /* !defined(AFS_DARWIN70_ENV) */
 int afs_vop_inactive(struct VOPPROT(inactive_args) *);
 int afs_vop_reclaim(struct VOPPROT(reclaim_args) *);
 int afs_vop_strategy(struct VOPPROT(strategy_args) *);
@@ -132,13 +127,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {VOPPREF(readdir_desc), (VOPFUNC)afs_vop_readdir},	/* readdir */
     {VOPPREF(readlink_desc), (VOPFUNC)afs_vop_readlink},	/* readlink */
 #ifndef AFS_DARWIN80_ENV
-#if defined(AFS_DARWIN70_ENV)
     {VOPPREF(abortop_desc), (VOPFUNC)nop_abortop },             /* abortop */
-#else /* ! defined(AFS_DARWIN70_ENV) */
-    /* Yes, we use the ufs_abortop call.  It just releases the namei
-     * buffer stuff */
-    {VOPPREF(abortop_desc), (VOPFUNC)ufs_abortop},	/* abortop */
-#endif /* defined(AFS_DARWIN70_ENV) */
 #endif
     {VOPPREF(inactive_desc), (VOPFUNC)afs_vop_inactive},	/* inactive */
     {VOPPREF(reclaim_desc), (VOPFUNC)afs_vop_reclaim},	/* reclaim */
@@ -484,7 +473,7 @@ afs_vop_open(ap)
     int error;
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(vp);
-#if defined(AFS_DARWIN14_ENV) && !defined(AFS_DARWIN80_ENV)
+#if !defined(AFS_DARWIN80_ENV)
     int didhold = 0;
     /*----------------------------------------------------------------
      * osi_VM_TryReclaim() removes the ubcinfo of a vnode, but that vnode
@@ -498,7 +487,7 @@ afs_vop_open(ap)
     if (vp->v_type == VREG && !(vp->v_flag & VSYSTEM)
       && vp->v_ubcinfo->ui_refcount < 2)
 	didhold = ubc_hold(vp);
-#endif /* AFS_DARWIN14_ENV */
+#endif /* !AFS_DARWIN80_ENV */
     AFS_GLOCK();
     error = afs_open(&vc, ap->a_mode, vop_cred);
 #ifdef DIAGNOSTIC
@@ -507,10 +496,10 @@ afs_vop_open(ap)
 #endif
     osi_FlushPages(vc, vop_cred);
     AFS_GUNLOCK();
-#if defined(AFS_DARWIN14_ENV) && !defined(AFS_DARWIN80_ENV)
+#if !defined(AFS_DARWIN80_ENV)
     if (error && didhold)
 	ubc_rele(vp);
-#endif /* AFS_DARWIN14_ENV */
+#endif /* !AFS_DARWIN80_ENV */
     return error;
 }
 
@@ -1755,7 +1744,6 @@ afs_vop_pathconf(ap)
     case _PC_PIPE_BUF:
 	return EINVAL;
 	break;
-#if defined(AFS_DARWIN70_ENV)
     case _PC_NAME_CHARS_MAX:
         *ap->a_retval = NAME_MAX;
 	break;
@@ -1765,7 +1753,6 @@ afs_vop_pathconf(ap)
     case _PC_CASE_PRESERVING:
         *ap->a_retval = 1;
 	break;
-#endif /* defined(AFS_DARWIN70_ENV) */
     default:
 	return EINVAL;
     }
@@ -1968,13 +1955,9 @@ afs_vop_print(ap)
 	printf("\n  UBC: ");
 	if (UBCINFOEXISTS(vp)) {
 	    printf("exists, ");
-#ifdef AFS_DARWIN14_ENV
 	    printf("refs %d%s%s", vp->v_ubcinfo->ui_refcount,
 		   ubc_issetflags(vp, UI_HASOBJREF) ? " HASOBJREF" : "",
 		   ubc_issetflags(vp, UI_WASMAPPED) ? " WASMAPPED" : "");
-#else
-	    printf("holdcnt %d", vp->v_ubcinfo->ui_holdcnt);
-#endif
 	} else
 	    printf("does not exist");
     }

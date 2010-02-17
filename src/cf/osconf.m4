@@ -473,58 +473,6 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	ppc_darwin_12)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-traditional-cpp"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
-	ppc_darwin_13)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		LWP_OPTMZ="-O2"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
-	ppc_darwin_14)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		LWP_OPTMZ="-O2"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
-	ppc_darwin_60)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		LWP_OPTMZ="-O2"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
-		TXLIBS="-lncurses"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
 	ppc_darwin_70)
 		CC="cc"
 		CCOBJ="cc"

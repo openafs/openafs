@@ -576,68 +576,8 @@ else
 		hppa*-hp-hpux10*)
 			AFS_SYSNAME="hp_ux102"
 			;;
-		powerpc-apple-darwin1.2*)
-			AFS_SYSNAME="ppc_darwin_12"
-			;;
-		powerpc-apple-darwin1.3*)
-			AFS_SYSNAME="ppc_darwin_13"
-			;;
-		powerpc-apple-darwin1.4*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.1*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.2*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.3*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.4*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.5*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin6.0*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.1*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.2*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.3*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.4*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.5*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin7.0*)
+		powerpc-apple-darwin7*)
 			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.1*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.2*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.3*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.4*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.5*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin8.0*)
-			AFS_SYSNAME="ppc_darwin_80"
 			;;
 		powerpc-apple-darwin8.*)
 			AFS_SYSNAME="ppc_darwin_80"

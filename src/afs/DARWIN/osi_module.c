@@ -23,11 +23,7 @@ extern open_close_fcn_t afs_cdev_nop_openclose;
 extern ioctl_fcn_t afs_cdev_ioctl;
 static void *afs_cdev_devfs_handle;
 #else
-#ifdef AFS_DARWIN60_ENV		/* not in Kernel.framework anymore !?! */
 #include <sys/syscall.h>
-#else
-#include "sys/syscall.h"
-#endif
 struct vfsconf afs_vfsconf;
 #endif
 #include <mach/kmod.h>

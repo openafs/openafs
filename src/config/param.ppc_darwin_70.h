@@ -13,9 +13,6 @@
 #include <afs/afs_sysnames.h>
 
 #define AFS_DARWIN_ENV
-#define AFS_DARWIN13_ENV
-#define AFS_DARWIN14_ENV
-#define AFS_DARWIN60_ENV
 #define AFS_DARWIN70_ENV
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
@@ -89,9 +86,6 @@
 #include <afs/afs_sysnames.h>
 #define AFS_USERSPACE_ENV
 #define AFS_USR_DARWIN_ENV
-#define AFS_USR_DARWIN13_ENV
-#define AFS_USR_DARWIN14_ENV
-#define AFS_USR_DARWIN60_ENV
 #define AFS_USR_DARWIN70_ENV
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
