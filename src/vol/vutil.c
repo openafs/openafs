@@ -892,10 +892,8 @@ _VLockFd(FD_t handle, afs_uint32 offset, int locktype, int nonblock)
 
     if (!LockFileEx(handle, flags, 0, 1, 0, &lap)) {
 	if (GetLastError() == ERROR_LOCK_VIOLATION) {
-	    CloseHandle(handle);
 	    return EBUSY;
 	}
-	CloseHandle(handle);
 	return EIO;
     }
 
@@ -977,12 +975,10 @@ _VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
     if (fcntl(fd, cmd, &sf)) {
 	if (nonblock && (errno == EACCES || errno == EAGAIN)) {
 	    /* We asked for a nonblocking lock, and it was already locked */
-	    close(fd);
 	    return EBUSY;
 	}
 	Log("_VLockFd: fcntl failed with error %d when trying to lock "
 	    "fd %d (locktype=%d)\n", errno, fd, locktype);
-	close(fd);
 	return EIO;
     }
 
