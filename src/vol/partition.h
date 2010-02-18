@@ -48,19 +48,20 @@
 #define VICE_ALWAYSATTACH_FILE	"AlwaysAttach"
 #endif
 
-#ifdef AFS_DEMAND_ATTACH_FS
-
 /**
  * abstraction for files used for file-locking.
  */
 struct VLockFile {
     FD_t fd;                /**< fd holding the lock(s) */
     char *path;             /**< path to the lock file */
-
-    pthread_mutex_t mutex;  /**< lock for the VLockFile struct */
     int refcount;           /**< how many locks we have on the file */
+
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t mutex;  /**< lock for the VLockFile struct */
+#endif /* AFS_PTHREAD_ENV */
 };
 
+#ifdef AFS_DEMAND_ATTACH_FS
 /*
  * flag bits for 'flags' in struct VDiskLock.
  */

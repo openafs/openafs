@@ -837,7 +837,13 @@ VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
     return code;
 }
 
-#ifdef AFS_DEMAND_ATTACH_FS
+#ifdef AFS_PTHREAD_ENV
+# define AFS_LF_LOCK(lf) assert(pthread_mutex_lock(&((lf)->mutex)) == 0)
+# define AFS_LF_UNLOCK(lf) assert(pthread_mutex_unlock(&((lf)->mutex)) == 0)
+#else
+# define AFS_LF_LOCK(lf)
+# define AFS_LF_UNLOCK(lf)
+#endif /* AFS_PTHREAD_ENV */
 
 /**
  * initialize a struct VLockFile.
@@ -852,10 +858,12 @@ VLockFileInit(struct VLockFile *lf, const char *path)
     memset(lf, 0, sizeof(*lf));
     lf->path = strdup(path);
     lf->fd = INVALID_FD;
+#ifdef AFS_PTHREAD_ENV
     assert(pthread_mutex_init(&lf->mutex, NULL) == 0);
+#endif /* AFS_PTHREAD_ENV */
 }
 
-# ifdef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
 static_inline FD_t
 _VOpenPath(const char *path)
 {
@@ -918,7 +926,7 @@ _VCloseFd(struct VLockFile *lf)
     CloseHandle(lf->fd);
 }
 
-# else /* !AFS_NT40_ENV */
+#else /* !AFS_NT40_ENV */
 
 /**
  * open a file on the local filesystem suitable for locking
@@ -1021,7 +1029,7 @@ _VUnlockFd(int fd, afs_uint32 offset)
 	    "fd %d\n", errno, fd);
     }
 }
-# endif /* !AFS_NT40_ENV */
+#endif /* !AFS_NT40_ENV */
 
 /**
  * lock a file on disk for the process.
@@ -1050,29 +1058,29 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 {
     int code;
 
-    assert(pthread_mutex_lock(&lf->mutex) == 0);
+    AFS_LF_LOCK(lf);
 
     if (lf->fd == INVALID_FD) {
 	lf->fd = _VOpenPath(lf->path);
 	if (lf->fd == INVALID_FD) {
-	    assert(pthread_mutex_unlock(&lf->mutex) == 0);
+	    AFS_LF_UNLOCK(lf);
 	    return EIO;
 	}
     }
 
     lf->refcount++;
 
-    assert(pthread_mutex_unlock(&lf->mutex) == 0);
+    AFS_LF_UNLOCK(lf);
 
     code = _VLockFd(lf->fd, offset, locktype, nonblock);
 
     if (code) {
-	assert(pthread_mutex_lock(&lf->mutex) == 0);
+	AFS_LF_LOCK(lf);
 	if (--lf->refcount < 1) {
 	    _VCloseFd(lf->fd);
 	    lf->fd = INVALID_FD;
 	}
-	assert(pthread_mutex_unlock(&lf->mutex) == 0);
+	AFS_LF_UNLOCK(lf);
     }
 
     return code;
@@ -1081,7 +1089,7 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 void
 VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 {
-    assert(pthread_mutex_lock(&lf->mutex) == 0);
+    AFS_LF_LOCK(lf);
 
     if (--lf->refcount < 1) {
 	_VCloseFd(lf->fd);
@@ -1090,8 +1098,10 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 	_VUnlockFd(lf->fd, offset);
     }
 
-    assert(pthread_mutex_unlock(&lf->mutex) == 0);
+    AFS_LF_UNLOCK(lf);
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
 
 /**
  * initialize a struct VDiskLock.
