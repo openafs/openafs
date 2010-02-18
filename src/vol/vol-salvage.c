@@ -338,40 +338,43 @@ extern pthread_t main_thread;
 childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
 #endif
 
-/* Get the salvage lock if not already held. Hold until process exits. */
+/**
+ * Get the salvage lock if not already held. Hold until process exits.
+ *
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ */
+static void
+_ObtainSalvageLock(int locktype)
+{
+    struct VLockFile salvageLock;
+    int offset = 0;
+    int nonblock = 1;
+    int code;
+
+    VLockFileInit(&salvageLock, AFSDIR_SERVER_SLVGLOCK_FILEPATH);
+
+    code = VLockFileLock(&salvageLock, offset, locktype, nonblock);
+    if (code == EBUSY) {
+	fprintf(stderr,
+	        "salvager:  There appears to be another salvager running!  "
+	        "Aborted.\n");
+	Exit(1);
+    } else if (code) {
+	fprintf(stderr,
+	        "salvager:  Error %d trying to acquire salvage lock!  "
+	        "Aborted.\n", code);
+	Exit(1);
+    }
+}
 void
 ObtainSalvageLock(void)
 {
-    FD_t salvageLock;
-
-#ifdef AFS_NT40_ENV
-    salvageLock =
-	(FD_t)CreateFile(AFSDIR_SERVER_SLVGLOCK_FILEPATH, 0, 0, NULL,
-			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (salvageLock == INVALID_FD) {
-	fprintf(stderr,
-		"salvager:  There appears to be another salvager running!  Aborted.\n");
-	Exit(1);
-    }
-#else
-    salvageLock =
-	afs_open(AFSDIR_SERVER_SLVGLOCK_FILEPATH, O_CREAT | O_RDWR, 0666);
-    if (salvageLock < 0) {
-	fprintf(stderr,
-		"salvager:  can't open salvage lock file %s, aborting\n",
-		AFSDIR_SERVER_SLVGLOCK_FILEPATH);
-	Exit(1);
-    }
-#ifdef AFS_DARWIN_ENV
-    if (flock(salvageLock, LOCK_EX) == -1) {
-#else
-    if (lockf(salvageLock, F_LOCK, 0) == -1) {
-#endif
-	fprintf(stderr,
-		"salvager:  There appears to be another salvager running!  Aborted.\n");
-	Exit(1);
-    }
-#endif
+    _ObtainSalvageLock(WRITE_LOCK);
+}
+void
+ObtainSharedSalvageLock(void)
+{
+    _ObtainSalvageLock(READ_LOCK);
 }
 
 

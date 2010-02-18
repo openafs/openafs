@@ -243,6 +243,7 @@ extern int JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 extern void MaybeZapVolume(register struct InodeSummary *isp, char *message,
 			   int deleteMe, int check);
 extern void ObtainSalvageLock(void);
+extern void ObtainSharedSalvageLock(void);
 extern void PrintInodeList(void);
 extern void PrintInodeSummary(void);
 extern void PrintVolumeSummary(void);
