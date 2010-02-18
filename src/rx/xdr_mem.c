@@ -50,27 +50,23 @@
 # endif
 #endif
 
-#ifndef KERNEL
 #include "xdr.h"
-#elif !defined(UKERNEL)
-#include "rx/xdr.h"
-#else
-#include "rpc/types.h"
-#include "rpc/xdr.h"
-#define AFS_XDRS_T XDR *
-#endif
 
-static bool_t xdrmem_getint32(AFS_XDRS_T axdrs, afs_int32 * lp);
-static bool_t xdrmem_putint32(AFS_XDRS_T axdrs, afs_int32 * lp);
-static bool_t xdrmem_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len);
-static bool_t xdrmem_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len);
-static u_int xdrmem_getpos(AFS_XDRS_T axdrs);
-static bool_t xdrmem_setpos(AFS_XDRS_T axdrs, u_int pos);
-static afs_int32 *xdrmem_inline(AFS_XDRS_T axdrs, u_int len);
-static void xdrmem_destroy(AFS_XDRS_T axdrs);
+static bool_t xdrmem_getint32(XDR *, afs_int32 *);
+static bool_t xdrmem_putint32(XDR *, afs_int32 *);
+static bool_t xdrmem_getbytes(XDR *, caddr_t, u_int);
+static bool_t xdrmem_putbytes(XDR *, caddr_t, u_int);
+static u_int xdrmem_getpos(XDR *);
+static bool_t xdrmem_setpos(XDR *, u_int);
+static afs_int32 *xdrmem_inline(XDR *, u_int);
+static void xdrmem_destroy(XDR *);
 
 static struct xdr_ops xdrmem_ops = {
 #if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifdef AFS_XDR_64BITOPS
+    NULL,
+    NULL,
+#endif
     /* Windows does not support labeled assigments */
     xdrmem_getint32,    /* deserialize an afs_int32 */
     xdrmem_putint32,    /* serialize an afs_int32 */
@@ -81,13 +77,12 @@ static struct xdr_ops xdrmem_ops = {
     xdrmem_inline,      /* prime stream for inline macros */
     xdrmem_destroy      /* destroy stream */
 #else
-#if defined(UKERNEL)
-    .x_getlong = xdrmem_getint32,
-    .x_putlong = xdrmem_putint32,
-#else
-    .x_getint32 = xdrmem_getint32,       /* deserialize an afs_int32 */
-    .x_putint32 = xdrmem_putint32,       /* serialize an afs_int32 */
+#ifdef AFS_XDR_64BITOPS
+    .x_getint64 = NULL,
+    .x_putint64 = NULL,
 #endif
+    .x_getint32 = xdrmem_getint32,
+    .x_putint32 = xdrmem_putint32,
     .x_getbytes = xdrmem_getbytes,
     .x_putbytes = xdrmem_putbytes,
     .x_getpostn = xdrmem_getpos,
@@ -111,15 +106,13 @@ xdrmem_create(XDR * xdrs, caddr_t addr, u_int size, enum xdr_op op)
 }
 
 static void
-xdrmem_destroy(AFS_XDRS_T axdrs)
+xdrmem_destroy(XDR *xdrs)
 {
 }
 
 static bool_t
-xdrmem_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
+xdrmem_getint32(XDR *xdrs, afs_int32 * lp)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
     else
@@ -130,10 +123,8 @@ xdrmem_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrmem_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
+xdrmem_putint32(XDR *xdrs, afs_int32 * lp)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
     else
@@ -144,10 +135,8 @@ xdrmem_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrmem_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
+xdrmem_getbytes(XDR *xdrs, caddr_t addr, u_int len)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     if (xdrs->x_handy < len)
 	return (FALSE);
     else
@@ -158,10 +147,8 @@ xdrmem_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 }
 
 static bool_t
-xdrmem_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
+xdrmem_putbytes(XDR *xdrs, caddr_t addr, u_int len)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     if (xdrs->x_handy < len)
 	return (FALSE);
     else
@@ -172,18 +159,14 @@ xdrmem_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 }
 
 static u_int
-xdrmem_getpos(AFS_XDRS_T axdrs)
+xdrmem_getpos(XDR *xdrs)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
-    return ((u_int)((char *)xdrs->x_private - xdrs->x_base));
+    return ((u_int)(xdrs->x_private - xdrs->x_base));
 }
 
 static bool_t
-xdrmem_setpos(AFS_XDRS_T axdrs, u_int pos)
+xdrmem_setpos(XDR *xdrs, u_int pos)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     caddr_t newaddr = xdrs->x_base + pos;
     caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
 
@@ -195,10 +178,8 @@ xdrmem_setpos(AFS_XDRS_T axdrs, u_int pos)
 }
 
 static afs_int32 *
-xdrmem_inline(AFS_XDRS_T axdrs, u_int len)
+xdrmem_inline(XDR *xdrs, u_int len)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     afs_int32 *buf = 0;
 
     if (len >= 0 && xdrs->x_handy >= len) {

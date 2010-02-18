@@ -55,35 +55,6 @@
 #endif /* !TRUE */
 #define __dontcare__	-1
 
-#if defined(KERNEL)
-/*
- * kernel version needs to agree with <rpc/xdr.h>
- * except on Linux which does XDR differently from everyone else
- */
-# if defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
-#  define AFS_XDRS_T void *
-# else
-#  define AFS_XDRS_T XDR *
-# endif
-# if defined(AFS_SUN57_ENV)
-#  define AFS_RPC_INLINE_T rpc_inline_t
-# elif defined(AFS_DUX40_ENV)
-#  define AFS_RPC_INLINE_T int
-# elif defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
-#  define AFS_RPC_INLINE_T afs_int32
-# elif defined(AFS_LINUX20_ENV)
-#  define AFS_RPC_INLINE_T int32_t *
-# else
-#  define AFS_RPC_INLINE_T long
-# endif
-#else /* KERNEL */
-/*
- * user version needs to agree with "xdr.h", i.e. <rx/xdr.h>
- */
-#  define AFS_XDRS_T void *
-#  define AFS_RPC_INLINE_T afs_int32
-#endif /* KERNEL */
-
 #ifndef mem_alloc
 #define mem_alloc(bsize)	malloc(bsize)
 #endif
@@ -222,31 +193,36 @@ typedef bool_t(*xdrproc_t) (void *, ...);
  * an operations vector for the paticular implementation (e.g. see xdr_mem.c),
  * and two private fields for the use of the particular impelementation.
  */
-typedef struct {
-    enum xdr_op x_op;		/* operation; fast additional param */
-    struct xdr_ops {
+
 #if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
 /* NOTE: SGI 6.1 adds two routines to the xdr_ops if the size of a long is
  * 64 bits. I've only done this for the kernel, since other changes may
  * be necessary if we make a 64 bit user version of AFS.
  */
-	bool_t(*x_getint64) (void *xdrs, afs_int64 * lp);	/* get 32 bits into a long */
-	bool_t(*x_putint64) (void *xdrs, afs_int64 * lp);	/* send 32 bits of a long */
-#endif				/* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
-	bool_t(*x_getint32) (void *xdrs, afs_int32 * lp);	/* get an afs_int32 from underlying stream */
-	bool_t(*x_putint32) (void *xdrs, afs_int32 * lp);	/* put an afs_int32 to " */
+#define AFS_XDR_64BITOPS 1
 #endif
-	bool_t(*x_getbytes) (void *xdrs, caddr_t addr, u_int len);	/* get some bytes from " */
-	bool_t(*x_putbytes) (void *xdrs, caddr_t addr, u_int len);	/* put some bytes to " */
-	u_int(*x_getpostn) (void *xdrs);	/* returns bytes off from beginning */
-	bool_t(*x_setpostn) (void *xdrs, u_int pos);	/* lets you reposition the stream */
-	afs_int32 *(*x_inline) (void *xdrs, u_int len);	/* buf quick ptr to buffered data */
-	void (*x_destroy) (void *xdrs);	/* free privates of this xdr_stream */
+
+typedef struct __afs_xdr {
+    enum xdr_op x_op;		/* operation; fast additional param */
+    struct xdr_ops {
+#ifdef AFS_XDR_64BITOPS
+	bool_t(*x_getint64) (struct __afs_xdr *xdrs, afs_int64 * lp);	/* get 32 bits into a long */
+	bool_t(*x_putint64) (struct __afs_xdr *xdrs, afs_int64 * lp);	/* send 32 bits of a long */
+#endif
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
+	bool_t(*x_getint32) (struct __afs_xdr *xdrs, afs_int32 * lp);	/* get an afs_int32 from underlying stream */
+	bool_t(*x_putint32) (struct __afs_xdr *xdrs, afs_int32 * lp);	/* put an afs_int32 to " */
+#endif
+	bool_t(*x_getbytes) (struct __afs_xdr *xdrs, caddr_t addr, u_int len);	/* get some bytes from " */
+	bool_t(*x_putbytes) (struct __afs_xdr *xdrs, caddr_t addr, u_int len);	/* put some bytes to " */
+	u_int(*x_getpostn) (struct __afs_xdr *xdrs);	/* returns bytes off from beginning */
+	bool_t(*x_setpostn) (struct __afs_xdr *xdrs, u_int pos);	/* lets you reposition the stream */
+	afs_int32 *(*x_inline) (struct __afs_xdr *xdrs, u_int len);	/* buf quick ptr to buffered data */
+	void (*x_destroy) (struct __afs_xdr *xdrs);	/* free privates of this xdr_stream */
 #if defined(KERNEL) && defined(AFS_SUN57_ENV)
-	  bool_t(*x_control) (void *xdrs);
-	  bool_t(*x_getint32) (void *xdrs, afs_int32 * lp);
-	  bool_t(*x_putint32) (void *xdrs, afs_int32 * lp);
+	  bool_t(*x_control) (struct __afs_xdr *xdrs);
+	  bool_t(*x_getint32) (struct __afs_xdr *xdrs, afs_int32 * lp);
+	  bool_t(*x_putint32) (struct __afs_xdr *xdrs, afs_int32 * lp);
 #endif
     } *x_ops;
     caddr_t x_public;		/* users' data */
@@ -264,7 +240,7 @@ typedef struct {
  * u_int	 len;
  * u_int	 pos;
  */
-#if defined(AFS_SGI61_ENV) && defined(KERNEL) && (_MIPS_SZLONG != _MIPS_SZINT) || defined(AFS_HPUX_64BIT_ENV)
+#ifdef AFS_XDR_64BITOPS
 #define XDR_GETINT64(xdrs, int64p)			\
 	(*(xdrs)->x_ops->x_getint64)(xdrs, int64p)
 #define xdr_getint64(xdrs, int64p)			\
@@ -274,7 +250,7 @@ typedef struct {
 	(*(xdrs)->x_ops->x_putint64)(xdrs, int64p)
 #define xdr_putint64(xdrs, int64p)			\
 	(*(xdrs)->x_ops->x_putint64)(xdrs, int64p)
-#endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
+#endif /* AFS_XDR_64BITOPS */
 
 #define XDR_GETINT32(xdrs, int32p)			\
 	(*(xdrs)->x_ops->x_getint32)(xdrs, int32p)

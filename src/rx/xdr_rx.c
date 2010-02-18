@@ -20,94 +20,60 @@
 
 
 #ifdef KERNEL
-#include "afs/sysincludes.h"
-#ifndef UKERNEL
-#include "h/types.h"
-#include "h/uio.h"
-#ifdef	AFS_OSF_ENV
-#include <net/net_globals.h>
-#endif /* AFS_OSF_ENV */
-#ifdef AFS_LINUX20_ENV
-#include "h/socket.h"
-#else
-#include "rpc/types.h"
-#endif
-#ifdef  AFS_OSF_ENV
-#undef kmem_alloc
-#undef kmem_free
-#undef mem_alloc
-#undef mem_free
-#undef register
-#endif /* AFS_OSF_ENV */
-#ifdef AFS_LINUX22_ENV
-#ifndef quad_t
-#define quad_t __quad_t
-#define u_quad_t __u_quad_t
-#endif
-#endif
-#include "rx/xdr.h"
-#include "netinet/in.h"
-#else /* !UKERNEL */
-#include "rpc/types.h"
-#include "rpc/xdr.h"
-#endif /* !UKERNEL */
-#include "rx/rx.h"
+# include "afs/sysincludes.h"
+# ifndef UKERNEL
+#  include "h/types.h"
+#  include "h/uio.h"
+#  ifdef AFS_OSF_ENV
+#   include <net/net_globals.h>
+#  endif /* AFS_OSF_ENV */
+#  ifdef AFS_LINUX20_ENV
+#   include "h/socket.h"
+#  else
+#   include "rpc/types.h"
+#  endif
+#  ifdef  AFS_OSF_ENV
+#   undef kmem_alloc
+#   undef kmem_free
+#   undef mem_alloc
+#   undef mem_free
+#   undef register
+#  endif /* AFS_OSF_ENV */
+#  ifdef AFS_LINUX22_ENV
+#   ifndef quad_t
+#    define quad_t __quad_t
+#    define u_quad_t __u_quad_t
+#   endif
+#  endif
+#  include "rx/xdr.h"
+#  include "netinet/in.h"
+# endif /* !UKERNEL */
+# include "rx/xdr.h"
+# include "rx/rx.h"
 
 #else /* KERNEL */
-#include <sys/types.h>
-#include <stdio.h>
-#ifndef AFS_NT40_ENV
-#include <netinet/in.h>
-#endif
-#include "rx.h"
-#include "xdr.h"
-#endif /* KERNEL */
-
-/*
- * This section should really go in the param.*.h files.
- */
-#if defined(KERNEL)
-/*
- * kernel version needs to agree with <rpc/xdr.h>
- * except on Linux which does XDR differently from everyone else
- */
-# if defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
-#  define AFS_XDRS_T void *
-# else
-#  define AFS_XDRS_T XDR *
+# include <sys/types.h>
+# include <stdio.h>
+# ifndef AFS_NT40_ENV
+#  include <netinet/in.h>
 # endif
-# if defined(AFS_SUN57_ENV)
-#  define AFS_RPC_INLINE_T rpc_inline_t
-# elif defined(AFS_DUX40_ENV)
-#  define AFS_RPC_INLINE_T int
-# elif defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
-#  define AFS_RPC_INLINE_T afs_int32
-# elif defined(AFS_LINUX20_ENV)
-#  define AFS_RPC_INLINE_T int32_t *
-# else
-#  define AFS_RPC_INLINE_T long
-# endif
-#else /* KERNEL */
-/*
- * user version needs to agree with "xdr.h", i.e. <rx/xdr.h>
- */
-#  define AFS_XDRS_T void *
-#  define AFS_RPC_INLINE_T afs_int32
+# include "rx.h"
+# include "xdr.h"
 #endif /* KERNEL */
 
 /* Static prototypes */
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
-static bool_t xdrrx_getint64(AFS_XDRS_T axdrs, long *lp);
-static bool_t xdrrx_putint64(AFS_XDRS_T axdrs, long *lp);
-#endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
+#if AFS_XDR_64BITOPS
+static bool_t xdrrx_getint64(XDR *axdrs, long *lp);
+static bool_t xdrrx_putint64(XDR *axdrs, long *lp);
+#endif /* AFS_XDR_64BITOPS */
 
-static bool_t xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp);
-static bool_t xdrrx_putint32(AFS_XDRS_T axdrs, afs_int32 * lp);
-static bool_t xdrrx_getbytes(AFS_XDRS_T axdrs, caddr_t addr,
+static bool_t xdrrx_getint32(XDR *axdrs, afs_int32 * lp);
+static bool_t xdrrx_putint32(XDR *axdrs, afs_int32 * lp);
+static bool_t xdrrx_getbytes(XDR *axdrs, caddr_t addr,
 			     u_int len);
-static bool_t xdrrx_putbytes(AFS_XDRS_T axdrs, caddr_t addr,
+static bool_t xdrrx_putbytes(XDR *axdrs, caddr_t addr,
 			     u_int len);
-static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, u_int len);
+static afs_int32 *xdrrx_inline(XDR *axdrs, u_int len);
 
 
 /*
@@ -115,6 +81,10 @@ static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, u_int len);
  */
 static struct xdr_ops xdrrx_ops = {
 #if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifdef AFS_XDR_64BITOPS
+    xdrrx_getint64,     /* deserialize an afs_int64 */
+    xdrrx_putint64,     /* serialize an afs_int64 */
+#endif
     /* Windows does not support labeled assigments */
     xdrrx_getint32,	/* deserialize an afs_int32 */
     xdrrx_putint32,	/* serialize an afs_int32 */
@@ -125,17 +95,12 @@ static struct xdr_ops xdrrx_ops = {
     xdrrx_inline,	/* prime stream for inline macros */
     NULL		/* destroy stream */
 #else
-#if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
+#ifdef AFS_XDR_64BITOPS
     .x_getint64 = xdrrx_getint64,
     .x_putint64 = xdrrx_putint64,
-#endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
-#if defined(UKERNEL)
-    .x_getlong = xdrrx_getint32,
-    .x_putlong = xdrrx_putint32,
-#elif !(defined(KERNEL) && defined(AFS_SUN57_ENV))
+#endif /* AFS_XDR_64BITOPS */
     .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
     .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
-#endif
     .x_getbytes = xdrrx_getbytes,	/* deserialize counted bytes */
     .x_putbytes = xdrrx_putbytes,	/* serialize counted bytes */
     .x_getpostn = NULL,		/* get offset in the stream: not supported. */
@@ -144,8 +109,6 @@ static struct xdr_ops xdrrx_ops = {
     .x_destroy = NULL,			/* destroy stream */
 #if defined(KERNEL) && defined(AFS_SUN57_ENV)
     .x_control = NULL,
-    .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
-    .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
 #endif
 #endif
 };
@@ -168,9 +131,9 @@ xdrrx_create(XDR * xdrs, struct rx_call *call,
 int rx_pin_failed = 0;
 #endif
 
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
+#ifdef AFS_XDR_64BITOPS
 static bool_t
-xdrrx_getint64(AFS_XDRS_T axdrs, long *lp)
+xdrrx_getint64(XDR *axdrs, long *lp)
 {
     XDR * xdrs = (XDR *)axdrs;
     struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
@@ -184,7 +147,7 @@ xdrrx_getint64(AFS_XDRS_T axdrs, long *lp)
 }
 
 static bool_t
-xdrrx_putint64(AFS_XDRS_T axdrs, long *lp)
+xdrrx_putint64(XDR *axdrs, long *lp)
 {
     XDR * xdrs = (XDR *)axdrs;
     afs_int32 code, i = htonl(*lp);
@@ -193,10 +156,10 @@ xdrrx_putint64(AFS_XDRS_T axdrs, long *lp)
     code = (rx_Write32(call, &i) == sizeof(i));
     return code;
 }
-#endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
+#endif /* AFS_XDR_64BITOPS */
 
 static bool_t
-xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
+xdrrx_getint32(XDR *axdrs, afs_int32 * lp)
 {
     afs_int32 l;
     XDR * xdrs = (XDR *)axdrs;
@@ -235,7 +198,7 @@ xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrrx_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
+xdrrx_putint32(XDR *axdrs, afs_int32 * lp)
 {
     afs_int32 code, l = htonl(*lp);
     XDR * xdrs = (XDR *)axdrs;
@@ -266,7 +229,7 @@ xdrrx_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrrx_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
+xdrrx_getbytes(XDR *axdrs, caddr_t addr, u_int len)
 {
     afs_int32 code;
     XDR * xdrs = (XDR *)axdrs;
@@ -298,7 +261,7 @@ xdrrx_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 }
 
 static bool_t
-xdrrx_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
+xdrrx_putbytes(XDR *axdrs, caddr_t addr, u_int len)
 {
     afs_int32 code;
     XDR * xdrs = (XDR *)axdrs;
@@ -345,8 +308,8 @@ xdrrx_setpos(XDR * xdrs, u_int pos)
 }
 #endif
 
-static AFS_RPC_INLINE_T *
-xdrrx_inline(AFS_XDRS_T axdrs, u_int len)
+static afs_int32 *
+xdrrx_inline(XDR *axdrs, u_int len)
 {
     /* I don't know what this routine is supposed to do, but the stdio module returns null, so we will, too */
     return (0);
