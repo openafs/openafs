@@ -3508,7 +3508,7 @@ VCloseVolumeHandles_r(Volume * vp)
      * DFlushVolume outside of vol_glock_mutex... 
      *
      * VCloseVnodeFiles_r drops the glock internally */
-    DFlushVolume(V_id(vp));
+    DFlushVolume(vp->hashid);
     VCloseVnodeFiles_r(vp);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3552,7 +3552,7 @@ VReleaseVolumeHandles_r(Volume * vp)
 
     /* XXX need to investigate whether we can perform
      * DFlushVolume outside of vol_glock_mutex... */
-    DFlushVolume(V_id(vp));
+    DFlushVolume(vp->hashid);
 
     VReleaseVnodeFiles_r(vp); /* releases the glock internally */
 
