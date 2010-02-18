@@ -850,8 +850,9 @@ void
 VLockFileInit(struct VLockFile *lf, const char *path)
 {
     memset(lf, 0, sizeof(*lf));
-    assert(pthread_mutex_init(&lf->mutex, NULL) == 0);
     lf->path = strdup(path);
+    lf->fd = INVALID_FD;
+    assert(pthread_mutex_init(&lf->mutex, NULL) == 0);
 }
 
 # ifdef AFS_NT40_ENV
