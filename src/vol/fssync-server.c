@@ -74,7 +74,9 @@
 #include "nfs.h"
 #include <afs/errors.h>
 #include "daemon_com.h"
+#include "daemon_com_inline.h"
 #include "fssync.h"
+#include "fssync_inline.h"
 #include "salvsync.h"
 #include "lwp.h"
 #include "lock.h"
@@ -177,9 +179,9 @@ static afs_int32 FSYNC_com_VolDone(FSSYNC_VolOp_command * com, SYNC_response * r
 static afs_int32 FSYNC_com_VolQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
 #ifdef AFS_DEMAND_ATTACH_FS
+static afs_int32 FSYNC_com_VGUpdate(osi_socket fd, SYNC_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VGQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
-static afs_int32 FSYNC_com_VGUpdate(SYNC_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VGScan(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VGScanAll(FSSYNC_VolOp_command * com, SYNC_response * res);
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -496,6 +498,16 @@ FSYNC_com(osi_socket fd)
 	goto done;
     }
 
+    ViceLog(125, ("FSYNC_com: from fd %d got command %ld (%s) reason %ld (%s) "
+                  "pt %ld (%s) pid %ld\n", (int)fd,
+                  afs_printable_int32_ld(com.hdr.command),
+                  FSYNC_com2string(com.hdr.command),
+                  afs_printable_int32_ld(com.hdr.reason),
+                  FSYNC_reason2string(com.hdr.reason),
+                  afs_printable_int32_ld(com.hdr.programType),
+                  VPTypeToString(com.hdr.programType),
+                  afs_printable_int32_ld(com.hdr.pid)));
+
     res.hdr.com_seq = com.hdr.com_seq;
 
     VOL_LOCK;
@@ -533,7 +545,7 @@ FSYNC_com(osi_socket fd)
 #ifdef AFS_DEMAND_ATTACH_FS
     case FSYNC_VG_ADD:
     case FSYNC_VG_DEL:
-	res.hdr.response = FSYNC_com_VGUpdate(&com, &res);
+	res.hdr.response = FSYNC_com_VGUpdate(fd, &com, &res);
 	break;
 #endif
     default:
@@ -541,6 +553,13 @@ FSYNC_com(osi_socket fd)
 	break;
     }
     VOL_UNLOCK;
+
+    ViceLog(125, ("FSYNC_com: fd %d responding with code %ld (%s) reason %ld "
+                  "(%s)\n", (int)fd,
+                  afs_printable_int32_ld(res.hdr.response),
+                  SYNC_res2string(res.hdr.response),
+                  afs_printable_int32_ld(res.hdr.reason),
+                  FSYNC_reason2string(res.hdr.reason)));
 
  respond:
     SYNC_putRes(&fssync_server_state, fd, &res);
@@ -577,6 +596,10 @@ FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
 	    break;
 	}
     }
+
+    ViceLog(125, ("FSYNC_com_VolOp: fd %d got command for vol %lu part %.16s\n",
+                  (int)fd, afs_printable_uint32_lu(vcom.vop->volume),
+                  vcom.vop->partName));
 
     switch (com->hdr.command) {
     case FSYNC_VOL_ON:
@@ -1504,7 +1527,7 @@ FSYNC_com_VGQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 }
 
 static afs_int32
-FSYNC_com_VGUpdate(SYNC_command * com, SYNC_response * res)
+FSYNC_com_VGUpdate(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     afs_int32 code = SYNC_FAILED;
     struct DiskPartition64 * dp;
@@ -1519,6 +1542,12 @@ FSYNC_com_VGUpdate(SYNC_command * com, SYNC_response * res)
     }
 
     vgucom = com->payload.buf;
+
+    ViceLog(125, ("FSYNC_com_VGUpdate: fd %d got command for parent %lu child "
+                  "%lu partName %.16s\n", (int)fd,
+                  afs_printable_uint32_lu(vgucom->parent),
+                  afs_printable_uint32_lu(vgucom->child),
+                  vgucom->partName));
 
     if (SYNC_verifyProtocolString(vgucom->partName, sizeof(vgucom->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -1615,6 +1644,14 @@ FSYNC_com_VnQry(osi_socket fd, SYNC_command * com, SYNC_response * res)
 	return SYNC_COM_ERROR;
     }
 
+    ViceLog(125, ("FSYNC_com_VnQry: fd %d got command for vol %lu vnode %lu "
+                  "uniq %lu spare %lu partName %.16s\n", (int)fd,
+                  afs_printable_uint32_lu(qry->volume),
+                  afs_printable_uint32_lu(qry->vnode),
+                  afs_printable_uint32_lu(qry->unique),
+                  afs_printable_uint32_lu(qry->spare),
+                  qry->partName));
+
 #ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, qry->volume, NULL);
 #else /* !AFS_DEMAND_ATTACH_FS */
@@ -1667,6 +1704,13 @@ FSYNC_com_StatsOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
     scom.hdr = &com->hdr;
     scom.sop = (FSSYNC_StatsOp_hdr *) com->payload.buf;
     scom.com = com;
+
+    ViceLog(125, ("FSYNC_com_StatsOp: fd %d got command for stats: "
+                  "{vlru_generation = %lu, hash_bucket = %lu, partName = "
+                  "%.16s}\n", (int)fd,
+                  afs_printable_uint32_lu(scom.sop->args.vlru_generation),
+                  afs_printable_uint32_lu(scom.sop->args.hash_bucket),
+                  scom.sop->args.partName));
 
     switch (com->hdr.command) {
     case FSYNC_VOL_STATS_GENERAL:
