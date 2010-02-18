@@ -145,7 +145,9 @@ afs_read_super(struct super_block *sb, void *data, int silent)
 #if defined(HAVE_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
+#if defined(STRUCT_BDI_HAS_NAME)
     afs_backing_dev_info->name = "openafs";
+#endif
     afs_backing_dev_info->ra_pages = 0;
 #if defined (STRUCT_SUPER_BLOCK_HAS_S_BDI)
     sb->s_bdi = afs_backing_dev_info;

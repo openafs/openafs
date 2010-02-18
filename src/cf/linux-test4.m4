@@ -1247,3 +1247,17 @@ _t.ctl_name = 0;],
   if test "x$ac_cv_linux_struct_ctl_table_has_ctl_name" = "xyes"; then
     AC_DEFINE([STRUCT_CTL_TABLE_HAS_CTL_NAME], 1, [define if struct ctl_table has a ctl_name member])
   fi])
+
+AC_DEFUN([LINUX_STRUCT_BDI_HAS_NAME], [
+  AC_MSG_CHECKING([if struct backing_dev_info has name])
+  AC_CACHE_VAL([ac_cv_linux_struct_bdi_has_name], [
+    AC_TRY_KBUILD(
+[#include <linux/backing-dev.h>],
+[struct backing_dev_info _bdi;
+_bdi.name = NULL;],
+      ac_cv_linux_struct_bdi_has_name=yes,
+      ac_cv_linux_struct_bdi_has_name=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_bdi_has_name)
+  if test "x$ac_cv_linux_struct_bdi_has_name" = "xyes"; then
+    AC_DEFINE([STRUCT_BDI_HAS_NAME], 1, [define if struct backing_dev_info has a name member])
+  fi])
