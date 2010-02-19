@@ -226,4 +226,7 @@ extern afs_int32 FSYNC_VGCDel(char *part, VolumeId parent, VolumeId child,
 			      int reason, SYNC_response *res);
 extern afs_int32 FSYNC_VGCScan(char *part, int reason);
 
+extern afs_int32 FSYNC_VerifyCheckout(VolumeId volume, char *partition,
+                                      afs_int32 command, afs_int32 reason);
+
 #endif /* __fssync_h_ */
