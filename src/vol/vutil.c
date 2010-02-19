@@ -1058,6 +1058,8 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 {
     int code;
 
+    assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+
     AFS_LF_LOCK(lf);
 
     if (lf->fd == INVALID_FD) {
@@ -1090,6 +1092,8 @@ void
 VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 {
     AFS_LF_LOCK(lf);
+
+    assert(lf->fd != INVALID_FD);
 
     if (--lf->refcount < 1) {
 	_VCloseFd(lf->fd);
