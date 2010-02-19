@@ -133,6 +133,8 @@ struct DiskPartition64 {
     } vol_list;
     struct VLockFile headerLockFile;
     struct VDiskLock headerLock; /* lock for the collective headers on the partition */
+
+    struct VLockFile volLockFile; /* lock file for individual volume locks */
 #endif /* AFS_DEMAND_ATTACH_FS */
 };
 

@@ -185,6 +185,7 @@ struct DiskPartition64 *DiskPartitionList;
 #ifdef AFS_DEMAND_ATTACH_FS
 /* file to lock to conceptually "lock" the vol headers on a partition */
 #define AFS_PARTLOCK_FILE ".volheaders.lock"
+#define AFS_VOLUMELOCK_FILE ".volume.lock"
 
 static struct DiskPartition64 *DiskPartitionTable[VOLMAXPARTS+1];
 
@@ -292,6 +293,10 @@ VInitPartition_r(char *path, char *devname, Device dev)
 	afs_snprintf(lockpath, MAXPATHLEN, "%s/" AFS_PARTLOCK_FILE, dp->name);
 	lockpath[MAXPATHLEN] = '\0';
 	VLockFileInit(&dp->headerLockFile, lockpath);
+
+	afs_snprintf(lockpath, MAXPATHLEN, "%s/" AFS_VOLUMELOCK_FILE, dp->name);
+	lockpath[MAXPATHLEN] = '\0';
+	VLockFileInit(&dp->volLockFile, lockpath);
     }
     VDiskLockInit(&dp->headerLock, &dp->headerLockFile, 1);
 #endif /* AFS_DEMAND_ATTACH_FS */

@@ -2385,6 +2385,57 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 	return vp;
     }
 }
+
+/**
+ * lock a volume on disk (non-blocking).
+ *
+ * @param[in] vp  The volume to lock
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ *
+ * @return operation status
+ *  @retval 0 success, lock was obtained
+ *  @retval EBUSY a conflicting lock was held by another process
+ *  @retval EIO   error acquiring lock
+ *
+ * @pre If we're in the fileserver, vp is in an exclusive state
+ *
+ * @pre vp is not already locked
+ */
+static int
+VLockVolumeNB(Volume *vp, int locktype)
+{
+    int code;
+
+    assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
+    assert(!(V_attachFlags(vp) & VOL_LOCKED));
+
+    code = VLockVolumeByIdNB(vp->hashid, vp->partition, locktype);
+    if (code == 0) {
+	V_attachFlags(vp) |= VOL_LOCKED;
+    }
+
+    return code;
+}
+
+/**
+ * unlock a volume on disk that was locked with VLockVolumeNB.
+ *
+ * @param[in] vp  volume to unlock
+ *
+ * @pre If we're in the fileserver, vp is in an exclusive state
+ *
+ * @pre vp has already been locked
+ */
+static void
+VUnlockVolume(Volume *vp)
+{
+    assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
+    assert((V_attachFlags(vp) & VOL_LOCKED));
+
+    VUnlockVolumeById(vp->hashid, vp->partition);
+
+    V_attachFlags(vp) &= ~VOL_LOCKED;
+}
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 /*

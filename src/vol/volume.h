@@ -194,6 +194,7 @@ enum VolFlags {
     VOL_IS_BUSY           = 0x20,    /**< volume is not to be free()d */
     VOL_ON_VLRU           = 0x40,    /**< volume is on the VLRU */
     VOL_HDR_DONTSALV      = 0x80,    /**< volume header DONTSALVAGE flag is set */
+    VOL_LOCKED            = 0x100,   /**< volume is disk-locked (@see VLockVolumeNB) */
 };
 
 /* VPrintExtendedCacheStats flags */
