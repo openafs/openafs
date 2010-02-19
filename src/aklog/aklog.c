@@ -345,7 +345,7 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 }
 
 static void
-dprintf(char *fmt, ...) {
+afs_dprintf(char *fmt, ...) {
     va_list ap;
 
     va_start(ap, fmt);
@@ -524,10 +524,10 @@ rxkad_get_ticket(krb5_context context, char *realm,
 	if (realm && realm[0]) {
 	    realm_of_cell = realm;
 	    status = AKLOG_TRYAGAIN;
-	    dprintf("We were told to authenticate to realm %s.\n", realm);
+	    afs_dprintf("We were told to authenticate to realm %s.\n", realm);
 	} else {
 	    /* Initially, try using afs/cell@USERREALM */
-	    dprintf("Trying to authenticate to user's realm %s.\n",
+	    afs_dprintf("Trying to authenticate to user's realm %s.\n",
 		    realm_of_user);
 	    realm_of_cell = realm_of_user;
 	    status = get_credv5(context, AFSKEY, cell->name, realm_of_cell,
@@ -544,10 +544,10 @@ rxkad_get_ticket(krb5_context context, char *realm,
 		}
 
 		if (realm_of_cell[0])
-		    dprintf("We've deduced that we need to authenticate"
+		    afs_dprintf("We've deduced that we need to authenticate"
 			    " to realm %s.\n", realm_of_cell);
 		    else
-		    dprintf("We've deduced that we need to authenticate "
+		    afs_dprintf("We've deduced that we need to authenticate "
 			    "using referrals.\n");
 	    }
 	}
@@ -573,7 +573,7 @@ rxkad_get_ticket(krb5_context context, char *realm,
 				progname, cell->name);
 			exit(AKLOG_MISC);
 		    }
-		    dprintf("We've deduced that we need to authenticate"
+		    afs_dprintf("We've deduced that we need to authenticate"
 			    " to realm %s.\n", realm_of_cell);
 		}
 		status = get_credv5(context, AFSKEY, cell->name,
@@ -605,7 +605,7 @@ rxkad_get_ticket(krb5_context context, char *realm,
     }
 
     if (status != 0) {
-	dprintf("Kerberos error code returned by get_cred : %d\n", status);
+	afs_dprintf("Kerberos error code returned by get_cred : %d\n", status);
 	fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		progname, cell->name);
 	afs_com_err(progname, status, "while getting AFS tickets");
@@ -675,7 +675,7 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     int len;
 #endif
 
-    dprintf("Using Kerberos V5 ticket natively\n");
+    afs_dprintf("Using Kerberos V5 ticket natively\n");
 
     *tokenPtr = NULL;
     *userPtr = NULL;
@@ -774,7 +774,7 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
     *tokenPtr = NULL;
     *userPtr = NULL;
 
-    dprintf("Using Kerberos 524 translator service\n");
+    afs_dprintf("Using Kerberos 524 translator service\n");
 
     status = krb5_524_convert_creds(context, v5cred, &cred);
 
@@ -968,7 +968,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     }
 
     if (ll_string(&authedcells, ll_s_check, cellconf.name)) {
-	dprintf("Already authenticated to %s (or tried to)\n", cellconf.name);
+	afs_dprintf("Already authenticated to %s (or tried to)\n", cellconf.name);
 	status = AKLOG_SUCCESS;
 	goto out;
     }
@@ -1001,7 +1001,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     }
 
     if (!noauth) {
-	dprintf("Authenticating to cell %s (server %s).\n", cellconf.name,
+	afs_dprintf("Authenticating to cell %s (server %s).\n", cellconf.name,
 		cellconf.hostName[0]);
 
 	status = rxkad_get_token(context, &cellconf, realm, &token,
@@ -1013,7 +1013,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	if (!force &&
 	    !get_kernel_token(&cellconf, &btoken) &&
 	    tokens_equal(token, btoken)) {
-	    dprintf("Identical tokens already exist; skipping.\n");
+	    afs_dprintf("Identical tokens already exist; skipping.\n");
 	    status = AKLOG_SUCCESS;
 	    goto out;
 	}
@@ -1023,19 +1023,19 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 #endif
 
 	if (noprdb) {
-	    dprintf("Not resolving name %s to id (-noprdb set)\n", username);
+	    afs_dprintf("Not resolving name %s to id (-noprdb set)\n", username);
 	}
 	else {
-	    dprintf("About to resolve name %s to id in cell %s.\n", username,
+	    afs_dprintf("About to resolve name %s to id in cell %s.\n", username,
 		    cellconf.name);
 
 	    if (!pr_Initialize (0,  AFSDIR_CLIENT_ETC_DIRPATH, cellconf.name))
 		status = pr_SNameToId (username, &viceId);
 
 	    if (status)
-		dprintf("Error %d\n", status);
+		afs_dprintf("Error %d\n", status);
 	    else
-		dprintf("Id %d\n", (int) viceId);
+		afs_dprintf("Id %d\n", (int) viceId);
 	    
 
 	    /*
@@ -1045,7 +1045,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 
 #ifdef ALLOW_REGISTER
 	    if ((status == 0) && (viceId == ANONYMOUSID) && isForeign) {
-		dprintf("doing first-time registration of %s at %s\n",
+		afs_dprintf("doing first-time registration of %s at %s\n",
 			username, cellconf.name);
 		viceId = 0;
 
@@ -1096,9 +1096,9 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    }
 	}
 
-	dprintf("Set username to %s\n", username);
+	afs_dprintf("Set username to %s\n", username);
 
-	dprintf("Setting tokens. %s @ %s \n", username, cellconf.name);
+	afs_dprintf("Setting tokens. %s @ %s \n", username, cellconf.name);
 
 #ifndef AFS_AIX51_ENV
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
@@ -1116,7 +1116,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	}
     }
     else
-	dprintf("Noauth mode; not authenticating.\n");
+	afs_dprintf("Noauth mode; not authenticating.\n");
 
 out:
     if (local_cell)
@@ -1289,7 +1289,7 @@ add_hosts(char *file)
     vio.in_size = 0;
     vio.out = outbuf;
 
-    dprintf("Getting list of hosts for %s\n", file);
+    afs_dprintf("Getting list of hosts for %s\n", file);
 
     /* Don't worry about errors. */
     if (!pioctl(file, VIOCWHEREIS, &vio, 1)) {
@@ -1314,11 +1314,11 @@ add_hosts(char *file)
 	for (i = 0; phosts[i]; i++) {
 	    if (hosts) {
 		in.s_addr = phosts[i];
-		dprintf("Got host %s\n", inet_ntoa(in));
+		afs_dprintf("Got host %s\n", inet_ntoa(in));
 		ll_string(&hostlist, ll_s_add, (char *)inet_ntoa(in));
 	    }
 	    if (zsubs && (hp=gethostbyaddr((char *) &phosts[i],sizeof(long),AF_INET))) {
-		dprintf("Got host %s\n", hp->h_name);
+		afs_dprintf("Got host %s\n", hp->h_name);
 		ll_string(&zsublist, ll_s_add, hp->h_name);
 	    }
 	}
@@ -1364,7 +1364,7 @@ auth_to_path(krb5_context context, char *path)
     /* Go on to the next level down the path */
     while ((nextpath = next_path(NULL))) {
 	strcpy(pathtocheck, nextpath);
-	dprintf("Checking directory %s\n", pathtocheck);
+	afs_dprintf("Checking directory %s\n", pathtocheck);
 	/* 
 	 * If this is an afs mountpoint, determine what cell from 
 	 * the mountpoint name which is of the form 
@@ -1639,7 +1639,7 @@ main(int argc, char *argv[])
 	 */
 
 	if (!status && linked && linkedcell != NULL) {
-	    dprintf("Linked cell: %s\n", linkedcell);
+	    afs_dprintf("Linked cell: %s\n", linkedcell);
 	    status = auth_to_cell(context, linkedcell, NULL, NULL);
 	}
 	if (linkedcell) {
@@ -1664,7 +1664,7 @@ main(int argc, char *argv[])
 	    if ((stat(xlog_path, &sbuf) == 0) &&
 		((f = fopen(xlog_path, "r")) != NULL)) {
 
-		dprintf("Reading %s for cells to authenticate to.\n",
+		afs_dprintf("Reading %s for cells to authenticate to.\n",
 			xlog_path);
 
 		while (fgets(fcell, 100, f) != NULL) {
@@ -1672,7 +1672,7 @@ main(int argc, char *argv[])
 
 		    fcell[strlen(fcell) - 1] = '\0';
 
-		    dprintf("Found cell %s in %s.\n", fcell, xlog_path);
+		    afs_dprintf("Found cell %s in %s.\n", fcell, xlog_path);
 
 		    auth_status = auth_to_cell(context, fcell, NULL, NULL);
 		    if (status == AKLOG_SUCCESS)
@@ -1692,7 +1692,7 @@ main(int argc, char *argv[])
 		somethingswrong++;
 	    else {
 		if (linked && linkedcell != NULL) {
-		    dprintf("Linked cell: %s\n", linkedcell);
+		    afs_dprintf("Linked cell: %s\n", linkedcell);
 		    if ((status = auth_to_cell(context, linkedcell,
 					       cellinfo.realm, NULL)))
 			somethingswrong++;
@@ -2080,7 +2080,7 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
     krb5_error_code r;
     static krb5_principal client_principal = 0;
 
-    dprintf("Getting tickets: %s%s%s@%s\n", name,
+    afs_dprintf("Getting tickets: %s%s%s@%s\n", name,
 	    (inst && inst[0]) ? "/" : "", inst ? inst : "", realm);
     
     memset(&increds, 0, sizeof(increds));
