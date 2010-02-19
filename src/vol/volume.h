@@ -821,6 +821,7 @@ extern char *vol_DevName(dev_t adev, char *wpath);
 
 struct VLockFile;
 extern void VLockFileInit(struct VLockFile *lf, const char *path);
+extern void VLockFileReinit(struct VLockFile *lf);
 extern int VLockFileLock(struct VLockFile *lf, afs_uint32 offset,
                          int locktype, int nonblock);
 extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);

@@ -1032,6 +1032,39 @@ _VUnlockFd(int fd, afs_uint32 offset)
 #endif /* !AFS_NT40_ENV */
 
 /**
+ * reinitialize a struct VLockFile.
+ *
+ * Use this to close the lock file (unlocking any locks in it), and effectively
+ * restore lf to the state it was in when it was initialized. This is the same
+ * as unlocking all of the locks on the file, without having to remember what
+ * all of the locks were. Do not unlock previously held locks after calling
+ * this.
+ *
+ * @param[in] lf  struct VLockFile to reinit
+ *
+ * @pre nobody is waiting for a lock on this lockfile or otherwise using
+ *      this lockfile at all
+ */
+void
+VLockFileReinit(struct VLockFile *lf)
+{
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_mutex_lock(&lf->mutex) == 0);
+#endif /* AFS_PTHREAD_ENV */
+
+    if (lf->fd != INVALID_FD) {
+	_VCloseFd(lf->fd);
+	lf->fd = INVALID_FD;
+    }
+
+    lf->refcount = 0;
+
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_mutex_unlock(&lf->mutex) == 0);
+#endif /* AFS_PTHREAD_ENV */
+}
+
+/**
  * lock a file on disk for the process.
  *
  * @param[in] lf       the struct VLockFile representing the file to lock
