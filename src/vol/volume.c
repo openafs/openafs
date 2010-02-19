@@ -360,7 +360,7 @@ static void VVByPListWait_r(struct DiskPartition64 * dp);
 
 /* online salvager */
 static int VCheckSalvage(register Volume * vp);
-#ifdef SALVSYNC_BUILD_CLIENT
+#if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 static int VScheduleSalvage_r(Volume * vp);
 #endif
 
@@ -2565,20 +2565,17 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	vp->nUsers = 0;
 
-	VCheckFree(vp);
-	return NULL;
+	goto error;
     } else if (*ec) {
 	/* volume operation in progress */
 	VOL_LOCK;
-	VCheckFree(vp);
-	return NULL;
+	goto error;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
         VOL_LOCK;
-	FreeVolume(vp);
-	return NULL;
+	goto error;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -2593,12 +2590,10 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	vp->nUsers = 0;
 
-	VCheckFree(vp);
 #else /* AFS_DEMAND_ATTACH_FS */
-	FreeVolume(vp);
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	return NULL;
+	goto error;
     }
 
     VOL_LOCK;
@@ -2616,13 +2611,12 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
 
-	    VCheckFree(vp);
 #else /* AFS_DEMAND_ATTACH_FS */
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
-	    FreeVolume(vp);
 	    *ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	    return NULL;
+
+	    goto error;
 	}
 #endif /* FAST_RESTART */
 
@@ -2659,13 +2653,10 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #ifdef AFS_DEMAND_ATTACH_FS
 		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 		vp->nUsers = 0;
-		VCheckFree(vp);
-#else /* AFS_DEMAND_ATTACH_FS */
-		FreeVolume(vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
 		    path);
-		return NULL;
+		goto error;
 	    }
 	}
     }
@@ -2696,6 +2687,23 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
     }
 #endif
     return vp;
+
+ error:
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (!VIsErrorState(V_attachState(vp))) {
+	VChangeState_r(vp, VOL_STATE_ERROR);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    VReleaseVolumeHandles_r(vp);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VCheckSalvage(vp);
+    VCheckFree(vp);
+#else /* !AFS_DEMAND_ATTACH_FS */
+    FreeVolume(vp);
+#endif /* !AFS_DEMAND_ATTACH_FS */
+    return NULL;
 }
 
 /* Attach an existing volume.
@@ -4106,14 +4114,14 @@ static int
 VCheckSalvage(register Volume * vp)
 {
     int ret = 0;
-#ifdef SALVSYNC_BUILD_CLIENT
+#if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
     if (vp->nUsers || vp->nWaiters)
 	return ret;
     if (vp->salvage.requested) {
 	VScheduleSalvage_r(vp);
 	ret = 1;
     }
-#endif /* SALVSYNC_BUILD_CLIENT */
+#endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
     return ret;
 }
 
@@ -4162,41 +4170,7 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	return 1;
     }
 
-    if (programType != fileServer) {
-#ifdef FSSYNC_BUILD_CLIENT
-        if (VCanUseFSSYNC()) {
-            /*
-             * If we aren't the fileserver, tell the fileserver the volume
-             * needs to be salvaged. We could directly tell the
-             * salvageserver, but the fileserver keeps track of some stats
-             * related to salvages, and handles some other salvage-related
-             * complications for us.
-             */
-
-	    /*
-	     * You might wonder why we don't check for
-	     * VIsSalvager(V_inUse(vp)) here, since we do check for that
-	     * in the fileServer case (below). The reason is that the
-	     * below check is done since the fileServer can't tell if a
-	     * salvage is still running or not when V_inUse refers to a
-	     * salvaging program. However, if we are a non-fileserver,
-	     * to get here we must have checked out the volume from the
-	     * fileserver and locked the partition, meaning there must
-	     * be no salvager running; so we just always try to salvage
-	     */
-
-            code = FSYNC_VolOp(vp->hashid, vp->partition->name,
-                               FSYNC_VOL_FORCE_ERROR, FSYNC_SALVAGE, NULL);
-            if (code == SYNC_OK) {
-                *ec = VSALVAGING;
-                return 0;
-            }
-            Log("VRequestSalvage: force error salvage state of volume %u"
-                " denied by fileserver\n", vp->hashid);
-
-            /* fall through to error condition below */
-        }
-#endif /* FSSYNC_BUILD_CLIENT */
+    if (programType != fileServer && !VCanUseFSSYNC()) {
         VChangeState_r(vp, VOL_STATE_ERROR);
         *ec = VSALVAGE;
         return 1;
@@ -4207,7 +4181,7 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	vp->salvage.reason = reason;
 	vp->stats.last_salvage = FT_ApproxTime();
 
-	if (vp->header && VIsSalvager(V_inUse(vp))) {
+	if (programType == fileServer && vp->header && VIsSalvager(V_inUse(vp))) {
 	    /* Right now we can't tell for sure if this indicates a
 	     * salvage is running, or if a running salvage crashed, so
 	     * we always ERROR the volume in case a salvage is running.
@@ -4215,6 +4189,11 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	     * individual volume header files for salvages, we will
 	     * probably be able to tell if a salvage is running, and we
 	     * can do away with this behavior. */
+	    /* Note that we can avoid this check for non-fileserver programs,
+	     * since they must lock the partition in order to attach a volume.
+	     * Since the salvager also locks the partition to salvage, we
+	     * could not have reached this point for non-fileservers if this
+	     * volume was being salvaged; so we assume it is not. */
 	    Log("VRequestSalvage: volume %u appears to be salvaging, but we\n", vp->hashid);
 	    Log("  didn't request a salvage. Forcing it offline waiting for the\n");
 	    Log("  salvage to finish; if you are sure no salvage is running,\n");
@@ -4320,23 +4299,27 @@ VUpdateSalvagePriority_r(Volume * vp)
 }
 
 
-#ifdef SALVSYNC_BUILD_CLIENT
+#if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 /**
- * schedule a salvage with the salvage server.
+ * schedule a salvage with the salvage server or fileserver.
  *
  * @param[in] vp  pointer to volume object
  *
  * @return operation status
  *    @retval 0 salvage scheduled successfully
- *    @retval 1 salvage not scheduled, or SALVSYNC com error
+ *    @retval 1 salvage not scheduled, or SALVSYNC/FSSYNC com error
  *
  * @pre 
  *    @arg VOL_LOCK is held.
  *    @arg nUsers and nWaiters should be zero.
  *
- * @post salvageserver is sent a salvage request
+ * @post salvageserver or fileserver is sent a salvage request
  *
- * @note DAFS fileserver only
+ * @note If we are the fileserver, the request will be sent to the salvage
+ * server over SALVSYNC. If we are not the fileserver, the request will be
+ * sent to the fileserver over FSSYNC (FSYNC_VOL_FORCE_ERROR/FSYNC_SALVAGE).
+ *
+ * @note DAFS only
  *
  * @internal volume package internal use only.
  */
@@ -4348,6 +4331,8 @@ VScheduleSalvage_r(Volume * vp)
     VolState state_save;
     VThreadOptions_t * thread_opts;
     char partName[16];
+
+    assert(VCanUseSALVSYNC() || VCanUseFSSYNC());
 
     if (vp->nWaiters || vp->nUsers) {
 	return 1;
@@ -4385,22 +4370,44 @@ VScheduleSalvage_r(Volume * vp)
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	VOL_UNLOCK;
 
-	/* can't use V_id() since there's no guarantee
-	 * we have the disk data header at this point */
-	code = SALVSYNC_SalvageVolume(vp->hashid,
-				      partName,
-				      SALVSYNC_SALVAGE,
-				      vp->salvage.reason,
-				      vp->salvage.prio,
-				      NULL);
+#ifdef SALVSYNC_BUILD_CLIENT
+	if (VCanUseSALVSYNC()) {
+	    /* can't use V_id() since there's no guarantee
+	     * we have the disk data header at this point */
+	    code = SALVSYNC_SalvageVolume(vp->hashid,
+	                                  partName,
+	                                  SALVSYNC_SALVAGE,
+	                                  vp->salvage.reason,
+	                                  vp->salvage.prio,
+	                                  NULL);
+	} else
+#endif /* SALVSYNC_BUILD_CLIENT */
+#ifdef FSSYNC_BUILD_CLIENT
+        if (VCanUseFSSYNC()) {
+            /*
+             * If we aren't the fileserver, tell the fileserver the volume
+             * needs to be salvaged. We could directly tell the
+             * salvageserver, but the fileserver keeps track of some stats
+             * related to salvages, and handles some other salvage-related
+             * complications for us.
+             */
+            code = FSYNC_VolOp(vp->hashid, partName,
+                               FSYNC_VOL_FORCE_ERROR, FSYNC_SALVAGE, NULL);
+        }
+#endif /* FSSYNC_BUILD_CLIENT */
+
 	VOL_LOCK;
 	VChangeState_r(vp, state_save);
 
 	if (code == SYNC_OK) {
 	    vp->salvage.scheduled = 1;
-	    vp->stats.salvages++;
 	    vp->stats.last_salvage_req = FT_ApproxTime();
-	    IncUInt64(&VStats.salvages);
+	    if (VCanUseSALVSYNC()) {
+		/* don't record these stats for non-fileservers; let the
+		 * fileserver take care of these */
+		vp->stats.salvages++;
+		IncUInt64(&VStats.salvages);
+	    }
 	} else {
 	    ret = 1;
 	    switch(code) {
@@ -4408,16 +4415,26 @@ VScheduleSalvage_r(Volume * vp)
 	    case SYNC_COM_ERROR:
 		break;
 	    case SYNC_DENIED:
-		Log("VScheduleSalvage_r:  SALVSYNC request denied\n");
+		Log("VScheduleSalvage_r: Salvage request for volume %lu "
+		    "denied\n", afs_printable_uint32_lu(vp->hashid));
 		break;
 	    default:
-		Log("VScheduleSalvage_r:  SALVSYNC unknown protocol error\n");
+		Log("VScheduleSalvage_r: Salvage request for volume %lu "
+		    "received unknown protocol error %d\n",
+		    afs_printable_uint32_lu(vp->hashid), code);
 		break;
+	    }
+
+	    if (VCanUseFSSYNC()) {
+		VChangeState_r(vp, VOL_STATE_ERROR);
 	    }
 	}
     }
     return ret;
 }
+#endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
+
+#ifdef SALVSYNC_BUILD_CLIENT
 
 /**
  * connect to the salvageserver SYNC service.
