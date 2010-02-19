@@ -509,7 +509,7 @@ SalvageServer(void)
      * still needs this because we don't want
      * a stand-alone salvager to conflict with
      * the salvager daemon */
-    ObtainSalvageLock();
+    ObtainSharedSalvageLock();
 
     child_slot = (int *) malloc(Parallel * sizeof(int));
     assert(child_slot != NULL);
@@ -623,6 +623,11 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 	    node->command.sop.partName);
 	return 1;
     }
+
+    /* obtain a shared salvage lock in the child worker, so if the
+     * salvageserver restarts (and we continue), we will still hold a lock and
+     * prevent standalone salvagers from interfering */
+    ObtainSharedSalvageLock();
 
     /* Salvage individual volume; don't notify fs */
     SalvageFileSys1(partP, node->command.sop.parent);

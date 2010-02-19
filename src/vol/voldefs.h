@@ -30,6 +30,10 @@
 /* the maximum number of volumes in a volume group that we can handle */
 #define VOL_VG_MAX_VOLS 20
 
+/* how many times to retry if we raced the fileserver restarting, when trying
+ * to checkout/lock a volume */
+#define VOL_MAX_CHECKOUT_RETRIES 10
+
 /* maximum numbe of Vice partitions */
 #define	VOLMAXPARTS	255
 

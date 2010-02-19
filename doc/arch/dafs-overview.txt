@@ -322,3 +322,75 @@ it's okay, then we avoided the race.
 
 Note that destroying vol headers does not require any locks, since
 unlink()s are atomic and don't cause any races for us here.
+
+ - partition and volume locking
+
+Previously, whenever the volserver would attach a volume or the salvager
+would salvage anything, the partition would be locked
+(VLockPartition_r). This unnecessarily serializes part of most volserver
+operations. It also makes it so only one salvage can run on a partition
+at a time, and that a volserver operation cannot occur at the same time
+as a salvage. With the addition of the VGC (previous section), the
+salvager partition lock is unnecessary on namei, since the salvager does
+not need to scan all volume headers.
+
+Instead of the rather heavyweight partition lock, in DAFS we now lock
+individual volumes. Locking an individual volume is done by locking a
+certain byte in the file /vicepX/.volume.lock. To lock volume with ID
+1234, you lock 1 byte at offset 1234 (with VLockFile: fcntl on unix,
+LockFileEx on windows as of the time of this writing). To read-lock the
+volume, acquire a read lock; to write-lock the volume, acquire a write
+lock.
+
+Due to the potentially very large number of volumes attached by the
+fileserver at once, the fileserver does not keep volumes locked the
+entire time they are attached (which would make volume locking
+potentially very slow). Rather, it locks the volume before attaching,
+and unlocks it when the volume has been attached. However, all other
+programs are expected to acquire a volume lock for the entire duration
+they interact with the volume. Whether a read or write lock is obtained
+is determined by the attachment mode, and whether or not the volume in
+question is an RW volume (see VVolLockType()).
+
+These locks are all acquired non-blocking, so we can just fail if we
+fail to acquire a lock. That is, an errant process holding a file-level
+lock cannot cause any process to just hang, waiting for a lock.
+
+ -- re-reading volume headers
+
+Since we cannot know whether a volume is writeable or not until the
+volume header is read, and we cannot atomically upgrade file-level
+locks, part of attachment can now occur twice (see attach2 and
+attach_volume_header). What occurs is we read the vol header, assuming
+the volume is readonly (acquiring a read or write lock as necessary).
+If, after reading the vol header, we discover that the volume is
+writable and that means we need to acquire a write lock, we read the vol
+header again while acquiring a write lock on the header.
+
+ -- verifying checkouts
+
+Since the fileserver does not hold volume locks for the entire time a
+volume is attached, there could have been a potential race between the
+fileserver and other programs. Consider when a non-fileserver program
+checks out a volume from the fileserver via FSSYNC, then locks the
+volume. Before the program locked the volume, the fileserver could have
+restarted and attached the volume. Since the fileserver releases the
+volume lock after attachment, the fileserver and the other program could
+both think they have control over the volume, which is a problem.
+
+To prevent this non-fileserver programs are expected to verify that
+their volume is checked out after locking it (FSYNC_VerifyCheckout).
+What this does is ask the fileserver for the current volume operation on
+the specific volume, and verifies that it matches how the program
+checked out the volume.
+
+For example, programType X checks out volume V from the fileserver, and
+then locks it. We then ask the fileserver for the current volume
+operation on volume V. If the programType on the vol operation does not
+match (or the PID, or the checkout mode, or other things), we know the
+fileserver must have restarted or something similar, and we do not have
+the volume checked out like we thought we did.
+
+If the program determines that the fileserver may have restarted, it
+then must retry checking out and locking the volume (or return an
+error).

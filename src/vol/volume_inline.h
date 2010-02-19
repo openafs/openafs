@@ -7,10 +7,14 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <sys/file.h>
+
 #ifndef _AFS_VOL_VOLUME_INLINE_H
 #define _AFS_VOL_VOLUME_INLINE_H 1
 
 #include "volume.h"
+#include "partition.h"
+
 /**
  * tell caller whether the given program type represents a salvaging
  * program.
@@ -41,10 +45,15 @@ VIsSalvager(ProgramType type)
  * @return whether or not we need to lock the partition
  *  @retval 0  no, we do not
  *  @retval 1  yes, we do
+ *
+ * @note for DAFS, always returns 0, since we use per-header locks instead
  */
 static_inline int
 VRequiresPartLock(void)
 {
+#ifdef AFS_DEMAND_ATTACH_FS
+    return 0;
+#else
     switch (programType) {
     case volumeServer:
     case volumeUtility:
@@ -52,6 +61,26 @@ VRequiresPartLock(void)
     default:
         return 0;
     }
+#endif /* AFS_DEMAND_ATTACH_FS */
+}
+
+/**
+ * tells caller whether or not we need to check out a volume from the
+ * fileserver before we can use it.
+ *
+ * @param[in] mode the mode of attachment for the volume
+ *
+ * @return whether or not we need to check out the volume from the fileserver
+ *  @retval 0 no, we can just use the volume
+ *  @retval 1 yes, we must check out the volume before use
+ */
+static_inline int
+VMustCheckoutVolume(int mode)
+{
+    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
+	return 1;
+    }
+    return 0;
 }
 
 /**
@@ -77,12 +106,10 @@ VShouldCheckInUse(int mode)
     if (programType == fileServer) {
        return 1;
     }
-    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
-       /* If we can FSSYNC, we assume we checked out the volume from
-        * the fileserver, so inUse should not be set. If we checked out
-        * with V_SECRETLY or V_PEEK, though, we didn't ask the
-        * fileserver, so don't check inUse. */
-       return 1;
+    if (VMustCheckoutVolume(mode)) {
+	/* assume we checked out the volume from the fileserver, so inUse
+	 * should not be set */
+	return 1;
     }
     return 0;
 }

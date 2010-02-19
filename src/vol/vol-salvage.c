@@ -183,6 +183,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "partition.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "volume_inline.h"
 #include "salvsync.h"
 #include "viceinode.h"
 #include "salvage.h"
@@ -306,6 +307,10 @@ char *tmpdir = NULL;
 /*@printflike@*/ void Abort(const char *format, ...);
 static int IsVnodeOrphaned(VnodeId vnode);
 static int AskVolumeSummary(VolumeId singleVolumeNumber);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+static int LockVolume(VolumeId volumeId);
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 /* Uniquifier stored in the Inode */
 static Unique
@@ -716,12 +721,31 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
     char inodeListPath[256];
-    FILE *inodeFile;
+    FILE *inodeFile = NULL;
     static char tmpDevName[100];
     static char wpath[100];
     struct VolumeSummary *vsp, *esp;
     int i, j;
     int code;
+    int tries = 0;
+
+ retry:
+    tries++;
+    if (inodeFile) {
+	fclose(inodeFile);
+	inodeFile = NULL;
+    }
+    if (tries > VOL_MAX_CHECKOUT_RETRIES) {
+	Abort("Raced too many times with fileserver restarts while trying to "
+	      "checkout/lock volumes; Aborted\n");
+    }
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (tries > 1) {
+	/* unlock all previous volume locks, since we're about to lock them
+	 * again */
+	VLockFileReinit(&partP->volLockFile);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     fileSysPartition = partP;
     fileSysDevice = fileSysPartition->device;
@@ -739,19 +763,34 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     filesysfulldev = wpath;
 #endif
 
-    VLockPartition(partP->name);
-    if (singleVolumeNumber || ForceSalvage)
-	ForceSalvage = 1;
-    else
-	ForceSalvage = UseTheForceLuke(fileSysPath);
-
     if (singleVolumeNumber) {
+#ifndef AFS_DEMAND_ATTACH_FS
+	/* only non-DAFS locks the partition when salvaging a single volume;
+	 * DAFS will lock the individual volumes in the VG */
+	VLockPartition(partP->name);
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
+	ForceSalvage = 1;
+
 	/* salvageserver already setup fssync conn for us */
 	if ((programType != salvageServer) && !VConnectFS()) {
 	    Abort("Couldn't connect to file server\n");
 	}
+
 	AskOffline(singleVolumeNumber, partP->name);
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (LockVolume(singleVolumeNumber)) {
+	    goto retry;
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
     } else {
+	VLockPartition(partP->name);
+	if (ForceSalvage) {
+	    ForceSalvage = 1;
+	} else {
+	    ForceSalvage = UseTheForceLuke(fileSysPath);
+	}
 	if (!Showmode)
 	    Log("SALVAGING FILE SYSTEM PARTITION %s (device=%s%s)\n",
 		partP->name, name, (Testing ? "(READONLY mode)" : ""));
@@ -827,7 +866,9 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * Fix up inodes on last volume in set (whether it is read-write
      * or read-only).
      */
-    GetVolumeSummary(singleVolumeNumber);
+    if (GetVolumeSummary(singleVolumeNumber)) {
+	goto retry;
+    }
 
     for (i = j = 0, vsp = volumeSummaryp, esp = vsp + nVolumes;
 	 i < nVolumesInInodeFile; i = j) {
@@ -872,6 +913,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	RemoveTheForce(fileSysPath);
 
     if (!Testing && singleVolumeNumber) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* unlock vol headers so the fs can attach them when we AskOnline */
+	VLockFileReinit(&fileSysPartition->volLockFile);
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 	AskOnline(singleVolumeNumber, fileSysPartition->name);
 
 	/* Step through the volumeSummary list and set all volumes on-line.
@@ -1233,11 +1279,13 @@ CompareVolumes(const void *_p1, const void *_p2)
  *                                salvaging a whole partition
  *
  * @return whether we obtained the volume summary information or not
- *  @retval 0 success; we obtained the volume summary information
- *  @retval nonzero we did not get the volume summary information; either the
- *            fileserver responded with an error, or we are not supposed to
- *            ask the fileserver for the information (e.g. we are salvaging
- *            the entire partition or we are not the salvageserver)
+ *  @retval 0  success; we obtained the volume summary information
+ *  @retval -1 we raced with a fileserver restart; volume locks and checkout
+ *             must be retried
+ *  @retval 1  we did not get the volume summary information; either the
+ *             fileserver responded with an error, or we are not supposed to
+ *             ask the fileserver for the information (e.g. we are salvaging
+ *             the entire partition or we are not the salvageserver)
  *
  * @note for non-DAFS, always returns 1
  */
@@ -1245,7 +1293,7 @@ static int
 AskVolumeSummary(VolumeId singleVolumeNumber)
 {
     afs_int32 code = 1;
-#ifdef FSSYNC_BUILD_CLIENT
+#if defined(FSSYNC_BUILD_CLIENT) && defined(AFS_DEMAND_ATTACH_FS)
     if (programType == salvageServer) {
 	if (singleVolumeNumber) {
 	    FSSYNC_VGQry_response_t q_res;
@@ -1333,9 +1381,15 @@ AskVolumeSummary(VolumeId singleVolumeNumber)
 		    continue;
 		}
 
+		/* AskOffline for singleVolumeNumber was called much earlier */
 		if (q_res.children[i] != singleVolumeNumber) {
 		    AskOffline(q_res.children[i], fileSysPartition->name);
+		    if (LockVolume(q_res.children[i])) {
+			/* need to retry */
+			return -1;
+		    }
 		}
+
 		code = VReadVolumeDiskHeader(q_res.children[i], fileSysPartition, &diskHdr);
 		if (code) {
 		    Log("Cannot read header for %lu; trying to salvage group anyway\n",
@@ -1360,7 +1414,7 @@ AskVolumeSummary(VolumeId singleVolumeNumber)
 	        "entire partition\n");
 	}
     }
-#endif /* FSSYNC_BUILD_CLIENT */
+#endif /* FSSYNC_BUILD_CLIENT && AFS_DEMAND_ATTACH_FS */
     return code;
 }
 
@@ -1397,6 +1451,7 @@ struct SalvageScanParams {
     afs_int32 nVolumes;          /**< # of vols we've encountered */
     afs_int32 totalVolumes;      /**< max # of vols we should encounter (the
                                   * # of vols we've alloc'd memory for) */
+    int retry;  /**< do we need to retry vol lock/checkout? */
 };
 
 /**
@@ -1413,8 +1468,10 @@ struct SalvageScanParams {
  *                 information needed to record the volume summary data
  *
  * @return operation status
- *  @retval 0 success
- *  @retval 1 volume header is mis-named and should be deleted
+ *  @retval 0  success
+ *  @retval -1 volume locking raced with fileserver restart; checking out
+ *             and locking volumes needs to be retried
+ *  @retval 1  volume header is mis-named and should be deleted
  */
 static int
 RecordHeader(struct DiskPartition64 *dp, const char *name,
@@ -1486,6 +1543,17 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 		 * earlier */
 
 	        AskOffline(summary.header.id, fileSysPartition->name);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+		if (!badname) {
+		    /* don't lock the volume if the header is bad, since we're
+		     * about to delete it anyway. */
+		    if (LockVolume(summary.header.id)) {
+			params->retry = 1;
+			return -1;
+		    }
+		}
+#endif /* AFS_DEMAND_ATTACH_FS */
 	    }
 	}
 	if (badname) {
@@ -1569,17 +1637,35 @@ UnlinkHeader(struct DiskPartition64 *dp, const char *name,
     }
 }
 
-void
+/**
+ * Populates volumeSummaryp with volume summary information, either by asking
+ * the fileserver for VG information, or by scanning the /vicepX partition.
+ *
+ * @param[in] singleVolumeNumber  the volume ID of the single volume group we
+ *                                are salvaging, or 0 if this is a partition
+ *                                salvage
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 we raced with a fileserver restart; checking out and locking
+ *             volumes must be retried
+ */
+int
 GetVolumeSummary(VolumeId singleVolumeNumber)
 {
     afs_int32 nvols = 0;
     struct SalvageScanParams params;
     int code;
 
-    if (AskVolumeSummary(singleVolumeNumber) == 0) {
+    code = AskVolumeSummary(singleVolumeNumber);
+    if (code == 0) {
 	/* we successfully got the vol information from the fileserver; no
 	 * need to scan the partition */
-	return;
+	return 0;
+    }
+    if (code < 0) {
+	/* we need to retry volume checkout */
+	return code;
     }
 
     if (!singleVolumeNumber) {
@@ -1602,11 +1688,16 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
     params.vsp = volumeSummaryp;
     params.nVolumes = 0;
     params.totalVolumes = nvols;
+    params.retry = 0;
 
     /* walk the partition directory of volume headers and record the info
      * about them; unlinking invalid headers */
     code = VWalkVolumeHeaders(fileSysPartition, fileSysPath, RecordHeader,
                               UnlinkHeader, &params);
+    if (params.retry) {
+	/* we apparently need to retry checking-out/locking volumes */
+	return -1;
+    }
     if (code < 0) {
 	Abort("Failed to get volume header summary\n");
     }
@@ -1614,6 +1705,8 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 
     qsort(volumeSummaryp, nVolumes, sizeof(struct VolumeSummary),
 	  CompareVolumes);
+
+    return 0;
 }
 
 /* Find the link table. This should be associated with the RW volume or, if
@@ -3627,6 +3720,93 @@ MaybeZapVolume(register struct InodeSummary *isp, char *message, int deleteMe,
     }
 }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * Locks a volume on disk for salvaging.
+ *
+ * @param[in] volumeId   volume ID to lock
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 volume lock raced with a fileserver restart; all volumes must
+ *             checked out and locked again
+ *
+ * @note DAFS only
+ */
+static int
+LockVolume(VolumeId volumeId)
+{
+    afs_int32 code;
+    int locktype;
+
+    /* should always be WRITE_LOCK, but keep the lock-type logic all
+     * in one place, in VVolLockType. Params will be ignored, but
+     * try to provide what we're logically doing. */
+    locktype = VVolLockType(V_VOLUPD, 1);
+
+    code = VLockVolumeByIdNB(volumeId, fileSysPartition, locktype);
+    if (code) {
+	if (code == EBUSY) {
+	    Abort("Someone else appears to be using volume %lu; Aborted\n",
+	          afs_printable_uint32_lu(volumeId));
+	}
+	Abort("Error %ld trying to lock volume %lu; Aborted\n",
+	      afs_printable_int32_ld(code),
+	      afs_printable_uint32_lu(volumeId));
+    }
+
+    code = FSYNC_VerifyCheckout(volumeId, fileSysPathName, FSYNC_VOL_OFF, FSYNC_SALVAGE);
+    if (code == SYNC_DENIED) {
+	/* need to retry checking out volumes */
+	return -1;
+    }
+    if (code != SYNC_OK) {
+	Abort("FSYNC_VerifyCheckout failed for volume %lu with code %ld\n",
+	      afs_printable_uint32_lu(volumeId), afs_printable_int32_ld(code));
+    }
+
+    /* set inUse = programType in the volume header to ensure that nobody
+     * tries to use this volume again without salvaging, if we somehow crash
+     * or otherwise exit before finishing the salvage.
+     */
+    if (!Testing) {
+       IHandle_t *h;
+       struct VolumeHeader header;
+       struct VolumeDiskHeader diskHeader;
+       struct VolumeDiskData volHeader;
+
+       code = VReadVolumeDiskHeader(volumeId, fileSysPartition, &diskHeader);
+       if (code) {
+           return 0;
+       }
+
+       DiskToVolumeHeader(&header, &diskHeader);
+
+       IH_INIT(h, fileSysDevice, header.parent, header.volumeInfo);
+       if (IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) != sizeof(volHeader) ||
+           volHeader.stamp.magic != VOLUMEINFOMAGIC) {
+
+           IH_RELEASE(h);
+           return 0;
+       }
+
+       volHeader.inUse = programType;
+
+       /* If we can't re-write the header, bail out and error. We don't
+        * assert when reading the header, since it's possible the
+        * header isn't really there (when there's no data associated
+        * with the volume; we just delete the vol header file in that
+        * case). But if it's there enough that we can read it, but
+        * somehow we cannot write to it to signify we're salvaging it,
+        * we've got a big problem and we cannot continue. */
+       assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
+
+       IH_RELEASE(h);
+    }
+
+    return 0;
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 void
 AskOffline(VolumeId volumeId, char * partition)
@@ -3668,49 +3848,6 @@ AskOffline(VolumeId volumeId, char * partition)
 	Log("AskOffline:  request for fileserver to take volume offline failed; salvage aborting.\n");
 	Abort("Salvage aborted\n");
     }
-
-#ifdef AFS_DEMAND_ATTACH_FS
-    /* set inUse = programType in the volume header. We do this in case
-     * the fileserver restarts/crashes while we are salvaging.
-     * Otherwise, the fileserver could attach the volume again on
-     * startup while we are salvaging, which would be very bad, or
-     * schedule another salvage while we are salvaging, which would be
-     * annoying. */
-    if (!Testing) {
-	IHandle_t *h;
-	struct VolumeHeader header;
-	struct VolumeDiskHeader diskHeader;
-	struct VolumeDiskData volHeader;
-
-	code = VReadVolumeDiskHeader(volumeId, fileSysPartition, &diskHeader);
-	if (code) {
-	    return;
-	}
-
-	DiskToVolumeHeader(&header, &diskHeader);
-
-	IH_INIT(h, fileSysDevice, header.parent, header.volumeInfo);
-	if (IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) != sizeof(volHeader) ||
-	    volHeader.stamp.magic != VOLUMEINFOMAGIC) {
-
-	    IH_RELEASE(h);
-	    return;
-	}
-
-	volHeader.inUse = programType;
-
-	/* If we can't re-write the header, bail out and error. We don't
-	 * assert when reading the header, since it's possible the
-	 * header isn't really there (when there's no data associated
-	 * with the volume; we just delete the vol header file in that
-	 * case). But if it's there enough that we can read it, but
-	 * somehow we cannot write to it to signify we're salvaging it,
-	 * we've got a big problem and we cannot continue. */
-	assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
-
-	IH_RELEASE(h);
-    }
-#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 void

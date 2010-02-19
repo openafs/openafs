@@ -40,6 +40,7 @@
 #include "voldefs.h"
 #include "partition.h"
 #include "fssync.h"
+#include "volume_inline.h"
 #include <afs/errors.h>
 
 /*@+fcnmacros +macrofcndecl@*/
@@ -1605,6 +1606,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
 int
 namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 {
+    int code = 0;
 #ifdef FSSYNC_BUILD_CLIENT
     namei_t n;
     char dir_name[512], oldpath[512], newpath[512];
@@ -1617,7 +1619,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     char smallSeen = 0;
     char largeSeen = 0;
     char linkSeen = 0;
-    int code, fd, fd2;
+    int fd, fd2;
     char *p;
     DIR *dirp;
     Inode ino;
@@ -1625,18 +1627,33 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
+# ifdef AFS_DEMAND_ATTACH_FS
+    int locktype = 0;
+# endif /* AFS_DEMAND_ATTACH_FS */
 
     for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
          partP = partP->next);
     if (!partP) {
         Log("1 namei_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
-        return EIO;
+	code = EIO;
+	goto done;
     }
+
+# ifdef AFS_DEMAND_ATTACH_FS
+    locktype = VVolLockType(V_VOLUPD, 1);
+    code = VLockVolumeByIdNB(volumeId, partP, locktype);
+    if (code) {
+	locktype = 0;
+	code = EIO;
+	goto done;
+    }
+# endif /* AFS_DEMAND_ATTACH_FS */
 
     if (VReadVolumeDiskHeader(volumeId, partP, &h)) {
 	Log("1 namei_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n",
 	    afs_printable_uint32_lu(volumeId));
-	return EIO;
+	code = EIO;
+	goto done;
     }
 
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
@@ -1651,7 +1668,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     dirp = opendir(dir_name);
     if (!dirp) {
 	Log("1 namei_ConvertROtoRWvolume: Could not opendir(%s)\n", dir_name);
-	return EIO;
+	code = EIO;
+	goto done;
     }
 
     while ((dp = readdir(dirp))) {
@@ -1663,12 +1681,14 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    Log("1 namei_ConvertROtoRWvolume: DecodeInode failed for %s/%s\n",
 		dir_name, dp->d_name);
 	    closedir(dirp);
-	    return -1;
+	    code = -1;
+	    goto done;
 	}
 	if (info.u.param[1] != -1) {
 	    Log("1 namei_ConvertROtoRWvolume: found other than volume special file %s/%s\n", dir_name, dp->d_name);
 	    closedir(dirp);
-	    return -1;
+	    code = -1;
+	    goto done;
 	}
 	if (info.u.param[0] != volumeId) {
 	    if (info.u.param[0] == ih->ih_vid) {
@@ -1679,7 +1699,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    }
 	    Log("1 namei_ConvertROtoRWvolume: found special file %s/%s for volume %lu\n", dir_name, dp->d_name, info.u.param[0]);
 	    closedir(dirp);
-	    return VVOLEXISTS;
+	    code = VVOLEXISTS;
+	    goto done;
 	}
 	if (info.u.param[2] == VI_VOLINFO) {	/* volume info file */
 	    strlcpy(infoName, dp->d_name, sizeof(infoName));
@@ -1693,14 +1714,16 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	} else {
 	    closedir(dirp);
 	    Log("1 namei_ConvertROtoRWvolume: unknown type %d of special file found : %s/%s\n", info.u.param[2], dir_name, dp->d_name);
-	    return -1;
+	    code = -1;
+	    goto done;
 	}
     }
     closedir(dirp);
 
     if (!infoSeen || !smallSeen || !largeSeen || !linkSeen) {
 	Log("1 namei_ConvertROtoRWvolume: not all special files found in %s\n", dir_name);
-	return -1;
+	code = -1;
+	goto done;
     }
 
     /*
@@ -1717,7 +1740,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     if (fd < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
 	    oldpath);
-	return -1;
+	code = -1;
+	goto done;
     }
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_VOLINFO);
     namei_HandleToName(&n, &t_ih);
@@ -1725,14 +1749,16 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     if (fd2 < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not create RW info file: %s\n", n.n_path);
 	close(fd);
-	return -1;
+	code = -1;
+	goto done;
     }
     code = convertVolumeInfo(fd, fd2, ih->ih_vid);
     close(fd);
     if (code) {
 	close(fd2);
 	unlink(n.n_path);
-	return -1;
+	code = -1;
+	goto done;
     }
     SetOGM(fd2, ih->ih_vid, 1);
     close(fd2);
@@ -1743,7 +1769,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     fd = afs_open(newpath, O_RDWR, 0);
     if (fd < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
-	return -1;
+	code = -1;
+	goto done;
     }
     SetOGM(fd, ih->ih_vid, 2);
     close(fd);
@@ -1756,7 +1783,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     fd = afs_open(newpath, O_RDWR, 0);
     if (fd < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
-	return -1;
+	code = -1;
+	goto done;
     }
     SetOGM(fd, ih->ih_vid, 3);
     close(fd);
@@ -1774,7 +1802,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     if (VCreateVolumeDiskHeader(&h, partP)) {
         Log("1 namei_ConvertROtoRWvolume: Couldn't write header for RW-volume %lu\n",
 	    afs_printable_uint32_lu(h.id));
-        return EIO;
+	code = EIO;
+	goto done;
     }
 
     if (VDestroyVolumeDiskHeader(partP, volumeId, h.parent)) {
@@ -1784,8 +1813,16 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
+
+ done:
+# ifdef AFS_DEMAND_ATTACH_FS
+    if (locktype) {
+	VUnlockVolumeById(volumeId, partP);
+    }
+# endif /* AFS_DEMAND_ATTACH_FS */
 #endif
-    return 0;
+
+    return code;
 }
 
 /* PrintInode

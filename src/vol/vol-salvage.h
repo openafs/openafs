@@ -237,7 +237,7 @@ extern void DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp);
 extern void DistilVnodeEssence(VolumeId vid, VnodeClass class, Inode ino,
 			       Unique * maxu);
 extern int GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber);
-extern void GetVolumeSummary(VolumeId singleVolumeNumber);
+extern int GetVolumeSummary(VolumeId singleVolumeNumber);
 extern int JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		      afs_int32 unique);
 extern void MaybeZapVolume(register struct InodeSummary *isp, char *message,

@@ -52,6 +52,7 @@
 #endif
 #include "vnode.h"
 #include "volume.h"
+#include "volume_inline.h"
 #include "partition.h"
 #include "viceinode.h"
 
@@ -126,6 +127,9 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     Inode nearInode = 0;
     char *part, *name;
     struct stat st;
+# ifdef AFS_DEMAND_ATTACH_FS
+    int locktype = 0;
+# endif /* AFS_DEMAND_ATTACH_FS */
 
     *ec = 0;
     memset(&vol, 0, sizeof(vol));
@@ -160,7 +164,23 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	}
     }
     *ec = 0;
+
+# ifdef AFS_DEMAND_ATTACH_FS
+    /* volume doesn't exist yet, but we must lock it to try to prevent something
+     * else from reading it when we're e.g. half way through creating it (or
+     * something tries to create the same volume at the same time) */
+    locktype = VVolLockType(V_VOLUPD, 1);
+    rc = VLockVolumeByIdNB(volumeId, partition, locktype);
+    if (rc) {
+	Log("VCreateVolume: vol %lu already locked by someone else\n",
+	    afs_printable_uint32_lu(volumeId));
+	*ec = VNOVOL;
+	return NULL;
+    }
+# else /* AFS_DEMAND_ATTACH_FS */
     VLockPartition_r(partname);
+# endif /* !AFS_DEMAND_ATTACH_FS */
+
     memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
     tempHeader.stamp.version = VOLUMEHEADERVERSION;
@@ -183,7 +203,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	        errno, volumePath);
 	    *ec = VNOVOL;
 	}
-	return NULL;
+	goto bad_noheader;
     }
     device = partition->device;
 
@@ -237,6 +257,12 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 		*ec = VNOVOL;
 	    }
 	    VDestroyVolumeDiskHeader(partition, volumeId, parentId);
+	  bad_noheader:
+# ifdef AFS_DEMAND_ATTACH_FS
+	    if (locktype) {
+		VUnlockVolumeById(volumeId, partition);
+	    }
+# endif /* AFS_DEMAND_ATTACH_FS */
 	    return NULL;
 	}
 	IH_INIT(handle, device, vol.parentId, *(p->inode));
@@ -298,6 +324,11 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	goto bad;
     }
 
+# ifdef AFS_DEMAND_ATTACH_FS
+    if (locktype) {
+	VUnlockVolumeById(volumeId, partition);
+    }
+# endif /* AFS_DEMAND_ATTACH_FS */
     return (VAttachVolumeByName_r(ec, partname, headerName, V_SECRETLY));
 }
 #endif /* FSSYNC_BUILD_CLIENT */
@@ -381,7 +412,10 @@ ClearVolumeStats_r(register VolumeDiskData * vol)
  *
  * @param[in]  volid  volume id
  * @param[in]  dp     disk partition object
- * @param[out] hdr    volume disk header
+ * @param[out] hdr    volume disk header or NULL
+ *
+ * @note if hdr is NULL, this is essentially an existence test for the vol
+ *       header
  *
  * @return operation status
  *    @retval 0 success
@@ -404,10 +438,11 @@ VReadVolumeDiskHeader(VolumeId volid,
 		       VPartitionPath(dp), afs_printable_uint32_lu(volid));
     fd = open(path, O_RDONLY);
     if (fd < 0) {
-	Log("VReadVolumeDiskHeader: Couldn't open header for volume %lu.\n",
-	    afs_printable_uint32_lu(volid));
+	Log("VReadVolumeDiskHeader: Couldn't open header for volume %lu (errno %d).\n",
+	    afs_printable_uint32_lu(volid), errno);
 	code = -1;
-    } else if (read(fd, hdr, sizeof(*hdr)) != sizeof(*hdr)) {
+
+    } else if (hdr && read(fd, hdr, sizeof(*hdr)) != sizeof(*hdr)) {
 	Log("VReadVolumeDiskHeader: Couldn't read header for volume %lu.\n",
 	    afs_printable_uint32_lu(volid));
 	code = EIO;
@@ -984,10 +1019,23 @@ _VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
     if (fcntl(fd, cmd, &sf)) {
 	if (nonblock && (errno == EACCES || errno == EAGAIN)) {
 	    /* We asked for a nonblocking lock, and it was already locked */
+	    sf.l_pid = 0;
+	    if (fcntl(fd, F_GETLK, &sf) != 0 || sf.l_pid == 0) {
+		Log("_VLockFd: fcntl failed with error %d when trying to "
+		    "query the conflicting lock for fd %d (locktype=%d, "
+		    "offset=%lu)\n", errno, fd, locktype,
+		    afs_printable_uint32_lu(offset));
+	    } else {
+		Log("_VLockFd: conflicting lock held on fd %d, offset %lu by "
+		    "pid %ld (locktype=%d)\n", fd,
+		    afs_printable_uint32_lu(offset), (long int)sf.l_pid,
+		    locktype);
+	    }
 	    return EBUSY;
 	}
 	Log("_VLockFd: fcntl failed with error %d when trying to lock "
-	    "fd %d (locktype=%d)\n", errno, fd, locktype);
+	    "fd %d (locktype=%d, offset=%lu)\n", errno, fd, locktype,
+	    afs_printable_uint32_lu(offset));
 	return EIO;
     }
 

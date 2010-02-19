@@ -862,6 +862,7 @@ extern int VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock);
 extern void VReleaseDiskLock(struct VDiskLock *dl, int locktype);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+extern int VVolOpLeaveOnlineNoHeader_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 
 extern void VPurgeVolume(Error * ec, Volume * vp);

@@ -1404,6 +1404,17 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     Inode nearInode = 0;
 
     memset(&specinos, 0, sizeof(specinos));
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/* DAFS currently doesn't really work with inode, so don't bother putting the
+ * locking code here right now. But in case someday someone makes DAFS work
+ * with the inode backend, make sure they remember to add the volume locking
+ * code here (make the build fail until that happens). If that is what you're
+ * trying to do, take a look at VLockVolumeByIdNB, and
+ * namei_ConvertROtoRWvolume.
+ */
+# error must lock volumes before ConvertROtoRW is usable on DAFS inode
+#endif
 	   
     /* now do the work */
 	   
