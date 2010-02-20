@@ -781,7 +781,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT
 		 LINUX_POSIX_TEST_LOCK_CONFLICT_ARG
-		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
 		 LINUX_KERNEL_HLIST_UNHASHED
@@ -953,9 +952,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_posix_lock_file_wait_arg" = "xyes" ; then
 		  AC_DEFINE(POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
-		 fi
-		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
-		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
 		 fi
 		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])

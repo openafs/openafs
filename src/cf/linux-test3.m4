@@ -69,20 +69,6 @@ fi
 AC_SUBST(MPS)
 ])
 
-AC_DEFUN([LINUX_KERNEL_SELINUX],[
-AC_MSG_CHECKING(for SELinux kernel)
-AC_CACHE_VAL(ac_cv_linux_kernel_is_selinux,
-[
-AC_TRY_KBUILD(
-  [#include <linux/autoconf.h>],
-  [#ifndef CONFIG_SECURITY_SELINUX
-   #error not SELINUX
-   #endif],
-  ac_cv_linux_kernel_is_selinux=yes,
-  ac_cv_linux_kernel_is_selinux=no)])
-AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
-])
-
 AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
   AC_MSG_CHECKING(for linux/seq_file.h in kernel)
   AC_TRY_KBUILD([#include <linux/seq_file.h>], [],
