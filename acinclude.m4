@@ -721,10 +721,8 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
-			save_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
-			AC_TRY_COMPILE(
-			 [#include <linux/autoconf.h>],
+			AC_TRY_KBUILD(
+			 [],
 			 [#ifndef CONFIG_USERMODE
 			  #error not UML
 			  #endif],
@@ -732,7 +730,6 @@ else
 			if test "${ac_cv_linux_is_uml}" = yes; then
 			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
 			fi
-			CPPFLAGS="$save_CPPFLAGS"
 			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
