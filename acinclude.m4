@@ -259,7 +259,8 @@ case $system in
                      fi
                    fi
 		 fi
-		 if test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
+		 if test ! -f "$LINUX_KERNEL_BUILD/include/generated/autoconf.h" &&
+		    test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
 		 if test "x$enable_kernel_module" = "xno"; then
