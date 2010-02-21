@@ -481,7 +481,10 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;
     flock.l_start = flp->fl_start;
-    flock.l_len = flp->fl_end - flp->fl_start + 1;
+    if (flp->fl_end == OFFSET_MAX)
+	flock.l_len = 0; /* Lock to end of file */
+    else
+	flock.l_len = flp->fl_end - flp->fl_start + 1;
 
     /* Safe because there are no large files, yet */
 #if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
@@ -525,7 +528,10 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     flp->fl_type = flock.l_type;
     flp->fl_pid = flock.l_pid;
     flp->fl_start = flock.l_start;
-    flp->fl_end = flock.l_start + flock.l_len - 1;
+    if (flock.l_len == 0)
+	flp->fl_end = OFFSET_MAX; /* Lock to end of file */
+    else
+	flp->fl_end = flock.l_start + flock.l_len - 1;
 
     crfree(credp);
     return afs_convert_code(code);
@@ -544,7 +550,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;
     flock.l_start = 0;
-    flock.l_len = OFFSET_MAX;
+    flock.l_len = 0;
 
     /* Safe because there are no large files, yet */
 #if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
