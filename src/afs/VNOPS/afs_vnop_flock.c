@@ -539,24 +539,8 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #else
 	) {
 #endif
-    /* this next check is safer when left out, but more applications work
-     * with it in.  However, they fail in race conditions.  The question is
-     * what to do for people who don't have source to their application;
-     * this way at least, they can get work done */
-#ifdef AFS_LINUX24_ENV
-    if (af->l_len == OFFSET_MAX)
-	af->l_len = 0;		/* since some systems indicate it as EOF */
-#else
-    if (af->l_len == 0x7fffffff)
-	af->l_len = 0;		/* since some systems indicate it as EOF */
-#ifdef AFS_LINUX_64BIT_KERNEL
-    if (af->l_len == LONG_MAX)
-	af->l_len = 0;		/* since some systems indicate it as EOF */
-#endif
-#endif
-    /* Java VMs ask for l_len=(long)-1 regardless of OS/CPU; bottom 32 bits
-     * sometimes get masked off by OS */
-    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffe))
+    /* Java VMs ask for l_len=(long)-1 regardless of OS/CPU */
+    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7fffffffffffffffLL))
 	af->l_len = 0;
     /* next line makes byte range locks always succeed,
      * even when they should block */
