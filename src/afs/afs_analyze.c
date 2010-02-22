@@ -672,8 +672,9 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     if ((acode < 0) && (acode != VRESTARTING)) {
 	if (acode == RX_CALL_TIMEOUT) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
-	    tvp = afs_FindVolume(afid, READ_LOCK);
-	    if (!tvp || (tvp->states & VRO))
+	    if (afid)
+		tvp = afs_FindVolume(afid, READ_LOCK);
+	    if (!afid || !tvp || (tvp->states & VRO))
 		areq->idleError++;
 	    if ((serversleft == 0) && tvp &&
 		((tvp->states & VRO) || (tvp->states & VBackup))) {
