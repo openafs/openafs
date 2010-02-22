@@ -312,7 +312,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     afs_int32 i;
     struct srvAddr *sa;
     struct server *tsp;
-    struct volume *tvp;
+    struct volume *tvp = NULL;
     afs_int32 shouldRetry = 0;
     afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
