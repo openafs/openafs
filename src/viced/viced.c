@@ -802,6 +802,15 @@ ShutDownAndCore(int dopanic)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_WRLOCK;
+    if (fs_state.mode == FS_MODE_SHUTDOWN) {
+	/* it is possible for at least fs_stateSave() (called below) to call
+	 * ShutDownAndCore if there's host list corruption; prevent
+	 * deinitializing some stuff twice */
+	ViceLog(0, ("ShutDownAndCore called during shutdown? Skipping volume "
+	            "and host package shutdown\n"));
+	FS_STATE_UNLOCK;
+	goto done_vol_host;
+    }
     fs_state.mode = FS_MODE_SHUTDOWN;
     FS_STATE_UNLOCK;
 #endif
@@ -847,11 +856,14 @@ ShutDownAndCore(int dopanic)
 		FS_UNLOCK;
 		FS_STATE_RDLOCK;
 	    }
+	    FS_STATE_UNLOCK;
 
 	    /* ok. it should now be fairly safe. let's do the state dump */
 	    fs_stateSave();
 	}
     }
+ done_vol_host:
+
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     if (debugFile) {
