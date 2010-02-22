@@ -292,8 +292,6 @@ static int MultiBreakVolumeCallBack(struct host *host, int isheld,
 				    struct VCBParams *parms);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 struct VCBParams *parms);
-static int lih_r(register struct host *host, register int held,
-		 register struct host *hostp);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
 
@@ -1579,23 +1577,6 @@ CleanupTimedOutCallBacks_r(void)
 
 static struct host *lih_host;
 static int lih_host_held;
-
-static int
-lih_r(register struct host *host, register int held,
-      register struct host *hostp)
-{
-    if (host->cblist
-	&& ((hostp && host != hostp) || (!held && !h_OtherHolds_r(host)))
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall)) {
-	if (lih_host != NULL && lih_host_held) {
-	    h_Release_r(lih_host);
-	}
-	lih_host = host;
-	lih_host_held = !held;
-	held = 1;
-    }
-    return held;
-}
 
 /* This version does not allow 'host' to be selected unless its ActiveCall 
  * is newer than 'hostp' which is the host with the oldest ActiveCall from
