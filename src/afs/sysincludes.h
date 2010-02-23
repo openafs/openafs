@@ -204,6 +204,7 @@ typedef unsigned short etap_event_t;
 #  include "sys/sysmacros.h"
 #  include "sys/fs_subr.h"
 #  include "sys/siginfo.h"
+#  include "limits.h"
 # endif /* AFS_SGI_ENV */
 
 # if !defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV)
