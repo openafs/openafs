@@ -178,7 +178,12 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     /* Get the volume struct. Unless this volume name has ".readonly" or
      * ".backup" in it, this will get the volume struct for the RW volume.
      * The RO volume will be prefetched if requested (but not returned).
+     * Set up to use volname first.
      */
+    cpos = afs_strchr(volnamep, ':'); /* if vno present */
+    if (cpos)
+	*cpos = 0;
+    
     /*printf("Calling GetVolumeByName\n");*/
     tvp = afs_GetVolumeByName(volnamep, mtptCell, prefetch, areq, WRITE_LOCK);
 
@@ -207,6 +212,9 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	}
 	osi_FreeSmallSpace(buf);
     }
+    /* done with volname */
+    if (cpos)
+	*cpos = ':';
 
     if (!tvp) {
 	/*printf("Couldn't find the volume\n");*/
