@@ -15,7 +15,6 @@
 
 #define BAD_IGET	-1000
 
-#define VICEMAGIC       0x84fa1cb6
 /* chown can't set the high bit - used for XFS based filesystem */
 #define XFS_VICEMAGIC   0x74fa1cb6
 
@@ -54,15 +53,5 @@ struct afsparms {
 };
 
 #define dmag(p,n)        ((p)->di_u.di_extents[n].ex_magic)
-
-#define	IS_VICEMAGIC(ip)	(((ip)->i_version == EFS_IVER_AFSSPEC || \
-				  (ip)->i_version == EFS_IVER_AFSINO) \
-				 ?  1 : 0)
-#define	IS_DVICEMAGIC(dp)	(((dp)->di_version == EFS_IVER_AFSSPEC || \
-				  (dp)->di_version == EFS_IVER_AFSINO) \
-				 ?  1 : 0)
-
-#define  CLEAR_VICEMAGIC(ip)     (ip)->i_version = EFS_IVER_EFS
-#define  CLEAR_DVICEMAGIC(dp)    dp->di_version = EFS_IVER_EFS
 
 #endif /* _OSI_INODE_H_ */

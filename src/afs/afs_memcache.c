@@ -49,7 +49,7 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
 	(memCache + index)->data = blk;
 	memset((memCache + index)->data, 0, memCacheBlkSize);
     }
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
+#if defined(AFS_HAVE_VXFS)
     afs_InitDualFSCacheOps((struct vnode *)0);
 #endif
 

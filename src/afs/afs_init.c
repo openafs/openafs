@@ -458,7 +458,7 @@ afs_InitCacheInfo(register char *afile)
     afs_cacheVfsp = filevp->v_vfsp;
 #endif
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
 #endif
 #ifndef AFS_CACHE_VNODE_PATH

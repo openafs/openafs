@@ -11,8 +11,6 @@
  * IRIX inode operations
  *
  * Implements:
- * afsdptoip
- * afsiptodp
  * afsidestroy
  * getinode
  * igetinode
@@ -26,7 +24,6 @@
  * afs_syscall_iopen
  * iopen
  * iopen64
- * efs_iincdec
  * xfs_iincdec64
  * iincdec64
  * afs_syscall_idec64
@@ -59,82 +56,6 @@
  */
 #define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h  */
 #endif
-/*
- * copy disk inode to incore inode and vice-versa
- */
-void
-afsdptoip(struct efs_dinode *dp, struct inode *ip)
-{
-    struct afsparms *ap;
-
-    ip->i_afs = kmem_alloc(sizeof(struct afsparms), KM_SLEEP);
-    osi_Assert(ip->i_version == EFS_IVER_AFSSPEC
-	       || ip->i_version == EFS_IVER_AFSINO);
-    ap = (struct afsparms *)ip->i_afs;
-    /* vicep1 is VOLid */
-    ap->vicep1 =
-	dmag(dp, 0) << 24 | dmag(dp, 1) << 16 | dmag(dp, 2) << 8 | dmag(dp,
-									3) <<
-	0;
-
-    if (ip->i_version == EFS_IVER_AFSSPEC) {
-	ap->vicep3 = dmag(dp, 8);	/* Type */
-	ap->vicep4 =
-	    dmag(dp, 4) << 24 | dmag(dp, 5) << 16 | dmag(dp,
-							 6) << 8 | dmag(dp,
-									7) <<
-	    0;
-
-    } else {
-	/* vnode number */
-	ap->vicep2 = dmag(dp, 4) << 16 | dmag(dp, 5) << 8 | dmag(dp, 6) << 0;
-	/* disk uniqifier */
-	ap->vicep3 = dmag(dp, 7) << 16 | dmag(dp, 8) << 8 | dmag(dp, 9) << 0;
-	/* data version */
-	ap->vicep4 = dmag(dp, 10) << 16 | dmag(dp, 11) << 8 | (dp)->di_spare;
-    }
-}
-
-void
-afsiptodp(struct inode *ip, struct efs_dinode *dp)
-{
-    struct afsparms *ap;
-
-    if (ip->i_afs == NULL)
-	return;
-
-    osi_Assert(ip->i_version == EFS_IVER_AFSSPEC
-	       || ip->i_version == EFS_IVER_AFSINO);
-    ap = (struct afsparms *)ip->i_afs;
-    /* vicep1 is VOLid */
-    dmag(dp, 0) = ap->vicep1 >> 24;
-    dmag(dp, 1) = ap->vicep1 >> 16;
-    dmag(dp, 2) = ap->vicep1 >> 8;
-    dmag(dp, 3) = ap->vicep1 >> 0;
-
-    if (ip->i_version == EFS_IVER_AFSSPEC) {
-	/* Type */
-	dmag(dp, 8) = ap->vicep3;
-	/* ParentId */
-	dmag(dp, 4) = ap->vicep4 >> 24;
-	dmag(dp, 5) = ap->vicep4 >> 16;
-	dmag(dp, 6) = ap->vicep4 >> 8;
-	dmag(dp, 7) = ap->vicep4 >> 0;
-    } else {
-	/* vnode number */
-	dmag(dp, 4) = ap->vicep2 >> 16;
-	dmag(dp, 5) = ap->vicep2 >> 8;
-	dmag(dp, 6) = ap->vicep2 >> 0;
-	/* disk uniqifier */
-	dmag(dp, 7) = ap->vicep3 >> 16;
-	dmag(dp, 8) = ap->vicep3 >> 8;
-	dmag(dp, 9) = ap->vicep3 >> 0;
-	/* data version */
-	dmag(dp, 10) = ap->vicep4 >> 16;
-	dmag(dp, 11) = ap->vicep4 >> 8;
-	dp->di_spare = ap->vicep4 >> 0;
-    }
-}
 
 void
 afsidestroy(struct inode *ip)
@@ -145,52 +66,18 @@ afsidestroy(struct inode *ip)
     }
 }
 
-extern int efs_fstype;
-#ifdef AFS_SGI_XFS_IOPS_ENV
 extern int xfs_fstype;
-#endif
 
 int
 getinode(struct vfs *vfsp, dev_t dev, ino_t inode, struct inode **ipp)
 {
-    struct inode *ip;
-    int error;
-
-    if (!vfsp) {
-#ifdef AFS_SGI65_ENV
-	vfsp = vfs_devsearch(dev, efs_fstype);
-#else
-	vfsp = vfs_devsearch(dev);
-#endif
-	if (!vfsp) {
-	    return ENXIO;
-	}
-    }
-#ifndef AFS_SGI65_ENV
-    if (vfsp->vfs_fstype != efs_fstype)
-	return ENOSYS;
-#endif
-
-    if (error =
-	iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)),
-	     (unsigned int)(inode & 0xffffffff), &ip)) {
-	return error;
-    }
-    *ipp = ip;
-    return 0;
+    return ENOSYS;
 }
 
 int
 igetinode(struct vfs *vfsp, dev_t dev, ino_t inode, struct inode **ipp)
 {
-    struct inode *ip;
-    int error;
-
-    AFS_STATCNT(igetinode);
-    if (error = getinode(vfsp, dev, inode, &ip))
-	return error;
-    *ipp = ip;
-    return 0;
+    return ENOSYS;
 }
 
 int XFS_IGET_EPOS;
@@ -206,22 +93,12 @@ xfs_getinode(struct vfs *vfsp, dev_t dev, ino_t inode, struct xfs_inode **ipp)
     int error;
 
     if (!vfsp) {
-#ifdef AFS_SGI65_ENV
 	vfsp = vfs_devsearch(dev, xfs_fstype);
-#else
-	vfsp = vfs_devsearch(dev);
-#endif
 	if (!vfsp) {
 	    SET_XFS_ERROR(1, dev, inode);
 	    return ENXIO;
 	}
     }
-#ifndef AFS_SGI65_ENV
-    if (vfsp->vfs_fstype != xfs_fstype) {
-	SET_XFS_ERROR(2, vfsp->vfs_dev, inode);
-	return ENOSYS;
-    }
-#endif
 
     if (error = xfs_iget((((struct mount *)
 			   ((vfsp)->vfs_bh.bh_first)->bd_pdata)), (void *)0,
@@ -286,7 +163,6 @@ struct icreateargs {
     sysarg_t param4;
 };
 
-/* EFS only fs suite uses this entry point - icreate in afssyscalls.c. */
 int
 icreate(struct icreateargs *uap, rval_t * rvp)
 {
@@ -301,10 +177,8 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
     return ENOSYS;
 }
 
-#ifdef AFS_SGI_XFS_IOPS_ENV
-/* inode creation routines for icreatename64 entry point. Use for EFS/XFS
- * fileserver suite.  For XFS, create a name in the namespace as well as the
- * inode. For EFS, just call the original routine.
+/* inode creation routines for icreatename64 entry point. 
+ * Create a name in the namespace as well as the inode.
  */
 
 #include <afs/xfsattrs.h>
@@ -499,8 +373,8 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 }
 
 /* afs_syscall_icreatename64
- * This is the icreatename64 entry point used by the combined EFS/XFS
- * fileserver suite. The datap and datalen do not need to be set for EFS.
+ * This is the icreatename64 entry point used by the XFS
+ * fileserver suite.
  */
 int
 afs_syscall_icreatename64(int dev, int datap, int datalen, int paramp,
@@ -516,11 +390,7 @@ afs_syscall_icreatename64(int dev, int datap, int datalen, int paramp,
     if (!afs_suser(NULL))
 	return EPERM;
 
-#ifdef AFS_SGI65_ENV
     vfsp = vfs_devsearch(dev, VFS_FSTYPE_ANY);
-#else
-    vfsp = vfs_devsearch(dev);
-#endif
     if (vfsp == NULL) {
 	return ENXIO;
     }
@@ -535,29 +405,14 @@ afs_syscall_icreatename64(int dev, int datap, int datalen, int paramp,
 	    AFS_COPYOUT((char *)&ino, (char *)inop, sizeof(ino_t), code);
 	    return code;
 	}
-    } else if (vfsp->vfs_fstype == efs_fstype) {
-	code =
-	    afs_syscall_icreate(dev, 0, param[0], param[1], param[2],
-				param[3], &rval);
-	if (code)
-	    return code;
-	else {
-	    ino = (ino_t) rval.r_val1;
-	    AFS_COPYOUT((char *)&ino, (char *)inop, sizeof(ino_t), code);
-	    return code;
-	}
     }
     return ENXIO;
 }
-#endif /* AFS_SGI_XFS_IOPS_ENV */
 
 /*
  * iopen system calls -- open an inode for reading/writing
  * Restricted to super user.
  * Any IFREG files.
- * The original EFS only system calls are still present in the kernel for
- * in case a kernel upgrade is done for a fix, but the EFS fileserver is
- * still in use.
  */
 struct iopenargs {
     sysarg_t dev;
@@ -565,7 +420,6 @@ struct iopenargs {
     sysarg_t usrmod;
 };
 
-#ifdef AFS_SGI_XFS_IOPS_ENV
 struct iopenargs64 {
     sysarg_t dev;
     sysarg_t inode_hi;
@@ -573,7 +427,6 @@ struct iopenargs64 {
     sysarg_t usrmod;
 };
 
-#ifdef AFS_SGI65_ENV
 int
 afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
 {
@@ -587,8 +440,6 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
     if (!afs_suser(NULL))
 	return EPERM;
     vfsp = vfs_devsearch(dev, xfs_fstype);
-    if (!vfsp)
-	vfsp = vfs_devsearch(dev, efs_fstype);
     if (!vfsp)
 	return ENXIO;
 
@@ -608,54 +459,6 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
     rvp->r_val1 = fd;
     return 0;
 }
-#else
-/* afs_syscall_iopen
- * EFS/XFS version vectors to correct code based vfs_fstype. Expects a
- * 64 bit inode number.
- */
-int
-afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
-{
-    struct file *fp;
-    int fd;
-    int error;
-    struct vfs *vfsp;
-
-    AFS_STATCNT(afs_syscall_iopen);
-    if (!afs_suser(NULL))
-	return EPERM;
-    vfsp = vfs_devsearch(dev);
-    if (!vfsp) {
-	return ENXIO;
-    }
-
-    if (vfsp->vfs_fstype == xfs_fstype) {
-	struct xfs_inode *xip;
-	struct vnode *vp;
-	if (error = xfs_igetinode(vfsp, (dev_t) dev, inode, &xip))
-	    return error;
-	vp = XFS_ITOV(xip);
-	if (error = falloc(vp, (usrmod + 1) & (FMASK), &fp, &fd)) {
-	    VN_RELE(vp);
-	    return error;
-	}
-    } else if (vfsp->vfs_fstype == efs_fstype) {
-	struct inode *ip;
-	if (error = igetinode(vfsp, (dev_t) dev, inode, &ip))
-	    return error;
-	if (error = falloc(EFS_ITOV(ip), (usrmod + 1) & (FMASK), &fp, &fd)) {
-	    iput(ip);
-	    return error;
-	}
-	iunlock(ip);
-    } else {
-	osi_Panic("afs_syscall_iopen: bad fstype = %d\n", vfsp->vfs_fstype);
-    }
-    fready(fp);
-    rvp->r_val1 = fd;
-    return 0;
-}
-#endif /* AFS_SGI65_ENV */
 
 int
 iopen(struct iopenargs *uap, rval_t * rvp)
@@ -674,57 +477,16 @@ iopen64(struct iopenargs64 *uap, rval_t * rvp)
 	     uap->usrmod, rvp));
 }
 
-#else /* AFS_SGI_XFS_IOPS_ENV */
-/* iopen/afs_syscall_iopen
- *
- * Original EFS only 32 bit iopen call.
- */
-int
-iopen(struct iopenargs *uap, rval_t * rvp)
-{
-    AFS_STATCNT(iopen);
-    return (afs_syscall_iopen(uap->dev, uap->inode, uap->usrmod, rvp));
-}
-
-int
-afs_syscall_iopen(dev, inode, usrmod, rvp)
-     int dev, inode, usrmod;
-     rval_t *rvp;
-{
-    struct file *fp;
-    struct inode *ip;
-    int fd;
-    int error;
-
-    AFS_STATCNT(afs_syscall_iopen);
-    if (!afs_suser(NULL))
-	return EPERM;
-    if (error = igetinode(0, (dev_t) dev, inode, &ip))
-	return error;
-    if (error = falloc(EFS_ITOV(ip), (usrmod + 1) & (FMASK), &fp, &fd)) {
-	iput(ip);
-	return error;
-    }
-    iunlock(ip);
-    rvp->r_val1 = fd;
-#ifdef	AFS_SGI53_ENV
-    fready(fp);
-#endif
-    return 0;
-}
-#endif /* AFS_SGI_XFS_IOPS_ENV */
-
 /*
  * Support for iinc() and idec() system calls--increment or decrement
  * count on inode.
  * Restricted to super user.
  * Only VICEMAGIC type inodes.
  */
-#ifdef AFS_SGI_XFS_IOPS_ENV
 
 /* xfs_iincdec
  *
- * XFS/EFS iinc/idec code for EFS. Uses 64 bit inode numbers. 
+ * XFS iinc/idec code. Uses 64 bit inode numbers. 
  */
 static int
 xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1, int amount)
@@ -872,11 +634,7 @@ iincdec64(int dev, int inode_hi, int inode_lo, int inode_p1, int amount)
 
     if (!afs_suser(NULL))
 	return EPERM;
-#ifdef AFS_SGI65_ENV
     vfsp = vfs_devsearch(dev, VFS_FSTYPE_ANY);
-#else
-    vfsp = vfs_devsearch(dev);
-#endif
     if (!vfsp) {
 	return ENXIO;
     }
@@ -903,16 +661,12 @@ afs_syscall_iinc64(int dev, int inode_hi, int inode_lo, int inode_p1)
     return iincdec64(dev, inode_hi, inode_lo, inode_p1, 1);
 }
 
-
-
-
 struct iincargs {
     sysarg_t dev;
     sysarg_t inode;
     sysarg_t inode_p1;
 };
 
-#ifdef AFS_SGI65_ENV
 int
 iinc(struct iincargs *uap, rval_t * rvp)
 {
@@ -926,102 +680,7 @@ idec(struct iincargs *uap, rval_t * rvp)
     AFS_STATCNT(idec);
     return ENOTSUP;
 }
-#else
-/* iincdec
- *
- * XFS/EFS iinc/idec entry points for EFS only fileservers.
- *
- */
-int
-iincdec(dev, inode, inode_p1, amount)
-     int dev, inode, inode_p1, amount;
-{
-    struct vfs *vfsp;
 
-    if (!afs_suser(NULL))
-	return EPERM;
-    vfsp = vfs_devsearch(dev);
-    if (!vfsp) {
-	return ENXIO;
-    }
-    if (vfsp->vfs_fstype != efs_fstype)
-	return ENOSYS;
-
-    return efs_iincdec(vfsp, inode, inode_p1, amount);
-}
-
-int
-iinc(struct iincargs *uap, rval_t * rvp)
-{
-    AFS_STATCNT(iinc);
-    return (iincdec(uap->dev, uap->inode, uap->inode_p1, 1));
-}
-
-int
-idec(struct iincargs *uap, rval_t * rvp)
-{
-    AFS_STATCNT(idec);
-    return (iincdec(uap->dev, uap->inode, uap->inode_p1, -1));
-}
-#endif /* AFS_SGI65_ENV */
-
-#else /* AFS_SGI_XFS_IOPS_ENV */
-/* afs_syscall_iincdec iinc idec
- *
- * These are the original EFS only entry points.
- */
-int
-afs_syscall_iincdec(dev, inode, inode_p1, amount)
-     int dev, inode, inode_p1, amount;
-{
-    struct inode *ip;
-    int error = 0;
-
-    if (!afs_suser(NULL))
-	return EPERM;
-    if (error = igetinode(0, (dev_t) dev, inode, &ip))
-	return error;
-
-    if (!IS_VICEMAGIC(ip))
-	error = EPERM;
-    else if (((struct afsparms *)ip->i_afs)->vicep1 != inode_p1)
-	error = ENXIO;
-    else {
-	ip->i_nlink += amount;
-	osi_Assert(ip->i_nlink >= 0);
-	if (ip->i_nlink == 0) {
-	    CLEAR_VICEMAGIC(ip);
-	    afsidestroy(ip);
-	}
-	ip->i_flags |= ICHG;
-    }
-    /* XXX sync write?? */
-    iput(ip);
-    return error;
-}
-
-struct iincargs {
-    sysarg_t dev;
-    sysarg_t inode;
-    sysarg_t inode_p1;
-};
-
-int
-iinc(struct iincargs *uap, rval_t * rvp)
-{
-    AFS_STATCNT(iinc);
-    return (afs_syscall_iincdec(uap->dev, uap->inode, uap->inode_p1, 1));
-}
-
-int
-idec(struct iincargs *uap, rval_t * rvp)
-{
-    AFS_STATCNT(idec);
-    return (afs_syscall_iincdec(uap->dev, uap->inode, uap->inode_p1, -1));
-}
-#endif /* AFS_SGI_XFS_IOPS_ENV */
-
-#ifdef AFS_SGI_XFS_IOPS_ENV
 /* afs_syscall_ilistinode64
  * Gathers up all required info for ListViceInodes in one system call.
  */
@@ -1042,18 +701,10 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo, int datap,
 
     if (!afs_suser(NULL))
 	return EPERM;
-#ifdef AFS_SGI65_ENV
     vfsp = vfs_devsearch(dev, xfs_fstype);
-#else
-    vfsp = vfs_devsearch(dev);
-#endif
     if (!vfsp) {
 	return ENXIO;
     }
-#ifndef AFS_SGI65_ENV
-    if (vfsp->vfs_fstype != xfs_fstype)
-	return ENOSYS;
-#endif
 
     AFS_COPYIN((char *)datalenp, &idatalen, sizeof(int), code);
     if (idatalen < sizeof(i_list_inode_t)) {
@@ -1122,4 +773,3 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo, int datap,
     VN_RELE(vp);
     return code;
 }
-#endif /* AFS_SGI_XFS_IOPS_ENV */
