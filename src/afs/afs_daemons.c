@@ -634,7 +634,8 @@ afs_BBusy(void)
 struct brequest *
 afs_BQueue(register short aopcode, register struct vcache *avc,
 	   afs_int32 dontwait, afs_int32 ause, afs_ucred_t *acred,
-	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
+	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0,
+	   void *apparm1, void *apparm2)
 {
     register int i;
     register struct brequest *tb;
@@ -660,6 +661,8 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 	    tb->size_parm[0] = asparm0;
 	    tb->size_parm[1] = asparm1;
 	    tb->ptr_parm[0] = apparm0;
+	    tb->ptr_parm[1] = apparm1;
+	    tb->ptr_parm[2] = apparm2;
 	    tb->flags = 0;
 	    tb->code = 0;
 	    tb->ts = afs_brs_count++;
@@ -960,6 +963,38 @@ afs_BioDaemon(afs_int32 nbiods)
 
 
 int afs_nbrs = 0;
+static_inline void
+afs_BackgroundDaemon_once(void)
+{
+    LOCK_INIT(&afs_xbrs, "afs_xbrs");
+    memset(afs_brs, 0, sizeof(afs_brs));
+    brsInit = 1;
+#if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
+    /*
+     * steal the first daemon for doing delayed DSlot flushing
+     * (see afs_GetDownDSlot)
+     */
+    AFS_GUNLOCK();
+    afs_sgidaemon();
+    exit(CLD_EXITED, 0);
+#endif
+}
+
+static_inline void
+brequest_release(struct brequest *tb)
+{
+    if (tb->vc) {
+	AFS_RELE(AFSTOV(tb->vc));       /* MUST call vnode layer or could lose vnodes */
+	tb->vc = NULL;
+    }
+    if (tb->cred) {
+	crfree(tb->cred);
+	tb->cred = (afs_ucred_t *)0;
+    }
+    tb->code = 0;
+    afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
+}
+
 void
 afs_BackgroundDaemon(void)
 {
@@ -968,20 +1003,10 @@ afs_BackgroundDaemon(void)
 
     AFS_STATCNT(afs_BackgroundDaemon);
     /* initialize subsystem */
-    if (brsInit == 0) {
-	LOCK_INIT(&afs_xbrs, "afs_xbrs");
-	memset(afs_brs, 0, sizeof(afs_brs));
-	brsInit = 1;
-#if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
-	/*
-	 * steal the first daemon for doing delayed DSlot flushing
-	 * (see afs_GetDownDSlot)
-	 */
-	AFS_GUNLOCK();
-	afs_sgidaemon();
-	return;
-#endif
-    }
+    if (brsInit == 0)
+	/* Irix with "short stack" exits */
+	afs_BackgroundDaemon_once();
+
     afs_nbrs++;
 
     ObtainWriteLock(&afs_xbrs, 302);
@@ -1029,15 +1054,7 @@ afs_BackgroundDaemon(void)
 		BPath(tb);
 	    else
 		panic("background bop");
-	    if (tb->vc) {
-		AFS_RELE(AFSTOV(tb->vc));	/* MUST call vnode layer or could lose vnodes */
-		tb->vc = NULL;
-	    }
-	    if (tb->cred) {
-		crfree(tb->cred);
-		tb->cred = (afs_ucred_t *)0;
-	    }
-	    afs_BRelease(tb);	/* this grabs and releases afs_xbrs lock */
+	    brequest_release(tb);
 	    ObtainWriteLock(&afs_xbrs, 305);
 	}
 	if (!foundAny) {

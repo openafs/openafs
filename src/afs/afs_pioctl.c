@@ -2625,7 +2625,7 @@ Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 	return EWOULDBLOCK;	/* pretty close */
     }
     afs_BQueue(BOP_PATH, (struct vcache *)0, 0, 0, acred, (afs_size_t) 0,
-	       (afs_size_t) 0, tp);
+	       (afs_size_t) 0, tp, (void *)0, (void *)0);
     return 0;
 }
 

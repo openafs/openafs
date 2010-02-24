@@ -186,7 +186,8 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 	       doing so ourselves.
 	    */
 	    bp = afs_BQueue(BOP_FETCH, tvc, B_DONTWAIT, 0, acred,
-			    (afs_size_t) 0, (afs_size_t) 1, tdc);
+			    (afs_size_t) 0, (afs_size_t) 1, tdc,
+			    (void *)0, (void *)0);
 	    if (!bp) {
 		tdc->mflags &= ~DFFetchReq;
 	    }
