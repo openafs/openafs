@@ -353,6 +353,9 @@ struct afs_cacheParams cparams;	/* params passed to cache manager */
 static int HandleMTab(void);
 int PartSizeOverflow(char *path, int cs);
 
+/* for now, not prototyped fully as it can't be */
+int call_syscall();
+
 #ifdef AFS_DARWIN_ENV
 static void
 afsd_sleep_callback(void * refCon, io_service_t service, 
