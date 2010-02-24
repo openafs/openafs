@@ -638,6 +638,11 @@ Afs_syscall()
 	    code =
 		afs_syscall64_call(uap64->parm1, uap64->parm2, uap64->parm3,
 				   uap64->parm4, uap64->parm5, uap64->parm6);
+	    /* pass back the code as syscall retval */
+	    if (code < 0) {
+		*retval = code;
+		code = 0;
+	    }
 	} else if (uap64->syscall == AFSCALL_SETPAG) {
 	    AFS_GLOCK();
 	    code = afs_setpag(p, args, retval);
@@ -676,6 +681,13 @@ Afs_syscall()
 	    code =
 		afs_syscall_call(uap->parm1, uap->parm2, uap->parm3,
 				 uap->parm4, uap->parm5, uap->parm6);
+#ifdef AFS_DARWIN_ENV
+	    /* pass back the code as syscall retval */
+	    if (code < 0) {
+		*retval = code;
+		code = 0;
+	    }
+#endif
 	} else if (uap->syscall == AFSCALL_SETPAG) {
 #ifdef	AFS_SUN5_ENV
 	    register proc_t *procp;
