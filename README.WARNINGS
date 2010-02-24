@@ -65,6 +65,5 @@ ubik/beacon.c        : all           : Ubik uses signed/unsigned
 ubik/ubikclient.c    : strict-protos : ubik_Call
 uss/uss_kauth.c      : all	     : ubik_Call
 viced/fsprobe.c      : all	     : ubik_Call
-vol/salvager.c       : all           : consts & undefined variable from header - maybe fixed!
 volser/vol-dump.c    : format        : afs_sfsize_t
 
