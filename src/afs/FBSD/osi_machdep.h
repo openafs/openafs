@@ -117,19 +117,20 @@ extern struct mtx afs_global_mtx;
 #define AFS_GLOCK() mtx_lock(&afs_global_mtx)
 #define AFS_GUNLOCK() mtx_unlock(&afs_global_mtx)
 #define ISAFS_GLOCK() (mtx_owned(&afs_global_mtx))
-#if defined(AFS_FBSD80_ENV) && defined(WITNESS)
-# define osi_InitGlock() \
+# if defined(AFS_FBSD80_ENV) && defined(WITNESS)
+#  define osi_InitGlock() \
 	do { \
 	    memset(&afs_global_mtx, 0, sizeof(struct mtx)); \
 	    mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF); \
 	    afs_global_owner = 0; \
 	} while(0)
-#else
-# define osi_InitGlock() \
+# else
+#  define osi_InitGlock() \
     do { \
 	mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF); \
 	afs_global_owner = 0; \
     } while (0)
+# endif
 #else /* FBSD50 */
 extern struct lock afs_global_lock;
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
