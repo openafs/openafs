@@ -293,4 +293,35 @@ VChangeState_r(Volume * vp, VolState new_state)
 
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+#define VENUMCASE(en) \
+    case en: \
+        return #en; \
+        break
+
+/**
+ * translate a ProgramType code to a string.
+ *
+ * @param[in] type ProgramType numeric code
+ *
+ * @return a human-readable string for that program type
+ *  @retval "**UNKNOWN**" an unknown ProgramType was given
+ */
+static_inline char *
+VPTypeToString(ProgramType type)
+{
+    switch (type) {
+	VENUMCASE(fileServer);
+	VENUMCASE(volumeUtility);
+	VENUMCASE(salvager);
+	VENUMCASE(salvageServer);
+	VENUMCASE(debugUtility);
+	VENUMCASE(volumeServer);
+	VENUMCASE(volumeSalvager);
+    default:
+	return "**UNKNOWN**";
+    }
+}
+
+#undef VENUMCASE
+
 #endif /* _AFS_VOL_VOLUME_INLINE_H */

@@ -57,9 +57,12 @@
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"
+#include "volume_inline.h"
 #include "partition.h"
 #include "daemon_com.h"
+#include "daemon_com_inline.h"
 #include "fssync.h"
+#include "fssync_inline.h"
 #include "vg_cache.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
@@ -84,11 +87,6 @@ static int common_prolog(struct cmd_syndesc *, struct state *);
 static int common_volop_prolog(struct cmd_syndesc *, struct state *);
 
 static int do_volop(struct state *, afs_int32 command, SYNC_response * res);
-
-static char * response_code_to_string(afs_int32);
-static char * command_code_to_string(afs_int32);
-static char * reason_code_to_string(afs_int32);
-static char * program_type_to_string(afs_int32);
 
 static int VolOnline(struct cmd_syndesc * as, void * rock);
 static int VolOffline(struct cmd_syndesc * as, void * rock);
@@ -341,13 +339,13 @@ debug_response(afs_int32 code, SYNC_response * res)
 	fprintf(stderr, "warning: response code indicates possible protocol error.\n");
     }
 
-    fprintf(stderr, "FSSYNC service returned %d (%s)\n", code, response_code_to_string(code));
+    fprintf(stderr, "FSSYNC service returned %d (%s)\n", code, SYNC_res2string(code));
 
     if (res) {
 	fprintf(stderr, "protocol header response code was %d (%s)\n",
-	        res->hdr.response, response_code_to_string(res->hdr.response));
+	        res->hdr.response, SYNC_res2string(res->hdr.response));
 	fprintf(stderr, "protocol reason code was %d (%s)\n",
-	        res->hdr.reason, reason_code_to_string(res->hdr.reason));
+	        res->hdr.reason, FSYNC_reason2string(res->hdr.reason));
     }
 
     return 0;
@@ -367,7 +365,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
     }
 
     fprintf(stderr, "calling FSYNC_VolOp with command code %d (%s)\n", 
-	    command, command_code_to_string(command));
+	    command, FSYNC_com2string(command));
 
     code = FSYNC_VolOp(state->vop->volume,
 		       state->vop->partName,
@@ -400,96 +398,6 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
             (count)++; \
         } \
     } while (0)
-
-static char *
-response_code_to_string(afs_int32 response)
-{
-    switch (response) {
-	ENUMCASE(SYNC_OK);
-	ENUMCASE(SYNC_DENIED);
-	ENUMCASE(SYNC_COM_ERROR);
-	ENUMCASE(SYNC_BAD_COMMAND);
-	ENUMCASE(SYNC_FAILED);
-    default:
-	return "**UNKNOWN**";
-    }
-}
-
-static char *
-command_code_to_string(afs_int32 command)
-{
-    switch (command) {
-	ENUMCASE(SYNC_COM_CHANNEL_CLOSE);
-	ENUMCASE(FSYNC_VOL_ON);
-	ENUMCASE(FSYNC_VOL_OFF);
-	ENUMCASE(FSYNC_VOL_LISTVOLUMES);
-	ENUMCASE(FSYNC_VOL_NEEDVOLUME);
-	ENUMCASE(FSYNC_VOL_MOVE);
-	ENUMCASE(FSYNC_VOL_BREAKCBKS);
-	ENUMCASE(FSYNC_VOL_DONE);
-	ENUMCASE(FSYNC_VOL_QUERY);
-	ENUMCASE(FSYNC_VOL_QUERY_HDR);
-	ENUMCASE(FSYNC_VOL_QUERY_VOP);
-	ENUMCASE(FSYNC_VOL_STATS_GENERAL);
-	ENUMCASE(FSYNC_VOL_STATS_VICEP);
-	ENUMCASE(FSYNC_VOL_STATS_HASH);
-	ENUMCASE(FSYNC_VOL_STATS_HDR);
-	ENUMCASE(FSYNC_VOL_STATS_VLRU);
-	ENUMCASE(FSYNC_VOL_ATTACH);
-	ENUMCASE(FSYNC_VOL_FORCE_ERROR);
-	ENUMCASE(FSYNC_VOL_LEAVE_OFF);
-	ENUMCASE(FSYNC_VOL_QUERY_VNODE);
-	ENUMCASE(FSYNC_VG_QUERY);
-	ENUMCASE(FSYNC_VG_ADD);
-	ENUMCASE(FSYNC_VG_DEL);
-	ENUMCASE(FSYNC_VG_SCAN);
-	ENUMCASE(FSYNC_VG_SCAN_ALL);
-
-    default:
-	return "**UNKNOWN**";
-    }
-}
-
-static char *
-reason_code_to_string(afs_int32 reason)
-{
-    switch (reason) {
-	ENUMCASE(SYNC_REASON_NONE);
-	ENUMCASE(SYNC_REASON_MALFORMED_PACKET);
-	ENUMCASE(SYNC_REASON_NOMEM);
-	ENUMCASE(SYNC_REASON_ENCODING_ERROR);
-	ENUMCASE(FSYNC_WHATEVER);
-	ENUMCASE(FSYNC_SALVAGE);
-	ENUMCASE(FSYNC_MOVE);
-	ENUMCASE(FSYNC_OPERATOR);
-	ENUMCASE(FSYNC_EXCLUSIVE);
-	ENUMCASE(FSYNC_UNKNOWN_VOLID);
-	ENUMCASE(FSYNC_HDR_NOT_ATTACHED);
-	ENUMCASE(FSYNC_NO_PENDING_VOL_OP);
-	ENUMCASE(FSYNC_VOL_PKG_ERROR);
-	ENUMCASE(FSYNC_UNKNOWN_VNID);
-	ENUMCASE(FSYNC_WRONG_PART);
-	ENUMCASE(FSYNC_BAD_STATE);
-	ENUMCASE(FSYNC_BAD_PART);
-	ENUMCASE(FSYNC_PART_SCANNING);
-    default:
-	return "**UNKNOWN**";
-    }
-}
-
-static char *
-program_type_to_string(afs_int32 type)
-{
-    switch ((ProgramType)type) {
-	ENUMCASE(fileServer);
-	ENUMCASE(volumeUtility);
-	ENUMCASE(salvager);
-	ENUMCASE(salvageServer);
-	ENUMCASE(debugUtility);
-    default:
-	return "**UNKNOWN**";
-    }
-}
 
 static int 
 VolOnline(struct cmd_syndesc * as, void * rock)
@@ -883,7 +791,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tid               = %u\n", v.id);
 	printf("\tname             = '%s'\n", v.name);
 	if (v.inUse != 0) {
-	    printf("\tinUse            = %d (%s)\n", v.inUse, program_type_to_string(v.inUse));
+	    printf("\tinUse            = %d (%s)\n", v.inUse, VPTypeToString(v.inUse));
 	} else {
 	    printf("\tinUse            = %d (no)\n", v.inUse);
 	}
@@ -960,13 +868,13 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tpkt_seq        = %u\n", vop.com.pkt_seq);
 	printf("\t\tcom_seq        = %u\n", vop.com.com_seq);
 	printf("\t\tprogramType    = %d (%s)\n", 
-	       vop.com.programType, program_type_to_string(vop.com.programType));
+	       vop.com.programType, VPTypeToString(vop.com.programType));
 	printf("\t\tpid            = %d\n", vop.com.pid);
 	printf("\t\ttid            = %d\n", vop.com.tid);
 	printf("\t\tcommand        = %d (%s)\n", 
-	       vop.com.command, command_code_to_string(vop.com.command));
+	       vop.com.command, FSYNC_com2string(vop.com.command));
 	printf("\t\treason         = %d (%s)\n", 
-	       vop.com.reason, reason_code_to_string(vop.com.reason));
+	       vop.com.reason, FSYNC_reason2string(vop.com.reason));
 	printf("\t\tcommand_len    = %u\n", vop.com.command_len);
 	printf("\t\tflags          = 0x%lux\n", afs_printable_uint32_lu(vop.com.flags));
 	printf("\t}\n");
@@ -1036,7 +944,7 @@ do_vnqry(struct state * state, SYNC_response * res)
     strlcpy(qry.partName, state->vop->partName, sizeof(qry.partName));
 
     fprintf(stderr, "calling FSYNC_GenericOp with command code %d (%s)\n", 
-	    command, command_code_to_string(command));
+	    command, FSYNC_com2string(command));
 
     code = FSYNC_GenericOp(&qry, sizeof(qry), command, FSYNC_OPERATOR, res);
 
@@ -1227,7 +1135,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     common_prolog(as, &state);
 
     fprintf(stderr, "calling FSYNC_askfs with command code %d (%s)\n", 
-	    command, command_code_to_string(command));
+	    command, FSYNC_com2string(command));
 
     code = FSYNC_StatsOp(&scom, command, FSYNC_WHATEVER, &res);
 
@@ -1239,11 +1147,11 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
 	fprintf(stderr, "possible sync protocol error. return code was %d\n", code);
     }
 
-    fprintf(stderr, "FSYNC_VolOp returned %d (%s)\n", code, response_code_to_string(code));
+    fprintf(stderr, "FSYNC_VolOp returned %d (%s)\n", code, SYNC_res2string(code));
     fprintf(stderr, "protocol response code was %d (%s)\n", 
-	    res.hdr.response, response_code_to_string(res.hdr.response));
+	    res.hdr.response, SYNC_res2string(res.hdr.response));
     fprintf(stderr, "protocol reason code was %d (%s)\n", 
-	    res.hdr.reason, reason_code_to_string(res.hdr.reason));
+	    res.hdr.reason, FSYNC_reason2string(res.hdr.reason));
 
     VDisconnectFS();
 
