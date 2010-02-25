@@ -1052,8 +1052,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * file.  Leave the entry alone.
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
+#ifdef AFS_DARWIN80_ENV	    
+	    int isdead = (tvcp->f.states & CDeadVnode);
+#endif
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
+#ifdef AFS_DARWIN80_ENV	    
+	    if (!isdead)
+		/* re-acquire the usecount that the other finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+#endif
 	    afs_PutVCache(tvcp);
 	    continue;
 	}
@@ -1104,6 +1112,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
+#ifdef AFS_DARWIN80_ENV	    
+	    if ((tvcp->f.states & CDeadVnode) == 0)
+		/* re-acquire the usecount that the other finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+#endif
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
 	    afs_PutVCache(tvcp);
@@ -1211,6 +1224,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tvcp->f.states &= ~CBulkFetching;
 	}
 	if (tvcp != NULL) {
+#ifdef AFS_DARWIN80_ENV	    
+	    if ((tvcp->f.states & CDeadVnode) == 0) 
+		/* re-acquire the usecount that the other finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+#endif
 	    afs_PutVCache(tvcp);
 	}
     }
@@ -1611,7 +1629,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    /* if the vcache isn't usable, release it */
 	    if (tvc && !(tvc->f.states & CStatd)) {
 #ifndef  AFS_FBSD80_ENV
-	      afs_PutVCache(tvc);
+		afs_PutVCache(tvc);
 #endif
 		tvc = NULL;
 	    }
