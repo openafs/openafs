@@ -60,7 +60,7 @@ error_table.o: et_lex.lex.c
 
 include ../config/Makefile.version
 ${DESTDIR}${bindir}/afs_compile_et: compile_et
-	${INSTALL} $? $@
+	${INSTALL} -f $? $@
 
 ${DESTDIR}${includedir}/afs/com_err.h: com_err.h
 	${INSTALL} $? $@
