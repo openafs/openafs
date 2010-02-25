@@ -169,7 +169,10 @@ extern void rxi_KeepAliveEvent(struct rxevent *event,
 			       void *call /* struct rx_call *call */, 
 			       void *dummy);
 extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
+extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
 extern void rxi_KeepAliveOn(struct rx_call *call);
+extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
+extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds);
 extern void rxi_SendDelayedConnAbort(struct rxevent *event,
 				     void *conn, /* struct rx_connection *conn */
 				     void *dummy);

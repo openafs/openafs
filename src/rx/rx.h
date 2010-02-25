@@ -272,6 +272,8 @@ struct rx_connection {
     u_char ackRate;		/* how many packets between ack requests */
     u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
     afs_int32 idleDeadErr;
+    afs_int32 secondsUntilNatPing;	/* how often to ping conn */
+    struct rxevent *natKeepAliveEvent; /* Scheduled to keep connection open */
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 };

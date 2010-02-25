@@ -828,6 +828,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     conn->securityData = (void *) 0;
     conn->securityIndex = serviceSecurityIndex;
     rx_SetConnDeadTime(conn, rx_connDeadTime);
+    rx_SetConnSecondsUntilNatPing(conn, 0);
     conn->ackRate = RX_FAST_ACK_RATE;
     conn->nSpecific = 0;
     conn->specific = NULL;
@@ -1034,6 +1035,10 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 	return;
     }
 
+    if (conn->natKeepAliveEvent) {
+	rxi_NatKeepAliveOff(conn);
+    }
+
     if (conn->delayedAbortEvent) {
 	rxevent_Cancel(conn->delayedAbortEvent, (struct rx_call *)0, 0);
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
@@ -1067,6 +1072,8 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 	rxevent_Cancel(conn->challengeEvent, (struct rx_call *)0, 0);
     if (conn->checkReachEvent)
 	rxevent_Cancel(conn->checkReachEvent, (struct rx_call *)0, 0);
+    if (conn->natKeepAliveEvent)
+	rxevent_Cancel(conn->natKeepAliveEvent, (struct rx_call *)0, 0);
 
     /* Add the connection to the list of destroyed connections that
      * need to be cleaned up. This is necessary to avoid deadlocks
@@ -4602,6 +4609,8 @@ rxi_ConnectionError(struct rx_connection *conn,
 	MUTEX_ENTER(&conn->conn_data_lock);
 	if (conn->challengeEvent)
 	    rxevent_Cancel(conn->challengeEvent, (struct rx_call *)0, 0);
+	if (conn->natKeepAliveEvent)
+	    rxevent_Cancel(conn->natKeepAliveEvent, (struct rx_call *)0, 0);
 	if (conn->checkReachEvent) {
 	    rxevent_Cancel(conn->checkReachEvent, (struct rx_call *)0, 0);
 	    conn->checkReachEvent = 0;
@@ -5779,6 +5788,79 @@ rxi_CheckCall(struct rx_call *call)
     return 0;
 }
 
+void
+rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
+{
+    struct rx_connection *conn = arg1;
+    struct rx_header theader;
+    char tbuffer[1500];
+    struct sockaddr_in taddr;
+    char *tp;
+    char a[1] = { 0 };
+    struct iovec tmpiov[2];
+    osi_socket socket =
+        (conn->type ==
+         RX_CLIENT_CONNECTION ? rx_socket : conn->service->socket);
+
+
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->natKeepAliveEvent = NULL;
+    MUTEX_EXIT(&conn->conn_data_lock);
+
+    tp = &tbuffer[sizeof(struct rx_header)];
+    taddr.sin_family = AF_INET;
+    taddr.sin_port = rx_PortOf(rx_PeerOf(conn));
+    taddr.sin_addr.s_addr = rx_HostOf(rx_PeerOf(conn));
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
+    memset(&theader, 0, sizeof(theader));
+    theader.epoch = htonl(999);
+    theader.cid = 0;
+    theader.callNumber = 0;
+    theader.seq = 0;
+    theader.serial = 0;
+    theader.type = RX_PACKET_TYPE_VERSION;
+    theader.flags = RX_LAST_PACKET;
+    theader.serviceId = 0;
+
+    memcpy(tbuffer, &theader, sizeof(theader));
+    memcpy(tp, &a, sizeof(a));
+    tmpiov[0].iov_base = tbuffer;
+    tmpiov[0].iov_len = 1 + sizeof(struct rx_header);
+
+    osi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
+    rxi_ScheduleNatKeepAliveEvent(conn);
+}
+
+void
+rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn)
+{
+    MUTEX_ENTER(&conn->conn_data_lock);
+    if (!conn->natKeepAliveEvent && conn->secondsUntilNatPing) {
+	struct clock when, now;
+	clock_GetTime(&now);
+	when = now;
+	when.sec += conn->secondsUntilNatPing;
+	conn->natKeepAliveEvent =
+	    rxevent_PostNow(&when, &now, rxi_NatKeepAliveEvent, conn, 0);
+    }
+    MUTEX_EXIT(&conn->conn_data_lock);
+}
+
+void
+rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds)
+{
+    conn->secondsUntilNatPing = seconds;
+    if (seconds != 0)
+	rxi_ScheduleNatKeepAliveEvent(conn);
+}
+
+void
+rxi_NatKeepAliveOn(struct rx_connection *conn)
+{
+    rxi_ScheduleNatKeepAliveEvent(conn);
+}
 
 /* When a call is in progress, this routine is called occasionally to
  * make sure that some traffic has arrived (or been sent to) the peer.
