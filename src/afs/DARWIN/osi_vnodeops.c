@@ -1292,9 +1292,12 @@ afs_vop_rename(ap)
     p = cn_proc(fcnp);
 
 #ifdef AFS_DARWIN80_ENV
-/* generic code tests for v_mount equality, so we don't have to, but we don't
-   get the multiple-mount "benefits" of the old behavior
-*/
+    /*
+     * generic code tests for v_mount equality, so we don't have to, but we
+     * don't get the multiple-mount "benefits" of the old behavior
+     * the generic code doesn't do this, so we really should, but all the
+     * vrele's are wrong...
+     */
 #else
     /* Check for cross-device rename.
      * For AFS, this means anything not in AFS-space
@@ -1304,12 +1307,7 @@ afs_vop_rename(ap)
 	error = EXDEV;
 	goto abortit;
     }
-#endif
 
-#ifdef AFS_DARWIN80_ENV
-   /* the generic code doesn't do this, so we really should, but all the
-      vrele's are wrong... */
-#else
     /*
      * if fvp == tvp, we're just removing one name of a pair of
      * directory entries for the same element.  convert call into rename.
@@ -1337,17 +1335,6 @@ afs_vop_rename(ap)
 	vput(tdvp);
 	vput(tvp);
 	/* Delete source. */
-#if defined(AFS_DARWIN80_ENV) 
-
-        MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
-        memcpy(fname, fcnp->cn_nameptr, fcnp->cn_namelen);
-        fname[fcnp->cn_namelen] = '\0';
-        AFS_GLOCK();
-        error = afs_remove(VTOAFS(fdvp), fname, vop_cn_cred);
-        AFS_GUNLOCK();
-        FREE(fname, M_TEMP);
-        cache_purge(fvp);
-#else
 	vrele(fdvp);
 	vrele(fvp);
 	fcnp->cn_flags &= ~MODMASK;
@@ -1364,7 +1351,6 @@ afs_vop_rename(ap)
 	    return (ENOENT);
         }
         error=VOP_REMOVE(fdvp, fvp, fcnp);
-#endif
         
         if (fdvp == fvp)
             vrele(fdvp);
@@ -1373,8 +1359,6 @@ afs_vop_rename(ap)
         vput(fvp);
         return (error);
     }
-#endif
-#if !defined(AFS_DARWIN80_ENV) 
     if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
 	goto abortit;
 #endif
@@ -1391,11 +1375,21 @@ afs_vop_rename(ap)
     /* XXX use "from" or "to" creds? NFS uses "to" creds */
     error =
 	afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname, cn_cred(tcnp));
-    AFS_GUNLOCK();
 
 #if !defined(AFS_DARWIN80_ENV) 
+    AFS_GUNLOCK();
     VOP_UNLOCK(fvp, 0, p);
-#endif
+    if (error)
+	goto abortit;		/* XXX */
+    if (tdvp == tvp)
+	vrele(tdvp);
+    else
+	vput(tdvp);
+    if (tvp)
+	vput(tvp);
+    vrele(fdvp);
+    vrele(fvp);
+#else
 #ifdef notdef
     if (error == EXDEV) {
 	/* The idea would be to have a userspace handler like afsdb to
@@ -1408,29 +1402,19 @@ afs_vop_rename(ap)
 	       tvc->f.fid.Fid.Unique, tname);
     }
 #endif
-#ifdef AFS_DARWIN80_ENV
+    AFS_GUNLOCK();
+
     cache_purge(fdvp);
     cache_purge(fvp);
     cache_purge(tdvp);
     if (tvp) {
-       cache_purge(tvp);
-       if (!error) {
-          vnode_recycle(tvp);
-       }
+	cache_purge(tvp);
+	if (!error) {
+	    vnode_recycle(tvp);
+	}
     }
     if (!error)
-       cache_enter(tdvp, fvp, tcnp);
-#else
-    if (error)
-	goto abortit;		/* XXX */
-    if (tdvp == tvp)
-	vrele(tdvp);
-    else
-	vput(tdvp);
-    if (tvp)
-	vput(tvp);
-    vrele(fdvp);
-    vrele(fvp);
+	cache_enter(tdvp, fvp, tcnp);
 #endif
     FREE(fname, M_TEMP);
     FREE(tname, M_TEMP);
@@ -1877,7 +1861,7 @@ afs_vop_truncate(ap)
 				 * struct proc *a_p;
 				 * } */ *ap;
 {
-    printf("stray afs_vop_truncate\n");
+    /* printf("stray afs_vop_truncate\n"); */
     return EOPNOTSUPP;
 }
 
@@ -1890,7 +1874,7 @@ afs_vop_update(ap)
 				 * int a_waitfor;
 				 * } */ *ap;
 {
-    printf("stray afs_vop_update\n");
+    /* printf("stray afs_vop_update\n"); */
     return EOPNOTSUPP;
 }
 
