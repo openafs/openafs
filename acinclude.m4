@@ -1185,6 +1185,8 @@ else
   
 fi
 
+AC_CHECK_RESOLV_RETRANS
+
 AC_CACHE_VAL(ac_cv_setsockopt_iprecverr,
 [
 AC_MSG_CHECKING([for setsockopt(, SOL_IP, IP_RECVERR)])

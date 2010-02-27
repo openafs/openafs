@@ -1027,6 +1027,18 @@ afsconf_LookupServer(const char *service, const char *protocol,
     if (!dotcellname)
 	return AFSCONF_NOTFOUND;	/* service not found */
 
+#ifdef HAVE_RES_RETRANSRETRY
+    if ((_res.options & RES_INIT) == 0 && res_init() == -1)
+      return (0);
+
+    /*
+     * Rx timeout is typically 56 seconds; limit user experience to
+     * similar timeout
+     */
+    _res.retrans = 18;
+    _res.retry = 3;
+#endif
+
  retryafsdb:
     switch (pass) {
     case 0:
