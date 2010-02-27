@@ -27,7 +27,8 @@
 	SInt32					osxMJVers = 0;
 	SInt32					osxMnVers = 0;
 	FileUtil				*futil = nil;
-	
+	SInt32                                  object_index = 0;
+
 	//check system 
 	if (Gestalt(gestaltSystemVersionMajor, &osxMJVers) != noErr || Gestalt(gestaltSystemVersionMinor, &osxMnVers) != noErr) @throw [NSException exceptionWithName:@"PListManager:krb5TiketAtLoginTime" 
 																																						   reason:@"Error getting system version"
@@ -82,8 +83,9 @@
 	}
 	
 	//Make change
-	[mechanismsArray removeObject:toRemove];
-	[mechanismsArray addObject:toAdd];
+	object_index = [mechanismsArray indexOfObject: toRemove];
+	[mechanismsArray replaceObjectAtIndex:object_index withObject:toAdd];
+
 	//write plist
 	plistData  = [NSPropertyListSerialization dataFromPropertyList:plist
 															format:NSPropertyListXMLFormat_v1_0
@@ -110,7 +112,7 @@
 		}
 		// chmod on tmp file
 		[futil autorizedChown:TMP_FILE owner:@"root" group:@"wheel"];
-		//mov ethe file 
+		//move the file 
 		[futil autorizedMoveFile:TMP_FILE toPath:AUTH_FILE_DIR];
 	}
 	[futil release];
