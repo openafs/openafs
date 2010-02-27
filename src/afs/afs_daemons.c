@@ -995,8 +995,13 @@ brequest_release(struct brequest *tb)
     afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
 }
 
+#ifdef AFS_DARWIN80_ENV
+int
+afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2)
+#else
 void
 afs_BackgroundDaemon(void)
+#endif
 {
     struct brequest *tb;
     int i, foundAny;
@@ -1007,7 +1012,33 @@ afs_BackgroundDaemon(void)
 	/* Irix with "short stack" exits */
 	afs_BackgroundDaemon_once();
 
-    afs_nbrs++;
+#ifdef AFS_DARWIN80_ENV
+    /* If it's a re-entering syscall, complete the request and release */
+    if (uspc->ts > -1) {
+        tb = afs_brs;
+        for (i = 0; i < NBRS; i++, tb++) {
+            if (tb->ts == uspc->ts) {
+                /* copy the userspace status back in */
+                ((struct afs_uspc_param *) tb->ptr_parm[0])->retval =
+                    uspc->retval;
+                /* mark it valid and notify our caller */
+                tb->flags |= BUVALID;
+                if (tb->flags & BUWAIT) {
+                    tb->flags &= ~BUWAIT;
+                    afs_osi_Wakeup(tb);
+                }
+                brequest_release(tb);
+                break;
+            }
+        }
+    } else {
+        afs_osi_MaskUserLoop();
+#endif
+        /* Otherwise it's a new one */
+	afs_nbrs++;
+#ifdef AFS_DARWIN80_ENV
+    }
+#endif
 
     ObtainWriteLock(&afs_xbrs, 302);
     while (1) {
@@ -1019,7 +1050,11 @@ afs_BackgroundDaemon(void)
 		afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
+#ifdef AFS_DARWIN80_ENV
+	    return -2;
+#else
 	    return;
+#endif
 	}
 
 	/* find a request */
@@ -1052,6 +1087,19 @@ afs_BackgroundDaemon(void)
 		BStore(tb);
 	    else if (tb->opcode == BOP_PATH)
 		BPath(tb);
+#ifdef AFS_DARWIN80_ENV
+            else if (tb->opcode == BOP_MOVE) {
+                memcpy(uspc, (struct afs_uspc_param *) tb->ptr_parm[0],
+                       sizeof(struct afs_uspc_param));
+                uspc->ts = tb->ts;
+                /* string lengths capped in move vop; copy NUL tho */
+                memcpy(param1, (char *)tb->ptr_parm[1],
+                       strlen(tb->ptr_parm[1])+1);
+                memcpy(param2, (char *)tb->ptr_parm[2],
+                       strlen(tb->ptr_parm[2])+1);
+                return 0;
+            }
+#endif
 	    else
 		panic("background bop");
 	    brequest_release(tb);
@@ -1066,6 +1114,9 @@ afs_BackgroundDaemon(void)
 	    afs_brsDaemons--;
 	}
     }
+#ifdef AFS_DARWIN80_ENV
+    return -2;
+#endif
 }
 
 

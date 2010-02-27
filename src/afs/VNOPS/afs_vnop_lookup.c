@@ -51,26 +51,26 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 static int
 EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
               struct volume **avolpp, register struct vrequest *areq,
-	      afs_uint32 *acellidxp, afs_uint32 *avolnump, afs_uint32 *avnoidp)
+	      afs_uint32 *acellidxp, afs_uint32 *avolnump,
+	      afs_uint32 *avnoidp, afs_uint32 *auniqp)
 {
     struct volume *tvp = 0;
     struct VenusFid tfid;
     struct cell *tcell;
-    char *cpos, *volnamep, *x;
-    char *buf;
+    char *cpos, *volnamep;
+    char *buf, *endptr;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
     afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
-    afs_uint32 volid, cellidx, vnoid = 0;
+    afs_uint32 volid = 0, cellidx, vnoid = 0, uniq = 0;
 
+    /* Start by figuring out and finding the cell */
     cpos = afs_strchr(data, ':');	/* if cell name present */
     if (cpos) {
-	cellnum = 0;
 	volnamep = cpos + 1;
 	*cpos = 0;
-	for (x = data; *x >= '0' && *x <= '9'; x++)
-	    cellnum = (cellnum * 10) + (*x - '0');
-	if (cellnum && !*x)
+	if ((afs_strtoi_r(data, &endptr, &cellnum) == 0) &&
+	    (endptr == cpos))
 	    tcell = afs_GetCell(cellnum, READ_LOCK);
 	else {
 	    tcell = afs_GetCellByName(data, READ_LOCK);
@@ -81,12 +81,11 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	volnamep = data;
 	tcell = afs_GetCell(cellnum, READ_LOCK);
     } else {
-	/*printf("No cellname %s , or cellnum %d , returning ENODEV\n", 
-	       data, cellnum);*/
+	/* No cellname or cellnum; return ENODEV */
 	return ENODEV;
     }
     if (!tcell) {
-	/*printf("Lookup failed, returning ENODEV\n");*/
+	/* no cell found; return ENODEV */
 	return ENODEV;
     }
 
@@ -98,22 +97,38 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     }
     afs_PutCell(tcell, READ_LOCK);
 
-    cpos = afs_strrchr(volnamep, ':'); /* if vno present */
-    if (cpos) 
+    /* If there's nothing to look up, we can't proceed */
+    if (!*volnamep)
+	return ENODEV;
+
+    /* cell found. figure out volume */
+    cpos = afs_strchr(volnamep, ':');
+    if (cpos)
 	*cpos = 0;
+
     /* Look for an all-numeric volume ID */
-    volid = 0;
-    for (x = volnamep; *x >= '0' && *x <= '9'; x++)
-	volid = (volid * 10) + (*x - '0');
-    if (cpos) {
-	*cpos = ':';
-	vnoid = 0;
-	if (*x == *cpos) /* allow vno with numeric volid only */
-	    for (x = (cpos + 1); *x >= '0' && *x <= '9'; x++)
-		vnoid = (vnoid * 10) + (*x - '0');
-	if (*x)
-	    vnoid = 0;
-    }
+    if ((afs_strtoi_r(volnamep, &endptr, &volid) == 0) &&
+	((endptr == cpos) || (!*endptr)))
+    {
+	/* Ok. Is there a vnode and uniq? */
+	if (cpos) {
+	    char *vnodep = (char *)(cpos + 1);
+	    char *uniqp = NULL;
+	    if ((!*vnodep) /* no vnode after colon */
+		|| !(uniqp = afs_strchr(vnodep, ':')) /* no colon for uniq */
+		|| (!*(++uniqp)) /* no uniq after colon */
+		|| (afs_strtoi_r(vnodep, &endptr, &vnoid) != 0) /* bad vno */
+		|| (*endptr != ':') /* bad vnode field */
+		|| (afs_strtoi_r(uniqp, &endptr, &uniq) != 0) /* bad uniq */
+		|| (*endptr)) /* anything after uniq */
+	    {
+		*cpos = ':';
+		/* sorry. vnode and uniq, or nothing */
+		return ENODEV;
+	    }
+	}
+    } else
+	    volid = 0;
 
     /*
      * If the volume ID was all-numeric, and they didn't ask for a
@@ -121,14 +136,10 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * as-is.  This is currently only used for handling name lookups
      * in the dynamic mount directory.
      */
-    if (!*x && !avolpp) {
-	if (acellidxp)
-	    *acellidxp = cellidx;
-	if (avolnump)
-	    *avolnump = volid;
-	if (avnoidp)
-	    *avnoidp = vnoid;
-	return 0;
+    if (volid && !avolpp) {
+	if (*cpos)
+	    *cpos = ':';
+	goto done;
     }
 
     /*
@@ -137,14 +148,14 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * and don't second-guess them by forcing use of a RW volume when
      * they gave the ID of something else.
      */
-    if (!*x && type == '%') {
+    if (volid && type == '%') {
 	tfid.Fid.Volume = volid;	/* remember BK volume */
 	tfid.Cell = mtptCell;
 	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
-	if (!tvp) {
-	    /*printf("afs_GetVolume failed - returning ENODEV");*/
-	    return ENODEV;	/* oops, can't do it */
-	}
+	if (cpos) /* one way or another we're done */
+	    *cpos = ':';
+	if (!tvp)
+	    return ENODEV; /* afs_GetVolume failed; return ENODEV */
 	goto done;
     }
 
@@ -180,11 +191,6 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * The RO volume will be prefetched if requested (but not returned).
      * Set up to use volname first.
      */
-    cpos = afs_strchr(volnamep, ':'); /* if vno present */
-    if (cpos)
-	*cpos = 0;
-    
-    /*printf("Calling GetVolumeByName\n");*/
     tvp = afs_GetVolumeByName(volnamep, mtptCell, prefetch, areq, WRITE_LOCK);
 
     /* If no volume was found in this cell, try the associated linked cell */
@@ -215,11 +221,8 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     /* done with volname */
     if (cpos)
 	*cpos = ':';
-
-    if (!tvp) {
-	/*printf("Couldn't find the volume\n");*/
+    if (!tvp)
 	return ENODEV;		/* Couldn't find the volume */
-    }
 
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((states & CBackup) && (tvp->states & VBackup)) {
@@ -256,9 +259,11 @@ done:
 	*avolnump = tvp->volume;
     if (avnoidp)
 	*avnoidp = vnoid;
+    if (auniqp)
+	*auniqp = uniq;
     if (avolpp)
 	*avolpp = tvp;
-    else
+    else if (tvp)
 	afs_PutVolume(tvp, WRITE_LOCK);
     return 0;
 }
@@ -268,7 +273,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	       struct volume **avolpp, register struct vrequest *areq)
 {
     afs_int32 code;
-    afs_uint32 avnoid;
+    afs_uint32 avnoid, auniq;
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
@@ -283,11 +288,14 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     /* Determine which cell and volume the mointpoint goes to */
     code = EvalMountData(avc->linkData[0], avc->linkData + 1,
                          avc->f.states, avc->f.fid.Cell, avolpp, areq, 0, 0,
-			 &avnoid);
+			 &avnoid, &auniq);
     if (code) return code;
 
     if (!avnoid)
 	avnoid = 1;
+
+    if (!auniq)
+	auniq = 1;
 
     if (avc->mvid == 0)
 	avc->mvid =
@@ -295,7 +303,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     avc->mvid->Cell = (*avolpp)->cell;
     avc->mvid->Fid.Volume = (*avolpp)->volume;
     avc->mvid->Fid.Vnode = avnoid;
-    avc->mvid->Fid.Unique = 1;
+    avc->mvid->Fid.Unique = auniq;
     avc->f.states |= CMValid;
 
     /* Used to: if the mount point is stored within a backup volume,
@@ -1425,15 +1433,26 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
      */
     if (afs_IsDynrootMount(adp)) {
 	struct VenusFid tfid;
-	afs_uint32 cellidx, volid, vnoid;
+	afs_uint32 cellidx, volid, vnoid, uniq;
 
-	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid, &vnoid);
+	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid, &vnoid, &uniq);
 	if (code)
 	    goto done;
-	afs_GetDynrootMountFid(&tfid);
-	tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
-	tfid.Fid.Unique = volid;
+	/* If a vnode was returned, it's not a real mount point */
+	if (vnoid > 1) {
+	    struct cell *tcell = afs_GetCellByIndex(cellidx, READ_LOCK);
+	    tfid.Cell = tcell->cellNum;
+	    afs_PutCell(tcell, READ_LOCK);
+	    tfid.Fid.Vnode = vnoid;
+	    tfid.Fid.Volume = volid;
+	    tfid.Fid.Unique = uniq;
+	} else {
+	    afs_GetDynrootMountFid(&tfid);
+	    tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
+	    tfid.Fid.Unique = volid;
+	}
 	*avcp = tvc = afs_GetVCache(&tfid, &treq, NULL, NULL);
+	code = (tvc ? 0 : ENOENT);
 	hit = 1;
 	goto done;
     }

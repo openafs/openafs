@@ -1390,18 +1390,72 @@ afs_vop_rename(ap)
     vrele(fdvp);
     vrele(fvp);
 #else
-#ifdef notdef
     if (error == EXDEV) {
-	/* The idea would be to have a userspace handler like afsdb to
-	 * run mv as the user, thus:
-	 */
-	printf("su %d -c /bin/mv /afs/.:mount/%d:%d:%d:%d/%s /afs/.:mount/%d:%d:%d:%d/%s\n",
-	       afs_cr_uid(cn_cred(tcnp)), fvc->f.fid.Cell, fvc->f.fid.Fid.Volume,
-	       fvc->f.fid.Fid.Vnode, fvc->f.fid.Fid.Unique, fname, 
-	       tvc->f.fid.Cell, tvc->f.fid.Fid.Volume, tvc->f.fid.Fid.Vnode, 
-	       tvc->f.fid.Fid.Unique, tname);
+        struct brequest *tb;
+        struct afs_uspc_param mvReq;
+        struct vcache *tvc;
+        struct vcache *fvc = VTOAFS(fdvp);
+        int code = 0;
+        struct afs_fakestat_state fakestate;
+        int fakestatdone = 0;
+
+	tvc = VTOAFS(tdvp);
+
+        /* unrewritten mount point? */
+        if (tvc->mvstat == 1) {
+            if (tvc->mvid && (tvc->f.states & CMValid)) {
+                struct vrequest treq;
+
+                afs_InitFakeStat(&fakestate);
+                code = afs_InitReq(&treq, vop_cred);
+                if (!code) {
+                    fakestatdone = 1;
+                    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
+                } else
+                    afs_PutFakeStat(&fakestate);
+            }
+        }
+
+        if (!code) {
+	    /* at some point in the future we should allow other types */
+	    mvReq.reqtype = AFS_USPC_UMV;
+            mvReq.req.umv.id = afs_cr_uid(cn_cred(tcnp));
+            mvReq.req.umv.idtype = IDTYPE_UID;
+            mvReq.req.umv.sCell = fvc->f.fid.Cell;
+            mvReq.req.umv.sVolume = fvc->f.fid.Fid.Volume;
+            mvReq.req.umv.sVnode = fvc->f.fid.Fid.Vnode;
+            mvReq.req.umv.sUnique = fvc->f.fid.Fid.Unique;
+            mvReq.req.umv.dCell = tvc->f.fid.Cell;
+            mvReq.req.umv.dVolume = tvc->f.fid.Fid.Volume;
+            mvReq.req.umv.dVnode = tvc->f.fid.Fid.Vnode;
+            mvReq.req.umv.dUnique = tvc->f.fid.Fid.Unique;
+
+	    /*
+	     * su %d -c mv /afs/.:mount/%d:%d:%d:%d/%s
+	     * /afs/.:mount/%d:%d:%d:%d/%s where:
+	     * mvReq.req.umv.id, fvc->f.fid.Cell, fvc->f.fid.Fid.Volume,
+	     * fvc->f.fid.Fid.Vnode, fvc->f.fid.Fid.Unique, fname,
+	     * tvc->f.fid.Cell, tvc->f.fid.Fid.Volume, tvc->f.fid.Fid.Vnode,
+	     * tvc->f.fid.Fid.Unique, tname
+	     */
+
+            tb = afs_BQueue(BOP_MOVE, NULL, 0, 1, cn_cred(tcnp),
+                            0L, 0L, &mvReq, fname, tname);
+	    /* wait to collect result */
+            while ((tb->flags & BUVALID) == 0) {
+                tb->flags |= BUWAIT;
+                afs_osi_Sleep(tb);
+            }
+            /* if we succeeded, clear the error. otherwise, EXDEV */
+            if (mvReq.retval == 0)
+                error = 0;
+
+            afs_BRelease(tb);
+        }
+
+        if (fakestatdone)
+            afs_PutFakeStat(&fakestate);
     }
-#endif
     AFS_GUNLOCK();
 
     cache_purge(fdvp);

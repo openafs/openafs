@@ -79,6 +79,34 @@ afs_cv2string(char *ttp, afs_uint32 aval)
 }				/*afs_cv2string */
 #endif
 
+/* not a generic strtoul replacement. for vol/vno/uniq, portable */
+
+afs_int32
+afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret)
+{
+    char *x;
+
+    *ret = 0;
+    *endptr = (char *)str;
+
+    if (!str)
+	return ERANGE;
+
+    for (x = (char *)str; *x >= '0' && *x <= '9'; x++) {
+	/* Check for impending overflow */
+	if (*ret > 429496729) { /* ULONG_MAX/10 */
+	    *ret = 0;
+	    *endptr = (char *)str;
+	    return EINVAL;
+	}
+
+	*ret = (*ret * 10) + (*x - '0');
+    }
+
+    *endptr = x;
+    return 0;
+}
+
 #ifndef afs_strcasecmp
 int
 afs_strcasecmp(char *s1, char *s2)

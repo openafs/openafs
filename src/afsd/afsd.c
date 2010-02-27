@@ -999,7 +999,7 @@ doSweepAFSCache(int *vFilesFound,
     {
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
-#ifdef AFS_SGI62_ENV
+#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN90_ENV)
 	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
 #elif defined(AFS_DFBSD_ENV)
@@ -1510,9 +1510,119 @@ AfsdbLookupHandler(void)
     exit(1);
 }
 
-#ifdef mac2
-#include <sys/ioctl.h>
-#endif /* mac2 */
+#ifdef AFS_DARWIN_ENV
+static void
+BkgHandler(void)
+{
+    afs_int32 code;
+    struct afs_uspc_param *uspc;
+    char srcName[256];
+    char dstName[256];
+
+    uspc = (struct afs_uspc_param *)malloc(sizeof(struct afs_uspc_param));
+    memset(uspc, 0, sizeof(struct afs_uspc_param));
+    memset(srcName, 0, sizeof(srcName));
+    memset(dstName, 0, sizeof(dstName));
+
+    /* brscount starts at 0 */
+    uspc->ts = -1;
+
+    while (1) {
+	pid_t child = 0;
+	int status;
+	char srcpath[BUFSIZ];
+	char dstpath[BUFSIZ];
+
+	/* pushing in a buffer this large */
+	uspc->bufSz = 256;
+
+	code = call_syscall(AFSOP_BKG_HANDLER, uspc, srcName, dstName);
+	if (code) {		/* Something is wrong? */
+	    if (code == -2) /* shutting down */
+		break;
+
+	    sleep(1);
+	    uspc->retval = -1;
+	    continue;
+	}
+
+	switch (uspc->reqtype) {
+	case AFS_USPC_UMV:
+	    snprintf(srcpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
+		     uspc->req.umv.sCell, uspc->req.umv.sVolume,
+		     uspc->req.umv.sVnode, uspc->req.umv.sUnique, srcName);
+	    snprintf(dstpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
+		     uspc->req.umv.dCell, uspc->req.umv.dVolume,
+		     uspc->req.umv.dVnode, uspc->req.umv.dUnique, dstName);
+	    if ((child = fork()) == 0) {
+		/* first child does cp; second, rm. mv would re-enter. */
+
+		switch (uspc->req.umv.idtype) {
+		case IDTYPE_UID:
+		    if (setuid(uspc->req.umv.id) != 0) {
+			exit(-1);
+		    }
+		    break;
+		default:
+		    exit(-1);
+		    break; /* notreached */
+		}
+		execl("/bin/cp", "(afsd EXDEV helper)", "-PRp", "--", srcpath,
+		      dstpath, (char *) NULL);
+	    }
+	    if (child == (pid_t) -1) {
+		uspc->retval = -1;
+		continue;
+	    }
+
+	    if (waitpid(child, &status, 0) == -1)
+		uspc->retval = EIO;
+	    else if (WIFEXITED(status) != 0 && WEXITSTATUS(status) == 0) {
+		if ((child = fork()) == 0) {
+		    switch (uspc->req.umv.idtype) {
+		    case IDTYPE_UID:
+			if (setuid(uspc->req.umv.id) != 0) {
+			    exit(-1);
+			}
+			break;
+		    default:
+			exit(-1);
+			break; /* notreached */
+		    }
+		    execl("/bin/rm", "(afsd EXDEV helper)", "-rf", "--",
+			  srcpath, (char *) NULL);
+		}
+		if (child == (pid_t) -1) {
+		    uspc->retval = -1;
+		    continue;
+		}
+		if (waitpid(child, &status, 0) == -1)
+		    uspc->retval = EIO;
+		else if (WIFEXITED(status) != 0) {
+		    /* rm exit status */
+		    uspc->retval = WEXITSTATUS(status);
+		} else {
+		    /* rm signal status */
+		    uspc->retval = -(WTERMSIG(status));
+		}
+	    } else {
+		/* error from cp: exit or signal status */
+		uspc->retval = (WIFEXITED(status) != 0) ?
+		    WEXITSTATUS(status) : -(WTERMSIG(status));
+	    }
+	    memset(srcName, 0, sizeof(srcName));
+	    memset(dstName, 0, sizeof(dstName));
+	    break;
+
+	default:
+	    /* unknown req type */
+	    uspc->retval = -1;
+	    break;
+	}
+    }
+    exit(1);
+}
+#endif
 
 #ifdef AFS_SGI65_ENV
 #define SET_RTPRI(P) {  \
@@ -2262,8 +2372,17 @@ mainproc(struct cmd_syndesc *as, void *arock)
     for (i = 0; i < nDaemons; i++) {
 	code = fork();
 	if (code == 0) {
-	    /* Child */
-#ifdef	AFS_AIX32_ENV
+#ifdef AFS_DARWIN80_ENV
+	    /* Since the background daemon runs as a user process,
+	     * need to drop the controlling TTY, etc.
+	     */
+	    if (daemon(0, 0) == -1) {
+		printf("Error starting background daemon: %s\n",
+		       strerror(errno));
+		exit(1);
+	    }
+	    BkgHandler();
+#elif defined(AFS_AIX32_ENV)
 	    call_syscall(AFSOP_START_BKG, 0);
 #else
 	    call_syscall(AFSOP_START_BKG);

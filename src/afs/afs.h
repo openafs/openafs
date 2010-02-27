@@ -131,6 +131,9 @@ struct sysname_info {
 #if defined(AFS_CACHE_BYPASS)
 #define	BOP_FETCH_NOCACHE	4   /* parms are: vnode ptr, offset, segment ptr, addr, cred ptr */
 #endif
+#ifdef AFS_DARWIN_ENV
+#define	BOP_MOVE	5	 /* ptr1 afs_uspc_param ptr2 sname ptr3 dname */
+#endif
 
 #define	B_DONTWAIT	1	/* On failure return; don't wait */
 

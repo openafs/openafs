@@ -218,7 +218,11 @@ extern int afs_CheckRootVolume(void);
 extern void afs_BRelease(register struct brequest *ab);
 extern int afs_BBusy(void);
 extern int afs_BioDaemon(afs_int32 nbiods);
+#ifdef AFS_DARWIN80_ENV
+extern int afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2);
+#else
 extern void afs_BackgroundDaemon(void);
+#endif
 extern void shutdown_daemons(void);
 extern int afs_sgidaemon(void);
 
@@ -931,6 +935,7 @@ extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
 
 
 /* afs_util.c */
+extern afs_int32 afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret);
 extern afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode);
 #ifndef afs_cv2string
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
