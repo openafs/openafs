@@ -169,7 +169,6 @@ int afs_evhashcnt = 0;
 #define EVTLOCK_UNLOCK(e)
 #define EVTLOCK_DESTROY(e)
 #endif
-#endif
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
  * */
