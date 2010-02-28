@@ -781,7 +781,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     return (code);
 }
 #elif defined(AFS_XBSD_ENV)
-# if !defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD50_ENV)
 #  define arg data
 int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap,
@@ -802,6 +802,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     register struct filedesc *fdp;
     register struct vcache *tvc;
     register int ioctlDone = 0, code = 0;
+    struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
     fdp = p->p_fd;
