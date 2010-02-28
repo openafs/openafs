@@ -108,7 +108,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     if (cpos) {
 	*cpos = ':';
 	vnoid = 0;
-	if (!*x) /* allow vno with numeric volid only */
+	if (*x == *cpos) /* allow vno with numeric volid only */
 	    for (x = (cpos + 1); *x >= '0' && *x <= '9'; x++)
 		vnoid = (vnoid * 10) + (*x - '0');
 	if (*x)
