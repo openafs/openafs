@@ -1180,9 +1180,6 @@ DumpRecreate(char map[], struct misc_data *misc)
 	    if ((id < 0) && (flags & PRGRP)) {
 		int count = 0;
 		afs_int32 na;
-#if defined(SUPERGROUPS)
-		afs_int32 ng;
-#endif
 		int i;
 		for (i = 0; i < PRSIZE; i++) {
 		    afs_int32 uid = ntohl(e.entries[i]);
