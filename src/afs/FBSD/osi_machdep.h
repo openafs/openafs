@@ -114,6 +114,7 @@ extern int (**afs_vnodeop_p) ();
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(cred),(aresid), curthread)
 extern struct mtx afs_global_mtx;
+extern struct thread *afs_global_owner;
 #define AFS_GLOCK() mtx_lock(&afs_global_mtx)
 #define AFS_GUNLOCK() mtx_unlock(&afs_global_mtx)
 #define ISAFS_GLOCK() (mtx_owned(&afs_global_mtx))
