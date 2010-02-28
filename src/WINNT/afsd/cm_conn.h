@@ -20,6 +20,9 @@
 #ifndef CM_CONN_IDLEDEADTIME
 #define CM_CONN_IDLEDEADTIME             0
 #endif
+#ifndef CM_CONN_NATPINGINTERVAL
+#define CM_CONN_NATPINGINTERVAL          0
+#endif
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;

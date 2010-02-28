@@ -27,6 +27,7 @@ DWORD RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
 unsigned short ConnDeadtimeout = CM_CONN_CONNDEADTIME;
 unsigned short HardDeadtimeout = CM_CONN_HARDDEADTIME;
 unsigned short IdleDeadtimeout = CM_CONN_IDLEDEADTIME;
+unsigned short NatPingInterval = CM_CONN_NATPINGINTERVAL;
 
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
 #define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
@@ -121,6 +122,13 @@ void cm_InitConn(void)
                 IdleDeadtimeout = (unsigned short)dwValue;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
+	    dummyLen = sizeof(DWORD);
+	    code = RegQueryValueEx(parmKey, "NatPingInterval", NULL, NULL,
+				    (BYTE *) &dwValue, &dummyLen);
+	    if (code == ERROR_SUCCESS) {
+                NatPingInterval = (unsigned short)dwValue;
+            }
+            afsi_log("NatPingInterval is %d", NatPingInterval);
             RegCloseKey(parmKey);
 	}
 
@@ -1103,6 +1111,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
     rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
     rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
+    if (NatPingInterval)
+        rx_SetConnSecondsUntilNatPing(tcp->rxconnp, NatPingInterval);
     tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */
