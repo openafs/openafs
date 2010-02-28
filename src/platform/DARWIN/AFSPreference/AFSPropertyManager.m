@@ -1370,8 +1370,8 @@
 // -------------------------------------------------------------------------------
 -(BOOL) checkAfsStatusForStartup {
 	BOOL result = NO;
-	NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"ps" args:[NSArray arrayWithObjects:@"-ef", nil]];
-	result = (fsResult?([fsResult rangeOfString:@AFS_DAEMON_LAUNCH_PATH].location != NSNotFound):NO);
+	NSString *dfResult = [TaskUtil executeTaskSearchingPath:@"/bin/df" args:[NSArray arrayWithObjects:nil]];
+	result = (dfResult?([dfResult rangeOfString:@AFS_FS_MOUNT].location != NSNotFound):NO);
 	return result;
 }
 
