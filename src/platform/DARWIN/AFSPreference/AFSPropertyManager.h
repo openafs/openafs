@@ -13,8 +13,8 @@
 
 #define AFS_DAEMON_STARTUPSCRIPT	"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.rc"
 #define AFS_DAEMON_PATH				"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist"
-#define AFS_FS_MOUNT                    "AFS"
-#define AFS_DAEMON_LAUNCH_PATH		"/private/var/db/openafs/etc/launchafs.sh"
+#define AFS_FS_MOUNT                "AFS"
+#define AFS_LAUNCHCTL_GREP_STR		"org.openafs.filesystems.afs"
 /*!
     @class		AFSPropertyManager
     @abstract   AFS Manage Class

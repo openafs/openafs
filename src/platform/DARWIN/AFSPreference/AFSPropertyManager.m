@@ -1360,8 +1360,8 @@
 -(BOOL) checkAfsStatus
 {
 	BOOL result = NO;
-	NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"fs" args:[NSArray arrayWithObjects:@"checkserver", nil]];
-	result = (fsResult?([fsResult rangeOfString:@"All servers are running."].location != NSNotFound):NO);
+	NSString *dfResult = [TaskUtil executeTaskSearchingPath:@"/bin/df" args:[NSArray arrayWithObjects:nil]];
+	result = (dfResult?([dfResult rangeOfString:@AFS_FS_MOUNT].location != NSNotFound):NO);
 	return result;	
 }
 
@@ -1370,8 +1370,8 @@
 // -------------------------------------------------------------------------------
 -(BOOL) checkAfsStatusForStartup {
 	BOOL result = NO;
-	NSString *dfResult = [TaskUtil executeTaskSearchingPath:@"/bin/df" args:[NSArray arrayWithObjects:nil]];
-	result = (dfResult?([dfResult rangeOfString:@AFS_FS_MOUNT].location != NSNotFound):NO);
+		//NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"launchctl" args:[NSArray arrayWithObjects: @"list", nil]];
+		//result = (fsResult?([fsResult rangeOfString:@AFS_LAUNCHCTL_GREP_STR].location != NSNotFound):NO);
 	return result;
 }
 

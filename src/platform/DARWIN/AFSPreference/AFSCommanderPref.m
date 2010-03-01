@@ -900,8 +900,25 @@
 // -------------------------------------------------------------------------------
 -(void) setAfsStatus
 {
+	
 	BOOL afsIsUp = [afsProperty checkAfsStatus];
-	BOOL afsEnabledAtStartup = [afsProperty checkAfsStatusForStartup];
+	BOOL afsEnabledAtStartup = NO;
+	
+	NSMutableString *commandOutput = [NSMutableString stringWithCapacity:20];
+	NSString *rootHelperApp = [[self bundle] pathForResource:@"afshlp" ofType:@""];
+		
+			// make the parameter to call the root helper app
+	const char *checkAFSDaemonParam[] = {"check_afs_daemon",  0L};
+	if([[AuthUtil shared] autorize] == noErr) {
+				//now disable the launchd configuration
+		[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String]
+									  args:checkAFSDaemonParam
+									output:commandOutput];
+		afsEnabledAtStartup = [commandOutput rangeOfString:@"afshlp:afs daemon registration result:1"].location!=NSNotFound;
+	}
+
+	
+	
 
 
 	[((NSButton *)startStopButton) setTitle: (afsIsUp?kAfsButtonShutdown:kAfsButtonStartup)];
