@@ -89,6 +89,10 @@ void runCommand(int argc, char *argv[])
 		[PListManager launchctlStringCommand:enable?@"load":@"unload"
 									  option:[NSArray arrayWithObjects:@"-w", nil]
 								   plistName:@AFS_DAEMON_PATH];
+	} else if(argc == 2 && [cmdString rangeOfString:@"check_afs_daemon"].location!=NSNotFound) {
+		NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"launchctl" args:[NSArray arrayWithObjects: @"list", nil]];
+		BOOL checkAfsDaemon = (fsResult?([fsResult rangeOfString:@"org.openafs.filesystems.afs"].location != NSNotFound):NO);
+		printf("afshlp:afs daemon registration result:%d",checkAfsDaemon);
 	}
 }
 
