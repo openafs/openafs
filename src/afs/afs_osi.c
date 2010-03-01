@@ -58,6 +58,7 @@ afs_proc_t *afs_global_owner;
 #endif
 #ifdef AFS_FBSD50_ENV
 struct mtx afs_global_mtx;
+struct thread *afs_global_owner;
 #endif
 
 #if defined(AFS_DARWIN_ENV)
