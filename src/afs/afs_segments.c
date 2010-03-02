@@ -167,7 +167,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     unsigned int i, j, minj, moredata, high, off;
     afs_size_t tlen;
     afs_size_t maxStoredLength;	/* highest offset we've written to server. */
-    int safety;
+    int safety, marineronce = 0;
 
     AFS_STATCNT(afs_StoreAllSegments);
 
@@ -255,6 +255,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 		    if (off < NCHUNKSATONCE) {
 			if (dcList[off])
 			    osi_Panic("dclist slot already in use!");
+			if (afs_mariner && !marineronce) {
+			    /* first chunk only */
+			    afs_MarinerLog("store$Storing", avc);
+			    marineronce++;
+			}
 			dcList[off] = tdc;
 			if (off > high)
 			    high = off;
