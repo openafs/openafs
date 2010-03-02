@@ -274,7 +274,7 @@ afs_CheckLocks(void)
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
-		    printf("Server entry %p is marked down\n", ts);
+		    afs_warn("Server entry %p is marked down\n", ts);
 		for (sa = ts->addr; sa; sa = sa->next_sa) {
 		    for (tc = sa->conns; tc; tc = tc->next) {
 			if (tc->refCount)
@@ -302,7 +302,7 @@ afs_CheckLocks(void)
 	for (i = 0; i < NUSERS; i++) {
 	    for (tu = afs_users[i]; tu; tu = tu->next) {
 		if (tu->refCount)
-		    printf("user at %lx is held\n", (unsigned long)tu);
+		    afs_warn("user at %lx is held\n", (unsigned long)tu);
 	    }
 	}
     }
