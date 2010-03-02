@@ -92,10 +92,12 @@ afs_MarinerLog(register char *astring, register struct vcache *avc)
 
     strcpy(tp, astring);
     tp += strlen(astring);
-    *tp++ = ' ';
-    tp1 = afs_GetMariner(avc);
-    strcpy(tp, tp1);
-    tp += strlen(tp1);
+    if (avc) {
+	*tp++ = ' ';
+	tp1 = afs_GetMariner(avc);
+	strcpy(tp, tp1);
+	tp += strlen(tp1);
+    }
     *tp++ = '\n';
     /* note, console doesn't want a terminating null */
     /* I don't care if mariner packets fail to be sent */
