@@ -115,6 +115,9 @@ void
 afs_warnuser(char *fmt, ...)
 #endif
 {
+#if defined(AFS_WARNUSER_MARINER_ENV)
+    char buf[256];
+#endif
     AFS_STATCNT(afs_warnuser);
     if (afs_showflags & GAGUSER) {
 #if !defined(AFS_AIX_ENV)
@@ -122,22 +125,45 @@ afs_warnuser(char *fmt, ...)
 #endif
 #ifdef AFS_GLOBAL_SUNLOCK
 	int haveGlock = ISAFS_GLOCK();
+#if defined(AFS_WARNUSER_MARINER_ENV)
+	/* gain GLOCK for mariner */
+	if (!haveGlock)
+	    AFS_GLOCK();
+#else
+	/* drop GLOCK for uprintf */
 	if (haveGlock)
 	    AFS_GUNLOCK();
+#endif
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #if defined(AFS_AIX_ENV)
 	uprintf(fmt, a, b, c, d, e, f, g, h, i);
 #else
-
 	va_start(ap, fmt);
+#if defined(AFS_WARNUSER_MARINER_ENV)
+	/* mariner log the warning */
+	snprintf(buf, sizeof(buf), "warn$");
+	vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), fmt, ap);
+	afs_MarinerLog(buf, NULL);
+	va_end(ap);
+	va_start(ap, fmt);
+	vprintf(fmt, ap);
+#else
 	afs_vprintf(fmt, ap);
+#endif
 	va_end(ap);
 #endif
 
 #ifdef AFS_GLOBAL_SUNLOCK
+#if defined(AFS_WARNUSER_MARINER_ENV)
+	/* drop GLOCK we got for mariner */
+	if (!haveGlock)
+	    AFS_GUNLOCK();
+#else
+	/* regain GLOCK we dropped for uprintf */
 	if (haveGlock)
 	    AFS_GLOCK();
+#endif
 #endif /* AFS_GLOBAL_SUNLOCK */
     }
 }
