@@ -32,21 +32,14 @@ afs_quotactl()
 }
 
 int
-afs_fhtovp(mp, fhp, vpp)
-     struct mount *mp;
-     struct fid *fhp;
-     struct vnode **vpp;
+afs_fhtovp(struct mount *mp, struct fid *fhp, struct vnode **vpp)
 {
-
     return (EINVAL);
 }
 
 int
-afs_vptofh(vp, fhp)
-     struct vnode *vp;
-     struct fid *fhp;
+afs_vptofh(struct vnode *vp, struct fid *fhp)
 {
-
     return (EINVAL);
 }
 
@@ -63,10 +56,7 @@ afs_vptofh(vp, fhp)
 #define PROC_DECL(out,in) struct proc *out = CTX_PROC_CONVERT(in)
 
 int
-afs_start(mp, flags, p)
-     struct mount *mp;
-     int flags;
-     CTX_TYPE p;
+afs_start(struct mount *mp, int flags, CTX_TYPE p)
 {
     return (0);			/* nothing to do. ? */
 }
@@ -75,19 +65,10 @@ int
 afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx);
 #ifdef AFS_DARWIN80_ENV
 int
-afs_mount(mp, devvp, data, ctx)
-     register struct mount *mp;
-     vnode_t *devvp;
-     user_addr_t data;
-     vfs_context_t ctx;
+afs_mount(struct mount *mp, vnode_t *devvp, user_addr_t data, vfs_context_t ctx)
 #else
 int
-afs_mount(mp, path, data, ndp, ctx)
-     register struct mount *mp;
-     char *path;
-     caddr_t data;
-     struct nameidata *ndp;
-     CTX_TYPE ctx;
+afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX_TYPE ctx)
 #endif
 {
     /* ndp contains the mounted-from device.  Just ignore it.
@@ -189,10 +170,7 @@ afs_mount(mp, path, data, ndp, ctx)
 }
 
 int
-afs_unmount(mp, flags, ctx)
-     struct mount *mp;
-     int flags;
-     CTX_TYPE ctx;
+afs_unmount(struct mount *mp, int flags, CTX_TYPE ctx)
 {
     void *mdata = vfs_fsprivate(mp);
     AFS_GLOCK();
@@ -333,10 +311,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 
 #ifndef AFS_DARWIN80_ENV /* vget vfsop never had this prototype AFAIK */
 int
-afs_vget(mp, lfl, vp)
-     struct mount *mp;
-     struct vnode *vp;
-     int lfl;
+afs_vget(struct mount *mp, int lfl, struct vnode *vp)
 {
     int error;
     //printf("vget called. help!\n");
@@ -462,17 +437,10 @@ afs_vfs_getattr(struct mount *mp, struct vfs_attr *outattrs,
 
 #ifdef AFS_DARWIN80_ENV
 int
-afs_sync(mp, waitfor, ctx)
-     struct mount *mp;
-     int waitfor;
-     CTX_TYPE ctx;
+afs_sync(struct mount *mp, int waitfor, CTX_TYPE ctx)
 #else
 int
-afs_sync(mp, waitfor, cred, p)
-     struct mount *mp;
-     int waitfor;
-     struct ucred *cred;
-     struct proc *p;
+afs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 #endif
 {
     return 0;
