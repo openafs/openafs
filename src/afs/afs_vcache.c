@@ -247,7 +247,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	afs_stats_cmperf.vcacheXAllocs--;
     } else {
 	if (afs_norefpanic) {
-	    printf("flush vc refcnt < 1");
+	    afs_warn("flush vc refcnt < 1");
 	    afs_norefpanic++;
 	} else
 	    osi_Panic("flush vc refcnt < 1");
@@ -590,7 +590,7 @@ afs_FlushReclaimedVcaches(void)
 	       We probably need a way to be smarter about this. */
 	    tvc->nextfree = tmpReclaimedVCList;
 	    tmpReclaimedVCList = tvc;
-	    printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code);
+	    /* printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code); */
 	}
         if (tvc->f.states & (CVInit
 #ifdef AFS_DARWIN80_ENV
@@ -696,7 +696,7 @@ restart:
 		break;
 	}
 	if (!afsd_dynamic_vcaches && anumber == target) {
-	    printf("afs_ShakeLooseVCaches: warning none freed, using %d of %d\n",
+	    afs_warn("afs_ShakeLooseVCaches: warning none freed, using %d of %d\n",
 		   afs_vcount, afs_maxvcount);
 	}
     } /* finished freeing up space */
@@ -822,7 +822,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     if(!afsd_dynamic_vcaches) {
 	afs_ShakeLooseVCaches(anumber);
 	if (afs_vcount >= afs_maxvcount) {
-	    printf("afs_NewVCache - none freed\n");
+	    afs_warn("afs_NewVCache - none freed\n");
 	    return NULL;
 	}
     }
@@ -1069,7 +1069,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 	     * then there probably needs to be some sort of additional
 	     * mutual exclusion (an Embryonic flag would suffice).
 	     * -GAW */
-	    printf("afs_NewVCache: lost the race\n");
+	    afs_warn("afs_NewVCache: lost the race\n");
 	    return (tvc);
 	}
 	tvc->v = vp;
@@ -1636,13 +1636,13 @@ int afs_WriteVCacheDiscon(register struct vcache *avc,
 	}
 
 	if (astatus->Mask & AFS_SETOWNER) {
-		printf("Not allowed yet. \n");
-		/*avc->f.m.Owner = astatus->Owner;*/
+	    /* printf("Not allowed yet. \n"); */
+	    /*avc->f.m.Owner = astatus->Owner;*/
 	}
 
 	if (astatus->Mask & AFS_SETGROUP) {
-		printf("Not allowed yet. \n");
-		/*avc->f.m.Group =  astatus->Group;*/
+	    /* printf("Not allowed yet. \n"); */
+	    /*avc->f.m.Group =  astatus->Group;*/
 	}
 
 	if (astatus->Mask & AFS_SETMODE) {
@@ -2058,7 +2058,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	    if (AFS_IS_DISCONNECTED) {
 		/* Nothing to do otherwise...*/
 		code = ENETDOWN;
-		printf("Network is down in afs_GetCache");
+		/* printf("Network is down in afs_GetCache"); */
 	    } else
 	        code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
 
@@ -2167,7 +2167,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     origCBs = afs_allCBs;	/* if anything changes, we don't have a cb */
     
     if (AFS_IS_DISCONNECTED) {
-	printf("Network is down in afs_LookupVcache\n");
+	/* printf("Network is down in afs_LookupVcache\n"); */
         code = ENETDOWN;
     } else 
         code =

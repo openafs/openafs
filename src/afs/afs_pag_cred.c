@@ -173,14 +173,15 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     if (set_parent_pag) {
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 # if defined(AFS_DARWIN_ENV)
-	afs_proc_t *p = current_proc();	/* XXX */
+	afs_proc_t *p = current_proc(); /* XXX */
+	char procname[256];
+	proc_selfname(procname, 256);
 # else
 	afs_proc_t *p = curproc;	/* XXX */
+	char *procname = p->p_comm;
 # endif
-# ifndef AFS_DARWIN80_ENV
-	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
-		p->p_pid, p->p_comm);
-# endif
+	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
+		     MyPidxx2Pid(MyPidxx), procname);
 	setpag(p, acred, -1, &pag, 1);
 #else
 	setpag(acred, -1, &pag, 1);

@@ -157,7 +157,7 @@ afs_pag_sleep(afs_ucred_t **acred)
 	if (rv && (osi_Time() < pag_epoch)) {
 	    if (!afs_pag_timewarn) {
 		afs_pag_timewarn = 1;
-		printf("clock went backwards, not PAG throttling");
+		afs_warn("clock went backwards, not PAG throttling");
 	    }
 	    rv = 0;
 	}
@@ -171,8 +171,8 @@ afs_pag_wait(afs_ucred_t **acred)
 {
     if (afs_pag_sleep(acred)) {
 	if (!afs_pag_sleepcnt) {
-	    printf("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
-		   "afs_pag_wait", osi_getpid(), afs_pag_sleepcnt);
+	    afs_warn("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
+		     "afs_pag_wait", osi_getpid(), afs_pag_sleepcnt);
 	}
 
 	afs_pag_sleepcnt++;

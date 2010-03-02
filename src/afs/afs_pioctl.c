@@ -1834,14 +1834,15 @@ DECL_PIOCTL(PSetTokens)
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 # if defined(AFS_DARWIN_ENV)
-	afs_proc_t *p = current_proc();	/* XXX */
+	afs_proc_t *p = current_proc(); /* XXX */
+	char procname[256];
+	proc_selfname(procname, 256);
 # else
 	afs_proc_t *p = curproc;	/* XXX */
+	char *procname = p->p_comm;
 # endif
-# ifndef AFS_DARWIN80_ENV
-	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
-		p->p_pid, p->p_comm);
-# endif
+	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
+		     MyPidxx2Pid(MyPidxx), procname);
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
 	if (!setpag(acred, -1, &pag, 1)) {
@@ -3844,7 +3845,7 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
     touchedSize = 0;
     for (k = 0; k < num; sp++, k++) {
 	if (debugsetsp) {
-	    printf("sp host=%x, rank=%d\n", sp->host.s_addr, sp->rank);
+	    afs_warn("sp host=%x, rank=%d\n", sp->host.s_addr, sp->rank);
 	}
 	matches = 0;
 	ObtainReadLock(&afs_xserver);
@@ -3864,7 +3865,7 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
 
 	if (sa && matches) {	/* found one! */
 	    if (debugsetsp) {
-		printf("sa ip=%x, ip_rank=%d\n", sa->sa_ip, sa->sa_iprank);
+		afs_warn("sa ip=%x, ip_rank=%d\n", sa->sa_ip, sa->sa_iprank);
 	    }
 	    sa->sa_iprank = sp->rank + afs_randomMod15();
 	    afs_SortOneServer(sa->server);
@@ -5158,7 +5159,7 @@ DECL_PIOCTL(PDiscon)
 	    afs_in_sync = 0;
 
 	    if (code && !force) {
-	    	printf("Files not synchronized properly, still in discon state. \n"
+	    	afs_warnuser("Files not synchronized properly, still in discon state. \n"
 		       "Please retry or use \"force\".\n");
 		mode = 0;
 	    } else {
@@ -5168,7 +5169,7 @@ DECL_PIOCTL(PDiscon)
 	        afs_ClearAllStatdFlag();
 		afs_is_disconnected = 0;
 		afs_is_discon_rw = 0;
-		printf("\nSync succeeded. You are back online.\n");
+		afs_warnuser("\nSync succeeded. You are back online.\n");
 	    }
 
 	    ReleaseWriteLock(&afs_discon_lock);

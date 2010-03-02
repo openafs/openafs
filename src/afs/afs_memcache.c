@@ -56,8 +56,8 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
     return 0;
 
   nomem:
-    printf("afsd:  memCache allocation failure at %d KB.\n",
-	   (index * memCacheBlkSize) / 1024);
+    afs_warn("afsd:  memCache allocation failure at %d KB.\n",
+	     (index * memCacheBlkSize) / 1024);
     while (--index >= 0) {
 	afs_osi_Free((memCache + index)->data, memCacheBlkSize);
 	(memCache + index)->data = NULL;

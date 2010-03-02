@@ -293,7 +293,7 @@ afs_GetVnodeName(struct vcache *avc, struct VenusFid *afid, char *aname,
 	if (tnf.name_len == -1)
 	    code = ENOENT;
     } else {
-	printf("Directory dcache not found!\n");
+	/* printf("Directory dcache not found!\n"); */
         code = ENOENT;
     }
 
@@ -468,7 +468,7 @@ afs_FixChildrenFids(struct VenusFid *old_fid, struct VenusFid *new_fid)
 static int
 list_dir_hook(void *hdata, char *aname, afs_int32 vnode, afs_int32 unique)
 {
-    printf("list_dir_hook: %s v:%u u:%u\n", aname, vnode, unique);
+    /* printf("list_dir_hook: %s v:%u u:%u\n", aname, vnode, unique); */
     return 0;
 }
 
@@ -507,13 +507,13 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
     *adp = NULL;
 
     if (afs_GetParentDirFid(avc, afid)) {
-	printf("afs_GetParentVCache: Couldn't find parent dir's FID.\n");
+	/* printf("afs_GetParentVCache: Couldn't find parent dir's FID.\n"); */
 	return ENOENT;
     }
 
     code = afs_GetVnodeName(avc, afid, aname, deleted);
     if (code) {
-	printf("afs_GetParentVCache: Couldn't find file name\n");
+	/* printf("afs_GetParentVCache: Couldn't find file name\n"); */
 	goto end;
     }
 
@@ -521,13 +521,13 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
     *adp = afs_FindVCache(afid, 0, 1);
     ReleaseSharedLock(&afs_xvcache);
     if (!*adp) {
-	printf("afs_GetParentVCache: Couldn't find parent dir's vcache\n");
+	/* printf("afs_GetParentVCache: Couldn't find parent dir's vcache\n"); */
 	code = ENOENT;
 	goto end;
     }
 
     if ((*adp)->f.ddirty_flags & VDisconCreate) {
-	printf("afs_GetParentVCache: deferring until parent exists\n");
+	/* printf("afs_GetParentVCache: deferring until parent exists\n"); */
 	code = EAGAIN;
 	goto end;
     }
@@ -565,19 +565,19 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     /* Get old name. */
     old_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
     if (!old_name) {
-	printf("afs_ProcessOpRename: Couldn't alloc space for old name.\n");
+	/* printf("afs_ProcessOpRename: Couldn't alloc space for old name.\n"); */
 	return ENOMEM;
     }
     code = afs_GetVnodeName(avc, &old_pdir_fid, old_name, 1);
     if (code) {
-	printf("afs_ProcessOpRename: Couldn't find old name.\n");
+	/* printf("afs_ProcessOpRename: Couldn't find old name.\n"); */
 	goto done;
     }
 
     /* Alloc data first. */
     new_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
     if (!new_name) {
-	printf("afs_ProcessOpRename: Couldn't alloc space for new name.\n");
+	/* printf("afs_ProcessOpRename: Couldn't alloc space for new name.\n"); */
 	code = ENOMEM;
 	goto done;
     }
@@ -590,7 +590,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     } else {
 	/* Get parent dir's FID.*/
     	if (afs_GetParentDirFid(avc, &new_pdir_fid)) {
-	    printf("afs_ProcessOpRename: Couldn't find new parent dir FID.\n");
+	    /* printf("afs_ProcessOpRename: Couldn't find new parent dir FID.\n"); */
 	    code = ENOENT;
 	    goto done;
         }
@@ -599,7 +599,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     /* And finally get the new name. */
     code = afs_GetVnodeName(avc, &new_pdir_fid, new_name, 0);
     if (code) {
-	printf("afs_ProcessOpRename: Couldn't find new name.\n");
+	/* printf("afs_ProcessOpRename: Couldn't find new name.\n"); */
 	goto done;
     }
 
@@ -630,8 +630,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 		SHARED_LOCK,
 		NULL));
 
-    if (code)
-    	printf("afs_ProcessOpRename: server code=%u\n", code);
+    /* if (code) printf("afs_ProcessOpRename: server code=%u\n", code); */
 done:
     if (new_name)
 	afs_osi_Free(new_name, AFSNAMEMAX);
@@ -772,7 +771,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 
     /* TODO: Handle errors. */
     if (code) {
-	printf("afs_ProcessOpCreate: error while creating vnode on server, code=%d .\n", code);
+	/* printf("afs_ProcessOpCreate: error while creating vnode on server, code=%d .\n", code); */
 	goto end;
     }
 
@@ -918,7 +917,7 @@ afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
 
     tname = afs_osi_Alloc(AFSNAMEMAX);
     if (!tname) {
-	printf("afs_ProcessOpRemove: Couldn't alloc space for file name\n");
+	/* printf("afs_ProcessOpRemove: Couldn't alloc space for file name\n"); */
 	return ENOMEM;
     }
 
@@ -985,8 +984,7 @@ afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
 
     }				/* if (vType(avc) == VREG) */
 
-    if (code)
-    	printf("afs_ProcessOpRemove: server returned code=%u\n", code);
+    /* if (code) printf("afs_ProcessOpRemove: server returned code=%u\n", code); */
 
 end:
     afs_osi_Free(tname, AFSNAMEMAX);
@@ -1226,7 +1224,7 @@ afs_ResyncDisconFiles(struct vrequest *areq, afs_ucred_t *acred)
 	    afs_ResetVCache(tvc, acred);
 	    tvc->f.truncPos = AFS_NOTRUNC;
 	} else {
-	    printf("afs_ResyncDisconFiles: no resolution policy selected.\n");
+	    /* printf("afs_ResyncDisconFiles: no resolution policy selected.\n"); */
 	}		/* if DV match or client wins policy */
 
 unlock_srv_file:
@@ -1367,13 +1365,13 @@ afs_DbgDisconFiles(void)
     struct afs_q *q;
     int i = 0;
 
-    printf("List of dirty files: \n");
+    afs_warn("List of dirty files: \n");
 
     ObtainReadLock(&afs_disconDirtyLock);
     for (q = QPrev(&afs_disconDirty); q != &afs_disconDirty; q = QPrev(q)) {
         tvc = QEntry(q, struct vcache, dirtyq);
 
-	printf("Cell=%u Volume=%u VNode=%u Unique=%u\n",
+	afs_warn("Cell=%u Volume=%u VNode=%u Unique=%u\n",
 		tvc->f.fid.Cell,
 		tvc->f.fid.Fid.Volume,
 		tvc->f.fid.Fid.Vnode,

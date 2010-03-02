@@ -233,7 +233,7 @@ afs_Daemon(void)
 	    /* Do the check here if the correct afsd is not installed. */
 	    if (!cs_warned) {
 		cs_warned = 1;
-		printf("Please install afsd with check server daemon.\n");
+		afs_warn("Please install afsd with check server daemon.\n");
 	    }
 	    if (lastNMinCheck + afs_probe_interval < now) {
 		/* only check down servers */

@@ -118,11 +118,11 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 
 #ifdef AFS_MAXVCOUNT_ENV
     afsd_dynamic_vcaches = dynamic_vcaches;
-    printf("%s dynamically allocated vcaches\n",
-	   ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+    afs_warn("%s dynamically allocated vcaches\n",
+	     ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
-    printf("Starting AFS cache scan...");
+    afs_warn("Starting AFS cache scan...");
     if (afs_cacheinit_flag)
 	return 0;
     afs_cacheinit_flag = 1;

@@ -115,7 +115,7 @@ afs_InitSetup(int preallocs)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
     code = rx_InitHost(rx_bindhost, htons(7001));
     if (code) {
-	printf("AFS: RX failed to initialize %d).\n", code);
+	afs_warn("AFS: RX failed to initialize %d).\n", code);
 	return code;
     }
     rx_SetRxDeadTime(afs_rx_deadtime);
@@ -161,7 +161,7 @@ afsd_thread(int *rock)
 	thread_terminate(current_thread());
 	break;
     case AFSOP_START_BKG:
-	printf("Install matching afsd! Old background daemons not supported.\n");
+	afs_warn("Install matching afsd! Old background daemons not supported.\n");
 	thread_terminate(current_thread());
 	break;
     case AFSOP_START_TRUNCDAEMON:
@@ -202,7 +202,7 @@ afsd_thread(int *rock)
 	thread_terminate(current_thread());
 	break;
     default:
-	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
+	afs_warn("Unknown op %ld in StartDaemon()\n", (long)parm);
 	break;
     }
 }
@@ -376,7 +376,7 @@ afsd_thread(void *rock)
 	complete_and_exit(0, 0);
 	break;
     default:
-	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
+	afs_warn("Unknown op %ld in StartDaemon()\n", (long)parm);
 	break;
     }
     return 0;
@@ -394,7 +394,7 @@ afsd_launcher(void *rock)
 #endif
 
     if (!kernel_thread(afsd_thread, (void *)rock, CLONE_VFORK | SIGCHLD))
-	printf("kernel_thread failed. afs startup will not complete\n");
+	afs_warn("kernel_thread failed. afs startup will not complete\n");
 }
 
 void

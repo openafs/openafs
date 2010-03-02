@@ -47,7 +47,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
 
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 0);
     if (!tdc) {
-	printf("afs_DisconCreateSymlink: can't get new dcache for symlink.\n");
+	/* printf("afs_DisconCreateSymlink: can't get new dcache for symlink.\n"); */
 	return ENOENT;
     }
 
