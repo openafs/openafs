@@ -4099,7 +4099,7 @@ void
 RemoveTheForce(char *path)
 {
     char target[1024];
-    struct afs_stat force; // so we can use afs_stat to find it
+    struct afs_stat force; /* so we can use afs_stat to find it */
     strcpy(target,path);
     strcat(target,"/FORCESALVAGE");
     if (!Testing && ForceSalvage) {
