@@ -33,74 +33,52 @@
  void getPath(char **selfPathPtr);
  void selfRepair(char *selfPath);
  void runWithSelfRepair(char *selfPath,int argc, char *argv[]);
- void runCommand(int argc, char *argv[]);
 
-int main(int argc, char *argv[])
+void main(int argc, char *argv[])
 {
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    char *selfPath;
-	
-	NSLog(@"num of arguments %d", argc);
-	int status = [[AuthUtil shared] autorize];
-	if(status != noErr) exit(-1);
-	
-    // Get the path to the tool's executable
-    getPath(&selfPath);
-
-    //selfRepair(selfPath);
-    // All done with the executable path
-    if(selfPath) free(selfPath);
-	
-	// Now do the real work of running the command.
-    runCommand(argc, argv);
-    [[AuthUtil shared] deautorize];
-    [pool release];
-	
-	return 0;
-}
-
-// 
-void runCommand(int argc, char *argv[])
-{
-	setuid(0);
+	if (argc < 2)
+		return; // nothing to do
 	NSString *cmdString = [NSString stringWithCString:(const char *)argv[1] encoding:NSUTF8StringEncoding];
 
 	if(argc == 2 && [cmdString rangeOfString:@"stop_afs"].location!=NSNotFound ){
-		NSLog(@"Stop afs from helper");
+		if (setuid(0) == -1)
+			return;
 		const char *stopArgs[] = {"stop", 0L};
 		[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
 									  args:stopArgs
 									output:nil];
-
 	} else 	if(argc == 2 && [cmdString rangeOfString:@"start_afs"].location!=NSNotFound){
-		NSLog(@"Start afs from helper");
+		if (setuid(0) == -1)
+			return;
 		const char *startArgs[] = {"start", 0L};
 		[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
 									  args:startArgs
 									output:nil];
-
 	} else if(argc == 4 && [cmdString rangeOfString:@"enable_krb5_startup"].location!=NSNotFound) {
-		NSLog(@"Manage KRB5 at login time with option %s from helper", argv[2]);
+		int olduid = getuid();
+		setuid(0);
 		int arg2 = atoi(argv[2]);
 		[PListManager krb5TiketAtLoginTime:[[NSNumber numberWithInt:arg2] boolValue]];
 	} else if(argc == 3 && [cmdString rangeOfString:@"start_afs_at_startup"].location!=NSNotFound){
+		if (setuid(0) == -1)
+			return;
 		BOOL enable = strcmp("enable", argv[2])==0;
 		NSLog(@"Manage start_afs_at_startup with option %s from helper", argv[2]);
 		[PListManager launchctlStringCommand:enable?@"load":@"unload"
 									  option:[NSArray arrayWithObjects:@"-w", nil]
 								   plistName:@AFS_DAEMON_PATH];
+#if 0
 	} else if(argc == 2 && [cmdString rangeOfString:@"check_afs_daemon"].location!=NSNotFound) {
 		NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"launchctl" args:[NSArray arrayWithObjects: @"list", nil]];
 		BOOL checkAfsDaemon = (fsResult?([fsResult rangeOfString:@"org.openafs.filesystems.afs"].location != NSNotFound):NO);
 		printf("afshlp:afs daemon registration result:%d",checkAfsDaemon);
+#endif
 	}
 }
 
+#if 0
 void stopAfs(int argc, char *argv[])
 {
-	
-	
-	setuid(0);
 	const char *umountArgs[] = {"-f", "/afs", 0L};
 	[[AuthUtil shared] execUnixCommand:"/sbin/umount" 
 								  args:umountArgs
@@ -118,7 +96,6 @@ void stopAfs(int argc, char *argv[])
 	
 	[[AuthUtil shared] deautorize];
 }
-
 
 // Code to get the path to the executable using _NSGetExecutablePath.
 void getPath(char **selfPathPtr)
@@ -142,6 +119,30 @@ void getPath(char **selfPathPtr)
             exit(-1);
         }
     }
+}
+
+int main(int argc, char *argv[])
+{
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    char *selfPath;
+	
+	NSLog(@"num of arguments %d", argc);
+	int status = [[AuthUtil shared] autorize];
+	if(status != noErr) exit(-1);
+	
+    // Get the path to the tool's executable
+    getPath(&selfPath);
+
+    //selfRepair(selfPath);
+    // All done with the executable path
+    if(selfPath) free(selfPath);
+	
+	// Now do the real work of running the command.
+    runCommand(argc, argv);
+    [[AuthUtil shared] deautorize];
+    [pool release];
+	
+	return 0;
 }
 
 // Self-repair code. Found somehwere in internet
@@ -168,13 +169,13 @@ void selfRepair(char *selfPath)
         exit(-1);
     }
     
-    if(st.st_uid != 0)
+    // Disable group and world writability and make setuid root.
+    if ((st.st_uid != 0) || (st.st_mode & S_IWGRP) || (st.st_mode & S_IWOTH) ||
+	!(st.st_mode & S_ISUID))
     {
         fchown(fdTool, 0, st.st_gid);
+	fchmod(fdTool, (st.st_mode & (~(S_IWGRP | S_IWOTH))) | S_ISUID);
     } else  NSLog(@"st_uid = 0");
-    
-    // Disable group and world writability and make setuid root.
-    fchmod(fdTool, (st.st_mode & (~(S_IWGRP | S_IWOTH))) | S_ISUID);
     
     close(fdTool);
     
@@ -208,3 +209,4 @@ void runWithSelfRepair(char *selfPath, int argc, char *argv[])
     // Exit with the same exit code as the self-repair child
     exit(WEXITSTATUS(status));
 }
+#endif
