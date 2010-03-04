@@ -14,7 +14,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 .PHONY: all afscell
 
-all: OpenAFS.prefPane afssettings afscell
+all: OpenAFS.prefPane afssettings afscell growlagent
 
 AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
 afscell/build/Release/afscell.bundle: afscell
@@ -32,6 +32,9 @@ OpenAFS.prefPane:
 		echo Not building AFS prefPane for ${SYS_NAME} ;; \
 	esac
 
+growlagent:
+	cd growlagent && $(MAKE) all
+
 afscell:
 	xcodebuild -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build
 
@@ -40,12 +43,14 @@ afssettings: afssettings.m
 
 install: \
 	${DESTDIR}${sbindir}/afssettings
+	cd growlagent && $(MAKE) install
 
 dest: \
 	${DEST}/etc/afssettings \
 	${DEST}/installer/afscell.bundle \
 	${DEST}/installer/InstallerSections.plist \
 	${DEST}/tools/OpenAFS.prefPane
+	cd growlagent && $(MAKE) dest
 
 ${DESTDIR}${sbindir}/afssettings: afssettings
 	${INSTALL} $? $@
@@ -71,3 +76,4 @@ clean:
 	$(RM) -rf AFSPreference/build
 	$(RM) -rf afscell/build
 	$(RM) -f *.o core afssettings AFS_component_version_number.c
+	cd growlagent && $(MAKE) clean
