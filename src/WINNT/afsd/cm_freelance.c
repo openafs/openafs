@@ -18,7 +18,7 @@
 
 extern void afsi_log(char *pattern, ...);
 
-static int cm_noLocalMountPoints;
+static int cm_noLocalMountPoints = 0;
 char * cm_FakeRootDir = NULL;
 int cm_fakeDirSize = 0;
 int cm_fakeDirCallback=0;
@@ -433,6 +433,8 @@ int cm_reInitLocalMountPoints() {
     // cm_InitLocalMountPoints call
     osi_Log0(afsd_logp,"Removing old localmountpoints...  ");
     free(cm_localMountPoints);
+    cm_localMountPoints = NULL;
+    cm_noLocalMountPoints = 0;
     osi_Log0(afsd_logp,"\tall old localmountpoints cleared!");
 
     // now re-init the localmountpoints
