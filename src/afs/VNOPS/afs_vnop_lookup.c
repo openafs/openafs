@@ -223,6 +223,8 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	*cpos = ':';
     if (!tvp)
 	return ENODEV;		/* Couldn't find the volume */
+    else
+	volid = tvp->volume;
 
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((states & CBackup) && (tvp->states & VBackup)) {
@@ -256,7 +258,7 @@ done:
     if (acellidxp)
 	*acellidxp = cellidx;
     if (avolnump)
-	*avolnump = tvp->volume;
+	*avolnump = volid;
     if (avnoidp)
 	*avnoidp = vnoid;
     if (auniqp)
