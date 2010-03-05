@@ -143,6 +143,8 @@ DECL_FUNC_PTR(krb5_free_host_realm);
 DECL_FUNC_PTR(krb5_c_random_make_octets);
 DECL_FUNC_PTR(krb5_free_addresses);
 DECL_FUNC_PTR(krb5_free_default_realm);
+DECL_FUNC_PTR(krb5_get_error_message);
+DECL_FUNC_PTR(krb5_free_error_message);
 
 // Krb524 functions
 DECL_FUNC_PTR(krb524_init_ets);
@@ -287,6 +289,8 @@ FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_free_host_realm),
     MAKE_FUNC_INFO(krb5_c_random_make_octets),
     MAKE_FUNC_INFO(krb5_free_default_realm),
+    MAKE_FUNC_INFO(krb5_get_error_message),
+    MAKE_FUNC_INFO(krb5_free_error_message),
     END_FUNC_INFO
 };
 

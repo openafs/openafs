@@ -50,12 +50,13 @@ khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
     const char *errText;
     int krb5Error = ((int)(rc & 255));  
 
-    errText = perror_message(rc);   
+    errText = pkrb5_get_error_message(rc);
     _snprintf(message, sizeof(message), 
         "%s\n(Kerberos error %ld)\n\n%s failed", 
         errText, 
         krb5Error, 
         FailedFunctionName);
+    pkrb5_free_error_message(errText);
 
     MessageBoxA(NULL, message, "Kerberos Five", MB_OK | MB_ICONERROR | 
         MB_TASKMODAL | 
