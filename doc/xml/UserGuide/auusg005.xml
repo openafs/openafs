@@ -23,14 +23,14 @@
 
       <indexterm><primary>commands</primary><secondary>login</secondary></indexterm>
 
-      <para>On machines that use an AFS-modified login utility, you log in and authenticate in one step. On machines that do not use
-      an AFS-modified login utility, you log in and authenticate in separate steps. To determine which type of login utility your
+      <para>On machines that use AFS enabled PAM modules with their login utility, you log in and authenticate in one step. On machines that do not use
+      an AFS enabled PAM modules, you log in and authenticate in separate steps. To determine which type of login configuration your
       machine uses, you can check for AFS tokens after logging in, or ask your system administrator, who can also tell you about any
       differences between your login procedure and the two methods described here.</para>
     </sect2>
 
     <sect2 id="Header_33">
-      <title>To Log In Using an AFS-modified Login Utility</title>
+      <title>To Log In Using an AFS enabled PAM module</title>
 
       <para>Provide your username at the <computeroutput>login:</computeroutput> prompt that appears when you establish a new
       connection to a machine. Then provide your password at the <computeroutput>Password:</computeroutput> prompt as shown in the
@@ -39,18 +39,18 @@
       <programlisting>
    login: <replaceable>username</replaceable>
    Password: <replaceable>password</replaceable>
-</programlisting>
+      </programlisting>
 
       <para>If you are not sure which type of login utility is running on your machine, it is best to issue the <emphasis
       role="bold">tokens</emphasis> command to check if you are authenticated; for instructions, see <link linkend="HDRWQ30">To
-      Display Your Tokens</link>. If you do not have tokens, issue the <emphasis role="bold">klog</emphasis> command as described in
+      Display Your Tokens</link>. If you do not have tokens, issue the <emphasis role="bold">kinit/aklog</emphasis> command pair as described in
       <link linkend="HDRWQ29">To Authenticate with AFS</link>.</para>
     </sect2>
 
     <sect2 id="HDRWQ23">
       <title>To Log In Using a Two-Step Login Procedure</title>
 
-      <para>If your machine does not use an AFS-modified login utility, you must perform a two-step procedure:
+      <para>If your machine does not use AFS enabled PAM modules, you must perform a two-step procedure:
 
       <orderedlist>
         <listitem>
@@ -59,21 +59,31 @@
         </listitem>
 
         <listitem>
-          <para>Issue the <emphasis role="bold">klog</emphasis> command to authenticate with AFS. Include the command's <emphasis
-          role="bold">-setpag</emphasis> argument to associate your token with a special identification number called a
-          <emphasis>PAG</emphasis> (for <emphasis>process authentication group</emphasis>). For a description of PAGs, see <link
-          linkend="HDRWQ25">Protecting Your Tokens with a PAG</link>. <programlisting>
-  
-   % <emphasis role="bold">klog -setpag</emphasis>
-   Password: <replaceable>your_AFS_password</replaceable>
-</programlisting></para>
-        </listitem>
-      </orderedlist>
-</para>
+          <para>Issue the <emphasis role="bold">kinit</emphasis> command to authenticate with kerberos and
+		  obtain a ticket granting ticket ( or TGT).
 
+		<programlisting>
+   % <emphasis role="bold">kinit</emphasis>
+   Password: <replaceable>your_Kerberos_password</replaceable>
+                </programlisting></para>
+        </listitem>
+        <listitem>
+	          <para>Issue the <emphasis role="bold">aklog</emphasis> command to obtain an AFS token using your TGT.
+       <programlisting>
+
+   % <emphasis role="bold">aklog</emphasis>
+
+	</programlisting>
+        </para>
+	<para>On systems with an AFS enabled kinit program, the kinit program can be configured to run the aklog
+              program for you by default, but running it again has no negative side effects.</para>
+
+	</listitem>
+      </orderedlist>
+      </para>
       <note>
         <para>If your machine uses a two-step login procedure, you can choose to use different passwords for logging in and
-        authenticating. It is simplest to use the same one for both, though. Talk with your system administrator.</para>
+        authenticating.</para>
       </note>
     </sect2>
 
@@ -86,17 +96,20 @@
       role="bold">anonymous</emphasis> user and your access to AFS filespace is limited: you have only the ACL permissions granted
       to the <emphasis role="bold">system:anyuser</emphasis> group. <indexterm><primary>authentication</primary><secondary>tokens as proof</secondary></indexterm> <indexterm><primary>tokens</primary><secondary>as proof of authentication</secondary></indexterm> <indexterm><primary>Cache Manager</primary><secondary>tokens, use of</secondary></indexterm></para>
 
-      <para>You can obtain new tokens (reauthenticate) at any time, even after using an AFS-modified login utility, which logs you
-      in and authenticates you in one step. Issue the <emphasis role="bold">klog</emphasis> command as described in <link
-      linkend="HDRWQ29">To Authenticate with AFS</link>.</para>
+      <para>You can obtain new tokens (reauthenticate) at any time, even after using an AFS enabled login utility, which logs you
+      in and authenticates you in one step. Issue the <emphasis role="bold">aklog</emphasis> command as described in <link
+      linkend="HDRWQ29">To Authenticate with AFS</link>. If your kerberos TGT has expired, you will also need to use the <emphasis role="bold">kinit</emphasis> command.</para>
 
       <sect3 id="HDRWQ25">
         <title>Protecting Your Tokens with a PAG</title>
 
         <para>To make your access to AFS as secure as possible, it is best to associate your tokens with a unique identification
-        number called a <emphasis>PAG</emphasis> (for <emphasis>process authentication group</emphasis>). <indexterm><primary>PAG</primary></indexterm>
-        <indexterm><primary>process authentication group (PAG)</primary></indexterm> <indexterm><primary>setpag argument to klog command</primary></indexterm> AFS-modified login utilities automatically create a PAG and associate the new
-        token with it. To create a PAG when you use the two-step login procedure, include the <emphasis role="bold">klog</emphasis>
+        number called a <emphasis>PAG</emphasis> (for <emphasis>process authentication group</emphasis>).
+		<indexterm><primary>PAG</primary></indexterm>
+        <indexterm><primary>process authentication group (PAG)</primary></indexterm>
+		<indexterm><primary>setpag argument to klog command</primary></indexterm>
+		AFS enabled login utilities automatically create a PAG and associate the new
+        token with it. To create a PAG when you use the two-step login procedure, include the <emphasis role="bold">aklog</emphasis>
         command's <emphasis role="bold">-setpag</emphasis> flag. If you do not use this flag, your tokens are associated with your
         UNIX UID number instead. This type of association has two potential drawbacks:
 
@@ -125,8 +138,21 @@
         any other cell consider you to be the <emphasis role="bold">anonymous</emphasis> user unless you have an account in the cell
         and authenticate with its AFS authentication service.</para>
 
-        <para>To obtain tokens in a foreign cell, use the <emphasis role="bold">-cell</emphasis> argument to the <emphasis
-        role="bold">klog</emphasis> command. You can have tokens for your home cell and one or more foreign cells at the same
+        <para>To obtain tokens in a foreign cell, you must first obtain a kerberos TGT for the realm used to authenticate for that cell.
+		Unfortunately, while AFS tokens have support for multi-realm credentials, most kerberos implementations don't handle this as
+		gracefully. You can control where kerberos stores it's credentials by using the ENV variable <emphasis role="bold">KRB5CCNAME</emphasis>.
+		If you want to get a token for a foreign cell, without destroying the kerberos credentials of your current session, you
+		need to follow this sequence of commands.
+	<programlisting>
+
+   env KRB5CCNAME=/tmp/test.ticket kinit user@REMOTE.REALM
+   env KRB5CCNAME=/tmp/test.ticket aklog -c remote.realm -k REMOTE.REALM
+
+	</programlisting>
+		It's probably a good idea to remove the TGT from the remote realm after doing this. For kerberos implementations that don't use
+		file based ticket caches ( Mac OS X, Windows), you will need to use the graphic kerberos ticket manager included in the OS to
+		switch kerberos identities.
+	    You can have tokens for your home cell and one or more foreign cells at the same
         time.</para>
       </sect3>
 
@@ -134,14 +160,13 @@
         <title>The One-Token-Per-Cell Rule</title>
 
         <para>You can have only one token per cell for each PAG you have obtained on a client machine. If you already have a token
-        for a particular cell and issue the <emphasis role="bold">klog</emphasis> command, the new token overwrites the existing
+        for a particular cell and issue the <emphasis role="bold">aklog</emphasis> command, the new token overwrites the existing
         one. Getting a new token is useful if your current token is almost expired but you want to continue accessing AFS files. For
         a discussion of token expiration, see <link linkend="HDRWQ28">Token Lifetime</link>.</para>
 
-        <para>To obtain a second token for the same cell, you must either login on a different machine or establish another separate
-        connection to the machine where you already have a token (by using the <emphasis role="bold">telnet</emphasis> utility, for
-        example). You get a new PAG for each separate machine or connection, and can use the associated tokens only while working on
-        that machine or connection.</para>
+        <para>To obtain a second token for the same cell, you need to run a process in a different PAG. OpenAFS provides the <emphasis role="bold">pagsh</emphasis> command to start a new shell in with a different PAG. You will then need to authenticate as described in <link
+	      linkend="HDRWQ29">To Authenticate with AFS</link>.
+	      </para>
       </sect3>
 
       <sect3 id="Header_39">
@@ -150,9 +175,11 @@
         <indexterm><primary>authentication</primary><secondary>as another user</secondary></indexterm>
 
         <para>You can authenticate as another username if you know the associated password. (It is, of course, unethical to use
-        someone else's tokens without permission.) If you use the <emphasis role="bold">klog</emphasis> command to authenticate as
-        another AFS username, you retain your own local (UNIX) identity, but the AFS server processes recognize you as the other
-        user. The new token replaces any token you already have for the relevant cell (for the reason described in <link
+        someone else's tokens without permission.) If you use the <emphasis role="bold">kinit</emphasis> and
+		<emphasis role="bold">aklog</emphasis>  commands to authenticate as
+        another Kerberos username and obtain an AFS token, you retain your own local (UNIX) identity, but the AFS
+		server processes recognize you as the other user. The new token replaces any token you already have for the
+		relevant cell (for the reason described in <link
         linkend="HDRWQ27">The One-Token-Per-Cell Rule</link>).</para>
       </sect3>
 
@@ -163,89 +190,96 @@
 
         <indexterm><primary>lifetime of tokens</primary></indexterm>
 
-        <para>Tokens have a limited lifetime. To determine when your tokens expire, issue the <emphasis
+        <para>Tokens and Kerberos TGT's have a limited lifetime. To determine when your tokens expire, issue the <emphasis
         role="bold">tokens</emphasis> command as described in <link linkend="HDRWQ30">To Display Your Tokens</link>. If you are ever
         unable to access AFS in a way that you normally can, issuing the <emphasis role="bold">tokens</emphasis> command tells you
         whether an expired token is a possible reason.</para>
 
-        <para>Your cell's administrators set the default lifetime of your token. The AFS authentication service never grants a token
-        lifetime longer than the default, but you can request a token with a shorter lifetime. See the <emphasis
-        role="bold">klog</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis> to learn how to use
+        <para>Your cell's kerberos administrators set the default lifetime of your kerberos TGT. The AFS authentication service never grants a token
+        lifetime longer than the current TGT lifetime, but you can request a TGT with a shorter lifetime. See the <emphasis
+        role="bold">kinit</emphasis> man page on your system to learn how to use
         its <emphasis role="bold">-lifetime</emphasis> argument for this purpose.</para>
       </sect3>
 
-      <sect3 id="Header_41">
-        <title>Authenticating for DFS Access</title>
-
-        <indexterm><primary>commands</primary><secondary>dlog</secondary></indexterm>
-
-        <indexterm><primary>commands</primary><secondary>dpass</secondary></indexterm>
-
-        <indexterm><primary>dlog command</primary></indexterm>
-
-        <indexterm><primary>dpass command</primary></indexterm>
-
-        <indexterm><primary>authentication</primary><secondary>with DCE for DFS access</secondary></indexterm>
-
-        <para>If your machine is configured to access a DCE cell's DFS filespace by means of the AFS/DFS Migration Toolkit, you can
-        use the <emphasis role="bold">dlog</emphasis> command to authenticate with DCE. The <emphasis role="bold">dlog</emphasis>
-        command has no effect on your ability to access AFS filespace.</para>
-
-        <para>If your system administrator has converted your AFS account to a DCE account and you are not sure of your DCE
-        password, use the <emphasis role="bold">dpass</emphasis> command to display it. You must be authenticated as the AFS user
-        whose AFS account was converted to a DCE account, and be able to provide the correct AFS password. Like the <emphasis
-        role="bold">dlog</emphasis> command, the <emphasis role="bold">dpass</emphasis> command has no functionality with respect to
-        AFS.</para>
-
-        <para>For more information on using the <emphasis role="bold">dlog</emphasis> and <emphasis role="bold">dpass</emphasis>
-        commands, see your system administrator.</para>
-      </sect3>
     </sect2>
 
     <sect2 id="HDRWQ29">
       <title>To Authenticate with AFS</title>
 
-      <indexterm><primary>klog command</primary></indexterm>
-
-      <indexterm><primary>commands</primary><secondary>klog</secondary></indexterm>
-
+      <indexterm><primary>aklog command</primary></indexterm>
+      <indexterm><primary>kinit command</primary></indexterm>
+      <indexterm><primary>commands</primary><secondary>aklog</secondary></indexterm>
+     <indexterm><primary>commands</primary><secondary>kinit</secondary></indexterm>
       <indexterm><primary>tokens</primary><secondary>getting</secondary></indexterm>
 
-      <para>If your machine is not using an AFS-modified login utility, you must authenticate after login by issuing the <emphasis
-      role="bold">klog</emphasis> command. You can also issue this command at any time to obtain a token with a later expiration
+      <para>If your machine is not using an AFS enabled login utility, you must authenticate after login by issuing the <emphasis
+      role="bold">kinit</emphasis> command and then use <emphasis role="bold">aklog</emphasis> to obtain a token. You can also
+      issue these commands at any time to obtain a token with a later expiration
       date than your current token.</para>
 
       <programlisting>
-   % <emphasis role="bold">klog</emphasis> [<emphasis role="bold">-setpag</emphasis>] [<emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;]
-   Password: <replaceable>your_AFS_password</replaceable>
+   % <emphasis role="bold">kinit</emphasis> [<emphasis role="bold">userid@KRB5.REALM</emphasis>]
+   Password: <replaceable>your_kerberos_password</replaceable>
 </programlisting>
 
       <para>where
 
       <variablelist>
         <varlistentry>
-          <term><emphasis role="bold">-setpag</emphasis></term>
+          <term><emphasis role="bold">userid@KRB5.REALM</emphasis></term>
 
           <listitem>
-            <para>Associates the resulting tokens with a PAG (see <link linkend="HDRWQ25">Protecting Your Tokens with a PAG</link>).
-            Include this flag the first time you obtain a token for a particular cell during a login session or connection. Do not
-            include it when refreshing the token for a cell during the same session.</para>
+            <para>is the kerberos userid and realm that you want to get a TGT from. If the machine is properly configured
+				for your local cell and realm, you should not need to specify the kerberos identity.</para>
           </listitem>
         </varlistentry>
 
-        <varlistentry>
-          <term><emphasis role="bold">-cell</emphasis></term>
-
-          <listitem>
-            <para>Names the cell for which to obtain the token. You must have an account in the cell.</para>
-          </listitem>
-        </varlistentry>
       </variablelist>
-</para>
+      </para>
 
-      <para>Your password does not echo visibly appear on the screen. When the command shell prompt returns, you are an
-      authenticated AFS user. You can use the <emphasis role="bold">tokens</emphasis> command to verify that you are authenticated,
+      <para>Your password does not echo visibly appear on the screen. When the command shell prompt returns,
+      you have a kerberos TGT. You then need to use the <emphasis role="bold">aklog</emphasis> command to
+      obtain an AFS token.</para>
+
+	  <programlisting>
+   % <emphasis role="bold">aklog</emphasis> [<emphasis role="bold">-cell afs.cell.name</emphasis>]  [<emphasis role="bold">-k KRB5.REALM</emphasis>]
+          </programlisting>
+
+      <para>where
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">KRB5.REALM</emphasis></term>
+
+          <listitem>
+            <para>is the kerberos realm used to authenticate the AFS cell.</para>
+          </listitem>
+        </varlistentry>
+
+	<varlistentry>
+	  <term><emphasis role="bold">afs.cell.name</emphasis></term>
+
+	  <listitem>
+	    <para>is the AFS cell for which you want a token.</para>
+	  </listitem>
+	</varlistentry>
+
+      </variablelist>
+      </para>
+
+      <para>You can use the <emphasis role="bold">tokens</emphasis> command to verify that you are authenticated,
       as described in the following section.</para>
+
+      <note xml:id="note.a.note.on.kerberos.realms.and.afs.cellnames">
+          <title>A Note on Kerberos Realms and AFS Cellnames</title>
+          <para>These are two things that are often the same, but each has it's own distinct rules.
+          By convention, kerberos realms are always in UPPER CASE and afs cellnames are in lower case.
+          Thus username@KRB5.REALM is the kerberos identity used for the AFS cell krb5.realm. There is
+          no restriction that the cell and realm names must match, but most sites are set up that way
+          to avoid confusion. In a well configured system you should never need worry about this until
+          you need to access remote realms/cells.</para>
+      </note>
+
     </sect2>
 
     <sect2 id="HDRWQ30">
@@ -281,7 +315,7 @@
       <programlisting>
    Tokens held by the Cache Manager:
    User's (AFS ID 1022) tokens for afs@abc.com [Expires Aug   3 14:35]
-   User's (AFS ID 9554) tokens for afs@stateu.edu [Expires Aug   4  1:02] 
+   User's (AFS ID 9554) tokens for afs@stateu.edu [Expires Aug   4  1:02]
       --End of list--
 </programlisting>
     </sect2>
@@ -293,11 +327,13 @@
 
       <para>Suppose that user <emphasis role="bold">terry</emphasis> cannot save a file. He uses the <emphasis
       role="bold">tokens</emphasis> command and finds that his tokens have expired. He reauthenticates in his local cell under his
-      current identity by issuing the following command:</para>
+      current identity by issuing the following commands:</para>
 
       <programlisting>
-   % <emphasis role="bold">klog</emphasis>
+   % <emphasis role="bold">kinit</emphasis>
    Password:  <replaceable>terry's_password</replaceable>
+   % <emphasis role="bold">aklog</emphasis>
+
 </programlisting>
 
       <para>The he issues the <emphasis role="bold">tokens</emphasis> command to make sure he is authenticated.</para>
@@ -320,8 +356,9 @@
       Manager can store only one token per cell per login session on a machine.</para>
 
       <programlisting>
-   % <emphasis role="bold">klog pat</emphasis>
+   % <emphasis role="bold">kinit pat</emphasis>
    Password: <replaceable>pat's_password</replaceable>
+   % <emphasis role="bold">aklog</emphasis>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
    User's (AFS ID 4278) tokens for afs@abc.com [Expires Jun 23 9:46]
@@ -338,73 +375,15 @@
       his account is called <emphasis role="bold">ts09</emphasis>.</para>
 
       <programlisting>
-   % <emphasis role="bold">klog  ts09 -cell stateu.edu</emphasis>
-   Password: <replaceable>ts09's_password</replaceable>
+   % <emphasis role="bold">env KRB5CCNAME=/tmp/temp.tgt kinit ts09@STATEU.EDU</emphasis>
+	Password: <replaceable>ts09's_password</replaceable>
+   % <emphasis role="bold">env KRB5CCNAME=/tmp/temp.tgt aklog  ts09 -cell stateu.edu</emphasis>
+
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
    User's (AFS ID 4562) tokens for afs@abc.com [Expires Jun 22 14:35]
    User's (AFS ID 8346) tokens for afs@stateu.edu [Expires Jun 23  1:02]
        --End of list--
-</programlisting>
-    </sect2>
-
-    <sect2 id="HDRWQ31">
-      <title>Limits on Failed Authentication Attempts</title>
-
-      <indexterm><primary>authentication</primary><secondary>limits on consecutive failed attempts</secondary></indexterm>
-
-      <para>Your system administrator can choose to limit the number of times that you fail to provide the correct password when
-      authenticating with AFS (using either an AFS-modified login utility or the <emphasis role="bold">klog</emphasis> command). If
-      you exceed the limit, the AFS authentication service refuses further authentication attempts for a period of time set by your
-      system administrator. The purpose of this limit is to prevent unauthorized users from breaking into your account by trying a
-      series of passwords.</para>
-
-      <para>To determine if your user account is subject to this limit, ask your system administrator or issue the <emphasis
-      role="bold">kas examine</emphasis> command as described in <link linkend="HDRWQ32">To Display Your Failed Authentication Limit
-      and Lockout Time</link>.</para>
-
-      <para>The following message indicates that you have exceeded the limit on failed authentication attempts.</para>
-
-      <programlisting>
-   Unable to authenticate to AFS because ID is locked - see your system admin
-</programlisting>
-    </sect2>
-
-    <sect2 id="HDRWQ32">
-      <title>To Display Your Failed Authentication Limit and Lockout Time</title>
-
-      <indexterm><primary>kas commands</primary><secondary>examine</secondary></indexterm>
-
-      <indexterm><primary>commands</primary><secondary>kas examine</secondary></indexterm>
-
-      <indexterm><primary>limits on authentication attempts</primary></indexterm>
-
-      <indexterm><primary>users</primary><secondary>account lockout time</secondary></indexterm>
-
-      <para>Issue the <emphasis role="bold">kas examine</emphasis> command to determine if there is a limit on the number of
-      unsuccessful authentication attempts for your user account and any associated lockout time. You can examine only your own
-      account. The fourth line of the output reports the maximum number of times you can provide an incorrect password before being
-      locked out of your account. The <computeroutput>lock time</computeroutput> field on the next line reports how long the AFS
-      authentication service refuses authentication attempts after the limit is exceeded.</para>
-
-      <programlisting>
-   % <emphasis role="bold">kas examine</emphasis> <replaceable>your_username</replaceable>
-   Password for <replaceable>your_username</replaceable>: <replaceable>your_AFS_password</replaceable>
-</programlisting>
-
-      <para>The following example displays the output for the user <emphasis role="bold">pat</emphasis>, who is allowed nine failed
-      authentication attempts. The lockout time is 25.5 minutes.</para>
-
-      <programlisting>
-   User data for pat
-    key (15) cksum is 3414844392,  last cpw: Thu Oct 21 16:05:44 1999
-    password will expire:  Fri Nov 26 20:44:36 1999
-    9 consecutive unsuccessful authentications are permitted.
-    The lock time for this user is 25.5 minutes.
-    User is not locked.
-    entry never expires. Max ticket lifetime 100.00 hours.
-    last mod on Wed Aug 18 08:22:29 1999 by admin
-    permit password reuse
 </programlisting>
     </sect2>
   </sect1>
@@ -428,7 +407,7 @@
 
     <para>You can use the <emphasis role="bold">unlog</emphasis> command any time you want to unauthenticate, not just when logging
     out. For instance, it is a good practice to unauthenticate before leaving your machine unattended, to prevent other users from
-    using your tokens during your absence. When you return to your machine, issue the <emphasis role="bold">klog</emphasis> command
+    using your tokens during your absence. When you return to your machine, issue the <emphasis role="bold">aklog</emphasis> command
     to reauthenticate, as described in <link linkend="HDRWQ29">To Authenticate with AFS</link>.</para>
 
     <para>Do not issue the <emphasis role="bold">unlog</emphasis> command when you are running jobs that take a long time to
@@ -589,11 +568,11 @@
 
           <para>The alternative is for the foreign cell's administrator to create an account for you, essentially making you a local
           user in the cell. The directory's owner creates an ACL entry for you as for any other local user. To authenticate in the
-          foreign cell, issue the <emphasis role="bold">klog</emphasis> command with the <emphasis role="bold">-cell</emphasis>
+          foreign cell, issue the <emphasis role="bold">aklog</emphasis> command with the <emphasis role="bold">-cell</emphasis>
           argument.</para>
         </listitem>
       </itemizedlist>
-</para>
+      </para>
 
       <para>For further discussion of directory and file protection, see <link linkend="HDRWQ44">Protecting Your Directories and
       Files</link>.</para>
@@ -603,127 +582,13 @@
   <sect1 id="HDRWQ36">
     <title>Changing Your Password</title>
 
-    <para>In cells that use an AFS-modified login utility, the password is the same for both logging in and authenticating with AFS.
-    In this case, you use a single command, <emphasis role="bold">kpasswd</emphasis>, to change the password.</para>
+    <para>In cells that use an AFS and kerberos enabled login utility, the password is the same for both logging in and authenticating with AFS.
+    In this case, generally you use a single command, <emphasis role="bold">kpasswd</emphasis>, to change the password. But this may vary from system to system, if in doubt contact your local system administrator.</para>
 
-    <para>If your machine does not use an AFS-modified login utility, there are separate passwords for logging into the local file
+    <para>If your machine does not use an AFS and kerberos enabled login utility, there are separate passwords for logging into the local file
     system and authenticating with AFS. (The two passwords can be the same or different, at your discretion.) In this case, use the
-    <emphasis role="bold">kpasswd</emphasis> command to change your AFS password and the UNIX <emphasis
+    <emphasis role="bold">kpasswd</emphasis> command to change your Kerberos password and the UNIX <emphasis
     role="bold">passwd</emphasis> command to change your UNIX password.</para>
 
-    <para>Your system administrator can improve cell security by configuring several features that guide your choice of password.
-    Keep them in mind when you issue the <emphasis role="bold">kpasswd</emphasis> command:
-
-    <itemizedlist>
-      <listitem>
-        <para>Limiting the amount of time your password is valid. This improves your cell's security by limiting the amount of time
-        an unauthorized user has to try to guess your password. Your system administrator needs to tell you when your password is
-        due to expire so that you can change it in time. The administrator can configure the AFS-modified login utility to report
-        this information automatically each time you log in. You can also use the <emphasis role="bold">kas examine</emphasis>
-        command to display the password expiration date, as instructed in <link linkend="HDRWQ37">To Display Password Expiration
-        Date and Reuse Policy</link>.</para>
-
-        <para>You can change your password prior to the expiration date, but your system administrator can choose to set a minimum
-        time between password changes. The following message indicates that the minimum time has not yet passed.</para>
-
-        <programlisting>
-   kpasswd:  password was not changed because you changed it too 
-   recently; see your system administrator
-</programlisting>
-      </listitem>
-
-      <listitem>
-        <para>Enforcing password quality standards, such as a minimum length or inclusion of nonalphabetic characters. The
-        administrator needs to tell you about such requirements so that you do not waste time picking unacceptable passwords.</para>
-      </listitem>
-
-      <listitem>
-        <para>Rejecting a password that is too similar to the last 20 passwords you used. You can use the <emphasis role="bold">kas
-        examine</emphasis> command to check whether this policy applies to you, as instructed in <link linkend="HDRWQ37">To Display
-        Password Expiration Date and Reuse Policy</link>. The following message indicates that the password you have chosen is too
-        similar to a previous password. <programlisting>
-   kpasswd:  Password was not changed because it seems like a reused password
-</programlisting></para>
-      </listitem>
-    </itemizedlist>
-</para>
-
-    <sect2 id="HDRWQ37">
-      <title>To Display Password Expiration Date and Reuse Policy</title>
-
-      <indexterm><primary>kas commands</primary><secondary>examine</secondary></indexterm>
-
-      <indexterm><primary>commands</primary><secondary>kas examine</secondary></indexterm>
-
-      <indexterm><primary>password</primary><secondary>expiration date, displaying</secondary></indexterm>
-
-      <indexterm><primary>password</primary><secondary>reuse policy, displaying</secondary></indexterm>
-
-      <indexterm><primary>displaying</primary><secondary>password expiration date</secondary></indexterm>
-
-      <indexterm><primary>displaying</primary><secondary>password reuse policy</secondary></indexterm>
-
-      <para>Issue the <emphasis role="bold">kas examine</emphasis> command to display your password expiration date and reuse
-      policy. You can examine only your own account. The third line of the output reports your password's expiration date. The last
-      line reports the password reuse policy that applies to you.</para>
-
-      <programlisting>
-   % <emphasis role="bold">kas examine</emphasis> <replaceable>your_username</replaceable>
-   Password for <replaceable>your_username</replaceable>: <replaceable>your_AFS_password</replaceable>
-</programlisting>
-
-      <para>The following example displays the output for the user <emphasis role="bold">pat</emphasis>.</para>
-
-      <programlisting>
-   User data for pat
-    key (15) cksum is 3414844392,  last cpw: Thu Oct 21 16:05:44 1999
-    password will expire:  Fri Nov 26 20:44:36 1999
-    9 consecutive unsuccessful authentications are permitted.
-    The lock time for this user is 25.5 minutes.
-    User is not locked.
-    entry never expires. Max ticket lifetime 100.00 hours.
-    last mod on Wed Aug 18 08:22:29 1999 by admin
-    don't permit password reuse
-</programlisting>
-    </sect2>
-
-    <sect2 id="Header_59">
-      <title>To Change Your AFS Password</title>
-
-      <indexterm><primary>password</primary><secondary>changing AFS</secondary></indexterm>
-
-      <indexterm><primary>changing</primary><secondary>AFS password</secondary></indexterm>
-
-      <indexterm><primary>commands</primary><secondary>kpasswd</secondary></indexterm>
-
-      <indexterm><primary>kpasswd command</primary></indexterm>
-
-      <para>Issue the <emphasis role="bold">kpasswd</emphasis> command, which prompts you to provide your old and new passwords and
-      to confirm the new password. The passwords do not echo visibly on the screen.</para>
-
-      <programlisting>
-   % <emphasis role="bold">kpasswd</emphasis>
-   Old password: <replaceable>current_password</replaceable>
-   New password (RETURN to abort): <replaceable>new_password</replaceable>
-   Retype new password: <replaceable>new_password</replaceable>
-</programlisting>
-    </sect2>
-
-    <sect2 id="Header_60">
-      <title>To Change Your UNIX Password</title>
-
-      <para><indexterm><primary>commands</primary><secondary>passwd</secondary></indexterm> <indexterm><primary>passwd</primary><secondary>command</secondary></indexterm> <indexterm><primary>password</primary><secondary>changing UNIX</secondary></indexterm> <indexterm><primary>changing</primary><secondary>UNIX password</secondary></indexterm> Issue the UNIX <emphasis
-      role="bold">passwd</emphasis> command, which prompts you to provide your old and new passwords and to confirm the new
-      password. The passwords do not echo visibly on the screen. On many machines, the <emphasis role="bold">passwd</emphasis>
-      resides in the <emphasis role="bold">/bin</emphasis> directory, and you possibly need to type the complete pathname.</para>
-
-      <programlisting>
-   % <emphasis role="bold">passwd</emphasis>
-   Changing password for <replaceable>username</replaceable>.
-   Old password: <replaceable>current_password</replaceable>
-   New password: <replaceable>new_password</replaceable>
-   Retype new passwd: <replaceable>new_password</replaceable>
-</programlisting>
-    </sect2>
   </sect1>
 </chapter>

@@ -82,8 +82,8 @@
       <glossterm><emphasis role="bold">Authenticate</emphasis></glossterm>
 
       <glossdef>
-        <para>To become recognized as a valid AFS user by providing the correct password. Authenticate by logging onto a machine
-        that uses an AFS-modified login utility or by issuing the <emphasis role="bold">klog</emphasis> command. Only authenticated
+        <para>To become recognized as a valid AFS user by getting an AFS token using your kerberos TGT. Authenticate by logging onto a machine
+        that uses an AFS enabled login utility or by issuing the <emphasis role="bold">aklog</emphasis> command after using <emphasis role="bold">kinit</emphasis> to obtain a kerberos TGT. Only authenticated
         users can perform most AFS actions.</para>
       </glossdef>
     </glossentry>

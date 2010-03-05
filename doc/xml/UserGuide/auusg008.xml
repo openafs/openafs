@@ -243,7 +243,7 @@
    % <emphasis role="bold">pts membership terry:team</emphasis>
    Members of terry:team (id: -286) are:
      terry
-     smith 
+     smith
      pat
      johnson
 </programlisting>
@@ -347,7 +347,7 @@
    Groups owned by pat (id: 1845) are:
       pat:accounting
       pat:plans
-   
+
 </programlisting>
     </sect2>
 
@@ -536,7 +536,7 @@
 
       <programlisting>
   % <emphasis role="bold">pts examine pat</emphasis>
-   Name: pat, id: 1045, owner: system:administrators, creator: admin, 
+   Name: pat, id: 1045, owner: system:administrators, creator: admin,
      membership: 12, flags: S-M--, group quota: 17
 </programlisting>
     </sect2>
@@ -693,7 +693,7 @@
    % <emphasis role="bold">pts creategroup terry:team</emphasis>
    group terry:team has id -286
    % <emphasis role="bold">pts examine terry:team</emphasis>
-   Name: terry:team, id: -286, owner: terry, creator: terry, 
+   Name: terry:team, id: -286, owner: terry, creator: terry,
      membership: 0, flags: S----, group quota: 0.
 </programlisting>
     </sect2>
@@ -739,7 +739,7 @@
       own the group.</para>
 
       <note>
-        <para>If you already have a token when you are added to a group, you must issue the <emphasis role="bold">klog</emphasis>
+        <para>If you already have a token when you are added to a group, you must issue the <emphasis role="bold">aklog</emphasis>
         command to reauthenticate before you can exercise the permissions granted to the group on ACLs.</para>
       </note>
 
@@ -1131,8 +1131,8 @@
 
       <programlisting>
    % <emphasis role="bold">pts chown pat:staff terry</emphasis>
-   % <emphasis role="bold">pts examine terry:staff</emphasis> 
-   Name: terry:staff, id: -534, owner: terry, creator: pat, 
+   % <emphasis role="bold">pts examine terry:staff</emphasis>
+   Name: terry:staff, id: -534, owner: terry, creator: pat,
      membership: 15, flags: SOm--, group quota: 0.
 </programlisting>
     </sect2>
@@ -1153,7 +1153,7 @@
       <programlisting>
    % <emphasis role="bold">pts chown terry:team terry:team</emphasis>
    % <emphasis role="bold">pts examine terry:team</emphasis>
-   Name: terry:team, id: -286, owner: terry:team, creator: terry, 
+   Name: terry:team, id: -286, owner: terry:team, creator: terry,
      membership: 6, flags: SOm--, group quota: 0.
 </programlisting>
     </sect2>
@@ -1169,11 +1169,11 @@
 
       <programlisting>
    % <emphasis role="bold">pts examine sam:project</emphasis>
-   Name: sam:project, id: -522, owner: sam, creator: sam, 
+   Name: sam:project, id: -522, owner: sam, creator: sam,
      membership: 33, flags: SOm--, group quota: 0.
    % <emphasis role="bold">pts chown sam:project smith:cpa</emphasis>
    % <emphasis role="bold">pts examine smith:project</emphasis>
-   Name: smith:project, id: -522, owner: smith:cpa, creator: sam, 
+   Name: smith:project, id: -522, owner: smith:cpa, creator: sam,
      membership: 33, flags: SOm--, group quota: 0.
 </programlisting>
     </sect2>
@@ -1236,11 +1236,11 @@
 
       <programlisting>
    % <emphasis role="bold">pts examine smith:project</emphasis>
-   Name: smith:project, id: -522, owner: smith:cpa, creator: sam, 
+   Name: smith:project, id: -522, owner: smith:cpa, creator: sam,
      membership: 33, flags: SOm--, group quota: 0.
    % <emphasis role="bold">pts rename smith:project smith:fiscal-closing</emphasis>
    % <emphasis role="bold">pts examine smith:fiscal-closing</emphasis>
-   Name: smith:fiscal-closing, id: -522, owner: smith:cpa, creator: sam, 
+   Name: smith:fiscal-closing, id: -522, owner: smith:cpa, creator: sam,
      membership: 33, flags: SOm--, group quota: 0.
 </programlisting>
     </sect2>
@@ -1257,12 +1257,12 @@
       the name to <emphasis role="bold">terry:plans</emphasis> to reflect its actual ownership.</para>
 
       <programlisting>
-   % <emphasis role="bold">pts examine pat:plans</emphasis> 
-   Name: pat:plans, id: -535, owner: terry:staff, creator: pat, 
+   % <emphasis role="bold">pts examine pat:plans</emphasis>
+   Name: pat:plans, id: -535, owner: terry:staff, creator: pat,
      membership: 8, flags: SOm--, group quota: 0.
    % <emphasis role="bold">pts rename pat:plans terry:plans</emphasis>
-   % <emphasis role="bold">pts examine terry:plans</emphasis> 
-   Name: terry:plans, id: -535, owner: terry:staff, creator: pat, 
+   % <emphasis role="bold">pts examine terry:plans</emphasis>
+   Name: terry:plans, id: -535, owner: terry:staff, creator: pat,
      membership: 8, flags: SOm--, group quota: 0.
 </programlisting>
     </sect2>
@@ -1482,7 +1482,7 @@
 
       <programlisting>
    % <emphasis role="bold">pts setfields terry:team -access SOm--</emphasis>
-  
+
 </programlisting>
 
       <itemizedlist>

@@ -745,7 +745,7 @@
    Normal rights:
       system:anyuser rl
       pat rlidwka
-      terry rliw 
+      terry rliw
    Access list for ../plans is
    Normal rights:
       terry rlidwka
@@ -1050,7 +1050,7 @@
       <programlisting>
    % <emphasis role="bold">fs setacl  -dir</emphasis> &lt;<replaceable>directory</replaceable>&gt;<superscript>+</superscript> <emphasis
           role="bold">-acl</emphasis> &lt;<replaceable>access list entries</replaceable>&gt;<superscript>+</superscript>  <emphasis
-          role="bold">-negative</emphasis> 
+          role="bold">-negative</emphasis>
 </programlisting>
 
       <para>where <variablelist>
@@ -1449,10 +1449,10 @@
    Normal rights:
       terry rlidwka
       pat rl
-      smith rl   
-     
+      smith rl
+
   % <emphasis role="bold">fs copyacl -from . -to plans</emphasis>
-   
+
    % <emphasis role="bold">fs listacl . plans</emphasis>
    Access list for . is
    Normal rights:
@@ -1464,7 +1464,7 @@
       terry rlidwka
       pat rlidwk
       jones rl
-      smith rl   
+      smith rl
 </programlisting>
     </sect2>
   </sect1>

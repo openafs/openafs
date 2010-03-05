@@ -336,7 +336,7 @@
         </listitem>
 
         <listitem>
-          <para>On machines that do not use an AFS-modified login utility, you must perform two steps.
+          <para>On machines that do not use an AFS-modified login utility, you must perform three steps.
 
           <orderedlist>
             <listitem>
@@ -344,9 +344,16 @@
             </listitem>
 
             <listitem>
-              <para>Issue the <emphasis role="bold">klog</emphasis> command with the <emphasis role="bold">-setpag</emphasis>
-              argument to authenticate with AFS and get your token.</para>
+              <para>Issue the <emphasis role="bold">kinit</emphasis> command to obtain a kerberos Ticket Granting Ticket or
+              <emphasis role="bold">TGT</emphasis>. If the kinit is compiled with AFS support, it may automatically get a
+               token for you. However to ensure that you get an afs token, you will need to run a second command.</para>
             </listitem>
+			<listitem>
+              <para>OpenAFS provides the <emphasis role="bold">aklog</emphasis> command to allow you to obtain a token,
+              or AFS service ticket using your kerberos TGT. A kinit with AFS support will run this as part of it's execution,
+			  but if you issue the aklog command that will ensure you have an AFS token.</para>
+            </listitem>
+
           </orderedlist>
 </para>
         </listitem>
@@ -356,7 +363,7 @@
       <para>Your system administrator can tell you whether your machine uses an AFS-modified login utility or not. Then see the
       login instructions in <link linkend="HDRWQ21">Logging in and Authenticating with AFS</link>.</para>
 
-      <para>AFS authentication passwords are stored in special AFS database, rather than in the local password file (<emphasis
+      <para>AFS uses the kerberos authentication protocol, rather than storing passwords in the local password file (<emphasis
       role="bold">/etc/passwd</emphasis> or equivalent). If your machine uses an AFS-modified login utility, you can change your
       password with a single command. If your machine does not use an AFS-modified login utility, you must issue separate commands
       to change your AFS and local passwords. See <link linkend="HDRWQ36">Changing Your Password</link>. <indexterm><primary>UNIX, differences with AFS</primary><secondary>passwords</secondary></indexterm>
@@ -426,28 +433,43 @@
     <sect2 id="HDRWQ18">
       <title>Remote Commands</title>
 
-      <para><indexterm><primary>UNIX, differences with AFS</primary><secondary>commands</secondary></indexterm> <indexterm><primary>remote commands</primary></indexterm> <indexterm><primary>commands</primary><secondary>ftp</secondary></indexterm> <indexterm><primary>ftp command</primary></indexterm> <indexterm><primary>commands</primary><secondary>rcp</secondary></indexterm>
-      <indexterm><primary>rcp command</primary></indexterm> <indexterm><primary>commands</primary><secondary>rsh</secondary></indexterm> <indexterm><primary>rsh command</primary></indexterm> The UNIX <emphasis>remote commands</emphasis> enable you
-      to run programs on a remote machine without establishing a connection to it by using a program such as <emphasis
-      role="bold">telnet</emphasis>. Many of the remote commands (such as <emphasis role="bold">ftp</emphasis>, <emphasis
-      role="bold">rcp</emphasis>, and <emphasis role="bold">rsh</emphasis>) remain available in AFS, depending on how your
-      administrators have configured them. If the remote machine has a Cache Manager, your token is used there also and you are
-      authenticated while the remote command runs. If the remote machine does not run a Cache Manager, you receive the following
-      message:</para>
+      <para>
+	  <indexterm><primary>SSH, differences with AFS</primary><secondary>commands</secondary></indexterm>
+	  <indexterm><primary>remote commands</primary></indexterm>
+	  <indexterm><primary>commands</primary><secondary>ssh</secondary></indexterm>
+	  <indexterm><primary>ftp command</primary></indexterm>
+	  <indexterm><primary>commands</primary><secondary>scp</secondary></indexterm>
+      <indexterm><primary>scp command</primary></indexterm>
+      The <emphasis>ssh</emphasis> and <emphasis>scp</emphasis> commands enable you
+      to run programs on a remote machine or copy files to/from a remote machine. ssh commands can work seamlessly with AFS, depending
+      on how your administrators have configured them. For the recent versions of OpenSSH, you need to have a kerberos ticket on the machine you are
+      connecting from and support in the ssh client to forward that ticket to the remote machine. The remote machine needs to be configured
+      to use that ticket to obtain a token after it is forwarded.
+      </para>
 
+      <para>Most current unix OS's come with a version of OpenSSH that understands the necessary GSSAPI protocol that can use kerberos to forward
+      TGT's, but this ability is generally not enabled by default. In order to configure your ssh client to use this you need to add the
+      following lines to your ~/.ssh/config file.</para>
       <programlisting>
-   Warning: unable to authenticate.
-</programlisting>
+      	GSSAPIAuthentication yes
+      	GSSAPIDelegateCredentials yes
+      	GSSAPITrustDNS yes
+      </programlisting>
+      <para>See the ssh_config man page on your system for more details about these configuration options. In particular, you may
+        want to limit them to specific hosts or domains.</para>
 
-      <para>In this case, you are logged into the remote machine's UNIX file system, but you are not authenticated to AFS. You can
-      access the local files on the remote machine and the AFS directories that grant access to the <emphasis
-      role="bold">system:anyuser</emphasis> group, but you cannot access protected AFS directories.</para>
+
+      <para>If you do not have an ssh client that can do TGT forwarding, when you login into a remote machine, you will have access to
+	  native UNIX file system. However, since you are not authenticated to AFS, you can only
+      access the AFS directories that grant access to the <emphasis
+      role="bold">system:anyuser</emphasis> group, but you cannot access protected AFS directories. You can enable this access by
+      following the kinit/aklog procedure listed above.</para>
     </sect2>
 
     <sect2 id="Header_28">
       <title>Differences in the Semantics of Standard UNIX Commands</title>
 
-      <para>This section summarizes differences in the functionality of some commonly issued UNIX commands.
+      <para>This section summarizes differences in the functionality of some commonly issued UNIX commands.</para>
 
       <variablelist>
         <varlistentry>
@@ -489,19 +511,10 @@
         </varlistentry>
 
         <varlistentry>
-          <term><emphasis role="bold">inetd <indexterm><primary>inetd command</primary></indexterm> <indexterm><primary>commands</primary><secondary>inetd</secondary></indexterm> </emphasis></term>
-
-          <listitem>
-            <para>The AFS version of this daemon authenticates remote issuers of the AFS-modified <emphasis
-            role="bold">rcp</emphasis> and <emphasis role="bold">rsh</emphasis> commands with AFS.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
           <term><emphasis role="bold">login utilities <indexterm><primary>login utility</primary></indexterm> </emphasis></term>
 
           <listitem>
-            <para>AFS-modified login utilities both log you into the local UNIX file system and authenticate you with AFS.</para>
+            <para>In general, most systems will use a combination of PAM modules to provide both kerberos enabled logins and automatic AFS tokens on login. Often these PAM modules will also be used with screenlockers and graphic logins at the console.</para>
           </listitem>
         </varlistentry>
 
@@ -514,7 +527,6 @@
           </listitem>
         </varlistentry>
       </variablelist>
-</para>
     </sect2>
   </sect1>
 

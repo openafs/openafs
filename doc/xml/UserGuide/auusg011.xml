@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
     <appendix id="HDRWQ86"><title>OpenAFS Command Syntax and Online Help</title>
-    
+
 <indexterm><primary>syntax of AFS commands described</primary></indexterm>
- 
+
     <para>The AFS commands available to you are used to authenticate, list AFS information, protect directories, create
     and manage groups, and create and manage ACLs. There are three general types of commands available to all AFS
     users: file server commands, protection server commands, and miscellaneous commands. This chapter discusses the
@@ -17,9 +17,9 @@
 </programlisting>
     <para>The <emphasis>command suite</emphasis> indicates the general type of command and the server process that
     performs the command. Regular AFS users have access to two main command suites and a miscellaneous set of commands:
-    
+
 <indexterm><primary>commands</primary><secondary>suite organization for AFS</secondary></indexterm>
- 
+
 <indexterm><primary>suite, defined for AFS command</primary></indexterm>
 </para>
     <itemizedlist>
@@ -30,26 +30,26 @@
       <listitem><para>The miscellaneous commands are not associated with any command suite.</para></listitem>
     </itemizedlist>
     <para>The <emphasis>operation code</emphasis> indicates the action that the command performs. Miscellaneous
-    commands have operation codes only. 
+    commands have operation codes only.
 <indexterm><primary>operation codes in AFS commands</primary><secondary>defined</secondary></indexterm>
 </para>
     <para>A command can have multiple <emphasis>options</emphasis>, which can be <emphasis>arguments</emphasis> or
     <emphasis>flags</emphasis>:</para>
     <itemizedlist>
       <listitem><para>Arguments are used to supply additional information for use by the command.
-      
+
 <indexterm><primary>arguments to AFS commands</primary></indexterm>
  They consist of a paired <emphasis>switch</emphasis> and <emphasis>instance</emphasis>.
-      
+
 <indexterm><primary>switches on AFS commands</primary><secondary>defined</secondary></indexterm>
- 
+
 <indexterm><primary>instances to AFS commands</primary></indexterm>
  A switch defines the type of argument and is always preceded
       by a hyphen; arguments can take multiple instances if a plus sign (+) appears after the instance. An instance
       represents some variable piece of information that is used by the command. Arguments can be optional or
       required.</para></listitem>
       <listitem><para>Flags are used to direct a command to perform in a specific way (for example, to generate a
-      specific type of output). 
+      specific type of output).
 <indexterm><primary>flags on AFS commands</primary></indexterm>
  Flags are always preceded by a hyphen and are always
       optional.</para></listitem>
@@ -65,7 +65,7 @@
       the File Server process to set an access control list.</para></listitem>
       <listitem><para>
         <emphasis role="bold">-dir $HOME</emphasis> and <emphasis role="bold">-acl pat all terry none</emphasis> are
-        <emphasis>arguments</emphasis>. 
+        <emphasis>arguments</emphasis>.
         </para><itemizedlist>
           <listitem><para><emphasis role="bold">-dir</emphasis> and <emphasis role="bold">-acl</emphasis> are switches;
           <emphasis role="bold">-dir</emphasis> indicates the name of the directory on which to set the ACL, and
@@ -88,9 +88,9 @@
     <para>Type all AFS commands on one line, followed by a carriage return. Some commands in this document appear on
     more than one line, but that is for legibility only.</para>
     </sect2><sect2 id="Header_172"><title>Abbreviations and Aliases for Operation Codes</title>
-    
+
 <indexterm><primary>operation codes in AFS commands</primary><secondary>abbreviating</secondary></indexterm>
- 
+
     <para>You can type operation codes in one of three ways:</para>
     <itemizedlist>
       <listitem><para>You can type the operation code in full.</para></listitem>
@@ -107,9 +107,9 @@
     <para>The <emphasis>OpenAFS Administration Reference</emphasis> provides information on the full and abbreviated
     command syntax as well as any aliases for all of the commands discussed in this guide.</para>
     </sect2><sect2 id="Header_173"><title>Omitting Argument Switches</title>
-    
+
 <indexterm><primary>switches on AFS commands</primary><secondary>omitting</secondary></indexterm>
- 
+
     <para>You can omit an argument's switch if the command takes only one argument, or if the following conditions are
     met.</para>
     <itemizedlist>
@@ -165,7 +165,7 @@
     <para>If the current working directory is <emphasis role="bold">terry</emphasis>'s home directory, he can issue the
     following command.</para>
 <programlisting>
-   % <emphasis role="bold">fs setacl -dir  .  -acl pat rl</emphasis> 
+   % <emphasis role="bold">fs setacl -dir  .  -acl pat rl</emphasis>
 </programlisting>
     <para>Both of the previous examples are acceptable short forms for the following command:</para>
 <programlisting>
@@ -176,21 +176,21 @@
     <emphasis role="bold">pts</emphasis> commands. For more detailed information, see the <emphasis>OpenAFS
     Administration Reference</emphasis>.</para>
     <sect2 id="Header_177"><title>About the fs Commands</title>
-    
+
 <indexterm><primary>fs commands</primary><secondary>introduction</secondary></indexterm>
- 
+
     <para>Some <emphasis role="bold">fs</emphasis> commands extend UNIX file system semantics by invoking file-related
     functions that UNIX does not provide (setting access control lists, for example). Other
     <emphasis role="bold">fs</emphasis> commands help you control the performance of the Cache Manager running on your
-    local client machine. 
+    local client machine.
 <indexterm><primary>fs commands</primary><secondary>help flag</secondary></indexterm>
- 
+
 <indexterm><primary>fs commands</primary><secondary>getting help</secondary></indexterm>
 </para>
     <para>All <emphasis role="bold">fs</emphasis> commands accept the optional <emphasis role="bold">-help</emphasis>
     flag. It has the same function as the <emphasis role="bold">fs help</emphasis> command: it prints a command's
     online help message on the screen. Do not provide other options at the same time as this flag. It overrides them,
-    and the only effect of issuing the command is to display the help message. 
+    and the only effect of issuing the command is to display the help message.
 <indexterm><primary>fs commands</primary><secondary>privileges required</secondary></indexterm>
 </para>
     <para>The privilege required for issuing <emphasis role="bold">fs</emphasis> commands varies. The necessary
@@ -208,11 +208,11 @@
       not require any special privilege.</para></listitem>
     </itemizedlist>
     </sect2><sect2 id="Header_178"><title>About the pts Commands</title>
-    
+
 <indexterm><primary>pts commands</primary><secondary>privilege required</secondary></indexterm>
- 
+
 <indexterm><primary>Protection Database</primary></indexterm>
- 
+
     <para>The <emphasis role="bold">pts</emphasis> command suite is the interface through which you can create
     protection groups and add members to them. System administrators who belong to a special system group called
     <emphasis role="bold">system:administrators</emphasis> group can manipulate any group, and also create the user and
@@ -224,7 +224,7 @@
     command descriptions in the <emphasis>OpenAFS Administration Reference</emphasis> and are described here in
     detail:</para>
     <variablelist>
-      
+
 <indexterm><primary>pts commands</primary><secondary>cell argument</secondary></indexterm>
 
       <varlistentry><term><emphasis role="bold">[-cell &lt;<replaceable>cell name</replaceable>&gt;]</emphasis></term>
@@ -232,7 +232,7 @@
         This argument indicates that the command runs in the indicated cell. The issuer can abbreviate the
         <replaceable>cell name</replaceable> value to the shortest form that distinguishes it from the other cells
         listed in the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file on the client machine on which the
-        command is issued. By default, commands are executed in the local cell as defined 
+        command is issued. By default, commands are executed in the local cell as defined
         </para><itemizedlist>
           <listitem><para>First, by the value of the environment variable AFSCELL. (This variable is normally not
           defined by default. If you are working in another, nonlocal cell for an extended period of time, you can set
@@ -246,7 +246,7 @@
       <varlistentry><term><emphasis role="bold">[-force]</emphasis></term>
       <listitem><para>This flag directs the <emphasis role="bold">pts</emphasis> command interpreter to continue
       executing the command, if possible, even if it encounters problems during the command's execution.
-      
+
 <indexterm><primary>pts commands</primary><secondary>force flag</secondary></indexterm>
  The command interpreter performs as much of the requested operation as possible, rather
       than halting if it encounters a problem. The command interpreter reports any errors it encounters during the
@@ -255,10 +255,10 @@
       arguments.</para></listitem></varlistentry>
     </variablelist>
     <variablelist>
-      <varlistentry><term><emphasis role="bold">[-help] 
+      <varlistentry><term><emphasis role="bold">[-help]
 <indexterm><primary>pts commands</primary><secondary>help flag</secondary></indexterm>
 
-      
+
 <indexterm><primary>pts commands</primary><secondary>getting help</secondary></indexterm>
 </emphasis></term>
       <listitem><para>This flag has the same function as the <emphasis role="bold">pts help</emphasis> command: it
@@ -267,27 +267,27 @@
       message.</para></listitem></varlistentry>
     </variablelist>
     </sect2></sect1><sect1 id="HDRWQ89"><title>Getting Help in AFS</title>
-    
+
 <indexterm><primary>help</primary><secondary>online for AFS commands</secondary></indexterm>
- 
+
 <indexterm><primary>online help</primary></indexterm>
- 
+
     <para>AFS online help consists of basic syntax messages. The AFS distribution also includes help in HTML format
     which your system administrator can make available to you.</para>
     <sect2 id="Header_180"><title>Displaying Command Syntax and Aliases</title>
-    
+
 <indexterm><primary>apropos operation code</primary></indexterm>
- 
+
 <indexterm><primary>help</primary><secondary>operation code in AFS command suites</secondary></indexterm>
- 
+
 <indexterm><primary>help</primary><secondary>examples</secondary></indexterm>
- 
+
     <para>To display a brief description of a command, its syntax statement, and alias if any, use the
     <emphasis role="bold">help</emphasis> operation code. For example, to display the online help entry for the
     <emphasis role="bold">fs listacl</emphasis> command, enter the following command:</para>
 <programlisting>
    % <emphasis role="bold">fs help listacl</emphasis>
-   fs listacl: list access control list 
+   fs listacl: list access control list
    aliases: la
    Usage: fs listacl  [-path &lt;dir/file path&gt;+]  [-id] [-if] [-help]
 </programlisting>
@@ -296,14 +296,14 @@
     setacl</emphasis> command, enter the following command:</para>
 <programlisting>
    % <emphasis role="bold">fs setacl -help</emphasis>
-   Usage: fs setacl -dir &lt;directory&gt;+ -acl &lt;access list entries&gt;+ [-clear] [-negative] 
+   Usage: fs setacl -dir &lt;directory&gt;+ -acl &lt;access list entries&gt;+ [-clear] [-negative]
    [-id] [-if] [-help]
 </programlisting>
     </sect2><sect2 id="Header_181"><title>Displaying Operation Code Descriptions</title>
     <para>To display a short description of all of a command suite's operation codes, issue the
     <emphasis role="bold">help</emphasis> operation code without any other arguments. For example, the
     <emphasis role="bold">fs help</emphasis> command displays a short description of every operation code in the
-    <emphasis role="bold">fs</emphasis> command suite. 
+    <emphasis role="bold">fs</emphasis> command suite.
 <indexterm><primary>keyword for apropos command</primary></indexterm>
 </para>
     <para>To display a list of the commands in a command suite that concern a certain type of object, provide a
