@@ -186,13 +186,13 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	udebug.syncVersion.counter = udebug.localVersion.counter;
     }
 
-    /* sockaddr is always in net-order */
+    /* XDR converts addresses for us, so all addresses are in HBO */
     if (udebug.lastYesHost == 0xffffffff) {
 	printf("Last yes vote not cast yet \n");
     } else {
 	diff = udebug.now - udebug.lastYesTime;
 	printf("Last yes vote for %s was %d secs ago (%ssync site); \n",
-	       afs_inet_ntoa(udebug.lastYesHost), 
+	       afs_inet_ntoa(htonl(udebug.lastYesHost)),
 	       afs_cast_time_t(diff),
 	       ((udebug.lastYesState) ? "" : "not "));
 
