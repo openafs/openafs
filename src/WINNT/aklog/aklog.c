@@ -53,6 +53,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <afs/stds.h>
+#include <afs/com_err.h>
 #ifdef HAVE_KRB4
 #include <krb.h>
 #else
@@ -195,6 +196,9 @@ static int use524 = FALSE;  /* use krb524? */
 static krb5_context context = 0;
 static krb5_ccache _krb425_ccache = 0;
 
+static char * (KRB5_CALLCONV *pkrb5_get_error_message)(krb5_context context, krb5_error_code code)=NULL;
+static void (KRB5_CALLCONV *pkrb5_free_error_message)(krb5_context context, char *s) = NULL;
+
 void akexit(int exit_code)
 {
     if (_krb425_ccache)
@@ -217,12 +221,19 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
         fputs(": ", stderr);
     }
     if (code) {
-        const char *str = afs_error_message(code);
+        int freestr = 0;
+        char *str = (char *)afs_error_message(code);
         if (strncmp(str, "unknown", strlen(str)) == 0) {
-            str = error_message(code);
+            if (pkrb5_get_error_message) {
+                str = pkrb5_get_error_message(NULL, code);
+                freestr = 1;
+            } else
+                str = (char *)error_message(code);
         }
         fputs(str, stderr);
         fputs(" ", stderr);
+        if (freestr)
+            pkrb5_free_error_message(NULL, str);
     }
     if (fmt) {
         vfprintf(stderr, fmt, ap);
@@ -749,8 +760,16 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	int realm_fallback = 0;
 
         if ((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
-            fprintf(stderr, "%s: Couldn't determine realm of user: %d\n",
-                     progname, status);
+            char * msg;
+            
+            if (pkrb5_get_error_message)
+                msg = pkrb5_get_error_message(context, status);
+            else
+                msg = (char *)error_message(status);
+            fprintf(stderr, "%s: Couldn't determine realm of user: %s\n",
+                     progname, msg);
+            if (pkrb5_free_error_message)
+                pkrb5_free_error_message(context, msg);
             status = AKLOG_KERBEROS;
             goto done;
         }
@@ -870,19 +889,26 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 #endif
     } 
 
-    /* TODO: get k5 error text */
     if (status != KSUCCESS)
     {
+        char * msg = NULL;
         if (dflag)
             printf("Kerberos error code returned by get_cred: %d\n", status);
-        fprintf(stderr, "%s: Couldn't get %s AFS tickets: %s\n",
-                 progname, cell_to_use, 
+
+        if (usev5) {
+            if (pkrb5_get_error_message)
+                msg = pkrb5_get_error_message(context, status);
+            else
+                msg = (char *)error_message(status);
+        }
 #ifdef HAVE_KRB4
-                 (usev5)?"":krb_err_text(status)
-#else
-                 ""
+        else
+            msg = krb_err_text(status);
 #endif
-                 );
+        fprintf(stderr, "%s: Couldn't get %s AFS tickets: %s\n",
+                 progname, cell_to_use, msg?msg:"(unknown error)");
+        if (usev5 && pkrb5_free_error_message)
+            pkrb5_free_error_message(context, msg);
         status = AKLOG_KERBEROS;
         goto done;
     }
@@ -906,7 +932,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         if ( v5cred->client->length > 1 ) {
             strcat(username, ".");
             p = username + strlen(username);
-            len = min(v5cred->client->data[1].length,MAXKTCNAMELEN - strlen(username) - 1);
+            len = min(v5cred->client->data[1].length, (unsigned int)(MAXKTCNAMELEN - strlen(username) - 1));
             strncpy(p, v5cred->client->data[1].data, len);
             p[len] = '\0';
         }
@@ -1067,7 +1093,7 @@ static int get_afs_mountpoint(char *file, char *mountpoint, int size)
     memset(cellname, 0, sizeof(cellname));
 
     vio.in = last_component;
-    vio.in_size = strlen(last_component)+1;
+    vio.in_size = (long)strlen(last_component)+1;
     vio.out_size = size;
     vio.out = mountpoint;
 
@@ -1076,7 +1102,7 @@ static int get_afs_mountpoint(char *file, char *mountpoint, int size)
         if (strchr(mountpoint, VOLMARKER) == NULL)
         {
             vio.in = file;
-            vio.in_size = strlen(file) + 1;
+            vio.in_size = (long)strlen(file) + 1;
             vio.out_size = sizeof(cellname);
             vio.out = cellname;
 
@@ -1139,8 +1165,8 @@ static char *next_path(char *origpath)
     {
         while (BeginsWithDir(last_comp, FALSE))
             strncat(pathtocheck, last_comp++, 1);
-        len = (elast_comp = LastComponent(last_comp))
-            ? elast_comp - last_comp : strlen(last_comp);
+        len = (int) ((elast_comp = LastComponent(last_comp))
+            ? elast_comp - last_comp : strlen(last_comp));
         strncat(pathtocheck, last_comp, len);
         memset(linkbuf, 0, sizeof(linkbuf));
         if (link = (readlink(pathtocheck, linkbuf, sizeof(linkbuf)) > 0))
@@ -1322,14 +1348,24 @@ static void usage(void)
     akexit(AKLOG_USAGE);
 }
 
-void
-validate_krb5_availability(void)
-{
 #ifndef _WIN64
 #define KRB5LIB "krb5_32.dll"
 #else
 #define KRB5LIB "krb5_64.dll"
 #endif
+void
+load_krb5_error_message_funcs(void)
+{
+    HINSTANCE h = LoadLibrary(KRB5LIB);
+    if (h) {
+        (FARPROC)pkrb5_get_error_message = GetProcAddress(h, "krb5_get_error_message");
+        (FARPROC)pkrb5_free_error_message = GetProcAddress(h, "krb5_free_error_message");
+    }
+}
+
+void
+validate_krb5_availability(void)
+{
     HINSTANCE h = LoadLibrary(KRB5LIB);
     if (h) 
         FreeLibrary(h);
@@ -1520,6 +1556,7 @@ int main(int argc, char *argv[])
         validate_krb5_availability();
         if (krb5_init_context(&context))
             return(AKLOG_KERBEROS);
+        load_krb5_error_message_funcs();
     } else 
         validate_krb4_availability();
     afs_set_com_err_hook(redirect_errors);
