@@ -180,6 +180,8 @@ DECL_FUNC_PTR(krb5_get_host_realm);
 DECL_FUNC_PTR(krb5_free_host_realm);
 DECL_FUNC_PTR(krb5_free_addresses);
 DECL_FUNC_PTR(krb5_c_random_make_octets);
+DECL_FUNC_PTR(krb5_get_error_message);
+DECL_FUNC_PTR(krb5_free_error_message);
 
 #ifdef USE_KRB524
 // Krb524 functions
@@ -318,6 +320,8 @@ FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_free_host_realm),
     MAKE_FUNC_INFO(krb5_free_addresses),
     MAKE_FUNC_INFO(krb5_c_random_make_octets),
+    MAKE_FUNC_INFO(krb5_get_error_message),
+    MAKE_FUNC_INFO(krb5_free_error_message),
     END_FUNC_INFO
 };
 
@@ -652,12 +656,13 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
     }
     */
         
-    errText = perror_message(rc);   
+    errText = pkrb5_get_error_message(ctx, rc);
     _snprintf(message, sizeof(message), 
               "%s\n(Kerberos error %ld)\n\n%s failed", 
               errText, 
               krb5Error, 
               FailedFunctionName);
+    pkrb5_free_error_message(ctx, errText);
 
     if ( IsDebuggerPresent() )
         OutputDebugString(message);
@@ -1491,7 +1496,9 @@ KFW_AFS_get_cred( char * username,
         free(cellconfig.linkedCell);
 
     if ( code && reasonP ) {
-        *reasonP = (char *)perror_message(code);
+        char *msg = pkrb5_get_error_message(ctx, code);
+        *reasonP = strdup(msg);
+        pkrb5_free_error_message(ctx, msg);
     }
     return(code);
 }
