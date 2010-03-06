@@ -69,6 +69,7 @@
 #include "afskfw-int.h"
 #include "afskfw.h"
 #include <userenv.h>
+#include "strsafe.h"
 
 #include <Sddl.h>
 #include <Aclapi.h>
@@ -180,6 +181,8 @@ DECL_FUNC_PTR(krb5_get_host_realm);
 DECL_FUNC_PTR(krb5_free_host_realm);
 DECL_FUNC_PTR(krb5_free_addresses);
 DECL_FUNC_PTR(krb5_c_random_make_octets);
+
+// Krb5 KFW 3.2 functions
 DECL_FUNC_PTR(krb5_get_error_message);
 DECL_FUNC_PTR(krb5_free_error_message);
 
@@ -320,6 +323,10 @@ FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_free_host_realm),
     MAKE_FUNC_INFO(krb5_free_addresses),
     MAKE_FUNC_INFO(krb5_c_random_make_octets),
+    END_FUNC_INFO
+};
+
+FUNC_INFO k5_kfw_32_fi[] = {
     MAKE_FUNC_INFO(krb5_get_error_message),
     MAKE_FUNC_INFO(krb5_free_error_message),
     END_FUNC_INFO
@@ -395,6 +402,7 @@ static int                inited = 0;
 static int                mid_cnt = 0;
 static struct textField * mid_tb = NULL;
 static HINSTANCE hKrb5 = 0;
+static HINSTANCE hKrb5_kfw_32 = 0;
 #ifdef USE_KRB4
 static HINSTANCE hKrb4 = 0;
 #endif /* USE_KRB4 */
@@ -436,6 +444,7 @@ KFW_initialize(void)
         if ( !inited ) {
             inited = 1;
             LoadFuncs(KRB5_DLL, k5_fi, &hKrb5, 0, 1, 0, 0);
+            LoadFuncs(KRB5_DLL, k5_kfw_32_fi, &hKrb5_kfw_32, 0, 1, 0, 0);
             LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
             LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
 #ifdef USE_KRB4
@@ -503,6 +512,8 @@ KFW_cleanup(void)
 #endif /* USE_KRB4 */
     if (hKrb5)
         FreeLibrary(hKrb5);
+    if (hKrb5_kfw_32)
+        FreeLibrary(hKrb5_kfw_32);
 }
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
@@ -656,13 +667,17 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
     }
     */
         
-    errText = pkrb5_get_error_message(ctx, rc);
+    if (pkrb5_get_error_message)
+        errText = pkrb5_get_error_message(ctx, rc);
+    else
+        errText = perror_message(rc);
     _snprintf(message, sizeof(message), 
               "%s\n(Kerberos error %ld)\n\n%s failed", 
               errText, 
               krb5Error, 
               FailedFunctionName);
-    pkrb5_free_error_message(ctx, errText);
+    if (pkrb5_free_error_message)
+        pkrb5_free_error_message(ctx, errText);
 
     if ( IsDebuggerPresent() )
         OutputDebugString(message);
@@ -1327,6 +1342,7 @@ KFW_AFS_get_cred( char * username,
                   char * smbname,
                   char ** reasonP )
 {
+    static char reason[1024]="";
     krb5_context ctx = NULL;
     krb5_ccache cc = NULL;
     char * realm = NULL, * userrealm = NULL;
@@ -1496,9 +1512,15 @@ KFW_AFS_get_cred( char * username,
         free(cellconfig.linkedCell);
 
     if ( code && reasonP ) {
-        char *msg = pkrb5_get_error_message(ctx, code);
-        *reasonP = strdup(msg);
-        pkrb5_free_error_message(ctx, msg);
+        if (pkrb5_get_error_message) {
+            char *msg = pkrb5_get_error_message(ctx, code);
+            StringCbCopyN( reason, sizeof(reason),
+                           msg, sizeof(reason) - 1);
+            *reasonP = reason;
+            pkrb5_free_error_message(ctx, msg);
+        } else {
+            *reasonP = perror_message(code);
+        }
     }
     return(code);
 }
