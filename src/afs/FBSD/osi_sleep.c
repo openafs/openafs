@@ -264,7 +264,6 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     int code = 0;
     struct afs_event *evp;
     int seq, prio;
-    struct timespec ts;
 
     evp = afs_getevent(event);
     seq = evp->seq;
@@ -273,10 +272,8 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 	prio = PCATCH | PPAUSE;
     else
 	prio = PVFS;
-    ts.tv_sec = ams / 1000;
-    ts.tv_nsec = (ams % 1000) * 1000000;
     evp->owner = 0;
-    code = msleep(event, evp->lck, prio, "afsslp", &ts);
+    code = msleep(event, evp->lck, prio, "afsslp", (ams * hz) / 1000);
     evp->owner = curthread;
     if (seq == evp->seq)
 	code = EINTR;
