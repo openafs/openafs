@@ -7,6 +7,7 @@
 
 # General AFS utilities.
 
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\WINNT\kfw\inc\krb5
 RELDIR=util
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 
@@ -24,6 +25,7 @@ INCFILES =\
 	$(INCFILEDIR)\pthread_nosigs.h \
 	$(INCFILEDIR)\errmap_nt.h \
 	$(INCFILEDIR)\dirpath.h \
+        $(INCFILEDIR)\krb5_nt.h \
 	$(INCFILEDIR)\ktime.h \
 	$(INCFILEDIR)\fileutil.h \
 	$(INCFILEDIR)\afsutil_prototypes.h \
@@ -47,6 +49,7 @@ LIBOBJS = \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
 	$(OUT)\isathing.obj \
+        $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
         $(OUT)\netutils.obj \
@@ -72,6 +75,7 @@ MT_LIBOBJS = \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
 	$(OUT)\isathing.obj \
+        $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
         $(OUT)\netutils.obj \
