@@ -1231,3 +1231,29 @@ _bdi.name = NULL;],
     AC_DEFINE([STRUCT_BDI_HAS_NAME], 1, [define if struct backing_dev_info has a name member])
   fi])
 
+AC_DEFUN([LINUX_HAVE_ZERO_USER_SEGMENTS], [
+  AC_MSG_CHECKING([for zero_user_segments])
+  AC_CACHE_VAL([ac_cv_linux_have_zero_user_segments], [
+    AC_TRY_KBUILD(
+[#include <linux/highmem.h>],
+[zero_user_segments(NULL, 0, 0, 0, 0);],
+      ac_cv_linux_have_zero_user_segments=yes,
+      ac_cv_linux_have_zero_user_segments=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_zero_user_segments)
+  if test "x$ac_cv_linux_have_zero_user_segments" = "xyes"; then
+    AC_DEFINE([HAVE_ZERO_USER_SEGMENTS], 1, [define if your kernel has the zero_user_segments function])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_PAGE_OFFSET], [
+  AC_MSG_CHECKING([for page_offset])
+  AC_CACHE_VAL([ac_cv_linux_have_page_offset], [
+    AC_TRY_KBUILD(
+[#include <linux/pagemap.h>],
+[page_offset(NULL);],
+      ac_cv_linux_have_page_offset=yes,
+      ac_cv_linux_have_page_offset=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_page_offset)
+  if test "x$ac_cv_linux_have_page_offset" = "xyes"; then
+    AC_DEFINE([HAVE_PAGE_OFFSET], 1, [define if your kernel has the page_offset function])
+  fi])
+
