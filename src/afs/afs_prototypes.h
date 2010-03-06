@@ -932,7 +932,7 @@ extern void afs_CheckTokenCache(void);
 extern void afs_ResetAccessCache(afs_int32 uid, int alock);
 extern void afs_ResetUserConns(register struct unixuser *auser);
 extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
-
+extern void afs_MarkUserExpired(afs_int32 pag);
 
 /* afs_util.c */
 extern afs_int32 afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret);
