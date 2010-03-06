@@ -550,6 +550,30 @@ afs_SetPrimary(register struct unixuser *au, register int aflag)
 }				/*afs_SetPrimary */
 
 
+/**
+ * Mark all of the unixuser records held for a particular PAG as
+ * expired
+ *
+ * @param[in] pag
+ * 	PAG to expire records for
+ */
+void
+afs_MarkUserExpired(afs_int32 pag) {
+    afs_int32 i;
+    struct unixuser *tu;
+
+    i = UHash(pag);
+    ObtainWriteLock(&afs_xuser, 9);
+    for (tu = afs_users[i]; tu; tu = tu->next) {
+	if (tu->uid == pag) {
+	    tu->ct.EndTimestamp = 0;
+	    tu->tokenTime = 0;
+	}
+    }
+    ReleaseWriteLock(&afs_xuser);
+}
+
+
 #if AFS_GCPAGS
 
 /*
