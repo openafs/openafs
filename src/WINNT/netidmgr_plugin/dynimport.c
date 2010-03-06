@@ -31,6 +31,7 @@
 
 HINSTANCE hKrb4 = 0;
 HINSTANCE hKrb5 = 0;
+HINSTANCE hKrb5_KFW_32 = 0;
 HINSTANCE hKrb524 = 0;
 HINSTANCE hSecur32 = 0;
 HINSTANCE hComErr = 0;
@@ -143,6 +144,8 @@ DECL_FUNC_PTR(krb5_free_host_realm);
 DECL_FUNC_PTR(krb5_c_random_make_octets);
 DECL_FUNC_PTR(krb5_free_addresses);
 DECL_FUNC_PTR(krb5_free_default_realm);
+
+// Krb5 (3.2) functions
 DECL_FUNC_PTR(krb5_get_error_message);
 DECL_FUNC_PTR(krb5_free_error_message);
 
@@ -289,6 +292,10 @@ FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_free_host_realm),
     MAKE_FUNC_INFO(krb5_c_random_make_octets),
     MAKE_FUNC_INFO(krb5_free_default_realm),
+    END_FUNC_INFO
+};
+
+FUNC_INFO k5_kfw_32_fi[] = {
     MAKE_FUNC_INFO(krb5_get_error_message),
     MAKE_FUNC_INFO(krb5_free_error_message),
     END_FUNC_INFO
@@ -394,6 +401,9 @@ khm_int32 init_imports(void) {
     imp_rv = LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
     /* CCAPI_DLL is optional.  No error check. */
 
+    imp_rv = LoadFuncs(KRB5_DLL, k5_kfw_32_fi, &hKrb5_KFW_32, 0, 1, 0, 0);
+    /* KFW 3.2 krb5 functions are optional.  No error check. */
+
     memset(&osvi, 0, sizeof(OSVERSIONINFO));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&osvi);
@@ -435,6 +445,8 @@ khm_int32 exit_imports(void) {
         FreeLibrary(hKrb4);
     if (hKrb5)
         FreeLibrary(hKrb5);
+    if (hKrb5_KFW_32)
+        FreeLibrary(hKrb5_KFW_32);
     if (hProfile)
         FreeLibrary(hProfile);
     if (hComErr)
