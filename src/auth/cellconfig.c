@@ -1120,7 +1120,8 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		 * right AFSDB type.  Write down the true cell name that
 		 * the resolver gave us above.
 		 */
-		realCellName = strdup(host);
+		if (!realCellName)
+		    realCellName = strdup(host);
 	    }
 
 	    code = dn_expand(answer, answer + len, p + 2, host, sizeof(host));
@@ -1151,8 +1152,9 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	    if ((strncmp(host + 1, IANAname, strlen(IANAname)) == 0) &&
 		(strncmp(host + strlen(IANAname) + 3, protocol,
 			 strlen(protocol)) == 0)) {
-		realCellName = strdup(host + strlen(IANAname) +
-				      strlen(protocol) + 4);
+		if (!realCellName)
+		    realCellName = strdup(host + strlen(IANAname) +
+					  strlen(protocol) + 4);
 	    }
 
 	    code = dn_expand(answer, answer + len, p + 6, host, sizeof(host));
@@ -1193,17 +1195,18 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	    *p = tolower(*p);
     }
 
-    *arealCellName = realCellName;
-
     *numServers = server_num;
     *ttl = minttl ? (time(0) + minttl) : 0;
 
-    if ( *numServers > 0 )
+    if ( *numServers > 0 ) {
         code =  0;
-    else
+	*arealCellName = realCellName;
+    } else
         code = AFSCONF_NOTFOUND;
 
 findservererror:
+    if (code && realCellName)
+	free(realCellName);
     free(dotcellname);
     return code;
 }
@@ -1244,9 +1247,11 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	    acellInfo->hostAddr[i].sin_family = AF_INET;
 	    acellInfo->hostAddr[i].sin_port = ports[i];
 
-	    if (realCellName)
+	    if (realCellName) {
 		strlcpy(acellInfo->name, realCellName,
 			sizeof(acellInfo->name));
+		free(realCellName);
+	    }
 	}
 	acellInfo->linkedCell = NULL;       /* no linked cell */
 	acellInfo->flags = 0;
