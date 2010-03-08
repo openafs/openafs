@@ -31,8 +31,21 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
-openafs (1.4.11+dfsg-7) UNRELEASED; urgency=low
+openafs (1.4.12~pre4+dfsg-1) UNRELEASED; urgency=low
 
+  * New upstream release candidate.
+    - Enable weak encryption types in aklog and klog.krb5.
+    - Build support for Linux 2.6.33.
+    - Improvements to host tracking safety in the file server.
+    - Fall back to current kernel credentials if we can't use stored ones.
+    - Fix truncation handling in some large file situations.
+    - Further fixes to mmap handling.
+    - Avoid double-free in some FetchData64 error situations.
+    - Stop warning about system call hooks when keyrings are in use.
+    - Flush vcaches when a mount fails to avoid inconsistent data.
+    - New dump tag and length standard for vos dump.
+    - Fix stack executability for programs containing assembly code.
+    - Various salvager robustness fixes.
   * Update init script to require $remote_fs be started first.  This won't
     be the case in the long run, but for now some important boot-time
     options need /usr/bin/fs to set them.
