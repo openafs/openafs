@@ -174,7 +174,7 @@ des: config pinstall
 sys: cmd comerr afs des rx rxstat fsint auth sys_depinstall
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: cmd comerr sys des rx rxkad_depinstall
+rxkad: cmd comerr des rx rxkad_depinstall
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
 auth: cmd comerr comerr des lwp rx rxkad audit sys_depinstall auth_depinstall

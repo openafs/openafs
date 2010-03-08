@@ -29,7 +29,7 @@ fc_test_LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libafsutil.a
 
-all: ${TOP_LIBDIR}/librxkad.a fc_test depinstall
+all: ${TOP_LIBDIR}/librxkad.a depinstall
 
 depinstall: \
 	${TOP_INCDIR}/rx/rxkad.h \
