@@ -55,7 +55,7 @@ openafs (1.4.12~pre4+dfsg-1) UNRELEASED; urgency=low
   * List $syslog in Should-Start for the openafs-client init script, since
     otherwise if loading the module causes a kernel panic, it won't be
     logged to disk.
-  * Update CellServDB to the new 2009-06-29 version.
+  * Update CellServDB to the 2010-02-28 version.
   * Add README.source explaining maintenance procedures and a
     debian/import-upstream script to do a Git-aware merge of a new
     upstream release that will allow us to cherry-pick upstream patches
