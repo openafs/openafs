@@ -2,7 +2,7 @@
 ### BEGIN INIT INFO
 # Provides:             openafs-client
 # Required-Start:       $remote_fs $network $time
-# Required-Stop:        $network
+# Required-Stop:        $remote_fs $network
 # Should-Start:         $syslog
 # X-Stop-After:         autofs
 # Default-Start:        2 3 4 5
