@@ -1147,6 +1147,13 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	}
 	if (type == T_SRV) {
 	    struct hostent *he;
+	    /* math here: _ is 1, _ ._ is 3, _ ._ . is 4. then the domain. */
+	    if ((strncmp(host + 1, IANAname, strlen(IANAname)) == 0) &&
+		(strncmp(host + strlen(IANAname) + 3, protocol,
+			 strlen(protocol)) == 0)) {
+		realCellName = strdup(host + strlen(IANAname) +
+				      strlen(protocol) + 4);
+	    }
 
 	    code = dn_expand(answer, answer + len, p + 6, host, sizeof(host));
 	    if (code < 0) {
