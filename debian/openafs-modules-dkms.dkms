@@ -1,8 +1,8 @@
 # DKMS configuration for the OpenAFS kernel module.  -*- sh -*-
 
-# The version is replaced at build time by debian/rules.
+# The version is replaced at build time by dh_dkms invoked in debian/rules.
 PACKAGE_NAME="openafs"
-PACKAGE_VERSION="@VERSION@"
+PACKAGE_VERSION="#MODULE_VERSION#"
 
 BUILT_MODULE_NAME[0]="$PACKAGE_NAME"
 DEST_MODULE_LOCATION[0]="/updates/dkms/"

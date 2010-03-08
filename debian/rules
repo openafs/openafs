@@ -172,8 +172,6 @@ install-stamp: build-stamp
 	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
 	rm -rf debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/debian
 	rmdir debian/$(srcpkg)/usr/src/modules
-	sed -e 's/[@]VERSION[@]/$(VERSION)/' debian/dkms.conf.in \
-	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
 
 	set -e; for pkg in $(DOC_PACKAGES) ; do \
 	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
@@ -207,6 +205,7 @@ install-stamp: build-stamp
 	install -m 644 debian/openafs-client.NEWS \
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 
+	dh_dkms -V $(VERSION)
 	dh install --after dh_install
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db

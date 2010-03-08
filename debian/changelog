@@ -46,6 +46,9 @@ openafs (1.4.12~pre4+dfsg-1) UNRELEASED; urgency=low
     - New dump tag and length standard for vos dump.
     - Fix stack executability for programs containing assembly code.
     - Various salvager robustness fixes.
+  * Use dh_dkms from the DKMS package to handle creation of the maintainer
+    scripts for openafs-modules-dkms rather than rolling our own.
+    (LP: #497149)
   * Update init script to require $remote_fs be started first.  This won't
     be the case in the long run, but for now some important boot-time
     options need /usr/bin/fs to set them.
