@@ -62,6 +62,7 @@ openafs (1.4.12~pre4+dfsg-1) UNRELEASED; urgency=low
     and do proper merges.
   * Stop linking the openafs-fileserver doc directory to openafs-client so
     that we can provide a separate NEWS.Debian.
+  * Update standards version to 3.8.4 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Tue, 05 Jan 2010 17:03:24 -0800
   
