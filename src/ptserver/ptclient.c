@@ -30,6 +30,7 @@
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
 #include "display.h"
 #include <afs/afsutil.h>
@@ -42,6 +43,8 @@ char *whoami;
 
 #ifndef AFS_PTHREAD_ENV
 extern struct ubik_client *pruclient;
+static void skip(char **);
+static void PrintHelp(void);
 #endif
 
 static int ignoreExist = 0;
@@ -163,7 +166,8 @@ main(int argc, char **argv)
     char name[PR_MAXNAMELEN];
     afs_int32 id, oid = ANONYMOUSID, gid;
     afs_int32 pos;
-    int i;
+    unsigned int i;
+    int n;
     struct prentry entry;
     prlist alist;
     idlist lid;
@@ -195,30 +199,30 @@ main(int argc, char **argv)
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
     cell = 0;
-    i = 1;
-    while (i < argc) {
-	int arglen = strlen(argv[i]);
+    n = 1;
+    while (n < argc) {
+	int arglen = strlen(argv[n]);
 	char arg[256];
-	lcstring(arg, argv[i], sizeof(arg));
+	lcstring(arg, argv[n], sizeof(arg));
 #define IsArg(a) (strncmp (arg,a, arglen) == 0)
 	if (IsArg("-testconfdir"))
-	    strncpy(confdir, argv[++i], sizeof(confdir));
+	    strncpy(confdir, argv[++n], sizeof(confdir));
 	else if (IsArg("client"))
 	    strncpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confdir));
 	else if (IsArg("server"))
 	    strncpy(confdir, AFSDIR_SERVER_ETC_DIRPATH, sizeof(confdir));
 	else if (IsArg("0") || IsArg("1") || IsArg("2"))
-	    security = atoi(argv[i]);
+	    security = atoi(argv[n]);
 	else if (IsArg("-ignoreexist"))
 	    ignoreExist++;
 	else if (IsArg("-cell"))
-	    cell = argv[++i];
+	    cell = argv[++n];
 	else {
 	    printf
 		("Usage is: 'prclient [-testconfdir <dir> | server | client] [0 | 1 | 2] [-ignoreExist] [-cell <cellname>]\n");
 	    exit(1);
 	}
-	i++;
+	n++;
     }
 
     printf("Using CellServDB file in %s\n", confdir);
@@ -301,7 +305,7 @@ main(int argc, char **argv)
 	    if (GetInt32(&pos))
 		code = PRBADARG;
 	    else
-		code = ubik_PR_DumpEntry(pruclient, 0, pos, &entry);
+		code = ubik_PR_DumpEntry(pruclient, 0, pos, (struct prdebugentry *)&entry);
 	    if (CodeOk(code))
 		printf("%s\n", pr_ErrorMsg(code));
 	    if (code == PRSUCCESS) {
@@ -467,7 +471,7 @@ main(int argc, char **argv)
 	    else if (!(hostinfo = gethostbyname(name)))
 		code = PRBADARG;
 	    else {
-		hostaddr = hostinfo->h_addr_list[0];
+		hostaddr = (struct in_addr *)hostinfo->h_addr_list[0];
 		id = ntohl(hostaddr->s_addr);
 		code =
 		    ubik_PR_GetHostCPS(pruclient, 0, id, &alist, &over);
@@ -703,7 +707,8 @@ main(int argc, char **argv)
 }
 
 
-PrintHelp()
+static void
+PrintHelp(void)
 {
     printf("cr name id owner - create entry with name and id.\n");
     printf("wh id  - what is the offset into database for id?\n");
@@ -732,9 +737,8 @@ PrintHelp()
     printf("q - quit.\n?- this message.\n");
 }
 
-
-skip(s)
-     char **s;
+static void
+skip(char **s)
 {
     while (**s != ' ' && **s != '\0')
 	(*s)++;

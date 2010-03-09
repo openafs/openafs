@@ -1181,11 +1181,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 void
 afsi_SetServerIPRank(sa, ifa)
      struct srvAddr *sa;
-#ifdef AFS_DARWIN80_ENV
-     ifaddr_t ifa;
-#else
-     struct ifaddr *ifa;
-#endif
+     rx_ifaddr_t ifa;
 {
     struct sockaddr sout;
     struct sockaddr_in *sin;
@@ -1194,9 +1190,9 @@ afsi_SetServerIPRank(sa, ifa)
     afs_uint32 subnetmask, myAddr, myNet, myDstaddr, mySubnet, netMask;
     afs_uint32 serverAddr;
 
-    if (ifaddr_address_family(ifa) != AF_INET)
+    if (rx_ifaddr_address_family(ifa) != AF_INET)
 	return;
-    t = ifaddr_address(ifa, &sout, sizeof(sout));
+    t = rx_ifaddr_address(ifa, &sout, sizeof(sout));
     if (t == 0) {
 	sin = (struct sockaddr_in *)&sout;
 	myAddr = ntohl(sin->sin_addr.s_addr);	/* one of my IP addr in host order */
@@ -1204,14 +1200,14 @@ afsi_SetServerIPRank(sa, ifa)
 	myAddr = 0;
     }
     serverAddr = ntohl(sa->sa_ip);	/* server's IP addr in host order */
-    t = ifaddr_netmask(ifa, &sout, sizeof(sout));
+    t = rx_ifaddr_netmask(ifa, &sout, sizeof(sout));
     if (t == 0) {
 	sin = (struct sockaddr_in *)&sout;
 	subnetmask = ntohl(sin->sin_addr.s_addr);	/* subnet mask in host order */
     } else {
 	subnetmask = 0;
     }
-    t = ifaddr_dstaddress(ifa, &sout, sizeof(sout));
+    t = rx_ifaddr_dstaddress(ifa, &sout, sizeof(sout));
     if (t == 0) {
 	sin = (struct sockaddr_in *)&sout;
 	myDstaddr = sin->sin_addr.s_addr;
@@ -1236,20 +1232,20 @@ afsi_SetServerIPRank(sa, ifa)
 	    if (serverAddr == myAddr) {	/* same machine */
 		sa->sa_iprank = afs_min(sa->sa_iprank, TOPR);
 	    } else {		/* same subnet */
-		sa->sa_iprank = afs_min(sa->sa_iprank, HI + ifnet_metric(ifaddr_ifnet(ifa)));
+		sa->sa_iprank = afs_min(sa->sa_iprank, HI + rx_ifnet_metric(rx_ifaddr_ifnet(ifa)));
 	    }
 	} else {		/* same net */
-	    sa->sa_iprank = afs_min(sa->sa_iprank, MED + ifnet_metric(ifaddr_ifnet(ifa)));
+	    sa->sa_iprank = afs_min(sa->sa_iprank, MED + rx_ifnet_metric(rx_ifaddr_ifnet(ifa)));
 	}
     }
 #ifdef  IFF_POINTTOPOINT
     /* check for case #4 -- point-to-point link */
-    if ((ifnet_flags(ifaddr_ifnet(ifa)) & IFF_POINTOPOINT)
+    if ((rx_ifnet_flags(rx_ifaddr_ifnet(ifa)) & IFF_POINTOPOINT)
 	&& (myDstaddr == serverAddr)) {
-	if (ifnet_metric(ifaddr_ifnet(ifa)) >= (MAXDEFRANK - MED) / PPWEIGHT)
+	if (rx_ifnet_metric(rx_ifaddr_ifnet(ifa)) >= (MAXDEFRANK - MED) / PPWEIGHT)
 	    t = MAXDEFRANK;
 	else
-	    t = MED + (PPWEIGHT << ifnet_metric(ifaddr_ifnet(ifa)));
+	    t = MED + (PPWEIGHT << rx_ifnet_metric(rx_ifaddr_ifnet(ifa)));
 	if (sa->sa_iprank > t)
 	    sa->sa_iprank = t;
 	}
@@ -1409,7 +1405,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 #endif /* AFS_SUN510_ENV */
 #else
 #ifndef USEIFADDR
-    struct ifnet *ifn = NULL;
+    rx_ifnet_t ifn = NULL;
     struct in_ifaddr *ifad = (struct in_ifaddr *)0;
     struct sockaddr_in *sin;
 
@@ -1479,12 +1475,12 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	errno_t t;
 	unsigned int count;
 	int cnt=0, m, j;
-	ifaddr_t *ifads;
-	ifnet_t *ifn;
+	rx_ifaddr_t *ifads;
+	rx_ifnet_t *ifns;
 
-	if (!ifnet_list_get(AF_INET, &ifn, &count)) {
+	if (!ifnet_list_get(AF_INET, &ifns, &count)) {
 	    for (m = 0; m < count; m++) {
-		if (!ifnet_get_address_list(ifn[m], &ifads)) {
+		if (!ifnet_get_address_list(ifns[m], &ifads)) {
 		    for (j = 0; ifads[j] != NULL && cnt < ADDRSPERSITE; j++) {
 			afsi_SetServerIPRank(sa, ifads[j]);
 			cnt++;
@@ -1492,13 +1488,13 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 		    ifnet_free_address_list(ifads);
 		}
 	    }
-	    ifnet_list_free(ifn);
+	    ifnet_list_free(ifns);
 	}
     }
 #elif defined(AFS_DARWIN60_ENV)
     {
-	struct ifnet *ifn;
-	struct ifaddr *ifa;
+	rx_ifnet_t ifn;
+	rx_ifaddr_t ifa;
 	  TAILQ_FOREACH(ifn, &ifnet, if_link) {
 	    TAILQ_FOREACH(ifa, &ifn->if_addrhead, ifa_link) {
 		afsi_SetServerIPRank(sa, ifa);

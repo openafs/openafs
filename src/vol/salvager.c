@@ -198,7 +198,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	Testing = 1;
     if (as->parms[4].items)	/* -inodes */
 	ListInodeOption = 1;
-    if (as->parms[5].items)	/* -force */
+    if (as->parms[5].items || as->parms[20].items)	/* -force, -f */
 	ForceSalvage = 1;
     if (as->parms[6].items)	/* -oktozap */
 	OKToZap = 1;
@@ -503,6 +503,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-forceDAFS", CMD_FLAG, CMD_OPTIONAL,
 		"For Demand Attach Fileserver, permit a manual volume salvage outside of the salvageserver");
 #endif /* FAST_RESTART */
+    cmd_Seek(ts, 20);
+    cmd_AddParm(ts, "-f", CMD_FLAG, CMD_OPTIONAL, "Alias for -force");
     err = cmd_Dispatch(argc, argv);
     Exit(err);
     return 0; /* not reached */

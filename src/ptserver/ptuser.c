@@ -62,12 +62,12 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc = NULL;
     static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
-    struct ktc_token ttoken;
     afs_int32 scIndex;
+    afs_int32 secFlags;
     static struct afsconf_cell info;
     afs_int32 i;
 #if !defined(UKERNEL)
@@ -168,66 +168,39 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	return code;
     }
 
-    scIndex = secLevel;
-    sc[0] = 0;
-    sc[1] = 0;
-    sc[2] = 0;
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
     if (secLevel == 2) {
 	code = afsconf_GetLatestKey(tdir, 0, 0);
 	if (code) {
-	    afs_com_err(whoami, code, 
-			"(getting key from local KeyFile)\n");
-	    scIndex = 0; /* use noauth */
+	    afs_com_err(whoami, code, "(getting key from local KeyFile)\n");
 	} else {
 	    /* If secLevel is two assume we're on a file server and use
 	     * ClientAuthSecure if possible. */
-	    code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-	    if (code) {
-		afs_com_err(whoami, code,
-			    "(calling client secure)\n");
-		scIndex = 0;	/* use noauth */
-	    }
+	    code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
+	    if (code)
+		afs_com_err(whoami, code, "(calling client secure)\n");
         }
-	if (scIndex != 2)
-	    /* if there was a problem, an unauthenticated conn is returned */
-	    sc[scIndex] = sc[2];
     } else if (secLevel > 0) {
-	struct ktc_principal sname;
-	strcpy(sname.cell, info.name);
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+	secFlags = 0;
+	if (secLevel > 1)
+	    secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
+
+	code = afsconf_ClientAuthToken(&info, secFlags, &sc, &scIndex, NULL);
 	if (code) {
 	    afs_com_err(whoami, code, "(getting token)");
 	    if (secLevel > 1)
 		return code;
-	    scIndex = 0;
-	} else {
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
-		/* this is a kerberos ticket, set scIndex accordingly */
-		scIndex = 2;
-	    else {
-		fprintf(stderr,
-			"%s: funny kvno (%d) in ticket, proceeding\n",
-			whoami, ttoken.kvno);
-		scIndex = 2;
-	    }
-	    sc[2] =
-		rxkad_NewClientSecurityObject((secLevel > 1) ? rxkad_crypt :
-					      rxkad_clear, &ttoken.sessionKey,
-					      ttoken.kvno, ttoken.ticketLen,
-					      ttoken.ticket);
 	}
     }
 
-    if (scIndex == 1)
-	return PRBADARG;
-    if ((scIndex == 0) && (sc[0] == 0))
-	sc[0] = rxnull_NewClientSecurityObject();
-    if ((scIndex == 0) && (secLevel != 0))
+    if (sc == NULL) {
+	sc = rxnull_NewClientSecurityObject();
+        scIndex = RX_SECIDX_NULL;
+    }
+
+    if ((scIndex == RX_SECIDX_NULL) && (secLevel != 0))
 	fprintf(stderr,
 		"%s: Could not get afs tokens, running unauthenticated\n",
 		whoami);
@@ -236,7 +209,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     for (i = 0; i < info.numServers; i++)
 	serverconns[i] =
 	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
+			     info.hostAddr[i].sin_port, PRSRV, sc,
 			     scIndex);
 
     code = ubik_ClientInit(serverconns, &pruclient);
@@ -246,7 +219,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     }
     lastLevel = scIndex;
 
-    code = rxs_Release(sc[scIndex]);
+    code = rxs_Release(sc);
     return code;
 }
 
@@ -338,7 +311,7 @@ pr_AddToGroup(char *user, char *group)
     idlist lids;
 
     lnames.namelist_len = 2;
-    lnames.namelist_val = (prname *) xdr_alloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], group, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -357,9 +330,9 @@ pr_AddToGroup(char *user, char *group)
 		  lids.idlist_val[1]);
   done:
     if (lnames.namelist_val)
-	xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
-    if (lids.idlist_val)
-	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
+	free(lnames.namelist_val);
+
+    xdr_free((xdrproc_t) xdr_idlist, &lids);
     return code;
 }
 
@@ -371,7 +344,7 @@ pr_RemoveUserFromGroup(char *user, char *group)
     idlist lids;
 
     lnames.namelist_len = 2;
-    lnames.namelist_val = (prname *) xdr_alloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], group, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -390,11 +363,11 @@ pr_RemoveUserFromGroup(char *user, char *group)
 		  lids.idlist_val[1]);
   done:
     if (lnames.namelist_val)
-	xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
-    if (lids.idlist_val)
-	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
-    return code;
+	free(lnames.namelist_val);
 
+    xdr_free((xdrproc_t) xdr_idlist, &lids);
+
+    return code;
 }
 
 int
@@ -419,16 +392,16 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
     lids.idlist_len = 0;
     lids.idlist_val = 0;
     lnames.namelist_len = 1;
-    lnames.namelist_val = (prname *) xdr_alloc(PR_MAXNAMELEN);
+    lnames.namelist_val = malloc(PR_MAXNAMELEN);
     stolower(name);
     strncpy(lnames.namelist_val[0], name, PR_MAXNAMELEN);
     code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);
     if (lids.idlist_val) {
 	*id = *lids.idlist_val;
-	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
+	xdr_free((xdrproc_t) xdr_idlist, &lids);
     }
     if (lnames.namelist_val)
-	xdr_free(lnames.namelist_val, PR_MAXNAMELEN);
+	free(lnames.namelist_val);
     return code;
 }
 
@@ -449,17 +422,20 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
     register afs_int32 code;
 
     lids.idlist_len = 1;
-    lids.idlist_val = (afs_int32 *) xdr_alloc(sizeof(afs_int32));
+    lids.idlist_val = malloc(sizeof(afs_int32));
     *lids.idlist_val = id;
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
     code = ubik_PR_IDToName(pruclient, 0, &lids, &lnames);
-    if (lnames.namelist_val) {
+
+    if (lnames.namelist_val)
 	strncpy(name, lnames.namelist_val[0], PR_MAXNAMELEN);
-	xdr_free(lnames.namelist_val, PR_MAXNAMELEN);
-    }
+
     if (lids.idlist_val)
-	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
+	free(lids.idlist_val);
+
+    xdr_free((xdrproc_t) xdr_namelist, &lnames);
+
     return code;
 }
 
@@ -554,12 +530,14 @@ pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
 		oid);
 	*moreP = 0;
     }
-    lids = (idlist *) & alist;
+    lids = (idlist *) &alist;
     code = pr_IdToName(lids, lnames);
+
+    xdr_free((xdrproc_t) xdr_prlist, &alist);
+
     if (code)
 	return code;
-    if (alist.prlist_val)
-	xdr_free(alist.prlist_val, alist.prlist_len * sizeof(alist.prlist_val[0]));
+
     return PRSUCCESS;
 }
 
@@ -580,12 +558,13 @@ pr_IDListMembers(afs_int32 gid, namelist *lnames)
 	fprintf(stderr, "membership list for id %d exceeds display limit\n",
 		gid);
     }
-    lids = (idlist *) & alist;
+    lids = (idlist *) &alist;
     code = pr_IdToName(lids, lnames);
+
+    xdr_free((xdrproc_t) xdr_prlist, &alist);
+
     if (code)
 	return code;
-    if (alist.prlist_val)
-	xdr_free(alist.prlist_val, alist.prlist_len * sizeof(alist.prlist_val[0]));
     return PRSUCCESS;
 }
 
@@ -704,7 +683,7 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
     stolower(uname);
     stolower(gname);
     lnames.namelist_len = 2;
-    lnames.namelist_val = (prname *) xdr_alloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], uname, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], gname, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -712,18 +691,16 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
     code = pr_NameToId(&lnames, &lids);
     if (code) {
 	if (lnames.namelist_val)
-	    xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
-	if (lids.idlist_val)
-	    xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
+	    free(lnames.namelist_val);
+	xdr_free((xdrproc_t) xdr_idlist, &lids);
 	return code;
     }
     code =
 	ubik_PR_IsAMemberOf(pruclient, 0, lids.idlist_val[0],
 		  lids.idlist_val[1], flag);
     if (lnames.namelist_val)
-	xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
-    if (lids.idlist_val)
-	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
+	free(lnames.namelist_val);
+    xdr_free((xdrproc_t) xdr_idlist, &lids);
     return code;
 }
 

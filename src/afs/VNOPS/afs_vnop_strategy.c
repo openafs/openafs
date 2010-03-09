@@ -40,6 +40,8 @@ int afs_ustrategy(register struct buf *abp)
     register afs_int32 len = abp->b_bcount;
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp;
+#elif defined(UKERNEL)
+    afs_ucred_t *credp = get_user_struct()->u_cred;
 #elif !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
     afs_ucred_t *credp = u.u_cred;
 #endif

@@ -56,12 +56,14 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
 #if defined(STRUCT_TASK_HAS_CRED)
     /* Use stashed credentials - prevent selinux/apparmor problems  */
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
+    if (IS_ERR(filp))
+	filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
 #else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
     if (IS_ERR(filp))
 #if defined(LINUX_USE_FH)
-	osi_Panic("Can't open file\n");
+	osi_Panic("Can't open file: %d\n", (int) PTR_ERR(filp));
 #else
 	osi_Panic("Can't open inode %d\n", (int) ainode->ufs);
 #endif
@@ -386,8 +388,10 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 
     /* seek to the desired position. Return -1 on error. */
     if (filp->f_op->llseek) {
-	if (filp->f_op->llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset)
-	    return -1;
+	if (filp->f_op->llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset) {
+	    code = -1;
+	    goto out;
+	}
     } else
 	filp->f_pos = uiop->uio_offset;
 
@@ -425,6 +429,7 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	code = 0;
     }
 
+out:
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_KERNEL_SPACE();
 

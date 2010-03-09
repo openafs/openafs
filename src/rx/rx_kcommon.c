@@ -122,46 +122,6 @@ rxi_GetUDPSocket(u_short port)
     return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 }
 
-#if !defined(AFS_LINUX26_ENV)
-void
-#ifdef AFS_AIX_ENV
-osi_Panic(char *msg, void *a1, void *a2, void *a3)
-#else
-osi_Panic(char *msg, ...)
-#endif
-{
-#ifdef AFS_AIX_ENV
-    if (!msg)
-        msg = "Unknown AFS panic";
-    printf(msg, a1, a2, a3);
-    panic(msg);
-#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
-    char buf[256];
-    va_list ap;
-    if (!msg)
-	msg = "Unknown AFS panic";
-
-    va_start(ap, msg);
-    vsnprintf(buf, sizeof(buf), msg, ap);
-    va_end(ap);
-    printf(buf);
-    panic(buf);
-#else
-    va_list ap;
-    if (!msg)
-	msg = "Unknown AFS panic";
-
-    va_start(ap, msg);
-    vprintf(msg, ap);
-    va_end(ap);
-# ifdef AFS_LINUX20_ENV
-    * ((char *) 0) = 0; 
-# else
-    panic(msg);
-# endif
-#endif
-}
-
 /*
  * osi_utoa() - write the NUL-terminated ASCII decimal form of the given
  * unsigned long value into the given buffer.  Returns 0 on success,
@@ -232,6 +192,7 @@ osi_utoa(char *buf, size_t len, unsigned long val)
     return 0;
 }
 
+#ifndef AFS_LINUX26_ENV
 /*
  * osi_AssertFailK() -- used by the osi_Assert() macro.
  *
@@ -282,7 +243,7 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 
 #undef ADDBUF
 
-    osi_Panic(buf);
+    osi_Panic("%s", buf);
 }
 #else
 void
@@ -437,7 +398,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #  else /* AFS_USERSPACE_IP_ADDR */
-    AFS_IFNET_T ifn;
+    rx_ifnet_t ifn;
 
 #   if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)
@@ -450,7 +411,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	/* pp->timeout.usec = 0; */
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 #   ifdef IFF_POINTOPOINT
-	if (ifnet_flags(ifn) & IFF_POINTOPOINT) {
+	if (rx_ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
 	    pp->timeout.sec = 4;
 	    pp->ifMTU = RX_PP_PACKET_SIZE;
@@ -458,8 +419,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 #   endif /* IFF_POINTOPOINT */
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
-	if (ifnet_mtu(ifn) > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
-	    rxmtu = ifnet_mtu(ifn) - RX_IPUDP_SIZE;
+	if (rx_ifnet_mtu(ifn) > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
+	    rxmtu = rx_ifnet_mtu(ifn) - RX_IPUDP_SIZE;
 	    if (rxmtu < pp->ifMTU)
 		pp->ifMTU = rxmtu;
 	}
@@ -672,27 +633,27 @@ rxi_GetIFInfo(void)
     errno_t t;
     unsigned int count;
     int cnt=0, m, j;
-    ifaddr_t *ifads;
-    ifnet_t *ifn;
+    rx_ifaddr_t *ifads;
+    rx_ifnet_t *ifns;
     struct sockaddr sout;
     struct sockaddr_in *sin;
     struct in_addr pin;
 #else
-    struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
-    struct ifnet *ifn;
+    rx_ifaddr_t ifad;	/* ifnet points to a if_addrlist of ifaddrs */
+    rx_ifnet_t ifn;
 #endif
 
     memset(addrs, 0, sizeof(addrs));
     memset(mtus, 0, sizeof(mtus));
 
 #if defined(AFS_DARWIN80_ENV)
-    if (!ifnet_list_get(AF_INET, &ifn, &count)) {
+    if (!ifnet_list_get(AF_INET, &ifns, &count)) {
 	for (m = 0; m < count; m++) {
-	    if (!ifnet_get_address_list(ifn[m], &ifads)) {
+	    if (!ifnet_get_address_list(ifns[m], &ifads)) {
 		for (j = 0; ifads[j] != NULL && cnt < ADDRSPERSITE; j++) {
 		    if ((t = ifaddr_address(ifads[j], &sout, sizeof(struct sockaddr))) == 0) {
 			sin = (struct sockaddr_in *)&sout;
-			rxmtu = ifnet_mtu(ifaddr_ifnet(ifads[j])) - RX_IPUDP_SIZE;
+			rxmtu = rx_ifnet_mtu(rx_ifaddr_ifnet(ifads[j])) - RX_IPUDP_SIZE;
 			ifinaddr = ntohl(sin->sin_addr.s_addr);
 			if (myNetAddrs[i] != ifinaddr) {
 			    different++;
@@ -717,7 +678,7 @@ rxi_GetIFInfo(void)
 		ifnet_free_address_list(ifads);
 	    }
 	}
-	ifnet_list_free(ifn);
+	ifnet_list_free(ifns);
     }
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
@@ -784,45 +745,27 @@ rxi_GetIFInfo(void)
 
 #if defined(AFS_DARWIN60_ENV) || defined(AFS_XBSD_ENV)
 /* Returns ifnet which best matches address */
-#ifdef AFS_DARWIN80_ENV
-ifnet_t
-#else
-struct ifnet *
-#endif
+rx_ifnet_t
 rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 {
     struct sockaddr_in s, sr;
-#ifdef AFS_DARWIN80_ENV
-    ifaddr_t ifad;
-#else
-    struct ifaddr *ifad;
-#endif
+    rx_ifaddr_t ifad;
 
     s.sin_family = AF_INET;
     s.sin_addr.s_addr = addr;
-#ifdef AFS_DARWIN80_ENV
-    ifad = ifaddr_withnet((struct sockaddr *)&s);
-#else
-    ifad = ifa_ifwithnet((struct sockaddr *)&s);
-#endif
+    ifad = rx_ifaddr_withnet((struct sockaddr *)&s);
 
-#ifdef AFS_DARWIN80_ENV
     if (ifad && maskp) {
-	ifaddr_netmask(ifad, (struct sockaddr *)&sr, sizeof(sr));
+	rx_ifaddr_netmask(ifad, (struct sockaddr *)&sr, sizeof(sr));
 	*maskp = sr.sin_addr.s_addr;
     }
-    return (ifad ? ifaddr_ifnet(ifad) : NULL);
-#else
-    if (ifad && maskp)
-	*maskp = ((struct sockaddr_in *)ifad->ifa_netmask)->sin_addr.s_addr;
-    return (ifad ? ifad->ifa_ifp : NULL);
-#endif
+    return (ifad ? rx_ifaddr_ifnet(ifad) : NULL);
 }
 
 #else /* DARWIN60 || XBSD */
 
 /* Returns ifnet which best matches address */
-struct ifnet *
+rx_ifnet_t
 rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 {
     int match_value = 0;
@@ -1092,6 +1035,20 @@ rxk_FreeSocket(struct socket *asocket)
 #endif /* !SUN5 && !LINUX20 */
 
 #if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_DARWIN80_ENV
+/* Shutting down should wake us up, as should an earlier event. */
+void
+rxi_ReScheduleEvents(void)
+{
+    /* needed to allow startup */
+    int glock = ISAFS_GLOCK();
+    if (!glock)
+	AFS_GLOCK();
+    osi_rxWakeup(&afs_termState);
+    if (!glock)
+        AFS_GUNLOCK();
+}
+#endif
 /*
  * Run RX event daemon every second (5 times faster than rest of systems)
  */
@@ -1115,7 +1072,12 @@ afs_rxevent_daemon(void)
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before afs_osi_Wait()");
 #endif
+#ifdef AFS_DARWIN80_ENV
+	afs_osi_TimedSleep(&afs_termState, MAX(500, ((temp.sec * 1000) +
+						     (temp.usec / 1000))), 0);
+#else
 	afs_osi_Wait(500, NULL, 0);
+#endif
 #ifdef RX_KERNEL_TRACE
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "after afs_osi_Wait()");
@@ -1342,5 +1304,45 @@ osi_StopListener(void)
 }
 #endif
 #endif /* RXK_LISTENER_ENV */
-
 #endif /* !NCR && !UKERNEL */
+
+#if !defined(AFS_LINUX26_ENV)
+void
+#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+osi_Panic(char *msg, void *a1, void *a2, void *a3)
+#else
+osi_Panic(char *msg, ...)
+#endif
+{
+#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+    if (!msg)
+        msg = "Unknown AFS panic";
+    printf(msg, a1, a2, a3);
+    panic(msg);
+#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
+    char buf[256];
+    va_list ap;
+    if (!msg)
+	msg = "Unknown AFS panic";
+
+    va_start(ap, msg);
+    vsnprintf(buf, sizeof(buf), msg, ap);
+    va_end(ap);
+    printf(buf);
+    panic(buf);
+#else
+    va_list ap;
+    if (!msg)
+	msg = "Unknown AFS panic";
+
+    va_start(ap, msg);
+    vprintf(msg, ap);
+    va_end(ap);
+# ifdef AFS_LINUX20_ENV
+    * ((char *) 0) = 0; 
+# else
+    panic(msg);
+# endif
+#endif
+}
+#endif

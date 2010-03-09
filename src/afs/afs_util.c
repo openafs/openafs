@@ -206,7 +206,7 @@ afs_CheckLocks(void)
     register int i;
 
     afs_warn("Looking for locked data structures.\n");
-    afs_warn("conn %lx, volume %lx, user %lx, cell %lx, server %lx\n", &afs_xconn,
+    afs_warn("conn %p, volume %p, user %p, cell %p, server %p\n", &afs_xconn,
 	     &afs_xvolume, &afs_xuser, &afs_xcell, &afs_xserver);
     {
 	register struct vcache *tvc;
@@ -220,9 +220,9 @@ afs_CheckLocks(void)
 #else
 		if (VREFCOUNT(tvc))
 #endif
-		    afs_warn("Stat cache entry at %x is held\n", tvc);
+		    afs_warn("Stat cache entry at %p is held\n", tvc);
 		if (CheckLock(&tvc->lock))
-		    afs_warn("Stat entry at %x is locked\n", tvc);
+		    afs_warn("Stat entry at %p is locked\n", tvc);
 	    }
 	}
     }
@@ -232,10 +232,10 @@ afs_CheckLocks(void)
 	    tdc = afs_indexTable[i];
 	    if (tdc) {
 		if (tdc->refCount)
-		    afs_warn("Disk entry %d at %x is held\n", i, tdc);
+		    afs_warn("Disk entry %d at %p is held\n", i, tdc);
 	    }
 	    if (afs_indexFlags[i] & IFDataMod)
-		afs_warn("Disk entry %d at %x has IFDataMod flag set.\n", i,
+		afs_warn("Disk entry %d at %p has IFDataMod flag set.\n", i,
 			 tdc);
 	}
     }
@@ -246,11 +246,11 @@ afs_CheckLocks(void)
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
-		    printf("Server entry %lx is marked down\n", (unsigned long)ts);
+		    printf("Server entry %p is marked down\n", ts);
 		for (sa = ts->addr; sa; sa = sa->next_sa) {
 		    for (tc = sa->conns; tc; tc = tc->next) {
 			if (tc->refCount)
-			    afs_warn("conn at %x (server %x) is held\n", tc,
+			    afs_warn("conn at %p (server %x) is held\n", tc,
 				     sa->sa_ip);
 		    }
 		}
@@ -262,9 +262,9 @@ afs_CheckLocks(void)
 	for (i = 0; i < NVOLS; i++) {
 	    for (tv = afs_volumes[i]; tv; tv = tv->next) {
 		if (CheckLock(&tv->lock))
-		    afs_warn("volume at %x is locked\n", tv);
+		    afs_warn("volume at %p is locked\n", tv);
 		if (tv->refCount)
-		    afs_warn("volume at %x is held\n", tv);
+		    afs_warn("volume at %p is held\n", tv);
 	    }
 	}
     }

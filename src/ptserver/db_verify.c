@@ -1295,7 +1295,8 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     n = eof / sizeof(struct prentry);
     if ((eof < 0) || (n * sizeof(struct prentry) != eof)) {
 	code = PRDBBAD;
-	afs_com_err(whoami, code, "eof ptr no good: eof=%d, sizeof(prentry)=%d",
+	afs_com_err(whoami, code,
+		    "eof ptr no good: eof=%d, sizeof(prentry)=%" AFS_SIZET_FMT,
 		eof, sizeof(struct prentry));
       abort:
 	return code;

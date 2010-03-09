@@ -40,10 +40,14 @@ extern int serverLogSyslog;
 extern int serverLogSyslogFacility;
 extern char *serverLogSyslogTag;
 #endif
-extern void vFSLog(const char *format, va_list args);
+extern void vFSLog(const char *format, va_list args)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 0);
+
 extern void SetLogThreadNumProgram(int (*func) (void) );
 
-/*@printflike@*/ extern void FSLog(const char *format, ...);
+extern void FSLog(const char *format, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+
 #define ViceLog(level, str)  do { if ((level) <= LogLevel) (FSLog str); } while (0)
 #define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str); } while (0)
 
@@ -54,26 +58,31 @@ extern void SetupLogSignals(void);
 extern int
 afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 	      va_list ap)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 0)
     /*@requires maxSet(p) >= (avail-1)@ */
     /*@modifies p@ */ ;
 
 extern /*@printflike@ */ int
-afs_snprintf( /*@out@ */ char *p, size_t avail,
-		    const char *fmt, ...)
+afs_snprintf( /*@out@ */ char *p, size_t avail, const char *fmt, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4)
     /*@requires maxSet(p) >= (avail-1)@ */
     /*@modifies p@ */ ;
 
 extern int
-afs_vasnprintf (char **ret, size_t max_sz, const char *format, va_list args);
+afs_vasnprintf (char **ret, size_t max_sz, const char *format, va_list args)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 0);
 
 extern int
-afs_vasprintf (char **ret, const char *format, va_list args);
+afs_vasprintf (char **ret, const char *format, va_list args)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 2, 0);
 
 extern int
-afs_asprintf (char **ret, const char *format, ...);
+afs_asprintf (char **ret, const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
 
 extern int
-afs_asnprintf (char **ret, size_t max_sz, const char *format, ...);
+afs_asnprintf (char **ret, size_t max_sz, const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
 
 /* special version of ctime that clobbers a *different static variable, so
  * that ViceLog can call ctime and not cause buffer confusion.

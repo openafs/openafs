@@ -150,20 +150,20 @@ struct afs_icl_log {
  */
 extern int afs_icl_sizeofLong;
 
-#define ICL_SIZEHACK(t1, p1) \
+#define ICL_SIZEHACK(t1, p1, ts1, rs1)		\
     MACRO_BEGIN \
 	if ((t1) == ICL_TYPE_STRING) { \
-	    tsize = (int)((unsigned)(strlen((char *)(p1)) + 4) >> 2); \
+	    ts1 = (int)((unsigned)(strlen((char *)(p1)) + 4) >> 2); \
 	} else if ((t1) == ICL_TYPE_HYPER  || (t1) == ICL_TYPE_INT64) \
-	    tsize = 2; \
+	    ts1 = 2; \
 	else if ((t1) == ICL_TYPE_FID) \
-	    tsize = 4; \
+	    ts1 = 4; \
 	else if ((t1) == ICL_TYPE_INT32) \
-	    tsize = 1; \
+	    ts1 = 1; \
 	else \
-	    tsize = afs_icl_sizeofLong; \
+	    ts1 = afs_icl_sizeofLong; \
 	/* now add in the parameter */ \
-	rsize += tsize; \
+	rs1 += ts1; \
     MACRO_END
 
 /* log flags */

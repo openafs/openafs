@@ -143,6 +143,16 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 	flock->l_pid = getpid();
     }
 }
+#elif defined(UKERNEL)
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
+{
+    if (slp) {
+	slp->pid = get_user_struct()->u_procp->p_pid;
+    } else {
+	flock->l_pid = get_user_struct()->u_procp->p_pid;
+    }
+}
 #else
 void
 lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
@@ -177,7 +187,9 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI64_ENV
     afs_proc_t *procp = curprocp;
-#else /* AFS_SGI64_ENV */
+#elif defined(UKERNEL)
+    afs_proc_t *procp = get_user_struct()->u_procp;
+#else
     afs_proc_t *procp = u.u_procp;
 #endif /* AFS_SGI64_ENV */
 #endif

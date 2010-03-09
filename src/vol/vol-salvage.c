@@ -880,7 +880,18 @@ DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
     if (!Showmode)
 	Log("The volume header file %s is not associated with any actual data (%sdeleted)\n", path, (Testing ? "would have been " : ""));
     if (!Testing) {
-	if (unlink(path)) {
+	afs_int32 code;
+	code = VDestroyVolumeDiskHeader(fileSysPartition, vsp->header.id, vsp->header.parent);
+	if (code) {
+	    Log("Error %ld destroying volume disk header for volume %lu\n",
+	        afs_printable_int32_ld(code),
+	        afs_printable_uint32_lu(vsp->header.id));
+	}
+
+	/* make sure we actually delete the fileName file; ENOENT
+	 * is fine, since VDestroyVolumeDiskHeader probably already
+	 * unlinked it */
+	if (unlink(path) && errno != ENOENT) {
 	    Log("Unable to unlink %s (errno = %d)\n", path, errno);
 	}
     }
@@ -1687,11 +1698,11 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 			register struct ViceInodeInfo *inodes, int RW,
 			int check, int *deleteMe)
 {
-    int headerFd = 0;
     int i;
     register struct ViceInodeInfo *ip;
     int allinodesobsolete = 1;
     struct VolumeDiskHeader diskHeader;
+    afs_int32 (*writefunc)(VolumeDiskHeader_t *, struct DiskPartition64 *) = NULL;
     int *skip;
 
     /* keeps track of special inodes that are probably 'good'; they are
@@ -1872,11 +1883,11 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    Log("No header file for volume %u; %screating %s\n",
 		isp->volumeId, (Testing ? "it would have been " : ""),
 		path);
-	headerFd = afs_open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
-	assert(headerFd != -1);
 	isp->volSummary = (struct VolumeSummary *)
 	    malloc(sizeof(struct VolumeSummary));
 	isp->volSummary->fileName = ToString(headerName);
+
+	writefunc = VCreateVolumeDiskHeader;
     } else {
 	char path[64];
 	char headerName[64];
@@ -1901,11 +1912,10 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    if (check)
 		return -1;
 
-	    headerFd = afs_open(path, O_RDWR | O_TRUNC, 0644);
-	    assert(headerFd != -1);
+	    writefunc = VWriteVolumeDiskHeader;
 	}
     }
-    if (headerFd) {
+    if (writefunc) {
 	memcpy(&isp->volSummary->header, &tempHeader,
 	       sizeof(struct VolumeHeader));
 	if (Testing) {
@@ -1913,15 +1923,16 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 		Log("It would have written a new header file for volume %u\n",
 		    isp->volumeId);
 	} else {
+	    afs_int32 code;
 	    VolumeHeaderToDisk(&diskHeader, &tempHeader);
-	    if (write(headerFd, &diskHeader, sizeof(struct VolumeDiskHeader))
-		!= sizeof(struct VolumeDiskHeader)) {
-		Log("Couldn't rewrite volume header file!\n");
-		close(headerFd);
+	    code = (*writefunc)(&diskHeader, fileSysPartition);
+	    if (code) {
+		Log("Error %ld writing volume header file for volume %lu\n",
+		    afs_printable_int32_ld(code),
+		    afs_printable_uint32_lu(diskHeader.id));
 		return -1;
 	    }
 	}
-	close(headerFd);
     }
     IH_INIT(isp->volSummary->volumeInfoHandle, fileSysDevice, isp->RWvolumeId,
 	    isp->volSummary->header.volumeInfo);
@@ -3315,9 +3326,21 @@ MaybeZapVolume(register struct InodeSummary *isp, char *message, int deleteMe,
 		    Log("it will be deleted instead.  It should be recloned.\n");
 	    }
 	    if (!Testing) {
+		afs_int32 code;
 		char path[64];
 		sprintf(path, "%s/%s", fileSysPath, isp->volSummary->fileName);
-		if (unlink(path)) {
+
+		code = VDestroyVolumeDiskHeader(fileSysPartition, isp->volumeId, isp->RWvolumeId);
+		if (code) {
+		    Log("Error %ld destroying volume disk header for volume %lu\n",
+		        afs_printable_int32_ld(code),
+		        afs_printable_uint32_lu(isp->volumeId));
+		}
+
+		/* make sure we actually delete the fileName file; ENOENT
+		 * is fine, since VDestroyVolumeDiskHeader probably already
+		 * unlinked it */
+		if (unlink(path) && errno != ENOENT) {
 		    Log("Unable to unlink %s (errno = %d)\n", path, errno);
 		}
 	    }
@@ -3376,27 +3399,15 @@ AskOffline(VolumeId volumeId, char * partition)
      * schedule another salvage while we are salvaging, which would be
      * annoying. */
     if (!Testing) {
-	int fd;
 	IHandle_t *h;
-	char name[VMAXPATHLEN];
 	struct VolumeHeader header;
 	struct VolumeDiskHeader diskHeader;
 	struct VolumeDiskData volHeader;
 
-	afs_snprintf(name, sizeof(name), "%s/" VFORMAT, fileSysPathName,
-	    afs_printable_uint32_lu(volumeId));
-
-	fd = afs_open(name, O_RDONLY);
-	if (fd < 0) {
+	code = VReadVolumeDiskHeader(volumeId, fileSysPartition, &diskHeader);
+	if (code) {
 	    return;
 	}
-	if (read(fd, &diskHeader, sizeof(diskHeader)) != sizeof(diskHeader) ||
-	    diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-
-	    close(fd);
-	    return;
-	}
-	close(fd);
 
 	DiskToVolumeHeader(&header, &diskHeader);
 

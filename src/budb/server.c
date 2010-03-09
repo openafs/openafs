@@ -80,10 +80,10 @@ int lwps   = 3;
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+static int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -377,7 +377,8 @@ main(int argc, char **argv)
     char  clones[MAXHOSTSPERCELL];
 
     struct rx_service *tservice;
-    struct rx_securityClass *sca[3];
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
 
     extern int rx_stackSize;
 
@@ -559,18 +560,16 @@ main(int argc, char **argv)
 	ERROR(code);
     }
 
-    sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
-    sca[RX_SCINDEX_VAB] = 0;
-    sca[RX_SCINDEX_KAD] =
-	rxkad_NewServerSecurityObject(rxkad_clear, BU_conf, afsconf_GetKey,
-				      NULL);
+    afsconf_BuildServerSecurityObjects(BU_conf, 0,
+				       &securityClasses, &numClasses);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
 
     tservice =
-	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase", sca, 3,
-		      BUDB_ExecuteRequest);
+	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase",
+			  securityClasses, numClasses, BUDB_ExecuteRequest);
+
     if (tservice == (struct rx_service *)0) {
 	LogError(0, "Could not create backup database rx service\n");
 	printf("Could not create backup database rx service\n");

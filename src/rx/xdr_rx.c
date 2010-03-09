@@ -114,24 +114,39 @@ static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrrx_ops = {
+#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+    /* Windows does not support labeled assigments */
+    xdrrx_getint32,	/* deserialize an afs_int32 */
+    xdrrx_putint32,	/* serialize an afs_int32 */
+    xdrrx_getbytes,	/* deserialize counted bytes */
+    xdrrx_putbytes,	/* serialize counted bytes */
+    NULL,		/* get offset in the stream: not supported. */
+    NULL,		/* set offset in the stream: not supported. */
+    xdrrx_inline,	/* prime stream for inline macros */
+    NULL		/* destroy stream */
+#else
 #if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
-    xdrrx_getint64,
-    xdrrx_putint64,
+    .x_getint64 = xdrrx_getint64,
+    .x_putint64 = xdrrx_putint64,
 #endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
-    xdrrx_getint32,		/* deserialize an afs_int32 */
-    xdrrx_putint32,		/* serialize an afs_int32 */
+#if defined(UKERNEL)
+    .x_getlong = xdrrx_getint32,
+    .x_putlong = xdrrx_putint32,
+#elif !(defined(KERNEL) && defined(AFS_SUN57_ENV))
+    .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
+    .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
 #endif
-    xdrrx_getbytes,		/* deserialize counted bytes */
-    xdrrx_putbytes,		/* serialize counted bytes */
-    0,				/* get offset in the stream: not supported. */
-    0,				/* set offset in the stream: not supported. */
-    xdrrx_inline,		/* prime stream for inline macros */
-    0,				/* destroy stream */
+    .x_getbytes = xdrrx_getbytes,	/* deserialize counted bytes */
+    .x_putbytes = xdrrx_putbytes,	/* serialize counted bytes */
+    .x_getpostn = NULL,		/* get offset in the stream: not supported. */
+    .x_setpostn = NULL,		/* set offset in the stream: not supported. */
+    .x_inline = xdrrx_inline,		/* prime stream for inline macros */
+    .x_destroy = NULL,			/* destroy stream */
 #if defined(KERNEL) && defined(AFS_SUN57_ENV)
-    0,
-    xdrrx_getint32,		/* deserialize an afs_int32 */
-    xdrrx_putint32,		/* serialize an afs_int32 */
+    .x_control = NULL,
+    .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
+    .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
+#endif
 #endif
 };
 

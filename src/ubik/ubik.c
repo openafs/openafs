@@ -399,13 +399,13 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     pthread_attr_t urecovery_Interact_tattr;
 #else
     PROCESS junk;
+    extern int rx_stackSize;
 #endif
 
     afs_int32 secIndex;
     struct rx_securityClass *secClass;
 
     struct rx_service *tservice;
-    extern int rx_stackSize;
 
     initialize_U_error_table();
 
@@ -430,6 +430,13 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     tdb->tidCounter = tdb->writeTidCounter = 0;
     *dbase = tdb;
     ubik_dbase = tdb;		/* for now, only one db per server; can fix later when we have names for the other dbases */
+
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_init(&tdb->version_cond, NULL) == 0);
+    assert(pthread_cond_init(&tdb->flags_cond, NULL) == 0);
+    assert(pthread_mutex_init(&tdb->version_mutex, NULL) == 0);
+    assert(pthread_mutex_init(&tdb->flags_mutex, NULL) == 0);
+#endif /* AFS_PTHREAD_ENV */
 
     /* initialize RX */
 

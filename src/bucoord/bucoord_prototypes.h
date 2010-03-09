@@ -19,6 +19,7 @@ extern int dlqLinkf(dlqlinkP, dlqlinkP);
 extern int dlqTraverseQueue(dlqlinkP, int (*)(void *), int (*)(void *));
 
 /* status.c */
+extern void initStatus(void);
 extern statusP findStatus(afs_uint32);
 extern void lock_Status(void);
 extern void unlock_Status(void);
@@ -53,5 +54,9 @@ extern int bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq,
 extern afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *);
 extern afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *,
 				 afs_int32 );
+extern afs_int32 udbClientInit(int noAuthFlag, int localauth, char *cellName);
+struct ktc_token;
+extern int vldbClientInit(int noAuthFlag, int localauth, char *cellName,
+                          struct ubik_client **cstruct, time_t *expires);
 #endif
 

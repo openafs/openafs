@@ -115,7 +115,8 @@ KASERVER_OBJS =\
 	$(OUT)\kaserver.res
 
 KASERVER_EXELIBS =\
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+        $(DESTDIR)\lib\afs\afspioctl.lib
 
 $(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib

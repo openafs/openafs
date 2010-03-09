@@ -534,6 +534,12 @@ afs_osi_Wakeup(void *x)
 }
 
 int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
+{
+    return afs_osi_Wait(ams, event, aintok);
+}
+
+int
 afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 {
     int index;
@@ -708,7 +714,7 @@ osi_UFSOpen(afs_dcache_id_t *ino)
     AFS_ASSERT_GLOCK();
 
     if (ino->ufs > n_osi_files) {
-	u.u_error = ENOENT;
+	get_user_struct()->u_error = ENOENT;
 	return NULL;
     }
 
@@ -717,14 +723,14 @@ osi_UFSOpen(afs_dcache_id_t *ino)
     usr_assert(fp != NULL);
     fp->fd = open(osi_file_table[ino->ufs - 1].name, O_RDWR | O_CREAT, 0);
     if (fp->fd < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	afs_osi_Free((char *)fp, sizeof(struct osi_file));
 	AFS_GLOCK();
 	return NULL;
     }
     rc = fstat(fp->fd, &st);
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	afs_osi_Free((void *)fp, sizeof(struct osi_file));
 	AFS_GLOCK();
 	return NULL;
@@ -747,7 +753,7 @@ osi_UFSClose(struct osi_file *fp)
     AFS_GUNLOCK();
     rc = close(fp->fd);
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	afs_osi_Free((void *)fp, sizeof(struct osi_file));
 	AFS_GLOCK();
 	return -1;
@@ -767,7 +773,7 @@ osi_UFSTruncate(struct osi_file *fp, afs_int32 len)
     AFS_GUNLOCK();
     rc = ftruncate(fp->fd, len);
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
@@ -791,21 +797,21 @@ afs_osi_Read(struct osi_file *fp, int offset, void *buf, afs_int32 len)
 	rc = lseek(fp->fd, fp->offset, SEEK_SET);
     }
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
     fp->offset = rc;
     ret = read(fp->fd, buf, len);
     if (ret < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
     fp->offset += ret;
     rc = fstat(fp->fd, &st);
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
@@ -829,21 +835,21 @@ afs_osi_Write(struct osi_file *fp, afs_int32 offset, void *buf, afs_int32 len)
 	rc = lseek(fp->fd, fp->offset, SEEK_SET);
     }
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
     fp->offset = rc;
     ret = write(fp->fd, buf, len);
     if (ret < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
     fp->offset += ret;
     rc = fstat(fp->fd, &st);
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
@@ -861,7 +867,7 @@ afs_osi_Stat(struct osi_file *fp, struct osi_stat *stp)
     AFS_GUNLOCK();
     rc = fstat(fp->fd, &st);
     if (rc < 0) {
-	u.u_error = errno;
+	get_user_struct()->u_error = errno;
 	AFS_GLOCK();
 	return -1;
     }
@@ -898,7 +904,7 @@ afs_osi_VOP_RDWR(struct usr_vnode *vnodeP, struct usr_uio *uioP, int rw,
 			  uioP->uio_iov[0].iov_len);
     }
     if (rc < 0) {
-	return u.u_error;
+	return get_user_struct()->u_error;
     }
 
     uioP->uio_resid -= rc;
@@ -1980,8 +1986,8 @@ syscallThread(void *argp)
     /*
      * AFS daemons run authenticated
      */
-    u.u_viceid = getuid();
-    crp = u.u_cred;
+    get_user_struct()->u_viceid = getuid();
+    crp = get_user_struct()->u_cred;
     afs_set_cr_uid(crp, getuid());
     afs_set_cr_ruid(crp, getuid());
     crp->cr_suid = getuid();
@@ -2041,8 +2047,8 @@ call_syscall(long syscall, long afscall, long param1, long param2,
     a.parm3 = param3;
     a.parm4 = param4;
 
-    u.u_error = 0;
-    u.u_ap = (char *)&a;
+    get_user_struct()->u_error = 0;
+    get_user_struct()->u_ap = (char *)&a;
 
     code = Afs_syscall();
     return code;
@@ -2263,7 +2269,7 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 	    /*
 	     * We need execute permission to search a directory
 	     */
-	    code = afs_access(VTOAFS(vp), VEXEC, u.u_cred);
+	    code = afs_access(VTOAFS(vp), VEXEC, get_user_struct()->u_cred);
 	    if (code != 0) {
 		VN_RELE(vp);
 		afs_osi_Free(tmpPath, strlen(path) + 1);
@@ -2278,13 +2284,13 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 	    nextVp = NULL;
 #ifdef AFS_WEB_ENHANCEMENTS
 	    if ((nextPathP != NULL && *nextPathP != '\0') || !no_eval_mtpt)
-		code = afs_lookup(VTOAFS(vp), pathP, &nextVc, u.u_cred, 0);
+		code = afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred, 0);
 	    else
 		code =
-		    afs_lookup(VTOAFS(vp), pathP, &nextVc, u.u_cred,
+		    afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred,
 			       AFS_LOOKUP_NOEVAL);
 #else
-	    code = afs_lookup(VTOAFS(vp), pathP, &nextVc, u.u_cred, 0);
+	    code = afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred, 0);
 #endif /* AFS_WEB_ENHANCEMENTS */
 	    if (nextVc)
 		nextVp=AFSTOV(nextVc);
@@ -2377,7 +2383,7 @@ uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
     /*
      * Read the link data
      */
-    code = afs_readlink(VTOAFS(vp), &uio, u.u_cred);
+    code = afs_readlink(VTOAFS(vp), &uio, get_user_struct()->u_cred);
     if (code) {
 	afs_osi_Free(pathP, MAX_OSI_PATH + 1);
 	return code;
@@ -2578,10 +2584,10 @@ uafs_mkdir_r(char *path, int mode)
     usr_vattr_null(&attrs);
     attrs.va_type = VREG;
     attrs.va_mode = mode;
-    attrs.va_uid = afs_cr_uid(u.u_cred);
-    attrs.va_gid = afs_cr_gid(u.u_cred);
+    attrs.va_uid = afs_cr_uid(get_user_struct()->u_cred);
+    attrs.va_gid = afs_cr_gid(get_user_struct()->u_cred);
     dirP = NULL;
-    code = afs_mkdir(VTOAFS(parentP), nameP, &attrs, &dirP, u.u_cred);
+    code = afs_mkdir(VTOAFS(parentP), nameP, &attrs, &dirP, get_user_struct()->u_cred);
     VN_RELE(parentP);
     if (code != 0) {
 	errno = code;
@@ -2677,8 +2683,8 @@ uafs_open_r(char *path, int flags, int mode)
 	    usr_vattr_null(&attrs);
 	    attrs.va_type = VREG;
 	    attrs.va_mode = mode;
-	    attrs.va_uid = afs_cr_uid(u.u_cred);
-	    attrs.va_gid = afs_cr_gid(u.u_cred);
+	    attrs.va_uid = afs_cr_uid(get_user_struct()->u_cred);
+	    attrs.va_gid = afs_cr_gid(get_user_struct()->u_cred);
 	    if (flags & O_TRUNC) {
 		attrs.va_size = 0;
 	    }
@@ -2687,7 +2693,7 @@ uafs_open_r(char *path, int flags, int mode)
 	    code =
 		afs_create(VTOAFS(dirP), nameP, &attrs,
 			   (flags & O_EXCL) ? usr_EXCL : usr_NONEXCL, mode,
-			   &vc, u.u_cred);
+			   &vc, get_user_struct()->u_cred);
 	    VN_RELE(dirP);
 	    if (code != 0) {
 		errno = code;
@@ -2715,7 +2721,7 @@ uafs_open_r(char *path, int flags, int mode)
 	    }
 	    if (!fileMode)
 		fileMode = VREAD;	/* since O_RDONLY is 0 */
-	    code = afs_access(VTOAFS(fileP), fileMode, u.u_cred);
+	    code = afs_access(VTOAFS(fileP), fileMode, get_user_struct()->u_cred);
 	    if (code != 0) {
 		VN_RELE(fileP);
 		errno = code;
@@ -2725,7 +2731,7 @@ uafs_open_r(char *path, int flags, int mode)
 	    /*
 	     * Get the file attributes, all we need is the size
 	     */
-	    code = afs_getattr(VTOAFS(fileP), &attrs, u.u_cred);
+	    code = afs_getattr(VTOAFS(fileP), &attrs, get_user_struct()->u_cred);
 	    if (code != 0) {
 		VN_RELE(fileP);
 		errno = code;
@@ -2768,7 +2774,7 @@ uafs_open_r(char *path, int flags, int mode)
 	usr_vattr_null(&attrs);
 	attrs.va_mask = ATTR_SIZE;
 	attrs.va_size = 0;
-	code = afs_setattr(VTOAFS(fileP), &attrs, u.u_cred);
+	code = afs_setattr(VTOAFS(fileP), &attrs, get_user_struct()->u_cred);
 	if (code != 0) {
 	    VN_RELE(fileP);
 	    errno = code;
@@ -2780,7 +2786,7 @@ uafs_open_r(char *path, int flags, int mode)
     /*
      * do the open
      */
-    code = afs_open(&vc, openFlags, u.u_cred);
+    code = afs_open(&vc, openFlags, get_user_struct()->u_cred);
     if (code != 0) {
 	VN_RELE(fileP);
 	errno = code;
@@ -2886,7 +2892,7 @@ uafs_pwrite_r(int fd, char *buf, int len, off_t offset)
      * do the write
      */
 
-    code = afs_write(VTOAFS(fileP), &uio, afs_FileFlags[fd], u.u_cred, 0);
+    code = afs_write(VTOAFS(fileP), &uio, afs_FileFlags[fd], get_user_struct()->u_cred, 0);
     if (code) {
 	errno = code;
 	return -1;
@@ -2952,7 +2958,7 @@ uafs_pread_r(int fd, char *buf, int len, off_t offset)
     /*
      * do the read
      */
-    code = afs_read(VTOAFS(fileP), &uio, u.u_cred, 0, &bufP, 0);
+    code = afs_read(VTOAFS(fileP), &uio, get_user_struct()->u_cred, 0, &bufP, 0);
     if (code) {
 	errno = code;
 	return -1;
@@ -2978,7 +2984,7 @@ uafs_GetAttr(struct usr_vnode *vp, struct stat *stats)
     /*
      * Get the attributes
      */
-    code = afs_getattr(VTOAFS(vp), &attrs, u.u_cred);
+    code = afs_getattr(VTOAFS(vp), &attrs, get_user_struct()->u_cred);
     if (code != 0) {
 	return code;
     }
@@ -3130,7 +3136,7 @@ uafs_chmod_r(char *path, int mode)
     usr_vattr_null(&attrs);
     attrs.va_mask = ATTR_MODE;
     attrs.va_mode = mode;
-    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, get_user_struct()->u_cred);
     VN_RELE(vp);
     if (code != 0) {
 	errno = code;
@@ -3167,7 +3173,7 @@ uafs_fchmod_r(int fd, int mode)
     usr_vattr_null(&attrs);
     attrs.va_mask = ATTR_MODE;
     attrs.va_mode = mode;
-    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, get_user_struct()->u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3203,7 +3209,7 @@ uafs_truncate_r(char *path, int length)
     usr_vattr_null(&attrs);
     attrs.va_mask = ATTR_SIZE;
     attrs.va_size = length;
-    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, get_user_struct()->u_cred);
     VN_RELE(vp);
     if (code != 0) {
 	errno = code;
@@ -3240,7 +3246,7 @@ uafs_ftruncate_r(int fd, int length)
     usr_vattr_null(&attrs);
     attrs.va_mask = ATTR_SIZE;
     attrs.va_size = length;
-    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, get_user_struct()->u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3282,7 +3288,7 @@ uafs_lseek_r(int fd, int offset, int whence)
 	newpos = offset;
 	break;
     case SEEK_END:
-	code = afs_getattr(VTOAFS(vp), &attrs, u.u_cred);
+	code = afs_getattr(VTOAFS(vp), &attrs, get_user_struct()->u_cred);
 	if (code != 0) {
 	    errno = code;
 	    return -1;
@@ -3327,7 +3333,7 @@ uafs_fsync_r(int fd)
 	return -1;
     }
 
-    code = afs_fsync(VTOAFS(fileP), u.u_cred);
+    code = afs_fsync(VTOAFS(fileP), get_user_struct()->u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3362,7 +3368,7 @@ uafs_close_r(int fd)
     }
     afs_FileTable[fd] = NULL;
 
-    code = afs_close(VTOAFS(fileP), afs_FileFlags[fd], u.u_cred);
+    code = afs_close(VTOAFS(fileP), afs_FileFlags[fd], get_user_struct()->u_cred);
     VN_RELE(fileP);
     if (code != 0) {
 	errno = code;
@@ -3437,7 +3443,7 @@ uafs_link_r(char *existing, char *new)
     /*
      * Create the link
      */
-    code = afs_link(VTOAFS(existP), VTOAFS(dirP), nameP, u.u_cred);
+    code = afs_link(VTOAFS(existP), VTOAFS(dirP), nameP, get_user_struct()->u_cred);
     VN_RELE(existP);
     VN_RELE(dirP);
     if (code != 0) {
@@ -3504,9 +3510,9 @@ uafs_symlink_r(char *target, char *source)
     usr_vattr_null(&attrs);
     attrs.va_type = VLNK;
     attrs.va_mode = 0777;
-    attrs.va_uid = afs_cr_uid(u.u_cred);
-    attrs.va_gid = afs_cr_gid(u.u_cred);
-    code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, u.u_cred);
+    attrs.va_uid = afs_cr_uid(get_user_struct()->u_cred);
+    attrs.va_gid = afs_cr_gid(get_user_struct()->u_cred);
+    code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, get_user_struct()->u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;
@@ -3563,7 +3569,7 @@ uafs_readlink_r(char *path, char *buf, int len)
     /*
      * Read the the link
      */
-    code = afs_readlink(VTOAFS(vp), &uio, u.u_cred);
+    code = afs_readlink(VTOAFS(vp), &uio, get_user_struct()->u_cred);
     VN_RELE(vp);
     if (code) {
 	errno = code;
@@ -3629,7 +3635,7 @@ uafs_unlink_r(char *path)
     /*
      * Remove the file
      */
-    code = afs_remove(VTOAFS(dirP), nameP, u.u_cred);
+    code = afs_remove(VTOAFS(dirP), nameP, get_user_struct()->u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;
@@ -3706,7 +3712,7 @@ uafs_rename_r(char *old, char *new)
     /*
      * Rename the file
      */
-    code = afs_rename(VTOAFS(odirP), onameP, VTOAFS(ndirP), nnameP, u.u_cred);
+    code = afs_rename(VTOAFS(odirP), onameP, VTOAFS(ndirP), nnameP, get_user_struct()->u_cred);
     VN_RELE(odirP);
     VN_RELE(ndirP);
     if (code != 0) {
@@ -3770,7 +3776,7 @@ uafs_rmdir_r(char *path)
     /*
      * Remove the directory
      */
-    code = afs_rmdir(VTOAFS(dirP), nameP, u.u_cred);
+    code = afs_rmdir(VTOAFS(dirP), nameP, get_user_struct()->u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;
@@ -3918,7 +3924,7 @@ uafs_getdents_r(int fd, struct min_direct *buf, int len)
     /*
      * read the next chunk from the directory
      */
-    code = afs_readdir(VTOAFS(vp), &uio, u.u_cred);
+    code = afs_readdir(VTOAFS(vp), &uio, get_user_struct()->u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3982,7 +3988,7 @@ uafs_readdir_r(usr_DIR * dirp)
 	/*
 	 * read the next chunk from the directory
 	 */
-	code = afs_readdir(VTOAFS(vp), &uio, u.u_cred);
+	code = afs_readdir(VTOAFS(vp), &uio, get_user_struct()->u_cred);
 	if (code != 0) {
 	    errno = code;
 	    return NULL;
@@ -4308,7 +4314,7 @@ uafs_getRights(char *path)
 	PRSFS_READ | PRSFS_WRITE | PRSFS_INSERT | PRSFS_LOOKUP | PRSFS_DELETE
 	| PRSFS_LOCK | PRSFS_ADMINISTER;
 
-    afs_rights = afs_getRights(VTOAFS(vp), afs_rights, u.u_cred);
+    afs_rights = afs_getRights(VTOAFS(vp), afs_rights, get_user_struct()->u_cred);
 
     AFS_GUNLOCK();
     return afs_rights;

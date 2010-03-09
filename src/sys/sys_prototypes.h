@@ -36,7 +36,9 @@ extern void inparam_conversion(afs_int32, char *, afs_int32);
 extern void outparam_conversion(afs_int32, char *, afs_int32);
 
 /* rmtsyss.c */
-extern void rmt_Quit(char *msg, ...);
+extern void rmt_Quit(char *msg, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+
 extern void rmtsysd(void);
 
 /* setpag.c */

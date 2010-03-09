@@ -90,7 +90,7 @@ bc_Dumper(int aindex)
     volDesc =
 	(struct tc_dumpDesc *)malloc(count * sizeof(struct tc_dumpDesc));
     if (!volDesc) {
-	afs_com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
     }
 

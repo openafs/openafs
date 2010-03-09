@@ -175,7 +175,6 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
     register struct osi_file *afile = NULL;
     afs_int32 code = 0;
     int dummy;
-    char fname[1024];
 #ifdef AFS_CACHE_VNODE_PATH
     char namebuf[1024];
     struct pathname lookpn;
@@ -186,38 +185,23 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
 
 /*
  * AFS_CACHE_VNODE_PATH can be used with any file system, including ZFS or tmpfs.
- * The ainode is not an inode number but a signed index used to generate file names. 
+ * The ainode is not an inode number but a path.
  */
 #ifdef AFS_CACHE_VNODE_PATH
-	switch (ainode->ufs) {
-	case AFS_CACHE_CELLS_INODE:
-	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CellItems");
-	    break;
-	case AFS_CACHE_ITEMS_INODE:
-	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CacheItems");
-	    break;
-	case AFS_CACHE_VOLUME_INODE:
-	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "VolumeItems");
-	    break;
-	default:
-	    dummy = ainode->ufs / afs_numfilesperdir;
-	    snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode->ufs);
-    }
-		
 	/* Can not use vn_open or lookupname, they use user's CRED() 
-     * We need to run as root So must use low level lookuppnvp 
-     * assume fname starts with /
+	 * We need to run as root So must use low level lookuppnvp
+	 * assume fname starts with /
 	 */
 
-	code = pn_get_buf(fname, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
+	code = pn_get_buf(ainode->ufs, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
     if (code != 0) 
-        osi_Panic("UfsOpen: pn_get_buf failed %ld %s %ld", code, fname, ainode->ufs);
+        osi_Panic("UfsOpen: pn_get_buf failed %ld %s", code, ainode->ufs);
  
 	VN_HOLD(rootdir); /* released in loopuppnvp */
 	code = lookuppnvp(&lookpn, NULL, FOLLOW, NULL, &vp, 
            rootdir, rootdir, &afs_osi_cred); 
     if (code != 0)  
-        osi_Panic("UfsOpen: lookuppnvp failed %ld %s %ld", code, fname, ainode->ufs);
+        osi_Panic("UfsOpen: lookuppnvp failed %ld %s", code, ainode->ufs);
 	
 #ifdef AFS_SUN511_ENV
     code = VOP_OPEN(&vp, FREAD|FWRITE, &afs_osi_cred, NULL);
@@ -226,7 +210,7 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
 #endif
 
     if (code != 0)
-        osi_Panic("UfsOpen: VOP_OPEN failed %ld %s %ld", code, fname, ainode->ufs);
+        osi_Panic("UfsOpen: VOP_OPEN failed %ld %s", code, ainode->ufs);
 
 #else
     code =
@@ -236,12 +220,12 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
-	osi_Panic("UfsOpen: igetinode failed %ld %s %ld", code, fname, ainode->ufs);
+	osi_Panic("UfsOpen: igetinode failed %ld %s", code, ainode->ufs);
     }
 #ifdef AFS_CACHE_VNODE_PATH
-	afile->vnode = vp;
-	code = afs_osi_Stat(afile, &tstat);
-	afile->size = tstat.size;
+    afile->vnode = vp;
+    code = afs_osi_Stat(afile, &tstat);
+    afile->size = tstat.size;
 #else
     afile->vnode = ITOV(ip);
     afile->size = VTOI(afile->vnode)->i_size;

@@ -364,8 +364,8 @@ OldSetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     /*
      * Information needed by the user space cache manager
      */
-    u.u_expiration = ct.EndTimestamp;
-    u.u_viceid = ct.ViceId;
+    get_user_struct()->u_expiration = ct.EndTimestamp;
+    get_user_struct()->u_viceid = ct.ViceId;
 #endif
 
     temp = sizeof(struct ClearToken);

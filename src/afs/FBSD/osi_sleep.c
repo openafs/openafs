@@ -17,7 +17,6 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 
 #ifndef AFS_FBSD50_ENV
-static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 static char waitV;
 #endif
 
@@ -88,8 +87,10 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     AFS_ASSERT_GLOCK();
     if (ahandle == NULL) {
 	/* This is nasty and evil and rude. */
+	afs_global_owner = 0;
 	code = msleep(&tv, &afs_global_mtx, (aintok ? PPAUSE|PCATCH : PVFS),
 	    "afswait", ticks);
+	afs_global_owner = curthread;
     } else {
 	if (!ahandle->wh_inited)
 	    afs_osi_InitWaitHandle(ahandle);	/* XXX should not be needed */
@@ -106,7 +107,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	ahandle->proc = (caddr_t) curproc;
     do {
 	AFS_ASSERT_GLOCK();
-	code = osi_TimedSleep(&waitV, ams, aintok);
+	code = afs_osi_TimedSleep(&waitV, ams, aintok);
 	if (code)
 	    break;		/* if something happened, quit now */
 	/* if we we're cancelled, quit now */
@@ -129,13 +130,46 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				 * by wakeup calls; wait will not return until
 				 * it changes */
+#ifdef AFS_FBSD50_ENV
+    struct mtx *lck;
+    struct thread *owner;
+#else
     int cond;
+#endif
 } afs_event_t;
 
 #define HASHSIZE 128
 afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
 #define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
 int afs_evhashcnt = 0;
+
+#ifdef AFS_FBSD50_ENV
+#define EVTLOCK_INIT(e) \
+    do { \
+        mtx_init((e)->lck, "event lock", NULL, MTX_DEF); \
+        (e)->owner = 0; \
+    } while (0)
+#define EVTLOCK_LOCK(e) \
+    do { \
+        osi_Assert((e)->owner != curthread); \
+        mtx_lock((e)->lck);		     \
+        osi_Assert((e)->owner == 0); \
+        (e)->owner = curthread; \
+    } while (0)
+#define EVTLOCK_UNLOCK(e) \
+    do { \
+        osi_Assert((e)->owner == curthread); \
+        (e)->owner = 0; \
+        mtx_unlock((e)->lck); \
+    } while (0)
+#define EVTLOCK_DESTROY(e) mtx_destroy((e)->lck)
+#else
+#define EVTLOCK_INIT(e)
+#define EVTLOCK_LOCK(e)
+#define EVTLOCK_UNLOCK(e)
+#define EVTLOCK_DESTROY(e)
+#endif
+#endif
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
  * */
@@ -149,12 +183,14 @@ afs_getevent(char *event)
     hashcode = afs_evhash(event);
     evp = afs_evhasht[hashcode];
     while (evp) {
+	EVTLOCK_LOCK(evp);
 	if (evp->event == event) {
 	    evp->refcount++;
 	    return evp;
 	}
 	if (evp->refcount == 0)
 	    newp = evp;
+	EVTLOCK_UNLOCK(evp);
 	evp = evp->next;
     }
     if (!newp) {
@@ -163,15 +199,26 @@ afs_getevent(char *event)
 	newp->next = afs_evhasht[hashcode];
 	afs_evhasht[hashcode] = newp;
 	newp->seq = 0;
+	EVTLOCK_INIT(newp);
     }
+    EVTLOCK_LOCK(newp);
     newp->event = event;
     newp->refcount = 1;
     return newp;
 }
 
 /* Release the specified event */
+#ifdef AFS_FBSD50_ENV
+#define relevent(evp) \
+    do { \
+        osi_Assert((evp)->owner == curthread); \
+        (evp)->refcount--; \
+        (evp)->owner = 0; \
+        mtx_unlock((evp)->lck); \
+    } while (0)
+#else
 #define relevent(evp) ((evp)->refcount--)
-
+#endif
 
 void
 afs_osi_Sleep(void *event)
@@ -184,7 +231,9 @@ afs_osi_Sleep(void *event)
     while (seq == evp->seq) {
 	AFS_ASSERT_GLOCK();
 #ifdef AFS_FBSD50_ENV
+	evp->owner = 0;
 	msleep(event, &afs_global_mtx, PVFS, "afsslp", 0);
+	evp->owner = curthread;
 #else
 	AFS_GUNLOCK();
 	tsleep(event, PVFS, "afs_osi_Sleep", 0);
@@ -201,8 +250,7 @@ afs_osi_SleepSig(void *event)
     return 0;
 }
 
-#ifndef AFS_FBSD50_ENV
-/* osi_TimedSleep
+/* afs_osi_TimedSleep
  * 
  * Arguments:
  * event - event to sleep on
@@ -211,16 +259,13 @@ afs_osi_SleepSig(void *event)
  *
  * Returns 0 if timeout and EINTR if signalled.
  */
-static int
-osi_TimedSleep(char *event, afs_int32 ams, int aintok)
+int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     struct afs_event *evp;
-    int ticks;
     int seq, prio;
-
-    ticks = (ams * afs_hz) / 1000;
-
+    struct timespec ts;
 
     evp = afs_getevent(event);
     seq = evp->seq;
@@ -229,14 +274,17 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 	prio = PCATCH | PPAUSE;
     else
 	prio = PVFS;
-    code = tsleep(event, prio, "afs_osi_TimedSleep", ticks);
-    AFS_GLOCK();
+    ts.tv_sec = ams / 1000;
+    ts.tv_nsec = (ams % 1000) * 1000000;
+    evp->owner = 0;
+    code = msleep(event, evp->lck, prio, "afsslp", &ts);
+    evp->owner = curthread;
     if (seq == evp->seq)
 	code = EINTR;
     relevent(evp);
+    AFS_GLOCK();
     return code;
 }
-#endif /* not AFS_FBSD50_ENV */
 
 int
 afs_osi_Wakeup(void *event)
@@ -252,4 +300,28 @@ afs_osi_Wakeup(void *event)
     }
     relevent(evp);
     return ret;
+}
+
+void
+shutdown_osisleep(void) {
+    struct afs_event *evp, *nevp, **pevpp;
+    int i;
+    for (i=0; i < HASHSIZE; i++) {
+        evp = afs_evhasht[i];
+        pevpp = &afs_evhasht[i];
+        while (evp) {
+            EVTLOCK_LOCK(evp);
+            nevp = evp->next;
+            if (evp->refcount == 0) {
+                EVTLOCK_DESTROY(evp);
+                *pevpp = evp->next;
+                osi_FreeSmallSpace(evp);
+                afs_evhashcnt--;
+            } else {
+                EVTLOCK_UNLOCK(evp);
+                pevpp = &evp->next;
+            }
+            evp = nevp;
+        }
+    }
 }

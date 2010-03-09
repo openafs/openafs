@@ -132,7 +132,7 @@
 .\" ========================================================================
 .\"
 .IX Title "FS_GETCACHEPARMS 1"
-.TH FS_GETCACHEPARMS 1 "2010-01-18" "OpenAFS" "AFS Command Reference"
+.TH FS_GETCACHEPARMS 1 "2010-02-11" "OpenAFS" "AFS Command Reference"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -141,9 +141,9 @@
 fs_getcacheparms \- Displays the current size and usage of the cache
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-\&\fBfs getcacheparms\fR [\fB\-help\fR]
+\&\fBfs getcacheparms\fR [\fB\-help\fR] [\fB\-files\fR] [\fB\-excessive\fR]
 .PP
-\&\fBfs getca\fR [\fB\-h\fR]
+\&\fBfs getca\fR [\fB\-h\fR] [\fB\-files\fR] [\fB\-excessive\fR]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 The \fBfs getcacheparms\fR command displays the current size of the cache
@@ -159,6 +159,14 @@ been used to alter cache size.
 .IX Item "-help"
 Prints the online help for this command. All other valid options are
 ignored.
+.IP "\fB\-files\fR" 4
+.IX Item "-files"
+Displays the current number of cache files in use, and the maximum
+available, as well as displaying the current cache size.
+.IP "\fB\-excessive\fR" 4
+.IX Item "-excessive"
+Displays detailed cache statistics, including the flags set on each
+cache element, and the distribution of cache entries by size.
 .SH "OUTPUT"
 .IX Header "OUTPUT"
 The output reports
@@ -177,6 +185,37 @@ cache.
 .Vb 2
 \&   % fs getcacheparms
 \&   AFS using 22876 of the cache\*(Aqs available 25000 1K byte blocks.
+.Ve
+.PP
+The following shows the output when asked to show file information.
+.PP
+.Vb 3
+\&   % fs getcacheparm \-files
+\&   AFS using     0% of cache blocks (897 of 200000 1k blocks)
+\&                 1% of the cache files (79 of 6250 files)
+.Ve
+.PP
+And finally, the following detailed information can be obtained by using
+the excessive flag
+.PP
+.Vb 10
+\&   % fs getcacheparm \-excessive
+\&   AFS using     0% of cache blocks (897 of 200000 1k blocks)
+\&                 1% of the cache files (79 of 6250 files)
+\&           afs_cacheFiles:       6250
+\&           IFFree:               6171
+\&           IFEverUsed:             79
+\&           IFDataMod:               0
+\&           IFDirtyPages:            0
+\&           IFAnyPages:              0
+\&           IFDiscarded:             1
+\&           DCentries:        3122
+\&            0k\-   4K:         74
+\&            4k\-  16k:       3045
+\&           16k\-  64k:          2
+\&           64k\- 256k:          0
+\&          256k\-   1M:          1
+\&                >=1M:          0
 .Ve
 .SH "PRIVILEGE REQUIRED"
 .IX Header "PRIVILEGE REQUIRED"

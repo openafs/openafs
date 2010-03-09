@@ -58,7 +58,6 @@ extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
 static PROCESS bozo_pid;
-struct rx_securityClass *bozo_rxsc[3];
 const char *bozo_fileName;
 FILE *bozo_logFile;
 
@@ -722,6 +721,8 @@ main(int argc, char **argv, char **envp)
     int rxMaxMTU = -1;
     afs_uint32 host = htonl(INADDR_ANY);
     char *auditFileName = NULL;
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
 #ifndef AFS_NT40_ENV
     int nofork = 0;
     struct stat sb;
@@ -1002,14 +1003,8 @@ main(int argc, char **argv, char **envp)
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(bozo_rxstat_userok);
 
-    /* have bcrypt key now */
-
     afsconf_SetNoAuthFlag(tdir, noAuth);
-
-    bozo_rxsc[0] = rxnull_NewServerSecurityObject();
-    bozo_rxsc[1] = (struct rx_securityClass *)0;
-    bozo_rxsc[2] =
-	rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+    afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
@@ -1035,11 +1030,9 @@ main(int argc, char **argv, char **envp)
             host = SHostAddrs[0];
     }
 
-    tservice = rx_NewServiceHost(host,  /* port */ 0, /* service id */ 1,
-			     /*service name */ "bozo",
-			     /* security classes */
-			     bozo_rxsc,
-			     /* numb sec classes */ 3, BOZO_ExecuteRequest);
+    tservice = rx_NewServiceHost(host, 0, /* service id */ 1,
+			         "bozo", securityClasses, numClasses,
+				 BOZO_ExecuteRequest);
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
     rx_SetStackSize(tservice, BOZO_LWP_STACKSIZE);	/* so gethostbyname works (in cell stuff) */
@@ -1049,8 +1042,8 @@ main(int argc, char **argv, char **envp)
     }
 
     tservice =
-	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", bozo_rxsc,
-			  3, RXSTATS_ExecuteRequest);
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats",
+			  securityClasses, numClasses, RXSTATS_ExecuteRequest);
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
     rx_StartServer(1);		/* donate this process */

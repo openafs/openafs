@@ -706,6 +706,13 @@ struct rx_ackPacket {
 /* this shud be equal to VRESTARTING ( util/errors.h ) for old clients to work */
 #define RX_RESTARTING		    (-100)
 
+typedef enum {
+    RX_SECIDX_NULL = 0,
+    RX_SECIDX_KAD  = 2,
+    RX_SECIDX_GK   = 4,
+    RX_SECIDX_K5   = 5,
+} rx_securityIndex;
+
 struct rx_securityObjectStats {
     char type;			/* 0:unk 1:null,2:vab 3:kad */
     char level;

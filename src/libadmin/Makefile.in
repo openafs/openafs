@@ -15,7 +15,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 all: ${TOP_INCDIR}/afs/afs_Admin.h
 
 ${TOP_INCDIR}/afs/afs_Admin.h: afs_Admin.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 
 install:
 	${INSTALL} -d ${DESTDIR}${includedir}/afs

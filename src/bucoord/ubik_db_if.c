@@ -771,120 +771,70 @@ bc_CheckTextVersion(udbClientTextP ctPtr)
  * -------------------------------------
  */
 
+static afsconf_secflags
+parseSecFlags(int noAuthFlag, int localauth, const char **confdir) {
+    afsconf_secflags secFlags;
+
+    secFlags = 0;
+    if (noAuthFlag)
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
+
+    if (localauth) {
+	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
+	*confdir = AFSDIR_SERVER_ETC_DIRPATH;
+    } else {
+	*confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+    }
+    return secFlags;
+}
+
 /* vldbClientInit 
  *      Initialize a client for the vl ubik database.
  */
 int
 vldbClientInit(int noAuthFlag, int localauth, char *cellName, 
 	       struct ubik_client **cstruct, 
-	       struct ktc_token *ttoken)
+	       time_t *expires)
 {
     afs_int32 code = 0;
     struct afsconf_dir *acdir;
     struct rx_securityClass *sc;
-    afs_int32 i, scIndex = 0;	/* Index of Rx security object - noauth */
+    afs_int32 i, scIndex = RX_SECIDX_NULL;
     struct afsconf_cell info;
-    struct ktc_principal sname;
     struct rx_connection *serverconns[VLDB_MAXSERVERS];
+    afsconf_secflags secFlags;
+    const char *confdir;
 
+    secFlags = parseSecFlags(noAuthFlag, localauth, &confdir);
+    secFlags |= AFSCONF_SECOPTS_FALLBACK_NULL;
+
+    /* This just preserves old behaviour of using the default cell when
+     * passed an empty string */
+    if (cellName && cellName[0] == '\0')
+	cellName = NULL;
 
     /* Find out about the given cell */
-    acdir =
-	afsconf_Open((localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		      AFSDIR_CLIENT_ETC_DIRPATH));
+    acdir = afsconf_Open(confdir);
     if (!acdir) {
-	afs_com_err(whoami, 0, "Can't open configuration directory '%s'",
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH));
+	afs_com_err(whoami, 0, "Can't open configuration directory '%s'", confdir);
 	ERROR(BC_NOCELLCONFIG);
-    }
-
-    if (!cellName[0]) {
-	char cname[64];
-
-	code = afsconf_GetLocalCell(acdir, cname, sizeof(cname));
-	if (code) {
-	    afs_com_err(whoami, code,
-		    "; Can't get the local cell name - check %s/%s",
-		    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		     AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_THISCELL_FILE);
-	    ERROR(code);
-	}
-	strcpy(cellName, cname);
     }
 
     code = afsconf_GetCellInfo(acdir, cellName, AFSCONF_VLDBSERVICE, &info);
     if (code) {
 	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
-		cellName,
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_CELLSERVDB_FILE);
+		    cellName, confdir, AFSDIR_CELLSERVDB_FILE);
 	ERROR(BC_NOCELLCONFIG);
     }
 
-    /*
-     * Grab tickets if we care about authentication.
-     */
-    ttoken->endTime = 0;
-    if (localauth) {
-	code = afsconf_GetLatestKey(acdir, 0, 0);
-	if (code) {
-	    afs_com_err(whoami, code, "; Can't get key from local key file");
-	    ERROR(code);
-	} else {
-	    code = afsconf_ClientAuth(acdir, &sc, &scIndex);
-	    if (code) {
-		afs_com_err(whoami, code, "; Calling ClientAuth");
-		ERROR(code);
-	    }
-
-	    ttoken->endTime = NEVERDATE;
-	}
-    } else {
-	if (!noAuthFlag) {
-	    strcpy(sname.cell, info.name);
-	    sname.instance[0] = 0;
-	    strcpy(sname.name, "afs");
-
-	    code =
-		ktc_GetToken(&sname, ttoken, sizeof(struct ktc_token), NULL);
-	    if (code) {
-		afs_com_err(whoami, code, 0,
-			"; Can't get AFS tokens - running unauthenticated");
-	    } else {
-		if ((ttoken->kvno < 0) || (ttoken->kvno > 256))
-		    afs_com_err(whoami, 0,
-			    "Funny kvno (%d) in ticket, proceeding",
-			    ttoken->kvno);
-
-		scIndex = 2;
-	    }
-	}
-
-	switch (scIndex) {
-	case 0:
-	    sc = rxnull_NewClientSecurityObject();
-	    break;
-	case 2:
-	    sc = (struct rx_securityClass *)
-		rxkad_NewClientSecurityObject(rxkad_clear,
-					      &ttoken->sessionKey,
-					      ttoken->kvno, ttoken->ticketLen,
-					      ttoken->ticket);
-	    break;
-	default:
-	    afs_com_err(whoami, 0, "Unsupported authentication type %d", scIndex);
-	    ERROR(-1);
-	    break;
-	}
+    code = afsconf_PickClientSecObj(acdir, secFlags, &info, cellName,
+				    &sc, &scIndex, expires);
+    if (code) {
+	afs_com_err(whoami, code, "(configuring connection security)");
+	ERROR(BC_NOCELLCONFIG);
     }
-
-    if (!sc) {
-	afs_com_err(whoami, 0,
-		"Can't create a security object with security index %d",
-		scIndex);
-	ERROR(-1);
-    }
+    if (scIndex == RX_SECIDX_NULL && !noAuthFlag)
+	afs_com_err(whoami, 0, "Can't get tokens - running unauthenticated");
 
     /* tell UV module about default authentication */
     UV_SetSecurity(sc, scIndex);
@@ -923,109 +873,42 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 afs_int32
 udbClientInit(int noAuthFlag, int localauth, char *cellName)
 {
-    struct ktc_principal principal;
-    struct ktc_token token;
     struct afsconf_cell info;
     struct afsconf_dir *acdir;
+    const char *confdir;
     int i;
+    afs_int32 secFlags;
     afs_int32 code = 0;
 
-    acdir =
-	afsconf_Open((localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		      AFSDIR_CLIENT_ETC_DIRPATH));
+    secFlags = parseSecFlags(noAuthFlag, localauth, &confdir);
+    secFlags |= AFSCONF_SECOPTS_FALLBACK_NULL;
+
+    if (cellName && cellName[0] == '\0')
+	cellName = NULL;
+
+    acdir = afsconf_Open(confdir);
     if (!acdir) {
 	afs_com_err(whoami, 0, "Can't open configuration directory '%s'",
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH));
+		    confdir);
 	ERROR(BC_NOCELLCONFIG);
-    }
-
-    if (!cellName[0]) {
-	char cname[64];
-
-	code = afsconf_GetLocalCell(acdir, cname, sizeof(cname));
-	if (code) {
-	    afs_com_err(whoami, code,
-		    "; Can't get the local cell name - check %s/%s",
-		    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		     AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_THISCELL_FILE);
-	    ERROR(code);
-	}
-	strcpy(cellName, cname);
     }
 
     code = afsconf_GetCellInfo(acdir, cellName, 0, &info);
     if (code) {
 	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
-		cellName,
-		(localauth ? AFSDIR_SERVER_ETC_DIRPATH :
-		 AFSDIR_CLIENT_ETC_DIRPATH), AFSDIR_CELLSERVDB_FILE);
+		    cellName, confdir, AFSDIR_CELLSERVDB_FILE);
 	ERROR(BC_NOCELLCONFIG);
     }
 
-    udbHandle.uh_scIndex = RX_SCINDEX_NULL;
-
-    if (localauth) {
-	code = afsconf_GetLatestKey(acdir, 0, 0);
-	if (code) {
-	    afs_com_err(whoami, code, "; Can't get key from local key file");
-	    ERROR(-1);
-	} else {
-	    code =
-		afsconf_ClientAuth(acdir, &udbHandle.uh_secobj,
-				   &udbHandle.uh_scIndex);
-	    if (code) {
-		afs_com_err(whoami, code, "; Calling ClientAuth");
-		ERROR(-1);
-	    }
-	}
-    } else {
-	if (!noAuthFlag) {
-	    /* setup principal */
-	    strcpy(principal.cell, info.name);
-	    principal.instance[0] = 0;
-	    strcpy(principal.name, "afs");
-
-	    /* get token */
-	    code = ktc_GetToken(&principal, &token, sizeof(token), NULL);
-	    if (code) {
-		afs_com_err(whoami, code,
-			"; Can't get tokens - running unauthenticated");
-	    } else {
-		if ((token.kvno < 0) || (token.kvno > 256))
-		    afs_com_err(whoami, 0,
-			    "Unexpected kvno (%d) in ticket - proceeding",
-			    token.kvno);
-		udbHandle.uh_scIndex = RX_SCINDEX_KAD;	/* Kerberos */
-	    }
-	}
-
-	switch (udbHandle.uh_scIndex) {
-	case 0:
-	    udbHandle.uh_secobj = rxnull_NewClientSecurityObject();
-	    break;
-
-	case 2:
-	    udbHandle.uh_secobj = (struct rx_securityClass *)
-		rxkad_NewClientSecurityObject(rxkad_clear, &token.sessionKey,
-					      token.kvno, token.ticketLen,
-					      token.ticket);
-	    break;
-
-	default:
-	    afs_com_err(whoami, 0, "Unsupported authentication type %d",
-		    udbHandle.uh_scIndex);
-	    ERROR(-1);
-	    break;
-	}
+    code = afsconf_PickClientSecObj(acdir, secFlags, &info, cellName,
+				    &udbHandle.uh_secobj,
+				    &udbHandle.uh_scIndex, NULL);
+    if (code) {
+	afs_com_err(whoami, code, "(configuring connection security)");
+	ERROR(BC_NOCELLCONFIG);
     }
-
-    if (!udbHandle.uh_secobj) {
-	afs_com_err(whoami, 0,
-		"Can't create a security object with security index %d",
-		udbHandle.uh_secobj);
-	ERROR(-1);
-    }
+    if (&udbHandle.uh_scIndex == RX_SECIDX_NULL && !noAuthFlag)
+	afs_com_err(whoami, 0, "Can't get tokens - running unauthenticated");
 
     if (info.numServers > MAXSERVERS) {
 	afs_com_err(whoami, 0,
@@ -1283,7 +1166,7 @@ udbLocalInit(void)
 	return (-1);
     }
 
-    udbHandle.uh_scIndex = RX_SCINDEX_NULL;
+    udbHandle.uh_scIndex = RX_SECIDX_NULL;
     udbHandle.uh_secobj = (struct rx_securityClass *)
 	rxnull_NewClientSecurityObject();
 

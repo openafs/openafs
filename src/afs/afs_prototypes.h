@@ -636,6 +636,7 @@ extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);
 extern void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle);
 extern int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle,
 			int aintok);
+extern int afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok);
 #ifndef afs_osi_Wakeup
 extern int afs_osi_Wakeup(void *event);
 #endif
@@ -795,7 +796,6 @@ extern int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 
 
 /* afs_segments.c */
-extern int afs_StoreMini(register struct vcache *avc, struct vrequest *areq);
 extern int afs_StoreAllSegments(register struct vcache *avc,
 				struct vrequest *areq, int sync);
 extern int afs_InvalidateAllSegments(struct vcache *avc);
@@ -966,8 +966,10 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 extern void afs_warn();
 extern void afs_warnuser();
 #else
-extern void afs_warn(char *fmt, ...);
-extern void afs_warnuser(char *fmt, ...);
+extern void afs_warn(char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern void afs_warnuser(char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 #endif
 
 /* afs_vcache.c */

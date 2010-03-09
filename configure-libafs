@@ -722,6 +722,8 @@ DEMAND_ATTACH
 USE_UNIX_SOCKETS
 XBSA_CFLAGS
 XBSA_XLIBS
+INCLUDE_libintl
+LIB_libintl
 HAVE_PAM
 BUILD_LOGIN
 afsconfdir
@@ -1494,6 +1496,9 @@ Optional Packages:
   --with-html-xsl         build HTML documentation using Norman Walsh's
                           DocBook XSL stylesheets (default is no; specify a
                           path to chunk.xsl or docbook.xsl)
+  --with-libintl=dir                use libintl in dir
+  --with-libintl-lib=dir            use libintl libraries in dir
+  --with-libintl-include=dir        use libintl headers in dir
   --with-krb5-conf=[krb5-config-location]
                           use a krb5-config script to configure Kerberos
   --with-krb5             support for Kerberos 5 (manual configuration)
@@ -2272,7 +2277,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs-libafs
- VERSION=1.5.69
+ VERSION=1.5.72
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2420,8 +2425,8 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.5.69
-LINUX_PKGVER=1.5.69
+MACOS_VERSION=1.5.72
+LINUX_PKGVER=1.5.72
 #LINUX_PKGREL=0.pre3
 LINUX_PKGREL=1.1
 
@@ -19611,6 +19616,197 @@ _ACEOF
 fi
 
 
+
+
+# Check whether --with-libintl was given.
+if test "${with_libintl+set}" = set; then
+  withval=$with_libintl;
+fi
+
+
+# Check whether --with-libintl-lib was given.
+if test "${with_libintl_lib+set}" = set; then
+  withval=$with_libintl_lib; if test "$withval" = "yes" -o "$withval" = "no"; then
+  { { echo "$as_me:$LINENO: error: No argument for --with-libintl-lib" >&5
+echo "$as_me: error: No argument for --with-libintl-lib" >&2;}
+   { (exit 1); exit 1; }; }
+elif test "X$with_libintl" = "X"; then
+  with_libintl=yes
+fi
+fi
+
+
+# Check whether --with-libintl-include was given.
+if test "${with_libintl_include+set}" = set; then
+  withval=$with_libintl_include; if test "$withval" = "yes" -o "$withval" = "no"; then
+  { { echo "$as_me:$LINENO: error: No argument for --with-libintl-include" >&5
+echo "$as_me: error: No argument for --with-libintl-include" >&2;}
+   { (exit 1); exit 1; }; }
+elif test "X$with_libintl" = "X"; then
+  with_libintl=yes
+fi
+fi
+
+
+{ echo "$as_me:$LINENO: checking for libintl" >&5
+echo $ECHO_N "checking for libintl... $ECHO_C" >&6; }
+
+case "$with_libintl" in
+yes) ;;
+no)  ;;
+"")  ;;
+*)   if test "$with_libintl_include" = ""; then
+	with_libintl_include="$with_libintl/include"
+	fi
+	if test "$with_libintl_lib" = ""; then
+	   with_libintl_lib="$with_libintl/lib$abilibdirext"
+	   fi
+	   ;;
+esac
+header_dirs=
+lib_dirs=
+d=''
+for i in $d; do
+    header_dirs="$header_dirs $i/include"
+    lib_dirs="$lib_dirs $i/lib$abilibdirext"
+done
+
+case "$with_libintl_include" in
+yes) ;;
+no)  ;;
+*)   header_dirs="$with_libintl_include $header_dirs";;
+esac
+case "$with_libintl_lib" in
+yes) ;;
+no)  ;;
+*)   lib_dirs="$with_libintl_lib $lib_dirs";;
+esac
+
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+ires= lres=
+for i in $header_dirs; do
+    CFLAGS="-I$i $save_CFLAGS"
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <libintl.h>
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ires=$i;break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+done
+for i in $lib_dirs; do
+    LIBS="-L$i -lintl  $save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <libintl.h>
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  lres=$i;break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+done
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
+
+if test "$ires" -a "$lres" -a "$with_libintl" != "no"; then
+   libintl_includedir="$ires"
+   libintl_libdir="$lres"
+   INCLUDE_libintl="-I$libintl_includedir"
+   LIB_libintl="-L$libintl_libdir -lintl"
+
+cat >>confdefs.h <<_ACEOF
+#define LIBINTL 1
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBINTL 1
+_ACEOF
+
+   with_libintl=yes
+   { echo "$as_me:$LINENO: result: headers $ires, libraries $lres" >&5
+echo "${ECHO_T}headers $ires, libraries $lres" >&6; }
+else
+	INCLUDE_libintl=
+	LIB_libintl=
+	with_libintl=no
+	{ echo "$as_me:$LINENO: result: $with_libintl" >&5
+echo "${ECHO_T}$with_libintl" >&6; }
+fi
+
+
+
+
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
         case $AFS_SYSNAME in
         sgi_*)
@@ -22792,7 +22988,7 @@ RXDEBUG="-DRXDEBUG"
 SHLIB_SUFFIX="so"
 CCOBJ="$CC"
 MT_CC="$CC"
-XLIBS="${LIB_AFSDB} ${XBSA_XLIBS}"
+XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} ${LIB_libintl}"
 
 KERN_DBG=-g
 KERN_OPTMZ=-O
@@ -23751,6 +23947,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_80)
@@ -23771,6 +23968,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_90)
@@ -23789,13 +23987,14 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_100)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
-		MT_LIBS="-lresolv"
+		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
@@ -23809,6 +24008,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	ppc_linux*)
@@ -23838,7 +24038,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64="#"
@@ -23857,7 +24057,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64=""
@@ -23875,7 +24075,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64=""
@@ -23893,7 +24093,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32=""
 		AIX64=""
@@ -23911,7 +24111,7 @@ case $AFS_SYSNAME in
 		SHLIB_SUFFIX="o"
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
-		XLIBS="${LIB_AFSDB} -ldl"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="#"
 		AIX64=""
@@ -24662,7 +24862,9 @@ echo "${ECHO_T}Configuring support for Kerberos 5 utilities" >&6; }
 
 
 
-for ac_func in add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_decode_ticket krb5_get_prompt_types
+
+
+for ac_func in add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_decode_ticket krb5_get_prompt_types krb5_allow_weak_crypto krb5_enctype_enable
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -26312,6 +26514,8 @@ DEMAND_ATTACH!$DEMAND_ATTACH$ac_delim
 USE_UNIX_SOCKETS!$USE_UNIX_SOCKETS$ac_delim
 XBSA_CFLAGS!$XBSA_CFLAGS$ac_delim
 XBSA_XLIBS!$XBSA_XLIBS$ac_delim
+INCLUDE_libintl!$INCLUDE_libintl$ac_delim
+LIB_libintl!$LIB_libintl$ac_delim
 HAVE_PAM!$HAVE_PAM$ac_delim
 BUILD_LOGIN!$BUILD_LOGIN$ac_delim
 afsconfdir!$afsconfdir$ac_delim
@@ -26395,8 +26599,6 @@ XLDFLAGS!$XLDFLAGS$ac_delim
 XLDFLAGS64!$XLDFLAGS64$ac_delim
 XLIBELFA!$XLIBELFA$ac_delim
 XLIBKVM!$XLIBKVM$ac_delim
-XLIBS!$XLIBS$ac_delim
-KRB5_CONFIG!$KRB5_CONFIG$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -26438,6 +26640,8 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+XLIBS!$XLIBS$ac_delim
+KRB5_CONFIG!$KRB5_CONFIG$ac_delim
 BUILD_KRB5!$BUILD_KRB5$ac_delim
 MAKE_KRB5!$MAKE_KRB5$ac_delim
 KRB5CFLAGS!$KRB5CFLAGS$ac_delim
@@ -26448,7 +26652,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 8; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 10; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -52,6 +52,7 @@
 
 #include "bc.h"			/*Backup Coordinator structs and defs */
 #include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
 
 int localauth, interact;
 char tcell[64];
@@ -62,7 +63,7 @@ char tcell[64];
 struct bc_config *bc_globalConfig;	/*Ptr to global BC configuration info */
 
 struct ubik_client *cstruct;	/* Ptr to Ubik client structure */
-struct ktc_token ttoken;	/* The token */
+time_t tokenExpires;		/* The token's expiration time */
 
 static const char *DefaultConfDir;	/*Default backup config directory */
 static int bcInit = 0;		/* backupInit called yet ? */
@@ -253,7 +254,7 @@ backupInit(void)
     rx_SetRxDeadTime(60);
 
     /* VLDB initialization */
-    code = vldbClientInit(0, localauth, tcell, &cstruct, &ttoken);
+    code = vldbClientInit(0, localauth, tcell, &cstruct, &tokenExpires);
     if (code)
 	return (code);
 

@@ -100,11 +100,11 @@ struct VCBParams {
 
 /* call back indices to pointers, and vice-versa */
 #define itocb(i)    ((i)?CB+(i):0)
-#define cbtoi(cbp)  (!(cbp)?0:(cbp)-CB)
+#define cbtoi(cbp)  ((afs_uint32)(!(cbp)?0:(cbp)-CB))
 
 /* file entry indices to pointers, and vice-versa */
 #define itofe(i)    ((i)?FE+(i):0)
-#define fetoi(fep)  (!(fep)?0:(fep)-FE)
+#define fetoi(fep)  ((afs_uint32)(!(fep)?0:(fep)-FE))
 
 /* Timeouts:  there are 128 possible timeout values in effect at any
  * given time.  Each timeout represents timeouts in an interval of 128

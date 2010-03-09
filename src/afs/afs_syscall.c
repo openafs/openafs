@@ -552,7 +552,7 @@ Afs_syscall()
 	long parm4;
 	long parm5;
 	long parm6;
-    } *uap = (struct a *)u.u_ap;
+    } *uap = (struct a *)get_user_struct()->u_ap;
 # else /* UKERNEL */
 int
 Afs_syscall()
@@ -569,6 +569,8 @@ Afs_syscall()
 # endif /* UKERNEL */
 # if defined(AFS_HPUX_ENV)
     long *retval = &u.u_rval1;
+# elif defined(UKERNEL)
+    int *retval = &(get_user_struct()->u_rval1);
 # else
     int *retval = &u.u_rval1;
 # endif

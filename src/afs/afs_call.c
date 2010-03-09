@@ -464,18 +464,6 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 }
 #endif
 
-static void
-wait_for_cachedefs(void) {
-#ifdef AFS_CACHE_VNODE_PATH
-    if (cacheDiskType != AFS_FCACHE_TYPE_MEM) 
-	while ((afs_numcachefiles < 1) || (afs_numfilesperdir < 1) ||
-	       (afs_cachebasedir[0] != '/')) {
-	    printf("afs: waiting for cache parameter definitions\n");
-	    afs_osi_Sleep(&afs_initState);
-	}
-#endif
-}
-
 #ifdef AFS_DARWIN100_ENV
 #define AFSKPTR(X) k ## X
 int
@@ -861,8 +849,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	} else
 	    code = 0;
     } else if (parm == AFSOP_CACHEFILE || parm == AFSOP_CACHEINFO
-	       || parm == AFSOP_VOLUMEINFO || parm == AFSOP_AFSLOG
-	       || parm == AFSOP_CELLINFO || parm == AFSOP_CACHEBASEDIR) {
+	       || parm == AFSOP_VOLUMEINFO || parm == AFSOP_CELLINFO) {
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
 	code = 0;
@@ -878,21 +865,13 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef AFS_DARWIN80_ENV
 	    get_vfs_context();
 #endif
-	    if (parm == AFSOP_CACHEBASEDIR) {
-		strncpy(afs_cachebasedir, tbuffer, 1024);
-		afs_cachebasedir[1023] = '\0';
-		afs_osi_Wakeup(&afs_initState);
-	    } else if (parm == AFSOP_CACHEFILE) {
-		wait_for_cachedefs();
+	    if (parm == AFSOP_CACHEFILE) {
 		code = afs_InitCacheFile(tbuffer, 0);
 	    } else if (parm == AFSOP_CACHEINFO) {
-		wait_for_cachedefs();
 		code = afs_InitCacheInfo(tbuffer);
 	    } else if (parm == AFSOP_VOLUMEINFO) {
-		wait_for_cachedefs();
 		code = afs_InitVolumeInfo(tbuffer);
 	    } else if (parm == AFSOP_CELLINFO) {
-		wait_for_cachedefs();
 		code = afs_InitCellInfo(tbuffer);
 	    }
 #ifdef AFS_DARWIN80_ENV
@@ -901,26 +880,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
-#ifdef AFS_CACHE_VNODE_PATH
-	if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
-	    afs_int32 dummy;
-	    
-	    wait_for_cachedefs();
-	    
-#ifdef AFS_DARWIN80_ENV
-	    get_vfs_context();
-#endif
-	    if ((afs_numcachefiles > 0) && (afs_numfilesperdir > 0) && 
-		(afs_cachebasedir[0] == '/')) {
-		for (dummy = 0; dummy < afs_numcachefiles; dummy++) {
-		    code = afs_InitCacheFile(NULL, dummy);
-		}
-	    }
-#ifdef AFS_DARWIN80_ENV
-	    put_vfs_context();
-#endif
-	}
-#endif
 	/* the generic initialization calls come here.  One parameter: should we do the
 	 * set-time operation on this workstation */
 	if (afs_Go_Done)
@@ -1086,10 +1045,10 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	i = rxi_Findcbi(parm2);
 	mtu = ((i == -1) ? htonl(1500) : afs_cb_interface.mtu[i]);
 #else /* AFS_USERSPACE_IP_ADDR */
-	AFS_IFNET_T tifnp;
+	rx_ifnet_t tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, NULL);	/*  make iterative */
-	mtu = (tifnp ? ifnet_mtu(tifnp) : htonl(1500));
+	mtu = (tifnp ? rx_ifnet_mtu(tifnp) : htonl(1500));
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
@@ -1123,7 +1082,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    code = -1;
 	}
 #else /* AFS_USERSPACE_IP_ADDR */
-	AFS_IFNET_T tifnp;
+	rx_ifnet_t tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)

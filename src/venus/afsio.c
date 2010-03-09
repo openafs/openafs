@@ -159,7 +159,7 @@ struct connectionLookup {
 struct cellLookup {
     struct cellLookup *next;
     struct afsconf_cell info;
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
     afs_int32 scIndex;
 };
 
@@ -274,16 +274,14 @@ main (int argc, char **argv)
 
 AFS_UNUSED
 afs_int32
-HandleLocalAuth(struct rx_securityClass **sc[3], afs_int32 *scIndex)
+HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
 {
     static struct afsconf_dir *tdir = NULL;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    int kvno;
-    struct ktc_encryptionKey key;
     afs_uint32 host = 0;
-    char *cell;
     afs_int32 code;
+
+    *sc = NULL;
+    *scIndex = RX_SECIDX_NULL;
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
@@ -291,39 +289,11 @@ HandleLocalAuth(struct rx_securityClass **sc[3], afs_int32 *scIndex)
 		AFSDIR_SERVER_ETC_DIRPATH);
         return -1;
     }
-    cell = tdir->cellName;
-    strcpy(sname.cell, cell);
-    sname.instance[0] = 0;
-    strcpy(sname.name, "afs");
-    code=afsconf_GetLatestKey(tdir, &kvno, &key);
+    code = afsconf_ClientAuth(tdir, sc, scIndex);
     if (code) {
-        fprintf(stderr,"afsconf_GetLatestKey returned %d\n", code);
+        fprintf(stderr,"afsconf_ClientAuth returned %d\n", code);
         return -1;
     }
-    ttoken.kvno = kvno;
-    des_init_random_number_generator(ktc_to_cblock(&key));
-    code = des_random_key(ktc_to_cblock(&ttoken.sessionKey));
-    if (code) {
-        fprintf(stderr,"des_random_key returned %d\n", code);
-        return -1;
-    }
-    ttoken.ticketLen = MAXKTCTICKETLEN;
-    code = tkt_MakeTicket(ttoken.ticket, &ttoken.ticketLen, &key,
-			  AUTH_SUPERUSER, "", sname.cell,
-			  0, 0xffffffff,
-			  &ttoken.sessionKey, host,
-			  sname.name, sname.instance);
-    if (code)
-        *scIndex = 0;
-    else {
-	*scIndex = 2;
-        *sc[2] = (struct rx_securityClass *)
-	    rxkad_NewClientSecurityObject(rxkad_clear,
-					  &ttoken.sessionKey, ttoken.kvno,
-					  ttoken.ticketLen, ttoken.ticket);
-    }
-    if (*scIndex == 0)
-	*sc[0] = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
     return 0;
 }
 
@@ -993,7 +963,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 	}
 	first = 0;
         RXConn = FindRXConnection(useHost, htons(AFSCONF_FILEPORT), 1,
-				  cl->sc[cl->scIndex], cl->scIndex);
+				  cl->sc, cl->scIndex);
         if (!RXConn) {
             fprintf(stderr,"rx_NewConnection failed to server 0x%X\n",
                     useHost);
@@ -1205,7 +1175,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     gettimeofday (&starttime, &Timezone);
     useHost = hosts[0];
     RXConn = FindRXConnection(useHost, htons(AFSCONF_FILEPORT), 1,
-			      cl->sc[cl->scIndex], cl->scIndex);
+			      cl->sc, cl->scIndex);
     if (!RXConn) {
         fprintf(stderr,"rx_NewConnection failed to server 0x%X\n",
 		hosts[0]);
@@ -1413,6 +1383,7 @@ FindCell(char *cellName)
     static struct afsconf_dir *tdir;
     struct ktc_principal sname;
     struct ktc_token ttoken;
+    time_t expires;
     afs_int32 len, code;
 
     if (cellName) {
@@ -1452,29 +1423,11 @@ FindCell(char *cellName)
 	if (code = VLDBInit(1, &p->info))
             fprintf(stderr,"VLDBInit failed for cell %s\n", p->info.name);
 #endif
-        strcpy((char *)&sname.cell, (char *)&p->info.name);
-        sname.instance[0] = 0;
-        strcpy(sname.name, "afs");
-        code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-        if (code)
-            p->scIndex = 0;
-        else {
-            if ((ttoken.kvno >= 0) && (ttoken.kvno <= 255))
-	        /* this is a kerberos ticket, set scIndex accordingly */
-	        p->scIndex = 2;
-	    else {
-	        fprintf(stderr,"funny kvno (%d) in ticket, proceeding\n",
-	  	        ttoken.kvno);
-	        p->scIndex = 2;
-	    }
-	    p->sc[2] = (struct rx_securityClass *)
-		rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					      ttoken.kvno, ttoken.ticketLen,
-					      ttoken.ticket);
-        }
-        if (p->scIndex == 0)
-            p->sc[0] = (struct rx_securityClass *)
-		rxnull_NewClientSecurityObject();
+	code = afsconf_ClientAuthToken(&p->info, 0, &p->sc, &p->scIndex, &expires);
+	if (code) {
+	    p->scIndex = RX_SECIDX_NULL;
+            p->sc = rxnull_NewClientSecurityObject();
+	}
     }
 
     if (p)

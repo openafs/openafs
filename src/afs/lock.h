@@ -70,73 +70,65 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
 
-#if defined(AFS_SUN57_ENV)
+#if defined(UKERNEL)
+typedef unsigned int afs_lock_tracker_t;
+# define MyPidxx (get_user_struct()->u_procp->p_pid )
+# define MyPidxx2Pid(x) (x)
+#elif defined(AFS_SUN57_ENV)
 typedef kthread_t * afs_lock_tracker_t;
-#define MyPidxx (curthread)
-#define MyPidxx2Pid(x) (x ? ttoproc(x)->p_pid : 0)
+# define MyPidxx (curthread)
+# define MyPidxx2Pid(x) (x ? ttoproc(x)->p_pid : 0)
 #elif defined(AFS_SUN5_ENV) || defined(AFS_OBSD_ENV)
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx (curproc->p_pid)
-#define MyPidxx2Pid(x) (x)
-#else
-#if defined(AFS_AIX41_ENV)
+# define MyPidxx (curproc->p_pid)
+# define MyPidxx2Pid(x) (x)
+#elif defined(AFS_AIX41_ENV)
 typedef tid_t afs_lock_tracker_t;
 extern tid_t thread_self();
-#define MyPidxx (thread_self())
-#define MyPidxx2Pid(x) ((afs_int32)(x))
-#else /* AFS_AIX41_ENV */
-#if defined(AFS_HPUX101_ENV)
-#if defined(AFS_HPUX1111_ENV)
+# define MyPidxx (thread_self())
+# define MyPidxx2Pid(x) ((afs_int32)(x))
+#elif defined(AFS_HPUX101_ENV)
+# if defined(AFS_HPUX1111_ENV)
 typedef struct kthread * afs_lock_tracker_t;
-#define MyPidxx (u.u_kthreadp)
-#define MyPidxx2Pid(x) (x ? kt_tid(x) : 0)
-#else
+#  define MyPidxx (u.u_kthreadp)
+#  define MyPidxx2Pid(x) (x ? kt_tid(x) : 0)
+# else
 typedef afs_proc_t * afs_lock_tracker_t;
-#define MyPidxx (u.u_procp)
-#define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
-#endif
-#else
-#if defined(AFS_SGI64_ENV)
-#if defined(AFS_SGI65_ENV)
+#  define MyPidxx (u.u_procp)
+#  define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
+# endif
+#elif defined(AFS_SGI64_ENV)
+# if defined(AFS_SGI65_ENV)
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx proc_pid(curproc())
-#define MyPidxx2Pid(x) (x)
-#else
+#  define MyPidxx proc_pid(curproc())
+#  define MyPidxx2Pid(x) (x)
+# else
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx current_pid()
-#define MyPidxx2Pid(x) (x)
-#endif
-#else /* AFS_SGI64_ENV */
-#ifdef AFS_LINUX20_ENV
+#  define MyPidxx current_pid()
+#  define MyPidxx2Pid(x) (x)
+# endif
+#elif defined(AFS_LINUX20_ENV)
 typedef struct task_struct * afs_lock_tracker_t;
-#define MyPidxx (current)
-#define MyPidxx2Pid(x) (x? (x)->pid : 0)
-#else
-#if defined(AFS_DARWIN_ENV)
-#if defined(AFS_DARWIN80_ENV)
+# define MyPidxx (current)
+# define MyPidxx2Pid(x) (x? (x)->pid : 0)
+#elif defined(AFS_DARWIN_ENV)
+# if defined(AFS_DARWIN80_ENV)
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx (proc_selfpid())
-#define MyPidxx2Pid(x) (x)
-#else
+#  define MyPidxx (proc_selfpid())
+#  define MyPidxx2Pid(x) (x)
+# else
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx (current_proc()->p_pid )
-#define MyPidxx2Pid(x) (x)
-#endif
-#else
-#if defined(AFS_FBSD_ENV)
+#  define MyPidxx (current_proc()->p_pid )
+#  define MyPidxx2Pid(x) (x)
+# endif
+#elif defined(AFS_FBSD_ENV)
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx (curproc->p_pid )
-#define MyPidxx2Pid(x) (x)
+# define MyPidxx (curproc->p_pid )
+# define MyPidxx2Pid(x) (x)
 #else
 typedef unsigned int afs_lock_tracker_t;
-#define MyPidxx (u.u_procp->p_pid )
-#define MyPidxx2Pid(x) (x)
-#endif /* AFS_FBSD_ENV */
-#endif /* AFS_DARWIN_ENV */
-#endif /* AFS_LINUX20_ENV */
-#endif /* AFS_SGI64_ENV */
-#endif /* AFS_HPUX101_ENV */
-#endif /* AFS_AIX41_ENV */
+# define MyPidxx (u.u_procp->p_pid )
+# define MyPidxx2Pid(x) (x)
 #endif
 
 /* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */

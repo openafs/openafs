@@ -201,7 +201,7 @@ bc_Restorer(afs_int32 aindex)
     volumeEntries = (struct budb_volumeEntry *)
 	malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
     if (!volumeEntries) {
-	afs_com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
     }
 
@@ -279,7 +279,7 @@ bc_Restorer(afs_int32 aindex)
 	if (!di) {
 	    di = (struct dumpinfo *)malloc(sizeof(struct dumpinfo));
 	    if (!di) {
-		afs_com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, NULL);
 		ERROR(BC_NOMEM);
 	    }
 	    memset(di, 0, sizeof(struct dumpinfo));
@@ -301,7 +301,7 @@ bc_Restorer(afs_int32 aindex)
 	/* Create one and thread into list */
 	vi = (struct volinfo *)malloc(sizeof(struct volinfo));
 	if (!vi) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 	memset(vi, 0, sizeof(struct volinfo));
@@ -309,7 +309,7 @@ bc_Restorer(afs_int32 aindex)
 	vi->volname = (char *)malloc(strlen(vname) + 1);
 	if (!vi->volname) {
 	    free(vi);
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 
@@ -482,7 +482,7 @@ bc_Restorer(afs_int32 aindex)
 			    tle = (struct bc_tapeList *)
 				malloc(sizeof(struct bc_tapeList));
 			    if (!tle) {
-				afs_com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 			    memset(tle, 0, sizeof(struct bc_tapeList));
@@ -492,7 +492,7 @@ bc_Restorer(afs_int32 aindex)
 					       + 1);
 			    if (!tle->tapeName) {
 				free(tle);
-				afs_com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 
@@ -537,7 +537,7 @@ bc_Restorer(afs_int32 aindex)
 			    ti = (struct bc_tapeItem *)
 				malloc(sizeof(struct bc_tapeItem));
 			    if (!ti) {
-				afs_com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 			    memset(ti, 0, sizeof(struct bc_tapeItem));
@@ -547,7 +547,7 @@ bc_Restorer(afs_int32 aindex)
 					       + 1);
 			    if (!ti->volumeName) {
 				free(ti);
-				afs_com_err(whoami, BC_NOMEM, "");
+				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 
@@ -637,7 +637,7 @@ bc_Restorer(afs_int32 aindex)
 	(struct tc_restoreDesc *)malloc(nentries *
 					sizeof(struct tc_restoreDesc));
     if (!tcarray) {
-	afs_com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
     }
     memset(tcarray, 0, nentries * sizeof(struct tc_restoreDesc));

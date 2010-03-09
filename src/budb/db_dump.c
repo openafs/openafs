@@ -62,7 +62,9 @@ dumpSyncP dumpSyncPtr = &dumpSync;
 afs_int32
 canWrite(int fid)
 {
+#ifndef AFS_PTHREAD_ENV
     afs_int32 code = 0;
+#endif
     extern dumpSyncP dumpSyncPtr;
 
     ObtainWriteLock(&dumpSyncPtr->ds_lock);
@@ -104,7 +106,9 @@ canWrite(int fid)
 void
 haveWritten(afs_int32 nbytes)
 {
+#ifndef AFS_PTHREAD_ENV
     afs_int32 code = 0;
+#endif
     extern dumpSyncP dumpSyncPtr;
 
     dumpSyncPtr->ds_bytes += nbytes;
@@ -129,7 +133,9 @@ haveWritten(afs_int32 nbytes)
 void
 doneWriting(afs_int32 error)
 {
+#ifndef AFS_PTHREAD_ENV
     afs_int32 code = 0;
+#endif
 
     /* wait for the reader */
     ObtainWriteLock(&dumpSyncPtr->ds_lock);

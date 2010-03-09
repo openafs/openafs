@@ -117,14 +117,26 @@ static bool_t skip_input_bytes(RECSTREAM * rstrm, int cnt);
 static u_int fix_buf_size(u_int s);
 
 static struct xdr_ops xdrrec_ops = {
-    xdrrec_getint32,
-    xdrrec_putint32,
-    xdrrec_getbytes,
-    xdrrec_putbytes,
-    xdrrec_getpos,
-    xdrrec_setpos,
-    xdrrec_inline,
-    xdrrec_destroy
+#ifdef AFS_NT40_ENV
+    /* Windows does not support labeled assignments */
+    xdrrec_getint32,    /* deserialize an afs_int32 */
+    xdrrec_putint32,    /* serialize an afs_int32 */
+    xdrrec_getbytes,    /* deserialize counted bytes */
+    xdrrec_putbytes,    /* serialize counted bytes */
+    xdrrec_getpos,      /* get offset in the stream: not supported. */
+    xdrrec_setpos,      /* set offset in the stream: not supported. */
+    xdrrec_inline,      /* prime stream for inline macros */
+    xdrrec_destroy      /* destroy stream */
+#else
+    .x_getint32 = xdrrec_getint32,
+    .x_putint32 = xdrrec_putint32,
+    .x_getbytes = xdrrec_getbytes,
+    .x_putbytes = xdrrec_putbytes,
+    .x_getpos = xdrrec_getpos,
+    .x_setpos = xdrrec_setpos,
+    .x_inline = xdrrec_inline,
+    .x_destroy = xdrrec_destroy
+#endif
 };
 
 /*  * Create an xdr handle for xdrrec

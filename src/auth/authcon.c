@@ -58,7 +58,7 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
     register struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
     *astr = tc;
-    *aindex = 0;
+    *aindex = RX_SECIDX_NULL;
     return 0;
 }
 
@@ -77,7 +77,7 @@ afsconf_ServerAuth(void *arock,
 	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
-	*aindex = 2;		/* kerberos security index */
+	*aindex = RX_SECIDX_KAD;
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     } else {
@@ -134,7 +134,7 @@ GenericAuth(struct afsconf_dir *adir,
 	rxkad_NewClientSecurityObject(enclevel, &session, kvno, ticketLen,
 				      tbuffer);
     *astr = tclass;
-    *aindex = 2;		/* kerberos security index */
+    *aindex = RX_SECIDX_KAD;
     return 0;
 }
 
@@ -170,4 +170,196 @@ afsconf_ClientAuthSecure(void *arock,
     rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
+}
+
+/*!
+ * Build a security class from the user's current tokens
+ *
+ * This function constructs an RX security class from a user's current
+ * tokens.
+ *
+ * @param[in] info	The cell information structure
+ * @param[in] flags	Security flags describing the desired mechanism
+ * @param[out] sc	The selected security class
+ * @param[out] scIndex  The index of the selected class
+ * @parma[out] expires  The expiry time of the tokens used to build the class
+ *
+ * Only the AFSCONF_SECOPTS_ALWAYSENCRYPT flag will modify the behaviour of
+ * this function - it determines whether a cleartext, or encrypting, security
+ * class is provided.
+ *
+ * @return
+ *     0 on success, non-zero on failure. An error code of
+ *     AFSCONF_NO_SECURITY_CLASS indicates that were were unable to build a
+ *     security class using the selected tokens.
+ */
+
+afs_int32
+afsconf_ClientAuthToken(struct afsconf_cell *info,
+			afsconf_secflags flags,
+			struct rx_securityClass **sc,
+			afs_int32 *scIndex,
+			time_t *expires)
+{
+    struct ktc_principal sname;
+    struct ktc_token ttoken;
+    int encryptLevel;
+    afs_int32 code;
+
+    *sc = NULL;
+    *scIndex = RX_SECIDX_NULL;
+
+    strcpy(sname.cell, info->name);
+    sname.instance[0] = 0;
+    strcpy(sname.name, "afs");
+    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+
+    if (code == 0) {
+	/* XXX - We should think about how to handle this */
+	if (ttoken.kvno < 0 || ttoken.kvno > 256) {
+	     fprintf(stderr,
+		    "funny kvno (%d) in ticket, proceeding\n",
+		    ttoken.kvno);
+	}
+	if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
+	    encryptLevel = rxkad_crypt;
+	else
+	    encryptLevel = rxkad_clear;
+	*sc = rxkad_NewClientSecurityObject(encryptLevel,
+					    &ttoken.sessionKey,
+					    ttoken.kvno,
+					    ttoken.ticketLen,
+					    ttoken.ticket);
+	*scIndex = RX_SECIDX_KAD;
+	if (expires)
+	    *expires = ttoken.endTime;
+    }
+    if (*sc == NULL)
+	return AFSCONF_NO_SECURITY_CLASS;
+
+    return code;
+}
+
+/*!
+ * Build a set of security classes suitable for a server accepting
+ * incoming connections
+ */
+#if !defined(UKERNEL)
+void
+afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
+				   afs_uint32 flags,
+			           struct rx_securityClass ***classes,
+			           afs_int32 *numClasses)
+{
+    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+	*numClasses = 4;
+    else
+	*numClasses = 3;
+
+    *classes = calloc(*numClasses, sizeof(**classes));
+
+    (*classes)[0] = rxnull_NewServerSecurityObject();
+    (*classes)[1] = NULL;
+    (*classes)[2] = rxkad_NewServerSecurityObject(0, dir,
+						  afsconf_GetKey, NULL);
+    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+	(*classes)[3] = rxkad_NewServerSecurityObject(rxkad_crypt, dir,
+						      afsconf_GetKey, NULL);
+}
+#endif
+
+/*!
+ * Pick a security class to use for an outgoing connection
+ *
+ * This function selects an RX security class to use for an outgoing
+ * connection, based on the set of security flags provided.
+ *
+ * @param[in] dir
+ * 	The configuration directory structure for this cell. If NULL,
+ * 	no classes requiring local configuration will be returned.
+ * @param[in] flags
+ * 	A set of flags to determine the properties of the security class which
+ * 	is selected
+ * 	- AFSCONF_SECOPTS_NOAUTH - return an anonymous secirty class
+ * 	- AFSCONF_SECOPTS_LOCALAUTH - use classes which have local key
+ * 		material available.
+ * 	- AFSCONF_SECOPTS_ALWAYSENCRYPT - use classes in encrypting, rather
+ * 	 	than authentication or integrity modes.
+ * 	- AFSCONF_SECOPTS_FALLBACK_NULL - if no suitable class can be found,
+ * 		then fallback to the rxnull security class.
+ * @param[in] info
+ * 	The cell information structure for the current cell. If this is NULL,
+ * 	then use a version locally obtained using the cellName.
+ * @param[in] cellName
+ * 	The cellName to use when obtaining cell information (may be NULL if
+ * 	info is specified)
+ * @param[out] sc
+ * 	The selected security class
+ * @param[out] scIndex
+ * 	The index of the selected security class
+ * @param[out] expires
+ * 	The expiry time of the tokens used to construct the class. Will be
+ * 	NEVER_DATE if the class has an unlimited lifetime. If NULL, the
+ * 	function won't store the expiry date.
+ *
+ * @return
+ * 	Returns 0 on success, or a com_err error code on failure.
+ */
+afs_int32
+afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
+		         struct afsconf_cell *info,
+		         char *cellName, struct rx_securityClass **sc,
+			 afs_int32 *scIndex, time_t *expires) {
+    struct afsconf_cell localInfo;
+    afs_int32 code = 0;
+
+    *sc = NULL;
+    *scIndex = RX_SECIDX_NULL;
+    if (expires)
+	expires = 0;
+
+    if ( !(flags & AFSCONF_SECOPTS_NOAUTH) ) {
+	if (!dir)
+	    return AFSCONF_NOCELLDB;
+
+	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
+	    code = afsconf_GetLatestKey(dir, 0, 0);
+	    if (code)
+		goto out;
+
+	    if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
+		code = afsconf_ClientAuthSecure(dir, sc, scIndex);
+	    else
+		code = afsconf_ClientAuth(dir, sc, scIndex);
+
+	    if (code)
+		goto out;
+
+	    if (expires)
+		*expires = NEVERDATE;
+	} else {
+	    if (info == NULL) {
+		code = afsconf_GetCellInfo(dir, cellName, NULL, &localInfo);
+		if (code)
+		    goto out;
+		info = &localInfo;
+	    }
+
+	    code = afsconf_ClientAuthToken(info, flags, sc, scIndex, expires);
+	    if (code && !(flags & AFSCONF_SECOPTS_FALLBACK_NULL))
+		goto out;
+
+	    /* If we didn't get a token, we'll just run anonymously */
+	    code = 0;
+	}
+    }
+    if (*sc == NULL) {
+	*sc = rxnull_NewClientSecurityObject();
+	*scIndex = RX_SECIDX_NULL;
+	if (expires)
+	    *expires = NEVERDATE;
+    }
+
+out:
+    return code;
 }

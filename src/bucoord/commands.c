@@ -54,7 +54,6 @@ extern struct bc_config *bc_globalConfig;
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 extern struct ubik_client *cstruct;
 extern char *whoami;
-extern struct ktc_token ttoken;
 
 char *loadFile;
 extern afs_int32 lastTaskCode;
@@ -121,7 +120,7 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
     if (!(*ss)) {
 	*ss = (struct serversort *)malloc(sizeof(struct serversort));
 	if (!(*ss)) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    *ss = 0;
 	    return (BC_NOMEM);
 	}
@@ -142,7 +141,7 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
     if (!(*ps)) {
 	*ps = (struct partitionsort *)malloc(sizeof(struct partitionsort));
 	if (!(*ps)) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    free(*ss);
 	    *ps = 0;
 	    *ss = 0;
@@ -287,7 +286,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 				 entries[e].serverPartition[ei], &servers,
 				 &ss, &ps);
 		if (tcode) {
-		    afs_com_err(whoami, tcode, "");
+		    afs_com_err(whoami, tcode, NULL);
 		    ERROR(tcode);
 		}
 
@@ -308,7 +307,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 			    if ((strcmp(&entries[e].name[l], ".backup") == 0)
 				|| (strcmp(&entries[e].name[l], ".readonly")
 				    == 0)
-				|| (strcmp(&entries[e].name[l], "") == 0))
+				|| (strcmp(&entries[e].name[l], NULL) == 0))
 				add = 0;
 			}
 		    }
@@ -319,14 +318,14 @@ EvalVolumeSet2(struct bc_config *aconfig,
 		    tvd = (struct bc_volumeDump *)
 			malloc(sizeof(struct bc_volumeDump));
 		    if (!tvd) {
-			afs_com_err(whoami, BC_NOMEM, "");
+			afs_com_err(whoami, BC_NOMEM, NULL);
 			ERROR(BC_NOMEM);
 		    }
 		    memset(tvd, 0, sizeof(*tvd));
 
 		    tvd->name = (char *)malloc(strlen(entries[e].name) + 10);
 		    if (!(tvd->name)) {
-			afs_com_err(whoami, BC_NOMEM, "");
+			afs_com_err(whoami, BC_NOMEM, NULL);
 			free(tvd);
 			ERROR(BC_NOMEM);
 		    }
@@ -582,7 +581,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
 				 entry.serverPartition[foundentry], &servers,
 				 &ss, &ps);
 		if (code) {
-		    afs_com_err(whoami, code, "");
+		    afs_com_err(whoami, code, NULL);
 		    return (code);
 		}
 
@@ -590,14 +589,14 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		tvd = (struct bc_volumeDump *)
 		    malloc(sizeof(struct bc_volumeDump));
 		if (!tvd) {
-		    afs_com_err(whoami, BC_NOMEM, "");
+		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    return (BC_NOMEM);
 		}
 		memset(tvd, 0, sizeof(*tvd));
 
 		tvd->name = (char *)malloc(strlen(entry.name) + 10);
 		if (!(tvd->name)) {
-		    afs_com_err(whoami, BC_NOMEM, "");
+		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    free(tvd);
 		    return (BC_NOMEM);
 		}
@@ -637,6 +636,23 @@ EvalVolumeSet1(struct bc_config *aconfig,
     return (0);
 }				/*EvalVolumeSet1 */
 
+char *
+compactTimeString(time_t *date, char *string, afs_int32 size)
+{
+    struct tm *ltime;
+
+    if (!string)
+	return NULL;
+
+    if (*date == NEVERDATE) {
+	sprintf(string, "NEVER");
+    } else {
+	ltime = localtime(date);
+	strftime(string, size, "%m/%d/%Y %H:%M", ltime);
+    }
+    return (string);
+}
+
 /* compactDateString
  *	print out a date in compact format, 16 chars, format is
  *	mm/dd/yyyy hh:mm
@@ -648,21 +664,10 @@ EvalVolumeSet1(struct bc_config *aconfig,
 char *
 compactDateString(afs_uint32 *date_long, char *string, afs_int32 size)
 {
-    struct tm *ltime;
-
-    if (!string)
-	return 0;
-
-    if (*date_long == NEVERDATE) {
-	sprintf(string, "NEVER");
-    } else {
-        time_t t = *date_long;
-	ltime = localtime(&t);
-	/* prints date in U.S. format of mm/dd/yyyy */
-	strftime(string, size, "%m/%d/%Y %H:%M", ltime);
-    }
-    return (string);
+    time_t t = *date_long;
+    return compactTimeString(&t, string, size);
 }
+
 
 afs_int32
 bc_SafeATOI(char *anum)
@@ -739,7 +744,7 @@ bc_CopyString(char *astring)
     tlen = strlen(astring);
     tp = (char *)malloc(tlen + 1);	/* don't forget the terminating null */
     if (!tp) {
-	afs_com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, NULL);
 	return (tp);
     }
     strcpy(tp, astring);
@@ -772,7 +777,7 @@ concatParams(struct cmd_item *itemPtr)
 
     string = (char *)malloc(length);	/* allocate the string */
     if (!string) {
-	afs_com_err(whoami, BC_NOMEM, "");
+	afs_com_err(whoami, BC_NOMEM, NULL);
 	return (NULL);
     }
     string[0] = 0;
@@ -1018,11 +1023,11 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* Print token expiration time */
-	if ((ttoken.endTime > prevTime)
-	    && (ttoken.endTime <= youngest->scheduledDump) && as
-	    && (ttoken.endTime != NEVERDATE)) {
-	    if (ttoken.endTime > time(0)) {
-		compactDateString(&ttoken.endTime, ds, 50);
+	if ((tokenExpires > prevTime)
+	    && (tokenExpires <= youngest->scheduledDump) && as
+	    && (tokenExpires != NEVERDATE)) {
+	    if (tokenExpires > time(0)) {
+		compactTimeString(&tokenExpires, ds, 50);
 		printf("       %16s: TOKEN EXPIRATION\n", ds);
 	    } else {
 		printf("       TOKEN HAS EXPIRED\n");
@@ -1042,11 +1047,11 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
     }
 
     /* Print token expiration time if havn't already */
-    if ((ttoken.endTime == NEVERDATE) && as)
+    if ((tokenExpires == NEVERDATE) && as)
 	printf("     : TOKEN NEVER EXPIRES\n");
-    else if ((ttoken.endTime > prevTime) && as) {
-	if (ttoken.endTime > time(0)) {
-	    compactDateString(&ttoken.endTime, ds, 50);
+    else if ((tokenExpires > prevTime) && as) {
+	if (tokenExpires > time(0)) {
+	    compactTimeString(&tokenExpires, ds, 50);
 	    printf("       %16s: TOKEN EXPIRATION\n", ds);
 	} else {
 	    printf("     : TOKEN HAS EXPIRED\n");
@@ -1190,14 +1195,14 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 	/* build list of volume items */
 	tvol = (struct bc_volumeDump *)malloc(sizeof(struct bc_volumeDump));
 	if (!tvol) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
 	memset(tvol, 0, sizeof(struct bc_volumeDump));
 
 	tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
 	if (!tvol->name) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
 	strncpy(tvol->name, ti->data, VOLSER_OLDMAXVOLNAME);
@@ -1237,7 +1242,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    portCount++;
 	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
 
@@ -1367,7 +1372,7 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    portCount++;
 	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
 
@@ -1538,7 +1543,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 
 	    tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
 	    if (!tvol->name) {
-		afs_com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
 	    }
 	    strncpy(tvol->name, volume, VOLSER_OLDMAXVOLNAME);
@@ -1564,7 +1569,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    portCount++;
 	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
 
@@ -1721,7 +1726,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	    portCount = 1;
 	    portp = (afs_int32 *) malloc(sizeof(afs_int32));
 	    if (!portp) {
-		afs_com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
 	    }
 
@@ -1802,7 +1807,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	    statusPtr->scheduledDump = atTime;
 	    statusPtr->cmdLine = (char *)malloc(length);
 	    if (!statusPtr->cmdLine) {
-		afs_com_err(whoami, BC_NOMEM, "");
+		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
 	    }
 
@@ -1835,7 +1840,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 		strcat(statusPtr->cmdLine, " -n");
 
 	    printf("Add scheduled dump as job %d\n", statusPtr->jobNumber);
-	    if ((atTime > ttoken.endTime) && (ttoken.endTime != NEVERDATE))
+	    if ((atTime > tokenExpires) && (tokenExpires != NEVERDATE))
 		afs_com_err(whoami, 0,
 			"Warning: job %d starts after expiration of AFS token",
 			statusPtr->jobNumber);
@@ -1854,7 +1859,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     if (loadfile) {
 	loadFile = (char *)malloc(strlen(as->parms[6].items->data) + 1);
 	if (!loadFile) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
 	strcpy(loadFile, as->parms[6].items->data);
@@ -2403,7 +2408,7 @@ deleteDump(afs_uint32 dumpid,		/* The dumpid to delete */
 	/* Display the dumps that were deleted - includes appended dumps */
 	for (i = 0; i < dumps.budb_dumpsList_len; i++)
 	    printf("     %u%s\n", dumps.budb_dumpsList_val[i],
-		   (i > 0) ? " Appended Dump" : "");
+		   (i > 0) ? " Appended Dump" : NULL);
 	if (dumps.budb_dumpsList_val)
 	    free(dumps.budb_dumpsList_val);
     }
@@ -2424,7 +2429,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 rcode = 0;
     afs_int32 groupId = 0, havegroupid, sflags, noexecute;
     struct cmd_item *ti;
-    afs_uint32 fromTime = 0, toTime = 0, havetime = 0;
+    afs_int32 fromTime = 0, toTime = 0, havetime = 0;
     char *timeString;
     budb_dumpsList dumps, flags;
     int i;
@@ -2833,7 +2838,7 @@ DBLookupByVolume(char *volumeName)
     }
 
     if (code)
-	afs_com_err(whoami, code, "");
+	afs_com_err(whoami, code, NULL);
     return (code);
 }
 
@@ -2921,7 +2926,7 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
     for (tapeNumber = dumpEntry.tapes.b; tapeNumber <= dumpEntry.tapes.maxTapes; tapeNumber++) {	/*f */
 	tapeLinkPtr = (struct tapeLink *)malloc(sizeof(struct tapeLink));
 	if (!tapeLinkPtr) {
-	    afs_com_err(whoami, BC_NOMEM, "");
+	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 
@@ -2973,7 +2978,7 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 		volumeLinkPtr =
 		    (struct volumeLink *)malloc(sizeof(struct volumeLink));
 		if (!volumeLinkPtr) {
-		    afs_com_err(whoami, BC_NOMEM, "");
+		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    ERROR(BC_NOMEM);
 		}
 		memset(volumeLinkPtr, 0, sizeof(*volumeLinkPtr));

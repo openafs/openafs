@@ -35,7 +35,10 @@ typedef struct {
 void OpenFDs(int);
 void assertNullFDSet(int fd, fd_set *);
 void Die(int flag, char *);
-void Log(char *fmt, ...);
+
+void Log(char *fmt, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+
 void sendOOB(int);
 void recvOOB(int);
 

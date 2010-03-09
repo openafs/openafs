@@ -59,7 +59,7 @@ uss_common.o : uss_common.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss_common.c
 
 uss_vol.o : uss_vol.c
-	${CC} -c ${CFLAGS} @CFLAGS_NOERROR@ ${srcdir}/uss_vol.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_vol.c
 
 uss_acl.o : uss_acl.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss_acl.c

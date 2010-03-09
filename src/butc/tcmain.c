@@ -60,6 +60,8 @@
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
+#include <afs/kautils.h>
+#include <afs/bc.h>
 
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */
@@ -839,7 +841,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);
     struct rx_service *service;
-    struct ktc_token ttoken;
+    time_t tokenExpires;
     char cellName[64];
     int localauth;
     /*process arguments */
@@ -851,7 +853,6 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 #else
     PROCESS dbWatcherPid;
 #endif
-    time_t t;
     afs_uint32 host = htonl(INADDR_ANY);
 
     debugLevel = 0;
@@ -1063,7 +1064,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     rx_SetRxDeadTime(150);
 
     /* Establish connection with the vldb server */
-    code = vldbClientInit(0, localauth, cellName, &cstruct, &ttoken);
+    code = vldbClientInit(0, localauth, cellName, &cstruct, &tokenExpires);
     if (code) {
 	TapeLog(0, 0, code, 0, "Can't access vldb\n");
 	return code;
@@ -1146,8 +1147,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     TLog(0, "Starting Tape Coordinator: Port offset %u   Debug level %u\n",
 	 portOffset, debugLevel);
-    t = ttoken.endTime;
-    TLog(0, "Token expires: %s\n", cTIME(&t));
+    TLog(0, "Token expires: %s\n", cTIME(&tokenExpires));
 
     rx_StartServer(1);		/* Donate this process to the server process pool */
     TLog(0, "Error: StartServer returned");
