@@ -6225,6 +6225,7 @@ UV_SyncVolume(afs_int32 aserver, afs_int32 apart, char *avolname, int flags)
 	if (modified && (code == VL_NOENT)) {
 	    fprintf(STDOUT, "\n**entry deleted**\n");
 	} else if (modified) {
+	    MapHostToNetwork(&vldbentry);
 	    EnumerateEntry(&vldbentry);
 	} else {
 	    fprintf(STDOUT, "\n**no change**\n");
