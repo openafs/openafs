@@ -57,7 +57,7 @@ IGNORE += -Xpam_afs
 DEBVERS  := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
 		| cut -d- -f1)
 VERSION  := $(shell echo '$(DEBVERS)' | sed -e 's/[+-].*//' -e 's/~//g')
-UPSTREAM  = /afs/grand.central.org/software/openafs/candidate/$(VERSION)
+UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
 
 # Download the upstream source, merge in the doc tarball, and do the
 # repackaging that we have to do for DFSG reasons.  This assumes AFS is

@@ -31,9 +31,9 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
-openafs (1.4.12~pre4+dfsg-1) UNRELEASED; urgency=low
+openafs (1.4.12+dfsg-1) UNRELEASED; urgency=low
 
-  * New upstream release candidate.
+  * New upstream release.
     - Enable weak encryption types in aklog and klog.krb5.
     - Build support for Linux 2.6.33.
     - Improvements to host tracking safety in the file server.
