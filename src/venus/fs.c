@@ -3276,13 +3276,14 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	verbose = 1;
 
     blob.in = (char *)&tsb;
-    blob.out = (char *)&tsb2;
-    blob.in_size = blob.out_size = sizeof(struct sbstruct);
-    memset(&tsb2, 0, sizeof(tsb2));
+    blob.in_size = sizeof(struct sbstruct);
 
     /* once per -file */
     for (ti = as->parms[1].items; ti; ti = ti->next) {
 	/* Do this solely to see if the file is there */
+
+        blob.out = space;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	code = pioctl(ti->data, VIOCWHEREIS, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
@@ -3290,6 +3291,9 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
 	}
 
+	memset(&tsb2, 0, sizeof(tsb2));
+	blob.out = (char *)&tsb2;
+	blob.out_size = sizeof(struct sbstruct);
 	code = pioctl(ti->data, VIOC_STORBEHIND, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
@@ -3314,6 +3318,9 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
      */
     if (!as->parms[1].items || (allfiles != -1)) {
 	tsb.sb_default = allfiles;
+        memset(&tsb2, 0, sizeof(tsb2));
+	blob.out = (char *)&tsb2;
+	blob.out_size = sizeof(struct sbstruct);
 	code = pioctl(0, VIOC_STORBEHIND, &blob, 1);
 	if (code) {
 	    Die(errno, ((allfiles == -1) ? 0 : "-allfiles"));

@@ -119,6 +119,7 @@ struct cmd_parmdesc;
 extern afs_int32 bc_ParseExpiration(struct cmd_parmdesc *paramPtr,
 		                    afs_int32 *expType, afs_int32 *expDate);
 /* main.c */
+extern time_t tokenExpires;
 extern afs_int32 doDispatch(afs_int32, char *[], afs_int32);
 extern void bc_HandleMisc(afs_int32 code);
 
@@ -166,11 +167,6 @@ extern int bcdb_FindTape(afs_int32 dumpid, char *tapeName,
 		         struct budb_tapeEntry *teptr);
 
 extern afs_int32 udbClientInit(int noAuthFlag, int localauth, char *cellName);
-
-struct ktc_token;
-extern int vldbClientInit(int noAuthFlag, int localauth, char *cellName,
-		          struct ubik_client **cstruct,
-                          struct ktc_token *ttoken);
 
 /* vol_sets.c */
 extern afs_int32 bc_UpdateVolumeSet(void);

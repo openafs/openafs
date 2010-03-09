@@ -114,8 +114,8 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 {				/* Should be the same as volumeId if there is
 				 * no parent */
     VolumeDiskData vol;
-    int fd, i;
-    char headerName[32], volumePath[64];
+    int i, rc;
+    char headerName[VMAXPATHLEN], volumePath[VMAXPATHLEN];
     Device device;
     struct DiskPartition64 *partition;
     struct VolumeDiskHeader diskHeader;
@@ -123,6 +123,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     FdHandle_t *fdP;
     Inode nearInode = 0;
     char *part, *name;
+    struct stat st;
 
     *ec = 0;
     memset(&vol, 0, sizeof(vol));
@@ -156,6 +157,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	    return NULL;
 	}
     }
+    *ec = 0;
     VLockPartition_r(partname);
     memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
@@ -168,14 +170,15 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(vol.id));
     (void)afs_snprintf(volumePath, sizeof volumePath, "%s/%s",
 		       VPartitionPath(partition), headerName);
-    fd = afs_open(volumePath, O_CREAT | O_EXCL | O_WRONLY, 0600);
-    if (fd == -1) {
-	if (errno == EEXIST) {
+    rc = stat(volumePath, &st);
+    if (rc == 0 || errno != ENOENT) {
+	if (rc == 0) {
 	    Log("VCreateVolume: Header file %s already exists!\n",
 		volumePath);
 	    *ec = VVOLEXISTS;
 	} else {
-	    Log("VCreateVolume: Couldn't create header file %s for volume %u\n", volumePath, vol.id);
+	    Log("VCreateVolume: Error %d trying to stat header file %s\n",
+	        errno, volumePath);
 	    *ec = VNOVOL;
 	}
 	return NULL;
@@ -228,8 +231,10 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	    if (handle)
 		IH_RELEASE(handle);
 	    RemoveInodes(device, vol.id);
-	    *ec = VNOVOL;
-	    close(fd);
+	    if (!*ec) {
+		*ec = VNOVOL;
+	    }
+	    VDestroyVolumeDiskHeader(partition, volumeId, parentId);
 	    return NULL;
 	}
 	IH_INIT(handle, device, vol.parentId, *(p->inode));
@@ -262,34 +267,35 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     if (fdP == NULL) {
 	Log("VCreateVolume:  Problem iopen inode %s (err=%d)\n",
 	    PrintInode(NULL, tempHeader.volumeInfo), errno);
-	unlink(volumePath);
 	goto bad;
     }
     if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
 	Log("VCreateVolume:  Problem lseek inode %s (err=%d)\n",
 	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	FDH_REALLYCLOSE(fdP);
-	unlink(volumePath);
 	goto bad;
     }
     if (FDH_WRITE(fdP, (char *)&vol, sizeof(vol)) != sizeof(vol)) {
 	Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
 	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	FDH_REALLYCLOSE(fdP);
-	unlink(volumePath);
 	goto bad;
     }
     FDH_CLOSE(fdP);
     IH_RELEASE(handle);
 
     VolumeHeaderToDisk(&diskHeader, &tempHeader);
-    if (write(fd, &diskHeader, sizeof(diskHeader)) != sizeof(diskHeader)) {
-	Log("VCreateVolume: Unable to write volume header %s; volume %u not created\n", volumePath, vol.id);
-	unlink(volumePath);
+    rc = VCreateVolumeDiskHeader(&diskHeader, partition);
+    if (rc) {
+	Log("VCreateVolume: Error %d trying to write volume header for "
+	    "volume %u on partition %s; volume not created\n", rc,
+	    vol.id, VPartitionPath(partition));
+	if (rc == EEXIST) {
+	    *ec = VVOLEXISTS;
+	}
 	goto bad;
     }
-    fsync(fd);
-    close(fd);
+
     return (VAttachVolumeByName_r(ec, partname, headerName, V_SECRETLY));
 }
 
@@ -366,3 +372,187 @@ ClearVolumeStats_r(register VolumeDiskData * vol)
     vol->dayUse = 0;
     vol->dayUseDate = 0;
 }
+
+/**
+ * read an existing volume disk header.
+ *
+ * @param[in]  volid  volume id
+ * @param[in]  dp     disk partition object
+ * @param[out] hdr    volume disk header
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval -1 volume header doesn't exist
+ *    @retval EIO failed to read volume header
+ *
+ * @internal
+ */
+afs_int32
+VReadVolumeDiskHeader(VolumeId volid,
+		      struct DiskPartition64 * dp,
+		      VolumeDiskHeader_t * hdr)
+{
+    afs_int32 code = 0;
+    int fd;
+    char path[MAXPATHLEN];
+
+    (void)afs_snprintf(path, sizeof(path),
+		       "%s/" VFORMAT,
+		       VPartitionPath(dp), afs_printable_uint32_lu(volid));
+    fd = open(path, O_RDONLY);
+    if (fd < 0) {
+	Log("VReadVolumeDiskHeader: Couldn't open header for volume %lu.\n",
+	    afs_printable_uint32_lu(volid));
+	code = -1;
+    } else if (read(fd, hdr, sizeof(*hdr)) != sizeof(*hdr)) {
+	Log("VReadVolumeDiskHeader: Couldn't read header for volume %lu.\n",
+	    afs_printable_uint32_lu(volid));
+	code = EIO;
+    }
+
+    if (fd >= 0) {
+	close(fd);
+    }
+    return code;
+}
+
+/**
+ * write an existing volume disk header.
+ *
+ * @param[in] hdr   volume disk header
+ * @param[in] dp    disk partition object
+ * @param[in] cr    assert if O_CREAT | O_EXCL should be passed to open()
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval -1 volume header doesn't exist
+ *    @retval EIO failed to write volume header
+ *
+ * @internal
+ */
+static afs_int32
+_VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
+			struct DiskPartition64 * dp,
+			int flags)
+{
+    afs_int32 code = 0;
+    int fd;
+    char path[MAXPATHLEN];
+
+    flags |= O_RDWR;
+
+    (void)afs_snprintf(path, sizeof(path),
+		       "%s/" VFORMAT,
+		       VPartitionPath(dp), afs_printable_uint32_lu(hdr->id));
+    fd = open(path, flags, 0644);
+    if (fd < 0) {
+	code = errno;
+	Log("_VWriteVolumeDiskHeader: Couldn't open header for volume %lu, "
+	    "error = %d\n", afs_printable_uint32_lu(hdr->id), errno);
+    } else if (write(fd, hdr, sizeof(*hdr)) != sizeof(*hdr)) {
+	Log("_VWriteVolumeDiskHeader: Couldn't write header for volume %lu, "
+	    "error = %d\n", afs_printable_uint32_lu(hdr->id), errno);
+	code = EIO;
+    }
+
+    if (fd >= 0) {
+	if (close(fd) != 0) {
+	    Log("_VWriteVolumeDiskHeader: Error closing header for volume "
+	        "%lu, errno %d\n", afs_printable_uint32_lu(hdr->id), errno);
+	}
+    }
+
+    return code;
+}
+
+/**
+ * write an existing volume disk header.
+ *
+ * @param[in] hdr   volume disk header
+ * @param[in] dp    disk partition object
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval ENOENT volume header doesn't exist
+ *    @retval EIO failed to write volume header
+ */
+afs_int32
+VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
+		       struct DiskPartition64 * dp)
+{
+    afs_int32 code;
+
+    code = _VWriteVolumeDiskHeader(hdr, dp, 0);
+    if (code) {
+	goto done;
+    }
+
+ done:
+    return code;
+}
+
+/**
+ * create and write a volume disk header to disk.
+ *
+ * @param[in] hdr   volume disk header
+ * @param[in] dp    disk partition object
+ *
+ * @return operation status
+ *    @retval 0 success
+ *    @retval EEXIST volume header already exists
+ *    @retval EIO failed to write volume header
+ *
+ * @internal
+ */
+afs_int32
+VCreateVolumeDiskHeader(VolumeDiskHeader_t * hdr,
+			struct DiskPartition64 * dp)
+{
+    afs_int32 code = 0;
+
+    code = _VWriteVolumeDiskHeader(hdr, dp, O_CREAT | O_EXCL);
+    if (code) {
+	goto done;
+    }
+
+ done:
+    return code;
+}
+
+
+/**
+ * destroy a volume disk header.
+ *
+ * @param[in] dp      disk partition object
+ * @param[in] volid   volume id
+ * @param[in] parent  parent's volume id, 0 if unknown
+ *
+ * @return operation status
+ *    @retval 0 success
+ *
+ * @note if parent is 0, the parent volume ID will be looked up from the
+ * fileserver
+ *
+ * @note for non-DAFS, parent is currently ignored
+ */
+afs_int32
+VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
+			 VolumeId volid,
+			 VolumeId parent)
+{
+    afs_int32 code = 0;
+    char path[MAXPATHLEN];
+
+    (void)afs_snprintf(path, sizeof(path),
+                       "%s/" VFORMAT,
+                       VPartitionPath(dp), afs_printable_uint32_lu(volid));
+    code = unlink(path);
+    if (code) {
+	Log("VDestroyVolumeDiskHeader: Couldn't unlink disk header, error = %d\n", errno);
+	goto done;
+    }
+
+ done:
+    return code;
+}
+

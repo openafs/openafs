@@ -131,7 +131,8 @@ main(int argc, char **argv)
     register afs_int32 code;
     afs_int32 myHost;
     struct rx_service *tservice;
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
     struct afsconf_dir *tdir;
     struct ktc_encryptionKey tkey;
     struct afsconf_cell info;
@@ -363,13 +364,12 @@ main(int argc, char **argv)
     memset(HostAddress, 0, sizeof(HostAddress));
     initialize_dstats();
 
-    sc[0] = rxnull_NewServerSecurityObject();
-    sc[1] = (struct rx_securityClass *)0;
-    sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+    afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
 
     tservice =
-	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server", sc, 3,
-		      VL_ExecuteRequest);
+	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server",
+			  securityClasses, numClasses,
+			  VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create VLDB_SERVICE rx service\n");
 	exit(3);
@@ -385,8 +385,9 @@ main(int argc, char **argv)
     }
 
     tservice =
-	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
-		      RXSTATS_ExecuteRequest);
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats",
+			  securityClasses, numClasses,
+			  RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create rpc stats rx service\n");
 	exit(3);

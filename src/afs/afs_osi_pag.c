@@ -264,6 +264,8 @@ afs_setpag(void)
 	code = AddPag(p, genpag(), &credp);
 	crfree(credp);
     }
+#elif defined(UKERNEL)
+    code = AddPag(genpag(), &(get_user_struct()->u_cred));
 #else
     code = AddPag(genpag(), &u.u_cred);
 #endif
@@ -359,6 +361,8 @@ afs_setpag_val(int pagval)
 	code = AddPag(p, pagval, &credp);
 	crfree(credp);
     }
+#elif defined(UKERNEL)
+    code = AddPag(pagval, &(get_user_struct()->u_cred));
 #else
     code = AddPag(pagval, &u.u_cred);
 #endif
@@ -379,7 +383,11 @@ int
 afs_getpag_val(void)
 {
     int pagvalue;
+#ifdef UKERNEL
+    afs_ucred_t *credp = get_user_struct()->u_cred;
+#else
     afs_ucred_t *credp = u.u_cred;
+#endif
     gid_t gidset0, gidset1;
 #ifdef AFS_SUN510_ENV
     const gid_t *gids;

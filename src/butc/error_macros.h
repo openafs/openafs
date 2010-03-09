@@ -26,11 +26,15 @@
         }
 
 extern void ErrorLog(int debug, afs_int32 task, afs_int32 error1,
-		     afs_int32 error2, char *fmt, ...);
-extern void TapeLog(int debug, afs_int32 task, afs_int32 error1,
-		    afs_int32 error2, char *fmt, ...);
-extern void TLog(afs_int32 task, char *fmt, ...);
+		     afs_int32 error2, char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 5, 6);
 
+extern void TapeLog(int debug, afs_int32 task, afs_int32 error1,
+		    afs_int32 error2, char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 5, 6);
+
+extern void TLog(afs_int32 task, char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
 
 extern void FreeNode(afs_int32 taskID);
 extern void CreateNode(struct dumpNode **newNode);

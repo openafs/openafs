@@ -59,12 +59,15 @@ extern bool_t xdr_union(XDR * xdrs, enum_t * dscmp, caddr_t unp,
 extern bool_t xdr_string(XDR * xdrs, char **cpp, u_int maxsize);
 extern bool_t xdr_wrapstring(XDR * xdrs, char **cpp);
 extern void * xdr_alloc(afs_int32 size);
-extern void   xdr_free(void *x, afs_int32 size);
+extern void   xdr_free(xdrproc_t proc, void *obj);
 
 
 /* xdr_float.c */
 extern bool_t xdr_float(XDR * xdrs, float *fp);
 extern bool_t xdr_double(XDR * xdrs, double *dp);
+
+/* xdr_len.c */
+extern void xdrlen_create(XDR *xdrs);
 
 /* xdr_mem.c */
 extern void xdrmem_create(XDR * xdrs, caddr_t addr, u_int size,

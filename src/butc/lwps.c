@@ -299,7 +299,7 @@ ELog(afs_int32 task, char *fmt, ...)
     va_end(ap);
 
     /* Sends message to ErrorLog, TapeLog and stdout */
-    ErrorLog(0, task, 0, 0, tmp);
+    ErrorLog(0, task, 0, 0, "%s", tmp);
 }
 
 /* first proc called by anybody who intends to use the device */

@@ -264,8 +264,67 @@ rxfs_storeDestroy(void **r, afs_int32 error)
     return code;
 }
 
+afs_int32
+afs_GenericStoreProc(struct storeOps *ops, void *rock,
+		     struct dcache *tdc, int *shouldwake,
+		     afs_size_t *bytesXferred)
+{
+    struct rxfs_storeVariables *svar = rock;
+    afs_uint32 tlen, bytesread, byteswritten;
+    afs_int32 code;
+    int offset = 0;
+    afs_size_t size;
+    struct osi_file *tfile;
+
+    size = tdc->f.chunkBytes;
+
+    tfile = afs_CFileOpen(&tdc->f.inode);
+
+    while ( size > 0 ) {
+	code = (*ops->prepare)(rock, size, &tlen);
+	if ( code )
+	    break;
+
+	code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
+	if (code)
+	    break;
+
+	tlen = bytesread;
+	code = (*ops->write)(rock, tlen, &byteswritten);
+	if (code)
+	    break;
+#ifndef AFS_NOSTATS
+	*bytesXferred += byteswritten;
+#endif /* AFS_NOSTATS */
+
+	offset += tlen;
+	size -= tlen;
+	/*
+	 * if file has been locked on server, can allow
+	 * store to continue
+	 */
+	if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
+	    *shouldwake = 0;	/* only do this once */
+	    afs_wakeup(svar->vcache);
+	}
+    }
+    afs_CFileClose(tfile);
+
+    return code;
+}
+
 static
 struct storeOps rxfs_storeUfsOps = {
+#if (defined(AFS_SGI_ENV) && !defined(__c99))
+    rxfs_storeUfsPrepare,
+    rxfs_storeUfsRead,
+    rxfs_storeUfsWrite,
+    rxfs_storeStatus,
+    rxfs_storePadd,
+    rxfs_storeClose,
+    rxfs_storeDestroy,
+    afs_GenericStoreProc
+#else
     .prepare = 	rxfs_storeUfsPrepare,
     .read =	rxfs_storeUfsRead,
     .write =	rxfs_storeUfsWrite,
@@ -275,11 +334,23 @@ struct storeOps rxfs_storeUfsOps = {
     .destroy =	rxfs_storeDestroy,
 #ifdef AFS_LINUX26_ENV
     .storeproc = afs_linux_storeproc
+#else
+    .storeproc = afs_GenericStoreProc
+#endif
 #endif
 };
 
 static
 struct storeOps rxfs_storeMemOps = {
+#if (defined(AFS_SGI_ENV) && !defined(__c99))
+    rxfs_storeMemPrepare,
+    rxfs_storeMemRead,
+    rxfs_storeMemWrite,
+    rxfs_storeStatus,
+    rxfs_storePadd,
+    rxfs_storeClose,
+    rxfs_storeDestroy
+#else
     .prepare =	rxfs_storeMemPrepare,
     .read = 	rxfs_storeMemRead,
     .write = 	rxfs_storeMemWrite,
@@ -287,6 +358,7 @@ struct storeOps rxfs_storeMemOps = {
     .padd =	rxfs_storePadd,
     .close = 	rxfs_storeClose,
     .destroy =	rxfs_storeDestroy
+#endif
 };
 
 afs_int32
@@ -368,56 +440,6 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
     *rock = (void *)v;
     return 0;
 }
-
-afs_int32
-afs_GenericStoreProc(struct storeOps *ops, void *rock,
-		     struct dcache *tdc, int *shouldwake,
-		     afs_size_t *bytesXferred)
-{
-    struct rxfs_storeVariables *svar = rock;
-    afs_uint32 tlen, bytesread, byteswritten;
-    afs_int32 code;
-    int offset = 0;
-    afs_size_t size;
-    struct osi_file *tfile;
-
-    size = tdc->f.chunkBytes;
-
-    tfile = afs_CFileOpen(&tdc->f.inode);
-
-    while ( size > 0 ) {
-	code = (*ops->prepare)(rock, size, &tlen);
-	if ( code )
-	    break;
-
-	code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
-	if (code)
-	    break;
-
-	tlen = bytesread;
-	code = (*ops->write)(rock, tlen, &byteswritten);
-	if (code)
-	    break;
-#ifndef AFS_NOSTATS
-	*bytesXferred += byteswritten;
-#endif /* AFS_NOSTATS */
-
-	offset += tlen;
-	size -= tlen;
-	/*
-	 * if file has been locked on server, can allow
-	 * store to continue
-	 */
-	if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
-	    *shouldwake = 0;	/* only do this once */
-	    afs_wakeup(svar->vcache);
-	}
-    }
-    afs_CFileClose(tfile);
-
-    return code;
-}
-
 unsigned int storeallmissing = 0;
 /*!
  *	Called for each chunk upon store.
@@ -495,12 +517,8 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 #endif /* AFS_NOSTATS */
 	bytesXferred = 0;
 
-	if (ops->storeproc)
-	    code = (*ops->storeproc)(ops, rock, tdc, shouldwake,
+	code = (*ops->storeproc)(ops, rock, tdc, shouldwake,
 				     &bytesXferred);
-	else
-            code = afs_GenericStoreProc(ops, rock, tdc, shouldwake,
-					&bytesXferred);
 
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,

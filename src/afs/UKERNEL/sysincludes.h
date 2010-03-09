@@ -229,9 +229,9 @@ typedef unsigned int fsblkcnt_t;
 #define flock			usr_flock
 #define fid			usr_fid
 #define sysent			usr_sysent
+#define ifaddr                  usr_ifaddr
+#define ifnet                   usr_ifnet
 #define in_ifaddr		usr_in_ifaddr
-#define ifaddr			usr_ifaddr
-#define ifnet			usr_ifnet
 #define socket			usr_socket
 #define crget			usr_crget
 #define crcopy			usr_crcopy
@@ -1013,7 +1013,7 @@ do { \
     AFS_ASSERT_GLOCK(); \
     usr_assert((vp)->v_count > 0); \
     if (--((vp)->v_count) == 0) \
-	afs_inactive(VTOAFS(vp), u.u_cred); \
+	afs_inactive(VTOAFS(vp), get_user_struct()->u_cred); \
 } while(0)
 
 struct usr_statfs {
@@ -1399,7 +1399,6 @@ struct usr_user {
     } u_r;
 };
 #define u_rval1			u_r.r_val1
-#define u			(*(get_user_struct()))
 
 extern struct usr_user *get_user_struct(void);
 

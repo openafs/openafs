@@ -1100,8 +1100,7 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		ts = afs_GetServer(addrp, nentries, acell, cellp->fsport,
 				   WRITE_LOCK, &ve->serverNumber[i],
 				   ve->serverUnique[i]);
-		xdr_free(addrs.bulkaddrs_val,
-			 addrs.bulkaddrs_len * sizeof(*addrp));
+		xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 	    }
 	}
 	av->serverHost[j] = ts;

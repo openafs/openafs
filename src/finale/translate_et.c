@@ -36,6 +36,7 @@ main(int argc, char *argv[])
     int i;
     afs_int32 code;
     afs_int32 offset;
+    char msgbuf[BUFSIZ];
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -72,7 +73,7 @@ main(int argc, char *argv[])
 	offset = code & ((1 << ERRCODE_RANGE) - 1);
 
 	printf("%d (%s).%d = %s\n", (int)code, afs_error_table_name(code),
-	       (int)offset, afs_error_message(code));
+	       (int)offset, afs_error_message_localize(code, msgbuf, BUFSIZ));
     }
     return 0;
 }

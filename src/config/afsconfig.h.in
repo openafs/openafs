@@ -206,6 +206,9 @@
 /* Define to 1 if you have the `krb5_524_convert_creds' function. */
 #undef HAVE_KRB5_524_CONVERT_CREDS
 
+/* Define to 1 if you have the `krb5_allow_weak_crypto' function. */
+#undef HAVE_KRB5_ALLOW_WEAK_CRYPTO
+
 /* define if krb5_creds has keyblock */
 #undef HAVE_KRB5_CREDS_KEYBLOCK
 
@@ -218,6 +221,9 @@
 /* Define to 1 if you have the `krb5_decode_ticket' function. */
 #undef HAVE_KRB5_DECODE_TICKET
 
+/* Define to 1 if you have the `krb5_enctype_enable' function. */
+#undef HAVE_KRB5_ENCTYPE_ENABLE
+
 /* Define to 1 if you have the `krb5_get_prompt_types' function. */
 #undef HAVE_KRB5_GET_PROMPT_TYPES
 
@@ -229,6 +235,9 @@
 
 /* define if krb5_prompt has type */
 #undef HAVE_KRB5_PROMPT_TYPE
+
+/* Define if you have the libintl package. */
+#undef HAVE_LIBINTL
 
 /* define if your kernel has d_alloc_anon() */
 #undef HAVE_LINUX_D_ALLOC_ANON
@@ -463,6 +472,9 @@
 
 /* define if kmem_cache_create takes a destructor argument */
 #undef KMEM_CACHE_TAKES_DTOR
+
+/* Define if you have the libintl package. */
+#undef LIBINTL
 
 /* define if your linux kernel uses 5 arguments for sock_create */
 #undef LINUX_KERNEL_SOCK_CREATE_V

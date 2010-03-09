@@ -22,7 +22,8 @@ LIBS = \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+        $(DESTDIR)\lib\afs\afspioctl.lib
 
 ############################################################################
 # Definitions for generating files via RXGEN
@@ -51,7 +52,7 @@ USVR_OBJS = \
 	$(OUT)\upserver.res
 
 $(UPSERVER):  $(USVR_OBJS) $(LIBS)
-	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
@@ -69,7 +70,7 @@ UCLNT_OBJS = \
 	$(OUT)\upclient.res
 
 $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
-	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)

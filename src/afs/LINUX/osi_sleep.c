@@ -19,8 +19,6 @@
 #include <linux/freezer.h>
 #endif
 
-static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-
 static char waitV, dummyV;
 
 void
@@ -61,7 +59,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 
     do {
 	AFS_ASSERT_GLOCK();
-	code = osi_TimedSleep(&waitV, ams, 1);
+	code = afs_osi_TimedSleep(&waitV, ams, 1);
 	if (code)
 	    break;
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
@@ -247,7 +245,7 @@ afs_osi_Sleep(void *event)
     SIG_UNLOCK(current);
 }
 
-/* osi_TimedSleep
+/* afs_osi_TimedSleep
  * 
  * Arguments:
  * event - event to sleep on
@@ -257,8 +255,8 @@ afs_osi_Sleep(void *event)
  * Returns 0 if timeout, EINTR if signalled, and EGAIN if it might
  * have raced.
  */
-static int
-osi_TimedSleep(char *event, afs_int32 ams, int aintok)
+int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     long ticks = (ams * HZ / 1000) + 1;

@@ -35,14 +35,14 @@ afs_uint32 afs_stampValue = 0;
  *	We're write-locked upon entry.
  */
 
-int
+static int
 afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 {
     register struct afs_conn *tc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
-    register afs_int32 code;
+    register afs_int32 code, code2;
     register struct rx_call *tcall;
     afs_size_t tlen, xlen = 0;
     XSTATS_DECLS;
@@ -109,7 +109,9 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	    if (code == 0) {
 		code = EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
 	    }
-	    code = rx_EndCall(tcall, code);
+	    code2 = rx_EndCall(tcall, code);
+	    if (code2 && !code)
+		code = code2;
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 #ifdef AFS_64BIT_CLIENT
@@ -124,14 +126,10 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
 	      SHARED_LOCK, NULL));
 
-    if (code == 0) {
+    if (code == 0)
 	afs_ProcessFS(avc, &OutStatus, areq);
-    } else {
-	/* blew it away */
-	afs_InvalidateAllSegments(avc);
-    }
-    return code;
 
+    return code;
 }				/*afs_StoreMini */
 
 /*
@@ -424,7 +422,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	 * invalidated. Also discard data if it's a permanent error from the
 	 * fileserver.
 	 */
-	if (areq->permWriteError || (avc->f.states & (CCore1 | CCore))) {
+	if (areq->permWriteError || (avc->f.states & CCore)) {
 	    afs_InvalidateAllSegments(avc);
 	}
     }
@@ -646,7 +644,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     register struct dcache *tdc;
     register afs_int32 code;
     register afs_int32 index;
-    afs_int32 newSize;
+    afs_size_t newSize;
 
     int dcCount, dcPos;
     struct dcache **tdcArray;
@@ -750,12 +748,12 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	if (newSize < 0)
 	    newSize = 0;
 	ObtainSharedLock(&tdc->lock, 672);
-	if (newSize < tdc->f.chunkBytes) {
+	if (newSize < tdc->f.chunkBytes && newSize < MAX_AFS_UINT32) {
 	    UpgradeSToWLock(&tdc->lock, 673);
 	    tfile = afs_CFileOpen(&tdc->f.inode);
-	    afs_CFileTruncate(tfile, newSize);
+	    afs_CFileTruncate(tfile, (afs_int32)newSize);
 	    afs_CFileClose(tfile);
-	    afs_AdjustSize(tdc, newSize);
+	    afs_AdjustSize(tdc, (afs_int32)newSize);
 	    if (alen < tdc->validPos) {
                 if (alen < AFS_CHUNKTOBASE(tdc->f.chunk))
                     tdc->validPos = 0;

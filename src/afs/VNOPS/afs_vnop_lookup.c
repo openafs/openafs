@@ -74,7 +74,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	    tcell = afs_GetCell(cellnum, READ_LOCK);
 	else {
 	    tcell = afs_GetCellByName(data, READ_LOCK);
-	               cellnum = 0;
+	    cellnum = 0;
 	}
 	*cpos = ':';
     } else if (cellnum) {
@@ -1243,6 +1243,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    tryEvalOnly = 1;
 	if (strcmp(aname, "Contents") == 0)
 	    tryEvalOnly = 1;
+    }
+    if (afs_fakestat_enable && adp->mvstat == 2) {
 	if (strncmp(aname, "._", 2) == 0)
 	    tryEvalOnly = 1;
     }
@@ -1514,8 +1516,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	ReleaseReadLock(&tdc->lock);
 	if (!afs_InReadDir(adp))
 	    afs_PutDCache(tdc);
-
-	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {
+	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry && !tryEvalOnly) {
 	    ReleaseReadLock(&adp->lock);
 	    dynrootRetry = 0;
 	    if (tname[0] == '.')
@@ -1538,7 +1539,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 
 	if (code) {
 	    if (code != ENOENT) {
-		printf("LOOKUP dirLookupOff -> %d\n", code);
+		/*printf("LOOKUP dirLookupOff -> %d\n", code);*/
 	    }
 	    goto done;
 	}
@@ -1723,7 +1724,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    }
 	    code = ENOENT;
 	} else {
-	    printf("Network down in afs_lookup\n");
 	    code = ENETDOWN;
 	}
     }

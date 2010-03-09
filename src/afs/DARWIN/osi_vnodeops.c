@@ -2028,32 +2028,9 @@ afs_darwin_getnewvnode(struct vcache *avc)
     struct vnode_fsparam par;
 
     memset(&par, 0, sizeof(struct vnode_fsparam));
-#if 0
-    AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,342);
-    if (avc->f.states & CStatd) { 
-       par.vnfs_vtype = avc->f.m.Type;
-       par.vnfs_vops = afs_vnodeop_p;
-       par.vnfs_filesize = avc->f.m.Length;
-       if (!ac->cnp)
-           par.vnfs_flags = VNFS_NOCACHE;
-       dead = 0;
-    } else {
-       par.vnfs_vtype = VNON;
-       par.vnfs_vops = afs_dead_vnodeop_p;
-       par.vnfs_flags = VNFS_NOCACHE|VNFS_CANTCACHE;
-       dead = 1;
-    }
-    ReleaseWriteLock(&avc->lock);
-    AFS_GUNLOCK();
-    par.vnfs_dvp = ac->dvp;
-    par.vnfs_cnp = ac->cnp;
-    par.vnfs_markroot = ac->markroot;
-#else
     par.vnfs_vtype = VNON;
     par.vnfs_vops = afs_dead_vnodeop_p;
     par.vnfs_flags = VNFS_NOCACHE|VNFS_CANTCACHE;
-#endif
     par.vnfs_mp = afs_globalVFS;
     par.vnfs_fsnode = avc;
 
@@ -2062,20 +2039,8 @@ afs_darwin_getnewvnode(struct vcache *avc)
       vnode_addfsref(vp);
       vnode_ref(vp);
       avc->v = vp;
-#if 0
-      if (dead) {
-         vnode_recycle(vp); /* terminate as soon as iocount drops */
-         avc->f.states |= CDeadVnode;
-      } else if (!ac->markroot && !ac->cnp) {
-       /* the caller doesn't know anything about this vnode. if markroot
-          should have been set and wasn't, bad things may happen, so encourage
-          it to recycle */
-          vnode_recycle(vp);
-      }
-#else
       vnode_recycle(vp); /* terminate as soon as iocount drops */
       avc->f.states |= CDeadVnode;
-#endif
     }
     return error;
 #else
@@ -2091,21 +2056,22 @@ afs_darwin_getnewvnode(struct vcache *avc)
 /* if this fails, then tvc has been unrefed and may have been freed. 
    Don't touch! */
 int 
-afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot) {
-   vnode_t ovp;
-   vnode_t nvp;
-   int error;
-   struct vnode_fsparam par;
-   AFS_GLOCK();
-   ObtainWriteLock(&avc->lock,325);
-   ovp = AFSTOV(avc);
-   if (!(avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
+afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot)
+{
+    vnode_t ovp;
+    vnode_t nvp;
+    int error;
+    struct vnode_fsparam par;
+    AFS_GLOCK();
+    ObtainWriteLock(&avc->lock,325);
+    ovp = AFSTOV(avc);
+    if (!(avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
         AFS_GUNLOCK();
 #if 0 /* unsupported */
         if (dvp && cnp)
-        vnode_update_identity(ovp, dvp, cnp->cn_nameptr, cnp->cn_namelen,
-                              cnp->cn_hash,
-                              VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
+	    vnode_update_identity(ovp, dvp, cnp->cn_nameptr, cnp->cn_namelen,
+				  cnp->cn_hash,
+				  VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
 #endif
 	/* Can end up in reclaim... drop GLOCK */
         vnode_rele(ovp);
@@ -2113,44 +2079,44 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
         ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
         return 0;
-   }
-   if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
-       panic("vcache %p should not be CDeadVnode", avc);
-   AFS_GUNLOCK();
-   memset(&par, 0, sizeof(struct vnode_fsparam));
-   par.vnfs_mp = afs_globalVFS;
-   par.vnfs_vtype = avc->f.m.Type;
-   par.vnfs_vops = afs_vnodeop_p;
-   par.vnfs_filesize = avc->f.m.Length;
-   par.vnfs_fsnode = avc;
-   par.vnfs_dvp = dvp;
-   if (cnp && (cnp->cn_flags & ISDOTDOT) == 0)
-       par.vnfs_cnp = cnp;
-   if (!dvp || !cnp || (cnp->cn_flags & MAKEENTRY) == 0)
-       par.vnfs_flags = VNFS_NOCACHE;
-   if (isroot)
-       par.vnfs_markroot = 1;
-   error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
-   if (!error) {
-       vnode_addfsref(nvp);
-       if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
-	   printf("vcache %p should not be CDeadVnode", avc);
-       if (avc->v == ovp) {
-	   if (!(avc->f.states & CVInit)) {
-	       vnode_clearfsnode(ovp);
-	       vnode_removefsref(ovp);
-	   }
-       }
-       avc->v = nvp;
-       avc->f.states &=~ CDeadVnode;
-   }
-   vnode_put(ovp);
-   vnode_rele(ovp);
-   AFS_GLOCK();
-   ReleaseWriteLock(&avc->lock);
-   if (!error)
-      afs_osi_Wakeup(&avc->f.states);
-   AFS_GUNLOCK();
-   return error;
+    }
+    if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
+	panic("vcache %p should not be CDeadVnode", avc);
+    AFS_GUNLOCK();
+    memset(&par, 0, sizeof(struct vnode_fsparam));
+    par.vnfs_mp = afs_globalVFS;
+    par.vnfs_vtype = avc->f.m.Type;
+    par.vnfs_vops = afs_vnodeop_p;
+    par.vnfs_filesize = avc->f.m.Length;
+    par.vnfs_fsnode = avc;
+    par.vnfs_dvp = dvp;
+    if (cnp && (cnp->cn_flags & ISDOTDOT) == 0)
+	par.vnfs_cnp = cnp;
+    if (!dvp || !cnp || (cnp->cn_flags & MAKEENTRY) == 0)
+	par.vnfs_flags = VNFS_NOCACHE;
+    if (isroot)
+	par.vnfs_markroot = 1;
+    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
+    if (!error) {
+	vnode_addfsref(nvp);
+	if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
+	    printf("vcache %p should not be CDeadVnode", avc);
+	if (avc->v == ovp) {
+	    if (!(avc->f.states & CVInit)) {
+		vnode_clearfsnode(ovp);
+		vnode_removefsref(ovp);
+	    }
+	}
+	avc->v = nvp;
+	avc->f.states &=~ CDeadVnode;
+    }
+    vnode_put(ovp);
+    vnode_rele(ovp);
+    AFS_GLOCK();
+    ReleaseWriteLock(&avc->lock);
+    if (!error)
+	afs_osi_Wakeup(&avc->f.states);
+    AFS_GUNLOCK();
+    return error;
 }
 #endif

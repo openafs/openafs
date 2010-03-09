@@ -240,7 +240,8 @@ int
 main(int argc, char **argv)
 {
     register afs_int32 code;
-    struct rx_securityClass *(securityObjects[3]);
+    struct rx_securityClass **securityClasses;
+    afs_int32 numClasses;
     struct rx_service *service;
     struct ktc_encryptionKey tkey;
     int rxpackets = 100;
@@ -502,15 +503,12 @@ main(int argc, char **argv)
 	VS_EXIT(1);
     }
     afsconf_GetKey(tdir, 999, &tkey);
-    securityObjects[0] = rxnull_NewServerSecurityObject();
-    securityObjects[1] = (struct rx_securityClass *)0;	/* don't bother with rxvab */
-    securityObjects[2] =
-	rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
-    if (securityObjects[0] == (struct rx_securityClass *)0)
+    afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
+    if (securityClasses[0] == NULL)
 	Abort("rxnull_NewServerSecurityObject");
     service =
-	rx_NewServiceHost(host, 0, VOLSERVICE_ID, "VOLSER", securityObjects, 3,
-		      AFSVolExecuteRequest);
+	rx_NewServiceHost(host, 0, VOLSERVICE_ID, "VOLSER", securityClasses,
+			  numClasses, AFSVolExecuteRequest);
     if (service == (struct rx_service *)0)
 	Abort("rx_NewService");
     rx_SetBeforeProc(service, MyBeforeProc);
@@ -533,8 +531,8 @@ main(int argc, char **argv)
     }
 
     service =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityObjects, 3,
-		      RXSTATS_ExecuteRequest);
+	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityClasses,
+		      numClasses, RXSTATS_ExecuteRequest);
     if (service == (struct rx_service *)0)
 	Abort("rx_NewService");
     rx_SetMinProcs(service, 2);

@@ -51,7 +51,7 @@ process.s:
 	@echo Nothing to be done for process.s
 
 # Making process.o for $(SYS_NAME)
-process.o	: process.s process.i386.s process.c
+process.o	: process.s process.i386.s process.c lwp.o
 	@set -x; case "$(SYS_NAME)" in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5* | arm_linux* ) \
 		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
@@ -71,9 +71,13 @@ process.o	: process.s process.i386.s process.c
 		$(RM) process.ss ;; \
 	*_darwin* ) \
 		$(RM) -f process.o ; \
-		ppc=`echo "${ARCHFLAGS}" | grep -q -w ppc && echo process.ppc.o` ; \
-		i386=`echo "${ARCHFLAGS}" | grep -q -w i386 && echo process.i386.o` ; \
-		amd64=`echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo process.amd64.o` ; \
+		CURRENTBUILDARCH="${ARCHFLAGS}"; \
+		if [ -z "$${CURRENTBUILDARCH}" ] ; then \
+		    CURRENTBUILDARCH=`$(CC) -dM -E -xc /dev/null | grep 'ppc\|i386\|x86_64'`; \
+		fi; \
+		ppc=`echo $${CURRENTBUILDARCH} | grep -q ppc && echo process.ppc.o` ; \
+		i386=`echo $${CURRENTBUILDARCH} | grep -q i386 && echo process.i386.o` ; \
+		amd64=`echo $${CURRENTBUILDARCH} | grep -q x86_64 && echo process.amd64.o` ; \
 		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" ] ; then \
 			if [ `arch` = ppc ] ; then \
 				ppc=yes ; \

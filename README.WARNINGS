@@ -49,7 +49,6 @@ bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
 bucoord/ubik_db_if.c : strict-proto  : Ubik_Call
 bucoord/commands.c   : all	     : Ubik_Call
 				     : signed vs unsigned for dates
-butc/tcmain.c	     : all	     : prototypes
 butc/tcudbprocs.c    : all	     : ubik_Call
 kauth/admin_tools.c  : all           : ubik_Call nonsense
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
@@ -65,7 +64,6 @@ ubik/beacon.c        : all           : Ubik uses signed/unsigned
 				       interchangably for IP addresses, a 
 				       fix will require API changes.
 ubik/ubikclient.c    : strict-protos : ubik_Call
-uss/uss_vol.c 	     : all             Format issues
 uss/uss_kauth.c      : all	     : ubik_Call
 viced/fsprobe.c      : all	     : ubik_Call
 vol/salvager.c       : all           : consts & undefined variable from header - maybe fixed!

@@ -125,6 +125,30 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
+int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
+{
+    int code = 0;
+    struct afs_event *evp;
+    int seq, prio;
+    int ticks;
+
+    evp = afs_getevent(event);
+    seq = evp->seq;
+    AFS_GUNLOCK();
+    if (aintok)
+	prio = PCATCH | PPAUSE;
+    else
+	prio = PVFS;
+    ticks = (ams * afs_hz) / 1000;
+    code = tsleep(event, prio, "afs_osi_TimedSleep", ticks);
+    if (seq == evp->seq)
+	code = EINTR;
+    relevent(evp);
+    AFS_GLOCK();
+    return code;
+}
+
 void
 afs_osi_Sleep(void *event)
 {

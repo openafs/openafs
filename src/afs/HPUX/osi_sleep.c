@@ -163,6 +163,22 @@ afs_osi_SleepSig(void *event)
 }
 
 #if defined(AFS_HPUX110_ENV)
+int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
+{
+    lock_t *sleep_lock;
+    int intr = EWOULDBLOCK;
+
+    AFS_ASSERT_GLOCK();
+    AFS_GUNLOCK();
+    afs_osi_CallProc(AfsWaitHack, event, ams);
+    sleep((caddr_t) event, PZERO - 2);
+    if (afs_osi_CancelProc(AfsWaitHack, event) < 0)
+	intr = 0;
+    AFS_GLOCK();
+    return intr;
+}
+
 void
 afs_osi_Sleep(void *event)
 {

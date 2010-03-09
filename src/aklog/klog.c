@@ -222,7 +222,7 @@ whoami(struct ktc_token *atoken,
     struct ktc_principal *aclient,
     int *vicep)
 {
-    int scIndex;
+    rx_securityIndex scIndex;
     int code;
     int i;
     struct ubik_client *ptconn = 0;
@@ -234,7 +234,7 @@ whoami(struct ktc_token *atoken,
 
     memset(lnames, 0, sizeof *lnames);
     memset(lids, 0, sizeof *lids);
-    scIndex = 2;
+    scIndex = RX_SECIDX_KAD;
     sc = rxkad_NewClientSecurityObject(rxkad_auth,
 	&atoken->sessionKey, atoken->kvno,
 	atoken->ticketLen, atoken->ticket);
@@ -404,9 +404,22 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     /* initialize_rx_error_table(); */
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	afs_com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
-	    rn, AFSDIR_CLIENT_ETC_DIRPATH);
+	    AFSDIR_CLIENT_ETC_DIRPATH);
 	KLOGEXIT(1);
     }
+
+    /*
+     * Enable DES enctypes, which are currently still required for AFS.
+     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
+     * Heimdal.
+     */
+#if defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+    krb5_allow_weak_crypto(k5context, 1);
+#elif defined(HAVE_KRB5_ENCTYPE_ENABLE)
+    i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
+    if (i)
+        krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
+#endif
 
     /* Parse remaining arguments. */
 
@@ -437,10 +450,10 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[aKRBREALM].items) {
 	code = krb5_set_default_realm(k5context,
-		(const char *) as->parms[aKRBREALM].items);
+		as->parms[aKRBREALM].items->data);
 	if (code) {
 	    afs_com_err(rn, code, "Can't make <%s> the default realm",
-		as->parms[aKRBREALM].items);
+		as->parms[aKRBREALM].items->data);
 	    KLOGEXIT(code);
 	}
     }
@@ -610,7 +623,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    break;
 	Failed:
 	    if (code)
-		afs_com_err(rn, code, what);
+		afs_com_err(rn, code, "%s", what);
 	    if (writeTicketFile) {
 		if (cc) {
 		    krb5_cc_close(k5context, cc);
@@ -699,7 +712,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	    code = whoami(atoken, cellconfig, aclient, &viceid);
 	    if (code) {
-		afs_com_err(rn, code, "Can't get your viceid", cellconfig->name);
+		afs_com_err(rn, code, "Can't get your viceid for cell %s", cellconfig->name);
 		*aclient->name = 0;
 	    } else
 		snprintf(aclient->name, MAXKTCNAMELEN-1, "AFS ID %d", viceid);

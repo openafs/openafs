@@ -121,7 +121,7 @@ icl_GetSize(afs_int32 type, char *addr)
     int tsize;
 
     rsize = 0;
-    ICL_SIZEHACK(type, addr);
+    ICL_SIZEHACK(type, addr, tsize, rsize);
     return rsize;
 }
 

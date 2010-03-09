@@ -434,8 +434,8 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 	    if (ahost != thost) {
 		    /* host/client recycle */
 		    char hoststr[16], hoststr2[16];
-		    ViceLog(0, ("CallPostamble: ahost %s:%d (%x) != thost "
-				"%s:%d (%x)\n",
+		    ViceLog(0, ("CallPostamble: ahost %s:%d (%p) != thost "
+				"%s:%d (%p)\n",
 				afs_inet_ntoa_r(ahost->host, hoststr),
 				ntohs(ahost->port),
 				ahost,
@@ -447,7 +447,7 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 	    h_Release_r(ahost);
     } else {
 	    char hoststr[16];
-	    ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%x)\n",
+	    ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%p)\n",
 			afs_inet_ntoa_r(thost->host, hoststr),
 			ntohs(thost->port),
 			thost));
@@ -7288,8 +7288,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    if (Pos == 0) CopyOnWrite_off0++;
 	    if (CoW_len > CopyOnWrite_maxsize) CopyOnWrite_maxsize = CoW_len;
 
-	    ViceLog(1, ("StoreData : calling CopyOnWrite on vnode %lu.%lu (%s) off 0x%llx size 0x%llx\n",
-			V_id(volptr), targetptr->vnodeNumber, V_name(volptr), 0, Pos));
+	    ViceLog(1, ("StoreData : calling CopyOnWrite on vnode %u.%u (%s) "
+			"off 0x0 size 0x%llx\n",
+			afs_printable_VolumeId_u(V_id(volptr)),
+			afs_printable_VnodeId_u(targetptr->vnodeNumber),
+			V_name(volptr), Pos));
 	    if ((errorCode = CopyOnWrite(targetptr, volptr, 0, Pos))) {
 		ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
 		volptr->partition->flags &= ~PART_DONTUPDATE;
@@ -7395,13 +7398,13 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 #else /* AFS_NT40_ENV */
 	    errorCode = rx_Readv(Call, tiov, &tnio, RX_MAXIOVECS, rlen);
 #endif /* AFS_NT40_ENV */
-#if FS_STATS_DETAILED
-	    (*a_bytesStoredP) += errorCode;
-#endif /* FS_STATS_DETAILED */
 	    if (errorCode <= 0) {
 		errorCode = -32;
 		break;
 	    }
+#if FS_STATS_DETAILED
+	    (*a_bytesStoredP) += errorCode;
+#endif /* FS_STATS_DETAILED */
 	    rlen = errorCode;
 #ifdef AFS_NT40_ENV
 	    errorCode = FDH_WRITE(fdP, tbuffer, rlen);
@@ -7443,8 +7446,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     if (origfdP) {					/* finish CopyOnWrite */
 	if ( (CoW_off = Pos + Length) < NewLength) {
 	    errorCode = CopyOnWrite2(origfdP, fdP, CoW_off, CoW_len = NewLength - CoW_off);
-	    ViceLog(1, ("StoreData : CopyOnWrite2 on vnode %lu.%lu (%s) off 0x%llx size 0x%llx returns %d\n",
-                        V_id(volptr), targetptr->vnodeNumber, V_name(volptr), CoW_off, CoW_len, errorCode));
+	    ViceLog(1, ("StoreData : CopyOnWrite2 on vnode %u.%u (%s) "
+			"off 0x%llx size 0x%llx returns %d\n",
+                        afs_printable_VolumeId_u(V_id(volptr)),
+			afs_printable_VnodeId_u(targetptr->vnodeNumber),
+			V_name(volptr), CoW_off, CoW_len, errorCode));
 	}
 	FDH_CLOSE(origfdP);
     }

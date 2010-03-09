@@ -800,8 +800,10 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n",
-          ntohl(shost), ntohs(sport), sservice, securityObject, serviceSecurityIndex));
+    dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %p, "
+	 "serviceSecurityIndex %d)\n",
+         ntohl(shost), ntohs(sport), sservice, securityObject,
+	 serviceSecurityIndex));
 
     /* Vasilsi said: "NETPRI protects Cid and Alloc", but can this be true in
      * the case of kmem_alloc? */
@@ -1741,7 +1743,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 	MUTEX_EXIT(&call->lock);
     } else {
-	dpf(("rx_GetCall(socketp=0x%"AFS_PTR_FMT", *socketp=0x%"AFS_PTR_FMT")\n", socketp, *socketp));
+	dpf(("rx_GetCall(socketp=%p, *socketp=0x%x)\n", socketp, *socketp));
     }
 
     return call;
@@ -1888,11 +1890,11 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 #endif
 
 	rxi_calltrace(RX_CALL_START, call);
-	dpf(("rx_GetCall(port=%d, service=%d) ==> call %x\n",
+	dpf(("rx_GetCall(port=%d, service=%d) ==> call %p\n",
 	     call->conn->service->servicePort, call->conn->service->serviceId,
 	     call));
     } else {
-	dpf(("rx_GetCall(socketp=0x%"AFS_PTR_FMT", *socketp=0x%"AFS_PTR_FMT")\n", socketp, *socketp));
+	dpf(("rx_GetCall(socketp=%p, *socketp=0x%x)\n", socketp, *socketp));
     }
 
     USERPRI;
@@ -2219,6 +2221,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
 	CLEAR_CALL_QUEUE_LOCK(call);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* Now, if TQ wasn't cleared earlier, do it now. */
+	rxi_WaitforTQBusy(call);
 	if (call->flags & RX_CALL_TQ_CLEARME) {
 	    rxi_ClearTransmitQueue(call, 1);
 	    /*queue_Init(&call->tq);*/
@@ -2775,7 +2778,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0) 
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%0.06d len %d",
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.06d len %d",
                       np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
                       np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
                       np->header.flags, np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
@@ -4710,6 +4713,11 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     if (flags & RX_CALL_TQ_BUSY) {
 	call->flags = RX_CALL_TQ_CLEARME | RX_CALL_TQ_BUSY;
 	call->flags |= (flags & RX_CALL_TQ_WAIT);
+#ifdef RX_ENABLE_LOCKS
+        CV_WAIT(&call->cv_tq, &call->lock);
+#else /* RX_ENABLE_LOCKS */
+        osi_rxSleep(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
     } else
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     {
@@ -5503,8 +5511,8 @@ rxi_Start(struct rxevent *event,
                         rx_MutexIncrement(rx_tq_debug.rxi_start_aborted, rx_stats_mutex);
 		    call->flags &= ~RX_CALL_TQ_BUSY;
 		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-			dpf(("call error %d while xmit %x has %d waiters and flags %d\n",
-                             call, call->error, call->tqWaiters, call->flags));
+			dpf(("call error %d while xmit %p has %d waiters and flags %d\n",
+                             call->error, call, call->tqWaiters, call->flags));
 #ifdef RX_ENABLE_LOCKS
 			osirx_AssertMine(&call->lock, "rxi_Start middle");
 			CV_BROADCAST(&call->cv_tq);
@@ -5744,7 +5752,8 @@ rxi_CheckCall(struct rx_call *call)
     }
     /* see if we have a non-activity timeout */
     if (call->startWait && conn->idleDeadTime
-	&& ((call->startWait + conn->idleDeadTime) < now)) {
+	&& ((call->startWait + conn->idleDeadTime) < now) &&
+	(call->flags & RX_CALL_READER_WAIT)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
 	    return -1;

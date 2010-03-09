@@ -52,6 +52,43 @@ afs_int32 cryptall = 0;		/* encrypt all communications */
 unsigned int VNOSERVERS = 0;
 
 /**
+ * Pick a security object to use for a connection to a given server,
+ * by a given user
+ *
+ * @param[in] conn
+ *	The AFS connection for which the security object is required
+ * @param[out] secLevel
+ *	The security level of the returned object
+ *
+ * @return
+ *	An rx security object. This function is guaranteed to return
+ *	an object, although that object may be rxnull (with a secLevel
+ *	of 0)
+ */
+static struct rx_securityClass *
+afs_pickSecurityObject(struct afs_conn *conn, int *secLevel) {
+    struct rx_securityClass *secObj = NULL;
+
+    /* Do we have tokens ? */
+    if (conn->user->vid != UNDEFVID) {
+	*secLevel = 2;
+	/* kerberos tickets on channel 2 */
+	secObj = rxkad_NewClientSecurityObject(
+		    cryptall ? rxkad_crypt : rxkad_clear,
+                    (struct ktc_encryptionKey *)conn->user->ct.HandShakeKey,
+		    conn->user->ct.AuthHandle,
+		    conn->user->stLen, conn->user->stp);
+     }
+     if (secObj == NULL) {
+	*secLevel = 0;
+	secObj = rxnull_NewClientSecurityObject();
+     }
+
+     return secObj;
+}
+
+
+/**
  * Try setting up a connection to the server containing the specified fid.
  * Gets the volume, checks if it's up and does the connection by server address.
  *
@@ -246,24 +283,9 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	else
 	    service = 1;
 	isec = 0;
-	if (tu->vid != UNDEFVID) {
-	    int level;
 
-	    if (cryptall) {
-		level = rxkad_crypt;
-	    } else {
-		level = rxkad_clear;
-	    }
-	    isec = 2;
-	    /* kerberos tickets on channel 2 */
-	    csec = rxkad_NewClientSecurityObject(level,
-                                                 (struct ktc_encryptionKey *)tu->ct.HandShakeKey,
-						 /* kvno */
-						 tu->ct.AuthHandle, tu->stLen,
-						 tu->stp);
-	}
-	if (isec == 0)
-	    csec = rxnull_NewClientSecurityObject();
+	csec = afs_pickSecurityObject(tc, &isec);
+
 	AFS_GUNLOCK();
 	tc->id = rx_NewConnection(sap->sa_ip, aport, service, csec, isec);
 	AFS_GLOCK();

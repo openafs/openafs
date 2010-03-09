@@ -731,7 +731,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 
 		if (!hp || !idx) {
 		    ViceLog(0,
-			    ("BCB: INTERNAL ERROR: hp=%x, cba=%x, thead=%u\n", 
+			    ("BCB: INTERNAL ERROR: hp=%p, cba=%p, thead=%u\n",
 			     hp, cba, idx));
 		} else {
 		    /* 
@@ -740,7 +740,8 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		    if (MultiBreakCallBackAlternateAddress(hp, afidp)) {
 			if (ShowProblems) {
 			    ViceLog(7,
-				    ("BCB: Failed on file %u.%u.%u, Host %x (%s:%d) is down\n",
+				    ("BCB: Failed on file %u.%u.%u, "
+				     "Host %p (%s:%d) is down\n",
 				     afidp->AFSCBFids_val->Volume,
 				     afidp->AFSCBFids_val->Vnode,
 				     afidp->AFSCBFids_val->Unique,
@@ -813,7 +814,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     char hoststr[16];
 
     ViceLog(7,
-	    ("BCB: BreakCallBack(Host %x all but %s:%d, (%u,%u,%u))\n",
+	    ("BCB: BreakCallBack(Host %p all but %s:%d, (%u,%u,%u))\n",
 	     xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
 	     fid->Volume, fid->Vnode, fid->Unique));
 
@@ -843,7 +844,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 		    ViceLog(0, ("BCB: BOGUS! cb->hhead is NULL!\n"));
 		} else if (thishost->hostFlags & VENUSDOWN) {
 		    ViceLog(7,
-			    ("BCB: %x (%s:%d) is down; delaying break call back\n",
+			    ("BCB: %p (%s:%d) is down; delaying break call back\n",
 			     thishost, afs_inet_ntoa_r(thishost->host, hoststr),
 			     ntohs(thishost->port)));
 		    cb->status = CB_DELAYED;
@@ -906,7 +907,7 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     pcb = FindCBPtr(fe, host);
     if (!*pcb) {
 	ViceLog(8,
-		("DCB: No call back for host %x (%s:%d), (%u, %u, %u)\n",
+		("DCB: No call back for host %p (%s:%d), (%u, %u, %u)\n",
 		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
 		 fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
@@ -1028,15 +1029,17 @@ BreakDelayedCallBacks_r(struct host *host)
 	if (code) {
 	    if (ShowProblems) {
 		ViceLog(0,
-			("CB: Call back connect back failed (in break delayed) for Host %x (%s:%d)\n",
+			("CB: Call back connect back failed (in break delayed) "
+			 "for Host %p (%s:%d)\n",
 			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 	    }
 	    host->hostFlags |= VENUSDOWN;
 	} else {
 	    ViceLog(25,
-		    ("InitCallBackState success on %x (%s:%d)\n",
-		     host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+		    ("InitCallBackState success on %p (%s:%d)\n",
+		     host, afs_inet_ntoa_r(host->host, hoststr),
+		     ntohs(host->port)));
 	    /* reset was done successfully */
 	    host->hostFlags |= RESETDONE;
 	    host->hostFlags &= ~VENUSDOWN;
@@ -1075,14 +1078,16 @@ BreakDelayedCallBacks_r(struct host *host)
 		int i;
 		if (ShowProblems) {
 		    ViceLog(0,
-			    ("CB: XCallBackBulk failed, Host %x (%s:%d); callback list follows:\n",
+			    ("CB: XCallBackBulk failed, Host %p (%s:%d); "
+			     "callback list follows:\n",
                              host, afs_inet_ntoa_r(host->host, hoststr),
 			     ntohs(host->port)));
 		}
 		for (i = 0; i < nfids; i++) {
 		    if (ShowProblems) {
 			ViceLog(0,
-				("CB: Host %x (%s:%d), file %u.%u.%u (part of bulk callback)\n",
+				("CB: Host %p (%s:%d), file %u.%u.%u "
+				 "(part of bulk callback)\n",
 				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port), fids[i].Volume,
 				 fids[i].Vnode, fids[i].Unique));
@@ -1128,7 +1133,7 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
         /* Do not care if the host is now HOSTDELETED */
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("BVCB: volume callback for Host %x (%s:%d) failed\n",
+		    ("BVCB: volume callback for Host %p (%s:%d) failed\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
@@ -1388,7 +1393,7 @@ BreakLaterCallBacks(void)
 		/* leave hold for MultiBreakVolumeCallBack to clear */
 	    } else {
 		ViceLog(125,
-			("Found host %x (%s:%d) non-DELAYED cb for %u:%u:%u\n", 
+			("Found host %p (%s:%d) non-DELAYED cb for %u:%u:%u\n",
 			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port), fe->vnode, fe->unique, fe->volid));
 	    }
@@ -1616,7 +1621,7 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     struct rx_connection *cb_conn = NULL;
 
     ViceLog(5,
-	    ("GSS: Delete longest inactive host %x (%s:%d)\n",
+	    ("GSS: Delete longest inactive host %p (%s:%d)\n",
              hp, afs_inet_ntoa_r(hp->host, hoststr), ntohs(hp->port)));
 
     h_Hold_r(hp);
@@ -1977,12 +1982,15 @@ cb_stateVerifyFE(struct fs_dump_state * state, struct FileEntry * fe)
 
     if ((fe->firstcb && !fe->ncbs) ||
 	(!fe->firstcb && fe->ncbs)) {
-	ViceLog(0, ("cb_stateVerifyFE: error: fe->firstcb does not agree with fe->ncbs (fei=%d, fe->firstcb=%d, fe->ncbs=%d)\n",
-		    fetoi(fe), fe->firstcb, fe->ncbs));
+	ViceLog(0, ("cb_stateVerifyFE: error: fe->firstcb does not agree with fe->ncbs (fei=%lu, fe->firstcb=%lu, fe->ncbs=%lu)\n",
+		    afs_printable_uint32_lu(fetoi(fe)),
+		    afs_printable_uint32_lu(fe->firstcb),
+		    afs_printable_uint32_lu(fe->ncbs)));
 	ret = 1;
     }
     if (cb_stateVerifyFCBList(state, fe)) {
-	ViceLog(0, ("cb_stateVerifyFE: error: FCBList failed verification (fei=%d)\n", fetoi(fe)));
+	ViceLog(0, ("cb_stateVerifyFE: error: FCBList failed verification (fei=%lu)\n",
+		    afs_printable_uint32_lu(fetoi(fe))));
 	ret = 1;
     }
 
@@ -2986,7 +2994,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 
     assert(j);			/* at least one alternate address */
     ViceLog(125,
-	    ("Starting multibreakcall back on all addr for host %x (%s:%d)\n",
+	    ("Starting multibreakcall back on all addr for host %p (%s:%d)\n",
              host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
     H_UNLOCK;
     multi_Rx(conns, j) {
@@ -3081,7 +3089,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 
     assert(j);			/* at least one alternate address */
     ViceLog(125,
-	    ("Starting multiprobe on all addr for host %x (%s:%d)\n",
+	    ("Starting multiprobe on all addr for host %p (%s:%d)\n",
              host, afs_inet_ntoa_r(host->host, hoststr),
              ntohs(host->port)));
     H_UNLOCK;

@@ -395,7 +395,8 @@ extern afs_int32 ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans,
 					       ubik_version *OldVersion,
 					       ubik_version *NewVersion);
                                               
-extern void panic(char *format, ...); 
+extern void panic(char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
 extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr); 
 /*\}*/
@@ -437,10 +438,17 @@ extern void ulock_Debug(struct ubik_debug *aparm);
 extern int uvote_ShouldIRun(void);
 extern afs_int32 uvote_GetSyncSite(void);
 extern int uvote_Init(void);
-extern void ubik_vprint(const char *format, va_list ap);
-extern void ubik_print(const char *format, ...);
-extern void ubik_dprint(const char *format, ...);
-extern void ubik_dprint_25(const char *format, ...);
+extern void ubik_vprint(const char *format, va_list ap)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 0);
+
+extern void ubik_print(const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+
+extern void ubik_dprint(const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+
+extern void ubik_dprint_25(const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */

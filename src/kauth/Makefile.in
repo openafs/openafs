@@ -233,7 +233,7 @@ ka-forwarder: ka-forwarder.o
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
-	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS)
+	${CC} ${LDFLAGS} -o rebuild rebuild.o kautils.o $(LIBS) ${XLIBS}
 
 #
 # Install targets

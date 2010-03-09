@@ -15,6 +15,12 @@
 #include <stdio.h>
 #include "error_table.h"
 #include "mit-sipb-cr.h"
+#ifdef HAVE_LIBINTL
+#include <libintl.h>
+#endif
+#ifdef AFS_DARWIN70_ENV
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 #include <afs/errors.h>
 #include <afs/afsutil.h>
 #include <string.h>
@@ -109,43 +115,93 @@ volume_message(int code)
 	return "unknown volume error";
 }
 
-const char *
-afs_error_message(afs_int32 code)
+#ifdef AFS_DARWIN70_ENV
+static_inline const char *
+_intlize(const char *msg, int base, char *str, size_t len)
+{
+    char domain[12 +20];
+    CFStringRef cfstring = CFStringCreateWithCString(kCFAllocatorSystemDefault,
+						     msg,
+						     kCFStringEncodingUTF8);
+    CFStringRef cfdomain;
+    CFBundleRef OpenAFSBundle = CFBundleGetBundleWithIdentifier(CFSTR("org.openafs.filesystems.afs"));
+
+    if (!str)
+	return msg;
+    snprintf(domain, sizeof(domain), "heim_com_err%d", base);
+    cfdomain = CFStringCreateWithCString(kCFAllocatorSystemDefault, domain,
+					 kCFStringEncodingUTF8);
+    if (OpenAFSBundle != NULL)
+	cfstring = CFBundleCopyLocalizedString(OpenAFSBundle, cfstring,
+					       cfstring, cfdomain);
+    CFStringGetCString(cfstring, str, len, kCFStringEncodingUTF8);
+    CFRelease(cfstring);
+    CFRelease(cfdomain);
+    return str;
+}
+#else
+static_inline const char *
+_intlize(const char *msg, int base, char *str, size_t len)
+{
+    char domain[12 +20];
+    if (!str)
+	return msg;
+    snprintf(domain, sizeof(domain), "heim_com_err%d", base);
+#if defined(HAVE_LIBINTL)
+    strlcpy(str, dgettext(domain, msg), len);
+#endif
+    return str;
+}
+#endif
+
+static const char *
+afs_error_message_int(struct et_list *list, afs_int32 code, char *str, size_t len)
 {
     int offset;
     struct et_list *et;
-    int table_num;
+    int table_num, unlock = 0;
     int started = 0;
     char *cp;
-    char *err_msg;
+    const char *err_msg;
 
     /* check for rpc errors first */
     if (code < 0)
-	return negative_message(code);
+	return _intlize(negative_message(code), -1, str, len);
 
     offset = code & ((1 << ERRCODE_RANGE) - 1);
     table_num = code - offset;
     if (!table_num) {
 	if ((err_msg = strerror(offset)) != NULL)
-	    return (err_msg);
+	    return _intlize(err_msg, 0, str, len);
 	else if (offset < 140)
-	    return volume_message(code);
+	    return _intlize(volume_message(code), 0, str, len);
 	else
 	    goto oops;
     }
-    LOCK_ET_LIST;
-    for (et = _et_list; et; et = et->next) {
+    if (list) {
+	et = list;
+    } else {
+	LOCK_ET_LIST;
+	unlock = 1;
+	et = _et_list;
+    }
+    for (; et; et = et->next) {
 	if (et->table->base == table_num) {
 	    /* This is the right table */
 	    if (et->table->n_msgs <= offset)
 		goto oops;
-	    UNLOCK_ET_LIST;
-	    return (et->table->msgs[offset]);
+	    err_msg = _intlize(et->table->msgs[offset], et->table->base,
+			       str, len);
+	    if (unlock)
+		UNLOCK_ET_LIST;
+	    return err_msg;
 	}
     }
   oops:
-    UNLOCK_ET_LIST;
-    strlcpy(buffer, "Unknown code ", sizeof buffer);
+    if (unlock)
+	UNLOCK_ET_LIST;
+    /* Unknown code can be included in the negative errors catalog */
+    _intlize("Unknown code ", -1, buffer, sizeof buffer);
     if (table_num) {
 	strlcat(buffer, afs_error_table_name(table_num), sizeof buffer);
 	strlcat(buffer, " ", sizeof buffer);
@@ -166,6 +222,30 @@ afs_error_message(afs_int32 code)
     else
 	*cp = '\0';
     return (buffer);
+}
+
+const char *
+afs_error_message_localize(afs_int32 code, char *str, size_t len)
+{
+    return afs_error_message_int((struct et_list *)0, code, str, len);
+}
+
+const char *
+afs_com_right_r(struct et_list *list, long code, char *str, size_t len)
+{
+    return afs_error_message_int(list, (afs_int32)code, str, len);
+}
+
+const char *
+afs_com_right(struct et_list *list, long code)
+{
+    return afs_error_message_int(list, (afs_int32)code, (char *)0, 0);
+}
+
+const char *
+afs_error_message(afs_int32 code)
+{
+    return afs_error_message_int((struct et_list *)0, code, (char *)0, 0);
 }
 
 void

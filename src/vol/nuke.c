@@ -119,8 +119,9 @@ nuke(char *aname, afs_int32 avolid)
     struct ilist *ti, *ni, *li=NULL;
     register afs_int32 code;
     int i, forceSal;
-    char devName[64], wpath[100];
+    char wpath[100];
     char *lastDevComp;
+    struct DiskPartition64 *dp;
 #ifdef AFS_NAMEI_ENV
 #ifdef AFS_NT40_ENV
     char path[MAX_PATH];
@@ -129,14 +130,20 @@ nuke(char *aname, afs_int32 avolid)
     namei_t ufs_name;
 #endif
 #endif /* AFS_NAMEI_ENV */
+#ifndef AFS_NAMEI_ENV
+    char devName[64]
+#endif /* !AFS_NAMEI_ENV */
     IHandle_t *fileH;
     struct ilist *allInodes = 0;
 
     if (avolid == 0)
 	return EINVAL;
     code = afs_stat(aname, &tstat);
-    if (code) {
+    if (code || (dp = VGetPartition(aname, 0)) == NULL) {
 	printf("volnuke: partition %s does not exist.\n", aname);
+	if (!code) {
+	    code = EINVAL;
+	}
 	return code;
     }
     /* get the device name for the partition */
@@ -227,17 +234,7 @@ nuke(char *aname, afs_int32 avolid)
 	 * system, and is a normal file.  As such, it is not stamped with the
 	 * volume's ID in its inode, and has to be removed explicitly.
 	 */
-	/* reuse devName buffer now */
-#ifdef AFS_NT40_ENV
-	afs_snprintf(devName, sizeof devName, "%c:\\%s", *lastDevComp,
-		     VolumeExternalName(avolid));
-#else
-	afs_snprintf(devName, sizeof devName, "%s/%s", aname,
-		     VolumeExternalName(avolid));
-#endif /* AFS_NT40_ENV */
-	code = unlink(devName);
-	if (code)
-	    code = errno;
+	code = VDestroyVolumeDiskHeader(dp, avolid, 0);
     } else {
 	/* just free things */
 	for (ti = allInodes; ti; ti = ni) {

@@ -32,20 +32,14 @@
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
 
-#if defined(AFS_SGI61_ENV)
-/* For SGI 6.2, this can is changed to 1 if it's a 32 bit kernel. */
-#if defined(AFS_SGI62_ENV) && !defined(_K64U64)
-int afs_icl_sizeofLong = 1;
+/* Matches below where ICL_APPENDLONG is 2 INT32s */
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
+#define ICL_LONG 2
 #else
-int afs_icl_sizeofLong = 2;
-#endif /* SGI62 */
-#else
-#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
-int afs_icl_sizeofLong = 2;
-#else
-int afs_icl_sizeofLong = 1;
+#define ICL_LONG 1
 #endif
-#endif
+
+int afs_icl_sizeofLong = ICL_LONG;
 
 int afs_icl_inited = 0;
 
@@ -540,7 +534,7 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
         (lp)->logElements++; \
     MACRO_END
 
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
+#if ICL_LONG == 2
 #define ICL_APPENDLONG(lp, x) \
     MACRO_BEGIN \
 	ICL_APPENDINT32((lp), ((x) >> 32) & 0xffffffffL); \
@@ -562,6 +556,51 @@ afs_icl_UseAddr(int type)
 	return 1;
     else
 	return 0;
+}
+
+void
+afs_icl_AppendOne(struct afs_icl_log *logp, int type, long parm)
+{
+    if (type) {
+	/* marshall parameter 3 now */
+	if (type == ICL_TYPE_STRING)
+	    afs_icl_AppendString(logp, (char *)parm);
+	else if (type == ICL_TYPE_HYPER) {
+	    ICL_APPENDINT32(logp,
+			    (afs_int32) ((struct afs_hyper_t *)parm)->high);
+	    ICL_APPENDINT32(logp,
+			    (afs_int32) ((struct afs_hyper_t *)parm)->low);
+	} else if (type == ICL_TYPE_INT64) {
+#ifndef WORDS_BIGENDIAN
+#ifdef AFS_64BIT_CLIENT
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[1]);
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[0]);
+#else /* AFS_64BIT_CLIENT */
+	    ICL_APPENDINT32(logp, (afs_int32) parm);
+	    ICL_APPENDINT32(logp, (afs_int32) 0);
+#endif /* AFS_64BIT_CLIENT */
+#else /* AFSLITTLE_ENDIAN */
+#ifdef AFS_64BIT_CLIENT
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[0]);
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[1]);
+#else /* AFS_64BIT_CLIENT */
+	    ICL_APPENDINT32(logp, (afs_int32) 0);
+	    ICL_APPENDINT32(logp, (afs_int32) parm);
+#endif /* AFS_64BIT_CLIENT */
+#endif /* AFSLITTLE_ENDIAN */
+	} else if (type == ICL_TYPE_FID) {
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[0]);
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[1]);
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[2]);
+	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) parm)[3]);
+	}
+#if ICL_LONG == 2
+	else if (type == ICL_TYPE_INT32)
+	    ICL_APPENDINT32(logp, (afs_int32) parm);
+#endif
+	else
+	    ICL_APPENDLONG(logp, parm);
+    }
 }
 
 /* Function to append a record to the log.  Written for speed
@@ -614,30 +653,30 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	logp->lastTS = tv.tv_sec;
     }
 
-    rsize = 4;			/* base case */
+    rsize = 4;			/* base case: see 4 items below */
     if (t1) {
 	/* compute size of parameter p1.  Only tricky case is string.
 	 * In that case, we have to call strlen to get the string length.
 	 */
-	ICL_SIZEHACK(t1, p1);
+	ICL_SIZEHACK(t1, p1, tsize, rsize);
     }
     if (t2) {
 	/* compute size of parameter p2.  Only tricky case is string.
 	 * In that case, we have to call strlen to get the string length.
 	 */
-	ICL_SIZEHACK(t2, p2);
+	ICL_SIZEHACK(t2, p2, tsize, rsize);
     }
     if (t3) {
 	/* compute size of parameter p3.  Only tricky case is string.
 	 * In that case, we have to call strlen to get the string length.
 	 */
-	ICL_SIZEHACK(t3, p3);
+	ICL_SIZEHACK(t3, p3, tsize, rsize);
     }
     if (t4) {
 	/* compute size of parameter p4.  Only tricky case is string.
 	 * In that case, we have to call strlen to get the string length.
 	 */
-	ICL_SIZEHACK(t4, p4);
+	ICL_SIZEHACK(t4, p4, tsize, rsize);
     }
 
     /* At this point, we've computed all of the parameter sizes, and
@@ -661,166 +700,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
     ICL_APPENDINT32(logp,
 		    (afs_int32) (tv.tv_sec & 0x3ff) * 1000000 + tv.tv_usec);
 
-    if (t1) {
-	/* marshall parameter 1 now */
-	if (t1 == ICL_TYPE_STRING) {
-	    afs_icl_AppendString(logp, (char *)p1);
-	} else if (t1 == ICL_TYPE_HYPER) {
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p1)->high);
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p1)->low);
-	} else if (t1 == ICL_TYPE_INT64) {
-#ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) p1);
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-	    ICL_APPENDINT32(logp, (afs_int32) p1);
-#endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
-	} else if (t1 == ICL_TYPE_FID) {
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[2]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[3]);
-	}
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-	else if (t1 == ICL_TYPE_INT32)
-	    ICL_APPENDINT32(logp, (afs_int32) p1);
-#endif
-	else
-	    ICL_APPENDLONG(logp, p1);
-    }
-    if (t2) {
-	/* marshall parameter 2 now */
-	if (t2 == ICL_TYPE_STRING)
-	    afs_icl_AppendString(logp, (char *)p2);
-	else if (t2 == ICL_TYPE_HYPER) {
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p2)->high);
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p2)->low);
-	} else if (t2 == ICL_TYPE_INT64) {
-#ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) p2);
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-	    ICL_APPENDINT32(logp, (afs_int32) p2);
-#endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
-	} else if (t2 == ICL_TYPE_FID) {
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[2]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[3]);
-	}
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-	else if (t2 == ICL_TYPE_INT32)
-	    ICL_APPENDINT32(logp, (afs_int32) p2);
-#endif
-	else
-	    ICL_APPENDLONG(logp, p2);
-    }
-    if (t3) {
-	/* marshall parameter 3 now */
-	if (t3 == ICL_TYPE_STRING)
-	    afs_icl_AppendString(logp, (char *)p3);
-	else if (t3 == ICL_TYPE_HYPER) {
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p3)->high);
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p3)->low);
-	} else if (t3 == ICL_TYPE_INT64) {
-#ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) p3);
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-	    ICL_APPENDINT32(logp, (afs_int32) p3);
-#endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
-	} else if (t3 == ICL_TYPE_FID) {
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[2]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[3]);
-	}
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-	else if (t3 == ICL_TYPE_INT32)
-	    ICL_APPENDINT32(logp, (afs_int32) p3);
-#endif
-	else
-	    ICL_APPENDLONG(logp, p3);
-    }
-    if (t4) {
-	/* marshall parameter 4 now */
-	if (t4 == ICL_TYPE_STRING)
-	    afs_icl_AppendString(logp, (char *)p4);
-	else if (t4 == ICL_TYPE_HYPER) {
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p4)->high);
-	    ICL_APPENDINT32(logp,
-			    (afs_int32) ((struct afs_hyper_t *)p4)->low);
-	} else if (t4 == ICL_TYPE_INT64) {
-#ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) p4);
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
-#else /* AFS_64BIT_CLIENT */
-	    ICL_APPENDINT32(logp, (afs_int32) 0);
-	    ICL_APPENDINT32(logp, (afs_int32) p4);
-#endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
-	} else if (t4 == ICL_TYPE_FID) {
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[2]);
-	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[3]);
-	}
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-	else if (t4 == ICL_TYPE_INT32)
-	    ICL_APPENDINT32(logp, (afs_int32) p4);
-#endif
-	else
-	    ICL_APPENDLONG(logp, p4);
-    }
+    afs_icl_AppendOne(logp, t1, p1);
+    afs_icl_AppendOne(logp, t2, p2);
+    afs_icl_AppendOne(logp, t3, p3);
+    afs_icl_AppendOne(logp, t4, p4);
     ReleaseWriteLock(&logp->lock);
 }
 

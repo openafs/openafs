@@ -46,15 +46,6 @@ Creation date:
  * Return codes.
  */
 #define	AFSCONF_SUCCESS	  0	/* worked */
-#if 0
-#define	AFSCONF_FAILURE	  1	/* mysterious failure */
-#define	AFSCONF_NOTFOUND  2	/* could not find entry */
-#define	AFSCONF_UNKNOWN	  3	/* do not know that information */
-#define	AFSCONF_NOCELL	  4	/* line appears before a cell has been defined */
-#define	AFSCONF_SYNTAX	  5	/* syntax error */
-#define	AFSCONF_NODB	  6	/* a database file is missing */
-#define	AFSCONF_FULL	  7	/* no more entries */
-#endif
 
 /*
  * Complete server info for one cell.
@@ -144,6 +135,37 @@ extern afs_int32 afsconf_ClientAuth(void *arock,
 extern afs_int32 afsconf_ClientAuthSecure(void *arock,
 				          struct rx_securityClass **astr,
 				          afs_int32 * aindex);
+
+/*!
+ * A set of bit flags to control the selection of a security object
+ */
+#define AFSCONF_SECOPTS_NOAUTH        0x1
+#define AFSCONF_SECOPTS_LOCALAUTH     0x2
+#define AFSCONF_SECOPTS_ALWAYSENCRYPT 0x4
+#define AFSCONF_SECOPTS_FALLBACK_NULL 0x8
+typedef afs_uint32 afsconf_secflags;
+
+extern afs_int32 afsconf_ClientAuthToken(struct afsconf_cell *info,
+					 afsconf_secflags flags,
+					 struct rx_securityClass **sc,
+					 afs_int32 *scIndex,
+					 time_t *expires);
+
+
+extern afs_int32 afsconf_PickClientSecObj(struct afsconf_dir *dir,
+					  afsconf_secflags flags,
+					  struct afsconf_cell *info,
+					  char *cellName,
+					  struct rx_securityClass **sc,
+					  afs_int32 *scIndex,
+					  time_t *expires);
+
+/* Flags for this function */
+#define AFSCONF_SEC_OBJS_RXKAD_CRYPT 1
+extern void afsconf_BuildServerSecurityObjects(struct afsconf_dir *,
+					       afs_uint32,
+					       struct rx_securityClass ***,
+					       afs_int32 *);
 
 /* writeconfig.c */
 int afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, const char *apath, 
