@@ -377,11 +377,12 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
     if (tvc->mvstat != 1)
 	return 0;
 
-    /* Is the call to VerifyVCache really necessary? */
-    code = afs_VerifyVCache(tvc, areq);
-    if (code)
-	goto done;
     if (canblock) {
+	/* Is the call to VerifyVCache really necessary? */
+	code = afs_VerifyVCache(tvc, areq);
+	if (code)
+	    goto done;
+
 	ObtainWriteLock(&tvc->lock, 599);
 	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
 	ReleaseWriteLock(&tvc->lock);
