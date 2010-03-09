@@ -58,7 +58,7 @@ Importing a New Upstream Release
        work and it's up to date:
 
            git remote add openafs git://git.openafs.org/openafs.git
-           git fetch
+           git fetch openafs
 
        This will be required to locate the tag for the new upstream
        release.
