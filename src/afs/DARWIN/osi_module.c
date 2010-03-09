@@ -36,7 +36,7 @@ extern int ioctl();
 extern int setgroups();
 extern int maxvfsconf;
 kern_return_t
-afs_modload(struct kmod_info *ki, void *data)
+afs_modload(struct kmod_info *kmod_info, void *data)
 {
     osi_Init();
 #ifdef AFS_DARWIN80_ENV
@@ -95,11 +95,15 @@ afs_modload(struct kmod_info *ki, void *data)
     sysent[AFS_SYSCALL].sy_funnel = KERNEL_FUNNEL;
 #endif
 #endif
+    printf("%s kext loaded; %u pages at 0x%lx (load tag %u).\n",
+	   kmod_info->name, (unsigned)kmod_info->size / PAGE_SIZE,
+	   (unsigned long)kmod_info->address, (unsigned)kmod_info->id);
+
     return KERN_SUCCESS;
 }
 
 kern_return_t
-afs_modunload(struct kmod_info * ki, void *data)
+afs_modunload(struct kmod_info * kmod_info, void *data)
 {
     if (afs_globalVFS)
 	return KERN_FAILURE;
@@ -121,6 +125,8 @@ afs_modunload(struct kmod_info * ki, void *data)
     MUTEX_FINISH();
     lck_mtx_free(afs_global_lock, openafs_lck_grp);
 #endif
+    printf("%s kext unloaded; (load tag %u).\n",
+	   kmod_info->name, (unsigned)kmod_info->id);
     return KERN_SUCCESS;
 }
 
