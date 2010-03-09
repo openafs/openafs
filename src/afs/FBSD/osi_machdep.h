@@ -76,6 +76,10 @@ extern int (**afs_vnodeop_p) ();
 
 #define afs_strcat(s1, s2)	strcat((s1), (s2))
 
+/* malloc */
+extern void *osi_fbsd_alloc(size_t size, int dropglobal);
+extern void osi_fbsd_free(void *p);
+
 #undef afs_osi_Alloc_NoSleep
 #define afs_osi_Alloc_NoSleep(size) osi_fbsd_alloc((size), 0)
 
