@@ -31,7 +31,7 @@ openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
-openafs (1.4.12+dfsg-1) UNRELEASED; urgency=low
+openafs (1.4.12+dfsg-1) unstable; urgency=low
 
   * New upstream release.
     - Enable weak encryption types in aklog and klog.krb5.
@@ -64,8 +64,8 @@ openafs (1.4.12+dfsg-1) UNRELEASED; urgency=low
     that we can provide a separate NEWS.Debian.
   * Update standards version to 3.8.4 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Tue, 05 Jan 2010 17:03:24 -0800
-  
+ -- Russ Allbery <rra@debian.org>  Mon, 08 Mar 2010 16:32:49 -0800
+
 openafs (1.4.11+dfsg-6) unstable; urgency=low
 
   * Apply upstream deltas:
