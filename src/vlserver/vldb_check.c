@@ -379,9 +379,10 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 	vlentryp->nextIdHash[i] = ntohl(vlentryp->nextIdHash[i]);
     vlentryp->nextNameHash = ntohl(vlentryp->nextNameHash);
     for (i = 0; i < NMAXNSERVERS; i++) {
-	vlentryp->serverNumber[i] = ntohl(vlentryp->serverNumber[i]);
-	vlentryp->serverPartition[i] = ntohl(vlentryp->serverPartition[i]);
-	vlentryp->serverFlags[i] = ntohl(vlentryp->serverFlags[i]);
+	/* make sure not to ntohl these, as they're chars, not ints */
+	vlentryp->serverNumber[i] = vlentryp->serverNumber[i];
+	vlentryp->serverPartition[i] = vlentryp->serverPartition[i];
+	vlentryp->serverFlags[i] = vlentryp->serverFlags[i];
     }
 
     if (vlentryp->flags == VLCONTBLOCK) {
