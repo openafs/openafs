@@ -1,4 +1,4 @@
-openafs (1.5.69+dfsg-1) UNRELEASED; urgency=low
+openafs (1.5.72+dfsg-1) UNRELEASED; urgency=low
 
   * New upstream testing release.
     - New demand-attach file server support for greatly improved file
