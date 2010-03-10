@@ -1146,8 +1146,16 @@ int interrupt = 0;
 static void *
 do_interrupt(void * unused)
 {
-    if (interrupt)
+    if (interrupt) {
+#ifndef AFS_PTHREAD_ENV
+	/* Avoid LWP from getting confused that our stack has suddenly
+	 * changed. This will avoid some sanity checks, but until a better way
+	 * is found, the only alternative is always crashing and burning on at
+	 * least the stack-overflow check. */
+	lwp_cpptr->stack = NULL;
+#endif
 	longjmp(env, 0);
+    }
 
     fprintf(STDOUT, "\nSIGINT handler: vos move operation in progress\n");
     fprintf(STDOUT,
