@@ -8,20 +8,19 @@ pts_membership - Displays the membership list for a user or group
 <div class="synopsis">
 
 B<pts membership> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
-    [B<-supergroups>]
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-localauth>] [B<-noauth>] 
-    [B<-force>] [B<-help>]
+    [B<-supergroups>] [B<-expandgroups>] S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-localauth>] [B<-noauth>] [B<-force>] [B<-help>]
 
 B<pts m> S<<< B<-na> <I<user or group name or id>>+ >>>
-    [B<-s>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 B<pts groups> S<<< B<-na> <I<user or group name or id>>+ >>>
-    [B<-s>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 B<pts g> S<<< B<-na> <I<user or group name or id>>+ >>>
-    [B<-s>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-h>]
 
 =for html
@@ -59,6 +58,21 @@ is negative.
 List the groups to which each group specified by the B<-nameorid>
 argument belongs, in addition to user and machine members. Group
 membership may be nested when B<ptserver> is compilied with the
+SUPERGROUPS option enabled.
+
+=item B<-expandgroups>
+
+Instead of listing only the groups in which the user or machine is a direct
+member, list every group in which the user or machine belongs, including
+membership due to nested groups, for each user or machine specified by
+the B<-nameorid> argument.
+
+Instead of listing groups which are members of a group, list every user and
+machine which is a member of a group, including the users and machines which
+are members due to nested groups, for each group specified by the B<-nameorid>
+argument.
+
+Group membership may be nested when B<ptserver> is compilied with the
 SUPERGROUPS option enabled.
 
 =item B<-cell> <I<cell name>>

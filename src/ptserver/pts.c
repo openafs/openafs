@@ -608,7 +608,13 @@ ListMembership(struct cmd_syndesc *as, void *arock)
 
 	list.namelist_val = 0;
 	list.namelist_len = 0;
-	code = pr_IDListMembers(ids.idlist_val[i], &list);
+	if (as->parms[2].items) {	/* -expandgroups */
+	    code = pr_IDListExpandedMembers(id, &list);
+	    if (!code)
+		printf("Expanded ");
+	} else {
+	    code = pr_IDListMembers(id, &list);
+	}
 	if (code) {
 	    afs_com_err(whoami, code, "; unable to get membership of %s (id: %d)",
 		    name, id);
@@ -1163,6 +1169,7 @@ main(int argc, char **argv)
 			  "list membership of a user or group");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-supergroups", CMD_FLAG, CMD_OPTIONAL, "show supergroups");
+    cmd_AddParm(ts, "-expandgroups", CMD_FLAG, CMD_OPTIONAL, "expand super and sub group membership");
     add_std_args(ts);
     cmd_CreateAlias(ts, "groups");
 
