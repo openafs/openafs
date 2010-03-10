@@ -1143,8 +1143,8 @@ UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_uint32 avolid)
 jmp_buf env;
 int interrupt = 0;
 
-void
-sigint_handler(int x)
+static void *
+do_interrupt(void * unused)
 {
     if (interrupt)
 	longjmp(env, 0);
@@ -1156,9 +1156,18 @@ sigint_handler(int x)
     fflush(STDOUT);
 
     interrupt = 1;
-    (void)signal(SIGINT, sigint_handler);
+    return NULL;
+}
 
-    return;
+static void
+sigint_handler(int x)
+{
+#ifdef AFS_PTHREAD_ENV
+    do_interrupt(NULL);
+#else
+    IOMGR_SoftSig(do_interrupt, 0);
+#endif
+    (void)signal(SIGINT, sigint_handler);
 }
 
 /* Move volume <afromvol> on <afromserver> <afrompart> to <atoserver>
