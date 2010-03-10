@@ -1172,21 +1172,33 @@ int
 UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	       afs_int32 atoserver, afs_int32 atopart, int flags)
 {
-    struct rx_connection *toconn, *fromconn;
-    afs_int32 fromtid, totid, clonetid;
+    /* declare stuff 'volatile' that may be used from setjmp/longjmp and may
+     * be changing during the move */
+    struct rx_connection * volatile toconn;
+    struct rx_connection * volatile fromconn;
+    afs_int32 volatile fromtid;
+    afs_int32 volatile totid;
+    afs_int32 volatile clonetid;
+    afs_uint32 volatile newVol;
+    afs_uint32 volatile volid;
+    afs_uint32 volatile backupId;
+    int volatile islocked;
+    int volatile pntg;
+
     char vname[64];
     char *volName = 0;
     char tmpName[VOLSER_MAXVOLNAME + 1];
     afs_int32 rcode;
     afs_int32 fromDate;
+    afs_int32 tmp;
+    afs_uint32 tmpVol;
     struct restoreCookie cookie;
     register afs_int32 vcode, code;
-    afs_uint32 newVol, volid, backupId;
     struct volser_status tstatus;
     struct destServer destination;
 
     struct nvldbentry entry, storeEntry;
-    int i, islocked, pntg;
+    int i;
     afs_int32 error;
     char in, lf;		/* for test code */
     int same;
@@ -1292,9 +1304,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	fromtid = 0;
 	pntg = 1;
 
+	tmp = fromtid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITOffline,
-				    &fromtid);
+				    &tmp);
+	fromtid = tmp;
 
 	if (!code) {		/* volume exists - delete it */
 	    VPRINT1("Setting flags on leftover source volume %u ...",
@@ -1330,7 +1344,8 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	fromtid = 0;
 	code =
 	    AFSVolTransCreate_retry(fromconn, backupId, afrompart, ITOffline,
-				    &fromtid);
+				    &tmp);
+	fromtid = tmp;
 
 	if (!code) {		/* backup volume exists - delete it */
 	    VPRINT1("Setting flags on leftover backup volume %u ...",
@@ -1393,7 +1408,8 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
      * ***/
 
     VPRINT1("Starting transaction on source volume %u ...", afromvol);
-    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &fromtid);
+    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &tmp);
+    fromtid = tmp;
     EGOTO1(mfail, code, "Failed to create transaction on the volume %u\n",
 	   afromvol);
     VDONE;
@@ -1402,8 +1418,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	/* Get a clone id */
 	VPRINT1("Allocating new volume id for clone of volume %u ...",
 		afromvol);
-	newVol = 0;
-	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &newVol);
+	newVol = tmpVol = 0;
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &tmpVol);
+	newVol = tmpVol;
 	EGOTO1(mfail, vcode,
 	       "Could not get an ID for the clone of volume %u from the VLDB\n",
 	       afromvol);
@@ -1413,7 +1430,8 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	VPRINT1("Cloning source volume %u ...", afromvol);
 	strcpy(vname, "move-clone-temp");
 	code =
-	    AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &newVol);
+	    AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &tmpVol);
+	newVol = tmpVol;
 	EGOTO1(mfail, code, "Failed to clone the source volume %u\n",
 	       afromvol);
 	VDONE;
@@ -1443,9 +1461,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (!(flags & RV_NOCLONE)) {
 	/* All of this is to get the fromDate */
 	VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
+	tmp = clonetid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, newVol, afrompart, ITOffline,
-			      &clonetid);
+			      &tmp);
+	clonetid = tmp;
 	EGOTO1(mfail, code,
 	       "Failed to start a transaction on the cloned volume%u\n",
 	       newVol);
@@ -1495,7 +1515,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 
     /* create a volume on the target machine */
     volid = afromvol;
-    code = AFSVolTransCreate_retry(toconn, volid, atopart, ITOffline, &totid);
+    tmp = totid;
+    code = AFSVolTransCreate_retry(toconn, volid, atopart, ITOffline, &tmp);
+    totid = tmp;
     if (!code) {
 	/* Delete the existing volume.
 	 * While we are deleting the volume in these steps, the transaction
@@ -1523,9 +1545,13 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     }
 
     VPRINT1("Creating the destination volume %u ...", volid);
+    tmp = totid;
+    tmpVol = volid;
     code =
-	AFSVolCreateVolume(toconn, atopart, volName, volser_RW, volid, &volid,
-			   &totid);
+	AFSVolCreateVolume(toconn, atopart, volName, volser_RW, volid, &tmpVol,
+			   &tmp);
+    totid = tmp;
+    volid = tmpVol;
     EGOTO1(mfail, code, "Failed to create the destination volume %u\n",
 	   volid);
     VDONE;
@@ -1580,7 +1606,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
      * ***/
 
     VPRINT1("Starting transaction on source volume %u ...", afromvol);
-    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &fromtid);
+    tmp = fromtid;
+    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &tmp);
+    fromtid = tmp;
     EGOTO1(mfail, code,
 	   "Failed to create a transaction on the source volume %u\n",
 	   afromvol);
@@ -1731,8 +1759,10 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     /* Delete the backup volume on the original site */
     VPRINT1("Creating transaction for backup volume %u on source ...",
 	    backupId);
+    tmp = fromtid;
     code =
-	AFSVolTransCreate_retry(fromconn, backupId, afrompart, ITOffline, &fromtid);
+	AFSVolTransCreate_retry(fromconn, backupId, afrompart, ITOffline, &tmp);
+    fromtid = tmp;
     VDONE;
     if (!code) {
 	VPRINT1("Setting flags on backup volume %u on source ...", backupId);
@@ -1767,9 +1797,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     fromtid = 0;
     if (!(flags & RV_NOCLONE)) {
 	VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
+	tmp = clonetid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, newVol, afrompart, ITOffline,
-			      &clonetid);
+			      &tmp);
+	clonetid = tmp;
 	EGOTO1(mfail, code,
 	       "Failed to start a transaction on the cloned volume%u\n",
 	       newVol);
@@ -1954,8 +1986,10 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	    VPRINT1
 		("Recovery: Creating transaction for destination volume %u ...",
 		 volid);
+	    tmp = totid;
 	    code =
-		AFSVolTransCreate_retry(toconn, volid, atopart, ITOffline, &totid);
+		AFSVolTransCreate_retry(toconn, volid, atopart, ITOffline, &tmp);
+	    totid = tmp;
 
 	    if (!code) {
 		VDONE;
@@ -1988,9 +2022,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	if (fromconn) {
 	    VPRINT1("Recovery: Creating transaction on source volume %u ...",
 		    afromvol);
+	    tmp = fromtid;
 	    code =
 		AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy,
-				  &fromtid);
+				  &tmp);
+	    fromtid = tmp;
 	    if (!code) {
 		VDONE;
 
@@ -2021,9 +2057,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	if (fromconn) {
 	    VPRINT1("Recovery: Creating transaction on backup volume %u ...",
 		    backupId);
+	    tmp = fromtid;
 	    code =
 		AFSVolTransCreate_retry(fromconn, backupId, afrompart, ITOffline,
-				  &fromtid);
+				  &tmp);
+	    fromtid = tmp;
 	    if (!code) {
 		VDONE;
 
@@ -2051,9 +2089,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	    /* delete source volume */
 	    VPRINT1("Recovery: Creating transaction on source volume %u ...",
 		    afromvol);
+	    tmp = fromtid;
 	    code =
 		AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy,
-				  &fromtid);
+				  &tmp);
+	    fromtid = tmp;
 	    if (!code) {
 		VDONE;
 
@@ -2090,9 +2130,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (newVol) {
 	VPRINT1("Recovery: Creating transaction on clone volume %u ...",
 		newVol);
+	tmp = clonetid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, newVol, afrompart, ITOffline,
-			      &clonetid);
+			      &tmp);
+	clonetid = tmp;
 	if (!code) {
 	    VDONE;
 
@@ -2165,21 +2207,30 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	       char *atovolname, afs_int32 atoserver, afs_int32 atopart,
 	       afs_uint32 atovolid, int flags)
 {
-    struct rx_connection *toconn, *fromconn;
-    afs_int32 fromtid, totid, clonetid;
+    /* declare stuff 'volatile' that may be used from setjmp/longjmp and may
+     * be changing during the copy */
+    int volatile pntg;
+    afs_int32 volatile clonetid;
+    afs_int32 volatile totid;
+    afs_int32 volatile fromtid;
+    struct rx_connection * volatile fromconn;
+    struct rx_connection * volatile toconn;
+    afs_uint32 volatile cloneVol;
+
     char vname[64];
     afs_int32 rcode;
     afs_int32 fromDate, cloneFromDate;
     struct restoreCookie cookie;
     register afs_int32 vcode, code;
-    afs_uint32 cloneVol, newVol;
+    afs_uint32 newVol;
     afs_int32 volflag;
     struct volser_status tstatus;
     struct destServer destination;
-
     struct nvldbentry entry, newentry, storeEntry;
-    int islocked, pntg;
+    int islocked;
     afs_int32 error;
+    afs_int32 tmp;
+    afs_uint32 tmpVol;
     int justclone = 0;
 
     islocked = 0;
@@ -2221,8 +2272,10 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     cloneVol = 0;
     if (!(flags & RV_NOCLONE)) {
 	VPRINT1("Starting transaction on source volume %u ...", afromvol);
+	tmp = fromtid;
 	code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy,
-				 &fromtid);
+				 &tmp);
+	fromtid = tmp;
 	EGOTO1(mfail, code, "Failed to create transaction on the volume %u\n",
 	       afromvol);
 	VDONE;
@@ -2231,7 +2284,9 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	VPRINT1("Allocating new volume id for clone of volume %u ...",
 		afromvol);
 	cloneVol = 0;
-	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &cloneVol);
+	tmpVol = cloneVol;
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &tmpVol);
+	cloneVol = tmpVol;
 	EGOTO1(mfail, vcode,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   afromvol);
@@ -2255,9 +2310,11 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	/* Do the clone. Default flags on clone are set to delete on salvage and out of service */
 	VPRINT1("Cloning source volume %u ...", afromvol);
 	strcpy(vname, "copy-clone-temp");
+	tmpVol = cloneVol;
 	code =
 	    AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname,
-			&cloneVol);
+			&tmpVol);
+	cloneVol = tmpVol;
 	EGOTO1(mfail, code, "Failed to clone the source volume %u\n",
 	       afromvol);
 	VDONE;
@@ -2280,9 +2337,11 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 
     if (!(flags & RV_NOCLONE)) {
 	VPRINT1("Starting transaction on the cloned volume %u ...", cloneVol);
+	tmp = clonetid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, cloneVol, afrompart, ITOffline,
-			  &clonetid);
+			  &tmp);
+	clonetid = tmp;
 	EGOTO1(mfail, code,
 	       "Failed to start a transaction on the cloned volume%u\n",
 	       cloneVol);
@@ -2311,7 +2370,9 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 
     /* create a volume on the target machine */
     cloneFromDate = 0;
-    code = AFSVolTransCreate_retry(toconn, newVol, atopart, ITOffline, &totid);
+    tmp = totid;
+    code = AFSVolTransCreate_retry(toconn, newVol, atopart, ITOffline, &tmp);
+    totid = tmp;
     if (!code) {
 	if ((flags & RV_CPINCR)) {
 	    VPRINT1("Getting status of pre-existing volume %u ...", newVol);
@@ -2359,10 +2420,12 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     }
 
     VPRINT1("Creating the destination volume %u ...", newVol);
+    tmp = totid;
     code =
 	AFSVolCreateVolume(toconn, atopart, atovolname,
 			   (flags & RV_RDONLY) ? volser_RO : volser_RW,
-			   newVol, &newVol, &totid);
+			   newVol, &newVol, &tmp);
+    totid = tmp;
     EGOTO1(mfail, code, "Failed to create the destination volume %u\n",
 	   newVol);
     VDONE;
@@ -2420,7 +2483,9 @@ cpincr:
      * ***/
 
     VPRINT1("Starting transaction on source volume %u ...", afromvol);
-    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &fromtid);
+    tmp = fromtid;
+    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &tmp);
+    fromtid = tmp;
     EGOTO1(mfail, code,
 	   "Failed to create a transaction on the source volume %u\n",
 	   afromvol);
@@ -2471,9 +2536,11 @@ cpincr:
 
     if (!(flags & RV_NOCLONE)) {
 	VPRINT1("Starting transaction on the cloned volume %u ...", cloneVol);
+	tmp = clonetid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, cloneVol, afrompart, ITOffline,
-			      &clonetid);
+			      &tmp);
+	clonetid = tmp;
 	EGOTO1(mfail, code,
 	       "Failed to start a transaction on the cloned volume%u\n",
 	       cloneVol);
@@ -2620,9 +2687,11 @@ cpincr:
     if (cloneVol) {
 	VPRINT1("Recovery: Creating transaction on clone volume %u ...",
 		cloneVol);
+	tmp = clonetid;
 	code =
 	    AFSVolTransCreate_retry(fromconn, cloneVol, afrompart, ITOffline,
-			      &clonetid);
+			      &tmp);
+	clonetid = tmp;
 	if (!code) {
 	    VDONE;
 
@@ -3998,10 +4067,15 @@ UV_DumpVolume(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	      afs_int32(*DumpFunction) (struct rx_call *, void *), void *rock,
 	      afs_int32 flags)
 {
-    struct rx_connection *fromconn = (struct rx_connection *)0;
-    struct rx_call *fromcall = (struct rx_call *)0;
-    afs_int32 fromtid = 0, rxError = 0, rcode = 0;
-    afs_int32 code, error = 0, retry = 0;
+    /* declare stuff 'volatile' that may be used from setjmp/longjmp and may
+     * be changing during the dump */
+    struct rx_call * volatile fromcall = NULL;
+    struct rx_connection * volatile fromconn = NULL;
+    afs_int32 volatile fromtid = 0;
+
+    afs_int32 rxError = 0, rcode = 0;
+    afs_int32 code, error = 0;
+    afs_int32 tmp;
     time_t tmv = fromdate;
 
     if (setjmp(env))
@@ -4022,7 +4096,9 @@ UV_DumpVolume(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
 
     VEPRINT1("Starting transaction on volume %u...", afromvol);
-    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &fromtid);
+    tmp = fromtid;
+    code = AFSVolTransCreate_retry(fromconn, afromvol, afrompart, ITBusy, &tmp);
+    fromtid = tmp;
     EGOTO1(error_exit, code,
 	   "Could not start transaction on the volume %u to be dumped\n",
 	   afromvol);
@@ -4034,7 +4110,6 @@ UV_DumpVolume(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (flags & VOLDUMPV2_OMITDIRS) 
 	code = StartAFSVolDumpV2(fromcall, fromtid, fromdate, flags);
     else
-      retryold:
 	code = StartAFSVolDump(fromcall, fromtid, fromdate);
     EGOTO(error_exit, code, "Could not start the dump process \n");
     VEDONE;
@@ -4068,8 +4143,6 @@ UV_DumpVolume(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     if (fromconn)
 	rx_DestroyConnection(fromconn);
 
-    if (retry)
-	goto retryold;
     if (error != RXGEN_OPCODE)
 	PrintError("", error);
     return (error);
@@ -4087,12 +4160,17 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_int32 afromserver,
 		    afs_int32(*DumpFunction) (struct rx_call *, void *),
 		    void *rock, afs_int32 flags)
 {
-    struct rx_connection *fromconn = (struct rx_connection *)0;
-    struct rx_call *fromcall = (struct rx_call *)0;
+    /* declare stuff 'volatile' that may be used from setjmp/longjmp and may
+     * be changing during the dump */
+    struct rx_connection * volatile fromconn = NULL;
+    struct rx_call * volatile fromcall = NULL;
+    afs_int32 volatile clonetid = 0;
+    afs_uint32 volatile clonevol = 0;
+
+    afs_int32 tmp;
     afs_int32 fromtid = 0, rxError = 0, rcode = 0;
-    afs_int32 clonetid = 0;
     afs_int32 code = 0, error = 0;
-    afs_uint32 clonevol = 0;
+    afs_uint32 tmpVol;
     char vname[64];
     time_t tmv = fromdate;
 
@@ -4122,7 +4200,9 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_int32 afromserver,
 
     /* Get a clone id */
     VEPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
-    code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &clonevol);
+    tmpVol = clonevol;
+    code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &tmpVol);
+    clonevol = tmpVol;
     EGOTO1(error_exit, code,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   afromvol);
@@ -4132,8 +4212,10 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_int32 afromserver,
     VEPRINT2("Cloning source volume %u to clone volume %u...", afromvol,
 	    clonevol);
     strcpy(vname, "dump-clone-temp");
+    tmpVol = clonevol;
     code =
-	AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &clonevol);
+	AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &tmpVol);
+    clonevol = tmpVol;
     EGOTO1(error_exit, code, "Failed to clone the source volume %u\n",
 	   afromvol);
     VEDONE;
@@ -4150,9 +4232,11 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_int32 afromserver,
 
 
     VEPRINT1("Starting transaction on the cloned volume %u ...", clonevol);
+    tmp = clonetid;
     code =
 	AFSVolTransCreate_retry(fromconn, clonevol, afrompart, ITOffline,
-			  &clonetid);
+			  &tmp);
+    clonetid = tmp;
     EGOTO1(error_exit, code,
 	   "Failed to start a transaction on the cloned volume%u\n",
 	   clonevol);
