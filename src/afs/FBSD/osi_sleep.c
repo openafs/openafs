@@ -16,21 +16,14 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#ifndef AFS_FBSD50_ENV
 static char waitV;
-#endif
 
 
 void
 afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
     AFS_STATCNT(osi_InitWaitHandle);
-#ifdef AFS_FBSD50_ENV
-    cv_init(&achandle->wh_condvar, "afscondvar");
-    achandle->wh_inited = 1;
-#else
-    achandle->proc = NULL;
-#endif
+    achandle->proc = (caddr_t) 0;
 }
 
 /* cancel osi_Wait */
@@ -42,25 +35,15 @@ afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 void
 afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
 {
-#ifndef AFS_FBSD50_ENV
     caddr_t proc;
-#endif
 
     AFS_STATCNT(osi_CancelWait);
 
-#ifdef AFS_FBSD50_ENV
-    /* XXX should not be necessary */
-    if (!achandle->wh_inited)
-	return;
-    AFS_ASSERT_GLOCK();
-    cv_signal(&achandle->wh_condvar);
-#else
     proc = achandle->proc;
     if (proc == 0)
 	return;
     achandle->proc = NULL;	/* so dude can figure out he was signalled */
     afs_osi_Wakeup(&waitV);
-#endif
 }
 
 /* afs_osi_Wait
@@ -71,37 +54,10 @@ int
 afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int code;
-#ifdef AFS_FBSD50_ENV
-    struct timeval tv;
-    int ticks;
-#else
     afs_int32 endTime;
-#endif
 
     AFS_STATCNT(osi_Wait);
-#ifdef AFS_FBSD50_ENV
-    tv.tv_sec = ams / 1000;
-    tv.tv_usec = (ams % 1000) * 1000;
-    ticks = tvtohz(&tv);
 
-    AFS_ASSERT_GLOCK();
-    if (ahandle == NULL) {
-	/* This is nasty and evil and rude. */
-	afs_global_owner = 0;
-	code = msleep(&tv, &afs_global_mtx, (aintok ? PPAUSE|PCATCH : PVFS),
-	    "afswait", ticks);
-	afs_global_owner = curthread;
-    } else {
-	if (!ahandle->wh_inited)
-	    afs_osi_InitWaitHandle(ahandle);	/* XXX should not be needed */
-
-	if (aintok)
-	    code = cv_timedwait_sig(&ahandle->wh_condvar, &afs_global_mtx,
-		ticks);
-	else
-	    code = cv_timedwait(&ahandle->wh_condvar, &afs_global_mtx, ticks);
-    }
-#else
     endTime = osi_Time() + (ams / 1000);
     if (ahandle)
 	ahandle->proc = (caddr_t) curproc;
@@ -111,12 +67,12 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	if (code)
 	    break;		/* if something happened, quit now */
 	/* if we we're cancelled, quit now */
-	if (ahandle && (ahandle->proc == NULL)) {
+	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
 	    break;
 	}
     } while (osi_Time() < endTime);
-#endif
+
     return code;
 }
 
@@ -130,12 +86,8 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				 * by wakeup calls; wait will not return until
 				 * it changes */
-#ifdef AFS_FBSD50_ENV
     struct mtx *lck;
     struct thread *owner;
-#else
-    int cond;
-#endif
 } afs_event_t;
 
 #define HASHSIZE 128
@@ -143,7 +95,6 @@ afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
 #define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
 int afs_evhashcnt = 0;
 
-#ifdef AFS_FBSD50_ENV
 #define EVTLOCK_INIT(e) \
     do { \
         mtx_init((e)->lck, "event lock", NULL, MTX_DEF); \
@@ -163,12 +114,6 @@ int afs_evhashcnt = 0;
         mtx_unlock((e)->lck); \
     } while (0)
 #define EVTLOCK_DESTROY(e) mtx_destroy((e)->lck)
-#else
-#define EVTLOCK_INIT(e)
-#define EVTLOCK_LOCK(e)
-#define EVTLOCK_UNLOCK(e)
-#define EVTLOCK_DESTROY(e)
-#endif
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
  * */
@@ -207,7 +152,6 @@ afs_getevent(char *event)
 }
 
 /* Release the specified event */
-#ifdef AFS_FBSD50_ENV
 #define relevent(evp) \
     do { \
         osi_Assert((evp)->owner == curthread); \
@@ -215,9 +159,6 @@ afs_getevent(char *event)
         (evp)->owner = 0; \
         mtx_unlock((evp)->lck); \
     } while (0)
-#else
-#define relevent(evp) ((evp)->refcount--)
-#endif
 
 void
 afs_osi_Sleep(void *event)
@@ -227,19 +168,14 @@ afs_osi_Sleep(void *event)
 
     evp = afs_getevent(event);
     seq = evp->seq;
+    AFS_GUNLOCK();
     while (seq == evp->seq) {
-	AFS_ASSERT_GLOCK();
-#ifdef AFS_FBSD50_ENV
 	evp->owner = 0;
-	msleep(event, &afs_global_mtx, PVFS, "afsslp", 0);
+	msleep(event, evp->lck, PVFS, "afsslp", 0);
 	evp->owner = curthread;
-#else
-	AFS_GUNLOCK();
-	tsleep(event, PVFS, "afs_osi_Sleep", 0);
-	AFS_GLOCK();
-#endif
     }
     relevent(evp);
+    AFS_GLOCK();
 }
 
 int
