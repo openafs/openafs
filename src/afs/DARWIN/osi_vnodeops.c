@@ -615,13 +615,17 @@ afs_vop_access(ap)
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
     
     code = afs_AccessOK(tvc, bits, &treq, cmb);
-#if defined(AFS_DARWIN80_ENV)
-    /* In a dropbox, cp on 10.4 behaves badly, looping on EACCES */
-    /* In a dropbox, Finder may reopen the file. Let it. */
-    if (code == 0 && ((bits &~(PRSFS_READ|PRSFS_WRITE)) == 0)) {
+    /*
+     * Special cased dropbox handling:
+     * cp on 10.4 behaves badly, looping on EACCES
+     * Finder may reopen the file. Let it.
+     */
+    if (code == 0 && ((bits &~(PRSFS_READ|PRSFS_WRITE)) == 0))
 	code = afs_AccessOK(tvc, PRSFS_ADMINISTER|PRSFS_INSERT|bits, &treq, cmb);
-    }
-#endif
+    /* Finder also treats dropboxes as insert+delete. fake it out. */
+    if (code == 0 && (bits == (PRSFS_INSERT|PRSFS_DELETE)))
+	code = afs_AccessOK(tvc, PRSFS_INSERT, &treq, cmb);
+
     if (code == 1 && vnode_vtype(ap->a_vp) == VREG &&
         ap->a_action & KAUTH_VNODE_EXECUTE &&
         (tvc->f.m.Mode & 0100) != 0100) {
