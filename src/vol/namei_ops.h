@@ -77,6 +77,11 @@ void namei_HandleToName(namei_t * name, IHandle_t * h);
 int namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId);
 int namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget);
 
+# ifdef AFS_SALSRV_ENV
+#  include <afs/work_queue.h>
+extern void namei_SetWorkQueue(struct afs_work_queue *wq);
+# endif
+
 #endif /* AFS_NAMEI_ENV */
 
 #endif /* _AFS_NAMEI_OPS_H_H_ */
