@@ -138,7 +138,9 @@ afs_getevent(char *event)
 	evp = evp->next;
     }
     if (!newp) {
-	newp = (afs_event_t *) osi_AllocSmallSpace(sizeof(afs_event_t));
+	newp = osi_AllocSmallSpace(sizeof(afs_event_t));
+	newp->lck = osi_AllocSmallSpace(sizeof(struct mtx));
+	memset(newp->lck, 0, sizeof(struct mtx));
 	afs_evhashcnt++;
 	newp->next = afs_evhasht[hashcode];
 	afs_evhasht[hashcode] = newp;
@@ -247,6 +249,7 @@ shutdown_osisleep(void) {
             if (evp->refcount == 0) {
                 EVTLOCK_DESTROY(evp);
                 *pevpp = evp->next;
+                osi_FreeSmallSpace(evp->lck);
                 osi_FreeSmallSpace(evp);
                 afs_evhashcnt--;
             } else {
