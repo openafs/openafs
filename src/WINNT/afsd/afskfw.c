@@ -66,21 +66,20 @@
 /* Prevent inclusion of des.h to avoid conflicts with des types */
 #define NO_DES_H_INCLUDE
 
-#include "afskfw-int.h"
+#include <osilog.h>
+#include <afs/ptserver.h>
+#include <afs/ptuser.h>
+#include <rx/rxkad.h>
+#include <WINNT\afsreg.h>
+#include "cm.h"
+
 #include "afskfw.h"
+#include "afskfw-int.h"
 #include <userenv.h>
 #include "strsafe.h"
 
 #include <Sddl.h>
 #include <Aclapi.h>
-
-#include <osilog.h>
-#include <afs/ptserver.h>
-#include <afs/ptuser.h>
-#include <rx/rxkad.h>
-
-#include <WINNT\afsreg.h>
-#include "cm.h"
 
 /*
  * TIMING _____________________________________________________________________
@@ -433,7 +432,7 @@ KFW_initialize(void)
         char mutexName[MAX_PATH];
         HANDLE hMutex = NULL;
 
-        sprintf(mutexName, "AFS KFW Init pid=%d", getpid());
+        StringCbPrintf( mutexName, sizeof(mutexName), "AFS KFW Init pid=%d", getpid());
         
         hMutex = CreateMutex( NULL, TRUE, mutexName );
         if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
@@ -671,13 +670,13 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
         errText = pkrb5_get_error_message(ctx, rc);
     else
         errText = perror_message(rc);
-    _snprintf(message, sizeof(message), 
-              "%s\n(Kerberos error %ld)\n\n%s failed", 
+    StringCbPrintf(message, sizeof(message), 
+              "%s\n(Kerberos error %ld)\n\n%s failed",
               errText, 
               krb5Error, 
               FailedFunctionName);
     if (pkrb5_free_error_message)
-        pkrb5_free_error_message(ctx, errText);
+        pkrb5_free_error_message(ctx, (char *)errText);
 
     if ( IsDebuggerPresent() )
         OutputDebugString(message);
@@ -736,7 +735,7 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     ccfullname = malloc(strlen(ccname) + strlen(cctype) + 2);
     if (!ccfullname) goto cleanup;
 	
-    sprintf(ccfullname, "%s:%s", cctype, ccname);
+    StringCbPrintf(ccfullname, sizeof(ccfullname), "%s:%s", cctype, ccname);
 
     // Search the existing list to see if we have a match 
     if ( next ) {
@@ -1019,8 +1018,9 @@ KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
 
         if ( !KFW_AFS_find_ccache_for_principal(ctx,pname,&ccname,TRUE) &&
              !KFW_AFS_find_ccache_for_principal(ctx,pname,&ccname,FALSE)) {
-            ccname = (char *)malloc(strlen(pname) + 5);
-            sprintf(ccname,"API:%s",pname);
+            size_t len = strlen(pname) + 5;
+            ccname = (char *)malloc(len);
+            StringCbPrintf(ccname, len, "API:%s", pname);
         }
         code = pkrb5_cc_resolve(ctx, ccname, cc);
     } else {
@@ -1050,7 +1050,7 @@ KFW_import_windows_lsa(void)
     krb5_data *  princ_realm;
     krb5_error_code code;
     char cell[128]="", realm[128]="", *def_realm = 0;
-    int i;
+    unsigned int i;
     DWORD dwMsLsaImport;
          
     if (!pkrb5_init_context)
@@ -1075,10 +1075,10 @@ KFW_import_windows_lsa(void)
         break;
     case 2: { /* matching realm */
         char ms_realm[128] = "", *r;
-        int i;
+        unsigned int j;
 
-        for ( r=ms_realm, i=0; i<krb5_princ_realm(ctx, princ)->length; r++, i++ ) {
-            *r = krb5_princ_realm(ctx, princ)->data[i];
+        for ( r=ms_realm, j=0; j<krb5_princ_realm(ctx, princ)->length; r++, j++ ) {
+            *r = krb5_princ_realm(ctx, princ)->data[j];
         }
         *r = '\0';
 
@@ -1107,7 +1107,7 @@ KFW_import_windows_lsa(void)
     code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, pLeash_get_default_lifetime(),NULL);
     if ( IsDebuggerPresent() ) {
         char message[256];
-        sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
+        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
         OutputDebugString(message);
     }
     if ( code ) goto cleanup;
@@ -1249,8 +1249,10 @@ KFW_import_ccache_data(void)
                 }
 
                 memset(&aserver, '\0', sizeof(aserver));
-                strcpy(aserver.name, sname->data);
-                strcpy(aserver.cell, cell->data);
+                StringCbCopyN( aserver.name, sizeof(aserver.name),
+                               sname->data, sizeof(aserver.name) - 1);
+                StringCbCopyN( aserver.cell, sizeof(aserver.cell),
+                               cell->data, sizeof(aserver.cell) - 1);
 
                 code = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
                 if (!code) {
@@ -1288,7 +1290,7 @@ KFW_import_ccache_data(void)
                                         NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
-                        sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
+                        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
                         OutputDebugString(message);
                     }
                 }
@@ -1390,9 +1392,13 @@ KFW_AFS_get_cred( char * username,
             *userrealm++ = '@';
         }
     } else {
-        pname = malloc(strlen(username) + strlen(realm) + 2);
-
-        strcpy(pname, username);
+        size_t len = strlen(username) + strlen(realm) + 2;
+        pname = malloc(len);
+        if (pname == NULL) {
+            code = KRB5KRB_ERR_GENERIC;
+            goto cleanup;
+        }
+        StringCbCopy(pname, len, username);
 
         if (!KFW_accept_dotted_usernames()) {
             /* handle kerberos iv notation */
@@ -1400,8 +1406,8 @@ KFW_AFS_get_cred( char * username,
                 *dot = '/';
             }
         }
-        strcat(pname,"@");
-        strcat(pname,realm);
+        StringCbCat( pname, len, "@");
+        StringCbCat( pname, len, realm);
     }
     if ( IsDebuggerPresent() ) {
         OutputDebugString("Realm: ");
@@ -1444,7 +1450,7 @@ KFW_AFS_get_cred( char * username,
 
         if ( IsDebuggerPresent() ) {
             char message[256];
-            sprintf(message,"KFW_kinit() returns: %d\n",code);
+            StringCbPrintf(message, sizeof(message), "KFW_kinit() returns: %d\n", code);
             OutputDebugString(message);
         }
         if ( code ) goto cleanup;
@@ -1455,7 +1461,7 @@ KFW_AFS_get_cred( char * username,
     code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime, smbname);
     if ( IsDebuggerPresent() ) {
         char message[256];
-        sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
+        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
         OutputDebugString(message);
     }
     if ( code ) goto cleanup;
@@ -1470,7 +1476,8 @@ KFW_AFS_get_cred( char * username,
             if ( strcmp(cells[cell_count],cell) ) {
                 if ( IsDebuggerPresent() ) {
                     char message[256];
-                    sprintf(message,"found another cell for the same principal: %s\n",cell);
+                    StringCbPrintf(message, sizeof(message),
+                                   "found another cell for the same principal: %s\n", cell);
                     OutputDebugString(message);
                 }
 
@@ -1491,7 +1498,7 @@ KFW_AFS_get_cred( char * username,
                 code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], realm, lifetime, smbname);
                 if ( IsDebuggerPresent() ) {
                     char message[256];
-                    sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
+                    StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
                     OutputDebugString(message);
                 }
             }
@@ -1727,7 +1734,7 @@ KFW_AFS_renew_expiring_tokens(void)
                     code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], (char *)realm, 0, NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
-                        sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
+                        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
                         OutputDebugString(message);
                     }
                     free(cells[cell_count]);
@@ -1853,7 +1860,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
             code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, 0,NULL);
             if ( IsDebuggerPresent() ) {
                 char message[256];
-                sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
+                StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
                 OutputDebugString(message);
             }
 
@@ -1970,7 +1977,7 @@ KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
     if (code) {
         if ( IsDebuggerPresent() ) {
             char message[256];
-            sprintf(message,"krb5_get_renewed_creds() failed: %d\n",code);
+            StringCbPrintf(message, sizeof(message), "krb5_get_renewed_creds() failed: %d\n", code);
             OutputDebugString(message);
         }
         goto cleanup;
@@ -1980,7 +1987,7 @@ KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
     if (code) {
         if ( IsDebuggerPresent() ) {
             char message[256];
-            sprintf(message,"krb5_cc_initialize() failed: %d\n",code);
+            StringCbPrintf(message, sizeof(message), "krb5_cc_initialize() failed: %d\n", code);
             OutputDebugString(message);
         }
         goto cleanup;
@@ -1990,7 +1997,7 @@ KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
     if (code) {
         if ( IsDebuggerPresent() ) {
             char message[256];
-            sprintf(message,"krb5_cc_store_cred() failed: %d\n",code);
+            StringCbPrintf(message, sizeof(message), "krb5_cc_store_cred() failed: %d\n", code);
             OutputDebugString(message);
         }
         goto cleanup;
@@ -2290,8 +2297,8 @@ MSLSA_IsKerberosLogon(VOID)
             usLength = (pSessionData->AuthenticationPackage).Length;
             if (usLength < 256)
             {
-                lstrcpynW (buffer, usBuffer, usLength);
-                lstrcatW (buffer,L"");
+                StringCbCopyNW( buffer, sizeof(buffer)/sizeof(WCHAR),
+                                usBuffer, usLength);
                 if ( !lstrcmpW(L"Kerberos",buffer) )
                     Success = TRUE;
             }
@@ -2541,7 +2548,7 @@ MultiInputDialog( HINSTANCE hinst, HWND hwndOwner,
         return 0;
     default: {
         char buf[256];
-        sprintf(buf,"DialogBoxIndirect() failed: %d",GetLastError());
+        StringCbPrintf(buf, sizeof(buf), "DialogBoxIndirect() failed: %d", GetLastError());
         MessageBox(hwndOwner,
                     buf,
                     "GetLastError()",
@@ -2732,12 +2739,13 @@ ViceIDToUsername(char *username,
     if (confdir[0] == '\0')
         cm_GetConfigDir(confdir, sizeof(confdir));
 
-    strcpy(lastcell, aserver->cell);
+    StringCbCopyN( lastcell, sizeof(lastcell),
+                   aserver->cell, sizeof(lastcell) - 1);
 
     if (!pr_Initialize (0, confdir, aserver->cell)) {
         char sname[PR_MAXNAMELEN];
-        strncpy(sname, username, PR_MAXNAMELEN);
-        sname[PR_MAXNAMELEN-1] = '\0';    
+        StringCbCopyN( sname, sizeof(sname),
+                       username, sizeof(sname) - 1);
         status = pr_SNameToId (sname, &viceId);
 	pr_End();
     }
@@ -2765,16 +2773,19 @@ ViceIDToUsername(char *username,
 #endif /* ALLOW_REGISTER */
             {
 #ifdef AFS_ID_TO_NAME
-                strncpy(username_copy, username, BUFSIZ);
+                StringCbCopyN( username_copy, sizeof(username_copy),
+                               username, sizeof(username_copy) - 1);
                 snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
             }
 #ifdef ALLOW_REGISTER
         } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
             id = 0;
-            strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
-            strcpy(aclient->instance, "");
-            strncpy(aclient->cell, realm_of_user, MAXKTCREALMLEN - 1);
+            StringCbCopyN( aclient->name, sizeof(aclient->name),
+                           username, sizeof(aclient->name) - 1);
+            aclient->instance[0] = '\0';
+            StringCbCopyN( aclient->cell, sizeof(aclient->cell),
+                           realm_of_user, sizeof(aclient->cell) - 1);
             if (status = ktc_SetToken(aserver, atoken, aclient, 0))
                 return status;
             if (status = pr_Initialize(1L, confdir, aserver->cell))
@@ -2784,7 +2795,8 @@ ViceIDToUsername(char *username,
 	    if (status)
 		return status;
 #ifdef AFS_ID_TO_NAME
-            strncpy(username_copy, username, BUFSIZ);
+            StringCbCopyN( username_copy, sizeof(username_copy),
+                           username, sizeof(username_copy) - 1);
             snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
         }
@@ -2806,8 +2818,7 @@ copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_cre
         if (len > destlen - 1)
             len = destlen - 1;
 
-        strncpy(dest, krb5_princ_realm(context, ticket->server)->data, len);
-        dest[len] = '\0';
+        StringCbCopyN(dest, destlen, krb5_princ_realm(context, ticket->server)->data, len);
 
         pkrb5_free_ticket(context, ticket);
     }
@@ -2851,7 +2862,7 @@ KFW_AFS_klog(
     krb5_error_code code;
     krb5_principal client_principal = NULL;
     krb5_data * k5data = NULL;
-    int i, retry = 0;
+    unsigned int i, retry = 0;
 
     CurrentState = 0;
     memset(HostName, '\0', sizeof(HostName));
@@ -2877,7 +2888,8 @@ KFW_AFS_klog(
     memset(realm_of_user, '\0', sizeof(realm_of_user));
     memset(realm_of_cell, '\0', sizeof(realm_of_cell));
     if (cell && cell[0])
-        strcpy(Dmycell, cell);
+        StringCbCopyN( Dmycell, sizeof(Dmycell),
+                       cell, sizeof(Dmycell) - 1);
     else
         memset(Dmycell, '\0', sizeof(Dmycell));
 
@@ -2933,8 +2945,8 @@ KFW_AFS_klog(
     i = krb5_princ_realm(ctx, client_principal)->length;
     if (i > REALM_SZ-1) 
         i = REALM_SZ-1;
-    strncpy(realm_of_user,krb5_princ_realm(ctx, client_principal)->data,i);
-    realm_of_user[i] = 0;
+    StringCbCopyN( realm_of_user, sizeof(realm_of_user),
+                   krb5_princ_realm(ctx, client_principal)->data, i);
     try_krb5 = 1;
 
   skip_krb5_init:
@@ -2949,23 +2961,30 @@ KFW_AFS_klog(
     if (!try_krb5)
         goto cleanup;
 #endif
-    strcpy(realm_of_cell, afs_realm_of_cell(ctx, &ak_cellconfig));
+    StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
+                   afs_realm_of_cell(ctx, &ak_cellconfig),
+                   sizeof(realm_of_cell) - 1);
 
     if (strlen(service) == 0)
-        strcpy(ServiceName, "afs");
+        StringCbCopy( ServiceName, sizeof(ServiceName), "afs");
     else
-        strcpy(ServiceName, service);
+        StringCbCopyN( ServiceName, sizeof(ServiceName),
+                       service, sizeof(ServiceName) - 1);
 
     if (strlen(cell) == 0)
-        strcpy(CellName, local_cell);
+        StringCbCopyN( CellName, sizeof(CellName),
+                       local_cell, sizeof(CellName) - 1);
     else
-        strcpy(CellName, cell);
+        StringCbCopyN( CellName, sizeof(CellName),
+                       cell, sizeof(CellName) - 1);
 
     /* This is for Kerberos v4 only */
     if (strlen(realm) == 0)
-        strcpy(RealmName, realm_of_cell);
+        StringCbCopyN( RealmName, sizeof(RealmName),
+                       realm_of_cell, sizeof(RealmName) - 1);
     else
-        strcpy(RealmName, realm);
+        StringCbCopyN( RealmName, sizeof(RealmName),
+                       realm, sizeof(RealmName) - 1);
 
     memset(&creds, '\0', sizeof(creds));
 
@@ -3040,7 +3059,8 @@ KFW_AFS_klog(
 
             if (code == 0) {
                 /* we have a local realm for the cell */
-                strcpy(realm_of_cell, realm);
+                StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
+                               realm, sizeof(realm_of_cell) - 1);
             }
         } else {
             /* Otherwise, first try service/cell@CLIENT_REALM */
@@ -3073,7 +3093,8 @@ KFW_AFS_klog(
                  * Save it so that later the pts registration will not
                  * be performed.
                  */
-                strcpy(realm_of_cell, realm_of_user);
+                StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
+                               realm_of_user, sizeof(realm_of_cell) - 1);
             }
 
             if ((code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
@@ -3148,7 +3169,7 @@ KFW_AFS_klog(
         if (code) {
             if ( IsDebuggerPresent() ) {
                 char message[256];
-                sprintf(message,"krb5_get_credentials returns: %d\n",code);
+                StringCbPrintf(message, sizeof(message), "krb5_get_credentials returns: %d\n", code);
                 OutputDebugString(message);
             }
             try_krb5 = 0;
@@ -3164,8 +3185,10 @@ KFW_AFS_klog(
             goto try_krb524d;
 
         memset(&aserver, '\0', sizeof(aserver));
-        strncpy(aserver.name, ServiceName, MAXKTCNAMELEN - 1);
-        strncpy(aserver.cell, CellName, MAXKTCREALMLEN - 1);
+        StringCbCopyN( aserver.name, sizeof(aserver.name),
+                       ServiceName, sizeof(aserver.name) - 1);
+        StringCbCopyN( aserver.cell, sizeof(aserver.cell),
+                       CellName, sizeof(aserver.cell) - 1);
 
         memset(&atoken, '\0', sizeof(atoken));
         atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
@@ -3199,31 +3222,27 @@ KFW_AFS_klog(
         // * This structure was first set by the ktc_GetToken call when
         // * we were comparing whether identical tokens already existed.
 
-        len = min(k5creds->client->data[0].length,MAXKTCNAMELEN - 1);
-        strncpy(aclient.name, k5creds->client->data[0].data, len);
-        aclient.name[len] = '\0';
+        len = min(k5creds->client->data[0].length, sizeof(aclient.name) - 1);
+        StringCbCopyN( aclient.name, sizeof(aclient.name),
+                       k5creds->client->data[0].data, len);
 
         if ( k5creds->client->length > 1 ) {
-            char * p;
-            strcat(aclient.name, ".");
-            p = aclient.name + strlen(aclient.name);
-            len = min(k5creds->client->data[1].length,MAXKTCNAMELEN - (int)strlen(aclient.name) - 1);
-            strncpy(p, k5creds->client->data[1].data, len);
-            p[len] = '\0';
+            StringCbCat( aclient.name, sizeof(aclient.name), ".");
+            len = min(k5creds->client->data[1].length, (int)(sizeof(aclient.name) - strlen(aclient.name) - 1));
+            StringCbCatN( aclient.name, sizeof(aclient.name),
+                          k5creds->client->data[1].data, len);
         }
         aclient.instance[0] = '\0';
 
-        strcpy(aclient.cell, realm_of_cell);
+        StringCbCopyN( aclient.cell, sizeof(aclient.cell),
+                       realm_of_cell, sizeof(aclient.cell) - 1);
 
         len = min(k5creds->client->realm.length,(int)strlen(realm_of_cell));
         /* For Khimaira, always append the realm name */
         if ( 1 /* strncmp(realm_of_cell, k5creds->client->realm.data, len) */ ) {
-            char * p;
-            strcat(aclient.name, "@");
-            p = aclient.name + strlen(aclient.name);
-            len = min(k5creds->client->realm.length,MAXKTCNAMELEN - (int)strlen(aclient.name) - 1);
-            strncpy(p, k5creds->client->realm.data, len);
-            p[len] = '\0';
+            StringCbCat( aclient.name, sizeof(aclient.name), "@");
+            len = min(k5creds->client->realm.length, (int)(sizeof(aclient.name) - strlen(aclient.name) - 1));
+            StringCbCatN( aclient.name, sizeof(aclient.name), k5creds->client->realm.data, len);
         }
 
 	GetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL, 0);
@@ -3232,8 +3251,8 @@ KFW_AFS_klog(
 			     &aclient, &aserver, &atoken);
 
         if ( smbname ) {
-            strncpy(aclient.smbname, smbname, sizeof(aclient.smbname));
-            aclient.smbname[sizeof(aclient.smbname)-1] = '\0';
+            StringCbCopyN( aclient.smbname, sizeof(aclient.smbname),
+                           smbname, sizeof(aclient.smbname) - 1);
         } else {
             aclient.smbname[0] = '\0';
         }
@@ -3254,7 +3273,7 @@ KFW_AFS_klog(
         if (code) {
             if ( IsDebuggerPresent() ) {
                 char message[256];
-                sprintf(message,"krb524_convert_creds_kdc returns: %d\n",code);
+                StringCbPrintf(message, sizeof(message), "krb524_convert_creds_kdc returns: %d\n", code);
                 OutputDebugString(message);
             }
             try_krb5 = 0;
@@ -3300,8 +3319,8 @@ KFW_AFS_klog(
     }
 
     memset(&aserver, '\0', sizeof(aserver));
-    strncpy(aserver.name, ServiceName, MAXKTCNAMELEN - 1);
-    strncpy(aserver.cell, CellName, MAXKTCREALMLEN - 1);
+    StringCbCopyN( aserver.name, sizeof(aserver.name), ServiceName, sizeof(aserver.name) - 1);
+    StringCbCopyN( aserver.cell, sizeof(aserver.cell), CellName, sizeof(aserver.cell) - 1);
 
     memset(&atoken, '\0', sizeof(atoken));
     atoken.kvno = creds.kvno;
@@ -3336,19 +3355,20 @@ KFW_AFS_klog(
     // * This structure was first set by the ktc_GetToken call when
     // * we were comparing whether identical tokens already existed.
 
-    strncpy(aclient.name, creds.pname, MAXKTCNAMELEN - 1);
+    StringCbCopyN( aclient.name, sizeof(aclient.name), creds.pname, sizeof(aclient.name) - 1);
     if (creds.pinst[0])
     {
         strncat(aclient.name, ".", MAXKTCNAMELEN - 1);
         strncat(aclient.name, creds.pinst, MAXKTCNAMELEN - 1);
     }
-    strcpy(aclient.instance, "");
+    aclient.instance[0] = '\0';
 
     strncat(aclient.name, "@", MAXKTCNAMELEN - 1);
     strncat(aclient.name, creds.realm, MAXKTCREALMLEN - 1);
     aclient.name[MAXKTCREALMLEN-1] = '\0';
 
-    strcpy(aclient.cell, CellName);
+    StringCbCopyN( aclient.cell, sizeof(aclient.cell),
+                   CellName, sizeof(aclient.cell) - 1);
 
     GetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL, 0);
     if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
@@ -3356,8 +3376,8 @@ KFW_AFS_klog(
 			 &aclient, &aserver, &atoken);
 
     if ( smbname ) {
-        strncpy(aclient.smbname, smbname, sizeof(aclient.smbname));
-        aclient.smbname[sizeof(aclient.smbname)-1] = '\0';
+        StringCbCopyN( aclient.smbname, sizeof(aclient.smbname),
+                       smbname, sizeof(aclient.smbname) - 1);
     } else {
         aclient.smbname[0] = '\0';
     }
@@ -3400,7 +3420,8 @@ afs_realm_of_cell(krb5_context ctx, struct afsconf_cell *cellconfig)
 
     r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
     if ( !r && realmlist && realmlist[0] ) {
-        strcpy(krbrlm, realmlist[0]);
+        StringCbCopyN( krbrlm, sizeof(krbrlm),
+                       realmlist[0], sizeof(krbrlm) - 1);
         pkrb5_free_host_realm(ctx, realmlist);
     }
 
@@ -3451,7 +3472,8 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
     }
 
     if (rc == 0) {
-        strcpy(cellconfig->name, newcell);
+        StringCbCopyN( cellconfig->name, sizeof(cellconfig->name),
+                       newcell, sizeof(cellconfig->name) - 1);
         if (linkedcell[0])
             cellconfig->linkedCell = strdup(linkedcell);
     }
@@ -3467,7 +3489,8 @@ get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep
     struct afsconf_cell *cc = (struct afsconf_cell *)cellconfig;
 
     cc->hostAddr[cc->numServers] = *addrp;
-    strcpy(cc->hostName[cc->numServers], namep);
+    StringCbCopyN( cc->hostName[cc->numServers], sizeof(cc->hostName[cc->numServers]),
+                   namep, sizeof(cc->hostName[cc->numServers]) - 1);
     cc->numServers++;
     return(0);
 }
@@ -3504,7 +3527,7 @@ KFW_AFS_error(LONG rc, LPCSTR FailedFunctionName)
     else
       errText = "Unknown error!";
 
-    sprintf(message, "%s (0x%x)\n(%s failed)", errText, rc, FailedFunctionName);
+    StringCbPrintf(message, sizeof(message), "%s (0x%x)\n(%s failed)", errText, rc, FailedFunctionName);
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString(message);
@@ -3741,8 +3764,7 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
         goto cleanup;
 
     if ( strlen(pname) < *dwSize ) {
-        strncpy(szUser, pname, *dwSize);
-        szUser[*dwSize-1] = '\0';
+        StringCbCopyN(szUser, *dwSize, pname, (*dwSize) - 1);
         success = 1;
     }
     *dwSize = (DWORD)strlen(pname);
@@ -3909,10 +3931,10 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     if ( strlen(filename) + strlen(szLogonId) + 2 > sizeof(filename) )
         return;
 
-    strcat(filename, "\\");
-    strcat(filename, szLogonId);    
+    StringCbCat( filename, sizeof(filename), "\\");
+    StringCbCat( filename, sizeof(filename), szLogonId);
 
-    strcat(cachename, filename);
+    StringCbCat( cachename, sizeof(cachename), filename);
 
     DeleteFile(filename);
 
@@ -3974,7 +3996,7 @@ KFW_AFS_copy_file_cache_to_default_cache(char * filename)
     code = pkrb5_init_context(&ctx);
     if (code) return 1;
 
-    strcat(cachename, filename);
+    StringCbCat( cachename, sizeof(cachename), filename);
 
     code = pkrb5_cc_resolve(ctx, cachename, &cc);
     if (code) goto cleanup;
