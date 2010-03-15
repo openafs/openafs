@@ -71,7 +71,7 @@ void
 afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off,
 		    register afs_int32 bytes, register afs_int32 idx)
 {
-    return afs_MarinerLog("fetch$Fetching", avc);
+    afs_MarinerLog("fetch$Fetching", avc);
 }				/*afs_MarinerLogFetch */
 
 void
