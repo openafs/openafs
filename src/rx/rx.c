@@ -5803,10 +5803,6 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
          RX_CLIENT_CONNECTION ? rx_socket : conn->service->socket);
 
 
-    MUTEX_ENTER(&conn->conn_data_lock);
-    conn->natKeepAliveEvent = NULL;
-    MUTEX_EXIT(&conn->conn_data_lock);
-
     tp = &tbuffer[sizeof(struct rx_header)];
     taddr.sin_family = AF_INET;
     taddr.sin_port = rx_PortOf(rx_PeerOf(conn));
@@ -5830,36 +5826,51 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
     tmpiov[0].iov_len = 1 + sizeof(struct rx_header);
 
     osi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
-    rxi_ScheduleNatKeepAliveEvent(conn);
+
+    MUTEX_ENTER(&conn->conn_data_lock);
+    /* Only reschedule ourselves if the connection would not be destroyed */
+    if (conn->refCount <= 1) {
+	conn->natKeepAliveEvent = NULL;
+	MUTEX_EXIT(&conn->conn_data_lock);
+	rx_DestroyConnection(conn); /* drop the reference for this */
+    } else {
+	conn->natKeepAliveEvent = NULL;
+	conn->refCount--; /* drop the reference for this */
+	rxi_ScheduleNatKeepAliveEvent(conn);
+	MUTEX_EXIT(&conn->conn_data_lock);
+    }
 }
 
 void
 rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn)
 {
-    MUTEX_ENTER(&conn->conn_data_lock);
     if (!conn->natKeepAliveEvent && conn->secondsUntilNatPing) {
 	struct clock when, now;
 	clock_GetTime(&now);
 	when = now;
 	when.sec += conn->secondsUntilNatPing;
+	conn->refCount++; /* hold a reference for this */
 	conn->natKeepAliveEvent =
 	    rxevent_PostNow(&when, &now, rxi_NatKeepAliveEvent, conn, 0);
     }
-    MUTEX_EXIT(&conn->conn_data_lock);
 }
 
 void
 rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds)
 {
+    MUTEX_ENTER(&conn->conn_data_lock);
     conn->secondsUntilNatPing = seconds;
     if (seconds != 0)
 	rxi_ScheduleNatKeepAliveEvent(conn);
+    MUTEX_EXIT(&conn->conn_data_lock);
 }
 
 void
 rxi_NatKeepAliveOn(struct rx_connection *conn)
 {
+    MUTEX_ENTER(&conn->conn_data_lock);
     rxi_ScheduleNatKeepAliveEvent(conn);
+    MUTEX_EXIT(&conn->conn_data_lock);
 }
 
 /* When a call is in progress, this routine is called occasionally to
