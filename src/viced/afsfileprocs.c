@@ -1114,6 +1114,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     ssize_t rdlen;
     ssize_t wrlen;
     afs_fsize_t size;
+    afs_foff_t done;
     size_t length;
     char *buff;
     int rc;			/* return code */
@@ -1175,8 +1176,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     newFdP = IH_OPEN(newH);
     assert(newFdP != NULL);
 
-    FDH_SEEK(targFdP, off, SEEK_SET);
-    FDH_SEEK(newFdP, off, SEEK_SET);
+    done = off;
     while (size > 0) {
 	if (size > COPYBUFFSIZE) {	/* more than a buffer */
 	    length = COPYBUFFSIZE;
@@ -1185,10 +1185,11 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 	    length = size;
 	    size = 0;
 	}
-	rdlen = FDH_READ(targFdP, buff, length);
-	if (rdlen == length)
-	    wrlen = FDH_WRITE(newFdP, buff, length);
-	else
+	rdlen = FDH_PREAD(targFdP, buff, length, done);
+	if (rdlen == length) {
+	    wrlen = FDH_PWRITE(newFdP, buff, length, done);
+	    done += rdlen;
+	} else
 	    wrlen = 0;
 	/*  Callers of this function are not prepared to recover
 	 *  from error that put the filesystem in an inconsistent
@@ -1272,9 +1273,7 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
     ssize_t rdlen;
     ssize_t wrlen;
     int rc = 0;
-
-    FDH_SEEK(targFdP, off, SEEK_SET);
-    FDH_SEEK(newFdP, off, SEEK_SET);
+    afs_foff_t done = off;
 
     if (size > FDH_SIZE(targFdP) - off)
 	size = FDH_SIZE(targFdP) - off;
@@ -1287,9 +1286,11 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
 	    length = size;
 	    size = 0;
 	}
-	rdlen = FDH_READ(targFdP, buff, length);
-	if (rdlen == length)
-	    wrlen = FDH_WRITE(newFdP, buff, length);
+	rdlen = FDH_PREAD(targFdP, buff, length, done);
+	if (rdlen == length) {
+	    wrlen = FDH_PWRITE(newFdP, buff, length, done);
+	    done += rdlen;
+	}
 	else
 	    wrlen = 0;
 
@@ -2025,13 +2026,13 @@ SRXAFS_FsCmd(struct rx_call * acall, struct AFSFid * Fid,
     return code;
 }
 
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
 static struct afs_buffer {
     struct afs_buffer *next;
 } *freeBufferList = 0;
 static int afs_buffersAlloced = 0;
 
-static
+static int
 FreeSendBuffer(struct afs_buffer *adata)
 {
     FS_LOCK;
@@ -2045,7 +2046,7 @@ FreeSendBuffer(struct afs_buffer *adata)
 
 /* allocate space for sender */
 static char *
-AllocSendBuffer()
+AllocSendBuffer(void)
 {
     struct afs_buffer *tp;
 
@@ -2067,7 +2068,7 @@ AllocSendBuffer()
     return (char *)tp;
 
 }				/*AllocSendBuffer */
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
 
 /*
  * This routine returns the status info associated with the targetptr vnode
@@ -4465,9 +4466,9 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 	return EIO;
     }
     len = strlen((char *) LinkContents);
-    code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
+    code = (len == FDH_PWRITE(fdP, (char *) LinkContents, len, 0)) ? 0 : VDISKFULL;
     if (code)
-	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", (int)len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
+	ViceLog(0, ("SAFSS_Symlink FDH_PWRITE failed for len=%d, Fid=%u.%d.%d\n", (int)len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -7029,12 +7030,12 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
     IHandle_t *ihP;
     FdHandle_t *fdP;
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
     char *tbuffer;
-#else /* AFS_NT40_ENV */
+#else /* HAVE_PIOV */
     struct iovec tiov[RX_MAXIOVECS];
     int tnio;
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
     afs_sfsize_t tlen;
     afs_int32 optSize;
 
@@ -7089,7 +7090,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     if (Pos + Len > tlen) /* get length we should send */
 	Len = ((tlen - Pos) < 0) ? 0 : tlen - Pos;
 
-    (void)FDH_SEEK(fdP, Pos, 0);
     {
 	afs_int32 high, low;
 	SplitOffsetOrSize(Len, high, low);
@@ -7104,9 +7104,9 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 #if FS_STATS_DETAILED
     (*a_bytesToFetchP) = Len;
 #endif /* FS_STATS_DETAILED */
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
     tbuffer = AllocSendBuffer();
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
     while (Len > 0) {
 	size_t wlen;
 	ssize_t nBytes;
@@ -7114,8 +7114,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    wlen = optSize;
 	else
 	    wlen = Len;
-#ifdef AFS_NT40_ENV
-	nBytes = FDH_READ(fdP, tbuffer, wlen);
+#ifndef HAVE_PIOV
+	nBytes = FDH_PREAD(fdP, tbuffer, wlen, Pos);
 	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
@@ -7125,14 +7125,14 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    return EIO;
 	}
 	nBytes = rx_Write(Call, tbuffer, wlen);
-#else /* AFS_NT40_ENV */
+#else /* HAVE_PIOV */
 	nBytes = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
 	if (nBytes <= 0) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
 	wlen = nBytes;
-	nBytes = FDH_READV(fdP, tiov, tnio);
+	nBytes = FDH_PREADV(fdP, tiov, tnio, Pos);
 	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
@@ -7141,7 +7141,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    return EIO;
 	}
 	nBytes = rx_Writev(Call, tiov, tnio, wlen);
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
+	Pos += wlen;
 #if FS_STATS_DETAILED
 	/*
 	 * Bump the number of bytes actually sent by the number from this
@@ -7151,16 +7152,16 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 #endif /* FS_STATS_DETAILED */
 	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
 	    return -31;
 	}
 	Len -= wlen;
     }
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
     FreeSendBuffer((struct afs_buffer *)tbuffer);
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
     FDH_CLOSE(fdP);
     FT_GetTimeOfDay(&StopTime, 0);
 
@@ -7255,12 +7256,12 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_sfsize_t bytesTransfered;	/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
     Error errorCode = 0;		/* Returned error code to caller */
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
     char *tbuffer;	/* data copying buffer */
-#else /* AFS_NT40_ENV */
+#else /* HAVE_PIOV */
     struct iovec tiov[RX_MAXIOVECS];	/* no data copying with iovec */
     int tnio;			/* temp for iovec size */
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
     afs_sfsize_t tlen;		/* temp for xfr length */
     Inode tinode;		/* inode for I/O */
     afs_int32 optSize;		/* optimal transfer size */
@@ -7416,12 +7417,10 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     /* truncate the file iff it needs it (ftruncate is slow even when its a noop) */
     if (FileLength < DataLength)
 	FDH_TRUNC(fdP, FileLength);
-    if (Pos > 0)
-	FDH_SEEK(fdP, Pos, 0);
     bytesTransfered = 0;
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
     tbuffer = AllocSendBuffer();
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
     /* if length == 0, the loop below isn't going to do anything, including
      * extend the length of the inode, which it must do, since the file system
      * assumes that the inode length == vnode's file length.  So, we extend
@@ -7433,7 +7432,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	/* Set the file's length; we've already done an lseek to the right
 	 * spot above.
 	 */
-	nBytes = FDH_WRITE(fdP, &tlen, 1);
+	nBytes = FDH_PWRITE(fdP, &tlen, 1, Pos);
 	if (nBytes != 1) {
 	    errorCode = -1;
 	    goto done;
@@ -7455,11 +7454,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		rlen = optSize;	/* bound by buffer size */
 	    else
 		rlen = (int)tlen;
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
 	    errorCode = rx_Read(Call, tbuffer, rlen);
-#else /* AFS_NT40_ENV */
+#else /* HAVE_PIOV */
 	    errorCode = rx_Readv(Call, tiov, &tnio, RX_MAXIOVECS, rlen);
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
 	    if (errorCode <= 0) {
 		errorCode = -32;
 		break;
@@ -7468,22 +7467,23 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    (*a_bytesStoredP) += errorCode;
 #endif /* FS_STATS_DETAILED */
 	    rlen = errorCode;
-#ifdef AFS_NT40_ENV
-	    nBytes = FDH_WRITE(fdP, tbuffer, rlen);
-#else /* AFS_NT40_ENV */
-	    nBytes = FDH_WRITEV(fdP, tiov, tnio);
-#endif /* AFS_NT40_ENV */
+#ifndef HAVE_PIOV
+	    nBytes = FDH_PWRITE(fdP, tbuffer, rlen, Pos);
+#else /* HAVE_PIOV */
+	    nBytes = FDH_PWRITEV(fdP, tiov, tnio, Pos);
+#endif /* HAVE_PIOV */
 	    if (nBytes != rlen) {
 		errorCode = VDISKFULL;
 		break;
 	    }
 	    bytesTransfered += rlen;
+	    Pos += rlen;
 	}
     }
   done:
-#ifdef AFS_NT40_ENV
+#ifndef HAVE_PIOV
     FreeSendBuffer((struct afs_buffer *)tbuffer);
-#endif /* AFS_NT40_ENV */
+#endif /* HAVE_PIOV */
     if (sync) {
 	FDH_SYNC(fdP);
     }

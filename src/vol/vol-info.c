@@ -779,7 +779,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
     nVnodes = (size / diskSize) - 1;
     if (nVnodes > 0) {
-	STREAM_SEEK(file, diskSize, 0);
+	STREAM_ASEEK(file, diskSize);
     } else
 	nVnodes = 0;
 
@@ -810,7 +810,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		total = bad = 0;
 		while (1) {
 		    ssize_t nBytes;
-		    len = FDH_READ(fdP1, buffer, sizeof(buffer));
+		    len = FDH_PREAD(fdP1, buffer, sizeof(buffer), total);
 		    if (len < 0) {
 			FDH_REALLYCLOSE(fdP1);
 			IH_RELEASE(ih1);

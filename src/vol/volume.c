@@ -1890,13 +1890,8 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
 	return;
     }
 
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	*ec = VSALVAGE;
-	FDH_REALLYCLOSE(fdP);
-	return;
-    }
     vsn = (struct versionStamp *)to;
-    if (FDH_READ(fdP, to, size) != size || vsn->magic != magic) {
+    if (FDH_PREAD(fdP, to, size, 0) != size || vsn->magic != magic) {
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
 	return;
@@ -1922,12 +1917,7 @@ WriteVolumeHeader_r(Error * ec, Volume * vp)
 	*ec = VSALVAGE;
 	return;
     }
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	*ec = VSALVAGE;
-	FDH_REALLYCLOSE(fdP);
-	return;
-    }
-    if (FDH_WRITE(fdP, (char *)&V_disk(vp), sizeof(V_disk(vp)))
+    if (FDH_PWRITE(fdP, (char *)&V_disk(vp), sizeof(V_disk(vp)), 0)
 	!= sizeof(V_disk(vp))) {
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
@@ -5786,7 +5776,7 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
     assert(vip->bitmap != NULL);
     vip->bitmapOffset = 0;
 #endif /* BITMAP_LATER */
-    if (STREAM_SEEK(file, vcp->diskSize, 0) != -1) {
+    if (STREAM_ASEEK(file, vcp->diskSize) != -1) {
 	int bitNumber = 0;
 	for (bitNumber = 0; bitNumber < nVnodes + 100; bitNumber++) {
 	    if (STREAM_READ(vnode, vcp->diskSize, 1, file) != 1)

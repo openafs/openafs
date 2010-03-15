@@ -337,7 +337,6 @@ ViceCreateRoot(Volume *vp)
     FdHandle_t *fdP;
     afs_fsize_t length;
     ssize_t nBytes;
-    afs_foff_t off;
 
     vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
     if (!vnode)
@@ -397,9 +396,7 @@ ViceCreateRoot(Volume *vp)
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
     assert(fdP != NULL);
-    off = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
-    assert(off >= 0);
-    nBytes = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
+    nBytes = FDH_PWRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE, vnodeIndexOffset(vcp, 1));
     assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);

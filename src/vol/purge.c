@@ -127,7 +127,7 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
      * We remember the inodes in an array, and idec them after zeroing them in the index.
      * The reason for these contortions is to make volume deletion idempotent, even
      * if we crash in the middle of a delete operation. */
-    STREAM_SEEK(afile, offset, 0);
+    STREAM_ASEEK(afile, offset);
     while (1) {
 	if (iindex >= MAXOBLITATONCE) {
 	    break;
@@ -148,7 +148,7 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     }
 
     /* next, obliterate the index and fflush (and fsync) it */
-    STREAM_SEEK(afile, *aoffset, 0);	/* seek back to start of vnode index region */
+    STREAM_ASEEK(afile, *aoffset);	/* seek back to start of vnode index region */
     memset(buf, 0, sizeof(buf));	/* zero out our proto-vnode */
     for (i = 0; i < nscanned; i++) {
 	if (STREAM_WRITE(buf, vcp->diskSize, 1, afile) != 1)
