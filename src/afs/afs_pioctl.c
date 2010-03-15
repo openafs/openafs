@@ -3428,10 +3428,8 @@ DECL_PIOCTL(PFlushVolumeData)
 		    vnode_recycle(AFSTOV(tvc));
 		    AFS_GLOCK();
 		}
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		osi_vnhold(tvc, 0);
 #else
-		VREFCOUNT_INC(tvc); /* AIX, apparently */
+		AFS_FAST_HOLD(tvc);
 #endif
 		ReleaseReadLock(&afs_xvcache);
 #ifdef AFS_BOZONLOCK_ENV

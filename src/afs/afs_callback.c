@@ -481,11 +481,7 @@ loop1:
 			    AFS_GLOCK();
 			}
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-			osi_vnhold(tvc, 0);
-#else
-			VREFCOUNT_INC(tvc); /* AIX, apparently */
-#endif
+			AFS_FAST_HOLD(tvc);
 #endif
 #endif
 			ReleaseReadLock(&afs_xvcache);
@@ -580,11 +576,7 @@ loop2:
 			AFS_GLOCK();
 		    }
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		    osi_vnhold(tvc, 0);
-#else
-		    VREFCOUNT_INC(tvc); /* AIX, apparently */
-#endif
+		    AFS_FAST_HOLD(tvc);
 #endif
 #endif
 		    ReleaseReadLock(&afs_xvcache);

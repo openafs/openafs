@@ -246,10 +246,16 @@ typedef struct timeval osi_timeval_t;
 /* Bare refcount manipulation would probably work on this platform, but just
    calling VREF does not */
 #define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
+#elif defined(AFS_AIX_ENV)
+#define AFS_FAST_HOLD(vp) VREFCOUNT_INC(vp)
 #else
 #define AFS_FAST_HOLD(vp) VN_HOLD(AFSTOV(vp))
 #endif
+#ifdef AFS_AIX_ENV
+#define AFS_FAST_RELE(vp) VREFCOUNT_DEC(vp)
+#else
 #define AFS_FAST_RELE(vp) AFS_RELE(AFSTOV(vp))
+#endif
 
 /*
  * MP safe versions of routines to copy memory between user space
