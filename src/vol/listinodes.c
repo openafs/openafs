@@ -1306,12 +1306,12 @@ bread(int fd, char *buf, daddr_t blk, afs_int32 size)
 
 #endif /* AFS_LINUX20_ENV */
 static afs_int32
-convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
+convertVolumeInfo(FdHandle_t *fdhr, FdHandle_t *fdhw, afs_uint32 vid)
 {
     struct VolumeDiskData vd;
     char *p;
 
-    if (read(fdr, &vd, sizeof(struct VolumeDiskData)) !=
+    if (FDH_PREAD(fdhr, &vd, sizeof(struct VolumeDiskData), 0) !=
         sizeof(struct VolumeDiskData)) {
         Log("1 convertiVolumeInfo: read failed for %lu with code %d\n", vid,
             errno);
@@ -1331,7 +1331,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
         memset(p, 0, 9);
     }
 
-    if (write(fdw, &vd, sizeof(struct VolumeDiskData)) !=
+    if (FDH_PWRITE(fdhw, &vd, sizeof(struct VolumeDiskData), 0) !=
         sizeof(struct VolumeDiskData)) {
         Log("1 convertiVolumeInfo: write failed for %lu with code %d\n", vid,
             errno);
@@ -1395,6 +1395,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct VolumeDiskHeader h;
     IHandle_t *ih, *ih2;
     FdHandle_t *fdP, *fdP2;
+    ssize_t offset;
     char wpath[100];
     char tmpDevName[100];
     char buffer[128];
@@ -1475,19 +1476,21 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    }
 
 	    if (j == VI_VOLINFO)
-		convertVolumeInfo(fdP->fd_fd, fdP2->fd_fd, ih2->ih_vid);
+		convertVolumeInfo(fdP, fdP2, ih2->ih_vid);
 	    else {
+	        offset = 0;
 		while (1) {
-		    len = read(fdP->fd_fd, buffer, sizeof(buffer));
+		    len = FDH_PREAD(fdP, buffer, sizeof(buffer), offset);
 		    if (len < 0)
 			return errno;
 		    if (len == 0)
 			break;
-		    nBytes = write(fdP2->fd_fd, buffer, len);
+		    nBytes = FDH_PWRITE(fdP2, buffer, len, offset);
 		    if (nBytes != len) {
 			code = -1;
 			goto done;
 		    }
+		    offset += len;
 		}
 	    }
 

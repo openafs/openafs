@@ -1760,7 +1760,7 @@ CreateLinkTable(struct InodeSummary *isp, Inode ino)
     version.magic = LINKTABLEMAGIC;
     version.version = LINKTABLEVERSION;
 
-    if (FDH_WRITE(fdP, (char *)&version, sizeof(version))
+    if (FDH_PWRITE(fdP, (char *)&version, sizeof(version), 0)
 	!= sizeof(version))
 	Abort("Can't truncate link table for volume %u (error = %d)\n",
 	      isp->RWvolumeId, errno);
@@ -2366,7 +2366,7 @@ SalvageHeader(struct stuff *sp, struct InodeSummary *isp, int check,
 	      sp->description, errno);
 
     if (!recreate
-	&& (FDH_READ(fdP, (char *)&header, sp->size) != sp->size
+	&& (FDH_PREAD(fdP, (char *)&header, sp->size, 0) != sp->size
 	    || header.fileHeader.magic != sp->stamp.magic)) {
 	if (check) {
 	    Log("Part of the header (%s) is corrupted\n", sp->description);
@@ -2417,14 +2417,9 @@ SalvageHeader(struct stuff *sp, struct InodeSummary *isp, int check,
 	    header.volumeInfo.needsCallback = 0;
 	    gettimeofday(&tp, 0);
 	    header.volumeInfo.creationDate = tp.tv_sec;
-	    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-		Abort
-		    ("Unable to seek to beginning of volume header file (%s) (errno = %d)\n",
-		     sp->description, errno);
-	    }
 	    nBytes =
-		FDH_WRITE(fdP, (char *)&header.volumeInfo,
-			  sizeof(header.volumeInfo));
+		FDH_PWRITE(fdP, (char *)&header.volumeInfo,
+			   sizeof(header.volumeInfo), 0);
 	    if (nBytes != sizeof(header.volumeInfo)) {
 		if (nBytes < 0)
 		    Abort
@@ -2434,12 +2429,7 @@ SalvageHeader(struct stuff *sp, struct InodeSummary *isp, int check,
 		      sp->description);
 	    }
 	} else {
-	    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-		Abort
-		    ("Unable to seek to beginning of volume header file (%s) (errno = %d)\n",
-		     sp->description, errno);
-	    }
-	    nBytes = FDH_WRITE(fdP, (char *)&sp->stamp, sizeof(sp->stamp));
+	    nBytes = FDH_PWRITE(fdP, (char *)&sp->stamp, sizeof(sp->stamp), 0);
 	    if (nBytes != sizeof(sp->stamp)) {
 		if (nBytes < 0)
 		    Abort
@@ -2528,7 +2518,7 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
 	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else {
 	nVnodes = 0;
     }
@@ -3089,7 +3079,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 
 	    if (size > 1024)
 		size = 1024;
-	    nBytes = FDH_READ(fdP, buf, size);
+	    nBytes = FDH_PREAD(fdP, buf, size, 0);
 	    if (nBytes == size) {
 		buf[size] = '\0';
 		if ( (*buf != '#' && *buf != '%') || buf[strlen(buf)-1] != '.' ) {
@@ -3184,7 +3174,7 @@ DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino, Unique * maxu)
     vip->nVnodes = (size / vcp->diskSize) - 1;
     if (vip->nVnodes > 0) {
 	osi_Assert((vip->nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
 	osi_Assert((vip->vnodes = (struct VnodeEssence *)
 		calloc(vip->nVnodes, sizeof(struct VnodeEssence))) != NULL);
 	if (class == vLarge) {
@@ -4314,14 +4304,17 @@ CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume)
     IHandle_t *srcH, *destH;
     FdHandle_t *srcFdP, *destFdP;
     ssize_t nBytes = 0;
+    afs_foff_t size = 0;
 
     IH_INIT(srcH, device, rwvolume, inode1);
     srcFdP = IH_OPEN(srcH);
     osi_Assert(srcFdP != NULL);
     IH_INIT(destH, device, rwvolume, inode2);
     destFdP = IH_OPEN(destH);
-    while ((nBytes = FDH_READ(srcFdP, buf, sizeof(buf))) > 0)
-	osi_Assert(FDH_WRITE(destFdP, buf, nBytes) == nBytes);
+    while ((nBytes = FDH_PREAD(srcFdP, buf, sizeof(buf), size)) > 0) {
+	osi_Assert(FDH_PWRITE(destFdP, buf, nBytes, size) == nBytes);
+	size += nBytes;
+    }
     osi_Assert(nBytes == 0);
     FDH_REALLYCLOSE(srcFdP);
     FDH_REALLYCLOSE(destFdP);

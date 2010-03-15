@@ -267,13 +267,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 		PrintInode(NULL, *(p->inode)), errno);
 	    goto bad;
 	}
-	if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	    Log("VCreateVolume:  Problem lseek inode %s (err=%d)\n",
-		PrintInode(NULL, *(p->inode)), errno);
-	    FDH_REALLYCLOSE(fdP);
-	    goto bad;
-	}
-	if (FDH_WRITE(fdP, (char *)&p->stamp, sizeof(p->stamp)) !=
+	if (FDH_PWRITE(fdP, (char *)&p->stamp, sizeof(p->stamp), 0) !=
 	    sizeof(p->stamp)) {
 	    Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
 		PrintInode(NULL, *(p->inode)), errno);
@@ -292,13 +286,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	goto bad;
     }
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	Log("VCreateVolume:  Problem lseek inode %s (err=%d)\n",
-	    PrintInode(NULL, tempHeader.volumeInfo), errno);
-	FDH_REALLYCLOSE(fdP);
-	goto bad;
-    }
-    if (FDH_WRITE(fdP, (char *)&vol, sizeof(vol)) != sizeof(vol)) {
+    if (FDH_PWRITE(fdP, (char *)&vol, sizeof(vol), 0) != sizeof(vol)) {
 	Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
 	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	FDH_REALLYCLOSE(fdP);

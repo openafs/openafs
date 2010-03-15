@@ -47,18 +47,14 @@
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
 #ifdef S_SPLINT_S
-extern off64_t afs_lseek(int FD, off64_t O, int F);
 #endif /*S_SPLINT_S */
-#define afs_lseek(FD, O, F)	lseek64(FD, (off64_t)(O), F)
 #define afs_stat		stat64
 #define afs_fstat		fstat64
 #define afs_open		open64
 #define afs_fopen		fopen64
 #else /* !O_LARGEFILE */
 #ifdef S_SPLINT_S
-extern off_t afs_lseek(int FD, off_t O, int F);
 #endif /*S_SPLINT_S */
-#define afs_lseek(FD, O, F)	lseek(FD, (off_t)(O), F)
 #define afs_stat		stat
 #define afs_fstat		fstat
 #define afs_open		open
@@ -111,12 +107,7 @@ namei_iread(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
     if (fdP == NULL)
 	return -1;
 
-    if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-	FDH_REALLYCLOSE(fdP);
-	return -1;
-    }
-
-    nBytes = FDH_READ(fdP, buf, size);
+    nBytes = FDH_PREAD(fdP, buf, size, offset);
     FDH_CLOSE(fdP);
     return nBytes;
 }
@@ -131,11 +122,7 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
     if (fdP == NULL)
 	return -1;
 
-    if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-	FDH_REALLYCLOSE(fdP);
-	return -1;
-    }
-    nBytes = FDH_WRITE(fdP, buf, size);
+    nBytes = FDH_PWRITE(fdP, buf, size, offset);
     FDH_CLOSE(fdP);
     return nBytes;
 }
@@ -825,6 +812,7 @@ namei_copy_on_write(IHandle_t *h)
     namei_t name;
     FdHandle_t *fdP;
     struct afs_stat tstat;
+    afs_foff_t offset;
 
     namei_HandleToName(&name, h);
     if (afs_stat(name.n_path, &tstat) < 0)
@@ -852,14 +840,15 @@ namei_copy_on_write(IHandle_t *h)
 	    return ENOMEM;
 	}
 	size = tstat.st_size;
-	FDH_SEEK(fdP, 0, 0);
+	offset = 0;
 	while (size) {
 	    tlen = size > 8192 ? 8192 : size;
-	    if (FDH_READ(fdP, buf, tlen) != tlen)
+	    if (FDH_PREAD(fdP, buf, tlen, offset) != tlen)
 		break;
 	    if (write(fd, buf, tlen) != tlen)
 		break;
 	    size -= tlen;
+	    offset += tlen;
 	}
 	close(fd);
 	FDH_REALLYCLOSE(fdP);
@@ -988,10 +977,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
 	    return -1;
     }
 
-    if (afs_lseek(h->fd_fd, offset, SEEK_SET) == -1)
-	goto bad_getLinkByte;
-
-    rc = read(h->fd_fd, (char *)&row, sizeof(row));
+    rc = FDH_PREAD(h, (char*)&row, sizeof(row), offset);
     if ((rc == 0 || !((row >> index) & NAMEI_TAGMASK)) && fixup && nowrite)
         return 1;
     if (rc == 0 && fixup) {
@@ -1000,7 +986,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
 	   goto bad_getLinkByte;
         FDH_TRUNC(h, offset+sizeof(row));
         row = 1 << index;
-        rc = write(h->fd_fd, (char *)&row, sizeof(row));
+	rc = FDH_PWRITE(h, (char *)&row, sizeof(row), offset);
     }
     if (rc != sizeof(row)) {
 	goto bad_getLinkByte;
@@ -1008,9 +994,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
 
     if (fixup && !((row >> index) & NAMEI_TAGMASK)) {
         row |= 1<<index;
-        if (afs_lseek(h->fd_fd, offset, SEEK_SET) == -1)
-	    goto bad_getLinkByte;
-        rc = write(h->fd_fd, (char *)&row, sizeof(row));
+	rc = FDH_PWRITE(h, (char *)&row, sizeof(row), offset);
         if (rc != sizeof(row))
 	    goto bad_getLinkByte;
     }
@@ -1052,11 +1036,8 @@ GetFreeTag(IHandle_t * ih, int vno)
     }
 
     offset = (vno << LINKTABLE_SHIFT) + 8;	/* * 2 + sizeof stamp */
-    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
-	goto badGetFreeTag;
-    }
 
-    nBytes = read(fdP->fd_fd, (char *)&row, sizeof(row));
+    nBytes = FDH_PREAD(fdP, (char *)&row, sizeof(row), offset);
     if (nBytes != sizeof(row)) {
 	if (nBytes != 0)
 	    goto badGetFreeTag;
@@ -1077,10 +1058,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     coldata = 1 << (col * 3);
     row |= coldata;
 
-    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
-	goto badGetFreeTag;
-    }
-    if (write(fdP->fd_fd, (char *)&row, sizeof(row)) != sizeof(row)) {
+    if (FDH_PWRITE(fdP, (char *)&row, sizeof(row), offset) != sizeof(row)) {
 	goto badGetFreeTag;
     }
     FDH_SYNC(fdP);
@@ -1116,13 +1094,8 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 	    return -1;
 	}
     }
-    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
-	errno = EBADF;
-	goto bad_SetLinkCount;
-    }
 
-
-    nBytes = read(fdP->fd_fd, (char *)&row, sizeof(row));
+    nBytes = FDH_PREAD(fdP, (char *)&row, sizeof(row), offset);
     if (nBytes != sizeof(row)) {
 	if (nBytes != 0) {
 	    errno = EBADF;
@@ -1136,12 +1109,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     row &= (unsigned short)~junk;
     row |= (unsigned short)count;
 
-    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
-	errno = EBADF;
-	goto bad_SetLinkCount;
-    }
-
-    if (write(fdP->fd_fd, (char *)&row, sizeof(short)) != sizeof(short)) {
+    if (FDH_PWRITE(fdP, (char *)&row, sizeof(short), offset) != sizeof(short)) {
 	errno = EBADF;
 	goto bad_SetLinkCount;
     }

@@ -155,6 +155,7 @@ typedef int FD_t;
 /* file descriptor handle */
 typedef struct FdHandle_s {
     int fd_status;		/* status flags */
+    int fd_refcnt;		/* refcnt */
     FD_t fd_fd;			/* file descriptor */
     struct IHandle_s *fd_ih;	/* Pointer to Inode handle */
     struct FdHandle_s *fd_next;	/* LRU/Avail list pointers */
@@ -175,6 +176,7 @@ typedef struct StreamHandle_s {
     int str_direction;		/* current read/write direction */
     afs_sfsize_t str_buflen;	/* bytes remaining in buffer */
     afs_foff_t str_bufoff;	/* current offset into buffer */
+    afs_foff_t str_fdoff;	/* current offset into file */
     int str_error;		/* error code */
     int str_eof;		/* end of file flag */
     struct StreamHandle_s *str_next;	/* Avail list pointers */
@@ -305,8 +307,7 @@ extern afs_sfsize_t stream_read(void *ptr, afs_fsize_t size,
 extern afs_sfsize_t stream_write(void *ptr, afs_fsize_t size,
 				 afs_fsize_t nitems,
 				 StreamHandle_t * streamP);
-extern int stream_seek(StreamHandle_t * streamP, afs_foff_t offset,
-		       int whence);
+extern int stream_aseek(StreamHandle_t * streamP, afs_foff_t offset);
 extern int stream_flush(StreamHandle_t * streamP);
 extern int stream_close(StreamHandle_t * streamP, int reallyClose);
 extern int ih_reallyclose(IHandle_t * ihP);
@@ -336,7 +337,7 @@ extern int ih_condsync(IHandle_t * ihP);
 
 #define STREAM_WRITE(A, B, C, H) stream_write(A, B, C, H)
 
-#define STREAM_SEEK(H, A, B) stream_seek(H, A, B)
+#define STREAM_ASEEK(H, A) stream_aseek(H, A)
 
 #define STREAM_FLUSH(H) stream_flush(H)
 
@@ -428,6 +429,8 @@ extern int OS_OPEN(const char *F, int M, mode_t P);
 extern int OS_CLOSE(int FD);
 extern ssize_t OS_READ(int FD, void *B, size_t S);
 extern ssize_t OS_WRITE(int FD, void *B, size_t S);
+extern ssize_t OS_PREAD(int FD, void *B, size_t S, afs_foff_t O);
+extern ssize_t OS_PWRITE(int FD, void *B, size_t S, afs_foff_t O);
 extern int OS_SYNC(int FD);
 extern afs_sfsize_t OS_SIZE(int FD);
 extern int IH_INC(IHandle_t * H, Inode I, int /*@alt VolId, VolumeId @ */ P);
@@ -499,8 +502,6 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 #define OS_OPEN(F, M, P) open(F, M, P)
 #define OS_CLOSE(FD) close(FD)
 
-#define OS_READ(FD, B, S) read(FD, B, S)
-#define OS_WRITE(FD, B, S) write(FD, B, S)
 #ifdef O_LARGEFILE
 #define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) (O), F)
 #else /* !O_LARGEFILE */
@@ -538,6 +539,13 @@ extern afs_sfsize_t ih_size(int fd);
 #define FDH_WRITEV(H, I, N) writev((H)->fd_fd, I, N)
 #endif
 
+#ifdef HAVE_PIOV
+#define FDH_PREADV(H, I, N, O) preadv((H)->fd_fd, I, N, O)
+#define FDH_PWRITEV(H, I, N, O) pwritev((H)->fd_fd, I, N, O)
+#endif
+
+#define FDH_PREAD(H, B, S, O) OS_PREAD((H)->fd_fd, B, S, O)
+#define FDH_PWRITE(H, B, S, O) OS_PWRITE((H)->fd_fd, B, S, O)
 #define FDH_READ(H, B, S) OS_READ((H)->fd_fd, B, S)
 #define FDH_WRITE(H, B, S) OS_WRITE((H)->fd_fd, B, S)
 #define FDH_SEEK(H, O, F) OS_SEEK((H)->fd_fd, O, F)

@@ -563,6 +563,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     afs_sfsize_t nbytes, howBig;
     ssize_t n;
     size_t howMany;
+    afs_foff_t howFar = 0;
     byte *p;
     afs_uint32 hi, lo;
 #ifndef AFS_NT40_ENV
@@ -627,7 +628,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	    howMany = nbytes;
 
 	/* Read the data - unless we know we can't */
-	n = (failed_seek ? 0 : FDH_READ(handleP, p, howMany));
+	n = (failed_seek ? 0 : FDH_PREAD(handleP, p, howMany, howFar));
+	howFar += n;
 
 	/* If read any good data and we null padded previously, log the
 	 * amount that we had null padded.
@@ -668,22 +670,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	    /* Now seek over the data we could not get. An error here means we
 	     * can't do the next read.
 	     */
-	    failed_seek = FDH_SEEK(handleP, ((size - nbytes) + howMany), SEEK_SET);
-	    if (failed_seek != ((size - nbytes) + howMany)) {
-		if (failed_seek < 0) {
-		    fprintf(stderr,
-			    "Error %d seeking in inode %s for vnode %d\n",
-			    errno, PrintInode(NULL, handleP->fd_ih->ih_ino),
-			    vnode);
-		} else {
-		    fprintf(stderr,
-			    "Error seeking in inode %s for vnode %d\n",
-			    PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
-		    failed_seek = -1;
-		}
-	    } else {
-		failed_seek = 0;
-	    }
+	    howFar = ((size - nbytes) + howMany);
 	}
 
 	/* Now write the data out */
@@ -793,7 +780,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
     nVnodes = (size / vcp->diskSize) - 1;
 
     if (nVnodes > 0) {
-	STREAM_SEEK(file, vcp->diskSize, 0);
+	STREAM_ASEEK(file, vcp->diskSize);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;

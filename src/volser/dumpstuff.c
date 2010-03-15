@@ -709,7 +709,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_sfsize_t nbytes, howBig;
     ssize_t n;
     size_t howMany;
-    afs_foff_t lcode = 0;
+    afs_foff_t howFar = 0;
     byte *p;
     afs_uint32 hi, lo;
 #ifndef AFS_NT40_ENV
@@ -775,8 +775,9 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	if (nbytes < howMany)
 	    howMany = nbytes;
 
-	/* Read the data - unless we know we can't */
-	n = (lcode ? 0 : FDH_READ(handleP, p, howMany));
+	/* Read the data */
+	n = FDH_PREAD(handleP, p, howMany, howFar);
+	howFar += n;
 
 	/* If read any good data and we null padded previously, log the
 	 * amount that we had null padded.
@@ -810,17 +811,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    /* Now seek over the data we could not get. An error here means we
 	     * can't do the next read.
 	     */
-	    lcode = FDH_SEEK(handleP, (size_t)((size - nbytes) + howMany), SEEK_SET);
-	    if (lcode != ((size - nbytes) + howMany)) {
-		if (lcode < 0) {
-		    Log("1 Volser: DumpFile: Error seeking in inode %s for vnode %d: %s\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode, afs_error_message(errno));
-		} else {
-		    Log("1 Volser: DumpFile: Error seeking in inode %s for vnode %d\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
-		    lcode = -1;
-		}
-	    } else {
-		lcode = 0;
-	    }
+	    howFar = (size_t)((size - nbytes) + howMany);
 	}
 
 	/* Now write the data out */
@@ -1003,7 +994,7 @@ DumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
 	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;
@@ -1135,7 +1126,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	for (i = 0; i < *sizep; i++) {
 	    if (Buf[i]) {
 		cnt++;
-		STREAM_SEEK(afile, Buf[i], 0);
+		STREAM_ASEEK(afile, Buf[i]);
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
 		if (code == 1) {
 		    if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
@@ -1149,7 +1140,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 			       V_parentId(vp));
 			DOPOLL;
 		    }
-		    STREAM_SEEK(afile, Buf[i], 0);
+		    STREAM_ASEEK(afile, Buf[i]);
 		    (void)STREAM_WRITE(zero, vcp->diskSize, 1, afile);	/* Zero it out */
 		}
 		Buf[i] = 0;
@@ -1179,7 +1170,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 		return -1;
 	    }
 	    memset(Buf, 0, nVnodes * sizeof(afs_foff_t));
-	    STREAM_SEEK(afile, offset = vcp->diskSize, 0);
+	    STREAM_ASEEK(afile, offset = vcp->diskSize);
 	    while (1) {
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
 		if (code != 1) {
@@ -1475,14 +1466,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		    afs_error_message(errno));
 		return VOLSERREAD_DUMPERROR;
 	    }
-	    if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, vnodeNumber), SEEK_SET) <
-		0) {
-		Log("1 Volser: ReadVnodes: Error seeking into vnode index: %s; restore aborted\n",
-		    afs_error_message(errno));
-		FDH_REALLYCLOSE(fdP);
-		return VOLSERREAD_DUMPERROR;
-	    }
-	    if (FDH_READ(fdP, &oldvnode, sizeof(oldvnode)) ==
+	    if (FDH_PREAD(fdP, &oldvnode, sizeof(oldvnode), vnodeIndexOffset(vcp, vnodeNumber)) ==
 		sizeof(oldvnode)) {
 		if (oldvnode.type != vNull && VNDISK_GET_INO(&oldvnode)) {
 		    IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(&oldvnode),
@@ -1490,14 +1474,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		}
 	    }
 	    vnode->vnodeMagic = vcp->magic;
-	    if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, vnodeNumber), SEEK_SET) <
-		0) {
-		Log("1 Volser: ReadVnodes: Error seeking into vnode index: %s; restore aborted\n",
-		    afs_error_message(errno));
-		FDH_REALLYCLOSE(fdP);
-		return VOLSERREAD_DUMPERROR;
-	    }
-	    if (FDH_WRITE(fdP, vnode, vcp->diskSize) != vcp->diskSize) {
+	    if (FDH_PWRITE(fdP, vnode, vcp->diskSize, vnodeIndexOffset(vcp, vnodeNumber)) != vcp->diskSize) {
 		Log("1 Volser: ReadVnodes: Error writing vnode index: %s; restore aborted\n",
 		    afs_error_message(errno));
 		FDH_REALLYCLOSE(fdP);
@@ -1569,7 +1546,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	    break;
 	}
 	if (handleP) {
-	    nBytes = FDH_WRITE(handleP, p, size);
+	    nBytes = FDH_PWRITE(handleP, p, size, written);
 	    if (nBytes > 0)
 		written += nBytes;
 	    if (nBytes != size) {
@@ -1892,7 +1869,7 @@ SizeDumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
 	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;

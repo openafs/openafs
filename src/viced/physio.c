@@ -63,17 +63,7 @@ ReallyRead(DirHandle * file, int block, char *data)
 						       ih_ino), code));
 	return code;
     }
-    if (FDH_SEEK(fdP, block * PAGESIZE, SEEK_SET) < 0) {
-	code = errno;
-	ViceLog(0,
-		("ReallyRead(): lseek failed device %X inode %s errno %d\n",
-		 file->dirh_handle->ih_dev, PrintInode(NULL,
-						       file->dirh_handle->
-						       ih_ino), code));
-	FDH_REALLYCLOSE(fdP);
-	return code;
-    }
-    rdlen = FDH_READ(fdP, data, PAGESIZE);
+    rdlen = FDH_PREAD(fdP, data, PAGESIZE, ((afs_foff_t)block) * PAGESIZE);
     if (rdlen != PAGESIZE) {
 	if (rdlen < 0)
 	    code = errno;
@@ -109,17 +99,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
 	lpErrno = errno;
 	return 0;
     }
-    if (FDH_SEEK(fdP, block * PAGESIZE, SEEK_SET) < 0) {
-	ViceLog(0,
-		("ReallyWrite(): lseek failed device %X inode %s errno %d\n",
-		 file->dirh_handle->ih_dev, PrintInode(NULL,
-						       file->dirh_handle->
-						       ih_ino), errno));
-	lpErrno = errno;
-	FDH_REALLYCLOSE(fdP);
-	return 0;
-    }
-    if ((count = FDH_WRITE(fdP, data, PAGESIZE)) != PAGESIZE) {
+    if ((count = FDH_PWRITE(fdP, data, PAGESIZE, ((afs_foff_t)block) * PAGESIZE)) != PAGESIZE) {
 	ViceLog(0,
 		("ReallyWrite(): write failed device %X inode %s errno %d\n",
 		 file->dirh_handle->ih_dev, PrintInode(NULL,

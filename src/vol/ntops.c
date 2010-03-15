@@ -233,12 +233,7 @@ nt_iread(IHandle_t * h, int offset, char *buf, int size)
     if (fdP == NULL)
 	return -1;
 
-    if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-	FDH_REALLYCLOSE(fdP);
-	return -1;
-    }
-
-    nBytes = FDH_READ(fdP, buf, size);
+    nBytes = FDH_PREAD(fdP, buf, size, offset);
     FDH_CLOSE(fdP);
     return nBytes;
 }
@@ -253,11 +248,7 @@ nt_iwrite(IHandle_t * h, int offset, char *buf, int size)
     if (fdP == NULL)
 	return -1;
 
-    if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-	FDH_REALLYCLOSE(fdP);
-	return -1;
-    }
-    nBytes = FDH_WRITE(fdP, buf, size);
+    nBytes = FDH_PWRITE(fdP, buf, size, offset);
     FDH_CLOSE(fdP);
     return nBytes;
 }

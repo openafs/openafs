@@ -48,12 +48,7 @@ ReallyRead(DirHandle * file, int block, char *data)
 	code = errno;
 	return code;
     }
-    if (FDH_SEEK(fdP, ((afs_foff_t)block) * AFS_PAGESIZE, SEEK_SET) < 0) {
-	code = errno;
-	FDH_REALLYCLOSE(fdP);
-	return code;
-    }
-    nBytes = FDH_READ(fdP, data, AFS_PAGESIZE);
+    nBytes = FDH_PREAD(fdP, data, AFS_PAGESIZE, ((afs_foff_t)block) * AFS_PAGESIZE);
     if (nBytes != AFS_PAGESIZE) {
 	if (nBytes < 0)
 	    code = errno;
@@ -82,12 +77,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
 	code = errno;
 	return code;
     }
-    if (FDH_SEEK(fdP, ((afs_foff_t)block) * AFS_PAGESIZE, SEEK_SET) < 0) {
-	code = errno;
-	FDH_REALLYCLOSE(fdP);
-	return code;
-    }
-    nBytes = FDH_WRITE(fdP, data, AFS_PAGESIZE);
+    nBytes = FDH_PWRITE(fdP, data, AFS_PAGESIZE, ((afs_foff_t)block) * AFS_PAGESIZE);
     if (nBytes != AFS_PAGESIZE) {
 	if (nBytes < 0)
 	    code = errno;
