@@ -5,8 +5,8 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
-AH_VERBATIM([OPENAFS_HEADER],
-[#undef HAVE_RES_SEARCH
+AH_BOTTOM([
+#undef HAVE_RES_SEARCH
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
 #if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
 # if ENDIANESS_IN_SYS_PARAM_H

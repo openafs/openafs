@@ -12,7 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#define _POSIX_PTHREAD_SEMANTICS
 #include <afs/param.h>
 #include <assert.h>
 #include <stdlib.h>
