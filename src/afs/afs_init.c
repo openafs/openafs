@@ -694,8 +694,11 @@ shutdown_cache(void)
 	pag_epoch = 0;
 	pagCounter = 0;
 #if defined(AFS_XBSD_ENV)
-	vrele(volumeVnode);	/* let it go, finally. */
-	volumeVnode = NULL;
+	/* memcache never sets this, so don't panic on shutdown */
+	if (volumeVnode != NULL) {
+	    vrele(volumeVnode);	/* let it go, finally. */
+	    volumeVnode = NULL;
+	}
 	if (cacheDev.held_vnode) {
 	    vrele(cacheDev.held_vnode);
 	    cacheDev.held_vnode = NULL;
