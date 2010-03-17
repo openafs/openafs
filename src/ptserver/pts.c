@@ -623,6 +623,24 @@ ListMembership(struct cmd_syndesc *as, void *arock)
 	    printf("  %s\n", list.namelist_val[j]);
 	if (list.namelist_val)
 	    free(list.namelist_val);
+	if (as->parms[1].items && id < 0) {	/* -supergroups */
+	    list.namelist_val = 0;
+	    list.namelist_len = 0;
+	    code = pr_ListSuperGroups(ids.idlist_val[i], &list);
+	    if (code == RXGEN_OPCODE) {
+		continue; /* server does not support supergroups */
+	    } else if (code != 0) {
+		afs_com_err(whoami, code,
+			    "; unable to get supergroups of %s (id: %d)",
+			    name, id);
+		continue;
+	    }
+	    printf("Groups %s (id: %d) is a member of:\n", name, id);
+	    for (j = 0; j < list.namelist_len; j++)
+		printf("  %s\n", list.namelist_val[j]);
+	    if (list.namelist_val)
+		free(list.namelist_val);
+	}
     }
     if (ids.idlist_val)
 	free(ids.idlist_val);
@@ -1144,6 +1162,7 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("membership", ListMembership, NULL,
 			  "list membership of a user or group");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
+    cmd_AddParm(ts, "-supergroups", CMD_FLAG, CMD_OPTIONAL, "show supergroups");
     add_std_args(ts);
     cmd_CreateAlias(ts, "groups");
 

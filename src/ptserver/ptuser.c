@@ -752,3 +752,27 @@ pr_SetFieldsEntry(afs_int32 id, afs_int32 mask, afs_int32 flags, afs_int32 ngrou
 		  nusers, 0, 0);
     return code;
 }
+
+int
+pr_ListSuperGroups(afs_int32 gid, namelist * lnames)
+{
+    afs_int32 code;
+    prlist alist;
+    idlist *lids;
+    afs_int32 over;
+
+    alist.prlist_len = 0;
+    alist.prlist_val = 0;
+    code = ubik_PR_ListSuperGroups(pruclient, 0, gid, &alist, &over);
+    if (code)
+	return code;
+    if (over) {
+	fprintf(stderr, "supergroup list for id %d exceeds display limit\n",
+		gid);
+    }
+    lids = (idlist *) & alist;
+    code = pr_IdToName(lids, lnames);
+
+    xdr_free((xdrproc_t) xdr_prlist, &alist);
+    return code;
+}
