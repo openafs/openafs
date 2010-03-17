@@ -1,174 +1,200 @@
 /*
- * Copyright (c) 2003, 2006 Apple Computer, Inc. All rights reserved.
+ * Copyright (c) 1992, 1993, 1994
+ *      The Regents of the University of California.  All rights reserved.
  *
- * @APPLE_LICENSE_HEADER_START@
- * 
- * This file contains Original Code and/or Modifications of Original Code
- * as defined in and that are subject to the Apple Public Source License
- * Version 2.0 (the 'License'). You may not use this file except in
- * compliance with the License. Please obtain a copy of the License at
- * http://www.opensource.apple.com/apsl/ and read it before using this
- * file.
- * 
- * The Original Code and all software distributed under the License are
- * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
- * Please see the License for the specific language governing rights and
- * limitations under the License.
- * 
- * @APPLE_LICENSE_HEADER_END@
+ * This code is derived from software donated to Berkeley by
+ * Jan-Simon Pendry.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
-#import <Foundation/Foundation.h>
-#import <stdio.h>
-#import <err.h>
-#import <sys/types.h>
-#import <sys/mount.h>
-#import <sys/sysctl.h>
-#import <afs/sysctl.h>
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/mount.h>
+#include <sys/sysctl.h>
+#include <ctype.h>
+
+#include <afs/sysctl.h>
+
+#include <CoreFoundation/CFString.h>
+#include <Foundation/Foundation.h>
 
 enum Type {
-    TypeNode = 0,
-    TypeNum,
-    TypeStr
+    Node = 0,
+    LeafNum,
+    LeafStr
 };
 
-typedef struct _setting {
+typedef struct oidsetting {
     NSString *key;
     int selector;
     enum Type type;
-    struct _setting *children;
+    struct oidsetting *children;
 } Setting;
 
-Setting s_darwin_all[] = {
-    {@"RealModes", AFS_SC_DARWIN_ALL_REALMODES, TypeNum, NULL},
-    {NULL, 0, 0, NULL}
-};
-Setting s_darwin[] = {
-    {@"All", AFS_SC_DARWIN_ALL, TypeNode, s_darwin_all},
-    {@"Darwin12", AFS_SC_DARWIN_12, TypeNode, NULL},
-    {@"Darwin13", AFS_SC_DARWIN_13, TypeNode, NULL},
-    {@"Darwin14", AFS_SC_DARWIN_14, TypeNode, NULL},
-    {@"Darwin60", AFS_SC_DARWIN_60, TypeNode, NULL},
-    {@"Darwin70", AFS_SC_DARWIN_70, TypeNode, NULL},
-    {@"Darwin80", AFS_SC_DARWIN_80, TypeNode, NULL},
-    {@"Darwin90", AFS_SC_DARWIN_90, TypeNode, NULL},
-    {NULL, 0, 0, NULL}
-};
-Setting s_first[] = {
-    {@"All", AFS_SC_ALL, TypeNode, NULL},
-    {@"Darwin", AFS_SC_DARWIN, TypeNode, s_darwin},
-    {NULL, 0, 0, NULL}
-};
-Setting s_top = {NULL, -1, TypeNode, s_first};
-
-int oid[CTL_MAXNAME] = {CTL_VFS};
-NSString *path = @"/var/db/openafs/etc/config/settings.plist";
-
-char *oidString(int *oid, int len);
-void init(void);
-void walk(id obj, Setting *s, int level);
-
-void
-init(void)
+int
+mygetvfsbyname(const char *fsname, struct vfsconf *vfcp, Setting *s, int myoid[])
 {
-    int oidmax[] = {CTL_VFS, VFS_GENERIC, VFS_MAXTYPENUM};
-    int oidvfs[] = {CTL_VFS, VFS_GENERIC, VFS_CONF, 0};
-    int max;
-    struct vfsconf conf;
-    size_t len;
-    int i;
-
-    len = sizeof(max);
-    if(sysctl(oidmax, 3, &max, &len, NULL, 0) < 0)
-	err(1, "sysctl VFS_MAXTYPENUM");
-    for(i = max; --i >= 0; ) {
-	oidvfs[3] = i;
-	len = sizeof(conf);
-	if(sysctl(oidvfs, 4, &conf, &len, NULL, 0) < 0)
+    int maxtypenum, cnt;
+    size_t buflen;
+    
+    myoid[0] = CTL_VFS;
+    myoid[1] = VFS_GENERIC;
+    myoid[2] = VFS_MAXTYPENUM;
+    buflen = 4;
+    if (sysctl(myoid, 3, &maxtypenum, &buflen, (void *)0, (size_t)0) < 0)
+    {
+	return (-1);
+    }
+    myoid[2] = VFS_CONF;
+    buflen = sizeof * vfcp;
+    for (cnt = 0; cnt < maxtypenum; cnt++)
+    {
+	myoid[3] = cnt;
+	if (sysctl(myoid, 4, vfcp, &buflen, (void *)0, (size_t)0) < 0)
+	{
+	    if (errno != EOPNOTSUPP && errno != ENOENT && errno != ENOTSUP)
+	    {
+		return (-1);
+	    }
 	    continue;
-	if(strcmp("afs", conf.vfc_name) == 0) {
-	    s_top.selector = conf.vfc_typenum;
-	    break;
+	}
+	if (!strcmp(fsname, vfcp->vfc_name))
+	{
+	    s->selector = vfcp->vfc_typenum;
+	    return (0);
 	}
     }
-    if(s_top.selector < 0)
-	errx(1, "AFS is not loaded");
-}
-
-char *
-oidString(int *oid, int len)
-{
-    static char buf[256];
-    char *cp = buf;
-
-    for(;;) {
-	sprintf(cp, "%d", *oid++);
-	if(--len <= 0)
-	    break;
-	cp += strlen(cp);
-	*cp++ = '.';
-    }
-    return buf;
+    errno = ENOENT;
+    return (-1);
 }
 
 void
-walk(id obj, Setting *s, int level)
+oiderror(int *oid, int oidlen, enum Type type, void *obj)
+{
+    fprintf(stderr, "sysctl ");
+    while (1) {
+	fprintf(stderr, "%d", *oid++);
+	if(--oidlen <= 0)
+	    break;
+	fprintf(stderr, "%c", '.');
+    }
+    fprintf(stderr, " => ");
+    if (type == LeafNum)
+	fprintf(stderr, "%d\n", *(int *)obj);
+    else
+	fprintf(stderr, "%s\n", (char *)obj);
+
+    return;
+}
+
+void
+recurse(id obj, Setting *s, int level, int myoid[])
 {
     Setting *child;
     id newobj;
     int intval;
     const char *cp;
-    int level1 = level + 1;
 
-    oid[level] = s->selector;
+    myoid[level] = s->selector;
     switch(s->type) {
-      case TypeNode:
+    case Node:
 	for(child = s->children; child->key; child++) {
-	    if(child->type == TypeNode && !child->children)
+	    if(child->type == Node && !child->children)
 		continue;
 	    newobj = [obj objectForKey: child->key];
 	    if(newobj)
-		walk(newobj, child, level1);
+	      recurse(newobj, child, level+1, myoid);
 	}
 	break;
-      case TypeNum:
+    case LeafNum:
 	intval = [obj intValue];
-	if(sysctl(oid, level1, NULL, NULL, &intval, sizeof(intval)) < 0)
-	    err(1, "sysctl %s => %d", oidString(oid, level1), intval);
+	if(sysctl(myoid, level+1, NULL, NULL, &intval, sizeof(intval)) < 0)
+	    oiderror(myoid, level+1, s->type, &intval);
 	break;
-      case TypeStr:
+    case LeafStr:
 	cp = [obj UTF8String];
-	if(sysctl(oid, level1, NULL, NULL, (void *)cp, strlen(cp)) < 0)
-	    err(1, "sysctl %s => %s", oidString(oid, level1), cp);
+	if(sysctl(myoid, level+1, NULL, NULL, (void *)cp, strlen(cp)) < 0)
+	    oiderror(myoid, level+1, s->type, &cp);
 	break;
     }
 }
 
+Setting sysctl_darwin_all[] = {
+    {@"RealModes", AFS_SC_DARWIN_ALL_REALMODES, LeafNum, NULL},
+    {@"FSEvents", AFS_SC_DARWIN_ALL_FSEVENTS, LeafNum, NULL},
+    {NULL, 0, 0, NULL}
+};
+Setting sysctl_darwin[] = {
+    {@"All", AFS_SC_DARWIN_ALL, Node, sysctl_darwin_all},
+    {@"Darwin60", AFS_SC_DARWIN_60, Node, NULL},
+    {@"Darwin70", AFS_SC_DARWIN_70, Node, NULL},
+    {@"Darwin80", AFS_SC_DARWIN_80, Node, NULL},
+    {@"Darwin90", AFS_SC_DARWIN_90, Node, NULL},
+    {@"Darwin100", AFS_SC_DARWIN_100, Node, NULL},
+    {NULL, 0, 0, NULL}
+};
+Setting sysctl_first[] = {
+    {@"All", AFS_SC_ALL, Node, NULL},
+    {@"Darwin", AFS_SC_DARWIN, Node, sysctl_darwin},
+    {NULL, 0, 0, NULL}
+};
+Setting sysctl_top = {NULL, -1, Node, sysctl_first};
+
 int
 main(int argc, char **argv)
 {
+    struct vfsconf vfcp;
     NSData *plistData;
     id plist;
     NSString *error;
-    NSPropertyListFormat format;
-    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+    NSAutoreleasePool * nspool = [[NSAutoreleasePool alloc] init];
+    NSString *plistpath = @"/var/db/openafs/etc/config/settings.plist";
+    int oid[CTL_MAXNAME] = {CTL_VFS};
 
-    init();
-    plistData = [NSData dataWithContentsOfFile: path];
+    if (mygetvfsbyname("afs", &vfcp, &sysctl_top, oid) != 0)
+	exit(-1);
+    plistData = [NSData dataWithContentsOfFile: plistpath];
     if(plistData) {
 	plist = [NSPropertyListSerialization propertyListFromData: plistData
-	  mutabilityOption: NSPropertyListImmutable
-	  format: &format
-	  errorDescription: &error
-	];
-	if(plist)
-	    walk(plist, &s_top, 1);
-	else
-	    errx(1, "%s: %s", [path UTF8String], [error UTF8String]);
-    }
+					     mutabilityOption: NSPropertyListImmutable
+					     format: NULL
+					     errorDescription: &error
+	    ];
+	if (!plist) {
+	    NSLog(@"Error reading plist from file '%s', error = '%s'", [plistpath UTF8String], [error UTF8String]);
+	    [nspool release];
+	    return -1;
+	}
 
-    [pool release];
+	recurse(plist, &sysctl_top, 1, oid);
+    }
+    [nspool release];
     return 0;
 }
