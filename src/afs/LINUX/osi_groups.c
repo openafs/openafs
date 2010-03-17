@@ -230,7 +230,7 @@ install_session_keyring(struct key *keyring)
 {
     struct key *old;
     char desc[20];
-    unsigned long not_in_quota;
+    int flags;
     int code = -EINVAL;
 
     if (!__key_type_keyring)
@@ -239,24 +239,31 @@ install_session_keyring(struct key *keyring)
     if (!keyring) {
 
 	/* create an empty session keyring */
-	not_in_quota = KEY_ALLOC_IN_QUOTA;
 	sprintf(desc, "_ses.%u", current->tgid);
+
+	/* if we're root, don't count the keyring against our quota. This
+	 * avoids starvation issues when dealing with PAM modules that always
+	 * setpag() as root */
+	if (current_uid() == 0)
+	    flags = KEY_ALLOC_NOT_IN_QUOTA;
+	else
+	    flags = KEY_ALLOC_IN_QUOTA;
 
 #if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
 	keyring = key_alloc(__key_type_keyring, desc,
 			    current_uid(), current_gid(), current,
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
+			    flags);
 #elif defined(KEY_ALLOC_NEEDS_CRED)
 	keyring = key_alloc(__key_type_keyring, desc,
 			    current_uid(), current_gid(), current_cred(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
+			    flags);
 #else
 	keyring = key_alloc(__key_type_keyring, desc,
 			    current_uid(), current_gid(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
+			    flags);
 #endif
 	if (IS_ERR(keyring)) {
 	    code = PTR_ERR(keyring);
