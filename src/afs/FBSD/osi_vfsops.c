@@ -70,7 +70,9 @@ afs_start(struct mount *mp, int flags, THREAD_OR_PROC)
 }
 
 int
-#ifdef AFS_FBSD53_ENV
+#if defined(AFS_FBSD80_ENV)
+afs_omount(struct mount *mp, char *path, caddr_t data)
+#elif defined(AFS_FBSD53_ENV)
 afs_omount(struct mount *mp, char *path, caddr_t data, struct thread *p)
 #else
 afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
@@ -115,29 +117,49 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     MNT_IUNLOCK(mp);
 #endif
     AFS_GUNLOCK();
+#ifdef AFS_FBSD80_ENV
+    afs_statfs(mp, &mp->mnt_stat);
+#else
     afs_statfs(mp, &mp->mnt_stat, p);
+#endif
 
     return 0;
 }
 
 #ifdef AFS_FBSD53_ENV
 int
+#ifdef AFS_FBSD80_ENV
+afs_mount(struct mount *mp)
+#else
 afs_mount(struct mount *mp, struct thread *td)
+#endif
 {
+#ifdef AFS_FBSD80_ENV
+    return afs_omount(mp, NULL, NULL);
+#else
     return afs_omount(mp, NULL, NULL, td);
+#endif
 }
 #endif
 
 #ifdef AFS_FBSD60_ENV
 static int
+#ifdef AFS_FBSD80_ENV
+afs_cmount(struct mntarg *ma, void *data, int flags)
+#else
 afs_cmount(struct mntarg *ma, void *data, int flags, struct thread *td)
+#endif
 {
     return kernel_mount(ma, flags);
 }
 #endif
 
 int
+#ifdef AFS_FBSD80_ENV
+afs_unmount(struct mount *mp, int flags)
+#else
 afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
+#endif
 {
 
     /*
@@ -245,7 +267,11 @@ tryagain:
 }
 
 int
+#ifdef AFS_FBSD80_ENV
+afs_statfs(struct mount *mp, struct statfs *abp)
+#else
 afs_statfs(struct mount *mp, struct statfs *abp, THREAD_OR_PROC)
+#endif
 {
     AFS_GLOCK();
     AFS_STATCNT(afs_statfs);
@@ -275,7 +301,9 @@ afs_statfs(struct mount *mp, struct statfs *abp, THREAD_OR_PROC)
 }
 
 int
-#ifdef AFS_FBSD60_ENV
+#if defined(AFS_FBSD80_ENV)
+afs_sync(struct mount *mp, int waitfor)
+#elif defined(AFS_FBSD60_ENV)
 afs_sync(struct mount *mp, int waitfor, struct thread *td)
 #else
 afs_sync(struct mount *mp, int waitfor, struct ucred *cred, THREAD_OR_PROC)
