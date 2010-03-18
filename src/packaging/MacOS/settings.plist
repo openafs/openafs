@@ -8,6 +8,8 @@
 		<dict>
 			<key>RealModes</key>
 			<false/>
+			<key>FSEvents</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

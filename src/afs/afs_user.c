@@ -561,6 +561,13 @@ afs_SetPrimary(register struct unixuser *au, register int aflag)
 
 }				/*afs_SetPrimary */
 
+void
+afs_NotifyUser(struct unixuser *auser, int event)
+{
+#ifdef AFS_DARWIN_ENV
+    darwin_notify_perms(auser, event);
+#endif
+}
 
 /**
  * Mark all of the unixuser records held for a particular PAG as

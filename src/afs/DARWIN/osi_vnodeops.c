@@ -287,6 +287,13 @@ afs_vop_lookup(ap)
     struct proc *p;
 #ifdef AFS_DARWIN80_ENV
     vcp = VTOAFS(ap->a_dvp);
+    /*
+     * ._ file attribute mirroring touches this.
+     * we can't flag the vcache as there is none, so fail here.
+     * needed for fsevents support.
+     */
+    if (ap->a_context == afs_osi_ctxtp)
+	return ENOENT;
     if (vcp->mvstat != 1) {
 	error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
 	if (error == -1) 
@@ -515,6 +522,9 @@ afs_vop_close(ap)
     int code;
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
+    /* allows faking FSE_CONTENT_MODIFIED */
+    if (afs_osi_ctxtp == ap->a_context)
+	return 0;
     AFS_GLOCK();
     if (vop_cred)
 	code = afs_close(avc, ap->a_fflag, vop_cred);
@@ -545,6 +555,14 @@ afs_vop_access(ap)
     struct vcache * tvc = VTOAFS(ap->a_vp);
     int bits=0;
     int cmb = CHECK_MODE_BITS;
+#ifdef AFS_DARWIN80_ENV
+    /*
+     * needed for fsevents. ._ file attribute mirroring touches this.
+     * we can't flag the vcache, as there is none, so fail here.
+     */
+    if (ap->a_context == afs_osi_ctxtp)
+	return ENOENT;
+#endif
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
     if ((code = afs_InitReq(&treq, vop_cred)))
@@ -671,11 +689,54 @@ afs_vop_getattr(ap)
 {
     int code;
 
-    AFS_GLOCK();
-    code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
-    /* This is legit; it just forces the fstrace event to happen */
-    code = afs_CheckCode(code, NULL, 58);
-    AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+    /* CEvent excludes the fsevent. our context excludes the ._ */
+    if ((VTOAFS(ap->a_vp)->f.states & CEvent) ||
+	(ap->a_context == afs_osi_ctxtp)){
+	struct vcache *avc = VTOAFS(ap->a_vp);
+	int isglock = ISAFS_GLOCK();
+
+	/* this is needed because of how and when we re-enter */
+	if (!isglock)
+	  AFS_GLOCK();
+	/* do minimal work to return fake result for fsevents */
+	if (afs_fakestat_enable && VTOAFS(ap->a_vp)->mvstat == 1) {
+	    struct afs_fakestat_state fakestat;
+	    struct vrequest treq;
+
+	    code = afs_InitReq(&treq, vop_cred);
+	    if (code) {
+		if (!isglock)
+		    AFS_GUNLOCK();
+		return code;
+	    }
+	    afs_InitFakeStat(&fakestat);
+	    /* expects GLOCK */
+	    code = afs_TryEvalFakeStat(&avc, &fakestat, &treq);
+	    if (code) {
+		if (!isglock)
+		    AFS_GUNLOCK();
+		afs_PutFakeStat(&fakestat);
+		return code;
+	    }
+	}
+	code = afs_CopyOutAttrs(avc, ap->a_vap);
+	if (!isglock)
+	    AFS_GUNLOCK();
+	if (0 && !code) {
+	    /* tweak things so finder will recheck */
+	    (ap->a_vap)->va_gid = ((ap->a_vap)->va_gid == 1) ? 2 : 1;
+	    (ap->a_vap)->va_mode &= ~(VSGID);
+	}
+    } else
+#endif
+    {
+	AFS_GLOCK();
+	code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
+	/* This is legit; it just forces the fstrace event to happen */
+	code = afs_CheckCode(code, NULL, 58);
+	AFS_GUNLOCK();
+    }
 #ifdef AFS_DARWIN80_ENV
     VATTR_SET_SUPPORTED(ap->a_vap, va_type);
     VATTR_SET_SUPPORTED(ap->a_vap, va_mode);
@@ -706,6 +767,11 @@ afs_vop_setattr(ap)
 				 * } */ *ap;
 {
     int code;
+#ifdef AFS_DARWIN80_ENV
+    /* fsevents tries to set attributes. drop it. */
+    if (ap->a_context == afs_osi_ctxtp)
+	return 0;
+#endif
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
     /* This is legit; it just forces the fstrace event to happen */

@@ -533,6 +533,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
+		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired\n",
 		     tu->vid, aconn->srvr->server->cell->cellName);
@@ -549,6 +550,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		    areq->tokenError = 0;
 		    aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		    aconn->user->states |= UTokensBad;
+		    afs_NotifyUser(tu, UTokensDropped);
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d)\n",
 			 tu->vid, aconn->srvr->server->cell->cellName, acode);
@@ -562,12 +564,14 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
+		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s have expired\n",
 		     areq->uid, aconn->srvr->server->cell->cellName);
 	    } else {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
+		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d)\n",
 		     areq->uid, aconn->srvr->server->cell->cellName, acode);

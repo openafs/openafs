@@ -316,6 +316,10 @@ struct cell_alias {
  */
 #define TMP_UPAGNotReferenced	128
 
+/* unixuser notify events */
+#define UTokensObtained 1
+#define UTokensDropped  2
+
 /* values for afs_gcpags */
 enum { AFS_GCPAGS_NOTCOMPILED = 0, AFS_GCPAGS_OK =
 	1, AFS_GCPAGS_USERDISABLED, AFS_GCPAGS_EPROC0, AFS_GCPAGS_EPROCN,
@@ -584,8 +588,10 @@ struct SimpleLocks {
 #define CVFlushed	0x00080000
 #ifdef AFS_LINUX22_ENV
 #define CPageWrite      0x00200000      /* to detect vm deadlock - linux */
-#else
+#elif defined(AFS_SGI_ENV)
 #define CWritingUFS	0x00200000	/* to detect vm deadlock - used by sgi */
+#elif defined(AFS_DARWIN80_ENV)
+#define CEvent          0x00200000      /* to preclude deadlock when sending events */
 #endif
 #define CCreating	0x00400000	/* avoid needless store after open truncate */
 #define CPageHog	0x00800000	/* AIX - dumping large cores is a page hog. */

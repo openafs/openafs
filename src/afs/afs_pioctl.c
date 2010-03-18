@@ -1874,6 +1874,7 @@ DECL_PIOCTL(PSetTokens)
     afs_SetPrimary(tu, flag);
     tu->tokenTime = osi_Time();
     afs_ResetUserConns(tu);
+    afs_NotifyUser(tu, UTokensObtained);
     afs_PutUser(tu, WRITE_LOCK);
 
     return 0;
@@ -2267,6 +2268,7 @@ DECL_PIOCTL(PGetTokens)
     if (((tu->states & UHasTokens) == 0)
 	|| (tu->ct.EndTimestamp < osi_Time())) {
 	tu->states |= (UTokensBad | UNeedsReset);
+	afs_NotifyUser(tu, UTokensDropped);
 	afs_PutUser(tu, READ_LOCK);
 	return ENOTCONN;
     }
@@ -2345,6 +2347,7 @@ DECL_PIOCTL(PUnlog)
 	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+	    afs_NotifyUser(tu, UTokensDropped);
 	    /* We have to drop the lock over the call to afs_ResetUserConns,
 	     * since it obtains the afs_xvcache lock.  We could also keep
 	     * the lock, and modify ResetUserConns to take parm saying we

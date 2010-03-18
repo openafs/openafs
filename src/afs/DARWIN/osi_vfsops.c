@@ -447,17 +447,47 @@ afs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 }
 
 u_int32_t afs_darwin_realmodes = 0;
+u_int32_t afs_darwin_fsevents = 0;
+
+int
+afs_sysctl_int(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp,
+	       user_addr_t newp, size_t newlen, u_int32_t *object)
+{
+#ifdef AFS_DARWIN80_ENV
+    int error;
+
+    if (oldp != USER_ADDR_NULL && oldlenp == NULL)
+	return (EFAULT);
+    if (oldp && *oldlenp < sizeof(u_int32_t))
+	return (ENOMEM);
+    if (newp && newlen != sizeof(u_int32_t))
+	return (EINVAL);
+    *oldlenp = sizeof(u_int32_t);
+    if (oldp) {
+	if ((error = copyout(object,
+			     oldp, sizeof(u_int32_t)))) {
+	    return error;
+	}
+    }
+    if (newp)
+	return copyin(newp, object, sizeof(u_int32_t));
+    return 0;
+#else
+    return sysctl_int(oldp, oldlenp, newp, newlen,
+		      object);
+#endif
+}
 
 #ifdef AFS_DARWIN80_ENV
-int afs_sysctl(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp, 
+int
+afs_sysctl(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp,
 	       user_addr_t newp, size_t newlen, vfs_context_t context)
 #else
-int afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, 
+int
+afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	       void *newp, size_t newlen, struct proc *p)
 #endif
 {
-    int error;
-
     switch (name[0]) {
     case AFS_SC_ALL:
         /* nothing defined */
@@ -469,28 +499,11 @@ int afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	case AFS_SC_DARWIN_ALL:
 	    switch (name[2]) {
 	    case AFS_SC_DARWIN_ALL_REALMODES:
-#ifdef AFS_DARWIN80_ENV
-		if (oldp != USER_ADDR_NULL && oldlenp == NULL)
-		    return (EFAULT);
-		if (oldp && *oldlenp < sizeof(u_int32_t))
-		    return (ENOMEM);
-		if (newp && newlen != sizeof(u_int32_t))
-		    return (EINVAL);
-		*oldlenp = sizeof(u_int32_t);
-		if (oldp) {
-		    if ((error = copyout(&afs_darwin_realmodes,
-					 oldp, sizeof(u_int32_t)))) {
-			return error;
-		    }
-		}
-		if (newp)
-		    return copyin(newp, &afs_darwin_realmodes,
-				  sizeof(u_int32_t));
-		return 0;
-#else
-	        return sysctl_int(oldp, oldlenp, newp, newlen,
-				  &afs_darwin_realmodes);
-#endif
+		return afs_sysctl_int(name, namelen, oldp, oldlenp,
+				      newp, newlen, &afs_darwin_realmodes);
+	    case AFS_SC_DARWIN_ALL_FSEVENTS:
+		return afs_sysctl_int(name, namelen, oldp, oldlenp,
+				      newp, newlen, &afs_darwin_fsevents);
 	    }
 	    break;
 	    /* darwin version specific sysctl's goes here */

@@ -116,6 +116,8 @@ if [ $majorvers -ge 7 ]; then
   # make config/settings.plist if it doesn't exist
   if [ ! -e config/settings.plist -a -e config/settings.plist.orig ]; then
     cp config/settings.plist.orig config/settings.plist
+  else
+    /usr/libexec/PlistBuddy -c "Add :Darwin:All:FSEvents bool" config/settings.plist  && /usr/libexec/PlistBuddy -c "Set :Darwin:All:FSEvents true" config/settings.plist
   fi
 elif [ -e config/afssettings ]; then
   # turn off execution of afssettings

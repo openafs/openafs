@@ -921,6 +921,8 @@ extern struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell,
 				     afs_int32 locktype);
 extern struct unixuser *afs_GetUser(register afs_int32 auid, afs_int32 acell,
 				    afs_int32 locktype);
+extern void afs_NotifyUser(struct unixuser *auser, int event);
+
 #if AFS_GCPAGS
 extern afs_int32 afs_GCPAGs(afs_int32 * ReleasedCount);
 extern void afs_GCPAGs_perproc_func(afs_proc_t * pproc);

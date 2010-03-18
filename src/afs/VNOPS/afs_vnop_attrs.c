@@ -65,7 +65,6 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     }
 #if defined(AFS_DARWIN_ENV)
     {
-	extern u_int32_t afs_darwin_realmodes;
 	if (!afs_darwin_realmodes) {
 	    /* Mac OS X uses the mode bits to determine whether a file or
 	     * directory is accessible, and believes them, even though under
