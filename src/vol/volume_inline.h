@@ -7,13 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/file.h>
-
 #ifndef _AFS_VOL_VOLUME_INLINE_H
 #define _AFS_VOL_VOLUME_INLINE_H 1
 
 #include "volume.h"
 #include "partition.h"
+
+#ifdef AFS_DEMAND_ATTACH_FS
+# include "lock.h"
+#endif
 
 /**
  * tell caller whether the given program type represents a salvaging
