@@ -665,6 +665,11 @@ afsd_InitCM(char **reasonP)
 
     osi_Log0(afsd_logp, "Log init");
 
+    dummyLen = sizeof(smb_monitorReqs);
+    code = RegQueryValueEx(parmKey, "SMBRequestMonitor", NULL, NULL,
+                           (BYTE *) &smb_monitorReqs, &dummyLen);
+    afsi_log("SMB request monitoring is %s", (smb_monitorReqs != 0)? "enabled": "disabled");
+
     dummyLen = sizeof(cacheSize);
     code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
                             (BYTE *) &cacheSize, &dummyLen);

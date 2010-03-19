@@ -8878,6 +8878,361 @@ void smb_ServerWaiter(void *parmp)
     }
 }
 
+typedef struct _monitored_task {
+    osi_queue_t q;
+    INT_PTR     task_id;
+    LARGE_INTEGER start_time;
+    BOOL        started;
+    BOOL        trace_timer_hit;
+    BOOL        dump_timer_hit;
+} monitored_task;
+
+typedef struct osi_queueHT {
+    osi_queue_t * headp;
+    osi_queue_t * tailp;
+} osi_queueHT_t;
+
+static osi_queue_t *smb_monitored_tasks = NULL;
+static osi_queue_t *smb_free_monitored_tasks = NULL;
+
+static osi_mutex_t _monitor_mx;
+
+static HANDLE h_monitored_task_queue    = NULL;
+static HANDLE h_monitored_task_shutdown = NULL;
+
+static time_t smb_last_dump_time = 0;
+
+DWORD  smb_monitorReqs = 0;
+
+/* FILETIME comparison fuzz */
+#define MONITOR_FUZZ_TIMEOUT    (1 * 10000000i64)
+
+/* Trace timeout is at 60 seconds */
+#define MONITOR_TRACE_TIMEOUT   (60 * 10000000i64)
+
+/* Dump timeout is at 120 seconds */
+#define MONITOR_DUMP_TIMEOUT    (120 * 10000000i64)
+
+/* Time before another dump is performed in seconds*/
+#define MONITOR_DUMP_RESET_TIMEOUT  (600)
+
+static void smb_PurgeOldTaskMonitors(osi_queueHT_t * taskmq)
+{
+    FILETIME now;
+    LARGE_INTEGER earliest;
+    monitored_task * t;
+
+    GetSystemTimeAsFileTime(&now);
+    earliest.LowPart = now.dwLowDateTime;
+    earliest.HighPart = now.dwHighDateTime;
+    earliest.QuadPart -= MONITOR_FUZZ_TIMEOUT + MONITOR_DUMP_TIMEOUT;
+
+    while ((t = (monitored_task *) taskmq->headp) != NULL &&
+
+           (t->start_time.QuadPart < earliest.QuadPart ||
+
+            t->dump_timer_hit)) {
+
+        osi_QRemoveHT(&taskmq->headp,
+                      &taskmq->tailp,
+                      &t->q);
+
+        lock_ObtainMutex(&_monitor_mx);
+        osi_QAdd(&smb_free_monitored_tasks, &t->q);
+        lock_ReleaseMutex(&_monitor_mx);
+    }
+
+#ifdef INVARIANT_CHECK
+    {
+        LARGE_INTEGER last;
+
+        last.QuadPart = 0;
+
+        for (t = (monitored_task *) taskmq->headp;
+             t;
+             t = (monitored_task *) osi_QNext(&t->q)) {
+            osi_assert(last.QuadPart <= t->start_time.QuadPart);
+            last.QuadPart = t->start_time.QuadPart;
+        }
+    }
+#endif
+}
+
+static void smb_SlurpNewTaskMonitors(osi_queueHT_t * taskmq)
+{
+    monitored_task * task;
+    monitored_task * tasks;
+
+    lock_ObtainMutex(&_monitor_mx);
+    tasks = (monitored_task *) smb_monitored_tasks;
+    smb_monitored_tasks = NULL;
+    lock_ReleaseMutex(&_monitor_mx);
+
+    while (tasks) {
+
+        task = tasks;
+        osi_QRemove((osi_queue_t **) &tasks, &task->q);
+
+        if (task->started) {
+
+            osi_queue_t q;
+            osi_queue_t *p;
+
+            q.nextp = NULL;
+            q.prevp = taskmq->tailp;
+
+            /* Insertion sort by start_time.  Earliest request is
+               first.  Since we are likely to receive new requests
+               later, we start inserting from the back. */
+            for (p = &q;
+                 osi_QPrev(p) &&
+                     ((monitored_task *) osi_QPrev(p))->start_time.QuadPart > task->start_time.QuadPart;
+                 p = osi_QPrev(p));
+
+            if (p == &q)
+                osi_QAddT(&taskmq->headp, &taskmq->tailp, &task->q);
+            else if (p->prevp == NULL)
+                osi_QAddH(&taskmq->headp, &taskmq->tailp, &task->q);
+            else {
+                osi_queue_t *o = p->prevp;
+
+                osi_assert(o->nextp == p);
+
+                task->q.nextp = p;
+                task->q.prevp = o;
+                p->prevp = &task->q;
+                o->nextp = &task->q;
+            }
+
+        } else {
+            /* Some task ending */
+
+            osi_queue_t * p;
+
+            for (p = taskmq->headp;
+                 p != NULL;
+                 p = osi_QNext(p)) {
+
+                monitored_task * mt = (monitored_task *) p;
+
+                if (mt->task_id == task->task_id) {
+
+                    osi_QRemoveHT(&taskmq->headp,
+                                  &taskmq->tailp, p);
+
+                    lock_ObtainMutex(&_monitor_mx);
+                    osi_QAdd(&smb_free_monitored_tasks, p);
+                    lock_ReleaseMutex(&_monitor_mx);
+
+                    break;
+                }
+            }
+
+            lock_ObtainMutex(&_monitor_mx);
+            osi_QAdd(&smb_free_monitored_tasks, &task->q);
+            lock_ReleaseMutex(&_monitor_mx);
+        }
+    }
+
+#ifdef INVARIANT_CHECK
+    {
+        LARGE_INTEGER last;
+        monitored_task * t;
+
+        last.QuadPart = 0;
+
+        for (t = (monitored_task *) taskmq->headp;
+             t;
+             t = (monitored_task *) osi_QNext(&t->q)) {
+            osi_assert(last.QuadPart <= t->start_time.QuadPart);
+            last.QuadPart = t->start_time.QuadPart;
+        }
+    }
+#endif
+}
+
+static void smb_HandleTaskMonitorEvent(monitored_task * task)
+{
+    if (!task->trace_timer_hit) {
+
+        task->trace_timer_hit = TRUE;
+
+        osi_LogEnable(afsd_logp);
+        rx_DebugOnOff(TRUE);
+
+    } else if (!task->dump_timer_hit) {
+        time_t now;
+
+        time(&now);
+
+        if (smb_last_dump_time + MONITOR_DUMP_RESET_TIMEOUT < now) {
+            task->dump_timer_hit = TRUE;
+            smb_last_dump_time = now;
+
+            GenerateMiniDump(NULL);
+        }
+    }
+}
+
+/**
+ * Server request monitoring
+ *
+ * The server monitor runs in a separate thread and monitors server
+ * requests for potential timeouts.  It examines notifcations queued
+ * by smb_NotifyRequestEvent() and waits for potential timeout events:
+ *
+ * - After MONITOR_TRACE_TIMEOUT threshold elapses, the monitor
+ *   enables trace logging.
+ *
+ * - After MONITOR_DUMP_TIMEOUT threshold elapses, the monitor writes
+ *   out a dump file that will hopefully contain enough evidence to
+ *   figure out why the timeout event occurred.
+ *
+ */
+void smb_ServerMonitor(VOID * parmp)
+{
+    osi_queueHT_t in_progress = { NULL, NULL };
+    HANDLE h_timer = NULL;
+
+    HANDLE h_all[3];
+
+    h_monitored_task_queue = CreateEvent(NULL, FALSE, FALSE, "Local\\OpenAFSTaskMonitor");
+    h_monitored_task_shutdown = CreateEvent(NULL, FALSE, FALSE, "Local\\OpenAFSTaskMonitorShutdown");
+    h_timer = CreateWaitableTimer(NULL, FALSE, "Local\\OpenAFSTaskMonitorTimer");
+
+    lock_InitializeMutex(&_monitor_mx, "Request monitor lock", LOCK_HIERARCHY_SMB_MONITOR);
+
+    h_all[0] = h_monitored_task_queue;
+    h_all[1] = h_timer;
+    h_all[2] = h_monitored_task_shutdown;
+
+    while(1) {
+        DWORD rv;
+
+        rv = WaitForMultipleObjects(3, h_all, FALSE, INFINITE);
+
+        if (rv == WAIT_OBJECT_0) {
+
+            smb_SlurpNewTaskMonitors(&in_progress);
+
+        } else if (rv == WAIT_OBJECT_0 + 1) {
+
+            smb_HandleTaskMonitorEvent((monitored_task *) in_progress.headp);
+
+        } else {
+
+            break;
+
+        }
+
+        /* refresh timers */
+        {
+            monitored_task * t;
+
+            smb_PurgeOldTaskMonitors(&in_progress);
+            t = (monitored_task *) in_progress.headp;
+
+            if (t && !t->trace_timer_hit) {
+                LARGE_INTEGER due;
+
+                due = t->start_time;
+                due.QuadPart += MONITOR_TRACE_TIMEOUT;
+
+                SetWaitableTimer(h_timer, &due, 0, NULL, NULL, FALSE);
+            } else if (t && !t->dump_timer_hit) {
+
+                LARGE_INTEGER due;
+
+                due = t->start_time;
+                due.QuadPart += MONITOR_DUMP_TIMEOUT;
+
+                SetWaitableTimer(h_timer, &due, 0, NULL, NULL, FALSE);
+            } else {
+                CancelWaitableTimer(h_timer);
+
+                /* CancelWaitableTimer() doesn't reset the timer if it
+                   was already signalled. */
+                WaitForSingleObject(h_timer, 0);
+            }
+        }
+    }
+
+    {
+        HANDLE h;
+
+        h = h_monitored_task_queue;
+        h_monitored_task_queue = NULL;
+        CloseHandle(h);
+
+        h = h_monitored_task_shutdown;
+        h_monitored_task_shutdown = NULL;
+        CloseHandle(h);
+
+        CloseHandle(h_timer);
+
+        lock_FinalizeMutex(&_monitor_mx);
+    }
+
+    {
+        monitored_task * task;
+
+        while (in_progress.headp) {
+            task = (monitored_task *) in_progress.headp;
+            osi_QRemoveHT(&in_progress.headp, &in_progress.tailp, &task->q);
+            free(task);
+        }
+
+        for (task = (monitored_task  *) smb_free_monitored_tasks;
+             task; task = (monitored_task *) smb_free_monitored_tasks) {
+            osi_QRemove(&smb_free_monitored_tasks, &task->q);
+            free(task);
+        }
+
+        for (task = (monitored_task *) smb_monitored_tasks;
+             task; task = (monitored_task *) smb_monitored_tasks) {
+            osi_QRemove(&smb_monitored_tasks, &task->q);
+            free(task);
+        }
+    }
+}
+
+void smb_NotifyRequestEvent(INT_PTR task_id, BOOL started)
+{
+    monitored_task * task;
+
+    lock_ObtainMutex(&_monitor_mx);
+    task = (monitored_task *) smb_free_monitored_tasks;
+    if (task)
+        osi_QRemove(&smb_free_monitored_tasks, &task->q);
+    lock_ReleaseMutex(&_monitor_mx);
+
+    if (task == NULL)
+        task = malloc(sizeof(monitored_task));
+    memset(task, 0, sizeof(*task));
+
+    task->task_id = task_id;
+    task->started = started;
+
+    {
+        FILETIME now;
+
+        GetSystemTimeAsFileTime(&now);
+        task->start_time.HighPart = now.dwHighDateTime;
+        task->start_time.LowPart = now.dwLowDateTime;
+    }
+
+    lock_ObtainMutex(&_monitor_mx);
+    osi_QAdd(&smb_monitored_tasks, &task->q);
+    lock_ReleaseMutex(&_monitor_mx);
+
+    SetEvent(h_monitored_task_queue);
+}
+
+void smb_ShutdownMonitor()
+{
+    SetEvent(h_monitored_task_shutdown);
+}
+
 /*
  * The top level loop for handling SMB request messages.  Each server thread
  * has its own NCB and buffer for sending replies (outncbp, outbufp), but the
@@ -9102,6 +9457,9 @@ void smb_Server(VOID *parmp)
         }
 
 	cm_SetRequestStartTime();
+        if (smb_monitorReqs) {
+            smb_NotifyRequestEvent(GetCurrentThreadId(), TRUE);
+        }
 
         vcp->errorCount = 0;
         bufp = (struct smb_packet *) ncbp->ncb_buffer;
@@ -9158,6 +9516,9 @@ void smb_Server(VOID *parmp)
         }
 #endif
 
+        if (smb_monitorReqs) {
+            smb_NotifyRequestEvent(GetCurrentThreadId(), FALSE);
+        }
         smb_concurrentCalls--;
 
       doneWithNCB:
@@ -10626,6 +10987,13 @@ void smb_Init(osi_log_t *logp, int useV3,
     osi_assertx(phandle != NULL, "smb_WaitingLocksDaemon thread creation failure");
     thrd_CloseHandle(phandle);
 
+    if (smb_monitorReqs) {
+        phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ServerMonitor,
+                              NULL, 0, &lpid, "smb_ServerMonitor");
+        osi_assertx(phandle != NULL, "smb_ServerMonitor thread creation failure");
+        thrd_CloseHandle(phandle);
+    }
+
     lock_ReleaseMutex(&smb_StartedLock);
     return;
 }
@@ -10744,6 +11112,10 @@ void smb_Shutdown(void)
     }
     lock_ReleaseWrite(&smb_rctLock);
     smb_FreeNCB(ncbp);
+
+    if (smb_monitorReqs) {
+        smb_ShutdownMonitor();
+    }
 }
 
 /* Get the UNC \\<servername>\<sharename> prefix. */

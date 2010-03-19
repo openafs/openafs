@@ -124,6 +124,7 @@
 #define LOCK_HIERARCHY_SMB_RCT_GLOBAL          110
 #define LOCK_HIERARCHY_SMB_USERNAME            115
 #define LOCK_HIERARCHY_SMB_VC                  120
+#define LOCK_HIERARCHY_SMB_MONITOR             125
 
 
 #define LOCK_HIERARCHY_DAEMON_GLOBAL           400

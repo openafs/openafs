@@ -763,6 +763,7 @@ extern int smb_ServerLanManagerLength;
 extern GUID smb_ServerGUID;
 extern LSA_STRING smb_lsaLogonOrigin;
 extern LONG smb_UseUnicode;
+extern DWORD smb_monitorReqs;
 
 /* used for getting a challenge for SMB auth */
 typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {  
