@@ -66,8 +66,10 @@ afs_mount(afsp, path, data)
     afsp->vfs_fsid.val[1] = AFS_VFSFSID;
 
     /* For AFS, we don't allow file over file mounts. */
-    if (afsp->vfs_mntdover->v_type != VDIR)
-	return (ENOTDIR);
+    if (afsp->vfs_mntdover->v_type != VDIR) {
+	AFS_VFSUNLOCK();
+	return (setuerror(ENOTDIR));
+    }
     /* try to get the root vnode, but don't worry if you don't.  The actual
      * setting of the root vnode (vfs_mntd) is done in afs_root, so that it
      * get re-eval'd at the right time if things aren't working when we
