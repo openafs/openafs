@@ -34,6 +34,7 @@ $gen_dirs = { };
     "/var/db/openafs/etc/cacheinfo",
     "/var/db/openafs/etc/ThisCell",
     "/var/db/openafs/etc/config/afsd.options",
+    "/var/db/openafs/etc/config/afs.conf",
     "/var/db/openafs/etc/CellServDB.save",
     "/var/db/openafs/etc/CellServDB.master.last",
     "/var/db/openafs/etc/CellServDB",
