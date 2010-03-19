@@ -90,29 +90,41 @@ sub remove_main_packages
 #    opendir (DIR, $ARGV[0]) or die "ERROR: package directory $ARGV[0] not found\n";
 #    my @pkglist = grep /\.pkg$/, readdir DIR;
 #    closedir DIR;
-     my @pkglist = ("OpenAFS",
+     my @pkglist = ("org.openafs.OpenAFS-debug",
+		    "org.openafs.OpenAFS",
+		    "OpenAFS",
+		    "OpenAFS-debug-extension",
 		    );
     
     foreach (@pkglist)
       {
         s/\.pkg$//;
         my $pkgname = $_;
-        my $pkgname_fullpath = "$receipts_dir/$pkgname.pkg";
-        my $pkgname_bom_fullpath = undef;
+	my $bompath = undef;
+	my $infopath = undef;
+        my $pkgname_plist_newpath = "/var/db/receipts/$pkgname.pkg.plist";
+	    my $pkgname_bom_newpath = "/var/db/receipts/$pkgname.pkg.bom";
+        my $pkgname_plist_fullpath = "/Library/Receipts/$pkgname.pkg/Contents/Info.plist";
+        my $pkgname_bom_fullpath = "/Library/Receipts/$pkgname.pkg/Contents/Archive.bom";
 
-        next if (! -d "$pkgname_fullpath" );
-        
-        print_verbose ("Removing package $pkgname.pkg\n");
+	if (-f $pkgname_plist_newpath && -r $pkgname_plist_newpath && -f $pkgname_bom_newpath && -r $pkgname_bom_newpath) {
+	    print_verbose ("Removing package $pkgname.pkg\n");
+	    $bompath = $pkgname_bom_newpath;
+	    $infopath = $pkgname_plist_newpath;
+	} else {
+	    if (-f $pkgname_plist_fullpath && -r $pkgname_plist_fullpath && -f $pkgname_bom_fullpath && -r $pkgname_bom_fullpath) {
+		print_verbose ("Removing package $pkgname.pkg\n");
+		$bompath = $pkgname_bom_fullpath;
+		$infopath = $pkgname_plist_fullpath;
+	    } else {
+		next;
+	    }
+	}
 
-        my $f  = "$pkgname_fullpath/Contents/Resources/$pkgname.bom";
-        if (-f $f && -r $f) {
-            $pkgname_bom_fullpath = $f;
-        }
-
-        next if (!defined ($pkgname_bom_fullpath));
+        next if (!defined ($bompath));
         
         my $bomroot = "";
-        open (INFO, "$pkgname_fullpath/Contents/Info.plist") or next;
+        open (INFO, "$infopath") or next;
         while (<INFO>) {
             m/IFPkgFlagDefaultLocation/ or next;
             $bomroot = <INFO>;
@@ -125,7 +137,7 @@ sub remove_main_packages
 
         spin_rate_slow ();
 
-        open (LSBOM, "/usr/bin/lsbom -l -f -p f '$pkgname_bom_fullpath' |") or next;
+        open (LSBOM, "/usr/bin/lsbom -l -f -p f '$bompath' |") or next;
         while (<LSBOM>)
           {
             chomp;
@@ -139,7 +151,7 @@ sub remove_main_packages
 
         my $rooth = { };
 
-        open (LSBOM, "/usr/bin/lsbom -d -p f '$pkgname_bom_fullpath' |") or next;
+        open (LSBOM, "/usr/bin/lsbom -d -p f '$bompath' |") or next;
         while (<LSBOM>)
           {
             chomp;
@@ -163,7 +175,12 @@ sub remove_main_packages
         spin_rate_fast ();
         remove_empty_directories ($rooth, "/");
 
-        remove_package_receipts ("$pkgname.pkg") if (!defined ($ARGV[1]) || !$ARGV[1]) ;
+	if (-d "$receipts_dir/$pkgname.pkg" ) {
+	    remove_package_receipts ("$pkgname.pkg") if (!defined ($ARGV[1]) || !$ARGV[1]) ;
+	} else {
+	    unshift(@rmfiles, "$bompath");
+	    unshift(@rmfiles, "$infopath");
+       	}
       }
   }
 
@@ -269,7 +286,7 @@ sub remove_a_file
     else
       {
 	  unshift(@rmfiles, "$fn");
-	  unshift(@rmfiles, "$fn") if ( -f $ufs_rsrc_file);
+	  unshift(@rmfiles, "$ufs_rsrc_file") if ( -f $ufs_rsrc_file);
       }
   }
 
