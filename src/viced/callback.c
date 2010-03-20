@@ -1533,6 +1533,7 @@ lih0_r(register struct host *host, register int flags, void *rock)
 {
     struct lih_params *params = (struct lih_params *)rock;
 
+    /* OTHER_MUSTHOLD_LIH is because the h_Enum loop holds us once */
     if (host->cblist
 	&& (!(host->hostFlags & HOSTDELETED))
 	&& (host->refCount < OTHER_MUSTHOLD_LIH)
