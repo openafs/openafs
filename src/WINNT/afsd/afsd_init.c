@@ -1679,16 +1679,21 @@ static BOOL (WINAPI *pMiniDumpWriteDump)(HANDLE hProcess,DWORD ProcessId,HANDLE 
 static HANDLE
 OpenDumpFile(void)
 {
+    char tmp[256];
     char wd[256];
+    SYSTEMTIME st;
     DWORD code;
 
-    code = GetEnvironmentVariable("TEMP", wd, sizeof(wd));
-    if ( code == 0 || code > sizeof(wd) )
+    code = GetEnvironmentVariable("TEMP", tmp, sizeof(tmp));
+    if ( code == 0 || code > sizeof(tmp) )
     {
-        if (!GetWindowsDirectory(wd, sizeof(wd)))
+        if (!GetWindowsDirectory(tmp, sizeof(tmp)))
             return NULL;
     }
-    StringCbCatA(wd, sizeof(wd), "\\afsd.dmp");
+    GetLocalTime(&st);
+    StringCbPrintfA(wd, sizeof(wd),
+                    "%s\\afsd-%04d-%02d-%02d-%02d_%02d_%02d.dmp", tmp,
+                    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
     return CreateFile( wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                             CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
 }
