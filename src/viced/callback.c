@@ -1125,10 +1125,11 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 {
     char hoststr[16];
 
-    if (!isheld)
-	return isheld;		/* host is held only by h_Enumerate, do nothing */
     if (host->hostFlags & HOSTDELETED)
 	return 0;		/* host is deleted, release hold */
+
+    if (!(host->hostFlags & HCBREAK))
+	return 0;		/* host is not flagged to notify */
 
     if (host->hostFlags & VENUSDOWN) {
 	h_Lock_r(host);
@@ -1144,9 +1145,9 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 						 * selectively remember to
 						 * delete the volume callbacks
 						 * later */
-	host->hostFlags &= ~RESETDONE;	/* Do InitCallBackState when host returns */
+	host->hostFlags &= ~(RESETDONE|HCBREAK);	/* Do InitCallBackState when host returns */
 	h_Unlock_r(host);
-	return 0;		/* release hold */
+	return 0;		/* parent will release hold */
     }
     assert(parms->ncbas <= MAX_CB_HOSTS);
 
@@ -1166,7 +1167,8 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
     }
     parms->cba[parms->ncbas].hp = host;
     parms->cba[(parms->ncbas)++].thead = parms->thead;
-    return 1;			/* DON'T release hold, because we still need it. */
+    host->hostFlags &= ~HCBREAK;
+    return 1;		/* parent shouldn't release hold, more work to do */
 }
 
 /*
@@ -1236,7 +1238,8 @@ BreakVolumeCallBacks(afs_uint32 volume)
 		    host = h_itoh(cb->hhead);
 
 		    if (!(host->hostFlags & HOSTDELETED)) {
-			h_Hold_r(host);
+			/* mark this host for notification */
+			host->hostFlags |= HCBREAK;
 			if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
 			    tthead = cb->thead;
 			}
@@ -1245,7 +1248,7 @@ BreakVolumeCallBacks(afs_uint32 volume)
 		    TDel(cb);
 		    HDel(cb);
 		    FreeCB(cb);
-		    /* leave hold for MultiBreakVolumeCallBack to clear */
+		    /* leave flag for MultiBreakVolumeCallBack to clear */
 		}
 		*feip = fe->fnext;
 		FreeFE(fe);
@@ -1389,7 +1392,8 @@ BreakLaterCallBacks(void)
 	    host = h_itoh(cb->hhead);
 	    if (cb->status == CB_DELAYED) {
 		if (!(host->hostFlags & HOSTDELETED)) {
-		    h_Hold_r(host);
+		    /* mark this host for notification */
+		    host->hostFlags |= HCBREAK;
 		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
 			tthead = cb->thead;
 		    }
@@ -1397,7 +1401,7 @@ BreakLaterCallBacks(void)
 		TDel(cb);
 		HDel(cb);
 		CDel(cb, 0);	/* Don't let CDel clean up the fe */
-		/* leave hold for MultiBreakVolumeCallBack to clear */
+		/* leave flag for MultiBreakVolumeCallBack to clear */
 	    } else {
 		ViceLog(125,
 			("Found host %p (%s:%d) non-DELAYED cb for %u:%u:%u\n",
