@@ -992,6 +992,22 @@ afsd_InitCM(char **reasonP)
     afsi_log("Dot files/dirs will %sbe marked hidden",
               smb_hideDotFiles ? "" : "not ");
 
+    dummyLen = sizeof(dwValue);
+    code = RegQueryValueEx(parmKey, "UnixModeFileDefault", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        smb_unixModeDefaultFile = (dwValue & 07777);
+    }
+    afsi_log("Default unix mode bits for files is 0%04o", smb_unixModeDefaultFile);
+
+    dummyLen = sizeof(dwValue);
+    code = RegQueryValueEx(parmKey, "UnixModeDirDefault", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        smb_unixModeDefaultDir = (dwValue & 07777);
+    }
+    afsi_log("Default unix mode bits for directories is 0%04o", smb_unixModeDefaultDir);
+
     dummyLen = sizeof(smb_maxMpxRequests);
     code = RegQueryValueEx(parmKey, "MaxMpxRequests", NULL, NULL,
                            (BYTE *) &smb_maxMpxRequests, &dummyLen);

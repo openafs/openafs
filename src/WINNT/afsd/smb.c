@@ -134,6 +134,11 @@ long smb_dirSearchCounter = 1;
 smb_dirSearch_t *smb_firstDirSearchp;
 smb_dirSearch_t *smb_lastDirSearchp;
 
+/* Initial mode bits for files and directories.  Set to 0 to use
+   defaults. */
+int smb_unixModeDefaultFile = 0666;
+int smb_unixModeDefaultDir = 0777;
+
 /* hide dot files? */
 int smb_hideDotFiles;
 
@@ -490,6 +495,24 @@ unsigned int smb_Attributes(cm_scache_t *scp)
 #endif
 
     return attrs;
+}
+
+void smb_SetInitialModeBitsForFile(int smb_attr, cm_attr_t * attr)
+{
+    if (smb_unixModeDefaultFile != 0) {
+        attr->mask |= CM_ATTRMASK_UNIXMODEBITS;
+        attr->unixModeBits = smb_unixModeDefaultFile;
+        if (smb_attr & SMB_ATTR_READONLY)
+            attr->unixModeBits &= ~0222;
+    }
+}
+
+void smb_SetInitialModeBitsForDir(int smb_attr, cm_attr_t * attr)
+{
+    if (smb_unixModeDefaultDir != 0) {
+        attr->mask |= CM_ATTRMASK_UNIXMODEBITS;
+        attr->unixModeBits = smb_unixModeDefaultDir;
+    }
 }
 
 /* Check if the named file/dir is a dotfile/dotdir */
@@ -8065,6 +8088,8 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
     setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
     setAttr.clientModTime = time(NULL);
+    smb_SetInitialModeBitsForDir(0, &setAttr);
+
     code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req, NULL);
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
@@ -8113,7 +8138,6 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_scache_t *dscp;			/* dir we're dealing with */
     cm_scache_t *scp;			/* file we're creating */
     cm_attr_t setAttr;
-    int initialModeBits;
     smb_fid_t *fidp;
     int attributes;
     clientchar_t *lastNamep;
@@ -8130,11 +8154,6 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     attributes = smb_GetSMBParm(inp, 0);
     dosTime = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
-        
-    /* compute initial mode bits based on read-only flag in attributes */
-    initialModeBits = 0666;
-    if (attributes & SMB_ATTR_READONLY) 
-	initialModeBits &= ~0222;
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
@@ -8237,6 +8256,8 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     else {
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
+        smb_SetInitialModeBitsForFile(attributes, &setAttr);
+
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                          &req);
         if (code == 0) {

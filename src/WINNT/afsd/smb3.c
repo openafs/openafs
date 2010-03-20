@@ -2480,7 +2480,6 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     cm_scache_t *dscp;		/* dir we're dealing with */
     cm_scache_t *scp;		/* file we're creating */
     cm_attr_t setAttr;
-    int initialModeBits;
     smb_fid_t *fidp;
     int attributes;
     clientchar_t *lastNamep;
@@ -2513,11 +2512,6 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
     attributes = p->parmsp[3];
     dosTime = p->parmsp[4] | (p->parmsp[5] << 16);
-        
-    /* compute initial mode bits based on read-only flag in attributes */
-    initialModeBits = 0666;
-    if (attributes & SMB_ATTR_READONLY) 
-        initialModeBits &= ~0222;
         
     pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[14]), NULL,
                                   SMB_STRF_ANSIPATH);
@@ -2754,6 +2748,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         openAction = 2;	/* created file */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         cm_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
+        smb_SetInitialModeBitsForFile(attributes, &setAttr);
+
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                           &req);
         if (code == 0) {
@@ -5928,7 +5924,6 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_scache_t *dscp;		/* dir we're dealing with */
     cm_scache_t *scp;		/* file we're creating */
     cm_attr_t setAttr;
-    int initialModeBits;
     smb_fid_t *fidp;
     int attributes;
     clientchar_t *lastNamep;
@@ -5959,11 +5954,6 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     attributes = smb_GetSMBParm(inp, 5);
     dosTime = smb_GetSMBParm(inp, 6) | (smb_GetSMBParm(inp, 7) << 16);
 
-                                /* compute initial mode bits based on read-only flag in attributes */
-    initialModeBits = 0666;
-    if (attributes & SMB_ATTR_READONLY) 
-	initialModeBits &= ~0222;
-        
     pathp = smb_ParseASCIIBlock(inp, smb_GetSMBData(inp, NULL), NULL,
                                 SMB_STRF_ANSIPATH);
     if (!pathp)
@@ -6171,6 +6161,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         openAction = 2;	/* created file */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
+        smb_SetInitialModeBitsForFile(attributes, &setAttr);
+
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                          &req);
         if (code == 0) {
@@ -7137,7 +7129,6 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned int createDisp;
     unsigned int createOptions;
     unsigned int shareAccess;
-    int initialModeBits;
     unsigned short baseFid;
     smb_fid_t *baseFidp;
     smb_fid_t *fidp;
@@ -7203,14 +7194,6 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         realDirFlag = 0;
     else
         realDirFlag = -1;
-
-    /*
-     * compute initial mode bits based on read-only flag in
-     * extended attributes
-     */
-    initialModeBits = 0666;
-    if (extAttributes & SMB_ATTR_READONLY) 
-        initialModeBits &= ~0222;
 
     pathp = smb_ParseStringCb(inp, smb_GetSMBData(inp, NULL), nameLength,
                               NULL, SMB_STRF_ANSIPATH);
@@ -7658,6 +7641,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         openAction = 2;		/* created file */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
+        smb_SetInitialModeBitsForFile(extAttributes, &setAttr);
+
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp, &req);
         if (code == 0) {
 	    created = 1;
@@ -7724,6 +7709,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
+        smb_SetInitialModeBitsForDir(extAttributes, &setAttr);
 
         pp = treeStartp;
         cp = spacep->wdata;
@@ -8068,7 +8054,6 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     unsigned int impLevel;
     unsigned int secFlags;
     unsigned int createOptions;
-    int initialModeBits;
     unsigned short baseFid;
     smb_fid_t *baseFidp;
     smb_fid_t *fidp;
@@ -8133,14 +8118,6 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         realDirFlag = 0;
     else
         realDirFlag = -1;
-
-    /*
-     * compute initial mode bits based on read-only flag in
-     * extended attributes
-     */
-    initialModeBits = 0666;
-    if (extAttributes & SMB_ATTR_READONLY) 
-        initialModeBits &= ~0222;
 
     pathp = smb_ParseStringCb(inp, (parmp + (13 * sizeof(ULONG)) + sizeof(UCHAR)),
                                nameLength, NULL, SMB_STRF_ANSIPATH);
@@ -8457,6 +8434,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         openAction = 2;		/* created file */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
+        smb_SetInitialModeBitsForFile(extAttributes, &setAttr);
+
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                           &req);
         if (code == 0) {
@@ -8509,6 +8488,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         openAction = 2;		/* created directory */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
+        smb_SetInitialModeBitsForDir(extAttributes, &setAttr);
+
         code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req, NULL);
         if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
             smb_NotifyChange(FILE_ACTION_ADDED,
