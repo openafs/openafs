@@ -3562,7 +3562,7 @@ CreateRootDir(VolumeDiskData *volHeader, IHandle_t *alinkH, VolumeId vid,
     AFSFid did, readmeid;
     afs_fsize_t length;
     Inode rootinode;
-    struct VnodeDiskObject *rootvnode;
+    struct VnodeDiskObject *rootvnode = NULL;
     struct acl_accessList *ACL;
     Inode *ip;
     afs_sfsize_t bytes;
