@@ -332,10 +332,17 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
     if (code) {
 	const char *str = afs_error_message(code);
 	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
+#ifdef HAVE_KRB5_SVC_GET_MSG
+	    krb5_svc_get_msg(code,&str);
+#else
 	    str = error_message(code);
+#endif
 	}
 	fputs(str, stderr);
 	fputs(" ", stderr);
+#ifdef HAVE_KRB5_SVC_GET_MSG
+	krb5_free_string(str);
+#endif
     }
     if (fmt) {
 	vfprintf(stderr, fmt, ap);
