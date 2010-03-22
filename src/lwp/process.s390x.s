@@ -17,10 +17,6 @@
 #define IGNORE_STDS_H  1
 #include <afs/param.h>
 
-#if defined(__linux__) && defined(__ELF__)
-        .section .note.GNU-stack,"",%progbits
-#endif
-
 	.file   "process.s"
 
               .globl savecontext
@@ -100,3 +96,6 @@ returnto:
       .returnto_end:
               .size   returnto,.returnto_end-returnto
 
+#if defined(__linux__) && defined(__ELF__)
+        .section .note.GNU-stack,"",%progbits
+#endif
