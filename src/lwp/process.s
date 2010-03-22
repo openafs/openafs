@@ -10,10 +10,6 @@
 #define	IGNORE_STDS_H	1
 #include <afs/param.h>
 
-#if defined(__linux__) && defined(__ELF__)
-	.section .note.GNU-stack,"",%progbits
-#endif
-
 #if defined(__arm32__) || defined(__arm__)
        /* register definitions */
        fp      .req    r11
@@ -1291,3 +1287,6 @@ returnto:
       blr
 #endif
 	
+#if defined(__linux__) && defined(__ELF__)
+	.section .note.GNU-stack,"",%progbits
+#endif
