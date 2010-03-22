@@ -307,7 +307,8 @@ UDP_Authenticate(int ksoc, struct sockaddr_in *client, char *name,
 	    afs_uint32 temp;	/* unsigned for safety */
 	    afs_uint32 pwexpires;
 
-	    temp = ntohl(*((afs_int32 *) (tentry.misc_auth_bytes)));
+	    memcpy(&temp, tentry.misc_auth_bytes, sizeof(afs_uint32));
+	    temp = ntohl(temp);
 	    unpack_long(temp, misc_auth_bytes);
 	    pwexpires = misc_auth_bytes[0];
 	    if (pwexpires) {

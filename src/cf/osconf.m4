@@ -1135,6 +1135,12 @@ if test "x$GCC" = "xyes"; then
   fi
 fi
 
+CFLAGS_NOSTRICT=
+
+if test "x$GCC" = "xyes"; then
+  CFLAGS_NOSTRICT="-fno-strict-aliasing"
+fi
+
 if test "x$GCC" = "xyes"; then
   CFLAGS_NOUNUSED="-Wno-unused"
 else
@@ -1191,6 +1197,7 @@ AC_SUBST(TXLIBS)
 AC_SUBST(VFSCK_CFLAGS)
 AC_SUBST(XCFLAGS)
 AC_SUBST(CFLAGS_NOERROR)
+AC_SUBST(CFLAGS_NOSTRICT)
 AC_SUBST(CFLAGS_NOUNUSED)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)

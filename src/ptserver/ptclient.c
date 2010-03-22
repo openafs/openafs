@@ -133,7 +133,9 @@ PrintEntry(afs_int32 ea, struct prentry *e, int indent)
 {
     /* handle screwed up versions of DumpEntry */
     if (e->flags & PRCONT) {
-	afs_int32 id = *(afs_int32 *) (e->name);
+	afs_int32 id;
+
+	memcpy(&id, e->name, sizeof(id));
 	if ((id != PRBADID) && ((id > (1 << 24)) || (id < -(1 << 24)))) {
 	    /* assume server incorrectly swapped these bytes... */
 	    int i = 0;
