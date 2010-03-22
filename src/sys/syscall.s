@@ -10,10 +10,6 @@
 #define	IGNORE_STDS_H
 #include <afs/param.h>
 
-#if defined(__linux__) && defined(__ELF__)
-	.section .note.GNU-stack,"",%progbits
-#endif
-
 #if defined(AFS_AIX32_ENV) && defined(RIOS)
 	/*
 	 * This is never be referenced, and is only here as placeholder;
@@ -66,3 +62,6 @@ LEAF(afs_syscall)
 #endif /* AFS_SGI_ENV */
 #endif
 
+#if defined(__linux__) && defined(__ELF__)
+	.section .note.GNU-stack,"",%progbits
+#endif
