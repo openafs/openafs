@@ -6,7 +6,7 @@
 //  Copyright 2007 INFN - National Institute of Nuclear Physics. All rights reserved.
 //
 
-#import <Kerberos/Kerberos.h>
+#import "Krb5Util.h"
 #import "AFSPropertyManager.h"
 #import "TaskUtil.h"
 
@@ -1000,23 +1000,12 @@
 //  +(void) aklog
 // -------------------------------------------------------------------------------
 -(void) aklog:(NSString*)theCell noKerberosCall:(BOOL)krb5CallEnable {
-	KLPrincipal		princ = nil;
 	KLStatus		kstatus = noErr;
-	char			*princName = 0L;
-	KLBoolean       outFoundValidTickets = false;
 	@try {
 		// trying to ket kerberos ticket
 		if(krb5CallEnable) {
-			kstatus = KLCacheHasValidTickets(nil, nil, &outFoundValidTickets, nil, nil);
-			//kstatus =  KLAcquireInitialTickets (0L, 0L, &princ,  &princName);
-			if(!outFoundValidTickets) {
-				kstatus = KLAcquireNewInitialTickets(nil, nil, &princ, &princName);
-				if(kstatus != noErr && kstatus != klUserCanceledErr) @throw [NSException exceptionWithName:@"aklog" 
-																									reason:@"KLAcquireInitialTickets" 
-																								  userInfo:nil];
-			}
+			kstatus = [Krb5Util getNewTicketIfNotPresent];
 		} else kstatus = klNoErr;
-		
 		
 		//ok to launch aklog
 		if(kstatus == klNoErr) [TaskUtil executeTaskSearchingPath:@"aklog" 
@@ -1027,11 +1016,7 @@
 		@throw e;
 	}
 	@finally {
-		// destory the kerberos va
-		if (kstatus == klNoErr) {
-			KLDisposeString (princName);
-			KLDisposePrincipal (princ);
-		}
+
 	}
 		
 }

@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #import <sys/xattr.h>
+#import "Krb5Util.h"
 
 #define LINK_ICON 'srvr'
 
@@ -34,6 +35,7 @@
 	
 	// allocate the lock for concurent afs check state
 	tokensLock = [[NSLock alloc] init];
+	renewTicketLock = [[NSLock alloc] init];
 	
 	//remove the auto eanble on menu item
 	[backgrounderMenu setAutoenablesItems:NO];
@@ -111,6 +113,7 @@
 	
 	//release the lock
 	[self stopTimer];
+	[self stopTimerRenewTicket];
 	
 	if(hasTokenImage) [hasTokenImage release];
 	if(noTokenImage) [noTokenImage release];
@@ -172,9 +175,19 @@
 	NSNumber *linkEnabledStatus =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_LINK, (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	[self updateLinkModeStatusWithpreferenceStatus:[linkEnabledStatus boolValue]];
 	
+	//check the user preference for manage the renew
+	krb5CheckRenew =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_CHECK_ENABLE,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	krb5RenewTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_RENEW_TIME,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	krb5RenewCheckTimeInterval = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	krb5SecToExpireTimeForRenew = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_SEC_TO_EXPIRE_TIME_FOR_RENEW,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+
 	
 	//set the menu name
 	[self updateAfsStatus:nil];
+
+		//stop and start the timer for krb5 renew
+	[self stopTimerRenewTicket];
+	[self startTimerRenewTicket];
 }
 
 // -------------------------------------------------------------------------------
@@ -432,6 +445,52 @@
 	[timerForCheckTokensList invalidate];	
 	timerForCheckTokensList = nil;
 }
+
+// -------------------------------------------------------------------------------
+//  startTimerRenewTicket:
+// -------------------------------------------------------------------------------
+- (void)startTimerRenewTicket {
+	//start the time for check ticket renew
+	if(timerForCheckRenewTicket || !krb5RenewCheckTimeInterval || ![krb5RenewCheckTimeInterval intValue]) return;
+	NSLog(@"startTimerRenewTicket with sec %d", [krb5RenewCheckTimeInterval intValue]);
+	timerForCheckRenewTicket = [NSTimer scheduledTimerWithTimeInterval:(krb5RenewCheckTimeInterval?[krb5RenewCheckTimeInterval intValue]:PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL_DEFAULT_VALUE)
+															   target:self
+															 selector:@selector(krb5RenewAction:)
+															 userInfo:nil
+															  repeats:YES];
+	[timerForCheckRenewTicket fire];
+}
+
+// -------------------------------------------------------------------------------
+//  stopTimerRenewTicket:
+// -------------------------------------------------------------------------------
+- (void)stopTimerRenewTicket {
+	NSLog(@"stopTimerRenewTicket");
+	if(!timerForCheckRenewTicket) return;
+	[timerForCheckRenewTicket invalidate];
+	timerForCheckRenewTicket = nil;
+}
+
+// -------------------------------------------------------------------------------
+//  krb5RenewAction:
+// -------------------------------------------------------------------------------
+- (void)krb5RenewAction:(NSTimer*)timer {
+	//Try to locking
+	if(![renewTicketLock tryLock]) return;
+	NSLog(@"krb5RenewAction %@", [NSDate date]);
+	@try {
+		[Krb5Util renewTicket:[krb5SecToExpireTimeForRenew intValue]
+					renewTime:[krb5RenewTime intValue]];
+	}
+	@catch (NSException * e) {
+	}
+	@finally {
+		[renewTicketLock unlock];
+	}
+
+
+}
+
 // -------------------------------------------------------------------------------
 //  -(void) getImageFromBundle
 // -------------------------------------------------------------------------------

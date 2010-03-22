@@ -297,6 +297,22 @@
 	NSNumber *linkEnabledStatus =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_LINK,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	[checkEnableLink setState:[linkEnabledStatus boolValue]];
 	
+	//check the user preference for manage the renew
+	NSNumber *checkRenew =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_CHECK_ENABLE,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	if(checkRenew)[nsButtonEnableDisableKrb5RenewCheck setState:[checkRenew intValue]];
+
+	NSNumber *renewTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_RENEW_TIME,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	if(renewTime && [renewTime intValue])[nsTextFieldKrb5RenewTime setIntValue:[renewTime intValue]];
+	else [nsTextFieldKrb5RenewTime setIntValue:PREFERENCE_KRB5_RENEW_TIME_DEFAULT_VALUE];
+
+	NSNumber *renewCheckTimeInterval = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	if(renewCheckTimeInterval && [renewCheckTimeInterval intValue])[nsTextFieldKrb5RenewCheckIntervall setIntValue:[renewCheckTimeInterval intValue]];
+	else [nsTextFieldKrb5RenewCheckIntervall setIntValue:PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL_DEFAULT_VALUE];
+
+	NSNumber *expireTimeForRenew = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_SEC_TO_EXPIRE_TIME_FOR_RENEW,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	if(expireTimeForRenew && [expireTimeForRenew intValue])[nsTextFieldKrb5SecToExpireDateForRenew setIntValue:[expireTimeForRenew intValue]];
+	else [nsTextFieldKrb5SecToExpireDateForRenew setIntValue:PREFERENCE_KRB5_SEC_TO_EXPIRE_TIME_FOR_RENEW_DEFAULT_VALUE];
+
 	//link configuration
 	NSData *prefData = (NSData*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_LINK_CONFIGURATION,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	linkConfiguration = (NSMutableDictionary*)[NSPropertyListSerialization propertyListFromData:prefData
@@ -312,10 +328,6 @@
 - (void) writePreferenceFile
 {
 	//Set the preference for afs path
-	/*CFPreferencesSetValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, 
-						  (CFStringRef)[((NSTextField*) installationPathTextField ) stringValue], 
-						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);*/
-	
 	//Set the preference for aklog use
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_USE_AKLOG, 
 						  (CFNumberRef)[NSNumber numberWithInt:[useAklogCheck state]], 
@@ -333,14 +345,29 @@
 	
 	//set aklog at login
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU, 
-						  (CFNumberRef)[NSNumber numberWithBool:[afsMenucheckBox state]], 
+						  (CFNumberRef)[NSNumber numberWithBool:[(NSButton*)afsMenucheckBox state]],
 						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
-	//write preference for link
+	//preference for link
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_USE_LINK,
 						  (CFNumberRef)[NSNumber numberWithBool:[checkEnableLink state]], 
 						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
+		//preference for renew time
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_KRB5_RENEW_TIME,
+						  (CFNumberRef)[NSNumber numberWithInt:[nsTextFieldKrb5RenewTime intValue]],
+						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+
+		//expire time for renew
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_KRB5_SEC_TO_EXPIRE_TIME_FOR_RENEW,
+						  (CFNumberRef)[NSNumber numberWithInt:[nsTextFieldKrb5SecToExpireDateForRenew intValue]],
+						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+
+		//sec to expiretime for renew job
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL,
+						  (CFNumberRef)[NSNumber numberWithInt:[nsTextFieldKrb5RenewCheckIntervall intValue]],
+						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kPrefChangeNotification];
@@ -800,7 +827,7 @@
 -(IBAction) afsMenuActivationEvent:(id) sender
 {
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU, 
-						  (CFNumberRef)[NSNumber numberWithBool:[afsMenucheckBox state]], 
+						  (CFNumberRef)[NSNumber numberWithBool:[(NSButton*)afsMenucheckBox state]],
 						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
@@ -1041,7 +1068,48 @@
 		[tableViewLink reloadData];
 	}
 }
+// -------------------------------------------------------------------------------
+//  tableViewLinkPerformClick:
+// -------------------------------------------------------------------------------
+- (IBAction) enableDisableKrb5RenewCheck:(id) sender {
+	//NSLog(@"enableDisableKrb5RenewCheck");
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_KRB5_CHECK_ENABLE,
+						  (CFNumberRef) [NSNumber numberWithInt:[(NSButton*)sender intValue]],
+						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+		//notify the backgrounder
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kPrefChangeNotification];
+}
+// -------------------------------------------------------------------------------
+//  tableViewLinkPerformClick:
+// -------------------------------------------------------------------------------
+- (IBAction) krb5RenewParamChange:(id) sender {
+	//NSLog(@"krb5RenewParamChange %@", [sender description]);
+	CFStringRef prefStr = 0L;
+	NSNumber *newNumberValue = [NSNumber numberWithInt:[(NSButton*)sender intValue]];
 
+	switch([(NSControl*)sender tag]){
+		case 1:{
+			prefStr = (CFStringRef)PREFERENCE_KRB5_RENEW_TIME;
+		}
+		break;
+
+		case 2:{
+			prefStr = (CFStringRef)PREFERENCE_KRB5_SEC_TO_EXPIRE_TIME_FOR_RENEW;
+		}
+		break;
+
+		case 3:{
+			prefStr = (CFStringRef)PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL;
+		}
+		break;
+	}
+
+		/*CFPreferencesSetValue(prefStr,
+						  (CFNumberRef)newNumberValue,
+						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);*/
+}
 @end
 
 @implementation AFSCommanderPref (NSTableDataSource)

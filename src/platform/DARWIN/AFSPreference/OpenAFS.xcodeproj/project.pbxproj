@@ -28,6 +28,10 @@
 		324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */; };
 		324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D683B0DA133A3007E1561 /* IpPanel.xib */; };
 		324D684A0DA133CF007E1561 /* CredentialPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D68480DA133CF007E1561 /* CredentialPanel.xib */; };
+		324F490E115548E2001A763B /* Krb5Util.h in Headers */ = {isa = PBXBuildFile; fileRef = 324F490C115548E2001A763B /* Krb5Util.h */; };
+		324F490F115548E2001A763B /* Krb5Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 324F490D115548E2001A763B /* Krb5Util.m */; };
+		324F4910115548ED001A763B /* Krb5Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 324F490D115548E2001A763B /* Krb5Util.m */; };
+		324F492D11554AF2001A763B /* Krb5Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 324F490D115548E2001A763B /* Krb5Util.m */; };
 		325311D00C44F4B100FAF2F3 /* license.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 325311CF0C44F4B100FAF2F3 /* license.rtf */; };
 		3273088D0C2A9B05008C322B /* FileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 3273088B0C2A9B05008C322B /* FileUtil.h */; };
 		3273088E0C2A9B05008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
@@ -169,6 +173,8 @@
 		324D67FC0DA13194007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/OpenAFSPreference.xib; sourceTree = "<group>"; };
 		324D683C0DA133A3007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/IpPanel.xib; sourceTree = "<group>"; };
 		324D68490DA133CF007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CredentialPanel.xib; sourceTree = "<group>"; };
+		324F490C115548E2001A763B /* Krb5Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Krb5Util.h; sourceTree = "<group>"; };
+		324F490D115548E2001A763B /* Krb5Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Krb5Util.m; sourceTree = "<group>"; };
 		325311CF0C44F4B100FAF2F3 /* license.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = license.rtf; sourceTree = "<group>"; };
 		3273088B0C2A9B05008C322B /* FileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtil.h; sourceTree = "<group>"; };
 		3273088C0C2A9B05008C322B /* FileUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileUtil.m; sourceTree = "<group>"; };
@@ -434,6 +440,8 @@
 				498DCB420DC2240B00D143C8 /* PListManager.m */,
 				49B766430DCA47A50014A80F /* DialogUtility.h */,
 				49B766440DCA47A50014A80F /* DialogUtility.m */,
+				324F490C115548E2001A763B /* Krb5Util.h */,
+				324F490D115548E2001A763B /* Krb5Util.m */,
 			);
 			name = Utility;
 			sourceTree = "<group>";
@@ -524,6 +532,7 @@
 				498DCB430DC2240B00D143C8 /* PListManager.h in Headers */,
 				49B766450DCA47A50014A80F /* DialogUtility.h in Headers */,
 				32DE818C0DF573200069A05C /* LynkCreationController.h in Headers */,
+				324F490E115548E2001A763B /* Krb5Util.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -692,6 +701,7 @@
 				3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */,
 				3231522210243E09005901AA /* AFSMenuExtraView.m in Sources */,
 				3231522610243E10005901AA /* CredentialWindowController.m in Sources */,
+				324F4910115548ED001A763B /* Krb5Util.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -726,6 +736,7 @@
 				49683F420C344CDA0093C7C8 /* AuthUtil.m in Sources */,
 				49683F430C344CDB0093C7C8 /* TaskUtil.m in Sources */,
 				4934D4170DC38958000511D2 /* PListManager.m in Sources */,
+				324F492D11554AF2001A763B /* Krb5Util.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -748,6 +759,7 @@
 				498DCB440DC2240B00D143C8 /* PListManager.m in Sources */,
 				49B766460DCA47A50014A80F /* DialogUtility.m in Sources */,
 				32DE818D0DF573200069A05C /* LynkCreationController.m in Sources */,
+				324F490F115548E2001A763B /* Krb5Util.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

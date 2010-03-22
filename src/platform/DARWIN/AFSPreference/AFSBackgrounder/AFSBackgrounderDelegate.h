@@ -31,23 +31,34 @@
 	NSImage	*hasTokenImage;
 	NSImage	*noTokenImage;
 	
+	//krb5 renew
+	NSNumber *krb5CheckRenew;
+	NSNumber *krb5RenewTime;
+	NSNumber *krb5RenewCheckTimeInterval;
+	NSNumber *krb5SecToExpireTimeForRenew;
+
 	//credential windows mainWindow
 	AFSMenuCredentialContoller *credentialMenuController;
 
 	//NSTimer for tokens refresh
 	NSTimer *timerForCheckTokensList;
+	NSTimer *timerForCheckRenewTicket;
 	NSLock *tokensLock;
+	NSLock *renewTicketLock;
 	bool currentLinkActivationStatus;
 	NSMutableDictionary *linkConfiguration;
 	NSLock *linkCreationLock;
 }
 - (void)startTimer;
 - (void)stopTimer;
+- (void)startTimerRenewTicket;
+- (void)stopTimerRenewTicket;
 - (BOOL)useAklogPrefValue;
 - (void)readPreferenceFile:(NSNotification *)notification;
 - (void)getToken:(id)sender;
 - (void)releaseToken:(id)sender;
 - (void)updateAfsStatus:(NSTimer*)timer;
+- (void)krb5RenewAction:(NSTimer*)timer;
 - (void)klogUserEven:(NSNotification *)notification;
 - (void)switchHandler:(NSNotification*) notification;
 - (void)chageMenuVisibility:(NSNotification *)notification;
