@@ -436,6 +436,9 @@ afs_osi_proc2cred(afs_proc_t * pr)
 {
     afs_ucred_t *rv = NULL;
     static afs_ucred_t cr;
+#if defined(AFS_FBSD80_ENV)
+    osi_Panic("proc2cred broken for dynamic cr_groups");
+#endif
 
     if (pr == NULL) {
 	return NULL;

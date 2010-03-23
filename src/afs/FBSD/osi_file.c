@@ -17,7 +17,9 @@
 
 
 int afs_osicred_initialized = 0;
+#ifndef AFS_FBSD80_ENV	/* cr_groups is now malloc()'d */
 afs_ucred_t afs_osi_cred;
+#endif
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;

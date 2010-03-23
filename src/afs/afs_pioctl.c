@@ -4490,7 +4490,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
 #elif !defined(AFS_LINUX26_ENV) && !defined(AFS_SUN510_ENV)
-# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD80_ENV)
     newcred->cr_ngroups = 2;
 # else
     for (i = 2; i < NGROUPS; i++)

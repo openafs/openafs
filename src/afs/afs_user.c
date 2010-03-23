@@ -631,7 +631,11 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 
     afs_GCPAGs_perproc_count++;
 
+#if defined(AFS_FBSD80_ENV)
+    pcred = pproc->p_ucred;	/* XXX locking (or just use thread creds) */
+#else
     pcred = afs_osi_proc2cred(pproc);
+#endif
     if (!pcred)
 	return;
 
