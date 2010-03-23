@@ -745,11 +745,6 @@ extern unsigned int smb_IsDotFile(clientchar_t *lastComp);
 extern afs_uint32 smb_AsyncStore;
 extern afs_uint32 smb_AsyncStoreSize;
 
-extern int smb_unixModeDefaultFile;
-extern int smb_unixModeDefaultDir;
-extern void smb_SetInitialModeBitsForFile(int smb_attr, cm_attr_t * attr);
-extern void smb_SetInitialModeBitsForDir(int smb_attr, cm_attr_t * attr);
-
 /* the following are used for smb auth */
 extern int smb_authType; /* Type of SMB authentication to be used. One from below. */
 
@@ -839,6 +834,12 @@ extern void smb_InitReq(cm_req_t *reqp);
 #include "smb_ioctl.h"
 #include "smb_iocons.h"
 #include "smb_rpc.h"
+#include "cm_vnodeops.h"
+
+extern int smb_unixModeDefaultFile;
+extern int smb_unixModeDefaultDir;
+extern void smb_SetInitialModeBitsForFile(int smb_attr, cm_attr_t * attr);
+extern void smb_SetInitialModeBitsForDir(int smb_attr, cm_attr_t * attr);
 
 cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, clientchar_t *usern);
 
