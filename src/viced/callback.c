@@ -193,8 +193,6 @@ static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 				 struct AFSCBFids *afidp, struct host *xhost);
 static int MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 				      struct VCBParams *parms, int deletefe);
-static int MultiBreakVolumeCallBack(struct host *host, int isheld,
-				    void *rock);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 void *rock);
 static int GetSomeSpace_r(struct host *hostp, int locked);
@@ -1169,22 +1167,6 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
     parms->cba[(parms->ncbas)++].thead = parms->thead;
     host->hostFlags &= ~HCBREAK;
     return 1;		/* parent shouldn't release hold, more work to do */
-}
-
-/*
-** isheld is 0 if the host is held in h_Enumerate
-** isheld is 1 if the host is held in BreakVolumeCallBacks
-*/
-static int
-MultiBreakVolumeCallBack(struct host *host, int isheld, void *rock)
-{
-    struct VCBParams *parms = (struct VCBParams *) rock;
-    
-    int retval;
-    H_LOCK;
-    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
-    H_UNLOCK;
-    return retval;
 }
 
 /*
