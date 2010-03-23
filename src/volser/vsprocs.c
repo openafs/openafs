@@ -1147,8 +1147,8 @@ static void *
 do_interrupt(void * unused)
 {
     if (interrupt) {
-#ifndef AFS_PTHREAD_ENV
-	/* Avoid LWP from getting confused that our stack has suddenly
+#if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+	/* Avoid UNIX LWP from getting confused that our stack has suddenly
 	 * changed. This will avoid some sanity checks, but until a better way
 	 * is found, the only alternative is always crashing and burning on at
 	 * least the stack-overflow check. */
