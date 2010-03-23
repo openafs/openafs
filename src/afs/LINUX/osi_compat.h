@@ -51,32 +51,6 @@ afs_posix_test_lock(struct file *fp, struct file_lock *flp) {
 #endif
 }
 
-#ifdef DCACHE_NFSFS_RENAMED
-static inline void
-afs_linux_clear_nfsfs_renamed(struct dentry *dp) {
-    spin_lock(&dp->d_lock);
-    dp->d_flags &= ~DCACHE_NFSFS_RENAMED;
-    spin_unlock(&dp->d_lock);
-}
-
-static inline void
-afs_linux_set_nfsfs_renamed(struct dentry *dp) {
-    spin_lock(&dp->d_lock);
-    dp->d_flags |= DCACHE_NFSFS_RENAMED;
-    spin_unlock(&dp->d_lock);
-}
-#else
-static inline void afs_linux_clear_nfsfs_renamed(void) { return; }
-static inline void afs_linux_set_nfsfs_renamed(void) { return; }
-#endif
-
-#ifndef HAVE_KERNEL_HLIST_UNHASHED
-static void
-hlist_unhashed(const struct hlist_node *h) {
-    return (!h->pprev == NULL);
-}
-#endif
-
 #if defined(WRITEPAGE_ACTIVATE)
 #define AOP_WRITEPAGE_ACTIVATE WRITEPAGE_ACTIVATE
 #endif
