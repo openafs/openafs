@@ -62,7 +62,7 @@
 #endif /* KERNEL */
 
 /* Static prototypes */
-#if AFS_XDR_64BITOPS
+#ifdef AFS_XDR_64BITOPS
 static bool_t xdrrx_getint64(XDR *axdrs, long *lp);
 static bool_t xdrrx_putint64(XDR *axdrs, long *lp);
 #endif /* AFS_XDR_64BITOPS */
