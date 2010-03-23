@@ -1815,11 +1815,12 @@ afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 
     code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
                                     offset, to - offset);
-#if !defined(AFS_LINUX26_ENV)
-    kunmap(page);
-#endif
+#if defined(AFS_LINUX26_ENV)
     if (code == WRITEPAGE_ACTIVATE)
 	code = -EIO;
+#else
+    kunmap(page);
+#endif
 
     return code;
 }
