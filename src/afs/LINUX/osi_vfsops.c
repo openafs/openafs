@@ -140,20 +140,22 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+#if defined(AFS_LINUX26_ENV)
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
-#if defined(HAVE_BDI_INIT)
+# if defined(HAVE_BDI_INIT)
     bdi_init(afs_backing_dev_info);
-#endif
-#if defined(STRUCT_BDI_HAS_NAME)
+# endif
+# if defined(STRUCT_BDI_HAS_NAME)
     afs_backing_dev_info->name = "openafs";
-#endif
+# endif
     afs_backing_dev_info->ra_pages = 0;
-#if defined (STRUCT_SUPER_BLOCK_HAS_S_BDI)
+# if defined (STRUCT_SUPER_BLOCK_HAS_S_BDI)
     sb->s_bdi = afs_backing_dev_info;
     /* The name specified here will appear in the flushing thread name - flush-afs */
     bdi_register(afs_backing_dev_info, NULL, "afs");
-#endif
+# endif
+#endif /* AFS_LINUX26_ENV */
 #if defined(MAX_NON_LFS)
 #ifdef AFS_64BIT_CLIENT
 #if !defined(MAX_LFS_FILESIZE)
@@ -380,10 +382,12 @@ afs_put_super(struct super_block *sbp)
 #endif
 
     osi_linux_verify_alloced_memory();
-#if defined(HAVE_BDI_INIT)
+#if defined(AFS_LINUX26_ENV)
+# if defined(HAVE_BDI_INIT)
     bdi_destroy(afs_backing_dev_info);
-#endif
+# endif
     osi_Free(afs_backing_dev_info, sizeof(struct backing_dev_info));
+#endif /* AFS_LINUX26_ENV */
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;
