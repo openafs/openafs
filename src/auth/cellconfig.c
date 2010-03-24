@@ -1251,6 +1251,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		strlcpy(acellInfo->name, realCellName,
 			sizeof(acellInfo->name));
 		free(realCellName);
+		realCellName = NULL;
 	    }
 	}
 	acellInfo->linkedCell = NULL;       /* no linked cell */
