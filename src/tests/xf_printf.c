@@ -33,6 +33,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "xfiles.h"
 #include "xf_errs.h"
@@ -514,8 +516,6 @@ vxfprintf(XFILE * X, char *fmt, va_list ap)
     if (lit && (err = xfwrite(X, lit, fmt - lit)))
 	return err;
     return 0;
-  lose:
-    return err;
 }
 
 

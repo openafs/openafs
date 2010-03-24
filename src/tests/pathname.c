@@ -123,7 +123,7 @@ vnode_stop(afs_vnode * v, XFILE * X, void *refcon)
 
     /* If the file is seekable, try to position so we can pick up later... */
     if (phi->p->flags & DSFLAG_SEEK)
-	if (r = xfseek(X, &v->offset))
+      if ((r = xfseek(X, &v->offset)))
 	    return r;
     return DSERR_DONE;
 }
@@ -158,7 +158,6 @@ afs_uint32
 Path_PreScan(XFILE * X, path_hashinfo * phi, int full)
 {
     dump_parser my_p, *p = phi->p;
-    int r;
 
     memset(phi, 0, sizeof(path_hashinfo));
     phi->p = p;
@@ -239,7 +238,7 @@ Path_Follow(XFILE * X, path_hashinfo * phi, char *path, vhash_ent * his_vhe)
 				    "Directory vnode %d is incomplete", vnum);
 	    return DSERR_FMT;
 	}
-	if (r = xfseek(X, &vhe->d_offset)) {
+	if ((r = xfseek(X, &vhe->d_offset))) {
 	    if (phi->p->cb_error)
 		(phi->p->cb_error) (r, 1, phi->p->err_refcon,
 				    "Unable to seek to directory %d", vnum);
@@ -339,7 +338,7 @@ Path_Build(XFILE * X, path_hashinfo * phi, afs_uint32 vnode, char **his_path,
 		    free(path);
 		return DSERR_FMT;
 	    }
-	    if (r = xfseek(X, &vhe->d_offset)) {
+	    if ((r = xfseek(X, &vhe->d_offset))) {
 		if (phi->p->cb_error)
 		    (phi->p->cb_error) (errno, 1, phi->p->err_refcon,
 					"Unable to seek to directory %d",

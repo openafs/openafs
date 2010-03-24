@@ -94,8 +94,8 @@ handle_return(int r, XFILE * X, unsigned char tag, dump_parser * p)
 }
 
 
-/* Prepare a tag_parse_info for use by the dump parser. *
-/*** THIS FUNCTION INTENDED FOR INTERNAL USE ONLY ***/
+/* Prepare a tag_parse_info for use by the dump parser. */
+/* ** THIS FUNCTION INTENDED FOR INTERNAL USE ONLY ** */
 void
 prep_pi(dump_parser * p, tag_parse_info * pi)
 {
@@ -121,18 +121,18 @@ match_next_vnode(XFILE * X, dump_parser * p, u_int64 * where,
     afs_uint32 r, x, y, z;
     unsigned char tag;
 
-    if (r = xfseek(X, where))
+    if ((r = xfseek(X, where)))
 	return r;
-    if (r = ReadByte(X, &tag))
+    if ((r = ReadByte(X, &tag)))
 	return r;
     switch (tag) {
     case 3:			/* A vnode? */
-	if (r = ReadInt32(X, &x))
+	if ((r = ReadInt32(X, &x)))
 	    return r;
-	if (r = ReadInt32(X, &y))
+	if ((r = ReadInt32(X, &y)))
 	    return r;
-	if (r = ReadByte(X, &tag))
-	    return r;
+	if ((r = ReadByte(X, &tag)))
+	  return r;
 	if (!((vnode & 1) && !(x & 1) && x < vnode)
 	    && !((vnode & 1) == (x & 1) && x > vnode))
 	    return DSERR_FMT;
@@ -146,7 +146,7 @@ match_next_vnode(XFILE * X, dump_parser * p, u_int64 * where,
 	case 3:		/* Another vnode? - Only if this is a non-directory */
 	    if (x & 1)
 		return DSERR_FMT;
-	    if (r = ReadInt32(X, &z))
+	    if ((r = ReadInt32(X, &z)))
 		return r;
 	    if (!((x & 1) && !(z & 1) && z < x)
 		&& !((x & 1) == (z & 1) && z > x))
@@ -156,14 +156,14 @@ match_next_vnode(XFILE * X, dump_parser * p, u_int64 * where,
 	case 4:		/* Dump end - Only if this is a non-directory */
 	    if (x & 1)
 		return DSERR_FMT;
-	    if (r = ReadInt32(X, &z))
+	    if ((r = ReadInt32(X, &z)))
 		return r;
 	    if (z != DUMPENDMAGIC)
 		return DSERR_FMT;
 	    return 0;
 
 	case 't':		/* Vnode type byte */
-	    if (r = ReadByte(X, &tag))
+	    if ((r = ReadByte(X, &tag)))
 		return r;
 	    if ((tag == vFile || tag == vSymlink) && !(x & 1))
 		return 0;
@@ -176,7 +176,7 @@ match_next_vnode(XFILE * X, dump_parser * p, u_int64 * where,
 	}
 
     case 4:			/* A dump end? */
-	if (r = ReadInt32(X, &x))
+	if ((r = ReadInt32(X, &x)))
 	    return r;
 	if (x != DUMPENDMAGIC)
 	    return DSERR_FMT;

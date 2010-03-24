@@ -64,9 +64,9 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
     char buf[STAGE_HDRLEN];
     struct stage_header *bckhdr = (struct stage_header *)buf;
     u_int64 where;
-    afs_uint32 r;
+    afs_int32 r;
 
-    if (r = xftell(X, &where))
+    if ((r = xftell(X, &where)))
 	return r;
     if (hdr)
 	memset(hdr, 0, sizeof(*hdr));
@@ -117,9 +117,9 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 		free(hdr->volname);
 	    return ENOMEM;
 	}
-	strcpy(hdr->server, bckhdr->c_host);
-	strcpy(hdr->part, bckhdr->c_disk);
-	strcpy(hdr->volname, bckhdr->c_name);
+	strcpy((char *)hdr->server, bckhdr->c_host);
+	strcpy((char *)hdr->part, bckhdr->c_disk);
+	strcpy((char *)hdr->volname, bckhdr->c_name);
     }
 
     if (tag)
@@ -150,15 +150,15 @@ DumpStageHdr(XFILE * OX, backup_system_header * hdr)
     bckhdr->c_magic = htonl(STAGE_MAGIC);
     bckhdr->c_flags = htonl(hdr->flags);
 
-    strcpy(bckhdr->c_host, hdr->server);
-    strcpy(bckhdr->c_disk, hdr->part);
-    strcpy(bckhdr->c_name, hdr->volname);
+    strcpy(bckhdr->c_host, (char *)hdr->server);
+    strcpy(bckhdr->c_disk, (char *)hdr->part);
+    strcpy(bckhdr->c_name, (char *)hdr->volname);
 
     /* Now, compute the checksum */
     checksum = hdr_checksum(buf, STAGE_HDRLEN);
     bckhdr->c_checksum = htonl(STAGE_CHECKSUM - checksum);
 
-    if (r = xfwrite(OX, buf, STAGE_HDRLEN))
+    if ((r = xfwrite(OX, buf, STAGE_HDRLEN)))
 	return r;
     return 0;
 }

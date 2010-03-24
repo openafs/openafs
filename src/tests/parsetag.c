@@ -67,7 +67,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
     for (;;) {
 	if (i < 0 || (fields[i].kind & DKIND_MASK) != DKIND_SPECIAL) {
 	    /* Need to read in a tag */
-	    if (r = ReadByte(X, tag))
+	    if ((r = ReadByte(X, tag)))
 		return r;
 	}
 
@@ -83,10 +83,10 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	    char buf1[21], buf2[21], buf3[21];
 	    char *p1, *p2, *p3;
 
-	    if (r = xftell(X, &tmp64a))
+	    if ((r = xftell(X, &tmp64a)))
 		return r;
 	    sub64_32(where, tmp64a, pi->shift_offset + 1);
-	    if (r = xfseek(X, &where))
+	    if ((r = xfseek(X, &where)))
 		return r;
 	    if (pi->cb_error) {
 		(pi->cb_error) (DSERR_FMT, 0, pi->err_refcon,
@@ -102,18 +102,18 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 				p2, p3);
 	    }
 	    pi->shift_offset = 0;
-	    if (r = ReadByte(X, tag))
+	    if ((r = ReadByte(X, tag)))
 		return r;
 	}
 	if (!*tag && (pi->flags & TPFLAG_SKIP)) {
 	    int count = 0;
 	    u_int64 where, tmp64a;
 
-	    if (r = xftell(X, &where))
+	    if ((r = xftell(X, &where)))
 		return r;
 
 	    while (!*tag) {
-		if (r = ReadByte(X, tag))
+		if ((r = ReadByte(X, tag)))
 		    return r;
 		count++;
 	    }
@@ -142,7 +142,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	    break;
 
 	case DKIND_BYTE:
-	    if (r = ReadByte(X, &val8))
+	    if ((r = ReadByte(X, &val8)))
 		return r;
 	    if (fields[i].func) {
 		r = (fields[i].func) (X, 0, fields + i, val8, pi, g_refcon,
@@ -153,7 +153,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	    break;
 
 	case DKIND_INT16:
-	    if (r = ReadInt16(X, &val16))
+	    if ((r = ReadInt16(X, &val16)))
 		return r;
 	    if (fields[i].func) {
 		r = (fields[i].func) (X, 0, fields + i, val16, pi, g_refcon,
@@ -164,7 +164,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	    break;
 
 	case DKIND_INT32:
-	    if (r = ReadInt32(X, &val))
+	    if ((r = ReadInt32(X, &val)))
 		return r;
 	    if (fields[i].func) {
 		r = (fields[i].func) (X, 0, fields + i, val, pi, g_refcon,
@@ -175,7 +175,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	    break;
 
 	case DKIND_STRING:
-	    if (r = ReadString(X, &strval))
+	    if ((r = ReadString(X, &strval)))
 		return r;
 	    if (fields[i].func) {
 		r = (fields[i].func) (X, strval, fields + i, 0, pi, g_refcon,

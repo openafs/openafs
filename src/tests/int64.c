@@ -57,7 +57,7 @@ hexify_int64(u_int64 * X, char *buf)
 #else
     if (!buf)
 	buf = mybuf;
-    sprintf(buf, "%08lx%08lx", X->hi, X->lo);
+    sprintf(buf, "%08lx%08lx", (unsigned long)X->hi, (unsigned long)X->lo);
 #endif
 
     return buf;

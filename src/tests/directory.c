@@ -45,7 +45,7 @@ static afs_dir_page page;
 
 #define allocbit(x) (page.header.freebitmap[(x)>>3] & (1 << ((x) & 7)))
 #define DPHE (DHE + 1)
-
+#if 0
 static void
 fixup(char *name, int l)
 {
@@ -57,14 +57,14 @@ fixup(char *name, int l)
 	name++;
     }
 }
-
+#endif
 afs_uint32
 parse_directory(XFILE * X, dump_parser * p, afs_vnode * v, afs_uint32 size,
 		int toeof)
 {
     afs_dir_entry de;
-    int pgno, i, j, l, n;
-    afs_uint32 r;
+    int pgno, i, l, n;
+    afs_int32 r;
     u_int64 where;
 
     if (p->print_flags & DSPRINT_DIR) {
@@ -76,8 +76,8 @@ parse_directory(XFILE * X, dump_parser * p, afs_vnode * v, afs_uint32 size,
     for (pgno = 0; toeof || size; pgno++, size -= (toeof ? 0 : AFS_PAGESIZE)) {
 	if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where)))
 	    return r;
-	if (r = xfread(X, &page, AFS_PAGESIZE)) {
-	    if (toeof && r == ERROR_XFILE_EOF)
+	if ((r = xfread(X, &page, AFS_PAGESIZE))) {
+	  if (toeof && (r == ERROR_XFILE_EOF))
 		break;
 	    return r;
 	}
@@ -139,6 +139,7 @@ ParseDirectory(XFILE * X, dump_parser * p, afs_uint32 size, int toeof)
     afs_uint32 r;
 
     r = parse_directory(X, p, 0, size, toeof);
+    return r;
 }
 
 

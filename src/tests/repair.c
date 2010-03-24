@@ -46,12 +46,14 @@ XFILE repair_output;
 int repair_verbose;
 #define RV repair_verbose
 
+extern afs_uint32 CopyVNodeData(XFILE * OX, XFILE * X, afs_uint32 size);
+extern afs_uint32 DumpVNodeData(XFILE * OX, char *buf, afs_uint32 size);
 
 /* Try to dump a dump header.  Generate missing fields, if neccessary */
 afs_uint32
 repair_dumphdr_cb(afs_dump_header * hdr, XFILE * X, void *refcon)
 {
-    afs_uint32 r, field_mask = hdr->field_mask;
+    afs_uint32 field_mask = hdr->field_mask;
     char volname[22];
 
     if (!(field_mask & F_DUMPHDR_VOLID)) {
@@ -68,7 +70,7 @@ repair_dumphdr_cb(afs_dump_header * hdr, XFILE * X, void *refcon)
 	hdr->volname = (unsigned char *)malloc(strlen(volname) + 1);
 	if (!hdr->volname)
 	    return ENOMEM;
-	strcpy(hdr->volname, volname);
+	strcpy((char *)hdr->volname, volname);
 	hdr->field_mask |= F_DUMPHDR_VOLNAME;
     }
     if (!(field_mask & F_DUMPHDR_FROM)) {
@@ -93,7 +95,7 @@ repair_dumphdr_cb(afs_dump_header * hdr, XFILE * X, void *refcon)
 afs_uint32
 repair_volhdr_cb(afs_vol_header * hdr, XFILE * X, void *refcon)
 {
-    afs_uint32 r, field_mask = hdr->field_mask;
+    afs_uint32 field_mask = hdr->field_mask;
     char volname[22];
 
     if (!(field_mask & F_VOLHDR_VOLID)) {
@@ -121,7 +123,7 @@ repair_volhdr_cb(afs_vol_header * hdr, XFILE * X, void *refcon)
 	hdr->volname = (unsigned char *)malloc(strlen(volname) + 1);
 	if (!hdr->volname)
 	    return ENOMEM;
-	strcpy(hdr->volname, volname);
+	strcpy((char *)hdr->volname, volname);
 	hdr->field_mask |= F_VOLHDR_VOLNAME;
     }
     if (!(field_mask & F_VOLHDR_INSERV)) {
@@ -246,7 +248,7 @@ repair_vnode_cb(afs_vnode * v, XFILE * X, void *refcon)
 
     if ((v->vnode & 1) && !field_mask) {
 	if (RV)
-	    fprintf(stderr, ">>> VNODE %d is directory but has no fields?\n");
+	    fprintf(stderr, ">>> VNODE %d is directory but has no fields?\n", v->vnode);
 	v->type = vDirectory;
 	v->field_mask |= F_VNODE_TYPE;
 	field_mask = F_VNODE_TYPE;	/* Messy! */
@@ -329,7 +331,7 @@ repair_vnode_cb(afs_vnode * v, XFILE * X, void *refcon)
     }
     if (field_mask && !(field_mask & F_VNODE_SIZE)) {
 	if (RV)
-	    fprintf(stderr, ">>> VNODE %d has no data size (using 0)\n");
+	    fprintf(stderr, ">>> VNODE %d has no data size (using 0)\n", v->vnode);
 	v->size = 0;
 	v->field_mask |= F_VNODE_SIZE;
     }
@@ -343,7 +345,7 @@ repair_vnode_cb(afs_vnode * v, XFILE * X, void *refcon)
     if (field_mask && v->type == vDirectory && !(field_mask & F_VNODE_ACL)) {
 	struct acl_accessList *acl = (struct acl_accessList *)v->acl;
 	if (RV) {
-	    fprintf(stderr, ">>> VNODE %d is directory but has no ACL\n");
+	    fprintf(stderr, ">>> VNODE %d is directory but has no ACL\n", v->vnode);
 	    fprintf(stderr, ">>> Will generate default ACL\n");
 	}
 	memset(v->acl, 0, SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE);
@@ -366,7 +368,7 @@ repair_vnode_cb(afs_vnode * v, XFILE * X, void *refcon)
 	return r;
 
     if (v->size) {
-	if (r = xfseek(X, &v->d_offset))
+	if ((r = xfseek(X, &v->d_offset)))
 	    return r;
 	r = CopyVNodeData(&repair_output, X, v->size);
     } else if (v->type == vDirectory) {
@@ -376,7 +378,7 @@ repair_vnode_cb(afs_vnode * v, XFILE * X, void *refcon)
 
 	if (RV) {
 	    fprintf(stderr,
-		    ">>> VNODE %d is directory but has no contents\n");
+		    ">>> VNODE %d is directory but has no contents\n", v->vnode);
 	    fprintf(stderr, ">>> Will generate deafult directory entries\n");
 	}
 	memset(&page, 0, sizeof(page));
