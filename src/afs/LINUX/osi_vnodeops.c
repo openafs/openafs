@@ -735,8 +735,12 @@ static inline void
 check_bad_parent(struct dentry *dp)
 {
     cred_t *credp;
-    struct vcache *vcp = VTOAFS(dp->d_inode), *avc = NULL;
-    struct vcache *pvc = VTOAFS(dp->d_parent->d_inode);
+    struct dentry *parent;
+    struct vcache *vcp, *pvc, *avc = NULL;
+
+    vcp = VTOAFS(dp->d_inode);
+    parent = dget_parent(dp);
+    pvc = VTOAFS(parent->d_inode);
 
     if (vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
 	credp = crref();
@@ -753,6 +757,8 @@ check_bad_parent(struct dentry *dp)
 	    AFS_RELE(AFSTOV(avc));
 	crfree(credp);
     }
+
+    dput(parent);
 
     return;
 }
