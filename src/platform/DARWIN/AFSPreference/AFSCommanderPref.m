@@ -302,8 +302,20 @@
 	if(checkRenew)[nsButtonEnableDisableKrb5RenewCheck setState:[checkRenew intValue]];
 
 	NSNumber *renewTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_RENEW_TIME,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-	if(renewTime && [renewTime intValue])[nsTextFieldKrb5RenewTime setIntValue:[renewTime intValue]];
-	else [nsTextFieldKrb5RenewTime setIntValue:PREFERENCE_KRB5_RENEW_TIME_DEFAULT_VALUE];
+	if(!renewTime) renewTime = [NSNumber numberWithInt:PREFERENCE_KRB5_RENEW_TIME_DEFAULT_VALUE];
+
+		//update gui
+	NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+	NSDateComponents *weekdayComponents = [gregorian components:(NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit) 
+													   fromDate:[NSDate dateWithTimeIntervalSince1970:[renewTime intValue]]];
+	[nsTextFieldKrb5RenewTimeD setIntValue:[weekdayComponents day]-1];
+	[nsTextFieldKrb5RenewTimeH setIntValue:[weekdayComponents hour]-1];
+	[nsTextFieldKrb5RenewTimeM setIntValue:[weekdayComponents minute]];
+	[nsTextFieldKrb5RenewTimeS setIntValue:[weekdayComponents second]];
+	[nsStepperKrb5RenewTimeD setIntValue:[weekdayComponents day]-1];
+	[nsStepperKrb5RenewTimeH setIntValue:[weekdayComponents hour]-1];
+	[nsStepperKrb5RenewTimeM setIntValue:[weekdayComponents minute]];
+	[nsStepperKrb5RenewTimeS setIntValue:[weekdayComponents second]];
 
 	NSNumber *renewCheckTimeInterval = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	if(renewCheckTimeInterval && [renewCheckTimeInterval intValue])[nsTextFieldKrb5RenewCheckIntervall setIntValue:[renewCheckTimeInterval intValue]];
@@ -354,8 +366,14 @@
 						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
 		//preference for renew time
+	NSLog(@"%d %d %d %d", [nsTextFieldKrb5RenewTimeD intValue],[nsTextFieldKrb5RenewTimeH intValue],[nsTextFieldKrb5RenewTimeM intValue],[nsTextFieldKrb5RenewTimeS intValue]);
+	NSInteger totalSeconds =	([nsTextFieldKrb5RenewTimeD intValue]*24*60*60)+
+								([nsTextFieldKrb5RenewTimeH intValue]*60*60)+
+								([nsTextFieldKrb5RenewTimeM intValue]*60)+
+								[nsTextFieldKrb5RenewTimeS intValue];
+
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_KRB5_RENEW_TIME,
-						  (CFNumberRef)[NSNumber numberWithInt:[nsTextFieldKrb5RenewTime intValue]],
+						  (CFNumberRef)[NSNumber numberWithInt:totalSeconds],
 						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 
 		//expire time for renew
@@ -1084,31 +1102,6 @@
 //  tableViewLinkPerformClick:
 // -------------------------------------------------------------------------------
 - (IBAction) krb5RenewParamChange:(id) sender {
-	//NSLog(@"krb5RenewParamChange %@", [sender description]);
-	CFStringRef prefStr = 0L;
-	NSNumber *newNumberValue = [NSNumber numberWithInt:[(NSButton*)sender intValue]];
-
-	switch([(NSControl*)sender tag]){
-		case 1:{
-			prefStr = (CFStringRef)PREFERENCE_KRB5_RENEW_TIME;
-		}
-		break;
-
-		case 2:{
-			prefStr = (CFStringRef)PREFERENCE_KRB5_SEC_TO_EXPIRE_TIME_FOR_RENEW;
-		}
-		break;
-
-		case 3:{
-			prefStr = (CFStringRef)PREFERENCE_KRB5_RENEW_CHECK_TIME_INTERVALL;
-		}
-		break;
-	}
-
-		/*CFPreferencesSetValue(prefStr,
-						  (CFNumberRef)newNumberValue,
-						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);*/
 }
 @end
 

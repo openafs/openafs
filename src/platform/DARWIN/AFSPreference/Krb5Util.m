@@ -10,7 +10,6 @@
 
 @implementation Krb5Util
 +(KLStatus) getNewTicketIfNotPresent {
-
 	KLPrincipal		princ = nil;
 	KLStatus		kstatus = noErr;
 	char			*princName = 0L;
@@ -43,7 +42,6 @@
 	KLLoginOptions  inLoginOptions;
 	KLLifetime      inTicketLifetime = renewTime;
 	NSDate			*expirationDate = nil;
-
 	@try {
 		//prepare the login option
 		kstatus = KLCreateLoginOptions(&inLoginOptions);
@@ -55,17 +53,14 @@
 		//kstatus =  KLLoginOptionsSetRenewableLifetime (inLoginOptions, inTicketLifetime);
 		//check the start time
 		kstatus = KLTicketExpirationTime (nil, kerberosVersion_All, &expireStartTime);
-
 		expirationDate = [NSDate dateWithTimeIntervalSince1970:expireStartTime];
+
 		//NSLog(@"Ticket Expiration time: %@", [expirationDate description]);
 		NSTimeInterval secondToExpireTime = [expirationDate timeIntervalSinceNow];
 		if(secondToExpireTime <= secToExpire) {
-
 			kstatus = KLRenewInitialTickets ( nil, inLoginOptions, nil, nil);
-
-			kstatus = KLTicketExpirationTime (nil, kerberosVersion_All, &expireStartTime);
-
-			expirationDate = [NSDate dateWithTimeIntervalSince1970:expireStartTime];
+			//kstatus = KLTicketExpirationTime (nil, kerberosVersion_All, &expireStartTime);
+			//expirationDate = [NSDate dateWithTimeIntervalSince1970:expireStartTime];
 			//NSLog(@"Ticket Renewed Unitl %@", expirationDate);
 		}
 	}
