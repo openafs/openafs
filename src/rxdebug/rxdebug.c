@@ -449,7 +449,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 			    printf("\n  Received %d bytes in %d packets\n",
 				   tconn.secStats.bytesReceived,
 				   tconn.secStats.packetsReceived);
-			    printf("  Sent %d bytes in %d packets\n",
+			    printf("  Sent %u bytes in %u packets\n",
 				   tconn.secStats.bytesSent,
 				   tconn.secStats.packetsSent);
 			} else
