@@ -581,7 +581,8 @@ afs_InvalidateAllSegments(struct vcache *avc)
  * \note avc must be write locked. May release and reobtain avc and GLOCK
  */
 int
-afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
+afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
+{
     afs_size_t offset, toAdd;
     struct osi_file *tfile;
     afs_int32 code = 0;

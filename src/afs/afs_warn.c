@@ -56,7 +56,8 @@
 # define afs_vprintf(fmt, ap) icmn_err(CE_WARN, fmt, ap)
 #elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV))
 static_inline void
-afs_vprintf(const char *fmt, va_list ap) {
+afs_vprintf(const char *fmt, va_list ap)
+{
     char buf[256];
 
     vsnprintf(buf, sizeof(buf), fmt, ap);

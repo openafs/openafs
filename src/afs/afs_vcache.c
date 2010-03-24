@@ -1614,9 +1614,10 @@ afs_WriteVCache(register struct vcache *avc,
  *
  * \note Must be called with a shared lock on the vnode
  */
-int afs_WriteVCacheDiscon(register struct vcache *avc,
-				register struct AFSStoreStatus *astatus,
-				struct vattr *attrs)
+int
+afs_WriteVCacheDiscon(register struct vcache *avc,
+		      register struct AFSStoreStatus *astatus,
+		      struct vattr *attrs)
 {
     afs_int32 code = 0;
     afs_int32 flags = 0;
@@ -2531,12 +2532,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
  * \note The vcache must be write locked.
  */
 void
-afs_UpdateStatus(struct vcache *avc,
-			struct VenusFid *afid,
-			struct vrequest *areq,
-			struct AFSFetchStatus *Outsp,
-			struct AFSCallBack *acb,
-			afs_uint32 start)
+afs_UpdateStatus(struct vcache *avc, struct VenusFid *afid,
+		 struct vrequest *areq, struct AFSFetchStatus *Outsp,
+		 struct AFSCallBack *acb, afs_uint32 start)
 {
     struct volume *volp;
 
@@ -2813,7 +2811,8 @@ afs_PutVCache(register struct vcache *avc)
  * \note avc must be write locked on entry
  */
 void
-afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred) {
+afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred)
+{
     ObtainWriteLock(&afs_xcbhash, 456);
     afs_DequeueCallback(avc);
     avc->f.states &= ~(CStatd | CDirty);    /* next reference will re-stat */
@@ -2836,7 +2835,9 @@ afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred) {
  *
  * \return 
  */
-static void findvc_sleep(struct vcache *avc, int flag) {
+static void
+findvc_sleep(struct vcache *avc, int flag)
+{
     if (flag & IS_SLOCK) {
 	    ReleaseSharedLock(&afs_xvcache);
     } else {
@@ -3304,7 +3305,8 @@ shutdown_vcache(void)
 }
 
 void
-afs_DisconGiveUpCallbacks(void) {
+afs_DisconGiveUpCallbacks(void)
+{
     int i;
     struct vcache *tvc;
     int nq=0;
@@ -3335,7 +3337,8 @@ afs_DisconGiveUpCallbacks(void) {
  *
  */
 void
-afs_ClearAllStatdFlag(void) {
+afs_ClearAllStatdFlag(void)
+{
     int i;
     struct vcache *tvc;
    

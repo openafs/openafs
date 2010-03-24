@@ -203,7 +203,7 @@ afs_osi_TraverseProcTable(void)
 extern rwlock_t tasklist_lock __attribute__((weak));
 #endif
 void
-afs_osi_TraverseProcTable()
+afs_osi_TraverseProcTable(void)
 {
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
     struct task_struct *p;

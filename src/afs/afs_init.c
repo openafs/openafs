@@ -99,7 +99,8 @@ static int afs_cacheinit_flag = 0;
 int
 afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	      afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk,
-	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers, afs_int32 dynamic_vcaches)
+	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers,
+	      afs_int32 dynamic_vcaches)
 {
     register afs_int32 i;
     register struct volume *tv;
@@ -248,7 +249,8 @@ afs_ComputeCacheParms(void)
  * If the vnode is not returned, we rele it.
  */
 int
-afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode, struct vnode **fvpp)
+afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
+		      struct vnode **fvpp)
 {
     afs_int32 code;
 

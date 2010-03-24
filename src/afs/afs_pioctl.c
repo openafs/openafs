@@ -49,7 +49,8 @@ struct afs_pdata {
  */
 
 static_inline int
-afs_pd_alloc(struct afs_pdata *apd, size_t size) {
+afs_pd_alloc(struct afs_pdata *apd, size_t size)
+{
 
     if (size > AFS_LRALLOCSIZ)
 	apd->ptr = osi_Alloc(size + 1);
@@ -65,7 +66,8 @@ afs_pd_alloc(struct afs_pdata *apd, size_t size) {
 }
 
 static_inline void
-afs_pd_free(struct afs_pdata *apd) {
+afs_pd_free(struct afs_pdata *apd)
+{
     if (apd->ptr == NULL)
 	return;
 
@@ -79,17 +81,20 @@ afs_pd_free(struct afs_pdata *apd) {
 }
 
 static_inline char *
-afs_pd_where(struct afs_pdata *apd) {
+afs_pd_where(struct afs_pdata *apd)
+{
     return apd ? apd->ptr : NULL;
 }
 
 static_inline size_t
-afs_pd_remaining(struct afs_pdata *apd) {
+afs_pd_remaining(struct afs_pdata *apd)
+{
     return apd ? apd->remaining : 0;
 }
 
 static_inline int
-afs_pd_skip(struct afs_pdata *apd, size_t skip) {
+afs_pd_skip(struct afs_pdata *apd, size_t skip)
+{
     if (apd == NULL || apd->remaining < skip)
 	return EINVAL;
     apd->remaining -= skip;
@@ -99,7 +104,8 @@ afs_pd_skip(struct afs_pdata *apd, size_t skip) {
 }
 
 static_inline int
-afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val) {
+afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val)
+{
     if (apd == NULL || apd->remaining < sizeof(afs_int32))
 	return EINVAL;
     apd->remaining -= sizeof(afs_int32);
@@ -109,12 +115,14 @@ afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val) {
 }
 
 static_inline int
-afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val) {
+afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val)
+{
     return afs_pd_getInt(apd, (afs_int32 *)val);
 }
 
 static_inline int
-afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes) {
+afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes)
+{
     if (apd == NULL || apd->remaining < bytes)
 	return EINVAL;
     apd->remaining -= bytes;
@@ -124,7 +132,8 @@ afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes) {
 }
 
 static_inline void *
-afs_pd_inline(struct afs_pdata *apd, size_t bytes) {
+afs_pd_inline(struct afs_pdata *apd, size_t bytes)
+{
     void *ret;
 
     if (apd == NULL || apd->remaining < bytes)
@@ -139,7 +148,8 @@ afs_pd_inline(struct afs_pdata *apd, size_t bytes) {
 }
 
 static_inline int
-afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen) {
+afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen)
+{
     size_t len;
 
     if (apd == NULL || apd->remaining <= 0)
@@ -154,7 +164,8 @@ afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen) {
 }
 
 static_inline int
-afs_pd_getStringPtr(struct afs_pdata *apd, char **str) {
+afs_pd_getStringPtr(struct afs_pdata *apd, char **str)
+{
     size_t len;
 
     if (apd == NULL || apd->remaining <= 0)
@@ -167,7 +178,8 @@ afs_pd_getStringPtr(struct afs_pdata *apd, char **str) {
 }
 
 static_inline int
-afs_pd_putInt(struct afs_pdata *apd, afs_int32 val) {
+afs_pd_putInt(struct afs_pdata *apd, afs_int32 val)
+{
     if (apd == NULL || apd->remaining < sizeof(afs_int32))
 	return E2BIG;
     *(afs_int32 *)apd->ptr = val;
@@ -178,7 +190,8 @@ afs_pd_putInt(struct afs_pdata *apd, afs_int32 val) {
 }
 
 static_inline int
-afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len) {
+afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len)
+{
     if (apd == NULL || apd->remaining < len)
 	return E2BIG;
     memcpy(apd->ptr, bytes, len);
@@ -1385,7 +1398,8 @@ DECL_PIOCTL(PGetFID)
  *
  * \post Changed ACL, via direct writing to the wire
  */
-int dummy_PSetAcl(char *ain, char *aout)
+int
+dummy_PSetAcl(char *ain, char *aout)
 {
     return 0;
 }

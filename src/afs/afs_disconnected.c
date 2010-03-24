@@ -1301,7 +1301,8 @@ next_file:
  */
 
 static void
-afs_DisconDiscardAllShadows(int squash, afs_ucred_t *acred) {
+afs_DisconDiscardAllShadows(int squash, afs_ucred_t *acred)
+{
    struct vcache *tvc;
 
    while (!QEmpty(&afs_disconShadow)) {
@@ -1332,7 +1333,8 @@ afs_DisconDiscardAllShadows(int squash, afs_ucred_t *acred) {
  *
  */
 void 
-afs_DisconDiscardAll(afs_ucred_t *acred) {
+afs_DisconDiscardAll(afs_ucred_t *acred)
+{
     struct vcache *tvc;
 
     ObtainWriteLock(&afs_disconDirtyLock, 717);

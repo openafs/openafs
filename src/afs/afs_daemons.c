@@ -1080,7 +1080,7 @@ afs_BackgroundDaemon(void)
 	    if (tb->opcode == BOP_FETCH)
 		BPrefetch(tb);
 #if defined(AFS_CACHE_BYPASS)		
-		else if (tb->opcode == BOP_FETCH_NOCACHE)
+	    else if (tb->opcode == BOP_FETCH_NOCACHE)
 		BPrefetchNoCache(tb);
 #endif		
 	    else if (tb->opcode == BOP_STORE)

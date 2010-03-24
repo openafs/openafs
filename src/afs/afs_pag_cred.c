@@ -32,7 +32,8 @@ static struct afspag_cell *cells = 0;
 static struct afspag_cell *primary_cell = 0;
 
 
-struct afspag_cell *afspag_GetCell(char *acell)
+struct afspag_cell *
+afspag_GetCell(char *acell)
 {
     struct afspag_cell *tcell;
 
@@ -66,7 +67,8 @@ out:
 }
 
 
-struct afspag_cell *afspag_GetPrimaryCell()
+struct afspag_cell *
+afspag_GetPrimaryCell(void)
 {
     struct afspag_cell *tcell;
 
@@ -77,7 +79,8 @@ struct afspag_cell *afspag_GetPrimaryCell()
 }
 
 
-void afspag_SetPrimaryCell(char *acell)
+void
+afspag_SetPrimaryCell(char *acell)
 {
     struct afspag_cell *tcell;
 
@@ -88,7 +91,8 @@ void afspag_SetPrimaryCell(char *acell)
 }
 
 
-int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
+int
+afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     register afs_int32 i;
     register struct unixuser *tu;
@@ -122,7 +126,8 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 }
 
 
-int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
+int
+afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     afs_int32 i;
     register struct unixuser *tu;
@@ -313,7 +318,8 @@ out:
 }
 
 
-int afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
+int
+afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     int setsysname, count, t;
     char *cp, *setp;

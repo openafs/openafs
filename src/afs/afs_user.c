@@ -577,7 +577,8 @@ afs_NotifyUser(struct unixuser *auser, int event)
  * 	PAG to expire records for
  */
 void
-afs_MarkUserExpired(afs_int32 pag) {
+afs_MarkUserExpired(afs_int32 pag)
+{
     afs_int32 i;
     struct unixuser *tu;
 

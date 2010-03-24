@@ -1492,10 +1492,9 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
  *
  * \return The new dcache.
  */
-struct dcache *afs_AllocDCache(struct vcache *avc,
-				afs_int32 chunk,
-				afs_int32 lock,
-				struct VenusFid *ashFid)
+struct dcache *
+afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
+		struct VenusFid *ashFid)
 {
     struct dcache *tdc = NULL;
     afs_uint32 size = 0;
@@ -3227,7 +3226,8 @@ shutdown_dcache(void)
 struct dcache *
 afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos, 
 			   afs_size_t len, struct vrequest *areq,
-			   int noLock) {
+			   int noLock)
+{
     struct dcache *tdc = NULL;
     afs_size_t offset;
 

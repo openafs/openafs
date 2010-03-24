@@ -369,7 +369,8 @@ afs_data_pointer_to_int32(const void *p)
 
 #ifdef AFS_LINUX20_ENV
 
-afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+afs_int32
+afs_calc_inum(afs_int32 volume, afs_int32 vnode)
 { 
     afs_int32 ino, vno = vnode;
     char digest[16];
@@ -391,7 +392,8 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 
 #else
 
-afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+afs_int32
+afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 {
     return (volume << 16) + vnode;
 }
