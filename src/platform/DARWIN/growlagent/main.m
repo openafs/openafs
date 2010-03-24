@@ -223,10 +223,16 @@ int main(int argc, const char **argv) {
 	CFSocketContext MarinerSocketContext = {0, (void *)&growlContext, NULL, NULL, NULL };
 	
 	CFSocketRef MarinerSocket = CFSocketCreateWithSocketSignature(kCFAllocatorDefault, &MarinerSignature, kCFSocketReadCallBack, &MySocketReadCallBack, &MarinerSocketContext);
+
+	if (!MarinerSocket)
+		goto fail;
 	
 	CFSocketSetSocketFlags(MarinerSocket, kCFSocketCloseOnInvalidate|kCFSocketAutomaticallyReenableReadCallBack);
 	
 	CFRunLoopSourceRef MarinerRunLoopSource = CFSocketCreateRunLoopSource(NULL, MarinerSocket, 0);
+	if (!MarinerRunLoopSource)
+		goto fail;
+
 	CFRunLoopAddSource(CFRunLoopGetCurrent(), MarinerRunLoopSource, kCFRunLoopCommonModes);
 
 	/* Run the run loop until it is manually cancelled */
@@ -236,6 +242,7 @@ int main(int argc, const char **argv) {
 	CFRelease(MarinerRunLoopSource);
 	CFSocketInvalidate(MarinerSocket);
 	CFRelease(MarinerSocket);
+fail:
 	/* CFRelease(notificationInfo); */
 	[pool release];
 
