@@ -276,9 +276,8 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
     } else if (syncTime + BIGTIME < now) {
 	if (syncHost) {
 	    ubik_dprint
-		("Ubik: Lost contact with sync-site %d.%d.%d.%d (NOT in quorum)\n",
-		 ((syncHost >> 24) & 0xff), ((syncHost >> 16) & 0xff),
-		 ((syncHost >> 8) & 0xff), (syncHost & 0xff));
+		("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
+		 afs_inet_ntoa(syncHost));
 	}
 	syncHost = 0;
     }
