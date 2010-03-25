@@ -854,9 +854,14 @@ DWORD APIENTRY NPLogonNotify(
 	 !UnicodeStringToANSI(IL->LogonDomainName, logonDomain, MAX_DOMAIN_LENGTH))
  	return 0;
 
-    /* Make sure AD-DOMANS sent from login that is sent to us is striped */
+    /* Make sure AD-DOMAINS sent from login that is sent to us is striped */
     ctemp = strchr(uname, '@');
-    if (ctemp) *ctemp = 0;
+    if (ctemp) {
+        *ctemp = 0;
+        ctemp++;
+        if ( logonDomain[0] == '\0' )
+            StringCchCopy(logonDomain, MAX_DOMAIN_LENGTH, ctemp);
+    }
 
     /* is the name all lowercase? */
     for ( ctemp = uname; *ctemp ; ctemp++) {
