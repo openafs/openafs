@@ -97,6 +97,14 @@ DStat(int *abuffers, int *acalls, int *aios)
     return 0;
 }
 
+/**
+ * initialize the directory package.
+ *
+ * @param[in] abuffers  size of directory buffer cache
+ *
+ * @return operation status
+ *    @retval 0 success
+ */
 int
 DInit(int abuffers)
 {
@@ -131,6 +139,15 @@ DInit(int abuffers)
     return 0;
 }
 
+/**
+ * read a page out of a directory object.
+ *
+ * @param[in] fid   directory object fid
+ * @param[in] page  page in hash table to be read
+ *
+ * @return pointer to requested page in directory cache
+ *    @retval NULL read failed
+ */
 void *
 DRead(register afs_int32 *fid, register int page)
 {
