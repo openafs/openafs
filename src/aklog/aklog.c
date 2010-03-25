@@ -1495,7 +1495,11 @@ main(int argc, char *argv[])
 	progname = argv[0];
 
     krb5_init_context(&context);
-    initialize_ktc_error_table ();
+    initialize_KTC_error_table ();
+    initialize_U_error_table();
+    initialize_RXK_error_table();
+    initialize_ACFG_error_table();
+    initialize_PT_error_table();
     afs_set_com_err_hook(redirect_errors);
 
     /*
