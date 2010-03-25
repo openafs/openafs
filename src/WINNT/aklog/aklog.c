@@ -364,18 +364,16 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             /* copy the name because pr_CreateUser lowercases the realm */
             strncpy(username_copy, username, BUFSIZ);
 
-            *status = pr_CreateUser(username, &viceId);
-
-            /* and restore the name to the original state */
-            strncpy(username, username_copy, BUFSIZ);
+            viceId = 0;
+            *status = pr_CreateUser(username_copy, &viceId);
 
             if (*status) {
                 printf("%s: unable to create remote PTS "
                         "user %s in cell %s (status: %s).\n", progname,
-                        username, cell_to_use, afs_error_message(*status));
+                        username_copy, cell_to_use, afs_error_message(*status));
             } else {
                 printf("created cross-cell entry for %s (Id %d) at %s\n",
-                        username, viceId, cell_to_use);
+                        username_copy, viceId, cell_to_use);
 #ifdef AFS_ID_TO_NAME
                 snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
