@@ -301,7 +301,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
     if (dflag)
     {
         if (*status)
-            printf("Error %d\n", *status);
+            printf("pr_SNameToId Error %s\n",  afs_error_message(*status));
         else
             printf("Id %d\n", viceId);
     }       
@@ -357,7 +357,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
              */
 
             if ((*status = pr_Initialize(1L, confname, aserver->cell))) {
-                printf("Error %d\n", *status);
+                printf("pr_Initialize Error %s\n",  afs_error_message(*status));
                 return;
             }
 
@@ -371,8 +371,8 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 
             if (*status) {
                 printf("%s: unable to create remote PTS "
-                        "user %s in cell %s (status: %d).\n", progname,
-                        username, cell_to_use, *status);
+                        "user %s in cell %s (status: %s).\n", progname,
+                        username, cell_to_use, afs_error_message(*status));
             } else {
                 printf("created cross-cell entry for %s (Id %d) at %s\n",
                         username, viceId, cell_to_use);
@@ -1551,6 +1551,9 @@ int main(int argc, char *argv[])
             memset(path, 0, sizeof(path));
         }
     }
+
+    if (!noprdb)
+        initialize_PT_error_table();
 
     if (usev5) {
         validate_krb5_availability();

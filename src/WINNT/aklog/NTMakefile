@@ -22,6 +22,11 @@ AKLOGOBJS = \
 	$(OUT)\aklog.obj \
 	$(OUT)\linked_list.obj
 
+PTERROBJS=$(OUT)\pterror.obj
+
+$(PTERROBJS): $(AFSROOT)\src\ptserver\pterror.c
+	$(C2OBJ) /Fo$@ $**
+
 ASETKEY = $(DESTDIR)\root.server\usr\afs\bin\asetkey.exe
 
 ASETKEYOBJS = \
@@ -58,7 +63,7 @@ $(ASETKEYOBJS): $$(@B).c
 
 ############################################################################
 
-$(AKLOG) : $(AKLOGOBJS) $(EXELIBS) $(OUT)\aklog.res
+$(AKLOG) : $(AKLOGOBJS) $(PTERROBJS) $(EXELIBS) $(OUT)\aklog.res
 	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
