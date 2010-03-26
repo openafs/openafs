@@ -30,10 +30,15 @@ if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
     # If ThisCell is not in CellServDB, we have to prompt the user for the
     # VLDB servers.  Unfortunately, we can't do this in config because we
     # need the CellServDB file, which is part of the package.
+    #
+    # If the user is using afsdb for cell location, don't worry about
+    # prompting them for cells for their local system.
+    db_get openafs-client/afsdb
+    afsdb="$RET"
     if grep -q -F "$THISCELL" /etc/openafs/CellServDB \
            && [ "x$THISCELL" != "x" ] ; then
         :
-    else
+    elif [ x"$afsdb" != xtrue ] ; then
         db_input critical openafs-client/cell-info || true
         db_input high openafs-client/run-client || true
         db_go
@@ -70,8 +75,7 @@ EOF
 
     db_get openafs-client/run-client
     echo AFS_CLIENT="$RET" > /etc/openafs/afs.conf.client
-    db_get openafs-client/afsdb
-    echo AFS_AFSDB="$RET" >> /etc/openafs/afs.conf.client
+    echo AFS_AFSDB="$afsdb" >> /etc/openafs/afs.conf.client
     db_get openafs-client/crypt
     echo AFS_CRYPT="$RET" >> /etc/openafs/afs.conf.client
     db_get openafs-client/dynroot
