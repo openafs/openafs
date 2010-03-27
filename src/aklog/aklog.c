@@ -88,6 +88,7 @@
 #include <afs/venus.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
+#include <afs/pterror.h>
 #include <afs/dirpath.h>
 #include <afs/afsutil.h>
 
