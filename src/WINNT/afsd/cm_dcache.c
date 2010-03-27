@@ -457,7 +457,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 long cm_BufRead(cm_buf_t *bufp, long nbytes, long *bytesReadp, cm_user_t *userp)
 {
-    *bytesReadp = cm_data.buf_blockSize;
+    *bytesReadp = 0;
 
     /* now return a code that means that I/O is done */
     return 0;
@@ -534,6 +534,8 @@ int cm_HaveBuffer(cm_scache_t *scp, cm_buf_t *bufp, int isBufLocked)
     if ((bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED)) == (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED))
         return 1;
     if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow)
+        return 1;
+    if (bufp->offset.QuadPart >= scp->serverLength.QuadPart)
         return 1;
     if (!isBufLocked) {
         code = lock_TryMutex(&bufp->mx);
