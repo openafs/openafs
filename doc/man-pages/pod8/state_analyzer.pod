@@ -7,25 +7,25 @@ state_analyzer - Explores and queries the fileserver state database interactivel
 =for html
 <div class="synopsis">
 
-B<state_analyzer> S<<< <F<state dump file>> | B<-h> >>>
+B<state_analyzer> S<<< [F<state dump file> | B<-h>] >>>
 
 =for html
 </div>
 
 =head1 DESCRIPTION
 
-Demand-attach file server makes host / callback information
+The demand-attach file server makes host / callback information
 persistent. On shutdown, the state is saved to database L<fsstate.dat(5)>.
 On startup, the state is read, verified and restored.
 This allows for file server shutdowns or restarts without breaking
-the callbacks (an operation that could otherwise take a long time).
+all callbacks (an operation that could otherwise take a long time).
 
 B<state_analyzer> interactively explores and queries the saved
 state database, L<fsstate.dat(5)>.
 
 This command is only supported on the demand-attach file server.
 It operates at an extremely low-level and hence requires detailed
-knowledge of the OpenAFS architecture and code. 
+knowledge of the OpenAFS architecture and code.
 
 =head1 COMMANDS
 
