@@ -20,6 +20,8 @@
 #endif
 
 #ifdef AFS_DARWIN80_ENV
+static thread_t vfs_context_owner;
+
 /* works like PFlushVolumeData */
 void
 darwin_notify_perms(struct unixuser *auser, int event)
@@ -30,6 +32,7 @@ darwin_notify_perms(struct unixuser *auser, int event)
     int isglock = ISAFS_GLOCK();
     struct vnode *vp;
     struct vnode_attr va;
+    int isctxtowner = 0;
 
     if (!afs_darwin_fsevents)
 	return;
@@ -41,9 +44,12 @@ darwin_notify_perms(struct unixuser *auser, int event)
     else
 	VATTR_SET(&va, va_uid, -2); /* nobody */
 
-    get_vfs_context();
     if (!isglock)
 	AFS_GLOCK();
+    if (!(vfs_context_owner == current_thread())) {
+	get_vfs_context();
+	isctxtowner = 1;
+    }
 loop:
     ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
@@ -87,9 +93,10 @@ loop:
 	}
     }
     ReleaseReadLock(&afs_xvcache);
+    if (isctxtowner)
+	put_vfs_context();
     if (!isglock)
 	AFS_GUNLOCK();
-    put_vfs_context();
 }
 
 int
@@ -207,7 +214,6 @@ afsio_darwin_partialcopy(uio_t auio, int size)
 
 vfs_context_t afs_osi_ctxtp;
 int afs_osi_ctxtp_initialized;
-static thread_t vfs_context_owner;
 static proc_t vfs_context_curproc;
 int vfs_context_ref;
 
