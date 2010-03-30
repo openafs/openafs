@@ -1454,7 +1454,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/rmtsysd.*
 %{_mandir}/man8/vsys.*
 %{_mandir}/man5/CellAlias.*
-%{_mandir}/man5/afszcm.cat.*
 
 %files server
 %defattr(-,root,root)
@@ -1534,21 +1533,26 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
+%{_libdir}/libkopenafs.so.*
 %endif
 
 %files authlibs-devel
 %defattr(-,root,root)
+%{_includedir}/kopenafs.h
 %{_libdir}/libafsauthent.a
 %{_libdir}/libafsrpc.a
 %{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafsrpc_pic.a
+%{_libdir}/libkopenafs.a
 %if %{build_authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
+%{_libdir}/libkopenafs.so
 %endif
 
 %files devel
 %defattr(-,root,root)
+%{_bindir}/afs_compile_et
 %{_bindir}/rxgen
 %{_includedir}/afs
 %{_includedir}/des.h
