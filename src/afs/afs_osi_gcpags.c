@@ -430,15 +430,24 @@ afs_osi_proc2cred(afs_proc_t * pr)
            NGROUPS * sizeof(gid_t));
     return &cr;
 }
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_FBSD_ENV)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
+{
+    /*
+     * This whole function is kind of an ugly hack.  For one, the
+     * 'const' is a lie.  Also, we should probably be holding the
+     * proc mutex around all accesses to the credentials structure,
+     * but the present API does not allow this.
+     */
+    return pr->p_ucred;
+}
+#elif defined(AFS_DARWIN_ENV)
 const afs_ucred_t *
 afs_osi_proc2cred(afs_proc_t * pr)
 {
     afs_ucred_t *rv = NULL;
     static afs_ucred_t cr;
-#if defined(AFS_FBSD80_ENV)
-    osi_Panic("proc2cred broken for dynamic cr_groups");
-#endif
 
     if (pr == NULL) {
 	return NULL;
