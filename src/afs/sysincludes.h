@@ -230,6 +230,10 @@ typedef unsigned short etap_event_t;
 # include "h/socketvar.h"
 # include "h/protosw.h"
 
+# if defined(AFS_FBSD_ENV)
+#  include "limits.h"
+# endif
+
 # if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
 #  include "h/dirent.h"
 #  ifdef	AFS_SUN5_ENV
