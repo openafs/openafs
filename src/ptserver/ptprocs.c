@@ -83,7 +83,6 @@
 extern int restricted;
 extern struct ubik_dbase *dbase;
 extern int pr_noAuth;
-extern afs_int32 initd;
 extern char *pr_realmName;
 extern int prp_group_default;
 extern int prp_user_default;
@@ -146,10 +145,11 @@ static afs_int32 WhoIsThisWithName(struct rx_call *acall,
 				   struct ubik_trans *at, afs_int32 *aid, 
 				   char *aname);
 
-/* When abort, reset initd so that the header is read in on next call.
+/* when we abort, the ubik cachedVersion will be reset, so we'll read in the
+ * header on the next call.
  * Abort the transaction and return the code.
  */
-#define ABORT_WITH(tt,code) return(initd=0,ubik_AbortTrans(tt),code)
+#define ABORT_WITH(tt,code) return(ubik_AbortTrans(tt),code)
 
 static int
 CreateOK(struct ubik_trans *ut, afs_int32 cid, afs_int32 oid, afs_int32 flag, 

@@ -45,7 +45,6 @@ InitDB(void)
     pollCount = 0;
 
     memset(&db, 0, sizeof(db));
-    Lock_Init(&db.lock);
     if ((code = InitDBalloc()) || (code = InitDBhash()))
 	return code;
     return 0;
@@ -167,17 +166,22 @@ cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 le
 /* check that the database has been initialized.  Be careful to fail in a safe
    manner, to avoid bogusly reinitializing the db.  */
 
-afs_int32
-CheckInit(struct ubik_trans *ut, 
-	  int (*db_init) (struct ubik_trans *ut)) /* call if rebuilding DB */
+/**
+ * reads in db cache from ubik.
+ *
+ * @param[in] ut ubik transaction
+ * @param[in] rock  opaque pointer to an int (*) (struct ubik_trans *), which
+ *                  will be called on rebuilding the database (or NULL to not
+ *                  rebuild the db)
+ *
+ * @return operation status
+ *   @retval 0 success
+ */
+static afs_int32
+UpdateCache(struct ubik_trans *ut, void *rock)
 {
-    register afs_int32 code;
-
-    /* Don't read header if not necessary */
-    if (!ubik_CacheUpdate(ut))
-	return 0;
-
-    ObtainWriteLock(&db.lock);
+    int (*db_init) (struct ubik_trans *ut) = rock;
+    afs_int32 code;
 
     db.h.eofPtr = htonl(sizeof(db.h));	/* for sanity check in dbread */
     code = dbread(ut, 0, (char *)&db.h, sizeof(db.h));
@@ -202,7 +206,6 @@ CheckInit(struct ubik_trans *ut,
     ht_Reset(&db.dumpIden);
 
   error_exit:
-    ReleaseWriteLock(&db.lock);
     if (code) {
 	if ((code == UEOF) || (code == BUDB_EMPTY)) {
 	    if (db_init) {
@@ -233,4 +236,11 @@ CheckInit(struct ubik_trans *ut,
 	}
     }
     return code;
+}
+
+afs_int32
+CheckInit(struct ubik_trans *ut,
+	  int (*db_init) (struct ubik_trans *ut)) /* call if rebuilding DB */
+{
+    return ubik_CheckCache(ut, UpdateCache, db_init);
 }

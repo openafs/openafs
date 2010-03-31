@@ -99,7 +99,7 @@ ubik_WaitVersion(register struct ubik_dbase *adatabase,
 }
 
 int
-ubik_CacheUpdate(register struct ubik_trans *atrans)
+ubik_CheckCache(struct ubik_trans *atrans, ubik_updatecache_func cbf, void *rock)
 {
     return (0);
 }

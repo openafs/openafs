@@ -290,37 +290,38 @@ readExtents(struct ubik_trans *trans)
 
 /* Check that the database has been initialized.  Be careful to fail in a safe
    manner, to avoid bogusly reinitializing the db.  */
-afs_int32
-CheckInit(struct ubik_trans *trans, int builddb)
+/**
+ * reads in db cache from ubik.
+ *
+ * @param[in] ut ubik transaction
+ * @param[in] rock  opaque pointer to an int*; if 1, we should rebuild the db
+ *                  if it appears empty, if 0 we should return an error if the
+ *                  db appears empty
+ *
+ * @return operation status
+ *   @retval 0 success
+ */
+static afs_int32
+UpdateCache(struct ubik_trans *trans, void *rock)
 {
-    afs_int32 error = 0, i, code, ubcode = 0;
+    int *builddb_rock = rock;
+    int builddb = *builddb_rock;
+    afs_int32 error = 0, i, code, ubcode;
 
-    /* ubik_CacheUpdate must be called on every transaction.  It returns 0 if the
-     * previous transaction would have left the cache fine, and non-zero otherwise.
-     * Thus, a local abort or a remote commit will cause this to return non-zero
-     * and force a header re-read.  Necessary for a local abort because we may
-     * have damaged cheader during the operation.  Necessary for a remote commit
-     * since it may have changed cheader. 
-     */
-    if (ubik_CacheUpdate(trans) != 0) {
-	/* if version changed (or first call), read the header */
-	ubcode = vlread(trans, 0, (char *)&cheader, sizeof(cheader));
-	vldbversion = ntohl(cheader.vital_header.vldbversion);
-
-	if (!ubcode && (vldbversion != 0)) {
-	    memcpy(HostAddress, cheader.IpMappedAddr,
-		   sizeof(cheader.IpMappedAddr));
-	    for (i = 0; i < MAXSERVERID + 1; i++) {	/* cvt HostAddress to host order */
-		HostAddress[i] = ntohl(HostAddress[i]);
-	    }
-
-	    code = readExtents(trans);
-	    if (code)
-		ERROR_EXIT(code);
-	}
-    }
-
+    /* if version changed (or first call), read the header */
+    ubcode = vlread(trans, 0, (char *)&cheader, sizeof(cheader));
     vldbversion = ntohl(cheader.vital_header.vldbversion);
+
+    if (!ubcode && (vldbversion != 0)) {
+	memcpy(HostAddress, cheader.IpMappedAddr, sizeof(cheader.IpMappedAddr));
+	for (i = 0; i < MAXSERVERID + 1; i++) {	/* cvt HostAddress to host order */
+	    HostAddress[i] = ntohl(HostAddress[i]);
+	}
+
+	code = readExtents(trans);
+	if (code)
+	    ERROR_EXIT(code);
+    }
 
     /* now, if can't read, or header is wrong, write a new header */
     if (ubcode || vldbversion == 0) {
@@ -343,14 +344,18 @@ CheckInit(struct ubik_trans *trans, int builddb)
 		printf("Can't write VLDB header (error = %d)\n", code);
 		ERROR_EXIT(VL_IO);
 	    }
-	} else
+	    vldbversion = ntohl(cheader.vital_header.vldbversion);
+	} else {
 	    ERROR_EXIT(VL_EMPTY);
-    } else if ((vldbversion != VLDBVERSION) && (vldbversion != OVLDBVERSION)
-	       && (vldbversion != VLDBVERSION_4)) {
+	}
+    }
+
+    if ((vldbversion != VLDBVERSION) && (vldbversion != OVLDBVERSION)
+        && (vldbversion != VLDBVERSION_4)) {
 	printf
 	    ("VLDB version %d doesn't match this software version(%d, %d or %d), quitting!\n",
 	     vldbversion, VLDBVERSION_4, VLDBVERSION, OVLDBVERSION);
-	ERROR_EXIT(VL_BADVERSION);
+	return VL_BADVERSION;
     }
 
     maxnservers = ((vldbversion == 3 || vldbversion == 4) ? 13 : 8);
@@ -358,6 +363,30 @@ CheckInit(struct ubik_trans *trans, int builddb)
   error_exit:
     /* all done */
     return error;
+}
+
+afs_int32
+CheckInit(struct ubik_trans *trans, int builddb)
+{
+    afs_int32 code;
+
+    code = ubik_CheckCache(trans, UpdateCache, &builddb);
+    if (code) {
+	return code;
+    }
+
+    /* these next two cases shouldn't happen (UpdateCache should either
+     * rebuild the db or return an error if these cases occur), but just to
+     * be on the safe side... */
+    if (vldbversion == 0) {
+	return VL_EMPTY;
+    }
+    if ((vldbversion != VLDBVERSION) && (vldbversion != OVLDBVERSION)
+        && (vldbversion != VLDBVERSION_4)) {
+	return VL_BADVERSION;
+    }
+
+    return 0;
 }
 
 
