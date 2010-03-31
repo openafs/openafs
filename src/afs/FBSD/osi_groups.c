@@ -75,12 +75,15 @@ int
 setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
        afs_uint32 * newpag, int change_parent)
 {
-#ifdef AFS_FBSD80_ENV
+#if defined(AFS_FBSD81_ENV)
     gid_t *gidset;
-    int gidset_len = ngroups_max;
+    int gidset_len = ngroups_max + 1;
+#elif defined(AFS_FBSD80_ENV)
+    gid_t *gidset;
+    int gidset_len = NGROUPS;	/* 1024 */
 #else
     gid_t gidset[NGROUPS];
-    int gidset_len = NGROUPS;
+    int gidset_len = NGROUPS;	/* 16 */
 #endif
     int ngroups, code;
     int j;
