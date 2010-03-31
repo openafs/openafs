@@ -59,15 +59,9 @@
 #if defined(AFS_FBSD80_ENV)
 #define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0)
-#elif defined(AFS_FBSD50_ENV)
+#else
 #define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY, curthread)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
-#else
-#define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY, curproc)
-#define unlock_vnode(v)	VOP_UNLOCK((v), 0, curproc)
-/* need splvm() protection? */
-#define	VM_OBJECT_LOCK(o)
-#define VM_OBJECT_UNLOCK(o)
 #endif
 
 /* Try to discard pages, in order to recycle a vcache entry.
@@ -162,11 +156,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
     do {
 	anyio = 0;
 	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
-#ifdef AFS_FBSD50_ENV
 	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY, curthread)) {
-#else
-		if (!vget(vp, LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
-#endif
 		    if (VOP_GETVOBJECT(vp, &obj) == 0) {
 			VM_OBJECT_LOCK(obj);
 			vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);

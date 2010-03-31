@@ -176,6 +176,9 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 	afs_proc_t *p = current_proc(); /* XXX */
 	char procname[256];
 	proc_selfname(procname, 256);
+# elif defined(AFS_FBSD_ENV)
+	struct thread *p = curthread;
+	char *procname = p->td_proc->p_comm;
 # else
 	afs_proc_t *p = curproc;	/* XXX */
 	char *procname = p->p_comm;

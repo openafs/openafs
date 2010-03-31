@@ -28,10 +28,8 @@ int afs_init(struct vfsconf *vfc);
 int afs_uninit(struct vfsconf *vfc);
 #if defined(AFS_FBSD80_ENV)
 extern int afs_statfs(struct mount *mp, struct statfs *abp);
-#elif defined(AFS_FBSD50_ENV)
-extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *th);
 #else
-extern int afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p);
+extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *td);
 #endif
 
 #endif /* _OSI_PROTO_H_ */

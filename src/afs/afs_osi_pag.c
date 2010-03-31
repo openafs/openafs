@@ -191,6 +191,8 @@ afs_pag_wait(afs_ucred_t **acred)
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag(afs_ucred_t **credpp)
+#elif	defined(AFS_FBSD_ENV)
+afs_setpag(struct thread *td, void *args)
 #elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag(afs_proc_t *p, void *args, int *retval)
 #else
@@ -220,6 +222,8 @@ afs_setpag(void)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(genpag(), credpp);
+#elif	defined(AFS_FBSD_ENV)
+    code = AddPag(td, genpag(), &td->td_ucred);
 #elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, genpag(), &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
@@ -295,6 +299,8 @@ afs_setpag(void)
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag_val(afs_ucred_t **credpp, int pagval)
+#elif	defined(AFS_FBSD_ENV)
+afs_setpag_val(struct thread *td, void *args, int pagval)
 #elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag_val(afs_proc_t *p, void *args, int *retval, int pagval)
 #else
@@ -323,6 +329,8 @@ afs_setpag_val(int pagval)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
+#elif	defined(AFS_FBSD_ENV)
+    code = AddPag(td, pagval, &td->td_ucred);
 #elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, pagval, &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
@@ -407,11 +415,12 @@ afs_getpag_val(void)
 
 
 /* Note - needs to be available on AIX, others can be static - rework this */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
+#if defined(AFS_FBSD_ENV)
+AddPag(struct thread *p, afs_int32 aval, afs_ucred_t **credpp)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp)
 #else
-int
 AddPag(afs_int32 aval, afs_ucred_t **credpp)
 #endif
 {

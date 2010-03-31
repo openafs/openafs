@@ -497,16 +497,23 @@ afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval)
 {
     struct afssysa64 *uap64 = NULL;
     struct afssysa *uap = NULL;
+#elif defined(AFS_FBSD_ENV)
+int
+afs3_syscall(struct thread *p, void *args)
+{
+    register struct a {
+	long syscall;
+	long parm1;
+	long parm2;
+	long parm3;
+	long parm4;
+	long parm5;
+	long parm6;
+    } *uap = (struct a *)args;
+    long *retval;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs3_syscall(p, args, retval)
-# ifdef AFS_FBSD50_ENV
-     struct thread *p;
-# else
-     afs_proc_t *p;
-# endif
-     void *args;
-     long *retval;
+afs3_syscall(afs_proc_t *p, void *args, long *retval)
 {
     register struct a {
 	long syscall;
@@ -698,7 +705,9 @@ Afs_syscall()
 	    AFS_GUNLOCK();
 #else
 	    AFS_GLOCK();
-#if	defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_FBSD_ENV)
+	    code = afs_setpag(p, args);
+#elif	defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    code = afs_setpag(p, args, retval);
 #else /* AFS_DARWIN_ENV || AFS_XBSD_ENV */
 	    code = afs_setpag();

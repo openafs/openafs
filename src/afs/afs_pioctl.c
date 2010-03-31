@@ -947,7 +947,11 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
+# if defined(AFS_FBSD_ENV)
+afs_pioctl(struct thread *td, void *args)
+# else
 afs_pioctl(afs_proc_t *p, void *args, int *retval)
+# endif
 {
     struct a {
 	char *path;
@@ -964,7 +968,11 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
 # else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
+#  if defined(AFS_FBSD_ENV)
+	     td->td_ucred));
+#  else
 	     p->p_cred->pc_ucred));
+#  endif
 # endif
 }
 
@@ -1838,6 +1846,9 @@ DECL_PIOCTL(PSetTokens)
 	afs_proc_t *p = current_proc(); /* XXX */
 	char procname[256];
 	proc_selfname(procname, 256);
+# elif defined(AFS_FBSD_ENV)
+	struct thread *p = curthread;
+	char *procname = p->td_proc->p_comm;
 # else
 	afs_proc_t *p = curproc;	/* XXX */
 	char *procname = p->p_comm;

@@ -572,6 +572,8 @@ extern void shutdown_osinet(void);
 /* afs_osi_pag.c */
 #if defined(AFS_SUN5_ENV)
 extern int afs_setpag(afs_ucred_t **credpp);
+#elif defined(AFS_FBSD_ENV)
+extern int afs_setpag(struct thread *td, void *args);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_setpag(afs_proc_t *p, void *args, int *retval);
 #else
@@ -580,7 +582,9 @@ extern int afs_setpag(void);
 	
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_FBSD_ENV)
+extern int AddPag(struct thread *td, afs_int32 aval, afs_ucred_t **credpp);
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp);
 #else
 extern int AddPag(afs_int32 aval, afs_ucred_t **credpp);
@@ -701,11 +705,16 @@ extern int usr_setpag(afs_ucred_t **cred, afs_uint32 pagvalue,
 #else
 # if defined AFS_XBSD_ENV
 #  if !defined(AFS_DFBSD_ENV)
+#   if defined(AFS_FBSD_ENV)
+extern int setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
+		  afs_uint32 * newpag, int change_parent);
+#   else
 extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
-#  endif
-# endif
-#endif
+#   endif /* AFS_FBSD_ENV */
+#  endif /* ! AFS_DFBSD_ENV */
+# endif /* AFS_XBSD_ENV */
+#endif /* UKERNEL */
 
 #if defined(AFS_LINUX26_ENV)
 extern afs_int32 osi_get_group_pag(afs_ucred_t *cred);
@@ -887,8 +896,8 @@ extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN100_ENV
 extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
-#elif defined(AFS_FBSD50_ENV)
-extern int afs3_syscall(struct thread *p, void *args, long *retval);
+#elif defined(AFS_FBSD_ENV)
+extern int afs3_syscall(struct thread *p, void *args);
 #else
 extern int afs3_syscall(afs_proc_t *p, void *args, long *retval);
 #endif

@@ -100,14 +100,11 @@ extern void osi_fbsd_free(void *p);
 #define osi_suser_client_settings(x)   (!priv_check(curthread, PRIV_AFS_ADMIN))
 #define osi_suser_afs_daemon(x)   (!priv_check(curthread, PRIV_AFS_DAEMON))
 #define afs_suser(x) (osi_suser_client_settings((x)) && osi_suser_afs_daemon((x)))
-#elif defined(AFS_FBSD50_ENV)
-#define afs_suser(x)	(!suser(curthread))
 #else
-#define afs_suser(x)	(!suser(curproc))
+#define afs_suser(x)	(!suser(curthread))
 #endif
 
 #undef osi_getpid
-#if defined(AFS_FBSD50_ENV)
 #define VT_AFS		"afs"
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
@@ -136,34 +133,6 @@ extern struct thread *afs_global_owner;
 	afs_global_owner = 0; \
     } while (0)
 # endif
-#else /* FBSD50 */
-extern struct lock afs_global_lock;
-#define osi_curcred()	(curproc->p_cred->pc_ucred)
-#define osi_getpid()	(curproc->p_pid)
-#define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
-  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
-extern struct proc *afs_global_owner;
-#define AFS_GLOCK() \
-    do { \
-        osi_Assert(curproc); \
- 	lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, curproc); \
-        osi_Assert(afs_global_owner == 0); \
-   	afs_global_owner = curproc; \
-    } while (0)
-#define AFS_GUNLOCK() \
-    do { \
-        osi_Assert(curproc); \
- 	osi_Assert(afs_global_owner == curproc); \
-        afs_global_owner = 0; \
-        lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
-    } while(0)
-#define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
-#define osi_InitGlock() \
-    do { \
-	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
-	afs_global_owner = 0; \
-    } while (0)
-#endif /* FBSD50 */
 
 #undef SPLVAR
 #define SPLVAR int splvar
