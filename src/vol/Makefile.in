@@ -225,10 +225,6 @@ volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
 		ihandle.o ${LIBS} ${XLIBS}
 
-# Uses an alignment hack to convert between incompatible pointers.
-fssync-debug.o: fssync-debug.c
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c fssync-debug.c
-
 fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
 	${CC} ${LDFLAGS} -o fssync-debug fssync-debug.o physio.o ${LIBS} ${XLIBS}
 

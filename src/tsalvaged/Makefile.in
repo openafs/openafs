@@ -62,9 +62,8 @@ vol-salvage.o: ${VOL}/vol-salvage.c
 physio.o: ${VOL}/physio.c
 	${CCRULE}
 
-# Uses an alignment hack to convert between incompatible pointers.
 fssync-debug.o: ${VOL}/fssync-debug.c
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${VOL}/fssync-debug.c
+	${CCRULE}
 
 salvsync-debug.o: salvsync-debug.c
 	${CCRULE}

@@ -1061,17 +1061,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_StatsOp_hdr scom;
-    union {
-	void * ptr;
-	struct VolPkgStats * vol_stats;
-	struct VolumeHashChainStats * hash_stats;
-#ifdef AFS_DEMAND_ATTACH_FS
-	struct volume_hdr_LRU_stats * hdr_stats;
-#endif
-	struct DiskPartitionStats64 * vicep_stats;
-    } sres;
 
-    sres.ptr = res_buf;
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
     res.payload.len = SYNC_PROTO_MAX_LEN;
@@ -1158,18 +1148,34 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     if (res.hdr.response == SYNC_OK) {
 	switch (command) {
 	case FSYNC_VOL_STATS_GENERAL:
-	    print_vol_stats_general(sres.vol_stats);
-	    break;
+	    {
+		struct VolPkgStats vol_stats;
+		memcpy(&vol_stats, res_buf, sizeof(vol_stats));
+		print_vol_stats_general(&vol_stats);
+		break;
+	    }
 	case FSYNC_VOL_STATS_VICEP:
-	    print_vol_stats_viceP(sres.vicep_stats);
-	    break;
+	    {
+		struct DiskPartitionStats64 vicep_stats;
+		memcpy(&vicep_stats, res_buf, sizeof(vicep_stats));
+		print_vol_stats_viceP(&vicep_stats);
+		break;
+	    }
 	case FSYNC_VOL_STATS_HASH:
-	    print_vol_stats_hash(sres.hash_stats);
-	    break;
+	    {
+		struct VolumeHashChainStats hash_stats;
+		memcpy(&hash_stats, res_buf, sizeof(hash_stats));
+		print_vol_stats_hash(&hash_stats);
+		break;
+	    }
 #ifdef AFS_DEMAND_ATTACH_FS
 	case FSYNC_VOL_STATS_HDR:
-	    print_vol_stats_hdr(sres.hdr_stats);
-	    break;
+	    {
+		struct volume_hdr_LRU_stats hdr_stats;
+		memcpy(&hdr_stats, res_buf, sizeof(hdr_stats));
+		print_vol_stats_hdr(&hdr_stats);
+		break;
+	    }
 #endif /* AFS_DEMAND_ATTACH_FS */
 	}
     }
