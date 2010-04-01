@@ -795,6 +795,7 @@ SocketListener(void *unused)
     struct packet packet;
     socklen_t fromLen;
     afs_int32 code;
+    char hoststr[16];
 
     printf("Starting to listen for UDP packets\n");
     while (1) {
@@ -830,7 +831,7 @@ SocketListener(void *unused)
 	    packet.len = code;
 	    if (krb_udp_debug) {
 		printf("Kerb:udp: Got %d bytes from addr %s which are '",
-		       code, afs_inet_ntoa(packet.from.sin_addr.s_addr));
+		       code, afs_inet_ntoa_r(packet.from.sin_addr.s_addr, hoststr));
 		ka_PrintBytes(packet.data, packet.len);
 		printf("'\n");
 	    }
@@ -852,7 +853,7 @@ SocketListener(void *unused)
 	    packet.len = code;
 	    if (krb_udp_debug) {
 		printf("Kerb5:udp: Got %d bytes from addr %s which are '",
-		       code, afs_inet_ntoa(packet.from.sin_addr.s_addr));
+		       code, afs_inet_ntoa_r(packet.from.sin_addr.s_addr, hoststr));
 		ka_PrintBytes(packet.data, packet.len);
 		printf("'\n");
 	    }

@@ -67,7 +67,8 @@ cmdproc(register struct cmd_syndesc *as, void * arock)
 			   ctime(&rdata.last_use));
 		} else {
 		    char *hostIP;
-		    hostIP = afs_inet_ntoa(rdata.host);
+		    char hoststr[16];
+		    hostIP = afs_inet_ntoa_r(rdata.host, hoststr);
 		    printf("%s: last operation from host %s at %s", 
 			   (char *)key.dptr, hostIP, 
 			   ctime(&rdata.last_use));

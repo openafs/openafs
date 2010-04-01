@@ -233,20 +233,7 @@ extractAddr(char *line, int maxSize)
     return val;
 }
 
-/* 
-** converts a 4byte IP address into a static string (e.g. w.x.y.z) 
-** On Solaris, if we pass a 4 byte integer directly into inet_ntoa(), it
-** causes a memory fault. 
-*/
-char *
-afs_inet_ntoa(afs_uint32 addr)
-{
-    struct in_addr temp;
-    temp.s_addr = addr;
-    return (char *)inet_ntoa(temp);
-}
-
-/* same as above, but to a non-static buffer, must be freed by called */
+/* same as inet_ntoa, but to a non-static buffer, must be freed by called */
 char *
 afs_inet_ntoa_r(afs_uint32 addr, char *buf)
 {

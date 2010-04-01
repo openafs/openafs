@@ -1278,8 +1278,9 @@ dump_he_hdr(void)
 static void
 dump_he_entry(void)
 {
+    char hoststr[16];
     DPFSO0("hostDiskEntry");
-    DPFS1("host", afs_inet_ntoa(he_cursor.he.host));
+    DPFS1("host", afs_inet_ntoa_r(he_cursor.he.host, hoststr));
     DPFV1("port", "u", he_cursor.he.port);
     DPFX1("hostFlags", he_cursor.he.hostFlags);
     DPFV1("Console", "u", he_cursor.he.Console);
@@ -1307,6 +1308,7 @@ dump_he_interfaces(void)
     char temp_str[40];
     struct Interface * ifp;
     int len, i;
+    char hoststr[16];
 
     if (!he_cursor.hdr.interfaces)
 	return;
@@ -1325,7 +1327,7 @@ dump_he_interfaces(void)
     for (i = 0; i < he_cursor.hdr.interfaces; i++) {
 	snprintf(temp_str, sizeof(temp_str), "interface[%d]", i);
 	DPFSO1(temp_str);
-	DPFS2("addr", afs_inet_ntoa(ifp->interface[i].addr));
+	DPFS2("addr", afs_inet_ntoa_r(ifp->interface[i].addr, hoststr));
 	DPFV2("port", "u", ifp->interface[i].port);
 	DPFSC1;
     }

@@ -456,6 +456,7 @@ urecovery_Interact(void *dummy)
     char tbuffer[1024];
     struct ubik_stat ubikstat;
     struct in_addr inAddr;
+    char hoststr[16];
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
     int flen, fd = -1;
@@ -576,7 +577,7 @@ urecovery_Interact(void *dummy)
 	    rxcall = rx_NewCall(bestServer->disk_rxcid);
 
 	    ubik_print("Ubik: Synchronize database with server %s\n",
-		       afs_inet_ntoa(bestServer->addr[0]));
+		       afs_inet_ntoa_r(bestServer->addr[0], hoststr));
 
 	    code = StartDISK_GetFile(rxcall, file);
 	    if (code) {
@@ -788,12 +789,12 @@ urecovery_Interact(void *dummy)
 		inAddr.s_addr = ts->addr[0];
 		if (!ts->up) {
 		    ubik_dprint("recovery cannot send version to %s\n",
-				afs_inet_ntoa(inAddr.s_addr));
+				afs_inet_ntoa_r(inAddr.s_addr, hoststr));
 		    dbok = 0;
 		    continue;
 		}
 		ubik_dprint("recovery sending version to %s\n",
-			    afs_inet_ntoa(inAddr.s_addr));
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr));
 		if (vcmp(ts->version, ubik_dbase->version) != 0) {
 		    ubik_dprint("recovery stating local database\n");
 
@@ -868,6 +869,7 @@ DoProbe(struct ubik_server *server)
     int i, j;
     afs_uint32 addr;
     char buffer[32];
+    char hoststr[16];
     extern afs_int32 ubikSecIndex;
     extern struct rx_securityClass *ubikSecClass;
 
@@ -900,10 +902,10 @@ DoProbe(struct ubik_server *server)
 	    server->vote_rxcid = rx_NewConnection(addr, ubik_callPortal, VOTE_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for vote reqs */
 
 	    connSuccess = conns[multi_i];
-	    strcpy(buffer, (char *)afs_inet_ntoa(server->addr[0]));
+	    strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
 	    ubik_print
 		("ubik:server %s is back up: will be contacted through %s\n",
-		 buffer, afs_inet_ntoa(addr));
+		 buffer, afs_inet_ntoa_r(addr, hoststr));
 
 	    multi_Abort;
 	}
@@ -916,7 +918,7 @@ DoProbe(struct ubik_server *server)
 
     if (!connSuccess)
 	ubik_dprint("ubik:server %s still down\n",
-		    afs_inet_ntoa(server->addr[0]));
+		    afs_inet_ntoa_r(server->addr[0], hoststr));
 
     if (connSuccess)
 	return 0;		/* success */
