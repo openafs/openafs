@@ -415,7 +415,11 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     tdb->activeTrans = (struct ubik_trans *)0;
     memset(&tdb->version, 0, sizeof(struct ubik_version));
     memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_mutex_init(&tdb->versionLock, NULL) == 0);
+#else
     Lock_Init(&tdb->versionLock);
+#endif
     tdb->flags = 0;
     tdb->read = uphys_read;
     tdb->write = uphys_write;
@@ -434,8 +438,6 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_cond_init(&tdb->version_cond, NULL) == 0);
     assert(pthread_cond_init(&tdb->flags_cond, NULL) == 0);
-    assert(pthread_mutex_init(&tdb->version_mutex, NULL) == 0);
-    assert(pthread_mutex_init(&tdb->flags_mutex, NULL) == 0);
 #endif /* AFS_PTHREAD_ENV */
 
     /* initialize RX */
@@ -662,16 +664,15 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
     if (transMode == UBIK_WRITETRANS) {
 	/* if we're writing already, wait */
 	while (dbase->flags & DBWRITING) {
-	    DBRELE(dbase);
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_mutex_lock(&dbase->flags_mutex) == 0);
-	    assert(pthread_cond_wait(&dbase->flags_cond, &dbase->flags_mutex) == 0);
-	    assert(pthread_mutex_unlock(&dbase->flags_mutex) == 0);
+	    assert(pthread_cond_wait(&dbase->flags_cond, &dbase->versionLock) == 0);
 #else
+	    DBRELE(dbase);
 	    LWP_WaitProcess(&dbase->flags);
-#endif
 	    DBHOLD(dbase);
+#endif
 	}
+
 	if (!ubeacon_AmSyncSite()) {
 	    DBRELE(dbase);
 	    return UNOTSYNC;
@@ -1194,16 +1195,19 @@ int
 ubik_WaitVersion(register struct ubik_dbase *adatabase,
 		 register struct ubik_version *aversion)
 {
+    DBHOLD(adatabase);
     while (1) {
 	/* wait until version # changes, and then return */
-	if (vcmp(*aversion, adatabase->version) != 0)
+	if (vcmp(*aversion, adatabase->version) != 0) {
+	    DBRELE(adatabase);
 	    return 0;
+	}
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_mutex_lock(&adatabase->version_mutex) == 0);
-	assert(pthread_cond_wait(&adatabase->version_cond,&adatabase->version_mutex) == 0);
-	assert(pthread_mutex_unlock(&adatabase->version_mutex) == 0);
+	assert(pthread_cond_wait(&adatabase->version_cond, &adatabase->versionLock) == 0);
 #else
+	DBRELE(adatabase);
 	LWP_WaitProcess(&adatabase->version);	/* same vers, just wait */
+	DBHOLD(adatabase);
 #endif
     }
 }
