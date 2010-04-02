@@ -716,11 +716,15 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		 */
 		while (call->flags & RX_CALL_TQ_BUSY) {
 		    call->flags |= RX_CALL_TQ_WAIT;
+                    call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
 		    CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 		    osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+                    call->tqWaiters--;
+                    if (call->tqWaiters == 0)
+                        call->flags &= ~RX_CALL_TQ_WAIT;
 		}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		clock_NewTime();	/* Bogus:  need new time package */
@@ -1096,11 +1100,15 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
      * packets to the transmit queue.  */
     while (!call->error && call->flags & RX_CALL_TQ_BUSY) {
 	call->flags |= RX_CALL_TQ_WAIT;
+        call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
 	CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 	osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+        call->tqWaiters--;
+        if (call->tqWaiters == 0)
+            call->flags &= ~RX_CALL_TQ_WAIT;
     }
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     /* cp is no longer valid since we may have given up the lock */
@@ -1305,11 +1313,15 @@ rxi_FlushWrite(struct rx_call *call)
 	 */
 	while (call->flags & RX_CALL_TQ_BUSY) {
 	    call->flags |= RX_CALL_TQ_WAIT;
+            call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
 	    CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 	    osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+            call->tqWaiters--;
+            if (call->tqWaiters == 0)
+                call->flags &= ~RX_CALL_TQ_WAIT;
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
