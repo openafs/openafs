@@ -169,7 +169,7 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 
 
 /* called when user enters pane */
-- (BOOL)didEnterPane:(InstallerSectionDirection)dir
+- (void)didEnterPane:(InstallerSectionDirection)dir
 {
 	/* get any existing values from ThisCell and CellAlias files */
 	NSString *readStrCellFile = [NSString stringWithContentsOfFile:fileReadThisCell encoding:NSASCIIStringEncoding error:nil];
@@ -178,7 +178,7 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 	/* drop out now if no ThisCell */
 	if (readStrCellFile == nil)
 	{
-		return YES;
+		return;
 	}
 
 	NSString *cellString = @"";
@@ -196,7 +196,7 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 	/* drop out now if no CellAlias file */
 	if (readStrAliasFile == nil)
 	{
-		return YES;
+		return;
 	}
 	
 	/* now find our local cell in the alias file */
@@ -213,7 +213,7 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 	/* set Alias value in pane */
 	[CellAlias setStringValue:aliasString];
 
-	return YES;
+	return;
 }
 
 /* called when user clicks "Continue" -- return value indicates if application should exit pane */
