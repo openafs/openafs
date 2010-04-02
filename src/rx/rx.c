@@ -4464,6 +4464,13 @@ rxi_ClearTransmitQueue(struct rx_call *call, int force)
         call->tqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->tq);
+	if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
+#ifdef RX_ENABLE_LOCKS
+	    CV_BROADCAST(&call->cv_tq);
+#else /* RX_ENABLE_LOCKS */
+	    osi_rxWakeup(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
+	}
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	call->flags &= ~RX_CALL_TQ_CLEARME;
     }
@@ -4739,14 +4746,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	    dpf(("rcall %"AFS_PTR_FMT" has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 	}
 	call->flags = 0;
-	while (call->tqWaiters) {
-#ifdef RX_ENABLE_LOCKS
-	    CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	    call->tqWaiters--;
-	}
     }
 
     rxi_ClearReceiveQueue(call);
