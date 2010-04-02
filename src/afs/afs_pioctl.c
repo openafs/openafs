@@ -210,8 +210,13 @@ int afs_nobody = NFS_NOBODY;
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
+#ifdef AFS_DARWIN100_ENV
+    dst->in = CAST_USER_ADDR_T(src->in);
+    dst->out = CAST_USER_ADDR_T(src->out);
+#else
     dst->in = (char *)(unsigned long)src->in;
     dst->out = (char *)(unsigned long)src->out;
+#endif
     dst->in_size = src->in_size;
     dst->out_size = src->out_size;
 }
