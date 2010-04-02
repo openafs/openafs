@@ -85,7 +85,12 @@ struct osi_dev {
 };
 
 struct afs_osi_WaitHandle {
+#ifdef AFS_FBSD_ENV
+    struct cv wh_condvar;
+    int wh_inited;
+#else
     caddr_t proc;		/* process waiting */
+#endif
 };
 
 #define	osi_SetFileProc(x,p)	((x)->proc=(p))
