@@ -116,8 +116,17 @@ extern void osi_fbsd_free(void *p);
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(cred),(aresid), curthread)
 extern struct mtx afs_global_mtx;
 extern struct thread *afs_global_owner;
-#define AFS_GLOCK() mtx_lock(&afs_global_mtx)
-#define AFS_GUNLOCK() mtx_unlock(&afs_global_mtx)
+#define AFS_GLOCK() \
+    do { \
+	mtx_assert(&afs_global_mtx, (MA_NOTOWNED)); \
+	mtx_lock(&afs_global_mtx); \
+	mtx_assert(&afs_global_mtx, (MA_OWNED|MA_NOTRECURSED)); \
+    } while (0)
+#define AFS_GUNLOCK() \
+    do { \
+	mtx_assert(&afs_global_mtx, (MA_OWNED|MA_NOTRECURSED)); \
+	mtx_unlock(&afs_global_mtx); \
+    } while (0)
 #define ISAFS_GLOCK() (mtx_owned(&afs_global_mtx))
 # if defined(AFS_FBSD80_ENV) && defined(WITNESS)
 #  define osi_InitGlock() \
