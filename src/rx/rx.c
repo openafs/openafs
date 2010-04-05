@@ -350,7 +350,7 @@ struct rx_connection *rxLastConn = 0;
  *      conn->peer was previously a constant for all intents and so has no
  *      lock protecting this field. The multihomed client delta introduced
  *      a RX code change : change the peer field in the connection structure
- *      to that remote inetrface from which the last packet for this
+ *      to that remote interface from which the last packet for this
  *      connection was sent out. This may become an issue if further changes
  *      are made.
  */
@@ -1149,8 +1149,6 @@ rx_NewCall(struct rx_connection *conn)
 
     NETPRI;
     clock_GetTime(&queueTime);
-    MUTEX_ENTER(&conn->conn_call_lock);
-
     /*
      * Check if there are others waiting for a new call.
      * If so, let them go first to avoid starving them.
@@ -1162,14 +1160,13 @@ rx_NewCall(struct rx_connection *conn)
      * RX_CONN_MAKECALL_WAITING flag bit is used to 
      * indicate that there are indeed calls waiting.
      * The flag is set when the waiter is incremented.
-     * It is only cleared in rx_EndCall when 
-     * makeCallWaiters is 0.  This prevents us from 
-     * accidently destroying the connection while it
-     * is potentially about to be used.
+     * It is only cleared when makeCallWaiters is 0.
+     * This prevents us from accidently destroying the
+     * connection while it is potentially about to be used.
      */
+    MUTEX_ENTER(&conn->conn_call_lock);
     MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->makeCallWaiters) {
-	conn->flags |= RX_CONN_MAKECALL_WAITING;
 	conn->makeCallWaiters++;
         MUTEX_EXIT(&conn->conn_data_lock);
 
@@ -1180,6 +1177,8 @@ rx_NewCall(struct rx_connection *conn)
 #endif
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->makeCallWaiters--;
+        if (conn->makeCallWaiters == 0)
+            conn->flags &= ~RX_CONN_MAKECALL_WAITING;
     } 
     MUTEX_EXIT(&conn->conn_data_lock);
 
@@ -1187,14 +1186,20 @@ rx_NewCall(struct rx_connection *conn)
 	for (i = 0; i < RX_MAXCALLS; i++) {
 	    call = conn->call[i];
 	    if (call) {
-		MUTEX_ENTER(&call->lock);
 		if (call->state == RX_STATE_DALLY) {
-		    rxi_ResetCall(call, 0);
-		    (*call->callNumber)++;
-		    break;
-		}
-		MUTEX_EXIT(&call->lock);
+                    MUTEX_ENTER(&call->lock);
+                    if (call->state == RX_STATE_DALLY) {
+                        call->state = RX_STATE_RESET;
+                        MUTEX_EXIT(&conn->conn_call_lock);
+                        rxi_ResetCall(call, 0);
+                        MUTEX_ENTER(&conn->conn_call_lock);
+                        (*call->callNumber)++;
+                        break;
+                    }
+                    MUTEX_EXIT(&call->lock);
+                }
 	    } else {
+                /* rxi_NewCall returns with mutex locked */
 		call = rxi_NewCall(conn, i);
 		break;
 	    }
@@ -1214,6 +1219,8 @@ rx_NewCall(struct rx_connection *conn)
 #endif
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->makeCallWaiters--;
+        if (conn->makeCallWaiters == 0)
+            conn->flags &= ~RX_CONN_MAKECALL_WAITING;
 	MUTEX_EXIT(&conn->conn_data_lock);
     }
     /*
@@ -1244,21 +1251,16 @@ rx_NewCall(struct rx_connection *conn)
 
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
-
-    MUTEX_EXIT(&call->lock);
     MUTEX_EXIT(&conn->conn_call_lock);
-    USERPRI;
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-    /* Now, if TQ wasn't cleared earlier, do it now. */
-    MUTEX_ENTER(&call->lock);
-    rxi_WaitforTQBusy(call);
-    if (call->flags & RX_CALL_TQ_CLEARME) {
-	rxi_ClearTransmitQueue(call, 1);
-	/*queue_Init(&call->tq);*/
+    if (call->flags & (RX_CALL_TQ_BUSY | RX_CALL_TQ_CLEARME)) {
+        osi_Panic("rx_NewCall call about to be used without an empty tq");
     }
-    MUTEX_EXIT(&call->lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+
+    MUTEX_EXIT(&call->lock);
+    USERPRI;
 
     dpf(("rx_NewCall(call %"AFS_PTR_FMT")\n", call));
     return call;
@@ -1949,8 +1951,6 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     afs_int32 error;
     SPLVAR;
 
-
-
     dpf(("rx_EndCall(call %"AFS_PTR_FMT" rc %d error %d abortCode %d)\n",
           call, rc, call->error, call->abortCode));
 
@@ -2018,18 +2018,10 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	 * rx_NewCall is in a stable state. Otherwise, rx_NewCall may
 	 * have checked this call, found it active and by the time it
 	 * goes to sleep, will have missed the signal.
-         *
-         * Do not clear the RX_CONN_MAKECALL_WAITING flag as long as
-         * there are threads waiting to use the conn object.
 	 */
-	MUTEX_EXIT(&call->lock);
-	MUTEX_ENTER(&conn->conn_call_lock);
-	MUTEX_ENTER(&call->lock);
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
-            if (conn->makeCallWaiters == 0)
-                conn->flags &= (~RX_CONN_MAKECALL_WAITING);
 	    MUTEX_EXIT(&conn->conn_data_lock);
 #ifdef	RX_ENABLE_LOCKS
 	    CV_BROADCAST(&conn->conn_call_cv);
@@ -2067,7 +2059,6 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
     if (conn->type == RX_CLIENT_CONNECTION) {
-	MUTEX_EXIT(&conn->conn_call_lock);
 	conn->flags &= ~RX_CONN_BUSY;
     }
     USERPRI;
@@ -4729,28 +4720,14 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 
     flags = call->flags;
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-    if (flags & RX_CALL_TQ_BUSY) {
-	call->flags = RX_CALL_TQ_CLEARME | RX_CALL_TQ_BUSY;
-	call->flags |= (flags & RX_CALL_TQ_WAIT);
-        call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-        CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-        osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-        call->tqWaiters--;
-	if (call->tqWaiters == 0)
-	    call->flags &= ~RX_CALL_TQ_WAIT;
-    } else
+    rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-    {
-	rxi_ClearTransmitQueue(call, 1);
-	/* why init the queue if you just emptied it? queue_Init(&call->tq); */
-	if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
-	    dpf(("rcall %"AFS_PTR_FMT" has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
-	}
-	call->flags = 0;
+
+    rxi_ClearTransmitQueue(call, 1);
+    if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
+        dpf(("rcall %"AFS_PTR_FMT" has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
     }
+    call->flags = 0;
 
     rxi_ClearReceiveQueue(call);
     /* why init the queue if you just emptied it? queue_Init(&call->rq); */

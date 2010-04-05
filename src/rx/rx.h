@@ -580,6 +580,7 @@ struct rx_call {
 #define	RX_STATE_ACTIVE	  2	/* An active call; a process is dealing with this call */
 #define	RX_STATE_DALLY	  3	/* Dallying after process is done with call */
 #define	RX_STATE_HOLD	  4	/* Waiting for acks on reply data packets */
+#define RX_STATE_RESET    5     /* Call is being reset */
 
 /* Call modes:  the modes of a call in RX_STATE_ACTIVE state (process attached) */
 #define	RX_MODE_SENDING	  1	/* Sending or ready to send */
