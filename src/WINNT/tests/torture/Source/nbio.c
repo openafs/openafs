@@ -153,6 +153,8 @@ int nb_Xrmdir(char *Directory, char *type)
         sprintf(temp, "rmdir failed on %s\n", command);
         LeaveThread(rc, temp, CMD_XRMDIR);
         sprintf(temp, "FAILURE: Thread %d - Xrmdir failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -188,6 +190,8 @@ int nb_Mkdir(char *Directory)
         sprintf(temp,  "mkdir failed on %s\n", command);
         LeaveThread(rc, temp, CMD_MKDIR);
         sprintf(temp, "ERROR: Thread %d - mkdir failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -226,6 +230,8 @@ int nb_Attach(char *Locker, char *Drive)
         sprintf(pExitStatus->Reason, "attach failed on %s\n", command);
         pExitStatus->ExitStatus = rc;
         sprintf(temp, "ERROR: Thread %d - attach failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
     }
     EndFirstTimer(CMD_ATTACH, 1);
@@ -266,6 +272,8 @@ int nb_Detach(char *Name, char *type)
         sprintf(temp, "detach failed on %s\n", command);
         LeaveThread(rc, temp, CMD_DETACH);
         sprintf(temp, "ERROR: Thread %d - detach failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -309,6 +317,8 @@ int nb_CreateFile(char *path, DWORD size)
         sprintf(temp, "Create file failed on \"%s\" GLE(0x%x)\n", NewPath, gle);
         LeaveThread(0, temp, CMD_CREATEFILE);
         sprintf(temp, "ERROR: Thread %d - Create file failed on \"%s\" GLE(0x%x)\n", ProcessNumber, NewPath, gle);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -392,6 +402,8 @@ int nb_DeleteFile(char *path)
         sprintf(temp, "del failed on \"%s\"\n", NewPath);
         LeaveThread(rc, temp, CMD_DELETEFILES);
         sprintf(temp, "ERROR: Thread %d - del failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -427,6 +439,8 @@ int nb_xcopy(char *Source, char *Destination)
         sprintf(temp, "xcopy failed on %s\n", command);
         LeaveThread((int)rc, temp, CMD_XCOPY);
         sprintf(temp, "FAIURE: Thread %d - xcopy failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -461,6 +475,8 @@ int nb_Move(char *Source, char *Destination)
         sprintf(temp, "move failed on \"%s\"\n", command);
         LeaveThread(rc, temp, CMD_MOVE);
         sprintf(temp, "FAILURE: Thread %d - move failed on \"%s\"\n", ProcessNumber, command);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -584,6 +600,8 @@ int nb_writex(int handle, int offset, int size, int ret_size)
         if (verbose)
             printf("%s", temp);
         nb_close(handle);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
 	}

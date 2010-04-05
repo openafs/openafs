@@ -180,6 +180,8 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
         if (LastKnownError != ERROR_NETNAME_DELETED)
             break; 
         sprintf(temp, "entered error %d processing\n", LastKnownError);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
 
         count = strlen(pExitStatus->Reason);
@@ -211,6 +213,8 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
             Sleep(10 * 1000);
         }
         sprintf(temp, "leaving error 0x%x processing\n", LastKnownError);
+        if (verbose)
+            printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         if (count > 3)
             break;
@@ -277,9 +281,13 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
 
     sprintf(temp, "Started Iteration %d\n", CurrentLoop);
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
+    if (verbose)
+        printf("%s", temp);
     LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
     sprintf(temp, "Thread %d started\n", ProcessNumber);
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
+    if (verbose)
+        printf("%s", temp);
     LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
 
     hFile = CreateFile(ClientText, GENERIC_READ | STANDARD_RIGHTS_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL); 
@@ -318,16 +326,22 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
         {
             strcpy(temp, "AFS suspend request received\n");
             sprintf(FileName, "Thread_%05d.log", ProcessNumber);
+            if (verbose)
+                printf("%s", temp);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
             while (WaitForSingleObject(ContinueEventHandle, 5000) == WAIT_TIMEOUT);
             strcpy(temp, "AFS continue request received\n");
             sprintf(FileName, "Thread_%05d.log", ProcessNumber);
+            if (verbose)
+                printf("%s", temp);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         }
         if (rc = WaitForSingleObject(ShutDownEventHandle, 0) == WAIT_OBJECT_0)
         {
             strcpy(temp, "AFS shutdown request received\n");
             sprintf(FileName, "Thread_%05d.log", ProcessNumber);
+            if (verbose)
+                printf("%s", temp);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
             break;
         }
