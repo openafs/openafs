@@ -139,6 +139,13 @@ sub extract_openafs {
 
     $oversion =~ /org.openafs.filesystems.afs\(([0-9.]+)\)/;
     my $vers = $1;
+    $vers =~ s/fc/pre/;
+    my $dmgvers = $vers;
+    if ($vers =~ /([0-9]+)f([0-9]+)/) {
+	$dmgvers = "$1" . "." . "$2";
+	$vers = "$1";
+    }
+
     my $odmg = "$oarchive/$vers/macos-10.${major}/OpenAFS-$vers-\*.dmg";
     if ($option_verbose) {
 	print "$hdutil $odmg extractall OpenAFS.pkg $tempdir/OpenAFS.pkg\n"; 
