@@ -268,11 +268,14 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     }
 
     /* We can end up here with code == CM_ERROR_NOSUCHVOLUME if the base volume name
-     * does not exist but there might exist a .readonly volume.  If the base name 
-     * doesn't exist we will not care about the .backup that might be left behind
-     * since there should be no method to access it.  
+     * does not exist and is not a numeric string but there might exist a .readonly volume.
+     * If the base name doesn't exist we will not care about the .backup that might be left
+     * behind since there should be no method to access it.
      */
-    if (code == CM_ERROR_NOSUCHVOLUME && volp->vol[RWVOL].ID == 0 && strlen(volp->namep) < (VL_MAXNAMELEN - 9)) {
+    if (code == CM_ERROR_NOSUCHVOLUME &&
+        _atoi64(volp->namep) == 0 &&
+        volp->vol[RWVOL].ID == 0 &&
+        strlen(volp->namep) < (VL_MAXNAMELEN - 9)) {
         char name[VL_MAXNAMELEN];
 
         snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
