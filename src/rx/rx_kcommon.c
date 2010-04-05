@@ -1344,7 +1344,7 @@ osi_Panic(char *msg, ...)
     va_start(ap, msg);
     vsnprintf(buf, sizeof(buf), msg, ap);
     va_end(ap);
-    printf(buf);
+    printf("%s", buf);
     panic(buf);
 #else
     va_list ap;
