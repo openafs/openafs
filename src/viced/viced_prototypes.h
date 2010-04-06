@@ -20,7 +20,6 @@ extern afs_int32 BlocksSpare;
 extern afs_int32 PctSpare;
 
 /* callback.c */
-extern int BreakVolumeCallBacks(afs_uint32);
 extern int InitCallBack(int);
 extern int BreakLaterCallBacks(void);
 extern int BreakVolumeCallBacksLater(afs_uint32);

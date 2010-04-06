@@ -106,7 +106,8 @@ main(int argc, char *argv[])
 	printf("refCount:        %u\n", peer.refCount);
 	printf("burstSize:       %u\n", peer.burstSize);
 	printf("burst:           %u\n", peer.burst);
-	printf("burstWait:       %u\n", peer.burstWait);
+	printf("burstWait:       %u.%06u\n", peer.burstWait.sec,
+	       peer.burstWait.usec);
 	printf("rtt:             %u\n", peer.rtt);
 	printf("rtt_dev:         %u\n", peer.rtt_dev);
 	printf("timeout:         %u.%06u\n", peer.timeout.sec,

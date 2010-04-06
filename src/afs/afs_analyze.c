@@ -26,7 +26,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif
 #endif /* !UKERNEL */
@@ -312,7 +312,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     afs_int32 i;
     struct srvAddr *sa;
     struct server *tsp;
-    struct volume *tvp;
+    struct volume *tvp = NULL;
     afs_int32 shouldRetry = 0;
     afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
@@ -458,12 +458,18 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     if ((acode < 0) && (acode != VRESTARTING)) {
 	if (acode == RX_CALL_TIMEOUT) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
-	    areq->idleError++;
-	    if (serversleft) {
-		shouldRetry = 1;
-	    } else {
+	    if (afid)
+		tvp = afs_FindVolume(afid, READ_LOCK);
+	    if (!afid || !tvp || (tvp->states & VRO))
+		areq->idleError++;
+	    if ((serversleft == 0) && tvp &&
+		((tvp->states & VRO) || (tvp->states & VBackup))) {
 		shouldRetry = 0;
+	    } else {
+		shouldRetry = 1;
 	    }
+	    if (tvp)
+		afs_PutVolume(tvp, READ_LOCK);
 	    /* By doing this, we avoid ever marking a server down
 	     * in an idle timeout case. That's because the server is 
 	     * still responding and may only be letting a single vnode
@@ -527,6 +533,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
+		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired\n",
 		     tu->vid, aconn->srvr->server->cell->cellName);
@@ -543,6 +550,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		    areq->tokenError = 0;
 		    aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		    aconn->user->states |= UTokensBad;
+		    afs_NotifyUser(tu, UTokensDropped);
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d)\n",
 			 tu->vid, aconn->srvr->server->cell->cellName, acode);
@@ -556,12 +564,14 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
+		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s have expired\n",
 		     areq->uid, aconn->srvr->server->cell->cellName);
 	    } else {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
+		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d)\n",
 		     areq->uid, aconn->srvr->server->cell->cellName, acode);

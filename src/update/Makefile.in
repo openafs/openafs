@@ -15,6 +15,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \

@@ -233,7 +233,7 @@ afs_Daemon(void)
 	    /* Do the check here if the correct afsd is not installed. */
 	    if (!cs_warned) {
 		cs_warned = 1;
-		printf("Please install afsd with check server daemon.\n");
+		afs_warn("Please install afsd with check server daemon.\n");
 	    }
 	    if (lastNMinCheck + afs_probe_interval < now) {
 		/* only check down servers */
@@ -634,7 +634,8 @@ afs_BBusy(void)
 struct brequest *
 afs_BQueue(register short aopcode, register struct vcache *avc,
 	   afs_int32 dontwait, afs_int32 ause, afs_ucred_t *acred,
-	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
+	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0,
+	   void *apparm1, void *apparm2)
 {
     register int i;
     register struct brequest *tb;
@@ -660,6 +661,8 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 	    tb->size_parm[0] = asparm0;
 	    tb->size_parm[1] = asparm1;
 	    tb->ptr_parm[0] = apparm0;
+	    tb->ptr_parm[1] = apparm1;
+	    tb->ptr_parm[2] = apparm2;
 	    tb->flags = 0;
 	    tb->code = 0;
 	    tb->ts = afs_brs_count++;
@@ -960,29 +963,82 @@ afs_BioDaemon(afs_int32 nbiods)
 
 
 int afs_nbrs = 0;
+static_inline void
+afs_BackgroundDaemon_once(void)
+{
+    LOCK_INIT(&afs_xbrs, "afs_xbrs");
+    memset(afs_brs, 0, sizeof(afs_brs));
+    brsInit = 1;
+#if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
+    /*
+     * steal the first daemon for doing delayed DSlot flushing
+     * (see afs_GetDownDSlot)
+     */
+    AFS_GUNLOCK();
+    afs_sgidaemon();
+    exit(CLD_EXITED, 0);
+#endif
+}
+
+static_inline void
+brequest_release(struct brequest *tb)
+{
+    if (tb->vc) {
+	AFS_RELE(AFSTOV(tb->vc));       /* MUST call vnode layer or could lose vnodes */
+	tb->vc = NULL;
+    }
+    if (tb->cred) {
+	crfree(tb->cred);
+	tb->cred = (afs_ucred_t *)0;
+    }
+    tb->code = 0;
+    afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
+}
+
+#ifdef AFS_DARWIN80_ENV
+int
+afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2)
+#else
 void
 afs_BackgroundDaemon(void)
+#endif
 {
     struct brequest *tb;
     int i, foundAny;
 
     AFS_STATCNT(afs_BackgroundDaemon);
     /* initialize subsystem */
-    if (brsInit == 0) {
-	LOCK_INIT(&afs_xbrs, "afs_xbrs");
-	memset(afs_brs, 0, sizeof(afs_brs));
-	brsInit = 1;
-#if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
-	/*
-	 * steal the first daemon for doing delayed DSlot flushing
-	 * (see afs_GetDownDSlot)
-	 */
-	AFS_GUNLOCK();
-	afs_sgidaemon();
-	return;
+    if (brsInit == 0)
+	/* Irix with "short stack" exits */
+	afs_BackgroundDaemon_once();
+
+#ifdef AFS_DARWIN80_ENV
+    /* If it's a re-entering syscall, complete the request and release */
+    if (uspc->ts > -1) {
+        tb = afs_brs;
+        for (i = 0; i < NBRS; i++, tb++) {
+            if (tb->ts == uspc->ts) {
+                /* copy the userspace status back in */
+                ((struct afs_uspc_param *) tb->ptr_parm[0])->retval =
+                    uspc->retval;
+                /* mark it valid and notify our caller */
+                tb->flags |= BUVALID;
+                if (tb->flags & BUWAIT) {
+                    tb->flags &= ~BUWAIT;
+                    afs_osi_Wakeup(tb);
+                }
+                brequest_release(tb);
+                break;
+            }
+        }
+    } else {
+        afs_osi_MaskUserLoop();
 #endif
+        /* Otherwise it's a new one */
+	afs_nbrs++;
+#ifdef AFS_DARWIN80_ENV
     }
-    afs_nbrs++;
+#endif
 
     ObtainWriteLock(&afs_xbrs, 302);
     while (1) {
@@ -994,7 +1050,11 @@ afs_BackgroundDaemon(void)
 		afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
+#ifdef AFS_DARWIN80_ENV
+	    return -2;
+#else
 	    return;
+#endif
 	}
 
 	/* find a request */
@@ -1020,24 +1080,29 @@ afs_BackgroundDaemon(void)
 	    if (tb->opcode == BOP_FETCH)
 		BPrefetch(tb);
 #if defined(AFS_CACHE_BYPASS)		
-		else if (tb->opcode == BOP_FETCH_NOCACHE)
+	    else if (tb->opcode == BOP_FETCH_NOCACHE)
 		BPrefetchNoCache(tb);
 #endif		
 	    else if (tb->opcode == BOP_STORE)
 		BStore(tb);
 	    else if (tb->opcode == BOP_PATH)
 		BPath(tb);
+#ifdef AFS_DARWIN80_ENV
+            else if (tb->opcode == BOP_MOVE) {
+                memcpy(uspc, (struct afs_uspc_param *) tb->ptr_parm[0],
+                       sizeof(struct afs_uspc_param));
+                uspc->ts = tb->ts;
+                /* string lengths capped in move vop; copy NUL tho */
+                memcpy(param1, (char *)tb->ptr_parm[1],
+                       strlen(tb->ptr_parm[1])+1);
+                memcpy(param2, (char *)tb->ptr_parm[2],
+                       strlen(tb->ptr_parm[2])+1);
+                return 0;
+            }
+#endif
 	    else
 		panic("background bop");
-	    if (tb->vc) {
-		AFS_RELE(AFSTOV(tb->vc));	/* MUST call vnode layer or could lose vnodes */
-		tb->vc = NULL;
-	    }
-	    if (tb->cred) {
-		crfree(tb->cred);
-		tb->cred = (afs_ucred_t *)0;
-	    }
-	    afs_BRelease(tb);	/* this grabs and releases afs_xbrs lock */
+	    brequest_release(tb);
 	    ObtainWriteLock(&afs_xbrs, 305);
 	}
 	if (!foundAny) {
@@ -1049,6 +1114,9 @@ afs_BackgroundDaemon(void)
 	    afs_brsDaemons--;
 	}
     }
+#ifdef AFS_DARWIN80_ENV
+    return -2;
+#endif
 }
 
 

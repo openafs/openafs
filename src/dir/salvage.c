@@ -27,6 +27,10 @@
 
 #include <string.h>
 
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
+
 #include "dir.h"
 /* Defined in vol/vol-salvage.c */
 extern void Log(const char *format, ...);

@@ -50,7 +50,7 @@ ReadInt16(XFILE * X, afs_uint16 * val)
 {
     afs_uint32 r;
 
-    if (r = xfread(X, val, 2))
+    if ((r = xfread(X, val, 2)))
 	return r;
     *val = ntohs(*val);
     return 0;
@@ -61,7 +61,7 @@ ReadInt32(XFILE * X, afs_uint32 * val)
 {
     afs_uint32 r;
 
-    if (r = xfread(X, val, 4))
+    if ((r = xfread(X, val, 4)))
 	return r;
     *val = ntohl(*val);
     return 0;

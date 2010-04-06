@@ -501,7 +501,7 @@ afs_ReadNoCache(register struct vcache *avc,
     AFS_GLOCK();
     while(bcnt < 20) {
 	breq = afs_BQueue(BOP_FETCH_NOCACHE, avc, B_DONTWAIT, 0, acred, 1, 1,
-			  bparms);
+			  bparms, (void *)0, (void *)0);
 	if(breq != 0) {
 	    code = 0;
 	    break;

@@ -301,8 +301,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 }
 
 void
-afs_nfsclient_getcreds(au)
-    struct unixuser *au;
+afs_nfsclient_getcreds(struct unixuser *au)
 {
     struct nfsclientpag *np = (struct nfsclientpag *)(au->exporter);
     struct rx_securityClass *csec;
@@ -415,10 +414,10 @@ done:
 }
 
 
-/* It's called whenever a new unixuser structure is created for the remote user associated with the nfsclientpag structure, np */
+/* It's called whenever a new unixuser structure is created for the remote
+ * user associated with the nfsclientpag structure, np */
 void
-afs_nfsclient_hold(np)
-     register struct nfsclientpag *np;
+afs_nfsclient_hold(register struct nfsclientpag *np)
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -430,8 +429,7 @@ afs_nfsclient_hold(np)
 
 /* check if this exporter corresponds to the specified host */
 int
-afs_nfsclient_checkhost(np, host)
-    register struct nfsclientpag *np;
+afs_nfsclient_checkhost(register struct nfsclientpag *np, int host)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -441,8 +439,7 @@ afs_nfsclient_checkhost(np, host)
 
 /* get the host for this exporter, or 0 if there is an error */
 afs_int32
-afs_nfsclient_gethost(np)
-    register struct nfsclientpag *np;
+afs_nfsclient_gethost(register struct nfsclientpag *np)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -450,7 +447,9 @@ afs_nfsclient_gethost(np)
 }
 
 
-/* if inname is non-null, a new system name value is set for the remote user (inname contains the new sysname). In all cases, outname returns the current sysname value for this remote user */
+/* if inname is non-null, a new system name value is set for the remote
+ * user (inname contains the new sysname). In all cases, outname returns
+ * the current sysname value for this remote user */
 int 
 afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname, 
 		      char ***outname, int *num, int allpags)
@@ -500,11 +499,15 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
 }
 
 
-/* Garbage collect routine for the nfs exporter. When pag is -1 then all entries are removed (used by the nfsclient_shutdown routine); else if it's non zero then only the entry with that pag is removed, else all "timedout" entries are removed. TimedOut entries are those who have no "unixuser" structures associated with them (i.e. unixusercnt == 0) and they haven't had any activity the last NFSCLIENTGC seconds */
+/* Garbage collect routine for the nfs exporter. When pag is -1 then all
+ * entries are removed (used by the nfsclient_shutdown routine); else if
+ * it's non zero then only the entry with that pag is removed, else all
+ * "timedout" entries are removed. TimedOut entries are those who have no
+ * "unixuser" structures associated with them (i.e. unixusercnt == 0) and
+ * they haven't had any activity the last NFSCLIENTGC seconds */
 void
-afs_nfsclient_GC(exporter, pag)
-     register struct afs_exporter *exporter;
-     register afs_int32 pag;
+afs_nfsclient_GC(register struct afs_exporter *exporter,
+		 register afs_int32 pag)
 {
     register struct nfsclientpag *np, **tnp, *nnp;
     register afs_int32 i, delflag;
@@ -605,7 +608,7 @@ afs_iauth_verify(long id, fsid_t * fsidp, long host, int uid,
  * and -1 on failure. Can fail because DFS has already registered.
  */
 int
-afs_iauth_register()
+afs_iauth_register(void)
 {
     if (nfs_iauth_register((unsigned long)afs_nfs_id, afs_iauth_verify))
 	return -1;
@@ -618,7 +621,7 @@ afs_iauth_register()
 /* afs_iauth_unregister - unregister the iauth verify routine. Called on shutdown. 
  */
 void
-afs_iauth_unregister()
+afs_iauth_unregister(void)
 {
     if (afs_iauth_initd)
 	nfs_iauth_unregister((unsigned long)afs_nfs_id);
@@ -629,7 +632,7 @@ afs_iauth_unregister()
 
 
 void
-shutdown_nfsclnt()
+shutdown_nfsclnt(void)
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());

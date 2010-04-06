@@ -118,6 +118,10 @@ static u_int fix_buf_size(u_int s);
 
 static struct xdr_ops xdrrec_ops = {
 #ifdef AFS_NT40_ENV
+#ifdef AFS_XDR_64BITOPS
+    NULL,
+    NULL,
+#endif
     /* Windows does not support labeled assignments */
     xdrrec_getint32,    /* deserialize an afs_int32 */
     xdrrec_putint32,    /* serialize an afs_int32 */
@@ -128,6 +132,10 @@ static struct xdr_ops xdrrec_ops = {
     xdrrec_inline,      /* prime stream for inline macros */
     xdrrec_destroy      /* destroy stream */
 #else
+#ifdef AFS_XDR_64BITOPS
+    .x_getint64 = NULL,
+    .x_putint64 = NULL,
+#endif
     .x_getint32 = xdrrec_getint32,
     .x_putint32 = xdrrec_putint32,
     .x_getbytes = xdrrec_getbytes,

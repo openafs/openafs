@@ -194,6 +194,7 @@ enum VolFlags {
     VOL_IS_BUSY           = 0x20,    /**< volume is not to be free()d */
     VOL_ON_VLRU           = 0x40,    /**< volume is on the VLRU */
     VOL_HDR_DONTSALV      = 0x80,    /**< volume header DONTSALVAGE flag is set */
+    VOL_LOCKED            = 0x100,   /**< volume is disk-locked (@see VLockVolumeNB) */
 };
 
 /* VPrintExtendedCacheStats flags */
@@ -819,6 +820,13 @@ extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
 			   char **namep);
 extern char *vol_DevName(dev_t adev, char *wpath);
 
+struct VLockFile;
+extern void VLockFileInit(struct VLockFile *lf, const char *path);
+extern void VLockFileReinit(struct VLockFile *lf);
+extern int VLockFileLock(struct VLockFile *lf, afs_uint32 offset,
+                         int locktype, int nonblock);
+extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
+
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
@@ -846,8 +854,15 @@ extern int VDeregisterVolOp_r(Volume * vp);
 extern void VCancelReservation_r(Volume * vp);
 extern int VChildProcReconnectFS_r(void);
 extern void VOfflineForVolOp_r(Error *ec, Volume *vp, char *message);
+
+struct VDiskLock;
+extern void VDiskLockInit(struct VDiskLock *dl, struct VLockFile *lf,
+                          afs_uint32 offset);
+extern int VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock);
+extern void VReleaseDiskLock(struct VDiskLock *dl, int locktype);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+extern int VVolOpLeaveOnlineNoHeader_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 
 extern void VPurgeVolume(Error * ec, Volume * vp);
@@ -864,6 +879,54 @@ extern afs_int32 VCreateVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 					 struct DiskPartition64 * dp);
 extern afs_int32 VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
 					  VolumeId volid, VolumeId parent);
+
+/**
+ * VWalkVolumeHeaders header callback.
+ *
+ * @param[in] dp   disk partition
+ * @param[in] name full path to the .vol header file
+ * @param[in] hdr  the header data that was read from the .vol header
+ * @param[in] last 1 if this is the last attempt to read the vol header, 0
+ *                 otherwise. DAFS VWalkVolumeHeaders will retry reading the
+ *                 header once, if a non-fatal error occurs when reading the
+ *                 header, or if this function returns a positive error code.
+ *                 So, if there is a problem, this function will be called
+ *                 first with last=0, then with last=1, then the error function
+ *                 callback will be called. For non-DAFS, this is always 1.
+ * @param[in] rock the rock passed to VWalkVolumeHeaders
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval negative a fatal error that should stop the walk immediately
+ *  @retval positive an error with the volume header was encountered; the walk
+ *          should continue, but the error function should be called on this
+ *          header
+ *
+ * @see VWalkVolumeHeaders
+ */
+typedef int (*VWalkVolFunc)(struct DiskPartition64 *dp, const char *name,
+                            struct VolumeDiskHeader *hdr, int last,
+                            void *rock);
+/**
+ * VWalkVolumeHeaders error callback.
+ *
+ * This is called from VWalkVolumeHeaders when an invalid or otherwise
+ * problematic volume header is encountered. It is typically implemented as a
+ * wrapper to unlink the .vol file.
+ *
+ * @param[in] dp   disk partition
+ * @param[in] name full path to the .vol header file
+ * @param[in] hdr  header read in from the .vol file, or NULL if it could not
+ *                 be read
+ * @param[in] rock rock passed to VWalkVolumeHeaders
+ *
+ * @see VWalkVolumeHeaders
+ */
+typedef void (*VWalkErrFunc)(struct DiskPartition64 *dp, const char *name,
+                             struct VolumeDiskHeader *hdr, void *rock);
+extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
+                              VWalkVolFunc volfunc, VWalkErrFunc errfunc,
+                              void *rock);
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store

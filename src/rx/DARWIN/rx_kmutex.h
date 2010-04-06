@@ -48,7 +48,6 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
  */
 #define CV_INIT(cv,a,b,c)
 #define CV_DESTROY(cv)
-#ifdef AFS_DARWIN14_ENV
 #ifdef AFS_DARWIN80_ENV
 #define CV_WAIT(cv, lck)    do { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
@@ -99,31 +98,6 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 #endif
 #define CV_SIGNAL(cv)           wakeup_one((void *)(cv))
 #define CV_BROADCAST(cv)        wakeup((void *)(cv))
-#else
-#define CV_WAIT(cv, lck)    { \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-	                        assert_wait((event_t)(cv), 0);  \
-	                        MUTEX_EXIT(lck);        \
-	                        thread_block(0);                \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-	                        MUTEX_ENTER(lck); \
-	                    }
-
-#define CV_TIMEDWAIT(cv,lck,t)  { \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-	                        assert_wait((event_t)(cv), 0);  \
-	                        thread_set_timer(t, NSEC_PER_SEC/hz);   \
-	                        MUTEX_EXIT(lck);        \
-	                        thread_block(0);                \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-	                        MUTEX_ENTER(lck);       \
-				}
-
-#define CV_SIGNAL(cv)           thread_wakeup_one((event_t)(cv))
-#define CV_BROADCAST(cv)        thread_wakeup((event_t)(cv))
-#endif
 
 #ifdef AFS_DARWIN80_ENV
 typedef struct {

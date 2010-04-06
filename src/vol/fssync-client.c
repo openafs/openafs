@@ -151,6 +151,19 @@ FSYNC_askfs(SYNC_command * com, SYNC_response * res)
     return code;
 }
 
+
+/**
+ *  FSSYNC volume operations client interface.
+ *
+ * @param[in]    volume     volume id
+ * @param[in]    partName   partition name string
+ * @param[in]    com        FSSYNC command code
+ * @param[in]    reason     FSSYNC reason sub-code
+ * @param[out]   res        response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK  success
+ */
 afs_int32
 FSYNC_GenericOp(void * ext_hdr, size_t ext_len,
 	      int command, int reason,
@@ -195,6 +208,99 @@ FSYNC_VolOp(VolumeId volume, char * partition,
     return FSYNC_GenericOp(&vcom, sizeof(vcom), command, reason, res);
 }
 
+/**
+ * verify that the fileserver still thinks we have a volume checked out.
+ *
+ * In DAFS, a non-fileserver program accesses a volume by checking it out from
+ * the fileserver (FSYNC_VOL_OFF or FSYNC_VOL_NEEDVOLUME), and then locks the
+ * volume. There is a possibility that the fileserver crashes or restarts for
+ * some reason between volume checkout and locking; if this happens, the
+ * fileserver could attach the volume before we had a chance to lock it. This
+ * function serves to detect if this has happened; it must be called after
+ * volume checkout and locking to make sure the fileserver still thinks we
+ * have the volume. (If it doesn't, we should try to check it out again.)
+ *
+ * @param[in] volume    volume ID
+ * @param[in] partition partition name string
+ * @param[in] command   the command that was used to checkout the volume
+ * @param[in] reason    the reason code used to checkout the volume
+ *
+ * @return operation status
+ *  @retval SYNC_OK the fileserver could not have attached the volume since
+ *                  it was checked out (either it thinks it is still checked
+ *                  out, or it doesn't know about the volume)
+ *  @retval SYNC_DENIED fileserver may have restarted since checkout; checkout
+ *                      should be reattempted
+ *  @retval SYNC_COM_ERROR internal/fatal error
+ */
+afs_int32
+FSYNC_VerifyCheckout(VolumeId volume, char * partition,
+                     afs_int32 command, afs_int32 reason)
+{
+    SYNC_response res;
+    FSSYNC_VolOp_info vop;
+    afs_int32 code;
+    afs_int32 pid;
+
+    res.hdr.response_len = sizeof(res.hdr);
+    res.payload.buf = &vop;
+    res.payload.len = sizeof(vop);
+
+    code = FSYNC_VolOp(volume, partition, FSYNC_VOL_QUERY_VOP, FSYNC_WHATEVER, &res);
+    if (code != SYNC_OK) {
+	if (res.hdr.reason == FSYNC_NO_PENDING_VOL_OP) {
+	    Log("FSYNC_VerifyCheckout: fileserver claims no vop for vol %lu "
+	        "part %s; fileserver may have restarted since checkout\n",
+	        afs_printable_uint32_lu(volume), partition);
+	    return SYNC_DENIED;
+	}
+
+	if (res.hdr.reason == FSYNC_UNKNOWN_VOLID) {
+	    /* if the fileserver does not know about this volume, there's no
+	     * way it could have attached it, so we're fine */
+	    return SYNC_OK;
+	}
+
+	Log("FSYNC_VerifyCheckout: FSYNC_VOL_QUERY_VOP failed for vol %lu "
+	    "part %s with code %ld reason %ld\n",
+	    afs_printable_uint32_lu(volume), partition,
+	    afs_printable_int32_ld(code),
+	    afs_printable_int32_ld(res.hdr.reason));
+	return SYNC_COM_ERROR;
+    }
+
+    pid = getpid();
+
+    /* Check if the current vol op is us. Checking pid is probably enough, but
+     * be a little bit paranoid. We could also probably check tid, but I'm not
+     * completely confident of its reliability on all platforms (on pthread
+     * envs, we coerce a pthread_t to an afs_int32, which is not guaranteed
+     * to mean anything significant). */
+
+    if (vop.com.programType == programType && vop.com.pid == pid &&
+        vop.com.command == command && vop.com.reason == reason) {
+
+	/* looks like the current pending vol op is the same one as the one
+	 * with which we checked it out. success. */
+	return SYNC_OK;
+    }
+
+    Log("FSYNC_VerifyCheckout: vop for vol %lu part %s does not match "
+        "expectations (got pt %ld pid %ld cmd %ld reason %ld, but expected "
+        "pt %ld pid %ld cmd %ld reason %ld); fileserver may have restarted "
+        "since checkout\n", afs_printable_uint32_lu(volume), partition,
+	afs_printable_int32_ld(vop.com.programType),
+	afs_printable_int32_ld(vop.com.pid),
+	afs_printable_int32_ld(vop.com.command),
+	afs_printable_int32_ld(vop.com.reason),
+	afs_printable_int32_ld(programType),
+	afs_printable_int32_ld(pid),
+	afs_printable_int32_ld(command),
+	afs_printable_int32_ld(reason));
+
+    return SYNC_DENIED;
+}
+
 afs_int32
 FSYNC_StatsOp(FSSYNC_StatsOp_hdr * scom, int command, int reason,
 	      SYNC_response * res)
@@ -202,5 +308,139 @@ FSYNC_StatsOp(FSSYNC_StatsOp_hdr * scom, int command, int reason,
     return FSYNC_GenericOp(scom, sizeof(*scom), command, reason, res);
 }
 
+/**
+ * query the volume group cache.
+ *
+ * @param[in]  part     vice partition path
+ * @param[in]  volid    volume id
+ * @param[out] qry      query response object
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCQuery(char * part,
+	     VolumeId volid,
+	     FSSYNC_VGQry_response_t * qry,
+	     SYNC_response *res)
+{
+    SYNC_response lres;
+
+    if (!res) {
+	res = &lres;
+    }
+
+    res->hdr.response_len = sizeof(res->hdr);
+    res->payload.buf = qry;
+    res->payload.len = sizeof(*qry);
+
+    return FSYNC_VolOp(volid, part, FSYNC_VG_QUERY, 0, res);
+}
+
+/**
+ * perform an update operation on the VGC.
+ *
+ * @param[in] parent    rw volume
+ * @param[in] child     volume id to add
+ * @param[in] partition name of vice partition on which this VG resides
+ * @param[in] opcode    FSSYNC VG cache opcode
+ * @param[in] reason    FSSYNC reason code
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ *
+ * @internal
+ */
+static afs_int32
+_FSYNC_VGCUpdate(char * partition,
+		 VolumeId parent,
+		 VolumeId child,
+		 int opcode,
+		 int reason,
+		 SYNC_response *res)
+{
+    FSSYNC_VGUpdate_command_t vcom;
+
+    memset(&vcom, 0, sizeof(vcom));
+
+    vcom.parent = parent;
+    vcom.child = child;
+    if (partition)
+	strlcpy(vcom.partName, partition, sizeof(vcom.partName));
+
+    return FSYNC_GenericOp(&vcom, sizeof(vcom), opcode, reason, res);
+}
+
+/**
+ * Add volume to volume group cache.
+ *
+ * @param[in] parent    rw volume
+ * @param[in] child     volume id to add
+ * @param[in] partition name of vice partition on which this VG resides
+ * @param[in] reason    FSSYNC reason code
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCAdd(char * partition,
+	     VolumeId parent,
+	     VolumeId child,
+	     int reason,
+	     SYNC_response *res)
+{
+    return _FSYNC_VGCUpdate(partition, parent, child, FSYNC_VG_ADD, reason, res);
+}
+
+/**
+ * Delete volume from volume group cache.
+ *
+ * @param[in] parent    rw volume
+ * @param[in] child     volume id to add
+ * @param[in] partition name of vice partition on which this VG resides
+ * @param[in] reason    FSSYNC reason code
+ * @param[out] res      SYNC response message
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCDel(char * partition,
+	     VolumeId parent,
+	     VolumeId child,
+	     int reason,
+	     SYNC_response *res)
+{
+    return _FSYNC_VGCUpdate(partition, parent, child, FSYNC_VG_DEL, reason, res);
+}
+
+/**
+ * perform an asynchronous volume group scan.
+ *
+ * @param[in] partition   vice partition string
+ * @param[in] reason      FSSYNC reason code
+ *
+ * @note if partition is NULL, all vice partitions will be scanned.
+ *
+ * @return operation status
+ *    @retval SYNC_OK success
+ */
+afs_int32
+FSYNC_VGCScan(char * partition, int reason)
+{
+    int command;
+
+    if (partition == NULL) {
+	command = FSYNC_VG_SCAN_ALL;
+	partition = "";
+    } else {
+	command = FSYNC_VG_SCAN;
+    }
+
+    return FSYNC_VolOp(0, partition, command, reason, NULL);
+}
 
 #endif /* FSSYNC_BUILD_CLIENT */

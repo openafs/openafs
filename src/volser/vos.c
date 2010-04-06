@@ -16,6 +16,9 @@
 
 #include <sys/types.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
@@ -292,7 +295,7 @@ SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 	FD_SET((intptr_t)(ufd->handle), &in);
 	/* don't timeout if read blocks */
 #if defined(AFS_PTHREAD_ENV)
-	select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
+	select(((intptr_t)(ufd->handle)) + 1, &in, 0, 0, 0);
 #else
 	IOMGR_Select(((intptr_t)(ufd->handle)) + 1, &in, 0, 0, 0);
 #endif
@@ -407,7 +410,7 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 	    FD_SET((intptr_t)(ufd->handle), &out);
 	    /* don't timeout if write blocks */
 #if defined(AFS_PTHREAD_ENV)
-	    select(((int)(ufd->handle)) + 1, &out, 0, 0, 0);
+	    select(((intptr_t)(ufd->handle)) + 1, &out, 0, 0, 0);
 #else
 	    IOMGR_Select(((intptr_t)(ufd->handle)) + 1, 0, &out, 0, 0);
 #endif

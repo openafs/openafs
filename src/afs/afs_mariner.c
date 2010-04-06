@@ -71,35 +71,7 @@ void
 afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off,
 		    register afs_int32 bytes, register afs_int32 idx)
 {
-    struct sockaddr_in taddr;
-    register char *tp, *tp1, *tp2;
-    struct iovec dvec;
-    int len;
-
-
-    AFS_STATCNT(afs_MarinerLog);
-    taddr.sin_family = AF_INET;
-    taddr.sin_addr.s_addr = afs_marinerHost;
-    taddr.sin_port = htons(2106);
-#ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
-    taddr.sin_len = sizeof(taddr);
-#endif
-    tp = tp1 = (char *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-    strcpy(tp, "fetch$Fetching ");
-    tp += 15;			/* change it if string changes */
-    tp2 = afs_GetMariner(avc);
-    strcpy(tp, tp2);
-    tp += strlen(tp2);
-    *tp++ = '\n';
-    /* note, console doesn't want a terminating null */
-    len = strlen(tp1) - 1;
-    /* I don't care if mariner packets fail to be sent */
-    dvec.iov_base = tp1;
-    dvec.iov_len = len;
-    AFS_GUNLOCK();
-    (void)osi_NetSend(afs_server->socket, &taddr, &dvec, 1, len, 0);
-    AFS_GLOCK();
-    osi_FreeSmallSpace(tp1);
+    afs_MarinerLog("fetch$Fetching", avc);
 }				/*afs_MarinerLogFetch */
 
 void
@@ -120,10 +92,12 @@ afs_MarinerLog(register char *astring, register struct vcache *avc)
 
     strcpy(tp, astring);
     tp += strlen(astring);
-    *tp++ = ' ';
-    tp1 = afs_GetMariner(avc);
-    strcpy(tp, tp1);
-    tp += strlen(tp1);
+    if (avc) {
+	*tp++ = ' ';
+	tp1 = afs_GetMariner(avc);
+	strcpy(tp, tp1);
+	tp += strlen(tp1);
+    }
     *tp++ = '\n';
     /* note, console doesn't want a terminating null */
     /* I don't care if mariner packets fail to be sent */

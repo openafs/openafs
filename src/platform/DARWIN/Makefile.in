@@ -1,0 +1,79 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+.PHONY: all afscell
+
+all: OpenAFS.prefPane afssettings afscell growlagent
+
+AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
+afscell/build/Release/afscell.bundle: afscell
+afscell/InstallerSections.plist: afscell 
+
+OpenAFS.prefPane:
+	@case ${SYS_NAME} in \
+	*_darwin_100 ) \
+		xcodebuild -sdk macosx10.6 -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
+	*_darwin_90 ) \
+		xcodebuild -sdk macosx10.5 -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
+	*_darwin_80 ) \
+		xcodebuild -sdk macosx10.4 -project ${srcdor}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
+	* ) \
+		echo Not building AFS prefPane for ${SYS_NAME} ;; \
+	esac
+
+growlagent:
+	cd growlagent && $(MAKE) all
+
+afscell:
+	xcodebuild -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build
+
+afssettings: afssettings.m 
+	${CC} ${CFLAGS} -o afssettings $? -framework Foundation
+
+install: \
+	${DESTDIR}${sbindir}/afssettings
+	cd growlagent && $(MAKE) install
+
+dest: \
+	${DEST}/etc/afssettings \
+	${DEST}/installer/afscell.bundle \
+	${DEST}/installer/InstallerSections.plist \
+	${DEST}/tools/OpenAFS.prefPane
+	cd growlagent && $(MAKE) dest
+
+${DESTDIR}${sbindir}/afssettings: afssettings
+	${INSTALL} $? $@
+
+${DEST}/etc/afssettings: afssettings
+	${INSTALL} $? $@
+
+${DEST}/installer/afscell.bundle: afscell/build/Release/afscell.bundle
+	mkdir -p ${DEST}/installer
+	rm -rf ${DEST}/installer/afscell.bundle
+	cp -R $? $@
+
+${DEST}/installer/InstallerSections.plist: afscell/InstallerSections.plist
+	${INSTALL} $? $@
+
+${DEST}/tools/OpenAFS.prefPane: AFSPreference/build/Release/OpenAFS.prefPane
+	mkdir -p ${DEST}/tools
+	rm -rf ${DEST}/tools/OpenAFS.prefPane
+	cp -R $? $@
+
+clean:
+	$(RM) -rf OpenAFS.prefPane
+	$(RM) -rf AFSPreference/build
+	$(RM) -rf afscell/build
+	$(RM) -f *.o core afssettings AFS_component_version_number.c
+	cd growlagent && $(MAKE) clean

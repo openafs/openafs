@@ -35,8 +35,11 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <afs/param.h>
+#include <afs/com_err.h>
 #include "dumpscan.h"
 #include "dumpscan_errs.h"
+#include "xf_errs.h"
 
 #define COPYBUFSIZE (256*1024)
 
@@ -89,7 +92,7 @@ parse_options(int argc, char **argv)
     int c, i, i_name, i_vnum;
 
     /* Set the program name */
-    if (argv0 = strrchr(argv[0], '/'))
+    if ((argv0 = strrchr(argv[0], '/')))
 	argv0++;
     else
 	argv0 = argv[0];
@@ -158,7 +161,7 @@ parse_options(int argc, char **argv)
 		vnum_count++;
 	}
 	file_names = (char **)malloc(name_count + sizeof(char *));
-	file_vnums = (afs_uint32 *) malloc(vnum_count + sizeof(afs_uint32));
+	file_vnums = (afs_int32 *) malloc(vnum_count + sizeof(afs_uint32));
 	if (name_count)
 	    use_realpath = 1;
 
@@ -297,13 +300,13 @@ static int
 copyfile(XFILE * in, XFILE * out, int size)
 {
     static char buf[COPYBUFSIZE];
-    int nr, nw, r;
+    int nr, r;
 
     while (size) {
 	nr = (size > COPYBUFSIZE) ? COPYBUFSIZE : size;
-	if (r = xfread(in, buf, nr))
+	if ((r = xfread(in, buf, nr)))
 	    return r;
-	if (r = xfwrite(out, buf, nr))
+	if ((r = xfwrite(out, buf, nr)))
 	    return r;
 	size -= nr;
     }
@@ -323,6 +326,7 @@ my_error_cb(afs_uint32 code, int fatal, void *ref, char *msg, ...)
 	afs_com_err_va(argv0, code, msg, alist);
 	va_end(alist);
     }
+    return 0;
 }
 
 
@@ -344,11 +348,11 @@ static afs_uint32
 directory_cb(afs_vnode * v, XFILE * X, void *refcon)
 {
     char *vnodepath;
-    int r, use;
+    int r, use = 0;
 
     /* Should we even use this? */
     if (!use_vnum) {
-	if (r = Path_Build(X, &phi, v->vnode, &vnodepath, !use_realpath))
+	if ((r = Path_Build(X, &phi, v->vnode, &vnodepath, !use_realpath)))
 	    return r;
 	if (!(use = usevnode(X, v->vnode, vnodepath))) {
 	    free(vnodepath);
@@ -391,7 +395,7 @@ file_cb(afs_vnode * v, XFILE * X, void *refcon)
     char *vnodepath, vnpx[30];
     u_int64 where;
     XFILE OX;
-    int r, use;
+    int r, use = 0;
 
     if (!dirs_done) {
 	dirs_done = 1;
@@ -401,7 +405,7 @@ file_cb(afs_vnode * v, XFILE * X, void *refcon)
 
     /* Should we even use this? */
     if (!use_vnum) {
-	if (r = Path_Build(X, &phi, v->vnode, &vnodepath, !use_realpath))
+	if ((r = Path_Build(X, &phi, v->vnode, &vnodepath, !use_realpath)))
 	    return r;
 	if (!(use = usevnode(X, v->vnode, vnodepath))) {
 	    free(vnodepath);
@@ -452,7 +456,7 @@ symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
 {
     char *vnodepath, *linktarget, vnpx[30];
     u_int64 where;
-    int r, use;
+    int r, use = 0;
 
     if (!dirs_done) {
 	dirs_done = 1;
@@ -462,7 +466,7 @@ symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
 
     /* Should we even use this? */
     if (!use_vnum) {
-	if (r = Path_Build(X, &phi, v->vnode, &vnodepath, !use_realpath))
+	if ((r = Path_Build(X, &phi, v->vnode, &vnodepath, !use_realpath)))
 	    return r;
 	if (!(use = usevnode(X, v->vnode, vnodepath))) {
 	    free(vnodepath);
@@ -518,8 +522,6 @@ symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
 static afs_uint32
 lose_cb(afs_vnode * v, XFILE * F, void *refcon)
 {
-    int r;
-
     if (!dirs_done) {
 	dirs_done = 1;
 	if (verbose)
@@ -531,7 +533,7 @@ lose_cb(afs_vnode * v, XFILE * F, void *refcon)
 
 
 /* Main program */
-void
+int
 main(int argc, char **argv)
 {
     XFILE input_file;

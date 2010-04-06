@@ -35,7 +35,6 @@ crget(void)
     cred_t *tmp;
     
     tmp = kmalloc(sizeof(cred_t), GFP_NOFS);
-    memset(tmp, 0, sizeof(cred_t));
     if (!tmp)
         osi_Panic("crget: No more memory for creds!\n");
 

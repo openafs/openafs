@@ -80,9 +80,7 @@ struct file_system_type afs_fs_type = {
     .fs_flags = FS_BINARY_MOUNTDATA,
 };
 
-struct backing_dev_info afs_backing_dev_info = {
-    .ra_pages		= 32,
-};
+struct backing_dev_info *afs_backing_dev_info;
 
 int
 afs_fill_super(struct super_block *sb, void *data, int silent)
@@ -107,13 +105,19 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+    /* used for inodes backing_dev_info field, also */
+    afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
 #if defined(HAVE_BDI_INIT)
-    bdi_init(&afs_backing_dev_info);
+    bdi_init(afs_backing_dev_info);
 #endif
+#if defined(STRUCT_BDI_HAS_NAME)
+    afs_backing_dev_info->name = "openafs";
+#endif
+    afs_backing_dev_info->ra_pages = 32;
 #if defined (STRUCT_SUPER_BLOCK_HAS_S_BDI)
-    sb->s_bdi = &afs_backing_dev_info;
+    sb->s_bdi = afs_backing_dev_info;
     /* The name specified here will appear in the flushing thread name - flush-afs */
-    bdi_register(&afs_backing_dev_info, NULL, "afs");
+    bdi_register(afs_backing_dev_info, NULL, "afs");
 #endif
 #if !defined(AFS_NONFSTRANS)
     sb->s_export_op = &afs_export_ops;
@@ -316,8 +320,9 @@ afs_put_super(struct super_block *sbp)
 
     osi_linux_verify_alloced_memory();
 #if defined(HAVE_BDI_INIT)
-    bdi_destroy(&afs_backing_dev_info);
+    bdi_destroy(afs_backing_dev_info);
 #endif
+    osi_Free(afs_backing_dev_info, sizeof(struct backing_dev_info));
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;

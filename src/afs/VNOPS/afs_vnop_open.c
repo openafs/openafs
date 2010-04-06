@@ -72,7 +72,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #ifdef AFS_DISCON_ENV
     if (AFS_IS_DISCONNECTED && (afs_DCacheMissingChunks(tvc) != 0)) {
        ReleaseReadLock(&tvc->lock);
-       printf("Network is down in afs_open: missing chunks\n");
+       /* printf("Network is down in afs_open: missing chunks\n"); */
        code = ENETDOWN;
        goto done;
     }
@@ -94,7 +94,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 		(tvc, ((tvc->f.states & CForeign) ? PRSFS_READ : PRSFS_LOOKUP),
 		 &treq, CHECK_MODE_BITS)) {
 		code = EACCES;
-		printf("afs_Open: no access for dir\n");
+		/* printf("afs_Open: no access for dir\n"); */
 		goto done;
 	    }
 	}
@@ -186,7 +186,8 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 	       doing so ourselves.
 	    */
 	    bp = afs_BQueue(BOP_FETCH, tvc, B_DONTWAIT, 0, acred,
-			    (afs_size_t) 0, (afs_size_t) 1, tdc);
+			    (afs_size_t) 0, (afs_size_t) 1, tdc,
+			    (void *)0, (void *)0);
 	    if (!bp) {
 		tdc->mflags &= ~DFFetchReq;
 	    }

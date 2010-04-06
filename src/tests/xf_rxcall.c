@@ -47,6 +47,7 @@
 #include <afs/cellconfig.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
+#include <afs/volint.h>
 
 #ifndef AFSCONF_CLIENTNAME
 #include <afs/dirpath.h>
@@ -114,7 +115,7 @@ xf_voldump_do_close(XFILE * X)
 {
     struct rxinfo *i = X->refcon;
     struct rx_connection *conn = i->conn;
-    afs_uint32 code, rcode, xcode;
+    afs_int32 code, rcode, xcode;
     afs_int32 tid = i->tid;
 
     code = xf_rxcall_do_close(X);
@@ -153,10 +154,10 @@ xfopen_voldump(XFILE * X, struct rx_connection * conn, afs_int32 part,
 {
     struct rx_call *call;
     struct rxinfo *i;
-    afs_uint32 code, rcode;
+    afs_int32 code, rcode;
     afs_int32 tid;
 
-    if (code = AFSVolTransCreate(conn, volid, part, ITBusy, &tid))
+    if ((code = AFSVolTransCreate(conn, volid, part, ITBusy, &tid)))
 	return code;
     call = rx_NewCall(conn);
     if ((code = StartAFSVolDump(call, tid, date))
@@ -184,22 +185,22 @@ xfon_voldump(XFILE * X, int flag, char *name)
     struct ktc_token token;
     struct afsconf_dir *confdir;
     afs_uint32 code, server_addr;
-    afs_int32 volid, partid, date;
+    afs_int32 volid, date, partid = 0;
     int isnum, index;
     char *x, *y;
 
     /* Parse out the optional date and server location */
-    if (code = rx_Init(0))
+    if ((code = rx_Init(0)))
 	return code;
     if (!(name = strdup(name)))
 	return ENOMEM;
-    if (x = strrchr(name, ',')) {
+    if ((x = strrchr(name, ','))) {
 	*x++ = 0;
 	date = atoi(x);
     } else {
 	date = 0;
     }
-    if (x = strrchr(name, '@')) {
+    if ((x = strrchr(name, '@'))) {
 	int a, b, c, d;
 
 	*x++ = 0;
@@ -234,7 +235,7 @@ xfon_voldump(XFILE * X, int flag, char *name)
 	free(name);
 	return AFSCONF_NODB;
     }
-    if (code = afsconf_GetLocalCell(confdir, sname.cell, MAXKTCNAMELEN)) {
+    if ((code = afsconf_GetLocalCell(confdir, sname.cell, MAXKTCNAMELEN))) {
 	free(name);
 	return code;
     }

@@ -196,7 +196,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 			tdc->mflags |= DFFetchReq;
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
 					(afs_size_t) filePos, (afs_size_t) 0,
-					tdc);
+					tdc, (void *)0, (void *)0);
 			if (!bp) {
 			    tdc->mflags &= ~DFFetchReq;
 			    trybusy = 0;	/* Avoid bkg daemon since they're too busy */
@@ -454,7 +454,8 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 	     * since we don't want to wait for it to finish before doing so ourselves.
 	     */
 	    bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-			    (afs_size_t) offset, (afs_size_t) 1, tdc);
+			    (afs_size_t) offset, (afs_size_t) 1, tdc,
+			    (void *)0, (void *)0);
 	    if (!bp) {
 		/* Bkg table full; just abort non-important prefetching to avoid deadlocks */
 		tdc->mflags &= ~DFFetchReq;
@@ -652,7 +653,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 			tdc->mflags |= DFFetchReq;
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
 					(afs_size_t) filePos, (afs_size_t) 0,
-					tdc);
+					tdc, (void *)0, (void *)0);
 			if (!bp) {
 			    /* Bkg table full; retry deadlocks */
 			    tdc->mflags &= ~DFFetchReq;

@@ -97,6 +97,7 @@ PrintInterfaces(struct rx_connection *aconn)
     char uuidstr[128];
 #endif
     int i, code;
+    char hoststr[16];
 
     caps.Capabilities_val = NULL;
     caps.Capabilities_len = 0;
@@ -121,9 +122,9 @@ PrintInterfaces(struct rx_connection *aconn)
 
     printf("Host interfaces:\n");
     for (i = 0; i < addr.numberOfInterfaces; i++) {
-	printf("%s", afs_inet_ntoa(htonl(addr.addr_in[i])));
+	printf("%s", afs_inet_ntoa_r(htonl(addr.addr_in[i]), hoststr));
 	if (addr.subnetmask[i])
-	    printf(", netmask %s", afs_inet_ntoa(htonl(addr.subnetmask[i])));
+	    printf(", netmask %s", afs_inet_ntoa_r(htonl(addr.subnetmask[i]), hoststr));
 	if (addr.mtu[i])
 	    printf(", MTU %d", addr.mtu[i]);
 	printf("\n");
@@ -492,12 +493,13 @@ PrintCellServDBEntry(struct rx_connection *aconn, afs_int32 cellnum)
     printf(">%-23s#%s\n", cellname, cellname);
 
     if (sl.serverList_val) {
+	char hoststr[16];
         for ( n=0; n<sl.serverList_len; n++) {
             struct hostent *host;
             afs_uint32      addr = ntohl(sl.serverList_val[n]);
 
             host = gethostbyaddr((const char *)&addr, sizeof(afs_uint32), AF_INET);
-            printf("%-28s#%s\n", afs_inet_ntoa(addr), 
+            printf("%-28s#%s\n", afs_inet_ntoa_r(addr, hoststr),
                     host ? host->h_name : "");
         }
     }

@@ -141,13 +141,13 @@ Kubik_int.xdr.c: ${srcdir}/ubik_int.xg
 Kubik_int.h: ${srcdir}/ubik_int.xg
 	${RXGEN} -A -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
 
-utst_int.ss.o: utst_int.ss.c utst_int.xdr.c
+utst_int.ss.o: utst_int.ss.c
 	${CCRULE}
 
-utst_int.cs.o: utst_int.cs.c utst_int.xdr.c
+utst_int.cs.o: utst_int.cs.c
 	${CCRULE}
 
-utst_int.xdr.o: utst_int.xdr.c utst_int.h
+utst_int.xdr.o: utst_int.xdr.c
 	${CCRULE}
 
 utst_int.cs.c: ${srcdir}/utst_int.xg
@@ -229,15 +229,6 @@ ubik_int.cs.o: ubik_int.cs.c
 	${CCRULE}
 
 ubik_int.xdr.o: ubik_int.xdr.c
-	${CCRULE}
-
-utst_int.ss.o: utst_int.ss.c 
-	${CCRULE}
-
-utst_int.cs.o: utst_int.cs.c
-	${CCRULE}
-
-utst_int.xdr.o: utst_int.xdr.c
 	${CCRULE}
 
 #

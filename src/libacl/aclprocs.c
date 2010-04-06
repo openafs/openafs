@@ -168,9 +168,8 @@ acl_FreeExternalACL(char **r)
     return (AddToList(&freeList, x));
 }
 
-
 int
-acl_Externalize(struct acl_accessList *acl, char **elist)
+acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessList *acl, char **elist)
 {
     /* Converts the access list defined by acl into the external access list 
      * in elist.  Non-translatable id's are converted to their ASCII string 
@@ -202,7 +201,7 @@ acl_Externalize(struct acl_accessList *acl, char **elist)
     j = i;
     for (i = acl->total - 1; i >= acl->total - acl->negative; i--, j++)
 	lids.idlist_val[j] = acl->entries[i].id;
-    code = pr_IdToName(&lids, &lnames);
+    code = (*func)(&lids, &lnames);
     if (code != 0) {
 	if (lids.idlist_val)
 	    free(lids.idlist_val);
@@ -230,9 +229,14 @@ acl_Externalize(struct acl_accessList *acl, char **elist)
     return (0);
 }
 
+int
+acl_Externalize(struct acl_accessList *acl, char **elist)
+{
+    return acl_Externalize_pr(pr_IdToName, acl, elist);
+}
 
 int
-acl_Internalize(char *elist, struct acl_accessList **acl)
+acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struct acl_accessList **acl)
 {
     /* Converts the external access list elist into the access list acl.  
      * Returns 0 on success, -1 if ANY name is not translatable, or if 
@@ -295,7 +299,7 @@ acl_Internalize(char *elist, struct acl_accessList **acl)
     lids.idlist_len = 0;
     lids.idlist_val = 0;
 
-    code = pr_NameToId(&lnames, &lids);
+    code = (*func)(&lnames, &lids);
     if (code) {
 	free(lnames.namelist_val);
 	if (lids.idlist_val)
@@ -332,6 +336,11 @@ acl_Internalize(char *elist, struct acl_accessList **acl)
     return (0);
 }
 
+int
+acl_Internalize(char *elist, struct acl_accessList **acl)
+{
+    return acl_Internalize_pr(pr_NameToId, elist, acl);
+}
 
 int
 acl_CheckRights(struct acl_accessList *acl, prlist *groups, int *rights)

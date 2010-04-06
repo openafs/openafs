@@ -1055,8 +1055,8 @@ RXFetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
 {
     char *eACL;			/* External access list placeholder */
 
-    if (acl_Externalize
-	((targetptr->disk.type ==
+    if (acl_Externalize_pr
+	(hpr_IdToName, (targetptr->disk.type ==
 	  vDirectory ? VVnodeACL(targetptr) :
 	  VVnodeACL(parentwhentargetnotdir)), &eACL) != 0) {
 	return EIO;
@@ -1084,7 +1084,8 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 {
     struct acl_accessList *newACL;	/* PlaceHolder for new access list */
 
-    if (acl_Internalize(AccessList->AFSOpaque_val, &newACL) != 0)
+    if (acl_Internalize_pr(hpr_NameToId, AccessList->AFSOpaque_val, &newACL)
+	!= 0)
 	return (EINVAL);
     if ((newACL->size + 4) > VAclSize(targetptr))
 	return (E2BIG);
@@ -2730,6 +2731,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
     AFSFetchStatus *tstatus;
+    int VolSync_set = 0;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -2772,6 +2774,11 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     }
     CallBacks->AFSCBs_len = nfiles;
 
+    /* Zero out return values to avoid leaking information on partial succes */
+    memset(OutStats->AFSBulkStats_val, 0, nfiles * sizeof(struct AFSFetchStatus));
+    memset(CallBacks->AFSCBs_val, 0, nfiles * sizeof(struct AFSCallBack));
+    memset(Sync, 0, sizeof(*Sync));
+
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost))) {
 	goto Bad_InlineBulkStatus;
     }
@@ -2798,8 +2805,10 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	}
 
 	/* set volume synchronization information, but only once per call */
-	if (i == 0)
+	if (!VolSync_set) {
 	    SetVolumeSync(Sync, volptr);
+	    VolSync_set = 1;
+	}
 
 	/* Are we allowed to fetch Fid's status? */
 	if (targetptr->disk.type != vDirectory) {

@@ -31,7 +31,8 @@
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
+# include <winsock2.h>
+# include <krb5_nt.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -79,6 +80,9 @@ init_once(void)
     initialize_AU_error_table();
     initialize_AV_error_table();
     initialize_VOLS_error_table();
+#ifdef AFS_KRB5_ERROR_ENV
+    initialize_krb5();
+#endif
     error_init_done = 1;
 }
 
@@ -103,6 +107,12 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
 	pthread_once(&error_init_once, init_once);
     code = (afs_int32) errorCode;
     *errorTextP = afs_error_message(code);
+#ifdef AFS_KRB5_ERROR_ENV
+    if (strncmp(*errorTextP, "unknown", strlen("unknown")) == 0) {
+        const char *msg = fetch_krb5_error_message(NULL, code);
+        *errorTextP = msg ? msg : error_message(code);
+    }
+#endif
     rc = 1;
 
   fail_util_AdminErrorCodeTranslate:

@@ -18,6 +18,7 @@
 extern afs_rwlock_t afs_xosi;
 
 /* osi_misc.c */
+extern void darwin_notify_perms(struct unixuser *auser, int event);
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 			  struct vnode **vpp);
 extern int osi_lookupname_user(user_addr_t aname, enum uio_seg seg,
@@ -35,7 +36,8 @@ extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
 extern int osi_VM_Setup(struct vcache *avc, int force);
 
 /* osi_vnodeops.c */
-extern int afs_darwin_getnewvnode(struct vcache *avc);
+extern int afs_darwin_getnewvnode(struct vcache *avc, int recycle);
 extern int afs_darwin_finalizevnode(struct vcache *avc, struct vnode *parent, 
-                                     struct componentname *cnp, int isroot);
+				    struct componentname *cnp, int isroot,
+				    int locked);
 #endif /* _OSI_PROTO_H_ */

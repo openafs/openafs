@@ -151,6 +151,8 @@ AFSAOBJS = \
 	rx_packet.o	\
 	rx_multi.o	\
 	xdr_rx.o	\
+	xdr_mem.o	\
+	xdr_len.o	\
 	Kvldbint.cs.o	\
 	Kvldbint.xdr.o	\
 	Kcallback.ss.o	\
@@ -217,6 +219,8 @@ AFSPAGOBJS = \
 	rx_packet.o	\
 	rx_multi.o	\
 	xdr_rx.o	\
+	xdr_mem.o	\
+	xdr_len.o	\
 	Kpagcb.ss.o	\
 	Kpagcb.xdr.o	\
 	Krxstat.ss.o	\
@@ -331,6 +335,10 @@ rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
 afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE_OPT)
 xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE_OPT)
+xdr_mem.o: $(TOP_SRCDIR)/rx/xdr_mem.c
+	$(CRULE_OPT)
+xdr_len.o: $(TOP_SRCDIR)/rx/xdr_len.c
 	$(CRULE_OPT)
 
 # these files are not to be optimized - subject to change.

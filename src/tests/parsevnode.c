@@ -73,7 +73,7 @@ resync_vnode(XFILE * X, dump_parser * p, afs_vnode * v, int start, int limit)
     afs_uint32 r;
     int i;
 
-    if (r = xftell(X, &expected_where))
+    if ((r = xftell(X, &expected_where)))
 	return r;
     cp64(where, expected_where);
 
@@ -128,13 +128,13 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
     afs_uint32 r;
 
 
-    if (r = xftell(X, &where))
+    if ((r = xftell(X, &where)))
 	return r;
     memset(&v, 0, sizeof(v));
     sub64_32(v.offset, where, 1);
-    if (r = ReadInt32(X, &v.vnode))
+    if ((r = ReadInt32(X, &v.vnode)))
 	return r;
-    if (r = ReadInt32(X, &v.vuniq))
+    if ((r = ReadInt32(X, &v.vuniq)))
 	return r;
 
     mk64(offset2k, 0, 2048);
@@ -155,7 +155,7 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
 	afs_uint32 drop;
 	u_int64 xwhere;
 
-	if (r = xftell(X, &where))
+	if ((r = xftell(X, &where)))
 	    return r;
 	sub64_32(xwhere, where, 1);
 
@@ -173,15 +173,15 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
 		return r;
 	    if (!r) {
 		add64_32(where, v.offset, 1);
-		if (r = xfseek(X, &v.offset))
+		if ((r = xfseek(X, &v.offset)))
 		    return r;
 	    } else {
-		if (r = xfseek(X, &xwhere))
+		if ((r = xfseek(X, &xwhere)))
 		    return r;
 	    }
-	    if (r = resync_vnode(X, p, &v, 0, 1024))
+	    if ((r = resync_vnode(X, p, &v, 0, 1024)))
 		return r;
-	    if (r = ReadByte(X, tag))
+	    if ((r = ReadByte(X, tag)))
 		return r;
 	    if (drop) {
 		if (p->cb_error)
@@ -190,7 +190,7 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
 		return 0;
 	    }
 	} else {
-	    if (r = xfseek(X, &where))
+	    if ((r = xfseek(X, &where)))
 		return r;
 	}
     }
@@ -216,7 +216,7 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
 	if (cb) {
 	    u_int64 where;
 
-	    if (r = xftell(X, &where))
+	    if ((r = xftell(X, &where)))
 		return r;
 	    r = (cb) (&v, X, p->refcon);
 	    if (p->flags & DSFLAG_SEEK) {
@@ -399,7 +399,7 @@ parse_acl(XFILE * X, unsigned char *tag, tagged_field * field,
     afs_vnode *v = (afs_vnode *) l_refcon;
     afs_uint32 r, i, n;
 
-    if (r = xfread(X, v->acl, SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE))
+    if ((r = xfread(X, v->acl, SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE)))
 	return r;
 
     v->field_mask |= F_VNODE_ACL;
@@ -436,13 +436,13 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
     static int symlink_size = 0;
     afs_uint32 r;
 
-    if (r = ReadInt32(X, &v->size))
+    if ((r = ReadInt32(X, &v->size)))
 	return r;
     v->field_mask |= F_VNODE_SIZE;
 
     if (v->size) {
 	v->field_mask |= F_VNODE_DATA;
-	if (r = xftell(X, &v->d_offset))
+	if ((r = xftell(X, &v->d_offset)))
 	    return r;
 	if (p->print_flags & DSPRINT_VNODE)
 	    printf("%s%d (0x%08x) bytes at %s (0x%s)\n", field->label,
@@ -459,7 +459,7 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
 		symlink_size = symlink_buf ? v->size : 0;
 	    }
 	    if (symlink_buf) {
-		if (r = xfread(X, symlink_buf, v->size))
+		if ((r = xfread(X, symlink_buf, v->size)))
 		    return r;
 		symlink_buf[v->size] = 0;
 		if (p->print_flags & DSPRINT_VNODE)
@@ -469,20 +469,20 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
 		if (p->cb_error)
 		    (p->cb_error) (ENOMEM, 0, p->err_refcon,
 				   "Out of memory reading symlink");
-		if (r = xfskip(X, v->size))
+		if ((r = xfskip(X, v->size)))
 		    return r;
 	    }
 	    break;
 
 	case vDirectory:
 	    if (p->cb_dirent || (p->print_flags & DSPRINT_DIR)) {
-		if (r = parse_directory(X, p, v, v->size, 0))
+		if ((r = parse_directory(X, p, v, v->size, 0)))
 		    return r;
 		break;
 	    }
 
 	default:
-	    if (r = xfskip(X, v->size))
+	    if ((r = xfskip(X, v->size)))
 		return r;
 	}
     } else if (p->print_flags & DSPRINT_VNODE) {

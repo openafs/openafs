@@ -26,7 +26,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
@@ -560,6 +560,38 @@ afs_SetPrimary(register struct unixuser *au, register int aflag)
     ReleaseWriteLock(&afs_xuser);
 
 }				/*afs_SetPrimary */
+
+void
+afs_NotifyUser(struct unixuser *auser, int event)
+{
+#ifdef AFS_DARWIN_ENV
+    darwin_notify_perms(auser, event);
+#endif
+}
+
+/**
+ * Mark all of the unixuser records held for a particular PAG as
+ * expired
+ *
+ * @param[in] pag
+ * 	PAG to expire records for
+ */
+void
+afs_MarkUserExpired(afs_int32 pag)
+{
+    afs_int32 i;
+    struct unixuser *tu;
+
+    i = UHash(pag);
+    ObtainWriteLock(&afs_xuser, 9);
+    for (tu = afs_users[i]; tu; tu = tu->next) {
+	if (tu->uid == pag) {
+	    tu->ct.EndTimestamp = 0;
+	    tu->tokenTime = 0;
+	}
+    }
+    ReleaseWriteLock(&afs_xuser);
+}
 
 
 #if AFS_GCPAGS

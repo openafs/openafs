@@ -28,9 +28,7 @@
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/ubc.h>
-#if defined(AFS_DARWIN70_ENV)
 #include <vfs/vfs_support.h>
-#endif /* defined(AFS_DARWIN70_ENV) */
 
 lck_grp_t * openafs_lck_grp;
 static lck_grp_attr_t * openafs_lck_grp_attr;

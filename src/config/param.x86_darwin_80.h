@@ -20,15 +20,13 @@
 #include <afs/afs_sysnames.h>
 
 #define AFS_DARWIN_ENV
-#define AFS_DARWIN13_ENV
-#define AFS_DARWIN14_ENV
-#define AFS_DARWIN60_ENV
 #define AFS_DARWIN70_ENV
 #define AFS_DARWIN80_ENV
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define AFS_NAMEI_ENV 1
+#define AFS_WARNUSER_MARINER_ENV 1
 #define DARWIN_REFBASE 3
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
@@ -114,14 +112,12 @@
 #include <afs/afs_sysnames.h>
 #define AFS_USERSPACE_ENV
 #define AFS_USR_DARWIN_ENV
-#define AFS_USR_DARWIN13_ENV
-#define AFS_USR_DARWIN14_ENV
-#define AFS_USR_DARWIN60_ENV
 #define AFS_USR_DARWIN70_ENV
 #define AFS_USR_DARWIN80_ENV
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
+#define AFS_WARNUSER_MARINER_ENV 1
 #define DARWIN_REFBASE 0
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */

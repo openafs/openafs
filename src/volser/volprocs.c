@@ -134,7 +134,7 @@ static afs_int32 VolSetDate(struct rx_call *, afs_int32, afs_int32);
 
 /* this call unlocks all of the partition locks we've set */
 int 
-VPFullUnlock(void)
+VPFullUnlock_r(void)
 {
     register struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
@@ -144,6 +144,16 @@ VPFullUnlock(void)
 	}
     }
     return 0;
+}
+
+int
+VPFullUnlock(void)
+{
+    int code;
+    VOL_LOCK;
+    code = VPFullUnlock_r();
+    VOL_UNLOCK;
+    return code;
 }
 
 /* get partition id from a name */

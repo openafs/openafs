@@ -142,8 +142,23 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
         $(DESTDIR)\lib\afs\afsreg.lib
 
+!IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
+KFWLIBS = \
+    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\krb5_64.lib \
+    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\comerr64.lib \
+    dnsapi.lib mpr.lib delayimp.lib shell32.lib
+LINKOPTS = /DELAYLOAD:krb5_64.dll /DELAYLOAD:comerr64.dll
+!else
+KFWLIBS = \
+    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\krb5_32.lib \
+    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\comerr32.lib \
+    dnsapi.lib mpr.lib delayimp.lib shell32.lib
+LINKOPTS = /DELAYLOAD:krb5_32.dll /DELAYLOAD:comerr32.dll
+!endif
+afscflags = -I$(AFSROOT)\src\WINNT\kfw\inc\krb5 $(afscflags)
+
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
-	$(DLLCONLINK) /DEF:afsadminutil.def shell32.lib
+	$(DLLCONLINK) /DEF:afsadminutil.def $(KFWLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)

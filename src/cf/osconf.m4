@@ -473,58 +473,6 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	ppc_darwin_12)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-traditional-cpp"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
-	ppc_darwin_13)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		LWP_OPTMZ="-O2"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
-	ppc_darwin_14)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		LWP_OPTMZ="-O2"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
-	ppc_darwin_60)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
-		LEX="lex -l"
-		LWP_OPTMZ="-O2"
-		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
-		TXLIBS="-lncurses"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
-		SHLIB_SUFFIX="dylib"
-		;;
-
 	ppc_darwin_70)
 		CC="cc"
 		CCOBJ="cc"
@@ -1136,18 +1084,6 @@ case $AFS_SYSNAME in
 	;;
 esac
 
-
-
-dnl pthreads fixes
-case $AFS_SYSNAME in
-dnl we'll go ahead and turn on XOPEN2K and ISO_C99
-dnl if this causes problems, we should scale back to _XOPEN_SOURCE=500
-	*linux*)
-		MT_CFLAGS="${MT_CFLAGS} -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
-	;;
-esac
-
-
 dnl Disable the default for debugging/optimization if not enabled
 if test "x$enable_debug_kernel" = "xno"; then
   KERN_DBG=
@@ -1197,6 +1133,12 @@ if test "x$GCC" = "xyes"; then
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
     fi
   fi
+fi
+
+CFLAGS_NOSTRICT=
+
+if test "x$GCC" = "xyes"; then
+  CFLAGS_NOSTRICT="-fno-strict-aliasing"
 fi
 
 if test "x$GCC" = "xyes"; then
@@ -1255,6 +1197,7 @@ AC_SUBST(TXLIBS)
 AC_SUBST(VFSCK_CFLAGS)
 AC_SUBST(XCFLAGS)
 AC_SUBST(CFLAGS_NOERROR)
+AC_SUBST(CFLAGS_NOSTRICT)
 AC_SUBST(CFLAGS_NOUNUSED)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)

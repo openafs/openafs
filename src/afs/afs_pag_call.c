@@ -21,7 +21,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
@@ -52,7 +52,8 @@ int afs_sysnamegen = 0;
 afs_int32 afs_showflags = GAGUSER | GAGCONSOLE; /* show all messages */
 
 
-void afs_Daemon(void)
+void
+afs_Daemon(void)
 {
     afs_int32 now, last10MinCheck, last60MinCheck;
 
@@ -87,7 +88,8 @@ void afs_Daemon(void)
 }
 
 
-void afspag_Init(afs_int32 nfs_server_addr)
+void
+afspag_Init(afs_int32 nfs_server_addr)
 {
     struct clientcred ccred;
     struct rmtbulk idata, odata;
@@ -158,7 +160,8 @@ void afspag_Init(afs_int32 nfs_server_addr)
 
 
 /* called with the GLOCK held */
-void afspag_Shutdown(void)
+void
+afspag_Shutdown(void)
 {
     if (afs_shuttingdown)
 	return;
@@ -190,7 +193,8 @@ void afspag_Shutdown(void)
 #endif
 }
 
-static void token_conversion(char *buffer, int buf_size, int in)
+static void
+token_conversion(char *buffer, int buf_size, int in)
 {
     struct ClearToken *ticket;
     afs_int32 *lptr, n;
@@ -248,7 +252,8 @@ static void token_conversion(char *buffer, int buf_size, int in)
     return;
 }
 
-static void FetchVolumeStatus_conversion(char *buffer, int buf_size, int in)
+static void
+FetchVolumeStatus_conversion(char *buffer, int buf_size, int in)
 {
     AFSFetchVolumeStatus *status = (AFSFetchVolumeStatus *)buffer;
 
@@ -275,7 +280,8 @@ static void FetchVolumeStatus_conversion(char *buffer, int buf_size, int in)
     }
 }
 
-static void inparam_conversion(int cmd, char *buffer, int buf_size, int in)
+static void
+inparam_conversion(int cmd, char *buffer, int buf_size, int in)
 {
     afs_int32 *lptr = (afs_int32 *)buffer;
 
@@ -318,7 +324,8 @@ static void inparam_conversion(int cmd, char *buffer, int buf_size, int in)
     }
 }
 
-static void outparam_conversion(int cmd, char *buffer, int buf_size, int in)
+static void
+outparam_conversion(int cmd, char *buffer, int buf_size, int in)
 {
     afs_int32 *lptr = (afs_int32 *)buffer;
     int i;

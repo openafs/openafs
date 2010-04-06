@@ -188,7 +188,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
      * high-level write op.
      */
     if (avc->execsOrWriters <= 0) {
-	printf("WARNING: afs_ufswr vp=%lx, exOrW=%d\n", (unsigned long)avc,
+	afs_warn("WARNING: afs_ufswr vp=%lx, exOrW=%d\n", (unsigned long)avc,
 	       avc->execsOrWriters);
     }
 #else
@@ -405,7 +405,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
      * high-level write op.
      */
     if (avc->execsOrWriters <= 0) {
-	printf("WARNING: afs_ufswr vcp=%lx, exOrW=%d\n", (unsigned long)avc,
+	afs_warn("WARNING: afs_ufswr vcp=%lx, exOrW=%d\n", (unsigned long)avc,
 	       avc->execsOrWriters);
     }
 #else
@@ -746,7 +746,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 	     * Also, note that  we don't lock it any more... */
 	    tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred,
 			    (afs_size_t) afs_cr_uid(acred), (afs_size_t) 0,
-			    (void *)0);
+			    (void *)0, (void *)0, (void *)0);
 	    /* sleep waiting for the store to start, then retrieve error code */
 	    while ((tb->flags & BUVALID) == 0) {
 		tb->flags |= BUWAIT;
@@ -771,7 +771,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #ifdef AFS_AIX32_ENV
 	    osi_ReleaseVM(avc, acred);
 #endif
-	    printf("avc->vc_error=%d\n", avc->vc_error);
+	    /* printf("avc->vc_error=%d\n", avc->vc_error); */
 	    code = avc->vc_error;
 	    avc->vc_error = 0;
 	}

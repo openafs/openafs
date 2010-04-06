@@ -162,13 +162,16 @@ print_cmCallStats(void)
 
     cmp = (struct afs_CMStats *)(xstat_cm_Results.data.AFSCB_CollData_val);
 
+    if (xstat_cm_Results.data.AFSCB_CollData_len != sizeof(struct afs_CMStats))
+	printf("Data sets differ in size. Is cache manager a different version?");
+
     printf("\t%10d afs_init\n", cmp->callInfo.C_afs_init);
     printf("\t%10d gop_rdwr\n", cmp->callInfo.C_gop_rdwr);
     printf("\t%10d aix_gnode_rele\n", cmp->callInfo.C_aix_gnode_rele);
     printf("\t%10d gettimeofday\n", cmp->callInfo.C_gettimeofday);
     printf("\t%10d m_cpytoc\n", cmp->callInfo.C_m_cpytoc);
     printf("\t%10d aix_vattr_null\n", cmp->callInfo.C_aix_vattr_null);
-    printf("\t%10d afs_gn_frunc\n", cmp->callInfo.C_afs_gn_ftrunc);
+    printf("\t%10d afs_gn_ftrunc\n", cmp->callInfo.C_afs_gn_ftrunc);
     printf("\t%10d afs_gn_rdwr\n", cmp->callInfo.C_afs_gn_rdwr);
     printf("\t%10d afs_gn_ioctl\n", cmp->callInfo.C_afs_gn_ioctl);
     printf("\t%10d afs_gn_locktl\n", cmp->callInfo.C_afs_gn_lockctl);
@@ -604,6 +607,21 @@ print_cmCallStats(void)
     printf("\t%10d afs_hp_strategy\n", cmp->callInfo.C_afs_hp_strategy);
 #endif
     printf("\t%10d PFlushMount\n", cmp->callInfo.C_PFlushMount);
+    printf("\t%10d SRXAFSCB_GetServerPrefs\n",
+	   cmp->callInfo.C_SRXAFSCB_GetServerPrefs);
+    printf("\t%10d SRXAFSCB_GetCellServDB\n",
+	   cmp->callInfo.C_SRXAFSCB_GetCellServDB);
+    printf("\t%10d SRXAFSCB_GetLocalCell\n",
+           cmp->callInfo.C_SRXAFSCB_GetLocalCell);
+    printf("\t%10d afs_MarshallCacheConfig\n",
+	   cmp->callInfo.C_afs_MarshallCacheConfig);
+    printf("\t%10d SRXAFSCB_GetCacheConfig\n",
+	   cmp->callInfo.C_SRXAFSCB_GetCacheConfig);
+    printf("\t%10d SRXAFSCB_GetCE64\n", cmp->callInfo.C_SRXAFSCB_GetCE64);
+    printf("\t%10d SRXAFSCB_GetCellByNum\n",
+	   cmp->callInfo.C_SRXAFSCB_GetCellByNum);
+    printf("\t%10d BPrefetchNoCache\n", cmp->callInfo.C_BPrefetchNoCache);
+    printf("\t%10d afs_ReadNoCache\n", cmp->callInfo.C_afs_ReadNoCache);
 }
 
 

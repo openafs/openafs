@@ -99,7 +99,8 @@ static int afs_cacheinit_flag = 0;
 int
 afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	      afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk,
-	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers, afs_int32 dynamic_vcaches)
+	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers,
+	      afs_int32 dynamic_vcaches)
 {
     register afs_int32 i;
     register struct volume *tv;
@@ -118,11 +119,11 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 
 #ifdef AFS_MAXVCOUNT_ENV
     afsd_dynamic_vcaches = dynamic_vcaches;
-    printf("%s dynamically allocated vcaches\n",
-	   ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+    afs_warn("%s dynamically allocated vcaches\n",
+	     ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
-    printf("Starting AFS cache scan...");
+    afs_warn("Starting AFS cache scan...");
     if (afs_cacheinit_flag)
 	return 0;
     afs_cacheinit_flag = 1;
@@ -248,7 +249,8 @@ afs_ComputeCacheParms(void)
  * If the vnode is not returned, we rele it.
  */
 int
-afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode, struct vnode **fvpp)
+afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
+		      struct vnode **fvpp)
 {
     afs_int32 code;
 
@@ -458,7 +460,7 @@ afs_InitCacheInfo(register char *afile)
     afs_cacheVfsp = filevp->v_vfsp;
 #endif
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
 #endif
 #ifndef AFS_CACHE_VNODE_PATH
@@ -694,8 +696,11 @@ shutdown_cache(void)
 	pag_epoch = 0;
 	pagCounter = 0;
 #if defined(AFS_XBSD_ENV)
-	vrele(volumeVnode);	/* let it go, finally. */
-	volumeVnode = NULL;
+	/* memcache never sets this, so don't panic on shutdown */
+	if (volumeVnode != NULL) {
+	    vrele(volumeVnode);	/* let it go, finally. */
+	    volumeVnode = NULL;
+	}
 	if (cacheDev.held_vnode) {
 	    vrele(cacheDev.held_vnode);
 	    cacheDev.held_vnode = NULL;

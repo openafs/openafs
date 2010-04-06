@@ -16,6 +16,9 @@
 
  */
 
+#ifndef AFS_VOL_PARTITION_H
+#define AFS_VOL_PARTITION_H
+
 #include <afs/param.h>
 #include "nfs.h"
 #if	defined(AFS_HPUX_ENV)
@@ -28,6 +31,8 @@
 #define	AFS_DSKDEV	"/dev"
 #define	AFS_RDSKDEV	"/dev/r"
 #endif
+
+#include "lock.h"
 
 
 /* All Vice partitions on a server will have the following name prefix */
@@ -42,6 +47,44 @@
 #ifdef AFS_NAMEI_ENV
 #define VICE_ALWAYSATTACH_FILE	"AlwaysAttach"
 #endif
+
+/**
+ * abstraction for files used for file-locking.
+ */
+struct VLockFile {
+    FD_t fd;                /**< fd holding the lock(s) */
+    char *path;             /**< path to the lock file */
+    int refcount;           /**< how many locks we have on the file */
+
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t mutex;  /**< lock for the VLockFile struct */
+#endif /* AFS_PTHREAD_ENV */
+};
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * flag bits for 'flags' in struct VDiskLock.
+ */
+#define VDISKLOCK_ACQUIRING  0x1   /**< is someone waiting for an fs lock? */
+#define VDISKLOCK_ACQUIRED   0x2   /**< we have an fs lock */
+
+/**
+ * on-disk locking mechanism.
+ */
+struct VDiskLock {
+    struct VLockFile *lockfile; /**< file holding the locks */
+    afs_uint32 offset;          /**< what offset we lock in the file */
+
+    struct Lock rwlock;         /**< rw lock for inter-thread locking */
+    pthread_mutex_t mutex;      /**< lock for the DiskLock object itself */
+    pthread_cond_t cv;          /**< cond var for 'acquiring' changes */
+
+    int lockers;                /**< # of callers that have this locked; */
+
+    unsigned int flags;         /**< see above for flag bits */
+};
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 
 /* For NT, the roles of "name" and "devName" are reversed. That is, "name"
  * refers to the drive letter name and "devName" refers to the /vicep style
@@ -88,6 +131,10 @@ struct DiskPartition64 {
 	int busy;               /* asynch vol list op in progress */
 	pthread_cond_t cv;      /* vol_list.busy change cond var */
     } vol_list;
+    struct VLockFile headerLockFile;
+    struct VDiskLock headerLock; /* lock for the collective headers on the partition */
+
+    struct VLockFile volLockFile; /* lock file for individual volume locks */
 #endif /* AFS_DEMAND_ATTACH_FS */
 };
 
@@ -121,6 +168,8 @@ extern struct DiskPartition64 *VGetPartition_r(char * name, int abortp);
 #ifdef AFS_DEMAND_ATTACH_FS
 extern struct DiskPartition64 *VGetPartitionById(afs_int32 index, int abortp);
 extern struct DiskPartition64 *VGetPartitionById_r(afs_int32 index, int abortp);
+extern int VPartHeaderLock(struct DiskPartition64 *dp, int locktype);
+extern void VPartHeaderUnlock(struct DiskPartition64 *dp, int locktype);
 #endif
 extern int VAttachPartitions(void);
 extern void VLockPartition(char *name);
@@ -137,3 +186,5 @@ extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
 extern int VDiskUsage(struct Volume *vp, afs_sfsize_t blocks);
 extern void VPrintDiskStats(void);
 extern int VInitPartitionPackage(void);
+
+#endif /* AFS_VOL_PARTITION_H */

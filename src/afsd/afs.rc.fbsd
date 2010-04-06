@@ -24,7 +24,7 @@ fi
 
 # Need the commands ps, awk, kill, sleep
 PATH=${PATH}${PATH:+:}/sbin:/bin:/usr/bin
-if kmodstat | grep -q afs.ko ; then
+if kldstat | grep -q afs.ko ; then
 :
 else
 if [ -f $VICEETC/afs.ko ]; then

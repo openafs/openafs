@@ -976,7 +976,8 @@ OSI_VC_DECL(avc);
 	    /* at least one daemon is idle, so ask it to do the store.
 	     * Also, note that  we don't lock it any more... */
 	    tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred,
-			    (afs_size_t) afs_cr_uid(acred), 0L, (void *)0);
+			    (afs_size_t) afs_cr_uid(acred), 0L, (void *)0,
+			    (void *)0, (void *)0);
 	    /* sleep waiting for the store to start, then retrieve error code */
 	    while ((tb->flags & BUVALID) == 0) {
 		tb->flags |= BUWAIT;
@@ -1886,50 +1887,14 @@ struct vnodeops *afs_ops = &Afs_vnodeops;
 #endif /* MP */
 
 
-#if defined(AFS_SGI62_ENV) && defined(AFS_SGI_DUAL_FS_CACHE)
-/* Support for EFS and XFS caches. The assumption here is that the size of
+/* Support for XFS caches. The assumption here is that the size of
  * a cache file also does not exceed 32 bits. 
  */
 
 /* Initialized in osi_InitCacheFSType(). Used to determine inode type. */
-int afs_CacheFSType = -1;
-vnodeops_t *afs_efs_vnodeopsp;
 vnodeops_t *afs_xfs_vnodeopsp;
-vnode_t *(*afs_IGetVnode) (ino_t);
-
-extern vnode_t *afs_EFSIGetVnode(ino_t);	/* defined in osi_file.c */
-extern vnode_t *afs_XFSIGetVnode(ino_t);	/* defined in osi_file.c */
 
 extern afs_lock_t afs_xosi;	/* lock is for tvattr */
-
-/* Initialize the cache operations. Called while initializing cache files. */
-void
-afs_InitDualFSCacheOps(struct vnode *vp)
-{
-    static int inited = 0;
-    struct vfssw *swp;
-    int found = 0;
-
-    if (inited)
-	return;
-    inited = 1;
-
-    swp = vfs_getvfssw("xfs");
-    if (swp) {
-	afs_xfs_vnodeopsp = swp->vsw_vnodeops;
-	if (!found) {
-	    if (vp && vp->v_op == afs_xfs_vnodeopsp) {
-		afs_CacheFSType = AFS_SGI_XFS_CACHE;
-		afs_IGetVnode = afs_XFSIGetVnode;
-		found = 1;
-	    }
-	}
-    }
-
-    if (vp && !found)
-	osi_Panic("osi_InitCacheFSType: Can't find fstype for vnode 0x%llx\n",
-		  vp);
-}
 
 ino_t
 VnodeToIno(vnode_t * vp)
@@ -1984,5 +1949,4 @@ VnodeToSize(vnode_t * vp)
     ReleaseWriteLock(&afs_xosi);
     return vattr.va_size;
 }
-#endif /* 6.2 and dual fs cache */
 #endif /* AFS_SGI62_ENV */

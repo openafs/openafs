@@ -20,6 +20,85 @@
 #endif
 
 #ifdef AFS_DARWIN80_ENV
+static thread_t vfs_context_owner;
+
+/* works like PFlushVolumeData */
+void
+darwin_notify_perms(struct unixuser *auser, int event)
+{
+    int i;
+    struct afs_q *tq, *uq = NULL;
+    struct vcache *tvc, *hnext;
+    int isglock = ISAFS_GLOCK();
+    struct vnode *vp;
+    struct vnode_attr va;
+    int isctxtowner = 0;
+
+    if (!afs_darwin_fsevents)
+	return;
+
+    VATTR_INIT(&va);
+    VATTR_SET(&va, va_mode, 0777);
+    if (event & UTokensObtained)
+	VATTR_SET(&va, va_uid, auser->uid);
+    else
+	VATTR_SET(&va, va_uid, -2); /* nobody */
+
+    if (!isglock)
+	AFS_GLOCK();
+    if (!(vfs_context_owner == current_thread())) {
+	get_vfs_context();
+	isctxtowner = 1;
+    }
+loop:
+    ObtainReadLock(&afs_xvcache);
+    for (i = 0; i < VCSIZE; i++) {
+	for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+	    uq = QPrev(tq);
+	    tvc = QTOVH(tq);
+	    if (tvc->f.states & CDeadVnode) {
+		/* we can afford to be best-effort */
+		continue;
+	    }
+	    /* no per-file acls, so only notify on directories */
+	    if (!(vp = AFSTOV(tvc)) || !vnode_isdir(AFSTOV(tvc)))
+		continue;
+	    /* dynroot object. no callbacks. anonymous ACL. just no. */
+	    if (afs_IsDynrootFid(tvc))
+		continue;
+	    /* no fake fsevents on mount point sources. leaks refs */
+	    if (tvc->mvstat == 1)
+		continue;
+	    /* if it's being reclaimed, just pass */
+	    if (vnode_get(vp))
+		continue;
+	    if (vnode_ref(vp)) {
+		AFS_GUNLOCK();
+		vnode_put(vp);
+		AFS_GLOCK();
+		continue;
+	    }
+	    ReleaseReadLock(&afs_xvcache);
+	    ObtainWriteLock(&tvc->lock, 234);
+	    tvc->f.states |= CEvent;
+	    AFS_GUNLOCK();
+	    vnode_setattr(vp, &va, afs_osi_ctxtp);
+	    tvc->f.states &= ~CEvent;
+	    vnode_put(vp);
+	    AFS_GLOCK();
+	    ReleaseWriteLock(&tvc->lock);
+	    ObtainReadLock(&afs_xvcache);
+	    /* our tvc ptr is still good until now */
+	    AFS_FAST_RELE(tvc);
+	}
+    }
+    ReleaseReadLock(&afs_xvcache);
+    if (isctxtowner)
+	put_vfs_context();
+    if (!isglock)
+	AFS_GUNLOCK();
+}
+
 int
 osi_lookupname_user(user_addr_t aname, enum uio_seg seg, int followlink,
 		    struct vnode **vpp) {
@@ -135,7 +214,6 @@ afsio_darwin_partialcopy(uio_t auio, int size)
 
 vfs_context_t afs_osi_ctxtp;
 int afs_osi_ctxtp_initialized;
-static thread_t vfs_context_owner;
 static proc_t vfs_context_curproc;
 int vfs_context_ref;
 

@@ -997,56 +997,41 @@ WriteInodeInfo(FILE * fp, struct ViceInodeInfo *info, char *dir, char *name)
  * This code optimizes single volume salvages by just looking at that one
  * volume's directory. 
  *
- * If the resultFile is NULL, then don't call the write routine.
+ * If the inodeFile is NULL, then don't call the write routine.
  */
 int
-ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
 	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath, 
 	       void *rock)
 {
-    FILE *fp = (FILE *) - 1;
     int ninodes;
     struct stat status;
 
-    if (resultFile) {
-	fp = fopen(resultFile, "w");
-	if (!fp) {
-	    Log("Unable to create inode description file %s\n", resultFile);
-	    return -1;
-	}
-    }
     ninodes =
-	nt_ListAFSFiles(wpath, WriteInodeInfo, fp, judgeInode,
+	nt_ListAFSFiles(wpath, WriteInodeInfo, inodeFile, judgeInode,
 			singleVolumeNumber, rock);
 
-    if (!resultFile)
+    if (!inodeFile)
 	return ninodes;
 
     if (ninodes < 0) {
-	fclose(fp);
 	return ninodes;
     }
 
-    if (fflush(fp) == EOF) {
+    if (fflush(inodeFile) == EOF) {
 	Log("Unable to successfully flush inode file for %s\n", mountedOn);
-	fclose(fp);
 	return -2;
     }
-    if (fsync(fileno(fp)) == -1) {
+    if (fsync(fileno(inodeFile)) == -1) {
 	Log("Unable to successfully fsync inode file for %s\n", mountedOn);
-	fclose(fp);
-	return -2;
-    }
-    if (fclose(fp) == EOF) {
-	Log("Unable to successfully close inode file for %s\n", mountedOn);
 	return -2;
     }
 
     /*
      * Paranoia:  check that the file is really the right size
      */
-    if (stat(resultFile, &status) == -1) {
+    if (fstat(fileno(inodeFile), &status) == -1) {
 	Log("Unable to successfully stat inode file for %s\n", mountedOn);
 	return -2;
     }

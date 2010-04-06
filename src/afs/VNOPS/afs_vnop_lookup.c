@@ -51,26 +51,26 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 static int
 EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
               struct volume **avolpp, register struct vrequest *areq,
-	      afs_uint32 *acellidxp, afs_uint32 *avolnump, afs_uint32 *avnoidp)
+	      afs_uint32 *acellidxp, afs_uint32 *avolnump,
+	      afs_uint32 *avnoidp, afs_uint32 *auniqp)
 {
     struct volume *tvp = 0;
     struct VenusFid tfid;
     struct cell *tcell;
-    char *cpos, *volnamep, *x;
-    char *buf;
+    char *cpos, *volnamep;
+    char *buf, *endptr;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
     afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
-    afs_uint32 volid, cellidx, vnoid = 0;
+    afs_uint32 volid = 0, cellidx, vnoid = 0, uniq = 0;
 
+    /* Start by figuring out and finding the cell */
     cpos = afs_strchr(data, ':');	/* if cell name present */
     if (cpos) {
-	cellnum = 0;
 	volnamep = cpos + 1;
 	*cpos = 0;
-	for (x = data; *x >= '0' && *x <= '9'; x++)
-	    cellnum = (cellnum * 10) + (*x - '0');
-	if (cellnum && !*x)
+	if ((afs_strtoi_r(data, &endptr, &cellnum) == 0) &&
+	    (endptr == cpos))
 	    tcell = afs_GetCell(cellnum, READ_LOCK);
 	else {
 	    tcell = afs_GetCellByName(data, READ_LOCK);
@@ -81,12 +81,11 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	volnamep = data;
 	tcell = afs_GetCell(cellnum, READ_LOCK);
     } else {
-	/*printf("No cellname %s , or cellnum %d , returning ENODEV\n", 
-	       data, cellnum);*/
+	/* No cellname or cellnum; return ENODEV */
 	return ENODEV;
     }
     if (!tcell) {
-	/*printf("Lookup failed, returning ENODEV\n");*/
+	/* no cell found; return ENODEV */
 	return ENODEV;
     }
 
@@ -98,22 +97,38 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     }
     afs_PutCell(tcell, READ_LOCK);
 
-    cpos = afs_strrchr(volnamep, ':'); /* if vno present */
-    if (cpos) 
+    /* If there's nothing to look up, we can't proceed */
+    if (!*volnamep)
+	return ENODEV;
+
+    /* cell found. figure out volume */
+    cpos = afs_strchr(volnamep, ':');
+    if (cpos)
 	*cpos = 0;
+
     /* Look for an all-numeric volume ID */
-    volid = 0;
-    for (x = volnamep; *x >= '0' && *x <= '9'; x++)
-	volid = (volid * 10) + (*x - '0');
-    if (cpos) {
-	*cpos = ':';
-	vnoid = 0;
-	if (!*x) /* allow vno with numeric volid only */
-	    for (x = (cpos + 1); *x >= '0' && *x <= '9'; x++)
-		vnoid = (vnoid * 10) + (*x - '0');
-	if (*x)
-	    vnoid = 0;
-    }
+    if ((afs_strtoi_r(volnamep, &endptr, &volid) == 0) &&
+	((endptr == cpos) || (!*endptr)))
+    {
+	/* Ok. Is there a vnode and uniq? */
+	if (cpos) {
+	    char *vnodep = (char *)(cpos + 1);
+	    char *uniqp = NULL;
+	    if ((!*vnodep) /* no vnode after colon */
+		|| !(uniqp = afs_strchr(vnodep, ':')) /* no colon for uniq */
+		|| (!*(++uniqp)) /* no uniq after colon */
+		|| (afs_strtoi_r(vnodep, &endptr, &vnoid) != 0) /* bad vno */
+		|| (*endptr != ':') /* bad vnode field */
+		|| (afs_strtoi_r(uniqp, &endptr, &uniq) != 0) /* bad uniq */
+		|| (*endptr)) /* anything after uniq */
+	    {
+		*cpos = ':';
+		/* sorry. vnode and uniq, or nothing */
+		return ENODEV;
+	    }
+	}
+    } else
+	    volid = 0;
 
     /*
      * If the volume ID was all-numeric, and they didn't ask for a
@@ -121,14 +136,10 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * as-is.  This is currently only used for handling name lookups
      * in the dynamic mount directory.
      */
-    if (!*x && !avolpp) {
-	if (acellidxp)
-	    *acellidxp = cellidx;
-	if (avolnump)
-	    *avolnump = volid;
-	if (avnoidp)
-	    *avnoidp = vnoid;
-	return 0;
+    if (volid && !avolpp) {
+	if (*cpos)
+	    *cpos = ':';
+	goto done;
     }
 
     /*
@@ -137,14 +148,14 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * and don't second-guess them by forcing use of a RW volume when
      * they gave the ID of something else.
      */
-    if (!*x && type == '%') {
+    if (volid && type == '%') {
 	tfid.Fid.Volume = volid;	/* remember BK volume */
 	tfid.Cell = mtptCell;
 	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
-	if (!tvp) {
-	    /*printf("afs_GetVolume failed - returning ENODEV");*/
-	    return ENODEV;	/* oops, can't do it */
-	}
+	if (cpos) /* one way or another we're done */
+	    *cpos = ':';
+	if (!tvp)
+	    return ENODEV; /* afs_GetVolume failed; return ENODEV */
 	goto done;
     }
 
@@ -178,8 +189,8 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     /* Get the volume struct. Unless this volume name has ".readonly" or
      * ".backup" in it, this will get the volume struct for the RW volume.
      * The RO volume will be prefetched if requested (but not returned).
+     * Set up to use volname first.
      */
-    /*printf("Calling GetVolumeByName\n");*/
     tvp = afs_GetVolumeByName(volnamep, mtptCell, prefetch, areq, WRITE_LOCK);
 
     /* If no volume was found in this cell, try the associated linked cell */
@@ -207,11 +218,13 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 	}
 	osi_FreeSmallSpace(buf);
     }
-
-    if (!tvp) {
-	/*printf("Couldn't find the volume\n");*/
+    /* done with volname */
+    if (cpos)
+	*cpos = ':';
+    if (!tvp)
 	return ENODEV;		/* Couldn't find the volume */
-    }
+    else
+	volid = tvp->volume;
 
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((states & CBackup) && (tvp->states & VBackup)) {
@@ -245,12 +258,14 @@ done:
     if (acellidxp)
 	*acellidxp = cellidx;
     if (avolnump)
-	*avolnump = tvp->volume;
+	*avolnump = volid;
     if (avnoidp)
 	*avnoidp = vnoid;
+    if (auniqp)
+	*auniqp = uniq;
     if (avolpp)
 	*avolpp = tvp;
-    else
+    else if (tvp)
 	afs_PutVolume(tvp, WRITE_LOCK);
     return 0;
 }
@@ -260,7 +275,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	       struct volume **avolpp, register struct vrequest *areq)
 {
     afs_int32 code;
-    afs_uint32 avnoid;
+    afs_uint32 avnoid, auniq;
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
@@ -275,11 +290,14 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     /* Determine which cell and volume the mointpoint goes to */
     code = EvalMountData(avc->linkData[0], avc->linkData + 1,
                          avc->f.states, avc->f.fid.Cell, avolpp, areq, 0, 0,
-			 &avnoid);
+			 &avnoid, &auniq);
     if (code) return code;
 
     if (!avnoid)
 	avnoid = 1;
+
+    if (!auniq)
+	auniq = 1;
 
     if (avc->mvid == 0)
 	avc->mvid =
@@ -287,7 +305,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     avc->mvid->Cell = (*avolpp)->cell;
     avc->mvid->Fid.Volume = (*avolpp)->volume;
     avc->mvid->Fid.Vnode = avnoid;
-    avc->mvid->Fid.Unique = 1;
+    avc->mvid->Fid.Unique = auniq;
     avc->f.states |= CMValid;
 
     /* Used to: if the mount point is stored within a backup volume,
@@ -359,11 +377,12 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
     if (tvc->mvstat != 1)
 	return 0;
 
-    /* Is the call to VerifyVCache really necessary? */
-    code = afs_VerifyVCache(tvc, areq);
-    if (code)
-	goto done;
     if (canblock) {
+	/* Is the call to VerifyVCache really necessary? */
+	code = afs_VerifyVCache(tvc, areq);
+	if (code)
+	    goto done;
+
 	ObtainWriteLock(&tvc->lock, 599);
 	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
 	ReleaseWriteLock(&tvc->lock);
@@ -399,7 +418,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 #ifdef AFS_DARWIN80_ENV
         root_vp->f.m.Type = VDIR;
         AFS_GUNLOCK();
-        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0);
+        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0, 0);
         AFS_GLOCK();
         if (code) goto done;
         vnode_ref(AFSTOV(root_vp));
@@ -628,6 +647,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 {
     int nentries;		/* # of entries to prefetch */
     int nskip;			/* # of slots in the LRU queue to skip */
+#ifdef AFS_DARWIN80_ENV
+    int npasses = 0;
+    struct vnode *lruvp;
+#endif
     struct vcache *lruvcp;	/* vcache ptr of our goal pos in LRU queue */
     struct dcache *dcp;		/* chunk containing the dir block */
     afs_size_t temp;		/* temp for holding chunk length, &c. */
@@ -664,9 +687,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     dotdot.Cell = 0;
     dotdot.Fid.Unique = 0;
     dotdot.Fid.Vnode = 0;
-#ifdef AFS_DARWIN80_ENV
-    panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
-#endif
+
     /* first compute some basic parameters.  We dont want to prefetch more
      * than a fraction of the cache in any given call, and we want to preserve
      * a portion of the LRU queue in any event, so as to avoid thrashing
@@ -750,6 +771,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * and it is safe to set the status information for this file.
      */
     statSeqNo = bulkStatCounter++;
+    /* ensure against wrapping */
+    if (statSeqNo == 0)
+	statSeqNo = bulkStatCounter++;
 
     /* now we have dir data in the cache, so scan the dir page */
     fidIndex = 0;
@@ -799,7 +823,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		}
 	    } while (tvcp && retry);
 	    if (!tvcp) {	/* otherwise, create manually */
-		tvcp = afs_NewVCache(&tfid, hostp);
+		tvcp = afs_NewBulkVCache(&tfid, hostp, statSeqNo);
 		if (tvcp)
 		{
 			ObtainWriteLock(&tvcp->lock, 505);
@@ -821,27 +845,22 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		goto done;	/* can happen if afs_NewVCache fails */
 	    }
 
-#ifdef AFS_DARWIN80_ENV
-            if (tvcp->f.states & CVInit) {
-                 /* XXX don't have status yet, so creating the vnode is
-                    not yet useful. we would get CDeadVnode set, and the
-                    upcoming PutVCache will cause the vcache to be flushed &
-                    freed, which in turn means the bulkstatus results won't 
-                    be used */
-            }
-#endif
 	    /* WARNING: afs_DoBulkStat uses the Length field to store a
 	     * sequence number for each bulk status request. Under no
 	     * circumstances should afs_DoBulkStat store a sequence number
 	     * if the new length will be ignored when afs_ProcessFS is
 	     * called with new stats. */
 #ifdef AFS_SGI_ENV
-	    if (!(tvcp->f.states & (CStatd | CBulkFetching))
+	    if (!(tvcp->f.states & CStatd)
+		&& (!((tvcp->f.states & CBulkFetching) &&
+		      (tvcp->f.m.Length != statSeqNo)))
 		&& (tvcp->execsOrWriters <= 0)
 		&& !afs_DirtyPages(tvcp)
 		&& !AFS_VN_MAPPED((vnode_t *) tvcp))
 #else
-	    if (!(tvcp->f.states & (CStatd | CBulkFetching))
+	    if (!(tvcp->f.states & CStatd)
+		&& (!((tvcp->f.states & CBulkFetching) &&
+		      (tvcp->f.m.Length != statSeqNo)))
 		&& (tvcp->execsOrWriters <= 0)
 		&& !afs_DirtyPages(tvcp))
 #endif
@@ -855,7 +874,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		 * CBulkFetching state bit and the value in the file size.
 		 * It is safe to set the status only if the CBulkFetching
 		 * flag is still set and the value in the file size does
-		 * not change.
+		 * not change. NewBulkVCache sets us up.
 		 *
 		 * Don't fetch status for dirty files. We need to
 		 * preserve the value of the file size. We could
@@ -863,8 +882,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		 */
 		memcpy((char *)(fidsp + fidIndex), (char *)&tfid.Fid,
 		       sizeof(*fidsp));
-		tvcp->f.states |= CBulkFetching;
-		tvcp->f.m.Length = statSeqNo;
 		fidIndex++;
 	    }
 	    afs_PutVCache(tvcp);
@@ -958,6 +975,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
   reskip:
     nskip = afs_cacheStats / 2;	/* preserved fraction of the cache */
     ObtainReadLock(&afs_xvcache);
+#ifdef AFS_DARWIN80_ENV
+ reskip2:
+#endif
     if (QEmpty(&VLRU)) {
 	/* actually a serious error, probably should panic. Probably will 
 	 * panic soon, oh well. */
@@ -969,9 +989,13 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	refpanic("Bulkstat VLRU inconsistent");
     }
     for (tq = VLRU.next; tq != &VLRU; tq = QNext(tq)) {
-	if (--nskip <= 0)
-	    break;
-	else if (QNext(QPrev(tq)) != tq) {
+	if (--nskip <= 0) {
+#ifdef AFS_DARWIN80_ENV
+	    if ((!(QTOV(tq)->f.states & CDeadVnode)&&!(QTOV(tq)->f.states & CVInit)))
+#endif
+		break;
+	}
+	if (QNext(QPrev(tq)) != tq) {
 	    BStvc = QTOV(tq);
 	    refpanic("BulkStat VLRU inconsistent");
 	}
@@ -987,7 +1011,28 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * doesn't hurt nearly as much.
      */
     retry = 0;
+#ifdef AFS_DARWIN80_ENV
+    if (((lruvcp->f.states & CDeadVnode)||(lruvcp->f.states & CVInit))) {
+	if (npasses == 0) {
+	    nskip = 1;
+	    npasses++;
+	    goto reskip2;
+	} else
+	    panic("Can't find non-dead vnode in VLRU\n");
+    }
+    lruvp = AFSTOV(lruvcp);
+    if (vnode_get(lruvp))       /* this bumps ref count */
+	retry = 1;
+    else if (vnode_ref(lruvp)) {
+	AFS_GUNLOCK();
+	/* AFSTOV(lruvcp) may be NULL */
+	vnode_put(lruvp);
+	AFS_GLOCK();
+	retry = 1;
+    }
+#else
     osi_vnhold(lruvcp, &retry);
+#endif
     ReleaseReadLock(&afs_xvcache);	/* could be read lock */
     if (retry)
 	goto reskip;
@@ -1030,8 +1075,17 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * file.  Leave the entry alone.
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
+#ifdef AFS_DARWIN80_ENV	    
+	    int isdead = ((tvcp->f.states & CDeadVnode) ||
+			  (tvcp->f.states & CVInit));
+#endif
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
+#ifdef AFS_DARWIN80_ENV	    
+	    if (!isdead)
+		/* re-acquire the usecount that the other finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+#endif
 	    afs_PutVCache(tvcp);
 	    continue;
 	}
@@ -1043,6 +1097,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));
 	    *tvcp->mvid = dotdot;
 	}
+
+#ifdef AFS_DARWIN80_ENV
+	if (((lruvcp->f.states & CDeadVnode)||(lruvcp->f.states & CVInit)))
+	    panic("vlru control point went dead\n");
+#endif
 
 	ObtainWriteLock(&afs_xvcache, 132);
 	if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
@@ -1082,6 +1141,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
+#ifdef AFS_DARWIN80_ENV	    
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
+		/* re-acquire the usecount that the other finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+#endif
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
 	    afs_PutVCache(tvcp);
@@ -1138,6 +1202,23 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		osi_dnlc_purgedp(tvcp);	/* if it (could be) a directory */
 	}
 	ReleaseWriteLock(&afs_xcbhash);
+#ifdef AFS_DARWIN80_ENV
+	/* reclaim->FlushVCache will need xcbhash */
+	if (((tvcp->f.states & CDeadVnode)||(tvcp->f.states & CVInit))) {
+	    /* passing in a parent hangs getting the vnode lock */
+	    code = afs_darwin_finalizevnode(tvcp, NULL, NULL, 0, 1);
+	    if (code) {
+		/* It's gonna get recycled - shouldn't happen */
+		tvcp->callback = 0;
+		tvcp->f.states &= ~(CStatd | CUnique);
+		afs_DequeueCallback(tvcp);
+		if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
+		    osi_dnlc_purgedp(tvcp); /* if it (could be) a directory */
+	    } else
+		/* re-acquire the usecount that finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+	}
+#endif
 
 	ReleaseWriteLock(&tvcp->lock);
 	/* finally, we're done with the entry */
@@ -1145,7 +1226,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     }				/* for all files we got back */
 
     /* finally return the pointer into the LRU queue */
+#ifdef AFS_DARWIN80_ENV
+    if (((lruvcp->f.states & CDeadVnode)||(lruvcp->f.states & CVInit)))
+	panic("vlru control point went dead before put\n");
+    AFS_GUNLOCK();
+    vnode_put(lruvp);
+    vnode_rele(lruvp);
+    AFS_GLOCK();
+#else
     afs_PutVCache(lruvcp);
+#endif
 
   done:
     /* Be sure to turn off the CBulkFetching flags */
@@ -1165,6 +1255,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tvcp->f.states &= ~CBulkFetching;
 	}
 	if (tvcp != NULL) {
+#ifdef AFS_DARWIN80_ENV	    
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
+		/* re-acquire the usecount that the other finalizevnode disposed of */
+		vnode_ref(AFSTOV(tvcp));
+#endif
 	    afs_PutVCache(tvcp);
 	}
     }
@@ -1189,11 +1284,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-#ifdef AFS_DARWIN80_ENV
-#define AFSDOBULK 0
-#else
 static int AFSDOBULK = 1;
-#endif
 
 int
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
@@ -1365,15 +1456,26 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
      */
     if (afs_IsDynrootMount(adp)) {
 	struct VenusFid tfid;
-	afs_uint32 cellidx, volid, vnoid;
+	afs_uint32 cellidx, volid, vnoid, uniq;
 
-	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid, &vnoid);
+	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid, &vnoid, &uniq);
 	if (code)
 	    goto done;
-	afs_GetDynrootMountFid(&tfid);
-	tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
-	tfid.Fid.Unique = volid;
+	/* If a vnode was returned, it's not a real mount point */
+	if (vnoid > 1) {
+	    struct cell *tcell = afs_GetCellByIndex(cellidx, READ_LOCK);
+	    tfid.Cell = tcell->cellNum;
+	    afs_PutCell(tcell, READ_LOCK);
+	    tfid.Fid.Vnode = vnoid;
+	    tfid.Fid.Volume = volid;
+	    tfid.Fid.Unique = uniq;
+	} else {
+	    afs_GetDynrootMountFid(&tfid);
+	    tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
+	    tfid.Fid.Unique = volid;
+	}
 	*avcp = tvc = afs_GetVCache(&tfid, &treq, NULL, NULL);
+	code = (tvc ? 0 : ENOENT);
 	hit = 1;
 	goto done;
     }
@@ -1569,7 +1671,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    /* if the vcache isn't usable, release it */
 	    if (tvc && !(tvc->f.states & CStatd)) {
 #ifndef  AFS_FBSD80_ENV
-	      afs_PutVCache(tvc);
+		afs_PutVCache(tvc);
 #endif
 		tvc = NULL;
 	    }

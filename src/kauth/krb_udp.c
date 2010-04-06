@@ -307,7 +307,8 @@ UDP_Authenticate(int ksoc, struct sockaddr_in *client, char *name,
 	    afs_uint32 temp;	/* unsigned for safety */
 	    afs_uint32 pwexpires;
 
-	    temp = ntohl(*((afs_int32 *) (tentry.misc_auth_bytes)));
+	    memcpy(&temp, tentry.misc_auth_bytes, sizeof(afs_uint32));
+	    temp = ntohl(temp);
 	    unpack_long(temp, misc_auth_bytes);
 	    pwexpires = misc_auth_bytes[0];
 	    if (pwexpires) {
@@ -794,6 +795,7 @@ SocketListener(void *unused)
     struct packet packet;
     socklen_t fromLen;
     afs_int32 code;
+    char hoststr[16];
 
     printf("Starting to listen for UDP packets\n");
     while (1) {
@@ -829,7 +831,7 @@ SocketListener(void *unused)
 	    packet.len = code;
 	    if (krb_udp_debug) {
 		printf("Kerb:udp: Got %d bytes from addr %s which are '",
-		       code, afs_inet_ntoa(packet.from.sin_addr.s_addr));
+		       code, afs_inet_ntoa_r(packet.from.sin_addr.s_addr, hoststr));
 		ka_PrintBytes(packet.data, packet.len);
 		printf("'\n");
 	    }
@@ -851,7 +853,7 @@ SocketListener(void *unused)
 	    packet.len = code;
 	    if (krb_udp_debug) {
 		printf("Kerb5:udp: Got %d bytes from addr %s which are '",
-		       code, afs_inet_ntoa(packet.from.sin_addr.s_addr));
+		       code, afs_inet_ntoa_r(packet.from.sin_addr.s_addr, hoststr));
 		ka_PrintBytes(packet.data, packet.len);
 		printf("'\n");
 	    }

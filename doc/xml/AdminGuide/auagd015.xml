@@ -1511,7 +1511,129 @@
           </listitem>
         </itemizedlist></para>
     </sect2>
+
+
+    <sect2 id="tuning-cache-configuration">
+      <title>Tuning Cache Configuration</title>
+
+      <indexterm>
+        <primary>cache</primary>
+        <secondary>tuning</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>performance</primary>
+        <secondary>cache</secondary>
+      </indexterm>
+
+      <para>
+        Tuning the parameters of the OpenAFS cache for optimal performance
+        is highly dependent on the behavior of applications and users on a
+        client machine. The default options may perform poorly under
+        certain conditions.
+      </para>
+
+      <para>
+        The <emphasis role="bold">xstat_cm_test</emphasis> command is
+        useful for measuring how effectively the cache is operating. The
+        following procedure may be used to aide in tuning the parameters
+        for the data cache (dcache) and the stats cache (vcache):
+        <orderedlist>
+          <listitem>
+            <para>
+              Run the following command and replace "hostname" with the hostname of the machine to be measured:
+              <programlisting>
+                <emphasis role="bold">xstat_cm_test hostname 2 -onceonly</emphasis>
+              </programlisting>
+            </para>
+            <para>
+              Take note of the following fields: dcacheHits, dcacheMisses,
+              vcacheHits, and vcacheMisses. Saving the above command
+              output to a file or filtering it using grep is advised.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Using the noted fields, compute the miss ratios for the
+              dcache and vcache using the following formulas:
+              <programlisting>
+                <emphasis role="bold">
+                  dcache miss ratio = dcacheMisses / ( dcacheMisses + dcacheHits )
+                </emphasis>
+              </programlisting>
+              <programlisting>
+                <emphasis role="bold">
+                  vcache miss ratio = vcacheMisses / ( vcacheMisses + vcacheHits )
+                </emphasis>
+              </programlisting>
+              As a guideline, a miss ratio of 0.05 (5 percent) or less is
+              acceptable and a miss ratio of 0.01 (1 percent) or less is
+              recommended.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              If your dcache miss ratio is too large, then cache
+              performance is likely to improve if the data cache is made
+              larger. If the vcache miss ratio is too large, then increase
+              the size of the stat cache using
+              the <emphasis role="bold">-stat</emphasis> parameter
+              to <emphasis role="bold">afsd</emphasis> for a Unix-based
+              client or using the Control Panel or registry interfaces on
+              Microsoft Windows-based clients. The default size of the
+              stat cache is 10,000 entries on windows platforms and 300
+              entries on Unix platforms. There may be a significant
+              performance penalty when the vcache size is much smaller
+              than the working set of commonly accessed files. On the
+              fileserver, the number of callbacks should be more than the
+              size of the vcache of any client that connects to the
+              server. If the cache is too small or there aren't enough
+              callbacks (<emphasis role="bold">-cb</emphasis>) on the
+              fileserver, then the cached entries will be discarded
+              prematurely, causing thrashing.
+              <tip>
+                <para>
+                  As an example of how the wrong vcache size can degrade
+                  performance, one OpenAFS site had performance issues
+                  with the Apache and mod_php software on a Unix web
+                  server serving web pages directly out of AFS. During
+                  peak times, the load on the server would spike with an
+                  excess of Apache processes. After profiling, it was
+                  found that Apache and PHP made lots
+                  of <emphasis role="bold">stat()</emphasis> library calls
+                  and that the default vcache size of 300 was too
+                  small. After some experimentation, a vcache size of
+                  50,000 was found to improve performance. This size makes
+                  sense in light of that fact that the total number of
+                  files in the website exceeded 350,000, including 50,000
+                  PHP files. The number of callbacks configured on the
+                  fileserver was 1,500,000, so the vcache size was not too
+                  large.
+                </para>
+              </tip>
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              After changing your configuration appropriately and
+              restarting the AFS client service, wait until enough data
+              has been collected before changing the configuration
+              further. The sum of the hits and misses should be at least
+              five times the value of the configured parameter before
+              making further adjustments. Repeat this process until the
+              desired miss ratio is achieved. Take note that the numbers
+              from the <emphasis role="bold">xstat_cm_test</emphasis>
+              command only reset when the client is restarted. If multiple
+              samples are taken, then subtract the previous measurement
+              from the current measurement to accurately measure the
+              activity that happened between the samples.
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+    </sect2>
   </sect1>
+
 
   <sect1 id="HDRWQ406">
     <title>Maintaining Knowledge of Database Server Machines</title>
@@ -3910,3 +4032,4 @@
     </sect2>
   </sect1>
 </chapter>
+

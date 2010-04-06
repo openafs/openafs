@@ -95,9 +95,13 @@ ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) 
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
+# When supergroups is enabled, some parts of ptserver cast between
+# incompatible structs.
 ptutils.o: ptutils.c ${INCLS}
+	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ptutils.c
 
 ptprocs.o: ptprocs.c ${INCLS}
+	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ptprocs.c
 
 utils.o: utils.c ${INCLS} 
 

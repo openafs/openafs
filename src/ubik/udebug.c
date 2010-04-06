@@ -99,6 +99,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     struct ubik_sdebug usdebug;
     int oldServer = 0;		/* are we talking to a pre 3.5 server? */
     afs_int32 isClone = 0;
+    char hoststr[16];
 
     int32p = (as->parms[2].items ? 1 : 0);
 
@@ -164,10 +165,10 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	printf("Host's addresses are: ");
 	for (j = 0; udebug.interfaceAddr[j] && (j < UBIK_MAX_INTERFACE_ADDR);
 	     j++)
-	    printf("%s ", afs_inet_ntoa(htonl(udebug.interfaceAddr[j])));
+	    printf("%s ", afs_inet_ntoa_r(htonl(udebug.interfaceAddr[j]), hoststr));
 	printf("\n");
     }
-    printf("Host's %s time is %s\n", afs_inet_ntoa(hostAddr), times);
+    printf("Host's %s time is %s\n", afs_inet_ntoa_r(hostAddr, hoststr), times);
 
     times = ctime(&now);
     times[24] = 0;
@@ -186,13 +187,13 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	udebug.syncVersion.counter = udebug.localVersion.counter;
     }
 
-    /* sockaddr is always in net-order */
+    /* XDR converts addresses for us, so all addresses are in HBO */
     if (udebug.lastYesHost == 0xffffffff) {
 	printf("Last yes vote not cast yet \n");
     } else {
 	diff = udebug.now - udebug.lastYesTime;
 	printf("Last yes vote for %s was %d secs ago (%ssync site); \n",
-	       afs_inet_ntoa(udebug.lastYesHost), 
+	       afs_inet_ntoa_r(htonl(udebug.lastYesHost), hoststr),
 	       afs_cast_time_t(diff),
 	       ((udebug.lastYesState) ? "" : "not "));
 
@@ -233,12 +234,12 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    printf("I am not sync site\n");
 	diff = udebug.now - udebug.lowestTime;
 	printf("Lowest host %s was set %d secs ago\n",
-	       afs_inet_ntoa(htonl(udebug.lowestHost)),
+	       afs_inet_ntoa_r(htonl(udebug.lowestHost), hoststr),
 	       afs_cast_time_t(diff));
 
 	diff = udebug.now - udebug.syncTime;
 	printf("Sync host %s was set %d secs ago\n",
-	       afs_inet_ntoa(htonl(udebug.syncHost)),
+	       afs_inet_ntoa_r(htonl(udebug.syncHost), hoststr),
 	       afs_cast_time_t(diff));
     }
 
@@ -289,11 +290,11 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 		break;
 	    }
 	    /* otherwise print the structure */
-	    printf("\nServer (%s", afs_inet_ntoa(htonl(usdebug.addr)));
+	    printf("\nServer (%s", afs_inet_ntoa_r(htonl(usdebug.addr), hoststr));
 	    for (j = 0;
 		 ((usdebug.altAddr[j]) && (j < UBIK_MAX_INTERFACE_ADDR - 1));
 		 j++)
-		printf(" %s", afs_inet_ntoa(htonl(usdebug.altAddr[j])));
+		printf(" %s", afs_inet_ntoa_r(htonl(usdebug.altAddr[j]), hoststr));
 	    printf("): (db %d.%d)", usdebug.remoteVersion.epoch,
 		   usdebug.remoteVersion.counter);
 	    if (isClone)

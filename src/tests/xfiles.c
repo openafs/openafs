@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "xfiles.h"
 #include "xf_errs.h"
@@ -132,7 +133,7 @@ xfskip(XFILE * X, afs_uint32 count)
 
     /* Simulate using absolute seek, if available */
     if (X->do_seek && !X->passthru) {
-	if (code = xftell(X, &tmp64))
+	if ((code = xftell(X, &tmp64)))
 	    return code;
 	add64_32(X->filepos, tmp64, count);
 	cp64(tmp64, X->filepos);
@@ -149,7 +150,7 @@ xfskip(XFILE * X, afs_uint32 count)
 
 	while (count) {
 	    n = (count > SKIP_SIZE) ? SKIP_SIZE : count;
-	    if (code = xfread(X, buf, n))
+	    if ((code = xfread(X, buf, n)))
 		return code;
 	    count -= n;
 	}
@@ -204,6 +205,7 @@ xfregister(char *name, afs_uint32(*do_on) (XFILE *, int, char *))
     x->name = name;
     x->do_on = do_on;
     xftypes = x;
+    return 0;
 }
 
 

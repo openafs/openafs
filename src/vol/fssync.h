@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  *
- * Portions Copyright (c) 2006-2008 Sine Nomine Associates
+ * Portions Copyright (c) 2006-2010 Sine Nomine Associates
  */
 
 /*
@@ -19,12 +19,15 @@
 #ifndef __fssync_h_
 #define __fssync_h_
 
-
 #define FSYNC_PROTO_VERSION     3
 
+#include "voldefs.h"
 
 /**
  * FSYNC command codes.
+ *
+ * If you add more command codes here, be sure to add some documentation
+ * in doc/arch/fssync.txt.
  */
 enum FSYNCOpCode {
     FSYNC_VOL_ON              = SYNC_COM_CODE_DECL(0),	/**< bring Volume online */
@@ -50,6 +53,11 @@ enum FSYNCOpCode {
     FSYNC_VOL_FORCE_ERROR     = SYNC_COM_CODE_DECL(16), /**< force volume into error state */
     FSYNC_VOL_LEAVE_OFF       = SYNC_COM_CODE_DECL(17), /**< end vol op, but leave volume offline */
     FSYNC_VOL_QUERY_VNODE     = SYNC_COM_CODE_DECL(18), /**< query vnode state */
+    FSYNC_VG_QUERY            = SYNC_COM_CODE_DECL(19), /**< Query volume group membership for a given volume id */
+    FSYNC_VG_ADD              = SYNC_COM_CODE_DECL(20), /**< add a volume id to a vg */
+    FSYNC_VG_DEL              = SYNC_COM_CODE_DECL(21), /**< delete a volume id from a vg */
+    FSYNC_VG_SCAN             = SYNC_COM_CODE_DECL(22), /**< force a re-scan of a given partition */
+    FSYNC_VG_SCAN_ALL         = SYNC_COM_CODE_DECL(23), /**< force a re-scan of all vice partitions */
     FSYNC_OP_CODE_END
 };
 
@@ -69,6 +77,8 @@ enum FSYNCReasonCode {
     FSYNC_UNKNOWN_VNID        = SYNC_REASON_CODE_DECL(9), /**< vnode id not known by fileserver */
     FSYNC_WRONG_PART          = SYNC_REASON_CODE_DECL(10),/**< volume attached on different partition */
     FSYNC_BAD_STATE           = SYNC_REASON_CODE_DECL(11),/**< current volume state does not allow this operation */
+    FSYNC_BAD_PART            = SYNC_REASON_CODE_DECL(12),/**< invalid disk partition */
+    FSYNC_PART_SCANNING       = SYNC_REASON_CODE_DECL(13),/**< partition is busy scanning VGs */
     FSYNC_REASON_CODE_END
 };
 
@@ -154,6 +164,24 @@ typedef struct FSSYNC_VnQry_hdr {
     char partName[16];          /**< partition name */
 } FSSYNC_VnQry_hdr;
 
+/**
+ * fssync protocol volume group query response message.
+ */
+typedef struct FSSYNC_VGQry_response {
+    afs_uint32 rw;                        /**< rw volume id */
+    afs_uint32 children[VOL_VG_MAX_VOLS]; /**< vector of children */
+} FSSYNC_VGQry_response_t;
+
+/**
+ * fssync protocol volume group update command message.
+ */
+typedef struct FSSYNC_VGUpdate_command {
+    afs_uint32 parent;          /**< rw volume id */
+    afs_uint32 child;           /**< volume id to associate with parent
+				 *   (can legally be the parent itself) */
+    char partName[16];          /**< name of vice partition on which this
+				 *   volume group resides */
+} FSSYNC_VGUpdate_command_t;
 
 #define FSSYNC_IN_PORT 2040
 #define FSSYNC_UN_PATH "fssync.sock"
@@ -179,7 +207,7 @@ extern afs_int32 FSYNC_GenericOp(void * ext_hdr, size_t ext_len,
 				 int command, int reason,
 				 SYNC_response * res);
 
-/* volume operations interface */
+/* volume operations control interface */
 extern afs_int32 FSYNC_VolOp(VolumeId volume, char *partName, int com, int reason, 
 			     SYNC_response * res);
 
@@ -188,5 +216,17 @@ extern afs_int32 FSYNC_StatsOp(FSSYNC_StatsOp_hdr * scom, int command, int reaso
 			       SYNC_response * res_in);
 
 extern void FSYNC_fsInit(void);
+
+/* volume group cache coherence interfaces */
+extern afs_int32 FSYNC_VGCQuery(char * part, VolumeId parent,
+				FSSYNC_VGQry_response_t *, SYNC_response *res);
+extern afs_int32 FSYNC_VGCAdd(char *part, VolumeId parent, VolumeId child,
+			      int reason, SYNC_response *res);
+extern afs_int32 FSYNC_VGCDel(char *part, VolumeId parent, VolumeId child,
+			      int reason, SYNC_response *res);
+extern afs_int32 FSYNC_VGCScan(char *part, int reason);
+
+extern afs_int32 FSYNC_VerifyCheckout(VolumeId volume, char *partition,
+                                      afs_int32 command, afs_int32 reason);
 
 #endif /* __fssync_h_ */

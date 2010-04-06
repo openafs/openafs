@@ -1,0 +1,1100 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3213E9410C2ABFD200D3D2F6 /* AuthUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 3213E93F0C2ABFD200D3D2F6 /* AuthUtil.h */; };
+		3213E9420C2ABFD200D3D2F6 /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
+		3219259D0C339DAE00B55E86 /* TokenCredentialController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219259C0C339DAE00B55E86 /* TokenCredentialController.m */; };
+		3223836C0C32A96F00380547 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3223836A0C32A96F00380547 /* Localizable.strings */; };
+		322884030C3E45C800E778CC /* InfoController.h in Headers */ = {isa = PBXBuildFile; fileRef = 322884010C3E45C800E778CC /* InfoController.h */; };
+		322884040C3E45C800E778CC /* InfoController.m in Sources */ = {isa = PBXBuildFile; fileRef = 322884020C3E45C800E778CC /* InfoController.m */; };
+		322884050C3E45C800E778CC /* InfoController.m in Sources */ = {isa = PBXBuildFile; fileRef = 322884020C3E45C800E778CC /* InfoController.m */; };
+		3228B9B01020526900DF98DA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3228B9AF1020526900DF98DA /* main.m */; };
+		3228B9B4102052A900DF98DA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
+		3228B9BE102052BE00DF98DA /* version.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3228B9BD102052BE00DF98DA /* version.plist */; };
+		322CEF600C211D220060D66D /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
+		322CEF6E0C211DCC0060D66D /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
+		3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */; };
+		3231522210243E09005901AA /* AFSMenuExtraView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231521E10243E09005901AA /* AFSMenuExtraView.m */; };
+		3231522610243E10005901AA /* CredentialWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231522510243E10005901AA /* CredentialWindowController.m */; };
+		3231522810243E21005901AA /* CredentialWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 3231522710243E21005901AA /* CredentialWindow.nib */; };
+		3231522B10243E2C005901AA /* hasToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3231522910243E2C005901AA /* hasToken.png */; };
+		3231522C10243E2C005901AA /* noToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3231522A10243E2C005901AA /* noToken.png */; };
+		324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */; };
+		324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D683B0DA133A3007E1561 /* IpPanel.xib */; };
+		324D684A0DA133CF007E1561 /* CredentialPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D68480DA133CF007E1561 /* CredentialPanel.xib */; };
+		324F490E115548E2001A763B /* Krb5Util.h in Headers */ = {isa = PBXBuildFile; fileRef = 324F490C115548E2001A763B /* Krb5Util.h */; };
+		324F490F115548E2001A763B /* Krb5Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 324F490D115548E2001A763B /* Krb5Util.m */; };
+		324F4910115548ED001A763B /* Krb5Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 324F490D115548E2001A763B /* Krb5Util.m */; };
+		324F492D11554AF2001A763B /* Krb5Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 324F490D115548E2001A763B /* Krb5Util.m */; };
+		325311D00C44F4B100FAF2F3 /* license.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 325311CF0C44F4B100FAF2F3 /* license.rtf */; };
+		3273088D0C2A9B05008C322B /* FileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 3273088B0C2A9B05008C322B /* FileUtil.h */; };
+		3273088E0C2A9B05008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
+		327308C30C2AA2E1008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
+		327308D70C2AA364008C322B /* SecurityFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327308D20C2AA364008C322B /* SecurityFoundation.framework */; };
+		327308D80C2AA369008C322B /* SecurityFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327308D20C2AA364008C322B /* SecurityFoundation.framework */; };
+		327309970C2AB433008C322B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
+		327309980C2AB434008C322B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
+		3276592110204E4E004CA418 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
+		3276592210204E51004CA418 /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
+		3276592310204E51004CA418 /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
+		3276592410204EE0004CA418 /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
+		3276592510204EE1004CA418 /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
+		3276592610204EE2004CA418 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
+		3276592710204EE2004CA418 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
+		3276592810204EE3004CA418 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
+		3276592910204EE4004CA418 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
+		3276592A10204EE5004CA418 /* DialogUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B766440DCA47A50014A80F /* DialogUtility.m */; };
+		3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */; };
+		3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */; };
+		3276594110204FFA004CA418 /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
+		3276594310204FFA004CA418 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4940075A0CE62EB500F40D0A /* CoreServices.framework */; };
+		3276594410204FFC004CA418 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
+		3276594510205003004CA418 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 493564E70CE711F300699A24 /* Carbon.framework */; };
+		327756270C3053A100C15D11 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
+		327756280C3053A100C15D11 /* TaskUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 327756250C3053A100C15D11 /* TaskUtil.h */; };
+		327756290C3053A100C15D11 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
+		328014501025F503008E1060 /* afshlp in Resources */ = {isa = PBXBuildFile; fileRef = 49683EE40C3446380093C7C8 /* afshlp */; };
+		32B0AFDF0C01729400272348 /* AFSPropertyManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B0AFDD0C01729400272348 /* AFSPropertyManager.h */; };
+		32B0AFE00C01729400272348 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
+		32B565740D8FAF62005255F2 /* NSString+search.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B565720D8FAF62005255F2 /* NSString+search.h */; };
+		32B565750D8FAF62005255F2 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
+		32C4A9580C268D9B009280A0 /* IpConfiguratorCommander.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */; };
+		32C4A9B80C26A0FA009280A0 /* IpConfiguratorCommander.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */; };
+		32C4A9B90C26A0FB009280A0 /* IpConfiguratorCommander.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C4A9560C268D9B009280A0 /* IpConfiguratorCommander.h */; };
+		32CF013F0C203C5600A8DC58 /* TestLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CFFEFD0C20316B00A8DC58 /* TestLib.m */; };
+		32CF01460C203CA800A8DC58 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
+		32CF014C0C203CBD00A8DC58 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
+		32DE818C0DF573200069A05C /* LynkCreationController.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DE818A0DF573200069A05C /* LynkCreationController.h */; };
+		32DE818D0DF573200069A05C /* LynkCreationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 32DE818B0DF573200069A05C /* LynkCreationController.m */; };
+		32DE81BD0DF57BDA0069A05C /* SymLinkEdit.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32DE81BC0DF57BDA0069A05C /* SymLinkEdit.xib */; };
+		32E299A3102491AA00D2C2E5 /* AFSBackgrounder.app in Resources */ = {isa = PBXBuildFile; fileRef = 3276591B10204E08004CA418 /* AFSBackgrounder.app */; };
+		492AFA860C51301D00AEDC93 /* TokenCredentialController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3219259B0C339DAE00B55E86 /* TokenCredentialController.h */; };
+		492AFA870C51301E00AEDC93 /* TokenCredentialController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219259C0C339DAE00B55E86 /* TokenCredentialController.m */; };
+		4934D4170DC38958000511D2 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
+		493564E80CE711F300699A24 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 493564E70CE711F300699A24 /* Carbon.framework */; };
+		4940075B0CE62EB500F40D0A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4940075A0CE62EB500F40D0A /* CoreServices.framework */; };
+		495B04400D219A2900F1E328 /* ViewUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 495B043E0D219A2900F1E328 /* ViewUtility.h */; };
+		495B04410D219A2900F1E328 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
+		495B04420D219A2900F1E328 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
+		495C39470D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
+		495C39490D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
+		495C39CC0D81F742003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
+		49683EEC0C3446600093C7C8 /* afshlp.m in Sources */ = {isa = PBXBuildFile; fileRef = 49683EEB0C3446600093C7C8 /* afshlp.m */; };
+		49683F3D0C344CD40093C7C8 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
+		49683F3E0C344CD50093C7C8 /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
+		49683F3F0C344CD70093C7C8 /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
+		49683F400C344CD80093C7C8 /* IpConfiguratorCommander.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */; };
+		49683F410C344CD90093C7C8 /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
+		49683F420C344CDA0093C7C8 /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
+		49683F430C344CDB0093C7C8 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
+		49683F440C344CE20093C7C8 /* SecurityFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327308D20C2AA364008C322B /* SecurityFoundation.framework */; };
+		49683F470C344CE40093C7C8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
+		49683F990C3452870093C7C8 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
+		4968CBEB0C51EA01001F5CC7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 089C1672FE841209C02AAC07 /* Foundation.framework */; };
+		498DCB430DC2240B00D143C8 /* PListManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 498DCB410DC2240B00D143C8 /* PListManager.h */; };
+		498DCB440DC2240B00D143C8 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
+		499716930C23E36E001339E3 /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
+		499716940C23E36F001339E3 /* CellIp.h in Headers */ = {isa = PBXBuildFile; fileRef = 322CEF6C0C211DCC0060D66D /* CellIp.h */; };
+		499716950C23E370001339E3 /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
+		499716960C23E370001339E3 /* DBCellElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 322CEF5E0C211D220060D66D /* DBCellElement.h */; };
+		49AF1F480C25B52A006A046E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49AF1F470C25B52A006A046E /* InfoPlist.strings */; };
+		49B766450DCA47A50014A80F /* DialogUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 49B766430DCA47A50014A80F /* DialogUtility.h */; };
+		49B766460DCA47A50014A80F /* DialogUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B766440DCA47A50014A80F /* DialogUtility.m */; };
+		49E05CAD0C2674DA002AAEF2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D202CF70486D31800D8A456 /* Info.plist */; };
+		49E43BE70C47D9EE00084436 /* global.h in Headers */ = {isa = PBXBuildFile; fileRef = 49E43BE60C47D9EE00084436 /* global.h */; };
+		49E43D2E0C480B8200084436 /* afshlp in Resources */ = {isa = PBXBuildFile; fileRef = 49683EE40C3446380093C7C8 /* afshlp */; };
+		49FFE7D20C2AED7200DF83CF /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
+		8D202CEA0486D31800D8A456 /* AFSCommander_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA20370C41700C91783 /* AFSCommander_Prefix.pch */; };
+		8D202CEB0486D31800D8A456 /* AFSCommanderPref.h in Headers */ = {isa = PBXBuildFile; fileRef = F506C03C013D9D7901CA16C8 /* AFSCommanderPref.h */; };
+		8D202CF10486D31800D8A456 /* AFSCommanderPref.m in Sources */ = {isa = PBXBuildFile; fileRef = F506C03D013D9D7901CA16C8 /* AFSCommanderPref.m */; };
+		8D202CF30486D31800D8A456 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
+		8D202CF40486D31800D8A456 /* PreferencePanes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F506C035013D953901CA16C8 /* PreferencePanes.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		328014511025F52A008E1060 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 49683EE30C3446380093C7C8;
+			remoteInfo = afshlp;
+		};
+		32E29A9810249A1200D2C2E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 49683EE30C3446380093C7C8;
+			remoteInfo = afshlp;
+		};
+		32E29A9A10249A1600D2C2E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3276591A10204E08004CA418;
+			remoteInfo = AFSBackgrounder;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089C1672FE841209C02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		089C167FFE841241C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		3213E93F0C2ABFD200D3D2F6 /* AuthUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AuthUtil.h; sourceTree = "<group>"; };
+		3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AuthUtil.m; sourceTree = "<group>"; };
+		3219259B0C339DAE00B55E86 /* TokenCredentialController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TokenCredentialController.h; sourceTree = "<group>"; };
+		3219259C0C339DAE00B55E86 /* TokenCredentialController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenCredentialController.m; sourceTree = "<group>"; };
+		3223836B0C32A96F00380547 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
+		322884010C3E45C800E778CC /* InfoController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InfoController.h; sourceTree = "<group>"; };
+		322884020C3E45C800E778CC /* InfoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InfoController.m; sourceTree = "<group>"; };
+		3228B9AF1020526900DF98DA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AFSBackgrounder/main.m; sourceTree = "<group>"; };
+		3228B9BD102052BE00DF98DA /* version.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = version.plist; path = AFSBackgrounder/resource/version.plist; sourceTree = "<group>"; };
+		322CEF5E0C211D220060D66D /* DBCellElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBCellElement.h; sourceTree = "<group>"; };
+		322CEF5F0C211D220060D66D /* DBCellElement.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DBCellElement.m; sourceTree = "<group>"; };
+		322CEF6C0C211DCC0060D66D /* CellIp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CellIp.h; sourceTree = "<group>"; };
+		322CEF6D0C211DCC0060D66D /* CellIp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CellIp.m; sourceTree = "<group>"; };
+		3231521910243E09005901AA /* AFSMenuCredentialContoller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSMenuCredentialContoller.h; path = AFSBackgrounder/AFSMenuCredentialContoller.h; sourceTree = "<group>"; };
+		3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSMenuCredentialContoller.m; path = AFSBackgrounder/AFSMenuCredentialContoller.m; sourceTree = "<group>"; };
+		3231521B10243E09005901AA /* AFSMenuExtra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSMenuExtra.h; path = AFSBackgrounder/AFSMenuExtra.h; sourceTree = "<group>"; };
+		3231521C10243E09005901AA /* AFSMenuExtra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSMenuExtra.m; path = AFSBackgrounder/AFSMenuExtra.m; sourceTree = "<group>"; };
+		3231521D10243E09005901AA /* AFSMenuExtraView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSMenuExtraView.h; path = AFSBackgrounder/AFSMenuExtraView.h; sourceTree = "<group>"; };
+		3231521E10243E09005901AA /* AFSMenuExtraView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSMenuExtraView.m; path = AFSBackgrounder/AFSMenuExtraView.m; sourceTree = "<group>"; };
+		3231522410243E10005901AA /* CredentialWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CredentialWindowController.h; sourceTree = "<group>"; };
+		3231522510243E10005901AA /* CredentialWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CredentialWindowController.m; sourceTree = "<group>"; };
+		3231522710243E21005901AA /* CredentialWindow.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = CredentialWindow.nib; path = AFSBackgrounder/resource/CredentialWindow.nib; sourceTree = "<group>"; };
+		3231522910243E2C005901AA /* hasToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hasToken.png; path = AFSBackgrounder/resource/hasToken.png; sourceTree = "<group>"; };
+		3231522A10243E2C005901AA /* noToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = noToken.png; path = AFSBackgrounder/resource/noToken.png; sourceTree = "<group>"; };
+		324D67FC0DA13194007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/OpenAFSPreference.xib; sourceTree = "<group>"; };
+		324D683C0DA133A3007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/IpPanel.xib; sourceTree = "<group>"; };
+		324D68490DA133CF007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CredentialPanel.xib; sourceTree = "<group>"; };
+		324F490C115548E2001A763B /* Krb5Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Krb5Util.h; sourceTree = "<group>"; };
+		324F490D115548E2001A763B /* Krb5Util.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Krb5Util.m; sourceTree = "<group>"; };
+		325311CF0C44F4B100FAF2F3 /* license.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = license.rtf; sourceTree = "<group>"; };
+		3273088B0C2A9B05008C322B /* FileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtil.h; sourceTree = "<group>"; };
+		3273088C0C2A9B05008C322B /* FileUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileUtil.m; sourceTree = "<group>"; };
+		327308D20C2AA364008C322B /* SecurityFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SecurityFoundation.framework; path = /System/Library/Frameworks/SecurityFoundation.framework; sourceTree = "<absolute>"; };
+		327309620C2AB433008C322B /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
+		3276591B10204E08004CA418 /* AFSBackgrounder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AFSBackgrounder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3276591D10204E08004CA418 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = AFSBackgrounder/resource/Info.plist; sourceTree = "<group>"; };
+		3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AFSBackounderMainMenu.xib; path = AFSBackgrounder/resource/AFSBackounderMainMenu.xib; sourceTree = "<group>"; };
+		3276592F10204F9E004CA418 /* AFSBackgrounderDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSBackgrounderDelegate.h; path = AFSBackgrounder/AFSBackgrounderDelegate.h; sourceTree = "<group>"; };
+		3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSBackgrounderDelegate.m; path = AFSBackgrounder/AFSBackgrounderDelegate.m; sourceTree = "<group>"; };
+		327756250C3053A100C15D11 /* TaskUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TaskUtil.h; sourceTree = "<group>"; };
+		327756260C3053A100C15D11 /* TaskUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TaskUtil.m; sourceTree = "<group>"; };
+		32B0AFDD0C01729400272348 /* AFSPropertyManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSPropertyManager.h; sourceTree = "<group>"; };
+		32B0AFDE0C01729400272348 /* AFSPropertyManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFSPropertyManager.m; sourceTree = "<group>"; };
+		32B565720D8FAF62005255F2 /* NSString+search.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+search.h"; sourceTree = "<group>"; };
+		32B565730D8FAF62005255F2 /* NSString+search.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+search.m"; sourceTree = "<group>"; };
+		32C4A9560C268D9B009280A0 /* IpConfiguratorCommander.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IpConfiguratorCommander.h; sourceTree = "<group>"; };
+		32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IpConfiguratorCommander.m; sourceTree = "<group>"; };
+		32CF01390C203C1800A8DC58 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
+		32CFFEFD0C20316B00A8DC58 /* TestLib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestLib.m; sourceTree = "<group>"; };
+		32DBCFA20370C41700C91783 /* AFSCommander_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSCommander_Prefix.pch; sourceTree = "<group>"; };
+		32DE817D0DF571630069A05C /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SymLinkEdit.xib; sourceTree = "<group>"; };
+		32DE818A0DF573200069A05C /* LynkCreationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LynkCreationController.h; sourceTree = "<group>"; };
+		32DE818B0DF573200069A05C /* LynkCreationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LynkCreationController.m; sourceTree = "<group>"; };
+		493564E70CE711F300699A24 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		4940075A0CE62EB500F40D0A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
+		494BD47B0C43EDF900DB0A3A /* SystemUIPlugin.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SystemUIPlugin.h; sourceTree = "<group>"; };
+		495B043E0D219A2900F1E328 /* ViewUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewUtility.h; sourceTree = "<group>"; };
+		495B043F0D219A2900F1E328 /* ViewUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewUtility.m; sourceTree = "<group>"; };
+		495C39460D81EA3C003426FC /* Kerberos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kerberos.framework; path = /System/Library/Frameworks/Kerberos.framework; sourceTree = "<absolute>"; };
+		49683EE40C3446380093C7C8 /* afshlp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = afshlp; sourceTree = BUILT_PRODUCTS_DIR; };
+		49683EEB0C3446600093C7C8 /* afshlp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = afshlp.m; sourceTree = "<group>"; };
+		498DCB410DC2240B00D143C8 /* PListManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PListManager.h; sourceTree = "<group>"; };
+		498DCB420DC2240B00D143C8 /* PListManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PListManager.m; sourceTree = "<group>"; };
+		49B766430DCA47A50014A80F /* DialogUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DialogUtility.h; sourceTree = "<group>"; };
+		49B766440DCA47A50014A80F /* DialogUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DialogUtility.m; sourceTree = "<group>"; };
+		49E43BE60C47D9EE00084436 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
+		8D202CF70486D31800D8A456 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AFSBackgrounder/resource/Info.plist; sourceTree = "<group>"; };
+		8D202CF80486D31800D8A456 /* OpenAFS.prefPane */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenAFS.prefPane; sourceTree = BUILT_PRODUCTS_DIR; };
+		F506C035013D953901CA16C8 /* PreferencePanes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PreferencePanes.framework; path = /System/Library/Frameworks/PreferencePanes.framework; sourceTree = "<absolute>"; };
+		F506C03C013D9D7901CA16C8 /* AFSCommanderPref.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSCommanderPref.h; sourceTree = "<group>"; };
+		F506C03D013D9D7901CA16C8 /* AFSCommanderPref.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFSCommanderPref.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3276591910204E08004CA418 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3276594110204FFA004CA418 /* Kerberos.framework in Frameworks */,
+				3276594310204FFA004CA418 /* CoreServices.framework in Frameworks */,
+				3276594410204FFC004CA418 /* Cocoa.framework in Frameworks */,
+				3276594510205003004CA418 /* Carbon.framework in Frameworks */,
+				3228B9B4102052A900DF98DA /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		32CF01370C203C1800A8DC58 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32CF014C0C203CBD00A8DC58 /* Cocoa.framework in Frameworks */,
+				327308D80C2AA369008C322B /* SecurityFoundation.framework in Frameworks */,
+				327309980C2AB434008C322B /* Security.framework in Frameworks */,
+				495C39490D81EA3C003426FC /* Kerberos.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49683EE20C3446380093C7C8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49683F440C344CE20093C7C8 /* SecurityFoundation.framework in Frameworks */,
+				49683F470C344CE40093C7C8 /* Security.framework in Frameworks */,
+				49683F990C3452870093C7C8 /* Cocoa.framework in Frameworks */,
+				4968CBEB0C51EA01001F5CC7 /* Foundation.framework in Frameworks */,
+				495C39CC0D81F742003426FC /* Kerberos.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D202CF20486D31800D8A456 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D202CF30486D31800D8A456 /* Cocoa.framework in Frameworks */,
+				8D202CF40486D31800D8A456 /* PreferencePanes.framework in Frameworks */,
+				327308D70C2AA364008C322B /* SecurityFoundation.framework in Frameworks */,
+				327309970C2AB433008C322B /* Security.framework in Frameworks */,
+				4940075B0CE62EB500F40D0A /* CoreServices.framework in Frameworks */,
+				493564E80CE711F300699A24 /* Carbon.framework in Frameworks */,
+				495C39470D81EA3C003426FC /* Kerberos.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		089C166AFE841209C02AAC07 /* AFSCommander */ = {
+			isa = PBXGroup;
+			children = (
+				32CFFEF90C20314100A8DC58 /* Stand Alone Program */,
+				08FB77AFFE84173DC02AAC07 /* Classes */,
+				3276591010204DB4004CA418 /* AFSBackgrounder */,
+				32DBCFA10370C40200C91783 /* Other Sources */,
+				089C167CFE841241C02AAC07 /* Resources */,
+				089C1671FE841209C02AAC07 /* Frameworks and Libraries */,
+				19C28FB8FE9D52D311CA2CBB /* Products */,
+			);
+			comments = "Progetto per la gestione delle configurazioni afs";
+			name = AFSCommander;
+			sourceTree = "<group>";
+		};
+		089C1671FE841209C02AAC07 /* Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7ACFEA557BF11CA2CBB /* Linked Frameworks */,
+				1058C7AEFEA557BF11CA2CBB /* Other Frameworks */,
+			);
+			name = "Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C167CFE841241C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				325311CF0C44F4B100FAF2F3 /* license.rtf */,
+				324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */,
+				32DE81BC0DF57BDA0069A05C /* SymLinkEdit.xib */,
+				324D68480DA133CF007E1561 /* CredentialPanel.xib */,
+				324D683B0DA133A3007E1561 /* IpPanel.xib */,
+				32B0AFB40C016E6900272348 /* English.lproj */,
+				8D202CF70486D31800D8A456 /* Info.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77AFFE84173DC02AAC07 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				49E43BE60C47D9EE00084436 /* global.h */,
+				F506C03C013D9D7901CA16C8 /* AFSCommanderPref.h */,
+				F506C03D013D9D7901CA16C8 /* AFSCommanderPref.m */,
+				3212AA7F0C27AC2800A0689C /* AFS Logic */,
+				32C4A9550C268D84009280A0 /* IpConfigurator */,
+				3219259A0C339C1F00B55E86 /* TokenCredential */,
+				32DE81890DF573030069A05C /* Lynk Creation */,
+				322884000C3E45B100E778CC /* Info */,
+				327308880C2A99A1008C322B /* Utility */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		1058C7ACFEA557BF11CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				495C39460D81EA3C003426FC /* Kerberos.framework */,
+				493564E70CE711F300699A24 /* Carbon.framework */,
+				4940075A0CE62EB500F40D0A /* CoreServices.framework */,
+				1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */,
+				F506C035013D953901CA16C8 /* PreferencePanes.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7AEFEA557BF11CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				327309620C2AB433008C322B /* Security.framework */,
+				327308D20C2AA364008C322B /* SecurityFoundation.framework */,
+				089C1672FE841209C02AAC07 /* Foundation.framework */,
+				089C167FFE841241C02AAC07 /* AppKit.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FB8FE9D52D311CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D202CF80486D31800D8A456 /* OpenAFS.prefPane */,
+				32CF01390C203C1800A8DC58 /* Test */,
+				49683EE40C3446380093C7C8 /* afshlp */,
+				3276591B10204E08004CA418 /* AFSBackgrounder.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3212AA7F0C27AC2800A0689C /* AFS Logic */ = {
+			isa = PBXGroup;
+			children = (
+				32B0AFDD0C01729400272348 /* AFSPropertyManager.h */,
+				32B0AFDE0C01729400272348 /* AFSPropertyManager.m */,
+				322CEF6B0C211DAC0060D66D /* Afs Element */,
+			);
+			name = "AFS Logic";
+			sourceTree = "<group>";
+		};
+		3219259A0C339C1F00B55E86 /* TokenCredential */ = {
+			isa = PBXGroup;
+			children = (
+				3219259B0C339DAE00B55E86 /* TokenCredentialController.h */,
+				3219259C0C339DAE00B55E86 /* TokenCredentialController.m */,
+			);
+			name = TokenCredential;
+			sourceTree = "<group>";
+		};
+		322884000C3E45B100E778CC /* Info */ = {
+			isa = PBXGroup;
+			children = (
+				322884010C3E45C800E778CC /* InfoController.h */,
+				322884020C3E45C800E778CC /* InfoController.m */,
+			);
+			name = Info;
+			sourceTree = "<group>";
+		};
+		3228B9B21020527000DF98DA /* resource */ = {
+			isa = PBXGroup;
+			children = (
+				3276591D10204E08004CA418 /* Info.plist */,
+				3228B9BD102052BE00DF98DA /* version.plist */,
+				3231521910243E09005901AA /* AFSMenuCredentialContoller.h */,
+				3231522910243E2C005901AA /* hasToken.png */,
+				3231522A10243E2C005901AA /* noToken.png */,
+				3231522710243E21005901AA /* CredentialWindow.nib */,
+				3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */,
+			);
+			name = resource;
+			sourceTree = "<group>";
+		};
+		322CEF6B0C211DAC0060D66D /* Afs Element */ = {
+			isa = PBXGroup;
+			children = (
+				322CEF5E0C211D220060D66D /* DBCellElement.h */,
+				322CEF5F0C211D220060D66D /* DBCellElement.m */,
+				322CEF6C0C211DCC0060D66D /* CellIp.h */,
+				322CEF6D0C211DCC0060D66D /* CellIp.m */,
+			);
+			name = "Afs Element";
+			sourceTree = "<group>";
+		};
+		3231522310243E10005901AA /* CredentialWindow */ = {
+			isa = PBXGroup;
+			children = (
+				3231522510243E10005901AA /* CredentialWindowController.m */,
+				3231522410243E10005901AA /* CredentialWindowController.h */,
+			);
+			name = CredentialWindow;
+			path = AFSBackgrounder/CredentialWindow;
+			sourceTree = "<group>";
+		};
+		327308880C2A99A1008C322B /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				3273088B0C2A9B05008C322B /* FileUtil.h */,
+				3273088C0C2A9B05008C322B /* FileUtil.m */,
+				3213E93F0C2ABFD200D3D2F6 /* AuthUtil.h */,
+				3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */,
+				327756250C3053A100C15D11 /* TaskUtil.h */,
+				327756260C3053A100C15D11 /* TaskUtil.m */,
+				495B043E0D219A2900F1E328 /* ViewUtility.h */,
+				495B043F0D219A2900F1E328 /* ViewUtility.m */,
+				32B565720D8FAF62005255F2 /* NSString+search.h */,
+				32B565730D8FAF62005255F2 /* NSString+search.m */,
+				498DCB410DC2240B00D143C8 /* PListManager.h */,
+				498DCB420DC2240B00D143C8 /* PListManager.m */,
+				49B766430DCA47A50014A80F /* DialogUtility.h */,
+				49B766440DCA47A50014A80F /* DialogUtility.m */,
+				324F490C115548E2001A763B /* Krb5Util.h */,
+				324F490D115548E2001A763B /* Krb5Util.m */,
+			);
+			name = Utility;
+			sourceTree = "<group>";
+		};
+		3276591010204DB4004CA418 /* AFSBackgrounder */ = {
+			isa = PBXGroup;
+			children = (
+				3228B9AF1020526900DF98DA /* main.m */,
+				3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */,
+				3276592F10204F9E004CA418 /* AFSBackgrounderDelegate.h */,
+				3231521C10243E09005901AA /* AFSMenuExtra.m */,
+				3231521B10243E09005901AA /* AFSMenuExtra.h */,
+				3231521E10243E09005901AA /* AFSMenuExtraView.m */,
+				3231521D10243E09005901AA /* AFSMenuExtraView.h */,
+				3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */,
+				3231522310243E10005901AA /* CredentialWindow */,
+				3228B9B21020527000DF98DA /* resource */,
+			);
+			name = AFSBackgrounder;
+			sourceTree = "<group>";
+		};
+		32B0AFB40C016E6900272348 /* English.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				3223836A0C32A96F00380547 /* Localizable.strings */,
+				49AF1F470C25B52A006A046E /* InfoPlist.strings */,
+			);
+			name = English.lproj;
+			sourceTree = "<group>";
+		};
+		32C4A9550C268D84009280A0 /* IpConfigurator */ = {
+			isa = PBXGroup;
+			children = (
+				32C4A9560C268D9B009280A0 /* IpConfiguratorCommander.h */,
+				32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */,
+			);
+			name = IpConfigurator;
+			sourceTree = "<group>";
+		};
+		32CFFEF90C20314100A8DC58 /* Stand Alone Program */ = {
+			isa = PBXGroup;
+			children = (
+				32CFFEFD0C20316B00A8DC58 /* TestLib.m */,
+				49683EEB0C3446600093C7C8 /* afshlp.m */,
+			);
+			name = "Stand Alone Program";
+			sourceTree = "<group>";
+		};
+		32DBCFA10370C40200C91783 /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				494BD47B0C43EDF900DB0A3A /* SystemUIPlugin.h */,
+				32DBCFA20370C41700C91783 /* AFSCommander_Prefix.pch */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		32DE81890DF573030069A05C /* Lynk Creation */ = {
+			isa = PBXGroup;
+			children = (
+				32DE818A0DF573200069A05C /* LynkCreationController.h */,
+				32DE818B0DF573200069A05C /* LynkCreationController.m */,
+			);
+			name = "Lynk Creation";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8D202CE90486D31800D8A456 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D202CEA0486D31800D8A456 /* AFSCommander_Prefix.pch in Headers */,
+				8D202CEB0486D31800D8A456 /* AFSCommanderPref.h in Headers */,
+				32B0AFDF0C01729400272348 /* AFSPropertyManager.h in Headers */,
+				499716940C23E36F001339E3 /* CellIp.h in Headers */,
+				499716960C23E370001339E3 /* DBCellElement.h in Headers */,
+				32C4A9B90C26A0FB009280A0 /* IpConfiguratorCommander.h in Headers */,
+				3273088D0C2A9B05008C322B /* FileUtil.h in Headers */,
+				3213E9410C2ABFD200D3D2F6 /* AuthUtil.h in Headers */,
+				327756280C3053A100C15D11 /* TaskUtil.h in Headers */,
+				322884030C3E45C800E778CC /* InfoController.h in Headers */,
+				49E43BE70C47D9EE00084436 /* global.h in Headers */,
+				492AFA860C51301D00AEDC93 /* TokenCredentialController.h in Headers */,
+				495B04400D219A2900F1E328 /* ViewUtility.h in Headers */,
+				32B565740D8FAF62005255F2 /* NSString+search.h in Headers */,
+				498DCB430DC2240B00D143C8 /* PListManager.h in Headers */,
+				49B766450DCA47A50014A80F /* DialogUtility.h in Headers */,
+				32DE818C0DF573200069A05C /* LynkCreationController.h in Headers */,
+				324F490E115548E2001A763B /* Krb5Util.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		3276591A10204E08004CA418 /* AFSBackgrounder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3276592010204E08004CA418 /* Build configuration list for PBXNativeTarget "AFSBackgrounder" */;
+			buildPhases = (
+				3276591710204E08004CA418 /* Resources */,
+				3276591810204E08004CA418 /* Sources */,
+				3276591910204E08004CA418 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				328014521025F52A008E1060 /* PBXTargetDependency */,
+			);
+			name = AFSBackgrounder;
+			productName = AFSBackgrounder;
+			productReference = 3276591B10204E08004CA418 /* AFSBackgrounder.app */;
+			productType = "com.apple.product-type.application";
+		};
+		32CF01380C203C1800A8DC58 /* Test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32CF013C0C203C4900A8DC58 /* Build configuration list for PBXNativeTarget "Test" */;
+			buildPhases = (
+				32CF01360C203C1800A8DC58 /* Sources */,
+				32CF01370C203C1800A8DC58 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Test;
+			productName = Test;
+			productReference = 32CF01390C203C1800A8DC58 /* Test */;
+			productType = "com.apple.product-type.tool";
+		};
+		49683EE30C3446380093C7C8 /* afshlp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49683EE70C34465D0093C7C8 /* Build configuration list for PBXNativeTarget "afshlp" */;
+			buildPhases = (
+				49683EE10C3446380093C7C8 /* Sources */,
+				49683EE20C3446380093C7C8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = afshlp;
+			productName = afshlp;
+			productReference = 49683EE40C3446380093C7C8 /* afshlp */;
+			productType = "com.apple.product-type.tool";
+		};
+		8D202CE80486D31800D8A456 /* OpenAFS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DBD214808BA80EA00186707 /* Build configuration list for PBXNativeTarget "OpenAFS" */;
+			buildPhases = (
+				8D202CE90486D31800D8A456 /* Headers */,
+				8D202CEC0486D31800D8A456 /* Resources */,
+				8D202CF00486D31800D8A456 /* Sources */,
+				8D202CF20486D31800D8A456 /* Frameworks */,
+				8D202CF50486D31800D8A456 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				32E29A9910249A1200D2C2E5 /* PBXTargetDependency */,
+				32E29A9B10249A1600D2C2E5 /* PBXTargetDependency */,
+			);
+			name = OpenAFS;
+			productInstallPath = "$(HOME)/Library/PreferencePanes";
+			productName = AFSCommander;
+			productReference = 8D202CF80486D31800D8A456 /* OpenAFS.prefPane */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		089C1669FE841209C02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DBD214C08BA80EA00186707 /* Build configuration list for PBXProject "OpenAFS" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+				Italian,
+			);
+			mainGroup = 089C166AFE841209C02AAC07 /* AFSCommander */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D202CE80486D31800D8A456 /* OpenAFS */,
+				32CF01380C203C1800A8DC58 /* Test */,
+				49683EE30C3446380093C7C8 /* afshlp */,
+				3276591A10204E08004CA418 /* AFSBackgrounder */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3276591710204E08004CA418 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */,
+				3228B9BE102052BE00DF98DA /* version.plist in Resources */,
+				3231522810243E21005901AA /* CredentialWindow.nib in Resources */,
+				3231522B10243E2C005901AA /* hasToken.png in Resources */,
+				3231522C10243E2C005901AA /* noToken.png in Resources */,
+				328014501025F503008E1060 /* afshlp in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D202CEC0486D31800D8A456 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49AF1F480C25B52A006A046E /* InfoPlist.strings in Resources */,
+				49E05CAD0C2674DA002AAEF2 /* Info.plist in Resources */,
+				3223836C0C32A96F00380547 /* Localizable.strings in Resources */,
+				325311D00C44F4B100FAF2F3 /* license.rtf in Resources */,
+				49E43D2E0C480B8200084436 /* afshlp in Resources */,
+				324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */,
+				324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */,
+				324D684A0DA133CF007E1561 /* CredentialPanel.xib in Resources */,
+				32DE81BD0DF57BDA0069A05C /* SymLinkEdit.xib in Resources */,
+				32E299A3102491AA00D2C2E5 /* AFSBackgrounder.app in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		8D202CF50486D31800D8A456 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3276591810204E08004CA418 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3276592110204E4E004CA418 /* AFSPropertyManager.m in Sources */,
+				3276592210204E51004CA418 /* DBCellElement.m in Sources */,
+				3276592310204E51004CA418 /* CellIp.m in Sources */,
+				3276592410204EE0004CA418 /* FileUtil.m in Sources */,
+				3276592510204EE1004CA418 /* AuthUtil.m in Sources */,
+				3276592610204EE2004CA418 /* TaskUtil.m in Sources */,
+				3276592710204EE2004CA418 /* ViewUtility.m in Sources */,
+				3276592810204EE3004CA418 /* NSString+search.m in Sources */,
+				3276592910204EE4004CA418 /* PListManager.m in Sources */,
+				3276592A10204EE5004CA418 /* DialogUtility.m in Sources */,
+				3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */,
+				3228B9B01020526900DF98DA /* main.m in Sources */,
+				3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */,
+				3231522210243E09005901AA /* AFSMenuExtraView.m in Sources */,
+				3231522610243E10005901AA /* CredentialWindowController.m in Sources */,
+				324F4910115548ED001A763B /* Krb5Util.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		32CF01360C203C1800A8DC58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32CF013F0C203C5600A8DC58 /* TestLib.m in Sources */,
+				32CF01460C203CA800A8DC58 /* AFSPropertyManager.m in Sources */,
+				322CEF600C211D220060D66D /* DBCellElement.m in Sources */,
+				322CEF6E0C211DCC0060D66D /* CellIp.m in Sources */,
+				32C4A9580C268D9B009280A0 /* IpConfiguratorCommander.m in Sources */,
+				327308C30C2AA2E1008C322B /* FileUtil.m in Sources */,
+				49FFE7D20C2AED7200DF83CF /* AuthUtil.m in Sources */,
+				327756270C3053A100C15D11 /* TaskUtil.m in Sources */,
+				3219259D0C339DAE00B55E86 /* TokenCredentialController.m in Sources */,
+				322884050C3E45C800E778CC /* InfoController.m in Sources */,
+				495B04420D219A2900F1E328 /* ViewUtility.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49683EE10C3446380093C7C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49683EEC0C3446600093C7C8 /* afshlp.m in Sources */,
+				49683F3D0C344CD40093C7C8 /* AFSPropertyManager.m in Sources */,
+				49683F3E0C344CD50093C7C8 /* DBCellElement.m in Sources */,
+				49683F3F0C344CD70093C7C8 /* CellIp.m in Sources */,
+				49683F400C344CD80093C7C8 /* IpConfiguratorCommander.m in Sources */,
+				49683F410C344CD90093C7C8 /* FileUtil.m in Sources */,
+				49683F420C344CDA0093C7C8 /* AuthUtil.m in Sources */,
+				49683F430C344CDB0093C7C8 /* TaskUtil.m in Sources */,
+				4934D4170DC38958000511D2 /* PListManager.m in Sources */,
+				324F492D11554AF2001A763B /* Krb5Util.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D202CF00486D31800D8A456 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D202CF10486D31800D8A456 /* AFSCommanderPref.m in Sources */,
+				32B0AFE00C01729400272348 /* AFSPropertyManager.m in Sources */,
+				499716930C23E36E001339E3 /* CellIp.m in Sources */,
+				499716950C23E370001339E3 /* DBCellElement.m in Sources */,
+				32C4A9B80C26A0FA009280A0 /* IpConfiguratorCommander.m in Sources */,
+				3273088E0C2A9B05008C322B /* FileUtil.m in Sources */,
+				3213E9420C2ABFD200D3D2F6 /* AuthUtil.m in Sources */,
+				327756290C3053A100C15D11 /* TaskUtil.m in Sources */,
+				322884040C3E45C800E778CC /* InfoController.m in Sources */,
+				492AFA870C51301E00AEDC93 /* TokenCredentialController.m in Sources */,
+				495B04410D219A2900F1E328 /* ViewUtility.m in Sources */,
+				32B565750D8FAF62005255F2 /* NSString+search.m in Sources */,
+				498DCB440DC2240B00D143C8 /* PListManager.m in Sources */,
+				49B766460DCA47A50014A80F /* DialogUtility.m in Sources */,
+				32DE818D0DF573200069A05C /* LynkCreationController.m in Sources */,
+				324F490F115548E2001A763B /* Krb5Util.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		328014521025F52A008E1060 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 49683EE30C3446380093C7C8 /* afshlp */;
+			targetProxy = 328014511025F52A008E1060 /* PBXContainerItemProxy */;
+		};
+		32E29A9910249A1200D2C2E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 49683EE30C3446380093C7C8 /* afshlp */;
+			targetProxy = 32E29A9810249A1200D2C2E5 /* PBXContainerItemProxy */;
+		};
+		32E29A9B10249A1600D2C2E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3276591A10204E08004CA418 /* AFSBackgrounder */;
+			targetProxy = 32E29A9A10249A1600D2C2E5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		3223836A0C32A96F00380547 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3223836B0C32A96F00380547 /* English */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				324D67FC0DA13194007E1561 /* English */,
+			);
+			name = OpenAFSPreference.xib;
+			sourceTree = "<group>";
+		};
+		324D683B0DA133A3007E1561 /* IpPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				324D683C0DA133A3007E1561 /* English */,
+			);
+			name = IpPanel.xib;
+			sourceTree = "<group>";
+		};
+		324D68480DA133CF007E1561 /* CredentialPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				324D68490DA133CF007E1561 /* English */,
+			);
+			name = CredentialPanel.xib;
+			sourceTree = "<group>";
+		};
+		32DE81BC0DF57BDA0069A05C /* SymLinkEdit.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				32DE817D0DF571630069A05C /* English */,
+			);
+			name = SymLinkEdit.xib;
+			sourceTree = "<group>";
+		};
+		49AF1F470C25B52A006A046E /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C167EFE841241C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1DBD214908BA80EA00186707 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = AFSCommander_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/PreferencePanes";
+				PRODUCT_NAME = OpenAFS;
+				WRAPPER_EXTENSION = prefPane;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		1DBD214A08BA80EA00186707 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = AFSCommander_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "";
+				PRODUCT_NAME = OpenAFS;
+				WRAPPER_EXTENSION = prefPane;
+			};
+			name = Release;
+		};
+		1DBD214D08BA80EA00186707 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				PREBINDING = NO;
+				SKIP_INSTALL = NO;
+				VALID_ARCHS = "i386 ppc x86_64 armv6";
+			};
+			name = Debug;
+		};
+		1DBD214E08BA80EA00186707 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PREBINDING = NO;
+				VALID_ARCHS = "i386 ppc x86_64 armv6";
+			};
+			name = Release;
+		};
+		3276591E10204E08004CA418 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = AFSBackgrounder/resource/Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = AFSBackgrounder;
+			};
+			name = Debug;
+		};
+		3276591F10204E08004CA418 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = AFSBackgrounder/resource/Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = AFSBackgrounder;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		32CF013D0C203C4900A8DC58 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = "$(HOME)/bin";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = Test;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		32CF013E0C203C4900A8DC58 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = "$(HOME)/bin";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = Test;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		49683EE80C34465D0093C7C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = "$(HOME)/bin";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = afshlp;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		49683EE90C34465D0093C7C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = "$(HOME)/bin";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = afshlp;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DBD214808BA80EA00186707 /* Build configuration list for PBXNativeTarget "OpenAFS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DBD214908BA80EA00186707 /* Debug */,
+				1DBD214A08BA80EA00186707 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DBD214C08BA80EA00186707 /* Build configuration list for PBXProject "OpenAFS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DBD214D08BA80EA00186707 /* Debug */,
+				1DBD214E08BA80EA00186707 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3276592010204E08004CA418 /* Build configuration list for PBXNativeTarget "AFSBackgrounder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3276591E10204E08004CA418 /* Debug */,
+				3276591F10204E08004CA418 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		32CF013C0C203C4900A8DC58 /* Build configuration list for PBXNativeTarget "Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32CF013D0C203C4900A8DC58 /* Debug */,
+				32CF013E0C203C4900A8DC58 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49683EE70C34465D0093C7C8 /* Build configuration list for PBXNativeTarget "afshlp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49683EE80C34465D0093C7C8 /* Debug */,
+				49683EE90C34465D0093C7C8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 089C1669FE841209C02AAC07 /* Project object */;
+}

@@ -31,6 +31,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ctype.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 #include <afs/gtxwindows.h>		/*Generic window package */
 #include <afs/gtxobjects.h>		/*Object definitions */

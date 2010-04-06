@@ -17,12 +17,6 @@ struct vcache *afs_globalVp = NULL;
 struct mount *afs_globalVFS = NULL;
 int afs_pbuf_freecnt = -1;
 
-#ifdef AFS_FBSD50_ENV
-#define	THREAD_OR_PROC struct thread *p
-#else
-#define	THREAD_OR_PROC struct proc *p
-#endif
-
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
@@ -64,21 +58,23 @@ afs_uninit(struct vfsconf *vfc)
 }
 
 int
-afs_start(struct mount *mp, int flags, THREAD_OR_PROC)
+afs_start(struct mount *mp, int flags, struct thread *p)
 {
     return (0);			/* nothing to do. ? */
 }
 
 int
-#ifdef AFS_FBSD53_ENV
+#if defined(AFS_FBSD80_ENV)
+afs_omount(struct mount *mp, char *path, caddr_t data)
+#elif defined(AFS_FBSD53_ENV)
 afs_omount(struct mount *mp, char *path, caddr_t data, struct thread *p)
 #else
 afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
-	THREAD_OR_PROC)
+	struct thread *p)
 #endif
 {
     /* ndp contains the mounted-from device.  Just ignore it.
-     * we also don't care about our proc struct. */
+     * we also don't care about our thread struct. */
     size_t size;
 
     if (mp->mnt_flag & MNT_UPDATE)
@@ -115,29 +111,49 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     MNT_IUNLOCK(mp);
 #endif
     AFS_GUNLOCK();
+#ifdef AFS_FBSD80_ENV
+    afs_statfs(mp, &mp->mnt_stat);
+#else
     afs_statfs(mp, &mp->mnt_stat, p);
+#endif
 
     return 0;
 }
 
 #ifdef AFS_FBSD53_ENV
 int
+#ifdef AFS_FBSD80_ENV
+afs_mount(struct mount *mp)
+#else
 afs_mount(struct mount *mp, struct thread *td)
+#endif
 {
+#ifdef AFS_FBSD80_ENV
+    return afs_omount(mp, NULL, NULL);
+#else
     return afs_omount(mp, NULL, NULL, td);
+#endif
 }
 #endif
 
 #ifdef AFS_FBSD60_ENV
 static int
+#ifdef AFS_FBSD80_ENV
+afs_cmount(struct mntarg *ma, void *data, int flags)
+#else
 afs_cmount(struct mntarg *ma, void *data, int flags, struct thread *td)
+#endif
 {
     return kernel_mount(ma, flags);
 }
 #endif
 
 int
-afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
+#ifdef AFS_FBSD80_ENV
+afs_unmount(struct mount *mp, int flags)
+#else
+afs_unmount(struct mount *mp, int flags, struct thread *p)
+#endif
 {
 
     /*
@@ -176,15 +192,10 @@ afs_root(struct mount *mp, struct vnode **vpp)
     int error;
     struct vrequest treq;
     register struct vcache *tvp = 0;
-#ifdef AFS_FBSD50_ENV
 #if !defined(AFS_FBSD53_ENV) || defined(AFS_FBSD80_ENV)
     struct thread *td = curthread;
 #endif
     struct ucred *cr = osi_curcred();
-#else
-    struct proc *p = curproc;
-    struct ucred *cr = p->p_cred->pc_ucred;
-#endif
 
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
@@ -245,7 +256,11 @@ tryagain:
 }
 
 int
-afs_statfs(struct mount *mp, struct statfs *abp, THREAD_OR_PROC)
+#ifdef AFS_FBSD80_ENV
+afs_statfs(struct mount *mp, struct statfs *abp)
+#else
+afs_statfs(struct mount *mp, struct statfs *abp, struct thread *p)
+#endif
 {
     AFS_GLOCK();
     AFS_STATCNT(afs_statfs);
@@ -275,10 +290,12 @@ afs_statfs(struct mount *mp, struct statfs *abp, THREAD_OR_PROC)
 }
 
 int
-#ifdef AFS_FBSD60_ENV
+#if defined(AFS_FBSD80_ENV)
+afs_sync(struct mount *mp, int waitfor)
+#elif defined(AFS_FBSD60_ENV)
 afs_sync(struct mount *mp, int waitfor, struct thread *td)
 #else
-afs_sync(struct mount *mp, int waitfor, struct ucred *cred, THREAD_OR_PROC)
+afs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct thread *p)
 #endif
 {
     return 0;

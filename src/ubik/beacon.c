@@ -420,6 +420,7 @@ ubeacon_Interact(void *dummy)
 	 * Don't waste time using mult Rx calls if there are no connections out there
 	 */
 	if (i > 0) {
+	    char hoststr[16];
 	    multi_Rx(connections, i) {
 		multi_VOTE_Beacon(syncsite, startTime, &ubik_dbase->version,
 				  &ttid);
@@ -442,19 +443,19 @@ ubeacon_Interact(void *dummy)
 		    ts->up = 1;	/* server is up (not really necessary: recovery does this for real) */
 		    ts->beaconSinceDown = 1;
 		    ubik_dprint("yes vote from host %s\n",
-				afs_inet_ntoa(ts->addr[0]));
+				afs_inet_ntoa_r(ts->addr[0], hoststr));
 		} else if (code == 0) {
 		    ts->lastVoteTime = temp;
 		    ts->lastVote = 0;
 		    ts->beaconSinceDown = 1;
 		    ubik_dprint("no vote from %s\n",
-				afs_inet_ntoa(ts->addr[0]));
+				afs_inet_ntoa_r(ts->addr[0], hoststr));
 		} else if (code < 0) {
 		    ts->up = 0;
 		    ts->beaconSinceDown = 0;
 		    urecovery_LostServer();
 		    ubik_dprint("time out from %s\n",
-				afs_inet_ntoa(ts->addr[0]));
+				afs_inet_ntoa_r(ts->addr[0], hoststr));
 		}
 	    }
 	    multi_End;
@@ -520,6 +521,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 		       afs_uint32 aservers[]) {
     afs_uint32 myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
     afs_uint32 myAddr2[UBIK_MAX_INTERFACE_ADDR];
+    char hoststr[16];
     int tcount, count, found, i, j, totalServers, start, end, usednetfiles =
 	0;
 
@@ -568,7 +570,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 
     if (!found) {
 	ubik_print("ubik: primary address %s does not exist\n",
-		   afs_inet_ntoa(*ame));
+		   afs_inet_ntoa_r(*ame, hoststr));
 	/* if we had the result of rx_getAllAddr already, avoid subverting
 	 * the "is gethostbyname(gethostname()) us" check. If we're
 	 * using NetInfo/NetRestrict, we assume they have enough clue
@@ -613,7 +615,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	}
     }
     if (found)
-	ubik_print("Using %s as my primary address\n", afs_inet_ntoa(*ame));
+	ubik_print("Using %s as my primary address\n", afs_inet_ntoa_r(*ame, hoststr));
 
     if (!info) {
 	/* get rid of servers which were purged because all 
@@ -667,6 +669,7 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
     struct rx_connection *conns[MAXSERVERS];
     struct ubik_server *ts, *server[MAXSERVERS];
     char buffer[32];
+    char hoststr[16];
 
     for (count = 0, ts = ubik_servers; ts; count++, ts = ts->next) {
 	conns[count] = ts->disk_rxcid;
@@ -690,9 +693,10 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	    if (!multi_error) {
 		if (ts->addr[0] != htonl(outAddr.hostAddr[0])) {
 		    code = UBADHOST;
-		    strcpy(buffer, (char *)afs_inet_ntoa(ts->addr[0]));
+		    strcpy(buffer, afs_inet_ntoa_r(ts->addr[0], hoststr));
 		    ubik_print("ubik:Two primary addresses for same server \
-                    %s %s\n", buffer, afs_inet_ntoa(htonl(outAddr.hostAddr[0])));
+                    %s %s\n", buffer,
+		    afs_inet_ntoa_r(htonl(outAddr.hostAddr[0]), hoststr));
 		} else {
 		    for (j = 1; j < UBIK_MAX_INTERFACE_ADDR; j++)
 			ts->addr[j] = htonl(outAddr.hostAddr[j]);
@@ -700,12 +704,12 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	    } else if (multi_error == RXGEN_OPCODE) {	/* pre 3.5 remote server */
 		ubik_print
 		    ("ubik server %s does not support UpdateInterfaceAddr RPC\n",
-		     afs_inet_ntoa(ts->addr[0]));
+		     afs_inet_ntoa_r(ts->addr[0], hoststr));
 	    } else if (multi_error == UBADHOST) {
 		code = UBADHOST;	/* remote CellServDB inconsistency */
 		ubik_print("Inconsistent Cell Info on server: ");
 		for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
-		    ubik_print("%s ", afs_inet_ntoa(ts->addr[j]));
+		    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[j], hoststr));
 		ubik_print("\n");
 	    } else {
 		ts->up = 0;	/* mark the remote server as down */

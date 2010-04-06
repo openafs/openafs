@@ -16,7 +16,7 @@
 
 
 #if defined(UKERNEL)
-#ifdef HAVE_UNISTD_H
+#if defined(HAVE_UNISTD_H) && !defined(__USE_XOPEN)
 #define __USE_XOPEN
 #endif
 #include "afs/sysincludes.h"

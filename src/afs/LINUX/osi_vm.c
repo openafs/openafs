@@ -67,7 +67,7 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     struct inode *ip = AFSTOV(avc);
 
-    invalidate_inode_pages(ip->i_mapping);
+    invalidate_remote_inode(ip);
 }
 
 /* Flush and invalidate pages, for fsync() with INVAL flag

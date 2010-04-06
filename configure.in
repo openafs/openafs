@@ -1,8 +1,8 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.5.72)
+AM_INIT_AUTOMAKE(openafs,1.5.73.3)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.5.72
-LINUX_PKGVER=1.5.72
+MACOS_VERSION=1.5.73f3
+LINUX_PKGVER=1.5.73.3
 #LINUX_PKGREL=0.pre3
 LINUX_PKGREL=1.1
 
@@ -10,6 +10,7 @@ AC_SUBST(MACOS_VERSION)
 AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
@@ -117,6 +118,7 @@ src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/platform/Makefile \
 src/platform/${MKAFS_OSTYPE}/Makefile \
+src/platform/DARWIN/growlagent/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \

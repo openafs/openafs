@@ -180,7 +180,7 @@ dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_PROGRAM} restorevol ${DEST}/etc/restorevol
+	${INSTALL_PROGRAM} restorevol ${DEST}/root.server/usr/afs/bin/restorevol
 	${INSTALL_PROGRAM} voldump ${DEST}/etc/voldump
 	${INSTALL_DATA} volser.h ${DEST}/include/afs/volser.h
 	${INSTALL_DATA} volint.h ${DEST}/include/afs/volint.h

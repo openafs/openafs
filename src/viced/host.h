@@ -174,9 +174,14 @@ do { \
 	++((x)->refCount); \
 } while(0)
 
-#define h_Release_r(x) \
+#define h_Decrement_r(x) \
 do { \
 	--((x)->refCount); \
+} while (0)
+
+#define h_Release_r(x) \
+do { \
+	h_Decrement_r(x); \
 	if (((x)->refCount < 1) && \
 		(((x)->hostFlags & HOSTDELETED) || \
 		 ((x)->hostFlags & CLIENTDELETED))) h_TossStuff_r((x));	 \
@@ -247,7 +252,8 @@ extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 por
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern afs_int32 hpr_Initialize(struct ubik_client **);
 extern int hpr_End(struct ubik_client *);
-
+extern int hpr_IdToName(idlist *ids, namelist *names);
+extern int hpr_NameToId(namelist *names, idlist *ids);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*
@@ -286,4 +292,5 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define HFE_LATER                       0x80	/* host has FE_LATER callbacks */
 #define HERRORTRANS                    0x100	/* do error translation */
 #define HWHO_INPROGRESS                0x200    /* set when WhoAreYou running */
+#define HCBREAK                        0x400    /* flag for a multi CB break */
 #endif /* _AFS_VICED_HOST_H */

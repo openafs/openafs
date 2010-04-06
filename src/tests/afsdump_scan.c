@@ -33,8 +33,12 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "dumpscan.h"
+#include <afs/param.h>
+#include <afs/com_err.h>
 
+#include "dumpscan.h"
+#include "dumpscan_errs.h"
+#include "xf_errs.h"
 extern int optind;
 extern char *optarg;
 
@@ -166,7 +170,7 @@ parse_options(int argc, char **argv)
     int c;
 
     /* Set the program name */
-    if (argv0 = strrchr(argv[0], '/'))
+    if ((argv0 = strrchr(argv[0], '/')))
 	argv0++;
     else
 	argv0 = argv[0];
@@ -226,6 +230,7 @@ my_error_cb(afs_uint32 code, int fatal, void *ref, char *msg, ...)
 	afs_com_err_va(argv0, code, msg, alist);
 	va_end(alist);
     }
+    return 0;
 }
 
 
@@ -238,8 +243,8 @@ print_vnode_path(afs_vnode * v, XFILE * X, void *refcon)
 
     /* Do repair, but only for known vnode types */
     if (gendump_path && (!(v->field_mask & F_VNODE_TYPE)
-			 || v->type != vFile || v->type != vDirectory
-			 || v->type != vSymlink)) {
+			 || ((v->type != vFile) && (v->type != vDirectory)
+			     && (v->type != vSymlink)))) {
 	r = repair_vnode_cb(v, X, refcon);
 	if (r)
 	    return r;
@@ -272,9 +277,10 @@ setup_repair(void)
     return 0;
 }
 
+extern afs_uint32 DumpDumpEnd(XFILE * OX);
 
 /* Main program */
-void
+int
 main(int argc, char **argv)
 {
     XFILE input_file;

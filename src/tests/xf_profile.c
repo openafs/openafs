@@ -162,7 +162,7 @@ xfopen_profile(XFILE * X, int flag, char *xname, char *profile)
     X->do_close = xf_PROFILE_do_close;
     X->is_writable = PF->content.is_writable;
     if (PF->content.is_seekable) {
-	X->is_seekable;
+	X->is_seekable = 1;
 	X->do_seek = xf_PROFILE_do_seek;
 	X->do_skip = xf_PROFILE_do_skip;
     }

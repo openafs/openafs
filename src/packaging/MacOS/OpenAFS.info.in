@@ -1,0 +1,18 @@
+Title OpenAFS
+Version @VERSION@
+Description The OpenAFS distributed filesystem. This package installs a ready-to-run client for OpenAFS. See http://www.openafs.org for more information.
+DefaultLocation /
+Diskname (null)
+DeleteWarning 
+NeedsAuthorization YES
+DisableStop NO
+UseUserMask NO
+Application NO
+Relocatable NO
+Required NO
+InstallOnly NO
+RequiresReboot NO
+InstallFat NO
+rootVolumeOnly YES
+AllowBackRev YES
+

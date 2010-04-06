@@ -1,3 +1,38 @@
+Since 1.5.72
+
+ * Prevent the Explorer Shell extension from crashing if
+   symlink creation failed.  (126406)
+
+ * A Rx level NAT ping has been implemented.
+   Add NatPingInterval registry value to
+     HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+   to permit Nat Ping to be enabled.  The default value is 0 seconds.
+
+ * When a re-initialization is taking place, be sure to reset
+   cm_noLocalMountPoints to 0 in case someone deletes the "Freelance"
+   registry key out from underneath the service.
+
+ * Add krb5 error message translation to aklog, afscreds,
+   afslogon.dll, the network identity manager afs provider
+   and translate_et.
+
+ * Mode bits aren't directly exposed by the Win32 API. We were leaving
+   them to default to 0777 when creating new files and directories.
+   This version introduces two configuration parameters;
+   'UnixModeFileDefault' and 'UnixModeDirDefault' which are DWORD
+   registry entries that are used to set the initial mode bits.
+   If the values are set to 0, then the behavior is identical to what we
+   had before.
+
+ * Minidump files are now produced with a timestamp appended
+   to the name.
+
+ * An SMB request debugging monitor has been added.  When activated
+   the monitor will automatically turn on trace logging if any SMB
+   request has required longer than 60 seconds to complete and will
+   then create a minidump every 60 seconds thereafter until the
+   request completes.
+
 Since 1.5.71
 
  * Restore use of DNS AFSDB and SRV records by kaserver clients.

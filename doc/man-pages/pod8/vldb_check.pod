@@ -45,7 +45,7 @@ either full or relative to the current working directory.
 
 Displays information which Ubik maintains in the database's header.
 
-=item B<-pheader>
+=item B<-vheader>
 
 Displays information which the VL Server maintains in the database's
 header.

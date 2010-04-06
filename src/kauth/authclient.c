@@ -51,6 +51,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <des.h>

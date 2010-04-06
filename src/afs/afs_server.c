@@ -45,10 +45,10 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* AFS_HPUX110_ENV */
-#ifdef AFS_DARWIN60_ENV
+#ifdef AFS_DARWIN_ENV
 #include <net/if_var.h>
 #endif
 #endif /* !defined(UKERNEL) */
@@ -1137,7 +1137,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
     return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
@@ -1174,14 +1174,12 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 #endif /* IFF_POINTTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
-#if defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
+#if defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
 void
-afsi_SetServerIPRank(sa, ifa)
-     struct srvAddr *sa;
-     rx_ifaddr_t ifa;
+afsi_SetServerIPRank(struct srvAddr *sa, rx_ifaddr_t ifa)
 {
     struct sockaddr sout;
     struct sockaddr_in *sin;
@@ -1256,14 +1254,16 @@ afsi_SetServerIPRank(sa, ifa)
 
 #ifdef AFS_SGI62_ENV
 static int
-
-  afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
-		     caddr_t arg2) {
+afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
+		   caddr_t arg2)
+{
     afsi_SetServerIPRank((struct srvAddr *)arg1, (struct in_ifaddr *)h);
     return 0;			/* Never match, so we enumerate everyone */
 }
 #endif				/* AFS_SGI62_ENV */
-static int afs_SetServerPrefs(struct srvAddr *sa) {
+static int
+afs_SetServerPrefs(struct srvAddr *sa)
+{
 #if     defined(AFS_USERSPACE_IP_ADDR)
     int i;
 
@@ -1491,7 +1491,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    ifnet_list_free(ifns);
 	}
     }
-#elif defined(AFS_DARWIN60_ENV)
+#elif defined(AFS_DARWIN_ENV)
     {
 	rx_ifnet_t ifn;
 	rx_ifaddr_t ifa;
@@ -1499,7 +1499,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    TAILQ_FOREACH(ifa, &ifn->if_addrhead, ifa_link) {
 		afsi_SetServerIPRank(sa, ifa);
     }}}
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_FBSD_ENV)
     {
 	struct in_ifaddr *ifa;
 	  TAILQ_FOREACH(ifa, &in_ifaddrhead, ia_link) {
@@ -1542,7 +1542,9 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
  * clean up all other structures that may reference it.
  * The afs_xserver and afs_xsrvAddr locks are assumed taken.
  */
-void afs_FlushServer(struct server *srvp) {
+void
+afs_FlushServer(struct server *srvp)
+{
     afs_int32 i;
     struct server *ts, **pts;
 
@@ -1597,7 +1599,9 @@ void afs_FlushServer(struct server *srvp) {
  * The afs_xserver and afs_xsrvAddr locks are assumed taken.
  *    It is not removed from the afs_srvAddrs hash chain.
  */
-void afs_RemoveSrvAddr(struct srvAddr *sap) {
+void
+afs_RemoveSrvAddr(struct srvAddr *sap)
+{
     struct srvAddr **psa, *sa;
     struct server *srv;
 
@@ -1625,10 +1629,11 @@ void afs_RemoveSrvAddr(struct srvAddr *sap) {
  * If one does not exist, then one will be created.
  * aserver and aport must be in NET byte order.
  */
-struct server *afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers,
-			     afs_int32 acell, u_short aport,
-			     afs_int32 locktype, afsUUID * uuidp,
-			     afs_int32 addr_uniquifier) {
+struct server *
+afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
+	      u_short aport, afs_int32 locktype, afsUUID * uuidp,
+	      afs_int32 addr_uniquifier)
+{
     struct server *oldts = 0, *ts, *newts, *orphts = 0;
     struct srvAddr *oldsa, *newsa, *nextsa, *orphsa;
     u_short fsport;
@@ -1823,7 +1828,9 @@ struct server *afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers,
     return (newts);
 }				/* afs_GetServer */
 
-void afs_ActivateServer(struct srvAddr *sap) {
+void
+afs_ActivateServer(struct srvAddr *sap)
+{
     osi_timeval_t currTime;	/*Filled with current time */
     osi_timeval_t *currTimeP;	/*Ptr to above */
     struct afs_stats_SrvUpDownInfo *upDownP;	/*Ptr to up/down info record */
@@ -1848,7 +1855,8 @@ void afs_ActivateServer(struct srvAddr *sap) {
     }
 }
 
-void afs_RemoveAllConns(void)
+void
+afs_RemoveAllConns(void)
 {
     int i;
     struct server *ts, *nts;
@@ -1885,7 +1893,8 @@ void afs_RemoveAllConns(void)
     
 }
 
-void afs_MarkAllServersUp(void)
+void
+afs_MarkAllServersUp(void)
 {
     int i;
     struct server *ts;
