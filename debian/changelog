@@ -31,6 +31,35 @@ openafs (1.5.72+dfsg-1) UNRELEASED; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
+openafs (1.4.12+dfsg-3) unstable; urgency=low
+
+  * Apply upstream deltas:
+    - [135e196b] Create missing root directory when ORPH_ATTACH
+    - [190ef2cb] volmonitor keep vtrans lock
+    - [812dcc2c] Increase the maximum number of sysnames
+    - [a123d4ab] Print rxdebug statistics as unsigned values
+  * If the user configures openafs-client to use AFSDB records for VLDB
+    server location, don't prompt the user for VLDB servers for the local
+    cell even if they're not present in CellServDB and don't try to add an
+    entry for the local cell to CellServDB.  (Closes: #575299)
+
+ -- Russ Allbery <rra@debian.org>  Fri, 26 Mar 2010 16:05:30 -0700
+
+openafs (1.4.12+dfsg-2) unstable; urgency=low
+
+  * Apply upstream deltas:
+    - [4ca7b6fc] Remove lih_r
+    - [f3899ac3] Allow GetSomeSpace_r to select an optimal host
+    - [94a43966] h_TossStuff_r: check held-ness after lock
+    - [b78eeb0c] h_TossStuff_r: make sure host does not go away
+    - [0583af32] volmonitor copy link before calling free
+    - [eb799d07] Move non-executable stack assembly code to end of file
+  * Build with -fno-strict-aliasing.  The upstream development branch has
+    a better fix that selectively enables this for specific files with
+    known problems, but be conservative for the stable release.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 22 Mar 2010 15:53:48 -0700
+
 openafs (1.4.12+dfsg-1) unstable; urgency=low
 
   * New upstream release.
