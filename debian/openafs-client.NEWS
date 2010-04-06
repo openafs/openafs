@@ -1,4 +1,4 @@
-openafs (1.5.69+dfsg-1) experimental; urgency=low
+openafs (1.5.73.3-1) experimental; urgency=low
 
   This version of the OpenAFS client is built with experimental
   disconnected support.  This support should not change the normal
@@ -7,7 +7,12 @@ openafs (1.5.69+dfsg-1) experimental; urgency=low
   correctly, and may lose data.  Disconnected mode is configured through
   the fs discon command, which is not yet documented.
 
- -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 23:54:16 -0700
+  The communication protocol between afsd (in openafs-client) and the
+  OpenAFS kernel module has changed in 1.5.  You must upgrade your kernel
+  module to a 1.5.x kernel module when using this or newer versions of
+  openafs-client, or OpenAFS will not start correctly.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 06 Apr 2010 14:51:38 -0700
 
 openafs (1.4.10+dfsg1-1) unstable; urgency=high
 

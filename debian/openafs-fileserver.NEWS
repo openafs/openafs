@@ -1,4 +1,4 @@
-openafs (1.5.69+dfsg-1) experimental; urgency=low
+openafs (1.5.73.3-1) experimental; urgency=low
 
   This version of the OpenAFS file server is built with demand-attach.
   Demand-attach completely changes how the file server shuts down and
@@ -20,7 +20,7 @@ openafs (1.5.69+dfsg-1) experimental; urgency=low
   in that directory are safe, chmod 755 /etc/openafs/server to make
   bosserver happy.
 
- -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 23:51:35 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 06 Apr 2010 14:51:52 -0700
 
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
