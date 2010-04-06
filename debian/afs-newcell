@@ -228,10 +228,11 @@ run("bos create $server vlserver simple /usr/lib/openafs/vlserver -localauth");
 unwind("bos delete $server vlserver -localauth");
 
 # Create a file server as well.
-run("bos create $server fs fs"
+run("bos create $server dafs dafs"
     . " -cmd '/usr/lib/openafs/fileserver $fs_options'"
     . " -cmd /usr/lib/openafs/volserver"
-    . " -cmd /usr/lib/openafs/salvager -localauth");
+    . " -cmd /usr/lib/openafs/salvageserver"
+    . " -cmd /usr/lib/openafs/salvager");
 unwind("bos delete $server fs -localauth");
 
 # Make sure that there is no scheduled general restart time; it's not needed.
