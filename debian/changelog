@@ -28,6 +28,8 @@ openafs (1.5.72+dfsg-1) UNRELEASED; urgency=low
   * Upstream now installs afszcm.cat and finds it in /usr/share/openafs/C,
     so use the version installed via make install and install it in the
     same location.
+  * Upstream builds specific files with -fno-strict-aliasing where needed,
+    so we no longer need to build the whole source with that flag.
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
