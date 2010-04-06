@@ -1946,7 +1946,9 @@ uafs_Shutdown(void)
     printf("\n");
 
     AFS_GLOCK();
-    VN_RELE(afs_CurrentDir);
+    if (afs_CurrentDir) {
+	VN_RELE(afs_CurrentDir);
+    }
     rc = afs_unmount(&afs_RootVfs);
     usr_assert(rc == 0);
     AFS_GUNLOCK();
