@@ -1100,7 +1100,12 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	     */
 
 	    if ((status == 0) && (viceId != ANONYMOUSID)) {
-		sprintf(username, "AFS ID %d", (int) viceId);
+		free(username);
+		if (afs_asprintf(&username, "AFS ID %d", (int) viceId) < 0) {
+		    status = ENOMEM;
+		    username = NULL;
+		    goto out;
+		}
 	    }
 	}
 
