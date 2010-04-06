@@ -647,8 +647,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 {
     int nentries;		/* # of entries to prefetch */
     int nskip;			/* # of slots in the LRU queue to skip */
-    int novlru = 0;             /* Currently Darwin-only but can be used
-				   globally if needed */
 #ifdef AFS_DARWIN80_ENV
     int npasses = 0;
     struct vnode *lruvp;
@@ -977,7 +975,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
   reskip:
     nskip = afs_cacheStats / 2;	/* preserved fraction of the cache */
     ObtainReadLock(&afs_xvcache);
+#ifdef AFS_DARWIN80_ENV
  reskip2:
+#endif
     if (QEmpty(&VLRU)) {
 	/* actually a serious error, probably should panic. Probably will 
 	 * panic soon, oh well. */
@@ -991,7 +991,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     for (tq = VLRU.next; tq != &VLRU; tq = QNext(tq)) {
 	if (--nskip <= 0) {
 #ifdef AFS_DARWIN80_ENV
-	    if (!(QTOV(tq)->f.states & CDeadVnode))
+	    if ((!(QTOV(tq)->f.states & CDeadVnode)&&!(QTOV(tq)->f.states & CVInit)))
 #endif
 		break;
 	}
@@ -1012,31 +1012,26 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      */
     retry = 0;
 #ifdef AFS_DARWIN80_ENV
-    if ((lruvcp->f.states & CDeadVnode)) {
+    if (((lruvcp->f.states & CDeadVnode)||(lruvcp->f.states & CVInit))) {
 	if (npasses == 0) {
 	    nskip = 1;
 	    npasses++;
 	    goto reskip2;
-	} else {
-	    afs_warn("Can't find non-dead vnode in VLRU\n");
-	    novlru = 1;
-	}
+	} else
+	    panic("Can't find non-dead vnode in VLRU\n");
     }
-    if (!novlru) {
-	lruvp = AFSTOV(lruvcp);
-	if (vnode_get(lruvp))       /* this bumps ref count */
-	    retry = 1;
-	else if (vnode_ref(lruvp)) {
-	    AFS_GUNLOCK();
-	    /* AFSTOV(lruvcp) may be NULL */
-	    vnode_put(lruvp);
-	    AFS_GLOCK();
-	    retry = 1;
-	}
+    lruvp = AFSTOV(lruvcp);
+    if (vnode_get(lruvp))       /* this bumps ref count */
+	retry = 1;
+    else if (vnode_ref(lruvp)) {
+	AFS_GUNLOCK();
+	/* AFSTOV(lruvcp) may be NULL */
+	vnode_put(lruvp);
+	AFS_GLOCK();
+	retry = 1;
     }
 #else
-    if (novlru)
-	osi_vnhold(lruvcp, &retry);
+    osi_vnhold(lruvcp, &retry);
 #endif
     ReleaseReadLock(&afs_xvcache);	/* could be read lock */
     if (retry)
@@ -1081,7 +1076,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 #ifdef AFS_DARWIN80_ENV	    
-	    int isdead = (tvcp->f.states & CDeadVnode);
+	    int isdead = ((tvcp->f.states & CDeadVnode) ||
+			  (tvcp->f.states & CVInit));
 #endif
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
@@ -1102,38 +1098,41 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    *tvcp->mvid = dotdot;
 	}
 
-	if (!novlru) {
-	    ObtainWriteLock(&afs_xvcache, 132);
-	    if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
-		refpanic("Bulkstat VLRU inconsistent2");
-	    }
-	    if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq)
-		|| (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq)) {
-		refpanic("Bulkstat VLRU inconsistent4");
-	    }
-	    if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq)
-		|| (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq)) {
-		refpanic("Bulkstat VLRU inconsistent5");
-	    }
-	    
-	    if (tvcp != lruvcp) {	/* if they are == don't move it, don't corrupt vlru */
-		QRemove(&tvcp->vlruq);
-		QAdd(&lruvcp->vlruq, &tvcp->vlruq);
-	    }
-	    
-	    if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
-		refpanic("Bulkstat VLRU inconsistent3");
-	    }
-	    if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq)
-		|| (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq)) {
-		refpanic("Bulkstat VLRU inconsistent5");
-	    }
-	    if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq)
-		|| (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq)) {
-		refpanic("Bulkstat VLRU inconsistent6");
-	    }
-	    ReleaseWriteLock(&afs_xvcache);
+#ifdef AFS_DARWIN80_ENV
+	if (((lruvcp->f.states & CDeadVnode)||(lruvcp->f.states & CVInit)))
+	    panic("vlru control point went dead\n");
+#endif
+
+	ObtainWriteLock(&afs_xvcache, 132);
+	if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
+	    refpanic("Bulkstat VLRU inconsistent2");
 	}
+	if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq)
+	    || (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq)) {
+	    refpanic("Bulkstat VLRU inconsistent4");
+	}
+	if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq)
+	    || (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq)) {
+	    refpanic("Bulkstat VLRU inconsistent5");
+	}
+
+	if (tvcp != lruvcp) {	/* if they are == don't move it, don't corrupt vlru */
+	    QRemove(&tvcp->vlruq);
+	    QAdd(&lruvcp->vlruq, &tvcp->vlruq);
+	}
+
+	if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
+	    refpanic("Bulkstat VLRU inconsistent3");
+	}
+	if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq)
+	    || (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq)) {
+	    refpanic("Bulkstat VLRU inconsistent5");
+	}
+	if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq)
+	    || (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq)) {
+	    refpanic("Bulkstat VLRU inconsistent6");
+	}
+	ReleaseWriteLock(&afs_xvcache);
 
 	ObtainWriteLock(&afs_xcbhash, 494);
 
@@ -1143,7 +1142,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
 #ifdef AFS_DARWIN80_ENV	    
-	    if ((tvcp->f.states & CDeadVnode) == 0)
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
 		/* re-acquire the usecount that the other finalizevnode disposed of */
 		vnode_ref(AFSTOV(tvcp));
 #endif
@@ -1205,7 +1204,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	ReleaseWriteLock(&afs_xcbhash);
 #ifdef AFS_DARWIN80_ENV
 	/* reclaim->FlushVCache will need xcbhash */
-	if (tvcp->f.states & CDeadVnode) {
+	if (((tvcp->f.states & CDeadVnode)||(tvcp->f.states & CVInit))) {
 	    /* passing in a parent hangs getting the vnode lock */
 	    code = afs_darwin_finalizevnode(tvcp, NULL, NULL, 0, 1);
 	    if (code) {
@@ -1227,16 +1226,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     }				/* for all files we got back */
 
     /* finally return the pointer into the LRU queue */
-    if (!novlru) {
 #ifdef AFS_DARWIN80_ENV
-	AFS_GUNLOCK();
-	vnode_put(lruvp);
-	vnode_rele(lruvp);
-	AFS_GLOCK();
+    if (((lruvcp->f.states & CDeadVnode)||(lruvcp->f.states & CVInit)))
+	panic("vlru control point went dead before put\n");
+    AFS_GUNLOCK();
+    vnode_put(lruvp);
+    vnode_rele(lruvp);
+    AFS_GLOCK();
 #else
-	afs_PutVCache(lruvcp);
+    afs_PutVCache(lruvcp);
 #endif
-    }
 
   done:
     /* Be sure to turn off the CBulkFetching flags */
@@ -1257,7 +1256,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	}
 	if (tvcp != NULL) {
 #ifdef AFS_DARWIN80_ENV	    
-	    if ((tvcp->f.states & CDeadVnode) == 0) 
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
 		/* re-acquire the usecount that the other finalizevnode disposed of */
 		vnode_ref(AFSTOV(tvcp));
 #endif
