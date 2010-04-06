@@ -33,6 +33,7 @@ debian/tmp/usr/share/man/man8/bosserver.8          usr/share/man/man8
 debian/tmp/usr/share/man/man8/fileserver.8         usr/share/man/man8
 debian/tmp/usr/share/man/man8/salvager.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/salvageserver.8      usr/share/man/man8
+debian/tmp/usr/share/man/man8/state_analyzer.8     usr/share/man/man8
 debian/tmp/usr/share/man/man8/upclient.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/upserver.8           usr/share/man/man8
 debian/tmp/usr/share/man/man8/voldump.8            usr/share/man/man8
