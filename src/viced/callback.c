@@ -37,7 +37,7 @@
  *     Break all call backs for fid, except for the specified host.
  *     Delete all of them.
  * 
- * BreakVolumeCallBacks(volume)
+ * BreakVolumeCallBacksLater(volume)
  *     Break all call backs on volume, using single call to each host
  *     Delete all the call backs.
  * 
@@ -193,8 +193,6 @@ static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 				 struct AFSCBFids *afidp, struct host *xhost);
 static int MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 				      struct VCBParams *parms, int deletefe);
-static int MultiBreakVolumeCallBack(struct host *host, int isheld,
-				    void *rock);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 void *rock);
 static int GetSomeSpace_r(struct host *hostp, int locked);
@@ -849,10 +847,12 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 			     ntohs(thishost->port)));
 		    cb->status = CB_DELAYED;
 		} else {
-		    h_Hold_r(thishost);
-		    cba[ncbas].hp = thishost;
-		    cba[ncbas].thead = cb->thead;
-		    ncbas++;
+		    if (!(thishost->hostFlags & HOSTDELETED)) {
+			h_Hold_r(thishost);
+			cba[ncbas].hp = thishost;
+			cba[ncbas].thead = cb->thead;
+			ncbas++;
+		    }
 		    TDel(cb);
 		    HDel(cb);
 		    CDel(cb, 1);	/* Usually first; so this delete 
@@ -1123,10 +1123,11 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 {
     char hoststr[16];
 
-    if (!isheld)
-	return isheld;		/* host is held only by h_Enumerate, do nothing */
     if (host->hostFlags & HOSTDELETED)
 	return 0;		/* host is deleted, release hold */
+
+    if (!(host->hostFlags & HCBREAK))
+	return 0;		/* host is not flagged to notify */
 
     if (host->hostFlags & VENUSDOWN) {
 	h_Lock_r(host);
@@ -1142,9 +1143,9 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 						 * selectively remember to
 						 * delete the volume callbacks
 						 * later */
-	host->hostFlags &= ~RESETDONE;	/* Do InitCallBackState when host returns */
+	host->hostFlags &= ~(RESETDONE|HCBREAK);	/* Do InitCallBackState when host returns */
 	h_Unlock_r(host);
-	return 0;		/* release hold */
+	return 0;		/* parent will release hold */
     }
     assert(parms->ncbas <= MAX_CB_HOSTS);
 
@@ -1164,23 +1165,8 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
     }
     parms->cba[parms->ncbas].hp = host;
     parms->cba[(parms->ncbas)++].thead = parms->thead;
-    return 1;			/* DON'T release hold, because we still need it. */
-}
-
-/*
-** isheld is 0 if the host is held in h_Enumerate
-** isheld is 1 if the host is held in BreakVolumeCallBacks
-*/
-static int
-MultiBreakVolumeCallBack(struct host *host, int isheld, void *rock)
-{
-    struct VCBParams *parms = (struct VCBParams *) rock;
-    
-    int retval;
-    H_LOCK;
-    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
-    H_UNLOCK;
-    return retval;
+    host->hostFlags &= ~HCBREAK;
+    return 1;		/* parent shouldn't release hold, more work to do */
 }
 
 /*
@@ -1206,74 +1192,9 @@ MultiBreakVolumeLaterCallBack(struct host *host, int isheld, void *rock)
  * this function is executing.  It is just a temporary state, however,
  * since the callback will be broken later by this same function.
  *
- * Now uses multi-RX for CallBack RPC.  Note that the
- * multiBreakCallBacks routine does not force a reset if the RPC
- * fails, unlike the previous version of this routine, but does create
- * a delayed callback.  Resets will be forced if the host is
- * determined to be down before the RPC is executed.
+ * Now uses multi-RX for CallBack RPC in a different thread,
+ * only marking them here.
  */
-int
-BreakVolumeCallBacks(afs_uint32 volume)
-{
-    struct AFSFid fid;
-    int hash;
-    afs_uint32 *feip;
-    struct CallBack *cb;
-    struct FileEntry *fe;
-    struct host *host;
-    struct VCBParams henumParms;
-    afs_uint32 tthead = 0;	/* zero is illegal value */
-
-    H_LOCK;
-    fid.Volume = volume, fid.Vnode = fid.Unique = 0;
-    for (hash = 0; hash < FEHASH_SIZE; hash++) {
-	for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
-	    if (fe->volid == volume) {
-		register struct CallBack *cbnext;
-		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
-		    host = h_itoh(cb->hhead);
-		    h_Hold_r(host);
-		    cbnext = itocb(cb->cnext);
-		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
-			tthead = cb->thead;
-		    }
-		    TDel(cb);
-		    HDel(cb);
-		    FreeCB(cb);
-		    /* leave hold for MultiBreakVolumeCallBack to clear */
-		}
-		*feip = fe->fnext;
-		FreeFE(fe);
-	    } else {
-		feip = &fe->fnext;
-	    }
-	}
-    }
-
-    if (!tthead) {
-	/* didn't find any callbacks, so return right away. */
-	H_UNLOCK;
-	return 0;
-    }
-    henumParms.ncbas = 0;
-    henumParms.fid = &fid;
-    henumParms.thead = tthead;
-    H_UNLOCK;
-    h_Enumerate(MultiBreakVolumeCallBack, &henumParms);
-    H_LOCK;
-    if (henumParms.ncbas) {	/* do left-overs */
-	struct AFSCBFids tf;
-	tf.AFSCBFids_len = 1;
-	tf.AFSCBFids_val = &fid;
-
-	MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0);
-
-	henumParms.ncbas = 0;
-    }
-    H_UNLOCK;
-    return 0;
-}
-
 #ifdef AFS_PTHREAD_ENV
 extern pthread_cond_t fsync_cond;
 #else
@@ -1383,14 +1304,17 @@ BreakLaterCallBacks(void)
 	    cbnext = itocb(cb->cnext);
 	    host = h_itoh(cb->hhead);
 	    if (cb->status == CB_DELAYED) {
-		h_Hold_r(host);
-		if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
-		    tthead = cb->thead;
+		if (!(host->hostFlags & HOSTDELETED)) {
+		    /* mark this host for notification */
+		    host->hostFlags |= HCBREAK;
+		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
+			tthead = cb->thead;
+		    }
 		}
 		TDel(cb);
 		HDel(cb);
 		CDel(cb, 0);	/* Don't let CDel clean up the fe */
-		/* leave hold for MultiBreakVolumeCallBack to clear */
+		/* leave flag for MultiBreakVolumeCallBack to clear */
 	    } else {
 		ViceLog(125,
 			("Found host %p (%s:%d) non-DELAYED cb for %u:%u:%u\n",
@@ -1479,57 +1403,87 @@ CleanupTimedOutCallBacks_r(void)
     return (ntimedout > 0);
 }
 
-static struct host *lih_host;
-static int lih_host_held;
+/**
+ * parameters to pass to lih*_r from h_Enumerate_r when trying to find a host
+ * from which to clear callbacks.
+ */
+struct lih_params {
+    /**
+     * Points to the least interesting host found; try to clear callbacks on
+     * this host after h_Enumerate_r(lih*_r)'ing.
+     */
+    struct host *lih;
+
+    /**
+     * The last host we got from lih*_r, but we couldn't clear its callbacks
+     * for some reason. Choose the next-best host after this one (with the
+     * current lih*_r, this means to only select hosts that have an ActiveCall
+     * newer than lastlih).
+     */
+    struct host *lastlih;
+};
 
 /* Value of host->refCount that allows us to reliably infer that
  * host may be held by some other thread */
 #define OTHER_MUSTHOLD_LIH 2
 
 /* This version does not allow 'host' to be selected unless its ActiveCall 
- * is newer than 'hostp' which is the host with the oldest ActiveCall from
- * the last pass (if it is provided).  We filter out any hosts that are
- * are held by other threads.
+ * is newer than 'params->lastlih' which is the host with the oldest
+ * ActiveCall from the last pass (if it is provided).  We filter out any hosts
+ * that are are held by other threads.
+ *
+ * There is a small problem here, but it may not be easily fixable. Say we
+ * select some host A, and give it back to GetSomeSpace_r. GSS_r for some
+ * reason cannot clear the callbacks on A, and so calls us again with
+ * lastlih = A. Suppose there is another host B that has the same ActiveCall
+ * time as A. We will now skip over host B, since
+ * 'hostB->ActiveCall > hostA->ActiveCall' is not true. This could result in
+ * us prematurely going to the GSS_r 2nd or 3rd pass, and making us a little
+ * inefficient. This should be pretty rare, though, except perhaps in cases
+ * with very small numbers of hosts.
+ *
+ * Also filter out any hosts with HOSTDELETED set. h_Enumerate_r should in
+ * theory not give these to us anyway, but be paranoid.
  */
 static int
 lih0_r(register struct host *host, register int flags, void *rock)
 {
-    struct host *hostp = (struct host *) rock;
+    struct lih_params *params = (struct lih_params *)rock;
+
+    /* OTHER_MUSTHOLD_LIH is because the h_Enum loop holds us once */
     if (host->cblist
-	&& (hostp && host != hostp) 
+	&& (!(host->hostFlags & HOSTDELETED))
 	&& (host->refCount < OTHER_MUSTHOLD_LIH)
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
-	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
-        if (lih_host != NULL && lih_host_held) {
-            h_Release_r(lih_host); /* release prev host */
-        }
-        lih_host = host;
-        lih_host_held = !flags; /* on i==1, this === (lih_host_held = 1) */
-        flags = 1; /* now flags is 1, but at next(i), it will be 0 again */
+	&& (!params->lih || host->ActiveCall < params->lih->ActiveCall)
+	&& (!params->lastlih || host->ActiveCall > params->lastlih->ActiveCall)) {
+
+	if (params->lih) {
+	    h_Release_r(params->lih); /* release prev host */
+	}
+
+	h_Hold_r(host);
+	params->lih = host;
     }
     return flags;
 }
 
-/* This version does not allow 'host' to be selected unless its ActiveCall 
- * is newer than 'hostp' which is the host with the oldest ActiveCall from
- * the last pass (if it is provided).  In this second varient, we do not 
- * prevent held hosts from being selected.
- */
+/* same as lih0_r, except we do not prevent held hosts from being selected. */
 static int
 lih1_r(register struct host *host, register int flags, void *rock)
 {
-    struct host *hostp = (struct host *) rock;
+    struct lih_params *params = (struct lih_params *)rock;
 
     if (host->cblist
-	&& (hostp && host != hostp) 
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
-	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
-	    if (lih_host != NULL && lih_host_held) {
-		    h_Release_r(lih_host); /* really? */
-	    }
-	    lih_host = host;
-	    lih_host_held = !flags; /* see note above */
-	    flags = 1; /* see note above */
+	&& (!(host->hostFlags & HOSTDELETED))
+	&& (!params->lih || host->ActiveCall < params->lih->ActiveCall)
+	&& (!params->lastlih || host->ActiveCall > params->lastlih->ActiveCall)) {
+
+	if (params->lih) {
+	    h_Release_r(params->lih); /* release prev host */
+	}
+
+	h_Hold_r(host);
+	params->lih = host;
     }
     return flags;
 }
@@ -1549,7 +1503,8 @@ extern struct host *hostList;
 static int
 GetSomeSpace_r(struct host *hostp, int locked)
 {
-    register struct host *hp, *hp1, *hp2;
+    struct host *hp;
+    struct lih_params params;
     int i = 0;
 
     cbstuff.GotSomeSpaces++;
@@ -1561,38 +1516,39 @@ GetSomeSpace_r(struct host *hostp, int locked)
     }
 
     i = 0;
-    hp1 = NULL;
-    hp2 = hostList;
+    params.lastlih = NULL;
+
     do {
-	lih_host = 0;
-	h_Enumerate_r(i == 0 ? lih0_r : lih1_r, hp2, (char *)hp1);
-	hp = lih_host;
+	params.lih = NULL;
+
+	h_Enumerate_r(i == 0 ? lih0_r : lih1_r, hostList, &params);
+
+	hp = params.lih;
+	if (params.lastlih) {
+	    h_Release_r(params.lastlih);
+	    params.lastlih = NULL;
+	}
+
 	if (hp) {
-	    /* set in lih_r! private copy before giving up H_LOCK */
-	    int lih_host_held2=lih_host_held;   
+	    /* note that 'hp' was held by lih*_r; we will need to release it */
 	    cbstuff.GSS4++;
 	    if ((hp != hostp) && !ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
-                if (lih_host_held2)
-                    h_Release_r(hp);
+                h_Release_r(hp);
 		return 0;
 	    }
-            if (lih_host_held2) {
-                h_Release_r(hp);
-                hp = NULL;
-            }
-	    hp1 = hp;
-	    hp2 = hostList;
+
+	    params.lastlih = hp;
+	    /* params.lastlih will be released on the next iteration, after
+	     * h_Enumerate_r */
+
 	} else {
 	    /*
 	     * Next time try getting callbacks from any host even if
-	     * it's deleted (that's actually great since we can freely
-	     * remove its callbacks) or it's held since the only other
-	     * option is starvation for the file server (i.e. until the
-	     * callback timeout arrives).
+	     * it's held, since the only other option is starvation for
+	     * the file server (i.e. until the callback timeout arrives).
 	     */
 	    i++;
-	    hp1 = NULL;
-	    hp2 = hostList;
+	    params.lastlih = NULL;
 	    cbstuff.GSS1++;
 	    ViceLog(5,
 		    ("GSS: Try harder for longest inactive host cnt= %d\n",
@@ -1623,6 +1579,13 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     ViceLog(5,
 	    ("GSS: Delete longest inactive host %p (%s:%d)\n",
              hp, afs_inet_ntoa_r(hp->host, hoststr), ntohs(hp->port)));
+
+    if ((hp->hostFlags & HOSTDELETED)) {
+	/* hp could go away after reacquiring H_LOCK in h_NBLock_r, so we can't
+	 * really use it; its callbacks will get cleared anyway when
+	 * h_TossStuff_r gets its hands on it */
+	return 1;
+    }
 
     h_Hold_r(hp);
 

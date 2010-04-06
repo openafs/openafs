@@ -27,7 +27,7 @@ SFLAGS=-P -I${TOP_INCDIR}
 
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?
-RXKAD = ../rxkad
+RXKAD = $(srcdir)/../rxkad
 RXSTAT = ../rxstat
 FSINT = ../fsint
 DES = ../des
@@ -56,6 +56,8 @@ XDROBJS =\
 	xdr_array.o \
 	xdr_arrayn.o \
 	xdr_rx.o \
+	xdr_mem.o \
+	xdr_len.o \
 	xdr_int32.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
@@ -207,16 +209,16 @@ rx_multi.o: ${RX}/rx_multi.c
 	${CCRULE}
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
-	${CCRULE}
+	${CCRULE} -I../rxkad
 
 rxkad_server.o: ${RXKAD}/rxkad_server.c
-	${CCRULE}
+	${CCRULE} -I../rxkad
 
 rxkad_common.o: ${RXKAD}/rxkad_common.c
-	${CCRULE}
+	${CCRULE} -I../rxkad
 
 ticket.o: ${RXKAD}/ticket.c
-	${CCRULE}
+	${CCRULE} -I ../rxkad
 
 ticket5.o: ${RXKAD}/ticket5.c
 	${CCRULE} -I../rxkad -I${RXKAD}
@@ -234,7 +236,7 @@ fcrypt.o: ${RXKAD}/domestic/fcrypt.c
 	${CCRULE} -I../rxkad -I${RXKAD}
 
 crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
-	${CCRULE}
+	${CCRULE} -I../rxkad -I${RXKAD}
 
 AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
 	${CCRULE}
@@ -258,6 +260,9 @@ xdr_float.o: ${RX}/xdr_float.c
 	${CCRULE}
 
 xdr_mem.o: ${RX}/xdr_mem.c
+	${CCRULE}
+
+xdr_len.o: ${RX}/xdr_len.c
 	${CCRULE}
 
 xdr_rec.o: ${RX}/xdr_rec.c
@@ -306,10 +311,10 @@ des.o: ${DES}/des.c
 	case ${SYS_NAME} in \
 	hp_ux11*) \
 		set X `echo ${CCRULE} | sed s/-g//`; shift; \
-		"$$@" \
+		"-I../des $$@" \
 		;; \
 	*) \
-		${CCRULE} \
+		${CCRULE} -I../des \
 		;; \
 	esac
 
@@ -329,7 +334,7 @@ new_rnd_key.o: ${DES}/new_rnd_key.c
 	${CCRULE}
 
 key_sched.o: ${DES}/key_sched.c
-	${CCRULE}
+	${CCRULE} -I../des
 
 debug_decl.o: ${DES}/debug_decl.c
 	${CCRULE}
@@ -338,7 +343,7 @@ quad_cksum.o: ${DES}/quad_cksum.c
 	${CCRULE}
 
 key_parity.o: ${DES}/key_parity.c
-	${CCRULE}
+	${CCRULE} -I../des
 
 weak_key.o: ${DES}/weak_key.c
 	${CCRULE}
@@ -425,7 +430,7 @@ afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
 	${CCRULE}
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE}
+	${CCRULE} -I../fsint
 
 clean:
 	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so* libafsrpc_pic.a libafsrpc.dylib.*

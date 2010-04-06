@@ -183,12 +183,19 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "partition.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "volume_inline.h"
 #include "salvsync.h"
 #include "viceinode.h"
 #include "salvage.h"
 #include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
 #include "vol_internal.h"
+#include <afs/acl.h>
+#include <afs/prs_fs.h>
+
+#ifdef FSSYNC_BUILD_CLIENT
+#include "vg_cache.h"
+#endif
 
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
@@ -289,7 +296,7 @@ int inodeFd;			/* File descriptor for inode file */
 struct VnodeInfo vnodeInfo[nVNODECLASSES];
 
 
-struct VolumeSummary *volumeSummaryp;	/* Holds all the volumes in a part */
+struct VolumeSummary *volumeSummaryp = NULL;	/* Holds all the volumes in a part */
 int nVolumes;			/* Number of volumes (read-write and read-only)
 				 * in volume summary */
 
@@ -301,6 +308,11 @@ char *tmpdir = NULL;
 /*@printflike@*/ void Log(const char *format, ...);
 /*@printflike@*/ void Abort(const char *format, ...);
 static int IsVnodeOrphaned(VnodeId vnode);
+static int AskVolumeSummary(VolumeId singleVolumeNumber);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+static int LockVolume(VolumeId volumeId);
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 /* Uniquifier stored in the Inode */
 static Unique
@@ -333,40 +345,43 @@ extern pthread_t main_thread;
 childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
 #endif
 
-/* Get the salvage lock if not already held. Hold until process exits. */
+/**
+ * Get the salvage lock if not already held. Hold until process exits.
+ *
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ */
+static void
+_ObtainSalvageLock(int locktype)
+{
+    struct VLockFile salvageLock;
+    int offset = 0;
+    int nonblock = 1;
+    int code;
+
+    VLockFileInit(&salvageLock, AFSDIR_SERVER_SLVGLOCK_FILEPATH);
+
+    code = VLockFileLock(&salvageLock, offset, locktype, nonblock);
+    if (code == EBUSY) {
+	fprintf(stderr,
+	        "salvager:  There appears to be another salvager running!  "
+	        "Aborted.\n");
+	Exit(1);
+    } else if (code) {
+	fprintf(stderr,
+	        "salvager:  Error %d trying to acquire salvage lock!  "
+	        "Aborted.\n", code);
+	Exit(1);
+    }
+}
 void
 ObtainSalvageLock(void)
 {
-    FD_t salvageLock;
-
-#ifdef AFS_NT40_ENV
-    salvageLock =
-	(FD_t)CreateFile(AFSDIR_SERVER_SLVGLOCK_FILEPATH, 0, 0, NULL,
-			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (salvageLock == INVALID_FD) {
-	fprintf(stderr,
-		"salvager:  There appears to be another salvager running!  Aborted.\n");
-	Exit(1);
-    }
-#else
-    salvageLock =
-	afs_open(AFSDIR_SERVER_SLVGLOCK_FILEPATH, O_CREAT | O_RDWR, 0666);
-    if (salvageLock < 0) {
-	fprintf(stderr,
-		"salvager:  can't open salvage lock file %s, aborting\n",
-		AFSDIR_SERVER_SLVGLOCK_FILEPATH);
-	Exit(1);
-    }
-#ifdef AFS_DARWIN_ENV
-    if (flock(salvageLock, LOCK_EX) == -1) {
-#else
-    if (lockf(salvageLock, F_LOCK, 0) == -1) {
-#endif
-	fprintf(stderr,
-		"salvager:  There appears to be another salvager running!  Aborted.\n");
-	Exit(1);
-    }
-#endif
+    _ObtainSalvageLock(WRITE_LOCK);
+}
+void
+ObtainSharedSalvageLock(void)
+{
+    _ObtainSalvageLock(READ_LOCK);
 }
 
 
@@ -708,10 +723,31 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
     char inodeListPath[256];
+    FILE *inodeFile = NULL;
     static char tmpDevName[100];
     static char wpath[100];
     struct VolumeSummary *vsp, *esp;
     int i, j;
+    int code;
+    int tries = 0;
+
+ retry:
+    tries++;
+    if (inodeFile) {
+	fclose(inodeFile);
+	inodeFile = NULL;
+    }
+    if (tries > VOL_MAX_CHECKOUT_RETRIES) {
+	Abort("Raced too many times with fileserver restarts while trying to "
+	      "checkout/lock volumes; Aborted\n");
+    }
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (tries > 1) {
+	/* unlock all previous volume locks, since we're about to lock them
+	 * again */
+	VLockFileReinit(&partP->volLockFile);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     fileSysPartition = partP;
     fileSysDevice = fileSysPartition->device;
@@ -729,19 +765,34 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     filesysfulldev = wpath;
 #endif
 
-    VLockPartition(partP->name);
-    if (singleVolumeNumber || ForceSalvage)
-	ForceSalvage = 1;
-    else
-	ForceSalvage = UseTheForceLuke(fileSysPath);
-
     if (singleVolumeNumber) {
+#ifndef AFS_DEMAND_ATTACH_FS
+	/* only non-DAFS locks the partition when salvaging a single volume;
+	 * DAFS will lock the individual volumes in the VG */
+	VLockPartition(partP->name);
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
+	ForceSalvage = 1;
+
 	/* salvageserver already setup fssync conn for us */
 	if ((programType != salvageServer) && !VConnectFS()) {
 	    Abort("Couldn't connect to file server\n");
 	}
+
 	AskOffline(singleVolumeNumber, partP->name);
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (LockVolume(singleVolumeNumber)) {
+	    goto retry;
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
     } else {
+	VLockPartition(partP->name);
+	if (ForceSalvage) {
+	    ForceSalvage = 1;
+	} else {
+	    ForceSalvage = UseTheForceLuke(fileSysPath);
+	}
 	if (!Showmode)
 	    Log("SALVAGING FILE SYSTEM PARTITION %s (device=%s%s)\n",
 		partP->name, name, (Testing ? "(READONLY mode)" : ""));
@@ -780,9 +831,10 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     snprintf(inodeListPath, 255, "%s/salvage.inodes.%s.%d", tdir, name,
 	     getpid());
 #endif
-    if (GetInodeSummary(inodeListPath, singleVolumeNumber) < 0) {
-	unlink(inodeListPath);
-	return;
+
+    inodeFile = fopen(inodeListPath, "w+b");
+    if (!inodeFile) {
+	Abort("Error %d when creating inode description file %s; not salvaged\n", errno, inodeListPath);
     }
 #ifdef AFS_NT40_ENV
     /* Using nt_unlink here since we're really using the delete on close
@@ -790,15 +842,22 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * mean to unlink the file at that point. Those places have been
      * modified to actually do that so that the NT crt can be used there.
      */
-    inodeFd =
-	_open_osfhandle((intptr_t)nt_open(inodeListPath, O_RDWR, 0), O_RDWR);
-    nt_unlink(inodeListPath);	/* NT's crt unlink won't if file is open. */
+    code = nt_unlink(inodeListPath);
 #else
-    inodeFd = afs_open(inodeListPath, O_RDONLY);
-    unlink(inodeListPath);
+    code = unlink(inodeListPath);
 #endif
+    if (code < 0) {
+	Log("Error %d when trying to unlink %s\n", errno, inodeListPath);
+    }
+
+    if (GetInodeSummary(inodeFile, singleVolumeNumber) < 0) {
+	fclose(inodeFile);
+	return;
+    }
+    inodeFd = fileno(inodeFile);
     if (inodeFd == -1)
 	Abort("Temporary file %s is missing...\n", inodeListPath);
+    afs_lseek(inodeFd, 0L, SEEK_SET);
     if (ListInodeOption) {
 	PrintInodeList();
 	return;
@@ -809,7 +868,9 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * Fix up inodes on last volume in set (whether it is read-write
      * or read-only).
      */
-    GetVolumeSummary(singleVolumeNumber);
+    if (GetVolumeSummary(singleVolumeNumber)) {
+	goto retry;
+    }
 
     for (i = j = 0, vsp = volumeSummaryp, esp = vsp + nVolumes;
 	 i < nVolumesInInodeFile; i = j) {
@@ -854,6 +915,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	RemoveTheForce(fileSysPath);
 
     if (!Testing && singleVolumeNumber) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* unlock vol headers so the fs can attach them when we AskOnline */
+	VLockFileReinit(&fileSysPartition->volLockFile);
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 	AskOnline(singleVolumeNumber, fileSysPartition->name);
 
 	/* Step through the volumeSummary list and set all volumes on-line.
@@ -868,7 +934,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 		fileSysPartition->name, (Testing ? " (READONLY mode)" : ""));
     }
 
-    close(inodeFd);		/* SalvageVolumeGroup was the last which needed it. */
+    fclose(inodeFile);		/* SalvageVolumeGroup was the last which needed it. */
 }
 
 void
@@ -1040,10 +1106,11 @@ OnlyOneVolume(struct ViceInodeInfo *inodeinfo, afs_uint32 singleVolumeNumber, vo
  * be unlinked by the caller.
  */
 int
-GetInodeSummary(char *path, VolumeId singleVolumeNumber)
+GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 {
     struct afs_stat status;
     int forceSal, err;
+    int code;
     struct ViceInodeInfo *ip;
     struct InodeSummary summary;
     char summaryFileName[50];
@@ -1060,23 +1127,22 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 
     /* This file used to come from vfsck; cobble it up ourselves now... */
     if ((err =
-	 ListViceInodes(dev, fileSysPath, path,
+	 ListViceInodes(dev, fileSysPath, inodeFile,
 			singleVolumeNumber ? OnlyOneVolume : 0,
 			singleVolumeNumber, &forceSal, forceR, wpath, NULL)) < 0) {
 	if (err == -2) {
-	    Log("*** I/O error %d when writing a tmp inode file %s; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, path, dev);
+	    Log("*** I/O error %d when writing a tmp inode file; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, dev);
 	    return -1;
 	}
-	unlink(path);
 	Abort("Unable to get inodes for \"%s\"; not salvaged\n", dev);
     }
     if (forceSal && !ForceSalvage) {
 	Log("***Forced salvage of all volumes on this partition***\n");
 	ForceSalvage = 1;
     }
-    inodeFd = afs_open(path, O_RDWR);
+    fseek(inodeFile, 0L, SEEK_SET);
+    inodeFd = fileno(inodeFile);
     if (inodeFd == -1 || afs_fstat(inodeFd, &status) == -1) {
-	unlink(path);
 	Abort("No inode description file for \"%s\"; not salvaged\n", dev);
     }
     tdir = (tmpdir ? tmpdir : part);
@@ -1089,18 +1155,29 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 #endif
     summaryFile = afs_fopen(summaryFileName, "a+");
     if (summaryFile == NULL) {
-	close(inodeFd);
-	unlink(path);
 	Abort("Unable to create inode summary file\n");
     }
+
+#ifdef AFS_NT40_ENV
+    /* Using nt_unlink here since we're really using the delete on close
+     * semantics of unlink. In most places in the salvager, we really do
+     * mean to unlink the file at that point. Those places have been
+     * modified to actually do that so that the NT crt can be used there.
+     */
+    code = nt_unlink(summaryFileName);
+#else
+    code = unlink(summaryFileName);
+#endif
+    if (code < 0) {
+	Log("Error %d when trying to unlink %s\n", errno, summaryFileName);
+    }
+
     if (!canfork || debug || Fork() == 0) {
 	int nInodes;
 	unsigned long st_size=(unsigned long) status.st_size;
 	nInodes = st_size / sizeof(struct ViceInodeInfo);
 	if (nInodes == 0) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(summaryFileName);
 	    if (!singleVolumeNumber)	/* Remove the FORCESALVAGE file */
 		RemoveTheForce(fileSysPath);
 	    else {
@@ -1121,27 +1198,18 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Abort
 		("Unable to allocate enough space to read inode table; %s not salvaged\n",
 		 dev);
 	}
 	if (read(inodeFd, ip, st_size) != st_size) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Abort("Unable to read inode table; %s not salvaged\n", dev);
 	}
 	qsort(ip, nInodes, sizeof(struct ViceInodeInfo), CompareInodes);
 	if (afs_lseek(inodeFd, 0, SEEK_SET) == -1
 	    || write(inodeFd, ip, st_size) != st_size) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Abort("Unable to rewrite inode table; %s not salvaged\n", dev);
 	}
 	summary.index = 0;
@@ -1150,7 +1218,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	    if (fwrite(&summary, sizeof(summary), 1, summaryFile) != 1) {
 		Log("Difficulty writing summary file (errno = %d); %s not salvaged\n", errno, dev);
 		fclose(summaryFile);
-		close(inodeFd);
 		return -1;
 	    }
 	    summary.index += (summary.nInodes);
@@ -1161,7 +1228,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	if (fflush(summaryFile) == EOF || fsync(fileno(summaryFile)) == -1) {
 	    Log("Unable to write summary file (errno = %d); %s not salvaged\n", errno, dev);
 	    fclose(summaryFile);
-	    close(inodeFd);
 	    return -1;
 	}
 	if (canfork && !debug) {
@@ -1171,9 +1237,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     } else {
 	if (Wait("Inode summary") == -1) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Exit(1);		/* salvage of this partition aborted */
 	}
     }
@@ -1191,8 +1254,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     nVolumesInInodeFile =(unsigned long)(status.st_size) / sizeof(struct InodeSummary);
     Log("%d nVolumesInInodeFile %d \n",nVolumesInInodeFile,(unsigned long)(status.st_size));
     fclose(summaryFile);
-    close(inodeFd);
-    unlink(summaryFileName);
     return 0;
 }
 
@@ -1213,132 +1274,441 @@ CompareVolumes(const void *_p1, const void *_p2)
     return p1->header.id < p2->header.id ? -1 : 1;	/* Both read-only */
 }
 
-void
-GetVolumeSummary(VolumeId singleVolumeNumber)
+/**
+ * Gleans volumeSummary information by asking the fileserver
+ *
+ * @param[in] singleVolumeNumber  the volume we're salvaging. 0 if we're
+ *                                salvaging a whole partition
+ *
+ * @return whether we obtained the volume summary information or not
+ *  @retval 0  success; we obtained the volume summary information
+ *  @retval -1 we raced with a fileserver restart; volume locks and checkout
+ *             must be retried
+ *  @retval 1  we did not get the volume summary information; either the
+ *             fileserver responded with an error, or we are not supposed to
+ *             ask the fileserver for the information (e.g. we are salvaging
+ *             the entire partition or we are not the salvageserver)
+ *
+ * @note for non-DAFS, always returns 1
+ */
+static int
+AskVolumeSummary(VolumeId singleVolumeNumber)
 {
-    DIR *dirp = NULL;
-    afs_int32 nvols = 0;
-    struct VolumeSummary *vsp, vs;
-    struct VolumeDiskHeader diskHeader;
-    struct dirent *dp;
+    afs_int32 code = 1;
+#if defined(FSSYNC_BUILD_CLIENT) && defined(AFS_DEMAND_ATTACH_FS)
+    if (programType == salvageServer) {
+	if (singleVolumeNumber) {
+	    FSSYNC_VGQry_response_t q_res;
+	    SYNC_response res;
+	    struct VolumeSummary *vsp;
+	    int i;
+	    struct VolumeDiskHeader diskHdr;
 
-    /* Get headers from volume directory */
-    dirp = opendir(fileSysPath);
-    if (dirp  == NULL)
-	Abort("Can't read directory %s; not salvaged\n", fileSysPath);
-    if (!singleVolumeNumber) {
-	while ((dp = readdir(dirp))) {
-	    char *p = dp->d_name;
-	    p = strrchr(dp->d_name, '.');
-	    if (p != NULL && strcmp(p, VHDREXT) == 0) {
-		int fd;
-		char name[64];
-		sprintf(name, "%s/%s", fileSysPath, dp->d_name);
-		if ((fd = afs_open(name, O_RDONLY)) != -1
-		    && read(fd, (char *)&diskHeader, sizeof(diskHeader))
-		    == sizeof(diskHeader)
-		    && diskHeader.stamp.magic == VOLUMEHEADERMAGIC) {
-		    DiskToVolumeHeader(&vs.header, &diskHeader);
-		    nvols++;
-		}
-		close(fd);
-	    }
-	}
-#ifdef AFS_NT40_ENV
-	closedir(dirp);
-	dirp = opendir(".");	/* No rewinddir for NT */
-#else
-	rewinddir(dirp);
-#endif
-	if (!nvols)
-	    nvols = 1;
-	volumeSummaryp =
-	    (struct VolumeSummary *)malloc(nvols *
-					   sizeof(struct VolumeSummary));
-    } else
-	volumeSummaryp =
-	    (struct VolumeSummary *)malloc(20 * sizeof(struct VolumeSummary));
-    assert(volumeSummaryp != NULL);
+	    memset(&res, 0, sizeof(res));
 
-    nVolumes = 0;
-    vsp = volumeSummaryp;
-    while ((dp = readdir(dirp))) {
-	char *p = dp->d_name;
-	p = strrchr(dp->d_name, '.');
-	if (p != NULL && strcmp(p, VHDREXT) == 0) {
-	    int error = 0;
-	    int fd;
-	    char name[64];
-	    sprintf(name, "%s/%s", fileSysPath, dp->d_name);
-	    if ((fd = afs_open(name, O_RDONLY)) == -1
-		|| read(fd, &diskHeader, sizeof(diskHeader))
-		!= sizeof(diskHeader)
-		|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-		error = 1;
-	    }
-	    close(fd);
-	    if (error) {
-		if (!singleVolumeNumber) {
-		    if (!Showmode)
-			Log("%s is not a legitimate volume header file; %sdeleted\n", name, (Testing ? "it would have been " : ""));
-		    if (!Testing) {
-			if (unlink(name)) {
-			    Log("Unable to unlink %s (errno = %d)\n", name, errno);
-			}
-		    }
+	    code = FSYNC_VGCQuery(fileSysPartition->name, singleVolumeNumber, &q_res, &res);
+
+	    /*
+	     * We must wait for the partition to finish scanning before
+	     * can continue, since we will not know if we got the entire
+	     * VG membership unless the partition is fully scanned.
+	     * We could, in theory, just scan the partition ourselves if
+	     * the VG cache is not ready, but we would be doing the exact
+	     * same scan the fileserver is doing; it will almost always
+	     * be faster to wait for the fileserver. The only exceptions
+	     * are if the partition does not take very long to scan, and
+	     * in that case it's fast either way, so who cares?
+	     */
+	    if (code == SYNC_FAILED && res.hdr.reason == FSYNC_PART_SCANNING) {
+		Log("waiting for fileserver to finish scanning partition %s...\n",
+		    fileSysPartition->name);
+
+		for (i = 1; code == SYNC_FAILED && res.hdr.reason == FSYNC_PART_SCANNING; i++) {
+		    /* linearly ramp up from 1 to 10 seconds; nothing fancy,
+		     * just so small partitions don't need to wait over 10
+		     * seconds every time, and large partitions are generally
+		     * polled only once every ten seconds. */
+		    sleep((i > 10) ? (i = 10) : i);
+
+		    code = FSYNC_VGCQuery(fileSysPartition->name, singleVolumeNumber, &q_res, &res);
 		}
-	    } else {
-		char nameShouldBe[64];
-		DiskToVolumeHeader(&vsp->header, &diskHeader);
-		if (singleVolumeNumber && vsp->header.id == singleVolumeNumber
-		    && vsp->header.parent != singleVolumeNumber) {
-		    if (programType == salvageServer) {
+	    }
+
+	    if (code == SYNC_FAILED && res.hdr.reason == FSYNC_UNKNOWN_VOLID) {
+		/* This can happen if there's no header for the volume
+		 * we're salvaging, or no headers exist for the VG (if
+		 * we're salvaging an RW). Act as if we got a response
+		 * with no VG members. The headers may be created during
+		 * salvaging, if there are inodes in this VG. */
+		code = 0;
+		memset(&q_res, 0, sizeof(q_res));
+		q_res.rw = singleVolumeNumber;
+	    }
+
+	    if (code) {
+		Log("fileserver refused VGCQuery request for volume %lu on "
+		    "partition %s, code %ld reason %ld\n",
+		    afs_printable_uint32_lu(singleVolumeNumber),
+		    fileSysPartition->name,
+		    afs_printable_int32_ld(code),
+		    afs_printable_int32_ld(res.hdr.reason));
+		goto done;
+	    }
+
+	    if (q_res.rw != singleVolumeNumber) {
+		Log("fileserver requested salvage of clone %lu; scheduling salvage of volume group %lu...\n",
+		    afs_printable_uint32_lu(singleVolumeNumber),
+		    afs_printable_uint32_lu(q_res.rw));
 #ifdef SALVSYNC_BUILD_CLIENT
-			Log("fileserver requested salvage of clone %u; scheduling salvage of volume group %u...\n",
-			    vsp->header.id, vsp->header.parent);
-			if (SALVSYNC_LinkVolume(vsp->header.parent,
-						vsp->header.id,
-						fileSysPartition->name,
-						NULL) != SYNC_OK) {
-			    Log("schedule request failed\n");
-			}
-#endif
-			Exit(SALSRV_EXIT_VOLGROUP_LINK);
-		    } else {
-			Log("%u is a read-only volume; not salvaged\n",
-			    singleVolumeNumber);
-			Exit(1);
-		    }
+		if (SALVSYNC_LinkVolume(q_res.rw,
+		                       singleVolumeNumber,
+		                       fileSysPartition->name,
+		                       NULL) != SYNC_OK) {
+		    Log("schedule request failed\n");
 		}
-		if (!singleVolumeNumber
-		    || (vsp->header.id == singleVolumeNumber
-			|| vsp->header.parent == singleVolumeNumber)) {
-		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-				       VFORMAT, afs_printable_uint32_lu(vsp->header.id));
-		    if (singleVolumeNumber 
-			&& vsp->header.id != singleVolumeNumber)
-			AskOffline(vsp->header.id, fileSysPartition->name);
-		    if (strcmp(nameShouldBe, dp->d_name)) {
-			if (!Showmode)
-			    Log("Volume header file %s is incorrectly named; %sdeleted (it will be recreated later, if necessary)\n", name, (Testing ? "it would have been " : ""));
-			if (!Testing) {
-			    if (unlink(name)) {
-				Log("Unable to unlink %s (errno = %d)\n", name, errno);
-			    }
-			}
-		    } else {
-			vsp->fileName = ToString(dp->d_name);
-			nVolumes++;
-			vsp++;
-		    }
-		}
+#endif /* SALVSYNC_BUILD_CLIENT */
+		Exit(SALSRV_EXIT_VOLGROUP_LINK);
 	    }
-	    close(fd);
+
+	    volumeSummaryp = malloc(VOL_VG_MAX_VOLS * sizeof(struct VolumeSummary));
+	    assert(volumeSummaryp != NULL);
+
+	    nVolumes = 0;
+	    vsp = volumeSummaryp;
+
+	    for (i = 0; i < VOL_VG_MAX_VOLS; i++) {
+		char name[VMAXPATHLEN];
+
+		if (!q_res.children[i]) {
+		    continue;
+		}
+
+		/* AskOffline for singleVolumeNumber was called much earlier */
+		if (q_res.children[i] != singleVolumeNumber) {
+		    AskOffline(q_res.children[i], fileSysPartition->name);
+		    if (LockVolume(q_res.children[i])) {
+			/* need to retry */
+			return -1;
+		    }
+		}
+
+		code = VReadVolumeDiskHeader(q_res.children[i], fileSysPartition, &diskHdr);
+		if (code) {
+		    Log("Cannot read header for %lu; trying to salvage group anyway\n",
+		        afs_printable_uint32_lu(q_res.children[i]));
+		    code = 0;
+		    continue;
+		}
+
+		DiskToVolumeHeader(&vsp->header, &diskHdr);
+		VolumeExternalName_r(q_res.children[i], name, sizeof(name));
+		vsp->fileName = ToString(name);
+		nVolumes++;
+		vsp++;
+	    }
+
+	    qsort(volumeSummaryp, nVolumes, sizeof(struct VolumeSummary),
+	          CompareVolumes);
+	}
+      done:
+	if (code) {
+	    Log("Cannot get volume summary from fileserver; falling back to scanning "
+	        "entire partition\n");
 	}
     }
-    closedir(dirp);
+#endif /* FSSYNC_BUILD_CLIENT && AFS_DEMAND_ATTACH_FS */
+    return code;
+}
+
+/**
+ * count how many volume headers are found by VWalkVolumeHeaders.
+ *
+ * @param[in] dp   the disk partition (unused)
+ * @param[in] name full path to the .vol header (unused)
+ * @param[in] hdr  the header data (unused)
+ * @param[in] last whether this is the last try or not (unused)
+ * @param[in] rock actually an afs_int32*; the running count of how many
+ *                 volumes we have found
+ *
+ * @retval 0 always
+ */
+static int
+CountHeader(struct DiskPartition64 *dp, const char *name,
+            struct VolumeDiskHeader *hdr, int last, void *rock)
+{
+    afs_int32 *nvols = (afs_int32 *)rock;
+    (*nvols)++;
+    return 0;
+}
+
+/**
+ * parameters to pass to the VWalkVolumeHeaders callbacks when recording volume
+ * data.
+ */
+struct SalvageScanParams {
+    VolumeId singleVolumeNumber; /**< 0 for a partition-salvage, otherwise the
+                                  * vol id of the VG we're salvaging */
+    struct VolumeSummary *vsp;   /**< ptr to the current volume summary object
+                                  * we're filling in */
+    afs_int32 nVolumes;          /**< # of vols we've encountered */
+    afs_int32 totalVolumes;      /**< max # of vols we should encounter (the
+                                  * # of vols we've alloc'd memory for) */
+    int retry;  /**< do we need to retry vol lock/checkout? */
+};
+
+/**
+ * records volume summary info found from VWalkVolumeHeaders.
+ *
+ * Found volumes are also taken offline if they are in the specific volume
+ * group we are looking for.
+ *
+ * @param[in] dp   the disk partition
+ * @param[in] name full path to the .vol header
+ * @param[in] hdr  the header data
+ * @param[in] last 1 if this is the last try to read the header, 0 otherwise
+ * @param[in] rock actually a struct SalvageScanParams*, containing the
+ *                 information needed to record the volume summary data
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 volume locking raced with fileserver restart; checking out
+ *             and locking volumes needs to be retried
+ *  @retval 1  volume header is mis-named and should be deleted
+ */
+static int
+RecordHeader(struct DiskPartition64 *dp, const char *name,
+             struct VolumeDiskHeader *hdr, int last, void *rock)
+{
+    char nameShouldBe[64];
+    struct SalvageScanParams *params;
+    struct VolumeSummary summary;
+    VolumeId singleVolumeNumber;
+
+    params = (struct SalvageScanParams *)rock;
+
+    singleVolumeNumber = params->singleVolumeNumber;
+
+    DiskToVolumeHeader(&summary.header, hdr);
+
+    if (singleVolumeNumber && summary.header.id == singleVolumeNumber
+        && summary.header.parent != singleVolumeNumber) {
+
+	if (programType == salvageServer) {
+#ifdef SALVSYNC_BUILD_CLIENT
+	    Log("fileserver requested salvage of clone %u; scheduling salvage of volume group %u...\n",
+	        summary.header.id, summary.header.parent);
+	    if (SALVSYNC_LinkVolume(summary.header.parent,
+		                    summary.header.id,
+		                    dp->name,
+		                    NULL) != SYNC_OK) {
+		Log("schedule request failed\n");
+	    }
+#endif
+	    Exit(SALSRV_EXIT_VOLGROUP_LINK);
+
+	} else {
+	    Log("%u is a read-only volume; not salvaged\n",
+	        singleVolumeNumber);
+	    Exit(1);
+	}
+    }
+
+    if (!singleVolumeNumber || summary.header.id == singleVolumeNumber
+	|| summary.header.parent == singleVolumeNumber) {
+
+	/* check if the header file is incorrectly named */
+	int badname = 0;
+	const char *base = strrchr(name, '/');
+	if (base) {
+	    base++;
+	} else {
+	    base = name;
+	}
+
+	(void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
+	                   VFORMAT, afs_printable_uint32_lu(summary.header.id));
+
+
+	if (strcmp(nameShouldBe, base)) {
+	    /* .vol file has wrong name; retry/delete */
+	    badname = 1;
+	}
+
+	if (!badname || last) {
+	    /* only offline the volume if the header is good, or if this is
+	     * the last try looking at it; avoid AskOffline'ing the same vol
+	     * multiple times */
+
+	    if (singleVolumeNumber 
+	        && summary.header.id != singleVolumeNumber) {
+		/* don't offline singleVolumeNumber; we already did that
+		 * earlier */
+
+	        AskOffline(summary.header.id, fileSysPartition->name);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+		if (!badname) {
+		    /* don't lock the volume if the header is bad, since we're
+		     * about to delete it anyway. */
+		    if (LockVolume(summary.header.id)) {
+			params->retry = 1;
+			return -1;
+		    }
+		}
+#endif /* AFS_DEMAND_ATTACH_FS */
+	    }
+	}
+	if (badname) {
+	    if (last && !Showmode) {
+		Log("Volume header file %s is incorrectly named (should be %s "
+		    "not %s); %sdeleted (it will be recreated later, if "
+		    "necessary)\n", name, nameShouldBe, base,
+		    (Testing ? "it would have been " : ""));
+	    }
+	    return 1;
+	}
+
+	summary.fileName = ToString(base);
+	params->nVolumes++;
+
+	if (params->nVolumes > params->totalVolumes) {
+	    /* We found more volumes than we found on the first partition walk;
+	     * apparently something created a volume while we were
+	     * partition-salvaging, or we found more than 20 vols when salvaging a
+	     * particular volume. Abort if we detect this, since other programs
+	     * supposed to not touch the partition while it is partition-salvaging,
+	     * and we shouldn't find more than 20 vols in a VG.
+	     */
+	    Abort("Found %ld vol headers, but should have found at most %ld! "
+	          "Make sure the volserver/fileserver are not running at the "
+		  "same time as a partition salvage\n",
+		  afs_printable_int32_ld(params->nVolumes),
+		  afs_printable_int32_ld(params->totalVolumes));
+	}
+
+	memcpy(params->vsp, &summary, sizeof(summary));
+	params->vsp++;
+    }
+
+    return 0;
+}
+
+/**
+ * possibly unlinks bad volume headers found from VWalkVolumeHeaders.
+ *
+ * If the header could not be read in at all, the header is always unlinked.
+ * If instead RecordHeader said the header was bad (that is, the header file
+ * is mis-named), we only unlink if we are doing a partition salvage, as
+ * opposed to salvaging a specific volume group.
+ *
+ * @param[in] dp   the disk partition
+ * @param[in] name full path to the .vol header
+ * @param[in] hdr  header data, or NULL if the header could not be read
+ * @param[in] rock actually a struct SalvageScanParams*, with some information
+ *                 about the scan
+ */
+static void
+UnlinkHeader(struct DiskPartition64 *dp, const char *name,
+             struct VolumeDiskHeader *hdr, void *rock)
+{
+    struct SalvageScanParams *params;
+    int dounlink = 0;
+
+    params = (struct SalvageScanParams *)rock;
+
+    if (!hdr) {
+	/* no header; header is too bogus to read in at all */
+	if (!Showmode) {
+	    Log("%s is not a legitimate volume header file; %sdeleted\n", name, (Testing ? "it would have been " : ""));
+	}
+	if (!Testing) {
+	    dounlink = 1;
+	}
+
+    } else if (!params->singleVolumeNumber) {
+	/* We were able to read in a header, but RecordHeader said something
+	 * was wrong with it. We only unlink those if we are doing a partition
+	 * salvage. */
+	if (!Testing) {
+	    dounlink = 1;
+	}
+    }
+
+    if (dounlink && unlink(name)) {
+	Log("Error %d while trying to unlink %s\n", errno, name);
+    }
+}
+
+/**
+ * Populates volumeSummaryp with volume summary information, either by asking
+ * the fileserver for VG information, or by scanning the /vicepX partition.
+ *
+ * @param[in] singleVolumeNumber  the volume ID of the single volume group we
+ *                                are salvaging, or 0 if this is a partition
+ *                                salvage
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 we raced with a fileserver restart; checking out and locking
+ *             volumes must be retried
+ */
+int
+GetVolumeSummary(VolumeId singleVolumeNumber)
+{
+    afs_int32 nvols = 0;
+    struct SalvageScanParams params;
+    int code;
+
+    code = AskVolumeSummary(singleVolumeNumber);
+    if (code == 0) {
+	/* we successfully got the vol information from the fileserver; no
+	 * need to scan the partition */
+	return 0;
+    }
+    if (code < 0) {
+	/* we need to retry volume checkout */
+	return code;
+    }
+
+    if (!singleVolumeNumber) {
+	/* Count how many volumes we have in /vicepX */
+	code = VWalkVolumeHeaders(fileSysPartition, fileSysPath, CountHeader,
+	                          NULL, &nvols);
+	if (code < 0) {
+	    Abort("Can't read directory %s; not salvaged\n", fileSysPath);
+	}
+	if (!nvols)
+	    nvols = 1;
+    } else {
+	nvols = VOL_VG_MAX_VOLS;
+    }
+
+    volumeSummaryp = malloc(nvols * sizeof(struct VolumeSummary));
+    assert(volumeSummaryp != NULL);
+
+    params.singleVolumeNumber = singleVolumeNumber;
+    params.vsp = volumeSummaryp;
+    params.nVolumes = 0;
+    params.totalVolumes = nvols;
+    params.retry = 0;
+
+    /* walk the partition directory of volume headers and record the info
+     * about them; unlinking invalid headers */
+    code = VWalkVolumeHeaders(fileSysPartition, fileSysPath, RecordHeader,
+                              UnlinkHeader, &params);
+    if (params.retry) {
+	/* we apparently need to retry checking-out/locking volumes */
+	return -1;
+    }
+    if (code < 0) {
+	Abort("Failed to get volume header summary\n");
+    }
+    nVolumes = params.nVolumes;
+
     qsort(volumeSummaryp, nVolumes, sizeof(struct VolumeSummary),
 	  CompareVolumes);
+
+    return 0;
 }
 
 /* Find the link table. This should be associated with the RW volume or, if
@@ -2988,6 +3358,372 @@ SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
     return;
 }
 
+/**
+ * Get a new FID that can be used to create a new file.
+ *
+ * @param[in] volHeader vol header for the volume
+ * @param[in] class     what type of vnode we'll be creating (vLarge or vSmall)
+ * @param[out] afid     the FID that we can use (only Vnode and Unique are set)
+ * @param[inout] maxunique  max uniquifier for all vnodes in the volume;
+ *                          updated to the new max unique if we create a new
+ *                          vnode
+ */
+static void
+GetNewFID(VolumeDiskData *volHeader, VnodeClass class, AFSFid *afid,
+          Unique *maxunique)
+{
+    int i;
+    for (i = 0; i < vnodeInfo[class].nVnodes; i++) {
+	if (vnodeInfo[class].vnodes[i].type == vNull) {
+	    break;
+	}
+    }
+    if (i == vnodeInfo[class].nVnodes) {
+	/* no free vnodes; make a new one */
+	vnodeInfo[class].nVnodes++;
+	vnodeInfo[class].vnodes = realloc(vnodeInfo[class].vnodes,
+	                                  sizeof(struct VnodeEssence) * (i+1));
+	vnodeInfo[class].vnodes[i].type = vNull;
+    }
+
+    afid->Vnode = bitNumberToVnodeNumber(i, class);
+
+    if (volHeader->uniquifier < (*maxunique + 1)) {
+	/* header uniq is bad; it will get bumped by 2000 later */
+	afid->Unique = *maxunique + 1 + 2000;
+	(*maxunique)++;
+    } else {
+	/* header uniq seems okay; just use that */
+	afid->Unique = *maxunique = volHeader->uniquifier++;
+    }
+}
+
+/**
+ * Create a vnode for a README file explaining not to use a recreated-root vol.
+ *
+ * @param[in] volHeader vol header for the volume
+ * @param[in] alinkH    ihandle for i/o for the volume
+ * @param[in] vid       volume id
+ * @param[inout] maxunique  max uniquifier for all vnodes in the volume;
+ *                          updated to the new max unique if we create a new
+ *                          vnode
+ * @param[out] afid     FID for the new readme vnode
+ * @param[out] ainode   the inode for the new readme file
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval -1 error
+ */
+static int
+CreateReadme(VolumeDiskData *volHeader, IHandle_t *alinkH,
+             VolumeId vid, Unique *maxunique, AFSFid *afid, Inode *ainode)
+{
+    Inode readmeinode;
+    struct VnodeDiskObject *rvnode = NULL;
+    afs_sfsize_t bytes;
+    IHandle_t *readmeH = NULL;
+    struct VnodeEssence *vep;
+    afs_fsize_t length;
+    time_t now = time(NULL);
+
+    /* Try to make the note brief, but informative. Only administrators should
+     * be able to read this file at first, so we can hopefully assume they
+     * know what AFS is, what a volume is, etc. */
+    char readme[] =
+"This volume has been salvaged, but has lost its original root directory.\n"
+"The root directory that exists now has been recreated from orphan files\n"
+"from the rest of the volume. This recreated root directory may interfere\n"
+"with old cached data on clients, and there is no way the salvager can\n"
+"reasonably prevent that. So, it is recommended that you do not continue to\n"
+"use this volume, but only copy the salvaged data to a new volume.\n"
+"Continuing to use this volume as it exists now may cause some clients to\n"
+"behave oddly when accessing this volume.\n"
+"\n\t -- Your friendly neighborhood OpenAFS salvager\n";
+    /* ^ the person reading this probably just lost some data, so they could
+     * use some cheering up. */
+
+    /* -1 for the trailing NUL */
+    length = sizeof(readme) - 1;
+
+    GetNewFID(volHeader, vSmall, afid, maxunique);
+
+    vep = &vnodeInfo[vSmall].vnodes[vnodeIdToBitNumber(afid->Vnode)];
+
+    /* create the inode and write the contents */
+    readmeinode = IH_CREATE(alinkH, fileSysDevice, fileSysPath, 0, vid,
+                            afid->Vnode, afid->Unique, 1);
+    if (!VALID_INO(readmeinode)) {
+	Log("CreateReadme: readme IH_CREATE failed\n");
+	goto error;
+    }
+
+    IH_INIT(readmeH, fileSysDevice, vid, readmeinode);
+    bytes = IH_IWRITE(readmeH, 0, readme, length);
+    IH_RELEASE(readmeH);
+
+    if (bytes != length) {
+	Log("CreateReadme: IWRITE failed (%d/%d)\n", (int)bytes,
+	    (int)sizeof(readme));
+	goto error;
+    }
+
+    /* create the vnode and write it out */
+    rvnode = malloc(SIZEOF_SMALLDISKVNODE);
+    if (!rvnode) {
+	Log("CreateRootDir: error alloc'ing memory\n");
+	goto error;
+    }
+
+    rvnode->type = vFile;
+    rvnode->cloned = 0;
+    rvnode->modeBits = 0777;
+    rvnode->linkCount = 1;
+    VNDISK_SET_LEN(rvnode, length);
+    rvnode->uniquifier = afid->Unique;
+    rvnode->dataVersion = 1;
+    VNDISK_SET_INO(rvnode, readmeinode);
+    rvnode->unixModifyTime = rvnode->serverModifyTime = now;
+    rvnode->author = 0;
+    rvnode->owner = 0;
+    rvnode->parent = 1;
+    rvnode->group = 0;
+    rvnode->vnodeMagic = VnodeClassInfo[vSmall].magic;
+
+    bytes = IH_IWRITE(vnodeInfo[vSmall].handle,
+                      vnodeIndexOffset(&VnodeClassInfo[vSmall], afid->Vnode),
+                      (char*)rvnode, SIZEOF_SMALLDISKVNODE);
+
+    if (bytes != SIZEOF_SMALLDISKVNODE) {
+	Log("CreateReadme: IH_IWRITE failed (%d/%d)\n", (int)bytes,
+	    (int)SIZEOF_SMALLDISKVNODE);
+	goto error;
+    }
+
+    /* update VnodeEssence for new readme vnode */
+    vnodeInfo[vSmall].nAllocatedVnodes++;
+    vep->count = 0;
+    vep->blockCount = nBlocks(length);
+    vnodeInfo[vSmall].volumeBlockCount += vep->blockCount;
+    vep->parent = rvnode->parent;
+    vep->unique = rvnode->uniquifier;
+    vep->modeBits = rvnode->modeBits;
+    vep->InodeNumber = VNDISK_GET_INO(rvnode);
+    vep->type = rvnode->type;
+    vep->author = rvnode->author;
+    vep->owner = rvnode->owner;
+    vep->group = rvnode->group;
+
+    free(rvnode);
+    rvnode = NULL;
+
+    vep->claimed = 1;
+    vep->changed = 0;
+    vep->salvaged = 1;
+    vep->todelete = 0;
+
+    *ainode = readmeinode;
+
+    return 0;
+
+ error:
+    if (IH_DEC(alinkH, readmeinode, vid)) {
+	Log("CreateReadme (recovery): IH_DEC failed\n");
+    }
+
+    if (rvnode) {
+	free(rvnode);
+	rvnode = NULL;
+    }
+
+    return -1;
+}
+
+/**
+ * create a root dir for a volume that lacks one.
+ *
+ * @param[in] volHeader vol header for the volume
+ * @param[in] alinkH    ihandle for disk access for this volume group
+ * @param[in] vid       volume id we're dealing with
+ * @param[out] rootdir  populated with info about the new root dir
+ * @param[inout] maxunique  max uniquifier for all vnodes in the volume;
+ *                          updated to the new max unique if we create a new
+ *                          vnode
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 error
+ */
+static int
+CreateRootDir(VolumeDiskData *volHeader, IHandle_t *alinkH, VolumeId vid,
+              struct DirSummary *rootdir, Unique *maxunique)
+{
+    FileVersion dv;
+    int decroot = 0, decreadme = 0;
+    AFSFid did, readmeid;
+    afs_fsize_t length;
+    Inode rootinode;
+    struct VnodeDiskObject *rootvnode = NULL;
+    struct acl_accessList *ACL;
+    Inode *ip;
+    afs_sfsize_t bytes;
+    struct VnodeEssence *vep;
+    Inode readmeinode;
+    time_t now = time(NULL);
+
+    if (!vnodeInfo[vLarge].vnodes && !vnodeInfo[vSmall].vnodes) {
+	Log("Not creating new root dir; volume appears to lack any vnodes\n");
+	goto error;
+    }
+
+    if (!vnodeInfo[vLarge].vnodes) {
+	/* We don't have any large vnodes in the volume; allocate room
+	 * for one so we can recreate the root dir */
+	vnodeInfo[vLarge].nVnodes = 1;
+	vnodeInfo[vLarge].vnodes = calloc(1, sizeof(struct VnodeEssence));
+	vnodeInfo[vLarge].inodes = calloc(1, sizeof(Inode));
+
+	assert(vnodeInfo[vLarge].vnodes);
+	assert(vnodeInfo[vLarge].inodes);
+    }
+
+    vep = &vnodeInfo[vLarge].vnodes[vnodeIdToBitNumber(1)];
+    ip = &vnodeInfo[vLarge].inodes[vnodeIdToBitNumber(1)];
+    if (vep->type != vNull) {
+	Log("Not creating new root dir; existing vnode 1 is non-null\n");
+	goto error;
+    }
+
+    if (CreateReadme(volHeader, alinkH, vid, maxunique, &readmeid, &readmeinode)) {
+	goto error;
+    }
+    decreadme = 1;
+
+    /* set the DV to a very high number, so it is unlikely that we collide
+     * with a cached DV */
+    dv = 1 << 30;
+
+    rootinode = IH_CREATE(alinkH, fileSysDevice, fileSysPath, 0, vid, 1, 1, dv);
+    if (!VALID_INO(rootinode)) {
+	Log("CreateRootDir: IH_CREATE failed\n");
+	goto error;
+    }
+    decroot = 1;
+
+    SetSalvageDirHandle(&rootdir->dirHandle, vid, fileSysDevice, rootinode);
+    did.Volume = vid;
+    did.Vnode = 1;
+    did.Unique = 1;
+    if (MakeDir(&rootdir->dirHandle, (afs_int32*)&did, (afs_int32*)&did)) {
+	Log("CreateRootDir: MakeDir failed\n");
+	goto error;
+    }
+    if (Create(&rootdir->dirHandle, "README.ROOTDIR", &readmeid)) {
+	Log("CreateRootDir: Create failed\n");
+	goto error;
+    }
+    DFlush();
+    length = Length(&rootdir->dirHandle);
+    DZap((void *)&rootdir->dirHandle);
+
+    /* create the new root dir vnode */
+    rootvnode = malloc(SIZEOF_LARGEDISKVNODE);
+    if (!rootvnode) {
+	Log("CreateRootDir: malloc failed\n");
+	goto error;
+    }
+
+    /* only give 'rl' permissions to 'system:administrators'. We do this to
+     * try to catch the attention of an administrator, that they should not
+     * be writing to this directory or continue to use it. */
+    ACL = VVnodeDiskACL(rootvnode);
+    ACL->size = sizeof(struct acl_accessList);
+    ACL->version = ACL_ACLVERSION;
+    ACL->total = 1;
+    ACL->positive = 1;
+    ACL->negative = 0;
+    ACL->entries[0].id = -204; /* system:administrators */
+    ACL->entries[0].rights = PRSFS_READ | PRSFS_LOOKUP;
+
+    rootvnode->type = vDirectory;
+    rootvnode->cloned = 0;
+    rootvnode->modeBits = 0777;
+    rootvnode->linkCount = 2;
+    VNDISK_SET_LEN(rootvnode, length);
+    rootvnode->uniquifier = 1;
+    rootvnode->dataVersion = dv;
+    VNDISK_SET_INO(rootvnode, rootinode);
+    rootvnode->unixModifyTime = rootvnode->serverModifyTime = now;
+    rootvnode->author = 0;
+    rootvnode->owner = 0;
+    rootvnode->parent = 0;
+    rootvnode->group = 0;
+    rootvnode->vnodeMagic = VnodeClassInfo[vLarge].magic;
+
+    /* write it out to disk */
+    bytes = IH_IWRITE(vnodeInfo[vLarge].handle,
+	      vnodeIndexOffset(&VnodeClassInfo[vLarge], 1),
+	      (char*)rootvnode, SIZEOF_LARGEDISKVNODE);
+
+    if (bytes != SIZEOF_LARGEDISKVNODE) {
+	/* just cast to int and don't worry about printing real 64-bit ints;
+	 * a large disk vnode isn't anywhere near the 32-bit limit */
+	Log("CreateRootDir: IH_IWRITE failed (%d/%d)\n", (int)bytes,
+	    (int)SIZEOF_LARGEDISKVNODE);
+	goto error;
+    }
+
+    /* update VnodeEssence for the new root vnode */
+    vnodeInfo[vLarge].nAllocatedVnodes++;
+    vep->count = 0;
+    vep->blockCount = nBlocks(length);
+    vnodeInfo[vLarge].volumeBlockCount += vep->blockCount;
+    vep->parent = rootvnode->parent;
+    vep->unique = rootvnode->uniquifier;
+    vep->modeBits = rootvnode->modeBits;
+    vep->InodeNumber = VNDISK_GET_INO(rootvnode);
+    vep->type = rootvnode->type;
+    vep->author = rootvnode->author;
+    vep->owner = rootvnode->owner;
+    vep->group = rootvnode->group;
+
+    free(rootvnode);
+    rootvnode = NULL;
+
+    vep->claimed = 0;
+    vep->changed = 0;
+    vep->salvaged = 1;
+    vep->todelete = 0;
+
+    /* update DirSummary for the new root vnode */
+    rootdir->vnodeNumber = 1;
+    rootdir->unique = 1;
+    rootdir->haveDot = 1;
+    rootdir->haveDotDot = 1;
+    rootdir->rwVid = vid;
+    rootdir->copied = 0;
+    rootdir->parent = 0;
+    rootdir->name = strdup(".");
+    rootdir->vname = volHeader->name;
+    rootdir->ds_linkH = alinkH;
+
+    *ip = rootinode;
+
+    return 0;
+
+ error:
+    if (decroot && IH_DEC(alinkH, rootinode, vid)) {
+	Log("CreateRootDir (recovery): IH_DEC (root) failed\n");
+    }
+    if (decreadme && IH_DEC(alinkH, readmeinode, vid)) {
+	Log("CreateRootDir (recovery): IH_DEC (readme) failed\n");
+    }
+    if (rootvnode) {
+	free(rootvnode);
+	rootvnode = NULL;
+    }
+    return -1;
+}
+
 int
 SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 {
@@ -3011,6 +3747,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
     VnodeId LFVnode, ThisVnode;
     Unique LFUnique, ThisUnique;
     char npath[128];
+    int newrootdir = 0;
 
     vid = rwIsp->volSummary->header.id;
     IH_INIT(h, fileSysDevice, vid, rwIsp->volSummary->header.volumeInfo);
@@ -3040,6 +3777,18 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	return 0;
     }
 
+    if (!rootdirfound && (orphans == ORPH_ATTACH) && !Testing) {
+
+	Log("Cannot find root directory for volume %lu; attempting to create "
+	    "a new one\n", afs_printable_uint32_lu(vid));
+
+	code = CreateRootDir(&volHeader, alinkH, vid, &rootdir, &maxunique);
+	if (code == 0) {
+	    rootdirfound = 1;
+	    newrootdir = 1;
+	}
+    }
+
     /* Parse each vnode looking for orphaned vnodes and
      * connect them to the tree as orphaned (if requested).
      */
@@ -3061,8 +3810,20 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	     */
 	    if (class == vLarge) {	/* directory vnode */
 		pv = vnodeIdToBitNumber(vep->parent);
-		if (vnodeInfo[vLarge].vnodes[pv].unique != 0)
-		    vnodeInfo[vLarge].vnodes[pv].count++;
+		if (vnodeInfo[vLarge].vnodes[pv].unique != 0) {
+		    if (vep->parent == 1 && newrootdir) {
+			/* this vnode's parent was the volume root, and
+			 * we just created the volume root. So, the parent
+			 * dir didn't exist during JudgeEntry, so the link
+			 * count was not inc'd there, so don't dec it here.
+			 */
+
+			 /* noop */
+
+		    } else {
+			vnodeInfo[vLarge].vnodes[pv].count++;
+		    }
+		}
 	    }
 
 	    if (!rootdirfound)
@@ -3260,6 +4021,13 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	volHeader.uniquifier = (maxunique + 1 + 2000);
     }
 
+    if (newrootdir) {
+	Log("*** WARNING: Root directory recreated, but volume is fragile! "
+	    "Only use this salvaged volume to copy data to another volume; "
+	    "do not continue to use this volume (%lu) as-is.\n",
+	    afs_printable_uint32_lu(vid));
+    }
+
     /* Turn off the inUse bit; the volume's been salvaged! */
     volHeader.inUse = 0;	/* clear flag indicating inUse@last crash */
     volHeader.needsSalvaged = 0;	/* clear 'damaged' flag */
@@ -3352,14 +4120,104 @@ MaybeZapVolume(register struct InodeSummary *isp, char *message, int deleteMe,
     }
 }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * Locks a volume on disk for salvaging.
+ *
+ * @param[in] volumeId   volume ID to lock
+ *
+ * @return operation status
+ *  @retval 0  success
+ *  @retval -1 volume lock raced with a fileserver restart; all volumes must
+ *             checked out and locked again
+ *
+ * @note DAFS only
+ */
+static int
+LockVolume(VolumeId volumeId)
+{
+    afs_int32 code;
+    int locktype;
+
+    /* should always be WRITE_LOCK, but keep the lock-type logic all
+     * in one place, in VVolLockType. Params will be ignored, but
+     * try to provide what we're logically doing. */
+    locktype = VVolLockType(V_VOLUPD, 1);
+
+    code = VLockVolumeByIdNB(volumeId, fileSysPartition, locktype);
+    if (code) {
+	if (code == EBUSY) {
+	    Abort("Someone else appears to be using volume %lu; Aborted\n",
+	          afs_printable_uint32_lu(volumeId));
+	}
+	Abort("Error %ld trying to lock volume %lu; Aborted\n",
+	      afs_printable_int32_ld(code),
+	      afs_printable_uint32_lu(volumeId));
+    }
+
+    code = FSYNC_VerifyCheckout(volumeId, fileSysPathName, FSYNC_VOL_OFF, FSYNC_SALVAGE);
+    if (code == SYNC_DENIED) {
+	/* need to retry checking out volumes */
+	return -1;
+    }
+    if (code != SYNC_OK) {
+	Abort("FSYNC_VerifyCheckout failed for volume %lu with code %ld\n",
+	      afs_printable_uint32_lu(volumeId), afs_printable_int32_ld(code));
+    }
+
+    /* set inUse = programType in the volume header to ensure that nobody
+     * tries to use this volume again without salvaging, if we somehow crash
+     * or otherwise exit before finishing the salvage.
+     */
+    if (!Testing) {
+       IHandle_t *h;
+       struct VolumeHeader header;
+       struct VolumeDiskHeader diskHeader;
+       struct VolumeDiskData volHeader;
+
+       code = VReadVolumeDiskHeader(volumeId, fileSysPartition, &diskHeader);
+       if (code) {
+           return 0;
+       }
+
+       DiskToVolumeHeader(&header, &diskHeader);
+
+       IH_INIT(h, fileSysDevice, header.parent, header.volumeInfo);
+       if (IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) != sizeof(volHeader) ||
+           volHeader.stamp.magic != VOLUMEINFOMAGIC) {
+
+           IH_RELEASE(h);
+           return 0;
+       }
+
+       volHeader.inUse = programType;
+
+       /* If we can't re-write the header, bail out and error. We don't
+        * assert when reading the header, since it's possible the
+        * header isn't really there (when there's no data associated
+        * with the volume; we just delete the vol header file in that
+        * case). But if it's there enough that we can read it, but
+        * somehow we cannot write to it to signify we're salvaging it,
+        * we've got a big problem and we cannot continue. */
+       assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
+
+       IH_RELEASE(h);
+    }
+
+    return 0;
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 void
 AskOffline(VolumeId volumeId, char * partition)
 {
     afs_int32 code, i;
+    SYNC_response res;
+
+    memset(&res, 0, sizeof(res));
 
     for (i = 0; i < 3; i++) {
-	code = FSYNC_VolOp(volumeId, partition, FSYNC_VOL_OFF, FSYNC_SALVAGE, NULL);
+	code = FSYNC_VolOp(volumeId, partition, FSYNC_VOL_OFF, FSYNC_SALVAGE, &res);
 
 	if (code == SYNC_OK) {
 	    break;
@@ -3390,49 +4248,6 @@ AskOffline(VolumeId volumeId, char * partition)
 	Log("AskOffline:  request for fileserver to take volume offline failed; salvage aborting.\n");
 	Abort("Salvage aborted\n");
     }
-
-#ifdef AFS_DEMAND_ATTACH_FS
-    /* set inUse = programType in the volume header. We do this in case
-     * the fileserver restarts/crashes while we are salvaging.
-     * Otherwise, the fileserver could attach the volume again on
-     * startup while we are salvaging, which would be very bad, or
-     * schedule another salvage while we are salvaging, which would be
-     * annoying. */
-    if (!Testing) {
-	IHandle_t *h;
-	struct VolumeHeader header;
-	struct VolumeDiskHeader diskHeader;
-	struct VolumeDiskData volHeader;
-
-	code = VReadVolumeDiskHeader(volumeId, fileSysPartition, &diskHeader);
-	if (code) {
-	    return;
-	}
-
-	DiskToVolumeHeader(&header, &diskHeader);
-
-	IH_INIT(h, fileSysDevice, header.parent, header.volumeInfo);
-	if (IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) != sizeof(volHeader) ||
-	    volHeader.stamp.magic != VOLUMEINFOMAGIC) {
-
-	    IH_RELEASE(h);
-	    return;
-	}
-
-	volHeader.inUse = programType;
-
-	/* If we can't re-write the header, bail out and error. We don't
-	 * assert when reading the header, since it's possible the
-	 * header isn't really there (when there's no data associated
-	 * with the volume; we just delete the vol header file in that
-	 * case). But if it's there enough that we can read it, but
-	 * somehow we cannot write to it to signify we're salvaging it,
-	 * we've got a big problem and we cannot continue. */
-	assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
-
-	IH_RELEASE(h);
-    }
-#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 void
@@ -3745,7 +4560,7 @@ Abort(const char *format, ...)
 }
 
 char *
-ToString(char *s)
+ToString(const char *s)
 {
     register char *p;
     p = (char *)malloc(strlen(s) + 1);

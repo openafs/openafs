@@ -83,14 +83,18 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
 		funcName, confdir);
 	return -1;
     }
-    code = afsconf_GetCellInfo(tdir, tdir->cellName, serviceid, &info);
+
+    if (sauth)
+	cellName = tdir->cellName;
+
+    code = afsconf_GetCellInfo(tdir, cellName, serviceid, &info);
     if (code) {
 	afsconf_Close(tdir);
 	fprintf(stderr, "%s: can't find cell %s's hosts in %s/%s\n",
 		funcName, cellName, confdir, AFSDIR_CELLSERVDB_FILE);
 	return -1;
     }
-    code = afsconf_PickClientSecObj(tdir, secFlags, &info, tdir->cellName, &sc,
+    code = afsconf_PickClientSecObj(tdir, secFlags, &info, cellName, &sc,
 				    &scIndex, NULL);
     if (code) {
 	fprintf(stderr, "%s: can't create client security object", funcName);

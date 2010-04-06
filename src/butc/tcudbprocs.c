@@ -15,6 +15,9 @@
 #endif
 
 #include <sys/types.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <io.h>

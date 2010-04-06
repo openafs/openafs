@@ -18,7 +18,7 @@
 #ifdef HAVE_LIBINTL
 #include <libintl.h>
 #endif
-#ifdef AFS_DARWIN70_ENV
+#ifdef AFS_DARWIN_ENV
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 #include <afs/errors.h>
@@ -115,7 +115,7 @@ volume_message(int code)
 	return "unknown volume error";
 }
 
-#ifdef AFS_DARWIN70_ENV
+#ifdef AFS_DARWIN_ENV
 static_inline const char *
 _intlize(const char *msg, int base, char *str, size_t len)
 {

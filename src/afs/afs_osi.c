@@ -58,6 +58,7 @@ afs_proc_t *afs_global_owner;
 #endif
 #ifdef AFS_FBSD50_ENV
 struct mtx afs_global_mtx;
+struct thread *afs_global_owner;
 #endif
 
 #if defined(AFS_DARWIN_ENV)
@@ -125,7 +126,7 @@ afs_osi_UnmaskRxkSignals(void)
 
 /* Two hacks to try and fix afsdb */
 void 
-afs_osi_MaskUserLoop()
+afs_osi_MaskUserLoop(void)
 {
 #ifdef AFS_DARWIN_ENV
     afs_osi_Invisible();

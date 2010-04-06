@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2008, Sine Nomine Associates and others.
+ * Copyright 2006-2010, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
@@ -57,9 +57,13 @@
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"
+#include "volume_inline.h"
 #include "partition.h"
 #include "daemon_com.h"
+#include "daemon_com_inline.h"
 #include "fssync.h"
+#include "fssync_inline.h"
+#include "vg_cache.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -84,11 +88,6 @@ static int common_volop_prolog(struct cmd_syndesc *, struct state *);
 
 static int do_volop(struct state *, afs_int32 command, SYNC_response * res);
 
-static char * response_code_to_string(afs_int32);
-static char * command_code_to_string(afs_int32);
-static char * reason_code_to_string(afs_int32);
-static char * program_type_to_string(afs_int32);
-
 static int VolOnline(struct cmd_syndesc * as, void * rock);
 static int VolOffline(struct cmd_syndesc * as, void * rock);
 static int VolMode(struct cmd_syndesc * as, void * rock);
@@ -104,6 +103,12 @@ static int VolHdrQuery(struct cmd_syndesc * as, void * rock);
 static int VolOpQuery(struct cmd_syndesc * as, void * rock);
 static int StatsQuery(struct cmd_syndesc * as, void * rock);
 static int VnQuery(struct cmd_syndesc * as, void * rock);
+
+static int VGCQuery(struct cmd_syndesc * as, void * rock);
+static int VGCAdd(struct cmd_syndesc * as, void * rock);
+static int VGCDel(struct cmd_syndesc * as, void * rock);
+static int VGCScan(struct cmd_syndesc * as, void * rock);
+static int VGCScanAll(struct cmd_syndesc * as, void * rock);
 
 static void print_vol_stats_general(VolPkgStats * stats);
 static void print_vol_stats_viceP(struct DiskPartitionStats64 * stats);
@@ -215,6 +220,39 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-arg2", CMD_SINGLE, CMD_OPTIONAL, "arg2");
     COMMON_PARMS_DECL(ts);
 
+    ts = cmd_CreateSyntax("vgcquery", VGCQuery, 0, "query volume group cache (FSYNC_VG_QUERY opcode)");
+    cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
+    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
+    COMMON_PARMS_DECL(ts);
+    cmd_CreateAlias(ts, "vgcqry");
+
+    ts = cmd_CreateSyntax("vgcadd", VGCAdd, 0, "add entry to volume group cache (FSYNC_VG_ADD opcode)");
+    cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
+    cmd_AddParm(ts, "-parent", CMD_SINGLE, 0, "parent volume id");
+    cmd_AddParm(ts, "-child", CMD_SINGLE, 0, "child volume id");
+    COMMON_PARMS_DECL(ts);
+
+    ts = cmd_CreateSyntax("vgcdel", VGCDel, 0, "delete entry from volume group cache (FSYNC_VG_DEL opcode)");
+    cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
+    cmd_AddParm(ts, "-parent", CMD_SINGLE, 0, "parent volume id");
+    cmd_AddParm(ts, "-child", CMD_SINGLE, 0, "child volume id");
+    COMMON_PARMS_DECL(ts);
+
+    ts = cmd_CreateSyntax("vgcscan", VGCScan, 0,
+			  "start volume group cache re-scan"
+			  " (FSYNC_VG_SCAN opcode)");
+    cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
+    COMMON_PARMS_DECL(ts);
+
+    ts = cmd_CreateSyntax("vgcscanall", VGCScanAll, 0,
+			  "start whole-server volume group cache re-scan"
+			  " (FSYNC_VG_SCAN_ALL opcode)");
+    COMMON_PARMS_DECL(ts);
+
     err = cmd_Dispatch(argc, argv);
     exit(err);
 }
@@ -291,6 +329,29 @@ common_volop_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
+debug_response(afs_int32 code, SYNC_response * res)
+{
+    switch (code) {
+    case SYNC_OK:
+    case SYNC_DENIED:
+	break;
+    default:
+	fprintf(stderr, "warning: response code indicates possible protocol error.\n");
+    }
+
+    fprintf(stderr, "FSSYNC service returned %d (%s)\n", code, SYNC_res2string(code));
+
+    if (res) {
+	fprintf(stderr, "protocol header response code was %d (%s)\n",
+	        res->hdr.response, SYNC_res2string(res->hdr.response));
+	fprintf(stderr, "protocol reason code was %d (%s)\n",
+	        res->hdr.reason, FSYNC_reason2string(res->hdr.reason));
+    }
+
+    return 0;
+}
+
+static int
 do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 {
     afs_int32 code;
@@ -304,7 +365,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
     }
 
     fprintf(stderr, "calling FSYNC_VolOp with command code %d (%s)\n", 
-	    command, command_code_to_string(command));
+	    command, FSYNC_com2string(command));
 
     code = FSYNC_VolOp(state->vop->volume,
 		       state->vop->partName,
@@ -312,19 +373,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 		       state->reason,
 		       res);
 
-    switch (code) {
-    case SYNC_OK:
-    case SYNC_DENIED:
-	break;
-    default:
-	fprintf(stderr, "possible sync protocol error. return code was %d\n", code);
-    }
-
-    fprintf(stderr, "FSYNC_VolOp returned %d (%s)\n", code, response_code_to_string(code));
-    fprintf(stderr, "protocol response code was %d (%s)\n", 
-	    res->hdr.response, response_code_to_string(res->hdr.response));
-    fprintf(stderr, "protocol reason code was %d (%s)\n", 
-	    res->hdr.reason, reason_code_to_string(res->hdr.reason));
+    debug_response(code, res);
 
     VDisconnectFS();
 
@@ -349,86 +398,6 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
             (count)++; \
         } \
     } while (0)
-
-static char *
-response_code_to_string(afs_int32 response)
-{
-    switch (response) {
-	ENUMCASE(SYNC_OK);
-	ENUMCASE(SYNC_DENIED);
-	ENUMCASE(SYNC_COM_ERROR);
-	ENUMCASE(SYNC_BAD_COMMAND);
-	ENUMCASE(SYNC_FAILED);
-    default:
-	return "**UNKNOWN**";
-    }
-}
-
-static char *
-command_code_to_string(afs_int32 command)
-{
-    switch (command) {
-	ENUMCASE(SYNC_COM_CHANNEL_CLOSE);
-	ENUMCASE(FSYNC_VOL_ON);
-	ENUMCASE(FSYNC_VOL_OFF);
-	ENUMCASE(FSYNC_VOL_LISTVOLUMES);
-	ENUMCASE(FSYNC_VOL_NEEDVOLUME);
-	ENUMCASE(FSYNC_VOL_MOVE);
-	ENUMCASE(FSYNC_VOL_BREAKCBKS);
-	ENUMCASE(FSYNC_VOL_DONE);
-	ENUMCASE(FSYNC_VOL_QUERY);
-	ENUMCASE(FSYNC_VOL_QUERY_HDR);
-	ENUMCASE(FSYNC_VOL_QUERY_VOP);
-	ENUMCASE(FSYNC_VOL_STATS_GENERAL);
-	ENUMCASE(FSYNC_VOL_STATS_VICEP);
-	ENUMCASE(FSYNC_VOL_STATS_HASH);
-	ENUMCASE(FSYNC_VOL_STATS_HDR);
-	ENUMCASE(FSYNC_VOL_STATS_VLRU);
-	ENUMCASE(FSYNC_VOL_ATTACH);
-	ENUMCASE(FSYNC_VOL_FORCE_ERROR);
-	ENUMCASE(FSYNC_VOL_LEAVE_OFF);
-	ENUMCASE(FSYNC_VOL_QUERY_VNODE);
-    default:
-	return "**UNKNOWN**";
-    }
-}
-
-static char *
-reason_code_to_string(afs_int32 reason)
-{
-    switch (reason) {
-	ENUMCASE(SYNC_REASON_NONE);
-	ENUMCASE(SYNC_REASON_MALFORMED_PACKET);
-	ENUMCASE(SYNC_REASON_NOMEM);
-	ENUMCASE(SYNC_REASON_ENCODING_ERROR);
-	ENUMCASE(FSYNC_WHATEVER);
-	ENUMCASE(FSYNC_SALVAGE);
-	ENUMCASE(FSYNC_MOVE);
-	ENUMCASE(FSYNC_OPERATOR);
-	ENUMCASE(FSYNC_EXCLUSIVE);
-	ENUMCASE(FSYNC_UNKNOWN_VOLID);
-	ENUMCASE(FSYNC_HDR_NOT_ATTACHED);
-	ENUMCASE(FSYNC_NO_PENDING_VOL_OP);
-	ENUMCASE(FSYNC_VOL_PKG_ERROR);
-	ENUMCASE(FSYNC_UNKNOWN_VNID);
-    default:
-	return "**UNKNOWN**";
-    }
-}
-
-static char *
-program_type_to_string(afs_int32 type)
-{
-    switch ((ProgramType)type) {
-	ENUMCASE(fileServer);
-	ENUMCASE(volumeUtility);
-	ENUMCASE(salvager);
-	ENUMCASE(salvageServer);
-	ENUMCASE(debugUtility);
-    default:
-	return "**UNKNOWN**";
-    }
-}
 
 static int 
 VolOnline(struct cmd_syndesc * as, void * rock)
@@ -822,7 +791,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tid               = %u\n", v.id);
 	printf("\tname             = '%s'\n", v.name);
 	if (v.inUse != 0) {
-	    printf("\tinUse            = %d (%s)\n", v.inUse, program_type_to_string(v.inUse));
+	    printf("\tinUse            = %d (%s)\n", v.inUse, VPTypeToString(v.inUse));
 	} else {
 	    printf("\tinUse            = %d (no)\n", v.inUse);
 	}
@@ -899,13 +868,13 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tpkt_seq        = %u\n", vop.com.pkt_seq);
 	printf("\t\tcom_seq        = %u\n", vop.com.com_seq);
 	printf("\t\tprogramType    = %d (%s)\n", 
-	       vop.com.programType, program_type_to_string(vop.com.programType));
+	       vop.com.programType, VPTypeToString(vop.com.programType));
 	printf("\t\tpid            = %d\n", vop.com.pid);
 	printf("\t\ttid            = %d\n", vop.com.tid);
 	printf("\t\tcommand        = %d (%s)\n", 
-	       vop.com.command, command_code_to_string(vop.com.command));
+	       vop.com.command, FSYNC_com2string(vop.com.command));
 	printf("\t\treason         = %d (%s)\n", 
-	       vop.com.reason, reason_code_to_string(vop.com.reason));
+	       vop.com.reason, FSYNC_reason2string(vop.com.reason));
 	printf("\t\tcommand_len    = %u\n", vop.com.command_len);
 	printf("\t\tflags          = 0x%lux\n", afs_printable_uint32_lu(vop.com.flags));
 	printf("\t}\n");
@@ -975,23 +944,11 @@ do_vnqry(struct state * state, SYNC_response * res)
     strlcpy(qry.partName, state->vop->partName, sizeof(qry.partName));
 
     fprintf(stderr, "calling FSYNC_GenericOp with command code %d (%s)\n", 
-	    command, command_code_to_string(command));
+	    command, FSYNC_com2string(command));
 
     code = FSYNC_GenericOp(&qry, sizeof(qry), command, FSYNC_OPERATOR, res);
 
-    switch (code) {
-    case SYNC_OK:
-    case SYNC_DENIED:
-	break;
-    default:
-	fprintf(stderr, "possible sync protocol error. return code was %d\n", code);
-    }
-
-    fprintf(stderr, "FSYNC_GenericOp returned %d (%s)\n", code, response_code_to_string(code));
-    fprintf(stderr, "protocol response code was %d (%s)\n", 
-	    res->hdr.response, response_code_to_string(res->hdr.response));
-    fprintf(stderr, "protocol reason code was %d (%s)\n", 
-	    res->hdr.reason, reason_code_to_string(res->hdr.reason));
+    debug_response(code, res);
 
     VDisconnectFS();
 
@@ -1104,17 +1061,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_StatsOp_hdr scom;
-    union {
-	void * ptr;
-	struct VolPkgStats * vol_stats;
-	struct VolumeHashChainStats * hash_stats;
-#ifdef AFS_DEMAND_ATTACH_FS
-	struct volume_hdr_LRU_stats * hdr_stats;
-#endif
-	struct DiskPartitionStats64 * vicep_stats;
-    } sres;
 
-    sres.ptr = res_buf;
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
     res.payload.len = SYNC_PROTO_MAX_LEN;
@@ -1178,7 +1125,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     common_prolog(as, &state);
 
     fprintf(stderr, "calling FSYNC_askfs with command code %d (%s)\n", 
-	    command, command_code_to_string(command));
+	    command, FSYNC_com2string(command));
 
     code = FSYNC_StatsOp(&scom, command, FSYNC_WHATEVER, &res);
 
@@ -1190,29 +1137,45 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
 	fprintf(stderr, "possible sync protocol error. return code was %d\n", code);
     }
 
-    fprintf(stderr, "FSYNC_VolOp returned %d (%s)\n", code, response_code_to_string(code));
+    fprintf(stderr, "FSYNC_VolOp returned %d (%s)\n", code, SYNC_res2string(code));
     fprintf(stderr, "protocol response code was %d (%s)\n", 
-	    res.hdr.response, response_code_to_string(res.hdr.response));
+	    res.hdr.response, SYNC_res2string(res.hdr.response));
     fprintf(stderr, "protocol reason code was %d (%s)\n", 
-	    res.hdr.reason, reason_code_to_string(res.hdr.reason));
+	    res.hdr.reason, FSYNC_reason2string(res.hdr.reason));
 
     VDisconnectFS();
 
     if (res.hdr.response == SYNC_OK) {
 	switch (command) {
 	case FSYNC_VOL_STATS_GENERAL:
-	    print_vol_stats_general(sres.vol_stats);
-	    break;
+	    {
+		struct VolPkgStats vol_stats;
+		memcpy(&vol_stats, res_buf, sizeof(vol_stats));
+		print_vol_stats_general(&vol_stats);
+		break;
+	    }
 	case FSYNC_VOL_STATS_VICEP:
-	    print_vol_stats_viceP(sres.vicep_stats);
-	    break;
+	    {
+		struct DiskPartitionStats64 vicep_stats;
+		memcpy(&vicep_stats, res_buf, sizeof(vicep_stats));
+		print_vol_stats_viceP(&vicep_stats);
+		break;
+	    }
 	case FSYNC_VOL_STATS_HASH:
-	    print_vol_stats_hash(sres.hash_stats);
-	    break;
+	    {
+		struct VolumeHashChainStats hash_stats;
+		memcpy(&hash_stats, res_buf, sizeof(hash_stats));
+		print_vol_stats_hash(&hash_stats);
+		break;
+	    }
 #ifdef AFS_DEMAND_ATTACH_FS
 	case FSYNC_VOL_STATS_HDR:
-	    print_vol_stats_hdr(sres.hdr_stats);
-	    break;
+	    {
+		struct volume_hdr_LRU_stats hdr_stats;
+		memcpy(&hdr_stats, res_buf, sizeof(hdr_stats));
+		print_vol_stats_hdr(&hdr_stats);
+		break;
+	    }
 #endif /* AFS_DEMAND_ATTACH_FS */
 	}
     }
@@ -1353,3 +1316,171 @@ print_vol_stats_hdr(struct volume_hdr_LRU_stats * stats)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+
+/**
+ * query VGC.
+ *
+ * @notes args:
+ *    - CUSTOM_PARMS_OFFSET+0 is partition string
+ *    - CUSTOM_PARMS_OFFSET+1 is volume id
+ *
+ * @return operation status
+ *    @retval 0 success
+ */
+static int
+VGCQuery(struct cmd_syndesc * as, void * rock)
+{
+    afs_int32 code;
+    struct state state;
+    char * partName;
+    VolumeId volid;
+    FSSYNC_VGQry_response_t q_res;
+    SYNC_response res;
+    int i;
+    struct cmd_item *ti;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+0].items)) {	/* -partition */
+	return -1;
+    }
+    partName = ti->data;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+1].items)) {	/* -volumeid */
+	return -1;
+    }
+    volid = atoi(ti->data);
+
+    common_prolog(as, &state);
+
+    fprintf(stderr, "calling FSYNC_VCGQuery\n");
+
+    code = FSYNC_VGCQuery(partName, volid, &q_res, &res);
+
+    debug_response(code, &res);
+
+    if (code == SYNC_OK) {
+	printf("VG = {\n");
+	printf("\trw\t=\t%u\n", q_res.rw);
+	printf("\tchildren\t= (\n");
+	for (i = 0; i < VOL_VG_MAX_VOLS; i++) {
+	    if (q_res.children[i]) {
+		printf("\t\t%u\n", q_res.children[i]);
+	    }
+	}
+	printf("\t)\n");
+    }
+
+    VDisconnectFS();
+
+    return 0;
+}
+
+static int
+VGCAdd(struct cmd_syndesc * as, void * rock)
+{
+    afs_int32 code;
+    struct state state;
+    char * partName;
+    VolumeId parent, child;
+    struct cmd_item *ti;
+    SYNC_response res;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+0].items)) {	/* -partition */
+	return -1;
+    }
+    partName = ti->data;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+1].items)) {	/* -parent */
+	return -1;
+    }
+    parent = atoi(ti->data);
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+2].items)) {	/* -child */
+	return -1;
+    }
+    child = atoi(ti->data);
+
+    common_prolog(as, &state);
+    fprintf(stderr, "calling FSYNC_VCGAdd\n");
+    code = FSYNC_VGCAdd(partName, parent, child, state.reason, &res);
+    debug_response(code, &res);
+
+    VDisconnectFS();
+
+    return 0;
+}
+
+static int
+VGCDel(struct cmd_syndesc * as, void * rock)
+{
+    afs_int32 code;
+    struct state state;
+    char * partName;
+    VolumeId parent, child;
+    struct cmd_item *ti;
+    SYNC_response res;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+0].items)) {	/* -partition */
+	return -1;
+    }
+    partName = ti->data;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+1].items)) {	/* -parent */
+	return -1;
+    }
+    parent = atoi(ti->data);
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+2].items)) {	/* -child */
+	return -1;
+    }
+    child = atoi(ti->data);
+
+    state.reason = FSYNC_WHATEVER;
+
+    common_prolog(as, &state);
+    fprintf(stderr, "calling FSYNC_VCGDel\n");
+    code = FSYNC_VGCDel(partName, parent, child, state.reason, &res);
+    debug_response(code, &res);
+
+    VDisconnectFS();
+
+    return 0;
+}
+
+static int
+VGCScan(struct cmd_syndesc * as, void * rock)
+{
+    afs_int32 code;
+    struct state state;
+    char * partName;
+    struct cmd_item *ti;
+
+    if (!(ti = as->parms[CUSTOM_PARMS_OFFSET+0].items)) {	/* -partition */
+	return -1;
+    }
+    partName = ti->data;
+
+    common_prolog(as, &state);
+    fprintf(stderr, "calling FSYNC_VCGScan\n");
+    code = FSYNC_VGCScan(partName, state.reason);
+    debug_response(code, NULL);
+
+    VDisconnectFS();
+
+    return 0;
+}
+
+static int
+VGCScanAll(struct cmd_syndesc * as, void * rock)
+{
+    afs_int32 code;
+    struct state state;
+
+    common_prolog(as, &state);
+    fprintf(stderr, "calling FSYNC_VCGScanAll\n");
+    code = FSYNC_VGCScan(NULL, state.reason);
+    debug_response(code, NULL);
+
+    VDisconnectFS();
+
+    return 0;
+}

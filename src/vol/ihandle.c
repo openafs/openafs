@@ -270,6 +270,7 @@ ih_init(int dev, int vid, Inode ino)
     ihP->ih_vid = vid;
     ihP->ih_ino = ino;
     ihP->ih_flags = 0;
+    ihP->ih_synced = 0;
     ihP->ih_refcnt = 1;
     DLL_INIT_LIST(ihP->ih_fdhead, ihP->ih_fdtail);
     DLL_INSERT_TAIL(ihP, ihashTable[ihash].ihash_head,

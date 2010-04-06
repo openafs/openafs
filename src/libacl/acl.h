@@ -16,6 +16,7 @@
 #define _ACL_
 
 
+#include "afs/ptint.h"
 
 #define ACL_VERSION "Version 1"
 
@@ -70,6 +71,8 @@ extern int acl_NewExternalACL(int nEntries, char **r);
 extern int acl_FreeExternalACL(char **r);
 extern int acl_Externalize(struct acl_accessList *acl, char **elist);
 extern int acl_Internalize(char *elist, struct acl_accessList **acl);
+extern int acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessList *acl, char **elist);
+extern int acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struct acl_accessList **acl);
 extern int acl_Initialize(char *version);
 #ifdef	_RXGEN_PTINT_
 extern int acl_CheckRights(struct acl_accessList *acl, prlist *groups, int *rights);

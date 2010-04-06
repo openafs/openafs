@@ -30,7 +30,7 @@
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
 #include "h/systm.h"
 #endif
-#if defined(AFS_DARWIN60_ENV) || defined(AFS_OBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_OBSD_ENV)
 #include "h/kernel.h"
 #endif
 #include "h/types.h"

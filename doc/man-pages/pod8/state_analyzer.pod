@@ -1,0 +1,186 @@
+=head1 NAME
+
+state_analyzer - Explores and queries the fileserver state database interactively
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<state_analyzer> S<<< [F<state dump file> | B<-h>] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The demand-attach file server makes host / callback information
+persistent. On shutdown, the state is saved to database L<fsstate.dat(5)>.
+On startup, the state is read, verified and restored.
+This allows for file server shutdowns or restarts without breaking
+all callbacks (an operation that could otherwise take a long time).
+
+B<state_analyzer> interactively explores and queries the saved
+state database, L<fsstate.dat(5)>.
+
+This command is only supported on the demand-attach file server.
+It operates at an extremely low-level and hence requires detailed
+knowledge of the OpenAFS architecture and code.
+
+=head1 COMMANDS
+
+B<state_analyzer> supports the following interactive commands:
+
+=over 4
+
+
+=item B<h <...>>  -- host menu
+
+=over 4
+
+=item *
+
+B<hdr>      -- display the host_state_header struct
+
+=item *
+
+B<first>    -- display the first host
+
+=item *
+
+B<prev>     -- display the previous host
+
+=item *
+
+B<this>     -- display this host
+
+=item *
+
+B<next>     -- display the next host
+
+=item *
+
+B<last>     -- display the last host
+
+=item *
+
+B<dump>     -- display all hosts
+
+=back
+
+
+=item B<fe <...>>  -- FileEntry menu
+
+=over 4
+
+=item *
+
+B<hdr>      -- display the callback_state_header struct
+
+=item *
+
+B<first>    -- display the first FE
+
+=item *
+
+B<prev>     -- display the previous FE
+
+=item *
+
+B<this>     -- display this FE
+
+=item *
+
+B<next>     -- display the next FE
+
+=item *
+
+B<last>     -- display the last FE
+
+=item *
+
+B<dump>     -- display all FEs
+
+=item *
+
+B<timeout>  -- display the timeout queue heads
+
+=item *
+
+B<hash>     -- display the file entry hash buckets
+
+=item *
+
+B<find by index I<id>> -- find an fe by its array index
+
+=item *
+
+B<find by fid I<(vol,vnode,unique)>> -- find an fe by its AFSFid
+
+=back
+
+
+=item B<cb <...>>  -- CallBack menu
+
+=over 4
+
+=item *
+
+B<hdr>      -- display the callback_state_entry_header struct
+
+=item *
+
+B<first>    -- display the first CB
+
+=item *
+
+B<prev>     -- display the previous CB
+
+=item *
+
+B<this>     -- display this CB
+
+=item *
+
+B<next>     -- display the next CB
+
+=item *
+
+B<last>     -- display the last CB
+
+=item *
+
+B<dump>     -- display all CBs
+
+=back
+
+=item B<hexdump [B<offset> [B<len>]]>  -- hex dump raw data
+
+=item B<quit>     -- quit current menu
+
+=item B<exit>     -- exit debugger
+
+=item B<help>     -- help message
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have read access to the file server state database,
+F<fsstate.dat>.
+Usually, this means that the issuer must be the
+local superuser C<root> on the file server machine.
+
+=head1 SEE ALSO
+
+L<fsstate.dat(5)>,
+L<fssync-debug(8)>,
+L<salvsync-debug(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2010 Davor Ocelic <docelic@spinlocksolutions.com>
+
+This documentation is covered by the IBM Public License Version 1.0.  This
+man page was written by Davor Ocelic for OpenAFS, based on documentation
+from Tom Keiser, Steven Jenkins and others.

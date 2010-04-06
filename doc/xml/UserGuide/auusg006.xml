@@ -159,8 +159,8 @@
 
       <programlisting>
    % <emphasis role="bold">fs listquota ~terry</emphasis>
-   Volume Name     Quota    Used    % Used   Partition 
-   user.terry      10000    3400       34%         86% 
+   Volume Name     Quota    Used    % Used   Partition
+   user.terry      10000    3400       34%         86%
 </programlisting>
     </sect2>
 
@@ -401,7 +401,7 @@
 
       <programlisting>
    % <emphasis role="bold">fs checkservers -all &amp;</emphasis>
-   These servers unavailable due to network or server problems: 
+   These servers unavailable due to network or server problems:
       fs1.abc.com server7.stateu.edu.
 </programlisting>
     </sect2>
@@ -432,18 +432,18 @@
 
       <programlisting>
    % <emphasis role="bold">fs listcells &amp;</emphasis>
-   Cell abc.com  on hosts 
+   Cell abc.com  on hosts
         db1.abc.com
         db2.abc.com
         db3.abc.com
-   Cell test.abc.com on hosts 
+   Cell test.abc.com on hosts
         test4.abc.com.
-   Cell stateu.edu on hosts 
+   Cell stateu.edu on hosts
         sv5.stateu.edu.
         sv2.stateu.edu.
         sv11.stateu.edu.
-   Cell def.com on hosts 
-        serverA.def.com 
+   Cell def.com on hosts
+        serverA.def.com
 </programlisting>
     </sect2>
   </sect1>

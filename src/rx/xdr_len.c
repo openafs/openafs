@@ -25,69 +25,70 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <stdlib.h>
+#ifdef KERNEL
+# include "afs/sysincludes.h"
+#else
+# include <stdlib.h>
+#endif
+
 #include "xdr.h"
 
 static void
-xdrlen_destroy(AFS_XDRS_T axdrs)
+xdrlen_destroy(XDR *xdrs)
 {
 }
 
 static bool_t
-xdrlen_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
+xdrlen_getint32(XDR *xdrs, afs_int32 * lp)
 {
     return (FALSE);
 }
 
 static bool_t
-xdrlen_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
+xdrlen_putint32(XDR *xdrs, afs_int32 * lp)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     xdrs->x_handy += sizeof(afs_int32);
     return (TRUE);
 }
 
 static bool_t
-xdrlen_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
+xdrlen_getbytes(XDR *xdrs, caddr_t addr, u_int len)
 {
     return (FALSE);
 }
 
 static bool_t
-xdrlen_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
+xdrlen_putbytes(XDR *xdrs, caddr_t addr, u_int len)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     xdrs->x_handy += len;
     return (TRUE);
 }
 
 static u_int
-xdrlen_getpos(AFS_XDRS_T axdrs)
+xdrlen_getpos(XDR *xdrs)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     return xdrs->x_handy;
 }
 
 static bool_t
-xdrlen_setpos(AFS_XDRS_T axdrs, u_int pos)
+xdrlen_setpos(XDR *xdrs, u_int pos)
 {
-    XDR * xdrs = (XDR *)axdrs;
-
     xdrs->x_handy = pos;
     return (TRUE);
 }
 
 static afs_int32 *
-xdrlen_inline(AFS_XDRS_T axdrs, u_int len)
+xdrlen_inline(XDR *xdrs, u_int len)
 {
     return NULL;
 }
 
 static struct xdr_ops xdrlen_ops = {
 #if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifdef AFS_XDR_64BITOPS
+    NULL,
+    NULL,
+#endif
     /* Windows does not support labeled assigments */
     xdrlen_getint32,    /* not supported */
     xdrlen_putint32,    /* serialize an afs_int32 */
@@ -98,6 +99,10 @@ static struct xdr_ops xdrlen_ops = {
     xdrlen_inline,      /* not supported */
     xdrlen_destroy      /* destroy stream */
 #else
+#ifdef AFS_XDR_64BITOPS
+    .x_getint64 = NULL,
+    .x_putint64 = NULL,
+#endif
     .x_getint32 = xdrlen_getint32,
     .x_putint32 = xdrlen_putint32,
     .x_getbytes = xdrlen_getbytes,

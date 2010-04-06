@@ -43,7 +43,7 @@ DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 salvsync-client.o daemon_com.o
+	 fstab.o salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
@@ -143,6 +143,12 @@ vutil.o: ${VOL}/vutil.c
 	${CCRULE}
 
 partition.o: ${VOL}/partition.c
+	${CCRULE}
+
+vg_cache.o: ${VOL}/vg_cache.c
+	${CCRULE}
+
+vg_scan.o: ${VOL}/vg_scan.c
 	${CCRULE}
 
 fssync-server.o: ${VOL}/fssync-server.c

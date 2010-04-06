@@ -251,7 +251,7 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     if ((amode & VWRITE) && (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW)) {
         afs_PutFakeStat(&fakestate);
 	AFS_DISCON_UNLOCK();
-	printf("Network is down in afs_vnop_access\n");
+	/* printf("Network is down in afs_vnop_access\n"); */
         return ENETDOWN;
     }
     

@@ -28,7 +28,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
@@ -78,6 +78,34 @@ afs_cv2string(char *ttp, afs_uint32 aval)
 
 }				/*afs_cv2string */
 #endif
+
+/* not a generic strtoul replacement. for vol/vno/uniq, portable */
+
+afs_int32
+afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret)
+{
+    char *x;
+
+    *ret = 0;
+    *endptr = (char *)str;
+
+    if (!str)
+	return ERANGE;
+
+    for (x = (char *)str; *x >= '0' && *x <= '9'; x++) {
+	/* Check for impending overflow */
+	if (*ret > 429496729) { /* ULONG_MAX/10 */
+	    *ret = 0;
+	    *endptr = (char *)str;
+	    return EINVAL;
+	}
+
+	*ret = (*ret * 10) + (*x - '0');
+    }
+
+    *endptr = x;
+    return 0;
+}
 
 #ifndef afs_strcasecmp
 int
@@ -246,7 +274,7 @@ afs_CheckLocks(void)
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
-		    printf("Server entry %p is marked down\n", ts);
+		    afs_warn("Server entry %p is marked down\n", ts);
 		for (sa = ts->addr; sa; sa = sa->next_sa) {
 		    for (tc = sa->conns; tc; tc = tc->next) {
 			if (tc->refCount)
@@ -274,7 +302,7 @@ afs_CheckLocks(void)
 	for (i = 0; i < NUSERS; i++) {
 	    for (tu = afs_users[i]; tu; tu = tu->next) {
 		if (tu->refCount)
-		    printf("user at %lx is held\n", (unsigned long)tu);
+		    afs_warn("user at %lx is held\n", (unsigned long)tu);
 	    }
 	}
     }
@@ -341,7 +369,8 @@ afs_data_pointer_to_int32(const void *p)
 
 #ifdef AFS_LINUX20_ENV
 
-afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+afs_int32
+afs_calc_inum(afs_int32 volume, afs_int32 vnode)
 { 
     afs_int32 ino, vno = vnode;
     char digest[16];
@@ -363,7 +392,8 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 
 #else
 
-afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+afs_int32
+afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 {
     return (volume << 16) + vnode;
 }

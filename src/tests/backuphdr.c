@@ -46,7 +46,7 @@ try_backuphdr(XFILE * X, char *tag, tagged_field * field, afs_uint32 value,
     /* Which header should we try (if any)? */
     switch (*tag) {
     case STAGE_VERSMIN:
-	r = ParseStageHdr(X, tag, &bh);
+      r = ParseStageHdr(X, (unsigned char *)tag, &bh);
 	break;
     default:
 	return DSERR_MAGIC;

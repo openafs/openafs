@@ -34,6 +34,9 @@
 #include <netinet/in.h>
 #endif
 #include <stdio.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 #include <rx/xdr.h>
 #include <rx/rx.h>

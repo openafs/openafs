@@ -48,10 +48,10 @@
 
           <listitem>
             <para>If your do not have tokens for the relevant cell, or they are expired, issue the <emphasis
-            role="bold">klog</emphasis> command to authenticate. For complete instructions, see <link linkend="HDRWQ29">To
+            role="bold">aklog</emphasis> command to authenticate. You may also need to first obtain a kerberos ticket using<emphasis role="bold">kinit</emphasis> since tokens often expire at the same time as TGT's. For complete instructions, see <link linkend="HDRWQ29">To
             Authenticate with AFS</link>. Then try accessing or saving the file again. If you are not successful, proceed to Step
             <link linkend="LINOSAVE-FSCHECKS">2</link>. <programlisting>
-   % <emphasis role="bold">klog</emphasis>
+   % <emphasis role="bold">aklog</emphasis>
 </programlisting></para>
           </listitem>
         </itemizedlist>
@@ -74,7 +74,7 @@
           <listitem>
             <para>Output like the following indicates that your Cache Manager cannot reach the indicated file server machines.
             <programlisting>
-   These servers unavailable due to network or server problem:  
+   These servers unavailable due to network or server problem:
    <replaceable>list of machines</replaceable>.
 </programlisting></para>
 
@@ -134,7 +134,7 @@
 
         <para>If you do not have the necessary permissions and do not own the directory, ask the owner or a system administrator to
         grant them to you. If they add you to a group that has the required permissions, you must issue the <emphasis
-        role="bold">klog</emphasis> command to reauthenticate before you can exercise them.</para>
+        role="bold">aklog</emphasis> command to reauthenticate before you can exercise them.</para>
 
         <para>If you still cannot access the file even though you have the necessary permissions, contact your system administrator
         for help in investigating further possible causes of your problem. If you still cannot copy or save the file even though you
@@ -153,8 +153,8 @@
 
         <programlisting>
    % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
-   Volume Name     Quota    Used    % Used   Partition 
-   user.terry      10000    3400       34%         86% 
+   Volume Name     Quota    Used    % Used   Partition
+   user.terry      10000    3400       34%         86%
 </programlisting>
 
         <itemizedlist>
@@ -241,7 +241,7 @@
 </programlisting></para>
 
             <para>Ask the directory's owner or your system administrator to grant you the permissions you need. If they add you to a
-            group that has the required permissions, you must issue the <emphasis role="bold">klog</emphasis> command to
+            group that has the required permissions, you must issue the <emphasis role="bold">aklog</emphasis> command to
             reauthenticate before you can exercise them.</para>
           </listitem>
         </itemizedlist>
@@ -284,7 +284,7 @@
       <listitem>
         <para>Output like the following indicates that your Cache Manager cannot reach the indicated file server machines. You must
         wait until they are again accessible before continuing to work with the files that are stored on them. <programlisting>
-   These servers unavailable due to network or server problem: 
+   These servers unavailable due to network or server problem:
    <replaceable>list_of_machines</replaceable>.
 </programlisting></para>
       </listitem>

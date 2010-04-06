@@ -64,6 +64,10 @@
 #endif /* AFS_NT40_ENV */
 #include <sys/stat.h>
 
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
+
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 /*@printflike@*/ extern void Abort(const char *format, ...);

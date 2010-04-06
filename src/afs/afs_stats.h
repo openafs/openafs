@@ -81,6 +81,18 @@ struct afs_MeanStats {
  * struct afs_CMCallStats
  *	This is the place where we keep records on each and every
  *	function call.
+ *
+ * This structure is encoded as a binary blob and thrown at the client
+ * for use by the xstat_cm interface. As the datastructure is unversioned,
+ * some rules apply;
+ *    *) Never add elements to the middle of the list. Everything new
+ *       must go at the end
+ *    *) Never remove elements from the list. If a function dies, don't
+ *       remove it's entry here (by all means, flag it as dead, though)
+ *    *) Never make elements conditional on preprocessor symbols. Doing
+ *       this would mean that the client has to be built with exactly
+ *       the same options as you are. Which isn't a great idea.
+ *
  */
 struct afs_CMCallStats {
     afs_int32 C_afs_init;	/* afs_aix_subr.c */
@@ -640,10 +652,8 @@ struct afs_CMCallStats {
     afs_int32 C_SRXAFSCB_GetCacheConfig;	/* afs_callback.c */
     afs_int32 C_SRXAFSCB_GetCE64;	/* afs_callback.c */
     afs_int32 C_SRXAFSCB_GetCellByNum;	/* afs_callback.c */
-#if defined(AFS_CACHE_BYPASS)
     afs_int32 C_BPrefetchNoCache;	/* afs_daemons.c */
-	afs_int32 C_afs_ReadNoCache;	/* osi_vnodeops.c */
-#endif	
+    afs_int32 C_afs_ReadNoCache;	/* osi_vnodeops.c */
 };
 
 struct afs_CMMeanStats {

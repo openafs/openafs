@@ -28,8 +28,8 @@
     <para><link linkend="HDRWQ2">An Introduction to OpenAFS</link> introduces the basic concepts and functions of AFS. To use AFS
     successfully, it is important to be familiar with the terms and concepts described in this chapter.</para>
 
-    <para><link linkend="HDRWQ20">Using OpenAFS</link> describes how to use AFS's basic features: how to log in and authenticate, unlog,
-    log out, access AFS files and directories in AFS, and change your password.</para>
+    <para><link linkend="HDRWQ20">Using OpenAFS</link> describes how to use AFS's basic features: how to log in and authenticate,
+    and access AFS files and directories in AFS.</para>
 
     <para><link linkend="HDRWQ38">Displaying Information about OpenAFS</link> describes how to display information about AFS volume
     quota and location, file server machine status, and the foreign cells you can access.</para>

@@ -26,10 +26,10 @@ extern void osi_fbsd_free(void *p);
 /* osi_vfsops.c */
 int afs_init(struct vfsconf *vfc);
 int afs_uninit(struct vfsconf *vfc);
-#ifdef AFS_FBSD50_ENV
-extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *th);
+#if defined(AFS_FBSD80_ENV)
+extern int afs_statfs(struct mount *mp, struct statfs *abp);
 #else
-extern int afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p);
+extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *td);
 #endif
 
 #endif /* _OSI_PROTO_H_ */

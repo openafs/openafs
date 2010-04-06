@@ -1,0 +1,14 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/OpenAFS.Info.plist
+/OpenAFS.info
+/OpenAFS.Description.plist
+/buildpkg.sh
+/CellServDB
+.DS_Store
+*.mode1v3
+*.pbxuser
+*.dmg
+build/

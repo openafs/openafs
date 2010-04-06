@@ -22,14 +22,14 @@ extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
 
 vnode_t *
-afs_XFSIGetVnode(afs_dcache_id_t *ainode)
+afs_XFSIGetVnode(ino_t ainode)
 {
     struct xfs_inode *ip;
     int error;
     vnode_t *vp;
 
     if ((error =
-	 xfs_igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode->ufs, &ip))) {
+	 xfs_igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode, &ip))) {
 	osi_Panic("afs_XFSIGetVnode: xfs_igetinode failed, error=%d", error);
     }
     vp = XFS_ITOV(ip);
@@ -57,7 +57,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    afile->vnode = AFS_SGI_IGETVNODE(ainode->ufs);
+    afile->vnode = afs_XFSIGetVnode(ainode->ufs);
     AFS_GLOCK();
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;

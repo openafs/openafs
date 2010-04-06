@@ -36,6 +36,9 @@
 #include <errno.h>
 #include <afs/afsutil.h>
 #include <netdb.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 /*
  * Command line parameter indicies.

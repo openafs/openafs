@@ -19,6 +19,7 @@
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV       1	/* User space interface to file system */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
+#define AFS_KRB5_ERROR_ENV  1   /* fetch_krb5_error_message() available in afsutil.lib */
 
 #include <afs/afs_sysnames.h>
 #define SYS_NAME_ID	SYS_NAME_ID_amd64_w2k

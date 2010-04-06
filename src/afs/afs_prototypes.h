@@ -210,14 +210,19 @@ extern struct brequest *afs_BQueue(register short aopcode,
 				   afs_int32 dontwait, afs_int32 ause,
 				   afs_ucred_t *acred,
 				   afs_size_t asparm0, afs_size_t asparm1,
-				   void *apparm0);
+				   void *apparm0, void *apparm1,
+				   void *apparm2);
 extern void afs_SetCheckServerNATmode(int isnat);
 extern void afs_CheckServerDaemon(void);
 extern int afs_CheckRootVolume(void);
 extern void afs_BRelease(register struct brequest *ab);
 extern int afs_BBusy(void);
 extern int afs_BioDaemon(afs_int32 nbiods);
+#ifdef AFS_DARWIN80_ENV
+extern int afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2);
+#else
 extern void afs_BackgroundDaemon(void);
+#endif
 extern void shutdown_daemons(void);
 extern int afs_sgidaemon(void);
 
@@ -567,6 +572,8 @@ extern void shutdown_osinet(void);
 /* afs_osi_pag.c */
 #if defined(AFS_SUN5_ENV)
 extern int afs_setpag(afs_ucred_t **credpp);
+#elif defined(AFS_FBSD_ENV)
+extern int afs_setpag(struct thread *td, void *args);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_setpag(afs_proc_t *p, void *args, int *retval);
 #else
@@ -575,7 +582,9 @@ extern int afs_setpag(void);
 	
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_FBSD_ENV)
+extern int AddPag(struct thread *td, afs_int32 aval, afs_ucred_t **credpp);
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp);
 #else
 extern int AddPag(afs_int32 aval, afs_ucred_t **credpp);
@@ -696,11 +705,16 @@ extern int usr_setpag(afs_ucred_t **cred, afs_uint32 pagvalue,
 #else
 # if defined AFS_XBSD_ENV
 #  if !defined(AFS_DFBSD_ENV)
+#   if defined(AFS_FBSD_ENV)
+extern int setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
+		  afs_uint32 * newpag, int change_parent);
+#   else
 extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
-#  endif
-# endif
-#endif
+#   endif /* AFS_FBSD_ENV */
+#  endif /* ! AFS_DFBSD_ENV */
+# endif /* AFS_XBSD_ENV */
+#endif /* UKERNEL */
 
 #if defined(AFS_LINUX26_ENV)
 extern afs_int32 osi_get_group_pag(afs_ucred_t *cred);
@@ -882,8 +896,8 @@ extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN100_ENV
 extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
-#elif defined(AFS_FBSD50_ENV)
-extern int afs3_syscall(struct thread *p, void *args, long *retval);
+#elif defined(AFS_FBSD_ENV)
+extern int afs3_syscall(struct thread *p, void *args);
 #else
 extern int afs3_syscall(afs_proc_t *p, void *args, long *retval);
 #endif
@@ -916,6 +930,8 @@ extern struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell,
 				     afs_int32 locktype);
 extern struct unixuser *afs_GetUser(register afs_int32 auid, afs_int32 acell,
 				    afs_int32 locktype);
+extern void afs_NotifyUser(struct unixuser *auser, int event);
+
 #if AFS_GCPAGS
 extern afs_int32 afs_GCPAGs(afs_int32 * ReleasedCount);
 extern void afs_GCPAGs_perproc_func(afs_proc_t * pproc);
@@ -927,9 +943,10 @@ extern void afs_CheckTokenCache(void);
 extern void afs_ResetAccessCache(afs_int32 uid, int alock);
 extern void afs_ResetUserConns(register struct unixuser *auser);
 extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
-
+extern void afs_MarkUserExpired(afs_int32 pag);
 
 /* afs_util.c */
+extern afs_int32 afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret);
 extern afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode);
 #ifndef afs_cv2string
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
@@ -1012,6 +1029,8 @@ extern struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 					struct volume *tvolp);
 extern struct vcache *afs_NewVCache(struct VenusFid *afid,
 				    struct server *serverp);
+extern struct vcache *afs_NewBulkVCache(struct VenusFid *afid,
+					struct server *serverp, int seq);
 extern int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq);
 extern struct vcache *afs_GetVCache(register struct VenusFid *afid,
 				    struct vrequest *areq, afs_int32 * cached,

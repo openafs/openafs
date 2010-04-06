@@ -192,33 +192,31 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     }
 
     afs_InitFakeStat(&fakestate);
+    AFS_DISCON_LOCK();
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
-    if (code) {
-	afs_PutFakeStat(&fakestate);
-	return code;
-    }
+    if (code)
+	goto done;
 
     /* Check if this is dynroot */
     if (afs_IsDynroot(adp)) {
 	code = afs_DynrootVOPRemove(adp, acred, aname);
-	afs_PutFakeStat(&fakestate);
-	return code;
+	goto done;
     }
     if (afs_IsDynrootMount(adp)) {
-	return ENOENT;
+	code = ENOENT;
+	goto done;
     }
 
     if (strlen(aname) > AFSNAMEMAX) {
-	afs_PutFakeStat(&fakestate);
-	return ENAMETOOLONG;
+	code = ENAMETOOLONG;
+	goto done;
     }
   tagain:
     code = afs_VerifyVCache(adp, &treq);
     tvc = NULL;
     if (code) {
 	code = afs_CheckCode(code, &treq, 23);
-	afs_PutFakeStat(&fakestate);
-	return code;
+	goto done;
     }
 
     /** If the volume is read-only, return error without making an RPC to the
@@ -226,15 +224,13 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
       */
     if (adp->f.states & CRO) {
 	code = EROFS;
-	afs_PutFakeStat(&fakestate);
-	return code;
+	goto done;
     }
 
     /* If we're running disconnected without logging, go no further... */
     if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
         code = ENETDOWN;
-        afs_PutFakeStat(&fakestate);
-        return code;
+	goto done;
     }
     
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
@@ -385,12 +381,14 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     } else {
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
+    done:
     afs_PutFakeStat(&fakestate);
 #ifndef AFS_DARWIN80_ENV
     /* we can't track by thread, it's not exported in the KPI; only do
        this on !macos */
     osi_Assert(!WriteLocked(&adp->lock) || (adp->lock.pid_writer != MyPidxx));
 #endif
+    AFS_DISCON_UNLOCK();
     return code;
 }
 

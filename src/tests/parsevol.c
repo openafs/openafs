@@ -82,7 +82,7 @@ parse_volhdr(XFILE * X, unsigned char *tag, tagged_field * field,
     afs_uint32 r;
 
     memset(&hdr, 0, sizeof(hdr));
-    if (r = xftell(X, &where))
+    if ((r = xftell(X, &where)))
 	return r;
     sub64_32(hdr.offset, where, 1);
     if (p->print_flags & DSPRINT_VOLHDR)
@@ -92,7 +92,7 @@ parse_volhdr(XFILE * X, unsigned char *tag, tagged_field * field,
     r = ParseTaggedData(X, volhdr_fields, tag, pi, g_refcon, (void *)&hdr);
 
     if (!r && p->cb_volhdr) {
-	if (r = xftell(X, &where))
+      if ((r = xftell(X, &where)))
 	    return r;
 	r = (p->cb_volhdr) (&hdr, X, p->refcon);
 	if (p->flags & DSFLAG_SEEK) {
@@ -302,7 +302,7 @@ parse_weekuse(XFILE * X, unsigned char *tag, tagged_field * field,
     afs_uint32 r;
     unsigned int i;
 
-    if (r = ReadInt16(X, &count))
+    if ((r = ReadInt16(X, &count)))
 	return r;
     if (count != 7) {
 	if (p->cb_error)
@@ -312,7 +312,7 @@ parse_weekuse(XFILE * X, unsigned char *tag, tagged_field * field,
 	return DSERR_FMT;
     }
     for (i = 0; i < count; i++)
-	if (r = ReadInt32(X, hdr->weekuse + i))
+	if ((r = ReadInt32(X, hdr->weekuse + i)))
 	    return r;
     hdr->field_mask |= F_VOLHDR_WEEKUSE;
     if (p->print_flags & DSPRINT_VOLHDR) {

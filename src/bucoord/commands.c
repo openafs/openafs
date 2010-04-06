@@ -307,7 +307,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 			    if ((strcmp(&entries[e].name[l], ".backup") == 0)
 				|| (strcmp(&entries[e].name[l], ".readonly")
 				    == 0)
-				|| (strcmp(&entries[e].name[l], NULL) == 0))
+				|| (strcmp(&entries[e].name[l], "") == 0))
 				add = 0;
 			}
 		    }

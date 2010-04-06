@@ -49,6 +49,7 @@
 #define AFSOP_SET_RXPCK		 38	/* set rx_extraPackets*/
 #define AFSOP_BUCKETPCT          39     /* bucket percentage */
 #define AFSOP_SET_RXMAXMTU       40     /* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */  
+#define AFSOP_BKG_HANDLER        41     /* userspace-capable Bkg daemon */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
@@ -130,6 +131,34 @@
 #endif
 
 /* arguments passed by afsd */
+#define IDTYPE_UID 0
+
+/* We don't necessarily have VenusFid here */
+struct afs_umv_param {
+    afs_int32 id;
+    afs_int32 idtype;
+    afs_int32 sCell;
+    afs_int32 sVolume;
+    afs_int32 sVnode;
+    afs_int32 sUnique;
+    afs_int32 dCell;
+    afs_int32 dVolume;
+    afs_int32 dVnode;
+    afs_int32 dUnique;
+};
+
+#define AFS_USPC_UMV 1
+
+struct afs_uspc_param {
+    afs_int32 retval;
+    afs_int32 ts; /* brequest ts - always unique */
+    afs_int32 bufSz;
+    afs_int32 reqtype;
+    union {
+	struct afs_umv_param umv;
+    } req;
+};
+
 struct afs_cacheParams {
     afs_int32 cacheScaches;
     afs_int32 cacheFiles;

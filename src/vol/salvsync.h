@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2008, Sine Nomine Associates and others.
+ * Copyright 2006-2010, Sine Nomine Associates and others.
  * All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public

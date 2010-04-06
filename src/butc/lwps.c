@@ -21,6 +21,9 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 #include <afs/procmgmt.h>
 #include <rx/xdr.h>

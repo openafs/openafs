@@ -478,6 +478,7 @@ SDISK_SendFile(register struct rx_call *rxcall, afs_int32 file,
     struct rx_peer *tpeer;
     struct rx_connection *tconn;
     afs_uint32 otherHost = 0;
+    char hoststr[16];
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
     int flen, fd = -1;
@@ -518,7 +519,7 @@ SDISK_SendFile(register struct rx_call *rxcall, afs_int32 file,
     urecovery_AbortAll(dbase);
 
     ubik_print("Ubik: Synchronize database with server %s\n",
-	       afs_inet_ntoa(otherHost));
+	       afs_inet_ntoa_r(otherHost, hoststr));
 
     offset = 0;
 #ifdef OLD_URECOVERY
@@ -627,7 +628,7 @@ SDISK_SendFile(register struct rx_call *rxcall, afs_int32 file,
 #endif
 	ubik_print
 	    ("Ubik: Synchronize database with server %s failed (error = %d)\n",
-	     afs_inet_ntoa(otherHost), code);
+	     afs_inet_ntoa_r(otherHost, hoststr), code);
     } else {
 	ubik_print("Ubik: Synchronize database completed\n");
     }
@@ -655,6 +656,7 @@ SDISK_UpdateInterfaceAddr(register struct rx_call *rxcall,
     struct ubik_server *ts, *tmp;
     afs_uint32 remoteAddr;	/* in net byte order */
     int i, j, found = 0, probableMatch = 0;
+    char hoststr[16];
 
     /* copy the output parameters */
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR; i++)
@@ -692,7 +694,7 @@ SDISK_UpdateInterfaceAddr(register struct rx_call *rxcall,
     if (!probableMatch || found) {
 	ubik_print("Inconsistent Cell Info from server: ");
 	for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && inAddr->hostAddr[i]; i++)
-	    ubik_print("%s ", afs_inet_ntoa(htonl(inAddr->hostAddr[i])));
+	    ubik_print("%s ", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr));
 	ubik_print("\n");
 	fflush(stdout);
 	fflush(stderr);
@@ -706,7 +708,7 @@ SDISK_UpdateInterfaceAddr(register struct rx_call *rxcall,
 
     ubik_print("ubik: A Remote Server has addresses: ");
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && ts->addr[i]; i++)
-	ubik_print("%s ", afs_inet_ntoa(ts->addr[i]));
+	ubik_print("%s ", afs_inet_ntoa_r(ts->addr[i], hoststr));
     ubik_print("\n");
 
     return 0;
@@ -717,12 +719,13 @@ printServerInfo(void)
 {
     struct ubik_server *ts;
     int i, j = 1;
+    char hoststr[16];
 
     ubik_print("Local CellServDB:");
     for (ts = ubik_servers; ts; ts = ts->next, j++) {
 	ubik_print("Server %d: ", j);
 	for (i = 0; (i < UBIK_MAX_INTERFACE_ADDR) && ts->addr[i]; i++)
-	    ubik_print("%s ", afs_inet_ntoa(ts->addr[i]));
+	    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[i], hoststr));
     }
     ubik_print("\n");
 }

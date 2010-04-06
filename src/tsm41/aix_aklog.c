@@ -156,9 +156,18 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
     status = auth_to_cell(context, userName, NULL, NULL);
     
     if (status) {
+	char *str = afs_error_message(status);
 	*message = (char *)malloc(1024);
-	sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
-		afs_error_message(status));
+#ifdef HAVE_KRB5_SVC_GET_MSG
+	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
+	    krb5_svc_get_msg(status,&str);
+	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
+                    str);
+	    krb5_free_string(str);
+	} else
+#endif
+	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
+		    str);
 	return AUTH_FAILURE; /* NOTFOUND? */
     }
     

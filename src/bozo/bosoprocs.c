@@ -31,6 +31,9 @@
 #include <des.h>
 #include <dirent.h>
 #include <stdio.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/ktime.h>

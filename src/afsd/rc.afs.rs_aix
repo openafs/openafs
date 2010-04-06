@@ -97,6 +97,19 @@ for dir in `awk -F: '{print $1, $2}' /usr/vice/etc/cacheinfo`; do
   fi
 done
 
+#
+# Make sure afs exists in /etc/name_to_sysnum
+#
+if grep -s "afs" /etc/vfs > /dev/null; then
+    echo "Entry for afs already exists in /etc/vfs"
+else
+    echo "Creating entry for afs in /etc/vfs"
+    cp /etc/vfs /etc/vfs.orig
+    sed '/cdrfs/i\
+afs	4	none	none	remote' /etc/vfs > /tmp/vfs
+    mv /tmp/vfs /etc/vfs
+fi
+
 
 # Start afsd
 /usr/vice/etc/afsd $OPTIONS $RMTSYS

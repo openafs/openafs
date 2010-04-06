@@ -85,9 +85,9 @@ struct osi_dev {
 };
 
 struct afs_osi_WaitHandle {
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
     struct cv wh_condvar;
-    int wh_inited;		/* XXX */
+    int wh_inited;
 #else
     caddr_t proc;		/* process waiting */
 #endif
@@ -185,7 +185,7 @@ typedef struct timeval osi_timeval_t;
  */
 #ifdef AFS_FBSD50_ENV
 /* should use curthread, but 'ps' can't display it */
-#define osi_ThreadUnique()	curproc
+#define osi_ThreadUnique()	(curproc->p_pid)
 #elif defined(AFS_LINUX_ENV)
 #define osi_ThreadUnique()	(current->pid)
 #elif defined(UKERNEL)
@@ -197,13 +197,8 @@ typedef struct timeval osi_timeval_t;
 
 
 #ifdef AFS_GLOBAL_SUNLOCK
-# if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
-#define AFS_ASSERT_GLOCK() \
-    do { if (!ISAFS_GLOCK()) osi_Panic("afs global lock not held at %s:%d%s\n", __FILE__, (void *)__LINE__, ""); } while (0)
-# else
 #define AFS_ASSERT_GLOCK() \
     do { if (!ISAFS_GLOCK()) osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__); } while (0)
-# endif /* defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) */
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef RX_ENABLE_LOCKS
@@ -256,10 +251,16 @@ typedef struct timeval osi_timeval_t;
 /* Bare refcount manipulation would probably work on this platform, but just
    calling VREF does not */
 #define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
+#elif defined(AFS_AIX_ENV)
+#define AFS_FAST_HOLD(vp) VREFCOUNT_INC(vp)
 #else
 #define AFS_FAST_HOLD(vp) VN_HOLD(AFSTOV(vp))
 #endif
+#ifdef AFS_AIX_ENV
+#define AFS_FAST_RELE(vp) VREFCOUNT_DEC(vp)
+#else
 #define AFS_FAST_RELE(vp) AFS_RELE(AFSTOV(vp))
+#endif
 
 /*
  * MP safe versions of routines to copy memory between user space

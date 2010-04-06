@@ -30,19 +30,9 @@ static int
   afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset);
 
 static int
-  afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
+  afs_setgroups(struct thread *td, struct ucred **cred, int ngroups,
 		gid_t * gidset, int change_parent);
 
-#ifdef AFS_FBSD50_ENV
-/*
- * This does nothing useful yet.
- * In 5.0, creds are associated not with a process, but with a thread.
- * Probably the right thing to do is replace struct proc with struct thread
- * everywhere, including setpag.
- * That will be a tedious undertaking.
- * For now, I'm just passing curproc to AddPag.
- * This is probably wrong and I don't know what the consequences might be.
- */
 
 int
 Afs_xsetgroups(struct thread *td, struct setgroups_args *uap)
@@ -72,68 +62,40 @@ Afs_xsetgroups(struct thread *td, struct setgroups_args *uap)
 	if (((treq.uid >> 24) & 0xff) == 'A') {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
-	    AddPag(curproc, treq.uid, &cr);
+	    AddPag(td, treq.uid, &cr);
 	    AFS_GUNLOCK();
 	}
     }
     crfree(cr);
     return code;
 }
-#else /* FBSD50 */
-int
-Afs_xsetgroups(p, args, retval)
-     struct proc *p;
-     void *args;
-     int *retval;
-{
-    int code = 0;
-    struct vrequest treq;
-    struct ucred *cr;
-
-    cr = crdup(p->p_cred->pc_ucred);
-
-    AFS_STATCNT(afs_xsetgroups);
-    AFS_GLOCK();
-
-    code = afs_InitReq(&treq, cr);
-    AFS_GUNLOCK();
-    crfree(cr);
-    if (code)
-	return setgroups(p, args, retval);	/* afs has shut down */
-
-    code = setgroups(p, args, retval);
-    /* Note that if there is a pag already in the new groups we don't
-     * overwrite it with the old pag.
-     */
-    cr = crdup(p->p_cred->pc_ucred);
-
-    if (PagInCred(cr) == NOPAG) {
-	if (((treq.uid >> 24) & 0xff) == 'A') {
-	    AFS_GLOCK();
-	    /* we've already done a setpag, so now we redo it */
-	    AddPag(p, treq.uid, &cr);
-	    AFS_GUNLOCK();
-	}
-    }
-    crfree(cr);
-    return code;
-}
-#endif
 
 
 int
-setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
        afs_uint32 * newpag, int change_parent)
 {
+#if defined(AFS_FBSD81_ENV)
+    gid_t *gidset;
+    int gidset_len = ngroups_max + 1;
+#elif defined(AFS_FBSD80_ENV)
+    gid_t *gidset;
+    int gidset_len = NGROUPS;	/* 1024 */
+#else
     gid_t gidset[NGROUPS];
+    int gidset_len = NGROUPS;	/* 16 */
+#endif
     int ngroups, code;
     int j;
 
     AFS_STATCNT(setpag);
-    ngroups = afs_getgroups(*cred, NGROUPS, gidset);
+#ifdef AFS_FBSD80_ENV
+    gidset = osi_Alloc(gidset_len * sizeof(gid_t));
+#endif
+    ngroups = afs_getgroups(*cred, gidset_len, gidset);
     if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
-	if (ngroups + 2 > NGROUPS) {
+	if (ngroups + 2 > gidset_len) {
 	    return (E2BIG);
 	}
 	for (j = ngroups - 1; j >= 1; j--) {
@@ -143,7 +105,10 @@ setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
     }
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
-    code = afs_setgroups(proc, cred, ngroups, gidset, change_parent);
+    code = afs_setgroups(td, cred, ngroups, gidset, change_parent);
+#ifdef AFS_FBSD80_ENV
+    osi_Free(gidset, gidset_len * sizeof(gid_t));
+#endif
     return code;
 }
 
@@ -164,37 +129,8 @@ afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
 
 
 static int
-afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
+afs_setgroups(struct thread *td, struct ucred **cred, int ngroups,
 	      gid_t * gidset, int change_parent)
 {
-#ifndef AFS_FBSD50_ENV
-    int ngrps;
-    int i;
-    gid_t *gp;
-    struct ucred *oldcr, *cr;
-
-    AFS_STATCNT(afs_setgroups);
-    /*
-     * The real setgroups() call does this, so maybe we should too.
-     *
-     */
-    if (ngroups > NGROUPS)
-	return EINVAL;
-    cr = *cred;
-    cr->cr_ngroups = ngroups;
-    gp = cr->cr_groups;
-    while (ngroups--)
-	*gp++ = *gidset++;
-    if (change_parent) {
-	crhold(cr);
-	oldcr = proc->p_pptr->p_cred->pc_ucred;
-	proc->p_pptr->p_cred->pc_ucred = cr;
-	crfree(oldcr);
-    }
-    crhold(cr);
-    oldcr = proc->p_cred->pc_ucred;
-    proc->p_cred->pc_ucred = cr;
-    crfree(oldcr);
-#endif
     return (0);
 }

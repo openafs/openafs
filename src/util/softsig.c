@@ -12,7 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#define _POSIX_PTHREAD_SEMANTICS
 #include <afs/param.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -37,9 +36,9 @@ static pthread_t softsig_tid;
 static struct {
     void (*handler) (int);
     int pending;
-#if !(defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV)))
+#if !(defined(AFS_DARWIN_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV)))
     int fatal;
-#endif /* !defined(AFS_DARWIN60_ENV) || !defined(AFS_NBSD_ENV) */
+#endif /* !defined(AFS_DARWIN_ENV) || !defined(AFS_NBSD_ENV) */
     int inited;
 } softsig_sigs[NSIG];
 
@@ -54,7 +53,7 @@ softsig_thread(void *arg)
     pthread_sigmask(SIG_BLOCK, &ss, &os);
     pthread_sigmask(SIG_SETMASK, &os, NULL);
     sigaddset(&ss, SIGUSR1);
-#if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
+#if defined(AFS_DARWIN_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
     pthread_sigmask (SIG_BLOCK, &ss, NULL);
     sigdelset (&os, SIGUSR1);
 #elif !defined(AFS_HPUX_ENV)
@@ -69,11 +68,11 @@ softsig_thread(void *arg)
 	    softsig_sigs[i].fatal = 1;
 	}
     }
-#endif /* defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV) */
+#endif /* defined(AFS_DARWIN_ENV) || defined(AFS_NBSD_ENV) */
 
     while (1) {
 	void (*h) (int);
-#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_NBSD_ENV)
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_NBSD_ENV)
 	int sigw;
 #endif
 
@@ -82,10 +81,10 @@ softsig_thread(void *arg)
 	for (i = 0; i < NSIG; i++) {
 	    if (softsig_sigs[i].handler && !softsig_sigs[i].inited) {
 		sigaddset(&ss, i);
-#if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
+#if defined(AFS_DARWIN_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
 		pthread_sigmask (SIG_BLOCK, &ss, NULL);
 		sigdelset (&os, i);
-#endif /* defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV) */
+#endif /* defined(AFS_DARWIN_ENV) || defined(AFS_NBSD_ENV) */
 		softsig_sigs[i].inited = 1;
 	    }
 	    if (softsig_sigs[i].pending) {
@@ -95,16 +94,16 @@ softsig_thread(void *arg)
 	    }
 	}
 	if (i == NSIG) {
-#if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
+#if defined(AFS_DARWIN_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
 	    sigsuspend (&os);
-#else /* !defined(AFS_DARWIN60_ENV) && !defined(AFS_NBSD_ENV) */
+#else /* !defined(AFS_DARWIN_ENV) && !defined(AFS_NBSD_ENV) */
 	    sigwait(&ss, &sigw);
 	    if (sigw != SIGUSR1) {
 		if (softsig_sigs[sigw].fatal)
 		    exit(0);
 		softsig_sigs[sigw].pending = 1;
 	    }
-#endif /* defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV) */
+#endif /* defined(AFS_DARWIN_ENV) || defined(AFS_NBSD_ENV) */
 	} else if (h)
 	    h(i);
     }

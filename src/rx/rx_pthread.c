@@ -23,6 +23,9 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #ifndef AFS_NT40_ENV
 # include <sys/socket.h>
 # include <sys/file.h>

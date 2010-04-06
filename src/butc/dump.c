@@ -22,6 +22,9 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -97,7 +100,7 @@ afs_int32 tapeblocks;		/* Number of 16K tape datablocks in buffer (!CONF_XBSA) *
    else \
      sprintf(dumpname, "%s (DumpId %u)", name, dbDumpId);
 
-#if defined(AFS_NT40_ENV) || (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN60_ENV)) || defined(AFS_SUN4_ENV)
+#if defined(AFS_NT40_ENV) || defined(AFS_SUN4_ENV)
 int
 localtime_r(time_t * t, struct tm *tm)
 {

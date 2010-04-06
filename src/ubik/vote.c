@@ -198,6 +198,7 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
     struct rx_peer *rxp;
     struct ubik_server *ts;
     int isClone = 0;
+    char hoststr[16];
 
     now = FT_ApproxTime();	/* close to current time */
     if (rxcall) {		/* caller's host */
@@ -210,7 +211,7 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
 	otherHost = ubikGetPrimaryInterfaceAddr(otherHost);
 	if (!otherHost) {
 	    ubik_dprint("Received beacon from unknown host %s\n",
-			afs_inet_ntoa(rx_HostOf(rxp)));
+			afs_inet_ntoa_r(rx_HostOf(rxp), hoststr));
 	    return 0;		/* I don't know about you: vote no */
 	}
 	for (ts = ubik_servers; ts; ts = ts->next) {
@@ -227,7 +228,7 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
     }
 
     ubik_dprint("Received beacon type %d from host %s\n", astate,
-		afs_inet_ntoa(otherHost));
+		afs_inet_ntoa_r(otherHost, hoststr));
 
     /* compute the lowest server we've heard from.  We'll try to only vote for
      * this dude if we don't already have a synchronization site.  Also, don't
@@ -276,9 +277,8 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
     } else if (syncTime + BIGTIME < now) {
 	if (syncHost) {
 	    ubik_dprint
-		("Ubik: Lost contact with sync-site %d.%d.%d.%d (NOT in quorum)\n",
-		 ((syncHost >> 24) & 0xff), ((syncHost >> 16) & 0xff),
-		 ((syncHost >> 8) & 0xff), (syncHost & 0xff));
+		("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
+		 afs_inet_ntoa_r(syncHost, hoststr));
 	}
 	syncHost = 0;
     }
@@ -328,7 +328,7 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
 	    || (lastYesState != astate)) {
 	    /* A new vote or a change in the vote or changed quorum */
 	    ubik_dprint("Ubik: vote 'yes' for %s %s\n",
-			afs_inet_ntoa(otherHost),
+			afs_inet_ntoa_r(otherHost, hoststr),
 			(astate ? "(in quorum)" : "(NOT in quorum)"));
 	}
 

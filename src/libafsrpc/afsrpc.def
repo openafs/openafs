@@ -258,6 +258,7 @@ EXPORTS
         xdr_serverList                          @263
         xdr_Capabilities                        @264
         xdrlen_create                           @265
+        rx_SetConnSecondsUntilNatPing           @266
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

@@ -1027,6 +1027,18 @@ afsconf_LookupServer(const char *service, const char *protocol,
     if (!dotcellname)
 	return AFSCONF_NOTFOUND;	/* service not found */
 
+#ifdef HAVE_RES_RETRANSRETRY
+    if ((_res.options & RES_INIT) == 0 && res_init() == -1)
+      return (0);
+
+    /*
+     * Rx timeout is typically 56 seconds; limit user experience to
+     * similar timeout
+     */
+    _res.retrans = 18;
+    _res.retry = 3;
+#endif
+
  retryafsdb:
     switch (pass) {
     case 0:
@@ -1108,7 +1120,8 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		 * right AFSDB type.  Write down the true cell name that
 		 * the resolver gave us above.
 		 */
-		realCellName = strdup(host);
+		if (!realCellName)
+		    realCellName = strdup(host);
 	    }
 
 	    code = dn_expand(answer, answer + len, p + 2, host, sizeof(host));
@@ -1135,6 +1148,14 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	}
 	if (type == T_SRV) {
 	    struct hostent *he;
+	    /* math here: _ is 1, _ ._ is 3, _ ._ . is 4. then the domain. */
+	    if ((strncmp(host + 1, IANAname, strlen(IANAname)) == 0) &&
+		(strncmp(host + strlen(IANAname) + 3, protocol,
+			 strlen(protocol)) == 0)) {
+		if (!realCellName)
+		    realCellName = strdup(host + strlen(IANAname) +
+					  strlen(protocol) + 4);
+	    }
 
 	    code = dn_expand(answer, answer + len, p + 6, host, sizeof(host));
 	    if (code < 0) {
@@ -1174,17 +1195,18 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	    *p = tolower(*p);
     }
 
-    *arealCellName = realCellName;
-
     *numServers = server_num;
     *ttl = minttl ? (time(0) + minttl) : 0;
 
-    if ( *numServers > 0 )
+    if ( *numServers > 0 ) {
         code =  0;
-    else
+	*arealCellName = realCellName;
+    } else
         code = AFSCONF_NOTFOUND;
 
 findservererror:
+    if (code && realCellName)
+	free(realCellName);
     free(dotcellname);
     return code;
 }
@@ -1225,9 +1247,12 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	    acellInfo->hostAddr[i].sin_family = AF_INET;
 	    acellInfo->hostAddr[i].sin_port = ports[i];
 
-	    if (realCellName)
+	    if (realCellName) {
 		strlcpy(acellInfo->name, realCellName,
 			sizeof(acellInfo->name));
+		free(realCellName);
+		realCellName = NULL;
+	    }
 	}
 	acellInfo->linkedCell = NULL;       /* no linked cell */
 	acellInfo->flags = 0;

@@ -168,7 +168,9 @@ struct ubik_dbase {
     char *pathName;		/*!< root name for dbase */
     struct ubik_trans *activeTrans;	/*!< active transaction list */
     struct ubik_version version;	/*!< version number */
-#if defined(UKERNEL)
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t versionLock;	/*!< lock on version number */
+#elif defined(UKERNEL)
     struct afs_lock versionLock;	/*!< lock on version number */
 #else				/* defined(UKERNEL) */
     struct Lock versionLock;	/*!< lock on version number */
@@ -195,8 +197,6 @@ struct ubik_dbase {
 #ifdef AFS_PTHREAD_ENV
     pthread_cond_t version_cond;    /*!< condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /*!< condition variable to manage changes to flags */
-    pthread_mutex_t version_mutex;
-    pthread_mutex_t flags_mutex;
 #endif
 };
 
@@ -291,8 +291,13 @@ struct ubik_server {
 };
 
 /*! \name hold and release functions on a database */
-#define	DBHOLD(a)	ObtainWriteLock(&((a)->versionLock))
-#define	DBRELE(a)	ReleaseWriteLock(&((a)->versionLock))
+#ifdef AFS_PTHREAD_ENV
+# define	DBHOLD(a)	assert(pthread_mutex_lock(&((a)->versionLock)) == 0)
+# define	DBRELE(a)	assert(pthread_mutex_unlock(&((a)->versionLock)) == 0)
+#else /* !AFS_PTHREAD_ENV */
+# define	DBHOLD(a)	ObtainWriteLock(&((a)->versionLock))
+# define	DBRELE(a)	ReleaseWriteLock(&((a)->versionLock))
+#endif /* !AFS_PTHREAD_ENV */
 /*\}*/
 
 /* globals */

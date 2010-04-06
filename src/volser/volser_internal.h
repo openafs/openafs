@@ -52,7 +52,6 @@ extern int UV_CreateVolume3(afs_int32 aserver, afs_int32 apart, char *aname,
 			    afs_uint32 * aroid, afs_uint32 * abkid);
 extern int UV_AddVLDBEntry(afs_int32 aserver, afs_int32 apart, char *aname,
 			   afs_uint32 aid);
-extern void sigint_handler(int x);
 extern int UV_MoveVolume(afs_uint32 afromvol, afs_int32 afromserver,
 			 afs_int32 afrompart, afs_int32 atoserver,
 			 afs_int32 atopart);

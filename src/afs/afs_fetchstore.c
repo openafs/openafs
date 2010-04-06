@@ -27,11 +27,10 @@
 
 extern int cacheDiskType;
 
-
 #ifndef AFS_NOSTATS
 void
 FillStoreStats(int code, int idx, osi_timeval_t *xferStartTime,
-		  afs_size_t bytesToXfer, afs_size_t bytesXferred)
+	       afs_size_t bytesToXfer, afs_size_t bytesXferred)
 {
     struct afs_stats_xferData *xferP;
     osi_timeval_t xferStopTime;
@@ -349,7 +348,8 @@ struct storeOps rxfs_storeMemOps = {
     rxfs_storeStatus,
     rxfs_storePadd,
     rxfs_storeClose,
-    rxfs_storeDestroy
+    rxfs_storeDestroy,
+    afs_GenericStoreProc
 #else
     .prepare =	rxfs_storeMemPrepare,
     .read = 	rxfs_storeMemRead,
@@ -357,7 +357,12 @@ struct storeOps rxfs_storeMemOps = {
     .status =	rxfs_storeStatus,
     .padd =	rxfs_storePadd,
     .close = 	rxfs_storeClose,
-    .destroy =	rxfs_storeDestroy
+    .destroy =	rxfs_storeDestroy,
+#ifdef AFS_LINUX26_ENV
+    .storeproc = afs_linux_storeproc
+#else
+    .storeproc = afs_GenericStoreProc
+#endif
 #endif
 };
 
@@ -457,13 +462,9 @@ unsigned int storeallmissing = 0;
  */
 afs_int32
 afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
-			afs_size_t bytes,
-			afs_hyper_t *anewDV,
-			int *doProcessFS,
-			struct AFSFetchStatus *OutStatus,
-			afs_uint32 nchunks,
-			int nomore,
-			struct storeOps *ops, void *rock)
+		      afs_size_t bytes, afs_hyper_t *anewDV, int *doProcessFS,
+		      struct AFSFetchStatus *OutStatus, afs_uint32 nchunks,
+		      int nomore, struct storeOps *ops, void *rock)
 {
     int *shouldwake = NULL;
     unsigned int i;
@@ -572,10 +573,9 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
  */
 int
 afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
-			struct vrequest *areq, int sync,
-			unsigned int minj, unsigned int high,
-			unsigned int moredata,
-			afs_hyper_t *anewDV, afs_size_t *amaxStoredLength)
+		     struct vrequest *areq, int sync, unsigned int minj,
+		     unsigned int high, unsigned int moredata,
+		     afs_hyper_t *anewDV, afs_size_t *amaxStoredLength)
 {
     afs_int32 code = 0;
     struct storeOps *ops;
@@ -769,9 +769,8 @@ rxfs_fetchMemRead(void *r, afs_uint32 tlen, afs_uint32 *bytesread)
 
 
 afs_int32
-rxfs_fetchMemWrite(void *r, struct osi_file *fP,
-			afs_uint32 offset, afs_uint32 tlen,
-			afs_uint32 *byteswritten)
+rxfs_fetchMemWrite(void *r, struct osi_file *fP, afs_uint32 offset,
+		   afs_uint32 tlen, afs_uint32 *byteswritten)
 {
     afs_int32 code;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
@@ -786,9 +785,8 @@ rxfs_fetchMemWrite(void *r, struct osi_file *fP,
 }
 
 afs_int32
-rxfs_fetchUfsWrite(void *r, struct osi_file *fP,
-			afs_uint32 offset, afs_uint32 tlen,
-			afs_uint32 *byteswritten)
+rxfs_fetchUfsWrite(void *r, struct osi_file *fP, afs_uint32 offset,
+		   afs_uint32 tlen, afs_uint32 *byteswritten)
 {
     afs_int32 code;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
@@ -804,7 +802,7 @@ rxfs_fetchUfsWrite(void *r, struct osi_file *fP,
 
 afs_int32
 rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
-					struct afs_FetchOutput *o)
+		struct afs_FetchOutput *o)
 {
     afs_int32 code, code1 = 0;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
@@ -904,8 +902,8 @@ struct fetchOps rxfs_fetchMemOps = {
 
 afs_int32
 rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
-		afs_uint32 size, afs_int32 *alength, struct dcache *adc,
-		struct osi_file *fP, struct fetchOps **ops, void **rock)
+	       afs_uint32 size, afs_int32 *alength, struct dcache *adc,
+	       struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
     int code = 0, code1 = 0;
@@ -914,7 +912,8 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 #endif
     afs_uint32 length, bytes;
 
-    v = (struct rxfs_fetchVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_fetchVariables));
+    v = (struct rxfs_fetchVariables *)
+	    osi_AllocSmallSpace(sizeof(struct rxfs_fetchVariables));
     if (!v)
         osi_Panic("rxfs_fetchInit: osi_AllocSmallSpace returned NULL\n");
     memset(v, 0, sizeof(struct rxfs_fetchVariables));
@@ -928,8 +927,9 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 	if (!afs_serverHasNo64Bit(tc)) {
 	    afs_uint64 llbytes = size;
 	    RX_AFS_GUNLOCK();
-	    code = StartRXAFS_FetchData64(v->call, (struct AFSFid *) &avc->f.fid.Fid,
-					       base, llbytes);
+	    code = StartRXAFS_FetchData64(v->call,
+					  (struct AFSFid *) &avc->f.fid.Fid,
+					  base, llbytes);
 	    if (code != 0) {
 		RX_AFS_GLOCK();
 		afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
@@ -1072,8 +1072,8 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
  */
 int
 afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
-		    struct dcache *adc, struct vcache *avc, afs_int32 size,
-		    struct afs_FetchOutput *tsmall)
+		   struct dcache *adc, struct vcache *avc, afs_int32 size,
+		   struct afs_FetchOutput *tsmall)
 {
     afs_int32 code;
     afs_int32 length;

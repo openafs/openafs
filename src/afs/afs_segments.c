@@ -94,8 +94,10 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 		l2 = tlen;
 		if ((avc->f.m.Length > 0x7fffffff) ||
 		    (tlen > 0x7fffffff) ||
-		    ((0x7fffffff - tlen) < avc->f.m.Length))
+		    ((0x7fffffff - tlen) < avc->f.m.Length)) {
+		    RX_AFS_GLOCK();
 		    return EFBIG;
+		}
 		code =
 		    StartRXAFS_StoreData(tcall,
 					 (struct AFSFid *)&avc->f.fid.Fid,
@@ -167,7 +169,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     unsigned int i, j, minj, moredata, high, off;
     afs_size_t tlen;
     afs_size_t maxStoredLength;	/* highest offset we've written to server. */
-    int safety;
+    int safety, marineronce = 0;
 
     AFS_STATCNT(afs_StoreAllSegments);
 
@@ -255,6 +257,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 		    if (off < NCHUNKSATONCE) {
 			if (dcList[off])
 			    osi_Panic("dclist slot already in use!");
+			if (afs_mariner && !marineronce) {
+			    /* first chunk only */
+			    afs_MarinerLog("store$Storing", avc);
+			    marineronce++;
+			}
 			dcList[off] = tdc;
 			if (off > high)
 			    high = off;
@@ -574,7 +581,8 @@ afs_InvalidateAllSegments(struct vcache *avc)
  * \note avc must be write locked. May release and reobtain avc and GLOCK
  */
 int
-afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
+afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
+{
     afs_size_t offset, toAdd;
     struct osi_file *tfile;
     afs_int32 code = 0;

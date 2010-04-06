@@ -11,6 +11,12 @@
 #define _AFS_VOL_VOLUME_INLINE_H 1
 
 #include "volume.h"
+#include "partition.h"
+
+#ifdef AFS_DEMAND_ATTACH_FS
+# include "lock.h"
+#endif
+
 /**
  * tell caller whether the given program type represents a salvaging
  * program.
@@ -41,10 +47,15 @@ VIsSalvager(ProgramType type)
  * @return whether or not we need to lock the partition
  *  @retval 0  no, we do not
  *  @retval 1  yes, we do
+ *
+ * @note for DAFS, always returns 0, since we use per-header locks instead
  */
 static_inline int
 VRequiresPartLock(void)
 {
+#ifdef AFS_DEMAND_ATTACH_FS
+    return 0;
+#else
     switch (programType) {
     case volumeServer:
     case volumeUtility:
@@ -52,6 +63,26 @@ VRequiresPartLock(void)
     default:
         return 0;
     }
+#endif /* AFS_DEMAND_ATTACH_FS */
+}
+
+/**
+ * tells caller whether or not we need to check out a volume from the
+ * fileserver before we can use it.
+ *
+ * @param[in] mode the mode of attachment for the volume
+ *
+ * @return whether or not we need to check out the volume from the fileserver
+ *  @retval 0 no, we can just use the volume
+ *  @retval 1 yes, we must check out the volume before use
+ */
+static_inline int
+VMustCheckoutVolume(int mode)
+{
+    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
+	return 1;
+    }
+    return 0;
 }
 
 /**
@@ -77,21 +108,134 @@ VShouldCheckInUse(int mode)
     if (programType == fileServer) {
        return 1;
     }
-    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
-       /* If we can FSSYNC, we assume we checked out the volume from
-        * the fileserver, so inUse should not be set. If we checked out
-        * with V_SECRETLY or V_PEEK, though, we didn't ask the
-        * fileserver, so don't check inUse. */
-       return 1;
+    if (VMustCheckoutVolume(mode)) {
+	/* assume we checked out the volume from the fileserver, so inUse
+	 * should not be set */
+	return 1;
     }
     return 0;
+}
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * acquire a non-blocking disk lock for a particular volume id.
+ *
+ * @param[in] volid the volume ID to lock
+ * @param[in] dp    the partition on which 'volid' resides
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ *
+ * @return operation status
+ *  @retval 0 success, lock was obtained
+ *  @retval EBUSY another process holds a conflicting lock
+ *  @retval EIO   error acquiring lock
+ *
+ * @note Use VLockVolumeNB instead, if possible; only use this directly if
+ * you are not dealing with 'Volume*'s and attached volumes and such
+ *
+ * @pre There must not be any other threads acquiring locks on the same volid
+ * and partition; the locks will not work correctly if two threads try to
+ * acquire locks for the same volume
+ */
+static_inline int
+VLockVolumeByIdNB(VolumeId volid, struct DiskPartition64 *dp, int locktype)
+{
+    return VLockFileLock(&dp->volLockFile, volid, locktype, 1 /* nonblock */);
+}
+
+/**
+ * release a lock acquired by VLockVolumeByIdNB.
+ *
+ * @param[in] volid the volume id to unlock
+ * @param[in] dp    the partition on which 'volid' resides
+ *
+ * @pre volid was previously locked by VLockVolumeByIdNB
+ */
+static_inline void
+VUnlockVolumeById(VolumeId volid, struct DiskPartition64 *dp)
+{
+    VLockFileUnlock(&dp->volLockFile, volid);
 }
 
 /***************************************************/
 /* demand attach fs state machine routines         */
 /***************************************************/
 
-#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * tells caller whether we need to keep volumes locked for the entire time we
+ * are using them, or if we can unlock volumes as soon as they are attached.
+ *
+ * @return whether we can unlock attached volumes or not
+ *  @retval 1 yes, we can unlock attached volumes
+ *  @retval 0 no, do not unlock volumes until we unattach them
+ */
+static_inline int
+VCanUnlockAttached(void)
+{
+    switch(programType) {
+    case fileServer:
+	return 1;
+    default:
+	return 0;
+    }
+}
+
+/**
+ * tells caller whether we need to lock a vol header with a write lock, a
+ * read lock, or if we do not need to lock it at all, when attaching.
+ *
+ * @param[in]  mode  volume attachment mode
+ * @param[in]  writeable  1 if the volume is writable, 0 if not
+ *
+ * @return how we need to lock the vol header
+ *  @retval 0 do not lock the vol header at all
+ *  @retval READ_LOCK lock the vol header with a read lock
+ *  @retval WRITE_LOCK lock the vol header with a write lock
+ *
+ * @note DAFS only (non-DAFS uses partition locks)
+ */
+static_inline int
+VVolLockType(int mode, int writeable)
+{
+    switch (programType) {
+    case fileServer:
+	if (writeable) {
+	    return WRITE_LOCK;
+	}
+	return READ_LOCK;
+
+    case volumeSalvager:
+    case salvageServer:
+    case salvager:
+	return WRITE_LOCK;
+
+    default:
+	/* volserver, vol utilies, etc */
+
+	switch (mode) {
+	case V_READONLY:
+	    return READ_LOCK;
+
+	case V_VOLUPD:
+	case V_SECRETLY:
+	    return WRITE_LOCK;
+
+	case V_CLONE:
+	case V_DUMP:
+	    if (writeable) {
+		return WRITE_LOCK;
+	    }
+	    return READ_LOCK;
+
+	case V_PEEK:
+	    return 0;
+
+	default:
+	    assert(0 /* unknown checkout mode */);
+	    return 0;
+	}
+    }
+}
+
 /**
  * tells caller whether or not the current state requires
  * exclusive access without holding glock.
@@ -292,5 +436,36 @@ VChangeState_r(Volume * vp, VolState new_state)
 }
 
 #endif /* AFS_DEMAND_ATTACH_FS */
+
+#define VENUMCASE(en) \
+    case en: \
+        return #en; \
+        break
+
+/**
+ * translate a ProgramType code to a string.
+ *
+ * @param[in] type ProgramType numeric code
+ *
+ * @return a human-readable string for that program type
+ *  @retval "**UNKNOWN**" an unknown ProgramType was given
+ */
+static_inline char *
+VPTypeToString(ProgramType type)
+{
+    switch (type) {
+	VENUMCASE(fileServer);
+	VENUMCASE(volumeUtility);
+	VENUMCASE(salvager);
+	VENUMCASE(salvageServer);
+	VENUMCASE(debugUtility);
+	VENUMCASE(volumeServer);
+	VENUMCASE(volumeSalvager);
+    default:
+	return "**UNKNOWN**";
+    }
+}
+
+#undef VENUMCASE
 
 #endif /* _AFS_VOL_VOLUME_INLINE_H */

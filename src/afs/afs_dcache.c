@@ -1492,10 +1492,9 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
  *
  * \return The new dcache.
  */
-struct dcache *afs_AllocDCache(struct vcache *avc,
-				afs_int32 chunk,
-				afs_int32 lock,
-				struct VenusFid *ashFid)
+struct dcache *
+afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
+		struct VenusFid *ashFid)
 {
     struct dcache *tdc = NULL;
     afs_uint32 size = 0;
@@ -3054,12 +3053,12 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 	/* ablocks is reported in 1K blocks */
 	code = afs_InitMemCache(afiles, AFS_FIRSTCSIZE, aflags);
 	if (code != 0) {
-	    printf("afsd: memory cache too large for available memory.\n");
-	    printf("afsd: AFS files cannot be accessed.\n\n");
+	    afs_warn("afsd: memory cache too large for available memory.\n");
+	    afs_warn("afsd: AFS files cannot be accessed.\n\n");
 	    dcacheDisabled = 1;
 	    afiles = ablocks = 0;
 	} else
-	    printf("Memory cache: Allocating %d dcache entries...",
+	    afs_warn("Memory cache: Allocating %d dcache entries...",
 		   aDentries);
     } else {
 	cacheDiskType = AFS_FCACHE_TYPE_UFS;
@@ -3227,7 +3226,8 @@ shutdown_dcache(void)
 struct dcache *
 afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos, 
 			   afs_size_t len, struct vrequest *areq,
-			   int noLock) {
+			   int noLock)
+{
     struct dcache *tdc = NULL;
     afs_size_t offset;
 
@@ -3356,7 +3356,7 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
     /* Alloc a 4k block. */
     data = (char *) afs_osi_Alloc(4096);
     if (!data) {
-	printf("afs_MakeShadowDir: could not alloc data\n");
+	afs_warn("afs_MakeShadowDir: could not alloc data\n");
 	ret_code = ENOMEM;
 	goto done;
     }

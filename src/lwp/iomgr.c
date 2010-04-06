@@ -236,11 +236,12 @@ static struct IoRequest *NewRequest(void)
 #define FD_N_ZERO(nfds, x) memset((char*)(x), 0, (INTS_PER_FDS(nfds))*sizeof(int))
 #endif
 
-#if defined(AFS_LINUX22_ENV) && (__GLIBC_MINOR__ > 0)
-/* Build for both glibc 2.0.x and 2.1.x */
-#define FDS_BITS __fds_bits
+/* On Linux without __USE_XOPEN, we have __fds_bits. With __USE_XOPEN, or
+ * non-Linux, we have fds_bits. */
+#if defined(AFS_LINUX22_ENV) && (__GLIBC_MINOR__ > 0) && !defined(__USE_XOPEN)
+# define FDS_BITS __fds_bits
 #else
-#define FDS_BITS fds_bits
+# define FDS_BITS fds_bits
 #endif
 
 /* FDSetCmp - returns 1 if any bits in fd_set1 are also set in fd_set2.
@@ -746,8 +747,6 @@ int IOMGR_SoftSig(void *(*aproc)(void *), void *arock)
 }
 
 
-unsigned char allOnes[100];
-
 int IOMGR_Initialize(void)
 {
     PROCESS pid;
@@ -766,7 +765,6 @@ int IOMGR_Initialize(void)
     sigsHandled = 0;
     anySigsDelivered = TRUE; /* A soft signal may have happened before
 	IOMGR_Initialize:  so force a check for signals regardless */
-    memset(allOnes, 0xff, sizeof(allOnes));
 
     return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0, 
 			     "IO MANAGER", &IOMGR_Id);
@@ -993,7 +991,7 @@ int IOMGR_Signal (int signo, char *event)
     if (event == NULL)
 	return LWP_EBADEVENT;
     sa.sa_handler = SigHandler;
-    sa.sa_mask = *((sigset_t *) allOnes);	/* mask all signals */
+    sigfillset(&sa.sa_mask);	/* mask all signals */
     sa.sa_flags = 0;
     sigsHandled |= mysigmask(signo);
     sigEvents[signo] = event;

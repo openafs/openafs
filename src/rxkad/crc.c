@@ -61,9 +61,9 @@
 #include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rxkad.h>
 #include <des.h>
 #include "lifetimes.h"
-#include "rxkad.h"
 #endif /* defined(UKERNEL) */
 
 static u_long table[256];

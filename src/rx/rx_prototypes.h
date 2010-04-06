@@ -169,7 +169,10 @@ extern void rxi_KeepAliveEvent(struct rxevent *event,
 			       void *call /* struct rx_call *call */, 
 			       void *dummy);
 extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
+extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
 extern void rxi_KeepAliveOn(struct rx_call *call);
+extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
+extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds);
 extern void rxi_SendDelayedConnAbort(struct rxevent *event,
 				     void *conn, /* struct rx_connection *conn */
 				     void *dummy);
@@ -374,10 +377,8 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 # undef osi_Assert
 # define osi_Assert(expr) \
     do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
-# elif (defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV))
+# elif defined(AFS_AIX_ENV)
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
-# elif defined(AFS_AIX61_ENV) || defined(AFS_SGI_ENV)
-/* No prototype. Deliberate, since there's no vprintf et al */
 # else
 extern void osi_Panic(char *fmt, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);

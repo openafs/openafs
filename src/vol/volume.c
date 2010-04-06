@@ -177,8 +177,7 @@ extern void *calloc(), *realloc();
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 /* Forward declarations */
-static Volume *attach2(Error * ec, VolId vid, char *path,
-		       register struct VolumeHeader *header,
+static Volume *attach2(Error * ec, VolId volumeId, char *path,
 		       struct DiskPartition64 *partp, Volume * vp, 
 		       int isbusy, int mode);
 static void ReallyFreeVolume(Volume * vp);
@@ -360,7 +359,7 @@ static void VVByPListWait_r(struct DiskPartition64 * dp);
 
 /* online salvager */
 static int VCheckSalvage(register Volume * vp);
-#ifdef SALVSYNC_BUILD_CLIENT
+#if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 static int VScheduleSalvage_r(Volume * vp);
 #endif
 
@@ -1874,10 +1873,6 @@ Volume *
 VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 {
     register Volume *vp = NULL;
-    int fd, n;
-    struct afs_stat status;
-    struct VolumeDiskHeader diskHeader;
-    struct VolumeHeader iheader;
     struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
@@ -2029,55 +2024,6 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     strcat(path, "/");
     strcat(path, name);
-    if ((fd = afs_open(path, O_RDONLY)) == -1 || afs_fstat(fd, &status) == -1) {
-	Log("VAttachVolume: Failed to open %s (errno %d)\n", path, errno);
-	if (fd > -1)
-	    close(fd);
-	*ec = VNOVOL;
-	VOL_LOCK;
-	goto done;
-    }
-    n = read(fd, &diskHeader, sizeof(diskHeader));
-    close(fd);
-    if (n != sizeof(diskHeader)
-	|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-	Log("VAttachVolume: Error reading volume header %s\n", path);
-	*ec = VSALVAGE;
-	VOL_LOCK;
-	goto done;
-    }
-    if (diskHeader.stamp.version != VOLUMEHEADERVERSION) {
-	Log("VAttachVolume: Volume %s, version number is incorrect; volume needs salvaged\n", path);
-	*ec = VSALVAGE;
-	VOL_LOCK;
-	goto done;
-    }
-
-    DiskToVolumeHeader(&iheader, &diskHeader);
-#ifdef FSSYNC_BUILD_CLIENT
-    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
-        SYNC_response res;
-        memset(&res, 0, sizeof(res));
-
-        VOL_LOCK;
-	if (FSYNC_VolOp(iheader.id, partition, FSYNC_VOL_NEEDVOLUME, mode, &res)
-	    != SYNC_OK) {
-
-            if (res.hdr.reason == FSYNC_SALVAGE) {
-                Log("VAttachVolume: file server says volume %u is salvaging\n",
-                     iheader.id);
-                *ec = VSALVAGING;
-            } else {
-	        Log("VAttachVolume: attach of volume %u apparently denied by file server\n",
-                     iheader.id);
-	        *ec = VNOVOL;	/* XXXX */
-            }
-
-	    goto done;
-	}
-	VOL_UNLOCK;
-    }
-#endif
 
     if (!vp) {
       vp = (Volume *) calloc(1, sizeof(Volume));
@@ -2093,7 +2039,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     /* attach2 is entered without any locks, and returns
      * with vol_glock_mutex held */
-    vp = attach2(ec, volumeId, path, &iheader, partp, vp, isbusy, mode);
+    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
 
     if (VCanUseFSSYNC() && vp) {
 	if ((mode == V_VOLUPD) || (VolumeWriteable(vp) && (mode == V_CLONE))) {
@@ -2141,7 +2087,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
          * notified the fileserver; don't online it now */
         if (*ec != VSALVAGING)
 #endif /* AFS_DEMAND_ATTACH_FS */
-	FSYNC_VolOp(iheader.id, partition, FSYNC_VOL_ON, 0, NULL);
+	FSYNC_VolOp(volumeId, partition, FSYNC_VOL_ON, 0, NULL);
     } else 
 #endif
     if (programType == fileServer && vp) {
@@ -2222,10 +2168,7 @@ static Volume *
 VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 {
     char name[VMAXPATHLEN];
-    int fd, n, reserve = 0;
-    struct afs_stat status;
-    struct VolumeDiskHeader diskHeader;
-    struct VolumeHeader iheader;
+    int reserve = 0;
     struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
@@ -2286,48 +2229,19 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 
     *ec = 0;
 
-
-    /* compute path to disk header, 
-     * read in header, 
-     * and verify magic and version stamps */
+    /* compute path to disk header */
     strcpy(path, VPartitionPath(partp));
 
     VOL_UNLOCK;
 
     strcat(path, "/");
     strcat(path, name);
-    if ((fd = afs_open(path, O_RDONLY)) == -1 || afs_fstat(fd, &status) == -1) {
-	Log("VAttachVolume: Failed to open %s (errno %d)\n", path, errno);
-	if (fd > -1)
-	    close(fd);
-	*ec = VNOVOL;
-	VOL_LOCK;
-	goto done;
-    }
-    n = read(fd, &diskHeader, sizeof(diskHeader));
-    close(fd);
-    if (n != sizeof(diskHeader)
-	|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-	Log("VAttachVolume: Error reading volume header %s\n", path);
-	*ec = VSALVAGE;
-	VOL_LOCK;
-	goto done;
-    }
-    if (diskHeader.stamp.version != VOLUMEHEADERVERSION) {
-	Log("VAttachVolume: Volume %s, version number is incorrect; volume needs salvaged\n", path);
-	*ec = VSALVAGE;
-	VOL_LOCK;
-	goto done;
-    }
-
-    /* convert on-disk header format to in-memory header format */
-    DiskToVolumeHeader(&iheader, &diskHeader);
 
     /* do volume attach
      *
      * NOTE: attach2 is entered without any locks, and returns
      * with vol_glock_mutex held */
-    vp = attach2(ec, volumeId, path, &iheader, partp, vp, isbusy, mode);
+    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
 
     /*
      * the event that an error was encountered, or
@@ -2385,40 +2299,204 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 	return vp;
     }
 }
+
+/**
+ * lock a volume on disk (non-blocking).
+ *
+ * @param[in] vp  The volume to lock
+ * @param[in] locktype READ_LOCK or WRITE_LOCK
+ *
+ * @return operation status
+ *  @retval 0 success, lock was obtained
+ *  @retval EBUSY a conflicting lock was held by another process
+ *  @retval EIO   error acquiring lock
+ *
+ * @pre If we're in the fileserver, vp is in an exclusive state
+ *
+ * @pre vp is not already locked
+ */
+static int
+VLockVolumeNB(Volume *vp, int locktype)
+{
+    int code;
+
+    assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
+    assert(!(V_attachFlags(vp) & VOL_LOCKED));
+
+    code = VLockVolumeByIdNB(vp->hashid, vp->partition, locktype);
+    if (code == 0) {
+	V_attachFlags(vp) |= VOL_LOCKED;
+    }
+
+    return code;
+}
+
+/**
+ * unlock a volume on disk that was locked with VLockVolumeNB.
+ *
+ * @param[in] vp  volume to unlock
+ *
+ * @pre If we're in the fileserver, vp is in an exclusive state
+ *
+ * @pre vp has already been locked
+ */
+static void
+VUnlockVolume(Volume *vp)
+{
+    assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
+    assert((V_attachFlags(vp) & VOL_LOCKED));
+
+    VUnlockVolumeById(vp->hashid, vp->partition);
+
+    V_attachFlags(vp) &= ~VOL_LOCKED;
+}
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-/*
- * called without any locks held
- * returns with vol_glock_mutex held
+/**
+ * read in a vol header, possibly lock the vol header, and possibly check out
+ * the vol header from the fileserver, as part of volume attachment.
+ *
+ * @param[out] ec     error code
+ * @param[in] vp      volume pointer object
+ * @param[in] partp   disk partition object of the attaching partition
+ * @param[in] mode    attachment mode such as V_VOLUPD, V_DUMP, etc (see
+ *                    volume.h)
+ * @param[in] peek    1 to just try to read in the volume header and make sure
+ *                    we don't try to lock the vol, or check it out from
+ *                    FSSYNC or anything like that; 0 otherwise, for 'normal'
+ *                    operation
+ *
+ * @note As part of DAFS volume attachment, the volume header may be either
+ *       read- or write-locked to ensure mutual exclusion of certain volume
+ *       operations. In some cases in order to determine whether we need to
+ *       read- or write-lock the header, we need to read in the header to see
+ *       if the volume is RW or not. So, if we read in the header under a
+ *       read-lock and determine that we actually need a write-lock on the
+ *       volume header, this function will drop the read lock, acquire a write
+ *       lock, and read the header in again.
  */
-private Volume * 
-attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * header,
-	struct DiskPartition64 * partp, register Volume * vp, int isbusy, int mode)
+static void
+attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
+                     int mode, int peek)
 {
-    vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
-    IH_INIT(vp->vnodeIndex[vLarge].handle, partp->device, header->parent,
-	    header->largeVnodeIndex);
-    IH_INIT(vp->vnodeIndex[vSmall].handle, partp->device, header->parent,
-	    header->smallVnodeIndex);
-    IH_INIT(vp->diskDataHandle, partp->device, header->parent,
-	    header->volumeInfo);
-    IH_INIT(vp->linkHandle, partp->device, header->parent, header->linkTable);
-    vp->shuttingDown = 0;
-    vp->goingOffline = 0;
-    vp->nUsers = 1;
+    struct VolumeDiskHeader diskHeader;
+    struct VolumeHeader header;
+    int code;
+    int first_try = 1;
+    int lock_tries = 0, checkout_tries = 0;
+    int retry;
+    VolumeId volid = vp->hashid;
+#ifdef FSSYNC_BUILD_CLIENT
+    int checkout, done_checkout = 0;
+#endif /* FSSYNC_BUILD_CLIENT */
 #ifdef AFS_DEMAND_ATTACH_FS
-    vp->stats.last_attach = FT_ApproxTime();
-    vp->stats.attaches++;
+    int locktype = 0, use_locktype = -1;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+ retry:
+    retry = 0;
+    *ec = 0;
+
+    if (lock_tries > VOL_MAX_CHECKOUT_RETRIES) {
+	Log("VAttachVolume: retried too many times trying to lock header for "
+	    "vol %lu part %s; giving up\n", afs_printable_uint32_lu(volid),
+	    VPartitionPath(partp));
+	*ec = VNOVOL;
+	goto done;
+    }
+    if (checkout_tries > VOL_MAX_CHECKOUT_RETRIES) {
+	Log("VAttachVolume: retried too many times trying to checkout "
+	    "vol %lu part %s; giving up\n", afs_printable_uint32_lu(volid),
+	    VPartitionPath(partp));
+	*ec = VNOVOL;
+	goto done;
+    }
+
+    if (VReadVolumeDiskHeader(volid, partp, NULL)) {
+	/* short-circuit the 'volume does not exist' case */
+	*ec = VNOVOL;
+	goto done;
+    }
+
+#ifdef FSSYNC_BUILD_CLIENT
+    checkout = !done_checkout;
+    done_checkout = 1;
+    if (!peek && checkout && VMustCheckoutVolume(mode)) {
+        SYNC_response res;
+        memset(&res, 0, sizeof(res));
+
+	if (FSYNC_VolOp(volid, VPartitionPath(partp), FSYNC_VOL_NEEDVOLUME, mode, &res)
+	    != SYNC_OK) {
+
+            if (res.hdr.reason == FSYNC_SALVAGE) {
+                Log("VAttachVolume: file server says volume %lu is salvaging\n",
+                     afs_printable_uint32_lu(volid));
+                *ec = VSALVAGING;
+            } else {
+	        Log("VAttachVolume: attach of volume %lu apparently denied by file server\n",
+                     afs_printable_uint32_lu(volid));
+	        *ec = VNOVOL;	/* XXXX */
+            }
+	    goto done;
+	}
+    }
 #endif
 
-    VOL_LOCK;
-    IncUInt64(&VStats.attaches);
-    vp->cacheCheck = ++VolumeCacheCheck;
-    /* just in case this ever rolls over */
-    if (!vp->cacheCheck)
-	vp->cacheCheck = ++VolumeCacheCheck;
-    GetVolumeHeader(vp);
-    VOL_UNLOCK;
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (use_locktype < 0) {
+	/* don't know whether vol is RO or RW; assume it's RO and we can retry
+	 * if it turns out to be RW */
+	locktype = VVolLockType(mode, 0);
+
+    } else {
+	/* a previous try says we should use use_locktype to lock the volume,
+	 * so use that */
+	locktype = use_locktype;
+    }
+
+    if (!peek && locktype) {
+	code = VLockVolumeNB(vp, locktype);
+	if (code) {
+	    if (code == EBUSY) {
+		Log("VAttachVolume: another program has vol %lu locked\n",
+	            afs_printable_uint32_lu(volid));
+	    } else {
+		Log("VAttachVolume: error %d trying to lock vol %lu\n",
+	            code, afs_printable_uint32_lu(volid));
+	    }
+
+	    *ec = VNOVOL;
+	    goto done;
+	}
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    code = VReadVolumeDiskHeader(volid, partp, &diskHeader);
+    if (code) {
+	if (code == EIO) {
+	    *ec = VSALVAGE;
+	} else {
+	    *ec = VNOVOL;
+	}
+	goto done;
+    }
+
+    DiskToVolumeHeader(&header, &diskHeader);
+
+    IH_INIT(vp->vnodeIndex[vLarge].handle, partp->device, header.parent,
+	    header.largeVnodeIndex);
+    IH_INIT(vp->vnodeIndex[vSmall].handle, partp->device, header.parent,
+	    header.smallVnodeIndex);
+    IH_INIT(vp->diskDataHandle, partp->device, header.parent,
+	    header.volumeInfo);
+    IH_INIT(vp->linkHandle, partp->device, header.parent, header.linkTable);
+
+    if (first_try) {
+	/* only need to do this once */
+	VOL_LOCK;
+	GetVolumeHeader(vp);
+	VOL_UNLOCK;
+    }
 
 #if defined(AFS_DEMAND_ATTACH_FS) && defined(FSSYNC_BUILD_CLIENT)
     /* demand attach changes the V_PEEK mechanism
@@ -2430,12 +2508,12 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
      *  to demand attach fileservers.  However, I'm trying
      *  to limit the number of common code changes)
      */
-    if (programType != fileServer && mode == V_PEEK) {
+    if (VCanUseFSSYNC() && (mode == V_PEEK || peek)) {
 	SYNC_response res;
 	res.payload.len = sizeof(VolumeDiskData);
 	res.payload.buf = &vp->header->diskstuff;
 
-	if (FSYNC_VolOp(volumeId,
+	if (FSYNC_VolOp(vp->hashid,
 			partp->name,
 			FSYNC_VOL_QUERY_HDR,
 			FSYNC_WHATEVER,
@@ -2456,56 +2534,240 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #endif /* AFS_DEMAND_ATTACH_FS */
     
     if (*ec) {
-	Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%u\n", path, *ec);
+	Log("VAttachVolume: Error reading diskDataHandle header for vol %lu; "
+	    "error=%u\n", afs_printable_uint32_lu(volid), *ec);
+	goto done;
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
 # ifdef FSSYNC_BUILD_CLIENT
  disk_header_loaded:
-#endif
-    if (!*ec) {
+# endif /* FSSYNC_BUILD_CLIENT */
 
-	/* check for pending volume operations */
-	if (vp->pending_vol_op) {
-	    /* see if the pending volume op requires exclusive access */
-	    switch (vp->pending_vol_op->vol_op_state) {
-	    case FSSYNC_VolOpPending:
-		/* this should never happen */
-		assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpPending);
-		break;
-
-	    case FSSYNC_VolOpRunningUnknown:
-		if (VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
-		    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOnline;
-		    break;
-		} else {
-		    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
-		    /* fall through to take volume offline */
-		}
-
-	    case FSSYNC_VolOpRunningOffline:
-		/* mark the volume down */
-		*ec = VOFFLINE;
-		VChangeState_r(vp, VOL_STATE_UNATTACHED);
-		if (V_offlineMessage(vp)[0] == '\0')
-		    strlcpy(V_offlineMessage(vp),
-			    "A volume utility is running.", 
-			    sizeof(V_offlineMessage(vp)));
-		V_offlineMessage(vp)[sizeof(V_offlineMessage(vp)) - 1] = '\0';
-
-		/* check to see if we should set the specialStatus flag */
-		if (VVolOpSetVBusy_r(vp, vp->pending_vol_op)) {
-		    vp->specialStatus = VBUSY;
-		}
-	    default:
-		break;
-	    }
-	}
-
-	V_attachFlags(vp) |= VOL_HDR_LOADED;
-	vp->stats.last_hdr_load = vp->stats.last_attach;
+    /* if the lock type we actually used to lock the volume is different than
+     * the lock type we should have used, retry with the lock type we should
+     * use */
+    use_locktype = VVolLockType(mode, VolumeWriteable(vp));
+    if (locktype != use_locktype) {
+	retry = 1;
+	lock_tries++;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
+
+    *ec = 0;
+
+ done:
+#if defined(AFS_DEMAND_ATTACH_FS) && defined(FSSYNC_BUILD_CLIENT)
+    if (!peek && *ec == 0 && retry == 0 && VMustCheckoutVolume(mode)) {
+
+	code = FSYNC_VerifyCheckout(volid, VPartitionPath(partp), FSYNC_VOL_NEEDVOLUME, mode);
+
+	if (code == SYNC_DENIED) {
+	    /* must retry checkout; fileserver no longer thinks we have
+	     * the volume */
+	    retry = 1;
+	    checkout_tries++;
+	    done_checkout = 0;
+
+	} else if (code != SYNC_OK) {
+	    *ec = VNOVOL;
+	}
+    }
+#endif /* AFS_DEMAND_ATTACH_FS && FSSYNC_BUILD_CLIENT */
+
+    if (*ec || retry) {
+	/* either we are going to be called again for a second pass, or we
+	 * encountered an error; clean up in either case */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	if ((V_attachFlags(vp) & VOL_LOCKED)) {
+	    VUnlockVolume(vp);
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+	if (vp->linkHandle) {
+	    IH_RELEASE(vp->vnodeIndex[vLarge].handle);
+	    IH_RELEASE(vp->vnodeIndex[vSmall].handle);
+	    IH_RELEASE(vp->diskDataHandle);
+	    IH_RELEASE(vp->linkHandle);
+	}
+    }
+
+    if (*ec) {
+	return;
+    }
+    if (retry) {
+	first_try = 0;
+	goto retry;
+    }
+}
+
+#ifdef AFS_DEMAND_ATTACH_FS
+static void
+attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
+                 Volume *vp)
+{
+    *ec = 0;
+
+    if (vp->pending_vol_op) {
+
+	VOL_LOCK;
+
+	if (vp->pending_vol_op->vol_op_state == FSSYNC_VolOpRunningUnknown) {
+	    int code;
+	    code = VVolOpLeaveOnlineNoHeader_r(vp, vp->pending_vol_op);
+	    if (code == 1) {
+		vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOnline;
+	    } else if (code == 0) {
+		vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
+
+	    } else {
+		/* we need the vol header to determine if the volume can be
+		 * left online for the vop, so... get the header */
+
+		VOL_UNLOCK;
+
+		/* attach header with peek=1 to avoid checking out the volume
+		 * or locking it; we just want the header info, we're not
+		 * messing with the volume itself at all */
+		attach_volume_header(ec, vp, partp, V_PEEK, 1);
+		if (*ec) {
+		    return;
+		}
+
+		VOL_LOCK;
+
+		if (VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
+		    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOnline;
+		} else {
+		    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
+		}
+
+		/* make sure we grab a new vol header and re-open stuff on
+		 * actual attachment; we can't keep the data we grabbed, since
+		 * it was not done under a lock and thus not safe */
+		FreeVolumeHeader(vp);
+		VReleaseVolumeHandles_r(vp);
+	    }
+	}
+	/* see if the pending volume op requires exclusive access */
+	switch (vp->pending_vol_op->vol_op_state) {
+	case FSSYNC_VolOpPending:
+	    /* this should never happen */
+	    assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpPending);
+	    break;
+
+	case FSSYNC_VolOpRunningUnknown:
+	    /* this should never happen; we resolved 'unknown' above */
+	    assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
+	    break;
+
+	case FSSYNC_VolOpRunningOffline:
+	    /* mark the volume down */
+	    *ec = VOFFLINE;
+	    VChangeState_r(vp, VOL_STATE_UNATTACHED);
+
+	    /* do not set V_offlineMessage here; we don't have ownership of
+	     * the volume (and probably do not have the header loaded), so we
+	     * can't alter the disk header */
+
+	    /* check to see if we should set the specialStatus flag */
+	    if (VVolOpSetVBusy_r(vp, vp->pending_vol_op)) {
+	        vp->specialStatus = VBUSY;
+	    }
+	    break;
+
+	default:
+	    break;
+	}
+
+	VOL_UNLOCK;
+    }
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+/**
+ * volume attachment helper function.
+ *
+ * @param[out] ec      error code
+ * @param[in] volumeId volume ID of the attaching volume
+ * @param[in] path     full path to the volume header .vol file
+ * @param[in] partp    disk partition object for the attaching partition
+ * @param[in] vp       volume object; vp->hashid, vp->device, vp->partition,
+ *                     vp->vnode_list, and V_attachCV (for DAFS) should already
+ *                     be initialized
+ * @param[in] isbusy   1 if vp->specialStatus should be set to VBUSY; that is,
+ *                     if there is a volume operation running for this volume
+ *                     that should set the volume to VBUSY during its run. 0
+ *                     otherwise. (see VVolOpSetVBusy_r)
+ * @param[in] mode     attachment mode such as V_VOLUPD, V_DUMP, etc (see
+ *                     volume.h)
+ *
+ * @return pointer to the semi-attached volume pointer
+ *  @retval NULL an error occurred (check value of *ec)
+ *  @retval vp volume successfully attaching
+ *
+ * @pre no locks held
+ *
+ * @post VOL_LOCK held
+ */
+static Volume *
+attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
+        Volume * vp, int isbusy, int mode)
+{
+    /* have we read in the header successfully? */
+    int read_header = 0;
+
+    /* should we FreeVolume(vp) instead of VCheckFree(vp) in the error
+     * cleanup? */
+    int forcefree = 0;
+
+    *ec = 0;
+
+    vp->vnodeIndex[vLarge].handle = NULL;
+    vp->vnodeIndex[vSmall].handle = NULL;
+    vp->diskDataHandle = NULL;
+    vp->linkHandle = NULL;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    attach_check_vop(ec, volumeId, partp, vp);
+    if (!*ec) {
+	attach_volume_header(ec, vp, partp, mode, 0);
+    }
+#else
+    attach_volume_header(ec, vp, partp, mode, 0);
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
+    if (*ec == VNOVOL) {
+	/* if the volume doesn't exist, skip straight to 'error' so we don't
+	 * request a salvage */
+	goto error;
+    }
+
+    if (!*ec) {
+	read_header = 1;
+
+	vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
+	vp->shuttingDown = 0;
+	vp->goingOffline = 0;
+	vp->nUsers = 1;
+#ifdef AFS_DEMAND_ATTACH_FS
+	vp->stats.last_attach = FT_ApproxTime();
+	vp->stats.attaches++;
+#endif
+
+	VOL_LOCK;
+	IncUInt64(&VStats.attaches);
+	vp->cacheCheck = ++VolumeCacheCheck;
+	/* just in case this ever rolls over */
+	if (!vp->cacheCheck)
+	    vp->cacheCheck = ++VolumeCacheCheck;
+	VOL_UNLOCK;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	V_attachFlags(vp) |= VOL_HDR_LOADED;
+	vp->stats.last_hdr_load = vp->stats.last_attach;
+#endif /* AFS_DEMAND_ATTACH_FS */
+    }
 
     if (!*ec) {
 	struct IndexFileHeader iHead;
@@ -2565,20 +2827,17 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	vp->nUsers = 0;
 
-	VCheckFree(vp);
-	return NULL;
+	goto error;
     } else if (*ec) {
 	/* volume operation in progress */
 	VOL_LOCK;
-	VCheckFree(vp);
-	return NULL;
+	goto error;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
         VOL_LOCK;
-	FreeVolume(vp);
-	return NULL;
+	goto error;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -2593,12 +2852,11 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	vp->nUsers = 0;
 
-	VCheckFree(vp);
 #else /* AFS_DEMAND_ATTACH_FS */
-	FreeVolume(vp);
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	return NULL;
+
+	goto error;
     }
 
     VOL_LOCK;
@@ -2616,13 +2874,12 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
 
-	    VCheckFree(vp);
 #else /* AFS_DEMAND_ATTACH_FS */
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
-	    FreeVolume(vp);
 	    *ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	    return NULL;
+
+	    goto error;
 	}
 #endif /* FAST_RESTART */
 
@@ -2641,10 +2898,10 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    VChangeState_r(vp, VOL_STATE_ERROR);
 	    vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	    FreeVolume(vp);
 	    Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
 	    *ec = VNOVOL;
-	    return NULL;
+	    forcefree = 1;
+	    goto error;
 	}
     }
 
@@ -2659,13 +2916,10 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #ifdef AFS_DEMAND_ATTACH_FS
 		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 		vp->nUsers = 0;
-		VCheckFree(vp);
-#else /* AFS_DEMAND_ATTACH_FS */
-		FreeVolume(vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
 		    path);
-		return NULL;
+		goto error;
 	    }
 	}
     }
@@ -2686,6 +2940,9 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 
     AddVolumeToHashTable(vp, V_id(vp));
 #ifdef AFS_DEMAND_ATTACH_FS
+    if (VCanUnlockAttached() && (V_attachFlags(vp) & VOL_LOCKED)) {
+	VUnlockVolume(vp);
+    }
     if ((programType != fileServer) ||
 	(V_inUse(vp) == fileServer)) {
 	AddVolumeToVByPList_r(vp);
@@ -2695,7 +2952,31 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	VChangeState_r(vp, VOL_STATE_UNATTACHED);
     }
 #endif
+
     return vp;
+
+ error:
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (!VIsErrorState(V_attachState(vp))) {
+	VChangeState_r(vp, VOL_STATE_ERROR);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    if (read_header) {
+	VReleaseVolumeHandles_r(vp);
+    }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VCheckSalvage(vp);
+    if (forcefree) {
+	FreeVolume(vp);
+    } else {
+	VCheckFree(vp);
+    }
+#else /* !AFS_DEMAND_ATTACH_FS */
+    FreeVolume(vp);
+#endif /* !AFS_DEMAND_ATTACH_FS */
+    return NULL;
 }
 
 /* Attach an existing volume.
@@ -3041,31 +3322,11 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	}
 #endif
 
-	LoadVolumeHeader(ec, vp);
-	if (*ec) {
-	    VGET_CTR_INC(V6);
-	    /* Only log the error if it was a totally unexpected error.  Simply
-	     * a missing inode is likely to be caused by the volume being deleted */
-	    if (errno != ENXIO || LogLevel)
-		Log("Volume %u: couldn't reread volume header\n",
-		    vp->hashid);
-#ifdef AFS_DEMAND_ATTACH_FS
-	    if (VCanScheduleSalvage()) {
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
-	    } else {
-		FreeVolume(vp);
-		vp = NULL;
-	    }
-#else /* AFS_DEMAND_ATTACH_FS */
-	    FreeVolume(vp);
-	    vp = NULL;
-#endif /* AFS_DEMAND_ATTACH_FS */
-	    break;
-	}
-
 #ifdef AFS_DEMAND_ATTACH_FS
 	/*
-	 * this test MUST happen after the volume header is loaded
+	 * this test MUST happen after VAttachVolymeByVp, so vol_op_state is
+	 * not VolOpRunningUnknown (attach2 would have converted it to Online
+	 * or Offline)
 	 */
         
          /* only valid before/during demand attachment */
@@ -3104,6 +3365,28 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	   break;
 	}
 #endif /* AFS_DEMAND_ATTACH_FS */
+
+	LoadVolumeHeader(ec, vp);
+	if (*ec) {
+	    VGET_CTR_INC(V6);
+	    /* Only log the error if it was a totally unexpected error.  Simply
+	     * a missing inode is likely to be caused by the volume being deleted */
+	    if (errno != ENXIO || LogLevel)
+		Log("Volume %u: couldn't reread volume header\n",
+		    vp->hashid);
+#ifdef AFS_DEMAND_ATTACH_FS
+	    if (VCanScheduleSalvage()) {
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	    } else {
+		FreeVolume(vp);
+		vp = NULL;
+	    }
+#else /* AFS_DEMAND_ATTACH_FS */
+	    FreeVolume(vp);
+	    vp = NULL;
+#endif /* AFS_DEMAND_ATTACH_FS */
+	    break;
+	}
 	
 	VGET_CTR_INC(V7);
 	if (vp->shuttingDown) {
@@ -3508,7 +3791,7 @@ VCloseVolumeHandles_r(Volume * vp)
      * DFlushVolume outside of vol_glock_mutex... 
      *
      * VCloseVnodeFiles_r drops the glock internally */
-    DFlushVolume(V_id(vp));
+    DFlushVolume(vp->hashid);
     VCloseVnodeFiles_r(vp);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3531,6 +3814,10 @@ VCloseVolumeHandles_r(Volume * vp)
     IH_REALLYCLOSE(vp->linkHandle);
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    if ((V_attachFlags(vp) & VOL_LOCKED)) {
+	VUnlockVolume(vp);
+    }
+
     VOL_LOCK;
     VChangeState_r(vp, state_save);
 #endif
@@ -3552,7 +3839,7 @@ VReleaseVolumeHandles_r(Volume * vp)
 
     /* XXX need to investigate whether we can perform
      * DFlushVolume outside of vol_glock_mutex... */
-    DFlushVolume(V_id(vp));
+    DFlushVolume(vp->hashid);
 
     VReleaseVnodeFiles_r(vp); /* releases the glock internally */
 
@@ -3576,6 +3863,10 @@ VReleaseVolumeHandles_r(Volume * vp)
     IH_RELEASE(vp->linkHandle);
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    if ((V_attachFlags(vp) & VOL_LOCKED)) {
+	VUnlockVolume(vp);
+    }
+
     VOL_LOCK;
     VChangeState_r(vp, state_save);
 #endif
@@ -4054,6 +4345,48 @@ VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 }
 
 /**
+ * same as VVolOpLeaveOnline_r, but does not require a volume with an attached
+ * header.
+ *
+ * @param[in] vp        volume object
+ * @param[in] vopinfo   volume operation info object
+ *
+ * @return whether it is safe to leave volume online
+ *    @retval 0  it is NOT SAFE to leave the volume online
+ *    @retval 1  it is safe to leave the volume online during the operation
+ *    @retval -1 unsure; volume header is required in order to know whether or
+ *               not is is safe to leave the volume online
+ *
+ * @pre VOL_LOCK is held
+ *
+ * @internal volume package internal use only
+ */
+int
+VVolOpLeaveOnlineNoHeader_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
+{
+    /* follow the logic in VVolOpLeaveOnline_r; this is the same, except
+     * assume that we don't know VolumeWriteable; return -1 if the answer
+     * depends on VolumeWriteable */
+
+    if (vopinfo->vol_op_state == FSSYNC_VolOpRunningOnline) {
+	return 1;
+    }
+    if (vopinfo->com.command == FSYNC_VOL_NEEDVOLUME &&
+        vopinfo->com.reason == V_READONLY) {
+
+	return 1;
+    }
+    if (vopinfo->com.command == FSYNC_VOL_NEEDVOLUME &&
+        (vopinfo->com.reason == V_CLONE ||
+         vopinfo->com.reason == V_DUMP)) {
+
+	/* must know VolumeWriteable */
+	return -1;
+    }
+    return 0;
+}
+
+/**
  * determine whether VBUSY should be set during this volume operation.
  *
  * @param[in] vp        volume object
@@ -4106,14 +4439,14 @@ static int
 VCheckSalvage(register Volume * vp)
 {
     int ret = 0;
-#ifdef SALVSYNC_BUILD_CLIENT
+#if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
     if (vp->nUsers || vp->nWaiters)
 	return ret;
     if (vp->salvage.requested) {
 	VScheduleSalvage_r(vp);
 	ret = 1;
     }
-#endif /* SALVSYNC_BUILD_CLIENT */
+#endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
     return ret;
 }
 
@@ -4138,12 +4471,12 @@ VCheckSalvage(register Volume * vp)
  *   @retval 0  volume salvage will occur
  *   @retval 1  volume salvage could not be scheduled
  *
- * @note DAFS fileserver only
+ * @note DAFS only
  *
- * @note this call does not synchronously schedule a volume salvage.  rather,
- *       it sets volume state so that when volume refcounts reach zero, a
- *       volume salvage will occur.  by "refcounts", we mean both nUsers and 
- *       nWaiters must be zero.
+ * @note in the fileserver, this call does not synchronously schedule a volume
+ *       salvage. rather, it sets volume state so that when volume refcounts
+ *       reach zero, a volume salvage will occur. by "refcounts", we mean both
+ *       nUsers and nWaiters must be zero.
  *
  * @internal volume package internal use only.
  */
@@ -4152,9 +4485,8 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 {
     int code = 0;
     /*
-     * for DAFS volume utilities, transition to error state
-     * (at some point in the future, we should consider
-     *  making volser talk to salsrv)
+     * for DAFS volume utilities that are not supposed to schedule salvages,
+     * just transition to error state instead
      */
     if (!VCanScheduleSalvage()) {
 	VChangeState_r(vp, VOL_STATE_ERROR);
@@ -4162,41 +4494,7 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	return 1;
     }
 
-    if (programType != fileServer) {
-#ifdef FSSYNC_BUILD_CLIENT
-        if (VCanUseFSSYNC()) {
-            /*
-             * If we aren't the fileserver, tell the fileserver the volume
-             * needs to be salvaged. We could directly tell the
-             * salvageserver, but the fileserver keeps track of some stats
-             * related to salvages, and handles some other salvage-related
-             * complications for us.
-             */
-
-	    /*
-	     * You might wonder why we don't check for
-	     * VIsSalvager(V_inUse(vp)) here, since we do check for that
-	     * in the fileServer case (below). The reason is that the
-	     * below check is done since the fileServer can't tell if a
-	     * salvage is still running or not when V_inUse refers to a
-	     * salvaging program. However, if we are a non-fileserver,
-	     * to get here we must have checked out the volume from the
-	     * fileserver and locked the partition, meaning there must
-	     * be no salvager running; so we just always try to salvage
-	     */
-
-            code = FSYNC_VolOp(vp->hashid, vp->partition->name,
-                               FSYNC_VOL_FORCE_ERROR, FSYNC_SALVAGE, NULL);
-            if (code == SYNC_OK) {
-                *ec = VSALVAGING;
-                return 0;
-            }
-            Log("VRequestSalvage: force error salvage state of volume %u"
-                " denied by fileserver\n", vp->hashid);
-
-            /* fall through to error condition below */
-        }
-#endif /* FSSYNC_BUILD_CLIENT */
+    if (programType != fileServer && !VCanUseFSSYNC()) {
         VChangeState_r(vp, VOL_STATE_ERROR);
         *ec = VSALVAGE;
         return 1;
@@ -4207,34 +4505,16 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	vp->salvage.reason = reason;
 	vp->stats.last_salvage = FT_ApproxTime();
 
-	if (vp->header && VIsSalvager(V_inUse(vp))) {
-	    /* Right now we can't tell for sure if this indicates a
-	     * salvage is running, or if a running salvage crashed, so
-	     * we always ERROR the volume in case a salvage is running.
-	     * Once we get rid of the partition lock and instead lock
-	     * individual volume header files for salvages, we will
-	     * probably be able to tell if a salvage is running, and we
-	     * can do away with this behavior. */
-	    Log("VRequestSalvage: volume %u appears to be salvaging, but we\n", vp->hashid);
-	    Log("  didn't request a salvage. Forcing it offline waiting for the\n");
-	    Log("  salvage to finish; if you are sure no salvage is running,\n");
-	    Log("  run a salvage manually.\n");
+	/* Note that it is not possible for us to reach this point if a
+	 * salvage is already running on this volume (even if the fileserver
+	 * was restarted during the salvage). If a salvage were running, the
+	 * salvager would have write-locked the volume header file, so when
+	 * we tried to lock the volume header, the lock would have failed,
+	 * and we would have failed during attachment prior to calling
+	 * VRequestSalvage. So we know that we can schedule salvages without
+	 * fear of a salvage already running for this volume. */
 
-	    /* make sure neither VScheduleSalvage_r nor
-	     * VUpdateSalvagePriority_r try to schedule another salvage */
-	    vp->salvage.requested = vp->salvage.scheduled = 0;
-
-	    /* these stats aren't correct, but doing this makes them
-	     * slightly closer to being correct */
-	    vp->stats.salvages++;
-	    vp->stats.last_salvage_req = FT_ApproxTime();
-	    IncUInt64(&VStats.salvages);
-
-	    VChangeState_r(vp, VOL_STATE_ERROR);
-	    *ec = VSALVAGE;
-	    code = 1;
-
-	} else if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
+	if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
 	    VChangeState_r(vp, VOL_STATE_SALVAGING);
 	    *ec = VSALVAGING;
 	} else {
@@ -4320,23 +4600,27 @@ VUpdateSalvagePriority_r(Volume * vp)
 }
 
 
-#ifdef SALVSYNC_BUILD_CLIENT
+#if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 /**
- * schedule a salvage with the salvage server.
+ * schedule a salvage with the salvage server or fileserver.
  *
  * @param[in] vp  pointer to volume object
  *
  * @return operation status
  *    @retval 0 salvage scheduled successfully
- *    @retval 1 salvage not scheduled, or SALVSYNC com error
+ *    @retval 1 salvage not scheduled, or SALVSYNC/FSSYNC com error
  *
  * @pre 
  *    @arg VOL_LOCK is held.
  *    @arg nUsers and nWaiters should be zero.
  *
- * @post salvageserver is sent a salvage request
+ * @post salvageserver or fileserver is sent a salvage request
  *
- * @note DAFS fileserver only
+ * @note If we are the fileserver, the request will be sent to the salvage
+ * server over SALVSYNC. If we are not the fileserver, the request will be
+ * sent to the fileserver over FSSYNC (FSYNC_VOL_FORCE_ERROR/FSYNC_SALVAGE).
+ *
+ * @note DAFS only
  *
  * @internal volume package internal use only.
  */
@@ -4348,6 +4632,8 @@ VScheduleSalvage_r(Volume * vp)
     VolState state_save;
     VThreadOptions_t * thread_opts;
     char partName[16];
+
+    assert(VCanUseSALVSYNC() || VCanUseFSSYNC());
 
     if (vp->nWaiters || vp->nUsers) {
 	return 1;
@@ -4385,22 +4671,44 @@ VScheduleSalvage_r(Volume * vp)
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	VOL_UNLOCK;
 
-	/* can't use V_id() since there's no guarantee
-	 * we have the disk data header at this point */
-	code = SALVSYNC_SalvageVolume(vp->hashid,
-				      partName,
-				      SALVSYNC_SALVAGE,
-				      vp->salvage.reason,
-				      vp->salvage.prio,
-				      NULL);
+#ifdef SALVSYNC_BUILD_CLIENT
+	if (VCanUseSALVSYNC()) {
+	    /* can't use V_id() since there's no guarantee
+	     * we have the disk data header at this point */
+	    code = SALVSYNC_SalvageVolume(vp->hashid,
+	                                  partName,
+	                                  SALVSYNC_SALVAGE,
+	                                  vp->salvage.reason,
+	                                  vp->salvage.prio,
+	                                  NULL);
+	} else
+#endif /* SALVSYNC_BUILD_CLIENT */
+#ifdef FSSYNC_BUILD_CLIENT
+        if (VCanUseFSSYNC()) {
+            /*
+             * If we aren't the fileserver, tell the fileserver the volume
+             * needs to be salvaged. We could directly tell the
+             * salvageserver, but the fileserver keeps track of some stats
+             * related to salvages, and handles some other salvage-related
+             * complications for us.
+             */
+            code = FSYNC_VolOp(vp->hashid, partName,
+                               FSYNC_VOL_FORCE_ERROR, FSYNC_SALVAGE, NULL);
+        }
+#endif /* FSSYNC_BUILD_CLIENT */
+
 	VOL_LOCK;
 	VChangeState_r(vp, state_save);
 
 	if (code == SYNC_OK) {
 	    vp->salvage.scheduled = 1;
-	    vp->stats.salvages++;
 	    vp->stats.last_salvage_req = FT_ApproxTime();
-	    IncUInt64(&VStats.salvages);
+	    if (VCanUseSALVSYNC()) {
+		/* don't record these stats for non-fileservers; let the
+		 * fileserver take care of these */
+		vp->stats.salvages++;
+		IncUInt64(&VStats.salvages);
+	    }
 	} else {
 	    ret = 1;
 	    switch(code) {
@@ -4408,16 +4716,26 @@ VScheduleSalvage_r(Volume * vp)
 	    case SYNC_COM_ERROR:
 		break;
 	    case SYNC_DENIED:
-		Log("VScheduleSalvage_r:  SALVSYNC request denied\n");
+		Log("VScheduleSalvage_r: Salvage request for volume %lu "
+		    "denied\n", afs_printable_uint32_lu(vp->hashid));
 		break;
 	    default:
-		Log("VScheduleSalvage_r:  SALVSYNC unknown protocol error\n");
+		Log("VScheduleSalvage_r: Salvage request for volume %lu "
+		    "received unknown protocol error %d\n",
+		    afs_printable_uint32_lu(vp->hashid), code);
 		break;
+	    }
+
+	    if (VCanUseFSSYNC()) {
+		VChangeState_r(vp, VOL_STATE_ERROR);
 	    }
 	}
     }
     return ret;
 }
+#endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
+
+#ifdef SALVSYNC_BUILD_CLIENT
 
 /**
  * connect to the salvageserver SYNC service.

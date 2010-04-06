@@ -40,6 +40,9 @@
 #include "afsutil.h"
 #include "fileutil.h"
 #include <lwp.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #if defined(AFS_PTHREAD_ENV)
 #include <assert.h>
 #include <pthread.h>

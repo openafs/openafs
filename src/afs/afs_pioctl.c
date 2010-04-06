@@ -49,7 +49,8 @@ struct afs_pdata {
  */
 
 static_inline int
-afs_pd_alloc(struct afs_pdata *apd, size_t size) {
+afs_pd_alloc(struct afs_pdata *apd, size_t size)
+{
 
     if (size > AFS_LRALLOCSIZ)
 	apd->ptr = osi_Alloc(size + 1);
@@ -65,7 +66,8 @@ afs_pd_alloc(struct afs_pdata *apd, size_t size) {
 }
 
 static_inline void
-afs_pd_free(struct afs_pdata *apd) {
+afs_pd_free(struct afs_pdata *apd)
+{
     if (apd->ptr == NULL)
 	return;
 
@@ -79,17 +81,20 @@ afs_pd_free(struct afs_pdata *apd) {
 }
 
 static_inline char *
-afs_pd_where(struct afs_pdata *apd) {
+afs_pd_where(struct afs_pdata *apd)
+{
     return apd ? apd->ptr : NULL;
 }
 
 static_inline size_t
-afs_pd_remaining(struct afs_pdata *apd) {
+afs_pd_remaining(struct afs_pdata *apd)
+{
     return apd ? apd->remaining : 0;
 }
 
 static_inline int
-afs_pd_skip(struct afs_pdata *apd, size_t skip) {
+afs_pd_skip(struct afs_pdata *apd, size_t skip)
+{
     if (apd == NULL || apd->remaining < skip)
 	return EINVAL;
     apd->remaining -= skip;
@@ -99,7 +104,8 @@ afs_pd_skip(struct afs_pdata *apd, size_t skip) {
 }
 
 static_inline int
-afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val) {
+afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val)
+{
     if (apd == NULL || apd->remaining < sizeof(afs_int32))
 	return EINVAL;
     apd->remaining -= sizeof(afs_int32);
@@ -109,12 +115,14 @@ afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val) {
 }
 
 static_inline int
-afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val) {
+afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val)
+{
     return afs_pd_getInt(apd, (afs_int32 *)val);
 }
 
 static_inline int
-afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes) {
+afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes)
+{
     if (apd == NULL || apd->remaining < bytes)
 	return EINVAL;
     apd->remaining -= bytes;
@@ -124,7 +132,8 @@ afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes) {
 }
 
 static_inline void *
-afs_pd_inline(struct afs_pdata *apd, size_t bytes) {
+afs_pd_inline(struct afs_pdata *apd, size_t bytes)
+{
     void *ret;
 
     if (apd == NULL || apd->remaining < bytes)
@@ -139,7 +148,8 @@ afs_pd_inline(struct afs_pdata *apd, size_t bytes) {
 }
 
 static_inline int
-afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen) {
+afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen)
+{
     size_t len;
 
     if (apd == NULL || apd->remaining <= 0)
@@ -154,7 +164,8 @@ afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen) {
 }
 
 static_inline int
-afs_pd_getStringPtr(struct afs_pdata *apd, char **str) {
+afs_pd_getStringPtr(struct afs_pdata *apd, char **str)
+{
     size_t len;
 
     if (apd == NULL || apd->remaining <= 0)
@@ -167,7 +178,8 @@ afs_pd_getStringPtr(struct afs_pdata *apd, char **str) {
 }
 
 static_inline int
-afs_pd_putInt(struct afs_pdata *apd, afs_int32 val) {
+afs_pd_putInt(struct afs_pdata *apd, afs_int32 val)
+{
     if (apd == NULL || apd->remaining < sizeof(afs_int32))
 	return E2BIG;
     *(afs_int32 *)apd->ptr = val;
@@ -178,7 +190,8 @@ afs_pd_putInt(struct afs_pdata *apd, afs_int32 val) {
 }
 
 static_inline int
-afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len) {
+afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len)
+{
     if (apd == NULL || apd->remaining < len)
 	return E2BIG;
     memcpy(apd->ptr, bytes, len);
@@ -781,7 +794,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     return (code);
 }
 #elif defined(AFS_XBSD_ENV)
-# if !defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD50_ENV)
 #  define arg data
 int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap,
@@ -802,6 +815,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     register struct filedesc *fdp;
     register struct vcache *tvc;
     register int ioctlDone = 0, code = 0;
+    struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
     fdp = p->p_fd;
@@ -946,7 +960,11 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
+# if defined(AFS_FBSD_ENV)
+afs_pioctl(struct thread *td, void *args)
+# else
 afs_pioctl(afs_proc_t *p, void *args, int *retval)
+# endif
 {
     struct a {
 	char *path;
@@ -963,7 +981,11 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
 # else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
+#  if defined(AFS_FBSD_ENV)
+	     td->td_ucred));
+#  else
 	     p->p_cred->pc_ucred));
+#  endif
 # endif
 }
 
@@ -1376,7 +1398,8 @@ DECL_PIOCTL(PGetFID)
  *
  * \post Changed ACL, via direct writing to the wire
  */
-int dummy_PSetAcl(char *ain, char *aout)
+int
+dummy_PSetAcl(char *ain, char *aout)
 {
     return 0;
 }
@@ -1834,14 +1857,18 @@ DECL_PIOCTL(PSetTokens)
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 # if defined(AFS_DARWIN_ENV)
-	afs_proc_t *p = current_proc();	/* XXX */
+	afs_proc_t *p = current_proc(); /* XXX */
+	char procname[256];
+	proc_selfname(procname, 256);
+# elif defined(AFS_FBSD_ENV)
+	struct thread *p = curthread;
+	char *procname = p->td_proc->p_comm;
 # else
 	afs_proc_t *p = curproc;	/* XXX */
+	char *procname = p->p_comm;
 # endif
-# ifndef AFS_DARWIN80_ENV
-	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
-		p->p_pid, p->p_comm);
-# endif
+	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
+		     MyPidxx2Pid(MyPidxx), procname);
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
 	if (!setpag(acred, -1, &pag, 1)) {
@@ -1872,6 +1899,7 @@ DECL_PIOCTL(PSetTokens)
     afs_SetPrimary(tu, flag);
     tu->tokenTime = osi_Time();
     afs_ResetUserConns(tu);
+    afs_NotifyUser(tu, UTokensObtained);
     afs_PutUser(tu, WRITE_LOCK);
 
     return 0;
@@ -2265,6 +2293,7 @@ DECL_PIOCTL(PGetTokens)
     if (((tu->states & UHasTokens) == 0)
 	|| (tu->ct.EndTimestamp < osi_Time())) {
 	tu->states |= (UTokensBad | UNeedsReset);
+	afs_NotifyUser(tu, UTokensDropped);
 	afs_PutUser(tu, READ_LOCK);
 	return ENOTCONN;
     }
@@ -2343,6 +2372,7 @@ DECL_PIOCTL(PUnlog)
 	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+	    afs_NotifyUser(tu, UTokensDropped);
 	    /* We have to drop the lock over the call to afs_ResetUserConns,
 	     * since it obtains the afs_xvcache lock.  We could also keep
 	     * the lock, and modify ResetUserConns to take parm saying we
@@ -2625,7 +2655,7 @@ Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 	return EWOULDBLOCK;	/* pretty close */
     }
     afs_BQueue(BOP_PATH, (struct vcache *)0, 0, 0, acred, (afs_size_t) 0,
-	       (afs_size_t) 0, tp);
+	       (afs_size_t) 0, tp, (void *)0, (void *)0);
     return 0;
 }
 
@@ -3401,11 +3431,13 @@ DECL_PIOCTL(PFlushVolumeData)
 		    goto loop;
 		}
 #ifdef AFS_DARWIN80_ENV
-		if (tvc->f.states & CDeadVnode) {
+	    if (tvc->f.states & CDeadVnode) {
+		if (!(tvc->f.states & CBulkFetching)) {
 		    ReleaseReadLock(&afs_xvcache);
 		    afs_osi_Sleep(&tvc->f.states);
 		    goto loop;
 		}
+	    }
 #endif
 #if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
@@ -3419,10 +3451,13 @@ DECL_PIOCTL(PFlushVolumeData)
 		    AFS_GLOCK();
 		    continue;
 		}
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		osi_vnhold(tvc, 0);
+		if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
+		    AFS_GUNLOCK();
+		    vnode_recycle(AFSTOV(tvc));
+		    AFS_GLOCK();
+		}
 #else
-		VREFCOUNT_INC(tvc); /* AIX, apparently */
+		AFS_FAST_HOLD(tvc);
 #endif
 		ReleaseReadLock(&afs_xvcache);
 #ifdef AFS_BOZONLOCK_ENV
@@ -3837,7 +3872,7 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
     touchedSize = 0;
     for (k = 0; k < num; sp++, k++) {
 	if (debugsetsp) {
-	    printf("sp host=%x, rank=%d\n", sp->host.s_addr, sp->rank);
+	    afs_warn("sp host=%x, rank=%d\n", sp->host.s_addr, sp->rank);
 	}
 	matches = 0;
 	ObtainReadLock(&afs_xserver);
@@ -3857,7 +3892,7 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
 
 	if (sa && matches) {	/* found one! */
 	    if (debugsetsp) {
-		printf("sa ip=%x, ip_rank=%d\n", sa->sa_ip, sa->sa_iprank);
+		afs_warn("sa ip=%x, ip_rank=%d\n", sa->sa_ip, sa->sa_iprank);
 	    }
 	    sa->sa_iprank = sp->rank + afs_randomMod15();
 	    afs_SortOneServer(sa->server);
@@ -4480,7 +4515,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
 #elif !defined(AFS_LINUX26_ENV) && !defined(AFS_SUN510_ENV)
-# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD80_ENV)
     newcred->cr_ngroups = 2;
 # else
     for (i = 2; i < NGROUPS; i++)
@@ -5151,7 +5186,7 @@ DECL_PIOCTL(PDiscon)
 	    afs_in_sync = 0;
 
 	    if (code && !force) {
-	    	printf("Files not synchronized properly, still in discon state. \n"
+	    	afs_warnuser("Files not synchronized properly, still in discon state. \n"
 		       "Please retry or use \"force\".\n");
 		mode = 0;
 	    } else {
@@ -5161,7 +5196,7 @@ DECL_PIOCTL(PDiscon)
 	        afs_ClearAllStatdFlag();
 		afs_is_disconnected = 0;
 		afs_is_discon_rw = 0;
-		printf("\nSync succeeded. You are back online.\n");
+		afs_warnuser("\nSync succeeded. You are back online.\n");
 	    }
 
 	    ReleaseWriteLock(&afs_discon_lock);

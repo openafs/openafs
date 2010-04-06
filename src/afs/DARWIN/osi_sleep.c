@@ -185,13 +185,8 @@ afs_osi_Sleep(void *event)
 #else
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
-#ifdef AFS_DARWIN14_ENV
 	/* this is probably safe for all versions, but testing is hard */
 	sleep(event, PVFS);
-#else
-	assert_wait((event_t) event, 0);
-	thread_block(0);
-#endif
 	AFS_GLOCK();
 #endif
     }
@@ -279,7 +274,6 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     evp->owner = current_thread();
 #else
     ticks = (ams * afs_hz) / 1000;
-#ifdef AFS_DARWIN14_ENV
     /* this is probably safe for all versions, but testing is hard. */
     /* using tsleep instead of assert_wait/thread_set_timer/thread_block
      * allows shutdown to work in 1.4 */
@@ -293,12 +287,6 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     else
 	prio = PVFS;
     code = tsleep(event, prio, "afs_osi_TimedSleep", ticks);
-#else
-    assert_wait((event_t) event, aintok ? THREAD_ABORTSAFE : THREAD_UNINT);
-    thread_set_timer(ticks, NSEC_PER_SEC / hz);
-    thread_block(0);
-    code = 0;
-#endif
     AFS_GLOCK();
 #endif
     if (seq == evp->seq)
@@ -321,12 +309,8 @@ afs_osi_Wakeup(void *event)
     evp = afs_getevent(event);
     if (evp->refcount > 1) {
 	evp->seq++;
-#ifdef AFS_DARWIN14_ENV
 	/* this is probably safe for all versions, but testing is hard. */
 	wakeup(event);
-#else
-	thread_wakeup((event_t) event);
-#endif
 	ret = 0;
     }
     relevent(evp);

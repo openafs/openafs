@@ -17,7 +17,9 @@
 
 
 int afs_osicred_initialized = 0;
+#ifndef AFS_FBSD80_ENV	/* cr_groups is now malloc()'d */
 afs_ucred_t afs_osi_cred;
+#endif
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
@@ -50,10 +52,8 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
 #if defined(AFS_FBSD80_ENV)
     VOP_UNLOCK(vp, 0);
-#elif defined(AFS_FBSD50_ENV)
-    VOP_UNLOCK(vp, 0, curthread);
 #else
-    VOP_UNLOCK(vp, 0, curproc);
+    VOP_UNLOCK(vp, 0, curthread);
 #endif
     afile->vnode = vp;
     afile->size = VTOI(vp)->i_size;
@@ -74,12 +74,10 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
     VOP_UNLOCK(afile->vnode, 0);
-#elif defined(AFS_FBSD50_ENV)
+#else
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
     VOP_UNLOCK(afile->vnode, LK_EXCLUSIVE, curthread);
-#else
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
 #endif
     AFS_GLOCK();
     if (code == 0) {
@@ -124,12 +122,9 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 #if defined(AFS_FBSD80_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
-#elif defined(AFS_FBSD50_ENV)
+#else
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
-#else
-    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
 #endif
     if (code != 0 || tvattr.va_size <= asize)
 	goto out;
@@ -138,19 +133,15 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     tvattr.va_size = asize;
 #if defined(AFS_FBSD80_ENV)
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp);
-#elif defined(AFS_FBSD50_ENV)
-    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curthread);
 #else
-    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curproc);
+    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curthread);
 #endif
 
 out:
 #if defined(AFS_FBSD80_ENV)
     VOP_UNLOCK(vp, 0);
-#elif defined(AFS_FBSD50_ENV)
-    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
 #else
-    VOP_UNLOCK(vp, LK_EXCLUSIVE, curproc);
+    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
 #endif
     if (glocked)
       AFS_GLOCK();

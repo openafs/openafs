@@ -464,7 +464,8 @@ DZap(struct dcache *adc)
 }
 
 static void
-DFlushBuffer(struct buffer *ab) {
+DFlushBuffer(struct buffer *ab)
+{
     struct osi_file *tfile;
     
     tfile = afs_CFileOpen(&ab->inode);

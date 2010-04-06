@@ -497,6 +497,8 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		    printf("dally, ");
 		else if (tconn.callState[j] == RX_STATE_HOLD)
 		    printf("hold, ");
+		else if (tconn.callState[j] == RX_STATE_RESET)
+		    printf("reset, ");
 		printf("mode: ");
 		if (tconn.callMode[j] == RX_MODE_SENDING)
 		    printf("sending");

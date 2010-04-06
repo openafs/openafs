@@ -269,7 +269,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-11-07
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2010-02-28
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
@@ -1051,7 +1051,7 @@ PACKAGE_VERSION="%{dkms_version}"
 
 # Items below here should not have to change with each driver version
 PACKAGE_NAME="%{name}"
-MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --enable-disconnected --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
+MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --enable-disconnected --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
 CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
@@ -1454,7 +1454,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/rmtsysd.*
 %{_mandir}/man8/vsys.*
 %{_mandir}/man5/CellAlias.*
-%{_mandir}/man5/afszcm.cat.*
 
 %files server
 %defattr(-,root,root)
@@ -1534,21 +1533,26 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
+%{_libdir}/libkopenafs.so.*
 %endif
 
 %files authlibs-devel
 %defattr(-,root,root)
+%{_includedir}/kopenafs.h
 %{_libdir}/libafsauthent.a
 %{_libdir}/libafsrpc.a
 %{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafsrpc_pic.a
+%{_libdir}/libkopenafs.a
 %if %{build_authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
+%{_libdir}/libkopenafs.so
 %endif
 
 %files devel
 %defattr(-,root,root)
+%{_bindir}/afs_compile_et
 %{_bindir}/rxgen
 %{_includedir}/afs
 %{_includedir}/des.h

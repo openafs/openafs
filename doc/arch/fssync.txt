@@ -1,0 +1,253 @@
+This file provides a brief description of the commands of the FSSYNC
+protocol, and how/why each are typically used.
+
+ -- vol op FSSYNC commands
+
+FSSYNC commands involving volume operations take a FSSYNC_VolOp_command
+struct as their command and arguments. They all deal with a specific
+volume, so "the specified volume" below refers to the volume in the
+FSSYNC_VolOp_hdr in the FSSYNC_VolOp_command.
+
+ -- FSYNC_VOL_ON
+
+Tells the fileserver to bring the specified volume online. For DAFS,
+this brings the volume into the preattached state. For non-DAFS, the
+volume is attached.
+
+This is generally used to tell the fileserver about a newly-created
+volume, or to return ('check in') a volume to the fileserver that was
+previously checked-out (e.g. via FSYNC_VOL_NEEDVOLUME).
+
+ -- FSYNC_VOL_OFF
+
+Tells the fileserver to take a volume offline, so nothing else will
+access the volume until it is brought online via FSSYNC again. A volume
+that is offlined with this command and the FSYNC_SALVAGE reason code
+will not be allowed access from the fileserver by anything. The volume
+will be 'checked out' until it is 'checked in' by another FSYNC command.
+
+Currently only the salvaging code uses this command; the only difference
+between it an FSYNC_VOL_NEEDVOLUME is the logic that determines whether
+an offlined volume can be accessed by other programs or not.
+
+ -- FSYNC_VOL_LISTVOLUMES
+
+This is currently a no-op; all it does is return success, assuming the
+FSSYNC command is well-formed.
+
+In Transarc/IBM AFS 3.1, this was used to create a file listing all
+volumes on the server, and was used with a tool to create a list of
+volumes to backup. After AFS 3.1, however, it never did anything.
+
+ -- FSYNC_VOL_NEEDVOLUME
+
+Tells the fileserver that the calling program needs the volume for a
+certain operation. The fileserver will offline the volume or keep it
+online, depending on the reason code given. The volume will be marked as
+'checked out' until 'checked in' again with another FSYNC command.
+
+Reason codes for this command are different than for normal FSSYNC
+commands; reason codes for _NEEDVOLUME are volume checkout codes like
+V_CLONE, V_DUMP, and the like. The fileserver will keep the volume
+online if the given reason code is V_READONLY, or if the volume is an RO
+volume and the given reason code is V_CLONE or V_DUMP. If the volume is
+taken offline, the volume's specialStatus will also be marked with VBUSY
+in the case of the V_CLONE or V_DUMP reason codes.
+
+ -- FSYNC_VOL_MOVE
+
+Tells the fileserver that the specified volume was moved to a new site.
+The new site is given in the reason code of the request. On receiving
+this, the fileserver merely sets the specialStatus on the volume, and
+breaks all of the callbacks on the volume.
+
+ -- FSYNC_VOL_BREAKCBKS
+
+Tells the fileserver to break all callbacks with the specified volume.
+This is used when volumes are deleted or overwritten (restores,
+reclones, etc).
+
+ -- FSYNC_VOL_DONE
+
+Tells the fileserver that a volume has been deleted. This is actually
+similar to FSYNC_VOL_ON, except that the volume isn't onlined. The
+volume is 'checked in', though, and is removed from the list of volumes.
+
+ -- FSYNC_VOL_QUERY
+
+Asks the fileserver to provide the known volume state information for
+the specified volume. If the volume is known, the response payload is a
+filled-in 'struct Volume'.
+
+This is used as a debugging tool to query volume state in the
+fileserver, but is also used by the volserver as an optimization so it
+does not need to always go to disk to retrieve volume information for
+e.g. the AFSVolListOneVolume or AFSVolListVolumes RPCs.
+
+ -- FSYNC_VOL_QUERY_HDR
+
+Asks the fileserver to provide the on-disk volume header for the
+specified volume, if the fileserver already has it loaded. If the
+fileserver does not already know this information, it responds with
+SYNC_FAILED with the reason code FSYNC_HDR_NOT_ATTACHED. Otherwise it
+responds with a filled-in 'struct VolumeDiskData' in the response
+payload.
+
+This is used by non-fileservers as an optimization during attachment if
+we are just reading from the volume and we don't need to 'check out' the
+volume from the fileserver (attaching with V_PEEK). If the fileserver
+has the header loaded, it avoids needing to hit the disk for the volume
+header.
+
+ -- FSYNC_VOL_QUERY_VOP (DAFS only)
+
+Asks the fileserver to provide information about the current volume
+operation that has the volume checked out. If the volume is checked out,
+the response payload is a filled-in 'struct FSSYNC_VolOp_info';
+otherwise the command fails with SYNC_FAILED.
+
+This is useful as a debugging aid, and is also used by the volserver to
+determine if a volume should be advertised as 'offline' or 'online'.
+
+ -- FSYNC_VOL_ATTACH
+
+This is like FSYNC_VOL_ON, but for DAFS forces the volume to become
+fully attached (as opposed to preattached). This is used for debugging,
+to ensure that a volume is attached and online without needing to
+contact the fileserver via e.g. a client.
+
+ -- FSYNC_VOL_FORCE_ERROR (DAFS only)
+
+This tells the fileserver that there is something wrong with a volume,
+and it should be put in an error state or salvaged.
+
+If the reason code is FSYNC_SALVAGE, the fileserver will potentially
+schedule a salvage for the volume. It may or may not actually schedule a
+salvage, depending on how many salvages have occurred and other internal
+logic; basically, specifying FSYNC_SALVAGE makes the fileserver behave
+as if the fileserver itself encountered an error with the volume that
+warrants a salvage.
+
+Non-fileserver programs use this to schedule salvages; they should not
+contact the salvageserver directly. Note when a salvage is scheduled as
+a result of this command, it is done so in the background; getting a
+response from this command does not necessarily mean the salvage has
+been scheduled, as it may be deferred until later.
+
+If the reason code is not FSYNC_SALVAGE, the fileserver will just put
+the volume into an error state, and the volume will be inaccessible
+until it is salvaged, or forced online.
+
+ -- FSYNC_VOL_LEAVE_OFF
+
+This 'checks in' a volume back to the fileserver, but tells the
+fileserver not to bring the volume back online. This can occur when a
+non-fileserver program is done with a volume, but the volume's "blessed"
+or "inService" fields are not set; this prevents the fileserver from
+trying to attach the volume later, only to find the volume is not
+blessed and take the volume offline.
+
+ -- FSYNC_VG_QUERY (DAFS only)
+
+This queries the fileserver VGC (volume group cache) for the volume
+group of the requested volume. The payload consists of an
+FSSYNC_VGQry_response_t, specifying the volume group and all of the
+volumes in that volume group.
+
+If the VGC for the requested partition is currently being populated,
+this will fail with SYNC_FAILED, and the FSYNC_PART_SCANNING reason
+code. If the VGC for the requested partition is currently completely
+unpopulated, a VGC scan for the partition will be started automatically
+in the background, and FSYNC_PART_SCANNING will still be returned.
+
+The demand-salvager uses this to find out what volumes are in the volume
+group it is salvaging; it can also be used for debugging the VGC.
+
+ -- FSYNC_VG_SCAN (DAFS only)
+
+This discards any information in the VGC for the specified partition,
+and re-scans the partition to populate the VGC in the background. This
+should normally not be needed, since scans start automatically when VGC
+information is requested. This can be used as a debugging tool, or to
+force the VGC to discard incorrect information that somehow got into the
+VGC.
+
+Note that the scan is scheduled in the background, so getting a response
+from this command does not imply that the scan has started; it may start
+sometime in the future.
+
+ -- FSYNC_VG_SCAN_ALL
+
+This is the same as FSYNC_VG_SCAN, but schedules scans for all
+partitions on the fileserver, instead of a particular one.
+
+ -- FSYNC_VOL_QUERY_VNODE
+
+Asks the fileserver for information about specific vnode. This takes a
+different command header than other vol ops; it takes a struct
+FSSYNC_VnQry_hdr which specifies the volume and vnode requested. The
+response payload is a 'struct Vnode' if successful.
+
+This responds with FSYNC_UNKNOWN_VNID if the fileserver doesn't know
+anything about the given vnode. This command will not automatically
+attach the associated volume; the volume must be attached before issuing
+this command in order to do anything useful.
+
+This is just a debugging tool, to see what the fileserver thinks about a
+particular vnode.
+
+ -- stats FSSYNC commands
+
+FSSYNC commands involving statistics take a FSSYNC_StatsOp_command
+struct as their command and arguments. Some of them use arguments to
+specify what stats are requested, which are specified in sop->args, the
+union in the FSSYNC_StatsOp_hdr struct.
+
+ -- FSYNC_VOL_STATS_GENERAL
+
+Retrieves general volume package stats from the fileserver. Response
+payload consists of a 'struct VolPkgStats'.
+
+ -- FSYNC_VOL_STATS_VICEP (DAFS only)
+
+Retrieves per-partition stats from the fileserver for the partition
+specified in sop->partName. Response payload consists of a 'struct
+DiskPartitionStats64'.
+
+ -- FSYNC_VOL_STATS_HASH (DAFS only)
+
+Retrieves hash chain stats for the hash bucket specified in
+sop->hash_bucket. Response payload consists of a 'struct
+VolumeHashChainStats'.
+
+ -- FSYNC_VOL_STATS_HDR (DAFS only)
+
+Retrieves stats for the volume header cache. Response payload consists
+of a 'struct volume_hdr_LRU_stats'.
+
+ -- FSYNC_VOL_STATS_VLRU (DAFS only)
+
+This is intended to retrieve stats for the VLRU generation specified in
+sop->vlru_generation. However, it is not yet implemented and currently
+always results in a SYNC_BAD_COMMAND result from the fileserver.
+
+ -- VGC update FSSYNC commands
+
+FSSYNC commands involving updating the VGC (volume group cache) take an
+FSSYNC_VGUpdate_command struct as their command arguments. The parent
+and child fields specify the (parent,child) entry in the partName VGC to
+add or remove.
+
+ -- FSYNC_VG_ADD (DAFS only)
+
+Adds an entry to the fileserver VGC. This merely adds the specified
+child volume to the specified parent volume group, and creates the
+parent volume group if it does not exist. This is used by programs that
+create new volumes, in order to keep the VGC up to date.
+
+ -- FSYNC_VG_DEL (DAFS only)
+
+Deletes an entry from the fileserver VGC. This merely removes the
+specified child volume from the specified parent volume group, deleting
+the volume group if the last entry was deleted. This is used by programs
+that destroy volumes, in order to keep the VGC up to date.

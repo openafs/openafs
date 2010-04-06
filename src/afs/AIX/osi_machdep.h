@@ -32,10 +32,6 @@ typedef struct proc afs_proc_t;
 #define afs_bufferpages v.v_bufhw
 
 #define osi_vnhold(avc, r) do { (avc)->vrefCount++; } while (0)
-#undef AFS_FAST_HOLD
-#define AFS_FAST_HOLD(vp) (vp)->vrefCount++
-#undef AFS_FAST_RELE
-#define AFS_FAST_RELE(vp) (vp)->vrefCount--
 
 #undef gop_lookupname
 #define	gop_lookupname(fnamep,segflg,followlink,compvpp) \

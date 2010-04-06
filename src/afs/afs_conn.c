@@ -26,7 +26,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
@@ -66,7 +66,8 @@ unsigned int VNOSERVERS = 0;
  *	of 0)
  */
 static struct rx_securityClass *
-afs_pickSecurityObject(struct afs_conn *conn, int *secLevel) {
+afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
+{
     struct rx_securityClass *secObj = NULL;
 
     /* Do we have tokens ? */
@@ -293,6 +294,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
 	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
+
+	rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)

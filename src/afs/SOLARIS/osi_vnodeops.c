@@ -245,7 +245,8 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
 
 		tdc->mflags |= DFFetchReq;
 		bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-				(afs_size_t) off, (afs_size_t) 1, tdc);
+				(afs_size_t) off, (afs_size_t) 1, tdc,
+				(void *)0, (void *)0);
 		if (!bp) {
 		    /* Unable to start background fetch; might as well stop */
 		    tdc->mflags &= ~DFFetchReq;

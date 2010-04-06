@@ -20,7 +20,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
@@ -115,7 +115,7 @@ afs_InitSetup(int preallocs)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
     code = rx_InitHost(rx_bindhost, htons(7001));
     if (code) {
-	printf("AFS: RX failed to initialize %d).\n", code);
+	afs_warn("AFS: RX failed to initialize %d).\n", code);
 	return code;
     }
     rx_SetRxDeadTime(afs_rx_deadtime);
@@ -161,16 +161,7 @@ afsd_thread(int *rock)
 	thread_terminate(current_thread());
 	break;
     case AFSOP_START_BKG:
-	AFS_GLOCK();
-	wakeup(arg);
-	while (afs_initState < AFSOP_START_BKG)
-	    afs_osi_Sleep(&afs_initState);
-	if (afs_initState < AFSOP_GO) {
-	    afs_initState = AFSOP_GO;
-	    afs_osi_Wakeup(&afs_initState);
-	}
-	afs_BackgroundDaemon();
-	AFS_GUNLOCK();
+	afs_warn("Install matching afsd! Old background daemons not supported.\n");
 	thread_terminate(current_thread());
 	break;
     case AFSOP_START_TRUNCDAEMON:
@@ -211,7 +202,7 @@ afsd_thread(int *rock)
 	thread_terminate(current_thread());
 	break;
     default:
-	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
+	afs_warn("Unknown op %ld in StartDaemon()\n", (long)parm);
 	break;
     }
 }
@@ -385,7 +376,7 @@ afsd_thread(void *rock)
 	complete_and_exit(0, 0);
 	break;
     default:
-	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
+	afs_warn("Unknown op %ld in StartDaemon()\n", (long)parm);
 	break;
     }
     return 0;
@@ -403,7 +394,7 @@ afsd_launcher(void *rock)
 #endif
 
     if (!kernel_thread(afsd_thread, (void *)rock, CLONE_VFORK | SIGCHLD))
-	printf("kernel_thread failed. afs startup will not complete\n");
+	afs_warn("kernel_thread failed. afs startup will not complete\n");
 }
 
 void
@@ -533,6 +524,48 @@ afs_syscall_call(long parm, long parm2, long parm3,
     put_vfs_context();
 #endif
 #if ((defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#if defined(AFS_DARWIN80_ENV)
+    if (parm == AFSOP_BKG_HANDLER) {
+	/* if afs_uspc_param grows this should be checked */
+	struct afs_uspc_param *mvParam = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+	void *param2;
+	void *param1;
+	int namebufsz;
+
+	AFS_COPYIN(AFSKPTR(parm2), (caddr_t)mvParam,
+		   sizeof(struct afs_uspc_param), code);
+	namebufsz = mvParam->bufSz;
+	param1 = afs_osi_Alloc(namebufsz);
+	param2 = afs_osi_Alloc(namebufsz);
+
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	if (afs_initState < AFSOP_GO) {
+	    afs_initState = AFSOP_GO;
+	    afs_osi_Wakeup(&afs_initState);
+	}
+
+	code = afs_BackgroundDaemon(mvParam, param1, param2);
+
+	if (!code) {
+	    mvParam->retval = 0;
+	    /* for reqs where pointers are strings: */
+	    if (mvParam->reqtype == AFS_USPC_UMV) {
+		/* don't copy out random kernel memory */
+		AFS_COPYOUT(param2, AFSKPTR(parm4),
+			    MIN(namebufsz, strlen((char *)param2)+1), code);
+		AFS_COPYOUT(param1, AFSKPTR(parm3),
+			    MIN(namebufsz, strlen((char *)param1)+1), code);
+	    }
+	    AFS_COPYOUT((caddr_t)mvParam, AFSKPTR(parm2),
+		       sizeof(struct afs_uspc_param), code);
+	}
+
+	afs_osi_Free(param1, namebufsz);
+	afs_osi_Free(param2, namebufsz);
+	osi_FreeSmallSpace(mvParam);
+    } else
+#endif /* DARWIN80 */
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
@@ -618,6 +651,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
 #endif /* AFS_SGI_ENV */
+#ifndef AFS_DARWIN80_ENV
     } else if (parm == AFSOP_START_BKG) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -627,17 +661,18 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
 	/* start the bkg daemon */
 	afs_osi_Invisible();
-#ifdef AFS_AIX32_ENV
+# ifdef AFS_AIX32_ENV
 	if (parm2)
 	    afs_BioDaemon(parm2);
 	else
-#endif /* AFS_AIX32_ENV */
+# endif /* AFS_AIX32_ENV */
 	    afs_BackgroundDaemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
+#endif /* ! AFS_DARWIN80_ENV */
     } else if (parm == AFSOP_START_TRUNCDAEMON) {
 	while (afs_initState < AFSOP_GO)
 	    afs_osi_Sleep(&afs_initState);
@@ -1018,12 +1053,10 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_cold_shutdown = 0;
 	if (parm2 == 1)
 	    afs_cold_shutdown = 1;
-#ifndef AFS_DARWIN_ENV
 	if (afs_globalVFS != 0) {
 	    afs_warn("AFS isn't unmounted yet! Call aborted\n");
 	    code = EACCES;
 	} else
-#endif
 	    afs_shutdown();
     } else if (parm == AFSOP_AFS_VFSMOUNT) {
 #ifdef	AFS_HPUX_ENV

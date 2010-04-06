@@ -174,6 +174,7 @@ install_session_keyring(struct key *keyring)
     struct key *old;
     char desc[20];
     int code = -EINVAL;
+    int flags;
 
     if (!__key_type_keyring)
 	return code;
@@ -183,11 +184,19 @@ install_session_keyring(struct key *keyring)
 	/* create an empty session keyring */
 	sprintf(desc, "_ses.%u", current->tgid);
 
+	/* if we're root, don't count the keyring against our quota. This
+	 * avoids starvation issues when dealing with PAM modules that always
+	 * setpag() as root */
+	if (current_uid() == 0)
+	    flags = KEY_ALLOC_NOT_IN_QUOTA;
+	else
+	    flags = KEY_ALLOC_IN_QUOTA;
+
 	keyring = afs_linux_key_alloc(
 			    __key_type_keyring, desc,
 			    current_uid(), current_gid(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    KEY_ALLOC_IN_QUOTA);
+			    flags);
 
 	if (IS_ERR(keyring)) {
 	    code = PTR_ERR(keyring);
@@ -472,17 +481,13 @@ static int afs_pag_match(const struct key *key, const void *description)
 static void afs_pag_destroy(struct key *key)
 {
     afs_uint32 pag = key->payload.value;
-    struct unixuser *pu;
     int locked = ISAFS_GLOCK();
 
     if (!locked)
 	AFS_GLOCK();
-    pu = afs_FindUser(pag, -1, READ_LOCK);
-    if (pu) {
-	pu->ct.EndTimestamp = 0;
-	pu->tokenTime = 0;
-	afs_PutUser(pu, READ_LOCK);
-    }
+
+    afs_MarkUserExpired(pag);
+
     if (!locked)
 	AFS_GUNLOCK();
 }

@@ -117,13 +117,12 @@ enum vcexcl { EXCL, NONEXCL };
 extern vfs_context_t afs_osi_ctxtp;
 extern int afs_osi_ctxtp_initialized;
 #endif
+extern u_int32_t afs_darwin_realmodes;
+extern u_int32_t afs_darwin_fsevents;
 
 /* 
  * Time related macros
  */
-#ifndef AFS_DARWIN60_ENV
-extern struct timeval time;
-#endif
 #ifdef AFS_DARWIN80_ENV
 static inline time_t osi_Time(void) {
     struct timeval _now;

@@ -1,0 +1,19 @@
+#!/bin/bash
+export BINDEST=/Library/OpenAFS/Tools
+
+function afsshutdown()
+{
+    logger -p local0.notice "Stopping OpenAFS"
+    $BINDEST/root.client/usr/vice/etc/afs.rc stop
+    exit 0
+}
+
+logger -p local0.notice "Starting OpenAFS"
+
+$BINDEST/root.client/usr/vice/etc/afs.rc start
+
+trap 'afsshutdown' TERM KILL INT QUIT HUP
+
+while true; do sleep 20; done
+exit 0
+

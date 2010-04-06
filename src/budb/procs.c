@@ -3405,6 +3405,9 @@ T_DumpHashTable(struct rx_call *call, int type, char *filename)
     afs_uint32 hash;
     dbadr a, first_a;
     char e[sizeof(struct block)];	/* unnecessarily conservative */
+    struct dump e_dump;
+    struct tape e_tape;
+    struct volInfo e_volinfo;
     int e_size;
     int old;
 
@@ -3448,16 +3451,20 @@ T_DumpHashTable(struct rx_call *call, int type, char *filename)
 		    fprintf(DUMP, "    at %d is ", a);
 		switch (type) {
 		case HT_dumpIden_FUNCTION:
-		    fprintf(DUMP, "%d\n", ntohl(((struct dump *)e)->id));
+		    memcpy(&e_dump, e, sizeof(e_dump));
+		    fprintf(DUMP, "%d\n", ntohl(e_dump.id));
 		    break;
 		case HT_dumpName_FUNCTION:
-		    fprintf(DUMP, "%s\n", ((struct dump *)e)->dumpName);
+		    memcpy(&e_dump, e, sizeof(e_dump));
+		    fprintf(DUMP, "%s\n", e_dump.dumpName);
 		    break;
 		case HT_tapeName_FUNCTION:
-		    fprintf(DUMP, "%s\n", ((struct tape *)e)->name);
+		    memcpy(&e_tape, e, sizeof(e_tape));
+		    fprintf(DUMP, "%s\n", e_tape.name);
 		    break;
 		case HT_volName_FUNCTION:
-		    fprintf(DUMP, "%s\n", ((struct volInfo *)e)->name);
+		    memcpy(&e_volinfo, e, sizeof(e_volinfo));
+		    fprintf(DUMP, "%s\n", e_volinfo.name);
 		    break;
 		}
 		if ((ht_HashEntry(mht, e) % length) != hash)

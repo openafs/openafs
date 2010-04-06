@@ -51,7 +51,7 @@ int nt_ListAFSFiles(char *dev,
 				      char *dir, char *file), FILE * fp,
 		    int (*judge_fun) (struct ViceInodeInfo *, afs_uint32 vid, void *rock),
 		    afs_uint32 singleVolumeNumber, void *rock);
-int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+int ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		   int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
 		   afs_uint32 singleVolumeNumber, int *forcep, int forceR,
 		   char *wpath, void *rock);

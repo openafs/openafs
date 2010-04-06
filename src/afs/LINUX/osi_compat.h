@@ -203,3 +203,30 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 # endif
 #endif
 #endif
+
+#ifndef HAVE_PAGE_OFFSET
+static inline loff_t
+page_offset(struct page *pp)
+{
+    return (((loff_t) pp->index) << PAGE_CACHE_SHIFT);
+}
+#endif
+
+#ifndef HAVE_ZERO_USER_SEGMENTS
+static inline void
+zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
+		   unsigned int from2, unsigned int to2)
+{
+    void *base = kmap_atomic(pp, KM_USER0);
+
+    if (to1 > from1)
+	memset(base + from1, 0, to1 - from1);
+
+    if (to2 > from2)
+	memset(base + from2, 0, to2 - from2);
+
+    flush_dcache_page(pp);
+    kunmap_atomic(base, KM_USER0);
+}
+#endif
+

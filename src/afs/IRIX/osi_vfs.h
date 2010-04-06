@@ -13,34 +13,15 @@
 #ifndef _SGI_VFS_H_
 #define _SGI_VFS_H_
 
-#if !defined(AFS_SGI65_ENV)
-/* In Irix 6.5, the r/w-vops rwlocks the vnode if not already locked. */
-#define IO_ISLOCKED 0
-#endif
-
 /*
- * UFS -> EFS/XFS translations
+ * UFS -> XFS translations
  */
-#ifdef AFS_SGI62_ENV
-#ifdef AFS_SGI64_ENV
-#define EFS_VTOI(vp)	bhvtoi(VNODE_TO_FIRST_BHV(vp))
 /* Note: If SGI ever has more than one behavior per vnode, we'll have
  * to search for the one we want.
  */
 #define XFS_VTOI(V) ((xfs_inode_t*)((V)->v_fbhv->bd_pdata))
 #define vfstom(V) (bhvtom((V)->vfs_fbhv))
-#else
-#define EFS_VTOI(vp)	vtoi(vp)
-#endif
-#define EFS_ITOV(ip)	itov(ip)
-#else
-#define ITOV(ip)	itov(ip)
-#define VTOI(vp)	vtoi(vp)
-#define EFS_ITOV ITOV
-#define EFS_VTOI VTOI
-#endif
 
-#ifdef AFS_SGI62_ENV
 struct xfs_inode;
 typedef struct xfs_inode xfs_inode_t;
 #define xfs_ino_t uint64_t
@@ -59,45 +40,21 @@ extern int xfs_iget(struct mount *, struct xfs_trans *, xfs_ino_t, uint,
 /* When we have XFS only clients, then these macros will be defined in
  * terms of the XFS inode only.
  */
-#ifdef AFS_SGI_DUAL_FS_CACHE
-#define AFS_SGI_EFS_CACHE 0
-#define AFS_SGI_XFS_CACHE 1
-extern int afs_CacheFSType;
-extern vnode_t *(*afs_IGetVnode) (ino_t);
-extern struct vnodeops *afs_efs_vnodeopsp;
 extern struct vnodeops *afs_xfs_vnodeopsp;
 
-#define AFS_SGI_IGETVNODE(INO) (*afs_IGetVnode)(INO)
 /* These need to be functions to wrap the vnode op calls. */
 extern ino_t VnodeToIno(vnode_t * vp);
 extern dev_t VnodeToDev(vnode_t * vp);
 extern off_t VnodeToSize(vnode_t * vp);
-#else
-/* Just the EFS variants exist for now. */
-#define VnodeToIno(vp)		((ino_t)(EFS_VTOI((vp))->i_number))
-#define VnodeToDev(vp)		EFS_VTOI((vp))->i_dev
-#define VnodeToSize(vp)		EFS_VTOI((vp))->i_size
-#define AFS_SGI_IGETVNODE(INO)	afs_EFSIGetVnode(INO)
-#endif
-#else /* AFS_SGI62_ENV */
-#define AFS_SGI_IGETVNODE(INO)	afs_EFSIGetVnode(INO)
-#endif
 
 /* Page routines are vnode ops in Irix 6.5. These macros paper over the
  * differences.
  */
-#ifdef AFS_SGI65_ENV
 #define	PTOSSVP(vp, off, len)  VOP_TOSS_PAGES((vp), (off), (len), 0)
 #define PFLUSHINVALVP(vp, off, len) VOP_FLUSHINVAL_PAGES((vp), (off), (len), 0)
 #define PFLUSHVP(vp, len, flags, code) \
 		VOP_FLUSH_PAGES((vp), 0, (len), (flags), 0, code)
 #define PINVALFREE(vp, off)    VOP_INVALFREE_PAGES((vp), (off))
-#else
-#define	PTOSSVP		ptossvp
-#define PFLUSHINVALVP	pflushinvalp
-#define PFLUSHVP(vp, len, flags, code) code = pflushvp(vp, len, flags)
-#define PINVALFREE	pinvalfree
-#endif
 
 
 /*
@@ -187,7 +144,6 @@ extern int afs_is_numa_arch;
 	vn_open((path), (seg), (mode), (perm), (dvp), (why), 0)
 #else /* AFS_SGI_VNODE_GLUE */
 #define VFS_STATFS	VFS_STATVFS
-#ifdef AFS_SGI65_ENV
 #define AFS_VOP_ATTR_SET VOP_ATTR_SET
 #define AFS_VOP_ATTR_GET VOP_ATTR_GET
 #define AFS_VOP_SETATTR  VOP_SETATTR
@@ -202,28 +158,6 @@ extern int afs_is_numa_arch;
 
 #define AFS_VN_OPEN(path, seg, mode, perm, dvp, why) \
 	vn_open((path), (seg), (mode), (perm), (dvp), (why), 0, NULL)
-#else
-#define AFS_VOP_ATTR_SET(dvp, name, attr, size, flags, cred, code) \
-	code = VOP_ATTR_SET((dvp), (name), (attr), (size), (flags), (cred))
-#define AFS_VOP_ATTR_GET(dvp, name, attr, sizep, flags, cred, code) \
-	code = VOP_ATTR_GET((dvp), (name), (attr), (sizep), (flags), (cred))
-#define AFS_VOP_SETATTR(vp, vattr, flags, cred, code) \
-	code = VOP_SETATTR((vp), (vattr), (flags), (cred))
-#define AFS_VOP_GETATTR(vp, vattr, flags, cred, code) \
-	code = VOP_GETATTR((vp), (vattr), (flags), (cred))
-#define AFS_VOP_REMOVE(dvp, path,  cred, code) \
-	code = VOP_REMOVE((dvp), (path), (cred))
-#define AFS_VOP_LOOKUP(dvp, name, dvpp, path, flags, rdir, cred, code) \
-	code = VOP_LOOKUP((dvp), (name), (dvpp), (path), (flags), \
-			  (rdir), (cred))
-#define AFS_VOP_RMDIR(ddvp, path, cdir, cred, code) \
-	code = VOP_RMDIR((ddvp), (path), (cdir), (cred))
-#define AFS_VOP_READ(vp,uiop,iof,cr,code) \
-	code = VOP_READ((vp), (uiop), (iof), (cr))
-#define AFS_VOP_WRITE(vp,uiop,iof,cr,code) \
-	code = VOP_WRITE((vp), (uiop), (iof), (cr))
-#define AFS_VN_OPEN	vn_open
-#endif /* AFS_SGI65_ENV */
 
 #define AFS_VOP_RWLOCK(vp, flag)	VOP_RWLOCK((vp), (flag))
 #define AFS_VOP_RWUNLOCK(vp, flag)	VOP_RWUNLOCK((vp), (flag))

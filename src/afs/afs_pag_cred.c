@@ -32,7 +32,8 @@ static struct afspag_cell *cells = 0;
 static struct afspag_cell *primary_cell = 0;
 
 
-struct afspag_cell *afspag_GetCell(char *acell)
+struct afspag_cell *
+afspag_GetCell(char *acell)
 {
     struct afspag_cell *tcell;
 
@@ -66,7 +67,8 @@ out:
 }
 
 
-struct afspag_cell *afspag_GetPrimaryCell()
+struct afspag_cell *
+afspag_GetPrimaryCell(void)
 {
     struct afspag_cell *tcell;
 
@@ -77,7 +79,8 @@ struct afspag_cell *afspag_GetPrimaryCell()
 }
 
 
-void afspag_SetPrimaryCell(char *acell)
+void
+afspag_SetPrimaryCell(char *acell)
 {
     struct afspag_cell *tcell;
 
@@ -88,7 +91,8 @@ void afspag_SetPrimaryCell(char *acell)
 }
 
 
-int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
+int
+afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     register afs_int32 i;
     register struct unixuser *tu;
@@ -122,7 +126,8 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 }
 
 
-int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
+int
+afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     afs_int32 i;
     register struct unixuser *tu;
@@ -173,14 +178,18 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     if (set_parent_pag) {
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 # if defined(AFS_DARWIN_ENV)
-	afs_proc_t *p = current_proc();	/* XXX */
+	afs_proc_t *p = current_proc(); /* XXX */
+	char procname[256];
+	proc_selfname(procname, 256);
+# elif defined(AFS_FBSD_ENV)
+	struct thread *p = curthread;
+	char *procname = p->td_proc->p_comm;
 # else
 	afs_proc_t *p = curproc;	/* XXX */
+	char *procname = p->p_comm;
 # endif
-# ifndef AFS_DARWIN80_ENV
-	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
-		p->p_pid, p->p_comm);
-# endif
+	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
+		     MyPidxx2Pid(MyPidxx), procname);
 	setpag(p, acred, -1, &pag, 1);
 #else
 	setpag(acred, -1, &pag, 1);
@@ -309,7 +318,8 @@ out:
 }
 
 
-int afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
+int
+afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     int setsysname, count, t;
     char *cp, *setp;

@@ -79,13 +79,13 @@ parse_dumphdr(XFILE * X, unsigned char *tag, tagged_field * field,
     afs_uint32 r;
 
     memset(&hdr, 0, sizeof(hdr));
-    if (r = xftell(X, &where))
+    if ((r = xftell(X, &where)))
 	return r;
     sub64_32(hdr.offset, where, 1);
 
-    if (r = ReadInt32(X, &hdr.magic))
+    if ((r = ReadInt32(X, &hdr.magic)))
 	return r;
-    if (r = ReadInt32(X, &hdr.version))
+    if ((r = ReadInt32(X, &hdr.version)))
 	return r;
 
     if (hdr.magic != DUMPBEGINMAGIC) {
@@ -175,7 +175,7 @@ parse_dumptimes(XFILE * X, unsigned char *tag, tagged_field * field,
     afs_uint16 count;
     afs_uint32 r;
 
-    if (r = ReadInt16(X, &count))
+    if ((r = ReadInt16(X, &count)))
 	return r;
     if (count != 2) {
 	if (p->cb_error)
@@ -183,9 +183,9 @@ parse_dumptimes(XFILE * X, unsigned char *tag, tagged_field * field,
 			   "Incorrect array count (%d) in dump times", count);
 	return DSERR_FMT;
     }
-    if (r = ReadInt32(X, &hdr->from_date))
+    if ((r = ReadInt32(X, &hdr->from_date)))
 	return r;
-    if (r = ReadInt32(X, &hdr->to_date))
+    if ((r = ReadInt32(X, &hdr->to_date)))
 	return r;
     hdr->field_mask |= (F_DUMPHDR_FROM | F_DUMPHDR_TO);
     if (p->print_flags & DSPRINT_DUMPHDR)
@@ -202,7 +202,6 @@ parse_dumpend(XFILE * X, unsigned char *tag, tagged_field * field,
 	      void *l_refcon)
 {
     dump_parser *p = (dump_parser *) g_refcon;
-    afs_uint32 r;
 
     if (value != DUMPENDMAGIC) {
 	if (p->cb_error)
@@ -239,7 +238,7 @@ ParseDumpHeader(XFILE * X, dump_parser * p)
     afs_uint32 r;
 
     prep_pi(p, &pi);
-    if (r = ReadByte(X, &tag))
+    if ((r = ReadByte(X, &tag)))
 	return handle_return(r, X, tag, p);
     if (tag != TAG_DUMPHEADER)
 	return handle_return(0, X, tag, p);
@@ -258,7 +257,7 @@ ParseVolumeHeader(XFILE * X, dump_parser * p)
     afs_uint32 r;
 
     prep_pi(p, &pi);
-    if (r = ReadByte(X, &tag))
+    if ((r = ReadByte(X, &tag)))
 	return handle_return(r, X, tag, p);
     if (tag != TAG_VOLHEADER)
 	return handle_return(0, X, tag, p);
@@ -277,7 +276,7 @@ ParseVNode(XFILE * X, dump_parser * p)
     afs_uint32 r;
 
     prep_pi(p, &pi);
-    if (r = ReadByte(X, &tag))
+    if ((r = ReadByte(X, &tag)))
 	return handle_return(r, X, tag, p);
     if (tag != TAG_VNODE)
 	return handle_return(0, X, tag, p);

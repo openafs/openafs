@@ -935,6 +935,7 @@ verifyEntryChains(struct ubik_trans *ut)
 {
     afs_int32 code;
     afs_int32 offset;
+    afs_int32 start;
     int blockIndex, entryIndex;
     char entry[sizeof(struct block)];
     int entrySize;
@@ -966,7 +967,8 @@ verifyEntryChains(struct ubik_trans *ut)
 		return BUDB_IO;
 
 	    /* check if entry is free by looking at the first "afs_int32" of the structure */
-	    if (*((afs_int32 *) & entry[0]) == 0) {	/* zero is free */
+	    memcpy(&start, entry, sizeof(start));
+	    if (start == 0) {	/* zero is free */
 		/* Is it on any hash chain? */
 		if (blockMap[blockIndex]->entries[entryIndex] & MAP_HASHES) {
 		    Log("Entry: blockindex %d, entryindex %d - marked free but hashed 0x%x\n", blockIndex, entryIndex, blockMap[blockIndex]->entries[entryIndex]);

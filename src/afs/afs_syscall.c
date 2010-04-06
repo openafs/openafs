@@ -24,7 +24,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
@@ -36,8 +36,13 @@
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
+#ifdef AFS_DARWIN100_ENV
+    dst->in = CAST_USER_ADDR_T(src->in);
+    dst->out = CAST_USER_ADDR_T(src->out);
+#else
     dst->in = (char *)(unsigned long)src->in;
     dst->out = (char *)(unsigned long)src->out;
+#endif
     dst->in_size = src->in_size;
     dst->out_size = src->out_size;
 }
@@ -497,16 +502,23 @@ afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval)
 {
     struct afssysa64 *uap64 = NULL;
     struct afssysa *uap = NULL;
+#elif defined(AFS_FBSD_ENV)
+int
+afs3_syscall(struct thread *p, void *args)
+{
+    register struct a {
+	long syscall;
+	long parm1;
+	long parm2;
+	long parm3;
+	long parm4;
+	long parm5;
+	long parm6;
+    } *uap = (struct a *)args;
+    long *retval;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs3_syscall(p, args, retval)
-# ifdef AFS_FBSD50_ENV
-     struct thread *p;
-# else
-     afs_proc_t *p;
-# endif
-     void *args;
-     long *retval;
+afs3_syscall(afs_proc_t *p, void *args, long *retval)
 {
     register struct a {
 	long syscall;
@@ -638,6 +650,11 @@ Afs_syscall()
 	    code =
 		afs_syscall64_call(uap64->parm1, uap64->parm2, uap64->parm3,
 				   uap64->parm4, uap64->parm5, uap64->parm6);
+	    /* pass back the code as syscall retval */
+	    if (code < 0) {
+		*retval = code;
+		code = 0;
+	    }
 	} else if (uap64->syscall == AFSCALL_SETPAG) {
 	    AFS_GLOCK();
 	    code = afs_setpag(p, args, retval);
@@ -676,6 +693,13 @@ Afs_syscall()
 	    code =
 		afs_syscall_call(uap->parm1, uap->parm2, uap->parm3,
 				 uap->parm4, uap->parm5, uap->parm6);
+#ifdef AFS_DARWIN_ENV
+	    /* pass back the code as syscall retval */
+	    if (code < 0) {
+		*retval = code;
+		code = 0;
+	    }
+#endif
 	} else if (uap->syscall == AFSCALL_SETPAG) {
 #ifdef	AFS_SUN5_ENV
 	    register proc_t *procp;
@@ -686,7 +710,9 @@ Afs_syscall()
 	    AFS_GUNLOCK();
 #else
 	    AFS_GLOCK();
-#if	defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_FBSD_ENV)
+	    code = afs_setpag(p, args);
+#elif	defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    code = afs_setpag(p, args, retval);
 #else /* AFS_DARWIN_ENV || AFS_XBSD_ENV */
 	    code = afs_setpag();

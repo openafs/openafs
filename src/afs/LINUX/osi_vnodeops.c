@@ -49,7 +49,7 @@
 #define MAX_ERRNO 1000L
 #endif
 
-extern struct backing_dev_info afs_backing_dev_info;
+extern struct backing_dev_info *afs_backing_dev_info;
 
 extern struct vcache *afs_globalVp;
 extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
@@ -481,7 +481,10 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;
     flock.l_start = flp->fl_start;
-    flock.l_len = flp->fl_end - flp->fl_start + 1;
+    if (flp->fl_end == OFFSET_MAX)
+	flock.l_len = 0; /* Lock to end of file */
+    else
+	flock.l_len = flp->fl_end - flp->fl_start + 1;
 
     /* Safe because there are no large files, yet */
 #if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
@@ -525,7 +528,10 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     flp->fl_type = flock.l_type;
     flp->fl_pid = flock.l_pid;
     flp->fl_start = flock.l_start;
-    flp->fl_end = flock.l_start + flock.l_len - 1;
+    if (flock.l_len == 0)
+	flp->fl_end = OFFSET_MAX; /* Lock to end of file */
+    else
+	flp->fl_end = flock.l_start + flock.l_len - 1;
 
     crfree(credp);
     return afs_convert_code(code);
@@ -544,7 +550,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;
     flock.l_start = 0;
-    flock.l_len = OFFSET_MAX;
+    flock.l_len = 0;
 
     /* Safe because there are no large files, yet */
 #if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
@@ -729,8 +735,12 @@ static inline void
 check_bad_parent(struct dentry *dp)
 {
     cred_t *credp;
-    struct vcache *vcp = VTOAFS(dp->d_inode), *avc = NULL;
-    struct vcache *pvc = VTOAFS(dp->d_parent->d_inode);
+    struct dentry *parent;
+    struct vcache *vcp, *pvc, *avc = NULL;
+
+    vcp = VTOAFS(dp->d_inode);
+    parent = dget_parent(dp);
+    pvc = VTOAFS(parent->d_inode);
 
     if (vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
 	credp = crref();
@@ -747,6 +757,8 @@ check_bad_parent(struct dentry *dp)
 	    AFS_RELE(AFSTOV(avc));
 	crfree(credp);
     }
+
+    dput(parent);
 
     return;
 }
@@ -2463,7 +2475,7 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
     if (vattr)
 	vattr2inode(ip, vattr);
 
-    ip->i_mapping->backing_dev_info = &afs_backing_dev_info;
+    ip->i_mapping->backing_dev_info = afs_backing_dev_info;
 /* Reset ops if symlink or directory. */
     if (S_ISREG(ip->i_mode)) {
 	ip->i_op = &afs_file_iops;

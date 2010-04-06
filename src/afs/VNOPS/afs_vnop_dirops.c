@@ -210,7 +210,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	/* Get a new dcache for it first. */
 	new_dc = afs_GetDCache(tvc, (afs_size_t) 0, &treq, &offset, &len, 1);
 	if (!new_dc) {
-	    printf("afs_mkdir: can't get new dcache for dir.\n");
+	    /* printf("afs_mkdir: can't get new dcache for dir.\n"); */
 	    code = ENOENT;
 	    goto done;
 	}
@@ -220,8 +220,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			       (afs_int32 *) &newFid.Fid,
 			       (afs_int32 *) &adp->f.fid.Fid);
 	ReleaseWriteLock(&afs_xdcache);
-	if (code)
-	    printf("afs_mkdir: afs_dirMakeDir code = %u\n", code);
+	/* if (code) printf("afs_mkdir: afs_dirMakeDir code = %u\n", code); */
 
 	afs_PutDCache(new_dc);
 
@@ -383,7 +382,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 
 	if (!tdc) {
 	    ReleaseWriteLock(&adp->lock);
-	    printf("afs_rmdir: No local dcache!\n");
+	    /* printf("afs_rmdir: No local dcache!\n"); */
 	    code = ENETDOWN;
 	    goto done;
 	}
@@ -401,7 +400,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    ReleaseSharedLock(&afs_xvcache);
 	    
 	    if (!tvc) {
-		printf("afs_rmdir: Can't find dir's vcache!\n");
+		/* printf("afs_rmdir: Can't find dir's vcache!\n"); */
 		ReleaseSharedLock(&tdc->lock);
 	        afs_PutDCache(tdc);	/* drop ref count */
     	        ReleaseWriteLock(&adp->lock);

@@ -82,7 +82,7 @@ extern int afs_shuttingdown;
 #define	PIGGYSIZE	1350	/* max piggyback size */
 #define	MAXVOLS		128	/* max vols we can store */
 #define	MAXSYSNAME	128	/* max sysname (i.e. @sys) size */
-#define MAXNUMSYSNAMES	16	/* max that current constants allow */
+#define MAXNUMSYSNAMES	32	/* max that current constants allow */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
 #define AFS_NCBRS	300	/* max # of call back return entries */
@@ -130,6 +130,9 @@ struct sysname_info {
 
 #if defined(AFS_CACHE_BYPASS)
 #define	BOP_FETCH_NOCACHE	4   /* parms are: vnode ptr, offset, segment ptr, addr, cred ptr */
+#endif
+#ifdef AFS_DARWIN_ENV
+#define	BOP_MOVE	5	 /* ptr1 afs_uspc_param ptr2 sname ptr3 dname */
 #endif
 
 #define	B_DONTWAIT	1	/* On failure return; don't wait */
@@ -312,6 +315,10 @@ struct cell_alias {
  * lifetime of the afs_GCPAGs function.
  */
 #define TMP_UPAGNotReferenced	128
+
+/* unixuser notify events */
+#define UTokensObtained 1
+#define UTokensDropped  2
 
 /* values for afs_gcpags */
 enum { AFS_GCPAGS_NOTCOMPILED = 0, AFS_GCPAGS_OK =
@@ -581,8 +588,10 @@ struct SimpleLocks {
 #define CVFlushed	0x00080000
 #ifdef AFS_LINUX22_ENV
 #define CPageWrite      0x00200000      /* to detect vm deadlock - linux */
-#else
+#elif defined(AFS_SGI_ENV)
 #define CWritingUFS	0x00200000	/* to detect vm deadlock - used by sgi */
+#elif defined(AFS_DARWIN80_ENV)
+#define CEvent          0x00200000      /* to preclude deadlock when sending events */
 #endif
 #define CCreating	0x00400000	/* avoid needless store after open truncate */
 #define CPageHog	0x00800000	/* AIX - dumping large cores is a page hog. */

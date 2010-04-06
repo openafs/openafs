@@ -347,7 +347,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 		    AFS_RELE(AFSTOV(afs_globalVp));
 #endif
 		afs_globalVp = tvp;
-		VREF(AFSTOV(afs_globalVp));
+		vref(AFSTOV(afs_globalVp));
 	    }
 	    AFSTOV(tvp)->v_flag |= VROOT;
 	    afs_globalVFS = mp;

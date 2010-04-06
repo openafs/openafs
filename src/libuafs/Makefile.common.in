@@ -208,7 +208,9 @@ UAFSOBJ = \
 	$(UOBJ)/Krxstat.xdr.o \
 	$(UOBJ)/rxstat.o \
 	$(UOBJ)/xdr_int32.o \
-	$(UOBJ)/xdr_int64.o
+	$(UOBJ)/xdr_int64.o \
+	$(UOBJ)/xdr_mem.o \
+	$(UOBJ)/xdr_len.o
 
 AFSWEBOBJ = \
 	$(WEBOBJ)/afs_atomlist.o \
@@ -338,8 +340,9 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
-	$(WEBOBJ)/rxstat.o
-
+	$(WEBOBJ)/rxstat.o \
+	$(WEBOBJ)/xdr_mem.o \
+	$(WEBOBJ)/xdr_len.o
 
 AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_atomlist.o \
@@ -464,7 +467,9 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
-	$(WEBOBJ)/rxstat.o
+	$(WEBOBJ)/rxstat.o \
+	$(WEBOBJ)/xdr_mem.o \
+	$(WEBOBJ)/xdr_len.o
 
 JUAFSOBJ = \
 	$(JUAFS)/afs_atomlist.o \
@@ -592,7 +597,9 @@ JUAFSOBJ = \
 	$(JUAFS)/Krxstat.ss.o \
 	$(JUAFS)/Krxstat.xdr.o \
 	$(JUAFS)/rxstat.o \
-	$(JUAFS)/xdr_int64.o
+	$(JUAFS)/xdr_int64.o \
+	$(JUAFS)/xdr_mem.o \
+	$(JUAFS)/xdr_len.o
 
 # Compilation rules
 
@@ -739,7 +746,7 @@ $(UOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(UOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE1)
 $(UOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(UOBJ)/xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
 	$(CRULE1)
 $(UOBJ)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
@@ -861,6 +868,10 @@ $(UOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 $(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE1)
+$(UOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
+	$(CRULE1)
+$(UOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE1)
 
 # These files are for the netscape plugin
@@ -1006,7 +1017,7 @@ $(WEBOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(WEBOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE2)
 $(WEBOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE2) @CFLAGS_NOERROR@
+	$(CRULE2)
 $(WEBOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE2)
 $(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
@@ -1131,6 +1142,10 @@ $(WEBOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 $(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE2)
 $(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE2)
+$(WEBOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
+	$(CRULE2)
+$(WEBOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE2)
 
 # These are for libjuafs.a 
@@ -1277,7 +1292,7 @@ $(JUAFS)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 $(JUAFS)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE1)
 $(JUAFS)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(JUAFS)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE1)
 $(JUAFS)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
@@ -1396,7 +1411,10 @@ $(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
 $(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
-
+$(JUAFS)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
+	$(CRULE1)
+$(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
+	$(CRULE1)
 
 clean:
 	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx

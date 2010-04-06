@@ -5,8 +5,8 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
-AH_VERBATIM([OPENAFS_HEADER],
-[#undef HAVE_RES_SEARCH
+AH_BOTTOM([
+#undef HAVE_RES_SEARCH
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
 #if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
 # if ENDIANESS_IN_SYS_PARAM_H
@@ -364,7 +364,8 @@ case $system in
                      fi
                    fi
 		 fi
-		 if test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
+		 if test ! -f "$LINUX_KERNEL_BUILD/include/generated/autoconf.h" &&
+		    test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
 		 if test "x$enable_kernel_module" = "xno"; then
@@ -576,68 +577,8 @@ else
 		hppa*-hp-hpux10*)
 			AFS_SYSNAME="hp_ux102"
 			;;
-		powerpc-apple-darwin1.2*)
-			AFS_SYSNAME="ppc_darwin_12"
-			;;
-		powerpc-apple-darwin1.3*)
-			AFS_SYSNAME="ppc_darwin_13"
-			;;
-		powerpc-apple-darwin1.4*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.1*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.2*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.3*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.4*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.5*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin6.0*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.1*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.2*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.3*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.4*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.5*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin7.0*)
+		powerpc-apple-darwin7*)
 			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.1*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.2*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.3*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.4*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.5*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin8.0*)
-			AFS_SYSNAME="ppc_darwin_80"
 			;;
 		powerpc-apple-darwin8.*)
 			AFS_SYSNAME="ppc_darwin_80"
@@ -781,10 +722,8 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
-			save_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
-			AC_TRY_COMPILE(
-			 [#include <linux/autoconf.h>],
+			AC_TRY_KBUILD(
+			 [],
 			 [#ifndef CONFIG_USERMODE
 			  #error not UML
 			  #endif],
@@ -792,7 +731,6 @@ else
 			if test "${ac_cv_linux_is_uml}" = yes; then
 			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
 			fi
-			CPPFLAGS="$save_CPPFLAGS"
 			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
@@ -830,6 +768,7 @@ case $AFS_SYSNAME in
     *_obsd43)   AFS_PARAM_COMMON=param.obsd43.h  ;;
     *_obsd44)   AFS_PARAM_COMMON=param.obsd44.h  ;;
     *_obsd45)   AFS_PARAM_COMMON=param.obsd45.h  ;;
+    *_obsd46)   AFS_PARAM_COMMON=param.obsd46.h  ;;
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
@@ -873,6 +812,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
 		 LINUX_HAVE_PAGEVEC_LRU_ADD_FILE
 		 LINUX_HAVE_SPLICE_DIRECT_TO_ACTOR
+		 LINUX_HAVE_PAGE_OFFSET
+		 LINUX_HAVE_ZERO_USER_SEGMENTS
                  LINUX_STRUCT_TASK_HAS_CRED
 		 LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER
 		 LINUX_HAVE_KMEM_CACHE_T
@@ -887,6 +828,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_DEFINES_PREV_TASK
 		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
 		 LINUX_STRUCT_SUPER_BLOCK_HAS_S_BDI
+		 LINUX_STRUCT_BDI_HAS_NAME
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS
 		 LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE
@@ -1244,6 +1186,8 @@ else
   fi
   
 fi
+
+AC_CHECK_RESOLV_RETRANS
 
 AC_CACHE_VAL(ac_cv_setsockopt_iprecverr,
 [

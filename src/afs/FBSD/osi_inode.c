@@ -33,7 +33,11 @@ int
 getinode(fs, dev, inode, ipp, perror)
      struct mount *fs;
      struct inode **ipp;
+#ifdef AFS_FBSD53_ENV
+     struct cdev *dev;
+#else
      dev_t dev;
+#endif
      ino_t inode;
      int *perror;
 {
@@ -94,7 +98,11 @@ int
 igetinode(vfsp, dev, inode, ipp, perror)
      struct inode **ipp;
      struct mount *vfsp;
+#ifdef AFS_FBSD53_ENV
+     struct cdev *dev;
+#else
      dev_t dev;
+#endif
      ino_t inode;
      int *perror;
 {

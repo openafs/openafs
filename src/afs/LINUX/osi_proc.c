@@ -67,7 +67,7 @@ static void *c_next(struct seq_file *m, void *p, loff_t *pos)
 	tq = QNext(cq);
 
 	if (tq == &CellLRU)
-		return NULL;
+		tq = NULL;
 
 	AFS_GUNLOCK();
 	return tq;

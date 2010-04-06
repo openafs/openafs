@@ -203,7 +203,7 @@ afs_osi_TraverseProcTable(void)
 extern rwlock_t tasklist_lock __attribute__((weak));
 #endif
 void
-afs_osi_TraverseProcTable()
+afs_osi_TraverseProcTable(void)
 {
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
     struct task_struct *p;
@@ -430,7 +430,19 @@ afs_osi_proc2cred(afs_proc_t * pr)
            NGROUPS * sizeof(gid_t));
     return &cr;
 }
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_FBSD_ENV)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
+{
+    /*
+     * This whole function is kind of an ugly hack.  For one, the
+     * 'const' is a lie.  Also, we should probably be holding the
+     * proc mutex around all accesses to the credentials structure,
+     * but the present API does not allow this.
+     */
+    return pr->p_ucred;
+}
+#elif defined(AFS_DARWIN_ENV)
 const afs_ucred_t *
 afs_osi_proc2cred(afs_proc_t * pr)
 {

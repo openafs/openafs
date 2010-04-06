@@ -82,7 +82,6 @@ extern int afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, ch
 extern struct hostent *hostutil_GetHostByName(register char *ahost);
 extern char *hostutil_GetNameByINet(afs_uint32 addr);
 extern afs_uint32 extractAddr(char *line, int maxSize);
-extern char *afs_inet_ntoa(afs_uint32 addr);
 extern char *afs_inet_ntoa_r(afs_uint32 addr, char *buf);
 extern char *gettmpdir(void);
 

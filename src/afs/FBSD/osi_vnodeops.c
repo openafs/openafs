@@ -474,11 +474,7 @@ afs_vop_lookup(ap)
     register int flags = ap->a_cnp->cn_flags;
     int lockparent;		/* 1 => lockparent flag is set */
     int wantparent;		/* 1 => wantparent or lockparent flag */
-#ifdef AFS_FBSD50_ENV
     struct thread *p = ap->a_cnp->cn_thread;
-#else
-    struct proc *p = ap->a_cnp->cn_proc;
-#endif
 
     dvp = ap->a_dvp;
     if (dvp->v_type != VDIR) {
@@ -570,11 +566,7 @@ afs_vop_create(ap)
     int error = 0;
     struct vcache *vcp;
     register struct vnode *dvp = ap->a_dvp;
-#ifdef AFS_FBSD50_ENV
     struct thread *p = ap->a_cnp->cn_thread;
-#else
-    struct proc *p = ap->a_cnp->cn_proc;
-#endif
     GETNAME();
 
     AFS_GLOCK();
@@ -637,7 +629,8 @@ afs_vop_open(ap)
 				 * struct vnode *a_vp;
 				 * int  a_mode;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
+				 * struct thread *a_td;
+				 * struct file *a_fp;
 				 * } */ *ap;
 {
     int error;
@@ -663,7 +656,7 @@ afs_vop_close(ap)
 				 * struct vnode *a_vp;
 				 * int  a_fflag;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
+				 * struct thread *a_td;
 				 * } */ *ap;
 {
     int code;
@@ -682,9 +675,9 @@ int
 afs_vop_access(ap)
      struct vop_access_args	/* {
 				 * struct vnode *a_vp;
-				 * int  a_mode;
+				 * accmode_t a_accmode;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
+				 * struct thread *a_td;
 				 * } */ *ap;
 {
     int code;
@@ -704,7 +697,6 @@ afs_vop_getattr(ap)
 				 * struct vnode *a_vp;
 				 * struct vattr *a_vap;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
 				 * } */ *ap;
 {
     int code;
@@ -720,7 +712,6 @@ afs_vop_setattr(ap)
 				 * struct vnode *a_vp;
 				 * struct vattr *a_vap;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
 				 * } */ *ap;
 {
     int code;
@@ -828,11 +819,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     uio.uio_resid = ap->a_count;
     uio.uio_segflg = UIO_SYSSPACE;
     uio.uio_rw = UIO_READ;
-#ifdef AFS_FBSD50_ENV
     uio.uio_td = curthread;
-#else
-    uio.uio_procp = curproc;
-#endif
 
     AFS_GLOCK();
     osi_FlushPages(avc, osi_curcred());	/* hold bozon lock, but not basic vnode lock */
@@ -1001,11 +988,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     uio.uio_resid = ap->a_count;
     uio.uio_segflg = UIO_SYSSPACE;
     uio.uio_rw = UIO_WRITE;
-#ifdef AFS_FBSD50_ENV
     uio.uio_td = curthread;
-#else
-    uio.uio_procp = curproc;
-#endif
     sync = IO_VMIO;
     if (ap->a_sync & VM_PAGER_PUT_SYNC)
 	sync |= IO_SYNC;
@@ -1033,11 +1016,11 @@ int
 afs_vop_ioctl(ap)
      struct vop_ioctl_args	/* {
 				 * struct vnode *a_vp;
-				 * int  a_command;
-				 * caddr_t  a_data;
+				 * u_long a_command;
+				 * void *a_data;
 				 * int  a_fflag;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
+				 * struct thread *a_td;
 				 * } */ *ap;
 {
     struct vcache *tvc = VTOAFS(ap->a_vp);
@@ -1065,7 +1048,7 @@ afs_vop_poll(ap)
 				 * struct vnode *a_vp;
 				 * int  a_events;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
+				 * struct thread *td;
 				 * } */ *ap;
 {
     /*
@@ -1086,7 +1069,7 @@ afs_vop_mmap(ap)
 				 * struct vnode *a_vp;
 				 * int  a_fflags;
 				 * struct ucred *a_cred;
-				 * struct proc *a_p;
+				 * struct thread *td;
 				 * } */ *ap;
 {
     return (EINVAL);
@@ -1096,9 +1079,8 @@ int
 afs_vop_fsync(ap)
      struct vop_fsync_args	/* {
 				 * struct vnode *a_vp;
-				 * struct ucred *a_cred;
 				 * int a_waitfor;
-				 * struct proc *a_p;
+				 * struct thread *td;
 				 * } */ *ap;
 {
     int error;
@@ -1150,11 +1132,7 @@ afs_vop_link(ap)
     int error = 0;
     register struct vnode *dvp = ap->a_tdvp;
     register struct vnode *vp = ap->a_vp;
-#ifdef AFS_FBSD50_ENV
     struct thread *p = ap->a_cnp->cn_thread;
-#else
-    struct proc *p = ap->a_cnp->cn_proc;
-#endif
 
     GETNAME();
     if (dvp->v_mount != vp->v_mount) {
@@ -1198,11 +1176,7 @@ afs_vop_rename(ap)
     register struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
     register struct vnode *fdvp = ap->a_fdvp;
-#ifdef AFS_FBSD50_ENV
     struct thread *p = fcnp->cn_thread;
-#else
-    struct proc *p = fcnp->cn_proc;
-#endif
 
     /*
      * Check for cross-device rename.
@@ -1304,11 +1278,7 @@ afs_vop_mkdir(ap)
     register struct vattr *vap = ap->a_vap;
     int error = 0;
     struct vcache *vcp;
-#ifdef AFS_FBSD50_ENV
     struct thread *p = ap->a_cnp->cn_thread;
-#else
-    struct proc *p = ap->a_cnp->cn_proc;
-#endif
 
     GETNAME();
 #ifdef DIAGNOSTIC
@@ -1378,11 +1348,7 @@ afs_vop_symlink(struct vop_symlink_args *ap)
 	error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
 	if (error == 0) {
 	    newvp = AFSTOV(vcp);
-#ifdef AFS_FBSD50_ENV
 	    ma_vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_thread);
-#else
-	    ma_vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_proc);
-#endif
 	}
     }
     AFS_GUNLOCK();
@@ -1463,7 +1429,7 @@ int
 afs_vop_inactive(ap)
      struct vop_inactive_args	/* {
 				 * struct vnode *a_vp;
-				 * struct proc *a_p;
+				 * struct thread *td;
 				 * } */ *ap;
 {
     register struct vnode *vp = ap->a_vp;

@@ -20,12 +20,6 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include <sys/namei.h>
 
-#ifdef AFS_FBSD50_ENV
-/* serious cheating */
-#undef curproc
-#define curproc curthread
-#endif
-
 int
 osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	       struct vnode **vpp)
@@ -48,7 +42,7 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 #ifdef AFS_FBSD80_ENV
     flags |= MPSAFE; /* namei must take GIANT if needed */
 #endif
-    NDINIT(&n, LOOKUP, flags, seg, aname, curproc);
+    NDINIT(&n, LOOKUP, flags, seg, aname, curthread);
     if ((error = namei(&n)) != 0) {
 #ifdef AFS_FBSD50_ENV
 	if (glocked)
@@ -60,10 +54,8 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
     /* XXX should we do this?  Usually NOT (matt) */
 #if defined(AFS_FBSD80_ENV)
     /*VOP_UNLOCK(n.ni_vp, 0);*/
-#elif defined(AFS_FBSD50_ENV)
-    VOP_UNLOCK(n.ni_vp, 0, curthread);
 #else
-    VOP_UNLOCK(n.ni_vp, 0, curproc);
+    VOP_UNLOCK(n.ni_vp, 0, curthread);
 #endif
     NDFREE(&n, NDF_ONLY_PNBUF);
 #ifdef AFS_FBSD50_ENV

@@ -177,16 +177,9 @@ nuke(char *aname, afs_int32 avolid)
      * all we need to do to call ListViceInodes is find the inodes for the
      * volume we're nuking.
      */
-#ifdef AFS_NAMEI_ENV
     code =
 	ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid, &forceSal,
 		       0, wpath, &allInodes);
-#else
-    code =
-	ListViceInodes(lastDevComp, aname, "/tmp/vNukeXX", NukeProc, avolid,
-		       &forceSal, 0, wpath, &allInodes);
-    unlink("/tmp/vNukeXX");	/* clean it up now */
-#endif
     if (code == 0) {
 	/* actually do the idecs now */
 	for (ti = allInodes; ti; ti = ti->next) {

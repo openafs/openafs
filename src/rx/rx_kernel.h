@@ -36,7 +36,7 @@ typedef struct socket *osi_socket;
         CM_TRACE_RXWAKE, ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__)
 
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
-#define osi_Assert(e) (void)((e) || (osi_AssertFailK(#e, __FILE__, __LINE__), 0))
+#define osi_Assert(exp) (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
 
 #define	osi_Msg printf)(
 #define osi_VMsg vprintf)(

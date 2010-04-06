@@ -49,6 +49,9 @@
 #include "ubik.h"
 #endif /* defined(UKERNEL) */
 
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 short ubik_initializationState;	/*!< initial state is zero */
 
