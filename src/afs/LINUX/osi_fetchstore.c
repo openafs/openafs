@@ -64,10 +64,12 @@ afs_linux_splice_actor(struct pipe_inode_info *pipe,
     size = sd->len;
 
     /* Eventually, this could be rx_WritePage */
-    code = rx_Write(svar->call, page_address(buf->page), size);
-    if (code != size) {
-	return -33; /* Can't get a proper rx error out from here */
-    }
+    code = rx_Write(svar->call, kmap(buf->page), size);
+
+    if (code != size)
+	size = -33; /* Can't get a proper rx error out from here */
+
+    kunmap(buf->page);
 
     return size;
 }
@@ -132,7 +134,8 @@ afs_linux_read_actor(read_descriptor_t *desc, struct page *page,
 	size = count;
 
     /* Eventually, this could be rx_WritePage */
-    code = rx_Write(svar->call, page_address(page) + offset, size);
+    code = rx_Write(svar->call, kmap(page) + offset, size);
+    kunmap(page);
 
     if (code != size) {
         return -33; /* Can't get a proper rx error out from here */
