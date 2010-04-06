@@ -11,6 +11,24 @@ openafs (1.5.73.3-1) experimental; urgency=low
   Demand-attach is experimental.  Please only use this file server for
   testing.  It is not yet ready to run in a production environment.
 
+  This change REQUIRES changes to your BosConfig file so that the file
+  server will start properly.  After installing the new openafs-fileserver
+  package, run:
+
+      bos status localhost -instance fs -long
+
+  and take note of the flags that you're using with the fileserver and
+  volserver.  Then, run:
+
+      bos stop localhost fs -localauth
+      bos delete localhost fs -localauth
+      bos create localhost dafs dafs \
+          "/usr/lib/openafs/fileserver <fileserver-flags>" \
+          "/usr/lib/openafs/volserver <volserver-flags>" \
+          /usr/lib/openafs/salvageserver /usr/lib/openafs/salvager
+
+  to create the correct new BosConfig entry for demand-attach AFS.
+
   As of this release, the default permissions for /etc/openafs/server are
   now 0755, matching upstream.  The only file in that directory that needs
   to be kept secure is KeyFile, which is created with 0600 permissions.
