@@ -38,20 +38,15 @@ Importing a New Upstream Release
     1. Update the package version in debian/changelog to match the new
        upstream version.  If the new upstream version is a release
        candidate, don't forget to add "~" before "rc" so that the versions
-       will sort property.  Add "+dfsg" to the upstream version to
-       indicate that we are repacking the upstream release tarball.  You
-       will need to commit this change before continuing.
+       will sort property.
 
-    2. Update debian/rules to change the UPSTREAM variable if obtaining
-       the upstream tarballs from a different location.  If you do not run
-       AFS on the system from which you're preparing a release, you'll
-       also need to change this to a URL and use wget instead of cp.  You
-       will need to commit this change before continuing.
+    2. Double-check the TAG setting in debian/rules to be sure it's going
+       to retrieve the correct Git tag.
 
-    3. Run debian/rules get-orig-source.  This will repack the upstream
-       tarball, remove non-DFSG files and the WINNT directory, and create
-       a file named openafs_<version>.orig.tar.gz in the current
-       directory.
+    3. Run debian/rules get-orig-source.  This will generate a tarball
+       from the upstream Git tag using git archive, remove the WINNT
+       directory, and create a file named openafs_<version>.orig.tar.gz in
+       the current directory.
 
     4. Ensure that you have the OpenAFS upstream Git repository available
        as a remote in the Git repository where you're doing the packaging
@@ -81,8 +76,8 @@ Importing a New Upstream Release
        <upstream-tag> is the corresponding tag from the upstream Git
        repository, and <local-tag> is of the form upstream/<version> where
        <version> is the non-Debian portion of the package version number.
-       (In other words, including any tildes and the "+dfsg" part, but not
-       the dash and the Debian revision.)
+       (In other words, including any tildes, but not the dash and the
+       Debian revision.)
 
     7. Commit the tarball to the repository with pristine-tar, using the
        new local tag as the reference:
@@ -138,4 +133,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Tue, 19 Jan 2010 20:34:36 -0800
+ -- Russ Allbery <rra@debian.org>, Tue,  6 Apr 2010 14:27:11 -0700

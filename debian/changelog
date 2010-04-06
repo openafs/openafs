@@ -30,6 +30,14 @@ openafs (1.5.72+dfsg-1) UNRELEASED; urgency=low
     same location.
   * Upstream builds specific files with -fno-strict-aliasing where needed,
     so we no longer need to build the whole source with that flag.
+  * Upstream no longer includes files covered by the Apple Public Source
+    License, so we no longer have to repackage the upstream source to
+    remove those files.  Drop Debian patches to the build system that were
+    compensating for the removal of those files.
+  * Switch to generating upstream tarballs from the upstream Git tag
+    rather than from tarball releases.  There's no reason to include all
+    the generated files when we're going to regenerate them anyway, and
+    this saves effort combining the doc and src tarballs.
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
