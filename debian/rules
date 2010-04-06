@@ -75,7 +75,7 @@ REPO    := git://git.openafs.org/openafs.git
 # installed and there's network connectivity to the upstream repository.
 get-orig-source:
 	git archive --remote='$(REPO)' --prefix='openafs_$(DEBVERS).orig/' \
-	    --format=tar '$(TAG)' | tar xf
+	    --format=tar '$(TAG)' | tar xf -
 	rm -r openafs_$(DEBVERS).orig/src/WINNT
 	tar cf openafs_$(DEBVERS).orig.tar openafs_$(DEBVERS).orig
 	rm -r openafs_$(DEBVERS).orig
