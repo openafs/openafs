@@ -1049,8 +1049,6 @@ struct afs_fheader {
 
 #if defined(AFS_CACHE_VNODE_PATH)
 typedef char *afs_ufs_dcache_id_t;
-#elif defined(UKERNEL)
-typedef afs_int32 afs_ufs_dcache_id_t;
 #elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
@@ -1350,6 +1348,8 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #ifndef afs_vnodeToDev
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToDev(V) VnodeToDev(V)
+#elif defined(UKERNEL)
+#define afs_vnodeToDev(V) (VTOI(V) ? (VTOI(V)->i_dev) : (-1))
 #else
 #define afs_vnodeToDev(V) (VTOI(V)->i_dev)
 #endif

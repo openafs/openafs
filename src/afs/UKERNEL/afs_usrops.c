@@ -35,6 +35,10 @@
 #undef	VIRTUE
 #undef	VICE
 
+#ifndef AFS_CACHE_VNODE_PATH
+#error You must compile UKERNEL code with -DAFS_CACHE_VNODE_PATH
+#endif
+
 #define CACHEINFOFILE	"cacheinfo"
 #define	AFSLOGFILE	"AFSLog"
 #define	DCACHEFILE	"CacheItems"
@@ -119,7 +123,7 @@ usr_mutex_t afs_global_lock;
 usr_thread_t afs_global_owner;
 usr_mutex_t rx_global_lock;
 usr_thread_t rx_global_owner;
-usr_mutex_t osi_inode_lock;
+usr_mutex_t osi_dummy_lock;
 usr_mutex_t osi_waitq_lock;
 usr_mutex_t osi_authenticate_lock;
 afs_lock_t afs_ftf;
@@ -632,18 +636,19 @@ afs_osi_CheckTimedWaits(void)
 }
 
 /*
- * I-node numbers are indeces into a table containing a filename
- * i-node structure and a vnode structure. When we create an i-node,
- * we copy the name into the array and initialize enough of the fields
- * in the inode and vnode structures to get the client to work.
+ * 'dummy' vnode, for non-AFS files. We don't actually need most vnode
+ * information for non-AFS files, so point all of them towards this vnode
+ * to save memory.
  */
-typedef struct {
-    struct usr_inode i_node;
-    char *name;
-} osi_file_table_t;
-osi_file_table_t *osi_file_table;
-int n_osi_files = 0;
-int max_osi_files = 0;
+static struct usr_vnode dummy_vnode = {
+    0,    /* v_flag */
+    1024, /* v_count */
+    NULL, /* v_op */
+    NULL, /* v_vfsp */
+    0,    /* v_type */
+    0,    /* v_rdev */
+    NULL  /* v_data */
+};
 
 /*
  * Allocate a slot in the file table if there is not one there already,
@@ -653,12 +658,7 @@ int
 lookupname(char *fnamep, int segflg, int followlink,
 	   struct usr_vnode **compvpp)
 {
-    int i;
     int code;
-    struct usr_inode *ip;
-    struct usr_vnode *vp;
-
-    /*usr_assert(followlink == 0); */
 
     /*
      * Assume relative pathnames refer to files in AFS
@@ -670,34 +670,17 @@ lookupname(char *fnamep, int segflg, int followlink,
 	return code;
     }
 
-    usr_mutex_lock(&osi_inode_lock);
+    /* For non-afs files, nobody really looks at the meaningful values in the
+     * returned vnode, so we can return a 'fake' one. The vnode can be held,
+     * released, etc. and some callers check for a NULL vnode anyway, so we
+     * to return something. */
 
-    for (i = 0; i < n_osi_files; i++) {
-	if (strcmp(fnamep, osi_file_table[i].name) == 0) {
-	    *compvpp = &osi_file_table[i].i_node.i_vnode;
-	    (*compvpp)->v_count++;
-	    usr_mutex_unlock(&osi_inode_lock);
-	    return 0;
-	}
-    }
+    usr_mutex_lock(&osi_dummy_lock);
+    VN_HOLD(&dummy_vnode);
+    usr_mutex_unlock(&osi_dummy_lock);
 
-    if (n_osi_files == max_osi_files) {
-	usr_mutex_unlock(&osi_inode_lock);
-	return ENOSPC;
-    }
+    *compvpp = &dummy_vnode;
 
-    osi_file_table[n_osi_files].name = afs_osi_Alloc(strlen(fnamep) + 1);
-    usr_assert(osi_file_table[n_osi_files].name != NULL);
-    strcpy(osi_file_table[n_osi_files].name, fnamep);
-    ip = &osi_file_table[i].i_node;
-    vp = &ip->i_vnode;
-    vp->v_data = (caddr_t) ip;
-    ip->i_dev = -1;
-    n_osi_files++;
-    ip->i_number = n_osi_files;
-    vp->v_count = 2;
-    usr_mutex_unlock(&osi_inode_lock);
-    *compvpp = vp;
     return 0;
 }
 
@@ -713,15 +696,13 @@ osi_UFSOpen(afs_dcache_id_t *ino)
 
     AFS_ASSERT_GLOCK();
 
-    if (ino->ufs > n_osi_files) {
-	get_user_struct()->u_error = ENOENT;
-	return NULL;
-    }
-
     AFS_GUNLOCK();
     fp = (struct osi_file *)afs_osi_Alloc(sizeof(struct osi_file));
     usr_assert(fp != NULL);
-    fp->fd = open(osi_file_table[ino->ufs - 1].name, O_RDWR | O_CREAT, 0);
+
+    usr_assert(ino->ufs);
+
+    fp->fd = open(ino->ufs, O_RDWR | O_CREAT, 0);
     if (fp->fd < 0) {
 	get_user_struct()->u_error = errno;
 	afs_osi_Free((char *)fp, sizeof(struct osi_file));
@@ -1075,14 +1056,6 @@ osi_Init(void)
 {
     int i;
 
-    /*
-     * Allocate the table used to implement psuedo-inodes.
-     */
-    max_osi_files = cacheFiles + 100;
-    osi_file_table = (osi_file_table_t *)
-	afs_osi_Alloc(max_osi_files * sizeof(osi_file_table_t));
-    usr_assert(osi_file_table != NULL);
-
 #ifndef NETSCAPE_NSAPI
     /*
      * Initialize the mutex and condition variable used to implement
@@ -1113,7 +1086,7 @@ osi_Init(void)
      */
     usr_mutex_init(&afs_global_lock);
     usr_mutex_init(&rx_global_lock);
-    usr_mutex_init(&osi_inode_lock);
+    usr_mutex_init(&osi_dummy_lock);
     usr_mutex_init(&osi_waitq_lock);
     usr_mutex_init(&osi_authenticate_lock);
 

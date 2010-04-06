@@ -45,6 +45,7 @@ AH_BOTTOM([
  * try and reduce potential confusion. 
  */
 #define _FILE_OFFSET_BITS 64
+#define AFS_CACHE_VNODE_PATH
 #endif
 
 #undef AFS_NAMEI_ENV
