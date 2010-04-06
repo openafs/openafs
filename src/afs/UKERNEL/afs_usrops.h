@@ -10,9 +10,10 @@
 #ifndef __AFS_USROPS_H__
 #define __AFS_USROPS_H__ 1
 
-#if !defined(UKERNEL)
-#include <afs/sysincludes.h>
-#endif /* !defined(UKERNEL) */
+#ifdef KERNEL
+# include "afs/sysincludes.h"
+# include "afsincludes.h"
+#endif /* KERNEL */
 
 /*
  * Macros to manipulate doubly linked lists
@@ -51,25 +52,19 @@
     _ELEM->_PREV = NULL; \
 }
 
+extern char *uafs_mountDir;
+
 extern struct afsconf_dir *afs_cdir;
 extern char afs_LclCellName[64];
 
 extern int afs_osicred_Initialized;
 
-extern struct usr_vnode *afs_RootVnode;
-
-extern struct usr_vnode *afs_CurrentDir;
-extern struct usr_vnode *afs_FileTable[];
-extern int afs_FileFlags[];
-extern off_t afs_FileOffsets[];
-
-extern char afs_mountDir[];
-extern int afs_mountDirLen;
-
 extern void uafs_InitClient(void);
 extern void uafs_InitThread(void);
-extern void uafs_Init(char *, char *, char *, char *, int, int, int, int, int,
-		      int, int, int, int, int, char *);
+extern int uafs_Setup(const char *mount);
+extern int uafs_ParseArgs(int argc, char **argv);
+extern int uafs_Run(void);
+extern const char* uafs_MountDir(void);
 extern void uafs_RxServerProc(void);
 extern int uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentP,
 			   struct usr_vnode **vpp);
@@ -153,5 +148,6 @@ extern int uafs_IsRoot(char *path);
 extern int uafs_statmountpoint_r(char *path);
 extern int uafs_statvfs(struct statvfs *buf);
 extern void uafs_Shutdown(void);
+extern void uafs_mount(void);
 
 #endif /* __AFS_USROPS_H__ */

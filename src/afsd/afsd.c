@@ -62,6 +62,8 @@
 
 #define VFS 1
 
+#include <afs/stds.h>
+
 #include <afs/cmd.h>
 
 #include "afsd.h"
@@ -80,8 +82,17 @@
 #include <sys/file.h>
 #include <errno.h>
 #include <sys/time.h>
-#include <dirent.h>
 #include <sys/wait.h>
+
+/* darwin dirent.h doesn't give us the prototypes we want if KERNEL is
+ * defined */
+#if defined(UKERNEL) && defined(AFS_USR_DARWIN_ENV)
+# undef KERNEL
+# include <dirent.h>
+# define KERNEL
+#else
+# include <dirent.h>
+#endif
 
 
 #ifdef HAVE_SYS_PARAM_H
@@ -182,13 +193,13 @@ static int event_pid;
 
 #endif /* AFS_DARWIN_ENV */
 
-#if AFS_HAVE_STATVFS
+#if AFS_HAVE_STATVFS || defined(HAVE_SYS_STATVFS_H)
 #include <sys/statvfs.h>
 #else
 #if defined(AFS_SUN_ENV)
 #include <sys/vfs.h>
 #else
-#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#ifdef HAVE_SYS_STATFS_H
 #include <sys/statfs.h>
 #endif
 #endif
@@ -240,37 +251,38 @@ struct in_addr_42 {
 /*
  * Global configuration variables.
  */
-afs_int32 enable_rxbind = 0;
-afs_int32 afs_shutdown = 0;
-afs_int32 cacheBlocks;		/*Num blocks in the cache */
-afs_int32 cacheFiles;		/*Optimal # of files in workstation cache */
-afs_int32 rwpct = 0;
-afs_int32 ropct = 0;
-afs_int32 cacheStatEntries;	/*Number of stat cache entries */
-char cacheBaseDir[1024];	/*Where the workstation AFS cache lives */
-char confDir[1024];		/*Where the workstation AFS configuration lives */
-char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
-char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
-char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
-char fullpn_CacheInfo[1024];	/*Full pathname of CACHEINFO */
-char fullpn_VFile[1024];	/*Full pathname of data cache files */
-char *vFilePtr;			/*Ptr to the number part of above pathname */
-int sawCacheMountDir = 0;	/* from cmd line */
-int sawCacheBaseDir = 0;
-int sawCacheBlocks = 0;
-int sawDCacheSize = 0;
-int sawBiod = 0;
-int sawCacheStatEntries = 0;
-char afsd_cacheMountDir[1024];	/*Mount directory for AFS */
-char rootVolume[64] = "root.afs";	/*AFS root volume name */
-afs_int32 cacheSetTime = FALSE;	/*Keep checking time to avoid drift? */
-afs_int32 isHomeCell;		/*Is current cell info for the home cell? */
-#ifdef AFS_XBSD_ENV
-int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
-#else
-int createAndTrunc = O_CREAT | O_TRUNC;	/*Create & truncate on open */
+static afs_int32 enable_rxbind = 0;
+static afs_int32 afs_shutdown = 0;
+static afs_int32 cacheBlocks;		/*Num blocks in the cache */
+static afs_int32 cacheFiles;		/*Optimal # of files in workstation cache */
+static afs_int32 rwpct = 0;
+static afs_int32 ropct = 0;
+static afs_int32 cacheStatEntries;	/*Number of stat cache entries */
+static char cacheBaseDir[1024];	/*Where the workstation AFS cache lives */
+static char confDir[1024];		/*Where the workstation AFS configuration lives */
+static char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
+static char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
+static char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
+static char fullpn_CacheInfo[1024];	/*Full pathname of CACHEINFO */
+static char fullpn_VFile[1024];	/*Full pathname of data cache files */
+static char *vFilePtr;			/*Ptr to the number part of above pathname */
+static int sawCacheMountDir = 0;	/* from cmd line */
+static int sawCacheBaseDir = 0;
+static int sawCacheBlocks = 0;
+static int sawDCacheSize = 0;
+#ifdef AFS_AIX32_ENV
+static int sawBiod = 0;
 #endif
-int ownerRWmode = 0600;		/*Read/write OK by owner */
+static int sawCacheStatEntries = 0;
+char afsd_cacheMountDir[1024];	/*Mount directory for AFS */
+static char rootVolume[64] = "root.afs";	/*AFS root volume name */
+static afs_int32 cacheSetTime = FALSE;	/*Keep checking time to avoid drift? */
+#ifdef AFS_XBSD_ENV
+static int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
+#else
+static int createAndTrunc = O_CREAT | O_TRUNC;	/*Create & truncate on open */
+#endif
+static int ownerRWmode = 0600;		/*Read/write OK by owner */
 static int filesSet = 0;	/*True if number of files explicitly set */
 static int nFilesPerDir = 2048;	/* # files per cache dir */
 #if defined(AFS_CACHE_BYPASS)
@@ -297,11 +309,11 @@ static int enable_fakestat = 0;	/* enable fakestat support */
 static int enable_backuptree = 0;	/* enable backup tree support */
 static int enable_nomount = 0;	/* do not mount */
 static int enable_splitcache = 0;
-int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
+static int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
-int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
-int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
+static int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
+static int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 
 #ifdef AFS_SGI62_ENV
 #define AFSD_INO_T ino64_t
@@ -602,7 +614,7 @@ PartSizeOverflow(char *path, int cs)
 {
   int bsize = -1;
   afs_int64 totalblks, mint;
-#if AFS_HAVE_STATVFS
+#if AFS_HAVE_STATVFS || defined(HAVE_SYS_STATVFS_H)
     struct statvfs statbuf;
 
     if (statvfs(path, &statbuf) != 0) {
@@ -1641,20 +1653,19 @@ daemon_thread(void *rock)
     return NULL;
 }
 
+#ifndef UKERNEL
 static void *
 rmtsysd_thread(void *rock)
 {
     rmtsysd();
     return NULL;
 }
+#endif /* !UKERNEL */
 
 int
 mainproc(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;		/*Result of fork() */
-#ifdef AFS_AIX32_ENV
-    int sawBiod = 0;
-#endif
 #ifdef	AFS_SUN5_ENV
     struct stat st;
 #endif
@@ -1721,6 +1732,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
     if (as->parms[10].items) {
 	/* -rmtsys */
 	afsd_rmtsys = 1;
+#ifdef UKERNEL
+	printf("-rmtsys not supported for UKERNEL\n");
+	return -1;
+#endif
     }
     if (as->parms[11].items) {
 	/* -debug */
@@ -2446,11 +2461,13 @@ afsd_run(void)
 	afsd_mount_afs(rn, afsd_cacheMountDir);
     }
 
+#ifndef UKERNEL
     if (afsd_rmtsys) {
 	if (afsd_verbose)
 	    printf("%s: Forking 'rmtsys' daemon.\n", rn);
 	afsd_fork(0, rmtsysd_thread, NULL);
     }
+#endif /* !UKERNEL */
     /*
      * Exit successfully.
      */

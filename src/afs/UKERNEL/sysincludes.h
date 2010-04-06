@@ -1152,7 +1152,6 @@ extern struct usr_ucred *usr_crget(void);
 extern struct usr_ucred *usr_crcopy(struct usr_ucred *);
 extern int usr_crhold(struct usr_ucred *);
 extern int usr_crfree(struct usr_ucred *);
-extern struct usr_ucred *afs_global_ucredp;
 
 struct usr_proc {
     unsigned long p_flag;
@@ -1291,12 +1290,6 @@ struct usr_vfs {
     struct usr_vfsops *vfs_op;
 };
 
-struct usr_sysent {
-    char sy_narg;
-    int (*sy_call) (void);
-};
-extern struct usr_sysent usr_sysent[];
-
 struct usr_ifnet {
     struct usr_ifnet *if_next;
     short if_flags;
@@ -1330,14 +1323,6 @@ struct usr_in_ifaddr {
     struct in_addr ia_netbroadcast;
 };
 extern struct usr_in_ifaddr *usr_in_ifaddr;
-
-extern usr_key_t afs_global_u_key;	/* for per thread authentication */
-
-#if defined(AFS_USR_OSF_ENV)
-extern char V;
-#else
-extern long V;
-#endif
 
 #endif /* UKERNEL */
 
