@@ -109,7 +109,7 @@ packages: dest
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR} ${TOP_JLIBDIR}:
+${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -135,7 +135,7 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
-prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR}
+prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR}
 
 project: cmd comerr 
 
@@ -164,6 +164,9 @@ cmd: comerr
 	*) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
+
+hcrypto:
+	+${COMPILE_PART1} crypto/hcrypto ${COMPILE_PART2}
 
 lwp: util lwp_depinstall
 	+${COMPILE_PART1} lwp ${COMPILE_PART2}
@@ -648,7 +651,7 @@ build_tools: config des comerr rxgen
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser \
-	venus update xstat afsmonitor rxdebug libafsrpc \
+	venus update xstat afsmonitor rxdebug libafsrpc hcrypto \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -656,7 +659,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser \
-	venus update xstat afsmonitor rxdebug libafsrpc \
+	venus update xstat afsmonitor rxdebug libafsrpc hcrypto \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -772,6 +775,7 @@ clean2:
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
+	-${COMPILE_PART1} crypto/hcrypto ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
@@ -812,6 +816,7 @@ distclean: clean
 	src/config/Makefile.version-NOCML \
 	src/config/shlib-build \
 	src/config/shlib-install \
+	src/crypto/hcrypto/Makefile \
 	src/des/Makefile \
 	src/des/test/Makefile \
 	src/dir/Makefile \

@@ -131,6 +131,7 @@ src/config/Makefile.version-CML \
 src/config/Makefile.version-NOCML \
 src/config/shlib-build \
 src/config/shlib-install \
+src/crypto/hcrypto/Makefile \
 src/des/Makefile \
 src/des/test/Makefile \
 src/dir/Makefile \

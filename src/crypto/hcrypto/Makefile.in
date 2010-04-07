@@ -1,0 +1,265 @@
+# Copyright 2010, Your File System Inc
+# All rights reserved
+#
+# This software has been released under the terms of the BSD License
+# For details, see the LICENSE file in the top level source directory
+
+# API version. Must be incremented whenever something changes.
+LIBMAJOR=1
+LIBMINOR=1
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} ${SHLIB_CFLAGS}
+
+HEADERS= ${TOP_INCDIR}/hcrypto/aes.h \
+	 ${TOP_INCDIR}/hcrypto/des.h \
+	 ${TOP_INCDIR}/hcrypto/engine.h \
+	 ${TOP_INCDIR}/hcrypto/evp.h \
+	 ${TOP_INCDIR}/hcrypto/evp-hcrypto.h \
+	 ${TOP_INCDIR}/hcrypto/evp-cc.h \
+	 ${TOP_INCDIR}/hcrypto/hmac.h \
+	 ${TOP_INCDIR}/hcrypto/md2.h \
+	 ${TOP_INCDIR}/hcrypto/md4.h \
+	 ${TOP_INCDIR}/hcrypto/md5.h \
+	 ${TOP_INCDIR}/hcrypto/rand.h \
+	 ${TOP_INCDIR}/hcrypto/rc2.h \
+	 ${TOP_INCDIR}/hcrypto/rc4.h \
+	 ${TOP_INCDIR}/hcrypto/sha.h \
+	 ${TOP_INCDIR}/hcrypto/ui.h
+
+SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
+
+all: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} ${TOP_LIBDIR}/libafshcrypto.a
+
+install: libafshcrypto.a ${SHLIBOBJ}
+	${TOP_OBJDIR}/src/config/shlib-install -d ${DESTDIR}${libdir} \
+	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
+	${INSTALL_DATA} libafshcrypto.a ${DESTDIR}${libdir}/libafshcrypto.a
+
+dest: libafshcrypto.a ${SHLIBOBJ}
+	${TOP_OBJDIR}/src/config/shlib-install -d ${DEST}/lib \
+	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
+	${INSTALL_DATA} libafshcrypto.a ${DEST}/lib/libafshcrypto.a
+
+clean:
+	$(RM) -f ${OBJECTS} ${SHLIBOBJ} libafshcrypto.a libafshcrypto.exp \
+		 test_cipher test_cipher.o hex.o
+
+# Ignore for now : rand-egd.o
+
+OBJECTS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
+	 evp-hcrypto.o evp-cc.o hmac.o md2.o md4.o md5.o pkcs5.o \
+	 rand-egd.o rand-fortuna.o rand-timer.o rand-unix.o rand.o \
+	 rc2.o rc4.o rijndael-alg-fst.o rnd_keys.o sha.o sha256.o ui.o \
+	 cloexec.o ct.o issuid.o net_read.o net_write.o strlcpy.o
+
+UPSTREAM= ${TOP_SRCDIR}/external/heimdal
+
+CCRULE = ${CC} -I${TOP_INCDIR}/hcrypto ${CFLAGS} -I${UPSTREAM}/hcrypto -c $?
+
+${TOP_LIBDIR}/${SHLIBOBJ}: ${SHLIBOBJ}
+	${TOP_OBJDIR}/src/config/shlib-install -d ${TOP_LIBDIR} \
+	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
+
+${SHLIBOBJ}: ${OBJECTS} libafshcrypto.map
+	${TOP_OBJDIR}/src/config/shlib-build -d $(srcdir) -l libafshcrypto \
+		-M ${LIBMAJOR} -m ${LIBMINOR} -- \
+		${OBJECTS} ${MT_LIBS}
+
+libafshcrypto.a: ${OBJECTS}
+	$(RM) -f $@
+	$(AR) crv $@ ${OBJECTS}
+	$(RANLIB) $@
+
+test_cipher: test_cipher.o hex.o libafshcrypto.a
+	${CC} ${LDFLAGS} -o test_cipher test_cipher.o hex.o libafshcrypto.a
+
+${TOP_INCDIR}/hcrypto/aes.h: ${UPSTREAM}/hcrypto/aes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/bn.h: ${UPSTREAM}/hcrypto/bn.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/des.h: ${UPSTREAM}/hcrypto/des.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/dh.h: ${UPSTREAM}/hcrypto/dh.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/dsa.h: ${UPSTREAM}/hcrypto/dsa.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/engine.h: engine.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/evp.h: ${UPSTREAM}/hcrypto/evp.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/evp-hcrypto.h: ${UPSTREAM}/hcrypto/evp-hcrypto.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/evp-cc.h: ${UPSTREAM}/hcrypto/evp-cc.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/hmac.h: ${UPSTREAM}/hcrypto/hmac.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/md2.h: ${UPSTREAM}/hcrypto/md2.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/md4.h: ${UPSTREAM}/hcrypto/md4.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/md5.h: ${UPSTREAM}/hcrypto/md5.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/pkcs12.h: ${UPSTREAM}/hcrypto/pkcs12.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/rand.h: ${UPSTREAM}/hcrypto/rand.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/rc2.h: ${UPSTREAM}/hcrypto/rc2.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/rc4.h: ${UPSTREAM}/hcrypto/rc4.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/rsa.h: ${UPSTREAM}/hcrypto/rsa.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/sha.h: ${UPSTREAM}/hcrypto/sha.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/hcrypto/ui.h: ${UPSTREAM}/hcrypto/ui.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libafshcrypto.a: libafshcrypto.a
+	${INSTALL_DATA} $? $@
+
+aes.o: ${UPSTREAM}/hcrypto/aes.c
+	${CCRULE}
+
+bn.o: ${UPSTREAM}/hcrypto/bn.c
+	${CCRULE}
+
+camellia.o: ${UPSTREAM}/hcrypto/camellia.c
+	${CCRULE}
+
+camellia-ntt.o: ${UPSTREAM}/hcrypto/camellia-ntt.c
+	${CCRULE}
+
+des.o: ${UPSTREAM}/hcrypto/des.c
+	${CCRULE}
+
+dh-imath.o: ${UPSTREAM}/hcrypto/dh-imath.c
+	${CCRULE}
+
+dsa.o: ${UPSTREAM}/hcrypto/dsa.c
+	${CCRULE}
+
+evp.o: ${UPSTREAM}/hcrypto/evp.c
+	${CCRULE}
+
+evp-hcrypto.o: ${UPSTREAM}/hcrypto/evp-hcrypto.c
+	${CCRULE}
+
+evp-cc.o: ${UPSTREAM}/hcrypto/evp-cc.c
+	${CCRULE}
+
+engine.o: engine.c
+	${CCRULE}
+
+hmac.o: ${UPSTREAM}/hcrypto/hmac.c
+	${CCRULE}
+
+md2.o: ${UPSTREAM}/hcrypto/md2.c
+	${CCRULE}
+
+md4.o: ${UPSTREAM}/hcrypto/md4.c
+	${CCRULE}
+
+md5.o: ${UPSTREAM}/hcrypto/md5.c
+	${CCRULE}
+
+pkcs5.o: ${UPSTREAM}/hcrypto/pkcs5.c
+	${CCRULE}
+
+pkcs12.o: ${UPSTREAM}/hcrypto/pkcs12.c
+	${CCRULE}
+
+rand-egd.o: ${UPSTREAM}/hcrypto/rand-egd.c
+	${CCRULE}
+
+rand-fortuna.o: ${UPSTREAM}/hcrypto/rand-fortuna.c
+	${CCRULE}
+
+rand-timer.o: ${UPSTREAM}/hcrypto/rand-timer.c
+	${CCRULE}
+
+# The upstream code has a const pointer warning, which we need to suppress */
+rand-unix.o: ${UPSTREAM}/hcrypto/rand-unix.c
+	${CCRULE} @CFLAGS_NOERROR@
+
+rand.o: ${UPSTREAM}/hcrypto/rand.c
+	${CCRULE}
+
+rc2.o: ${UPSTREAM}/hcrypto/rc2.c
+	${CCRULE}
+
+rc4.o: ${UPSTREAM}/hcrypto/rc4.c
+	${CCRULE}
+
+rijndael-alg-fst.o: ${UPSTREAM}/hcrypto/rijndael-alg-fst.c
+	${CCRULE}
+
+rnd_keys.o: ${UPSTREAM}/hcrypto/rnd_keys.c
+	${CCRULE}
+
+rsa.o: ${UPSTREAM}/hcrypto/rsa.c
+	${CCRULE}
+
+rsa-gmp.o: ${UPSTREAM}/hcrypto/rsa-gmp.c
+	${CCRULE}
+
+rsa-imath.o: ${UPSTREAM}/hcrypto/rsa-imath.c
+	${CCRULE}
+
+sha.o: ${UPSTREAM}/hcrypto/sha.c
+	${CCRULE}
+
+sha256.o: ${UPSTREAM}/hcrypto/sha256.c
+	${CCRULE}
+
+ui.o: ${UPSTREAM}/hcrypto/ui.c
+	${CCRULE}
+
+test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c
+	${CCRULE} -I${UPSTREAM}/roken/
+
+cloexec.o: ${UPSTREAM}/roken/cloexec.c
+	${CCRULE}
+
+ct.o: ${UPSTREAM}/roken/ct.c
+	${CCRULE}
+
+hex.o: ${UPSTREAM}/roken/hex.c
+	${CCRULE}
+
+issuid.o: ${UPSTREAM}/roken/issuid.c
+	${CCRULE}
+
+net_read.o: ${UPSTREAM}/roken/net_read.c
+	${CCRULE}
+
+net_write.o: ${UPSTREAM}/roken/net_write.c
+	${CCRULE}
+
+strlcpy.o: ${UPSTREAM}/roken/strlcpy.c
+	${CCRULE}

@@ -1201,7 +1201,7 @@ AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h sys/pag.h)
-AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h)
+AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h)
@@ -1248,6 +1248,7 @@ AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strc
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_CHECK_FUNCS(fseeko64 ftello64)
+AC_CHECK_FUNCS(setitimer issetugidi getuid geteuid getgid getegid)
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
 	test "$ac_cv_func_regcomp" = "yes" && \
@@ -1260,6 +1261,7 @@ else
 fi
 
 AC_TYPE_SIGNAL
+OPENAFS_RETSIGTYPE
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(unsigned long)
@@ -1386,7 +1388,6 @@ AC_SUBST(HELPER_SPLINTCFG)
 
 mkdir -p ${TOP_OBJDIR}/src/JAVA/libjafs
 
-
 dnl Check to see if crypt lives in a different library
 AC_CHECK_LIB(crypt, crypt, LIB_crypt="-lcrypt")
 AC_SUBST(LIB_crypt)
@@ -1408,4 +1409,7 @@ struct labeltest struct_labeltest = {
 [AC_MSG_RESULT(no)
 ])
 
+dnl Eventually, this will look for the system one, or for OpenSSL
+LIB_hcrypto="-lafshcrypto"
+AC_SUBST(LIB_hcrypto)
 ])

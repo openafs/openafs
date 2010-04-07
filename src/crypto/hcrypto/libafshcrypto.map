@@ -1,0 +1,27 @@
+# Copyright 2010 Your File System Inc
+# All Rights Reserved
+#
+# This software has been released under the terms of the BSD License. For
+# details, see the LICENSE file in the top level source directory.
+
+{
+    global:
+	hc_DES_cbc_encrypt;
+	hc_DES_cbc_cksum;
+	hc_DES_ecb_encrypt;
+	hc_DES_init_random_number_generator;
+	hc_DES_key_sched;
+	hc_DES_new_random_key;
+	hc_DES_pcbc_encrypt;
+	hc_DES_set_odd_parity;
+	hc_DES_string_to_key;
+	hc_MD4_Final;
+	hc_MD4_Init;
+	hc_MD4_Update;
+	hc_MD5_Final;
+	hc_MD5_Init;
+	hc_MD5_Update;
+	hc_UI_UTIL_read_pw_string;
+    local:
+	*;
+};

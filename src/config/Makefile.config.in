@@ -51,6 +51,7 @@ LD = @LD@
 LEX = @LEX@
 LIB_AFSDB = @LIB_AFSDB@
 LIB_crypt = @LIB_crypt@
+LIB_hcrypto = @LIB_hcrypto@
 LIBS = @LIBS@
 LIB_LIBINTL = @LIB_libintl@
 LINUX_KERNEL_PATH = @LINUX_KERNEL_PATH@
