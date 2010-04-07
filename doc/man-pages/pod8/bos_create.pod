@@ -172,7 +172,7 @@ B<volserver>, and B<salvager>, in that order. The standard binary
 directory is F</usr/afs/bin>.  If including any of an initialization
 command's options, surround the entire command in double quotes (C<"">).
 
-For the B<dafs> process, provide the complete pathname of hte local disk
+For the B<dafs> process, provide the complete pathname of the local disk
 binary file for each of the component processes: B<fileserver>,
 B<volserver>, B<salvageserver>, and B<salvager>, in that order. The
 standard binary directory is F</usr/afs/bin>.  If including any of an
