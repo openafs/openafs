@@ -248,6 +248,53 @@ afs_HasUsableTokens(struct tokenJar *token, afs_int32 now) {
 }
 
 /*!
+ * Indicate whether a token jar contains a valid (non-expired) token
+ *
+ * @param[in] token
+ * 	The token jar to check
+ * @param[in] now
+ * 	The time to use for the expiry check
+ *
+ * @returns
+ * 	True if the jar contains valid tokens, otherwise false
+ *
+ */
+int
+afs_HasValidTokens(struct tokenJar *token, afs_int32 now) {
+    while (token != NULL) {
+        if (!afs_IsTokenExpired(token, now))
+	    return 1;
+	token = token->next;
+    }
+    return 0;
+}
+
+/*!
+ * Count the number of valid tokens in a jar. A valid token is
+ * one which is not expired - note that valid tokens may not be
+ * usable by the kernel.
+ *
+ * @param[in] token
+ * 	The token jar to check
+ * @param[in] now
+ * 	The time to use for the expiry check
+ *
+ * @returns
+ * 	The number of valid tokens in the jar
+ */
+static int
+countValidTokens(struct tokenJar *token, time_t now) {
+    int count = 0;
+
+    while (token != NULL) {
+        if (!afs_IsTokenExpired(token, now))
+	    count ++;
+	token = token->next;
+    }
+    return count;
+}
+
+/*!
  * Add an rxkad token to the token jar
  *
  * @param[in] tokens
@@ -295,6 +342,31 @@ afs_AddRxkadTokenFromPioctl(struct tokenJar **tokens,
     return 0;
 }
 
+static int
+rxkad_extractTokenForPioctl(struct tokenJar *token,
+			       struct ktc_tokenUnion *pioctlToken) {
+
+    struct token_rxkad *rxkadPioctl;
+    struct rxkadToken *rxkadInternal;
+
+    rxkadPioctl = &pioctlToken->ktc_tokenUnion_u.at_kad;
+    rxkadInternal = &token->u.rxkad;
+
+    rxkadPioctl->rk_kvno = rxkadInternal->clearToken.AuthHandle;
+    rxkadPioctl->rk_viceid = rxkadInternal->clearToken.ViceId;
+    rxkadPioctl->rk_begintime = rxkadInternal->clearToken.BeginTimestamp;
+    rxkadPioctl->rk_endtime = rxkadInternal->clearToken.EndTimestamp;
+    memcpy(rxkadPioctl->rk_key, rxkadInternal->clearToken.HandShakeKey, 8);
+
+    rxkadPioctl->rk_ticket.rk_ticket_val = xdr_alloc(rxkadInternal->ticketLen);
+    if (rxkadPioctl->rk_ticket.rk_ticket_val == NULL)
+	return ENOMEM;
+    rxkadPioctl->rk_ticket.rk_ticket_len = rxkadInternal->ticketLen;
+    memcpy(rxkadPioctl->rk_ticket.rk_ticket_val,
+	   rxkadInternal->ticket, rxkadInternal->ticketLen);
+
+    return 0;
+}
 
 /*!
  * Add a token to a token jar based on the input from a new-style
@@ -319,4 +391,102 @@ afs_AddTokenFromPioctl(struct tokenJar **tokens,
     }
 
     return EINVAL;
+}
+
+static int
+extractPioctlToken(struct tokenJar *token,
+		   struct token_opaque *opaque) {
+    XDR xdrs;
+    struct ktc_tokenUnion *pioctlToken;
+    int code;
+
+    memset(opaque, 0, sizeof(token_opaque));
+
+    pioctlToken = osi_Alloc(sizeof(struct ktc_tokenUnion));
+    if (pioctlToken == NULL)
+	return ENOMEM;
+
+    pioctlToken->at_type = token->type;
+
+    switch (token->type) {
+      case RX_SECIDX_KAD:
+	code = rxkad_extractTokenForPioctl(token, pioctlToken);
+	break;
+      default:
+	code = EINVAL;;
+    }
+
+    if (code)
+	goto out;
+
+    xdrlen_create(&xdrs);
+    if (!xdr_ktc_tokenUnion(&xdrs, pioctlToken)) {
+	code = EINVAL;
+	xdr_destroy(&xdrs);
+	goto out;
+    }
+
+    opaque->token_opaque_len = xdr_getpos(&xdrs);
+    xdr_destroy(&xdrs);
+
+    opaque->token_opaque_val = osi_Alloc(opaque->token_opaque_len);
+    if (opaque->token_opaque_val == NULL) {
+	code = ENOMEM;
+	goto out;
+    }
+
+    xdrmem_create(&xdrs,
+		  opaque->token_opaque_val,
+		  opaque->token_opaque_len,
+		  XDR_ENCODE);
+    if (!xdr_ktc_tokenUnion(&xdrs, pioctlToken)) {
+	code = EINVAL;
+	xdr_destroy(&xdrs);
+	goto out;
+    }
+    xdr_destroy(&xdrs);
+
+out:
+    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &pioctlToken);
+    osi_Free(pioctlToken, sizeof(struct ktc_tokenUnion));
+
+    if (code != 0) {
+	osi_Free(opaque->token_opaque_val, opaque->token_opaque_len);
+	opaque->token_opaque_val = NULL;
+	opaque->token_opaque_len = 0;
+    }
+    return code;
+}
+
+int
+afs_ExtractTokensForPioctl(struct tokenJar *token,
+			   time_t now,
+			   struct ktc_setTokenData *tokenSet)
+{
+    int numTokens, pos;
+    int code = 0;
+
+    numTokens = countValidTokens(token, now);
+
+    tokenSet->tokens.tokens_len = numTokens;
+    tokenSet->tokens.tokens_val
+	= xdr_alloc(sizeof(struct token_opaque) * numTokens);
+
+    if (tokenSet->tokens.tokens_val == NULL)
+	return ENOMEM;
+
+    pos = 0;
+    while (token != NULL && pos < numTokens) {
+	code = extractPioctlToken(token, &tokenSet->tokens.tokens_val[pos]);
+	if (code)
+	    goto out;
+	token = token->next;
+	pos++;
+    }
+
+out:
+    if (code)
+	xdr_free((xdrproc_t) xdr_ktc_setTokenData, tokenSet);
+
+    return code;
 }

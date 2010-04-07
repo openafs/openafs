@@ -269,6 +269,7 @@ DECL_PIOCTL(PSetVolumeStatus);
 DECL_PIOCTL(PFlush);
 DECL_PIOCTL(PNewStatMount);
 DECL_PIOCTL(PGetTokens);
+DECL_PIOCTL(PGetTokens2);
 DECL_PIOCTL(PUnlog);
 DECL_PIOCTL(PMariner);
 DECL_PIOCTL(PCheckServers);
@@ -423,7 +424,7 @@ static pioctlFunction CpioctlSw[] = {
     PBogus,                     /* 4 */
     PDiscon,                    /* 5 -- get/set discon mode */
     PBogus,                     /* 6 */
-    PBogus,                     /* 7 */
+    PGetTokens2,                /* 7 */
     PSetTokens2,                /* 8 */
     PNewUuid,                   /* 9 */
     PBogus,                     /* 10 */
@@ -1353,7 +1354,8 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     if (code)
 	goto out;
 
-    if (function == 8 && device == 'V') {	/* PGetTokens */
+    if ((function == 8 && device == 'V') ||
+       (function == 7 && device == 'C')) {	/* PGetTokens */
 	code = afs_pd_alloc(&output, MAXPIOCTLTOKENLEN);
     } else {
 	code = afs_pd_alloc(&output, AFS_LRALLOCSIZ);
@@ -2242,6 +2244,34 @@ DECL_PIOCTL(PNewStatMount)
 }
 
 /*!
+ * A helper function to get the n'th cell which a particular user has tokens
+ * for. This is racy. If new tokens are added whilst we're iterating, then
+ * we may return some cells twice. If tokens expire mid run, then we'll
+ * miss some cells from our output. So, could be better, but that would
+ * require an interface change.
+ */
+
+static struct unixuser *
+getNthCell(afs_int32 uid, afs_int32 iterator) {
+    int i;
+    struct unixuser *tu = NULL;
+
+    i = UHash(uid);
+    ObtainReadLock(&afs_xuser);
+    for (tu = afs_users[i]; tu; tu = tu->next) {
+	if (tu->uid == uid && (tu->states & UHasTokens)) {
+	    if (iterator-- == 0)
+	    break;	/* are we done yet? */
+	}
+    }
+    if (tu) {
+	tu->refCount++;
+    }
+    ReleaseReadLock(&afs_xuser);
+
+    return tu;
+}
+/*!
  * VIOCGETTOK (8) - Get authentication tokens
  *
  * \ingroup pioctl
@@ -2268,11 +2298,11 @@ DECL_PIOCTL(PNewStatMount)
 DECL_PIOCTL(PGetTokens)
 {
     struct cell *tcell;
-    afs_int32 i;
-    struct unixuser *tu;
+    struct unixuser *tu = NULL;
     union tokenUnion *token;
     afs_int32 iterator = 0;
     int newStyle;
+    int cellNum;
     int code = E2BIG;
 
     AFS_STATCNT(PGetTokens);
@@ -2293,27 +2323,13 @@ DECL_PIOCTL(PGetTokens)
 	if (afs_pd_getInt(ain, &iterator) != 0)
 	    return EINVAL;
     }
-    i = UHash(areq->uid);
-    ObtainReadLock(&afs_xuser);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
-	if (newStyle) {
-	    if (tu->uid == areq->uid && (tu->states & UHasTokens)) {
-		if (iterator-- == 0)
-		    break;	/* are we done yet? */
-	    }
-	} else {
-	    if (tu->uid == areq->uid && afs_IsPrimaryCellNum(tu->cell))
-		break;
-	}
+    if (newStyle) {
+	tu = getNthCell(areq->uid, iterator);
+    } else {
+	cellNum = afs_GetPrimaryCellNum();
+	if (cellNum)
+	    tu = afs_FindUser(areq->uid, cellNum, READ_LOCK);
     }
-    if (tu) {
-	/*
-	 * No need to hold a read lock on each user entry
-	 */
-	tu->refCount++;
-    }
-    ReleaseReadLock(&afs_xuser);
-
     if (!tu) {
 	return EDOM;
     }
@@ -5347,6 +5363,82 @@ out:
 
     return code;
 }
+
+DECL_PIOCTL(PGetTokens2)
+{
+    struct cell *cell;
+    struct unixuser *tu = NULL;
+    afs_int32 iterator;
+    char *cellName = NULL;
+    afs_int32 cellNum;
+    int code = 0;
+    time_t now;
+    XDR xdrs;
+    struct ktc_setTokenData tokenSet;
+
+    AFS_STATCNT(PGetTokens);
+    if (!afs_resourceinit_flag)
+	return EIO;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
+    /* No input data - return tokens for primary cell */
+    /* 4 octets of data is an iterator count */
+    /* Otherwise, treat as string & return tokens for that cell name */
+
+    if (afs_pd_remaining(ain) == sizeof(afs_int32)) {
+	/* Integer iterator - return tokens for the n'th cell found for user */
+	if (afs_pd_getInt(ain, &iterator) != 0)
+	    return EINVAL;
+	tu = getNthCell(areq->uid, iterator);
+    } else {
+        if (afs_pd_remaining(ain) > 0) {
+	    if (afs_pd_getStringPtr(ain, &cellName) != 0)
+		return EINVAL;
+        } else {
+	    cellName = NULL;
+	}
+	code = _settok_tokenCell(cellName, &cellNum, NULL);
+	if (code)
+	    return code;
+	tu = afs_FindUser(areq->uid, cellNum, READ_LOCK);
+    }
+    if (tu == NULL)
+	return EDOM;
+
+    now = osi_Time();
+
+    if (!(tu->states & UHasTokens)
+	|| !afs_HasValidTokens(tu->tokens, now)) {
+	tu->states |= (UTokensBad | UNeedsReset);
+	afs_PutUser(tu, READ_LOCK);
+	return ENOTCONN;
+    }
+
+    code = afs_ExtractTokensForPioctl(tu->tokens, now, &tokenSet);
+    if (code)
+	goto out;
+
+    cell = afs_GetCell(tu->cell, READ_LOCK);
+    tokenSet.cell = cell->cellName;
+    afs_pd_xdrStart(aout, &xdrs, XDR_ENCODE);
+    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+	code = E2BIG;
+	goto out;
+    }
+    afs_pd_xdrEnd(aout, &xdrs);
+
+out:
+    tokenSet.cell = NULL;
+
+    if (tu)
+	afs_PutUser(tu, READ_LOCK);
+    if (cell)
+	afs_PutCell(cell, READ_LOCK);
+    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+
+    return code;
+};
 
 DECL_PIOCTL(PNFSNukeCreds)
 {

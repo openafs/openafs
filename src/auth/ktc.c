@@ -451,6 +451,94 @@ ktc_SetToken(struct ktc_principal *aserver,
     return 0;
 }
 
+/*!
+ * Get a token, given the cell that we need to get information for
+ *
+ * @param cellName
+ * 	The name of the cell we're getting the token for - if NULL, we'll
+ * 	get information for the primary cell
+ */
+int
+ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
+    struct ViceIoctl iob;
+    char tbuffer[MAXPIOCTLTOKENLEN];
+    char *tp;
+    afs_int32 code;
+    XDR xdrs;
+
+    tp = tbuffer;
+
+    /* If we have a cellName, write it out here */
+    if (cellName) {
+	memcpy(tp, cellName, strlen(cellName) +1);
+	tp += strlen(cellName)+1;
+    }
+
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
+
+    code = PIOCTL(0, VIOC_GETTOK2, &iob, 0);
+
+    /* If we can't use the new pioctl, the fall back to the old one. We then
+     * need to convert the rxkad token we get back into the new format
+     */
+    if (code == -1 && errno == EINVAL) {
+	struct ktc_principal server;
+	struct ktc_principal client;
+	struct ktc_tokenUnion token;
+	struct ktc_token *ktcToken; /* too huge for the stack */
+
+	memset(&server, 0, sizeof(server));
+	ktcToken = malloc(sizeof(struct ktc_token));
+	if (ktcToken == NULL)
+	    return ENOMEM;
+	memset(ktcToken, 0, sizeof(struct ktc_token));
+
+	strcpy(server.name, "afs");
+	strcpy(server.cell, cellName);
+	code = ktc_GetToken(&server, ktcToken, sizeof(struct ktc_token),
+			    &client);
+	if (code == 0) {
+	    *tokenSet = token_buildTokenJar(cellName);
+	    token.at_type = AFSTOKEN_UNION_KAD;
+	    token.ktc_tokenUnion_u.at_kad.rk_kvno = ktcToken->kvno;
+	    memcpy(token.ktc_tokenUnion_u.at_kad.rk_key,
+		   ktcToken->sessionKey.data, 8);
+
+	    token.ktc_tokenUnion_u.at_kad.rk_begintime = ktcToken->startTime;
+	    token.ktc_tokenUnion_u.at_kad.rk_endtime   = ktcToken->endTime;
+	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len
+		= ktcToken->ticketLen;
+	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val
+		= ktcToken->ticket;
+
+	    token_addToken(*tokenSet, &token);
+
+	    memset(ktcToken, 0, sizeof(struct ktc_token));
+	}
+	free(ktcToken);
+    }
+    if (code)
+	return KTC_PIOCTLFAIL;
+
+    *tokenSet = malloc(sizeof(struct ktc_setTokenData));
+    if (*tokenSet == NULL)
+	return ENOMEM;
+    memset(*tokenSet, 0, sizeof(struct ktc_setTokenData));
+
+    xdrmem_create(&xdrs, iob.out, iob.out_size, XDR_DECODE);
+    if (!xdr_ktc_setTokenData(&xdrs, *tokenSet)) {
+	free(*tokenSet);
+	*tokenSet = NULL;
+	xdr_destroy(&xdrs);
+	return EINVAL;
+    }
+    xdr_destroy(&xdrs);
+    return 0;
+}
+
 /* get token, given server we need and token buffer.  aclient will eventually
  * be set to our identity to the server.
  */

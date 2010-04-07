@@ -144,6 +144,7 @@ extern struct cell *afs_GetCellByHandle(void *handle, afs_int32 locktype);
 extern struct cell *afs_GetCellByIndex(afs_int32 cellidx, afs_int32 locktype);
 extern struct cell *afs_GetCellByName(char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetPrimaryCell(afs_int32 locktype);
+extern afs_int32 afs_GetPrimaryCellNum(void);
 extern int afs_IsPrimaryCellNum(afs_int32 cellnum);
 extern int afs_IsPrimaryCell(struct cell *cell);
 extern void *afs_TraverseCells(void *(*cb) (struct cell *, void *),
@@ -917,14 +918,19 @@ extern int Afs_syscall(void);
 
 /* afs_tokens.c */
 struct ktc_tokenUnion;
+struct ktc_setTokenData;
+
 extern union tokenUnion *afs_FindToken(struct tokenJar *, rx_securityIndex);
 extern void afs_FreeTokens(struct tokenJar **);
 extern union tokenUnion *afs_AddToken(struct tokenJar **, rx_securityIndex);
 extern void afs_DiscardExpiredTokens(struct tokenJar **, afs_int32);
+extern int afs_HasValidTokens(struct tokenJar *, afs_int32);
 extern int afs_HasUsableTokens(struct tokenJar *, afs_int32);
 extern void afs_AddRxkadToken(struct tokenJar **, char *, int,
 			      struct ClearToken *);
 extern int afs_AddTokenFromPioctl(struct tokenJar **, struct ktc_tokenUnion *);
+extern int afs_ExtractTokensForPioctl(struct tokenJar *, time_t,
+				      struct ktc_setTokenData *);
 
 /* UKERNEL/afs_usrops.c */
 #ifdef UKERNEL

@@ -830,6 +830,24 @@ afs_GetPrimaryCell(afs_int32 locktype)
 }
 
 /*!
+ * Return number of the primary cell.
+ * \return
+ *    Cell number, or 0 if primary cell not found
+ */
+afs_int32
+afs_GetPrimaryCellNum(void)
+{
+    struct cell *cell;
+    afs_int32 cellNum = 0;
+    cell = afs_GetPrimaryCell(READ_LOCK);
+    if (cell) {
+	cellNum = cell->cellNum;
+	afs_PutCell(cell, READ_LOCK);
+    }
+    return cellNum;
+}
+
+/*!
  * Returns true if the given cell is the primary cell.
  * \param cell
  * \return

@@ -919,63 +919,7 @@ out:
     return status;
 }
 
-/*!
- * Get the set of tokens for a given cell out of the cache manager
- *
- * @param[in] cell
- * 	The cellconf structure for the cell to retrieve tokens for
- * @param[out] tokenPtr
- * 	The tokens held for that cell
- *
- * @returns
- * 	0 on success, otherwise an error code
- */
-
-static int
-get_kernel_token(struct afsconf_cell *cell, struct ktc_token **tokenPtr) {
-    struct ktc_principal client, server;
-    struct ktc_token *token;
-    int ret;
-
-    *tokenPtr = NULL;
-
-    strncpy(server.name, AFSKEY, MAXKTCNAMELEN - 1);
-    strncpy(server.instance, AFSINST, MAXKTCNAMELEN - 1);
-    strncpy(server.cell, cell->name, MAXKTCREALMLEN - 1);
-
-    token = malloc(sizeof(struct ktc_token));
-    if (token == NULL)
-	return ENOMEM;
-
-    memset(token, 0, sizeof(struct ktc_token));
-
-    ret = ktc_GetToken(&server, token, sizeof(struct ktc_token), &client);
-    if (ret) {
-	free(token);
-	return ret;
-    }
-
-    *tokenPtr = token;
-    return 0;
-}
-
-/**
- * Return true if a pair of tokens are directly equivalent
- */
-static int
-tokens_equal(struct ktc_setTokenData *tokenA, struct ktc_token *tokenB) {
-   return 0;
-/* Bodge bodge bodge
-   return (tokenA != NULL && tokenB != NULL &&
-	    tokenA->kvno == tokenB->kvno &&
-	    tokenA->ticketLen == tokenB->ticketLen &&
-	    !memcmp(&tokenA->sessionKey, &tokenB->sessionKey,
-		    sizeof(tokenA->sessionKey)) &&
-	    !memcmp(tokenA->ticket, tokenB->ticket, tokenA->ticketLen));
-*/
-}
-
-/*
+/* 
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
  * to.
@@ -991,7 +935,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     char *local_cell = NULL;
     struct ktc_tokenUnion *rxkadToken = NULL;
     struct ktc_setTokenData *token;
-    struct ktc_token *btoken;
+    struct ktc_setTokenData *btoken = NULL;
     struct afsconf_cell cellconf;
 
     /* NULL or empty cell returns information on local cell */
@@ -1067,12 +1011,17 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	}
 
 	if (!force &&
-	    !get_kernel_token(&cellconf, &btoken) &&
-	    tokens_equal(token, btoken)) {
+	    ktc_GetTokenEx(cellconf.name, &btoken) == 0 &&
+	    token_SetsEquivalent(token, btoken)) {
+
+	    token_FreeSet(&btoken);
 	    afs_dprintf("Identical tokens already exist; skipping.\n");
 	    status = AKLOG_SUCCESS;
 	    goto out;
 	}
+
+	if (btoken)
+	    token_FreeSet(&btoken);
 
 #ifdef FORCE_NOPRDB
 	noprdb = 1;
