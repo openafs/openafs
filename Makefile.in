@@ -308,7 +308,7 @@ venus: cmd comerr volser ptserver
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
-afsd: cmd comerr sys kauth
+afsd: cmd comerr sys kauth @CLIENT_UAFS_DEP@
 	+${COMPILE_PART1} afsd ${COMPILE_PART2}
 
 gtx: cmd comerr auth kauth
