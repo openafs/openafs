@@ -341,26 +341,18 @@ typedef long usr_ino_t;
 #ifdef VFIFO
 #undef VFIFO
 #endif
-#ifdef VDOOR
-#undef VDOOR
-#endif
-#ifdef VBAD
-#undef VBAD
-#endif
 #ifdef VSOCK
 #undef VSOCK
 #endif
 
-#define VNON			0
-#define VREG			1
-#define VDIR			2
-#define VBLK			3
-#define VCHR			4
-#define VLNK			5
-#define VFIFO			6
-#define VDOOR			7
-#define VBAD			8
-#define VSOCK			9
+#define VNON 0
+#define VREG S_IFREG
+#define VDIR S_IFDIR
+#define VBLK S_IFBLK
+#define VCHR S_IFCHR
+#define VLNK S_IFLNK
+#define VSOCK S_IFSOCK
+#define VFIFO S_IFIFO
 
 typedef int usr_vtype_t;
 
