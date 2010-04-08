@@ -84,6 +84,25 @@ static char *xferOpNames[] = {
     "StoreData"
 };
 
+static char *CbCounterStrings[] = {
+    "DeleteFiles",
+    "DeleteCallBacks",
+    "BreakCallBacks",
+    "AddCallBack",
+    "GotSomeSpaces",
+    "DeleteAllCallBacks",
+    "nFEs",
+    "nCBs",
+    "nblks",
+    "CBsTimedOut",
+    "nbreakers",
+    "GSS1",
+    "GSS2",
+    "GSS3",
+    "GSS4",
+    "GSS5"
+};
+
 /*________________________________________________________________________
 				FS STATS ROUTINES 
  *_______________________________________________________________________*/
@@ -401,6 +420,47 @@ Print_fs_FullPerfInfo(struct xstat_fs_ProbeResults *a_fs_Results)
 
 }				/*Print_fs_FullPerfInfo */
 
+/*------------------------------------------------------------------------
+ * Print_fs_CallbackStats
+ *
+ * Description:
+ *	Print out the AFS_XSTATSCOLL_CBSTATS collection we just
+ *	received.
+ *
+ * Arguments:
+ *	None.
+ *
+ * Returns:
+ *	Nothing.
+ *
+ * Environment:
+ *	All the info we need is nestled into xstat_fs_Results.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+void
+Print_fs_CallBackStats(struct xstat_fs_ProbeResults *a_fs_Results)
+{
+    char *printableTime;
+    time_t probeTime;
+    int numInt32s = xstat_fs_Results.data.AFS_CollData_len;
+    afs_int32 *val = xstat_fs_Results.data.AFS_CollData_val;
+    int i;
+
+    probeTime = a_fs_Results->probeTime;
+    printableTime = ctime(&probeTime);
+    printableTime[strlen(printableTime) - 1] = '\0';
+    fprintf(fs_outFD,
+	    "AFS_XSTATSCOLL_CBSTATS (coll %d) for FS %s\n[Probe %d, %s]\n\n",
+	    a_fs_Results->collectionNumber, a_fs_Results->connP->hostName,
+	    a_fs_Results->probeNum, printableTime);
+
+    numInt32s = min(numInt32s, sizeof(CbCounterStrings)/sizeof(*CbCounterStrings));
+    for (i=0; i<numInt32s; i++) {
+	fprintf(fs_outFD, "\t%10u %s\n", val[i], CbCounterStrings[i]);
+    }
+}				/*Print_fs_CallbackStats */
 
 /*------------------------------------------------------------------------
  * afsmon_fsOutput()
@@ -476,8 +536,15 @@ afsmon_fsOutput(char *a_outfile,	/* ptr to output file name */
 
     /* print detailed information */
     if (a_detOutput) {
-	Print_fs_FullPerfInfo(&xstat_fs_Results);
-	fflush(fs_outFD);
+	if (xstat_fs_Results.collectionNumber ==
+	    AFS_XSTATSCOLL_FULL_PERF_INFO) {
+	    Print_fs_FullPerfInfo(&xstat_fs_Results);
+	    fflush(fs_outFD);
+	} else if (xstat_fs_Results.collectionNumber ==
+		   AFS_XSTATSCOLL_CBSTATS) {
+	    Print_fs_CallBackStats(&xstat_fs_Results);
+	    fflush(fs_outFD);
+	}
     }
 
     if (fclose(fs_outFD))

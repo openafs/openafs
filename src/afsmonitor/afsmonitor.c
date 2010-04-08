@@ -117,6 +117,12 @@ static struct afsmon_hostEntry *CMnameList;
 int numFS = 0;
 int numCM = 0;
 
+/* number of xstat collection ids */
+#define MAX_NUM_FS_COLLECTIONS 2
+#define MAX_NUM_CM_COLLECTIONS 1
+int num_fs_collections = 0;
+int num_cm_collections = 0;
+
 /* variables used for processing config file */
 /* ptr to the hostEntry structure of the last "fs" or "cm" entry processed
 in the config file */
@@ -132,8 +138,8 @@ static int lastHostType = 0;	/* 0 = no host entries processed
 /* FILE SERVER CIRCULAR BUFFER VARIABLES  */
 
 struct afsmon_fs_Results_list {
-    struct xstat_fs_ProbeResults *fsResults;	/* ptr to results struct */
-    int empty;			/* fsResults empty ? */
+    struct xstat_fs_ProbeResults *fsResults[MAX_NUM_FS_COLLECTIONS];
+    int empty[MAX_NUM_FS_COLLECTIONS];
     struct afsmon_fs_Results_list *next;
 };
 
@@ -141,6 +147,9 @@ struct afsmon_fs_Results_CBuffer {
     int probeNum;		/* probe number of entries in this slot */
     struct afsmon_fs_Results_list *list;	/* ptr to list of results */
 };
+
+int afsmon_fs_results_length[] =
+    { XSTAT_FS_FULLPERF_RESULTS_LEN, XSTAT_FS_CBSTATS_RESULTS_LEN };
 
 /* buffer for FS probe results */
 struct afsmon_fs_Results_CBuffer *afsmon_fs_ResultsCB;
@@ -160,8 +169,8 @@ int afsmon_fs_prev_probeNum = 0;	/* previous fs probe number */
 /* CACHE MANAGER CIRCULAR BUFFER VARIABLES  */
 
 struct afsmon_cm_Results_list {
-    struct xstat_cm_ProbeResults *cmResults;	/* ptr to results struct */
-    int empty;			/* cmResults empty ? */
+    struct xstat_cm_ProbeResults *cmResults[MAX_NUM_CM_COLLECTIONS];
+    int empty[MAX_NUM_CM_COLLECTIONS];
     struct afsmon_cm_Results_list *next;
 };
 
@@ -169,6 +178,8 @@ struct afsmon_cm_Results_CBuffer {
     int probeNum;		/* probe number of entries in this slot */
     struct afsmon_cm_Results_list *list;	/* ptr to list of results */
 };
+
+int afsmon_cm_results_length[] = { XSTAT_CM_FULLPERF_RESULTS_LEN };
 
 /* buffer for CM probe results */
 struct afsmon_cm_Results_CBuffer *afsmon_cm_ResultsCB;
@@ -238,13 +249,13 @@ vcache data items in the fs_varNames[] array. If the config file contains
 no "show fs .." directives, it will contain the indices of all the 
 items in the fs_varNames[] array */
 
-short fs_Display_map[XSTAT_FS_FULLPERF_RESULTS_LEN];
+short fs_Display_map[NUM_FS_STAT_ENTRIES];
 int fs_DisplayItems_count = 0;	/* number of items to display */
 int fs_showDefault = 1;		/* show all of FS data ? */
 
 
 /* same use as above for Cache Managers  */
-short cm_Display_map[XSTAT_CM_FULLPERF_RESULTS_LEN];
+short cm_Display_map[NUM_CM_STAT_ENTRIES];
 int cm_DisplayItems_count = 0;	/* number of items to display */
 int cm_showDefault = 1;		/* show all of CM data ? */
 
@@ -260,6 +271,10 @@ extern char *fs_categories[];	/* file server data category names */
 extern char *cm_categories[];	/* cache manager data category names */
 
 
+static int fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
+			     struct xstat_fs_ProbeResults *a_fsResults);
+static int fs_CallBackStats_ltoa(struct fs_Display_Data *a_fsData,
+				 struct xstat_fs_ProbeResults *a_fsResults);
 
 #ifdef HAVE_STRCASESTR
 extern char * strcasestr(const char *, const char *);
@@ -393,15 +408,17 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 			break;
 		    }
 		    next_fslist = tmp_fslist->next;
-		    tmp_xstat_fsPR = tmp_fslist->fsResults;
+		    for (i = 0; i < MAX_NUM_FS_COLLECTIONS; i++) {
+		        tmp_xstat_fsPR = tmp_fslist->fsResults[i];
 
-		    if (afsmon_debug)
-			fprintf(debugFD, "%d ", numFS - j);
+		        if (afsmon_debug)
+			    fprintf(debugFD, "%d ", numFS - j);
 
-		    /* free xstat_fs_Results data */
-		    free(tmp_xstat_fsPR->data.AFS_CollData_val);
-		    free(tmp_xstat_fsPR->connP);
-		    free(tmp_xstat_fsPR);
+		        /* free xstat_fs_Results data */
+		        free(tmp_xstat_fsPR->data.AFS_CollData_val);
+		        free(tmp_xstat_fsPR->connP);
+		        free(tmp_xstat_fsPR);
+		    }
 
 		    /* free the fs list item */
 		    free(tmp_fslist);
@@ -437,17 +454,19 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 			break;
 		    }
 		    next_cmlist = tmp_cmlist->next;
-		    tmp_xstat_cmPR = tmp_cmlist->cmResults;
+		    for (i = 0; i < MAX_NUM_CM_COLLECTIONS; i++) {
+		        tmp_xstat_cmPR = tmp_cmlist->cmResults[i];
 
-		    if (afsmon_debug)
-			fprintf(debugFD, "%d ", numCM - j);
-		    /* make sure data is ok */
-		    /* Print_cm_FullPerfInfo(tmp_xstat_cmPR); */
+		        if (afsmon_debug)
+			    fprintf(debugFD, "%d ", numCM - j);
+		        /* make sure data is ok */
+		        /* Print_cm_FullPerfInfo(tmp_xstat_cmPR); */
 
-		    /* free xstat_cm_Results data */
-		    free(tmp_xstat_cmPR->data.AFSCB_CollData_val);
-		    free(tmp_xstat_cmPR->connP);
-		    free(tmp_xstat_cmPR);
+		        /* free xstat_cm_Results data */
+		        free(tmp_xstat_cmPR->data.AFSCB_CollData_val);
+		        free(tmp_xstat_cmPR->connP);
+		    }
+		    free(tmp_cmlist->cmResults);
 
 		    /* free the cm list item */
 		    free(tmp_cmlist);
@@ -1645,6 +1664,7 @@ Print_FS_CB(void)
     struct afsmon_fs_Results_list *fslist;
     int i;
     int j;
+    int k;
 
     /* print valid info in the fs CB */
 
@@ -1661,16 +1681,20 @@ Print_FS_CB(void)
 	    fslist = afsmon_fs_ResultsCB[i].list;
 	    j = 0;
 	    while (j < numFS) {
-		if (!fslist->empty) {
-		    fprintf(debugFD, "\t %d) probeNum = %d host = %s", j,
-			    fslist->fsResults->probeNum,
-			    fslist->fsResults->connP->hostName);
-		    if (fslist->fsResults->probeOK)
-			fprintf(debugFD, " NOTOK\n");
-		    else
-			fprintf(debugFD, " OK\n");
-		} else
-		    fprintf(debugFD, "\t %d) -- empty --\n", j);
+		for (k = 0; k < MAX_NUM_FS_COLLECTIONS; k++) {
+		    if (!(fslist->empty[k])) {
+			fprintf(debugFD, "\t %d) probeNum = %d host = %s cn = %d",
+			        j,
+				fslist->fsResults[k]->probeNum,
+				fslist->fsResults[k]->connP->hostName,
+				fslist->fsResults[k]->collectionNumber);
+			if (fslist->fsResults[k]->probeOK)
+			    fprintf(debugFD, " NOTOK\n");
+			else
+			    fprintf(debugFD, " OK\n");
+		    } else
+			fprintf(debugFD, "\t %d) -- empty --\n", j);
+		}
 		fslist = fslist->next;
 		j++;
 	    }
@@ -1703,6 +1727,7 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
     struct afsmon_fs_Results_list *tmp_fslist_item;	/* temp fs list item */
     struct xstat_fs_ProbeResults *tmp_fsPR;	/* temp ptr */
     int i;
+    int index;
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called, a_newProbeCycle= %d\n", rn,
@@ -1710,6 +1735,19 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
 	fflush(debugFD);
     }
 
+    switch (xstat_fs_Results.collectionNumber) {
+    case AFS_XSTATSCOLL_FULL_PERF_INFO:
+	index = 0;
+	break;
+    case AFS_XSTATSCOLL_CBSTATS:
+	index = 1;
+    default:
+	if (index < 0) {
+	    fprintf(stderr, "[ %s ] collection number %d is out of range.\n",
+		    rn, xstat_fs_Results.collectionNumber);
+	    afsmon_Exit(51);
+	}
+    }
 
     /* If a new probe cycle started, mark the list in the current buffer
      * slot empty for resuse. Note that afsmon_fs_curr_CBindex was appropriately
@@ -1718,7 +1756,7 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
     if (a_newProbeCycle) {
 	tmp_fslist_item = afsmon_fs_ResultsCB[afsmon_fs_curr_CBindex].list;
 	for (i = 0; i < numFS; i++) {
-	    tmp_fslist_item->empty = 1;
+	    tmp_fslist_item->empty[index] = 1;
 	    tmp_fslist_item = tmp_fslist_item->next;
 	}
     }
@@ -1726,13 +1764,13 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
     /* locate last unused item in list */
     tmp_fslist_item = afsmon_fs_ResultsCB[afsmon_fs_curr_CBindex].list;
     for (i = 0; i < numFS; i++) {
-	if (tmp_fslist_item->empty)
+	if (tmp_fslist_item->empty[index])
 	    break;
 	tmp_fslist_item = tmp_fslist_item->next;
     }
 
     /* if we could not find one we have an inconsistent list */
-    if (!tmp_fslist_item->empty) {
+    if (!tmp_fslist_item->empty[index]) {
 	fprintf(stderr,
 		"[ %s ] list inconsistency 1. unable to find an empty slot to store results of probenum %d of %s\n",
 		rn, xstat_fs_Results.probeNum,
@@ -1740,7 +1778,7 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
 	afsmon_Exit(50);
     }
 
-    tmp_fsPR = tmp_fslist_item->fsResults;
+    tmp_fsPR = tmp_fslist_item->fsResults[index];
 
     /* copy hostname and probe number and probe time and probe status.
      * if the probe failed return now */
@@ -1752,7 +1790,7 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
     tmp_fsPR->probeOK = xstat_fs_Results.probeOK;
     if (xstat_fs_Results.probeOK) {	/* probeOK = 1 => notOK */
 	/* we have a nonempty results structure so mark the list item used */
-	tmp_fslist_item->empty = 0;
+	tmp_fslist_item->empty[index] = 0;
 	return (0);
     }
 
@@ -1765,14 +1803,16 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
     tmp_fsPR->collectionNumber = xstat_fs_Results.collectionNumber;
 
     /* copy the probe data information */
-    tmp_fsPR->data.AFS_CollData_len = xstat_fs_Results.data.AFS_CollData_len;
+    tmp_fsPR->data.AFS_CollData_len =
+	min(xstat_fs_Results.data.AFS_CollData_len,
+	    afsmon_fs_results_length[index]);
     memcpy(tmp_fsPR->data.AFS_CollData_val,
 	   xstat_fs_Results.data.AFS_CollData_val,
-	   xstat_fs_Results.data.AFS_CollData_len * sizeof(afs_int32));
+	   tmp_fsPR->data.AFS_CollData_len * sizeof(afs_int32));
 
 
     /* we have a valid results structure so mark the list item used */
-    tmp_fslist_item->empty = 0;
+    tmp_fslist_item->empty[index] = 0;
 
     /* Print the fs circular buffer */
     Print_FS_CB();
@@ -1803,18 +1843,49 @@ fs_Results_ltoa(struct fs_Display_Data *a_fsData,	/* target buffer */
 {				/* fs_Results_ltoa */
 
     static char rn[] = "fs_Results_ltoa";	/* routine name */
-    afs_int32 *srcbuf;
-    struct fs_stats_FullPerfStats *fullPerfP;
-    int idx;
-    int i, j;
-    afs_int32 *tmpbuf;
-    afs_int32 numInt32s;
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called, a_fsData= %p, a_fsResults= %p\n", rn,
 		a_fsData, a_fsResults);
 	fflush(debugFD);
     }
+
+    switch (a_fsResults->collectionNumber) {
+    case AFS_XSTATSCOLL_FULL_PERF_INFO:
+	fs_FullPerfs_ltoa(a_fsData, a_fsResults);
+	break;
+    case AFS_XSTATSCOLL_CBSTATS:
+	fs_CallBackStats_ltoa(a_fsData, a_fsResults);
+	break;
+    default:
+	if (afsmon_debug) {
+	    fprintf(debugFD, "[ %s ] Unexpected collection id %d\n",
+		    rn, a_fsResults->collectionNumber);
+	}
+    }
+
+    return (0);
+}				/* fs_Results_ltoa */
+
+/*-----------------------------------------------------------------------
+ * fs_FullPerfs_ltoa()
+ *
+ * Description:
+ *	Convert the full perf xstat collection from int32s to strings.
+ *
+ * Returns:
+ *	Always returns 0.
+ *----------------------------------------------------------------------*/
+static int
+fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
+		struct xstat_fs_ProbeResults *a_fsResults)
+{
+    afs_int32 *srcbuf;
+    struct fs_stats_FullPerfStats *fullPerfP;
+    int idx;
+    int i, j;
+    afs_int32 *tmpbuf;
+    afs_int32 numInt32s;
 
     fullPerfP = (struct fs_stats_FullPerfStats *)
 	(a_fsResults->data.AFS_CollData_val);
@@ -1929,9 +2000,35 @@ fs_Results_ltoa(struct fs_Display_Data *a_fsData,	/* target buffer */
     }
 
     return (0);
-}				/* fs_Results_ltoa */
+}
 
+/*-----------------------------------------------------------------------
+ * fs_CallBackStats_ltoa()
+ *
+ * Description:
+ *	Convert the callback counter xstat collection from
+ *	int32s to strings.
+ *
+ * Returns:
+ *	Always returns 0.
+ *----------------------------------------------------------------------*/
 
+static int
+fs_CallBackStats_ltoa(struct fs_Display_Data *a_fsData,
+		      struct xstat_fs_ProbeResults *a_fsResults)
+{
+    int idx;
+    int i;
+    int len = a_fsResults->data.AFS_CollData_len;
+    afs_int32 *val = a_fsResults->data.AFS_CollData_val;
+
+    /* place callback stats after the full perf stats */
+    idx = NUM_FS_FULLPERF_ENTRIES;
+    for (i=0; i < len && i < NUM_FS_CB_ENTRIES; i++) {
+	sprintf(a_fsData->data[idx++], "%u", val[i]);
+    }
+    return 0;
+}
 
 /*-----------------------------------------------------------------------
  * execute_thresh_handler()
@@ -2152,7 +2249,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
     struct fs_Display_Data *curr_fsDataP;	/* tmp ptr to curr_fsData */
     struct fs_Display_Data *prev_fsDataP;	/* tmp ptr to prev_fsData */
     struct afsmon_hostEntry *curr_host;
-    static int probes_Received = 0;	/* number of probes reveived in
+    static int results_Received = 0;	/* number of probes reveived in
 					 * the current cycle. If this is equal to numFS we got all
 					 * the data we want in this cycle and can now display it */
     int numBytes;
@@ -2205,7 +2302,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
     } else {			/* probe succeeded, update display data structures */
 	curr_fsDataP->probeOK = 1;
 
-	/* covert longs to strings and place them in curr_fsDataP */
+	/* convert longs to strings and place them in curr_fsDataP */
 	fs_Results_ltoa(curr_fsDataP, a_fsResults);
 
 	/* compare with thresholds and set the overflow flags.
@@ -2252,9 +2349,9 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
     /* if we have received a reply from all the hosts for this probe cycle,
      * it is time to display the data */
 
-    probes_Received++;
-    if (probes_Received == numFS) {
-	probes_Received = 0;
+    results_Received++;
+    if (results_Received == numFS * num_fs_collections) {
+	results_Received = 0;
 
 	if (afsmon_fs_curr_probeNum != afsmon_fs_prev_probeNum + 1) {
 	    sprintf(errMsg, "[ %s ] Probe number %d missed! \n", rn,
@@ -2273,7 +2370,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
 	/* initialize curr_fsData but retain the threshold flag information.
 	 * The previous state of threshold flags is used in check_fs_thresholds() */
 
-	numBytes = NUM_FS_STAT_ENTRIES * CM_STAT_STRING_LEN;
+	numBytes = NUM_FS_STAT_ENTRIES * FS_STAT_STRING_LEN;
 	curr_fsDataP = curr_fsData;
 	for (i = 0; i < numFS; i++) {
 	    curr_fsDataP->probeOK = 0;
@@ -2345,9 +2442,10 @@ afsmon_FS_Handler(void)
 
     if (afsmon_debug) {
 	fprintf(debugFD,
-		"[ %s ] Called, hostName= %s, probeNum= %d, status=%s\n", rn,
+		"[ %s ] Called, hostName= %s, probeNum= %d, status=%s, collection=%d\n", rn,
 		xstat_fs_Results.connP->hostName, xstat_fs_Results.probeNum,
-		xstat_fs_Results.probeOK ? "FAILED" : "OK");
+		xstat_fs_Results.probeOK ? "FAILED" : "OK",
+		xstat_fs_Results.collectionNumber);
 	fflush(debugFD);
     }
 
@@ -2379,6 +2477,7 @@ afsmon_FS_Handler(void)
 	    afsmon_Exit(85);
 	}
     }
+
 
     /* store the results of this probe in the FS circular buffer */
     if (num_bufSlots)
@@ -2412,6 +2511,7 @@ Print_CM_CB(void)
     struct afsmon_cm_Results_list *cmlist;
     int i;
     int j;
+    int k;
 
     /* print valid info in the cm CB */
 
@@ -2428,16 +2528,21 @@ Print_CM_CB(void)
 	    cmlist = afsmon_cm_ResultsCB[i].list;
 	    j = 0;
 	    while (j < numCM) {
-		if (!cmlist->empty) {
-		    fprintf(debugFD, "\t %d) probeNum = %d host = %s", j,
-			    cmlist->cmResults->probeNum,
-			    cmlist->cmResults->connP->hostName);
-		    if (cmlist->cmResults->probeOK)
-			fprintf(debugFD, " NOTOK\n");
-		    else
-			fprintf(debugFD, " OK\n");
-		} else
-		    fprintf(debugFD, "\t %d) -- empty --\n", j);
+	        for (k = 0; k < MAX_NUM_CM_COLLECTIONS; k++) {
+		    if (!cmlist->empty[k]) {
+			fprintf(debugFD,
+				"\t %d) probeNum = %d host = %s cn = %d",
+				j,
+				cmlist->cmResults[k]->probeNum,
+				cmlist->cmResults[k]->connP->hostName,
+				cmlist->cmResults[k]->collectionNumber);
+			if (cmlist->cmResults[k]->probeOK)
+			    fprintf(debugFD, " NOTOK\n");
+			else
+			    fprintf(debugFD, " OK\n");
+		    } else
+		        fprintf(debugFD, "\t %d) -- empty --\n", j);
+		}
 		cmlist = cmlist->next;
 		j++;
 	    }
@@ -2472,12 +2577,21 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
     struct afsmon_cm_Results_list *tmp_cmlist_item;	/* temp cm list item */
     struct xstat_cm_ProbeResults *tmp_cmPR;	/* temp ptr */
     int i;
+    int index;
 
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called, a_newProbeCycle= %d\n", rn,
 		a_newProbeCycle);
 	fflush(debugFD);
+    }
+
+    if (xstat_cm_Results.collectionNumber == AFSCB_XSTATSCOLL_FULL_PERF_INFO) {
+	index = 0;
+    } else {
+	fprintf(stderr, "[ %s ] collection number %d is out of range.\n",
+		rn, xstat_cm_Results.collectionNumber);
+	afsmon_Exit(91);
     }
 
     /* If a new probe cycle started, mark the list in the current buffer
@@ -2487,7 +2601,7 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
     if (a_newProbeCycle) {
 	tmp_cmlist_item = afsmon_cm_ResultsCB[afsmon_cm_curr_CBindex].list;
 	for (i = 0; i < numCM; i++) {
-	    tmp_cmlist_item->empty = 1;
+	    tmp_cmlist_item->empty[index] = 1;
 	    tmp_cmlist_item = tmp_cmlist_item->next;
 	}
     }
@@ -2495,13 +2609,13 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
     /* locate last unused item in list */
     tmp_cmlist_item = afsmon_cm_ResultsCB[afsmon_cm_curr_CBindex].list;
     for (i = 0; i < numCM; i++) {
-	if (tmp_cmlist_item->empty)
+	if (tmp_cmlist_item->empty[index])
 	    break;
 	tmp_cmlist_item = tmp_cmlist_item->next;
     }
 
     /* if we could not find one we have an inconsistent list */
-    if (!tmp_cmlist_item->empty) {
+    if (!tmp_cmlist_item->empty[index]) {
 	fprintf(stderr,
 		"[ %s ] list inconsistency 1. unable to find an empty slot to store results of probenum %d of %s\n",
 		rn, xstat_cm_Results.probeNum,
@@ -2509,7 +2623,7 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
 	afsmon_Exit(90);
     }
 
-    tmp_cmPR = tmp_cmlist_item->cmResults;
+    tmp_cmPR = tmp_cmlist_item->cmResults[index];
 
     /* copy hostname and probe number and probe time and probe status.
      * if the probe failed return now */
@@ -2521,7 +2635,7 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
     tmp_cmPR->probeOK = xstat_cm_Results.probeOK;
     if (xstat_cm_Results.probeOK) {	/* probeOK = 1 => notOK */
 	/* we have a nonempty results structure so mark the list item used */
-	tmp_cmlist_item->empty = 0;
+	tmp_cmlist_item->empty[index] = 0;
 	return (0);
     }
 
@@ -2538,14 +2652,15 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
 
     /* copy the probe data information */
     tmp_cmPR->data.AFSCB_CollData_len =
-	xstat_cm_Results.data.AFSCB_CollData_len;
+	min(xstat_cm_Results.data.AFSCB_CollData_len,
+	    afsmon_cm_results_length[index]);
     memcpy(tmp_cmPR->data.AFSCB_CollData_val,
 	   xstat_cm_Results.data.AFSCB_CollData_val,
-	   xstat_cm_Results.data.AFSCB_CollData_len * sizeof(afs_int32));
+	   tmp_cmPR->data.AFSCB_CollData_len * sizeof(afs_int32));
 
 
     /* we have a valid results structure so mark the list item used */
-    tmp_cmlist_item->empty = 0;
+    tmp_cmlist_item->empty[index] = 0;
 
     /* print the stored info - to make sure we copied it right */
     /*   Print_cm_FullPerfInfo(tmp_cmPR);        */
@@ -2923,7 +3038,7 @@ save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
     struct cm_Display_Data *curr_cmDataP;
     struct cm_Display_Data *prev_cmDataP;
     struct afsmon_hostEntry *curr_host;
-    static int probes_Received = 0;	/* number of probes reveived in
+    static int results_Received = 0;	/* number of probes reveived in
 					 * the current cycle. If this is equal to numFS we got all
 					 * the data we want in this cycle and can now display it */
     int numBytes;
@@ -3063,9 +3178,9 @@ save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
     /* if we have received a reply from all the hosts for this probe cycle,
      * it is time to display the data */
 
-    probes_Received++;
-    if (probes_Received == numCM) {
-	probes_Received = 0;
+    results_Received++;
+    if (results_Received == numCM * num_cm_collections) {
+	results_Received = 0;
 
 	if (afsmon_cm_curr_probeNum != afsmon_cm_prev_probeNum + 1) {
 	    sprintf(errMsg, "[ %s ] Probe number %d missed! \n", rn,
@@ -3261,36 +3376,37 @@ init_fs_buffers(void)
 		if (new_fslist_item == (struct afsmon_fs_Results_list *)0)
 		    return (-1);
 
-		/* allocate memory to store xstat_fs_Results */
-		new_fsPR = (struct xstat_fs_ProbeResults *)
-		    malloc(sizeof(struct xstat_fs_ProbeResults));
-		if (new_fsPR == (struct xstat_fs_ProbeResults *)0) {
-		    free(new_fslist_item);
-		    return (-1);
-		}
-		new_fsPR->connP = (struct xstat_fs_ConnectionInfo *)
-		    malloc(sizeof(struct xstat_fs_ConnectionInfo));
-		if (new_fsPR->connP == (struct xstat_fs_ConnectionInfo *)0) {
-		    free(new_fslist_item);
-		    free(new_fsPR);
-		    return (-1);
-		}
+		for (i = 0; i < MAX_NUM_FS_COLLECTIONS; i++) {
+		    /* allocate memory to store xstat_fs_Results */
+		    new_fsPR = (struct xstat_fs_ProbeResults *)
+		        malloc(sizeof(struct xstat_fs_ProbeResults));
+		    if (!new_fsPR) {
+		        free(new_fslist_item);
+		        return (-1);
+		    }
 
-		/* >>>  need to allocate rx connection info structure here <<< */
+		    new_fsPR->connP = (struct xstat_fs_ConnectionInfo *)
+		        malloc(sizeof(struct xstat_fs_ConnectionInfo));
+		    if (new_fsPR->connP == (struct xstat_fs_ConnectionInfo *)0) {
+		        free(new_fslist_item);
+		        free(new_fsPR);
+		        return (-1);
+		    }
 
-		new_fsPR->data.AFS_CollData_val =
-		    (afs_int32 *) malloc(XSTAT_FS_FULLPERF_RESULTS_LEN *
-					 sizeof(afs_int32));
-		if (new_fsPR->data.AFS_CollData_val == NULL) {
-		    free(new_fslist_item);
-		    free(new_fsPR->connP);
-		    free(new_fsPR);
-		    return (-1);
+		    /* >>>  need to allocate rx connection info structure here <<< */
+		    new_fsPR->data.AFS_CollData_val = (afs_int32 *)
+		       malloc(afsmon_fs_results_length[i] * sizeof(afs_int32));
+		    if (new_fsPR->data.AFS_CollData_val == NULL) {
+		       free(new_fslist_item);
+		       free(new_fsPR->connP);
+		       free(new_fsPR);
+		       return (-1);
+		    }
+		    new_fslist_item->fsResults[i] = new_fsPR;
+		    new_fslist_item->empty[i] = 1;
 		}
 
 		/* initialize this list entry */
-		new_fslist_item->fsResults = new_fsPR;
-		new_fslist_item->empty = 1;
 		new_fslist_item->next = (struct afsmon_fs_Results_list *)0;
 
 		/* store it at the end of the fs list in the current CB slot */
@@ -3377,36 +3493,39 @@ init_cm_buffers(void)
 		if (new_cmlist_item == (struct afsmon_cm_Results_list *)0)
 		    return (-1);
 
-		/* allocate memory to store xstat_cm_Results */
-		new_cmPR = (struct xstat_cm_ProbeResults *)
-		    malloc(sizeof(struct xstat_cm_ProbeResults));
-		if (new_cmPR == (struct xstat_cm_ProbeResults *)0) {
-		    free(new_cmlist_item);
-		    return (-1);
-		}
-		new_cmPR->connP = (struct xstat_cm_ConnectionInfo *)
-		    malloc(sizeof(struct xstat_cm_ConnectionInfo));
-		if (new_cmPR->connP == (struct xstat_cm_ConnectionInfo *)0) {
-		    free(new_cmlist_item);
-		    free(new_cmPR);
-		    return (-1);
-		}
+		for (i = 0; i < MAX_NUM_CM_COLLECTIONS; i++) {
+		    /* allocate memory to store xstat_cm_Results */
+		    new_cmPR = (struct xstat_cm_ProbeResults *)
+			malloc(sizeof(struct xstat_cm_ProbeResults));
+		    if (!new_cmPR) {
+			free(new_cmlist_item);
+			return (-1);
+		    }
+		    new_cmPR->connP = (struct xstat_cm_ConnectionInfo *)
+			malloc(sizeof(struct xstat_cm_ConnectionInfo));
+		    if (!new_cmPR->connP) {
+			free(new_cmlist_item);
+			free(new_cmPR);
+			return (-1);
+		    }
 
-		/* >>>  need to allocate rx connection info structure here <<< */
+		    /* >>>  need to allocate rx connection info structure here <<< */
 
-		new_cmPR->data.AFSCB_CollData_val =
-		    (afs_int32 *) malloc(XSTAT_CM_FULLPERF_RESULTS_LEN *
-					 sizeof(afs_int32));
-		if (new_cmPR->data.AFSCB_CollData_val == NULL) {
-		    free(new_cmlist_item);
-		    free(new_cmPR->connP);
-		    free(new_cmPR);
-		    return (-1);
+		    new_cmPR->data.AFSCB_CollData_val =
+			(afs_int32 *) malloc(XSTAT_CM_FULLPERF_RESULTS_LEN
+					     * sizeof(afs_int32));
+		    if (new_cmPR->data.AFSCB_CollData_val == NULL) {
+			free(new_cmlist_item);
+			free(new_cmPR->connP);
+			free(new_cmPR);
+			return (-1);
+		    }
+
+		    new_cmlist_item->cmResults[i] = new_cmPR;
+		    new_cmlist_item->empty[i] = 1;
 		}
 
 		/* initialize this list entry */
-		new_cmlist_item->cmResults = new_cmPR;
-		new_cmlist_item->empty = 1;
 		new_cmlist_item->next = (struct afsmon_cm_Results_list *)0;
 
 		/* store it at the end of the cm list in the current CB slot */
@@ -3603,12 +3722,12 @@ afsmon_execute(void)
     struct afsmon_hostEntry *curr_FS;	/* ptr to FS name list */
     struct afsmon_hostEntry *curr_CM;	/* ptr to CM name list */
     struct hostent *he;		/* host entry */
-    afs_int32 *collIDP;		/* ptr to collection ID */
-    int numCollIDs;		/* number of collection IDs */
     int FSinitFlags = 0;	/* flags for xstat_fs_Init */
     int CMinitFlags = 0;	/* flags for xstat_cm_Init */
     int code;			/* function return code */
     struct timeval tv;		/* time structure */
+    int i;
+    short index;
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called\n", rn);
@@ -3618,6 +3737,8 @@ afsmon_execute(void)
 
     /* process file server entries */
     if (numFS) {
+	afs_int32 collIDs[MAX_NUM_FS_COLLECTIONS];
+
 	/* Allocate an array of sockets for each fileserver we monitor */
 
 	FSsktbytes = numFS * sizeof(struct sockaddr_in);
@@ -3656,18 +3777,22 @@ afsmon_execute(void)
 	    curr_FS = curr_FS->next;
 	}
 
-	/* initialize collection IDs. We need only one entry since we collect
-	 * all the information from xstat */
-
-	numCollIDs = 1;
-	collIDP = (afs_int32 *) malloc(sizeof(afs_int32));
-	if (collIDP == NULL) {
-	    fprintf(stderr,
-		    "[ %s ] failed to allocate a measely afs_int32 word.Argh!\n",
-		    rn);
-	    return (-1);
+	/* Initialize collection IDs, depending on the data requested. */
+	num_fs_collections = 0;
+	for (i = 0; i < fs_DisplayItems_count; i++) {
+	    index = fs_Display_map[i];
+	    if (FS_FULLPERF_ENTRY_START <= index && index <= FS_FULLPERF_ENTRY_END) {
+	        collIDs[num_fs_collections++] = AFS_XSTATSCOLL_FULL_PERF_INFO;
+		break;
+	    }
 	}
-	*collIDP = 2;		/* USE A macro for this */
+	for (i = 0; i < fs_DisplayItems_count; i++) {
+	    index = fs_Display_map[i];
+	    if (FS_CB_ENTRY_START <= index && index <= FS_CB_ENTRY_END) {
+	        collIDs[num_fs_collections++] = AFS_XSTATSCOLL_CBSTATS;
+		break;
+	    }
+	}
 
 	FSinitFlags = 0;
 	if (afsmon_onceOnly)	/* option not provided at this time */
@@ -3683,8 +3808,8 @@ afsmon_execute(void)
 			     afsmon_probefreq,	/*probe frequency */
 			     afsmon_FS_Handler,	/*Handler routine */
 			     FSinitFlags,	/*Initialization flags */
-			     numCollIDs,	/*Number of collection IDs */
-			     collIDP);	/*Ptr to collection ID */
+			     num_fs_collections,	/*Number of collection IDs */
+			     collIDs);	/*Ptr to collection ID */
 
 	if (code) {
 	    fprintf(stderr, "[ %s ] xstat_fs_init returned error\n", rn);
@@ -3697,6 +3822,8 @@ afsmon_execute(void)
     /* end of process fileserver entries */
     /* process cache manager entries */
     if (numCM) {
+	afs_int32 collIDs[MAX_NUM_CM_COLLECTIONS];
+
 	/* Allocate an array of sockets for each cache manager we monitor */
 
 	CMsktbytes = numCM * sizeof(struct sockaddr_in);
@@ -3741,16 +3868,8 @@ afsmon_execute(void)
 
 	/* initialize collection IDs. We need only one entry since we collect
 	 * all the information from xstat */
-
-	numCollIDs = 1;
-	collIDP = (afs_int32 *) malloc(sizeof(afs_int32));
-	if (collIDP == NULL) {
-	    fprintf(stderr,
-		    "[ %s ] failed to allocate a measely long word.Argh!\n",
-		    rn);
-	    return (-1);
-	}
-	*collIDP = 2;		/* USE A macro for this */
+	num_cm_collections = 0;
+	collIDs[num_cm_collections++] = AFSCB_XSTATSCOLL_FULL_PERF_INFO;
 
 	CMinitFlags = 0;
 	if (afsmon_onceOnly)	/* once only ? */
@@ -3766,8 +3885,8 @@ afsmon_execute(void)
 			     afsmon_probefreq,	/*probe frequency */
 			     afsmon_CM_Handler,	/*Handler routine */
 			     CMinitFlags,	/*Initialization flags */
-			     numCollIDs,	/*Number of collection IDs */
-			     collIDP);	/*Ptr to collection ID */
+			     num_cm_collections,	/*Number of collection IDs */
+			     collIDs);	/*Ptr to collection ID */
 
 	if (code) {
 	    fprintf(stderr, "[ %s ] xstat_cm_init returned error\n", rn);

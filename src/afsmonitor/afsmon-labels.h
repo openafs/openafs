@@ -24,6 +24,7 @@
 
 -------------------------------------------------------------------------*/
 
+#include "afsmonitor.h"
 
 /* File Server variable names */
 
@@ -298,7 +299,23 @@ char *fs_varNames[] = {
     "StoreData_xfers_bucket5",
     "StoreData_xfers_bucket6",
     "StoreData_xfers_bucket7",
-    "StoreData_xfers_bucket8"
+    "StoreData_xfers_bucket8",
+    "DeleteFiles",	/* start of callback stats */
+    "DeleteCallBacks",
+    "BreakCallBacks",
+    "AddCallBack",
+    "GotSomeSpaces",
+    "DeleteAllCallBacks",
+    "nFEs",
+    "nCBs",
+    "nblks",
+    "CBsTimedOut",
+    "nbreakers",
+    "GSS1",
+    "GSS2",
+    "GSS3",
+    "GSS4",
+    "GSS5"
 };
 
 
@@ -578,7 +595,23 @@ char *fs_labels[] = {
     "StoreData/xfers/bucket5",
     "StoreData/xfers/bucket6",
     "StoreData/xfers/bucket7",
-    "StoreData/xfers/bucket8"
+    "StoreData/xfers/bucket8",
+    "Delete/Files",	/* start of callback stats */
+    "Delete/CallBacks",
+    "Break/CallBacks",
+    "Add/CallBack",
+    "Got/Some/Spaces",
+    "Delete/All/CallBacks",
+    "nFEs",
+    "nCBs",
+    "nblks",
+    "CBs/TimedOut",
+    "nbreakers",
+    "GSS1",
+    "GSS2",
+    "GSS3",
+    "GSS4",
+    "GSS5"
 };
 
 /* file server data classification */
@@ -597,7 +630,10 @@ char *fs_categories[] = {
     "misc_group 0 0",		/* numPerfCalls */
     "RPCop_section 2",
     "RPCopTimes_group 66 234",
-    "RPCopBytes_group 235 270"
+    "RPCopBytes_group 235 270",
+    "CallBackStats_section 2",
+    "CallBackCounters_group 271 281",
+    "GotSomeSpaces_group 282 286"
 };
 
 
