@@ -120,6 +120,21 @@ afs_statfs(register struct vfs *afsp, struct statfs *abp)
 }
 
 int
+afs_statvfs(struct vfs *afsp, struct statvfs *abp)
+{
+    AFS_STATCNT(afs_statfs);
+
+    abp->f_frsize = 1024;
+    abp->f_favail = 9000000;
+    abp->f_bsize = afsp->vfs_bsize;
+    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
+      abp->f_ffree = 9000000;
+    abp->f_fsid = (AFS_VFSMAGIC << 16) || AFS_VFSFSID;
+
+    return 0;
+}
+
+int
 afs_mountroot(void)
 {
     AFS_STATCNT(afs_mountroot);

@@ -1919,6 +1919,25 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     return;
 }
 
+int
+uafs_statvfs(struct statvfs *buf)
+{
+    int rc;
+
+    AFS_GLOCK();
+
+    rc = afs_statvfs(&afs_RootVfs, buf);
+
+    AFS_GUNLOCK();
+
+    if (rc) {
+	errno = rc;
+	return -1;
+    }
+
+    return 0;
+}
+
 void
 uafs_Shutdown(void)
 {
