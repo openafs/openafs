@@ -152,5 +152,6 @@ extern int uafs_RPCStatsDisablePeer(void);
 extern int uafs_IsRoot(char *path);
 extern int uafs_statmountpoint_r(char *path);
 extern int uafs_statvfs(struct statvfs *buf);
+extern void uafs_Shutdown(void);
 
 #endif /* __AFS_USROPS_H__ */
