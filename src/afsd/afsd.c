@@ -1003,9 +1003,9 @@ doSweepAFSCache(int *vFilesFound,
 	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
 #elif defined(AFS_DFBSD_ENV)
-	    printf("\tinode=%d, name='%s'\n", currp->d_ino, currp->d_name);
+	    printf("\tinode=%ld, name='%s'\n", (long)currp->d_ino, currp->d_name);
 #else
-	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
+	    printf("\tinode=%ld, reclen=%d, name='%s'\n", (long)currp->d_ino,
 		   currp->d_reclen, currp->d_name);
 #endif
 	}
