@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
+    update-alternatives --install /usr/bin/klog klog \
+        /usr/bin/klog.krb5 20 \
+        --slave /usr/share/man/man1/klog.1.gz klog.1.gz \
+        /usr/share/man/man1/klog.krb5.1.gz
+fi
+
+#DEBHELPER#
+
+exit 0

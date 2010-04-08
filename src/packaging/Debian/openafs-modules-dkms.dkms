@@ -1,0 +1,16 @@
+# DKMS configuration for the OpenAFS kernel module.  -*- sh -*-
+
+# The version is replaced at build time by dh_dkms invoked in debian/rules.
+PACKAGE_NAME="openafs"
+PACKAGE_VERSION="#MODULE_VERSION#"
+
+BUILT_MODULE_NAME[0]="$PACKAGE_NAME"
+DEST_MODULE_LOCATION[0]="/updates/dkms/"
+AUTOINSTALL=yes
+
+MAKE[0]="./configure --enable-disconnected \
+        --with-linux-kernel-headers=${kernel_source_dir} \
+        --with-linux-kernel-packaging
+    && make
+    && mv src/libafs/MODLOAD-*/openafs.ko ."
+CLEAN="rm -f openafs.ko && make -C src/libafs clean"

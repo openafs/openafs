@@ -1,0 +1,5 @@
+# /var/lib/openafs/local contains the fssync.sock file used to coordinate
+# volume actions between the fileserver and the volserver so upstream
+# wants it to be locked down.  Probably doesn't matter on Linux, but if we
+# diverge, we either have to patch bosserver or it complains.
+openafs-fileserver: non-standard-dir-perm var/lib/openafs/local/ 0700 != 0755

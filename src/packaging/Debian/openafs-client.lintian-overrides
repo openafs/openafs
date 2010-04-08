@@ -1,0 +1,3 @@
+# The AFS client cache should not be world-readable, since it may contain
+# files only readable by some of the local users based on their tokens.
+openafs-client: non-standard-dir-perm var/cache/openafs/ 0700 != 0755

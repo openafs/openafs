@@ -1,9 +1,10 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:             openafs-client
-# Required-Start:       $network $time
-# Required-Stop:        $local_fs $remote_fs $network
-# Should-Start:         $local_fs $remote_fs
+# Required-Start:       $remote_fs $network $time
+# Required-Stop:        $remote_fs $network
+# Should-Start:         $syslog
+# X-Stop-After:         autofs
 # Default-Start:        2 3 4 5
 # Default-Stop:         0 1 6
 # Short-Description:    OpenAFS client
@@ -27,7 +28,9 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
-MODULEDIR=${MODULEDIR:-/lib/modules/`uname -r`/fs}
+MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
+MODULEDIR=${MODULEDIR:-$MODULEROOT/fs}
+DKMSDIR=${DKMSDIR:-$MODULEROOT/updates/dkms}
 
 exec 3>/dev/null
 exec </dev/null
@@ -63,7 +66,12 @@ choose_client() {
     # exists and this is an SMP system, use it; otherwise, use the default
     # value.  Unset $MP if not using it so that we can use it later in the
     # call to modprobe.
-    if [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.o" ] ; then
+    #
+    # Assume that if we're using DKMS, we won't have a .mp and we'll always
+    # have a *.ko module name.
+    if [ -f "$DKMSDIR/openafs.ko" ] ; then
+        LIBAFS=openafs.ko
+    elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.o" ] ; then
         LIBAFS=openafs${MP}.o
     elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.ko" ] ; then
         LIBAFS=openafs${MP}.ko
@@ -77,12 +85,14 @@ choose_client() {
 }
 
 # Load the AFS client module if it's not already loaded.  Set $MODULEDIR and
-# $LIBAFS to override the default location and module name.
+# $LIBAFS to override the default location and module name.  Also check before
+# loading whether the module is listed in the module dependencies so that we
+# can exit with a 0 status in that case.
 load_client() {
     if [ -z "$LIBAFS" ] ; then
         choose_client
     fi
-    if [ ! -f "$MODULEDIR/$LIBAFS" ] ; then
+    if [ ! -f "$MODULEDIR/$LIBAFS" -a ! -f "$DKMSDIR/$LIBAFS" ] ; then
         echo ""
         cat <<EOF >&2
 AFS module $MODULEDIR/$LIBAFS does not exist.
@@ -93,6 +103,10 @@ EOF
         # installation unless a module is installed.
         exit 0
     fi
+    sawdep=0
+    if grep -q openafs "$MODULEROOT/modules.dep" ; then
+        sawdep=1
+    fi
     LOADED=`/sbin/lsmod | fgrep openafs`
     if [ -z "$LOADED" ] ; then
         modprobe openafs
@@ -100,7 +114,16 @@ EOF
         if [ $status = 0 ] ; then
             echo -n " openafs"
         fi
-        return $status
+
+        # We must exit successfully here if the openafs module just isn't
+        # listed in the dependency information for modprobe, which can happen
+        # if openafs-client and the module package are installed at the same
+        # time and the module hasn't been set up yet.
+        if [ $sawdep = 0 ] ; then
+            return 0
+        else
+            return $status
+        fi
     fi
     return 0
 }
@@ -151,8 +174,7 @@ start_client() {
 }
 
 # Kill all processes that are accessing AFS.  Not enabled by default, and
-# normally called via kill_all_afs.  Warns and does nothing if lsof is not
-# installed.
+# normally called via kill_all_afs.
 kill_afs() {
     signal=$1
     pids=`/usr/bin/lsof -Fp /afs | sed 's/p//'`
@@ -165,6 +187,8 @@ kill_afs() {
 # Repeatedly call kill_afs for a series of signals to give AFS-using processes
 # a hope of shutting down cleanly if the system is shutting down.  Not enabled
 # by default.  Enable this in /etc/openafs/afs.conf.
+#
+# Warns and does nothing if lsof is not installed.
 kill_all_afs() {
     runlevel=`runlevel | sed 's/^. //'`
     if [ "$runlevel" -eq 0 ] || [ "$runlevel" -eq 6 ] ; then
