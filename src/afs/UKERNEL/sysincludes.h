@@ -952,10 +952,10 @@ extern pthread_cond_t usr_sleep_cond;
 	pthread_attr_t attr; \
 	assert(pthread_attr_init(&attr) == 0); \
 	assert(pthread_attr_setstacksize(&attr, 124288) == 0); \
-	assert(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0); \
 	assert(pthread_create((A), &attr, (B), (void *)(C)) == 0); \
 	assert(pthread_attr_destroy(&attr) == 0); \
     } while(0)
+#define usr_thread_join(A,B)	pthread_join(A, B)
 #define usr_thread_detach(A)	pthread_detach(A)
 #define usr_keycreate(A,B)	assert(pthread_key_create(A,B) == 0)
 #define usr_setspecific(A,B)	pthread_setspecific(A,B)
