@@ -11,6 +11,12 @@ openafs (1.5.73.3-1) UNRELEASED; urgency=low
     - Network performance improvements.
     - New libkopenafs library providing a kernel PAG manipulation
       interface (a subset of the API provided by Heimdal's libkafs).
+  * Apply upstream deltas:
+    - [7d395f17] Improve demand-attach fileserver bos documentation
+    - [a763edc3] Make src/rx/rx.c not executable
+    - [8d41bc24] Reallocate memory in aklog for the AFS ID string
+    - [be449999] Fix typo in bos_create manpage
+    - [fdb9429e] Linux: kmap() not page_address()
   * Build OpenAFS with demand-attach enabled for the file server, bos
     restricted mode enabled for bosserver, and disconnected mode enabled
     for the client.  Except for demand-attach, these options don't change
