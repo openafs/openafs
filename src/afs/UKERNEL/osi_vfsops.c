@@ -15,10 +15,6 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics stuff */
 
-int afs_statfs(register struct vfs *afsp, struct statfs *abp);
-int afs_sync(struct vfs *afsp);
-
-
 struct vfsops Afs_vfsops = {
     afs_mount,
     afs_unmount,
