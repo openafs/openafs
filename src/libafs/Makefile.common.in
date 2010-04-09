@@ -99,7 +99,6 @@ AFSAOBJS = \
 	afs_osi.o		\
 	afs_osidnlc.o	\
 	afs_osi_alloc.o	\
-	afs_osi_gcpags.o	\
 	afs_osi_pag.o \
 	afs_osi_uio.o \
 	afs_osi_vget.o \
@@ -192,7 +191,6 @@ AFSPAGOBJS = \
 	afs_lock.o	\
 	afs_osi.o		\
 	afs_osi_alloc.o	\
-	afs_osi_gcpags.o	\
 	afs_osi_pag.o \
 	afs_pag_call.o \
 	afs_pag_cred.o \
@@ -273,8 +271,6 @@ afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
 afs_osi.o: 	$(TOP_SRC_AFS)/afs_osi.c
 	$(CRULE_OPT)
 afs_osi_alloc.o: $(TOP_SRC_AFS)/afs_osi_alloc.c
-	$(CRULE_OPT)
-afs_osi_gcpags.o: 	$(TOP_SRC_AFS)/afs_osi_gcpags.c
 	$(CRULE_OPT)
 afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 	$(CRULE_OPT)
@@ -472,6 +468,8 @@ afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
 # but have common build rules. Place here instead of duplicating
 # in the per-platform Makefiles.
 osi_groups.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_groups.c
+	$(CRULE_NOOPT)
+osi_gcpags.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_gcpags.c
 	$(CRULE_NOOPT)
 osi_inode.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_inode.c
 	$(CRULE_NOOPT)

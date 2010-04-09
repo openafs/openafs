@@ -16,6 +16,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 AFS_OS_OBJS = \
 	osi_assem.o \
 	osi_config.o \
+	osi_gcpags.o \
 	osi_groups.o \
 	osi_file.o \
 	osi_inode.o \
