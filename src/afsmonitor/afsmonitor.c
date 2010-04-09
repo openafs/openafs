@@ -1808,6 +1808,7 @@ fs_Results_ltoa(struct fs_Display_Data *a_fsData,	/* target buffer */
     int idx;
     int i, j;
     afs_int32 *tmpbuf;
+    afs_int32 numInt32s;
 
     if (afsmon_debug) {
 	fprintf(debugFD, "[ %s ] Called, a_fsData= %p, a_fsResults= %p\n", rn,
@@ -1822,6 +1823,25 @@ fs_Results_ltoa(struct fs_Display_Data *a_fsData,	/* target buffer */
      * - fullPerfP->overall which give the overall performance statistics, and
      * - fullPerfP->det which gives detailed info about file server operation
      * execution times */
+
+    /*
+     * Unfortunately, the full perf stats contain timeval structures which
+     * do not have the same size everywhere. Avoid displaying gargbage,
+     * but at least try to show the overall stats.
+     */
+    numInt32s = a_fsResults->data.AFS_CollData_len;
+    if (numInt32s !=
+	(sizeof(struct fs_stats_FullPerfStats) / sizeof(afs_int32))) {
+	srcbuf = a_fsResults->data.AFS_CollData_val;
+	for (i = 0; i < NUM_FS_STAT_ENTRIES; i++) {
+	    if (i < numInt32s && i < NUM_XSTAT_FS_AFS_PERFSTATS_LONGS) {
+		sprintf(a_fsData->data[i], "%d", srcbuf[i]);
+	    } else {
+		sprintf(a_fsData->data[i], "%s", "--");
+	    }
+	}
+	return 0;
+    }
 
     /* copy overall performance statistics */
     srcbuf = (afs_int32 *) & (fullPerfP->overall);

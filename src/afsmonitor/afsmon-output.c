@@ -368,14 +368,6 @@ Print_fs_FullPerfInfo(struct xstat_fs_ProbeResults *a_fs_Results)
     char *printableTime;	/*Ptr to printable time string */
     time_t probeTime;
 
-    numLongs = a_fs_Results->data.AFS_CollData_len;
-    if (numLongs != fullPerfLongs) {
-	fprintf(fs_outFD,
-		" ** Data size mismatch in full performance collection!\n");
-	fprintf(fs_outFD, " ** Expecting %d, got %d\n", fullPerfLongs,
-		numLongs);
-	return;
-    }
 
     probeTime = a_fs_Results->probeTime;
     printableTime = ctime(&probeTime);
@@ -388,8 +380,24 @@ Print_fs_FullPerfInfo(struct xstat_fs_ProbeResults *a_fs_Results)
 	    a_fs_Results->collectionNumber, a_fs_Results->connP->hostName,
 	    a_fs_Results->probeNum, printableTime);
 
-    Print_fs_OverallPerfInfo(&(fullPerfP->overall));
-    Print_fs_DetailedPerfInfo(&(fullPerfP->det));
+    numLongs = a_fs_Results->data.AFS_CollData_len;
+    if (numLongs != fullPerfLongs) {
+	fprintf(fs_outFD,
+		" ** Data size mismatch in full performance collection!\n");
+	fprintf(fs_outFD, " ** Expecting %d, got %d\n", fullPerfLongs,
+		numLongs);
+
+	/* Unfortunately, the full perf stats contain timeval structures which
+	 * do not have the same size everywhere. At least try to print
+	 * the overall stats.
+	 */
+	if (numLongs >= (sizeof(struct afs_stats_CMPerf) / sizeof(afs_int32))) {
+	    Print_fs_OverallPerfInfo(&(fullPerfP->overall));
+	}
+    } else {
+	Print_fs_OverallPerfInfo(&(fullPerfP->overall));
+	Print_fs_DetailedPerfInfo(&(fullPerfP->det));
+    }
 
 }				/*Print_fs_FullPerfInfo */
 
