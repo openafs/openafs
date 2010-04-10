@@ -362,7 +362,7 @@ afsmon_Exit(int a_exitVal)	/* exit code */
     struct afsmon_cm_Results_list *next_cmlist;
     struct xstat_cm_ProbeResults *tmp_xstat_cmPR;
     struct afsmon_hostEntry *curr_hostEntry;
-    struct afsmon_hostEntry *prev_hostEntry;
+    struct afsmon_hostEntry *next_hostEntry;
     int i;
     int j;
     int bufslot;
@@ -507,14 +507,12 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 	if (afsmon_debug)
 	    fprintf(debugFD, "Deallocating FS hostEntries ..");
 	curr_hostEntry = FSnameList;
-	for (i = 0; i < numFS; i++) {
-	    prev_hostEntry = curr_hostEntry;
+	while (curr_hostEntry) {
+	    next_hostEntry = curr_hostEntry->next;
 	    if (curr_hostEntry->thresh != NULL)
 		free(curr_hostEntry->thresh);
 	    free(curr_hostEntry);
-	    if (afsmon_debug)
-		fprintf(debugFD, " %d", i);
-	    curr_hostEntry = prev_hostEntry->next;
+	    curr_hostEntry = next_hostEntry;
 	}
 	if (afsmon_debug)
 	    fprintf(debugFD, "\n");
@@ -523,14 +521,12 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 	if (afsmon_debug)
 	    fprintf(debugFD, "Deallocating CM hostEntries ..");
 	curr_hostEntry = CMnameList;
-	for (i = 0; i < numCM; i++) {
-	    prev_hostEntry = curr_hostEntry;
+	while (curr_hostEntry) {
+	    next_hostEntry = curr_hostEntry->next;
 	    if (curr_hostEntry->thresh != NULL)
 		free(curr_hostEntry->thresh);
 	    free(curr_hostEntry);
-	    if (afsmon_debug)
-		fprintf(debugFD, " %d", i);
-	    curr_hostEntry = prev_hostEntry->next;
+	    curr_hostEntry = next_hostEntry;
 	}
 	if (afsmon_debug)
 	    fprintf(debugFD, "\n");
