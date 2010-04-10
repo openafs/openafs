@@ -42,6 +42,9 @@ struct clock {
     afs_int32 usec;		/* Microseconds since clock_Init */
 };
 
+#if defined(KERNEL)
+#include "afs/afs_osi.h"
+#endif
 #if !defined(KERNEL) || defined(UKERNEL)
 #if defined(AFS_USE_GETTIMEOFDAY) || defined(AFS_PTHREAD_ENV) || defined(UKERNEL)
 #define clock_Init()
@@ -85,7 +88,6 @@ extern int clock_nUpdates;
 #define	clock_Sec() ((!clock_haveCurrentTime)? clock_UpdateTime(), clock_now.sec:clock_now.sec)
 #endif /* AFS_USE_GETTIMEOFDAY || AFS_PTHREAD_ENV */
 #else /* KERNEL */
-#include "afs/afs_osi.h"
 #define clock_Init()
 #if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
 #define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)cv)
