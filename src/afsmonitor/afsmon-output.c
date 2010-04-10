@@ -223,8 +223,12 @@ Print_fs_OverallPerfInfo(struct afs_PerfStats *a_ovP)
     fprintf(fs_outFD, "\t%10d rx_nClientConns\n", a_ovP->rx_nClientConns);
     fprintf(fs_outFD, "\t%10d rx_nPeerStructs\n", a_ovP->rx_nPeerStructs);
     fprintf(fs_outFD, "\t%10d rx_nCallStructs\n", a_ovP->rx_nCallStructs);
-    fprintf(fs_outFD, "\t%10d rx_nFreeCallStructs\n\n",
+    fprintf(fs_outFD, "\t%10d rx_nFreeCallStructs\n",
 	    a_ovP->rx_nFreeCallStructs);
+    fprintf(fs_outFD, "\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
+
+    fprintf(fs_outFD, "\t%10d fs_nBusies\n", a_ovP->fs_nBusies);
+    fprintf(fs_outFD, "\t%10d fs_GetCapabilities\n\n", a_ovP->fs_nGetCaps);
 
     /*
      * Host module fields.
@@ -244,6 +248,7 @@ Print_fs_OverallPerfInfo(struct afs_PerfStats *a_ovP)
     fprintf(fs_outFD, "\t%10d host_ClientBlocks\n\n",
 	    a_ovP->host_ClientBlocks);
 
+    fprintf(fs_outFD, "\t%10d sysname_ID\n", a_ovP->sysname_ID);
 }				/*Print_fs_OverallPerfInfo */
 
 

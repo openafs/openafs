@@ -41,7 +41,7 @@ struct afsmon_hostEntry {
     struct afsmon_hostEntry *next;
 };
 
-#define NUM_FS_FULLPERF_ENTRIES 271 /* number fields saved from full prefs */
+#define NUM_FS_FULLPERF_ENTRIES 275 /* number fields saved from full prefs */
 #define NUM_FS_CB_ENTRIES 16	/* number fields saved from callback counters */
 #define NUM_FS_STAT_ENTRIES  \
 	(NUM_FS_FULLPERF_ENTRIES + NUM_FS_CB_ENTRIES)
@@ -90,7 +90,7 @@ other. Hence we should update only the one that completed. */
 
 /* Data is categorized into sections and groups to enable to user to choose
 what he wants displayed. */
-#define FS_NUM_DATA_CATEGORIES 12	/* # of fs categories */
+#define FS_NUM_DATA_CATEGORIES 13	/* # of fs categories */
 #define CM_NUM_DATA_CATEGORIES 16	/* # of cm categories */
 
 /* Set this  enable detailed debugging with the -debug switch */

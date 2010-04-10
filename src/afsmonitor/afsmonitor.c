@@ -88,7 +88,7 @@ short cm_showFlags[NUM_CM_STAT_ENTRIES];
 #define CM 2			/* for misc. use */
 
 
-#define	NUM_XSTAT_FS_AFS_PERFSTATS_LONGS 66	/* number of fields (longs) in struct afs_PerfStats that we display */
+#define NUM_XSTAT_FS_AFS_PERFSTATS_LONGS 70	/* number of fields from struct afs_PerfStats that we display */
 #define NUM_AFS_STATS_CMPERF_LONGS 40	/* number of longs in struct afs_stats_CMPerf excluding up/down stats and fields we dont display */
 
 

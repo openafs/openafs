@@ -94,7 +94,12 @@ char *fs_varNames[] = {
     "host_HostsInDiffSubnet",
     "host_HostsInDiffNetwork",
     "host_NumClients",
-    "host_ClientBlocks",	/* ",sysname_ID", has been junked */
+    "host_ClientBlocks",
+    "sysname_ID",		/* start of fields claimed from spares */
+    "rx_nBusies",
+    "fs_nBusies",
+    "fs_nGetCaps",
+    /* spares */
     "epoch",			/* RPC Operation timings */
     "FetchData_ops",
     "FetchData_ops_ok",
@@ -390,7 +395,12 @@ char *fs_labels[] = {
     "host/HostsIn/DiffSubnet",
     "host/HostsIn/DiffNetwork",
     "host/NumClients/",
-    "host/Client/Blocks",	/* ",sysname_ID", has been junked */
+    "host/Client/Blocks",
+    "sysname/ID",		/* start of fields claimed from spares */
+    "rx/nBusies",
+    "fs/nBusies",
+    "fs/nGetCaps",
+    /* spares */
     "//epoch",			/* RPC Operation timings */
     "/FetchData/ops",
     "/FetchData/ops_ok",
@@ -622,18 +632,22 @@ ending positional indices to fs_varNames[]. Unimportant information
 is placed at the end of the section. */
 
 char *fs_categories[] = {
-    "PerfStats_section 5",
+    "PerfStats_section 6",
     "VnodeCache_group 1 13",
     "Directory_group 14 16",
     "Rx_group 17 57",
     "HostModule_group 58 65",
     "misc_group 0 0",		/* numPerfCalls */
+    /* skip sysname id */
+    "Busies_group 67 68",
+    /* skip get caps */
+    /* skip spares */
     "RPCop_section 2",
-    "RPCopTimes_group 66 234",
-    "RPCopBytes_group 235 270",
+    "RPCopTimes_group 70 238",
+    "RPCopBytes_group 239 274",
     "CallBackStats_section 2",
-    "CallBackCounters_group 271 281",
-    "GotSomeSpaces_group 282 286"
+    "CallBackCounters_group 275 285",
+    "GotSomeSpaces_group 286 290"
 };
 
 
