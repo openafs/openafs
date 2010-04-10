@@ -287,15 +287,16 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
-	*nbsd2*|*nbsd3*|*nbsd4*)
+	*nbsd2*|*nbsd3*|*nbsd4*|*nbsd5*)
 		LEX="flex -l"
-		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
-		MT_LIBS="-lpthread" # XXX -pthread soon
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-pthread"
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
+		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="/usr/lib/libcurses.so"
+		TXLIBS="-lcurses"
 		XCFLAGS="-pipe"
 		YACC="yacc"
 		;;

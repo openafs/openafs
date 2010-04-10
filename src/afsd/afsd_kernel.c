@@ -508,6 +508,8 @@ afsd_mount_afs(const char *rn, const char *cacheMountDir)
 	< 0) {
 #elif defined(AFS_LINUX20_ENV)
     if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
+#elif defined(AFS_NBSD50_ENV)
+    if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, NULL, 0)) < 0) {
 #else
     /* This is the standard mount used by the suns and rts */
     if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {

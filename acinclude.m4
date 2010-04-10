@@ -492,63 +492,33 @@ else
 		i386-*-dragonfly2.3*)
 			AFS_SYSNAME="i386_dfbsd_23"
 			;;
-		i?86-*-netbsd*1.5*)
-			AFS_SYSNAME="i386_nbsd15"
-			;;
-		alpha-*-netbsd*1.5*)
-			AFS_SYSNAME="alpha_nbsd15"
-			;;
 		i?86-*-netbsd*1.6[[M-Z]]*)
 			AFS_SYSNAME="i386_nbsd20"
 			;;
 		powerpc-*-netbsd*1.6[[M-Z]]*)
 			AFS_SYSNAME="ppc_nbsd20"
 			;;
-		i?86-*-netbsd*2.0*)
-			AFS_SYSNAME="i386_nbsd20"
-			;;
-		amd64-*-netbsd*2.0*)
-			AFS_SYSNAME="amd64_nbsd20"
-			;;
-		x86_64-*-netbsd*3.[[0-8]]*)
-# XXX AFS_PARAM_COMMON handled separately, redundant?
-			AFS_PARAM_COMMON=param.nbsd30.h
-			AFS_SYSNAME="amd64_nbsd30"
-			;;
-		x86_64-*-netbsd*4.[[0-8]]*)
-# XXX AFS_PARAM_COMMON handled separately, redundant?
-			AFS_PARAM_COMMON=param.nbsd40.h
-			AFS_SYSNAME="amd64_nbsd40"
-			;;
-		powerpc-*-netbsd*2.0*)
-			AFS_SYSNAME="ppc_nbsd20"
-			;;
-		i?86-*-netbsd*1.6*)
-			AFS_SYSNAME="i386_nbsd16"
-			;;
-		alpha-*-netbsd*1.6*)
-			AFS_SYSNAME="alpha_nbsd16"
-			;;
-		powerpc-*-netbsd*1.6*)
-			AFS_SYSNAME="ppc_nbsd16"
-			;;
-		i?86-*-netbsd*2.1*)
-			AFS_SYSNAME="i386_nbsd21"
-			;;
-		i?86-*-netbsd*2.99*)
-			AFS_SYSNAME="i386_nbsd30"
-			;;
-		i?86-*-netbsd*3.[[0-8]]*)
-			AFS_SYSNAME="i386_nbsd30"
-			;;
-		i?86-*-netbsd*3.99*)
-			AFS_SYSNAME="i386_nbsd30"
-			;;
-		i?86-*-netbsd*4.[[0-8]]*)
-			AFS_SYSNAME="i386_nbsd40"
-			;;
-		i?86-*-netbsd*4.99*)
-			AFS_SYSNAME="i386_nbsd40"
+		*-*-netbsd*)
+			arch=${host%%-unknown*}
+			arch=$(echo $arch |sed -e 's/x86_64/amd64/g' \
+					       -e 's/powerpc/ppc/g')
+			v=${host#*netbsd}
+			v=${v#*aout}
+			v=${v#*ecoff}
+			v=${v#*elf}
+			vM=${v%%.*}
+			vM=${vM%.*}
+			v=${v#*.}
+			vm=${v%%.*}
+			vm=${vm%.*}
+			vm=${vm%%[[_A-Z]]*}
+			if test $vm -eq 99 ; then
+				vM=$((vM+1))
+			fi
+			if test $vM -gt 1 ; then
+				vm=0
+			fi
+			AFS_SYSNAME="${arch}_nbsd${vM}${vm}"
 			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
@@ -744,6 +714,7 @@ case $AFS_SYSNAME in
     *_nbsd21)   AFS_PARAM_COMMON=param.nbsd21.h  ;;
     *_nbsd30)   AFS_PARAM_COMMON=param.nbsd30.h  ;;
     *_nbsd40)   AFS_PARAM_COMMON=param.nbsd40.h  ;;
+    *_nbsd50)   AFS_PARAM_COMMON=param.nbsd50.h  ;;
     *_obsd31)   AFS_PARAM_COMMON=param.obsd31.h  ;;
     *_obsd32)   AFS_PARAM_COMMON=param.obsd32.h  ;;
     *_obsd33)   AFS_PARAM_COMMON=param.obsd33.h  ;;
