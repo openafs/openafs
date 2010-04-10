@@ -21,7 +21,7 @@
  * table, calling afs_GCPAGs_perproc_func() for each process.
  */
 
- void
+void
 afs_osi_TraverseProcTable(void)
 {
     afs_proc_t *p;
@@ -43,13 +43,26 @@ afs_osi_TraverseProcTable(void)
 const afs_ucred_t *
 afs_osi_proc2cred(afs_proc_t * pr)
 {
-    /*
-     * This whole function is kind of an ugly hack.  For one, the
-     * 'const' is a lie.  Also, we should probably be holding the
-     * proc mutex around all accesses to the credentials structure,
-     * but the present API does not allow this.
-     */
-    return pr->p_ucred;
+	afs_ucred_t *rv = NULL;
+	static afs_ucred_t cr;
+
+	if (pr == NULL) {
+		return NULL;
+	}
+
+	if ((pr->p_stat == SSLEEP) || (pr->p_stat == SRUN)
+		|| (pr->p_stat == SSTOP)) {
+		pcred_readlock(pr);
+		cr.cr_ref = 1;
+		afs_set_cr_uid(&cr, afs_cr_uid(pr->p_cred->pc_ucred));
+		cr.cr_ngroups = pr->p_cred->pc_ucred->cr_ngroups;
+		memcpy(cr.cr_groups, pr->p_cred->pc_ucred->cr_groups,
+		NGROUPS * sizeof(gid_t));
+		pcred_unlock(pr);
+		rv = &cr;
+	}
+
+	return rv;
 }
 
 #endif /* AFS_GCPAGS */

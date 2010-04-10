@@ -22,7 +22,6 @@
  */
 
 
-#if defined(AFS_LINUX22_ENV)
 #ifdef EXPORTED_TASKLIST_LOCK
 extern rwlock_t tasklist_lock __attribute__((weak));
 #endif
@@ -121,22 +120,5 @@ afs_osi_proc2cred(afs_proc_t * pr)
     return rv;
 }
 #endif
-
-#else
-
-const afs_ucred_t *
-afs_osi_proc2cred(afs_proc_t * pr)
-{
-    afs_ucred_t *rv = NULL;
-
-    if (pr == NULL) {
-	return NULL;
-    }
-    rv = pr->p_cred;
-
-    return rv;
-}
-
-#endif /* AFS_LINUX22_ENV */
 
 #endif /* AFS_GCPAGS */

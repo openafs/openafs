@@ -16,6 +16,19 @@
 
 #if AFS_GCPAGS
 
+/* afs_osi_TraverseProcTable() - Walk through the systems process
+ * table, calling afs_GCPAGs_perproc_func() for each process.
+ */
+
+void
+afs_osi_TraverseProcTable(void)
+{
+	afs_proc_t *prp;
+	for (prp = practive; prp != NULL; prp = prp->p_next) {
+		afs_GCPAGs_perproc_func(prp);
+	}
+}
+
 /* return a pointer (sometimes a static copy ) to the cred for a
  * given afs_proc_t.
  * subsequent calls may overwrite the previously returned value.

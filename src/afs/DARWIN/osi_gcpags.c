@@ -22,7 +22,7 @@
  */
 
 
-#if (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
+#if (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV))
 void
 afs_osi_TraverseProcTable(void)
 {

@@ -22,7 +22,7 @@
  * table, calling afs_GCPAGs_perproc_func() for each process.
  */
 
- #ifdef AFS_AIX51_ENV
+#ifdef AFS_AIX51_ENV
 #define max_proc v.ve_proc
 #endif
 void
