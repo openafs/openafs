@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
+#include <strsafe.h>
 #include <stdio.h>
 #include <time.h>
 #include <winsock2.h>
@@ -286,14 +287,20 @@ static char *
 Parent(char *apath)
 {
     char *tp;
-    strcpy(tspace, apath);
+    if( FAILED(StringCbCopy(tspace, sizeof(tspace), apath))) {
+        fprintf (stderr, "tspace - not enough space");
+        exit(1);
+    }
     tp = strrchr(tspace, '\\');
     if (tp) {
 	*(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
     }
     else {
 	fs_ExtractDriveLetter(apath, tspace);
-    	strcat(tspace, ".");
+	if( FAILED(StringCbCat(tspace, sizeof(tspace), "."))) {
+	    fprintf (stderr, "tspace - not enough space");
+	    exit(1);
+	}
     }
     return tspace;
 }
@@ -303,7 +310,6 @@ enum rtype {add, destroy, deny};
 static afs_int32 
 Convert(char *arights, int dfs, enum rtype *rtypep)
 {
-    int i, len;
     afs_int32 mode;
     char tc;
 
@@ -338,10 +344,8 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
 	*rtypep = destroy; /* Remove entire entry */
 	return 0;
     }
-    len = (int)strlen(arights);
     mode = 0;
-    for(i=0;i<len;i++) {
-        tc = *arights++;
+    for(; (tc = *arights) != '\0'; arights++) {
 	if (dfs) {
 	    if (tc == '-') 
                 continue;
@@ -435,15 +439,20 @@ static void
 SetDotDefault(struct cmd_item **aitemp)
 {
     struct cmd_item *ti;
+    int len_data = 2;
+
     if (*aitemp) 
         return;	                /* already has value */
     /* otherwise, allocate an item representing "." */
     ti = (struct cmd_item *) malloc(sizeof(struct cmd_item));
     assert(ti);
     ti->next = (struct cmd_item *) 0;
-    ti->data = (char *) malloc(2);
+    ti->data = (char *) malloc(len_data);
     assert(ti->data);
-    strcpy(ti->data, ".");
+    if( FAILED(StringCbCopy(ti->data, len_data, "."))) {
+        fprintf (stderr, "data - not enough space");
+        exit(1);
+    }
     *aitemp = ti;
 }
 
@@ -465,7 +474,10 @@ ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights)
     /* Otherwise we make a new item and plug in the new data. */
     tlist = (struct AclEntry *) malloc(sizeof (struct AclEntry));
     assert(tlist);
-    strcpy(tlist->name, aname);
+    if( FAILED(StringCbCopy(tlist->name, sizeof(tlist->name), aname))) {
+	fprintf (stderr, "name - not enough space");
+        exit(1);
+    }
     tlist->rights = arights;
     if (plus) {
         tlist->next = al->pluslist;
@@ -541,32 +553,52 @@ EmptyAcl(char *astr)
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
     tp->dfs = 0;
+#if _MSC_VER < 1400
     if (astr == NULL || sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell) <= 0) {
         tp->dfs = 0;
         tp->cell[0] = '\0';
     }
+#else
+    if (astr == NULL || sscanf_s(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell, sizeof(tp->cell)) <= 0) {
+        tp->dfs = 0;
+        tp->cell[0] = '\0';
+    }
+#endif
     return tp;
 }
 
 static struct Acl *
-ParseAcl (char *astr)
+ParseAcl (char *astr, int astr_size)
 {
     int nplus, nminus, i, trights, ret;
+    size_t len;
     char tname[MAXNAME];
     struct AclEntry *first, *next, *last, *tl;
     struct Acl *ta;
 
     ta = EmptyAcl(NULL);
-    if (astr == NULL || strlen(astr) == 0)
+    if( FAILED(StringCbLength(astr, astr_size, &len))) {
+        fprintf (stderr, "StringCbLength failure on astr");
+        exit(1);
+    }
+    if (astr == NULL || len == 0)
         return ta;
 
+#if _MSC_VER < 1400
     ret = sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
+#else
+    ret = sscanf_s(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell, sizeof(ta->cell));
+#endif
     if (ret <= 0) {
         free(ta);
         return NULL;
     }
     astr = SkipLine(astr);
+#if _MSC_VER < 1400
     ret = sscanf(astr, "%d", &ta->nminus);
+#else
+    ret = sscanf_s(astr, "%d", &ta->nminus);
+#endif
     if (ret <= 0) {
         free(ta);
         return NULL;
@@ -579,7 +611,11 @@ ParseAcl (char *astr)
     last = 0;
     first = 0;
     for(i=0;i<nplus;i++) {
+#if _MSC_VER < 1400
         ret = sscanf(astr, "%100s %d", tname, &trights); 
+#else
+        ret = sscanf_s(astr, "%100s %d", tname, sizeof(tname), &trights);
+#endif
         if (ret <= 0)
             goto nplus_err;
         astr = SkipLine(astr);
@@ -588,7 +624,10 @@ ParseAcl (char *astr)
             goto nplus_err;
         if (!first) 
             first = tl;
-        strcpy(tl->name, tname);
+        if( FAILED(StringCbCopy(tl->name, sizeof(tl->name), tname))) {
+            fprintf (stderr, "name - not enough space");
+            exit(1);
+        }
         tl->rights = trights;
         tl->next = 0;
         if (last) 
@@ -600,7 +639,11 @@ ParseAcl (char *astr)
     last = 0;
     first = 0;
     for(i=0;i<nminus;i++) {
+#if _MSC_VER < 1400
         ret = sscanf(astr, "%100s %d", tname, &trights);
+#else
+        ret = sscanf_s(astr, "%100s %d", tname, sizeof(tname), &trights);
+#endif
         if (ret <= 0)
             goto nminus_err;
         astr = SkipLine(astr);
@@ -609,7 +652,10 @@ ParseAcl (char *astr)
             goto nminus_err;
         if (!first) 
             first = tl;
-        strcpy(tl->name, tname);
+        if( FAILED(StringCbCopy(tl->name, sizeof(tl->name), tname))) {
+            fprintf (stderr, "name - not enough space");
+            exit(1);
+        }
         tl->rights = trights;
         tl->next = 0;
         if (last) 
@@ -716,19 +762,38 @@ AclToString(struct Acl *acl)
     char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[30];
     struct AclEntry *tp;
-    
-    if (acl->dfs) 
-        sprintf(dfsstring, " dfs:%d %s", acl->dfs, acl->cell);
-    else 
+
+    if (acl->dfs) {
+        if( FAILED(StringCbPrintf(dfsstring, sizeof(dfsstring), " dfs:%d %s", acl->dfs, acl->cell))) {
+            fprintf (stderr, "dfsstring - cannot be populated");
+            exit(1);
+        }
+    } else {
         dfsstring[0] = '\0';
-    sprintf(mydata, "%d%s\n%d\n", acl->nplus, dfsstring, acl->nminus);
+    }
+    if( FAILED(StringCbPrintf(mydata, sizeof(mydata), "%d%s\n%d\n", acl->nplus, dfsstring, acl->nminus))) {
+        fprintf (stderr, "mydata - cannot be populated");
+        exit(1);
+    }
     for (tp = acl->pluslist;tp;tp=tp->next) {
-        sprintf(tstring, "%s %d\n", tp->name, tp->rights);
-        strcat(mydata, tstring);
+        if( FAILED(StringCbPrintf(tstring, sizeof(tstring), "%s %d\n", tp->name, tp->rights))) {
+            fprintf (stderr, "tstring - cannot be populated");
+            exit(1);
+        }
+        if( FAILED(StringCbCat(mydata, sizeof(mydata), tstring))) {
+            fprintf (stderr, "mydata - not enough space");
+            exit(1);
+        }
     }
     for (tp = acl->minuslist;tp;tp=tp->next) {
-        sprintf(tstring, "%s %d\n", tp->name, tp->rights);
-        strcat(mydata, tstring);
+        if( FAILED(StringCbPrintf(tstring, sizeof(tstring), "%s %d\n", tp->name, tp->rights))) {
+            fprintf (stderr, "tstring - cannot be populated");
+            exit(1);
+        }
+        if( FAILED(StringCbCat(mydata, sizeof(mydata), tstring))) {
+            fprintf (stderr, "mydata - not enough space");
+            exit(1);
+        }
     }
     return mydata;
 }
@@ -751,9 +816,10 @@ static DWORD IsFreelance(void)
     return enabled;
 }
 
+#define NETBIOSNAMESZ 1024
 static const char * NetbiosName(void)
 {
-    static char buffer[1024] = "AFS";
+    static char buffer[NETBIOSNAMESZ] = "AFS";
     HKEY  parmKey;
     DWORD code;
     DWORD dummyLen;
@@ -767,7 +833,10 @@ static const char * NetbiosName(void)
 			       buffer, &dummyLen);
         RegCloseKey (parmKey);
     } else {
-	strcpy(buffer, "AFS");
+	if( FAILED(StringCbCopy(buffer, sizeof(buffer), "AFS"))) {
+	    fprintf (stderr, "buffer - not enough space");
+            exit(1);
+	}
     }
     return buffer;
 }
@@ -801,8 +870,15 @@ static BOOL IsAdmin (void)
         dwSize = 0;
         dwSize2 = 0;
 
-        strcat(pszAdminGroup,"\\");
-        strcat(pszAdminGroup, AFSCLIENT_ADMIN_GROUPNAME);
+	if( FAILED(StringCbCat(pszAdminGroup, MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2,"\\"))) {
+	    fprintf (stderr, "pszAdminGroup - not enough space");
+            exit(1);
+	}
+	if( FAILED(StringCbCat(pszAdminGroup, MAX_COMPUTERNAME_LENGTH +
+	    sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2, AFSCLIENT_ADMIN_GROUPNAME))) {
+	    fprintf (stderr, "pszAdminGroup - not enough space");
+            exit(1);
+	}
 
         LookupAccountName(NULL, pszAdminGroup, NULL, &dwSize, NULL, &dwSize2, &snu);
         /* that should always fail. */
@@ -922,7 +998,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 rights;
     int clear;
     int idf = getidf(as, parm_setacl_id);
-
+    size_t len;
     int error = 0;
 
     if (as->parms[2].items)
@@ -942,7 +1018,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	}
         if (ta)
             ZapAcl(ta);
-	ta = ParseAcl(space);
+	ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
                     "fs: %s: invalid acl data returned from VIOCGETAL\n",
@@ -963,7 +1039,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	if (clear) 
             ta = EmptyAcl(space);
 	else 
-            ta = ParseAcl(space);
+            ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
                     "fs: %s: invalid acl data returned from VIOCGETAL\n",
@@ -996,7 +1072,11 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	}
 	blob.in = AclToString(ta);
 	blob.out_size=0;
-	blob.in_size = 1+(long)strlen(blob.in);
+	if( FAILED(StringCbLength(blob.in, sizeof(space), &len))) {
+	    fprintf (stderr, "StringCbLength failure on blob.in");
+	    exit(1);
+	}
+	blob.in_size = 1+(long)len;
 	code = pioctl_utf8(ti->data, VIOCSETAL, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
@@ -1066,6 +1146,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     int clear;
     int idf = getidf(as, parm_copyacl_id);
     int error = 0;
+    size_t len;
 
     if (as->parms[2].items) 
         clear=1;
@@ -1079,7 +1160,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	Die(errno, as->parms[0].items->data);
 	return 1;
     }
-    fa = ParseAcl(space);
+    fa = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
     if (!fa) {
         fprintf(stderr,
                  "fs: %s: invalid acl data returned from VIOCGETAL\n",
@@ -1102,7 +1183,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	if (clear) 
             ta = EmptyAcl(space);
 	else 
-            ta = ParseAcl(space);
+            ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
                     "fs: %s: invalid acl data returned from VIOCGETAL\n",
@@ -1126,7 +1207,10 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
                 error = 1;
 		continue;
 	    }
-	    strcpy(ta->cell, fa->cell);
+	    if( FAILED(StringCbCopy(ta->cell, sizeof(ta->cell), fa->cell))) {
+	        fprintf (stderr, "cell - not enough space");
+                exit(1);
+	    }
 	}
 	for (tp = fa->pluslist;tp;tp=tp->next) 
 	    ChangeList(ta, 1, tp->name, tp->rights);
@@ -1134,7 +1218,11 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	    ChangeList(ta, 0, tp->name, tp->rights);
 	blob.in = AclToString(ta);
 	blob.out_size=0;
-	blob.in_size = 1+(long)strlen(blob.in);
+	if( FAILED(StringCbLength(blob.in, sizeof(space), &len))) {
+	    fprintf (stderr, "StringCbLength failure on blob.in");
+	    exit(1);
+	}
+	blob.in_size = 1+(long)len;
 	code = pioctl_utf8(ti->data, VIOCSETAL, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
@@ -1259,6 +1347,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     struct AclEntry *te;
     int error = 0;
+    size_t len;
 
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
@@ -1273,7 +1362,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	}
         if (ta)
             ZapAcl(ta);
-	ta = ParseAcl(space);
+	ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
                     "fs: %s: invalid acl data returned from VIOCGETAL\n",
@@ -1294,7 +1383,11 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	if (changes) {
 	    /* now set the acl */
 	    blob.in=AclToString(ta);
-	    blob.in_size = (long)strlen(blob.in)+1;
+	    if( FAILED(StringCbLength(blob.in, sizeof(space), &len))) {
+	        fprintf (stderr, "StringCbLength failure on blob.in");
+	        exit(1);
+	    }
+	    blob.in_size = (long)len+1;
 	    blob.out_size = 0;
 	    code = pioctl_utf8(ti->data, VIOCSETAL, &blob, 1);
 	    if (code) {
@@ -1365,7 +1458,7 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
 	    continue;
 	}
-	ta = ParseAcl(space);
+	ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
                     "fs: %s: invalid acl data returned from VIOCGETAL\n",
@@ -1514,9 +1607,17 @@ FlushCmd(struct cmd_syndesc *as, void *arock)
 static int
 SetQuotaCmd(struct cmd_syndesc *as, void *arock) {
     struct cmd_syndesc ts;
-
+    errno_t err;
     /* copy useful stuff from our command slot; we may later have to reorder */
-    memcpy(&ts, as, sizeof(ts));	/* copy whole thing */
+#if _MSC_VER < 1400
+    memcpy(&ts, as, sizeof(ts));    /* copy whole thing */
+#else
+    err = memcpy_s(&ts, sizeof(ts), as, sizeof(ts));  /* copy whole thing */
+    if ( err ) {
+        fprintf (stderr, "memcpy_s failure on ts");
+        exit(1);
+    }
+#endif
     return SetVolCmd(&ts, arock);
 }
 
@@ -1526,12 +1627,15 @@ SetVolCmd(struct cmd_syndesc *as, void *arock) {
     struct ViceIoctl blob;
     struct cmd_item *ti;
     struct VolumeStatus *status;
-    char *motd, *offmsg, *input;
+    char *motd, *offmsg, *input, *destEnd;
+    size_t destRemaining;
     int error = 0;
+    size_t len;
 
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
+        destRemaining = sizeof(space);
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = sizeof(*status) + 3;	/* for the three terminating nulls */
 	blob.out = space;
@@ -1553,29 +1657,42 @@ SetVolCmd(struct cmd_syndesc *as, void *arock) {
             offmsg = as->parms[3].items->data;
 	input = (char *)status + sizeof(*status);
 	*(input++) = '\0';	/* never set name: this call doesn't change vldb */
+        destRemaining -= sizeof(*status) + 1;
 	if(offmsg) {
-            if (strlen(offmsg) >= VMSGSIZE) {
-                fprintf(stderr,"%s: message must be shorter than %d characters\n",
+            if( FAILED(StringCbLength(offmsg, VMSGSIZE, &len))) {
+	        fprintf(stderr,"%s: message must be shorter than %d characters\n",
                          pn, VMSGSIZE);
                 error = 1;
                 continue;
-            }
-	    strcpy(input,offmsg);
-	    blob.in_size += (long)strlen(offmsg);
-	    input += strlen(offmsg) + 1;
-	} else 
+	    }
+            if( FAILED(StringCbCopyEx(input, destRemaining, offmsg, &destEnd, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
+	        fprintf (stderr, "input - not enough space");
+                exit(1);
+	    }
+	    blob.in_size += destEnd - input;
+	    input = destEnd + 1;
+	    destRemaining -= sizeof(char);
+	} else {
             *(input++) = '\0';
+            destRemaining -= sizeof(char);
+        }
 	if(motd) {
-            if (strlen(motd) >= VMSGSIZE) {
-                fprintf(stderr,"%s: message must be shorter than %d characters\n",
-                         pn, VMSGSIZE);
+            if( FAILED(StringCbLength(motd, VMSGSIZE, &len))) {
+	        fprintf(stderr,"%s: message must be shorter than %d characters\n",
+                    pn, VMSGSIZE);
                 return code;
-            }
-	    strcpy(input,motd);
-	    blob.in_size += (long)strlen(motd);
-	    input += strlen(motd) + 1;
-	} else 
+	    }
+	    if( FAILED(StringCbCopyEx(input, destRemaining, motd, &destEnd, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
+                fprintf (stderr, "input - not enough space");
+                exit(1);
+	    }
+	    blob.in_size += (long)(destEnd - input);
+	    input = destEnd + 1;
+	    destRemaining -= sizeof(char);
+	} else {
             *(input++) = '\0';
+            destRemaining -= sizeof(char);
+        }
 	code = pioctl_utf8(ti->data,VIOCSETVOLSTAT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
@@ -1622,6 +1739,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
     int error = 0;
     int literal = 0;
     cm_ioctlQueryOptions_t options;
+    int len;
 
     if (as->parms[1].items)
         literal = 1;
@@ -1700,8 +1818,16 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
             space[blob.out_size - 1] = '\0';
             status = (VolumeStatus *)space;
             name = (char *)status + sizeof(*status);
-            offmsg = name + strlen(name) + 1;
-            motd = offmsg + strlen(offmsg) + 1;
+            if( FAILED(StringCbLength(name, sizeof(space) - (name - space), &len))) {
+	        fprintf (stderr, "StringCbLength failure on name");
+	        exit(1);
+	    }
+            offmsg = name + len + 1;
+            if( FAILED(StringCbLength(offmsg, sizeof(space) - (offmsg - space), &len))) {
+	        fprintf (stderr, "StringCbLength failure on offmsg");
+	        exit(1);
+	    }
+            motd = offmsg + len + 1;
             PrintStatus(status, name, motd, offmsg);
         } else {
             Die(errno, ti->data);
@@ -1920,6 +2046,8 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
     char true_name[1024];		/*``True'' dirname (e.g., symlink target)*/
     char parent_dir[1024];		/*Parent directory of true name*/
     char *last_component;	/*Last component of true name*/
+    size_t len;
+
 #ifndef WIN32
     struct stat statbuff;		/*Buffer for status info*/
 #endif /* not WIN32 */
@@ -1933,11 +2061,18 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	/* once per file */
 	thru_symlink = 0;
 #ifdef WIN32
-	strcpy(orig_name, ti->data);
+    if( FAILED(StringCbCopy(orig_name, sizeof(orig_name), ti->data))) {
+        fprintf (stderr, "orig_name - not enough space");
+        exit(1);
+    }
 #else /* not WIN32 */
-	sprintf(orig_name, "%s%s",
-		(ti->data[0] == '/') ? "" : "./",
-		ti->data);
+
+    if( FAILED(StringCbPrintf(orig_name, sizeof(orig_name), "%s%s",
+        (ti->data[0] == '/') ? "" : "./",
+        ti->data))) {
+        fprintf (stderr, "orig_name - cannot be populated");
+        exit(1);
+    }
 #endif /* not WIN32 */
 
 #ifndef WIN32
@@ -1978,14 +2113,27 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	     * name (we know there is one) and splice in the symlink value.
 	     */
 	    if (true_name[0] != '\\') {
-		last_component = (char *) strrchr(orig_name, '\\');
-		strcpy(++last_component, true_name);
-		strcpy(true_name, orig_name);
+	        last_component = (char *) strrchr(orig_name, '\\');
+		if( FAILED(StringCbCopy(++last_component, sizeof(orig_name) - (last_component - orig_name) * sizeof(char), true_name))) {
+		    fprintf (stderr, "last_component - not enough space");
+                    exit(1);
+		}
+		if( FAILED(StringCbCopy(true_name, sizeof(true_name), orig_name))) {
+		    fprintf (stderr, "true_name - not enough space");
+                    exit(1);
+	        }
 	    }
-	} else
-	    strcpy(true_name, orig_name);
+	} else {
+	    if( FAILED(StringCbCopy(true_name, sizeof(true_name), orig_name))) {
+	        fprintf (stderr, "true_name - not enough space");
+                exit(1);
+            }
+	}
 #else	/* WIN32 */
-	strcpy(true_name, orig_name);
+	if( FAILED(StringCbCopy(true_name, sizeof(true_name), orig_name))) {
+	    fprintf (stderr, "true_name - not enough space");
+            exit(1);
+        }
 #endif /* WIN32 */
 
 	/*
@@ -2001,20 +2149,28 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	     * Found it.  Designate everything before it as the parent directory,
 	     * everything after it as the final component.
 	     */
-	    strncpy(parent_dir, true_name, last_component - true_name + 1);
+	    if( FAILED(StringCchCopyN(parent_dir, sizeof(parent_dir) / sizeof(char), true_name, last_component - true_name + 1))) {
+                fprintf (stderr, "parent_dir - not enough space");
+                exit(1);
+	    }
 	    parent_dir[last_component - true_name + 1] = 0;
 	    last_component++;   /*Skip the slash*/
 #ifdef WIN32
 	    if (!InAFS(parent_dir)) {
 		const char * nbname = NetbiosName();
-		int len = (int)strlen(nbname);
-
+		if( FAILED(StringCbLength(nbname, NETBIOSNAMESZ, &len))) {
+		    fprintf (stderr, "StringCbLength failure on nbname");
+		    exit(1);
+		}
 		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
 		    parent_dir[len+2] == '\\' &&
 		    parent_dir[len+3] == '\0' &&
 		    !strnicmp(nbname,&parent_dir[2],len))
 		{
-		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+		    if( FAILED(StringCbPrintf(parent_dir, sizeof(parent_dir),"\\\\%s\\all\\", nbname))) {
+	                fprintf (stderr, "parent_dir - cannot be populated");
+                        exit(1);
+		    }
 		}
 	    }
 #endif
@@ -2024,7 +2180,10 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	     * directory, and the last component as the given name.
 	     */
 	    fs_ExtractDriveLetter(true_name, parent_dir);
-	    strcat(parent_dir, ".");
+	    if( FAILED(StringCbCat(parent_dir, sizeof(parent_dir), "."))) {
+	        fprintf (stderr, "parent_dir - not enough space");
+                exit(1);
+	    }
 	    last_component = true_name;
             fs_StripDriveLetter(true_name, true_name, sizeof(true_name));
 	}
@@ -2037,7 +2196,11 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	}
 
 	blob.in = last_component;
-	blob.in_size = (long)strlen(last_component)+1;
+	if( FAILED(StringCchLength(last_component, sizeof(true_name) / sizeof(char) - (last_component - true_name), &len))) {
+	    fprintf (stderr, "StringCbLength failure on last_component");
+	    exit(1);
+	}
+	blob.in_size = (long)len+1;
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.out = space;
 	memset(space, 0, AFS_PIOCTL_MAXSIZE);
@@ -2076,6 +2239,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     struct vldbentry vldbEntry;
     struct ViceIoctl blob;
     char * parent;
+    size_t len;
 
     memset(&info, 0, sizeof(info));
 
@@ -2084,9 +2248,8 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     else
 	cellName = NULL;
     volName = as->parms[1].items->data;
-
-    if (strlen(volName) >= 64) {
-	fprintf(stderr,"%s: volume name too long (length must be < 64 characters)\n", pn);
+    if( FAILED(StringCbLength(volName, VL_MAXNAMELEN, &len))) {
+        fprintf(stderr,"%s: volume name too long (length must be <= 64 characters)\n", pn);
 	return 1;
     }
 
@@ -2108,14 +2271,19 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     if (!InAFS(parent)) {
 #ifdef WIN32
 	const char * nbname = NetbiosName();
-	int len = (int)strlen(nbname);
-
+	if ( FAILED(StringCbLength(nbname, NETBIOSNAMESZ, &len))) {
+	    fprintf (stderr, "StringCbLength failure on nbname");
+	    exit(1);
+	}
 	if (parent[0] == '\\' && parent[1] == '\\' &&
 	    parent[len+2] == '\\' &&
 	    parent[len+3] == '\0' &&
 	    !strnicmp(nbname,&parent[2],len))
 	{
-	    sprintf(path,"%sall\\%s", parent, &as->parms[0].items->data[strlen(parent)]);
+	    if( FAILED(StringCbPrintf(path, sizeof(path),"%sall\\%s", parent, &as->parms[0].items->data[len+2]))) {
+	        fprintf (stderr, "path - cannot be populated");
+                exit(1);
+            }
 	    parent = Parent(path);
 	    if (!InAFS(parent)) {
 		fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
@@ -2129,9 +2297,16 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if ( strlen(path) == 0 )
-	strcpy(path, as->parms[0].items->data);
-
+    if( FAILED(StringCbLength(path, sizeof(path), &len))) {
+        fprintf (stderr, "StringCbLength failure on path");
+        exit(1);
+    }
+    if ( len == 0 ) {
+	if( FAILED(StringCbCopy(path, sizeof(path), as->parms[0].items->data))) {
+	    fprintf (stderr, "path - not enough space");
+            exit(1);
+	}
+    }
     if ( IsFreelanceRoot(parent) ) {
 	if ( !IsAdmin() ) {
 	    fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
@@ -2176,23 +2351,46 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
       }
     }
 
-    if (as->parms[3].items)	/* if -rw specified */
-	strcpy(space, "%");
-    else
-	strcpy(space, "#");
+    if (as->parms[3].items) {	/* if -rw specified */
+	if( FAILED(StringCbCopy(space, sizeof(space), "%"))) {
+	    fprintf (stderr, "space arr - not enough space");
+            exit(1);
+	}
+	} else {
+	    if( FAILED(StringCbCopy(space, sizeof(space), "#"))) {
+	       fprintf (stderr, "space arr - not enough space");
+               exit(1);
+	    }
+	}
     if (cellName) {
 	/* cellular mount point, prepend cell prefix */
-	strcat(space, info.name);
-	strcat(space, ":");
+	if( FAILED(StringCbCat(space, sizeof(space), info.name))) {
+	    fprintf (stderr, "space arr - not enough space");
+            exit(1);
+	}
+	if( FAILED(StringCbCat(space, sizeof(space), ":"))) {
+	    fprintf (stderr, "space arr - not enough space");
+            exit(1);
+	}
     }
-    strcat(space, volName);	/* append volume name */
-    strcat(space, ".");		/* stupid convention; these end with a period */
+    if( FAILED(StringCbCat(space, sizeof(space), volName))) {    /* append volume name */
+        fprintf (stderr, "space arr - not enough space");
+        exit(1);
+    }
+    if( FAILED(StringCbCat(space, sizeof(space), "."))) {    /* stupid convention; these end with a period */
+        fprintf (stderr, "space arr - not enough space");
+        exit(1);
+    }
 #ifdef WIN32
     /* create symlink with a special pioctl for Windows NT, since it doesn't
      * have a symlink system call.
      */
     blob.out_size = 0;
-    blob.in_size = 1 + (long)strlen(space);
+    if( FAILED(StringCbLength(space, sizeof(space), &len))) {
+        fprintf (stderr, "StringCbLength failure on space");
+        exit(1);
+    }
+    blob.in_size = 1 + (long)len;
     blob.in = space;
     blob.out = NULL;
     code = pioctl_utf8(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
@@ -2225,39 +2423,55 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
     char lsbuffer[1024];
     char *tp;
     int error = 0;
-    
+    size_t len;
+
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
 	tp = (char *) strrchr(ti->data, '\\');
 	if (!tp)
 	    tp = (char *) strrchr(ti->data, '/');
 	if (tp) {
-	    strncpy(tbuffer, ti->data, code=(afs_int32)(tp-ti->data+1));  /* the dir name */
-            tbuffer[code] = 0;
+            if( FAILED(StringCchCopyN(tbuffer, sizeof(tbuffer) / sizeof(char), ti->data, code=(afs_int32)(tp-ti->data+1)))) {    /* the dir name */
+	        fprintf (stderr, "tbuffer - not enough space");
+                exit(1);
+            }
 	    tp++;   /* skip the slash */
 
 #ifdef WIN32
 	    if (!InAFS(tbuffer)) {
 		const char * nbname = NetbiosName();
-		int len = (int)strlen(nbname);
+		if( FAILED(StringCbLength(nbname, NETBIOSNAMESZ, &len))) {
+		    fprintf (stderr, "StringCbLength failure on nbname");
+		    exit(1);
+		}
 
 		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
 		    tbuffer[len+2] == '\\' &&
 		    tbuffer[len+3] == '\0' &&
 		    !strnicmp(nbname,&tbuffer[2],len))
 		{
-		    sprintf(tbuffer,"\\\\%s\\all\\", nbname);
+		    if( FAILED(StringCbPrintf(tbuffer, sizeof(tbuffer),"\\\\%s\\all\\", nbname))) {
+		        fprintf (stderr, "tbuffer - cannot be populated");
+                        exit(1);
+		    }
 		}
 	    }
 #endif
 	} else {
 	    fs_ExtractDriveLetter(ti->data, tbuffer);
-	    strcat(tbuffer, ".");
+	    if( FAILED(StringCbCat(tbuffer, sizeof(tbuffer), "."))) {
+	        fprintf (stderr, "tbuffer - not enough space");
+                exit(1);
+	    }
 	    tp = ti->data;
             fs_StripDriveLetter(tp, tp, 0);
 	}
 	blob.in = tp;
-	blob.in_size = (long)strlen(tp)+1;
+	if( FAILED(StringCbLength(tp, AFS_PIOCTL_MAXSIZE, &len))) {
+	    fprintf (stderr, "StringCbLength failure on tp");
+	    exit(1);
+	}
+	blob.in_size = (long)len+1;
 	blob.out = lsbuffer;
 	blob.out_size = sizeof(lsbuffer);
 	code = pioctl_utf8(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
@@ -2279,7 +2493,11 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
 
         blob.out_size = 0;
 	blob.in = tp;
-	blob.in_size = (long)strlen(tp)+1;
+	if( FAILED(StringCbLength(tp, AFS_PIOCTL_MAXSIZE, &len))) {
+	    fprintf (stderr, "StringCbLength failure on tp");
+	    exit(1);
+	}
+	blob.in_size = (long)len+1;
 	code = pioctl_utf8(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
 	if (code) {
 	    Die(errno, ti->data);
@@ -2302,6 +2520,8 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
     char *tp;
     struct afsconf_cell info;
     struct chservinfo checkserv;
+    errno_t err;
+    size_t len;
 
     memset(&info, 0, sizeof(info));
     memset(&checkserv, 0, sizeof(struct chservinfo));
@@ -2328,12 +2548,22 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 	if (code) {
 	    return 1;
 	}
-	strcpy(checkserv.tbuffer,info.name);
-	checkserv.tsize=(int)strlen(info.name)+1;
+	if( FAILED(StringCbCopy(checkserv.tbuffer, sizeof(checkserv.tbuffer), info.name))) {
+	    fprintf (stderr, "tbuffer - not enough space");
+            exit(1);
+	}
+	if( FAILED(StringCbLength(info.name, sizeof(info.name), &len))) {
+	    fprintf (stderr, "StringCbLength failure on info.name");
+	    exit(1);
+	}
+	checkserv.tsize=(int)len+1;
         if (info.linkedCell)
             free(info.linkedCell);
     } else {
-        strcpy(checkserv.tbuffer,"\0");
+	if( FAILED(StringCbCopy(checkserv.tbuffer, sizeof(checkserv.tbuffer),"\0"))) {
+	    fprintf (stderr, "tbuffer - not enough space");
+            exit(1);
+	}
         checkserv.tsize=0;
     }
 
@@ -2375,7 +2605,16 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 	Die(errno, 0);
         return 1;
     }
+#if _MSC_VER < 1400
     memcpy(&temp, space, sizeof(afs_int32));
+#else
+    err = memcpy_s(&temp, sizeof(temp), space, sizeof(afs_int32));
+    if ( err ) {
+        fprintf (stderr, "memcpy_s failure on temp");
+        exit(1);
+    }
+#endif
+
     if (checkserv.tinterval >= 0) {
 	if (checkserv.tinterval > 0) 
 	    printf("The new down server probe interval (%d secs) is now in effect (old interval was %d secs)\n", 
@@ -2389,7 +2628,16 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
     } else {
 	printf("These servers unavailable due to network or server problems: ");
 	for(j=0; j < AFS_MAXHOSTS; j++) {
-	    memcpy(&temp, space + j*sizeof(afs_int32), sizeof(afs_int32));
+#if _MSC_VER < 1400
+            memcpy(&temp, space + j*sizeof(afs_int32), sizeof(afs_int32));
+#else
+            err = memcpy_s(&temp, sizeof(temp), space + j*sizeof(afs_int32), sizeof(afs_int32));
+	    if ( err ) {
+                fprintf (stderr, "memcpy_s failure on temp");
+                exit(1);
+            }
+#endif
+
 	    if (temp == 0) 
                 break;
 	    tp = hostutil_GetNameByINet(temp);
@@ -2540,12 +2788,21 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 addr, maxa = AFS_OMAXHOSTS;
     struct ViceIoctl blob;
     int resolve;
+    errno_t err;
 
     resolve = !(as->parms[0].items);    /* -numeric */
     
     for(i=0;i<1000;i++) {
 	tp = space;
-	memcpy(tp, &i, sizeof(afs_int32));
+#if _MSC_VER < 1400
+        memcpy(tp, &i, sizeof(afs_int32));
+#else
+        err = memcpy_s(tp, sizeof(space), &i, sizeof(afs_int32));
+	if ( err ) {
+            fprintf (stderr, "memcpy_s failure on tp");
+            exit(1);
+        }
+#endif
 	tp = (char *)(space + sizeof(afs_int32));
 	lp = (afs_int32 *)tp;
 	*lp++ = 0x12345678;
@@ -2562,7 +2819,15 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
             return 1;
 	}       
 	tp = space;
-	memcpy(&magic, tp, sizeof(afs_int32));	
+#if _MSC_VER < 1400
+        memcpy(&magic, tp, sizeof(afs_int32));
+#else
+        err = memcpy_s(&magic, sizeof(magic), tp, sizeof(afs_int32));
+	if ( err ) {
+            fprintf (stderr, "memcpy_s failure on magic");
+            exit(1);
+        }
+#endif
 	if (magic == 0x12345678) {
 	    maxa = AFS_MAXHOSTS;
 	    tp += sizeof(afs_int32);
@@ -2570,8 +2835,15 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 	printf("Cell %s on hosts", tp+maxa*sizeof(afs_int32));
 	for(j=0; j < maxa && j*sizeof(afs_int32) < AFS_PIOCTL_MAXSIZE; j++) {
             char *name, tbuffer[20];
-
-	    memcpy(&addr, tp + j*sizeof(afs_int32), sizeof(afs_int32));
+#if _MSC_VER < 1400
+            memcpy(&addr, tp + j*sizeof(afs_int32), sizeof(afs_int32));
+#else
+            err = memcpy_s(&addr, sizeof(addr), tp + j*sizeof(afs_int32), sizeof(afs_int32));
+            if ( err ) {
+                fprintf (stderr, "memcpy_s failure on addr");
+                exit(1);
+           }
+#endif
 	    if (addr == 0) 
                 break;
 
@@ -2579,8 +2851,11 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
                 name = hostutil_GetNameByINet(addr);
             } else {
                 addr = ntohl(addr);
-                sprintf(tbuffer, "%d.%d.%d.%d", (addr >> 24) & 0xff,
-                         (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff);
+	        if( FAILED(StringCbPrintf(tbuffer, sizeof(tbuffer), "%d.%d.%d.%d", (addr >> 24) & 0xff,
+                         (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))) {
+		    fprintf (stderr, "tbuffer - cannot be populated");
+                    exit(1);
+	        }
                 name = tbuffer;
             }
 	    printf(" %s", name);
@@ -2597,10 +2872,20 @@ ListAliasesCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code, i;
     char *tp, *aliasName, *realName;
     struct ViceIoctl blob;
+    errno_t err;
+    size_t len;
 
     for (i = 0;; i++) {
 	tp = space;
-	memcpy(tp, &i, sizeof(afs_int32));
+#if _MSC_VER < 1400
+        memcpy(tp, &i, sizeof(afs_int32));
+#else
+        err = memcpy_s(tp, sizeof(space), &i, sizeof(afs_int32));
+	if ( err ) {
+            fprintf (stderr, "memcpy_s failure on tp");
+            exit(1);
+       }
+#endif
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;
@@ -2615,7 +2900,11 @@ ListAliasesCmd(struct cmd_syndesc *as, void *arock)
         space[blob.out_size - 1] = '\0';
 	tp = space;
 	aliasName = tp;
-	tp += strlen(aliasName) + 1;
+	if( FAILED(StringCbLength(aliasName, sizeof(space), &len))) {
+	    fprintf (stderr, "StringCbLength failure on aliasName");
+	    exit(1);
+	}
+	tp += len + 1;
 	realName = tp;
 	printf("Alias %s for cell %s\n", aliasName, realName);
     }
@@ -2640,8 +2929,16 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
 	if (!thp) {
 	    fprintf(stderr, "host %s not found in host table.\n", ti->data);
 	    return 1;
-	}
-	else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
+	} else {
+#if _MSC_VER < 1400
+            memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
+#else
+            err = memcpy_s(&hostAddr, sizeof(hostAddr), thp->h_addr, sizeof(afs_int32));
+	    if ( err ) {
+                fprintf (stderr, "memcpy_s failure on hostAddr");
+                exit(1);
+            }
+#endif
     } else {
         hostAddr = 0;   /* means don't set host */
 	setp = 0;       /* aren't setting host */
@@ -2669,9 +2966,12 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code, linkedstate=0, size=0, *lp;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    char *tp, *cellname=0;
+    char *destEnd, *tp, *cellname=0;
     struct hostent *thp;
     afs_int32 fsport = 0, vlport = 0;
+    errno_t err;
+    int len;
+    size_t destRemaining;
 
     memset(space, 0, AFS_MAXHOSTS * sizeof(afs_int32));
     tp = space;
@@ -2685,7 +2985,15 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
 		   pn, ti->data);
 	}
 	else {
-	    memcpy(tp, thp->h_addr, sizeof(afs_int32));
+#if _MSC_VER < 1400
+            memcpy(tp, thp->h_addr, sizeof(afs_int32));
+#else
+            err = memcpy_s(tp, sizeof(space) - (tp - space) * sizeof(char), thp->h_addr, sizeof(afs_int32));
+	    if ( err ) {
+                fprintf (stderr, "memcpy_s failure on tp");
+                exit(1);
+            }
+#endif
 	    tp += sizeof(afs_int32);
 	}
     }
@@ -2718,12 +3026,19 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     *lp++ = fsport;
     *lp++ = vlport;
     *lp = linkedstate;
-    strcpy(space +  ((AFS_MAXHOSTS+4) * sizeof(afs_int32)), as->parms[0].items->data);
-    size = ((AFS_MAXHOSTS+4) * sizeof(afs_int32)) + strlen(as->parms[0].items->data) + 1 /* for null */;
-    tp = (char *)(space + size);
+    if( FAILED(StringCbCopyEx(space +  ((AFS_MAXHOSTS+4) * sizeof(afs_int32)), sizeof(space) - (AFS_MAXHOSTS+4) * sizeof(afs_int32)
+        , as->parms[0].items->data, &tp, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
+        fprintf (stderr, "var - not enough space");
+        exit(1);
+    }
+    tp++;   /* for null */
+    destRemaining -= sizeof(char);
     if (linkedstate) {
-	strcpy(tp, cellname);
-	size += strlen(cellname) + 1;
+        if( FAILED(StringCbCopyEx(tp, sizeof(space) - size, cellname, &destEnd, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
+            fprintf (tp, "space arr - not enough space");
+            exit(1);
+	}
+        size += destEnd - tp + 1;
     }
     blob.in_size = size;
     blob.in = space;
@@ -2766,15 +3081,24 @@ NewAliasCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
     char *tp;
     char *aliasName, *realName;
+    size_t destRemaining = sizeof(space);
 
     /* Setup and do the NEWALIAS pioctl call */
     aliasName = as->parms[0].items->data;
     realName = as->parms[1].items->data;
     tp = space;
-    strcpy(tp, aliasName);
-    tp += strlen(aliasName) + 1;
-    strcpy(tp, realName);
-    tp += strlen(realName) + 1;
+    if( FAILED(StringCbCopyEx(tp, destRemaining, aliasName, &tp, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
+        fprintf (stderr, "tp - not enough space");
+        exit(1);
+    }
+    tp++;
+    destRemaining -= sizeof(char);
+    if( FAILED(StringCbCopyEx(tp, destRemaining, realName, &tp, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
+        fprintf (stderr, "tp - not enough space");
+        exit(1);
+    }
+    tp++;
+    destRemaining -= sizeof(char);
 
     blob.in_size = tp - space;
     blob.in = space;
@@ -2907,6 +3231,7 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
     struct hostent *thp;
     char *tp;
     int setp;
+    errno_t err;
     
     ti = as->parms[0].items;
     setp = 1;
@@ -2925,8 +3250,16 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
 		    return 1;
 		}
 	    } else {
+#if _MSC_VER < 1400
                 memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
-            }
+#else
+                err = memcpy_s(&hostAddr, sizeof(hostAddr), thp->h_addr, sizeof(afs_int32));
+		if ( err ) {
+                    fprintf (stderr, "memcpy_s failure on hostAddr");
+                    exit(1);
+                }
+#endif
+        }
 	}
     } else {
 	hostAddr = 0;	/* means don't set host */
@@ -2966,6 +3299,9 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     char *input = space;
     afs_int32 setp = 0;
+    errno_t err;
+    size_t destRemaining = sizeof(space);
+    size_t len;
     
     ti = as->parms[0].items;
     if (ti) {
@@ -2986,21 +3322,38 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     blob.out = space;
     blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = sizeof(afs_int32);
+#if _MSC_VER < 1400
     memcpy(input, &setp, sizeof(afs_int32));
+#else
+    err = memcpy_s(input, destRemaining, &setp, sizeof(afs_int32));
+    if ( err ) {
+        fprintf (stderr, "memcpy_s failure on input");
+        exit(1);
+    }
+#endif
     input += sizeof(afs_int32);
+    destRemaining -= sizeof(afs_int32);
     for (; ti; ti = ti->next) {
         setp++;
-        blob.in_size += (long)strlen(ti->data) + 1;
-        if (blob.in_size > AFS_PIOCTL_MAXSIZE) {
+        if( FAILED(StringCbCopyEx(input, destRemaining, ti->data, &input, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
             fprintf(stderr, "%s: sysname%s too long.\n", pn,
                      setp > 1 ? "s" : "");
             return 1;
         }
-        strcpy(input, ti->data);
-        input += strlen(ti->data);
-        *(input++) = '\0';
+        input++;
+        destRemaining -= sizeof(char);
     }
+    blob.in_size = (input - space) * sizeof(char);
+#if _MSC_VER < 1400
     memcpy(space, &setp, sizeof(afs_int32));
+#else
+    err = memcpy_s(space, sizeof(space), &setp, sizeof(afs_int32));
+    if ( err ) {
+        fprintf (stderr, "memcpy_s failure on space");
+        exit(1);
+    }
+#endif
+
     code = pioctl_utf8(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
         Die(errno, 0);
@@ -3012,7 +3365,15 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     }
 
     input = space;
+#if _MSC_VER < 1400
     memcpy(&setp, input, sizeof(afs_int32));
+#else
+    err = memcpy_s(&setp, sizeof(setp), input, sizeof(afs_int32));
+    if ( err ) {
+        fprintf (stderr, "memcpy_s failure on setp");
+        exit(1);
+    }
+#endif
     input += sizeof(afs_int32);
     if (!setp) {
         fprintf(stderr,"No sysname name value was found\n");
@@ -3022,7 +3383,11 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     printf("Current sysname%s is", setp > 1 ? " list" : "");
     for (; setp > 0; --setp ) {
         printf(" \'%s\'", input);
-        input += strlen(input) + 1;
+        if( FAILED(StringCbLength(input, sizeof(space) - (input - space), &len))) {
+            fprintf (stderr, "StringCbLength failure on input");
+            exit(1);
+        }
+        input += len + 1;
     }
     printf("\n");
     return 0;
@@ -3144,6 +3509,7 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 	afs_int32 junk;
     } args;
     int error = 0;
+    size_t len;
 
     memset(&info, 0, sizeof(info));
     memset(&args, 0, sizeof(args));      /* avoid Purify UMR error */
@@ -3158,7 +3524,11 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 	}
         if (info.linkedCell)
             free(info.linkedCell);
-	blob.in_size = 1+(long)strlen(info.name);
+        if( FAILED(StringCbLength(info.name, sizeof(info.name), &len))) {
+	    fprintf (stderr, "StringCbLength failure on info.name");
+	    exit(1);
+	}
+	blob.in_size = 1+(long)len;
 	blob.in = info.name;
 	code = pioctl_utf8(0, VIOC_GETCELLSTATUS, &blob, 1);
 	if (code) {
@@ -3235,7 +3605,10 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
 	}
         if (info.linkedCell)
             free(info.linkedCell);
-	strcpy(args.cname, info.name);
+	if( FAILED(StringCbCopy(args.cname, sizeof(args.cname), info.name))) {
+	    fprintf (stderr, "cname - not enough space");
+            exit(1);
+	}
 	blob.in_size = sizeof(args);
 	blob.in = (caddr_t) &args;
 	blob.out_size = 0;
@@ -3252,7 +3625,10 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
 static int
 GetCellName(char *cellNamep, struct afsconf_cell *infop)
 {
-    strcpy(infop->name, cellNamep);
+    if( FAILED(StringCbCopy(infop->name, sizeof(infop->name), cellNamep))) {
+        fprintf (stderr, "name - not enough space");
+        exit(1);
+    }
     return 0;
 }
 
@@ -3337,6 +3713,7 @@ addServer(char *name, unsigned short rank)
     cm_SSetPref_t *ssp;
     cm_SPref_t *sp;
     struct hostent *thostent;
+    errno_t err;
 
 #ifndef MAXUSHORT
 #ifdef MAXSHORT
@@ -3361,7 +3738,16 @@ addServer(char *name, unsigned short rank)
     }
 
     sp = (cm_SPref_t *)((char*)gblob.in + gblob.in_size);
+#if _MSC_VER < 1400
     memcpy (&(sp->host.s_addr), thostent->h_addr, sizeof(afs_uint32));
+#else
+    err = memcpy_s (&(sp->host.s_addr), sizeof(afs_uint32), thostent->h_addr, sizeof(afs_uint32));
+    if ( err ) {
+        fprintf (stderr, "memcpy_s failure on sp->host.s_addr");
+        exit(1);
+    }
+#endif
+
     sp->rank = (rank > MAXUSHORT ? MAXUSHORT : rank);
     gblob.in_size += sizeof(cm_SPref_t);
     ssp->num_servers++;
@@ -3385,6 +3771,7 @@ addServer(char *name, afs_int32 rank)
     struct hostent *thostent;
     afs_uint32 addr;
     int error = 0;
+    errno_t err;
 
 #ifndef MAXUSHORT
 #ifdef MAXSHORT
@@ -3411,8 +3798,18 @@ addServer(char *name, afs_int32 rank)
 	}
 
 	sp = (struct spref *)(gblob.in + gblob.in_size);
-	memcpy(&(sp->server.s_addr), thostent->h_addr_list[t],
+#if _MSC_VER < 1400
+        memcpy(&(sp->server.s_addr), thostent->h_addr_list[t],
 	       sizeof(afs_uint32));
+#else
+        err = memcpy_s(&(sp->server.s_addr), sizeof(afs_uint32), thostent->h_addr_list[t],
+	       sizeof(afs_uint32));
+        if ( err ) {
+            fprintf (stderr, "memcpy_s failure on sp->server.s_addr");
+            exit(1);
+        }
+#endif
+
 	sp->rank = (rank > MAXUSHORT ? MAXUSHORT : rank);
 	gblob.in_size += sizeof(struct spref);
 	ssp->num_servers++;
@@ -3483,18 +3880,31 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
         if (!(infd = fopen(ti->data,"r" ))) {
             code = errno;
             Die(errno,ti->data);
-        }
-        else
+        } else {
+#if _MSC_VER < 1400
             while ( fscanf(infd, "%79s%ld", name, &rank) != EOF) {
                 code = addServer (name, (unsigned short) rank);
             }
+#else
+            while ( fscanf_s(infd, "%79s%ld", name, sizeof(name), &rank) != EOF) {
+                code = addServer (name, (unsigned short) rank);
+            }
+#endif
+        }
     }
+
 
     ti = as->parms[3].items;  /* -stdin */
     if (ti) {
-        while ( scanf("%79s%ld", name, &rank) != EOF) {
+#if _MSC_VER < 1400
+    while ( scanf("%79s%ld", name, &rank) != EOF) {
             code = addServer (name, (unsigned short) rank);
         }
+#else
+    while ( scanf_s("%79s%ld", name, sizeof(name), &rank) != EOF) {
+            code = addServer (name, (unsigned short) rank);
+        }
+#endif
     }
 
     for (ti = as->parms[0].items;ti;ti=ti->next) {/*list of servers, ranks */
@@ -3576,21 +3986,38 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    perror(ti->data);
 	    error = -1;
 	} else {
-	    while (fscanf(infd, "%79s%ld", name, &rank) != EOF) {
+#if _MSC_VER < 1400
+            while (fscanf(infd, "%79s%ld", name, &rank) != EOF) {
 		code = addServer(name, (unsigned short)rank);
 		if (code)
 		    error = code;
 	    }
+#else
+            while (fscanf_s(infd, "%79s%ld", name, sizeof(name), &rank) != EOF) {
+		code = addServer(name, (unsigned short)rank);
+		if (code)
+		    error = code;
+	    }
+#endif
+
 	}
     }
 
     ti = as->parms[3].items;	/* -stdin */
     if (ti) {
+#if _MSC_VER < 1400
 	while (scanf("%79s%ld", name, &rank) != EOF) {
 	    code = addServer(name, (unsigned short)rank);
 	    if (code)
 		error = code;
 	}
+#else
+        while (scanf_s("%79s%ld", name, sizeof(name), &rank) != EOF) {
+	    code = addServer(name, (unsigned short)rank);
+	    if (code)
+		error = code;
+	}
+#endif
     }
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {	/* list of servers, ranks */
@@ -3705,8 +4132,11 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
                 }
                 else {
                     addr = ntohl(out->servers[i].host.s_addr);
-                    sprintf(tbuffer, "%d.%d.%d.%d", (addr>>24) & 0xff, (addr>>16) & 0xff,
-                             (addr>>8) & 0xff, addr & 0xff);
+		    if( FAILED(StringCbPrintf(tbuffer, sizeof(tbuffer), "%d.%d.%d.%d", (addr>>24) & 0xff, (addr>>16) & 0xff,
+                        (addr>>8) & 0xff, addr & 0xff))) {
+			fprintf (stderr, "tbuffer - cannot be populated");
+                        exit(1);
+		    }
                     name=tbuffer;
                 }
                 printf ("%-50s %5u\n",name,out->servers[i].rank);      
@@ -3776,8 +4206,11 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 		name = hostutil_GetNameByINet(out->servers[i].server.s_addr);
 	    } else {
 		addr = ntohl(out->servers[i].server.s_addr);
-		sprintf(tbuffer, "%d.%d.%d.%d", (addr >> 24) & 0xff,
-			(addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff);
+		if( FAILED(StringCbPrintf(tbuffer, sizeof(tbuffer), "%d.%d.%d.%d", (addr >> 24) & 0xff,
+		    (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))) {
+		    fprintf (stderr, "tbuffer - cannot be populated");
+                    exit(1);
+		}
 		name = tbuffer;
 	    }
 	    printf("%-50s %5u\n", name, out->servers[i].rank);
@@ -4039,7 +4472,11 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
 	tsb.sb_thisfile = strtol(ti->data, &t, 10) * 1024;
-	if ((tsb.sb_thisfile < 0) || (t != ti->data + strlen(ti->data))) {
+	if (errno == ERANGE) {
+	    fprintf(stderr, "%s: ti->data must within long int range", pn);
+	    return 1;
+	}
+	if ((tsb.sb_thisfile < 0) || (*t != '\0')) {
 	    fprintf(stderr, "%s: %s must be 0 or a positive number.\n", pn,
 		    ti->data);
 	    return 1;
@@ -4050,7 +4487,11 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     ti = as->parms[2].items;	/* -allfiles */
     if (ti) {
 	allfiles = strtol(ti->data, &t, 10) * 1024;
-	if ((allfiles < 0) || (t != ti->data + strlen(ti->data))) {
+	if (errno == ERANGE) {
+	    fprintf(stderr, "%s: ti->data must within long int range", pn);
+	    return 1;
+	}
+	if ((allfiles < 0) || (*t != '\0')) {
 	    fprintf(stderr, "%s: %s must be 0 or a positive number.\n", pn,
 		    ti->data);
 	    return 1;
@@ -4159,6 +4600,7 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
     char *tp;
+    errno_t err;
  
     blob.in = NULL;
     blob.in_size = 0;
@@ -4170,8 +4612,17 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
     if (code || blob.out_size != sizeof(flag))
         Die(code, NULL);
     else {
-      tp = space;
-      memcpy(&flag, tp, sizeof(afs_int32));
+        tp = space;
+#if _MSC_VER < 1400
+        memcpy(&flag, tp, sizeof(afs_int32));
+#else
+        err = memcpy_s(&flag, sizeof(flag), tp, sizeof(afs_int32));
+        if ( err ) {
+            fprintf (stderr, "memcpy_s failure on flag");
+            exit(1);
+        }
+#endif
+
       printf("Security level is currently ");
       if (flag == 2)
           printf("auth (data integrity).\n");
@@ -4275,6 +4726,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
     struct cmd_item *ti;
     char *share = NULL;
     HKEY hkCSCPolicy;
+    size_t len;
 
     if ( !IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
@@ -4315,17 +4767,25 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
         }
 
         policy = "manual";
+        len = 6;
 		
-        if (asp->parms[1].items)
+        if (asp->parms[1].items) {
             policy = "manual";
-        if (asp->parms[2].items)
+            len = 6;
+        }
+        if (asp->parms[2].items) {
             policy = "programs";
-        if (asp->parms[3].items)
+            len = 8;
+        }
+        if (asp->parms[3].items) {
             policy = "documents";
-        if (asp->parms[4].items)
+            len = 9;
+        }
+        if (asp->parms[4].items) {
             policy = "disable";
-		
-        RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, (DWORD)strlen(policy)+1);
+            len = 7;
+        }
+        RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, (DWORD)len+1);
 		
         printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
         printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
@@ -4418,8 +4878,11 @@ GetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 		afs_int32 addr;
 		char tbuffer[32];
 		addr = ntohl(out->servers[i].server.s_addr);
-		sprintf(tbuffer, "%d.%d.%d.%d", (addr >> 24) & 0xff,
-			(addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff);
+		if( FAILED(StringCbPrintf(tbuffer, sizeof(tbuffer), "%d.%d.%d.%d", (addr >> 24) & 0xff,
+		    (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))) {
+		    fprintf (stderr, "tbuffer - cannot be populated");
+                    exit(1);
+		}
 		printf("%-50s\n", tbuffer);
 	    }
 	    in->offset = out->next_offset;
@@ -4517,12 +4980,16 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
     int link_chars_read;	/*Num chars read in readlink() */
     int thru_symlink;		/*Did we get to a mount point via a symlink? */
     int error = 0;
+    size_t len;
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
 	thru_symlink = 0;
-	sprintf(orig_name, "%s%s", (ti->data[0] == '/') ? "" : "./",
-		ti->data);
+	if( FAILED(StringCbPrintf(orig_name, sizeof(orig_name), "%s%s", (ti->data[0] == '/') ? "" : "./",
+	    ti->data))) {
+	    fprintf (stderr, "orig_name - cannot be populated");
+            exit(1);
+	}
 
 	if (lstat(orig_name, &statbuff) < 0) {
 	    /* if lstat fails, we should still try the pioctl, since it
@@ -4562,12 +5029,21 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	     */
 	    if (true_name[0] != '/') {
 		last_component = (char *)strrchr(orig_name, '/');
-		strcpy(++last_component, true_name);
-		strcpy(true_name, orig_name);
+		if( FAILED(StringCbCopy(++last_component, sizeof(orig_name) - (last_component - orig_name) * sizeof(char), true_name))) {
+		    fprintf (stderr, "last_component - not enough space");
+                    exit(1);
+		}
+		if( FAILED(StringCbCopy(true_name, sizeof(true_name), orig_name))) {
+		    fprintf (stderr, "true_name - not enough space");
+                    exit(1);
+		}
 	    }
-	} else
-	    strcpy(true_name, orig_name);
-
+	} else {
+	    if( FAILED(StringCbCopy(true_name, sizeof(true_name), orig_name))) {
+	        fprintf (stderr, "true_name - not enough space");
+                exit(1);
+	    }
+	}
 	/*
 	 * Find rightmost slash, if any.
 	 */
@@ -4577,7 +5053,10 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	     * Found it.  Designate everything before it as the parent directory,
 	     * everything after it as the final component.
 	     */
-	    strncpy(parent_dir, true_name, last_component - true_name);
+	    if( FAILED(StringCchCopyN(parent_dir, sizeof(parent_dir) / sizeof(char), true_name, last_component - true_name))) {
+	        fprintf (stderr, "parent_dir - not enough space");
+                exit(1);
+	    }
 	    parent_dir[last_component - true_name] = 0;
 	    last_component++;	/*Skip the slash */
 	} else {
@@ -4585,7 +5064,10 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	     * No slash appears in the given file name.  Set parent_dir to the current
 	     * directory, and the last component as the given name.
 	     */
-	    strcpy(parent_dir, ".");
+	    if( FAILED(StringCbCopy(parent_dir, sizeof(parent_dir), "."))) {
+	        fprintf (stderr, "parent_dir - not enough space");
+                exit(1);
+	    }
 	    last_component = true_name;
 	}
 
@@ -4601,7 +5083,11 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	}
 
 	blob.in = last_component;
-	blob.in_size = strlen(last_component) + 1;
+	if( FAILED(StringCbLength(last_component, sizeof(true_name) - (last_component - true_name), &len))) {
+	    fprintf (stderr, "StringCbLength failure on last_component");
+	    exit(1);
+	}
+	blob.in_size = len + 1;
 	blob.out_size = 0;
 	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
@@ -4719,7 +5205,10 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
         if (n != 0)
             test.fid.cell = n;
         else {
-            strncpy(test.cellname, tp, sizeof(test.cellname));
+            if( FAILED(StringCbCopy(test.cellname, sizeof(test.cellname), tp))) {
+	        fprintf (stderr, "cellname - not enough space");
+                exit(1);
+	    }
             test.cellname[sizeof(test.cellname)-1] = '\0';
         }
     }
@@ -4729,7 +5218,10 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
         if (n != 0)
             test.fid.volume = n;
         else {
-            strncpy(test.volname, tp, sizeof(test.volname));
+            if( FAILED(StringCbCopy(test.volname, sizeof(test.volname), tp))) {
+	        fprintf (stderr, "volname - not enough space");
+                exit(1);
+	    }
             test.volname[sizeof(test.volname)-1] = '\0';
         }
     }
