@@ -81,6 +81,7 @@
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */
+#define AFS_HAVE_STATVFS 1	/* System supports statvfs */
 
 
 #endif /* !defined(UKERNEL) */
