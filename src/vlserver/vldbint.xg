@@ -142,7 +142,7 @@ struct uvldbentry   {
 	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
 	afs_uint32	cloneId;			/* Used during cloning */
 	afs_int32	flags;				/* General flags */
-	afs_int32	spares1;			/* The server index we matched */
+	afs_int32	matchindex;			/* The server index we matched */
 	afs_int32	spares2;
 	afs_int32	spares3;
 	afs_int32	spares4;
