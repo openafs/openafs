@@ -1013,6 +1013,16 @@ typedef long iparmtype;
 #endif
 #endif
 
+#if SIZEOF_VOID_P == SIZEOF_UNSIGNED_INT
+# define uintptrsz unsigned int
+#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG
+# define uintptrsz unsigned long
+#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG_LONG
+# define uintptrsz unsigned long long
+#else
+# error "Unable to determine casting for pointers"
+#endif
+
 struct afs_ioctl {
     uparmtype in;		/* input buffer */
     uparmtype out;		/* output buffer */

@@ -1286,7 +1286,7 @@ SweepAFSCache(int *vFilesFound)
 	    printf("\tinode=%d, name='%s'\n", currp->d_ino,
 		   currp->d_name);
 #else
-	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
+	    printf("\tinode=%d, reclen=%d, name='%s'\n", (int)currp->d_ino,
 		   currp->d_reclen, currp->d_name);
 #endif
 	}
