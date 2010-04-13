@@ -1,3 +1,17 @@
+openafs (@DEB_PKGVER@-1~openafs) unstable; urgency=low
+
+  * Local package built from OpenAFS source.
+  * This Debian package was generated using the packaging files included
+    in the OpenAFS release, provided as a convenience for users who would
+    like to quickly build Debian packages based on the current OpenAFS
+    code.  For production use, the packages included in Debian and Ubuntu
+    should normally be used instead.  The version of this package is set
+    so that it will be automatically upgraded to the official Debian or
+    Ubuntu versions when packages for at least this version of OpenAFS are
+    available.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 08 Apr 2010 13:20:50 -0700
+
 openafs (1.5.73.3-1) experimental; urgency=low
 
   * New upstream testing release.
