@@ -16,7 +16,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # System specific build commands and flags
 DEFINES= -DKERNEL -DUKERNEL
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG} $(XCFLAGS)
 AR = /usr/bin/ar
 ARFLAGS = -r
 RANLIB = /bin/ranlib
@@ -25,7 +25,7 @@ DEF_LIBPATH=/usr/lib/threads:/usr/lib:/lib
 EXPFILE=../nsafslib.exp 
 LD_FLAGS=-bM:SRE -bE:$(EXPFILE) -berok -bnoentry -blibpath:$(DEF_LIBPATH)
 
-TEST_CFLAGS=-DAFS_PTHREAD_ENV -Daix -DAFS_AIX_ENV
+TEST_CFLAGS=-DAFS_PTHREAD_ENV -Daix -DAFS_AIX_ENV $(XCFLAGS)
 TEST_LDFLAGS=
 TEST_LIBS=-lm -lpthreads
 
