@@ -255,8 +255,9 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 	    else if (vtype == VREG)
 		return DT_REG;
 	    /* Don't do this until we're sure it can't be a mtpt */
-	    /* else if (vtype == VLNK)
-	     * type=DT_LNK; */
+	    /* if we're CStatd and CTruth and mvstat==0, it's a link */
+	    else if (vtype == VLNK)
+		return DT_LNK;
 	    /* what other types does AFS support? */
 	} else
 	    afs_PutVCache(tvc);
