@@ -1703,12 +1703,18 @@ afs_GetCapabilities(struct server *ts)
 								SHARED_LOCK);
     if ( !tc )
 	return;
+    /* InitCallBackStateN, triggered by our RPC, may need this */
+    ReleaseWriteLock(&afs_xserver);
     code = RXAFS_GetCapabilities(tc->id, &caps);
-    if ( code && code != RXGEN_OPCODE )
-	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
-    else
-	ts->flags |= SCAPS_KNOWN;
+    ObtainWriteLock(&afs_xserver, 723);
     afs_PutConn(tc, SHARED_LOCK);
+    if ( code && code != RXGEN_OPCODE ) {
+	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
+	/* better not be anything to free. we failed! */
+	return;
+    }
+
+    ts->flags |= SCAPS_KNOWN;
 
     if ( caps.Capabilities_len > 0 ) {
 	ts->capabilities = caps.Capabilities_val[0];
@@ -1919,10 +1925,11 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 	    afs_stats_cmperf.srvRecordsHWM = afs_stats_cmperf.srvRecords;
     }
 
+    ReleaseWriteLock(&afs_xsrvAddr);
+
     if ( aport == AFS_FSPORT && !(newts->flags & SCAPS_KNOWN))
 	afs_GetCapabilities(newts);
 
-    ReleaseWriteLock(&afs_xsrvAddr);
     ReleaseWriteLock(&afs_xserver);
     return (newts);
 }				/* afs_GetServer */
