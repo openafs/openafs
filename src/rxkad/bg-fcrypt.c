@@ -70,7 +70,7 @@
 #include "rxkad.h"
 #include "fcrypt.h"
 #include "private_data.h"
-#include <des/stats.h>
+#include "stats.h"
 
 /*
  * Unrolling of the inner loops helps the most on pentium chips

@@ -41,7 +41,8 @@ generated: \
 depinstall: \
 	${TOP_INCDIR}/rx/rxkad.h \
 	${TOP_INCDIR}/rx/rxkad_prototypes.h \
-	${TOP_INCDIR}/rx/fcrypt.h
+	${TOP_INCDIR}/rx/fcrypt.h \
+	${TOP_INCDIR}/rx/rxkad_stats.h
 
 ${TOP_LIBDIR}/librxkad.a: librxkad.a
 	${INSTALL_DATA} $? $@
@@ -53,6 +54,9 @@ ${TOP_INCDIR}/rx/rxkad.h: rxkad.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rxkad_prototypes.h: rxkad_prototypes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/rx/rxkad_stats.h: stats.h
 	${INSTALL_DATA} $? $@
 
 #

@@ -10,8 +10,8 @@
 /* Some Cheap statistics which should be shared with the rxkad definitions, but
  * aren't.  The layout should match the layout in rxkad/rxkad.p.h. */
 
-#ifndef OPENAFS_DES_STATS_H
-#define OPENAFS_DES_STATS_H
+#ifndef AFS_SRC_RXKAD_STATS_H
+#define AFS_SRC_RXKAD_STATS_H
 
 
 /* this is an optimization for pthreads environments.  Instead of having global
@@ -154,4 +154,4 @@ RXKAD_STATS_DECLSPEC struct rxkad_stats rxkad_stats;
 #endif
 
 
-#endif /* OPENAFS_DES_STATS_H */
+#endif /* AFS_SRC_DES_STATS_H */

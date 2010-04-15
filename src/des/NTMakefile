@@ -36,13 +36,9 @@ INCFILES =\
 	$(INCFILEDIR)\mit-cpyright.h \
 	$(INCFILEDIR)\des_odd.h \
 	$(INCFILEDIR)\crypt.h \
-        $(INCFILEDIR)\des\stats.h
 
 $(INCFILEDIR)\des_odd.h: odd.h
 	$(COPY) odd.h $@
-
-$(INCFILEDIR)\des\stats.h: stats.h
-        $(COPY) stats.h $@
 
 # Library component lists.
 

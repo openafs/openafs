@@ -44,7 +44,7 @@
 #endif
 #endif /* KERNEL */
 
-#include <des/stats.h>
+#include <rx/rxkad_stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
 

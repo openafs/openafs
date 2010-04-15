@@ -63,7 +63,7 @@
 #include <afs/afsutil.h>
 #endif /* KERNEL */
 
-#include <des/stats.h>
+#include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_COMMON
 
@@ -81,11 +81,7 @@ struct rxkad_global_stats rxkad_global_stats = { 0 };
 pthread_mutex_t rxkad_global_stats_lock;
 pthread_key_t rxkad_stats_key;
 #else /* AFS_PTHREAD_ENV */
-#if defined(KERNEL) && !defined(UKERNEL)
 struct rxkad_stats rxkad_stats = { { 0 } };
-#else
-/* Move delaration of this to des/key_sched.c */
-#endif
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_PTHREAD_ENV

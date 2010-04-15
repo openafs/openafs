@@ -59,7 +59,7 @@
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
 
-#include <des/stats.h>
+#include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
 

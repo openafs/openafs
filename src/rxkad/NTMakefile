@@ -48,6 +48,7 @@ $(LIBFILE): $(LIBOBJS)
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
 	 $(COPY)  fcrypt.h $(INCFILEDIR)\.
+	 $(COPY)  stats.h $(INCFILEDIR)\rxkad_stats.h
 
 rxkad.h rxkad_errs.c : rxkad_errs.et rxkad.p.h
 	$(DEL) rxkad_errs.c 

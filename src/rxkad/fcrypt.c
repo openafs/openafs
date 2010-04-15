@@ -55,7 +55,7 @@
 #include "sboxes.h"
 #include "fcrypt.h"
 #include <rxkad.h>
-#include <des/stats.h>
+#include <rx/rxkad_stats.h>
 
 #ifdef TCRYPT
 int ROUNDS = 16;
