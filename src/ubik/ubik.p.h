@@ -36,11 +36,7 @@
 
 #endif
 
-#if defined(UKERNEL)
-#include "ubik_int.h"
-#else /* defined(UKERNEL) */
 #include <ubik_int.h>
-#endif /* defined(UKERNEL) */
 
 /*! \name ubik_trans types */
 #define	UBIK_READTRANS	    0

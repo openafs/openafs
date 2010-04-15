@@ -8,28 +8,8 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afs_usrops.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "rx/rx.h"
-#include "rx/xdr.h"
-#include "afs/auth.h"
-#include "afs/cellconfig.h"
-#include "afs/afsutil.h"
-#include "afs/ptclient.h"
-#include "afs/ptuser.h"
-#include "afs/pterror.h"
-#include "afs/com_err.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <ctype.h>
 #include <sys/types.h>
@@ -50,8 +30,10 @@
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
-#endif /* defined(UKERNEL) */
 
+#ifdef UKERNEL
+# include "afs_usrops.h"
+#endif
 
 struct ubik_client *pruclient = 0;
 static afs_int32 lastLevel;	/* security level pruclient, if any */

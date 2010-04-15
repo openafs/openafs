@@ -12,23 +12,12 @@
  */
 
 #include <afsconfig.h>
-#ifdef UKERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-
-#ifdef UKERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "rx/rx.h"
-#else /* ! UKERNEL */
 #include <sys/types.h>
 #include <errno.h>
 #include <assert.h>
 #include "rx.h"
-#endif /* UKERNEL */
 
 /*
  * We initialize rxi_connectionCache at compile time, so there is no

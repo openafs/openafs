@@ -8,26 +8,8 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-
-#if defined(UKERNEL)
-#include "afs/pthread_glock.h"
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs_usrops.h"
-#include "afs/cellconfig.h"
-#include "afs/pthread_glock.h"
-#include "rx/xdr.h"
-#include "rx/rx.h"
-#include "afs/kauth.h"
-#include "afs/kautils.h"
-#include "afs/afsutil.h"
-#else /* defined(UKERNEL) */
 #include <afs/pthread_glock.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -42,7 +24,10 @@
 #include "kauth.h"
 #include "kautils.h"
 #include <afs/afsutil.h>
-#endif /* defined(UKERNEL) */
+
+#ifdef UKERNEL
+#include "afs_usrops.h"
+#endif
 
 /* This is a utility routine that many parts of kauth use but it invokes the
    afsconf package so its best to have it in a separate .o file to make the

@@ -8,27 +8,8 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "afs/pthread_glock.h"
-#include "rx/rxkad.h"
-#include "rx/rx.h"
-#include "afs/cellconfig.h"
-#include "afs/keys.h"
-#include "afs/auth.h"
-#include "afs/pthread_glock.h"
-#include "des.h"
-#include "des_prototypes.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>
@@ -49,7 +30,6 @@
 #include "cellconfig.h"
 #include "keys.h"
 #include "auth.h"
-#endif /* defined(UKERNEL) */
 
 /* return a null security object if nothing else can be done */
 static afs_int32

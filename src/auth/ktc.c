@@ -10,30 +10,11 @@
 /* ticket caching code */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
 
 #if defined(UKERNEL)
-#include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "afs/stds.h"
-#include "afs/pthread_glock.h"
-#include "afs/vice.h"
-#include "afs/auth.h"
-#include "afs/venus.h"
-#include "afs/pthread_glock.h"
-#include "afs/dirpath.h"
-#include <ctype.h>
-
-#if !defined(min)
-#define min(a,b) ((a)<(b)?(a):(b))
-#endif /* !defined(min) */
-
-#else /* defined(UKERNEL) */
+#endif
 
 #ifdef	AFS_SUN5_ENV
 #include <unistd.h>
@@ -69,9 +50,10 @@
 #include <afs/auth.h>
 #include <afs/venus.h>
 #include <afs/afsutil.h>
-#include <afs/sys_prototypes.h>
 
-#endif /* defined(UKERNEL) */
+#if !defined(UKERNEL)
+#include <afs/sys_prototypes.h>
+#endif
 
 #if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
 #include <sys/syscall.h>
