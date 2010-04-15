@@ -1082,9 +1082,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 #ifdef AFS_DARWIN80_ENV	    
-	    if (!isdead)
-		/* re-acquire the usecount that the other finalizevnode disposed of */
+	    if (!isdead) {
+		/* re-acquire the io&usecount that the other finalizevnode disposed of */
+		vnode_get(AFSTOV(tvcp));
 		vnode_ref(AFSTOV(tvcp));
+	    }
 #endif
 	    afs_PutVCache(tvcp);
 	    continue;
@@ -1142,9 +1144,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
 #ifdef AFS_DARWIN80_ENV	    
-	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
-		/* re-acquire the usecount that the other finalizevnode disposed of */
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit))) {
+		/* re-acquire the io&usecount that the other finalizevnode disposed of */
+		vnode_get(AFSTOV(tvcp));
 		vnode_ref(AFSTOV(tvcp));
+	    }
 #endif
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
@@ -1214,9 +1218,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		afs_DequeueCallback(tvcp);
 		if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
 		    osi_dnlc_purgedp(tvcp); /* if it (could be) a directory */
-	    } else
-		/* re-acquire the usecount that finalizevnode disposed of */
+	    } else {
+		/* re-acquire the io&usecount that finalizevnode disposed of */
+		vnode_get(AFSTOV(tvcp));
 		vnode_ref(AFSTOV(tvcp));
+	    }
 	}
 #endif
 
@@ -1256,9 +1262,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	}
 	if (tvcp != NULL) {
 #ifdef AFS_DARWIN80_ENV	    
-	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
-		/* re-acquire the usecount that the other finalizevnode disposed of */
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit))) {
+		/* re-acquire the io&usecount that the other finalizevnode disposed of */
+		vnode_get(AFSTOV(tvcp));
 		vnode_ref(AFSTOV(tvcp));
+	    }
 #endif
 	    afs_PutVCache(tvcp);
 	}
