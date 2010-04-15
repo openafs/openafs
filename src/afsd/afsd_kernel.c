@@ -196,22 +196,51 @@ afsd_call_syscall(long param1, long param2, long param3, long param4, long param
 # endif /* AFS_LINUX20_ENV */
 # ifdef AFS_DARWIN80_ENV
     struct afssysargs syscall_data;
+    void *ioctldata;
     int fd = open(SYSCALL_DEV_FNAME,O_RDWR);
-    syscall_data.syscall = AFSCALL_CALL;
-    syscall_data.param1 = param1;
-    syscall_data.param2 = param2;
-    syscall_data.param3 = param3;
-    syscall_data.param4 = param4;
-    syscall_data.param5 = param5;
-    syscall_data.param6 = param6;
-    if(fd >= 0) {
-       error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
-       close(fd);
+    int syscallnum;
+#ifdef AFS_DARWIN100_ENV
+    int is64 = 0;
+    struct afssysargs64 syscall64_data;
+    if (sizeof(param1) == 8) {
+	syscallnum = VIOC_SYSCALL64;
+	is64 = 1;
+	ioctldata = &syscall64_data;
+	syscall64_data.syscall = (int)AFSCALL_CALL;
+	syscall64_data.param1 = param1;
+	syscall64_data.param2 = param2;
+	syscall64_data.param3 = param3;
+	syscall64_data.param4 = param4;
+	syscall64_data.param5 = param5;
+	syscall64_data.param6 = param6;
     } else {
-       error = -1;
+#endif
+	syscallnum = VIOC_SYSCALL;
+        ioctldata = &syscall_data;
+	syscall_data.syscall = AFSCALL_CALL;
+	syscall_data.param1 = param1;
+	syscall_data.param2 = param2;
+	syscall_data.param3 = param3;
+	syscall_data.param4 = param4;
+	syscall_data.param5 = param5;
+	syscall_data.param6 = param6;
+#ifdef AFS_DARWIN100_ENV
     }
-    if (!error)
-      error=syscall_data.retval;
+#endif
+    if(fd >= 0) {
+        error = ioctl(fd, syscallnum, ioctldata);
+        close(fd);
+    } else {
+        error = -1;
+    }
+    if (!error) {
+#ifdef AFS_DARWIN100_ENV
+        if (is64)
+            error=syscall64_data.retval;
+        else
+#endif
+            error=syscall_data.retval;
+    }
 # else /* AFS_DARWIN80_ENV */
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
