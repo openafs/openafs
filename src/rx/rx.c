@@ -982,7 +982,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
      * waiting, treat this as a running call, and wait to destroy the
      * connection later when the call completes. */
     if ((conn->type == RX_CLIENT_CONNECTION)
-	&& (conn->flags & RX_CONN_MAKECALL_WAITING)) {
+	&& (conn->flags & (RX_CONN_MAKECALL_WAITING|RX_CONN_MAKECALL_ACTIVE))) {
 	conn->flags |= RX_CONN_DESTROY_ME;
 	MUTEX_EXIT(&conn->conn_data_lock);
 	USERPRI;
@@ -1166,7 +1166,8 @@ rx_NewCall(struct rx_connection *conn)
      */
     MUTEX_ENTER(&conn->conn_call_lock);
     MUTEX_ENTER(&conn->conn_data_lock);
-    if (conn->makeCallWaiters) {
+    while (conn->flags & RX_CONN_MAKECALL_ACTIVE) {
+        conn->flags |= RX_CONN_MAKECALL_WAITING;
 	conn->makeCallWaiters++;
         MUTEX_EXIT(&conn->conn_data_lock);
 
@@ -1180,6 +1181,9 @@ rx_NewCall(struct rx_connection *conn)
         if (conn->makeCallWaiters == 0)
             conn->flags &= ~RX_CONN_MAKECALL_WAITING;
     } 
+
+    /* We are now the active thread in rx_NewCall */
+    conn->flags |= RX_CONN_MAKECALL_ACTIVE;
     MUTEX_EXIT(&conn->conn_data_lock);
 
     for (;;) {
@@ -1204,6 +1208,7 @@ rx_NewCall(struct rx_connection *conn)
                          * effect on overall system performance.
                          */
                         call->state = RX_STATE_RESET;
+                        CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
                         MUTEX_EXIT(&conn->conn_call_lock);
                         rxi_ResetCall(call, 0);
                         (*call->callNumber)++;
@@ -1221,6 +1226,7 @@ rx_NewCall(struct rx_connection *conn)
                         MUTEX_EXIT(&call->lock);
                         MUTEX_ENTER(&conn->conn_call_lock);
                         MUTEX_ENTER(&call->lock);
+
                         if (call->state == RX_STATE_RESET)
                             break;
 
@@ -1235,6 +1241,7 @@ rx_NewCall(struct rx_connection *conn)
                          * Instead, cycle through one more time to see if
                          * we can find a call that can call our own.
                          */
+                        CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
                         wait = 0;
                     }
                     MUTEX_EXIT(&call->lock);
@@ -1242,6 +1249,7 @@ rx_NewCall(struct rx_connection *conn)
 	    } else {
                 /* rxi_NewCall returns with mutex locked */
 		call = rxi_NewCall(conn, i);
+                CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 		break;
 	    }
 	}
@@ -1267,18 +1275,6 @@ rx_NewCall(struct rx_connection *conn)
             conn->flags &= ~RX_CONN_MAKECALL_WAITING;
 	MUTEX_EXIT(&conn->conn_data_lock);
     }
-    /*
-     * Wake up anyone else who might be giving us a chance to
-     * run (see code above that avoids resource starvation).
-     */
-#ifdef	RX_ENABLE_LOCKS
-    CV_BROADCAST(&conn->conn_call_cv);
-#else
-    osi_rxWakeup(conn);
-#endif
-
-    CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
-
     /* Client is initially in send mode */
     call->state = RX_STATE_ACTIVE;
     call->error = conn->error;
@@ -1295,6 +1291,23 @@ rx_NewCall(struct rx_connection *conn)
 
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
+
+    /*
+     * We are no longer the active thread in rx_NewCall
+     */
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->flags &= ~RX_CONN_MAKECALL_ACTIVE;
+    MUTEX_EXIT(&conn->conn_data_lock);
+
+    /*
+     * Wake up anyone else who might be giving us a chance to
+     * run (see code above that avoids resource starvation).
+     */
+#ifdef	RX_ENABLE_LOCKS
+    CV_BROADCAST(&conn->conn_call_cv);
+#else
+    osi_rxWakeup(conn);
+#endif
     MUTEX_EXIT(&conn->conn_call_lock);
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
