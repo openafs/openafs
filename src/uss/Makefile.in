@@ -27,13 +27,13 @@ LIBS=${TOP_LIBDIR}/libvolser.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a\
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 OBJS =  uss_procs.o \
 	uss_common.o \
@@ -45,8 +45,8 @@ OBJS =  uss_procs.o \
 	lex.yy.o \
 	y.tab.o 
 
-uss: uss.o ${OBJS} 
-	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS} $(LIB_roken) $(XLIBS)
+uss: uss.o ${OBJS} $(LIBS)
+	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS} $(LIB_roken) $(LIB_crypt) $(XLIBS)
 
 uss.o:  uss.c AFS_component_version_number.c
 

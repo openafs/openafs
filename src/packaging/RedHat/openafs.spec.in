@@ -1582,7 +1582,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
 %{_libdir}/afs
-%{_libdir}/libdes.a
 %{_libdir}/liblwp.a
 %{_libdir}/librx.a
 %{_libdir}/librxkad.a

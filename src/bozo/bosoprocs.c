@@ -29,7 +29,6 @@
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <sys/stat.h>
-#include <des.h>
 #include <dirent.h>
 #include <stdio.h>
 #ifdef HAVE_STDINT_H

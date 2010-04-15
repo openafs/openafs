@@ -101,9 +101,9 @@
 #endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
-#include <des_prototypes.h>
 #include <rx/rx_prototypes.h>
-#include "../rxkad/md5.h"
+#include <hcrypto/md5.h>
+
 #ifdef O_LARGEFILE
 #define afs_stat        stat64
 #define afs_fstat       fstat64

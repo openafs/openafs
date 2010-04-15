@@ -30,12 +30,12 @@
 #endif
 #include <string.h>
 #include <signal.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
 #include "kauth.h"
 #include "kautils.h"
 #include "kkids.h"
@@ -158,7 +158,7 @@ static afs_int32
 read_pass(char *passwd, int len, char *prompt, int verify)
 {
     afs_int32 code;
-    code = read_pw_string(passwd, len, prompt, verify);
+    code = UI_UTIL_read_pw_string(passwd, len, prompt, verify);
     if (code == -1) {
 	getpipepass(passwd, len);
 	return 0;
@@ -406,7 +406,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	}
     }
     ka_StringToKey(passwd, realm, &key);
-    des_string_to_key(passwd, ktc_to_cblockptr(&mitkey));
+    DES_string_to_key(passwd, ktc_to_cblockptr(&mitkey));
     give_to_child(passwd);
 
     /* Get new password if it wasn't provided. */
@@ -452,7 +452,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	npasswd[8] = 0;		/* in case the password was exactly 8 chars long */
 #endif
     ka_StringToKey(npasswd, realm, &newkey);
-    des_string_to_key(npasswd, ktc_to_cblockptr(&newmitkey));
+    DES_string_to_key(npasswd, ktc_to_cblockptr(&newmitkey));
     memset(npasswd, 0, sizeof(npasswd));
 
     if (lexplicit)

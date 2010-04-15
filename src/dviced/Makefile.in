@@ -214,7 +214,7 @@ state_analyzer.o: ${TVICED}/state_analyzer.c
 
 dafileserver: ${objects} ${LIBS}
 	$(AFS_LDRULE) ${objects} \
-		${LIBS} $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 state_analyzer: ${SDBGOBJS}
 	$(AFS_LDRULE) ${SDBGOBJS} \

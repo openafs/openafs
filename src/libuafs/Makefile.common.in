@@ -16,7 +16,6 @@ WEBOBJ=../AFSWEB
 AFS	=../afs
 RX	=../rx
 AFSINT=../afsint
-DES	=../des
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
 
@@ -75,12 +74,13 @@ webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEB) \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
-linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) $(LDFLAGS_roken) -o linktest \
+linktest: UAFS/$(LIBUAFS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) \
+		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) -o linktest \
 		${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL \
 		UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a \
-		$(LIB_roken) $(TEST_LIBS) $(XLIBS)
+		${TOP_LIBDIR}/libafsutil.a \
+		$(LIB_hcrypto) $(LIB_roken) $(TEST_LIBS) $(XLIBS)
 
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
@@ -1522,8 +1522,8 @@ $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE1)
 
 clean:
-	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx
-	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest $(AFS_OS_CLEAN)
+	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi afs afsint config rx
+	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys linktest $(AFS_OS_CLEAN)
 
 
 install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
@@ -1536,7 +1536,7 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		$(TOP_INCDIR)/afs/afs_stats.h \
 		$(TOP_SRCDIR)/afs/sysincludes.h \
 		$(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
-		${TOP_OBJDIR}/lib/libdes.a UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
+		UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
 	${INSTALL} -d ${DEST}/root.perf/include/afs
 	${INSTALL} -d ${DEST}/root.perf/lib
 	${INSTALL_DATA} $(TOP_INCDIR)/afs/param.h \
@@ -1551,8 +1551,6 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		${DEST}/root.perf/include/afs/sysincludes.h
 	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
 		${DEST}/root.perf/include/afs/afs_usrops.h
-	${INSTALL_DATA} ${TOP_OBJDIR}/lib/libdes.a \
-		${DEST}/root.perf/lib/libdes.a
 	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/$(LIBUAFS)
 	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DEST}/root.perf/lib/$(LIBJUAFS)
 

@@ -48,8 +48,7 @@ KAUTHOBJS = \
 	kautils.o \
 	kalocalcell.o \
 	kaerrors.o \
-	user.o \
-	read_passwd.o
+	user.o
 
 UBIKOBJS = \
 	uinit.o \

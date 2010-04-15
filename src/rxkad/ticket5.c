@@ -73,6 +73,8 @@
 #include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <hcrypto/md4.h>
+#include <hcrypto/md5.h>
 #include "lifetimes.h"
 #include "rxkad.h"
 
@@ -81,20 +83,12 @@
 #include "der.h"
 #include "v5der.c"
 #include "v5gen.c"
-#include "md4.h"
-#include "md5.h"
 
 /*
  * Principal conversion Taken from src/lib/krb5/krb/conv_princ from MIT Kerberos.  If you
  * find a need to change the services here, please consider opening a
  * bug with MIT by sending mail to krb5-bugs@mit.edu.
  */
-
-extern afs_int32 des_cbc_encrypt(void * in, void * out,
-                                 afs_int32 length,
-                                 des_key_schedule key, des_cblock *iv,
-                                 int encrypt);
-extern int des_key_sched(des_cblock k, des_key_schedule schedule);
 
 struct krb_convert {
     char *v4_str;
@@ -432,15 +426,15 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 {
     int (*cksum_func) (void *, size_t, void *, size_t,
 		       struct ktc_encryptionKey *);
-    des_cblock ivec;
-    des_key_schedule s;
+    DES_cblock ivec;
+    DES_key_schedule s;
     char cksum[24];
     size_t cksumsz;
     int ret = 1;		/* failure */
 
     cksum_func = NULL;
 
-    des_key_sched(ktc_to_cblock(key), (struct des_ks_struct *)&s);
+    DES_key_sched(ktc_to_cblock(key), &s);
 
 #define CONFOUNDERSZ 8
 
@@ -464,7 +458,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 	abort();
     }
 
-    des_cbc_encrypt(in, out, insz, s, &ivec, 0);
+    DES_cbc_encrypt(in, out, insz, &s, &ivec, 0);
 
     memcpy(cksum, (char *)out + CONFOUNDERSZ, cksumsz);
     memset((char *)out + CONFOUNDERSZ, 0, cksumsz);

@@ -19,7 +19,6 @@ INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
-	${TOP_INCDIR}/des.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/rx/rxkad.h \
@@ -38,12 +37,12 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/util.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o

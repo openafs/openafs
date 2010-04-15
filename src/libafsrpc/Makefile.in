@@ -27,7 +27,6 @@ RX = ${srcdir}/../rx
 RXKAD = ${srcdir}/../rxkad
 RXSTAT = ${srcdir}/../rxstat
 FSINT = ${srcdir}/../fsint
-DES = ${srcdir}/../des
 COMERR = ${srcdir}/../comerr
 UTIL = ${srcdir}/../util
 SYS = ${srcdir}/../sys
@@ -98,27 +97,8 @@ RXKADOBJS =\
 	ticket.o \
 	ticket5.o \
 	crc.o \
-	md4.o \
-	md5.o \
 	fcrypt.o \
 	crypt_conn.o
-
-DESOBJS =\
-	des.o \
-	cbc_encrypt.o \
-	pcbc_encrypt.o \
-	cksum.o \
-	new_rnd_key.o \
-	key_sched.o \
-	debug_decl.o \
-	quad_cksum.o \
-	key_parity.o \
-	weak_key.o \
-	strng_to_key.o \
-	misc.o \
-	util.o
-
-CRYPT_OBJ = crypt.o
 
 LWPOBJS = \
 	fasttime.o \
@@ -126,13 +106,11 @@ LWPOBJS = \
 
 LIBOBJS = \
 	${RXOBJS} \
-	${DESOBJS} \
 	${XDROBJS} \
 	${RXKADOBJS} \
 	${COMERROBJS} \
 	${UTILOBJS} \
 	${SYSOBJS} \
-	${CRYPT_OBJ} \
 	${RXSTATOBJS} \
 	${LWPOBJS} \
 	${FSINTOBJS}
@@ -274,84 +252,6 @@ xdr_update.o: ${RX}/xdr_update.c
 
 xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 	$(AFS_CCRULE) $(RX)/xdr_afsuuid.c
-
-# Note that the special case statement for compiling des.c is present
-# simply to work around a compiler bug on HP-UX 11.0.  The symptom of
-# the problem is that linking the pthread fileserver fails with messages
-# such as
-#
-#   pxdb internal warning: cu[84]: SLT_SRCFILE[411] out of synch
-#   Please contact your HP Support representative
-#   pxdb internal warning: cu[84]: SLT_SRCFILE[442] out of synch
-#   pxdb internal warning: cu[84]: SLT_SRCFILE[450] out of synch
-#   pxdb internal warning: cu[84]: SLT_SRCFILE[529] out of synch
-#   pxdb internal warning: cu[84]: SLT_SRCFILE[544] out of synch
-#   ...
-#   pxdb32: internal error. File won't be debuggable (still a valid executable)
-#   *** Error exit code 10
-#
-# The problematic version of pxdb is:
-#
-#   $ what /opt/langtools/bin/pxdb32
-#   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision$
-#
-# The problem occurs when -g and -O are both used when compiling des.c.
-# The simplest way to work around the problem is to leave out either -g or -O.
-# Since des.c is relatively stable I've chosen to eliminate -g rather
-# than take any hit in performance.
-
-des.o: ${DES}/des.c
-	set -x; \
-	case ${SYS_NAME} in \
-	hp_ux11*) \
-		set X `echo ${AFS_CCRULE} -I../des ${DES}/des.c | sed s/-g//`; shift; \
-		"$$@" \
-		;; \
-	*) \
-		${AFS_CCRULE} -I../des ${DES}/des.c \
-		;; \
-	esac
-
-crypt.o: ${DES}/crypt.c
-	$(AFS_CCRULE) $(DES)/crypt.c
-
-cbc_encrypt.o: ${DES}/cbc_encrypt.c
-	$(AFS_CCRULE) $(DES)/cbc_encrypt.c
-
-pcbc_encrypt.o: ${DES}/pcbc_encrypt.c
-	$(AFS_CCRULE) $(DES)/pcbc_encrypt.c
-
-cksum.o: ${DES}/cksum.c
-	$(AFS_CCRULE) $(DES)/cksum.c
-
-new_rnd_key.o: ${DES}/new_rnd_key.c
-	$(AFS_CCRULE) $(DES)/new_rnd_key.c
-
-key_sched.o: ${DES}/key_sched.c
-	$(AFS_CCRULE) -I../des $(DES)/key_sched.c
-
-debug_decl.o: ${DES}/debug_decl.c
-	$(AFS_CCRULE) $(DES)/debug_decl.c
-
-quad_cksum.o: ${DES}/quad_cksum.c
-	$(AFS_CCRULE) $(DES)/quad_cksum.c
-
-key_parity.o: ${DES}/key_parity.c
-	$(AFS_CCRULE) -I../des $(DES)/key_parity.c
-
-weak_key.o: ${DES}/weak_key.c
-	$(AFS_CCRULE) $(DES)/weak_key.c
-
-strng_to_key.o: ${DES}/strng_to_key.c
-	$(AFS_CCRULE) $(DES)/strng_to_key.c
-
-misc.o: ${DES}/misc.c
-	$(AFS_CCRULE) $(DES)/misc.c
-
-util.o: ${DES}/util.c
-	$(AFS_CCRULE) $(DES)/util.c
-
 
 error_msg.o: ${COMERR}/error_msg.c
 	$(AFS_CCRULE) $(COMERR)/error_msg.c

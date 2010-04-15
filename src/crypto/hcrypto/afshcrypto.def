@@ -15,3 +15,5 @@ EXPORTS
 	hc_MD5_Init                             @14
 	hc_MD5_Update                           @15
 	hc_UI_UTIL_read_pw_string               @16
+	hc_DES_is_weak_key			@17
+	hc_DES_check_key_parity			@18

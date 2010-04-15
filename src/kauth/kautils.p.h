@@ -19,7 +19,6 @@
 #ifndef __KAUTILS__
 #define __KAUTILS__
 
-#include <des.h>
 #include <afs/auth.h>
 
 #ifndef KAMAJORVERSION

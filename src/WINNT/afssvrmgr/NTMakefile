@@ -97,7 +97,6 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
         $(DESTDIR)\lib\afsrxkad.lib \
-        $(DESTDIR)\lib\afsdes.lib \
         $(DESTDIR)\lib\afskfw.lib \
 	$(DESTDIR)\lib\afs\AfsClass.lib \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib

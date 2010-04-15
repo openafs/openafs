@@ -25,7 +25,7 @@
 #define KRB_DEFS
 
 /* Need some defs from des.h	 */
-#include <des.h>
+#include <hcrypto/des.h>
 
 /* General definitions */
 #define		KSUCCESS	0

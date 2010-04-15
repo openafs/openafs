@@ -359,11 +359,11 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsvldb.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 EXELIBS2 = \
@@ -375,15 +375,17 @@ EXELIBS2 = \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 EXELIBS3 = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afsrxkad.lib
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 
 # klog.exe
@@ -517,8 +519,9 @@ KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afsdes.lib \
-	$(DESTDIR)\lib\afs\mtafsutil.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(OUT)\kpasswd.obj: $(KAUTH)/kpasswd.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**

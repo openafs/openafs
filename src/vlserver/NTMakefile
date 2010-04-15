@@ -81,7 +81,6 @@ VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\afsrxstat.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
@@ -90,6 +89,7 @@ VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
         $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)

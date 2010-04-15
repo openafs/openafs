@@ -63,7 +63,6 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afsrxstat.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
@@ -71,6 +70,7 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
         $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 !IF (("$(SYS_NAME)"!="i386_win95" ) && ("$(SYS_NAME)"!="I386_WIN95" ))
@@ -114,7 +114,6 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsprot.lib \
@@ -123,6 +122,7 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 

@@ -50,6 +50,7 @@ KAUTHOBJS = \
 	$(OUT)\kauth.cs.obj \
 	$(OUT)\kaaux.obj \
 	$(OUT)\client.obj \
+	$(OUT)\crypt.obj \
 	$(OUT)\authclient.obj \
 	$(OUT)\kautils.obj \
 	$(OUT)\kalocalcell.obj \
@@ -138,7 +139,6 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
@@ -146,6 +146,7 @@ DLLLIBS =\
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\lanahelper.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)

@@ -45,8 +45,7 @@
 #include <afs/com_err.h>
 #include <ubik.h>
 #include <afs/ktime.h>
-#include <des.h>
-#include <des_prototypes.h>
+#include <hcrypto/ui.h>
 #include <afs/kautils.h>
 #include <afs/volser.h>
 
@@ -816,12 +815,12 @@ AddKey(struct cmd_syndesc *as, void *arock)
 	strcpy(buf, as->parms[1].items->data);
     else {
 	/* prompt for key */
-	code = des_read_pw_string(buf, sizeof(buf), "input key: ", 0);
+	code = UI_UTIL_read_pw_string(buf, sizeof(buf), "input key: ", 0);
 	if (code || strlen(buf) == 0) {
 	    fprintf(stderr, "Bad key: \n");
 	    exit(1);
 	}
-	code = des_read_pw_string(ver, sizeof(ver), "Retype input key: ", 0);
+	code = UI_UTIL_read_pw_string(ver, sizeof(ver), "Retype input key: ", 0);
 	if (code || strlen(ver) == 0) {
 	    fprintf(stderr, "Bad key: \n");
 	    exit(1);

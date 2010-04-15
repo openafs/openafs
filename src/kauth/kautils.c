@@ -28,8 +28,7 @@
 #include <ctype.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <des.h>
-#include <des_prototypes.h>
+#include <hcrypto/des.h>
 #include "kauth.h"
 #include "kautils.h"
 
@@ -143,18 +142,18 @@ umin(afs_uint32 a, afs_uint32 b)
 afs_int32
 ka_KeyCheckSum(char *key, afs_uint32 * cksumP)
 {
-    des_key_schedule s;
-    unsigned char block[8];
+    DES_key_schedule s;
+    DES_cblock block;
     afs_uint32 cksum;
     afs_int32 code;
 
     *cksumP = 0;
     memset(block, 0, 8);
-    code = des_key_sched(charptr_to_cblock(key), s);
+    code = DES_key_sched(charptr_to_cblock(key), &s);
     if (code)
 	return KABADKEY;
-    des_ecb_encrypt(block, block, s, ENCRYPT);
-    memcpy(&cksum, block, sizeof(afs_int32));
+    DES_ecb_encrypt(&block, &block, &s, ENCRYPT);
+    memcpy(&cksum, &block, sizeof(afs_int32));
     *cksumP = ntohl(cksum);
     return 0;
 }

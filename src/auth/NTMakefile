@@ -87,13 +87,13 @@ EXELIBDIR = $(DESTDIR)\lib
 EXELIBS =\
 	$(EXELIBDIR)\afs\afsauth.lib \
 	$(EXELIBDIR)\afsrxkad.lib \
-	$(EXELIBDIR)\afsdes.lib \
 	$(EXELIBDIR)\afsrx.lib \
 	$(EXELIBDIR)\afslwp.lib \
 	$(EXELIBDIR)\afs\afsutil.lib \
 	$(EXELIBDIR)\afs\afseventlog.lib \
 	$(EXELIBDIR)\afs\afsreg.lib \
 	$(EXELIBDIR)\libafsconf.lib \
+	$(EXELIBDIR)\afshcrypto.lib \
 	$(EXELIBDIR)\afsroken.lib
 
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)

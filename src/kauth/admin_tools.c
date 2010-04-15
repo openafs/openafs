@@ -39,9 +39,8 @@
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
-#include <des.h>
-#include <des_prototypes.h>
-
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
 #include "kauth.h"
 #include "kauth_internal.h"
 #include "kautils.h"
@@ -766,7 +765,7 @@ StringToKey(struct cmd_syndesc *as, void *arock)
     ka_PrintBytes((char *)&key, sizeof(key));
     printf("'.\n");
 
-    des_string_to_key(as->parms[0].items->data, ktc_to_cblockptr(&key));
+    DES_string_to_key(as->parms[0].items->data, ktc_to_cblockptr(&key));
 
     printf("Converting %s with the DES string to key yields key='",
 	   as->parms[0].items->data);
@@ -1412,7 +1411,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 		    sprintf(msg, "Administrator's (%s) Password: ", name);
 		else
 		    sprintf(msg, "Password for %s: ", name);
-		code = read_pw_string(passwd, sizeof(passwd), msg, 0);
+		code = UI_UTIL_read_pw_string(passwd, sizeof(passwd), msg, 0);
 		if (code)
 		    code = KAREADPW;
 		else if (strlen(passwd) == 0)
@@ -1427,7 +1426,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 		ka_GetAdminToken(name, instance, cell, &key, KA_SIXHOURS,
 				 &token, 0 /* !new */ );
 	    if (code == KABADREQUEST) {
-		des_string_to_key(passwd, ktc_to_cblockptr(&key));
+		DES_string_to_key(passwd, ktc_to_cblockptr(&key));
 		code =
 		    ka_GetAdminToken(name, instance, cell, &key, KA_SIXHOURS,
 				     &token, 0 /* !new */ );
@@ -1518,7 +1517,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
 		    strcpy(msg, p + 1);
 		    strcat(msg, ": ");
-		    code = read_pw_string(password, sizeof(password), msg, 1);
+		    code = UI_UTIL_read_pw_string(password, sizeof(password), msg, 1);
 		    if (code)
 			code = KAREADPW;
 		    else if (strlen(password) == 0)

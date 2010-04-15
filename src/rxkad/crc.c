@@ -49,7 +49,6 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <des.h>
 #include "lifetimes.h"
 
 static u_long table[256];

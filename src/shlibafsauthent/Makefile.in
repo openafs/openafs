@@ -55,8 +55,7 @@ KAUTHOBJS = \
 	kautils.o \
 	kalocalcell.o \
 	kaerrors.o \
-	user.o \
-	read_passwd.o
+	user.o
 
 UBIKOBJS = \
 	uinit.o \
@@ -133,9 +132,9 @@ dest: ${LIBAFSAUTHENT} libafsauthent_pic.a
 ${LIBAFSAUTHENT}: ${LIBOBJS} libafsauthent.map
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
-		-L${TOP_LIBDIR} $(LDFLAGS_roken) \
+		-L${TOP_LIBDIR} $(LDFLAGS_roken) $(LDFLAGS_hcrypto) \
 		$(LIBOBJS) \
-		-lafsrpc $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) \
+		-lafsrpc $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) \
 		${MT_LIBS}
 
 libafsauthent_pic.a: ${LIBOBJS}

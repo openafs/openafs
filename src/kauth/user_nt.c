@@ -27,7 +27,7 @@
 #include <afs/krb_prot.h>
 #include <rx/rxkad.h>
 #include <crypt.h>
-#include <des.h>
+#include <hcrypto/des.h>
 
 int krb_add_host(struct sockaddr_in *server_list_p);
 static void krb_set_port(long port);
@@ -124,7 +124,7 @@ ka_UserAuthenticateGeneral2(afs_int32 flags, char *name, char *instance,
 
     /* encrypt password, both ways */
     ka_StringToKey(password, upperRealm, &key1);
-    des_string_to_key(password, &key2);
+    DES_string_to_key(password, &key2);
 
     /* set port number */
     sp = getservbyname("kerberos", "udp");
@@ -207,7 +207,6 @@ static int krbONE = 1;
 #include <string.h>
 #include <time.h>
 
-#include <des.h>
 #include "krb.h"
 
 #include <sys/types.h>
@@ -299,7 +298,7 @@ static
 check_response(KTEXT rpkt, KTEXT cip, char *service, char *instance,
 	       char *realm, struct ktc_encryptionKey *key)
 {
-    Key_schedule key_s;
+    DES_key_schedule key_s;
     char *ptr;
     char s_service[SNAME_SZ];
     char s_instance[INST_SZ];
@@ -314,9 +313,9 @@ check_response(KTEXT rpkt, KTEXT cip, char *service, char *instance,
     memcpy((char *)(cip->dat), (char *)pkt_cipher(rpkt), cip->length);
 
     /* decrypt ticket */
-    key_sched((char *)key, key_s);
-    pcbc_encrypt((C_Block *) cip->dat, (C_Block *) cip->dat,
-		 (long)cip->length, key_s, (des_cblock *) key, 0);
+    DES_key_sched((DES_cblock *)key, &key_s);
+    DES_pcbc_encrypt((DES_cblock *) cip->dat, (DES_cblock *) cip->dat,
+		     (long)cip->length, &key_s, (DES_cblock *) key, 0);
 
     /* Skip session key */
     ptr = (char *)cip->dat + 8;
@@ -428,7 +427,7 @@ krb_get_in_tkt_ext(user, instance, realm, service, sinstance, life, key1,
     KTEXT cip = &cip_st;	/* Returned Ciphertext */
     KTEXT_ST tkt_st;
     KTEXT tkt = &tkt_st;	/* Current ticket */
-    C_Block ses;		/* Session key for tkt */
+    DES_cblock ses;		/* Session key for tkt */
     int kvno;			/* Kvno for session key */
     unsigned char *v = pkt->dat;	/* Prot vers no */
     unsigned char *t = (pkt->dat + 1);	/* Prot msg type */
@@ -937,7 +936,7 @@ Andrew_StringToKey(str, cell, key)
 	    keybytes[i] = (unsigned char)(temp << 1);
 	}
     }
-    des_fixup_key_parity((unsigned char *)key);
+    DES_fixup_key_parity((DES_cblock *)key);
 }
 
 
@@ -947,7 +946,7 @@ StringToKey(str, cell, key)
      char *cell;		/* cell for password */
      struct ktc_encryptionKey *key;
 {
-    des_key_schedule schedule;
+    DES_key_schedule schedule;
     char temp_key[8];
     char ivec[8];
     char password[BUFSIZ];
@@ -961,14 +960,14 @@ StringToKey(str, cell, key)
 
     memcpy(ivec, "kerberos", 8);
     memcpy(temp_key, "kerberos", 8);
-    des_fixup_key_parity(temp_key);
-    des_key_sched(temp_key, schedule);
-    des_cbc_cksum(password, ivec, passlen, schedule, ivec);
+    DES_fixup_key_parity(temp_key);
+    DES_key_sched(temp_key, &schedule);
+    DES_cbc_cksum(password, ivec, passlen, &schedule, ivec);
 
     memcpy(temp_key, ivec, 8);
-    des_fixup_key_parity(temp_key);
-    des_key_sched(temp_key, schedule);
-    des_cbc_cksum(password, (char *)key, passlen, schedule, ivec);
+    DES_fixup_key_parity(temp_key);
+    DES_key_sched(temp_key, &schedule);
+    DES_cbc_cksum(password, (DES_cblock *)key, passlen, &schedule, ivec);
 
-    des_fixup_key_parity((char *)key);
+    DES_fixup_key_parity((DES_cblock *)key);
 }

@@ -39,7 +39,6 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <des.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <errno.h>

@@ -28,8 +28,7 @@
 #include <time.h>
 #include <ubik.h>
 #include <afs/cmd.h>
-#include <des.h>
-#include <des_prototypes.h>
+#include <hcrypto/des.h>
 #include <rx/rxkad.h>
 
 #include <afs/com_err.h>
@@ -471,8 +470,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    printf("Entry %d has zero length name\n", i);
 		continue;
 	    }
-	    if (!des_check_key_parity(ktc_to_cblock(&entry.key))
-		|| des_is_weak_key(ktc_to_cblock(&entry.key))) {
+	    if (!DES_check_key_parity(ktc_to_cblock(&entry.key))
+		|| DES_is_weak_key(ktc_to_cblock(&entry.key))) {
 		fprintf(stderr, "Entry %d, %s, has bad key\n", i,
 			EntryName(&entry));
 		continue;

@@ -15,7 +15,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
    LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
 	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
   KLIBS = ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
-	  ${TOP_LIBDIR}/libafsrpc_pic.a ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
+	  ${TOP_LIBDIR}/libafsrpc_pic.a \
+	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
  SHOBJS = afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
@@ -61,7 +62,9 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o \
 		${TOP_LIBDIR}/libafsrpc_pic.a \
 		pam_afs.map
 	../config/shlib-build -d $(srcdir) -f pam_afs.so.1 -l pam_afs -- \
-		afs_setcred.o afs_auth.o afs_util.o ${SHOBJS} ${LIBS}
+		afs_setcred.o afs_auth.o afs_util.o ${SHOBJS} \
+		${LIBS} $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
+		$(LIB_hcrypto) $(LIB_roken)
 
 pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
 		ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
@@ -69,7 +72,8 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
 		pam_afs.map
 	../config/shlib-build -d $(srcdir) -f pam_afs.krb.so.1 -l pam_afs -- \
 		afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
-		${SHOBJS} ${KLIBS}
+		${SHOBJS} ${KLIBS} $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
+		$(LIB_hcrypto) $(LIB_roken)
 
 test_pam: test_pam.o
 	set -x; \

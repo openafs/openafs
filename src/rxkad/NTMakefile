@@ -15,9 +15,6 @@ INCFILES =\
 	$(INCFILEDIR)\rxkad_prototypes.h \
 	$(INCFILEDIR)\asn1_err.h \
         $(INCFILEDIR)\v5gen.h \
-        $(INCFILEDIR)\hash.h\
-        $(INCFILEDIR)\md4.h \
-        $(INCFILEDIR)\md5.h \
 	$(INCFILEDIR)\rxkad.h
 
 # build afsrxkad.lib
@@ -31,8 +28,6 @@ LIBOBJS =\
 	$(OUT)\bg-fcrypt.obj \
 	$(OUT)\ticket5.obj \
 	$(OUT)\crc.obj \
-        $(OUT)\md4.obj \
-        $(OUT)\md5.obj \
 	$(OUT)\crypt_conn.obj 
 
 $(LIBOBJS):

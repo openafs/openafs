@@ -20,9 +20,12 @@ KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o token.xdr.o token.o
 
 LIBS=libauth.a \
-      ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
-      ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
+      ${TOP_LIBDIR}/librxkad.a \
+      ${TOP_LIBDIR}/librx.a \
+      ${TOP_LIBDIR}/libsys.a \
+      ${TOP_LIBDIR}/liblwp.a \
+      ${TOP_LIBDIR}/util.a
+
 INCLS=cellconfig.h auth.h keys.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \

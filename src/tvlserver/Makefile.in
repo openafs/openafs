@@ -108,26 +108,29 @@ get_krbrlm.o: ${UTIL}/get_krbrlm.c
 
 vldb_check: vldb_check.o ${LIBS} AFS_component_version_number.o
 	$(AFS_LDRULE) vldb_check.o AFS_component_version_number.o \
-		${LIBS} ${MT_LIBS} ${XLIBS} 
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} 
 
 vldb_check.o: ${VLSERVER}/vldb_check.c 
 	$(AFS_CCRULE) $(VLSERVER)/vldb_check.c
 
 cnvldb: cnvldb.o ${LIBS} 
-	$(AFS_LDRULE) cnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) cnvldb.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 cnvldb.o: ${VLSERVER}/cnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/cnvldb.c
 
 sascnvldb: sascnvldb.o ${LIBS} 
-	$(AFS_LDRULE) sascnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) sascnvldb.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 sascnvldb.o: ${VLSERVER}/sascnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/sascnvldb.c
 
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
 	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o $(LIBS) ${MT_LIBS} ${XLIBS} \
+		vldbint.xdr.o \
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} \
 		${TOP_LIBDIR}/libaudit.a
 
 vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
@@ -166,9 +169,9 @@ Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
 	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
-	$(AFS_LDRULE) vlclient.o $(OBJS) $(LIBS) ${MT_LIBS} ${XLIBS} \
-		${TOP_LIBDIR}/libcmd.a
-
+	$(AFS_LDRULE) vlclient.o $(OBJS) ${TOP_LIBDIR}/libcmd.a \
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		
 vlclient.o: ${VLSERVER}/vlclient.c
 	$(AFS_CCRULE) $(VLSERVER)/vlclient.c
 

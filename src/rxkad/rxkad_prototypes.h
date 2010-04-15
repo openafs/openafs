@@ -14,10 +14,7 @@
 #include "fcrypt.h"
 #include "rx/rx.h"
 
-/* Don't include des.h where it can cause conflict with krb4 headers */
-#if !defined(NO_DES_H_INCLUDE)
-#include <des.h>
-#endif
+#include <hcrypto/des.h>
 
 /* crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket(const struct rx_connection *conn,
@@ -161,10 +158,9 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     afs_int32 * host, afs_uint32 * start,
 			     afs_uint32 * end, afs_int32 disableDotCheck);
 
-#if !defined(NO_DES_H_INCLUDE)
-static_inline unsigned char *
+static_inline DES_cblock *
 ktc_to_cblock(struct ktc_encryptionKey *key) {
-    return (unsigned char *)key;
+    return (DES_cblock *)key;
 }
 
 static_inline char *
@@ -172,11 +168,27 @@ ktc_to_charptr(struct ktc_encryptionKey *key) {
     return (char *)key;
 }
 
-static_inline des_cblock *
+
+static_inline DES_cblock *
 ktc_to_cblockptr(struct ktc_encryptionKey *key) {
-    return (des_cblock *)key;
+    return (DES_cblock *)key;
+}
+
+#if 0
+static_inline unsigned char *
+cblockptr_to_cblock(DES_cblock *key) {
+    return (unsigned char *)key;
 }
 #endif
 
+static_inline DES_cblock *
+charptr_to_cblock(char *key) {
+    return (DES_cblock *)key;
+}
+
+static_inline DES_cblock *
+charptr_to_cblockptr(char *key) {
+    return (DES_cblock *)key;
+}
 
 #endif

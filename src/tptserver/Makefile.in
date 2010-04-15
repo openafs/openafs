@@ -150,7 +150,8 @@ display.o: ${PTSERVER}/display.c ${INCLS}
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
 	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o \
-		ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${MT_LIBS} \
+		ptint.ss.o ptint.xdr.o utils.o map.o \
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
 		${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
@@ -158,12 +159,12 @@ db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
 	$(AFS_LDRULE) db_verify.o display.o pterror.o \
-		$(LIBS) ${MT_LIBS} ${XLIBS}
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o \
 	AFS_component_version_number.o $(LIBS)
 	$(AFS_LDRULE) ptclient.o display.o $(PTOBJS) \
-		$(LIBS) ${MT_LIBS} ${XLIBS}
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptclient.c
@@ -176,34 +177,37 @@ pterror.h pterror.c: ${PTSERVER}/pterror.et
 	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
 
 pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
-	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a \
-		$(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 pts.o: ${PTSERVER}/pts.c
 	$(AFS_CCRULE) $(PTSERVER)/pts.c
 
 readgroup: readgroup.o $(PTOBJS) $(LIBS)
-	$(AFS_LDRULE) readgroup.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) readgroup.o $(PTOBJS) \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readgroup.c
 
 readpwd: readpwd.o $(PTOBJS) $(LIBS)
-	$(AFS_LDRULE) readpwd.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) readpwd.o $(PTOBJS) \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readpwd.c
 
 testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
-		$(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) $(LIBS)
 	$(AFS_LDRULE) pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) \
-		${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS}
+		${TOP_LIBDIR}/libcmd.a \
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
 	$(AFS_CCRULE) $(PTSERVER)/pt_util.c

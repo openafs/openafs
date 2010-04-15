@@ -217,10 +217,11 @@ vos.o: ${VOLSER}/vos.c
 vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
 	$(AFS_LDRULE) vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} \
 		${TOP_LIBDIR}/libubik_pthread.a \
-		$(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 volserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} ${LIBS} $(LIB_roken) ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${objects} \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: volserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

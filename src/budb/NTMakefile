@@ -68,7 +68,6 @@ EXELIBS =\
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afs\afskauth.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
@@ -80,6 +79,7 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
         $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)

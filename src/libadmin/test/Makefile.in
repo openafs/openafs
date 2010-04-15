@@ -27,7 +27,8 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
 	$(TOP_LIBDIR)/libcmd.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(TOP_LIBDIR)/libafsutil.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 AFSCPOBJS =\
 	bos.o \
@@ -43,7 +44,7 @@ CFLAGS_client.o = @CFLAGS_NOERROR@
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	$(AFS_LDRULE) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) \
-		$(LIB_roken) ${MT_LIBS} $(XLIBS)
+		$(LIB_roken) $(LIB_crypt) ${MT_LIBS} $(XLIBS)
 
 #######################################################################
 install:

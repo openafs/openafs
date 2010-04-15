@@ -17,7 +17,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCDIRS= -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I..
 LDIRS= -L${TOP_LIBDIR} -L..
-LIBS= -lsys -lubik -lvldb -lauth -lrxkad -ldes -lcom_err -lcmd -lrx -llwp -lafsutil
+LIBS= -lsys -lubik -lvldb -lauth -lrxkad -lafshcrypto_lwp \
+      -lcom_err -lcmd -lrx -llwp -lafsutil
 
 all test:  fulltest owntest idtest getinitparams
 

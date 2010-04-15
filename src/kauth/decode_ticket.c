@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 
-#include <des.h>
+#include <hcrypto/des.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <rx/rxkad.h>
@@ -42,7 +42,7 @@ main(int argc, char *argv[])
     }
     if (ka_ReadBytes(argv[1], key, sizeof(key)) != 8)
 	printf("Key must be 8 bytes long\n");
-    if (!des_check_key_parity(key) || des_is_weak_key(key)) {
+    if (!DES_check_key_parity(charptr_to_cblock(key)) || DES_is_weak_key(charptr_to_cblock(key))) {
 	afs_com_err(whoami, KABADKEY, "server's key for decoding ticket is bad");
 	exit(1);
     }

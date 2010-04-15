@@ -30,7 +30,6 @@
 #include <string.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#include <des.h>
 #include <afs/afsutil.h>
 #ifdef HAVE_STDINT_H
 # include <stdint.h>

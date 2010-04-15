@@ -7,16 +7,6 @@
 
 {
     global:
-	des_check_key_parity;
-	des_fixup_key_parity;
-	des_init_random_number_generator;
-	des_is_weak_key;
-	des_key_sched;
-	des_random_key;
-	des_string_to_key;
-	des_cbc_cksum;
-	des_ecb_encrypt;
-	des_pcbc_encrypt;
 	ktohl;
 	life_to_time;
 	osi_AssertFailU;

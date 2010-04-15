@@ -17,7 +17,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 SFLAGS=-I${TOP_INCDIR}
-LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
+LIBS=libsys.a \
+     ${TOP_LIBDIR}/librx.a \
+     libsys.a \
+     ${TOP_LIBDIR}/liblwp.a \
+     ${TOP_LIBDIR}/util.a \
+     ${TOP_LIBDIR}/libafshcrypto_lwp.a \
+     ${XLIBS}
 
 OBJECTS= afssyscalls.o setpag.o pioctl.o glue.o \
 	AFS_component_version_number.o
@@ -158,9 +164,9 @@ CFLAGS_pagsh.krb.o = -DAFS_KERBEROS_ENV
 pagsh.krb.o: pagsh.c
 	$(AFS_CCRULE) $(srcdir)/pagsh.c 
 
-pagsh.krb: libsys.a pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a
+pagsh.krb: libsys.a pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a
 	$(AFS_LDRULE) pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a \
-		${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS} $(LIB_roken)
+		${TOP_LIBDIR}/librxkad.a ${LIBS} $(LIB_roken)
 
 #
 # Test programs.

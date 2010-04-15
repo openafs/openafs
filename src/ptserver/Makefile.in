@@ -32,17 +32,17 @@ LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	ptclient.h ptuser.h ptint.h pterror.h
 
-LIBS=${TOP_LIBDIR}/libubik.a \
+LIBS=   ${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \

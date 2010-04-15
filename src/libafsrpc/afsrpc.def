@@ -1,11 +1,4 @@
 EXPORTS
-	des_check_key_parity			@2
-	des_fixup_key_parity			@5
-	des_init_random_number_generator	@6
-	des_is_weak_key				@7
-	des_key_sched				@8
-	des_random_key				@9
-	des_string_to_key			@10
 	ktohl					@11
 	life_to_time				@12
 	rx_DestroyConnection			@13

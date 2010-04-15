@@ -36,7 +36,6 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <string.h>
-#include <des.h>
 #include <afs/cellconfig.h>
 #include <errno.h>
 #include "budb.h"

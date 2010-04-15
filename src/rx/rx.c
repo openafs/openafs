@@ -196,8 +196,6 @@ rxi_InitPthread(void)
     MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_event_mutex, "event", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&des_init_mutex, "des", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&des_random_mutex, "random", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&osi_malloc_mutex, "malloc", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxi_connCacheMutex, "conn cache", MUTEX_DEFAULT, 0);

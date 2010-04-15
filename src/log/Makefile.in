@@ -22,17 +22,17 @@ ${TOP_INCDIR}/afs/cellconfig.h
 
 LIBRARIES=${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
-		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/libsys.a \
 	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	        ${TOP_LIBDIR}/util.a
 KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
-		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/libsys.a \
 	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	        ${TOP_LIBDIR}/util.a
 
 #

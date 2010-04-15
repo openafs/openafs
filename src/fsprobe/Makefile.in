@@ -22,13 +22,14 @@ LIBS=${TOP_LIBDIR}/libvolser.a ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
         ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libvldb.a \
         ${TOP_LIBDIR}/libubik.a \
         ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libsys.a \
-        ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
+        ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/librxkad.a \
         ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/util.a
 
 all: ${TOP_INCDIR}/afs/fsprobe.h ${TOP_LIBDIR}/libfsprobe.a fsprobe_test

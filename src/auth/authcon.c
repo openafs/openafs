@@ -12,6 +12,10 @@
 
 #include <roken.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>
@@ -25,10 +29,13 @@
 #endif
 #include <string.h>
 #include <stdio.h>
-#include <des.h>
-#include <des_prototypes.h>
+
+#define HC_DEPRECATED
+#include <hcrypto/des.h>
+
 #include <rx/rxkad.h>
 #include <rx/rx.h>
+
 #include "cellconfig.h"
 #include "keys.h"
 #include "ktc.h"
@@ -90,8 +97,8 @@ GenericAuth(struct afsconf_dir *adir,
     }
 
     /* next create random session key, using key for seed to good random */
-    des_init_random_number_generator(ktc_to_cblock(&key));
-    code = des_random_key(ktc_to_cblock(&session));
+    DES_init_random_number_generator((DES_cblock *) &key);
+    code = DES_new_random_key((DES_cblock *) &session);
     if (code) {
 	return QuickAuth(astr, aindex);
     }

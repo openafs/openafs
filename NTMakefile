@@ -166,13 +166,6 @@ rxgen: lwp
 	$(NTMAKE)
 	$(CD) ..\..
 
-des: rxgen
-     @echo ***** $@
-	$(DOCD) $(SRC)\des
-	$(CD) $(SRC)\des
-	$(NTMAKE)
-	$(CD) ..\..
-
 hcrypto: roken
      @echo ***** $@
 	$(DOCD) $(SRC)\crypto\hcrypto
@@ -180,7 +173,7 @@ hcrypto: roken
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-roken: des
+roken: rxgen
      @echo ***** $@
         $(DOCD) $(SRC)\roken
 	$(CD) $(SRC)\roken

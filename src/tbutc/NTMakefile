@@ -83,8 +83,8 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 !ELSE
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
-	     $(DESTDIR)\lib\afsdes.lib \
 	     $(DESTDIR)\lib\libafsconf.lib \
+	     $(DESTDIR)\lib\afshcrypto.lib \
 	     $(DESTDIR)\lib\afsroken.lib
 
 

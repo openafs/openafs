@@ -12,6 +12,10 @@
 
 #include <roken.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #include <afs/stds.h>
 #include <errno.h>
 #include "kauth.h"
@@ -24,11 +28,13 @@
 #include <sys/file.h>
 #endif
 #include <stdio.h>
+
+#define HC_DEPRECATED
+#include <hcrypto/des.h>
+
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -41,6 +47,7 @@
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/com_err.h>
+
 #include "kautils.h"
 #include "kaserver.h"
 #include "kalog.h"
@@ -150,12 +157,12 @@ get_time(Date *timeP,
 	if (to) {		/* check if auto cpw is disabled */
 	    if (!(ntohl(tentry.flags) & KAFNOCPW)) {
 		memcpy(&key, &random_value[0], sizeof(key));
-		des_fixup_key_parity(ktc_to_cblock(&key));
+		DES_set_odd_parity(ktc_to_cblock(&key));
 		code =
 		    set_password(tt, KA_ADMIN_NAME, KA_ADMIN_INST, &key, 0,
 				 0);
 		if (code == 0) {
-		    des_init_random_number_generator(ktc_to_cblock(&key));
+		    DES_init_random_number_generator(ktc_to_cblock(&key));
 		    ka_ConvertBytes(buf, sizeof(buf), (char *)&key,
 				    sizeof(key));
 		    es_Report("New Admin key is %s\n", buf);
@@ -174,7 +181,7 @@ get_time(Date *timeP,
 	if (to) {		/* check if auto cpw is disabled */
 	    if (!(ntohl(tentry.flags) & KAFNOCPW)) {
 		memcpy(&key, &random_value[2], sizeof(key));
-		des_fixup_key_parity(ktc_to_cblock(&key));
+		DES_set_odd_parity(ktc_to_cblock(&key));
 		code = set_password(tt, KA_TGS_NAME, lrealm, &key, 0, 0);
 		if (code == 0) {
 		    ka_ConvertBytes(buf, sizeof(buf), (char *)&key,
@@ -221,14 +228,14 @@ initialize_database(struct ubik_trans *tt)
     int code;
 
     gettimeofday((struct timeval *)&key, 0);	/* this is just a cheap seed key */
-    des_fixup_key_parity(ktc_to_cblock(&key));
-    des_init_random_number_generator(ktc_to_cblock(&key));
-    if ((code = des_random_key(ktc_to_cblock(&key)))
+    DES_set_odd_parity(ktc_to_cblock(&key));
+    DES_init_random_number_generator(ktc_to_cblock(&key));
+    if ((code = DES_new_random_key(ktc_to_cblock(&key)))
 	|| (code =
 	    create_user(tt, KA_ADMIN_NAME, KA_ADMIN_INST, &key, 0,
 			KAFNORMAL | KAFNOSEAL | KAFNOTGS)))
 	return code;
-    if ((code = des_random_key(ktc_to_cblock(&key)))
+    if ((code = DES_new_random_key(ktc_to_cblock(&key)))
 	|| (code =
 	    create_user(tt, KA_TGS_NAME, lrealm, &key, 0,
 			KAFNORMAL | KAFNOSEAL | KAFNOTGS)))
@@ -292,7 +299,7 @@ init_kaprocs(const char *lclpath, int initFlags)
 	     code);
 	return code;
     }
-    des_init_random_number_generator(ktc_to_cblock(&key));
+    DES_init_random_number_generator(ktc_to_cblock(&key));
 
     code = ubik_EndTrans(tt);
     if (code) {
@@ -630,7 +637,8 @@ kamCreateUser(struct rx_call *call, char *aname, char *ainstance,
     afs_int32 caller;		/* Disk offset of caller's entry */
 
     COUNT_REQ(CreateUser);
-    if (!des_check_key_parity(EncryptionKey_to_cblock(&ainitpw)) || des_is_weak_key(EncryptionKey_to_cblock(&ainitpw)))
+    if (!DES_check_key_parity(EncryptionKey_to_cblock(&ainitpw)) ||
+	DES_is_weak_key(EncryptionKey_to_cblock(&ainitpw)))
 	return KABADKEY;
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
@@ -678,7 +686,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     char *answer;		/* where answer is to be put */
     int answer_len;		/* length of answer packet */
     afs_int32 kvno;		/* requested key version number */
-    des_key_schedule user_schedule;	/* key schedule for user's key */
+    DES_key_schedule user_schedule;	/* key schedule for user's key */
     Date request_time;		/* time request originated */
 
     COUNT_REQ(ChangePassword);
@@ -703,10 +711,10 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     }
 
     /* decrypt request w/ user password */
-    if ((code = des_key_sched(ktc_to_cblock(&tentry.key), user_schedule)))
+    if ((code = DES_key_sched(ktc_to_cblock(&tentry.key), &user_schedule)))
 	es_Report("In KAChangePassword: key_sched returned %d\n", code);
-    des_pcbc_encrypt(arequest->SeqBody, &request,
-		     min(arequest->SeqLen, sizeof(request)), user_schedule,
+    DES_pcbc_encrypt(arequest->SeqBody, &request,
+		     min(arequest->SeqLen, sizeof(request)), &user_schedule,
 		     ktc_to_cblockptr(&tentry.key), DECRYPT);
 
     /* validate the request */
@@ -738,8 +746,8 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     answer += sizeof(Date);
     memcpy(answer, KA_CPW_ANS_LABEL, KA_LABELSIZE);
 
-    des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, answer_len,
-		     user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
+    DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, answer_len,
+		     &user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
 
     code = set_password(tt, aname, ainstance, &request.newpw, kvno, 0);
     if (code) {
@@ -890,7 +898,8 @@ kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
     COUNT_REQ(SetPassword);
     if (akvno > MAXKAKVNO)
 	return KABADARGUMENT;
-    if (!des_check_key_parity(EncryptionKey_to_cblock(&apassword)) || des_is_weak_key(EncryptionKey_to_cblock(&apassword)))
+    if (!DES_check_key_parity(EncryptionKey_to_cblock(&apassword)) ||
+	DES_is_weak_key(EncryptionKey_to_cblock(&apassword)))
 	return KABADKEY;
 
     if (!name_instance_legal(aname, ainstance))
@@ -1062,7 +1071,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     int answer_len;		/* length of answer packet */
     Date answer_time;		/* 1+ request time in network order */
     afs_int32 temp;		/* for htonl conversions */
-    des_key_schedule user_schedule;	/* key schedule for user's key */
+    DES_key_schedule user_schedule;	/* key schedule for user's key */
     afs_int32 tgskvno;		/* key version of service key */
     struct ktc_encryptionKey tgskey;	/* service key for encrypting ticket */
     Date now;
@@ -1101,10 +1110,10 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     save_principal(authPrincipal, aname, ainstance, 0);
 
     /* decrypt request w/ user password */
-    if ((code = des_key_sched(ktc_to_cblock(&tentry.key), user_schedule)))
+    if ((code = DES_key_sched(ktc_to_cblock(&tentry.key), &user_schedule)))
 	es_Report("In KAAuthenticate: key_sched returned %d\n", code);
-    des_pcbc_encrypt(arequest->SeqBody, &request,
-		     min(arequest->SeqLen, sizeof(request)), user_schedule,
+    DES_pcbc_encrypt(arequest->SeqBody, &request,
+		     min(arequest->SeqLen, sizeof(request)), &user_schedule,
 		     ktc_to_cblockptr(&tentry.key), DECRYPT);
 
     request.time = ntohl(request.time);	/* reorder date */
@@ -1167,7 +1176,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     tgskvno = ntohl(server.key_version);
     memcpy(&tgskey, &server.key, sizeof(tgskey));
 
-    code = des_random_key(ktc_to_cblock(&sessionKey));
+    code = DES_new_random_key(ktc_to_cblock(&sessionKey));
     if (code) {
 	code = KANOKEYS;
 	goto abort;
@@ -1244,8 +1253,8 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
 	code = KAINTERNALERROR;
 	goto abort;
     }
-    des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
-		     user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
+    DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
+		     &user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(aname, ainstance, sname, sinst, NULL, call->conn->peer->host,
 	  LOG_AUTHENTICATE);
@@ -1740,7 +1749,7 @@ GetTicket(int version,
     int import, export;
     struct ubik_trans *tt;
     struct ktc_encryptionKey tgskey;
-    des_key_schedule schedule;
+    DES_key_schedule schedule;
     afs_int32 to;
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
@@ -1801,7 +1810,7 @@ GetTicket(int version,
 	    code = KANOAUTH;
 	goto abort;
     }
-    code = des_key_sched(ktc_to_cblock(&authSessionKey), schedule);
+    code = DES_key_sched(ktc_to_cblock(&authSessionKey), &schedule);
     if (code) {
 	code = KANOAUTH;
 	goto abort;
@@ -1819,7 +1828,7 @@ GetTicket(int version,
 	goto abort;
     }
 
-    des_ecb_encrypt(atimes->SeqBody, &times, schedule, DECRYPT);
+    DES_ecb_encrypt((DES_cblock *)atimes->SeqBody, (DES_cblock *)&times, &schedule, DECRYPT);
     times.start = ntohl(times.start);
     times.end = ntohl(times.end);
     code = tkt_CheckTimes(times.start, times.end, now);
@@ -1856,7 +1865,7 @@ GetTicket(int version,
     }
     save_principal(tgsServerPrincipal, sname, sinstance, 0);
 
-    code = des_random_key(ktc_to_cblock(&sessionKey));
+    code = DES_new_random_key(ktc_to_cblock(&sessionKey));
     if (code) {
 	code = KANOKEYS;
 	goto abort;
@@ -1929,8 +1938,8 @@ GetTicket(int version,
 	code = KAINTERNALERROR;
 	goto abort;
     }
-    des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
-		     schedule, ktc_to_cblockptr(&authSessionKey), ENCRYPT);
+    DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
+		     &schedule, ktc_to_cblockptr(&authSessionKey), ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(name, instance, sname, sinstance, (import ? authDomain : NULL),
 	  call->conn->peer->host, LOG_GETTICKET);
@@ -2145,7 +2154,7 @@ kamGetRandomKey(struct rx_call *call, EncryptionKey *key)
     AFS_UNUSED COUNT_REQ(GetRandomKey);
     if ((code = AwaitInitialization()))
 	return code;
-    code = des_random_key(EncryptionKey_to_cblock(key));
+    code = DES_new_random_key(EncryptionKey_to_cblock(key));
     if (code)
 	return KANOKEYS;
     return 0;

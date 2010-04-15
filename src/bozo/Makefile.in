@@ -25,7 +25,7 @@ INCLS=bnode.h \
 	${TOP_INCDIR}/afs/ktime.h
 
 # EH 12/18/90 - have to search librx.a twice on Ultrix 4.0
-LIBS=${TOP_LIBDIR}/librx.a \
+LIBS=   ${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libkauth.a \
@@ -34,13 +34,13 @@ LIBS=${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libprocmgmt.a
+	${TOP_LIBDIR}/libprocmgmt.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
@@ -97,12 +97,12 @@ bosoprocs.o: bosoprocs.c ${INCLS}
 bos.o: bos.c ${INCLS} AFS_component_version_number.o
 
 bos: bos.o $(LIBS) libbos.a
-	$(AFS_LDRULE) bos.o libbos.a $(LIBS) $(LIB_roken) ${XLIBS}
+	$(AFS_LDRULE) bos.o libbos.a $(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o ${TOP_INCDIR}/afs/bnode.h
 
 bos_util: bos_util.o  $(LIBS)
-	$(AFS_LDRULE) bos_util.o $(LIBS) $(LIB_roken) ${XLIBS}
+	$(AFS_LDRULE) bos_util.o $(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 ezbnodeops.o: ezbnodeops.c ${INCLS}
 
@@ -115,7 +115,7 @@ libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 
 bosserver: $(OBJS) $(LIBS)
 	$(AFS_LDRULE) $(OBJS) ${TOP_LIBDIR}/libaudit.a \
-		$(LIBS) $(LIB_roken) ${XLIBS}
+		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 #
 # Install targets

@@ -31,12 +31,11 @@
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>
-#include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/cellconfig.h>
 #include <afs/kautils.h>
-#include <des.h>
-#include <des_prototypes.h>
+#include <hcrypto/ui.h>
+#include <hcrypto/des.h>
 
 int
 main(int argc, char **argv)
@@ -76,12 +75,12 @@ main(int argc, char **argv)
 	memset(&tkey, 0, sizeof(struct ktc_encryptionKey));
 
 	/* prompt for key */
-	code = des_read_pw_string(buf, sizeof(buf), "input key: ", 0);
+	code = UI_UTIL_read_pw_string(buf, sizeof(buf), "input key: ", 0);
 	if (code || strlen(buf) == 0) {
 	    printf("Bad key: \n");
 	    exit(1);
 	}
-	code = des_read_pw_string(ver, sizeof(ver), "Retype input key: ", 0);
+	code = UI_UTIL_read_pw_string(ver, sizeof(ver), "Retype input key: ", 0);
 	if (code || strlen(ver) == 0) {
 	    printf("Bad key: \n");
 	    exit(1);
@@ -97,7 +96,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
     } else if (strcmp(argv[1], "adddes") == 0) {
-	struct ktc_encryptionKey tkey;
+	DES_cblock tkey;
 	int kvno;
 	afs_int32 code;
 	char buf[BUFSIZ], ver[BUFSIZ];
@@ -110,12 +109,12 @@ main(int argc, char **argv)
 	memset(&tkey, 0, sizeof(struct ktc_encryptionKey));
 
 	/* prompt for key */
-	code = des_read_pw_string(buf, sizeof(buf), "input key: ", 0);
+	code = UI_UTIL_read_pw_string(buf, sizeof(buf), "input key: ", 0);
 	if (code || strlen(buf) == 0) {
 	    printf("Bad key: \n");
 	    exit(1);
 	}
-	code = des_read_pw_string(ver, sizeof(ver), "Retype input key: ", 0);
+	code = UI_UTIL_read_pw_string(ver, sizeof(ver), "Retype input key: ", 0);
 	if (code || strlen(ver) == 0) {
 	    printf("Bad key: \n");
 	    exit(1);
@@ -124,8 +123,8 @@ main(int argc, char **argv)
 	    printf("\nInput key mismatch\n");
 	    exit(1);
 	}
-	des_string_to_key(buf, ktc_to_cblockptr(&tkey));
-	code = afsconf_AddKey(tdir, kvno, ktc_to_charptr(&tkey), 0);
+	DES_string_to_key(buf, &tkey);
+	code = afsconf_AddKey(tdir, kvno, (char *) &tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);

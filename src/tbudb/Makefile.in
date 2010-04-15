@@ -30,7 +30,6 @@ INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
-	${TOP_INCDIR}/des.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/rx/rxkad.h \
@@ -153,7 +152,8 @@ server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
 	$(AFS_CCRULE) $(BUDB)/server.c
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	$(AFS_LDRULE) $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) $(SERVER_OBJS) ${LIBS} \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
 	${RXGEN} -u -C -o $@ ${srcdir}/${BUDB}/budb.rg

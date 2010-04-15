@@ -64,7 +64,6 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
     	$(DESTDIR)\lib\lanahelper.lib \
     	$(DESTDIR)\lib\afsrxkad.lib \
-    	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \

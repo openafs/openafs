@@ -57,7 +57,6 @@ BOSSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrxstat.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
@@ -69,6 +68,7 @@ BOSSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
         $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
@@ -97,7 +97,6 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsvldb.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
@@ -107,6 +106,7 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 

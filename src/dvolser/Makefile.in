@@ -205,7 +205,8 @@ namei_ops.o: ${VOL}/namei_ops.c
 	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 davolserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} ${LIBS} $(LIB_roken) ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${objects} ${LIBS} $(LIB_hcrypto) $(LIB_roken) \
+		${MT_LIBS} ${XLIBS}
 
 install: davolserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

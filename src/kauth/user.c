@@ -37,15 +37,15 @@
 #include <afs/sys_prototypes.h>
 #endif
 
-#include <des.h>
-#include <des_prototypes.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include <afs/ktc.h>
-
 
 afs_int32
 GetTickets(char *name, char *instance, char *realm,
@@ -187,7 +187,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     if (flags & KA_USERAUTH_ONLY_VERIFY) {
 	code = ka_VerifyUserToken(name, instance, realm, &key);
 	if (code == KABADREQUEST) {
-	    des_string_to_key(password, ktc_to_cblockptr(&key));
+	    DES_string_to_key(password, ktc_to_cblockptr(&key));
 	    code = ka_VerifyUserToken(name, instance, realm, &key);
 	}
     } else {
@@ -212,7 +212,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
 	    GetTickets(name, instance, realm, &key, lifetime,
 		       password_expires, dosetpag);
 	if (code == KABADREQUEST) {
-	    des_string_to_key(password, ktc_to_cblockptr(&key));
+	    DES_string_to_key(password, ktc_to_cblockptr(&key));
 	    code =
 		GetTickets(name, instance, realm, &key, lifetime,
 			   password_expires, dosetpag);
@@ -264,7 +264,7 @@ ka_UserReadPassword(char *prompt, char *password, int plen, char **reasonP)
     code = ka_Init(0);
     if (code)
 	return code;
-    code = read_pw_string(password, plen, prompt, 0);
+    code = UI_UTIL_read_pw_string(password, plen, prompt, 0);
     if (code)
 	code = KAREADPW;
     else if (strlen(password) == 0)

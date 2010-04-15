@@ -109,7 +109,7 @@ packages: dest
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR} ${TOP_JLIBDIR}:
+${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -135,7 +135,7 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
-prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR}
+prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR}
 
 project: cmd comerr 
 
@@ -148,7 +148,7 @@ config: prelude
 procmgmt: config
 	+${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: $(DIR_roken) procmgmt des lwp_depinstall rx_depinstall
+util: $(DIR_roken) procmgmt hcrypto lwp_depinstall rx_depinstall
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
 audit: util rx rxkad fsint
@@ -204,16 +204,13 @@ export_build: fsint
 afs: config export comerr afs_depinstall
 	+${COMPILE_PART1} afs ${COMPILE_PART2}
 
-des: config
-	+${COMPILE_PART1} des ${COMPILE_PART2}
-
-sys: cmd comerr afs des rx rxstat fsint auth sys_depinstall
+sys: cmd comerr afs hcrypto rx rxstat fsint auth sys_depinstall
 	+${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: cmd comerr des rx rxkad_depinstall
+rxkad: cmd comerr hcrypto rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr des lwp rx rxkad audit sys_depinstall auth_depinstall
+auth: cmd comerr hcrypto lwp rx rxkad audit sys_depinstall auth_depinstall
 	+${COMPILE_PART1} auth ${COMPILE_PART2}
 
 ubik: cmd comerr auth ubik_depinstall sys
@@ -357,7 +354,7 @@ fsprobe: cmd comerr util fsint volser
 scout: cmd comerr gtx fsprobe
 	+${COMPILE_PART1} scout ${COMPILE_PART2}
 
-uss: des kauth cmd comerr rx vlserver vol volser
+uss: hcrypto kauth cmd comerr rx vlserver vol volser
 	+${COMPILE_PART1} uss ${COMPILE_PART2}
 
 bozo: cmd comerr audit auth kauth volser
@@ -491,17 +488,13 @@ libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_d
 # libuafs build targets
 #
 
-UKERNELDIR= \
-  des \
-  afsweb 
-
 libuafs_setup: config export
 	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
 libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fsint_depinstall \
 		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
 		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
-		rxstat_depinstall lwp_depinstall sys_depinstall des cmd
+		rxstat_depinstall lwp_depinstall sys_depinstall cmd hcrypto
 	+set -x; \
 	case ${SYS_NAME} in \
 	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | hp_ux112* | ia64_hpux112*) \
@@ -569,7 +562,7 @@ afsmonitor: cmd comerr gtx xstat
 tests: rxtests ubiktests rpctestlib
 
 # pthread based user space RX library
-libafsrpc: rx rxkad rxstat fsint des
+libafsrpc: rx rxkad rxstat fsint hcrypto
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
@@ -594,7 +587,7 @@ libafsauthent: ubik auth kauth libafsrpc
 	esac
 
 # pthread based user space RX library
-shlibafsrpc: rx rxstat fsint rxkad des
+shlibafsrpc: rx rxstat fsint rxkad hcrypto
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*|*nbsd*|*obsd*|*fbsd*) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
@@ -709,7 +702,6 @@ clean2:
 	-${COMPILE_PART1} fsint ${COMPILE_CLEAN}
 	-${COMPILE_PART1} export ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afs ${COMPILE_CLEAN}
-	-${COMPILE_PART1} des ${COMPILE_CLEAN}
 	-${COMPILE_PART1} sys ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxkad ${COMPILE_CLEAN}
 	-${COMPILE_PART1} auth ${COMPILE_CLEAN}
@@ -784,7 +776,7 @@ clean2:
 	-${COMPILE_PART1} crypto/hcrypto ${COMPILE_CLEAN}
 	-${COMPILE_PART1} roken ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
-	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
+	-(cd src/libuafs; /bin/rm -rf afs afsint config rx)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
@@ -827,8 +819,6 @@ distclean: clean
 	src/config/shlib-build \
 	src/config/shlib-install \
 	src/crypto/hcrypto/Makefile \
-	src/des/Makefile \
-	src/des/test/Makefile \
 	src/dir/Makefile \
 	src/dir/test/Makefile \
 	src/dviced/Makefile \

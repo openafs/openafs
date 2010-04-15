@@ -13,7 +13,6 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_P
 RX = ..\rx
 RXSTAT = ..\rxstat
 RXKAD = ..\rxkad
-DES = ..\des
 UTIL = ..\util
 FSINT = ..\fsint
 COMERR = ..\comerr
@@ -43,15 +42,9 @@ RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj \
 RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\rxstat.cs.obj
 
 LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj \
-	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\md4.obj $(OUT)\md5.obj $(OUT)\AFS_component_version_number.obj
+	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\AFS_component_version_number.obj
 
 LIBRXKAD_REGOBJS = $(OUT)\bg-fcrypt.obj
-
-DESOBJS_INT = $(OUT)\des.obj $(OUT)\cbc_encrypt.obj $(OUT)\pcbc_encrypt.obj $(OUT)\cksum.obj $(OUT)\new_rnd_key.obj \
-	$(OUT)\key_sched.obj $(OUT)\debug_decl.obj $(OUT)\quad_cksum.obj $(OUT)\key_parity.obj \
-	$(OUT)\weak_key.obj $(OUT)\strng_to_key.obj $(OUT)\util.obj
-
-DESOBJS = $(DESOBJS_INT) $(OUT)\misc.obj 
 
 UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj
 
@@ -63,7 +56,7 @@ FSINTBJS = $(OUT)\afsint.cs.obj $(OUT)\afsint.xdr.obj $(OUT)\afscbint.cs.obj $(O
 	$(OUT)\afsaux.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
-	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
+	$(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
 	$(FSINTBJS) $(LWPOBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
@@ -74,12 +67,6 @@ $(RXSTATBJS):$(RXSTAT)\$$(@B).c
 
 $(LIBRXKAD_REGOBJS) $(LIBRXKAD_OBJS):$(RXKAD)\$$(@B).c
 	$(C2OBJ) $** -I$(RXKAD)
-
-$(DESOBJS_INT):$(DES)\$$(@B).c
-	$(C2OBJ) $** -I$(DES)
-
-$(OUT)\misc.obj:$(DES)\misc.c
-	$(C2OBJ) $** -DDONT_INCL_MAIN -I$(DES)
 
 $(COMERRBJS):$(COMERR)\$$(@B).c
 	$(C2OBJ) $** -I$(COMERR)
@@ -104,6 +91,7 @@ DLLLIBS =\
 !ENDIF
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
@@ -117,31 +105,10 @@ $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 # Definitions for generating versioninfo resources
 $(OUT)\afsrpc.res: AFS_component_version_number.h
 
-install:
-!       IF (EXIST(..\..\src\des\NTMakefile))
-		$(NTMAKE) $(LIBFILE)
-!	else
-		$(NTMAKE) libstub
-!	endif
+install: $(LIBFILE)
 
 install9x: install
 
-!IF (EXIST(..\..\src\des\NTMakefile))
-!ELSE IF (EXIST(..\..\DESLIB))
-DESPAR = ..\..\DESLIB\dest
-!ELSE IF (EXIST(..\..\..\DESLIB))
-DESPAR = ..\..\..\DESLIB\dest
-!ELSE
-!ERROR Must create DESLIB link in the same directory as PARENT link.
-!ENDIF
-
-libstub:
-	$(COPY) $(DESPAR)\lib\afsrpc.dll \
-		$(DESTDIR)\lib\afsrpc.dll
-	$(COPY) $(DESPAR)\lib\afsrpc.lib \
-		$(DESTDIR)\lib\afsrpc.lib
-	$(COPY) $(DESPAR)\lib\afsrpc.exp \
-		$(DESTDIR)\lib\afsrpc.exp
 
 clean::
 	$(DEL) $(DESTDIR)\lib\afsrpc.dll $(DESTDIR)\lib\afsrpc.lib $(DESTDIR)\lib\afsrpc.exp

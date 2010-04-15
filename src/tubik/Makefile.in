@@ -100,14 +100,15 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
 	$(AFS_LDRULE) utst_server.o utst_int.ss.o utst_int.xdr.o \
-		libubik_pthread.a $(LIBS)
+		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
 	$(AFS_LDRULE) utst_client.o utst_int.cs.o utst_int.xdr.o \
-		libubik_pthread.a $(LIBS)
+		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 udebug: udebug.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	$(AFS_LDRULE) udebug.o libubik_pthread.a $(LIBS)
+	$(AFS_LDRULE) udebug.o libubik_pthread.a \
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 ubik_int.cs.c: ${UBIK}/ubik_int.xg
 	${RXGEN} -A -x -C -o $@ ${UBIK}/ubik_int.xg

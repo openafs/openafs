@@ -27,11 +27,11 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libcom_err.a \
 	 ${TOP_LIBDIR}/libcmd.a \
 	 ${TOP_LIBDIR}/libkauth.a \
-	 ${TOP_LIBDIR}/libdes.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/libaudit.a \
+	 ${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	 $(TOP_LIBDIR)/libafsutil.a
 
 CMLIBS=${TOP_LIBDIR}/libsys.a \

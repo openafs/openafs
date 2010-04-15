@@ -32,11 +32,11 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	$(DBM)
+	$(DBM) \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 UKSRCS=authclient.c user.c kautils.h kaserver.h kaaux.c katoken.c \
        kalocalcell.c client.c kaerrors.c
@@ -49,10 +49,10 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o katoken.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o katoken.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
@@ -94,7 +94,8 @@ kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kaut
 	$(AFS_LDRULE) kaserver.o kautils.o kalocalcell.o kadatabase.o \
 		krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o \
 		kaauxdb.o \
-		$(LIBS) $(LIB_roken) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS} \
+		${TOP_LIBDIR}/libaudit.a
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 
@@ -159,8 +160,6 @@ libkauth.krb.a: $(KOBJS) AFS_component_version_number.o
 	$(AR) crv $@ $(KOBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
-read_passwd.o: read_passwd.c
-
 katoken.o: katoken.c ${INCLS}
 
 client.o: client.c ${INCLS} AFS_component_version_number.o
@@ -176,22 +175,22 @@ krb_tf.o: krb_tf.c ${INCLS}
 
 kas: kauth.h kautils.h admin_tools.o libkauth.a $(LIBS) kas.o kkids.o
 	$(AFS_LDRULE) kas.o admin_tools.o kkids.o libkauth.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+		${LIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 klog: AFS_component_version_number.o kauth.h kautils.h libkauth.a $(LIBS) \
 	klog.o
 	$(AFS_LDRULE) klog.o libkauth.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+		${LIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 klog.o: klog.c kauth.h kautils.h AFS_component_version_number.o
 
 klog.krb: kauth.h kautils.h libkauth.krb.a $(KLIBS) klog.o
 	$(AFS_LDRULE) klog.o libkauth.krb.a \
-		${KLIBS} $(LIB_roken) ${XLIBS}
+		${KLIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 knfs: kauth.h kautils.h libkauth.a $(LIBS) knfs.o
 	$(AFS_LDRULE) knfs.o libkauth.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+		${LIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 knfs.o: knfs.c AFS_component_version_number.o
 
@@ -200,17 +199,17 @@ klogin.o: klogin.c ${INCLS} AFS_component_version_number.o
 
 klogin: libkauth.a $(LIBS) klogin.o
 	$(AFS_LDRULE) klogin.o libkauth.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+		${LIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 klogin.krb: libkauth.a $(KLIBS) klogin.o
 	$(AFS_LDRULE) klogin.o libkauth.krb.a \
-		${KLIBS} $(LIB_roken) ${XLIBS}
+		${KLIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 kpasswd.o: kauth.h kautils.h ${INCLS} kpasswd.c AFS_component_version_number.o
 
 kpasswd: kauth.h kautils.h libkauth.a $(LIBS) kpasswd.o kkids.o
 	$(AFS_LDRULE) kpasswd.o kkids.o libkauth.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+		${LIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 kpwvalid.o: kpwvalid.c AFS_component_version_number.o
 

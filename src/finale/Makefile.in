@@ -43,7 +43,6 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libprot.a \
-	${TOP_LIBDIR}/libdes.a \
 	${XLIBS}
 
 all: translate_et
