@@ -201,22 +201,35 @@ IsNumeric(char *name)
 
 
 /*
- * Parse a server name/address and return the address in HOST BYTE order
+ * Parse a server dotted address and return the address in network byte order
+ */
+afs_int32
+GetServerNoresolve(char *aname)
+{
+    int b1, b2, b3, b4;
+    afs_int32 addr;
+    afs_int32 code;
+
+    code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
+    if (code == 4) {
+	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
+	addr = htonl(addr);	/* convert to network byte order */
+	return addr;
+    } else
+	return 0;
+}
+/*
+ * Parse a server name/address and return the address in network byte order
  */
 afs_int32
 GetServer(char *aname)
 {
     register struct hostent *th;
-    afs_int32 addr;
-    int b1, b2, b3, b4;
+    afs_int32 addr; /* in network byte order */
     register afs_int32 code;
     char hostname[MAXHOSTCHARS];
 
-    code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
-    if (code == 4) {
-	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
-	addr = ntohl(addr);	/* convert to host order */
-    } else {
+    if ((addr = GetServerNoresolve(aname)) == 0) {
 	th = gethostbyname(aname);
 	if (!th)
 	    return 0;
@@ -227,7 +240,7 @@ GetServer(char *aname)
 	code = gethostname(hostname, MAXHOSTCHARS);
 	if (code)
 	    return 0;
-	th = gethostbyname(hostname);	/* returns host byte order */
+	th = gethostbyname(hostname);
 	if (!th)
 	    return 0;
 	memcpy(&addr, th->h_addr, sizeof(addr));
@@ -5136,7 +5149,10 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
     afs_int32 ip1, ip2, vcode;
     int remove = 0;
 
-    ip1 = GetServer(as->parms[0].items->data);
+    if (noresolve)
+	ip1 = GetServerNoresolve(as->parms[0].items->data);
+    else
+	ip1 = GetServer(as->parms[0].items->data);
     if (!ip1) {
 	fprintf(STDERR, "vos: invalid host address\n");
 	return (EINVAL);
@@ -5150,7 +5166,10 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[1].items) {
-	ip2 = GetServer(as->parms[1].items->data);
+	if (noresolve)
+	    ip2 = GetServerNoresolve(as->parms[1].items->data);
+	else
+	    ip2 = GetServer(as->parms[1].items->data);
 	if (!ip2) {
 	    fprintf(STDERR, "vos: invalid host address\n");
 	    return (EINVAL);
@@ -5167,16 +5186,20 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 
     vcode = ubik_VL_ChangeAddr(cstruct, UBIK_CALL_NEW, ntohl(ip1), ntohl(ip2));
     if (vcode) {
+	char hoststr1[16], hoststr2[16];
 	if (remove) {
+	    afs_inet_ntoa_r(ip2, hoststr2);
 	    fprintf(STDERR, "Could not remove server %s from the VLDB\n",
-		    as->parms[0].items->data);
+		    hoststr2);
 	    if (vcode == VL_NOENT) {
 		fprintf(STDERR,
 			"vlserver does not support the remove flag or ");
 	    }
 	} else {
+	    afs_inet_ntoa_r(ip1, hoststr1);
+	    afs_inet_ntoa_r(ip2, hoststr2);
 	    fprintf(STDERR, "Could not change server %s to server %s\n",
-		    as->parms[0].items->data, as->parms[1].items->data);
+		    hoststr1, hoststr2);
 	}
 	PrintError("", vcode);
 	return (vcode);
@@ -5379,6 +5402,72 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	    break;
     }
 
+    return 0;
+}
+
+
+static int
+SetAddrs(register struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 vcode;
+    bulkaddrs m_addrs;
+    afsUUID askuuid;
+    afs_uint32 FS_HostAddrs_HBO[ADDRSPERSITE];
+
+    memset(&m_addrs, 0, sizeof(bulkaddrs));
+    memset(&askuuid, 0, sizeof(afsUUID));
+    if (as->parms[0].items) {
+	/* -uuid */
+        if (afsUUID_from_string(as->parms[0].items->data, &askuuid) < 0) {
+	    fprintf(STDERR, "vos: invalid UUID '%s'\n",
+		    as->parms[0].items->data);
+	    exit(-1);
+	}
+    }
+    if (as->parms[1].items) {
+	/* -host */
+	struct cmd_item *ti;
+	struct hostent *he;
+	afs_int32 saddr;
+	int i = 0;
+
+	for (ti = as->parms[1].items; ti && i < ADDRSPERSITE; ti = ti->next) {
+
+	    if (noresolve)
+		saddr = GetServerNoresolve(ti->data);
+	    else
+		saddr = GetServer(ti->data);
+
+	    if (!saddr) {
+		fprintf(STDERR, "vos: Can't get host info for '%s'\n",
+			ti->data);
+		exit(-1);
+	    }
+	    /* Convert it to host byte order */
+	    FS_HostAddrs_HBO[i] = ntohl(saddr);
+	    i++;
+	}
+	m_addrs.bulkaddrs_len = i;
+	m_addrs.bulkaddrs_val = FS_HostAddrs_HBO;
+    }
+
+    vcode = ubik_VL_RegisterAddrs(cstruct, 0, &askuuid, 0, &m_addrs);
+
+    if (vcode) {
+	if (vcode == VL_MULTIPADDR) {
+	    fprintf(STDERR, "vos: VL_RegisterAddrs rpc failed; The IP address exists on a different server; repair it\n");
+	    PrintError("", vcode);
+	    return vcode;
+	} else if (vcode == RXGEN_OPCODE) {
+	    fprintf(STDERR, "vlserver doesn't support VL_RegisterAddrs rpc; ignored\n");
+	    PrintError("", vcode);
+	    return vcode;
+	}
+    }
+    if (verbose) {
+	fprintf(STDOUT, "vos: Changed UUID with addresses:\n");
+	print_addrs(&m_addrs, &askuuid, m_addrs.bulkaddrs_len, 1);
+    }
     return 0;
 }
 
@@ -6154,6 +6243,12 @@ main(int argc, char **argv)
 		"transaction ID");
     COMMONPARMS;
 
+    ts = cmd_CreateSyntax("setaddrs", SetAddrs, NULL,
+			  "set the list of IP address for a given UUID in the VLDB");
+    cmd_AddParm(ts, "-uuid", CMD_SINGLE, 0, "uuid of server");
+    cmd_AddParm(ts, "-host", CMD_LIST, 0, "address of host");
+
+    COMMONPARMS;
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone) {
 	/* Shut down the ubik_client and rx connections */
