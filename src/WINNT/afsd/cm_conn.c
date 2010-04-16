@@ -230,6 +230,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     long code;
     char addr[16]="unknown";
     int forcing_new = 0;
+    char *format;
+    DWORD msgID;
 
     osi_Log2(afsd_logp, "cm_Analyze connp 0x%p, code 0x%x",
              connp, errorCode);
@@ -314,19 +316,32 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     else if (errorCode == CM_ERROR_ALLDOWN) {
-	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLDOWN.");
 	/* Servers marked DOWN will be restored by the background daemon
 	 * thread as they become available.  The volume status is 
          * updated as the server state changes.
 	 */
+        if (fidp) {
+            osi_Log2(afsd_logp, "cm_Analyze passed CM_ERROR_DOWN (FS cell %s vol 0x%x)",
+                      cellp->name, fidp->volume);
+            msgID = MSG_ALL_SERVERS_DOWN;
+            format = "All servers are unreachable when accessing cell %s volume %d.";
+	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
+        } else {
+            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLDOWN (VL Server)");
+        }
     }
 
     else if (errorCode == CM_ERROR_ALLOFFLINE) {
-        osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
         /* Volume instances marked offline will be restored by the 
          * background daemon thread as they become available 
          */
         if (fidp) {
+            osi_Log2(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE (FS cell %s vol 0x%x)",
+                      cellp->name, fidp->volume);
+            msgID = MSG_ALL_SERVERS_OFFLINE;
+            format = "All servers are offline when accessing cell %s volume %d.";
+	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
+
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                       &volp);
@@ -345,15 +360,21 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 lock_ReleaseRead(&cm_volumeLock);
                 volp = NULL;
             }
-        } 
+        } else {
+            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE (VL Server)");
+        }
     }
     else if (errorCode == CM_ERROR_ALLBUSY) {
         /* Volumes that are busy cannot be determined to be non-busy 
          * without actually attempting to access them.
          */
-	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY.");
-
         if (fidp) { /* File Server query */
+            osi_Log2(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY (FS cell %s vol 0x%x)",
+                     cellp->name, fidp->volume);
+            msgID = MSG_ALL_SERVERS_BUSY;
+            format = "All servers are busy when accessing cell %s volume %d.";
+	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
+
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
                                      CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                      &volp);
@@ -403,6 +424,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 volp = NULL;
             }
         } else {    /* VL Server query */
+            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY (VL Server).");
+
             if (timeLeft > 7) {
                 thrd_Sleep(5000);
 
@@ -431,6 +454,30 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 free_svr_list = 1;
             }
         }
+
+        switch ( errorCode ) {
+        case VBUSY:
+	    msgID = MSG_SERVER_REPORTS_VBUSY;
+            format = "Server %s reported busy when accessing volume %d.";
+            break;
+        case VRESTARTING:
+	    msgID = MSG_SERVER_REPORTS_VRESTARTING;
+            format = "Server %s reported restarting when accessing volume %d.";
+            break;
+        }
+
+        if (serverp && fidp) {
+            /* Log server being offline for this volume */
+            sprintf(addr, "%d.%d.%d.%d",
+                   ((serverp->addr.sin_addr.s_addr & 0xff)),
+                   ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                   ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                   ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+	    osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
+	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
+        }
+
         lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->status == srv_deleted)
@@ -472,9 +519,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
              errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO) 
     {       
-        char *format;
-	DWORD msgID;
-
         /* In case of timeout */
         reqp->volumeError = errorCode;
 

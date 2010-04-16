@@ -157,17 +157,26 @@ LogEventMessage(WORD wEventType, DWORD dwEventID, DWORD dwMessageID)
 // Use the ReportEvent API to write an entry to the system event log.
 //
 #define MAXARGS 8
-#define STRLEN  64
+#define STRLEN  128
+
 VOID
 LogEvent(WORD wEventType, DWORD dwEventID, ...)
 {
     va_list 	listArgs;
     HANDLE	hEventSource;
+    HANDLE      hMutex = NULL;
     LPTSTR 	lpArgs[MAXARGS];
     CHAR 	lpStrings[MAXARGS][STRLEN];
+    static CHAR lpLastStrings[MAXARGS][STRLEN];
     WORD 	wNumArgs = 0;
-    WORD 	wNumStrings = 0;
+    static WORD wLastNumArgs = MAXARGS;
+    static time_t lastMessageTime = 0;
+    static WORD wLastEventType = 0;
+    static DWORD dwLastEventID = 0;
+    time_t      now;
     DWORD       code;
+    BOOL        bLogMessage = TRUE;
+    WORD        i = 0, j;
 
     // Ensure that our event source is properly initialized.
     if (!AddEventSource())
@@ -221,6 +230,11 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVER_REPORTS_VSALVAGE:
     case MSG_SERVER_REPORTS_VNOSERVICE:
     case MSG_SERVER_REPORTS_VIO:
+    case MSG_SERVER_REPORTS_VBUSY:
+    case MSG_SERVER_REPORTS_VRESTARTING:
+    case MSG_ALL_SERVERS_BUSY:
+    case MSG_ALL_SERVERS_OFFLINE:
+    case MSG_ALL_SERVERS_DOWN:
 	wNumArgs = 2;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
 	StringCbPrintf(lpStrings[1],STRLEN,"%d",va_arg(listArgs,afs_int32));
@@ -307,19 +321,63 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
 
     // Make sure we were not given too many args.
     if (wNumArgs >= MAXARGS)
-	return;
+        goto done;
+
+    hMutex = CreateMutex( NULL, TRUE, "AFSD Event Log Mutex");
+    if (hMutex == NULL)
+        goto done;
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        code = WaitForSingleObject( hMutex, 500);
+        if (code != WAIT_OBJECT_0)
+            goto done;
+    }
+
+    /*
+     * We rate limit consecutive duplicate messages to one every
+     * five seconds.
+     */
+    now = time(NULL);
+    if (now < lastMessageTime + 5 &&
+        wEventType == wLastEventType &&
+        dwEventID == dwLastEventID &&
+        wNumArgs == wLastNumArgs) {
+        for (i=0; i<wNumArgs; i++) {
+            if ( strncmp(lpArgs[i], lpLastStrings[i], STRLEN))
+                break;
+        }
+        if (i == wNumArgs)
+            bLogMessage = FALSE;
+    }
+
+    if ( bLogMessage) {
+        wLastNumArgs = wNumArgs;
+        wLastEventType = wEventType;
+        dwLastEventID = dwEventID;
+        lastMessageTime = now;
+
+        for ( j = (i == wNumArgs ? 0 : i) ; i < wNumArgs; i++) {
+            StringCbCopyEx( lpLastStrings[i], STRLEN, lpArgs[i], NULL, NULL, STRSAFE_NULL_ON_FAILURE);
+        }
+    }
+
+    ReleaseMutex(hMutex);
 
     // Log the event.
-    code = ReportEvent(hEventSource,		// handle of event source
-                       wEventType,		// event type
-                       0,			// event category
-                       dwEventID,		// event ID
-                       NULL,			// current user's SID
-                       wNumArgs,		// strings in lpszArgs
-                       0,			// no bytes of raw data
-                       wNumArgs ? lpArgs : NULL,// array of error strings
-                       NULL);			// no raw data
+    if ( bLogMessage)
+        code = ReportEvent(hEventSource,		// handle of event source
+                           wEventType,		// event type
+                           0,			// event category
+                           dwEventID,		// event ID
+                           NULL,			// current user's SID
+                           wNumArgs,		// strings in lpszArgs
+                           0,			// no bytes of raw data
+                           wNumArgs ? lpArgs : NULL,// array of error strings
+                           NULL);			// no raw data
 
+  done:
+    if (hMutex)
+        CloseHandle(hMutex);
 
     DeregisterEventSource(hEventSource);
 }	

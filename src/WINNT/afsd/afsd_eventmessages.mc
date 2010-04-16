@@ -118,7 +118,7 @@ Server %1 reported volume %2 as not attached (may have been moved or deleted).
 .
 
 MessageId=
-Severity=Warning
+Severity=Informational
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VMOVED
 Language=English
@@ -381,5 +381,46 @@ SymbolicName=MSG_DIRTY_BUFFER_AT_SHUTDOWN
 Language=English
 A dirty buffer was not written to the file server (Cell=%1, Volume=%2, Vnode=%3, Unique=%4, Offset=%5, Length=%6).
 .
+
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_SERVER_REPORTS_VBUSY
+Language=English
+Server %1 reported busy when accessing volume %2.
+.
+
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_SERVER_REPORTS_VRESTARTING
+Language=English
+Server %1 reported restarting when accessing volume %2.
+.
+
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_ALL_SERVERS_BUSY
+Language=English
+All servers are busy when accessing cell %1 volume %2.
+.
+
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_ALL_SERVERS_OFFLINE
+Language=English
+All servers are offline when accessing cell %1 volume %2.
+.
+
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_ALL_SERVERS_DOWN
+Language=English
+All servers are unreachable when accessing cell %1 volume %2.
+.
+
 
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */
