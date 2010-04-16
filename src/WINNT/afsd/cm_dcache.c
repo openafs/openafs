@@ -936,8 +936,15 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             /* get buffer mutex and scp mutex safely */
             lock_ReleaseWrite(&scp->rw);
             lock_ObtainMutex(&bufp->mx);
-            lock_ObtainWrite(&scp->rw);
 
+            /*
+             * if the buffer is actively involved in I/O
+             * we wait for the I/O to complete.
+             */
+            if (bufp->flags & (CM_BUF_WRITING|CM_BUF_READING))
+                buf_WaitIO(scp, bufp);
+
+            lock_ObtainWrite(&scp->rw);
             flags = CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_STOREDATA | CM_SCACHESYNC_BUFLOCKED;
             code = cm_SyncOp(scp, bufp, userp, reqp, 0, flags); 
             if (code) {
