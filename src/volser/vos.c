@@ -5427,7 +5427,6 @@ SetAddrs(register struct cmd_syndesc *as, void *arock)
     if (as->parms[1].items) {
 	/* -host */
 	struct cmd_item *ti;
-	struct hostent *he;
 	afs_int32 saddr;
 	int i = 0;
 
