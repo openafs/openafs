@@ -1110,7 +1110,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
                 goto sleep;
             }
-            if (scp->bufReadsp || scp->bufWritesp) {
+            if ((!bufp || bufp && scp->fileType == CM_SCACHETYPE_FILE) &&
+                (scp->bufReadsp || scp->bufWritesp)) {
                 osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is bufRead|bufWrite want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
                 goto sleep;
             }
@@ -1355,49 +1356,43 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         scp->flags |= CM_SCACHEFLAG_LOCKING;
 
     /* now update the buffer pointer */
-    if (flags & CM_SCACHESYNC_FETCHDATA) {
+    if (bufp && (flags & CM_SCACHESYNC_FETCHDATA)) {
         /* ensure that the buffer isn't already in the I/O list */
-        if (bufp) {
-            for(qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
-                tbufp = osi_GetQData(qdp);
-                osi_assertx(tbufp != bufp, "unexpected cm_buf_t value");
-            }
+        for (qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
+            tbufp = osi_GetQData(qdp);
+            osi_assertx(tbufp != bufp, "unexpected cm_buf_t value");
         }
 
         /* queue a held reference to the buffer in the "reading" I/O list */
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, bufp);
-        if (bufp) {
-            buf_Hold(bufp);
-            bufp->cmFlags |= CM_BUF_CMFETCHING;
-        }
+
+        buf_Hold(bufp);
+        bufp->cmFlags |= CM_BUF_CMFETCHING;
         osi_QAdd((osi_queue_t **) &scp->bufReadsp, &qdp->q);
     }
 
-    if (flags & CM_SCACHESYNC_STOREDATA) {
+    if (bufp && (flags & CM_SCACHESYNC_STOREDATA)) {
+        osi_assertx(scp->fileType == CM_SCACHETYPE_FILE,
+            "attempting to store extents on a non-file object");
+
         /* ensure that the buffer isn't already in the I/O list */
-        if (bufp) {
-            for(qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
-                tbufp = osi_GetQData(qdp);
-                osi_assertx(tbufp != bufp, "unexpected cm_buf_t value");
-            }
+        for (qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
+            tbufp = osi_GetQData(qdp);
+            osi_assertx(tbufp != bufp, "unexpected cm_buf_t value");
         }
 
         /* queue a held reference to the buffer in the "writing" I/O list */
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, bufp);
-        if (bufp) {
-            buf_Hold(bufp);
-            bufp->cmFlags |= CM_BUF_CMSTORING;
-        }
+        buf_Hold(bufp);
+        bufp->cmFlags |= CM_BUF_CMSTORING;
         osi_QAdd((osi_queue_t **) &scp->bufWritesp, &qdp->q);
     }
 
-    if (flags & CM_SCACHESYNC_WRITE) {
+    if (bufp && (flags & CM_SCACHESYNC_WRITE)) {
         /* mark the buffer as being written to. */
-        if (bufp) {
-            bufp->cmFlags |= CM_BUF_CMWRITING;
-        }
+        bufp->cmFlags |= CM_BUF_CMWRITING;
     }
 
     return 0;
@@ -1430,11 +1425,11 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
         scp->flags &= ~CM_SCACHEFLAG_LOCKING;
 
     /* now update the buffer pointer */
-    if (flags & CM_SCACHESYNC_FETCHDATA) {
+    if (bufp && (flags & CM_SCACHESYNC_FETCHDATA)) {
 	int release = 0;
 
-	/* ensure that the buffer isn't already in the I/O list */
-        for(qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
+	/* ensure that the buffer is in the I/O list */
+        for (qdp = scp->bufReadsp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
             if (tbufp == bufp) 
 		break;
@@ -1444,22 +1439,20 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	    osi_QDFree(qdp);
 	    release = 1;
 	}
-        if (bufp) {
-            bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
-            if (bufp->flags & CM_BUF_WAITING) {
-                osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
-                osi_Wakeup((LONG_PTR) &bufp);
-            }
-	    if (release)
-		buf_Release(bufp);
+        bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
+        if (bufp->flags & CM_BUF_WAITING) {
+            osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
+            osi_Wakeup((LONG_PTR) &bufp);
         }
+        if (release)
+	    buf_Release(bufp);
     }
 
     /* now update the buffer pointer */
-    if (flags & CM_SCACHESYNC_STOREDATA) {
+    if (bufp && (flags & CM_SCACHESYNC_STOREDATA)) {
 	int release = 0;
-        /* ensure that the buffer isn't already in the I/O list */
-        for(qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
+        /* ensure that the buffer is in the I/O list */
+        for (qdp = scp->bufWritesp; qdp; qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
             tbufp = osi_GetQData(qdp);
             if (tbufp == bufp) 
 		break;
@@ -1469,23 +1462,18 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	    osi_QDFree(qdp);
 	    release = 1;
 	}
-        if (bufp) {
-            bufp->cmFlags &= ~CM_BUF_CMSTORING;
-            if (bufp->flags & CM_BUF_WAITING) {
-                osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
-                osi_Wakeup((LONG_PTR) &bufp);
-            }
-	    if (release)
-		buf_Release(bufp);
+        bufp->cmFlags &= ~CM_BUF_CMSTORING;
+        if (bufp->flags & CM_BUF_WAITING) {
+            osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
+            osi_Wakeup((LONG_PTR) &bufp);
         }
+        if (release)
+	    buf_Release(bufp);
     }
 
-    if (flags & CM_SCACHESYNC_WRITE) {
-        if (bufp) {
-            osi_assertx(bufp->cmFlags & CM_BUF_CMWRITING, "!CM_BUF_CMWRITING");
-
-            bufp->cmFlags &= ~CM_BUF_CMWRITING;
-        }
+    if (bufp && (flags & CM_SCACHESYNC_WRITE)) {
+        osi_assertx(bufp->cmFlags & CM_BUF_CMWRITING, "!CM_BUF_CMWRITING");
+        bufp->cmFlags &= ~CM_BUF_CMWRITING;
     }
 
     /* and wakeup anyone who is waiting */
