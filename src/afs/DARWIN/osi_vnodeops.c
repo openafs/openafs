@@ -766,16 +766,24 @@ afs_vop_setattr(ap)
 				 * struct proc *a_p;
 				 * } */ *ap;
 {
-    int code;
+    int code, pass = 0;
+    struct vcache *avc = VTOAFS(ap->a_vp);
 #ifdef AFS_DARWIN80_ENV
     /* fsevents tries to set attributes. drop it. */
     if (ap->a_context == afs_osi_ctxtp)
 	return 0;
 #endif
     AFS_GLOCK();
-    code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, vop_cred);
+retry:
+    code = afs_setattr(avc, ap->a_vap, vop_cred);
     /* This is legit; it just forces the fstrace event to happen */
     code = afs_CheckCode(code, NULL, 59);
+    if (!pass && code == EINVAL && (VATTR_IS_ACTIVE(ap->a_vap, va_mode) &&
+				    (vType(avc) == VLNK))) {
+	VATTR_CLEAR_ACTIVE(ap->a_vap, va_mode);
+	pass++;
+	goto retry;
+    }
     AFS_GUNLOCK();
     return code;
 }
