@@ -62,7 +62,8 @@ typedef struct cm_buf {
     afs_uint32 dirtyCounter;	/* bumped at each dirty->clean transition */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
-    afs_uint32 flags;		/* flags we're using */
+    afs_uint16 flags;		/* flags we're using - mx */
+    afs_uint16 qFlags;		/* queue/hash state flags - buf_globalLock */
     char *datap;		/* data in this buffer */
     afs_uint32 error;	        /* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
@@ -99,16 +100,19 @@ typedef struct cm_buf {
 /* waiting is done based on scp->flags.  Removing bits from cmFlags
    should be followed by waking the scp. */
 
+/* values for qFlags */
+#define CM_BUF_QINHASH	1	/* in the hash table */
+#define CM_BUF_QINLRU	2	/* in lru queue (aka free list) */
+#define CM_BUF_QINDL    4       /* in the dirty list */
+#define CM_BUF_QREDIR   8       /* buffer held by the redirector */
+
+/* values for flags */
 #define CM_BUF_READING	1	/* now reading buffer from the disk */
 #define CM_BUF_WRITING	2	/* now writing buffer to the disk */
-#define CM_BUF_INHASH	4	/* in the hash table */
 #define CM_BUF_DIRTY	8	/* buffer is dirty */
-#define CM_BUF_INLRU	0x10	/* in lru queue (aka free list) */
 #define CM_BUF_ERROR	0x20	/* something went wrong on delayed write */
 #define CM_BUF_WAITING	0x40	/* someone's waiting for a flag to change */
-#define CM_BUF_INDL     0x80    /* in the dirty list */
-#define CM_BUF_EOF	0x100	/* read 0 bytes; used for detecting EOF */
-#define CM_BUF_REDIR    0x200   /* buffer held by the redirector */
+#define CM_BUF_EOF	0x80	/* read 0 bytes; used for detecting EOF */
 
 typedef struct cm_buf_ops {
     long (*Writep)(void *, osi_hyper_t *, long, long, struct cm_user *,

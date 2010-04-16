@@ -1738,7 +1738,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
                     *lbpp = bp->hashp;	/* hash out */
                     bp->hashp = NULL;
 
-                    bp->flags &= ~CM_BUF_INHASH;
+                    bp->qFlags &= ~CM_BUF_QINHASH;
                 }
                 lock_ReleaseMutex(&bp->mx);
             }

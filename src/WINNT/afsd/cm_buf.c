@@ -161,13 +161,13 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
             lock_ConvertRToW(&buf_globalLock);
 
         if (bp->refCount == 0 &&
-            !(bp->flags & CM_BUF_INLRU)) {
+            !(bp->qFlags & CM_BUF_QINLRU)) {
             osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
 
             /* watch for transition from empty to one element */
             if (!cm_data.buf_freeListEndp)
                 cm_data.buf_freeListEndp = cm_data.buf_freeListp;
-            bp->flags |= CM_BUF_INLRU;
+            bp->qFlags |= CM_BUF_QINLRU;
         }
 
         if (!writeLocked)
@@ -201,13 +201,13 @@ void buf_Release(cm_buf_t *bp)
     if (refCount == 0) {
         lock_ObtainWrite(&buf_globalLock);
         if (bp->refCount == 0 && 
-            !(bp->flags & CM_BUF_INLRU)) {
+            !(bp->qFlags & CM_BUF_QINLRU)) {
             osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
 
             /* watch for transition from empty to one element */
             if (!cm_data.buf_freeListEndp)
                 cm_data.buf_freeListEndp = cm_data.buf_freeListp;
-            bp->flags |= CM_BUF_INLRU;
+            bp->qFlags |= CM_BUF_QINLRU;
         }
         lock_ReleaseWrite(&buf_globalLock);
     }
@@ -232,7 +232,7 @@ buf_Sync(int quitOnShutdown)
         */
         lock_ObtainMutex(&bp->mx);
 
-        if (bp->flags & CM_BUF_DIRTY && !(bp->flags & CM_BUF_REDIR)) {
+        if (bp->flags & CM_BUF_DIRTY && !(bp->qFlags & CM_BUF_QREDIR)) {
             /* start cleaning the buffer; don't touch log pages since
              * the log code counts on knowing exactly who is writing
              * a log page at any given instant.
@@ -270,7 +270,7 @@ buf_Sync(int quitOnShutdown)
 #endif
             *bpp = bp->dirtyp;
             bp->dirtyp = NULL;
-            bp->flags &= ~CM_BUF_INDL;
+            bp->qFlags &= ~CM_BUF_QINDL;
             if (cm_data.buf_dirtyListp == NULL)
                 cm_data.buf_dirtyListEndp = NULL;
             else if (cm_data.buf_dirtyListEndp == bp)
@@ -483,7 +483,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 cm_data.buf_allp = bp;
                 
                 osi_QAdd((osi_queue_t **)&cm_data.buf_freeListp, &bp->q);
-                bp->flags |= CM_BUF_INLRU;
+                bp->qFlags |= CM_BUF_QINLRU;
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
                 
                 /* grab appropriate number of bytes from aligned zone */
@@ -861,7 +861,7 @@ void buf_Recycle(cm_buf_t *bp)
                 "incorrect cm_buf_t flags");
     lock_AssertWrite(&buf_globalLock);
 
-    if (bp->flags & CM_BUF_INHASH) {
+    if (bp->qFlags & CM_BUF_QINHASH) {
         /* Remove from hash */
 
         i = BUF_HASH(&bp->fid, &bp->offset);
@@ -891,7 +891,7 @@ void buf_Recycle(cm_buf_t *bp)
         if (nextBp)
             nextBp->fileHashBackp = prevBp;
 
-        bp->flags &= ~CM_BUF_INHASH;
+        bp->qFlags &= ~CM_BUF_QINHASH;
     }
 
     /* make the fid unrecognizable */
@@ -981,7 +981,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
              */
 
             /* Don't recycle a buffer held by the redirector. */
-            if (bp->flags & CM_BUF_REDIR)
+            if (bp->qFlags & CM_BUF_QREDIR)
                 continue;
 
             /* don't recycle someone in our own chunk */
@@ -1038,7 +1038,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
              * appropriate label, if requested.
              */
             if (scp) {
-                bp->flags |= CM_BUF_INHASH;
+                bp->qFlags |= CM_BUF_QINHASH;
                 bp->fid = scp->fid;
 #ifdef DEBUG
 		bp->scp = scp;
@@ -1059,7 +1059,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
             /* we should move it from the lru queue.  It better still be there,
              * since we've held the global (big) lock since we found it there.
              */
-            osi_assertx(bp->flags & CM_BUF_INLRU,
+            osi_assertx(bp->qFlags & CM_BUF_QINLRU,
                          "buf_GetNewLocked: LRU screwup");
 
             if (cm_data.buf_freeListEndp == bp) {
@@ -1067,7 +1067,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                 cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
             }
             osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-            bp->flags &= ~CM_BUF_INLRU;
+            bp->qFlags &= ~CM_BUF_QINLRU;
 
             /* prepare to return it.  Give it a refcount */
             bp->refCount = 1;
@@ -1281,11 +1281,11 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
      * being recycled) when we're done in buf_Release.
      */
     lock_ObtainWrite(&buf_globalLock);
-    if (bp->flags & CM_BUF_INLRU) {
+    if (bp->qFlags & CM_BUF_QINLRU) {
         if (cm_data.buf_freeListEndp == bp)
             cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
         osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-        bp->flags &= ~CM_BUF_INLRU;
+        bp->qFlags &= ~CM_BUF_QINLRU;
     }
     lock_ReleaseWrite(&buf_globalLock);
 
@@ -1314,7 +1314,7 @@ long buf_CountFreeList(void)
          * has been invalidate (by having its DV stomped upon), then
          * count it as free, since it isn't really being utilized.
          */
-        if (!(bufp->flags & CM_BUF_INHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD)
+        if (!(bufp->qFlags & CM_BUF_QINHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD)
             count++;
     }       
     lock_ReleaseRead(&buf_globalLock);
@@ -1399,7 +1399,7 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
          * already there.
          */
         lock_ObtainWrite(&buf_globalLock);
-        if (!(bp->flags & CM_BUF_INDL)) {
+        if (!(bp->qFlags & CM_BUF_QINDL)) {
             buf_HoldLocked(bp);
             if (!cm_data.buf_dirtyListp) {
                 cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
@@ -1408,7 +1408,7 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
                 cm_data.buf_dirtyListEndp = bp;
             }
             bp->dirtyp = NULL;
-            bp->flags |= CM_BUF_INDL;
+            bp->qFlags |= CM_BUF_QINDL;
         }
         lock_ReleaseWrite(&buf_globalLock);
     }
@@ -1921,10 +1921,10 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 	    StringCbPrintfA(output, sizeof(output), 
 			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
 			    "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
-			    "flags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
+			    "flags=0x%x, qFlags=0x%x cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
 			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
 			     bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
-			     bp->offset.LowPart, bp->dataVersion, bp->flags, 
+			     bp->offset.LowPart, bp->dataVersion, bp->flags, bp->qFlags,
 			     bp->cmFlags, bp->error, bp->refCount);
 	    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
@@ -1939,10 +1939,10 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
-			 "flags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
+			 "flags=0x%x, qFlags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
 			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
-			 bp->offset.LowPart, bp->dataVersion, bp->flags, 
+			 bp->offset.LowPart, bp->dataVersion, bp->flags, bp->qFlags,
 			 bp->cmFlags, bp->error, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
@@ -1955,10 +1955,10 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
 	StringCbPrintfA(output, sizeof(output), 
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
-			 "flags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
+			 "flags=0x%x, qFlags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
 			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
 			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
-			 bp->offset.LowPart, bp->dataVersion, bp->flags, 
+			 bp->offset.LowPart, bp->dataVersion, bp->flags, bp->qFlags,
 			 bp->cmFlags, bp->error, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
