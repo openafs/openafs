@@ -76,11 +76,13 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 {
     long code = 0;
     cm_cell_rock_t rock;
+    afs_uint32 mxheld = 0;
 
     if (cp == NULL)
         return NULL;
 
     lock_ObtainMutex(&cp->mx);
+    mxheld = 1;
     if ((cp->vlServersp == NULL 
 #ifdef AFS_FREELANCE_CLIENT
           && !(cp->flags & CM_CELLFLAG_FREELANCE)
@@ -90,13 +92,14 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
          ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID)))
             ) 
     {
-        lock_ReleaseMutex(&cp->mx);
-
         /* must empty cp->vlServersp */
         if (cp->vlServersp) {
             cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
             cp->vlServersp = NULL;
         }
+
+        lock_ReleaseMutex(&cp->mx);
+        mxheld = 0;
 
         rock.cellp = cp;
         rock.flags = flags;
@@ -105,8 +108,8 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
             code = cm_SearchCellFileEx(cp->name, NULL, cp->linkedName, cm_AddCellProc, &rock);
         if (code == 0) {
             lock_ObtainMutex(&cp->mx);
+            mxheld = 1;
 	    cp->timeout = time(0) + 7200;
-            lock_ReleaseMutex(&cp->mx);
         }
         else {
             if (cm_dnsEnabled) {
@@ -115,10 +118,10 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
                 code = cm_SearchCellByDNS(cp->name, NULL, &ttl, cm_AddCellProc, &rock);
                 if (code == 0) {   /* got cell from DNS */
                     lock_ObtainMutex(&cp->mx);
+                    mxheld = 1;
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
 		    cp->timeout = time(0) + ttl;
-                    lock_ReleaseMutex(&cp->mx);
 #ifdef DEBUG
                     fprintf(stderr, "cell %s: ttl=%d\n", cp->name, ttl);
 #endif
@@ -127,17 +130,18 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
                      * current entry alone 
 		     */
                     lock_ObtainMutex(&cp->mx);
+                    mxheld = 1;
                     cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
-                    lock_ReleaseMutex(&cp->mx);
                 }
 	    }
 	}
-    } else {
-        lock_ReleaseMutex(&cp->mx);
     }
 
     if (code == 0)
         cm_RandomizeServer(&cp->vlServersp);
+
+    if (mxheld)
+        lock_ReleaseMutex(&cp->mx);
 
     return code ? NULL : cp;
 }
