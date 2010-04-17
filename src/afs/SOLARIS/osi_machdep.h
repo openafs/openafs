@@ -127,4 +127,7 @@ struct afs_ifinfo {
   int         metric;
   ipaddr_t    dstaddr;
 };
+
+#define osi_procname(procname, size) strncpy(procname, PTOU(ttoproc(curthread))->u_comm, size)
+
 #endif /* _OSI_MACHDEP_H_ */
