@@ -254,7 +254,7 @@ struct rx_connection {
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
     afs_uint32 refCount;		/* Reference count */
-    u_char flags;		/* Defined below */
+    u_char flags;		/* Defined below - (conn_data_lock) */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
     u_char securityIndex;	/* corresponds to the security class of the */

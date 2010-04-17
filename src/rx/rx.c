@@ -2076,6 +2076,9 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	 * have checked this call, found it active and by the time it
 	 * goes to sleep, will have missed the signal.
 	 */
+        MUTEX_EXIT(&call->lock);
+        MUTEX_ENTER(&conn->conn_call_lock);
+        MUTEX_ENTER(&call->lock);
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
@@ -2116,7 +2119,10 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
     if (conn->type == RX_CLIENT_CONNECTION) {
+	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags &= ~RX_CONN_BUSY;
+	MUTEX_EXIT(&conn->conn_data_lock);
+        MUTEX_EXIT(&conn->conn_call_lock);
     }
     USERPRI;
     /*
@@ -2385,8 +2391,8 @@ rxi_FreeCall(struct rx_call *call)
      * If someone else destroys a connection, they either have no
      * call lock held or are going through this section of code.
      */
+    MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->flags & RX_CONN_DESTROY_ME && !(conn->flags & RX_CONN_MAKECALL_WAITING)) {
-	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->refCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
 #ifdef RX_ENABLE_LOCKS
@@ -2397,6 +2403,8 @@ rxi_FreeCall(struct rx_call *call)
 #else /* RX_ENABLE_LOCKS */
 	rxi_DestroyConnection(conn);
 #endif /* RX_ENABLE_LOCKS */
+    } else {
+	MUTEX_EXIT(&conn->conn_data_lock);
     }
 }
 
@@ -3153,6 +3161,7 @@ rxi_IsConnInteresting(struct rx_connection *aconn)
 
     if (aconn->flags & (RX_CONN_MAKECALL_WAITING | RX_CONN_DESTROY_ME))
 	return 1;
+
     for (i = 0; i < RX_MAXCALLS; i++) {
 	tcall = aconn->call[i];
 	if (tcall) {
