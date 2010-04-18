@@ -1056,14 +1056,21 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     lock_ReleaseRead(&cm_serverLock);
 
     if (firstError == 0) {
-        if (allDown) 
+        if (allDown) {
             firstError = (reqp->tokenError ? reqp->tokenError : 
                           (reqp->idleError ? RX_CALL_TIMEOUT : CM_ERROR_ALLDOWN));
-        else if (allBusy) 
+            /*
+             * if we experienced either a token error or and idle dead time error
+             * and now all of the servers are down, we have either tried them
+             * all or lost connectivity.  Clear the error we are returning so
+             * we will not return it indefinitely if the request is retried.
+             */
+            reqp->idleError = reqp->tokenError = 0;
+        } else if (allBusy) {
             firstError = CM_ERROR_ALLBUSY;
-	else if (allOffline || (someBusy && someOffline))
+	} else if (allOffline || (someBusy && someOffline)) {
 	    firstError = CM_ERROR_ALLOFFLINE;
-        else {
+        } else {
             osi_Log0(afsd_logp, "cm_ConnByMServers returning impossible error TIMEDOUT");
             firstError = CM_ERROR_TIMEDOUT;
         }
