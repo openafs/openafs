@@ -1261,20 +1261,27 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */ );
 	    ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
-	if (tvcp != NULL && (tvcp->f.states & CBulkFetching)
-	    && (tvcp->f.m.Length == statSeqNo)) {
-	    tvcp->f.states &= ~CBulkFetching;
-	}
 	if (tvcp != NULL) {
-#ifdef AFS_DARWIN80_ENV	    
-	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit))) {
-		/* re-acquire the io&usecount that the other finalizevnode disposed of */
-		vnode_get(AFSTOV(tvcp));
-		vnode_ref(AFSTOV(tvcp));
-	    }
+	    if ((tvcp->f.states & CBulkFetching)
+		&& (tvcp->f.m.Length == statSeqNo)) {
+		tvcp->f.states &= ~CBulkFetching;
+#ifdef AFS_DARWIN80_ENV
+		if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit))) {
+		    /* re-acquire the io&usecount that finalizevnode dropped */
+		    vnode_get(AFSTOV(tvcp));
+		    vnode_ref(AFSTOV(tvcp));
+		}
 #endif
+	    }
 	    afs_PutVCache(tvcp);
 	}
+#ifdef AFS_DARWIN80_ENV            
+	else {
+	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
+		osi_Panic("vnode finalized without clearing BulkFetching!");
+	}
+#endif
+
     }
     if (volp)
 	afs_PutVolume(volp, READ_LOCK);
