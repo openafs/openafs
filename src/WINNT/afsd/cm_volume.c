@@ -217,12 +217,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             }
         }
 
-        /* clear out old bindings */
-        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
-            if (volp->vol[volType].serversp)
-                cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
-        }
-
         volp->flags |= CM_VOLUMEFLAG_UPDATING_VL;
         lock_ReleaseWrite(&volp->rw);
 
@@ -337,6 +331,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 	if (freelance)
 	    rwServers_alldown = 0;
 #endif
+
+        /* clear out old bindings */
+        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
+            if (volp->vol[volType].serversp)
+                cm_FreeServerList(&volp->vol[volType].serversp, CM_FREESERVERLIST_DELETE);
+        }
 
         memset(serverUUID, 0, sizeof(serverUUID));
 
