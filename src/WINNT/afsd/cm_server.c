@@ -1383,10 +1383,10 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     cm_serverRef_t  **nextp = 0;
     cm_serverRef_t  * next = 0;
 
-	if (*list == NULL)
-		return;
-
     lock_ObtainWrite(&cm_serverLock);
+
+    if (*list == NULL)
+        goto done;
 
     while (*current)
     {
@@ -1409,6 +1409,8 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
         }
     }
   
+  done:
+
     lock_ReleaseWrite(&cm_serverLock);
 }
 
