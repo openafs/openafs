@@ -2460,6 +2460,18 @@
               </listitem>
             </itemizedlist></para>
         </listitem>
+
+        <listitem>
+          <para>CallBackStats_section: CallBack Statistics Section. <itemizedlist>
+              <listitem>
+                <para>CallBackCounters_group: General CallBack Counters.</para>
+              </listitem>
+
+              <listitem>
+                <para>GotSomeSpaces_group: GotSomeSpaces Counters.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
       </itemizedlist></para>
 
     <para>All File Server variables categorized under the above sections and groups names are listed below.</para>
@@ -3554,6 +3566,78 @@
 
           <listitem>
             <para>StoreData_xfers_bucket8: Tally in bucket8 for StoreData operations.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+    <sect2 id="Header_715">
+      <title>CallBack Statistics Section (CallBackStats_section)</title>
+
+      <para>General CallBack Counters Group (CallBackCounters_group) <itemizedlist>
+          <listitem>
+            <para>DeleteFiles: Number of times a file was deleted, causing its callbacks to be deleted.</para>
+          </listitem>
+
+          <listitem>
+            <para>DeleteCallBacks: Number of times a callback was deleted due to a host giving up the callback.</para>
+          </listitem>
+
+          <listitem>
+            <para>BreakCallBacks: Number of times a callback was broken.</para>
+          </listitem>
+
+          <listitem>
+            <para>AddCallBack: Number of times a callback was added.</para>
+          </listitem>
+
+          <listitem>
+            <para>GotSomeSpaces: Number of times we tried to reclaim some callback space due to running out of callbacks.</para>
+          </listitem>
+
+          <listitem>
+            <para>DeleteAllCallBacks: Number of times all of the callbacks for a host were deleted.</para>
+          </listitem>
+
+          <listitem>
+            <para>nFEs: Number of files with callbacks currently tracked by the fileserver.</para>
+          </listitem>
+
+          <listitem>
+            <para>nCBs: Number of callbacks currently tracked by the fileserver.</para>
+          </listitem>
+
+          <listitem>
+            <para>nblks: Maximum number of callbacks or files with callbacks the fileserver will track.</para>
+          </listitem>
+
+          <listitem>
+            <para>CBsTimedOut: Number of callbacks that were deleted because they timed out.</para>
+          </listitem>
+
+          <listitem>
+            <para>nbreakers: Number of threads busy breaking callbacks.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>GotSomeSpaces Counters Group (GotSomeSpaces_group) <itemizedlist>
+
+          <listitem>
+            <para>GSS1: Number of times we tried to reclaim callback space and failed to find a suitable host for which to clear callbacks.</para>
+          </listitem>
+
+          <listitem>
+            <para>GSS2: Number of times we repeatedly tried to reclaim callback space and never found any host for which to clear callbacks, and cleared callbacks on the host for which we were adding a callback.</para>
+          </listitem>
+
+          <listitem>
+            <para>GSS3: Number of times we tried to reclaim callback space and we reclaimed space by clearing timed-out callbacks.</para>
+          </listitem>
+
+          <listitem>
+            <para>GSS4: Number of times we tried to reclaim callback space and we found a suitable host to try to clear callbacks on.</para>
+          </listitem>
+
+          <listitem>
+            <para>GSS5: Number of times we tried to reclaim callback space and we cleared callbacks on a host that was waiting to have a callback added to it.</para>
           </listitem>
         </itemizedlist></para>
     </sect2>
