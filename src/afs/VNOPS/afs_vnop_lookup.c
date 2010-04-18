@@ -874,12 +874,17 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		 * CBulkFetching state bit and the value in the file size.
 		 * It is safe to set the status only if the CBulkFetching
 		 * flag is still set and the value in the file size does
-		 * not change. NewBulkVCache sets us up.
+		 * not change. NewBulkVCache sets us up for the new ones.
+		 * Set up the rest here.
 		 *
 		 * Don't fetch status for dirty files. We need to
 		 * preserve the value of the file size. We could
 		 * flush the pages, but it wouldn't be worthwhile.
 		 */
+		if (!(tvcp->f.states & CBulkFetching)) {
+		    tvcp->f.states |= CBulkFetching;
+		    tvcp->f.m.Length = statSeqNo;
+		}
 		memcpy((char *)(fidsp + fidIndex), (char *)&tfid.Fid,
 		       sizeof(*fidsp));
 		fidIndex++;
