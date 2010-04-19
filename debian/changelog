@@ -1,3 +1,16 @@
+openafs (1.5.74-1) UNRELEASED; urgency=low
+
+  * New upstream testing release.
+    - New vos setaddrs command.
+    - Significant improvements to libuafs (user-space AFS client).
+    - Initial FUSE implementation for afsd.
+    - pts mem -supergroup and -expandgroups options.
+    - Rx lock acquisition and thread safety fixes.
+    - Fileserver capabilities support for the UNIX client.
+    - Various afsmonitor improvements.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 19 Apr 2010 12:42:13 -0700
+
 openafs (1.5.73.3-1) experimental; urgency=low
 
   * New upstream testing release.
