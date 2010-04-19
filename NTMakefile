@@ -680,14 +680,14 @@ loopback:
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-man-pages: 
+man-pages: config
    @echo ***** $@
    $(DOCD) $(DOC)\man-pages
    $(CD) $(DOC)\man-pages
    $(NTMAKE)
    $(CD) ..\..
 
-documentation:
+documentation: config
    @echo ***** $@
    $(DOCD) $(DOC)\xml\ReleaseNotesWindows
    $(CD) $(DOC)\xml\ReleaseNotesWindows

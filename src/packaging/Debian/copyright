@@ -1,30 +1,22 @@
 This package was debianized by Sam Hartman <hartmans@debian.org> on
 Fri,  3 Nov 2000 23:41:41 -0500.
 
-It was downloaded from either:
+It was downloaded via Git from:
 
-    http://www.openafs.org/release/
-    /afs/grand.central.org/software/openafs/
+    git://git.openafs.org/openafs.git
 
 Upstream Maintainers:
 
     openafs-gatekeepers@openafs.org
 
-The upstream source has been repackaged to remove the src/packaging/MacOS
-and src/platform/DARWIN directories and the files src/afs/sysctl.h and
-src/util/fstab.c.  These directories and files are only used for building
-on MacOS X and contained content covered by the Apple Public Source
-License 2.0.  This license is not considered DFSG-free.  Since the
-repackaging was needed anyway, the WINNT directory was also dropped,
-reducing the size of the upstream tarball by 8MB.
+The upstream source is generated from a Git tag for the corresponding
+upstream release, but with the WINNT directory removed to reduces the size
+of the upstream tarball by about 8MB.
 
-The upstream openafs-src and openafs-doc tarballs have been combined into
-one source tarball.
-
-The openafs-doc package contains the OpenAFS documentation as distributed
-by the OpenAFS project, which does not include the original source.  These
-documents were originally created using TeX internally by Transarc, the
-original authors of AFS.  By the time that AFS was released as free
+The source package contains the OpenAFS documentation as distributed by
+the OpenAFS project, some of which does not include the original source.
+These documents were originally created using TeX internally by Transarc,
+the original authors of AFS.  By the time that AFS was released as free
 software by IBM after acquiring Transarc, the original source could no
 longer be found.  It has apparently been lost over the years.
 
@@ -37,6 +29,12 @@ Normally, this documentation could not be included in Debian without being
 accompanied by the original TeX source and build tools under DFSG#2, but
 under the circumstances, these files essentially are the source, as
 they're all that anyone has.
+
+These documents are being replaced by revised versions in DocBook and
+Doxygen, with suitable source, and once that process is complete, the old
+sourceless HTML and PDF documents will be removed.  The documentation
+installed in the openafs-doc package already includes only material built
+from the new maintainable source.
 
 Copyright:
 
@@ -397,3 +395,39 @@ license:
 
 src/afs/LINUX/osi_flush.s included code under IBM Public License with
 permission of the author, Paul MacKerras.
+
+Personal contributions made by Jason Edgecombe
+<jason@rampaginggeek.com> that refer to the "BSD license" are subject
+to the following license:
+
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are
+   met:
+
+       * Redistributions of source code must retain the above
+         copyright notice, this list of conditions and the following
+         disclaimer.
+       
+       * Redistributions in binary form must reproduce the above
+         copyright notice, this list of conditions and the following
+         disclaimer in the documentation and/or other materials
+         provided with the distribution.
+
+       * Neither the name of OpenAFS nor the names of its
+         contributors may be used to endorse or promote products
+         derived from this software without specific prior written
+         permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+   TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+   PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

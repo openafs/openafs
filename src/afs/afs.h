@@ -406,6 +406,10 @@ struct srvAddr {
 #define	SRVR_ISGONE			0x80
 #define	SNO_INLINEBULK			0x100
 #define SNO_64BIT                       0x200
+#define SCAPS_KNOWN			0x400
+
+#define SRV_CAPABILITIES(ts) \
+{ if ( !(ts->flags & SCAPS_KNOWN)) afs_GetCapabilities(ts); ts->capabilities; }
 
 #define afs_serverSetNo64Bit(s) ((s)->srvr->server->flags |= SNO_64BIT)
 #define afs_serverHasNo64Bit(s) ((s)->srvr->server->flags & SNO_64BIT)
@@ -437,6 +441,7 @@ struct server {
     afs_int32 sumOfDowntimes;	/* Total downtime experienced, in seconds */
     struct srvAddr *addr;
     afs_uint32 flags;		/* Misc flags */
+    afs_int32 capabilities;
 };
 
 #define	afs_PutServer(servp, locktype)
@@ -1008,6 +1013,16 @@ typedef long iparmtype;
 #endif
 #endif
 
+#if SIZEOF_VOID_P == SIZEOF_UNSIGNED_INT
+# define uintptrsz unsigned int
+#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG
+# define uintptrsz unsigned long
+#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG_LONG
+# define uintptrsz unsigned long long
+#else
+# error "Unable to determine casting for pointers"
+#endif
+
 struct afs_ioctl {
     uparmtype in;		/* input buffer */
     uparmtype out;		/* output buffer */
@@ -1049,8 +1064,6 @@ struct afs_fheader {
 
 #if defined(AFS_CACHE_VNODE_PATH)
 typedef char *afs_ufs_dcache_id_t;
-#elif defined(UKERNEL)
-typedef afs_int32 afs_ufs_dcache_id_t;
 #elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
@@ -1350,6 +1363,8 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #ifndef afs_vnodeToDev
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToDev(V) VnodeToDev(V)
+#elif defined(UKERNEL)
+#define afs_vnodeToDev(V) (VTOI(V) ? (VTOI(V)->i_dev) : (-1))
 #else
 #define afs_vnodeToDev(V) (VTOI(V)->i_dev)
 #endif

@@ -8,29 +8,16 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 #endif
 
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
+#ifdef UKERNEL
 #include "afsincludes.h"
-#include "afs/stds.h"
-#include "rx/xdr.h"
-#include "rx/rx.h"
-#include "afs/lock.h"
-#include "afs/rxgen_consts.h"
-#define UBIK_LEGACY_CALLITER 1
-#include "ubik.h"
-#include "afs/pthread_glock.h"
-#include <netdb.h>
-#else /* defined(UKERNEL) */
+#endif
+
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <stdio.h>
@@ -46,8 +33,8 @@
 #include <netinet/in.h>
 #endif
 #include <afs/rxgen_consts.h>
+#define UBIK_LEGACY_CALLITER
 #include "ubik.h"
-#endif /* defined(UKERNEL) */
 
 #ifdef HAVE_STDINT_H
 # include <stdint.h>

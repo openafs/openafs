@@ -134,7 +134,7 @@ struct uio;
 #define SYS_NAME_ID	SYS_NAME_ID_hp_ux102
 #define AFSBIG_ENDIAN	1
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
+#define AFS_HAVE_STATVFS	1	/* System supports statvfs */
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL

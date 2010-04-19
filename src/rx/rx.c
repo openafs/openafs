@@ -982,7 +982,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
      * waiting, treat this as a running call, and wait to destroy the
      * connection later when the call completes. */
     if ((conn->type == RX_CLIENT_CONNECTION)
-	&& (conn->flags & RX_CONN_MAKECALL_WAITING)) {
+	&& (conn->flags & (RX_CONN_MAKECALL_WAITING|RX_CONN_MAKECALL_ACTIVE))) {
 	conn->flags |= RX_CONN_DESTROY_ME;
 	MUTEX_EXIT(&conn->conn_data_lock);
 	USERPRI;
@@ -1139,7 +1139,7 @@ static void rxi_WaitforTQBusy(struct rx_call *call) {
 struct rx_call *
 rx_NewCall(struct rx_connection *conn)
 {
-    int i;
+    int i, wait;
     struct rx_call *call;
     struct clock queueTime;
     SPLVAR;
@@ -1166,7 +1166,8 @@ rx_NewCall(struct rx_connection *conn)
      */
     MUTEX_ENTER(&conn->conn_call_lock);
     MUTEX_ENTER(&conn->conn_data_lock);
-    if (conn->makeCallWaiters) {
+    while (conn->flags & RX_CONN_MAKECALL_ACTIVE) {
+        conn->flags |= RX_CONN_MAKECALL_WAITING;
 	conn->makeCallWaiters++;
         MUTEX_EXIT(&conn->conn_data_lock);
 
@@ -1180,33 +1181,84 @@ rx_NewCall(struct rx_connection *conn)
         if (conn->makeCallWaiters == 0)
             conn->flags &= ~RX_CONN_MAKECALL_WAITING;
     } 
+
+    /* We are now the active thread in rx_NewCall */
+    conn->flags |= RX_CONN_MAKECALL_ACTIVE;
     MUTEX_EXIT(&conn->conn_data_lock);
 
     for (;;) {
+        wait = 1;
+
 	for (i = 0; i < RX_MAXCALLS; i++) {
 	    call = conn->call[i];
 	    if (call) {
 		if (call->state == RX_STATE_DALLY) {
                     MUTEX_ENTER(&call->lock);
                     if (call->state == RX_STATE_DALLY) {
+                        /*
+                         * We are setting the state to RX_STATE_RESET to
+                         * ensure that no one else will attempt to use this
+                         * call once we drop the conn->conn_call_lock and
+                         * call->lock.  We must drop the conn->conn_call_lock
+                         * before calling rxi_ResetCall because the process
+                         * of clearing the transmit queue can block for an
+                         * extended period of time.  If we block while holding
+                         * the conn->conn_call_lock, then all rx_EndCall
+                         * processing will block as well.  This has a detrimental
+                         * effect on overall system performance.
+                         */
                         call->state = RX_STATE_RESET;
+                        CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
                         MUTEX_EXIT(&conn->conn_call_lock);
                         rxi_ResetCall(call, 0);
-                        MUTEX_ENTER(&conn->conn_call_lock);
                         (*call->callNumber)++;
-                        break;
+                        if (MUTEX_TRYENTER(&conn->conn_call_lock))
+                            break;
+
+                        /*
+                         * If we failed to be able to safely obtain the
+                         * conn->conn_call_lock we will have to drop the
+                         * call->lock to avoid a deadlock.  When the call->lock
+                         * is released the state of the call can change.  If it
+                         * is no longer RX_STATE_RESET then some other thread is
+                         * using the call.
+                         */
+                        MUTEX_EXIT(&call->lock);
+                        MUTEX_ENTER(&conn->conn_call_lock);
+                        MUTEX_ENTER(&call->lock);
+
+                        if (call->state == RX_STATE_RESET)
+                            break;
+
+                        /*
+                         * If we get here it means that after dropping
+                         * the conn->conn_call_lock and call->lock that
+                         * the call is no longer ours.  If we can't find
+                         * a free call in the remaining slots we should
+                         * not go immediately to RX_CONN_MAKECALL_WAITING
+                         * because by dropping the conn->conn_call_lock
+                         * we have given up synchronization with rx_EndCall.
+                         * Instead, cycle through one more time to see if
+                         * we can find a call that can call our own.
+                         */
+                        CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
+                        wait = 0;
                     }
                     MUTEX_EXIT(&call->lock);
                 }
 	    } else {
                 /* rxi_NewCall returns with mutex locked */
 		call = rxi_NewCall(conn, i);
+                CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 		break;
 	    }
 	}
 	if (i < RX_MAXCALLS) {
 	    break;
 	}
+        if (!wait)
+            continue;
+
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_MAKECALL_WAITING;
 	conn->makeCallWaiters++;
@@ -1223,18 +1275,6 @@ rx_NewCall(struct rx_connection *conn)
             conn->flags &= ~RX_CONN_MAKECALL_WAITING;
 	MUTEX_EXIT(&conn->conn_data_lock);
     }
-    /*
-     * Wake up anyone else who might be giving us a chance to
-     * run (see code above that avoids resource starvation).
-     */
-#ifdef	RX_ENABLE_LOCKS
-    CV_BROADCAST(&conn->conn_call_cv);
-#else
-    osi_rxWakeup(conn);
-#endif
-
-    CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
-
     /* Client is initially in send mode */
     call->state = RX_STATE_ACTIVE;
     call->error = conn->error;
@@ -1251,6 +1291,23 @@ rx_NewCall(struct rx_connection *conn)
 
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
+
+    /*
+     * We are no longer the active thread in rx_NewCall
+     */
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->flags &= ~RX_CONN_MAKECALL_ACTIVE;
+    MUTEX_EXIT(&conn->conn_data_lock);
+
+    /*
+     * Wake up anyone else who might be giving us a chance to
+     * run (see code above that avoids resource starvation).
+     */
+#ifdef	RX_ENABLE_LOCKS
+    CV_BROADCAST(&conn->conn_call_cv);
+#else
+    osi_rxWakeup(conn);
+#endif
     MUTEX_EXIT(&conn->conn_call_lock);
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
@@ -2019,6 +2076,9 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	 * have checked this call, found it active and by the time it
 	 * goes to sleep, will have missed the signal.
 	 */
+        MUTEX_EXIT(&call->lock);
+        MUTEX_ENTER(&conn->conn_call_lock);
+        MUTEX_ENTER(&call->lock);
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
@@ -2059,7 +2119,10 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
     if (conn->type == RX_CLIENT_CONNECTION) {
+	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags &= ~RX_CONN_BUSY;
+	MUTEX_EXIT(&conn->conn_data_lock);
+        MUTEX_EXIT(&conn->conn_call_lock);
     }
     USERPRI;
     /*
@@ -2328,8 +2391,8 @@ rxi_FreeCall(struct rx_call *call)
      * If someone else destroys a connection, they either have no
      * call lock held or are going through this section of code.
      */
+    MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->flags & RX_CONN_DESTROY_ME && !(conn->flags & RX_CONN_MAKECALL_WAITING)) {
-	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->refCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
 #ifdef RX_ENABLE_LOCKS
@@ -2340,6 +2403,8 @@ rxi_FreeCall(struct rx_call *call)
 #else /* RX_ENABLE_LOCKS */
 	rxi_DestroyConnection(conn);
 #endif /* RX_ENABLE_LOCKS */
+    } else {
+	MUTEX_EXIT(&conn->conn_data_lock);
     }
 }
 
@@ -3096,6 +3161,7 @@ rxi_IsConnInteresting(struct rx_connection *aconn)
 
     if (aconn->flags & (RX_CONN_MAKECALL_WAITING | RX_CONN_DESTROY_ME))
 	return 1;
+
     for (i = 0; i < RX_MAXCALLS; i++) {
 	tcall = aconn->call[i];
 	if (tcall) {

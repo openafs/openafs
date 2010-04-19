@@ -11,34 +11,9 @@
  * package. */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "afs/com_err.h"
-#include "afs/cellconfig.h"
-#include "afs/auth.h"
-#include "afs/ptint.h"
-#include "afs/pterror.h"
-#include "afs/ptserver.h"
-#include "rx/rx.h"
-#include "rx/rx_globals.h"
-#include "rx/rxkad.h"
-#include "afs/kauth.h"
-#include "afs/kautils.h"
-#include "afs/afsutil.h"
-#include "afs/ptuser.h"
-#include "des.h"
-#include "des_prototypes.h"
-#include "afs/ktc.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>
 #include <afs/com_err.h>
@@ -57,7 +32,11 @@
 #include <afs/ptuser.h>
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
+
+#ifndef UKERNEL
 #include <afs/sys_prototypes.h>
+#endif
+
 #include <des.h>
 #include <des_prototypes.h>
 #include <rx/rx.h>
@@ -66,7 +45,6 @@
 #include "kauth.h"
 #include "kautils.h"
 #include <afs/ktc.h>
-#endif /* defined(UKERNEL) */
 
 
 afs_int32

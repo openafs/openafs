@@ -15,12 +15,6 @@
 #include <afs/param.h>
 
 
-#ifdef UKERNEL
-#include "afs/sysincludes.h"
-#include "afs/afsutil.h"
-#include <netdb.h>
-#include <ctype.h>
-#else /* UKERNEL */
 #include <stdio.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -37,7 +31,6 @@
 #include <string.h>
 #include <errno.h>
 #include "afsutil.h"
-#endif /* UKERNEL */
 
 
 /* also parse a.b.c.d addresses */

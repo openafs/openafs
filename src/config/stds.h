@@ -234,7 +234,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 #define hadd(a,b) (hadd32(a,(b).low), (a).high += (b).high)
 #endif /* AFS_64BIT_ENV */
 
-#ifndef	KERNEL
+#if !defined(KERNEL) || defined(UKERNEL)
 #ifndef AFS_NT40_ENV
 #define max(a, b)               ((a) < (b) ? (b) : (a))
 #define min(a, b)               ((a) > (b) ? (b) : (a))

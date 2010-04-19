@@ -4,8 +4,11 @@ Author: IBM
 Abstract: Initial setup and configuration documentation for AFS on Unix
  platforms.  Debian users can ignore most of the installation information,
  but the configuration information is still useful.
-Section: Apps/Net
+Section: File Management
 
 Format: HTML
-Index: /usr/share/doc/openafs-doc/html/QuickStartUnix/auqbg000.htm
+Index: /usr/share/doc/openafs-doc/html/QuickStartUnix/index.html
 Files: /usr/share/doc/openafs-doc/html/QuickStartUnix/*
+
+Format: PDF
+Files: /usr/share/doc/openafs-doc/auqbg000.pdf.gz

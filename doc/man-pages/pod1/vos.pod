@@ -59,8 +59,9 @@ and L<B<vos zap>|vos_zap(1)>.
 =item *
 
 Commands to edit or display VLDB server entries:
-L<B<vos changeaddr>|vos_changeaddr(1)>
-and L<B<vos listaddrs>|vos_listaddrs(1)>.
+L<B<vos changeaddr>|vos_changeaddr(1)>,
+L<B<vos listaddrs>|vos_listaddrs(1)>
+and L<B<vos setaddrs>|vos_setaddrs(1)>.
 
 =item *
 

@@ -1,3 +1,54 @@
+Since 1.5.73
+
+ * Avoid a race when updating cell vldb server lists
+   that can result in a crash.
+
+ * Avoid a deadlock when managing CM_SCACHESYNC_STOREDATA
+   state operations for directory objects.
+
+ * Add new Windows Application Event log messages for
+   VBUSY, VRESTARTING, ALL_BUSY, ALL_OFFLINE, and ALL_DOWN.
+   Include message throttling to prevent the same message
+   from being logged repeatedly within a five second window.
+
+ * Reduce lock contention by waiting for cm_buf_t I/O
+   operations to complete before permitting cm_SetupStoreBIOD
+   to analyze a buffer for inclusion in a BIOD.
+
+ * Split the cm_buf_t flags field to separate the flags
+   that are protected by the cm_buf_t mutex from those
+   protected by the buf_globalLock.  This eliminates the need
+   to hold both locks everytime the flags field is accessed.
+   Both locks were not held in the past resulting in race
+   conditions that could result in deadlocks.
+
+ * Add "vos setaddrs" command.
+
+ * Rx library lock contention avoidance between rx_NewCall and
+   rx_EndCall.
+
+ * Rx library races due to inconsistent use of rx_connection
+   conn_data_lock to protect the flags field.
+
+ * Rx library inconsistent use of RX_CALL_TQ_WAIT which could
+   result in deadlocks.
+
+ * Rx library must signal transmit queue waiters when flushing.
+   Otherwise, deadlocks can occur.
+
+ * In cm_UpdateVolumeLocation, avoid searching for a ".readonly"
+   volume on a numeric volume name.
+
+ * File buffer allocations whose offsets are beyond server EOF
+   should be locally allocated and zero filled.  The file server
+   should not be issued a FetchData rpc which is guaranteed to
+   fail.
+
+ * Enable integrated logon to work with Windows 7/2008 when
+   user logons are performed with a non-Domain Kerberos principal.
+
+ * Add Protection Error messages to aklog output.
+
 Since 1.5.72
 
  * Prevent the Explorer Shell extension from crashing if

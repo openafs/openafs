@@ -18,16 +18,23 @@ LDFLAGS = ${XLDFLAGS} ${ARCHFLAGS}
 #
 # What to make
 #
-all: afsd vsys
+all: afsd vsys @ENABLE_FUSE_CLIENT@
 
 #
 # Programs
 #
 
 AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
+UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a
 
-afsd: afsd.o $(AFSLIBS) $(AFSD_LIBS)
-	${CC} ${CFLAGS} -o afsd afsd.o @CFLAGS_NOERROR@ $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
+UAFS_CFLAGS=${CFLAGS} -I${TOP_SRCDIR}/afs -I${TOP_SRCDIR}/afs/UKERNEL -I${TOP_SRCDIR}/rx/UKERNEL -DUKERNEL @FUSE_CFLAGS@
+UAFS_XLIBS=${XLIBS} @FUSE_LIBS@
+
+afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
+	${CC} ${CFLAGS} -o afsd afsd.o afsd_kernel.o $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
+
+afsd.fuse: afsd_fuse.o $(UAFSLIBS) $(AFSD_LIBS)
+	${CC} ${UAFS_CFLAGS} -o afsd.fuse afsd_fuse.o $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(UAFSLIBS) ${UAFS_XLIBS} ${AFSD_LIBS}
 
 vsys: vsys.o
 	${CC} ${CFLAGS} -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
@@ -38,10 +45,16 @@ vsys: vsys.o
 afsd.o: afsd.c AFS_component_version_number.c
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
+afsd_kernel.o: afsd_kernel.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
+afsd_fuse.o: afsd_fuse.c AFS_component_version_number.c
+	${CC} -c ${CPPFLAGS} ${UAFS_CFLAGS} afsd_fuse.c -o afsd_fuse.o
+
 vsys.o: vsys.c AFS_component_version_number.c
 
 clean:
-	$(RM) -f *.o vsys afsd core AFS_component_version_number.c
+	$(RM) -f *.o vsys afsd afsd.fuse core AFS_component_version_number.c
 
 system: install
 

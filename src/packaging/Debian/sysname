@@ -9,16 +9,13 @@ case `dpkg --print-architecture` in
 alpha)
     echo alpha_linux_26
     ;;
+arm|armel|armv5tel)
+    echo arm_linux26
+    ;;
 amd64)
     echo amd64_linux26
     ;;
-armel)
-    echo arm_linux26
-    ;;
-hppa)
-    echo parisc_linux24
-    ;;
-i[3456]86)
+i[3456]86|lpia)
     echo i386_linux26
     ;;
 ia64)

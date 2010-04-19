@@ -2,12 +2,15 @@
 
 set -e
 
-case "$1" in
-configure|reconfigure)
+if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
     update-alternatives --install /usr/bin/pagsh pagsh \
         /usr/bin/pagsh.openafs 100  \
         --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
         /usr/share/man/man1/pagsh.openafs.1.gz
+    update-alternatives --install /usr/bin/klog klog \
+        /usr/bin/klog.afs 10 \
+        --slave /usr/share/man/man1/klog.1.gz klog.1.gz \
+        /usr/share/man/man1/klog.afs.1.gz
 
     test -d /afs || mkdir /afs
 
@@ -15,29 +18,33 @@ configure|reconfigure)
     db_version 2.0
 
     db_get openafs-client/thiscell
-    echo $RET >/etc/openafs/ThisCell
-    THISCELL=$RET
+    THISCELL="$RET"
+    if [ -n "$THISCELL" ] ; then
+        echo "$THISCELL" > /etc/openafs/ThisCell
+    fi
 
-    if test -f /etc/openafs/CellServDB ; then
-        :
-    else
+    if [ ! -f /etc/openafs/CellServDB ] ; then
         cp /usr/share/openafs/CellServDB /etc/openafs
     fi
 
     # If ThisCell is not in CellServDB, we have to prompt the user for the
     # VLDB servers.  Unfortunately, we can't do this in config because we
-    # need the CellServDB file, which is part of the package.  We have to
-    # override a lintian warning for this since prompts at installation time
-    # are frowned upon.
-    if grep -q -F "$RET" /etc/openafs/CellServDB && [ "x$RET" != "x" ] ; then
+    # need the CellServDB file, which is part of the package.
+    #
+    # If the user is using afsdb for cell location, don't worry about
+    # prompting them for cells for their local system.
+    db_get openafs-client/afsdb
+    afsdb="$RET"
+    if grep -q -F "$THISCELL" /etc/openafs/CellServDB \
+           && [ "x$THISCELL" != "x" ] ; then
         :
-    else
+    elif [ x"$afsdb" != xtrue ] ; then
         db_input critical openafs-client/cell-info || true
         db_input high openafs-client/run-client || true
         db_go
         db_get openafs-client/cell-info
         if [ "x$RET" != "x" ] ; then
-            echo \>$THISCELL > /etc/openafs/CellServDB.new
+            echo ">$THISCELL" > /etc/openafs/CellServDB.new
             perl -MSocket -e 'foreach (@ARGV) {' \
                 -e '@a=gethostbyname($_) and ' \
                 -e 'printf("%s\t\t# %s\n",inet_ntoa($a[4]),$a[0]) }' $RET \
@@ -45,12 +52,13 @@ configure|reconfigure)
             if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
                 echo None of the hostnames resolved to an address 2>&1
                 db_reset openafs-client/cell-info || true
-                exit 1
+                rm /etc/openafs/CellServDB.new
+            else
+                cat /etc/openafs/CellServDB.new /etc/openafs/CellServDB \
+                    > /etc/openafs/CellServDB.tmp
+                mv /etc/openafs/CellServDB.tmp /etc/openafs/CellServDB
+                rm /etc/openafs/CellServDB.new
             fi
-            cat /etc/openafs/CellServDB.new /etc/openafs/CellServDB \
-                >/etc/openafs/CellServDB.tmp
-            mv /etc/openafs/CellServDB.tmp /etc/openafs/CellServDB
-            rm /etc/openafs/CellServDB.new
         fi
     fi
                     
@@ -58,31 +66,23 @@ configure|reconfigure)
     echo /afs:/var/cache/openafs:$RET >/etc/openafs/cacheinfo
 
     echo <<'EOF' > /etc/openafs/afs.conf.client
-# This file is managed by debconf.  Do not edit directly.  To modify these
-# settings, run dpkg-reconfigure openafs-client.
+# This file is managed by debconf.  You may change the parameters set below,
+# but any additional lines or comments will be lost when the package is
+# upgraded or reconfigured.  Local modifications other than setting the
+# following parameters should be made in /etc/openafs/afs.conf instead.
 
 EOF
 
     db_get openafs-client/run-client
-    echo AFS_CLIENT=$RET >/etc/openafs/afs.conf.client
-    db_get openafs-client/afsdb
-    echo AFS_AFSDB=$RET >>/etc/openafs/afs.conf.client
+    echo AFS_CLIENT="$RET" > /etc/openafs/afs.conf.client
+    echo AFS_AFSDB="$afsdb" >> /etc/openafs/afs.conf.client
     db_get openafs-client/crypt
-    echo AFS_CRYPT=$RET >>/etc/openafs/afs.conf.client
+    echo AFS_CRYPT="$RET" >> /etc/openafs/afs.conf.client
     db_get openafs-client/dynroot
-    echo AFS_DYNROOT=$RET >>/etc/openafs/afs.conf.client
+    echo AFS_DYNROOT="$RET" >> /etc/openafs/afs.conf.client
     db_get openafs-client/fakestat
-    echo AFS_FAKESTAT=$RET >>/etc/openafs/afs.conf.client
-    ;;
-
-abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
-
-*)
-    echo "postinst called with unknown argument '$1'" >&2
-    exit 0
-    ;;
-esac
+    echo AFS_FAKESTAT="$RET" >> /etc/openafs/afs.conf.client
+fi
 
 #DEBHELPER#
 

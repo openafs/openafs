@@ -254,7 +254,7 @@ struct rx_connection {
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
     afs_uint32 refCount;		/* Reference count */
-    u_char flags;		/* Defined below */
+    u_char flags;		/* Defined below - (conn_data_lock) */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
     u_char securityIndex;	/* corresponds to the security class of the */
@@ -423,13 +423,14 @@ struct rx_peer {
 
 #ifndef KDUMP_RX_LOCK
 /* Flag bits for connection structure */
-#define	RX_CONN_MAKECALL_WAITING    1	/* rx_MakeCall is waiting for a channel */
+#define	RX_CONN_MAKECALL_WAITING    1	/* rx_NewCall is waiting for a channel */
 #define	RX_CONN_DESTROY_ME	    2	/* Destroy *client* connection after last call */
 #define RX_CONN_USING_PACKET_CKSUM  4	/* non-zero header.spare field seen */
 #define RX_CONN_KNOW_WINDOW         8	/* window size negotiation works */
 #define RX_CONN_RESET		   16	/* connection is reset, remove */
 #define RX_CONN_BUSY               32	/* connection is busy; don't delete */
 #define RX_CONN_ATTACHWAIT	   64	/* attach waiting for peer->lastReach */
+#define RX_CONN_MAKECALL_ACTIVE   128   /* a thread is actively in rx_NewCall */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0

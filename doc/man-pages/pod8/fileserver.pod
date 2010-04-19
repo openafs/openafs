@@ -220,6 +220,21 @@ suites. Provide the command name and all option names in full.
 
 =head1 CAUTIONS
 
+There are two strategies the File Server can use for attaching AFS volumes
+at startup and handling volume salvages.  The traditional method assumes
+all volumes are salvaged before the File Server starts and attaches all
+volumes at start before serving files.  The newer demand-attach method
+attaches volumes only on demand, salvaging them at that time as needed,
+and detaches volumes that are not in use.  A demand-attach File Server can
+also save state to disk for faster restarts.
+
+The choice of traditional or demand-attach File Server must be made at
+compile time, and the required setup in F<BosConfig> is different for the
+two servers.  When changing from a traditional File Server to
+demand-attach or vice versa, you will need to stop and remove the C<fs> or
+C<dafs> node in F<BosConfig> and create a new node of the appropriate
+type.  See L<bos_create(8)> for more information.
+
 Do not use the B<-k> and B<-w> arguments, which are intended for use
 by the OpenAFS developers only. Changing them from their default
 values can result in unpredictable File Server behavior.  In any case,
@@ -613,15 +628,23 @@ This option is not supported on platforms other than IRIX.
 
 =head1 EXAMPLES
 
-The following B<bos create> command creates an fs process on the file
-server machine C<fs2.abc.com> that uses the large configuration size, and
-allows volumes to exceed their quota by 10%. Type the command on a single
-line:
+The following B<bos create> command creates a traditional fs process on
+the file server machine C<fs2.abc.com> that uses the large configuration
+size, and allows volumes to exceed their quota by 10%. Type the command on
+a single line:
 
    % bos create -server fs2.abc.com -instance fs -type fs \
-                -cmd "/usr/afs/bin/fileserver -pctspare 10 \
-                -L" /usr/afs/bin/volserver /usr/afs/bin/salvager
+                -cmd "/usr/afs/bin/fileserver -pctspare 10 -L" \
+                /usr/afs/bin/volserver /usr/afs/bin/salvager
 
+The following is an equivalent B<bos create> command for a demand-attach
+File Server:
+
+   % bos create -server fs2.abc.com -instance dafs -type dafs \
+                -cmd "/usr/afs/bin/fileserver -pctspare 10 -L" \
+                /usr/afs/bin/volserver \
+                /usr/afs/bin/salvageserver \
+                /usr/afs/bin/salvager
 
 =head1 TROUBLESHOOTING
 

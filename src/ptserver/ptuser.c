@@ -8,28 +8,8 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afs_usrops.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "rx/rx.h"
-#include "rx/xdr.h"
-#include "afs/auth.h"
-#include "afs/cellconfig.h"
-#include "afs/afsutil.h"
-#include "afs/ptclient.h"
-#include "afs/ptuser.h"
-#include "afs/pterror.h"
-#include "afs/com_err.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <ctype.h>
 #include <sys/types.h>
@@ -46,16 +26,156 @@
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+#include <errno.h>
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
-#endif /* defined(UKERNEL) */
 
+#ifdef UKERNEL
+# include "afs_usrops.h"
+#endif
 
 struct ubik_client *pruclient = 0;
 static afs_int32 lastLevel;	/* security level pruclient, if any */
 
 static char *whoami = "libprot";
+
+
+#define ID_HASH_SIZE 1024
+#define ID_STACK_SIZE 1024
+
+/**
+ * Hash table chain of user and group ids.
+ */
+struct idchain {
+    struct idchain *next;
+    afs_int32 id;
+};
+
+/**
+ * Hash table of user and group ids.
+ */
+struct idhash {
+    afs_uint32 userEntries;         /**< number of user id entries hashed */
+    afs_uint32 groupEntries;        /**< number of group id entries hashed */
+    struct idchain *hash[ID_HASH_SIZE];
+};
+
+/**
+ * Allocate a new id hash table.
+ */
+static afs_int32
+AllocateIdHash(struct idhash **aidhash)
+{
+    struct idhash *idhash;
+
+    idhash = (struct idhash *)malloc(sizeof(struct idhash));
+    if (!idhash) {
+       return ENOMEM;
+    }
+    memset((void *)idhash, 0, sizeof(struct idhash));
+    *aidhash = idhash;
+    return 0;
+}
+
+/**
+ * Free the id hash.
+ */
+static void
+FreeIdHash(struct idhash *idhash)
+{
+    int index;
+    struct idchain *chain;
+    struct idchain *next;
+
+    for (index = 0; index < ID_HASH_SIZE; index++) {
+       for (chain = idhash->hash[index]; chain; chain = next) {
+           next = chain->next;
+           free(chain);
+       }
+    }
+    free(idhash);
+}
+
+/**
+ * Indicate if group/user id is already hashed, and
+ * if not insert it.
+ *
+ * @returns whether id is present
+ *   @retval >0 id is already present in the hash
+ *   @retval 0  id was not found and was inserted into the hash
+ *   @retval <0 error encountered
+ */
+static afs_int32
+FindId(struct idhash *idhash, afs_int32 id)
+{
+    afs_int32 index;
+    struct idchain *chain;
+    struct idchain *newChain;
+
+    index = abs(id) % ID_HASH_SIZE;
+    for (chain = idhash->hash[index]; chain; chain = chain->next) {
+	if (chain->id == id) {
+	    return 1;
+	}
+    }
+
+    /* Insert this id but return not found. */
+    newChain = (struct idchain *)malloc(sizeof(struct idchain));
+    if (!newChain) {
+	return ENOMEM;
+    } else {
+	newChain->id = id;
+	newChain->next = idhash->hash[index];
+	idhash->hash[index] = newChain;
+	if (id < 0) {
+	    idhash->groupEntries++;
+	} else {
+	    idhash->userEntries++;
+	}
+    }
+    return 0;
+}
+
+/**
+ * Create an idlist from the ids in the hash.
+ */
+static afs_int32
+CreateIdList(struct idhash *idhash, idlist * alist, afs_int32 select)
+{
+    struct idchain *chain;
+    afs_int32 entries = 0;
+    int index;
+    int i;
+
+    if (select & PRGROUPS) {
+	entries += idhash->groupEntries;
+    }
+    if (select & PRUSERS) {
+	entries += idhash->userEntries;
+    }
+
+    alist->idlist_len = entries;
+    alist->idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * entries);
+    if (!alist->idlist_val) {
+	return ENOMEM;
+    }
+
+    for (i = 0, index = 0; index < ID_HASH_SIZE; index++) {
+	for (chain = idhash->hash[index]; chain; chain = chain->next) {
+	    if (chain->id < 0) {
+		if (select & PRGROUPS) {
+		    alist->idlist_val[i++] = chain->id;
+		}
+	    } else {
+		if (select & PRUSERS) {
+		    alist->idlist_val[i++] = chain->id;
+		}
+	    }
+	}
+    }
+    return 0;
+}
 
 afs_int32
 pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
@@ -569,6 +689,100 @@ pr_IDListMembers(afs_int32 gid, namelist *lnames)
 }
 
 int
+pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
+{
+    afs_int32 code;
+    afs_int32 gid;
+    idlist lids;
+    prlist alist;
+    afs_int32 over;
+    struct idhash *members = NULL;
+    afs_int32 *stack = NULL;
+    afs_int32 maxstack = ID_STACK_SIZE;
+    int n = 0;			/* number of ids stacked */
+    int i;
+    int firstpass = 1;
+
+    code = AllocateIdHash(&members);
+    if (code) {
+	return code;
+    }
+    stack = (afs_int32 *) malloc(sizeof(afs_int32) * maxstack);
+    if (!stack) {
+	code = ENOMEM;
+	goto done;
+    }
+
+    stack[n++] = aid;
+    while (n) {
+	gid = stack[--n];	/* pop next group id */
+	alist.prlist_len = 0;
+	alist.prlist_val = NULL;
+	if (firstpass || aid < 0) {
+	    firstpass = 0;
+	    code = ubik_PR_ListElements(pruclient, 0, gid, &alist, &over);
+	} else {
+	    code = ubik_PR_ListSuperGroups(pruclient, 0, gid, &alist, &over);
+	    if (code == RXGEN_OPCODE) {
+	        alist.prlist_len = 0;
+		alist.prlist_val = NULL;
+		code = 0; /* server does not support supergroups. */
+	    }
+	}
+	if (code)
+	    goto done;
+	if (over) {
+	    fprintf(stderr,
+		    "membership list for id %d exceeds display limit\n", gid);
+	}
+	for (i = 0; i < alist.prlist_len; i++) {
+	    afs_int32 found;
+	    afs_int32 id;
+
+	    id = alist.prlist_val[i];
+	    found = FindId(members, id);
+	    if (found < 0) {
+		code = found;
+		xdr_free((xdrproc_t) xdr_prlist, &alist);
+		goto done;
+	    }
+	    if (found == 0 && id < 0) {
+		if (n == maxstack) {	/* need more stack space */
+		    afs_int32 *tmp;
+		    maxstack += n;
+		    tmp =
+			(afs_int32 *) realloc(stack,
+					      maxstack * sizeof(afs_int32));
+		    if (!tmp) {
+			code = ENOMEM;
+			xdr_free((xdrproc_t) xdr_prlist, &alist);
+			goto done;
+		    }
+		    stack = tmp;
+		}
+		stack[n++] = id;	/* push group id */
+	    }
+	}
+	xdr_free((xdrproc_t) xdr_prlist, &alist);
+    }
+
+    code = CreateIdList(members, &lids, (aid < 0 ? PRUSERS : PRGROUPS));
+    if (code) {
+	goto done;
+    }
+    code = pr_IdToName(&lids, lnames);
+    if (lids.idlist_len)
+	free(lids.idlist_val);
+
+  done:
+    if (stack)
+	free(stack);
+    if (members)
+	FreeIdHash(members);
+    return code;
+}
+
+int
 pr_ListEntry(afs_int32 id, struct prcheckentry *aentry)
 {
     register afs_int32 code;
@@ -750,5 +964,29 @@ pr_SetFieldsEntry(afs_int32 id, afs_int32 mask, afs_int32 flags, afs_int32 ngrou
     code =
 	ubik_PR_SetFieldsEntry(pruclient, 0, id, mask, flags, ngroups,
 		  nusers, 0, 0);
+    return code;
+}
+
+int
+pr_ListSuperGroups(afs_int32 gid, namelist * lnames)
+{
+    afs_int32 code;
+    prlist alist;
+    idlist *lids;
+    afs_int32 over;
+
+    alist.prlist_len = 0;
+    alist.prlist_val = 0;
+    code = ubik_PR_ListSuperGroups(pruclient, 0, gid, &alist, &over);
+    if (code)
+	return code;
+    if (over) {
+	fprintf(stderr, "supergroup list for id %d exceeds display limit\n",
+		gid);
+    }
+    lids = (idlist *) & alist;
+    code = pr_IdToName(lids, lnames);
+
+    xdr_free((xdrproc_t) xdr_prlist, &alist);
     return code;
 }

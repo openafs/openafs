@@ -7,16 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if defined(UKERNEL)
-#include "afs/lock.h"
-#include "ubik.h"
-#include "afs/ptint.h"
-#include "afs/ptserver.h"
-#else /* defined(UKERNEL) */
 #include <lock.h>
 #include <ubik.h>
 #include "ptint.h"
 #include "ptserver.h"
-#endif /* defined(UKERNEL) */
 
 #define pr_ErrorMsg afs_error_message

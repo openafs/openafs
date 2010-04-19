@@ -341,26 +341,18 @@ typedef long usr_ino_t;
 #ifdef VFIFO
 #undef VFIFO
 #endif
-#ifdef VDOOR
-#undef VDOOR
-#endif
-#ifdef VBAD
-#undef VBAD
-#endif
 #ifdef VSOCK
 #undef VSOCK
 #endif
 
-#define VNON			0
-#define VREG			1
-#define VDIR			2
-#define VBLK			3
-#define VCHR			4
-#define VLNK			5
-#define VFIFO			6
-#define VDOOR			7
-#define VBAD			8
-#define VSOCK			9
+#define VNON 0
+#define VREG S_IFREG
+#define VDIR S_IFDIR
+#define VBLK S_IFBLK
+#define VCHR S_IFCHR
+#define VLNK S_IFLNK
+#define VSOCK S_IFSOCK
+#define VFIFO S_IFIFO
 
 typedef int usr_vtype_t;
 
@@ -960,10 +952,10 @@ extern pthread_cond_t usr_sleep_cond;
 	pthread_attr_t attr; \
 	assert(pthread_attr_init(&attr) == 0); \
 	assert(pthread_attr_setstacksize(&attr, 124288) == 0); \
-	assert(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0); \
 	assert(pthread_create((A), &attr, (B), (void *)(C)) == 0); \
 	assert(pthread_attr_destroy(&attr) == 0); \
     } while(0)
+#define usr_thread_join(A,B)	pthread_join(A, B)
 #define usr_thread_detach(A)	pthread_detach(A)
 #define usr_keycreate(A,B)	assert(pthread_key_create(A,B) == 0)
 #define usr_setspecific(A,B)	pthread_setspecific(A,B)
@@ -1160,7 +1152,6 @@ extern struct usr_ucred *usr_crget(void);
 extern struct usr_ucred *usr_crcopy(struct usr_ucred *);
 extern int usr_crhold(struct usr_ucred *);
 extern int usr_crfree(struct usr_ucred *);
-extern struct usr_ucred *afs_global_ucredp;
 
 struct usr_proc {
     unsigned long p_flag;
@@ -1299,12 +1290,6 @@ struct usr_vfs {
     struct usr_vfsops *vfs_op;
 };
 
-struct usr_sysent {
-    char sy_narg;
-    int (*sy_call) (void);
-};
-extern struct usr_sysent usr_sysent[];
-
 struct usr_ifnet {
     struct usr_ifnet *if_next;
     short if_flags;
@@ -1338,14 +1323,6 @@ struct usr_in_ifaddr {
     struct in_addr ia_netbroadcast;
 };
 extern struct usr_in_ifaddr *usr_in_ifaddr;
-
-extern usr_key_t afs_global_u_key;	/* for per thread authentication */
-
-#if defined(AFS_USR_OSF_ENV)
-extern char V;
-#else
-extern long V;
-#endif
 
 #endif /* UKERNEL */
 

@@ -1,14 +1,14 @@
-Source: openafs
-Section: net
+Source: openafs-modules
+Section: kernel
 Priority: optional
-Maintainer: Sam Hartman <hartmans@debian.org>
-Uploaders: Russ Allbery <rra@debian.org>
+Maintainer: Russ Allbery <rra@debian.org>
+Uploaders: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 5), flex, bison
-Standards-Version: 3.7.2
+Standards-Version: 3.8.3
 
 Package: openafs-modules-=KVERS
-Conflicts: openafs-client (<< 1.2.9)
-Provides: openafs-modules2
+Conflicts: openafs-client (<< 1.5.61)
+Provides: openafs-modules3
 Architecture: any
 Recommends: =IMG-=KVERS
 Description: AFS distributed filesystem kernel module

@@ -166,7 +166,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define SYS_NAME	"alpha_dux50"
 #define SYS_NAME_ID	SYS_NAME_ID_alpha_dux50
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
+#define AFS_HAVE_STATVFS	1	/* System supports statvfs */
 #define AFSLITTLE_ENDIAN        1
 
 /* Extra kernel definitions (from kdefs file) */

@@ -55,25 +55,12 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "../afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/stds.h"
-#include "../rx/xdr.h"
-#include "../rx/rx.h"
-#include "../afs/lifetimes.h"
-#include "../afs/rxkad.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -86,7 +73,6 @@
 #include <rx/rx.h>
 #include "lifetimes.h"
 #include "rxkad.h"
-#endif /* defined(UKERNEL) */
 
 #include "v5gen-rewrite.h"
 #include "asn1-common.h"

@@ -184,6 +184,18 @@ No extra blank lines or newline characters are allowed in the file, even
 after the last entry. Their presence can prevent the Cache Manager from
 reading the file into kernel memory, resulting in an error message.
 
+For the client F<CellServDB>, it may be desirable to make the client aware
+of a cell (so that it's listed by default in F</afs> when the B<-dynroot>
+flag to B<afsd> is in use, for instance) without specifying the database
+server machines for that cell.  This can be done by including only the
+cell line (starting with C<< > >>) and omitting any following database
+server machine lines.  This only works if B<afsd> is configured, with the
+B<-afsdb> option, to use AFSDB record lookups to locate database server
+machines.  If the cell has such records and the client is configured to
+use them, this configuration won't require updates to the client
+F<CellServDB> file when the IP addresses of the database server machines
+change.
+
 grand.central.org maintains a list of the database server machines in all
 cells that have registered themselves as receptive to access from foreign
 cells. When a cell's administrators change its database server machines,
