@@ -45,6 +45,7 @@ AH_BOTTOM([
  * try and reduce potential confusion. 
  */
 #define _FILE_OFFSET_BITS 64
+#define AFS_CACHE_VNODE_PATH
 #endif
 
 #undef AFS_NAMEI_ENV
@@ -1523,6 +1524,7 @@ AC_SUBST(XSLTPROC)
 
 OPENAFS_OSCONF
 OPENAFS_KRB5CONF
+OPENAFS_FUSE
 
 TOP_SRCDIR="${srcdir}/src"
 dnl

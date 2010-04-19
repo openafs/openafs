@@ -20,7 +20,7 @@
 #include <afs/cellconfig.h>
 #include <afs/sys_prototypes.h>
 
-#include <afs/afs_const.h>
+#include <afs/afs_consts.h>
 
 /*#include <rx/rxkad.h>*/
 #include <rx/rx_null.h>

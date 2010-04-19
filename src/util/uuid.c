@@ -247,11 +247,8 @@ afs_uuid_create(afsUUID * uuid)
     afs_int32 got_no_time = 0, code;
 
     if (!uuid_init_done) {
-	union {
-	    uuid_time_t t;
-	    u_short seed[4];
-	} uuid_time;
-	u_short seed = 0;
+	uuid_time_t t;
+	u_short seedp[4], seed = 0;
 	rand_m = 971;;
 	rand_ia = 11113;
 	rand_ib = 104322;
@@ -267,11 +264,12 @@ afs_uuid_create(afsUUID * uuid)
 	 * independent.  Then for good measure to ensure a unique seed when there
 	 * are multiple processes creating UUID's on a system, we add in the PID.
 	 */
-	uuid__get_os_time(&uuid_time.t);
-	seed ^= uuid_time.seed[0];
-	seed ^= uuid_time.seed[1];
-	seed ^= uuid_time.seed[2];
-	seed ^= uuid_time.seed[3];
+	uuid__get_os_time(&t);
+	memcpy(&seedp, &t, sizeof(seedp));
+	seed ^= seedp[0];
+	seed ^= seedp[1];
+	seed ^= seedp[2];
+	seed ^= seedp[3];
 #if defined(KERNEL) && defined(AFS_XBSD_ENV)
 	rand_irand += seed + (afs_uint32) curproc->p_pid;
 #elif defined(UKERNEL)

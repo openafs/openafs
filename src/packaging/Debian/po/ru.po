@@ -1,0 +1,253 @@
+# translation of ru.po to Russian
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Yuri Kozlov <yuray@komyakino.ru>, 2009.
+msgid ""
+msgstr ""
+"Project-Id-Version: openafs 1.4.10+dfsg1-2\n"
+"Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"PO-Revision-Date: 2009-06-16 20:50+0400\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
+"Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid "DB server host names for your home cell:"
+msgstr "Имена машин-серверов БД ячейки:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid ""
+"AFS uses the file /etc/openafs/CellServDB to hold the list of servers that "
+"should be contacted to find parts of a cell.  The cell you claim this "
+"workstation belongs to is not in that file.  Enter the host names of the "
+"database servers separated by spaces. IMPORTANT: If you are creating a new "
+"cell and this machine is to be a database server in that cell, only enter "
+"this machine's name; add the other servers later after they are functioning. "
+"Also, do not enable the AFS client to start at boot on this server until the "
+"cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
+"client to enable the client."
+msgstr ""
+"AFS использует файл /etc/openafs/CellServDB для хранения списка серверов, "
+"с которыми нужно соединяться при поиске частей ячейки. Ячейка, которой "
+"принадлежит данная рабочая станция, указывается не в этом файле. Введите "
+"имена хостов серверов базы данных через пробел. ВАЖНО: если вы создаёте "
+"новую ячейку и эта машина является базой данных этой ячейки, то введите "
+"здесь только имя данной машины; добавляйте другие серверы по мере ввода "
+"их в работу. "
+"Также, выключите запуск клиента AFS при загрузке машины пока не будет "
+"настроена ячейка. Когда будете готовы, можете включить клиент, "
+"отредактировав файл /etc/openafs/afs.conf.client."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid "AFS cell this workstation belongs to:"
+msgstr "Ячейка AFS, которой принадлежит данная рабочая станция:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid ""
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
+msgstr ""
+"Всё файловое пространство AFS сгруппировано в ячейки или административные "
+"домены. Каждая рабочая станция принадлежит определённой ячейке. Обычно, "
+"ячейка характеризуется доменным именем DNS данной машины."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid "Size of AFS cache in kB:"
+msgstr "Размер кэша AFS в килобайтах:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid ""
+"AFS uses an area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
+msgstr ""
+"AFS использует часть диска для кэширования удалённых файлов для ускорения "
+"доступа. Этот кэш будет смонтирован в каталог /var/cache/openafs. "
+"Очень важно, чтобы кэш не переполнил раздел на котором расположен. "
+"Часто пользователи создают отдельный раздел для кэша AFS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid "Run Openafs client now and at boot?"
+msgstr "Запустить клиента Openafs сейчас и при включении компьютера?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid ""
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
+msgstr ""
+"Обычно, большинство пользователей, устанавливающих пакет "
+"openafs-client, ожидают, что AFS будет монтироваться автоматически "
+"при включении компьютера. Однако, если вы планируете настройку "
+"новой ячейки или работаете на ноутбуке, то можете не захотеть этого. "
+"Если вы укажите не запускать AFS при включении, то по желанию "
+"его можно запустить командой /etc/init.d/openafs-client force-start."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid "Look up AFS cells in DNS?"
+msgstr "Искать ячейки AFS в DNS?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid ""
+"In order to contact an AFS cell, you need the IP addresses of the cell's "
+"database servers.  Normally, this information is read from /etc/openafs/"
+"CellServDB.  However, if Openafs cannot find a cell in that file, it can use "
+"DNS to look for AFSDB records that contain the information."
+msgstr ""
+"Чтобы подключиться к ячейке AFS вам нужны IP-адреса серверов базы данных "
+"ячейки. Обычно, эта информация берётся из файла /etc/openafs/CellServDB. "
+"Однако, если Openafs не может найти ячейку в этом файле, то она может "
+"поискать записи AFSDB в DNS, в которых тоже содержится данная информация."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid "Encrypt authenticated traffic with AFS fileserver?"
+msgstr "Шифровать обмен с файловым сервером AFS во время аутентификации?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid ""
+"AFS provides a weak form of encryption that can optionally be used between a "
+"client and the fileservers.  While this encryption is weaker than DES and "
+"thus is not sufficient for highly confidential data, it does provide some "
+"confidentiality and is likely to make the job of a casual attacker "
+"significantly more difficult."
+msgstr ""
+"AFS предоставляет нестойкое подобие шифрования, которое можно включить "
+"для обмена данными между клиентом и файловыми серверами. Хотя это шифрование "
+"слабее чем DES и недостаточно для очень конфиденциальных данных, оно всё же "
+"обеспечивает некоторую защиту, которая значительно осложнит работу "
+"неискушённому атакующему."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "Dynamically generate the contents of /afs?"
+msgstr "Генерировать содержимое /afs динамически?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"/afs generally contains an entry for each cell that a client can talk to. "
+"Traditionally, these entries were generated by servers in the client's home "
+"cell.  However, OpenAFS clients can generate the contents of /afs "
+"dynamically based on the contents of /etc/openafs/CellServDB and DNS."
+msgstr ""
+"В /afs, в основном, содержатся элементы для каждой ячейки, с которыми работает клиент. "
+"Обычно, эти элементы генерируются серверами клиентской домашней ячейки. Однако, "
+"клиенты OpenAFS могут генерировать содержимое /afs динамически на основе содержимого "
+"/etc/openafs/CellServDB и DNS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"If you generate /afs dynamically, you may need to create /etc/openafs/"
+"CellAlias to include aliases for common cells.  (The syntax of this file is "
+"one line per alias, with the cell name, a space, and then the alias for that "
+"cell.)"
+msgstr ""
+"Если вы разрешите генерировать /afs динамически, то вам может потребоваться "
+"создать /etc/openafs/CellAlias с псевдонимами часто используемых ячеек. (В файле "
+"указываются псевдонимы по одному на строку в формате: имя ячейки, пробел, "
+"псевдоним ячейки.)"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid "Use fakestat to avoid hangs when listing /afs?"
+msgstr ""
+"Использовать fakestat, чтобы избежать зависаний при просмотре списка "
+"содержимого /afs?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid ""
+"Because AFS is a global file space, operations on the /afs directory can "
+"generate significant network traffic.  If some AFS cells are unavailable "
+"then looking at /afs using ls or a graphical file browser may hang your "
+"machine for minutes.  AFS has an option to simulate answers to these "
+"operations locally to avoid these hangs.  You want this option under most "
+"circumstances."
+msgstr ""
+"Так как AFS представляет собой глобальное файловое пространство, операции "
+"с каталогом /afs могут создавать значительный сетевой трафик. "
+"Если некоторые ячейки AFS недоступны, то просмотр /afs с помощью "
+"команды ls или графического файлового обозревателя может приостановить "
+"работу машины на несколько минут. В AFS есть возможность симулировать "
+"ответы для таких операций, чтобы предотвратить зависания. В большинстве "
+"случаев лучше воспользоваться данной возможностью."
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid "Cell this server serves files for:"
+msgstr "Ячейка, для которой работает сервер:"
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid ""
+"AFS fileservers belong to a cell.  They have the key for that cell's "
+"Kerberos service and serve volumes into that cell.  Normally, this cell is "
+"the same cell as the workstation's client belongs to."
+msgstr ""
+"Файловые серверы AFS принадлежат ячейке. У них есть ключ для службы Kerberos "
+"их ячейки, и они обслуживают тома этой ячейки. Обычно, эта ячейка совпадает "
+"с ячейкой, которой принадлежит клиент рабочей станции."
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid "OpenAFS file server probably does not work!"
+msgstr "Вероятно, файловый сервер OpenAFS не работает!"
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid ""
+"You are running the OpenAFS file server package on an alpha.  This probably "
+"doesn't work; the DES code is flaky on the alpha, along with the threaded "
+"file server.  Likely, the fileserver will simply fail to start, but if it "
+"does load, data corruption may result.  You have been warned."
+msgstr ""
+"Вы работаете с пакетом файлового сервера OpenAFS на архитектуре alpha. "
+"Скорее всего, он не работает; код DES часто отказывает на alpha, тоже "
+"случается и с потоковым файловым сервером. Вероятно, файловый сервер "
+"просто не запустится, но если это даже произойдёт, то в результате "
+"это может повредить данные. Это было предупреждение."
+

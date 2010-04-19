@@ -8,25 +8,10 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 #include <stdio.h>
 
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "rx/xdr.h"
-#include "rx/rx.h"
-#include "rxkad/lifetimes.h"
-#include "des.h"
-#include "des/des_prototypes.h"
-#include "rx/rxkad.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -41,7 +26,6 @@
 #include <rx/rx.h>
 #include "lifetimes.h"
 #include "rxkad.h"
-#endif /* defined(UKERNEL) */
 
 /* This union is used to insure we allocate enough space for a key
  * schedule even if we are linked against a library that uses OpenSSL's

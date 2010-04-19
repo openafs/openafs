@@ -833,6 +833,7 @@ extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 				    afs_int32 acell, u_short aport,
 				    afs_int32 locktype, afsUUID * uuidp,
 				    afs_int32 addr_uniquifier);
+extern void afs_GetCapabilities(struct server *ts);
 extern void ForceAllNewConnections(void);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
 extern afs_int32 afs_ServerDown(struct srvAddr *sa);
@@ -1345,7 +1346,7 @@ extern void afs_ntohuuid(afsUUID * uuidp);
 extern afs_int32 afs_uuid_create(afsUUID * uuid);
 extern u_short afs_uuid_hash(afsUUID * uuid);
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV) || defined(UKERNEL)
 #include "osi_prototypes.h"
 #endif
 

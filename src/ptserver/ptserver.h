@@ -7,11 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if defined(UKERNEL)
-#include "afs/ptint.h"
-#else /* defined(UKERNEL) */
 #include "ptint.h"
-#endif /* defined(UKERNEL) */
 
 #define	PRSRV		73
 

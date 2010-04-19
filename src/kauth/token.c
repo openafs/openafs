@@ -12,27 +12,12 @@
    from the AuthServer. */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
+
+#ifdef UKERNEL
+# include "afsincludes.h"
 #endif
 
-
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "rx/xdr.h"
-#include "afs/pthread_glock.h"
-#include "afs/lock.h"
-#include "ubik.h"
-#include "afs/kauth.h"
-#include "afs/kautils.h"
-#include "afs/auth.h"
-#include "afs/pthread_glock.h"
-#include "afs/afsutil.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <rx/xdr.h>
@@ -53,7 +38,6 @@
 #include "kauth.h"
 #include "kautils.h"
 #include <afs/auth.h>
-#endif /* defined(UKERNEL) */
 
 
 afs_int32

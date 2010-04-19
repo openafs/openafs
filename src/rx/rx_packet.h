@@ -12,11 +12,9 @@
 #if defined(AFS_NT40_ENV) 
 #include "rx_xmit_nt.h"
 #endif
-#ifndef UKERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/uio.h>
 #endif /* !AFS_NT40_ENV */
-#endif /* !UKERNEL */
 /* this file includes the macros and decls which depend on packet
  * format, and related packet manipulation macros.  Note that code
  * which runs at NETPRI should not sleep, or AIX will panic */

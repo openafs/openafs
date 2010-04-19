@@ -11,13 +11,8 @@
 #include <afs/param.h>
 
 
-#if defined(UKERNEL)
-#include "rx/xdr.h"
-#include "afs/kauth.h"
-#else /* defined(UKERNEL) */
 #include <rx/xdr.h>
 #include <afs/kauth.h>
-#endif /* defined(UKERNEL) */
 
 #define MAXBS	2048		/* try to avoid horrible allocs */
 

@@ -8,31 +8,8 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-
-#if defined(UKERNEL)
-#if defined(HAVE_UNISTD_H) && !defined(__USE_XOPEN)
-#define __USE_XOPEN
-#endif
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs/stds.h"
-#include "afs/pthread_glock.h"
-#include "afs/cellconfig.h"
-#include "afs/afsutil.h"
-#include "afs/auth.h"
-#include "afs/kauth.h"
-#include "afs/kautils.h"
-#include "afs/pthread_glock.h"
-#include "des/des.h"
-#include "des/des_prototypes.h"
-
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <stdio.h>
@@ -54,7 +31,6 @@
 #include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
-#endif /* defined(UKERNEL) */
 
 
 /* This defines the Andrew string_to_key function.  It accepts a password

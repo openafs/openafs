@@ -15,10 +15,6 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics stuff */
 
-int afs_statfs(register struct vfs *afsp, struct statfs *abp);
-int afs_sync(struct vfs *afsp);
-
-
 struct vfsops Afs_vfsops = {
     afs_mount,
     afs_unmount,
@@ -116,6 +112,21 @@ afs_statfs(register struct vfs *afsp, struct statfs *abp)
     abp->f_bsize = afsp->vfs_bsize;
     abp->f_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
     abp->f_fsid.val[1] = (intptr_t)AFS_VFSFSID;
+    return 0;
+}
+
+int
+afs_statvfs(struct vfs *afsp, struct statvfs *abp)
+{
+    AFS_STATCNT(afs_statfs);
+
+    abp->f_frsize = 1024;
+    abp->f_favail = 9000000;
+    abp->f_bsize = afsp->vfs_bsize;
+    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
+      abp->f_ffree = 9000000;
+    abp->f_fsid = (AFS_VFSMAGIC << 16) || AFS_VFSFSID;
+
     return 0;
 }
 

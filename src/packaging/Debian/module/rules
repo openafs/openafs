@@ -22,8 +22,8 @@ endif
 # Determine whether we're building with optimization.  This doesn't really
 # work at the moment due to upstream problems.
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
-    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-optimize-lwp
+    DEBIAN_KERN_FLAGS = --disable-optimize-kernel
 else
     DEBIAN_OPT_FLAGS =
     DEBIAN_KERN_FLAGS =
@@ -41,7 +41,8 @@ export KSRC
 export KVERS
 export KPKG_DEST_DIR
 
-SYS_NAME  := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" sh debian/sysname)
+SYS_NAME  := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" ARCH="$(ARCH)" \
+		sh debian/sysname)
 
 package    = openafs
 modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}
@@ -57,42 +58,44 @@ configure-stamp:
 	sh debian/prep-modules $(KSRC)
 	sh configure --with-afs-sysname=$(SYS_NAME) \
 	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
-	    --enable-debug --enable-lwp-debug --enable-kernel-debug \
+	    --with-linux-kernel-packaging --enable-disconnected \
+	    --enable-debug --enable-debug-lwp --enable-debug-kernel \
 	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
-	touch configure-stamp
+	touch $@
 
 build: build-arch build-indep
-build-arch: build-arch-stamp
+build-arch: build-stamp
 build-indep:
-build-arch-stamp: configure-stamp
-	make only_libafs
-	touch build-arch-stamp
+build-stamp: configure-stamp
+	$(MAKE)
+	touch $@
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-arch-stamp configure-stamp
-	[ ! -f Makefile ] || $(MAKE) distclean
-	dh_clean
+	rm -rf src/libafs/MODLOAD-* *-stamp
+	dh_clean Makefile config.log config.status src/libafs/Makefile \
+	    src/libafs/Makefile.common src/libafs/asm src/libafs/asm-generic \
+	    src/libafs/h src/libafs/linux src/libafs/net src/libafs/netinet \
+	    src/libafs/rpc src/libafs/sys
 
-install: build-arch-stamp
+install: install-stamp
+install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	cd src/libafs && make install
+	cd src/libafs && make install DESTDIR=$(CURDIR)/debian/tmp
 	install -d -g root -o root -m 755 $(moduledir)
-	install -g root -o root -m 755 debian/tmp/lib/openafs/*o $(moduledir)/
-	if test -f $(moduledir)/openafs.o \
-	        -a ! -f $(moduledir)/openafs.mp.o ; then \
-	    ln $(moduledir)/openafs.o $(moduledir)/openafs.mp.o || exit 1 ; \
-	fi
+	install -g root -o root -m 644 \
+	    debian/tmp/lib/modules/*/extra/openafs/*o $(moduledir)/
+	touch $@
 
 binary: binary-arch binary-indep
 binary-indep:
-binary-arch: install
+binary-arch: install-stamp
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs NEWS
+	dh_installchangelogs
 	dh_installdocs
 	dh_installmodules
 	dh_strip
@@ -108,11 +111,11 @@ binary-arch: install
 
 kdist_configure: configure-stamp
 
-kdist_image: build-arch-stamp
+kdist_image: build-stamp
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-arch
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
-kdist: build-arch-stamp
+kdist: build-stamp
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-arch
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
 	    sh -v debian/genchanges

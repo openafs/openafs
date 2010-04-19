@@ -542,6 +542,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     int nconns;
     struct rx_connection **rxconns;      
     afs_int32 *conntimer, *deltas, *results;
+    Capabilities *caps = NULL;
 
     AFS_STATCNT(afs_CheckServers);
 
@@ -587,6 +588,9 @@ afs_CheckServers(int adown, struct cell *acellp)
     conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
     deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
     results = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
+
+    caps = (Capabilities *)afs_osi_Alloc(j * sizeof (Capabilities));
+    memset(caps, 0, j * sizeof(Capabilities));
 
     for (i = 0; i < j; i++) {
 	deltas[i] = 0;
@@ -636,23 +640,72 @@ afs_CheckServers(int adown, struct cell *acellp)
 	}
     } /* Outer loop over addrs */
 
-    start = osi_Time();         /* time the gettimeofday call */
-    AFS_GUNLOCK(); 
+    AFS_GUNLOCK();
     multi_Rx(rxconns,nconns)
       {
-	tv.tv_sec = tv.tv_usec = 0;
-	multi_RXAFS_GetTime((afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
-	tc = conns[multi_i];
-	sa = tc->srvr;
-	if (conntimer[multi_i] == 1)
-	  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
-	end = osi_Time();
-	results[multi_i]=multi_error;
-	if ((start == end) && !multi_error)
-	  deltas[multi_i] = end - tv.tv_sec;
-	
+	multi_RXAFS_GetCapabilities(&caps[multi_i]);
+	results[multi_i] = multi_error;
       } multi_End;
-    AFS_GLOCK(); 
+    AFS_GLOCK();
+
+    for ( i = 0 ; i < nconns ; i++ ) {
+	ts = addrs[i]->server;
+	if ( !ts )
+	    continue;
+	ts->capabilities = 0;
+	ts->flags |= SCAPS_KNOWN;
+	if ( results[i] == RXGEN_OPCODE ) {
+	    /* Mark server as up - it responded */
+	    results[i] = 0;
+	    continue;
+	}
+	if ( results[i] >= 0 )
+	    /* we currently handle 32-bits of capabilities */
+	    if (caps[i].Capabilities_len > 0) {
+		ts->capabilities = caps[i].Capabilities_val[0];
+		xdr_free((xdrproc_t)xdr_Capabilities, &caps[i]);
+		caps[i].Capabilities_val = NULL;
+		caps[i].Capabilities_len = 0;
+	    }
+    }
+
+    if ( afs_setTime != 0 ) {
+	start = osi_Time();         /* time the gettimeofday call */
+	AFS_GUNLOCK();
+	if ( afs_setTimeHost == NULL ) {
+	    multi_Rx(rxconns,nconns)
+	      {
+		tv.tv_sec = tv.tv_usec = 0;
+		multi_RXAFS_GetTime(
+			(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
+		tc = conns[multi_i];
+		sa = tc->srvr;
+		if (conntimer[multi_i] == 1)
+		  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
+		end = osi_Time();
+		results[multi_i]=multi_error;
+		if ((start == end) && !multi_error)
+		  deltas[multi_i] = end - tv.tv_sec;
+
+	      } multi_End;
+	    }
+	else {			/* find and query setTimeHost only */
+	    for ( i = 0 ; i < j ; i++ ) {
+		if ( conns[i] == NULL || conns[i]->srvr == NULL )
+		    continue;
+		if ( conns[i]->srvr->server == afs_setTimeHost ) {
+		    tv.tv_sec = tv.tv_usec = 0;
+		    results[i] = RXAFS_GetTime(rxconns[i],
+				(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
+		    end = osi_Time();
+		    if ((start == end) && !results[i])
+			deltas[i] = end - tv.tv_sec;
+		    break;
+		}
+	    }
+	}
+	AFS_GLOCK();
+    }
     
     for(i=0;i<nconns;i++){
       tc = conns[i];
@@ -755,6 +808,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     afs_osi_Free(conntimer, j * sizeof(afs_int32));
     afs_osi_Free(deltas, j * sizeof(afs_int32));
     afs_osi_Free(results, j * sizeof(afs_int32));
+    afs_osi_Free(caps, j * sizeof(Capabilities));
     
 } /*afs_CheckServers*/
 
@@ -1623,6 +1677,54 @@ afs_RemoveSrvAddr(struct srvAddr *sap)
     }
 }
 
+/* afs_GetCapabilities
+ * Try and retrieve capabilities of a given file server. Carps on actual
+ * failure. Servers are not expected to support this RPC. */
+void
+afs_GetCapabilities(struct server *ts)
+{
+    Capabilities caps = {0, NULL};
+    struct vrequest treq;
+    struct afs_conn *tc;
+    struct unixuser *tu;
+    afs_int32 code;
+
+    if ( !ts )
+	return;
+    if ( !afs_osi_credp )
+	return;
+
+    if ((code = afs_InitReq(&treq, afs_osi_credp)))
+	return;
+    tu = afs_GetUser(treq.uid, ts->cell->cellNum, SHARED_LOCK);
+    if ( !tu )
+	return;
+    tc = afs_ConnBySA(ts->addr, ts->cell->fsport, ts->cell->cellNum, tu, 0, 1,
+								SHARED_LOCK);
+    if ( !tc )
+	return;
+    /* InitCallBackStateN, triggered by our RPC, may need this */
+    ReleaseWriteLock(&afs_xserver);
+    code = RXAFS_GetCapabilities(tc->id, &caps);
+    ObtainWriteLock(&afs_xserver, 723);
+    afs_PutConn(tc, SHARED_LOCK);
+    if ( code && code != RXGEN_OPCODE ) {
+	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
+	/* better not be anything to free. we failed! */
+	return;
+    }
+
+    ts->flags |= SCAPS_KNOWN;
+
+    if ( caps.Capabilities_len > 0 ) {
+	ts->capabilities = caps.Capabilities_val[0];
+	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
+	caps.Capabilities_len = 0;
+	caps.Capabilities_val = NULL;
+    }
+
+}
+
 /* afs_GetServer()
  * Return an updated and properly initialized server structure
  * corresponding to the server ID, cell, and port specified.
@@ -1824,6 +1926,10 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
     }
 
     ReleaseWriteLock(&afs_xsrvAddr);
+
+    if ( aport == AFS_FSPORT && !(newts->flags & SCAPS_KNOWN))
+	afs_GetCapabilities(newts);
+
     ReleaseWriteLock(&afs_xserver);
     return (newts);
 }				/* afs_GetServer */

@@ -7,7 +7,7 @@ if [ x"$KVERS" = x ] ; then
     exit 1
 fi
 
-case `uname -m` in
+case ${ARCH:-`uname -m`} in
 alpha)
     case $KVERS in
     2.2*)
@@ -21,14 +21,17 @@ alpha)
         ;;
     esac
     ;;
-hppa)
+arm|armel|armv5tel)
     case $KVERS in
     2.4*)
-        echo parisc_linux24
+        echo arm_linux24
+        ;;
+    2.6*)
+        echo arm_linux26
         ;;
     esac
     ;;
-i[3456]86)
+i[3456]86|lpia)
     case $KVERS in
     2.2*)
         echo i386_linux22

@@ -10,11 +10,7 @@
 /* These routines provide a convenient interface to the AuthServer. */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
@@ -23,25 +19,6 @@
 
 #define UBIK_LEGACY_CALLITER 1
 
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs_usrops.h"
-#include "afs/stds.h"
-#include "afs/pthread_glock.h"
-#include "des.h"
-#include "des_prototypes.h"
-#include "rx/rxkad.h"
-#include "afs/cellconfig.h"
-#include "ubik.h"
-#include "afs/auth.h"
-#include "afs/afsutil.h"
-
-#include "afs/kauth.h"
-#include "afs/kautils.h"
-#include "afs/pthread_glock.h"
-
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>
@@ -65,8 +42,10 @@
 #include <afs/afsutil.h>
 #include "kauth.h"
 #include "kautils.h"
-#endif /* defined(UKERNEL) */
 
+#ifdef UKERNEL
+#include "afs_usrops.h"
+#endif
 
 static struct afsconf_dir *conf = 0;
 static struct afsconf_cell explicit_cell_server_list;

@@ -74,7 +74,7 @@ webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
 linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a $(TEST_LIBS) $(XLIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a $(TEST_LIBS) $(XLIBS)
 
 
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
@@ -137,6 +137,8 @@ UAFSOBJ = \
 	$(UOBJ)/afs_pioctl.o \
 	$(UOBJ)/osi_vfsops.o \
 	$(UOBJ)/afs_usrops.o \
+	$(UOBJ)/afsd.o \
+	$(UOBJ)/afsd_uafs.o \
 	$(UOBJ)/xdr.o \
 	$(UOBJ)/xdr_afsuuid.o \
 	$(UOBJ)/afs_uuid.o \
@@ -144,6 +146,7 @@ UAFSOBJ = \
 	$(UOBJ)/osi_vnodeops.o \
 	$(UOBJ)/osi_vm.o \
 	$(UOBJ)/osi_groups.o \
+	$(UOBJ)/osi_gcpags.o \
 	$(UOBJ)/afsaux.o \
 	$(UOBJ)/Kvice.xdr.o \
 	$(UOBJ)/xdr_arrayn.o \
@@ -269,6 +272,8 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_pioctl.o \
 	$(WEBOBJ)/osi_vfsops.o \
 	$(WEBOBJ)/afs_usrops.o \
+	$(WEBOBJ)/afsd.o \
+	$(WEBOBJ)/afsd_uafs.o \
 	$(WEBOBJ)/xdr.o \
 	$(WEBOBJ)/xdr_afsuuid.o \
 	$(WEBOBJ)/afs_uuid.o \
@@ -276,6 +281,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/osi_vnodeops.o \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
+	$(WEBOBJ)/osi_gcpags.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
@@ -401,9 +407,12 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_pioctl.o \
 	$(WEBOBJ)/osi_vfsops.o \
 	$(WEBOBJ)/afs_usrops.o \
+	$(WEBOBJ)/afsd.o \
+	$(WEBOBJ)/afsd_uafs.o \
 	$(WEBOBJ)/osi_vnodeops.o \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
+	$(WEBOBJ)/osi_gcpags.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
@@ -528,6 +537,8 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_pioctl.o \
 	$(JUAFS)/osi_vfsops.o \
 	$(JUAFS)/afs_usrops.o \
+	$(JUAFS)/afsd.o \
+	$(JUAFS)/afsd_uafs.o \
 	$(JUAFS)/xdr.o \
 	$(JUAFS)/xdr_afsuuid.o \
 	$(JUAFS)/afs_uuid.o \
@@ -535,6 +546,7 @@ JUAFSOBJ = \
 	$(JUAFS)/osi_vnodeops.o \
 	$(JUAFS)/osi_vm.o \
 	$(JUAFS)/osi_groups.o \
+	$(JUAFS)/osi_gcpags.o \
 	$(JUAFS)/afsaux.o \
 	$(JUAFS)/Kvice.xdr.o \
 	$(JUAFS)/xdr_arrayn.o \
@@ -753,6 +765,10 @@ $(UOBJ)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE1)
 $(UOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE1)
+$(UOBJ)/afsd.o: $(TOP_SRCDIR)/afsd/afsd.c
+	$(CRULE1) @CFLAGS_NOERROR@
+$(UOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
+	$(CRULE1)
 $(UOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE1) -o afs_uuid.o
 $(UOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
@@ -766,6 +782,8 @@ $(UOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 $(UOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 	$(CRULE1)
 $(UOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
+	$(CRULE1)
+$(UOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
 	$(CRULE1)
 $(UOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
@@ -1020,6 +1038,10 @@ $(WEBOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE2)
 $(WEBOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE2)
+$(WEBOBJ)/afsd.o: $(TOP_SRCDIR)/afsd/afsd.c
+	$(CRULE2) @CFLAGS_NOERROR@
+$(WEBOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
+	$(CRULE2)
 $(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE2) -o afs_uuid.o
 $(WEBOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
@@ -1033,6 +1055,8 @@ $(WEBOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 $(WEBOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 	$(CRULE2)
 $(WEBOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
+	$(CRULE2)
+$(WEBOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
 	$(CRULE2)
 $(WEBOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE2)
@@ -1297,6 +1321,10 @@ $(JUAFS)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE1)
 $(JUAFS)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE1)
+$(JUAFS)/afsd.o: $(TOP_SRCDIR)/afsd/afsd.c
+	$(CRULE1) @CFLAGS_NOERROR@
+$(JUAFS)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
+	$(CRULE1)
 $(JUAFS)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE1) -o afs_uuid.o
 $(JUAFS)/assert.o: $(TOP_SRCDIR)/util/assert.c
@@ -1310,6 +1338,8 @@ $(JUAFS)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 $(JUAFS)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 	$(CRULE1)
 $(JUAFS)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
+	$(CRULE1)
+$(JUAFS)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
 	$(CRULE1)
 $(JUAFS)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
@@ -1473,6 +1503,7 @@ setup_common:
 	-ln -s /usr/include/nfs nfs
 	-ln -s /usr/include/inet inet
 	-ln -s /usr/include/ufs ufs
+	-ln -s $(TOP_SRCDIR)/afsd afsd
 	-ln -s $(NS_INCL) nsapi
 
 setup_uafs: UAFS setup_common

@@ -13,14 +13,6 @@
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
-#ifdef UKERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "des/des.h"
-#include "rx/rxkad.h"
-#include <netdb.h>
-#include <ctype.h>
-#else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -54,7 +46,7 @@
 #endif
 #include <rx/rxkad.h>
 #include <rx/rx.h>
-#endif /* UKERNEL */
+
 #include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"

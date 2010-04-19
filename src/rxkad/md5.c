@@ -32,22 +32,8 @@
  */
 
 #include <afsconfig.h>
-#if defined(UKERNEL)
-#include "../afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
-#if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/stds.h"
-#include "../rx/xdr.h"
-#include "../rx/rx.h"
-#include "../des/des.h"
-#include "../afs/lifetimes.h"
-#include "../afs/rxkad.h"
-#else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -60,13 +46,6 @@
 #include <rx/rxkad.h>
 #include <des.h>
 #include "lifetimes.h"
-#endif /* defined(UKERNEL) */
-
-
-
-
-
-
 
 #include "md5.h"
 #include "hash.h"

@@ -30,10 +30,15 @@
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
 #include "rx/rx_globals.h"
+#include "afsd/afsd.h"
 
 #define VFS 1
 #undef	VIRTUE
 #undef	VICE
+
+#ifndef AFS_CACHE_VNODE_PATH
+#error You must compile UKERNEL code with -DAFS_CACHE_VNODE_PATH
+#endif
 
 #define CACHEINFOFILE	"cacheinfo"
 #define	AFSLOGFILE	"AFSLog"
@@ -53,79 +58,40 @@ extern int cacheDiskType;
 
 char afs_LclCellName[64];
 
-struct usr_vnode *afs_FileTable[MAX_OSI_FILES];
-int afs_FileFlags[MAX_OSI_FILES];
-off_t afs_FileOffsets[MAX_OSI_FILES];
+static struct usr_vnode *afs_FileTable[MAX_OSI_FILES];
+static int afs_FileFlags[MAX_OSI_FILES];
+static off_t afs_FileOffsets[MAX_OSI_FILES];
 
 #define MAX_CACHE_LOOPS 4
 
-struct usr_vfs afs_RootVfs;
-struct usr_vnode *afs_RootVnode = NULL;
-struct usr_vnode *afs_CurrentDir = NULL;
+static struct usr_vfs afs_RootVfs;
+static struct usr_vnode *afs_RootVnode = NULL;
+static struct usr_vnode *afs_CurrentDir = NULL;
 
-afs_int32 cacheBlocks;		/* Num blocks in cache */
-afs_int32 cacheFiles = 1000;	/* Num files in workstation cache */
-afs_int32 cacheStatEntries = 300;	/* Num of stat cache entries */
-char cacheBaseDir[1024];	/* AFS cache directory */
-char confDir[1024];		/* AFS configuration directory */
-char afs_mountDir[1024];	/* AFS mount point */
-int afs_mountDirLen;		/* strlen of AFS mount point */
-char fullpn_DCacheFile[1024];	/* Full pathname of DCACHEFILE */
-char fullpn_VolInfoFile[1024];	/* Full pathname of VOLINFOFILE */
-char fullpn_CellInfoFile[1024];	/* Full pathname of CELLINFOFILE */
-char fullpn_AFSLogFile[1024];	/* Full pathname of AFSLOGFILE */
-char fullpn_CacheInfo[1024];	/* Full pathname of CACHEINFO */
-char fullpn_VFile[1024];	/* Full pathname of data cache files */
-char *vFileNumber;		/* Ptr to number in file pathname */
-char rootVolume[64] = "root.afs";	/* AFS root volume name */
-afs_int32 isHomeCell;		/* Is current cell info for home cell */
-int createAndTrunc = O_CREAT | O_TRUNC;	/* Create & truncate on open */
-int ownerRWmode = 0600;		/* Read/write OK by owner */
-static int nDaemons = 2;	/* Number of background daemons */
-static int chunkSize = 0;	/* 2^chunkSize bytes per chunk */
-static int dCacheSize = 300;	/* # of dcache entries */
-static int vCacheSize = 50;	/* # of volume cache entries */
-static int cacheFlags = 0;	/* Flags to cache manager */
-static int preallocs = 400;	/* Def # of allocated memory blocks */
-int afsd_verbose = 0;		/* Are we being chatty? */
-int afsd_debug = 0;		/* Are we printing debugging info? */
-int afsd_CloseSynch = 0;	/* Are closes synchronous or not? */
+static char afs_mountDir[1024];	/* AFS mount point */
+static int afs_mountDirLen;		/* strlen of AFS mount point */
 
-#define AFSD_INO_T afs_uint32
-char **pathname_for_V;		/* Array of cache file pathnames */
-int missing_DCacheFile = 1;	/* Is the DCACHEFILE missing? */
-int missing_VolInfoFile = 1;	/* Is the VOLINFOFILE missing? */
-int missing_CellInfoFile = 1;
-struct afs_cacheParams cparams;	/* params passed to cache manager */
 struct afsconf_dir *afs_cdir;	/* config dir */
 
 int afs_bufferpages = 100;
-int usr_udpcksum = 0;
 
-usr_key_t afs_global_u_key;
+static usr_key_t afs_global_u_key;
 
-struct usr_proc *afs_global_procp = NULL;
-struct usr_ucred *afs_global_ucredp = NULL;
-struct usr_sysent usr_sysent[200];
-
-#ifdef AFS_USR_OSF_ENV
-char V = 'V';
-#else /* AFS_USR_OSF_ENV */
-long V = 'V';
-#endif /* AFS_USR_OSF_ENV */
+static struct usr_proc *afs_global_procp = NULL;
+static struct usr_ucred *afs_global_ucredp = NULL;
 
 struct usr_ucred afs_osi_cred, *afs_osi_credp;
 usr_mutex_t afs_global_lock;
 usr_thread_t afs_global_owner;
 usr_mutex_t rx_global_lock;
 usr_thread_t rx_global_owner;
-usr_mutex_t osi_inode_lock;
-usr_mutex_t osi_waitq_lock;
-usr_mutex_t osi_authenticate_lock;
+
+static usr_mutex_t osi_dummy_lock;
+static usr_mutex_t osi_waitq_lock;
+static usr_mutex_t osi_authenticate_lock;
 afs_lock_t afs_ftf;
 afs_lock_t osi_flplock;
 afs_lock_t osi_fsplock;
-void *vnodefops;
 
 #ifndef NETSCAPE_NSAPI
 
@@ -159,17 +125,17 @@ typedef struct osi_wait {
 /*
  * Head of the linked list of available waitq structures.
  */
-osi_wait_t *osi_waithash_avail;
+static osi_wait_t *osi_waithash_avail;
 
 /*
  * List of timed waits, NSAPI does not provide a cond_timed
  * wait, so we need to keep track of the timed waits ourselves and
  * periodically check for expirations
  */
-osi_wait_t *osi_timedwait_head;
-osi_wait_t *osi_timedwait_tail;
+static osi_wait_t *osi_timedwait_head;
+static osi_wait_t *osi_timedwait_tail;
 
-struct {
+static struct {
     osi_wait_t *head;
     osi_wait_t *tail;
 } osi_waithash_table[OSI_WAITHASH_SIZE];
@@ -632,18 +598,19 @@ afs_osi_CheckTimedWaits(void)
 }
 
 /*
- * I-node numbers are indeces into a table containing a filename
- * i-node structure and a vnode structure. When we create an i-node,
- * we copy the name into the array and initialize enough of the fields
- * in the inode and vnode structures to get the client to work.
+ * 'dummy' vnode, for non-AFS files. We don't actually need most vnode
+ * information for non-AFS files, so point all of them towards this vnode
+ * to save memory.
  */
-typedef struct {
-    struct usr_inode i_node;
-    char *name;
-} osi_file_table_t;
-osi_file_table_t *osi_file_table;
-int n_osi_files = 0;
-int max_osi_files = 0;
+static struct usr_vnode dummy_vnode = {
+    0,    /* v_flag */
+    1024, /* v_count */
+    NULL, /* v_op */
+    NULL, /* v_vfsp */
+    0,    /* v_type */
+    0,    /* v_rdev */
+    NULL  /* v_data */
+};
 
 /*
  * Allocate a slot in the file table if there is not one there already,
@@ -653,12 +620,7 @@ int
 lookupname(char *fnamep, int segflg, int followlink,
 	   struct usr_vnode **compvpp)
 {
-    int i;
     int code;
-    struct usr_inode *ip;
-    struct usr_vnode *vp;
-
-    /*usr_assert(followlink == 0); */
 
     /*
      * Assume relative pathnames refer to files in AFS
@@ -670,34 +632,17 @@ lookupname(char *fnamep, int segflg, int followlink,
 	return code;
     }
 
-    usr_mutex_lock(&osi_inode_lock);
+    /* For non-afs files, nobody really looks at the meaningful values in the
+     * returned vnode, so we can return a 'fake' one. The vnode can be held,
+     * released, etc. and some callers check for a NULL vnode anyway, so we
+     * to return something. */
 
-    for (i = 0; i < n_osi_files; i++) {
-	if (strcmp(fnamep, osi_file_table[i].name) == 0) {
-	    *compvpp = &osi_file_table[i].i_node.i_vnode;
-	    (*compvpp)->v_count++;
-	    usr_mutex_unlock(&osi_inode_lock);
-	    return 0;
-	}
-    }
+    usr_mutex_lock(&osi_dummy_lock);
+    VN_HOLD(&dummy_vnode);
+    usr_mutex_unlock(&osi_dummy_lock);
 
-    if (n_osi_files == max_osi_files) {
-	usr_mutex_unlock(&osi_inode_lock);
-	return ENOSPC;
-    }
+    *compvpp = &dummy_vnode;
 
-    osi_file_table[n_osi_files].name = afs_osi_Alloc(strlen(fnamep) + 1);
-    usr_assert(osi_file_table[n_osi_files].name != NULL);
-    strcpy(osi_file_table[n_osi_files].name, fnamep);
-    ip = &osi_file_table[i].i_node;
-    vp = &ip->i_vnode;
-    vp->v_data = (caddr_t) ip;
-    ip->i_dev = -1;
-    n_osi_files++;
-    ip->i_number = n_osi_files;
-    vp->v_count = 2;
-    usr_mutex_unlock(&osi_inode_lock);
-    *compvpp = vp;
     return 0;
 }
 
@@ -713,15 +658,13 @@ osi_UFSOpen(afs_dcache_id_t *ino)
 
     AFS_ASSERT_GLOCK();
 
-    if (ino->ufs > n_osi_files) {
-	get_user_struct()->u_error = ENOENT;
-	return NULL;
-    }
-
     AFS_GUNLOCK();
     fp = (struct osi_file *)afs_osi_Alloc(sizeof(struct osi_file));
     usr_assert(fp != NULL);
-    fp->fd = open(osi_file_table[ino->ufs - 1].name, O_RDWR | O_CREAT, 0);
+
+    usr_assert(ino->ufs);
+
+    fp->fd = open(ino->ufs, O_RDWR | O_CREAT, 0);
     if (fp->fd < 0) {
 	get_user_struct()->u_error = errno;
 	afs_osi_Free((char *)fp, sizeof(struct osi_file));
@@ -1074,417 +1017,7 @@ void
 osi_Init(void)
 {
     int i;
-
-    /*
-     * Allocate the table used to implement psuedo-inodes.
-     */
-    max_osi_files = cacheFiles + 100;
-    osi_file_table = (osi_file_table_t *)
-	afs_osi_Alloc(max_osi_files * sizeof(osi_file_table_t));
-    usr_assert(osi_file_table != NULL);
-
-#ifndef NETSCAPE_NSAPI
-    /*
-     * Initialize the mutex and condition variable used to implement
-     * time sleeps.
-     */
-    pthread_mutex_init(&usr_sleep_mutex, NULL);
-    pthread_cond_init(&usr_sleep_cond, NULL);
-#endif /* !NETSCAPE_NSAPI */
-
-    /*
-     * Initialize the hash table used for sleep/wakeup
-     */
-    for (i = 0; i < OSI_WAITHASH_SIZE; i++) {
-	DLL_INIT_LIST(osi_waithash_table[i].head, osi_waithash_table[i].tail);
-    }
-    DLL_INIT_LIST(osi_timedwait_head, osi_timedwait_tail);
-    osi_waithash_avail = NULL;
-
-    /*
-     * Initialize the AFS file table
-     */
-    for (i = 0; i < MAX_OSI_FILES; i++) {
-	afs_FileTable[i] = NULL;
-    }
-
-    /*
-     * Initialize the global locks
-     */
-    usr_mutex_init(&afs_global_lock);
-    usr_mutex_init(&rx_global_lock);
-    usr_mutex_init(&osi_inode_lock);
-    usr_mutex_init(&osi_waitq_lock);
-    usr_mutex_init(&osi_authenticate_lock);
-
-    /*
-     * Initialize the AFS OSI credentials
-     */
-    afs_osi_cred = *afs_global_ucredp;
-    afs_osi_credp = &afs_osi_cred;
-}
-
-/* ParseArgs is now obsolete, being handled by cmd */
-
-/*---------------------------------------------------------------------
-  * GetVFileNumber
-  *
-  * Description:
-  *	Given the final component of a filename expected to be a data cache file,
-  *	return the integer corresponding to the file.  Note: we reject names that
-  *	are not a ``V'' followed by an integer.  We also reject those names having
-  *	the right format but lying outside the range [0..cacheFiles-1].
-  *
-  * Arguments:
-  *	fname : Char ptr to the filename to parse.
-  *
-  * Returns:
-  *	>= 0 iff the file is really a data cache file numbered from 0 to cacheFiles-1, or
-  *	-1      otherwise.
-  *
-  * Environment:
-  *	Nothing interesting.
-  *
-  * Side Effects:
-  *	None.
-  *------------------------------------------------------------------------*/
-
-int
-GetVFileNumber(char *fname)
-{
-    int computedVNumber;	/*The computed file number we return */
-    int filenameLen;		/*Number of chars in filename */
-    int currDigit;		/*Current digit being processed */
-
-    /*
-     * The filename must have at least two characters, the first of which must be a ``V''
-     * and the second of which cannot be a zero unless the file is exactly two chars long.
-     */
-    filenameLen = strlen(fname);
-    if (filenameLen < 2)
-	return (-1);
-    if (fname[0] != 'V')
-	return (-1);
-    if ((filenameLen > 2) && (fname[1] == '0'))
-	return (-1);
-
-    /*
-     * Scan through the characters in the given filename, failing immediately if a non-digit
-     * is found.
-     */
-    for (currDigit = 1; currDigit < filenameLen; currDigit++)
-	if (isdigit(fname[currDigit]) == 0)
-	    return (-1);
-
-    /*
-     * All relevant characters are digits.  Pull out the decimal number they represent.
-     * Reject it if it's out of range, otherwise return it.
-     */
-    computedVNumber = atoi(++fname);
-    if (computedVNumber < cacheFiles)
-	return (computedVNumber);
-    else
-	return (-1);
-}
-
-/*---------------------------------------------------------------------
-  * CreateCacheFile
-  *
-  * Description:
-  *	Given a full pathname for a file we need to create for the workstation AFS
-  *	cache, go ahead and create the file.
-  *
-  * Arguments:
-  *	fname : Full pathname of file to create.
-  *
-  * Returns:
-  *	0   iff the file was created,
-  *	-1  otherwise.
-  *
-  * Environment:
-  *	The given cache file has been found to be missing.
-  *
-  * Side Effects:
-  *	As described.
-  *------------------------------------------------------------------------*/
-
-int
-CreateCacheFile(char *fname)
-{
-    static char rn[] = "CreateCacheFile";	/*Routine name */
-    int cfd;			/*File descriptor to AFS cache file */
-    int closeResult;		/*Result of close() */
-
-    if (afsd_verbose)
-	printf("%s: Creating cache file '%s'\n", rn, fname);
-    cfd = open(fname, createAndTrunc, ownerRWmode);
-    if (cfd <= 0) {
-	printf("%s: Can't create '%s', error return is %d (%d)\n", rn, fname,
-	       cfd, errno);
-	return (-1);
-    }
-    closeResult = close(cfd);
-    if (closeResult) {
-	printf
-	    ("%s: Can't close newly-created AFS cache file '%s' (code %d)\n",
-	     rn, fname, errno);
-	return (-1);
-    }
-
-    return (0);
-}
-
-/*---------------------------------------------------------------------
-  * SweepAFSCache
-  *
-  * Description:
-  *	Sweep through the AFS cache directory, recording the inode number for
-  *	each valid data cache file there.  Also, delete any file that doesn't beint32
-  *	in the cache directory during this sweep, and remember which of the other
-  *	residents of this directory were seen.  After the sweep, we create any data
-  *	cache files that were missing.
-  *
-  * Arguments:
-  *	vFilesFound : Set to the number of data cache files found.
-  *
-  * Returns:
-  *	0   if everything went well,
-  *	-1 otherwise.
-  *
-  * Environment:
-  *	This routine may be called several times.  If the number of data cache files
-  *	found is less than the global cacheFiles, then the caller will need to call it
-  *	again to record the inodes of the missing zero-length data cache files created
-  *	in the previous call.
-  *
-  * Side Effects:
-  *	Fills up the global pathname_for_V array, may create and/or
-  *     delete files as explained above.
-  *------------------------------------------------------------------------*/
-
-int
-SweepAFSCache(int *vFilesFound)
-{
-    static char rn[] = "SweepAFSCache";	/*Routine name */
-    char fullpn_FileToDelete[1024];	/*File to be deleted from cache */
-    char *fileToDelete;		/*Ptr to last component of above */
-    DIR *cdirp;			/*Ptr to cache directory structure */
-#undef dirent
-    struct dirent *currp;	/*Current directory entry */
-    int vFileNum;		/*Data cache file's associated number */
-
-    if (cacheFlags & AFSCALL_INIT_MEMCACHE) {
-	if (afsd_debug)
-	    printf("%s: Memory Cache, no cache sweep done\n", rn);
-	*vFilesFound = 0;
-	return 0;
-    }
-
-    if (afsd_debug)
-	printf("%s: Opening cache directory '%s'\n", rn, cacheBaseDir);
-
-    if (chmod(cacheBaseDir, 0700)) {	/* force it to be 700 */
-	printf("%s: Can't 'chmod 0700' the cache dir, '%s'.\n", rn,
-	       cacheBaseDir);
-	return (-1);
-    }
-    cdirp = opendir(cacheBaseDir);
-    if (cdirp == (DIR *) 0) {
-	printf("%s: Can't open AFS cache directory, '%s'.\n", rn,
-	       cacheBaseDir);
-	return (-1);
-    }
-
-    /*
-     * Scan the directory entries, remembering data cache file inodes and the existance
-     * of other important residents.  Delete all files that don't belong here.
-     */
-    *vFilesFound = 0;
-    sprintf(fullpn_FileToDelete, "%s/", cacheBaseDir);
-    fileToDelete = fullpn_FileToDelete + strlen(fullpn_FileToDelete);
-
-    for (currp = readdir(cdirp); currp; currp = readdir(cdirp)) {
-	if (afsd_debug) {
-	    printf("%s: Current directory entry:\n", rn);
-#if defined(AFS_SGI62_ENV) || defined(AFS_USR_DARWIN100_ENV)
-            printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n",
-		   currp->d_ino, currp->d_reclen, currp->d_name);
-#elif defined(AFS_USR_DFBSD_ENV)
-	    printf("\tinode=%d, name='%s'\n", currp->d_ino,
-		   currp->d_name);
-#else
-	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
-		   currp->d_reclen, currp->d_name);
-#endif
-	}
-
-	/*
-	 * Guess current entry is for a data cache file.
-	 */
-	vFileNum = GetVFileNumber(currp->d_name);
-	if (vFileNum >= 0) {
-	    /*
-	     * Found a valid data cache filename.  Remember this file's name
-	     * and bump the number of files found.
-	     */
-	    pathname_for_V[vFileNum] =
-		afs_osi_Alloc(strlen(currp->d_name) + strlen(cacheBaseDir) +
-			      2);
-	    usr_assert(pathname_for_V[vFileNum] != NULL);
-	    sprintf(pathname_for_V[vFileNum], "%s/%s", cacheBaseDir,
-		    currp->d_name);
-	    (*vFilesFound)++;
-	} else if (strcmp(currp->d_name, DCACHEFILE) == 0) {
-	    /*
-	     * Found the file holding the dcache entries.
-	     */
-	    missing_DCacheFile = 0;
-	} else if (strcmp(currp->d_name, VOLINFOFILE) == 0) {
-	    /*
-	     * Found the file holding the volume info.
-	     */
-	    missing_VolInfoFile = 0;
-	} else if (strcmp(currp->d_name, CELLINFOFILE) == 0) {
-	    missing_CellInfoFile = 0;
-	} else if ((strcmp(currp->d_name, ".") == 0)
-		   || (strcmp(currp->d_name, "..") == 0)
-		   || (strcmp(currp->d_name, "lost+found") == 0)) {
-	    /*
-	     * Don't do anything - this file is legit, and is to be left alone.
-	     */
-	} else {
-	    /*
-	     * This file doesn't belong in the cache.  Nuke it.
-	     */
-	    sprintf(fileToDelete, "%s", currp->d_name);
-	    if (afsd_verbose)
-		printf("%s: Deleting '%s'\n", rn, fullpn_FileToDelete);
-	    if (unlink(fullpn_FileToDelete)) {
-		printf("%s: Can't unlink '%s', errno is %d\n", rn,
-		       fullpn_FileToDelete, errno);
-	    }
-	}
-    }
-
-    /*
-     * Create all the cache files that are missing.
-     */
-    if (missing_DCacheFile) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n", rn, fullpn_DCacheFile);
-	if (CreateCacheFile(fullpn_DCacheFile))
-	    printf("%s: Can't create '%s'\n", rn, fullpn_DCacheFile);
-    }
-    if (missing_VolInfoFile) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n", rn, fullpn_VolInfoFile);
-	if (CreateCacheFile(fullpn_VolInfoFile))
-	    printf("%s: Can't create '%s'\n", rn, fullpn_VolInfoFile);
-    }
-    if (missing_CellInfoFile) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n", rn, fullpn_CellInfoFile);
-	if (CreateCacheFile(fullpn_CellInfoFile))
-	    printf("%s: Can't create '%s'\n", rn, fullpn_CellInfoFile);
-    }
-
-    if (*vFilesFound < cacheFiles) {
-	/*
-	 * We came up short on the number of data cache files found.  Scan through the inode
-	 * list and create all missing files.
-	 */
-	for (vFileNum = 0; vFileNum < cacheFiles; vFileNum++)
-	    if (pathname_for_V[vFileNum] == (AFSD_INO_T) 0) {
-		sprintf(vFileNumber, "%d", vFileNum);
-		if (afsd_verbose)
-		    printf("%s: Creating '%s'\n", rn, fullpn_VFile);
-		if (CreateCacheFile(fullpn_VFile))
-		    printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
-	    }
-    }
-
-    /*
-     * Close the directory, return success.
-     */
-    if (afsd_debug)
-	printf("%s: Closing cache directory.\n", rn);
-    closedir(cdirp);
-    return (0);
-}
-
-static int
-ConfigCell(register struct afsconf_cell *aci, void *arock,
-	   struct afsconf_dir *adir)
-{
-    register int isHomeCell;
-    register int i;
-    afs_int32 cellFlags = 0;
-    afs_int32 hosts[MAXHOSTSPERCELL];
-
-    /* figure out if this is the home cell */
-    isHomeCell = (strcmp(aci->name, afs_LclCellName) == 0);
-    if (!isHomeCell)
-	cellFlags = 2;		/* not home, suid is forbidden */
-
-    /* build address list */
-    for (i = 0; i < MAXHOSTSPERCELL; i++)
-	memcpy(&hosts[i], &aci->hostAddr[i].sin_addr, sizeof(afs_int32));
-
-    if (aci->linkedCell)
-	cellFlags |= 4;		/* Flag that linkedCell arg exists,
-				 * for upwards compatibility */
-
-    /* configure one cell */
-    call_syscall(AFSCALL_CALL, AFSOP_ADDCELL2, (long)hosts,	/* server addresses */
-		 (long)aci->name,	/* cell name */
-		 (long)cellFlags,	/* is this the home cell? */
-		 (long)aci->linkedCell);	/* Linked cell, if any */
-    return 0;
-}
-
-static int
-ConfigCellAlias(struct afsconf_cellalias *aca, void *arock, struct afsconf_dir *adir)
-{
-	call_syscall(AFSOP_ADDCELLALIAS, (long)aca->aliasName, 
-		     (long)aca->realName, 0, 0, 0);
-	return 0;
-}
-
-/*
- * Set the UDP port number RX uses for UDP datagrams
- */
-void
-uafs_SetRxPort(int port)
-{
-    usr_assert(usr_rx_port == 0);
-    usr_rx_port = port;
-}
-
-
-/*
- * Initialize the user space client.
- */
-void
-uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
-	  char *cacheBaseDirParam, int cacheBlocksParam, int cacheFilesParam,
-	  int cacheStatEntriesParam, int dCacheSizeParam, int vCacheSizeParam,
-	  int chunkSizeParam, int closeSynchParam, int debugParam,
-	  int nDaemonsParam, int cacheFlagsParam, char *logFile)
-{
     int st;
-    int i;
-    int rc;
-    int currVFile;		/* Current AFS cache file number */
-    int lookupResult;		/* Result of GetLocalCellName() */
-    int cacheIteration;		/* cache verification loop counter */
-    int vFilesFound;		/* Num data cache files found in sweep */
-    FILE *logfd;
-    char tbuffer[1024];
-    char *p;
-    char lastchar;
-    afs_int32 buffer[MAXIPADDRS];
-    afs_int32 maskbuffer[MAXIPADDRS];
-    afs_int32 mtubuffer[MAXIPADDRS];
 
     /*
      * Use the thread specific data to implement the user structure
@@ -1521,384 +1054,62 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     afs_global_procp->p_ppid = (pid_t) 1;
     afs_global_procp->p_ucred = afs_global_ucredp;
 
+#ifndef NETSCAPE_NSAPI
     /*
-     * Initialize the AFS mount point, default is '/afs'.
-     * Strip duplicate/trailing slashes from mount point string.
-     * afs_mountDirLen is set to strlen(afs_mountDir).
+     * Initialize the mutex and condition variable used to implement
+     * time sleeps.
      */
-    if (mountDirParam) {
-	sprintf(tbuffer, "%s", mountDirParam);
-    } else {
-	sprintf(tbuffer, "afs");
-    }
-    afs_mountDir[0] = '/';
-    afs_mountDirLen = 1;
-    for (lastchar = '/', p = &tbuffer[0]; *p != '\0'; p++) {
-	if (lastchar != '/' || *p != '/') {
-	    afs_mountDir[afs_mountDirLen++] = lastchar = *p;
-	}
-    }
-    if (lastchar == '/' && afs_mountDirLen > 1)
-	afs_mountDirLen--;
-    afs_mountDir[afs_mountDirLen] = '\0';
-    usr_assert(afs_mountDirLen > 1);
-
-    /*
-     * Initialize cache parameters using the input arguments
-     */
-
-    cacheBlocks = cacheBlocksParam;
-    if (cacheFilesParam != 0) {
-	cacheFiles = cacheFilesParam;
-    } else {
-	cacheFiles = cacheBlocks / 10;
-    }
-    if (cacheStatEntriesParam != 0) {
-	cacheStatEntries = cacheStatEntriesParam;
-    }
-    strcpy(cacheBaseDir, cacheBaseDirParam);
-    if (nDaemonsParam != 0) {
-	nDaemons = nDaemonsParam;
-    } else {
-	nDaemons = 3;
-    }
-    afsd_verbose = debugParam;
-    afsd_debug = debugParam;
-    chunkSize = chunkSizeParam;
-    if (dCacheSizeParam != 0) {
-	dCacheSize = dCacheSizeParam;
-    } else {
-	dCacheSize = cacheFiles / 2;
-    }
-    if (vCacheSizeParam != 0) {
-	vCacheSize = vCacheSizeParam;
-    }
-    strcpy(confDir, confDirParam);
-    afsd_CloseSynch = closeSynchParam;
-    if (cacheFlagsParam >= 0) {
-	cacheFlags = cacheFlagsParam;
-    }
-    if (cacheFlags & AFSCALL_INIT_MEMCACHE) {
-	cacheFiles = dCacheSize;
-    }
-
-    sprintf(fullpn_CacheInfo, "%s/%s", confDir, CACHEINFOFILE);
-    if (logFile == NULL) {
-	sprintf(fullpn_AFSLogFile, "%s/%s", confDir, AFSLOGFILE);
-    } else {
-	strcpy(fullpn_AFSLogFile, logFile);
-    }
-
-    printf("\n%s: Initializing user space AFS client\n\n", rn);
-    printf("    mountDir:           %s\n", afs_mountDir);
-    printf("    confDir:            %s\n", confDir);
-    printf("    cacheBaseDir:       %s\n", cacheBaseDir);
-    printf("    cacheBlocks:        %d\n", cacheBlocks);
-    printf("    cacheFiles:         %d\n", cacheFiles);
-    printf("    cacheStatEntries:   %d\n", cacheStatEntries);
-    printf("    dCacheSize:         %d\n", dCacheSize);
-    printf("    vCacheSize:         %d\n", vCacheSize);
-    printf("    chunkSize:          %d\n", chunkSize);
-    printf("    afsd_CloseSynch:    %d\n", afsd_CloseSynch);
-    printf("    afsd_debug/verbose: %d/%d\n", afsd_debug, afsd_verbose);
-    printf("    nDaemons:           %d\n", nDaemons);
-    printf("    cacheFlags:         %d\n", cacheFlags);
-    printf("    logFile:            %s\n", fullpn_AFSLogFile);
-    printf("\n");
-    fflush(stdout);
-
-    /*
-     * Initialize the AFS client
-     */
-    osi_Init();
-
-    /*
-     * Pull out all the configuration info for the workstation's AFS cache and
-     * the cellular community we're willing to let our users see.
-     */
-    afs_cdir = afsconf_Open(confDir);
-    if (!afs_cdir) {
-	printf("afsd: some file missing or bad in %s\n", confDir);
-	exit(1);
-    }
-
-    lookupResult =
-	afsconf_GetLocalCell(afs_cdir, afs_LclCellName,
-			     sizeof(afs_LclCellName));
-    if (lookupResult) {
-	printf("%s: Can't get my home cell name!  [Error is %d]\n", rn,
-	       lookupResult);
-    } else {
-	if (afsd_verbose)
-	    printf("%s: My home cell is '%s'\n", rn, afs_LclCellName);
-    }
-
-    if ((logfd = fopen(fullpn_AFSLogFile, "r+")) == 0) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n", rn, fullpn_AFSLogFile);
-	if (CreateCacheFile(fullpn_AFSLogFile)) {
-	    printf
-		("%s: Can't create '%s' (You may want to use the -logfile option)\n",
-		 rn, fullpn_AFSLogFile);
-	    exit(1);
-	}
-    } else
-	fclose(logfd);
-
-    /*
-     * Create and zero the pathname table for the desired cache files.
-     */
-    pathname_for_V = (char **)afs_osi_Alloc(cacheFiles * sizeof(char *));
-    if (pathname_for_V == NULL) {
-	printf("%s: malloc() failed for cache file table with %d entries.\n",
-	       rn, cacheFiles);
-	exit(1);
-    }
-    memset(pathname_for_V, 0, (cacheFiles * sizeof(char *)));
-    if (afsd_debug)
-	printf("%s: %d pathname_for_V entries at %" AFS_PTR_FMT
-	       ", %lud bytes\n", rn, cacheFiles, pathname_for_V,
-	       afs_printable_uint32_lu(cacheFiles * sizeof(AFSD_INO_T)));
-
-    /*
-     * Set up all the pathnames we'll need for later.
-     */
-    sprintf(fullpn_DCacheFile, "%s/%s", cacheBaseDir, DCACHEFILE);
-    sprintf(fullpn_VolInfoFile, "%s/%s", cacheBaseDir, VOLINFOFILE);
-    sprintf(fullpn_CellInfoFile, "%s/%s", cacheBaseDir, CELLINFOFILE);
-    sprintf(fullpn_VFile, "%s/V", cacheBaseDir);
-    vFileNumber = fullpn_VFile + strlen(fullpn_VFile);
-
-    /* initialize AFS callback interface */
-    {
-	/* parse multihomed address files */
-	char reason[1024];
-	st = parseNetFiles((afs_uint32*)buffer,(afs_uint32*) maskbuffer, (afs_uint32*)mtubuffer, MAXIPADDRS, reason,
-			   AFSDIR_CLIENT_NETINFO_FILEPATH,
-			   AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
-	if (st > 0)
-	    call_syscall(AFSCALL_CALL, AFSOP_ADVISEADDR, st,
-			 (long)(&buffer[0]), (long)(&maskbuffer[0]),
-			 (long)(&mtubuffer[0]));
-	else {
-	    printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
-		   reason);
-	    exit(1);
-	}
-    }
-
-    /*
-     * Start the RX listener.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_RXLISTENER_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE, FALSE, FALSE, 0);
-
-    if (afsd_verbose)
-	printf("%s: Forking rx callback listener.\n", rn);
-    /* Child */
-    if (preallocs < cacheStatEntries + 50)
-	preallocs = cacheStatEntries + 50;
-    fork_syscall(AFSCALL_CALL, AFSOP_START_RXCALLBACK, preallocs, 0, 0, 0);
-
-    /*
-     * Start the RX event handler.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_RXEVENT_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXEVENT_DAEMON, FALSE, 0, 0, 0);
-
-    /*
-     * Set up all the kernel processes needed for AFS.
-     */
-
-    if (afsd_verbose)
-	printf("%s: Initializing AFS daemon.\n", rn);
-    call_syscall(AFSCALL_CALL, AFSOP_BASIC_INIT, 1, 0, 0, 0);
-
-    /*
-     * Tell the kernel some basic information about the workstation's cache.
-     */
-    if (afsd_verbose)
-	printf("%s: Calling AFSOP_CACHEINIT: %d stat cache entries,"
-	       " %d optimum cache files, %d blocks in the cache,"
-	       " flags = 0x%x, dcache entries %d\n", rn, cacheStatEntries,
-	       cacheFiles, cacheBlocks, cacheFlags, dCacheSize);
-    memset(&cparams, 0, sizeof(cparams));
-    cparams.cacheScaches = cacheStatEntries;
-    cparams.cacheFiles = cacheFiles;
-    cparams.cacheBlocks = cacheBlocks;
-    cparams.cacheDcaches = dCacheSize;
-    cparams.cacheVolumes = vCacheSize;
-    cparams.chunkSize = chunkSize;
-    cparams.setTimeFlag = FALSE;
-    cparams.memCacheFlag = cacheFlags;
-    call_syscall(AFSCALL_CALL, AFSOP_CACHEINIT, (long)&cparams, 0, 0, 0);
-    if (afsd_CloseSynch)
-	call_syscall(AFSCALL_CALL, AFSOP_CLOSEWAIT, 0, 0, 0, 0);
-
-    /*
-     * Sweep the workstation AFS cache directory, remembering the inodes of
-     * valid files and deleting extraneous files.  Keep sweeping until we
-     * have the right number of data cache files or we've swept too many
-     * times.
-     */
-    if (afsd_verbose)
-	printf("%s: Sweeping workstation's AFS cache directory.\n", rn);
-    cacheIteration = 0;
-    /* Memory-cache based system doesn't need any of this */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
-	do {
-	    cacheIteration++;
-	    if (SweepAFSCache(&vFilesFound)) {
-		printf("%s: Error on sweep %d of workstation AFS cache \
-		       directory.\n", rn, cacheIteration);
-		exit(1);
-	    }
-	    if (afsd_verbose)
-		printf
-		    ("%s: %d out of %d data cache files found in sweep %d.\n",
-		     rn, vFilesFound, cacheFiles, cacheIteration);
-	} while ((vFilesFound < cacheFiles)
-		 && (cacheIteration < MAX_CACHE_LOOPS));
-    } else if (afsd_verbose)
-	printf("%s: Using memory cache, not swept\n", rn);
-
-    /*
-     * Pass the kernel the name of the workstation cache file holding the 
-     * dcache entries.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_CACHEINFO: dcache file is '%s'\n", rn,
-	       fullpn_DCacheFile);
-    /* once again, meaningless for a memory-based cache. */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
-	call_syscall(AFSCALL_CALL, AFSOP_CACHEINFO, (long)fullpn_DCacheFile,
-		     0, 0, 0);
-
-    call_syscall(AFSCALL_CALL, AFSOP_CELLINFO, (long)fullpn_CellInfoFile, 0,
-		 0, 0);
-
-    /*
-     * Pass the kernel the name of the workstation cache file holding the
-     * volume information.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_VOLUMEINFO: volume info file is '%s'\n", rn,
-	       fullpn_VolInfoFile);
-    call_syscall(AFSCALL_CALL, AFSOP_VOLUMEINFO, (long)fullpn_VolInfoFile, 0,
-		 0, 0);
-
-    /*
-     * Pass the kernel the name of the afs logging file holding the volume
-     * information.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_AFSLOG: volume info file is '%s'\n", rn,
-	       fullpn_AFSLogFile);
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))	/* ... nor this ... */
-	call_syscall(AFSCALL_CALL, AFSOP_AFSLOG, (long)fullpn_AFSLogFile, 0,
-		     0, 0);
-
-    /*
-     * Tell the kernel about each cell in the configuration.
-     */
-    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
-    afsconf_CellAliasApply(afs_cdir, ConfigCellAlias, NULL);
-
-    /*
-     * Set the primary cell name.
-     */
-    call_syscall(AFSCALL_CALL, AFSOP_SET_THISCELL, (long)afs_LclCellName, 0, 0, 0);
-
-    if (afsd_verbose)
-	printf("%s: Forking AFS daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_AFS, 0, 0, 0, 0);
-
-    if (afsd_verbose)
-	printf("%s: Forking check server daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_CS, 0, 0, 0, 0);
-
-    if (afsd_verbose)
-	printf("%s: Forking %d background daemons.\n", rn, nDaemons);
-    for (i = 0; i < nDaemons; i++) {
-	fork_syscall(AFSCALL_CALL, AFSOP_START_BKG, 0, 0, 0, 0);
-    }
-
-    if (afsd_verbose)
-	printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n", rn, rootVolume);
-    call_syscall(AFSCALL_CALL, AFSOP_ROOTVOLUME, (long)rootVolume, 0, 0, 0);
-
-    /*
-     * Give the kernel the names of the AFS files cached on the workstation's
-     * disk.
-     */
-    if (afsd_debug)
-	printf
-	    ("%s: Calling AFSOP_CACHEFILES for each of the %d files in '%s'\n",
-	     rn, cacheFiles, cacheBaseDir);
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))	/* ... and again ... */
-	for (currVFile = 0; currVFile < cacheFiles; currVFile++) {
-	    call_syscall(AFSCALL_CALL, AFSOP_CACHEFILE,
-			 (long)pathname_for_V[currVFile], 0, 0, 0);
-	}
-    /*end for */
-/*#ifndef NETSCAPE_NSAPI*/
-#if 0
-/* this breaks solaris if the kernel-mode client has never been installed,
- * and it doesn't seem to work now anyway, so just disable it */
-
-    /*
-     * Copy our tokens from the kernel to the user space client
-     */
-    for (i = 0; i < 200; i++) {
-	/*
-	 * Get the i'th token from the kernel
-	 */
-	memset((void *)&tbuffer[0], 0, sizeof(tbuffer));
-	memcpy((void *)&tbuffer[0], (void *)&i, sizeof(int));
-	iob.in = tbuffer;
-	iob.in_size = sizeof(int);
-	iob.out = tbuffer;
-	iob.out_size = sizeof(tbuffer);
-
-#if defined(AFS_USR_SUN5_ENV) || defined(AFS_USR_OSF_ENV) || defined(AFS_USR_HPUX_ENV) || defined(AFS_USR_LINUX22_ENV) || defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
-	rc = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, 0, _VICEIOCTL(8), &iob, 0);
-#elif defined(AFS_USR_SGI_ENV)
-	rc = syscall(AFS_PIOCTL, 0, _VICEIOCTL(8), &iob, 0);
-#else /* AFS_USR_AIX_ENV */
-	rc = lpioctl(0, _VICEIOCTL(8), &iob, 0);
-#endif
-	if (rc < 0) {
-	    usr_assert(errno == EDOM || errno == ENOSYS || errno == ERANGE);
-	    break;
-	}
-
-	/*
-	 * Now pass the token into the user space kernel
-	 */
-	rc = uafs_SetTokens(tbuffer, iob.out_size);
-	usr_assert(rc == 0);
-    }
+    pthread_mutex_init(&usr_sleep_mutex, NULL);
+    pthread_cond_init(&usr_sleep_cond, NULL);
 #endif /* !NETSCAPE_NSAPI */
 
     /*
-     * All the necessary info has been passed into the kernel to run an AFS
-     * system.  Give the kernel our go-ahead.
+     * Initialize the hash table used for sleep/wakeup
      */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_GO\n", rn);
-    call_syscall(AFSCALL_CALL, AFSOP_GO, FALSE, 0, 0, 0);
+    for (i = 0; i < OSI_WAITHASH_SIZE; i++) {
+	DLL_INIT_LIST(osi_waithash_table[i].head, osi_waithash_table[i].tail);
+    }
+    DLL_INIT_LIST(osi_timedwait_head, osi_timedwait_tail);
+    osi_waithash_avail = NULL;
 
     /*
-     * At this point, we have finished passing the kernel all the info 
-     * it needs to set up the AFS.  Mount the AFS root.
+     * Initialize the AFS file table
      */
-    printf("%s: All AFS daemons started.\n", rn);
+    for (i = 0; i < MAX_OSI_FILES; i++) {
+	afs_FileTable[i] = NULL;
+    }
 
-    if (afsd_verbose)
-	printf("%s: Forking trunc-cache daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_TRUNCDAEMON, 0, 0, 0, 0);
+    /*
+     * Initialize the global locks
+     */
+    usr_mutex_init(&afs_global_lock);
+    usr_mutex_init(&rx_global_lock);
+    usr_mutex_init(&osi_dummy_lock);
+    usr_mutex_init(&osi_waitq_lock);
+    usr_mutex_init(&osi_authenticate_lock);
+
+    /*
+     * Initialize the AFS OSI credentials
+     */
+    afs_osi_cred = *afs_global_ucredp;
+    afs_osi_credp = &afs_osi_cred;
+
+    init_et_to_sys_error();
+}
+
+/*
+ * Set the UDP port number RX uses for UDP datagrams
+ */
+void
+uafs_SetRxPort(int port)
+{
+    usr_assert(usr_rx_port == 0);
+    usr_rx_port = port;
+}
+
+void
+uafs_mount(void) {
+    int rc;
 
     /*
      * Mount the AFS filesystem
@@ -1919,6 +1130,25 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     return;
 }
 
+int
+uafs_statvfs(struct statvfs *buf)
+{
+    int rc;
+
+    AFS_GLOCK();
+
+    rc = afs_statvfs(&afs_RootVfs, buf);
+
+    AFS_GUNLOCK();
+
+    if (rc) {
+	errno = rc;
+	return -1;
+    }
+
+    return 0;
+}
+
 void
 uafs_Shutdown(void)
 {
@@ -1927,7 +1157,9 @@ uafs_Shutdown(void)
     printf("\n");
 
     AFS_GLOCK();
-    VN_RELE(afs_CurrentDir);
+    if (afs_CurrentDir) {
+	VN_RELE(afs_CurrentDir);
+    }
     rc = afs_unmount(&afs_RootVfs);
     usr_assert(rc == 0);
     AFS_GUNLOCK();
@@ -2052,6 +1284,74 @@ call_syscall(long syscall, long afscall, long param1, long param2,
 
     code = Afs_syscall();
     return code;
+}
+
+int
+uafs_Setup(const char *mount)
+{
+    char buf[1024];
+    char lastchar;
+    char *p;
+    static int inited = 0;
+
+    if (inited) {
+	return EEXIST;
+    }
+    inited = 1;
+
+    if (mount && strlen(mount) > 1023) {
+	return ENAMETOOLONG;
+    }
+
+    /*
+     * Initialize the AFS mount point, default is '/afs'.
+     * Strip duplicate/trailing slashes from mount point string.
+     * afs_mountDirLen is set to strlen(afs_mountDir).
+     */
+    if (!mount) {
+	mount = "afs";
+    }
+    sprintf(buf, "%s", mount);
+
+    afs_mountDir[0] = '/';
+    afs_mountDirLen = 1;
+    for (lastchar = '/', p = &buf[0]; *p != '\0'; p++) {
+        if (lastchar != '/' || *p != '/') {
+            afs_mountDir[afs_mountDirLen++] = lastchar = *p;
+        }
+    }
+    if (lastchar == '/' && afs_mountDirLen > 1)
+        afs_mountDirLen--;
+    afs_mountDir[afs_mountDirLen] = '\0';
+    if (afs_mountDirLen <= 1) {
+	return EINVAL;
+    }
+
+    /* initialize global vars and such */
+    osi_Init();
+
+    /* initialize cache manager foo */
+    afsd_init();
+
+    return 0;
+}
+
+int
+uafs_ParseArgs(int argc, char **argv)
+{
+    return afsd_parse(argc, argv);
+}
+
+int
+uafs_Run(void)
+{
+    return afsd_run();
+}
+
+const char *
+uafs_MountDir(void)
+{
+    return afsd_cacheMountDir;
 }
 
 int
@@ -3958,6 +3258,11 @@ uafs_readdir_r(usr_DIR * dirp)
     struct usr_dirent *direntP;
     struct min_direct *directP;
 
+    if (!dirp) {
+	errno = EBADF;
+	return NULL;
+    }
+
     /*
      * Make sure this is an open file
      */
@@ -4044,6 +3349,11 @@ uafs_closedir_r(usr_DIR * dirp)
 {
     int fd;
     int rc;
+
+    if (!dirp) {
+	errno = EBADF;
+	return -1;
+    }
 
     fd = dirp->dd_fd;
     afs_osi_Free((char *)dirp,

@@ -162,9 +162,7 @@ extern size_t strlcat(char *dst, const char *src, size_t siz);
 extern size_t strlcpy(char *dst, const char *src, size_t siz);
 #endif
 
-#ifndef UKERNEL
-#include "afs/ktime.h"
-#endif
+#include <afs/ktime.h>
 #include "afsutil_prototypes.h"
 
 #endif /* _AFSUTIL_H_ */

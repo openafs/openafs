@@ -11,11 +11,7 @@
 #ifndef DES_DEFS
 #define DES_DEFS
 
-#if defined(UKERNEL)
-#include "des/mit-cpyright.h"
-#else /* defined(UKERNEL) */
 #include "mit-cpyright.h"
-#endif /* defined(UKERNEL) */
 
 typedef unsigned char des_cblock[8];	/* crypto-block size */
 /* Key schedule */

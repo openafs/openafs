@@ -270,7 +270,7 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
 {
     struct rxfs_storeVariables *svar = rock;
     afs_uint32 tlen, bytesread, byteswritten;
-    afs_int32 code;
+    afs_int32 code = 0;
     int offset = 0;
     afs_size_t size;
     struct osi_file *tfile;

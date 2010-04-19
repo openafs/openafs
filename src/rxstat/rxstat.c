@@ -7,28 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifdef UKERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 #include <afsconfig.h>
 
 
-#ifdef UKERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include <rx/rxstat.h>
-#else /* UKERNEL */
 #include <afs/stds.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
-#ifdef KERNEL
+#if defined(KERNEL) && !defined(UKERNEL)
 #include "sys/errno.h"
-#else /* KERNEL */
+#else /* KERNEL && !UKERNEL */
 #include <errno.h>
-#endif /* KERNEL */
-#endif /* UKERNEL */
+#endif /* KERNEL && !UKERNEL */
 
 /*
  * This file creates a centralized mechanism for implementing the rpc

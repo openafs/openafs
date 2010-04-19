@@ -272,10 +272,10 @@ afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc)
     while (1) {
 	if (alock->count == 0) {
 	    /* lock not held, we win */
-	    alock->proc = afs_int_to_pointer(MyPidxx2Pid(MyPidxx));
+	    alock->proc = afs_int_to_pointer((iparmtype)(uintptrsz)MyPidxx2Pid(MyPidxx));
 	    alock->count = 1;
 	    return;
-	} else if (alock->proc == afs_int_to_pointer(MyPidxx2Pid(MyPidxx))) {
+	} else if (alock->proc == afs_int_to_pointer((iparmtype)(uintptrsz)MyPidxx2Pid(MyPidxx))) {
 	    /* lock is held, but by us, so we win anyway */
 	    alock->count++;
 	    return;
@@ -325,7 +325,7 @@ afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
 {
     AFS_STATCNT(afs_CheckBozonLockBlocking);
     if (alock->count || (alock->flags & AFS_BOZONWAITING))
-	if (alock->proc != afs_int_to_pointer(MyPidxx2Pid(MyPidxx)))
+	if (alock->proc != afs_int_to_pointer((iparmtype)(uintptrsz)MyPidxx2Pid(MyPidxx)))
 	    return 1;
     return 0;
 }

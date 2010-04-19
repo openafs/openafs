@@ -19,7 +19,6 @@
 #ifndef __KAUTILS__
 #define __KAUTILS__
 
-#if !defined(UKERNEL)
 #include <des.h>
 #include <afs/auth.h>
 
@@ -38,12 +37,6 @@
 #include <ubik.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
-
-#else
-#include "ubik.h"
-#include "afs/auth.h"
-#include "afs/cellconfig.h"
-#endif /* !defined(UKERNEL) */
 
 
 #define KA_TIMESTR_LEN 30
