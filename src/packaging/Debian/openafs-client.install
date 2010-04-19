@@ -153,6 +153,7 @@ debian/tmp/usr/share/man/man1/vos_restore.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_setfields.1         usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_shadow.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_size.1              usr/share/man/man1
+debian/tmp/usr/share/man/man1/vos_setaddrs.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_status.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_syncserv.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_syncvldb.1          usr/share/man/man1
