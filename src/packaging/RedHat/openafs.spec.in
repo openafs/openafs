@@ -1018,6 +1018,9 @@ tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
 tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
+# Fix the location of restorevol
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
+
 # Link kpasswd to kapasswd
 ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
 
@@ -1453,6 +1456,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/afsd.*
 %{_mandir}/man8/rmtsysd.*
 %{_mandir}/man8/vsys.*
+%{_mandir}/man8/state_analyzer.*
 %{_mandir}/man5/CellAlias.*
 
 %files server
