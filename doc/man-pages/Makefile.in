@@ -33,7 +33,10 @@ dest:
 	    test -h $(DEST)/man/man1/$$M.krb.1 \
 		|| ln -s $$M.1 $(DEST)/man/man1/$$M.krb.1 ; \
 	done
-
+	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
+	    test -h $(DEST)/man/man8/afsd.fuse.8 \
+		|| ln -s afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
+	fi
 
 install: $(MAN1) $(MAN8)
 	chmod +x install-man
@@ -52,3 +55,7 @@ install: $(MAN1) $(MAN8)
 	    test -h $(DESTDIR)$(mandir)/man1/$$M.krb.1 \
 		|| ln -s $$M.1 $(DESTDIR)$(mandir)/man1/$$M.krb.1 ; \
 	done
+	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
+	    test -h $(DESTDIR)$(mandir)/man8/afsd.fuse.8 \
+		|| ln -s afsd.8 $(DESTDIR)$(mandir)/man8/afsd.fuse.8; \
+	fi
