@@ -1117,7 +1117,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 
 # create list of man pages that go in the 'openafs' package
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man1 \
-	|egrep '^afs|^fs|^kas|^klog|kapasswd|pagsh|^pts|^rxdebug|scout|^sys|tokens|translate|udebug|unlog|^uss|^vos' \
+	|egrep '^afs|^fs|^kas|^klog|kapasswd|pagsh|^pts|^restorevol|^rxdebug|scout|^sys|tokens|translate|udebug|unlog|^uss|^vos' \
 	>openafs-man1files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man5 \
@@ -1456,7 +1456,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/afsd.*
 %{_mandir}/man8/rmtsysd.*
 %{_mandir}/man8/vsys.*
-%{_mandir}/man8/state_analyzer.*
 %{_mandir}/man5/CellAlias.*
 
 %files server
@@ -1488,7 +1487,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/vldb_convert
 %{_sbindir}/voldump
 %{initdir}/openafs-server
-%{_mandir}/man1/restorevol.*
 %{_mandir}/man5/AuthLog.*
 %{_mandir}/man5/BackupLog.*
 %{_mandir}/man5/BosConfig.*
@@ -1523,6 +1521,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/pt_util.*
 %{_mandir}/man8/salvager.*
 %{_mandir}/man8/salvageserver.*
+%{_mandir}/man8/state_analyzer.*
 %{_mandir}/man8/upclient.*
 %{_mandir}/man8/upserver.*
 %{_mandir}/man8/vldb_check.*
