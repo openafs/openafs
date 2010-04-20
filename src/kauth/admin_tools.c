@@ -821,11 +821,7 @@ SetPassword(struct cmd_syndesc *as, void *arock)
     if (as->parms[3].items)
 	sscanf(as->parms[3].items->data, "%d", &kvno);
 
-#if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
-    code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, 0, key);
-#else
     code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, key);
-#endif
     if (code)
 	afs_com_err(whoami, code, "so can't set password for %s.%s", name,
 		instance);
