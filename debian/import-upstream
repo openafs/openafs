@@ -44,3 +44,4 @@ commit=$(echo "Imported upstream tag $upstream via tarball" | \
 git branch -f upstream-1.5 "$commit"
 git tag "$tag" "$commit"
 git rm -q -r -f "$dir"
+rm -rf "$dir"
