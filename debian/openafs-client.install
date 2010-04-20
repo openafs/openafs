@@ -23,6 +23,7 @@ debian/tmp/usr/bin/xstat_fs_test        usr/bin
 debian/tmp/usr/sbin/rxdebug             usr/bin
 debian/tmp/usr/sbin/vos                 usr/bin
 
+debian/tmp/usr/sbin/afsd.fuse           usr/sbin
 debian/tmp/usr/sbin/backup              usr/sbin
 debian/tmp/usr/sbin/butc                usr/sbin
 debian/tmp/usr/sbin/fms                 usr/sbin
