@@ -1,9 +1,9 @@
 openafs (1.5.74-2) UNRELEASED; urgency=low
 
-  * Add build dependency on libfuse-dev so that the new FUSE afsd is
-    built.  Install afsd.fuse into the openafs-client package for the time
-    being.  There is, as yet, no documentation or init script support for
-    the FUSE implementation.
+  * Add build dependency on libfuse-dev and pass --enable-fuse-client to
+    configure so that the new FUSE afsd is built.  Install afsd.fuse into
+    the openafs-client package for the time being.  There is, as yet, no
+    documentation or init script support for the FUSE implementation.
 
  -- Russ Allbery <rra@debian.org>  Mon, 19 Apr 2010 20:40:49 -0700
 
