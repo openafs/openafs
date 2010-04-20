@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <Include>
     <UI>
       <Property Id="DefaultUIFont">DlgFont8</Property>
@@ -683,7 +683,7 @@
         <Control Id="TypicalButton" Type="PushButton" X="50" Y="65" Width="38" Height="38" ToolTip="Typical Installation" Default="yes" Icon="yes" FixedSize="yes" IconSize="32" Text="[InstallerIcon]">
           <Publish Property="InstallMode" Value="Typical">1</Publish>
           <Publish Event="SetInstallLevel" Value="100">1</Publish>
-          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+	  <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
         </Control>
         <Control Id="CustomLabel" Type="Text" X="105" Y="118" Width="100" Height="10" TabSkip="no">
           <Text>[DlgTitleFont]C&amp;ustom</Text>
@@ -698,7 +698,7 @@
         <Control Id="CompleteButton" Type="PushButton" X="50" Y="171" Width="38" Height="38" ToolTip="Complete Installation" Icon="yes" FixedSize="yes" IconSize="32" Text="[CompleteSetupIcon]">
           <Publish Property="InstallMode" Value="Complete">1</Publish>
           <Publish Event="SetInstallLevel" Value="1000">1</Publish>
-          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
         </Control>
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="LicenseAgreementDlg">ShowUserRegistrationDlg &lt;&gt; 1 AND NOT (IBMAFS_UPGRADE OR OPENAFS_UPGRADE)</Publish>
@@ -731,7 +731,8 @@
 
       <Dialog Id="ConfigClientDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
-          <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
+          <Publish Event="NewDialog" Value="CustomizeDlg">InstallMode &lt;&gt; "Typical" AND InstallMode &lt;&gt; "Complete"</Publish>
+          <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Next]">
           <Publish Event="NewDialog" Value="ConfigCredsDlg">1</Publish>
@@ -872,7 +873,7 @@
           <Publish Event="NewDialog" Value="CustomizeDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient &lt;&gt; 3</Publish>
           <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3</Publish>
           <Publish Event="NewDialog" Value="MaintenanceTypeDlg">InstallMode = "Repair"</Publish>
-          <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
         </Control>
         <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
           <Text>The [Wizard] is ready to begin the [InstallMode] installation</Text>
