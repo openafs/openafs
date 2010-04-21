@@ -3,6 +3,8 @@ openafs (1.5.74-2) UNRELEASED; urgency=low
   * Apply upstream deltas:
     - [e6f6c349] Fixes and clarifications to vos setaddrs man page
     - [d80382ef] Remove special-case call for KAM_SetPassword on s390
+  * Install afsd.fuse and a man page link for it if the FUSE client build
+    is enabled.
   * Add build dependency on libfuse-dev and pass --enable-fuse-client to
     configure so that the new FUSE afsd is built.  Install afsd.fuse into
     the openafs-client package for the time being.  There is, as yet, no
