@@ -2838,6 +2838,7 @@ afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred)
 static void
 findvc_sleep(struct vcache *avc, int flag)
 {
+    int fstates = avc->f.states;
     if (flag & IS_SLOCK) {
 	    ReleaseSharedLock(&afs_xvcache);
     } else {
@@ -2847,7 +2848,16 @@ findvc_sleep(struct vcache *avc, int flag)
 	    ReleaseReadLock(&afs_xvcache);
 	}
     }
-    afs_osi_Sleep(&avc->f.states);
+    if (flag & FIND_CDEAD) {
+	ObtainWriteLock(&afs_xvcache, 342);
+	afs_FlushReclaimedVcaches();
+	if (fstates == avc->f.states) {
+	    ReleaseWriteLock(&afs_xvcache);
+	    afs_osi_Sleep(&avc->f.states);
+	} else
+	    ReleaseWriteLock(&afs_xvcache);
+    } else
+	afs_osi_Sleep(&avc->f.states);
     if (flag & IS_SLOCK) {
 	    ObtainSharedLock(&afs_xvcache, 341);
     } else {
@@ -2894,7 +2904,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
             }
 #ifdef  AFS_DARWIN80_ENV
 	    if (tvc->f.states & CDeadVnode) {
-		if (!(tvc->f.states & CBulkFetching)) {
+		if (!(flag & FIND_CDEAD)) {
 		    findvc_sleep(tvc, flag);
 		    goto findloop;
 		}

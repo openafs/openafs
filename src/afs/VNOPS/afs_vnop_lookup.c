@@ -1061,7 +1061,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	do {
 	    retry = 0;
 	    ObtainReadLock(&afs_xvcache);
-	    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */ );
+	    tvcp = afs_FindVCache(&afid, &retry, FIND_CDEAD /* !stats&!lru */);
 	    ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 
@@ -1080,19 +1080,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * file.  Leave the entry alone.
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
-#ifdef AFS_DARWIN80_ENV	    
-	    int isdead = ((tvcp->f.states & CDeadVnode) ||
-			  (tvcp->f.states & CVInit));
-#endif
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
-#ifdef AFS_DARWIN80_ENV	    
-	    if (!isdead) {
-		/* re-acquire the io&usecount that the other finalizevnode disposed of */
-		vnode_get(AFSTOV(tvcp));
-		vnode_ref(AFSTOV(tvcp));
-	    }
-#endif
 	    afs_PutVCache(tvcp);
 	    continue;
 	}
@@ -1148,13 +1137,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 */
 	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
-#ifdef AFS_DARWIN80_ENV	    
-	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit))) {
-		/* re-acquire the io&usecount that the other finalizevnode disposed of */
-		vnode_get(AFSTOV(tvcp));
-		vnode_ref(AFSTOV(tvcp));
-	    }
-#endif
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
 	    afs_PutVCache(tvcp);
@@ -1210,10 +1192,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
 		osi_dnlc_purgedp(tvcp);	/* if it (could be) a directory */
 	}
-	ReleaseWriteLock(&afs_xcbhash);
 #ifdef AFS_DARWIN80_ENV
 	/* reclaim->FlushVCache will need xcbhash */
 	if (((tvcp->f.states & CDeadVnode)||(tvcp->f.states & CVInit))) {
+	    ReleaseWriteLock(&afs_xcbhash);
 	    /* passing in a parent hangs getting the vnode lock */
 	    code = afs_darwin_finalizevnode(tvcp, NULL, NULL, 0, 1);
 	    if (code) {
@@ -1224,12 +1206,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
 		    osi_dnlc_purgedp(tvcp); /* if it (could be) a directory */
 	    } else {
-		/* re-acquire the io&usecount that finalizevnode disposed of */
-		vnode_get(AFSTOV(tvcp));
+		/* re-acquire the usecount that finalizevnode disposed of */
 		vnode_ref(AFSTOV(tvcp));
 	    }
-	}
+	} else
 #endif
+	ReleaseWriteLock(&afs_xcbhash);
 
 	ReleaseWriteLock(&tvcp->lock);
 	/* finally, we're done with the entry */
@@ -1258,30 +1240,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	do {
 	    retry = 0;
 	    ObtainReadLock(&afs_xvcache);
-	    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */ );
+	    tvcp = afs_FindVCache(&afid, &retry, FIND_CDEAD /* !stats&!lru */);
 	    ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 	if (tvcp != NULL) {
 	    if ((tvcp->f.states & CBulkFetching)
 		&& (tvcp->f.m.Length == statSeqNo)) {
 		tvcp->f.states &= ~CBulkFetching;
-#ifdef AFS_DARWIN80_ENV
-		if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit))) {
-		    /* re-acquire the io&usecount that finalizevnode dropped */
-		    vnode_get(AFSTOV(tvcp));
-		    vnode_ref(AFSTOV(tvcp));
-		}
-#endif
 	    }
 	    afs_PutVCache(tvcp);
 	}
-#ifdef AFS_DARWIN80_ENV            
-	else {
-	    if ((!(tvcp->f.states & CDeadVnode)&&!(tvcp->f.states & CVInit)))
-		osi_Panic("vnode finalized without clearing BulkFetching!");
-	}
-#endif
-
     }
     if (volp)
 	afs_PutVolume(volp, READ_LOCK);
@@ -1304,11 +1272,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-#ifdef AFS_DARWIN_ENV
-static int AFSDOBULK = 0;
-#else
 static int AFSDOBULK = 1;
-#endif
 
 int
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
