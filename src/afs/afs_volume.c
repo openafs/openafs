@@ -105,11 +105,13 @@ afs_int32 afs_FVIndex = -1;
 struct volume *
 afs_UFSGetVolSlot(void)
 {
-    register struct volume *tv, **lv;
+    register struct volume *tv = NULL, **lv;
     struct osi_file *tfile;
-    register afs_int32 i, code;
+    register afs_int32 i = -1, code;
     afs_int32 bestTime;
-    struct volume *bestVp, **bestLp;
+    struct volume *bestVp, *oldLp = NULL, **bestLp = NULL;
+    char *oldname = NULL;
+    afs_int32 oldvtix;
 
     AFS_STATCNT(afs_UFSGetVolSlot);
     if (!afs_freeVolList) {
@@ -129,13 +131,19 @@ afs_UFSGetVolSlot(void)
 		}
 	    }
 	}
-	if (!bestVp)
-	    osi_Panic("getvolslot none");
+	if (!bestVp) {
+	    afs_warn("afs_UFSGetVolSlot: no vol slots available\n");
+	    goto error;
+	}
 	tv = bestVp;
+
+	oldLp = *bestLp;
 	*bestLp = tv->next;
-	if (tv->name)
-	    afs_osi_Free(tv->name, strlen(tv->name) + 1);
+
+	oldname = tv->name;
 	tv->name = NULL;
+
+	oldvtix = tv->vtix;
 	/* now write out volume structure to file */
 	if (tv->vtix < 0) {
 	    tv->vtix = afs_volCounter++;
@@ -153,9 +161,12 @@ afs_UFSGetVolSlot(void)
 		code =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * tv->vtix,
 				 &staticFVolume, sizeof(struct fvolume));
-		if (code != sizeof(struct fvolume))
-		    osi_Panic("read volumeinfo");
 		osi_UFSClose(tfile);
+		if (code != sizeof(struct fvolume)) {
+		    afs_warn("afs_UFSGetVolSlot: error %d reading volumeinfo\n",
+		             (int)code);
+		    goto error;
+		}
 		afs_FVIndex = tv->vtix;
 	    }
 	}
@@ -170,15 +181,41 @@ afs_UFSGetVolSlot(void)
 	code =
 	    afs_osi_Write(tfile, sizeof(struct fvolume) * afs_FVIndex,
 			  &staticFVolume, sizeof(struct fvolume));
-	if (code != sizeof(struct fvolume))
-	    osi_Panic("write volumeinfo");
 	osi_UFSClose(tfile);
+	if (code != sizeof(struct fvolume)) {
+	    afs_warn("afs_UFSGetVolSlot: error %d writing volumeinfo\n",
+	             (int)code);
+	    goto error;
+	}
+	if (oldname) {
+	    afs_osi_Free(oldname, strlen(oldname) + 1);
+	    oldname = NULL;
+	}
     } else {
 	tv = afs_freeVolList;
 	afs_freeVolList = tv->next;
     }
     return tv;
 
+ error:
+    if (tv) {
+	if (oldname) {
+	    tv->name = oldname;
+	    oldname = NULL;
+	}
+	if (oldvtix < 0) {
+	    afs_volCounter--;
+	    fvTable[i] = staticFVolume.next;
+	}
+	if (bestLp) {
+	    *bestLp = oldLp;
+	}
+	tv->vtix = oldvtix;
+	/* we messed with staticFVolume, so make sure someone else
+	 * doesn't think it's fine to use */
+	afs_FVIndex = -1;
+    }
+    return NULL;
 }				/*afs_UFSGetVolSlot */
 
 
@@ -490,6 +527,10 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	struct fvolume *tf = 0;
 
 	tv = afs_GetVolSlot();
+	if (!tv) {
+	    ReleaseWriteLock(&afs_xvolume);
+	    return NULL;
+	}
 	memset((char *)tv, 0, sizeof(struct volume));
 	tv->cell = tcell->cellNum;
 	RWLOCK_INIT(&tv->lock, "volume lock");
@@ -723,22 +764,26 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     else
 	ve = (char *)tve;
     tv = afs_SetupVolume(0, aname, ve, tcell, agood, type, areq);
-    if ((agood == 3) && tv->backVol) {
+    if ((agood == 3) && tv && tv->backVol) {
 	/*
 	 * This means that very soon we'll ask for the BK volume so
 	 * we'll prefetch it (well we did already.)
 	 */
 	tv1 =
 	    afs_SetupVolume(tv->backVol, (char *)0, ve, tcell, 0, type, areq);
-	tv1->refCount--;
+	if (tv1) {
+	    tv1->refCount--;
+	}
     }
-    if ((agood >= 2) && tv->roVol) {
+    if ((agood >= 2) && tv && tv->roVol) {
 	/*
 	 * This means that very soon we'll ask for the RO volume so
 	 * we'll prefetch it (well we did already.)
 	 */
 	tv1 = afs_SetupVolume(tv->roVol, NULL, ve, tcell, 0, type, areq);
-	tv1->refCount--;
+	if (tv1) {
+	    tv1->refCount--;
+	}
     }
     osi_FreeLargeSpace(tbuffer);
     afs_PutCell(tcell, READ_LOCK);
