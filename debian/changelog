@@ -3,6 +3,8 @@ openafs (1.5.74-2) UNRELEASED; urgency=low
   * Apply upstream deltas:
     - [e6f6c349] Fixes and clarifications to vos setaddrs man page
     - [d80382ef] Remove special-case call for KAM_SetPassword on s390
+  * Fix ucontext detection on ppc_linux26, hopefully fixing build failures
+    on the Debian powerpc architecture.
   * Install afsd.fuse and a man page link for it if the FUSE client build
     is enabled.
   * Add build dependency on libfuse-dev and pass --enable-fuse-client to
