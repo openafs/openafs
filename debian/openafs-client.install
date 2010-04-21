@@ -179,6 +179,7 @@ debian/tmp/usr/share/man/man5/cacheinfo.5             usr/share/man/man5
 debian/tmp/usr/share/man/man5/tapeconfig.5            usr/share/man/man5
 
 debian/tmp/usr/share/man/man8/afsd.8                  usr/share/man/man8
+debian/tmp/usr/share/man/man8/afsd.fuse.8             usr/share/man/man8
 debian/tmp/usr/share/man/man8/backup.8                usr/share/man/man8
 debian/tmp/usr/share/man/man8/backup_adddump.8        usr/share/man/man8
 debian/tmp/usr/share/man/man8/backup_addhost.8        usr/share/man/man8
