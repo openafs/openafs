@@ -1,4 +1,4 @@
-openafs (1.5.74-2) UNRELEASED; urgency=low
+openafs (1.5.74-2) experimental; urgency=low
 
   * Apply upstream deltas:
     - [e6f6c349] Fixes and clarifications to vos setaddrs man page
@@ -9,10 +9,12 @@ openafs (1.5.74-2) UNRELEASED; urgency=low
     is enabled.
   * Add build dependency on libfuse-dev and pass --enable-fuse-client to
     configure so that the new FUSE afsd is built.  Install afsd.fuse into
-    the openafs-client package for the time being.  There is, as yet, no
+    the openafs-client package for the time being; it will move to some
+    other package before being uploaded to unstable so that openafs-client
+    doesn't keep a dependency on libfuse.  There is, as yet, no
     documentation or init script support for the FUSE implementation.
 
- -- Russ Allbery <rra@debian.org>  Mon, 19 Apr 2010 20:40:49 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 20 Apr 2010 18:12:06 -0700
 
 openafs (1.5.74-1) experimental; urgency=low
 
