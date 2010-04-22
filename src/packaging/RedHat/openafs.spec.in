@@ -337,7 +337,7 @@ To a kernel module for your running kernel, just run:
 %if %{build_userspace}
 
 %package client
-Requires: binutils, openafs = %{PACKAGE_VERSION}
+Requires: binutils, openafs = %{version}
 
 %if %{fedorakmod}
 Requires: %{name}-kmod >= %{version}
@@ -359,7 +359,7 @@ This package provides basic client support to mount and manipulate
 AFS.
 
 %package server
-Requires: openafs = %{PACKAGE_VERSION}
+Requires: openafs = %{version}
 Summary: OpenAFS Filesystem Server
 Group: Networking/Filesystems
 
@@ -376,9 +376,9 @@ Cell.
 %package -n dkms-%{name}
 Summary:        DKMS-ready kernel source for AFS distributed filesystem
 Group:          Development/Kernel
-Provides:       openafs-kernel = %{PACKAGE_VERSION}
+Provides:       openafs-kernel = %{version}
 %if %{fedorakmod}
-Provides: %{name}-kmod = %{PACKAGE_VERSION}
+Provides: %{name}-kmod = %{version}
 %endif
 Requires(pre):  dkms
 Requires(pre):  flex
@@ -414,9 +414,9 @@ authentication may link against them.
 
 %package authlibs-devel
 %if %{build_authlibs}
-Requires: openafs-authlibs = %{PACKAGE_VERSION}
+Requires: openafs-authlibs = %{version}
 %endif
-Requires: openafs-devel = %{PACKAGE_VERSION}
+Requires: openafs-devel = %{version}
 Summary: OpenAFS shared library development
 Group: Development/Filesystems
 
@@ -446,7 +446,7 @@ shared libraries.
 
 %package docs
 Summary: OpenAFS user and administrator documentation
-Requires: openafs = %{PACKAGE_VERSION}
+Requires: openafs = %{version}
 Group: Networking/Filesystems
 
 %description docs
@@ -461,9 +461,9 @@ administrators.
 %package kernel-source
 Summary: OpenAFS Kernel Module source tree
 Group: Networking/Filesystems
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{fedorakmod}
-Provides: %{name}-kmod = %{PACKAGE_VERSION}
+Provides: %{name}-kmod = %{version}
 %endif
 
 %description kernel-source
@@ -477,7 +477,7 @@ module.
 
 %package compat
 Summary: OpenAFS client compatibility symlinks
-Requires: openafs = %{PACKAGE_VERSION}, openafs-client = %{PACKAGE_VERSION}
+Requires: openafs = %{version}, openafs-client = %{version}
 Group: Networking/Filesystems
 Obsoletes: openafs-client-compat
 
@@ -509,7 +509,7 @@ you are using KAserver instead of Krb5.
 %if %{krb5support}
 %package krb5
 Summary: OpenAFS programs to use with krb5
-Requires: openafs = %{PACKAGE_VERSION}
+Requires: openafs = %{version}
 Group: Networking/Filesystems
 BuildRequires: krb5-devel
 
@@ -548,7 +548,7 @@ krb4 lookalike services.
 Summary: OpenAFS Kernel Module (compiled for UP)
 Release: %{modpkgrel}
 Group: Networking/Filesystems
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-%{_target_cpu} = %{kversion}
 %else
@@ -568,7 +568,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-smp
 Summary: OpenAFS Kernel Module (compiled for SMP)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-smp-%{_target_cpu} = %{kversion}
 %else
@@ -589,7 +589,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-largesmp
 Summary: OpenAFS Kernel Module (compiled for LARGESMP)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-largesmp-%{_target_cpu} = %{kversion}
 %else
@@ -610,7 +610,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-bigmem
 Summary: OpenAFS Kernel Module (compiled for SMP & big memory support)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-bigmem-%{_target_cpu} = %{kversion}
 %else
@@ -631,7 +631,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-hugemem
 Summary: OpenAFS Kernel Module (compiled for SMP & huge memory support)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-hugemem-%{_target_cpu} = %{kversion}
 %else
