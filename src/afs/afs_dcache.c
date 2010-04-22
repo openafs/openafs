@@ -2551,6 +2551,7 @@ afs_WriteThroughDSlots(void)
 	theader.firstCSize = AFS_FIRSTCSIZE;
 	theader.otherCSize = AFS_OTHERCSIZE;
 	theader.version = AFS_CI_VERSION;
+	theader.dataSize = sizeof(struct fcache);
 	afs_osi_Write(afs_cacheInodep, 0, &theader, sizeof(theader));
     }
     ReleaseWriteLock(&afs_xdcache);

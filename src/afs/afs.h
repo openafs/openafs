@@ -1052,12 +1052,9 @@ struct afs_ioctl32 {
 struct afs_fheader {
 #define AFS_FHMAGIC	    0x7635abaf	/* uses version number */
     afs_int32 magic;
-#if defined(AFS_SUN57_64BIT_ENV)
-#define AFS_CI_VERSION 3
-#else
-#define AFS_CI_VERSION 2
-#endif
+#define AFS_CI_VERSION 4
     afs_int32 version;
+    afs_uint32 dataSize;
     afs_int32 firstCSize;
     afs_int32 otherCSize;
 };
