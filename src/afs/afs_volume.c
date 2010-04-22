@@ -111,7 +111,7 @@ afs_UFSGetVolSlot(void)
     afs_int32 bestTime;
     struct volume *bestVp, *oldLp = NULL, **bestLp = NULL;
     char *oldname = NULL;
-    afs_int32 oldvtix;
+    afs_int32 oldvtix = -2; /* Initialize to a value that doesn't occur */
 
     AFS_STATCNT(afs_UFSGetVolSlot);
     if (!afs_freeVolList) {
@@ -199,6 +199,10 @@ afs_UFSGetVolSlot(void)
 
  error:
     if (tv) {
+	if (oldtvix == -2) {
+	    afs_warn("afs_UFSGetVolSlot: oldvtix is uninitialized\n");
+	    return NULL;
+	}
 	if (oldname) {
 	    tv->name = oldname;
 	    oldname = NULL;
