@@ -40,6 +40,7 @@ get_verrel ()
   verrel=${1:-$(uname -r)}
   verrel=${verrel%%$knownvariants}
   case "$verrel" in
+    *.el6*)  verrel="`echo ${verrel} | sed -e 's/^\(.*.el6[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
     *.fc9*)  verrel="`echo ${verrel} | sed -e 's/^\(.*.fc9[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
     *.fc1?*) verrel="`echo ${verrel} | sed -e 's/^\(.*.fc1[0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
   esac
@@ -71,13 +72,15 @@ get_rpmtemplate ()
     local variant="${1}"
     local dashvariant="${variant:+-${variant}}"
     case "$verrel" in
+        *.el6*) kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
         *.EL*) kdep="kernel${dashvariant}-%{_target_cpu} = ${verrel}" ;;
         *)     kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
     esac
     case "$verrel" in
-        *.fc9*) kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *.el6*)   kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *.fc9*)   kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
         *.fc1?*)  kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
-        *)      kname="${verrel}${variant}"                             ;;
+        *)        kname="${verrel}${variant}"                             ;;
     esac
 
     cat <<EOF
