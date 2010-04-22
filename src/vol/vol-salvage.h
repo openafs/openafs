@@ -233,7 +233,7 @@ extern void SalvageFileSysParallel(struct DiskPartition64 *partP);
 extern void SalvageFileSys(struct DiskPartition64 *partP, VolumeId singleVolumeNumber);
 extern void SalvageFileSys1(struct DiskPartition64 *partP,
 			    VolumeId singleVolumeNumber);
-extern int SalvageHeader(struct SalvInfo *salvinfo, struct stuff *sp,
+extern int SalvageHeader(struct SalvInfo *salvinfo, struct afs_inode_info *sp,
                         struct InodeSummary *isp, int check, int *deleteMe);
 extern int SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class,
                         int RW, struct ViceInodeInfo *ip, int nInodes,

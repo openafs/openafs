@@ -2161,6 +2161,8 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
     struct VolumeDiskHeader diskHeader;
     afs_int32 (*writefunc)(VolumeDiskHeader_t *, struct DiskPartition64 *) = NULL;
     int *skip;
+    struct VolumeHeader tempHeader;
+    struct afs_inode_info stuff[MAXINODETYPE];
 
     /* keeps track of special inodes that are probably 'good'; they are
      * referenced in the vol header, and are included in the given inodes
@@ -2185,6 +2187,8 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	/* still try to perform the salvage; the skip array only does anything
 	 * if we detect duplicate special inodes */
     }
+
+    init_inode_info(&tempHeader, stuff);
 
     /*
      * First, look at the special inodes and see if any are referenced by
@@ -2397,7 +2401,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 }
 
 int
-SalvageHeader(struct SalvInfo *salvinfo, struct stuff *sp,
+SalvageHeader(struct SalvInfo *salvinfo, struct afs_inode_info *sp,
               struct InodeSummary *isp, int check, int *deleteMe)
 {
     union {
