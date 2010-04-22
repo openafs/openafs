@@ -1,8 +1,5 @@
 # Openafs Spec $Revision$
 
-# TEMPORARY fix for patch fuzz so we can build on Fedora 10
-%define _default_patch_fuzz 2
-
 %define afsvers @VERSION@
 %define pkgvers @LINUX_PKGVER@
 # for beta/rc releases make pkgrel 0.X.<tag>
