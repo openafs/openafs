@@ -42,7 +42,7 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
-    register afs_int32 code, code2;
+    register afs_int32 code;
     register struct rx_call *tcall;
     afs_size_t tlen, xlen = 0;
     XSTATS_DECLS;
@@ -111,9 +111,7 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	    if (code == 0) {
 		code = EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
 	    }
-	    code2 = rx_EndCall(tcall, code);
-	    if (code2 && !code)
-		code = code2;
+	    code = rx_EndCall(tcall, code);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 #ifdef AFS_64BIT_CLIENT
