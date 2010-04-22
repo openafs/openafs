@@ -75,7 +75,6 @@
 #define afs_open	open
 #endif /* !O_LARGEFILE */
 
-#define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 
 /* Note:  the volume creation functions herein leave the destroyMe flag in the
    volume header ON:  this means that the volumes will not be attached by the
@@ -83,7 +82,7 @@
 
 #ifdef FSSYNC_BUILD_CLIENT
 static void
-RemoveInodes(Device dev, VolumeId vid)
+RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId vid)
 {
     int i;
     IHandle_t *handle;
@@ -92,7 +91,7 @@ RemoveInodes(Device dev, VolumeId vid)
      * needs the dev and vid to decrement volume special files.
      */
     IH_INIT(handle, dev, vid, -1);
-    for (i = 0; i < nFILES; i++) {
+    for (i = 0; i < MAXINODETYPE; i++) {
 	Inode inode = *stuff[i].inode;
 	if (VALID_INO(inode))
 	    IH_DEC(handle, inode, vid);
@@ -126,9 +125,13 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     Inode nearInode = 0;
     char *part, *name;
     struct stat st;
+    struct VolumeHeader tempHeader;
+    struct afs_inode_info stuff[MAXINODETYPE];
 # ifdef AFS_DEMAND_ATTACH_FS
     int locktype = 0;
 # endif /* AFS_DEMAND_ATTACH_FS */
+
+    init_inode_info(&tempHeader, stuff);
 
     *ec = 0;
     memset(&vol, 0, sizeof(vol));
@@ -206,8 +209,8 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     }
     device = partition->device;
 
-    for (i = 0; i < nFILES; i++) {
-	struct stuff *p = &stuff[i];
+    for (i = 0; i < MAXINODETYPE; i++) {
+	struct afs_inode_info *p = &stuff[i];
 	if (p->obsolete)
 	    continue;
 #ifdef AFS_NAMEI_ENV
@@ -251,7 +254,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	  bad:
 	    if (handle)
 		IH_RELEASE(handle);
-	    RemoveInodes(device, vol.id);
+	    RemoveInodes(stuff, device, vol.id);
 	    if (!*ec) {
 		*ec = VNOVOL;
 	    }
