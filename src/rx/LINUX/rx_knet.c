@@ -34,7 +34,6 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct socket *sockp;
     struct sockaddr_in myaddr;
     int code;
-    KERNEL_SPACE_DECL;
 #ifdef ADAPT_PMTU
     int pmtu = IP_PMTUDISC_WANT;
     int do_recverr = 1;
@@ -65,14 +64,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	return NULL;
     }
 
-    TO_USER_SPACE();
-    sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
-                           sizeof(pmtu));
+    kernel_setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
+		      sizeof(pmtu));
 #ifdef ADAPT_PMTU
-    sockp->ops->setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
-                           sizeof(do_recverr));
+    kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
+                      sizeof(do_recverr));
 #endif
-    TO_KERNEL_SPACE();
     return (osi_socket *)sockp;
 }
 
@@ -94,7 +91,6 @@ rxk_FreeSocket(struct socket *asocket)
 void
 handle_socket_error(osi_socket so)
 {
-    KERNEL_SPACE_DECL;
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
@@ -108,15 +104,12 @@ handle_socket_error(osi_socket so)
 	return;
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
-    msg.msg_iov = NULL;
-    msg.msg_iovlen = 0;
     msg.msg_control = controlmsgbuf;
     msg.msg_controllen = 256;
     msg.msg_flags = 0;
 
-    TO_USER_SPACE();
-    code = sock_recvmsg(sop, &msg, 256, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
-    TO_KERNEL_SPACE();
+    code = kernel_recvmsg(sop, &msg, NULL, 0, 256,
+			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
 	goto out;
@@ -160,7 +153,6 @@ int
 osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 	    int iovcnt, afs_int32 size, int istack)
 {
-    KERNEL_SPACE_DECL;
     struct msghdr msg;
     int code;
 #ifdef ADAPT_PMTU
@@ -170,27 +162,20 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     while (1) {
 	sockerr=0;
 	esize = sizeof(sockerr);
-	TO_USER_SPACE();
-	sop->ops->getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr,
-			   &esize);
-	TO_KERNEL_SPACE();
+	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
 	if (sockerr == 0)
 	   break;
 	handle_socket_error(sop);
     }
 #endif
 
-    msg.msg_iovlen = iovcnt;
-    msg.msg_iov = iovec;
     msg.msg_name = to;
     msg.msg_namelen = sizeof(*to);
     msg.msg_control = NULL;
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    TO_USER_SPACE();
-    code = sock_sendmsg(sop, &msg, size);
-    TO_KERNEL_SPACE();
+    code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
     return (code < 0) ? code : 0;
 }
 
@@ -220,7 +205,6 @@ int
 osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	       int iovcnt, int *lengthp)
 {
-    KERNEL_SPACE_DECL;
     struct msghdr msg;
     int code;
 #ifdef ADAPT_PMTU
@@ -237,10 +221,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     while (1) {
 	sockerr=0;
 	esize = sizeof(sockerr);
- 	TO_USER_SPACE();
-	sop->ops->getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr,
-			   &esize);
-	TO_KERNEL_SPACE();
+	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
 	if (sockerr == 0)
 	   break;
 	handle_socket_error(so);
@@ -254,10 +235,8 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    TO_USER_SPACE();
-    code = sock_recvmsg(sop, &msg, *lengthp, 0);
-    TO_KERNEL_SPACE();
-
+    code = kernel_recvmsg(sop, &msg, (struct kvec *)tmpvec, iovcnt,
+			  *lengthp, 0);
     if (code < 0) {
 #ifdef CONFIG_PM
 	if (

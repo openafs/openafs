@@ -239,3 +239,34 @@ vfs_llseek(struct file *filp, loff_t offset, int origin) {
 }
 #endif
 
+#ifndef HAVE_KERNEL_SETSOCKOPT
+/* Available from 2.6.19 */
+
+static inline int
+kernel_setsockopt(struct socket *sockp, int level, int name, char *val,
+		  unsigned int len) {
+    mm_segment_t old_fs = get_fs();
+    int ret;
+
+    set_fs(get_ds());
+    ret = sockp->ops->setsockopt(sockp, level, name, val, len);
+    set_fs(old_fs);
+
+    return ret;
+}
+
+static inline int
+kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
+		  int *len) {
+    mm_segment_t old_fs = get_fs();
+    int ret;
+
+    set_fs(get_ds());
+    ret = sockp->ops->setsockopt(sockp, level, name, val, len);
+    set_fs(old_fs);
+
+    return ret;
+}
+
+#endif
+

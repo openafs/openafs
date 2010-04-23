@@ -1270,3 +1270,16 @@ AC_DEFUN([LINUX_HAVE_VFS_LLSEEK], [
     AC_DEFINE([HAVE_VFS_LLSEEK], 1, [define if your kernel has the vfs_llseek function])
   fi])
 
+AC_DEFUN([LINUX_HAVE_KERNEL_SETSOCKOPT], [
+  AC_MSG_CHECKING([for kernel_setsockopt])
+  AC_CACHE_VAL([ac_cv_linux_have_kernel_setsockopt], [
+    AC_TRY_KBUILD(
+[#include <linux/net.h>],
+[kernel_setsockopt(NULL, 0, 0, NULL, 0);],
+      ac_cv_linux_have_kernel_setsockopt=yes,
+      ac_cv_linux_have_kernel_setsockopt=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_kernel_setsockopt)
+  if test "x$ac_cv_linux_have_kernel_setsockopt" = "xyes"; then
+    AC_DEFINE([HAVE_KERNEL_SETSOCKOPT], 1, [define if your kernel has the kernel_setsockopt function])
+  fi])
+
