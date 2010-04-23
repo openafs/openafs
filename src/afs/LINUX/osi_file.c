@@ -363,9 +363,6 @@ osi_InitCacheInfo(char *aname)
 }
 
 
-#define FOP_READ(F, B, C) (F)->f_op->read(F, B, (size_t)(C), &(F)->f_pos)
-#define FOP_WRITE(F, B, C) (F)->f_op->write(F, B, (size_t)(C), &(F)->f_pos)
-
 /* osi_rdwr
  * seek, then read or write to an open inode. addrp points to data in
  * kernel space.
@@ -377,8 +374,9 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     KERNEL_SPACE_DECL;
     int code = 0;
     struct iovec *iov;
-    afs_size_t count;
+    size_t count;
     unsigned long savelim;
+    loff_t pos;
 
     savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
     current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
@@ -401,10 +399,12 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	    continue;
 	}
 
+	pos = filp->f_pos;
 	if (rw == UIO_READ)
-	    code = FOP_READ(filp, iov->iov_base, count);
+	    code = filp->f_op->read(filp, iov->iov_base, count, &pos);
 	else
-	    code = FOP_WRITE(filp, iov->iov_base, count);
+	    code = filp->f_op->write(filp, iov->iov_base, count, &pos);
+	filp->f_pos = pos;
 
 	if (code < 0) {
 	    code = -code;
