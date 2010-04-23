@@ -17,11 +17,8 @@
 
 
 #include <linux/version.h>
-#ifdef AFS_LINUX22_ENV
 #include "rx/rx_kcommon.h"
-#if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
-#endif
 #include <asm/uaccess.h>
 #ifdef ADAPT_PMTU
 #include <linux/errqueue.h>
@@ -64,11 +61,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	sockp->ops->bind(sockp, (struct sockaddr *)&myaddr, sizeof(myaddr));
 
     if (code < 0) {
-#if defined(AFS_LINUX24_ENV)
 	printk("sock_release(rx_socket) FIXME\n");
-#else
-	sock_release(sockp);
-#endif
 	return NULL;
     }
 
@@ -266,41 +259,35 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     TO_KERNEL_SPACE();
 
     if (code < 0) {
-#ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
 	if (
-#ifdef PF_FREEZE
+# ifdef PF_FREEZE
 	    current->flags & PF_FREEZE
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
+# else
+#  if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
+#  else
+#   if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
+#   else
             test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
-#endif
-#endif
+#   endif
+#  endif
+# endif
 	    )
-#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+# ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
 	    refrigerator(PF_FREEZE);
-#else
+# else
 	    refrigerator();
-#endif
+# endif
 	    set_current_state(TASK_INTERRUPTIBLE);
-#endif
 #endif
 
 	/* Clear the error before using the socket again.
 	 * Oh joy, Linux has hidden header files as well. It appears we can
 	 * simply call again and have it clear itself via sock_error().
 	 */
-#ifdef AFS_LINUX22_ENV
 	flush_signals(current);	/* We don't want no stinkin' signals. */
-#else
-	current->signal = 0;	/* We don't want no stinkin' signals. */
-#endif
 	rxk_lastSocketError = code;
 	rxk_nSocketErrors++;
     } else {
@@ -310,9 +297,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 
     return code;
 }
-#ifdef EXPORTED_TASKLIST_LOCK
-extern rwlock_t tasklist_lock __attribute__((weak));
-#endif
+
 void
 osi_StopListener(void)
 {
@@ -331,4 +316,3 @@ osi_StopListener(void)
     rx_socket = NULL;
 }
 
-#endif /* AFS_LINUX22_ENV */
