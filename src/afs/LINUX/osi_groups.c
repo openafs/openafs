@@ -272,24 +272,20 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
     afs_uint32 junk;
     int old_pag;
 
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
 
     code = (*sys_setgroupsp) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
 
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
 
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -305,10 +301,8 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     afs_uint32 junk;
     int old_pag;
 
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
 
     code = (*sys_setgroups32p) (gidsetsize, grouplist);
 
@@ -316,14 +310,12 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 	return code;
     }
 
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
 
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -339,24 +331,20 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
     afs_uint32 junk;
     int old_pag;
     
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
     
     code = (*sys32_setgroupsp)(gidsetsize, grouplist);
     if (code) {
 	return code;
     }
     
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
     
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -374,24 +362,20 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     afs_uint32 junk;
     int old_pag;
     
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
     
     code = (*sys32_setgroupsp) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
     
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
     
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -407,24 +391,20 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     afs_uint32 junk;
     int old_pag;
 
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
 
     code = (*sys32_setgroups32p) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
 
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
 
     /* Linux syscall ABI returns errno as negative */
     return (-code);

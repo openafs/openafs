@@ -595,7 +595,6 @@ Afs_syscall()
     }
 #endif
 #ifdef AFS_LINUX20_ENV
-    lock_kernel();
     /* setup uap for use below - pull out the magic decoder ring to know
      * which syscalls have folded argument lists.
      */
@@ -898,7 +897,6 @@ Afs_syscall()
 #endif
 #ifdef AFS_LINUX20_ENV
     code = -code;
-    unlock_kernel();
 #endif
     return code;
 }

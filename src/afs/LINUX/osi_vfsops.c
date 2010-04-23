@@ -208,7 +208,6 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
     VATTR_NULL(&vattr);
     iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
 
-    lock_kernel();
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ip), &vattr, credp);
     if (!code) {
@@ -216,7 +215,6 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 	vattr2inode(ip, &vattr);
     }
     AFS_GUNLOCK();
-    unlock_kernel();
     crfree(credp);
     return -code;
 }

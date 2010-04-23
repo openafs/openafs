@@ -204,7 +204,6 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     newattrs.ia_ctime = CURRENT_TIME;
 
     /* avoid notify_change() since it wants to update dentry->d_parent */
-    lock_kernel();
     code = inode_change_ok(inode, &newattrs);
     if (!code) {
 #ifdef INODE_SETATTR_NOT_VOID
@@ -216,7 +215,6 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
         inode_setattr(inode, &newattrs);
 #endif
     }
-    unlock_kernel();
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
     code = -code;
