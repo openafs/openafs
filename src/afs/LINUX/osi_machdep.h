@@ -119,19 +119,7 @@ static inline time_t osi_Time(void) {
 #define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
 #define SetAfsVnode(V)					/* unnecessary */
 
-/* We often need to pretend we're in user space to get memory transfers
- * right for the kernel calls we use.
- */
 #include <asm/uaccess.h>
-
-#ifdef KERNEL_SPACE_DECL
-#undef KERNEL_SPACE_DECL
-#undef TO_USER_SPACE
-#undef TO_KERNEL_SPACE
-#endif
-#define KERNEL_SPACE_DECL mm_segment_t _fs_space_decl={0}
-#define TO_USER_SPACE() { _fs_space_decl = get_fs(); set_fs(get_ds()); }
-#define TO_KERNEL_SPACE() set_fs(_fs_space_decl)
 
 #define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 static inline long copyinstr(char *from, char *to, int count, int *length) {

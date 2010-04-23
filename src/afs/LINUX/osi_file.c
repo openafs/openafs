@@ -371,7 +371,7 @@ int
 osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
     struct file *filp = osifile->filp;
-    KERNEL_SPACE_DECL;
+    mm_segment_t old_fs = {0};
     int code = 0;
     struct iovec *iov;
     size_t count;
@@ -381,8 +381,11 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
     current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
 
-    if (uiop->uio_seg == AFS_UIOSYS)
-	TO_USER_SPACE();
+    if (uiop->uio_seg == AFS_UIOSYS) {
+	/* Switch into user space */
+	old_fs = get_fs();
+	set_fs(get_ds());
+    }
 
     /* seek to the desired position. Return -1 on error. */
     if (vfs_llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset) {
@@ -427,8 +430,10 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     }
 
 out:
-    if (uiop->uio_seg == AFS_UIOSYS)
-	TO_KERNEL_SPACE();
+    if (uiop->uio_seg == AFS_UIOSYS) {
+	/* Switch back into kernel space */
+	set_fs(old_fs);
+    }
 
     current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = savelim;
 
