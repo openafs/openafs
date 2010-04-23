@@ -47,7 +47,6 @@ enum vcexcl { EXCL, NONEXCL } ;
 #define FSYNC O_SYNC
 
 #define VTOI(V)	(V)
-#define VFS_STATFS(V, S) ((V)->s_op->statfs)((V), (S), sizeof(*(S)))
 
 /* Various mode bits */
 #define VWRITE	S_IWUSR
