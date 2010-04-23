@@ -260,7 +260,6 @@ typedef struct uio {
 #define NEED_IOCTL32
 #endif
 
-#if defined(__KERNEL__)
 #include <linux/version.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
@@ -294,13 +293,6 @@ do { \
 } while (0)
 
 #define osi_InitGlock()
-
-#else
-#define AFS_GLOCK()
-#define AFS_GUNLOCK()
-#define ISAFS_GLOCK() 1
-#define AFS_ASSERT_GLOCK()
-#endif
 
 #ifdef AFS_AMD64_LINUX20_ENV
 /* RHEL5 beta's kernel doesn't define these. They aren't gonna change, so... */
