@@ -1257,3 +1257,16 @@ AC_DEFUN([LINUX_HAVE_PAGE_OFFSET], [
     AC_DEFINE([HAVE_PAGE_OFFSET], 1, [define if your kernel has the page_offset function])
   fi])
 
+AC_DEFUN([LINUX_HAVE_VFS_LLSEEK], [
+  AC_MSG_CHECKING([for vfs_llseek])
+  AC_CACHE_VAL([ac_cv_linux_have_vfs_llseek], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[vfs_llseek(NULL, 0, 0);],
+      ac_cv_linux_have_vfs_llseek=yes,
+      ac_cv_linux_have_vfs_llseek=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_vfs_llseek)
+  if test "x$ac_cv_linux_have_vfs_llseek" = "xyes"; then
+    AC_DEFINE([HAVE_VFS_LLSEEK], 1, [define if your kernel has the vfs_llseek function])
+  fi])
+

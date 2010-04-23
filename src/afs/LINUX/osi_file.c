@@ -387,13 +387,10 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	TO_USER_SPACE();
 
     /* seek to the desired position. Return -1 on error. */
-    if (filp->f_op->llseek) {
-	if (filp->f_op->llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset) {
-	    code = -1;
-	    goto out;
-	}
-    } else
-	filp->f_pos = uiop->uio_offset;
+    if (vfs_llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset) {
+	code = -1;
+	goto out;
+    }
 
     while (code == 0 && uiop->uio_resid > 0 && uiop->uio_iovcnt > 0) {
 	iov = uiop->uio_iov;
