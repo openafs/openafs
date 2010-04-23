@@ -1010,6 +1010,8 @@ _VLockFd(FD_t fd, afs_uint32 offset, int locktype, int nonblock)
     int cmd = AFS_SETLKW;
     struct afs_st_flock sf;
 
+    opr_Assert(fd >= 0);
+
     if (locktype == READ_LOCK) {
 	l_type = F_RDLCK;
     }
@@ -1146,6 +1148,7 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
     opr_mutex_enter(&lf->mutex);
 
     if (lf->fd == INVALID_FD) {
+	opr_Assert(lf->refcount == 0);
 	lf->fd = _VOpenPath(lf->path);
 	if (lf->fd == INVALID_FD) {
 	    opr_mutex_exit(&lf->mutex);
@@ -1155,12 +1158,15 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 
     lf->refcount++;
 
+    opr_Assert(lf->refcount > 0);
+
     opr_mutex_exit(&lf->mutex);
 
     code = _VLockFd(lf->fd, offset, locktype, nonblock);
 
     if (code) {
 	opr_mutex_enter(&lf->mutex);
+	opr_Assert(lf->refcount > 0);
 	if (--lf->refcount < 1) {
 	    _VCloseFd(lf->fd);
 	    lf->fd = INVALID_FD;
@@ -1177,6 +1183,7 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
     opr_mutex_enter(&lf->mutex);
 
     opr_Assert(lf->fd != INVALID_FD);
+    opr_Assert(lf->refcount > 0);
 
     if (--lf->refcount < 1) {
 	_VCloseFd(lf->fd);
