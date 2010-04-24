@@ -108,7 +108,6 @@ UAFSOBJ = \
 	$(UOBJ)/afs_lock.o	\
 	$(UOBJ)/afs_mariner.o \
 	$(UOBJ)/afs_memcache.o	\
-	$(UOBJ)/afs_md5.o	\
 	$(UOBJ)/afs_fetchstore.o	\
 	$(UOBJ)/afs_osidnlc.o	\
 	$(UOBJ)/afs_osi_pag.o \
@@ -250,7 +249,6 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
 	$(WEBOBJ)/afs_memcache.o \
-	$(WEBOBJ)/afs_md5.o \
 	$(WEBOBJ)/afs_fetchstore.o \
 	$(WEBOBJ)/afs_osidnlc.o \
 	$(WEBOBJ)/afs_osi_pag.o \
@@ -392,7 +390,6 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
 	$(WEBOBJ)/afs_memcache.o \
-	$(WEBOBJ)/afs_md5.o \
 	$(WEBOBJ)/afs_fetchstore.o \
 	$(WEBOBJ)/afs_osidnlc.o \
 	$(WEBOBJ)/afs_osi_pag.o \
@@ -529,7 +526,6 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_lock.o	\
 	$(JUAFS)/afs_mariner.o \
 	$(JUAFS)/afs_memcache.o	\
-	$(JUAFS)/afs_md5.o \
 	$(JUAFS)/afs_fetchstore.o	\
 	$(JUAFS)/afs_osidnlc.o	\
 	$(JUAFS)/afs_osi_pag.o \
@@ -751,8 +747,6 @@ $(UOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
 $(UOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE1)
 $(UOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
-	$(CRULE1)
-$(UOBJ)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
 	$(CRULE1)
 $(UOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE1)

@@ -19,7 +19,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/afs_osi.h"
-#include "afs/afs_md5.h"
+#include "hcrypto/md5.h"
 
 /* Local variables. */
 afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */
@@ -924,6 +924,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 {
     struct cell *tc, *tcl = 0;
     afs_int32 i, newc = 0, code = 0;
+    struct md5 m;
 
     AFS_STATCNT(afs_NewCell);
 
@@ -939,7 +940,9 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;
 	tc->vlport = AFS_VLPORT;
-	AFS_MD5_String(tc->cellHandle, tc->cellName, strlen(tc->cellName));
+	MD5_Init(&m);
+	MD5_Update(&m, tc->cellName, strlen(tc->cellName));
+	MD5_Final(tc->cellHandle, &m);
 	AFS_RWLOCK_INIT(&tc->lock, "cell lock");
 	newc = 1;
 	aflags |= CNoSUID;

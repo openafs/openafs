@@ -37,7 +37,7 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 
 #ifdef AFS_LINUX20_ENV
-#include "afs/afs_md5.h"	/* For MD5 inodes - Linux only */
+#include "hcrypto/md5.h"
 #endif
 
 #if	defined(AFS_SUN56_ENV)
@@ -374,13 +374,13 @@ afs_calc_inum(afs_int32 volume, afs_int32 vnode)
 {
     afs_int32 ino, vno = vnode;
     char digest[16];
-    struct afs_md5 ct;
+    struct md5 ct;
 
     if (afs_new_inum) {
-	AFS_MD5_Init(&ct);
-	AFS_MD5_Update(&ct, &volume, 4);
-	AFS_MD5_Update(&ct, &vnode, 4);
-	AFS_MD5_Final(digest, &ct);
+	MD5_Init(&ct);
+	MD5_Update(&ct, &volume, 4);
+	MD5_Update(&ct, &vnode, 4);
+	MD5_Final(digest, &ct);
 	memcpy(&ino, digest, sizeof(afs_int32));
 	ino ^= (ino ^ vno) & 1;
     } else {

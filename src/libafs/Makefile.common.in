@@ -23,6 +23,7 @@ TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
 
 COMMON_INCLUDE = -I. -I.. -I../nfs \
+	-I$(TOP_SRCDIR)/crypto/kernel \
 	-I${TOP_SRCDIR} \
 	-I${TOP_SRCDIR}/afs \
 	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
@@ -30,6 +31,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
 	-I${TOP_SRCDIR}/rxkad \
 	-I${TOP_SRCDIR}/util \
+	-I${TOP_SRCDIR}/external/heimdal \
 	-I${TOP_OBJDIR}/src \
 	-I${TOP_OBJDIR}/src/afs \
 	-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
@@ -93,7 +95,6 @@ AFSAOBJS = \
 	afs_init.o \
 	afs_lock.o	\
 	afs_mariner.o \
-	afs_md5.o \
 	afs_memcache.o	\
 	afs_fetchstore.o	\
 	afs_osi.o		\
@@ -170,6 +171,7 @@ AFSAOBJS = \
 	xdr_afsuuid.o	\
 	xdr.o		\
 	Ktoken.xdr.o	\
+	md5.o		\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -273,8 +275,6 @@ afs_error.o: $(TOP_SRC_AFS)/afs_error.c
 afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE_OPT)
 afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
-	$(CRULE_OPT)
-afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
 	$(CRULE_OPT)
 afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
 	$(CRULE_OPT)
@@ -485,6 +485,10 @@ afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE_OPT) -DAFS_PAG_MANAGER
 rx_pag_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 	$(CRULE_NOOPT)
+
+# Crypto
+md5.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/md5.c
+	$(CRULE_OPT)
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating

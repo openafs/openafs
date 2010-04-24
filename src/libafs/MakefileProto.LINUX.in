@@ -79,6 +79,9 @@ COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_KERNEL_BUILD=@LINUX_KERNEL_BUILD@
 
+CFLAGS_md5.o = -I$(TOP_SRCDIR)/crypto/kernel \
+	       -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+
 # System specific build commands and flags
 <linux26 linux_26>
 # All the platform-specific and kernel-related things are provided by
