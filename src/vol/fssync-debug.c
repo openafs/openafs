@@ -973,7 +973,7 @@ VnQuery(struct cmd_syndesc * as, void * rock)
     do_vnqry(&state, &res);
 
     if (res.hdr.response == SYNC_OK) {
-	memcpy(&v, res.payload.buf, sizeof(Volume));
+	memcpy(&v, res.payload.buf, sizeof(Vnode));
 
 	printf("vnode = {\n");
 
