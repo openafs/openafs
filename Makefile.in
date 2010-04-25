@@ -745,18 +745,19 @@ distclean: clean
 	/bin/rm -rf lib include
 	/bin/rm -f config.log config.cache config.status \
 	src/config/afsconfig.h src/config/stamp-h1 \
+	src/libafs/Makefile \
+	src/libuafs/Makefile \
 	Makefile \
 	src/afs/Makefile \
 	src/afsd/Makefile \
-	src/afsd/afs.ppc_darwin.plist \
 	src/afsmonitor/Makefile \
 	src/afsweb/Makefile \
 	src/aklog/Makefile \
 	src/audit/Makefile \
-	src/auth/test/Makefile \
 	src/auth/Makefile \
-	src/bozo/test/Makefile \
+	src/auth/test/Makefile \
 	src/bozo/Makefile \
+	src/bozo/test/Makefile \
 	src/bu_utils/Makefile \
 	src/bubasics/Makefile \
 	src/bucoord/Makefile \
@@ -764,53 +765,62 @@ distclean: clean
 	src/tbudb/Makefile \
 	src/butc/Makefile \
 	src/butm/Makefile \
-	src/cmd/test/Makefile \
 	src/cmd/Makefile \
-	src/comerr/test/Makefile \
+	src/cmd/test/Makefile \
 	src/comerr/Makefile \
+	src/comerr/test/Makefile \
 	src/config/Makefile \
-	src/config/Makefile.version \
-	src/config/Makefile.version-NOCML \
 	src/config/Makefile.config \
-	src/des/test/Makefile \
+	src/config/Makefile.version \
+	src/config/Makefile.version-CML \
+	src/config/Makefile.version-NOCML \
+	src/config/shlib-build \
+	src/config/shlib-install \
 	src/des/Makefile \
-	src/dir/test/Makefile \
+	src/des/test/Makefile \
 	src/dir/Makefile \
+	src/dir/test/Makefile \
 	src/export/Makefile \
 	src/finale/Makefile \
 	src/fsint/Makefile \
 	src/fsprobe/Makefile \
 	src/gtx/Makefile \
-	src/kauth/test/Makefile \
+	src/JAVA/libjafs/Makefile \
 	src/kauth/Makefile \
+	src/kauth/test/Makefile \
 	src/kopenafs/Makefile \
-	src/libacl/test/Makefile \
 	src/libacl/Makefile \
-	src/libadmin/adminutil/Makefile \
+	src/libacl/test/Makefile \
 	src/libadmin/Makefile \
+	src/libadmin/adminutil/Makefile \
 	src/libadmin/bos/Makefile \
-	src/libadmin/cfg/test/Makefile \
 	src/libadmin/cfg/Makefile \
+	src/libadmin/cfg/test/Makefile \
 	src/libadmin/client/Makefile \
 	src/libadmin/kas/Makefile \
 	src/libadmin/pts/Makefile \
 	src/libadmin/samples/Makefile \
 	src/libadmin/test/Makefile \
 	src/libadmin/vos/Makefile \
-	src/JAVA/libjafs/Makefile \
-	src/libafs/Makefile \
 	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
-	src/libafs/afs.${MKAFS_OSTYPE}.plist \
+	${DARWIN_PLIST} \
 	src/libafsauthent/Makefile \
 	src/libafsrpc/Makefile \
-	src/libuafs/Makefile \
 	src/libuafs/Makefile.common \
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
-	src/log/test/Makefile \
 	src/log/Makefile \
-	src/lwp/test/Makefile \
+	src/log/test/Makefile \
 	src/lwp/Makefile \
+	src/lwp/test/Makefile \
+	src/packaging/Debian/changelog \
+	src/packaging/MacOS/OpenAFS-debug.Description.plist \
+	src/packaging/MacOS/OpenAFS-debug.Info.plist \
+	src/packaging/MacOS/OpenAFS.Description.plist \
+	src/packaging/MacOS/OpenAFS.Info.plist \
+	src/packaging/MacOS/OpenAFS.info \
+	src/packaging/MacOS/buildpkg.sh \
+	src/packaging/RedHat/openafs.spec \
 	src/pam/Makefile \
 	src/platform/Makefile \
 	src/platform/${MKAFS_OSTYPE}/Makefile \
@@ -834,7 +844,6 @@ distclean: clean
 	src/sgistuff/Makefile \
 	src/shlibafsauthent/Makefile \
 	src/shlibafsrpc/Makefile \
-	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
 	src/tests/Makefile \
@@ -846,13 +855,13 @@ distclean: clean
 	src/ubik/Makefile \
 	src/tubik/Makefile \
 	src/update/Makefile \
-	src/usd/test/Makefile \
 	src/usd/Makefile \
+	src/usd/test/Makefile \
 	src/uss/Makefile \
 	src/util/Makefile \
 	src/util/test/Makefile \
-	src/venus/test/Makefile \
 	src/venus/Makefile \
+	src/venus/test/Makefile \
 	src/vfsck/Makefile \
 	src/viced/Makefile \
 	src/vlserver/Makefile \

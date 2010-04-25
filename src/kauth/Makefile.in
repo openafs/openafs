@@ -304,7 +304,9 @@ dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 clean:
 	$(RM) -f *.o *.a *.xdr.c *.cs.c *.ss.c core \
 		kaserver kas klog multiklog kpasswd klogin rebuild \
-		kauth.h kautils.h kaerrors.c kpwvalid AFS_component_version_number.c \
+		ka-forwarder \
+		kauth.h kautils.h kaerrors.c kpwvalid \
+		AFS_component_version_number.c \
 		klog.krb knfs klogin.krb kdb Kkauth.h
 
 include ../config/Makefile.version
