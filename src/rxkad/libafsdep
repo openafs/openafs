@@ -3,4 +3,8 @@ rxkad_prototypes.h
 rxkad_client.[ch]
 rxkad_common.c
 private_data.h
-domestic/*.[ch]
+crypt_conn.c
+fcrypt.c
+fcrypt.h
+sboxes.h
+tcrypt.c

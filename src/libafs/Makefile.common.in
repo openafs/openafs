@@ -29,7 +29,6 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_SRCDIR}/config \
 	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
 	-I${TOP_SRCDIR}/rxkad \
-	-I${TOP_SRCDIR}/rxkad/domestic \
 	-I${TOP_SRCDIR}/util \
 	-I${TOP_OBJDIR}/src \
 	-I${TOP_OBJDIR}/src/afs \
@@ -366,9 +365,9 @@ afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE_NOOPT)
 afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
 	$(CRULE_NOOPT)
-fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
+fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
 	$(CRULE_NOOPT)
-crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
 	$(CRULE_NOOPT)
 rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE_NOOPT)
