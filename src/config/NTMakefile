@@ -92,9 +92,6 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\des\test))
 		$(MKDIR) $(OJT)\des\test
 !	ENDIF
-!	IF (!EXIST($(OJT)\des_stub))
-		$(MKDIR) $(OJT)\des_stub
-!	ENDIF
 !	IF (!EXIST($(OJT)\dir))
 		$(MKDIR) $(OJT)\dir
 !	ENDIF

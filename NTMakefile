@@ -153,17 +153,10 @@ rxgen: lwp
 
 des: rxgen
      @echo ***** $@
-!	IF (EXIST($(SRC)\des\NTMakefile))
-		$(DOCD) $(SRC)\des
-		$(CD) $(SRC)\des
-		$(NTMAKE)
-		$(CD) ..\..
-!	ELSE
-		$(DOCD) $(SRC)\des_stub
-		$(CD) $(SRC)\des_stub
-		$(NTMAKE)
-		$(CD) ..\..
-!	ENDIF
+	$(DOCD) $(SRC)\des
+	$(CD) $(SRC)\des
+	$(NTMAKE)
+	$(CD) ..\..
 
 rx: des
      @echo ***** $@
