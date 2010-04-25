@@ -79,8 +79,13 @@ if [ -z "$filename" ] ; then
 fi
 case $sysname in
 rs_aix*)
-    if [ -f "$srcdir/$library.exp" ] ; then
-        export="-bE:$srcdir/$library.exp"
+    if [ -f "$srcdir/$library.map" ] ; then
+	cat $srcdir/$library.map | \
+	awk '/local:/ {inglobal=0};
+	     inglobal { sub(/;/,""); print };
+	     /global:/ { inglobal=1};' \
+	> $library.exp
+        export="-bE:$library.exp"
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"
@@ -112,6 +117,21 @@ sun*_5*)
 hp_ux*)
     if [ -f "$srcdir/$library.hp" ] ; then
         export="-c $srcdir/$library.hp"
+    fi
+    echo "$linker $export -o $filename $*"
+    $linker $export -o "$filename" "$@"
+    ;;
+*darwin*)
+    if [ -f "$srcdir/$library.map" ] ; then
+	# For 10.4 and later, the Mac exports list is a list of symbols,
+	# prefixed with an '_'
+	cat $srcdir/$library.map | \
+	awk '/local:/ {inglobal=0};
+	     /^[\t ]+#/ {next};
+	     inglobal { sub(/;/,""); sub(/[\t ]+/,"_"); print };
+	     /global:/ { inglobal=1};' \
+	> $library.exp
+	export="-Wl,-exported_symbols_list,$library.exp"
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"
