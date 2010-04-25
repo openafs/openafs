@@ -4947,6 +4947,49 @@ VUpdateSalvagePriority_r(Volume * vp)
 
 
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
+
+/* A couple of little helper functions. These return true if we tried to
+ * use this mechanism to schedule a salvage, false if we haven't tried.
+ * If we did try a salvage then the results are contained in code.
+ */
+
+static inline int
+try_SALVSYNC(Volume *vp, char *partName, int *code) {
+#ifdef SALVSYNC_BUILD_CLIENT
+    if (VCanUseSALVSYNC()) {
+	/* can't use V_id() since there's no guarantee
+	 * we have the disk data header at this point */
+	*code = SALVSYNC_SalvageVolume(vp->hashid,
+	                               partName,
+	                               SALVSYNC_SALVAGE,
+	                               vp->salvage.reason,
+	                               vp->salvage.prio,
+	                               NULL);
+	return 1;
+    }
+#endif
+    return 0;
+}
+
+static_inline int
+try_FSSYNC(Volume *vp, char *partName, int *code) {
+#ifdef FSSYNC_BUILD_CLIENT
+    if (VCanUseFSSYNC()) {
+	/*
+	 * If we aren't the fileserver, tell the fileserver the volume
+	 * needs to be salvaged. We could directly tell the
+	 * salvageserver, but the fileserver keeps track of some stats
+	 * related to salvages, and handles some other salvage-related
+	 * complications for us.
+         */
+        *code = FSYNC_VolOp(vp->hashid, partName,
+                            FSYNC_VOL_FORCE_ERROR, FSYNC_SALVAGE, NULL);
+	return 1;
+    }
+#endif /* FSSYNC_BUILD_CLIENT */
+    return 0;
+}
+
 /**
  * schedule a salvage with the salvage server or fileserver.
  *
@@ -5017,31 +5060,8 @@ VScheduleSalvage_r(Volume * vp)
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	VOL_UNLOCK;
 
-#ifdef SALVSYNC_BUILD_CLIENT
-	if (VCanUseSALVSYNC()) {
-	    /* can't use V_id() since there's no guarantee
-	     * we have the disk data header at this point */
-	    code = SALVSYNC_SalvageVolume(vp->hashid,
-	                                  partName,
-	                                  SALVSYNC_SALVAGE,
-	                                  vp->salvage.reason,
-	                                  vp->salvage.prio,
-	                                  NULL);
-	} else
-#endif /* SALVSYNC_BUILD_CLIENT */
-#ifdef FSSYNC_BUILD_CLIENT
-        if (VCanUseFSSYNC()) {
-            /*
-             * If we aren't the fileserver, tell the fileserver the volume
-             * needs to be salvaged. We could directly tell the
-             * salvageserver, but the fileserver keeps track of some stats
-             * related to salvages, and handles some other salvage-related
-             * complications for us.
-             */
-            code = FSYNC_VolOp(vp->hashid, partName,
-                               FSYNC_VOL_FORCE_ERROR, FSYNC_SALVAGE, NULL);
-        }
-#endif /* FSSYNC_BUILD_CLIENT */
+	assert(try_SALVSYNC(vp, partName, &code) ||
+	       try_FSSYNC(vp, partName, &code));
 
 	VOL_LOCK;
 	VChangeState_r(vp, state_save);
