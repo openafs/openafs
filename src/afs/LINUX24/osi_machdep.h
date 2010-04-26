@@ -73,7 +73,7 @@
 
 #define afs_hz HZ
 #include "h/sched.h"
-#if defined(HAVE_CURRENT_KERNEL_TIME)
+#if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
 static inline time_t osi_Time(void) { 
     struct timespec xtime;
     xtime = current_kernel_time();

@@ -107,7 +107,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
-#if defined(HAVE_BDI_INIT)
+#if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
 #if defined(STRUCT_BDI_HAS_NAME)
@@ -319,7 +319,7 @@ afs_put_super(struct super_block *sbp)
     mntput(afs_cacheMnt);
 
     osi_linux_verify_alloced_memory();
-#if defined(HAVE_BDI_INIT)
+#if defined(HAVE_LINUX_BDI_INIT)
     bdi_destroy(afs_backing_dev_info);
 #endif
     osi_Free(afs_backing_dev_info, sizeof(struct backing_dev_info));

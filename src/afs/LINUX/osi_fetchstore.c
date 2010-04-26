@@ -38,7 +38,7 @@
 #include "afs/param.h"
 
 #include <linux/fs.h>
-#if defined(HAVE_SPLICE_DIRECT_TO_ACTOR)
+#if defined(HAVE_LINUX_SPLICE_DIRECT_TO_ACTOR)
 # include <linux/splice.h>
 #else
 # include <linux/pipe_fs_i.h>
@@ -47,7 +47,7 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 
-#if defined(HAVE_SPLICE_DIRECT_TO_ACTOR)
+#if defined(HAVE_LINUX_SPLICE_DIRECT_TO_ACTOR)
 static int
 afs_linux_splice_actor(struct pipe_inode_info *pipe,
 		       struct pipe_buffer *buf,

@@ -391,33 +391,6 @@ AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
   AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)])
 
 
-AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK], [
-  AC_MSG_CHECKING([for page_follow_link_light vs page_follow_link])
-  AC_CACHE_VAL([ac_cv_linux_kernel_page_follow_link], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[page_follow_link(0,0);],
-      ac_cv_linux_kernel_page_follow_link=yes,
-      ac_cv_linux_kernel_page_follow_link=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)])
-
-AC_DEFUN([LINUX_KERNEL_HLIST_UNHASHED], [
-  AC_MSG_CHECKING([for hlist_unhashed])
-  AC_CACHE_VAL([ac_cv_linux_kernel_hlist_unhashed], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/list.h>],
-[hlist_unhashed(0);],
-      ac_cv_linux_kernel_hlist_unhashed=yes,
-      ac_cv_linux_kernel_hlist_unhashed=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_kernel_hlist_unhashed)])
-
-
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BYTES], [
   AC_MSG_CHECKING([for i_bytes in struct inode])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_bytes], [
@@ -649,70 +622,6 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
     AC_DEFINE([KEY_ALLOC_NEEDS_CRED], 1, [define if key_alloc takes credentials])
   fi])
 
-AC_DEFUN([LINUX_DO_SYNC_READ], [
-  AC_MSG_CHECKING([for linux do_sync_read()])
-  AC_CACHE_VAL([ac_cv_linux_do_sync_read], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[do_sync_read(NULL, NULL, 0, NULL);],
-      ac_cv_linux_do_sync_read=yes,
-      ac_cv_linux_do_sync_read=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_do_sync_read)
-  if test "x$ac_cv_linux_do_sync_read" = "xyes"; then
-    AC_DEFINE([DO_SYNC_READ], 1, [define if your kernel has do_sync_read()])
-  fi])
-
-AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
-  AC_MSG_CHECKING([for linux generic_file_aio_read()])
-  AC_CACHE_VAL([ac_cv_linux_generic_file_aio_read], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[generic_file_aio_read(NULL, NULL, 0, 0);],
-      ac_cv_linux_generic_file_aio_read=yes,
-      ac_cv_linux_generic_file_aio_read=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_generic_file_aio_read)
-  if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
-    AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_I_SIZE_READ], [
-  AC_MSG_CHECKING([for linux i_size_read()])
-  AC_CACHE_VAL([ac_cv_linux_i_size_read], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[i_size_read(NULL);],
-      ac_cv_linux_i_size_read=yes,
-      ac_cv_linux_i_size_read=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_i_size_read)
-  if test "x$ac_cv_linux_i_size_read" = "xyes"; then
-    AC_DEFINE([HAVE_LINUX_I_SIZE_READ], 1, [define if your kernel has i_size_read()])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_D_ALLOC_ANON], [
-  AC_MSG_CHECKING([for linux d_alloc_anon()])
-  AC_CACHE_VAL([ac_cv_linux_d_alloc_anon], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/dcache.h>],
-[d_alloc_anon(NULL);],
-      ac_cv_linux_d_alloc_anon=yes,
-      ac_cv_linux_d_alloc_anon=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_d_alloc_anon)
-  if test "x$ac_cv_linux_d_alloc_anon" = "xyes"; then
-    AC_DEFINE([HAVE_LINUX_D_ALLOC_ANON], 1, [define if your kernel has d_alloc_anon()])
-  fi])
-
 AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
   AC_MSG_CHECKING([whether INIT_WORK has a _data argument])
   AC_CACHE_VAL([ac_cv_linux_init_work_has_data], [
@@ -835,16 +744,6 @@ _fop.splice_read(NULL, NULL, NULL, 0, 0);],
       ac_cv_linux_fs_struct_fop_has_splice=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_splice)])
 
-AC_DEFUN([LINUX_HAVE_CURRENT_KERNEL_TIME], [
-  AC_MSG_CHECKING([for current_kernel_time()])
-  AC_CACHE_VAL([ac_cv_linux_have_current_kernel_time], [
-    AC_TRY_KBUILD(
-[#include <linux/time.h>],
-[struct timespec s = current_kernel_time();],
-      ac_cv_linux_have_current_kernel_time=yes,
-      ac_cv_linux_have_current_kernel_time=no)])
-  AC_MSG_RESULT($ac_cv_linux_have_current_kernel_time)])
-
 AC_DEFUN([LINUX_KMEM_CACHE_INIT], [
   AC_MSG_CHECKING([for new kmem_cache init function parameters])
   AC_CACHE_VAL([ac_cv_linux_kmem_cache_init], [
@@ -869,19 +768,6 @@ sysctl_check_table(NULL);],
  ac_cv_linux_sysctl_table_checking=yes)])
 AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
 
-AC_DEFUN([LINUX_HAVE_IGET], [
-  AC_MSG_CHECKING([for linux iget()])
-  AC_CACHE_VAL([ac_cv_linux_have_iget], [
-    save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[iget(NULL, NULL);],
-      ac_cv_linux_have_iget=yes,
-      ac_cv_linux_have_iget=no)
-    CPPFLAGS="$save_CPPFLAGS"])
-  AC_MSG_RESULT($ac_cv_linux_have_iget)])
-
 AC_DEFUN([LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH], [
   AC_MSG_CHECKING([for path in struct nameidata])
   AC_CACHE_VAL([ac_cv_linux_struct_nameidata_has_path], [
@@ -893,33 +779,6 @@ printk("%x\n", _nd.path);],
       ac_cv_linux_struct_nameidata_has_path=no)])
   AC_MSG_RESULT($ac_cv_linux_struct_nameidata_has_path)])
 
-AC_DEFUN([LINUX_EXPORTS_RCU_READ_LOCK], [
-  AC_MSG_CHECKING([if rcu_read_lock is usable])
-  AC_CACHE_VAL([ac_cv_linux_exports_rcu_read_lock], [
-    AC_TRY_KBUILD(
-[#include <linux/rcupdate.h>],
-[rcu_read_lock();],
-      ac_cv_linux_exports_rcu_read_lock=yes,
-      ac_cv_linux_exports_rcu_read_lock=no)])
-  AC_MSG_RESULT($ac_cv_linux_exports_rcu_read_lock)
-  if test "x$ac_cv_linux_exports_rcu_read_lock" = "xyes"; then
-    AC_DEFINE([EXPORTED_RCU_READ_LOCK], 1, [define if rcu_read_lock() is usable])
-  fi])
- 
-AC_DEFUN([LINUX_EXPORTS_FIND_TASK_BY_PID], [
-  AC_MSG_CHECKING([if find_task_by_pid is usable])
-  AC_CACHE_VAL([ac_cv_linux_exports_find_task_by_pid], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[pid_t p;
-find_task_by_pid(p);],
-      ac_cv_linux_exports_find_task_by_pid=yes,
-      ac_cv_linux_exports_find_task_by_pid=no)])
-  AC_MSG_RESULT($ac_cv_linux_exports_find_task_by_pid)
-  if test "x$ac_cv_linux_exports_find_task_by_pid" = "xyes"; then
-    AC_DEFINE([EXPORTED_FIND_TASK_BY_PID], 1, [define if find_task_by_pid() is usable])
-  fi])
- 
 AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
   AC_MSG_CHECKING([if proc_root_fs is defined and exported])
   AC_CACHE_VAL([ac_cv_linux_exports_proc_root_fs], [
@@ -961,18 +820,6 @@ _eops.fh_to_parent(NULL, NULL, 0, 0);],
     AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
   fi])
  
-AC_DEFUN([LINUX_HAVE_BDI_INIT], [
-  AC_MSG_CHECKING([for linux bdi_init()])
-  AC_CACHE_VAL([ac_cv_linux_bdi_init], [
-    AC_TRY_KBUILD(
-[#include <linux/backing-dev.h>],
-[bdi_init(NULL);],
-      ac_cv_linux_bdi_init=yes,
-      ac_cv_linux_bdi_init=no)])
-  AC_MSG_RESULT($ac_cv_linux_bdi_init)
-  if test "x$ac_cv_linux_bdi_init" = "xyes"; then
-    AC_DEFINE([HAVE_BDI_INIT], 1, [define if your kernel has a bdi_init()])
-  fi])
 
 AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   AC_MSG_CHECKING([for linux write_begin() address space op])
@@ -988,44 +835,6 @@ _aop.write_begin = NULL;],
     AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
   fi])
 
-AC_DEFUN([LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], [
-  AC_MSG_CHECKING([for linux grab_cache_page_write_begin()])
-  AC_CACHE_VAL([ac_cv_linux_grab_cache_page_write_begin], [
-    AC_TRY_KBUILD(
-[#include <linux/pagemap.h>],
-[grab_cache_page_write_begin(NULL, 0, 0);],
-      ac_cv_linux_grab_cache_page_write_begin=yes,
-      ac_cv_linux_grab_cache_page_write_begin=no)])
-  AC_MSG_RESULT($ac_cv_linux_grab_cache_page_write_begin)
-  if test "x$ac_cv_linux_grab_cache_page_write_begin" = "xyes"; then
-    AC_DEFINE([HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], 1, [define if your kernel has grab_cache_page_write_begin()])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_PAGEVEC_LRU_ADD_FILE], [
-  AC_MSG_CHECKING([for linux __pagevec_lru_add_file()])
-  AC_CACHE_VAL([ac_cv_linux_pagevec_add_file], [
-    AC_TRY_KBUILD(
-[#include <linux/pagevec.h>],
-[__pagevec_lru_add_file(NULL);],
-      ac_cv_linux_pagevec_add_file=yes,
-      ac_cv_linux_pagevec_add_file=no)])
-  AC_MSG_RESULT($ac_cv_linux_pagevec_add_file)
-  if test "x$ac_cv_linux_pagevec_add_file" = "xyes"; then
-    AC_DEFINE([HAVE_PAGEVEC_LRU_ADD_FILE], 1, [define if your kernel has __pagevec_lru_add_file()])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_SPLICE_DIRECT_TO_ACTOR], [
-  AC_MSG_CHECKING([for linux splice_direct_to_actor()])
-  AC_CACHE_VAL([ac_cv_linux_splice_direct_to_actor], [
-    AC_TRY_KBUILD(
-[#include <linux/splice.h>],
-[splice_direct_to_actor(NULL,NULL,NULL);],
-      ac_cv_linux_splice_direct_to_actor=yes,
-      ac_cv_linux_splice_direct_to_actor=no)])
-  AC_MSG_RESULT($ac_cv_linux_splice_direct_to_actor)
-  if test "x$ac_cv_linux_splice_direct_to_actor" = "xyes"; then
-    AC_DEFINE([HAVE_SPLICE_DIRECT_TO_ACTOR], 1, [define if your kernel has splice_direct_to_actor()])
-  fi])
 
 AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
   AC_MSG_CHECKING([if struct task has cred])
@@ -1161,63 +970,13 @@ _bdi.name = NULL;],
     AC_DEFINE([STRUCT_BDI_HAS_NAME], 1, [define if struct backing_dev_info has a name member])
   fi])
 
-AC_DEFUN([LINUX_HAVE_ZERO_USER_SEGMENTS], [
-  AC_MSG_CHECKING([for zero_user_segments])
-  AC_CACHE_VAL([ac_cv_linux_have_zero_user_segments], [
-    AC_TRY_KBUILD(
-[#include <linux/highmem.h>],
-[zero_user_segments(NULL, 0, 0, 0, 0);],
-      ac_cv_linux_have_zero_user_segments=yes,
-      ac_cv_linux_have_zero_user_segments=no)])
-  AC_MSG_RESULT($ac_cv_linux_have_zero_user_segments)
-  if test "x$ac_cv_linux_have_zero_user_segments" = "xyes"; then
-    AC_DEFINE([HAVE_ZERO_USER_SEGMENTS], 1, [define if your kernel has the zero_user_segments function])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_PAGE_OFFSET], [
-  AC_MSG_CHECKING([for page_offset])
-  AC_CACHE_VAL([ac_cv_linux_have_page_offset], [
-    AC_TRY_KBUILD(
-[#include <linux/pagemap.h>],
-[page_offset(NULL);],
-      ac_cv_linux_have_page_offset=yes,
-      ac_cv_linux_have_page_offset=no)])
-  AC_MSG_RESULT($ac_cv_linux_have_page_offset)
-  if test "x$ac_cv_linux_have_page_offset" = "xyes"; then
-    AC_DEFINE([HAVE_PAGE_OFFSET], 1, [define if your kernel has the page_offset function])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_VFS_LLSEEK], [
-  AC_MSG_CHECKING([for vfs_llseek])
-  AC_CACHE_VAL([ac_cv_linux_have_vfs_llseek], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[vfs_llseek(NULL, 0, 0);],
-      ac_cv_linux_have_vfs_llseek=yes,
-      ac_cv_linux_have_vfs_llseek=no)])
-  AC_MSG_RESULT($ac_cv_linux_have_vfs_llseek)
-  if test "x$ac_cv_linux_have_vfs_llseek" = "xyes"; then
-    AC_DEFINE([HAVE_VFS_LLSEEK], 1, [define if your kernel has the vfs_llseek function])
-  fi])
-
-AC_DEFUN([LINUX_HAVE_KERNEL_SETSOCKOPT], [
-  AC_MSG_CHECKING([for kernel_setsockopt])
-  AC_CACHE_VAL([ac_cv_linux_have_kernel_setsockopt], [
-    AC_TRY_KBUILD(
-[#include <linux/net.h>],
-[kernel_setsockopt(NULL, 0, 0, NULL, 0);],
-      ac_cv_linux_have_kernel_setsockopt=yes,
-      ac_cv_linux_have_kernel_setsockopt=no)])
-  AC_MSG_RESULT($ac_cv_linux_have_kernel_setsockopt)
-  if test "x$ac_cv_linux_have_kernel_setsockopt" = "xyes"; then
-    AC_DEFINE([HAVE_KERNEL_SETSOCKOPT], 1, [define if your kernel has the kernel_setsockopt function])
 
 AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
   AC_MSG_CHECKING([for try_to_freeze])
-  AC_CACHE_VAL([ac_cv_linux_have_try_to_freeze], [
-    AC_TRY_KBUILD(
+  AC_CACHE_CHECK([for try_to_freeze], [ac_cv_linux_have_try_to_freeze],
+    [AC_TRY_KBUILD(
 [#include <linux/sched.h>
-#ifdef FREEZER_H_EXISTS
+#ifdef HAVE_LINUX_FREEZER_H
 #include <linux/freezer.h>
 #endif],
 [#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
@@ -1228,8 +987,8 @@ AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
 ],
       ac_cv_linux_have_try_to_freeze=yes,
       ac_cv_linux_have_try_to_freeze=no)])
-  AC_MSG_RESULT($ac_cv_linux_have_try_to_freeze)
-  if test "x$ac_cv_linux_have_try_to_freeze" = "xyes"; then
-    AC_DEFINE([HAVE_TRY_TO_FREEZE], 1, [define if your kernel has the try_to_freeze function])
-  fi])
+  AS_IF([test "x$ac_cv_linux_have_try_to_freeze" = "xyes"],
+        [AC_DEFINE([HAVE_TRY_TO_FREEZE], 1,
+                   [define if your kernel has the try_to_freeze function])])
+ ])
 

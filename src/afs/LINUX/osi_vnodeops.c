@@ -41,7 +41,7 @@
 #include "osi_compat.h"
 #include "osi_pagecopy.h"
 
-#ifndef HAVE_PAGEVEC_LRU_ADD_FILE
+#ifndef HAVE_LINUX_PAGEVEC_LRU_ADD_FILE
 #define __pagevec_lru_add_file __pagevec_lru_add
 #endif
 
@@ -680,7 +680,7 @@ struct file_operations afs_dir_fops = {
 struct file_operations afs_file_fops = {
   .read =	afs_linux_read,
   .write =	afs_linux_write,
-#ifdef GENERIC_FILE_AIO_READ
+#ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
   .aio_read =	generic_file_aio_read,
   .aio_write =	generic_file_aio_write,
 #endif
@@ -2455,7 +2455,7 @@ static struct address_space_operations afs_symlink_aops = {
 static struct inode_operations afs_symlink_iops = {
 #if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
   .readlink = 		page_readlink,
-# if defined(HAVE_KERNEL_PAGE_FOLLOW_LINK)
+# if defined(HAVE_LINUX_PAGE_FOLLOW_LINK)
   .follow_link =	page_follow_link,
 # else
   .follow_link =	page_follow_link_light,

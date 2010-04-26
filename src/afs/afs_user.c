@@ -623,7 +623,7 @@ static size_t afs_GCPAGs_cred_count = 0;
 /*
  * LOCKS: afs_GCPAGs_perproc_func requires write lock on afs_xuser
  */
-#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
 void
 afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 {

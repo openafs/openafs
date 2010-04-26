@@ -516,19 +516,19 @@ void osi_keyring_init(void)
      * If that's not available, then keyring based PAGs won't work.
      */
     
-#if defined(EXPORTED_TASKLIST_LOCK) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+#if defined(EXPORTED_TASKLIST_LOCK) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(HAVE_LINUX_RCU_READ_LOCK))
     if (__key_type_keyring == NULL) {
 # ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_lock(&tasklist_lock);
 # endif
-# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(HAVE_LINUX_RCU_READ_LOCK))
 #  ifdef EXPORTED_TASKLIST_LOCK
  	else
 #  endif
 	    rcu_read_lock();
 # endif
-#if defined(EXPORTED_FIND_TASK_BY_PID)
+#if defined(HAVE_LINUX_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
 #else
 	p = find_task_by_vpid(1);
@@ -539,7 +539,7 @@ void osi_keyring_init(void)
 	if (&tasklist_lock)
 	    read_unlock(&tasklist_lock);
 # endif
-# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(HAVE_LINUX_RCU_READ_LOCK))
 #  ifdef EXPORTED_TASKLIST_LOCK
 	else
 #  endif

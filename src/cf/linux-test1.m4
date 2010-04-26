@@ -100,3 +100,19 @@ AC_DEFUN([AC_CHECK_LINUX_HEADER],
 		  [Define if your kernel has linux/$1])])
  ])
 
+dnl AC_CHECK_LINUX_FUNC([function], [includes], [code])
+AC_DEFUN([AC_CHECK_LINUX_FUNC],
+ [AS_VAR_PUSHDEF([ac_linux_func], [ac_cv_linux_func_$1])dnl
+  AC_CACHE_CHECK([for $1], [ac_linux_func],
+    [save_CPPFLAGS="$CPPFLAGS"
+     CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+     AC_TRY_KBUILD([$2], [$3],
+		   AS_VAR_SET([ac_linux_func], [yes]),
+		   AS_VAR_SET([ac_linux_func], [no]))
+     CPPFLAGS="$save_CPPFLAGS"
+    ])
+  AS_IF([test AS_VAR_GET([ac_linux_func]) = yes],
+	[AC_DEFINE(AS_TR_CPP(HAVE_LINUX_$1), 1,
+		   [Define if your kernel has the $1 function])])
+ ])
+

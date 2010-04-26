@@ -803,11 +803,17 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
                  LINUX_KBUILD_USES_EXTRA_CFLAGS
 		 LINUX_KERNEL_COMPILE_WORKS
-		 LINUX_EXPORTS_FIND_TASK_BY_PID
+		 AC_CHECK_LINUX_FUNC([find_task_by_pid],
+				     [#include <linux/sched.h>],
+				     [pid_t p; find_task_by_pid(p);])
 		 LINUX_EXPORTS_PROC_ROOT_FS
-                 LINUX_HAVE_CURRENT_KERNEL_TIME
+		 AC_CHECK_LINUX_FUNC([current_kernel_time],
+				     [#include <linux/time.h>],
+			           [struct timespec s = current_kernel_time();])
 		 LINUX_HAVE_WRITE_BEGIN_AOP
-                 LINUX_HAVE_BDI_INIT
+                 AC_CHECK_LINUX_FUNC([bdi_init],
+				     [#include <linux/backing-dev.h>],
+				     [bdi_init(NULL);])
                  LINUX_KMEM_CACHE_INIT
                  LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
 		 LINUX_HAVE_PAGEVEC_LRU_ADD_FILE
@@ -816,6 +822,28 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_HAVE_ZERO_USER_SEGMENTS
 		 LINUX_HAVE_VFS_LLSEEK
 		 LINUX_HAVE_KERNEL_SETSOCKOPT
+		 AC_CHECK_LINUX_FUNC([grap_cache_page_write_begin],
+				     [#include <linux/pagemap.h>],
+				    [grab_cache_page_write_begin(NULL, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([pagevec_lru_add_file],
+				     [#include <linux/pagevec.h>],
+				     [__pagevec_lru_add_file(NULL);])
+		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
+				     [#include <linux/splice.h>],
+				    [splice_direct_to_actor(NULL, NULL, NULL);])
+		 AC_CHECK_LINUX_FUNC([page_offset],
+				     [#include <linux/pagemap.h>],
+				     [page_offset(NULL);])
+		 AC_CHECK_LINUX_FUNC([zero_user_segments],
+				     [#include <linux/highmem.h>],
+				     [zero_user_segments(NULL, 0, 0, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([vfs_llseek],
+				     [#include <linux/fs.h>],
+				     [vfs_llseek(NULL, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
+				     [#include <linux/net.h>],
+				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
+
                  LINUX_STRUCT_TASK_HAS_CRED
 		 LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER
 		 LINUX_HAVE_KMEM_CACHE_T
@@ -852,8 +880,12 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT
 		 LINUX_POSIX_TEST_LOCK_CONFLICT_ARG
 		 LINUX_KERNEL_SOCK_CREATE
-		 LINUX_KERNEL_PAGE_FOLLOW_LINK
-		 LINUX_KERNEL_HLIST_UNHASHED
+		 AC_CHECK_LINUX_FUNC([page_follow_link],
+				     [#include <linux/fs.h>],
+				     [page_follow_link(0,0);])
+		 AC_CHECK_LINUX_FUNC([hlist_unhashed],
+				     [#include <linux/list.h>],
+				     [hlist_unhashed(0);])
 		 AC_CHECK_LINUX_HEADER([key-type.h])
 		 LINUX_EXPORTS_KEY_TYPE_KEYRING
 		 LINUX_KEYS_HAVE_SESSION_TO_PARENT
@@ -879,26 +911,38 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_KEY_ALLOC_NEEDS_CRED
-		 LINUX_DO_SYNC_READ
-		 LINUX_GENERIC_FILE_AIO_READ
+		 AC_CHECK_LINUX_FUNC([do_sync_read],
+				     [#include <linux/fs.h>],
+				     [do_sync_read(NULL, NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([generic_file_aio_read],
+				     [#include <linux/fs.h>],
+				   [generic_file_aio_read(NULL, NULL, 0, 0);])
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
 		 LINUX_STRUCT_CTL_TABLE_HAS_CTL_NAME
-		 LINUX_HAVE_IGET
-		 if test "x$ac_cv_linux_have_iget" = "xno"; then
-		   AC_DEFINE([LINUX_USE_FH], 1, [define to use linux file handles for cache files])
-		 fi
-		 LINUX_HAVE_I_SIZE_READ
-		 LINUX_HAVE_D_ALLOC_ANON
-		 if test "x$ac_cv_linux_d_alloc_anon" = "xno"; then
-		   AC_DEFINE([AFS_NONFSTRANS], 1, [define to disable the nfs translator])
-		 fi
+		 AC_CHECK_LINUX_FUNC([iget],
+				     [#include <linux/fs.h>],
+				     [iget(NULL, NULL);])
+		 AS_IF([test "x$ac_cv_linux_func_iget" = "xno"],
+		       [AC_DEFINE([LINUX_USE_FH], 1,
+			  [define to use linux file handles for cache files])])
+		 AC_CHECK_LINUX_FUNC([i_size_read],
+				     [#include <linux/fs.h>],
+				     [i_size_read(NULL);])
+		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
+				     [#include <linux/dcache.h>],
+				     [d_alloc_anon(NULL);])
+		 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
+		       [AC_DEFINE([AFS_NONFSTRANS], 1,
+				  [define to disable the nfs translator])])
 		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_OPEN
-		 LINUX_EXPORTS_RCU_READ_LOCK
+		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
+				     [#include <linux/rcupdate.h>],
+				     [rcu_read_lock();])
 		 if test "x$with_linux_kernel_packaging" = "xno" ; then
 		   LINUX_WHICH_MODULES
 		 else
@@ -988,12 +1032,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
-		 fi
-		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_PAGE_FOLLOW_LINK, 1, [define if your linux kernel provides page_follow_link])
-		 fi
-		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_HLIST_UNHASHED, 1, [define if your linux kernel provides hlist_unhashed])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])

@@ -13,7 +13,7 @@
 # include <linux/freezer.h>
 #endif
 
-#ifndef DO_SYNC_READ
+#ifndef HAVE_LINUX_DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
     return generic_file_read(fp, buf, count, offp);
@@ -80,7 +80,7 @@ static inline void afs_linux_clear_nfsfs_renamed(void) { return; }
 static inline void afs_linux_set_nfsfs_renamed(void) { return; }
 #endif
 
-#ifndef HAVE_KERNEL_HLIST_UNHASHED
+#ifndef HAVE_LINUX_HLIST_UNHASHED
 static void
 hlist_unhashed(const struct hlist_node *h) {
     return (!h->pprev == NULL);
@@ -91,7 +91,7 @@ hlist_unhashed(const struct hlist_node *h) {
 #define AOP_WRITEPAGE_ACTIVATE WRITEPAGE_ACTIVATE
 #endif
 
-#if defined(HAVE_WRITE_BEGIN) && !defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
+#if defined(HAVE_WRITE_BEGIN) && !defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN)
 static inline struct page *
 grab_cache_page_write_begin(struct address_space *mapping, pgoff_t index,
 			    unsigned int flags) {
@@ -208,7 +208,7 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 #endif
 #endif
 
-#ifndef HAVE_PAGE_OFFSET
+#ifndef HAVE_LINUX_PAGE_OFFSET
 static inline loff_t
 page_offset(struct page *pp)
 {
@@ -216,7 +216,7 @@ page_offset(struct page *pp)
 }
 #endif
 
-#ifndef HAVE_ZERO_USER_SEGMENTS
+#ifndef HAVE_LINUX_ZERO_USER_SEGMENTS
 static inline void
 zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
 		   unsigned int from2, unsigned int to2)
@@ -234,7 +234,7 @@ zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
 }
 #endif
 
-#ifndef HAVE_VFS_LLSEEK
+#ifndef HAVE_LINUX_VFS_LLSEEK
 static inline loff_t
 vfs_llseek(struct file *filp, loff_t offset, int origin) {
     if (filp->f_op->llseek)
@@ -243,7 +243,7 @@ vfs_llseek(struct file *filp, loff_t offset, int origin) {
 }
 #endif
 
-#ifndef HAVE_KERNEL_SETSOCKOPT
+#ifndef HAVE_LINUX_KERNEL_SETSOCKOPT
 /* Available from 2.6.19 */
 
 static inline int

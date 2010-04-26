@@ -46,7 +46,7 @@
 #define pageoff(pp) pp->offset
 #endif
 
-#ifndef HAVE_PAGEVEC_LRU_ADD_FILE
+#ifndef HAVE_LINUX_PAGEVEC_LRU_ADD_FILE
 #define __pagevec_lru_add_file __pagevec_lru_add
 #endif
 
@@ -147,7 +147,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 	 * so we optimise by not using it */
 	osi_FlushPages(vcp, NULL);	/* ensure stale pages are gone */
 	AFS_GUNLOCK();
-#ifdef DO_SYNC_READ
+#ifdef HAVE_LINUX_DO_SYNC_READ
 	code = do_sync_read(fp, buf, count, offp);
 #else
 	code = generic_file_read(fp, buf, count, offp);
@@ -770,7 +770,7 @@ struct file_operations afs_dir_fops = {
 struct file_operations afs_file_fops = {
   .read =	afs_linux_read,
   .write =	afs_linux_write,
-#ifdef GENERIC_FILE_AIO_READ
+#ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
   .aio_read =	generic_file_aio_read,
   .aio_write =	generic_file_aio_write,
 #endif
@@ -1157,7 +1157,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
 	if (
-#ifdef HAVE_KERNEL_HLIST_UNHASHED
+#ifdef HAVE_LINUX_HLIST_UNHASHED
 	    hlist_unhashed(&ip->i_hash)
 #else
 	    ip->i_hash.prev == NULL
@@ -2357,7 +2357,7 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_CACHE_SHIFT;
-#if defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
+#if defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN)
     page = grab_cache_page_write_begin(mapping, index, flags);
 #else
     page = __grab_cache_page(mapping, index);
