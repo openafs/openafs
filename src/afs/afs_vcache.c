@@ -1464,18 +1464,15 @@ afs_SimpleVStat(register struct vcache *avc,
     afs_size_t length;
     AFS_STATCNT(afs_SimpleVStat);
 
-#ifdef AFS_SGI_ENV
-    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)
-	&& !AFS_VN_MAPPED((vnode_t *) avc)) {
-#else
-    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)) {
-#endif
 #ifdef AFS_64BIT_CLIENT
 	FillInt64(length, astat->Length_hi, astat->Length);
 #else /* AFS_64BIT_CLIENT */
 	length = astat->Length;
 #endif /* AFS_64BIT_CLIENT */
+
 #if defined(AFS_SGI_ENV)
+    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)
+	&& !AFS_VN_MAPPED((vnode_t *) avc)) {
 	osi_Assert((valusema(&avc->vc_rwlock) <= 0)
 		   && (OSI_GET_LOCKID() == avc->vc_rwlockid));
 	if (length < avc->f.m.Length) {
@@ -1488,8 +1485,11 @@ afs_SimpleVStat(register struct vcache *avc,
 	    AFS_GLOCK();
 	    ObtainWriteLock(&avc->lock, 67);
 	}
+    }
 #endif
-	/* if writing the file, don't fetch over this value */
+
+    if (!afs_DirtyPages(avc)) {
+	/* if actively writing the file, don't fetch over this value */
 	afs_Trace3(afs_iclSetp, CM_TRACE_SIMPLEVSTAT, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length),
 		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
