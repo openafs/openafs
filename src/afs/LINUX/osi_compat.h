@@ -9,6 +9,10 @@
 #ifndef AFS_LINUX_OSI_COMPAT_H
 #define AFS_LINUX_OSI_COMPAT_H
 
+#if defined(HAVE_LINUX_FREEZER_H)
+# include <linux/freezer.h>
+#endif
+
 #ifndef DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
@@ -267,6 +271,24 @@ kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
 
     return ret;
 }
+#endif
 
+#ifdef HAVE_TRY_TO_FREEZE
+static inline void
+afs_try_to_freeze() {
+# ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+    try_to_freeze(PF_FREEZE);
+# else
+    try_to_freeze();
+# endif
+}
+#else
+static inline void
+afs_try_to_freeze() {
+# ifdef CONFIG_PM
+    if (current->flags & PF_FREEZE) {
+	refrigerator(PF_FREEZE);
+# endif
+}
 #endif
 

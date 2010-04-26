@@ -483,8 +483,10 @@ AC_DEFUN([LINUX_REFRIGERATOR], [
 [refrigerator(PF_FREEZE);],
       ac_cv_linux_func_refrigerator_takes_pf_freeze=yes,
       ac_cv_linux_func_refrigerator_takes_pf_freeze=no)])
-  AC_MSG_RESULT($ac_cv_linux_func_refrigerator_takes_pf_freeze)])
-
+  AC_MSG_RESULT($ac_cv_linux_func_refrigerator_takes_pf_freeze)
+  if test "x$ac_cv_linux_func_refrigerator_takes_pf_freeze" = "xyes"; then
+    AC_DEFINE([LINUX_REFRIGERATOR_TAKES_PF_FREEZE], 1, [define if your refrigerator takes PF_FREEZE])
+  fi])
 
 AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_NAMEIDATA], [
   AC_MSG_CHECKING([whether inode_operations.create takes a nameidata])
@@ -710,17 +712,6 @@ AC_DEFUN([LINUX_HAVE_D_ALLOC_ANON], [
   if test "x$ac_cv_linux_d_alloc_anon" = "xyes"; then
     AC_DEFINE([HAVE_LINUX_D_ALLOC_ANON], 1, [define if your kernel has d_alloc_anon()])
   fi])
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO], [
-  AC_MSG_CHECKING([for todo in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_todo], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.todo);],
-      ac_cv_linux_sched_struct_task_struct_has_todo=yes,
-      ac_cv_linux_sched_struct_task_struct_has_todo=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_todo)])
 
 AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
   AC_MSG_CHECKING([whether INIT_WORK has a _data argument])
@@ -1220,5 +1211,25 @@ AC_DEFUN([LINUX_HAVE_KERNEL_SETSOCKOPT], [
   AC_MSG_RESULT($ac_cv_linux_have_kernel_setsockopt)
   if test "x$ac_cv_linux_have_kernel_setsockopt" = "xyes"; then
     AC_DEFINE([HAVE_KERNEL_SETSOCKOPT], 1, [define if your kernel has the kernel_setsockopt function])
+
+AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
+  AC_MSG_CHECKING([for try_to_freeze])
+  AC_CACHE_VAL([ac_cv_linux_have_try_to_freeze], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#ifdef FREEZER_H_EXISTS
+#include <linux/freezer.h>
+#endif],
+[#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+   try_to_freeze(PF_FREEZE);
+#else
+   try_to_freeze();
+#endif
+],
+      ac_cv_linux_have_try_to_freeze=yes,
+      ac_cv_linux_have_try_to_freeze=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_try_to_freeze)
+  if test "x$ac_cv_linux_have_try_to_freeze" = "xyes"; then
+    AC_DEFINE([HAVE_TRY_TO_FREEZE], 1, [define if your kernel has the try_to_freeze function])
   fi])
 
