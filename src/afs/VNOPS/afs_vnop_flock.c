@@ -317,7 +317,7 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		}
 	    }
 	} else if (avc->flockCount == -1) {
-	    afs_StoreAllSegments(avc, areq, AFS_ASYNC);	/* fsync file early */
+	    afs_StoreAllSegments(avc, areq, AFS_SYNC | AFS_VMSYNC);	/* fsync file early */
 	    avc->flockCount = 0;
 	    /* And remove the (only) exclusive lock entry from the list... */
 	    osi_FreeSmallSpace(avc->slocks);

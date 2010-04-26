@@ -186,7 +186,9 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
      * on the memcache case since that's we adjust the file's size
      * and finish flushing partial vm pages.
      */
-    if ((cacheDiskType != AFS_FCACHE_TYPE_MEM) || (sync & AFS_LASTSTORE))
+    if ((cacheDiskType != AFS_FCACHE_TYPE_MEM) ||
+	(sync & AFS_VMSYNC_INVAL) || (sync & AFS_VMSYNC) ||
+	(sync & AFS_LASTSTORE))
 #endif /* !AFS_AIX32_ENV && !AFS_SGI65_ENV */
     {
 	/* If we're not diskless, reading a file may stress the VM
