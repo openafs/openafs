@@ -997,7 +997,7 @@ struct cm_initparams {
 #define	IFFree		2	/* index entry in freeDCList */
 #define	IFDataMod	4	/* file needs to be written out */
 #define	IFFlag		8	/* utility flag */
-#define	IFDirtyPages	16
+#define	IFDirtyPages	16      /* Solaris-only. contains dirty pages */
 #define	IFAnyPages	32
 #define	IFDiscarded	64	/* index entry in discardDCList */
 
