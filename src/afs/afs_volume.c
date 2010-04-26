@@ -199,7 +199,7 @@ afs_UFSGetVolSlot(void)
 
  error:
     if (tv) {
-	if (oldtvix == -2) {
+	if (oldvtix == -2) {
 	    afs_warn("afs_UFSGetVolSlot: oldvtix is uninitialized\n");
 	    return NULL;
 	}
