@@ -2184,10 +2184,10 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
-            hashDelete_r(host->host, host->port, host);
+            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
-            hashInsert_r(host->host, host->port, host);
+            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
@@ -2277,11 +2277,11 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    H_LOCK;
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
-            hashDelete_r(host->host, host->port, host);
+            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
 	    host->callback_rxcon = conns[multi_i];
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
-            hashInsert_r(host->host, host->port, host);
+            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);

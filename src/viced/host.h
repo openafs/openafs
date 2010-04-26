@@ -208,8 +208,6 @@ extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 			       int *heldp, struct host **hostp);
-extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
-			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (), char *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon, int *heldp);
@@ -223,9 +221,9 @@ extern void h_PrintClients();
 extern void h_GetWorkStats();
 extern void h_flushhostcps(register afs_uint32 hostaddr,
 			   register afs_uint16 hport);
-extern void hashInsertUuid_r(struct afsUUID *uuid, struct host *host);
-extern void hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host);
-extern int hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern void h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host);
+extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern int h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
