@@ -125,9 +125,7 @@ dest: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
 #
 clean: 
 	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
-		AFS_component_version_number.c \
-		fcrypt.h sboxes.h \
-		fc_test
+		AFS_component_version_number.c fc_test
 
 test:
 	cd test; $(MAKE)
