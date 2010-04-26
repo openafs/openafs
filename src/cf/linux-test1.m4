@@ -84,3 +84,19 @@ AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
     ac_linux_kbuild_requires_extra_cflags=yes)
     CPPFLAGS="$save_CPPFLAGS"
     AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
+
+dnl AC_CHECK_LINUX_HEADER(header)
+AC_DEFUN([AC_CHECK_LINUX_HEADER],
+ [AS_VAR_PUSHDEF([ac_linux_header], [ac_cv_linux_header_$1])dnl
+  AC_CACHE_CHECK([for linux/$1], [ac_linux_header],
+   [AC_TRY_KBUILD([#include <linux/$1>],
+		  [return;],
+		  AS_VAR_SET([ac_linux_header], [yes]),
+		  AS_VAR_SET([ac_linux_header], [no]))
+   ])
+  AS_IF([test AS_VAR_GET([ac_linux_header]) = yes],
+        [AC_DEFINE(AS_TR_CPP(HAVE_LINUX_$1),
+		  1,
+		  [Define if your kernel has linux/$1])])
+ ])
+

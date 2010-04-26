@@ -13,24 +13,9 @@ read_lock(&tasklist_lock);
   AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)])
 
 
-AC_DEFUN([LINUX_CONFIG_H_EXISTS], [
-  AC_MSG_CHECKING([for linux/config.h existance])
-  AC_CACHE_VAL([ac_cv_linux_config_h_exists], [
-    AC_TRY_KBUILD(
-[#include <linux/config.h>],
-[return;],
-      ac_cv_linux_config_h_exists=yes,
-      ac_cv_linux_config_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_config_h_exists)
-  if test "x$ac_cv_linux_config_h_exists" = "xyes"; then
-    AC_DEFINE([CONFIG_H_EXISTS], 1, [define if linux/config.h exists])
-  fi])
-
-
 AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
-  AC_MSG_CHECKING([for linux/completion.h existance])
-  AC_CACHE_VAL([ac_cv_linux_completion_h_exists], [
-    AC_TRY_KBUILD(
+  AC_CACHE_CHECK([for linux/completion.h], [ac_cv_linux_completion_h_exists],
+   [AC_TRY_KBUILD(
 [#include <linux/version.h>
 #include <linux/completion.h>],
 [struct completion _c;
@@ -39,17 +24,10 @@ lose
 #endif],
       ac_cv_linux_completion_h_exists=yes,
       ac_cv_linux_completion_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_completion_h_exists)])
-
-AC_DEFUN([LINUX_EXPORTFS_H_EXISTS], [
-  AC_MSG_CHECKING([for linux/exportfs.h existence])
-  AC_CACHE_VAL([ac_cv_linux_exportfs_h_exists], [
-    AC_TRY_KBUILD(
-[#include <linux/exportfs.h>],
-[return;],
-      ac_cv_linux_exportfs_h_exists=yes,
-      ac_cv_linux_exportfs_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_exportfs_h_exists)])
+  AS_IF([test "x$ac_linux_completion_h_exists" = xyes],
+	[AC_DEFINE(HAVE_LINUX_COMPLETION_H, 1,
+		   [Define if your kernel has a usable linux/completion.h])])
+])
 
 AC_DEFUN([LINUX_DEFINES_FOR_EACH_PROCESS], [
   AC_MSG_CHECKING([for defined for_each_process])
@@ -499,7 +477,7 @@ AC_DEFUN([LINUX_REFRIGERATOR], [
   AC_CACHE_VAL([ac_cv_linux_func_refrigerator_takes_pf_freeze], [
     AC_TRY_KBUILD(
 [#include <linux/sched.h>
-#ifdef FREEZER_H_EXISTS
+#ifdef HAVE_LINUX_FREEZER_H
 #include <linux/freezer.h>
 #endif],
 [refrigerator(PF_FREEZE);],
@@ -606,25 +584,12 @@ extern int vfs_statfs(struct dentry *, struct kstatfs *);
   AC_MSG_RESULT($ac_cv_linux_statfs_takes_dentry)])
 
 
-AC_DEFUN([LINUX_KEY_TYPE_H_EXISTS], [
-  AC_MSG_CHECKING([for linux/key-type.h existance])
-  AC_CACHE_VAL([ac_cv_linux_key_type_h_exists], [
-    AC_TRY_KBUILD(
-[#include <linux/key-type.h>],
-[return;],
-      ac_cv_linux_key_type_h_exists=yes,
-      ac_cv_linux_key_type_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_key_type_h_exists)
-  if test "x$ac_cv_linux_key_type_h_exists" = "xyes"; then
-    AC_DEFINE([KEY_TYPE_H_EXISTS], 1, [define if linux/key-type.h exists])
-  fi])
-
 AC_DEFUN([LINUX_LINUX_KEYRING_SUPPORT], [
   AC_MSG_CHECKING([for linux kernel keyring support])
   AC_CACHE_VAL([ac_cv_linux_keyring_support], [
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
-#ifdef KEY_TYPE_H_EXISTS
+#ifdef HAVE_LINUX_KEY_TYPE_H
 #include <linux/key-type.h>
 #endif
 #include <linux/key.h>
@@ -744,19 +709,6 @@ AC_DEFUN([LINUX_HAVE_D_ALLOC_ANON], [
   AC_MSG_RESULT($ac_cv_linux_d_alloc_anon)
   if test "x$ac_cv_linux_d_alloc_anon" = "xyes"; then
     AC_DEFINE([HAVE_LINUX_D_ALLOC_ANON], 1, [define if your kernel has d_alloc_anon()])
-  fi])
-
-AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
-  AC_MSG_CHECKING([for linux/freezer.h existance])
-  AC_CACHE_VAL([ac_cv_linux_freezer_h_exists], [
-    AC_TRY_KBUILD(
-[#include <linux/freezer.h>],
-[return;],
-      ac_cv_linux_freezer_h_exists=yes,
-      ac_cv_linux_freezer_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_freezer_h_exists)
-  if test "x$ac_cv_linux_freezer_h_exists" = "xyes"; then
-    AC_DEFINE([FREEZER_H_EXISTS], 1, [define if linux/freezer.h exists])
   fi])
 
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TODO], [
@@ -1018,19 +970,6 @@ _eops.fh_to_parent(NULL, NULL, 0, 0);],
     AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
   fi])
  
-AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
-  AC_MSG_CHECKING([for linux/semaphore.h existance])
-  AC_CACHE_VAL([ac_cv_linux_semaphore_h_exists], [
-    AC_TRY_KBUILD(
-[#include <linux/semaphore.h>],
-[return;],
-      ac_cv_linux_semaphore_h_exists=yes,
-      ac_cv_linux_semaphore_h_exists=no)])
-  AC_MSG_RESULT($ac_cv_linux_semaphore_h_exists)
-  if test "x$ac_cv_linux_semaphore_h_exists" = "xyes"; then
-    AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
-  fi])
-
 AC_DEFUN([LINUX_HAVE_BDI_INIT], [
   AC_MSG_CHECKING([for linux bdi_init()])
   AC_CACHE_VAL([ac_cv_linux_bdi_init], [
@@ -1162,7 +1101,7 @@ AC_DEFUN([LINUX_EXPORTS_KEY_TYPE_KEYRING], [
   AC_CACHE_VAL([ac_cv_linux_exports_key_type_keyring], [
     AC_TRY_KBUILD(
 [
-#ifdef KEY_TYPE_H_EXISTS
+#ifdef HAVE_LINUX_KEY_TYPE_H
 #include <linux/key-type.h>
 #endif
 #include <linux/key.h>],

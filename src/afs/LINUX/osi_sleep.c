@@ -14,8 +14,7 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
-
-#if defined(FREEZER_H_EXISTS)
+#if defined(HAVE_LINUX_FREEZER_H)
 #include <linux/freezer.h>
 #endif
 

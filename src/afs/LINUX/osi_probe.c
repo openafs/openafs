@@ -62,7 +62,7 @@
 #endif
 #include <linux/version.h>
 #include <linux/sched.h>
-#ifdef CONFIG_H_EXISTS
+#ifdef HAVE_LINUX_CONFIG_H
 # include <linux/config.h>
 #endif
 #include <linux/linkage.h>

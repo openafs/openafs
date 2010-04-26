@@ -51,7 +51,6 @@ AH_BOTTOM([
 #undef AFS_NAMEI_ENV
 #undef BITMAP_LATER
 #undef FAST_RESTART
-#undef COMPLETION_H_EXISTS
 #undef DEFINED_FOR_EACH_PROCESS
 #undef DEFINED_PREV_TASK
 #undef EXPORTED_KALLSYMS_SYMBOL
@@ -823,10 +822,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID
 		 LINUX_D_PATH_TAKES_STRUCT_PATH
 		 LINUX_NEW_EXPORT_OPS
-		 LINUX_CONFIG_H_EXISTS
-		 LINUX_COMPLETION_H_EXISTS
-		 LINUX_SEMAPHORE_H_EXISTS
-		 LINUX_EXPORTFS_H_EXISTS
+		 AC_CHECK_LINUX_HEADER([config.h])
+		 AC_CHECK_LINUX_HEADER([completion.h])
+		 AC_CHECK_LINUX_HEADER([semaphore.h])
+		 AC_CHECK_LINUX_HEADER([exportfs.h])
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
 		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
@@ -848,14 +847,14 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
 		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
-		 LINUX_KERNEL_LINUX_SEQ_FILE_H
+		 AC_CHECK_LINUX_HEADER([seq_file.h])
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT
 		 LINUX_POSIX_TEST_LOCK_CONFLICT_ARG
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
 		 LINUX_KERNEL_HLIST_UNHASHED
-                 LINUX_KEY_TYPE_H_EXISTS
+		 AC_CHECK_LINUX_HEADER([key-type.h])
 		 LINUX_EXPORTS_KEY_TYPE_KEYRING
 		 LINUX_KEYS_HAVE_SESSION_TO_PARENT
 		 LINUX_NEED_RHCONFIG
@@ -874,11 +873,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
-		 LINUX_FREEZER_H_EXISTS
+		 AC_CHECK_LINUX_HEADER([freezer.h])
 		 LINUX_HAVE_SVC_ADDR_IN
-		 if test "x$ac_cv_linux_freezer_h_exists" = "xyes" ; then
-		  AC_DEFINE(FREEZER_H_EXISTS, 1, [define if you have linux/freezer.h])
-		 fi
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
@@ -960,18 +956,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
                   AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS, 1, [define if your linux kernel exports kallsyms address])
                  fi
-		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
-		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
-		 fi
-		 if test "x$ac_cv_linux_config_h_exists" = "xyes" ; then
-		  AC_DEFINE(CONFIG_H_EXISTS, 1, [define if config.h exists])
-		 fi
-		 if test "x$ac_cv_linux_exportfs_h_exists" = "xyes"; then
-		  AC_DEFINE(EXPORTFS_H_EXISTS, 1, [define if linux/exportfs.h exists])
-		 fi
-		 if test "x$ac_cv_linux_key_type_h_exists" = "xyes" ; then
-		  AC_DEFINE(KEY_TYPE_H_EXISTS, 1, [define if key-type.h exists])
-		 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
 		 fi
@@ -1010,9 +994,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_HLIST_UNHASHED, 1, [define if your linux kernel provides hlist_unhashed])
-		 fi
-		 if test "x$ac_linux_seq_file" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_LINUX_SEQ_FILE_H, 1, [define if your linux kernel has linux/seq_file.h])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
@@ -1055,9 +1036,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
 		  AC_DEFINE(AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL, 1, [define if your aops.writepage takes a struct writeback_control argument])
-		 fi
-		 if test "x$ac_cv_linux_func_refrigerator_takes_pf_freeze" = "xyes" ; then
-		  AC_DEFINE(LINUX_REFRIGERATOR_TAKES_PF_FREEZE, 1, [define if your refrigerator takes PF_FREEZE])
 		 fi
 		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
 		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])

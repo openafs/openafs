@@ -31,7 +31,7 @@ else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $RHCONFIG_SP $CPPFLAGS"
   AC_MSG_CHECKING(which kernel modules to build)
-  if test "x$ac_cv_linux_config_h_exists" = "xyes"; then
+  if test "x$ac_cv_linux_header_config_h" = "xyes"; then
     CPPFLAGS="-DCONFIG_H_EXISTS $CPPFLAGS"
   fi
   if test "x$ac_linux_rhconfig" = "xyes"; then

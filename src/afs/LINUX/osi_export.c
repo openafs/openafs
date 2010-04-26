@@ -17,7 +17,7 @@
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include <linux/fs.h>
-#ifdef EXPORTFS_H_EXISTS
+#ifdef HAVE_LINUX_EXPORTFS_H
 #include <linux/exportfs.h>
 #endif
 #include "afs/sysincludes.h"

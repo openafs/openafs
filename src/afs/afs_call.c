@@ -246,7 +246,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 #endif
 
 
-#if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
+#if defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)
 struct afsd_thread_info {
 #if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
@@ -523,7 +523,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef AFS_DARWIN80_ENV
     put_vfs_context();
 #endif
-#if ((defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#if ((defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
 #if defined(AFS_DARWIN80_ENV)
     if (parm == AFSOP_BKG_HANDLER) {
 	/* if afs_uspc_param grows this should be checked */

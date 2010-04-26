@@ -53,7 +53,7 @@
 
 #elif defined(AFS_LINUX22_ENV)
 # include <linux/version.h>
-# ifdef CONFIG_H_EXISTS
+# ifdef HAVE_LINUX_CONFIG_H
 #  include <linux/config.h>
 # endif
 # include <linux/linkage.h>
@@ -75,7 +75,7 @@
 #  if defined(LINUX_KEYRING_SUPPORT)
 #   include <linux/rwsem.h>
 #   include <linux/key.h>
-#   if defined(KEY_TYPE_H_EXISTS)
+#   if defined(HAVE_LINUX_KEY_TYPE_H)
 #    include <linux/key-type.h>
 #   endif
 #   ifndef KEY_ALLOC_IN_QUOTA
@@ -108,7 +108,7 @@ struct xfs_inode_info {
 # include <linux/mm.h>
 # include <linux/slab.h>
 # include <linux/string.h>
-# if defined(LINUX_SEMAPHORE_H)
+# if defined(HAVE_LINUX_SEMAPHORE_H)
 #  include <linux/semaphore.h>
 # else
 #  include <asm/semaphore.h>
@@ -117,7 +117,7 @@ struct xfs_inode_info {
 #  include <linux/mutex.h>
 # endif
 # include <linux/errno.h>
-# ifdef COMPLETION_H_EXISTS
+# ifdef HAVE_LINUX_COMPLETION_H
 #  include <linux/completion.h>
 # endif
 # if defined(LINUX_USE_FH)
