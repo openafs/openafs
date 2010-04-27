@@ -14,7 +14,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
 
-objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
+objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
+	 hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o strnlen.o \
@@ -154,6 +155,9 @@ fstab.o: ${srcdir}/fstab.c ${includes}
 
 base64.o: ${srcdir}/base64.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/base64.c
+
+config_file.o : ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
+	${CCOBJ} ${CFLAGS} -c ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
 
 hostparse.o: ${srcdir}/hostparse.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/hostparse.c
