@@ -85,16 +85,24 @@ AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
     CPPFLAGS="$save_CPPFLAGS"
     AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
 
+dnl AC_CHECK_LINUX_BUILD([msg], [var], [includes], [code], [define])
+AC_DEFUN([AC_CHECK_LINUX_BUILD],
+ [AS_VAR_PUSHDEF([ac_linux_build], [$2])dnl
+  AC_CACHE_CHECK([$1], [ac_linux_build],
+   [AC_TRY_KBUILD([$3], [$4],
+		  AS_VAR_SET([ac_linux_build], [yes]),
+		  AS_VAR_SET([ac_linux_build], [no]))
+   ])
+  AS_IF([test AS_VAR_GET([ac_linux_build]) = yes],
+        [AC_DEFINE([$5],1,[$6])])
+ ])
+
 dnl AC_CHECK_LINUX_STRUCT([structure], [element], [includes])
 AC_DEFUN([AC_CHECK_LINUX_STRUCT],
- [AS_VAR_PUSHDEF([ac_linux_struct], [ac_cv_linux_struct_$1_has_$2])dnl
-  AC_CACHE_CHECK([for $2 in struct $1], [ac_linux_struct],
-   [AC_TRY_KBUILD([#include <linux/$3>],
-		  [struct $1 _test; printk("%x\n", &_test.$2); ],
-		  AS_VAR_SET([ac_linux_struct], [yes]),
-		  AS_VAR_SET([ac_linux_struct], [no]))
-   ])
-  AS_IF([test AS_VAR_GET([ac_linux_struct]) = yes],
-	[AC_DEFINE(AS_TR_CPP(STRUCT_$1_HAS_$2), 1,
-		   [Define if kernel struct $1 has the $2 element])])
+ [AC_CHECK_LINUX_BUILD([for $2 in struct $1],
+		       [ac_cv_linux_struct_$1_has_$2],
+		       [#include <linux/$3>],
+		       [struct $1 _test; printk("%x\n", &_test.$2); ],
+		       AS_TR_CPP(STRUCT_$1_HAS_$2),
+		       [Define if kernel struct $1 has the $2 element])
  ])

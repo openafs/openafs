@@ -675,18 +675,17 @@ struct nameidata _nameidata;
 
 
 AC_DEFUN([LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA], [
-  AC_MSG_CHECKING([whether inode_operations.permission takes a nameidata])
-  AC_CACHE_VAL([ac_cv_linux_func_i_permission_takes_nameidata], [
-    AC_TRY_KBUILD(
+  AC_CHECK_LINUX_BUILD([whether inode_operations.permission takes a nameidata],
+		       [ac_cv_linux_func_i_permission_takes_nameidata],
 [#include <linux/fs.h>
 #include <linux/namei.h>],
 [struct inode _inode;
 struct dentry _dentry;
 struct nameidata _nameidata;
 (void)_inode.i_op->permission(&_inode, 0, &_nameidata);],
-      ac_cv_linux_func_i_permission_takes_nameidata=yes,
-      ac_cv_linux_func_i_permission_takes_nameidata=no)])
-  AC_MSG_RESULT($ac_cv_linux_func_i_permission_takes_nameidata)])
+		       [IOP_PERMISSION_TAKES_NAMEIDATA],
+		       [define if your iops.permission takes a nameidata argument])
+])
 
 
 AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
