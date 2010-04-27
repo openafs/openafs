@@ -1,2 +1,0 @@
-#define P1003_1B 1
-#define _KPOSIX_PRIORITY_SCHEDULING 1
