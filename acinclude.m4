@@ -788,155 +788,166 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 OPENAFS_GCC_SUPPORTS_PIPE
 		 AC_SUBST(LINUX_GCC_KOPTS)
 
-                 LINUX_KBUILD_USES_EXTRA_CFLAGS
+		 dnl Setup the kernel build environment
+		 LINUX_KBUILD_USES_EXTRA_CFLAGS
 		 LINUX_KERNEL_COMPILE_WORKS
-		 AC_CHECK_LINUX_FUNC([find_task_by_pid],
-				     [#include <linux/sched.h>],
-				     [pid_t p; find_task_by_pid(p);])
-		 LINUX_EXPORTS_PROC_ROOT_FS
-		 AC_CHECK_LINUX_FUNC([current_kernel_time],
-				     [#include <linux/time.h>],
-			           [struct timespec s = current_kernel_time();])
+
+		 dnl Check for header files
+		 AC_CHECK_LINUX_HEADER([config.h])
+		 AC_CHECK_LINUX_HEADER([completion.h])
+		 AC_CHECK_LINUX_HEADER([exportfs.h])
+		 AC_CHECK_LINUX_HEADER([freezer.h])
+		 AC_CHECK_LINUX_HEADER([key-type.h])
+		 AC_CHECK_LINUX_HEADER([semaphore.h])
+		 AC_CHECK_LINUX_HEADER([seq_file.h])
+
+		 dnl Check for structure elements
 		 AC_CHECK_LINUX_STRUCT([address_space_operations],
 				       [write_begin], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
+				       [backing-dev.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_mutex], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_security], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
+		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
+				       [fs.h])
+                 AC_CHECK_LINUX_STRUCT([task_struct], [cred], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [exit_state], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [parent], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [real_parent], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [rlim], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [sig], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [sighand], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [sigmask_lock], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [tgid], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
+
+		 dnl Function existence checks
+
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
-                 LINUX_KMEM_CACHE_INIT
-                 LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
-		 LINUX_HAVE_PAGEVEC_LRU_ADD_FILE
-		 LINUX_HAVE_SPLICE_DIRECT_TO_ACTOR
-		 LINUX_HAVE_PAGE_OFFSET
-		 LINUX_HAVE_ZERO_USER_SEGMENTS
-		 LINUX_HAVE_VFS_LLSEEK
-		 LINUX_HAVE_KERNEL_SETSOCKOPT
+		 AC_CHECK_LINUX_FUNC([ctl_table], [ctl_name], [sysctl.h])
+		 AC_CHECK_LINUX_FUNC([current_kernel_time],
+				     [#include <linux/time.h>],
+			             [struct timespec s;
+				      s = current_kernel_time();])
+		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
+				     [#include <linux/dcache.h>],
+				     [d_alloc_anon(NULL);])
+		 AC_CHECK_LINUX_FUNC([do_sync_read],
+				     [#include <linux/fs.h>],
+				     [do_sync_read(NULL, NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([find_task_by_pid],
+				     [#include <linux/sched.h>],
+				     [pid_t p; find_task_by_pid(p);])
+		 AC_CHECK_LINUX_FUNC([generic_file_aio_read],
+				     [#include <linux/fs.h>],
+				     [generic_file_aio_read(NULL,NULL,0,0);])
 		 AC_CHECK_LINUX_FUNC([grap_cache_page_write_begin],
 				     [#include <linux/pagemap.h>],
-				    [grab_cache_page_write_begin(NULL, 0, 0);])
-		 AC_CHECK_LINUX_FUNC([pagevec_lru_add_file],
-				     [#include <linux/pagevec.h>],
-				     [__pagevec_lru_add_file(NULL);])
-		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
-				     [#include <linux/splice.h>],
-				    [splice_direct_to_actor(NULL, NULL, NULL);])
-		 AC_CHECK_LINUX_FUNC([page_offset],
-				     [#include <linux/pagemap.h>],
-				     [page_offset(NULL);])
-		 AC_CHECK_LINUX_FUNC([zero_user_segments],
-				     [#include <linux/highmem.h>],
-				     [zero_user_segments(NULL, 0, 0, 0, 0);])
-		 AC_CHECK_LINUX_FUNC([vfs_llseek],
+				     [grab_cache_page_write_begin(NULL, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([hlist_unhashed],
+				     [#include <linux/list.h>],
+				     [hlist_unhashed(0);])
+		 AC_CHECK_LINUX_FUNC([i_size_read],
 				     [#include <linux/fs.h>],
-				     [vfs_llseek(NULL, 0, 0);])
+				     [i_size_read(NULL);])
+		 AC_CHECK_LINUX_FUNC([iget],
+				     [#include <linux/fs.h>],
+				     [iget(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
-                 AC_CHECK_LINUX_STRUCT([task_struct], [cred], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
+		 AC_CHECK_LINUX_FUNC([page_follow_link],
+				     [#include <linux/fs.h>],
+				     [page_follow_link(0,0);])
+		 AC_CHECK_LINUX_FUNC([page_offset],
+				     [#include <linux/pagemap.h>],
+				     [page_offset(NULL);])
+		 AC_CHECK_LINUX_FUNC([pagevec_lru_add_file],
+				     [#include <linux/pagevec.h>],
+				     [__pagevec_lru_add_file(NULL);])
+		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
+				     [#include <linux/rcupdate.h>],
+				     [rcu_read_lock();])
+		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
+				     [#include <linux/splice.h>],
+				     [splice_direct_to_actor(NULL,NULL,NULL);])
+		 AC_CHECK_LINUX_FUNC([svc_addr_in],
+				     [#include <linux/sunrpc/svc.h>],
+				     [svc_addr_in(NULL);])
+		 AC_CHECK_LINUX_FUNC([vfs_llseek],
+				     [#include <linux/fs.h>],
+				     [vfs_llseek(NULL, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([zero_user_segments],
+				     [#include <linux/highmem.h>],
+				     [zero_user_segments(NULL, 0, 0, 0, 0);])
+
+		 dnl Consequences - things which get set as a result of the
+		 dnl                above tests
+		 AS_IF([test "x$ac_cv_linux_func_iget" = "xno"],
+		       [AC_DEFINE([LINUX_USE_FH], 1,
+			  [define to use linux file handles for cache files])])
+		 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
+		       [AC_DEFINE([AFS_NONFSTRANS], 1,
+				  [define to disable the nfs translator])])
+
+		 dnl Assorted more complex tests
+		 LINUX_EXPORTS_PROC_ROOT_FS
+                 LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID
 		 LINUX_D_PATH_TAKES_STRUCT_PATH
 		 LINUX_NEW_EXPORT_OPS
-		 AC_CHECK_LINUX_HEADER([config.h])
-		 AC_CHECK_LINUX_HEADER([completion.h])
-		 AC_CHECK_LINUX_HEADER([semaphore.h])
-		 AC_CHECK_LINUX_HEADER([exportfs.h])
-		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
-				       [fs.h])
-		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
-				       [backing-dev.h])
-		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([inode], [i_mutex], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([inode], [i_security], [fs.h])
-	  	 LINUX_INODE_SETATTR_RETURN_TYPE
-	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
-	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
+		 LINUX_INODE_SETATTR_RETURN_TYPE
+		 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
+		 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PUT_LINK_TAKES_COOKIE
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
-		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
-		 AC_CHECK_LINUX_HEADER([seq_file.h])
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT
 		 LINUX_POSIX_TEST_LOCK_CONFLICT_ARG
 		 LINUX_KERNEL_SOCK_CREATE
-		 AC_CHECK_LINUX_FUNC([page_follow_link],
-				     [#include <linux/fs.h>],
-				     [page_follow_link(0,0);])
-		 AC_CHECK_LINUX_FUNC([hlist_unhashed],
-				     [#include <linux/list.h>],
-				     [hlist_unhashed(0);])
-		 AC_CHECK_LINUX_HEADER([key-type.h])
 		 LINUX_EXPORTS_KEY_TYPE_KEYRING
 		 LINUX_KEYS_HAVE_SESSION_TO_PARENT
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
-		 AC_CHECK_LINUX_STRUCT([task_struct], [parent], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [real_parent], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [sig], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [sighand], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [sigmask_lock], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [rlim], [sched.h])
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
-		 AC_CHECK_LINUX_STRUCT([task_struct], [exit_state], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [tgid], [sched.h])
-		 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
-		 AC_CHECK_LINUX_HEADER([freezer.h])
-		 AC_CHECK_LINUX_FUNC([svc_addr_in],
-				     [#include <linux/sunrpc/svc.h>],
-				     [svc_addr_in(NULL);])
 		 LINUX_REFRIGERATOR
 		 LINUX_HAVE_TRY_TO_FREEZE
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_KEY_ALLOC_NEEDS_CRED
-		 AC_CHECK_LINUX_FUNC([do_sync_read],
-				     [#include <linux/fs.h>],
-				     [do_sync_read(NULL, NULL, 0, NULL);])
-		 AC_CHECK_LINUX_FUNC([generic_file_aio_read],
-				     [#include <linux/fs.h>],
-				   [generic_file_aio_read(NULL, NULL, 0, 0);])
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
-		 AC_CHECK_LINUX_FUNC([ctl_table], [ctl_name], [sysctl.h])
-		 AC_CHECK_LINUX_FUNC([iget],
-				     [#include <linux/fs.h>],
-				     [iget(NULL, NULL);])
-		 AS_IF([test "x$ac_cv_linux_func_iget" = "xno"],
-		       [AC_DEFINE([LINUX_USE_FH], 1,
-			  [define to use linux file handles for cache files])])
-		 AC_CHECK_LINUX_FUNC([i_size_read],
-				     [#include <linux/fs.h>],
-				     [i_size_read(NULL);])
-		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
-				     [#include <linux/dcache.h>],
-				     [d_alloc_anon(NULL);])
-		 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
-		       [AC_DEFINE([AFS_NONFSTRANS], 1,
-				  [define to disable the nfs translator])])
-		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_OPEN
-		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
-				     [#include <linux/rcupdate.h>],
-				     [rcu_read_lock();])
+
+		 dnl Packaging and SMP build
 		 if test "x$with_linux_kernel_packaging" = "xno" ; then
 		   LINUX_WHICH_MODULES
 		 else
 		   AC_SUBST(MPS,'SP')
 		 fi
+
+		 dnl Syscall probing
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
                    ac_cv_linux_exports_sys_call_table=no
