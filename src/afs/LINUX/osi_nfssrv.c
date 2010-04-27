@@ -109,7 +109,7 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
 	/* XXX maybe we should fail this with rpc_system_err? */
 	return SVC_OK;
     }
-#if HAVE_SVC_ADDR_IN
+#if HAVE_LINUX_SVC_ADDR_IN
     addr = svc_addr_in(rqstp);
 #else
     addr = &rqstp->rq_addr;

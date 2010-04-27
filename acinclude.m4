@@ -53,11 +53,8 @@ AH_BOTTOM([
 #undef FAST_RESTART
 #undef DEFINED_FOR_EACH_PROCESS
 #undef DEFINED_PREV_TASK
-#undef EXPORTED_KALLSYMS_SYMBOL
 #undef EXPORTED_SYS_CALL_TABLE
 #undef EXPORTED_IA32_SYS_CALL_TABLE
-#undef EXPORTED_TASKLIST_LOCK
-#undef INODE_SETATTR_NOT_VOID
 #undef IRIX_HAS_MEM_FUNCS
 #undef RECALC_SIGPENDING_TAKES_VOID
 #undef STRUCT_FS_HAS_FS_ROLLED
@@ -901,7 +898,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
 		 AC_CHECK_LINUX_HEADER([freezer.h])
-		 LINUX_HAVE_SVC_ADDR_IN
+		 AC_CHECK_LINUX_FUNC([svc_addr_in],
+				     [#include <linux/sunrpc/svc.h>],
+				     [svc_addr_in(NULL);])
 		 LINUX_REFRIGERATOR
 		 LINUX_HAVE_TRY_TO_FREEZE
 		 LINUX_LINUX_KEYRING_SUPPORT
@@ -978,98 +977,17 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
 		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
 	         fi
-		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
-		 fi
-		 if test "x$ac_cv_linux_exports_sys_open" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_OPEN, 1, [define if your linux kernel exports sys_open])
-		 fi
-                 if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE, 1, [define if your linux kernel exports sys_call_table])
-                 fi
-                 if test "x$ac_cv_linux_exports_ia32_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE, 1, [define if your linux kernel exports ia32_sys_call_table])
-                 fi
-                 if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL, 1, [define if your linux kernel exports kallsyms])
-                 fi
-                 if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS, 1, [define if your linux kernel exports kallsyms address])
-                 fi
 		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
 		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
 		 fi
 		 if test "x$ac_cv_linux_defines_prev_task" = "xyes" ; then
 		  AC_DEFINE(DEFINED_PREV_TASK, 1, [define if prev_task defined])
 		 fi
-		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
-		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
-		 fi
-		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then
-		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
-		 fi
-		 if test "x$ac_cv_linux_kernel_posix_lock_file_wait_arg" = "xyes" ; then
-		  AC_DEFINE(POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
-		 fi
-		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
-		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
-		 fi
-		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
-		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
-		 fi
-		 if test "x$ac_cv_linux_statfs_takes_dentry" = "xyes"; then
-		  AC_DEFINE(STATFS_TAKES_DENTRY, 1, [define if your statfs takes a dentry argument])
-		 fi
-		 if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
-		  AC_DEFINE(AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL, 1, [define if your aops.writepage takes a struct writeback_control argument])
-		 fi
-		 if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(IOP_CREATE_TAKES_NAMEIDATA, 1, [define if your iops.create takes a nameidata argument])
-		 fi
-		 if test "x$ac_cv_linux_func_f_flush_takes_fl_owner_t" = "xyes" ; then
-		  AC_DEFINE(FOP_FLUSH_TAKES_FL_OWNER_T, 1, [define if your fops.flush takes an fl_owner_t argument])
-		 fi
-		 if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(IOP_LOOKUP_TAKES_NAMEIDATA, 1, [define if your iops.lookup takes a nameidata argument])
-		 fi
-		 if test "x$ac_cv_linux_func_i_permission_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(IOP_PERMISSION_TAKES_NAMEIDATA, 1, [define if your iops.permission takes a nameidata argument])
-		 fi
-		 if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
-		  AC_DEFINE(DOP_REVALIDATE_TAKES_NAMEIDATA, 1, [define if your dops.d_revalidate takes a nameidata argument])
-		 fi
-		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
-		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
-		 fi
-		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
-		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
-		 fi
-		 if test "x$ac_cv_linux_sysctl_table_checking" = "xyes" ; then
-		  AC_DEFINE(SYSCTL_TABLE_CHECKING, 1, [define if your kernel has sysctl table checking])
-		 fi
-		 if test "x$ac_cv_linux_exports_init_mm" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_INIT_MM, 1, [define if your kernel exports init_mm])
-		 fi
-		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if tasklist_lock exported])
-		 fi
-		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
-		  AC_DEFINE(HAVE_KMEM_CACHE_T, 1, [define if kmem_cache_t exists])
-		 fi
-		 if test "x$ac_cv_linux_kmem_cache_init" = "xyes" ; then
-		  AC_DEFINE(KMEM_CACHE_INIT, 1, [define for new kmem_cache init function parameters])
-		 fi
-		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
-		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
-		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
 		 else
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
-		 if test "x$ac_cv_linux_have_svc_addr_in" = "xyes"; then
-		  AC_DEFINE(HAVE_SVC_ADDR_IN, 1, [define if svc_add_in exists])
-                 fi
                 :
 		fi
 esac
