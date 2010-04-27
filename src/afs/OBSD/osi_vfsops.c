@@ -148,7 +148,7 @@ struct vfsops afs_vfsops = {
 };
 
 int
-afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
+afs_obsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
 		    struct vnode **compvpp)
 {
     struct nameidata nd;
@@ -316,7 +316,7 @@ afs_badcall(struct proc *p, void *xx, register_t * yy)
 }
 
 void
-afs_nbsd_getnewvnode(struct vcache *tvc)
+afs_obsd_getnewvnode(struct vcache *tvc)
 {
     while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &tvc->v)) {
 	/* no vnodes available, force an alloc (limits be damned)! */

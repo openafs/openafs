@@ -1018,7 +1018,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 #ifdef AFS_OBSD_ENV
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
-    afs_nbsd_getnewvnode(tvc);	/* includes one refcount */
+    afs_obsd_getnewvnode(tvc);	/* includes one refcount */
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache,337);
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
