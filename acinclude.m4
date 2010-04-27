@@ -852,7 +852,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([generic_file_aio_read],
 				     [#include <linux/fs.h>],
 				     [generic_file_aio_read(NULL,NULL,0,0);])
-		 AC_CHECK_LINUX_FUNC([grap_cache_page_write_begin],
+		 AC_CHECK_LINUX_FUNC([grab_cache_page_write_begin],
 				     [#include <linux/pagemap.h>],
 				     [grab_cache_page_write_begin(NULL, 0, 0);])
 		 AC_CHECK_LINUX_FUNC([hlist_unhashed],
