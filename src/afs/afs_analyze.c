@@ -317,8 +317,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
     afs_int32 markeddown;
-
- 
+    afs_uint32 address;
  
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
 	/* On reconnection, act as connected. XXX: for now.... */
@@ -424,6 +423,7 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     /* Find server associated with this connection. */
     sa = aconn->srvr;
     tsp = sa->server;
+    address = ntohl(sa->sa_ip);
 
     /* Before we do anything with acode, make sure we translate it back to
      * a system error */
@@ -509,8 +509,10 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    }
 	    afs_PutVolume(tvp, READ_LOCK);
 	} else {
-	    afs_warnuser("afs: Waiting for busy volume %u in cell %s\n",
-			 (afid ? afid->Fid.Volume : 0), tsp->cell->cellName);
+	    afs_warnuser("afs: Waiting for busy volume %u in cell %s (server %d.%d.%d.%d)\n",
+			 (afid ? afid->Fid.Volume : 0), tsp->cell->cellName,
+			 (address >> 24), (address >> 16) & 0xff,
+			 (address >> 8) & 0xff, (address) & 0xff);
 	    VSleep(afs_BusyWaitPeriod);	/* poll periodically */
 	}
 	shouldRetry = 1;
@@ -535,16 +537,20 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		aconn->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
-		    ("afs: Tokens for user of AFS id %d for cell %s have expired\n",
-		     tu->vid, aconn->srvr->server->cell->cellName);
+		    ("afs: Tokens for user of AFS id %d for cell %s have expired (server %d.%d.%d.%d)\n",
+		     tu->vid, aconn->srvr->server->cell->cellName,
+		     (address >> 24), (address >> 16) & 0xff,
+		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
 		serversleft = afs_BlackListOnce(areq, afid, tsp);
 		areq->tokenError++;
 
 		if (serversleft) {
 		    afs_warnuser
-			("afs: Tokens for user of AFS id %d for cell %s: rxkad error=%d\n",
-			 tu->vid, aconn->srvr->server->cell->cellName, acode);
+			("afs: Tokens for user of AFS id %d for cell %s: rxkad error=%d (server %d.%d.%d.%d)\n",
+			 tu->vid, aconn->srvr->server->cell->cellName, acode,
+			 (address >> 24), (address >> 16) & 0xff,
+			 (address >> 8) & 0xff, (address) & 0xff);
 		    shouldRetry = 1;
 		} else {
 		    areq->tokenError = 0;
@@ -552,8 +558,10 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		    aconn->user->states |= UTokensBad;
 		    afs_NotifyUser(tu, UTokensDropped);
 		    afs_warnuser
-			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d)\n",
-			 tu->vid, aconn->srvr->server->cell->cellName, acode);
+			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d, server %d.%d.%d.%d)\n",
+			 tu->vid, aconn->srvr->server->cell->cellName, acode,
+			 (address >> 24), (address >> 16) & 0xff,
+			 (address >> 8) & 0xff, (address) & 0xff);
 		}
 	    }
 	    afs_PutUser(tu, READ_LOCK);
@@ -566,15 +574,20 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		aconn->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
-		    ("afs: Tokens for user %d for cell %s have expired\n",
-		     areq->uid, aconn->srvr->server->cell->cellName);
+		    ("afs: Tokens for user %d for cell %s have expired (server %d.%d.%d.%d)\n",
+		     areq->uid, aconn->srvr->server->cell->cellName,
+		     (address >> 24), (address >> 16) & 0xff,
+		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
 		aconn->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
-		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d)\n",
-		     areq->uid, aconn->srvr->server->cell->cellName, acode);
+		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d, server %d.%d.%d.%d)\n",
+		     areq->uid, aconn->srvr->server->cell->cellName, acode,
+		     (address >> 24), (address >> 16) & 0xff,
+		     (address >> 8) & 0xff, (address) & 0xff);
+
 	    }
 	}
 	shouldRetry = 1;	/* Try again (as root). */
