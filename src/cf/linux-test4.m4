@@ -478,7 +478,7 @@ AC_DEFUN([LINUX_NEW_EXPORT_OPS], [
 		       [ac_cv_linux_new_export_ops],
 		       [#include <linux/exportfs.h>],
 		       [struct export_operations _eops;
-			eops.fh_to_parent(NULL, NULL, 0, 0);],
+			_eops.fh_to_parent(NULL, NULL, 0, 0);],
 		       [NEW_EXPORT_OPS],
 		       [define if kernel uses new export ops])
 ])
