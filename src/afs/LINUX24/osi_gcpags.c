@@ -34,7 +34,7 @@ afs_osi_TraverseProcTable(void)
 	read_lock(&tasklist_lock);
 #endif /* EXPORTED_TASKLIST_LOCK */
 
-#ifdef DEFINED_FOR_EACH_PROCESS
+#if defined(for_each_process)
     for_each_process(p) if (p->pid) {
 #ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 	if (p->exit_state)

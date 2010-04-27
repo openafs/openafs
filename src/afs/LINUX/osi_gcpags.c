@@ -42,7 +42,7 @@ afs_osi_TraverseProcTable(void)
 	rcu_read_lock();
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
 
-#ifdef DEFINED_FOR_EACH_PROCESS
+#if defined(for_each_process)
     for_each_process(p) if (p->pid) {
 #ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 	if (p->exit_state)

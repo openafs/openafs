@@ -23,31 +23,6 @@ lose
 		       [Define if your kernel has a usable linux/completion.h])
 ])
 
-AC_DEFUN([LINUX_DEFINES_FOR_EACH_PROCESS], [
-  AC_MSG_CHECKING([for defined for_each_process])
-  AC_CACHE_VAL([ac_cv_linux_defines_for_each_process], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[#ifndef for_each_process
-#error for_each_process not defined
-#endif],
-      ac_cv_linux_defines_for_each_process=yes,
-      ac_cv_linux_defines_for_each_process=no)])
-  AC_MSG_RESULT($ac_cv_linux_defines_for_each_process)])
-
-
-AC_DEFUN([LINUX_DEFINES_PREV_TASK], [
-  AC_MSG_CHECKING([for defined prev_task])
-  AC_CACHE_VAL([ac_cv_linux_defines_prev_task], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[#ifndef prev_task
-#error prev_task not defined
-#endif],
-      ac_cv_linux_defines_prev_task=yes,
-      ac_cv_linux_defines_prev_task=no)])
-  AC_MSG_RESULT($ac_cv_linux_defines_prev_task)])
-
 
 AC_DEFUN([LINUX_EXPORTS_INIT_MM], [
   AC_CHECK_LINUX_BUILD([for exported init_mm],

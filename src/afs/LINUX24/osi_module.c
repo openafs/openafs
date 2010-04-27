@@ -175,7 +175,7 @@ get_page_offset(void)
     read_lock(&tasklist_lock);
 #endif
     /* search backward thru the circular list */
-#ifdef DEFINED_PREV_TASK
+#if defined(prev_task)
     for (q = current; p = q; q = prev_task(p)) {
 #else
     for (p = current; p; p = p->prev_task) {

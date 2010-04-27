@@ -845,8 +845,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_HEADER([completion.h])
 		 AC_CHECK_LINUX_HEADER([semaphore.h])
 		 AC_CHECK_LINUX_HEADER([exportfs.h])
-		 LINUX_DEFINES_FOR_EACH_PROCESS
-		 LINUX_DEFINES_PREV_TASK
 		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
 				       [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
@@ -977,12 +975,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
 		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
 	         fi
-		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
-		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
-		 fi
-		 if test "x$ac_cv_linux_defines_prev_task" = "xyes" ; then
-		  AC_DEFINE(DEFINED_PREV_TASK, 1, [define if prev_task defined])
-		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
 		 else
