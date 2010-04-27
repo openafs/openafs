@@ -110,7 +110,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
-#if defined(STRUCT_BDI_HAS_NAME)
+#if defined(STRUCT_BACKING_DEV_INFO_HAS_NAME)
     afs_backing_dev_info->name = "openafs";
 #endif
     afs_backing_dev_info->ra_pages = 32;
@@ -222,7 +222,7 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 }
 
 
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
 static afs_kmem_cache_t *afs_inode_cachep;
 
 static struct inode *
@@ -298,7 +298,7 @@ afs_clear_inode(struct inode *ip)
     if (vcp->hnext)
 	osi_Panic("inode freed while still hashed");
 
-#if !defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
     afs_osi_Free(ip->u.generic_ip, sizeof(struct vcache));
 #endif
 }
@@ -362,7 +362,7 @@ afs_statfs(struct super_block *sbp, struct kstatfs *statp)
 }
 
 struct super_operations afs_sops = {
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
   .alloc_inode =	afs_alloc_inode,
   .destroy_inode =	afs_destroy_inode,
 #endif

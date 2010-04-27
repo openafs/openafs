@@ -141,92 +141,6 @@ printk("%p\n", address);],
   AC_MSG_RESULT($ac_cv_linux_exports_sys_open)])
 
 
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE], [
-  AC_MSG_CHECKING([for i_blksize in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_blksize], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_blksize);],
-      ac_cv_linux_fs_struct_inode_has_i_blksize=yes,
-      ac_cv_linux_fs_struct_inode_has_i_blksize=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blksize)])
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS], [
-  AC_MSG_CHECKING([for i_blkbits in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_blkbits], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_blkbits);],
-      ac_cv_linux_fs_struct_inode_has_i_blkbits=yes,
-      ac_cv_linux_fs_struct_inode_has_i_blkbits=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_blkbits)
-  if test "x$ac_cv_linux_fs_struct_inode_has_i_blkbits" = "xyes"; then
-    AC_DEFINE(STRUCT_INODE_HAS_I_BLKBITS, 1, [define if your struct inode has i_blkbits])
-  fi])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
-  AC_MSG_CHECKING([for i_cdev in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_cdev], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_cdev);],
-      ac_cv_linux_fs_struct_inode_has_i_cdev=yes,
-      ac_cv_linux_fs_struct_inode_has_i_cdev=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_cdev)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD], [
-  AC_MSG_CHECKING([for i_mapping_overload in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_mapping_overload], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_mapping_overload);],
-      ac_cv_linux_fs_struct_inode_has_i_mapping_overload=yes,
-      ac_cv_linux_fs_struct_inode_has_i_mapping_overload=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mapping_overload)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED], [
-  AC_MSG_CHECKING([for i_mmap_shared in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_mmap_shared], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_mmap_shared);],
-      ac_cv_linux_fs_struct_inode_has_i_mmap_shared=yes,
-      ac_cv_linux_fs_struct_inode_has_i_mmap_shared=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MUTEX], [
-  AC_MSG_CHECKING([for i_mutex in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_mutex], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_mutex);],
-      ac_cv_linux_fs_struct_inode_has_i_mutex=yes,
-      ac_cv_linux_fs_struct_inode_has_i_mutex=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mutex)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SECURITY], [
-  AC_MSG_CHECKING([for i_security in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_security], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_security);],
-      ac_cv_linux_fs_struct_inode_has_i_security=yes,
-      ac_cv_linux_fs_struct_inode_has_i_security=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)])
-
-
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
   AC_MSG_CHECKING([for recalc_sigpending arg type])
   AC_CACHE_VAL([ac_cv_linux_func_recalc_sigpending_takes_void], [
@@ -238,136 +152,19 @@ AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
   AC_MSG_RESULT($ac_cv_linux_func_recalc_sigpending_takes_void)])
 
 
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT], [
-  AC_MSG_CHECKING([for parent in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_parent], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.parent);],
-      ac_cv_linux_sched_struct_task_struct_has_parent=yes,
-      ac_cv_linux_sched_struct_task_struct_has_parent=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_parent)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID], [
-  AC_MSG_CHECKING([for tgid in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_tgid], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.tgid);],
-      ac_cv_linux_sched_struct_task_struct_has_tgid=yes,
-      ac_cv_linux_sched_struct_task_struct_has_tgid=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_tgid)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT], [
-  AC_MSG_CHECKING([for real_parent in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_real_parent], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.real_parent);],
-      ac_cv_linux_sched_struct_task_struct_has_real_parent=yes,
-      ac_cv_linux_sched_struct_task_struct_has_real_parent=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_real_parent)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG], [
-  AC_MSG_CHECKING([for sig in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_sig], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.sig);],
-      ac_cv_linux_sched_struct_task_struct_has_sig=yes,
-      ac_cv_linux_sched_struct_task_struct_has_sig=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sig)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK], [
-  AC_MSG_CHECKING([for sigmask_lock in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_sigmask_lock], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.sigmask_lock);],
-      ac_cv_linux_sched_struct_task_struct_has_sigmask_lock=yes,
-      ac_cv_linux_sched_struct_task_struct_has_sigmask_lock=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sigmask_lock)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND], [
-  AC_MSG_CHECKING([for sighand in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_sighand], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.sighand);],
-      ac_cv_linux_sched_struct_task_struct_has_sighand=yes,
-      ac_cv_linux_sched_struct_task_struct_has_sighand=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sighand)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM], [
-  AC_MSG_CHECKING([for rlim in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_rlim], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.rlim);],
-      ac_cv_linux_sched_struct_task_struct_has_rlim=yes,
-      ac_cv_linux_sched_struct_task_struct_has_rlim=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_rlim)])
-
-
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
-  AC_MSG_CHECKING([for signal->rlim in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_signal_rlim], [
-    AC_TRY_KBUILD(
+  AC_CACHE_CHECK([for signal->rlim in struct task_struct],
+   [ac_cv_linux_sched_struct_task_struct_has_signal_rlim],
+   [AC_TRY_KBUILD(
 [#include <linux/sched.h>],
 [struct task_struct _tsk;
 printk("%d\n", _tsk.signal->rlim);],
-      ac_cv_linux_sched_struct_task_struct_has_signal_rlim=yes,
-      ac_cv_linux_sched_struct_task_struct_has_signal_rlim=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_signal_rlim)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE], [
-  AC_MSG_CHECKING([for exit_state in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_exit_state], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.exit_state);],
-      ac_cv_linux_sched_struct_task_struct_has_exit_state=yes,
-      ac_cv_linux_sched_struct_task_struct_has_exit_state=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)])
-
-
-AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO], [
-  AC_MSG_CHECKING([for thread_info in struct task_struct])
-  AC_CACHE_VAL([ac_cv_linux_sched_struct_task_struct_has_thread_info], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>],
-[struct task_struct _tsk;
-printk("%d\n", _tsk.thread_info);],
-      ac_cv_linux_sched_struct_task_struct_has_thread_info=yes,
-      ac_cv_linux_sched_struct_task_struct_has_thread_info=no)])
-  AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_thread_info)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
-  AC_MSG_CHECKING([for alloc_inode in struct super_operations])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_super_has_alloc_inode], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct super_operations _super;
-printk("%p\n", _super.alloc_inode);],
-      ac_cv_linux_fs_struct_super_has_alloc_inode=yes,
-      ac_cv_linux_fs_struct_super_has_alloc_inode=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)])
+      ac_cv_linux_struct_task_struct_has_signal_rlim=yes,
+      ac_cv_linux_struct_task_struct_has_signal_rlim=no)])
+    AS_IF([test "x$ac_cv_linux_struct_task_struct_has_signal_rlim" = "xyes"],
+	  [AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM, 1,
+	             [define if your struct task_struct has signal->rlim])])
+   ])
 
 
 AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
@@ -389,30 +186,6 @@ AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
       ac_cv_linux_kernel_sock_create_v=yes,
       ac_cv_linux_kernel_sock_create_v=no)])
   AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BYTES], [
-  AC_MSG_CHECKING([for i_bytes in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_bytes], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_bytes);],
-      ac_cv_linux_fs_struct_inode_has_i_bytes=yes,
-      ac_cv_linux_fs_struct_inode_has_i_bytes=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_bytes)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM], [
-  AC_MSG_CHECKING([for i_alloc_sem in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_alloc_sem], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _i;
-printk("%x\n", _i.i_alloc_sem);],
-      ac_cv_linux_fs_struct_inode_has_i_alloc_sem=yes,
-      ac_cv_linux_fs_struct_inode_has_i_alloc_sem=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_alloc_sem)])
 
 
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE], [
@@ -637,18 +410,6 @@ INIT_WORK(w,f,i);],
       ac_cv_linux_init_work_has_data=no)])
   AC_MSG_RESULT($ac_cv_linux_init_work_has_data)])
 
-
-AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_FLOCK], [
-  AC_MSG_CHECKING([for flock in struct file_operations])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_flock], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct file_operations _fop;
-_fop.flock(NULL, 0, NULL);],
-      ac_cv_linux_fs_struct_fop_has_flock=yes,
-      ac_cv_linux_fs_struct_fop_has_flock=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_flock)])
-
 AC_DEFUN([LINUX_REGISTER_SYSCTL_TABLE_NOFLAG], [
   AC_MSG_CHECKING([whether register_sysctl_table has an insert_at_head flag argument])
   AC_CACHE_VAL([ac_cv_linux_register_sysctl_table_noflag], [
@@ -711,17 +472,6 @@ kmem_cache_create(NULL, 0, 0, 0, _ctor);],
     AC_DEFINE([KMEM_CACHE_CTOR_TAKES_VOID], 1, [define if kmem_cache_create constructor function takes a single void pointer argument])
   fi])
 
-AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SENDFILE], [
-  AC_MSG_CHECKING([for sendfile in struct file_operations])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_sendfile], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct file_operations _fop;
-_fop.sendfile(NULL, NULL, 0, 0, NULL);],
-      ac_cv_linux_fs_struct_fop_has_sendfile=yes,
-      ac_cv_linux_fs_struct_fop_has_sendfile=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_sendfile)])
-
 AC_DEFUN([LINUX_HAVE_SVC_ADDR_IN], [
   AC_MSG_CHECKING([whether svc_addr_in exists])
   AC_CACHE_VAL([ac_cv_linux_have_svc_addr_in], [
@@ -732,9 +482,12 @@ AC_DEFUN([LINUX_HAVE_SVC_ADDR_IN], [
       ac_cv_linux_have_svc_addr_in=no)])
   AC_MSG_RESULT($ac_cv_linux_have_svc_addr_in)])
 
+dnl This function checks not just the existence of the splice functions,
+dnl but also that the signature matches (they gained an extra argument
+dnl around 2.6.17)
 AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SPLICE], [
-  AC_MSG_CHECKING([for splice_write and splice_read in struct file_operations])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_splice], [
+  AC_CACHE_CHECK([for splice_write and splice_read in struct file_operations],
+    [ac_cv_linux_fs_struct_fop_has_splice], [
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
 [struct file_operations _fop;
@@ -742,7 +495,10 @@ _fop.splice_write(NULL, NULL, NULL, 0, 0);
 _fop.splice_read(NULL, NULL, NULL, 0, 0);],
       ac_cv_linux_fs_struct_fop_has_splice=yes,
       ac_cv_linux_fs_struct_fop_has_splice=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_fop_has_splice)])
+  AS_IF([test "x$ac_cv_linux_fs_struct_fop_has_splice" = "xyes"],
+        [AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SPLICE, 1,
+		   [define if struct file_operations has splice functions])])
+  ])
 
 AC_DEFUN([LINUX_KMEM_CACHE_INIT], [
   AC_MSG_CHECKING([for new kmem_cache init function parameters])
@@ -767,17 +523,6 @@ sysctl_check_table(NULL);],
  ac_cv_linux_sysctl_table_checking=no,
  ac_cv_linux_sysctl_table_checking=yes)])
 AC_MSG_RESULT($ac_cv_linux_sysctl_table_checking)])
-
-AC_DEFUN([LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH], [
-  AC_MSG_CHECKING([for path in struct nameidata])
-  AC_CACHE_VAL([ac_cv_linux_struct_nameidata_has_path], [
-    AC_TRY_KBUILD(
-[#include <linux/namei.h>],
-[struct nameidata _nd;
-printk("%x\n", _nd.path);],
-      ac_cv_linux_struct_nameidata_has_path=yes,
-      ac_cv_linux_struct_nameidata_has_path=no)])
-  AC_MSG_RESULT($ac_cv_linux_struct_nameidata_has_path)])
 
 AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
   AC_MSG_CHECKING([if proc_root_fs is defined and exported])
@@ -820,51 +565,6 @@ _eops.fh_to_parent(NULL, NULL, 0, 0);],
     AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
   fi])
  
-
-AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
-  AC_MSG_CHECKING([for linux write_begin() address space op])
-  AC_CACHE_VAL([ac_cv_linux_write_begin], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct address_space_operations _aop;
-_aop.write_begin = NULL;],
-      ac_cv_linux_write_begin=yes,
-      ac_cv_linux_write_begin=no)])
-  AC_MSG_RESULT($ac_cv_linux_write_begin)
-  if test "x$ac_cv_linux_write_begin" = "xyes"; then
-    AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
-  fi])
-
-
-AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
-  AC_MSG_CHECKING([if struct task has cred])
-  AC_CACHE_VAL([ac_cv_linux_struct_task_has_cred], [
-    AC_TRY_KBUILD(
-[#include <linux/sched.h>
-#include <linux/cred.h>],
-[struct task_struct _t;
-uid_t _u;
-_u =_t.cred->uid ;],
-      ac_cv_linux_struct_task_has_cred=yes,
-      ac_cv_linux_struct_task_has_cred=no)])
-  AC_MSG_RESULT($ac_cv_linux_struct_task_has_cred)
-  if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
-    AC_DEFINE([STRUCT_TASK_HAS_CRED], 1, [define if struct task has a cred pointer])
-  fi])
-
-AC_DEFUN([LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER], [
-  AC_MSG_CHECKING([if struct proc_dir_entry_has_owner])
-  AC_CACHE_VAL([ac_cv_linux_struct_proc_dir_entry_has_owner], [
-    AC_TRY_KBUILD(
-[#include <linux/proc_fs.h>],
-[struct proc_dir_entry _p;
-_p.owner= "";],
-      ac_cv_linux_struct_proc_dir_entry_has_owner=yes,
-      ac_cv_linux_struct_proc_dir_entry_has_owner=no)])
-  AC_MSG_RESULT($ac_cv_linux_struct_proc_dir_entry_has_owner)
-  if test "x$ac_cv_linux_struct_proc_dir_entry_has_owner" = "xyes"; then
-    AC_DEFINE([STRUCT_PROC_DIR_ENTRY_HAS_OWNER], 1, [define if struct proc_dir_entry has an owner member])
-  fi])
 
 AC_DEFUN([LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT], [
   AC_MSG_CHECKING([if posix_test_lock returns a struct file_lock])
@@ -927,49 +627,6 @@ AC_DEFUN([LINUX_KEYS_HAVE_SESSION_TO_PARENT], [
   if test "x$ac_cv_linux_have_session_to_parent" = "xyes"; then
     AC_DEFINE([HAVE_SESSION_TO_PARENT], 1, [define if keyctl has the KEYCTL_SESSION_TO_PARENT function])
   fi])
-
-AC_DEFUN([LINUX_STRUCT_SUPER_BLOCK_HAS_S_BDI], [
-  AC_MSG_CHECKING([if struct super_block has s_bdi])
-  AC_CACHE_VAL([ac_cv_linux_struct_super_block_has_s_bdi], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct super_block _sb;
-_sb.s_bdi= NULL;],
-      ac_cv_linux_struct_super_block_has_s_bdi=yes,
-      ac_cv_linux_struct_super_block_has_s_bdi=no)])
-  AC_MSG_RESULT($ac_cv_linux_struct_super_block_has_s_bdi)
-  if test "x$ac_cv_linux_struct_super_block_has_s_bdi" = "xyes"; then
-    AC_DEFINE([STRUCT_SUPER_BLOCK_HAS_S_BDI], 1, [define if struct super_block has an s_bdi member])
-  fi])
-
-AC_DEFUN([LINUX_STRUCT_CTL_TABLE_HAS_CTL_NAME], [
-  AC_MSG_CHECKING([if struct ctl_table has ctl_name])
-  AC_CACHE_VAL([ac_cv_linux_struct_ctl_table_has_ctl_name], [
-    AC_TRY_KBUILD(
-[#include <linux/sysctl.h>],
-[struct ctl_table _t;
-_t.ctl_name = 0;],
-      ac_cv_linux_struct_ctl_table_has_ctl_name=yes,
-      ac_cv_linux_struct_ctl_table_has_ctl_name=no)])
-  AC_MSG_RESULT($ac_cv_linux_struct_ctl_table_has_ctl_name)
-  if test "x$ac_cv_linux_struct_ctl_table_has_ctl_name" = "xyes"; then
-    AC_DEFINE([STRUCT_CTL_TABLE_HAS_CTL_NAME], 1, [define if struct ctl_table has a ctl_name member])
-  fi])
-
-AC_DEFUN([LINUX_STRUCT_BDI_HAS_NAME], [
-  AC_MSG_CHECKING([if struct backing_dev_info has name])
-  AC_CACHE_VAL([ac_cv_linux_struct_bdi_has_name], [
-    AC_TRY_KBUILD(
-[#include <linux/backing-dev.h>],
-[struct backing_dev_info _bdi;
-_bdi.name = NULL;],
-      ac_cv_linux_struct_bdi_has_name=yes,
-      ac_cv_linux_struct_bdi_has_name=no)])
-  AC_MSG_RESULT($ac_cv_linux_struct_bdi_has_name)
-  if test "x$ac_cv_linux_struct_bdi_has_name" = "xyes"; then
-    AC_DEFINE([STRUCT_BDI_HAS_NAME], 1, [define if struct backing_dev_info has a name member])
-  fi])
-
 
 AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
   AC_MSG_CHECKING([for try_to_freeze])

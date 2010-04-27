@@ -61,12 +61,6 @@ AH_BOTTOM([
 #undef IRIX_HAS_MEM_FUNCS
 #undef RECALC_SIGPENDING_TAKES_VOID
 #undef STRUCT_FS_HAS_FS_ROLLED
-#undef STRUCT_INODE_HAS_I_ALLOC_SEM
-#undef STRUCT_TASK_STRUCT_HAS_PARENT
-#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
-#undef STRUCT_TASK_STRUCT_HAS_SIG
-#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
-#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t
 #undef HAVE_ARPA_NAMESER_COMPAT_H
 /* glue for RedHat kernel bug */
@@ -810,7 +804,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([current_kernel_time],
 				     [#include <linux/time.h>],
 			           [struct timespec s = current_kernel_time();])
-		 LINUX_HAVE_WRITE_BEGIN_AOP
+		 AC_CHECK_LINUX_STRUCT([address_space_operations],
+				       [write_begin], [fs.h])
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
@@ -843,9 +838,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
-
-                 LINUX_STRUCT_TASK_HAS_CRED
-		 LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER
+                 AC_CHECK_LINUX_STRUCT([task_struct], [cred], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID
 		 LINUX_D_PATH_TAKES_STRUCT_PATH
@@ -856,14 +850,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_HEADER([exportfs.h])
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
-		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
-		 LINUX_STRUCT_SUPER_BLOCK_HAS_S_BDI
-		 LINUX_STRUCT_BDI_HAS_NAME
-		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
-		 LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS
-		 LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE
-		 LINUX_FS_STRUCT_INODE_HAS_I_MUTEX
-		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
+		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
+				       [fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
+				       [backing-dev.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_mutex], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode], [i_security], [fs.h])
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
@@ -872,8 +868,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_AOP_WRITEBACK_CONTROL
-		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
-		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
+		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
 		 AC_CHECK_LINUX_HEADER([seq_file.h])
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
@@ -891,16 +887,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KEYS_HAVE_SESSION_TO_PARENT
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
+		 AC_CHECK_LINUX_STRUCT([task_struct], [parent], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [real_parent], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [sig], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [sighand], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [sigmask_lock], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [rlim], [sched.h])
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_TGID
-		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_THREAD_INFO
+		 AC_CHECK_LINUX_STRUCT([task_struct], [exit_state], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [tgid], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_GET_SB_HAS_STRUCT_VFSMOUNT
 		 LINUX_STATFS_TAKES_DENTRY
@@ -920,7 +916,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
-		 LINUX_STRUCT_CTL_TABLE_HAS_CTL_NAME
+		 AC_CHECK_LINUX_FUNC([ctl_table], [ctl_name], [sysctl.h])
 		 AC_CHECK_LINUX_FUNC([iget],
 				     [#include <linux/fs.h>],
 				     [iget(NULL, NULL);])
@@ -936,7 +932,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
 		       [AC_DEFINE([AFS_NONFSTRANS], 1,
 				  [define to disable the nfs translator])])
-		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
+		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
                  LINUX_EXPORTS_SYS_OPEN
@@ -1009,21 +1005,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
 		 fi
-		 if test "x$ac_cv_linux_fs_struct_super_has_alloc_inode" = "xyes" ; then
-		  AC_DEFINE(STRUCT_SUPER_HAS_ALLOC_INODE, 1, [define if your struct super_operations has alloc_inode])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_alloc_sem" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_ALLOC_SEM, 1, [define if your struct inode has alloc_sem])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_blksize" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_BLKSIZE, 1, [define if your struct inode has i_blksize])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mutex" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_MUTEX, 1, [define if you struct inode has i_mutex])
-		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
 		 fi
@@ -1032,39 +1013,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_real_parent" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_REAL_PARENT, 1, [define if your struct task_struct has real_parent])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sigmask_lock" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, 1, [define if your struct task_struct has sigmask_lock])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sighand" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGHAND, 1, [define if your struct task_struct has sighand])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sig" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIG, 1, [define if your struct task_struct has sig])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_rlim" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_RLIM, 1, [define if your struct task_struct has rlim])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_signal_rlim" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM, 1, [define if your struct task_struct has signal->rlim])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_tgid" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TGID, 1, [define if your struct task_struct has tgid])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_todo" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_TODO, 1, [define if your struct task_struct has todo])
-		 fi
-		 if test "x$ac_cv_linux_sched_struct_task_struct_has_thread_info" = "xyes"; then 
-		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_THREAD_INFO, 1, [define if your struct task_struct has thread_info])
 		 fi
 		 if test "x$ac_cv_linux_get_sb_has_struct_vfsmount" = "xyes"; then
 		  AC_DEFINE(GET_SB_HAS_STRUCT_VFSMOUNT, 1, [define if your get_sb_nodev needs a struct vfsmount argument])
@@ -1093,26 +1041,11 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_init_work_has_data" = "xyes" ; then
 		  AC_DEFINE(INIT_WORK_HAS_DATA, 1, [define if INIT_WORK takes a data (3rd) argument])
 		 fi
-		 if test "x$ac_cv_linux_fs_struct_fop_has_flock" = "xyes" ; then
-		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_FLOCK, 1, [define if your struct file_operations has flock])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_fop_has_sendfile" = "xyes" ; then
-		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SENDFILE, 1, [define if your struct file_operations has sendfile])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_fop_has_splice" = "xyes" ; then
-		  AC_DEFINE(STRUCT_FILE_OPERATIONS_HAS_SPLICE, 1, [define if your struct file_operations has splice_write and splice_read])
-		 fi
 		 if test "x$ac_cv_linux_register_sysctl_table_noflag" = "xyes" ; then
 		  AC_DEFINE(REGISTER_SYSCTL_TABLE_NOFLAG, 1, [define if register_sysctl_table has no insert_at head flag])
 		 fi
 		 if test "x$ac_cv_linux_sysctl_table_checking" = "xyes" ; then
 		  AC_DEFINE(SYSCTL_TABLE_CHECKING, 1, [define if your kernel has sysctl table checking])
-		 fi
-		 if test "x$ac_cv_linux_have_iget" = "xyes" ; then
-		  AC_DEFINE(HAVE_IGET, 1, [define if your kernel has iget])
-		 fi
-		 if test "x$ac_cv_linux_struct_nameidata_has_path" = "xyes" ; then
-		  AC_DEFINE(STRUCT_NAMEIDATA_HAS_PATH, 1, [define if your struct nameidata has path])
 		 fi
 		 if test "x$ac_cv_linux_exports_init_mm" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_INIT_MM, 1, [define if your kernel exports init_mm])
@@ -1125,9 +1058,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kmem_cache_init" = "xyes" ; then
 		  AC_DEFINE(KMEM_CACHE_INIT, 1, [define for new kmem_cache init function parameters])
-		 fi
-		 if test "x$ac_cv_linux_have_current_kernel_time" = "xyes" ; then
-		  AC_DEFINE(HAVE_CURRENT_KERNEL_TIME, 1, [define if current_kernel_time() exists])
 		 fi
 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
 		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])

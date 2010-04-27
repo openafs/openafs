@@ -688,7 +688,7 @@ extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 #if defined(AFS_DARWIN80_ENV)
 #define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
 #define AFSTOV(vc) ((vc)->v)
-#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -744,7 +744,7 @@ struct fvcache {
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */

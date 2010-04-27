@@ -2334,7 +2334,7 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
     return 0;
 }
 
-#if defined(HAVE_WRITE_BEGIN)
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN)
 static int
 afs_linux_write_end(struct file *file, struct address_space *mapping,
                                 loff_t pos, unsigned len, unsigned copied,
@@ -2384,7 +2384,7 @@ static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
   .readpages = 		afs_linux_readpages,
   .writepage =		afs_linux_writepage,
-#if defined (HAVE_WRITE_BEGIN)
+#if defined (STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN)
   .write_begin =        afs_linux_write_begin,
   .write_end =          afs_linux_write_end,
 #else

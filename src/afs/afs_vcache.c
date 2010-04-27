@@ -721,7 +721,7 @@ afs_AllocVCache(void)
     if (!ip)
  	osi_Panic("afs_AllocVCache: no more inodes");
     AFS_GLOCK();
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
     tvc = VTOAFS(ip);
 #else
     tvc = afs_osi_Alloc(sizeof(struct vcache));

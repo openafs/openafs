@@ -62,9 +62,3 @@ fi
 AC_SUBST(MPS)
 ])
 
-AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
-  AC_MSG_CHECKING(for linux/seq_file.h in kernel)
-  AC_TRY_KBUILD([#include <linux/seq_file.h>], [],
-    [ac_linux_seq_file=yes], [ac_linux_seq_file=no])
-  AC_MSG_RESULT($ac_linux_seq_file)
-])
