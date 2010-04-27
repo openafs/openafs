@@ -1,4 +1,3 @@
-make_vnode.pl
 Makefile.config.in
 Makefile.version-NOCML.in
 afsconfig.h.in
