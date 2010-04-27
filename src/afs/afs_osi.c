@@ -95,7 +95,7 @@ osi_Init(void)
 #if defined(AFS_DARWIN80_ENV)
         afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
 #else
-# if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED))
+# if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 	crhold(&afs_osi_cred);  /* don't let it evaporate */
 # endif
 #endif

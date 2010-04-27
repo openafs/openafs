@@ -180,7 +180,7 @@ set_cr_group_info(afs_ucred_t *cred, struct group_info *group_info) {
 #define current_fsgid() (current->fsgid)
 #define current_fsuid() (current->fsuid)
 #endif
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 #define current_group_info() (current->cred->group_info)
 #define task_gid(task) (task->cred->gid)
 #define task_user(task) (task->cred->user)

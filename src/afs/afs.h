@@ -1431,7 +1431,7 @@ extern int afsd_dynamic_vcaches;
  * Linux uses the kernel cred structure if available, with the
  * wrappers defined in LINUX/osi_machdep.h
  */
-#if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED))
+#if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 #define afs_cr_uid(cred) ((cred)->cr_uid)
 #define afs_cr_gid(cred) ((cred)->cr_gid)
 #define afs_cr_ruid(cred) ((cred)->cr_ruid)

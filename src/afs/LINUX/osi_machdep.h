@@ -144,7 +144,7 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 typedef struct task_struct afs_proc_t;
 
 /* Credentials.  For newer kernels we use the kernel structure directly. */
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 
 typedef struct cred afs_ucred_t;
 typedef struct cred cred_t;
@@ -212,7 +212,7 @@ afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
 #define current_session_keyring() (current->signal->session_keyring)
 #define crhold(c) atomic_inc(&(c)->cr_ref)
 
-#endif /* defined(STRUCT_TASK_HAS_CRED) */
+#endif /* defined(STRUCT_TASK_STRUCT_HAS_CRED) */
 
 #if !defined(current_cred)
 #define current_gid() (current->gid)

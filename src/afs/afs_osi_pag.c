@@ -611,7 +611,7 @@ PagInCred(afs_ucred_t *cred)
      * With keyrings but no kernel credentials, look at groups first and fall back
      * to looking at the keyrings.
      */
-# if !defined(STRUCT_TASK_HAS_CRED)
+# if !defined(STRUCT_TASK_STRUCT_HAS_CRED)
     pag = osi_get_group_pag(cred);
 # endif
     if (pag == NOPAG)

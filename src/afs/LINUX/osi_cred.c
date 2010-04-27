@@ -38,7 +38,7 @@ crget(void)
     if (!tmp)
         osi_Panic("crget: No more memory for creds!\n");
 
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     get_cred(tmp);
 #else
     atomic_set(&tmp->cr_ref, 1);
@@ -49,7 +49,7 @@ crget(void)
 void
 crfree(cred_t * cr)
 {
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     put_cred(cr);
 #else
     if (atomic_dec_and_test(&cr->cr_ref)) {
@@ -65,7 +65,7 @@ cred_t *
 crdup(cred_t * cr)
 {
     cred_t *tmp = crget();
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     afs_copy_creds(tmp, cr);
 #else
     afs_set_cr_uid(tmp, afs_cr_uid(cr));
@@ -82,7 +82,7 @@ crdup(cred_t * cr)
 cred_t *
 crref(void)
 {
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     return (cred_t *)get_current_cred();
 #else
     cred_t *cr = crget();
@@ -105,7 +105,7 @@ crref(void)
 void
 crset(cred_t * cr)
 {
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     struct cred *new_creds;
 
     /* If our current task doesn't have identical real and effective

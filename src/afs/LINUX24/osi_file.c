@@ -62,7 +62,7 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 #endif
 
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
 #else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);

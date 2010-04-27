@@ -129,7 +129,7 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     crset(*cr);
 
-#if defined(STRUCT_TASK_STRUCT_HAS_PARENT) && !defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_PARENT) && !defined(STRUCT_TASK_STRUCT_HAS_CRED)
     if (change_parent) {
 	old_info = current->parent->group_info;
 	get_group_info(group_info);

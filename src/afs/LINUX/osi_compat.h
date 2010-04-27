@@ -159,7 +159,7 @@ afs_linux_key_alloc(struct key_type *type, const char *desc, uid_t uid,
 #endif
 }
 
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 static inline struct key*
 afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 {
