@@ -2,7 +2,7 @@
  * CMUCS AFStools
  * dumpscan - routines for scanning and manipulating AFS volume dumps
  *
- * Copyright (c) 1998 Carnegie Mellon University
+ * Copyright (c) 1998, 2001, 2004 Carnegie Mellon University
  * All Rights Reserved.
  * 
  * Permission to use, copy, modify and distribute this software and its
@@ -26,11 +26,13 @@
  * the rights to redistribute these changes.
  */
 
-/* directory.c - Parse an AFS directory */
+/* directory.c - AFS directory parsing and generation */
 /* See the end of this file for a description of the directory format */
 
 #include <errno.h>
 #include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
 #include <netinet/in.h>
 
 #include "dumpscan.h"
@@ -41,140 +43,151 @@
 
 #include <afs/dir.h>
 
+struct dir_state {
+  unsigned char **dirpages;
+  int npages;
+
+  afs_dir_header *dh;        /* Directory header */
+  afs_dir_page *page;        /* Current page */
+  int pageno;                /* Current page # */
+  int entno;                 /* Current (next avail) entry # */
+  int used;                  /* # entries used in this page */
+};
+
 static afs_dir_page page;
 
-#define allocbit(x) (page.header.freebitmap[(x)>>3] & (1 << ((x) & 7)))
-#define DPHE (DHE + 1)
-#if 0
-static void
-fixup(char *name, int l)
-{
-    name += 16;
-    l -= 15;
+#define bmbyte(bm,x) bm[(x)>>3]
+#define bmbit(x) (1 << ((x) & 7))
 
-    while (l-- > 0) {
-	name[0] = name[4];
-	name++;
-    }
+#define allocbit(x) (bmbyte(page.header.freebitmap,x) & bmbit(x))
+#define setallocbit(bm,x) (bmbyte(bm,x) |= bmbit(x))
+
+#define DPHE (DHE + 1)
+
+/* Hash function used in AFS directories.  */
+static int namehash(char *name, int buckets, int seed)
+{   
+  int hval = seed, tval;
+
+  while (*name) hval = (hval * 173) + *name++;
+  tval = hval & (buckets - 1);
+  return tval ? hval < 0 ? buckets - tval : tval : 0;
+}
+
+#if 0
+static void fixup(char *name, int l)
+{
+  name += 16;
+  l -= 15;
+
+  while (l-- > 0) {
+    name[0] = name[4];
+    name++;
+  }
 }
 #endif
-afs_uint32
-parse_directory(XFILE * X, dump_parser * p, afs_vnode * v, afs_uint32 size,
-		int toeof)
-{
-    afs_dir_entry de;
-    int pgno, i, l, n;
-    afs_int32 r;
-    u_int64 where;
 
-    if (p->print_flags & DSPRINT_DIR) {
-	printf("  VNode      Uniqifier   Name\n");
-	printf("  ========== ==========  ==============================\n");
+afs_uint32 parse_directory(XFILE *X, dump_parser *p, afs_vnode *v,
+                        afs_uint32 size, int toeof)
+{
+  afs_dir_entry de;
+  int pgno, i, l, n;
+  afs_int32 r;
+  u_int64 where;
+
+  if (p->print_flags & DSPRINT_DIR) {
+    printf("  VNode      Uniqifier   Name\n");
+    printf("  ========== ==========  ==============================\n");
+  }
+  if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where))) return r;
+  for (pgno = 0; toeof || size; pgno++, size -= (toeof ? 0 : AFS_PAGESIZE)) {
+    if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where))) return r;
+    if ((r = xfread(X, &page, AFS_PAGESIZE))) {
+      if (toeof && r == ERROR_XFILE_EOF) break;
+      return r;
     }
-    if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where)))
-	return r;
-    for (pgno = 0; toeof || size; pgno++, size -= (toeof ? 0 : AFS_PAGESIZE)) {
-	if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where)))
-	    return r;
-	if ((r = xfread(X, &page, AFS_PAGESIZE))) {
-	  if (toeof && (r == ERROR_XFILE_EOF))
-		break;
-	    return r;
-	}
-	if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where)))
-	    return r;
-	if (page.header.tag != htons(1234)) {
-	    if (p->cb_error)
-		(p->cb_error) (DSERR_MAGIC, 1, p->err_refcon,
-			       "Invalid page tag (%d) in page %d",
-			       ntohs(page.header.tag), pgno);
-	    return DSERR_MAGIC;
-	}
-	for (i = (pgno ? 1 : DPHE); i < EPP; i++) {
-	    if (!allocbit(i))
-		continue;
-	    if (page.entry[i].flag != FFIRST) {
-		if (p->cb_error)
-		    (p->cb_error) (DSERR_MAGIC, 0, p->err_refcon,
-				   "Invalid entry flag %d in entry %d/%d; skipping...",
-				   page.entry[i].flag, pgno, i);
-		continue;
-	    }
-	    n = (EPP - i - 1) * 32 + 16;
-	    for (l = 0; n && page.entry[i].name[l]; l++, n--);
-	    if (page.entry[i].name[l]) {
-		if (p->cb_error)
-		    (p->cb_error) (DSERR_FMT, 0, p->err_refcon,
-				   "Filename too long in entry %d/%d; skipping page",
-				   pgno, i);
-		break;
-	    }
+    if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where))) return r;
+    if (page.header.tag != htons(1234)) {
+      if (p->cb_error)
+        (p->cb_error)(DSERR_MAGIC, 1, p->err_refcon,
+                      "Invalid page tag (%d) in page %d",
+                      ntohs(page.header.tag), pgno);
+      return DSERR_MAGIC;
+    }
+    for (i = (pgno ? 1 : DPHE); i < EPP; i++) {
+      if (!allocbit(i)) continue;
+      if (page.entry[i].flag != FFIRST) {
+        if (p->cb_error)
+          (p->cb_error)(DSERR_MAGIC, 0, p->err_refcon,
+                        "Invalid entry flag %d in entry %d/%d; skipping...",
+                        page.entry[i].flag, pgno, i);
+        continue;
+      }
+      n = (EPP - i - 1) * 32 + 16;
+      for (l = 0; n && page.entry[i].name[l]; l++, n--);
+      if (page.entry[i].name[l]) {
+        if (p->cb_error)
+          (p->cb_error)(DSERR_FMT, 0, p->err_refcon,
+                        "Filename too long in entry %d/%d; skipping page",
+                        pgno, i);
+        break;
+      }
 /*    fixup(page.entry[i].name, l); */
-	    if (pgno)
-		de.slot = i - 1 + (pgno - 1) * (EPP - 1) + (EPP - DPHE);
-	    else
-		de.slot = i - DPHE;
-	    de.name = page.entry[i].name;
-	    de.vnode = ntohl(page.entry[i].vnode);
-	    de.uniq = ntohl(page.entry[i].vunique);
-	    if (p->print_flags & DSPRINT_DIR)
-		printf("  %10d %10d  %s\n", de.vnode, de.uniq, de.name);
-	    if (p->cb_dirent) {
-		r = (p->cb_dirent) (v, &de, X, p->refcon);
-	    }
-	    if (p->cb_dirent && (r = (p->cb_dirent) (v, &de, X, p->refcon)))
-		return r;
-	    i += ((l + 16) >> 5);
-	}
+      if (pgno) de.slot = i - 1 + (pgno - 1) * (EPP - 1) + (EPP - DPHE);
+      else de.slot = i - DPHE;
+      de.name  = page.entry[i].name;
+      de.vnode = ntohl(page.entry[i].vnode);
+      de.uniq  = ntohl(page.entry[i].vunique);
+      if (p->print_flags & DSPRINT_DIR)
+        printf("  %10d %10d  %s\n", de.vnode, de.uniq, de.name);
+      if (p->cb_dirent) {
+        r = (p->cb_dirent)(v, &de, X, p->refcon);
+      }
+      if (p->cb_dirent && (r = (p->cb_dirent)(v, &de, X, p->refcon)))
+        return r;
+      i += ((l + 16) >> 5);
     }
-    if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where)))
-	return r;
-    return 0;
+  }
+  if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where))) return r;
+  return 0;
 }
 
 
-afs_uint32
-ParseDirectory(XFILE * X, dump_parser * p, afs_uint32 size, int toeof)
+afs_uint32 ParseDirectory(XFILE *X, dump_parser *p, afs_uint32 size, int toeof)
 {
-    afs_uint32 r;
+  afs_uint32 r;
 
-    r = parse_directory(X, p, 0, size, toeof);
-    return r;
+  r = parse_directory(X, p, 0, size, toeof);
+  return r;
 }
 
 
 typedef struct {
-    char **name;
-    afs_uint32 *vnode;
-    afs_uint32 *vuniq;
+  char **name;
+  afs_uint32 *vnode;
+  afs_uint32 *vuniq;
 } dirlookup_stat;
 
 
-static afs_uint32
-dirlookup_cb(afs_vnode * v, afs_dir_entry * de, XFILE * X, void *refcon)
+static afs_uint32 dirlookup_cb(afs_vnode *v, afs_dir_entry *de,
+                            XFILE *X, void *refcon)
 {
-    dirlookup_stat *s = (dirlookup_stat *) refcon;
+  dirlookup_stat *s = (dirlookup_stat *)refcon;
 
-    if (s->name && s->name[0]) {	/* Search by filename */
-	if (strcmp(de->name, s->name[0]))
-	    return 0;		/* Not it! */
-	if (s->vnode)
-	    s->vnode[0] = de->vnode;
-	if (s->vuniq)
-	    s->vuniq[0] = de->uniq;
-    } else if (s->vnode) {	/* Search by vnode */
-	if (de->vnode != s->vnode[0])
-	    return 0;		/* Not it! */
-	if (s->name) {
-	    s->name[0] = (char *)malloc(strlen(de->name) + 1);
-	    if (!s->name[0])
-		return ENOMEM;
-	    strcpy(s->name[0], de->name);
-	}
-	if (s->vuniq)
-	    s->vuniq[0] = de->uniq;
+  if (s->name && s->name[0]) {                  /* Search by filename */
+    if (strcmp(de->name, s->name[0])) return 0; /* Not it! */
+    if (s->vnode) s->vnode[0] = de->vnode;
+    if (s->vuniq) s->vuniq[0] = de->uniq;
+  } else if (s->vnode) {                        /* Search by vnode */
+    if (de->vnode != s->vnode[0]) return 0;     /* Not it! */
+    if (s->name) {
+      s->name[0] = (char *)malloc(strlen(de->name) + 1);
+      if (!s->name[0]) return ENOMEM;
+      strcpy(s->name[0], de->name);
     }
-    return DSERR_DONE;
+    if (s->vuniq) s->vuniq[0] = de->uniq;
+  }
+  return DSERR_DONE;
 }
 
 
@@ -189,29 +202,131 @@ dirlookup_cb(afs_vnode * v, afs_dir_entry * de, XFILE * X, void *refcon)
  * and size set to the length of the directory.
  * Returns 0 on success, whether or not the entry is found.
  */
-afs_uint32
-DirectoryLookup(XFILE * X, dump_parser * p, afs_uint32 size, char **name,
-		afs_uint32 * vnode, afs_uint32 * vuniq)
+afs_uint32 DirectoryLookup(XFILE *X, dump_parser *p, afs_uint32 size,
+                    char **name, afs_uint32 *vnode, afs_uint32 *vuniq)
 {
-    dump_parser my_p;
-    dirlookup_stat my_s;
-    afs_uint32 r;
+  dump_parser my_p;
+  dirlookup_stat my_s;
+  afs_uint32 r;
 
-    memset(&my_s, 0, sizeof(my_s));
-    my_s.name = name;
-    my_s.vnode = vnode;
-    my_s.vuniq = vuniq;
+  memset(&my_s, 0, sizeof(my_s));
+  my_s.name  = name;
+  my_s.vnode = vnode;
+  my_s.vuniq = vuniq;
 
-    memset(&my_p, 0, sizeof(my_p));
-    my_p.refcon = (void *)&my_s;
-    my_p.err_refcon = p->err_refcon;
-    my_p.cb_error = p->cb_error;
-    my_p.cb_dirent = dirlookup_cb;
+  memset(&my_p, 0, sizeof(my_p));
+  my_p.refcon = (void *)&my_s;
+  my_p.err_refcon = p->err_refcon;
+  my_p.cb_error = p->cb_error;
+  my_p.cb_dirent  = dirlookup_cb;
 
-    r = parse_directory(X, &my_p, 0, size, 0);
-    if (!r)
-	r = DSERR_DONE;
-    return handle_return(r, X, 0, p);
+  r = parse_directory(X, &my_p, 0, size, 0);
+  if (!r) r = DSERR_DONE;
+  return handle_return(r, X, 0, p);
+}
+
+
+static int allocpage(struct dir_state *ds, int reserve)
+{
+  unsigned char **dirpages;
+  int i;
+
+  dirpages = malloc((ds->npages + 1) * sizeof(unsigned char *));
+  if (!dirpages) return ENOMEM;
+  if (ds->dirpages) {
+    memcpy(dirpages, ds->dirpages, ds->npages * sizeof(unsigned char *));
+    free(ds->dirpages);
+  }
+  ds->dirpages = dirpages;
+
+  ds->dirpages[ds->npages] = malloc(AFS_PAGESIZE);
+  if (!ds->dirpages[ds->npages]) return ENOMEM;
+  ds->pageno = ds->npages++;
+
+  ds->page = (afs_dir_page *)(ds->dirpages[ds->pageno]);
+  memset(ds->page, 0, AFS_PAGESIZE);
+  ds->page->header.tag = htons(AFS_DIR_MAGIC);
+  ds->entno = ds->used = reserve;
+  for (i = 0; i < reserve; i++)
+    setallocbit(ds->page->header.freebitmap, i);
+  return 0;
+}
+
+
+afs_uint32 Dir_Init(struct dir_state **dsp)
+{
+  afs_uint32 r;
+
+  *dsp = malloc(sizeof(struct dir_state));
+  if (!*dsp) return ENOMEM;
+  memset(*dsp, 0, sizeof(struct dir_state));
+  if ((r = allocpage(*dsp, DPHE))) return r;
+  (*dsp)->dh = (afs_dir_header *)((*dsp)->page);
+  return 0;
+}
+
+
+afs_uint32 Dir_AddEntry(struct dir_state *ds, char *name,
+                        afs_uint32 vnode, afs_uint32 unique)
+{
+  afs_uint32 r;
+  int l = strlen(name) + 1;
+  int ne = l > 16 ? 1 + ((l - 16) / 32) + !!((l - 16) % 32) : 1;
+  int hash = namehash(name, NHASHENT, 0);
+
+  if (ne > EPP - 1) return ENAMETOOLONG;
+  if (ds->entno + ne > EPP) {
+    if (ds->pageno < 128) ds->dh->allomap[ds->pageno] = ds->used;
+    if ((r = allocpage(ds, 1))) return r;
+  }
+  ds->page->entry[ds->entno].flag    = FFIRST;
+  ds->page->entry[ds->entno].next    = ds->dh->hash[hash];
+  ds->page->entry[ds->entno].vnode   = htonl(vnode);
+  ds->page->entry[ds->entno].vunique = htonl(unique);
+  strcpy(ds->page->entry[ds->entno].name, name);
+  ds->dh->hash[hash] = htons((ds->pageno * EPP) + ds->entno);
+  while (ne--) {
+    setallocbit(ds->page->header.freebitmap, ds->entno);
+    ds->used++;
+    ds->entno++;
+  }
+  return 0;
+}
+
+
+afs_uint32 Dir_Finalize(struct dir_state *ds)
+{
+  int pages = ds->pageno + 1;
+  
+  if (ds->pageno < 128) ds->dh->allomap[ds->pageno] = ds->used;
+  ds->dh->pagehdr.pgcount = htons(pages);
+  return 0;
+}
+
+
+afs_uint32 Dir_EmitData(struct dir_state *ds, XFILE *X, int dotag)
+{
+  afs_uint32 r, size;
+  int i;
+
+  size = ds->npages * AFS_PAGESIZE;
+  if (dotag && (r = WriteTagInt32(X, VTAG_DATA, size))) return r;
+  for (i = 0; i < ds->npages; i++) {
+    if ((r = xfwrite(X, ds->dirpages[i], AFS_PAGESIZE))) return r;
+  }
+  return 0;
+}
+
+
+afs_uint32 Dir_Free(struct dir_state *ds)
+{
+  int i;
+
+  for (i = 0; i < ds->npages; i++)
+    free(ds->dirpages[i]);
+  free(ds->dirpages);
+  free(ds);
+  return 0;
 }
 
 

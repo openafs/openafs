@@ -2,7 +2,7 @@
  * CMUCS AFStools
  * dumpscan - routines for scanning and manipulating AFS volume dumps
  *
- * Copyright (c) 1998 Carnegie Mellon University
+ * Copyright (c) 1998, 2001 Carnegie Mellon University
  * All Rights Reserved.
  * 
  * Permission to use, copy, modify and distribute this software and its
@@ -122,29 +122,38 @@
 #define VTAG_DATA        'f'
 
 
-#define AFS_DIR_EPP 64
+#define AFS_DIR_MAGIC    1234
+#define AFS_DIR_EPP        64
+#define AFS_DIR_MAXPAGES  128
+#define AFS_DIR_NHASH     128
 
 typedef struct {
-    afs_uint16 pgcount;
-    afs_uint16 tag;
-    char freecount;
-    char freebitmap[AFS_DIR_EPP / 8];
-    char padding[32 - (5 + AFS_DIR_EPP / 8)];
+  afs_uint16 pgcount;
+  afs_uint16 tag;
+  char freecount;
+  char freebitmap[AFS_DIR_EPP/8];
+  char padding[32 - (5 + AFS_DIR_EPP/8)];
 } afs_dir_pagehdr;
 
 typedef struct {
-    char flag;
-    char length;
-    afs_uint16 next;
-    afs_uint32 vnode;
-    afs_uint32 vunique;
-    char name[16];
-    char padding[4];
+  afs_dir_pagehdr pagehdr;
+  char allomap[AFS_DIR_MAXPAGES];
+  afs_uint16 hash[AFS_DIR_NHASH];
+} afs_dir_header;
+
+typedef struct {
+  char flag;
+  char length;
+  afs_uint16 next;
+  afs_uint32 vnode;
+  afs_uint32 vunique;
+  char name[16];
+  char padding[4];
 } afs_dir_direntry;
 
 typedef union {
-    afs_dir_pagehdr header;
-    afs_dir_direntry entry[AFS_DIR_EPP];
+  afs_dir_pagehdr header;
+  afs_dir_direntry entry[AFS_DIR_EPP];
 } afs_dir_page;
 
 #endif /* _DUMPFMT_H_ */
