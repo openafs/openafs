@@ -558,7 +558,7 @@ osi_get_group_pag(afs_ucred_t *cred)
     ngroups = crgetngroups(cred);
 #endif
 #if defined(AFS_NBSD40_ENV)
-#warning com afs_ucred_t w/magic won't work
+#warning com afs_ucred_t w/magic will not work
     if (cred == NOCRED || cred == FSCRED)
       return NOPAG;
     if (osi_crngroups(cred) < 3)
