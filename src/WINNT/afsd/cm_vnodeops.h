@@ -110,7 +110,7 @@ extern long cm_Create(cm_scache_t *scp, clientchar_t *namep, long flags,
                       cm_attr_t *attrp, cm_scache_t **scpp,
                       cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
+extern long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, afs_uint32 locked);
 
 extern void cm_StatusFromAttr(struct AFSStoreStatus *statusp,
                               struct cm_scache *scp, struct cm_attr *attrp);

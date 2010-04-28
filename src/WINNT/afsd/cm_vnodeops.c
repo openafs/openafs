@@ -2804,10 +2804,16 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     return code;
 }       
 
-long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
+/*
+ * locked if TRUE means write-locked
+ * else the cm_scache_t rw must not be held
+ */
+long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, afs_uint32 locked)
 {
     long code;
 
+    if (locked)
+        lock_ReleaseWrite(&scp->rw);
     code = buf_CleanVnode(scp, userp, reqp);
     if (code == 0) {
         lock_ObtainWrite(&scp->rw);
@@ -2822,7 +2828,10 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 	    scp->flags &= ~(CM_SCACHEFLAG_OVERQUOTA | CM_SCACHEFLAG_OUTOFSPACE);
 	}
 
-        lock_ReleaseWrite(&scp->rw);
+        if (!locked)
+            lock_ReleaseWrite(&scp->rw);
+    } else if (locked) {
+        lock_ObtainWrite(&scp->rw);
     }
     return code;
 }
@@ -4847,9 +4856,11 @@ long cm_UnlockByKey(cm_scache_t * scp,
     if (scp->serverLock == LockWrite &&
         scp->exclusiveLocks == 0 &&
         scp->sharedLocks > 0) {
-
         /* The serverLock should be downgraded to LockRead */
         osi_Log0(afsd_logp, "  DOWNGRADE lock from LockWrite to LockRead");
+
+        /* Make sure there are no dirty buffers left. */
+        code = cm_FSync(scp, userp, reqp, TRUE);
 
         /* since scp->serverLock looked sane, we are going to assume
            that we have a valid server lock. */
@@ -4901,6 +4912,11 @@ long cm_UnlockByKey(cm_scache_t * scp,
               scp->exclusiveLocks == 0 &&
               scp->sharedLocks == 0) {
         /* The serverLock should be released entirely */
+
+        if (scp->serverLock == LockWrite) {
+            /* Make sure there are no dirty buffers left. */
+            code = cm_FSync(scp, userp, reqp, TRUE);
+        }
 
         code = cm_IntReleaseLock(scp, userp, reqp);
 
@@ -5052,6 +5068,9 @@ long cm_Unlock(cm_scache_t *scp,
         /* The serverLock should be downgraded to LockRead */
         osi_Log0(afsd_logp, "  DOWNGRADE lock from LockWrite to LockRead");
 
+        /* Make sure there are no dirty buffers left. */
+        code = cm_FSync(scp, userp, reqp, TRUE);
+
         /* Since we already had a lock, we assume that there is a
            valid server lock. */
         scp->lockDataVersion = scp->dataVersion;
@@ -5115,6 +5134,11 @@ long cm_Unlock(cm_scache_t *scp,
               scp->exclusiveLocks == 0 &&
               scp->sharedLocks == 0) {
         /* The serverLock should be released entirely */
+
+        if (scp->serverLock == LockWrite) {
+            /* Make sure there are no dirty buffers left. */
+            code = cm_FSync(scp, userp, reqp, TRUE);
+        }
 
         code = cm_IntReleaseLock(scp, userp, reqp);
 

@@ -6686,7 +6686,7 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_scache_t * scp = fidp->scp;
         cm_HoldSCache(scp);
         lock_ReleaseMutex(&fidp->mx);
-        code = cm_FSync(scp, userp, &req);
+        code = cm_FSync(scp, userp, &req, FALSE);
         cm_ReleaseSCache(scp);
     } else {
         lock_ReleaseMutex(&fidp->mx);
@@ -6834,7 +6834,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         }
         if (smb_AsyncStore != 2) {
             lock_ReleaseMutex(&fidp->mx);
-            code = cm_FSync(scp, userp, &req);
+            code = cm_FSync(scp, userp, &req, FALSE);
             lock_ObtainMutex(&fidp->mx);
         }
     }
