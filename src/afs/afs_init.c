@@ -391,7 +391,7 @@ afs_InitCacheInfo(register char *afile)
 	struct statvfs64 st;
 #elif	defined(AFS_HPUX102_ENV)
 	struct k_statvfs st;
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
 	struct statvfs st;
 #elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;

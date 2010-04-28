@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD_ENV)
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */

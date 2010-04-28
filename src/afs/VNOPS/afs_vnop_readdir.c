@@ -29,10 +29,14 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
+#if defined(AFS_NBSD40_ENV)
+#include <ufs/ufs/ufs_extern.h> /* direct_pool */
+#endif
 
-
-#if	defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX1122_ENV)
 #define DIRPAD 7
+#elif defined(AFS_NBSD40_ENV)
+#define DIRPAD 4
 #else
 #define DIRPAD 3
 #endif
@@ -99,6 +103,7 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
     /* never get here */
 }
 
+
 #if !defined(AFS_LINUX20_ENV)
 /* Changes to afs_readdir which affect dcache or vcache handling or use of
  * bulk stat data should also be reflected in the Linux specific verison of
@@ -141,6 +146,11 @@ struct min_direct {		/* miniature direct structure */
     u_short d_reclen;
     u_char d_type;
     u_char d_namlen;
+#elif defined(AFS_NBSD40_ENV)
+    ino_t d_fileno;		/* file number of entry */
+    uint16_t d_reclen;		/* length of this record */
+    uint16_t d_namlen;		/* length of string in d_name */
+    uint8_t  d_type; 		/* file type, see below */
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     afs_uint32 d_fileno;
     u_short d_reclen;
@@ -490,20 +500,30 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 		    auio, code);
 #else /* AFS_SGI_ENV */
     AFS_MOVE_UNLOCK();
-    AFS_UIOMOVE((char *)&sdirEntry, sizeof(sdirEntry), UIO_READ, auio, code);
-
+#if defined(AFS_NBSD40_ENV)
+    {
+	struct dirent *dp;
+	dp = (struct dirent *) pool_get(&ufs_direct_pool, PR_WAITOK);
+	dp->d_ino =  (Volume << 16) + ntohl(Vnode);
+	FIXUPSTUPIDINODE(dp->d_ino);
+	dp->d_reclen = rlen;
+	strcpy(dp->d_name, de->name);
+	AFS_UIOMOVE((char*) dp, sizeof(struct dirent), UIO_READ, auio, code);
+	pool_put(&ufs_direct_pool, dp);
+    }
+#else
+    AFS_UIOMOVE((char *) &sdirEntry, sizeof(sdirEntry), UIO_READ, auio, code);
     if (code == 0) {
 	AFS_UIOMOVE(de->name, slen, UIO_READ, auio, code);
     }
-
     /* pad out the remaining characters with zeros */
     if (code == 0) {
 	AFS_UIOMOVE(bufofzeros, ((slen + 1 + DIRPAD) & ~DIRPAD) - slen,
 		    UIO_READ, auio, code);
     }
+#endif
     AFS_MOVE_LOCK();
 #endif /* AFS_SGI_ENV */
-
     /* pad out the difference between rlen and slen... */
     if (DIRSIZ_LEN(slen) < rlen) {
 	AFS_MOVE_UNLOCK();
@@ -768,7 +788,6 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	    goto dirend;
 	}
 	/* by here nde is set */
-
 	/* Do we have enough user space to carry out our mission? */
 #if defined(AFS_SGI_ENV)
 	n_slen = strlen(nde->name) + 1;	/* NULL terminate */

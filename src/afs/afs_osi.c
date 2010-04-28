@@ -86,7 +86,8 @@ osi_Init(void)
 #endif
 #if defined(AFS_XBSD_ENV)
 	/* Can't just invent one, must use crget() because of mutex */
-	afs_osi_credp = crdup(osi_curcred());
+	afs_osi_credp =
+	  crdup(osi_curcred());
 #else
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 #if defined(AFS_LINUX26_ENV)
@@ -286,7 +287,7 @@ shutdown_osi(void)
     }
 }
 
-#ifndef AFS_OBSD_ENV
+#if !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD40_ENV)
 int
 afs_osi_suser(void *cr)
 {

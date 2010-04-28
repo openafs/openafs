@@ -10,17 +10,25 @@
 /*
  * rx_kmutex.h - mutex and condition variable macros for kernel environment.
  *
- * MACOS implementation.
+ * Based to the degree possible on FreeBSD implementation (which is by
+ * Garrett Wollman (?) and Jim Rees).  I couldn't rework it as I did for
+ * FreeBSD, because NetBSD doesn't have anything like FreeBSD's  new
+ * locking primitives.  So anyway, these are potentially heavier locks than
+ * the *ahem* locking Jim had in the OpenBSD port, although it looks as
+ * if struct lock is evolving into an adaptive mutex implementation (see
+ * LOCK(9)), which should be reasonable for the code we have today.  The
+ * available optimization would be to replace such a lock with a simple_lock
+ * any place we only consider the current CPU, and could not sleep
+ * (Matt).
  */
 
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
 #include <sys/lock.h>
-#include <kern/thread.h>
-#include <sys/vm.h>
 
-#define RX_ENABLE_LOCKS         1
+/* You can't have AFS_GLOBAL_SUNLOCK and not RX_ENABLE_LOCKS */
+#define RX_ENABLE_LOCKS 1
 #define AFS_GLOBAL_RXLOCK_KERNEL
 
 /*
@@ -28,80 +36,96 @@
  *
  * In Digital Unix (OSF/1), we use something akin to the ancient sleep/wakeup
  * mechanism.  The condition variable itself plays no role; we just use its
- * address as a convenient unique number.
- * 
- * XXX in darwin, both mach and bsd facilities are available. Should really
- * stick to one or the other (but mach locks don't have a _try.....)
+ * address as a convenient unique number.  NetBSD has some improvements in
+ * its versions of these mechanisms.
  */
-#define CV_INIT(cv,a,b,c)
+#define CV_INIT(cv, a, b, c)
 #define CV_DESTROY(cv)
 #define CV_WAIT(cv, lck)    { \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-	                        assert_wait((event_t)(cv), 0);  \
-	                        MUTEX_EXIT(lck);        \
-	                        thread_block(0);                \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-	                        MUTEX_ENTER(lck); \
-	                    }
+	struct simplelock slock = SIMPLELOCK_INITIALIZER;		\
+	simple_lock(&slock);						\
+	int glocked = ISAFS_GLOCK();					\
+	if (glocked)							\
+	    AFS_GUNLOCK();						\
+	MUTEX_EXIT(lck);						\
+	ltsleep(cv, PSOCK, "afs_rx_cv_wait", 0, &slock);		\
+	if (glocked)							\
+	    AFS_GLOCK();						\
+	MUTEX_ENTER(lck);						\
+	simple_unlock(&slock);						\
+    }
 
-#define CV_TIMEDWAIT(cv,lck,t)  { \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-	                        assert_wait((event_t)(cv), 0);  \
-	                        thread_set_timer(t, NSEC_PER_SEC/hz);   \
-	                        MUTEX_EXIT(lck);        \
-	                        thread_block(0);                \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-	                        MUTEX_ENTER(lck);       \
-				}
+#define CV_TIMEDWAIT(cv, lck, t)  {					\
+	struct simplelock slock = SIMPLELOCK_INITIALIZER;		\
+	simple_lock(&slock);						\
+	int glocked = ISAFS_GLOCK();					\
+	if (glocked)							\
+	    AFS_GUNLOCK();						\
+	MUTEX_EXIT(lck);						\
+	tsleep(cv, PSOCK, "afs_rx_cv_timedwait", t, &slock);		\
+	if (glocked)							\
+	    AFS_GLOCK();						\
+	MUTEX_ENTER(lck);						\
+	simple_unlock(&slock);						\
+    }
 
-#define CV_SIGNAL(cv)           thread_wakeup_one((event_t)(cv))
-#define CV_BROADCAST(cv)        thread_wakeup((event_t)(cv))
+#define CV_SIGNAL(cv)           wakeup_one(cv)
+#define CV_BROADCAST(cv)        wakeup(cv)
 
-typedef struct {
-    struct lock__bsd__ lock;
-    thread_t owner;
-} afs_kmutex_t;
+/* #define osi_rxWakeup(cv)        wakeup(cv) */
 typedef int afs_kcondvar_t;
 
-#define osi_rxWakeup(cv)        thread_wakeup((event_t)(cv))
+typedef struct {
+    struct lock lock;
+    struct lwp *owner;
+} afs_kmutex_t;
 
-#define LOCK_INIT(a,b) \
-    do { \
-	lockinit(&(a)->lock,PSOCK, "afs rx lock", 0, 0); \
-	(a)->owner = (thread_t)0; \
-    } while(0);
 #define MUTEX_INIT(a,b,c,d) \
     do { \
-	lockinit(&(a)->lock,PSOCK, "afs rx mutex", 0, 0); \
-	(a)->owner = (thread_t)0; \
+	lockinit(&(a)->lock, PSOCK, "afs rx mutex", 0, 0); \
+	(a)->owner = 0; \
     } while(0);
 #define MUTEX_DESTROY(a) \
     do { \
-	(a)->owner = (thread_t)-1; \
+	(a)->owner = (struct lwp *)-1; \
     } while(0);
+
+#if defined(LOCKDEBUG)
 #define MUTEX_ENTER(a) \
     do { \
-	lockmgr(&(a)->lock, LK_EXCLUSIVE, 0, current_proc()); \
-	osi_Assert((a)->owner == (thread_t)0); \
-	(a)->owner = current_thread(); \
+	_lockmgr(&(a)->lock, LK_EXCLUSIVE, 0, __FILE__, __LINE__); \
+	osi_Assert((a)->owner == 0); \
+	(a)->owner = curlwp; \
     } while(0);
 #define MUTEX_TRYENTER(a) \
-    ( lockmgr(&(a)->lock, LK_EXCLUSIVE|LK_NOWAIT, 0, current_proc()) ? 0 : ((a)->owner = current_thread(), 1) )
-#define xMUTEX_TRYENTER(a) \
-    ( osi_Assert((a)->owner == (thread_t)0), (a)->owner = current_thread(), 1)
+    ( _lockmgr(&(a)->lock, LK_EXCLUSIVE | LK_NOWAIT, 0, __FILE__, __LINE__) ? 0	\
+      : ((a)->owner = curlwp, 1) )
 #define MUTEX_EXIT(a) \
     do { \
-	osi_Assert((a)->owner == current_thread()); \
-	(a)->owner = (thread_t)0; \
-	lockmgr(&(a)->lock, LK_RELEASE, 0, current_proc()); \
+	osi_Assert((a)->owner == curlwp); \
+	(a)->owner = 0; \
+	_lockmgr(&(a)->lock, LK_RELEASE, 0, __FILE__, __LINE__); \
     } while(0);
-
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == current_thread())
-
-#undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
+#else
+#define MUTEX_ENTER(a) \
+    do { \
+	lockmgr(&(a)->lock, LK_EXCLUSIVE, 0); \
+	osi_Assert((a)->owner == 0); \
+	(a)->owner = curlwp; \
+    } while(0);
+#define MUTEX_TRYENTER(a) \
+    ( lockmgr(&(a)->lock, LK_EXCLUSIVE | LK_NOWAIT, 0) ? 0 \
+      : ((a)->owner = curlwp, 1) )
+#define MUTEX_EXIT(a) \
+    do { \
+	osi_Assert((a)->owner == curlwp); \
+	(a)->owner = 0; \
+	lockmgr(&(a)->lock, LK_RELEASE, 0); \
+    } while(0);
+#endif /* LOCKDEBUG */
+#define MUTEX_ISMINE(a) \
+    (lockstatus(a) == LK_EXCLUSIVE)
+#define MUTEX_LOCKED(a) \
+    (lockstatus(a) == LK_EXCLUSIVE)
 
 #endif /* _RX_KMUTEX_H_ */

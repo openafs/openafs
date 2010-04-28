@@ -1566,6 +1566,13 @@ afs_SetServerPrefs(struct srvAddr *sa)
 	for (ifa = in_ifaddr.tqh_first; ifa; ifa = ifa->ia_list.tqe_next)
 	    afsi_SetServerIPRank(sa, ifa);
     }
+#elif defined(AFS_NBSD40_ENV)
+     {
+       extern struct in_ifaddrhead in_ifaddrhead;
+       struct in_ifaddr *ifa;
+       for (ifa = in_ifaddrhead.tqh_first; ifa; ifa = ifa->ia_list.tqe_next)
+           afsi_SetServerIPRank(sa, ifa);
+     }
 #else
     {
 	struct in_ifaddr *ifa;

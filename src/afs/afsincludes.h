@@ -21,7 +21,7 @@
 #include "afs/stds.h"
 #ifdef	AFS_AIX_ENV
 #include "osi_vfs.h"
-#elif defined(AFS_HPUX_ENV)
+#elif defined(AFS_HPUX_ENV) || defined(AFS_NBSD_ENV)
 #include "osi_vfs.h"
 #endif
 #if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)

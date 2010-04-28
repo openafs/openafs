@@ -1015,7 +1015,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     }
     vcachegen++;
     /* it should now be safe to drop the xvcache lock */
-#ifdef AFS_OBSD_ENV
+#if defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
     afs_obsd_getnewvnode(tvc);	/* includes one refcount */
@@ -1895,7 +1895,6 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	goto loop;
 #endif
     }
-
     if (tvc) {
 	if (cached)
 	    *cached = 1;
@@ -2006,6 +2005,14 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	uvm_vnp_uncache(vp);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, 0, curproc);
+#elif defined(AFS_NBSD40_ENV)
+	iheldthelock = VOP_ISLOCKED(vp);
+	if (!iheldthelock) {
+	    VOP_LOCK(vp, LK_EXCLUSIVE | LK_RETRY);
+	}
+	uvm_vnp_uncache(vp);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, 0);
 #endif
     }
 #endif

@@ -86,7 +86,11 @@ int afs_ustrategy(register struct buf *abp)
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
 #endif
+#if defined(AFS_NBSD40_ENV)
+	UIO_SETUP_SYSSPACE(&tuio);
+#else
 	tuio.afsio_seg = AFS_UIOSYS;
+#endif
 #ifdef AFS_UIOFMODE
 	tuio.afsio_fmode = 0;
 #endif
@@ -152,7 +156,11 @@ int afs_ustrategy(register struct buf *abp)
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
 #endif
+#if defined(AFS_NBSD40_ENV)
+	UIO_SETUP_SYSSPACE(&tuio);
+#else
 	tuio.afsio_seg = AFS_UIOSYS;
+#endif
 #ifdef AFS_UIOFMODE
 	tuio.afsio_fmode = 0;
 #endif

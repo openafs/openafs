@@ -247,9 +247,17 @@ afsd_call_syscall(long param1, long param2, long param3, long param4, long param
 		param5, param6, param7);
 # endif /* !AFS_DARWIN80_ENV */
 
-    if (afsd_debug)
+    if (afsd_debug) {
+#ifdef AFS_NBSD40_ENV
+        char *s = strerror(errno);
+        printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
+                param1, error, errno, s);
+#else
 	printf("SScall(%d, %d, %ld)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
 	       error);
+#endif
+    }
+
     return (error);
 }
 #else /* !AFS_SGI_ENV && !AFS_AIX32_ENV */

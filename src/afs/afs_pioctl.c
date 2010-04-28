@@ -18,6 +18,10 @@
 #ifdef AFS_FBSD50_ENV
 #include "h/sysproto.h"
 #endif
+#ifdef AFS_NBSD40_ENV
+#include <sys/ioctl.h>
+#include <sys/ioccom.h>
+#endif
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/vice.h"
@@ -818,7 +822,11 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
+#   if defined(AFS_NBSD40_ENV)
+     fdp = p->l_proc->p_fd;
+#   else
     fdp = p->p_fd;
+#endif
     if ((u_int) uap->fd >= fdp->fd_nfiles
 	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
 	return EBADF;
@@ -861,6 +869,9 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 	return ioctl(p, uap);
 # elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
+# elif defined(AFS_NBSD_ENV)
+           struct lwp *l = osi_curproc();
+           code = sys_ioctl(l, uap, retval);
 # endif
     }
 
@@ -974,7 +985,7 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
-# ifdef AFS_DARWIN80_ENV
+# if defined(AFS_DARWIN80_ENV) || defined(AFS_NBSD40_ENV)
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     kauth_cred_get()));
@@ -1863,6 +1874,9 @@ DECL_PIOCTL(PSetTokens)
 # elif defined(AFS_FBSD_ENV)
 	struct thread *p = curthread;
 	char *procname = p->td_proc->p_comm;
+# elif defined(AFS_NBSD40_ENV)
+	afs_proc_t *p = curproc;	/* XXX */
+	char *procname = p->l_proc->p_comm;
 # else
 	afs_proc_t *p = curproc;	/* XXX */
 	char *procname = p->p_comm;

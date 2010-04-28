@@ -17,6 +17,10 @@
 #include <sys/condvar.h>
 #endif
 
+#ifdef AFS_NBSD_ENV
+#include <sys/lock.h>
+#endif
+
 #ifdef AFS_LINUX20_ENV
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
@@ -116,7 +120,7 @@ struct afs_osi_WaitHandle {
 /*
  * Alloc declarations.
  */
-#if !defined(AFS_OBSD44_ENV)
+#if !defined(AFS_OBSD44_ENV) && !defined(AFS_NBSD_ENV)
 #define afs_osi_Alloc_NoSleep afs_osi_Alloc
 #endif
 

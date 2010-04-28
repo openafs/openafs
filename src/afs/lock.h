@@ -125,6 +125,10 @@ typedef unsigned int afs_lock_tracker_t;
 typedef unsigned int afs_lock_tracker_t;
 # define MyPidxx (curproc->p_pid )
 # define MyPidxx2Pid(x) (x)
+#elif defined(AFS_NBSD40_ENV)
+typedef unsigned int afs_lock_tracker_t;
+#define MyPidxx osi_getpid() /* XXX could generalize this (above) */
+#define MyPidxx2Pid(x) (x)
 #else
 typedef unsigned int afs_lock_tracker_t;
 # define MyPidxx (u.u_procp->p_pid )

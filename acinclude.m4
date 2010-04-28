@@ -1117,6 +1117,8 @@ else
 		*_fbsd_*)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/${HOST_CPU}/compile/GENERIC"
 			;;
+		*_nbsd*)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/arch/${HOST_CPU}/compile/GENERIC"
 	esac
 fi
 

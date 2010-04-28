@@ -9,10 +9,14 @@
 #define AFS_64BIT_CLIENT 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
-#define AFS_SYSCALL 210
+#define AFS_SYSCALL 318 /* 210 */
 
+#if 0
+/* including this file before sysincludes.h is canonical, but
+ * NBSD40's mount.h defines MOUNT_AFS */
 #ifndef	MOUNT_AFS
 #define	MOUNT_AFS AFS_MOUNT_AFS
+#endif
 #endif
 
 #define AFS_XBSD_ENV 1		/* {Free,Open,Net}BSD */
@@ -47,10 +51,8 @@
 #define ICHG 0x0040
 #define IMOD 0x0080
 
-#define IN_LOCK(ip)     lockmgr(&ip->i_lock, LK_EXCLUSIVE, \
-                                NULL, curproc)
-#define IN_UNLOCK(ip)   lockmgr(&ip->i_lock, LK_RELEASE, \
-                                NULL, curproc)
+#define RXK_LISTENER_ENV      1
+
 
 #include <afs/afs_sysnames.h>
 
@@ -63,6 +65,14 @@
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
+#define AFS_GLOBAL_SUNLOCK        1
+#define	AFS_SHORTGID	1	/* are group id's short? */
+#endif
+
+/* apparently not in 40 */
+#define inline
+
+#ifdef _KERNEL_DEPRECATED
 #define AFS_GLOBAL_SUNLOCK        1
 #define	AFS_VFS34	1	/* What is VFS34??? */
 #define	AFS_SHORTGID	1	/* are group id's short? */
@@ -112,7 +122,7 @@ enum vcexcl { NONEXCL, EXCL };
 #endif /* KERNEL */
 
 #endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ && !defined(IGNORE_STDS_H) */ 
-#endif /* _KERNEL */
+#endif /* _KERNEL_DEPRECATED */
 
 #else /* !defined(UKERNEL) */
 

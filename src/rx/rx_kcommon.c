@@ -685,7 +685,7 @@ rxi_GetIFInfo(void)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
 	if (i >= ADDRSPERSITE)
 	    break;
-#elif defined(AFS_OBSD_ENV)
+#elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
     for (ifn = ifnet.tqh_first; i < ADDRSPERSITE && ifn != NULL;
 	 ifn = ifn->if_list.tqe_next) {
 #else
@@ -696,7 +696,7 @@ rxi_GetIFInfo(void)
 	TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
 	    if (i >= ADDRSPERSITE)
 		break;
-#elif defined(AFS_OBSD_ENV)
+#elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
 	for (ifad = ifn->if_addrlist.tqh_first;
 	     ifad != NULL && i < ADDRSPERSITE;
 	     ifad = ifad->ifa_list.tqe_next) {
@@ -879,6 +879,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #elif defined(AFS_DARWIN80_ENV)
     code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
+#elif defined(AFS_NBSD40_ENV)
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, osi_curproc());
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
 #endif /* AFS_HPUX102_ENV */
@@ -902,8 +904,11 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     memcpy((caddr_t) bindnam->b_rptr + SO_MSGOFFSET, (caddr_t) & myaddr,
 	   addrsize);
     bindnam->b_wptr = bindnam->b_rptr + (addrsize + SO_MSGOFFSET + 1);
-
+#if defined(AFS_NBSD40_ENV)
+    code = sobind(newSocket, bindnam, addrsize, osi_curproc());
+#else
     code = sobind(newSocket, bindnam, addrsize);
+#endif
     if (code) {
 	soclose(newSocket);
 #if !defined(AFS_HPUX1122_ENV)
@@ -970,7 +975,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
-#elif defined(AFS_OBSD44_ENV)
+#elif defined(AFS_OBSD44_ENV) || defined(AFS_NBSD40_ENV)
     code = sobind(newSocket, nam, osi_curproc());
 #else
     code = sobind(newSocket, nam);
