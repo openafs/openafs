@@ -442,17 +442,6 @@ AC_DEFUN([LINUX_KMEM_CACHE_INIT], [
 ])
 
 
-AC_DEFUN([LINUX_SYSCTL_TABLE_CHECKING], [
-  AC_CHECK_LINUX_BUILD([for sysctl table checking],
-		       [ac_cv_linux_sysctl_table_checking],
-		       [#include <linux/sysctl.h>],
-		       [extern int sysctl_check_table(int) __attribute__((weak));
-			sysctl_check_table(NULL);],
-		       [SYSCTL_TABLE_CHECKING],
-		       [define if your kernel has sysctl table checking])
-])
-
-
 AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
   AC_CHECK_LINUX_BUILD([if proc_root_fs is defined and exported],
 		       [ac_cv_linux_exports_proc_root_fs],
