@@ -275,7 +275,7 @@ kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
 
 #ifdef HAVE_TRY_TO_FREEZE
 static inline void
-afs_try_to_freeze() {
+afs_try_to_freeze(void) {
 # ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
     try_to_freeze(PF_FREEZE);
 # else
@@ -284,7 +284,7 @@ afs_try_to_freeze() {
 }
 #else
 static inline void
-afs_try_to_freeze() {
+afs_try_to_freeze(void) {
 # ifdef CONFIG_PM
     if (current->flags & PF_FREEZE) {
 	refrigerator(PF_FREEZE);
