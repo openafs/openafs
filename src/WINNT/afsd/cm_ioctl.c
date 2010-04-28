@@ -74,7 +74,7 @@ cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
 
-    code = buf_CleanVnode(scp, userp, reqp);
+    code = cm_FSync(scp, userp, reqp, FALSE);
     if (!code) {
         lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
