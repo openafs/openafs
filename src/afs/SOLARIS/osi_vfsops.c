@@ -96,6 +96,20 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
 	AFS_GUNLOCK();
 	return ENOTSUP;
     }
+
+    /* We should have one reference from the caller, and one reference for the
+     * root vnode; any more and someone is still referencing something */
+    if (afsp->vfs_count > 2) {
+	AFS_GUNLOCK();
+	return EBUSY;
+    }
+
+    /* The root vnode should have one ref for the mount; any more, and someone
+     * else is using the root vnode */
+    if (afs_globalVp && VREFCOUNT_GT(afs_globalVp, 1)) {
+	AFS_GUNLOCK();
+	return EBUSY;
+    }
 #endif /* AFS_SUN58_ENV */
 
     afs_globalVFS = 0;

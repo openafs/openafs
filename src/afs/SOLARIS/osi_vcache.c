@@ -67,4 +67,11 @@ osi_PostPopulateVCache(struct vcache *avc) {
     AFSTOV(avc)->v_op = afs_ops;
     AFSTOV(avc)->v_vfsp = afs_globalVFS;
     vSetType(avc, VREG);
+
+#ifdef AFS_SUN58_ENV
+    /* Normally we do this in osi_vnhold when we notice the ref count went from
+     * 0 -> 1. But if we just setup or reused a vcache, we set the refcount to
+     * 1 directly. So, we must explicitly VFS_HOLD here. */
+    VFS_HOLD(afs_globalVFS);
+#endif
 }
