@@ -1084,6 +1084,14 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->vmh = tvc->segid = NULL;
     tvc->credp = NULL;
 #endif
+
+#ifdef AFS_SUN58_ENV
+    /* Normally we do this in osi_vnhold when we notice the ref count went from
+     * 0 -> 1. But here we just set the refcount to 1, so we need to explicitly
+     * VFS_HOLD here. */
+    VFS_HOLD(afs_globalVFS);
+#endif /* AFS_SUN58_ENV */
+
 #ifdef AFS_BOZONLOCK_ENV
 #if	defined(AFS_SUN5_ENV)
     rw_init(&tvc->rwlock, "vcache rwlock", RW_DEFAULT, NULL);

@@ -1923,6 +1923,10 @@ afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
 	avc->opens = avc->execsOrWriters = 0;
 
     afs_InactiveVCache(avc, acred);
+
+#ifdef AFS_SUN58_ENV
+    VFS_RELE(afs_globalVFS);
+#endif
 }
 
 void
