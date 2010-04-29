@@ -1862,23 +1862,11 @@ DECL_PIOCTL(PSetTokens)
     if (set_parent_pag) {
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-# if defined(AFS_DARWIN_ENV)
-	afs_proc_t *p = current_proc(); /* XXX */
 	char procname[256];
-	proc_selfname(procname, 256);
-# elif defined(AFS_FBSD_ENV)
-	struct thread *p = curthread;
-	char *procname = p->td_proc->p_comm;
-# elif defined(AFS_NBSD40_ENV)
-	afs_proc_t *p = curproc;	/* XXX */
-	char *procname = p->l_proc->p_comm;
-# else
-	afs_proc_t *p = curproc;	/* XXX */
-	char *procname = p->p_comm;
-# endif
+	osi_procname(procname, 256);
 	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
 		     MyPidxx2Pid(MyPidxx), procname);
-	if (!setpag(p, acred, -1, &pag, 1)) {
+	if (!setpag(osi_curproc(), acred, -1, &pag, 1)) {
 #else
 	if (!setpag(acred, -1, &pag, 1)) {
 #endif

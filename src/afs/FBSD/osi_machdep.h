@@ -108,6 +108,7 @@ extern void osi_fbsd_free(void *p);
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
 #define osi_curcred()	(curthread->td_ucred)
+#define osi_curproc()   (curthread)
 #define osi_getpid()	(curthread->td_proc->p_pid)
 #define simple_lock(x)	mtx_lock(x)
 #define simple_unlock(x) mtx_unlock(x)
