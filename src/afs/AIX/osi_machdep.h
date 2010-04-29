@@ -31,7 +31,7 @@ extern long time;
 
 #define afs_bufferpages v.v_bufhw
 
-#define osi_vnhold(avc, r) do { (avc)->vrefCount++; } while (0)
+#define osi_vnhold(avc, r) do { VN_HOLD(AFSTOV(avc)); } while (0)
 #undef AFS_FAST_HOLD
 #define AFS_FAST_HOLD(vp) (vp)->vrefCount++
 #undef AFS_FAST_RELE

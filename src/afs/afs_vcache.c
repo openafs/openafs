@@ -1119,7 +1119,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
     /* Hold it for the LRU (should make count 2) */
-    VN_HOLD(AFSTOV(tvc));
+    AFS_FAST_HOLD(tvc);
 #else /* AFS_OSF_ENV */
 #if !(defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV))
     VREFCOUNT_SET(tvc, 1);	/* us */

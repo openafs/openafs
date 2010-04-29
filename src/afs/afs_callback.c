@@ -460,7 +460,7 @@ loop1:
 			}
 #endif
 #if     defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-			VN_HOLD(AFSTOV(tvc));
+			AFS_FAST_HOLD(tvc);
 #else
 #ifdef AFS_DARWIN80_ENV
 			vp = AFSTOV(tvc);
@@ -554,7 +554,7 @@ loop2:
 		    }
 #endif
 #if     defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-		    VN_HOLD(AFSTOV(tvc));
+		    AFS_FAST_HOLD(tvc);
 #else
 #ifdef AFS_DARWIN80_ENV
 		    vp = AFSTOV(tvc);

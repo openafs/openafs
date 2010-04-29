@@ -462,7 +462,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 	    VREF(AFSTOV(avc));
 #else
-	    VN_HOLD(AFSTOV(avc));
+	    AFS_FAST_HOLD(avc);
 #endif
 
 	    /* We'll only try this once. If it fails, just release the vnode.

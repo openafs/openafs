@@ -1059,7 +1059,7 @@ struct memCacheEntry {
 	avc->states |= CCore;	/* causes close to be called later */ \
                                                                       \
 	/* The cred and vnode holds will be released in afs_FlushActiveVcaches */  \
-	VN_HOLD(AFSTOV(avc));	/* So it won't disappear */           \
+	AFS_FAST_HOLD(avc);	/* So it won't disappear */           \
 	CRKEEP(avc, acred); /* Should use a better place for the creds */ \
     }                                                                         \
     else {                                                                    \

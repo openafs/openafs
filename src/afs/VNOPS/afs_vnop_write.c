@@ -795,7 +795,7 @@ afs_closex(register struct file *afd)
 		afs_PutFakeStat(&fakestat);
 		return code;
 	    }
-	    VN_HOLD(AFSTOV(tvc));
+	    AFS_FAST_HOLD(tvc);
 	    flags = afd->f_flag & (FSHLOCK | FEXLOCK);
 	    afd->f_flag &= ~(FSHLOCK | FEXLOCK);
 	    code = vno_close(afd);
