@@ -24,7 +24,9 @@
 #endif
 #include <sys/kobj.h>
 
-
+#ifdef AFS_SUN58_ENV
+# include <sys/mount.h>
+#endif
 
 struct vfs *afs_globalVFS = 0;
 struct vcache *afs_globalVp = 0;
@@ -88,6 +90,14 @@ afs_unmount(struct vfs *afsp, struct AFS_UCRED *credp)
         AFS_GUNLOCK();
         return (EPERM);
     }
+
+#ifdef AFS_SUN58_ENV
+    if (flag & MS_FORCE) {
+	AFS_GUNLOCK();
+	return ENOTSUP;
+    }
+#endif /* AFS_SUN58_ENV */
+
     afs_globalVFS = 0;
     afs_shutdown();
 
