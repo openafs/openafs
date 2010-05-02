@@ -893,7 +893,6 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 {
     fschar_t *cellNamep = NULL;
     fschar_t *volNamep = NULL;
-    int tlen;
     afs_uint32 code;
     fschar_t *cp;
     fschar_t *mpNamep;
@@ -918,7 +917,6 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     mpNamep = scp->mountPointStringp;
     if (!mpNamep[0])
 	return CM_ERROR_NOSUCHPATH;
-    tlen = cm_FsStrLen(scp->mountPointStringp);
     mtType = *scp->mountPointStringp;
 
     cp = cm_FsStrChr(mpNamep, _FS(':'));
