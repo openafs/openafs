@@ -1891,12 +1891,16 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
-	if (code || blob.out_size != sizeof(*status)) {
+        /*
+         * The response is VolumeStatus, volume name, offline message, and motd
+         */
+	if (code || blob.out_size < sizeof(*status)) {
 	    Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
-	status = (VolumeStatus *)space;
+
+        status = (VolumeStatus *)space;
 	if (status->MaxQuota) 
             quotaPct = ((((double)status->BlocksInUse)/status->MaxQuota) * 100.0);
 	else 
