@@ -219,7 +219,7 @@ void cm_InitFakeRootDir() {
     if (cm_fakeDirSize != dirSize) {
         if (cm_FakeRootDir)
             free(cm_FakeRootDir);
-        cm_FakeRootDir = malloc(dirSize);
+        cm_FakeRootDir = calloc(dirSize, 1);
         cm_fakeDirSize = dirSize;
     }
 
