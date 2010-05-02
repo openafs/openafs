@@ -1095,6 +1095,12 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
         if (!cpath)
             return CM_ERROR_NOSUCHPATH;
+
+        if (cm_getLocalMountPointChange()) {	// check for changes
+            cm_clearLocalMountPointChange();    // clear the changefile
+            cm_reInitLocalMountPoints();	// start reinit
+        }
+
         code = cm_NameI(cm_data.rootSCachep, cpath,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                         cm_rootUserp, NULL, &req, &scp);
@@ -1322,6 +1328,12 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
         cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
         if (!cpath)
             return CM_ERROR_NOSUCHPATH;
+
+        if (cm_getLocalMountPointChange()) {	// check for changes
+            cm_clearLocalMountPointChange();    // clear the changefile
+            cm_reInitLocalMountPoints();	// start reinit
+        }
+
         code = cm_NameI(cm_data.rootSCachep, cpath,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                         cm_rootUserp, NULL, &req, &scp);
