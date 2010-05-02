@@ -1243,6 +1243,10 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     if ( filename[0] == '\0' || destination[0] == '\0' )
         return CM_ERROR_INVAL;
 
+    /* Do not create the symlink if the name ends in a dot */
+    if ( filename[strlen(filename)-1] == '.')
+        return CM_ERROR_INVAL;
+
     fullname[0] = '\0';
     if (filename[0] == '.') {
         cm_GetCell_Gen(&filename[1], fullname, CM_FLAG_CREATE);
