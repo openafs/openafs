@@ -1230,8 +1230,10 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     DWORD dwType, dwSize;
     DWORD dwSymlinks;
     DWORD dwIndex;
+    afs_uint32 code = 0;
 
-    /* before adding, verify the filename.  If it is already in use, either as 
+    /*
+     * before adding, verify the filename.  If it is already in use, either as
      * as mount point or a cellname, do not permit the creation of the symlink.
      */
     osi_Log2(afsd_logp,"Freelance Add Symlink request: filename=%s destination=%s",
@@ -1244,17 +1246,23 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     fullname[0] = '\0';
     if (filename[0] == '.') {
         cm_GetCell_Gen(&filename[1], fullname, CM_FLAG_CREATE);
-        if (cm_stricmp_utf8(&filename[1],fullname) == 0)
-            return CM_ERROR_EXISTS;
+        if (cm_stricmp_utf8(&filename[1],fullname) == 0) {
+            code = CM_ERROR_EXISTS;
+            goto done;
+        }
     } else {
         cm_GetCell_Gen(filename, fullname, CM_FLAG_CREATE);
-        if (cm_stricmp_utf8(filename,fullname) == 0)
-            return CM_ERROR_EXISTS;
+        if (cm_stricmp_utf8(filename,fullname) == 0) {
+            code = CM_ERROR_EXISTS;
+            goto done;
+        }
     }
 
     if ( cm_FreelanceMountPointExists(filename, 0) ||
-         cm_FreelanceSymlinkExists(filename, 0) )
-        return CM_ERROR_EXISTS;
+         cm_FreelanceSymlinkExists(filename, 0) ) {
+        code = CM_ERROR_EXISTS;
+        goto done;
+    }
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
@@ -1317,34 +1325,35 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     cm_noteLocalMountPointChange(TRUE);
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
+  done:
     if (fidp) {
         cm_req_t req;
-        afs_uint32 code;
         cm_scache_t *scp;
         clientchar_t *cpath;
 
         cm_InitReq(&req);
 
         cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
-        if (!cpath)
-            return CM_ERROR_NOSUCHPATH;
+        if (!cpath) {
+            code = CM_ERROR_NOSUCHPATH;
+        } else {
+            if (cm_getLocalMountPointChange()) {	// check for changes
+                cm_clearLocalMountPointChange();    // clear the changefile
+                cm_reInitLocalMountPoints();	// start reinit
+            }
 
-        if (cm_getLocalMountPointChange()) {	// check for changes
-            cm_clearLocalMountPointChange();    // clear the changefile
-            cm_reInitLocalMountPoints();	// start reinit
+            code = cm_NameI(cm_data.rootSCachep, cpath,
+                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
+                             cm_rootUserp, NULL, &req, &scp);
+            free(cpath);
+            if (code == 0) {
+                *fidp = scp->fid;
+                cm_ReleaseSCache(scp);
+            }
         }
-
-        code = cm_NameI(cm_data.rootSCachep, cpath,
-                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
-                        cm_rootUserp, NULL, &req, &scp);
-        free(cpath);
-        if (code)
-            return code;
-        *fidp = scp->fid;
-        cm_ReleaseSCache(scp);
     }
 
-    return 0;
+    return code;
 }
 
 long cm_FreelanceRemoveSymlink(char *toremove)
