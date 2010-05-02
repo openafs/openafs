@@ -1053,6 +1053,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
     int getroot;
     normchar_t *nnamep = NULL;
     fschar_t *fnamep = NULL;
+    size_t fnlen;
 
     *outScpp = NULL;
 
@@ -1080,6 +1081,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
         goto done;
     }
 
+retry_lookup:
     if (flags & CM_FLAG_NOMOUNTCHASE) {
         /* In this case, we should go and call cm_Dir* functions
            directly since the following cm_ApplyDir() function will
@@ -1117,7 +1119,8 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
                 goto haveFid;
             }
             
-            return CM_ERROR_BPLUS_NOMATCH;
+            code = CM_ERROR_BPLUS_NOMATCH;
+            goto notfound;
         }
 #endif
     }
@@ -1137,7 +1140,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
      * that we stopped early, probably because we found the entry we're
      * looking for.  Any other non-zero code is an error.
      */
-    if (code && code != CM_ERROR_STOPNOW) {
+    if (code && code != CM_ERROR_STOPNOW && code != CM_ERROR_BPLUS_NOMATCH) {
         /* if the cm_scache_t we are searching in is not a directory 
          * we must return path not found because the error 
          * is to describe the final component not an intermediary
@@ -1151,6 +1154,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
         goto done;
     }
 
+notfound:
     getroot = (dscp==cm_data.rootSCachep) ;
     if (!rock.found) {
         if (!cm_freelanceEnabled || !getroot) {
@@ -1169,6 +1173,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
             /* nonexistent dir on freelance root, so add it */
             fschar_t fullname[CELL_MAXNAMELEN + 1] = ".";  /* +1 so that when we skip the . the size is still CELL_MAXNAMELEN */
             int  found = 0;
+            int  retry = 0;
 
             osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %S", 
                      osi_LogSaveClientString(afsd_logp,cnamep));
@@ -1181,28 +1186,71 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
              */
 
             code = -1;
+            fnlen = strlen(fnamep);
+            if ( fnamep[fnlen-1] == '.') {
+                fnamep[fnlen-1] = '\0';
+                fnlen--;
+                retry = 1;
+            }
+
             if (cnamep[0] == '.') {
                 if (cm_GetCell_Gen(&fnamep[1], &fullname[1], CM_FLAG_CREATE)) {
                     found = 1;
-                    if (!cm_FreelanceMountPointExists(fullname, 0))
-                        code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.",
-                                                    1, &rock.fid);
-                    if ( cm_FsStrCmpI(&fnamep[1], &fullname[1]) && 
-                         !cm_FreelanceMountPointExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
-                         !cm_FreelanceSymlinkExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
-                        code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
+                    code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.", 1, &rock.fid);
+                    if ( cm_FsStrCmpI(&fnamep[1], &fullname[1])) {
+                        /*
+                         * Do not permit symlinks that are one of:
+                         *  . the cellname followed by a dot
+                         *  . the cellname minus a single character
+                         *  . a substring of the cellname that does not consist of full components
+                         */
+                        if ( cm_strnicmp_utf8(&fnamep[1], fullname, (int)fnlen-1) == 0 &&
+                             (fnlen-1 == strlen(fullname)-1 || fullname[fnlen-1] != '.'))
+                        {
+                            /* do not add; substitute fullname for the search */
+                            free(fnamep);
+                            fnamep = malloc(strlen(fullname)+2);
+                            fnamep[0] = '.';
+                            strncpy(&fnamep[1], fullname, strlen(fullname)+1);
+                            retry = 1;
+                        } else {
+                            code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
+                        }
+                    }
                 }
             } else {
                 if (cm_GetCell_Gen(fnamep, fullname, CM_FLAG_CREATE)) {
                     found = 1;
-                    if (!cm_FreelanceMountPointExists(fullname, 0))
-                        code = cm_FreelanceAddMount(fullname, fullname, "root.cell.", 0, &rock.fid);
-                    if ( cm_FsStrCmpI(fnamep, fullname) && 
-                         !cm_FreelanceMountPointExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0) &&
-                         !cm_FreelanceSymlinkExists(fnamep, flags & CM_FLAG_DFS_REFERRAL ? 1 : 0))
-                        code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
+                    code = cm_FreelanceAddMount(fullname, fullname, "root.cell.", 0, &rock.fid);
+                    if ( cm_FsStrCmpI(fnamep, fullname)) {
+                        /*
+                         * Do not permit symlinks that are one of:
+                         *  . the cellname followed by a dot
+                         *  . the cellname minus a single character
+                         *  . a substring of the cellname that does not consist of full components
+                         */
+                        if ( cm_strnicmp_utf8(fnamep, fullname, (int)fnlen-1) == 0 &&
+                             (fnlen == strlen(fullname)-1 || fullname[fnlen] != '.'))
+                        {
+                            /* do not add; substitute fullname for the search */
+                                free(fnamep);
+                                fnamep = strdup(fullname);
+                                code = 0;
+                                retry = 1;
+                        } else {
+                            code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
+                        }
+                    }
                 }
             }
+
+            if (retry) {
+                if (nnamep)
+                    free(nnamep);
+                nnamep = cm_FsStringToNormStringAlloc(fnamep, -1, NULL);
+                goto retry_lookup;
+            }
+
             if (!found || code) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
                     code = CM_ERROR_NOSUCHPATH;
@@ -1220,7 +1268,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
         }
     }
 
-  haveFid:       
+  haveFid:
     if ( !tscp )    /* we did not find it in the dnlc */
     {
         dnlcHit = 0; 
