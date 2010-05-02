@@ -973,6 +973,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     DWORD dwType, dwSize;
     DWORD dwMountPoints;
     DWORD dwIndex;
+    afs_uint32 code = 0;
 
     /* before adding, verify the cell name; if it is not a valid cell,
        don't add the mount point.
@@ -985,19 +986,21 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
               rw ? "rw" : "ro");
 
     if ( filename[0] == '\0' || cellname[0] == '\0' || volume[0] == '\0' )
-        return -1;
+        return CM_ERROR_INVAL;
 
     if (cellname[0] == '.') {
         if (!cm_GetCell_Gen(&cellname[1], fullname, CM_FLAG_CREATE))
-            return -1;
+            return CM_ERROR_INVAL;
     } else {
         if (!cm_GetCell_Gen(cellname, fullname, CM_FLAG_CREATE))
-            return -1;
+            return CM_ERROR_INVAL;
     }
 
     if ( cm_FreelanceMountPointExists(filename, 0) ||
-         cm_FreelanceSymlinkExists(filename, 0) )
-        return -1;
+         cm_FreelanceSymlinkExists(filename, 0) ) {
+        code = CM_ERROR_EXISTS;
+        goto done;
+    }
     
     osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", 
               osi_LogSaveString(afsd_logp,cellname));
@@ -1081,9 +1084,9 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     cm_noteLocalMountPointChange(TRUE);
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
+  done:
     if (fidp) {
         cm_req_t req;
-        afs_uint32 code;
         cm_scache_t *scp;
         clientchar_t *cpath;
 
@@ -1102,7 +1105,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         cm_ReleaseSCache(scp);
     }
     
-    return 0;
+    return code;
 }
 
 long cm_FreelanceRemoveMount(char *toremove)
