@@ -673,7 +673,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
         StringCbCatA(query, sizeof(query), ".");
     }
 
-    rc = send_DNS_AFSDB_Query(cellName,commSock,sockAddr, buffer);
+    rc = send_DNS_AFSDB_Query(query,commSock,sockAddr, buffer);
     if (rc < 0) {
         closesocket(commSock);
         fprintf(stderr,"getAFSServer: send_DNS_AFSDB_Query failed\n");
