@@ -483,53 +483,56 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 return 0;
             }
             sp->caseFold = casefold;
+        }
 
-            /* see if we can find it using the directory hash tables.
-               we can only do exact matches, since the hash is case
-               sensitive. */
-            {
-                cm_dirOp_t dirop;
+        /*
+         * see if we can find it using the directory hash tables.
+         * we can only do exact matches, since the hash is case
+         * sensitive.
+         */
+        if (funcp != (cm_DirFuncp_t)cm_BPlusDirFoo)
+        {
+            cm_dirOp_t dirop;
 #ifdef USE_BPLUS
-                int usedBplus = 0;
+            int usedBplus = 0;
 #endif
 
-                code = ENOENT;
+            code = ENOENT;
 
-                code = cm_BeginDirOp(scp, userp, reqp, CM_DIRLOCK_READ, &dirop);
-                if (code == 0) {
+            code = cm_BeginDirOp(scp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+            if (code == 0) {
 
 #ifdef USE_BPLUS
-                    code = cm_BPlusDirLookup(&dirop, sp->nsearchNamep, &sp->fid);
-                    if (code != EINVAL)
-                        usedBplus = 1;
-                    else 
+                code = cm_BPlusDirLookup(&dirop, sp->nsearchNamep, &sp->fid);
+                if (code != EINVAL)
+                    usedBplus = 1;
+                else
 #endif
-                        code = cm_DirLookup(&dirop, sp->searchNamep, &sp->fid);
+                    code = cm_DirLookup(&dirop, sp->searchNamep, &sp->fid);
 
-                    cm_EndDirOp(&dirop);
-                }
+                cm_EndDirOp(&dirop);
+            }
 
-                if (code == 0) {
+            if (code == 0) {
+                /* found it */
+                sp->found = TRUE;
+                sp->ExactFound = TRUE;
+                *retscp = NULL; /* force caller to call cm_GetSCache() */
+                return 0;
+            }
+#ifdef USE_BPLUS
+            if (usedBplus) {
+                if (sp->caseFold && code == CM_ERROR_INEXACT_MATCH) {
                     /* found it */
                     sp->found = TRUE;
-                    sp->ExactFound = TRUE;
+                    sp->ExactFound = FALSE;
                     *retscp = NULL; /* force caller to call cm_GetSCache() */
                     return 0;
                 }
-#ifdef USE_BPLUS
-                if (usedBplus) {
-                    if (sp->caseFold && code == CM_ERROR_INEXACT_MATCH) {
-                        /* found it */
-                        sp->found = TRUE;
-                        sp->ExactFound = FALSE;
-                        *retscp = NULL; /* force caller to call cm_GetSCache() */
-                        return 0;
-                    }
-                    
-                    return CM_ERROR_BPLUS_NOMATCH;
-                }
-#endif 
+
+                return CM_ERROR_BPLUS_NOMATCH;
             }
+#endif
         }
     }	
 
