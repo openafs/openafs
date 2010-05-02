@@ -4075,7 +4075,7 @@ void smb_Daemon(void *parmp)
 
 #ifdef AFS_FREELANCE
             if ( smb_localZero != old_localZero )
-                cm_noteLocalMountPointChange();
+                cm_noteLocalMountPointChange(FALSE);
 #endif
 
 	    smb_CheckVCs();
@@ -10661,7 +10661,7 @@ void smb_Init(osi_log_t *logp, int useV3,
 
 #ifdef AFS_FREELANCE_CLIENT
     /* Make sure the root.afs volume has the correct time */
-    cm_noteLocalMountPointChange();
+    cm_noteLocalMountPointChange(FALSE);
 #endif
 
     /* initialize the remote debugging log */

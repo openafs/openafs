@@ -75,7 +75,7 @@ void cm_FreelanceChangeNotifier(void * parmp) {
                 hFreelanceChangeEvent = 0;         
                 return;                            
             }                                      
-            cm_noteLocalMountPointChange();
+            cm_noteLocalMountPointChange(FALSE);
         }
     }
 }
@@ -120,7 +120,7 @@ void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
                 hFreelanceSymlinkChangeEvent = 0;         
                 return;                            
             }                                      
-            cm_noteLocalMountPointChange();
+            cm_noteLocalMountPointChange(FALSE);
         }
     }
 }
@@ -358,11 +358,13 @@ int cm_FakeRootFid(cm_fid_t *fidp)
   
 /* called directly from ioctl */
 /* called while not holding freelance lock */
-int cm_noteLocalMountPointChange(void) {
-    lock_ObtainMutex(&cm_Freelance_Lock);
+int cm_noteLocalMountPointChange(afs_int32 locked) {
+    if (!locked)
+        lock_ObtainMutex(&cm_Freelance_Lock);
     cm_data.fakeDirVersion++;
     cm_localMountPointChangeFlag = 1;
-    lock_ReleaseMutex(&cm_Freelance_Lock);
+    if (!locked)
+        lock_ReleaseMutex(&cm_Freelance_Lock);
     return 1;
 }
 

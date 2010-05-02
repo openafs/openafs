@@ -95,7 +95,7 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
-	cm_noteLocalMountPointChange();
+	cm_noteLocalMountPointChange(FALSE);
 	return 0;
     }
 #endif
@@ -148,7 +148,7 @@ cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint32 vol
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( cell == AFS_FAKE_ROOT_CELL_ID && volume == AFS_FAKE_ROOT_VOL_ID ) {
-	cm_noteLocalMountPointChange();
+	cm_noteLocalMountPointChange(FALSE);
 	return 0;
     }
 #endif
