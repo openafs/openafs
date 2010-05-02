@@ -1991,7 +1991,7 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, clientchar_t *centry)
       
 }
 
-static 
+
 int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
                    void *dummy, osi_hyper_t *entryOffsetp)
 {
