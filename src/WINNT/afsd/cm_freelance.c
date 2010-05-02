@@ -1078,8 +1078,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     }
 
     /* Do this while we are holding the lock */
-    cm_data.fakeDirVersion++;
-    cm_localMountPointChangeFlag = 1;
+    cm_noteLocalMountPointChange(TRUE);
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
     if (fidp) {
@@ -1207,8 +1206,7 @@ long cm_FreelanceRemoveMount(char *toremove)
 
     if (found) {
         /* Do this while we are holding the lock */
-        cm_data.fakeDirVersion++;
-        cm_localMountPointChangeFlag = 1;
+        cm_noteLocalMountPointChange(TRUE);
     }
     lock_ReleaseMutex(&cm_Freelance_Lock);
     return (found ? 0 : CM_ERROR_NOSUCHFILE);
@@ -1307,8 +1305,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     } 
 
     /* Do this while we are holding the lock */
-    cm_data.fakeDirVersion++;
-    cm_localMountPointChangeFlag = 1;
+    cm_noteLocalMountPointChange(TRUE);
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
     if (fidp) {
@@ -1390,8 +1387,7 @@ long cm_FreelanceRemoveSymlink(char *toremove)
     
     if (found) {
         /* Do this while we are holding the lock */
-        cm_data.fakeDirVersion++;
-        cm_localMountPointChangeFlag = 1;
+        cm_noteLocalMountPointChange(TRUE);
     }
     lock_ReleaseMutex(&cm_Freelance_Lock);
     return (found ? 0 : CM_ERROR_NOSUCHFILE);
