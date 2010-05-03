@@ -352,7 +352,7 @@ case $system in
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(amd64_obsd)
 		;;
-	i386-openbsd*)
+	i386-*-openbsd*)
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
 		;;
