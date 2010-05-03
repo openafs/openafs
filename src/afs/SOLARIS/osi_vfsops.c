@@ -79,6 +79,8 @@ int
 afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
 #endif
 {
+    struct vcache *rootvp = NULL;
+
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
@@ -110,14 +112,38 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
 	AFS_GUNLOCK();
 	return EBUSY;
     }
+
+    afsp->vfs_flag |= VFS_UNMOUNTED;
 #endif /* AFS_SUN58_ENV */
+
+    /* release the root vnode, which should be the last reference to us
+     * besides the caller of afs_unmount */
+    rootvp = afs_globalVp;
+    afs_globalVp = NULL;
+    AFS_RELE(rootvp);
+
+#ifndef AFS_SUN58_ENV
+    /* shutdown now, since afs_freevfs() will not be called */
+    afs_globalVFS = 0;
+    afs_shutdown();
+#endif /* !AFS_SUN58_ENV */
+
+    AFS_GUNLOCK();
+    return 0;
+}
+
+#ifdef AFS_SUN58_ENV
+void
+afs_freevfs(struct vfs *afsp)
+{
+    AFS_GLOCK();
 
     afs_globalVFS = 0;
     afs_shutdown();
 
     AFS_GUNLOCK();
-    return 0;
 }
+#endif /* AFS_SUN58_ENV */
 
 int
 afs_root(struct vfs *afsp, struct vnode **avpp)
@@ -289,7 +315,7 @@ static const fs_operation_def_t afs_vfsops_template[] = {
     VFSNAME_SYNC,		{ .vfs_sync = afs_sync },
     VFSNAME_VGET,		{ .vfs_vget = afs_vget },
     VFSNAME_MOUNTROOT,  	{ .vfs_mountroot = afs_mountroot },
-    VFSNAME_FREEVFS,		{ .vfs_freevfs = fs_freevfs },
+    VFSNAME_FREEVFS,		{ .vfs_freevfs = afs_freevfs },
     NULL,			NULL
 };
 struct vfsops *afs_vfsopsp;
@@ -303,7 +329,7 @@ const fs_operation_def_t afs_vfsops_template[] = {
     VFSNAME_SYNC,		afs_sync,
     VFSNAME_VGET,		afs_vget,
     VFSNAME_MOUNTROOT,  	afs_mountroot,
-    VFSNAME_FREEVFS,		fs_freevfs,
+    VFSNAME_FREEVFS,		afs_freevfs,
     NULL,			NULL
 };
 struct vfsops *afs_vfsopsp;
@@ -318,7 +344,7 @@ struct vfsops Afs_vfsops = {
     afs_mountroot,
     afs_swapvp,
 #if defined(AFS_SUN58_ENV)
-    fs_freevfs,
+    afs_freevfs,
 #endif
 };
 #endif
