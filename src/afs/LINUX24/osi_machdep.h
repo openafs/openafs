@@ -341,4 +341,6 @@ do { \
 #endif
 #endif
 
+#define osi_procname(procname, size) strncpy(procname, current->comm, size)
+
 #endif /* OSI_MACHDEP_H_ */

@@ -80,4 +80,6 @@ extern simple_lock_data afs_global_lock;
 	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 #endif
 
+#define osi_procname(procname, size) strncpy(procname, curproc->pi_comm, size)
+
 #endif /* _OSI_MACHDEP_H_ */

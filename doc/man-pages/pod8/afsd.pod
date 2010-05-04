@@ -1,6 +1,6 @@
 =head1 NAME
 
-afsd - Initializes the Cache Manager and starts related daemons
+afsd, afsd.fuse - Initializes the Cache Manager and starts related daemons
 
 =head1 SYNOPSIS
 
@@ -41,8 +41,11 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
 
 The B<afsd> command initializes the Cache Manager on an AFS client machine
 by transferring AFS-related configuration information into kernel memory
-and starting several daemons. More specifically, the B<afsd> command
-performs the following actions:
+and starting several daemons. B<afsd.fuse> is an experimental variant that
+inititalizes a FUSE-based Cache Manager instead of one based on a kernel
+module.
+
+The B<afsd> command performs the following actions:
 
 =over 4
 
@@ -349,6 +352,13 @@ If neither argument is used, there are five VM daemons.
 
 =back
 
+B<afsd.fuse> is a variant of B<afsd> that, instead of initializing a Cache
+Manager implemented as a kernel module, initializes a FUSE-based AFS
+client.  FUSE (Filesystem in USErspace) is a Linux-only mechanism for
+providing a file system through a purely user-space daemon without a
+kernel module component.  B<afsd.fuse> takes all of the same options as
+B<afsd>.
+
 This command does not use the syntax conventions of the AFS command
 suites. Provide the command name and all option names in full.
 
@@ -390,6 +400,10 @@ suffice depending on the number of simultaneous B<klog>s).
 
 Be sure to set the UDP timeouts on the firewall to be at least twenty
 minutes for the best callback performance.
+
+B<afsd.fuse> was first introduced in OpenAFS 1.5.74.  It is only available
+if OpenAFS was built with the C<--enable-fuse-client> configure switch.
+It should be considered experimental.
 
 =head1 OPTIONS
 

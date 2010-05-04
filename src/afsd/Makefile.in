@@ -59,16 +59,22 @@ clean:
 system: install
 
 # XXX-INST: where to put the rc scripts?
-install: afsd vsys
+install: afsd vsys @ENABLE_FUSE_CLIENT@
 	${INSTALL} -d ${DESTDIR}${sbindir}
 	${INSTALL} afsd ${DESTDIR}${sbindir}/afsd
 	${INSTALL} vsys ${DESTDIR}${sbindir}/vsys
+	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
+	    ${INSTALL} afsd.fuse ${DESTDIR}${sbindir}/afsd.fuse; \
+	fi
 
-dest: afsd vsys
+dest: afsd vsys @ENABLE_FUSE_CLIENT@
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} afsd ${DEST}/root.client/usr/vice/etc/afsd
 	${INSTALL} vsys ${DEST}/etc/vsys
+	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
+	    ${INSTALL} afsd.fuse ${DEST}/root.client/usr/vice/etc/afsd.fuse; \
+	fi
 	case ${SYS_NAME} in \
 		rs_aix*)  \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \

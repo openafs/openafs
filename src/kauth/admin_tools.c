@@ -43,6 +43,7 @@
 #include <des_prototypes.h>
 
 #include "kauth.h"
+#include "kauth_internal.h"
 #include "kautils.h"
 #include "kaport.h"
 #include "kkids.h"
@@ -98,7 +99,7 @@ DumpUser(char *user, char *arock, int showadmin, int showkey, char *inst)
     if (!inst)
 	inst = instance;
     code =
-	ubik_Call(KAM_GetEntry, conn, 0, name, inst, KAMAJORVERSION, &tentry);
+	ubik_KAM_GetEntry(conn, 0, name, inst, KAMAJORVERSION, &tentry);
     if (code) {
 	afs_com_err(whoami, code, "getting information for %s.%s", name, inst);
 	return code;
@@ -254,7 +255,7 @@ ListUsers(struct cmd_syndesc *as, void *arock)
     }
     for (index = 0; 1; index = next_index) {
 	code =
-	    ubik_Call(KAM_ListEntry, conn, 0, index, &next_index, &count,
+	    ubik_KAM_ListEntry(conn, 0, index, &next_index, &count,
 		      &name);
 	if (code) {
 	    afs_com_err(whoami, code, "calling KAM_ListEntry");
@@ -341,7 +342,8 @@ CreateUser(struct cmd_syndesc *as, void *arock)
     ka_StringToKey(as->parms[1].items->data, cell, &key);
 
     do {
-	code = ubik_Call(KAM_CreateUser, conn, 0, name, instance, key);
+	code = ubik_KAM_CreateUser(conn, 0, name, instance,
+				   *ktc_to_EncryptionKey(&key));
 	if (!code)
 	    return 0;
 	ka_PrintUserID("Creating user ", name, instance, " ");
@@ -368,7 +370,7 @@ DeleteUser(struct cmd_syndesc *as, void *arock)
     }
 
     do {
-	code = ubik_Call(KAM_DeleteUser, conn, 0, name, instance);
+	code = ubik_KAM_DeleteUser(conn, 0, name, instance);
 	if (!code)
 	    return 0;
 	ka_PrintUserID("Deleting user ", name, instance, " ");
@@ -431,7 +433,7 @@ parse_flags(char *name, char *inst, char *str, afs_int32 * flags)
 	    } else
 		addop = 1;
 	    code =
-		ubik_Call(KAM_GetEntry, conn, 0, name, inst, KAMAJORVERSION,
+		ubik_KAM_GetEntry(conn, 0, name, inst, KAMAJORVERSION,
 			  &tentry);
 	    if (code) {
 		afs_com_err(whoami, code,
@@ -724,7 +726,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
 
     if (was_spare || flags || expiration || lifetime || (maxAssociates >= 0))
 	code =
-	    ubik_Call(KAM_SetFields, conn, 0, name, instance, flags,
+	    ubik_KAM_SetFields(conn, 0, name, instance, flags,
 		      expiration, lifetime, maxAssociates, was_spare,
 		      /* spare */ 0);
     else {
@@ -821,11 +823,8 @@ SetPassword(struct cmd_syndesc *as, void *arock)
     if (as->parms[3].items)
 	sscanf(as->parms[3].items->data, "%d", &kvno);
 
-#if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
-    code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, 0, key);
-#else
-    code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, key);
-#endif
+    code = ubik_KAM_SetPassword(conn, 0, name, instance, kvno,
+				*ktc_to_EncryptionKey(&key));
     if (code)
 	afs_com_err(whoami, code, "so can't set password for %s.%s", name,
 		instance);
@@ -1053,7 +1052,8 @@ GetPassword(struct cmd_syndesc *as, void *arock)
 	if (code)
 	    goto abort;
     }
-    code = ubik_Call(KAM_GetPassword, lpbkConn, 0, name, &key);
+    code = ubik_KAM_GetPassword(lpbkConn, 0, name,
+				ktc_to_EncryptionKey(&key));
     /* Lets close down the ubik_Client connection now */
     ubik_ClientDestroy(lpbkConn);
     if (code)
@@ -1070,7 +1070,7 @@ GetRandomKey(struct cmd_syndesc *as, void *arock)
     int code;
     struct ktc_encryptionKey key;
 
-    code = ubik_Call(KAM_GetRandomKey, conn, 0, &key);
+    code = ubik_KAM_GetRandomKey(conn, 0, ktc_to_EncryptionKey(&key));
     if (code)
 	afs_com_err(whoami, code, "so can't get random key");
     else {
@@ -1100,7 +1100,7 @@ Statistics(struct cmd_syndesc *as, void *arock)
     char bob[KA_TIMESTR_LEN];
 
     code =
-	ubik_Call(KAM_GetStats, conn, 0, KAMAJORVERSION, &admins, &statics,
+	ubik_KAM_GetStats(conn, 0, KAMAJORVERSION, &admins, &statics,
 		  &dynamics);
     if (code) {
 	printf("call to GetStats failed: %s\n", ka_ErrorString(code));
@@ -1175,10 +1175,10 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
 	    }
 	    return code;
 	}
-	code = ubik_Call(KAM_Debug, iConn, 0, KAMAJORVERSION, 0, &info);
+	code = ubik_KAM_Debug(iConn, 0, KAMAJORVERSION, 0, &info);
 	ubik_ClientDestroy(iConn);
     } else
-	code = ubik_Call(KAM_Debug, conn, 0, KAMAJORVERSION, 0, &info);
+	code = ubik_KAM_Debug(conn, 0, KAMAJORVERSION, 0, &info);
 
     if (code) {
 	afs_com_err(whoami, code, "call to Debug failed");
