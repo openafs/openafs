@@ -865,6 +865,9 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     VREFCOUNT_SET(tvc, 1);	/* us */
 #endif
 
+#if defined (AFS_FBSD_ENV)
+    if (tvc->f.states & CVInit)
+#endif
     afs_PostPopulateVCache(tvc, afid, seq);
 
     return tvc;

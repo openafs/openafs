@@ -30,10 +30,10 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
 	/* vgone() is correct, but v_usecount is assumed not
 	 * to be 0, and I suspect that currently our usage ensures that
 	 * in fact it will */
-	if (vrefcnt(AFSTOV(tvc)) < 1) {
-	    vref(AFSTOV(tvc));
+	if (vrefcnt(AFSTOV(avc)) < 1) {
+	    vref(AFSTOV(avc));
 	}
-	vn_lock(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY); /* !glocked */
+	vn_lock(AFSTOV(avc), LK_EXCLUSIVE | LK_RETRY); /* !glocked */
 #endif
 
         vgone(AFSTOV(avc));
@@ -97,7 +97,7 @@ osi_AttachVnode(struct vcache *avc, int seq) {
          * mutual exclusion (an Embryonic flag would suffice).
          * -GAW */
 	afs_warn("afs_NewVCache: lost the race\n");
-	return (avc);
+	return;
     }
     avc->v = vp;
     avc->v->v_data = avc;
