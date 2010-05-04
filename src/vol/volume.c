@@ -3206,6 +3206,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     }
 
     VOL_LOCK;
+    vp->nextVnodeUnique = V_uniquifier(vp);
     if (VShouldCheckInUse(mode)) {
 #ifndef FAST_RESTART
 	if (V_inUse(vp) && VolumeWriteable(vp)) {
@@ -3251,7 +3252,6 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	}
     }
 
-    vp->nextVnodeUnique = V_uniquifier(vp);
     vp->vnodeIndex[vSmall].bitmap = vp->vnodeIndex[vLarge].bitmap = NULL;
 #ifndef BITMAP_LATER
     if (programType == fileServer && VolumeWriteable(vp)) {

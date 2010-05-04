@@ -251,4 +251,10 @@ extern int (**afs_vnodeop_p) ();
 # define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 #endif
 
+#ifdef AFS_DARWIN80_ENV
+#define osi_procname(procname, size) proc_selfname(procname, size)
+#else
+#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+#endif
+
 #endif /* _OSI_MACHDEP_H_ */

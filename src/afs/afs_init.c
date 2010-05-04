@@ -488,6 +488,7 @@ afs_InitCacheInfo(register char *afile)
 	if (theader.magic == AFS_FHMAGIC
 	    && theader.firstCSize == AFS_FIRSTCSIZE
 	    && theader.otherCSize == AFS_OTHERCSIZE
+	    && theader.dataSize == sizeof(struct fcache)
 	    && theader.version == AFS_CI_VERSION)
 	    goodFile = 1;
     }
@@ -496,6 +497,7 @@ afs_InitCacheInfo(register char *afile)
 	theader.magic = AFS_FHMAGIC;
 	theader.firstCSize = AFS_FIRSTCSIZE;
 	theader.otherCSize = AFS_OTHERCSIZE;
+	theader.dataSize = sizeof(struct fcache);
 	theader.version = AFS_CI_VERSION;
 	afs_osi_Write(tfile, 0, &theader, sizeof(theader));
 	/*

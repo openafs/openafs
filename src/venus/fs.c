@@ -1893,7 +1893,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = strlen(tp) + 1;
 	blob.out = lsbuffer;
 	blob.out_size = sizeof(lsbuffer);
-	code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
+	code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
 		fprintf(stderr, "%s: '%s' is not a mount point.\n", pn,
@@ -1907,7 +1907,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = 0;
 	blob.in = tp;
 	blob.in_size = strlen(tp) + 1;
-	code = pioctl(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
+	code = pioctl(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
 	    error = 1;

@@ -87,4 +87,5 @@ extern int afs_suser(void *credp);
 #define getuerror(erval) get_user_struct()->u_error
 #define osi_curcred()    get_user_struct()->u_cred
 
+#define osi_procname(procname, size) strncpy(procname, "(unknown)", size)
 #endif /* _OSI_MACHDEP_H_ */

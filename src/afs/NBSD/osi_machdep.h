@@ -99,4 +99,6 @@ extern int (**afs_vnodeop_p) ();
 #define IsAfsVnode(v)           ((v)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(v)          /* nothing; done in getnewvnode() */
 
+#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+
 #endif /* _OSI_MACHDEP_H_ */

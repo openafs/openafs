@@ -6,7 +6,7 @@
         <key>Label</key>
         <string>org.openafs.filesystems.afs</string>
         <key>ExitTimeOut</key>
-	<integer>20</integer>
+	<integer>600</integer>
         <key>ProgramArguments</key>
         <array>
                 <string>/private/var/db/openafs/etc/launchafs.sh</string>

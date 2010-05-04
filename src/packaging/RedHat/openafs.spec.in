@@ -1,8 +1,5 @@
 # Openafs Spec $Revision$
 
-# TEMPORARY fix for patch fuzz so we can build on Fedora 10
-%define _default_patch_fuzz 2
-
 %define afsvers @VERSION@
 %define pkgvers @LINUX_PKGVER@
 # for beta/rc releases make pkgrel 0.X.<tag>
@@ -341,7 +338,7 @@ To a kernel module for your running kernel, just run:
 %if %{build_userspace}
 
 %package client
-Requires: binutils, openafs = %{PACKAGE_VERSION}
+Requires: binutils, openafs = %{version}
 
 %if %{fedorakmod}
 Requires: %{name}-kmod >= %{version}
@@ -363,7 +360,7 @@ This package provides basic client support to mount and manipulate
 AFS.
 
 %package server
-Requires: openafs = %{PACKAGE_VERSION}
+Requires: openafs = %{version}
 Summary: OpenAFS Filesystem Server
 Group: Networking/Filesystems
 
@@ -380,9 +377,9 @@ Cell.
 %package -n dkms-%{name}
 Summary:        DKMS-ready kernel source for AFS distributed filesystem
 Group:          Development/Kernel
-Provides:       openafs-kernel = %{PACKAGE_VERSION}
+Provides:       openafs-kernel = %{version}
 %if %{fedorakmod}
-Provides: %{name}-kmod = %{PACKAGE_VERSION}
+Provides: %{name}-kmod = %{version}
 %endif
 Requires(pre):  dkms
 Requires(pre):  flex
@@ -418,9 +415,9 @@ authentication may link against them.
 
 %package authlibs-devel
 %if %{build_authlibs}
-Requires: openafs-authlibs = %{PACKAGE_VERSION}
+Requires: openafs-authlibs = %{version}
 %endif
-Requires: openafs-devel = %{PACKAGE_VERSION}
+Requires: openafs-devel = %{version}
 Summary: OpenAFS shared library development
 Group: Development/Filesystems
 
@@ -450,7 +447,7 @@ shared libraries.
 
 %package docs
 Summary: OpenAFS user and administrator documentation
-Requires: openafs = %{PACKAGE_VERSION}
+Requires: openafs = %{version}
 Group: Networking/Filesystems
 
 %description docs
@@ -465,9 +462,9 @@ administrators.
 %package kernel-source
 Summary: OpenAFS Kernel Module source tree
 Group: Networking/Filesystems
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{fedorakmod}
-Provides: %{name}-kmod = %{PACKAGE_VERSION}
+Provides: %{name}-kmod = %{version}
 %endif
 
 %description kernel-source
@@ -481,7 +478,7 @@ module.
 
 %package compat
 Summary: OpenAFS client compatibility symlinks
-Requires: openafs = %{PACKAGE_VERSION}, openafs-client = %{PACKAGE_VERSION}
+Requires: openafs = %{version}, openafs-client = %{version}
 Group: Networking/Filesystems
 Obsoletes: openafs-client-compat
 
@@ -513,7 +510,7 @@ you are using KAserver instead of Krb5.
 %if %{krb5support}
 %package krb5
 Summary: OpenAFS programs to use with krb5
-Requires: openafs = %{PACKAGE_VERSION}
+Requires: openafs = %{version}
 Group: Networking/Filesystems
 BuildRequires: krb5-devel
 
@@ -552,7 +549,7 @@ krb4 lookalike services.
 Summary: OpenAFS Kernel Module (compiled for UP)
 Release: %{modpkgrel}
 Group: Networking/Filesystems
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-%{_target_cpu} = %{kversion}
 %else
@@ -572,7 +569,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-smp
 Summary: OpenAFS Kernel Module (compiled for SMP)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-smp-%{_target_cpu} = %{kversion}
 %else
@@ -593,7 +590,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-largesmp
 Summary: OpenAFS Kernel Module (compiled for LARGESMP)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-largesmp-%{_target_cpu} = %{kversion}
 %else
@@ -614,7 +611,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-bigmem
 Summary: OpenAFS Kernel Module (compiled for SMP & big memory support)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-bigmem-%{_target_cpu} = %{kversion}
 %else
@@ -635,7 +632,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 %package kernel-hugemem
 Summary: OpenAFS Kernel Module (compiled for SMP & huge memory support)
 Release: %{modpkgrel}
-Provides: openafs-kernel = %{PACKAGE_VERSION}
+Provides: openafs-kernel = %{version}
 %if %{kprovidesarch}
 Requires: kernel-hugemem-%{_target_cpu} = %{kversion}
 %else
@@ -1018,6 +1015,10 @@ tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
 tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
+# Fix the location of restorevol, since it should be available for
+# any user in /usr/bin
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
+
 # Link kpasswd to kapasswd
 ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
 
@@ -1051,7 +1052,7 @@ PACKAGE_VERSION="%{dkms_version}"
 
 # Items below here should not have to change with each driver version
 PACKAGE_NAME="%{name}"
-MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --enable-disconnected --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
+MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --enable-disconnected --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
 CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
@@ -1114,7 +1115,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 
 # create list of man pages that go in the 'openafs' package
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man1 \
-	|egrep '^afs|^fs|^kas|^klog|kapasswd|pagsh|^pts|^rxdebug|scout|^sys|tokens|translate|udebug|unlog|^uss|^vos' \
+	|egrep '^afs|^fs|^kas|^klog|kapasswd|pagsh|^pts|^restorevol|^rxdebug|scout|^sys|tokens|translate|udebug|unlog|^uss|^vos' \
 	>openafs-man1files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man5 \
@@ -1484,7 +1485,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/vldb_convert
 %{_sbindir}/voldump
 %{initdir}/openafs-server
-%{_mandir}/man1/restorevol.*
 %{_mandir}/man5/AuthLog.*
 %{_mandir}/man5/BackupLog.*
 %{_mandir}/man5/BosConfig.*
@@ -1519,6 +1519,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/pt_util.*
 %{_mandir}/man8/salvager.*
 %{_mandir}/man8/salvageserver.*
+%{_mandir}/man8/state_analyzer.*
 %{_mandir}/man8/upclient.*
 %{_mandir}/man8/upserver.*
 %{_mandir}/man8/vldb_check.*

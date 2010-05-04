@@ -391,7 +391,7 @@ extern long afs_global_owner;
 #define OSI_VFS_CONVERT(V) struct vfs * V = (struct vfs*)bhvtovfs(bhv_##V)
 #endif /* AFS_SGI64_ENV */
 
-
+#define osi_procname(procname, size) strncpy(procname, proc_name(curproc()), size)
 
 
 #endif /* _OSI_MACHDEP_H_ */
