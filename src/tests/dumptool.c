@@ -75,6 +75,7 @@
 #include <termios.h>
 #include <fnmatch.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 
 #include <lock.h>
 #include <afs/afsint.h>
@@ -95,6 +96,16 @@
 #endif /* RESIDENCY */
 
 #include <afs/dir.h>
+
+#ifndef HAVE_OFF64_T
+typedef off_t off64_t;
+#endif /* !HAVE_OFF64_T */
+#ifndef HAVE_FSEEKO64
+#define fseeko64 fseeko
+#endif /* HAVE_FSEEKO64 */
+#ifndef HAVE_FTELLO64
+#define ftello64 ftello
+#endif /* HAVE_FTELLO64 */
 
 /*
  * Sigh.  Linux blows it again
@@ -1419,8 +1430,8 @@ DirListInternal(struct vnodeData *vdata, char *pathnames[], int numpathnames,
 			c = '*';
 		    else
 			c = ' ';
-		    printf("%s%-*c", ep->name, longestname - strlen(ep->name),
-			   c);
+		    printf("%s%-*c", ep->name, (int)(longestname -
+						     strlen(ep->name)), c);
 		} else
 		    printf("%-*s", longestname, ep->name);
 	    }

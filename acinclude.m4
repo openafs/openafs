@@ -1268,6 +1268,7 @@ AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
+AC_CHECK_FUNCS(fseeko64 ftello64)
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
 	test "$ac_cv_func_regcomp" = "yes" && \
@@ -1297,6 +1298,7 @@ AC_CHECK_TYPE([socklen_t],[],
         [Define to int if <sys/socket.h> does not define.])],
 [#include <sys/types.h>
 #include <sys/socket.h>])
+AC_CHECK_TYPES(off64_t)
 AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST
