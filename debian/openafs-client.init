@@ -177,7 +177,7 @@ start_client() {
 # normally called via kill_all_afs.
 kill_afs() {
     signal=$1
-    mount=`mount | grep ^AFS | awk '{ print $3}'`
+    mount=`grep ^'AFS ' /etc/mtab | awk '{ print $2 }'`
     pids=`/usr/bin/lsof -Fp $mount | sed 's/p//'`
     if [ -n "$pids" ] ; then
         kill -$signal $pids > /dev/null 2>&1
@@ -239,8 +239,8 @@ force-start)
 stop|force-stop)
     $AFS_PRE_SHUTDOWN
     echo -n "Stopping AFS services:"
-    if mount | grep -q '^AFS' ; then
-        umount `mount | grep ^AFS | awk '{ print $3}'`
+    if grep -q '^AFS ' /etc/mtab ; then
+        umount `grep ^'AFS ' /etc/mtab | awk '{ print $2 }'`
         echo -n " afsd"
     fi
     if pidof /usr/sbin/afsd >/dev/null || pidof /sbin/afsd >/dev/null ; then

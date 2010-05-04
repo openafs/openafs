@@ -11,7 +11,7 @@ openafs (1.5.74.1-1) UNRELEASED; urgency=low
     (Closes: #580077)
   * In the openafs-client init script, don't assume that AFS is mounted on
     /afs when unmounting it or killing processes with AFS files open.
-    Instead, parse the output from mount to find the AFS mount point.
+    Instead, parse /etc/mtab to find the AFS mount point.
 
  -- Russ Allbery <rra@debian.org>  Tue, 04 May 2010 16:13:13 -0700
 
