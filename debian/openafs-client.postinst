@@ -69,7 +69,7 @@ if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
     mountpoint=/afs
     cachedir=/var/cache/openafs
     if [ -r /etc/openafs/cacheinfo ] ; then
-        IFS=: read mountpoint cachedir < /etc/openafs/cacheinfo
+        IFS=: read mountpoint cachedir cachesize < /etc/openafs/cacheinfo
     fi
     db_get openafs-client/cachesize
     echo "${mountpoint}:${cachedir}:${RET}" > /etc/openafs/cacheinfo
