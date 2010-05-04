@@ -178,10 +178,12 @@ start_client() {
 kill_afs() {
     signal=$1
     mount=`grep ^'AFS ' /etc/mtab | awk '{ print $2 }'`
-    pids=`/usr/bin/lsof -Fp $mount | sed 's/p//'`
-    if [ -n "$pids" ] ; then
-        kill -$signal $pids > /dev/null 2>&1
-        sleep 1
+    if [ -n "$mount" ] ; then
+        pids=`/usr/bin/lsof -Fp $mount | sed 's/p//'`
+        if [ -n "$pids" ] ; then
+            kill -$signal $pids > /dev/null 2>&1
+            sleep 1
+        fi
     fi
 }
 
