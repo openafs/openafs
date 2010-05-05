@@ -3206,6 +3206,7 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
     afs_int32 blockindex, count;
     int pollcount = 0;
     struct nvlentry tentry;
+    int ipaddr1_id = -1, ipaddr2_id = -1;
 
     if (!atrans)
 	return VL_CREATEFAIL;
@@ -3240,20 +3241,42 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
 	    for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
 		if (!exp->ex_addrs[mhidx])
 		    continue;
-		if (ntohl(exp->ex_addrs[mhidx]) == ipaddr1)
-		    break;
+		if (ntohl(exp->ex_addrs[mhidx]) == ipaddr1) {
+		    ipaddr1_id = i;
+		}
+		if (ipaddr2 != 0 && ntohl(exp->ex_addrs[mhidx]) == ipaddr2) {
+		    ipaddr2_id = i;
+		}
 	    }
-	    if (mhidx < VL_MAXIPADDRS_PERMH) {
-		break;
+	} else {
+	    if (HostAddress[i] == ipaddr1) {
+		exp = NULL;
+		ipaddr1_id = i;
 	    }
-	} else if (HostAddress[i] == ipaddr1) {
-	    exp = NULL;
+	    if (ipaddr2 != 0 && HostAddress[i] == ipaddr2) {
+		ipaddr2_id = i;
+	    }
+	}
+
+	if (ipaddr1_id >= 0 && (ipaddr2 == 0 || ipaddr2_id >= 0)) {
+	    /* we've either found both IPs already in the VLDB, or we found
+	     * ipaddr1, and we're not going to find ipaddr2 because it's 0 */
 	    break;
 	}
     }
 
-    if (i >= MAXSERVERID) {
+    if (ipaddr1_id < 0) {
 	return VL_NOENT;	/* not found */
+    }
+
+    if (ipaddr2_id >= 0 && ipaddr2_id != ipaddr1_id) {
+	char buf1[16], buf2[16];
+	VLog(0, ("Cannot change IP address from %s to %s because the latter "
+	         "is in use by server id %d\n",
+	         afs_inet_ntoa_r(htonl(ipaddr1), buf1),
+	         afs_inet_ntoa_r(htonl(ipaddr2), buf2),
+	         ipaddr2_id));
+	return VL_MULTIPADDR;
     }
 
     /* If we are removing a server entry, a volume cannot
@@ -3272,7 +3295,7 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
 	    for (j = 0; j < NMAXNSERVERS; j++) {
 		if (tentry.serverNumber[j] == BADSERVERID)
 		    break;
-		if (tentry.serverNumber[j] == i) {
+		if (tentry.serverNumber[j] == ipaddr1_id) {
 		    return VL_IDEXIST;
 		}
 	    }
@@ -3318,12 +3341,12 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
     }
 
     /* Now change the host address entry */
-    cheader.IpMappedAddr[i] = htonl(ipaddr2);
+    cheader.IpMappedAddr[ipaddr1_id] = htonl(ipaddr2);
     code =
-	vlwrite(atrans, DOFFSET(0, &cheader, &cheader.IpMappedAddr[i]),
+	vlwrite(atrans, DOFFSET(0, &cheader, &cheader.IpMappedAddr[ipaddr1_id]),
 		(char *)
-		&cheader.IpMappedAddr[i], sizeof(afs_int32));
-    HostAddress[i] = ipaddr2;
+		&cheader.IpMappedAddr[ipaddr1_id], sizeof(afs_int32));
+    HostAddress[ipaddr1_id] = ipaddr2;
     if (code)
 	return VL_IO;
 
