@@ -1,4 +1,4 @@
-openafs (1.5.74.1-1) UNRELEASED; urgency=low
+openafs (1.5.74.1-1) experimental; urgency=low
 
   * New upstream testing release.
     - Correctly recognize cache version differences in upgrades from 1.4
@@ -16,7 +16,7 @@ openafs (1.5.74.1-1) UNRELEASED; urgency=low
     avoid adding a FUSE dependency in openafs-client.  Document its
     current limitations in the package description.
 
- -- Russ Allbery <rra@debian.org>  Tue, 04 May 2010 16:13:13 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 04 May 2010 21:49:52 -0700
 
 openafs (1.5.74-2) experimental; urgency=low
 
