@@ -1,0 +1,3 @@
+debian/tmp/usr/sbin/afsd.fuse           usr/sbin
+
+debian/tmp/usr/share/man/man8/afsd.fuse.8             usr/share/man/man8

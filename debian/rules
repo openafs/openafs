@@ -39,7 +39,8 @@ HTML_XSL   = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
 # The /usr/share/doc directory for these packages should be a symlink to
 # /usr/share/doc/openafs-client.  Any package on this list must depend on
 # openafs-client.
-DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-kpasswd
+DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fuse \
+	openafs-kpasswd
 
 # These are files that we know we don't want to install.  List them so that we
 # can use dh_install --fail-missing and catch anything new that shows up.
