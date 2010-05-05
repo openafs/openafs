@@ -434,7 +434,7 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 			         (tc, code, &avc->f.fid, areq,
 			          AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
 			          NULL));
-			if ((LockType == LockWrite) && (code == VREADONLY))
+			if ((lockType == LockWrite) && (code == VREADONLY))
 			    code = EBADF; /* per POSIX; VREADONLY == EROFS */
 		    } else
 		        /* XXX - Should probably try and log this when we're
