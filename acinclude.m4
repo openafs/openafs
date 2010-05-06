@@ -734,6 +734,10 @@ case $AFS_SYSNAME in
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
+# Linux alpha adds an extra underscore for no good reason.
+    *_linux_22) AFS_PARAM_COMMON=param.linux22.h ;;
+    *_linux_24) AFS_PARAM_COMMON=param.linux24.h ;;
+    *_linux_26) AFS_PARAM_COMMON=param.linux26.h ;;
 esac
 
 case $AFS_SYSNAME in *_linux* | *_umlinux*)
