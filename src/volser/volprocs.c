@@ -313,8 +313,9 @@ ViceCreateRoot(Volume *vp)
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     IHandle_t *h;
     FdHandle_t *fdP;
-    int code;
     afs_fsize_t length;
+    ssize_t nBytes;
+    afs_foff_t off;
 
     vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
     if (!vnode)
@@ -374,10 +375,10 @@ ViceCreateRoot(Volume *vp)
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
     assert(fdP != NULL);
-    code = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
-    assert(code >= 0);
-    code = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
-    assert(code == SIZEOF_LARGEDISKVNODE);
+    off = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
+    assert(off >= 0);
+    nBytes = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
+    assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
     VNDISK_GET_LEN(length, vnode);

@@ -1106,13 +1106,13 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 #define	COPYBUFFSIZE	8192
 #define MAXFSIZE (~(afs_fsize_t) 0)
 static int
-CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len)
+CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 {
     Inode ino, nearInode;
-    int rdlen;
-    int wrlen;
+    ssize_t rdlen;
+    ssize_t wrlen;
     register afs_fsize_t size;
-    register int length;
+    size_t length;
     char *buff;
     int rc;			/* return code */
     IHandle_t *newH;		/* Use until finished copying, then cp to vnode. */
@@ -1180,7 +1180,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 	    length = COPYBUFFSIZE;
 	    size -= COPYBUFFSIZE;
 	} else {
-	    length = (int)size;
+	    length = size;
 	    size = 0;
 	}
 	rdlen = FDH_READ(targFdP, buff, length);
@@ -1216,10 +1216,14 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 		free(buff);
 		return ENOSPC;
 	    } else {
+		/* length, rdlen, and wrlen may or may not be 64-bits wide;
+		 * since we never do any I/O anywhere near 2^32 bytes at a
+		 * time, just case to an unsigned int for printing */
+
 		ViceLog(0,
 			("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
-			 V_id(volptr), volptr->partition->name, length, rdlen,
-			 wrlen, errno));
+			 V_id(volptr), volptr->partition->name, (unsigned)length, (unsigned)rdlen,
+			 (unsigned)wrlen, errno));
 #if defined(AFS_DEMAND_ATTACH_FS)
 		ViceLog(0, ("CopyOnWrite failed: requesting salvage\n"));
 #else
@@ -1258,11 +1262,11 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 }				/*CopyOnWrite */
 
 static int
-CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_fsize_t off, afs_fsize_t size) {
+CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off, afs_fsize_t size) {
     char *buff = (char *)malloc(COPYBUFFSIZE);
-    register int length;
-    int rdlen;
-    int wrlen;
+    size_t length;
+    ssize_t rdlen;
+    ssize_t wrlen;
     int rc;
 
     FDH_SEEK(targFdP, off, SEEK_SET);
@@ -1274,7 +1278,7 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_fsize_t off, afs_fsize
 	    length = COPYBUFFSIZE;
 	    size -= COPYBUFFSIZE;
 	} else {
-	    length = (int)size;
+	    length = size;
 	    size = 0;
 	}
 	rdlen = FDH_READ(targFdP, buff, length);
@@ -4317,7 +4321,8 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new link */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Error errorCode = 0;		/* error code */
-    int len, code = 0;
+    afs_sfsize_t len;
+    int code = 0;
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
@@ -4418,7 +4423,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     len = strlen((char *) LinkContents);
     code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
     if (code) 
-	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
+	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", (int)len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -6978,7 +6983,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     )
 {
     struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
-    Error errorCode = 0;		/* Returned error code to caller */
     IHandle_t *ihP;
     FdHandle_t *fdP;
 #ifdef AFS_NT40_ENV
@@ -7060,14 +7064,15 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     tbuffer = AllocSendBuffer();
 #endif /* AFS_NT40_ENV */
     while (Len > 0) {
-	int wlen;
+	size_t wlen;
+	ssize_t nBytes;
 	if (Len > optSize)
 	    wlen = optSize;
 	else
-	    wlen = (int)Len;
+	    wlen = Len;
 #ifdef AFS_NT40_ENV
-	errorCode = FDH_READ(fdP, tbuffer, wlen);
-	if (errorCode != wlen) {
+	nBytes = FDH_READ(fdP, tbuffer, wlen);
+	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    VTakeOffline(volptr);
@@ -7075,32 +7080,32 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 			volptr->hashid));
 	    return EIO;
 	}
-	errorCode = rx_Write(Call, tbuffer, wlen);
+	nBytes = rx_Write(Call, tbuffer, wlen);
 #else /* AFS_NT40_ENV */
-	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
-	if (errorCode <= 0) {
+	nBytes = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
+	if (nBytes <= 0) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
-	wlen = errorCode;
-	errorCode = FDH_READV(fdP, tiov, tnio);
-	if (errorCode != wlen) {
+	wlen = nBytes;
+	nBytes = FDH_READV(fdP, tiov, tnio);
+	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
 	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
 			volptr->hashid));
 	    return EIO;
 	}
-	errorCode = rx_Writev(Call, tiov, tnio, wlen);
+	nBytes = rx_Writev(Call, tiov, tnio, wlen);
 #endif /* AFS_NT40_ENV */
 #if FS_STATS_DETAILED
 	/*
 	 * Bump the number of bytes actually sent by the number from this
 	 * latest iteration
 	 */
-	(*a_bytesFetchedP) += errorCode;
+	(*a_bytesFetchedP) += nBytes;
 #endif /* FS_STATS_DETAILED */
-	if (errorCode != wlen) {
+	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 #ifdef AFS_NT40_ENV
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
@@ -7221,6 +7226,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount = 0;		/* link count on inode */
     afs_fsize_t CoW_off, CoW_len;
+    ssize_t nBytes;
     FdHandle_t *fdP, *origfdP = NULL;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 
@@ -7382,9 +7388,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	/* Set the file's length; we've already done an lseek to the right
 	 * spot above.
 	 */
-	errorCode = FDH_WRITE(fdP, &tlen, 1);
-	if (errorCode != 1)
+	nBytes = FDH_WRITE(fdP, &tlen, 1);
+	if (nBytes != 1) {
+	    errorCode = -1;
 	    goto done;
+	}
 	errorCode = FDH_TRUNC(fdP, Pos);
     } else {
 	/* have some data to copy */
@@ -7416,11 +7424,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 #endif /* FS_STATS_DETAILED */
 	    rlen = errorCode;
 #ifdef AFS_NT40_ENV
-	    errorCode = FDH_WRITE(fdP, tbuffer, rlen);
+	    nBytes = FDH_WRITE(fdP, tbuffer, rlen);
 #else /* AFS_NT40_ENV */
-	    errorCode = FDH_WRITEV(fdP, tiov, tnio);
+	    nBytes = FDH_WRITEV(fdP, tiov, tnio);
 #endif /* AFS_NT40_ENV */
-	    if (errorCode != rlen) {
+	    if (nBytes != rlen) {
 		errorCode = VDISKFULL;
 		break;
 	    }

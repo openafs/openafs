@@ -50,6 +50,7 @@ int
 ReallyRead(DirHandle * file, int block, char *data)
 {
     int code;
+    ssize_t rdlen;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(file->dirh_handle);
@@ -72,9 +73,9 @@ ReallyRead(DirHandle * file, int block, char *data)
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
-    code = FDH_READ(fdP, data, PAGESIZE);
-    if (code != PAGESIZE) {
-	if (code < 0)
+    rdlen = FDH_READ(fdP, data, PAGESIZE);
+    if (rdlen != PAGESIZE) {
+	if (rdlen < 0)
 	    code = errno;
 	else
 	    code = EIO;
@@ -95,7 +96,7 @@ ReallyRead(DirHandle * file, int block, char *data)
 int
 ReallyWrite(DirHandle * file, int block, char *data)
 {
-    afs_int32 count;
+    ssize_t count;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(file->dirh_handle);

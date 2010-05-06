@@ -834,7 +834,7 @@ namei_copy_on_write(IHandle_t *h)
 	char path[259];
 	char *buf;
 	afs_size_t size;
-	afs_int32 tlen;
+	ssize_t tlen;
 	
 	fdP = IH_OPEN(h);
 	if (!fdP)
@@ -1040,7 +1040,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     int col;
     int coldata;
     short row;
-    int code;
+    ssize_t nBytes;
 
 
     fdP = IH_OPEN(ih);
@@ -1058,9 +1058,9 @@ GetFreeTag(IHandle_t * ih, int vno)
 	goto badGetFreeTag;
     }
 
-    code = read(fdP->fd_fd, (char *)&row, sizeof(row));
-    if (code != sizeof(row)) {
-	if (code != 0)
+    nBytes = read(fdP->fd_fd, (char *)&row, sizeof(row));
+    if (nBytes != sizeof(row)) {
+	if (nBytes != 0)
 	    goto badGetFreeTag;
 	row = 0;
     }
@@ -1109,7 +1109,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     int index;
     unsigned short row;
     int junk;
-    int code = -1;
+    ssize_t nBytes = -1;
 
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
@@ -1124,9 +1124,9 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     }
 
 
-    code = read(fdP->fd_fd, (char *)&row, sizeof(row));
-    if (code != sizeof(row)) {
-	if (code != 0) {
+    nBytes = read(fdP->fd_fd, (char *)&row, sizeof(row));
+    if (nBytes != sizeof(row)) {
+	if (nBytes != 0) {
 	    errno = EBADF;
 	    goto bad_SetLinkCount;
 	}
@@ -1149,13 +1149,13 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     }
     FDH_SYNC(fdP);
 
-    code = 0;
+    nBytes = 0;
 
 
   bad_SetLinkCount:
     flock(fdP->fd_fd, LOCK_UN);
 
-    return code;
+    return nBytes;
 }
 
 

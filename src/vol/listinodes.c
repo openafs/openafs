@@ -1390,7 +1390,8 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     char volname[20];
     char headername[16];
     char *name;
-    int fd, err, forcep, len, j, code;
+    int fd, err, forcep, j;
+    ssize_t len, nBytes;
     struct dirent *dp;
     struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
@@ -1478,8 +1479,8 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 			return errno;
 		    if (len == 0)
 			break;
-		    code = write(fdP2->fd_fd, buffer, len);
-		    if (code != len)
+		    nBytes = write(fdP2->fd_fd, buffer, len);
+		    if (nBytes != len)
 			return -1;
 		}
 	    }

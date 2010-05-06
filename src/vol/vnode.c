@@ -870,7 +870,8 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 {
     /* vnode not cached */
     Error error;
-    int n, dosalv = 1;
+    int dosalv = 1;
+    ssize_t nBytes;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
 
@@ -896,23 +897,23 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	Log("VnLoad: can't seek on index file vn=%u\n", Vn_id(vnp));
 	*ec = VIO;
 	goto error_encountered_nolock;
-    } else if ((n = FDH_READ(fdP, (char *)&vnp->disk, vcp->diskSize))
+    } else if ((nBytes = FDH_READ(fdP, (char *)&vnp->disk, vcp->diskSize))
 	       != vcp->diskSize) {
 	/* Don't take volume off line if the inumber is out of range
 	 * or the inode table is full. */
-	if (n == BAD_IGET) {
+	if (nBytes == BAD_IGET) {
 	    Log("VnLoad: bad inumber %s\n",
 		PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
 	    dosalv = 0;
-	} else if (n == -1 && errno == EIO) {
+	} else if (nBytes == -1 && errno == EIO) {
 	    /* disk error; salvage */
 	    Log("VnLoad: Couldn't read vnode %u, volume %u (%s); volume needs salvage\n", Vn_id(vnp), V_id(vp), V_name(vp));
 	} else {
 	    /* vnode is not allocated */
 	    if (LogLevel >= 5) 
 		Log("VnLoad: Couldn't read vnode %u, volume %u (%s); read %d bytes, errno %d\n", 
-		    Vn_id(vnp), V_id(vp), V_name(vp), n, errno);
+		    Vn_id(vnp), V_id(vp), V_name(vp), (int)nBytes, errno);
 	    *ec = VIO;
 	    dosalv = 0;
 	}
@@ -996,7 +997,8 @@ static void
 VnStore(Error * ec, Volume * vp, Vnode * vnp, 
 	struct VnodeClassInfo * vcp, VnodeClass class)
 {
-    int offset, code;
+    ssize_t nBytes;
+    afs_foff_t offset;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1022,13 +1024,13 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	goto error_encountered;
     }
 
-    code = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
-    if (code != vcp->diskSize) {
+    nBytes = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
+    if (nBytes != vcp->diskSize) {
 	/* Don't force volume offline if the inumber is out of
 	 * range or the inode table is full.
 	 */
 	FDH_REALLYCLOSE(fdP);
-	if (code == BAD_IGET) {
+	if (nBytes == BAD_IGET) {
 	    Log("VnStore: bad inumber %s\n",
 		PrintInode(NULL,
 			   vp->vnodeIndex[class].handle->ih_ino));
@@ -1038,7 +1040,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	    VnChangeState_r(vnp, VN_STATE_ERROR);
 #endif
 	} else {
-	    Log("VnStore: Couldn't write vnode %u, volume %u (%s) (error %d)\n", Vn_id(vnp), V_id(Vn_volume(vnp)), V_name(Vn_volume(vnp)), code);
+	    Log("VnStore: Couldn't write vnode %u, volume %u (%s) (error %d)\n", Vn_id(vnp), V_id(Vn_volume(vnp)), V_name(Vn_volume(vnp)), (int)nBytes);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    goto error_encountered;
 #else
