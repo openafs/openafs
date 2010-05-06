@@ -88,7 +88,7 @@ extern void osi_obsd_Free(void *p, size_t asize);
   free((p), (mflags))
 #else
 #define BSD_KMALLOC MALLOC
-#define BSD_KFREE KFREE
+#define BSD_KFREE FREE
 #endif /* AFS_OBSD42_ENV */
 
 /* proc, cred */
