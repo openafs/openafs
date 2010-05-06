@@ -51,6 +51,14 @@ pragma Off(Prototype_override_warnings);
 #define MIN_AFS_INT64 (-MAX_AFS_INT64 - 1)
 #define MAX_AFS_UINT64 0xFFFFFFFFFFFFFFFFL
 
+#ifndef HAVE_SSIZE_T
+typedef int ssize_t;
+#endif
+
+#ifndef HAVE_SIG_ATOMIC_T
+typedef int sig_atomic_t;
+#endif
+
 typedef short afs_int16;
 typedef unsigned short afs_uint16;
 #ifdef  AFS_64BIT_ENV
