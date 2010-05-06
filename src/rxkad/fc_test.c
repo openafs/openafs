@@ -31,6 +31,7 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
 #include <afs/param.h>
 #include "rxkad.h"
 #include <rx/rx.h>

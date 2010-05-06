@@ -28,12 +28,14 @@
 
 /* afsdump_scan.c - General-purpose dump scanner */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/fcntl.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 
-#include <afs/param.h>
 #include <afs/com_err.h>
 #include <afs/pterror.h>
 #include <afs/vlserver.h>

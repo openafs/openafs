@@ -1,4 +1,6 @@
+#include <afsconfig.h>
 #include <afs/param.h>
+
 #include <afs/afscbint.h>	/*Callback interface defs */
 #include <afs/afsutil.h>
 #include <afs/afsutil_prototypes.h>

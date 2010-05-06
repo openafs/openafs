@@ -61,6 +61,9 @@
  * so directories will appear first in the VNODE section.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -74,7 +77,6 @@
 #include <fcntl.h>
 
 #include <lock.h>
-#include <afs/param.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/acl.h>

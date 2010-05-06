@@ -31,6 +31,9 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -53,7 +56,6 @@
 
 #include <err.h>
 #include <netinet/in.h>
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>

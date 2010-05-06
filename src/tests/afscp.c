@@ -1,3 +1,6 @@
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +14,6 @@
 #include <sys/stat.h>
 #include <netdb.h>
 
-#include <afs/param.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
 #include <afs/afscbint.h>

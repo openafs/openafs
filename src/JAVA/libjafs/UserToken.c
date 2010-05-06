@@ -19,6 +19,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
 #include <afs/param.h>
 
 #include "Internal.h"
