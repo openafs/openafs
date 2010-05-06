@@ -2346,8 +2346,8 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
     cm_scache_t *scp;
     cm_fid_t tfid;
     struct rx_connection * rxconnp;
-    int inlinebulk = 0;		/* Did we use InlineBulkStatus RPC or not? */
-        
+    int inlinebulk;		/* Did we use InlineBulkStatus RPC or not? */
+
     memset(&volSync, 0, sizeof(volSync));
 
     /* otherwise, we may have one or more bulk stat's worth of stuff in bb;
@@ -2367,15 +2367,26 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
         callbackStruct.AFSCBs_val = &bbp->callbacks[filex];
         cm_StartCallbackGrantingCall(NULL, &cbReq);
         osi_Log1(afsd_logp, "CALL BulkStatus, %d entries", filesThisCall);
+
+        /*
+         * Whenever cm_Analyze is called for a RXAFS_ RPC there must
+         * be a FID provided.  However, the error code from RXAFS_BulkStatus
+         * or RXAFS_InlinkBulkStatus does not apply to any FID.  Therefore,
+         * we generate an invalid FID to match with the RPC error.
+         */
+        cm_SetFid(&tfid, dscp->fid.cell, dscp->fid.volume, 0, 0);
+
         do {
-            code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
+            inlinebulk = 0;
+
+            code = cm_ConnFromFID(&tfid, userp, reqp, &connp);
             if (code) 
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
 	    if (!(connp->serverp->flags & CM_SERVERFLAG_NOINLINEBULK)) {
 		code = RXAFS_InlineBulkStatus(rxconnp, &fidStruct,
-                                     &statStruct, &callbackStruct, &volSync);
+                                              &statStruct, &callbackStruct, &volSync);
 		if (code == RXGEN_OPCODE) {
 		    cm_SetServerNoInlineBulk(connp->serverp, 0);
 		} else {
@@ -2388,11 +2399,38 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 	    }
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &dscp->fid,
-                             &volSync, NULL, &cbReq, code));
+            /*
+             * If InlineBulk RPC was called and it succeeded,
+             * then pull out the return code from the status info
+             * and use it for cm_Analyze so that we can failover to other
+             * .readonly volume instances.  But only do it for errors that
+             * are volume global.
+             */
+            if (inlinebulk && code == 0 && (&bbp->stats[0])->errorCode) {
+                osi_Log1(afsd_logp, "cm_TryBulkStat inline-bulk stat error: %d",
+                          (&bbp->stats[0])->errorCode);
+                switch ((&bbp->stats[0])->errorCode) {
+                case VBUSY:
+                case VRESTARTING:
+                case VNOVOL:
+                case VMOVED:
+                case VOFFLINE:
+                case VSALVAGE:
+                case VNOSERVICE:
+                    code = (&bbp->stats[0])->errorCode;
+                    break;
+                default:
+                    /* Rx and Rxkad errors are volume global */
+                    if ( (&bbp->stats[0])->errorCode >= -64 && (&bbp->stats[0])->errorCode < 0 ||
+                         (&bbp->stats[0])->errorCode >= ERROR_TABLE_BASE_RXK && (&bbp->stats[0])->errorCode < ERROR_TABLE_BASE_RXK + 256)
+                        code = (&bbp->stats[0])->errorCode;
+                }
+            }
+        } while (cm_Analyze(connp, userp, reqp, &tfid, &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
 
-        /* may as well quit on an error, since we're not going to do
+        /*
+         * might as well quit on an error, since we're not going to do
          * much better on the next immediate call, either.
          */
         if (code) {
@@ -2400,63 +2438,76 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 		      inlinebulk ? "Inline" : "", code);
             cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
             break;
-        } else {
-            osi_Log1(afsd_logp, "CALL %sBulkStatus SUCCESS", inlinebulk ? "Inline" : "");
         }
 
-        /* otherwise, we should do the merges */
+        /*
+         * The bulk RPC has succeeded or at least not failed with a
+         * volume global error result.  For items that have inlineBulk
+         * errors we must call cm_Analyze in order to perform required
+         * logging of errors.
+         *
+         * If the RPC was not inline bulk or the entry either has no error
+         * the status must be merged.
+         */
+        osi_Log1(afsd_logp, "CALL %sBulkStatus SUCCESS", inlinebulk ? "Inline" : "");
+
         for (i = 0; i<filesThisCall; i++) {
             j = filex + i;
             cm_SetFid(&tfid, dscp->fid.cell, bbp->fids[j].Volume, bbp->fids[j].Vnode, bbp->fids[j].Unique);
-            code = cm_GetSCache(&tfid, &scp, userp, reqp);
-            if (code != 0) 
-                continue;
 
-            /* otherwise, if this entry has no callback info, 
-             * merge in this.
-             */
-            lock_ObtainWrite(&scp->rw);
-            /* now, we have to be extra paranoid on merging in this
-             * information, since we didn't use cm_SyncOp before
-             * starting the fetch to make sure that no bad races
-             * were occurring.  Specifically, we need to make sure
-             * we don't obliterate any newer information in the
-             * vnode than have here.
-             *
-             * Right now, be pretty conservative: if there's a
-             * callback or a pending call, skip it.
-             * However, if the prior attempt to obtain status
-             * was refused access or the volume is .readonly,
-             * take the data in any case since we have nothing
-             * better for the in flight directory enumeration that
-             * resulted in this function being called.
-             */
-            if ((scp->cbServerp == NULL &&
-                !(scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESTORING))) ||
-                (scp->flags & CM_SCACHEFLAG_PURERO) ||
-                (scp->flags & CM_SCACHEFLAG_EACCESS)) {
-                cm_EndCallbackGrantingCall(scp, &cbReq,
-                                            &bbp->callbacks[j],
-                                            &volSync,
-                                            CM_CALLBACK_MAINTAINCOUNT);
-                cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
-            }       
-            lock_ReleaseWrite(&scp->rw);
-            cm_ReleaseSCache(scp);
+            if (inlinebulk && (&bbp->stats[j])->errorCode) {
+                cm_req_t treq = *reqp;
+                cm_Analyze(NULL, userp, &treq, &tfid, &volSync, NULL, &cbReq, (&bbp->stats[j])->errorCode);
+            } else {
+                code = cm_GetSCache(&tfid, &scp, userp, reqp);
+                if (code != 0)
+                    continue;
+
+                /*
+                 * otherwise, if this entry has no callback info,
+                 * merge in this.  If there is existing callback info
+                 * we skip the merge because the existing data must be
+                 * current (we have a callback) and the response from
+                 * a non-inline bulk rpc might actually be wrong.
+                 *
+                 * now, we have to be extra paranoid on merging in this
+                 * information, since we didn't use cm_SyncOp before
+                 * starting the fetch to make sure that no bad races
+                 * were occurring.  Specifically, we need to make sure
+                 * we don't obliterate any newer information in the
+                 * vnode than have here.
+                 *
+                 * Right now, be pretty conservative: if there's a
+                 * callback or a pending call, skip it.
+                 * However, if the prior attempt to obtain status
+                 * was refused access or the volume is .readonly,
+                 * take the data in any case since we have nothing
+                 * better for the in flight directory enumeration that
+                 * resulted in this function being called.
+                 */
+                lock_ObtainRead(&scp->rw);
+                if ((scp->cbServerp == NULL &&
+                     !(scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESTORING))) ||
+                     (scp->flags & CM_SCACHEFLAG_PURERO) ||
+                     (scp->flags & CM_SCACHEFLAG_EACCESS))
+                {
+                    lock_ConvertRToW(&scp->rw);
+                    cm_EndCallbackGrantingCall(scp, &cbReq,
+                                               &bbp->callbacks[j],
+                                               &volSync,
+                                               CM_CALLBACK_MAINTAINCOUNT);
+                    cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
+                    lock_ReleaseWrite(&scp->rw);
+                } else {
+                    lock_ReleaseRead(&scp->rw);
+                }
+                cm_ReleaseSCache(scp);
+            }
         } /* all files in the response */
         /* now tell it to drop the count,
          * after doing the vnode processing above */
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
     }	/* while there are still more files to process */
-
-    /* If we did the InlineBulk RPC pull out the return code and log it */
-    if (inlinebulk) {
-	if ((&bbp->stats[0])->errorCode) {
-	    osi_Log1(afsd_logp, "cm_TryBulkStat bulk stat error: %d", 
-		     (&bbp->stats[0])->errorCode);
-            code = (&bbp->stats[0])->errorCode;
-	}
-    }
 
     return code;
 }
