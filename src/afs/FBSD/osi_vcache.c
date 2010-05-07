@@ -38,7 +38,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
 
         vgone(AFSTOV(avc));
 #if defined(AFS_FBSD80_ENV)
-	VOP_UNLOCK(AFSTOV(tvc), 0);
+	VOP_UNLOCK(AFSTOV(avc), 0);
 #endif
 
 	AFS_GLOCK();
