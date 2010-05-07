@@ -150,4 +150,6 @@ extern struct thread *afs_global_owner;
 #undef USERPRI
 #define USERPRI splx(splvar)
 
+#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+
 #endif /* _OSI_MACHDEP_H_ */
