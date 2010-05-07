@@ -933,6 +933,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    RX_AFS_GUNLOCK();
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
+	    retryonce:
 		code =
 		    RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
 					   &cbParm, &volSync);
@@ -942,8 +943,21 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		    code =
 			RXAFS_BulkStatus(tcp->id, &fidParm, &statParm,
 					 &cbParm, &volSync);
-		} else
+		} else {
 		    inlinebulk = 1;
+		    if (!code && ((&statsp[0])->errorCode)) {
+			/*
+			 * If this is an error needing retry, do so.
+			 * Retryable errors are all whole-volume or
+			 * whole-server.
+			 */
+			if (afs_Analyze(tcp, (&statsp[0])->errorCode,
+					&adp->f.fid, areqp,
+					AFS_STATS_FS_RPCIDX_BULKSTATUS,
+					SHARED_LOCK, NULL) != 0)
+			    goto retryonce;
+		    }
+		}
 	    } else {
 		inlinebulk = 0;
 		code =
