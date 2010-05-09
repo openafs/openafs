@@ -1980,6 +1980,10 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		MUTEX_ENTER(&rx_peerHashTable_lock);
 		for (tp = rx_peerHashTable[i]; tp; tp = tp->next) {
 		    if (tin.index-- <= 0) {
+                        tp->refCount++;
+                        MUTEX_EXIT(&rx_peerHashTable_lock);
+
+                        MUTEX_ENTER(&tp->peer_lock);
 			tpeer.host = tp->host;
 			tpeer.port = tp->port;
 			tpeer.ifMTU = htons(tp->ifMTU);
@@ -2012,8 +2016,12 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			    htonl(tp->bytesReceived.high);
 			tpeer.bytesReceived.low =
 			    htonl(tp->bytesReceived.low);
+                        MUTEX_EXIT(&tp->peer_lock);
 
+                        MUTEX_ENTER(&rx_peerHashTable_lock);
+                        tp->refCount--;
 			MUTEX_EXIT(&rx_peerHashTable_lock);
+
 			rx_packetwrite(ap, 0, sizeof(struct rx_debugPeer),
 				       (char *)&tpeer);
 			tl = ap->length;

@@ -139,6 +139,7 @@ struct rx_tq_debug {
  * rxi_rpc_peer_stat_cnt counts the total number of peer stat structures
  * currently allocated within rx.  This number is used to allocate the
  * memory required to return the statistics when queried.
+ * Protected by the rx_rpc_stats mutex.
  */
 
 static unsigned int rxi_rpc_peer_stat_cnt;
@@ -147,6 +148,7 @@ static unsigned int rxi_rpc_peer_stat_cnt;
  * rxi_rpc_process_stat_cnt counts the total number of local process stat
  * structures currently allocated within rx.  The number is used to allocate
  * the memory required to return the statistics when queried.
+ * Protected by the rx_rpc_stats mutex.
  */
 
 static unsigned int rxi_rpc_process_stat_cnt;
@@ -334,8 +336,8 @@ struct rx_connection *rxLastConn = 0;
  * freeSQEList_lock
  *
  * serverQueueEntry->lock
- * rx_rpc_stats
  * rx_peerHashTable_lock - locked under rx_connHashTable_lock
+ * rx_rpc_stats
  * peer->lock - locks peer data fields.
  * conn_data_lock - that more than one thread is not updating a conn data
  *		    field at the same time.
@@ -2441,6 +2443,7 @@ void
 rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
 {
     struct rx_peer **peer_ptr, **peer_end;
+    struct rx_peer *peer = NULL;
     int hashIndex;
 
     MUTEX_ENTER(&rx_peerHashTable_lock);
@@ -2448,28 +2451,32 @@ rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
        for (peer_ptr = &rx_peerHashTable[0], peer_end =
                 &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
             peer_ptr++) {
-           struct rx_peer *peer, *next;
+           struct rx_peer *next;
            for (peer = *peer_ptr; peer; peer = next) {
                next = peer->next;
-               if (host == peer->host) {
-                   MUTEX_ENTER(&peer->peer_lock);
-                   peer->ifMTU=MIN(mtu, peer->ifMTU);
-                   peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
-                   MUTEX_EXIT(&peer->peer_lock);
-               }
+               if (host == peer->host)
+                   break;
            }
        }
     } else {
-       struct rx_peer *peer;
        hashIndex = PEER_HASH(host, port);
        for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
-           if ((peer->host == host) && (peer->port == port)) {
-               MUTEX_ENTER(&peer->peer_lock);
-               peer->ifMTU=MIN(mtu, peer->ifMTU);
-               peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
-               MUTEX_EXIT(&peer->peer_lock);
-           }
+           if ((peer->host == host) && (peer->port == port))
+               break;
        }
+    }
+
+    if (peer) {
+        peer->refCount++;
+        MUTEX_EXIT(&rx_peerHashTable_lock);
+
+        MUTEX_ENTER(&peer->peer_lock);
+        peer->ifMTU=MIN(mtu, peer->ifMTU);
+        peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+        MUTEX_EXIT(&peer->peer_lock);
+
+        MUTEX_ENTER(&rx_peerHashTable_lock);
+        peer->refCount++;
     }
     MUTEX_EXIT(&rx_peerHashTable_lock);
 }
@@ -6322,19 +6329,60 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
     {
 	struct rx_peer **peer_ptr, **peer_end;
 	int code;
-	MUTEX_ENTER(&rx_rpc_stats);
-	MUTEX_ENTER(&rx_peerHashTable_lock);
+
+        /*
+         * Why do we need to hold the rx_peerHashTable_lock across
+         * the incrementing of peer_ptr since the rx_peerHashTable
+         * array is not changing?  We don't.
+         *
+         * By dropping the lock periodically we can permit other
+         * activities to be performed while a rxi_ReapConnections
+         * call is in progress.  The goal of reap connections
+         * is to clean up quickly without causing large amounts
+         * of contention.  Therefore, it is important that global
+         * mutexes not be held for extended periods of time.
+         */
 	for (peer_ptr = &rx_peerHashTable[0], peer_end =
 	     &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	     peer_ptr++) {
 	    struct rx_peer *peer, *next, *prev;
-	    for (prev = peer = *peer_ptr; peer; peer = next) {
+
+            MUTEX_ENTER(&rx_peerHashTable_lock);
+            for (prev = peer = *peer_ptr; peer; peer = next) {
 		next = peer->next;
 		code = MUTEX_TRYENTER(&peer->peer_lock);
 		if ((code) && (peer->refCount == 0)
 		    && ((peer->idleWhen + rx_idlePeerTime) < now.sec)) {
 		    rx_interface_stat_p rpc_stat, nrpc_stat;
 		    size_t space;
+
+                    /*
+                     * now know that this peer object is one to be
+                     * removed from the hash table.  Once it is removed
+                     * it can't be referenced by other threads.
+                     * Lets remove it first and decrement the struct
+                     * nPeerStructs count.
+                     */
+		    if (peer == *peer_ptr) {
+			*peer_ptr = next;
+			prev = next;
+		    } else
+			prev->next = next;
+
+                    if (rx_stats_active)
+                        rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
+
+                    /*
+                     * Now if we hold references on 'prev' and 'next'
+                     * we can safely drop the rx_peerHashTable_lock
+                     * while we destroy this 'peer' object.
+                     */
+                    if (next)
+                        next->refCount++;
+                    if (prev)
+                        prev->refCount++;
+                    MUTEX_EXIT(&rx_peerHashTable_lock);
+
 		    MUTEX_EXIT(&peer->peer_lock);
 		    MUTEX_DESTROY(&peer->peer_lock);
 		    for (queue_Scan
@@ -6352,16 +6400,23 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 			    sizeof(rx_function_entry_v1_t);
 
 			rxi_Free(rpc_stat, space);
+
+                        MUTEX_ENTER(&rx_rpc_stats);
 			rxi_rpc_peer_stat_cnt -= num_funcs;
+                        MUTEX_EXIT(&rx_rpc_stats);
 		    }
 		    rxi_FreePeer(peer);
-                    if (rx_stats_active)
-                        rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
-		    if (peer == *peer_ptr) {
-			*peer_ptr = next;
-			prev = next;
-		    } else
-			prev->next = next;
+
+                    /*
+                     * Regain the rx_peerHashTable_lock and
+                     * decrement the reference count on 'prev'
+                     * and 'next'.
+                     */
+                    MUTEX_ENTER(&rx_peerHashTable_lock);
+                    if (next)
+                        next->refCount--;
+                    if (prev)
+                        prev->refCount--;
 		} else {
 		    if (code) {
 			MUTEX_EXIT(&peer->peer_lock);
@@ -6369,9 +6424,8 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 		    prev = peer;
 		}
 	    }
+            MUTEX_EXIT(&rx_peerHashTable_lock);
 	}
-	MUTEX_EXIT(&rx_peerHashTable_lock);
-	MUTEX_EXIT(&rx_rpc_stats);
     }
 
     /* THIS HACK IS A TEMPORARY HACK.  The idea is that the race condition in
@@ -7186,8 +7240,12 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 	}
 
 	if (tp) {
+                tp->refCount++;
+                MUTEX_EXIT(&rx_peerHashTable_lock);
+
 		error = 0;
 
+                MUTEX_ENTER(&tp->peer_lock);
 		peerStats->host = tp->host;
 		peerStats->port = tp->port;
 		peerStats->ifMTU = tp->ifMTU;
@@ -7218,6 +7276,10 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->bytesSent.low = tp->bytesSent.low;
 		peerStats->bytesReceived.high = tp->bytesReceived.high;
 		peerStats->bytesReceived.low = tp->bytesReceived.low;
+                MUTEX_EXIT(&tp->peer_lock);
+
+                MUTEX_ENTER(&rx_peerHashTable_lock);
+                tp->refCount--;
 	}
 	MUTEX_EXIT(&rx_peerHashTable_lock);
 
@@ -7274,9 +7336,14 @@ shutdown_rx(void)
 	     &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	     peer_ptr++) {
 	    struct rx_peer *peer, *next;
-	    for (peer = *peer_ptr; peer; peer = next) {
+
+            MUTEX_ENTER(&rx_peerHashTable_lock);
+            for (peer = *peer_ptr; peer; peer = next) {
 		rx_interface_stat_p rpc_stat, nrpc_stat;
 		size_t space;
+
+                MUTEX_ENTER(&rx_rpc_stats);
+                MUTEX_ENTER(&peer->peer_lock);
 		for (queue_Scan
 		     (&peer->rpcStats, rpc_stat, nrpc_stat,
 		      rx_interface_stat)) {
@@ -7292,15 +7359,19 @@ shutdown_rx(void)
 			sizeof(rx_function_entry_v1_t);
 
 		    rxi_Free(rpc_stat, space);
-		    MUTEX_ENTER(&rx_rpc_stats);
+
+                    /* rx_rpc_stats must be held */
 		    rxi_rpc_peer_stat_cnt -= num_funcs;
-		    MUTEX_EXIT(&rx_rpc_stats);
 		}
+                MUTEX_EXIT(&peer->peer_lock);
+                MUTEX_EXIT(&rx_rpc_stats);
+
 		next = peer->next;
 		rxi_FreePeer(peer);
                 if (rx_stats_active)
                     rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
 	    }
+            MUTEX_EXIT(&rx_peerHashTable_lock);
 	}
     }
     for (i = 0; i < RX_MAX_SERVICES; i++) {
@@ -7639,12 +7710,13 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
         return;
 
     MUTEX_ENTER(&rx_rpc_stats);
-    MUTEX_ENTER(&peer->peer_lock);
 
     if (rxi_monitor_peerStats) {
+        MUTEX_ENTER(&peer->peer_lock);
 	rxi_AddRpcStat(&peer->rpcStats, rxInterface, currentFunc, totalFunc,
 		       queueTime, execTime, bytesSent, bytesRcvd, isServer,
 		       peer->host, peer->port, 1, &rxi_rpc_peer_stat_cnt);
+        MUTEX_EXIT(&peer->peer_lock);
     }
 
     if (rxi_monitor_processStats) {
@@ -7653,7 +7725,6 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
 		       0xffffffff, 0xffffffff, 0, &rxi_rpc_process_stat_cnt);
     }
 
-    MUTEX_EXIT(&peer->peer_lock);
     MUTEX_EXIT(&rx_rpc_stats);
 
 }
@@ -8091,8 +8162,6 @@ rx_disablePeerRPCStats(void)
     struct rx_peer **peer_ptr, **peer_end;
     int code;
 
-    MUTEX_ENTER(&rx_rpc_stats);
-
     /*
      * Turn off peer statistics and if process stats is also off, turn
      * off everything
@@ -8103,18 +8172,34 @@ rx_disablePeerRPCStats(void)
 	rx_enable_stats = 0;
     }
 
-    MUTEX_ENTER(&rx_peerHashTable_lock);
     for (peer_ptr = &rx_peerHashTable[0], peer_end =
 	 &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	 peer_ptr++) {
 	struct rx_peer *peer, *next, *prev;
-	for (prev = peer = *peer_ptr; peer; peer = next) {
+
+        MUTEX_ENTER(&rx_peerHashTable_lock);
+        MUTEX_ENTER(&rx_rpc_stats);
+        for (prev = peer = *peer_ptr; peer; peer = next) {
 	    next = peer->next;
 	    code = MUTEX_TRYENTER(&peer->peer_lock);
 	    if (code) {
 		rx_interface_stat_p rpc_stat, nrpc_stat;
 		size_t space;
-		for (queue_Scan
+
+		if (prev == *peer_ptr) {
+		    *peer_ptr = next;
+		    prev = next;
+		} else
+		    prev->next = next;
+
+                if (next)
+                    next->refCount++;
+                if (prev)
+                    prev->refCount++;
+                peer->refCount++;
+                MUTEX_EXIT(&rx_peerHashTable_lock);
+
+                for (queue_Scan
 		     (&peer->rpcStats, rpc_stat, nrpc_stat,
 		      rx_interface_stat)) {
 		    unsigned int num_funcs = 0;
@@ -8132,18 +8217,20 @@ rx_disablePeerRPCStats(void)
 		    rxi_rpc_peer_stat_cnt -= num_funcs;
 		}
 		MUTEX_EXIT(&peer->peer_lock);
-		if (prev == *peer_ptr) {
-		    *peer_ptr = next;
-		    prev = next;
-		} else
-		    prev->next = next;
+
+                MUTEX_ENTER(&rx_peerHashTable_lock);
+                if (next)
+                    next->refCount--;
+                if (prev)
+                    prev->refCount--;
+                peer->refCount--;
 	    } else {
 		prev = peer;
 	    }
 	}
+        MUTEX_EXIT(&rx_rpc_stats);
+        MUTEX_EXIT(&rx_peerHashTable_lock);
     }
-    MUTEX_EXIT(&rx_peerHashTable_lock);
-    MUTEX_EXIT(&rx_rpc_stats);
 }
 
 /*
