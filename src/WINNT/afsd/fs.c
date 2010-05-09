@@ -1739,7 +1739,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
     int error = 0;
     int literal = 0;
     cm_ioctlQueryOptions_t options;
-    int len;
+    size_t len;
 
     if (as->parms[1].items)
         literal = 1;
@@ -2970,7 +2970,6 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     struct hostent *thp;
     afs_int32 fsport = 0, vlport = 0;
     errno_t err;
-    int len;
     size_t destRemaining;
 
     memset(space, 0, AFS_MAXHOSTS * sizeof(afs_int32));
