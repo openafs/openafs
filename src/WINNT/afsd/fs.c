@@ -1007,6 +1007,11 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
         clear = 0;
     plusp = !(as->parms[3].items);
     for(ti=as->parms[0].items; ti;ti=ti->next) {
+        if ( IsFreelanceRoot(ti->data) ) {
+            fprintf(stderr,"%s: ACLs cannot be set on the Freelance root.afs volume.\n", pn);
+            error = 1;
+            continue;
+        }
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
@@ -1449,7 +1454,14 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	char separator;
-	blob.out_size = AFS_PIOCTL_MAXSIZE;
+
+        if ( IsFreelanceRoot(ti->data) ) {
+            fprintf(stderr,"%s: ACLs are not set on the Freelance root.afs volume.\n", pn);
+            error = 1;
+            continue;
+        }
+
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
@@ -2309,7 +2321,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     }
     if ( IsFreelanceRoot(parent) ) {
 	if ( !IsAdmin() ) {
-	    fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
+	    fprintf(stderr,"%s: Only AFS Client Administrators may alter the Freelance root.afs volume\n", pn);
 	    return 1;
 	}
 
@@ -2486,7 +2498,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
 	}
 
         if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
-            fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
+            fprintf(stderr,"%s: Only AFS Client Administrators may alter the Freelance root.afs volume\n", pn);
             error = 1;
             continue;   /* skip */
         }
