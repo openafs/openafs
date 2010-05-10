@@ -75,11 +75,11 @@ BOOL CPartitionInfoDlg::OnInitDialog()
 	strFree.Format(_T("%ld"), m_nFree);
 	
 	CString strPerUsed;
-	strPerUsed.Format(_T("%d"), ((m_nSize - m_nFree) * 100) / m_nSize);
+	strPerUsed.Format(_T("%d"), ((m_nSize - m_nFree) / m_nSize) * 100);
 
 	m_Size.SetWindowText(strSize);
 	m_Free.SetWindowText(strFree);
-    percentUsed = ( double(m_nSize - m_nFree) * 100.0l ) / double(m_nSize);
+    percentUsed = ( double(m_nSize - m_nFree) / double(m_nSize) * 100.0l);
     strPerUsed.Format(_T("%2.2lf"), percentUsed );
 
 	return TRUE;  // return TRUE unless you set the focus to a control

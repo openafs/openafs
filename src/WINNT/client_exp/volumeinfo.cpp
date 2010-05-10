@@ -201,7 +201,7 @@ void CVolumeInfo::OnDeltaPosQuotaSpin(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
 	
-	LONG nNewQuota = m_nNewQuota + pNMUpDown->iDelta * 1024;
+	unsigned __int64 nNewQuota = m_nNewQuota + pNMUpDown->iDelta * 1024;
 	if (nNewQuota < 0)
 		return;
 
@@ -225,14 +225,14 @@ void CVolumeInfo::ShowInfo()
 			strEntry = m_pVolInfo[i].m_strFileName + "\t(Error:  " + m_pVolInfo[i].m_strErrorMsg + ")";
 		else {
 
-			LONG nQuota;
+			unsigned __int64 nQuota;
 			if (m_pVolInfo[i].m_nDup == -1)
 				nQuota = m_pVolInfo[i].m_nNewQuota;
 			else
 				nQuota = m_pVolInfo[m_pVolInfo[i].m_nDup].m_nNewQuota;
 
  			if (nQuota != 0) {
-				LONG nPercentUsed = (m_pVolInfo[i].m_nUsed * 100) / nQuota;
+                            LONG nPercentUsed = (LONG)((double)m_pVolInfo[i].m_nUsed / nQuota * 100);
                             strEntry.Format(_T("%s\t%s\t%ld\t%ldK\t%ldK\t%ld%%"),
                                             m_pVolInfo[i].m_strFileName,
                                             m_pVolInfo[i].m_strName,

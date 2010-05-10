@@ -35,7 +35,7 @@ public:
 	CButton	m_Ok;
 	CButton	m_ShowPartInfo;
 	CListBox	m_List;
-	long	m_nNewQuota;
+	unsigned __int64 m_nNewQuota;
 	//}}AFX_DATA
 
 
