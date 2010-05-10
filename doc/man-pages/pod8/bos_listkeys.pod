@@ -20,10 +20,14 @@ B<bos listk> S<<< B<-se> <I<machine name>> >>> [B<-sh>] S<<< [B<-c> <I<cell name
 
 The B<bos listkeys> command formats and displays the list of server
 encryption keys from the F</usr/afs/etc/KeyFile> file on the server
-machine named by the B<-server> argument.
+machine named by the B<-server> argument.  It is equivalent to B<asetkey
+list>, but can be run remotely.
 
-To edit the list of keys, use the B<bos addkey> and B<bos removekey>
-commands.
+To edit the list of keys, use the B<asetkey> command; see L<asetkey(8)>
+for more information.  You can also remove keys remotely using the B<bos
+removekey> command.  If you are using the Authentication Server
+(B<kaserver>) rather than a Kerberos v5 KDC, use the B<bos addkey> command
+instead of B<asetkey> to add a new key.
 
 =head1 CAUTIONS
 
@@ -42,12 +46,15 @@ file. Identify the machine by IP address or its host name (either
 fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
 
 For consistent performance in the cell, the output must be the same on
-every server machine. The B<bos addkey> reference page explains how to
-keep the machines synchronized.
+every server machine.  L<asetkey(8)> explains how to keep the machines
+synchronized.
 
 =item B<-showkey>
 
-Displays the octal digits that constitute each key.
+Displays the octal digits that constitute each key.  Anyone who has access
+to the resulting output will have complete access to the AFS cell and will
+be able to impersonate the AFS cell to any client, so be very careful when
+using this option.
 
 =item B<-cell> <I<cell name>>
 
@@ -130,6 +137,7 @@ included.
 
 L<KeyFile(5)>,
 L<UserList(5)>,
+L<asetkey(8)>,
 L<bos_addkey(8)>,
 L<bos_removekey(8)>,
 L<bos_setauth(8)>,
@@ -139,6 +147,6 @@ L<kas_examine(8)>
 
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 
-This documentation is covered by the IBM Public License Version 1.0.  It was
-converted from HTML to POD by software written by Chas Williams and Russ
-Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+This documentation is covered by the IBM Public License Version 1.0.  It
+was converted from HTML to POD by software written by Chas Williams and
+Russ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
