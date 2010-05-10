@@ -214,7 +214,7 @@ CONF_DLLLIBS = \
     $(DESTDIR)\lib\afs\afsreg.lib
 
 $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
-	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib mpr.lib shell32.lib
+	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib mpr.lib shell32.lib Rpcrt4.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
