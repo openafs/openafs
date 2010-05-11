@@ -117,17 +117,17 @@ PrintCallInfo(void)
     printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
 
-    printf("AFS_XSTATSCOLL_CALL_INFO (coll %d) for FS %s\n[Probe %d, %s]\n\n",
+    printf("AFS_XSTATSCOLL_CALL_INFO (coll %d) for FS %s\n[Probe %u, %s]\n\n",
 	   xstat_fs_Results.collectionNumber,
 	   xstat_fs_Results.connP->hostName, xstat_fs_Results.probeNum,
 	   printableTime);
 
     if (debugging_on)
-	printf("\n[%d entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
+	printf("\n[%u entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
 
     for (i = 0; i < numInt32s; i++)
-	printf("%d ", *currInt32++);
-    fprintf(stderr, "\n");
+	printf("%u ", *currInt32++);
+    printf("\n");
 
 }				/*PrintCallInfo */
 
@@ -154,105 +154,105 @@ PrintCallInfo(void)
 void
 PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
 {
-    printf("\t%10d numPerfCalls\n\n", a_ovP->numPerfCalls);
+    printf("\t%10u numPerfCalls\n\n", a_ovP->numPerfCalls);
 
     /*
      * Vnode cache section.
      */
-    printf("\t%10d vcache_L_Entries\n", a_ovP->vcache_L_Entries);
-    printf("\t%10d vcache_L_Allocs\n", a_ovP->vcache_L_Allocs);
-    printf("\t%10d vcache_L_Gets\n", a_ovP->vcache_L_Gets);
-    printf("\t%10d vcache_L_Reads\n", a_ovP->vcache_L_Reads);
-    printf("\t%10d vcache_L_Writes\n\n", a_ovP->vcache_L_Writes);
+    printf("\t%10u vcache_L_Entries\n", a_ovP->vcache_L_Entries);
+    printf("\t%10u vcache_L_Allocs\n", a_ovP->vcache_L_Allocs);
+    printf("\t%10u vcache_L_Gets\n", a_ovP->vcache_L_Gets);
+    printf("\t%10u vcache_L_Reads\n", a_ovP->vcache_L_Reads);
+    printf("\t%10u vcache_L_Writes\n\n", a_ovP->vcache_L_Writes);
 
-    printf("\t%10d vcache_S_Entries\n", a_ovP->vcache_S_Entries);
-    printf("\t%10d vcache_S_Allocs\n", a_ovP->vcache_S_Allocs);
-    printf("\t%10d vcache_S_Gets\n", a_ovP->vcache_S_Gets);
-    printf("\t%10d vcache_S_Reads\n", a_ovP->vcache_S_Reads);
-    printf("\t%10d vcache_S_Writes\n\n", a_ovP->vcache_S_Writes);
+    printf("\t%10u vcache_S_Entries\n", a_ovP->vcache_S_Entries);
+    printf("\t%10u vcache_S_Allocs\n", a_ovP->vcache_S_Allocs);
+    printf("\t%10u vcache_S_Gets\n", a_ovP->vcache_S_Gets);
+    printf("\t%10u vcache_S_Reads\n", a_ovP->vcache_S_Reads);
+    printf("\t%10u vcache_S_Writes\n\n", a_ovP->vcache_S_Writes);
 
-    printf("\t%10d vcache_H_Entries\n", a_ovP->vcache_H_Entries);
-    printf("\t%10d vcache_H_Gets\n", a_ovP->vcache_H_Gets);
-    printf("\t%10d vcache_H_Replacements\n\n", a_ovP->vcache_H_Replacements);
+    printf("\t%10u vcache_H_Entries\n", a_ovP->vcache_H_Entries);
+    printf("\t%10u vcache_H_Gets\n", a_ovP->vcache_H_Gets);
+    printf("\t%10u vcache_H_Replacements\n\n", a_ovP->vcache_H_Replacements);
 
     /*
      * Directory package section.
      */
-    printf("\t%10d dir_Buffers\n", a_ovP->dir_Buffers);
-    printf("\t%10d dir_Calls\n", a_ovP->dir_Calls);
-    printf("\t%10d dir_IOs\n\n", a_ovP->dir_IOs);
+    printf("\t%10u dir_Buffers\n", a_ovP->dir_Buffers);
+    printf("\t%10u dir_Calls\n", a_ovP->dir_Calls);
+    printf("\t%10u dir_IOs\n\n", a_ovP->dir_IOs);
 
     /*
      * Rx section.
      */
-    printf("\t%10d rx_packetRequests\n", a_ovP->rx_packetRequests);
-    printf("\t%10d rx_noPackets_RcvClass\n", a_ovP->rx_noPackets_RcvClass);
-    printf("\t%10d rx_noPackets_SendClass\n", a_ovP->rx_noPackets_SendClass);
-    printf("\t%10d rx_noPackets_SpecialClass\n",
+    printf("\t%10u rx_packetRequests\n", a_ovP->rx_packetRequests);
+    printf("\t%10u rx_noPackets_RcvClass\n", a_ovP->rx_noPackets_RcvClass);
+    printf("\t%10u rx_noPackets_SendClass\n", a_ovP->rx_noPackets_SendClass);
+    printf("\t%10u rx_noPackets_SpecialClass\n",
 	   a_ovP->rx_noPackets_SpecialClass);
-    printf("\t%10d rx_socketGreedy\n", a_ovP->rx_socketGreedy);
-    printf("\t%10d rx_bogusPacketOnRead\n", a_ovP->rx_bogusPacketOnRead);
-    printf("\t%10d rx_bogusHost\n", a_ovP->rx_bogusHost);
-    printf("\t%10d rx_noPacketOnRead\n", a_ovP->rx_noPacketOnRead);
-    printf("\t%10d rx_noPacketBuffersOnRead\n",
+    printf("\t%10u rx_socketGreedy\n", a_ovP->rx_socketGreedy);
+    printf("\t%10u rx_bogusPacketOnRead\n", a_ovP->rx_bogusPacketOnRead);
+    printf("\t%10u rx_bogusHost\n", a_ovP->rx_bogusHost);
+    printf("\t%10u rx_noPacketOnRead\n", a_ovP->rx_noPacketOnRead);
+    printf("\t%10u rx_noPacketBuffersOnRead\n",
 	   a_ovP->rx_noPacketBuffersOnRead);
-    printf("\t%10d rx_selects\n", a_ovP->rx_selects);
-    printf("\t%10d rx_sendSelects\n", a_ovP->rx_sendSelects);
-    printf("\t%10d rx_packetsRead_RcvClass\n",
+    printf("\t%10u rx_selects\n", a_ovP->rx_selects);
+    printf("\t%10u rx_sendSelects\n", a_ovP->rx_sendSelects);
+    printf("\t%10u rx_packetsRead_RcvClass\n",
 	   a_ovP->rx_packetsRead_RcvClass);
-    printf("\t%10d rx_packetsRead_SendClass\n",
+    printf("\t%10u rx_packetsRead_SendClass\n",
 	   a_ovP->rx_packetsRead_SendClass);
-    printf("\t%10d rx_packetsRead_SpecialClass\n",
+    printf("\t%10u rx_packetsRead_SpecialClass\n",
 	   a_ovP->rx_packetsRead_SpecialClass);
-    printf("\t%10d rx_dataPacketsRead\n", a_ovP->rx_dataPacketsRead);
-    printf("\t%10d rx_ackPacketsRead\n", a_ovP->rx_ackPacketsRead);
-    printf("\t%10d rx_dupPacketsRead\n", a_ovP->rx_dupPacketsRead);
-    printf("\t%10d rx_spuriousPacketsRead\n", a_ovP->rx_spuriousPacketsRead);
-    printf("\t%10d rx_packetsSent_RcvClass\n",
+    printf("\t%10u rx_dataPacketsRead\n", a_ovP->rx_dataPacketsRead);
+    printf("\t%10u rx_ackPacketsRead\n", a_ovP->rx_ackPacketsRead);
+    printf("\t%10u rx_dupPacketsRead\n", a_ovP->rx_dupPacketsRead);
+    printf("\t%10u rx_spuriousPacketsRead\n", a_ovP->rx_spuriousPacketsRead);
+    printf("\t%10u rx_packetsSent_RcvClass\n",
 	   a_ovP->rx_packetsSent_RcvClass);
-    printf("\t%10d rx_packetsSent_SendClass\n",
+    printf("\t%10u rx_packetsSent_SendClass\n",
 	   a_ovP->rx_packetsSent_SendClass);
-    printf("\t%10d rx_packetsSent_SpecialClass\n",
+    printf("\t%10u rx_packetsSent_SpecialClass\n",
 	   a_ovP->rx_packetsSent_SpecialClass);
-    printf("\t%10d rx_ackPacketsSent\n", a_ovP->rx_ackPacketsSent);
-    printf("\t%10d rx_pingPacketsSent\n", a_ovP->rx_pingPacketsSent);
-    printf("\t%10d rx_abortPacketsSent\n", a_ovP->rx_abortPacketsSent);
-    printf("\t%10d rx_busyPacketsSent\n", a_ovP->rx_busyPacketsSent);
-    printf("\t%10d rx_dataPacketsSent\n", a_ovP->rx_dataPacketsSent);
-    printf("\t%10d rx_dataPacketsReSent\n", a_ovP->rx_dataPacketsReSent);
-    printf("\t%10d rx_dataPacketsPushed\n", a_ovP->rx_dataPacketsPushed);
-    printf("\t%10d rx_ignoreAckedPacket\n", a_ovP->rx_ignoreAckedPacket);
-    printf("\t%10d rx_totalRtt_Sec\n", a_ovP->rx_totalRtt_Sec);
-    printf("\t%10d rx_totalRtt_Usec\n", a_ovP->rx_totalRtt_Usec);
-    printf("\t%10d rx_minRtt_Sec\n", a_ovP->rx_minRtt_Sec);
-    printf("\t%10d rx_minRtt_Usec\n", a_ovP->rx_minRtt_Usec);
-    printf("\t%10d rx_maxRtt_Sec\n", a_ovP->rx_maxRtt_Sec);
-    printf("\t%10d rx_maxRtt_Usec\n", a_ovP->rx_maxRtt_Usec);
-    printf("\t%10d rx_nRttSamples\n", a_ovP->rx_nRttSamples);
-    printf("\t%10d rx_nServerConns\n", a_ovP->rx_nServerConns);
-    printf("\t%10d rx_nClientConns\n", a_ovP->rx_nClientConns);
-    printf("\t%10d rx_nPeerStructs\n", a_ovP->rx_nPeerStructs);
-    printf("\t%10d rx_nCallStructs\n", a_ovP->rx_nCallStructs);
-    printf("\t%10d rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
-    printf("\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
+    printf("\t%10u rx_ackPacketsSent\n", a_ovP->rx_ackPacketsSent);
+    printf("\t%10u rx_pingPacketsSent\n", a_ovP->rx_pingPacketsSent);
+    printf("\t%10u rx_abortPacketsSent\n", a_ovP->rx_abortPacketsSent);
+    printf("\t%10u rx_busyPacketsSent\n", a_ovP->rx_busyPacketsSent);
+    printf("\t%10u rx_dataPacketsSent\n", a_ovP->rx_dataPacketsSent);
+    printf("\t%10u rx_dataPacketsReSent\n", a_ovP->rx_dataPacketsReSent);
+    printf("\t%10u rx_dataPacketsPushed\n", a_ovP->rx_dataPacketsPushed);
+    printf("\t%10u rx_ignoreAckedPacket\n", a_ovP->rx_ignoreAckedPacket);
+    printf("\t%10u rx_totalRtt_Sec\n", a_ovP->rx_totalRtt_Sec);
+    printf("\t%10u rx_totalRtt_Usec\n", a_ovP->rx_totalRtt_Usec);
+    printf("\t%10u rx_minRtt_Sec\n", a_ovP->rx_minRtt_Sec);
+    printf("\t%10u rx_minRtt_Usec\n", a_ovP->rx_minRtt_Usec);
+    printf("\t%10u rx_maxRtt_Sec\n", a_ovP->rx_maxRtt_Sec);
+    printf("\t%10u rx_maxRtt_Usec\n", a_ovP->rx_maxRtt_Usec);
+    printf("\t%10u rx_nRttSamples\n", a_ovP->rx_nRttSamples);
+    printf("\t%10u rx_nServerConns\n", a_ovP->rx_nServerConns);
+    printf("\t%10u rx_nClientConns\n", a_ovP->rx_nClientConns);
+    printf("\t%10u rx_nPeerStructs\n", a_ovP->rx_nPeerStructs);
+    printf("\t%10u rx_nCallStructs\n", a_ovP->rx_nCallStructs);
+    printf("\t%10u rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
+    printf("\t%10u rx_nBusies\n\n", a_ovP->rx_nBusies);
 
-    printf("\t%10d fs_nBusies\n", a_ovP->fs_nBusies);
-    printf("\t%10d fs_GetCapabilities\n\n", a_ovP->fs_nGetCaps);
+    printf("\t%10u fs_nBusies\n", a_ovP->fs_nBusies);
+    printf("\t%10u fs_GetCapabilities\n\n", a_ovP->fs_nGetCaps);
     /*
      * Host module fields.
      */
-    printf("\t%10d host_NumHostEntries\n", a_ovP->host_NumHostEntries);
-    printf("\t%10d host_HostBlocks\n", a_ovP->host_HostBlocks);
-    printf("\t%10d host_NonDeletedHosts\n", a_ovP->host_NonDeletedHosts);
-    printf("\t%10d host_HostsInSameNetOrSubnet\n",
+    printf("\t%10u host_NumHostEntries\n", a_ovP->host_NumHostEntries);
+    printf("\t%10u host_HostBlocks\n", a_ovP->host_HostBlocks);
+    printf("\t%10u host_NonDeletedHosts\n", a_ovP->host_NonDeletedHosts);
+    printf("\t%10u host_HostsInSameNetOrSubnet\n",
 	   a_ovP->host_HostsInSameNetOrSubnet);
-    printf("\t%10d host_HostsInDiffSubnet\n", a_ovP->host_HostsInDiffSubnet);
-    printf("\t%10d host_HostsInDiffNetwork\n",
+    printf("\t%10u host_HostsInDiffSubnet\n", a_ovP->host_HostsInDiffSubnet);
+    printf("\t%10u host_HostsInDiffNetwork\n",
 	   a_ovP->host_HostsInDiffNetwork);
-    printf("\t%10d host_NumClients\n", a_ovP->host_NumClients);
-    printf("\t%10d host_ClientBlocks\n\n", a_ovP->host_ClientBlocks);
+    printf("\t%10u host_NumClients\n", a_ovP->host_NumClients);
+    printf("\t%10u host_ClientBlocks\n\n", a_ovP->host_ClientBlocks);
 
-    printf("\t%10d sysname_ID\n", a_ovP->sysname_ID);
+    printf("\t%10u sysname_ID\n", a_ovP->sysname_ID);
 }
 
 
@@ -288,7 +288,7 @@ PrintOpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
     avg = fSumTime / ((double)(a_opTimeP->numSuccesses));
 
     printf
-	("%15s: %d ops (%d OK); sum=%ld.%06ld, sqr=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
+	("%15s: %u ops (%u OK); sum=%lu.%06lu, sqr=%lu.%06lu, min=%lu.%06lu, max=%lu.%06lu\n",
 	 opNames[a_opIdx], a_opTimeP->numOps, a_opTimeP->numSuccesses,
 	 (long)a_opTimeP->sumTime.tv_sec, (long)a_opTimeP->sumTime.tv_usec,
 	 (long)a_opTimeP->sqrTime.tv_sec, (long)a_opTimeP->sqrTime.tv_usec,
@@ -329,16 +329,16 @@ PrintXferTiming(int a_opIdx, struct fs_stats_xferData *a_xferP)
     avg = fSumTime / ((double)(a_xferP->numSuccesses));
 
     printf
-	("%s: %d xfers (%d OK), time sum=%ld.%06ld, sqr=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
+	("%s: %u xfers (%u OK), time sum=%lu.%06lu, sqr=%lu.%06lu, min=%lu.%06lu, max=%lu.%06lu\n",
 	 xferOpNames[a_opIdx], a_xferP->numXfers, a_xferP->numSuccesses,
 	 (long)a_xferP->sumTime.tv_sec, (long)a_xferP->sumTime.tv_usec,
 	 (long)a_xferP->sqrTime.tv_sec, (long)a_xferP->sqrTime.tv_usec,
 	 (long)a_xferP->minTime.tv_sec, (long)a_xferP->minTime.tv_usec,
 	 (long)a_xferP->maxTime.tv_sec, (long)a_xferP->maxTime.tv_usec);
-    printf("\t[bytes: sum=%d, min=%d, max=%d]\n", a_xferP->sumBytes,
+    printf("\t[bytes: sum=%u, min=%u, max=%u]\n", a_xferP->sumBytes,
 	   a_xferP->minBytes, a_xferP->maxBytes);
     printf
-	("\t[buckets: 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, 5: %d, 6: %d, 7: %d, 8: %d]\n",
+	("\t[buckets: 0: %u, 1: %u, 2: %u, 3: %u, 4: %u, 5: %u, 6: %u, 7: %u, 8: %u]\n",
 	 a_xferP->count[0], a_xferP->count[1], a_xferP->count[2],
 	 a_xferP->count[3], a_xferP->count[4], a_xferP->count[5],
 	 a_xferP->count[6], a_xferP->count[7], a_xferP->count[8]);
@@ -369,7 +369,7 @@ PrintDetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
 {
     int currIdx;		/*Loop variable */
 
-    printf("\t%10ld epoch\n", (long) a_detP->epoch.tv_sec);
+    printf("\t%10lu epoch\n", (long) a_detP->epoch.tv_sec);
 
     for (currIdx = 0; currIdx < FS_STATS_NUM_RPC_OPS; currIdx++)
 	PrintOpTiming(currIdx, &(a_detP->rpcOpTimes[currIdx]));
@@ -413,7 +413,7 @@ PrintFullPerfInfo(void)
     numInt32s = xstat_fs_Results.data.AFS_CollData_len;
     if (numInt32s != fullPerfInt32s) {
 	printf("** Data size mismatch in full performance collection!");
-	printf("** Expecting %d, got %d\n", fullPerfInt32s, numInt32s);
+	printf("** Expecting %u, got %u\n", fullPerfInt32s, numInt32s);
 	return;
     }
 
@@ -423,7 +423,7 @@ PrintFullPerfInfo(void)
 	(xstat_fs_Results.data.AFS_CollData_val);
 
     printf
-	("AFS_XSTATSCOLL_FULL_PERF_INFO (coll %d) for FS %s\n[Probe %d, %s]\n\n",
+	("AFS_XSTATSCOLL_FULL_PERF_INFO (coll %d) for FS %s\n[Probe %u, %s]\n\n",
 	 xstat_fs_Results.collectionNumber, xstat_fs_Results.connP->hostName,
 	 xstat_fs_Results.probeNum, printableTime);
 
@@ -464,7 +464,7 @@ PrintPerfInfo(void)
     numInt32s = xstat_fs_Results.data.AFS_CollData_len;
     if (numInt32s != perfInt32s) {
 	printf("** Data size mismatch in performance collection!");
-	printf("** Expecting %d, got %d\n", perfInt32s, numInt32s);
+	printf("** Expecting %u, got %u\n", perfInt32s, numInt32s);
 	return;
     }
 
@@ -473,7 +473,7 @@ PrintPerfInfo(void)
     perfP = (struct afs_PerfStats *)
 	(xstat_fs_Results.data.AFS_CollData_val);
 
-    printf("AFS_XSTATSCOLL_PERF_INFO (coll %d) for FS %s\n[Probe %d, %s]\n\n",
+    printf("AFS_XSTATSCOLL_PERF_INFO (coll %d) for FS %s\n[Probe %u, %s]\n\n",
 	   xstat_fs_Results.collectionNumber,
 	   xstat_fs_Results.connP->hostName, xstat_fs_Results.probeNum,
 	   printableTime);
@@ -546,7 +546,7 @@ FS_Handler(void)
      * If the probe failed, there isn't much we can do except gripe.
      */
     if (xstat_fs_Results.probeOK) {
-	printf("%s: Probe %d to File Server '%s' failed, code=%d\n", rn,
+	printf("%s: Probe %u to File Server '%s' failed, code=%d\n", rn,
 	       xstat_fs_Results.probeNum, xstat_fs_Results.connP->hostName,
 	       xstat_fs_Results.probeOK);
 	return (0);
