@@ -5405,19 +5405,33 @@ VChildProcReconnectFS(void)
 /* volume bitmap routines                          */
 /***************************************************/
 
-/*
- * For demand attach fs, flags parameter controls
- * locking behavior.  If (flags & VOL_ALLOC_BITMAP_WAIT)
- * is set, then this function will create a reservation
- * and block on any other exclusive operations.  Otherwise,
- * this function assumes the caller already has exclusive
- * access to vp, and we just change the volume state.
+/**
+ * allocate a vnode bitmap number for the vnode
+ *
+ * @param[out] ec  error code
+ * @param[in] vp   volume object pointer
+ * @param[in] index vnode index number for the vnode
+ * @param[in] flags flag values described in note
+ *
+ * @note for DAFS, flags parameter controls locking behavior.
+ * If (flags & VOL_ALLOC_BITMAP_WAIT) is set, then this function
+ * will create a reservation and block on any other exclusive
+ * operations.  Otherwise, this function assumes the caller
+ * already has exclusive access to vp, and we just change the
+ * volume state.
+ *
+ * @pre VOL_LOCK held
+ *
+ * @return bit number allocated
  */
-VnodeId
+/*
+
+ */
+int
 VAllocBitmapEntry_r(Error * ec, Volume * vp, 
 		    struct vnodeIndex *index, int flags)
 {
-    VnodeId ret;
+    int ret = 0;
     register byte *bp, *ep;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState state_save;
@@ -5428,7 +5442,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
     /* This test is probably redundant */
     if (!VolumeWriteable(vp)) {
 	*ec = (bit32) VREADONLY;
-	return 0;
+	return ret;
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -5479,7 +5493,6 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		    vp->shuttingDown = 1;	/* Let who has it free it. */
 		    vp->specialStatus = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
-		    ret = NULL;
 		    goto done;
 		}
 	    }
@@ -5504,7 +5517,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		bp++;
 	    o = ffs(~*bp) - 1;	/* ffs is documented in BSTRING(3) */
 	    *bp |= (1 << o);
-	    ret = (VnodeId) ((bp - index->bitmap) * 8 + o);
+	    ret = ((bp - index->bitmap) * 8 + o);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    VOL_LOCK;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -5537,10 +5550,10 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
     return ret;
 }
 
-VnodeId
+int
 VAllocBitmapEntry(Error * ec, Volume * vp, register struct vnodeIndex * index)
 {
-    VnodeId retVal;
+    int retVal;
     VOL_LOCK;
     retVal = VAllocBitmapEntry_r(ec, vp, index, VOL_ALLOC_BITMAP_WAIT);
     VOL_UNLOCK;
