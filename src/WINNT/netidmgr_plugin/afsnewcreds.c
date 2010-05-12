@@ -24,10 +24,6 @@
 
 /* $Id$ */
 
-#include <afsconfig.h>
-#include <afs/param.h>
-#include <roken.h>
-
 #include<afscred.h>
 #include<commctrl.h>
 #include<assert.h>

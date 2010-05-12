@@ -1,8 +1,4 @@
 
-#include <afsconfig.h>
-#include <afs/param.h>
-#include <roken.h>
-
 #define NOSTRSAFE
 #include "afscred.h"
 #include "AFS_component_version_number.h"

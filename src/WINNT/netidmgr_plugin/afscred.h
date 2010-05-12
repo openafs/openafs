@@ -33,6 +33,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 
 #define _WINSOCKAPI_
 #include<windows.h>
