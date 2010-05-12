@@ -591,6 +591,8 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 /* set afs:afs_if_poll_interval = integer (value is in seconds)         */
 static int afs_if_poll_interval = 30;
 
+static timeout_id_t afs_if_poller_timeout = 0;
+
 /* Global array which holds the interface info for consumers            */
 struct afs_ifinfo afsifinfo[ADDRSPERSITE];
 
@@ -622,14 +624,6 @@ osi_NetIfPoller()
     uint_t mtu;
     uint64_t flags;
 
-    if (afs_termState == AFSOP_STOP_NETIF) {
-	afs_warn("NetIfPoller... ");
-	rw_destroy(&afsifinfo_lock);
-	ddi_taskq_destroy(afs_taskq);
-	afs_termState = AFSOP_STOP_COMPLETE;
-	osi_rxWakeup(&afs_termState);
-	return;
-    }
     /* Get our permissions */
     cr = CRED();
 
@@ -765,10 +759,35 @@ osi_NetIfPoller()
     if (li)
         (void) ldi_ident_release(li);
 
-    /* Schedule this to run again after afs_if_poll_interval seconds */
-    (void) timeout((void(*) (void *)) osi_StartNetIfPoller, NULL,
-        drv_usectohz((clock_t)afs_if_poll_interval * MICROSEC));
+    if (afs_shuttingdown) {
+	/* do not schedule to run again if we're shutting down */
+	return;
+    }
 
+    /* Schedule this to run again after afs_if_poll_interval seconds */
+    afs_if_poller_timeout = timeout((void(*) (void *)) osi_StartNetIfPoller,
+        NULL, drv_usectohz((clock_t)afs_if_poll_interval * MICROSEC));
+}
+
+void
+osi_StopNetIfPoller(void)
+{
+    /* it's okay if untimeout races with StartNetIfPoller/NetIfPoller;
+     * it can handle being passed invalid ids. If StartNetIfPoller is
+     * in the middle of running, untimeout will not return until
+     * StartNetIfPoller is done */
+    untimeout(afs_if_poller_timeout);
+
+    /* if NetIfPoller is queued or running, ddi_taskq_destroy will not
+     * return until it is done */
+    ddi_taskq_destroy(afs_taskq);
+
+    rw_destroy(&afsifinfo_lock);
+
+    if (afs_termState == AFSOP_STOP_NETIF) {
+	afs_termState = AFSOP_STOP_COMPLETE;
+	osi_rxWakeup(&afs_termState);
+    }
 }
 #endif /* AFS_SUN510_ENV */
 
