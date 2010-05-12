@@ -29,6 +29,9 @@
 #pragma warning (push)
 #pragma warning (disable: 4005)
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include<afscred.h>
 #include<dynimport.h>
 #include<krb5common.h>

@@ -54,7 +54,7 @@ KFWLIBDIR = ..\kfw\lib\$(CPU)
 # Build environment
 
 kfwincflags=-I$(KFWINCDIR)\krb5\KerberosIV -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 -I$(KFWINCDIR)\netidmgr -I$(KFWINCDIR)
-afsincflags=-I$(DESTDIR)\include
+afsincflags=-I$(DESTDIR)\include -I$(DESTDIR)\include\afs -I$(DESTDIR)\include\rx
 
 incflags=$(kfwincflags) $(afsincflags) -I.
 pldefines=-DUNICODE -D_UNICODE
@@ -107,6 +107,7 @@ LIBFILES= 				\
 SDKLIBFILES= 				\
 	$(DESTDIR)\lib\afsauthent.lib 	\
 	$(DESTDIR)\lib\libafsconf.lib 	\
+        $(DESTDIR)\lib\afs\mtafsutil.lib\
 	$(KFWLIBDIR)\loadfuncs.lib	\
 	htmlhelp.lib			\
 	shell32.lib			\
