@@ -31,6 +31,9 @@
 #define _USE_32BIT_TIME_T 1
 #endif
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #define _WINSOCKAPI_
 #include<windows.h>
 #include<time.h>
