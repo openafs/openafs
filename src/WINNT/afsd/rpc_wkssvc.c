@@ -49,13 +49,19 @@ unsigned long NetrWkstaGetInfo(
      * not know the max size of the RPC response.
      */
     switch (Level) {
+    case 102:
+        WkstaInfo->WkstaInfo102 = calloc(1, sizeof(WKSTA_INFO_102));
+        break;
+    case 101:
+        WkstaInfo->WkstaInfo101 = calloc(1, sizeof(WKSTA_INFO_101));
+        break;
     case 100:
         WkstaInfo->WkstaInfo100 = calloc(1, sizeof(WKSTA_INFO_100));
         break;
     }
 
     if (WkstaInfo->WkstaInfo100 == NULL) {
-        return ERROR_NOT_ENOUGH_MEMORY;
+        return ERROR_INVALID_LEVEL;
     }
 
     /*
@@ -65,6 +71,10 @@ unsigned long NetrWkstaGetInfo(
     for ( s=ServerName; *s == '\\' || *s == '/'; s++);
 
     switch (Level) {
+    case 102:
+        WkstaInfo->WkstaInfo102->wki102_logged_on_users = 0;
+    case 101:
+        WkstaInfo->WkstaInfo101->wki101_lanroot = NULL;
     case  100:
         WkstaInfo->WkstaInfo100->wki100_computername = _wcsupr(wcsdup(s));
         WkstaInfo->WkstaInfo100->wki100_langroup = _wcsdup(L"AFS");
