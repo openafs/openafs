@@ -1166,6 +1166,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	 */
 	if (record[i].type & VL) {
 	    int foundbad = 0;
+	    int foundbroken = 0;
 	    char volidbuf[256];
 
 	    readentry(record[i].addr, &vlentry, &type);
@@ -1224,7 +1225,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		readentry(nextp, &vlentry2, &type);
 		nexthash = NameHash(vlentry2.name);
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
 	    if ((record[ADDR(vlentry.nextIdHash[0])].type & MULTRW)) {
@@ -1237,7 +1238,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		readentry(nextp, &vlentry2, &type);
 		nexthash = IdHash(vlentry2.volumeId[0]);
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
 	    if ((record[ADDR(vlentry.nextIdHash[1])].type & MULTRO)) {
@@ -1250,7 +1251,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		readentry(nextp, &vlentry2, &type);
 		nexthash = IdHash(vlentry2.volumeId[1]);
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
 	    if ((record[ADDR(vlentry.nextIdHash[2])].type & MULTBK)) {
@@ -1263,30 +1264,28 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		readentry(nextp, &vlentry2, &type);
 		nexthash = IdHash(vlentry2.volumeId[2]);
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
-	    if (foundbad) {
-		log_error(VLDB_CHECK_ERROR,"%d: Volume '%s' %snot found in %s hash %d", i, 
+	    if (foundbroken) {
+		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %s forward link in %s is broken (hash %d != %d)", i,
+			  vlentry.name, volidbuf, which, hash, nexthash);
+	    } else if (foundbad) {
+		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %snot found in %s hash %d", i,
 		       vlentry.name, volidbuf, which, hash);
-		if (nextp) {
-		    log_error(VLDB_CHECK_ERROR," (next %d", nextp);
-		    if (!(record[nextp].type & reft)) {
-			log_error(VLDB_CHECK_ERROR," not in chain ");
-			record[nextp].type |= reft;
-		    } else if (nextp != 0) {
-			log_error(VLDB_CHECK_ERROR," next in chain");
-			if (fix) {
-			    log_error(VLDB_CHECK_ERROR,", unchaining");
-			    *nextpp = 0;
-			    writeentry(record[i].addr, &vlentry);
-			}
-		    }
-		    log_error(VLDB_CHECK_ERROR,")");
-		}
-		log_error(VLDB_CHECK_ERROR,"\n");
 	    }
-	
+
+	    if (foundbad || foundbroken) {
+		if (nextp && fix) {
+		    log_error(VLDB_CHECK_ERROR, ", unchaining next (%d)\n", nextp);
+		    *nextpp = 0;
+		    writeentry(record[i].addr, &vlentry);
+		} else {
+		    log_error(VLDB_CHECK_ERROR, "\n");
+		}
+		
+	    }
+
 	    for (j = 0; j < NMAXNSERVERS; j++) {
 		if ((vlentry.serverNumber[j] != 255)
 		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
