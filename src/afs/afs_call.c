@@ -1281,9 +1281,14 @@ afs_shutdown(void)
 	afs_osi_Sleep(&afs_termState);
     }
 #endif
-#else
-    afs_termState = AFSOP_STOP_COMPLETE;
 #endif
+
+#ifdef AFS_SUN510_ENV
+    afs_warn("NetIfPoller... ");
+    osi_StopNetIfPoller();
+#endif
+
+    afs_termState = AFSOP_STOP_COMPLETE;
 
 #ifdef AFS_AIX51_ENV
     shutdown_daemons();
