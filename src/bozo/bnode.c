@@ -57,6 +57,7 @@ static struct bnode_stats {
     int weirdPids;
 } bnode_stats;
 
+extern const char *DoCore;
 #ifndef AFS_NT40_ENV
 extern char **environ;		/* env structure */
 #endif
@@ -86,7 +87,12 @@ RememberProcName(register struct bnode_proc *ap)
 int
 bnode_CoreName(register struct bnode *abnode, char *acoreName, char *abuffer)
 {
-    strcpy(abuffer, AFSDIR_SERVER_CORELOG_FILEPATH);
+    if (DoCore) {
+	strcpy(abuffer, DoCore);
+	strcat(abuffer, "/");
+	strcat(abuffer, AFSDIR_CORE_FILE);
+    } else
+	strcpy(abuffer, AFSDIR_SERVER_CORELOG_FILEPATH);
     if (acoreName) {
 	strcat(abuffer, acoreName);
 	strcat(abuffer, ".");
@@ -102,7 +108,7 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 {
     char tbuffer[256];
     struct stat tstat;
-    register afs_int32 code;
+    register afs_int32 code = 0;
     char *corefile = NULL;
 #ifdef BOZO_SAVE_CORES
     struct timeval Start;
@@ -112,14 +118,23 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 
     /* Linux always appends the PID to core dumps from threaded processes, so
      * we have to scan the directory to find core files under another name. */
-    code = stat(AFSDIR_SERVER_CORELOG_FILEPATH, &tstat);
+    if (DoCore) {
+	strcpy(tbuffer, DoCore);
+	strcat(tbuffer, "/");
+	strcat(tbuffer, AFSDIR_CORE_FILE);
+    } else
+	code = stat(AFSDIR_SERVER_CORELOG_FILEPATH, &tstat);
     if (code) {
         DIR *logdir;
         struct dirent *file;
         size_t length;
         unsigned long pid;
+	const char *coredir = AFSDIR_LOGS_DIR;
 
-        logdir = opendir(AFSDIR_LOGS_DIR);
+	if (DoCore)
+	  coredir = DoCore;
+
+	logdir = opendir(coredir);
         if (logdir == NULL)
             return;
         while ((file = readdir(logdir)) != NULL) {
@@ -127,19 +142,20 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
                 continue;
             pid = atol(file->d_name + 5);
             if (pid == aproc->pid) {
-                length = strlen(AFSDIR_LOGS_DIR) + strlen(file->d_name) + 2;
+                length = strlen(coredir) + strlen(file->d_name) + 2;
                 corefile = malloc(length);
                 if (corefile == NULL) {
                     closedir(logdir);
                     return;
                 }
-                snprintf(corefile, length, "%s/%s", AFSDIR_LOGS_DIR,
-                         file->d_name);
+                snprintf(corefile, length, "%s/%s", coredir, file->d_name);
                 code = 0;
                 break;
             }
         }
         closedir(logdir);
+    } else {
+	corefile = strdup(tbuffer);
     }
     if (code)
 	return;
@@ -153,12 +169,8 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif
-    if (corefile == NULL)
-        code = renamefile(AFSDIR_SERVER_CORELOG_FILEPATH, tbuffer);
-    else {
-        code = renamefile(corefile, tbuffer);
-        free(corefile);
-    }
+    code = renamefile(corefile, tbuffer);
+    free(corefile);
 }
 
 int

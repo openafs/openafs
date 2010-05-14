@@ -23,6 +23,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <direct.h>
@@ -61,6 +67,7 @@ static PROCESS bozo_pid;
 const char *bozo_fileName;
 FILE *bozo_logFile;
 
+const char *DoCore;
 int DoLogging = 0;
 int DoSyslog = 0;
 #ifndef AFS_NT40_ENV
@@ -186,7 +193,7 @@ MakeDir(const char *adir)
 
 /* create all the bozo dirs */
 static int
-CreateDirs(void)
+CreateDirs(const char *coredir)
 {
     if ((!strncmp
 	 (AFSDIR_USR_DIRPATH, AFSDIR_CLIENT_ETC_DIRPATH,
@@ -219,6 +226,8 @@ CreateDirs(void)
     symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
 	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH);
 #endif /* AFS_NT40_ENV */
+    if (coredir)
+	MakeDir(coredir);
     return 0;
 }
 
@@ -772,6 +781,7 @@ main(int argc, char **argv, char **envp)
 
     /* some path inits */
     bozo_fileName = AFSDIR_SERVER_BOZCONF_FILEPATH;
+    DoCore = AFSDIR_SERVER_LOGS_DIRPATH;
 
     /* initialize the list of dirpaths that the bosserver has
      * an interest in monitoring */
@@ -801,6 +811,11 @@ main(int argc, char **argv, char **envp)
 	} else if (strncmp(argv[code], "-syslog=", 8) == 0) {
 	    DoSyslog = 1;
 	    DoSyslogFacility = atoi(argv[code] + 8);
+	} else if (strncmp(argv[code], "-cores=", 7) == 0) {
+	    if (strcmp((argv[code]+7), "none") == 0)
+		DoCore = 0;
+	    else
+		DoCore = (argv[code]+7);
 	} else if (strcmp(argv[code], "-nofork") == 0) {
 	    nofork = 1;
 	}
@@ -855,6 +870,7 @@ main(int argc, char **argv, char **envp)
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-cores=<none|path>] \n"
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
@@ -862,6 +878,7 @@ main(int argc, char **argv, char **envp)
 		   "[-audit-interafce <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-cores=<none|path>] \n"
 		   "[-help]\n");
 #endif
 	    fflush(stdout);
@@ -892,10 +909,13 @@ main(int argc, char **argv, char **envp)
     bnode_Register("cron", &cronbnode_ops, 2);
 
     /* create useful dirs */
-    CreateDirs();
+    CreateDirs(DoCore);
 
     /* chdir to AFS log directory */
-    chdir(AFSDIR_SERVER_LOGS_DIRPATH);
+    if (DoCore)
+	chdir(DoCore);
+    else
+	chdir(AFSDIR_SERVER_LOGS_DIRPATH);
 
 #if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout);
@@ -933,6 +953,20 @@ main(int argc, char **argv, char **envp)
 	openlog("bosserver", LOG_PID, DoSyslogFacility);
 #endif
     }
+
+#if defined(RLIMIT_CORE) && defined(HAVE_GETRLIMIT)
+    {
+      struct rlimit rlp;
+      getrlimit(RLIMIT_CORE, &rlp);
+      if (!DoCore)
+	  rlp.rlim_cur = 0;
+      else
+	  rlp.rlim_max = rlp.rlim_cur = RLIM_INFINITY;
+      setrlimit(RLIMIT_CORE, &rlp);
+      getrlimit(RLIMIT_CORE, &rlp);
+      bozo_Log("Core limits now %d %d\n",(int)rlp.rlim_cur,(int)rlp.rlim_max);
+    }
+#endif
 
     /* Write current state of directory permissions to log file */
     DirAccessOK();
