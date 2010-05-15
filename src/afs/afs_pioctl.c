@@ -1133,7 +1133,8 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #else
 	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &vp);
 #if defined(AFS_FBSD80_ENV) /* XXX check on 7x */
-	VN_HOLD(vp);
+	if (vp != NULL)
+		VN_HOLD(vp);
 #endif /* AFS_FBSD80_ENV */
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
