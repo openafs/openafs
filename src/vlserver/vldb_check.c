@@ -459,9 +459,10 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
 	vlentryp->nextIdHash[i] = htonl(vlentryp->nextIdHash[i]);
     vlentryp->nextNameHash = htonl(vlentryp->nextNameHash);
     for (i = 0; i < NMAXNSERVERS; i++) {
-	vlentryp->serverNumber[i] = htonl(vlentryp->serverNumber[i]);
-	vlentryp->serverPartition[i] = htonl(vlentryp->serverPartition[i]);
-	vlentryp->serverFlags[i] = htonl(vlentryp->serverFlags[i]);
+	/* make sure not to htonl these, as they're chars, not ints */
+	vlentryp->serverNumber[i] =  vlentryp->serverNumber[i] ;
+	vlentryp->serverPartition[i] = vlentryp->serverPartition[i] ;
+	vlentryp->serverFlags[i] = vlentryp->serverFlags[i] ;
     }
     vldbwrite(addr, (char *)vlentryp, sizeof(*vlentryp));
 }
