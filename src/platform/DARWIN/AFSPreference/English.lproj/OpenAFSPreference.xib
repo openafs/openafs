@@ -1552,7 +1552,7 @@
 																<object class="NSTextFieldCell" key="NSCell" id="672812502">
 																	<int key="NSCellFlags">67239488</int>
 																	<int key="NSCellFlags2">272630784</int>
-																	<string key="NSContents">afs needs to be restarted</string>
+																	<string key="NSContents">will force client restart</string>
 																	<object class="NSFont" key="NSSupport">
 																		<string key="NSName">LucidaGrande</string>
 																		<double key="NSSize">10</double>
