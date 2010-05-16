@@ -25,6 +25,8 @@
 #include <linux/icmp.h>
 #endif
 
+#include "osi_compat.h"
+
 /* rxk_NewSocket
  * open and bind RX socket
  */
