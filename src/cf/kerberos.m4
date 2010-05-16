@@ -76,50 +76,11 @@ if test X$conf_krb5 = XYES; then
 	AC_CHECK_HEADERS([kerberosIV/krb.h])
 	AC_CHECK_HEADERS([kerberosV/heim_err.h])
 
-AC_MSG_CHECKING(for krb5_creds.keyblock existence)
-AC_CACHE_VAL(ac_cv_krb5_creds_keyblock_exists,
-[
-AC_TRY_COMPILE(
-[#include <krb5.h>],
-[krb5_creds _c;
-printf("%x\n", _c.keyblock);], 
-ac_cv_krb5_creds_keyblock_exists=yes,
-ac_cv_krb5_creds_keyblock_exists=no)])
-AC_MSG_RESULT($ac_cv_krb5_creds_keyblock_exists)
-	
-AC_MSG_CHECKING(for krb5_creds.session existence)
-AC_CACHE_VAL(ac_cv_krb5_creds_session_exists,
-[
-AC_TRY_COMPILE(
-[#include <krb5.h>],
-[krb5_creds _c;
-printf("%x\n", _c.session);], 
-ac_cv_krb5_creds_session_exists=yes,
-ac_cv_krb5_creds_session_exists=no)])
-AC_MSG_RESULT($ac_cv_krb5_creds_session_exists)
+	AC_CHECK_MEMBERS([krb5_creds.keyblock,
+			  krb5_creds.session,
+			  krb5_prompt.type],
+			 [], [], [#include <krb5.h>])
 
-AC_MSG_CHECKING(for krb5_prompt.type existence)
-AC_CACHE_VAL(ac_cv_krb5_prompt_type_exists,
-[
-AC_TRY_COMPILE(
-[#include <krb5.h>],
-[krb5_prompt _p;
-printf("%x\n", _p.type);], 
-ac_cv_krb5_prompt_type_exists=yes,
-ac_cv_krb5_prompt_type_exists=no)])
-AC_MSG_RESULT($ac_cv_krb5_prompt_type_exists)
-	
-if test "x$ac_cv_krb5_creds_keyblock_exists" = "xyes"; then
-	AC_DEFINE(HAVE_KRB5_CREDS_KEYBLOCK, 1, [define if krb5_creds has keyblock])
-fi
-if test "x$ac_cv_krb5_creds_session_exists" = "xyes"; then
-	AC_DEFINE(HAVE_KRB5_CREDS_SESSION, 1, [define if krb5_creds has session])
-fi
-if test "x$ac_cv_krb5_prompt_type_exists" = "xyes"; then
-	AC_DEFINE(HAVE_KRB5_PROMPT_TYPE, 1, [define if krb5_prompt has type])
-fi
-	
-dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb5.h>])
 	CPPFLAGS="$save_CPPFLAGS"
 	LIBS="$save_LIBS"
 fi
