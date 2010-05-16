@@ -1925,7 +1925,11 @@ afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
     afs_InactiveVCache(avc, acred);
 
 #ifdef AFS_SUN58_ENV
+    AFS_GUNLOCK();
+    /* VFS_RELE must be called outside of GLOCK, since it can potentially
+     * call afs_freevfs, which acquires GLOCK */
     VFS_RELE(afs_globalVFS);
+    AFS_GLOCK();
 #endif
 }
 
