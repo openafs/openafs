@@ -13,7 +13,7 @@
 #include "h/types.h"
 #include "h/param.h"
 
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
 #include <sys/condvar.h>
 #endif
 
@@ -194,7 +194,7 @@ typedef struct timeval osi_timeval_t;
  * is going on in the system.  So if ps cannot show thread IDs it is
  * likely to be the process ID instead.
  */
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	(curproc->p_pid)
 #elif defined(AFS_LINUX_ENV)

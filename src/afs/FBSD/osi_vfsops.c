@@ -224,22 +224,15 @@ tryagain:
     if (tvp) {
 	struct vnode *vp = AFSTOV(tvp);
 
-#ifdef AFS_FBSD50_ENV
 	ASSERT_VI_UNLOCKED(vp, "afs_root");
-#endif
 	AFS_GUNLOCK();
 	/*
 	 * I'm uncomfortable about this.  Shouldn't this happen at a
 	 * higher level, and shouldn't we busy the top-level directory
 	 * to prevent recycling?
 	 */
-#ifdef AFS_FBSD50_ENV
 	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
 	vp->v_vflag |= VV_ROOT;
-#else
-	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	vp->v_flag |= VROOT;
-#endif
 	AFS_GLOCK();
 	if (error != 0)
 		goto tryagain;
@@ -332,8 +325,6 @@ struct vfsops afs_vfsops = {
     afs_init,
     afs_uninit,
     vfs_stdextattrctl,
-#ifdef AFS_FBSD50_ENV
     vfs_stdsysctl,
-#endif
 };
 #endif

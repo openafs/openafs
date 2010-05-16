@@ -1087,9 +1087,6 @@ if test "x$with_bsd_kernel_build" != "x"; then
 	BSD_KERNEL_BUILD="$with_bsd_kernel_build"
 else
 	case $AFS_SYSNAME in
-		*_fbsd_4?)
-			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
-			;;
 		*_fbsd_*)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/${HOST_CPU}/compile/GENERIC"
 			;;

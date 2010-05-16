@@ -738,7 +738,7 @@ Afs_syscall()
 	    code =
 		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
 				   uap->parm4, rvp, CRED());
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 	    code =
 		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
 				   uap->parm4, p->td_ucred);

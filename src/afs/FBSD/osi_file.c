@@ -38,11 +38,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-#if defined(AFS_FBSD50_ENV)
     code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode->ufs, LK_EXCLUSIVE, &vp);
-#else
-    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode->ufs, &vp);
-#endif
     AFS_GLOCK();
     if (code == 0 && vp->v_type == VNON)
 	code = ENOENT;

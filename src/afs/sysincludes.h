@@ -313,7 +313,7 @@ typedef unsigned short etap_event_t;
 #  include "h/user.h"
 # endif /* AFS_SGI64_ENV */
 # define	MACH_USER_API	1
-# if defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD_ENV)
 #  include "h/bio.h"
 #  include "h/filedesc.h"
 # endif
@@ -340,7 +340,7 @@ struct vfspage;		/* for vnode.h compiler warnings */
 #  endif
 # endif /* AFS_HPUX_ENV */
 # if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#  if defined(AFS_FBSD50_ENV)
+#  if defined(AFS_FBSD_ENV)
 struct vop_getwritemount_args;
 #  endif
 #  include <sys/uio.h>
@@ -355,11 +355,7 @@ struct vop_getwritemount_args;
 #  ifndef AFS_NBSD40_ENV
 #   include <sys/malloc.h>
 #  endif
-#  ifndef AFS_FBSD_ENV
-#   include <sys/ubc.h>
-#   define timeout_fcn_t mach_timeout_fcn_t
-#   include <kern/sched_prim.h>
-#  else
+#  ifdef AFS_FBSD_ENV
 MALLOC_DECLARE(M_AFS);
 #   include <ufs/ufs/dinode.h>
 #   include <vm/vm.h>
@@ -368,6 +364,10 @@ MALLOC_DECLARE(M_AFS);
 #   include <vm/vm_map.h>
 #   include <sys/lock.h>
 #   include <sys/user.h>
+#  else
+#   include <sys/ubc.h>
+#   define timeout_fcn_t mach_timeout_fcn_t
+#   include <kern/sched_prim.h>
 #  endif
 #  undef timeout_fcn_t
 #  define _DIR_H_

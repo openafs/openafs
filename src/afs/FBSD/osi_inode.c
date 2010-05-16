@@ -24,9 +24,7 @@
 #include <sys/queue.h>
 #include <sys/lock.h>
 #include <ufs/ufs/dinode.h>
-#if defined(AFS_FBSD50_ENV)
 #include <ufs/ufs/extattr.h>
-#endif
 #include <ufs/ufsmount.h>
 
 int
@@ -50,11 +48,7 @@ getinode(fs, dev, inode, ipp, perror)
 	register struct ufsmount *ump;
 	register struct mount *mp;
 
-#if defined(AFS_FBSD50_ENV)
 	mtx_lock(&mountlist_mtx);
-#else
-	simple_lock(&mountlist_slock);
-#endif
 	if ((mp = TAILQ_FIRST(&mountlist)) != NULL)
 	    do {
 		/*
@@ -72,19 +66,11 @@ getinode(fs, dev, inode, ipp, perror)
 		}
 		mp = TAILQ_NEXT(mp, mnt_list);
 	    } while (mp != TAILQ_FIRST(&mountlist));
-#if defined(AFS_FBSD50_ENV)
 	mtx_unlock(&mountlist_mtx);
-#else
-	simple_unlock(&mountlist_slock);
-#endif
 	if (!fs)
 	    return (ENXIO);
     }
-#if defined(AFS_FBSD50_ENV)
     code = VFS_VGET(fs, inode, 0, &vp);
-#else
-    code = VFS_VGET(fs, inode, &vp);
-#endif
     if (code != 0) {
 	*perror = BAD_IGET;
 	return code;

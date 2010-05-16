@@ -45,6 +45,7 @@ long afs_global_owner;
 #endif
 
 #if defined(AFS_DARWIN_ENV) 
+thread_t afs_global_owner;
 #ifdef AFS_DARWIN80_ENV
 lck_mtx_t  *afs_global_lock;
 #else
@@ -52,18 +53,13 @@ struct lock__bsd__ afs_global_lock;
 #endif
 #endif
 
-#if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
+#if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD_ENV)
 struct lock afs_global_lock;
 afs_proc_t *afs_global_owner;
-#endif
-#ifdef AFS_FBSD50_ENV
+#elif defined(AFS_FBSD_ENV)
 struct mtx afs_global_mtx;
 struct thread *afs_global_owner;
 #endif
-
-#if defined(AFS_DARWIN_ENV)
-thread_t afs_global_owner;
-#endif /* AFS_DARWIN_ENV */
 
 #if defined(AFS_AIX41_ENV)
 simple_lock_data afs_global_lock;

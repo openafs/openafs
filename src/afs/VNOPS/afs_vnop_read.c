@@ -883,7 +883,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
 	    VOP_UNLOCK(tfile->vnode, 0);
 	    AFS_GLOCK();
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 	    AFS_GUNLOCK();
 	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
 	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);

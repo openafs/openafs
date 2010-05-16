@@ -15,7 +15,7 @@
 #ifdef AFS_OBSD_ENV
 #include "h/syscallargs.h"
 #endif
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
 #include "h/sysproto.h"
 #endif
 #ifdef AFS_NBSD40_ENV
@@ -798,7 +798,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     return (code);
 }
 #elif defined(AFS_XBSD_ENV)
-# if defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD_ENV)
 #  define arg data
 int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap,
@@ -863,10 +863,8 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     }
 
     if (!ioctlDone) {
-# if defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD_ENV)
 	return ioctl(td, uap);
-# elif defined(AFS_FBSD_ENV)
-	return ioctl(p, uap);
 # elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
 # elif defined(AFS_NBSD_ENV)
@@ -953,7 +951,7 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
 # endif
 }
 
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 int
 afs_pioctl(struct thread *td, void *args, int *retval)
 {
@@ -971,11 +969,7 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-# if defined(AFS_FBSD_ENV)
-afs_pioctl(struct thread *td, void *args)
-# else
 afs_pioctl(afs_proc_t *p, void *args, int *retval)
-# endif
 {
     struct a {
 	char *path;

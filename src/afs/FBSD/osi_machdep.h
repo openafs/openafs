@@ -21,9 +21,7 @@
 
 #include <sys/lock.h>
 #include <sys/time.h>
-#if defined(AFS_FBSD50_ENV)
 #include <sys/mutex.h>
-#endif
 #include <sys/vnode.h>
 #if defined(AFS_FBSD80_ENV)
 #include <sys/priv.h>
@@ -66,6 +64,7 @@ extern int (**afs_vnodeop_p) ();
 #else
 #define osi_vinvalbuf(vp, flags, slpflag, slptimeo) \
   vinvalbuf((vp), (flags), (curthread), (slpflag), (slptimeo))
+#define osi_curproc() (curthread)
 #endif
 
 #undef gop_lookupname

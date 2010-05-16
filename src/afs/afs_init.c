@@ -421,14 +421,10 @@ afs_InitCacheInfo(register char *afile)
 #elif defined(AFS_DARWIN80_ENV)
         afs_cacheVfsp = vnode_mount(filevp);
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
-#elif defined(AFS_DARWIN_ENV)
-	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
 #elif defined(AFS_FBSD80_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st))
-#elif defined(AFS_FBSD50_ENV)
-	if (!VFS_STATFS(filevp->v_mount, &st, curthread))
-#elif defined(AFS_XBSD_ENV)
-	if (!VFS_STATFS(filevp->v_mount, &st, curproc))
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st, osi_curproc()))
 #else
 	if (!VFS_STATFS(filevp->v_vfsp, &st))
 #endif /* SGI... */

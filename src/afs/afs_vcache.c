@@ -1647,20 +1647,13 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curthread);
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
 	vinvalbuf(vp, V_SAVE, osi_curcred(), curthread, PINOD, 0);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
-#elif defined(AFS_FBSD40_ENV)
-	iheldthelock = VOP_ISLOCKED(vp, curproc);
-	if (!iheldthelock)
-	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
-	vinvalbuf(vp, V_SAVE, osi_curcred(), curproc, PINOD, 0);
-	if (!iheldthelock)
-	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curproc);
 #elif defined(AFS_OBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curproc);
 	if (!iheldthelock)

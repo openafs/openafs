@@ -829,7 +829,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #else
     struct socket *newSocket;
 #endif
-#if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD50_ENV))
+#if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD_ENV))
     struct mbuf *nam;
 #endif
     struct sockaddr_in myaddr;
@@ -872,11 +872,9 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #endif /* else AFS_HPUX110_ENV */
 #elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP,
 		    afs_osi_credp, curthread);
-#elif defined(AFS_FBSD40_ENV)
-    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #elif defined(AFS_DARWIN80_ENV)
     code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
 #elif defined(AFS_NBSD40_ENV)
@@ -944,10 +942,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD_ENV)
     code = sobind(newSocket, (struct sockaddr *)&myaddr, curthread);
-#elif defined(AFS_FBSD40_ENV)
-    code = sobind(newSocket, (struct sockaddr *)&myaddr, curproc);
 #else
     code = sobind(newSocket, (struct sockaddr *)&myaddr);
 #endif

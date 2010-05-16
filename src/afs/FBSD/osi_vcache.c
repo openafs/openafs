@@ -70,10 +70,8 @@ osi_AttachVnode(struct vcache *avc, int seq) {
     AFS_GUNLOCK();
 #if defined(AFS_FBSD60_ENV)
     if (getnewvnode(MOUNT_AFS, afs_globalVFS, &afs_vnodeops, &vp))
-#elif defined(AFS_FBSD50_ENV)
-    if (getnewvnode(MOUNT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
 #else
-    if (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
+    if (getnewvnode(MOUNT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
 #endif
 	panic("afs getnewvnode");	/* can't happen */
 #ifdef AFS_FBSD70_ENV
