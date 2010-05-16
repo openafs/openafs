@@ -49,7 +49,7 @@ my $fh = IO::File->new("$externalDir/$module-files")
   or die "Couldn't open mapping file : $!\n";
 while (<$fh>) {
   next if /^\s#/;
-  if (/^(.+)\s+(.+)$/) {
+  if (/^(\S+)\s+(\S+)$/) {
     $mapping{$1} = $2;
   } elsif (/\w+/) {
     die "Unrecognised line in mapping file : $_\n";
