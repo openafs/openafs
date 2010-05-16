@@ -59,6 +59,10 @@ typedef int ssize_t;
 typedef int sig_atomic_t;
 #endif
 
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
 typedef short afs_int16;
 typedef unsigned short afs_uint16;
 #ifdef  AFS_64BIT_ENV

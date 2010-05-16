@@ -197,4 +197,4 @@
 #endif
 
 /* Windows does not provide socklen_t prior to WDK 6.0 */
-typedef int socklen_t;
+#undef HAVE_SOCKLEN_T

@@ -1271,7 +1271,6 @@ else
     AC_MSG_RESULT(no)
 fi
 
-AC_TYPE_SOCKLEN_T
 AC_TYPE_SIGNAL
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(unsigned long long)
@@ -1283,6 +1282,9 @@ AC_CHECK_TYPES([ssize_t])
 AC_CHECK_TYPES([sig_atomic_t],[],[],
 [#include <sys/types.h>
 #include <signal.h>])
+AC_CHECK_TYPES([socklen_t],[],[],
+[#include <sys/types.h>
+#include <sys/socket.h>])
 AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST
