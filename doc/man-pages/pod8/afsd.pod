@@ -567,6 +567,13 @@ this and the B<-fakestat-all> options are useful on Mac OS X so that the
 Finder program doesn't try to contact every AFS cell the system knows
 about.
 
+Note that, for the purposes of B<-fakestat>, local cellular mounts count
+as "cross-cell" mounts. That is, if the local cell is C<localcell>, a
+mount for C<localcell:root.cell> will count as a "cross-cell" mount and
+so stat calls for it will be faked with B<-fakestat>. In practice, local
+cellular mounts are rare and generally discouraged, so this should not
+generally make a difference.
+
 =item B<-fakestat-all>
 
 Return fake values for stat calls on all mounts, not just cross-cell
