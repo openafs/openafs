@@ -614,6 +614,7 @@ rxi_MorePackets(int apackets)
 	rx_mallocedP = p;
     }
 
+    rx_nPackets += apackets;
     rx_nFreePackets += apackets;
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
@@ -722,13 +723,12 @@ rxi_MorePacketsNoLock(int apackets)
     }
 
     rx_nFreePackets += apackets;
-#ifdef RX_ENABLE_TSFPQ
-    /* TSFPQ patch also needs to keep track of total packets */
     MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
+#ifdef RX_ENABLE_TSFPQ
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_packets_mutex);
 #endif /* RX_ENABLE_TSFPQ */
+    MUTEX_EXIT(&rx_packets_mutex);
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
 }
@@ -789,7 +789,7 @@ void
 rx_CheckPackets(void)
 {
     if (rxi_NeedMorePackets) {
-	rxi_MorePackets(rx_initSendWindow);
+	rxi_MorePackets(rx_maxSendWindow);
     }
 }
 
@@ -1153,7 +1153,7 @@ rxi_AllocPacketNoLock(int class)
 	    osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
         if (queue_IsEmpty(&rx_freePacketQueue))
-	    rxi_MorePacketsNoLock(4 * rx_initSendWindow);
+	    rxi_MorePacketsNoLock(rx_maxSendWindow);
 #endif /* KERNEL */
 
 
@@ -1212,7 +1212,7 @@ rxi_AllocPacketNoLock(int class)
 	osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
     if (queue_IsEmpty(&rx_freePacketQueue))
-	rxi_MorePacketsNoLock(4 * rx_initSendWindow);
+	rxi_MorePacketsNoLock(rx_maxSendWindow);
 #endif /* KERNEL */
 
     rx_nFreePackets--;
@@ -1247,7 +1247,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
         MUTEX_ENTER(&rx_freePktQ_lock);
 
         if (queue_IsEmpty(&rx_freePacketQueue))
-	    rxi_MorePacketsNoLock(4 * rx_initSendWindow);
+	    rxi_MorePacketsNoLock(rx_maxSendWindow);
 
 	RX_TS_FPQ_GTOL(rx_ts_info);
 

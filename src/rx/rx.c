@@ -509,12 +509,17 @@ rx_InitHost(u_int host, u_int port)
     rx_nFreePackets = 0;
     queue_Init(&rx_freePacketQueue);
     rxi_NeedMorePackets = FALSE;
+    rx_nPackets = 0;	/* rx_nPackets is managed by rxi_MorePackets* */
+
+    /* enforce a minimum number of allocated packets */
+    if (rx_extraPackets < rxi_nSendFrags * rx_maxSendWindow)
+        rx_extraPackets = rxi_nSendFrags * rx_maxSendWindow;
+
+    /* allocate the initial free packet pool */
 #ifdef RX_ENABLE_TSFPQ
-    rx_nPackets = 0;	/* in TSFPQ version, rx_nPackets is managed by rxi_MorePackets* */
     rxi_MorePacketsTSFPQ(rx_extraPackets + RX_MAX_QUOTA + 2, RX_TS_FPQ_FLUSH_GLOBAL, 0);
 #else /* RX_ENABLE_TSFPQ */
-    rx_nPackets = rx_extraPackets + RX_MAX_QUOTA + 2;	/* fudge */
-    rxi_MorePackets(rx_nPackets);
+    rxi_MorePackets(rx_extraPackets + RX_MAX_QUOTA + 2);        /* fudge */
 #endif /* RX_ENABLE_TSFPQ */
     rx_CheckPackets();
 
@@ -665,8 +670,10 @@ QuotaOK(struct rx_service *aservice)
     /* otherwise, can use only if there are enough to allow everyone
      * to go to their min quota after this guy starts.
      */
+    MUTEX_ENTER(&rx_quota_mutex);
     if (rxi_availProcs > rxi_minDeficit)
 	rc = 1;
+    MUTEX_EXIT(&rx_quota_mutex);
     return rc;
 }
 #endif /* RX_ENABLE_LOCKS */
@@ -1845,9 +1852,11 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
     if (cur_service != NULL) {
 	cur_service->nRequestsRunning--;
+        MUTEX_ENTER(&rx_quota_mutex);
 	if (cur_service->nRequestsRunning < cur_service->minProcs)
 	    rxi_minDeficit++;
 	rxi_availProcs++;
+        MUTEX_EXIT(&rx_quota_mutex);
     }
     if (queue_IsNotEmpty(&rx_incomingCallQueue)) {
 	struct rx_call *tcall, *ncall;
@@ -1910,9 +1919,11 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	service->nRequestsRunning++;
 	/* just started call in minProcs pool, need fewer to maintain
 	 * guarantee */
+        MUTEX_ENTER(&rx_quota_mutex);
 	if (service->nRequestsRunning <= service->minProcs)
 	    rxi_minDeficit--;
 	rxi_availProcs--;
+        MUTEX_EXIT(&rx_quota_mutex);
 	rx_nWaiting--;
 	/* MUTEX_EXIT(&call->lock); */
     } else {
@@ -4415,9 +4426,11 @@ rxi_AttachServerProc(struct rx_call *call,
 	CV_SIGNAL(&sq->cv);
 #else
 	service->nRequestsRunning++;
+        MUTEX_ENTER(&rx_quota_mutex);
 	if (service->nRequestsRunning <= service->minProcs)
 	    rxi_minDeficit--;
 	rxi_availProcs--;
+        MUTEX_EXIT(&rx_quota_mutex);
 	osi_rxWakeup(sq);
 #endif
     }

@@ -261,12 +261,13 @@ rx_ServerProc(void *unused)
 {
     int threadID;
 
-/* jaltman - rxi_dataQuota is protected by a mutex everywhere else */
     rxi_MorePackets(rx_maxReceiveWindow + 2);	/* alloc more packets */
+    MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
      * number of threads handling incoming calls */
     threadID = rxi_availProcs++;
+    MUTEX_EXIT(&rx_quota_mutex);
 
 #ifdef RX_ENABLE_LOCKS
     AFS_GUNLOCK();
@@ -1258,6 +1259,9 @@ rxk_Listener(void)
     AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
+        /* See if a check for additional packets was issued */
+        rx_CheckPackets();
+
 	if (rxp) {
 	    rxi_RestoreDataBufs(rxp);
 	} else {
