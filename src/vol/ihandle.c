@@ -941,9 +941,6 @@ ih_sync_thread() {
 	IOMGR_Sleep(60);
 #endif /* AFS_PTHREAD_ENV */
 
-#ifndef AFS_NT40_ENV
-        sync();
-#endif
         ih_sync_all();
     }
 }
