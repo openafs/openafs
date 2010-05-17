@@ -966,17 +966,18 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		fi
 esac
 
-AC_CACHE_VAL(ac_cv_sockaddr_len,
-[
-AC_MSG_CHECKING([if struct sockaddr has sa_len field])
-AC_TRY_COMPILE( [#include <sys/types.h>
+AC_CACHE_CHECK([if struct sockaddr has sa_len field],
+    [ac_cv_sockaddr_len],
+    [AC_TRY_COMPILE( [#include <sys/types.h>
 #include <sys/socket.h>],
-[struct sockaddr *a;
-a->sa_len=0;], ac_cv_sockaddr_len=yes, ac_cv_sockaddr_len=no)
-AC_MSG_RESULT($ac_cv_sockaddr_len)])
-if test "$ac_cv_sockaddr_len" = "yes"; then
-   AC_DEFINE(STRUCT_SOCKADDR_HAS_SA_LEN, 1, [define if you struct sockaddr sa_len])
-fi
+                     [struct sockaddr *a; a->sa_len=0;],
+		     [ac_cv_sockaddr_len=yes],
+		     [ac_cv_sockaddr_len=no])
+])
+AS_IF([test "$ac_cv_sockaddr_len" = "yes"],
+      [AC_DEFINE(STRUCT_SOCKADDR_HAS_SA_LEN, 1,
+		 [define if you struct sockaddr sa_len])])
+
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
 else
@@ -1030,18 +1031,20 @@ fi
 
 AC_CHECK_RESOLV_RETRANS
 
-AC_CACHE_VAL(ac_cv_setsockopt_iprecverr,
-[
-AC_MSG_CHECKING([for setsockopt(, SOL_IP, IP_RECVERR)])
-AC_TRY_COMPILE( [#include <sys/types.h>
+AC_CACHE_CHECK([for setsockopt(, SOL_IP, IP_RECVERR)],
+    [ac_cv_setsockopt_iprecverr],
+    [AC_TRY_COMPILE( [
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>],
 [int on=1;
-setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));], ac_cv_setsockopt_iprecverr=yes, ac_cv_setsockopt_iprecverr=no)
-AC_MSG_RESULT($ac_cv_setsockopt_iprecverr)])
-if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
-   AC_DEFINE(ADAPT_PMTU_RECVERR, 1, [define if asynchronous socket errors can be received])
-fi
+setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));],
+	[ac_cv_setsockopt_iprecverr=yes],
+	[ac_cv_setsockopt_iprecverr=no])])
+
+AS_IF([test "$ac_cv_setsockopt_iprecverr" = "yes"],
+      [AC_DEFINE(ADAPT_PMTU_RECVERR, 1,
+		 [define if asynchronous socket errors can be received])])
 
 PTHREAD_LIBS=error
 if test "x$MKAFS_OSTYPE" = OBSD; then
