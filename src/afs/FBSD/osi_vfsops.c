@@ -205,13 +205,11 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	error = 0;
     } else {
 tryagain:
-#ifndef AFS_FBSD80_ENV
 	if (afs_globalVp) {
 	    afs_PutVCache(afs_globalVp);
 	    /* vrele() needed here or not? */
 	    afs_globalVp = NULL;
 	}
-#endif
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
