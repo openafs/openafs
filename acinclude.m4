@@ -810,6 +810,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
+                 AC_CHECK_LINUX_FUNC([PageChecked],
+				     [#include <linux/mm.h>
+#include <linux/page-flags.h>],
+				     [struct page *_page;
+                                      int bchecked = PageChecked(_page);])
+                 AC_CHECK_LINUX_FUNC([PageFsMisc],
+				     [#include <linux/mm.h>
+#include <linux/page-flags.h>],
+				     [struct page *_page;
+                                      int bchecked = PageFsMisc(_page);])
 		 AC_CHECK_LINUX_FUNC([ctl_table], [ctl_name], [sysctl.h])
 		 AC_CHECK_LINUX_FUNC([current_kernel_time],
 				     [#include <linux/time.h>],

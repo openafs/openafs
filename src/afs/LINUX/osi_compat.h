@@ -292,3 +292,13 @@ afs_try_to_freeze(void) {
 }
 #endif
 
+#if !defined(HAVE_LINUX_PAGECHECKED)
+# if defined(HAVE_LINUX_PAGEFSMISC)
+#  include <linux/page-flags.h>
+
+#  define PageChecked(p)            PageFsMisc((p))
+#  define SetPageChecked(p)         SetPageFsMisc((p))
+#  define ClearPageChecked(p)       ClearPageFsMisc((p))
+
+# endif
+#endif
