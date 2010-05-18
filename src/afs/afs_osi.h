@@ -258,15 +258,9 @@ typedef struct timeval osi_timeval_t;
  * (Also, of course, the vnode is assumed to be one of ours.  Can't use this
  * macro for V-file vnodes.)
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-/* Bare refcount manipulation would probably work on this platform, but just
-   calling VREF does not */
-#define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
-#elif defined(AFS_AIX_ENV)
-#define AFS_FAST_HOLD(vp) VREFCOUNT_INC(vp)
-#else
-#define AFS_FAST_HOLD(vp) VN_HOLD(AFSTOV(vp))
-#endif
+/* osi_vnhold is defined in PLATFORM/osi_machdep.h */
+#define AFS_FAST_HOLD(vp) osi_vnhold((vp), 0)
+
 #ifdef AFS_AIX_ENV
 #define AFS_FAST_RELE(vp) VREFCOUNT_DEC(vp)
 #else

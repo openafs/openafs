@@ -114,7 +114,7 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 	addr[0] = (long)avc;
 #ifndef AFS_AIX41_ENV
 	/* No post processing, so don't hold ref count. */
-	VN_HOLD(AFSTOV(avc));
+	AFS_FAST_HOLD(avc);
 #endif
     }
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN54_ENV)

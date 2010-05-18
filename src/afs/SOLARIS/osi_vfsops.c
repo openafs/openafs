@@ -200,7 +200,7 @@ again:
 	}
     }
     if (tvp) {
-	VN_HOLD(AFSTOV(tvp));
+	AFS_FAST_HOLD(tvp);
 	mutex_enter(&AFSTOV(tvp)->v_lock);
 	AFSTOV(tvp)->v_flag |= VROOT;
 	mutex_exit(&AFSTOV(tvp)->v_lock);
