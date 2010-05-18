@@ -1222,7 +1222,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		nextpp = &vlentry.nextNameHash;
 		which = "name";
 		volidbuf[0]='\0';
-		readentry(nextp, &vlentry2, &type);
+		readentry(vlentry.nextNameHash, &vlentry2, &type);
 		nexthash = NameHash(vlentry2.name);
 		if (hash != nexthash)
 		    foundbroken = 1;
@@ -1235,7 +1235,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		nextpp = &(vlentry.nextIdHash[0]);
 		which = "RW";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
-		readentry(nextp, &vlentry2, &type);
+		readentry(vlentry.nextIdHash[0], &vlentry2, &type);
 		nexthash = IdHash(vlentry2.volumeId[0]);
 		if (hash != nexthash)
 		    foundbroken = 1;
@@ -1248,7 +1248,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		nextpp = &(vlentry.nextIdHash[1]);
 		which = "RO";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
-		readentry(nextp, &vlentry2, &type);
+		readentry(vlentry.nextIdHash[1], &vlentry2, &type);
 		nexthash = IdHash(vlentry2.volumeId[1]);
 		if (hash != nexthash)
 		    foundbroken = 1;
@@ -1261,14 +1261,14 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		nextpp = &(vlentry.nextIdHash[2]);
 		which = "BK";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
-		readentry(nextp, &vlentry2, &type);
+		readentry(vlentry.nextIdHash[2], &vlentry2, &type);
 		nexthash = IdHash(vlentry2.volumeId[2]);
 		if (hash != nexthash)
 		    foundbroken = 1;
 	    }
 
 	    if (foundbroken) {
-		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %s forward link in %s is broken (hash %d != %d)", i,
+		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %s forward link in %s hash chain is broken (hash %d != %d)", i,
 			  vlentry.name, volidbuf, which, hash, nexthash);
 	    } else if (foundbad) {
 		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %snot found in %s hash %d", i,
