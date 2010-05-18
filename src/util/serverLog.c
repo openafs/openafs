@@ -279,6 +279,7 @@ OpenLog(const char *fileName)
 
     if (mrafsStyleLogs) {
         time_t t;
+	struct stat buf;
 	FT_GetTimeOfDay(&Start, 0);
         t = Start.tv_sec;	
 	TimeFields = localtime(&t);
@@ -286,11 +287,17 @@ OpenLog(const char *fileName)
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
 		strcpy((char *)&ourName, (char *)fileName);
 	}
+    makefilename:
 	afs_snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
 		     ourName, TimeFields->tm_year + 1900,
 		     TimeFields->tm_mon + 1, TimeFields->tm_mday,
 		     TimeFields->tm_hour, TimeFields->tm_min,
 		     TimeFields->tm_sec);
+	if(lstat(FileName, &buf) == 0) {
+	    /* avoid clobbering a log */
+	    TimeFields->tm_sec++;
+	    goto makefilename;
+	}
 	if (!isfifo)
 	    renamefile(fileName, FileName);	/* don't check error code */
 	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
