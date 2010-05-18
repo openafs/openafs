@@ -122,7 +122,6 @@ static afs_int32 Do_VLRegisterRPC(void);
 
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
-FILE *console = NULL;
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t fsync_glock_mutex;
@@ -132,7 +131,6 @@ char fsync_wait[1];
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_NT40_ENV
-#define AFS_QUIETFS_ENV 1
 #define NT_OPEN_MAX    1024	/* This is an arbitrary no. we came up with for 
 				 * now. We hope this will be replaced by a more
 				 * intelligent estimate later. */
@@ -480,15 +478,9 @@ FiveMinuteCheckLWP(void *unused)
 #endif
 	if (printBanner && (++msg & 1)) {	/* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
-	    if (console != NULL) {
-#ifndef AFS_QUIETFS_ENV
-		fprintf(console, "File server is running at %s\r",
-			afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-#endif /* AFS_QUIETFS_ENV */
-		ViceLog(2,
-			("File server is running at %s\n",
-			 afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-	    }
+	    ViceLog(2,
+		    ("File server is running at %s\n",
+		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	}
 #ifdef AFS_DEMAND_ATTACH_FS
 	FS_STATE_WRLOCK;
@@ -820,12 +812,6 @@ ShutDownAndCore(int dopanic)
 	     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
     if (dopanic)
 	ViceLog(0, ("ABNORMAL SHUTDOWN, see core file.\n"));
-#ifndef AFS_QUIETFS_ENV
-    if (console != NULL) {
-	fprintf(console, "File server restart/shutdown received at %s\r",
-		afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-    }
-#endif
     DFlush();
     if (!dopanic)
 	PrintCounters();
@@ -870,25 +856,15 @@ ShutDownAndCore(int dopanic)
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
     }
-    if (console != NULL) {
-	now = time(0);
-	if (dopanic) {
-#ifndef AFS_QUIETFS_ENV
-	    fprintf(console, "File server has terminated abnormally at %s\r",
-		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-#endif
-	    ViceLog(0,
-		    ("File server has terminated abnormally at %s\n",
-		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-	} else {
-#ifndef AFS_QUIETFS_ENV
-	    fprintf(console, "File server has terminated normally at %s\r",
-		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-#endif
-	    ViceLog(0,
-		    ("File server has terminated normally at %s\n",
-		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-	}
+    now = time(0);
+    if (dopanic) {
+      ViceLog(0,
+	      ("File server has terminated abnormally at %s\n",
+	       afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+    } else {
+      ViceLog(0,
+	      ("File server has terminated normally at %s\n",
+	       afs_ctime(&now, tbuffer, sizeof(tbuffer))));
     }
 
     if (dopanic)
@@ -1966,9 +1942,6 @@ main(int argc, char *argv[])
 		argv[0]);
 	exit(2);
     }
-#ifndef AFS_QUIETFS_ENV
-    console = afs_fopen("/dev/console", "w");
-#endif
     /* set ihandle package defaults prior to parsing args */
     ih_PkgDefaults();
 
@@ -2322,13 +2295,8 @@ main(int argc, char *argv[])
 
     FT_GetTimeOfDay(&tp, 0);
 
-#ifndef AFS_QUIETFS_ENV
-    if (console != NULL) { 
-        time_t t = tp.tv_sec;
-	fprintf(console, "File server has started at %s\r",
-		afs_ctime(&t, tbuffer, sizeof(tbuffer)));
-    }
-#endif
+    ViceLog(0, ("File server has started at %s\r",
+		afs_ctime((time_t *)&(tp.tv_sec), tbuffer, sizeof(tbuffer))));
 
     /*
      * Figure out the FileServer's name and primary address.
