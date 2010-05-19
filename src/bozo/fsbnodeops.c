@@ -260,7 +260,7 @@ fs_restartp(struct bnode *bn)
 	    bnode_FreeTokens(tt);
 	    return 0;
 	}
-	if (tstat.st_ctime > abnode->lastScanStart)
+	if (tstat.st_ctime > abnode->lastSalsrvStart)
 	    code = 1;
 	else
 	    code = 0;
