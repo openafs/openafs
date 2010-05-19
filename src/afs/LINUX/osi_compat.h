@@ -234,15 +234,6 @@ zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
 }
 #endif
 
-#ifndef HAVE_LINUX_VFS_LLSEEK
-static inline loff_t
-vfs_llseek(struct file *filp, loff_t offset, int origin) {
-    if (filp->f_op->llseek)
-	return filp->f_op->llseek(filp, offset, origin);
-    return default_llseek(filp, offset, origin);
-}
-#endif
-
 #ifndef HAVE_LINUX_KERNEL_SETSOCKOPT
 /* Available from 2.6.19 */
 

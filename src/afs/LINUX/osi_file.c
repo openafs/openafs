@@ -387,12 +387,6 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	set_fs(get_ds());
     }
 
-    /* seek to the desired position. Return -1 on error. */
-    if (vfs_llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset) {
-	code = -1;
-	goto out;
-    }
-
     while (code == 0 && uiop->uio_resid > 0 && uiop->uio_iovcnt > 0) {
 	iov = uiop->uio_iov;
 	count = iov->iov_len;
@@ -402,12 +396,11 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	    continue;
 	}
 
-	pos = filp->f_pos;
+	pos = uiop->uio_offset;
 	if (rw == UIO_READ)
 	    code = filp->f_op->read(filp, iov->iov_base, count, &pos);
 	else
 	    code = filp->f_op->write(filp, iov->iov_base, count, &pos);
-	filp->f_pos = pos;
 
 	if (code < 0) {
 	    code = -code;

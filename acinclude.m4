@@ -870,9 +870,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([svc_addr_in],
 				     [#include <linux/sunrpc/svc.h>],
 				     [svc_addr_in(NULL);])
-		 AC_CHECK_LINUX_FUNC([vfs_llseek],
-				     [#include <linux/fs.h>],
-				     [vfs_llseek(NULL, 0, 0);])
 		 AC_CHECK_LINUX_FUNC([zero_user_segments],
 				     [#include <linux/highmem.h>],
 				     [zero_user_segments(NULL, 0, 0, 0, 0);])
