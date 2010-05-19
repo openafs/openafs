@@ -86,6 +86,7 @@ struct er {
     long addr;
     int type;
 } *record;
+afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
 
 /*  Used to control what goes to stdout based on quiet flag */
@@ -237,6 +238,20 @@ InvalidVolname(char *volname)
     if (slen >= VL_MAXNAMELEN)
 	return 1;
     return (slen != strspn(volname, map));
+}
+
+int
+validVolumeAddr(afs_uint32 fileOffset)
+{
+    if (ADDR(fileOffset) >= maxentries) {
+	/* Are we in range */
+	return 0;
+    }
+    /*
+     * We cannot test whether the offset is aligned
+     * since the vl entries are not in a regular array
+     */
+    return 1;
 }
 
 void
@@ -690,6 +705,13 @@ FollowNameHash(struct vlheader *header)
     if (verbose) quiet_println("Check Volume Name Hash\n");
     for (i = 0; i < HASHSIZE; i++) {
 	chainlength = 0;
+
+	if (!validVolumeAddr(header->VolnameHash[i])) {
+	    log_error(VLDB_CHECK_ERROR,"Name Hash %d: Bad entry %u is out of range\n",
+		      i, header->VolnameHash[i]);
+	    continue;
+	}
+
 	for (addr = header->VolnameHash[i]; addr; addr = vlentry.nextNameHash) {
 	    readentry(addr, &vlentry, &type);
 	    if (type != VL) {
@@ -698,8 +720,12 @@ FollowNameHash(struct vlheader *header)
 		continue;
 	    }
 
-	    rindex = addr / sizeof(vlentry);
+	    rindex = ADDR(addr);
 
+	    /*
+	     * we know that the address is valid because we
+	     * checked it either above or below
+	     */
 	    if (record[rindex].addr != addr && record[rindex].addr) {
 	        log_error	
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
@@ -712,6 +738,14 @@ FollowNameHash(struct vlheader *header)
 		record[rindex].type |= MULTN;
 		break;
 	    }
+
+	    if (!validVolumeAddr(vlentry.nextNameHash)) {
+		log_error(VLDB_CHECK_ERROR,"Name Hash forward link of '%s' is out of range\n",
+			  vlentry.name);
+		record[rindex].type |= MULTN;
+		break;
+	    }
+
 	    record[rindex].type |= NH;
 	    record[rindex].type |= REFN;
 
@@ -764,29 +798,43 @@ FollowIdHash(struct vlheader *header)
 
 	for (j = 0; j < HASHSIZE; j++) {
 	    chainlength = 0;
+	    if (!validVolumeAddr(header->VolidHash[i][j])) {
+		log_error(VLDB_CHECK_ERROR,"%s Hash %d: Bad entry %u is out of range\n",
+			  vtype(i), j, header->VolidHash[i][j]);
+		continue;
+	    }
+
 	    for (addr = header->VolidHash[i][j]; addr;
 		 addr = vlentry.nextIdHash[i]) {
 		readentry(addr, &vlentry, &type);
 		if (type != VL) {
-		   log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry at %u: Not a valid vlentry\n",
 			 vtype(i), j, addr);
 		    continue;
 		}
 
-		rindex = addr / sizeof(vlentry);
+		rindex = ADDR(addr);
 		if (record[rindex].addr != addr && record[rindex].addr) {
-		   log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
 			 record[rindex].addr, addr, rindex);
 		}
 		if (record[rindex].type & hash) {
-		   log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
 			 vtype(i), j, vlentry.name);
 		    record[rindex].type |= badref;
 		    break;
 		}
+
+		if (!validVolumeAddr(vlentry.nextIdHash[i])) {
+		    log_error(VLDB_CHECK_ERROR,"%s Id Hash forward link of '%s' is out of range\n",
+			      vtype(i), vlentry.name);
+		    record[rindex].type |= badref;
+		    break;
+		}
+
 		record[rindex].type |= hash;
 		record[rindex].type |= ref;
 
@@ -800,7 +848,6 @@ FollowIdHash(struct vlheader *header)
 			 vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
 		    record[rindex].type |= badhash;
-		    printf("%d: %x\n", rindex, record[rindex].type);
 		}
 	    }
 
@@ -1085,7 +1132,7 @@ int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *dbfile;
-    afs_int32 maxentries, type;
+    afs_int32 type;
     struct vlheader header;
     struct nvlentry vlentry, vlentry2;
     int i, j;
@@ -1215,54 +1262,74 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		foundbad = 1;
 	    }
 
-	    if (record[ADDR(vlentry.nextNameHash)].type & MULTN) {
+	    if (!validVolumeAddr(vlentry.nextNameHash) ||
+		record[ADDR(vlentry.nextNameHash)].type & MULTN) {
 		nextp = ADDR(vlentry.nextNameHash);
 		reft = REFN;
 		hash = NameHash(vlentry.name);
 		nextpp = &vlentry.nextNameHash;
 		which = "name";
 		volidbuf[0]='\0';
-		readentry(vlentry.nextNameHash, &vlentry2, &type);
-		nexthash = NameHash(vlentry2.name);
+		if (validVolumeAddr(vlentry.nextNameHash)) {
+		    readentry(vlentry.nextNameHash, &vlentry2, &type);
+		    nexthash = NameHash(vlentry2.name);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
 		    foundbroken = 1;
 	    }
 
-	    if ((record[ADDR(vlentry.nextIdHash[0])].type & MULTRW)) {
+	    if (!validVolumeAddr(vlentry.nextIdHash[0]) ||
+		record[ADDR(vlentry.nextIdHash[0])].type & MULTRW) {
 		nextp = ADDR(vlentry.nextIdHash[0]);
 		reft = REFRW;
 		hash = IdHash(vlentry.volumeId[0]);
 		nextpp = &(vlentry.nextIdHash[0]);
 		which = "RW";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
-		readentry(vlentry.nextIdHash[0], &vlentry2, &type);
-		nexthash = IdHash(vlentry2.volumeId[0]);
+		if (validVolumeAddr(vlentry.nextIdHash[0])) {
+		    readentry(vlentry.nextIdHash[0], &vlentry2, &type);
+		    nexthash = IdHash(vlentry2.volumeId[0]);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
 		    foundbroken = 1;
 	    }
 
-	    if ((record[ADDR(vlentry.nextIdHash[1])].type & MULTRO)) {
+	    if (!validVolumeAddr(vlentry.nextIdHash[1]) ||
+		record[ADDR(vlentry.nextIdHash[1])].type & MULTRO) {
 		nextp = ADDR(vlentry.nextIdHash[1]);
 		reft = REFRO;
 		hash = IdHash(vlentry.volumeId[1]);
 		nextpp = &(vlentry.nextIdHash[1]);
 		which = "RO";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
-		readentry(vlentry.nextIdHash[1], &vlentry2, &type);
-		nexthash = IdHash(vlentry2.volumeId[1]);
+		if (validVolumeAddr(vlentry.nextIdHash[1])) {
+		    readentry(vlentry.nextIdHash[1], &vlentry2, &type);
+		    nexthash = IdHash(vlentry2.volumeId[1]);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
 		    foundbroken = 1;
 	    }
 
-	    if ((record[ADDR(vlentry.nextIdHash[2])].type & MULTBK)) {
+	    if (!validVolumeAddr(vlentry.nextIdHash[2]) ||
+		record[ADDR(vlentry.nextIdHash[2])].type & MULTBK) {
 		nextp = ADDR(vlentry.nextIdHash[2]);
 		reft = REFBK;
 		hash = IdHash(vlentry.volumeId[2]);
 		nextpp = &(vlentry.nextIdHash[2]);
 		which = "BK";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
-		readentry(vlentry.nextIdHash[2], &vlentry2, &type);
-		nexthash = IdHash(vlentry2.volumeId[2]);
+		if (validVolumeAddr(vlentry.nextIdHash[2])) {
+		    readentry(vlentry.nextIdHash[2], &vlentry2, &type);
+		    nexthash = IdHash(vlentry2.volumeId[2]);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
 		    foundbroken = 1;
 	    }
