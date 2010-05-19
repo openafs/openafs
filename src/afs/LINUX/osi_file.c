@@ -422,7 +422,6 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	code = 0;
     }
 
-out:
     if (uiop->uio_seg == AFS_UIOSYS) {
 	/* Switch back into kernel space */
 	set_fs(old_fs);
