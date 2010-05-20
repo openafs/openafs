@@ -255,11 +255,10 @@ AC_ARG_ENABLE([optimize-pam],
     ,
     [enable_optimize_pam="yes"])
 AC_ARG_ENABLE([linux-syscall-probing],
-    [AS_HELP_STRING([--disable-linux-syscall-probing],
-	[disabling Linux syscall probing (defaults to enabled)])],
+    [AS_HELP_STRING([--enable-linux-syscall-probing],
+	[enable Linux syscall probing (defaults to autodetect)])],
     ,
-    [AC_DEFINE(ENABLE_LINUX_SYSCALL_PROBING, 1, 
-	[define to enable syscall table probes])])
+    [enable_linux_syscall_probing="maybe"])
     
 
 AC_ARG_WITH([xslt-processor],
@@ -918,9 +917,32 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KEY_ALLOC_NEEDS_CRED
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
-	         LINUX_EXPORTS_INIT_MM
-                 LINUX_EXPORTS_SYS_CHDIR
-                 LINUX_EXPORTS_SYS_OPEN
+
+		 dnl If we are guaranteed that keyrings will work - that is
+		 dnl  a) The kernel has keyrings enabled
+		 dnl  b) The code is new enough to give us a key_type_keyring
+		 dnl then we just disable syscall probing unless we've been
+		 dnl told otherwise
+
+		 AS_IF([test "$enable_linux_syscall_probing" = "maybe"],
+		   [AS_IF([test "$ac_cv_linux_keyring_support" = "yes" -a "$ac_cv_linux_exports_key_type_keyring" = "yes"],
+			  [enable_linux_syscall_probing="no"],
+			  [enable_linux_syscall_probing="yes"])
+                 ])
+
+		 dnl Syscall probing needs a few tests of its own, and just
+		 dnl won't work if the kernel doesn't export init_mm
+		 AS_IF([test "$enable_linux_syscall_probing" = "yes"], [
+                   LINUX_EXPORTS_INIT_MM
+		   AS_IF([test "$ac_cv_linux_exports_init_mm" = "no"], [
+                     AC_MSG_ERROR(
+		       [Can't do syscall probing without exported init_mm])
+                   ])
+		   LINUX_EXPORTS_SYS_CHDIR
+	           LINUX_EXPORTS_SYS_OPEN
+		   AC_DEFINE(ENABLE_LINUX_SYSCALL_PROBING, 1,
+			     [define to enable syscall table probes])
+		 ])
 
 		 dnl Packaging and SMP build
 		 if test "x$with_linux_kernel_packaging" = "xno" ; then
@@ -931,7 +953,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Syscall probing
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
-                   AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
+		   AS_IF([test "$enable_linux_syscall_probing" = "yes"], [
+                     AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
+		   ])
                    ac_cv_linux_exports_sys_call_table=no
 		   if test -f "$LINUX_KERNEL_PATH/include/asm/ia32_unistd.h"; then
 		     ac_cv_linux_exports_ia32_sys_call_table=yes
