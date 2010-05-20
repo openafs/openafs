@@ -223,6 +223,22 @@ extern int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
 extern void *ubik_CheckRXSecurityRock;
 /*\}*/
 
+/*
+ * For applications that make use of ubik_BeginTransReadAnyWrite, writing
+ * processes must not update the application-level cache as they write,
+ * or else readers can read the new cache before the data is committed to
+ * the db. So, when a commit occurs, the cache must be updated right then.
+ * If set, this function will be called during commits of write transactions,
+ * to update the application-level cache after a write. This will be called
+ * immediately after the local disk commit succeeds, and it will be called
+ * with a lock held that prevents other threads from reading from the cache
+ * or the db in general.
+ *
+ * Note that this function MUST be set in order to make use of
+ * ubik_BeginTransReadAnyWrite.
+ */
+extern int (*ubik_SyncWriterCacheProc) (void);
+
 /****************INTERNALS BELOW ****************/
 
 #ifdef UBIK_INTERNALS
@@ -251,6 +267,8 @@ extern void *ubik_CheckRXSecurityRock;
 #define TRCACHELOCKED       32  /*!< this trans has locked dbase->cache_lock
                                  *   (meaning, this trans has called
                                  *   ubik_CheckCache at some point */
+#define TRREADWRITE         64  /*!< read even if there's a conflicting ubik-
+                                 *   level write lock */
 /*\}*/
 
 /*! \name ubik_lock flags */
@@ -493,6 +511,9 @@ extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
 extern int ubik_BeginTransReadAny(register struct ubik_dbase *dbase,
 				  afs_int32 transMode,
 				  struct ubik_trans **transPtr);
+extern int ubik_BeginTransReadAnyWrite(struct ubik_dbase *dbase,
+                                       afs_int32 transMode,
+                                       struct ubik_trans **transPtr);
 extern int ubik_AbortTrans(register struct ubik_trans *transPtr);             
 
 extern int ubik_EndTrans(register struct ubik_trans *transPtr);
