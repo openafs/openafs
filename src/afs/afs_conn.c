@@ -295,7 +295,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	}
 	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
-	rx_SetConnSecondsUntilNatPing(tc->id, 20);
+	/*
+	 * Only do this for the base connection, not per-user.
+	 * Will need to be revisited if/when CB gets security.
+	 */
+	if (isec == 0)
+	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)
