@@ -133,7 +133,7 @@ Init_VLdbase(struct vl_ctx *ctx,
 	    wl = 1;
 	} else if (locktype == LOCKREAD) {
 	    errorcode =
-		ubik_BeginTransReadAny(VL_dbase, UBIK_READTRANS, &ctx->trans);
+		ubik_BeginTransReadAnyWrite(VL_dbase, UBIK_READTRANS, &ctx->trans);
 	    wl = 0;
 	} else {
 	    errorcode = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, &ctx->trans);

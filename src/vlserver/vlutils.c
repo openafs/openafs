@@ -28,8 +28,12 @@
 struct vlheader xheader;
 extern int maxnservers;
 struct extentaddr extentaddr;
+extern afs_uint32 rd_HostAddress[MAXSERVERID + 1];
+extern afs_uint32 wr_HostAddress[MAXSERVERID + 1];
 struct extentaddr *rd_ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
+struct extentaddr *wr_ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
 struct vlheader rd_cheader;	/* kept in network byte order */
+struct vlheader wr_cheader;
 int vldbversion = 0;
 
 static int index_OK(struct vl_ctx *ctx, afs_int32 blockindex);
@@ -306,7 +310,6 @@ UpdateCache(struct ubik_trans *trans, void *rock)
     int *builddb_rock = rock;
     int builddb = *builddb_rock;
     afs_int32 error = 0, i, code, ubcode;
-    extern afs_uint32 rd_HostAddress[];
 
     /* if version changed (or first call), read the header */
     ubcode = vlread(trans, 0, (char *)&rd_cheader, sizeof(rd_cheader));
@@ -1064,13 +1067,55 @@ index_OK(struct vl_ctx *ctx, afs_int32 blockindex)
     return 1;
 }
 
+/* makes a deep copy of src_ex into dst_ex */
+static int
+vlexcpy(struct extentaddr **dst_ex, struct extentaddr **src_ex)
+{
+    int i;
+    for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
+	if (src_ex[i]) {
+	    if (!dst_ex[i]) {
+		dst_ex[i] = malloc(VL_ADDREXTBLK_SIZE);
+	    }
+	    if (!dst_ex[i]) {
+		return VL_NOMEM;
+	    }
+	    memcpy(dst_ex[i], src_ex[i], VL_ADDREXTBLK_SIZE);
+
+	} else if (dst_ex[i]) {
+	    /* we have no src, but we have a dst... meaning, this block
+	     * has gone away */
+	    free(dst_ex[i]);
+	    dst_ex[i] = NULL;
+	}
+    }
+    return 0;
+}
+
 int
 vlsetcache(struct vl_ctx *ctx, int locktype)
 {
-    extern afs_uint32 rd_HostAddress[];
+    if (locktype == LOCKREAD) {
+	ctx->hostaddress = rd_HostAddress;
+	ctx->ex_addr = rd_ex_addr;
+	ctx->cheader = &rd_cheader;
+	return 0;
+    } else {
+	memcpy(wr_HostAddress, rd_HostAddress, sizeof(wr_HostAddress));
+	memcpy(&wr_cheader, &rd_cheader, sizeof(wr_cheader));
 
-    ctx->hostaddress = rd_HostAddress;
-    ctx->ex_addr = rd_ex_addr;
-    ctx->cheader = &rd_cheader;
-    return 0;
+	ctx->hostaddress = wr_HostAddress;
+	ctx->ex_addr = wr_ex_addr;
+	ctx->cheader = &wr_cheader;
+
+	return vlexcpy(wr_ex_addr, rd_ex_addr);
+    }
+}
+
+int
+vlsynccache(void)
+{
+    memcpy(rd_HostAddress, wr_HostAddress, sizeof(rd_HostAddress));
+    memcpy(&rd_cheader, &wr_cheader, sizeof(rd_cheader));
+    return vlexcpy(rd_ex_addr, wr_ex_addr);
 }

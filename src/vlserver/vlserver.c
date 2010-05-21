@@ -60,6 +60,7 @@ int lwps = 9;
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
 afs_uint32 rd_HostAddress[MAXSERVERID + 1];
+afs_uint32 wr_HostAddress[MAXSERVERID + 1];
 
 static void *CheckSignal(void*);
 int LogLevel = 0;
@@ -348,6 +349,7 @@ main(int argc, char **argv)
     ubik_SRXSecurityRock = (char *)tdir;
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
     ubik_CheckRXSecurityRock = (char *)tdir;
+    ubik_SyncWriterCacheProc = vlsynccache;
     code =
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,
 			      vl_dbaseName, &VL_dbase);
@@ -364,6 +366,7 @@ main(int argc, char **argv)
     rx_SetRxDeadTime(50);
 
     memset(rd_HostAddress, 0, sizeof(rd_HostAddress));
+    memset(wr_HostAddress, 0, sizeof(wr_HostAddress));
     initialize_dstats();
 
     afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
