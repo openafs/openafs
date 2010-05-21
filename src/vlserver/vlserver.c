@@ -60,7 +60,7 @@ int lwps = 9;
 
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
-afs_uint32 HostAddress[MAXSERVERID + 1];
+afs_uint32 rd_HostAddress[MAXSERVERID + 1];
 
 static void *CheckSignal(void*);
 int LogLevel = 0;
@@ -365,7 +365,7 @@ main(int argc, char **argv)
     }
     rx_SetRxDeadTime(50);
 
-    memset(HostAddress, 0, sizeof(HostAddress));
+    memset(rd_HostAddress, 0, sizeof(rd_HostAddress));
     initialize_dstats();
 
     afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
