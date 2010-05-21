@@ -15,6 +15,9 @@
  */
 struct vl_ctx {
     struct ubik_trans *trans;
+    afs_uint32 *hostaddress;
+    struct extentaddr **ex_addr;
+    struct vlheader *cheader;
 };
 
 /* vlprocs.c */
@@ -59,4 +62,5 @@ extern int UnhashVolname(struct vl_ctx *ctx, afs_int32 blockindex,
 extern afs_int32 NextEntry(struct vl_ctx *ctx, afs_int32 blockindex,
 			   struct nvlentry *tentry, afs_int32 *remaining);
 extern int FreeBlock(struct vl_ctx *ctx, afs_int32 blockindex);
+extern int vlsetcache(struct vl_ctx *ctx, int locktype);
 #endif
