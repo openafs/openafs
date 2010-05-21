@@ -65,18 +65,18 @@ static int put_nattributeentry(struct nvldbentry **, struct nvldbentry **,
 			       struct nvldbentry **, nbulkentries *,
 			       struct nvlentry *, afs_int32, afs_int32,
 			       afs_int32 *, afs_int32 *);
-static int RemoveEntry(struct ubik_trans *trans, afs_int32 entryptr,
+static int RemoveEntry(struct vl_ctx *ctx, afs_int32 entryptr,
 		       struct nvlentry *tentry);
 static void ReleaseEntry(struct nvlentry *tentry, afs_int32 releasetype);
 static int check_vldbentry(struct vldbentry *aentry);
 static int check_nvldbentry(struct nvldbentry *aentry);
-static int vldbentry_to_vlentry(struct ubik_trans *atrans,
+static int vldbentry_to_vlentry(struct vl_ctx *ctx,
 				struct vldbentry *VldbEntry,
 				struct nvlentry *VlEntry);
-static int nvldbentry_to_vlentry(struct ubik_trans *atrans,
+static int nvldbentry_to_vlentry(struct vl_ctx *ctx,
 				 struct nvldbentry *VldbEntry,
 				 struct nvlentry *VlEntry);
-static int get_vldbupdateentry(struct ubik_trans *trans, afs_int32 blockindex,
+static int get_vldbupdateentry(struct vl_ctx *ctx, afs_int32 blockindex,
 			       struct VldbUpdateEntry *updateentry,
 			       struct nvlentry *VlEntry);
 static int repsite_exists(struct nvlentry *VlEntry, int server, int partition);
@@ -91,9 +91,9 @@ static int InvalidVolname(char *volname);
 static int InvalidVoltype(afs_int32 voltype);
 static int InvalidOperation(afs_int32 voloper);
 static int InvalidReleasetype(afs_int32 releasetype);
-static int IpAddrToRelAddr(afs_uint32 ipaddr, struct ubik_trans *atrans);
-static int ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2,
-			struct ubik_trans *atrans);
+static int IpAddrToRelAddr(struct vl_ctx *ctx, afs_uint32 ipaddr, int create);
+static int ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1,
+                        afs_uint32 ipaddr2);
 
 #define AFS_RXINFO_LEN 128
 static char *
@@ -125,7 +125,7 @@ rxinfo(char * str, struct rx_call *rxcall)
 
 /* This is called to initialize the database, set the appropriate locks and make sure that the vldb header is valid */
 int
-Init_VLdbase(struct ubik_trans **trans,
+Init_VLdbase(struct vl_ctx *ctx,
 	     int locktype,	/* indicate read or write transaction */
 	     int this_op)
 {
@@ -133,34 +133,34 @@ Init_VLdbase(struct ubik_trans **trans,
 
     for (pass = 1; pass <= 3; pass++) {
 	if (pass == 2) {	/* take write lock to rebuild the db */
-	    errorcode = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, trans);
+	    errorcode = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, &ctx->trans);
 	    wl = 1;
 	} else if (locktype == LOCKREAD) {
 	    errorcode =
-		ubik_BeginTransReadAny(VL_dbase, UBIK_READTRANS, trans);
+		ubik_BeginTransReadAny(VL_dbase, UBIK_READTRANS, &ctx->trans);
 	    wl = 0;
 	} else {
-	    errorcode = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, trans);
+	    errorcode = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, &ctx->trans);
 	    wl = 1;
 	}
 	if (errorcode)
 	    return errorcode;
 
-	errorcode = ubik_SetLock(*trans, 1, 1, locktype);
+	errorcode = ubik_SetLock(ctx->trans, 1, 1, locktype);
 	if (errorcode) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(*trans);
+	    ubik_AbortTrans(ctx->trans);
 	    return errorcode;
 	}
 
 	/* check that dbase is initialized and setup cheader */
 	/* 2nd pass we try to rebuild the header */
-	errorcode = CheckInit(*trans, ((pass == 2) ? 1 : 0));
+	errorcode = CheckInit(ctx->trans, ((pass == 2) ? 1 : 0));
 	if (!errorcode && wl && extent_mod)
-	    errorcode = readExtents(*trans);	/* Fix the mh extent blocks */
+	    errorcode = readExtents(ctx->trans);	/* Fix the mh extent blocks */
 	if (errorcode) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(*trans);
+	    ubik_AbortTrans(ctx->trans);
 	    /* Only rebuld if the database is empty */
 	    /* Exit if can't rebuild */
 	    if ((pass == 1) && (errorcode != VL_EMPTY))
@@ -169,7 +169,7 @@ Init_VLdbase(struct ubik_trans **trans,
 		return errorcode;
 	} else {		/* No errorcode */
 	    if (pass == 2) {
-		ubik_EndTrans(*trans);	/* Rebuilt db. End trans, then retake original lock */
+		ubik_EndTrans(ctx->trans);	/* Rebuilt db. End trans, then retake original lock */
 	    } else {
 		break;		/* didn't rebuild and successful - exit */
 	    }
@@ -186,7 +186,7 @@ Init_VLdbase(struct ubik_trans **trans,
 afs_int32
 SVL_CreateEntry(struct rx_call *rxcall, struct vldbentry *newentry)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 errorcode, blockindex;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
@@ -199,13 +199,13 @@ SVL_CreateEntry(struct rx_call *rxcall, struct vldbentry *newentry)
 
     /* Do some validity tests on new entry */
     if ((errorcode = check_vldbentry(newentry))
-	|| (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+	|| (errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1,
 	 ("OCreate Volume %d %s\n", newentry->volumeId[RWVOL],
 	  rxinfo(rxstr, rxcall)));
-    if (EntryIDExists(trans, newentry->volumeId, MAXTYPES, &errorcode)) {
+    if (EntryIDExists(&ctx, newentry->volumeId, MAXTYPES, &errorcode)) {
 	/* at least one of the specified IDs already exists; we fail */
 	errorcode = VL_IDEXIST;
 	goto abort;
@@ -215,14 +215,14 @@ SVL_CreateEntry(struct rx_call *rxcall, struct vldbentry *newentry)
 
     /* Is this following check (by volume name) necessary?? */
     /* If entry already exists, we fail */
-    if (FindByName(trans, newentry->name, &tentry, &errorcode)) {
+    if (FindByName(&ctx, newentry->name, &tentry, &errorcode)) {
 	errorcode = VL_NAMEEXIST;
 	goto abort;
     } else if (errorcode) {
 	goto abort;
     }
 
-    blockindex = AllocBlock(trans, &tentry);
+    blockindex = AllocBlock(&ctx, &tentry);
     if (blockindex == 0) {
 	errorcode = VL_CREATEFAIL;
 	goto abort;
@@ -230,24 +230,24 @@ SVL_CreateEntry(struct rx_call *rxcall, struct vldbentry *newentry)
 
     memset(&tentry, 0, sizeof(struct nvlentry));
     /* Convert to its internal representation; both in host byte order */
-    if ((errorcode = vldbentry_to_vlentry(trans, newentry, &tentry))) {
-	FreeBlock(trans, blockindex);
+    if ((errorcode = vldbentry_to_vlentry(&ctx, newentry, &tentry))) {
+	FreeBlock(&ctx, blockindex);
 	goto abort;
     }
 
     /* Actually insert the entry in vldb */
-    errorcode = ThreadVLentry(trans, blockindex, &tentry);
+    errorcode = ThreadVLentry(&ctx, blockindex, &tentry);
     if (errorcode) {
-	FreeBlock(trans, blockindex);
+	FreeBlock(&ctx, blockindex);
 	goto abort;
     } else {
-	errorcode = ubik_EndTrans(trans);
+	errorcode = ubik_EndTrans(ctx.trans);
 	goto end;
     }
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLCreateEntryEvent, errorcode, AUD_STR,
@@ -259,7 +259,7 @@ SVL_CreateEntry(struct rx_call *rxcall, struct vldbentry *newentry)
 afs_int32
 SVL_CreateEntryN(struct rx_call *rxcall, struct nvldbentry *newentry)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 errorcode, blockindex;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
@@ -272,13 +272,13 @@ SVL_CreateEntryN(struct rx_call *rxcall, struct nvldbentry *newentry)
 
     /* Do some validity tests on new entry */
     if ((errorcode = check_nvldbentry(newentry))
-	|| (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+	|| (errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1,
 	 ("Create Volume %d %s\n", newentry->volumeId[RWVOL],
 	  rxinfo(rxstr, rxcall)));
-    if (EntryIDExists(trans, newentry->volumeId, MAXTYPES, &errorcode)) {
+    if (EntryIDExists(&ctx, newentry->volumeId, MAXTYPES, &errorcode)) {
 	/* at least one of the specified IDs already exists; we fail */
 	errorcode = VL_IDEXIST;
 	goto abort;
@@ -288,14 +288,14 @@ SVL_CreateEntryN(struct rx_call *rxcall, struct nvldbentry *newentry)
 
     /* Is this following check (by volume name) necessary?? */
     /* If entry already exists, we fail */
-    if (FindByName(trans, newentry->name, &tentry, &errorcode)) {
+    if (FindByName(&ctx, newentry->name, &tentry, &errorcode)) {
 	errorcode = VL_NAMEEXIST;
 	goto abort;
     } else if (errorcode) {
 	goto abort;
     }
 
-    blockindex = AllocBlock(trans, &tentry);
+    blockindex = AllocBlock(&ctx, &tentry);
     if (blockindex == 0) {
 	errorcode = VL_CREATEFAIL;
 	goto abort;
@@ -303,24 +303,24 @@ SVL_CreateEntryN(struct rx_call *rxcall, struct nvldbentry *newentry)
 
     memset(&tentry, 0, sizeof(struct nvlentry));
     /* Convert to its internal representation; both in host byte order */
-    if ((errorcode = nvldbentry_to_vlentry(trans, newentry, &tentry))) {
-	FreeBlock(trans, blockindex);
+    if ((errorcode = nvldbentry_to_vlentry(&ctx, newentry, &tentry))) {
+	FreeBlock(&ctx, blockindex);
 	goto abort;
     }
 
     /* Actually insert the entry in vldb */
-    errorcode = ThreadVLentry(trans, blockindex, &tentry);
+    errorcode = ThreadVLentry(&ctx, blockindex, &tentry);
     if (errorcode) {
-	FreeBlock(trans, blockindex);
+	FreeBlock(&ctx, blockindex);
 	goto abort;
     } else {
-	errorcode = ubik_EndTrans(trans);
+	errorcode = ubik_EndTrans(ctx.trans);
 	goto end;
     }
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLCreateEntryEvent, errorcode, AUD_STR,
@@ -332,7 +332,7 @@ SVL_CreateEntryN(struct rx_call *rxcall, struct nvldbentry *newentry)
 afs_int32
 SVL_ChangeAddr(struct rx_call *rxcall, afs_uint32 ip1, afs_uint32 ip2)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 errorcode;
     char rxstr[AFS_RXINFO_LEN];
 
@@ -342,20 +342,20 @@ SVL_ChangeAddr(struct rx_call *rxcall, afs_uint32 ip1, afs_uint32 ip2)
 	goto end;
     }
 
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("Change Addr %u -> %u %s\n", ip1, ip2, rxinfo(rxstr, rxcall)));
-    if ((errorcode = ChangeIPAddr(ip1, ip2, trans)))
+    if ((errorcode = ChangeIPAddr(&ctx, ip1, ip2)))
 	goto abort;
     else {
-	errorcode = ubik_EndTrans(trans);
+	errorcode = ubik_EndTrans(ctx.trans);
 	goto end;
     }
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLChangeAddrEvent, errorcode, AUD_LONG, ip1, AUD_LONG,
@@ -367,7 +367,7 @@ SVL_ChangeAddr(struct rx_call *rxcall, afs_uint32 ip1, afs_uint32 ip2)
 afs_int32
 SVL_DeleteEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
@@ -379,11 +379,11 @@ SVL_DeleteEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype)
     if ((voltype != -1) && (InvalidVoltype(voltype)))
 	END(VL_BADVOLTYPE);
 
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("Delete Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* volid not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -393,15 +393,15 @@ SVL_DeleteEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype)
     if (tentry.flags & VLDELETED) {	/* Already deleted; return */
 	ABORT(VL_ENTDELETED);
     }
-    if ((errorcode = RemoveEntry(trans, blockindex, &tentry))) {
+    if ((errorcode = RemoveEntry(&ctx, blockindex, &tentry))) {
 	goto abort;
     }
-    errorcode = (ubik_EndTrans(trans));
+    errorcode = (ubik_EndTrans(ctx.trans));
     goto end;
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLDeleteEntryEvent, errorcode, AUD_LONG, volid,
@@ -419,29 +419,29 @@ GetEntryByID(struct rx_call *rxcall,
 	     afs_int32 new,
 	     afs_int32 this_op)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
 
     if ((voltype != -1) && (InvalidVoltype(voltype)))
 	return VL_BADVOLTYPE;
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
 
     VLog(5, ("GetVolumeByID %u (%d) %s\n", volid, new,
              rxinfo(rxstr, rxcall)));
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return errorcode;
     }
     if (tentry.flags & VLDELETED) {	/* Entry is deleted! */
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_ENTDELETED;
     }
     /* Convert from the internal to external form */
@@ -451,7 +451,7 @@ GetEntryByID(struct rx_call *rxcall,
 	vlentry_to_uvldbentry(&tentry, (struct uvldbentry *)aentry);
     else
 	vlentry_to_vldbentry(&tentry, (struct vldbentry *)aentry);
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 afs_int32
@@ -508,7 +508,7 @@ GetEntryByName(struct rx_call *rxcall,
 	       int new,
 	       int this_op)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
@@ -518,20 +518,20 @@ GetEntryByName(struct rx_call *rxcall,
     }
     if (InvalidVolname(volname))
 	return VL_BADNAME;
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
     VLog(5, ("GetVolumeByName %s (%d) %s\n", volname, new, rxinfo(rxstr, rxcall)));
-    blockindex = FindByName(trans, volname, &tentry, &errorcode);
+    blockindex = FindByName(&ctx, volname, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return errorcode;
     }
     if (tentry.flags & VLDELETED) {	/* Entry is deleted */
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_ENTDELETED;
     }
     /* Convert to external entry representation */
@@ -541,7 +541,7 @@ GetEntryByName(struct rx_call *rxcall,
 	vlentry_to_uvldbentry(&tentry, (struct uvldbentry *)aentry);
     else
 	vlentry_to_vldbentry(&tentry, (struct vldbentry *)aentry);
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 afs_int32
@@ -581,7 +581,7 @@ SVL_GetNewVolumeId(struct rx_call *rxcall, afs_uint32 Maxvolidbump,
 {
     afs_int32 errorcode;
     afs_uint32 maxvolumeid;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     char rxstr[AFS_RXINFO_LEN];
 
     COUNT_REQ(VLGETNEWVOLUMEID);
@@ -591,10 +591,10 @@ SVL_GetNewVolumeId(struct rx_call *rxcall, afs_uint32 Maxvolidbump,
     if (Maxvolidbump < 0 || Maxvolidbump > MAXBUMPCOUNT)
 	END(VL_BADVOLIDBUMP);
 
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
-    *newvolumeid = maxvolumeid = NextUnusedID(trans,
+    *newvolumeid = maxvolumeid = NextUnusedID(&ctx,
 	ntohl(cheader.vital_header.MaxVolumeId), Maxvolidbump, &errorcode);
     if (errorcode) {
 	goto abort;
@@ -603,15 +603,15 @@ SVL_GetNewVolumeId(struct rx_call *rxcall, afs_uint32 Maxvolidbump,
     maxvolumeid += Maxvolidbump;
     VLog(1, ("GetNewVolid newmax=%u %s\n", maxvolumeid, rxinfo(rxstr, rxcall)));
     cheader.vital_header.MaxVolumeId = htonl(maxvolumeid);
-    if (write_vital_vlheader(trans)) {
+    if (write_vital_vlheader(&ctx)) {
 	ABORT(VL_IO);
     }
-    errorcode = (ubik_EndTrans(trans));
+    errorcode = (ubik_EndTrans(ctx.trans));
     goto end;
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLGetNewVolumeIdEvent, errorcode, AUD_END);
@@ -627,7 +627,7 @@ afs_int32
 SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 		 struct vldbentry *newentry, afs_int32 releasetype)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode, typeindex;
     int hashnewname;
     int hashVol[MAXTYPES];
@@ -650,12 +650,12 @@ SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 
     if (releasetype && InvalidReleasetype(releasetype))
 	END(VL_BADRELLOCKTYPE);
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("OReplace Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
     /* find vlentry we're changing */
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -674,7 +674,7 @@ SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 	    checkids[typeindex] = newentry->volumeId[typeindex];
 	}
     }
-    if (EntryIDExists(trans, checkids, MAXTYPES, &errorcode)) {
+    if (EntryIDExists(&ctx, checkids, MAXTYPES, &errorcode)) {
 	ABORT(VL_IDEXIST);
     } else if (errorcode) {
 	goto abort;
@@ -683,7 +683,7 @@ SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
     /* make sure the name we're changing to doesn't already exist */
     if (strcmp(newentry->name, tentry.name)) {
 	struct nvlentry tmp_entry;
-	if (FindByName(trans, newentry->name, &tmp_entry, &errorcode)) {
+	if (FindByName(&ctx, newentry->name, &tmp_entry, &errorcode)) {
 	    ABORT(VL_NAMEEXIST);
 	} else if (errorcode) {
 	    goto abort;
@@ -697,7 +697,7 @@ SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 	if (tentry.volumeId[typeindex] != newentry->volumeId[typeindex]) {
 	    if (tentry.volumeId[typeindex])
 		if ((errorcode =
-		    UnhashVolid(trans, typeindex, blockindex, &tentry))) {
+		    UnhashVolid(&ctx, typeindex, blockindex, &tentry))) {
 		    goto abort;
 		}
 	    /* we must rehash new id if the id is different and the ID is nonzero */
@@ -707,7 +707,7 @@ SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 
     /* Rehash volname if it changes */
     if (strcmp(newentry->name, tentry.name)) {	/* Name changes; redo hashing */
-	if ((errorcode = UnhashVolname(trans, blockindex, &tentry))) {
+	if ((errorcode = UnhashVolname(&ctx, blockindex, &tentry))) {
 	    goto abort;
 	}
 	hashnewname = 1;
@@ -715,32 +715,32 @@ SVL_ReplaceEntry(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 
     /* after this, tentry is new entry, not old one.  vldbentry_to_vlentry
      * doesn't touch hash chains */
-    if ((errorcode = vldbentry_to_vlentry(trans, newentry, &tentry))) {
+    if ((errorcode = vldbentry_to_vlentry(&ctx, newentry, &tentry))) {
 	goto abort;
     }
 
     for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
 	if (hashVol[typeindex] && tentry.volumeId[typeindex]) {
-	    if ((errorcode = HashVolid(trans, typeindex, blockindex, &tentry))) {
+	    if ((errorcode = HashVolid(&ctx, typeindex, blockindex, &tentry))) {
 		goto abort;
 	    }
 	}
     }
 
     if (hashnewname)
-	HashVolname(trans, blockindex, &tentry);
+	HashVolname(&ctx, blockindex, &tentry);
 
     if (releasetype)
 	ReleaseEntry(&tentry, releasetype);	/* Unlock entry if necessary */
-    if (vlentrywrite(trans, blockindex, &tentry, sizeof(tentry))) {
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
 	ABORT(VL_IO);
     }
 
-    END(ubik_EndTrans(trans));
+    END(ubik_EndTrans(ctx.trans));
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLReplaceVLEntryEvent, errorcode, AUD_LONG, volid,
@@ -752,7 +752,7 @@ afs_int32
 SVL_ReplaceEntryN(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 		  struct nvldbentry *newentry, afs_int32 releasetype)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode, typeindex;
     int hashnewname;
     int hashVol[MAXTYPES];
@@ -774,12 +774,12 @@ SVL_ReplaceEntryN(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 
     if (releasetype && InvalidReleasetype(releasetype))
 	END(VL_BADRELLOCKTYPE);
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("Replace Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
     /* find vlentry we're changing */
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -798,7 +798,7 @@ SVL_ReplaceEntryN(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 	if (tentry.volumeId[typeindex] != newentry->volumeId[typeindex]) {
 	    if (tentry.volumeId[typeindex])
 		if ((errorcode =
-		    UnhashVolid(trans, typeindex, blockindex, &tentry))) {
+		    UnhashVolid(&ctx, typeindex, blockindex, &tentry))) {
 		    goto abort;
 		}
 	    /* we must rehash new id if the id is different and the ID is nonzero */
@@ -808,7 +808,7 @@ SVL_ReplaceEntryN(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 
     /* Rehash volname if it changes */
     if (strcmp(newentry->name, tentry.name)) {	/* Name changes; redo hashing */
-	if ((errorcode = UnhashVolname(trans, blockindex, &tentry))) {
+	if ((errorcode = UnhashVolname(&ctx, blockindex, &tentry))) {
 	    goto abort;
 	}
 	hashnewname = 1;
@@ -816,32 +816,32 @@ SVL_ReplaceEntryN(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 
     /* after this, tentry is new entry, not old one.  vldbentry_to_vlentry
      * doesn't touch hash chains */
-    if ((errorcode = nvldbentry_to_vlentry(trans, newentry, &tentry))) {
+    if ((errorcode = nvldbentry_to_vlentry(&ctx, newentry, &tentry))) {
 	goto abort;
     }
 
     for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
 	if (hashVol[typeindex] && tentry.volumeId[typeindex]) {
-	    if ((errorcode = HashVolid(trans, typeindex, blockindex, &tentry))) {
+	    if ((errorcode = HashVolid(&ctx, typeindex, blockindex, &tentry))) {
 		goto abort;
 	    }
 	}
     }
 
     if (hashnewname)
-	HashVolname(trans, blockindex, &tentry);
+	HashVolname(&ctx, blockindex, &tentry);
 
     if (releasetype)
 	ReleaseEntry(&tentry, releasetype);	/* Unlock entry if necessary */
-    if (vlentrywrite(trans, blockindex, &tentry, sizeof(tentry))) {
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
 	ABORT(VL_IO);
     }
 
-    END(ubik_EndTrans(trans));
+    END(ubik_EndTrans(ctx.trans));
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLReplaceVLEntryEvent, errorcode, AUD_LONG, volid,
@@ -862,7 +862,7 @@ SVL_UpdateEntry(struct rx_call *rxcall,
 		struct VldbUpdateEntry *updateentry,	/* Update entry copied here */
 		afs_int32 releasetype)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
@@ -874,11 +874,11 @@ SVL_UpdateEntry(struct rx_call *rxcall,
 	END(VL_BADVOLTYPE);
     if (releasetype && InvalidReleasetype(releasetype))
 	END(VL_BADRELLOCKTYPE);
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("Update Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -887,19 +887,19 @@ SVL_UpdateEntry(struct rx_call *rxcall,
 
     /* Do the actual updating of the entry, tentry. */
     if ((errorcode =
-	get_vldbupdateentry(trans, blockindex, updateentry, &tentry))) {
+	get_vldbupdateentry(&ctx, blockindex, updateentry, &tentry))) {
 	goto abort;
     }
     if (releasetype)
 	ReleaseEntry(&tentry, releasetype);	/* Unlock entry if necessary */
-    if (vlentrywrite(trans, blockindex, &tentry, sizeof(tentry))) {
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
 	ABORT(VL_IO);
     }
-    END(ubik_EndTrans(trans));
+    END(ubik_EndTrans(ctx.trans));
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLUpdateEntryEvent, errorcode, AUD_LONG, volid,
@@ -914,7 +914,7 @@ SVL_UpdateEntryByName(struct rx_call *rxcall,
 		      struct VldbUpdateEntry *updateentry, /* Update entry copied here */
 		      afs_int32 releasetype)
 {
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     afs_int32 blockindex, errorcode;
     struct nvlentry tentry;
 
@@ -923,10 +923,10 @@ SVL_UpdateEntryByName(struct rx_call *rxcall,
 	END(VL_PERM);
     if (releasetype && InvalidReleasetype(releasetype))
 	END(VL_BADRELLOCKTYPE);
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
-    blockindex = FindByName(trans, volname, &tentry, &errorcode);
+    blockindex = FindByName(&ctx, volname, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -935,19 +935,19 @@ SVL_UpdateEntryByName(struct rx_call *rxcall,
 
     /* Do the actual updating of the entry, tentry. */
     if ((errorcode =
-	get_vldbupdateentry(trans, blockindex, updateentry, &tentry))) {
+	get_vldbupdateentry(&ctx, blockindex, updateentry, &tentry))) {
 	goto abort;
     }
     if (releasetype)
 	ReleaseEntry(&tentry, releasetype);	/* Unlock entry if necessary */
-    if (vlentrywrite(trans, blockindex, &tentry, sizeof(tentry))) {
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
 	ABORT(VL_IO);
     }
-    END(ubik_EndTrans(trans));
+    END(ubik_EndTrans(ctx.trans));
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLUpdateEntryEvent, errorcode, AUD_LONG, -1, AUD_END);
@@ -961,7 +961,7 @@ SVL_SetLock(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 	    afs_int32 voloper)
 {
     afs_int32 timestamp, blockindex, errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
 
@@ -972,11 +972,11 @@ SVL_SetLock(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 	END(VL_BADVOLTYPE);
     if (InvalidOperation(voloper))
 	END(VL_BADVOLOPER);
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("SetLock Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == NULLO) {
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -1004,14 +1004,14 @@ SVL_SetLock(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
     tentry.flags &= ~VLOP_ALLOPERS;	/* Clear any possible older operation bit */
     tentry.flags |= voloper;
 
-    if (vlentrywrite(trans, blockindex, &tentry, sizeof(tentry))) {
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
 	ABORT(VL_IO);
     }
-    END(ubik_EndTrans(trans));
+    END(ubik_EndTrans(ctx.trans));
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLSetLockEvent, errorcode, AUD_LONG, volid, AUD_END);
@@ -1028,7 +1028,7 @@ SVL_ReleaseLock(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 		afs_int32 releasetype)
 {
     afs_int32 blockindex, errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
 
@@ -1039,11 +1039,11 @@ SVL_ReleaseLock(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
 	END(VL_BADVOLTYPE);
     if (releasetype && InvalidReleasetype(releasetype))
 	END(VL_BADRELLOCKTYPE);
-    if ((errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	goto end;
 
     VLog(1, ("ReleaseLock Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
-    blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &errorcode);
     if (blockindex == NULLO) {
 	if (!errorcode)
 	    errorcode = VL_NOENT;
@@ -1054,14 +1054,14 @@ SVL_ReleaseLock(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
     }
     if (releasetype)
 	ReleaseEntry(&tentry, releasetype);	/* Unlock the appropriate fields */
-    if (vlentrywrite(trans, blockindex, &tentry, sizeof(tentry))) {
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
 	ABORT(VL_IO);
     }
-    END(ubik_EndTrans(trans));
+    END(ubik_EndTrans(ctx.trans));
 
   abort:
     COUNT_ABO;
-    ubik_AbortTrans(trans);
+    ubik_AbortTrans(ctx.trans);
 
   end:
     osi_auditU(rxcall, VLReleaseLockEvent, errorcode, AUD_LONG, volid,
@@ -1080,19 +1080,19 @@ SVL_ListEntry(struct rx_call *rxcall, afs_int32 previous_index,
 	      struct vldbentry *aentry)
 {
     int errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
 
     COUNT_REQ(VLLISTENTRY);
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
     VLog(25, ("OListEntry index=%d %s\n", previous_index,
               rxinfo(rxstr, rxcall)));
-    *next_index = NextEntry(trans, previous_index, &tentry, count);
+    *next_index = NextEntry(&ctx, previous_index, &tentry, count);
     if (*next_index)
 	vlentry_to_vldbentry(&tentry, aentry);
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 /* ListEntry returns a single vldb entry, aentry, with offset previous_index;
@@ -1105,18 +1105,18 @@ SVL_ListEntryN(struct rx_call *rxcall, afs_int32 previous_index,
 	       struct nvldbentry *aentry)
 {
     int errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     char rxstr[AFS_RXINFO_LEN];
 
     COUNT_REQ(VLLISTENTRYN);
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
     VLog(25, ("ListEntry index=%d %s\n", previous_index, rxinfo(rxstr, rxcall)));
-    *next_index = NextEntry(trans, previous_index, &tentry, count);
+    *next_index = NextEntry(&ctx, previous_index, &tentry, count);
     if (*next_index)
 	vlentry_to_nvldbentry(&tentry, aentry);
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 
@@ -1133,7 +1133,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
 		   bulkentries *vldbentries)
 {
     int errorcode, allocCount = 0;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     struct vldbentry *Vldbentry = 0, *VldbentryFirst = 0, *VldbentryLast = 0;
     int pollcount = 0;
@@ -1142,14 +1142,14 @@ SVL_ListAttributes(struct rx_call *rxcall,
     COUNT_REQ(VLLISTATTRIBUTES);
     vldbentries->bulkentries_val = 0;
     vldbentries->bulkentries_len = *nentries = 0;
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
     allocCount = VLDBALLOCCOUNT;
     Vldbentry = VldbentryFirst = vldbentries->bulkentries_val =
 	(vldbentry *) malloc(allocCount * sizeof(vldbentry));
     if (Vldbentry == NULL) {
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOMEM;
     }
     VldbentryLast = VldbentryFirst + allocCount;
@@ -1159,12 +1159,12 @@ SVL_ListAttributes(struct rx_call *rxcall,
 	afs_int32 blockindex;
 
 	blockindex =
-	    FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
+	    FindByID(&ctx, attributes->volumeid, -1, &tentry, &errorcode);
 	if (blockindex == 0) {
 	    if (!errorcode)
 		errorcode = VL_NOENT;
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    if (vldbentries->bulkentries_val)
 		free((char *)vldbentries->bulkentries_val);
 	    vldbentries->bulkentries_val = 0;
@@ -1175,7 +1175,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
 	    put_attributeentry(&Vldbentry, &VldbentryFirst, &VldbentryLast,
 			       vldbentries, &tentry, nentries, &allocCount))) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    if (vldbentries->bulkentries_val)
 		free((char *)vldbentries->bulkentries_val);
 	    vldbentries->bulkentries_val = 0;
@@ -1185,7 +1185,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
     } else {
 	afs_int32 nextblockindex = 0, count = 0, k = 0, match = 0;
 	while ((nextblockindex =
-	       NextEntry(trans, nextblockindex, &tentry, &count))) {
+	       NextEntry(&ctx, nextblockindex, &tentry, &count))) {
 	    if (++pollcount > 50) {
 #ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
@@ -1196,7 +1196,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
 	    if (attributes->Mask & VLLIST_SERVER) {
 		int serverindex;
 		if ((serverindex =
-		     IpAddrToRelAddr(attributes->server, NULL)) == -1)
+		     IpAddrToRelAddr(&ctx, attributes->server, 0)) == -1)
 		    continue;
 		for (k = 0; k < OMAXNSERVERS; k++) {
 		    if (tentry.serverNumber[k] == BADSERVERID)
@@ -1237,7 +1237,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
 				   &VldbentryLast, vldbentries, &tentry,
 				   nentries, &allocCount))) {
 		COUNT_ABO;
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		if (vldbentries->bulkentries_val)
 		    free((char *)vldbentries->bulkentries_val);
 		vldbentries->bulkentries_val = 0;
@@ -1255,14 +1255,14 @@ SVL_ListAttributes(struct rx_call *rxcall,
 				  sizeof(vldbentry));
 	if (vldbentries->bulkentries_val == NULL) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOMEM;
 	}
     }
     VLog(5,
 	 ("ListAttrs nentries=%d %s\n", vldbentries->bulkentries_len,
 	  rxinfo(rxstr, rxcall)));
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 afs_int32
@@ -1272,7 +1272,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 		    nbulkentries *vldbentries)
 {
     int errorcode, allocCount = 0;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     struct nvldbentry *Vldbentry = 0, *VldbentryFirst = 0, *VldbentryLast = 0;
     int pollcount = 0;
@@ -1281,14 +1281,14 @@ SVL_ListAttributesN(struct rx_call *rxcall,
     COUNT_REQ(VLLISTATTRIBUTESN);
     vldbentries->nbulkentries_val = 0;
     vldbentries->nbulkentries_len = *nentries = 0;
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
     allocCount = VLDBALLOCCOUNT;
     Vldbentry = VldbentryFirst = vldbentries->nbulkentries_val =
 	(nvldbentry *) malloc(allocCount * sizeof(nvldbentry));
     if (Vldbentry == NULL) {
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOMEM;
     }
     VldbentryLast = VldbentryFirst + allocCount;
@@ -1298,12 +1298,12 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 	afs_int32 blockindex;
 
 	blockindex =
-	    FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
+	    FindByID(&ctx, attributes->volumeid, -1, &tentry, &errorcode);
 	if (blockindex == 0) {
 	    if (!errorcode)
 		errorcode = VL_NOENT;
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    if (vldbentries->nbulkentries_val)
 		free((char *)vldbentries->nbulkentries_val);
 	    vldbentries->nbulkentries_val = 0;
@@ -1315,7 +1315,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 				vldbentries, &tentry, 0, 0, nentries,
 				&allocCount))) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    if (vldbentries->nbulkentries_val)
 		free((char *)vldbentries->nbulkentries_val);
 	    vldbentries->nbulkentries_val = 0;
@@ -1325,7 +1325,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
     } else {
 	afs_int32 nextblockindex = 0, count = 0, k = 0, match = 0;
 	while ((nextblockindex =
-	       NextEntry(trans, nextblockindex, &tentry, &count))) {
+	       NextEntry(&ctx, nextblockindex, &tentry, &count))) {
 	    if (++pollcount > 50) {
 #ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
@@ -1337,7 +1337,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 	    if (attributes->Mask & VLLIST_SERVER) {
 		int serverindex;
 		if ((serverindex =
-		     IpAddrToRelAddr(attributes->server, NULL)) == -1)
+		     IpAddrToRelAddr(&ctx, attributes->server, 0)) == -1)
 		    continue;
 		for (k = 0; k < NMAXNSERVERS; k++) {
 		    if (tentry.serverNumber[k] == BADSERVERID)
@@ -1378,7 +1378,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 				    &VldbentryLast, vldbentries, &tentry, 0,
 				    0, nentries, &allocCount))) {
 		COUNT_ABO;
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		if (vldbentries->nbulkentries_val)
 		    free((char *)vldbentries->nbulkentries_val);
 		vldbentries->nbulkentries_val = 0;
@@ -1396,14 +1396,14 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 				   sizeof(nvldbentry));
 	if (vldbentries->nbulkentries_val == NULL) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOMEM;
 	}
     }
     VLog(5,
 	 ("NListAttrs nentries=%d %s\n", vldbentries->nbulkentries_len,
 	  rxinfo(rxstr, rxcall)));
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 
@@ -1417,7 +1417,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 		     afs_int32 *nextstartindex)
 {
     int errorcode = 0, maxCount = VLDBALLOCCOUNT;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     struct nvldbentry *Vldbentry = 0, *VldbentryFirst = 0, *VldbentryLast = 0;
     afs_int32 blockindex = 0, count = 0, k, match;
@@ -1442,7 +1442,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
     *nentries = 0;
     *nextstartindex = -1;
 
-    errorcode = Init_VLdbase(&trans, LOCKREAD, this_op);
+    errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op);
     if (errorcode)
 	return errorcode;
 
@@ -1450,7 +1450,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 	(nvldbentry *) malloc(maxCount * sizeof(nvldbentry));
     if (Vldbentry == NULL) {
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOMEM;
     }
 
@@ -1461,7 +1461,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
      */
     if (attributes->Mask & VLLIST_VOLUMEID) {
 	blockindex =
-	    FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
+	    FindByID(&ctx, attributes->volumeid, -1, &tentry, &errorcode);
 	if (blockindex == 0) {
 	    if (!errorcode)
 		errorcode = VL_NOENT;
@@ -1483,7 +1483,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 	/* Get the server index for matching server address */
 	if (attributes->Mask & VLLIST_SERVER) {
 	    serverindex =
-		IpAddrToRelAddr(attributes->server, NULL);
+		IpAddrToRelAddr(&ctx, attributes->server, 0);
 	    if (serverindex == -1)
 		goto done;
 	    findserver = 1;
@@ -1510,7 +1510,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 
 	/* Read each entry and see if it is the one we want */
 	blockindex = startindex;
-	while ((blockindex = NextEntry(trans, blockindex, &tentry, &count))) {
+	while ((blockindex = NextEntry(&ctx, blockindex, &tentry, &count))) {
 	    if (++pollcount > 50) {
 #ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
@@ -1660,7 +1660,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 
     if (errorcode) {
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	if (vldbentries->nbulkentries_val)
 	    free((char *)vldbentries->nbulkentries_val);
 	vldbentries->nbulkentries_val = 0;
@@ -1671,7 +1671,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 	VLog(5,
 	     ("N2ListAttrs nentries=%d %s\n", vldbentries->nbulkentries_len,
 	      rxinfo(rxstr, rxcall)));
-	return (ubik_EndTrans(trans));
+	return (ubik_EndTrans(ctx.trans));
     }
 }
 
@@ -1689,7 +1689,7 @@ SVL_LinkedList(struct rx_call *rxcall,
 	       vldb_list *vldbentries)
 {
     int errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     vldblist vllist, *vllistptr;
     afs_int32 blockindex, count, match;
@@ -1698,7 +1698,7 @@ SVL_LinkedList(struct rx_call *rxcall,
     int pollcount = 0;
 
     COUNT_REQ(VLLINKEDLIST);
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
 
     *nentries = 0;
@@ -1708,17 +1708,17 @@ SVL_LinkedList(struct rx_call *rxcall,
     /* List by volumeid */
     if (attributes->Mask & VLLIST_VOLUMEID) {
 	blockindex =
-	    FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
+	    FindByID(&ctx, attributes->volumeid, -1, &tentry, &errorcode);
 	if (!blockindex) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return (errorcode ? errorcode : VL_NOENT);
 	}
 
 	vllist = (single_vldbentry *) malloc(sizeof(single_vldbentry));
 	if (vllist == NULL) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOMEM;
 	}
 	vlentry_to_vldbentry(&tentry, &vllist->VldbEntry);
@@ -1731,8 +1731,8 @@ SVL_LinkedList(struct rx_call *rxcall,
 
     /* Search by server, partition, and flags */
     else {
-	for (blockindex = NextEntry(trans, 0, &tentry, &count); blockindex;
-	     blockindex = NextEntry(trans, blockindex, &tentry, &count)) {
+	for (blockindex = NextEntry(&ctx, 0, &tentry, &count); blockindex;
+	     blockindex = NextEntry(&ctx, blockindex, &tentry, &count)) {
 	    match = 0;
 
 	    if (++pollcount > 50) {
@@ -1745,7 +1745,7 @@ SVL_LinkedList(struct rx_call *rxcall,
 	    /* Does this volume exist on the desired server */
 	    if (attributes->Mask & VLLIST_SERVER) {
 		serverindex =
-		    IpAddrToRelAddr(attributes->server, NULL);
+		    IpAddrToRelAddr(&ctx, attributes->server, 0);
 		if (serverindex == -1)
 		    continue;
 		for (k = 0; k < OMAXNSERVERS; k++) {
@@ -1789,7 +1789,7 @@ SVL_LinkedList(struct rx_call *rxcall,
 	    vllist = (single_vldbentry *) malloc(sizeof(single_vldbentry));
 	    if (vllist == NULL) {
 		COUNT_ABO;
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		return VL_NOMEM;
 	    }
 	    vlentry_to_vldbentry(&tentry, &vllist->VldbEntry);
@@ -1800,13 +1800,13 @@ SVL_LinkedList(struct rx_call *rxcall,
 	    (*nentries)++;
 	    if (smallMem && (*nentries >= VLDBALLOCCOUNT)) {
 		COUNT_ABO;
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		return VL_SIZEEXCEEDED;
 	    }
 	}
     }
     *vllistptr = NULL;
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 afs_int32
@@ -1816,7 +1816,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
 		nvldb_list *vldbentries)
 {
     int errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     struct nvlentry tentry;
     nvldblist vllist, *vllistptr;
     afs_int32 blockindex, count, match;
@@ -1825,7 +1825,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
     int pollcount = 0;
 
     COUNT_REQ(VLLINKEDLISTN);
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
 
     *nentries = 0;
@@ -1835,17 +1835,17 @@ SVL_LinkedListN(struct rx_call *rxcall,
     /* List by volumeid */
     if (attributes->Mask & VLLIST_VOLUMEID) {
 	blockindex =
-	    FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
+	    FindByID(&ctx, attributes->volumeid, -1, &tentry, &errorcode);
 	if (!blockindex) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return (errorcode ? errorcode : VL_NOENT);
 	}
 
 	vllist = (single_nvldbentry *) malloc(sizeof(single_nvldbentry));
 	if (vllist == NULL) {
 	    COUNT_ABO;
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOMEM;
 	}
 	vlentry_to_nvldbentry(&tentry, &vllist->VldbEntry);
@@ -1858,8 +1858,8 @@ SVL_LinkedListN(struct rx_call *rxcall,
 
     /* Search by server, partition, and flags */
     else {
-	for (blockindex = NextEntry(trans, 0, &tentry, &count); blockindex;
-	     blockindex = NextEntry(trans, blockindex, &tentry, &count)) {
+	for (blockindex = NextEntry(&ctx, 0, &tentry, &count); blockindex;
+	     blockindex = NextEntry(&ctx, blockindex, &tentry, &count)) {
 	    match = 0;
 
 	    if (++pollcount > 50) {
@@ -1872,7 +1872,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
 	    /* Does this volume exist on the desired server */
 	    if (attributes->Mask & VLLIST_SERVER) {
 		serverindex =
-		    IpAddrToRelAddr(attributes->server, NULL);
+		    IpAddrToRelAddr(&ctx, attributes->server, 0);
 		if (serverindex == -1)
 		    continue;
 		for (k = 0; k < NMAXNSERVERS; k++) {
@@ -1916,7 +1916,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
 	    vllist = (single_nvldbentry *) malloc(sizeof(single_nvldbentry));
 	    if (vllist == NULL) {
 		COUNT_ABO;
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		return VL_NOMEM;
 	    }
 	    vlentry_to_nvldbentry(&tentry, &vllist->VldbEntry);
@@ -1927,13 +1927,13 @@ SVL_LinkedListN(struct rx_call *rxcall,
 	    (*nentries)++;
 	    if (smallMem && (*nentries >= VLDBALLOCCOUNT)) {
 		COUNT_ABO;
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		return VL_SIZEEXCEEDED;
 	    }
 	}
     }
     *vllistptr = NULL;
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 /* Get back vldb header statistics (allocs, frees, maxvolumeid,
@@ -1946,7 +1946,7 @@ SVL_GetStats(struct rx_call *rxcall,
 	     vital_vlheader *vital_header)
 {
     afs_int32 errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     char rxstr[AFS_RXINFO_LEN];
 
     COUNT_REQ(VLGETSTATS);
@@ -1955,13 +1955,13 @@ SVL_GetStats(struct rx_call *rxcall,
     if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))	/* Must be in 'UserList' to use */
 	return VL_PERM;
 #endif
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
     VLog(5, ("GetStats %s\n", rxinfo(rxstr, rxcall)));
     memcpy((char *)vital_header, (char *)&cheader.vital_header,
 	   sizeof(vital_vlheader));
     memcpy((char *)stats, (char *)&dynamic_statistics, sizeof(vldstats));
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 /* Get the list of file server addresses from the VLDB.  Currently it's pretty
@@ -1977,7 +1977,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
 	     bulkaddrs *addrsp)
 {
     afs_int32 errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     int nservers, i;
     afs_uint32 *taddrp;
 
@@ -1986,7 +1986,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
     addrsp->bulkaddrs_val = 0;
     memset(spare3, 0, sizeof(struct VLCallBack));
 
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
 
     VLog(5, ("GetAddrs\n"));
@@ -1996,7 +1996,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
 
     if (!taddrp) {
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOMEM;
     }
 
@@ -2008,7 +2008,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
     }
 
     addrsp->bulkaddrs_len = *nentries = nservers;
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 static_inline void
@@ -2027,7 +2027,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 		  bulkaddrs *addrsp)
 {
     afs_int32 code;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     int cnt, h, i, j, k, m, base, index;
     struct extentaddr *exp = 0, *tex;
     char addrbuf[256];
@@ -2043,7 +2043,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
     COUNT_REQ(VLREGADDR);
     if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
 	return (VL_PERM);
-    if ((code = Init_VLdbase(&trans, LOCKWRITE, this_op)))
+    if ((code = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
 	return code;
 
     /* Eliminate duplicates from IP address list */
@@ -2066,7 +2066,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	}
     }
     if (cnt <= 0) {
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_INDEXERANGE;
     }
 
@@ -2213,7 +2213,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 		("   and/or remove the sysid file from the registering fileserver\n"));
 	VLog(0, ("   before the fileserver can be registered in the VLDB.\n"));
 
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_MULTIPADDR;
     }
 
@@ -2238,7 +2238,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 		change = 1;
 	}
 	if (!change) {
-	    return (ubik_EndTrans(trans));
+	    return (ubik_EndTrans(ctx.trans));
 	}
     }
 
@@ -2295,9 +2295,9 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    VLog(0, ("   It will replace existing entry %d, [%s], in the VLDB (new uuid):\n", ReplaceEntry, addrbuf));
 
 	    code =
-		FindExtentBlock(trans, uuidp, 1, ReplaceEntry, &exp, &fbase);
+		FindExtentBlock(&ctx, uuidp, 1, ReplaceEntry, &exp, &fbase);
 	    if (code || !exp) {
-		ubik_AbortTrans(trans);
+		ubik_AbortTrans(ctx.trans);
 		return (code ? code : VL_IO);
 	    }
 	}
@@ -2306,9 +2306,9 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	 * well as use a new slot of the HostAddress array.
 	 */
 	VLog(0, ("   It will create a new entry in the VLDB.\n"));
-	code = FindExtentBlock(trans, uuidp, 1, -1, &exp, &fbase);
+	code = FindExtentBlock(&ctx, uuidp, 1, -1, &exp, &fbase);
 	if (code || !exp) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return (code ? code : VL_IO);
 	}
     }
@@ -2329,11 +2329,11 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 
     /* Write the new mh entry out */
     if (vlwrite
-	(trans,
+	(ctx.trans,
 	 DOFFSET(ntohl(ex_addr[0]->ex_contaddrs[fbase]),
 		 (char *)ex_addr[fbase], (char *)exp), (char *)exp,
 	 sizeof(*exp))) {
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_IO;
     }
 
@@ -2383,13 +2383,13 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	doff =
 	    DOFFSET(ntohl(ex_addr[0]->ex_contaddrs[base]),
 		    (char *)ex_addr[base], (char *)tex);
-	if (vlwrite(trans, doff, (char *)tex, sizeof(*tex))) {
-	    ubik_AbortTrans(trans);
+	if (vlwrite(ctx.trans, doff, (char *)tex, sizeof(*tex))) {
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_IO;
 	}
     }
 
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 afs_int32
@@ -2401,7 +2401,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	      bulkaddrs *addrsp)
 {
     afs_int32 errorcode, index = -1, offset;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
     int nservers, i, j, base = 0;
     struct extentaddr *exp = 0;
     afsUUID tuuid;
@@ -2412,12 +2412,12 @@ SVL_GetAddrsU(struct rx_call *rxcall,
     addrsp->bulkaddrs_len = *nentries = 0;
     addrsp->bulkaddrs_val = 0;
     VLog(5, ("GetAddrsU %s\n", rxinfo(rxstr, rxcall)));
-    if ((errorcode = Init_VLdbase(&trans, LOCKREAD, this_op)))
+    if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
 	return errorcode;
 
     if (attributes->Mask & VLADDR_IPADDR) {
 	if (attributes->Mask & (VLADDR_INDEX | VLADDR_UUID)) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_BADMASK;
 	}
 	for (base = 0; base < VL_MAX_ADDREXTBLKS; base++) {
@@ -2442,51 +2442,51 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 		break;
 	}
 	if (base >= VL_MAX_ADDREXTBLKS) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOENT;
 	}
     } else if (attributes->Mask & VLADDR_INDEX) {
 	if (attributes->Mask & (VLADDR_IPADDR | VLADDR_UUID)) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_BADMASK;
 	}
 	index = attributes->index;
 	if (index < 1 || index >= (VL_MAX_ADDREXTBLKS * VL_MHSRV_PERBLK)) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_INDEXERANGE;
 	}
 	base = index / VL_MHSRV_PERBLK;
 	offset = index % VL_MHSRV_PERBLK;
 	if (offset == 0) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOENT;
 	}
 	if (!ex_addr[base]) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_INDEXERANGE;
 	}
 	exp = &ex_addr[base][offset];
     } else if (attributes->Mask & VLADDR_UUID) {
 	if (attributes->Mask & (VLADDR_IPADDR | VLADDR_INDEX)) {
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_BADMASK;
 	}
 	if (!ex_addr[0]) {	/* mh servers probably aren't setup on this vldb */
-	    ubik_AbortTrans(trans);
+	    ubik_AbortTrans(ctx.trans);
 	    return VL_NOENT;
 	}
 	if ((errorcode =
-	    FindExtentBlock(trans, &attributes->uuid, 0, -1, &exp, &base))) {
-	    ubik_AbortTrans(trans);
+	    FindExtentBlock(&ctx, &attributes->uuid, 0, -1, &exp, &base))) {
+	    ubik_AbortTrans(ctx.trans);
 	    return errorcode;
 	}
     } else {
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_BADMASK;
     }
 
     if (exp == NULL) {
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOENT;
     }
     addrsp->bulkaddrs_val = taddrp =
@@ -2494,13 +2494,13 @@ SVL_GetAddrsU(struct rx_call *rxcall,
     nservers = *nentries = addrsp->bulkaddrs_len = 0;
     if (!taddrp) {
 	COUNT_ABO;
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOMEM;
     }
     tuuid = exp->ex_hostuuid;
     afs_ntohuuid(&tuuid);
     if (afs_uuid_is_nil(&tuuid)) {
-	ubik_AbortTrans(trans);
+	ubik_AbortTrans(ctx.trans);
 	return VL_NOENT;
     }
     if (uuidpo)
@@ -2522,7 +2522,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	}
     }
     addrsp->bulkaddrs_len = *nentries = nservers;
-    return (ubik_EndTrans(trans));
+    return (ubik_EndTrans(ctx.trans));
 }
 
 /* ============> End of Exported vldb RPC functions <============= */
@@ -2613,14 +2613,14 @@ put_nattributeentry(struct nvldbentry **Vldbentry,
 
 /* Common code to actually remove a vldb entry from the database. */
 static int
-RemoveEntry(struct ubik_trans *trans, afs_int32 entryptr,
+RemoveEntry(struct vl_ctx *ctx, afs_int32 entryptr,
 	    struct nvlentry *tentry)
 {
     int errorcode;
 
-    if ((errorcode = UnthreadVLentry(trans, entryptr, tentry)))
+    if ((errorcode = UnthreadVLentry(ctx, entryptr, tentry)))
 	return errorcode;
-    if ((errorcode = FreeBlock(trans, entryptr)))
+    if ((errorcode = FreeBlock(ctx, entryptr)))
 	return errorcode;
     return 0;
 }
@@ -2687,7 +2687,7 @@ check_nvldbentry(struct nvldbentry *aentry)
 /* Convert from the external vldb entry representation to its internal
    (more compact) form.  This call should not change the hash chains! */
 static int
-vldbentry_to_vlentry(struct ubik_trans *atrans,
+vldbentry_to_vlentry(struct vl_ctx *ctx,
 		     struct vldbentry *VldbEntry,
 		     struct nvlentry *VlEntry)
 {
@@ -2696,7 +2696,7 @@ vldbentry_to_vlentry(struct ubik_trans *atrans,
     if (strcmp(VlEntry->name, VldbEntry->name))
 	strncpy(VlEntry->name, VldbEntry->name, sizeof(VlEntry->name));
     for (i = 0; i < VldbEntry->nServers; i++) {
-	serverindex = IpAddrToRelAddr(VldbEntry->serverNumber[i], atrans);
+	serverindex = IpAddrToRelAddr(ctx, VldbEntry->serverNumber[i], 1);
 	if (serverindex == -1)
 	    return VL_BADSERVER;
 	VlEntry->serverNumber[i] = serverindex;
@@ -2714,7 +2714,7 @@ vldbentry_to_vlentry(struct ubik_trans *atrans,
 }
 
 static int
-nvldbentry_to_vlentry(struct ubik_trans *atrans,
+nvldbentry_to_vlentry(struct vl_ctx *ctx,
 		      struct nvldbentry *VldbEntry,
 		      struct nvlentry *VlEntry)
 {
@@ -2723,7 +2723,7 @@ nvldbentry_to_vlentry(struct ubik_trans *atrans,
     if (strcmp(VlEntry->name, VldbEntry->name))
 	strncpy(VlEntry->name, VldbEntry->name, sizeof(VlEntry->name));
     for (i = 0; i < VldbEntry->nServers; i++) {
-	serverindex = IpAddrToRelAddr(VldbEntry->serverNumber[i], atrans);
+	serverindex = IpAddrToRelAddr(ctx, VldbEntry->serverNumber[i], 1);
 	if (serverindex == -1)
 	    return VL_BADSERVER;
 	VlEntry->serverNumber[i] = serverindex;
@@ -2746,7 +2746,7 @@ nvldbentry_to_vlentry(struct ubik_trans *atrans,
  * checks are performed.
  */
 static int
-get_vldbupdateentry(struct ubik_trans *trans,
+get_vldbupdateentry(struct vl_ctx *ctx,
 		    afs_int32 blockindex,
 		    struct VldbUpdateEntry *updateentry,
 		    struct nvlentry *VlEntry)
@@ -2768,7 +2768,7 @@ get_vldbupdateentry(struct ubik_trans *trans,
 	checkids[BACKVOL] = updateentry->BackupId;
     }
 
-    if (EntryIDExists(trans, checkids, MAXTYPES, &errorcode)) {
+    if (EntryIDExists(ctx, checkids, MAXTYPES, &errorcode)) {
 	return VL_IDEXIST;
     } else if (errorcode) {
 	return errorcode;
@@ -2780,24 +2780,24 @@ get_vldbupdateentry(struct ubik_trans *trans,
 	if (InvalidVolname(updateentry->name))
 	    return VL_BADNAME;
 
-	if (FindByName(trans, updateentry->name, &tentry, &errorcode)) {
+	if (FindByName(ctx, updateentry->name, &tentry, &errorcode)) {
 	    return VL_NAMEEXIST;
 	} else if (errorcode) {
 	    return errorcode;
 	}
 
-	if ((errorcode = UnhashVolname(trans, blockindex, VlEntry)))
+	if ((errorcode = UnhashVolname(ctx, blockindex, VlEntry)))
 	    return errorcode;
 	strncpy(VlEntry->name, updateentry->name, sizeof(VlEntry->name));
-	HashVolname(trans, blockindex, VlEntry);
+	HashVolname(ctx, blockindex, VlEntry);
     }
 
     if (updateentry->Mask & VLUPDATE_VOLNAMEHASH) {
-	if ((errorcode = UnhashVolname(trans, blockindex, VlEntry))) {
+	if ((errorcode = UnhashVolname(ctx, blockindex, VlEntry))) {
 	    if (errorcode != VL_NOENT)
 		return errorcode;
 	}
-	HashVolname(trans, blockindex, VlEntry);
+	HashVolname(ctx, blockindex, VlEntry);
     }
 
     if (updateentry->Mask & VLUPDATE_FLAGS) {
@@ -2807,30 +2807,30 @@ get_vldbupdateentry(struct ubik_trans *trans,
 	VlEntry->cloneId = updateentry->cloneId;
     }
     if (updateentry->Mask & VLUPDATE_RWID) {
-	if ((errorcode = UnhashVolid(trans, RWVOL, blockindex, VlEntry))) {
+	if ((errorcode = UnhashVolid(ctx, RWVOL, blockindex, VlEntry))) {
 	    if (errorcode != VL_NOENT)
 		return errorcode;
 	}
 	VlEntry->volumeId[RWVOL] = updateentry->spares3;	/* rw id */
-	if ((errorcode = HashVolid(trans, RWVOL, blockindex, VlEntry)))
+	if ((errorcode = HashVolid(ctx, RWVOL, blockindex, VlEntry)))
 	    return errorcode;
     }
     if (updateentry->Mask & VLUPDATE_READONLYID) {
-	if ((errorcode = UnhashVolid(trans, ROVOL, blockindex, VlEntry))) {
+	if ((errorcode = UnhashVolid(ctx, ROVOL, blockindex, VlEntry))) {
 	    if (errorcode != VL_NOENT)
 		return errorcode;
 	}
 	VlEntry->volumeId[ROVOL] = updateentry->ReadOnlyId;
-	if ((errorcode = HashVolid(trans, ROVOL, blockindex, VlEntry)))
+	if ((errorcode = HashVolid(ctx, ROVOL, blockindex, VlEntry)))
 	    return errorcode;
     }
     if (updateentry->Mask & VLUPDATE_BACKUPID) {
-	if ((errorcode = UnhashVolid(trans, BACKVOL, blockindex, VlEntry))) {
+	if ((errorcode = UnhashVolid(ctx, BACKVOL, blockindex, VlEntry))) {
 	    if (errorcode != VL_NOENT)
 		return errorcode;
 	}
 	VlEntry->volumeId[BACKVOL] = updateentry->BackupId;
-	if ((errorcode = HashVolid(trans, BACKVOL, blockindex, VlEntry)))
+	if ((errorcode = HashVolid(ctx, BACKVOL, blockindex, VlEntry)))
 	    return errorcode;
     }
     if (updateentry->Mask & VLUPDATE_REPSITES) {
@@ -2846,9 +2846,9 @@ get_vldbupdateentry(struct ubik_trans *trans,
 	    if (updateentry->RepsitesMask[i] & VLUPDATE_REPS_DELETE) {
 		if ((j =
 		     repsite_exists(VlEntry,
-				    IpAddrToRelAddr(updateentry->
+				    IpAddrToRelAddr(ctx, updateentry->
 						    RepsitesTargetServer[i],
-						    trans),
+						    1),
 				    updateentry->RepsitesTargetPart[i])) !=
 		    -1)
 		    repsite_compress(VlEntry, j);
@@ -2863,8 +2863,7 @@ get_vldbupdateentry(struct ubik_trans *trans,
 		    return VL_BADPARTITION;
 		if (repsite_exists
 		    (VlEntry,
-		     IpAddrToRelAddr(updateentry->RepsitesNewServer[i],
-				     trans),
+		     IpAddrToRelAddr(ctx, updateentry->RepsitesNewServer[i], 1),
 		     updateentry->RepsitesNewPart[i]) != -1)
 		    return VL_DUPREPSERVER;
 		for (j = 0;
@@ -2873,8 +2872,8 @@ get_vldbupdateentry(struct ubik_trans *trans,
 		if (j >= OMAXNSERVERS)
 		    return VL_REPSFULL;
 		if ((serverindex =
-		     IpAddrToRelAddr(updateentry->RepsitesNewServer[i],
-				     trans)) == -1)
+		     IpAddrToRelAddr(ctx, updateentry->RepsitesNewServer[i],
+				     1)) == -1)
 		    return VL_BADSERVER;
 		VlEntry->serverNumber[j] = serverindex;
 		VlEntry->serverPartition[j] = updateentry->RepsitesNewPart[i];
@@ -2888,14 +2887,14 @@ get_vldbupdateentry(struct ubik_trans *trans,
 		    return VL_BADSERVER;	    */
 		if ((j =
 		     repsite_exists(VlEntry,
-				    IpAddrToRelAddr(updateentry->
+				    IpAddrToRelAddr(ctx, updateentry->
 						    RepsitesTargetServer[i],
-						    trans),
+						    1),
 				    updateentry->RepsitesTargetPart[i])) !=
 		    -1) {
 		    VlEntry->serverNumber[j] =
-			IpAddrToRelAddr(updateentry->RepsitesNewServer[i],
-					trans);
+			IpAddrToRelAddr(ctx, updateentry->RepsitesNewServer[i],
+					1);
 		} else
 		    return VL_NOREPSERVER;
 	    }
@@ -2905,9 +2904,9 @@ get_vldbupdateentry(struct ubik_trans *trans,
 		    return VL_BADPARTITION;
 		if ((j =
 		     repsite_exists(VlEntry,
-				    IpAddrToRelAddr(updateentry->
+				    IpAddrToRelAddr(ctx, updateentry->
 						    RepsitesTargetServer[i],
-						    trans),
+						    1),
 				    updateentry->RepsitesTargetPart[i])) !=
 		    -1)
 		    VlEntry->serverPartition[j] =
@@ -2918,9 +2917,9 @@ get_vldbupdateentry(struct ubik_trans *trans,
 	    if (updateentry->RepsitesMask[i] & VLUPDATE_REPS_MODFLAG) {
 		if ((j =
 		     repsite_exists(VlEntry,
-				    IpAddrToRelAddr(updateentry->
+				    IpAddrToRelAddr(ctx, updateentry->
 						    RepsitesTargetServer[i],
-						    trans),
+						    1),
 				    updateentry->RepsitesTargetPart[i])) !=
 		    -1) {
 		    if (updateentry->RepsitesNewFlags[i] < 0
@@ -3145,7 +3144,7 @@ InvalidReleasetype(afs_int32 releasetype)
 }
 
 static int
-IpAddrToRelAddr(afs_uint32 ipaddr, struct ubik_trans *atrans)
+IpAddrToRelAddr(struct vl_ctx *ctx, afs_uint32 ipaddr, int create)
 {
     int i, j;
     afs_int32 code, base, index;
@@ -3185,12 +3184,12 @@ IpAddrToRelAddr(afs_uint32 ipaddr, struct ubik_trans *atrans)
     }
 
     /* allocate the new server a server id pronto */
-    if (atrans) {
+    if (create) {
 	for (i = 0; i <= MAXSERVERID; i++) {
 	    if (cheader.IpMappedAddr[i] == 0) {
 		cheader.IpMappedAddr[i] = htonl(ipaddr);
 		code =
-		    vlwrite(atrans,
+		    vlwrite(ctx->trans,
 			    DOFFSET(0, &cheader, &cheader.IpMappedAddr[i]),
 			    (char *)&cheader.IpMappedAddr[i],
 			    sizeof(afs_int32));
@@ -3205,7 +3204,7 @@ IpAddrToRelAddr(afs_uint32 ipaddr, struct ubik_trans *atrans)
 }
 
 static int
-ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
+ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
 {
     int i, j;
     afs_int32 code;
@@ -3219,9 +3218,6 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
     int ipaddr1_id = -1, ipaddr2_id = -1;
     char addrbuf1[256];
     char addrbuf2[256];
-
-    if (!atrans)
-	return VL_CREATEFAIL;
 
     /* Don't let addr change to 256.*.*.* : Causes internal error below */
     if ((ipaddr2 & 0xff000000) == 0xff000000)
@@ -3296,8 +3292,8 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
      * server entry: return error "volume entry exists".
      */
     if (ipaddr2 == 0) {
-	for (blockindex = NextEntry(atrans, 0, &tentry, &count); blockindex;
-	     blockindex = NextEntry(atrans, blockindex, &tentry, &count)) {
+	for (blockindex = NextEntry(ctx, 0, &tentry, &count); blockindex;
+	     blockindex = NextEntry(ctx, blockindex, &tentry, &count)) {
 	    if (++pollcount > 50) {
 #ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();
@@ -3341,7 +3337,7 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
 	afs_htonuuid(&tuuid);
 	exp->ex_hostuuid = tuuid;
 	code =
-	    vlwrite(atrans,
+	    vlwrite(ctx->trans,
 		    DOFFSET(ntohl(ex_addr[0]->ex_contaddrs[base]),
 			    (char *)ex_addr[base], (char *)exp),
 		    (char *)&tuuid, sizeof(tuuid));
@@ -3352,7 +3348,7 @@ ChangeIPAddr(afs_uint32 ipaddr1, afs_uint32 ipaddr2, struct ubik_trans *atrans)
     /* Now change the host address entry */
     cheader.IpMappedAddr[ipaddr1_id] = htonl(ipaddr2);
     code =
-	vlwrite(atrans, DOFFSET(0, &cheader, &cheader.IpMappedAddr[ipaddr1_id]),
+	vlwrite(ctx->trans, DOFFSET(0, &cheader, &cheader.IpMappedAddr[ipaddr1_id]),
 		(char *)
 		&cheader.IpMappedAddr[ipaddr1_id], sizeof(afs_int32));
     HostAddress[ipaddr1_id] = ipaddr2;

@@ -88,20 +88,20 @@ static void *
 CheckSignal(void *unused)
 {
     int i, errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
 
     if ((errorcode =
-	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
+	Init_VLdbase(&ctx, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
 	return (void *)(intptr_t)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
-	HashNDump(trans, i);
+	HashNDump(&ctx, i);
     }
     VLog(0, ("Dump id hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
-	HashIdDump(trans, i);
+	HashIdDump(&ctx, i);
     }
-    return ((void *)(intptr_t)ubik_EndTrans(trans));
+    return ((void *)(intptr_t)ubik_EndTrans(ctx.trans));
 }				/*CheckSignal */
 
 
