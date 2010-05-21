@@ -12,8 +12,24 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
+
+ifeq ($(ENABLE_PTHREADED_UBIK),yes)
+DEST_DEP = \
+	${DEST}/root.server/usr/afs/bin/ptserver \
+	${DEST}/root.server/usr/afs/bin/pts \
+	${DEST}/bin/pts \
+	${DEST}/root.server/usr/afs/bin/pt_util \
+	${DEST}/etc/prdb_check
+INST_DEP = \
+	${DESTDIR}${afssrvlibexecdir}/ptserver \
+	${DESTDIR}${afssrvbindir}/pts \
+	${DESTDIR}${bindir}/pts \
+	${DESTDIR}${afssrvsbindir}/pt_util \
+	${DESTDIR}${afssrvsbindir}/prdb_check
+endif
 
 RX=../rx
 UTIL=../util
@@ -232,24 +248,19 @@ prerror.h: pterror.h
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${afssrvlibexecdir}/ptserver \
-	${DESTDIR}${afssrvbindir}/pts \
-	${DESTDIR}${bindir}/pts \
-	${DESTDIR}${afssrvsbindir}/pt_util \
-	${DESTDIR}${afssrvsbindir}/prdb_check 
+install: $(INST_DEP)
 
 ${DEST}/root.server/usr/afs/bin/ptserver: ptserver
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DEST}/root.server/usr/afs/bin/pt_util: pt_util
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DEST}/etc/prdb_check: db_verify
-	${INSTALL} -f $? $@
+	${INSTALL_PROGRAM} $? $@
 
 #
 # Misc. targets
@@ -261,23 +272,18 @@ clean:
 
 include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DESTDIR}${afssrvbindir}/pts: pts
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DESTDIR}${bindir}/pts: pts
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DESTDIR}${afssrvsbindir}/pt_util: pt_util
-	${INSTALL} $? $@
+	${INSTALL_PROGRAM} $? $@
 
 ${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
-	${INSTALL} -f $? $@
+	${INSTALL_PROGRAM} -f $? $@
 
-dest: \
-	${DEST}/root.server/usr/afs/bin/ptserver \
-	${DEST}/root.server/usr/afs/bin/pts \
-	${DEST}/bin/pts \
-	${DEST}/root.server/usr/afs/bin/pt_util \
-	${DEST}/etc/prdb_check
+dest: $(DEST_DEP)

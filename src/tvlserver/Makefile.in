@@ -12,10 +12,22 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} 
 CCRULE=${CC} ${CFLAGS} -c $?
+
+ifeq ($(ENABLE_PTHREADED_UBIK),yes)
+DEST_DEP = \
+	${DEST}/root.server/usr/afs/bin/vlserver \
+	${DEST}/etc/vldb_convert \
+	${DEST}/etc/vldb_check
+INST_DEP = \
+	${DESTDIR}${afssrvlibexecdir}/vlserver \
+	${DESTDIR}${afssrvsbindir}/vldb_convert \
+	${DESTDIR}${afssrvsbindir}/vldb_check
+endif
 
 RX=../rx
 UTIL=../util
@@ -187,26 +199,20 @@ ${DEST}/root.server/usr/afs/bin/vlserver: vlserver
 	${INSTALL} $? $@
 
 ${DEST}/etc/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
+	${INSTALL} $? $@
 
-install: \
-	${DESTDIR}${afssrvlibexecdir}/vlserver \
-	${DESTDIR}${afssrvsbindir}/vldb_convert \
-	${DESTDIR}${afssrvsbindir}/vldb_check
+install: $(INST_DEP)
 
 ${DESTDIR}${afssrvlibexecdir}/vlserver: vlserver
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
+	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvsbindir}/vldb_check: vldb_check
 	${INSTALL} $? $@
 
-dest: \
-	${DEST}/root.server/usr/afs/bin/vlserver \
-	${DEST}/etc/vldb_convert \
-	${DEST}/etc/vldb_check
+dest: $(DEST_DEP)
 
 ${DEST}/etc/vldb_check: vldb_check
 	${INSTALL} $? $@
