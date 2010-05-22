@@ -744,7 +744,6 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     struct vnode *vp;
     struct vcache *avc;
 
-    GIANT_REQUIRED;
     vp = ap->a_vp;
     avc = VTOAFS(vp);
     if ((object = vp->v_object) == NULL) {
@@ -917,8 +916,6 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     vm_offset_t kva;
     struct vnode *vp;
     struct vcache *avc;
-
-    GIANT_REQUIRED;
 
     vp = ap->a_vp;
     avc = VTOAFS(vp);
