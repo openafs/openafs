@@ -1,24 +1,23 @@
 AC_DEFUN([AC_CHECK_RESOLV_RETRANS],[
-  AC_CACHE_CHECK([for retransmit support in res_state], [ac_cv_res_retransretry],[
-  AC_TRY_RUN( [
+  AC_CACHE_CHECK([for retransmit support in res_state],
+    [ac_cv_res_retransretry],[
+    AC_TRY_COMPILE( [
 #include <sys/types.h>
 #if defined(__sun__)
 #include <inet/ip.h>
 #endif
 #include <resolv.h>
-int main(void) {
+],[
     _res.retrans = 2;
     _res.retry = 1;
-    exit(0);
-}
-],[
-  ac_cv_res_retransretry=1
-],[
-  ac_cv_res_retransretry=
-],[
-  ac_cv_res_retransretry="no"
-])])
-AC_DEFINE_UNQUOTED([HAVE_RES_RETRANSRETRY], [$ac_cv_res_retransretry], [Define if resolv.h's res_state has the fields retrans/rety])
+],
+      [ac_cv_res_retransretry="yes"],
+      [ac_cv_res_retransretry="no"])
+  ])
+  AS_IF([test "$ac_cv_res_retransretry" = "yes"],
+        [AC_DEFINE([HAVE_RES_RETRANSRETRY], 1,
+	   [Define if resolv.h's res_state has the fields retrans/retry])
+  ])
 ])
 
 AC_DEFUN([AC_FUNC_RES_SEARCH], [
