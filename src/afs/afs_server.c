@@ -1696,7 +1696,7 @@ afs_GetCapabilities(struct server *ts)
     struct unixuser *tu;
     afs_int32 code;
 
-    if ( !ts )
+    if ( !ts || !ts->cell )
 	return;
     if ( !afs_osi_credp )
 	return;
