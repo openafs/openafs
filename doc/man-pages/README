@@ -230,9 +230,6 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * Some of the documentation in fs getserverprefs needs minor updates to
-     reflect what happens in the dynroot case.
-
    * There are lingering references to AFS Development or AFS Product
      Support in descriptions of options that one should generally not
      use.  Also, all of the manual references refer to the "IBM" manual.
