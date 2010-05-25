@@ -3204,11 +3204,20 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    (AFS_PIOCTL_MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
 	in->flags = vlservers;
 
-	code = pioctl(0, VIOC_GETSPREFS, &blob, 1);
-	if (code) {
-	    perror("getserverprefs pioctl");
-	    return 1;
-	}
+	do {
+	    code = pioctl(0, VIOC_GETSPREFS, &blob, 1);
+	    if (code) {
+		if ((errno != E2BIG) || (2 * blob.out_size > 0x7FFF)) {
+		    perror("getserverprefs pioctl");
+		    return 1;
+		}
+		blob.out_size *= 2;
+		if (blob.out == space)
+		    blob.out = malloc(blob.out_size);
+		else
+		    blob.out = realloc(blob.out, blob.out_size);
+	    }
+	} while (code != 0);
 
 	out = (struct sprefinfo *)blob.out;
 
@@ -3226,6 +3235,9 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 
 	in->offset = out->next_offset;
     } while (out->next_offset > 0);
+
+    if (blob.out != space)
+	free(blob.out);
 
     return 0;
 }
