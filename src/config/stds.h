@@ -7,6 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ * Do not put anything in this file that relies on Autoconf defines, since
+ * we're not guaranteed to have included afsconfig.h before this header file.
+ * This is an installed header file, and afsconfig.h is not.
+ */
+
 #ifndef OPENAFS_AFS_CONFIG_STDS_H
 #define OPENAFS_AFS_CONFIG_STDS_H	1
 
@@ -50,18 +56,6 @@ pragma Off(Prototype_override_warnings);
 #define MAX_AFS_INT64 0x7FFFFFFFFFFFFFFFL
 #define MIN_AFS_INT64 (-MAX_AFS_INT64 - 1)
 #define MAX_AFS_UINT64 0xFFFFFFFFFFFFFFFFL
-
-#ifndef HAVE_SSIZE_T
-typedef int ssize_t;
-#endif
-
-#ifndef HAVE_SIG_ATOMIC_T
-typedef int sig_atomic_t;
-#endif
-
-#ifndef HAVE_SOCKLEN_T
-typedef int socklen_t;
-#endif
 
 typedef short afs_int16;
 typedef unsigned short afs_uint16;
