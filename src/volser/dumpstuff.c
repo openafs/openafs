@@ -1560,7 +1560,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	if (nBytes > 0)
 	    written += nBytes;
 	if (nBytes != size) {
-	    Log("1 Volser: WriteFile: Error writing (%d,%u) bytes to vnode %d: %s; restore aborted\n", (int)(nBytes>>32), (int)(nBytes & 0xffffffff), vn, afs_error_message(errno));
+	    Log("1 Volser: WriteFile: Error writing (%u) bytes to vnode %d: %s; restore aborted\n", (int)(nBytes & 0xffffffff), vn, afs_error_message(errno));
 	    *status = 4;
 	    break;
 	}
