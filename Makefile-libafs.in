@@ -1,3 +1,5 @@
+# -*- makefile -*-
+#
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -5,12 +7,19 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+include src/config/Makefile.config
+
 all: 
+	cd src && cd config && $(MAKE)
+	src/config/config src/libafs/MakefileProto \
+		src/libafs/Makefile ${SYS_NAME}
 	cd src && cd libafs && $(MAKE)
 
 clean:
+	cd src && cd config && $(MAKE) clean
 	cd src && cd libafs && $(MAKE) clean
 
 distclean: clean
-	rm -f Makefile src/config/Makefile.config src/config/Makefile.version \
-		src/libafs/Makefile.common src/libafs/Makefile
+	rm -f Makefile src/config/Makefile src/config/Makefile.config \
+		src/config/Makefile.version src/libafs/Makefile.common \
+		src/libafs/Makefile

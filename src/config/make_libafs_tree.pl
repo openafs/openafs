@@ -65,11 +65,12 @@ finddepth(\&find_libafsdep, $projdir);
 #
 &copyit("$projdir/configure-libafs", "$treedir/configure");
 &copyit("$projdir/Makefile-libafs.in", "$treedir/Makefile.in");
+&copyit("$projdir/src/libafs/MakefileProto.$ostype.in",
+        "$treedir/src/libafs/MakefileProto.in");
 
-system("$objdir/src/config/config", 
-	"$projdir/src/libafs/MakefileProto.$ostype.in", 
-	"$treedir/src/libafs/Makefile.in",
-	$sysname);
+# We need to regenerate this to support building amd64 kernels from a
+# libafs_tree built on i386.
+unlink("$treedir/include/afs/param.h");
 
 #
 # Subs
@@ -108,7 +109,6 @@ sub process_libafsdep
 		# do some simple substitution in dep file
 		#
 		$file =~ s/MKAFS_OSTYPE/$ostype/ge;
-		$file =~ s/AFS_SYSNAME/$sysname/ge;
 
 		next if ( $file eq "" );
 
