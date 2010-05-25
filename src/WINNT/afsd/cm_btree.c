@@ -1901,20 +1901,19 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, clientchar_t *centry)
                     rc = CM_ERROR_INEXACT_MATCH;
                 } else {
                     rc = CM_ERROR_AMBIGUOUS_FILENAME;
-                } 
-            }
+                }
 
+                if (rc != CM_ERROR_AMBIGUOUS_FILENAME) {
+                    dfid.vnode = htonl(fid.vnode);
+                    dfid.unique = htonl(fid.unique);
+                    cm_Gen8Dot3NameIntW(centry, &dfid, shortName, NULL);
 
-            if (rc != CM_ERROR_AMBIGUOUS_FILENAME) {
-                dfid.vnode = htonl(fid.vnode);
-                dfid.unique = htonl(fid.unique);
-                cm_Gen8Dot3NameIntW(centry, &dfid, shortName, NULL);
-
-                /* delete first the long name and then the short name */
-                delete(op->scp->dirBplus, key);
-                key.name = shortName;
-                delete(op->scp->dirBplus, key);
-            }
+                    /* delete first the long name and then the short name */
+                    delete(op->scp->dirBplus, key);
+                    key.name = shortName;
+                    delete(op->scp->dirBplus, key);
+                }
+            } /* !NONODE */
         } else {
             clientchar_t * cname = NULL;
 
