@@ -62,6 +62,7 @@ openafs (1.5.73.3-1) experimental; urgency=low
     - Network performance improvements.
     - New libkopenafs library providing a kernel PAG manipulation
       interface (a subset of the API provided by Heimdal's libkafs).
+    - Fix builds on sparc64.  (LP: #181661)
   * Apply upstream deltas:
     - [7d395f17] Improve demand-attach fileserver bos documentation
     - [a763edc3] Make src/rx/rx.c not executable
