@@ -76,7 +76,7 @@ clean:
 	$(RM) -f *.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
 aklog_dynamic_auth: ${AUTH_KRB5_OBJS} ${AFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} @KRB5LIBS@ ${XLIBS} ${AKLDFLAGS}
+	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} @KRB5_LIBS@ ${XLIBS} ${AKLDFLAGS}
 
 afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
@@ -88,7 +88,7 @@ aix_auth_common.o: ${srcdir}/aix_auth_common.c
 	${CCRULE}
 
 aix_aklog.o: ${srcdir}/aix_aklog.c
-	${CCRULE} @KRB5CFLAGS@
+	${CCRULE} @KRB5_CPPFLAGS@
 
 aix_ktc_krb.o: ${srcdir}/aix_ktc.c
 	${CCRULE} -DAFS_KERBEROS_ENV

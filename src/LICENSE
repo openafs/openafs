@@ -394,3 +394,24 @@ to the following license:
     SUCH DAMAGE.
 
 ====================================================
+
+The files src/cf/krb5.m4, src/cf/lib-depends.m4, and
+src/cf/lib-pathname.m4 are covered by the following license:
+
+  Copyright 2005, 2006, 2007, 2008, 2009, 2010
+    Board of Trustees, Leland Stanford Jr. University
+
+  Permission to use, copy, modify, and distribute this software and its
+  documentation for any purpose and without fee is hereby granted,
+  provided that the above copyright notice appear in all copies and that
+  both that copyright notice and this permission notice appear in
+  supporting documentation, and that the name of Stanford University not
+  be used in advertising or publicity pertaining to distribution of the
+  software without specific, written prior permission.  Stanford
+  University makes no representations about the suitability of this
+  software for any purpose.  It is provided "as is" without express or
+  implied warranty.
+
+  THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
