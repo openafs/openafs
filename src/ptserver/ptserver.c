@@ -293,10 +293,8 @@ main(int argc, char **argv)
 		       lwps, 3);
 		lwps = 3;
 	    }
-	} else if (strncmp(arg, "-rebuild", alen) == 0)	/* rebuildDB++ */
-	    ;
 #if defined(SUPERGROUPS)
-	else if ((strncmp(arg, "-groupdepth", alen) == 0)
+	} else if ((strncmp(arg, "-groupdepth", alen) == 0)
 		 || (strncmp(arg, "-depth", alen) == 0)) {
 	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
 	}
