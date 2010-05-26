@@ -59,6 +59,7 @@ rs_state.ini
 /amd64_linux*
 /amd64_fsbd*
 /amd64_nbsd*
+/dest
 /hp_ux*
 /i386_dfbsd*
 /i386_fbsd*
@@ -68,6 +69,7 @@ rs_state.ini
 /i386_umlinux*
 /ia64_hpux*
 /ia64_linux*
+/obj
 /parisc_linux*
 /ppc_darwin*
 /ppc_nbsd*
