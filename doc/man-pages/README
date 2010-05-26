@@ -230,9 +230,6 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * The salvager actually creates a bunch of SalvageLog files and then
-     combines them, but the SalvageLog man page doesn't reflect this.
-
    * There's no mention of the Kerberos v5 support.  At least, we need
      some disclaimers under klog and friends talking about sites without
      kaserver (and possibly without fakeka), and deprecation warnings
