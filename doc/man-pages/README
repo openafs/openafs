@@ -230,10 +230,8 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * There are lingering references to AFS Development or AFS Product
-     Support in descriptions of options that one should generally not
-     use.  Also, all of the manual references refer to the "IBM" manual.
-     We should decide how to handle this terminology-wise.
+   * All of the manual references refer to the "IBM" manual.  We should
+     decide how to handle this terminology-wise.
 
    * The salvager actually creates a bunch of SalvageLog files and then
      combines them, but the SalvageLog man page doesn't reflect this.

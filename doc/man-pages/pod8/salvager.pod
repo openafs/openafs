@@ -178,9 +178,11 @@ having been active when a crash occurred.
 =item B<-oktozap>
 
 Removes a volume that is so damaged that even issuing the B<vos zap>
-command with the B<-force> flag is ineffective. Use this argument only in
-consultation with AFS Development or Product Support. Combine it with the
+command with the B<-force> flag is ineffective. Combine it with the
 B<-partition> and B<-volumeid> arguments to identify the volume to remove.
+Using this flag will destroy data that cannot be read, so use only with
+caution and when you're certain that nothing in that volume is still
+needed.
 
 =item B<-rootinodes>
 
