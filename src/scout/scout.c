@@ -2203,7 +2203,7 @@ scout_SetColumnWidths(struct cmd_item *a_width_item)
     int num_cols = sizeof(scout_col_width) / sizeof(*scout_col_width);
 
     for (i = 0; a_width_item && i < num_cols; i++) {
-	int width = atoi(a_width_item->data);
+	width = atoi(a_width_item->data);
 	if (width > 0) {
 	    int min_width = strlen(scout_underline[i]);
 	    if (min_width) {
