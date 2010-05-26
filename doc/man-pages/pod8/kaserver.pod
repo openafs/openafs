@@ -7,7 +7,7 @@ kaserver - Initializes the Authentication Server
 =for html
 <div class="synopsis">
 
-B<kaserver> [B<-noAuth>] [B<-fastKeys>] [B<-database> <I<dbpath>>]
+B<kaserver> [B<-noAuth>] [B<-database> <I<dbpath>>]
     S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     S<<< [B<-localfiles> <I<lclpath>>] >>> S<<< [B<-minhours> <I<n>>] >>>
     S<<< [B<-servers> <I<serverlist>>] >>> [B<-enable_peer_stats>]
@@ -74,11 +74,6 @@ disabled on the database server machine. In normal circumstances, the
 Authentication Server allows only authorized (privileged) users to issue
 commands that affect or contact the Authentication Database and will
 refuse to perform such an action even if the B<-noAuth> flag is used.
-
-=item B<-fastKeys>
-
-Is a test flag for use by the AFS Development staff; it serves no
-functional purpose.
 
 =item B<-database> <I<dbpath>>
 

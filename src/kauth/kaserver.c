@@ -190,7 +190,7 @@ main(int argc, char *argv[])
 
     if (argc == 0) {
       usage:
-	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "
+	printf("Usage: kaserver [-noAuth] [-database <dbpath>] "
 	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
 	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
 	       "[-servers <serverlist>] [-crossrealm] "
