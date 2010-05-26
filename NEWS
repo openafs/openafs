@@ -1,269 +1,2051 @@
-OpenAFS News -- history of user-visible changes.
+                       User-Visible OpenAFS Changes
 
-* Changes incorporated in OpenAFS 1.3
+OpenAFS 1.5.74 (2010-04-22)
 
-** -nosettime is now the default for afsd.  Use "-settime" to get the
-   old behavior.
+  All platforms
 
-** OpenBSD is now supported.
+    * Add "vos setaddrs" command.
 
-** Mountpoint directory information is now only faked for cross-cell
-   mountpoints when using the -fakestat flag (e.g. for the directories
-   under /afs, but not for most other volumes mounted inside the cell).
-   The -fakestat-all switch can be used to fake information for all
-   mountpoints.
+    * Rx library lock contention avoidance between rx_NewCall and
+      rx_EndCall.
 
-** When fakestat is enabled on MacOSX, the Finder can be used to browse
-   a fully-populated /afs directory.  However, this precludes reliable
-   use of entire volumes as MacOS bundles (i.e. containing a Contents
-   directory in the root of the volume).
+    * Rx library races due to inconsistent use of rx_connection
+      conn_data_lock to protect the flags field.
 
-** Mountpoint directory information can be faked by the cache manager,
-   making operations such as stat'ing all cells under /afs much faster.
-   This is enabled by passing -fakestat to afsd, but might not be stable
-   on all platforms.
+    * Rx library inconsistent use of RX_CALL_TQ_WAIT which could result in
+      deadlocks.
 
-* Changes incorporated in OpenAFS 1.2.9
+    * Rx library must signal transmit queue waiters when flushing.
 
-** The kaserver now defaults to not allowing interrealm authentication,
-   due to security vulnerabilities in the krb4 protocol.  The new
-   "-crossrealm" flag to the kaserver is provided to reenable interrealm
-   authentication if desired.
+    * afsmonitor shows busy counts now.
 
-** RedHat Linux 9.0 is now supported.
+    * afsmonitor displays xstat callback statistics.
 
-** Solaris 9 12/02 is now supported.  Solaris 7 and 8 x86 should now
-   work again.
+    * Provide expandgroups for pts mem on a supergroups server.
 
-** On Linux machines using 2.2 series kernels, 2.2.19 or higher is now
-   required.
+    * Provide supergroup option to liste nested groups during pts mem.
 
-** An OpenAFS 1.2.9 afsd will not work with kernel modules built from
-   an earlier OpenAFS release.  In general, using a mismatched afsd and
-   kernel modules set is unsupported; it is not recommended that you use
-   such a configuration on a regular basis.
+  All server platforms
 
-* Changes incorporated in OpenAFS 1.2.8
+    * Avoid volume lock contention during DAFS startup.
 
-** Mountpoint directory information is now only faked for cross-cell
-   mountpoits when using the -fakestat flag (e.g. for the directories
-   under /afs, but not for most other volumes mounted inside the cell).
-   The -fakestat-all switch can be used to fake information for all
-   mountpoints.
+  Microsoft Windows
 
-** HPUX 11.0 is now supported.
+    * Avoid a race when updating cell vldb server lists that can result in
+      a crash.
 
-** It is now possible for AFS to use Kerberos 5 directly, via rxkad 2b.
-   See the OpenAFS 1.2.8 Release Notes for more information on using this
-   capability.
+    * Avoid a deadlock when managing CM_SCACHESYNC_STOREDATA state
+      operations for directory objects.
 
-** An NFS translator kernel module is now included and compiled by default
-   for Solaris only.
+    * Add new Windows Application Event log messages for VBUSY,
+      VRESTARTING, ALL_BUSY, ALL_OFFLINE, and ALL_DOWN.
 
-* Changes incorporated in OpenAFS 1.2.7
+    * Reduce lock contention by waiting for cm_buf_t I/O operations.
 
-** MacOS X 10.2 is now supported.  FreeBSD 4.3 and later support is included
-   in this release, but is still under active development and should only
-   be used by those doing active development on the OpenAFS FreeBSD client.
+    * Split the cm_buf_t flags field to separate the flags that are
+      protected by the cm_buf_t mutex from those protected by the
+      buf_globalLock.
 
-** When fakestat is enabled on MacOSX, the Finder can be used to browse
-   a fully-populated /afs directory.  However, this precludes reliable
-   use of entire volumes as MacOS bundles (i.e. containing a Contents
-   directory in the root of the volume).
+    * In cm_UpdateVolumeLocation, avoid searching for a ".readonly" volume
+      on a numeric volume name.
 
-** The fileserver will now use Rx pings to determine if clients are reachable
-   prior to allocating resources to them, to prevent asymmetric clients from
-   consuming all fileserver resources.
+    * File buffer allocations whose offsets are beyond server EOF should
+      be locally allocated and zero filled.  The file server should not be
+      issued a FetchData rpc which is guaranteed to fail.
 
-* Changes incorporated in OpenAFS 1.2.6
+    * Enable integrated logon to work with Windows 7/2008 when user logons
+      are performed with a non-Domain Kerberos principal.
 
-** Mountpoint directory information can be faked by the cache manager,
-   making operations such as stat'ing all cells under /afs much faster.
-   This is enabled by passing -fakestat to afsd.
+    * Add Protection Error messages to aklog output.
 
-** Solaris 9 FCS and Solaris 7 and 8 x86 are now supported.
+  All UNIX client platforms
 
-* Changes incorporated in OpenAFS 1.2.5
+    * Provide a FUSE-interfacing userspace afs client.
 
-** A remote denial of service attack in the AIX and IRIX clients has
-   been fixed.  Users of those platforms are strongly encouraged to
-   upgrade.
+    * Updates to libuafs userspace cache manager.
 
-** Fixed race conditions in fileserver that could result in crash.
+    * Probe servers using GetCapabilities instead of GetTime, thus
+      requiring fewer RPCs.
 
-* Changes incorporated in OpenAFS 1.2.4
+    * Fix DNS SRV record handling for cell lookup.
 
-** Server logfiles now more consistant about format in which hosts are
-   referred to.
+  FreeBSD
 
-** vfsck on Solaris will now allow force runs (using -y flag) even if old 
-   inodes exist.
+    * Fix sleep/wakeup routines.
 
-* Changes incorporated in OpenAFS 1.2.3
+    * Update for 8.0 release.
 
-** Cell aliases for dynroot can be specified in the CellAlias file in
-   /usr/vice/etc or /usr/local/etc/openafs, in format "realname alias",
-   one per line.  They can also be managed at runtime with "fs newalias"
-   and "fs listaliases".
+  Linux
 
-* Changes incorporated in OpenAFS 1.2.2
-
-** Solaris 9 and Linux PA-RISC are now supported
+    * Handle high memory addresses correctly.
 
-** fileserver will not erroneously delay legitimate errors for 3 seconds
-   after 10 errors are returned (e.g. stat() on a directory you can't read)
-
-** Rx MTU calculation now works for Irix, Solaris and Linux
-
-** If afsd is started with the -dynroot flag, /afs will be locally
-   generated from the CellServDB.  AFSDB cells will be mounted
-   automatically upon access.
-
-** The namei fileserver allows vice "partitions" to be directories instead
-   of partitions and will attach and display accordingly. Creating the file
-   "AlwaysAttach" in the /vicepX directory is used as the trigger to attach it.
-
-** TSM support for butc no longer requires editing a Makefile, simply
-   specify the --enable-tivoli-tsm configure option.
-
-** Linux builds no longer require source changes every time the kernel
-   inode structure changes; the OpenAFS sources will now configure
-   itself to the actual inode structure as defined in the kernel
-   sources.
-
-* Changes incorporated in OpenAFS 1.2.1
-
-** vfsck on Digital UNIX and Solaris will now refuse to fsck mounted
-   mounted partitions.
-
-* Changes incorporated in OpenAFS 1.2.0
-
-** AFS now supports --prefix and the other directory options of
-   configure.  By default AFS builds assuming it will be installed in
-   /usr/local.  In order to get traditional AFS directory paths (/usr/afs
-   and /usr/vice/etc) use the --enable-transarc-paths option to
-   configure.  More details on the new directory layout are found in README.
-
-* Changes incorporated in OpenAFS 1.1.1a
- 
-** Windows 95/98/ME/NT/2000 - Consistent versioning
-   Installation, AFS Control Center, Client dialog boxes and properties 
-   pages for executables display a consistent OpenAFS version number. 
-   Installation detects previous installation and prompts the user for upgrade 
-   options.
-
-** Windows 95/98/ME/NT/2000 - Installation features
-   During installation the user can select the source of the CellservDB file,
-   AFS home cell, and drive mappings.  During installation a drive path 
-   mapping can include a variable that will be substituted with the current 
-   UserName that is logged in.
-
-** Windows 2000/NT - Integrated logon
-   The Integrated Logon feature works now.
-
-** Windows 95/98/ME - Logon script features
-   The Windows 95/98/ME client now offers a command-line option for starting up 
-   the AFS client without authenication. It is now possilbe to start the AFS 
-   client first and obtain tokens, and map drives all through Windows scripts.
-   This helps using Windows 95/98/ME client in Kerberos 5 environment.
-
-** Windows 2000/NT - LANA numbers
-   AFS client now scans the LANA numbers to establish the correct NETBIOS
-   connection.  NetBEUI is no longer needed.  The user no longer needs to find
-   the correct LANA number.
-
-** Windows 2000/NT - OpenAFS naming consistancy
-   Further progress has been made to remove references to "Transarc AFS"
-   and replace with "OpenAFS".
-
-
-  
-* Changes since OpenAFS 1.0 
-
-** AFS now builds with configure. The README for building has been
-   updated and includes full details.
-
-** A client system can now have multiple sysname values for @sys.
-   They will be searched in order when looking up files in AFS.  The
-   -newsysname argument to fs sysname can be repeated to set multiple
-   sysnames.
-
-** A new system group is created for new cells (system:ptsviewers
-   with id -203).  If this group exists, members of this group can
-   examine and read the entire protection database.  They can examine
-   all users and groups and can get the membership of any group.
-
-** A new program, pt_util has been added to the distribution.  This
-   program allows users to print the contents of the protection
-   database or to edit the protection database without running a
-   ptserver.  It can be used to set up a new cell without ever running
-   in noauth mode.  Run pt_util -h for help.
-
-** The fs setcrypt and fs getcrypt commands have been added.  These
-   commands allow the system administrator to require that the client
-   encrypt all authenticated traffic between the client workstation
-   and AFS.  The encryption used is weak, but is likely better than
-   sending unencrypted traffic in most environments.  Some functions,
-   such as looking for a volume may not be encrypted, but data
-   transfer certainly is.  By default data is not encrypted.  At this
-   time no significant experimentation with server performance has
-   been conducted.
-
-** By default AFS is compiled with AFS_AFSDB_ENV, enabling the -afsdb 
-   option to be given to afsd on startup.  If this option is used, then new
-   cells will be looked up using AFSDB records stored in DNS if they
-   are not found in CellServDB.  This means that users can create
-   cross-cell mountpoints in directories they control to access cells
-   not in root.afs, and that cells in root.afs need not be in the
-   client's CellServDB.
-
-** AFS database servers can be marked as read-only clones.  Surround
-   the hostname in square brackets on the bos addhost command and the
-   database server will never be elected sync site.  This is useful
-   for cells distributed over a wide region.
-
-** The AFS servers now support the -syslog flag.  This flag causes
-   them to log to syslog rather than to files.  This flag is not
-   supported on NT.  For all servers besides the salvager, the flag can
-   also be specified as -syslog=facility, where facility is an integer
-   facility code from syslog.h.  A -syslogfacility option is provided for
-   the salvager to accomplish the same goal.
-
-** If the --enable-fast-restart flag is given when configuring AFS,
-   then the salvager supports the -dontsalvage flag which causes it to 
-   exit without salvaging any volumes.  If this is configured into the 
-   third command of a fs process, then the fileserver will start without 
-   salvaging.  It will fail to attach volumes that need salvaging and they
-   can be salvaged manually.  This provides significantly better server 
-   startup performance at the cost of administrative complexity.
-
-** If the --enable-bitmap-later flag is given when configuring AFS,
-   then the fileserver creates bitmaps for free vnodes on demand, allowing 
-   faster starts.
-
-** If bosserver finds a BosConfig.new file at startup, it reads this
-   file and renames it to BosConfig.  This allows bosserver to be
-   reconfigured at next restart.
-
-** The bosserver can be placed in a restricted mode in
-   which AFS superusers are only granted limited access to the server
-   host. The following functionality is disabled when restricted mode is in
-   use:
-
-    bos exec
-    bos getlog (except for files with no '/'s in their name)*
-    bos create *
-    bos delete
-    bos install
-    bos uninstall
-
-   specific exceptions are made for functionality that "bos salvage"
-   uses:
-
-    a cron bnode who's name is "salvage-tmp", time is now, and command
-    begins with "/usr/afs/bin/salvager" may be created. This bnode 
-    deletes itself when complete, so no special "delete" support is needed. 
-    This functionality may be removed in the future if a "Salvage" RPC is 
+  MacOS
+
+    * Make 32 bit AFS syscalls work again.
+
+    * Work around finder "Duplicate" failure (caused by setting modes on
+      symlinks).
+
+    * Disable bulkstat again (will be re-enabled at or before .75).
+
+    * Provide symlink type hints during readdir.
+
+
+OpenAFS 1.5.73 (2010-03-24)
+
+  All platforms
+
+    * NAT keepalive support at Rx level.
+
+    * Corrected SRV record support for cell name canonicalization.
+
+  All server platforms
+
+    * Fix volume callback notification to not notify unaffected clients.
+      (126497)
+
+    * Allow root directory recreation by salvager. (94658)
+
+    * Numerous DAFS fixes.
+
+    * Improvements to callback table overflow handling. (126451)
+
+    * bosserver now shuts down cleanly on SIGTERM.
+
+  Microsoft Windows
+
+    * Prevent the Explorer Shell extension from crashing if symlink
+      creation failed.  (126406)
+
+    * A Rx level NAT ping has been implemented. A registry value enables.
+
+    * Adds krb5 error message translation to aklog, afscreds,
+      afslogon.dll, the network identity manager afs provider and
+      translate_et.
+
+    * Default mode bit settings for file and directory creation are now
+      provided, and can be configured.
+
+    * An SMB request trace facility is provided and can be enabled for
+      debugging.
+
+  All UNIX client platforms
+
+    * Rx idle deadtime does not stop file writes.
+
+    * Disconnected AFS no longer has a race condition during remove ops.
+
+    * Fakestat avoids a condition which could cause it to block on network
+      activity.
+
+    * Several fixes to handle interruptions in vos operations. (33360,
+      125535)
+
+    * Allow more sysnames in a sysname list.
+
+    * Attempt to enforce timeouts on AFSDB lookups.
+
+  AIX
+
+    * Clean up properly on mount failure.
+
+    * Add entry to /etc/vfs to allow umount to work.
+
+  Linux
+
+    * Several issues to deal with older kernels.
+
+    * Avoid leaking the global lock in the /proc cellservdb code.
+
+    * Keyring destruction now cleans up all tokens.
+
+    * Keyring quotas are not enforced against root.
+
+  MacOS
+
+    * Some FSEvents hinting for authentication events now done. (23781)
+
+    * Update uninstaller. (125634)
+
+    * Rewrite afssettings and fstab code to avoid licensing issue with
+      APSL.
+
+    * Growl client for user monitoring of AFS events included.
+
+    * Properly support insert-only dropboxes.
+
+    * Add bulkstat support.
+
+    * Include support for moving in Finder across mount points.
+
+    * Preferences Pane includes support for Kerberos 5 ticket renewal.
+
+
+OpenAFS 1.5.72 (2010-02-15)
+
+  All platforms
+
+    * Provide internationalization support in com_err.
+
+    * Fix array length checking to avoid crashes when checking for a
+      volume type based on name in vos.
+
+  All server platforms
+
+    * Provide backward compatible "-f" flag to salvager for force mode.
+
+  Microsoft Windows
+
+    * Restore use of DNS AFSDB and SRV records by kaserver clients.
+
+  All UNIX client platforms
+
+    * Fix client cache file truncation to not lose chunks when truncating
+      a large file.
+
+    * Ensure a cache writeback hook is installed in the client (bug from
+      1.5.71).
+
+    * Avoid spurious free memory warnings during clean shutdown.
+
+    * Fakestat mode avoids AFSDB lookups.
+
+    * "fs storebehind" now correctly reports errors on readonly volumes.
+
+    * Additional documentation for "fs getcacheparms"
+
+    * Forced new uuid generation with "fs uuid -generate" now works
+      enforced permission correctly.
+
+  MacOS
+
+    * Add optimized Rx event handler in kernel.
+
+    * Installer now allows installing an older version.
+
+    * Panic decoder can now deal with MacOS 10.5 again.
+
+    * MacOS ._ files are now correctly not looked up as cellnames.
+
+  Linux
+
+    * To deal with SELinux file labeling, try cache accesses with current
+      credentials in event of failure.
+
+    * Rx XDR encoding bug on i386 Linux is fixed (bug introduced in
+      1.5.71).
+
+  IRIX
+
+    * Code compilation fixes.
+
+  OpenBSD
+
+    * Update for OpenBSD 4.6.
+
+
+OpenAFS 1.5.69 (2010-01-19)
+
+  All platforms
+
+    * Configuration of BOSserver no longer defaults to weekly restarts
+      enabled.
+
+    * Provide BOS restricted mode by default.
+
+    * Add support for "vos endtrans" command.
+
+    * Default to providing full output from vos listvol.
+
+    * Correct additional-address tracking in the fileserver.
+
+    * Improve Rx performance by not unnecessarily dropping and reacquiring
+      call locks in read and write processes.
+
+    * Avoid crashes when monitoring volserver transactions across
+      potential transaction garbage collection.
+
+    * Numerous warning fixes.
+
+  All server platforms
+
+    * Avoid saving fileserver state in demand attach fileserver when
+      panicing.
+
+    * Demand attach fileserver allows other callers to schedule salvages.
+
+    * Demand attach "bos salvage" now works correctly with restricted
+      mode.
+
+  Microsoft Windows:
+
+    * Numerous changes to the client-internal btree directory handling to
+      prevent errors.
+
+    * fs examine reports owner and group ids as signed values (PTS groups
+      are negative).
+
+    * Preclude corruption due to races writing to smb buffers.
+
+    * Allow MTU settings in registry to be used.
+
+    * Apply MTU to both send and receive sizes.
+
+  All UNIX client platforms
+
+    * Avoid double-freeing Rx call structure if reading a response from
+      the file server results in a short read.
+
+    * Handle negative lengths in FetchStatus results correctly.
+
+    * Properly clean up allocated memory at shutdown.
+
+    * Default to AFSDB compiled into the cache manager.
+
+    * Avoid inadvertant disclosure of stat() information to clients not so
+      entitled.
+
+    * Correct a bug with AFSDB lookups introduced with SRV record support.
+
+  MacOS
+
+    * Install kernel panic processing tool in /Library/OpenAFS/Tools.
+
+    * Include debugging symbols for kernel extension in additional package.
+
+    * Support "Application Firewall" users.
+
+    * Avoid ._cellname AFSDB lookups.
+
+    * Compile preferences pane as a universal binary.
+
+  Linux
+
+    * Use splice to speed up storing files.
+
+    * When using memcache, avoid duplicating work in readpages.
+
+    * Use dget_parent to safely find an inode's parent.
+
+    * Disable access time updates in our superblock.
+
+    * Avoid crashing doing writeback if no credentials were stashed at
+      file open.
+
+    * Simplify keyring support.
+
+    * Properly clean up vcache in event of failed mount.
+
+  FreeBSD
+
+    * Update for current FreeBSD 8.
+
+  Solaris
+
+    * Abstractly manipulate groups as now required.
+
+    * Abstractly access time instead of using lbolt directly.
+
+
+OpenAFS 1.5.68 (2009-12-08)
+
+  All platforms
+
+    * aklog now attempts to convert non-AFS errors to human-readable
+      strings.
+
+    * Make stack not executable when compiling assembler source with GCC.
+
+    * Numerous source warning cleanups and code reorganization.
+
+  All server platforms
+
+    * Compute midnight for volume statistics calculation from local time.
+
+    * Salvager now orphans duplicate special inodes when running to allow
+      recovery in event of a problem, instead of simply ignoring the
+      issue.
+
+    * Support to ensure a server panic attempt leaves a core and thus
+      restarts in a timely manner, rather than potentially hanging. Use
+      panic to attempt cleanup before leaving a core when possible.
+
+    * Volume sync data reported during bulkstatus is now set correctly.
+
+    * Provide better tuning for fileserver file descriptor caching.
+
+    * Allow more than 128 threads in fileserver by modifying host
+      structure in-use tracking.
+
+    * Avoid crashes getting volume server status during transaction
+      cleanup.
+
+    * Improved logging of offline volume conditions.
+
+    * Correct volume statistics when cloning a volume.
+
+    * Avoid referencing host structures in the fileserver which are marked
+      for deletion.
+
+    * Demand attach fileserver corrections to avoid coring during an
+      aborted startup.
+
+    * host array bounds checking corrections to avoid buffer overflow.
+
+    * Handle special inodes correctly when promoting an inode fileserver
+      readonly volume to read-write.
+
+  Microsoft Windows
+
+    * Set the DOS Readonly attribute on a file/directory whenever the unix
+      mode combined with the mask 0200 is true.  Previously there was a
+      discrepency between the mask used for testing for readonly behavior
+      and that used for setting the attribute.
+
+    * Disable AFSVolSync based .readonly "whole-volume callback" support
+      because the all file servers prior to 1.5.67 (and perhaps 1.4.12) do
+      not properly assign a value to the AFSVolSync structure in bulk
+      status RPC responses.
+
+    * Improve the error output from aklog to output the value from krb5
+      error_message() if the afs_com_err output indicates an unknown
+      value.
+
+    * Convert VBUSY and VRESTARTING to CM_ERROR_ALLBUSY and do not permit
+      them to be exposed to the smb redirector.
+
+    * Convert STATUS_TIMEOUT responses to STATUS_IO_TIMEOUT to avoid
+      confusion within the smb redirector.
+
+    * Fix the byte order assigned to port numbers associated with AFSDB
+      record lookups.  They must be network byte order not host byte
+      order.
+
+    * Add dynamic server ranking based on RPC round trip time
+      measurements.
+
+  All UNIX client platforms
+
+    * Additional shutdown-time memory leaks removed.
+
+    * Improved logging of resource contention.
+
+    * Provide dumping for Rx debug packet tracking support in source.
+
+    * Update afscp test client to build, and provide an unlock client.
+
+    * Client buffers for directory parsing can now be allocated beyond the
+      fixed set formerly provided.
+
+    * Work around race condition when manipulating read-only volume
+      callbacks.
+
+    * Bugfixes to get PAG value pioctl.
+
+    * Bugfixes to SRV record support.
+
+  Linux
+
+    * Path MTU tracking code cleanup.
+
+    * Avoid an oops due to racing with vcache recycling thread.
+
+    * Changes to keyring PAG handling: for sufficiently new kernels, use
+      only keyring-based PAGs, and disable group PAGs entirely.
+
+    * Updates to the kernel page cache interface: writing pages will now
+      not spuriously leak page locks, and will avoid requiring duplicate
+      work.
+
+    * Credential references are now tracked using native atomic counters.
+
+    * Kernel mutex/semaphore lock ordering fix to avoid deadlocks.
+
+    * Manipulate disk cache with credentials used to initialize it, to
+      avoid security issues.
+
+  MacOS
+
+    * Fix fstrace message catalog location.
+
+    * Fix kernel fstrace logging.
+
+
+OpenAFS 1.5.66 (2009-10-25)
+
+  All platforms
+
+    * Avoid calling exit() in library code.
+
+    * Add rx window size and peer timeout tuning APIs.
+
+    * Correct rx peer timeout handling to disallow 0ms timeouts.
+
+    * Correct calculation of rx RTT by disregarding retransmitted packets.
+
+    * vos manpages updated to reflect changes in recent versions.
+
+    * GNU-style long options (e.g. --cell) are now supported in all
+      commands.
+
+    * fs listacl can now print a command to recreate the current ACL.
+
+  All server platforms
+
+    * Fix a race on transaction objects in the volserver which can cause a
+      crash.
+
+    * Avoid destroying and setting to NULL the callback connection when it
+      could still be being used.
+
+    * Correct unlink handling in salvager.
+
+    * Improve error messages due to I/O errors in the volserver.
+
+    * Correct an issue which caused converted RO to RW volumes on namei
+      fileservers to not come online immediately.
+
+  Microsoft Windows
+
+    * Official support for Windows 7 and Server 2008 R2.
+
+    * Prevent a file server bug (FetchData returning an invalid length
+      instead of zero) from causing an "unexpected network error" when
+      writing to files.
+
+    * Promote DNS SRV records as superior to DNS AFSDB records.  Support
+      arbitrary port numbers for vldb servers.
+
+    * Add AFSVolSync based .readonly "whole-volume callback" support.
+      With this functionality, multiple objects from a .readonly volume
+      can have their status validated by issuing a single
+      RXAFS_FetchStatus RPC.
+
+    * Remove drive mapping functionality and service start/stop from
+      afscreds.exe.
+
+    * Remove drive mapping functionality from afs_config.exe.
+
+    * Use {HKLM,HKCU}\SOFTWARE\OpenAFS\Client DWORD "ShowMountTab" to
+      restore access to drive mapping functionality in afscreds.exe and
+      afs_config.exe.
+
+    * Adjust SMB error return codes to avoid returning STATUS_TIMEOUT
+      which results in the SMB redirector disconnecting.
+
+    * Network Identity Manager OpenAFS Provider now provides its own "AFS
+      lock" notification icon to report the status of "have tokens, have
+      no tokens, service not started, service started but inaccessible".
+      Hovering over the icon lists the cells for which tokens exist (if
+      any) and the OpenAFS version number.  Double-clicking executes the
+      Network Identity Manager default action.
+
+    * Prevent pioctl calls from retrying indefinitely when a sharing
+      violation error occurs.
+
+  All UNIX client platforms
+
+    * Correct a condition which could discard the error from initializing
+      a fetch request.
+
+    * Avoid using invalid references to afs_Conn connection structures,
+      and thus potentially producing invalid data when a retry is needed.
+
+    * SRV records are now supported for discovering AFS servers.
+
+  Linux
+
+    * Correct writepage behavior.
+
+    * Fix error code handling in the writepage code.
+
+    * Avoid leaking page locks, which could potentially hang a machine.
+
+  MacOS X
+
+    * Preferences Pane improvements.
+
+  HP-UX
+
+    * Avoiding attempting to handle critical signals in servers, so that
+      core file handling works correctly.
+
+
+OpenAFS 1.5.65 (2009-10-06)
+
+  All platforms
+
+    * Code compilation warning fixes, to enable better finding and
+      tracking bugs.
+
+    * Provide configure-time switch to enable code warning compilation.
+
+  All server platforms
+
+    * Demand-attach fileserver now makes volume LRU list operations
+      exclusive operations to avoid races during adding to the list.
+
+    * Fileservers now avoid potential "negative length" fetches.
+
+    * A leak in host tracking objects in the fileserver has been fixed.
+
+    * Salvager now unlinks all files by full path, to deal with the change
+      to not chdir for core file tracking.
+
+    * Salvager avoids asserting if the volume header is unreadable.
+
+    * Demand-attach fileserver puts back volume references from fssync
+      handlers when done.
+
+  Microsoft Windows
+
+    * Improved service response to suspend and shutdown event
+      notifications.
+
+    * Avoid a bug in the file server that can result in an invalid length
+      being returned as part of a fetch data response if the client
+      attempts to read beyond the length of the file.
+
+    * Do not publish a default stream object for directories and mount
+      point objects.  This was impacting the ability of some Windows XP
+      systems to save roaming profiles.
+
+  All UNIX client platforms
+
+    * A bug which could cause erroneous handling of lengths on data reads
+      has been fixed.
+
+    * A bug where erroneous length returns from the fileserver could
+      result in a false error has been fixed.
+
+  Linux
+
+    * Background page copies are now supported for enhanced disk cache
+      read performance.
+
+    * Blocking readahead is supported in readpages() to reduce overhead.
+
+    * Use readpage() instead of read() to access cache data to avail disk
+      cache users of the kernel backing cache for improved performance.
+
+    * Minimize credential handling for improved performance.
+
+  MacOS X
+
+    * Preferences Pane cleanup.
+
+  Solaris
+
+    * Provide a fs_pathconf method with sensible defaults.
+
+    * Provide a _PC_FILESIZEBITS method to fix some NFS translator
+      consumers.
+
+
+OpenAFS 1.5.64 (2009-09-22)
+
+  All server platforms
+
+    * The demand attach fileserver now puts back volume references gotten
+      via the fssync interface.
+
+    * The demand attach fileserver had a structure reference error, which
+      has been correected.
+
+  Microsoft Windows
+
+    * Restores Windows 2000 compatibility.
+
+    * Fixes a data consistency error between the output of NetWkstaGetInfo
+      and NetServerGetInfo RPCs, specify the Lan workstation group name
+      "AFS", and report server name as "AFS" instead of "\\AFS" when the
+      caller asks for "\\AFS".
+
+    * Enables executables to be run from \\AFS on Windows 7.  Returns
+      "Name not found" instead of "File not found" when a directory or
+      file name cannot be found.  This avoids loader errors when system
+      dlls cannot be located in the executable directory.
+
+    * Prevents cache manager from marking the file server "down" when the
+      data returned in response to either RXAFS_FetchData64 or
+      RXAFS_StoreData64 is invalid.
+
+    * Adds pioctl data validation to the AFS Explorer Shell extension.
+
+  All UNIX client platforms
+
+    * A bug which could cause a kernel panic in 1.5.63 has been corrected.
+      This would manifest as a GetDCache panic or oops.
+
+  Linux
+
+    * aklog -setpag works again with recent kernels when keyring is in
+      use.
+
+  MacOS
+
+    * When Fast User Switch is in use, AFS login is now handled correctly
+      by the integration tool included with the preferences pane.
+
+    * Several packaging bugs have been corrected.
+
+
+OpenAFS 1.5.63 (2009-09-11)
+
+  All platforms
+
+    * The restorevol command is now documented and installed as a user
+      command.
+
+    * The uss command now properly translates vldb entries to its expected
+      format when handling them in all cases.
+
+    * Documentation now refers to Kerberos instead of kaserver.
+
+  All server platforms
+
+    * bosserver now handles BosConfig.new when restarting, allowing
+      configuration to be replaced at restart time rather than with bos
+      delete and bos create.  Documentation is updated to reflect this.
+
+    * The demand attach fileservice not longer potentially hangs trying to
+      terminate demand-salvages which have already exited.
+
+    * The demand attach fileservice has been modified to avoid spurious
+      'SYNC_putRes: write failed' warnings when some protocol messages
+      cannot be acknowledged due to the sender terminating the connection.
+
+    * In the event of failure to contact the vlserver or ptserver, the
+      fileserver will not exit and trigger a forced salvage. It will
+      continue to try in the background to contact the needed services.
+
+    * The salvager can now repair certain cases of a damamged vnode index.
+
+    * The accessDate metadata for a volume is now updated correctly.
+
+  Microsoft Windows
+
+    * CRITICAL: Some applications for example those based on Cygwin were
+      unable to access data stored in the AFS name space.  Explorer Shell
+      also experienced inconsistent behavior.  This is fixed.
+
+    * CRITICAL: Multiple AFS pioctl requests issued nearly simultaneously
+      by applications could result in pioctl responses being received by
+      the wrong requester.  This in turn could result in application
+      crashes.  symlink.exe, fs.exe, afslogon.dll, afscreds.exe, and the
+      netidmgr afscred.dll plugin were all affected.
+
+    * Some XP machines running 1.5.62 had trouble saving roaming profile
+      data.  This is fixed.
+
+    * Integrated Logon (afslogon.dll) did not function with domain
+      specific configurations.
+
+    * Ensure that access denied and over quota errors experienced while
+      storing data to the file server do not result in on-going retry
+      attempts.
+
+  All UNIX client platforms
+
+    * Except on Solaris and AIX, the compiler may now be overriden at
+      configure time by setting the CC environment variable.
+
+    * afsd now properly deals with large cache partitions.
+
+  FreeBSD
+
+    * Build shared libafsauthent and libafsrpc.
+
+  Linux
+
+    * Kernel module DKMS support now installs an unstripped module to
+      allow debugging information to be collected.
+
+  MacOS
+
+    * Preferences pane properly updates token information.
+
+  MacOS 10.6
+
+    * klog will now properly handle passwords of 8 or fewer characters
+      with an AFS string to key on hosts able to run 64 bit binaries.
+
+    * A panic at AFS shutdown due to "NO PCB" on a udp_lock has been
+      addressed.
+
+    * The panic decoder script included in the source now properly handles
+      32 and 64 bit panics.
+
+  NetBSD
+
+    * Avoid defining AFS_KERBEROS_ENV globally as it creates a circular
+      dependency.
+
+    * Build shared libafsauthent and libafsrpc.
+
+  OpenBSD
+
+    * Build shared libafsauthent and libafsrpc.
+
+
+OpenAFS 1.5.62 (2009-08-28)
+
+  All platforms
+
+    * Numerous invisible changes to improve code maintainability,
+      portability and enhanceability.
+
+  Microsoft Windows
+
+    * CRITICAL: Fixes two errors that can result in data loss when storing
+      data to the file server.
+      1. Failure to Store Portions of Unaligned Writes
+      2. Failure to Store Data to File Servers Lacking Large File Support
+      Read the announcement for more details:
+        http://www.openafs.org/pipermail/openafs-announce/2009/000305.html
+
+    * CRITICAL: The cache manager daemon thread could terminate when the
+      machine enters suspend mode.  This daemon thread performs the
+      background check of down servers, offline volumes, callback
+      expirations, etc.
+
+    * CRITICAL: Integrated Logon (afslogon.dll) was terminating
+      unexpectedly.  Error checking has been improved and NULL pointer
+      dereferences after Lsa API calls fail have been eliminated.
+
+    * For the first time, the OpenAFS SMB Server supports the DCE RPC
+      services SRVSVC and WKSSVC.  Browsing \\AFS with the Explorer Shell
+      or NET VIEW will now be faster and provide additional functionality.
+      No longer will cell names longer than 12 characters be truncated.
+
+    * Improvements to DFS Referral request processing have been
+      implemented.
+
+    * Unnecessary DNS lookups of share names are avoided improving
+      performance.
+
+  All UNIX client platforms
+
+    * Non-Kerberos PAM modules work correctly again.
+
+  MacOS X
+
+    * MacOS 10.6 (Snowleopard) is now supported, both 32 and 64 bit mode.
+
+    * Updates to the AFSCommander preferences pane.
+
+    * Installer now permits cell names with dashes.
+
+
+OpenAFS 1.5.61 (2009-08-06)
+
+  All platforms
+
+    * Correct another race condition in the Rx library that could result
+      in an unexpected panic while freeing the Rx call iovq.
+
+    * rx packet resend and data packets sent counts were incorrect.
+
+    * fs setquota, fs setcachesize, vos setfields, and vos create now
+      accept human readable orders of magnitude. (K, M, G)
+
+    * fs listquota fixed to permit large quota sizes to be displayed.
+
+    * Correct documentation of bosserver permissions requirements.
+
+    * Modify vlserver to avoid potentially corrupting the database through
+      volume id reuse.
+
+    * Generalized support for fast Rx timeout due to network
+      down/unreachable.
+
+  All server platforms
+
+    * Allow audit logs to be sent via sys5 IPC message queues instead of
+      logged directly.
+
+  Microsoft Windows
+
+    * If a file server becomes inaccessible while the cache manager has
+      dirty buffers to write, the afsd_service buf_IncrSync thread can
+      attempt to use 100% of the cpu.
+
+    * Fix "fs newcell" which was broken in 1.5.60.
+
+    * Do not attempt to synchronize dirty buffers if the associated volume
+      is known to be unavailable.
+
+    * Modify behavior of a Freelance mountpoint target that does not
+      specify a cell.  Instead of assuming the target volume is in the
+      Freelance.Local cell, use the workstation "Cell" specified in the
+      registry. A mountpoint target of "#root.cell." will now mean the
+      root.cell volume in the workstation cell for the current session.
+      If the workstation cell changes from "athena.mit.edu" to
+      "andrew.cmu.edu", the referenced volume will also change without
+      requiring that the mount point targets be altered.
+
+    * Add cm_FindServerByUuid().  Re-implement RXAFS_InitCallBackState3()
+      to permit the server Uuid to be used to lookup the server object and
+      from that determine the cell.  This permits callbacks that are
+      received from alternate addresses to be processed with a known
+      server object.  Previously a request from an unknown server would
+      clear all callbacks from all cells.
+
+    * Fix a bug that prevented optimal performance when using a non-zero
+      value for 'daemonCheckVolCBInterval'.  As a reminder, when
+      "daemonCheckVolCBInterval" is set to a non-zero value, all .readonly
+      volume callbacks are automatically renewed 90 minutes before their
+      expiration.
+
+    * Fix automatic ranking of vldb servers whose values are obtained from
+      the CellServDB file.
+
+    * Add failover for RX CALL TIMEOUT errors when the volume is readonly
+      or the call is to a vldb server.
+
+    * Add registry based cell search functionality to NetIdMgr,
+      afs_config.exe, and klog.exe.
+
+    * afsconf_GetCellInfo() has been modified to perform gethostbyname()
+      lookups on the host names in the CellServDB instead of using the
+      specified IP addresses.  This provides aklog, pts, vos, etc. the
+      same CellServDB behavior that the Windows Cache Manager uses.
+
+    * When updating the stat cache entry callback of a .readonly object
+      from the volume group object, update the file server reference to
+      ensure it matches the most update to date callback.
+
+    * Add proper support for processing callbacks from multi-homed file
+      servers.  Instead of comparing servers by cm_server_t pointer,
+      compare them by UUID when the UUID is known.
+
+    * During a shutdown short circuit the offline volume check daemon
+      functionality.
+
+    * Return the error code of RXAFS_FetchData / RXAFS_StoreData in
+      preference to an error code reported by rx_EndCall.
+
+    * Add "PerFileAccessCheck" registry value to permit testing against
+      experimental file servers that include per-file acl support.  This
+      value is intentionally undocumented.  It is not to be used by
+      production environment deployments.
+
+    * Fix a bug introduced in 1.5.60 that prevents the afs netidmgr
+      provider from obtaining tokens when referrals are in play.
+
+    * Add "fs chown" and "fs chgrp" commands to permit the owner and group
+      of objects stored in AFS to be set from Windows.
+
+    * Avoid performing background daemon operations when the machine is
+      going into suspend mode.
+
+    * Perform offline volume checks in most recently used order.
+
+    * Prevent crash when a data version for a cache object goes backwards.
+
+    * Multi-thread safe library versions are now being generated and used.
+      mtafsubik.lib, mtafsutil.lib, mtafsvldb.lib, mtafsvol.lib.
+
+    * Microsoft SMB Redirector (mrxsmb.sys) support for
+      ExtendedSessTimeout values are now available on XP through Windows
+      7.  Add functionality to autodetect if such support is present on
+      the machine.  If so, configure it if necessary and dynamically
+      adjust the AFS Rx timeout values accordingly.
+
+  All UNIX client platforms
+
+    * Fix out-of-tree source builds.
+
+  MacOS
+
+    * GUI installer now asks for local cell information.
+
+    * AFS Commander preferences pane is now installed by default.
+
+  Solaris
+
+    * Avoid kernel panics due to null pointer dereferences in the network
+      interface poller kernel thread.
+
+
+OpenAFS 1.5.60 (2009-05-31)
+
+  All platforms
+
+    * Retry volserver transaction creation on failure.
+
+    * Allow building HTML and PDF documentation from included XML copies
+      of User Guide, Admin Guide and Quick Start Guide for Unix.
+
+    * Documentation updates and additional documentation.
+
+    * Add -encrypt support to pts client.
+
+    * Convert MR-AFS fs commands to OSD commands.
+
+  All server platforms
+
+    * Updated background sync process in fileserver to avoid a race which
+      could result in a volume being taken offline.
+
+  Microsoft Windows
+
+    * On April 9th Microsoft released a Hot Fix for Windows Server 2003
+      SP2 that corrects a deadlock in the smb redirector and also adds new
+      functionality that permits the AFS SMB server to be given a longer
+      timeout than is normally the case.  New functionality has been added
+      to configure these additional LanmanWorkstation\Parameter values.
+      (This functionality has been backported to XP SP3 and is scheduled
+      to be released on June 5th.)
+
+    * Fix RT#124787, a race condition between "fs flush <dir>", "fs
+      flushvolume", or "fs flushall" and on-going directory operations
+      that can result in afsd_service.exe crashing.
+
+    * Release Notes, User and Administrator guides are now shipped as
+      indexed Windows HtmlHelp Files. (.chm).  Shortcuts are provided from
+      the Start Menu.
+
+    * A method of specifying Client CellServDB information within the
+      registry has been added that can be used to either override the
+      CellServDB file or force the use of DNS lookups for a given cell.
+      See the release notes for details.
+
+    * The pioctl interface now properly handles drive letter substitution
+      to UNC paths.  (SUBST <d:> <\\afs\cell\path>)
+
+    * The BackConnectionHostNames registry value configuration was broken
+      when dynamic re-establishment of Netbios Name registrations was
+      added.  This release restores the functionality.
+
+    * All hidden vos.exe commands are now revealed.
+
+    * Attempts to store the same dirty file chunk from multiple threads
+      are now prevented.
+
+    * The IsPathInAfs test in Explorer Shell Extension and fs.exe now
+      permits broken symlinks to be treated as being in AFS.
+
+    * vos.exe commands that output 64-bit integer values once again do so.
+      This was broken in 1.5.59.
+
+    * Cygwin Import Libraries are provided in the SDK for all OpenAFS
+      DLLs.  This permits building cygwin applications against OpenAFS
+      libraries.
+
+    * NSIS installer does a much better job of cleaning up files left over
+      from previous installs.
+
+    * libafsconf.dll moved from Client\Program to Common directory as is
+      is now used by all modules for CellServDB processing.
+
+  All UNIX client platforms
+
+    * Write back changes on last store for memcache to avoid discarding
+      changes.
+
+    * Abstract disk cache support to allow for path, fh, inode based
+      caches with no need for messy ifdef structures each time a new type
+      is added.
+
+  DragonflyBSD
+
+    * Support as a userland port.
+
+  FreeBSD
+
+    * Corrected structure definition for userspace cache manager to allow
+      builds to complete.
+
+  Linux
+
+    * Corrected client locking support.
+
+    * Updated patch to stop deadlocking in the kernel during mmap.
+
+    * Avoid oops when setting up groups for PAGs to match keyrings.
+
+    * Use Linux fh-based cache in cases where possible by default.
+
+  MacOS 10.3:
+
+    * Corrected structure definition for userspace cache manager to allow
+      builds to complete.
+
+  OpenBSD
+
+    * Support for OpenBSD 4.5.
+
+  Solaris
+
+    * Corrected support for server-side vos split interface.
+
+
+OpenAFS 1.5.59 (2009-04-06)
+
+  Microsoft Windows
+
+    * Increased service priority class to "High" to match the priority of
+      system components that are dependent upon the a timely response.
+
+    * SMB error responses avoid returning errors that could confuse the
+      Microsoft SMB redirector into disconnecting the connection to \\AFS.
+
+  All UNIX client platforms (except MacOS X 10.4 and 10.5)
+
+    * OpenAFS 1.5.59 contains fixes for the client issues addressed by the
+      security advisories OPENAFS-SA-2009-001 and OPENAFS-SA-2009-002.
+
+  Linux platforms
+
+    * Support for prerelease Linux 2.6.30 kernels.
+
+
+OpenAFS 1.5.58 (2009-03-30)
+
+  All platforms
+
+    * Code cleanup and prototyping.
+
+    * Avoid unnecessary blocking in Rx periodic cleanup code.
+
+  All server platforms
+
+    * Fileserver CopyOnWrite routine optimized for performance.
+
+    * Make fileserver callback dumps 64 bit safe.
+
+    * Fix byte order issues with fileserver host hashing.
+
+    * Fix buffer size issues with butc.
+
+    * Fix several Ubik recovery issues.
+
+    * Avoid leaking file references in the fileserver.
+
+    * Fix a race in DAFS while closing vnodes, and another offlining
+      volumes.
+
+    * volserver interfaces for volume splitting client.
+
+  Microsoft Windows
+
+    * [RT 124293] A race condition exists which can result in a crash.
+
+    * [RT 124276] If the vldb is out of sync with the contents of the file
+      servers, afsd_service will retry too many times when a file server
+      reports a volume as not being present.  Now if the list reported by
+      the vldb is the same as the previously seen list, then the retry is
+      aborted.
+
+    * [RT 124276] Read-only volume failover was broken in 1.5.53 whenever
+      accessing a volume results in VNOVOL or VMOVED.
+
+    * [RT 124276] Prior to 1.3.70 the volume server reference list was not
+      reference counted and would be prematurely freed while in use.  When
+      reference counting was added in 1.3.70 a bug was introduced that
+      could result in service reference list corruption.
+
+    * Add Windows Application Event Log warning messages for "Client SMB
+      MPX value too large" and "Client SMB Buffer Size too small".
+
+    * Renaming of files across directory boundaries would result in an
+      invalid handle error when attempting to access the files after the
+      move.
+
+    * Fix the handling of Tran2 Set Path Info RPCs.  Do not fail when a
+      smb file descriptor cannot be found.  The whole point of using a
+      Path Info function is because an smb file descriptor wasn't
+      allocated.
+
+    * More edge cases in which dynamic addition of Freelance root.afs
+      entries would get the wrong FID or where the root.afs directory
+      would not be refreshed.
+
+    * Buffer overflow could occur if the workstation cell name was longer
+      than 64 characters.  Crashes could occur in afscreds.exe,
+      afslogon.dll, and afsd_service.exe.
+
+    * VNOSERVICE and VOFFLINE errors were leaking and were exposed to the
+      smb client.
+
+    * Log file server uuid values as part of the cm_server object when
+      available.  Dump the cm_server object list in response to "fs
+      memdump".
+
+    * Optimize the performance of resetting access control lists when
+      tokens are set or removed.
+
+    * Remove symlink recursion tests and increase max symlink count to 64
+      from 16.
+
+    * Windows specific Rx performance improvements.
+
+    * Support for Network Identity Manager 2.0
+
+  All UNIX client platforms
+
+    * Avoid issues with freeing resources at shutdown.
+
+    * Numerous fixes to disconnected AFS.
+
+    * Disconnected AFS fixes for replaying changes without double-freeing.
+
+    * Attempt to use krb524 principal conversion in aklog if available.
+
+  AIX
+
+    * Kerberos configuration at build time corrected.
+
+  Linux
+
+    * Default to dynamic allocation of AFS kernel cache entries to allow
+      growth for inotify()-pinned entries. (beagle, famd, etc)
+
+    * Change client truncation routines to avoid locking issues.
+
+    * IA64 port clients fixed on Linux 2.6.
+
+    * RPMs now install fstrace message catalog.
+
+    * Support through kernel 2.6.29 tested.
+
+    * Fix locking issues on CellServDB file in /proc.
+
+  OpenBSD
+
+    * Support OpenBSD 4.4
+
+
+OpenAFS 1.5.57 (2009-01-23)
+
+  All platforms
+
+    * Conditional compilation of rxdebug support is now possible.
+
+    * Documentation updates.
+
+    * Further race connditions in Rx have been corrected.
+
+  All server platforms
+
+    * Salvager no longer attempts to recreate headers in the wrong
+      partition.
+
+    * Volumes are properly marked in use on creation and subsequently on
+      examination with vos.
+
+  Microsoft Windows
+
+    * Undo the "UAC manifest fix" applied to afs_config.exe.
+
+    * Ensure that Freelance allocation of vnodes follow the AFS convention
+      of odd vnodes are directories and everything else is an even vnode.
+
+    * Add Freelance logic to mount point and symlink evaluation functions.
+
+    * Enhance smb_ParseASCIIBlock() so that it can handle all of the
+      STRING formats defined by the CIFS Technical Report 1.0.
+
+    * Validate the output of smb_ParseASCIIBlock() in all callers.  Return
+      CM_ERROR_BADSMB if the STRING field cannot be parsed.
+      CM_ERROR_BADSMB will cause the contents of the packet to be logged.
+
+    * If multiple SMB Raw Write operations were taking place at the same
+      time, there could be data corruption because unique event objects
+      were not generated for each Netbios receive operation.
+
+  All UNIX client platforms
+
+    * Userspace AFS library can now deal with large files when supported
+      by the platform.
+
+    * Numerous updates to disconnected AFS support, including changes to
+      allow reconnection to work in more circumstances.
+
+  FreeBSD
+
+    * FreeBSD unstrategy code has been updated.
+
+  Linux
+
+    * A race during file truncation has been corrected.
+
+    * System call probing routines have been updated.
+
+    * 2.6.29 is now supported.
+
+  MacOS
+
+    * 10.3 support has been corrected.
+
+  OpenBSD
+
+    * Initial OpenBSD 4.4 support.
+
+  Solaris
+
+    * Updates to allow compiling on newer OpenSolaris are now included.
+
+
+OpenAFS 1.5.56 (2008-12-30)
+
+  All platforms
+
+    * libuafs (userspace cache manager) updated to correct several errors.
+
+    * Additional rx debugging support is available as a conditional
+      compile.
+
+    * A race condition in Rx leading to a panic has been corrected.
+
+    * Rx idle time tracking has been corrected.
+
+    * ubik clone server support has been corrected.
+
+  All server platforms
+
+    * Salvager no longer leaves cores in vice partitions.
+
+    * The vol-dump tool now supports dumps larger than 2gb where possible.
+
+    * Operations on multiple files now report all FIDs in the audit log.
+
+    * butc XBSA support now works correctly on amd64.
+
+  Microsoft Windows
+
+    * The NetIDMgr AFS Provider automated configuration logic was broken
+      by the introduction of Kerberos referrals.  If the realm of the
+      identity cannot be determined, the workstation cell is now assumed
+      to belong to the newly created identity.
+
+    * Avoid a reference count under flow during rename operations.
+
+    * Avoid a crash caused by treating an arbitrary length directory
+      search mask as an 8.3 mask.
+
+    * Prevent rename operations if a case insensitive match for the target
+      name already exists and does not refer to the object being renamed.
+
+    * Increase the maximum number of background daemons to 64.
+
+    * Fix the UAC manifest applied to afs_config.exe
+
+  All UNIX client platforms
+
+    * Updates to disconnected AFS support.
+
+  FreeBSD
+
+    * FreeBSD 7.1 is now supported.
+
+    * amd64 FreeBSD is now supported.
+
+  Linux
+
+    * Generic fh (exportfs API) cache type is now available.
+
+    * Avoid some oopses due to backing_dev_info inode fields not being
+      filled.
+
+    * 2.6.28 is now supported.
+
+  MacOS
+
+    * 10.3 support has been corrected.
+
+  Solaris
+
+    * Large partition support has been corrected.
+
+    * Filesystem-agnostic cache is now available on Solaris 10 and 11.
+
+
+OpenAFS 1.5.55 (2009-11-10)
+
+  All platforms
+
+    * Salvager avoids leaving core files in vice partitions.
+
+    * NFS translator fixes.
+
+    * Unresponsive server handling fixes.
+
+    * A volserver race which could result in duplicate transactions is
+      fixed.
+
+  Microsoft Windows
+
+    * Fixes a panic caused by corruption of the SMB virtual circuit list.
+      (race condition)
+
+    * Fixes a panic caused by receipt of a UTF-16 string that cannot be
+      converted to UTF-8.
+
+    * Implements a more aggressive recovery algorithm for Netbios errors
+      that result in loss of communication to the AFS SMB server.
+
+    * Improve pioctl response time when testing whether or not a PATH is
+      in AFS.
+
+    * Adds support for linked cells.
+
+    * Increases the length of the cell and realm names that can be input
+      into the Network Identity Manage AFS provider configuration dialog.
+
+  All UNIX client platforms
+
+    * Disconnected AFS avoids infinite recursion during rmdir.
+
+  Linux
+
+    * Support for 2.6.28 (not complete for NFS translator modules).
+
+    * Support for using exportfs API for filesystem-agnostic cache.
+
+    * Disable backing store readahead.
+
+    * Avoid deadlocks when writing back mmapped files larger than the
+      cache.
+
+    * Avoid Oops when doing PAG garbage collection.
+
+
+OpenAFS 1.5.54 (2008-10-08)
+
+  All platforms
+
+    * Updates for new Tivoli X/Open API finding.
+
+    * A double-free is corrected in Rx.
+
+  All server platforms
+
+    * Ubik cleans up file descriptor cache correctly when doing recovery.
+
+    * Enhanced vldb error checker included.
+
+  Microsoft Windows
+
+    * Prevent a crash that could occur when multiple file / directory
+      change notifications are processed simultaneously.
+
+  MacOS
+
+    * AFS claims more free space so Finder will attempt file copies.
+
+  Linux
+
+    * Avoid spurious ENOENT when calling gwtcwd() on a volume root.
+
+    * Avoid spurious ENOTDIR during fakestat.
+
+
+OpenAFS 1.5.53 (2008-09-26)
+
+  All platforms
+
+    * rx avoids many packet leaks.
+
+    * rx jumbogram disabling now works (and is the default).
+
+  All server platforms
+
+    * Demand Attach fileserver tries to avoid issues tracking offline
+      status of volumes.
+
+  Microsoft Windows
+
+    * Many potential deadlock conditions due to out of order lock
+      acquisitions have been corrected.
+
+    * A race condition resulting in an undercount on the cm_scache_t
+      reference counts has been corrected.
+
+    * An empty string when sent as an ioctl path is now properly
+      interpreted as meaning the current directory.  This affects "fs
+      lsm", "symlink list", etc.
+
+    * Fix smb string parsing differences where the smb protocol
+      documentation does not match the actual Windows implementation.
+
+    * Random access denied errors fixed.
+
+    * A file server lock synchronization issue was corrected in SMB
+      NTCreateX and NTTranCreate operations.  This bug prevented properly
+      operation when loading roaming profiles.
+
+    * Fix a heap overwrite error during server probe operations if a new
+      server is added while a probe operation is in progress.
+
+    * Fix an LSA memory leak that was the result of an LSA error.
+
+    * Do not leak cm_cell_t objects if the VLDB server lookup fails.
+
+    * Only initialize rx mutex/lock objects once.
+
+    * Do not nul terminate the AFS volume name when reported to Windows.
+
+    * Improve VNOVOL error handling.  Prevent updated vl information from
+      being destroyed immediately after it was acquired.  This bug
+      prevented proper fail over when volumes are moved or removed from a
+      server.
+
+    * Remove volume id from the server volume list in response to VMOVED
+      and VNOVOL errors.
+
+    * "fs flushXXX" commands now destroy locally built B+ directory trees.
+
+    * Prevent mixture of locally modified directory pages and file server
+      directory pages.
+
+    * Fail over to alternate vl servers if a ubik error is returned.
+
+  All UNIX client platforms
+
+    * Disconnected AFS now supports read-write mode.
+
+    * volserver now builds correctly.
+
+  AIX
+
+    * AIX 6 is now supported.
+
+  FreeBSD
+
+    * FreeBSD 7 is now supported.
+
+  Linux
+
+    * cache bypass is now supported.
+
+    * 2.6.x kmod compilation now uses kernel compile options always.
+
+    * Support through 2.6.27.
+
+  MacOS
+
+    * Show more space free so Finder doesn't get confused.
+
+  Solaris 10
+
+    * Default to namei rather than inode.
+
+
+OpenAFS 1.5.52 (2008-08-18)
+
+  All platforms
+
+    * Initialize volume updateDate at volume creation.
+
+    * Avoid potential corruption of directories during salvage.
+
+    * Check for out of memory condition during allocation of additional Rx
+      packets.
+
+  Microsoft Windows
+
+    * Restore support for Windows 2000 (broken in 1.5.50).
+
+    * Perform additional validation on volume names in mount points during
+      creation and evaluation.
+
+    * Fix several deadlocks, races, and reference count issues.
+
+    * Further optimize SMB Directory Search processing and minimize the
+      number of InlineBulkStatus RPCs sent to the file server.
+
+    * Enable "bos restricted" operations.
+
+    * Fix the create of submounts used by the AFSCreds and afs_config
+      drive mapping tabs.
+
+    * Fix a short name truncation bug. (1.5.50)
+
+    * Fix the error code reported when attempting to delete a file on a
+      readonly volume or one that is marked with the readonly DOS
+      attribute.
+
+    * Fix a heap corruption error when reading the CellServDB file
+      location.
+
+    * Add the "RxUdpBufSize" registry value.  The new default is 256KB.
+
+    * Do not include trailing NULs in the directory search output.
+      (1.5.50)
+
+    * Pre-allocate 64 Rx Packet buffers per thread in order to improve
+      performance.
+
+    * For debugging: add smb lock requests and stat cache lock allocations
+      to the output from "fs memdump".
+
+  NetBSD
+
+    * Workaround broken sigwait() to allow fileserver to shut down
+      correctly pre NetBSD 5.0.
+
+  Solaris 10
+
+    * Default to namei fileserver; Allow inode fileserver at configure
+      time by override.
+
+  NFS translator
+
+    * Try harder to avoid kernel panics for malformed requests.
+
+
+OpenAFS 1.5.51 (2008-07-29)
+
+  All platforms
+
+    * salvager tries harder to arrange for clients to get VBUSY while
+      salvaging single volumes.
+
+    * salvager avoids certain corruption when salvaging directories.
+
+    * Rx connection clones disabled.
+
+  Microsoft Windows
+
+    * The 32-bit EXE 1.5.50 installer failed to properly install the C
+      Runtime library.  When used as an upgrade OpenAFS would continue to
+      work but when used as a new installation, OpenAFS binaries would
+      fail to load.
+
+    * Fixes the "fs" and "symlink" commands to properly parse Unicode path
+      prefixes during the pioctl remote procedure call.  This bug would
+      result in file not found errors for files and directories that
+      clearly exist.  (Bug introduced in 1.5.50)
+
+    * Large File support is disabled. (Bug introduced in 1.5.50)
+
+    * Removes the possibility of a deadlock during volume location update
+      operation if all of the reported file servers are unreachable at the
+      time of the update.
+
+    * Ensures that reference counts are properly incremented/decremented
+      on Rx connection objects used for volume location RPCs.
+
+    * Over Quota errors during cm_FSync() calls would lead to an infinite
+      loop as the error was never propagated to the caller.
+
+  All UNIX client platforms
+
+    * Bugfixes to disconnected AFS support in the cache manager.
+
+
+OpenAFS 1.5.50 (2008-07-16)
+
+  All platforms
+
+    * volserver puts recloned volumes back online before returning the
+      volume to the fileserver, avoiding spurious VNOVOL errors.
+
+    * Updated TSM X/Open API support available.
+
+    * Demand Attach fileserver will not crash due to accesses during
+      volume cloning.
+
+    * Substantial documentation updates.
+
+    * Demand Attach fileserver state tracking and analyzer tool
+      improvements.
+
+    * UAFS userspace cachemanager updates.
+
+    * Corrected support for anti-meltdown protection in the client.
+
+  Microsoft Windows
+
+    * UNICODE Character Set Support.
+
+    * Pioctl interfaces to the cache manager have been refactored to
+      provide layering between the SMB specific code and the general
+      purpose ioctl operation.
+
+    * Garbage collect dead SMB virtual circuits as soon as they are no
+      longer being referenced.  This avoids problems with outstanding
+      locks not being dropped when the virtual circuit becomes invalid.
+
+    * Remove the IBM Administration Reference documentation and replace it
+      with the OpenAFS Command Reference Manual.
+
+    * Avoid calling rx_SetDeadTime and rx_SetHardDeadTime functions each
+      time a connection is about to be used.  Do not hold a lock on the rx
+      connection object while it is being selected.  This avoids a race
+      between threads attempting to set the timeout values and removes a
+      bottleneck that was hampering performance.
+
+    * Ensure that the smb directory attribute is set for all directory
+      objects.
+
+    * Replace the VC Runtime EXE installer with the MSI installer in the
+      NSIS installer scripts.
+
+  Solaris
+
+    * Support for updates to OpenSolaris.
+
+  Linux
+
+    * Correct dentry revalidation for cross-directory renames.
+
+    * Updated rpm packaging materials for 1.5 release series and 2.4
+      kernels.
+
+    * Corrected syscall table probing.
+
+    * NFS translator updates for current kernels.
+
+
+OpenAFS 1.5.39 (2008-06-24)
+
+  All platforms
+
+    * Updates for Demand Attach fileserver.
+
+  Microsoft Windows
+
+    * Fix two memory leaks.
+
+    * Fix one missing lock.
+
+    * Handle access denied errors when writing dirty buffers.
+
+    * Fix two errors that would cause the *experimental* AFS Servers
+      to crash.
+
+
+OpenAFS 1.5.38 (2008-05-24)
+
+  All platforms
+
+    * Add read-only disconnected support.
+
+
+OpenAFS 1.5.37 (2008-05-21)
+
+  All platforms
+
+    * Includes a number of optimizations for testing.
+
+
+OpenAFS 1.5.36 (2008-05-09)
+
+  All platforms
+
+    * Rx optimizations now attempt to deal with high latency WANs.
+
+    * Client will not wait infinitely for a server which is not providing
+      data.  Additional servers will be polled without marking the server
+      which is not providing data down.
+
+    * vos move will not erroneously unlock locked vldb entries on failure.
+
+  All server platforms
+
+    * Fileserver avoids a potential infinite loop when a client
+      relinquishes an address.
+
+    * Fileserver large setting now configures more threads.
+
+    * Fileserver properly registers uuids of new clients.
+
+    * Ubik servers do not improperly hide updates from clients.
+
+    * Fileservers reserve enough file descriptors such that each thread
+      can cache one to avoid spurious errors.
+
+  Microsoft Windows
+
+    * Fix a cm_buf_t reference count leak when attempts to write dirty
+      buffers to the file server from within cm_IncrSyncer() fail.
+
+    * Prevent udebug from crashing.
+
+    * Another VNOVNODE issue fixed.  When writing a dirty buffer to the
+      file server, if VNOVNODE is received, mark all buffers as invalid
+      without further attempts to contact the file server.
+
+      
+=======> Changes back to 1.3 have not yet been incorporated here <=======
+
+
+OpenAFS 1.3
+
+  * -nosettime is now the default for afsd.  Use "-settime" to get the
+    old behavior.
+
+  * OpenBSD is now supported.
+
+  * Mountpoint directory information is now only faked for cross-cell
+    mountpoints when using the -fakestat flag (e.g. for the directories
+    under /afs, but not for most other volumes mounted inside the cell).
+    The -fakestat-all switch can be used to fake information for all
+    mountpoints.
+
+  * When fakestat is enabled on MacOSX, the Finder can be used to browse
+    a fully-populated /afs directory.  However, this precludes reliable
+    use of entire volumes as MacOS bundles (i.e. containing a Contents
+    directory in the root of the volume).
+
+  * Mountpoint directory information can be faked by the cache manager,
+    making operations such as stat'ing all cells under /afs much faster.
+    This is enabled by passing -fakestat to afsd, but might not be stable
+    on all platforms.
+
+
+OpenAFS 1.2.9
+
+  * The kaserver now defaults to not allowing interrealm authentication,
+    due to security vulnerabilities in the krb4 protocol.  The new
+    "-crossrealm" flag to the kaserver is provided to reenable interrealm
+    authentication if desired.
+
+  * RedHat Linux 9.0 is now supported.
+
+  * Solaris 9 12/02 is now supported.  Solaris 7 and 8 x86 should now
+    work again.
+
+  * On Linux machines using 2.2 series kernels, 2.2.19 or higher is now
+    required.
+
+  * An OpenAFS 1.2.9 afsd will not work with kernel modules built from
+    an earlier OpenAFS release.  In general, using a mismatched afsd and
+    kernel modules set is unsupported; it is not recommended that you use
+    such a configuration on a regular basis.
+
+
+OpenAFS 1.2.8
+
+  * Mountpoint directory information is now only faked for cross-cell
+    mountpoits when using the -fakestat flag (e.g. for the directories
+    under /afs, but not for most other volumes mounted inside the cell).
+    The -fakestat-all switch can be used to fake information for all
+    mountpoints.
+
+  * HPUX 11.0 is now supported.
+
+  * It is now possible for AFS to use Kerberos 5 directly, via rxkad 2b.
+    See the OpenAFS 1.2.8 Release Notes for more information on using this
+    capability.
+
+  * An NFS translator kernel module is now included and compiled by
+    default for Solaris only.
+
+
+OpenAFS 1.2.7
+
+  * MacOS X 10.2 is now supported.  FreeBSD 4.3 and later support is
+    included in this release, but is still under active development and
+    should only be used by those doing active development on the OpenAFS
+    FreeBSD client.
+
+  * When fakestat is enabled on MacOSX, the Finder can be used to browse a
+    fully-populated /afs directory.  However, this precludes reliable use
+    of entire volumes as MacOS bundles (i.e. containing a Contents
+    directory in the root of the volume).
+
+  * The fileserver will now use Rx pings to determine if clients are
+    reachable prior to allocating resources to them, to prevent asymmetric
+    clients from consuming all fileserver resources.
+
+
+OpenAFS 1.2.6
+
+  * Mountpoint directory information can be faked by the cache manager,
+    making operations such as stat'ing all cells under /afs much faster.
+    This is enabled by passing -fakestat to afsd.
+
+  * Solaris 9 FCS and Solaris 7 and 8 x86 are now supported.
+
+
+OpenAFS 1.2.5
+
+  * A remote denial of service attack in the AIX and IRIX clients has been
+    fixed.  Users of those platforms are strongly encouraged to upgrade.
+
+  * Fixed race conditions in fileserver that could result in crash.
+
+
+OpenAFS 1.2.4
+
+  * Server logfiles now more consistant about format in which hosts are
+    referred to.
+
+  * vfsck on Solaris will now allow force runs (using -y flag) even if old
+    inodes exist.
+
+
+OpenAFS 1.2.3
+
+  * Cell aliases for dynroot can be specified in the CellAlias file in
+    /usr/vice/etc or /usr/local/etc/openafs, in format "realname alias",
+    one per line.  They can also be managed at runtime with "fs newalias"
+    and "fs listaliases".
+
+
+OpenAFS 1.2.2
+
+  * Solaris 9 and Linux PA-RISC are now supported.
+
+  * fileserver will not erroneously delay legitimate errors for 3 seconds
+    after 10 errors are returned (e.g. stat() on a directory you can't
+    read).
+
+  * Rx MTU calculation now works for Irix, Solaris and Linux
+
+  * If afsd is started with the -dynroot flag, /afs will be locally
+    generated from the CellServDB.  AFSDB cells will be mounted
+    automatically upon access.
+
+  * The namei fileserver allows vice "partitions" to be directories
+    instead of partitions and will attach and display accordingly.
+    Creating the file "AlwaysAttach" in the /vicepX directory is used as
+    the trigger to attach it.
+
+  * TSM support for butc no longer requires editing a Makefile, simply
+    specify the --enable-tivoli-tsm configure option.
+
+  * Linux builds no longer require source changes every time the kernel
+    inode structure changes; the OpenAFS sources will now configure itself
+    to the actual inode structure as defined in the kernel sources.
+
+
+OpenAFS 1.2.1
+
+  * vfsck on Digital UNIX and Solaris will now refuse to fsck mounted
+    mounted partitions.
+
+
+OpenAFS 1.2.0
+
+  * AFS now supports --prefix and the other directory options of
+    configure.  By default AFS builds assuming it will be installed in
+    /usr/local.  In order to get traditional AFS directory paths (/usr/afs
+    and /usr/vice/etc) use the --enable-transarc-paths option to
+    configure.  More details on the new directory layout are found in
+    README.
+
+
+OpenAFS 1.1.1a
+
+  * Windows 95/98/ME/NT/2000 - Consistent versioning:  Installation, AFS
+    Control Center, Client dialog boxes and properties pages for
+    executables display a consistent OpenAFS version number.  Installation
+    detects previous installation and prompts the user for upgrade
+    options.
+
+  * Windows 95/98/ME/NT/2000 - Installation features:  During installation
+    the user can select the source of the CellservDB file, AFS home cell,
+    and drive mappings.  During installation a drive path mapping can
+    include a variable that will be substituted with the current UserName
+    that is logged in.
+
+  * Windows 2000/NT - Integrated logon:  The Integrated Logon feature
+    works now.
+
+  * Windows 95/98/ME - Logon script features:  The Windows 95/98/ME client
+    now offers a command-line option for starting up the AFS client
+    without authenication. It is now possilbe to start the AFS client
+    first and obtain tokens, and map drives all through Windows scripts.
+    This helps using Windows 95/98/ME client in Kerberos 5 environment.
+
+  * Windows 2000/NT - LANA numbers:  AFS client now scans the LANA numbers
+    to establish the correct NETBIOS connection.  NetBEUI is no longer
+    needed.  The user no longer needs to find the correct LANA number.
+
+  * Windows 2000/NT - OpenAFS naming consistancy:  Further progress has
+    been made to remove references to "Transarc AFS" and replace with
+    "OpenAFS".
+
+
+OpenAFS 1.0
+
+  * AFS now builds with configure. The README for building has been
+    updated and includes full details.
+
+  * A client system can now have multiple sysname values for @sys.  They
+    will be searched in order when looking up files in AFS.  The
+    -newsysname argument to fs sysname can be repeated to set multiple
+    sysnames.
+
+  * A new system group is created for new cells (system:ptsviewers with id
+    -203).  If this group exists, members of this group can examine and
+    read the entire protection database.  They can examine all users and
+    groups and can get the membership of any group.
+
+  * A new program, pt_util has been added to the distribution.  This
+    program allows users to print the contents of the protection database
+    or to edit the protection database without running a ptserver.  It can
+    be used to set up a new cell without ever running in noauth mode.  Run
+    pt_util -h for help.
+
+  * The fs setcrypt and fs getcrypt commands have been added.  These
+    commands allow the system administrator to require that the client
+    encrypt all authenticated traffic between the client workstation and
+    AFS.  The encryption used is weak, but is likely better than sending
+    unencrypted traffic in most environments.  Some functions, such as
+    looking for a volume may not be encrypted, but data transfer certainly
+    is.  By default data is not encrypted.  At this time no significant
+    experimentation with server performance has been conducted.
+
+  * By default AFS is compiled with AFS_AFSDB_ENV, enabling the -afsdb
+    option to be given to afsd on startup.  If this option is used, then
+    new cells will be looked up using AFSDB records stored in DNS if they
+    are not found in CellServDB.  This means that users can create
+    cross-cell mountpoints in directories they control to access cells not
+    in root.afs, and that cells in root.afs need not be in the client's
+    CellServDB.
+
+  * AFS database servers can be marked as read-only clones.  Surround the
+    hostname in square brackets on the bos addhost command and the
+    database server will never be elected sync site.  This is useful for
+    cells distributed over a wide region.
+
+  * The AFS servers now support the -syslog flag.  This flag causes them
+    to log to syslog rather than to files.  This flag is not supported on
+    NT.  For all servers besides the salvager, the flag can also be
+    specified as -syslog=facility, where facility is an integer facility
+    code from syslog.h.  A -syslogfacility option is provided for the
+    salvager to accomplish the same goal.
+
+  * If the --enable-fast-restart flag is given when configuring AFS, then
+    the salvager supports the -dontsalvage flag which causes it to exit
+    without salvaging any volumes.  If this is configured into the third
+    command of a fs process, then the fileserver will start without
+    salvaging.  It will fail to attach volumes that need salvaging and
+    they can be salvaged manually.  This provides significantly better
+    server startup performance at the cost of administrative complexity.
+
+  * If the --enable-bitmap-later flag is given when configuring AFS, then
+    the fileserver creates bitmaps for free vnodes on demand, allowing
+    faster starts.
+
+  * If bosserver finds a BosConfig.new file at startup, it reads this file
+    and renames it to BosConfig.  This allows bosserver to be reconfigured
+    at next restart.
+
+  * The bosserver can be placed in a restricted mode in which AFS
+    superusers are only granted limited access to the server host. The
+    following functionality is disabled when restricted mode is in use:
+
+      bos exec
+      bos getlog (except for files with no '/'s in their name)*
+      bos create *
+      bos delete
+      bos install
+      bos uninstall
+
+    specific exceptions are made for functionality that "bos salvage"
+    uses:
+
+    A cron bnode who's name is "salvage-tmp", time is now, and command
+    begins with "/usr/afs/bin/salvager" may be created. This bnode deletes
+    itself when complete, so no special "delete" support is needed.  This
+    functionality may be removed in the future if a "Salvage" RPC is
     implimented.
 
     The file with the exact path /usr/afs/logs/SalvageLog may be fetched,
@@ -271,47 +2053,47 @@ OpenAFS News -- history of user-visible changes.
 
     Restricted mode is enabled using a new bos command (bos setrestricted)
     or bossever command line switch (bosserver -restricted). Restricted
-    mode can be disabled by a) sending the bosserver process a SIGFPE (which
-    will then allow restricted operations until the next restart or
-    setrestricted command) or b) editing /usr/afs/local/BosConfig 
-    (or BosConfig.new), and restarting the bosserver.
+    mode can be disabled by a) sending the bosserver process a SIGFPE
+    (which will then allow restricted operations until the next restart or
+    setrestricted command) or b) editing /usr/afs/local/BosConfig (or
+    BosConfig.new), and restarting the bosserver.
 
-** The bos UserList of trusted administrators can now contain
-   cross-realm Kerberos principals.
+  * The bos UserList of trusted administrators can now contain cross-realm
+    Kerberos principals.
 
-** udebug now takes --server not --servers.
+  * udebug now takes --server not --servers.
 
-** Several error messages have been improved to include volume
-   numbers.
+  * Several error messages have been improved to include volume numbers.
 
-** Several new ports have been included for UNIX platforms: Darwin
-   (ppc_darwin_12 and ppc_darwin_13), Linux 2.4 (i386_linux24), Linux on
-   the Powerpc (ppc_linux22 and ppc_linux24), Linux on the Sparc
-   (sparc_linux22, sparc64_linux22 and sparc64_linux24) .
+  * Several new ports have been included for UNIX platforms: Darwin
+    (ppc_darwin_12 and ppc_darwin_13), Linux 2.4 (i386_linux24), Linux on
+    the Powerpc (ppc_linux22 and ppc_linux24), Linux on the Sparc
+    (sparc_linux22, sparc64_linux22 and sparc64_linux24).
 
-** Incomplete FreeBSD and Alpha Linux ports are included.  The
-   FreeBSD port has a working server and the Alpha Linux port has a
-   partially working client.
+  * Incomplete FreeBSD and Alpha Linux ports are included.  The FreeBSD
+    port has a working server and the Alpha Linux port has a partially
+    working client.
 
-** A native client for Windows 95/98/ME has been added to the distribution.
-   With this program, a gateway machine is no longer required for Windows 9x
-   to access AFS files.  One drive letter will be created on your machine by
-   default - Z:.  The Z: drive will be the root of the AFS tree, allowing you
-   to browse all sites that have AFS servers available.  Additional drive
-   letters can be defined for other AFS directories.  A Windows Explorer
-   shell extension is included that allows you to right click on items
-   within an AFS tree to bring up an "AFS" menu item and perform various
-   operations on a file or directory.  The most useful item is "Access
-   Control Lists", which allows you to view and edit the permissions of a
-   particular directory.  Command line tools are also available in the
-   install directory.  These commands include klog, unlog, tokens, kpasswd,
-   symlink, fs and pts.  The installable includes a readme file that contains
-   more information on how to use the client program and known issues.
+  * A native client for Windows 95/98/ME has been added to the
+    distribution.  With this program, a gateway machine is no longer
+    required for Windows 9x to access AFS files.  One drive letter will be
+    created on your machine by default - Z:.  The Z: drive will be the
+    root of the AFS tree, allowing you to browse all sites that have AFS
+    servers available.  Additional drive letters can be defined for other
+    AFS directories.  A Windows Explorer shell extension is included that
+    allows you to right click on items within an AFS tree to bring up an
+    "AFS" menu item and perform various operations on a file or directory.
+    The most useful item is "Access Control Lists", which allows you to
+    view and edit the permissions of a particular directory.  Command line
+    tools are also available in the install directory.  These commands
+    include klog, unlog, tokens, kpasswd, symlink, fs and pts.  The
+    installable includes a readme file that contains more information on
+    how to use the client program and known issues.
 
-** support for large caches in afsd.  Cachefiles are stored in
-   subdirectories.  The default is 2048 files per subdirectory, which
-   should work fine in most situations.  You can use the new afsd
-   option -files_per_subdir to change this number.  Note that the first
-   time you run afsd with this patch, your cachefiles will get moved
-   into subdirectories.  If you subsequently run an older version of
-   afsd, you will lose all your cached files.
+  * Support for large caches in afsd.  Cachefiles are stored in
+    subdirectories.  The default is 2048 files per subdirectory, which
+    should work fine in most situations.  You can use the new afsd option
+    -files_per_subdir to change this number.  Note that the first time you
+    run afsd with this patch, your cachefiles will get moved into
+    subdirectories.  If you subsequently run an older version of afsd, you
+    will lose all your cached files.
