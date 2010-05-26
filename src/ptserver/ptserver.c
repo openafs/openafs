@@ -297,9 +297,8 @@ main(int argc, char **argv)
 	} else if ((strncmp(arg, "-groupdepth", alen) == 0)
 		 || (strncmp(arg, "-depth", alen) == 0)) {
 	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
-	}
 #endif
-	else if (strncmp(arg, "-default_access", alen) == 0) {
+	} else if (strncmp(arg, "-default_access", alen) == 0) {
 	    prp_user_default = prp_access_mask(argv[++a]);
 	    prp_group_default = prp_access_mask(argv[++a]);
 	}
