@@ -93,10 +93,10 @@ $(IDLFILES):afsrpc.idl
 	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /app_config $?
 
 ms-srvsvc.h ms-srvsvc_s.c: ms-srvsvc.idl
-	midl /Os ms-srvsvc.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /Os ms-srvsvc.idl
 
 ms-wkssvc.h ms-wkssvc_s.c: ms-wkssvc.idl
-	midl /Os ms-wkssvc.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /Os ms-wkssvc.idl
 
 $(OUT)\ms-srvsvc_s.obj: ms-srvsvc_s.c
 	$(C2OBJ) /FImsrpc.h /Fo$@ $**
@@ -179,7 +179,7 @@ ILIBDIR = $(DESTDIR)\lib
 #                                                    
 $(INCFILEDIR)\afsd_eventmessages.h:  afsd_eventmessages.mc         
 	mc afsd_eventmessages.mc                           
-                                                     
+
 ############################################################################
 #
 # Flags for linking LOGON DLL'S
