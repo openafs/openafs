@@ -46,7 +46,7 @@ The Tape Coordinator uses this capacity value or the one on the Backup
 System tape label to track how much space remains as it writes data to a
 tape or backup data file. The appropriate value to record for a tape
 depends on the size of the tapes usually used in the device and whether it
-has a compression mode; for suggested values, see the I<IBM AFS
+has a compression mode; for suggested values, see the I<OpenAFS
 Administration Guide> chapter on configuring the Backup System. If using a
 value obtained from the B<fms> command, reduce it by 10% to 15% before
 recording it in the file.
@@ -98,7 +98,7 @@ available for actual data.
 
 The appropriate value to record for a tape depends on the size of the
 tapes usually used in the device and whether it has a compression mode;
-for suggested values, see the I<IBM AFS Administration Guide> chapter on
+for suggested values, see the I<OpenAFS Administration Guide> chapter on
 configuring the Backup System. If using a value obtained from the B<fms>
 command, increase it by 10% to 15% before recording it in the file.
 

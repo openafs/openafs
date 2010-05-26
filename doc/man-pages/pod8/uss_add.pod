@@ -238,7 +238,7 @@ variable.
 
 =back
 
-See the chapter on uss in the I<IBM AFS Administration Guide> for further
+See the chapter on uss in the I<OpenAFS Administration Guide> for further
 explanation.
 
 =item B<-cell> <I<cell name>>

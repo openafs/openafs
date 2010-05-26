@@ -18,7 +18,7 @@ superuser C<root>.
 
 The Authentication Server is possibly unable to create these files on some
 operating systems that AFS otherwise supports, making the B<kdb> command
-inoperative. See the I<IBM AFS Release Notes> for details.
+inoperative.
 
 =head1 SEE ALSO
 

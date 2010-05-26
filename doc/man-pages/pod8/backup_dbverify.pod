@@ -76,7 +76,7 @@ The database is undamaged and can be used.
 
 The database is damaged. You can use the backup savedb command to repair
 many kinds of corruption as it creates a backup copy.  For more detailed
-instructions, see the I<IBM AFS Administration Guide> chapter about
+instructions, see the I<OpenAFS Administration Guide> chapter about
 performing backup operations.
 
 =back

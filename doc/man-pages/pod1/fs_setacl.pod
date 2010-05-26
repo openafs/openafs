@@ -28,8 +28,7 @@ the B<-dir> argument.
 If the B<-dir> argument designates a pathname in DFS filespace (accessed
 via the AFS/DFS Migration Toolkit Protocol Translator), it can be a file
 as well as a directory. The ACL must already include an entry for
-C<mask_obj>, however. For more details, refer to the I<IBM AFS/DFS
-Migration Toolkit Administration Guide and Reference>.
+C<mask_obj>, however.
 
 Only user and group entries are acceptable values for the B<-acl>
 argument. Do not place machine entries (IP addresses) directly on an ACL;
@@ -169,8 +168,8 @@ It is acceptable to mix entries that combine the individual letters with
 entries that use the shorthand words, but not use both types of notation
 within an individual pairing of user or group and permissions.
 
-To learn the proper format and acceptable values for DFS ACL entries, see
-the I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>.
+If setting ACLs on a pathname in DFS filespace, see the DFS documentation
+for the proper format and acceptable values for DFS ACL entries.
 
 =item B<-clear>
 
@@ -279,8 +278,6 @@ permission.
 L<fs_copyacl(1)>,
 L<fs_listacl(1)>,
 L<fs_mkmount(1)>
-
-I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>
 
 =head1 COPYRIGHT
 

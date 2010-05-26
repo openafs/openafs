@@ -150,8 +150,7 @@ permission, DFS C<c> (control) replaces AFS C<a> (administer), and there
 is no DFS equivalent to the AFS C<k> (lock) permission. The meanings of
 the various permissions also differ slightly, and DFS does not implement
 negative permissions. For a complete description of DFS permissions, see
-the DFS documentation and the I<IBM AFS/DFS Migration Toolkit
-Administration Guide and Reference>.
+the DFS documentation.
 
 =head1 EXAMPLES
 
@@ -201,8 +200,6 @@ directory that precedes it in the pathname.
 L<fs_cleanacl(1)>,
 L<fs_copyacl(1)>,
 L<fs_setacl(1)>
-
-I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>
 
 =head1 COPYRIGHT
 

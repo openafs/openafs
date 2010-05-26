@@ -116,7 +116,7 @@ If the Tape Coordinator machine is an AIX machine, use the SMIT utility to
 set the device's block size to 0 (zero), indicating variable block
 size. Otherwise, tape devices attached to machines running other operating
 systems sometimes cannot read tapes written on AIX machines.  For
-instructions, see the I<IBM AFS Administration Guide> chapter about
+instructions, see the I<OpenAFS Administration Guide> chapter about
 configuring the Backup System.
 
 =head1 OPTIONS

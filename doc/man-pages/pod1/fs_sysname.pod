@@ -105,11 +105,11 @@ as the local superuser C<root>.
 L<fs_exportafs(1)>,
 L<sys(1)>
 
-I<OpenAFS Quick Beginnings>
-L<http://www.openafs.org/pages/doc/QuickStartUnix/auqbg000.htm>
+The I<OpenAFS Quick Start Guide> at
+L<http://docs.openafs.org/QuickStartUnix/>.
 
-I<OpenAFS Administration Guide>
-L<http://www.openafs.org/pages/doc/AdminGuide/auagd000.htm>
+The I<OpenAFS Administration Guide>
+L<http://docs.openafs.org/AdminGuide/>.
 
 For the list of assigned standard sysname values, see
 L<http://grand.central.org/numbers/systypes.html>

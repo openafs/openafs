@@ -317,7 +317,7 @@ of 60 seconds.
 
 =head1 EXAMPLES
 
-See the chapter on monitoring tools in the I<IBM AFS Administration
+See the chapter on monitoring tools in the I<OpenAFS Administration
 Guide>, which illustrates the displays that result from different
 combinations of options.
 

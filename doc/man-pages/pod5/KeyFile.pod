@@ -85,7 +85,7 @@ L<upclient(8)>,
 L<upserver(8)>
 
 The I<OpenAFS Administration Guide> at
-L<http://docs.openafs.org/AdminGuide/index.html>.
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 

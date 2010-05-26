@@ -26,8 +26,7 @@ information on privileged actions performed by the Authentication Server.
 
 It is possible that on some operating systems that AFS otherwise supports,
 the Authentication Server cannot create the F</usr/afs/logs/AuthLog.dir>
-and F</usr/afs/logs/AuthLog.pag> files, making this command
-inoperative. See the I<IBM AFS Release Notes> for details.
+and F</usr/afs/logs/AuthLog.pag> files, making this command inoperative.
 
 =head1 OPTIONS
 

@@ -172,7 +172,7 @@ shown here on two lines only for legibility reasons.)
    % backup addvolentry -name fs2 -server fs2.abc.com \
                         -partition /vicepb -volumes ".*"
 
-The chapter in the I<IBM AFS Administration Guide> about configuring the
+The chapter in the I<OpenAFS Administration Guide> about configuring the
 AFS Backup System presents additional examples as well as advice on
 grouping volumes.
 

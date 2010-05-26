@@ -44,10 +44,9 @@ defaults.
 The Cache Manager stores a preference rank in kernel memory as a paired IP
 address and numerical rank. If a file server machine is multihomed, the
 Cache Manager assigns a distinct rank to each of the machine's addresses
-(up to the number of addresses that the VLDB can store per machine, which
-is specified in the I<IBM AFS Release Notes>). Once calculated, a rank
-persists until the machine reboots, or until this command is used to
-change it.
+(up to the number of addresses that the VLDB can store per machine). Once
+calculated, a rank persists until the machine reboots, or until this
+command is used to change it.
 
 The Cache Manager sets default VL Server preference ranks as it
 initializes, randomly assigning a rank from the range 10,000 to 10,126 to

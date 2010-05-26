@@ -16,7 +16,7 @@ on every AFS client machine. To change a client machine's cell membership,
 edit the file and reboot the machine.
 
 The file is in ASCII format and contains a character string on a single
-line. The I<IBM AFS Quick Beginnings> instructs the administrator to
+line. The I<OpenAFS Quick Start Guide> instructs the administrator to
 create it during the installation of each client machine.
 
 The client machine's cell membership determines three defaults important
@@ -78,7 +78,7 @@ every AFS server machine.
 The file is in ASCII format and contains a character string on a single
 line. The initial version of the file is created with the B<bos
 setcellname> command during the installation of the cell's first file
-server machine, and the I<IBM AFS Quick Beginnings> includes instructions
+server machine, and the I<OpenAFS Quick Start Guide> includes instructions
 for copying it over to additional server machine during their
 installation.
 

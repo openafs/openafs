@@ -16,7 +16,7 @@ directory. The ACL lists users and groups and specifies which of seven
 possible access permissions they have for the directory and the files it
 contains. (It is still possible to set a directory or file's mode bits,
 but AFS interprets them in its own way; see the chapter on protection in
-the I<IBM AFS Administration Guide> for details.)
+the I<OpenAFS Administration Guide> for details.)
 
 AFS enables users to define groups in the Protection Database and place
 them on ACLs to extend a set of rights to multiple users simultaneously.
@@ -208,6 +208,9 @@ L<pts_setfields(1)>,
 L<pts_setmax(1)>,
 L<pts_sleep(1)>,
 L<pts_source(1)>
+
+The I<OpenAFS Administration Guide> at
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 

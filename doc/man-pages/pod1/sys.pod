@@ -18,9 +18,9 @@ The B<sys> command displays the string set at compile time that indicates
 the local machine's CPU/operating system (OS) type, conventionally called
 the I<sysname>.  This string is the default for the value stored in kernel
 memory.  The Cache Manager substitutes this string for the I<@sys>
-variable which can occur in AFS pathnames; the I<IBM AFS Quick Beginnings>
-and I<IBM AFS Administration Guide> explain how using I<@sys> can simplify
-cell configuration.
+variable which can occur in AFS pathnames; the I<OpenAFS Quick Start
+Guide> and I<OpenAFS Administration Guide> explain how using I<@sys> can
+simplify cell configuration.
 
 To set a new value in kernel memory, use the B<fs sysname> command.  To
 view the current value set in the kernel, use either B<fs sysname> or
@@ -60,9 +60,10 @@ None
 L<fs_sysname(1)>,
 L<livesys(1)>
 
-I<OpenAFS Quick Beginnings>
+The I<OpenAFS Quick Start Guides> at L<http://docs.openafs.org/>.
 
-I<OpenAFS Administration Guide>
+The I<OpenAFS Administration Guide> at
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 

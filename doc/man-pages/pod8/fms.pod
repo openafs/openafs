@@ -32,7 +32,7 @@ The intended use of this command is to determine tape capacity and
 filemark size values that can be specified in a tape device's entry in the
 F</usr/afs/backup/tapeconfig> file. For certain types of tape drives, the
 Tape Coordinator operates more efficiently when the F<tapeconfig> file
-lists accurate values. For further discussion, see the I<IBM AFS
+lists accurate values. For further discussion, see the I<OpenAFS
 Administration Guide> chapter on configuring the Backup System.
 
 Insert a tape in the drive before issuing this command.
@@ -43,7 +43,7 @@ Do not use this command on compressing tape devices in compression mode or
 with tape devices that handle tapes of multigigabyte (or multiterabyte)
 capacity. It does not produce accurate results in those cases.  For
 alternate suggestions on the values to record in the B<tapeconfig> file
-for compressing drives, see the I<IBM AFS Administration Guide> chapter on
+for compressing drives, see the I<OpenAFS Administration Guide> chapter on
 configuring the Backup System.
 
 Running the command completely overwrites the tape, so use a blank one or

@@ -230,15 +230,8 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * All of the manual references refer to the "IBM" manual.  We should
-     decide how to handle this terminology-wise.
-
    * The salvager actually creates a bunch of SalvageLog files and then
      combines them, but the SalvageLog man page doesn't reflect this.
-
-   * The references to the other OpenAFS manuals, such as the Quick Start
-     guide and the Admin Guide, should be links, probably to the documents
-     on openafs.org.
 
    * There's no mention of the Kerberos v5 support.  At least, we need
      some disclaimers under klog and friends talking about sites without

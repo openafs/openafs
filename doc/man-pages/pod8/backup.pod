@@ -260,7 +260,7 @@ on every Backup Server machine, every Volume Location (VL) Server machine,
 and every file server machine that houses affected volumes. By convention,
 a common F<UserList> file is distributed to all database server and file
 server machines in the cell. See the chapter on privileged users in the
-I<IBM AFS Administration Guide> for more information on this type of
+I<OpenAFS Administration Guide> for more information on this type of
 privilege.
 
 If the B<-localauth> flag is included, the user must instead be logged on

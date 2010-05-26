@@ -139,7 +139,7 @@ on). If restoring multiple volumes, the same ordered list of port offsets
 must apply to all of them. If not, either issue this command separately
 for each volume, or use the B<vos volsetrestore> command after defining
 groups of volumes that were dumped to compatible tape types. For further
-discussion, see the I<IBM AFS Administration Guide>.
+discussion, see the I<OpenAFS Administration Guide>.
 
 The Tape Coordinator's default response to this command is to access the
 first tape it needs by invoking the B<MOUNT> instruction in the local

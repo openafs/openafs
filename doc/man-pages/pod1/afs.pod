@@ -73,7 +73,7 @@ I<operation_code> portion of the command name.
 The I<operation_code> tells the command interpreter and server process
 which action to perform. Most command suites include several operation
 codes. The man pages for each command name describe each operation code in
-detail, and the I<IBM AFS Administration Guide> describes how to use them
+detail, and the I<OpenAFS Administration Guide> describes how to use them
 in the context of performing administrative tasks.
 
 Several AFS commands do not belong to a suite and so their names do not
