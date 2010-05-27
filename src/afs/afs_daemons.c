@@ -991,7 +991,6 @@ brequest_release(struct brequest *tb)
 	crfree(tb->cred);
 	tb->cred = (afs_ucred_t *)0;
     }
-    tb->code = 0;
     afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
 }
 
