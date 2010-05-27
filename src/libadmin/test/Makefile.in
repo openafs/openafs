@@ -38,6 +38,8 @@ AFSCPOBJS =\
 	util.o \
 	vos.o
 
+all test tests: afscp
+
 client.o: client.c
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
@@ -46,8 +48,6 @@ afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
 
 #######################################################################
-all test tests: afscp
-
 install:
 
 dest:
