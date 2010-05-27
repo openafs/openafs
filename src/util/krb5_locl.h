@@ -7,14 +7,24 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
-#include <time.h>
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <string.h>
 #include <sys/types.h>
-#include <pwd.h>
-#include <assert.h>
+#include <time.h>
+#include <unistd.h>
+
+#ifndef TRUE
+# define TRUE 1
+#endif
+#ifndef FALSE
+# define FALSE 0
+#endif
 
 #define KRB5_LIB_FUNCTION static AFS_UNUSED
 #define KRB5_LIB_CALL
@@ -77,7 +87,7 @@ krb5_string_to_deltat(const char *str, krb5_deltat *t) {
     return 1;
 }
 
-static void krb5_clear_error_message(krb5_context context) {
+KRB5_LIB_FUNCTION void krb5_clear_error_message(krb5_context context) {
     return;
 }
 

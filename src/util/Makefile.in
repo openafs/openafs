@@ -156,7 +156,7 @@ fstab.o: ${srcdir}/fstab.c ${includes}
 base64.o: ${srcdir}/base64.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/base64.c
 
-config_file.o : ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
+config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
 	${CCOBJ} ${CFLAGS} -c ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
 
 hostparse.o: ${srcdir}/hostparse.c ${includes}
