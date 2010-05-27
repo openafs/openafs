@@ -101,9 +101,14 @@ typedef struct cm_dirOpBuffer {
 
 #define CM_DIROPBUFF_INUSE      0x1
 
+/* lock types */
 #define CM_DIRLOCK_NONE         0x0
 #define CM_DIRLOCK_READ         0x1
 #define CM_DIRLOCK_WRITE        0x2
+
+/* flags for cm_dirOp operations */
+#define CM_DIROP_FLAG_NONE         0x0000
+#define CM_DIROP_FLAG_NOBUILDTREE  0x0001
 
 /* Used for managing transactional directory operations.  Each
    instance should only be used by one thread. */
@@ -130,7 +135,7 @@ typedef struct cm_dirOp {
 
 extern long
 cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
-              afs_uint32 lockType, cm_dirOp_t * op);
+              afs_uint32 lockType, afs_uint32 flags, cm_dirOp_t * op);
 
 extern int
 cm_CheckDirOpForSingleChange(cm_dirOp_t * op);
@@ -187,4 +192,5 @@ extern int
 cm_MemDumpDirStats(FILE *outputFile, char *cookie, int lock);
 
 extern afs_uint64 dir_enums;
+
 #endif /*  __CM_DIR_ENV__ */

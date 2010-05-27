@@ -977,7 +977,7 @@ cm_DirFindItem(cm_dirOp_t * op,
  */
 long
 cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
-              afs_uint32 lockType, cm_dirOp_t * op)
+              afs_uint32 lockType, afs_uint32 flags, cm_dirOp_t * op)
 {
     long code;
     int i, mxheld = 0, haveWrite = 0;
@@ -1064,7 +1064,8 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                     scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
                 }
 
-                if (!scp->dirBplus) {
+                if ((!scp->dirBplus) &&
+                    (!(flags & CM_DIROP_FLAG_NOBUILDTREE))) {
                     if (mxheld) {
                         lock_ReleaseWrite(&scp->rw);
                         mxheld = 0;
@@ -1095,7 +1096,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                          if (scp->dirBplus)
                             scp->dirDataVersion = scp->dataVersion;
                     }
-                }
+                } /* build btree */
             }
 
             if (code == 0) {

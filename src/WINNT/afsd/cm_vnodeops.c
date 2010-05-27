@@ -499,7 +499,8 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 
             code = ENOENT;
 
-            code = cm_BeginDirOp(scp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+            code = cm_BeginDirOp(scp, userp, reqp, CM_DIRLOCK_READ,
+                                 CM_DIROP_FLAG_NONE, &dirop);
             if (code == 0) {
 
 #ifdef USE_BPLUS
@@ -1092,7 +1093,8 @@ retry_lookup:
         int usedBplus = 0;
 #endif
 
-        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ,
+                             CM_DIROP_FLAG_NONE, &dirop);
         if (code == 0) {
 #ifdef USE_BPLUS
             code = cm_BPlusDirLookup(&dirop, nnamep, &rock.fid);
@@ -1592,7 +1594,8 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     if (fnamep == NULL) {
         code = -1;
 #ifdef USE_BPLUS
-        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ,
+                             CM_DIROP_FLAG_NONE, &dirop);
         if (code == 0) {
             code = cm_BPlusDirLookupOriginalName(&dirop, cnamep, &fnamep);
             if (code == 0)
@@ -1615,7 +1618,8 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     code = cm_Lookup(dscp, cnamep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* make sure we don't screw up the dir status during the merge */
-    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE,
+                         CM_DIROP_FLAG_NONE, &dirop);
 
     lock_ObtainWrite(&dscp->rw);
     sflags = CM_SCACHESYNC_STOREDATA;
@@ -2802,7 +2806,8 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
      * that someone who does a chmod will know to wait until our call
      * completes.
      */
-    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, CM_DIROP_FLAG_NONE,
+                  &dirop);
     lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -2979,7 +2984,8 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
      * data, so that someone who does a chmod on the dir will wait until
      * our call completes.
      */
-    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, CM_DIROP_FLAG_NONE,
+                  &dirop);
     lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3101,7 +3107,8 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         return CM_ERROR_CROSSDEVLINK;
     }
 
-    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, CM_DIROP_FLAG_NONE,
+                  &dirop);
     lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3199,7 +3206,8 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
      * so that someone who does a chmod on the dir will wait until our
      * call completes.
      */
-    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, CM_DIROP_FLAG_NONE,
+                  &dirop);
     lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3324,7 +3332,8 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     if (fnamep == NULL) {
         code = -1;
 #ifdef USE_BPLUS
-        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+        code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ,
+                             CM_DIROP_FLAG_NONE, &dirop);
         if (code == 0) {
             code = cm_BPlusDirLookupOriginalName(&dirop, cnamep, &fnamep);
             if (code == 0)
@@ -3344,7 +3353,8 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
      * so that someone who does a chmod on the dir will wait until our
      * call completes.
      */
-    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, &dirop);
+    cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, CM_DIROP_FLAG_NONE,
+                  &dirop);
     lock_ObtainWrite(&dscp->rw);
     code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3523,7 +3533,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     if (oldNamep == NULL) {
         code = -1;
 #ifdef USE_BPLUS
-        code = cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_READ, &oldDirOp);
+        code = cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_READ,
+                             CM_DIROP_FLAG_NONE, &oldDirOp);
         if (code == 0) {
             code = cm_BPlusDirLookupOriginalName(&oldDirOp, cOldNamep, &oldNamep);
             if (code == 0)
@@ -3554,7 +3565,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         }
 
         oneDir = 1;
-        cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
+        cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE,
+                      CM_DIROP_FLAG_NONE, &oldDirOp);
         lock_ObtainWrite(&oldDscp->rw);
         cm_dnlcRemove(oldDscp, cOldNamep);
         cm_dnlcRemove(oldDscp, cNewNamep);
@@ -3588,7 +3600,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         }
 
         if (oldDscp->fid.vnode < newDscp->fid.vnode) {
-            cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
+            cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE,
+                          CM_DIROP_FLAG_NONE, &oldDirOp);
             lock_ObtainWrite(&oldDscp->rw);
             cm_dnlcRemove(oldDscp, cOldNamep);
             code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,
@@ -3597,7 +3610,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             if (code != 0)
                 cm_EndDirOp(&oldDirOp);
             if (code == 0) {
-                cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
+                cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE,
+                              CM_DIROP_FLAG_NONE, &newDirOp);
                 lock_ObtainWrite(&newDscp->rw);
                 cm_dnlcRemove(newDscp, cNewNamep);
                 code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
@@ -3617,7 +3631,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         }
         else {
             /* lock the new vnode entry first */
-            cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE, &newDirOp);
+            cm_BeginDirOp(newDscp, userp, reqp, CM_DIRLOCK_NONE,
+                          CM_DIROP_FLAG_NONE, &newDirOp);
             lock_ObtainWrite(&newDscp->rw);
             cm_dnlcRemove(newDscp, cNewNamep);
             code = cm_SyncOp(newDscp, NULL, userp, reqp, 0,
@@ -3626,7 +3641,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             if (code != 0)
                 cm_EndDirOp(&newDirOp);
             if (code == 0) {
-                cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE, &oldDirOp);
+                cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE,
+                              CM_DIROP_FLAG_NONE, &oldDirOp);
                 lock_ObtainWrite(&oldDscp->rw);
                 cm_dnlcRemove(oldDscp, cOldNamep);
                 code = cm_SyncOp(oldDscp, NULL, userp, reqp, 0,

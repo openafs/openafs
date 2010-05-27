@@ -1135,7 +1135,8 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     lock_ReleaseWrite(&scp->rw);
 
 #ifdef USE_BPLUS
-    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ,
+                         CM_DIROP_FLAG_NONE, &dirop);
     if (code == 0) {
         code = cm_BPlusDirLookupOriginalName(&dirop, cp, &originalName);
         /* The cm_Dir* functions can't be used to lookup the
@@ -2265,7 +2266,8 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     lock_ReleaseWrite(&scp->rw);
         
 #ifdef USE_BPLUS
-    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ, &dirop);
+    code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ,
+                         CM_DIROP_FLAG_NONE, &dirop);
     if (code == 0) {
         code = cm_BPlusDirLookupOriginalName(&dirop, clientp, &originalName);
         /* cm_Dir*() functions can't be used to lookup the original

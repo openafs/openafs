@@ -518,7 +518,8 @@ NET_API_STATUS NetrShareEnum(
     if (ResumeHandle == NULL || *ResumeHandle == 0) {
         cm_dirOp_t    dirop;
 
-        code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, &dirop);
+        code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ,
+                             CM_DIROP_FLAG_NONE, &dirop);
         if (code == 0) {
             code = cm_BPlusDirEnumerate(dscp, userp, &req, TRUE, NULL, TRUE, &enump);
             if (code) {
