@@ -1363,9 +1363,9 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *executable = NULL;
-    unsigned long new_time = 0;
-    unsigned long old_time = 0;
-    unsigned long bak_time = 0;
+    afs_int32 new_time = 0;
+    afs_int32 old_time = 0;
+    afs_int32 bak_time = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen

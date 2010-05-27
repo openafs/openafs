@@ -53,7 +53,6 @@ bucoord/commands.c   : all	     : Ubik_Call
 butc/tcudbprocs.c    : all	     : ubik_Call
 kauth/admin_tools.c  : all           : ubik_Call nonsense
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
-libadmin/bos/afs_bosAdmin.c: all     : time types, and const
 libadmin/kas/afs_kasAdmin.c: all     : Ubik_Call nonsense
 libadmin/samples/rxstat_query_peer.c : all : util_RPCStatsStateGet types
 libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types

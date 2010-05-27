@@ -2824,8 +2824,8 @@ bos_ExecutableRevert(const void *serverHandle, const char *execFile,
 
 int ADMINAPI
 bos_ExecutableTimestampGet(const void *serverHandle, const char *execFile,
-			   unsigned long *newTime, unsigned long *oldTime,
-			   unsigned long *bakTime, afs_status_p st)
+			   afs_int32 *newTime, afs_int32 *oldTime,
+			   afs_int32 *bakTime, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2964,7 +2964,7 @@ bos_ExecutableRestartTimeSet(const void *serverHandle, bos_Restart_t type,
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 restartType = 0;
-    struct ktime restartTime;
+    struct bozo_netKTime restartTime;
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutableRestartTimeSet;
@@ -3050,7 +3050,7 @@ bos_ExecutableRestartTimeGet(const void *serverHandle, bos_Restart_t type,
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 restartType = 0;
-    struct ktime restartTime;
+    struct bozo_netKTime restartTime;
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutableRestartTimeGet;
@@ -3154,7 +3154,7 @@ bos_LogGet(const void *serverHandle, const char *log,
 
     tcall = rx_NewCall(b_handle->server);
     have_call = 1;
-    tst = StartBOZO_GetLog(tcall, log);
+    tst = StartBOZO_GetLog(tcall, (char *) log);
 
     if (tst != 0) {
 	goto fail_bos_LogGet;
@@ -3295,7 +3295,7 @@ bos_CommandExecute(const void *serverHandle, const char *command,
 	goto fail_bos_CommandExecute;
     }
 
-    tst = BOZO_Exec(b_handle->server, command);
+    tst = BOZO_Exec(b_handle->server, (char *) command);
 
     if (tst == 0) {
 	rc = 1;
