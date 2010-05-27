@@ -26,6 +26,12 @@ and cannot recover from failures by reviewing the file. The log contents
 are useful for administrative evaluation of process failures and other
 problems.
 
+=head1 CAUTIONS
+
+The Authentication Server is obsolete and is provided only for sites that
+need to use it while preparing for a migration to Kerberos KDC. It will be
+removed in a future version of OpenAFS.
+
 =head1 SEE ALSO
 
 L<UserList(5)>,

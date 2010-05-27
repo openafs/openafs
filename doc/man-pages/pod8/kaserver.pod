@@ -18,10 +18,16 @@ B<kaserver> [B<-noAuth>] [B<-database> <I<dbpath>>]
 
 =head1 DESCRIPTION
 
-The B<kaserver> command initializes the Authentication Server, which runs
-on every database server machine. In the conventional configuration, its
-binary file is located in the F</usr/afs/bin> directory on a file server
-machine.
+The B<kaserver> command initializes the Authentication Server, an obsolete
+way of providing authentication services to an AFS cell. It should no
+longer be used; instead, it should be replaced with a Kerberos version 5
+KDC. It is provided only for support of sites already running the
+Authentication Server and that have not yet migrated to Kerberos version
+5.
+
+For a cell using the Authentication Server, it runs on every database
+server machine. In the conventional configuration, its binary file is
+located in the F</usr/afs/bin> directory on a file server machine.
 
 The B<kaserver> command is not normally issued at the command shell prompt
 but rather placed into a file server machine's F</usr/afs/local/BosConfig>
@@ -60,6 +66,21 @@ F<AuthLog.pag>.
 
 This command does not use the syntax conventions of the AFS command
 suites. Provide the command name and all option names in full.
+
+=head1 CAUTIONS
+
+The Authentication Server provides only Kerberos version 4, which is no
+longer considered sufficiently secure. It can only use DES encryption for
+user keys, is vulnerable to known flaws in the Kerberos version 4
+protocol, and is based on protocols that are obsolete and no longer
+developed. The Authentication Server is also not widely tested and is
+known to have problems on some platforms OpenAFS otherwise supports.
+
+The Authentication Server should not be used for any new deployment. It is
+provided only for sites that need to use it while preparing for a
+migration to Kerberos KDC. No significant updates to the Authentication
+Server will be developed, and it will be removed from a future version of
+OpenAFS.
 
 =head1 OPTIONS
 

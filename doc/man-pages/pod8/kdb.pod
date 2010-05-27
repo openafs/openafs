@@ -20,9 +20,16 @@ F<AuthLog.pag> files associated with the F<AuthLog> file that resides on
 the local disk, by default in the F</usr/afs/logs> directory. The files
 must exist in that directory, which normally implies that the
 Authentication Server is running on the machine. The files contain
-information on privileged actions performed by the Authentication Server.
+information on privileged actions performed by the obsolete Authentication
+Server.
 
 =head1 CAUTIONS
+
+The B<kdb> command is only used to read the log files from the obsolete
+Authentication Server, which should no longer be used. It is provided for
+sites that have not yet migrated to a Kerberos version 5 KDC. The
+Authentication Server and supporting commands, including B<kdb>, will be
+removed in a future version of OpenAFS.
 
 It is possible that on some operating systems that AFS otherwise supports,
 the Authentication Server cannot create the F</usr/afs/logs/AuthLog.dir>

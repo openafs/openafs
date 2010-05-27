@@ -5,10 +5,12 @@ kas - Introduction to the kas command suite
 =head1 DESCRIPTION
 
 The commands in the B<kas> command suite are the administrative interface
-to the Authentication Server, which runs on each database server machine
-in a cell, maintains the Authentication Database, and provides the
-authentication tickets that client applications must present to AFS
-servers in order to obtain access to AFS data and other services.
+to the Authentication Server, an obsolete AFS server process that
+maintains the Authentication Database and provides the authentication
+tickets that client applications must present to AFS servers in order to
+obtain access to AFS data and other services. It is used only for cells
+still running the Authentication Server until they can migrate to a
+Kerberos version 5 KDC.
 
 There are several categories of commands in the B<kas> command suite:
 
@@ -83,6 +85,14 @@ directory for the file, use the B<kaserver> command's B<-localfiles>
 argument.
 
 =back
+
+=head1 CAUTIONS
+
+The B<kas> command suite is provided only for administration of the
+obsolete Authentication Server for cells that have not yet migrated to a
+Kerberos version 5 KDC. New deployments should not use the Authentication
+Server, and it and the B<kas> command suite will be removed in a future
+version of OpenAFS.
 
 =head1 OPTIONS
 
