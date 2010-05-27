@@ -30,16 +30,15 @@
     <sect2 renderas="sect3">
       <title>Servers and Clients</title>
 
-      <para>In fact, AFS stores files on a subset of the machines in a
-      network, called file server machines. File server machines provide
-      file storage and delivery service, along with other specialized
-      services, to the other subset of machines in the network, the client
-      machines. These machines are called clients because they make use of
-      the servers' services while doing their own work. In a standard AFS
-      configuration, clients provide computational power, access to the
-      files in AFS and other "general purpose" tools to the users seated
-      at their consoles. There are generally many more client workstations
-      than file server machines.</para>
+      <para>AFS stores files on file server machines. File server machines
+      provide file storage and delivery service, along with other
+      specialized services, to the other subset of machines in the
+      network, the client machines. These machines are called clients
+      because they make use of the servers' services while doing their own
+      work. In a standard AFS configuration, clients provide computational
+      power, access to the files in AFS and other "general purpose" tools
+      to the users seated at their consoles. There are generally many more
+      client workstations than file server machines.</para>
 
       <para>AFS file server machines run a number of server processes, so
       called because each provides a distinct specialized service: one
@@ -97,9 +96,14 @@
       directories in the filespace--most cells store the contents of each
       user home directory in a separate volume. Thus the complete contents
       of the directory move together when the volume moves, making it easy
-      for AFS to keep track of where a file is at a certain time. Volume
-      moves are recorded automatically, so users do not have to keep track
-      of file locations.</para>
+      for AFS to keep track of where a file is at a certain time.</para>
+
+      <para>Volume moves are recorded automatically, so users do not have
+      to keep track of file locations. Volumes can be moved from server to
+      server by a cell administrator without notifying clients, even while
+      the volume is in active use by a client machine. Volume moves are
+      transparent to client machines apart from a brief interruption in
+      file service for files in that volume.</para>
     </sect2>
 
     <sect2 renderas="sect3">
@@ -118,19 +122,19 @@
       machine does not become overburdened with requests for files from a
       popular volume.</para>
 
-      <para>On client machines, AFS uses caching to improve
-      efficiency. When a user on a client workstation requests a file, the
-      Cache Manager on the client sends a request for the data to the File
-      Server process running on the proper file server machine.  The user
-      does not need to know which machine this is; the Cache Manager
-      determines file location automatically. The Cache Manager receives
-      the file from the File Server process and puts it into the cache, an
-      area of the client machine's local disk or memory dedicated to
-      temporary file storage. Caching improves efficiency because the
-      client does not need to send a request across the network every time
-      the user wants the same file. Network traffic is minimized, and
-      subsequent access to the file is especially fast because the file is
-      stored locally. AFS has a way of ensuring that the cached file stays
+      <para>On client machines, AFS uses caching to improve efficiency.
+      When a user on a client machine requests a file, the Cache Manager
+      on the client sends a request for the data to the File Server
+      process running on the proper file server machine. The user does not
+      need to know which machine this is; the Cache Manager determines
+      file location automatically. The Cache Manager receives the file
+      from the File Server process and puts it into the cache, an area of
+      the client machine's local disk or memory dedicated to temporary
+      file storage. Caching improves efficiency because the client does
+      not need to send a request across the network every time the user
+      wants the same file. Network traffic is minimized, and subsequent
+      access to the file is especially fast because the file is stored
+      locally. AFS has a way of ensuring that the cached file stays
       up-to-date, called a callback.</para>
     </sect2>
 
@@ -189,61 +193,11 @@
       interconnected computers able to communicate with each other and
       transfer information back and forth.</para>
 
-      <para>A networked computing environment contrasts with two types of
-      computing environments: <emphasis>mainframe</emphasis> and
-      <emphasis>personal</emphasis>.
-      <indexterm>
-        <primary>network</primary>
-
-        <secondary>as computing environment</secondary>
-      </indexterm>
-      <indexterm>
-        <primary>environment</primary>
-
-        <secondary>types compared</secondary>
-      </indexterm>
-        <itemizedlist>
-          <listitem>
-            <para>A <emphasis>mainframe</emphasis> computing environment
-            is the most traditional. It uses a single powerful computer
-            (the mainframe) to do the majority of the work in the system,
-            both file storage and computation. It serves many users, who
-            access their files and issue commands to the mainframe via
-            terminals, which generally have only enough computing power to
-            accept input from a keyboard and to display data on the
-            screen.</para>
-
-            <indexterm>
-              <primary>mainframe</primary>
-
-              <secondary>computing environment</secondary>
-            </indexterm>
-          </listitem>
-
-          <listitem>
-            <para>A <emphasis>personal</emphasis> computing environment is
-            a single small computer that serves one (or, at the most, a
-            few) users. Like a mainframe computer, the single computer
-            stores all the files and performs all computation. Like a
-            terminal, the personal computer provides access to the
-            computer through a keyboard and screen.</para>
-
-            <indexterm>
-              <primary>personal</primary>
-
-              <secondary>computing environment</secondary>
-            </indexterm>
-          </listitem>
-      </itemizedlist>
-      </para>
-
       <para>A network can connect computers of any kind, but the typical
-      network running AFS connects high-function personal
-      workstations. Each workstation has some computing power and local
-      disk space, usually more than a personal computer or terminal, but
-      less than a mainframe. For more about the classes of machines used
-      in an AFS environment, see <link linkend="HDRWQ10">Servers and
-      Clients</link>.</para>
+      network running AFS connects servers or high-function personal
+      workstations with AFS file server machines. For more about the
+      classes of machines used in an AFS environment, see <link
+      linkend="HDRWQ10">Servers and Clients</link>.</para>
     </sect2>
 
     <sect2 id="HDRWQ9">
@@ -262,10 +216,7 @@
       <para>A <emphasis>file system</emphasis> is a collection of files
       and the facilities (programs and commands) that enable users to
       access the information in the files. All computing environments have
-      file systems. In a mainframe environment, the file system consists
-      of all the files on the mainframe's storage disks, whereas in a
-      personal computing environment it consists of the files on the
-      computer's local disk.</para>
+      file systems.</para>
 
       <para>Networked computing environments often use
       <emphasis>distributed file systems</emphasis> like AFS. A
@@ -360,50 +311,17 @@
 
         <para>The other class of machines are the <emphasis>client
         machines</emphasis>, which generally work directly for users,
-        providing computational power and other general purpose
-        tools. Clients also provide users with access to the files stored
-        on the file server machines. Clients do not run any special
-        processes per se, but do use a modified kernel that enables them
-        to communicate with the AFS server processes running on the file
-        server machines and to cache files. This collection of kernel
-        modifications is referred to as the Cache Manager; see <link
-        linkend="HDRWQ28">The Cache Manager</link>. There are usually many
-        more client machines in a cell than file server machines.</para>
+        providing computational power and other general purpose tools but
+        may also be other servers that use data stored in AFS to provide
+        other services. Clients also provide users with access to the
+        files stored on the file server machines. Clients run a Cache
+        Manager, which is normally a combination of a kernel module and a
+        running process that enables them to communicate with the AFS
+        server processes running on the file server machines and to cache
+        files. See <link linkend="HDRWQ28">The Cache Manager</link> for
+        more information. There are usually many more client machines in a
+        cell than file server machines.</para>
       </formalpara>
-
-      <formalpara>
-        <title>Client and Server Configuration</title>
-
-        <indexterm>
-          <primary>personal</primary>
-
-          <secondary>workstation</secondary>
-
-          <tertiary>as typical AFS machine</tertiary>
-        </indexterm>
-
-        <para>In the most typical AFS configuration, both file server
-        machines and client machines are high-function workstations with
-        disk drives. While this configuration is not required, it does
-        have some advantages.</para>
-      </formalpara>
-
-      <para>There are several advantages to using personal workstations as
-      file server machines. One is that it is easy to expand the network
-      by adding another file server machine. It is also easy to increase
-      storage space by adding disks to existing machines. Using
-      workstations rather than more powerful mainframes makes it more
-      economical to use multiple file server machines rather than
-      one. Multiple file server machines provide an increase in system
-      availability and reliability if popular files are available on more
-      than one machine.</para>
-
-      <para>The advantage of using workstations as clients is that caching
-      on the local disk speeds the delivery of files to application
-      programs. (For an explanation of caching, see <link
-      linkend="HDRWQ16">Caching and Callbacks</link>.) Diskless machines
-      can access AFS if they are running NFS(R) and the NFS/AFS
-      Translator, an optional component of the AFS distribution.</para>
     </sect2>
 
     <sect2 id="HDRWQ11">
@@ -415,13 +333,10 @@
 
       <para>A <emphasis>cell</emphasis> is an independently administered
       site running AFS. In terms of hardware, it consists of a collection
-      of file server machines and client machines defined as belonging to
-      the cell; a machine can only belong to one cell at a time. Users
-      also belong to a cell in the sense of having an account in it, but
-      unlike machines can belong to (have an account in) multiple
-      cells. To say that a cell is administratively independent means that
-      its administrators determine many details of its configuration
-      without having to consult administrators in other cells or a central
+      of file server machines defined as belonging to the cell. To say
+      that a cell is administratively independent means that its
+      administrators determine many details of its configuration without
+      having to consult administrators in other cells or a central
       authority. For example, a cell administrator determines how many
       machines of different types to run, where to put files in the local
       tree, how to associate volumes and directories, and how much space
@@ -434,11 +349,14 @@
       as <emphasis>foreign</emphasis> from the user's perspective. In
       other words, throughout a login session, a user is accessing the
       filespace through a single Cache Manager--the one on the machine to
-      which he or she initially logged in--whose cell membership defines
-      the local cell. All other cells are considered foreign during that
-      login session, even if the user authenticates in additional cells or
-      uses the <emphasis role="bold">cd</emphasis> command to change
-      directories into their file trees.</para>
+      which he or she initially logged in--and that Cache Manager is
+      normally configured to have a default local cell. All other cells
+      are considered foreign during that login session, even if the user
+      authenticates in additional cells or uses the <emphasis
+      role="bold">cd</emphasis> command to change directories into their
+      file trees. This distinction is mostly invisible and irrelavant to
+      users. For most purposes, users will see no difference between local
+      and foreign cells.</para>
 
       <indexterm>
         <primary>local cell</primary>
@@ -550,12 +468,13 @@
           <listitem>
             <para>Each volume corresponds logically to a directory in the
             file tree and keeps together, on a single partition, all the
-            data that makes up the files in the directory. By maintaining
-            (for example) a separate volume for each user's home
-            directory, you keep all of the user's files together, but
-            separate from those of other users. This is an administrative
-            convenience that is impossible if the partition is the
-            smallest unit of storage.</para>
+            data that makes up the files in the directory (including
+            possible subdirectories). By maintaining (for example) a
+            separate volume for each user's home directory, you keep all
+            of the user's files together, but separate from those of other
+            users. This is an administrative convenience that is
+            impossible if the partition is the smallest unit of
+            storage.</para>
 
             <indexterm>
               <primary>volume</primary>
@@ -616,14 +535,15 @@
             file server machine) makes the contents more reliably
             available; for details, see <link
             linkend="HDRWQ15">Replication</link>. Entire sets of volumes
-            can be backed up to tape and restored to the file system; see
-            <link linkend="HDRWQ248">Configuring the AFS Backup
-            System</link> and <link linkend="HDRWQ283">Backing Up and
-            Restoring AFS Data</link>. In AFS, backup also refers to
-            recording the state of a volume at a certain time and then
-            storing it (either on tape or elsewhere in the file system)
-            for recovery in the event files in it are accidentally deleted
-            or changed. See <link linkend="HDRWQ201">Creating Backup
+            can be backed up as dump files (possibly to tape) and restored
+            to the file system; see <link linkend="HDRWQ248">Configuring
+            the AFS Backup System</link> and <link
+            linkend="HDRWQ283">Backing Up and Restoring AFS
+            Data</link>. In AFS, backup also refers to recording the state
+            of a volume at a certain time and then storing it (either on
+            tape or elsewhere in the file system) for recovery in the
+            event files in it are accidentally deleted or changed. See
+            <link linkend="HDRWQ201">Creating Backup
             Volumes</link>.</para>
           </listitem>
 
@@ -666,10 +586,10 @@
       internal structure is different.</para>
 
       <note>
-        <para>You must not create a symbolic link to a file whose name
-        begins with the number sign (#) or the percent sign (%), because
-        the Cache Manager interprets such a link as a mount point to a
-        regular or read/write volume, respectively.</para>
+        <para>You must not create, in AFS, a symbolic link to a file whose
+        name begins with the number sign (#) or the percent sign (%),
+        because the Cache Manager interprets such a link as a mount point
+        to a regular or read/write volume, respectively.</para>
       </note>
 
       <indexterm>
@@ -697,20 +617,22 @@
       <para>The use of mount points means that many of the elements in an
       AFS file tree that look and function just like standard UNIX file
       system directories are actually mount points. In form, a mount point
-      is a one-line file that names the volume containing the data for
-      files in the directory. When the Cache Manager (see <link
-      linkend="HDRWQ28">The Cache Manager</link>) encounters a mount
-      point--for example, in the course of interpreting a pathname--it
-      looks in the volume named in the mount point. In the volume the
-      Cache Manager finds an actual UNIX-style directory element--the
-      volume's root directory--that lists the files contained in the
-      directory/volume. The next element in the pathname appears in that
-      list.</para>
+      is a symbolic link in a special format that names the volume
+      containing the data for files in the directory. When the Cache
+      Manager (see <link linkend="HDRWQ28">The Cache Manager</link>)
+      encounters a mount point--for example, in the course of interpreting
+      a pathname--it looks in the volume named in the mount point. In the
+      volume the Cache Manager finds an actual UNIX-style directory
+      element--the volume's root directory--that lists the files contained
+      in the directory/volume. The next element in the pathname appears in
+      that list.</para>
 
       <para>A volume is said to be <emphasis>mounted</emphasis> at the
       point in the file tree where there is a mount point pointing to the
       volume. A volume's contents are not visible or accessible unless it
-      is mounted.</para>
+      is mounted. Unlike some other file systems, AFS volumes can be
+      mounted at multiple locations in the file system at the same
+      time.</para>.
     </sect2>
 
     <sect2 id="HDRWQ15">
@@ -841,7 +763,9 @@
             can change only when a new version of the complete volume is
             released. All callbacks associated with the old version of the
             volume are broken at release time.</para>
-          </listitem> </itemizedlist></para>
+          </listitem>
+        </itemizedlist>
+      </para>
 
       <para>The callback mechanism ensures that the Cache Manager always
       requests the most up-to-date version of a file. However, it does not
@@ -892,17 +816,11 @@
     administrators of much of the responsibility for overseeing system
     operations.</para>
 
-    <para>The third-party <emphasis>Kerberos Server</emphasis> replaces
-    the old <emphasis>Authentication Server</emphasis> and helps ensure
-    that communications on the network are secure. It verifies user
-    identities at login and provides the facilities through which
-    participants in transactions prove their identities to one another
-    (mutually authenticate).</para>
-
     <para>The Protection Server helps users control who has access to
-    their files and directories. Users can grant access to several other
-    users at once by putting them all in a group entry in the Protection
-    Database maintained by the Protection Server.</para>
+    their files and directories. It is responsible for mapping Kerberos
+    principals to AFS identities. Users can also grant access to several
+    other users at once by putting them all in a group entry in the
+    Protection Database maintained by the Protection Server.</para>
 
     <para>The <emphasis>Volume Server</emphasis> performs all types of
     volume manipulation. It helps the administrator move volumes from one
@@ -915,6 +833,11 @@
     server machine. This service is the key to transparent file access for
     users.</para>
 
+    <para>The <emphasis>Salvager</emphasis> is not a server in the sense
+    that others are. It runs only after the File Server or Volume Server
+    fails; it repairs any inconsistencies caused by the failure. The
+    system administrator can invoke it directly if necessary.</para>
+
     <para>The <emphasis>Update Server</emphasis> distributes new versions
     of AFS server process software and configuration information to all
     file server machines. It is crucial to stable system performance that
@@ -924,22 +847,9 @@
     Database, in which it stores information related to the Backup
     System. It enables the administrator to back up data from volumes to
     tape. The data can then be restored from tape in the event that it is
-    lost from the file system.</para>
-
-    <para>The <emphasis>Salvager</emphasis> is not a server in the sense
-    that others are. It runs only after the File Server or Volume Server
-    fails; it repairs any inconsistencies caused by the failure. The
-    system administrator can invoke it directly if necessary.</para>
-
-    <para>The <emphasis>Network Time Protocol Daemon (NTPD)</emphasis> is
-    not an AFS server process per se, but plays a vital role
-    nonetheless. It synchronizes the internal clock on a file server
-    machine with those on other machines. Synchronized clocks are
-    particularly important for correct functioning of the AFS distributed
-    database technology (known as Ubik); see <link
-    linkend="HDRWQ103">Configuring the Cell for Proper Ubik
-    Operation</link>. The NTPD is usually provided with the operating
-    system.</para>
+    lost from the file system. The Backup Server is optional and is only
+    one of several ways that the data in an AFS cell can be backed
+    up.</para>
 
     <para>The <emphasis>Cache Manager</emphasis> is the one component in
     this list that resides on AFS client rather than file server
@@ -947,6 +857,28 @@
     AFS client machines that communicates with AFS server processes. Its
     main responsibilities are to retrieve files for application programs
     running on the client and to maintain the files in the cache.</para>
+
+    <para>AFS also relies on two other services that are not part of AFS
+    and need to be instaled separately:</para>
+
+    <para>AFS requires a <emphasis>Kerberos KDC</emphasis> to use for user
+    authentication. It verifies user identities at login and provides the
+    facilities through which participants in transactions prove their
+    identities to one another (mutually authenticate). AFS uses Kerberos
+    for all of its authentication. The Kerberos KDC replaces the old
+    <emphasis>Authentication Server</emphasis> included in OpenAFS. The
+    Authentication Server is still available for sites that need it, but
+    is now deprecated and should not be used for any new
+    installations.</para>
+
+    <para>The <emphasis>Network Time Protocol Daemon (NTPD)</emphasis> is
+    not an AFS server process, but plays a vital role nonetheless. It
+    synchronizes the internal clock on a file server machine with those on
+    other machines. Synchronized clocks are particularly important for
+    correct functioning of the AFS distributed database technology (known
+    as Ubik); see <link linkend="HDRWQ103">Configuring the Cell for Proper
+    Ubik Operation</link>. The NTPD is usually provided with the operating
+    system.</para>
 
     <sect2 id="HDRWQ18">
       <title>The File Server</title>
@@ -969,11 +901,13 @@
 
           <listitem>
             <para>Maintaining the hierarchical directory structure that
-          users create to organize their files.</para> </listitem>
+            users create to organize their files.</para>
+          </listitem>
 
           <listitem>
             <para>Handling requests for copying, moving, creating, and
-          deleting files and directories.</para> </listitem>
+            deleting files and directories.</para>
+          </listitem>
 
           <listitem>
             <para>Keeping track of status information about each file and
@@ -993,7 +927,8 @@
 
           <listitem>
             <para>Granting advisory locks (corresponding to UNIX locks) on
-          request.</para> </listitem>
+            request.</para>
+          </listitem>
         </itemizedlist>
       </para>
     </sect2>
@@ -1051,111 +986,18 @@
 
         <listitem>
           <para>Helps system administrators to manage system configuration
-          information. The BOS server automates the process of adding and
-          changing <emphasis>server encryption keys</emphasis>, which are
-          important in mutual authentication. The BOS Server also provides
-          a simple interface for modifying two files that contain
-          information about privileged users and certain special file
-          server machines. For more details about these configuration
-          files, see <link linkend="HDRWQ85">Common Configuration Files in
-          the /usr/afs/etc Directory</link>.</para>
-        </listitem> </itemizedlist>
-    </sect2>
-
-    <sect2 id="HDRWQ20">
-      <title>The Kerberos Server</title>
-
-      <indexterm>
-        <primary>Kerberos Server</primary>
-        <secondary>description</secondary>
-      </indexterm>
-      <indexterm>
-        <primary>Authentication Server</primary>
-        <secondary>description</secondary>
-        <seealso>Kerberos Server</seealso>
-      </indexterm>
-      <indexterm>
-        <primary>Active Directory</primary>
-        <secondary>Kerberos Server</secondary>
-      </indexterm>
-      <indexterm>
-        <primary>MIT Kerberos</primary>
-        <secondary>Kerberos Server</secondary>
-      </indexterm>
-      <indexterm>
-        <primary>Heimdal</primary>
-        <secondary>Kerberos Server</secondary>
-      </indexterm>
-
-      <para>The <emphasis>Kerberos Server</emphasis> performs two main
-      functions related to network security: <itemizedlist>
-          <listitem>
-            <para>Verifying the identity of users as they log into the
-            system by requiring that they provide a password. The Kerberos
-            Server grants the user a ticket, which is converted into a
-            token to prove to AFS server processes that the user has
-            authenticated. For more on tokens, see <link
-            linkend="HDRWQ76">Complex Mutual Authentication</link>.</para>
-          </listitem>
-
-          <listitem>
-            <para>Providing the means through which server and client
-            processes prove their identities to each other (mutually
-            authenticate). This helps to create a secure environment in
-            which to send cross-network messages.</para>
-          </listitem> </itemizedlist></para>
-
-      <para>The Kerberos Server is a required service which is provided by
-      a third-party Kerberos server that supports version 5 of the
-      Kerberos protocol. Kerberos server software is included with some
-      operating systems or may be acquired separately. MIT Kerberos,
-      Heimdal, and Microsoft Active Directory are known to work with
-      OpenAFS as a Kerberos Server.  (Most Kerberos commands begin with
-      the letter <emphasis role="bold">k</emphasis>). This technology was
-      originally developed by the Massachusetts Institute of Technology's
-      Project Athena.</para>
-
-      <para>The Kerberos Server also maintains the
-      <emphasis>Authentication Database</emphasis>, in which it stores
-      user passwords converted into encryption key form as well as the AFS
-      server encryption key. To learn more about the procedures AFS uses
-      to verify user identity and during mutual authentication, see <link
-      linkend="HDRWQ75">A More Detailed Look at Mutual
-      Authentication</link>.</para>
-
-      <note><para>The <emphasis>Authentication Server</emphasis> known as
-      kaserver which uses Kerberos 4 is obsolete and has been replaced by
-      the Kerberos Server. All references to the <emphasis>Kerberos
-      Server</emphasis> in this guide refer to a Kerberos 5
-      server.</para></note>
-
-      <indexterm>
-        <primary>AFS</primary>
-
-        <secondary></secondary>
-
-        <see>AFS UID</see>
-      </indexterm>
-
-      <indexterm>
-        <primary>username</primary>
-
-        <secondary>use by Kerberos</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>UNIX</primary>
-
-        <secondary>UID</secondary>
-
-        <tertiary>functional difference from AFS UID</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>Kerberos</primary>
-
-        <secondary>use of usernames</secondary>
-      </indexterm>
+          information. The BOS Server provides a simple interface for
+          modifying two files that contain information about privileged
+          users and certain special file server machines. It also
+          automates the process of adding and changing <emphasis>server
+          encryption keys</emphasis>, which are important in mutual
+          authentication, if the Authentication Server is still in use,
+          but this function of the BOS Server is deprecated. For more
+          details about these configuration files, see <link
+          linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc
+          Directory</link>.</para>
+        </listitem>
+      </itemizedlist>
     </sect2>
 
     <sect2 id="HDRWQ21">
@@ -1184,6 +1026,13 @@
       directories from unauthorized use. The refinements include the
       following: <itemizedlist>
           <listitem>
+            <para>Defining associations between Kerberos principals and
+            AFS identities. Normally, this is a simple mapping between
+            principal names in the Kerberos realm associated with an AFS
+            cell to AFS identities in that cell, but the Protection Server
+            also manages mappings for users using cross-realm
+            authentication from a different Kerberos realm.</para>
+
             <para>Defining seven access permissions rather than the
             standard UNIX file system's three. In conjunction with the
             UNIX mode bits associated with each file and directory
@@ -1227,7 +1076,9 @@
             containing client machine IP addresses to permit access when
             it originates from the specified client machines. These types
             of groups are useful when it is necessary to adhere to
-            machine-based licensing restrictions.</para>
+            machine-based licensing restrictions or where it is difficult
+            for some reason to obtain Kerberos credentials for processes
+            running on those systems that need access to AFS.</para>
           </listitem>
         </itemizedlist>
       </para>
@@ -1250,18 +1101,18 @@
       acquires access both as an individual and as a member of any
       groups.</para>
 
-      <para>The Protection Server also maps usernames (the name typed at
-      the login prompt) to <emphasis>AFS user ID</emphasis> numbers
-      (<emphasis>AFS UIDs</emphasis>). These UIDs are functionally
-      equivalent to UNIX UIDs, but operate in the domain of AFS rather
-      than in the UNIX file system on a machine's local disk. This
-      conversion service is essential because the tokens that the
-      Authentication Server grants to authenticated users are stamped with
-      usernames (to comply with Kerberos standards). The AFS server
-      processes identify users by AFS UID, not by username. Before they
-      can understand whom the token represents, they need the Protection
-      Server to translate the username into an AFS UID. For further
-      discussion of tokens, see <link linkend="HDRWQ75">A More Detailed
+      <para>The Protection Server also maps Kerberos principals to
+      <emphasis>AFS user ID</emphasis> numbers (<emphasis>AFS
+      UIDs</emphasis>). These UIDs are functionally equivalent to UNIX
+      UIDs, but operate in the domain of AFS rather than in the UNIX file
+      system on a machine's local disk. This conversion service is
+      essential because the tickets that the Kerberos KDC gives to
+      authenticated users are stamped with principal names (to comply with
+      Kerberos standards). The AFS server processes identify users by AFS
+      UID, not by username. Before they can understand whom the token
+      represents, they need the Protection Server to translate the
+      username into an AFS UID. For further discussion of the
+      authentication process, see <link linkend="HDRWQ75">A More Detailed
       Look at Mutual Authentication</link>.</para>
     </sect2>
 
@@ -1276,13 +1127,14 @@
 
       <para>The <emphasis>Volume Server</emphasis> provides the interface
       through which you create, delete, move, and replicate volumes, as
-      well as prepare them for archiving to tape or other media (backing
-      up). <link linkend="HDRWQ13">Volumes</link> explained the advantages
-      gained by storing files in volumes. Creating and deleting volumes
-      are necessary when adding and removing users from the system; volume
-      moves are done for load balancing; and replication enables volume
-      placement on multiple file server machines (for more on replication,
-      see <link linkend="HDRWQ15">Replication</link>).</para>
+      well as prepare them for archiving to disk, tape, or other media
+      (backing up). <link linkend="HDRWQ13">Volumes</link> explained the
+      advantages gained by storing files in volumes. Creating and deleting
+      volumes are necessary when adding and removing users from the
+      system; volume moves are done for load balancing; and replication
+      enables volume placement on multiple file server machines (for more
+      on replication, see <link
+      linkend="HDRWQ15">Replication</link>).</para>
     </sect2>
 
     <sect2 id="HDRWQ23">
@@ -1326,6 +1178,27 @@
       </indexterm>
     </sect2>
 
+    <sect2 id="HDRWQ26">
+      <title>The Salvager</title>
+
+      <indexterm>
+        <primary>Salvager</primary>
+
+        <secondary>description</secondary>
+      </indexterm>
+
+      <para>The <emphasis>Salvager</emphasis> differs from other AFS
+      Servers in that it runs only at selected times. The BOS Server
+      invokes the Salvager when the File Server, Volume Server, or both
+      fail. The Salvager attempts to repair disk corruption that can
+      result from a failure.</para>
+
+      <para>As a system administrator, you can also invoke the Salvager as
+      necessary, even if the File Server or Volume Server has not
+      failed. See <link linkend="HDRWQ232">Salvaging
+      Volumes</link>.</para>
+    </sect2>
+
     <sect2 id="HDRWQ24">
       <title>The Update Server</title>
 
@@ -1338,7 +1211,7 @@
       <para>The <emphasis>Update Server</emphasis> is an optional process
       that helps guarantee that all file server machines are running the
       same version of a server process. System performance can be
-      inconsistent if some machines are running one version of the BOS
+      inconsistent if some machines are running one version of the File
       Server (for example) and other machines were running another
       version.</para>
 
@@ -1376,15 +1249,14 @@
       linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc
       Directory</link>). As with server process software, the need for
       consistent system performance demands that all the machines have the
-      same version of these files.  The system administrator needs to make
+      same version of these files. The system administrator needs to make
       changes to these files on one machine only, the cell's
       <emphasis>system control machine</emphasis>, which runs a server
       portion of the Update Server. All other machines in the cell run a
       client portion that accesses the correct versions of these
-      configuration files from the system control machine. Cells running
-      the international edition of AFS do not use a system control machine
-      to distribute configuration files. For more information, see <link
-      linkend="HDRWQ94">The System Control Machine</link>.</para>
+      configuration files from the system control machine. For more
+      information, see <link linkend="HDRWQ94">The System Control
+      Machine</link>.</para>
     </sect2>
 
     <sect2 id="HDRWQ25">
@@ -1402,17 +1274,19 @@
         <secondary>description</secondary>
       </indexterm>
 
-      <para>The <emphasis>Backup Server</emphasis> maintains the
-      information in the <emphasis>Backup Database</emphasis>. The Backup
-      Server and the Backup Database enable administrators to back up data
-      from AFS volumes to tape and restore it from tape to the file system
-      if necessary. The server and database together are referred to as
-      the Backup System.</para>
+      <para>The <emphasis>Backup Server</emphasis> is an optional process
+      that maintains the information in the <emphasis>Backup
+      Database</emphasis>. The Backup Server and the Backup Database
+      enable administrators to back up data from AFS volumes to tape and
+      restore it from tape to the file system if necessary. The server and
+      database together are referred to as the Backup System. This Backup
+      System is only one way to back up AFS, and many AFS cells use
+      different methods.</para>
 
-      <para>Administrators initially configure the Backup System by
-      defining sets of volumes to be dumped together and the schedule by
-      which the sets are to be dumped. They also install the system's tape
-      drives and define the drives' <emphasis>Tape
+      <para>Administrators who wish to use the Backup System initially
+      configure it by defining sets of volumes to be dumped together and
+      the schedule by which the sets are to be dumped. They also install
+      the system's tape drives and define the drives' <emphasis>Tape
       Coordinators</emphasis>, which are the processes that control the
       tape drives.</para>
 
@@ -1425,72 +1299,10 @@
       Backup System data is difficult to reproduce, the Backup Database
       itself can be backed up to tape and restored if it ever becomes
       corrupted. For more information on configuring and using the Backup
-      System, see <link linkend="HDRWQ248">Configuring the AFS Backup
-      System</link> and <link linkend="HDRWQ283">Backing Up and Restoring
-      AFS Data</link>.</para>
-    </sect2>
-
-    <sect2 id="HDRWQ26">
-      <title>The Salvager</title>
-
-      <indexterm>
-        <primary>Salvager</primary>
-
-        <secondary>description</secondary>
-      </indexterm>
-
-      <para>The <emphasis>Salvager</emphasis> differs from other AFS
-      Servers in that it runs only at selected times. The BOS Server
-      invokes the Salvager when the File Server, Volume Server, or both
-      fail. The Salvager attempts to repair disk corruption that can
-      result from a failure.</para>
-
-      <para>As a system administrator, you can also invoke the Salvager as
-      necessary, even if the File Server or Volume Server has not
-      failed. See <link linkend="HDRWQ232">Salvaging
-      Volumes</link>.</para>
-    </sect2>
-
-    <sect2 id="HDRWQ27">
-      <title>The Network Time Protocol Daemon</title>
-
-      <indexterm>
-        <primary>ntpd</primary>
-
-        <secondary>description</secondary>
-      </indexterm>
-
-      <para>The <emphasis>Network Time Protocol Daemon (NTPD)</emphasis>
-      is not an AFS server process per se, but plays an important role. It
-      helps guarantee that all of the file server machines and client
-      machines agree on the time. The NTPD on all file server machines
-      learns the correct time from a parent NTPD source, which may be
-      located inside or outside the cell.</para>
-
-      <para>Keeping clocks synchronized is particularly important to the
-      correct operation of AFS's distributed database technology, which
-      coordinates the copies of the Backup, Protection, and Volume
-      Location Databases; see <link linkend="HDRWQ52">Replicating the
-      OpenAFS Administrative Databases</link>. Client machines may also
-      refer to these clocks for the correct time; therefore, it is less
-      confusing if all file server machines have the same time. For more
-      technical detail about the NTPD, see <ulink
-      url="http://www.ntp.org/">The NTP web site</ulink> or the
-      documentation for your operating system.</para>
-
-      <important><title>Clock Skew Impact</title> <para>Client machines
-      that are authenticating to an OpenAFS cell with valid credentials
-      may still fail when the clocks of the client machine, Kerberos
-      server, and the fileserver machines are not in
-      sync.</para></important>
-
-      <note><title>Legacy runntp</title> <para>It is no longer recommended
-      to run the legacy NTPD process called <emphasis>runntp</emphasis>
-      that is part of the OpenAFS suite. Running the NTPD software that
-      comes with your operating system or from <ulink
-      url="http://www.ntp.org/">www.ntp.org</ulink> is
-      preferred.</para></note>
-
+      System, and on other AFS backup options, see <link
+      linkend="HDRWQ248">Configuring the AFS Backup System</link> and
+      <link linkend="HDRWQ283">Backing Up and Restoring AFS
+      Data</link>.</para>
     </sect2>
 
     <sect2 id="HDRWQ28">
@@ -1505,18 +1317,19 @@
       <para>As already mentioned in <link linkend="HDRWQ16">Caching and
       Callbacks</link>, the <emphasis>Cache Manager</emphasis> is the one
       component in this section that resides on client machines rather
-      than on file server machines. It is not technically a stand-alone
-      process, but rather a set of extensions or modifications in the
-      client machine's kernel that enable communication with the server
-      processes running on server machines. Its main duty is to translate
-      file requests (made by application programs on client machines) into
-      <emphasis>remote procedure calls (RPCs)</emphasis> to the File
-      Server. (The Cache Manager first contacts the VL Server to find out
-      which File Server currently houses the volume that contains a
-      requested file, as mentioned in <link linkend="HDRWQ23">The Volume
-      Location (VL) Server</link>). When the Cache Manager receives the
-      requested file, it caches it before passing data on to the
-      application program.</para>
+      than on file server machines. It is a combination of a daemon
+      process and a set of extensions or modifications in the client
+      machine's kernel, usually implemented as a loadable kernel module,
+      that enable communication with the server processes running on
+      server machines. Its main duty is to translate file requests (made
+      by application programs on client machines) into <emphasis>remote
+      procedure calls (RPCs)</emphasis> to the File Server. (The Cache
+      Manager first contacts the VL Server to find out which File Server
+      currently houses the volume that contains a requested file, as
+      mentioned in <link linkend="HDRWQ23">The Volume Location (VL)
+      Server</link>). When the Cache Manager receives the requested file,
+      it caches it before passing data on to the application
+      program.</para>
 
       <para>The Cache Manager also tracks the state of files in its cache
       compared to the version at the File Server by storing the callbacks
@@ -1524,6 +1337,149 @@
       indicating that a file or volume changed, the Cache Manager requests
       a copy of the new version before providing more data to application
       programs.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ20">
+      <title>The Kerberos KDC</title>
+
+      <indexterm>
+        <primary>Kerberos KDC</primary>
+        <secondary>description</secondary>
+      </indexterm>
+      <indexterm>
+        <primary>Authentication Server</primary>
+        <secondary>description</secondary>
+        <seealso>Kerberos KDC</seealso>
+      </indexterm>
+      <indexterm>
+        <primary>Active Directory</primary>
+        <secondary>Kerberos KDC</secondary>
+      </indexterm>
+      <indexterm>
+        <primary>MIT Kerberos</primary>
+        <secondary>Kerberos KDC</secondary>
+      </indexterm>
+      <indexterm>
+        <primary>Heimdal</primary>
+        <secondary>Kerberos KDC</secondary>
+      </indexterm>
+
+      <para>The <emphasis>Kerberos KDC</emphasis> (Key Distribution
+      Center) performs two main functions related to network security:
+        <itemizedlist>
+          <listitem>
+            <para>Verifying the identity of users as they log into the
+            system by requiring that they provide a password or some other
+            form of authentication credentials. The Kerberos KDC grants
+            the user a ticket, which is converted into a token to prove to
+            AFS server processes that the user has authenticated. For more
+            on tokens, see <link linkend="HDRWQ76">Complex Mutual
+            Authentication</link>.</para>
+          </listitem>
+
+          <listitem>
+            <para>Providing the means through which server and client
+            processes prove their identities to each other (mutually
+            authenticate). This helps to create a secure environment in
+            which to send cross-network messages.</para>
+          </listitem>
+        </itemizedlist>
+      </para>
+
+      <para>The Kerberos KDC is a required service, but does not come with
+      OpenAFS. One Kerberos KDC may provide authentication services for
+      multiple AFS cells. Each AFS cell must be associated with a Kerberos
+      realm with one or more Kerberos KDCs supporting version 4 or 5 of
+      the Kerberos protocol. Kerberos version 4 is not secure and is
+      supported only for backwards compatibility; Kerberos 5 should be
+      used for any new installation.</para>
+
+      <para>A Kerberos KDC maintains a database in which it stores
+      encryption keys for users and for services, including the AFS server
+      encryption key. For users, these encryption keys are normally formed
+      by converting a user password to a key, but Kerberos KDCs also
+      support other authentication mechanisms. To learn more about the
+      procedures AFS uses to verify user identity and during mutual
+      authentication, see <link linkend="HDRWQ75">A More Detailed Look at
+      Mutual Authentication</link>.</para>
+
+      <para>Kerberos KDC software is included with some operating systems
+      or may be acquired separately. MIT Kerberos, Heimdal, and Microsoft
+      Active Directory are known to work with OpenAFS as a Kerberos
+      Server.This technology was originally developed by the Massachusetts
+      Institute of Technology's Project Athena.</para>
+
+      <note>
+        <para>The <emphasis>Authentication Server</emphasis>, or kaserver,
+        was a Kerberos version 4 KDC. It is obsolete and should no longer
+        be used. A third-party Kerberos version 5 KDC should be used
+        instead. The Authentication Server is still provided with OpenAFS,
+        but only for backward compatibility and legacy support for sites
+        that have not yet migrated to a Kerberos version 5 KDC.  the
+        Kerberos Server. All references to the <emphasis>Kerberos
+        KDC</emphasis> in this guide refer to a Kerberos 5 server.</para>
+      </note>
+
+      <indexterm>
+        <primary>AFS</primary>
+
+        <secondary></secondary>
+
+        <see>AFS UID</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>username</primary>
+
+        <secondary>use by Kerberos</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>UNIX</primary>
+
+        <secondary>UID</secondary>
+
+        <tertiary>functional difference from AFS UID</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Kerberos</primary>
+
+        <secondary>use of usernames</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ27">
+      <title>The Network Time Protocol Daemon</title>
+
+      <indexterm>
+        <primary>ntpd</primary>
+
+        <secondary>description</secondary>
+      </indexterm>
+
+      <para>The <emphasis>Network Time Protocol Daemon (NTPD)</emphasis>
+      is not an AFS server process, but plays an important role. It helps
+      guarantee that all of the file server machines and client machines
+      agree on the time. The NTPD on all file server machines learns the
+      correct time from a parent NTPD source, which may be located inside
+      or outside the cell.</para>
+
+      <para>Keeping clocks synchronized is particularly important to the
+      correct operation of AFS's distributed database technology, which
+      coordinates the copies of the Backup, Protection, and Volume
+      Location Databases; see <link linkend="HDRWQ52">Replicating the
+      OpenAFS Administrative Databases</link>. Client machines may also
+      refer to these clocks for the correct time; therefore, it is less
+      confusing if all file server machines have the same time. For more
+      technical detail about the NTPD, see <ulink
+      url="http://www.ntp.org/">The NTP web site</ulink> or the
+      documentation for your operating system.</para>
+
+      <important><title>Clock Skew Impact</title> <para>Client machines
+      that are authenticating to an OpenAFS cell with valid credentials
+      may still fail when the clocks of the client machine, Kerberos KDC,
+      and the File Server machines are not in sync.</para></important>
     </sect2>
   </sect1>
 </chapter>
