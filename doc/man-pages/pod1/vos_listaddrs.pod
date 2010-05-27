@@ -31,10 +31,24 @@ in the VLDB.
 
 =over 4
 
+=item B<-host> <I<address of host>>
+
+Rather than displaying all the server entries, display only server entries
+for the specified host. This will show all multihomed addresses registered
+by that File Server in the VLDB.
+
+=item B<-uuid> <I<uuid of server>>
+
+Rather than displaying all the server entries, display only server entries
+for the File Server with the specified UUID. This will show all multihomed
+addresses registered by that File Server in the VLDB and also allows
+mapping a File Server UUID to its address.
+
 =item B<-printuuid>
 
-Prints UUID of hosts. The B<-printuuid> option is available in OpenAFS
-versions 1.4.5 or later and 1.5.8 or later.
+Prints the UUID of server entries in addition to the registered
+addresses. The B<-printuuid> option is available in OpenAFS versions 1.4.5
+or later and 1.5.8 or later.
 
 =item B<-cell> <I<cell name>>
 

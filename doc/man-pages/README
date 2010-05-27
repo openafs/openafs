@@ -263,9 +263,6 @@ Known Problems
    Changes needed to have vos suite commands completely up to date,
    including the 1.5 branch:
 
-   * Document vos listaddrs -uuid / -host, and verify docs and example for
-     -printuuid
-
    * Document vos offline -busy / -sleep
 
    * Do vos online/offline support -bless/-unbless? By looking at the
