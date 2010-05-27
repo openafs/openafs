@@ -6,6 +6,7 @@ KOPENAFS_1.0 {
     global:
         k_hasafs;
         k_setpag;
+        k_haspag;
         k_unlog;
         k_pioctl;
     local:
