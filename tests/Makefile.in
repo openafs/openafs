@@ -10,6 +10,7 @@ RUNTESTS_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 
 all: runtests
 	cd tap && $(MAKE) $@
+	cd util && $(MAKE) $@
 
 runtests.o: $(srcdir)/runtests.c
 	$(CCOBJ) $(CFLAGS) $(RUNTESTS_CPPFLAGS) -c $(srcdir)/runtests.c
@@ -25,4 +26,5 @@ install:
 
 clean distclean:
 	cd tap && $(MAKE) $@
+	cd util && $(MAKE) $@
 	$(RM) -f *.o core runtests

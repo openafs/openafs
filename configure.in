@@ -176,7 +176,8 @@ src/volser/Makefile \
 src/xstat/Makefile \
 src/helper-splint.sh \
 tests/Makefile \
-tests/tap/Makefile,
+tests/tap/Makefile \
+tests/util/Makefile,
 
 [chmod a+x src/config/shlib-build
  chmod a+x src/config/shlib-install])
