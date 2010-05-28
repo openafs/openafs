@@ -942,6 +942,23 @@ fl_owner_t id;
       ac_cv_linux_func_f_flush_takes_fl_owner_t=no)])
   AC_MSG_RESULT($ac_cv_linux_func_f_flush_takes_fl_owner_t)])
 
+AC_DEFUN([LINUX_FOP_F_FSYNC_TAKES_DENTRY], [
+  AC_MSG_CHECKING([whether file_operations.fsync takes a dentry argument])
+  AC_CACHE_VAL([ac_cv_linux_func_f_fsync_takes_dentry], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+struct dentry _d;
+(void)_inode.i_fop->fsync(&_file, &_d, 0);],
+      ac_cv_linux_func_f_fsync_takes_dentry=yes,
+      ac_cv_linux_func_f_fsync_takes_dentry=no)])
+  AC_MSG_RESULT($ac_cv_linux_func_f_fsync_takes_dentry)
+  if test "x$ac_cv_linux_func_f_fsync_takes_dentry" = "xyes"; then
+    AC_DEFINE([FOP_FSYNC_TAKES_DENTRY], 1, [define if your fops.fsync takes an dentry argument])
+  fi
+])
+
 AC_DEFUN([LINUX_HAVE_KMEM_CACHE_T], [
   AC_MSG_CHECKING([whether kmem_cache_t exists])
   AC_CACHE_VAL([ac_cv_linux_have_kmem_cache_t], [
