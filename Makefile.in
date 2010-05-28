@@ -628,6 +628,9 @@ finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth lo
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
+check test: finale
+	cd tests && $(MAKE) check
+
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
 
 force:
@@ -868,6 +871,8 @@ distclean: clean
 	src/vol/test/Makefile \
 	src/volser/Makefile \
 	src/xstat/Makefile  \
+	tests/Makefile \
+	tests/tap/Makefile \
 	src/helper-splint.sh
 	if test -d doc/man-pages ; then \
 	    rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \
