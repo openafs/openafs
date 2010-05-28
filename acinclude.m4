@@ -780,6 +780,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				       [write_begin], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
 				       [backing-dev.h])
+		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
@@ -819,7 +820,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 #include <linux/page-flags.h>],
 				     [struct page *_page;
                                       int bchecked = PageFsMisc(_page);])
-		 AC_CHECK_LINUX_FUNC([ctl_table], [ctl_name], [sysctl.h])
 		 AC_CHECK_LINUX_FUNC([current_kernel_time],
 				     [#include <linux/time.h>],
 			             [struct timespec s;
