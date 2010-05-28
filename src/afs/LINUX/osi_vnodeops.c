@@ -447,8 +447,10 @@ afs_linux_release(struct inode *ip, struct file *fp)
 }
 
 static int
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX24_ENV) && defined(FOP_FSYNC_TAKES_DENTRY)
 afs_linux_fsync(struct file *fp, struct dentry *dp, int datasync)
+#elif defined(AFS_LINUX24_ENV)
+afs_linux_fsync(struct file *fp, int datasync)
 #else
 afs_linux_fsync(struct file *fp, struct dentry *dp)
 #endif
