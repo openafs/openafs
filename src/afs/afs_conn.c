@@ -299,7 +299,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * Only do this for the base connection, not per-user.
 	 * Will need to be revisited if/when CB gets security.
 	 */
-	if (isec == 0)
+	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad))
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
