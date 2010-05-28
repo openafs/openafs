@@ -450,7 +450,11 @@ afs_linux_release(struct inode *ip, struct file *fp)
 }
 
 static int
+#if defined(FOP_FSYNC_TAKES_DENTRY)
 afs_linux_fsync(struct file *fp, struct dentry *dp, int datasync)
+#else
+afs_linux_fsync(struct file *fp, int datasync)
+#endif
 {
     int code;
     struct inode *ip = FILE_INODE(fp);

@@ -376,6 +376,19 @@ fl_owner_t id;
 ])
 
 
+AC_DEFUN([LINUX_FOP_F_FSYNC_TAKES_DENTRY], [
+  AC_CHECK_LINUX_BUILD([whether file_operations.fsync takes a dentry argument],
+		       [ac_cv_linux_func_f_fsync_takes_dentry],
+		       [#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+struct dentry _d;
+(void)_inode.i_fop->fsync(&_file, &_d, 0);],
+		       [FOP_FSYNC_TAKES_DENTRY],
+		       [define if your fops.fsync takes an dentry argument])
+])
+
+
 AC_DEFUN([LINUX_HAVE_KMEM_CACHE_T], [
   AC_CHECK_LINUX_BUILD([whether kmem_cache_t exists],
 		       [ac_cv_linux_have_kmem_cache_t],
