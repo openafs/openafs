@@ -40,6 +40,10 @@ OBJS_libdumpscan.a   = primitive.o util.o dumpscan_errs.o parsetag.o \
 TARGETS = libxfiles.a libdumpscan.a \
           afsdump_scan afsdump_dirlist afsdump_extract dumptool
 
+all: run-tests OpenAFS/Dirpath.pm libxfiles.a libdumpscan.a $(TEST_PROGRAMS)\
+	afsdump_scan afsdump_dirlist afsdump_extract dumptool OpenAFS/Dirpath.sh
+	@chmod +x run-tests
+
 afsdump_scan: libxfiles.a libdumpscan.a $(OBJS_afsdump_scan)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_scan $(OBJS_afsdump_scan) $(LIBS)
 
@@ -76,8 +80,13 @@ dumpscan_errs.c dumpscan_errs.h: dumpscan_errs.et
 
 util.o xfiles.o xf_files.o: xf_errs.h
 backuphdr.o directory.o parsedump.o parsetag.o: dumpscan_errs.h
-parsevnode.o parsevol.o pathname.o repair.o:    dumpscan_errs.h
-stagehdr.o util.o:                              dumpscan_errs.h
+parsevnode.o parsevol.o pathname.o stagehdr.o:  dumpscan_errs.h
+util.o:                                         dumpscan_errs.h
+
+# repair addresses the same storage as two different types of structs at the
+# same time.
+repair.o: repair.c dumpscan_errs.h
+	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/repair.c
 
 ${TOP_LIBDIR}/libxfiles.a: libxfiles.a
 	${INSTALL_DATA} $? $@
@@ -338,10 +347,6 @@ dest:
 install:
 
 uninstall:
-
-all: run-tests OpenAFS/Dirpath.pm libxfiles.a libdumpscan.a $(TEST_PROGRAMS)\
-	afsdump_scan afsdump_dirlist afsdump_extract dumptool OpenAFS/Dirpath.sh
-	@chmod +x run-tests
 
 clean:
 	-rm -f xf_errs.c xf_errs.h dumpscan_errs.c dumpscan_errs.h *.o \

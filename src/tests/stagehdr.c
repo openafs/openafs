@@ -99,7 +99,12 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 	hdr->dump_date = ntohl(bckhdr->c_time);
 	hdr->filenum = ntohl(bckhdr->c_filenum);
 	hdr->volid = ntohl(bckhdr->c_id);
+#ifdef NATIVE_INT64
 	hdr->dumplen = ntohl(bckhdr->c_length);
+#else
+        hdr->dumplen.hi = 0;
+        hdr->dumplen.lo = ntohl(bckhdr->c_length);
+#endif
 	hdr->level = ntohl(bckhdr->c_level);
 	hdr->magic = ntohl(bckhdr->c_magic);
 	hdr->cksum = ntohl(bckhdr->c_checksum);
@@ -145,7 +150,11 @@ DumpStageHdr(XFILE * OX, backup_system_header * hdr)
     bckhdr->c_filenum = htonl(hdr->filenum);
     bckhdr->c_time = htonl(hdr->dump_date);
     bckhdr->c_id = htonl(hdr->volid);
-    bckhdr->c_length = htonl(hdr->dumplen);
+#ifdef NATIVE_INT64
+    bckhdr->c_length = htonl((afs_uint32) hdr->dumplen);
+#else
+    bckhdr->c_length = htonl(hdr->dumplen.lo);
+#endif
     bckhdr->c_level = htonl(hdr->level);
     bckhdr->c_magic = htonl(STAGE_MAGIC);
     bckhdr->c_flags = htonl(hdr->flags);

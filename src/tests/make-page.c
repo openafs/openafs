@@ -46,6 +46,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include <err.h>
 

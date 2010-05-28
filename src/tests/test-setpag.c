@@ -43,6 +43,9 @@
 #include <pwd.h>
 #include <limits.h>
 
+#include <afs/stds.h>
+#include <afs/sys_prototypes.h>
+
 #include <err.h>
 
 #if !defined(NGROUPS) && defined(NGROUPS_MAX)

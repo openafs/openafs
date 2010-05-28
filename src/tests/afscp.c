@@ -585,7 +585,7 @@ Finish:
 	double rate, size, time;
 	if (finish.tv_sec == start.tv_sec) {
 	    printf("Copied %d bytes in %d microseconds\n", filesz,
-		   finish.tv_usec - start.tv_usec);
+		   (int)(finish.tv_usec - start.tv_usec));
 	} else {
 	    printf("Copied %d bytes in %d seconds\n", filesz,
 		   (int)(finish.tv_sec - start.tv_sec));

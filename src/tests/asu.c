@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <pwd.h>
 #include <unistd.h>
-
+#include <grp.h>
 
 #include <err.h>
 

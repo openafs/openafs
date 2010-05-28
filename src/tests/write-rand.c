@@ -81,9 +81,6 @@ main(int argc, char **argv)
 {
     const char *file;
     size_t sz;
-    char *random_buf;
-    char *read_buf1;
-    char *read_buf2;
     int fd;
 
     if (argc != 3)

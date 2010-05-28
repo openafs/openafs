@@ -43,6 +43,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <time.h>
 
 #include <err.h>
 

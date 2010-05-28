@@ -35,6 +35,8 @@
 #include <config.h>
 #endif
 
+#include <afsconfig.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,11 +50,7 @@
 #include <afs/cmd.h>
 
 #include <err.h>
-
-struct VenusFid {
-    afs_int32 Cell;
-    struct AFSFid Fid;
-};
+#include <fs_lib.h>
 
 static void
 usage(int ret)

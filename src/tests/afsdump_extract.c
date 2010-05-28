@@ -39,6 +39,11 @@
 #include <string.h>
 
 #include <afs/com_err.h>
+#include <afs/cellconfig.h>
+#include <afs/vlserver.h>
+#include <afs/volser.h>
+#include <rx/rxkad.h>
+
 #include "dumpscan.h"
 #include "dumpscan_errs.h"
 #include "xf_errs.h"

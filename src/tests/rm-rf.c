@@ -44,7 +44,10 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#include <afs/stds.h>
+
 #include <err.h>
+#include <fs_lib.h>
 
 static void
   kill_one(const char *filename);

@@ -59,6 +59,7 @@
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
+#include <afs/sys_prototypes.h>
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)-1)
