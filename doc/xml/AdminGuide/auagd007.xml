@@ -68,7 +68,7 @@
           <listitem>
             <para>For directories, AFS ignores the UNIX mode bits. For
             files, AFS uses only the first set of mode bits (the <emphasis
-            role="bold">owner</emphasis> bits) , and their meaning
+            role="bold">owner</emphasis> bits), and their meaning
             interacts with permissions on the directory's ACL. See <link
             linkend="HDRWQ580">How AFS Interprets the UNIX Mode
             Bits</link>.</para>
@@ -78,7 +78,9 @@
             <para>A directory's ACL protects all of the files in a
             directory in the same manner. To apply a more restrictive set
             of AFS permissions to certain file, place it in directory with
-            a different ACL.</para>
+            a different ACL. If a directory must contain files with
+            different permissions, use symbolic links to point to files
+            stored in directories with different ACLs.</para>
           </listitem>
 
           <listitem>
@@ -108,12 +110,12 @@
       </itemizedlist>
       </para>
 
-      <para>AFS enables users to define the groups of other users. Placing
-      these groups on ACLs extends the same permissions to a number of
-      exactly specified users at the same time, which is much more
-      convenient than placing the individuals on the ACLs directly. See
-      <link linkend="HDRWQ531">Administering the Protection
-      Database</link>.</para>
+      <para>AFS enables users to create groups and add other users to
+      those groups. Placing these groups on ACLs extends the same
+      permissions to a number of exactly specified users at the same time,
+      which is much more convenient than placing the individuals on the
+      ACLs directly. See <link linkend="HDRWQ531">Administering the
+      Protection Database</link>.</para>
 
       <para>There are also system-defined groups, <emphasis
       role="bold">system:anyuser</emphasis> and <emphasis
@@ -140,35 +142,30 @@
 
       <para>Just as the AFS filespace is distinct from each machine's
       local file system, AFS authentication is separate from local
-      login. This has two practical implications, which are discussed
-      further in <link linkend="HDRWQ65">Using an AFS-modified login
-      Utility</link>. <itemizedlist>
+      login. This has two practical implications, which will already be
+      familiar to users and system administrators who use Kerberos for
+      authentication.
+        <itemizedlist>
           <listitem>
-            <para>To access AFS files, users must both log into the local
-            machine's UNIX file system and authenticate with the AFS
-            authentication service. (Logging into the local UNIX file
-            system is necessary because the AFS filespace is accessed
-            through the Cache Manager, which resides in the local
-            machine's kernel.)</para>
-
-            <para>AFS provides a modified login utility for each system
-            type that accomplishes both local login and AFS authentication
-            in one step, based on a single password. If you choose not to
-            use the AFS-modified login utility, your users must login and
-            authenticate in separate steps, as detailed in the
-            <emphasis>OpenAFS User Guide</emphasis>.</para>
+            <para>To access AFS files, users must log into the local
+            machine as normal, obtain Kerberos tickets, and then obtain
+            AFS tokens. This process can often be automated through the
+            system authentication configuration so that the user logs into
+            the system as normal and obtains Kerberos tickets and AFS
+            tokens transparently. If you cannot or chose not to configure
+            the system this way, your users must login and authenticate in
+            separate steps, as detailed in the <emphasis>OpenAFS User
+            Guide</emphasis>.</para>
           </listitem>
 
           <listitem>
             <para>Passwords may be stored in two separate places: the
-            Kerberos Server and, optionally, each machine's local password
-            file (<emphasis role="bold">/etc/passwd</emphasis> or
-            equivalent) for the UNIX file system. A user's passwords in
-            the two places can differ if desired, though the resulting
-            behavior depends on whether and how the cell is using an
-            AFS-modified login utility.</para>
+            Kerberos KDC and, optionally, each machine's local user
+            database (<emphasis role="bold">/etc/passwd</emphasis> or
+            equivalent) for the local system. A user's passwords in the
+            two places can differ if desired.</para>
           </listitem>
-      </itemizedlist>
+        </itemizedlist>
       </para>
     </sect2>
 
@@ -177,7 +174,8 @@
       Commands</title>
 
       <para>This section summarizes how AFS modifies the functionality of
-      some UNIX commands. <variablelist>
+      some UNIX commands.
+        <variablelist>
           <indexterm>
             <primary>chmod command</primary>
 
@@ -207,20 +205,20 @@
               bits on AFS files. For more information, see <link
               linkend="HDRWQ409">Determining if a Client Can Run Setuid
               Programs</link>.</para>
-
-              <indexterm>
-                <primary>chown command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>chown (AFS compared to UNIX)</secondary>
-              </indexterm>
             </listitem>
           </varlistentry>
+
+          <indexterm>
+            <primary>chown command</primary>
+
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>chown (AFS compared to UNIX)</secondary>
+          </indexterm>
 
           <varlistentry>
             <term><emphasis role="bold">The chown
@@ -230,20 +228,20 @@
               <para>Only members of the <emphasis
               role="bold">system:administrators</emphasis> group can issue
               this command on AFS files.</para>
-
-              <indexterm>
-                <primary>chgrp command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>chgrp (AFS compared to UNIX)</secondary>
-              </indexterm>
             </listitem>
           </varlistentry>
+
+          <indexterm>
+            <primary>chgrp command</primary>
+
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>chgrp (AFS compared to UNIX)</secondary>
+          </indexterm>
 
           <varlistentry>
             <term><emphasis role="bold">The chgrp
@@ -253,70 +251,57 @@
               <para>Only members of the <emphasis
               role="bold">system:administrators</emphasis> can issue this
               command on AFS files and directories.</para>
-
-              <indexterm>
-                <primary>groups command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>groups (AFS compared to UNIX)</secondary>
-              </indexterm>
             </listitem>
           </varlistentry>
 
+          <indexterm>
+            <primary>groups command</primary>
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>id command</primary>
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+            <secondary>groups (AFS compared to UNIX)</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+            <secondary>id (AFS compared to UNIX)</secondary>
+          </indexterm>
+
           <varlistentry>
-            <term><emphasis role="bold">The groups
-            command</emphasis></term>
+            <term><emphasis role="bold">The groups and id
+            commands</emphasis></term>
 
             <listitem>
               <para>If the user's AFS tokens are associated with a process
-              authentication group (PAG), the output of this command can
-              include one or two large numbers. To learn about PAGs, see
-              <link linkend="HDRWQ64">Identifying AFS Tokens by
+              authentication group (PAG), the output of these commands may
+              include one or two large numbers. These are artificial
+              groups used by the OpenAFS Cache Manager to track the PAG on
+              some platforms. Other platforms may use other methods, such
+              as native kernel support for a PAG or a similar concept, in
+              which case the large GIDs may not appear. To learn about
+              PAGs, see <link linkend="HDRWQ64">Identifying AFS Tokens by
               PAG</link>.</para>
-
-              <indexterm>
-                <primary>login utility</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>login (AFS compared to UNIX)</secondary>
-              </indexterm>
-
             </listitem>
           </varlistentry>
 
-          <varlistentry>
-            <term><emphasis role="bold">The login
-            utility</emphasis></term>
+          <indexterm>
+            <primary>ln command</primary>
 
-            <listitem>
-              <para>AFS-modified login utilities both log the issuer into
-              the local file system and authenticate the user with the AFS
-              authentication service. See <link linkend="HDRWQ65">Using an
-              AFS-modified login Utility</link>.</para>
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
 
-              <indexterm>
-                <primary>ln command</primary>
+          <indexterm>
+            <primary>commands</primary>
 
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>ln (AFS compared to UNIX)</secondary>
-              </indexterm>
-            </listitem>
-          </varlistentry>
+            <secondary>ln (AFS compared to UNIX)</secondary>
+          </indexterm>
 
           <varlistentry>
             <term><emphasis role="bold">The ln command</emphasis></term>
@@ -325,40 +310,54 @@
               <para>This command cannot create hard links between files in
               different AFS directories. See <link
               linkend="HDRWQ32">Creating Hard Links</link>.</para>
-
-              <indexterm>
-                <primary>sshd command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>sshd (AFS compared to UNIX)</secondary>
-              </indexterm>
             </listitem>
           </varlistentry>
 
+          <indexterm>
+            <primary>sshd command</primary>
+
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>sshd (AFS compared to UNIX)</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>ssh command</primary>
+
+            <secondary>AFS compared to UNIX</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>commands</primary>
+
+            <secondary>ssh (AFS compared to UNIX)</secondary>
+          </indexterm>
+
           <varlistentry>
-            <term><emphasis role="bold">The sshd daemon</emphasis></term>
+            <term><emphasis role="bold">The sshd daemon and ssh
+            command</emphasis></term>
 
             <listitem>
+              <para>In order for a user to have access to files stored in
+              AFS, that user needs to have Kerberos tickets and an AFS token
+              on the system from which they're accessing AFS. This has an
+              implication for users who log in remotely via protocols such
+              as Secure Shell (SSH): that log-in process must create local
+              Kerberos tickets and an AFS token on the system, or the user
+              will have to separately authenticate to Kerberos and AFS
+              after logging in.</para>
+
               <para>The <ulink url="http://www.openssh.org/">OpenSSH
-              project</ulink> provides an sshd daemon that uses the GSSAPI
-              protocol to pass Kerberos tickets between machines.</para>
-
-              <indexterm>
-                <primary>ssh command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>ssh (AFS compared to UNIX)</secondary>
-              </indexterm>
+              project</ulink> provides an SSH client and server that uses
+              the GSS-API protocol to pass Kerberos tickets between
+              machines. With a suitable SSH client, this allows users to
+              delegate their Kerberos tickets to the remote machine, and
+              that machine to store those tickets and obtain AFS tokens as
+              part of the log-in process.</para>
             </listitem>
           </varlistentry>
         </variablelist>
@@ -371,11 +370,18 @@
       </indexterm>
 
       <indexterm>
-        <primary>inode-based fileserver</primary>
+        <primary>file server machine</primary>
+        <secondary>inode-based</secondary>
       </indexterm>
 
       <indexterm>
-        <primary>namei-based fileserver</primary>
+        <primary>file server machine</primary>
+        <secondary>namei-based</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>namei</primary>
+        <secondary>definition</secondary>
       </indexterm>
 
       <indexterm>
@@ -413,19 +419,22 @@
 
       <sidebar>
         <para>The fileserver uses either of two formats for storing data
-        on disk. The inode format uses a combination of regular files and
-        extra fields stored in the inode data structures that are normally
-        reserved for use by the operating system. The namei interface uses
-        normal file storage and does not use special structures. The
-        choice of storage formats is chosen at compile time and the two
-        formats are incompatible. The storage format must be consistent
-        for the fileserver binaries and all vice partitions on a given
-        fileserver machine.</para>
+        on disk. The inode-based format uses a combination of regular
+        files and extra fields stored in the inode data structures that
+        are normally reserved for use by the operating system. The namei
+        format uses normal file storage and does not use special
+        structures. The choice of storage formats is chosen at compile
+        time and the two formats are incompatible. The inode format is
+        only available on certain platforms. The storage format must be
+        consistent for the fileserver binaries and all vice partitions on
+        a given file server machine.</para>
       </sidebar>
 
-      <important><para>This section on fsck advice only applies to the
-      inode-based fileserver binaries. On servers using namei-based
-      binaries, the vendor-supplied fsck is required.</para></important>
+      <important>
+        <para>This section on fsck advice only applies to the inode-based
+        fileserver binaries. On servers using namei-based binaries, the
+        vendor-supplied fsck can be used as normal.</para>
+      </important>
 
       <para>If you are using AFS fileserver binaries compiled with the
       inode-based format, never run the standard UNIX <emphasis
@@ -436,7 +445,7 @@
 
       <para>Instead, use the version of the <emphasis
       role="bold">fsck</emphasis> program that is included in the AFS
-      distribution.  The <emphasis>OpenAFS Quick Beginnings</emphasis>
+      distribution.  The <emphasis>OpenAFS Quick Start Guide</emphasis>
       explains how to replace the vendor-supplied <emphasis
       role="bold">fsck</emphasis> program with the AFS version as you
       install each server machine.</para>
@@ -456,16 +465,23 @@
       binaries in use on the machine.</para>
 
       <para>If you ever accidentally run the standard version of the
-      program, contact your AFS support provider or refer to the <ulink
+      program, contact your AFS support provider, contact the OpenAFS
+      mailing lists, or refer to the <ulink
       url="http://www.openafs.org/support.html">OpenAFS support web
       page</ulink> for support options. It is sometimes possible to
       recover volume data from the <emphasis
       role="bold">lost+found</emphasis> directory. If the data is not
       recoverabled, then restoring from backup is recommended.</para>
 
-      <warning><para>Running the fsck binary supplied by the operating
-      system vendor on an fileserver using inode-based binaries will
-      result in data corruption!</para></warning>
+      <warning>
+        <para>Running the fsck binary supplied by the operating system
+        vendor on an fileserver using inode-based file storage will result
+        in data corruption!</para>
+      </warning>
+    </sect2>
+
+    <sect2 id="HDRWQ32">
+      <title>Creating Hard Links</title>
 
       <indexterm>
         <primary>hard link</primary>
@@ -478,10 +494,6 @@
 
         <secondary>on hard links in AFS</secondary>
       </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ32">
-      <title>Creating Hard Links</title>
 
       <para>AFS does not allow hard links (created with the UNIX <emphasis
       role="bold">ln</emphasis> command) between files that reside in
@@ -495,11 +507,15 @@
       <emphasis role="bold">ln -s</emphasis> command) between elements in
       two different AFS directories, or even between an element in AFS and
       one in a machine's local UNIX file system. Do not create a symbolic
-      link to a file whose name begins with either a number sign
+      link in AFS to a file whose name begins with either a number sign
       (<emphasis role="bold">#</emphasis>) or a percent sign (<emphasis
       role="bold">%</emphasis>), however. The Cache Manager interprets
       such links as a mount point to a regular or read/write volume,
       respectively.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ33">
+      <title>AFS Implements Save on Close</title>
 
       <indexterm>
         <primary>fsync system call</primary>
@@ -518,10 +534,6 @@
 
         <secondary>system call for files saved on AFS client</secondary>
       </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ33">
-      <title>AFS Implements Save on Close</title>
 
       <para>When an application issues the UNIX <emphasis
       role="bold">close</emphasis> system call on a file, the Cache
@@ -542,8 +554,8 @@
       file maintained by the File Server. The Cache Manager does sometimes
       write this type of modified data from the cache to the File Server
       without receiving the <emphasis role="bold">close</emphasis> or
-      <emphasis role="bold">fsync</emphasis> system call, for example if
-      it needs to free cache chunks for new data. However, it is not
+      <emphasis role="bold">fsync</emphasis> system call, such as when it
+      needs to free cache chunks for new data. However, it is not
       generally possible to predict when the Cache Manager transfers
       modified data to the File Server in this way.</para>
 
@@ -567,21 +579,36 @@
         <secondary>restrictions on</secondary>
       </indexterm>
 
-      <para>Set the UNIX setuid bit only for the local superuser <emphasis
-      role="bold">root</emphasis>; this does not present an automatic
-      security risk: the local superuser has no special privilege in AFS,
-      but only in the local machine's UNIX file system and kernel.</para>
+      <para>The UNIX setuid bit is ignored by default for programs run
+      from AFS, but can be enabled by the system administrator on a client
+      machine. The <emphasis role="bold">fs setcell</emphasis> command
+      determines whether setuid programs that originate in a particular
+      cell can run on a given client machine. Running setuid binaries from
+      AFS poses a security risk due to weaknesses in the integrity checks
+      of the AFS protocol and should normally not be permitted. See <link
+      linkend="HDRWQ409">Determining if a Client Can Run Setuid
+      Programs</link>.</para>
+
+      <para>Set the UNIX setuid bit only for files whose owner is UID 0
+      (the local superuser <emphasis role="bold">root</emphasis>). This
+      does not present an automatic security risk: the local superuser has
+      no special privilege in AFS, but only in the local machine's UNIX
+      file system and kernel. Setting the UNIX setuid bit for files owned
+      with a different UID will have unpredictable resuilts, since that
+      UID will be interpreted as possibly different users on each AFS
+      client machine.</para>
 
       <para>Any file can be marked with the setuid bit, but only members
       of the <emphasis role="bold">system:administrators</emphasis> group
       can issue the <emphasis role="bold">chown</emphasis> system call or
-      the <emphasis role="bold">chown</emphasis> command.</para>
+      the <emphasis role="bold">chown</emphasis> command, or issue the
+      <emphasis role="bold">chmod</emphasis> system call or the <emphasis
+      role="bold">chmod</emphasis> command to set the setuid bit.</para>
+    </sect2>
+  </sect1>
 
-      <para>The <emphasis role="bold">fs setcell</emphasis> command
-      determines whether setuid programs that originate in a foreign cell
-      can run on a given client machine. See <link
-      linkend="HDRWQ409">Determining if a Client Can Run Setuid
-      Programs</link>.</para>
+  <sect1 id="HDRWQ34">
+    <title>Choosing a Cell Name</title>
 
       <indexterm>
         <primary>cell</primary>
@@ -610,17 +637,12 @@
 
         <secondary>conventions for cell name</secondary>
       </indexterm>
-    </sect2>
-  </sect1>
-
-  <sect1 id="HDRWQ34">
-    <title>Choosing a Cell Name</title>
 
     <para>This section explains how to choose a cell name and explains why
     choosing an appropriate cell name is important.</para>
 
     <para>Your cell name must distinguish your cell from all others in the
-    AFS global namespace. By conventions, the cell name is the second
+    AFS global namespace. By convention, the cell name is the second
     element in any AFS pathname; therefore, a unique cell name guarantees
     that every AFS pathname uniquely identifies a file, even if cells use
     the same directory names at lower levels in their local AFS
@@ -630,21 +652,23 @@
     <emphasis role="bold">/afs/abc.com/usr/pat</emphasis> and <emphasis
     role="bold">/afs/stateu.edu/usr/pat</emphasis>.</para>
 
-    <para>By convention, cell names follow the ARPA Internet Domain System
-    conventions for site names. If you are already an Internet site, then
-    it is simplest to choose your Internet domain name as the
-    cellname.</para>
+    <para>By convention, cell names follow the Domain Name System (DNS)
+    conventions for domain names. If you are already an Internet site,
+    then it is simplest and strongly recommended to choose your Internet
+    domain name as the cell name.</para>
 
     <para>If you are not an Internet site, it is best to choose a unique
-    Internet-style name, particularly if you plan to connect to the
-    Internet in the future. There are a few constraints on AFS cell names:
-    <itemizedlist>
+    DNS-style name, particularly if you plan to connect to the Internet in
+    the future. There are a few constraints on AFS cell names:
+      <itemizedlist>
         <listitem>
           <para>It can contain as many as 64 characters, but shorter names
           are better because the cell name frequently is part of machine
           and file names. If your cell name is long, you can reduce
-          pathname length by creating a symbolic link to the complete cell
-          name, at the second level in your file tree. See <link
+          pathname length either by creating a symbolic link to the
+          complete cell name, at the second level in your file tree or by
+          using the <emphasis role="bold">CellAlias</emphasis>
+          configuration file on a client machine. See <link
           linkend="HDRWQ42">The Second (Cellname) Level</link>.</para>
         </listitem>
 
@@ -660,95 +684,32 @@
           conventionally separated by periods (see the examples
           below).</para>
         </listitem>
-
-        <listitem>
-          <para>It must end in a suffix that indicates the type of
-          institution it is, or the country in which it is situated. The
-          following are some of the standard suffixes:
-          <variablelist>
-              <varlistentry>
-                <term><emphasis role="bold">.com</emphasis></term>
-
-                <listitem>
-                  <para>For businesses and other commercial
-                  organizations. Example: <emphasis
-                  role="bold">abc.com</emphasis> for the ABC Corporation
-                  cell.</para>
-                </listitem> </varlistentry>
-
-              <varlistentry>
-                <term><emphasis role="bold">.edu</emphasis></term>
-
-                <listitem>
-                  <para>For educational institutions such as
-                  universities. Example: <emphasis
-                  role="bold">stateu.edu</emphasis> for the State
-                  University cell.</para>
-                </listitem> </varlistentry>
-
-              <varlistentry>
-                <term><emphasis role="bold">.gov</emphasis></term>
-
-                <listitem>
-                  <para>For United States government institutions.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><emphasis role="bold">.mil</emphasis></term>
-
-                <listitem>
-                  <para>For United States military installations.</para>
-                </listitem>
-              </varlistentry>
-          </variablelist>
-          </para>
-        </listitem>
-    </itemizedlist>
+      </itemizedlist>
     </para>
-
-    <indexterm>
-      <primary>Internet</primary>
-
-      <secondary>Domain Registrar</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>Domain Registrar</primary>
-    </indexterm>
-
-    <para>Other suffixes are available if none of these are
-    appropriate. Contact a domain registrar to purchase a domain name for
-    your cell.</para>
-
-    <indexterm>
-      <primary>setting</primary>
-
-      <secondary>cell name</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>cell</primary>
-
-      <secondary>name</secondary>
-
-      <tertiary>setting</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>server machine</primary>
-
-      <secondary>setting home cell</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>client machine</primary>
-
-      <secondary>setting home cell</secondary>
-    </indexterm>
 
     <sect2 id="Header_43">
       <title>How to Set the Cell Name</title>
+
+      <indexterm>
+        <primary>setting</primary>
+        <secondary>cell name</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>cell</primary>
+        <secondary>name</secondary>
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>server machine</primary>
+        <secondary>setting home cell</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>client machine</primary>
+        <secondary>setting home cell</secondary>
+      </indexterm>
 
       <para>The cell name is recorded in two files on the local disk of
       each file server and client machine. Among other functions, these
@@ -762,7 +723,7 @@
       name are the <emphasis role="bold">/usr/afs/etc/ThisCell</emphasis>
       and <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis>
       files. As described more explicitly in the <emphasis>OpenAFS Quick
-      Beginnings</emphasis>, you set the cell name in both by issuing the
+      Start Guide</emphasis>, you set the cell name in both by issuing the
       <emphasis role="bold">bos setcellname</emphasis> command on the
       first file server machine you install in your cell. It is not
       usually necessary to issue the command again. If you use the Update
@@ -770,7 +731,7 @@
       role="bold">ThisCell</emphasis> and <emphasis
       role="bold">CellServDB</emphasis> files to additional server
       machines that you install. If you do not use the Update Server, the
-      <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to copy
+      <emphasis>OpenAFS Quick Start Guide</emphasis> explains how to copy
       the files manually.</para>
 
       <para>For client machines, the two files that record the cell name
@@ -782,11 +743,12 @@
       Server Machines</link> for details.</para>
 
       <para>Change the cell name in these files only when you want to
-      transfer the machine to a different cell (it can only belong to one
-      cell at a time). If the machine is a file server, follow the
-      complete set of instructions in the <emphasis>OpenAFS Quick
-      Beginnings</emphasis> for configuring a new cell. If the machine is
-      a client, all you need to do is change the files appropriately and
+      transfer the machine to a different cell (client machines can only
+      have one default cell at a time and server machines can only belong
+      to one cell at a time). If the machine is a file server, follow the
+      complete set of instructions in the <emphasis>OpenAFS Quick Start
+      Guide</emphasis> for configuring a new cell. If the machine is a
+      client, all you need to do is change the files appropriately and
       reboot the machine. The next section explains further the negative
       consequences of changing the name of an existing cell.</para>
 
@@ -808,16 +770,15 @@
         the cell in which the parent directory of the new mount point
         resides.</para>
       </note>
-
-      <indexterm>
-        <primary>ThisCell file (client)</primary>
-
-        <secondary>how used by programs</secondary>
-      </indexterm>
     </sect2>
 
     <sect2 id="HDRWQ35">
       <title>Why Choosing the Appropriate Cell Name is Important</title>
+
+      <indexterm>
+        <primary>ThisCell file (client)</primary>
+        <secondary>how used by programs</secondary>
+      </indexterm>
 
       <para>Take care to select a cell name that is suitable for long-term
       use. Changing a cell name later is complicated. An appropriate cell
@@ -838,60 +799,53 @@
       in each machine's <emphasis role="bold">ThisCell</emphasis> file
       affects the performance of many programs and processes running on
       the machine. For instance, AFS commands (<emphasis
-      role="bold">fs</emphasis>, <emphasis role="bold">kas</emphasis>,
-      <emphasis role="bold">pts</emphasis> and <emphasis
-      role="bold">vos</emphasis> commands) by default execute in the cell
-      of the machine on which they are issued. The command interpreters
-      check the <emphasis role="bold">ThisCell</emphasis> file on the
-      local disk and then contact the database server machines listed in
-      the <emphasis role="bold">CellServDB</emphasis> file for the
-      indicated cell (the <emphasis role="bold">bos</emphasis> commands
+      role="bold">fs</emphasis>, <emphasis role="bold">pts</emphasis>, and
+      <emphasis role="bold">vos</emphasis> commands, for example) by
+      default execute in the cell of the machine on which they are
+      issued. The command interpreters check the <emphasis
+      role="bold">ThisCell</emphasis> file on the local disk and then
+      contact the database server machines listed in the <emphasis
+      role="bold">CellServDB</emphasis> file or configured in DNS for the
+      indicated cell. (The <emphasis role="bold">bos</emphasis> commands
       work differently because the issuer always has to name of the
-      machine on which to run the command).</para> <para>The <emphasis
-      role="bold">ThisCell</emphasis> file also determines the cell for
-      which a user receives an AFS token when he or she logs in to a
-      machine.</para> <para>This method of converting passwords into
-      encryption keys means that the same password results in different
-      keys in different cells. Even if a user uses the same password in
-      multiple cells, obtaining a user's token from one cell does not
-      enable unauthorized access to the user's account in another
-      cell.</para>
+      machine on which to run the command.)</para>
+
+      <para>The <emphasis role="bold">ThisCell</emphasis> file also
+      normally determines the cell for which a user receives an AFS token
+      when he or she logs in to a machine.</para>
 
       <para>If you change the cell name, you must change the <emphasis
       role="bold">ThisCell</emphasis> and <emphasis
       role="bold">CellServDB</emphasis> files on every server and client
-      machine. Failure to change them all can prevent login, because the
-      encryption keys produced by the login utility do not match the keys
-      stored in the Authentication Database. In addition, many commands
-      from the AFS suites do not work as expected.</para>
-
-      <indexterm>
-        <primary>participation</primary>
-
-        <secondary>in AFS global namespace</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS</primary>
-
-        <secondary>global namespace</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>global namespace</primary>
-      </indexterm>
+      machine. Failure to change them all will cause many commands from
+      the AFS suites to not work as expected.</para>
     </sect2>
   </sect1>
 
   <sect1 id="HDRWQ36">
     <title>Participating in the AFS Global Namespace</title>
 
+    <indexterm>
+      <primary>participation</primary>
+      <secondary>in AFS global namespace</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS</primary>
+      <secondary>global namespace</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>global namespace</primary>
+    </indexterm>
+
     <para>Participating in the AFS global namespace makes your cell's
     local file tree visible to AFS users in foreign cells and makes other
     cells' file trees visible to your local users. It makes file sharing
     across cells just as easy as sharing within a cell. This section
     outlines the procedures necessary for participating in the global
-    namespace. <itemizedlist>
+    namespace.
+      <itemizedlist>
         <listitem>
           <para>Participation in the global namespace is not
           mandatory. Some cells use AFS primarily to facilitate file
@@ -916,8 +870,10 @@
 
         <listitem>
           <para>You make your cell visible to others by advertising your
-          database server machines. See <link linkend="HDRWQ38">Making
-          Your Cell Visible to Others</link>.</para>
+          database server machines and allowing users at other sites to
+          access your database server and file server machines. See <link
+          linkend="HDRWQ38">Making Your Cell Visible to
+          Others</link>.</para>
         </listitem>
 
         <listitem>
@@ -927,45 +883,38 @@
           another. See <link linkend="HDRWQ39">Making Other Cells Visible
           in Your Cell</link>.</para>
         </listitem>
-    </itemizedlist>
+      </itemizedlist>
     </para>
-
-    <indexterm>
-      <primary>conventions</primary>
-
-      <secondary>AFS pathnames</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>AFS</primary>
-
-      <secondary>root directory (/afs)</secondary>
-
-      <tertiary>on client machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>directories</primary>
-
-      <secondary>/afs</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>directories</primary>
-
-      <secondary>/afs/<emphasis>cellname</emphasis></secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>cell</primary>
-
-      <secondary>name</secondary>
-
-      <tertiary>at second level in file tree</tertiary>
-    </indexterm>
 
     <sect2 id="HDRWQ37">
       <title>What the Global Namespace Looks Like</title>
+
+      <indexterm>
+        <primary>conventions</primary>
+        <secondary>AFS pathnames</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS</primary>
+        <secondary>root directory (/afs)</secondary>
+        <tertiary>on client machine</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>directories</primary>
+        <secondary>/afs</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>directories</primary>
+        <secondary>/afs/<emphasis>cellname</emphasis></secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>cell</primary>
+        <secondary>name</secondary>
+        <tertiary>at second level in file tree</tertiary>
+      </indexterm>
 
       <para>The AFS global namespace appears the same to all AFS cells
       that participate in it, because they all agree to follow a small set
@@ -987,28 +936,25 @@
       depends on how a cell has chosen to arrange its filespace.  There
       are some suggested conventional directories at the third level; see
       <link linkend="HDRWQ43">The Third Level</link>.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ38">
+      <title>Making Your Cell Visible to Others</title>
 
       <indexterm>
         <primary>cell</primary>
-
         <secondary>making local visible to foreign</secondary>
       </indexterm>
 
       <indexterm>
         <primary>local cell</primary>
-
         <secondary>making visible to foreign cells</secondary>
       </indexterm>
 
       <indexterm>
         <primary>foreign cell</primary>
-
         <secondary>making local cell visible</secondary>
       </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ38">
-      <title>Making Your Cell Visible to Others</title>
 
       <para>You make your cell visible to others by advertising your cell
       name and database server machines. Just like client machines in the
@@ -1016,9 +962,9 @@
       information to reach your cell's Volume Location (VL) Servers when
       they need volume and file location information. For authenticated
       access, foreign clients must be configured with the necessary
-      Kerberos v5 domain-to-realm mappings and Key Distribution Center
-      location information for both the local and remote Kerberos v5
-      realms.</para>
+      Kerberos version 5 domain-to-realm mappings and Key Distribution
+      Center (KDC) location information for both the local and remote
+      Kerberos version 5 realms.</para>
 
       <para>There are two places you can make this information available:
       <itemizedlist>
