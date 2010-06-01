@@ -2453,28 +2453,31 @@ rxi_Free(void *addr, size_t size)
 void 
 rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
 {
-    struct rx_peer **peer_ptr, **peer_end;
-    struct rx_peer *peer = NULL;
+    struct rx_peer **peer_ptr = NULL, **peer_end = NULL;
+    struct rx_peer *peer = NULL, *next = NULL;
     int hashIndex;
 
     MUTEX_ENTER(&rx_peerHashTable_lock);
     if (port == 0) {
-       for (peer_ptr = &rx_peerHashTable[0], peer_end =
-                &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
-            peer_ptr++) {
-           struct rx_peer *next;
-           for (peer = *peer_ptr; peer; peer = next) {
-               next = peer->next;
-               if (host == peer->host)
-                   break;
-           }
-       }
+	peer_ptr = &rx_peerHashTable[0];
+	peer_end = &rx_peerHashTable[rx_hashTableSize];
+	next = NULL;
+    resume:
+	for ( ; peer_ptr < peer_end; peer_ptr++) {
+	    if (!peer)
+		peer = *peer_ptr;
+	    for ( ; peer; peer = next) {
+		next = peer->next;
+		if (host == peer->host)
+		    break;
+	    }
+	}
     } else {
-       hashIndex = PEER_HASH(host, port);
-       for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
-           if ((peer->host == host) && (peer->port == port))
-               break;
-       }
+	hashIndex = PEER_HASH(host, port);
+	for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
+	    if ((peer->host == host) && (peer->port == port))
+		break;
+	}
     }
 
     if (peer) {
@@ -2482,12 +2485,19 @@ rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
         MUTEX_EXIT(&rx_peerHashTable_lock);
 
         MUTEX_ENTER(&peer->peer_lock);
+	/* We don't handle dropping below min, so don't */
+	mtu = MAX(mtu, RX_MIN_PACKET_SIZE);
         peer->ifMTU=MIN(mtu, peer->ifMTU);
         peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
         MUTEX_EXIT(&peer->peer_lock);
 
         MUTEX_ENTER(&rx_peerHashTable_lock);
-        peer->refCount++;
+        peer->refCount--;
+        if (!port) {
+            peer = next;
+	    /* pick up where we left off */
+            goto resume;
+        }
     }
     MUTEX_EXIT(&rx_peerHashTable_lock);
 }
