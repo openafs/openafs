@@ -825,7 +825,7 @@ rxi_HandleSocketError(int socket)
     err =(struct sock_extended_err *) CMSG_DATA(cmsg);
     
     if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
-        rxi_SetPeerMtu(addr.sin_addr.s_addr, addr.sin_port,
+	rxi_SetPeerMtu(NULL, addr.sin_addr.s_addr, addr.sin_port,
                        err->ee_info - RX_IPUDP_SIZE);
     }
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */

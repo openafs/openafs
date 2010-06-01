@@ -2451,33 +2451,37 @@ rxi_Free(void *addr, size_t size)
 }
 
 void 
-rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
+rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 {
     struct rx_peer **peer_ptr = NULL, **peer_end = NULL;
-    struct rx_peer *peer = NULL, *next = NULL;
+    struct rx_peer *next = NULL;
     int hashIndex;
 
-    MUTEX_ENTER(&rx_peerHashTable_lock);
-    if (port == 0) {
-	peer_ptr = &rx_peerHashTable[0];
-	peer_end = &rx_peerHashTable[rx_hashTableSize];
-	next = NULL;
-    resume:
-	for ( ; peer_ptr < peer_end; peer_ptr++) {
-	    if (!peer)
-		peer = *peer_ptr;
-	    for ( ; peer; peer = next) {
-		next = peer->next;
-		if (host == peer->host)
+    if (!peer) {
+	MUTEX_ENTER(&rx_peerHashTable_lock);
+	if (port == 0) {
+	    peer_ptr = &rx_peerHashTable[0];
+	    peer_end = &rx_peerHashTable[rx_hashTableSize];
+	    next = NULL;
+	resume:
+	    for ( ; peer_ptr < peer_end; peer_ptr++) {
+		if (!peer)
+		    peer = *peer_ptr;
+		for ( ; peer; peer = next) {
+		    next = peer->next;
+		    if (host == peer->host)
+			break;
+		}
+	    }
+	} else {
+	    hashIndex = PEER_HASH(host, port);
+	    for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
+		if ((peer->host == host) && (peer->port == port))
 		    break;
 	    }
 	}
     } else {
-	hashIndex = PEER_HASH(host, port);
-	for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
-	    if ((peer->host == host) && (peer->port == port))
-		break;
-	}
+	MUTEX_ENTER(&rx_peerHashTable_lock);
     }
 
     if (peer) {
@@ -2493,7 +2497,7 @@ rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
 
         MUTEX_ENTER(&rx_peerHashTable_lock);
         peer->refCount--;
-        if (!port) {
+        if (host && !port) {
             peer = next;
 	    /* pick up where we left off */
             goto resume;
@@ -5808,7 +5812,8 @@ rxi_CheckCall(struct rx_call *call)
 		);
 	    
 	    if (ire && ire->ire_max_frag > 0)
-		rxi_SetPeerMtu(call->conn->peer->host, 0, ire->ire_max_frag);
+		rxi_SetPeerMtu(NULL, call->conn->peer->host, 0,
+			       ire->ire_max_frag);
 #if defined(GLOBAL_NETSTACKID)
 	    netstack_rele(ns);
 #endif

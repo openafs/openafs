@@ -94,8 +94,8 @@ extern void rxi_FreeCall(struct rx_call *call);
 
 extern char *rxi_Alloc(size_t size);
 extern void rxi_Free(void *addr, size_t size);
-extern void rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port,
-            int mtu);
+extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
+			   afs_uint32 port, int mtu);
 extern struct rx_peer *rxi_FindPeer(afs_uint32 host,
 				    u_short port,
 				    struct rx_peer *origPeer, int create);
