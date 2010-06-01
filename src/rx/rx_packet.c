@@ -2217,6 +2217,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
      * serial number means the packet was never sent. */
     MUTEX_ENTER(&conn->conn_data_lock);
     p->header.serial = ++conn->serial;
+    if (p->length > conn->peer->maxPacketSize) {
+	conn->lastPacketSize = p->length;
+	conn->lastPacketSizeSeq = p->header.seq;
+    }
     MUTEX_EXIT(&conn->conn_data_lock);
     /* This is so we can adjust retransmit time-outs better in the face of 
      * rapidly changing round-trip times.  RTO estimation is not a la Karn.
@@ -2366,6 +2370,14 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     MUTEX_ENTER(&conn->conn_data_lock);
     serial = conn->serial;
     conn->serial += len;
+    for (i = 0; i < len; i++) {
+	p = list[i];
+	if ((p->length > conn->peer->maxPacketSize) &&
+	    (p->length > conn->lastPacketSize)) {
+	    conn->lastPacketSize = p->length;
+	    conn->lastPacketSizeSeq = p->header.seq;
+	}
+    }
     MUTEX_EXIT(&conn->conn_data_lock);
 
 

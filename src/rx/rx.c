@@ -2493,6 +2493,14 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 	mtu = MAX(mtu, RX_MIN_PACKET_SIZE);
         peer->ifMTU=MIN(mtu, peer->ifMTU);
         peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+	/* if we tweaked this down, need to tune our peer MTU too */
+	peer->MTU = MIN(peer->MTU, peer->natMTU);
+	/* if we discovered a sub-1500 mtu, degrade */
+	if (peer->ifMTU < OLD_MAX_PACKET_SIZE)
+	    peer->maxDgramPackets = 1;
+	/* We no longer have valid peer packet information */
+	if (peer->maxPacketSize-RX_IPUDP_SIZE > peer->ifMTU)
+	    peer->maxPacketSize = 0;
         MUTEX_EXIT(&peer->peer_lock);
 
         MUTEX_ENTER(&rx_peerHashTable_lock);
@@ -3810,6 +3818,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     int newAckCount = 0;
     u_short maxMTU = 0;		/* Set if peer supports AFS 3.4a jumbo datagrams */
     int maxDgramPackets = 0;	/* Set if peer supports AFS 3.5 jumbo datagrams */
+    int pktsize = 0;            /* Set if we need to update the peer mtu */
 
     if (rx_stats_active)
         rx_MutexIncrement(rx_stats.ackPacketsRead, rx_stats_mutex);
@@ -3836,6 +3845,28 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     if (ap->reason == RX_ACK_PING_RESPONSE)
 	rxi_UpdatePeerReach(conn, call);
+
+    if (conn->lastPacketSizeSeq) {
+	MUTEX_ENTER(&conn->conn_data_lock);
+	if (first >= conn->lastPacketSizeSeq) {
+	    pktsize = conn->lastPacketSize;
+	    conn->lastPacketSize = conn->lastPacketSizeSeq = 0;
+	}
+	MUTEX_EXIT(&conn->conn_data_lock);
+	MUTEX_ENTER(&peer->peer_lock);
+	/* start somewhere */
+	if (!peer->maxPacketSize)
+	    peer->maxPacketSize = np->length+RX_IPUDP_SIZE;
+
+	if (pktsize > peer->maxPacketSize) {
+	    peer->maxPacketSize = pktsize;
+	    if ((pktsize-RX_IPUDP_SIZE > peer->ifMTU)) {
+		peer->ifMTU=pktsize-RX_IPUDP_SIZE;
+		peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+	    }
+	}
+	MUTEX_EXIT(&peer->peer_lock);
+    }
 
 #ifdef RXDEBUG
 #ifdef AFS_NT40_ENV
@@ -4234,8 +4265,13 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		}
 		call->MTU = RX_HEADER_SIZE + RX_JUMBOBUFFERSIZE;
 	    } else if (call->MTU < peer->maxMTU) {
-		call->MTU += peer->natMTU;
-		call->MTU = MIN(call->MTU, peer->maxMTU);
+		/* don't upgrade if we can't handle it */
+		if ((call->nDgramPackets == 1) && (call->MTU >= peer->ifMTU))
+		    call->MTU = peer->ifMTU;
+		else {
+		    call->MTU += peer->natMTU;
+		    call->MTU = MIN(call->MTU, peer->maxMTU);
+		}
 	    }
 	    call->nAcks = 0;
 	}
@@ -5772,6 +5808,8 @@ rxi_CheckCall(struct rx_call *call)
     struct rx_connection *conn = call->conn;
     afs_uint32 now;
     afs_uint32 deadTime;
+    int cerror = 0;
+    int newmtu = 0;
 
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (call->flags & RX_CALL_TQ_BUSY) {
@@ -5819,8 +5857,8 @@ rxi_CheckCall(struct rx_call *call)
 #endif
 #endif
 #endif /* ADAPT_PMTU */
-	    rxi_CallError(call, RX_CALL_DEAD);
-	    return -1;
+	    cerror = RX_CALL_DEAD;
+	    goto mtuout;
 	} else {
 #ifdef RX_ENABLE_LOCKS
 	    /* Cancel pending events */
@@ -5867,6 +5905,31 @@ rxi_CheckCall(struct rx_call *call)
 	return -1;
     }
     return 0;
+mtuout:
+    if (call->conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT) {
+	/* if we never succeeded, let the error pass out as-is */
+	if (call->conn->peer->maxPacketSize)
+	    cerror = call->conn->msgsizeRetryErr;
+
+	/* if we thought we could send more, perhaps things got worse */
+	if (call->conn->peer->maxPacketSize > conn->lastPacketSize)
+	    /* maxpacketsize will be cleared in rxi_SetPeerMtu */
+	    newmtu = MAX(call->conn->peer->maxPacketSize-RX_IPUDP_SIZE,
+			 conn->lastPacketSize-(128+RX_IPUDP_SIZE));
+	else
+	    newmtu = conn->lastPacketSize-(128+RX_IPUDP_SIZE);
+
+	/* minimum capped in SetPeerMtu */
+	rxi_SetPeerMtu(call->conn->peer, 0, 0, newmtu);
+
+	/* clean up */
+	conn->lastPacketSize = 0;
+
+	/* needed so ResetCall doesn't clobber us. */
+	call->MTU = call->conn->peer->ifMTU;
+    }
+    rxi_CallError(call, cerror);
+    return -1;
 }
 
 void

@@ -175,6 +175,9 @@ int ntoh_syserr_conv(int error);
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
 
+/* Set the error to use for retrying a connection during MTU tuning */
+#define rx_SetMsgsizeRetryErr(conn, err) ((conn)->msgsizeRetryErr = (err))
+
 /* If this flag is set,no new requests are processed by rx, all new requests are
 returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define	rx_SetRxTranquil()   		(rx_tranquil = 1)
@@ -244,8 +247,9 @@ struct rx_connection {
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
-/*    afs_int32 maxPacketSize;    max packet size should be per-connection since */
-    /* peer process could be restarted on us. Includes RX Header.       */
+    afs_int32 lastPacketSize; /* last >max attempt */
+    afs_int32 lastPacketSizeSeq; /* seq number of attempt */
+
     struct rxevent *challengeEvent;	/* Scheduled when the server is challenging a     */
     struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
     struct rxevent *checkReachEvent;	/* Scheduled when checking reachability */
@@ -274,6 +278,7 @@ struct rx_connection {
     afs_int32 idleDeadErr;
     afs_int32 secondsUntilNatPing;	/* how often to ping conn */
     struct rxevent *natKeepAliveEvent; /* Scheduled to keep connection open */
+    afs_int32 msgsizeRetryErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 };
@@ -419,6 +424,7 @@ struct rx_peer {
     afs_hyper_t bytesReceived;	/* Number of bytes received from this peer */
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
+    afs_int32 maxPacketSize;    /* peer packetsize hint */
 };
 
 #ifndef KDUMP_RX_LOCK
