@@ -672,15 +672,16 @@ out:
 static int
 rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 			 struct ktc_token **tokenPtr, char **userPtr) {
-    char k4name[ANAME_SZ];
-    char k4inst[INST_SZ];
-    char k4realm[REALM_SZ];
     char username[BUFSIZ];
     struct ktc_token *token;
-    int status;
 #ifdef HAVE_NO_KRB5_524
     char *p;
     int len;
+#else
+    int status;
+    char k4name[ANAME_SZ];
+    char k4inst[INST_SZ];
+    char k4realm[REALM_SZ];
 #endif
 
     afs_dprintf("Using Kerberos V5 ticket natively\n");
