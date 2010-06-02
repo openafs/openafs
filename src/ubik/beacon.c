@@ -661,7 +661,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
  *
  * \return 0 on success, non-zero on failure
  */
-int
+static int
 updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 {
     int j, count, code = 0;
