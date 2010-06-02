@@ -817,13 +817,14 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	 */
 	char *cell = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
-	code = afs_InitDynroot();
-	if (!code) {
-	    AFS_COPYINSTR(AFSKPTR(parm2), cell, AFS_SMALLOCSIZ, &bufferSize, code);
-	}
+	afs_CellInit();
+	AFS_COPYINSTR(AFSKPTR(parm2), cell, AFS_SMALLOCSIZ, &bufferSize, code);
 	if (!code)
 	    afs_SetPrimaryCell(cell);
 	osi_FreeSmallSpace(cell);
+	if (!code) {
+	    code = afs_InitDynroot();
+	}
     } else if (parm == AFSOP_CACHEINIT) {
 	struct afs_cacheParams cparms;
 

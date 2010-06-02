@@ -2143,6 +2143,11 @@ afsd_run(void)
     setpgrp(getpid(), 0);
 #endif /* mac2 */
 
+    /*
+     * Set the primary cell name.
+     */
+    afsd_call_syscall(AFSOP_SET_THISCELL, LclCellName);
+
     /* Initialize RX daemons and services */
 
     /* initialize the rx random number generator from user space */
@@ -2333,11 +2338,6 @@ afsd_run(void)
      */
     afsconf_CellApply(cdir, ConfigCell, NULL);
     afsconf_CellAliasApply(cdir, ConfigCellAlias, NULL);
-
-    /*
-     * Set the primary cell name.
-     */
-    afsd_call_syscall(AFSOP_SET_THISCELL, LclCellName);
 
     /* Initialize AFS daemon threads. */
     if (afsd_verbose)
