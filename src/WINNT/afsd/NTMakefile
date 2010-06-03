@@ -204,6 +204,23 @@ MIDL_FLAGS=/app_config \
 .idl.h:
 	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) $<
 
+
+AFSD_SDKLIBS =\
+        netapi32.lib \
+        dnsapi.lib \
+        mpr.lib \
+        rpcrt4.lib \
+        user32.lib \
+        Dbghelp.lib \
+        strsafe.lib \
+        mpr.lib \
+        secur32.lib \
+        ole32.lib \
+        oleaut32.lib \
+        iphlpapi.lib \
+        shell32.lib \
+        shlwapi.lib
+
 ############################################################################
 # libafsconf.dll
 
@@ -214,7 +231,7 @@ CONF_DLLLIBS = \
     $(DESTDIR)\lib\afs\afsreg.lib
 
 $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
-	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib mpr.lib shell32.lib Rpcrt4.lib
+	$(DLLGUILINK) -def:libafsconf.def  $(AFSD_SDKLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
@@ -399,20 +416,6 @@ $(EXEDIR)\afscpcc.exe: $(OUT)\afscpcc.obj $(OUT)\afscpcc.res $(LOGON_DLLLIBS)
 
 # afsd.exe
 AFSD_EXEFILE = $(EXEDIR)\afsd.exe
-
-AFSD_SDKLIBS =\
-	netapi32.lib \
-        dnsapi.lib \
-        mpr.lib \
-	rpcrt4.lib \
-	user32.lib \
-        Dbghelp.lib \
-        strsafe.lib \
-        mpr.lib \
-        secur32.lib \
-        ole32.lib \
-        oleaut32.lib \
-        iphlpapi.lib shell32.lib shlwapi.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \

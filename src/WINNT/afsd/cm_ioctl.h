@@ -201,6 +201,8 @@ extern afs_int32 cm_IoctlGetCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern afs_int32 cm_IoctlNewCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern afs_int32 cm_IoctlNewCell2(cm_ioctl_t *ioctlp, cm_user_t *userp);
+
 extern afs_int32 cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern afs_int32 cm_IoctlSysName(cm_ioctl_t *ioctlp, cm_user_t *userp);

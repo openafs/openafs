@@ -81,4 +81,9 @@ extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep,
 
 extern cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags);
 
+extern long cm_CreateCellWithInfo( char * cellname,
+                                   char * linked_cellname,
+                                   unsigned short vlport, afs_uint32 host_count,
+                                   char *hostname[], afs_uint32 flags);
+
 #endif /* __CELL_H_ENV_ */

@@ -701,3 +701,66 @@ void cm_RemoveCellFromIDHashTable(cm_cell_t *cellp)
     }
 }
 
+long
+cm_CreateCellWithInfo( char * cellname,
+                       char * linked_cellname,
+                       unsigned short vlport,
+                       afs_uint32 host_count,
+                       char *hostname[],
+                       afs_uint32 flags)
+{
+    afs_uint32 code = 0;
+    cm_cell_rock_t rock;
+    struct hostent *thp;
+    struct sockaddr_in vlSockAddr;
+    afs_uint32 i, j;
+
+    rock.cellp = cm_GetCell(cellname, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
+    rock.flags = 0;
+
+    cm_FreeServerList(&rock.cellp->vlServersp, CM_FREESERVERLIST_DELETE);
+
+    if (!(flags & CM_CELLFLAG_DNS)) {
+        for (i = 0; i < host_count; i++) {
+            thp = gethostbyname(hostname[i]);
+            if (thp) {
+                int foundAddr = 0;
+                for (j=0 ; thp->h_addr_list[j]; j++) {
+                    if (thp->h_addrtype != AF_INET)
+                        continue;
+                    memcpy(&vlSockAddr.sin_addr.s_addr,
+                           thp->h_addr_list[j],
+                           sizeof(long));
+                    vlSockAddr.sin_port = htons(vlport ? vlport : 7003);
+                    vlSockAddr.sin_family = AF_INET;
+                    cm_AddCellProc(&rock, &vlSockAddr, hostname[i], CM_FLAG_NOPROBE);
+                }
+            }
+        }
+        lock_ObtainMutex(&rock.cellp->mx);
+        rock.cellp->flags &= ~CM_CELLFLAG_DNS;
+    } else if (cm_dnsEnabled) {
+        int ttl;
+
+        code = cm_SearchCellByDNS(rock.cellp->name, NULL, &ttl, cm_AddCellProc, &rock);
+        lock_ObtainMutex(&rock.cellp->mx);
+        if (code == 0) {   /* got cell from DNS */
+            rock.cellp->flags |= CM_CELLFLAG_DNS;
+            rock.cellp->timeout = time(0) + ttl;
+#ifdef DEBUG
+            fprintf(stderr, "cell %s: ttl=%d\n", rock.cellp->name, ttl);
+#endif
+        }
+    } else {
+        lock_ObtainMutex(&rock.cellp->mx);
+        rock.cellp->flags &= ~CM_CELLFLAG_DNS;
+    }
+    rock.cellp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+    StringCbCopy(rock.cellp->linkedName, CELL_MAXNAMELEN, linked_cellname);
+    lock_ReleaseMutex(&rock.cellp->mx);
+
+    if (rock.cellp->vlServersp)
+        cm_RandomizeServer(&rock.cellp->vlServersp);
+
+    return code;
+}

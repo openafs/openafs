@@ -128,6 +128,8 @@ extern afs_int32 smb_IoctlGetCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern afs_int32 smb_IoctlNewCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern afs_int32 smb_IoctlNewCell2(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
 extern afs_int32 smb_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern afs_int32 smb_IoctlSysName(smb_ioctl_t *ioctlp, cm_user_t *userp);

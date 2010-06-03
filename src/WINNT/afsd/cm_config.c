@@ -9,6 +9,7 @@
 
 #include <windows.h>
 #include <winsock2.h>
+#include <shlwapi.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -722,7 +723,113 @@ long cm_SearchCellRegistry(afs_uint32 client,
     return ((dwForceDNS || dwServers == 0) ? CM_ERROR_FORCE_DNS_LOOKUP : 0);
 }
 
-long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellRegistryProc_t *procp, void *rockp)
+/*
+ * Following the registry schema listed above, cm_AddCellToRegistry
+ * will either create or update the registry configuration data for
+ * the specified cellname.
+ */
+long cm_AddCellToRegistry( char * cellname,
+                           char * linked_cellname,
+                           unsigned short vlport,
+                           afs_uint32 host_count,
+                           char *hostname[],
+                           afs_uint32 flags)
+{
+    HKEY hkCellServDB = 0, hkCellName = 0, hkServerName = 0;
+    DWORD dwPort, dwDisposition;
+    long code;
+    unsigned int i;
+
+    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
+                        AFSREG_CLT_OPENAFS_SUBKEY "\\CellServDB",
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                        NULL,
+                        &hkCellServDB,
+                        &dwDisposition) != ERROR_SUCCESS) {
+        code = CM_ERROR_NOACCESS;
+        goto done;
+    }
+
+    /* Perform a recursive deletion of the cellname key */
+    SHDeleteKey( hkCellServDB, cellname);
+
+    if (RegCreateKeyEx( hkCellServDB,
+                        cellname,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                        NULL,
+                        &hkCellName,
+                        &dwDisposition) != ERROR_SUCCESS ||
+        (dwDisposition == REG_OPENED_EXISTING_KEY) ) {
+        code = CM_ERROR_NOACCESS;
+        goto done;
+    }
+
+    /* If we get here, hkCellName is a handle to an empty key */
+
+    if (linked_cellname && linked_cellname[0]) {
+        code = RegSetValueEx( hkCellName, "LinkedCell",
+                              0, REG_SZ,
+                              (BYTE *) linked_cellname, CELL_MAXNAMELEN);
+    }
+
+    if (flags & CM_CELLFLAG_DNS) {
+        DWORD dwForceDNS = 1;
+        code = RegSetValueEx( hkCellName, "ForceDNS",
+                              0, REG_DWORD,
+                              (BYTE *) &dwForceDNS, sizeof(DWORD));
+    }
+
+    for ( i = 0; i < host_count; i++ ) {
+        if (RegCreateKeyEx( hkCellName,
+                            hostname[i],
+                            0,
+                            NULL,
+                            REG_OPTION_NON_VOLATILE,
+                            KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                            NULL,
+                            &hkServerName,
+                            &dwDisposition) != ERROR_SUCCESS ||
+             (dwDisposition == REG_OPENED_EXISTING_KEY)) {
+            code = CM_ERROR_NOACCESS;
+            goto done;
+        }
+
+        /* We have a handle to a valid server key.  Now we need
+         * to add the server to the cell */
+
+        /* First, see if there is an alternate hostname specified */
+        code = RegSetValueEx( hkServerName, "HostName",
+                              0, REG_SZ,
+                              (BYTE *) hostname[i], (DWORD)strlen(hostname[i]) + 1);
+
+        if (vlport) {
+            dwPort = vlport;
+            code = RegSetValueEx( hkServerName, "vlserver",
+                                  0, REG_DWORD,
+                                  (BYTE *) &dwPort, (DWORD)sizeof(DWORD));
+        }
+        RegCloseKey( hkServerName);
+        hkServerName = 0;
+    }
+
+  done:
+    if (hkServerName)
+        RegCloseKey(hkServerName);
+    if (hkCellName)
+        RegCloseKey(hkCellName);
+    if (hkCellServDB)
+        RegCloseKey(hkCellServDB);
+
+    return code;
+}
+
+long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellProc_t *procp, void *rockp)
 {
     HKEY hkCellServDB = 0;
     DWORD dwSize;

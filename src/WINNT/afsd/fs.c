@@ -2974,114 +2974,182 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
 static int
 NewCellCmd(struct cmd_syndesc *as, void *arock)
 {
-#ifndef WIN32
-    afs_int32 code, linkedstate=0, size=0, *lp;
+    afs_uint32 code, linkedstate=0, size=0, count=0, *lp;
+    afs_uint32 usedns=0, useregistry=0;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    char *destEnd, *tp, *cellname=0;
-    struct hostent *thp;
-    afs_int32 fsport = 0, vlport = 0;
-    errno_t err;
+    char *tp, *cellname=0, *linked_cellname=0;
+    afs_uint32 fsport = 0, vlport = 0;
     size_t destRemaining;
 
-    memset(space, 0, AFS_MAXHOSTS * sizeof(afs_int32));
-    tp = space;
-    lp = (afs_int32 *)tp;
-    *lp++ = 0x12345678;
-    tp += sizeof(afs_int32);
-    for(ti=as->parms[1].items; ti; ti=ti->next) {
-	thp = hostutil_GetHostByName(ti->data);
-	if (!thp) {
-	    fprintf(stderr,"%s: Host %s not found in host table, skipping it.\n",
-		   pn, ti->data);
-	}
-	else {
-#if _MSC_VER < 1400
-            memcpy(tp, thp->h_addr, sizeof(afs_int32));
-#else
-            err = memcpy_s(tp, sizeof(space) - (tp - space) * sizeof(char), thp->h_addr, sizeof(afs_int32));
-	    if ( err ) {
-                fprintf (stderr, "memcpy_s failure on tp");
-                exit(1);
-            }
-#endif
-	    tp += sizeof(afs_int32);
-	}
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+        return EACCES;
     }
+
+    /* if there is no cell specified, use old Windows behavior */
+    if (as->parms[0].items == NULL) {
+        blob.in_size = 0;
+        blob.in = (char *) 0;
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
+        blob.out = space;
+
+        code = pioctl_utf8((char *) 0, VIOCNEWCELL, &blob, 1);
+
+        if (code) {
+            Die(errno, (char *) 0);
+            return 1;
+        }
+
+        printf("Cell servers information refreshed\n");
+        return 0;
+    } else {
+        cellname = as->parms[0].items->data;
+    }
+
     if (as->parms[2].items) {
 	/*
 	 * Link the cell, for the purposes of volume location, to the specified
 	 * cell.
 	 */
-	cellname = as->parms[2].items->data;
+	linked_cellname = as->parms[2].items->data;
 	linkedstate = 1;
     }
-#ifdef FS_ENABLE_SERVER_DEBUG_PORTS
+
     if (as->parms[3].items) {
-	code = util_GetInt32(as->parms[3].items->data, &vlport);
+	code = util_GetInt32(as->parms[2].items->data, &vlport);
 	if (code) {
 	    fprintf(stderr,"fs: bad integer specified for the fileserver port.\n");
 	    return code;
 	}
     }
     if (as->parms[4].items) {
-	code = util_GetInt32(as->parms[4].items->data, &fsport);
+	code = util_GetInt32(as->parms[3].items->data, &fsport);
 	if (code) {
 	    fprintf(stderr,"fs: bad integer specified for the vldb server port.\n");
 	    return code;
 	}
     }
-#endif
-    tp = (char *)(space + (AFS_MAXHOSTS+1) *sizeof(afs_int32));
-    lp = (afs_int32 *)tp;    
-    *lp++ = fsport;
-    *lp++ = vlport;
-    *lp = linkedstate;
-    if( FAILED(StringCbCopyEx(space +  ((AFS_MAXHOSTS+4) * sizeof(afs_int32)), sizeof(space) - (AFS_MAXHOSTS+4) * sizeof(afs_int32)
-        , as->parms[0].items->data, &tp, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
-        fprintf (stderr, "var - not enough space");
+
+    if (as->parms[5].items) {
+        useregistry = 1;
+    }
+
+    if (as->parms[6].items) {
+        usedns = 1;
+    }
+
+    /* Count the number of hostnames */
+    for (ti=as->parms[1].items; ti && count < AFS_MAXHOSTS; ti=ti->next, count++);
+
+    if (!usedns && count == 0) {
+        fprintf( stderr, "fs: at least one vldb server must be specified.");
         exit(1);
     }
-    tp++;   /* for null */
-    destRemaining -= sizeof(char);
-    if (linkedstate) {
-        if( FAILED(StringCbCopyEx(tp, sizeof(space) - size, cellname, &destEnd, &destRemaining, STRSAFE_FILL_ON_FAILURE))) {
-            fprintf (tp, "space arr - not enough space");
-            exit(1);
-	}
-        size += destEnd - tp + 1;
+
+    if (count > AFS_MAXHOSTS) {
+        fprintf( stderr, "fs: at most %u servers may be specified.", AFS_MAXHOSTS);
+        exit(1);
     }
-    blob.in_size = size;
+
+    /*
+     * The pioctl data buffer consists of the following structure:
+     *
+     *  afs_uint32 flags
+     *  afs_uint32 alternative fs port
+     *  afs_uint32 alternative vl port
+     *  afs_uint32 count of vldb servers
+     *  char[]     cellname
+     *  char[]     linkedcell
+     *  n * char[] hostnames
+     */
+
+    memset(space, 0, sizeof(space));
+    tp = space;
+    lp = (afs_uint32 *)tp;
+
+    /* flags */
+    if (usedns)
+        *lp |= VIOC_NEWCELL2_FLAG_USEDNS;
+
+    if (useregistry)
+        *lp |= VIOC_NEWCELL2_FLAG_USEREG;
+
+    if (linkedstate)
+        *lp |= VIOC_NEWCELL2_FLAG_LINKED;
+    lp++;
+
+    /* alt fs port */
+    *lp++ = fsport;
+
+    /* alt vl port */
+    *lp++ = vlport;
+
+    /* count of server names */
+    *lp++ = count;
+
+    /* Switch back to char pointer */
+    tp = (char *)lp;
+
+    /* Add nul-terminated cellname */
+    destRemaining = sizeof(space) - (tp - space);
+    if( FAILED(StringCbCopyEx( tp,
+                               destRemaining,
+                               as->parms[0].items->data,
+                               &tp,
+                               &destRemaining,
+                               STRSAFE_FILL_ON_FAILURE))) {
+        fprintf (stderr, " not enough space for cellname");
+        exit(1);
+    }
+    /* Move beyond the terminating nul */
+    tp++;
+    destRemaining -= sizeof(char);
+
+    /* Add nul-terminated linkname */
+    if( FAILED(StringCbCopyEx( tp,
+                               destRemaining,
+                               linkedstate ? linked_cellname : "",
+                               &tp,
+                               &destRemaining,
+                               STRSAFE_FILL_ON_FAILURE))) {
+        fprintf (stderr, " not enough space for linked cellname");
+        exit(1);
+    }
+    /* Move beyond the terminating nul */
+    tp++;
+    destRemaining -= sizeof(char);
+
+    /* Add the servers */
+    for (ti=as->parms[1].items; ti; ti=ti->next) {
+        if( FAILED(StringCbCopyEx( tp,
+                                   destRemaining,
+                                   ti->data,
+                                   &tp,
+                                   &destRemaining,
+                                   STRSAFE_FILL_ON_FAILURE))) {
+            fprintf (stderr, " not enough space for server %s", ti->data);
+            exit(1);
+        }
+        /* Move beyond the terminating nul */
+        tp++;
+        destRemaining -= sizeof(char);
+    }
+
+    blob.in_size = (tp - space);
     blob.in = space;
     blob.out_size = 0;
-    code = pioctl_utf8(0, VIOCNEWCELL, &blob, 1);
-    if (code < 0)
-	Die(errno, 0);
-    return 0;
-#else /* WIN32 */
-    afs_int32 code;
-    struct ViceIoctl blob;
-    
-    if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
-        return EACCES;
-    }
-
-    blob.in_size = 0;
-    blob.in = (char *) 0;
-    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
-
-    code = pioctl_utf8((char *) 0, VIOCNEWCELL, &blob, 1);
+    code = pioctl_utf8(NULL, VIOCNEWCELL2, &blob, 1);
 
     if (code) {
-        Die(errno, (char *) 0);
+        Die(errno, as->parms[0].items->data);
         return 1;
     }
     
-    printf("Cell servers information refreshed\n");
+    printf("Cell servers information for %s added or updated.\n",
+           as->parms[0].items->data);
     return 0;
-#endif /* WIN32 */
 }
 
 #ifndef WIN32
@@ -5694,12 +5762,10 @@ int wmain(int argc, wchar_t **wargv)
     cmd_CreateAlias(ts, "sq");
 
     ts = cmd_CreateSyntax("newcell", NewCellCmd, NULL, "configure new cell");
-#ifndef WIN32
-    cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
-    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "primary servers");
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "cell name");
+    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL, "linked cell name");
 
-#ifdef FS_ENABLE_SERVER_DEBUG_PORTS
     /*
      * Turn this on only if you wish to be able to talk to a server which is listening
      * on alternative ports. This is not intended for general use and may not be
@@ -5708,8 +5774,10 @@ int wmain(int argc, wchar_t **wargv)
      */
     cmd_AddParm(ts, "-fsport", CMD_SINGLE, CMD_OPTIONAL, "cell's fileserver port");
     cmd_AddParm(ts, "-vlport", CMD_SINGLE, CMD_OPTIONAL, "cell's vldb server port");
-#endif
+    cmd_AddParm(ts, "-registry", CMD_FLAG, CMD_OPTIONAL, "add cell info to registry cellservdb");
+    cmd_AddParm(ts, "-dns",    CMD_FLAG, CMD_OPTIONAL,   "force use of dns");
 
+#ifndef WIN32
     ts = cmd_CreateSyntax("newalias", NewAliasCmd, NULL,
 			  "configure new cell alias");
     cmd_AddParm(ts, "-alias", CMD_SINGLE, 0, "alias name");

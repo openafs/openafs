@@ -69,6 +69,13 @@ extern long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep);
 
 extern long cm_CloseCellFile(cm_configFile_t *filep);
 
+extern long cm_AddCellToRegistry( char * cellname,
+                                  char * linked_cellname,
+                                  unsigned short vlport,
+                                  afs_uint32 host_count,
+                                  char *hostname[],
+                                  afs_uint32 flags);
+
 extern long cm_GetCellServDB(char *cellNamep, afs_uint32 len);
 
 extern void cm_GetConfigDir(char *dir, afs_uint32 len);

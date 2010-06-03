@@ -89,6 +89,7 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOC_UNICODECTL] = smb_IoctlUnicodeControl;
     smb_ioctlProcsp[VIOC_SETOWNER] = smb_IoctlSetOwner;
     smb_ioctlProcsp[VIOC_SETGROUP] = smb_IoctlSetGroup;
+    smb_ioctlProcsp[VIOCNEWCELL2] = smb_IoctlNewCell2;
 }       
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -1554,6 +1555,14 @@ smb_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 }
 
 afs_int32 
+smb_IoctlNewCell2(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    cm_SkipIoctlPath(&ioctlp->ioctl);
+
+    return cm_IoctlNewCell2(&ioctlp->ioctl, userp);
+}
+
+afs_int32
 smb_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);

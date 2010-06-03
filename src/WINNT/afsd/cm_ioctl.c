@@ -10,6 +10,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/cellconfig.h>
+#include <afs/afs_consts.h>
 #include <afs/ptserver.h>
 #include <ubik.h>
 
@@ -1530,6 +1531,90 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 }
 
 /* 
+ * VIOCNEWCELL2 internals.
+ *
+ * Assumes that pioctl path has been parsed or skipped.
+ *
+ * The pioctl data buffer consists of the following structure:
+ *
+ *  afs_uint32 flags
+ *  afs_uint32 alternative fs port
+ *  afs_uint32 alternative vl port
+ *  afs_uint32 count of vldb servers
+ *  char[]     cellname
+ *  char[]     linkedcell
+ *  n * char[] hostnames
+ */
+afs_int32
+cm_IoctlNewCell2(struct cm_ioctl *ioctlp, struct cm_user *userp)
+{
+    afs_uint32  code = 0;
+    afs_uint32  flags = 0;
+    afs_uint32  fsport = 0;
+    afs_uint32  vlport = 0;
+    afs_uint32  i, host_count = 0;
+    char *      cellname = NULL;
+    char *      linked_cellname = NULL;
+    char *tp;
+    size_t tplen;
+    afs_uint32 *lp;
+    char * hostname[AFS_MAXHOSTS];
+    size_t len;
+
+    memset(hostname, 0, sizeof(hostname));
+
+    tp = ioctlp->inDatap;
+    tplen = ioctlp->inCopied;
+    lp = (afs_uint32 *)tp;
+
+    if (tplen >= 4 * sizeof(afs_uint32)) {
+        flags = *lp++;
+        fsport = *lp++;
+        vlport = *lp++;
+        host_count = *lp++;
+        tp = (char *)lp;
+        tplen -= 4 * sizeof(afs_uint32);
+    }
+
+    if ( FAILED(StringCbLength(tp, tplen, &len)) ||
+         len + 1 > CELL_MAXNAMELEN)
+        return CM_ERROR_INVAL;
+    cellname = tp;
+    tp += len + 1;
+    tplen -= (len + 1);
+
+    if ( FAILED(StringCbLength(tp, tplen, &len)) ||
+         len + 1 > CELL_MAXNAMELEN)
+        return CM_ERROR_INVAL;
+    linked_cellname = tp;
+    tp += len + 1;
+    tplen -= (len + 1);
+
+    if (!(flags & VIOC_NEWCELL2_FLAG_USEDNS)) {
+        for ( i=0; i<host_count; i++) {
+            if ( FAILED(StringCbLength(tp, tplen, &len)) )
+                return CM_ERROR_INVAL;
+            hostname[i] = tp;
+            tp += len + 1;
+            tplen -= (len + 1);
+        }
+    }
+
+    code = cm_CreateCellWithInfo( cellname, linked_cellname,
+                                  vlport, host_count,
+                                  hostname,
+                                  (flags & VIOC_NEWCELL2_FLAG_USEDNS) ? CM_CELLFLAG_DNS : 0);
+
+    if (code == 0 && (flags & VIOC_NEWCELL2_FLAG_USEREG)) {
+        cm_AddCellToRegistry( cellname, linked_cellname,
+                              vlport, host_count,
+                              hostname,
+                              (flags & VIOC_NEWCELL2_FLAG_USEDNS) ? CM_CELLFLAG_DNS : 0);
+    }
+    return code;
+}
+
+/*
  * VIOC_GET_WS_CELL internals.
  * 
  * Assumes that pioctl path has been parsed or skipped.

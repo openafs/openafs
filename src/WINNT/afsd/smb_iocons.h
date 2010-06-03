@@ -98,8 +98,13 @@ struct sbstruct {
 #define VIOC_SETOWNER                   0x34
 #define VIOC_SETGROUP                   0x35
 #define VIOC_FS_CMD                     0x36
+#define VIOCNEWCELL2                    0x37
 
 #define VIOC_VOLSTAT_TEST               0x3F
+
+#define VIOC_NEWCELL2_FLAG_LINKED       0x1
+#define VIOC_NEWCELL2_FLAG_USEDNS       0x2
+#define VIOC_NEWCELL2_FLAG_USEREG       0x4
 
 /* magic file name for ioctl opens */
 #define CM_IOCTL_FILENAME	"\\_._AFS_IOCTL_._"	/* double backslashes for C compiler */
