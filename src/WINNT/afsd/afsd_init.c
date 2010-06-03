@@ -970,13 +970,14 @@ afsd_InitCM(char **reasonP)
     dummyLen = sizeof(cm_freelanceEnabled);
     code = RegQueryValueEx(parmKey, "FreelanceClient", NULL, NULL,
                             (BYTE *) &cm_freelanceEnabled, &dummyLen);
-    if (code == ERROR_SUCCESS) {
-        afsi_log("Freelance client feature %s activated",
-                  cm_freelanceEnabled ? "is" : "is not");
-    }       
-    else {
-        cm_freelanceEnabled = 1;  /* default on */
-    }
+    afsi_log("Freelance client feature %s activated",
+              cm_freelanceEnabled ? "is" : "is not");
+
+    dummyLen = sizeof(cm_freelanceImportCellServDB);
+    code = RegQueryValueEx(parmKey, "FreelanceImportCellServDB", NULL, NULL,
+                            (BYTE *) &cm_freelanceImportCellServDB, &dummyLen);
+    afsi_log("Freelance client %s import CellServDB",
+              cm_freelanceImportCellServDB ? "does" : "does not");
 #endif /* AFS_FREELANCE_CLIENT */
 
     dummyLen = sizeof(smb_UseUnicode);

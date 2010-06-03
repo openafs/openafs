@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
+#include <cm_nls.h>
 
 #include <WINNT/afsreg.h>
 #include "afsd.h"
@@ -14,11 +15,13 @@
 
 #ifdef AFS_FREELANCE_CLIENT
 #include "cm_freelance.h"
-#include "stdio.h"
+#include <stdio.h>
+#define STRSAFE_NO_DEPRECATE
+#include <strsafe.h>
 
 extern void afsi_log(char *pattern, ...);
 
-static int cm_noLocalMountPoints = 0;
+static unsigned int cm_noLocalMountPoints = 0;
 char * cm_FakeRootDir = NULL;
 int cm_fakeDirSize = 0;
 int cm_fakeDirCallback=0;
@@ -27,6 +30,7 @@ static cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 static int cm_localMountPointChangeFlag = 0;
 int cm_freelanceEnabled = 1;
+int cm_freelanceImportCellServDB = 0;
 time_t FakeFreelanceModTime = 0x3b49f6e2;
 
 static int freelance_ShutdownFlag = 0;
@@ -133,7 +137,29 @@ cm_FreelanceShutdown(void)
         thrd_SetEvent(hFreelanceChangeEvent); 
     if (hFreelanceSymlinkChangeEvent != 0)           
         thrd_SetEvent(hFreelanceSymlinkChangeEvent); 
-}                                             
+}
+
+static long
+cm_FreelanceAddCSDBMountPoints(void *rockp, char *cellNamep)
+{
+    char szCellName[CELL_MAXNAMELEN+1] = ".";
+
+    cm_FsStrCpy( &szCellName[1], CELL_MAXNAMELEN, cellNamep);
+    /* create readonly mount point */
+    cm_FreelanceAddMount( cellNamep, cellNamep, "root.cell", 0, NULL);
+
+    /* create read/write mount point */
+    cm_FreelanceAddMount( szCellName, szCellName, "root.cell", 1, NULL);
+
+    return 0;
+}
+
+void
+cm_FreelanceImportCellServDB(void)
+{
+    cm_EnumerateCellRegistry( TRUE, cm_FreelanceAddCSDBMountPoints, NULL);
+    cm_EnumerateCellFile( TRUE, cm_FreelanceAddCSDBMountPoints, NULL);
+}
 
 void cm_InitFreelance() {
     thread_t phandle;
@@ -142,6 +168,7 @@ void cm_InitFreelance() {
     lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock", LOCK_HIERARCHY_FREELANCE_GLOBAL);
 
     lock_ObtainMutex(&cm_Freelance_Lock);
+
     // yj: first we make a call to cm_initLocalMountPoints
     // to read all the local mount points from the registry
     cm_InitLocalMountPoints();
@@ -194,7 +221,7 @@ void cm_InitFakeRootDir() {
     int curChunk = 13;	// chunks 0 - 12 are used for header stuff
                         // of the first page in the directory
     int curPage = 0;
-    int curDirEntry = 0;
+    unsigned int curDirEntry = 0;
     int curDirEntryInPage = 0;
     int sizeOfCurEntry;
     int dirSize;
@@ -379,7 +406,7 @@ int cm_clearLocalMountPointChange() {
 
 int cm_reInitLocalMountPoints() {
     cm_fid_t aFid;
-    int i, hash;
+    unsigned int i, hash;
     cm_scache_t *scp, **lscpp, *tscp;
 	
     osi_Log0(afsd_logp,"----- freelance reinitialization starts ----- ");
@@ -462,7 +489,7 @@ int cm_reInitLocalMountPoints() {
 /* to be called while holding freelance lock. */
 long cm_InitLocalMountPoints() {
     FILE *fp;
-    int i;
+    unsigned int i;
     char line[512];
     char*t, *t2;
     cm_localMountPoint_t* aLocalMountPoint;
@@ -988,6 +1015,12 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
     if ( filename[0] == '\0' || cellname[0] == '\0' || volume[0] == '\0' )
         return CM_ERROR_INVAL;
 
+    if ( cm_FreelanceMountPointExists(filename, 0) ||
+         cm_FreelanceSymlinkExists(filename, 0) ) {
+        code = CM_ERROR_EXISTS;
+        goto done;
+    }
+
     if (cellname[0] == '.') {
         if (!cm_GetCell_Gen(&cellname[1], fullname, CM_FLAG_CREATE))
             return CM_ERROR_INVAL;
@@ -996,12 +1029,6 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             return CM_ERROR_INVAL;
     }
 
-    if ( cm_FreelanceMountPointExists(filename, 0) ||
-         cm_FreelanceSymlinkExists(filename, 0) ) {
-        code = CM_ERROR_EXISTS;
-        goto done;
-    }
-    
     osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", 
               osi_LogSaveString(afsd_logp,cellname));
 
@@ -1224,7 +1251,7 @@ long cm_FreelanceRemoveMount(char *toremove)
 long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 {
     char line[512];
-    char fullname[CELL_MAXNAMELEN];
+    char fullname[CELL_MAXNAMELEN] = "";
     int alias = 0;
     HKEY hkFreelanceSymlinks = 0;
     DWORD dwType, dwSize;
@@ -1247,7 +1274,12 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
     if ( filename[strlen(filename)-1] == '.')
         return CM_ERROR_INVAL;
 
-    fullname[0] = '\0';
+    if ( cm_FreelanceMountPointExists(filename, 0) ||
+         cm_FreelanceSymlinkExists(filename, 0) ) {
+        code = CM_ERROR_EXISTS;
+        goto done;
+    }
+
     if (filename[0] == '.') {
         cm_GetCell_Gen(&filename[1], fullname, CM_FLAG_CREATE);
         if (cm_stricmp_utf8(&filename[1],fullname) == 0) {
@@ -1260,12 +1292,6 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
             code = CM_ERROR_EXISTS;
             goto done;
         }
-    }
-
-    if ( cm_FreelanceMountPointExists(filename, 0) ||
-         cm_FreelanceSymlinkExists(filename, 0) ) {
-        code = CM_ERROR_EXISTS;
-        goto done;
     }
 
     lock_ObtainMutex(&cm_Freelance_Lock);

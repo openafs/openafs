@@ -386,6 +386,9 @@ void cm_Daemon(long parm)
 	afsi_log("No Windows Firewall detected");
     }
 
+    if (cm_freelanceEnabled && cm_freelanceImportCellServDB)
+        cm_FreelanceImportCellServDB();
+
     /* ping all file servers, up or down, with unauthenticated connection,
      * to find out whether we have all our callbacks from the server still.
      * Also, ping down VLDBs.

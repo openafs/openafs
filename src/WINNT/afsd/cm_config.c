@@ -377,6 +377,69 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
     return (foundCell) ? 0 : -11;
 }
 
+long
+cm_EnumerateCellFile(afs_uint32 client, cm_enumCellProc_t *procp, void *rockp)
+{
+    char wdir[MAX_PATH]="";
+    FILE *tfilep = NULL;
+    char *tp;
+    char lineBuffer[257];
+
+    if (!procp)
+        return 0;
+
+    cm_GetCellServDB(wdir, sizeof(wdir));
+    if (*wdir)
+        tfilep = fopen(wdir, "r");
+
+    if (!tfilep)
+        return -2;
+
+#ifdef CELLSERV_DEBUG
+    osi_Log2(afsd_logp,"cm_enumfile fopen handle[%p], wdir[%s]", tfilep,
+	     osi_LogSaveString(afsd_logp,wdir));
+#endif
+    while (1) {
+        tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
+        if (tp == NULL && feof(tfilep)) {
+            /* hit EOF */
+            fclose(tfilep);
+            return (0);
+        }
+
+        /* turn trailing cr or lf into null */
+        tp = strrchr(lineBuffer, '\r');
+        if (tp) *tp = 0;
+        tp = strrchr(lineBuffer, '\n');
+        if (tp) *tp = 0;
+
+	/* skip blank lines */
+        if (lineBuffer[0] == 0)
+            continue;
+
+        /*
+         * The format is:
+         *   >[cell] [linked-cell] #[Description]
+         * where linked-cell and Description are optional
+         * but we are only going to use the initial cell name
+         */
+        if (lineBuffer[0] == '>') {
+            /*
+             * terminate the cellname at the first white space
+             * leaving 'tp' pointing to the next string if any
+             */
+            for (tp = &lineBuffer[1]; tp && !isspace(*tp); tp++);
+            if (tp)
+                *tp = '\0';
+
+            /* Now process the cell */
+            (*procp)(rockp, &lineBuffer[1]);
+        }
+    }		/* while loop processing all lines */
+
+    return 0;
+}
+
 /*
  * The CellServDB registry schema is as follows:
  *

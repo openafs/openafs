@@ -23,6 +23,7 @@ extern long cm_FreelanceMountPointExists(char * filename, int prefix_ok);
 extern long cm_FreelanceSymlinkExists(char * filename, int prefix_ok);
 extern long cm_FreelanceFetchMountPointString(cm_scache_t *scp);
 extern long cm_FreelanceFetchFileType(cm_scache_t *scp);
+extern void cm_FreelanceImportCellServDB(void);
 
 extern int cm_clearLocalMountPointChange();
 extern int cm_FakeRootFid(cm_fid_t *fidp);
@@ -32,4 +33,6 @@ extern int cm_FakeRootFid(cm_fid_t *fidp);
 #define AFS_FAKE_ROOT_VOL_ID  0xFFFFFFFF
 
 extern time_t FakeFreelanceModTime;
+extern int cm_freelanceEnabled;
+extern int cm_freelanceImportCellServDB;
 #endif // _CM_FREELANCE_H
