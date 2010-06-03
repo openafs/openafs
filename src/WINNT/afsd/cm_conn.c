@@ -1096,6 +1096,7 @@ void cm_GCConnections(cm_server_t *serverp)
             cm_PutServer(tcp->serverp);
             cm_ReleaseUser(userp);
             *lcpp = tcp->nextp;
+            rx_SetConnSecondsUntilNatPing(tcp->rxconnp, 0);
             rx_DestroyConnection(tcp->rxconnp);
             lock_FinalizeMutex(&tcp->mx);
             free(tcp);
@@ -1162,8 +1163,15 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
     rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
     rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
-    if (NatPingInterval)
+
+    /*
+     * Attempt to limit NAT pings to the anonymous file server connections.
+     * Only file servers implement client callbacks and we only need one ping
+     * to be sent to each server.
+     */
+    if (NatPingInterval && serverp->type == CM_SERVER_FILE && secIndex == 0)
         rx_SetConnSecondsUntilNatPing(tcp->rxconnp, NatPingInterval);
+
     tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */
@@ -1228,6 +1236,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
             else
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
 	    tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
+            rx_SetConnSecondsUntilNatPing(tcp->rxconnp, 0);
             rx_DestroyConnection(tcp->rxconnp);
             cm_NewRXConnection(tcp, ucellp, serverp);
         }
