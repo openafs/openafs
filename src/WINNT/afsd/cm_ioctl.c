@@ -144,7 +144,7 @@ cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint32 vol
 {
     afs_int32 code = 0;
     cm_scache_t *scp;
-    int i;
+    unsigned int i;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( cell == AFS_FAKE_ROOT_CELL_ID && volume == AFS_FAKE_ROOT_VOL_ID ) {
@@ -253,17 +253,17 @@ int cm_UnparseIoctlString(cm_ioctl_t *ioctlp,
 
     if ((ioctlp->flags & CM_IOCTLFLAG_USEUTF8) == CM_IOCTLFLAG_USEUTF8) {
         cchout = cm_ClientStringToUtf8(cstr, cchlen, outp,
-                                       SMB_IOCTL_MAXDATA - (outp - ioctlp->outAllocp));
+                                       (int)(SMB_IOCTL_MAXDATA - (outp - ioctlp->outAllocp)));
     } else {
         if (smb_StoreAnsiFilenames) {
             cchout = WideCharToMultiByte(CP_ACP, 0, cstr, cchlen,
                                          outp,
-                                         SMB_IOCTL_MAXDATA - (outp - ioctlp->outAllocp),
+                                         (int)(SMB_IOCTL_MAXDATA - (outp - ioctlp->outAllocp)),
                                          NULL, NULL);
         } else {
             cchout = WideCharToMultiByte(CP_OEMCP, 0, cstr, cchlen,
                                          outp,
-                                         SMB_IOCTL_MAXDATA - (outp - ioctlp->outAllocp),
+                                         (int)(SMB_IOCTL_MAXDATA - (outp - ioctlp->outAllocp)),
                                          NULL, NULL);
         }
     }
@@ -281,7 +281,7 @@ int cm_UnparseIoctlString(cm_ioctl_t *ioctlp,
 cm_ioctlQueryOptions_t * 
 cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
-    afs_uint32 pathlen = strlen(ioctlp->inDatap) + 1;
+    afs_uint32 pathlen = (afs_uint32) strlen(ioctlp->inDatap) + 1;
     char *p = ioctlp->inDatap + pathlen;
     cm_ioctlQueryOptions_t * optionsp = NULL;
 
@@ -325,7 +325,7 @@ cm_NormalizeAfsPath(clientchar_t *outpathp, long cchlen, clientchar_t *inpathp)
     if (!cm_ClientStrCmpNI(inpathp, cm_mountRootC, cm_mountRootCLen))
         cm_ClientStrCpy(outpathp, cchlen, inpathp);
     else if (!cm_ClientStrCmpNI(inpathp, bslash_mountRoot,
-                                cm_ClientStrLen(bslash_mountRoot)))
+                                (int)cm_ClientStrLen(bslash_mountRoot)))
         cm_ClientStrCpy(outpathp, cchlen, inpathp);
     else if ((inpathp[0] == '/') || (inpathp[0] == '\\'))
         cm_ClientStrPrintfN(outpathp, cchlen, _C("%s%s"), cm_mountRootC, inpathp);
@@ -540,7 +540,7 @@ cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t
 {
     afs_int32 code;
     cm_scache_t *scp;
-    int i;
+    unsigned int i;
 
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
@@ -1571,7 +1571,8 @@ cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
     afs_uint32 setSysName;
     char *cp, *cp2;
     clientchar_t *inname = NULL;
-    int t, count;
+    int t;
+    unsigned int count;
 
     memcpy(&setSysName, ioctlp->inDatap, sizeof(afs_uint32));
     ioctlp->inDatap += sizeof(afs_uint32);
@@ -1627,7 +1628,7 @@ cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
         }
         cm_sysNameCount = setSysName;
     } else {
-        afs_int32 i32;
+        afs_uint32 i32;
 
         /* return the sysname to the caller */
         i32 = cm_sysNameCount;

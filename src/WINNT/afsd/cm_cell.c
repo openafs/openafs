@@ -18,6 +18,8 @@
 #include <malloc.h>
 #include <osi.h>
 #include <string.h>
+#define STRSAFE_NO_DEPRECATE
+#include <strsafe.h>
 
 #include "afsd.h"
 
