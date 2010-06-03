@@ -79,14 +79,16 @@ loop:
 		continue;
 	    }
 	    ReleaseReadLock(&afs_xvcache);
-	    ObtainWriteLock(&tvc->lock, 234);
-	    tvc->f.states |= CEvent;
-	    AFS_GUNLOCK();
-	    vnode_setattr(vp, &va, afs_osi_ctxtp);
-	    tvc->f.states &= ~CEvent;
-	    vnode_put(vp);
-	    AFS_GLOCK();
-	    ReleaseWriteLock(&tvc->lock);
+	    /* Avoid potentially re-entering on this lock */
+	    if (0 == NBObtainWriteLock(&tvc->lock, 234)) {
+		tvc->f.states |= CEvent;
+		AFS_GUNLOCK();
+		vnode_setattr(vp, &va, afs_osi_ctxtp);
+		tvc->f.states &= ~CEvent;
+		vnode_put(vp);
+		AFS_GLOCK();
+		ReleaseWriteLock(&tvc->lock);
+	    }
 	    ObtainReadLock(&afs_xvcache);
 	    /* our tvc ptr is still good until now */
 	    AFS_FAST_RELE(tvc);
