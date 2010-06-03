@@ -408,14 +408,14 @@ long cm_SearchCellRegistry(afs_uint32 client,
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\CellServDB",
                       0,
-                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      KEY_READ|KEY_QUERY_VALUE,
                       &hkCellServDB) != ERROR_SUCCESS)
         return CM_ERROR_NOSUCHCELL;
 
     if (RegOpenKeyEx( hkCellServDB, 
                       cellNamep,
                       0,
-                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      KEY_READ|KEY_QUERY_VALUE,
                       &hkCellName) != ERROR_SUCCESS) {
         BOOL bFound = 0;
 
@@ -465,7 +465,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
             if (RegOpenKeyEx( hkCellServDB, 
                               szCellName,
                               0,
-                              KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                              KEY_READ|KEY_QUERY_VALUE,
                               &hkCellName) != ERROR_SUCCESS)
                 continue;
 
@@ -540,7 +540,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
         if (RegOpenKeyEx( hkCellName, 
                           szServerName,
                           0,
-                          KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                          KEY_READ|KEY_QUERY_VALUE,
                           &hkServerName) != ERROR_SUCCESS)
             continue;
 
