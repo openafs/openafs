@@ -304,6 +304,7 @@ cm_IoctlSkipQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     cm_ioctlQueryOptions_t * optionsp = (cm_ioctlQueryOptions_t *)ioctlp->inDatap;
     ioctlp->inDatap += optionsp->size;
+    ioctlp->inCopied -= optionsp->size;
 }
 
 /* format the specified path to look like "/afs/<cellname>/usr", by
