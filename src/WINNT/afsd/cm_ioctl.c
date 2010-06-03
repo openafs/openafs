@@ -1486,7 +1486,6 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
         cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
-        cp->vlServersp = NULL;
         lock_ReleaseWrite(&cm_cellLock);
 
         rock.cellp = cp;

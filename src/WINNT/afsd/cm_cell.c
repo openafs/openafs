@@ -94,14 +94,12 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
          ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID)))
             ) 
     {
-        /* must empty cp->vlServersp */
-        if (cp->vlServersp) {
-            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
-            cp->vlServersp = NULL;
-        }
-
         lock_ReleaseMutex(&cp->mx);
         mxheld = 0;
+
+        /* must empty cp->vlServersp */
+        if (cp->vlServersp)
+            cm_FreeServerList(&cp->vlServersp, CM_FREESERVERLIST_DELETE);
 
         rock.cellp = cp;
         rock.flags = flags;

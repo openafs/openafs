@@ -406,7 +406,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                         lock_ReleaseWrite(&cm_serverLock);
                         if (free_svr_list) {
                             cm_FreeServerList(serverspp, 0);
-                            serverspp = NULL;
                             serversp = NULL;
                             free_svr_list = 0;
                         }
@@ -508,7 +507,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         if (free_svr_list) {
             cm_FreeServerList(serverspp, 0);
-            serverspp = NULL;
             serversp = NULL;
             free_svr_list = 0;
         }
@@ -608,7 +606,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         /* Free the server list before cm_ForceUpdateVolume is called */
         if (free_svr_list) {
             cm_FreeServerList(serverspp, 0);
-            serverspp = NULL;
             serversp = NULL;
             free_svr_list = 0;
         }
