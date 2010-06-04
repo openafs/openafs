@@ -702,20 +702,43 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                      osi_LogSaveString(afsd_logp,addr));
             reqp->tokenIdleErrorServp = serverp;
             reqp->idleError++;
+        }
 
-            if (timeLeft > 2) {
-                if (!fidp) { /* vldb */
-                    retry = 1;
-                } else { /* file */
-                    cm_volume_t *volp = cm_GetVolumeByFID(fidp);
-                    if (volp) {
-                        if (fidp->volume == cm_GetROVolumeID(volp))
-                            retry = 1;
-                        cm_PutVolume(volp);
-                    }
+        if (timeLeft > 2) {
+            if (!fidp) { /* vldb */
+                retry = 1;
+            } else { /* file */
+                cm_volume_t *volp = cm_GetVolumeByFID(fidp);
+                if (volp) {
+                    if (fidp->volume == cm_GetROVolumeID(volp))
+                        retry = 1;
+                    cm_PutVolume(volp);
                 }
             }
         }
+    }
+    else if (errorCode == RX_MSGSIZE) {
+        /*
+         * RPC failed because a transmitted rx packet
+         * may have grown larger than the path mtu.
+         * Force a retry and the Rx library will try
+         * with a smaller mtu size.
+         */
+
+        if (serverp) {
+            sprintf(addr, "%d.%d.%d.%d",
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+            LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_MSGSIZE_EXCEEDED, addr);
+            osi_Log1(afsd_logp, "cm_Analyze: Path MTU may have been exceeded addr[%s]",
+                     osi_LogSaveString(afsd_logp,addr));
+        }
+
+        if (timeLeft > 2)
+            retry = 1;
     }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
@@ -1161,6 +1184,11 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
     rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
 
+    /*
+     * Let the Rx library know that we can auto-retry if an
+     * RX_MSGSIZE error is returned.
+     */
+    rx_SetMsgsizeRetryErr(tcp->rxconnp, RX_MSGSIZE);
     /*
      * Attempt to limit NAT pings to the anonymous file server connections.
      * Only file servers implement client callbacks and we only need one ping

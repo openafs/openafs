@@ -422,5 +422,12 @@ Language=English
 All servers are unreachable when accessing cell %1 volume %2.
 .
 
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_RX_MSGSIZE_EXCEEDED
+Language=English
+Path MTU may have been exceeded when communicating with server %1, retrying ...
+.
 
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */
