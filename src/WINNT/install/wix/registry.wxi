@@ -4,6 +4,7 @@
     This file will be included as a child of the root Directory tag.
     -->
 <?ifndef BinsOnly ?>
+<?ifndef LiteClient ?>
     <Component Id="rcm_Server" Guid="$(var.rcm_server_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server"/>
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Id="reg_Server3"/>
@@ -61,6 +62,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Control_Center26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Control_Center27" />
     </Component>
+    <?endif?>                                                  <!-- /!LiteClient -->
     <Component Id="rcm_Client" Guid="$(var.rcm_client_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_NoUninstall2" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_NoUninstall" />
@@ -166,6 +168,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Docs26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSDocDesc)" Id="reg_Docs27" />
     </Component>
+    <?ifndef LiteClient ?>
     <Component Id="rcm_SDK" Guid="$(var.rcm_sdk_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK" KeyPath="yes" Id="reg_SDK2" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_SDK" />
@@ -192,6 +195,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_SDK26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSSDKDesc)" Id="reg_SDK27" />
     </Component>
+    <?endif?>                   <!-- /!LiteClient-->
 
     <!-- Work around bug KB30673.  Only for Windows 2000. -->    
     <Component Id="rcm_KB301673" Guid="$(var.rcm_kb301673_guid)" Win64="$(var.Win64)">

@@ -102,8 +102,16 @@
         <?error AFSDEV_BUILDTYPE is not set in the environment.?>
     <?endif?>
 
-    <!-- We are including debug symbols anyway.  Undefine this for a leaner installer without debug syms. -->
-    <?define DebugSyms = "yes"?>
+    <!-- Are we building a lite installer? then don't include debug symbols -->
+    <?ifdef LiteClient ?>
+        <?define NoDebugSyms ?>
+    <?endif?>
+
+    <!-- Default to including debug symbols unless someone defines
+         NoDebugSyms. -->
+    <?ifndef NoDebugSyms ?>
+        <?define DebugSyms = "yes"?>
+    <?endif?>
 
     <!-- Parameters for the features containing debug symbols -->
     <?ifdef DebugSyms?>

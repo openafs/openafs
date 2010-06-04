@@ -31,6 +31,7 @@
                     <File Id="fileafsvosadmin_DLL" Name="afsvosad.dll" LongName="afsvosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsvosadmin.dll"/>
                 </Component>
   <?ifndef BinsOnly?>
+  <?ifndef LiteClient?>
                 <Component Win64="$(var.Win64)" Id="cmf_afsbosadmin_DLL" Guid="$(var.cmf_afsbosadmin_DLL_guid)">
                     <File Id="fileafsbosadmin_DLL" Name="afsbosad.dll" LongName="afsbosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.dll"/>
                 </Component>
@@ -43,6 +44,7 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsptsadmin_DLL" Guid="$(var.cmf_afsptsadmin_DLL_guid)">
                     <File Id="fileafsptsadmin_DLL" Name="afsptsad.dll" LongName="afsptsadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsptsadmin.dll"/>
                 </Component>
+  <?endif?>
   <?endif?>
 
                 <Component Win64="$(var.Win64)" Id="cmf_afsrpc_DLL" Guid="$(var.cmf_afsrpc_DLL_guid)">
@@ -99,6 +101,7 @@
   <?ifndef BinsOnly ?>
                 <!-- <<LanguageSpecific:1033/en_US>> -->
             <?if $(var.Language) ="en_US"?>
+            <?ifndef LiteClient?>
                 <Component Win64="$(var.Win64)" Id="cmf_afseventmsg_1033_DLL" Guid="$(var.cmf_afseventmsg_1033_DLL_guid)">
                     <File Id="fileafseventmsg_1033_DLL" Name="afse1033.dll" LongName="afseventmsg_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afseventmsg_1033.dll"/>
                 </Component>
@@ -111,11 +114,12 @@
                 <Component Win64="$(var.Win64)" Id="cmf_TaAfsAccountManager_1033_DLL" Guid="$(var.cmf_TaAfsAccountManager_1033_DLL_guid)">
                     <File Id="fileTaAfsAccountManager_1033_DLL" Name="tacm1033.dll" LongName="TaAfsAccountManager_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAccountManager_1033.dll"/>
                 </Component>
-                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAppLib_1033_DLL" Guid="$(var.cmf_TaAfsAppLib_1033_DLL_guid)">
-                    <File Id="fileTaAfsAppLib_1033_DLL" Name="taal1033.dll" LongName="TaAfsAppLib_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib_1033.dll"/>
-                </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_1033_DLL" Guid="$(var.cmf_TaAfsServerManager_1033_DLL_guid)">
                     <File Id="fileTaAfsServerManager_1033_DLL" Name="tasm1033.dll" LongName="TaAfsServerManager_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager_1033.dll"/>
+                </Component>
+              <?endif?>
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAppLib_1033_DLL" Guid="$(var.cmf_TaAfsAppLib_1033_DLL_guid)">
+                    <File Id="fileTaAfsAppLib_1033_DLL" Name="taal1033.dll" LongName="TaAfsAppLib_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib_1033.dll"/>
                 </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afs_config_1033_DLL" Guid="$(var.cmf_afs_config_1033_DLL_guid)">
                     <File Id="fileafs_config_1033_DLL" Name="acfg1033.dll" LongName="afs_config_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config_1033.dll"/>
@@ -295,7 +299,8 @@
           <?endif?>
             </Directory> <!-- /common -->
 
-  <?ifndef BinsOnly ?>            
+  <?ifndef BinsOnly ?>
+  <?ifndef LiteClient ?>
             <Directory Id="dirControl_Center" Name="Contr" LongName="Control Center" SourceName="ControlC" LongSource="Control Center">
                 <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_EXE" Guid="$(var.cmf_TaAfsServerManager_EXE_guid)">
                     <File Id="fileTaAfsServerManager_EXE" Name="TaAfsSvM.exe" LongName="TaAfsServerManager.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager.exe">
@@ -318,6 +323,7 @@
                 </Component>
             <?endif?>
             </Directory> <!-- /Control center -->
+  <?endif?>
   <?endif?>
 
   <?ifndef BinsOnly?>
@@ -1268,6 +1274,7 @@
                 </Directory> <!-- /Program -->
             </Directory> <!-- /Client -->
   <?ifndef BinsOnly ?>
+  <?ifndef LiteClient ?>
             <Directory Id="dirServer" Name="Server">
                 <Directory Id="dirusr" Name="usr">
                     <Directory Id="dirafs" Name="afs">
@@ -1384,7 +1391,9 @@
                 </Directory>
             </Directory> <!-- Server -->
   <?endif?>
-  <?ifndef BinsOnly?>                  
+  <?endif?>
+  <?ifndef BinsOnly?>
+  <?ifndef LiteClient ?>
             <Directory Id="dirSDK" Name="SDK">
                     <Directory Id="dirSample" Name="Sample">
                         <Component Id="cmp_SDK_Sample" Guid="F9373E95-F410-4AA5-AA79-07C11EE00334">
@@ -1721,6 +1730,7 @@
                         </Directory>
                     </Directory>
             </Directory> <!-- SDK -->
+  <?endif?>
   <?endif?>
 
         </Directory> <!-- AFS -->

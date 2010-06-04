@@ -713,10 +713,18 @@ wix: loopback man-pages documentation
    $(NTMAKE)
    $(CD) ..\..\..\..
 
+wix-lite: loopback man-pages documentation
+   @echo ***** Making Wix MSI Installer (Lite)
+   $(DOCD) $(SRC)\WINNT\install\wix
+   $(CD) $(SRC)\WINNT\install\wix
+   $(NTMAKE) LITECLIENT=1
+   $(CD) ..\..\..\..
+
 media: install NSIS wix
 
 install-nsis: install NSIS
 
 install-wix: install wix
 
+install-wix-lite: install wix-lite
 

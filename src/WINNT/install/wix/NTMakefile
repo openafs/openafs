@@ -12,9 +12,15 @@ RELDIR=WINNT\install\wix
 MEDIADIR = $(DESTDIR)\WinInstall
 MEDIABINDIR = $(MEDIADIR)\Dll
 
-MSIFILE = $(MEDIADIR)\openafs-$(LANG).msi
+!IFDEF LITECLIENT
+LITE=-lite
+!ELSE
+LITE=
+!ENDIF
+
+MSIFILE = $(MEDIADIR)\openafs-$(LANG)$(LITE).msi
 !IF ("$(CPU)" == "i386")
-BINMSIFILE = $(MEDIADIR)\openafs-32bit-tools-$(LANG).msi
+BINMSIFILE = $(MEDIADIR)\openafs-32bit-tools-$(LANG)$(LITE).msi
 !ENDIF
 
 !IFNDEF MSIDNNLS
@@ -31,9 +37,9 @@ WIXINCLUDES = \
 	registry.wxi \
 	lang\$(LANG)\ui.wxi
 
-WIXOBJ = $(OUT)\openafs-$(LANG).wixobj
+WIXOBJ = $(OUT)\openafs-$(LANG)$(LITE).wixobj
 !IF ("$(CPU)" == "i386")
-BINWIXOBJ  = $(OUT)\openafs-32bit-tools-$(LANG).wixobj
+BINWIXOBJ  = $(OUT)\openafs-32bit-tools-$(LANG)$(LITE).wixobj
 !ENDIF
 !IFNDEF NOCYGWIN
 WIXCYGOPT=-dCygwinArchives
@@ -53,8 +59,15 @@ languages:
 #	)
 	$(MAKE) /f NTMakefile /nologo LANG=en_US lang
 
-
 lang:: lang_clean $(MSIFILE) $(BINMSIFILE)
+
+lang_clean:
+	-$(DEL) $(WIXOBJ)
+	-$(DEL) $(MSIFILE)
+!IF ("$(CPU)" == "i386")
+	-$(DEL) $(BINWIXOBJ)
+	-$(DEL) $(BINMSIFILE)
+!ENDIF
 
 uninst: 
         $(CD) uninstall
@@ -86,6 +99,9 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		"-dDestDir=$(DESTDIR)\\" \
 		-dCellDbFile=CellServDB \
 		"-dIDNMRedistDir=$(MSIDNNLS)\\REDIST" 	\
+!IFDEF LITECLIENT
+		-dLiteClient=1 \
+!ENDIF
 		-v0 \
 		-w0 \
 		$(WIXCYGOPT) $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
@@ -101,6 +117,9 @@ $(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
 		-dVersionPatch=$(AFSPRODUCT_VER_PATCH)	\
 		"-dDestDir=$(DESTDIR)\\" \
 		-dCellDbFile=CellServDB \
+!IFDEF LITECLIENT
+		-dLiteClient=1 \
+!ENDIF
 		-v0 \
 		-w0 \
         $(WIXCYGOPT) $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
@@ -113,6 +132,12 @@ $(BINMSIFILE): $(BINWIXOBJ)
 	dir $(BINMSIFILE)
 !ENDIF
 
+# Pseudotarget for building lite installer.
+!IFNDEF LITECLIENT
+lite:
+	$(MAKE) /f NTMakefile /nologo install LITECLIENT=1
+!ENDIF
+
 # Cleanup
 clean::
 	for %l in ( $(LANGUAGES) ) do \
@@ -123,14 +148,6 @@ clean::
 	$(CD) uninstall
 	$(MAKE) /f NTMakefile /nologo clean
 	$(CD) ..
-
-lang_clean:
-	-$(DEL) $(WIXOBJ)
-	-$(DEL) $(MSIFILE)
-!IF ("$(CPU)" == "i386")
-	-$(DEL) $(BINWIXOBJ)
-	-$(DEL) $(BINMSIFILE)
-!ENDIF
 
 
 

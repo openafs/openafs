@@ -113,7 +113,8 @@
                 <!-- Runtime -->
                 <?include runtime.wxi?>
             </Feature>
-            
+
+            <?ifndef LiteClient ?>
             <Feature Id="feaServer" AllowAdvertise="no" Description="$(loc.StrAFSServerLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="130" Title="$(loc.StrAFSServerDesc)">
 
@@ -172,10 +173,11 @@
 					<?include runtime_debug.wxi?>
                 </Feature>
             <?endif?>
-
                 <!-- Runtime -->
                 <?include runtime.wxi?>
             </Feature>
+            <?endif?>
+            <?ifndef LiteClient ?>
             <Feature Id="feaControlCenter" AllowAdvertise="no" Description="$(loc.StrAFSCCLongDesc)"
                 Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSCCDesc)">
                 
@@ -227,6 +229,8 @@
                 <!-- Runtime -->
                 <?include runtime.wxi?>
             </Feature>
+            <?endif?>
+            <?ifndef LiteClient ?>
             <Feature Id="feaSDK" AllowAdvertise="no" Description="$(loc.StrAFSSDKLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="130" Title="$(loc.StrAFSSDKDesc)">
 
@@ -253,6 +257,7 @@
                 <!-- Runtime -->
                 <?include runtime.wxi?>
             </Feature>
+            <?endif?>
             
             <Feature Id="feaDocumentation" AllowAdvertise="no" Description="$(loc.StrAFSDocLongDesc)"
                 Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSDocDesc)">
