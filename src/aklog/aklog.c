@@ -1800,8 +1800,8 @@ get_credv5_akimpersonate(krb5_context context,
     krb5_ticket ticket_reply[1];
     krb5_enc_tkt_part enc_tkt_reply[1];
     krb5_address address[30], *faddr[30];
-#endif
     krb5_data * temp;
+#endif
     int i;
     static int any_enctype[] = {0};
     *out_creds = 0;
@@ -2082,7 +2082,6 @@ cleanup:
         krb5_kt_close(context, kt);
     if (creds) krb5_free_creds(context, creds);
     krb5_free_keyblock_contents(context, session_key);
-out:
     return code;
 #else
     return -1;

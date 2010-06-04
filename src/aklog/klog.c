@@ -355,7 +355,11 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     char service_temp[MAXKTCREALMLEN + 20];
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    krb5_get_init_creds_opt *gic_opts;
+#else
     krb5_get_init_creds_opt gic_opts[1];
+#endif
     char *tofree = NULL, *outname;
     int code;
     char *what;
@@ -572,7 +576,15 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     klog_arg->pstore = passwd;
     klog_arg->allocated = sizeof(passwd);
     /* XXX should allow k5 to prompt in most cases -- what about expired pw?*/
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    code = krb5_get_init_creds_opt_alloc(k5context, &gic_opts);
+    if (code) {
+	afs_com_err(rn, code, "Can't allocate get_init_creds options");
+	KLOGEXIT(code);
+    }
+#else
     krb5_get_init_creds_opt_init(gic_opts);
+#endif
     for (;;) {
 	code = krb5_get_init_creds_password(k5context,
 	    incred,
@@ -691,7 +703,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    size_t elen = enc_part->length;
 	    atoken->kvno = RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
 	    if (afs_krb5_skip_ticket_wrapper(afscred->ticket.data,
-			afscred->ticket.length, &enc_part->data,
+			afscred->ticket.length, (char **) &enc_part->data,
 			&elen)) {
 		afs_com_err(rn, 0, "Can't unwrap %s AFS credential",
 		    cellconfig->name);
