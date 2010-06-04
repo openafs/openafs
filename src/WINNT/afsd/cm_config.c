@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strsafe.h>
 
 #include "afsd.h"
 #include <WINNT\afssw.h>
@@ -137,6 +138,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
     int foundCell = 0;
     long code;
     int tracking = 1, partial = 0;
+    size_t len;
 
     if ( IsWindowsModule(cellNamep) )
 	return -3;
@@ -224,13 +226,19 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
             if (stricmp(lineBuffer+1, cellNamep) == 0) {
 		/* found the cell we're looking for */
 		if (newCellNamep) {
-		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN);
-                    newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+                    if (FAILED(StringCchCopy(newCellNamep, CELL_MAXNAMELEN, lineBuffer+1))) {
+                        fclose(tfilep);
+                        fclose(bestp);
+                        return(-1);
+                    }
                     strlwr(newCellNamep);
                 }
                 if (linkedNamep) {
-                    strncpy(linkedNamep, linkp ? linkp : "", CELL_MAXNAMELEN);
-                    linkedNamep[CELL_MAXNAMELEN-1] = '\0';
+                    if (FAILED(StringCchCopy(linkedNamep, CELL_MAXNAMELEN, linkp ? linkp : ""))) {
+                        fclose(tfilep);
+                        fclose(bestp);
+                        return(-1);
+                    }
                     strlwr(linkedNamep);
                 }
                 inRightCell = 1;
@@ -248,13 +256,19 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
 		    return -5;
 		}
 		if (newCellNamep) {
-		    strncpy(newCellNamep, lineBuffer+1,CELL_MAXNAMELEN);
-                    newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+                    if (FAILED(StringCchCopy(newCellNamep, CELL_MAXNAMELEN, lineBuffer+1))) {
+                        fclose(tfilep);
+                        fclose(bestp);
+                        return(-1);
+                    }
                     strlwr(newCellNamep);
                 }
                 if (linkedNamep) {
-                    strncpy(linkedNamep, linkp ? linkp : "", CELL_MAXNAMELEN);
-                    linkedNamep[CELL_MAXNAMELEN-1] = '\0';
+                    if (FAILED(StringCchCopy(linkedNamep, CELL_MAXNAMELEN, linkp ? linkp : ""))) {
+                        fclose(tfilep);
+                        fclose(bestp);
+                        return(-1);
+                    }
                     strlwr(linkedNamep);
                 }
 		inRightCell = 0;
@@ -273,11 +287,21 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
             valuep++;	/* skip the "#" */
 
             valuep += strspn(valuep, " \t"); /* skip SP & TAB */
-            /* strip spaces and tabs in the end. They should not be there according to CellServDB format
-             * so do this just in case                        
+            /*
+             * strip spaces and tabs in the end. They should not be there according to CellServDB format
+             * so do this just in case
 	     */
-            while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') 
-                valuep[strlen(valuep) - 1] = '\0';
+            if(FAILED(StringCchLength(valuep, sizeof(lineBuffer), &len))) {
+                fclose(tfilep);
+                fclose(bestp);
+                return(-1);
+            } else {
+                len--;
+                while(isspace(valuep[len]))
+                    valuep[len--] = '\0';
+                while(isspace(*valuep))
+                    valuep++;
+            }
 
 	    if (inRightCell) {
                 char hostname[256];
@@ -397,6 +421,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
     struct hostent *thp;
     struct sockaddr_in vlSockAddr;
     char * s;
+    size_t len;
 
     if ( IsWindowsModule(cellNamep) )
 	return -1;
@@ -451,7 +476,10 @@ long cm_SearchCellRegistry(afs_uint32 client,
             strlwr(szCellName);
 
             /* if not a prefix match, try the next key */
-            if (strncmp(cellNamep, szCellName, strlen(cellNamep)))
+            if (FAILED(StringCchLength(cellNamep, CELL_MAXNAMELEN, &len)))
+                continue;
+
+            if (strncmp(cellNamep, szCellName, len))
                 continue;
 
             /* If we have a prefix match and we already found another
@@ -470,8 +498,8 @@ long cm_SearchCellRegistry(afs_uint32 client,
                 continue;
 
             if (newCellNamep) {
-                strncpy(newCellNamep, szCellName, CELL_MAXNAMELEN);
-                newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+                if (FAILED(StringCchCopy(newCellNamep, CELL_MAXNAMELEN, cellNamep)))
+                    goto done;
             }
             bFound = 1;
         }
@@ -699,6 +727,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     int numServers;
     int i;
     struct sockaddr_in vlSockAddr;
+
 #ifdef CELLSERV_DEBUG
     osi_Log1(afsd_logp,"SearchCellDNS-Doing search for [%s]", osi_LogSaveString(afsd_logp,cellNamep));
 #endif
@@ -711,7 +740,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
      */
     if ( IsWindowsModule(cellNamep) ||
          cm_FsStrChr(cellNamep, '.') == NULL ||
-         strncasecmp(cellNamep, CM_IOCTL_FILENAME_NOSLASH, strlen(CM_IOCTL_FILENAME_NOSLASH)) == 0)
+         strncasecmp(cellNamep, CM_IOCTL_FILENAME_NOSLASH, sizeof(CM_IOCTL_FILENAME_NOSLASH)-1) == 0)
 	return -1;
 
     rc = getAFSServer("afs3-vlserver", "udp", cellNamep, htons(7003),
@@ -726,8 +755,8 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
                 (*procp)(rockp, &vlSockAddr, cellHostNames[i], ipRanks[i]);
         }
         if (newCellNamep) {
-            strncpy(newCellNamep,cellNamep,CELL_MAXNAMELEN);
-            newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+            if(FAILED(StringCchCopy(newCellNamep, CELL_MAXNAMELEN, cellNamep)))
+                return -1;
             strlwr(newCellNamep);
         }
         return 0;   /* found cell */
@@ -747,15 +776,17 @@ long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
     cm_GetConfigDir(cellNamep, len);
 
     /* add trailing backslash, if required */
-    tlen = (int)strlen(cellNamep);
+    if (FAILED(StringCchLength(cellNamep, len, &tlen)))
+        return(-1L);
+
     if (tlen) {
         if (cellNamep[tlen-1] != '\\') {
-            strncat(cellNamep, "\\", len);
-            cellNamep[len-1] = '\0';
+            if (FAILED(StringCchCat(cellNamep, len, "\\")))
+                return(-1L);
         }
-        
-        strncat(cellNamep, AFS_CELLSERVDB, len);
-        cellNamep[len-1] = '\0';
+
+        if (FAILED(StringCchCat(cellNamep, len, AFS_CELLSERVDB)))
+            return(-1L);
     }
     return 0;
 }
@@ -791,9 +822,9 @@ cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 
     cm_GetConfigDir(wdir, sizeof(wdir));
     if (*wdir) {
-        strncat(wdir, namep, sizeof(wdir));
-        wdir[sizeof(wdir)-1] = '\0';
-        
+        if (FAILED(StringCchCat(wdir, MAX_PATH, namep)))
+            return NULL;
+
         tfilep = fopen(wdir, rwp);
     }
     return ((cm_configFile_t *) tfilep);        
@@ -803,6 +834,7 @@ long cm_WriteConfigString(char *labelp, char *valuep)
 {
     DWORD code, dummyDisp;
     HKEY parmKey;
+    size_t len;
 
     code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
 			   0, "container", 0, KEY_SET_VALUE, NULL,
@@ -810,13 +842,15 @@ long cm_WriteConfigString(char *labelp, char *valuep)
     if (code != ERROR_SUCCESS)
 	return -1;
 
-    code = RegSetValueEx(parmKey, labelp, 0, REG_SZ,
-			  valuep, (DWORD)strlen(valuep) + 1);
+    if (FAILED(StringCchLength(valuep, CM_CONFIGDEFAULT_CELLS, &len)))
+        return -1;
+
+    code = RegSetValueEx(parmKey, labelp, 0, REG_SZ, valuep, (DWORD)(len + 1));
     RegCloseKey (parmKey);
     if (code != ERROR_SUCCESS)
-	return (long)-1;
+	return -1;
 
-    return (long)0;
+    return 0;
 }
 
 long cm_WriteConfigInt(char *labelp, long value)
@@ -933,24 +967,24 @@ long cm_CloseCellFile(cm_configFile_t *filep)
     char wdir[MAX_PATH];
     char sdir[MAX_PATH];
     long code;
-    long closeCode;
-    closeCode = fclose((FILE *)filep);
+    long closeCode = fclose((FILE *)filep);
 
     cm_GetConfigDir(wdir, sizeof(wdir));
-    strcpy(sdir, wdir);
+    if (FAILED(StringCchCopy(sdir, sizeof(sdir), wdir)))
+        return -1;
 
     if (closeCode != 0) {
         /* something went wrong, preserve original database */
-        strncat(wdir, AFS_CELLSERVDB ".new", sizeof(wdir));
-        wdir[sizeof(wdir)-1] = '\0';
+        if (FAILED(StringCchCat(wdir, sizeof(wdir), AFS_CELLSERVDB ".new")))
+            return -1;
         unlink(wdir);
         return closeCode;
     }
 
-    strncat(wdir, AFS_CELLSERVDB, sizeof(wdir));
-    wdir[sizeof(wdir)-1] = '\0';
-    strncat(sdir, AFS_CELLSERVDB ".new", sizeof(sdir));/* new file */
-    sdir[sizeof(sdir)-1] = '\0';
+    if (FAILED(StringCchCat(wdir, sizeof(wdir), AFS_CELLSERVDB)))
+        return -1;
+    if (FAILED(StringCchCat(sdir, sizeof(sdir), AFS_CELLSERVDB ".new"))) /* new file */
+        return -1;
 
     unlink(sdir);			/* delete old file */
 
@@ -967,8 +1001,8 @@ void cm_GetConfigDir(char *dir, afs_uint32 len)
     char * dirp = NULL;
 
     if (!afssw_GetClientCellServDBDir(&dirp)) {
-        strncpy(dir, dirp, len);
-        dir[len-1] = '\0';
+        if (FAILED(StringCchCopy(dir, len, dirp)))
+            return;
         free(dirp);
     } else {
         dir[0] = '\0';
