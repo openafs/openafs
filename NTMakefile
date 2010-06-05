@@ -643,7 +643,9 @@ install: finale
 
 # Clean target for obj tree
 clean:
-	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
+	$(CD) $(SRC)\config
+	nmake /nologo /f ntmakefile version
+	$(CD) ..\..
 	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" media
 	$(CD) $(SRC)\config
 	nmake /nologo /f ntmakefile clean_version

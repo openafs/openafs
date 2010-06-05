@@ -226,7 +226,7 @@ RXGEN = $(DESTDIR)\bin\rxgen
 
 # Common clean target.
 clean::
-	$(DEL) /q $(OUT)\*.obj $(OUT)\*.lib $(OUT)\*.dll $(OUT)\*.exe $(OUT)\*.pdb
+	$(DEL) /q $(OUT)\*.obj $(OUT)\*.lib $(OUT)\*.dll $(OUT)\*.exe $(OUT)\*.pdb $(OUT)\*.res $(OUT)\*.manifest $(OUT)\*.exp
 	$(DEL) /q $(OUT)\*_component_version_number.* *_component_version_number.*
 
 # Common lang target.
