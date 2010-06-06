@@ -11,12 +11,15 @@
 #define AFS_SRC_VOLSER_PROTOTYPES_H
 
 struct nvldbentry;
+struct uvldbentry;
 struct volintInfo;
 
 /* vsprocs.c */
 extern void MapPartIdIntoName(afs_int32 partId, char *partName);
 
 extern void MapHostToNetwork(struct nvldbentry *entry);
+
+extern void MapHostToNetworkU(struct uvldbentry *entry);
 
 extern struct rx_connection *UV_Bind(afs_uint32 aserver, afs_int32 port);
 
