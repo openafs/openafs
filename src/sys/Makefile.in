@@ -80,6 +80,7 @@ depinstall: \
 	${TOP_INCDIR}/afs/afs.exp \
 	${TOP_INCDIR}/afs/xfsattrs.h \
 	${TOP_INCDIR}/afs/sys_prototypes.h \
+	${TOP_LIBDIR}/afs.exp \
 	${KERNELDIR}/afs/xfsattrs.h \
 	${UKERNELDIR}/afs/afsl.exp \
 	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h 
