@@ -817,7 +817,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
         afsi_log("Reusing existing AFS Cache data:");
         cm_data = *config_data_p;      
 
-	afsi_log("  Base Address   = %p",baseAddress);
+	afsi_log("  Map Address    = %p", baseAddress);
+	afsi_log("  baseAddress    = %p", config_data_p->baseAddress);
 	afsi_log("  stats          = %u", config_data_p->stats);
 	afsi_log("  chunkSize      = %u", config_data_p->chunkSize);
 	afsi_log("  blockSize      = %u", config_data_p->blockSize);
@@ -833,9 +834,18 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
 	afsi_log("  currentSCaches = %u", config_data_p->currentSCaches);
 	afsi_log("  maxSCaches     = %u", config_data_p->maxSCaches);
 
-        // perform validation of persisted data structures
-        // if there is a failure, start from scratch
-        if (cm_ValidateCache && !cm_IsCacheValid()) {
+        /*
+         * perform validation of persisted data structures
+         * if there is a failure, start from scratch
+         *
+         * if the baseAddress changed then the embedded pointers
+         * within the data structures are no longer valid.
+         * in theory we could walk the tree and adjust the pointer
+         * values based on the offet but that has not been
+         * implemented.
+         */
+        if (baseAddress != cm_data.baseAddress ||
+            cm_ValidateCache && !cm_IsCacheValid()) {
             newFile = 1;
         }
     }
