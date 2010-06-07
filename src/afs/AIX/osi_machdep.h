@@ -80,6 +80,10 @@ extern simple_lock_data afs_global_lock;
 	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 #endif
 
-#define osi_procname(procname, size) strncpy(procname, curproc->pi_comm, size)
+/* Reading the current proc name from kernelspace is difficult. It is
+ * probably possible via indexing into v.vb_proc, but for now don't bother.
+ * To actually obtain the proc name, look at afs_procsize_init and
+ * src/afs/AIX/osi_gcpags.c for how to look at the process list */
+#define osi_procname(procname, size) strncpy(procname, "", size)
 
 #endif /* _OSI_MACHDEP_H_ */
