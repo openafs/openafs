@@ -231,6 +231,8 @@ extern int rx_KeyCreate(rx_destructor_t rtn);
 #endif
 extern void rx_SetSpecific(struct rx_connection *conn, int key, void *ptr);
 extern void *rx_GetSpecific(struct rx_connection *conn, int key);
+extern void rx_SetServiceSpecific(struct rx_service *svc, int key, void *ptr);
+extern void * rx_GetServiceSpecific(struct rx_service *svc, int key);
 extern void rx_IncrementTimeAndCount(struct rx_peer *peer,
 				     afs_uint32 rxInterface,
 				     afs_uint32 currentFunc,

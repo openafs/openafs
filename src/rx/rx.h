@@ -324,6 +324,12 @@ struct rx_service {
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
     afs_int32 idleDeadErr;
+    int nSpecific;		/* number entries in specific data */
+    void **specific;		/* pointer to connection specific data */
+#ifdef	RX_ENABLE_LOCKS
+    afs_kmutex_t svc_data_lock;	/* protect specific data */
+#endif
+
 };
 
 #endif /* KDUMP_RX_LOCK */

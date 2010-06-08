@@ -1430,6 +1430,11 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 
     tservice = rxi_AllocService();
     NETPRI;
+
+#ifdef	RX_ENABLE_LOCKS
+    MUTEX_INIT(&tservice->svc_data_lock, "svc data lock", MUTEX_DEFAULT, 0);
+#endif
+
     for (i = 0; i < RX_MAX_SERVICES; i++) {
 	struct rx_service *service = rx_services[i];
 	if (service) {
@@ -1476,6 +1481,8 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 	    service->connDeadTime = rx_connDeadTime;
 	    service->executeRequestProc = serviceProc;
 	    service->checkReach = 0;
+	    service->nSpecific = 0;
+	    service->specific = NULL;
 	    rx_services[i] = service;	/* not visible until now */
 	    USERPRI;
 	    return service;
@@ -7572,6 +7579,32 @@ rx_SetSpecific(struct rx_connection *conn, int key, void *ptr)
     MUTEX_EXIT(&conn->conn_data_lock);
 }
 
+void
+rx_SetServiceSpecific(struct rx_service *svc, int key, void *ptr)
+{
+    int i;
+    MUTEX_ENTER(&svc->svc_data_lock);
+    if (!svc->specific) {
+	svc->specific = (void **)malloc((key + 1) * sizeof(void *));
+	for (i = 0; i < key; i++)
+	    svc->specific[i] = NULL;
+	svc->nSpecific = key + 1;
+	svc->specific[key] = ptr;
+    } else if (key >= svc->nSpecific) {
+	svc->specific = (void **)
+	    realloc(svc->specific, (key + 1) * sizeof(void *));
+	for (i = svc->nSpecific; i < key; i++)
+	    svc->specific[i] = NULL;
+	svc->nSpecific = key + 1;
+	svc->specific[key] = ptr;
+    } else {
+	if (svc->specific[key] && rxi_keyCreate_destructor[key])
+	    (*rxi_keyCreate_destructor[key]) (svc->specific[key]);
+	svc->specific[key] = ptr;
+    }
+    MUTEX_EXIT(&svc->svc_data_lock);
+}
+
 void *
 rx_GetSpecific(struct rx_connection *conn, int key)
 {
@@ -7584,6 +7617,20 @@ rx_GetSpecific(struct rx_connection *conn, int key)
     MUTEX_EXIT(&conn->conn_data_lock);
     return ptr;
 }
+
+void *
+rx_GetServiceSpecific(struct rx_service *svc, int key)
+{
+    void *ptr;
+    MUTEX_ENTER(&svc->svc_data_lock);
+    if (key >= svc->nSpecific)
+	ptr = NULL;
+    else
+	ptr = svc->specific[key];
+    MUTEX_EXIT(&svc->svc_data_lock);
+    return ptr;
+}
+
 
 #endif /* !KERNEL */
 
