@@ -1288,6 +1288,23 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
 static int AFSDOBULK = 1;
 
+static_inline int
+osi_lookup_isdot(const char *aname)
+{
+#ifdef AFS_SUN5_ENV
+    if (!aname[0]) {
+	/* in Solaris, we can get passed "" as a path component if we are the
+	 * root directory, e.g. after a call to chroot. It is equivalent to
+	 * looking up "." */
+	return 1;
+    }
+#endif /* AFS_SUN5_ENV */
+    if (aname[0] == '.' && !aname[1]) {
+	return 1;
+    }
+    return 0;
+}
+
 int
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct pathname *pnp, int flags, struct vnode *rdir, afs_ucred_t *acred)
@@ -1415,7 +1432,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
      * I'm not fiddling with the LRUQ here, either, perhaps I should, or else 
      * invent a lightweight version of GetVCache.
      */
-    if (aname[0] == '.' && !aname[1]) {	/* special case */
+    if (osi_lookup_isdot(aname)) {	/* special case */
 	ObtainReadLock(&afs_xvcache);
 	osi_vnhold(adp, 0);
 	ReleaseReadLock(&afs_xvcache);
