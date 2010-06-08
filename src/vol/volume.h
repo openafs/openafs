@@ -413,6 +413,7 @@ struct volHeader {
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
 extern Volume *VGetVolume(Error * ec, VolId volumeId);
+extern Volume *VGetVolumeNoWait(Error * ec, VolId volumeId);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolume_r(Volume *);

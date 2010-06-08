@@ -176,6 +176,7 @@ static int VHold_r(Volume * vp);
 static void GetBitmap(Error * ec, Volume * vp, VnodeClass class);
 static void VReleaseVolumeHandles_r(Volume * vp);
 static void VCloseVolumeHandles_r(Volume * vp);
+static Volume * GetVolume(Error *ec, VolumeId volid, int nowait);
 void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
@@ -1138,13 +1139,35 @@ VGetVolume(Error * ec, VolId volumeId)
 {
     Volume *retVal;
     VOL_LOCK;
-    retVal = VGetVolume_r(ec, volumeId);
+    retVal = GetVolume(ec, volumeId, 0);
+    VOL_UNLOCK;
+    return retVal;
+}
+
+/* same as VGetVolume, but if a volume is waiting to go offline, we return
+ * that it is actually offline, instead of waiting for it to go offline */
+Volume *
+VGetVolumeNoWait(Error * ec, VolId volumeId)
+{
+    Volume *retVal;
+    VOL_LOCK;
+    retVal = GetVolume(ec, volumeId, 1);
     VOL_UNLOCK;
     return retVal;
 }
 
 Volume *
 VGetVolume_r(Error * ec, VolId volumeId)
+{
+    return GetVolume(ec, volumeId, 0);
+}
+
+/* set 'nowait' to 1 to not wait for goingOffline volumes to go offline
+ * before returning, and to just treat them as if they were already offline.
+ * otherwise, we wait for a goingOffline volume to go offline before we
+ * return. */
+static Volume *
+GetVolume(Error * ec, VolId volumeId, int nowait)
 {
     Volume *vp;
     unsigned short V0 = 0, V1 = 0, V2 = 0, V3 = 0, V4 = 0, V5 = 0, V6 =
@@ -1205,7 +1228,7 @@ VGetVolume_r(Error * ec, VolId volumeId)
 	}
 	if (programType == fileServer) {
 	    V9++;
-	    if (vp->goingOffline) {
+	    if (vp->goingOffline && !nowait) {
 		V10++;
 #ifdef AFS_PTHREAD_ENV
 		pthread_cond_wait(&vol_put_volume_cond, &vol_glock_mutex);
@@ -1220,7 +1243,7 @@ VGetVolume_r(Error * ec, VolId volumeId)
 	    } else if (V_inService(vp) == 0 || V_blessed(vp) == 0) {
 		V12++;
 		*ec = VNOVOL;
-	    } else if (V_inUse(vp) == 0) {
+	    } else if (V_inUse(vp) == 0 || vp->goingOffline) {
 		V13++;
 		*ec = VOFFLINE;
 	    } else {
