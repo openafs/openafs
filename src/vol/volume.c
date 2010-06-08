@@ -3486,12 +3486,21 @@ VGetVolumeByVp_r(Error * ec, Volume * vp)
     return GetVolume(ec, NULL, vp->hashid, vp, 0);
 }
 
-/* private interface for getting a volume handle
- * volumeId must be provided.
- * hint is an optional parameter to speed up hash lookups
- * flags is not used at this time
+/**
+ * private interface for getting a volume handle
+ *
+ * @param[out] ec         error code (0 if no error)
+ * @param[out] client_ec  wire error code to be given to clients
+ * @param[in]  volumeId   ID of the volume we want
+ * @param[in]  hint       optional hint for hash lookups, or NULL
+ * @param[in]  flags      unused; always 0
+ *
+ * @return a volume handle for the specified volume
+ *  @retval NULL an error occurred, or the volume is in such a state that
+ *               we cannot load a header or return any volume struct
+ *
+ * @note for DAFS, caller must NOT hold a ref count on 'hint'
  */
-/* for demand attach fs, caller MUST NOT hold a ref count on hint */
 static Volume *
 GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags)
 {
