@@ -491,7 +491,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		;
 
 	    errorCode = 0;
-	    *volptr = VGetVolume(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolumeNoWait(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
 	    if (!errorCode) {
 		assert(*volptr);
 		break;

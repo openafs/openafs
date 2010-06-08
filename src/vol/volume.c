@@ -3472,6 +3472,18 @@ VGetVolume(Error * ec, Error * client_ec, VolId volumeId)
     return retVal;
 }
 
+/* same as VGetVolume, but if a volume is waiting to go offline, we return
+ * that it is actually offline, instead of waiting for it to go offline */
+Volume *
+VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId)
+{
+    Volume *retVal;
+    VOL_LOCK;
+    retVal = GetVolume(ec, client_ec, volumeId, NULL, 1);
+    VOL_UNLOCK;
+    return retVal;
+}
+
 Volume *
 VGetVolume_r(Error * ec, VolId volumeId)
 {
@@ -3493,7 +3505,8 @@ VGetVolumeByVp_r(Error * ec, Volume * vp)
  * @param[out] client_ec  wire error code to be given to clients
  * @param[in]  volumeId   ID of the volume we want
  * @param[in]  hint       optional hint for hash lookups, or NULL
- * @param[in]  flags      unused; always 0
+ * @param[in]  nowait     0 to wait for a 'goingOffline' volume to go offline
+ *                        before returning, 1 to return immediately
  *
  * @return a volume handle for the specified volume
  *  @retval NULL an error occurred, or the volume is in such a state that
@@ -3502,7 +3515,7 @@ VGetVolumeByVp_r(Error * ec, Volume * vp)
  * @note for DAFS, caller must NOT hold a ref count on 'hint'
  */
 static Volume *
-GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags)
+GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowait)
 {
     Volume *vp = hint;
     /* pull this profiling/debugging code out of regular builds */
@@ -3755,7 +3768,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 
 	if (programType == fileServer) {
 	    VGET_CTR_INC(V9);
-	    if (vp->goingOffline) {
+	    if (vp->goingOffline && !nowait) {
 		VGET_CTR_INC(V10);
 #ifdef AFS_DEMAND_ATTACH_FS
 		/* wait for the volume to go offline */
@@ -3775,7 +3788,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	    } else if (V_inService(vp) == 0 || V_blessed(vp) == 0) {
 		VGET_CTR_INC(V12);
 		*ec = VNOVOL;
-	    } else if (V_inUse(vp) == 0) {
+	    } else if (V_inUse(vp) == 0 || vp->goingOffline) {
 		VGET_CTR_INC(V13);
 		*ec = VOFFLINE;
 	    } else {
