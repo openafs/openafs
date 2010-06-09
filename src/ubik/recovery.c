@@ -487,6 +487,11 @@ urecovery_Interact(void *dummy)
 	 * propogate it.
 	 */
 	if ((now = FT_ApproxTime()) > 30 + lastProbeTime) {
+
+#ifdef AFS_PTHREAD_ENV
+	    DBHOLD(ubik_dbase);
+#endif
+
 	    for (ts = ubik_servers, doingRPC = 0; ts; ts = ts->next) {
 		if (!ts->up) {
 		    doingRPC = 1;
@@ -499,6 +504,11 @@ urecovery_Interact(void *dummy)
 		    urecovery_state &= ~UBIK_RECFOUNDDB;
 		}
 	    }
+
+#ifdef AFS_PTHREAD_ENV
+	    DBRELE(ubik_dbase);
+#endif
+
 	    if (doingRPC)
 		now = FT_ApproxTime();
 	    lastProbeTime = now;
@@ -868,7 +878,7 @@ DoProbe(struct ubik_server *server)
 {
     struct rx_connection *conns[UBIK_MAX_INTERFACE_ADDR];
     struct rx_connection *connSuccess = 0;
-    int i, j;
+    int i, j, success_i = -1;
     afs_uint32 addr;
     char buffer[32];
     char hoststr[16];
@@ -889,29 +899,43 @@ DoProbe(struct ubik_server *server)
     }
     assert(i);			/* at least one interface address for this server */
 
+#ifdef AFS_PTHREAD_ENV
+    DBRELE(ubik_dbase);
+#endif
+
     multi_Rx(conns, i) {
 	multi_DISK_Probe();
 	if (!multi_error) {	/* first success */
-	    addr = server->addr[multi_i];	/* successful interface addr */
-
-	    if (server->disk_rxcid)	/* destroy existing conn */
-		rx_DestroyConnection(server->disk_rxcid);
-	    if (server->vote_rxcid)
-		rx_DestroyConnection(server->vote_rxcid);
-
-	    /* make new connections */
-	    server->disk_rxcid = conns[multi_i];
-	    server->vote_rxcid = rx_NewConnection(addr, ubik_callPortal, VOTE_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for vote reqs */
-
-	    connSuccess = conns[multi_i];
-	    strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
-	    ubik_print
-		("ubik:server %s is back up: will be contacted through %s\n",
-		 buffer, afs_inet_ntoa_r(addr, hoststr));
+	    success_i = multi_i;
 
 	    multi_Abort;
 	}
     } multi_End_Ignore;
+
+#ifdef AFS_PTHREAD_ENV
+    DBHOLD(ubik_dbase);
+#endif
+
+    if (success_i >= 0) {
+	addr = server->addr[success_i];	/* successful interface addr */
+
+	if (server->disk_rxcid)	/* destroy existing conn */
+	    rx_DestroyConnection(server->disk_rxcid);
+	if (server->vote_rxcid)
+	    rx_DestroyConnection(server->vote_rxcid);
+
+	/* make new connections */
+	server->disk_rxcid = conns[success_i];
+	server->vote_rxcid = rx_NewConnection(addr, ubik_callPortal,
+	                                      VOTE_SERVICE_ID, ubikSecClass,
+	                                      ubikSecIndex);
+
+	connSuccess = conns[success_i];
+	strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
+
+	ubik_print("ubik:server %s is back up: will be contacted through %s\n",
+	     buffer, afs_inet_ntoa_r(addr, hoststr));
+    }
 
     /* Destroy all connections except the one on which we succeeded */
     for (j = 0; j < i; j++)
