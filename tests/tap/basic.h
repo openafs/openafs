@@ -114,4 +114,4 @@ void sysdiag(const char *format, ...)
 
 END_DECLS
 
-#endif /* LIBTEST_H */
+#endif /* TAP_BASIC_H */
