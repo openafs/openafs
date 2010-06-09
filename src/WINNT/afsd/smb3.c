@@ -8871,88 +8871,180 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
     return 0;
 }
 
-unsigned char nullSecurityDesc[36] = {
+unsigned char nullSecurityDesc[] = {
     0x01,				/* security descriptor revision */
     0x00,				/* reserved, should be zero */
-    0x00, 0x80,			        /* security descriptor control;
-                                         * 0x8000 : self-relative format */
+    0x04, 0x80,			        /* security descriptor control;
+                                         * 0x0004 : null-DACL present - everyone has full access
+                                         * 0x8000 : relative format */
     0x14, 0x00, 0x00, 0x00,		/* offset of owner SID */
-    0x1c, 0x00, 0x00, 0x00,		/* offset of group SID */
+    0x20, 0x00, 0x00, 0x00,		/* offset of group SID */
     0x00, 0x00, 0x00, 0x00,		/* offset of DACL would go here */
     0x00, 0x00, 0x00, 0x00,		/* offset of SACL would go here */
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                        /* "null SID" owner SID */
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                                        /* "null SID" group SID */
+    0x01, 0x01, 0x00, 0x00,             /* "everyone SID" owner SID */
+    0x00, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00, 0x00,
+    0x01, 0x01, 0x00, 0x00,             /* "everyone SID" owner SID */
+    0x00, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00, 0x00
 };      
 
 /* NT_TRANSACT_QUERY_SECURITY_DESC (SMB_COM_NT_TRANSACT) */
 long smb_ReceiveNTTranQuerySecurityDesc(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     int parmOffset, parmCount, dataOffset, dataCount;
+    int totalParmCount, totalDataCount;
     int parmSlot;
-    int maxData;
+    int maxData, maxParm;
+    int inTotalParm, inTotalData;
+    int inParm, inData;
+    int inParmOffset, inDataOffset;
     char *outData;
     char *parmp;
     USHORT *sparmp;
     ULONG *lparmp;
     USHORT fid;
     ULONG securityInformation;
+    smb_fid_t *fidp;
+    long code = 0;
+    DWORD dwLength;
 
-    parmOffset = smb_GetSMBOffsetParm(inp, 11, 1)
+    /*
+     * For details on the meanings of the various
+     * SMB_COM_TRANSACTION fields, see sections 2.2.4.33
+     * of http://msdn.microsoft.com/en-us/library/ee442092%28PROT.13%29.aspx
+     */
+
+    inTotalParm = smb_GetSMBOffsetParm(inp, 1, 1)
+        | (smb_GetSMBOffsetParm(inp, 2, 1) << 16);
+
+    inTotalData = smb_GetSMBOffsetParm(inp, 3, 1)
+        | (smb_GetSMBOffsetParm(inp, 4, 1) << 16);
+
+    maxParm = smb_GetSMBOffsetParm(inp, 5, 1)
+        | (smb_GetSMBOffsetParm(inp, 6, 1) << 16);
+
+    maxData = smb_GetSMBOffsetParm(inp, 7, 1)
+        | (smb_GetSMBOffsetParm(inp, 8, 1) << 16);
+
+    inParm = smb_GetSMBOffsetParm(inp, 9, 1)
+        | (smb_GetSMBOffsetParm(inp, 10, 1) << 16);
+
+    inParmOffset = smb_GetSMBOffsetParm(inp, 11, 1)
         | (smb_GetSMBOffsetParm(inp, 12, 1) << 16);
-    parmp = inp->data + parmOffset;
+
+    inData = smb_GetSMBOffsetParm(inp, 13, 1)
+        | (smb_GetSMBOffsetParm(inp, 14, 1) << 16);
+
+    inDataOffset = smb_GetSMBOffsetParm(inp, 15, 1)
+        | (smb_GetSMBOffsetParm(inp, 16, 1) << 16);
+
+    parmp = inp->data + inParmOffset;
     sparmp = (USHORT *) parmp;
     lparmp = (ULONG *) parmp;
 
     fid = sparmp[0];
     securityInformation = lparmp[1];
 
-    maxData = smb_GetSMBOffsetParm(inp, 7, 1)
-        | (smb_GetSMBOffsetParm(inp, 8, 1) << 16);
+    fidp = smb_FindFID(vcp, fid, 0);
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveNTTranQuerySecurityDesc Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
+        return CM_ERROR_BADFD;
+    }
 
-    if (maxData < 36)
-        dataCount = 0;
-    else
-        dataCount = 36;
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+    lock_ReleaseMutex(&fidp->mx);
+
+    osi_Log4(smb_logp,"smb_ReceiveNTTranQuerySecurityDesc fidp 0x%p scp 0x%p file \"%S\" Info=0x%x",
+	      fidp, fidp->scp, osi_LogSaveClientString(smb_logp, fidp->NTopen_wholepathp),
+              securityInformation);
+
+    smb_ReleaseFID(fidp);
+
+    if ( securityInformation & ~(OWNER_SECURITY_INFORMATION|GROUP_SECURITY_INFORMATION|DACL_SECURITY_INFORMATION) )
+    {
+        code = CM_ERROR_BAD_LEVEL;
+        goto done;
+    }
+
+    dwLength = sizeof( nullSecurityDesc);
+
+    totalDataCount = dwLength;
+    totalParmCount = 4;
+
+    if (maxData >= totalDataCount) {
+        dataCount = totalDataCount;
+        parmCount = min(totalParmCount, maxParm);
+    } else if (maxParm >= totalParmCount) {
+        totalDataCount = dataCount = 0;
+        parmCount = totalParmCount;
+    } else {
+        totalDataCount = dataCount = 0;
+        totalParmCount = parmCount = 0;
+    }
 
     /* out parms */
     parmOffset = 8*4 + 39;
     parmOffset += 1;	/* pad to 4 */
-    parmCount = 4;
+
     dataOffset = parmOffset + parmCount;
 
     parmSlot = 1;
     outp->oddByte = 1;
     /* Total Parameter Count */
-    smb_SetSMBParmLong(outp, parmSlot, parmCount); parmSlot += 2;
+    smb_SetSMBParmLong(outp, parmSlot, totalParmCount); parmSlot += 2;
     /* Total Data Count */
-    smb_SetSMBParmLong(outp, parmSlot, dataCount); parmSlot += 2;
+    smb_SetSMBParmLong(outp, parmSlot, totalDataCount); parmSlot += 2;
     /* Parameter Count */
     smb_SetSMBParmLong(outp, parmSlot, parmCount); parmSlot += 2;
     /* Parameter Offset */
-    smb_SetSMBParmLong(outp, parmSlot, parmOffset); parmSlot += 2;
+    smb_SetSMBParmLong(outp, parmSlot, parmCount ? parmOffset : 0); parmSlot += 2;
     /* Parameter Displacement */
     smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
     /* Data Count */
     smb_SetSMBParmLong(outp, parmSlot, dataCount); parmSlot += 2;
     /* Data Offset */
-    smb_SetSMBParmLong(outp, parmSlot, dataOffset); parmSlot += 2;
+    smb_SetSMBParmLong(outp, parmSlot, dataCount ? dataOffset : 0); parmSlot += 2;
     /* Data Displacement */
     smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
-    smb_SetSMBParmByte(outp, parmSlot, 0);	/* Setup Count */
-    smb_SetSMBDataLength(outp, 1 + parmCount + dataCount);
+    /* Setup Count */
+    smb_SetSMBParmByte(outp, parmSlot, 0);
 
-    outData = smb_GetSMBData(outp, NULL);
-    outData++;			/* round to get to parmOffset */
-    *((ULONG *)outData) = 36; outData += 4;	/* length */
+    if (parmCount == totalParmCount && dwLength == dataCount) {
+        smb_SetSMBDataLength(outp, 1 + parmCount + dataCount);
 
-    if (maxData >= 36) {
-        memcpy(outData, nullSecurityDesc, 36);
-        outData += 36;
-        return 0;
-    } else
-        return CM_ERROR_BUFFERTOOSMALL;
+        /* Data */
+        outData = smb_GetSMBData(outp, NULL);
+        outData++;			/* round to get to dataOffset */
+
+        *((ULONG *)outData) = dataCount; outData += 4;	/* SD Length (4 bytes) */
+        memcpy(outData, nullSecurityDesc, dataCount);
+        outData += dataCount;
+
+        code = 0;
+    } else if (parmCount >= 4) {
+        smb_SetSMBDataLength(outp, 1 + parmCount);
+
+        /* Data */
+        outData = smb_GetSMBData(outp, NULL);
+        outData++;			/* round to get to dataOffset */
+
+        *((ULONG *)outData) = dwLength; outData += 4;	/* SD Length (4 bytes) */
+        code = CM_ERROR_BUFFERTOOSMALL;
+    } else {
+        smb_SetSMBDataLength(outp, 0);
+        code = CM_ERROR_BUFFER_OVERFLOW;
+    }
+
+  done:
+    return code;
 }
 
 /* SMB_COM_NT_TRANSACT

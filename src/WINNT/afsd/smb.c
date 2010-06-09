@@ -3145,6 +3145,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_BUFFERTOOSMALL) {
         NTStatus = 0xC0000023L;	/* Buffer too small */
     }
+    else if (code == CM_ERROR_BUFFER_OVERFLOW) {
+        NTStatus = 0x80000005L;	/* Buffer overflow */
+    }
     else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
         NTStatus = 0xC0000035L;	/* Object name collision */
     }   
