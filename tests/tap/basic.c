@@ -176,6 +176,21 @@ ok(int success, const char *format, ...)
 
 
 /*
+ * Same as ok(), but takes the format arguments as a va_list.
+ */
+void
+okv(int success, const char *format, va_list args)
+{
+    printf("%sok %lu", success ? "" : "not ", testnum++);
+    if (!success)
+        _failed++;
+    if (format != NULL)
+        print_desc(format, args);
+    putchar('\n');
+}
+
+
+/*
  * Skip a test.
  */
 void
