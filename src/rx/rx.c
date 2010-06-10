@@ -5299,7 +5299,10 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
-    call->lastSendData = conn->lastSendTime = call->lastSendTime = clock_Sec();
+    conn->lastSendTime = call->lastSendTime = clock_Sec();
+    /* Let a set of retransmits trigger an idle timeout */
+    if (!resending)
+	call->lastSendData = call->lastSendTime;
 }
 
 /* When sending packets we need to follow these rules:
@@ -5791,8 +5794,11 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
      * processing), and for the connection (so that we can discover
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
-    /* Don't count keepalives here, so idleness can be tracked. */
-    if ((p->header.type != RX_PACKET_TYPE_ACK) || (((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING))
+    /* Don't count keepalive ping/acks here, so idleness can be tracked. */
+    if ((p->header.type != RX_PACKET_TYPE_ACK) ||
+	((((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING) &&
+	 (((struct rx_ackPacket *)rx_DataOf(p))->reason !=
+	  RX_ACK_PING_RESPONSE)))
 	call->lastSendData = call->lastSendTime;
 }
 
