@@ -647,6 +647,11 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    areq->permWriteError = 1;
 	shouldRetry = 0;	/* Other random Vice error. */
     } else if (acode == RX_MSGSIZE) {	/* same meaning as EMSGSIZE... */
+	afs_warnuser
+	    ("afs: Path MTU may have been exceeded, retrying (server %d.%d.%d.%d)\n",
+	     (address >> 24), (address >> 16) & 0xff,
+	     (address >> 8) & 0xff, (address) & 0xff);
+
 	VSleep(1);		/* Just a hack for desperate times. */
 	if (aerrP)
 	    (aerrP->err_Other)++;
