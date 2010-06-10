@@ -5850,7 +5850,7 @@ rxi_CheckCall(struct rx_call *call)
 	    netstack_t *ns =  netstack_find_by_stackid(GLOBAL_NETSTACKID);
 	    ip_stack_t *ipst = ns->netstack_ip;
 #endif
-	    ire = ire_cache_lookup(call->conn->peer->host
+	    ire = ire_cache_lookup(conn->peer->host
 #if defined(AFS_SUN510_ENV) && defined(ALL_ZONES)
 				   , ALL_ZONES
 #if defined(AFS_SUN510_ENV) && (defined(ICL_3_ARG) || defined(GLOBAL_NETSTACKID))
@@ -5863,7 +5863,7 @@ rxi_CheckCall(struct rx_call *call)
 		);
 	    
 	    if (ire && ire->ire_max_frag > 0)
-		rxi_SetPeerMtu(NULL, call->conn->peer->host, 0,
+		rxi_SetPeerMtu(NULL, conn->peer->host, 0,
 			       ire->ire_max_frag);
 #if defined(GLOBAL_NETSTACKID)
 	    netstack_rele(ns);
@@ -5919,27 +5919,27 @@ rxi_CheckCall(struct rx_call *call)
     }
     return 0;
 mtuout:
-    if (call->conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT) {
+    if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT) {
 	/* if we never succeeded, let the error pass out as-is */
-	if (call->conn->peer->maxPacketSize)
-	    cerror = call->conn->msgsizeRetryErr;
+	if (conn->peer->maxPacketSize)
+	    cerror = conn->msgsizeRetryErr;
 
 	/* if we thought we could send more, perhaps things got worse */
 	if (call->conn->peer->maxPacketSize > conn->lastPacketSize)
 	    /* maxpacketsize will be cleared in rxi_SetPeerMtu */
-	    newmtu = MAX(call->conn->peer->maxPacketSize-RX_IPUDP_SIZE,
+	    newmtu = MAX(conn->peer->maxPacketSize-RX_IPUDP_SIZE,
 			 conn->lastPacketSize-(128+RX_IPUDP_SIZE));
 	else
 	    newmtu = conn->lastPacketSize-(128+RX_IPUDP_SIZE);
 
 	/* minimum capped in SetPeerMtu */
-	rxi_SetPeerMtu(call->conn->peer, 0, 0, newmtu);
+	rxi_SetPeerMtu(conn->peer, 0, 0, newmtu);
 
 	/* clean up */
 	conn->lastPacketSize = 0;
 
 	/* needed so ResetCall doesn't clobber us. */
-	call->MTU = call->conn->peer->ifMTU;
+	call->MTU = conn->peer->ifMTU;
     }
     rxi_CallError(call, cerror);
     return -1;
