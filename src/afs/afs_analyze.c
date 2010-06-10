@@ -414,7 +414,10 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		}
 	    } /* if (hm_retry_int ... */
 	    else {
-		areq->networkError = 1;
+		if (acode == RX_MSGSIZE)
+		    shouldRetry = 1;
+		else
+		    areq->networkError = 1;
 	    }
 	}
 	return shouldRetry;
@@ -456,6 +459,10 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
     if ((acode < 0) && (acode != VRESTARTING)) {
+	if (acode == RX_MSGSIZE) {
+	    shouldRetry = 1;
+	    goto out;
+	}
 	if (acode == RX_CALL_TIMEOUT) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
 	    if (afid)
