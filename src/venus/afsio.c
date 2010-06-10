@@ -99,7 +99,7 @@
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
 #include <des_prototypes.h>
-#include <rx_prototypes.h>
+#include <rx/rx_prototypes.h>
 #include "../rxkad/md5.h"
 #ifdef O_LARGEFILE
 #define afs_stat        stat64
@@ -130,7 +130,9 @@ static struct timeval now;
 struct timezone Timezone;
 static float seconds, datarate, oldseconds;
 extern int rxInitDone;
+#ifdef AFS_NT40_ENV
 static afs_int32 rx_mtu = -1;
+#endif
 afs_uint64 transid = 0;
 afs_uint32 expires = 0;
 afs_uint32 server_List[MAXHOSTSPERCELL];
@@ -279,7 +281,6 @@ afs_int32
 HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
 {
     static struct afsconf_dir *tdir = NULL;
-    afs_uint32 host = 0;
     afs_int32 code;
 
     *sc = NULL;
@@ -536,10 +537,8 @@ afs_int32
 SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call, struct interfaceAddr *
 			     addr, Capabilities *capabilities)
 {
-
-    int code;
-
 #ifdef AFS_NT40_ENV
+    int code;
     int cm_noIPAddr;                        /* number of client network interfaces */
     int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
     int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
@@ -946,7 +945,7 @@ readFile(struct cmd_syndesc *as, void *unused)
     afs_int32 code;
     afs_int32 hosts[AFS_MAXHOSTS];
     AFSFid Fid;
-    int i = 0, j;
+    int j;
     struct rx_connection *RXConn;
     struct cellLookup *cl;
     struct rx_call *tcall;
@@ -1151,7 +1150,6 @@ writeFile(struct cmd_syndesc *as, void *unused)
     afs_int32 hosts[AFS_MAXHOSTS];
     afs_uint32 useHost;
     AFSFid Fid;
-    int i = 0;
     struct rx_connection *RXConn;
     struct cellLookup *cl;
     struct rx_call *tcall;
