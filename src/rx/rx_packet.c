@@ -2218,8 +2218,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     MUTEX_ENTER(&conn->conn_data_lock);
     p->header.serial = ++conn->serial;
     if (p->length > conn->peer->maxPacketSize) {
-	conn->lastPacketSize = p->length;
-	conn->lastPacketSizeSeq = p->header.seq;
+	if (p->header.seq != 0) {
+	    conn->lastPacketSize = p->length;
+	    conn->lastPacketSizeSeq = p->header.seq;
+	}
     }
     MUTEX_EXIT(&conn->conn_data_lock);
     /* This is so we can adjust retransmit time-outs better in the face of 
@@ -2372,10 +2374,12 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     conn->serial += len;
     for (i = 0; i < len; i++) {
 	p = list[i];
-	if ((p->length > conn->peer->maxPacketSize) &&
-	    (p->length > conn->lastPacketSize)) {
-	    conn->lastPacketSize = p->length;
-	    conn->lastPacketSizeSeq = p->header.seq;
+	if (p->length > conn->peer->maxPacketSize) {
+	    if ((p->header.seq != 0) &&
+		((i == 0) || (p->length >= conn->lastPacketSize))) {
+		conn->lastPacketSize = p->length;
+		conn->lastPacketSizeSeq = p->header.seq;
+	    }
 	}
     }
     MUTEX_EXIT(&conn->conn_data_lock);
