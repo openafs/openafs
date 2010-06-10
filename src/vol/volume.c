@@ -2388,12 +2388,12 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
 
     if (VCanUseFSSYNC() && vp) {
+#ifdef AFS_DEMAND_ATTACH_FS
 	if ((mode == V_VOLUPD) || (VolumeWriteable(vp) && (mode == V_CLONE))) {
 	    /* mark volume header as in use so that volser crashes lead to a
 	     * salvage attempt */
 	    VUpdateVolume_r(ec, vp, 0);
 	}
-#ifdef AFS_DEMAND_ATTACH_FS
 	/* for dafs, we should tell the fileserver, except for V_PEEK
          * where we know it is not necessary */
 	if (mode == V_PEEK) {
@@ -3279,8 +3279,10 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    V_offlineMessage(vp)[0] = '\0';
 	}
     } else {
+#ifdef AFS_DEMAND_ATTACH_FS
 	if ((mode != V_PEEK) && (mode != V_SECRETLY))
 	    V_inUse(vp) = programType;
+#endif /* AFS_DEMAND_ATTACH_FS */
 	V_checkoutMode(vp) = mode;
     }
 
