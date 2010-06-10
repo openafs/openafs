@@ -2218,7 +2218,11 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     MUTEX_ENTER(&conn->conn_data_lock);
     p->header.serial = ++conn->serial;
     if (p->length > conn->peer->maxPacketSize) {
-	if (p->header.seq != 0) {
+	if ((p->header.type == RX_PACKET_TYPE_ACK) &&
+	    (p->header.flags & RX_REQUEST_ACK)) {
+	    conn->lastPingSize = p->length;
+	    conn->lastPingSizeSer = p->header.serial;
+	} else if (p->header.seq != 0) {
 	    conn->lastPacketSize = p->length;
 	    conn->lastPacketSizeSeq = p->header.seq;
 	}
@@ -2375,10 +2379,18 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     for (i = 0; i < len; i++) {
 	p = list[i];
 	if (p->length > conn->peer->maxPacketSize) {
-	    if ((p->header.seq != 0) &&
-		((i == 0) || (p->length >= conn->lastPacketSize))) {
-		conn->lastPacketSize = p->length;
-		conn->lastPacketSizeSeq = p->header.seq;
+	    /* a ping *or* a sequenced packet can count */
+	    if ((p->length > conn->peer->maxPacketSize)) {
+		if (((p->header.type == RX_PACKET_TYPE_ACK) &&
+		     (p->header.flags & RX_REQUEST_ACK)) &&
+		    ((i == 0) || (p->length >= conn->lastPingSize))) {
+		    conn->lastPingSize = p->length;
+		    conn->lastPingSizeSer = serial + i;
+		} else if ((p->header.seq != 0) &&
+			   ((i == 0) || (p->length >= conn->lastPacketSize))) {
+		    conn->lastPacketSize = p->length;
+		    conn->lastPacketSizeSeq = p->header.seq;
+		}
 	    }
 	}
     }

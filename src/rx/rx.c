@@ -1301,6 +1301,9 @@ rx_NewCall(struct rx_connection *conn)
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
 
+    /* Attempt MTU discovery */
+    rxi_GrowMTUOn(call);
+
     /*
      * We are no longer the active thread in rx_NewCall
      */
@@ -3855,15 +3858,30 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     if (conn->lastPacketSizeSeq) {
 	MUTEX_ENTER(&conn->conn_data_lock);
-	if (first >= conn->lastPacketSizeSeq) {
+	if ((first > conn->lastPacketSizeSeq) && (conn->lastPacketSize)) {
 	    pktsize = conn->lastPacketSize;
 	    conn->lastPacketSize = conn->lastPacketSizeSeq = 0;
 	}
 	MUTEX_EXIT(&conn->conn_data_lock);
+    }
+    if ((ap->reason == RX_ACK_PING_RESPONSE) && (conn->lastPingSizeSer)) {
+	MUTEX_ENTER(&conn->conn_data_lock);
+	if ((conn->lastPingSizeSer == serial) && (conn->lastPingSize)) {
+	    /* process mtu ping ack */
+	    pktsize = conn->lastPingSize;
+	    conn->lastPingSizeSer = conn->lastPingSize = 0;
+	}
+	MUTEX_EXIT(&conn->conn_data_lock);
+    }
+
+    if (pktsize) {
 	MUTEX_ENTER(&peer->peer_lock);
-	/* start somewhere */
+	/*
+	 * Start somewhere. Can't assume we can send what we can receive,
+	 * but we are clearly receiving.
+	 */
 	if (!peer->maxPacketSize)
-	    peer->maxPacketSize = np->length+RX_IPUDP_SIZE;
+	    peer->maxPacketSize = RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE;
 
 	if (pktsize > peer->maxPacketSize) {
 	    peer->maxPacketSize = pktsize;
@@ -4997,6 +5015,7 @@ rxi_SendAck(struct rx_call *call,
     struct rx_packet *p;
     u_char offset;
     afs_int32 templ;
+    afs_uint32 padbytes = 0;
 #ifdef RX_ENABLE_TSFPQ
     struct rx_ts_info_t * rx_ts_info;
 #endif
@@ -5006,6 +5025,28 @@ rxi_SendAck(struct rx_call *call,
      */
     if (call->rnext > 1) {
 	call->conn->rwind[call->channel] = call->rwind = rx_maxReceiveWindow;
+    }
+
+    /* Don't attempt to grow MTU if this is a critical ping */
+    if ((reason == RX_ACK_PING) && !(call->conn->flags & RX_CONN_ATTACHWAIT)
+	&& ((clock_Sec() - call->lastSendTime) < call->conn->secondsUntilPing))
+    {
+	/* keep track of per-call attempts, if we're over max, do in small
+	 * otherwise in larger? set a size to increment by, decrease
+	 * on failure, here?
+	 */
+	if (call->conn->peer->maxPacketSize &&
+	    (call->conn->peer->maxPacketSize < OLD_MAX_PACKET_SIZE
+	     +RX_IPUDP_SIZE))
+	    padbytes = call->conn->peer->maxPacketSize+16;
+	else
+	    padbytes = call->conn->peer->maxMTU + 128;
+
+	/* do always try a minimum size ping */
+	padbytes = MAX(padbytes, RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE+4);
+
+	/* subtract the ack payload */
+	padbytes -= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32));
     }
 
     call->nHardAcks = 0;
@@ -5035,7 +5076,7 @@ rxi_SendAck(struct rx_call *call,
     }
 #endif
 
-    templ =
+    templ = padbytes +
 	rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32) -
 	rx_GetDataSize(p);
     if (templ > 0) {
@@ -5135,6 +5176,18 @@ rxi_SendAck(struct rx_call *call,
 #ifdef ADAPT_WINDOW
 	clock_GetTime(&call->pingRequestTime);
 #endif
+	if (padbytes) {
+	    p->length = padbytes +
+		rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32);
+
+	    while (padbytes--)
+		/* not fast but we can potentially use this if truncated
+		 * fragments are delivered to figure out the mtu.
+		 */
+		rx_packetwrite(p, rx_AckDataSize(offset) + 4 *
+			       sizeof(afs_int32), sizeof(afs_int32),
+			       &padbytes);
+	}
     }
     if (call->conn->type == RX_CLIENT_CONNECTION)
 	p->header.flags |= RX_CLIENT_INITIATED;
@@ -5899,15 +5952,15 @@ rxi_CheckCall(struct rx_call *call)
 	&& ((call->startWait + conn->idleDeadTime) < now) &&
 	(call->flags & RX_CALL_READER_WAIT)) {
 	if (call->state == RX_STATE_ACTIVE) {
-	    rxi_CallError(call, RX_CALL_TIMEOUT);
-	    return -1;
+	    cerror = RX_CALL_TIMEOUT;
+	    goto mtuout;
 	}
     }
     if (call->lastSendData && conn->idleDeadTime && (conn->idleDeadErr != 0)
         && ((call->lastSendData + conn->idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
-	    rxi_CallError(call, conn->idleDeadErr);
-	    return -1;
+	    cerror = conn->idleDeadErr;
+	    goto mtuout;
 	}
     }
     /* see if we have a hard timeout */
@@ -6076,6 +6129,47 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
     MUTEX_EXIT(&call->lock);
 }
 
+/* Does what's on the nameplate. */
+void
+rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy)
+{
+    struct rx_call *call = arg1;
+    struct rx_connection *conn;
+
+    MUTEX_ENTER(&call->lock);
+    CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
+    if (event == call->growMTUEvent)
+	call->growMTUEvent = NULL;
+
+#ifdef RX_ENABLE_LOCKS
+    if (rxi_CheckCall(call, 0)) {
+	MUTEX_EXIT(&call->lock);
+	return;
+    }
+#else /* RX_ENABLE_LOCKS */
+    if (rxi_CheckCall(call))
+	return;
+#endif /* RX_ENABLE_LOCKS */
+
+    /* Don't bother with dallying calls */
+    if (call->state == RX_STATE_DALLY) {
+	MUTEX_EXIT(&call->lock);
+	return;
+    }
+
+    conn = call->conn;
+
+    /*
+     * keep being scheduled, just don't do anything if we're at peak,
+     * or we're not set up to be properly handled (idle timeout required)
+     */
+    if ((conn->peer->maxPacketSize != 0) &&
+	(conn->peer->natMTU < RX_MAX_PACKET_SIZE) &&
+	(conn->idleDeadErr))
+	(void)rxi_SendAck(call, NULL, 0, RX_ACK_PING, 0);
+    rxi_ScheduleGrowMTUEvent(call);
+    MUTEX_EXIT(&call->lock);
+}
 
 void
 rxi_ScheduleKeepAliveEvent(struct rx_call *call)
@@ -6091,6 +6185,25 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
     }
 }
 
+void
+rxi_ScheduleGrowMTUEvent(struct rx_call *call)
+{
+    if (!call->growMTUEvent) {
+	struct clock when, now;
+	clock_GetTime(&now);
+	when = now;
+	if ((call->conn->peer->maxPacketSize != 0) &&
+	    (call->conn->peer->ifMTU < OLD_MAX_PACKET_SIZE)) { /*was nat */
+	    when.sec += MAX(60, MIN(1+6*call->conn->secondsUntilPing,
+				    1+call->conn->secondsUntilDead));
+	} else
+	    when.sec += call->conn->secondsUntilPing - 1;
+	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
+	call->growMTUEvent =
+	    rxevent_PostNow(&when, &now, rxi_GrowMTUEvent, call, 0);
+    }
+}
+
 /* N.B. rxi_KeepAliveOff:  is defined earlier as a macro */
 void
 rxi_KeepAliveOn(struct rx_call *call)
@@ -6102,6 +6215,16 @@ rxi_KeepAliveOn(struct rx_call *call)
      * keep-alive is sent within the ping time */
     call->lastReceiveTime = call->lastSendTime = clock_Sec();
     rxi_ScheduleKeepAliveEvent(call);
+}
+
+void
+rxi_GrowMTUOn(struct rx_call *call)
+{
+    struct rx_connection *conn = call->conn;
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->lastPingSizeSer = conn->lastPingSize = 0;
+    MUTEX_EXIT(&conn->conn_data_lock);
+    rxi_ScheduleGrowMTUEvent(call);
 }
 
 /* This routine is called to send connection abort messages

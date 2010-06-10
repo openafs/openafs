@@ -249,7 +249,8 @@ struct rx_connection {
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
     afs_int32 lastPacketSize; /* last >max attempt */
     afs_int32 lastPacketSizeSeq; /* seq number of attempt */
-
+    afs_int32 lastPingSize; /* last MTU ping attempt */
+    afs_int32 lastPingSizeSer; /* serial of last MTU ping attempt */
     struct rxevent *challengeEvent;	/* Scheduled when the server is challenging a     */
     struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
     struct rxevent *checkReachEvent;	/* Scheduled when checking reachability */
@@ -521,6 +522,7 @@ struct rx_call {
     struct rxevent *resendEvent;	/* If this is non-Null, there is a retransmission event pending */
     struct rxevent *timeoutEvent;	/* If this is non-Null, then there is an overall timeout for this call */
     struct rxevent *keepAliveEvent;	/* Scheduled periodically in active calls to keep call alive */
+    struct rxevent *growMTUEvent;      /* Scheduled periodically in active calls to discover true maximum MTU */
     struct rxevent *delayedAckEvent;	/* Scheduled after all packets are received to send an ack if a reply or new call is not generated soon */
     struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
     int abortCode;		/* error code from last RPC */
