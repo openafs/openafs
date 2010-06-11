@@ -306,7 +306,7 @@ char *tmpdir = NULL;
 
 /* Forward declarations */
 /*@printflike@*/ void Log(const char *format, ...);
-/*@printflike@*/ void Abort(const char *format, ...);
+/*@printflike@*/ void Abort(const char *format, ...) AFS_NORETURN;
 static int IsVnodeOrphaned(VnodeId vnode);
 static int AskVolumeSummary(VolumeId singleVolumeNumber);
 

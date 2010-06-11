@@ -383,7 +383,8 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 # else
 extern void osi_Panic(char *fmt, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2)
+    AFS_NORETURN;
 #endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
@@ -403,7 +404,7 @@ extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 # ifdef UKERNEL
 extern void *rx_ServerProc(void *);
 # endif
-extern void osi_AssertFailK(const char *expr, const char *file, int line);
+extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
 extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 # ifndef UKERNEL
@@ -613,7 +614,7 @@ extern afs_kmutex_t rx_if_init_mutex;
 extern afs_kmutex_t rx_if_mutex;
 #endif
 extern osi_socket rxi_GetUDPSocket(u_short port);
-extern void osi_AssertFailU(const char *expr, const char *file, int line);
+extern void osi_AssertFailU(const char *expr, const char *file, int line) AFS_NORETURN;
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern int rxi_HandleSocketError(int socket);
 
@@ -626,7 +627,7 @@ extern void osi_Free(void *x, afs_int32 size);
 #endif
 #endif /* defined(AFS_AIX32_ENV) && !defined(KERNEL) */
 #ifndef KERNEL
-extern void osi_Panic(char *fmt, ...);
+extern void osi_Panic(char *fmt, ...) AFS_NORETURN;
 #endif
 
 extern void rx_GetIFInfo(void);

@@ -134,7 +134,6 @@
 
 /* Forward declarations */
 /*@printflike@*/ void Log(const char *format, ...);
-/*@printflike@*/ void Abort(const char *format, ...);
 
 
 /*@+fcnmacros +macrofcndecl@*/

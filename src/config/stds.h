@@ -336,9 +336,11 @@ hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return 
 #if !defined(__GNUC__) || __GNUC__ < 2
 #define AFS_UNUSED
 #define AFS_ATTRIBUTE_FORMAT(style,x,y)
+#define AFS_NORETURN
 #else
 #define AFS_UNUSED __attribute__((unused))
 #define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
+#define AFS_NORETURN __attribute__((__noreturn__));
 #endif
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

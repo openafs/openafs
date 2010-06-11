@@ -70,7 +70,7 @@
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-/*@printflike@*/ extern void Abort(const char *format, ...);
+/*@printflike@*/ extern void Abort(const char *format, ...) AFS_NORETURN;
 
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
