@@ -10,7 +10,7 @@
 #define AFS_64BIT_IOPS_ENV	1
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__x86_64__)
 #define AFS_X86_ENV		1
 #else
 #error Unsupported architecture
@@ -46,7 +46,7 @@
 #define SYS_NAME		"ppc_darwin_90"
 #define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_90
 #define AFSBIG_ENDIAN		1
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__x86_64__)
 #define sys_x86_darwin_12	1
 #define sys_x86_darwin_13	1
 #define sys_x86_darwin_14	1
@@ -106,7 +106,7 @@
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__x86_64__)
 #define AFS_X86_ENV		1
 #else
 #error Unsupported architecture
@@ -139,7 +139,7 @@
 #define SYS_NAME		"ppc_darwin_90"
 #define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_90
 #define AFSBIG_ENDIAN		1
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__x86_64__)
 #define sys_x86_darwin_12	1
 #define sys_x86_darwin_13	1
 #define sys_x86_darwin_14	1
