@@ -2447,13 +2447,6 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    goto done;
 	}
 #endif
-	V_needsCallback(vp) = 0;
-#ifdef	notdef
-	if (VInit >= 2 && V_BreakVolumeCallbacks) {
-	    Log("VAttachVolume: Volume %u was changed externally; breaking callbacks\n", V_id(vp));
-	    (*V_BreakVolumeCallbacks) (V_id(vp));
-	}
-#endif
 	VUpdateVolume_r(ec, vp, 0);
 	if (*ec) {
 	    Log("VAttachVolume: Error updating volume\n");
@@ -2601,7 +2594,6 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 	goto done;
     }
 
-    V_needsCallback(vp) = 0;
     VUpdateVolume_r(ec, vp, 0);
     if (*ec) {
 	Log("VAttachVolume: Error updating volume %u\n", vp->hashid);
@@ -3270,6 +3262,52 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	}
     }
 #endif /* BITMAP_LATER */
+
+    if (VInit >= 2 && V_needsCallback(vp)) {
+	if (V_BreakVolumeCallbacks) {
+	    Log("VAttachVolume: Volume %lu was changed externally; breaking callbacks\n",
+	        afs_printable_uint32_lu(V_id(vp)));
+	    V_needsCallback(vp) = 0;
+	    VOL_UNLOCK;
+	    (*V_BreakVolumeCallbacks) (V_id(vp));
+	    VOL_LOCK;
+
+	    VUpdateVolume_r(ec, vp, 0);
+	}
+#ifdef FSSYNC_BUILD_CLIENT
+	else if (VCanUseFSSYNC()) {
+	    afs_int32 fsync_code;
+
+	    V_needsCallback(vp) = 0;
+	    VOL_UNLOCK;
+	    fsync_code = FSYNC_VolOp(V_id(vp), NULL, FSYNC_VOL_BREAKCBKS, FSYNC_WHATEVER, NULL);
+	    VOL_LOCK;
+
+	    if (fsync_code) {
+	        V_needsCallback(vp) = 1;
+		Log("Error trying to tell the fileserver to break callbacks for "
+		    "changed volume %lu; error code %ld\n",
+		    afs_printable_uint32_lu(V_id(vp)),
+		    afs_printable_int32_ld(fsync_code));
+	    } else {
+		VUpdateVolume_r(ec, vp, 0);
+	    }
+	}
+#endif /* FSSYNC_BUILD_CLIENT */
+
+	if (*ec) {
+	    Log("VAttachVolume: error %d clearing needsCallback on volume "
+	        "%lu; needs salvage\n", (int)*ec,
+	        afs_printable_uint32_lu(V_id(vp)));
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	    vp->nUsers = 0;
+#else /* !AFS_DEMAND_ATTACH_FS */
+	    *ec = VSALVAGE;
+#endif /* !AFS_DEMAND_ATTACh_FS */
+	    goto error;
+	}
+    }
 
     if (programType == fileServer) {
 	if (vp->specialStatus)
