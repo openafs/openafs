@@ -4029,6 +4029,22 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	    afs_printable_uint32_lu(vid));
     }
 
+#ifdef FSSYNC_BUILD_CLIENT
+    if (!Testing && VolumeChanged) {
+	afs_int32 fsync_code;
+
+	fsync_code = FSYNC_VolOp(vid, NULL, FSYNC_VOL_BREAKCBKS, FSYNC_SALVAGE, NULL);
+	if (fsync_code) {
+	    Log("Error trying to tell the fileserver to break callbacks for "
+	        "changed volume %lu; error code %ld\n",
+	        afs_printable_uint32_lu(vid),
+	        afs_printable_int32_ld(fsync_code));
+	} else {
+	    VolumeChanged = 0;
+	}
+    }
+#endif /* FSSYNC_BUILD_CLIENT */
+
     /* Turn off the inUse bit; the volume's been salvaged! */
     volHeader.inUse = 0;	/* clear flag indicating inUse@last crash */
     volHeader.needsSalvaged = 0;	/* clear 'damaged' flag */
