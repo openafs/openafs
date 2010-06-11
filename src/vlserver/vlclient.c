@@ -37,6 +37,7 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <afs/afsutil.h>
 #include <rx/xdr.h>
@@ -1316,14 +1317,14 @@ GetArgs(char *line, char **args, int *nargs)
     *nargs = 0;
     while (*line) {
 	register char *last = line;
-	while (*line == ' ')
+	while (isspace(*line))
 	    line++;
-	if (*last == ' ')
+	if (isspace(*last))
 	    *last = 0;
 	if (!*line)
 	    break;
 	*args++ = line, (*nargs)++;
-	while (*line && *line != ' ')
+	while (*line && !isspace(*line))
 	    line++;
     }
 }
