@@ -3786,6 +3786,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	if (code == 0) {
 	    rootdirfound = 1;
 	    newrootdir = 1;
+	    VolumeChanged = 1;
 	}
     }
 
