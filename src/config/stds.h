@@ -333,14 +333,18 @@ hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return 
 #define afs_int_to_pointer(i)      ((void *)  (i))
 #endif
 
-#if !defined(__GNUC__) || __GNUC__ < 2
-#define AFS_UNUSED
-#define AFS_ATTRIBUTE_FORMAT(style,x,y)
-#define AFS_NORETURN
-#else
+#if defined(__GNUC__) && __GNUC__ > 2
 #define AFS_UNUSED __attribute__((unused))
 #define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
 #define AFS_NORETURN __attribute__((__noreturn__));
+#elif defined (__clang__)
+#define AFS_UNUSED __attribute__((unused))
+#define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
+#define AFS_NORETURN __attribute__((__noreturn__));
+#else
+#define AFS_UNUSED
+#define AFS_ATTRIBUTE_FORMAT(style,x,y)
+#define AFS_NORETURN
 #endif
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */
