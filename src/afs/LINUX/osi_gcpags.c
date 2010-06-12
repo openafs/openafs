@@ -105,10 +105,10 @@ afs_osi_proc2cred(afs_proc_t * pr)
 #if defined(AFS_LINUX26_ENV)
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 	get_group_info(pr->cred->group_info);
-	set_cr_group_info(&cr, pr->cred->group_info);
+	afs_set_cr_group_info(&cr, pr->cred->group_info);
 #else
 	get_group_info(pr->group_info);
-	set_cr_group_info(&cr, pr->group_info);
+	afs_set_cr_group_info(&cr, pr->group_info);
 #endif
 #else
 	cr.cr_ngroups = pr->ngroups;

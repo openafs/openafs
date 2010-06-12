@@ -4491,15 +4491,15 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
 # ifdef AFS_LINUX26_ONEGROUP_ENV
-    set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
+    afs_set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
     h = ((g1-0x3f00) >> 14) + h + h + h;
-    GROUP_AT(cr_group_info(newcred), 0) = ((h << 28) | l);
+    GROUP_AT(afs_cr_group_info(newcred), 0) = ((h << 28) | l);
 # else
-    set_cr_group_info(newcred, groups_alloc(2));
-    GROUP_AT(cr_group_info(newcred), 0) = g0;
-    GROUP_AT(cr_group_info(newcred), 1) = g1;
+    afs_set_cr_group_info(newcred, groups_alloc(2));
+    GROUP_AT(afs_cr_group_info(newcred), 0) = g0;
+    GROUP_AT(afs_cr_group_info(newcred), 1) = g1;
 # endif
 #elif defined(AFS_SUN510_ENV)
     gids[0] = g0;
