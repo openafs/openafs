@@ -1269,7 +1269,7 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
     size_t length;
     ssize_t rdlen;
     ssize_t wrlen;
-    int rc;
+    int rc = 0;
 
     FDH_SEEK(targFdP, off, SEEK_SET);
     FDH_SEEK(newFdP, off, SEEK_SET);
