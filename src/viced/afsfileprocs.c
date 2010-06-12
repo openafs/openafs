@@ -1262,8 +1262,10 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 }				/*CopyOnWrite */
 
 static int
-CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off, afs_fsize_t size) {
-    char *buff = (char *)malloc(COPYBUFFSIZE);
+CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
+             afs_fsize_t size)
+{
+    char *buff = malloc(COPYBUFFSIZE);
     size_t length;
     ssize_t rdlen;
     ssize_t wrlen;
@@ -1272,7 +1274,9 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off, afs_fsize_
     FDH_SEEK(targFdP, off, SEEK_SET);
     FDH_SEEK(newFdP, off, SEEK_SET);
 
-    if (size > FDH_SIZE(targFdP) - off) size = FDH_SIZE(targFdP) - off;
+    if (size > FDH_SIZE(targFdP) - off)
+	size = FDH_SIZE(targFdP) - off;
+
     while (size > 0) {
 	if (size > COPYBUFFSIZE) {	/* more than a buffer */
 	    length = COPYBUFFSIZE;
@@ -1288,7 +1292,8 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off, afs_fsize_
 	    wrlen = 0;
 
 	if ((rdlen != length) || (wrlen != length)) {
-	    /* no error recovery, at the worst we'll have a "hole" in the file */
+	    /* no error recovery, at the worst we'll have a "hole"
+	     * in the file */
 	    rc = 1;
 	    break;
 	}
