@@ -1270,13 +1270,14 @@ DoBosHostList(struct cmd_syndesc *as, void *arock)
 	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
+
+        printf("Listing hosts at server %s\n", as->parms[SERVER].items->data);
     }
 
     if (!bos_HostGetBegin(bos_server, &iter, &st)) {
 	ERR_ST_EXT("bos_HostGetBegin", st);
     }
 
-    printf("Listing hosts at server %s\n", as->parms[SERVER].items->data);
 
     while (bos_HostGetNext(iter, host, &st)) {
 	printf("\t%s\n", host);
