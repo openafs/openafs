@@ -83,7 +83,7 @@ afs_osi_TraverseProcTable(void)
  * subsequent calls may overwrite the previously returned value.
  */
 
-#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
 const afs_ucred_t *
 afs_osi_proc2cred(afs_proc_t * pr)
 {
