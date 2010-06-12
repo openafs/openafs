@@ -3341,7 +3341,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     }
 
     /* Having no arguments also reports the default store asynchrony */
-    if (verbose && (blob.out_size == sizeof(tsb2))) {
+    if (!error && verbose && (blob.out_size == sizeof(tsb2))) {
 	fprintf(stdout, "Default store asynchrony is %d kbytes.\n",
 		(tsb2.sb_default / 1024));
     }
