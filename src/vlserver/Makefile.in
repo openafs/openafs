@@ -43,6 +43,11 @@ all: \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
 	${TOP_LIBDIR}/libvldb.a depinstall
 
+generated: \
+	vl_errors.c vlserver.h \
+	Kvldbint.cs.c Kvldbint.xdr.c \
+	vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h
+
 depinstall: \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
 	${TOP_INCDIR}/afs/vl_opcodes.h \

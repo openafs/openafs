@@ -45,6 +45,8 @@ bosoprocs.o cronbnodeops.o
 
 all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a bos_util
 
+generated: bosint.ss.c bosint.xdr.c bosint.cs.c bosint.h bnode.h boserr.c
+
 ${TOP_INCDIR}/afs/bosint.h: bosint.h
 	${INSTALL_DATA} $? $@
 

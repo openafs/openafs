@@ -26,6 +26,12 @@ LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
 
 all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client
 
+generated: \
+	utst_int.cs.c utst_int.ss.c utst_int.xdr.c utst_int.h \
+	Kubik_int.cs.c Kubik_int.xdr.c Kubik_int.h \
+	ubik_int.cs.c ubik_int.ss.c ubik_int.xdr.c ubik_int.h \
+	uerrors.c ubik.h
+
 depinstall: \
 	ubik_int.cs.c ubik_int.xdr.c \
 	${TOP_INCDIR}/ubik.h \

@@ -25,6 +25,14 @@ depinstall: \
 	Kpagcb.ss.c Kpagcb.h Kpagcb.cs.c Kpagcb.xdr.c \
         afscbint.h afsint.h pagcb.h
 
+generated: \
+	Kcallback.cs.c Kcallback.ss.c Kcallback.xdr.c Kcallback.h \
+	Kvice.cs.c Kvice.ss.c Kvice.xdr.c Kvice.h \
+	Kpagcb.cs.c Kpagcb.ss.c Kpagcb.xdr.c Kpagcb.h \
+	pagcb.h \
+	afscbint.cs.c afscbint.ss.c afscbint.xdr.c afscbint.h \
+	afsint.cs.c afsint.ss.c afsint.xdr.c afsint.h
+
 ${TOP_LIBDIR}/libafsint.a: libafsint.a
 	${INSTALL_DATA} $? $@
 

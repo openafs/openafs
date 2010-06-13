@@ -35,6 +35,9 @@ fc_test_LIBS=\
 all: ${TOP_LIBDIR}/librxkad.a depinstall
 test: fc_test
 
+generated: \
+	rxkad_errs.c rxkad.h
+
 depinstall: \
 	${TOP_INCDIR}/rx/rxkad.h \
 	${TOP_INCDIR}/rx/rxkad_prototypes.h \

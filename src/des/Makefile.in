@@ -67,6 +67,15 @@ buildtools: \
 	${TOP_INCDIR}/mit-cpyright.h \
 	${TOP_INCDIR}/des/stats.h
 
+generated: \
+	p.c \
+	key_perm.h \
+	s_table.h \
+	p_table.h \
+	ip.c \
+	fp.c \
+	odd.h
+
 ${TOP_LIBDIR}/libdes.a: libdes.a
 	${INSTALL_DATA} $? $@
 

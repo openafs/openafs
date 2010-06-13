@@ -51,6 +51,10 @@ SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o
 
 all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_prototypes.h budb_server
 
+generated: \
+	budb_errs.c budb_errs.h budb_client.h \
+	budb.cs.c budb.ss.c budb.xdr.c budb.h
+
 ${TOP_LIBDIR}/libbudb.a: libbudb.a
 	${INSTALL_DATA} $? $@
 

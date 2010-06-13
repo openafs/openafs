@@ -67,6 +67,8 @@ all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
 
+generated: volser.h volerr.c volint.cs.c volint.ss.c volint.xdr.c volint.h
+
 ${TOP_INCDIR}/afs/vsutils_prototypes.h: vsutils_prototypes.h
 	${INSTALL_DATA} $? $@
 

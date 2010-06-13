@@ -44,6 +44,8 @@ all: run-tests OpenAFS/Dirpath.pm libxfiles.a libdumpscan.a $(TEST_PROGRAMS)\
 	afsdump_scan afsdump_dirlist afsdump_extract dumptool OpenAFS/Dirpath.sh
 	@chmod +x run-tests
 
+generated: xf_errs.c xf_errs.h dumpscan_errs.c dumpscan_errs.h
+
 afsdump_scan: libxfiles.a libdumpscan.a $(OBJS_afsdump_scan)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o afsdump_scan $(OBJS_afsdump_scan) $(LIBS)
 

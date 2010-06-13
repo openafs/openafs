@@ -36,6 +36,10 @@ all: \
     ${KERNELDIR}/afs/xfsattrs.h \
     ${UKERNELDIR}/afs/afsl.exp
 
+generated: \
+	rmtsys.cs.c rmtsys.ss.c rmtsys.xdr.c rmtsys.h \
+	Krmtsys.cs.c Krmtsys.xdr.c Krmtsys.h
+
 ${TOP_INCDIR}/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL_DATA} $? $@
 

@@ -16,6 +16,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: depinstall
 
+generated: afs_trace.h afs_trace.msf unified_afs.c unified_afs.h
+
 afs_trace.h afs_trace.msf: afs_trace.et
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
 
