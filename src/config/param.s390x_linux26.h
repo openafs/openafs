@@ -24,7 +24,7 @@
 
 #define AFS_64BITPOINTER_ENV	1
 #define AFS_64BITUSERPOINTER_ENV	1
-#define AFS_64BIT_KERNEL	1
+#define AFS_LINUX_64BIT_KERNEL	1
 
 #else /* !defined(UKERNEL) */
 
