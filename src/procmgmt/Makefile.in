@@ -14,6 +14,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: ${TOP_LIBDIR}/libprocmgmt.a ${TOP_INCDIR}/afs/procmgmt.h
 
+buildtools: ${TOP_INCDIR}/afs/procmgmt.h
+
 ${TOP_LIBDIR}/libprocmgmt.a: libprocmgmt.a
 	${INSTALL_DATA} $? $@
 

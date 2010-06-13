@@ -45,6 +45,9 @@ all: ${includes} \
 	${TOP_LIBDIR}/libafsutil.a \
 	sys
 
+buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
+buildtools_clean: clean
+
 depinstall: ${includes}
 
 ${TOP_INCDIR}/afs/dirpath.h: dirpath.h

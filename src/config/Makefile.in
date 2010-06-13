@@ -26,6 +26,13 @@ all: config mkvers \
 	${TOP_INCDIR}/afs/vioc.h \
 	${TOP_INCDIR}/afs/debug.h
 
+buildtools: \
+	config \
+	mkvers \
+	${TOP_INCDIR}/afs/param.h \
+	${TOP_INCDIR}/afs/afs_sysnames.h \
+	${TOP_INCDIR}/afs/stds.h
+
 Makefile.version: Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
 	if	[ -r @TOP_SRCDIR@/CML/state ] ; \

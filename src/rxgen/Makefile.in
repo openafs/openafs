@@ -19,6 +19,8 @@ OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o \
 
 all: rxgen ${TOP_INCDIR}/afs/rxgen_consts.h
 
+buildtools: rxgen
+
 ${TOP_INCDIR}/afs/rxgen_consts.h: rxgen_consts.h
 	${INSTALL_DATA} $? $@
 

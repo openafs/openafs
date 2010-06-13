@@ -43,6 +43,9 @@ only_libafs: force
 only_libafs_tree: force
 	$(MAKE) build TARGET=libafs_tree
 
+buildtools: force
+	$(MAKE) build TARGET=build_tools COMPILE_PART2B=buildtools
+
 install: all install_dirs
 	$(MAKE) build COMPILE_PART2B=install
 
@@ -613,6 +616,9 @@ libjafsadm: libjafs
 jafs: libjafs
 
 jafsadm: libjafsadm
+
+build_tools: config des comerr rxgen
+	+${COMPILE_PART1} util ${COMPILE_PART2A} buildtools_clean
 
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
