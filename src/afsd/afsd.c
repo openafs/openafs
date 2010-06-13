@@ -167,11 +167,6 @@ void set_staticaddrs(void);
 #include <sys/ioctl.h>
 #include <sys/xattr.h>
 #endif
-#include <mach/mach.h>
-#include <mach/mach_port.h>
-#include <mach/mach_interface.h>
-#include <mach/mach_init.h>
-
 #include <CoreFoundation/CoreFoundation.h>
 
 #include <SystemConfiguration/SystemConfiguration.h>

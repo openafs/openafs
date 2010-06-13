@@ -105,24 +105,6 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #include <mach/mach_port.h>
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
-
-#include <CoreFoundation/CoreFoundation.h>
-
-#include <SystemConfiguration/SystemConfiguration.h>
-#include <SystemConfiguration/SCDynamicStore.h>
-
-#include <IOKit/pwr_mgt/IOPMLib.h>
-#include <IOKit/IOMessage.h>
-
-#include <dns_sd.h>
-
-typedef struct DNSSDState
-{
-    DNSServiceRef       service;
-    CFRunLoopSourceRef  source;
-    CFSocketRef         socket;
-} DNSSDState;
-
 #endif /* AFS_DARWIN_ENV */
 
 #ifndef MOUNT_AFS
