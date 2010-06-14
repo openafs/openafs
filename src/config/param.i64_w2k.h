@@ -40,7 +40,15 @@ typedef __int64 ssize_t;
 
 /* map lstat calls to _stat, until an AFS-aware lstat wrapper
  * can be written */
-#define lstat(a, b)       _stat((a), (b))
+#if (_MSC_VER < 1400)
+#define lstat(a, b)       _stat((a), (struct _stat *)(b))
+#else
+#ifdef _USE_32BIT_TIME_T
+#define lstat(a, b)       _stat((a), (struct _stat32 *)(b))
+#else
+#define lstat(a, b)       _stat((a), (struct _stat64i32 *)(b))
+#endif 
+#endif
 
 #if 0
 #define memset(A, 0, S) memset((void*)(A), 0, (size_t)(S))

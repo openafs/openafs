@@ -39,6 +39,10 @@ typedef int ssize_t;
 /* these macros define Unix-style functions missing in  VC++5.0/NT4.0 */
 #define MAXPATHLEN _MAX_PATH
 
+/* map lstat calls to _stat, until an AFS-aware lstat wrapper
+ * can be written */
+#define lstat(a, b)       _stat((a), (struct _stat *)(b))
+
 #if 0
 #define memset(A, 0, S) memset((void*)(A), 0, (size_t)(S))
 #define memcpy(B, A, S) memcpy((void*)(B), (void*)(A), (size_t)(S))
