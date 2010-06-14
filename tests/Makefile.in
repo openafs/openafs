@@ -20,6 +20,7 @@ runtests: runtests.o
 
 check test tests: runtests
 	cd tap && $(MAKE) $@
+	cd util && $(MAKE) $@
 	./runtests $(abs_top_srcdir)/tests/TESTS
 
 install:

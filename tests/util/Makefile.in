@@ -8,7 +8,7 @@ CFLAGS += -I$(srcdir)/..
 
 tests = ktime-t
 
-all: $(tests)
+all check test tests: $(tests)
 
 ktime-t: ktime-t.o
 	$(CC) $(LDFLAGS) -o ktime-t ktime-t.o ../tap/libtap.a \
