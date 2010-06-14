@@ -103,7 +103,7 @@
 #include <sys/fs_types.h>
 #endif
 
-#ifdef HAVE_SYS_MOUNT_H
+#if defined(HAVE_SYS_MOUNT_H) && !defined(AFS_ARM_DARWIN_ENV)
 #include <sys/mount.h>
 #endif
 
@@ -172,12 +172,15 @@ void set_staticaddrs(void);
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <SystemConfiguration/SCDynamicStore.h>
 
+#ifndef AFS_ARM_DARWIN_ENV
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include <IOKit/IOMessage.h>
 
 static io_connect_t root_port;
 static IONotificationPortRef notify;
 static io_object_t iterator;
+#endif
+
 static CFRunLoopSourceRef source;
 
 static int event_pid;
@@ -342,7 +345,7 @@ static void fork_rx_syscall();
 #endif
 static void fork_syscall();
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 static void
 afsd_sleep_callback(void * refCon, io_service_t service, 
 		    natural_t messageType, void * messageArgument )
@@ -423,10 +426,11 @@ afsd_event_cleanup(int signo) {
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
     CFRelease (source);
+#ifndef AFS_ARM_DARWIN_ENV
     IODeregisterForSystemPower(&iterator);
     IOServiceClose(root_port);
     IONotificationPortDestroy(notify);
-
+#endif
     exit(0);
 }
 
@@ -437,6 +441,7 @@ afsd_install_events(void)
     SCDynamicStoreContext ctx = {0};
     SCDynamicStoreRef store;
 
+#ifndef AFS_ARM_DARWIN_ENV
     root_port = IORegisterForSystemPower(0,&notify,afsd_sleep_callback,&iterator);
     
     if (root_port) {
@@ -483,6 +488,7 @@ afsd_install_events(void)
 	
 	CFRelease (store); 
     }
+#endif
     
     if (source != NULL) {
 	CFRunLoopAddSource (CFRunLoopGetCurrent(),

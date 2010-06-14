@@ -80,7 +80,7 @@
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 #include <netinet/if_ether.h>
 #endif
 #include "afsutil.h"

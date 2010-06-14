@@ -49,7 +49,9 @@
 
 #ifndef AFS_LINUX20_ENV
 #include <net/if.h>
+#ifndef AFS_ARM_DARWIN_ENV
 #include <netinet/if_ether.h>
+#endif
 #endif
 #endif
 #ifdef AFS_HPUX_ENV
