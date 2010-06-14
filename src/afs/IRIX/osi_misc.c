@@ -30,6 +30,63 @@ afs_mpservice(void *a)
 {
 }
 
+/*!
+ * make a semaphore name for use in <sys/sema.h>-type routines on
+ * IRIX
+ *
+ * \param[out]	sname		will contain the semaphore name and
+ *				should point to an allocated string
+ *				buffer of size METER_NAMSZ
+ * \param[in]	prefix		string with which to start the name
+ * \param[in]	v_number	vnode number to complete the name
+ *
+ * \post sname will point to the beginning of a NULL-terminated
+ *       string to be used as a semaphore name with a maximum of
+ *       (METER_NAMSZ-1) characters plus the NULL.  The name is a
+ *       concatenation of the string at 'prefix' and the ASCII
+ *       representation of the number in 'v_number'.  sname is
+ *       returned.
+ *
+ * \note Due to IRIX's use of uint64_t to represent vnumber_t and a
+ *       maximum semaphore name length of 15 (METER_NAMSZ-1), this
+ *       function cannot be guaranteed to produce a name which
+ *       uniquely describes a vnode.
+ *
+ */
+char *
+makesname(char *sname, const char *prefix, vnumber_t v_number)
+{
+    char vnbuf[21]; /* max number of uint64 decimal digits + 1 */
+    size_t prlen, vnlen;
+
+    if (sname) {
+	/*
+	 * Note: IRIX doesn't have realloc() available in the
+	 * kernel, so the openafs util implementation of snprintf is
+	 * not usable.  What follows is intended to reproduce the
+	 * behavior of:
+	 * 	snprintf(sname, METER_NAMSZ, "%s%llu", prefix,
+	 *      	 (unsigned long long)v_number);
+	 * Additionally, the kernel only provides a void sprintf(),
+	 * making length checking slightly more difficult.
+	 */
+	prlen = strlen(prefix);
+	if (prlen > METER_NAMSZ-1)
+	    prlen = METER_NAMSZ-1;
+	strncpy(sname, prefix, prlen);
+
+	memset(vnbuf, 0, sizeof(vnbuf));
+	sprintf(vnbuf, "%llu", (unsigned long long)v_number);
+	vnlen = strlen(vnbuf);
+	if (vnlen+prlen > METER_NAMSZ-1)
+	    vnlen = METER_NAMSZ-1-prlen;
+	if (vnlen > 0)
+	    strncpy(&(sname[prlen]), vnbuf, vnlen);
+	sname[vnlen+prlen] = '\0';
+    }
+    return sname;
+}
+
 #ifdef AFS_SGI_VNODE_GLUE
 #include <sys/invent.h>
 extern mutex_t afs_init_kern_lock;
