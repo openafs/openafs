@@ -198,3 +198,7 @@
 
 /* Windows does not provide socklen_t prior to WDK 6.0 */
 #undef HAVE_SOCKLEN_T
+
+#if (_MSC_VER < 1400)
+typedef int errno_t;
+#endif
