@@ -12,6 +12,7 @@
 
 #define USE_BPLUS 1
 
+#include <afsconfig.h>
 #include <afs/param.h>
 
 BOOL InitClass(HANDLE);

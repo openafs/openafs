@@ -13,8 +13,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "afsd.h"
+#include <assert.h>
 #include <strsafe.h>
 
 #ifdef USE_BPLUS

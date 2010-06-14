@@ -24,6 +24,9 @@
 
 /* $Id$ */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include<windows.h>
 #include<netidmgr.h>
 #include<dynimport.h>

@@ -9,6 +9,9 @@
 
 */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #undef _CRTDBG_MAP_ALLOC
 #include "stdio.h"
 #include "io.h"
