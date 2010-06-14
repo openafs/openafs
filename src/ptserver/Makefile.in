@@ -209,12 +209,12 @@ install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	if [ "x$(ENABLE_PTHREADED_UBIK)" != "xyes" ] ; then
-		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver \
-		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts \
-		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts \
-		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util \
-		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check \
+	if [ "x$(ENABLE_PTHREADED_UBIK)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
+		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
 	fi
 	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
 	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/prclient.h

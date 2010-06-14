@@ -16,21 +16,6 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
 
-ifeq ($(ENABLE_PTHREADED_UBIK),yes)
-DEST_DEP = \
-	${DEST}/root.server/usr/afs/bin/ptserver \
-	${DEST}/root.server/usr/afs/bin/pts \
-	${DEST}/bin/pts \
-	${DEST}/root.server/usr/afs/bin/pt_util \
-	${DEST}/etc/prdb_check
-INST_DEP = \
-	${DESTDIR}${afssrvlibexecdir}/ptserver \
-	${DESTDIR}${afssrvbindir}/pts \
-	${DESTDIR}${bindir}/pts \
-	${DESTDIR}${afssrvsbindir}/pt_util \
-	${DESTDIR}${afssrvsbindir}/prdb_check
-endif
-
 RX=../rx
 UTIL=../util
 PTSERVER=../ptserver
@@ -248,19 +233,23 @@ prerror.h: pterror.h
 #
 # Installation targets
 #
-install: $(INST_DEP)
+install: ptserver pts pt_util db_verify
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
+		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
+	fi
 
-${DEST}/root.server/usr/afs/bin/ptserver: ptserver
-	${INSTALL_PROGRAM} $? $@
-
-${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
-	${INSTALL_PROGRAM} $? $@
-
-${DEST}/root.server/usr/afs/bin/pt_util: pt_util
-	${INSTALL_PROGRAM} $? $@
-
-${DEST}/etc/prdb_check: db_verify
-	${INSTALL_PROGRAM} $? $@
+dest: ptserver pts pt_util db_verify
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver; \
+		${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts; \
+		${INSTALL_PROGRAM} pts ${DEST}/bin/pts; \
+		${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check; \
+	fi
 
 #
 # Misc. targets
@@ -271,19 +260,3 @@ clean:
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version
-${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
-	${INSTALL_PROGRAM} $? $@
-
-${DESTDIR}${afssrvbindir}/pts: pts
-	${INSTALL_PROGRAM} $? $@
-
-${DESTDIR}${bindir}/pts: pts
-	${INSTALL_PROGRAM} $? $@
-
-${DESTDIR}${afssrvsbindir}/pt_util: pt_util
-	${INSTALL_PROGRAM} $? $@
-
-${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
-	${INSTALL_PROGRAM} -f $? $@
-
-dest: $(DEST_DEP)

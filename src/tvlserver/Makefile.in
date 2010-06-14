@@ -18,17 +18,6 @@ CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} 
 CCRULE=${CC} ${CFLAGS} -c $?
 
-ifeq ($(ENABLE_PTHREADED_UBIK),yes)
-DEST_DEP = \
-	${DEST}/root.server/usr/afs/bin/vlserver \
-	${DEST}/etc/vldb_convert \
-	${DEST}/etc/vldb_check
-INST_DEP = \
-	${DESTDIR}${afssrvlibexecdir}/vlserver \
-	${DESTDIR}${afssrvsbindir}/vldb_convert \
-	${DESTDIR}${afssrvsbindir}/vldb_check
-endif
-
 RX=../rx
 UTIL=../util
 VLSERVER=../vlserver
@@ -195,27 +184,19 @@ vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
 
 system: install
 
-${DEST}/root.server/usr/afs/bin/vlserver: vlserver
-	${INSTALL} $? $@
+install: vlserver cnvldb vldb_check
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+		${INSTALL_PROGRAM} vlserver ${DESTDIR}${afssrvlibexecdir}/vlserver; \
+		${INSTALL_PROGRAM} cnvldb ${DESTDIR}${afssrvsbindir}/vldb_convert; \
+		${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check; \
+	fi
 
-${DEST}/etc/vldb_convert: cnvldb
-	${INSTALL} $? $@
-
-install: $(INST_DEP)
-
-${DESTDIR}${afssrvlibexecdir}/vlserver: vlserver
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/vldb_convert: cnvldb
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/vldb_check: vldb_check
-	${INSTALL} $? $@
-
-dest: $(DEST_DEP)
-
-${DEST}/etc/vldb_check: vldb_check
-	${INSTALL} $? $@
+dest: vlserver cnvldb vldb_check
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+		${INSTALL_PROGRAM} vlserver ${DEST}/root.server/usr/afs/bin/vlserver; \
+		${INSTALL_PROGRAM} cnvldb ${DEST}/etc/vldb_convert; \
+		${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check; \
+	fi
 
 #
 # Misc targets
