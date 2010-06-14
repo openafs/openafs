@@ -1187,6 +1187,11 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
 
     /*
+     * Register the error to be returned on an idle dead timeout
+     */
+    rx_SetServerConnIdleDeadErr(tcp->rxconnp, RX_CALL_DEAD);
+
+    /*
      * Let the Rx library know that we can auto-retry if an
      * RX_MSGSIZE error is returned.
      */
