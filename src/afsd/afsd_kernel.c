@@ -112,6 +112,7 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #endif /* MOUNT_AFS */
 
 #ifdef AFS_SGI65_ENV
+# include <sched.h>
 # define SET_RTPRI(P) {  \
     struct sched_param sp; \
     sp.sched_priority = P; \

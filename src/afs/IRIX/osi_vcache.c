@@ -15,6 +15,7 @@
 
 int
 osi_TryEvictVCache(struct vcache *avc, int *slept) {
+     int code;
      if (!VREFCOUNT_GT(avc,0)
          && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
         code = afs_FlushVCache(avc, slept);
@@ -23,6 +24,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
      }
      return 0;
 }
+
+extern char *makesname();
 
 struct vcache *
 osi_NewVnode(void) {
@@ -88,7 +91,6 @@ osi_PostPopulateVCache(struct vcache *avc) {
     AFS_VN_INIT_BUF_LOCK(&(avc->v));
 #endif
 
-    avc->v.v_type = afs_globalVFS;
     vSetType(avc, VREG);
 
     VN_SET_DPAGES(&(avc->v), (struct pfdat *)NULL);
