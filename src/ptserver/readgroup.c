@@ -147,8 +147,7 @@ main(int argc, char **argv)
 		    } else {
 			/* add the members of a group to the group */
 			if (verbose)
-			    printf("Adding %s to %s.\n",
-				   lnames.namelist_val[i], gname);
+			    printf("Adding %s to %s.\n", name, gname);
 			code = pr_ListMembers(name, &lnames);
 			if (code) {
 			    fprintf(stderr,
