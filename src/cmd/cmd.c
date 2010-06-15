@@ -771,16 +771,17 @@ initSyntax(void)
 	ts = cmd_CreateSyntax("apropos", AproposProc, NULL,
 			      "search by help text");
 	cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED, "help string");
-	ts = cmd_CreateSyntax("version", VersionProc, NULL,
-			      (char *)CMD_HIDDEN);
-	ts = cmd_CreateSyntax("-version", VersionProc, NULL,
-			      (char *)CMD_HIDDEN);
-	ts = cmd_CreateSyntax("-help", HelpProc, NULL,
-			      (char *)CMD_HIDDEN);
-	ts = cmd_CreateSyntax("--version", VersionProc, NULL,
-		              (char *)CMD_HIDDEN);
-	ts = cmd_CreateSyntax("--help", HelpProc, NULL,
-			      (char *)CMD_HIDDEN);
+
+	cmd_CreateSyntax("version", VersionProc, NULL,
+			 (char *)CMD_HIDDEN);
+	cmd_CreateSyntax("-version", VersionProc, NULL,
+			 (char *)CMD_HIDDEN);
+	cmd_CreateSyntax("-help", HelpProc, NULL,
+			 (char *)CMD_HIDDEN);
+	cmd_CreateSyntax("--version", VersionProc, NULL,
+		         (char *)CMD_HIDDEN);
+	cmd_CreateSyntax("--help", HelpProc, NULL,
+			 (char *)CMD_HIDDEN);
     }
 }
 
