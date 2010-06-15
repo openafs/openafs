@@ -1654,7 +1654,7 @@ ReadSysIdFile(void)
 		 errno));
 	return EIO;
     }
-    if ((i = read(fd, (char *)&vsn, sizeof(vsn))) != sizeof(vsn)) {
+    if (read(fd, (char *)&vsn, sizeof(vsn)) != sizeof(vsn)) {
 	ViceLog(0,
 		("%s: Read failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH,
 		 errno));
@@ -1672,9 +1672,8 @@ ReadSysIdFile(void)
 		 AFSDIR_SERVER_SYSID_FILEPATH, vsn.version, SYSIDVERSION));
 	return EIO;
     }
-    if ((i =
-	 read(fd, (char *)&uuid,
-	      sizeof(struct afsUUID))) != sizeof(struct afsUUID)) {
+    if (read(fd, (char *)&uuid, sizeof(struct afsUUID))
+	    != sizeof(struct afsUUID)) {
 	ViceLog(0,
 		("%s: read of uuid failed (%d)\n",
 		 AFSDIR_SERVER_SYSID_FILEPATH, errno));
@@ -1682,9 +1681,7 @@ ReadSysIdFile(void)
     }
     afs_ntohuuid(&uuid);
     FS_HostUUID = uuid;
-    if ((i =
-	 read(fd, (char *)&nentries,
-	      sizeof(afs_int32))) != sizeof(afs_int32)) {
+    if (read(fd, (char *)&nentries, sizeof(afs_int32)) != sizeof(afs_int32)) {
 	ViceLog(0,
 		("%s: Read of entries failed (%d)\n",
 		 AFSDIR_SERVER_SYSID_FILEPATH, errno));
