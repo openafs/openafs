@@ -3106,20 +3106,19 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 
     if (strcmp(name, ".") == 0) {
 	if (dir->vnodeNumber != vnodeNumber || (dir->unique != unique)) {
-	    AFSFid fid;
 	    if (!Showmode)
 		Log("directory vnode %u.%u: bad '.' entry (was %u.%u); fixed\n", dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
+		AFSFid fid;
 		CopyOnWrite(salvinfo, dir);
 		osi_Assert(afs_dir_Delete(&dir->dirHandle, ".") == 0);
 		fid.Vnode = dir->vnodeNumber;
 		fid.Unique = dir->unique;
 		osi_Assert(afs_dir_Create(&dir->dirHandle, ".", &fid) == 0);
+	        vnodeNumber = fid.Vnode;	/* Get the new Essence */
+	        unique = fid.Unique;
+	        vnodeEssence = CheckVnodeNumber(salvinfo, vnodeNumber);
 	    }
-
-	    vnodeNumber = fid.Vnode;	/* Get the new Essence */
-	    unique = fid.Unique;
-	    vnodeEssence = CheckVnodeNumber(salvinfo, vnodeNumber);
 	}
 	dir->haveDot = 1;
     } else if (strcmp(name, "..") == 0) {
