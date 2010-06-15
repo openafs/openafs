@@ -1,3 +1,13 @@
+openafs (1.5.75-1) UNRELEASED; urgency=low
+  
+  * Remove the lpia architecture.  This was an experiment in Ubuntu that
+    has apparently been dropped.
+  * Add preliminary support for powerpcspe, mapping that architecture to
+    ppc_linux26.  The kernel build won't work unless uname -m on that
+    architecture returns ppc.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 09 Jul 2010 13:46:44 -0700
+
 openafs (1.5.74.1-1) experimental; urgency=low
 
   * New upstream testing release.

@@ -15,13 +15,13 @@ arm|armel|armv5tel)
 amd64)
     echo amd64_linux26
     ;;
-i[3456]86|lpia)
+i[3456]86)
     echo i386_linux26
     ;;
 ia64)
     echo ia64_linux26
     ;;
-powerpc)
+powerpc|powerpcspe)
     echo ppc_linux26
     ;;
 ppc64)

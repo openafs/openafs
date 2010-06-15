@@ -13,7 +13,7 @@ Vcs-Git: git://git.debian.org/git/pkg-k5-afs/openafs.git
 Vcs-Browser: http://git.debian.org/?p=pkg-k5-afs/openafs.git
 
 Package: openafs-client
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: lsof, openafs-modules-dkms (>= ${source:Version})
  | openafs-modules-source (>= ${source:Version})
@@ -46,7 +46,7 @@ Description: AFS distributed file system experimental FUSE client
 
 Package: openafs-kpasswd
 Priority: extra
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client
 Conflicts: krb5-user, heimdal-clients, kerberos4kth-clients
 Description: AFS distributed filesystem old password changing
@@ -60,7 +60,7 @@ Description: AFS distributed filesystem old password changing
  package for new cells or for cells using Kerberos v5.
 
 Package: openafs-fileserver
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client, lsb-base
 Recommends: ntp | time-daemon
 Suggests: openafs-doc
@@ -73,7 +73,7 @@ Description: AFS distributed filesystem file server
  installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends},
  openafs-fileserver, openafs-client
 Suggests: openafs-doc
@@ -102,7 +102,7 @@ Description: AFS distributed filesystem documentation
  protocol documentation, and other OpenAFS documentation.
 
 Package: openafs-krb5
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Conflicts: openafs-client (<< 1.4.7.dfsg1-1)
 Description: AFS distributed filesystem Kerberos 5 integration
@@ -130,7 +130,7 @@ Description: AFS distributed file system runtime library (PAGs)
 
 Package: libopenafs-dev
 Section: libdevel
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Priority: extra
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Suggests: openafs-doc
@@ -146,7 +146,7 @@ Description: AFS distributed filesystem development libraries
 Package: openafs-modules-source
 Section: kernel
 Priority: extra
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${misc:Depends}, bison, flex, debhelper (>= 5),
  module-assistant | kernel-package
 Description: AFS distributed filesystem kernel module source
@@ -161,7 +161,7 @@ Package: openafs-modules-dkms
 Section: kernel
 Priority: extra
 Depends: ${misc:Depends}, dkms, bison, flex
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Description: AFS distributed filesystem kernel module DKMS source
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
@@ -171,7 +171,7 @@ Description: AFS distributed filesystem kernel module DKMS source
  approriate configuration for DKMS to build new modules dynamically.
 
 Package: libpam-openafs-kaserver
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Section: admin
 Priority: extra
 Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client
@@ -188,7 +188,7 @@ Description: AFS distributed filesystem kaserver PAM module
 Package: openafs-dbg
 Section: debug
 Priority: extra
-Architecture: alpha amd64 arm armel i386 ia64 lpia powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${misc:Depends}, openafs-fileserver (= ${binary:Version})
  | openafs-dbserver (= ${binary:Version})
 Description: AFS distributed filesystem debugging information
