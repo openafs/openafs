@@ -1159,7 +1159,7 @@ CopyBackArgs(struct cmd_token *alist, char **argv,
 	argv++;
 	count++;
     }
-    *(argv++) = 0;		/* use last slot for terminating null */
+    *argv = NULL;		/* use last slot for terminating null */
     /* don't count terminating null */
     *an = count;
     return 0;
