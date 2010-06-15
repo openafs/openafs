@@ -15,8 +15,15 @@ init_afs_cb(void)
     count = rx_getAllAddr((afs_uint32 *)&afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
     if (count <= 0)
 	afs_cb_interface.numberOfInterfaces = 0;
-    else
+    else {
+	int i;
 	afs_cb_interface.numberOfInterfaces = count;
+	for (i = 0; i < count; i++) {
+	    /* these addresss will be marshalled in XDR, so they must be in
+	     * host-byte order to make sense */
+	    afs_cb_interface.addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
+	}
+    }
     afs_cb_inited = 1;
     return 0;
 }
