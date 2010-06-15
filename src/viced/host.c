@@ -2945,11 +2945,13 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 
     if (!found) {
 	afs_inet_ntoa_r(addr, tmp);
 	if (state->mode == FS_STATE_LOAD_MODE) {
-	    ViceLog(0, ("h_stateVerifyAddrHash: error: addr %s not found in hash\n", tmp));
+	    ViceLog(0, ("h_stateVerifyAddrHash: error: addr %s:%u not found in hash\n",
+	                tmp, (unsigned)htons(port)));
 	    ret = 1;
 	    goto done;
 	} else {
-	    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr %s not found in hash\n", tmp));
+	    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr %s:%u not found in hash\n",
+	                tmp, (unsigned)htons(port)));
 	    state->flags.warnings_generated = 1;
 	}
     }
