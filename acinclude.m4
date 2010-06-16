@@ -140,10 +140,6 @@ AC_ARG_ENABLE([pthreaded-ubik],
     [enable_pthreaded_ubik="no"])
 
 dnl Kernel module build options.
-AC_ARG_WITH([dux-kernel-headers],
-    [AS_HELP_STRING([--with-dux-kernel-headers=path],
-        [use the kernel headers found at path (optional, defaults to first
-         match in /usr/sys)])])
 AC_ARG_WITH([linux-kernel-headers],
     [AS_HELP_STRING([--with-linux-kernel-headers=path],
         [use the kernel headers found at path (optional, defaults to
@@ -408,10 +404,6 @@ case $system in
         *-aix*)
 		MKAFS_OSTYPE=AIX
                 AC_MSG_RESULT(rs_aix)
-                ;;
-        *-osf*)
-		MKAFS_OSTYPE=DUX
-                AC_MSG_RESULT(alpha_dux)
                 ;;
         arm-*-darwin*)
 		MKAFS_OSTYPE=DARWIN
