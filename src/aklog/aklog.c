@@ -968,11 +968,15 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     if ((status = get_cellconfig(cell, &cellconf, &local_cell)))
 	return(status);
 
-    if (linkedcell != NULL && cellconf.linkedCell != NULL) {
-	*linkedcell = strdup(cellconf.linkedCell);
-	if (*linkedcell == NULL) {
-	    status = ENOMEM;
-	    goto out;
+    if (linkedcell != NULL) {
+	if (cellconf.linkedCell != NULL) {
+	    *linkedcell = strdup(cellconf.linkedCell);
+	    if (*linkedcell == NULL) {
+		status = ENOMEM;
+		goto out;
+	    }
+	} else {
+	    *linkedcell = NULL;
 	}
     }
 
