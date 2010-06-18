@@ -155,6 +155,7 @@ afs_unmount(struct mount *mp, int flags)
 afs_unmount(struct mount *mp, int flags, struct thread *p)
 #endif
 {
+    int error = 0;
 
     /*
      * Release any remaining vnodes on this mount point.
@@ -163,19 +164,22 @@ afs_unmount(struct mount *mp, int flags, struct thread *p)
      * This has to be done outside the global lock.
      */
 #if defined(AFS_FBSD80_ENV)
-  /* do nothing */
+    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, curthread);
 #elif defined(AFS_FBSD53_ENV)
-    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
+    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
 #else
-    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
+    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
 #endif
+    if (error)
+	goto out;
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
     afs_globalVFS = 0;
     afs_shutdown();
     AFS_GUNLOCK();
 
-    return 0;
+out:
+    return error;
 }
 
 int
