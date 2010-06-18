@@ -1771,6 +1771,13 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 		lock_page(pp);
 	    }
 
+            /* increment page refcount--our original design assumed
+             * that locking it would effectively pin it;  protect
+             * ourselves from the possiblity that this assumption is
+             * is faulty, at low cost (provided we do not fail to
+             * do the corresponding decref on the other side) */
+            get_page(pp);
+
 	    /* save the page for background map */
             iovecp[page_ix].iov_base = (void*) pp;
 
