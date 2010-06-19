@@ -269,6 +269,7 @@ struct afs_cbr {
 #define CNoAFSDB		0x08	/* never bother trying AFSDB */
 #define CHasVolRef		0x10	/* volumes were referenced */
 #define CLinkedCell		0x20	/* has a linked cell in lcellp */
+#define CHush                   0x40    /* don't display until referenced */
 
 struct cell {
     struct afs_q lruq;		/* lru q next and prev */

@@ -1636,7 +1636,21 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (!afs_InReadDir(adp))
 	    afs_PutDCache(tdc);
 	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry && !tryEvalOnly) {
+	    struct cell *tc;
+	    char *cn = (tname[0] == '.') ? tname + 1 : tname;
 	    ReleaseReadLock(&adp->lock);
+	    /* confirm it's not just hushed */
+	    tc = afs_GetCellByName(cn, WRITE_LOCK);
+	    if (tc) {
+		if (tc->states & CHush) {
+		    tc->states &= ~CHush;
+		    ReleaseWriteLock(&tc->lock);
+		    afs_DynrootInvalidate();
+		    goto redo;
+		}
+		ReleaseWriteLock(&tc->lock);
+	    }
+	    /* Allow a second dynroot retry if the cell was hushed before */
 	    dynrootRetry = 0;
 	    if (tname[0] == '.')
 		afs_LookupAFSDB(tname + 1);

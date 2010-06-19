@@ -1414,9 +1414,11 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 
     /* figure out if this is the home cell */
     isHomeCell = (strcmp(aci->name, LclCellName) == 0);
-    if (!isHomeCell)
+    if (!isHomeCell) {
 	cellFlags = 2;		/* not home, suid is forbidden */
-
+	if (enable_dynroot == 2)
+	    cellFlags |= 8; /* don't display foreign cells until looked up */
+    }
     /* build address list */
     for (i = 0; i < MAXHOSTSPERCELL; i++)
 	memcpy(&hosts[i], &aci->hostAddr[i].sin_addr, sizeof(afs_int32));
@@ -1906,6 +1908,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
         /* -rxmaxmtu */
         rxmaxmtu = atoi(as->parms[36].items->data);
     }
+    if (as->parms[37].items) {
+	/* -dynroot-sparse */
+	enable_dynroot = 2;
+    }
     return 0;
 }
 
@@ -2308,7 +2314,8 @@ afsd_run(void)
 
     if (enable_dynroot) {
 	if (afsd_verbose)
-	    printf("%s: Enabling dynroot support in kernel.\n", rn);
+	    printf("%s: Enabling dynroot support in kernel%s.\n", rn,
+		   (enable_dynroot==2)?", not showing cells.":"");
 	code = afsd_call_syscall(AFSOP_SET_DYNROOT, 1);
 	if (code)
 	    printf("%s: Error enabling dynroot support.\n", rn);
@@ -2316,7 +2323,9 @@ afsd_run(void)
 
     if (enable_fakestat) {
 	if (afsd_verbose)
-	    printf("%s: Enabling fakestat support in kernel.\n", rn);
+	    printf("%s: Enabling fakestat support in kernel%s.\n", rn,
+		   (enable_fakestat==2)?" for all mountpoints."
+		   :" for crosscell mountpoints");
 	code = afsd_call_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
 	if (code)
 	    printf("%s: Error enabling fakestat support.\n", rn);
@@ -2552,6 +2561,8 @@ afsd_init(void)
     cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, 
 		"disable stat/vcache cache growing as needed");
     cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
+    cmd_AddParm(ts, "-dynroot-sparse", CMD_FLAG, CMD_OPTIONAL,
+		"Enable dynroot support with minimal cell list");
 }
 
 int

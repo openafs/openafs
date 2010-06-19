@@ -780,6 +780,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 			cflags |= CLinkedCell;
 		    }
 		}
+		if (parm4 & 8) {
+		    cflags |= CHush;
+		}
 		if (!code)
 		    code =
 			afs_NewCell(tbuffer1, tcell->hosts, cflags, lcnamep,
