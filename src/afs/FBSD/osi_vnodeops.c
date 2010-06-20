@@ -1398,7 +1398,7 @@ afs_vop_inactive(ap)
     AFS_GLOCK();
     afs_InactiveVCache(VTOAFS(vp), 0);	/* decrs ref counts */
     AFS_GUNLOCK();
-#ifndef AFS_FBSD80_ENV
+#ifndef AFS_FBSD60_ENV
     MA_VOP_UNLOCK(vp, 0, ap->a_td);
 #endif
     return 0;
