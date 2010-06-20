@@ -1,0 +1,118 @@
+=head1 NAME
+
+fssync-debug_stats - Displays various statistics
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fssync-debug stats> S<<< B<-cmd> <I<subcommand>> >>>
+    S<<< [B<-arg1> <I<arg1>>] >>>
+    S<<< [B<-arg2> <I<arg2>>] >>>
+    S<<< [B<-reason> <I<sync protocol reason code>>] >>>
+    S<<< [B<-programtype> <I<program type code>>] >>>
+    [B<-help>]
+
+B<fssync-debug s> S<<< B<-c> <I<subcommand>> >>>
+    S<<< [B<-arg1> <I<arg1>>] >>>
+    S<<< [B<-arg2> <I<arg2>>] >>>
+    S<<< [B<-r> <I<sync protocol reason code>>] >>>
+    S<<< [B<-p> <I<program type code>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fssync-debug stats> command displays statistics
+according to the value of the option B<-cmd>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-cmd> <I<subcommand>>
+
+Specifies statistics subcommand. Available subcommands are:
+
+=over 4
+
+=item *
+
+B<pkg>    -- general volume package statistics
+
+=item *
+
+B<vicep>  -- vice partition statistics
+
+=item *
+
+B<hash>   -- volume hash chain statistics
+
+=item *
+
+B<hdr>    -- volume header cache statistics
+
+=item *
+
+B<vlru>   -- vlru generation statistics
+
+=item *
+
+B<help>   -- display list of available subcommands
+
+=back
+
+=item B<-arg1> <I<arg1>>
+
+Specifies first optional argument, in the context of the
+chosen subcommand. For I<vicep> statistics, it specifies
+partition name; for I<hash> statistics, it specifies
+hash bucket number; for I<vlru> statistics it specifies
+vlru generation number.
+
+=item B<-arg2> <I<arg2>>
+
+Specifies second optional argument, in the context of
+the chose subcommand. Currently, none of the subcommands
+use it.
+
+=item B<-reason> <I<sync protocol reason code>>
+
+Specifies numeric sync protocol reason code.
+Available codes are listed in OpenAFS source file
+F<src/vol/fssync_inline.h>. For SYNC_REASON_NONE,
+use B<-reason I<0>>.
+
+=item B<-programtype> <I<program type code>>
+
+Specifies program type code. Permitted values are
+I<fileServer>,
+I<volumeUtility>,
+I<salvager>,
+I<salvageServer>,
+I<volumeServer> and
+I<volumeSalvager>.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have write access to the file server.
+Usually, this means that the issuer must be the
+local superuser C<root> on the file server machine.
+
+=head1 SEE ALSO
+
+L<fssync-debug_header(8)>,
+L<fssync-debug_query(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2010 Davor Ocelic <docelic@spinlocksolutions.com>
+
+This documentation is covered by the IBM Public License Version 1.0.  This
+man page was written by Davor Ocelic for OpenAFS, based on documentation
+from Steven Jenkins, Tom Keiser and Simon Wilkinson.
