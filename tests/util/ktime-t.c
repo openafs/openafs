@@ -11,8 +11,14 @@
 #include <afs/param.h>
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#include <time.h>
 
 #include <afs/ktime.h>
+#include <afs/afsutil.h>
+#include <afs/afsutil_prototypes.h>
 #include <tap/basic.h>
 
 static struct testTime {
@@ -58,7 +64,8 @@ static struct testTime {
 int
 main(void)
 {
-    long code, temp;
+    long code;
+    afs_int32 temp;
     int errors;
     time_t t;
     struct testTime *tt;
@@ -72,7 +79,8 @@ main(void)
     errors = 0;
     for (tt = testTimes; tt->time; tt++) {
         t = 0;
-	code = ktime_DateToLong(tt->time, &t);
+	code = ktime_DateToLong(tt->time, &temp);
+	t = temp;
         if (tt->code == 1) {
             is_int(0, code, "ktime_DateToLong return for %s", tt->time);
             ok((time(0) - t <= 1), "ktime_DateToLong result for %s", tt->time);
