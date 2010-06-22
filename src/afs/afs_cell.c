@@ -1005,7 +1005,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     ReleaseWriteLock(&tc->lock);
     ReleaseWriteLock(&afs_xcell);
     afs_PutCell(tc, 0);
-    if (!aflags & CHush)
+    if (!(aflags & CHush))
 	afs_DynrootInvalidate();
     return 0;
 
