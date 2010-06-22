@@ -326,6 +326,12 @@ MatchBuffer(struct buffer *buf, int page, afs_int32 fid,
     if (buf->file != fid) {
 	return 0;
     }
+    if (atrans->type == UBIK_READTRANS && buf->dirty) {
+	/* if 'buf' is dirty, it has uncommitted changes; we do not want to
+	 * see uncommitted changes if we are a read transaction, so skip over
+	 * it. */
+	return 0;
+    }
     if (buf->dbase != atrans->dbase) {
 	return 0;
     }
@@ -624,6 +630,27 @@ DAbort(struct ubik_trans *atrans)
     return 0;
 }
 
+/**
+ * Invalidate any buffers that are duplicates of abuf. Duplicate buffers
+ * can appear if a read transaction reads a page that is dirty, then that
+ * dirty page is synced. The read transaction will skip over the dirty page,
+ * and create a new buffer, and when the dirty page is synced, it will be
+ * identical (except for contents) to the read-transaction buffer.
+ */
+static void
+DedupBuffer(struct buffer *abuf)
+{
+    struct buffer *tb;
+    for (tb = phTable[pHash(abuf->page)]; tb; tb = tb->hashNext) {
+	if (tb->page == abuf->page && tb != abuf && tb->file == abuf->file
+	    && tb->dbase == abuf->dbase) {
+
+	    tb->file = BADFID;
+	    Dlru(tb);
+	}
+    }
+}
+
 /*!
  * \attention DSync() must only be called after DFlush(), due to its interpretation of dirty flag.
  */
@@ -644,8 +671,10 @@ DSync(struct ubik_trans *atrans)
 	    if (tb->dirty == 1) {
 		if (file == BADFID)
 		    file = tb->file;
-		if (file != BADFID && tb->file == file)
+		if (file != BADFID && tb->file == file) {
 		    tb->dirty = 0;
+		    DedupBuffer(tb);
+		}
 	    }
 	}
 	if (file == BADFID)
