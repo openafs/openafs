@@ -173,7 +173,7 @@ extern void rxi_GrowMTUEvent(struct rxevent *event,
 			     void *dummy);
 extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
 extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
-extern void rxi_ScheduleGrowMTUEvent(struct rx_call *call);
+extern void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
 extern void rxi_KeepAliveOn(struct rx_call *call);
 extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
 extern void rxi_GrowMTUOn(struct rx_call *call);

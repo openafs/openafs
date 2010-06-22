@@ -3888,6 +3888,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    if ((pktsize-RX_IPUDP_SIZE > peer->ifMTU)) {
 		peer->ifMTU=pktsize-RX_IPUDP_SIZE;
 		peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+		rxi_ScheduleGrowMTUEvent(call, 1);
 	    }
 	}
 	MUTEX_EXIT(&peer->peer_lock);
@@ -5028,9 +5029,7 @@ rxi_SendAck(struct rx_call *call,
     }
 
     /* Don't attempt to grow MTU if this is a critical ping */
-    if ((reason == RX_ACK_PING) && !(call->conn->flags & RX_CONN_ATTACHWAIT)
-	&& ((clock_Sec() - call->lastSendTime) < call->conn->secondsUntilPing))
-    {
+    if (reason == RX_ACK_MTU) {
 	/* keep track of per-call attempts, if we're over max, do in small
 	 * otherwise in larger? set a size to increment by, decrease
 	 * on failure, here?
@@ -5047,6 +5046,7 @@ rxi_SendAck(struct rx_call *call,
 
 	/* subtract the ack payload */
 	padbytes -= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32));
+	reason = RX_ACK_PING;
     }
 
     call->nHardAcks = 0;
@@ -5846,15 +5846,19 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
-    conn->lastSendTime = call->lastSendTime = clock_Sec();
-    /* Don't count keepalive ping/acks here, so idleness can be tracked. */
     if ((p->header.type != RX_PACKET_TYPE_ACK) ||
-	((((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING) &&
-	 (((struct rx_ackPacket *)rx_DataOf(p))->reason !=
-	  RX_ACK_PING_RESPONSE)))
-	call->lastSendData = call->lastSendTime;
+	(((struct rx_ackPacket *)rx_DataOf(p))->reason == RX_ACK_PING) ||
+	(p->length <= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32))))
+    {
+	conn->lastSendTime = call->lastSendTime = clock_Sec();
+	/* Don't count keepalive ping/acks here, so idleness can be tracked. */
+	if ((p->header.type != RX_PACKET_TYPE_ACK) ||
+	    ((((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING) &&
+	     (((struct rx_ackPacket *)rx_DataOf(p))->reason !=
+	      RX_ACK_PING_RESPONSE)))
+	    call->lastSendData = call->lastSendTime;
+    }
 }
-
 
 /* Check if a call needs to be destroyed.  Called by keep-alive code to ensure
  * that things are fine.  Also called periodically to guarantee that nothing
@@ -6166,8 +6170,8 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy)
     if ((conn->peer->maxPacketSize != 0) &&
 	(conn->peer->natMTU < RX_MAX_PACKET_SIZE) &&
 	(conn->idleDeadErr))
-	(void)rxi_SendAck(call, NULL, 0, RX_ACK_PING, 0);
-    rxi_ScheduleGrowMTUEvent(call);
+	(void)rxi_SendAck(call, NULL, 0, RX_ACK_MTU, 0);
+    rxi_ScheduleGrowMTUEvent(call, 0);
     MUTEX_EXIT(&call->lock);
 }
 
@@ -6186,18 +6190,22 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 }
 
 void
-rxi_ScheduleGrowMTUEvent(struct rx_call *call)
+rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 {
     if (!call->growMTUEvent) {
 	struct clock when, now;
+
 	clock_GetTime(&now);
 	when = now;
-	if ((call->conn->peer->maxPacketSize != 0) &&
-	    (call->conn->peer->ifMTU < OLD_MAX_PACKET_SIZE)) { /*was nat */
-	    when.sec += MAX(60, MIN(1+6*call->conn->secondsUntilPing,
-				    1+call->conn->secondsUntilDead));
-	} else
-	    when.sec += call->conn->secondsUntilPing - 1;
+	if (!secs) {
+	    if (call->conn->secondsUntilPing)
+		secs = (6*call->conn->secondsUntilPing)-1;
+
+	    if (call->conn->secondsUntilDead)
+		secs = MIN(secs, (call->conn->secondsUntilDead-1));
+	}
+
+	when.sec += secs;
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
 	call->growMTUEvent =
 	    rxevent_PostNow(&when, &now, rxi_GrowMTUEvent, call, 0);
@@ -6224,7 +6232,7 @@ rxi_GrowMTUOn(struct rx_call *call)
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->lastPingSizeSer = conn->lastPingSize = 0;
     MUTEX_EXIT(&conn->conn_data_lock);
-    rxi_ScheduleGrowMTUEvent(call);
+    rxi_ScheduleGrowMTUEvent(call, 1);
 }
 
 /* This routine is called to send connection abort messages
