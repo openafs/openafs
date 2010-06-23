@@ -425,7 +425,19 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 		quiet_println(" ro");
 	    if (vlentryp->flags & VLF_BACKEXISTS)
 		quiet_println(" bk");
-	    if (vlentryp->flags & 0xffff8fff)
+	    if (vlentryp->flags & VLOP_MOVE)
+		quiet_println(" lock_move");
+	    if (vlentryp->flags & VLOP_RELEASE)
+		quiet_println(" lock_release");
+	    if (vlentryp->flags & VLOP_BACKUP)
+		quiet_println(" lock_backup");
+	    if (vlentryp->flags & VLOP_DELETE)
+		quiet_println(" lock_delete");
+	    if (vlentryp->flags & VLOP_DUMP)
+		quiet_println(" lock_dump");
+
+	    /* all bits not covered by VLF_* and VLOP_* constants */
+	    if (vlentryp->flags & 0xffff8e0f)
 		quiet_println(" errorflag(0x%x)", vlentryp->flags);
 	    quiet_println("\n");
 	    quiet_println("   LockAfsId     = %d\n", vlentryp->LockAfsId);
