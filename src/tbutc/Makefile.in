@@ -102,7 +102,7 @@ tcudbprocs.o: ${BUTC}/tcudbprocs.c ${BUTCINCLS}
 	${CC} ${CFLAGS} -c ${BUTC}/tcudbprocs.c
 
 dump.o: ${BUTC}/dump.c ${BUTCINCLS}
-	${CC} ${CFLAGS} @CFLAGS_NOERROR@ -c ${BUTC}/dump.c
+	${CC} ${CFLAGS} -c ${BUTC}/dump.c
 
 tcstatus.o: ${BUTC}/tcstatus.c ${BUTCINCLS}
 	${CC} ${CFLAGS} -c ${BUTC}/tcstatus.c

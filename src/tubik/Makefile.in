@@ -199,7 +199,7 @@ remote.o: ${srcdir}/remote.c
 	${CCRULE}
 
 beacon.o: ${srcdir}/beacon.c
-	${CCRULE} @CFLAGS_NOERROR@
+	${CCRULE}
 
 lock.o: ${srcdir}/lock.c
 	${CCRULE}
