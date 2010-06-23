@@ -78,8 +78,8 @@ extern int afs_shuttingdown;
 #define MAXNUMSYSNAMES	32	/* max that current constants allow */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
-#define AFS_NCBRS	300	/* max # of call back return entries */
-#define AFS_MAXCBRSCALL	16	/* max to return in a given call */
+#define AFS_NCBRS	1024	/* max # of call back return entries */
+#define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
 #define	AFS_SALLOC_LOW_WATER	250	/* Min free blocks before allocating more */
 #define	AFS_LRALLOCSIZ 	4096	/* "Large" allocated size */
 #define	VCACHE_FREE	5
@@ -235,6 +235,7 @@ struct afs_cbr {
     struct afs_cbr *hash_next;
 
     struct AFSFid fid;
+    unsigned int dynalloc:1;
 };
 
 /* cellinfo file magic number */
