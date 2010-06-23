@@ -118,8 +118,8 @@ AC_ARG_ENABLE([disconnected],
     , 
     [enable_disconnected="no"])
 AC_ARG_ENABLE([unix-sockets],
-    [AS_HELP_STRING([--enable-unix-sockets],
-        [enable use of unix domain sockets for fssync])],
+    [AS_HELP_STRING([--disable-unix-sockets],
+        [disable use of unix domain sockets for fssync (defaults to enabled)])],
     ,
     [enable_unix_sockets="yes"])
 AC_ARG_ENABLE([icmp-pmtu-discovery],
