@@ -342,3 +342,21 @@ afs_init_sb_export_ops(struct super_block *sb) {
 	sb->s_export_op->find_exported_dentry = find_exported_dentry;
 #endif
 }
+
+static inline void
+afs_linux_lock_inode(struct inode *ip) {
+#ifdef STRUCT_INODE_HAS_I_MUTEX
+    mutex_lock(&ip->i_mutex);
+#else
+    down(&ip->i_sem);
+#endif
+}
+
+static inline void
+afs_linux_unlock_inode(struct inode *ip) {
+#ifdef STRUCT_INODE_HAS_I_MUTEX
+    mutex_unlock(&ip->i_mutex);
+#else
+    up(&ip->i_sem);
+#endif
+}

@@ -15,6 +15,8 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
 
+#include "osi_compat.h"
+
 /* Linux VM operations
  *
  * The general model for Linux is to treat vm as a cache that's:
@@ -116,7 +118,9 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
     struct inode *ip = AFSTOV(avc);
     
+    afs_linux_lock_inode(ip);
     truncate_inode_pages(&ip->i_data, 0);
+    afs_linux_unlock_inode(ip);
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
