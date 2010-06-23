@@ -315,7 +315,36 @@ that this site did receive the correct new version of the volume.
 
 =item *
 
-If the VLDB entry is locked, the string C<Volume is currently LOCKED>.
+If the VLDB entry is locked, the string C<Volume is currently LOCKED>, as
+well as (in OpenAFS 1.5.75 and later) one or more of the following strings:
+
+=over 4
+
+=item Volume is locked for a move operation
+
+Indicates that the volume was locked due to a B<vos move> or a B<vos
+convertROtoRW> command.
+
+=item Volume is locked for a release operation
+
+Indicates that the volume was locked due to a B<vos release> command.
+
+=item Volume is locked for a backup operation
+
+Indicates that the volume was locked due to a B<vos backup> command.
+
+=item Volume is locked for a delete/misc operation
+
+Indicates that the volume was locked due to a B<vos delentry>, B<vos
+addsite>, B<vos remsite>, B<vos changeloc>, B<vos syncvldb>, B<vos
+syncserv>, B<vos rename>, or B<vos lock> command.
+
+=item Volume is locked for a dump/restore operation
+
+Indicates that the volume was locked due to a B<vos dump> or B<vos restore>
+command.
+
+=back
 
 =back
 

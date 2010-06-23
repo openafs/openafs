@@ -1410,12 +1410,37 @@ GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 *server,
 }
 
 static void
+PrintLocked(afs_int32 aflags)
+{
+    afs_int32 flags = aflags & VLOP_ALLOPERS;
+
+    if (flags) {
+	fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+
+	if (flags & VLOP_MOVE) {
+	    fprintf(STDOUT, "    Volume is locked for a move operation\n");
+	}
+	if (flags & VLOP_RELEASE) {
+	    fprintf(STDOUT, "    Volume is locked for a release operation\n");
+	}
+	if (flags & VLOP_BACKUP) {
+	    fprintf(STDOUT, "    Volume is locked for a backup operation\n");
+	}
+	if (flags & VLOP_DELETE) {
+	    fprintf(STDOUT, "    Volume is locked for a delete/misc operation\n");
+	}
+	if (flags & VLOP_DUMP) {
+	    fprintf(STDOUT, "    Volume is locked for a dump/restore operation\n");
+	}
+    }
+}
+
+static void
 PostVolumeStats(struct nvldbentry *entry)
 {
     SubEnumerateEntry(entry);
     /* Check for VLOP_ALLOPERS */
-    if (entry->flags & VLOP_ALLOPERS)
-	fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+    PrintLocked(entry->flags);
     return;
 }
 
@@ -3900,8 +3925,7 @@ VolumeInfoCmd(char *name)
      * If VLOP_ALLOPERS is set, the entry is locked.
      * Leave this routine as is, but put in correct check.
      */
-    if (entry.flags & VLOP_ALLOPERS)
-	fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+    PrintLocked(entry.flags);
 
     return 0;
 }
@@ -4536,8 +4560,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 		MapHostToNetwork(vllist);
 		EnumerateEntry(vllist);
 
-		if (vllist->flags & VLOP_ALLOPERS)
-		    fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+		PrintLocked(vllist->flags);
 	    }
 	}
 
@@ -4585,8 +4608,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	    MapHostToNetwork(vllist);
 	    EnumerateEntry(vllist);
 
-	    if (vllist->flags & VLOP_ALLOPERS)
-		fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+	    PrintLocked(vllist->flags);
 	}
     }
 
