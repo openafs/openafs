@@ -80,10 +80,6 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
     if (atrans->flags & TRDONE)
 	return UDONE;
 
-    if (atype != LOCKREAD && (atrans->flags & TRREADWRITE)) {
-	return EINVAL;
-    }
-
     if (atrans->locktype != 0) {
 	ubik_print("Ubik: Internal Error: attempted to take lock twice\n");
 	abort();
@@ -95,7 +91,7 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
  */
 
     /* Check if the lock would would block */
-    if (!await && !(atrans->flags & TRREADWRITE)) {
+    if (!await) {
 	if (atype == LOCKREAD) {
 	    if (WouldReadBlock(&rwlock))
 		return EAGAIN;
@@ -124,9 +120,7 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
     atrans->locktype = LOCKWAIT;
 #endif /* UBIK_PAUSE */
     DBRELE(dbase);
-    if (atrans->flags & TRREADWRITE) {
-	/* noop; don't actually lock anything for TRREADWRITE */
-    } else if (atype == LOCKREAD) {
+    if (atype == LOCKREAD) {
 	ObtainReadLock(&rwlock);
     } else {
 	ObtainWriteLock(&rwlock);
@@ -162,15 +156,7 @@ ulock_relLock(struct ubik_trans *atrans)
     if (rwlockinit)
 	return;
 
-    if (atrans->locktype == LOCKWRITE && (atrans->flags & TRREADWRITE)) {
-	ubik_print("Ubik: Internal Error: unlocking write lock with "
-	           "TRREADWRITE?\n");
-	abort();
-    }
-
-    if (atrans->flags & TRREADWRITE) {
-	/* noop, TRREADWRITE means we don't actually lock anything */
-    } else if (atrans->locktype == LOCKREAD) {
+    if (atrans->locktype == LOCKREAD) {
 	ReleaseReadLock(&rwlock);
     } else if (atrans->locktype == LOCKWRITE) {
 	ReleaseWriteLock(&rwlock);

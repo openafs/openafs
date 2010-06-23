@@ -114,15 +114,10 @@ SDISK_Commit(register struct rx_call *rxcall, struct ubik_tid *atid)
     }
 
     dbase = ubik_currentTrans->dbase;
-
-    ObtainWriteLock(&dbase->cache_lock);
-
     DBHOLD(dbase);
-
     urecovery_CheckTid(atid);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
-	ReleaseWriteLock(&dbase->cache_lock);
 	return USYNC;
     }
 
@@ -132,7 +127,6 @@ SDISK_Commit(register struct rx_call *rxcall, struct ubik_tid *atid)
 	ubik_dbVersion = ubik_dbase->version;
     }
     DBRELE(dbase);
-    ReleaseWriteLock(&dbase->cache_lock);
     return code;
 }
 
