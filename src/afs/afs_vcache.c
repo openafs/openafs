@@ -297,17 +297,21 @@ afs_InactiveVCache(struct vcache *avc, afs_ucred_t *acred)
  */
 static struct afs_cbr *afs_cbrSpace = 0;
 /* if alloc limit below changes, fix me! */
-static struct afs_cbr *afs_cbrHeads[2];
+static struct afs_cbr *afs_cbrHeads[16];
 struct afs_cbr *
 afs_AllocCBR(void)
 {
     register struct afs_cbr *tsp;
     int i;
 
-    while (!afs_cbrSpace) {
-	if (afs_stats_cmperf.CallBackAlloced >= 2) {
-	    /* don't allocate more than 2 * AFS_NCBRS for now */
-	    afs_FlushVCBs(0);
+    if (!afs_cbrSpace) {
+	afs_osi_CancelWait(&AFS_WaitHandler);	/* trigger FlushVCBs asap */
+
+	if (afs_stats_cmperf.CallBackAlloced >= sizeof(afs_cbrHeads)/sizeof(afs_cbrHeads[0])) {
+	    /* don't allocate more than 16 * AFS_NCBRS for now */
+	    tsp = (struct afs_cbr *)osi_AllocSmallSpace(sizeof(*tsp));
+	    tsp->dynalloc = 1;
+	    tsp->next = NULL;
 	    afs_stats_cmperf.CallBackFlushes++;
 	} else {
 	    /* try allocating */
@@ -316,15 +320,18 @@ afs_AllocCBR(void)
 						sizeof(struct afs_cbr));
 	    for (i = 0; i < AFS_NCBRS - 1; i++) {
 		tsp[i].next = &tsp[i + 1];
+		tsp[i].dynalloc = 0;
 	    }
 	    tsp[AFS_NCBRS - 1].next = 0;
-	    afs_cbrSpace = tsp;
+	    tsp[AFS_NCBRS - 1].dynalloc = 0;
+	    afs_cbrSpace = tsp->next;
 	    afs_cbrHeads[afs_stats_cmperf.CallBackAlloced] = tsp;
 	    afs_stats_cmperf.CallBackAlloced++;
 	}
+    } else {
+	tsp = afs_cbrSpace;
+	afs_cbrSpace = tsp->next;
     }
-    tsp = afs_cbrSpace;
-    afs_cbrSpace = tsp->next;
     return tsp;
 }
 
@@ -348,8 +355,12 @@ afs_FreeCBR(register struct afs_cbr *asp)
     if (asp->hash_next)
 	asp->hash_next->hash_pprev = asp->hash_pprev;
 
-    asp->next = afs_cbrSpace;
-    afs_cbrSpace = asp;
+    if (asp->dynalloc) {
+	osi_FreeSmallSpace(asp);
+    } else {
+	asp->next = afs_cbrSpace;
+	afs_cbrSpace = asp;
+    }
     return 0;
 }
 
