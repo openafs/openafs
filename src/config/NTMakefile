@@ -20,11 +20,6 @@ INCFILES =\
 	$(INCFILEDIR)\param.h \
 	$(INCFILEDIR)\afs_sysnames.h \
 	$(INCFILEDIR)\afs_args.h \
-	$(INCFILEDIR)\debug.h \
-	$(INCFILEDIR)\param.h \
-	$(INCFILEDIR)\afsconfig.h \
-	$(INCFILEDIR)\afs_sysnames.h \
-	$(INCFILEDIR)\stds.h \
 	$(INCFILEDIR)\icl.h 
 
 
@@ -525,7 +520,7 @@ $(OUT)\util_cr.exe : $(OUT)\util_cr.obj
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 
-install: idirs $(INCTOOLS) $(INCCOPY) version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
+install: idirs $(INCFILES) $(INCTOOLS) $(INCCOPY) version $(DESTDIR)\NTDllmap.txt langsetup
 
 install9x: install
 
@@ -535,9 +530,11 @@ clean_version:
 	-$(DEL) NTMakefile.version
 
 clean::
+        -$(DEL) $(INCFILES)
 	-$(DEL) $(DESTDIR)\LIB\*.DLL
 	-$(DEL) $(DESTDIR)\bin\mkver.exe*
 	-$(DEL) $(DESTDIR)\bin\touch.exe*
+	-$(DEL) $(DESTDIR)\bin\util_cr.exe*
 	-$(DEL) $(OUT)\util_cr.exe*
 	-$(DEL) $(OUT)\mkver.exe*
 	-$(DEL) $(OUT)\touch.exe*
