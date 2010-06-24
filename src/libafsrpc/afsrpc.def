@@ -259,6 +259,8 @@ EXPORTS
         xdr_Capabilities                        @264
         xdrlen_create                           @265
         rx_SetConnSecondsUntilNatPing           @266
+        rx_GetServiceSpecific                   @267
+        rx_SetServiceSpecific                   @268
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
