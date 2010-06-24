@@ -26,6 +26,7 @@ typedef struct DirHandle {
     Inode dirh_inode;
     IHandle_t *dirh_handle;
     afs_int32 dirh_cacheCheck;
+    int *volumeChanged;
 } DirHandle;
 
 #endif /* __salvage_h_ */
