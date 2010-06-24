@@ -108,6 +108,12 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\libacl))
 		$(MKDIR) $(OJT)\libacl
 !	ENDIF
+!	IF (!EXIST($(OJT)\tests))
+		$(MKDIR) $(OJT)\tests
+!	ENDIF
+!	IF (!EXIST($(OJT)\tests\rpctestlib))
+		$(MKDIR) $(OJT)\tests\rpctestlib
+!	ENDIF
 !	IF (!EXIST($(OJT)\libadmin))
 		$(MKDIR) $(OJT)\libadmin
 !	ENDIF

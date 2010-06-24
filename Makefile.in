@@ -554,7 +554,7 @@ xstat: cmd comerr fsint viced
 afsmonitor: cmd comerr gtx xstat
 	+${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
-tests: rxtests ubiktests
+tests: rxtests ubiktests rpctestlib
 
 # pthread based user space RX library
 libafsrpc: rx rxkad des
@@ -900,6 +900,7 @@ distclean: clean
 	src/volser/Makefile \
 	src/xstat/Makefile  \
 	tests/Makefile \
+	tests/rpctestlib/Makefile \
 	tests/tap/Makefile \
 	src/helper-splint.sh
 	if test -d doc/man-pages ; then \

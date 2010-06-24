@@ -19,6 +19,7 @@
 # These three macros define the source, object, and destination folders
 SRC=$(AFSROOT)\src
 DOC=$(AFSROOT)\doc
+TESTS=$(AFSROOT)\tests
 
 #If AFS_OBJDIR is not defined then use obj as relative obj folder
 !IFNDEF AFS_OBJDIR
@@ -619,7 +620,14 @@ netidmgr_plugin: xstat
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-extra: netidmgr_plugin
+rpctestlib: fsint libafsrpc
+     @echo ***** $@
+	$(DOCD) $(TESTS)\$@
+	$(CD) $(TESTS)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+extra: netidmgr_plugin rpctestlib
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      @echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@
