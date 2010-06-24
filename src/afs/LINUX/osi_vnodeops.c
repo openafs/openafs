@@ -379,16 +379,18 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
     /* get a validated vcache entry */
     code = afs_linux_VerifyVCache(vcp, NULL);
 
-    /* Linux's Flushpage implementation doesn't use credp, so optimise
-     * our code to not need to crref() it */
-    osi_FlushPages(vcp, NULL); /* ensure stale pages are gone */
+    if (code == 0) {
+        /* Linux's Flushpage implementation doesn't use credp, so optimise
+         * our code to not need to crref() it */
+        osi_FlushPages(vcp, NULL); /* ensure stale pages are gone */
+        AFS_GUNLOCK();
+        code = generic_file_mmap(fp, vmap);
+        AFS_GLOCK();
+        if (!code)
+            vcp->f.states |= CMAPPED;
+    }
     AFS_GUNLOCK();
-    code = generic_file_mmap(fp, vmap);
-    AFS_GLOCK();
-    if (!code)
-	vcp->f.states |= CMAPPED;
 
-    AFS_GUNLOCK();
     return code;
 }
 
