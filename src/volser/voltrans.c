@@ -69,7 +69,7 @@ static afs_int32 transCounter = 1;
 
 /* create a new transaction, returning ptr to same with high ref count */
 struct volser_trans *
-NewTrans(afs_int32 avol, afs_int32 apart)
+NewTrans(afs_uint32 avol, afs_int32 apart)
 {
     /* set volid, next, partition */
     struct volser_trans *tt, *newtt;
