@@ -931,7 +931,7 @@ struct rx_debugStats {
 };
 
 struct rx_debugConn_vL {
-    afs_int32 host;
+    afs_uint32 host;
     afs_int32 cid;
     afs_int32 serial;
     afs_int32 callNumber[RX_MAXCALLS];
@@ -950,7 +950,7 @@ struct rx_debugConn_vL {
 };
 
 struct rx_debugConn {
-    afs_int32 host;
+    afs_uint32 host;
     afs_int32 cid;
     afs_int32 serial;
     afs_int32 callNumber[RX_MAXCALLS];

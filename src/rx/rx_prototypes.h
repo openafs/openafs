@@ -100,7 +100,7 @@ extern struct rx_peer *rxi_FindPeer(afs_uint32 host,
 				    u_short port,
 				    struct rx_peer *origPeer, int create);
 extern struct rx_connection *rxi_FindConnection(osi_socket socket,
-						afs_int32 host,
+						afs_uint32 host,
 						u_short port,
 						u_short serviceId,
 						afs_uint32 cid,
@@ -534,7 +534,7 @@ extern struct rx_packet *rxi_AllocSendPacket(struct rx_call *call,
 extern int rxi_ReadPacket(osi_socket socket, struct rx_packet *p,
 			  afs_uint32 * host, u_short * port);
 extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p,
-					      afs_int32 host, short port,
+					      afs_uint32 host, short port,
 					      int first);
 #ifndef KERNEL
 extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
@@ -542,11 +542,11 @@ extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
 #endif
 extern struct rx_packet *rxi_ReceiveDebugPacket(struct rx_packet *ap,
 						osi_socket asocket,
-						afs_int32 ahost, short aport,
+						afs_uint32 ahost, short aport,
 						int istack);
 extern struct rx_packet *rxi_ReceiveVersionPacket(struct rx_packet
 						  *ap, osi_socket asocket,
-						  afs_int32 ahost,
+						  afs_uint32 ahost,
 						  short aport, int istack);
 extern void rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			   struct rx_packet *p, int istack);

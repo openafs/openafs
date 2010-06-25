@@ -2580,7 +2580,7 @@ rxi_FindPeer(afs_uint32 host, u_short port,
  * server connection is created, it will be created using the supplied
  * index, if the index is valid for this service */
 struct rx_connection *
-rxi_FindConnection(osi_socket socket, afs_int32 host,
+rxi_FindConnection(osi_socket socket, afs_uint32 host,
 		   u_short port, u_short serviceId, afs_uint32 cid,
 		   afs_uint32 epoch, int type, u_int securityIndex)
 {

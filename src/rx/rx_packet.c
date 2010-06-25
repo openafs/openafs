@@ -101,7 +101,7 @@ extern char cml_version_number[];
 static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
 
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-				afs_int32 ahost, short aport,
+				afs_uint32 ahost, short aport,
 				afs_int32 istack);
 
 #ifdef RX_ENABLE_TSFPQ
@@ -1546,7 +1546,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
  * last two pad bytes. */
 
 struct rx_packet *
-rxi_SplitJumboPacket(struct rx_packet *p, afs_int32 host, short port,
+rxi_SplitJumboPacket(struct rx_packet *p, afs_uint32 host, short port,
 		     int first)
 {
     struct rx_packet *np;
@@ -1777,7 +1777,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 
 struct rx_packet *
 rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
-		       afs_int32 ahost, short aport, int istack)
+		       afs_uint32 ahost, short aport, int istack)
 {
     struct rx_debugIn tin;
     afs_int32 tl;
@@ -2087,7 +2087,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
 struct rx_packet *
 rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
-			 afs_int32 ahost, short aport, int istack)
+			 afs_uint32 ahost, short aport, int istack)
 {
     afs_int32 tl;
 
@@ -2116,7 +2116,7 @@ rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 /* send a debug packet back to the sender */
 static void
 rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-		    afs_int32 ahost, short aport, afs_int32 istack)
+		    afs_uint32 ahost, short aport, afs_int32 istack)
 {
     struct sockaddr_in taddr;
     unsigned int i, nbytes, savelen = 0;
