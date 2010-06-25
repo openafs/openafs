@@ -489,6 +489,12 @@ bit32 VolumeCacheCheck;		/* Incremented everytime a volume goes on line--
 /***************************************************/
 /* Startup routines                                */
 /***************************************************/
+
+#if defined(FAST_RESTART) && defined(AFS_DEMAND_ATTACH_FS)
+# error FAST_RESTART and DAFS are incompatible. For the DAFS equivalent \
+        of FAST_RESTART, use the -unsafe-nosalvage fileserver argument
+#endif
+
 /**
  * assign default values to a VolumePackageOptions struct.
  *
@@ -507,6 +513,12 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     opts->canScheduleSalvage = 0;
     opts->canUseFSSYNC = 0;
     opts->canUseSALVSYNC = 0;
+
+#ifdef FAST_RESTART
+    opts->unsafe_attach = 1;
+#else /* !FAST_RESTART */
+    opts->unsafe_attach = 0;
+#endif /* !FAST_RESTART */
 
     switch (pt) {
     case fileServer:
@@ -3201,7 +3213,6 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     VOL_LOCK;
     vp->nextVnodeUnique = V_uniquifier(vp);
 
-#ifndef FAST_RESTART
     if (VShouldCheckInUse(mode) && V_inUse(vp) && VolumeWriteable(vp)) {
 	if (!V_needsSalvaged(vp)) {
 	    V_needsSalvaged(vp) = 1;
@@ -3221,7 +3232,6 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
 	goto error;
     }
-#endif /* FAST_RESTART */
 
     if (programType == fileServer && V_destroyMe(vp) == DESTROY_ME) {
 	/* Only check destroyMe if we are the fileserver, since the
@@ -8514,4 +8524,10 @@ afs_int32
 VCanUseSALVSYNC(void)
 {
     return vol_opts.canUseSALVSYNC;
+}
+
+afs_int32
+VCanUnsafeAttach(void)
+{
+    return vol_opts.unsafe_attach;
 }

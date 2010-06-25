@@ -201,6 +201,7 @@ int abort_threshold = 10;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 int sendBufSize = 16384;	/* send buffer size */
 int saneacls = 0;		/* Sane ACLs Flag */
+static int unsafe_attach = 0;   /* avoid inUse check on vol attach? */
 
 struct timeval tp;
 
@@ -925,6 +926,7 @@ FlagMsg(void)
     fputs("[-vlruthresh <minutes before unused volumes become eligible for soft detach> (default is 2 hours)] ", stdout);
     fputs("[-vlruinterval <seconds between VLRU scans> (default is 2 minutes)] ", stdout);
     fputs("[-vlrumax <max volumes to soft detach in one VLRU scan> (default is 8)] ", stdout);
+    fputs("[-unsafe-nosalvage (bypass volume inUse safety check on attach, bypassing salvage)] ", stdout);
 #elif AFS_PTHREAD_ENV
     fputs("[-vattachpar <number of volume attach threads> (default is 1)] ", stdout);
 #endif
@@ -1205,6 +1207,8 @@ ParseArgs(int argc, char *argv[])
 		return -1; 
 	    }
 	    VLRU_SetOptions(VLRU_SET_MAX, atoi(argv[++i]));
+	} else if (!strcmp(argv[i], "-unsafe-nosalvage")) {
+	    unsafe_attach = 1;
 #endif /* AFS_DEMAND_ATTACH_FS */
 	} else if (!strcmp(argv[i], "-s")) {
 	    Sawsmall = 1;
@@ -2226,6 +2230,7 @@ main(int argc, char *argv[])
     opts.nLargeVnodes = large;
     opts.nSmallVnodes = nSmallVns;
     opts.volcache = volcache;
+    opts.unsafe_attach = unsafe_attach;
 
     if (VInitVolumePackage2(fileServer, &opts)) {
 	ViceLog(0,

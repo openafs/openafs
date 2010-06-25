@@ -249,6 +249,8 @@ typedef struct VolumePackageOptions {
                                    * find a bad vol) */
     afs_int32 canUseFSSYNC;       /**< can we use the FSSYNC channel? */
     afs_int32 canUseSALVSYNC;     /**< can we use the SALVSYNC channel? (DAFS) */
+    afs_int32 unsafe_attach;      /**< can we bypass checking the inUse vol
+                                   *   header on attach? */
 } VolumePackageOptions;
 
 /* Magic numbers and version stamps for each type of file */
@@ -871,6 +873,7 @@ extern void VPurgeVolume(Error * ec, Volume * vp);
 extern afs_int32 VCanScheduleSalvage(void);
 extern afs_int32 VCanUseFSSYNC(void);
 extern afs_int32 VCanUseSALVSYNC(void);
+extern afs_int32 VCanUnsafeAttach(void);
 extern afs_int32 VReadVolumeDiskHeader(VolumeId volid,
 				       struct DiskPartition64 * dp,
 				       VolumeDiskHeader_t * hdr);

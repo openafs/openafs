@@ -105,6 +105,9 @@ VMustCheckoutVolume(int mode)
 static_inline int
 VShouldCheckInUse(int mode)
 {
+    if (VCanUnsafeAttach()) {
+	return 0;
+    }
     if (programType == fileServer) {
        return 1;
     }

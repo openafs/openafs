@@ -58,6 +58,7 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-vlruthresh> <I<minutes before eligibility for soft detach>>] >>>
     S<<< [B<-vlruinterval> <I<seconds between VLRU scans>>] >>>
     S<<< [B<-vlrumax> <I<max volumes to soft detach in one VLRU scan>>] >>>
+    S<<< [B<-unsafe-nosalvage>] >>>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
     S<<< [B<-lock>] >>>
@@ -597,6 +598,21 @@ This option is only supported by the demand-attach file server.
 
 The maximum number of volumes which can be soft detached in a single pass
 of the scanner.  Default is 8 volumes.
+
+This option is only supported by the demand-attach file server.
+
+=item B<-unsafe-nosalvage>
+
+This option causes the fileserver to bypass the normal safety check when
+attaching volumes that checks the inUse field in the volume header. With
+this option, volumes that were in use at the time of an unclean shutdown
+will not be salvaged immediately the next time they are accessed, and thus
+risk (possibly silent and/or irrevocable) corruption. Volumes will still
+be salvaged when an internal inconsistency is detected or other cases
+where a salvage would normally occur.
+
+Due to the increased risk of data corruption, the use of this flag is
+strongly discouraged. Only use it if you really know what you are doing.
 
 This option is only supported by the demand-attach file server.
 
