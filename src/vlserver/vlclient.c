@@ -164,7 +164,7 @@ afs_int32
 GetServer(char *aname)
 {
     register struct hostent *th;
-    afs_int32 addr;
+    afs_uint32 addr;
     int b1, b2, b3, b4;
     register afs_int32 code;
 
@@ -828,7 +828,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		}
 		free((char *)addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "mhc")) {
-		afs_int32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
+		afs_uint32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
 		afs_int32 serveraddrtype[MAXSERVERID + 1];
 		int nentries1, nentries2, i, j, x, y, unique, found;
 		afs_uint32 *addrp1, *addrp2;

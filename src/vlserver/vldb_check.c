@@ -890,7 +890,7 @@ CheckIpAddrs(struct vlheader *header)
     int mhblocks = 0;
     afs_int32 i, j, m, rindex;
     afs_int32 mhentries, regentries;
-    afs_int32 caddrs[VL_MAX_ADDREXTBLKS];
+    afs_uint32 caddrs[VL_MAX_ADDREXTBLKS];
     char mhblock[VL_ADDREXTBLK_SIZE];
     struct extentaddr *MHblock = (struct extentaddr *)mhblock;
     struct extentaddr *e;
