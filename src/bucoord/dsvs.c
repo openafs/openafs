@@ -128,7 +128,7 @@ bc_ParseHost(char *aname, struct sockaddr_in *asockaddr)
 {				/*bc_ParseHost */
 
     register struct hostent *th;	/*Host entry */
-    afs_int32 addr;		/*Converted address */
+    afs_uint32 addr;		/*Converted address */
     afs_int32 b1, b2, b3, b4;	/*Byte-sized address chunks */
     register afs_int32 code;	/*Return code from sscanf() */
     afs_int32 tmp1, tmp2;
