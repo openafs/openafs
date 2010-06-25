@@ -22,7 +22,7 @@
 void afs_nfsclient_hold(), afs_PutNfsClientPag(), afs_nfsclient_GC();
 static void afs_nfsclient_getcreds();
 int afs_nfsclient_sysname(), afs_nfsclient_stats(), afs_nfsclient_checkhost();
-afs_int32 afs_nfsclient_gethost();
+afs_uint32 afs_nfsclient_gethost();
 #ifdef AFS_AIX_IAUTH_ENV
 int afs_allnfsreqs, afs_nfscalls;
 #endif
@@ -47,7 +47,7 @@ extern struct afs_exporter *afs_nfsexporter;
 /* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't 
  * exist. RefCount is incremented and it's time stamped. */
 static struct nfsclientpag *
-afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
+afs_GetNfsClientPag(register afs_int32 uid, register afs_uint32 host)
 {
     register struct nfsclientpag *np;
     register afs_int32 i, now;
@@ -109,7 +109,7 @@ afs_PutNfsClientPag(np)
  * {pag, host} pair, if pag is nonzero. RefCount is incremented and it's 
  * time stamped. */
 static struct nfsclientpag *
-afs_FindNfsClientPag(afs_int32 uid, afs_int32 host, afs_int32 pag)
+afs_FindNfsClientPag(afs_int32 uid, afs_uint32 host, afs_int32 pag)
 {
     register struct nfsclientpag *np;
     register afs_int32 i;
@@ -175,7 +175,7 @@ afs_nfsclient_init(void)
 int
 afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 			 afs_ucred_t **cred,
-			 afs_int32 host, afs_int32 *pagparam,
+			 afs_uint32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
     register struct nfsclientpag *np, *tnp;
@@ -429,7 +429,7 @@ afs_nfsclient_hold(register struct nfsclientpag *np)
 
 /* check if this exporter corresponds to the specified host */
 int
-afs_nfsclient_checkhost(register struct nfsclientpag *np, int host)
+afs_nfsclient_checkhost(register struct nfsclientpag *np, afs_uint32 host)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -438,7 +438,7 @@ afs_nfsclient_checkhost(register struct nfsclientpag *np, int host)
 
 
 /* get the host for this exporter, or 0 if there is an error */
-afs_int32
+afs_uint32
 afs_nfsclient_gethost(register struct nfsclientpag *np)
 {
     if (np->type != EXP_NFS)

@@ -523,7 +523,7 @@ extern struct afs_exporter *afs_nfsexporter;
 extern void afs_nfsclient_init(void);
 extern int afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 				    afs_ucred_t **cred,
-				    afs_int32 host, afs_int32 *pagparam,
+				    afs_uint32 host, afs_int32 *pagparam,
 				    struct afs_exporter **outexporter);
 extern void shutdown_nfsclnt(void);
 
