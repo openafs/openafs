@@ -77,9 +77,6 @@
 #include <krb.h>
 #endif
 
-
-#define	IP_WILDCARDS	1	/* XXX Should be defined outside of here XXX */
-
 extern int restricted;
 extern struct ubik_dbase *dbase;
 extern int pr_noAuth;
@@ -137,10 +134,8 @@ static afs_int32 listOwned(struct rx_call *call, afs_int32 aid, prlist *alist,
 			   afs_int32 *lastP, afs_int32 *cid);
 static afs_int32 isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid,
 			     afs_int32 *flag, afs_int32 *cid);
-#if IP_WILDCARDS
 static afs_int32 addWildCards(struct ubik_trans *tt, prlist *alist, 
 			      afs_uint32 host);
-#endif
 static afs_int32 WhoIsThisWithName(struct rx_call *acall, 
 				   struct ubik_trans *at, afs_int32 *aid, 
 				   char *aname);
@@ -1210,7 +1205,6 @@ getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over,
 }
 
 
-#ifdef IP_WILDCARDS
 int
 inCPS(prlist CPS, afs_int32 id)
 {
@@ -1222,7 +1216,6 @@ inCPS(prlist CPS, afs_int32 id)
     }
     return (0);
 }
-#endif /* IP_WILDCARDS */
 
 
 afs_int32
@@ -1299,10 +1292,8 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
 	code = GetList2(tt, &tentry, &host_tentry, alist, 1);
     else
 	code = GetList(tt, &tentry, alist, 1);
-#if IP_WILDCARDS
     if (!code)
 	code = addWildCards(tt, alist, ntohl(ahost));
-#endif /* IP_WILDCARDS */
     if (code != PRSUCCESS)
 	ABORT_WITH(tt, code);
 
@@ -1364,9 +1355,7 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
 	} else
 	    fprintf(stderr, "FindByID Failed -- Not found\n");
     }
-#if IP_WILDCARDS
     code = addWildCards(tt, alist, ntohl(ahost));
-#endif /* IP_WILDCARDS */
   bad:
     if (code != PRSUCCESS)
 	ABORT_WITH(tt, code);
@@ -2117,7 +2106,6 @@ isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid, afs_int32 *flag,
     return code;
 }
 
-#if IP_WILDCARDS
 static afs_int32
 addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
 {
@@ -2165,7 +2153,6 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
 	qsort(alist->prlist_val, alist->prlist_len, sizeof(afs_int32), IDCmp);
     return 0;
 }
-#endif /* IP_WILDCARDS */
 
 static afs_int32
 WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid, 
