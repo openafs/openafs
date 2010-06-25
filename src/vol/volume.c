@@ -3199,49 +3199,48 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
     VOL_LOCK;
     vp->nextVnodeUnique = V_uniquifier(vp);
-    if (VShouldCheckInUse(mode)) {
+
 #ifndef FAST_RESTART
-	if (V_inUse(vp) && VolumeWriteable(vp)) {
-	    if (!V_needsSalvaged(vp)) {
-		V_needsSalvaged(vp) = 1;
-		VUpdateVolume_r(ec, vp, 0);
-	    }
+    if (VShouldCheckInUse(mode) && V_inUse(vp) && VolumeWriteable(vp)) {
+	if (!V_needsSalvaged(vp)) {
+	    V_needsSalvaged(vp) = 1;
+	    VUpdateVolume_r(ec, vp, 0);
+	}
 #if defined(AFS_DEMAND_ATTACH_FS)
-	    if (!VCanScheduleSalvage()) {
-		Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
-	    }
-	    VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
-	    vp->nUsers = 0;
+	if (!VCanScheduleSalvage()) {
+	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
+	}
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
-	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
-	    *ec = VSALVAGE;
+	Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
+	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-	    goto error;
-	}
+	goto error;
+    }
 #endif /* FAST_RESTART */
 
-	if (programType == fileServer && V_destroyMe(vp) == DESTROY_ME) {
-	    /* Only check destroyMe if we are the fileserver, since the
-	     * volserver et al sometimes need to work with volumes with
-	     * destroyMe set. Examples are 'temporary' volumes the
-	     * volserver creates, and when we create a volume (destroyMe
-	     * is set on creation; sometimes a separate volserver
-	     * transaction is created to clear destroyMe).
-	     */
+    if (programType == fileServer && V_destroyMe(vp) == DESTROY_ME) {
+	/* Only check destroyMe if we are the fileserver, since the
+	 * volserver et al sometimes need to work with volumes with
+	 * destroyMe set. Examples are 'temporary' volumes the
+	 * volserver creates, and when we create a volume (destroyMe
+	 * is set on creation; sometimes a separate volserver
+	 * transaction is created to clear destroyMe).
+	 */
 
 #if defined(AFS_DEMAND_ATTACH_FS)
-	    /* schedule a salvage so the volume goes away on disk */
-	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
-	    VChangeState_r(vp, VOL_STATE_ERROR);
-	    vp->nUsers = 0;
+	/* schedule a salvage so the volume goes away on disk */
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	VChangeState_r(vp, VOL_STATE_ERROR);
+	vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
-	    Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
-	    *ec = VNOVOL;
-	    forcefree = 1;
-	    goto error;
-	}
+	Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
+	*ec = VNOVOL;
+	forcefree = 1;
+	goto error;
     }
 
     vp->vnodeIndex[vSmall].bitmap = vp->vnodeIndex[vLarge].bitmap = NULL;
