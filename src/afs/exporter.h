@@ -52,7 +52,7 @@ struct exporterops {
     int (*export_reqhandler) (struct afs_exporter *exp,
 		    	      afs_ucred_t **cred,
 			      afs_uint32 host,
-			      afs_int32 pag,
+			      afs_int32 *pag,
 			      struct afs_exporter **expp);
     void (*export_hold) (struct afs_exporter *exp);
     void (*export_rele) (struct afs_exporter *exp);
