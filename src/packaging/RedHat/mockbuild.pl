@@ -277,9 +277,8 @@ foreach my $platform (@platforms) {
 	  next if ($variant eq "xen0"); # Fedora 5 has some bad xen0 kernel-devels
 	  next if ($variant eq "smp");
       }
-      if ($platform=~/fedora-8/ || $platform=~/fedora-9/ || $platform=~/fedora-10/ || $platform=~/fedora-development/) {
-	  next if ($variant =~/debug$/); # Fedora 8 debug kernels are bad
-      }
+      next if ($variant =~/debug$/); # Fedora 8 debug kernels are bad
+
       print "$arch : $variant : $version\n";
       $modulelist{$arch} ={} if !$modulelist{$arch};
       $modulelist{$arch}{$version} = {} if !$modulelist{$arch}{$version};
