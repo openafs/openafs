@@ -1,6 +1,8 @@
 AC_PREREQ([2.60])
-AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.5.74.1)
+AC_INIT([OpenAFS], [1.5.74.1])
+AC_CONFIG_SRCDIR([src/config/stds.h])
+AM_INIT_AUTOMAKE
+
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 MACOS_VERSION=1.5.74f1
 LINUX_PKGVER=1.5.74.1
