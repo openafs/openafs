@@ -1067,11 +1067,13 @@ typedef char *afs_ufs_dcache_id_t;
  * the size correctly.
  */
 typedef ino64_t afs_ufs_dcache_id_t;
-#elif defined(LINUX_USE_FH)
+#elif defined(AFS_LINUX26_ENV)
 #define MAX_FH_LEN 10
 typedef union {
-     struct fid fh;
-     __u32 raw[MAX_FH_LEN];
+#if defined(NEW_EXPORT_OPS)
+    struct fid fh;
+#endif
+    __u32 raw[MAX_FH_LEN];
 } afs_ufs_dcache_id_t;
 extern int cache_fh_type;
 extern int cache_fh_len;

@@ -2910,7 +2910,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	}
     } else {
 	/* Add any other 'complex' inode types here ... */
-#if !defined(LINUX_USE_FH) && !defined(AFS_CACHE_VNODE_PATH)
+#if !defined(AFS_LINUX26_ENV) && !defined(AFS_CACHE_VNODE_PATH)
 	tdc->f.inode.ufs = ainode;
 #else
 	osi_Panic("Can't init cache with inode numbers when complex inodes are "

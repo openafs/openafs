@@ -293,3 +293,52 @@ afs_try_to_freeze(void) {
 
 # endif
 #endif
+
+#if !defined(NEW_EXPORT_OPS)
+extern struct export_operations export_op_default;
+#endif
+
+static inline struct dentry *
+afs_get_dentry_from_fh(struct super_block *afs_cacheSBp, afs_dcache_id_t *ainode,
+		int cache_fh_len, int cache_fh_type,
+		int (*afs_fh_acceptable)(void *, struct dentry *)) {
+#if defined(NEW_EXPORT_OPS)
+    return afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh,
+		cache_fh_len, cache_fh_type);
+#else
+    if (afs_cacheSBp->s_export_op && afs_cacheSBp->s_export_op->decode_fh)
+	return afs_cacheSBp->s_export_op->decode_fh(afs_cacheSBp, ainode->ufs.raw,
+			cache_fh_len, cache_fh_type, afs_fh_acceptable, NULL);
+    else
+	return export_op_default.decode_fh(afs_cacheSBp, ainode->ufs.raw,
+			cache_fh_len, cache_fh_type, afs_fh_acceptable, NULL);
+#endif
+}
+
+static inline int
+afs_get_fh_from_dentry(struct dentry *dp, afs_ufs_dcache_id_t *ainode, int *max_lenp) {
+    if (dp->d_sb->s_export_op->encode_fh)
+        return dp->d_sb->s_export_op->encode_fh(dp, &ainode->raw[0], max_lenp, 0);
+#if defined(NEW_EXPORT_OPS)
+    /* If fs doesn't provide an encode_fh method, assume the default INO32 type */
+    *max_lenp = sizeof(struct fid)/4;
+    ainode->fh.i32.ino = dp->d_inode->i_ino;
+    ainode->fh.i32.gen = dp->d_inode->i_generation;
+    return FILEID_INO32_GEN;
+#else
+    /* or call the default encoding function for the old API */
+    return export_op_default.encode_fh(dp, &ainode->raw[0], max_lenp, 0);
+#endif
+}
+
+static inline void
+afs_init_sb_export_ops(struct super_block *sb) {
+#if !defined(NEW_EXPORT_OPS)
+    /*
+     * decode_fh will call this function.  If not defined for this FS, make
+     * sure it points to the default
+     */
+    if (!sb->s_export_op->find_exported_dentry)
+	sb->s_export_op->find_exported_dentry = find_exported_dentry;
+#endif
+}

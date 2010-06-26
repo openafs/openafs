@@ -183,7 +183,7 @@ struct xfs_inode_info {
 # ifdef HAVE_LINUX_COMPLETION_H
 #  include <linux/completion.h>
 # endif
-# if defined(LINUX_USE_FH)
+# if defined(HAVE_LINUX_EXPORTFS_H)
 #  include <linux/exportfs.h>
 # endif
 

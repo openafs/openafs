@@ -842,9 +842,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([i_size_read],
 				     [#include <linux/fs.h>],
 				     [i_size_read(NULL);])
-		 AC_CHECK_LINUX_FUNC([iget],
-				     [#include <linux/fs.h>],
-				     [iget(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
@@ -872,9 +869,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Consequences - things which get set as a result of the
 		 dnl                above tests
-		 AS_IF([test "x$ac_cv_linux_func_iget" = "xno"],
-		       [AC_DEFINE([LINUX_USE_FH], 1,
-			  [define to use linux file handles for cache files])])
 		 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
 		       [AC_DEFINE([AFS_NONFSTRANS], 1,
 				  [define to disable the nfs translator])])

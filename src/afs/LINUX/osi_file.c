@@ -17,11 +17,14 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 #include <linux/smp_lock.h>
 #include <linux/namei.h>
-#if defined(LINUX_USE_FH)
+
+#if defined(HAVE_LINUX_EXPORTFS_H)
 #include <linux/exportfs.h>
+#endif
+#include "osi_compat.h"
+
 int cache_fh_type = -1;
 int cache_fh_len = -1;
-#endif
 
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
@@ -31,6 +34,13 @@ extern struct super_block *afs_cacheSBp;
 extern struct cred *cache_creds;
 #endif
 
+/* Old export ops: decode_fh will call back here. Accept any dentry it suggests */
+int
+afs_fh_acceptable(void *context, struct dentry *dp)
+{
+    return 1;
+}
+
 struct file *
 afs_linux_raw_open(afs_dcache_id_t *ainode)
 {
@@ -38,19 +48,11 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
     struct dentry *dp = NULL;
     struct file* filp;
 
-#if !defined(LINUX_USE_FH)
-    tip = iget(afs_cacheSBp, ainode->ufs);
-    if (!tip)
-	osi_Panic("Can't get inode %d\n", (int) ainode->ufs);
-
-    dp = d_alloc_anon(tip);
-#else
-    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh,
-						 cache_fh_len, cache_fh_type);
+    dp = afs_get_dentry_from_fh(afs_cacheSBp, ainode, cache_fh_len, cache_fh_type,
+		afs_fh_acceptable);
     if (!dp)
            osi_Panic("Can't get dentry\n");
     tip = dp->d_inode;
-#endif
     tip->i_flags |= S_NOATIME;	/* Disable updating access times. */
 
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
@@ -62,11 +64,7 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
     if (IS_ERR(filp))
-#if defined(LINUX_USE_FH)
 	osi_Panic("Can't open file: %d\n", (int) PTR_ERR(filp));
-#else
-	osi_Panic("Can't open inode %d\n", (int) ainode->ufs);
-#endif
     return filp;
 }
 
@@ -102,7 +100,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     return (void *)afile;
 }
 
-#if defined(LINUX_USE_FH)
 /*
  * Given a dentry, return the file handle as encoded by the filesystem.
  * We can't assume anything about the length (words, not bytes).
@@ -117,34 +114,19 @@ void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
 	max_len = cache_fh_len;
     else
 	max_len = MAX_FH_LEN;
-    if (dp->d_sb->s_export_op->encode_fh) {
-        type = dp->d_sb->s_export_op->encode_fh(dp, &ainode->raw[0], &max_len, 0);
-        if (type == 255) {
-           osi_Panic("File handle encoding failed\n");
-        }
-        if (cache_fh_type < 0)
-            cache_fh_type = type;
-        if (cache_fh_len < 0) {
-            cache_fh_len = max_len;
-        }
-        if (type != cache_fh_type || max_len != cache_fh_len) {
-           osi_Panic("Inconsistent file handles within cache\n");
-        }
-    } else {
-         /* If fs doesn't provide an encode_fh method, assume the default INO32 type */
-	if (cache_fh_type < 0)
-	    cache_fh_type = FILEID_INO32_GEN;
-	if (cache_fh_len < 0)
-	    cache_fh_len = sizeof(struct fid)/4;
-        ainode->fh.i32.ino = dp->d_inode->i_ino;
-        ainode->fh.i32.gen = dp->d_inode->i_generation;
+    type = afs_get_fh_from_dentry(dp, ainode, &max_len);
+    if (type == 255) {
+	osi_Panic("File handle encoding failed\n");
+    }
+    if (cache_fh_type < 0)
+	cache_fh_type = type;
+    if (cache_fh_len < 0) {
+	cache_fh_len = max_len;
+    }
+    if (type != cache_fh_type || max_len != cache_fh_len) {
+	osi_Panic("Inconsistent file handles within cache\n");
     }
 }
-#else
-void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
-    *ainode = dp->d_inode->i_ino;
-}
-#endif
 
 int
 afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
@@ -356,6 +338,8 @@ osi_InitCacheInfo(char *aname)
     afs_cacheSBp = dp->d_inode->i_sb;
 
     dput(dp);
+
+    afs_init_sb_export_ops(afs_cacheSBp);
 
     return 0;
 }
