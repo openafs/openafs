@@ -1,0 +1,21 @@
+#!/bin/sh
+
+version_file=$1
+
+if [ -f $version_file ] ; then
+  git_version=`cat $version_file`
+else
+  if which git > /dev/null; then
+    git_version=`git describe --abbrev=4 HEAD 2>/dev/null`
+
+    # Is the working tree dirty?
+    if ! git diff-index --quiet --cached HEAD --ignore-submodules || \
+       ! git diff-files --quiet --ignore-submodules ; then
+      git_version="$git_version-dirty"
+    fi
+  else
+    git_version=UNKNOWN
+  fi
+fi
+
+echo "$git_version" | sed -e 's/openafs-[^-]*-//' -e 's/_/./g' | tr -d '\012'

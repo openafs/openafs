@@ -52,6 +52,7 @@ rs_state.ini
 /TAGS
 /NTLang.bat
 /golast.bat
+/.version
 
 # Destination build directories
 /alpha_nbsd*

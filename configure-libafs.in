@@ -1,5 +1,5 @@
 AC_PRERQ([2.60])
-AC_INIT([OpenAFS], [1.5.74.1])
+AC_INIT([OpenAFS], m4_esyscmd([build-tools/git-version .version]))
 AC_CONFIG_SRCDIR(src/libafs/Makefile.common.in)
 AM_INIT_AUTOMAKE
 
