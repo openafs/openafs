@@ -19,7 +19,7 @@ my $changelog = shift;
 my $cellservdb = shift;
 
 if (!$srcball && !$docball) {
-  printf "Usage:  makesrpm <src.tar.gz> <doc.tar.gz> [<relnotes> [<changelog> [<cellservdb>]]]\n";
+  printf "Usage:  makesrpm <src.tar.bz2> <doc.tar.bz2> [<relnotes> [<changelog> [<cellservdb>]]]\n";
   exit(1);
 }
 
