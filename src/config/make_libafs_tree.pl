@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+use strict;
+use warnings;
+
 $| = 1;
 #
 # Build the libafs_tree by reading component list files in the src dir, and copying the
@@ -11,6 +14,11 @@ use File::Path;
 
 my $quiet = 0;
 my $showonly = 0;
+my $treedir;
+my $projdir;
+my $sysname;
+my $ostype;
+my $objdir;
 
 while ( $_ = shift @ARGV )
 {
@@ -23,7 +31,7 @@ while ( $_ = shift @ARGV )
 
 	if (m/^-q/) { $quiet = 1; next; }
 	if (m/^-n/) { $showonly = 1; next; }
-	usage;
+	&usage;
 }
 if ( !$treedir || !$projdir || !$ostype || !$sysname)
 {
@@ -181,7 +189,7 @@ sub testArg
 {
 	my ($arg) = @_;
 	return $arg if ( $arg && $arg ne "" );
-	usage;
+	&usage;
 }
 
 sub mkfullpath
@@ -208,7 +216,9 @@ sub mkfullpath
 sub copyit
 {
 	my ( $from, $to ) = @_;
-	my (@from, @new);
+	my @from;
+	my @new;
+	my @to;
 
 	@from = stat($from);
 	@to = stat($to);
