@@ -96,11 +96,6 @@ AC_ARG_ENABLE([supergroups],
         [enable support for nested pts groups])],
     , 
     [enable_supergroups="no"])
-AC_ARG_ENABLE([fast-restart],
-    [AS_HELP_STRING([--enable-fast-restart],
-        [enable fast startup of file server without salvaging])],
-    , 
-    [enable_fast_restart="no"])
 AC_ARG_ENABLE([bitmap-later],
     [AS_HELP_STRING([--enable-bitmap-later],
         [enable fast startup of file server by not reading bitmap till
@@ -1126,10 +1121,6 @@ if test "$enable_supergroups" = "yes"; then
 	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
 fi
 
-if test "$enable_fast_restart" = "yes"; then
-	AC_DEFINE(FAST_RESTART, 1, [define if you want to have fast restart])
-fi
-
 if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
 fi
@@ -1153,12 +1144,6 @@ else
 	USE_UNIX_SOCKETS="no"
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
-
-if test "$enable_fast_restart" = "yes" &&
-   test "$enable_demand_attach_fs" = "yes" ; then
-	AC_MSG_ERROR([The Demand Attach and Fast Restart extensions are mutually exclusive.  Demand Attach fileservers automatically salvage volumes in the background, thereby making Fast Restart pointless.])
-	exit 1
-fi
 
 if test "$enable_icmp_pmtu_discovery" = "yes"; then
    if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
