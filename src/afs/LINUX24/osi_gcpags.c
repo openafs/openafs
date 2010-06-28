@@ -87,7 +87,7 @@ afs_osi_proc2cred(afs_proc_t * pr)
 		* returned from here, we'll go boom, because it's statically
 		* allocated. */
 
-		atomic_set(&cr.cr_ref, 1);
+		cr.cr_ref = 1;
 		afs_set_cr_uid(&cr, task_uid(pr));
 
 		cr.cr_ngroups = pr->ngroups;
