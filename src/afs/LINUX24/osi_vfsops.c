@@ -97,9 +97,6 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
-#if defined(HAVE_LINUX_BDI_INIT)
-    bdi_init(&afs_backing_dev_info);
-#endif
 #if defined(MAX_NON_LFS)
 #ifdef AFS_64BIT_CLIENT
 #if !defined(MAX_LFS_FILESIZE)
@@ -335,9 +332,6 @@ afs_put_super(struct super_block *sbp)
 #endif
 
     osi_linux_verify_alloced_memory();
-#if defined(HAVE_LINUX_BDI_INIT)
-    bdi_destroy(&afs_backing_dev_info);
-#endif
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;
