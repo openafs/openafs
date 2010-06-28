@@ -577,7 +577,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 	if ((conflict = posix_test_lock(fp, flp))) {
 	    locks_copy_lock(flp, conflict);
 	    flp->fl_type = F_UNLCK;
-	    crfee(credp);
+	    crfree(credp);
 	    return 0;
 	}
 # else
