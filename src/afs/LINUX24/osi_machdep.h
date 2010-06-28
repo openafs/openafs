@@ -168,12 +168,6 @@ typedef struct afs_cred {		/* maps to task field: */
 typedef struct afs_cred afs_ucred_t;
 typedef struct task_struct afs_proc_t;
 
-#define afs_cr_group_info(cred) ((cred)->cr_group_info)
-static inline void
-afs_set_cr_group_info(afs_ucred_t *cred, struct group_info *group_info) {
-    cred->cr_group_info = group_info;
-}
-
 #if !defined(current_cred)
 #define current_gid() (current->gid)
 #define current_uid() (current->uid)
