@@ -11,7 +11,7 @@ AFS_component_version_number.o: AFS_component_version_number.c
 
 AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
 	( VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@VERSION@"` && \
-	echo 'char cml_version_number[]="@(#) OpenAFS '$$VERSION' built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c.NEW && \
+	echo 'char cml_version_number[]="@(#)OpenAFS '$$VERSION `date +"%Y-%m-%d"` $$USER@`hostname`'";' >AFS_component_version_number.c.NEW && \
 	echo 'char* AFSVersion = "${PACKAGE} '$$VERSION'";' >>AFS_component_version_number.c.NEW && \
 	if cmp AFS_component_version_number.c.NEW AFS_component_version_number.c > /dev/null 2>&1 ; then : ; else \
 	mv AFS_component_version_number.c.NEW AFS_component_version_number.c ; fi )
