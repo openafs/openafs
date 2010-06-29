@@ -1223,7 +1223,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	int reft = 0;
 	int hash = 0;
         int nexthash = 0;
-	int *nextpp = NULL;
+	afs_uint32 *nextpp = NULL;
 	char *which = NULL;
 
 	if (record[i].type == 0)
