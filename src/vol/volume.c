@@ -5018,6 +5018,9 @@ static inline int
 try_SALVSYNC(Volume *vp, char *partName, int *code) {
 #ifdef SALVSYNC_BUILD_CLIENT
     if (VCanUseSALVSYNC()) {
+	Log("Scheduling salvage for volume %lu on part %s over SALVSYNC\n",
+	    afs_printable_uint32_lu(vp->hashid), partName);
+
 	/* can't use V_id() since there's no guarantee
 	 * we have the disk data header at this point */
 	*code = SALVSYNC_SalvageVolume(vp->hashid,
@@ -5036,6 +5039,9 @@ static_inline int
 try_FSSYNC(Volume *vp, char *partName, int *code) {
 #ifdef FSSYNC_BUILD_CLIENT
     if (VCanUseFSSYNC()) {
+	Log("Scheduling salvage for volume %lu on part %s over FSSYNC\n",
+	    afs_printable_uint32_lu(vp->hashid), partName);
+
 	/*
 	 * If we aren't the fileserver, tell the fileserver the volume
 	 * needs to be salvaged. We could directly tell the
