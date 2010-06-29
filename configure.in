@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([OpenAFS], m4_esyscmd([build-tools/git-version .version]))
+AC_INIT([OpenAFS], m4_esyscmd([build-tools/git-version .]))
 AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 

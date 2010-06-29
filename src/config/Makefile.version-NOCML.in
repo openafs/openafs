@@ -10,12 +10,12 @@ PACKAGE=@PACKAGE@
 AFS_component_version_number.o: AFS_component_version_number.c
 
 AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
-	VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@/.version` && \
+	VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@VERSION@"` && \
 	echo 'char cml_version_number[]="@(#) OpenAFS '$$VERSION' built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c && \
 	echo 'char* AFSVersion = "${PACKAGE} '$$VERSION'";' >>AFS_component_version_number.c
 
 version.xml:
-	VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir/.version` && \
+	VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@VERSION@"` && \
 	echo '<?xml version="1.0" encoding="UTF-8"?>' >version.xml && \
 	echo '<revision>' >>version.xml && \
 	echo '<revnumber>'$$VERSION'</revnumber>' >>version.xml && \
