@@ -727,7 +727,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	if (i > MAXKTCREALMLEN-1) i = MAXKTCREALMLEN-1;
 	memcpy(aclient->cell, realm_data(k5context, afscred->client), i);
 	if (!noprdb) {
-	    int viceid;
+	    int viceid = 0;
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	    code = whoami(atoken, cellconfig, aclient, &viceid);
 	    if (code) {
