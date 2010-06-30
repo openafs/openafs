@@ -242,10 +242,19 @@ handleit(struct cmd_syndesc *as, void *arock)
 	} else {
 	    char *oper, *vname;
 	    register char **argp = args;
+
+	    /* Eliminate terminating CR */
+	    while(strlen(line) > 0 &&
+		 (line[strlen(line)-1] == '\n' ||
+		  line[strlen(line)-1] == '\r')) {
+	      line[strlen(line)-1] = NULL;
+	    }
+
 	    GetArgs(line, argp, &nargs);
 	    oper = &argp[0][0];
 	    ++argp, --nargs;
-	    if (!strcmp(oper, "cr")) {
+	    if (!*line) {
+	    } else if (!strcmp(oper, "cr")) {
 		fill_entry(&entry, argp, nargs);
 		display_entry(&entry, 0);
 		code = ubik_VL_CreateEntry(cstruct, 0, &entry);
@@ -1004,12 +1013,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("VL_ChangeAddr returned code = %d\n", code);
 		    continue;
 		}
-	    } else if ((!strcmp(oper, "?")) || !strcmp(oper, "h"))
+	    } else if ((!strcmp(oper, "?")) || !strcmp(oper, "h") || !strcmp(oper, "help"))
 		print_usage();
 	    else if ((!strcmp(oper, "q")) || !strcmp(oper, "quit"))
 		exit(0);
 	    else {
-		printf("Unknown oper!\n");
+		printf("Unknown oper (%s)!\n", oper);
+		print_usage();
 	    }
 	}
     }
