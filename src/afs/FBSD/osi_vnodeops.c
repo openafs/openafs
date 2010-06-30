@@ -1438,8 +1438,10 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
      * XXX Pretend it worked, to prevent panic on shutdown
      * Garrett, please fix - Jim Rees
      */
-    if (code)
-	printf("afs_vop_reclaim: afs_FlushVCache failed code %d\n", code);
+    if (code) {
+	printf("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
+	VOP_PRINT(vp);
+    }
 
     /* basically, it must not fail */
     vnode_destroy_vobject(vp);
