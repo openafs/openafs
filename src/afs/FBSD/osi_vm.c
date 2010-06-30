@@ -185,15 +185,28 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     struct vnode *vp;
     int tries, code;
+    int islocked;
 
     SPLVAR;
 
     vp = AFSTOV(avc);
 
+    VI_LOCK(vp);
     if (vp->v_iflag & VI_DOOMED) {
+	VI_UNLOCK(vp);
 	USERPRI;
 	return;
     }
+    VI_UNLOCK(vp);
+
+    islocked = VOP_ISLOCKED(vp);
+    if (islocked == LK_EXCLOTHER)
+	panic("Trying to Smush over someone else's lock");
+    else if (islocked == LK_SHARED) {
+	afs_warn("Trying to Smush with a shared lock");
+	vn_lock(vp, LK_UPGRADE);
+    } else if (!islocked)
+	vn_lock(vp, LK_EXCLUSIVE);
 
     if (vp->v_bufobj.bo_object != NULL) {
 	VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
@@ -218,9 +231,14 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     tries = 5;
     code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
     while (code && (tries > 0)) {
+	afs_warn("TryToSmush retrying vinvalbuf");
 	code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
 	--tries;
     }
+    if (islocked == LK_SHARED)
+	vn_lock(vp, LK_DOWNGRADE);
+    else if (!islocked)
+	VOP_UNLOCK(vp, 0);
     USERPRI;
 }
 
