@@ -466,6 +466,7 @@ free_EncryptedData(EncryptedData * data)
     free_ENCTYPE(&(data)->etype);
     if ((data)->kvno) {
 	free((data)->kvno);
+	(data)->kvno = NULL;
     }
     free_octet_string(&(data)->cipher);
 }
@@ -694,6 +695,7 @@ free_PrincipalName(PrincipalName * data)
 	(&(data)->name_string)->len--;
     }
     free((&(data)->name_string)->val);
+    (&(data)->name_string)->val = NULL;
 }
 
 size_t
@@ -829,6 +831,7 @@ free_HostAddresses(HostAddresses * data)
 	(data)->len--;
     }
     free((data)->val);
+    (data)->val = NULL;
 }
 
 size_t
@@ -1211,6 +1214,7 @@ free_AuthorizationData(AuthorizationData * data)
 	(data)->len--;
     }
     free((data)->val);
+    (data)->val = NULL;
 }
 
 size_t
@@ -1794,19 +1798,23 @@ free_EncTicketPart(EncTicketPart * data)
     if ((data)->starttime) {
 	free_KerberosTime((data)->starttime);
 	free((data)->starttime);
+	(data)->starttime = NULL;
     }
     free_KerberosTime(&(data)->endtime);
     if ((data)->renew_till) {
 	free_KerberosTime((data)->renew_till);
 	free((data)->renew_till);
+	(data)->renew_till = NULL;
     }
     if ((data)->caddr) {
 	free_HostAddresses((data)->caddr);
 	free((data)->caddr);
+	(data)->caddr = NULL;
     }
     if ((data)->authorization_data) {
 	free_AuthorizationData((data)->authorization_data);
 	free((data)->authorization_data);
+	(data)->authorization_data = NULL;
     }
 }
 

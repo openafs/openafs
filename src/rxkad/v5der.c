@@ -972,18 +972,21 @@ void
 free_general_string(general_string * str)
 {
     free(*str);
+    *str = NULL;
 }
 
 void
 free_octet_string(octet_string * k)
 {
     free(k->data);
+    k->data = NULL;
 }
 
 void
 free_oid(oid * k)
 {
     free(k->components);
+    k->components = NULL;
 }
 
 /*
