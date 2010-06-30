@@ -1776,14 +1776,15 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 
 	    /* and put it on the LRU cache */
 	    if (!pagevec_add(&lrupv, pp))
-		__pagevec_lru_add(&lrupv);
+		__pagevec_lru_add_file(&lrupv);
         }
     }
 
     /* If there were useful pages in the page list, make sure all pages
      * are in the LRU cache, then schedule the read */
     if(page_count) {
-        pagevec_lru_add(&lrupv);
+	if (pagevec_count(&lrupv))
+	    __pagevec_lru_add_file(&lrupv);
 	credp = crref();
         code = afs_ReadNoCache(avc, ancr, credp);
 	crfree(credp);
