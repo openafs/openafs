@@ -191,35 +191,35 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     vp = AFSTOV(avc);
 
     if (vp->v_iflag & VI_DOOMED) {
-      USERPRI;
-      return;
+	USERPRI;
+	return;
     }
 
     if (vp->v_bufobj.bo_object != NULL) {
-      VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
-      /*
-       * Do we really want OBJPC_SYNC?  OBJPC_INVAL would be
-       * faster, if invalidation is really what we are being
-       * asked to do.  (It would make more sense, too, since
-       * otherwise this function is practically identical to
-       * osi_VM_StoreAllSegments().)  -GAW
-       */
+	VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
+	/*
+	 * Do we really want OBJPC_SYNC?  OBJPC_INVAL would be
+	 * faster, if invalidation is really what we are being
+	 * asked to do.  (It would make more sense, too, since
+	 * otherwise this function is practically identical to
+	 * osi_VM_StoreAllSegments().)  -GAW
+	 */
 
-      /*
-       * Dunno.  We no longer resemble osi_VM_StoreAllSegments,
-       * though maybe that's wrong, now.  And OBJPC_SYNC is the
-       * common thing in 70 file systems, it seems.  Matt.
-       */
+	/*
+	 * Dunno.  We no longer resemble osi_VM_StoreAllSegments,
+	 * though maybe that's wrong, now.  And OBJPC_SYNC is the
+	 * common thing in 70 file systems, it seems.  Matt.
+	 */
 
-      vm_object_page_clean(vp->v_bufobj.bo_object, 0, 0, OBJPC_SYNC);
-      VM_OBJECT_UNLOCK(vp->v_bufobj.bo_object);
+	vm_object_page_clean(vp->v_bufobj.bo_object, 0, 0, OBJPC_SYNC);
+	VM_OBJECT_UNLOCK(vp->v_bufobj.bo_object);
     }
 
     tries = 5;
     code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
     while (code && (tries > 0)) {
-      code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
-      --tries;
+	code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
+	--tries;
     }
     USERPRI;
 }
