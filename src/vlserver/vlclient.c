@@ -243,13 +243,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    char *oper, *vname;
 	    register char **argp = args;
 
-	    /* Eliminate terminating CR */
-	    while(strlen(line) > 0 &&
-		 (line[strlen(line)-1] == '\n' ||
-		  line[strlen(line)-1] == '\r')) {
-	      line[strlen(line)-1] = NULL;
-	    }
-
 	    GetArgs(line, argp, &nargs);
 	    oper = &argp[0][0];
 	    ++argp, --nargs;
