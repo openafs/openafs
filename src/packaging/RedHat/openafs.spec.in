@@ -1132,7 +1132,6 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_bindir}/bos
 %{_bindir}/fs
 %{_bindir}/kapasswd
-%{_bindir}/kpasswd
 %{_bindir}/klog
 %{_bindir}/klog.krb
 %{_bindir}/pagsh
