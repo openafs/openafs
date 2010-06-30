@@ -7309,6 +7309,9 @@ GetVolumeHeader(register Volume * vp)
 	    hd = vp->header;
 	    queue_Remove(hd);
 	    assert(hd->back == vp);
+#ifdef AFS_DEMAND_ATTACH_FS
+            V_attachFlags(vp) &= ~(VOL_HDR_IN_LRU);
+#endif
 	} else {
 	    /* we need to grab a new element off the LRU */
 	    if (queue_IsNotEmpty(&volume_hdr_LRU)) {
