@@ -648,7 +648,7 @@ static const char power_letter[] = {
   'P',  /* pebi */
 };
 
-static int
+static void
 HumanPrintSpace(afs_int32 int_space)
 {
     int exponent = 0;
