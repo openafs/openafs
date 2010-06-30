@@ -38,6 +38,8 @@ KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 <amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80 amd64_fbsd_81 amd64_fbsd_90>
 KOPTS = -fPIC
+<amd64>
+KOPTS += -mno-red-zone
 <all>
 
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
