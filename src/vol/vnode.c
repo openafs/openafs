@@ -731,10 +731,11 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 
 	/* Sanity check:  is this vnode really not in use? */
 	{
-	    int size;
+	    afs_sfsize_t size;
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
-	    off_t off = vnodeIndexOffset(vcp, vnodeNumber);
+	    afs_foff_t off = vnodeIndexOffset(vcp, vnodeNumber);
+	    Error tmp;
 
 	    /* XXX we have a potential race here if two threads
 	     * allocate new vnodes at the same time, and they
@@ -759,32 +760,44 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    fdP = IH_OPEN(ihP);
 	    if (fdP == NULL) {
 		Log("VAllocVnode: can't open index file!\n");
+		*ec = ENOENT;
 		goto error_encountered;
 	    }
 	    if ((size = FDH_SIZE(fdP)) < 0) {
 		Log("VAllocVnode: can't stat index file!\n");
+		*ec = EIO;
 		goto error_encountered;
 	    }
 	    if (FDH_SEEK(fdP, off, SEEK_SET) < 0) {
 		Log("VAllocVnode: can't seek on index file!\n");
+		*ec = EIO;
 		goto error_encountered;
 	    }
 	    if (off + vcp->diskSize <= size) {
 		if (FDH_READ(fdP, &vnp->disk, vcp->diskSize) != vcp->diskSize) {
 		    Log("VAllocVnode: can't read index file!\n");
+		    *ec = EIO;
 		    goto error_encountered;
 		}
 		if (vnp->disk.type != vNull) {
 		    Log("VAllocVnode:  addled bitmap or index!\n");
+		    *ec = EIO;
 		    goto error_encountered;
 		}
 	    } else {
 		/* growing file - grow in a reasonable increment */
 		char *buf = (char *)malloc(16 * 1024);
-		if (!buf)
-		    Abort("VAllocVnode: malloc failed\n");
+		if (!buf) {
+		    *ec = ENOMEM;
+		    goto error_encountered;
+		}
 		memset(buf, 0, 16 * 1024);
-		(void)FDH_WRITE(fdP, buf, 16 * 1024);
+		if ((FDH_WRITE(fdP, buf, 16 * 1024)) != 16 * 1024) {
+		    Log("VAllocVnode: can't grow vnode index: out of memory\n");
+		    *ec = EIO;
+		    free(buf);
+		    goto error_encountered;
+		}
 		free(buf);
 	    }
 	    FDH_CLOSE(fdP);
@@ -798,7 +811,6 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 
 
 	error_encountered:
-#ifdef AFS_DEMAND_ATTACH_FS
 	    /* 
 	     * close the file handle
 	     * acquire VOL_LOCK
@@ -810,17 +822,17 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    if (fdP)
 		FDH_CLOSE(fdP);
 	    VOL_LOCK;
-	    VFreeBitMapEntry_r(ec, &vp->vnodeIndex[class], bitNumber);
+	    VFreeBitMapEntry_r(&tmp, &vp->vnodeIndex[class], bitNumber);
 	    VInvalidateVnode_r(vnp);
 	    VnUnlock(vnp, WRITE_LOCK);
 	    VnCancelReservation_r(vnp);
+#ifdef AFS_DEMAND_ATTACH_FS
 	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 	    VCancelReservation_r(vp);
-	    return NULL;
 #else
-	    assert(1 == 2);
+	    VForceOffline_r(vp, 0);
 #endif
-
+	    return NULL;
 	}
     sane:
 	VNLog(4, 2, vnodeNumber, (intptr_t)vnp, 0, 0);
