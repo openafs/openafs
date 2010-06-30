@@ -640,8 +640,30 @@ PrintStatus(VolumeStatus * status, char *name, char *offmsg)
     return 0;
 }
 
+static const char power_letter[] = {
+  'K',  /* kibi */
+  'M',  /* mebi */
+  'G',  /* gibi */
+  'T',  /* tebi */
+  'P',  /* pebi */
+};
+
 static int
-QuickPrintStatus(VolumeStatus * status, char *name)
+HumanPrintSpace(afs_int32 int_space)
+{
+    int exponent = 0;
+    int exponent_max = sizeof(power_letter) - 1;
+    float space = int_space;
+
+    while (space >= 1024 && exponent < exponent_max) {
+	exponent++;
+	space /= 1024;
+    }
+    printf(" %8.1f%c", space, power_letter[exponent]);
+}
+
+static int
+QuickPrintStatus(VolumeStatus * status, char *name, int human)
 {
     double QuotaUsed = 0.0;
     double PartUsed = 0.0;
@@ -649,11 +671,20 @@ QuickPrintStatus(VolumeStatus * status, char *name)
     printf("%-25.25s", name);
 
     if (status->MaxQuota != 0) {
-	printf(" %10d %10d", status->MaxQuota, status->BlocksInUse);
+	if (human) {
+	    HumanPrintSpace(status->MaxQuota);
+	    HumanPrintSpace(status->BlocksInUse);
+	}
+	else
+	    printf(" %10d %10d", status->MaxQuota, status->BlocksInUse);
 	QuotaUsed =
 	    ((((double)status->BlocksInUse) / status->MaxQuota) * 100.0);
     } else {
-	printf("   no limit %10d", status->BlocksInUse);
+	printf("   no limit");
+	if (human)
+	    HumanPrintSpace(status->BlocksInUse);
+	else
+	    printf(" %10d", status->BlocksInUse);
     }
     if (QuotaUsed > 90.0) {
 	printf("%5.0f%%<<", QuotaUsed);
@@ -677,15 +708,21 @@ QuickPrintStatus(VolumeStatus * status, char *name)
 }
 
 static int
-QuickPrintSpace(VolumeStatus * status, char *name)
+QuickPrintSpace(VolumeStatus * status, char *name, int human)
 {
     double PartUsed = 0.0;
     int WARN = 0;
     printf("%-25.25s", name);
 
-    printf("%10d%10d%10d", status->PartMaxBlocks,
-	   status->PartMaxBlocks - status->PartBlocksAvail,
-	   status->PartBlocksAvail);
+    if (human) {
+	HumanPrintSpace(status->PartMaxBlocks);
+	HumanPrintSpace(status->PartMaxBlocks - status->PartBlocksAvail);
+	HumanPrintSpace(status->PartBlocksAvail);
+    }
+    else
+	printf("%10d%10d%10d", status->PartMaxBlocks,
+               status->PartMaxBlocks - status->PartBlocksAvail,
+               status->PartBlocksAvail);
 
     PartUsed =
 	(100.0 -
@@ -1509,6 +1546,10 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
     struct VolumeStatus *status;
     char *name;
     int error = 0;
+    int human = 0;
+
+    if (as->parms[1].items)
+	human = 1;
 
     printf("%-25s%-11s%-11s%-7s%-11s\n", "Volume Name", "      Quota",
 	   "       Used", " %Used", "  Partition");
@@ -1526,7 +1567,7 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
 	}
 	status = (VolumeStatus *) space;
 	name = (char *)status + sizeof(*status);
-	QuickPrintStatus(status, name);
+	QuickPrintStatus(status, name, human);
     }
     return error;
 }
@@ -1579,9 +1620,13 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
     char *name;
     struct VolumeStatus *status;
     int error = 0;
+    int human = 0;
 
-    printf("%-25s%-10s%-10s%-10s%-6s\n", "Volume Name", "    kbytes",
-	   "      used", "     avail", " %used");
+    if (as->parms[1].items)
+	human = 1;
+
+    printf("%-25s%10s%10s%10s%6s\n", "Volume Name",
+	   human ? "total" : "kbytes", "used", "avail", "%used");
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
@@ -1596,7 +1641,7 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
 	}
 	status = (VolumeStatus *) space;
 	name = (char *)status + sizeof(*status);
-	QuickPrintSpace(status, name);
+	QuickPrintSpace(status, name, human);
     }
     return error;
 }
@@ -3620,11 +3665,13 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, "list volume quota");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "human-readable listing");
     cmd_CreateAlias(ts, "lq");
 
     ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL,
 			  "show server disk space usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "human-readable listing");
     cmd_CreateAlias(ts, "df");
 
     ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, "show volume quota usage");
