@@ -259,7 +259,7 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 	vm_object_page_remove(obj, 0, 0, FALSE);
 	VM_OBJECT_UNLOCK(obj);
     }
-    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0); */
+    osi_vinvalbuf(vp, 0, 0, 0);
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
