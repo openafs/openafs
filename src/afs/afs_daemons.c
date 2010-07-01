@@ -536,10 +536,7 @@ BPrefetch(register struct brequest *ab)
 }
 
 #if defined(AFS_CACHE_BYPASS)
-#if 1 /* XXX Matt debugging */
-static
-#endif
-void
+static void
 BPrefetchNoCache(register struct brequest *ab)
 {
     struct vrequest treq;
@@ -551,8 +548,6 @@ BPrefetchNoCache(register struct brequest *ab)
 #ifndef UKERNEL
     /* OS-specific prefetch routine */
     afs_PrefetchNoCache(ab->vc, ab->cred, (struct nocache_read_request *) ab->ptr_parm[0]);
-#else
-#warning Cache-bypass code path not implemented in UKERNEL
 #endif
 }
 #endif
