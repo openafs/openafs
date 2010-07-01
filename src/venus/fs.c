@@ -659,7 +659,7 @@ HumanPrintSpace(afs_int32 int_space)
 	exponent++;
 	space /= 1024;
     }
-    printf(" %8.1f%c", space, power_letter[exponent]);
+    printf("%9.1f%c", space, power_letter[exponent]);
 }
 
 static int
@@ -672,7 +672,9 @@ QuickPrintStatus(VolumeStatus * status, char *name, int human)
 
     if (status->MaxQuota != 0) {
 	if (human) {
+	    printf(" ");
 	    HumanPrintSpace(status->MaxQuota);
+	    printf(" ");
 	    HumanPrintSpace(status->BlocksInUse);
 	}
 	else
@@ -680,11 +682,11 @@ QuickPrintStatus(VolumeStatus * status, char *name, int human)
 	QuotaUsed =
 	    ((((double)status->BlocksInUse) / status->MaxQuota) * 100.0);
     } else {
-	printf("   no limit");
+	printf("   no limit ");
 	if (human)
 	    HumanPrintSpace(status->BlocksInUse);
 	else
-	    printf(" %10d", status->BlocksInUse);
+	    printf("%10d", status->BlocksInUse);
     }
     if (QuotaUsed > 90.0) {
 	printf("%5.0f%%<<", QuotaUsed);
