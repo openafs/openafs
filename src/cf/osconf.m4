@@ -41,7 +41,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		MT_CC="cc"
-		LEX="lex"
 		CSTATIC="-non_shared"
 		DBG="-g3"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -69,7 +68,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		MT_CC="cc"
-		LEX="flex -l"
 		DBG="-g3"
 		CSTATIC="-non_shared"
 		LWP_OPTMZ="-O2"
@@ -82,7 +80,6 @@ case $AFS_SYSNAME in
 
 	alpha_linux_22)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -91,14 +88,12 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	alpha_linux_24)
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -107,14 +102,12 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	alpha_linux_26)
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -123,14 +116,12 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	arm_linux24)
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -139,14 +130,12 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	arm_linux26)
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -155,7 +144,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -250,7 +238,6 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_fbsd_*)
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
 		PAM_OPTMZ=-O2
@@ -259,11 +246,9 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-pipe"
-		YACC="byacc"
 		;;
 
 	i386_dfbsd_*)
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
 		PAM_OPTMZ=-O2
@@ -272,11 +257,9 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-pipe"
-		YACC="byacc"
 		;;
 
 	amd64_fbsd_*)
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
 		PAM_CFLAGS="-O2 -pipe -fPIC"
@@ -284,11 +267,9 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe -fPIC"
-		YACC="byacc"
 		;;
 
 	*nbsd2*|*nbsd3*|*nbsd4*|*nbsd5*)
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
 		PAM_OPTMZ=-O2
@@ -298,11 +279,9 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lcurses"
 		XCFLAGS="-pipe"
-		YACC="yacc"
 		;;
 
 	*nbsd15|*nbsd16)
-		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS}'
 		MT_LIBS=""
 		PAM_OPTMZ=-O2
@@ -311,12 +290,10 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-pipe"
-		YACC="bison -y"
 		;;
 
 	ia64_linux24|ia64_linux26)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -331,7 +308,6 @@ case $AFS_SYSNAME in
 	amd64_linux*)
 		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -345,7 +321,6 @@ case $AFS_SYSNAME in
 
 	ppc64_linux24)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -359,7 +334,6 @@ case $AFS_SYSNAME in
 
 	ppc64_linux26)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -368,13 +342,11 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE -fPIC"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	i386_umlinux22)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -383,13 +355,11 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	i386_linux*)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
@@ -407,7 +377,6 @@ case $AFS_SYSNAME in
 
 	i386_umlinux24)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
@@ -426,7 +395,6 @@ case $AFS_SYSNAME in
 
 	i386_umlinux26)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		DBG=-g
@@ -444,7 +412,6 @@ case $AFS_SYSNAME in
 		;;
 
 	*_obsd*)
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
 		PAM_OPTMZ=-O2
@@ -454,12 +421,10 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.a"
 		XCFLAGS=
-		YACC="yacc"
 		;;
 
 	parisc_linux24)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -468,7 +433,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -477,7 +441,6 @@ case $AFS_SYSNAME in
 		CCOBJ="cc"
 		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
@@ -496,7 +459,6 @@ case $AFS_SYSNAME in
 		CCOBJ="cc"
 		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
@@ -514,7 +476,6 @@ case $AFS_SYSNAME in
 
 	*_darwin_90)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
@@ -533,7 +494,6 @@ case $AFS_SYSNAME in
 
 	*_darwin_100)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
 		KROOT=
@@ -554,7 +514,6 @@ case $AFS_SYSNAME in
 
 	ppc_linux*)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -563,7 +522,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -571,7 +529,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		DBG=""
-		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -590,7 +547,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		DBG=""
-		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -608,7 +564,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		DBG=""
-		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -626,7 +581,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		DBG="-g"
-		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -644,7 +598,6 @@ case $AFS_SYSNAME in
 		CC="cc"
 		CCOBJ="cc"
 		DBG="-g"
-		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -661,7 +614,6 @@ case $AFS_SYSNAME in
 	s390_linux22)
 		LD="ld"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CC="$CC"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -672,14 +624,12 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		OPTMZ=-O
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	s390_linux24|s390_linux26)
 		LD="ld"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CC="$CC"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -689,7 +639,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -697,7 +646,6 @@ case $AFS_SYSNAME in
 		CCOBJ="${CC} -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CC="$CC"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -708,7 +656,6 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		OPTMZ=-O
 		XCFLAGS="-D_LARGEFILE64_SOURCE -D__s390x__"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -718,7 +665,6 @@ case $AFS_SYSNAME in
 		MT_CC="cc"
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
-		LEX="lex"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
@@ -735,7 +681,6 @@ case $AFS_SYSNAME in
 		MT_CC="cc"
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
-		LEX="lex"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
@@ -752,7 +697,6 @@ case $AFS_SYSNAME in
 		MT_CC="cc"
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
-		LEX="lex"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		TXLIBS="-lcurses"
@@ -769,7 +713,6 @@ case $AFS_SYSNAME in
 		CCOBJ="/usr/bin/cc"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LD="/usr/bin/ld"
-		LEX="lex"
 		MT_CC="/usr/bin/cc"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -783,7 +726,6 @@ case $AFS_SYSNAME in
 
 	sparc*_linux*)
 		KERN_OPTMZ=-O2
-		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_OPTMZ=-O2
@@ -794,7 +736,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		XCFLAGS64="-D_LARGEFILE64_SOURCE -m64"
 		XLDFLAGS64="-m64"
-		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
@@ -802,7 +743,6 @@ case $AFS_SYSNAME in
 		CCXPG2="/usr/xpg2bin/cc"
 		CC="gcc"
 		CCOBJ="gcc"
-		LEX="lex"
 		SHLIB_CFLAGS="-PIC"
 		TXLIBS="-lcurses -ltermcap"
 		XCFLAGS=""
@@ -815,7 +755,6 @@ case $AFS_SYSNAME in
 	sun4x_55)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
@@ -833,7 +772,6 @@ case $AFS_SYSNAME in
 	sun4x_56)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
@@ -854,7 +792,6 @@ case $AFS_SYSNAME in
 	sun4x_57)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -876,7 +813,6 @@ case $AFS_SYSNAME in
 	sun4x_58)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -898,7 +834,6 @@ case $AFS_SYSNAME in
 	sun4x_59)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -920,7 +855,6 @@ case $AFS_SYSNAME in
 	sun4x_510)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -942,7 +876,6 @@ case $AFS_SYSNAME in
 	sun4x_511)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -964,7 +897,6 @@ case $AFS_SYSNAME in
 	sunx86_57)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -985,7 +917,6 @@ case $AFS_SYSNAME in
 	sunx86_58)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -1006,7 +937,6 @@ case $AFS_SYSNAME in
 	sunx86_59)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -1027,7 +957,6 @@ case $AFS_SYSNAME in
 	sunx86_510)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -1048,7 +977,6 @@ case $AFS_SYSNAME in
 	sunx86_511)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
-		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
