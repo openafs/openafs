@@ -547,7 +547,10 @@ afs_PrefetchNoCache(register struct vcache *avc,
     uio_t *auio;
     struct iovec *iovecp;
     struct vrequest *areq;
-    afs_int32 code, length_hi, bytes, locked;    
+    afs_int32 code = 0;
+#ifdef AFS_64BIT_CLIENT
+    afs_int32 length_hi, bytes, locked;
+#endif
 	
     register struct afs_conn *tc;
     afs_int32 i;
