@@ -1579,7 +1579,7 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 apart;
     int previdx = -1;
     int wantExtendedInfo;	/*Do we want extended vol info? */
-
+    int isSubEnum=0;		/* Keep track whether sub enumerate called. */
     wantExtendedInfo = (as->parms[1].items ? 1 : 0);	/* -extended */
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);	/* -id */
@@ -1669,6 +1669,7 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
 	    else if (as->parms[2].items) {
 		DisplayFormat2(aserver, apart, pntr);
 		EnumerateEntry(&entry);
+		isSubEnum = 1;
 	    } else
 		VolumeStats_int(pntr, &entry, aserver, apart, voltype);
 
@@ -1690,7 +1691,9 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
 	fprintf(STDERR, "Dump only information from VLDB\n\n");
 	fprintf(STDOUT, "%s \n", entry.name);	/* PostVolumeStats doesn't print name */
     }
-    PostVolumeStats(&entry);
+
+    if (!isSubEnum)
+	PostVolumeStats(&entry);
 
     return (error);
 }
