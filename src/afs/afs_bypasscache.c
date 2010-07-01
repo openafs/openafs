@@ -594,23 +594,23 @@ afs_PrefetchNoCache(register struct vcache *avc,
 			tcall = NULL;
 		    }
 		}
-		if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
-		    if (auio->uio_offset > 0x7FFFFFFF) {
-			code = EFBIG;
-		    } else {
-			afs_int32 pos;
-			pos = auio->uio_offset;
-			COND_GUNLOCK(locked);
-			if (!tcall)
-			    tcall = rx_NewCall(tc->id);
-			code = StartRXAFS_FetchData(tcall,
-					      (struct AFSFid *) &avc->f.fid.Fid,
-					      pos, bparms->length);
-			COND_RE_GLOCK(locked);
-		    }
-		    afs_serverSetNo64Bit(tc);
-		}
 	    } /* afs_serverHasNo64Bit */
+	    if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
+		if (auio->uio_offset > 0x7FFFFFFF) {
+		    code = EFBIG;
+		} else {
+		    afs_int32 pos;
+		    pos = auio->uio_offset;
+		    COND_GUNLOCK(locked);
+		    if (!tcall)
+			tcall = rx_NewCall(tc->id);
+		    code = StartRXAFS_FetchData(tcall,
+					(struct AFSFid *) &avc->f.fid.Fid,
+					pos, bparms->length);
+		    COND_RE_GLOCK(locked);
+		}
+		afs_serverSetNo64Bit(tc);
+	    }
 #else
 	    code = StartRXAFS_FetchData(tcall,
 			                (struct AFSFid *) &avc->f.fid.Fid,
