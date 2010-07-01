@@ -15,6 +15,8 @@
 
 int
 osi_TryEvictVCache(struct vcache *avc, int *slept) {
+    struct vnode *vp = AFSTOV(avc);
+
     if (!VREFCOUNT_GT(avc,0)
         && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
 	/*
@@ -24,24 +26,32 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
          * not on the free list.
          * XXX assume FreeBSD is the same for now.
          */
+	/*
+	 * We only have one caller (afs_ShakeLooseVCaches), which already
+	 * holds the write lock.  vgonel() sometimes calls VOP_CLOSE(),
+	 * so we must drop the write lock around our call to vgone().
+	 */
+	ReleaseWriteLock(&afs_xvcache);
         AFS_GUNLOCK();
+	*slept = 1;
 
 #if defined(AFS_FBSD80_ENV)
 	/* vgone() is correct, but v_usecount is assumed not
 	 * to be 0, and I suspect that currently our usage ensures that
 	 * in fact it will */
-	if (vrefcnt(AFSTOV(avc)) < 1) {
-	    vref(AFSTOV(avc));
+	if (vrefcnt(vp) < 1) {
+	    vref(vp);
 	}
-	vn_lock(AFSTOV(avc), LK_EXCLUSIVE | LK_RETRY); /* !glocked */
+	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
 #endif
 
-        vgone(AFSTOV(avc));
+        vgone(vp);
 #if defined(AFS_FBSD80_ENV)
-	VOP_UNLOCK(AFSTOV(avc), 0);
+	VOP_UNLOCK(vp, 0);
 #endif
 
 	AFS_GLOCK();
+	ObtainWriteLock(&afs_xvcache, 340);
 	return 1;
     }
     return 0;
