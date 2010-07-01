@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <errno.h>
 #ifdef AFS_SUN5_ENV
 #include <fcntl.h>
 #endif
@@ -28,24 +29,29 @@
 #ifdef AFS_LINUX20_ENV
 int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 		     long param4, int *rval) {
-  struct afsprocdata syscall_data;
-  int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
-  if(fd < 0)
-      fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
-  if(fd < 0)
-    return -1;
+    struct afsprocdata syscall_data;
+    int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
+    if(fd < 0)
+	fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
+    if(fd < 0)
+	return -1;
 
-  syscall_data.syscall = syscall;
-  syscall_data.param1 = param1;
-  syscall_data.param2 = param2;
-  syscall_data.param3 = param3;
-  syscall_data.param4 = param4;
+    syscall_data.syscall = syscall;
+    syscall_data.param1 = param1;
+    syscall_data.param2 = param2;
+    syscall_data.param3 = param3;
+    syscall_data.param4 = param4;
 
-  *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+    *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
 
-  close(fd);
+    close(fd);
 
-  return 0;
+    /* Callers expect us to emulate a syscall - return -1 on error, set errno */
+    if (*rval) {
+	errno = *rval;
+	*rval =  -1;
+    }
+    return 0;
 }
 #endif
 
