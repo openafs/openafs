@@ -297,7 +297,6 @@ DECL_PIOCTL(PPrecache);
 DECL_PIOCTL(PGetPAG);
 #if defined(AFS_CACHE_BYPASS)
 DECL_PIOCTL(PSetCachingThreshold);
-DECL_PIOCTL(PSetCachingBlkSize);
 #endif
 
 /*
@@ -5008,7 +5007,7 @@ DECL_PIOCTL(PSetCachingThreshold)
 {
     afs_int32 getting = 1;
     afs_int32 setting = 1;
-    afs_int32 threshold;
+    afs_int32 threshold = AFS_CACHE_BYPASS_DISABLED;
 
     if (afs_pd_getInt(ain, &threshold) != 0)
 	setting = 0;
