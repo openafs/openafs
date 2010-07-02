@@ -159,7 +159,7 @@ afs_TransitionToBypass(register struct vcache *avc,
     ObtainWriteLock(&avc->lock, 925);
 	
     /* If we never cached this, just change state */
-    if (setDesire && (!avc->cachingStates & FCSBypass)) {
+    if (setDesire && (!(avc->cachingStates & FCSBypass))) {
 	avc->f.states |= FCSBypass;
 	goto done;
     }
@@ -220,7 +220,7 @@ afs_TransitionToCaching(register struct vcache *avc,
     if (!avc)
 	return;
 
-    if (!avc->f.states & FCSBypass)
+    if (!(avc->f.states & FCSBypass))
 	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");		
 		
     if (aflags & TRANSChangeDesiredBit)
