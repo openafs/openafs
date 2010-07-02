@@ -3182,7 +3182,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                          VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 	goto locked_error;
@@ -3205,7 +3206,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume salvage flag is ON for %s; volume needs salvage\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                           VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3227,7 +3229,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                           VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3249,7 +3252,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
 #if defined(AFS_DEMAND_ATTACH_FS)
 	/* schedule a salvage so the volume goes away on disk */
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                          VOL_SALVAGE_NO_OFFLINE);
 	VChangeState_r(vp, VOL_STATE_ERROR);
 	vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -3267,7 +3271,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    VGetBitmap_r(ec, vp, i);
 	    if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+		                                          VOL_SALVAGE_NO_OFFLINE);
 		vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
@@ -3315,7 +3320,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	        "%lu; needs salvage\n", (int)*ec,
 	        afs_printable_uint32_lu(V_id(vp)));
 #ifdef AFS_DEMAND_ATTACH_FS
-	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                              VOL_SALVAGE_NO_OFFLINE);
 	    vp->nUsers = 0;
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    *ec = VSALVAGE;
@@ -3720,6 +3726,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	 *   - PREATTACHED
 	 *   - ATTACHED
 	 *   - SALVAGING
+	 *   - SALVAGE_REQ
 	 */
 
 	if (vp->salvage.requested) {
@@ -3762,8 +3769,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	    }
 	}
 
-	if ((V_attachState(vp) == VOL_STATE_SALVAGING) ||
-	    (*ec == VSALVAGING)) {
+	if (VIsSalvaging(vp) || (*ec == VSALVAGING)) {
 	    if (client_ec) {
 		/* see CheckVnode() in afsfileprocs.c for an explanation
 		 * of this error code logic */
@@ -4874,6 +4880,62 @@ VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 /* online salvager routines                        */
 /***************************************************/
 #if defined(AFS_DEMAND_ATTACH_FS)
+
+/**
+ * offline a volume to let it be salvaged.
+ *
+ * @param[in] vp  Volume to offline
+ *
+ * @return whether we offlined the volume successfully
+ *  @retval 0 volume was not offlined
+ *  @retval 1 volume is now offline
+ *
+ * @note This is similar to VCheckOffline, but slightly different. We do not
+ *       deal with vp->goingOffline, and we try to avoid touching the volume
+ *       header except just to set needsSalvaged
+ *
+ * @pre VOL_LOCK held
+ * @pre vp->nUsers == 0
+ * @pre V_attachState(vp) == VOL_STATE_SALVAGE_REQ
+ */
+static int
+VOfflineForSalvage_r(struct Volume *vp)
+{
+    Error error;
+
+    VCreateReservation_r(vp);
+    VWaitExclusiveState_r(vp);
+
+    if (vp->nUsers || V_attachState(vp) == VOL_STATE_SALVAGING) {
+	/* Someone's using the volume, or someone got to scheduling the salvage
+	 * before us. I don't think either of these should be possible, as we
+	 * should gain no new heavyweight references while we're trying to
+	 * salvage, but just to be sure... */
+	VCancelReservation_r(vp);
+	return 0;
+    }
+
+    VChangeState_r(vp, VOL_STATE_OFFLINING);
+
+    VLRU_Delete_r(vp);
+    if (vp->header) {
+	V_needsSalvaged(vp) = 1;
+	/* ignore error; updating needsSalvaged is just best effort */
+	VUpdateVolume_r(&error, vp, VOL_UPDATE_NOFORCEOFF);
+    }
+    VCloseVolumeHandles_r(vp);
+
+    FreeVolumeHeader(vp);
+
+    /* volume has been effectively offlined; we can mark it in the SALVAGING
+     * state now, which lets FSSYNC give it away */
+    VChangeState_r(vp, VOL_STATE_SALVAGING);
+
+    VCancelReservation_r(vp);
+
+    return 1;
+}
+
 /**
  * check whether a salvage needs to be performed on this volume.
  *
@@ -4899,12 +4961,31 @@ VCheckSalvage(Volume * vp)
 {
     int ret = 0;
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
-    if (vp->nUsers || vp->nWaiters)
+    if (vp->nUsers)
 	return ret;
+    if (!vp->salvage.requested) {
+	return ret;
+    }
+
+    /* prevent recursion; some of the code below creates and removes
+     * lightweight refs, which can call VCheckSalvage */
+    if (vp->salvage.scheduling) {
+	return ret;
+    }
+    vp->salvage.scheduling = 1;
+
+    if (V_attachState(vp) == VOL_STATE_SALVAGE_REQ) {
+	if (!VOfflineForSalvage_r(vp)) {
+	    vp->salvage.scheduling = 0;
+	    return ret;
+	}
+    }
+
     if (vp->salvage.requested) {
 	VScheduleSalvage_r(vp);
 	ret = 1;
     }
+    vp->salvage.scheduling = 0;
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
     return ret;
 }
@@ -4974,7 +5055,24 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	 * fear of a salvage already running for this volume. */
 
 	if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
-	    VChangeState_r(vp, VOL_STATE_SALVAGING);
+
+	    /* if we don't need to offline the volume, we can go directly
+	     * to SALVAGING. SALVAGING says the volume is offline and is
+	     * either salvaging or ready to be handed to the salvager.
+	     * SALVAGE_REQ says that we want to salvage the volume, but we
+	     * are waiting for it to go offline first. */
+	    if (flags & VOL_SALVAGE_NO_OFFLINE) {
+		VChangeState_r(vp, VOL_STATE_SALVAGING);
+	    } else {
+		VChangeState_r(vp, VOL_STATE_SALVAGE_REQ);
+		if (vp->nUsers == 0) {
+		    /* normally VOfflineForSalvage_r would be called from
+		     * PutVolume et al when nUsers reaches 0, but if
+		     * it's already 0, just do it ourselves, since PutVolume
+		     * isn't going to get called */
+		    VOfflineForSalvage_r(vp);
+		}
+	    }
 	    *ec = VSALVAGING;
 	} else {
 	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
@@ -5162,6 +5260,13 @@ VScheduleSalvage_r(Volume * vp)
 	return 1;
     }
 
+    if (vp->salvage.scheduled) {
+	return ret;
+    }
+
+    VCreateReservation_r(vp);
+    VWaitExclusiveState_r(vp);
+
     /*
      * XXX the scheduling process should really be done asynchronously
      *     to avoid fssync deadlocks
@@ -5171,9 +5276,6 @@ VScheduleSalvage_r(Volume * vp)
 	 *
 	 * set the volume to an exclusive state and drop the lock
 	 * around the SALVSYNC call
-	 *
-	 * note that we do NOT acquire a reservation here -- doing so
-	 * could result in unbounded recursion
 	 */
 	strlcpy(partName, VPartitionPath(vp->partition), sizeof(partName));
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
@@ -5216,6 +5318,7 @@ VScheduleSalvage_r(Volume * vp)
 	    }
 	}
     }
+    VCancelReservation_r(vp);
     return ret;
 }
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */

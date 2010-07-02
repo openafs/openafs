@@ -915,14 +915,22 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    if (vp->salvage.requested && !vp->salvage.scheduled) {
 		vp->salvage.scheduled = 1;
 	    }
+
+	    /* If the volume is in VOL_STATE_SALVAGE_REQ, we need to wait
+	     * for the vol to go offline before we can give it away. Also
+	     * make sure we don't come out with vp in an excl state. */
+	    while (V_attachState(vp) == VOL_STATE_SALVAGE_REQ ||
+	           VIsExclusiveState(V_attachState(vp))) {
+
+		VOL_CV_WAIT(&V_attachCV(vp));
+	    }
+
 	case debugUtility:
 	    break;
 
 	case volumeUtility:
 	case volumeServer:
-            if (V_attachState(vp) == VOL_STATE_SALVAGING ||
-	        vp->salvage.requested) {
-
+            if (VIsSalvaging(vp)) {
                 Log("denying offline request for volume %lu; volume is in salvaging state\n",
 		    afs_printable_uint32_lu(vp->hashid));
                 res->hdr.reason = FSYNC_SALVAGE;
