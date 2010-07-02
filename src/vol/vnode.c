@@ -788,12 +788,13 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		/* growing file - grow in a reasonable increment */
 		char *buf = (char *)malloc(16 * 1024);
 		if (!buf) {
+		    Log("VAllocVnode: can't grow vnode index: out of memory\n");
 		    *ec = ENOMEM;
 		    goto error_encountered;
 		}
 		memset(buf, 0, 16 * 1024);
 		if ((FDH_WRITE(fdP, buf, 16 * 1024)) != 16 * 1024) {
-		    Log("VAllocVnode: can't grow vnode index: out of memory\n");
+		    Log("VAllocVnode: can't grow vnode index: write failed\n");
 		    *ec = EIO;
 		    free(buf);
 		    goto error_encountered;
