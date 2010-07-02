@@ -1092,12 +1092,15 @@ VPrintDiskStats_r(void)
 {
     struct DiskPartition64 *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
-	Log("Partition %s: %d available 1K blocks (minfree=%d), ", dp->name,
-	    dp->totalUsable, dp->minFree);
-	if (dp->free < 0)
-	    Log("overallocated by %d blocks\n", -dp->free);
-	else
-	    Log("%d free blocks\n", dp->free);
+	if (dp->free < 0) {
+	    Log("Partition %s: %d available 1K blocks (minfree=%d), "
+	        "overallocated by %d blocks\n", dp->name,
+	        dp->totalUsable, dp->minFree, -dp->free);
+	} else {
+	    Log("Partition %s: %d available 1K blocks (minfree=%d), "
+	        "%d free blocks\n", dp->name,
+	        dp->totalUsable, dp->minFree, dp->free);
+	}
     }
 }
 
