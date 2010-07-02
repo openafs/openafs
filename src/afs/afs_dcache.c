@@ -1824,9 +1824,6 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			break;
 		    /* If we can't get space for 5 mins we give up and panic */
 		    if (++downDCount > 300) {
-#if defined(AFS_CACHE_BYPASS)
-			afs_warn("GetDCache calling osi_Panic: No space in five minutes.\n downDCount: %d\n aoffset: %d alen: %d\n", downDCount, aoffset, alen);
-#endif
 			osi_Panic("getdcache");
                     }
 		    ReleaseWriteLock(&afs_xdcache);
