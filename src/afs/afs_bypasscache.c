@@ -333,7 +333,7 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 	if (code != sizeof(afs_int32)) {
 	    result = 0;
 	    afs_warn("Preread error. code: %d instead of %d\n",
-		code, sizeof(afs_int32));
+		code, (int)sizeof(afs_int32));
 	    unlock_and_release_pages(auio);
 	    goto done;
 	} else
