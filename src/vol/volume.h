@@ -172,9 +172,12 @@ typedef enum {
     VOL_STATE_VNODE_RELEASE     = 18,   /**< volume is busy releasing vnodes */
     VOL_STATE_VLRU_ADD          = 19,   /**< volume is busy being added to a VLRU queue */
     VOL_STATE_DELETED           = 20,   /**< volume has been deleted by the volserver */
+    VOL_STATE_SALVAGE_REQ       = 21,   /**< volume has been requested to be salvaged,
+                                         *   but is waiting for other users to go away
+                                         *   so it can be offlined */
     /* please add new states directly above this line */
-    VOL_STATE_FREED             = 21,   /**< debugging aid */
-    VOL_STATE_COUNT             = 22    /**< total number of valid states */
+    VOL_STATE_FREED             = 22,   /**< debugging aid */
+    VOL_STATE_COUNT             = 23    /**< total number of valid states */
 } VolState;
 
 /**
@@ -604,7 +607,11 @@ typedef struct VolumeOnlineSalvage {
     int reason;                 /**< reason for requesting online salvage */
     byte requested;             /**< flag specifying that salvage should be scheduled */
     byte scheduled;             /**< flag specifying whether online salvage scheduled */
-    byte reserved[2];           /**< padding */
+    byte scheduling;            /**< if nonzero, this volume has entered
+                                 *   VCheckSalvage(), so if we recurse into
+                                 *   VCheckSalvage() with this set, exit immediately
+                                 *   to avoid recursing forever */
+    byte reserved[1];           /**< padding */
 } VolumeOnlineSalvage;
 
 /**
@@ -978,6 +985,8 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 
 /* VRequestSalvage_r flags */
 #define VOL_SALVAGE_INVALIDATE_HEADER 0x1 /* for demand attach fs, invalidate volume header cache */
+#define VOL_SALVAGE_NO_OFFLINE        0x2 /* we do not need to wait to offline the volume; it has
+                                           * not been fully attached */
 
 
 #if	defined(NEARINODE_HINT)

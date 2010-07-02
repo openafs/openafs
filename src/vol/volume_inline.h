@@ -240,6 +240,37 @@ VVolLockType(int mode, int writeable)
 }
 
 /**
+ * tells caller whether or not the volume is effectively salvaging.
+ *
+ * @param vp  volume pointer
+ *
+ * @return whether volume is salvaging or not
+ *  @retval 0 no, volume is not salvaging
+ *  @retval 1 yes, volume is salvaging
+ *
+ * @note The volume may not actually be getting salvaged at the moment if
+ *       this returns 1, but may have just been requested or scheduled to be
+ *       salvaged. Callers should treat these cases as pretty much the same
+ *       anyway, since we should not touch a volume that is busy salvaging or
+ *       waiting to be salvaged.
+ */
+static_inline int
+VIsSalvaging(struct Volume *vp)
+{
+    /* these tests are a bit redundant, but to be safe... */
+    switch(V_attachState(vp)) {
+    case VOL_STATE_SALVAGING:
+    case VOL_STATE_SALVAGE_REQ:
+	return 1;
+    default:
+	if (vp->salvage.requested || vp->salvage.scheduled) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+/**
  * tells caller whether or not the current state requires
  * exclusive access without holding glock.
  *
@@ -291,6 +322,7 @@ VIsErrorState(VolState state)
     switch (state) {
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
+    case VOL_STATE_SALVAGE_REQ:
 	return 1;
     default:
 	return 0;
