@@ -24,220 +24,246 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/afsint.h>
+
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/dir.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <search.h>
 #include "afscp.h"
 #include "afscp_internal.h"
 
+int
+afscp_CreateFile(const struct afscp_venusfid *dir, char *name,
+		 struct AFSStoreStatus *sst, struct afscp_venusfid **ret)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst, fst;
+    struct AFSVolSync vs;
+    struct AFSCallBack cb;
+    struct AFSFid ff;
+    struct afscp_server *server;
+    struct rx_connection *c;
+    time_t now;
 
-int afs_CreateFile(const struct afs_venusfid *dir, char *name,
-	       struct AFSStoreStatus *sst,
-	       struct afs_venusfid **ret) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst, fst;
-  struct AFSVolSync vs;
-  struct AFSCallBack cb;
-  struct AFSFid ff;
-  struct afs_volume *volume;
-  struct afs_server *server;
-  struct rx_call *c;
-
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_CreateFile(server->conns[j], &df, name, sst, &ff,
-			      &fst, &dfst, &cb, &vs);
-	if (code >= 0)
-	  break;
-      }
+    if (dir == NULL || name == NULL || sst == NULL) {
+	fprintf(stderr,
+		"afscp_CreateFile called with NULL args, cannot continue\n");
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  AddCallBack(server, &ff, &fst, &cb);
-  if (ret)
-    *ret=makefid(vol->cell, ff.Volume,  ff.Vnode, ff.Unique);
-  return 0;
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
+    }
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		c = afscp_ServerConnection(server, j);
+		if (c == NULL) {
+		    break;
+		}
+		time(&now);
+		code = RXAFS_CreateFile(c, &df, name, sst, &ff,
+					&fst, &dfst, &cb, &vs);
+		if (code >= 0) {
+		    break;
+		}
+	    }
+	}
+	if (code >= 0) {
+	    break;
+	}
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    afscp_AddCallBack(server, &ff, &fst, &cb, now);
+    if (ret != NULL)
+	*ret = afscp_MakeFid(vol->cell, ff.Volume, ff.Vnode, ff.Unique);
+    return 0;
 }
 
-int afs_MakeDir(const struct afs_venusfid *dir, char *name,
-	       struct AFSStoreStatus *sst,
-	       struct afs_venusfid **ret) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst, fst;
-  struct AFSVolSync vs;
-  struct AFSCallBack cb;
-  struct AFSFid ff;
-  struct afs_volume *volume;
-  struct afs_server *server;
+int
+afscp_MakeDir(const struct afscp_venusfid *dir, char *name,
+	      struct AFSStoreStatus *sst, struct afscp_venusfid **ret)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst, fst;
+    struct AFSVolSync vs;
+    struct AFSCallBack cb;
+    struct AFSFid ff;
+    struct afscp_server *server;
+    struct rx_connection *c;
+    time_t now;
 
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_MakeDir(server->conns[j], &df, name, sst, &ff,
-			      &fst, &dfst, &cb, &vs);
-	if (code >= 0)
-	  break;
-      }
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  AddCallBack(server, &ff, &fst, &cb);
-  if (ret)
-    *ret=makefid(vol->cell, ff.Volume, ff.Vnode, ff.Unique);
-  return 0;
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		c = afscp_ServerConnection(server, j);
+		if (c == NULL)
+		    break;
+		time(&now);
+		code = RXAFS_MakeDir(c, &df, name, sst, &ff,
+				     &fst, &dfst, &cb, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    afscp_AddCallBack(server, &ff, &fst, &cb, now);
+    if (ret != NULL)
+	*ret = afscp_MakeFid(vol->cell, ff.Volume, ff.Vnode, ff.Unique);
+    return 0;
 }
 
-int afs_Symlink(const struct afs_venusfid *dir, char *name,
-		char *target,
-		struct AFSStoreStatus *sst) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst, fst;
-  struct AFSVolSync vs;
-  struct AFSCallBack cb;
-  struct AFSFid ff;
-  struct afs_volume *volume;
-  struct afs_server *server;
+int
+afscp_Symlink(const struct afscp_venusfid *dir, char *name,
+	      char *target, struct AFSStoreStatus *sst)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst, fst;
+    struct AFSVolSync vs;
+    struct AFSFid ff;
+    struct afscp_server *server;
+    struct rx_connection *c;
 
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_Symlink(server->conns[j], &df, name, target, sst, &ff,
-			      &fst, &dfst, &vs);
-	if (code >= 0)
-	  break;
-      }
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  return 0;
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		c = afscp_ServerConnection(server, j);
+		if (c == NULL)
+		    break;
+		code = RXAFS_Symlink(c, &df, name, target, sst,
+				     &ff, &fst, &dfst, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    return 0;
 }
 
 
-int afs_RemoveFile(const struct afs_venusfid *dir, char *name) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst;
-  struct AFSVolSync vs;
-  struct AFSCallBack cb;
-  struct afs_volume *volume;
-  struct afs_server *server;
+int
+afscp_RemoveFile(const struct afscp_venusfid *dir, char *name)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst;
+    struct AFSVolSync vs;
+    struct afscp_server *server;
+    struct rx_connection *c;
 
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_RemoveFile(server->conns[j], &df, name, &dfst, &vs);
-	if (code >= 0)
-	  break;
-      }
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  return 0;
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		c = afscp_ServerConnection(server, j);
+		if (c == NULL)
+		    break;
+		code = RXAFS_RemoveFile(c, &df, name, &dfst, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    return 0;
 }
 
-int afs_RemoveDir(const struct afs_venusfid *dir, char *name) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst;
-  struct AFSVolSync vs;
-  struct AFSCallBack cb;
-  struct afs_volume *volume;
-  struct afs_server *server;
+int
+afscp_RemoveDir(const struct afscp_venusfid *dir, char *name)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst;
+    struct AFSVolSync vs;
+    struct afscp_server *server;
+    struct rx_connection *c;
 
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_RemoveDir(server->conns[j], &df, name, &dfst, &vs);
-	if (code >= 0)
-	  break;
-      }
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  return 0;
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		c = afscp_ServerConnection(server, j);
+		if (c == NULL)
+		    break;
+		code = RXAFS_RemoveDir(c, &df, name, &dfst, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    return 0;
 }

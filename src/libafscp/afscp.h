@@ -1,136 +1,180 @@
-#ifndef _AFSCP_H_
-#define _AFSCP_H_
+#ifndef AFS_SRC_LIBAFSCP_AFSCP_H
+#define AFS_SRC_LIBAFSCP_AFSCP_H
 
 /* AUTORIGHTS */
 #include <afs/param.h>
 #include <afs/afsint.h>
-struct afs_server;
-struct afs_cell;
-struct afs_callback ;
+#include <afs/afs_consts.h>
+#include <afs/cellconfig.h>
+#include <afs/dir.h>
+#include <afs/afsutil.h>
 
-struct afs_volume
-{
-     struct afs_cell *cell;
-     afs_uint32 id;
-     int voltype;
-     int nservers;
-     int servers[16];
-     char name[256];
-     void *statcache;
-     void *dircache;
+struct afscp_server {
+    afsUUID id;
+    int index;
+    int cell;
+    int naddrs;
+    afs_uint32 addrs[AFS_MAXHOSTS];
+    struct rx_connection *conns[AFS_MAXHOSTS];
 };
 
-struct afs_venusfid
-{
-     struct afs_cell *cell;
-     struct AFSFid fid;
+struct afscp_cell {
+    int id;
+    char name[MAXCELLCHARS + 1];
+    struct rx_securityClass *security;
+    int scindex;
+    struct ubik_client *vlservers;
+    int nservers;
+    int srvsalloced;
+    struct afscp_server **fsservers;
+    void *volsbyname;
+    void *volsbyid;
+    char *realm;
 };
 
-struct afs_dirent
-{
-     afs_uint32 vnode;
-     afs_uint32 unique;
-     char name[16+32*(64-2)]; /* 64 is EPP. */
+struct afscp_volume {
+    struct afscp_cell *cell;
+    afs_uint32 id;
+    int voltype;
+    int nservers;
+    int servers[AFS_MAXHOSTS];
+    char name[AFSNAMEMAX];
+    void *statcache;
+    void *dircache;
 };
 
-typedef struct afs_dirstream afs_DIR;
-typedef struct afs_openfile afs_FILE;
+struct afscp_venusfid {
+    struct afscp_cell *cell;
+    struct AFSFid fid;
+};
 
-extern int afs_errno;
-int afscp_init(const char *cellname);
-void afscp_finalize(void);
+struct afscp_dirent {
+    afs_uint32 vnode;
+    afs_uint32 unique;
+    char name[16 + 32 * (EPP - 2)];
+};
 
-#ifdef API_COMPAT
-#define GetCellByName afs_cellbyname
-#define GetCellById afs_cellbyid
-#define GetDefaultCell afs_defaultcell
-#define SetDefaultCell afs_setdefaultcell
-#define GetCellID afs_cellid
-#endif
-struct afs_cell *afs_defaultcell(void);
-struct afs_cell *afs_cellbyname(const char *cellname) ;
-int afs_setdefaultcell(const char *cellname);
-struct afs_cell *afs_cellbyid(int id);
-int afs_cellid(struct afs_cell *cell);
+struct afscp_dirstream {
+    struct afscp_venusfid fid;
+    int buflen;
+    char *dirbuffer;
+    int hashent;
+    int entry;
+    int dv;
+    struct afscp_dirent ret;
+};
 
+struct afscp_dircache {
+    struct afscp_venusfid me;
+    int buflen;
+    char *dirbuffer;
+    int dv;
+};
 
-#ifdef API_COMPAT
-#define GetServerById afs_serverbyid
-#define GetServerByAddr afs_serverbyaddr
-#define GetAnyServerById afs_anyserverbyaddr
-#define GetAnyServerByIndex afs_serverbyindex
-#define GetConnection afs_serverconnection
-#endif
+struct afscp_statent {
+    struct afscp_venusfid me;
+    struct AFSFetchStatus status;
+};
 
-struct afs_server *afs_serverbyid(struct afs_cell *thecell, afsUUID *u);
-struct afs_server *afs_serverbyaddr(struct afs_cell *thecell,
-				       afs_uint32 addr);
-struct afs_server *afs_anyserverbyaddr(afs_uint32 addr) ;
-struct afs_server *afs_serverbyindex(int idx) ;
-struct rx_connection *afs_serverconnection(const struct afs_server *srv,
-					      int i);
+struct afscp_openfile {
+    struct afscp_venusfid fid;
+    off_t offset;
+};
 
-int AddCallBack(const struct afs_server *server, const struct AFSFid *fid,
-                const struct AFSFetchStatus *st, const struct AFSCallBack *cb);
-int RemoveCallBack(const struct afs_server *server, const struct afs_venusfid *fid);
-int ReturnCallBacks(const struct afs_server *server);
-int ReturnAllCallBacks(void);
+struct afscp_callback {
+    int valid;
+    const struct afscp_server *server;
+    struct AFSFid fid;
+    struct AFSCallBack cb;
+    time_t as_of;
+};
 
+extern int afscp_errno;
+int afscp_Init(const char *);
+void afscp_Finalize(void);
+
+int afscp_Insecure(void);
+int afscp_AnonymousAuth(int);
+
+struct afscp_cell *afscp_DefaultCell(void);
+struct afscp_cell *afscp_CellByName(const char *, const char *);
+int afscp_SetDefaultRealm(const char *);
+int afscp_SetDefaultCell(const char *);
+struct afscp_cell *afscp_CellById(int);
+int afscp_CellId(struct afscp_cell *);
+void afscp_FreeAllCells(void);
+void afscp_FreeAllServers(void);
+
+struct afscp_server *afscp_ServerById(struct afscp_cell *, afsUUID *);
+struct afscp_server *afscp_ServerByAddr(struct afscp_cell *, afs_uint32);
+struct afscp_server *afscp_AnyServerByAddr(afs_uint32);
+struct afscp_server *afscp_ServerByIndex(int);
+struct rx_connection *afscp_ServerConnection(const struct afscp_server *,
+					     int);
+
+int afscp_AddCallBack(const struct afscp_server *,
+		      const struct AFSFid *,
+		      const struct AFSFetchStatus *,
+		      const struct AFSCallBack *, const time_t);
+int afscp_RemoveCallBack(const struct afscp_server *,
+			 const struct afscp_venusfid *);
+int afscp_ReturnCallBacks(const struct afscp_server *);
+int afscp_ReturnAllCallBacks(void);
 
 /* file metastuff */
 /* frees with free() */
-struct afs_venusfid *makefid(struct afs_cell *cell, afs_uint32 volume,
-                             afs_uint32 vnode, afs_uint32 unique);
-struct afs_venusfid *dupfid(const struct afs_venusfid *in);
+struct afscp_venusfid *afscp_MakeFid(struct afscp_cell *, afs_uint32,
+				     afs_uint32, afs_uint32);
+struct afscp_venusfid *afscp_DupFid(const struct afscp_venusfid *);
+void afscp_FreeFid(struct afscp_venusfid *);
 
 struct stat;
-int afs_stat(const struct afs_venusfid *fid, struct stat *s);
+int afscp_Stat(const struct afscp_venusfid *, struct stat *);
 
-ssize_t afs_pread(const struct afs_venusfid *fid, void *buffer, size_t count, off_t offset);
-ssize_t afs_pwrite(const struct afs_venusfid *fid, const void *buffer, size_t count, off_t offset);
-afs_FILE *afs_open(const char *path);
-afs_FILE *afs_fidopen(const struct afs_venusfid *fid);
-off_t afs_fseek (afs_FILE *f, off_t o, int whence);
-ssize_t afs_fread(const afs_FILE *f, void *buffer, size_t count);
-ssize_t afs_fwrite(const afs_FILE *f, const void *buffer, size_t count);
+ssize_t afscp_PRead(const struct afscp_venusfid *, void *, size_t, off_t);
+ssize_t afscp_PWrite(const struct afscp_venusfid *, const void *,
+		     size_t, off_t);
+/*
+ * for future implementation: (?)
+ * struct afscp_openfile *afscp_FidOpen(const struct afscp_venusfid *);
+ * off_t afscp_FSeek(struct afscp_openfile *, off_t, int);
+ * ssize_t afscp_FRead(const struct afscp_openfile *, void *, size_t);
+ */
 
 /* rpc wrappers */
-int afs_GetStatus(const struct afs_venusfid *fid, struct AFSFetchStatus *s);
-int afs_StoreStatus(const struct afs_venusfid *fid, struct AFSStoreStatus *s);
-int afs_CreateFile(const struct afs_venusfid *fid, /* const */ char *name,
-               struct AFSStoreStatus *sst,
-               struct afs_venusfid **ret);
-int afs_MakeDir(const struct afs_venusfid *fid, /* const */ char *name,
-               struct AFSStoreStatus *sst,
-               struct afs_venusfid **ret);
-int afs_Symlink(const struct afs_venusfid *fid, /* const */ char *name,
-                /*const*/ char *target, struct AFSStoreStatus *sst);
-int afs_RemoveFile(const struct afs_venusfid *dir, char *name);
-int afs_RemoveDir(const struct afs_venusfid *dir, char *name);
-int afs_FetchACL(const struct afs_venusfid *dir,
-		 struct AFSOpaque *acl);
-int afs_StoreACL(const struct afs_venusfid *dir,
-		 struct AFSOpaque *acl);
+int afscp_GetStatus(const struct afscp_venusfid *, struct AFSFetchStatus *);
+int afscp_StoreStatus(const struct afscp_venusfid *, struct AFSStoreStatus *);
+int afscp_CreateFile(const struct afscp_venusfid *, char *,
+		     struct AFSStoreStatus *, struct afscp_venusfid **);
+int afscp_MakeDir(const struct afscp_venusfid *, char *,
+		  struct AFSStoreStatus *, struct afscp_venusfid **);
+int afscp_Symlink(const struct afscp_venusfid *, char *,
+		  char *, struct AFSStoreStatus *);
+int afscp_RemoveFile(const struct afscp_venusfid *, char *);
+int afscp_RemoveDir(const struct afscp_venusfid *, char *);
+int afscp_FetchACL(const struct afscp_venusfid *, struct AFSOpaque *);
+int afscp_StoreACL(const struct afscp_venusfid *, struct AFSOpaque *);
+
 /* directory parsing stuff*/
-struct afs_dirstream *afs_opendir(const struct afs_venusfid *fid);
-struct afs_dirent *afs_readdir(struct afs_dirstream *d);
-int afs_rewinddir(struct afs_dirstream *d);
-int afs_closedir(struct afs_dirstream *d);
-struct afs_venusfid *DirLookup(struct afs_dirstream *d, const char *name);
-struct afs_venusfid *ResolveName(const struct afs_venusfid *dir, const char *name);
-struct afs_venusfid *ResolvePath(const char *path);
-struct afs_venusfid *ResolvePath2(const struct afs_volume *start, const char *path);
+struct afscp_dirstream *afscp_OpenDir(const struct afscp_venusfid *);
+struct afscp_dirent *afscp_ReadDir(struct afscp_dirstream *);
+int afscp_RewindDir(struct afscp_dirstream *);
+int afscp_CloseDir(struct afscp_dirstream *);
+struct afscp_venusfid *afscp_DirLookup(struct afscp_dirstream *,
+				       const char *);
+struct afscp_venusfid *afscp_ResolveName(const struct afscp_venusfid *,
+					 const char *);
+struct afscp_venusfid *afscp_ResolvePath(const char *);
+struct afscp_venusfid *afscp_ResolvePathFromVol(const struct afscp_volume *,
+						const char *);
 
 /* vldb stuff */
-struct afs_volume *afs_volumebyname(struct afs_cell *cell, const char *vname, afs_int32 vtype);
-struct afs_volume *afs_volumebyid(struct afs_cell *cell, afs_uint32 id);
+struct afscp_volume *afscp_VolumeByName(struct afscp_cell *,
+					const char *, afs_int32);
+struct afscp_volume *afscp_VolumeById(struct afscp_cell *, afs_uint32);
 
-#define DIRMODE_CELL    0
-#define DIRMODE_DYNROOT  1
+#define DIRMODE_CELL	0
+#define DIRMODE_DYNROOT	1
+int afscp_SetDirMode(int);
 
-#define VOLTYPE_RW 0
-#define VOLTYPE_RO 1
-#define VOLTYPE_BK 2
-int SetDirMode(int mode);
-
-#endif
+#endif /* AFS_SRC_LIBAFSCP_AFSCP_H */

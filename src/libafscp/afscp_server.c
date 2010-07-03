@@ -24,8 +24,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/afsint.h>
+
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/volint.h>
@@ -34,317 +35,437 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afs/dirpath.h>
 #define AFSCONF_CLIENTNAME AFSDIR_CLIENT_ETC_DIRPATH
 #endif
-#include <stdlib.h>
-#include <string.h>
 #include <rx/rx.h>
+#include <krb5.h>
 #include "afscp.h"
 #include "afscp_internal.h"
 
-static int afs_ncells=0,afs_cellsalloced=0;
-static struct afs_cell *allcells=NULL;
-static int afs_nservers=0,afs_srvsalloced=0;
-static struct afs_server **allservers=NULL;
-static char *defcell;
-int afs_errno=0;
+static int afscp_ncells = 0, afscp_cellsalloced = 0;
+static struct afscp_cell *allcells = NULL;
+static int afscp_nservers = 0, afscp_srvsalloced = 0;
+static struct afscp_server **allservers = NULL;
+static char *defcell = NULL;
+static char *defrealm = NULL;
+int afscp_errno = 0;
 
-struct afs_cell *afs_cellbyid(int id)
+void
+afscp_FreeAllCells(void)
 {
-     if (id >= afs_ncells)
-          return NULL;
-     return &allcells[id];
+    int i;
+
+    if (allcells == NULL)
+	return;
+
+    for (i = 0; i < afscp_ncells; i++) {
+	if (allcells[i].realm != NULL)
+	    free(allcells[i].realm);
+	if (allcells[i].fsservers != NULL)
+	    free(allcells[i].fsservers);
+    }
+
+    free(allcells);
+    allcells = NULL;
+    afscp_ncells = 0;
+    afscp_cellsalloced = 0;
 }
 
-struct afs_cell *afs_cellbyname(const char *cellname)
+void
+afscp_FreeAllServers(void)
 {
-     int i;
-     struct afs_cell *newlist, *thecell;
-
-     for (i=0;i<afs_ncells;i++) {
-          if (!strcmp(allcells[i].name, cellname))
-               return &allcells[i];
-     }
-     if (afs_ncells >= afs_cellsalloced) {
-          if (afs_cellsalloced)
-               afs_cellsalloced = afs_cellsalloced *2;
-          else
-               afs_cellsalloced = 4;
-          newlist=realloc(allcells, afs_cellsalloced * sizeof(struct afs_cell));
-          if (!newlist)
-               return NULL;
-          allcells=newlist;
-     }
-     thecell=&allcells[afs_ncells];
-     memset(thecell, 0, sizeof(struct afs_cell));
-     strcpy(thecell->name, cellname);
-     if (_GetSecurityObject(thecell))
-       return NULL;
-     if (_GetVLservers(thecell)) {
-       RXS_Close(thecell->security);
-       return NULL;
-     }
-     thecell->id=afs_ncells++;
-     return thecell;
-}
-struct afs_cell *afs_defaultcell(void)
-{
-     struct afsconf_dir *dir;
-     char localcell[MAXCELLCHARS+1];
-     int code;
-
-
-     if (defcell) {
-          return afs_cellbyname(defcell);
-     }
-
-     dir=afsconf_Open(AFSCONF_CLIENTNAME);
-     if (!dir) {
-          afs_errno=AFSCONF_NODB;
-          return NULL;
-     }
-     code=afsconf_GetLocalCell(dir, localcell, MAXCELLCHARS);
-     if (code){
-          afs_errno=code;
-          return NULL;
-     }
-     afsconf_Close(dir);
-     return afs_cellbyname(localcell);
+    if (allservers == NULL)
+	return;
+    free(allservers);
+    allservers = NULL;
+    afscp_nservers = 0;
+    afscp_srvsalloced = 0;
 }
 
-int afs_setdefaultcell(const char *cellname) {
-     struct afs_cell *this;
-     char *newdefcell;
-     if (!cellname) {
-          if (defcell)
-               free(defcell);
-          defcell=NULL;
-          return 0;
-     }
+struct afscp_cell *
+afscp_CellById(int id)
+{
+    if (id >= afscp_ncells || id < 0)
+	return NULL;
+    return &allcells[id];
+}
 
-     this=afs_cellbyname(cellname);
-     if (!this)
-          return -1;
-     newdefcell=strdup(cellname);
-     if (!newdefcell)
+struct afscp_cell *
+afscp_CellByName(const char *cellname, const char *realmname)
+{
+    int i;
+    struct afscp_cell *newlist, *thecell;
+
+    if (cellname == NULL) {
+	return NULL;
+    }
+    for (i = 0; i < afscp_ncells; i++) {
+	if (strcmp(allcells[i].name, cellname) == 0) {
+	    return &allcells[i];
+	}
+    }
+    if (afscp_ncells >= afscp_cellsalloced) {
+	if (afscp_cellsalloced)
+	    afscp_cellsalloced = afscp_cellsalloced * 2;
+	else
+	    afscp_cellsalloced = 4;
+	newlist =
+	    realloc(allcells, afscp_cellsalloced * sizeof(struct afscp_cell));
+	if (newlist == NULL) {
+	    return NULL;
+	}
+	allcells = newlist;
+    }
+    thecell = &allcells[afscp_ncells];
+    memset(thecell, 0, sizeof(struct afscp_cell));
+    strlcpy(thecell->name, cellname, sizeof(thecell->name));
+    if (realmname != NULL) {
+	thecell->realm = malloc(strlen(realmname) + 1);
+	memset(thecell->realm, 0, strlen(realmname) + 1);
+	strlcpy(thecell->realm, realmname, strlen(realmname) + 1);
+    } else {
+	thecell->realm = NULL;
+    }
+    if (_GetSecurityObject(thecell)) {
+	return NULL;
+    }
+    if (_GetVLservers(thecell)) {
+	RXS_Close(thecell->security);
+	return NULL;
+    }
+    thecell->id = afscp_ncells++;
+    return thecell;
+}
+
+struct afscp_cell *
+afscp_DefaultCell(void)
+{
+    struct afsconf_dir *dir;
+    char localcell[MAXCELLCHARS + 1];
+    int code;
+
+    if (defcell) {
+	return afscp_CellByName(defcell, defrealm);
+    }
+
+    dir = afsconf_Open(AFSCONF_CLIENTNAME);
+    if (dir == NULL) {
+	afscp_errno = AFSCONF_NODB;
+	return NULL;
+    }
+    code = afsconf_GetLocalCell(dir, localcell, MAXCELLCHARS);
+    if (code != 0) {
+	afscp_errno = code;
+	return NULL;
+    }
+    afsconf_Close(dir);
+    return afscp_CellByName(localcell, defrealm);
+}
+
+int
+afscp_SetDefaultRealm(const char *realmname)
+{
+    /* krb5_error_code k5ec; */
+    krb5_context k5con;
+    char *newdefrealm;
+    int code;
+
+    if (realmname == NULL) {
+	if (defrealm != NULL)
+	    free(defrealm);
+	defrealm = NULL;
+	return 0;
+    }
+
+    code = krb5_init_context(&k5con);	/* see aklog.c main() */
+    if (code != 0) {
 	return -1;
-     if (defcell)
-          free(defcell);
-     defcell = newdefcell;
-     return 0;
+    }
+    /* k5ec = */
+    krb5_set_default_realm(k5con, realmname);
+    /* if (k5ec != KRB5KDC_ERR_NONE) {
+     * com_err("libafscp", k5ec, "k5ec = %d (compared to KRB5KDC_ERR_NONE = %d)", k5ec, KRB5KDC_ERR_NONE);
+     * return -1;
+     * } */
+    /* krb5_set_default_realm() is returning 0 on success, not KRB5KDC_ERR_NONE */
+    newdefrealm = strdup(realmname);
+    if (newdefrealm == NULL) {
+	return -1;
+    }
+    if (defrealm != NULL)
+	free(defrealm);
+    defrealm = newdefrealm;
+    return 0;
 }
 
-int afs_cellid(struct afs_cell *cell) {
-	return cell->id;
-}
-
-static void _xdr_free(bool_t (*fn)(XDR *xdrs, void *obj), void *obj) {
-     XDR xdrs;
-     xdrs.x_op=XDR_FREE;
-     fn(&xdrs, obj);
-}
-static bool_t _xdr_bulkaddrs(XDR *xdrs, void *objp) {
-     return xdr_bulkaddrs(xdrs, objp);
-}
-
-
-struct afs_server *afs_serverbyid(struct afs_cell *thecell, afsUUID *u)
+int
+afscp_SetDefaultCell(const char *cellname)
 {
-     /* impliment uniquifiers? */
-     int i;
-     struct afs_server **newlist;
-     struct afs_server **newall;
-     struct afs_server *ret;
-     afsUUID tmp;
-     bulkaddrs addrs;
-     struct ListAddrByAttributes attrs;
-     afs_int32 nentries, uniq;
+    struct afscp_cell *this;
+    char *newdefcell;
+    if (cellname == NULL) {
+	if (defcell != NULL)
+	    free(defcell);
+	defcell = NULL;
+	return 0;
+    }
 
-     char s[512];
+    this = afscp_CellByName(cellname, defrealm);
+    if (this == NULL) {
+	return -1;
+    }
+    newdefcell = strdup(cellname);
+    if (newdefcell == NULL) {
+	return -1;
+    }
+    if (defcell != NULL)
+	free(defcell);
+    defcell = newdefcell;
+    return 0;
+}
 
-     afsUUID_to_string(u, s, 511);
-     afscp_dprintf(("GetServerByID %s\n", s));
+int
+afscp_CellId(struct afscp_cell *cell)
+{
+    if (cell == NULL)
+	return -1;
+    return cell->id;
+}
 
-     for (i=0;i<thecell->nservers;i++) {
-          if (afs_uuid_equal(&thecell->fsservers[i]->id, u))
-               return thecell->fsservers[i];
-     }
+static void
+_xdr_free(bool_t(*fn) (XDR * xdrs, void *obj), void *obj)
+{
+    XDR xdrs;
+    xdrs.x_op = XDR_FREE;
+    fn(&xdrs, obj);
+}
 
-     if (thecell->nservers >= thecell->srvsalloced) {
-          if (thecell->srvsalloced)
-               thecell->srvsalloced = thecell->srvsalloced *2;
-          else
-               thecell->srvsalloced = 4;
-          newlist=realloc(thecell->fsservers,
-                          thecell->srvsalloced * sizeof(struct afs_server *));
-          if (!newlist)
-               return NULL;
-          thecell->fsservers=newlist;
-     }
-     ret=malloc(sizeof(struct afs_server));
-     if (!ret)
-          return NULL;
-     thecell->fsservers[thecell->nservers]=ret;
-     memmove(&ret->id, u, sizeof(afsUUID));
-     ret->cell=thecell->id;
-     memset(&tmp, 0, sizeof(tmp));
-     memset(&addrs, 0, sizeof(addrs));
-     memset(&attrs, 0, sizeof(attrs));
-     attrs.Mask = VLADDR_UUID;
-     memmove(&attrs.uuid, u, sizeof(afsUUID));
+static bool_t
+_xdr_bulkaddrs(XDR * xdrs, void *objp)
+{
+    return xdr_bulkaddrs(xdrs, objp);
+}
 
-     if (ubik_VL_GetAddrsU(thecell->vlservers, 0, &attrs, &tmp,
-                      &uniq, &nentries, &addrs))
-          return NULL;
-     if (nentries > MAXADDRS) {
-          nentries=MAXADDRS;
-          /* XXX I don't want to do *that* much dynamic allocation */
-          abort();
-     }
+struct afscp_server *
+afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
+{
+    /* impliment uniquifiers? */
+    int i, code;
+    struct afscp_server **newlist;
+    struct afscp_server **newall;
+    struct afscp_server *ret = NULL;
+    afsUUID tmp;
+    bulkaddrs addrs;
+    struct ListAddrByAttributes attrs;
+    afs_int32 nentries, uniq;
+    char s[512];
+    afsUUID_to_string(u, s, 511);
+    afs_dprintf(("GetServerByID %s\n", s));
 
-     ret->naddrs=nentries;
-     for (i=0; i< nentries;i++) {
-          ret->addrs[i]=htonl(addrs.bulkaddrs_val[i]);
-	  ret->conns[i]=rx_NewConnection(ret->addrs[i],
+    for (i = 0; i < thecell->nservers; i++) {
+	if (afs_uuid_equal(&thecell->fsservers[i]->id, u)) {
+	    return thecell->fsservers[i];
+	}
+    }
+
+    if (thecell->nservers >= thecell->srvsalloced) {
+	if (thecell->srvsalloced)
+	    thecell->srvsalloced = thecell->srvsalloced * 2;
+	else
+	    thecell->srvsalloced = 4;
+	newlist = realloc(thecell->fsservers,
+			  thecell->srvsalloced *
+			  sizeof(struct afscp_server *));
+	if (newlist == NULL) {
+	    return NULL;
+	}
+	thecell->fsservers = newlist;
+    }
+    ret = malloc(sizeof(struct afscp_server));
+    if (ret == NULL) {
+	return NULL;
+    }
+    memset(ret, 0, sizeof(struct afscp_server));
+    thecell->fsservers[thecell->nservers] = ret;
+    memmove(&ret->id, u, sizeof(afsUUID));
+    ret->cell = thecell->id;
+    memset(&tmp, 0, sizeof(tmp));
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&attrs, 0, sizeof(attrs));
+    attrs.Mask = VLADDR_UUID;
+    memmove(&attrs.uuid, u, sizeof(afsUUID));
+
+    code = ubik_VL_GetAddrsU(thecell->vlservers, 0, &attrs, &tmp,
+			     &uniq, &nentries, &addrs);
+    if (code != 0) {
+	return NULL;
+    }
+    if (nentries > AFS_MAXHOSTS) {
+	nentries = AFS_MAXHOSTS;
+	/* XXX I don't want to do *that* much dynamic allocation */
+	abort();
+    }
+
+    ret->naddrs = nentries;
+    for (i = 0; i < nentries; i++) {
+	ret->addrs[i] = htonl(addrs.bulkaddrs_val[i]);
+	ret->conns[i] = rx_NewConnection(ret->addrs[i],
 					 htons(AFSCONF_FILEPORT),
 					 1, thecell->security,
 					 thecell->scindex);
-     }
-     _xdr_free(_xdr_bulkaddrs, &addrs);
-     thecell->nservers++;
+    }
+    _xdr_free(_xdr_bulkaddrs, &addrs);
+    thecell->nservers++;
 
-     if (afs_nservers >= afs_srvsalloced) {
-          if (afs_srvsalloced)
-               afs_srvsalloced = afs_srvsalloced *2;
-          else
-               afs_srvsalloced = 4;
-          newall=realloc(allservers,
-                          afs_srvsalloced * sizeof(struct afs_server *));
-          if (!newall)
-               return ret;
-          allservers=newall;
-     }
-     ret->index=afs_nservers;
-     allservers[afs_nservers++]=ret;
-     return ret;
+    if (afscp_nservers >= afscp_srvsalloced) {
+	if (afscp_srvsalloced)
+	    afscp_srvsalloced = afscp_srvsalloced * 2;
+	else
+	    afscp_srvsalloced = 4;
+	newall = realloc(allservers,
+			 afscp_srvsalloced * sizeof(struct afscp_server *));
+	if (newall == NULL) {
+	    return ret;
+	}
+	allservers = newall;
+    }
+    ret->index = afscp_nservers;
+    allservers[afscp_nservers++] = ret;
+    return ret;
 }
 
-struct afs_server *afs_serverbyaddr(struct afs_cell *thecell, afs_uint32 addr)
+struct afscp_server *
+afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 {
-     /* impliment uniquifiers? */
-     int i,j;
-     struct afs_server **newlist;
-     struct afs_server **newall;
-     struct afs_server *ret;
-     afsUUID uuid;
-     bulkaddrs addrs;
-     struct ListAddrByAttributes attrs;
-     afs_int32 nentries, code, uniq;
+    /* implement uniquifiers? */
+    int i, j;
+    struct afscp_server **newlist;
+    struct afscp_server **newall;
+    struct afscp_server *ret = NULL;
+    afsUUID uuid;
+    bulkaddrs addrs;
+    struct ListAddrByAttributes attrs;
+    afs_int32 nentries, code, uniq;
 
+    if (thecell == NULL)
+	return ret;		/* cannot continue without thecell */
 
-     for (i=0;i<thecell->nservers;i++) {
-          ret=thecell->fsservers[i];
-          for (j=0;j<ret->naddrs;j++)
-               if (ret->addrs[j] == htonl(addr))
-                    return ret;
-     }
+    for (i = 0; i < thecell->nservers; i++) {
+	ret = thecell->fsservers[i];
+	for (j = 0; j < ret->naddrs; j++)
+	    if (ret->addrs[j] == htonl(addr)) {
+		return ret;
+	    }
+    }
 
-     if (thecell->nservers >= thecell->srvsalloced) {
-          if (thecell->srvsalloced)
-               thecell->srvsalloced = thecell->srvsalloced *2;
-          else
-               thecell->srvsalloced = 4;
-          newlist=realloc(thecell->fsservers,
-                          thecell->srvsalloced * sizeof(struct afs_server));
-          if (!newlist)
-               return NULL;
-          thecell->fsservers=newlist;
-     }
-     ret=malloc(sizeof(struct afs_server));
-     if (!ret)
-          return NULL;
-     thecell->fsservers[thecell->nservers]=ret;
-     ret->cell=thecell->id;
-     memset(&uuid, 0, sizeof(uuid));
-     memset(&addrs, 0, sizeof(addrs));
-     memset(&attrs, 0, sizeof(attrs));
-     attrs.Mask = VLADDR_IPADDR;
-     attrs.ipaddr=addr;
+    if (thecell->nservers >= thecell->srvsalloced) {
+	if (thecell->srvsalloced)
+	    thecell->srvsalloced = thecell->srvsalloced * 2;
+	else
+	    thecell->srvsalloced = 4;
+	newlist = realloc(thecell->fsservers,
+			  thecell->srvsalloced * sizeof(struct afscp_server));
+	if (newlist == NULL) {
+	    return NULL;
+	}
+	thecell->fsservers = newlist;
+    }
+    ret = malloc(sizeof(struct afscp_server));
+    if (ret == NULL) {
+	return NULL;
+    }
+    memset(ret, 0, sizeof(struct afscp_server));
+    thecell->fsservers[thecell->nservers] = ret;
+    ret->cell = thecell->id;
+    memset(&uuid, 0, sizeof(uuid));
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&attrs, 0, sizeof(attrs));
+    attrs.Mask = VLADDR_IPADDR;
+    attrs.ipaddr = addr;
 
+    code = ubik_VL_GetAddrsU(thecell->vlservers, 0, &attrs, &uuid,
+			     &uniq, &nentries, &addrs);
+    if (code != 0) {
+	memset(&ret->id, 0, sizeof(uuid));
+	ret->naddrs = 1;
+	ret->addrs[0] = htonl(addr);
+	ret->conns[0] = rx_NewConnection(ret->addrs[0],
+					 htons(AFSCONF_FILEPORT),
+					 1, thecell->security,
+					 thecell->scindex);
+    } else {
+	char s[512];
 
-     if ((code=ubik_VL_GetAddrsU(thecell->vlservers, 0, &attrs, &uuid,
-                      &uniq, &nentries, &addrs))) {
-       memset(&ret->id, 0, sizeof(uuid));
-       ret->naddrs=1;
-       ret->addrs[0]=htonl(addr);
-       ret->conns[0]=rx_NewConnection(ret->addrs[0],
-				      htons(AFSCONF_FILEPORT),
-				      1, thecell->security,
-				      thecell->scindex);
-     } else {
-       char s[512];
+	afsUUID_to_string(&uuid, s, 511);
+	afs_dprintf(("GetServerByAddr 0x%x -> uuid %s\n", addr, s));
 
-       afsUUID_to_string(&uuid, s, 511);
-       afscp_dprintf(("GetServerByAddr 0x%x -> uuid %s\n", addr, s));
+	if (nentries > AFS_MAXHOSTS) {
+	    nentries = AFS_MAXHOSTS;
+	    /* XXX I don't want to do *that* much dynamic allocation */
+	    abort();
+	}
+	memmove(&ret->id, &uuid, sizeof(afsUUID));
 
-       if (nentries > MAXADDRS) {
-	 nentries=MAXADDRS;
-	 /* XXX I don't want to do *that* much dynamic allocation */
-	 abort();
-       }
-       memmove(&ret->id, &uuid, sizeof(afsUUID));
+	ret->naddrs = nentries;
+	for (i = 0; i < nentries; i++) {
+	    ret->addrs[i] = htonl(addrs.bulkaddrs_val[i]);
+	    ret->conns[i] = rx_NewConnection(ret->addrs[i],
+					     htons(AFSCONF_FILEPORT),
+					     1, thecell->security,
+					     thecell->scindex);
+	}
+	_xdr_free(_xdr_bulkaddrs, &addrs);
+    }
 
-       ret->naddrs=nentries;
-       for (i=0; i< nentries;i++) {
-	 ret->addrs[i]=htonl(addrs.bulkaddrs_val[i]);
-	 ret->conns[i]=rx_NewConnection(ret->addrs[i],
-					htons(AFSCONF_FILEPORT),
-					1, thecell->security,
-					thecell->scindex);
-       }
-       _xdr_free(_xdr_bulkaddrs, &addrs);
-     }
-
-     thecell->nservers++;
-     if (afs_nservers >= afs_srvsalloced) {
-          if (afs_srvsalloced)
-               afs_srvsalloced = afs_srvsalloced *2;
-          else
-               afs_srvsalloced = 4;
-          newall=realloc(allservers,
-                          afs_srvsalloced * sizeof(struct afs_server *));
-          if (!newall)
-               return ret;
-          allservers=newall;
-     }
-     ret->index=afs_nservers;
-     allservers[afs_nservers++]=ret;
-     return ret;
+    thecell->nservers++;
+    if (afscp_nservers >= afscp_srvsalloced) {
+	if (afscp_srvsalloced)
+	    afscp_srvsalloced = afscp_srvsalloced * 2;
+	else
+	    afscp_srvsalloced = 4;
+	newall = realloc(allservers,
+			 afscp_srvsalloced * sizeof(struct afscp_server *));
+	if (newall == NULL) {
+	    return ret;
+	}
+	allservers = newall;
+    }
+    ret->index = afscp_nservers;
+    allservers[afscp_nservers++] = ret;
+    return ret;
 }
 
-struct afs_server *afs_anyserverbyaddr(afs_uint32 addr)
+struct afscp_server *
+afscp_AnyServerByAddr(afs_uint32 addr)
 {
-     /* no idea what this means: "impliment uniquifiers?" */
-     int i,j;
-     struct afs_server *ret;
+    /* implement uniquifiers? */
+    int i, j;
+    struct afscp_server *ret = NULL;
 
-     for (i=0;i<afs_nservers;i++) {
-          ret=allservers[i];
-          for (j=0;j<ret->naddrs;j++)
-               if (ret->addrs[j] == htonl(addr))
-                    return ret;
-     }
-     return NULL;
-}
-
-struct afs_server *afs_serverbyindex(int i)
-{
-
-     if (i>= afs_nservers)
-          return NULL;
-     return allservers[i];
-}
-
-struct rx_connection *afs_serverconnection(const struct afs_server *srv, int i) {
-  if (i >= srv->naddrs)
+    if (allservers == NULL)
+	return ret;
+    for (i = 0; i < afscp_nservers; i++) {
+	ret = allservers[i];
+	for (j = 0; j < ret->naddrs; j++)
+	    if (ret->addrs[j] == htonl(addr)) {
+		return ret;
+	    }
+    }
     return NULL;
-  return srv->conns[i];
+}
+
+struct afscp_server *
+afscp_ServerByIndex(int i)
+{
+    if (i >= afscp_nservers || i < 0)
+	return NULL;
+    return allservers[i];
+}
+
+struct rx_connection *
+afscp_ServerConnection(const struct afscp_server *srv, int i)
+{
+    if (srv == NULL || srv->conns == NULL)
+	return NULL;
+    if (i >= srv->naddrs || i < 0)
+	return NULL;
+    return srv->conns[i];
 }

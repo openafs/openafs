@@ -1,79 +1,35 @@
+#ifndef AFS_SRC_LIBAFSCP_AFSCP_INTERNAL_H
+#define AFS_SRC_LIBAFSCP_AFSCP_INTERNAL_H
+
 #include <afs/param.h>
 #include <afs/afsint.h>
 #include <afs/cellconfig.h>
-#define MAXADDRS 16
+
+#include <afs/afs_consts.h>
+
+#include <afs/dir.h>
+#include <afs/afsutil.h>
+
+#include <sys/types.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <fcntl.h>
+
+/* afsint.h conflicts with afscbint.h; provide this here */
+extern int RXAFSCB_ExecuteRequest(struct rx_call *);
 
 /* AUTORIGHTS */
-struct afs_server
-{
-     afsUUID id;
-     int index;
-     int cell;
-     int naddrs;
-     afs_uint32 addrs[MAXADDRS];
-     struct rx_connection *conns[MAXADDRS];
-};
-struct afs_cell
-{
-     int id;
-     char name[MAXCELLCHARS];
-     struct rx_securityClass *security;
-     int scindex;
-     struct ubik_client *vlservers;
-     int nservers;
-     int srvsalloced;
-     struct afs_server **fsservers;
-     void *volsbyname;
-     void *volsbyid;
-};
+extern int _GetSecurityObject(struct afscp_cell *);
+extern int _GetVLservers(struct afscp_cell *);
+extern int _StatInvalidate(const struct afscp_venusfid *);
+extern int _StatStuff(const struct afscp_venusfid *,
+		      const struct AFSFetchStatus *);
 
-struct afs_callback
-{
-     int valid;
-     const struct afs_server *server;
-     struct AFSFid fid;
-     struct AFSCallBack cb;
-};
-
-struct afs_dirstream
-{
-     struct afs_venusfid fid;
-     int buflen;
-     char *dirbuffer;
-     int hashent;
-     int entry;
-     int dv;
-     struct afs_dirent ret;
-};
-
-struct afs_dircache
-{
-     struct afs_venusfid me;
-     int buflen;
-     char *dirbuffer;
-     int dv;
-};
-
-struct afs_statent
-{
-     struct afs_venusfid me;
-     struct AFSFetchStatus status;
-};
-
-struct afs_openfile
-{
-     struct afs_venusfid fid;
-     off_t offset;
-};
-
-extern int _rx_InitRandomPort(void);
-extern int _GetSecurityObject(struct afs_cell *);
-extern int _GetVLservers(struct afs_cell *);
-extern int _StatInvalidate(const struct afs_venusfid *fid);
-extern int _StatStuff(const struct afs_venusfid *fid, const struct AFSFetchStatus *s);
-
-#ifdef AFSCP_DEBUG
-#define afscp_dprintf(x) printf x
+#ifndef AFSCP_DEBUG
+#define afs_dprintf(x)
 #else
-#define afscp_dprintf(x)
+#define afs_dprintf(x) printf x
 #endif
+
+#endif /* AFS_SRC_LIBAFSCP_AFSCP_INTERNAL_H */

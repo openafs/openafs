@@ -24,89 +24,86 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/afsint.h>
+
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/dir.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 #include "afscp.h"
 #include "afscp_internal.h"
 
+int
+afscp_FetchACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst;
+    struct AFSVolSync vs;
+    struct afscp_server *server;
 
-int afs_FetchACL(const struct afs_venusfid *dir,
-		 struct AFSOpaque *acl) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst;
-  struct AFSVolSync vs;
-  struct afs_volume *volume;
-  struct afs_server *server;
-
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_FetchACL(server->conns[j], &df, acl, &dfst, &vs);
-	if (code >= 0)
-	  break;
-      }
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  return 0;
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		code = RXAFS_FetchACL(server->conns[j], &df, acl, &dfst, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    return 0;
 }
 
 
-int afs_StoreACL(const struct afs_venusfid *dir,
-		 struct AFSOpaque *acl) {
-  int code, i, j;
-  struct AFSFid df = dir->fid;
-  struct afs_volume *vol;
-  struct AFSFetchStatus dfst;
-  struct AFSVolSync vs;
-  struct afs_volume *volume;
-  struct afs_server *server;
+int
+afscp_StoreACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
+{
+    int code, i, j;
+    struct AFSFid df = dir->fid;
+    struct afscp_volume *vol;
+    struct AFSFetchStatus dfst;
+    struct AFSVolSync vs;
+    struct afscp_server *server;
 
-  vol=afs_volumebyid(dir->cell, dir->fid.Volume);
-  if (!vol) {
-    afs_errno=ENOENT;
-    return -1;
-  }
-  code=ENOENT;
-  for (i=0;i<vol->nservers;i++) {
-    server=afs_serverbyindex(vol->servers[i]);
-    if (server && server->naddrs > 0) {
-      for (j=0;j < server->naddrs;j++) {
-	code=RXAFS_StoreACL(server->conns[j], &df, acl, &dfst, &vs);
-	if (code >= 0)
-	  break;
-      }
+    vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
     }
-    if (code >= 0)
-      break;
-  }
-  if (code) {
-    _StatInvalidate(dir);
-    afs_errno=code;
-    return -1;
-  }
-  _StatStuff(dir, &dfst);
-  return 0;
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		code = RXAFS_StoreACL(server->conns[j], &df, acl, &dfst, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	_StatInvalidate(dir);
+	afscp_errno = code;
+	return -1;
+    }
+    _StatStuff(dir, &dfst);
+    return 0;
 }

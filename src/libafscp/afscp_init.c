@@ -24,24 +24,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-
+#include <afsconfig.h>
 #include <afs/param.h>
-#include <lwp.h>
+
 #include <rx/rx_null.h>
 #include <rx/rx.h>
-
-#include <com_err.h>
-
 #include "afscp.h"
 #include "afscp_internal.h"
 
@@ -50,57 +37,57 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AFSCONF_CLIENTNAME AFSDIR_CLIENT_ETC_DIRPATH
 #endif
 
-static int init=0;
-extern int RXAFSCB_ExecuteRequest();
+static int init = 0;
 static struct rx_securityClass *sc;
 static struct rx_service *serv;
-extern PROCESS rx_listenerPid;
-static int start_cb_server()
+
+static int
+start_cb_server(void)
 {
-
-     sc=rxnull_NewServerSecurityObject();
-     serv=rx_NewService(0,1,"afs", &sc, 1, RXAFSCB_ExecuteRequest);
-     if (!serv)
-          return 1;
-     rx_StartServer(0);
-     return 0;
+    sc = rxnull_NewServerSecurityObject();
+    serv = rx_NewService(0, 1, "afs", &sc, 1, RXAFSCB_ExecuteRequest);
+    if (serv == NULL) {
+	return 1;
+    }
+    rx_StartServer(0);
+    return 0;
 }
 
 
-int afscp_init(const char *cell)
+int
+afscp_Init(const char *cell)
 {
-     if (init)
-          return 0;
-     if (_rx_InitRandomPort())
-	     return -1;
-     init=1;
-     if (start_cb_server()) {
-          printf("Cannot start callback service\n");
-	  return -1;
-     }
-     init=2;
-     if (cell)
-          return afs_setdefaultcell(cell);
-     return 0;
+    int code;
+    if (init != 0) {
+	return 0;
+    }
+    code = rx_Init(0);
+    if (code != 0) {
+	return -1;
+    }
+    init = 1;
+    code = start_cb_server();
+    if (code != 0) {
+	printf("Cannot start callback service\n");
+	return -1;
+    }
+    init = 2;
+    if (cell != NULL)
+	code = afscp_SetDefaultCell(cell);
+    else
+	code = 0;
+    return code;
 }
 
-void afscp_finalize(void) {
-     if (!init)
-          return;
-
-     ReturnAllCallBacks();
-     IOMGR_Sleep(1);
-     rx_Finalize();
-#if 0
-     LWP_DestroyProcess(rx_listenerPid);
-     close(serv->socket);
-     rxi_FreeService(serv);
-#endif
-     IOMGR_Finalize();
-     LWP_TerminateProcessSupport();
-#if 1
-     close(serv->socket);
-#endif
+void
+afscp_Finalize(void)
+{
+    if (init == 0) {
+	return;
+    }
+    afscp_ReturnAllCallBacks();
+    afscp_FreeAllCells();
+    afscp_FreeAllServers();
+    rx_Finalize();
+    close(serv->socket);
 }
-
-
