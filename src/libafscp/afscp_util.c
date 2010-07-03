@@ -24,31 +24,23 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-
+#include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
+#include <ctype.h>
 #include <afs/cellconfig.h>
 #ifndef AFSCONF_CLIENTNAME
 #include <afs/dirpath.h>
 #define AFSCONF_CLIENTNAME AFSDIR_CLIENT_ETC_DIRPATH
 #endif
-
 #include <ubik.h>
-#include <rx/rxkad.h>
 #include <rx/rx_null.h>
-
+#include <rx/rxkad.h>
 #include <krb5.h>
-
 #include "afscp.h"
 #include "afscp_internal.h"
-
-#define HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE
 
 #ifdef HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE
 #define Z_keydata(keyblock)     ((keyblock)->contents)
@@ -62,156 +54,180 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define Z_enctype(keyblock)     ((keyblock)->keytype)
 #endif
 
-int _rx_InitRandomPort(void) {
-  int sock;
-  unsigned int port;
-  struct sockaddr_in sin;
+static int insecure = 0;
+static int try_anonymous = 0;
 
-  sock=socket(PF_INET, SOCK_DGRAM, 0);
-  if (sock == -1)
-    return errno;
-  sin.sin_family=AF_INET;
-  sin.sin_addr.s_addr=INADDR_ANY;
-  sin.sin_port=0;
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) < 0)
-    return errno;
-
-  port=sizeof(struct sockaddr_in);
-  if (getsockname(sock, (struct sockaddr *)&sin, &port) < 0)
-    return errno;
-  port=sin.sin_port;
-  close(sock);
-  return rx_Init(port);
-
+int
+afscp_Insecure(void)
+{
+    insecure = 1;
+    return 0;
 }
 
-static int insecure;
-
-int afscp_Insecure(void) {
-  insecure=1;
-  return 0;
+int
+afscp_AnonymousAuth(int state)
+{
+    try_anonymous = state;
+    return 0;
 }
+
 static struct afsconf_dir *confdir;
 
-static int _GetCellInfo(char *cell, struct afsconf_cell *celldata) {
-
-  if (!confdir)
-    confdir=afsconf_Open(AFSCONF_CLIENTNAME);
-  if (!confdir)
-    return AFSCONF_NODB;
-  return afsconf_GetCellInfo(confdir, cell, AFSCONF_VLDBSERVICE, celldata);
+static int
+_GetCellInfo(char *cell, struct afsconf_cell *celldata)
+{
+    int code;
+    if (confdir == NULL)
+	confdir = afsconf_Open(AFSCONF_CLIENTNAME);
+    if (confdir == NULL) {
+	return AFSCONF_NODB;
+    }
+    code = afsconf_GetCellInfo(confdir, cell, AFSCONF_VLDBSERVICE, celldata);
+    return code;
 }
 
-int _GetSecurityObject(struct afs_cell *cell) {
-  int code;
-  krb5_context context;
-  krb5_creds match;
-  krb5_creds *cred;
-  krb5_ccache cc;
-  char **realms,*realm;
-  struct afsconf_cell celldata;
-  char localcell[MAXCELLCHARS];
-  struct rx_securityClass *sc;
-  struct ktc_encryptionKey k;
-  int i;
-  rxkad_level l;
+static int
+_GetNullSecurityObject(struct afscp_cell *cell)
+{
+    cell->security = (struct rx_securityClass *)rxnull_NewClientSecurityObject();
+    cell->scindex = RX_SECIDX_NULL;
+    return 0;
+}
 
-  code=_GetCellInfo(cell->name, &celldata);
-  if (code)
-    return code;
-
-  code=krb5_init_context(&context);
-  if (code)
-    return code;
-  realm=NULL;
-  code=krb5_get_host_realm(context, celldata.hostName[0], &realms);
-  if (!code) {
-    strcpy(localcell,realms[0]);
-    krb5_free_host_realm(context,realms);
-    realm=localcell;
-  }
-  if (!realm) {
-    for (i=0; (i < MAXCELLCHARS && cell->name[i]); i++) {
-      if (isalpha(cell->name[i]))
-	localcell[i]=toupper(cell->name[i]);
-      else
-	localcell[i]=cell->name[i];
+int
+_GetSecurityObject(struct afscp_cell *cell)
+{
+    int code;
+    krb5_context context;
+    krb5_creds match;
+    krb5_creds *cred;
+    krb5_ccache cc;
+    char **realms, *realm, *inst;
+    char name[1024];
+    struct afsconf_cell celldata;
+    char localcell[MAXCELLCHARS + 1];
+    struct rx_securityClass *sc;
+    struct ktc_encryptionKey k;
+    int i;
+    rxkad_level l;
+    code = _GetCellInfo(cell->name, &celldata);
+    if (code != 0) {
+	goto try_anon;
     }
-    localcell[i]='\0';
-    realm=localcell;
-  }
-  cc=NULL;
-  code=krb5_cc_default(context, &cc);
 
-  memset(&match, 0, sizeof(match));
-  Z_enctype(Z_credskey(&match))=ENCTYPE_DES_CBC_CRC;
+    code = krb5_init_context(&context);	/* see aklog.c main() */
+    if (code != 0) {
+	goto try_anon;
+    }
 
-  if (!code)
-    code=krb5_cc_get_principal(context, cc, &match.client);
-  if (!code)
-      code=krb5_build_principal(context, &match.server,
-				strlen(realm), realm,
-				"afs", cell->name, NULL);
+    if (cell->realm == NULL) {
+	realm = NULL;
+	code = krb5_get_host_realm(context, celldata.hostName[0], &realms);
 
-  if (code) {
+	if (code == 0) {
+	    strlcpy(localcell, realms[0], sizeof(localcell));
+	    krb5_free_host_realm(context, realms);
+	    realm = localcell;
+	}
+    } else {
+	realm = cell->realm;
+	strlcpy(localcell, realm, MAXCELLCHARS + 1);
+    }
+    if (realm)
+	if (realm == NULL) {
+	    for (i = 0; (i < MAXCELLCHARS && cell->name[i]); i++) {
+		if (isalpha(cell->name[i]))
+		    localcell[i] = toupper(cell->name[i]);
+		else
+		    localcell[i] = cell->name[i];
+	    }
+	    localcell[i] = '\0';
+	    realm = localcell;
+	}
+    cc = NULL;
+    code = krb5_cc_default(context, &cc);
+
+    memset(&match, 0, sizeof(match));
+    Z_enctype(Z_credskey(&match)) = ENCTYPE_DES_CBC_CRC;
+
+    if (code == 0)
+	code = krb5_cc_get_principal(context, cc, &match.client);
+    if (code == 0)
+	code = krb5_build_principal(context, &match.server,
+				    strlen(realm), realm,
+				    "afs", cell->name, NULL);
+
+    if (code != 0) {
+	krb5_free_cred_contents(context, &match);
+	if (cc)
+	    krb5_cc_close(context, cc);
+	krb5_free_context(context);
+	goto try_anon;
+    }
+
+    code = krb5_get_credentials(context, 0, cc, &match, &cred);
+    if (code != 0) {
+	krb5_free_principal(context, match.server);
+	match.server = NULL;
+
+	inst = cell->name;
+	snprintf(name, sizeof(name), "afs/%s", inst);
+	code = krb5_build_principal(context, &match.server,
+				    strlen(realm), realm, name, (void *)NULL);
+	if (code == 0)
+	    code = krb5_get_credentials(context, 0, cc, &match, &cred);
+	if (code != 0) {
+	    krb5_free_cred_contents(context, &match);
+	    if (cc)
+		krb5_cc_close(context, cc);
+	    krb5_free_context(context);
+	    goto try_anon;
+	}
+    }
+
+    if (insecure)
+	l = rxkad_clear;
+    else
+	l = rxkad_crypt;
+    memcpy(&k.data, Z_keydata(Z_credskey(cred)), 8);
+    sc = (struct rx_securityClass *)rxkad_NewClientSecurityObject
+	(l, &k, RXKAD_TKT_TYPE_KERBEROS_V5,
+	 cred->ticket.length, cred->ticket.data);
+    krb5_free_creds(context, cred);
     krb5_free_cred_contents(context, &match);
     if (cc)
-      krb5_cc_close(context, cc);
-    krb5_free_context(context);
-    return code;
-  }
-
-  code = krb5_get_credentials(context, 0, cc, &match, &cred);
-  if (code) {
-    krb5_free_principal(context, match.server);
-    match.server=NULL;
-    code=krb5_build_principal(context, &match.server,
-			      strlen(realm), realm,
-			      "afs", NULL); /* afs@cell instead? */
-    if (!code)
-      code = krb5_get_credentials(context, 0, cc, &match, &cred);
-    if (code) {
-      krb5_free_cred_contents(context, &match);
-      if (cc)
 	krb5_cc_close(context, cc);
-      krb5_free_context(context);
-      return code;
-    }
-  }
+    krb5_free_context(context);
+    cell->security = sc;
+    cell->scindex = 2;
+    return 0;
 
-  if (insecure)
-    l=rxkad_clear;
-  else
-    l=rxkad_crypt;
-  memcpy(&k.data, Z_keydata(Z_credskey(cred)), 8);
-  sc = (struct rx_securityClass *)rxkad_NewClientSecurityObject
-    (l, &k, RXKAD_TKT_TYPE_KERBEROS_V5,
-     cred->ticket.length, cred->ticket.data);
-  krb5_free_creds(context, cred);
-  krb5_free_cred_contents(context, &match);
-  if (cc)
-    krb5_cc_close(context, cc);
-  krb5_free_context(context);
-  cell->security=sc;
-  cell->scindex=2;
-  return 0;
+    try_anon:
+    if (try_anonymous)
+	return _GetNullSecurityObject(cell);
+    else
+	return code;
 }
-int _GetVLservers(struct afs_cell *cell) {
-  struct rx_connection *conns[MAXHOSTSPERCELL+1];
-  int i;
-  int code;
-  struct afsconf_cell celldata;
 
-  code=_GetCellInfo(cell->name, &celldata);
-  if (code)
-    return code;
+int
+_GetVLservers(struct afscp_cell *cell)
+{
+    struct rx_connection *conns[MAXHOSTSPERCELL + 1];
+    int i;
+    int code;
+    struct afsconf_cell celldata;
 
-  for (i=0; i < celldata.numServers; i++) {
-    conns[i] = rx_NewConnection(celldata.hostAddr[i].sin_addr.s_addr,
-				htons(AFSCONF_VLDBPORT),
-				USER_SERVICE_ID, cell->security,
-				cell->scindex);
-  }
-  conns[i]=0;
-  return ubik_ClientInit(conns, &cell->vlservers);
+    code = _GetCellInfo(cell->name, &celldata);
+    if (code != 0) {
+	return code;
+    }
+
+    for (i = 0; i < celldata.numServers; i++) {
+	conns[i] = rx_NewConnection(celldata.hostAddr[i].sin_addr.s_addr,
+				    htons(AFSCONF_VLDBPORT),
+				    USER_SERVICE_ID, cell->security,
+				    cell->scindex);
+    }
+    conns[i] = 0;
+    return ubik_ClientInit(conns, &cell->vlservers);
 }

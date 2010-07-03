@@ -76,7 +76,7 @@ AS_IF([test x"$KRB5_LIBS" != x],
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
-     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session,
+     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype, krb5_creds.session,
                        krb5_prompt.type], , , [#include <krb5.h>])
      RRA_LIB_KRB5_RESTORE])
 AC_SUBST([BUILD_KRB5])
@@ -230,6 +230,7 @@ src/usd/test/Makefile \
 src/uss/Makefile \
 src/util/Makefile \
 src/util/test/Makefile \
+src/libafscp/Makefile \
 src/venus/Makefile \
 src/venus/test/Makefile \
 src/vfsck/Makefile \

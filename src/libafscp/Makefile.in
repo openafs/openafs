@@ -1,0 +1,72 @@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+#for debugging:
+#CFLAGS += -DAFSCP_DEBUG
+KRB5CFLAGS = @KRB5_CPPFLAGS@
+KRB5LIBS = @KRB5_LIBS@
+
+LIBOBJS = \
+	afscp_callback.o \
+	afscp_server.o \
+	afscp_fid.o \
+	afscp_volume.o \
+	afscp_file.o \
+	afscp_dir.o \
+	afscp_init.o \
+	afscp_util.o \
+	afscp_dirops.o \
+	afscp_acl.o
+
+all: \
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libafscp.a \
+	depinstall
+
+#
+# Build targets
+#
+${TOP_LIBDIR}/libafscp.a: libafscp.a
+	${INSTALL_DATA} $? $@
+
+libafscp.a: ${LIBOBJS} AFS_component_version_number.o
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
+	$(RANLIB) $@
+
+depinstall: \
+	${TOP_INCDIR}/afs/afscp.h
+
+${TOP_INCDIR}/afs/afscp.h: afscp.h
+	${INSTALL_DATA} $? $@
+
+CFLAGS_afscp_util.o = $(KRB5CFLAGS)
+CFLAGS_afscp_server.o = $(KRB5CFLAGS)
+
+#
+# Install targets
+#
+install: all
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_DATA} libafscp.a ${DESTDIR}${libdir}/libafscp.a
+	${INSTALL_DATA} afscp.h ${DESTDIR}${includedir}/afs/afscp.h
+
+dest: all
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_DATA} libafscp.a ${DEST}/lib/libafscp.a
+	${INSTALL_DATA} afscp.h ${DEST}/include/afs/afscp.h
+
+#
+# Misc targets
+#
+clean:
+	$(RM) -f *.o *.a *.gch libafscp* core AFS_component_version_number.c
+
+include ../config/Makefile.version
