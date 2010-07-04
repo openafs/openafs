@@ -86,10 +86,8 @@ osi_StopListener(void)
     int haveGlock = ISAFS_GLOCK();
     if (haveGlock)
 	AFS_GUNLOCK();
-    soshutdown(rx_socket, 2);
-#ifndef AFS_FBSD70_ENV
+    soshutdown(rx_socket, SHUT_RDWR);
     soclose(rx_socket);
-#endif
     p = pfind(rxk_ListenerPid);
     afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
     if (p)
