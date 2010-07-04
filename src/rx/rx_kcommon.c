@@ -951,7 +951,6 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     if (code) {
 	dpf(("sobind fails (%d)\n", (int)code));
 	soclose(newSocket);
-	AFS_GLOCK();
 	goto bad;
     }
 #else /* defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) */
