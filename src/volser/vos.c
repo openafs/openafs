@@ -4121,10 +4121,12 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
 	fprintf(STDOUT, "volume: %lu  partition: %s  procedure: %s\n",
 		(unsigned long)pntr->volid, pname, pntr->lastProcName);
 	if (pntr->callValid) {
-	    fprintf(STDOUT,
-		    "packetRead: %lu  lastReceiveTime: %d  packetSend: %lu  lastSendTime: %d\n",
-		    (unsigned long)pntr->readNext, pntr->lastReceiveTime,
-		    (unsigned long)pntr->transmitNext, pntr->lastSendTime);
+	    t = pntr->lastReceiveTime;
+	    fprintf(STDOUT, "packetRead: %lu  lastReceiveTime: %s",
+		    (unsigned long)pntr->readNext, ctime(&t));
+	    t = pntr->lastSendTime;
+	    fprintf(STDOUT, "packetSend: %lu  lastSendTime: %s",
+		    (unsigned long)pntr->transmitNext, ctime(&t));
 	}
 	pntr++;
 	fprintf(STDOUT, "--------------------------------------\n");
