@@ -4074,6 +4074,8 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
 	t = pntr->creationTime;
 	fprintf(STDOUT, "transaction: %lu  created: %s",
 		(unsigned long)pntr->tid, ctime(&t));
+	t = pntr->time;
+	fprintf(STDOUT, "lastActiveTime: %s", ctime(&t));
 	if (pntr->returnCode) {
 	    fprintf(STDOUT, "returnCode: %lu\n",
 		    (unsigned long)pntr->returnCode);

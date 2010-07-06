@@ -112,28 +112,33 @@ transaction started
 
 =item *
 
-C<attachFlags> on the second line, where a value of C<offline> indicates
+In OpenAFS 1.5.75 and later, C<lastActiveTime> on the second line, which
+indicates the last time an RPC interacted with this transaction
+
+=item *
+
+C<attachFlags> on the third line, where a value of C<offline> indicates
 that the volume is not available for other read or write operations during
 this transaction
 
 =item *
 
-C<volume> on the third line, which specifies the affected volume's ID
+C<volume> on the fourth line, which specifies the affected volume's ID
 number
 
 =item *
 
-C<partition> on the third line, which indicates where the affected volume
+C<partition> on the fourth line, which indicates where the affected volume
 resides (at the beginning of the transaction if this is a move)
 
 =item *
 
-C<procedure> on the third line, which indicates the internal subprocedure
+C<procedure> on the fourth line, which indicates the internal subprocedure
 being executed
 
 =back
 
-A fourth line can appear during certain transactions, and includes the
+A fifth line can appear during certain transactions, and includes the
 following fields:
 
 =over 4
