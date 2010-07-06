@@ -899,6 +899,14 @@
             As a result, it takes anywhere from 30 to 90 seconds after the operating system is resumed for access to the OpenAFS Client
             and the AFS file name space to be restored.  Until the network bindings have been re-established, ticket managers and other
             tools will report that the &quot;AFS Client Service may not have been started&quot;.</para>
+      <para>
+        Windows 7 and Server 2008 R2 contain a bug that will prevent access to \\AFS after either a network media link state change or
+        DHCP client lease results in the loss or change of assigned IP address.  When the bug is triggered, all attempts to connect to
+        \\AFS will result in a "Bad Network Name" error even though "nbtstat.exe -n" reports the name &quot;AFS&quot; as locally registered.
+        HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\Parameters &quot;DisableDHCPMediaSense&quot; (DWORD) can be set to &quot;1&quot;
+        to disable network media sense events from being delivered to the DHCP client.  Under some circumstances this will avoid triggering
+        the bug.  See <ulink url='http://support.microsoft.com/kb/239924'>KB239924: How to disable the Media Sensing Feature for TCP/IP in Windows</ulink>.
+      </para>
       <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
         <ulink url='http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx'>User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the &quot;Administrator&quot; access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require &quot;Administrator&quot; privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS Authentication Tool and the AFS Control Panel will not work unless they are &quot;Run as Administrator&quot;.  When a Vista user account that is a member of the &quot;Administrators&quot; group is used to access the AFS Control Panel (afs_config.exe), the process must be &quot;Run as Administrator&quot;.   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista’s system file and registry virtualization feature.
       </para>
@@ -924,7 +932,7 @@
       <indexterm><primary>fs chgrp</primary></indexterm>
       <indexterm><primary>owner information</primary></indexterm>
       <indexterm><primary>group information</primary></indexterm>
-      <title id='Differences_between_Windows_and_Unix'>3.45. Differences between Windows and UNIX &quot;fs examine&quot;</title>
+      <title id='Differences_between_Windows_and_Unix'>3.45. Differences between Windows and UNIX <emphasis>fs examine</emphasis></title>
       <para>The OpenAFS for Windows version of &quot;fs examine&quot; provide two additional lines of output when compared to the
         UNIX implementation.  These lines include the owner and group information for the file as well as the volume status.
         The Windows output will also indicate the type of object {File, Directory, Mountpoint, Symlink, ...} that was examined.</para>
@@ -1021,6 +1029,39 @@
         <emphasis>NET VIEW \\AFS</emphasis> command and the Explorer Shell.  No longer will Windows display truncated
         cell names as available network shares.  The network share properties will also include the object type and
         and the target of symlinks and mount points.</para>
+    </section>
+    <section>
+      <indexterm><primary>fs newcell</primary></indexterm>
+      <title id='fs_newcell_differences'>3.52. Differences between Windows and UNIX <emphasis>fs newcell</emphasis></title>
+      <para>
+        The OpenAFS for Windows version of &quot;fs newcell&quot; prior to 1.5.74 behaved quite differently than its UNIX counterpart.
+        Instead of adding cell server information for a new cell, the command simply caused the cache manager to destroy all of its
+        cell server information and then reload it the next time the server list for a cell is needed.  The UNIX version explicitly
+        replaces the server list for a cell with a new list.
+      </para>
+      <para>
+        Beginning with the 1.5.75 release, the Windows version will continue to behave as prior versions did when no parameters
+        are specified but will accept an extended UNIX command-line syntax as well.  In addition to the UNIX parameters,
+        the Windows &quot;fs newcell&quot; command accepts four new ones:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>[-fsport &lt;cell's fileserver port&gt;]</para>
+          <para>Specifies an alternate port number at which the cell's file servers are listening</para>
+        </listitem>
+        <listitem>
+          <para>[-vlport &lt;cell's vldb server port&gt;]</para>
+          <para>Specifies an alternate port number at which the cell's volume location database servers are listening</para>
+        </listitem>
+        <listitem>
+          <para>[-registry]</para>
+          <para>Instructs the cache manager to save the cell server information to the registry database</para>
+        </listitem>
+        <listitem>
+          <para>[-dns]</para>
+          <para>Indicates that the cell server information should be obtained via DNS SRV or DNS AFSDB records</para>
+        </listitem>
+      </itemizedlist>
     </section>
   </chapter>
   <chapter id='chap_4'>
@@ -2872,13 +2913,14 @@ Variable: rx_nojumbo</para>
             <title id='Regkey_TransarcAFSDaemon_Parameters_ConnDeadTimeout'>Value: ConnDeadTimeout</title>
                     <anchor id='Value_ConnDeadTimeout' />
             <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-                  <para>Type: DWORD
+                  <para>
+                     Type: DWORD
                   </para>
                   <para>
-Default: 0 (seconds)
+                     Default: 0 (seconds)
                   </para>
                   <para>
-Variable: ConnDeadtimeout</para>
+                     Variable: ConnDeadtimeout</para>
                   <para>When the value is 0, this setting is configured to be one-half the HardDeadTimeout value.</para>
                 </section>
 
@@ -2887,13 +2929,14 @@ Variable: ConnDeadtimeout</para>
             <indexterm><primary>HardDeadTimeout</primary></indexterm>
             <title id='Regkey_TransarcAFSDaemon_Parameters_HardDeadTimeout'>Value: HardDeadTimeout</title>
             <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-                  <para>Type: DWORD
+                  <para>
+                     Type: DWORD
                   </para>
                   <para>
-Default: 0 (seconds)
+                     Default: 0 (seconds)
                   </para>
                   <para>
-Variable: HardDeadtimeout</para>
+                     Variable: HardDeadtimeout</para>
                   <para>The Hard Dead Time is enforced to be at least double the ConnDeadTimeout.  The provides an opportunity for at least one retry. </para>
                   <para>The value 0 seconds means that the real timeout should be set to be equal to the minimum SMB timeout which can be configured in the registry at: </para>
                   <para></para>
@@ -2902,6 +2945,50 @@ Variable: HardDeadtimeout</para>
                   <para></para>
                   <para>If the minimum SMB timeout is not specified the value is 45 seconds.  See
                     <ulink url='http://support.microsoft.com/support/kb/articles/Q102/0/67.asp'>http://support.microsoft.com:80/support/kb/articles/Q102/0/67.asp</ulink>
+                  </para>
+                </section>
+
+                <section>
+            <indexterm><primary>IdleDeadTimeout</primary></indexterm>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_IdleDeadTimeout'>Value: IdleDeadTimeout</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+                  <para>
+                     Type: DWORD
+                  </para>
+                  <para>
+                        Default: 0 (seconds)
+                  </para>
+                  <para>
+                        Variable: IdleDeadtimeout
+                  </para>
+                  <para>The Idle Dead Time determines how long the cache manager will wait for an RPC to complete when the service is responding that it is busy.
+                        If the timeout occurs on a replicated object, the cache manager can choose to fail over to an alternate replica.
+                        This value is typically the same as the ConnDeadTimeout. </para>
+                </section>
+
+
+                <section>
+            <indexterm><primary>NATPingInterval</primary></indexterm>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_NATPingInterval'>Value: NATPingInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+                  <para>
+                     Type: DWORD
+                  </para>
+                  <para>
+                        Default: 0 (seconds)
+                  </para>
+                  <para>
+                        Variable: NatPingInterval
+                  </para>
+                  <para>
+                     The NAT Ping Interval determines how frequently a low-level Rx ping packet is sent to
+                     every file server using an anonymous connection.  The value 0 seconds disables the
+                     functionality.  A non-zero value activates the NAT ping behavior.  This option can be
+                     enabled on clients that access AFS file servers from behind a NAT or port mapping
+                     firewall that maintains a short timeout on UDP port mappings.  In this case the AFS
+                     cache manager may not receive AFS callbacks from the file server.  This registry value
+                     should be set to a number of seconds shorter than the port mapping timeout period.
+                     When there is no other information to go on, a value of 20 seconds can be used.
                   </para>
                 </section>
 
@@ -3191,6 +3278,26 @@ Default: 0</para>
                   <para>Determines whether or not the AFS Cache Manager will give up all callbacks prior to the service being suspended or shutdown.  Doing so will have significant performance benefits for the file servers.  However, file servers older than 1.4.6 can become unstable if the GiveUpAllCallBacks RPC is executed.</para>
                   <para>0: do not perform GiveUpAllCallBacks RPCs</para>
                   <para>1: perform GiveUpAllCallBacks RPCs </para>
+                </section>
+
+
+                <section>
+            <indexterm><primary>ReadOnlyVolumeVersioning</primary></indexterm>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_ReadOnlyVolumeVersioning'>Value: ReadOnlyVolumeVersioning</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+                  <para>Type: DWORD {0, 1}
+                  </para>
+                  <para>
+Default: 0</para>
+                  <para>
+                     Determines whether or not the AFS Cache Manager will will make use of the volume version information reported
+                     by the file server as part of the AFSVolSync data structure.  Use of volume version information can significantly
+                     reduce the number of FetchStatus RPCs issued on objects stored in read-only volumes.  This functionality is
+                     disabled by default because all OpenAFS file servers older than OpenAFS 1.4.10 failed to include valid volume
+                     version information as part of the BulkStatus and InlineBulkStatus RPCs.
+                  </para>
+                  <para>0: do not make use of volume version information</para>
+                  <para>1: make use of volume version information</para>
                 </section>
 
 
