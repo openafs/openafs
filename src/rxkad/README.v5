@@ -52,6 +52,8 @@ export htree otree
 | cat > $otree/src/rxkad/v5der.c
 
 grep -v 'struct units'  $hotree/lib/asn1/krb5_asn1.h \
+ | sed s/uint16_t/afs_uint16/ \
+ | sed s/uint32_t/afs_uint32/ \
    > $otree/src/rxkad/v5gen.h
 
 cp  $hotree/lib/asn1/der-protos.h \

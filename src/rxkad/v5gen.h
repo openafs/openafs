@@ -31,12 +31,12 @@ typedef char *heim_ia5_string;
 
 typedef struct heim_bmp_string {
   size_t length;
-  uint16_t *data;
+  afs_uint16 *data;
 } heim_bmp_string;
 
 typedef struct heim_universal_string {
   size_t length;
-  uint32_t *data;
+  afs_uint32 *data;
 } heim_universal_string;
 
 typedef char *heim_visible_string;
