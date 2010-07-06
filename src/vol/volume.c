@@ -5014,7 +5014,7 @@ VUpdateSalvagePriority_r(Volume * vp)
  * If we did try a salvage then the results are contained in code.
  */
 
-static inline int
+static_inline int
 try_SALVSYNC(Volume *vp, char *partName, int *code) {
 #ifdef SALVSYNC_BUILD_CLIENT
     if (VCanUseSALVSYNC()) {
