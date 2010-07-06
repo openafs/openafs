@@ -119,6 +119,6 @@ extern caddr_t kmem_alloc();
 #include <vfs_vm.h>
 #endif
 
-#define osi_procname(procname, size) strncpy(procname, u.u_comm, size)
+#define osi_procname(procname, size) strncpy(procname, "", size)
 
 #endif /* _OSI_MACHDEP_H_ */
