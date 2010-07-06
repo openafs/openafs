@@ -1,5 +1,6 @@
 #include "asn1_err.h"
 #include <errno.h>
+#include <limits.h>
 /*
  * Copyright (c) 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).

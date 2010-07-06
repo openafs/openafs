@@ -36,8 +36,9 @@ otree=/sources/afs/openafs-rxkad5
 export htree otree
 
 (cd $htree/lib/asn1 ; \
- echo '#include "asn1_err.h"'; 
- echo '#include <errno.h>'; 
+ echo '#include "asn1_err.h"'; \
+ echo '#include <errno.h>'; \
+ echo '#include <limits.h>'; \
  cat  timegm.c \
  der_get.c \
  der_put.c \
