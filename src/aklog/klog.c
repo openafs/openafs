@@ -286,6 +286,53 @@ k5_to_k4_name(krb5_context k5context,
 	}
 }
 
+#if defined(USING_HEIMDAL) || defined(HAVE_KRB5_PROMPT_TYPE)
+static int
+klog_is_pass_prompt(int index, krb5_context context, krb5_prompt prompts[])
+{
+    switch (prompts[index].type) {
+    case KRB5_PROMPT_TYPE_PASSWORD:
+    case KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN:
+	return 1;
+    default:
+	return 0;
+    }
+}
+#elif defined(HAVE_KRB5_GET_PROMPT_TYPES)
+static int
+klog_is_pass_prompt(int index, krb5_context context, krb5_prompt prompts[])
+{
+    /* this isn't thread-safe or anything obviously; it just should be good
+     * enough to work with klog */
+    static krb5_prompt_type *types = NULL;
+    if (index == 0) {
+	types = NULL;
+    }
+    if (!types) {
+	types = krb5_get_prompt_types(context);
+    }
+    if (!types) {
+	return 0;
+    }
+    switch (types[index]) {
+    case KRB5_PROMPT_TYPE_PASSWORD:
+    case KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN:
+	return 1;
+    default:
+	return 0;
+    }
+}
+#else
+static int
+klog_is_pass_prompt(int index, krb5_context context, krb5_prompt prompts[])
+{
+    /* AIX 5.3 doesn't have krb5_get_prompt_types. Neither does HP-UX, which
+     * also doesn't even define KRB5_PROMPT_TYPE_PASSWORD &co. We have no way
+     * of determining the the prompt type, so just assume it's a password */
+    return 1;
+}
+#endif
+
 /* save and reuse password.  This is necessary to make
  *  "direct to service" authentication work with most
  *  flavors of kerberos, when the afs principal has no instance.
@@ -303,39 +350,14 @@ klog_prompter(krb5_context context,
     krb5_prompt prompts[])
 {
     krb5_error_code code;
-    int i, type;
-#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
-    krb5_prompt_type *types;
-#endif
+    int i;
     struct kp_arg *kparg = (struct kp_arg *) a;
     size_t length;
 
     code = krb5_prompter_posix(context, a, name, banner, num_prompts, prompts);
     if (code) return code;
-#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
-    if ((types = krb5_get_prompt_types(context)))
-#endif
     for (i = 0; i < num_prompts; ++i) {
-#if !defined(USING_HEIMDAL) 
-#if defined(HAVE_KRB5_GET_PROMPT_TYPES)
-	type = types[i];
-#elif defined(HAVE_KRB5_PROMPT_TYPE)	
-	type = prompts[i].type;
-#else
-	/* AIX 5.3 krb5_get_prompt_types is missing. Um... */
-	type = ((i == 1)&&(num_prompts == 2)) ? 
-	  KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN : KRB5_PROMPT_TYPE_PASSWORD;
-#endif
-#else
-	type = prompts[i].type;
-#endif
-#if 0
-	printf ("i%d t%d <%.*s>\n", i, type, prompts[i].reply->length,
-		prompts[i].reply->data);
-#endif
-	switch(type) {
-	case KRB5_PROMPT_TYPE_PASSWORD:
-	case KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN:
+	if (klog_is_pass_prompt(i, context, prompts)) {
 	    length = prompts[i].reply->length;
 	    if (length > kparg->allocated - 1)
 		length = kparg->allocated - 1;
