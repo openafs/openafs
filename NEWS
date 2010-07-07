@@ -31,8 +31,6 @@ OpenAFS 1.5.75 (2010-07-07)
 
     * Updated userspace AFS client.
 
-    * FUSE version of userspace AFS client.
-
     * Beginning of a modernized test suite.
 
     * Additional documentation.
@@ -54,8 +52,6 @@ OpenAFS 1.5.75 (2010-07-07)
 
     * Force core file generation in bosserver by overriding default
       resource limits when possible.
-
-    * DAFS: Provide fast-restart equivalent option.
 
     * Update vlclient and vldb_check.
 
