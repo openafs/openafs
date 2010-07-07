@@ -385,8 +385,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
-    }
-    if (i != -1) {
 	mtu = ntohl(afs_cb_interface.mtu[i]);
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
@@ -395,8 +393,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	    if (rxmtu < pp->ifMTU)
 		pp->ifMTU = rxmtu;
 	}
-    } else {			/* couldn't find the interface, so assume the worst */
-	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #  else /* AFS_USERSPACE_IP_ADDR */
     rx_ifnet_t ifn;
@@ -444,9 +440,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
-    }
 
-    if (mtu > 0) {
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
 	if (mtu > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
@@ -454,8 +448,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	    if (rxmtu < pp->ifMTU)
 		pp->ifMTU = rxmtu;
 	}
-    } else {			/* couldn't find the interface, so assume the worst */
-	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE,rx_MyMaxSendSize);
     }
 # endif /* AFS_SUN5_ENV */
 #else /* ADAPT_MTU */
