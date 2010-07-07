@@ -20,6 +20,7 @@
 #define _OSI_MACHDEP_H_
 
 #include "h/kern_sem.h"
+#include "h/proc_iface.h"
 
 #define	afs_hz	    hz
 extern struct timeval time;
