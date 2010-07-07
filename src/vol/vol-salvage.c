@@ -2504,8 +2504,9 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
     StreamHandle_t *file;
     struct VnodeClassInfo *vcp;
     afs_sfsize_t size;
+    afs_sfsize_t nVnodes;
     afs_fsize_t vnodeLength;
-    int vnodeIndex, nVnodes;
+    int vnodeIndex;
     afs_ino_str_t stmp1, stmp2;
     IHandle_t *handle;
     FdHandle_t *fdP;
@@ -3059,7 +3060,8 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (/* ShowMounts && */ (vnodeEssence->type == vSymlink)
 	    && !(vnodeEssence->modeBits & 0111)) {
-	    ssize_t nBytes, size;
+	    ssize_t nBytes;
+	    afs_sfsize_t size;
 	    char buf[1025];
 	    IHandle_t *ihP;
 	    FdHandle_t *fdP;

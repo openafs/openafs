@@ -96,7 +96,7 @@ ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class,
     StreamHandle_t *stream = 0;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct VnodeExtract *e;
-    afs_uint32 size;
+    afs_sfsize_t size;
     afs_uint32 offset;
 
     *length = 0;
@@ -255,7 +255,7 @@ copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
 {
     FdHandle_t *infdP, *outfdP;
     char *tbuf;
-    afs_size_t size;
+    afs_sfsize_t size;
 
     infdP = IH_OPEN(inh);
     if (!infdP) {
@@ -326,7 +326,7 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
     FdHandle_t *newfdP = 0;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct VnodeExtract *e;
-    afs_uint64 size;
+    afs_sfsize_t size;
     afs_uint64 offset;
     Inode ino, newino;
 
@@ -656,7 +656,7 @@ deleteVnodes(Volume *vol, afs_int32 class,
     FdHandle_t *fdP = 0;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct VnodeExtract *e;
-    afs_uint64 size;
+    afs_sfsize_t size;
     afs_uint64 offset;
     Inode ino;
 

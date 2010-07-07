@@ -1265,7 +1265,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 
 static int
 CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
-             afs_fsize_t size)
+             afs_sfsize_t size)
 {
     char *buff = malloc(COPYBUFFSIZE);
     size_t length;
@@ -7484,7 +7484,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	FDH_SYNC(fdP);
     }
     if (errorCode) {
-	afs_fsize_t nfSize = (afs_fsize_t) FDH_SIZE(fdP);
+	afs_sfsize_t nfSize = FDH_SIZE(fdP);
+	assert(nfSize >= 0);
 	/* something went wrong: adjust size and return */
 	VN_SET_LEN(targetptr, nfSize);	/* set new file size. */
 	/* changed_newTime is tested in StoreData to detemine if we

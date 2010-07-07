@@ -5686,8 +5686,7 @@ static void
 VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
 {
     StreamHandle_t *file;
-    int nVnodes;
-    int size;
+    afs_sfsize_t nVnodes, size;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct vnodeIndex *vip = &vp->vnodeIndex[class];
     struct VnodeDiskObject *vnode;

@@ -66,8 +66,8 @@ struct VolumeSummary {		/* Volume summary an entry for each
 
 struct VnodeInfo {
     IHandle_t *handle;		/* Inode containing this index */
-    int nVnodes;		/* Total number of vnodes in index */
-    int nAllocatedVnodes;	/* Total number actually used */
+    afs_sfsize_t nVnodes;	/* Total number of vnodes in index */
+    afs_sfsize_t nAllocatedVnodes;	/* Total number actually used */
     int volumeBlockCount;	/* Total number of blocks used by volume */
     Inode *inodes;		/* Directory only */
     struct VnodeEssence {
