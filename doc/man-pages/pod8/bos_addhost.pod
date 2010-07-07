@@ -8,10 +8,10 @@ bos_addhost - Adds a database server machine to the CellServDB file
 <div class="synopsis">
 
 B<bos addhost> S<<< B<-server> <I<machine name>> >>> S<<< B<-host> <I<host name>>+ >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-clone>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos addh> S<<< B<-s> <I<machine name>> >>> S<<< B<-ho> <I<host name>>+ >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-he>]
+    S<<< [B<-ce> <I<cell name>>] >>> [B<-cl] [B<-n>] [B<-l>] [B<-he>]
 
 =for html
 </div>
@@ -67,6 +67,12 @@ database server machine to register in the F<CellServDB> file.
 
 Names the cell in which to run the command. Do not combine this
 argument with the B<-localauth> flag. For more details, see L<bos(8)>.
+
+=item B<-clone>
+
+Register the host given by B<-host> as a non-voting clone site, which
+prevents the host from becoming a sync-site. This is an advanced feature
+and should be used with caution.
 
 =item B<-noauth>
 
