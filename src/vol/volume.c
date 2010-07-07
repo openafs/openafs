@@ -1595,7 +1595,7 @@ GetBitmap(Error * ec, Volume * vp, VnodeClass class)
 {
     StreamHandle_t *file;
     int nVnodes;
-    int size;
+    afs_sfsize_t size;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct vnodeIndex *vip = &vp->vnodeIndex[class];
     struct VnodeDiskObject *vnode;

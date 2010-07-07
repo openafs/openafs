@@ -480,15 +480,16 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 
 	if (dheader) {
 	    FdHandle_t *fdP;
-	    int size = 0;
-	    int code;
+	    afs_sfsize_t size = 0;
+	    afs_sfsize_t code;
 
 	    if (afs_fstat(fd, &stat) == -1) {
 		perror("stat");
 		exit(1);
 	    }
 	    if (!dsizeOnly && !saveinodes) {
-		printf("Volume header (size = %d):\n", size = stat.st_size);
+		size = stat.st_size;
+		printf("Volume header (size = %d):\n", (int)size);
 		printf("\tstamp\t= 0x%x\n", header.stamp.version);
 		printf("\tVolId\t= %u\n", header.id);
 	    }
@@ -510,7 +511,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    if (!dsizeOnly && !saveinodes) {
 		printf("\tparent\t= %u\n", header.parent);
 		printf("\tInfo inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.volumeInfo), code);
+		       PrintInode(NULL, header.volumeInfo), (int)code);
 	    }
 
 	    IH_INIT(ih, dp->device, header.parent, header.smallVnodeIndex);
@@ -529,7 +530,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    size += code;
 	    if (!dsizeOnly && !saveinodes) {
 		printf("\tSmall inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.smallVnodeIndex), code);
+		       PrintInode(NULL, header.smallVnodeIndex), (int)code);
 	    }
 
 	    IH_INIT(ih, dp->device, header.parent, header.largeVnodeIndex);
@@ -548,9 +549,9 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    size += code;
 	    if (!dsizeOnly && !saveinodes) {
 		printf("\tLarge inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.largeVnodeIndex), code);
+		       PrintInode(NULL, header.largeVnodeIndex), (int)code);
 #ifndef AFS_NT40_ENV
-		printf("Total aux volume size = %d\n\n", size);
+		printf("Total aux volume size = %d\n\n", (int)size);
 #endif
 	    }
 #ifdef AFS_NAMEI_ENV
@@ -570,8 +571,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    size += code;
 	    if (!dsizeOnly && !saveinodes) {
 		printf("\tLink inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.linkTable), code);
-		printf("Total aux volume size = %d\n\n", size);
+		       PrintInode(NULL, header.linkTable), (int)code);
+		printf("Total aux volume size = %d\n\n", (int)size);
 	    }
 #endif
 	    Vauxsize = size;

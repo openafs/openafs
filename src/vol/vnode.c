@@ -379,7 +379,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 #endif /* AFS_PTHREAD_ENV */
 	/* Sanity check:  is this vnode really not in use? */
 	{
-	    int size;
+	    afs_sfsize_t size;
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
 	    off_t off = vnodeIndexOffset(vcp, vnodeNumber);

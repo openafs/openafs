@@ -329,8 +329,8 @@ struct VolumeSummary {		/* Volume summary an entry for each
 
 struct VnodeInfo {
     IHandle_t *handle;		/* Inode containing this index */
-    int nVnodes;		/* Total number of vnodes in index */
-    int nAllocatedVnodes;	/* Total number actually used */
+    afs_sfsize_t nVnodes;		/* Total number of vnodes in index */
+    afs_sfsize_t nAllocatedVnodes;	/* Total number actually used */
     int volumeBlockCount;	/* Total number of blocks used by volume */
     Inode *inodes;		/* Directory only */
     struct VnodeEssence {
@@ -2621,8 +2621,9 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
     StreamHandle_t *file;
     struct VnodeClassInfo *vcp;
     afs_sfsize_t size;
+    afs_sfsize_t nVnodes;
     afs_fsize_t vnodeLength;
-    int vnodeIndex, nVnodes;
+    int vnodeIndex;
     afs_ino_str_t stmp1, stmp2;
     IHandle_t *handle;
     FdHandle_t *fdP;
@@ -3175,7 +3176,8 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (/* ShowMounts && */ (vnodeEssence->type == vSymlink)
 	    && !(vnodeEssence->modeBits & 0111)) {
-	    int code, size;
+	    int code;
+	    afs_sfsize_t size;
 	    char buf[1025];
 	    IHandle_t *ihP;
 	    FdHandle_t *fdP;

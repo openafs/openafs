@@ -1012,9 +1012,9 @@ DumpVnodeIndex(register struct iod *iodp, Volume * vp, VnodeClass class,
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
     FdHandle_t *fdP;
-    int size;
+    afs_sfsize_t size, nVnodes;
     int flag;
-    register int vnodeIndex, nVnodes;
+    register int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     assert(fdP != NULL);
@@ -1138,7 +1138,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
     int i, nVnodes, offset, code, index = 0;
     afs_int32 *Buf;
     int cnt = 0;
-    int size;
+    afs_sfsize_t size;
     StreamHandle_t *afile;
     FdHandle_t *fdP;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
@@ -1874,9 +1874,9 @@ SizeDumpVnodeIndex(register struct iod *iodp, Volume * vp, VnodeClass class,
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
     FdHandle_t *fdP;
-    int size;
+    afs_sfsize_t size, nVnodes;
     int flag;
-    register int vnodeIndex, nVnodes;
+    register int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     assert(fdP != NULL);

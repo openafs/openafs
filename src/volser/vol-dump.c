@@ -775,7 +775,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
     FdHandle_t *fdP;
-    int size;
+    afs_sfsize_t size;
     int flag;
     int offset = 0;
     register int vnodeIndex, nVnodes = 0;
