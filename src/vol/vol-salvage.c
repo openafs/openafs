@@ -1111,7 +1111,7 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
     struct afs_stat status;
     int forceSal, err;
     int code;
-    struct ViceInodeInfo *ip;
+    struct ViceInodeInfo *ip, *ip_save;
     struct InodeSummary summary;
     char summaryFileName[50];
     FILE *summaryFile;
@@ -1213,6 +1213,7 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 	    Abort("Unable to rewrite inode table; %s not salvaged\n", dev);
 	}
 	summary.index = 0;
+	ip_save = ip;
 	while (nInodes) {
 	    CountVolumeInodes(ip, nInodes, &summary);
 	    if (fwrite(&summary, sizeof(summary), 1, summaryFile) != 1) {
@@ -1224,6 +1225,8 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 	    nInodes -= summary.nInodes;
 	    ip += summary.nInodes;
 	}
+	free(ip_save);
+	ip = ip_save = NULL;
 	/* Following fflush is not fclose, because if it was debug mode would not work */
 	if (fflush(summaryFile) == EOF || fsync(fileno(summaryFile)) == -1) {
 	    Log("Unable to write summary file (errno = %d); %s not salvaged\n", errno, dev);
