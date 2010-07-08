@@ -51,10 +51,6 @@
 #define MAX_NETFILE_LINE       2048	/* length of a line in the netrestrict file */
 #define MAXIPADDRS             1024	/* from afsd.c */
 
-#ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK (afs_uint32)0x7f000001
-#endif
-
 int ParseNetInfoFile_int(afs_uint32 *, afs_uint32 *, afs_uint32 *,
                          int, char reason[], const char *,
                          int);
@@ -412,7 +408,7 @@ filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[], afs_uint32 mask1[],
 	}
 
 	/* Always mask loopback address */
-	if (found && addr1[i] == INADDR_LOOPBACK) 
+	if (found && rx_IsLoopbackAddr(addr1[i]))
 	    found = 0;
 
 	if (found) {

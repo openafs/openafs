@@ -1358,7 +1358,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 
 #ifdef notdef
 	if (!s) {
-	    if (afsifinfo[i].ipaddr != 0x7f000001) {	/* ignore loopback */
+	    if (!rx_IsLoopbackAddr(afsifinfo[i].ipaddr)) {	/* ignore loopback */
 		*cnt += 1;
 		if (*cnt > 16)
 		    return;
@@ -1421,7 +1421,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 	    net = ipif->ipif_local_addr & netmask;
 #ifdef notdef
 	    if (!s) {
-		if (ipif->ipif_local_addr != 0x7f000001) {	/* ignore loopback */
+		if (!rx_IsLoopbackAddr(ipif->ipif_local_addr)) {	/* ignore loopback */
 		    *cnt += 1;
 		    if (*cnt > 16)
 			return;

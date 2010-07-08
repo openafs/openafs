@@ -236,7 +236,7 @@ GetServer(char *aname)
 	memcpy(&addr, th->h_addr, sizeof(addr));
     }
 
-    if (addr == htonl(0x7f000001)) {	/* local host */
+    if (rx_IsLoopbackAddr(ntohl(addr))) {	/* local host */
 	code = gethostname(hostname, MAXHOSTCHARS);
 	if (code)
 	    return 0;

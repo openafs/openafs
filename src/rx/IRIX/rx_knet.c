@@ -374,7 +374,7 @@ rxi_EnumGetIfInfo(struct hashbucket *h, caddr_t key, caddr_t arg1,
 	*(int *)arg1 = different;
     }
     rxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
-    if ((ifinaddr != 0x7f000001) && (rxmtu > rx_maxReceiveSize)) {
+    if (!rx_IsLoopbackAddr(ifinaddr) && (rxmtu > rx_maxReceiveSize)) {
 	rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, rxmtu);
 	rx_maxReceiveSize = MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
     }

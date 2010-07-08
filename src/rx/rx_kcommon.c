@@ -532,7 +532,7 @@ rxi_GetcbiInfo(void)
 	    rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
 	maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 	addrs[i++] = ifinaddr;
-	if ((ifinaddr != 0x7f000001) && (maxmtu > rx_maxReceiveSize)) {
+	if (!rx_IsLoopbackAddr(ifinaddr) && (maxmtu > rx_maxReceiveSize)) {
 	    rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
 	    rx_maxReceiveSize = MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 	}
@@ -658,7 +658,7 @@ rxi_GetIFInfo(void)
 			    ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
 			maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 			addrs[i++] = ifinaddr;
-			if ((ifinaddr != 0x7f000001) && 
+			if (!rx_IsLoopbackAddr(ifinaddr) &&
 			    (maxmtu > rx_maxReceiveSize)) {
 			    rx_maxReceiveSize = 
 				MIN(RX_MAX_PACKET_SIZE, maxmtu);
@@ -711,7 +711,7 @@ rxi_GetIFInfo(void)
 		    ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
 		maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 		addrs[i++] = ifinaddr;
-		if ((ifinaddr != 0x7f000001) && (maxmtu > rx_maxReceiveSize)) {
+		if (!rx_IsLoopbackAddr(ifinaddr) && (maxmtu > rx_maxReceiveSize)) {
 		    rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
 		    rx_maxReceiveSize =
 			MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);

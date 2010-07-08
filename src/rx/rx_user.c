@@ -541,7 +541,7 @@ rx_GetIFInfo(void)
 	if (a->sin_family != AF_INET)
 	    continue;
 	rxi_NetAddrs[rxi_numNetAddrs] = ntohl(a->sin_addr.s_addr);
-	if (rxi_NetAddrs[rxi_numNetAddrs] == 0x7f000001) {
+	if (rx_IsLoopbackAddr(rxi_NetAddrs[rxi_numNetAddrs])) {
 	    /* we don't really care about "localhost" */
 	    continue;
 	}
@@ -634,7 +634,7 @@ rx_GetIFInfo(void)
 #endif
 	}
 
-	if (rxi_NetAddrs[rxi_numNetAddrs] != 0x7f000001) {	/* ignore lo0 */
+	if (!rx_IsLoopbackAddr(rxi_NetAddrs[rxi_numNetAddrs])) {	/* ignore lo0 */
 	    int maxsize;
 	    maxsize =
 		rxi_nRecvFrags * (myNetMTUs[rxi_numNetAddrs] - RX_IP_SIZE);

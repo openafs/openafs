@@ -122,6 +122,12 @@ int ntoh_syserr_conv(int error);
 #define	rx_SecurityClassOf(conn)	((conn)->securityIndex)
 #define rx_SecurityObjectOf(conn)	((conn)->securityObject)
 
+static_inline int
+rx_IsLoopbackAddr(afs_uint32 addr)
+{
+    return (addr == 0x7f000001);
+}
+
 /*******************
  * Macros callable by the user to further define attributes of a
  * service.  Must be called before rx_StartServer

@@ -240,7 +240,7 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 	    if (count >= maxSize)	/* no more space */
 		dpf(("Too many interfaces..ignoring 0x%x\n",
 		       a->sin_addr.s_addr));
-	    else if (!loopbacks && a->sin_addr.s_addr == htonl(0x7f000001)) {
+	    else if (!loopbacks && rx_IsLoopbackAddr(ntohl(a->sin_addr.s_addr))) {
 		addrcount--;
 		continue;	/* skip loopback address as well. */
 	    } else if (loopbacks && ifm->ifm_flags & IFF_LOOPBACK) {
@@ -329,7 +329,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 	    }
 	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
-	    if (a->sin_addr.s_addr != htonl(0x7f000001) ) {
+	    if (!rx_IsLoopbackAddr(ntohl(a->sin_addr.s_addr))) ) {
 		if (count >= maxSize) {	/* no more space */
 		    dpf(("Too many interfaces..ignoring 0x%x\n",
 			   a->sin_addr.s_addr));
@@ -430,7 +430,7 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 	}
 	if (a->sin_addr.s_addr != 0) {
             if (!loopbacks) {
-                if (a->sin_addr.s_addr == htonl(0x7f000001)) 
+                if (rx_IsLoopbackAddr(ntohl(a->sin_addr.s_addr)))
 		    continue;	/* skip loopback address as well. */
             } else {
                 if (ifr->ifr_flags & IFF_LOOPBACK) 
@@ -517,7 +517,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 		continue;	/* ignore this address */
 	    }
 
-            if (a->sin_addr.s_addr == htonl(0x7f000001) )
+            if (rx_IsLoopbackAddr(ntohl(a->sin_addr.s_addr)))
                 continue;   /* skip loopback address as well. */
 
 	    if (count >= maxSize) {	/* no more space */
