@@ -4121,7 +4121,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     /*
      * Convert IP addresses to network byte order, and remove
-     * duplicate IP addresses from the interface list, and
+     * duplicate and loopback IP addresses from the interface list, and
      * determine whether or not the incoming addr/port is
      * listed.  Note that if the address matches it is not
      * truly a match because the port number for the entries
@@ -4129,6 +4129,9 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
      * for this connection might not be 7001.
      */
     for (i = 0, count = 0, found = 0; i < number; i++) {
+	if (rx_IsLoopbackAddr(interf->addr_in[i])) {
+	    continue;
+	}
 	interf->addr_in[i] = htonl(interf->addr_in[i]);
 	for (j = 0; j < count; j++) {
 	    if (interf->addr_in[j] == interf->addr_in[i])
