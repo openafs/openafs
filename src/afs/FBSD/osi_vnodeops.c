@@ -232,6 +232,22 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 
 #define DROPNAME() FREE(name, M_TEMP)
 
+/*
+ * Here we define compatibility functions/macros for interfaces that
+ * have changed between different FreeBSD versions.
+ */
+#if defined(AFS_FBSD90_ENV)
+static __inline void ma_vm_page_lock_queues(void) {};
+static __inline void ma_vm_page_unlock_queues(void) {};
+static __inline void ma_vm_page_lock(vm_page_t m) { vm_page_lock(m); };
+static __inline void ma_vm_page_unlock(vm_page_t m) { vm_page_unlock(m); };
+#else
+static __inline void ma_vm_page_lock_queues(void) { vm_page_lock_queues(); };
+static __inline void ma_vm_page_unlock_queues(void) { vm_page_unlock_queues(); };
+static __inline void ma_vm_page_lock(vm_page_t m) {};
+static __inline void ma_vm_page_unlock(vm_page_t m) {};
+#endif
+
 #if defined(AFS_FBSD80_ENV)
 #define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags))
 #define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags))
@@ -240,6 +256,14 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 #define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags, p))
 #define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags, p))
 #define MA_VOP_UNLOCK(vp, flags, p) (VOP_UNLOCK(vp, flags, p))
+#endif
+
+#if defined(AFS_FBSD70_ENV)
+#define MA_PCPU_INC(c) (PCPU_INC(c))
+#define	MA_PCPU_ADD(c, n) (PCPU_ADD(c, n))
+#else
+#define MA_PCPU_INC(c) (PCPU_LAZY_INC(c))
+#define	MA_PCPU_ADD(c, n) (c) += (n)
 #endif
 
 #ifdef AFS_FBSD70_ENV
@@ -761,27 +785,30 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	vm_page_t m = ap->a_m[ap->a_reqpage];
 
 	VM_OBJECT_LOCK(object);
-	vm_page_lock_queues();
+	ma_vm_page_lock_queues();
 	if (m->valid != 0) {
 	    /* handled by vm_fault now        */
 	    /* vm_page_zero_invalid(m, TRUE); */
 	    for (i = 0; i < npages; ++i) {
-		if (i != ap->a_reqpage)
+		if (i != ap->a_reqpage) {
+		    ma_vm_page_lock(ap->a_m[i]);
 		    vm_page_free(ap->a_m[i]);
+		    ma_vm_page_unlock(ap->a_m[i]);
+		}
 	    }
-	    vm_page_unlock_queues();
+	    ma_vm_page_unlock_queues();
 	    VM_OBJECT_UNLOCK(object);
 	    return (0);
 	}
-	vm_page_unlock_queues();
+	ma_vm_page_unlock_queues();
 	VM_OBJECT_UNLOCK(object);
     }
     bp = getpbuf(&afs_pbuf_freecnt);
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    cnt.v_vnodein++;
-    cnt.v_vnodepgsin += npages;
+    MA_PCPU_INC(cnt_v.vnodein);
+    MA_PCPU_ADD(cnt.v_vnodepgsin, npages);
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
@@ -803,24 +830,25 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 
     if (code && (uio.uio_resid == ap->a_count)) {
 	VM_OBJECT_LOCK(object);
-	vm_page_lock_queues();
+	ma_vm_page_lock_queues();
 	for (i = 0; i < npages; ++i) {
 	    if (i != ap->a_reqpage)
 		vm_page_free(ap->a_m[i]);
 	}
-	vm_page_unlock_queues();
+	ma_vm_page_unlock_queues();
 	VM_OBJECT_UNLOCK(object);
 	return VM_PAGER_ERROR;
     }
 
     size = ap->a_count - uio.uio_resid;
     VM_OBJECT_LOCK(object);
-    vm_page_lock_queues();
+    ma_vm_page_lock_queues();
     for (i = 0, toff = 0; i < npages; i++, toff = nextoff) {
 	vm_page_t m;
 	nextoff = toff + PAGE_SIZE;
 	m = ap->a_m[i];
 
+	/* XXX not in nfsclient? */
 	m->flags &= ~PG_ZERO;
 
 	if (nextoff <= size) {
@@ -828,15 +856,22 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * Read operation filled an entire page
 	     */
 	    m->valid = VM_PAGE_BITS_ALL;
+#ifndef AFS_FBSD80_ENV
 	    vm_page_undirty(m);
+#else
+	    KASSERT(m->dirty == 0, ("afs_getpages: page %p is dirty", m));
+#endif
 	} else if (size > toff) {
 	    /*
 	     * Read operation filled a partial page.
 	     */
 	    m->valid = 0;
-	    vm_page_set_validclean(m, 0, size - toff);
-	    /* handled by vm_fault now        */
-	    /* vm_page_zero_invalid(m, TRUE); */
+	    vm_page_set_valid(m, 0, size - toff);
+#ifndef AFS_FBSD80_ENV
+	    vm_page_undirty(m);
+#else
+	    KASSERT(m->dirty == 0, ("afs_getpages: page %p is dirty", m));
+#endif
 	}
 
 	if (i != ap->a_reqpage) {
@@ -854,20 +889,28 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     */
 	    if (!code) {
 #if defined(AFS_FBSD70_ENV)
-		if (m->oflags & VPO_WANTED)
+		if (m->oflags & VPO_WANTED) {
 #else
-		if (m->flags & PG_WANTED)
+		if (m->flags & PG_WANTED) {
 #endif
+		    ma_vm_page_lock(m);
 		    vm_page_activate(m);
-		else
+		    ma_vm_page_unlock(m);
+		}
+		else {
+		    ma_vm_page_lock(m);
 		    vm_page_deactivate(m);
+		    ma_vm_page_unlock(m);
+		}
 		vm_page_wakeup(m);
 	    } else {
+		ma_vm_page_lock(m);
 		vm_page_free(m);
+		ma_vm_page_unlock(m);
 	    }
 	}
     }
-    vm_page_unlock_queues();
+    ma_vm_page_unlock_queues();
     VM_OBJECT_UNLOCK(object);
     return 0;
 }
@@ -935,8 +978,8 @@ afs_vop_putpages(struct vop_putpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    cnt.v_vnodeout++;
-    cnt.v_vnodepgsout += ap->a_count;
+    MA_PCPU_INC(cnt.v_vnodeout);
+    MA_PCPU_ADD(cnt.v_vnodepgsout, ap->a_count);
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
