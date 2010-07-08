@@ -125,7 +125,7 @@ int ntoh_syserr_conv(int error);
 static_inline int
 rx_IsLoopbackAddr(afs_uint32 addr)
 {
-    return (addr == 0x7f000001);
+    return ((addr & 0xffff0000) == 0x7f000000);
 }
 
 /*******************
