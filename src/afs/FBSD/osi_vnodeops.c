@@ -259,10 +259,10 @@ static __inline void ma_vm_page_unlock(vm_page_t m) {};
 #endif
 
 #if defined(AFS_FBSD70_ENV)
-#define MA_PCPU_INC(c) (PCPU_INC(c))
-#define	MA_PCPU_ADD(c, n) (PCPU_ADD(c, n))
+#define MA_PCPU_INC(c) PCPU_INC(c)
+#define	MA_PCPU_ADD(c, n) PCPU_ADD(c, n)
 #else
-#define MA_PCPU_INC(c) (PCPU_LAZY_INC(c))
+#define MA_PCPU_INC(c) PCPU_LAZY_INC(c)
 #define	MA_PCPU_ADD(c, n) (c) += (n)
 #endif
 
@@ -807,7 +807,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    MA_PCPU_INC(cnt_v.vnodein);
+    MA_PCPU_INC(cnt.v_vnodein);
     MA_PCPU_ADD(cnt.v_vnodepgsin, npages);
 
     iov.iov_base = (caddr_t) kva;
