@@ -207,6 +207,7 @@ install-stamp: build-stamp
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 
 	dh_dkms -V $(VERSION)
+	dh_installchangelogs NEWS
 	dh install --after dh_install
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db

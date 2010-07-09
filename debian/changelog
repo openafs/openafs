@@ -49,6 +49,9 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     - Remove selection of linux-image vs. kernel-image for kernel names.
     - Use Breaks instead of Conflicts.
     - Update standards version to 3.9.0.
+  * Tighten the dependencies on openafs-client in packages that symlink
+    their /usr/share/doc directories to openafs-client's to meet the
+    Policy requirements for changelog files.
   * Remove the lpia architecture.  This was an experiment in Ubuntu that
     has apparently been dropped.
   * Add preliminary support for powerpcspe, mapping that architecture to
@@ -58,6 +61,7 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     notes are no longer included.
   * Remove conflicts/replaces/provides for openafs-ptutil, which was
     ancient (removed in 2001).
+  * Install an upstream changelog file now that upstream provides one.
   * Update standards version to 3.9.0.
     - Use Breaks instead of Conflicts where appropriate.
 
