@@ -62,6 +62,10 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
   * Remove conflicts/replaces/provides for openafs-ptutil, which was
     ancient (removed in 2001).
   * Install an upstream changelog file now that upstream provides one.
+  * Add a workaround in the clean target to allow the same packaging files
+    to be used by upstream, which removes changelog during distclean
+    because it's Autoconf-generated.  This workaround will not trigger
+    during a normal Debian package build.
   * Update standards version to 3.9.0.
     - Use Breaks instead of Conflicts where appropriate.
 

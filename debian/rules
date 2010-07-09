@@ -110,13 +110,20 @@ build-stamp:
 	done
 	touch $@
 
+# The manipulation of debian/changelog here is unnecessary with a regular
+# Debian build.  It is provided solely so that upstream can share the Debian
+# packaging files, working around problems caused by upstream's distclean
+# removing packaging/Debian/changelog because it's Autoconf-generated.
 clean:
 	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
 	    [ ! -f doc/xml/$$d/Makefile ] || $(MAKE) -C doc/xml/$$d clean ; \
 	done
+	[ ! -f debian/changelog.in ] \
+	    || cp debian/changelog debian/changelog.save
 	dh clean
+	[ -f debian/changelog ] || mv debian/changelog.save debian/changelog
 
 install: install-stamp
 install-stamp: build-stamp
