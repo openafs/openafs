@@ -56,6 +56,8 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     architecture returns ppc.
   * Minor update to README.Debian for openafs-doc: the old IBM release
     notes are no longer included.
+  * Remove conflicts/replaces/provides for openafs-ptutil, which was
+    ancient (removed in 2001).
   * Update standards version to 3.9.0.
     - Use Breaks instead of Conflicts where appropriate.
 

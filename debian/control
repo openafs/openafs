@@ -78,9 +78,6 @@ Architecture: alpha amd64 arm armel i386 ia64 powerpc powerpcspe ppc64 s390 s390
 Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends},
  openafs-fileserver, openafs-client
 Suggests: openafs-doc
-Conflicts: openafs-ptutil
-Replaces: openafs-ptutil
-Provides: openafs-ptutil
 Description: AFS distributed filesystem database server
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
