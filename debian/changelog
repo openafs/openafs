@@ -40,6 +40,8 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     - [c790e7d0] Remove a few erroneous NEWS entries for 1.5.75
   * openafs-modules-source and openafs-modules-dkms are now architecture:
     all.  The generated kernel source is now architecture-independent.
+  * openafs-modules-source and openafs-modules-dkms now recommend an
+    appropriate version of openafs-client.
   * Remove the lpia architecture.  This was an experiment in Ubuntu that
     has apparently been dropped.
   * Add preliminary support for powerpcspe, mapping that architecture to

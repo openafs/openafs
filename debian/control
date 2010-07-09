@@ -149,6 +149,7 @@ Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, bison, flex, debhelper (>= 5),
  module-assistant | kernel-package
+Recommends: openafs-client (>= ${source:Version})
 Description: AFS distributed filesystem kernel module source
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
@@ -161,6 +162,7 @@ Package: openafs-modules-dkms
 Section: kernel
 Priority: extra
 Depends: ${misc:Depends}, dkms, bison, flex
+Recommends: openafs-client (>= ${source:Version})
 Architecture: all
 Description: AFS distributed filesystem kernel module DKMS source
  AFS is a distributed filesystem allowing cross-platform sharing of
