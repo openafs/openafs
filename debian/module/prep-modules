@@ -7,12 +7,13 @@
 #    major kernel revision plus the debian subrevision and whatever
 #    architecture string is appropriate if building against the stock Debian
 #    kernels.  $(KVERS) should be identical to the version component contained
-#    in the Debian kernel package names.
+#    in the Debian kernel package names (in other words, the ABI version, not
+#    the package version)..
 #
-#  * Make the package recommend either kernel-image-$(KVERS) or
-#    linux-image-$(KVERS) as appropriate for the kernel version that we're
-#    building against.  Use recommend rather than depends since the user may
-#    have built their own kernel outside of the Debian package infrastructure.
+#  * Make the package recommend linux-image-$(KVERS) as appropriate for the
+#    kernel version that we're building against.  Use recommend rather than
+#    depends since the user may have built their own kernel outside of the
+#    Debian package infrastructure.
 #
 #  * Save the version number of the binary package in debian/VERSION for later
 #    use by dh_gencontrol.  This will be the version number of the source
@@ -29,7 +30,7 @@
 set -e
 
 if [ "$#" -ne 1 ]; then
-    echo Usage: $0 kernelsource-location
+    echo "Usage: $0 <kernel-source-location>" >&2
     exit 1
 fi
 
@@ -73,20 +74,9 @@ else
         | sed -e 's/.*source-\([^ ]*\) (\([^)]*\)).*/\2/'`
 fi
 
-# Determine the kernel package name.  For right now, assume linux-image for
-# 2.6.12 and later, and kernel-image for anything earlier.  If this doesn't
-# work for someone, please submit a bug with the details.
-
-if dpkg --compare-versions "$afs_kvers" ge "2.6.12" ; then
-    afs_image=linux-image
-else
-    afs_image=kernel-image
-fi
-
 # Generate the control file from the template.
 
-sed -e "s/=KVERS/${afs_kvers}/g" -e "s/=IMG/${afs_image}/g" \
-    debian/control.in > debian/control
+sed -e "s/=KVERS/${afs_kvers}/g" debian/control.in > debian/control
 
 # Now, calcuate the binary package version.  Extract the epoch from the kernel
 # package revision and add it to the beginning of the binary package version
