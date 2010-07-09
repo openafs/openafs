@@ -102,8 +102,7 @@ build-stamp:
 	    --enable-fuse-client --enable-debug --enable-debug-lwp \
 	    --with-xslt-processor=xsltproc --with-html-xsl=$(HTML_XSL) \
 	    --enable-reduced-depends $(DEBIAN_OPT_FLAGS) $(SYSTEM)
-	chmod a+x config.sub src/libafs/make_kbuild_makefile.pl \
-	    src/config/make_vnode.pl
+	chmod a+x config.sub
 	dh build --after configure
 	$(MAKE) libafs_tree
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
