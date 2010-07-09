@@ -48,8 +48,8 @@ IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log	    \
 	-Xfs_chgrp.1 -Xfs_chown.1 -Xfs_cscpolicy.1 -Xfs_flushall.1	    \
 	-Xfs_memdump.1 -Xfs_minidump.1 -Xfs_trace.1 -Xkadb_check -Xkaserver \
 	-Xkdb -Xkdump -Xkpwvalid -Xlibafssetpag.so -Xlibafsrpc.so	    \
-	-Xlibafsauthent.so -Xpackage -Xpagsh.krb -Xsymlink -Xtokens.krb	    \
-	-Xuss -Xvldb_convert -Xvsys -Xxfs_size_check
+	-Xlibafsauthent.so -Xpagsh.krb -Xsymlink -Xtokens.krb -Xuss	    \
+	-Xvldb_convert -Xvsys -Xxfs_size_check
 
 # Installed via other means since we have to rename them.
 IGNORE += -Xafsd.fuse.8 -Xpam_afs
