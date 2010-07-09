@@ -36,7 +36,7 @@ local and foreign cells.
 
 There are 271 available File Server statistics and 571 available Cache
 Manager statistics, listed in the appendix about B<afsmonitor> statistics
-in the I<IBM AFS Administration Guide>. By default, the command displays
+in the I<OpenAFS Administration Guide>. By default, the command displays
 all of the relevant statistics for the file server machines named by the
 B<-fshosts> argument and the client machines named by the B<-cmhosts>
 argument. To limit the display to only the statistics of interest, list
@@ -115,7 +115,7 @@ interpreted relative to the current working directory. Provide this
 argument if not providing the B<-fshosts> argument, B<-cmhosts> argument,
 or neither. For instructions on creating this file, see the preceding
 B<DESCRIPTION> section, and the section on the B<afsmonitor> program in
-the I<IBM AFS Administration Guide>.
+the I<OpenAFS Administration Guide>.
 
 =item B<-frequency> <I<poll frequency>>
 
@@ -131,7 +131,7 @@ frequency plus the time required for all hosts to respond.
 
 Names the file to which the afsmonitor program writes all of the
 statistics that it collects. By default, no output file is created. See
-the section on the B<afsmonitor> command in the I<IBM AFS Administration
+the section on the B<afsmonitor> command in the I<OpenAFS Administration
 Guide> for information on this file.
 
 =item B<-detailed>
@@ -398,7 +398,7 @@ the B<-detail> flag formats the data in a more easily readable form.
 =head1 EXAMPLES
 
 For examples of commands, display screens, and configuration files, see
-the section about the B<afsmonitor> program in the I<IBM AFS
+the section about the B<afsmonitor> program in the I<OpenAFS
 Administration Guide>.
 
 =head1 PRIVILEGE REQUIRED
@@ -410,6 +410,9 @@ None
 L<afsmonitor(5)>
 L<fstrace(8)>,
 L<scout(1)>
+
+The I<OpenAFS Administration Guide> at
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 

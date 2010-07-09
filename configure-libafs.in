@@ -1,8 +1,11 @@
-AC_INIT(src/libafs/Makefile.common.in)
-AM_INIT_AUTOMAKE(openafs-libafs,1.5.74.1)
+AC_PRERQ([2.60])
+AC_INIT([OpenAFS], m4_esyscmd([build-tools/git-version .]))
+AC_CONFIG_SRCDIR(src/libafs/Makefile.common.in)
+AM_INIT_AUTOMAKE
+
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.5.74f1
-LINUX_PKGVER=1.5.74.1
+MACOS_VERSION=1.5.75
+LINUX_PKGVER=1.5.75
 #LINUX_PKGREL=0.pre3
 LINUX_PKGREL=1.1
 
@@ -10,14 +13,15 @@ AC_SUBST(MACOS_VERSION)
 AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
-define(OPENAFS_CONFIGURE_LIBAFS)
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
 AC_OUTPUT(             \
 Makefile               \
+src/config/Makefile    \
 src/config/Makefile.config \
-src/config/Makefile.version:src/config/Makefile.version-NOCML.in \
+src/config/Makefile.version-CML \
+src/config/Makefile.version-NOCML \
 src/libafs/Makefile.common \
-src/libafs/Makefile \
+src/libafs/MakefileProto \
 )

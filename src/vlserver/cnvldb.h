@@ -23,7 +23,7 @@ typedef struct vital_vlheader_1 vital_vlheader1;
 
 struct vlheader_1 {
     vital_vlheader1 vital_header;
-    afs_int32 IpMappedAddr[31];
+    afs_uint32 IpMappedAddr[31];
     afs_int32 VolnameHash[8191];
     afs_int32 VolidHash[3][8191];
 };
@@ -51,7 +51,7 @@ typedef struct vital_vlheader_1 vital_vlheader2;
 
 struct vlheader_2 {
     vital_vlheader2 vital_header;
-    afs_int32 IpMappedAddr[255];	/* == 0..254 */
+    afs_uint32 IpMappedAddr[255];	/* == 0..254 */
     afs_int32 VolnameHash[8191];
     afs_int32 VolidHash[3][8191];
     afs_int32 SIT;
@@ -80,7 +80,7 @@ typedef struct vital_vlheader_1 vital_vlheader3;
 
 struct vlheader_3 {
     vital_vlheader3 vital_header;
-    afs_int32 IpMappedAddr[255];	/* == 0..254 */
+    afs_uint32 IpMappedAddr[255];	/* == 0..254 */
     afs_int32 VolnameHash[8191];
     afs_int32 VolidHash[3][8191];
     afs_int32 SIT;

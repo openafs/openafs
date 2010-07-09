@@ -12,6 +12,44 @@ openafs (@DEB_PKGVER@-1~openafs) unstable; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Thu, 08 Apr 2010 13:20:50 -0700
 
+openafs (1.5.74.1-1) experimental; urgency=low
+
+  * New upstream testing release.
+    - Correctly recognize cache version differences in upgrades from 1.4
+      and invalidate the old cache.
+    - Resolve symlinks in fs rmmount.
+    - Include PID in byte-range lock warning.
+  * Preserve the AFS mount point and cache directorys set in
+    /etc/openafs/cacheinfo if the file already exists rather than
+    overwriting them with the defaults.  Thanks, Liam Healy.
+    (Closes: #580077)
+  * In the openafs-client init script, don't assume that AFS is mounted on
+    /afs when unmounting it or killing processes with AFS files open.
+    Instead, parse /etc/mtab to find the AFS mount point.
+  * Move the experimental afsd.fuse AFS FUSE client into openafs-fuse to
+    avoid adding a FUSE dependency in openafs-client.  Document its
+    current limitations in the package description.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 04 May 2010 21:49:52 -0700
+
+openafs (1.5.74-2) experimental; urgency=low
+
+  * Apply upstream deltas:
+    - [e6f6c349] Fixes and clarifications to vos setaddrs man page
+    - [d80382ef] Remove special-case call for KAM_SetPassword on s390
+  * Fix ucontext detection on ppc_linux26, hopefully fixing build failures
+    on the Debian powerpc architecture.
+  * Install afsd.fuse and a man page link for it if the FUSE client build
+    is enabled.
+  * Add build dependency on libfuse-dev and pass --enable-fuse-client to
+    configure so that the new FUSE afsd is built.  Install afsd.fuse into
+    the openafs-client package for the time being; it will move to some
+    other package before being uploaded to unstable so that openafs-client
+    doesn't keep a dependency on libfuse.  There is, as yet, no
+    documentation or init script support for the FUSE implementation.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 20 Apr 2010 18:12:06 -0700
+
 openafs (1.5.74-1) experimental; urgency=low
 
   * New upstream testing release.
@@ -38,6 +76,7 @@ openafs (1.5.73.3-1) experimental; urgency=low
     - Network performance improvements.
     - New libkopenafs library providing a kernel PAG manipulation
       interface (a subset of the API provided by Heimdal's libkafs).
+    - Fix builds on sparc64.  (LP: #181661)
   * Apply upstream deltas:
     - [7d395f17] Improve demand-attach fileserver bos documentation
     - [a763edc3] Make src/rx/rx.c not executable

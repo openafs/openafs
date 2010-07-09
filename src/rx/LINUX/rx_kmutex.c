@@ -111,7 +111,6 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 
     while(seq == cv->seq) {
 	schedule();
-#ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
 	if (
 #ifdef PF_FREEZE
@@ -134,7 +133,6 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 	    refrigerator();
 #endif
 	    set_current_state(TASK_INTERRUPTIBLE);
-#endif
 #endif
     }
 

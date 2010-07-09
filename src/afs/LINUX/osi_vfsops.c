@@ -107,10 +107,10 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
-#if defined(HAVE_BDI_INIT)
+#if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
-#if defined(STRUCT_BDI_HAS_NAME)
+#if defined(STRUCT_BACKING_DEV_INFO_HAS_NAME)
     afs_backing_dev_info->name = "openafs";
 #endif
     afs_backing_dev_info->ra_pages = 32;
@@ -208,7 +208,6 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
     VATTR_NULL(&vattr);
     iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
 
-    lock_kernel();
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ip), &vattr, credp);
     if (!code) {
@@ -216,13 +215,12 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 	vattr2inode(ip, &vattr);
     }
     AFS_GUNLOCK();
-    unlock_kernel();
     crfree(credp);
     return -code;
 }
 
 
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
 static afs_kmem_cache_t *afs_inode_cachep;
 
 static struct inode *
@@ -298,7 +296,7 @@ afs_clear_inode(struct inode *ip)
     if (vcp->hnext)
 	osi_Panic("inode freed while still hashed");
 
-#if !defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
     afs_osi_Free(ip->u.generic_ip, sizeof(struct vcache));
 #endif
 }
@@ -319,7 +317,7 @@ afs_put_super(struct super_block *sbp)
     mntput(afs_cacheMnt);
 
     osi_linux_verify_alloced_memory();
-#if defined(HAVE_BDI_INIT)
+#if defined(HAVE_LINUX_BDI_INIT)
     bdi_destroy(afs_backing_dev_info);
 #endif
     osi_Free(afs_backing_dev_info, sizeof(struct backing_dev_info));
@@ -362,7 +360,7 @@ afs_statfs(struct super_block *sbp, struct kstatfs *statp)
 }
 
 struct super_operations afs_sops = {
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
   .alloc_inode =	afs_alloc_inode,
   .destroy_inode =	afs_destroy_inode,
 #endif

@@ -75,9 +75,8 @@
 #include "rxkad.h"
 
 #include "v5gen-rewrite.h"
-#include "asn1-common.h"
-#include "der.h"
 #include "v5gen.h"
+#include "der.h"
 #include "v5der.c"
 #include "v5gen.c"
 #include "md4.h"

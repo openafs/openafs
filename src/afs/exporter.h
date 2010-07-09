@@ -52,7 +52,7 @@ struct exporterops {
     int (*export_reqhandler) (struct afs_exporter *exp,
 		    	      afs_ucred_t **cred,
 			      afs_uint32 host,
-			      afs_int32 pag,
+			      afs_int32 *pag,
 			      struct afs_exporter **expp);
     void (*export_hold) (struct afs_exporter *exp);
     void (*export_rele) (struct afs_exporter *exp);
@@ -64,8 +64,8 @@ struct exporterops {
     void (*export_garbagecollect) (struct afs_exporter *exp,
 		    		   afs_int32 param);
     int (*export_statistics) (struct afs_exporter *exp);
-    int (*export_checkhost) (struct afs_exporter *exp, afs_int32 host);
-    afs_int32 (*export_gethost) (struct afs_exporter *exp);
+    int (*export_checkhost) (struct afs_exporter *exp, afs_uint32 host);
+    afs_uint32 (*export_gethost) (struct afs_exporter *exp);
 };
 
 struct exporterstats {

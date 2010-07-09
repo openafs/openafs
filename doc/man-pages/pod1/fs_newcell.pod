@@ -41,10 +41,7 @@ the F<CellServDB> file and reboot the machine.
 If the B<-name> argument names a DCE cell, then the B<-servers> argument
 names DFS Fileset Location (FL) Server machines. The B<-linkedcell>
 argument specifies the name of the AFS cell to link to a DCE cell for the
-purpose of DFS fileset location.  Refer to the I<IBM AFS/DFS Migration
-Toolkit Administration Guide and Reference> for more information on
-linking AFS clients to DCE cells using this command or by editing the
-F</usr/vice/etc/CellServDB> file.
+purpose of DFS fileset location.
 
 =head1 CAUTIONS
 
@@ -104,11 +101,6 @@ The issuer must be logged in as the local superuser root.
 
 L<CellServDB(5)>,
 L<fs_listcells(1)>
-
-I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>
-
-I<IBM AFS/DFS Migration Toolkit Administration Installation and
-Configuration Guide>
 
 =head1 COPYRIGHT
 

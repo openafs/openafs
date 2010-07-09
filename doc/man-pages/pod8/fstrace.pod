@@ -18,7 +18,7 @@ overwritten in a circular fashion (new trace messages overwrite the oldest
 ones). If an operation of particular interest occurs, the administrator
 can afterward display the log on the standard output stream or write it to
 a file for later study. For more specific procedural instructions, see the
-I<IBM AFS Administration Guide>.
+I<OpenAFS Administration Guide>.
 
 There are several categories of commands in the B<fstrace> command suite:
 

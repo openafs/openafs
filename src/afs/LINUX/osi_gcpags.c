@@ -28,7 +28,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void
 afs_osi_TraverseProcTable(void)
 {
-#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
     struct task_struct *p;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
@@ -42,7 +42,7 @@ afs_osi_TraverseProcTable(void)
 	rcu_read_lock();
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
 
-#ifdef DEFINED_FOR_EACH_PROCESS
+#if defined(for_each_process)
     for_each_process(p) if (p->pid) {
 #ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 	if (p->exit_state)
@@ -83,7 +83,7 @@ afs_osi_TraverseProcTable(void)
  * subsequent calls may overwrite the previously returned value.
  */
 
-#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
 const afs_ucred_t *
 afs_osi_proc2cred(afs_proc_t * pr)
 {
@@ -102,17 +102,12 @@ afs_osi_proc2cred(afs_proc_t * pr)
 	 * allocated. */
 	atomic_set(&cr.cr_ref, 1);
 	afs_set_cr_uid(&cr, task_uid(pr));
-#if defined(AFS_LINUX26_ENV)
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 	get_group_info(pr->cred->group_info);
-	set_cr_group_info(&cr, pr->cred->group_info);
+	afs_set_cr_group_info(&cr, pr->cred->group_info);
 #else
 	get_group_info(pr->group_info);
-	set_cr_group_info(&cr, pr->group_info);
-#endif
-#else
-	cr.cr_ngroups = pr->ngroups;
-	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
+	afs_set_cr_group_info(&cr, pr->group_info);
 #endif
 	rv = &cr;
     }

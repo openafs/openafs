@@ -153,17 +153,10 @@ rxgen: lwp
 
 des: rxgen
      @echo ***** $@
-!	IF (EXIST($(SRC)\des\NTMakefile))
-		$(DOCD) $(SRC)\des
-		$(CD) $(SRC)\des
-		$(NTMAKE)
-		$(CD) ..\..
-!	ELSE
-		$(DOCD) $(SRC)\des_stub
-		$(CD) $(SRC)\des_stub
-		$(NTMAKE)
-		$(CD) ..\..
-!	ENDIF
+	$(DOCD) $(SRC)\des
+	$(CD) $(SRC)\des
+	$(NTMAKE)
+	$(CD) ..\..
 
 rx: des
      @echo ***** $@
@@ -650,7 +643,9 @@ install: finale
 
 # Clean target for obj tree
 clean:
-	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
+	$(CD) $(SRC)\config
+	nmake /nologo /f ntmakefile version
+	$(CD) ..\..
 	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" media
 	$(CD) $(SRC)\config
 	nmake /nologo /f ntmakefile clean_version
@@ -720,10 +715,18 @@ wix: loopback man-pages documentation
    $(NTMAKE)
    $(CD) ..\..\..\..
 
+wix-lite: loopback man-pages documentation
+   @echo ***** Making Wix MSI Installer (Lite)
+   $(DOCD) $(SRC)\WINNT\install\wix
+   $(CD) $(SRC)\WINNT\install\wix
+   $(NTMAKE) LITECLIENT=1
+   $(CD) ..\..\..\..
+
 media: install NSIS wix
 
 install-nsis: install NSIS
 
 install-wix: install wix
 
+install-wix-lite: install wix-lite
 

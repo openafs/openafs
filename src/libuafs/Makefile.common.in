@@ -39,7 +39,6 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_SRCDIR}/rx \
         -I${TOP_SRCDIR}/rx/UKERNEL \
         -I${TOP_SRCDIR}/rxkad \
-        -I${TOP_SRCDIR}/rxkad/domestic \
         -I${TOP_SRCDIR}/util \
         -I${TOP_OBJDIR}/src \
         -I${TOP_OBJDIR}/src/afs/UKERNEL \
@@ -147,6 +146,7 @@ UAFSOBJ = \
 	$(UOBJ)/osi_vm.o \
 	$(UOBJ)/osi_groups.o \
 	$(UOBJ)/osi_gcpags.o \
+	$(UOBJ)/osi_vcache.o \
 	$(UOBJ)/afsaux.o \
 	$(UOBJ)/Kvice.xdr.o \
 	$(UOBJ)/xdr_arrayn.o \
@@ -282,6 +282,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
 	$(WEBOBJ)/osi_gcpags.o \
+	$(WEBOBJ)/osi_vcache.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
@@ -413,6 +414,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
 	$(WEBOBJ)/osi_gcpags.o \
+	$(WEBOBJ)/osi_vcache.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
@@ -547,6 +549,7 @@ JUAFSOBJ = \
 	$(JUAFS)/osi_vm.o \
 	$(JUAFS)/osi_groups.o \
 	$(JUAFS)/osi_gcpags.o \
+	$(JUAFS)/osi_vcache.o \
 	$(JUAFS)/afsaux.o \
 	$(JUAFS)/Kvice.xdr.o \
 	$(JUAFS)/xdr_arrayn.o \
@@ -723,9 +726,9 @@ $(UOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE1)
 $(UOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
-$(UOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
+$(UOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
 	$(CRULE1)
-$(UOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+$(UOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
 	$(CRULE1)
 $(UOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE1)
@@ -784,6 +787,8 @@ $(UOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 $(UOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE1)
 $(UOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(CRULE1)
+$(UOBJ)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
 	$(CRULE1)
 $(UOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
@@ -1000,9 +1005,9 @@ $(WEBOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE2)
 $(WEBOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE2)
-$(WEBOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
+$(WEBOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
 	$(CRULE2)
-$(WEBOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+$(WEBOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
 	$(CRULE2)
 $(WEBOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE2)
@@ -1057,6 +1062,8 @@ $(WEBOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 $(WEBOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE2)
 $(WEBOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(CRULE2)
+$(WEBOBJ)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
 	$(CRULE2)
 $(WEBOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE2)
@@ -1281,9 +1288,9 @@ $(JUAFS)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE1)
 $(JUAFS)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
-$(JUAFS)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
+$(JUAFS)/fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
 	$(CRULE1)
-$(JUAFS)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+$(JUAFS)/crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
 	$(CRULE1)
 $(JUAFS)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE1)
@@ -1340,6 +1347,8 @@ $(JUAFS)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 $(JUAFS)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE1)
 $(JUAFS)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(CRULE1)
+$(JUAFS)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
 	$(CRULE1)
 $(JUAFS)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
@@ -1494,7 +1503,7 @@ AFSWEB:
 	mkdir -p $@
 
 setup_common:
-	-$(RM) -f h net netinet rpc ufs nfs machine sys inet nsapi
+	-$(RM) -f h net netinet rpc ufs nfs machine sys inet nsapi afsd
 	-ln -s /usr/include/sys h
 	-ln -s /usr/include/net net 
 	-ln -s /usr/include/netinet netinet

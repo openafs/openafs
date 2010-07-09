@@ -623,7 +623,7 @@ static size_t afs_GCPAGs_cred_count = 0;
 /*
  * LOCKS: afs_GCPAGs_perproc_func requires write lock on afs_xuser
  */
-#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
 void
 afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 {
@@ -639,7 +639,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
     afs_GCPAGs_cred_count++;
 
     pag = PagInCred(pcred);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_LINUX22_ENV)
     uid = (pag != NOPAG ? pag : afs_cr_uid(pcred));
 #elif defined(AFS_SUN510_ENV)
     uid = (pag != NOPAG ? pag : crgetruid(pcred));

@@ -30,6 +30,7 @@ COMPILE_PART2B = all
 COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
 COMPILE_CLEAN  = ${COMPILE_PART2A} clean
 COMPILE_DEPINSTALL  = ${COMPILE_PART2A} depinstall
+COMPILE_GENERATED  = ${COMPILE_PART2A} generated
 
 all: force
 	$(MAKE) build
@@ -42,6 +43,30 @@ only_libafs: force
 
 only_libafs_tree: force
 	$(MAKE) build TARGET=libafs_tree
+
+buildtools: force
+	$(MAKE) build TARGET=build_tools COMPILE_PART2B=buildtools
+
+generated: force buildtools
+	+${COMPILE_PART1} afs ${COMPILE_GENERATED}
+	+${COMPILE_PART1} auth ${COMPILE_GENERATED}
+	+${COMPILE_PART1} bozo ${COMPILE_GENERATED}
+	+${COMPILE_PART1} bubasics ${COMPILE_GENERATED}
+	+${COMPILE_PART1} bucoord ${COMPILE_GENERATED}
+	+${COMPILE_PART1} budb ${COMPILE_GENERATED}
+	+${COMPILE_PART1} cmd ${COMPILE_GENERATED}
+	+${COMPILE_PART1} des ${COMPILE_GENERATED}
+	+${COMPILE_PART1} fsint ${COMPILE_GENERATED}
+	+${COMPILE_PART1} kauth ${COMPILE_GENERATED}
+	+${COMPILE_PART1} ptserver ${COMPILE_GENERATED}
+	+${COMPILE_PART1} rxkad ${COMPILE_GENERATED}
+	+${COMPILE_PART1} rxstat ${COMPILE_GENERATED}
+	+${COMPILE_PART1} sys ${COMPILE_GENERATED}
+	+${COMPILE_PART1} tests ${COMPILE_GENERATED}
+	+${COMPILE_PART1} ubik ${COMPILE_GENERATED}
+	+${COMPILE_PART1} update ${COMPILE_GENERATED}
+	+${COMPILE_PART1} vlserver ${COMPILE_GENERATED}
+	+${COMPILE_PART1} volser ${COMPILE_GENERATED}
 
 install: all install_dirs
 	$(MAKE) build COMPILE_PART2B=install
@@ -436,14 +461,12 @@ ${DEST}/bin/dedebug: dedebug
 #
 # libafs build targets
 #
-libafs_setup: config export
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
-
-libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
+libafs: config export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
+	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 	+${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
+libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
 		-sn $(SYS_NAME) \
@@ -616,6 +639,9 @@ jafs: libjafs
 
 jafsadm: libjafsadm
 
+build_tools: config des comerr rxgen
+	+${COMPILE_PART1} util ${COMPILE_PART2A} buildtools_clean
+
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	venus update xstat afsmonitor rxdebug libafsrpc \
@@ -629,6 +655,9 @@ finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth lo
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
+
+check test: finale
+	cd tests && $(MAKE) check
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
 
@@ -745,18 +774,19 @@ distclean: clean
 	/bin/rm -rf lib include
 	/bin/rm -f config.log config.cache config.status \
 	src/config/afsconfig.h src/config/stamp-h1 \
+	src/libafs/Makefile \
+	src/libuafs/Makefile \
 	Makefile \
 	src/afs/Makefile \
 	src/afsd/Makefile \
-	src/afsd/afs.ppc_darwin.plist \
 	src/afsmonitor/Makefile \
 	src/afsweb/Makefile \
 	src/aklog/Makefile \
 	src/audit/Makefile \
-	src/auth/test/Makefile \
 	src/auth/Makefile \
-	src/bozo/test/Makefile \
+	src/auth/test/Makefile \
 	src/bozo/Makefile \
+	src/bozo/test/Makefile \
 	src/bu_utils/Makefile \
 	src/bubasics/Makefile \
 	src/bucoord/Makefile \
@@ -764,53 +794,62 @@ distclean: clean
 	src/tbudb/Makefile \
 	src/butc/Makefile \
 	src/butm/Makefile \
-	src/cmd/test/Makefile \
 	src/cmd/Makefile \
-	src/comerr/test/Makefile \
+	src/cmd/test/Makefile \
 	src/comerr/Makefile \
+	src/comerr/test/Makefile \
 	src/config/Makefile \
-	src/config/Makefile.version \
-	src/config/Makefile.version-NOCML \
 	src/config/Makefile.config \
-	src/des/test/Makefile \
+	src/config/Makefile.version \
+	src/config/Makefile.version-CML \
+	src/config/Makefile.version-NOCML \
+	src/config/shlib-build \
+	src/config/shlib-install \
 	src/des/Makefile \
-	src/dir/test/Makefile \
+	src/des/test/Makefile \
 	src/dir/Makefile \
+	src/dir/test/Makefile \
 	src/export/Makefile \
 	src/finale/Makefile \
 	src/fsint/Makefile \
 	src/fsprobe/Makefile \
 	src/gtx/Makefile \
-	src/kauth/test/Makefile \
+	src/JAVA/libjafs/Makefile \
 	src/kauth/Makefile \
+	src/kauth/test/Makefile \
 	src/kopenafs/Makefile \
-	src/libacl/test/Makefile \
 	src/libacl/Makefile \
-	src/libadmin/adminutil/Makefile \
+	src/libacl/test/Makefile \
 	src/libadmin/Makefile \
+	src/libadmin/adminutil/Makefile \
 	src/libadmin/bos/Makefile \
-	src/libadmin/cfg/test/Makefile \
 	src/libadmin/cfg/Makefile \
+	src/libadmin/cfg/test/Makefile \
 	src/libadmin/client/Makefile \
 	src/libadmin/kas/Makefile \
 	src/libadmin/pts/Makefile \
 	src/libadmin/samples/Makefile \
 	src/libadmin/test/Makefile \
 	src/libadmin/vos/Makefile \
-	src/JAVA/libjafs/Makefile \
-	src/libafs/Makefile \
 	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
-	src/libafs/afs.${MKAFS_OSTYPE}.plist \
+	${DARWIN_PLIST} \
 	src/libafsauthent/Makefile \
 	src/libafsrpc/Makefile \
-	src/libuafs/Makefile \
 	src/libuafs/Makefile.common \
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
-	src/log/test/Makefile \
 	src/log/Makefile \
-	src/lwp/test/Makefile \
+	src/log/test/Makefile \
 	src/lwp/Makefile \
+	src/lwp/test/Makefile \
+	src/packaging/Debian/changelog \
+	src/packaging/MacOS/OpenAFS-debug.Description.plist \
+	src/packaging/MacOS/OpenAFS-debug.Info.plist \
+	src/packaging/MacOS/OpenAFS.Description.plist \
+	src/packaging/MacOS/OpenAFS.Info.plist \
+	src/packaging/MacOS/OpenAFS.info \
+	src/packaging/MacOS/buildpkg.sh \
+	src/packaging/RedHat/openafs.spec \
 	src/pam/Makefile \
 	src/platform/Makefile \
 	src/platform/${MKAFS_OSTYPE}/Makefile \
@@ -834,7 +873,6 @@ distclean: clean
 	src/sgistuff/Makefile \
 	src/shlibafsauthent/Makefile \
 	src/shlibafsrpc/Makefile \
-	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
 	src/tests/Makefile \
@@ -846,13 +884,13 @@ distclean: clean
 	src/ubik/Makefile \
 	src/tubik/Makefile \
 	src/update/Makefile \
-	src/usd/test/Makefile \
 	src/usd/Makefile \
+	src/usd/test/Makefile \
 	src/uss/Makefile \
 	src/util/Makefile \
 	src/util/test/Makefile \
-	src/venus/test/Makefile \
 	src/venus/Makefile \
+	src/venus/test/Makefile \
 	src/vfsck/Makefile \
 	src/viced/Makefile \
 	src/vlserver/Makefile \
@@ -861,6 +899,8 @@ distclean: clean
 	src/vol/test/Makefile \
 	src/volser/Makefile \
 	src/xstat/Makefile  \
+	tests/Makefile \
+	tests/tap/Makefile \
 	src/helper-splint.sh
 	if test -d doc/man-pages ; then \
 	    rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \

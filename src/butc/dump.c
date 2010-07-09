@@ -179,11 +179,11 @@ calcExpirationDate(afs_int32 expType, afs_int32 expDate, afs_int32 createTime)
     }
 }
 
-afs_int32 curr_bserver = 0;
+afs_uint32 curr_bserver = 0;
 struct rx_connection *curr_fromconn = (struct rx_connection *)0;
 
 struct rx_connection *
-Bind(afs_int32 server)
+Bind(afs_uint32 server)
 {
     if (curr_fromconn) {
 	if (curr_bserver == server)	/* Keep connection if have it */

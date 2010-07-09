@@ -15,6 +15,13 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/butx.h \
 		${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/butm.h
 
+generated: \
+	butc.ss.c butc.cs.c butc.xdr.c butc.h \
+	bumon.ss.c bumon.cs.c bumon.xdr.c bumon.h \
+	butc_errs.c tcdata.h \
+	butm_errs.c butm.h \
+	butx_errs.c butx.h
+
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o
 
 ${TOP_LIBDIR}/libbubasics.a: libbubasics.a

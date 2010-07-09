@@ -187,6 +187,9 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 	(*swapNameProgram) (pid, "listener", &name[0]);
 
     for (;;) {
+        /* See if a check for additional packets was issued */
+        rx_CheckPackets();
+
 	/* Grab a new packet only if necessary (otherwise re-use the old one) */
 	if (p) {
 	    rxi_RestoreDataBufs(p);

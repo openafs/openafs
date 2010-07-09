@@ -261,12 +261,13 @@ rx_ServerProc(void *unused)
 {
     int threadID;
 
-/* jaltman - rxi_dataQuota is protected by a mutex everywhere else */
     rxi_MorePackets(rx_maxReceiveWindow + 2);	/* alloc more packets */
+    MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
      * number of threads handling incoming calls */
     threadID = rxi_availProcs++;
+    MUTEX_EXIT(&rx_quota_mutex);
 
 #ifdef RX_ENABLE_LOCKS
     AFS_GUNLOCK();
@@ -685,7 +686,7 @@ rxi_GetIFInfo(void)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
 	if (i >= ADDRSPERSITE)
 	    break;
-#elif defined(AFS_OBSD_ENV)
+#elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
     for (ifn = ifnet.tqh_first; i < ADDRSPERSITE && ifn != NULL;
 	 ifn = ifn->if_list.tqe_next) {
 #else
@@ -696,7 +697,7 @@ rxi_GetIFInfo(void)
 	TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
 	    if (i >= ADDRSPERSITE)
 		break;
-#elif defined(AFS_OBSD_ENV)
+#elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
 	for (ifad = ifn->if_addrlist.tqh_first;
 	     ifad != NULL && i < ADDRSPERSITE;
 	     ifad = ifad->ifa_list.tqe_next) {
@@ -829,7 +830,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #else
     struct socket *newSocket;
 #endif
-#if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD50_ENV))
+#if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD_ENV))
     struct mbuf *nam;
 #endif
     struct sockaddr_in myaddr;
@@ -872,13 +873,13 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #endif /* else AFS_HPUX110_ENV */
 #elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP,
 		    afs_osi_credp, curthread);
-#elif defined(AFS_FBSD40_ENV)
-    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #elif defined(AFS_DARWIN80_ENV)
     code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
+#elif defined(AFS_NBSD40_ENV)
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, osi_curproc());
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
 #endif /* AFS_HPUX102_ENV */
@@ -902,8 +903,11 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     memcpy((caddr_t) bindnam->b_rptr + SO_MSGOFFSET, (caddr_t) & myaddr,
 	   addrsize);
     bindnam->b_wptr = bindnam->b_rptr + (addrsize + SO_MSGOFFSET + 1);
-
+#if defined(AFS_NBSD40_ENV)
+    code = sobind(newSocket, bindnam, addrsize, osi_curproc());
+#else
     code = sobind(newSocket, bindnam, addrsize);
+#endif
     if (code) {
 	soclose(newSocket);
 #if !defined(AFS_HPUX1122_ENV)
@@ -939,17 +943,14 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD_ENV)
     code = sobind(newSocket, (struct sockaddr *)&myaddr, curthread);
-#elif defined(AFS_FBSD40_ENV)
-    code = sobind(newSocket, (struct sockaddr *)&myaddr, curproc);
 #else
     code = sobind(newSocket, (struct sockaddr *)&myaddr);
 #endif
     if (code) {
 	dpf(("sobind fails (%d)\n", (int)code));
 	soclose(newSocket);
-	AFS_GLOCK();
 	goto bad;
     }
 #else /* defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) */
@@ -970,7 +971,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
-#elif defined(AFS_OBSD44_ENV)
+#elif defined(AFS_OBSD44_ENV) || defined(AFS_NBSD40_ENV)
     code = sobind(newSocket, nam, osi_curproc());
 #else
     code = sobind(newSocket, nam);
@@ -1257,6 +1258,9 @@ rxk_Listener(void)
     AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
+        /* See if a check for additional packets was issued */
+        rx_CheckPackets();
+
 	if (rxp) {
 	    rxi_RestoreDataBufs(rxp);
 	} else {

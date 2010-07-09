@@ -95,8 +95,8 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 		if ((avc->f.m.Length > 0x7fffffff) ||
 		    (tlen > 0x7fffffff) ||
 		    ((0x7fffffff - tlen) < avc->f.m.Length)) {
-		    RX_AFS_GLOCK();
-		    return EFBIG;
+		    code = EFBIG;
+		    goto error;
 		}
 		code =
 		    StartRXAFS_StoreData(tcall,
@@ -111,6 +111,9 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	    if (code == 0) {
 		code = EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
 	    }
+#ifdef AFS_64BIT_CLIENT
+	error:
+#endif
 	    code = rx_EndCall(tcall, code);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
@@ -183,7 +186,9 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
      * on the memcache case since that's we adjust the file's size
      * and finish flushing partial vm pages.
      */
-    if ((cacheDiskType != AFS_FCACHE_TYPE_MEM) || (sync & AFS_LASTSTORE))
+    if ((cacheDiskType != AFS_FCACHE_TYPE_MEM) ||
+	(sync & AFS_VMSYNC_INVAL) || (sync & AFS_VMSYNC) ||
+	(sync & AFS_LASTSTORE))
 #endif /* !AFS_AIX32_ENV && !AFS_SGI65_ENV */
     {
 	/* If we're not diskless, reading a file may stress the VM

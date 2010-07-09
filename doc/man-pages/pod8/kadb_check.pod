@@ -18,11 +18,17 @@ B<kadb_check> S<<< B<-d> <I<kadb file>> >>> [B<-u>] [B<-k>] [B<-e>] [B<-v>]
 
 =head1 DESCRIPTION
 
-The B<kadb_check> command checks the integrity of the Protection Database,
-reporting any errors or corruption it finds. If there are problems, do not
-issue any B<kas> commands until the database is repaired.
+The B<kadb_check> command checks the integrity of the Authentication
+Database, reporting any errors or corruption it finds. If there are
+problems, do not issue any B<kas> commands until the database is repaired.
 
 =head1 CAUTIONS
+
+The B<kadb_check> command is only used with the database used by the
+obsolete Authentication Server, which should no longer be used. It is
+provided for sites that have not yet migrated to a Kerberos version 5
+KDC. The Authentication Server and supporting commands, including B<kdb>,
+will be removed in a future version of OpenAFS.
 
 The results can be unpredictable if the Authentication Server makes
 changes to the Authentication Database while this command is running. Use

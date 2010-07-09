@@ -294,9 +294,9 @@ extern int ADMINAPI bos_ExecutableRevert(const void *serverHandle,
 
 extern int ADMINAPI bos_ExecutableTimestampGet(const void *serverHandle,
 					       const char *execFile,
-					       unsigned long *newTime,
-					       unsigned long *oldTime,
-					       unsigned long *bakTime,
+					       afs_int32 *newTime,
+					       afs_int32 *oldTime,
+					       afs_int32 *bakTime,
 					       afs_status_p st);
 
 extern int ADMINAPI bos_ExecutablePrune(const void *serverHandle,

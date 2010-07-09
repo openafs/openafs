@@ -41,20 +41,21 @@ ReallyRead(DirHandle * file, int block, char *data)
 {
     FdHandle_t *fdP;
     int code;
+    ssize_t nBytes;
     errno = 0;
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
 	code = errno;
 	return code;
     }
-    if (FDH_SEEK(fdP, block * AFS_PAGESIZE, SEEK_SET) < 0) {
+    if (FDH_SEEK(fdP, ((afs_foff_t)block) * AFS_PAGESIZE, SEEK_SET) < 0) {
 	code = errno;
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
-    code = FDH_READ(fdP, data, AFS_PAGESIZE);
-    if (code != AFS_PAGESIZE) {
-	if (code < 0)
+    nBytes = FDH_READ(fdP, data, AFS_PAGESIZE);
+    if (nBytes != AFS_PAGESIZE) {
+	if (nBytes < 0)
 	    code = errno;
 	else
 	    code = EIO;
@@ -72,6 +73,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
     FdHandle_t *fdP;
     extern int VolumeChanged;
     int code;
+    ssize_t nBytes;
 
     errno = 0;
 
@@ -80,14 +82,14 @@ ReallyWrite(DirHandle * file, int block, char *data)
 	code = errno;
 	return code;
     }
-    if (FDH_SEEK(fdP, block * AFS_PAGESIZE, SEEK_SET) < 0) {
+    if (FDH_SEEK(fdP, ((afs_foff_t)block) * AFS_PAGESIZE, SEEK_SET) < 0) {
 	code = errno;
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
-    code = FDH_WRITE(fdP, data, AFS_PAGESIZE);
-    if (code != AFS_PAGESIZE) {
-	if (code < 0)
+    nBytes = FDH_WRITE(fdP, data, AFS_PAGESIZE);
+    if (nBytes != AFS_PAGESIZE) {
+	if (nBytes < 0)
 	    code = errno;
 	else
 	    code = EIO;
@@ -104,7 +106,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
  * The handle needs to be dereferenced with the FidZap() routine.
  */
 void
-SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, afs_int32 device,
+SetSalvageDirHandle(DirHandle * dir, afs_uint32 volume, afs_int32 device,
                     Inode inode)
 {
     private int SalvageCacheCheck = 1;

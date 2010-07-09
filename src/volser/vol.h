@@ -18,7 +18,7 @@
 #include <afs/afssyscalls.h>
 
 typedef struct DirHandle {
-    int dirh_volume;
+    afs_uint32 dirh_volume;
     int dirh_device;
     Inode dirh_inode;
     afs_int32 dirh_cacheCheck;

@@ -393,9 +393,10 @@ doread(unsigned offset, unsigned size)
 	return;
 
     if (!quiet
-	&& (progressinterval && testcalls % progressinterval == 0 || debug
-	    && (monitorstart == -1 || offset + size > monitorstart
-		&& (monitorend == -1 || offset <= monitorend))))
+	&& ((progressinterval && testcalls % progressinterval == 0)
+            || (debug
+                && (monitorstart == -1 || offset + size > monitorstart)
+                && (monitorend == -1 || offset <= monitorend))))
 	prt("%lu read\t0x%x thru\t0x%x\t(0x%x bytes)\n", testcalls, offset,
 	    offset + size - 1, size);
     ret = lseek(fd, (off_t) offset, SEEK_SET);
@@ -442,9 +443,10 @@ domapread(unsigned offset, unsigned size)
 	return;
 
     if (!quiet
-	&& (progressinterval && testcalls % progressinterval == 0 || debug
-	    && (monitorstart == -1 || offset + size > monitorstart
-		&& (monitorend == -1 || offset <= monitorend))))
+	&& ((progressinterval && testcalls % progressinterval == 0)
+            || (debug
+                && (monitorstart == -1 || offset + size > monitorstart)
+                && (monitorend == -1 || offset <= monitorend))))
 	prt("%lu mapread\t0x%x thru\t0x%x\t(0x%x bytes)\n", testcalls, offset,
 	    offset + size - 1, size);
 
@@ -510,9 +512,10 @@ dowrite(unsigned offset, unsigned size)
 	return;
 
     if (!quiet
-	&& (progressinterval && testcalls % progressinterval == 0 || debug
-	    && (monitorstart == -1 || offset + size > monitorstart
-		&& (monitorend == -1 || offset <= monitorend))))
+	&& ((progressinterval && testcalls % progressinterval == 0)
+            || (debug
+                && (monitorstart == -1 || offset + size > monitorstart)
+                && (monitorend == -1 || offset <= monitorend))))
 	prt("%lu write\t0x%x thru\t0x%x\t(0x%x bytes)\n", testcalls, offset,
 	    offset + size - 1, size);
     ret = lseek(fd, (off_t) offset, SEEK_SET);
@@ -565,9 +568,10 @@ domapwrite(unsigned offset, unsigned size)
 	return;
 
     if (!quiet
-	&& (progressinterval && testcalls % progressinterval == 0 || debug
-	    && (monitorstart == -1 || offset + size > monitorstart
-		&& (monitorend == -1 || offset <= monitorend))))
+	&& ((progressinterval && testcalls % progressinterval == 0)
+            || (debug
+                && (monitorstart == -1 || offset + size > monitorstart)
+                && (monitorend == -1 || offset <= monitorend))))
 	prt("%lu mapwrite\t0x%x thru\t0x%x\t(0x%x bytes)\n", testcalls,
 	    offset, offset + size - 1, size);
 
@@ -620,8 +624,9 @@ dotruncate(unsigned size)
     if (testcalls <= simulatedopcount)
 	return;
 
-    if (progressinterval && testcalls % progressinterval == 0 || debug
-	&& (monitorstart == -1 || monitorend == -1 || size <= monitorend))
+    if ((progressinterval && testcalls % progressinterval == 0)
+        || (debug
+            && (monitorstart == -1 || monitorend == -1 || size <= monitorend)))
 	prt("%lu trunc\tfrom 0x%x to 0x%x\n", testcalls, oldsize, size);
     if (ftruncate(fd, (off_t) size) == -1) {
 	prt("ftruncate1: %x\n", size);
@@ -632,7 +637,7 @@ dotruncate(unsigned size)
 
 
 void
-writefileimage()
+writefileimage(void)
 {
     ssize_t iret;
 
@@ -749,8 +754,7 @@ test(void)
 
 
 void
-cleanup(sig)
-     int sig;
+cleanup(int sig)
 {
     if (sig)
 	prt("signal %d\n", sig);
@@ -1027,7 +1031,7 @@ main(int argc, char **argv)
 		warn("main: error on write");
 	    } else
 		warn("main: short write, 0x%x bytes instead of 0x%x\n",
-		     (unsigned)written, maxfilelen);
+		     (unsigned)written, (unsigned)maxfilelen);
 	    exit(98);
 	}
     } else

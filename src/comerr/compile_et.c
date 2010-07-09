@@ -92,6 +92,7 @@ static const char *const language_names[] = {
 };
 
 static const char *const c_src_prolog[] = {
+    "#include <afsconfig.h>\n",
     "#include <afs/param.h>\n",
     "#include <afs/error_table.h>\n",
     "static const char * const text[] = {\n",

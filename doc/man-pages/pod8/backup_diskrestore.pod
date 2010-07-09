@@ -66,7 +66,7 @@ dumps to a type of tape the second Tape Coordinator can read, and so
 on. If dumps are on multiple incompatible tape types, use the B<backup
 volrestore> command to restore individual volumes, or the B<backup
 volsetrestore> command after defining groups of volumes that were dumped
-to compatible tape types. For further discussion, see the I<IBM AFS
+to compatible tape types. For further discussion, see the I<OpenAFS
 Administration Guide>.
 
 By default, the Backup System restores the contents of the specified

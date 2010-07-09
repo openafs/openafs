@@ -17,16 +17,15 @@
 
 
 #include <linux/version.h>
-#ifdef AFS_LINUX22_ENV
 #include "rx/rx_kcommon.h"
-#if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
-#endif
 #include <asm/uaccess.h>
 #ifdef ADAPT_PMTU
 #include <linux/errqueue.h>
 #include <linux/icmp.h>
 #endif
+
+#include "osi_compat.h"
 
 /* rxk_NewSocket
  * open and bind RX socket
@@ -37,7 +36,6 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct socket *sockp;
     struct sockaddr_in myaddr;
     int code;
-    KERNEL_SPACE_DECL;
 #ifdef ADAPT_PMTU
     int pmtu = IP_PMTUDISC_WANT;
     int do_recverr = 1;
@@ -64,22 +62,16 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	sockp->ops->bind(sockp, (struct sockaddr *)&myaddr, sizeof(myaddr));
 
     if (code < 0) {
-#if defined(AFS_LINUX24_ENV)
 	printk("sock_release(rx_socket) FIXME\n");
-#else
-	sock_release(sockp);
-#endif
 	return NULL;
     }
 
-    TO_USER_SPACE();
-    sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
-                           sizeof(pmtu));
+    kernel_setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
+		      sizeof(pmtu));
 #ifdef ADAPT_PMTU
-    sockp->ops->setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
-                           sizeof(do_recverr));
+    kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
+                      sizeof(do_recverr));
 #endif
-    TO_KERNEL_SPACE();
     return (osi_socket *)sockp;
 }
 
@@ -101,7 +93,6 @@ rxk_FreeSocket(struct socket *asocket)
 void
 handle_socket_error(osi_socket so)
 {
-    KERNEL_SPACE_DECL;
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
@@ -115,15 +106,12 @@ handle_socket_error(osi_socket so)
 	return;
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
-    msg.msg_iov = NULL;
-    msg.msg_iovlen = 0;
     msg.msg_control = controlmsgbuf;
     msg.msg_controllen = 256;
     msg.msg_flags = 0;
 
-    TO_USER_SPACE();
-    code = sock_recvmsg(sop, &msg, 256, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
-    TO_KERNEL_SPACE();
+    code = kernel_recvmsg(sop, &msg, NULL, 0, 256,
+			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
 	goto out;
@@ -167,7 +155,6 @@ int
 osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 	    int iovcnt, afs_int32 size, int istack)
 {
-    KERNEL_SPACE_DECL;
     struct msghdr msg;
     int code;
 #ifdef ADAPT_PMTU
@@ -177,27 +164,20 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     while (1) {
 	sockerr=0;
 	esize = sizeof(sockerr);
-	TO_USER_SPACE();
-	sop->ops->getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr,
-			   &esize);
-	TO_KERNEL_SPACE();
+	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
 	if (sockerr == 0)
 	   break;
 	handle_socket_error(sop);
     }
 #endif
 
-    msg.msg_iovlen = iovcnt;
-    msg.msg_iov = iovec;
     msg.msg_name = to;
     msg.msg_namelen = sizeof(*to);
     msg.msg_control = NULL;
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    TO_USER_SPACE();
-    code = sock_sendmsg(sop, &msg, size);
-    TO_KERNEL_SPACE();
+    code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
     return (code < 0) ? code : 0;
 }
 
@@ -227,7 +207,6 @@ int
 osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	       int iovcnt, int *lengthp)
 {
-    KERNEL_SPACE_DECL;
     struct msghdr msg;
     int code;
 #ifdef ADAPT_PMTU
@@ -244,10 +223,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     while (1) {
 	sockerr=0;
 	esize = sizeof(sockerr);
- 	TO_USER_SPACE();
-	sop->ops->getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr,
-			   &esize);
-	TO_KERNEL_SPACE();
+	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
 	if (sockerr == 0)
 	   break;
 	handle_socket_error(so);
@@ -261,46 +237,38 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    TO_USER_SPACE();
-    code = sock_recvmsg(sop, &msg, *lengthp, 0);
-    TO_KERNEL_SPACE();
-
+    code = kernel_recvmsg(sop, &msg, (struct kvec *)tmpvec, iovcnt,
+			  *lengthp, 0);
     if (code < 0) {
-#ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
 	if (
-#ifdef PF_FREEZE
+# ifdef PF_FREEZE
 	    current->flags & PF_FREEZE
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
+# else
+#  if defined(STRUCT_TASK_STRUCT_HAS_TODO)
 	    !current->todo
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
+#  else
+#   if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
             test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
+#   else
             test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
-#endif
-#endif
+#   endif
+#  endif
+# endif
 	    )
-#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+# ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
 	    refrigerator(PF_FREEZE);
-#else
+# else
 	    refrigerator();
-#endif
+# endif
 	    set_current_state(TASK_INTERRUPTIBLE);
-#endif
 #endif
 
 	/* Clear the error before using the socket again.
 	 * Oh joy, Linux has hidden header files as well. It appears we can
 	 * simply call again and have it clear itself via sock_error().
 	 */
-#ifdef AFS_LINUX22_ENV
 	flush_signals(current);	/* We don't want no stinkin' signals. */
-#else
-	current->signal = 0;	/* We don't want no stinkin' signals. */
-#endif
 	rxk_lastSocketError = code;
 	rxk_nSocketErrors++;
     } else {
@@ -310,9 +278,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 
     return code;
 }
-#ifdef EXPORTED_TASKLIST_LOCK
-extern rwlock_t tasklist_lock __attribute__((weak));
-#endif
+
 void
 osi_StopListener(void)
 {
@@ -331,4 +297,3 @@ osi_StopListener(void)
     rx_socket = NULL;
 }
 
-#endif /* AFS_LINUX22_ENV */

@@ -1,0 +1,32 @@
+#!/bin/sh
+
+srcdir=$1
+fallback=$2
+
+if [ "x$fallback" = "x" ]; then
+  fallback=UNKNOWN
+fi
+
+if [ -f $srcdir/.version ] ; then
+  git_version=`cat $srcdir/.version`
+else
+  if which git > /dev/null; then
+    cd $srcdir
+    git_version=`git describe --abbrev=4 HEAD 2>/dev/null`
+    if [ $? = 0 ]; then
+      # Is the working tree dirty?
+      if git diff-index --quiet --cached HEAD --ignore-submodules && \
+         git diff-files --quiet --ignore-submodules ; then
+	 :
+      else
+        git_version="$git_version-dirty"
+      fi
+    else
+      git_version=$fallback
+    fi
+  else
+    git_version=$fallback
+  fi
+fi
+
+echo "$git_version" | sed -e 's/openafs-[^-]*-//' -e 's/_/./g' | tr -d '\012'

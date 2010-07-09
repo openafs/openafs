@@ -174,7 +174,7 @@ extern int bc_SaveVolumeSet(void);
 
 /* volstub.c */
 
-extern afs_int32 volImageTime(afs_int32 serv, afs_int32 part, afs_int32 volid,
+extern afs_int32 volImageTime(afs_uint32 serv, afs_int32 part, afs_uint32 volid,
 		              afs_int32 voltype, afs_int32 *clDatePtr);
 #endif
 

@@ -202,7 +202,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     char instance[MAXKTCNAMELEN] = "";
     char cell[MAXKTCREALMLEN] = "";
     char realm[MAXKTCREALMLEN] = "";
-    afs_int32 serverList[MAXSERVERS];
+    afs_uint32 serverList[MAXSERVERS];
     char *lcell;		/* local cellname */
     int code;
     int i;

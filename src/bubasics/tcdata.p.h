@@ -103,7 +103,7 @@ struct volumeHeader {
     char volumeName[TC_MAXVOLNAME];
     char pad[2];
     afs_int32 volumeID;
-    afs_int32 server;		/* which server */
+    afs_uint32 server;		/* which server */
     afs_int32 part;		/* partition vol. was on */
     afs_int32 from;		/* clone date of vol ?? */
     int frag;

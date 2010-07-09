@@ -55,6 +55,27 @@ all: \
 	${TOP_INCDIR}/mit-cpyright.h \
 	${TOP_INCDIR}/des_odd.h
 
+buildtools: \
+	make_p \
+	make_keyperm \
+	make_s_table \
+	make_p_table \
+	make_ip \
+	make_fp \
+	make_odd \
+	${TOP_INCDIR}/des.h \
+	${TOP_INCDIR}/mit-cpyright.h \
+	${TOP_INCDIR}/des/stats.h
+
+generated: \
+	p.c \
+	key_perm.h \
+	s_table.h \
+	p_table.h \
+	ip.c \
+	fp.c \
+	odd.h
+
 ${TOP_LIBDIR}/libdes.a: libdes.a
 	${INSTALL_DATA} $? $@
 

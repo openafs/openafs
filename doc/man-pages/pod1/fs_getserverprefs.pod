@@ -33,17 +33,18 @@ types of rank, lower integer values are more preferred.
 
 The Cache Manager stores ranks in kernel memory. Once set, a rank persists
 until the machine reboots, or until the B<fs setserverprefs> command is
-used to change it. The reference page for the B<fs setserverprefs> command
-explains how the Cache Manager sets default ranks, and how to use that
-command to change the default values.
+used to change it. L<fs_setserverprefs(1)> explains how the Cache Manager
+sets default ranks, and how to use that command to change the default
+values.
 
-Default VL Server ranks range from 10,000 to 10,126, and the Cache Manager
-assigns them to every machine listed in its copy of the
-F</usr/vice/etc/CellServDB> file. When the Cache Manager needs to fetch
-VLDB information from a cell, it compares the ranks for the VL Server
-machines belonging to that cell, and attempts to contact the VL Server
-with the lowest integer rank. If the Cache Manager cannot reach the VL
-Server (because of server process, machine or network outage), it tries to
+Default VL Server ranks range from 10,000 to 10,126. The Cache Manager
+assigns ranks to every machine listed in its copy of the
+F</usr/vice/etc/CellServDB> file or found via DNS AFSDB or SRV records for
+the cell when it initializes. When the Cache Manager needs to fetch VLDB
+information from a cell, it compares the ranks for the VL Server machines
+belonging to that cell, and attempts to contact the VL Server with the
+lowest integer rank. If the Cache Manager cannot reach the VL Server
+(because of server process, machine or network outage), it tries to
 contact the VL Server with the next lowest integer rank, and so on. If all
 of a cell's VL Server machines are unavailable, the Cache Manager cannot
 fetch data from the cell.

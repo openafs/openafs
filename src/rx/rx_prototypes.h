@@ -94,13 +94,13 @@ extern void rxi_FreeCall(struct rx_call *call);
 
 extern char *rxi_Alloc(size_t size);
 extern void rxi_Free(void *addr, size_t size);
-extern void rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port,
-            int mtu);
+extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
+			   afs_uint32 port, int mtu);
 extern struct rx_peer *rxi_FindPeer(afs_uint32 host,
 				    u_short port,
 				    struct rx_peer *origPeer, int create);
 extern struct rx_connection *rxi_FindConnection(osi_socket socket,
-						afs_int32 host,
+						afs_uint32 host,
 						u_short port,
 						u_short serviceId,
 						afs_uint32 cid,
@@ -168,10 +168,15 @@ extern int rxi_CheckCall(struct rx_call *call);
 extern void rxi_KeepAliveEvent(struct rxevent *event,
 			       void *call /* struct rx_call *call */, 
 			       void *dummy);
+extern void rxi_GrowMTUEvent(struct rxevent *event,
+			     void *call /* struct rx_call *call */,
+			     void *dummy);
 extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
 extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
+extern void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
 extern void rxi_KeepAliveOn(struct rx_call *call);
 extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
+extern void rxi_GrowMTUOn(struct rx_call *call);
 extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds);
 extern void rxi_SendDelayedConnAbort(struct rxevent *event,
 				     void *conn, /* struct rx_connection *conn */
@@ -231,6 +236,8 @@ extern int rx_KeyCreate(rx_destructor_t rtn);
 #endif
 extern void rx_SetSpecific(struct rx_connection *conn, int key, void *ptr);
 extern void *rx_GetSpecific(struct rx_connection *conn, int key);
+extern void rx_SetServiceSpecific(struct rx_service *svc, int key, void *ptr);
+extern void * rx_GetServiceSpecific(struct rx_service *svc, int key);
 extern void rx_IncrementTimeAndCount(struct rx_peer *peer,
 				     afs_uint32 rxInterface,
 				     afs_uint32 currentFunc,
@@ -381,7 +388,8 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 # else
 extern void osi_Panic(char *fmt, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2)
+    AFS_NORETURN;
 #endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
@@ -401,7 +409,7 @@ extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 # ifdef UKERNEL
 extern void *rx_ServerProc(void *);
 # endif
-extern void osi_AssertFailK(const char *expr, const char *file, int line);
+extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
 extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 # ifndef UKERNEL
@@ -434,6 +442,7 @@ extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
 # if defined(AFS_SUN510_ENV)
 extern void osi_StartNetIfPoller(void);
 extern void osi_NetIfPoller(void);
+extern void osi_StopNetIfPoller(void);
 extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
 # endif
 extern void osi_StopListener(void);
@@ -525,7 +534,7 @@ extern struct rx_packet *rxi_AllocSendPacket(struct rx_call *call,
 extern int rxi_ReadPacket(osi_socket socket, struct rx_packet *p,
 			  afs_uint32 * host, u_short * port);
 extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p,
-					      afs_int32 host, short port,
+					      afs_uint32 host, short port,
 					      int first);
 #ifndef KERNEL
 extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
@@ -533,11 +542,11 @@ extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
 #endif
 extern struct rx_packet *rxi_ReceiveDebugPacket(struct rx_packet *ap,
 						osi_socket asocket,
-						afs_int32 ahost, short aport,
+						afs_uint32 ahost, short aport,
 						int istack);
 extern struct rx_packet *rxi_ReceiveVersionPacket(struct rx_packet
 						  *ap, osi_socket asocket,
-						  afs_int32 ahost,
+						  afs_uint32 ahost,
 						  short aport, int istack);
 extern void rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			   struct rx_packet *p, int istack);
@@ -610,7 +619,7 @@ extern afs_kmutex_t rx_if_init_mutex;
 extern afs_kmutex_t rx_if_mutex;
 #endif
 extern osi_socket rxi_GetUDPSocket(u_short port);
-extern void osi_AssertFailU(const char *expr, const char *file, int line);
+extern void osi_AssertFailU(const char *expr, const char *file, int line) AFS_NORETURN;
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern int rxi_HandleSocketError(int socket);
 
@@ -623,7 +632,7 @@ extern void osi_Free(void *x, afs_int32 size);
 #endif
 #endif /* defined(AFS_AIX32_ENV) && !defined(KERNEL) */
 #ifndef KERNEL
-extern void osi_Panic(char *fmt, ...);
+extern void osi_Panic(char *fmt, ...) AFS_NORETURN;
 #endif
 
 extern void rx_GetIFInfo(void);

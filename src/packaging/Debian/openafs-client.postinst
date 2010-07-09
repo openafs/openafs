@@ -62,8 +62,17 @@ if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
         fi
     fi
                     
+    # Our config script will have already taken care of extracting the cache
+    # size from the cacheinfo file and using it as the default for the debconf
+    # prompt, but the mount point and cache directory have no debconf prompts.
+    # For those, we need to get the default from the file.
+    mountpoint=/afs
+    cachedir=/var/cache/openafs
+    if [ -r /etc/openafs/cacheinfo ] ; then
+        IFS=: read mountpoint cachedir cachesize < /etc/openafs/cacheinfo
+    fi
     db_get openafs-client/cachesize
-    echo /afs:/var/cache/openafs:$RET >/etc/openafs/cacheinfo
+    echo "${mountpoint}:${cachedir}:${RET}" > /etc/openafs/cacheinfo
 
     echo <<'EOF' > /etc/openafs/afs.conf.client
 # This file is managed by debconf.  You may change the parameters set below,

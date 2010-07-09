@@ -1268,6 +1268,22 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
+
+    if (!vp && vcom->hdr->reason == FSYNC_SALVAGE) {
+	/* The requested volume doesn't seem to exist. However, it is possible
+	 * that this is triggered by trying to create or clone a volume that
+	 * was prevented from succeeding by a half-created volume in the way.
+	 * (e.g. we tried to create volume X, but volume X exists except that
+	 * its .vol header was deleted for some reason) So, still try to
+	 * a salvage for that volume ID. */
+
+	Log("FSYNC_com_VolError: attempting to schedule salvage for unknown "
+	    "volume %lu part %s\n", afs_printable_uint32_lu(vcom->vop->volume),
+	    vcom->vop->partName);
+	vp = VPreAttachVolumeById_r(&error, vcom->vop->partName,
+	                            vcom->vop->volume);
+    }
+
     if (vp) {
 	if (FSYNC_partMatch(vcom, vp, 0)) {
 	    /* null out salvsync control state, as it's no longer relevant */

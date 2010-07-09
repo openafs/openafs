@@ -341,9 +341,10 @@ afs_RebuildDynroot(void)
 	c = afs_GetCellByIndex(cellidx, READ_LOCK);
 	if (!c)
 	    break;
-	if (c->cellNum == afs_dynrootCell)
+	if ((c->cellNum == afs_dynrootCell) || (c->states & CHush)) {
+	    afs_PutCell(c, READ_LOCK);
 	    continue;
-
+	}
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
@@ -417,8 +418,10 @@ afs_RebuildDynroot(void)
 	c = afs_GetCellByIndex(cellidx, READ_LOCK);
 	if (!c)
 	    continue;
-	if (c->cellNum == afs_dynrootCell)
+	if ((c->cellNum == afs_dynrootCell) || (c->states & CHush)) {
+	    afs_PutCell(c, READ_LOCK);
 	    continue;
+	}
 
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);

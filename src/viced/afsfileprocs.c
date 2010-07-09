@@ -49,7 +49,9 @@
 
 #ifndef AFS_LINUX20_ENV
 #include <net/if.h>
+#ifndef AFS_ARM_DARWIN_ENV
 #include <netinet/if_ether.h>
+#endif
 #endif
 #endif
 #ifdef AFS_HPUX_ENV
@@ -489,7 +491,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		;
 
 	    errorCode = 0;
-	    *volptr = VGetVolume(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolumeNoWait(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
 	    if (!errorCode) {
 		assert(*volptr);
 		break;
@@ -1106,13 +1108,13 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 #define	COPYBUFFSIZE	8192
 #define MAXFSIZE (~(afs_fsize_t) 0)
 static int
-CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len)
+CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 {
     Inode ino, nearInode;
-    int rdlen;
-    int wrlen;
+    ssize_t rdlen;
+    ssize_t wrlen;
     register afs_fsize_t size;
-    register int length;
+    size_t length;
     char *buff;
     int rc;			/* return code */
     IHandle_t *newH;		/* Use until finished copying, then cp to vnode. */
@@ -1180,7 +1182,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 	    length = COPYBUFFSIZE;
 	    size -= COPYBUFFSIZE;
 	} else {
-	    length = (int)size;
+	    length = size;
 	    size = 0;
 	}
 	rdlen = FDH_READ(targFdP, buff, length);
@@ -1216,10 +1218,14 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 		free(buff);
 		return ENOSPC;
 	    } else {
+		/* length, rdlen, and wrlen may or may not be 64-bits wide;
+		 * since we never do any I/O anywhere near 2^32 bytes at a
+		 * time, just case to an unsigned int for printing */
+
 		ViceLog(0,
 			("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
-			 V_id(volptr), volptr->partition->name, length, rdlen,
-			 wrlen, errno));
+			 V_id(volptr), volptr->partition->name, (unsigned)length, (unsigned)rdlen,
+			 (unsigned)wrlen, errno));
 #if defined(AFS_DEMAND_ATTACH_FS)
 		ViceLog(0, ("CopyOnWrite failed: requesting salvage\n"));
 #else
@@ -1258,23 +1264,27 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 }				/*CopyOnWrite */
 
 static int
-CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_fsize_t off, afs_fsize_t size) {
-    char *buff = (char *)malloc(COPYBUFFSIZE);
-    register int length;
-    int rdlen;
-    int wrlen;
-    int rc;
+CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
+             afs_fsize_t size)
+{
+    char *buff = malloc(COPYBUFFSIZE);
+    size_t length;
+    ssize_t rdlen;
+    ssize_t wrlen;
+    int rc = 0;
 
     FDH_SEEK(targFdP, off, SEEK_SET);
     FDH_SEEK(newFdP, off, SEEK_SET);
 
-    if (size > FDH_SIZE(targFdP) - off) size = FDH_SIZE(targFdP) - off;
+    if (size > FDH_SIZE(targFdP) - off)
+	size = FDH_SIZE(targFdP) - off;
+
     while (size > 0) {
 	if (size > COPYBUFFSIZE) {	/* more than a buffer */
 	    length = COPYBUFFSIZE;
 	    size -= COPYBUFFSIZE;
 	} else {
-	    length = (int)size;
+	    length = size;
 	    size = 0;
 	}
 	rdlen = FDH_READ(targFdP, buff, length);
@@ -1284,7 +1294,8 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_fsize_t off, afs_fsize
 	    wrlen = 0;
 
 	if ((rdlen != length) || (wrlen != length)) {
-	    /* no error recovery, at the worst we'll have a "hole" in the file */
+	    /* no error recovery, at the worst we'll have a "hole"
+	     * in the file */
 	    rc = 1;
 	    break;
 	}
@@ -3843,6 +3854,8 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     afs_int32 newanyrights;	/* rights for any user */
     int doDelete;		/* deleted the rename target (ref count now 0) */
     int code;
+    int updatefile = 0;		/* are we changing the renamed file? (we do this
+				 * if we need to update .. on a renamed dir) */
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
@@ -4084,10 +4097,28 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    assert(errorCode == 0);
 	}
     }
+
+    if (fileptr->disk.type == vDirectory) {
+	SetDirHandle(&filedir, fileptr);
+	if (oldvptr != newvptr) {
+	    /* we always need to update .. if we've moving fileptr to a
+	     * different directory */
+	    updatefile = 1;
+	} else {
+	    struct AFSFid unused;
+
+	    code = Lookup(&filedir, "..", &unused);
+	    if (code == ENOENT) {
+		/* only update .. if it doesn't already exist */
+		updatefile = 1;
+	    }
+	}
+    }
+
     /* Do the CopyonWrite first before modifying anything else. Copying is
-     *  required because we may have to change entries for .. 
+     * required when we have to change entries for ..
      */
-    if ((fileptr->disk.type == vDirectory) && (fileptr->disk.cloned)) {
+    if (updatefile && (fileptr->disk.cloned)) {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
 	if ((errorCode = CopyOnWrite(fileptr, volptr, 0, MAXFSIZE)))
 	    goto Bad_Rename;
@@ -4163,17 +4194,23 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     if (oldvptr == newvptr)
 	oldvptr->disk.dataVersion--;	/* Since it was bumped by 2! */
 
-    fileptr->disk.parent = newvptr->vnodeNumber;
-    fileptr->changed_newTime = 1;	/* status change of moved file */
+    if (fileptr->disk.parent != newvptr->vnodeNumber) {
+	fileptr->disk.parent = newvptr->vnodeNumber;
+	fileptr->changed_newTime = 1;
+    }
 
-    /* if we are dealing with a rename of a directory */
-    if (fileptr->disk.type == vDirectory) {
+    /* if we are dealing with a rename of a directory, and we need to
+     * update the .. entry of that directory */
+    if (updatefile) {
 	assert(!fileptr->disk.cloned);
-	SetDirHandle(&filedir, fileptr);
+
+	fileptr->changed_newTime = 1;	/* status change of moved file */
+
 	/* fix .. to point to the correct place */
 	Delete(&filedir, "..");	/* No assert--some directories may be bad */
 	assert(Create(&filedir, "..", NewDirFid) == 0);
 	fileptr->disk.dataVersion++;
+
 	/* if the parent directories are different the link counts have to be   */
 	/* changed due to .. in the renamed directory */
 	if (oldvptr != newvptr) {
@@ -4208,8 +4245,16 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     BreakCallBack(client->host, NewDirFid, 0);
     if (oldvptr != newvptr) {
 	BreakCallBack(client->host, OldDirFid, 0);
-	if (fileptr->disk.type == vDirectory)	/* if a dir moved, .. changed */
-	    BreakCallBack(client->host, &fileFid, 0);
+    }
+    if (updatefile) {
+	/* if a dir moved, .. changed */
+	/* we do not give an AFSFetchStatus structure back to the
+	 * originating client, and the file's status has changed, so be
+	 * sure to send a callback break. In theory the client knows
+	 * enough to know that the callback could be broken implicitly,
+	 * but that may not be clear, and some client implementations
+	 * may not know to. */
+	BreakCallBack(client->host, &fileFid, 1);
     }
     if (newfileptr) {
 	/* Note:  it is not necessary to break the callback */
@@ -4317,7 +4362,8 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new link */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Error errorCode = 0;		/* error code */
-    int len, code = 0;
+    afs_sfsize_t len;
+    int code = 0;
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
@@ -4418,7 +4464,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     len = strlen((char *) LinkContents);
     code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
     if (code) 
-	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
+	ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", (int)len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -6978,7 +7024,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     )
 {
     struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
-    Error errorCode = 0;		/* Returned error code to caller */
     IHandle_t *ihP;
     FdHandle_t *fdP;
 #ifdef AFS_NT40_ENV
@@ -7060,14 +7105,15 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     tbuffer = AllocSendBuffer();
 #endif /* AFS_NT40_ENV */
     while (Len > 0) {
-	int wlen;
+	size_t wlen;
+	ssize_t nBytes;
 	if (Len > optSize)
 	    wlen = optSize;
 	else
-	    wlen = (int)Len;
+	    wlen = Len;
 #ifdef AFS_NT40_ENV
-	errorCode = FDH_READ(fdP, tbuffer, wlen);
-	if (errorCode != wlen) {
+	nBytes = FDH_READ(fdP, tbuffer, wlen);
+	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    VTakeOffline(volptr);
@@ -7075,32 +7121,32 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 			volptr->hashid));
 	    return EIO;
 	}
-	errorCode = rx_Write(Call, tbuffer, wlen);
+	nBytes = rx_Write(Call, tbuffer, wlen);
 #else /* AFS_NT40_ENV */
-	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
-	if (errorCode <= 0) {
+	nBytes = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
+	if (nBytes <= 0) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
-	wlen = errorCode;
-	errorCode = FDH_READV(fdP, tiov, tnio);
-	if (errorCode != wlen) {
+	wlen = nBytes;
+	nBytes = FDH_READV(fdP, tiov, tnio);
+	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
 	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
 			volptr->hashid));
 	    return EIO;
 	}
-	errorCode = rx_Writev(Call, tiov, tnio, wlen);
+	nBytes = rx_Writev(Call, tiov, tnio, wlen);
 #endif /* AFS_NT40_ENV */
 #if FS_STATS_DETAILED
 	/*
 	 * Bump the number of bytes actually sent by the number from this
 	 * latest iteration
 	 */
-	(*a_bytesFetchedP) += errorCode;
+	(*a_bytesFetchedP) += nBytes;
 #endif /* FS_STATS_DETAILED */
-	if (errorCode != wlen) {
+	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 #ifdef AFS_NT40_ENV
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
@@ -7221,6 +7267,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount = 0;		/* link count on inode */
     afs_fsize_t CoW_off, CoW_len;
+    ssize_t nBytes;
     FdHandle_t *fdP, *origfdP = NULL;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 
@@ -7382,9 +7429,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	/* Set the file's length; we've already done an lseek to the right
 	 * spot above.
 	 */
-	errorCode = FDH_WRITE(fdP, &tlen, 1);
-	if (errorCode != 1)
+	nBytes = FDH_WRITE(fdP, &tlen, 1);
+	if (nBytes != 1) {
+	    errorCode = -1;
 	    goto done;
+	}
 	errorCode = FDH_TRUNC(fdP, Pos);
     } else {
 	/* have some data to copy */
@@ -7416,11 +7465,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 #endif /* FS_STATS_DETAILED */
 	    rlen = errorCode;
 #ifdef AFS_NT40_ENV
-	    errorCode = FDH_WRITE(fdP, tbuffer, rlen);
+	    nBytes = FDH_WRITE(fdP, tbuffer, rlen);
 #else /* AFS_NT40_ENV */
-	    errorCode = FDH_WRITEV(fdP, tiov, tnio);
+	    nBytes = FDH_WRITEV(fdP, tiov, tnio);
 #endif /* AFS_NT40_ENV */
-	    if (errorCode != rlen) {
+	    if (nBytes != rlen) {
 		errorCode = VDISKFULL;
 		break;
 	    }

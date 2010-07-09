@@ -13,6 +13,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
 
+buildtools: compile_et
+
 ${TOP_INCDIR}/afs/com_err.h: com_err.h
 	${INSTALL_DATA} $? $@
 

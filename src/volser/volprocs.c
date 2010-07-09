@@ -224,6 +224,28 @@ ConvertPartition(int apartno, char *aname, int asize)
     return 0;
 }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/* normally we should use the regular salvaging functions from the volume
+ * package, but this is a special case where we have a volume ID, but no
+ * volume structure to give the volume package */
+static void
+SalvageUnknownVolume(VolumeId volid, char *part)
+{
+    afs_int32 code;
+
+    Log("Scheduling salvage for allegedly nonexistent volume %lu part %s\n",
+        afs_printable_uint32_lu(volid), part);
+
+    code = FSYNC_VolOp(volid, part, FSYNC_VOL_FORCE_ERROR,
+                       FSYNC_SALVAGE, NULL);
+    if (code) {
+	Log("SalvageUnknownVolume: error %ld trying to salvage vol %lu part %s\n",
+	    afs_printable_int32_ld(code), afs_printable_uint32_lu(volid),
+	    part);
+    }
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 static struct Volume *
 VAttachVolumeByName_retry(Error *ec, char *partition, char *name, int mode)
 {
@@ -313,8 +335,9 @@ ViceCreateRoot(Volume *vp)
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     IHandle_t *h;
     FdHandle_t *fdP;
-    int code;
     afs_fsize_t length;
+    ssize_t nBytes;
+    afs_foff_t off;
 
     vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
     if (!vnode)
@@ -374,10 +397,10 @@ ViceCreateRoot(Volume *vp)
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
     assert(fdP != NULL);
-    code = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
-    assert(code >= 0);
-    code = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
-    assert(code == SIZEOF_LARGEDISKVNODE);
+    off = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
+    assert(off >= 0);
+    nBytes = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
+    assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
     VNDISK_GET_LEN(length, vnode);
@@ -545,6 +568,11 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
     }
     vp = VCreateVolume(&error, ppath, volumeID, aparent);
     if (error) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (error != VVOLEXISTS && error != EXDEV) {
+	    SalvageUnknownVolume(volumeID, ppath);
+	}
+#endif
 	Log("1 Volser: CreateVolume: Unable to create the volume; aborted, error code %u\n", error);
 	LogError(error);
 	DeleteTrans(tt, 1);
@@ -657,6 +685,9 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     Error error, code;
     register struct volser_trans *tt, *ttc;
     char caller[MAXKTCNAMELEN];
+#ifdef AFS_DEMAND_ATTACH_FS
+    struct Volume *salv_vp = NULL;
+#endif
 
     if (strlen(newName) > 31)
 	return VOLSERBADNAME;
@@ -742,6 +773,9 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     }
 
     error = 0;
+#ifdef AFS_DEMAND_ATTACH_FS
+    salv_vp = originalvp;
+#endif
 
     newvp =
 	VCreateVolume(&error, originalvp->partition->name, newId,
@@ -797,6 +831,9 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	goto fail;
     }
     TClearRxCall(tt);
+#ifdef AFS_DEMAND_ATTACH_FS
+    salv_vp = NULL;
+#endif
     if (TRELE(tt)) {
 	tt = (struct volser_trans *)0;
 	error = VOLSERTRELE_ERROR;
@@ -816,6 +853,12 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     }
     if (ttc)
 	DeleteTrans(ttc, 1);
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (salv_vp && error != VVOLEXISTS && error != EXDEV) {
+	Error salv_error;
+	VRequestSalvage_r(&salv_error, salv_vp, FSYNC_SALVAGE, 0);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
     return error;
 }
 

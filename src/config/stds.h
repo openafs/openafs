@@ -7,6 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ * Do not put anything in this file that relies on Autoconf defines, since
+ * we're not guaranteed to have included afsconfig.h before this header file.
+ * This is an installed header file, and afsconfig.h is not.
+ */
+
 #ifndef OPENAFS_AFS_CONFIG_STDS_H
 #define OPENAFS_AFS_CONFIG_STDS_H	1
 
@@ -307,6 +313,9 @@ typedef struct afsUUID afsUUID;
 #elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
 #define static_inline static
 #define hdr_static_inline(x) x
+#elif defined(AFS_NBSD_ENV)
+#define static_inline static __inline __attribute__((always_inline))
+#define hdr_static_inline(x) static __inline __attribute__((always_inline)) x
 #else
 #define static_inline static inline
 #define hdr_static_inline(x) static inline x
@@ -324,12 +333,18 @@ hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return 
 #define afs_int_to_pointer(i)      ((void *)  (i))
 #endif
 
-#if !defined(__GNUC__) || __GNUC__ < 2
-#define AFS_UNUSED
-#define AFS_ATTRIBUTE_FORMAT(style,x,y)
-#else
+#if defined(__GNUC__) && __GNUC__ > 2
 #define AFS_UNUSED __attribute__((unused))
 #define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
+#define AFS_NORETURN __attribute__((__noreturn__))
+#elif defined (__clang__)
+#define AFS_UNUSED __attribute__((unused))
+#define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
+#define AFS_NORETURN __attribute__((__noreturn__))
+#else
+#define AFS_UNUSED
+#define AFS_ATTRIBUTE_FORMAT(style,x,y)
+#define AFS_NORETURN
 #endif
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

@@ -6,6 +6,7 @@
 /xf_errs.h
 /OS.pm
 /Dirpath.pm
+/afscp
 /afsdump_dirlist
 /afsdump_extract
 /afsdump_scan
@@ -54,6 +55,7 @@
 /rename6
 /rm-rf
 /run-tests
+/run-tests.conf
 /still-there-p
 /strange-characters-c
 /symlink

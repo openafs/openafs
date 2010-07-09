@@ -41,6 +41,7 @@ AFS_OS_OBJS = \
 	osi_file.o \
 	osi_misc.o \
 	osi_sleep.o \
+	osi_vcache.o \
 	osi_vm.o \
 	osi_vnodeops.o
 
@@ -67,7 +68,6 @@ COMMON_INCLUDE = \
 	-I${TOP_SRCDIR}/rx \
 	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
 	-I${TOP_SRCDIR}/rxkad \
-	-I${TOP_SRCDIR}/domestic \
 	-I${TOP_SRCDIR}/util \
 	-I${TOP_SRCDIR}/../include \
 	-I${TOP_SRCDIR}/../include/afs

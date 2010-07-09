@@ -676,7 +676,7 @@ stream_write(void *ptr, afs_fsize_t size, afs_fsize_t nitems,
 int
 stream_seek(StreamHandle_t * streamP, afs_foff_t offset, int whence)
 {
-    int rc;
+    ssize_t rc;
     int retval = 0;
 
     if (streamP->str_direction == STREAM_DIRECTION_WRITE
@@ -703,7 +703,7 @@ stream_seek(StreamHandle_t * streamP, afs_foff_t offset, int whence)
 int
 stream_flush(StreamHandle_t * streamP)
 {
-    int rc;
+    ssize_t rc;
     int retval = 0;
 
     if (streamP->str_direction == STREAM_DIRECTION_WRITE
@@ -725,7 +725,7 @@ stream_flush(StreamHandle_t * streamP)
 int
 stream_close(StreamHandle_t * streamP, int reallyClose)
 {
-    int rc;
+    ssize_t rc;
     int retval = 0;
 
     assert(streamP != NULL);
@@ -984,9 +984,6 @@ ih_sync_thread(void *dummy) {
 	IOMGR_Sleep(60);
 #endif /* AFS_PTHREAD_ENV */
 
-#ifndef AFS_NT40_ENV
-        sync();
-#endif
         ih_sync_all();
     }
     return NULL;

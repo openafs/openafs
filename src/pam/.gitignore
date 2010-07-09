@@ -3,3 +3,4 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /test_pam
+/pam_afs.exp

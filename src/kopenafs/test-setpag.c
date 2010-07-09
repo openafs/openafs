@@ -13,6 +13,9 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
+
+#include <kopenafs.h>
 
 int
 main(int argc, char *argv[])
@@ -20,9 +23,12 @@ main(int argc, char *argv[])
     int status;
 
     if (k_hasafs()) {
+        printf("%s in a PAG\n", k_haspag() ? "Currently" : "Not currently");
         printf("Running k_setpag\n");
         status = k_setpag();
         printf("Status: %d, errno: %d\n", status, errno);
+        if (!k_haspag())
+            printf("Error: not in a PAG after k_setpag()\n");
         if (argc > 1) {
             argv++;
             execvp(argv[0], argv);
@@ -30,4 +36,5 @@ main(int argc, char *argv[])
     } else {
         printf("AFS apparently not running\n");
     }
+    return 0;
 }

@@ -1,3 +1,213 @@
+Since 1.5.74
+ * Revise SMB QuerySecurityInfo Response for MS10-020
+
+   MS10-020 (http://support.microsoft.com/kb/980232) has caused
+   many problems for implementors of SMB 1.0 servers and applications
+   that call GetFileSecurity() without checking the return code to
+   determine if the call succeeded.  The gist of the vulnerability
+   was that the SMB redirector would pass any buffer it received
+   to the application regardless of whether or not it was valid.
+   MS10-020 protects the applications by strictly validating the
+   SMB response data structure and the data in the security descriptor
+   that is returned.
+
+   The problem for SMB 1.0 server implementors is that there have
+   been at least three different protocol descriptions for
+   NT_TRANSACT_QUERY_SECURITY_DESC published over the last decade
+   and all of them are incomplete.  Therefore, just about no one but
+   Microsoft has an SMB 1.0 server implementation that produces the
+   exact out that they are expecting to validate.
+
+   The end result is that in an attempt to protect applications from
+   crashing due to invalid input being passed in directly caused
+   dozens of applications to crash by not returning any security
+   descriptor data at all.  Even when the applications didn't crash
+   they might not have been able to save their data.  Cisco WAAS
+   and NetApp DataOnTap systems were most adversely affected and
+   they have had CIFS protocol licenses for many many years.
+
+   To fix OpenAFS here is what needed to be done:
+
+   1. Instead of returning a security descriptor that gives ownership
+      to the NUL SID, give it to the Everyone SID and set the flag
+      that states that everyone has full access.
+
+   2. Validate the input parameters.  In particular, check to ensure
+      that the SMB file descriptor is valid and the file has not
+      been deleted.
+
+   3. Enforce the maximum output data and parameter counts.
+
+   4. Handle buffer overflow and buffertoosmall conditions
+      in the manner that Microsoft expects them to be handled.
+      In particular, note that the parameter data which is returned
+      in the SMB Data Region is not counted in the Data Count.
+      Even if MaxData is 0, we can still return parameters values
+      as long as MaxParm is large enough.
+
+ * Prevent use of AFSCache file contents if mapped to
+   a new address.
+
+ * The Windows version of "fs newcell" did not accept any parameters
+   and behaved quite differently from the Unix version.  Instead of
+   permitting new cell information to be added, the Windows version
+   simply forced the existing cell information to be reacquired.
+
+   This update adds a new pioctl, VIOCNEWCELL2, to support the
+   implementation of a Unix-style "fs newcell".  The functionality
+   added here differs from the Unix version in the following ways:
+
+     1. "fs newcell" with no arguments is still accepted
+        in order to maintain compatibility with prior Windows
+        behavior.
+
+     2. "fs newcell -cell <cell> -dns" instructs the cache manager
+        to add the new cell but obtain the vldb server info from
+        DNS.
+
+     3. "fs newcell -cell <cell> ... -registry" instructs the cache
+        manager to add the new cell and also save the cell configuration
+        data in the registry for use the next time the service restarts.
+
+     4. The -vlport and -fsport options are accepted although the
+        -fsport value is currently unsupported by the cache manager.
+
+ * New registry value "FreelanceImportCellServDB" instructs Freelance
+   to create a mount point for every cell name listed within the
+   CellServDB.
+
+ * Path MTU discovery for Rx is activated.
+
+ * Rx socket input buffer is converted to a circular buffer.
+
+ * Fix usage of cm_FreeServerList().  Do not set the server list
+   pointer to NULL after calling cm_FreeServerList().  Doing so
+   can result in a memory leak.
+
+ * Only enable Rx NAT pings on a single anonymous connection at a
+   time.
+
+ * Fix cm_IoctlSkipQueryOptions() buffer management.  Prevents a
+   potential read beyond end of memory buffer.
+
+ * Reduce requested privileges when reading registry CellServDB
+   to the minimum required.
+
+ * Add support for RPC Pipe Service NetWkstaGetInfo levels
+   101 and 102 which are called on Windows 7 and 2008-R2.
+
+ * Prevent integer overflow during quota percent used calculation
+   in Explorer Shell Extension  (RT 126846)
+
+ * Generate a meaningful error if "fs listacls" or "fs setacls"
+   are executed on the Freelance root.afs volume.
+
+ * RXAFS_InlineBulkStat errors must be processed via cm_Analyze.
+   RXAFS_InlineBulkStatus does not return errors such as EACCES,
+   VNOVOL, VNOVNODE, VOFFLINE, VBUSY, VIO, VMOVED, etc. as an RPC return
+   code.  Instead they are returned in the status info errorCode field
+   for each file.
+
+   Traditionally, the error associated with the first FID in the query
+   list has been returned to the caller of cm_TryBulkStatRPC().
+   However, the error has never been processed through cm_Analyze()
+   which means that the per-vnode processing for VNOVNODE and the volume
+   global processing for VMOVED, VNOVOL, etc. has never been performed.
+   As a result, failover to other .readonly volume instances cannot occur,
+   volume moves will not be handled, and files that have been deleted
+   are not detected.
+
+   This patchset makes the following changes:
+
+   1. If an inline bulk operation has been performed and the inline
+      errorCode is a volume global error, then that error replaces
+      the RPC return code within the cm_Analyze() processing for
+      the RPC.  This will affect whether or not a retry operation
+      is performed.
+
+   2. The variable 'inlinebulk' is reset to 0 at the top of the
+      cm_Analyze() loop in case failover from an inlinebulk capable
+      file to an inlinebulk incapable file server takes place.
+
+   3. The FID that is passed into cm_Analyze() is not a real fid.
+      Instead it consists of the cell and volume but vnode = 0.
+      This ensures that the error (if any) is not applied to the
+      directory object.
+
+   4. If an inline bulk operation was performed, prior to performing
+      the cm_MergeStatus() operation a vnode a check is made to
+      determine if an error was returned for that vnode.  If so,
+      cm_Analyze() is called with no connection, a fake cm_req_t,
+      the fid, and the error.  This permits cm_Analyze() processing
+      to be performed on the file.  
+
+ * Show configuration pages for all types of MSI installations
+
+   The OpenAFS MSI installer wizard used to not show any configuration
+   pages for "Typical" and "Complete" installations.  Setting the
+   workstation cell and logon options during installation required
+   selecting the "Custom" option.  Many users choose the "Typical" option
+   during installation, and thus would never see the configuration pages.
+   Therefore, for these users, the workstation cell was being set to the
+   default.
+
+   This patch makes the workstation cell and logon option configuration
+   pages visible to all types of installations (except silent
+   installations which show no UI).
+
+ * cm_LookupInternal creates Freelance mount points and symlinks
+   when queries cannot be found in the Freelance root.afs directory.
+   If the search name is a full cell name for which vldb information
+   can be obtained, then a mount point is added.  If the search name
+   is a left-most substring or the full cell name with a dot appended
+   to it, then a symlink was created.  This approach created a very
+   poluted Freelance name space.
+
+   This patchset makes the following changes:
+
+    1. Do not create symlinks with a dot appended to the cellname
+
+    2. Do not create symlinks where the left-most substring is not
+       a full dot separated component of the cellname.
+
+    3. Permit lookups to succeed when we would have created a
+       symlink in the past without creating the symlink.
+
+ * BPlus tree lookups are much faster than searching through
+   the native directory format on Windows because the case sensitive
+   hash tables cannot be used successfully.  Permit BPlus trees
+   to be used except when called with cm_BPlusDirFoo as the action
+   function because cm_BPlusDirFoo is used to build the BPlus trees
+   from the native directory format.
+
+ * Symlinks are ending up in the Freelance root.afs directory that
+   end with a dot.  Make sure it cannot happen.
+
+ * cm_FreelanceAddMount and cm_FreelanceAddSymlink is supposed to
+   return the allocated FID of the entry that was added.  However,
+   cm_NameI is called to perform the lookup without forcing an update
+   of the Freelance fake directory.  As a result the entry may not be
+   found.
+
+   Force an update prior to calling cm_NameI() by using
+   cm_clearLocalMountPointChange() and cm_reInitLocalMountPoints()
+   if required.
+
+ * The Freelance fake root directory buffers were not zero-filled.
+   This results in random behavior that can cause the service to
+   terminate unexpectedly.
+
+ * The validation check for the response from the GetVolumeStatus
+   pioctl is incorrect.  The response is not simply a VolumeStatus
+   structure but also several C strings appended to it.
+
+ * When flushing a file, we need to commit the file length changes
+   as well as the dirty buffers.  Call cm_FSync instead of buf_CleanVnode
+   which is called by cm_FSync.
+
+ * Prevent rx_rpc_stats global lock from being a bottleneck in the
+   Rx library.
+
 Since 1.5.73
 
  * Avoid a race when updating cell vldb server lists

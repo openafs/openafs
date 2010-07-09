@@ -53,7 +53,7 @@
 
 struct kadstats dynamic_statistics;
 struct ubik_dbase *KA_dbase;
-afs_int32 myHost = 0;
+afs_uint32 myHost = 0;
 afs_int32 verbose_track = 1;
 afs_int32 krb4_cross = 0;
 afs_int32 rxBind = 0;
@@ -103,8 +103,8 @@ initialize_dstats(void)
 }
 
 static int
-convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost,
-		     afs_int32 *serverList)
+convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_uint32 *myHost,
+		     afs_uint32 *serverList)
 {
     int i;
     char hostname[64];
@@ -117,7 +117,7 @@ convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost,
 	ViceLog(0, ("kaserver: couldn't get address of this host.\n"));
 	exit(1);
     }
-    memcpy(myHost, th->h_addr, sizeof(afs_int32));
+    memcpy(myHost, th->h_addr, sizeof(afs_uint32));
 
     for (i = 0; i < cellinfo->numServers; i++)
 	if (cellinfo->hostAddr[i].sin_addr.s_addr != *myHost) {
@@ -150,7 +150,7 @@ main(int argc, char *argv[])
 {
     afs_int32 code;
     char *whoami = argv[0];
-    afs_int32 serverList[MAXSERVERS];
+    afs_uint32 serverList[MAXSERVERS];
     struct afsconf_cell cellinfo;
     char *cell;
     const char *cellservdb, *dbpath, *lclpath;
@@ -190,7 +190,7 @@ main(int argc, char *argv[])
 
     if (argc == 0) {
       usage:
-	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "
+	printf("Usage: kaserver [-noAuth] [-database <dbpath>] "
 	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
 	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
 	       "[-servers <serverlist>] [-crossrealm] "

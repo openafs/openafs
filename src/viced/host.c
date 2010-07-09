@@ -2767,7 +2767,8 @@ static int h_stateSaveHost(struct host * host, int flags, void *rock);
 static int h_stateRestoreHost(struct fs_dump_state * state);
 static int h_stateRestoreIndex(struct host * h, int flags, void *rock);
 static int h_stateVerifyHost(struct host * h, int flags, void *rock);
-static int h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 addr, afs_uint16 port);
+static int h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
+                                 afs_uint32 addr, afs_uint16 port, int valid);
 static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
 static void h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out);
 static void h_diskEntryToHost_r(struct hostDiskEntry * in, struct host * out);
@@ -2888,14 +2889,15 @@ h_stateVerifyHost(struct host * h, int flags, void* rock)
     if (h->interface) {
 	for (i = h->interface->numberOfInterfaces-1; i >= 0; i--) {
 	    if (h_stateVerifyAddrHash(state, h, h->interface->interface[i].addr, 
-				      h->interface->interface[i].port)) {
+				      h->interface->interface[i].port,
+				      h->interface->interface[i].valid)) {
 		state->bail = 1;
 	    }
 	}
 	if (h_stateVerifyUuidHash(state, h)) {
 	    state->bail = 1;
 	}
-    } else if (h_stateVerifyAddrHash(state, h, h->host, h->port)) {
+    } else if (h_stateVerifyAddrHash(state, h, h->host, h->port, 1)) {
 	state->bail = 1;
     }
 
@@ -2906,8 +2908,25 @@ h_stateVerifyHost(struct host * h, int flags, void* rock)
     return flags;
 }
 
+/**
+ * verify a host is either in, or absent from, the addr hash table.
+ *
+ * @param[in] state  fs dump state
+ * @param[in] h      host we're dealing with
+ * @param[in] addr   addr to look for (NBO)
+ * @param[in] port   port to look for (NBO)
+ * @param[in] valid  1 if we're verifying that the specified addr and port
+ *                   in the hash table point to the specified host. 0 if we're
+ *                   verifying that the specified addr and port do NOT point
+ *                   to the specified host
+ *
+ * @return operation status
+ *  @retval 1 failed to verify, bail out
+ *  @retval 0 verified successfully, all is well
+ */
 static int
-h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 addr, afs_uint16 port)
+h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
+                      afs_uint32 addr, afs_uint16 port, int valid)
 {
     int ret = 0, found = 0;
     struct host *host = NULL;
@@ -2926,9 +2945,21 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 
 	}
 	if ((chain->addr == addr) && (chain->port == port)) {
 	    if (host != h) {
-		ViceLog(0, ("h_stateVerifyAddrHash: warning: addr hash entry points to different host struct (%d, %d)\n", 
-			    h->index, host->index));
-		state->flags.warnings_generated = 1;
+		if (valid) {
+		    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr hash entry "
+		                "points to different host struct (%d, %d)\n",
+		                h->index, host->index));
+		    state->flags.warnings_generated = 1;
+		}
+	    } else {
+		if (!valid) {
+		    ViceLog(0, ("h_stateVerifyAddrHash: error: addr %s:%u is "
+		                "marked invalid, but points to the containing "
+				"host\n", afs_inet_ntoa_r(addr, tmp),
+		                (unsigned)htons(port)));
+		    ret = 1;
+		    goto done;
+		}
 	    }
 	    found = 1;
 	    break;
@@ -2942,14 +2973,16 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 
 	chain_len++;
     }
 
-    if (!found) {
+    if (!found && valid) {
 	afs_inet_ntoa_r(addr, tmp);
 	if (state->mode == FS_STATE_LOAD_MODE) {
-	    ViceLog(0, ("h_stateVerifyAddrHash: error: addr %s not found in hash\n", tmp));
+	    ViceLog(0, ("h_stateVerifyAddrHash: error: addr %s:%u not found in hash\n",
+	                tmp, (unsigned)htons(port)));
 	    ret = 1;
 	    goto done;
 	} else {
-	    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr %s not found in hash\n", tmp));
+	    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr %s:%u not found in hash\n",
+	                tmp, (unsigned)htons(port)));
 	    state->flags.warnings_generated = 1;
 	}
     }

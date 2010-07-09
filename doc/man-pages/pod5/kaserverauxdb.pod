@@ -23,6 +23,12 @@ directly accessible. However, the output from the B<kas examine> command
 reports an account's maximum number of failed attempts, the lockout time,
 and whether the account is currently locked.
 
+=head1 CAUTIONS
+
+The Authentication Server is obsolete and is provided only for sites that
+need to use it while preparing for a migration to Kerberos KDC. It will be
+removed in a future version of OpenAFS.
+
 =head1 SEE ALSO
 
 L<kaserver.DB0(5)>,

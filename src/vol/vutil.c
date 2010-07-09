@@ -217,7 +217,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 		      (p->inodeType == VI_LINKTABLE) ? vol.parentId : vol.id,
 		      INODESPECIAL, p->inodeType, vol.parentId);
 	if (!(VALID_INO(*(p->inode)))) {
-	    if (errno == EEXIST) {
+	    if (errno == EEXIST && (p->inodeType == VI_LINKTABLE)) {
 		/* Increment the reference count instead. */
 		IHandle_t *lh;
 		int code;

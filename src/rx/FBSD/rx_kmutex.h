@@ -99,7 +99,7 @@ typedef struct mtx afs_kmutex_t;
 #define MUTEX_ISMINE(a)				\
     ( mtx_owned((a)) )
 
-#elif defined(AFS_FBSD50_ENV)
+#else
 
 typedef struct {
     struct lock lock;
@@ -135,74 +135,6 @@ typedef struct {
 
 #undef MUTEX_ISMINE
 #define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curthread)
-#elif defined(HEAVY_LOCKS)
-typedef struct {
-    struct lock lock;
-    struct proc *owner;
-} afs_kmutex_t;
-
-
-#define MUTEX_INIT(a,b,c,d) \
-    do { \
-	lockinit(&(a)->lock, PSOCK, "afs rx mutex", 0, 0); \
-	(a)->owner = 0; \
-    } while(0);
-#define MUTEX_DESTROY(a) \
-    do { \
-	(a)->owner = (struct proc *)-1; \
-    } while(0);
-#define MUTEX_ENTER(a) \
-    do { \
-	lockmgr(&(a)->lock, LK_EXCLUSIVE, 0, curproc); \
-	osi_Assert((a)->owner == 0); \
-	(a)->owner = curproc; \
-    } while(0);
-#define MUTEX_TRYENTER(a) \
-    ( lockmgr(&(a)->lock, LK_EXCLUSIVE|LK_NOWAIT, 0, curproc) ? 0 : ((a)->owner = curproc, 1) )
-#define xMUTEX_TRYENTER(a) \
-    ( osi_Assert((a)->owner == 0), (a)->owner = curproc, 1)
-#define MUTEX_EXIT(a) \
-    do { \
-	osi_Assert((a)->owner == curproc); \
-	(a)->owner = 0; \
-	lockmgr(&(a)->lock, LK_RELEASE, 0, curproc); \
-    } while(0);
-
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
-#else
-typedef struct {
-    struct simplelock lock;
-    struct proc *owner;
-} afs_kmutex_t;
-
-
-#define MUTEX_INIT(a,b,c,d) \
-    do { \
-	simple_lock_init(&(a)->lock); \
-	(a)->owner = 0; \
-    } while(0);
-#define MUTEX_DESTROY(a) \
-    do { \
-	(a)->owner = (struct proc *)-1; \
-    } while(0);
-#define MUTEX_ENTER(a) \
-    do { \
-	simple_lock(&(a)->lock); \
-	osi_Assert((a)->owner == 0); \
-	(a)->owner = curproc; \
-    } while(0);
-#define MUTEX_TRYENTER(a) \
-    ( simple_lock_try(&(a)->lock) ? 0 : ((a)->owner = curproc, 1) )
-#define MUTEX_EXIT(a) \
-    do { \
-	osi_Assert((a)->owner == curproc); \
-	(a)->owner = 0; \
-	simple_unlock(&(a)->lock); \
-    } while(0);
-
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
 #endif
 
 

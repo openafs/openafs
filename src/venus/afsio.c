@@ -46,6 +46,7 @@
 #include <afs/afsd.h>
 #include <afs/cm_ioctl.h>
 #include <afs/pioctl_nt.h>
+#include <WINNT/syscfg.h>
 #else
 #include <sys/param.h>
 #include <sys/file.h>
@@ -98,7 +99,7 @@
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
 #include <des_prototypes.h>
-#include <rx_prototypes.h>
+#include <rx/rx_prototypes.h>
 #include "../rxkad/md5.h"
 #ifdef O_LARGEFILE
 #define afs_stat        stat64
@@ -129,6 +130,9 @@ static struct timeval now;
 struct timezone Timezone;
 static float seconds, datarate, oldseconds;
 extern int rxInitDone;
+#ifdef AFS_NT40_ENV
+static afs_int32 rx_mtu = -1;
+#endif
 afs_uint64 transid = 0;
 afs_uint32 expires = 0;
 afs_uint32 server_List[MAXHOSTSPERCELL];
@@ -192,7 +196,7 @@ printDatarate(void)
 	afs_int64 tmp;
 	tmp = xfered - oldxfered;
         datarate = ((afs_uint32) (tmp >> 20)) / (seconds - oldseconds);
-        fprintf(stderr,"%llu MB transferred, present date rate = %.0f MB/sec.\n",
+        fprintf(stderr,"%llu MB transferred, present date rate = %.03f MB/sec.\n",
 		xfered >> 20, datarate);
 	oldxfered = xfered;
 	oldseconds = seconds;
@@ -277,7 +281,6 @@ afs_int32
 HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
 {
     static struct afsconf_dir *tdir = NULL;
-    afs_uint32 host = 0;
     afs_int32 code;
 
     *sc = NULL;
@@ -476,28 +479,17 @@ SRXAFSCB_GetXStats(struct rx_call *rxcall,
 afs_int32
 SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid)
 {
-    return(0);
+    if ( !afs_uuid_equal(&uuid, a_uuid) )
+        return(1);
+    else
+        return(0);
 }
 
 
 afs_int32
 SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
 {
-    int code = 0;
-
-    addr->numberOfInterfaces = 0;
-    addr->uuid = uuid;
-#ifdef notdef
-    /* return all network interface addresses */
-    addr->numberOfInterfaces = afs_cb_interface.numberOfInterfaces;
-    for ( i=0; i < afs_cb_interface.numberOfInterfaces; i++) {
-        addr->addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
-        addr->subnetmask[i] = ntohl(afs_cb_interface.subnetmask[i]);
-        addr->mtu[i] = ntohl(afs_cb_interface.mtu[i]);
-    }
-#endif
-
-    return code;
+    return SRXAFSCB_TellMeAboutYourself(a_call, addr, NULL);
 }
 
 afs_int32
@@ -545,7 +537,57 @@ afs_int32
 SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call, struct interfaceAddr *
 			     addr, Capabilities *capabilities)
 {
-    return RXGEN_OPCODE;
+#ifdef AFS_NT40_ENV
+    int code;
+    int cm_noIPAddr;                        /* number of client network interfaces */
+    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
+    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
+    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
+    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
+    int i;
+
+    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+    code = syscfg_GetIFInfo(&cm_noIPAddr,
+                            cm_IPAddr, cm_SubnetMask,
+                            cm_NetMtu, cm_NetFlags);
+    if (code > 0) {
+        /* return all network interface addresses */
+        addr->numberOfInterfaces = cm_noIPAddr;
+        for ( i=0; i < cm_noIPAddr; i++ ) {
+            addr->addr_in[i] = cm_IPAddr[i];
+            addr->subnetmask[i] = cm_SubnetMask[i];
+            addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ?
+                cm_NetMtu[i] : rx_mtu;
+        }
+    } else {
+        addr->numberOfInterfaces = 0;
+    }
+#else
+    addr->numberOfInterfaces = 0;
+#ifdef notdef
+    /* return all network interface addresses */
+    addr->numberOfInterfaces = afs_cb_interface.numberOfInterfaces;
+    for ( i=0; i < afs_cb_interface.numberOfInterfaces; i++) {
+        addr->addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
+        addr->subnetmask[i] = ntohl(afs_cb_interface.subnetmask[i]);
+        addr->mtu[i] = ntohl(afs_cb_interface.mtu[i]);
+    }
+#endif
+#endif
+
+    addr->uuid = uuid;
+
+    if (capabilities) {
+        afs_uint32 *dataBuffP;
+        afs_int32 dataBytes;
+
+        dataBytes = 1 * sizeof(afs_uint32);
+        dataBuffP = (afs_uint32 *) xdr_alloc(dataBytes);
+        dataBuffP[0] = CLIENT_CAPABILITY_ERRORTRANS;
+        capabilities->Capabilities_len = dataBytes / sizeof(afs_uint32);
+        capabilities->Capabilities_val = dataBuffP;
+    }
+    return 0;
 }
 
 afs_int32
@@ -798,7 +840,12 @@ get_file_cell(char *fn, char **cellp, afs_int32 hosts[AFS_MAXHOSTS], AFSFid *Fid
 	char *c;
 	int fd;
 	strcpy(buf,fn);
-	if ((c = strrchr(buf,'/'))) {
+#ifdef AFS_NT40_ENV
+        c = strrchr(buf,'\\');
+#else
+        c = strrchr(buf,'/');
+#endif
+	if (c) {
 	    *c = 0;
 	    code = pioctl(buf,VIOC_FILE_CELL_NAME, &status, 0);
 	    if (!code) {
@@ -898,7 +945,7 @@ readFile(struct cmd_syndesc *as, void *unused)
     afs_int32 code;
     afs_int32 hosts[AFS_MAXHOSTS];
     AFSFid Fid;
-    int i, j;
+    int j;
     struct rx_connection *RXConn;
     struct cellLookup *cl;
     struct rx_call *tcall;
@@ -915,7 +962,10 @@ readFile(struct cmd_syndesc *as, void *unused)
     char *buf = 0;
     int bufflen = BUFFLEN;
 
-    i=0;
+#ifdef AFS_NT40_ENV
+    /* stdout on Windows defaults to _O_TEXT mode */
+    _setmode(1, _O_BINARY);
+#endif
 
     if (as->name[0] == 'f')
 	vnode = 1;
@@ -969,19 +1019,13 @@ readFile(struct cmd_syndesc *as, void *unused)
                     useHost);
             continue;
         }
-#ifndef NO_AFS_CLIENT
-	if (vnode) {
-#endif /* NO_AFS_CLIENT */
-            code = AFS_FetchStatus(RXConn, &Fid, &OutStatus, &CallBack, &tsync);
-            if (code) {
-                fprintf(stderr,"RXAFS_FetchStatus failed to server 0x%X for"
-			" file %s, code was %d\n",
-			useHost, fname, code);
-	        continue;
-	    }
-#ifndef NO_AFS_CLIENT
-        }
-#endif /* NO_AFS_CLIENT */
+        code = AFS_FetchStatus(RXConn, &Fid, &OutStatus, &CallBack, &tsync);
+        if (code) {
+           fprintf(stderr,"RXAFS_FetchStatus failed to server 0x%X for"
+                   " file %s, code was %d\n",
+		   useHost, fname, code);
+	   continue;
+	}
         gettimeofday(&opentime, &Timezone);
 	if (verbose) {
             seconds = (float)(opentime.tv_sec + opentime.tv_usec *.000001
@@ -1069,15 +1113,18 @@ readFile(struct cmd_syndesc *as, void *unused)
 	    afs_uint32 md5int[4];
 	    char *p;
 	    MD5_Final((char *) &md5int[0], &md5);
-	    p = fname + strlen(fname);
-            while (p > fname) {
-	        if (*(--p) == '/') {
-		    ++p;
-		    break;
-	        }
-	    }
+#ifdef AFS_NT40_ENV
+            p = strrchr(fname,'\\');
+#else
+            p = strrchr(fname,'/');
+#endif
+            if (p)
+                p++;
+	    else
+                p = fname;
+
 	    fprintf(stderr, "%08x%08x%08x%08x  %s\n",
-		    htonl(md5int[0]), htonl(md5int[1]),
+                    htonl(md5int[0]), htonl(md5int[1]),
 		    htonl(md5int[2]), htonl(md5int[3]), p);
         }
 	if(verbose) {
@@ -1086,7 +1133,7 @@ readFile(struct cmd_syndesc *as, void *unused)
             fprintf(stderr,"Transfer of %llu bytes took %.3f sec.\n",
 		    xfered, seconds);
             datarate = (xfered >> 20) / seconds;
-            fprintf(stderr,"Total data rate = %.0f MB/sec. for read\n",
+            fprintf(stderr,"Total data rate = %.03f MB/sec. for read\n",
 		    datarate);
 	}
     }
@@ -1103,7 +1150,6 @@ writeFile(struct cmd_syndesc *as, void *unused)
     afs_int32 hosts[AFS_MAXHOSTS];
     afs_uint32 useHost;
     AFSFid Fid;
-    int i;
     struct rx_connection *RXConn;
     struct cellLookup *cl;
     struct rx_call *tcall;
@@ -1122,7 +1168,10 @@ writeFile(struct cmd_syndesc *as, void *unused)
     struct wbuf *bufchain = 0;
     struct wbuf *previous, *tbuf;
 
-    i=0;
+#ifdef AFS_NT40_ENV
+    /* stdin on Windows defaults to _O_TEXT mode */
+    _setmode(0, _O_BINARY);
+#endif
 
     if (as->name[0] == 'f') {
 	vnode = 1;
@@ -1347,7 +1396,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
         fprintf(stderr,"Transfer of %llu bytes took %.3f sec.\n",
 		xfered, seconds);
         datarate = (xfered >> 20) / seconds;
-        fprintf(stderr,"Total data rate = %.0f MB/sec. for write\n",
+        fprintf(stderr,"Total data rate = %.03f MB/sec. for write\n",
 		datarate);
     }
     while (bufchain) {
@@ -1360,14 +1409,17 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	afs_uint32 md5int[4];
 	char *p;
 	MD5_Final((char *) &md5int[0], &md5);
-	p = fname + strlen(fname);
-        while (p > fname) {
-	    if (*(--p) == '/') {
-		++p;
-		break;
-	    }
-	}
-	fprintf(stdout, "%08x%08x%08x%08x  %s\n",
+#ifdef AFS_NT40_ENV
+        p = strrchr(fname,'\\');
+#else
+        p = strrchr(fname,'/');
+#endif
+        if (p)
+            p++;
+	else
+            p = fname;
+
+        fprintf(stderr, "%08x%08x%08x%08x  %s\n",
 		htonl(md5int[0]), htonl(md5int[1]),
 		htonl(md5int[2]), htonl(md5int[3]), p);
     }
@@ -1381,8 +1433,6 @@ FindCell(char *cellName)
     char *np;
     struct cellLookup *p, *p2;
     static struct afsconf_dir *tdir;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
     time_t expires;
     afs_int32 len, code;
 

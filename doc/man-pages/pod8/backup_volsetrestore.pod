@@ -102,7 +102,7 @@ Coordinator can read, and so on. If dumps are on multiple incompatible
 tape types, use the B<backup volrestore> command to restore individual
 volumes, or use this command after defining new volume sets that group
 together volumes that were dumped to compatible tape types. For further
-discussion, see the I<IBM AFS Administration Guide>.
+discussion, see the I<OpenAFS Administration Guide>.
 
 By default, the Backup System overwrites the contents of an existing
 volume with the restored data. To create a new volume to house the
@@ -341,7 +341,7 @@ The date and time when the volume was dumped.
 
 One way to generate a file for use as input to the B<-file> argument is to
 combine the B<-name> and B<-n> options, directing the output to a
-file. The I<IBM AFS Administration Guide> section on using the Backup
+file. The I<OpenAFS Administration Guide> section on using the Backup
 System to restore data explains how to edit the file as necessary before
 using it as input to the B<-file> argument.
 

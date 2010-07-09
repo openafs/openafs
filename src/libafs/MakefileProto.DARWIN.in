@@ -24,6 +24,7 @@ AFS_OS_OBJS = \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_sleep.o \
+	osi_vcache.o \
 	osi_vm.o \
 	osi_vnodeops.o \
 	osi_module.o

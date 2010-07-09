@@ -22,11 +22,12 @@ B<kpasswd> [B<-x>] S<<< [B<-pr> <I<user name>>] >>> S<<< [B<-pa> <I<user's passw
 =head1 DESCRIPTION
 
 The B<kpasswd> command changes the password recorded in an Authentication
-Database entry. By default, the command interpreter changes the password
-for the AFS user name that matches the issuer's local identity (UNIX
-UID). To specify an alternate user, include the B<-principal>
-argument. The user named by the B<-principal> argument does not have to
-appear in the local password file (the F</etc/passwd> file or equivalent).
+Database entry on the obsolete Authentication Server. By default, the
+command interpreter changes the password for the AFS user name that
+matches the issuer's local identity (UNIX UID). To specify an alternate
+user, include the B<-principal> argument. The user named by the
+B<-principal> argument does not have to appear in the local password file
+(the F</etc/passwd> file or equivalent).
 
 By default, the command interpreter sends the password change request to
 the Authentication Server running on one of the database server machines
@@ -73,6 +74,13 @@ a password before the minimum time has passed:
    recently; see your systems administrator
 
 =back
+
+=head1 CAUTIONS
+
+The B<kpasswd> command is only used by the obsolete Authentication Server
+It is provided for sites that have not yet migrated to a Kerberos version
+5 KDC. The Authentication Server and supporting commands, including
+B<kpwvalid>, will be removed in a future version of OpenAFS.
 
 =head1 OPTIONS
 

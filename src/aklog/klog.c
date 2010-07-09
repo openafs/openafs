@@ -292,6 +292,7 @@ k5_to_k4_name(krb5_context k5context,
  */
 struct kp_arg {
     char **pp, *pstore;
+    size_t allocated;
 };
 krb5_error_code
 klog_prompter(krb5_context context,
@@ -307,6 +308,8 @@ klog_prompter(krb5_context context,
     krb5_prompt_type *types;
 #endif
     struct kp_arg *kparg = (struct kp_arg *) a;
+    size_t length;
+
     code = krb5_prompter_posix(context, a, name, banner, num_prompts, prompts);
     if (code) return code;
 #if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
@@ -333,8 +336,11 @@ klog_prompter(krb5_context context,
 	switch(type) {
 	case KRB5_PROMPT_TYPE_PASSWORD:
 	case KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN:
-	    memcpy(kparg->pstore, prompts[i].reply->data, prompts[i].reply->length);
-	    kparg->pstore[prompts[i].reply->length] = 0;
+	    length = prompts[i].reply->length;
+	    if (length > kparg->allocated - 1)
+		length = kparg->allocated - 1;
+	    memcpy(kparg->pstore, prompts[i].reply->data, length);
+	    kparg->pstore[length] = 0;
 	    *kparg->pp = kparg->pstore;
 	}
     }
@@ -349,7 +355,11 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     char service_temp[MAXKTCREALMLEN + 20];
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    krb5_get_init_creds_opt *gic_opts;
+#else
     krb5_get_init_creds_opt gic_opts[1];
+#endif
     char *tofree = NULL, *outname;
     int code;
     char *what;
@@ -564,8 +574,17 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     klog_arg->pp = &pass;
     klog_arg->pstore = passwd;
+    klog_arg->allocated = sizeof(passwd);
     /* XXX should allow k5 to prompt in most cases -- what about expired pw?*/
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    code = krb5_get_init_creds_opt_alloc(k5context, &gic_opts);
+    if (code) {
+	afs_com_err(rn, code, "Can't allocate get_init_creds options");
+	KLOGEXIT(code);
+    }
+#else
     krb5_get_init_creds_opt_init(gic_opts);
+#endif
     for (;;) {
 	code = krb5_get_init_creds_password(k5context,
 	    incred,
@@ -684,7 +703,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    size_t elen = enc_part->length;
 	    atoken->kvno = RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
 	    if (afs_krb5_skip_ticket_wrapper(afscred->ticket.data,
-			afscred->ticket.length, &enc_part->data,
+			afscred->ticket.length, (char **) &enc_part->data,
 			&elen)) {
 		afs_com_err(rn, 0, "Can't unwrap %s AFS credential",
 		    cellconfig->name);
@@ -708,7 +727,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	if (i > MAXKTCREALMLEN-1) i = MAXKTCREALMLEN-1;
 	memcpy(aclient->cell, realm_data(k5context, afscred->client), i);
 	if (!noprdb) {
-	    int viceid;
+	    int viceid = 0;
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	    code = whoami(atoken, cellconfig, aclient, &viceid);
 	    if (code) {

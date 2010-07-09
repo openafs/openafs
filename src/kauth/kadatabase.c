@@ -77,7 +77,6 @@ karead(struct ubik_trans *tt, afs_int32 pos, char *buff, afs_int32 len)
     return code;
 }
 
-static struct Lock cheader_lock;
 static struct Lock keycache_lock;
 
 static int maxCachedKeys;
@@ -98,7 +97,6 @@ static int dbfixup = 0;
 void
 init_kadatabase(int initFlags)
 {
-    Lock_Init(&cheader_lock);
     Lock_Init(&keycache_lock);
 
     maxCachedKeys = 10;
@@ -116,20 +114,25 @@ init_kadatabase(int initFlags)
 
 /* check that the database has been initialized.  Be careful to fail in a safe
    manner, to avoid bogusly reinitializing the db.  */
-
-afs_int32
-CheckInit(struct ubik_trans *at,
-          int (*db_init) (struct ubik_trans *))		/* procedure to call if rebuilding DB */
+/**
+ * reads in db cache from ubik.
+ *
+ * @param[in] ut ubik transaction
+ * @param[in] rock  opaque pointer to an int (*) (struct ubik_trans *), which
+ *                  will be called on rebuilding the database (or NULL to not
+ *                  rebuild the db)
+ *
+ * @return operation status
+ *   @retval 0 success
+ */
+static afs_int32
+UpdateCache(struct ubik_trans *at, void *rock)
 {
-    register afs_int32 code;
+    int (*db_init) (struct ubik_trans *) = rock;
+    afs_int32 code;
     afs_int32 iversion;
     afs_int32 tversion;
 
-    /* Don't read header if not necessary */
-    if (!ubik_CacheUpdate(at))
-	return 0;
-
-    ObtainWriteLock(&cheader_lock);
     if ((code = karead(at, 0, (char *)&iversion, sizeof(iversion)))
 	|| (code =
 	    karead(at, sizeof(cheader) - sizeof(afs_int32), (char *)&tversion,
@@ -155,7 +158,6 @@ CheckInit(struct ubik_trans *at,
 	    code = KAIO;
 	}
     }
-    ReleaseWriteLock(&cheader_lock);
     if (code == 0)
 	return 0;
 
@@ -188,6 +190,13 @@ CheckInit(struct ubik_trans *at,
 	return KAIO;		/* return the error code */
 
     return db_init(at);		/* initialize the db */
+}
+
+afs_int32
+CheckInit(struct ubik_trans *at,
+          int (*db_init) (struct ubik_trans *))		/* procedure to call if rebuilding DB */
+{
+    return ubik_CheckCache(at, UpdateCache, db_init);
 }
 
 /* Allocate a free block of storage for entry, returning address of a new
@@ -628,7 +637,8 @@ ka_debugKeyCache(struct ka_debugInfo *info)
 {
     int i;
 
-    memcpy(&info->cheader_lock, &cheader_lock, sizeof(info->cheader_lock));
+    /* cheader_lock no longer exists */
+    memset(&info->cheader_lock, 0, sizeof(info->cheader_lock));
     memcpy(&info->keycache_lock, &keycache_lock, sizeof(info->keycache_lock));
 
     info->kcVersion = keyCacheVersion;

@@ -133,7 +133,7 @@ do_test(int randomp)
 	err(1, "open %s", file);
 
     mmap_buf = mmap_file(fd, sz);
-    malloc_buf = read_file(fd, sz);
+    malloc_buf = (unsigned char *) read_file(fd, sz);
     close(fd);
     unlink(file);
     if (memcmp(malloc_buf, mmap_buf, sz) != 0) {

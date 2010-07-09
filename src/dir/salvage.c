@@ -72,8 +72,14 @@ ComputeUsedPages(register struct DirHeader *dhp)
     return usedPages;
 }
 
-/* returns true if something went wrong checking, or if dir is fine.  Returns
- * false if we *know* that the dir is bad.
+/**
+ * check whether a directory object is ok.
+ *
+ * @param[in] file  opaque pointer to directory object fid
+ *
+ * @return operation status
+ *    @retval 1 dir is fine, or something went wrong checking
+ *    @retval 0 we *know* that the dir is bad
  */
 int
 DirOK(void *file)
@@ -420,13 +426,18 @@ DirOK(void *file)
     return 1;
 }
 
-/* This routine is called with six parameters.  The first is the id of 
- * the original, currently suspect, directory.  The second is the file 
- * id of the place the salvager should place the new, fixed, directory. 
- * The third and the fourth parameters are the vnode number and the
- * uniquifier of the currently suspect directory. The fifth and the
- * sixth parameters are the vnode number and the uniquifier of the
- * parent directory.
+/**
+ * Salvage a directory object.
+ *
+ * @param[in] fromFile  fid of original, currently suspect directory object
+ * @param[in] toFile    fid where salvager will place new, fixed directory
+ * @param[in] vn        vnode of currently suspect directory
+ * @param[in] vu        uniquifier of currently suspect directory
+ * @param[in] pvn       vnode of parent directory
+ * @param[in] pvu       uniquifier of parent directory
+ *
+ * @return operation status
+ *    @retval 0 success
  */
 int
 DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,

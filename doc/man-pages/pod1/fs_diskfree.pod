@@ -7,11 +7,11 @@ fs_diskfree - Shows data about the partition housing a directory or file
 =for html
 <div class="synopsis">
 
-B<fs diskfree> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+B<fs diskfree> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-human>] [B<-help>]
 
-B<fs df> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+B<fs df> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-hu>] [B<-he>]
 
-B<fs di> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+B<fs di> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-hu>] [B<-he>]
 
 =for html
 </div>
@@ -47,6 +47,12 @@ produce output. Partial pathnames are interpreted relative to the current
 working directory, which is also the default value if this argument is
 omitted.
 
+=item B<-human>
+
+Print space in a "human-readable" format. Instead of always printing space
+in kilobytes, show disk space in kilobytes, megabytes, gigabytes,
+terabytes, or petabytes, as appropriate.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -65,17 +71,20 @@ partition that houses each file or directory:
 
 The name of the volume.
 
-=item kbytes
+=item total
 
-The partition's total size in kilobytes.
+The partition's total size. If B<-human> is not specified, this value is
+in kilobytes.
 
 =item used
 
-The number of kilobytes used on the partition.
+The amount of space used on the partition. If B<-human> is not specified,
+this value is in kilobytes.
 
 =item avail
 
-The number of kilobytes available on the partition.
+The amount of space available on the partition. If B<-human> is not
+specified, this value is in kilobytes.
 
 =item %used
 
@@ -100,7 +109,7 @@ The following example shows the output for the partitions housing the
 volumes C<user.smith> and C<sun4x_56.bin>:
 
    % fs diskfree -path /afs/abc.com/usr/smith /afs/abc.com/sun4x_56/bin
-   Volume Name     kbytes  used     avail     %used
+   Volume Name      total    used   avail     %used
    user.smith     4177920 3841258  336662       92% <<WARNING
    sun4x_56.bin   4423680 3174500 1249180       72%
 

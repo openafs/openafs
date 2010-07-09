@@ -135,6 +135,67 @@ non-administrative user to obtain this listing.
      richard
      thompson
 
+The following example shows how to list the groups to which nested groups
+belong. In this example the group C<executives> is a member of the group
+C<management> and the group C<management> is a member of the group C<staff>.
+The group C<management> is called a supergroup of the group C<executives> and the
+group C<staff> is called a supergroup of the group C<management>.
+
+   % pts membership executives
+   Members of executives (id: -208) are:
+     jane
+
+   % pts membership executives -supergroups
+   Members of executives (id: -208) are:
+     jane
+   Groups executives (id: -208) is a member of:
+     management
+
+   % pts membership management -supergroups
+   Members of management (id: -207) are:
+     executives
+     mary
+     sarah
+     carol
+   Groups management (id: -207) is a member of:
+      staff
+
+   % pts membership staff -supergroups
+   Members of staff (id: -206) are:
+     sales
+     marketing
+     engineering
+     management
+   Groups staff (id: -206) is a member of:
+
+The following example shows how to find all the users which belong
+to a group, including users of nested groups. In this example, the
+user C<jane> is listed as an expanded member of the group C<management>
+instead of the group C<executives>.
+
+   % pts membership management -expandgroups
+   Expanded Members of management (id: -207) are:
+     jane
+     mary
+     sarah
+     carol
+
+The following example shows how to find all the groups a user
+is a member of, including membership due to nested groups.  In
+this example the user C<jane> is a direct member of the group
+C<executives>. The C<-expandgroups> flag shows all the groups
+to which C<jane> has membership status.
+
+   % pts membership jane
+   Groups jane (id: 7) is a member of:
+     executives
+
+   % pts membership jane -expandgroups
+   Expanded Groups jane (id: 7) is a member of:
+     staff
+     management
+     executives
+
 =head1 PRIVILEGE REQUIRED
 
 Members of the system:ptsviewers and system:administrators groups can

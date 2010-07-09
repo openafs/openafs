@@ -70,7 +70,7 @@
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-/*@printflike@*/ extern void Abort(const char *format, ...);
+/*@printflike@*/ extern void Abort(const char *format, ...) AFS_NORETURN;
 
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
@@ -731,10 +731,11 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 
 	/* Sanity check:  is this vnode really not in use? */
 	{
-	    int size;
+	    afs_sfsize_t size;
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
-	    off_t off = vnodeIndexOffset(vcp, vnodeNumber);
+	    afs_foff_t off = vnodeIndexOffset(vcp, vnodeNumber);
+	    Error tmp;
 
 	    /* XXX we have a potential race here if two threads
 	     * allocate new vnodes at the same time, and they
@@ -759,32 +760,45 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    fdP = IH_OPEN(ihP);
 	    if (fdP == NULL) {
 		Log("VAllocVnode: can't open index file!\n");
+		*ec = ENOENT;
 		goto error_encountered;
 	    }
 	    if ((size = FDH_SIZE(fdP)) < 0) {
 		Log("VAllocVnode: can't stat index file!\n");
+		*ec = EIO;
 		goto error_encountered;
 	    }
 	    if (FDH_SEEK(fdP, off, SEEK_SET) < 0) {
 		Log("VAllocVnode: can't seek on index file!\n");
+		*ec = EIO;
 		goto error_encountered;
 	    }
 	    if (off + vcp->diskSize <= size) {
 		if (FDH_READ(fdP, &vnp->disk, vcp->diskSize) != vcp->diskSize) {
 		    Log("VAllocVnode: can't read index file!\n");
+		    *ec = EIO;
 		    goto error_encountered;
 		}
 		if (vnp->disk.type != vNull) {
 		    Log("VAllocVnode:  addled bitmap or index!\n");
+		    *ec = EIO;
 		    goto error_encountered;
 		}
 	    } else {
 		/* growing file - grow in a reasonable increment */
 		char *buf = (char *)malloc(16 * 1024);
-		if (!buf)
-		    Abort("VAllocVnode: malloc failed\n");
+		if (!buf) {
+		    Log("VAllocVnode: can't grow vnode index: out of memory\n");
+		    *ec = ENOMEM;
+		    goto error_encountered;
+		}
 		memset(buf, 0, 16 * 1024);
-		(void)FDH_WRITE(fdP, buf, 16 * 1024);
+		if ((FDH_WRITE(fdP, buf, 16 * 1024)) != 16 * 1024) {
+		    Log("VAllocVnode: can't grow vnode index: write failed\n");
+		    *ec = EIO;
+		    free(buf);
+		    goto error_encountered;
+		}
 		free(buf);
 	    }
 	    FDH_CLOSE(fdP);
@@ -798,7 +812,6 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 
 
 	error_encountered:
-#ifdef AFS_DEMAND_ATTACH_FS
 	    /* 
 	     * close the file handle
 	     * acquire VOL_LOCK
@@ -810,17 +823,17 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    if (fdP)
 		FDH_CLOSE(fdP);
 	    VOL_LOCK;
-	    VFreeBitMapEntry_r(ec, &vp->vnodeIndex[class], bitNumber);
+	    VFreeBitMapEntry_r(&tmp, &vp->vnodeIndex[class], bitNumber);
 	    VInvalidateVnode_r(vnp);
 	    VnUnlock(vnp, WRITE_LOCK);
 	    VnCancelReservation_r(vnp);
+#ifdef AFS_DEMAND_ATTACH_FS
 	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 	    VCancelReservation_r(vp);
-	    return NULL;
 #else
-	    assert(1 == 2);
+	    VForceOffline_r(vp, 0);
 #endif
-
+	    return NULL;
 	}
     sane:
 	VNLog(4, 2, vnodeNumber, (intptr_t)vnp, 0, 0);
@@ -870,7 +883,8 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 {
     /* vnode not cached */
     Error error;
-    int n, dosalv = 1;
+    int dosalv = 1;
+    ssize_t nBytes;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
 
@@ -896,23 +910,23 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	Log("VnLoad: can't seek on index file vn=%u\n", Vn_id(vnp));
 	*ec = VIO;
 	goto error_encountered_nolock;
-    } else if ((n = FDH_READ(fdP, (char *)&vnp->disk, vcp->diskSize))
+    } else if ((nBytes = FDH_READ(fdP, (char *)&vnp->disk, vcp->diskSize))
 	       != vcp->diskSize) {
 	/* Don't take volume off line if the inumber is out of range
 	 * or the inode table is full. */
-	if (n == BAD_IGET) {
+	if (nBytes == BAD_IGET) {
 	    Log("VnLoad: bad inumber %s\n",
 		PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
 	    dosalv = 0;
-	} else if (n == -1 && errno == EIO) {
+	} else if (nBytes == -1 && errno == EIO) {
 	    /* disk error; salvage */
 	    Log("VnLoad: Couldn't read vnode %u, volume %u (%s); volume needs salvage\n", Vn_id(vnp), V_id(vp), V_name(vp));
 	} else {
 	    /* vnode is not allocated */
 	    if (LogLevel >= 5) 
 		Log("VnLoad: Couldn't read vnode %u, volume %u (%s); read %d bytes, errno %d\n", 
-		    Vn_id(vnp), V_id(vp), V_name(vp), n, errno);
+		    Vn_id(vnp), V_id(vp), V_name(vp), (int)nBytes, errno);
 	    *ec = VIO;
 	    dosalv = 0;
 	}
@@ -996,7 +1010,8 @@ static void
 VnStore(Error * ec, Volume * vp, Vnode * vnp, 
 	struct VnodeClassInfo * vcp, VnodeClass class)
 {
-    int offset, code;
+    ssize_t nBytes;
+    afs_foff_t offset;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1022,13 +1037,13 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	goto error_encountered;
     }
 
-    code = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
-    if (code != vcp->diskSize) {
+    nBytes = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
+    if (nBytes != vcp->diskSize) {
 	/* Don't force volume offline if the inumber is out of
 	 * range or the inode table is full.
 	 */
 	FDH_REALLYCLOSE(fdP);
-	if (code == BAD_IGET) {
+	if (nBytes == BAD_IGET) {
 	    Log("VnStore: bad inumber %s\n",
 		PrintInode(NULL,
 			   vp->vnodeIndex[class].handle->ih_ino));
@@ -1038,7 +1053,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	    VnChangeState_r(vnp, VN_STATE_ERROR);
 #endif
 	} else {
-	    Log("VnStore: Couldn't write vnode %u, volume %u (%s) (error %d)\n", Vn_id(vnp), V_id(Vn_volume(vnp)), V_name(Vn_volume(vnp)), code);
+	    Log("VnStore: Couldn't write vnode %u, volume %u (%s) (error %d)\n", Vn_id(vnp), V_id(Vn_volume(vnp)), V_name(Vn_volume(vnp)), (int)nBytes);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    goto error_encountered;
 #else

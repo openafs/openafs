@@ -217,6 +217,9 @@ rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
     MUTEX_EXIT(&listener_mutex);
 
     for (;;) {
+        /* See if a check for additional packets was issued */
+        rx_CheckPackets();
+
 	/*
 	 * Grab a new packet only if necessary (otherwise re-use the old one)
 	 */

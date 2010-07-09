@@ -13,8 +13,12 @@
 #include "h/types.h"
 #include "h/param.h"
 
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
 #include <sys/condvar.h>
+#endif
+
+#ifdef AFS_NBSD_ENV
+#include <sys/lock.h>
 #endif
 
 #ifdef AFS_LINUX20_ENV
@@ -116,7 +120,7 @@ struct afs_osi_WaitHandle {
 /*
  * Alloc declarations.
  */
-#if !defined(AFS_OBSD44_ENV)
+#if !defined(AFS_OBSD44_ENV) && !defined(AFS_NBSD_ENV)
 #define afs_osi_Alloc_NoSleep afs_osi_Alloc
 #endif
 
@@ -133,6 +137,13 @@ extern struct vnodeops *afs_ops;
 # define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
 # define	SetAfsVnode(v)	    (v)->v_op = afs_ops
 #endif
+
+struct vcache;
+extern int osi_TryEvictVCache(struct vcache *, int *);
+extern struct vcache *osi_NewVnode(void);
+extern void osi_PrePopulateVCache(struct vcache *);
+extern void osi_PostPopulateVCache(struct vcache *);
+extern void osi_AttachVnode(struct vcache *, int seq);
 
 /*
  * In IRIX 6.5 we cannot have DEBUG turned on since certain
@@ -183,7 +194,7 @@ typedef struct timeval osi_timeval_t;
  * is going on in the system.  So if ps cannot show thread IDs it is
  * likely to be the process ID instead.
  */
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	(curproc->p_pid)
 #elif defined(AFS_LINUX_ENV)
@@ -247,15 +258,9 @@ typedef struct timeval osi_timeval_t;
  * (Also, of course, the vnode is assumed to be one of ours.  Can't use this
  * macro for V-file vnodes.)
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-/* Bare refcount manipulation would probably work on this platform, but just
-   calling VREF does not */
-#define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
-#elif defined(AFS_AIX_ENV)
-#define AFS_FAST_HOLD(vp) VREFCOUNT_INC(vp)
-#else
-#define AFS_FAST_HOLD(vp) VN_HOLD(AFSTOV(vp))
-#endif
+/* osi_vnhold is defined in PLATFORM/osi_machdep.h */
+#define AFS_FAST_HOLD(vp) osi_vnhold((vp), 0)
+
 #ifdef AFS_AIX_ENV
 #define AFS_FAST_RELE(vp) VREFCOUNT_DEC(vp)
 #else

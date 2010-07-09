@@ -105,7 +105,6 @@ doit(const char *filename, void (*func) (int, struct stat *))
 
 static int read_flag;
 static int mmap_flag;
-static int help_flag;
 
 static void
 usage(int exit_val)
@@ -117,8 +116,6 @@ usage(int exit_val)
 int
 main(int argc, char **argv)
 {
-    int optind = 0;
-
     if (argc != 2)
 	usage(1);
 

@@ -73,7 +73,7 @@
 
 #define afs_hz HZ
 #include "h/sched.h"
-#if defined(HAVE_CURRENT_KERNEL_TIME)
+#if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
 static inline time_t osi_Time(void) { 
     struct timespec xtime;
     xtime = current_kernel_time();
@@ -168,19 +168,13 @@ typedef struct afs_cred {		/* maps to task field: */
 typedef struct afs_cred afs_ucred_t;
 typedef struct task_struct afs_proc_t;
 
-#define cr_group_info(cred) ((cred)->cr_group_info)
-static inline void
-set_cr_group_info(afs_ucred_t *cred, struct group_info *group_info) {
-    cred->cr_group_info = group_info;
-}
-
 #if !defined(current_cred)
 #define current_gid() (current->gid)
 #define current_uid() (current->uid)
 #define current_fsgid() (current->fsgid)
 #define current_fsuid() (current->fsuid)
 #endif
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 #define current_group_info() (current->cred->group_info)
 #define task_gid(task) (task->cred->gid)
 #define task_user(task) (task->cred->user)

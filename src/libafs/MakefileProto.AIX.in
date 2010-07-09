@@ -23,6 +23,7 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_timeout.o \
+	osi_vcache.o \
 	osi_vm.o
 
 AFSNOIAUTHOBJS = \

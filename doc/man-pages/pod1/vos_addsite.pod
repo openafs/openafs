@@ -37,14 +37,15 @@ one.
 
 =head1 CAUTIONS
 
-A volume's VLDB entry accommodates a maximum number of site definitions,
-as defined in the I<IBM AFS Release Notes>. The site housing the
-read/write and backup versions of the volume counts as one site, and each
-read-only site counts as an additional site (even the read-only site
-defined on the same file server machine and partition as the read/write
-site counts as a separate site). The limit in the VLDB entry effectively
-determines the maximum number of copies of the volume that are available
-to AFS clients.
+A volume's VLDB entry accommodates a maximum number of 16 site
+definitions. The site housing the read/write and backup versions of the
+volume counts as one site, the backup snapshot counts as one site, and one
+site should be reserved for a transient clone for volume moves and similar
+operations. Each read-only site counts as an additional site (even the
+read-only site defined on the same file server machine and partition as
+the read/write site counts as a separate site). The limit in the VLDB
+entry effectively determines the maximum number of copies of the volume
+that are available to AFS clients.
 
 Attempts to create additional sites by using this command fail with an
 error.

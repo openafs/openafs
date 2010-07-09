@@ -1,0 +1,21 @@
+# Build rules for the OpenAFS test suite.
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+objects = basic.o
+
+all check test tests: libtap.a
+
+basic.o: $(srcdir)/basic.c $(srcdir)/basic.h
+	$(CCOBJ) $(CFLAGS) -I$(srcdir)/.. -c $(srcdir)/basic.c
+
+libtap.a: $(objects)
+	$(RM) -f libtap.a
+	$(AR) crv libtap.a $(objects)
+	$(RANLIB) libtap.a
+
+install:
+
+clean distclean:
+	$(RM) -f *.o *.a core

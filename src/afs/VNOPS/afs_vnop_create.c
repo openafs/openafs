@@ -492,6 +492,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	afs_AddMarinerName(aname, *avcp);
 	/* return the new status in vattr */
 	afs_CopyOutAttrs(*avcp, attrs);
+	afs_MarinerLog("store$Creating", *avcp);
     }
 
     afs_PutFakeStat(&fakestate);

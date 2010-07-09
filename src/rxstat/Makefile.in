@@ -16,6 +16,10 @@ LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
 all: depinstall ${TOP_LIBDIR}/librxstat.a 
 
+generated: \
+	Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c \
+	rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h
+
 depinstall: \
 	${TOP_INCDIR}/rx/rxstat.h Krxstat.cs.c \
 	Krxstat.ss.c Krxstat.xdr.c

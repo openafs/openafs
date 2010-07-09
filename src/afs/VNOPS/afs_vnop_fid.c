@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD_ENV)
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -114,7 +114,7 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 	addr[0] = (long)avc;
 #ifndef AFS_AIX41_ENV
 	/* No post processing, so don't hold ref count. */
-	VN_HOLD(AFSTOV(avc));
+	AFS_FAST_HOLD(avc);
 #endif
     }
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN54_ENV)

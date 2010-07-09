@@ -14,10 +14,7 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
-
-#if defined(FREEZER_H_EXISTS)
-#include <linux/freezer.h>
-#endif
+#include "osi_compat.h"
 
 static char waitV, dummyV;
 
@@ -184,28 +181,8 @@ afs_osi_SleepSig(void *event)
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 	schedule();
-#ifdef CONFIG_PM
-	if (
-#ifdef PF_FREEZE
-	    current->flags & PF_FREEZE
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
-	    !current->todo
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-            test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
-            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
-#endif
-#endif
-	    )
-#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-	    refrigerator(PF_FREEZE);
-#else
-	    refrigerator();
-#endif
-#endif
+	try_to_freeze();
+
 	AFS_GLOCK();
 	if (signal_pending(current)) {
 	    retval = EINTR;
@@ -279,33 +256,12 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
      * from artifically increasing. */
     AFS_GUNLOCK();
 
-    if (aintok) {
-	if (schedule_timeout(ticks))
+    if (schedule_timeout(ticks)) {
+	if (aintok)
 	    code = EINTR;
-    } else
-	schedule_timeout(ticks);
-#ifdef CONFIG_PM
-    if (
-#ifdef PF_FREEZE
-	    current->flags & PF_FREEZE
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
-	    !current->todo
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-            test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
-            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
-#endif
-#endif
-	    )
-#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-	refrigerator(PF_FREEZE);
-#else
-	refrigerator();
-#endif
-#endif
+    }
+
+    try_to_freeze();
 
     AFS_GLOCK();
     remove_wait_queue(&evp->cond, &wait);

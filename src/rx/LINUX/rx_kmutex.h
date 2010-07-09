@@ -55,11 +55,7 @@ typedef struct afs_kmutex {
 
 typedef struct afs_kcondvar {
     int seq;
-#if defined(AFS_LINUX24_ENV)
     wait_queue_head_t waitq;
-#else
-    struct wait_queue *waitq;
-#endif
 } afs_kcondvar_t;
 
 static inline int
@@ -74,21 +70,13 @@ MUTEX_ISMINE(afs_kmutex_t * l)
 #define MUTEX_TRYENTER		afs_mutex_tryenter
 #define MUTEX_EXIT		afs_mutex_exit
 
-#if defined(AFS_LINUX24_ENV)
 #define CV_INIT(cv,b,c,d)       do { (cv)->seq = 0; init_waitqueue_head(&(cv)->waitq); } while (0)
-#else
-#define CV_INIT(cv,b,c,d)	do { (cv)->seq = 0; init_waitqueue(&(cv)->waitq); } while (0)
-#endif
 #define CV_DESTROY(cv)
 #define CV_WAIT_SIG(cv, m)	afs_cv_wait(cv, m, 1)
 #define CV_WAIT(cv, m)		afs_cv_wait(cv, m, 0)
 #define CV_TIMEDWAIT		afs_cv_timedwait
 
 #define CV_SIGNAL(cv)          do { ++(cv)->seq; wake_up(&(cv)->waitq); } while (0)
-#if defined(AFS_LINUX24_ENV)
 #define CV_BROADCAST(cv)       do { ++(cv)->seq; wake_up_all(&(cv)->waitq); } while (0)
-#else
-#define CV_BROADCAST(cv)       do { ++(cv)->seq; wake_up(&(cv)->waitq); } while (0)
-#endif
 
 #endif /* RX_KMUTEX_H_ */

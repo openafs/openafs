@@ -536,10 +536,7 @@ BPrefetch(register struct brequest *ab)
 }
 
 #if defined(AFS_CACHE_BYPASS)
-#if 1 /* XXX Matt debugging */
-static
-#endif
-void
+static void
 BPrefetchNoCache(register struct brequest *ab)
 {
     struct vrequest treq;
@@ -551,8 +548,6 @@ BPrefetchNoCache(register struct brequest *ab)
 #ifndef UKERNEL
     /* OS-specific prefetch routine */
     afs_PrefetchNoCache(ab->vc, ab->cred, (struct nocache_read_request *) ab->ptr_parm[0]);
-#else
-#warning Cache-bypass code path not implemented in UKERNEL
 #endif
 }
 #endif
@@ -655,7 +650,7 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 	    tb->cred = acred;
 	    crhold(tb->cred);
 	    if (avc) {
-		VN_HOLD(AFSTOV(avc));
+		AFS_FAST_HOLD(avc);
 	    }
 	    tb->refCount = ause + 1;
 	    tb->size_parm[0] = asparm0;
@@ -991,7 +986,6 @@ brequest_release(struct brequest *tb)
 	crfree(tb->cred);
 	tb->cred = (afs_ucred_t *)0;
     }
-    tb->code = 0;
     afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
 }
 

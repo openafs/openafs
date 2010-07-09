@@ -46,10 +46,7 @@
 int
 main(int argc, char *argv[])
 {
-    int fd1;
     int ret;
-    struct stat sb1;
-
 
     ret = mkdir("1", 0777);
     if (ret < 0)

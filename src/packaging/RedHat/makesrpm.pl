@@ -19,7 +19,7 @@ my $changelog = shift;
 my $cellservdb = shift;
 
 if (!$srcball && !$docball) {
-  printf "Usage:  makesrpm <src.tar.gz> <doc.tar.gz> [<relnotes> [<changelog> [<cellservdb>]]]\n";
+  printf "Usage:  makesrpm <src.tar.bz2> <doc.tar.bz2> [<relnotes> [<changelog> [<cellservdb>]]]\n";
   exit(1);
 }
 
@@ -48,6 +48,8 @@ my $linuxrel;
 my $fh = new IO::File $srcdir."/configure.in"
   or die "Unable to find unpacked configure.in file";
 while(<$fh>) {
+  next if (/^\s*\#/);
+
   if (/AM_INIT_AUTOMAKE\(openafs,(.*)\)/) {
     $afsversion = $1;
     next;

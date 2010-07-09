@@ -5,10 +5,12 @@ kas - Introduction to the kas command suite
 =head1 DESCRIPTION
 
 The commands in the B<kas> command suite are the administrative interface
-to the Authentication Server, which runs on each database server machine
-in a cell, maintains the Authentication Database, and provides the
-authentication tickets that client applications must present to AFS
-servers in order to obtain access to AFS data and other services.
+to the Authentication Server, an obsolete AFS server process that
+maintains the Authentication Database and provides the authentication
+tickets that client applications must present to AFS servers in order to
+obtain access to AFS data and other services. It is used only for cells
+still running the Authentication Server until they can migrate to a
+Kerberos version 5 KDC.
 
 There are several categories of commands in the B<kas> command suite:
 
@@ -17,27 +19,39 @@ There are several categories of commands in the B<kas> command suite:
 =item *
 
 Commands to create, modify, examine and delete entries in the
-Authentication Database, including passwords: B<kas create>, B<kas
-delete>, B<kas examine>, B<kas list>, B<kas setfields>, B<kas setkey>,
-B<kas setpassword>, and B<kas unlock>.
+Authentication Database, including passwords:
+L<B<kas create>|kas_create(8)>,
+L<B<kas delete>|kas_delete(8)>,
+L<B<kas examine>|kas_examine(8)>,
+L<B<kas list>|kas_list(8)>,
+L<B<kas setfields>|kas_setfields(8)>,
+L<B<kas setkey>|kas_setkey(8)>,
+L<B<kas setpassword>|kas_setpassword(8)>,
+and L<B<kas unlock>|kas_unlock(8)>.
 
 =item *
 
-Commands to create, delete, and examine tokens and server tickets: B<kas
-forgetticket>, B<kas listtickets>, B<kas noauthentication>, and B<kas
-stringtokey>.
+Commands to create, delete, and examine tokens and server tickets:
+L<B<kas forgetticket>|kas_forgetticket(8)>,
+L<B<kas listtickets>|kas_listtickets(8)>,
+L<B<kas noauthentication>|kas_noauthentication(8)>,
+and L<B<kas stringtokey>|kas_stringtokey(8)>.
 
 =item *
 
-A command to enter interactive mode: B<kas interactive>.
+A command to enter interactive mode:
+L<B<kas interactive>|kas_interactive(8)>.
 
 =item *
 
-A command to trace Authentication Server operations: B<kas statistics>.
+A command to trace Authentication Server operations:
+L<B<kas statistics>|kas_statistics(8)>.
 
 =item *
 
-Commands to obtain help: B<kas apropos> and B<kas help>.
+Commands to obtain help:
+L<B<kas apropos>|kas_apropos(8)>
+and L<B<kas help>|kas_help(8)>.
 
 =back
 
@@ -83,6 +97,14 @@ directory for the file, use the B<kaserver> command's B<-localfiles>
 argument.
 
 =back
+
+=head1 CAUTIONS
+
+The B<kas> command suite is provided only for administration of the
+obsolete Authentication Server for cells that have not yet migrated to a
+Kerberos version 5 KDC. New deployments should not use the Authentication
+Server, and it and the B<kas> command suite will be removed in a future
+version of OpenAFS.
 
 =head1 OPTIONS
 

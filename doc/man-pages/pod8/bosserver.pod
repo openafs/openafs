@@ -10,6 +10,7 @@ bosserver - Initializes the BOS Server
 B<bosserver> [B<-noauth>] [B<-log>] [B<-enable_peer_stats>]
     S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     [B<-enable_process_stats>] [B<-allow-dotted-principals>]
+    [B<-cores=>(none|<I<path>>)]
     [B<-restricted>] [B<-help>]
 
 =for html
@@ -116,6 +117,11 @@ useful only when authorization checking is disabled on the server machine
 Records in the F</usr/afs/logs/BosLog> file the names of all users who
 successfully issue a privileged B<bos> command (one that requires being
 listed in the F</usr/afs/etc/UserList> file).
+
+=item B<-cores=>none|<I<path>>
+
+The argument none turns off core file generation. Otherwise, the
+argument is a path where core files will be stored.
 
 =item B<-auditlog> <I<log path>>
 

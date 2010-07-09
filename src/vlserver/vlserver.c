@@ -132,7 +132,7 @@ int
 main(int argc, char **argv)
 {
     register afs_int32 code;
-    afs_int32 myHost;
+    afs_uint32 myHost;
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
@@ -300,7 +300,7 @@ main(int argc, char **argv)
 	       hostname);
 	exit(1);
     }
-    memcpy(&myHost, th->h_addr, sizeof(afs_int32));
+    memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
     signal(SIGXCPU, CheckSignal_Signal);

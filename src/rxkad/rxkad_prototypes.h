@@ -19,7 +19,7 @@
 #include <des.h>
 #endif
 
-/* domestic/crypt_conn.c */
+/* crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket(const struct rx_connection *conn,
 				     const fc_KeySchedule * schedule,
 				     const fc_InitializationVector * ivec,
@@ -30,7 +30,7 @@ extern afs_int32 rxkad_EncryptPacket(const struct rx_connection *conn,
 				     const int len, struct rx_packet *packet);
 
 
-/* domestic/fcrypt.c */
+/* fcrypt.c */
 extern int fc_keysched(struct ktc_encryptionKey *key,
 		       fc_KeySchedule schedule);
 extern afs_int32 fc_ecb_encrypt(void * clear, void * cipher,

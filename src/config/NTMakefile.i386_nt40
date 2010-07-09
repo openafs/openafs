@@ -89,7 +89,7 @@ AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
 !ENDIF
 !IF !DEFINED(AFSPRODUCT_VER_PATCH)
-AFSPRODUCT_VER_PATCH=7401
+AFSPRODUCT_VER_PATCH=7500
 !ENDIF
 !IF !DEFINED(AFSPRODUCT_VER_BUILD)
 AFSPRODUCT_VER_BUILD=0
@@ -226,7 +226,7 @@ RXGEN = $(DESTDIR)\bin\rxgen
 
 # Common clean target.
 clean::
-	$(DEL) /q $(OUT)\*.obj $(OUT)\*.lib $(OUT)\*.dll $(OUT)\*.exe $(OUT)\*.pdb
+	$(DEL) /q $(OUT)\*.obj $(OUT)\*.lib $(OUT)\*.dll $(OUT)\*.exe $(OUT)\*.pdb $(OUT)\*.res $(OUT)\*.manifest $(OUT)\*.exp
 	$(DEL) /q $(OUT)\*_component_version_number.* *_component_version_number.*
 
 # Common lang target.

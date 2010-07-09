@@ -11,6 +11,7 @@ INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
+ENABLE_PTHREADED_UBIK = @ENABLE_PTHREADED_UBIK@
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
@@ -41,6 +42,11 @@ all: \
 	vlserver vlclient cnvldb vlserver cnvldb vldb_check \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
 	${TOP_LIBDIR}/libvldb.a depinstall
+
+generated: \
+	vl_errors.c vlserver.h \
+	Kvldbint.cs.c Kvldbint.xdr.c \
+	vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h
 
 depinstall: \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
@@ -136,9 +142,11 @@ install: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_PROGRAM} vlserver ${DESTDIR}${afssrvlibexecdir}/vlserver
-	${INSTALL_PROGRAM} cnvldb ${DESTDIR}${afssrvsbindir}/vldb_convert
-	${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check
+	if [ "x$(ENABLE_PTHREADED_UBIK)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} vlserver ${DESTDIR}${afssrvlibexecdir}/vlserver; \
+		${INSTALL_PROGRAM} cnvldb ${DESTDIR}${afssrvsbindir}/vldb_convert; \
+		${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check; \
+	fi;
 	${INSTALL_DATA} libvldb.a ${DESTDIR}${libdir}/afs/libvldb.a
 	${INSTALL_DATA} vl_opcodes.h ${DESTDIR}${includedir}/afs/vl_opcodes.h
 	${INSTALL_DATA} vlserver.h ${DESTDIR}${includedir}/afs/vlserver.h
@@ -151,9 +159,11 @@ dest: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_PROGRAM} vlserver ${DEST}/root.server/usr/afs/bin/vlserver
-	${INSTALL_PROGRAM} cnvldb ${DEST}/etc/vldb_convert
-	${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check
+	if [ "x$(ENABLE_PTHREADED_UBIK)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} vlserver ${DEST}/root.server/usr/afs/bin/vlserver; \
+		${INSTALL_PROGRAM} cnvldb ${DEST}/etc/vldb_convert; \
+		${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check; \
+	fi;
 	${INSTALL_DATA} libvldb.a ${DEST}/lib/afs/libvldb.a
 	${INSTALL_DATA} vl_opcodes.h ${DEST}/include/afs/vl_opcodes.h
 	${INSTALL_DATA} vlserver.h ${DEST}/include/afs/vlserver.h

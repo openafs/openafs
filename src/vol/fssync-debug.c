@@ -210,7 +210,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
     cmd_AddParm(ts, "-vnodeid", CMD_SINGLE, 0, "vnode id");
     cmd_AddParm(ts, "-unique", CMD_SINGLE, 0, "uniquifier");
-    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "paritition name");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     COMMON_PARMS_DECL(ts);
 
     ts = cmd_CreateSyntax("stats", StatsQuery, NULL, "see 'stats help' for more information");
@@ -973,7 +973,7 @@ VnQuery(struct cmd_syndesc * as, void * rock)
     do_vnqry(&state, &res);
 
     if (res.hdr.response == SYNC_OK) {
-	memcpy(&v, res.payload.buf, sizeof(Volume));
+	memcpy(&v, res.payload.buf, sizeof(Vnode));
 
 	printf("vnode = {\n");
 

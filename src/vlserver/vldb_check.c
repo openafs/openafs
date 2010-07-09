@@ -75,7 +75,6 @@ int fd;
 int listentries, listservers, listheader, listuheader, verbose, quiet;
 
 int fix = 0;
-int fixed = 0;
 int passes = 0;
 /* if quiet, don't send anything to stdout */
 int quiet = 0; 
@@ -86,6 +85,7 @@ struct er {
     long addr;
     int type;
 } *record;
+afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
 
 /*  Used to control what goes to stdout based on quiet flag */
@@ -143,7 +143,7 @@ readUbikHeader(void)
     }
 
     uheader.magic = ntohl(uheader.magic);
-    uheader.size = ntohl(uheader.size);
+    uheader.size = ntohs(uheader.size);
     uheader.version.epoch = ntohl(uheader.version.epoch);
     uheader.version.counter = ntohl(uheader.version.counter);
 
@@ -237,6 +237,20 @@ InvalidVolname(char *volname)
     if (slen >= VL_MAXNAMELEN)
 	return 1;
     return (slen != strspn(volname, map));
+}
+
+int
+validVolumeAddr(afs_uint32 fileOffset)
+{
+    if (ADDR(fileOffset) >= maxentries) {
+	/* Are we in range */
+	return 0;
+    }
+    /*
+     * We cannot test whether the offset is aligned
+     * since the vl entries are not in a regular array
+     */
+    return 1;
 }
 
 void
@@ -411,7 +425,19 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 		quiet_println(" ro");
 	    if (vlentryp->flags & VLF_BACKEXISTS)
 		quiet_println(" bk");
-	    if (vlentryp->flags & 0xffff8fff)
+	    if (vlentryp->flags & VLOP_MOVE)
+		quiet_println(" lock_move");
+	    if (vlentryp->flags & VLOP_RELEASE)
+		quiet_println(" lock_release");
+	    if (vlentryp->flags & VLOP_BACKUP)
+		quiet_println(" lock_backup");
+	    if (vlentryp->flags & VLOP_DELETE)
+		quiet_println(" lock_delete");
+	    if (vlentryp->flags & VLOP_DUMP)
+		quiet_println(" lock_dump");
+
+	    /* all bits not covered by VLF_* and VLOP_* constants */
+	    if (vlentryp->flags & 0xffff8e0f)
 		quiet_println(" errorflag(0x%x)", vlentryp->flags);
 	    quiet_println("\n");
 	    quiet_println("   LockAfsId     = %d\n", vlentryp->LockAfsId);
@@ -448,7 +474,6 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
     int i;
 
     if (verbose) quiet_println("Writing back entry at addr %u\n", addr);
-    fixed++;
     for (i = 0; i < MAXTYPES; i++)
 	vlentryp->volumeId[i] = htonl(vlentryp->volumeId[i]);
     vlentryp->flags = htonl(vlentryp->flags);
@@ -459,9 +484,10 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
 	vlentryp->nextIdHash[i] = htonl(vlentryp->nextIdHash[i]);
     vlentryp->nextNameHash = htonl(vlentryp->nextNameHash);
     for (i = 0; i < NMAXNSERVERS; i++) {
-	vlentryp->serverNumber[i] = htonl(vlentryp->serverNumber[i]);
-	vlentryp->serverPartition[i] = htonl(vlentryp->serverPartition[i]);
-	vlentryp->serverFlags[i] = htonl(vlentryp->serverFlags[i]);
+	/* make sure not to htonl these, as they're chars, not ints */
+	vlentryp->serverNumber[i] =  vlentryp->serverNumber[i] ;
+	vlentryp->serverPartition[i] = vlentryp->serverPartition[i] ;
+	vlentryp->serverFlags[i] = vlentryp->serverFlags[i] ;
     }
     vldbwrite(addr, (char *)vlentryp, sizeof(*vlentryp));
 }
@@ -621,57 +647,6 @@ ReadAllEntries(struct vlheader *header)
 	     header->vital_header.MaxVolumeId, maxvolid);
 }
 
-
-void
-SetHashEnd(long addr, int type, long new)
-{
-    struct nvlentry vlentry;
-    afs_int32 type2, next = -1;
-
-    for (; addr; addr = next) {
-	readentry(addr, &vlentry, &type2);
-	switch(type & 0xf0) {
-	case RWH:
-	    next = vlentry.nextIdHash[0];
-	    break;
-	case ROH:
-	    next = vlentry.nextIdHash[1];
-	    break;
-	case BKH:
-	    next = vlentry.nextIdHash[2];
-	    break;
-	case NH:
-	    next = vlentry.nextNameHash;
-	    break;
-	default:
-	    next = -1;
-	}
-
-	if (next < 1) {
-	    switch(type & 0xf0) {
-	    case RWH:
-	      if (vlentry.nextIdHash[0] != 0) {quiet_println("bwoop\n");}
-		vlentry.nextIdHash[0] = new;
-		break;
-	    case ROH:
-	      if (vlentry.nextIdHash[1] != 0) {quiet_println("bwoop\n");}
-		vlentry.nextIdHash[1] = new;
-		break;
-	    case BKH:
-	      if (vlentry.nextIdHash[2] != 0) {quiet_println("bwoop\n");}
-		vlentry.nextIdHash[2] = new;
-		break;
-	    case NH:
-	      if (vlentry.nextNameHash != 0) {quiet_println("bwoop\n");}
-		vlentry.nextNameHash = new;
-		break;
-	    }
-	    writeentry(addr, &vlentry);
-	    return;
-	}
-    }
-}
-
 /*
  * Follow each Name hash bucket marking it as read in the record array.
  * Record we found it in the name hash within the record array.
@@ -689,6 +664,13 @@ FollowNameHash(struct vlheader *header)
     if (verbose) quiet_println("Check Volume Name Hash\n");
     for (i = 0; i < HASHSIZE; i++) {
 	chainlength = 0;
+
+	if (!validVolumeAddr(header->VolnameHash[i])) {
+	    log_error(VLDB_CHECK_ERROR,"Name Hash %d: Bad entry %u is out of range\n",
+		      i, header->VolnameHash[i]);
+	    continue;
+	}
+
 	for (addr = header->VolnameHash[i]; addr; addr = vlentry.nextNameHash) {
 	    readentry(addr, &vlentry, &type);
 	    if (type != VL) {
@@ -697,8 +679,12 @@ FollowNameHash(struct vlheader *header)
 		continue;
 	    }
 
-	    rindex = addr / sizeof(vlentry);
+	    rindex = ADDR(addr);
 
+	    /*
+	     * we know that the address is valid because we
+	     * checked it either above or below
+	     */
 	    if (record[rindex].addr != addr && record[rindex].addr) {
 	        log_error	
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
@@ -711,6 +697,14 @@ FollowNameHash(struct vlheader *header)
 		record[rindex].type |= MULTN;
 		break;
 	    }
+
+	    if (!validVolumeAddr(vlentry.nextNameHash)) {
+		log_error(VLDB_CHECK_ERROR,"Name Hash forward link of '%s' is out of range\n",
+			  vlentry.name);
+		record[rindex].type |= MULTN;
+		break;
+	    }
+
 	    record[rindex].type |= NH;
 	    record[rindex].type |= REFN;
 
@@ -763,29 +757,43 @@ FollowIdHash(struct vlheader *header)
 
 	for (j = 0; j < HASHSIZE; j++) {
 	    chainlength = 0;
+	    if (!validVolumeAddr(header->VolidHash[i][j])) {
+		log_error(VLDB_CHECK_ERROR,"%s Hash %d: Bad entry %u is out of range\n",
+			  vtype(i), j, header->VolidHash[i][j]);
+		continue;
+	    }
+
 	    for (addr = header->VolidHash[i][j]; addr;
 		 addr = vlentry.nextIdHash[i]) {
 		readentry(addr, &vlentry, &type);
 		if (type != VL) {
-		   log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry at %u: Not a valid vlentry\n",
 			 vtype(i), j, addr);
 		    continue;
 		}
 
-		rindex = addr / sizeof(vlentry);
+		rindex = ADDR(addr);
 		if (record[rindex].addr != addr && record[rindex].addr) {
-		   log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
 			 record[rindex].addr, addr, rindex);
 		}
 		if (record[rindex].type & hash) {
-		   log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
 			 vtype(i), j, vlentry.name);
 		    record[rindex].type |= badref;
 		    break;
 		}
+
+		if (!validVolumeAddr(vlentry.nextIdHash[i])) {
+		    log_error(VLDB_CHECK_ERROR,"%s Id Hash forward link of '%s' is out of range\n",
+			      vtype(i), vlentry.name);
+		    record[rindex].type |= badref;
+		    break;
+		}
+
 		record[rindex].type |= hash;
 		record[rindex].type |= ref;
 
@@ -799,7 +807,6 @@ FollowIdHash(struct vlheader *header)
 			 vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
 		    record[rindex].type |= badhash;
-		    printf("%d: %x\n", rindex, record[rindex].type);
 		}
 	    }
 
@@ -883,7 +890,7 @@ CheckIpAddrs(struct vlheader *header)
     int mhblocks = 0;
     afs_int32 i, j, m, rindex;
     afs_int32 mhentries, regentries;
-    afs_int32 caddrs[VL_MAX_ADDREXTBLKS];
+    afs_uint32 caddrs[VL_MAX_ADDREXTBLKS];
     char mhblock[VL_ADDREXTBLK_SIZE];
     struct extentaddr *MHblock = (struct extentaddr *)mhblock;
     struct extentaddr *e;
@@ -1072,22 +1079,84 @@ CheckIpAddrs(struct vlheader *header)
     return;
 }
 
-void 
-FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp, 
-       struct nvlentry *vlentry, afs_uint32 hash) {
-    SetHashEnd(addr, type, tmp);
-    quiet_println("linked unlinked chain %u (index %lu) to end of chain %d for %s hash\n", 
-	   tmp, ADDR(tmp), hash, type==NH?"Name":(type==RWH?"RW":(type==ROH?"RO":"BK")));
+char *
+nameForAddr(afs_uint32 addr, int hashtype, afs_uint32 *hash, char *buffer)
+{
+    /*
+     * We need to simplify the reporting, while retaining
+     * legible messages.  This is a helper function.  The return address
+     * is either a fixed char or the provided buffer - so don't use the
+     * name after the valid lifetime of the buffer.
+     */
+    afs_int32 type;
+    struct nvlentry entry;
+    if (!addr) {
+	/* Distinguished, invalid, hash */
+	*hash = 0xFFFFFFFF;
+	return "empty";
+    } else if (!validVolumeAddr(addr)) {
+	/* Different, invalid, hash */
+	*hash = 0XFFFFFFFE;
+	return "invalid";
+    }
+    readentry(addr, &entry, &type);
+    if (VL != type) {
+	*hash = 0XFFFFFFFE;
+	return "invalid";
+    }
+    if (hashtype >= MAXTYPES) {
+	*hash = NameHash(entry.name);
+    } else {
+	*hash = IdHash(entry.volumeId[hashtype]);
+    }
+    sprintf(buffer, "for '%s'", entry.name);
+    return buffer;
+}
+
+void
+reportHashChanges(struct vlheader *header, afs_uint32 oldnamehash[HASHSIZE], afs_uint32 oldidhash[MAXTYPES][HASHSIZE])
+{
+    int i, j;
+    afs_uint32 oldhash, newhash;
+    char oldNameBuffer[10 + VL_MAXNAMELEN];
+    char newNameBuffer[10 + VL_MAXNAMELEN];
+    char *oldname, *newname;
+    /*
+     * report hash changes
+     */
+
+    for (i = 0; i < HASHSIZE; i++) {
+	if (oldnamehash[i] != header->VolnameHash[i]) {
+
+	    oldname = nameForAddr(oldnamehash[i], MAXTYPES, &oldhash, oldNameBuffer);
+	    newname = nameForAddr(header->VolnameHash[i], MAXTYPES, &newhash, newNameBuffer);
+	    if (verbose || (oldhash != newhash)) {
+		quiet_println("FIX: Name hash header at %d was %s, is now %s\n", i, oldname, newname);
+	    }
+	}
+	for (j = 0; j < MAXTYPES; j++) {
+	    if (oldidhash[j][i] != header->VolidHash[j][i]) {
+
+		oldname = nameForAddr(oldidhash[j][i], j, &oldhash, oldNameBuffer);
+		newname = nameForAddr(header->VolidHash[j][i], j, &newhash, newNameBuffer);
+		if (verbose || (oldhash != newhash)) {
+		    quiet_println("FIX: %s hash header at %d was %s, is now %s\n", vtype(j), i, oldname, newname);
+		}
+	    }
+	}
+    }
 }
 
 int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *dbfile;
-    afs_int32 maxentries, type;
+    afs_int32 type;
     struct vlheader header;
     struct nvlentry vlentry, vlentry2;
     int i, j;
+    afs_uint32 oldnamehash[HASHSIZE];
+    afs_uint32 oldidhash[MAXTYPES][HASHSIZE];
 
     error_level = 0;  /*  start clean with no error status */
     dbfile = as->parms[0].items->data;	/* -database */
@@ -1106,7 +1175,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
         return VLDB_CHECK_FATAL;
     }
 
- restart:
+
     /* open the vldb database file */
     fd = open(dbfile, (fix > 0)?O_RDWR:O_RDONLY, 0);
     if (fd < 0) {
@@ -1154,7 +1223,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	int reft = 0;
 	int hash = 0;
         int nexthash = 0;
-	int *nextpp = NULL;
+	afs_uint32 *nextpp = NULL;
 	char *which = NULL;
 
 	if (record[i].type == 0)
@@ -1165,6 +1234,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	 */
 	if (record[i].type & VL) {
 	    int foundbad = 0;
+	    int foundbroken = 0;
 	    char volidbuf[256];
 
 	    readentry(record[i].addr, &vlentry, &type);
@@ -1213,79 +1283,86 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		foundbad = 1;
 	    }
 
-	    if (record[ADDR(vlentry.nextNameHash)].type & MULTN) {
+	    if (!validVolumeAddr(vlentry.nextNameHash) ||
+		record[ADDR(vlentry.nextNameHash)].type & MULTN) {
 		nextp = ADDR(vlentry.nextNameHash);
 		reft = REFN;
 		hash = NameHash(vlentry.name);
 		nextpp = &vlentry.nextNameHash;
 		which = "name";
 		volidbuf[0]='\0';
-		readentry(nextp, &vlentry2, &type);
-		nexthash = NameHash(vlentry2.name);
+		if (validVolumeAddr(vlentry.nextNameHash)) {
+		    readentry(vlentry.nextNameHash, &vlentry2, &type);
+		    nexthash = NameHash(vlentry2.name);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
-	    if ((record[ADDR(vlentry.nextIdHash[0])].type & MULTRW)) {
+	    if (!validVolumeAddr(vlentry.nextIdHash[0]) ||
+		record[ADDR(vlentry.nextIdHash[0])].type & MULTRW) {
 		nextp = ADDR(vlentry.nextIdHash[0]);
 		reft = REFRW;
 		hash = IdHash(vlentry.volumeId[0]);
 		nextpp = &(vlentry.nextIdHash[0]);
 		which = "RW";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
-		readentry(nextp, &vlentry2, &type);
-		nexthash = IdHash(vlentry2.volumeId[0]);
+		if (validVolumeAddr(vlentry.nextIdHash[0])) {
+		    readentry(vlentry.nextIdHash[0], &vlentry2, &type);
+		    nexthash = IdHash(vlentry2.volumeId[0]);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
-	    if ((record[ADDR(vlentry.nextIdHash[1])].type & MULTRO)) {
+	    if (!validVolumeAddr(vlentry.nextIdHash[1]) ||
+		record[ADDR(vlentry.nextIdHash[1])].type & MULTRO) {
 		nextp = ADDR(vlentry.nextIdHash[1]);
 		reft = REFRO;
 		hash = IdHash(vlentry.volumeId[1]);
 		nextpp = &(vlentry.nextIdHash[1]);
 		which = "RO";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
-		readentry(nextp, &vlentry2, &type);
-		nexthash = IdHash(vlentry2.volumeId[1]);
+		if (validVolumeAddr(vlentry.nextIdHash[1])) {
+		    readentry(vlentry.nextIdHash[1], &vlentry2, &type);
+		    nexthash = IdHash(vlentry2.volumeId[1]);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
-	    if ((record[ADDR(vlentry.nextIdHash[2])].type & MULTBK)) {
+	    if (!validVolumeAddr(vlentry.nextIdHash[2]) ||
+		record[ADDR(vlentry.nextIdHash[2])].type & MULTBK) {
 		nextp = ADDR(vlentry.nextIdHash[2]);
 		reft = REFBK;
 		hash = IdHash(vlentry.volumeId[2]);
 		nextpp = &(vlentry.nextIdHash[2]);
 		which = "BK";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
-		readentry(nextp, &vlentry2, &type);
-		nexthash = IdHash(vlentry2.volumeId[2]);
+		if (validVolumeAddr(vlentry.nextIdHash[2])) {
+		    readentry(vlentry.nextIdHash[2], &vlentry2, &type);
+		    nexthash = IdHash(vlentry2.volumeId[2]);
+		} else {
+		    nexthash = 0xFFFFFFFF;
+		}
 		if (hash != nexthash)
-		    foundbad = 1;
+		    foundbroken = 1;
 	    }
 
-	    if (foundbad) {
-		log_error(VLDB_CHECK_ERROR,"%d: Volume '%s' %snot found in %s hash %d", i, 
+	    if (foundbroken) {
+		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %s forward link in %s hash chain is broken (hash %d != %d)\n", i,
+			  vlentry.name, volidbuf, which, hash, nexthash);
+	    } else if (foundbad) {
+		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %snot found in %s hash %d\n", i,
 		       vlentry.name, volidbuf, which, hash);
-		if (nextp) {
-		    log_error(VLDB_CHECK_ERROR," (next %d", nextp);
-		    if (!(record[nextp].type & reft)) {
-			log_error(VLDB_CHECK_ERROR," not in chain ");
-			record[nextp].type |= reft;
-		    } else if (nextp != 0) {
-			log_error(VLDB_CHECK_ERROR," next in chain");
-			if (fix) {
-			    log_error(VLDB_CHECK_ERROR,", unchaining");
-			    *nextpp = 0;
-			    writeentry(record[i].addr, &vlentry);
-			}
-		    }
-		    log_error(VLDB_CHECK_ERROR,")");
-		}
-		log_error(VLDB_CHECK_ERROR,"\n");
 	    }
-	
+
 	    for (j = 0; j < NMAXNSERVERS; j++) {
 		if ((vlentry.serverNumber[j] != 255)
 		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
@@ -1328,136 +1405,104 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (verbose)  quiet_println("Verify each chain head\n");
-    {
-	afs_uint32 addr;
-	int hash;
+    if (fix) {
+	/*
+	 * If we are fixing we will rebuild all the hash lists from the ground up
+	 */
+	memcpy(oldnamehash, header.VolnameHash, sizeof(oldnamehash));
+	memset(header.VolnameHash, 0, sizeof(header.VolnameHash));
 
-	for (j = 0; j < HASHSIZE; j++) {
-	    for (addr = header.VolnameHash[j]; j < HASHSIZE; j++) {
-		if (record[ADDR(addr)].type & MULTN) {
-		    hash = NameHash(vlentry.name);
-		    if (hash != j) {
-			header.VolnameHash[j] = vlentry.nextNameHash;
-			vlentry.nextNameHash = 0;
-			if (fix)
-			    writeentry(record[i].addr, &vlentry);
-		    }
-		}
-	    }
-	}
-	for (i = 0; i <= 2; i++) {
-         for (j = 0, addr = header.VolidHash[i][j]; j < HASHSIZE; j++) {
-        if (verbose) quiet_println("got %d %d %d\n", i, j, ADDR(addr));
-		if (i == 0 && (record[ADDR(addr)].type & MULTRW)) {
-		    hash = IdHash(vlentry.volumeId[i]);
-		    if (hash != j) {
-			header.VolidHash[i][j] = vlentry.nextIdHash[i];
-			vlentry.nextIdHash[i] = 0;
-			if (fix) {
-                         quiet_println("fix %d %d %d\n", i, j, ADDR(addr));
-			    writeentry(record[i].addr, &vlentry);
-		    }
-		}
-		}
-
-		if (i == 1 && (record[ADDR(addr)].type & MULTRO)) {
-		    hash = IdHash(vlentry.volumeId[i]);
-		    if (hash != j) {
-			header.VolidHash[i][j] = vlentry.nextIdHash[i];
-			vlentry.nextIdHash[i] = 0;
-			if (fix) {
-                         quiet_println("fix %d %d %d\n", i, j, addr);
-			    writeentry(record[i].addr, &vlentry);
-		    }
-		}
-		}
-
-		if (i == 2 && (record[ADDR(addr)].type & MULTBK)) {
-		    hash = IdHash(vlentry.volumeId[i]);
-		    if (hash != j) {
-			header.VolidHash[i][j] = vlentry.nextIdHash[i];
-			vlentry.nextIdHash[i] = 0;
-			if (fix) {
-                         quiet_println("fix %d %d %d\n", i, j, addr);
-			    writeentry(record[i].addr, &vlentry);
-		    }
-		}
-	    }
-	}
+	memcpy(oldidhash, header.VolidHash, sizeof(oldidhash));
+	memset(header.VolidHash, 0, sizeof(header.VolidHash));
+	quiet_println("Rebuilding %u entries\n", maxentries);
+    } else {
+	quiet_println("Scanning %u entries for possible repairs\n", maxentries);
     }
-    }
-    /* By the time we get here, unchained entries are really unchained */
-    quiet_println("Scanning %u entries for possible repairs\n", maxentries);
     for (i = 0; i < maxentries; i++) {
-	int *nextpp;
+	afs_uint32 hash;
 	if (record[i].type & VL) {
 	    readentry(record[i].addr, &vlentry, &type);
 	    if (!(record[i].type & REFN)) {
 		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a name chain\n", i, 
 		       record[i].addr, record[i].type);
-		if (strlen(vlentry.name)>0) {
-		    if (fix) {
-			if (header.VolnameHash[NameHash(vlentry.name)] == 0)
-			    header.VolnameHash[NameHash(vlentry.name)] = record[i].addr;
-			else
-			    FixBad(i, header.VolnameHash[NameHash(vlentry.name)], NH, record[i].addr, &vlentry, NameHash(vlentry.name));
-		    }
-		} else {
-		    nextpp = &vlentry.nextNameHash;
-		    if (fix && *nextpp) {
-			printf(", unchaining");
-			*nextpp = 0;
-			writeentry(record[i].addr, &vlentry);
-		    }
-		}
 	    }
 	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
 		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RW chain\n", i,
 		       record[i].addr, record[i].type);
-		if (fix) {
-		    if (header.VolidHash[0][IdHash(vlentry.volumeId[0])] == 0)
-			header.VolidHash[0][IdHash(vlentry.volumeId[0])] = record[i].addr;
-		    else
-			FixBad(i, header.VolidHash[0][IdHash(vlentry.volumeId[0])], RWH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[0]));
-		}
 	    }
 	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
 		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RO chain\n", i, 
 		       record[i].addr, record[i].type);
-		if (fix) {
-		    if (header.VolidHash[1][IdHash(vlentry.volumeId[1])] == 0)
-			header.VolidHash[1][IdHash(vlentry.volumeId[1])] = record[i].addr;
-		    else
-			FixBad(i, header.VolidHash[1][IdHash(vlentry.volumeId[1])], ROH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[1]));
-		}
 	    }
 	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
 		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a BK chain\n", i, 
 		       record[i].addr, record[i].type);
-		if (fix) {
-		    if (header.VolidHash[2][IdHash(vlentry.volumeId[2])] == 0)
-			header.VolidHash[2][IdHash(vlentry.volumeId[2])] = record[i].addr;
-		    else
-			FixBad(i, header.VolidHash[2][IdHash(vlentry.volumeId[2])], BKH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[2]));
+	    }
+	    if (fix) {
+		afs_uint32 oldhash, newhash;
+		char oldNameBuffer[10 + VL_MAXNAMELEN];
+		char newNameBuffer[10 + VL_MAXNAMELEN];
+		char *oldname, *newname;
+
+		/*
+		 * Put the current hash table contexts into our 'next'
+		 * and our address into the hash table.
+		 */
+		hash = NameHash(vlentry.name);
+
+		if (vlentry.nextNameHash != header.VolnameHash[hash]) {
+		    oldname = nameForAddr(vlentry.nextNameHash, MAXTYPES, &oldhash, oldNameBuffer);
+		    newname = nameForAddr(header.VolnameHash[hash], MAXTYPES, &newhash, newNameBuffer);
+		    if (verbose || ((oldhash != newhash) &&
+                                    (0 != vlentry.nextNameHash) &&
+                                    (0 != header.VolnameHash[hash]))) {
+			/*
+			 * That is, only report if we are verbose
+			 * or the hash is changing (and one side wasn't NULL
+			 */
+			quiet_println("FIX: Name hash link for '%s' was %s, is now %s\n",
+                              vlentry.name, oldname, newname);
+		    }
 		}
 
+		vlentry.nextNameHash = header.VolnameHash[hash];
+		header.VolnameHash[hash] = record[i].addr;
+
+		for (j = 0; j < MAXTYPES; j++) {
+
+		    if (0 == vlentry.volumeId[j]) {
+			/*
+			 * No volume of that type.  Continue
+			 */
+			continue;
+		    }
+		    hash = IdHash(vlentry.volumeId[j]);
+
+		    if (vlentry.nextIdHash[j] != header.VolidHash[j][hash]) {
+			oldname = nameForAddr(vlentry.nextIdHash[j], j, &oldhash, oldNameBuffer);
+			newname = nameForAddr(header.VolidHash[j][hash], j, &newhash, newNameBuffer);
+			if (verbose || ((oldhash != newhash) &&
+					(0 != vlentry.nextIdHash[j]) &&
+					(0 != header.VolidHash[j][hash]))) {
+			    quiet_println("FIX: %s hash link for '%s' was %s, is now %s\n",
+					  vtype(j), vlentry.name, oldname, newname);
+			}
+		    }
+
+		    vlentry.nextIdHash[j] = header.VolidHash[j][hash];
+		    header.VolidHash[j][hash] = record[i].addr;
+		}
+		writeentry(record[i].addr, &vlentry);
 	    }
 	}
     }
-    if (fix) 
+    if (fix) {
+	reportHashChanges(&header, oldnamehash, oldidhash);
 	writeheader(&header);
+    }
 
     close(fd);
 
-    if (fixed) {
-      fixed=0;
-      passes++;
-      if (passes < 20)
-	goto restart;
-      else
-	return 1;
-    }
     return error_level;
 }
 

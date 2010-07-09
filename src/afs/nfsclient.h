@@ -26,7 +26,7 @@ struct nfsclientpag {
 
     afs_int32 refCount;		/* Ref count for packages using this */
     afs_int32 uid;		/* search based on uid and ... */
-    afs_int32 host;		/* ... nfs client's host ip address */
+    afs_uint32 host;		/* ... nfs client's host ip address */
     afs_int32 pag;		/* active pag for all  (uid, host) "unpaged" conns */
     afs_int32 client_uid;       /* actual UID on client */
     char *sysname[MAXNUMSYSNAMES];/* user's "@sys" value; also kept in unixuser */

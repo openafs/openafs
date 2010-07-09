@@ -93,6 +93,10 @@ PrintBackupHdr(backup_system_header * hdr)
     printf("          => %s", ctime(&to));
     printf(" Dump Time:  %d == %s", hdr->dump_date, ctime(&dd));
     printf(" Dump Flags: 0x%08x\n", hdr->flags);
-    printf(" Length:     %d\n", hdr->dumplen);
+#ifdef NATIVE_INT64
+    printf(" Length:     %llu\n", hdr->dumplen);
+#else
+    printf(" Length:     %u,%u\n", hdr->dumplen.hi, hdr->dumplen.lo);
+#endif
     printf(" File Num:   %d\n", hdr->filenum);
 }

@@ -139,8 +139,8 @@ partition, but do not count against the volume's quota.
 =head1 CAUTIONS
 
 Running this command can result in data loss if the Salvager process can
-repair corruption only by removing the offending data. Consult the I<IBM
-AFS Administration Guide> for more information.
+repair corruption only by removing the offending data. Consult the
+I<OpenAFS Administration Guide> for more information.
 
 =head1 OPTIONS
 
@@ -349,7 +349,8 @@ L<vos_release(1)>,
 L<vos_remove(1)>,
 L<vos_zap(1)>
 
-I<IBM AFS Administration Guide>
+The I<OpenAFS Administration Guide> at
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 

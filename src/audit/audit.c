@@ -321,8 +321,8 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     afs_int32 code;
     afs_int32 err;
     static char BUFFER[32768];
-#endif
     int result;
+#endif
 
 #ifdef AFS_PTHREAD_ENV
     /* i'm pretty sure all the server apps now call osi_audit_init(),
@@ -336,6 +336,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     if (!osi_audit_all && !auditout_open)
 	return 0;
 
+#ifdef AFS_AIX32_ENV
     switch (errCode) {
     case 0:
 	result = AUDIT_OK;
@@ -359,6 +360,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 	result = AUDIT_FAIL;
 	break;
     }
+#endif
 
 #ifdef AFS_PTHREAD_ENV
     pthread_mutex_lock(&audit_lock);

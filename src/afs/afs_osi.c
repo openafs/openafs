@@ -45,6 +45,7 @@ long afs_global_owner;
 #endif
 
 #if defined(AFS_DARWIN_ENV) 
+thread_t afs_global_owner;
 #ifdef AFS_DARWIN80_ENV
 lck_mtx_t  *afs_global_lock;
 #else
@@ -52,18 +53,13 @@ struct lock__bsd__ afs_global_lock;
 #endif
 #endif
 
-#if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
+#if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD_ENV)
 struct lock afs_global_lock;
 afs_proc_t *afs_global_owner;
-#endif
-#ifdef AFS_FBSD50_ENV
+#elif defined(AFS_FBSD_ENV)
 struct mtx afs_global_mtx;
 struct thread *afs_global_owner;
 #endif
-
-#if defined(AFS_DARWIN_ENV)
-thread_t afs_global_owner;
-#endif /* AFS_DARWIN_ENV */
 
 #if defined(AFS_AIX41_ENV)
 simple_lock_data afs_global_lock;
@@ -86,7 +82,8 @@ osi_Init(void)
 #endif
 #if defined(AFS_XBSD_ENV)
 	/* Can't just invent one, must use crget() because of mutex */
-	afs_osi_credp = crdup(osi_curcred());
+	afs_osi_credp =
+	  crdup(osi_curcred());
 #else
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 #if defined(AFS_LINUX26_ENV)
@@ -95,7 +92,9 @@ osi_Init(void)
 #if defined(AFS_DARWIN80_ENV)
         afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
 #else
-	crhold(&afs_osi_cred);	/* don't let it evaporate */
+# if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
+	crhold(&afs_osi_cred);  /* don't let it evaporate */
+# endif
 #endif
 
 	afs_osi_credp = &afs_osi_cred;
@@ -284,7 +283,7 @@ shutdown_osi(void)
     }
 }
 
-#ifndef AFS_OBSD_ENV
+#if !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD40_ENV)
 int
 afs_osi_suser(void *cr)
 {

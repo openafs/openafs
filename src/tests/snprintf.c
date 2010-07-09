@@ -44,6 +44,9 @@
 #ifndef HAVE_VASNPRINTF
 int vasnprintf(char **ret, size_t max_sz, const char *format, va_list args);
 #endif
+#ifndef HAVE_VASPRINTF
+int vasprintf(char**ret, const char *format, va_list args);
+#endif
 
 #ifndef min
 #define min(a, b)               ((a) > (b) ? (b) : (a))

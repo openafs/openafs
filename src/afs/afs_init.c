@@ -22,7 +22,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "rx/rxstat.h"
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
 #include <linux/cred.h>
 #endif
 
@@ -54,7 +54,7 @@ static struct vnode *volumeVnode;
 afs_rwlock_t afs_discon_lock;
 extern afs_rwlock_t afs_disconDirtyLock;
 #endif
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
 const struct cred *cache_creds;
 #endif
 
@@ -158,7 +158,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     afs_cacheStats = astatSize;
     afs_vcacheInit(astatSize);
     afs_dcacheInit(afiles, ablocks, aDentries, achunk, aflags);
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
     /*
      * Save current credentials for later access to disk cache files.
      * If selinux, apparmor or other security modules are enabled,
@@ -391,7 +391,7 @@ afs_InitCacheInfo(register char *afile)
 	struct statvfs64 st;
 #elif	defined(AFS_HPUX102_ENV)
 	struct k_statvfs st;
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
 	struct statvfs st;
 #elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;
@@ -421,14 +421,10 @@ afs_InitCacheInfo(register char *afile)
 #elif defined(AFS_DARWIN80_ENV)
         afs_cacheVfsp = vnode_mount(filevp);
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
-#elif defined(AFS_DARWIN_ENV)
-	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
 #elif defined(AFS_FBSD80_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st))
-#elif defined(AFS_FBSD50_ENV)
-	if (!VFS_STATFS(filevp->v_mount, &st, curthread))
-#elif defined(AFS_XBSD_ENV)
-	if (!VFS_STATFS(filevp->v_mount, &st, curproc))
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st, osi_curproc()))
 #else
 	if (!VFS_STATFS(filevp->v_vfsp, &st))
 #endif /* SGI... */
@@ -722,7 +718,7 @@ shutdown_cache(void)
 	memset(&cacheDev, 0, sizeof(struct osi_dev));
 	osi_dnlc_shutdown();
     }
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED)
+#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
     put_cred(cache_creds);
 #endif
 }				/*shutdown_cache */

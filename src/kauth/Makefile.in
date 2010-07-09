@@ -66,6 +66,10 @@ depinstall: \
 	${TOP_INCDIR}/afs/kauth.h \
 	${TOP_INCDIR}/afs/kaport.h 
 
+generated: \
+	kaerrors.c kautils.h \
+	kauth.cs.c kauth.ss.c kauth.xdr.c kauth.h
+
 ${TOP_LIBDIR}/libkauth.a: libkauth.a
 	${INSTALL_DATA} $? $@
 
@@ -304,7 +308,9 @@ dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 clean:
 	$(RM) -f *.o *.a *.xdr.c *.cs.c *.ss.c core \
 		kaserver kas klog multiklog kpasswd klogin rebuild \
-		kauth.h kautils.h kaerrors.c kpwvalid AFS_component_version_number.c \
+		ka-forwarder \
+		kauth.h kautils.h kaerrors.c kpwvalid \
+		AFS_component_version_number.c \
 		klog.krb knfs klogin.krb kdb Kkauth.h
 
 include ../config/Makefile.version

@@ -121,7 +121,7 @@ int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr, int *code)
 int
 afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 			 afs_ucred_t **cred,
-			 afs_int32 host, afs_int32 *pagparam,
+			 afs_uint32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
     return EINVAL;

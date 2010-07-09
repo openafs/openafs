@@ -1270,13 +1270,14 @@ DoBosHostList(struct cmd_syndesc *as, void *arock)
 	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
+
+        printf("Listing hosts at server %s\n", as->parms[SERVER].items->data);
     }
 
     if (!bos_HostGetBegin(bos_server, &iter, &st)) {
 	ERR_ST_EXT("bos_HostGetBegin", st);
     }
 
-    printf("Listing hosts at server %s\n", as->parms[SERVER].items->data);
 
     while (bos_HostGetNext(iter, host, &st)) {
 	printf("\t%s\n", host);
@@ -1363,9 +1364,9 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *executable = NULL;
-    unsigned long new_time = 0;
-    unsigned long old_time = 0;
-    unsigned long bak_time = 0;
+    afs_int32 new_time = 0;
+    afs_int32 old_time = 0;
+    afs_int32 bak_time = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen

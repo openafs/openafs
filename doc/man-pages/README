@@ -180,13 +180,13 @@ Man Page Sections
 
 How You Can Help
 
-  The OpenAFS man page project is just starting, and a lot of work remains
-  to be done.  Any and all contributions are greatly appreciated.  What
-  follows is a list of the ways that you can help in order of increasing
-  helpfulness.  If you only have time to do something near the top of the
-  list, please do; every little bit helps.  If you have more time and can
-  do something closer to the bottom of the list, that's even better and
-  your contribution can be included more rapidly.
+  A lot of work remains to be done on the OpenAFS man page project.  Any
+  and all contributions are greatly appreciated.  What follows is a list
+  of the ways that you can help in order of increasing helpfulness.  If
+  you only have time to do something near the top of the list, please do;
+  every little bit helps.  If you have more time and can do something
+  closer to the bottom of the list, that's even better and your
+  contribution can be included more rapidly.
 
    * Point out places OpenAFS behavior has changed since the documentation
      was written, or point out missing documentation.  Please check the
@@ -213,11 +213,11 @@ How You Can Help
    * Provide patches against the POD source that add or correct the
      documentation of commands or file formats for changes in OpenAFS.
 
-  Please send contributions either to the openafs-doc list or as bugs
-  filed via the bug reporting instructions at <http://www.openafs.org/>.
-  If you do submit a bug, please send me a note at rra@stanford.edu with
-  the bug number so that I'm aware of it, as I don't always notice new
-  bugs.
+  Please submit contributions to Gerrit or send them either to the
+  openafs-doc list or as bugs filed via the bug reporting instructions at
+  <http://www.openafs.org/>.  If you do submit a bug, please send me a
+  note at rra@stanford.edu with the bug number so that I'm aware of it, as
+  I don't always notice new bugs.
 
   You can test your new POD documentation by running the check-pod script
   in this directory with "prove check-pod".  (And check other people's
@@ -229,27 +229,6 @@ Known Problems
   The current man pages have the following known deficiencies.  Please
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
-
-   * Some of the documentation in fs getserverprefs needs minor updates to
-     reflect what happens in the dynroot case.
-
-   * bos listkeys and the KeyFile man page assume that you're using the
-     kaserver.
-
-   * bos addkey should be marked deprecated in favor of using asetkey with
-     a keytab.
-
-   * There are lingering references to AFS Development or AFS Product
-     Support in descriptions of options that one should generally not
-     use.  Also, all of the manual references refer to the "IBM" manual.
-     We should decide how to handle this terminology-wise.
-
-   * The salvager actually creates a bunch of SalvageLog files and then
-     combines them, but the SalvageLog man page doesn't reflect this.
-
-   * The references to the other OpenAFS manuals, such as the Quick Start
-     guide and the Admin Guide, should be links, probably to the documents
-     on openafs.org.
 
    * There's no mention of the Kerberos v5 support.  At least, we need
      some disclaimers under klog and friends talking about sites without
@@ -269,27 +248,20 @@ Known Problems
    * Provide a way to substitute the correct paths into the HTML output
      from Autoconf results.
 
-   * Currently, the man pages are built by regen.sh, which is somewhat
-     annoying since it takes a long time.  Figure out how better to do this
-     during the release process so that end users don't have to have
-     pod2man.
-
    * Review the sections used for all man pages against what directories
      the commands are installed into.  (In some cases, it may be better to
      change the directory than the section of the man page.)
 
    * Consider using M4 or similar to operate on POD text before output.
-     This would allow common options like vos -c,-noa,-l,-v,-e,-nor
-     to be documented once and automatically included in all vos_ reference
-     pages, much like the vos.c source includes those arguments as COMMONPARMS.
+     This would allow common options like vos -c,-noa,-l,-v,-e,-nor to be
+     documented once and automatically included in all vos_ reference
+     pages, much like the vos.c source includes those arguments as
+     COMMONPARMS.
 
    * Check that suite intro pages mention all subcommands
 
    Changes needed to have vos suite commands completely up to date,
    including the 1.5 branch:
-
-   * Document vos listaddrs -uuid / -host, and verify docs and example for
-     -printuuid
 
    * Document vos offline -busy / -sleep
 

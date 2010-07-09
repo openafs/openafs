@@ -24,6 +24,8 @@ LIBS=${TOP_LIBDIR}/libbudb.a ${TOP_LIBDIR}/libbubasics.a \
 
 all: ${TOP_LIBDIR}/libbxdb.a ${TOP_INCDIR}/afs/bucoord_prototypes.h ${TOP_INCDIR}/afs/bc.h backup
 
+generated: bucoord_errs.c bc.h
+
 ${TOP_LIBDIR}/libbxdb.a: libbxdb.a
 	${INSTALL_DATA} $? $@
 

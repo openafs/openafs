@@ -31,7 +31,9 @@
  * SUCH DAMAGE.
  */
 
-#define _LARGEFILE64_SOURCE
+#ifndef _LARGEFILE64_SOURCE
+# define _LARGEFILE64_SOURCE
+#endif
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

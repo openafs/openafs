@@ -26,7 +26,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void
 afs_osi_TraverseProcTable(void)
 {
-#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
     struct task_struct *p;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
@@ -34,7 +34,7 @@ afs_osi_TraverseProcTable(void)
 	read_lock(&tasklist_lock);
 #endif /* EXPORTED_TASKLIST_LOCK */
 
-#ifdef DEFINED_FOR_EACH_PROCESS
+#if defined(for_each_process)
     for_each_process(p) if (p->pid) {
 #ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 	if (p->exit_state)
@@ -87,7 +87,7 @@ afs_osi_proc2cred(afs_proc_t * pr)
 		* returned from here, we'll go boom, because it's statically
 		* allocated. */
 
-		atomic_set(&cr.cr_ref, 1);
+		cr.cr_ref = 1;
 		afs_set_cr_uid(&cr, task_uid(pr));
 
 		cr.cr_ngroups = pr->ngroups;

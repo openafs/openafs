@@ -1,4 +1,9 @@
-make_vnode.pl
+Makefile.in
 Makefile.config.in
+Makefile.version-CML.in
 Makefile.version-NOCML.in
 afsconfig.h.in
+config.c
+mc.c
+mkvers.c
+*.h

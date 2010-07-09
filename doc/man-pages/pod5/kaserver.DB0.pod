@@ -27,6 +27,12 @@ Always use the commands in the kas suite to administer the Authentication
 Database. It is advisable to create an archive copy of the database on a
 regular basis, using a tool such as the UNIX B<tar> command.
 
+=head1 CAUTIONS
+
+The Authentication Server is obsolete and is provided only for sites that
+need to use it while preparing for a migration to Kerberos KDC. It will be
+removed in a future version of OpenAFS.
+
 =head1 SEE ALSO
 
 L<kadb_check(8)>,

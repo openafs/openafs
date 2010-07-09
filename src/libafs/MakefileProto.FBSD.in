@@ -21,6 +21,7 @@ AFS_OS_OBJS = \
 	osi_inode.o \
 	osi_misc.o \
 	osi_sleep.o \
+	osi_vcache.o \
 	osi_vm.o \
 	osi_vnodeops.o \
 	osi_module.o 
@@ -35,24 +36,19 @@ AFS_OS_NONFSOBJS = \
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
-<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80>
+<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80 amd64_fbsd_81 amd64_fbsd_90>
 KOPTS = -fPIC
+<amd64>
+KOPTS += -mno-red-zone
 <all>
 
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 	-elf \
-<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-	-mpreferred-stack-boundary=2 \
-	-fformat-extensions \
-	-include ${KBLD}/opt_global.h \
-<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-	-include ${KBLD}/opt_global.h -mpreferred-stack-boundary=2 \
 <i386_fbsd_60>
 	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
-<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+<all>
 	-mno-align-long-strings -fno-common -ffreestanding \
 	-I${KBLD} -include opt_global.h -fno-strict-aliasing
-<all>
 
 DBUG = -O2
 #DBUG = -O -g
@@ -80,9 +76,9 @@ setup:
 	-ln -fs ${KSRC}/@HOST_CPU@/include machine
 	-ln -fs ${KSRC}/netinet netinet
 	-ln -fs ${KSRC}/nfs nfs
-<all -fbsd_71 -fbsd_80>
+<all -fbsd_71 -fbsd_80 -fbsd_81 -fbsd_90>
 	-ln -fs /usr/include/rpc rpc
-<fbsd_71 fbsd_80>
+<fbsd_71 fbsd_80 fbsd_81 fbsd_90>
 	-ln -fs ${KSRC}/rpc rpc
 <all>
 	-ln -fs ${KSRC}/sys sys
@@ -126,17 +122,10 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -Bshareable -o ${LIBAFS} setdef0.o ${LIBAFS}.kld setdef1.o
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-	$(LD) -r -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
-	gensetdefs libafs.kld
-	$(MAKE) setdef0.o setdef1.o
-	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o libafs.kld setdef1.o
-<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 	$(LD) -r -d -warn-common -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
 	touch export_syms
 	awk -f ${KSRC}/conf/kmod_syms.awk libafs.kld export_syms | xargs -J% objcopy % libafs.kld
 	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS} libafs.kld
-<all>
 
 
 # Object build rules:
@@ -146,10 +135,6 @@ setdef1.o: setdef1.c
 	$(CRULE_NOOPT)
 
 # vnode_if.h build rules:
-<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-vnode_if.h:	${KSRC}/kern/vnode_if.src
-	perl5 ${KSRC}/kern/vnode_if.pl -h ${KSRC}/kern/vnode_if.src
-<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 vnode_if.h:	${KSRC}/kern/vnode_if.src
 	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
 	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -q

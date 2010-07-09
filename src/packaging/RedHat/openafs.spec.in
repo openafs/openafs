@@ -298,7 +298,6 @@ what gets built:
  --without krb5                   Disable krb5 support (default: with krb5)
  --with bitmap-later              Enable "bitmap later" support
  --with bos-restricted            Enable "bos restricted" mode
- --with fast-restart              Enable "fast restart" mode
  --with largefiles                Enable "largefile fileserver" mode
  --with supergroups               Enable "supergroups"
 
@@ -825,7 +824,6 @@ PrintRedhatKernelFix() {
 config_opts="--enable-redhat-buildsys \
 	%{?_with_bitmap_later:--enable-bitmap-later} \
 	%{?_with_bos_restricted:--enable-bos-restricted-mode} \
-	%{?_with_fast_restart:--enable-fast-restart} \
 	%{?_with_largefiles:--enable-largefile-fileserver} \
 	%{?_with_supergroups:--enable-supergroups} \
 	--enable-transarc-paths"
@@ -1134,7 +1132,6 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_bindir}/bos
 %{_bindir}/fs
 %{_bindir}/kapasswd
-%{_bindir}/kpasswd
 %{_bindir}/klog
 %{_bindir}/klog.krb
 %{_bindir}/pagsh

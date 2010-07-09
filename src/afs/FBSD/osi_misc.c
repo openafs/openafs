@@ -27,11 +27,9 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
     struct nameidata n;
     int flags, error, glocked;
 
-#ifdef AFS_FBSD50_ENV
     glocked = ISAFS_GLOCK();
     if (glocked)
 	AFS_GUNLOCK();
-#endif
 
     flags = 0;
     flags = LOCKLEAF;
@@ -44,10 +42,8 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 #endif
     NDINIT(&n, LOOKUP, flags, seg, aname, curthread);
     if ((error = namei(&n)) != 0) {
-#ifdef AFS_FBSD50_ENV
 	if (glocked)
 	    AFS_GLOCK();
-#endif
 	return error;
     }
     *vpp = n.ni_vp;
@@ -58,10 +54,8 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
     VOP_UNLOCK(n.ni_vp, 0, curthread);
 #endif
     NDFREE(&n, NDF_ONLY_PNBUF);
-#ifdef AFS_FBSD50_ENV
     if (glocked)
 	AFS_GLOCK();
-#endif
     return 0;
 }
 
@@ -71,27 +65,7 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 void
 afs_osi_SetTime(osi_timeval_t * atv)
 {
-#ifdef AFS_FBSD50_ENV
     printf("afs attempted to set clock; use \"afsd -nosettime\"\n");
-#else
-    struct timespec ts;
-    struct timeval tv, delta;
-    int s;
-
-    AFS_GUNLOCK();
-    s = splclock();
-    microtime(&tv);
-    delta = *atv;
-    timevalsub(&delta, &tv);
-    ts.tv_sec = atv->tv_sec;
-    ts.tv_nsec = atv->tv_usec * 1000;
-    set_timecounter(&ts);
-    (void)splsoftclock();
-    lease_updatetime(delta.tv_sec);
-    splx(s);
-    resettodr();
-    AFS_GLOCK();
-#endif
 }
 
 /*
@@ -101,7 +75,6 @@ void *
 osi_fbsd_alloc(size_t size, int dropglobal)
 {
 	void *rv;
-#ifdef AFS_FBSD50_ENV
 	int glocked;
 
 	if (dropglobal) {
@@ -112,7 +85,6 @@ osi_fbsd_alloc(size_t size, int dropglobal)
 	    if (glocked)
 		AFS_GLOCK();
 	} else
-#endif
 	    rv = malloc(size, M_AFS, M_NOWAIT);
 
 	return (rv);

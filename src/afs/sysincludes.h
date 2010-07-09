@@ -51,9 +51,72 @@
 # include <sys/ioctl.h>
 # include <sys/timeout.h>
 
+#elif defined(AFS_NBSD40_ENV)
+# include <sys/errno.h>
+# include <sys/types.h>
+# include <sys/mount.h> /* may define MOUNT_AFS */
+# include <sys/param.h>
+# include <sys/systm.h>
+# include <sys/conf.h>
+# include <sys/exec.h>
+# include <sys/lock.h>
+# include <sys/syscall.h>
+# include <sys/syscallargs.h>
+# include <sys/queue.h>
+# include <sys/resourcevar.h>
+# include <sys/kernel.h>
+# include <sys/proc.h>
+# include <sys/time.h>
+# include <sys/filedesc.h>
+# include <sys/exec.h>
+# include <sys/lock.h>
+# include <sys/syscall.h>
+# include <sys/syscallargs.h>
+# include <sys/queue.h>
+# include <sys/resourcevar.h>
+# include <sys/kernel.h>
+# include <sys/proc.h>
+# include <sys/time.h>
+# include <sys/filedesc.h>
+# include <sys/file.h>
+# include <sys/socket.h>
+# include <sys/socketvar.h>
+# include <sys/dirent.h>
+# include <sys/user.h>
+# include <sys/kauth.h>
+# include <sys/uio.h>
+# include <sys/buf.h>
+# include <sys/stat.h>
+# include <sys/file.h>
+# include <sys/namei.h>
+# include <sys/socket.h>
+# include <sys/socketvar.h>
+# include <sys/dirent.h>
+# include <sys/user.h>
+# include <sys/kauth.h>
+# include <sys/uio.h>
+# include <sys/buf.h>
+# include <sys/stat.h>
+# include <sys/file.h>
+# include <sys/namei.h>
+# include <sys/vnode.h>
+# include <ufs/ffs/fs.h>
+# include <ufs/ufs/quota.h>
+# include <ufs/ufs/inode.h>
+# include <ufs/ufs/extattr.h>
+# include <ufs/ufs/ufsmount.h>
+# ifndef MLEN
+#  if 0
+#   include <sys/mbuf.h>
+#  endif /* 0 */
+#  include <net/if.h>
+# endif /* !MLEN */
+# include <sys/protosw.h>
+# include <sys/ioctl.h>
+
 #elif defined(AFS_LINUX22_ENV)
 # include <linux/version.h>
-# ifdef CONFIG_H_EXISTS
+# ifdef HAVE_LINUX_CONFIG_H
 #  include <linux/config.h>
 # endif
 # include <linux/linkage.h>
@@ -75,7 +138,7 @@
 #  if defined(LINUX_KEYRING_SUPPORT)
 #   include <linux/rwsem.h>
 #   include <linux/key.h>
-#   if defined(KEY_TYPE_H_EXISTS)
+#   if defined(HAVE_LINUX_KEY_TYPE_H)
 #    include <linux/key-type.h>
 #   endif
 #   ifndef KEY_ALLOC_IN_QUOTA
@@ -108,7 +171,7 @@ struct xfs_inode_info {
 # include <linux/mm.h>
 # include <linux/slab.h>
 # include <linux/string.h>
-# if defined(LINUX_SEMAPHORE_H)
+# if defined(HAVE_LINUX_SEMAPHORE_H)
 #  include <linux/semaphore.h>
 # else
 #  include <asm/semaphore.h>
@@ -117,10 +180,10 @@ struct xfs_inode_info {
 #  include <linux/mutex.h>
 # endif
 # include <linux/errno.h>
-# ifdef COMPLETION_H_EXISTS
+# ifdef HAVE_LINUX_COMPLETION_H
 #  include <linux/completion.h>
 # endif
-# if defined(LINUX_USE_FH)
+# if defined(HAVE_LINUX_EXPORTFS_H)
 #  include <linux/exportfs.h>
 # endif
 
@@ -234,7 +297,8 @@ typedef unsigned short etap_event_t;
 #  include "limits.h"
 # endif
 
-# if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || \
+  defined(AFS_FBSD_ENV) || defined(AFS_NBSD40_ENV)
 #  include "h/dirent.h"
 #  ifdef	AFS_SUN5_ENV
 #   include "h/sysmacros.h"
@@ -244,11 +308,12 @@ typedef unsigned short etap_event_t;
 #  include "h/dir.h"
 # endif /* SGI || SUN || HPUX */
 
-# if !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN80_ENV)
+# if !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN80_ENV) && \
+  !defined(AFS_NBSD40_ENV)
 #  include "h/user.h"
 # endif /* AFS_SGI64_ENV */
 # define	MACH_USER_API	1
-# if defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD_ENV)
 #  include "h/bio.h"
 #  include "h/filedesc.h"
 # endif
@@ -275,7 +340,7 @@ struct vfspage;		/* for vnode.h compiler warnings */
 #  endif
 # endif /* AFS_HPUX_ENV */
 # if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#  if defined(AFS_FBSD50_ENV)
+#  if defined(AFS_FBSD_ENV)
 struct vop_getwritemount_args;
 #  endif
 #  include <sys/uio.h>
@@ -287,12 +352,10 @@ struct vop_getwritemount_args;
 #  endif
 #  include <sys/vnode.h>
 #  include <sys/queue.h>
-#  include <sys/malloc.h>
-#  ifndef AFS_FBSD_ENV
-#   include <sys/ubc.h>
-#   define timeout_fcn_t mach_timeout_fcn_t
-#   include <kern/sched_prim.h>
-#  else
+#  ifndef AFS_NBSD40_ENV
+#   include <sys/malloc.h>
+#  endif
+#  ifdef AFS_FBSD_ENV
 MALLOC_DECLARE(M_AFS);
 #   include <ufs/ufs/dinode.h>
 #   include <vm/vm.h>
@@ -301,6 +364,10 @@ MALLOC_DECLARE(M_AFS);
 #   include <vm/vm_map.h>
 #   include <sys/lock.h>
 #   include <sys/user.h>
+#  else
+#   include <sys/ubc.h>
+#   define timeout_fcn_t mach_timeout_fcn_t
+#   include <kern/sched_prim.h>
 #  endif
 #  undef timeout_fcn_t
 #  define _DIR_H_
@@ -311,15 +378,17 @@ MALLOC_DECLARE(M_AFS);
 #   include <ufs/ffs/fs.h>
 #  endif
 # else
-#  include "h/vfs.h"
-#  include "h/vnode.h"
+#  ifndef AFS_NBSD40_ENV
+#   include "h/vfs.h"
+#   include "h/vnode.h"
+#  endif
 #  ifdef	AFS_SUN5_ENV
 #   include "h/fs/ufs_inode.h"
 #   include "h/fs/ufs_mount.h"
 #  else
-#   if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
+#   if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_NBSD40_ENV)
 #    include "ufs/inode.h"
-#    if !defined(AFS_SGI_ENV) && !defined(AFS_HPUX_ENV)
+#    if !defined(AFS_SGI_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_NBSD40_ENV)
 #     include "ufs/mount.h"
 #    endif /* !AFS_HPUX_ENV */
 #   endif /* !AFS_AIX32_ENV */
@@ -356,7 +425,7 @@ MALLOC_DECLARE(M_AFS);
 #  include "h/tty.h"
 # endif
 
-# if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+# if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_NBSD40_ENV)
 
 #  include "h/text.h"
 # endif

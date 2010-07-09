@@ -69,7 +69,7 @@ input file C<add> instruction's I<username> field.
 The C<A> instruction in a uss template file enhances cell security by
 imposing the following restrictions on users' password choice and
 authentication attempts. For further information on these limits, see the
-I<IBM AFS Administration Guide> and the B<kas setfields> reference page.
+I<OpenAFS Administration Guide> and the B<kas setfields> reference page.
 
 =over 4
 
@@ -454,7 +454,7 @@ fashion is useful mainly in very large cells where storing all user home
 directories under a single parent directory potentially slows directory
 lookup, or where a workplace-based division results in unevenly sized
 directories such that some users consistently experience slower directory
-lookup than others. See the chapter on B<uss> in the I<IBM AFS
+lookup than others. See the chapter on B<uss> in the I<OpenAFS
 Administration Guide> for more information.
 
 Any number of C<G> instructions can appear in the template file. If the

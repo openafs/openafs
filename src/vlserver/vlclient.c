@@ -37,6 +37,7 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <afs/afsutil.h>
 #include <rx/xdr.h>
@@ -163,7 +164,7 @@ afs_int32
 GetServer(char *aname)
 {
     register struct hostent *th;
-    afs_int32 addr;
+    afs_uint32 addr;
     int b1, b2, b3, b4;
     register afs_int32 code;
 
@@ -241,10 +242,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 	} else {
 	    char *oper, *vname;
 	    register char **argp = args;
+
 	    GetArgs(line, argp, &nargs);
 	    oper = &argp[0][0];
 	    ++argp, --nargs;
-	    if (!strcmp(oper, "cr")) {
+	    if (!*line) {
+	    } else if (!strcmp(oper, "cr")) {
 		fill_entry(&entry, argp, nargs);
 		display_entry(&entry, 0);
 		code = ubik_VL_CreateEntry(cstruct, 0, &entry);
@@ -827,7 +830,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		}
 		free((char *)addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "mhc")) {
-		afs_int32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
+		afs_uint32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
 		afs_int32 serveraddrtype[MAXSERVERID + 1];
 		int nentries1, nentries2, i, j, x, y, unique, found;
 		afs_uint32 *addrp1, *addrp2;
@@ -1003,12 +1006,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("VL_ChangeAddr returned code = %d\n", code);
 		    continue;
 		}
-	    } else if ((!strcmp(oper, "?")) || !strcmp(oper, "h"))
+	    } else if ((!strcmp(oper, "?")) || !strcmp(oper, "h") || !strcmp(oper, "help"))
 		print_usage();
 	    else if ((!strcmp(oper, "q")) || !strcmp(oper, "quit"))
 		exit(0);
 	    else {
-		printf("Unknown oper!\n");
+		printf("Unknown oper (%s)!\n", oper);
+		print_usage();
 	    }
 	}
     }
@@ -1316,14 +1320,14 @@ GetArgs(char *line, char **args, int *nargs)
     *nargs = 0;
     while (*line) {
 	register char *last = line;
-	while (*line == ' ')
+	while (isspace(*line))
 	    line++;
-	if (*last == ' ')
+	if (isspace(*last))
 	    *last = 0;
 	if (!*line)
 	    break;
 	*args++ = line, (*nargs)++;
-	while (*line && *line != ' ')
+	while (*line && !isspace(*line))
 	    line++;
     }
 }

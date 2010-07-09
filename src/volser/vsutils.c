@@ -267,7 +267,7 @@ VLDB_ListAttributesN2(VldbListByAttributes *attrp,
 
 static int vlserverv4 = -1;
 struct cacheips {
-    afs_int32 server;
+    afs_uint32 server;
     afs_int32 count;
     afs_uint32 addrs[16];
 };
@@ -281,7 +281,7 @@ struct cacheips cacheips[GETADDRUCACHESIZE];
 int cacheip_index = 0;
 
 int
-VLDB_IsSameAddrs(afs_int32 serv1, afs_int32 serv2, afs_int32 *errorp)
+VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
 {
     register int code;
     ListAddrByAttributes attrs;

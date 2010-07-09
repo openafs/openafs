@@ -285,7 +285,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ma_critical_exit();
 	    return 0;
 	}
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 	/* can't sleep in a critical section */
 	ma_critical_exit();
 	osi_vnhold(tvc, 0);

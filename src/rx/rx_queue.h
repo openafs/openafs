@@ -93,6 +93,9 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 /* Initialize a queue head (*q).  A queue head is just a queue element */
 #define queue_Init(q) (_RXQ(q))->prev = (_RXQ(q))->next = (_RXQ(q))
 
+/* initialize a node in the queue */
+#define queue_NodeInit(q) ((_RXQ(q))->prev = (_RXQ(q))->next = NULL)
+
 /* Prepend a queue element (*i) to the head of the queue, after the queue head (*q).  The new queue element should not currently be on any list. */
 #define queue_Prepend(q,i) _RXQA(_RXQ(q),_RXQ(i),next,prev)
 

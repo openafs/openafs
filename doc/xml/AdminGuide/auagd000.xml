@@ -36,7 +36,7 @@
 
     <revhistory>
       &version;
-                                  
+
       <revision>
         <revnumber>3.6</revnumber>
 
@@ -47,19 +47,13 @@
     </revhistory>
 
     <abstract>
-      <para>This edition applies to: <simplelist>
-          <member>OpenAFS for AIX, Version M.m</member>
-          <member>OpenAFS for Digital Unix, Version M.m</member>
-          <member>OpenAFS for HP-UX, Version M.m</member>
-          <member>OpenAFS for Linux, Version M.m</member>
-          <member>OpenAFS for SGI IRIX, Version M.m</member>
-          <member>OpenAFS for Solaris, Version M.m</member>
-        </simplelist></para>
-
-      <para>and to all subsequent releases and modifications until otherwise
-      indicated in new editions.This softcopy version is based on the printed
-      edition of this book. Some formatting amendments have been made to make
-      this information more suitable for softcopy.</para>
+      <para>
+        This document describes the configuration and maintenance of
+        OpenAFS from an adminstrator's standpoint.  It provides a
+        conceptual overview of OpenAFS for cell administrators, details on
+        OpenAFS configuration, and information about managing OpenAFS
+        servers and clients.
+      </para>
     </abstract>
   </bookinfo>
 
@@ -79,7 +73,7 @@
     &chapter4;
     &chapter5;
     &chapter6;
-    &chapter7; 
+    &chapter7;
     &chapter8;
     &chapter9;
   </part>

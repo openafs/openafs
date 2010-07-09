@@ -3,7 +3,7 @@
 #undef BSDUNIX
 #if defined(__ppc__) || defined(__ppc64__)
 #define MSBFIRST
-#elif defined(__i386__) || defined(__amd64__)
+#elif defined(__i386__) || defined(__amd64__) || defined(__arm__)
 #define LSBFIRST
 #else
 #error "MSBFIRST or LSBFIRST undefined"

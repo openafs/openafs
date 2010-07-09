@@ -217,7 +217,7 @@ extern int canfork;
 
 
 /* prototypes */
-extern void Exit(int code);
+extern void Exit(int code) AFS_NORETURN;
 extern int Fork(void);
 extern int Wait(char *prog);
 extern char *ToString(const char *s);

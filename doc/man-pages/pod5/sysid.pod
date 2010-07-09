@@ -32,8 +32,8 @@ file server machine to a newly installed one, be sure to remove the
 F<sysid> file from the new machine before starting the C<fs> trio of
 processes, which includes the B<fileserver> process.
 
-Some versions of AFS limit how many of a file server machine's interface
-addresses that can be registered. Consult the I<IBM AFS Release Notes>.
+A maximum of 15 file server interface addresses can be registered in the
+VLDB.
 
 =head1 SEE ALSO
 

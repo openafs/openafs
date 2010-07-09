@@ -33,8 +33,8 @@ struct buServerConfS {
     FILE *log;			/* log file for status/errors */
 
     /* ubik and comm. related */
-    afs_int32 myHost;
-    afs_int32 serverList[MAXSERVERS];	/* list of ubik servers */
+    afs_uint32 myHost;
+    afs_uint32 serverList[MAXSERVERS];	/* list of ubik servers */
     char *cellConfigdir;	/* afs cell config. directory */
     struct ubik_dbase *database;	/* handle for the database */
 

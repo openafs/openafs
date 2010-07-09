@@ -24,6 +24,8 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 
 all: upserver upclient
 
+generated: update.cs.c update.ss.c update.xdr.c update.h
+
 #
 # Build targets
 #

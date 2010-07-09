@@ -57,7 +57,7 @@ int truncateDatabase(void);
 int parseServerList(struct cmd_item *);
 
 char lcell[MAXKTCREALMLEN];
-afs_int32 myHost = 0;
+afs_uint32 myHost = 0;
 int helpOption;
 
 /* server's global configuration information. This is exported to other
@@ -95,8 +95,8 @@ BU_rxstat_userok(struct rx_call *call)
 }
 
 int
-convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost, 
-		     afs_int32 *serverList)
+convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_uint32 *myHost,
+		     afs_uint32 *serverList)
 {
     int i;
     char hostname[64];
@@ -109,7 +109,7 @@ convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost,
 	printf("prserver: couldn't get address of this host.\n");
 	BUDB_EXIT(1);
     }
-    memcpy(myHost, th->h_addr, sizeof(afs_int32));
+    memcpy(myHost, th->h_addr, sizeof(afs_uint32));
 
     for (i = 0; i < cellinfo->numServers; i++)
 	/* omit my host from serverList */

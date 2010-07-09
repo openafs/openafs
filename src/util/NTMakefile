@@ -107,7 +107,7 @@ $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
 $(MT_LIBFILE): $(MT_LIBOBJS)
-	$(LIBARCH)
+	$(LIBARCH) Rpcrt4.lib
 
 install_headers: $(INCFILES) 
 

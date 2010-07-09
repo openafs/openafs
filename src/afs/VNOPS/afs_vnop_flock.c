@@ -317,7 +317,7 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		}
 	    }
 	} else if (avc->flockCount == -1) {
-	    afs_StoreAllSegments(avc, areq, AFS_ASYNC);	/* fsync file early */
+	    afs_StoreAllSegments(avc, areq, AFS_SYNC | AFS_VMSYNC);	/* fsync file early */
 	    avc->flockCount = 0;
 	    /* And remove the (only) exclusive lock entry from the list... */
 	    osi_FreeSmallSpace(avc->slocks);
@@ -434,6 +434,8 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 			         (tc, code, &avc->f.fid, areq,
 			          AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
 			          NULL));
+			if ((lockType == LockWrite) && (code == VREADONLY))
+			    code = EBADF; /* per POSIX; VREADONLY == EROFS */
 		    } else
 		        /* XXX - Should probably try and log this when we're
 		         * XXX - running with logging enabled. But it's horrid

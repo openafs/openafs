@@ -44,7 +44,7 @@ the user's Protection Database entry, including the Authentication
 Database entry, volume, and mount point. When using this command to change
 a user name, also change the names of all related entities to maintain
 consistency. For instructions, see the chapter on user accounts in the
-I<IBM AFS Administration Guide>.
+I<OpenAFS Administration Guide>.
 
 =head1 OPTIONS
 

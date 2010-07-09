@@ -109,6 +109,6 @@ extern int cm_refresh(int, int);
 extern int gtx_initialize(void);
 
 /* afsmonitor.c */
-extern int afsmon_Exit(int a_exitVal);
+extern int afsmon_Exit(int a_exitVal) AFS_NORETURN;
 
 #endif /* AFSMONITOR_H */

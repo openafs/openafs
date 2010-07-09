@@ -46,7 +46,8 @@ int rxInitDone = 0;
 
 struct rx_connection *
 UV_Bind(aserver, port)
-     afs_int32 aserver, port;
+     afs_uint32 aserver;
+     afs_int32 port;
 {
     register struct rx_connection *tc;
     struct rx_securityClass *uvclass;
@@ -58,12 +59,12 @@ UV_Bind(aserver, port)
 
 
 /* return host address in network byte order */
-afs_int32
+afs_uint32
 GetServer(aname)
      char *aname;
 {
     register struct hostent *th;
-    afs_int32 addr;
+    afs_uint32 addr;
     char b1, b2, b3, b4;
     register afs_int32 code;
 
@@ -84,7 +85,7 @@ static int
 PerformDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
-    afs_int32 server;
+    afs_uint32 server;
     FILE *fopen(), *fp;
     struct tc_dumpDesc *ptr;
     int i;
@@ -134,7 +135,7 @@ static int
 PerformRestore(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
-    afs_int32 server;
+    afs_uint32 server;
     int i;
     FILE *fopen(), *fp;
     struct tc_restoreDesc *ptr;
@@ -176,7 +177,7 @@ static int
 CheckDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
-    afs_int32 server;
+    afs_uint32 server;
     server = GetServer(SERVERNAME);
     if (!server) {
 	printf("cant get server id \n");
@@ -196,7 +197,7 @@ static int
 AbortDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
-    afs_int32 server;
+    afs_uint32 server;
     server = GetServer(SERVERNAME);
     if (!server) {
 	printf("cant get server id \n");
@@ -216,7 +217,7 @@ static int
 WaitForDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
-    afs_int32 server;
+    afs_uint32 server;
     server = GetServer(SERVERNAME);
     if (!server) {
 	printf("cant get server id \n");
@@ -236,7 +237,7 @@ static int
 EndDump(register struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
-    afs_int32 server;
+    afs_uint32 server;
     server = GetServer(SERVERNAME);
     if (!server) {
 	printf("cant get server id \n");

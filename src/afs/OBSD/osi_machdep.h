@@ -88,7 +88,7 @@ extern void osi_obsd_Free(void *p, size_t asize);
   free((p), (mflags))
 #else
 #define BSD_KMALLOC MALLOC
-#define BSD_KFREE KFREE
+#define BSD_KFREE FREE
 #endif /* AFS_OBSD42_ENV */
 
 /* proc, cred */
@@ -136,11 +136,11 @@ extern int afs_vget();
 
 #undef gop_lookupname
 #define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
-	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
+	afs_obsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
 #undef gop_lookupname_user
 #define	gop_lookupname_user(fnamep, segflg, followlink, compvpp) \
-	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
+	afs_obsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
 #ifdef AFS_OBSD39_ENV
 #define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i))

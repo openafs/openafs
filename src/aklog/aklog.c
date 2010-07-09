@@ -672,15 +672,16 @@ out:
 static int
 rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 			 struct ktc_token **tokenPtr, char **userPtr) {
-    char k4name[ANAME_SZ];
-    char k4inst[INST_SZ];
-    char k4realm[REALM_SZ];
     char username[BUFSIZ];
     struct ktc_token *token;
-    int status;
 #ifdef HAVE_NO_KRB5_524
     char *p;
     int len;
+#else
+    int status;
+    char k4name[ANAME_SZ];
+    char k4inst[INST_SZ];
+    char k4realm[REALM_SZ];
 #endif
 
     afs_dprintf("Using Kerberos V5 ticket natively\n");
@@ -967,11 +968,15 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     if ((status = get_cellconfig(cell, &cellconf, &local_cell)))
 	return(status);
 
-    if (linkedcell != NULL && cellconf.linkedCell != NULL) {
-	*linkedcell = strdup(cellconf.linkedCell);
-	if (*linkedcell == NULL) {
-	    status = ENOMEM;
-	    goto out;
+    if (linkedcell != NULL) {
+	if (cellconf.linkedCell != NULL) {
+	    *linkedcell = strdup(cellconf.linkedCell);
+	    if (*linkedcell == NULL) {
+		status = ENOMEM;
+		goto out;
+	    }
+	} else {
+	    *linkedcell = NULL;
 	}
     }
 
@@ -1799,8 +1804,8 @@ get_credv5_akimpersonate(krb5_context context,
     krb5_ticket ticket_reply[1];
     krb5_enc_tkt_part enc_tkt_reply[1];
     krb5_address address[30], *faddr[30];
-#endif
     krb5_data * temp;
+#endif
     int i;
     static int any_enctype[] = {0};
     *out_creds = 0;
@@ -2081,7 +2086,6 @@ cleanup:
         krb5_kt_close(context, kt);
     if (creds) krb5_free_creds(context, creds);
     krb5_free_keyblock_contents(context, session_key);
-out:
     return code;
 #else
     return -1;

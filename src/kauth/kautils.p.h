@@ -62,7 +62,7 @@ extern afs_int32 ka_GetAdminToken(char *name, char *instance, char *cell,
 extern afs_int32 ka_VerifyUserToken(char *name, char *instance, char *cell,
 				    struct ktc_encryptionKey *key);
 
-extern void ka_ExplicitCell(char *cell, afs_int32 serverList[]
+extern void ka_ExplicitCell(char *cell, afs_uint32 serverList[]
     );
 
 extern afs_int32 ka_GetServers(char *cell, struct afsconf_cell *cellinfo);

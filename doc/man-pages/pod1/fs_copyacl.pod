@@ -50,9 +50,7 @@ the source ACL completely replaces the destination ACL.
 When using this command to copy ACLs between objects in DFS filespace
 accessed via the AFS/DFS Migration Toolkit Protocol Translator, it is
 possible to specify files, as well as directories, with the B<-fromdir>
-and B<-todir> arguments. For more information on copying ACLs between DFS
-directories and files, refer to the I<IBM AFS/DFS Migration Toolkit
-Administration Guide and Reference>.
+and B<-todir> arguments.
 
 =head1 CAUTIONS
 
@@ -164,8 +162,6 @@ each destination directory or file's ACL.
 L<fs_listacl(1)>,
 L<fs_mkmount(1)>,
 L<fs_setacl(1)>
-
-I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>
 
 =head1 COPYRIGHT
 

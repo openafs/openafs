@@ -47,17 +47,17 @@ $(LIBFILE): $(LIBOBJS)
 
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
-	 $(COPY)  domestic\fcrypt.h $(INCFILEDIR)\.
+	 $(COPY)  fcrypt.h $(INCFILEDIR)\.
 
 rxkad.h rxkad_errs.c : rxkad_errs.et rxkad.p.h
 	$(DEL) rxkad_errs.c 
 	$(COMPILE_ET) rxkad_errs -h rxkad
 
-$(OUT)\fcrypt.obj: DOMESTIC\fcrypt.c DOMESTIC\fcrypt.h DOMESTIC\sboxes.h DOMESTIC\rxkad.h DOMESTIC\rxkad_prototypes.h
-	$(C2OBJ) DOMESTIC\fcrypt.c
+$(OUT)\fcrypt.obj: fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
+	$(C2OBJ) fcrypt.c
 
-$(OUT)\crypt_conn.obj: DOMESTIC\crypt_conn.c DOMESTIC\fcrypt.h private_data.h
-	$(C2OBJ) DOMESTIC\crypt_conn.c
+$(OUT)\crypt_conn.obj: crypt_conn.c fcrypt.h private_data.h
+	$(C2OBJ) crypt_conn.c
 
 install: $(INCFILES) $(LIBFILE)
 

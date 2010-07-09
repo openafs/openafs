@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
 #include <afs/param.h>
 
 #if defined(AFS_DARWIN_ENV)

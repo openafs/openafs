@@ -180,7 +180,7 @@
 # endif
 #endif
 
-#undef AFS_NAMEI_ENV
+#define AFS_NAMEI_ENV 1
 
 #undef FAST_RESTART
 #undef BITMAP_LATER
@@ -196,5 +196,9 @@
 #include "redhat-fix.h"
 #endif
 
-/* Windows does not provide socklen_t */
-typedef unsigned int socklen_t;
+/* Windows does not provide socklen_t prior to WDK 6.0 */
+#undef HAVE_SOCKLEN_T
+
+#if (_MSC_VER < 1400)
+typedef int errno_t;
+#endif

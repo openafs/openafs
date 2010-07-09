@@ -105,24 +105,6 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #include <mach/mach_port.h>
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
-
-#include <CoreFoundation/CoreFoundation.h>
-
-#include <SystemConfiguration/SystemConfiguration.h>
-#include <SystemConfiguration/SCDynamicStore.h>
-
-#include <IOKit/pwr_mgt/IOPMLib.h>
-#include <IOKit/IOMessage.h>
-
-#include <dns_sd.h>
-
-typedef struct DNSSDState
-{
-    DNSServiceRef       service;
-    CFRunLoopSourceRef  source;
-    CFSocketRef         socket;
-} DNSSDState;
-
 #endif /* AFS_DARWIN_ENV */
 
 #ifndef MOUNT_AFS
@@ -130,6 +112,7 @@ typedef struct DNSSDState
 #endif /* MOUNT_AFS */
 
 #ifdef AFS_SGI65_ENV
+# include <sched.h>
 # define SET_RTPRI(P) {  \
     struct sched_param sp; \
     sp.sched_priority = P; \
@@ -247,9 +230,17 @@ afsd_call_syscall(long param1, long param2, long param3, long param4, long param
 		param5, param6, param7);
 # endif /* !AFS_DARWIN80_ENV */
 
-    if (afsd_debug)
+    if (afsd_debug) {
+#ifdef AFS_NBSD40_ENV
+        char *s = strerror(errno);
+        printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
+                param1, error, errno, s);
+#else
 	printf("SScall(%d, %d, %ld)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
 	       error);
+#endif
+    }
+
     return (error);
 }
 #else /* !AFS_SGI_ENV && !AFS_AIX32_ENV */
@@ -500,6 +491,8 @@ afsd_mount_afs(const char *rn, const char *cacheMountDir)
 	< 0) {
 #elif defined(AFS_LINUX20_ENV)
     if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
+#elif defined(AFS_NBSD50_ENV)
+    if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, NULL, 0)) < 0) {
 #else
     /* This is the standard mount used by the suns and rts */
     if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {

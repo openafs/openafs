@@ -190,11 +190,27 @@ struct ubik_dbase {
     int (*getnfiles) (struct ubik_dbase * adbase);	/*!< find out number of files */
     short readers;		/*!< number of current read transactions */
     struct ubik_version cachedVersion;	/*!< version of caller's cached data */
+#ifdef UKERNEL
+    struct afs_lock cache_lock;
+#else
+    struct Lock cache_lock; /*!< protects cached application data */
+#endif
 #ifdef AFS_PTHREAD_ENV
     pthread_cond_t version_cond;    /*!< condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /*!< condition variable to manage changes to flags */
 #endif
 };
+
+/**
+ * ubik_CheckCache callback function.
+ *
+ * @param[in] atrans  ubik transaction
+ * @param[in] rock    rock passed to ubik_CheckCache
+ *
+ * @return operation status
+ *   @retval 0        cache was read properly
+ */
+typedef int (*ubik_updatecache_func) (struct ubik_trans *atrans, void *rock);
 
 /*! \name procedures for automatically authenticating ubik connections */
 extern int (*ubik_CRXSecurityProc) (void *, struct rx_securityClass **,
@@ -232,6 +248,9 @@ extern void *ubik_CheckRXSecurityRock;
 #define TRSETLOCK           8	/*!< SetLock is using trans */
 #define TRSTALE             16	/*!< udisk_end during getLock */
 #endif /* UBIK_PAUSE */
+#define TRCACHELOCKED       32  /*!< this trans has locked dbase->cache_lock
+                                 *   (meaning, this trans has called
+                                 *   ubik_CheckCache at some point */
 /*\}*/
 
 /*! \name ubik_lock flags */
@@ -406,10 +425,10 @@ extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
 struct afsconf_cell;
 extern void ubeacon_Debug(struct ubik_debug *aparm);
 extern int ubeacon_AmSyncSite(void);
-extern int ubeacon_InitServerListByInfo(afs_int32 ame, 
-					struct afsconf_cell *info, 
+extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
+					struct afsconf_cell *info,
 					char clones[]);
-extern int ubeacon_InitServerList(afs_int32 ame, afs_int32 aservers[]);
+extern int ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[]);
 extern void *ubeacon_Interact(void *);
 /*\}*/
 
@@ -462,12 +481,12 @@ extern afs_int32 ubik_nBuffers;
 
 /*! \name ubik.c */
 struct afsconf_cell;
-extern int ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
+extern int ubik_ServerInitByInfo(afs_uint32 myHost, short myPort,
 				 struct afsconf_cell *info, char clones[],
 				 const char *pathName,
 				 struct ubik_dbase **dbase);
-extern int ubik_ServerInit(afs_int32 myHost, short myPort, 
-			   afs_int32 serverList[],
+extern int ubik_ServerInit(afs_uint32 myHost, short myPort,
+			   afs_uint32 serverList[],
 			   const char *pathName, struct ubik_dbase **dbase);
 extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
 			   afs_int32 transMode, struct ubik_trans **transPtr);
@@ -494,12 +513,14 @@ extern int ubik_WaitVersion(register struct ubik_dbase *adatabase,
 			    register struct ubik_version *aversion);
 extern int ubik_GetVersion(register struct ubik_trans *atrans,
 			   register struct ubik_version *avers);
-extern int ubik_CacheUpdate(register struct ubik_trans *atrans);
+extern int ubik_CheckCache(struct ubik_trans *atrans,
+                           ubik_updatecache_func check,
+                           void *rock);
 /*\}*/
 
 /*! \name ubikclient.c */
 
-extern int ubik_ParseClientList(int argc, char **argv, afs_int32 * aothers);
+extern int ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers);
 extern unsigned int afs_random(void);
 extern int ubik_ClientInit(register struct rx_connection **serverconns,
 			   struct ubik_client **aclient);
@@ -520,8 +541,8 @@ extern afs_int32 ubik_Call_New(int (*aproc) (), register struct ubik_client
 /*\}*/
 
 /* \name ubikcmd.c */
-extern int ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost, 
-				afs_int32 *aothers);
+extern int ubik_ParseServerList(int argc, char **argv, afs_uint32 *ahost,
+				afs_uint32 *aothers);
 /*\}*/
 
 /* \name uinit.c */

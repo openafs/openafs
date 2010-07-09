@@ -15,8 +15,8 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      S<<< [B<-confdir> <I<configuration directory>>] >>>
      S<<< [B<-daemons> <I<number of daemons to use>>] >>>
      S<<< [B<-dcache> <I<number of dcache entries>>] >>> [B<-debug>]
-     [B<-dynroot>] [B<-enable_peer_stats>] [B<-enable_process_stats>]
-     [B<-fakestat>] [B<-fakestat-all>]
+     [B<-dynroot>] [B<-dynroot-sparse>] [B<-enable_peer_stats>]
+     [B<-enable_process_stats>] [B<-fakestat>] [B<-fakestat-all>]
      S<<< [B<-files> <I<files in cache>>] >>>
      S<<< [B<-files_per_subdir> <I<log(2) of files per dir>> ] >>>
      [B<-help>] S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
@@ -536,6 +536,13 @@ the F<CellAlias> file can be used to provide shortname for common AFS cells
 which provides equivalent functionality to the most commonly used symbolic
 links.
 
+=item B<-dynroot-sparse>
+
+In addition to operating in the manner described for dynroot above,
+cells other than the local cell are not shown by default until a lookup
+occurs. Cell aliases as set in the CellAliases file are shown as normal,
+although they may appear to be dangling links until traversed.
+
 =item B<-enable_peer_stats>
 
 Activates the collection of Rx statistics and allocates memory for their
@@ -559,6 +566,13 @@ an C<ls -l> of F</afs> much faster since each cell isn't contacted, and
 this and the B<-fakestat-all> options are useful on Mac OS X so that the
 Finder program doesn't try to contact every AFS cell the system knows
 about.
+
+Note that, for the purposes of B<-fakestat>, local cellular mounts count
+as "cross-cell" mounts. That is, if the local cell is C<localcell>, a
+mount for C<localcell:root.cell> will count as a "cross-cell" mount and
+so stat calls for it will be faked with B<-fakestat>. In practice, local
+cellular mounts are rare and generally discouraged, so this should not
+generally make a difference.
 
 =item B<-fakestat-all>
 

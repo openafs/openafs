@@ -17,7 +17,7 @@
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include <linux/fs.h>
-#ifdef EXPORTFS_H_EXISTS
+#ifdef HAVE_LINUX_EXPORTFS_H
 #include <linux/exportfs.h>
 #endif
 #include "afs/sysincludes.h"
@@ -545,13 +545,11 @@ static struct dentry *afs_export_get_dentry(struct super_block *sb,
     cred_t *credp;
 
     credp = crref();
-    lock_kernel();
     AFS_GLOCK();
 
     dp = get_dentry_from_fid(credp, inump);
 
     AFS_GUNLOCK();
-    unlock_kernel();
     crfree(credp);
 
     return dp;
@@ -609,7 +607,6 @@ static int afs_export_get_name(struct dentry *parent, char *name,
     afs_InitFakeStat(&fakestate);
 
     credp = crref();
-    lock_kernel();
     AFS_GLOCK();
 
     vcp = VTOAFS(child->d_inode);
@@ -818,7 +815,6 @@ done:
     }
     afs_PutFakeStat(&fakestate);
     AFS_GUNLOCK();
-    unlock_kernel();
     crfree(credp);
     code = afs_CheckCode(code, &treq, 102);
     return -code;
@@ -846,7 +842,6 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
     }
 
     credp = crref();
-    lock_kernel();
     AFS_GLOCK();
 
     vcp = VTOAFS(child->d_inode);
@@ -938,7 +933,6 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 
 done:
     AFS_GUNLOCK();
-    unlock_kernel();
     crfree(credp);
 
     return dp;
