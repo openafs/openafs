@@ -60,6 +60,7 @@
 #include <errno.h>
 #include <string.h>
 #ifdef AFS_NT40_ENV
+#include <rpc.h>
 #include <winsock2.h>
 #include <process.h>
 #else
@@ -79,7 +80,7 @@
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 #include <netinet/if_ether.h>
 #endif
 #include "afsutil.h"
@@ -243,6 +244,9 @@ afsUUID_to_string(const afsUUID * uuid, char *str, size_t strsz)
 afs_int32
 afs_uuid_create(afsUUID * uuid)
 {
+#ifdef AFS_NT40_ENV
+    UuidCreate((UUID *) uuid);
+#else /* AFS_NT40_ENV */
     uuid_address_t eaddr;
     afs_int32 got_no_time = 0, code;
 
@@ -333,6 +337,7 @@ afs_uuid_create(afsUUID * uuid)
     uuid->clock_seq_hi_and_reserved = (clock_seq & 0x3f00) >> 8;
     uuid->clock_seq_hi_and_reserved |= 0x80;
     uuid_memcpy((void *)uuid->node, (void *)&eaddr, sizeof(uuid_address_t));
+#endif /* AFS_NT40_ENV */
     return 0;
 }
 

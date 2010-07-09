@@ -126,15 +126,25 @@ _intlize(const char *msg, int base, char *str, size_t len)
     CFStringRef cfdomain;
     CFBundleRef OpenAFSBundle = CFBundleGetBundleWithIdentifier(CFSTR("org.openafs.filesystems.afs"));
 
-    if (!str)
+    if (!str) {
+        CFRelease(cfstring);
 	return msg;
+    }
+
     snprintf(domain, sizeof(domain), "heim_com_err%d", base);
     cfdomain = CFStringCreateWithCString(kCFAllocatorSystemDefault, domain,
 					 kCFStringEncodingUTF8);
-    if (OpenAFSBundle != NULL)
-	cfstring = CFBundleCopyLocalizedString(OpenAFSBundle, cfstring,
-					       cfstring, cfdomain);
-    CFStringGetCString(cfstring, str, len, kCFStringEncodingUTF8);
+    if (OpenAFSBundle != NULL) {
+	CFStringRef cflocal;
+
+	cflocal = CFBundleCopyLocalizedString(OpenAFSBundle, cfstring,
+					      cfstring, cfdomain);
+        CFStringGetCString(cflocal, str, len, kCFStringEncodingUTF8);
+	CFRelease(cflocal);
+    } else {
+        CFStringGetCString(cfstring, str, len, kCFStringEncodingUTF8);
+    }
+
     CFRelease(cfstring);
     CFRelease(cfdomain);
     return str;

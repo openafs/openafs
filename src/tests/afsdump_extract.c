@@ -28,6 +28,9 @@
 
 /* afsdump_extract.c - Extract files from an AFS dump */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,8 +38,12 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include <afs/param.h>
 #include <afs/com_err.h>
+#include <afs/cellconfig.h>
+#include <afs/vlserver.h>
+#include <afs/volser.h>
+#include <rx/rxkad.h>
+
 #include "dumpscan.h"
 #include "dumpscan_errs.h"
 #include "xf_errs.h"

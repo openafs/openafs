@@ -51,13 +51,12 @@
 #include <afs/afsint.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+#include <afs/sys_prototypes.h>
+
+#include <err.h>
+#include <fs_lib.h>
 
 enum { PIOCTL_MAXSIZE = 2000 };
-
-struct VenusFid {
-    afs_int32 Cell;
-    struct AFSFid Fid;
-};
 
 /*
  * fs_getfid, the the `fid' that `path' points on. 
@@ -431,6 +430,8 @@ fs_invalidate(const char *path)
  * outflags == NULL -> don't return
  */
 
+#if defined(VIOC_XFSDEBUG) || defined(VIOC_XFSDEBUG_PRINT) \
+    || defined(VIOC_ARLADEBUG)
 static int
 debug(int pioctl_cmd, int inflags, int *outflags, char *pathname)
 {
@@ -463,6 +464,7 @@ debug(int pioctl_cmd, int inflags, int *outflags, char *pathname)
 
     return 0;
 }
+#endif
 
 /*
  * xfs_debug

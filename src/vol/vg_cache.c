@@ -261,12 +261,11 @@ static int
 _VVGC_entry_cl_add(VVGCache_entry_t * ent,
 		   VolumeId volid)
 {
-    int code = 0, i, empty_found, empty_idx;
+    int code = 0, i;
+    int empty_idx = -1;
 
     /* search table to avoid duplicates */
-    for (i = 0, empty_found = 0;
-	 i < VOL_VG_MAX_VOLS;
-	 i++) {
+    for (i = 0; i < VOL_VG_MAX_VOLS; i++) {
 	if (ent->children[i] == volid) {
 	    ViceLog(1, ("VVGC_entry_cl_add: tried to add duplicate vol "
 	               "%lu to VG %lu\n",
@@ -274,16 +273,15 @@ _VVGC_entry_cl_add(VVGCache_entry_t * ent,
 		       afs_printable_uint32_lu(ent->rw)));
 	    goto done;
 	}
-	if (!empty_found && !ent->children[i]) {
+	if (empty_idx == -1 && !ent->children[i]) {
 	    empty_idx = i;
-	    empty_found = 1;
 	    /* don't break; make sure we go through all children so we don't
 	     * add a duplicate entry */
 	}
     }
 
     /* verify table isn't full */
-    if (!empty_found) {
+    if (empty_idx == -1) {
 	code = -1;
 	ViceLog(0, ("VVGC_entry_cl_add: tried to add vol %lu to VG %lu, but VG "
 	    "is full\n", afs_printable_uint32_lu(volid),

@@ -29,8 +29,6 @@
 
 afs_lock_t osi_fsplock;
 
-
-
 static struct osi_packet {
     struct osi_packet *next;
 } *freePacketList = NULL, *freeSmallList;
@@ -42,7 +40,7 @@ struct osimem {
     struct osimem *next;
 };
 
-
+#if !defined(AFS_NBSD_ENV)
 void *
 afs_osi_Alloc(size_t x)
 {
@@ -111,7 +109,7 @@ afs_osi_Free(void *x, size_t asize)
     osi_linux_free(x);
 #elif defined(AFS_FBSD_ENV)
     osi_fbsd_free(x);
-#elif defined(AFS_OBSD44_ENV)
+#elif defined(AFS_OBSD_ENV)
     osi_obsd_Free(x, asize);
 #else
     AFS_KFREE((struct osimem *)x, asize);
@@ -123,8 +121,6 @@ afs_osi_FreeStr(char *x)
 {
     afs_osi_Free(x, strlen(x) + 1);
 }
-
-
 
 /* free space allocated by AllocLargeSpace.  Also called by mclput when freeing
  * a packet allocated by osi_NetReceive. */
@@ -222,7 +218,7 @@ osi_AllocSmallSpace(size_t size)
     return (char *)tp;
 }
 
-
+#endif /* !AFS_NBSD_ENV */
 
 void
 shutdown_osinet(void)
@@ -257,4 +253,3 @@ shutdown_osinet(void)
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
-

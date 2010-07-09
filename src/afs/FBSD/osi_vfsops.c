@@ -155,6 +155,7 @@ afs_unmount(struct mount *mp, int flags)
 afs_unmount(struct mount *mp, int flags, struct thread *p)
 #endif
 {
+    int error = 0;
 
     /*
      * Release any remaining vnodes on this mount point.
@@ -163,19 +164,22 @@ afs_unmount(struct mount *mp, int flags, struct thread *p)
      * This has to be done outside the global lock.
      */
 #if defined(AFS_FBSD80_ENV)
-  /* do nothing */
+    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, curthread);
 #elif defined(AFS_FBSD53_ENV)
-    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
+    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
 #else
-    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
+    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
 #endif
+    if (error)
+	goto out;
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
     afs_globalVFS = 0;
     afs_shutdown();
     AFS_GUNLOCK();
 
-    return 0;
+out:
+    return error;
 }
 
 int
@@ -205,13 +209,11 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	error = 0;
     } else {
 tryagain:
-#ifndef AFS_FBSD80_ENV
 	if (afs_globalVp) {
 	    afs_PutVCache(afs_globalVp);
 	    /* vrele() needed here or not? */
 	    afs_globalVp = NULL;
 	}
-#endif
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
@@ -224,22 +226,15 @@ tryagain:
     if (tvp) {
 	struct vnode *vp = AFSTOV(tvp);
 
-#ifdef AFS_FBSD50_ENV
 	ASSERT_VI_UNLOCKED(vp, "afs_root");
-#endif
 	AFS_GUNLOCK();
 	/*
 	 * I'm uncomfortable about this.  Shouldn't this happen at a
 	 * higher level, and shouldn't we busy the top-level directory
 	 * to prevent recycling?
 	 */
-#ifdef AFS_FBSD50_ENV
 	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
 	vp->v_vflag |= VV_ROOT;
-#else
-	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	vp->v_flag |= VROOT;
-#endif
 	AFS_GLOCK();
 	if (error != 0)
 		goto tryagain;
@@ -332,8 +327,6 @@ struct vfsops afs_vfsops = {
     afs_init,
     afs_uninit,
     vfs_stdextattrctl,
-#ifdef AFS_FBSD50_ENV
     vfs_stdsysctl,
-#endif
 };
 #endif

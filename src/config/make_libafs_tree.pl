@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+use strict;
+use warnings;
+
 $| = 1;
 #
 # Build the libafs_tree by reading component list files in the src dir, and copying the
@@ -11,6 +14,11 @@ use File::Path;
 
 my $quiet = 0;
 my $showonly = 0;
+my $treedir;
+my $projdir;
+my $sysname;
+my $ostype;
+my $objdir;
 
 while ( $_ = shift @ARGV )
 {
@@ -23,7 +31,7 @@ while ( $_ = shift @ARGV )
 
 	if (m/^-q/) { $quiet = 1; next; }
 	if (m/^-n/) { $showonly = 1; next; }
-	usage;
+	&usage;
 }
 if ( !$treedir || !$projdir || !$ostype || !$sysname)
 {
@@ -65,11 +73,14 @@ finddepth(\&find_libafsdep, $projdir);
 #
 &copyit("$projdir/configure-libafs", "$treedir/configure");
 &copyit("$projdir/Makefile-libafs.in", "$treedir/Makefile.in");
+&copyit("$projdir/src/libafs/MakefileProto.$ostype.in",
+        "$treedir/src/libafs/MakefileProto.in");
 
-system("$objdir/src/config/config", 
-	"$projdir/src/libafs/MakefileProto.$ostype.in", 
-	"$treedir/src/libafs/Makefile.in",
-	$sysname);
+$showonly || system("$projdir/build-tools/git-version $projdir/.version > $treedir/.version");
+
+# We need to regenerate this to support building amd64 kernels from a
+# libafs_tree built on i386.
+unlink("$treedir/include/afs/param.h");
 
 #
 # Subs
@@ -108,7 +119,6 @@ sub process_libafsdep
 		# do some simple substitution in dep file
 		#
 		$file =~ s/MKAFS_OSTYPE/$ostype/ge;
-		$file =~ s/AFS_SYSNAME/$sysname/ge;
 
 		next if ( $file eq "" );
 
@@ -181,7 +191,7 @@ sub testArg
 {
 	my ($arg) = @_;
 	return $arg if ( $arg && $arg ne "" );
-	usage;
+	&usage;
 }
 
 sub mkfullpath
@@ -208,7 +218,9 @@ sub mkfullpath
 sub copyit
 {
 	my ( $from, $to ) = @_;
-	my (@from, @new);
+	my @from;
+	my @new;
+	my @to;
 
 	@from = stat($from);
 	@to = stat($to);

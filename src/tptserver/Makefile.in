@@ -12,6 +12,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
 
@@ -232,24 +233,23 @@ prerror.h: pterror.h
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${afssrvlibexecdir}/ptserver \
-	${DESTDIR}${afssrvbindir}/pts \
-	${DESTDIR}${bindir}/pts \
-	${DESTDIR}${afssrvsbindir}/pt_util \
-	${DESTDIR}${afssrvsbindir}/prdb_check 
+install: ptserver pts pt_util db_verify
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
+		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
+	fi
 
-${DEST}/root.server/usr/afs/bin/ptserver: ptserver
-	${INSTALL} $? $@
-
-${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/pt_util: pt_util
-	${INSTALL} $? $@
-
-${DEST}/etc/prdb_check: db_verify
-	${INSTALL} -f $? $@
+dest: ptserver pts pt_util db_verify
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver; \
+		${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts; \
+		${INSTALL_PROGRAM} pts ${DEST}/bin/pts; \
+		${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check; \
+	fi
 
 #
 # Misc. targets
@@ -260,24 +260,3 @@ clean:
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version
-${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/pts: pts
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/pts: pts
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/pt_util: pt_util
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
-	${INSTALL} -f $? $@
-
-dest: \
-	${DEST}/root.server/usr/afs/bin/ptserver \
-	${DEST}/root.server/usr/afs/bin/pts \
-	${DEST}/bin/pts \
-	${DEST}/root.server/usr/afs/bin/pt_util \
-	${DEST}/etc/prdb_check

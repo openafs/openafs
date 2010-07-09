@@ -76,7 +76,7 @@
 
 #define afs_hz HZ
 #include "h/sched.h"
-#if defined(HAVE_CURRENT_KERNEL_TIME)
+#if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
 static inline time_t osi_Time(void) { 
     struct timespec xtime;
     xtime = current_kernel_time();
@@ -119,19 +119,7 @@ static inline time_t osi_Time(void) {
 #define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
 #define SetAfsVnode(V)					/* unnecessary */
 
-/* We often need to pretend we're in user space to get memory transfers
- * right for the kernel calls we use.
- */
 #include <asm/uaccess.h>
-
-#ifdef KERNEL_SPACE_DECL
-#undef KERNEL_SPACE_DECL
-#undef TO_USER_SPACE
-#undef TO_KERNEL_SPACE
-#endif
-#define KERNEL_SPACE_DECL mm_segment_t _fs_space_decl={0}
-#define TO_USER_SPACE() { _fs_space_decl = get_fs(); set_fs(get_ds()); }
-#define TO_KERNEL_SPACE() set_fs(_fs_space_decl)
 
 #define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 static inline long copyinstr(char *from, char *to, int count, int *length) {
@@ -156,7 +144,7 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 typedef struct task_struct afs_proc_t;
 
 /* Credentials.  For newer kernels we use the kernel structure directly. */
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 
 typedef struct cred afs_ucred_t;
 typedef struct cred cred_t;
@@ -224,7 +212,7 @@ afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
 #define current_session_keyring() (current->signal->session_keyring)
 #define crhold(c) atomic_inc(&(c)->cr_ref)
 
-#endif /* defined(STRUCT_TASK_HAS_CRED) */
+#endif /* defined(STRUCT_TASK_STRUCT_HAS_CRED) */
 
 #if !defined(current_cred)
 #define current_gid() (current->gid)
@@ -260,7 +248,6 @@ typedef struct uio {
 #define NEED_IOCTL32
 #endif
 
-#if defined(__KERNEL__)
 #include <linux/version.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
@@ -294,13 +281,6 @@ do { \
 } while (0)
 
 #define osi_InitGlock()
-
-#else
-#define AFS_GLOCK()
-#define AFS_GUNLOCK()
-#define ISAFS_GLOCK() 1
-#define AFS_ASSERT_GLOCK()
-#endif
 
 #ifdef AFS_AMD64_LINUX20_ENV
 /* RHEL5 beta's kernel doesn't define these. They aren't gonna change, so... */

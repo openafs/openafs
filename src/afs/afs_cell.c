@@ -549,7 +549,7 @@ afs_NewCellAlias(char *alias, char *cell)
  */
 
 struct afs_q CellLRU;		/* Export for kdump */
-static char *afs_thiscell;
+static char *afs_thiscell = NULL;
 afs_int32 afs_cellindex;	/* Export for kdump */
 
 /*!
@@ -1005,7 +1005,8 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     ReleaseWriteLock(&tc->lock);
     ReleaseWriteLock(&afs_xcell);
     afs_PutCell(tc, 0);
-    afs_DynrootInvalidate();
+    if (!(aflags & CHush))
+	afs_DynrootInvalidate();
     return 0;
 
   bad:
@@ -1035,6 +1036,13 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 void
 afs_CellInit(void)
 {
+    static char CellInit_done = 0;
+
+    if (CellInit_done)
+	return;
+
+    CellInit_done = 1;
+
     AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
     AFS_RWLOCK_INIT(&afsdb_client_lock, "afsdb_client_lock");
     AFS_RWLOCK_INIT(&afsdb_req_lock, "afsdb_req_lock");

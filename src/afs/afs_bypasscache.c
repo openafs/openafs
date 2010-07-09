@@ -159,7 +159,7 @@ afs_TransitionToBypass(register struct vcache *avc,
     ObtainWriteLock(&avc->lock, 925);
 	
     /* If we never cached this, just change state */
-    if (setDesire && (!avc->cachingStates & FCSBypass)) {
+    if (setDesire && (!(avc->cachingStates & FCSBypass))) {
 	avc->f.states |= FCSBypass;
 	goto done;
     }
@@ -220,7 +220,7 @@ afs_TransitionToCaching(register struct vcache *avc,
     if (!avc)
 	return;
 
-    if (!avc->f.states & FCSBypass)
+    if (!(avc->f.states & FCSBypass))
 	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");		
 		
     if (aflags & TRANSChangeDesiredBit)
@@ -268,7 +268,7 @@ afs_TransitionToCaching(register struct vcache *avc,
  * to be unlocked.
  */
 #if defined(AFS_LINUX24_ENV)
-#define unlock_pages(auio) \
+#define unlock_and_release_pages(auio) \
     do { \
 	struct iovec *ciov;	\
 	struct page *pp; \
@@ -281,6 +281,7 @@ afs_TransitionToCaching(register struct vcache *avc,
 	while(1) { \
 	    if(pp != NULL && PageLocked(pp)) \
 		UnlockPage(pp);	\
+            put_page(pp); /* decrement refcount */ \
 	    iovno++; \
 	    if(iovno > iovmax) \
 		break; \
@@ -291,7 +292,7 @@ afs_TransitionToCaching(register struct vcache *avc,
     } while(0)
 #else
 #ifdef UKERNEL
-#define unlock_pages(auio) \
+#define unlock_and_release_pages(auio) \
 	 do { } while(0)
 #else
 #error AFS_CACHE_BYPASS not implemented on this platform
@@ -332,8 +333,8 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 	if (code != sizeof(afs_int32)) {
 	    result = 0;
 	    afs_warn("Preread error. code: %d instead of %d\n",
-		code, sizeof(afs_int32));
-	    unlock_pages(auio);
+		code, (int)sizeof(afs_int32));
+	    unlock_and_release_pages(auio);
 	    goto done;
 	} else
 	    length = ntohl(length);		
@@ -342,7 +343,7 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 	    result = EIO;
 	    afs_warn("Preread error. Got length %d, which is greater than size %d\n",
 	             length, size);
-	    unlock_pages(auio);
+	    unlock_and_release_pages(auio);
 	    goto done;
 	}
 					
@@ -394,12 +395,12 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 	    if (code < 0) {
 	        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", code);
 		result = 0;
-		unlock_pages(auio);
+		unlock_and_release_pages(auio);
 		goto done;
 	    } else if (code == 0) {
 		result = 0;
 		afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
-		unlock_pages(auio);
+		unlock_and_release_pages(auio);
 		goto done;
 	    }
 	    length -= code;
@@ -427,13 +428,14 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 		    /* this is appropriate when no caller intends to unlock
 		     * and release the page */
 #ifdef AFS_LINUX24_ENV
-		    SetPageUptodate(pp);
-		    if(PageLocked(pp))
-			UnlockPage(pp);
-		    else
-			afs_warn("afs_NoCacheFetchProc: page not locked at iovno %d!\n", iovno);
+                    SetPageUptodate(pp);
+                    if(PageLocked(pp))
+                        UnlockPage(pp);
+                    else
+                        afs_warn("afs_NoCacheFetchProc: page not locked at iovno %d!\n", iovno);
+                    put_page(pp); /* decrement refcount */
 #ifndef AFS_KMAP_ATOMIC
-		    kunmap(pp);
+                    kunmap(pp);
 #endif
 #else
 #ifndef UKERNEL
@@ -523,7 +525,7 @@ cleanup:
      * processed, like unlocking the pages and freeing memory.
      */
 #ifdef AFS_LINUX24_ENV
-    unlock_pages(bparms->auio);
+    unlock_and_release_pages(bparms->auio);
 #else
 #ifndef UKERNEL
 #error AFS_CACHE_BYPASS not implemented on this platform
@@ -547,7 +549,10 @@ afs_PrefetchNoCache(register struct vcache *avc,
     uio_t *auio;
     struct iovec *iovecp;
     struct vrequest *areq;
-    afs_int32 code, length_hi, bytes, locked;    
+    afs_int32 code = 0;
+#ifdef AFS_64BIT_CLIENT
+    afs_int32 length_hi, bytes, locked;
+#endif
 	
     register struct afs_conn *tc;
     afs_int32 i;
@@ -591,23 +596,23 @@ afs_PrefetchNoCache(register struct vcache *avc,
 			tcall = NULL;
 		    }
 		}
-		if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
-		    if (auio->uio_offset > 0x7FFFFFFF) {
-			code = EFBIG;
-		    } else {
-			afs_int32 pos;
-			pos = auio->uio_offset;
-			COND_GUNLOCK(locked);
-			if (!tcall)
-			    tcall = rx_NewCall(tc->id);
-			code = StartRXAFS_FetchData(tcall,
-					      (struct AFSFid *) &avc->f.fid.Fid,
-					      pos, bparms->length);
-			COND_RE_GLOCK(locked);
-		    }
-		    afs_serverSetNo64Bit(tc);
-		}
 	    } /* afs_serverHasNo64Bit */
+	    if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
+		if (auio->uio_offset > 0x7FFFFFFF) {
+		    code = EFBIG;
+		} else {
+		    afs_int32 pos;
+		    pos = auio->uio_offset;
+		    COND_GUNLOCK(locked);
+		    if (!tcall)
+			tcall = rx_NewCall(tc->id);
+		    code = StartRXAFS_FetchData(tcall,
+					(struct AFSFid *) &avc->f.fid.Fid,
+					pos, bparms->length);
+		    COND_RE_GLOCK(locked);
+		}
+		afs_serverSetNo64Bit(tc);
+	    }
 #else
 	    code = StartRXAFS_FetchData(tcall,
 			                (struct AFSFid *) &avc->f.fid.Fid,
@@ -619,7 +624,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 					    bparms->length);
 	    } else {
 		afs_warn("BYPASS: StartRXAFS_FetchData failed: %d\n", code);
-		unlock_pages(auio);
+		unlock_and_release_pages(auio);
 		goto done;
 	    }
 	    if (code == 0) {
@@ -634,7 +639,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 	    afs_warn("BYPASS: No connection.\n");
 	    code = -1;
 #ifdef AFS_LINUX24_ENV
-	    unlock_pages(auio);
+	    unlock_and_release_pages(auio);
 #else
 #ifndef UKERNEL
 #error AFS_CACHE_BYPASS not implemented on this platform

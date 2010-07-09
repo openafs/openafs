@@ -129,7 +129,7 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     crset(*cr);
 
-#if defined(STRUCT_TASK_STRUCT_HAS_PARENT) && !defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_PARENT) && !defined(STRUCT_TASK_STRUCT_HAS_CRED)
     if (change_parent) {
 	old_info = current->parent->group_info;
 	get_group_info(group_info);
@@ -272,24 +272,20 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
     afs_uint32 junk;
     int old_pag;
 
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
 
     code = (*sys_setgroupsp) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
 
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
 
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -305,10 +301,8 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     afs_uint32 junk;
     int old_pag;
 
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
 
     code = (*sys_setgroups32p) (gidsetsize, grouplist);
 
@@ -316,14 +310,12 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 	return code;
     }
 
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
 
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -339,24 +331,20 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
     afs_uint32 junk;
     int old_pag;
     
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
     
     code = (*sys32_setgroupsp)(gidsetsize, grouplist);
     if (code) {
 	return code;
     }
     
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
     
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -374,24 +362,20 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     afs_uint32 junk;
     int old_pag;
     
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
     
     code = (*sys32_setgroupsp) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
     
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
     
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -407,24 +391,20 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     afs_uint32 junk;
     int old_pag;
 
-    lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
-    unlock_kernel();
 
     code = (*sys32_setgroups32p) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
 
-    lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0);
     }
     crfree(cr);
-    unlock_kernel();
 
     /* Linux syscall ABI returns errno as negative */
     return (-code);
@@ -516,19 +496,19 @@ void osi_keyring_init(void)
      * If that's not available, then keyring based PAGs won't work.
      */
     
-#if defined(EXPORTED_TASKLIST_LOCK) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+#if defined(EXPORTED_TASKLIST_LOCK) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(HAVE_LINUX_RCU_READ_LOCK))
     if (__key_type_keyring == NULL) {
 # ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_lock(&tasklist_lock);
 # endif
-# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(HAVE_LINUX_RCU_READ_LOCK))
 #  ifdef EXPORTED_TASKLIST_LOCK
  	else
 #  endif
 	    rcu_read_lock();
 # endif
-#if defined(EXPORTED_FIND_TASK_BY_PID)
+#if defined(HAVE_LINUX_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
 #else
 	p = find_task_by_vpid(1);
@@ -539,7 +519,7 @@ void osi_keyring_init(void)
 	if (&tasklist_lock)
 	    read_unlock(&tasklist_lock);
 # endif
-# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(EXPORTED_RCU_READ_LOCK))
+# if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) && defined(HAVE_LINUX_RCU_READ_LOCK))
 #  ifdef EXPORTED_TASKLIST_LOCK
 	else
 #  endif

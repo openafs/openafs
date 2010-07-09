@@ -47,12 +47,13 @@ short ubik_initializationState;	/*!< initial state is zero */
  * \brief Parse list for clients.
  */
 int
-ubik_ParseClientList(int argc, char **argv, afs_int32 * aothers)
+ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers)
 {
     register afs_int32 i;
     register char *tp;
     register struct hostent *th;
-    afs_int32 temp, counter;
+    afs_uint32 temp;
+    afs_int32 counter;
     int inServer;
 
     inServer = 0;		/* haven't seen -servers yet */

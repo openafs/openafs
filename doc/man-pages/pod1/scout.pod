@@ -11,12 +11,14 @@ B<scout> [B<initcmd>] S<<< B<-server> <I<servers to monitor>>+ >>>
       S<<< [B<-basename> <I<base server name>>] >>>
       S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>> [B<-host>]
       S<<< [B<-attention> <I<specify attention (highlighting) level>>+] >>>
+      S<<< [B<-columnwidths> <I<number of characters>>+] >>>
       S<<< [B<-debug> <I<turn debugging output on to the named file>>] >>>
       [B<-help>]
 
 B<scout> [B<i>] S<<< B<-s> <I<servers to monitor>>+ >>>
       S<<< [B<-b> <I<base server name>>] >>> S<<< [B<-f> <I<poll frequency, in seconds>>] >>>
       [B<-ho>] S<<< [B<-a> <I<specify attention (highlighting) level>>+] >>>
+      S<<< [B<-c> <I<number of characters>+>] >>>
       S<<< [B<-d> <I<turn debugging output on to the named file>>] >>> [B<-he>]
 
 =for html
@@ -154,6 +156,14 @@ below the threshold. There is no default threshold.
 Example of an acceptable value: ws 65
 
 =back
+
+=item B<-columnwidths> <I<number of characters>>+
+
+Specifies the number of characters to display in each column of the B<scout>
+statistics display region. Specify one to six numbers separated by spaces to
+set the number of characters to be displayed in each column.  The values
+specify the widths of the columns in the same order the columns are displayed
+from left to right.  Use 0 as a placeholder to specify a default column width.
 
 =item B<-debug> <I<debugging trace file>>
 
@@ -307,7 +317,7 @@ of 60 seconds.
 
 =head1 EXAMPLES
 
-See the chapter on monitoring tools in the I<IBM AFS Administration
+See the chapter on monitoring tools in the I<OpenAFS Administration
 Guide>, which illustrates the displays that result from different
 combinations of options.
 

@@ -1,0 +1,31 @@
+# Build rules for the OpenAFS test suite.
+
+srcdir=@srcdir@
+abs_top_srcdir=@abs_top_srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+RUNTESTS_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
+	-DBUILD='"$(abs_top_builddir)/tests"'
+
+all: runtests
+	cd tap && $(MAKE) $@
+	cd util && $(MAKE) $@
+
+runtests.o: $(srcdir)/runtests.c
+	$(CCOBJ) $(CFLAGS) $(RUNTESTS_CPPFLAGS) -c $(srcdir)/runtests.c
+
+runtests: runtests.o
+	$(CC) $(LDFLAGS) -o runtests runtests.o
+
+check test tests: runtests
+	cd tap && $(MAKE) $@
+	cd util && $(MAKE) $@
+	./runtests $(abs_top_srcdir)/tests/TESTS
+
+install:
+
+clean distclean:
+	cd tap && $(MAKE) $@
+	cd util && $(MAKE) $@
+	$(RM) -f *.o core runtests

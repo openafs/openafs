@@ -61,6 +61,9 @@
  * so directories will appear first in the VNODE section.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -74,7 +77,6 @@
 #include <fcntl.h>
 
 #include <lock.h>
-#include <afs/param.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/acl.h>
@@ -277,7 +279,6 @@ int ShutdownInProgress = 0;
 static int ReadDumpHeader(FILE *, struct DumpHeader *);
 static int ReadVolumeHeader(FILE *, VolumeDiskData *);
 static int ScanVnodes(FILE *, VolumeDiskData *, int);
-static int DumpVnodeFile(FILE *, struct VnodeDiskObject *, VolumeDiskData *);
 static struct vnodeData *InsertVnode(unsigned int, struct VnodeDiskObject *);
 static struct vnodeData *GetVnode(unsigned int);
 static int CompareVnode(const void *, const void *);
@@ -290,7 +291,6 @@ static struct vnodeData *ChangeDirectory(int, char **, struct vnodeData *);
 static void CopyFile(int, char **, struct vnodeData *, FILE *);
 static void CopyVnode(int, char **, FILE *);
 static void DumpAllFiles(int, char **, struct vnodeData *, VolumeDiskData *);
-static void DumpAllResidencies(FILE *, struct vnodeData *, VolumeDiskData *);
 static struct vnodeData *FindFile(struct vnodeData *, char *);
 static void ResetDirCursor(struct DirCursor *, struct vnodeData *);
 static struct DirEntry *ReadNextDir(struct DirCursor *, struct vnodeData *);
@@ -301,15 +301,23 @@ static int ReadInt32(FILE *, uint32_t *);
 static int ReadString(FILE *, char *, int);
 static int ReadByteString(FILE *, void *, int);
 
+#ifdef RESIDENCY
+static int DumpVnodeFile(FILE *, struct VnodeDiskObject *, VolumeDiskData *);
+static void DumpAllResidencies(FILE *, struct vnodeData *, VolumeDiskData *);
+#endif
+
 int
 main(int argc, char *argv[])
 {
-    int c, errflg = 0, dumpvnodes = 0, force = 0, inode = 0;
+    int c, errflg = 0, force = 0, inode = 0;
     unsigned int magic;
     struct DumpHeader dheader;
     VolumeDiskData vol;
     off64_t offset;
+#ifdef RESIDENCY
     int Res, Arg1, Arg2, Arg3, i;
+    int dumpvnodes = 0;
+#endif
     char *p;
     struct winsize win;
     FILE *f;
@@ -458,8 +466,8 @@ main(int argc, char *argv[])
     }
 
     if (verbose)
-	printf("Dump is for volume %lu (%s)\n", dheader.volumeId,
-	       dheader.volumeName);
+	printf("Dump is for volume %lu (%s)\n",
+	       (unsigned long) dheader.volumeId, dheader.volumeName);
 
     if (getc(f) != D_VOLUMEHEADER) {
 	fprintf(stderr, "Volume header is missing from dump, aborting\n");
@@ -473,8 +481,8 @@ main(int argc, char *argv[])
 
     if (verbose) {
 	printf("Volume information:\n");
-	printf("\tid = %lu\n", vol.id);
-	printf("\tparent id = %lu\n", vol.parentId);
+	printf("\tid = %lu\n", (unsigned long) vol.id);
+	printf("\tparent id = %lu\n", (unsigned long) vol.parentId);
 	printf("\tname = %s\n", vol.name);
 	printf("\tflags =");
 	if (vol.inUse)
@@ -486,14 +494,14 @@ main(int argc, char *argv[])
 	if (vol.needsSalvaged)
 	    printf(" needsSalvaged");
 	printf("\n");
-	printf("\tuniquifier = %lu\n", vol.uniquifier);
+	printf("\tuniquifier = %lu\n", (unsigned long) vol.uniquifier);
 	tmv = vol.creationDate;
 	printf("\tCreation date = %s", ctime(&tmv));
 	tmv = vol.accessDate;
 	printf("\tLast access date = %s", ctime(&tmv));
 	tmv = vol.updateDate;
 	printf("\tLast update date = %s", ctime(&tmv));
-	printf("\tVolume owner = %lu\n", vol.owner);
+	printf("\tVolume owner = %lu\n", (unsigned long) vol.owner);
     }
 
     if (verbose)
@@ -1407,7 +1415,7 @@ DirListInternal(struct vnodeData *vdata, char *pathnames[], int numpathnames,
 			c = '/';
 		    else if (lvdata->vnode->type == vSymlink)
 			c = '@';
-		    else if (lvdata->vnode->modeBits & 0111 != 0)
+		    else if ((lvdata->vnode->modeBits & 0111) != 0)
 			c = '*';
 		    else
 			c = ' ';
@@ -1896,7 +1904,7 @@ FindFile(struct vnodeData *vdatacwd, char *filename)
     }
 
     if ((vdata = GetVnode(ntohl(ep->fid.vnode))) == NULL) {
-	fprintf(stderr, "%s: No vnode information for %lu found\n", filename,
+	fprintf(stderr, "%s: No vnode information for %u found\n", filename,
 		ntohl(ep->fid.vnode));
 	return NULL;
     }
@@ -1970,7 +1978,7 @@ MakeArgv(char *string, int *argc, char ***argv)
     *argc = 0;
     *argv = largv;
 
-    while (*la++ = GetToken(s, &s, ap, &ap))
+    while ((*la++ = GetToken(s, &s, ap, &ap)) != NULL)
 	(*argc)++;
 }
 
@@ -2407,15 +2415,15 @@ ReadByteString(FILE * f, void *s, int size)
  * The directory hashing algorithm used by AFS
  */
 
-DirHash(string)
-     register char *string;
+int
+DirHash(char *string)
 {
     /* Hash a string to a number between 0 and NHASHENT. */
     register unsigned char tc;
     register int hval;
     register int tval;
     hval = 0;
-    while (tc = (*string++)) {
+    while ((tc = (*string++)) != '\0') {
 	hval *= 173;
 	hval += tc;
     }

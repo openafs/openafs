@@ -708,7 +708,9 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     int code = 0, error = 0;
     afs_int32 pad = 0;
     afs_int32 offset = 0;
-    afs_sfsize_t n, nbytes, howMany, howBig;
+    afs_sfsize_t nbytes, howBig;
+    ssize_t n;
+    size_t howMany;
     afs_foff_t lcode = 0;
     byte *p;
     afs_uint32 hi, lo;
@@ -747,7 +749,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
         Log("DumpFile: fstatfs returned error code %d on descriptor %d\n", errno, handleP->fd_fd);
 	return VOLSERDUMPERROR;
     }
-    howMany = (afs_sfsize_t) tstatfs.f_bsize;
+    howMany = tstatfs.f_bsize;
 #else
     howMany = status.st_blksize;
 #endif /* AFS_AIX_ENV */
@@ -765,9 +767,9 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	return VOLSERDUMPERROR;
     }
 
-    p = (unsigned char *)malloc((size_t)howMany);
+    p = malloc(howMany);
     if (!p) {
-	Log("1 Volser: DumpFile: not enough memory to allocate %u bytes\n", howMany);
+	Log("1 Volser: DumpFile: not enough memory to allocate %u bytes\n", (unsigned)howMany);
 	return VOLSERDUMPERROR;
     }
 
@@ -776,7 +778,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    howMany = nbytes;
 
 	/* Read the data - unless we know we can't */
-	n = (lcode ? 0 : FDH_READ(handleP, p, (size_t)howMany));
+	n = (lcode ? 0 : FDH_READ(handleP, p, howMany));
 
 	/* If read any good data and we null padded previously, log the
 	 * amount that we had null padded.
@@ -824,7 +826,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	}
 
 	/* Now write the data out */
-	if (iod_Write(iodp, (char *)p, (size_t)howMany) != howMany)
+	if (iod_Write(iodp, (char *)p, howMany) != howMany)
 	    error = VOLSERDUMPERROR;
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
@@ -1510,10 +1512,10 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 		 Error * status)
 {
     afs_int32 code;
-    afs_sfsize_t lcode;
+    ssize_t nBytes;
     afs_fsize_t filesize;
     afs_fsize_t written = 0;
-    register afs_uint32 size = 8192;
+    size_t size = 8192;
     register afs_fsize_t nbytes;
     unsigned char *p;
 
@@ -1550,15 +1552,15 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	    size = nbytes;
 
 	if ((code = iod_Read(iodp, (char *) p, size)) != size) {
-	    Log("1 Volser: WriteFile: Error reading dump file %d size=%llu nbytes=%u (%d of %u): %s; restore aborted\n", vn, (afs_uintmax_t) filesize, nbytes, code, size, afs_error_message(errno));
+	    Log("1 Volser: WriteFile: Error reading dump file %d size=%llu nbytes=%u (%d of %u): %s; restore aborted\n", vn, (afs_uintmax_t) filesize, nbytes, code, (unsigned)size, afs_error_message(errno));
 	    *status = 3;
 	    break;
 	}
-	lcode = FDH_WRITE(handleP, p, size);
-	if (lcode > 0)
-	    written += lcode;
-	if (lcode != size) {
-	    Log("1 Volser: WriteFile: Error writing (%d,%u) bytes to vnode %d: %s; restore aborted\n", (int)(lcode>>32), (int)(lcode & 0xffffffff), vn, afs_error_message(errno));
+	nBytes = FDH_WRITE(handleP, p, size);
+	if (nBytes > 0)
+	    written += nBytes;
+	if (nBytes != size) {
+	    Log("1 Volser: WriteFile: Error writing (%u) bytes to vnode %d: %s; restore aborted\n", (int)(nBytes & 0xffffffff), vn, afs_error_message(errno));
 	    *status = 4;
 	    break;
 	}

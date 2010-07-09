@@ -17,13 +17,13 @@ there are normally only two circumstances in which the file is present:
 
 =item *
 
-During installation of the machine, as instructed in the I<IBM AFS Quick
-Beginnings>.
+During installation of the machine, as instructed in the I<OpenAFS Quick
+Start Guide>.
 
 =item *
 
 During correction of a server encryption key emergency, as discussed in
-the I<IBM AFS Administration Guide>.
+the I<OpenAFS Administration Guide>.
 
 =back
 

@@ -507,6 +507,13 @@ afs3_syscall(struct thread *p, void *args)
 	long parm6;
     } *uap = (struct a *)args;
     long *retval;
+#elif defined(AFS_NBSD40_ENV)
+int
+afs3_syscall(struct lwp *p, void *args)
+{
+    /* see osi_machdep.h */
+    struct afs_sysargs *uap = (struct afs_sysargs *) args;
+    long *retval;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs3_syscall(afs_proc_t *p, void *args, long *retval)
@@ -588,7 +595,6 @@ Afs_syscall()
     }
 #endif
 #ifdef AFS_LINUX20_ENV
-    lock_kernel();
     /* setup uap for use below - pull out the magic decoder ring to know
      * which syscalls have folded argument lists.
      */
@@ -680,6 +686,15 @@ Afs_syscall()
      */
 	osi_InitGlock();
 #endif
+
+#if defined(AFS_NBSD40_ENV)
+	if (SCARG(uap, syscall) == AFSCALL_CALL) {
+	    code =
+		afs_syscall_call(SCARG(uap, parm1), SCARG(uap, parm2),
+                                 SCARG(uap, parm3), SCARG(uap, parm4),
+                                 SCARG(uap, parm5), SCARG(uap, parm6));
+	} else if (SCARG(uap, syscall) == AFSCALL_SETPAG) {
+#else
 	if (uap->syscall == AFSCALL_CALL) {
 	    code =
 		afs_syscall_call(uap->parm1, uap->parm2, uap->parm3,
@@ -692,6 +707,7 @@ Afs_syscall()
 	    }
 #endif
 	} else if (uap->syscall == AFSCALL_SETPAG) {
+#endif
 #ifdef	AFS_SUN5_ENV
 	    register proc_t *procp;
 
@@ -710,13 +726,18 @@ Afs_syscall()
 #endif
 	    AFS_GUNLOCK();
 #endif
-	} else if (uap->syscall == AFSCALL_PIOCTL) {
+	} else if
+#if defined(AFS_NBSD40_ENV)
+		(SCARG(uap, syscall) == AFSCALL_PIOCTL) {
+#else
+	    (uap->syscall == AFSCALL_PIOCTL) {
+#endif
 	    AFS_GLOCK();
 #if defined(AFS_SUN5_ENV)
 	    code =
 		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
 				   uap->parm4, rvp, CRED());
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 	    code =
 		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
 				   uap->parm4, p->td_ucred);
@@ -724,6 +745,11 @@ Afs_syscall()
 	    code =
 		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
 				   uap->parm4, kauth_cred_get());
+#elif defined(AFS_NBSD40_ENV)
+	    code =
+		afs_syscall_pioctl(SCARG(uap, parm1), SCARG(uap, parm2),
+				   SCARG(uap, parm3), SCARG(uap, parm4),
+				   kauth_cred_get());
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    code =
 		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
@@ -736,20 +762,32 @@ Afs_syscall()
 				   (int) uap->parm4);
 #endif
 	    AFS_GUNLOCK();
+
+#ifdef AFS_NBSD40_ENV
+	    } else if (SCARG(uap, syscall) == AFSCALL_ICREATE) {
+		struct iparam iparams;
+		code = copyin_iparam((char *) SCARG(uap, parm3), &iparams);
+#else
 	} else if (uap->syscall == AFSCALL_ICREATE) {
 	    struct iparam iparams;
 
 	    code = copyin_iparam((char *)uap->parm3, &iparams);
+#endif
 	    if (code) {
 #if defined(KERNEL_HAVE_UERROR)
 		setuerror(code);
 #endif
 	    } else {
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV)
 		code =
 		    afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1,
 					iparams.param2, iparams.param3,
 					iparams.param4, rvp, CRED());
+#elif defined(AFS_NBSD40_ENV)
+
+		code = afs_syscall_create(SCARG(uap, parm1), SCARG(uap, parm2),
+					  SCARG(uap, parm3), SCARG(uap, parm4),
+					  retval);
 #else
 		code =
 		    afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1,
@@ -761,11 +799,18 @@ Afs_syscall()
 			);
 #endif /* AFS_SUN5_ENV */
 	    }
-	} else if (uap->syscall == AFSCALL_IOPEN) {
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_NBSD40_ENV)
+	    } else if (SCARG(uap, syscall) == AFSCALL_IOPEN) {
+#else
+	    } else if (uap->syscall == AFSCALL_IOPEN) {
+#endif /* !AFS_NBSD40_ENV */
+#if defined(AFS_SUN5_ENV)
 	    code =
 		afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3, rvp,
 				  CRED());
+#elif defined(AFS_NBSD40_ENV)
+	    code = afs_syscall_iopen(SCARG(uap, parm1), SCARG(uap, parm2),
+				     SCARG(uap, parm3), retval);
 #else
 	    code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -773,25 +818,56 @@ Afs_syscall()
 #endif
 		);
 #endif /* AFS_SUN5_ENV */
+#if defined(AFS_NBSD40_ENV)
+        } else if (SCARG(uap, syscall) == AFSCALL_IDEC) {
+#else
 	} else if (uap->syscall == AFSCALL_IDEC) {
+#endif
+#if defined(AFS_NBSD40_ENV)
+	    code = afs_syscall_iincdec(SCARG(uap, parm1), SCARG(uap, parm2),
+					 SCARG(uap, parm3), -1);
+#else
+
+
 	    code =
 		afs_syscall_iincdec(uap->parm1, uap->parm2, uap->parm3, -1
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV)
 				    , rvp, CRED()
 #endif
 		    );
-	} else if (uap->syscall == AFSCALL_IINC) {
+
+#endif /* !AFS_NBSD40_ENV */
+#if defined(AFS_NBSD40_ENV)
+	    } else if (SCARG(uap, syscall) == AFSCALL_IINC) {
+#else
+	    } else if (uap->syscall == AFSCALL_IINC) {
+#endif
+#if defined(AFS_NBSD40_ENV)
+	      code = afs_syscall_iincdec(SCARG(uap, parm1), SCARG(uap, parm2),
+					 SCARG(uap, parm3), 1);
+#else
 	    code =
 		afs_syscall_iincdec(uap->parm1, uap->parm2, uap->parm3, 1
 #ifdef	AFS_SUN5_ENV
 				    , rvp, CRED()
 #endif
 		    );
-	} else if (uap->syscall == AFSCALL_ICL) {
+#endif /* !AFS_NBSD40_ENV */
+#if defined(AFS_NBSD40_ENV)
+	    } else if (SCARG(uap, syscall) == AFSCALL_ICL) {
+#else
+	    } else if (uap->syscall == AFSCALL_ICL) {
+#endif
 	    AFS_GLOCK();
 	    code =
+#if defined(AFS_NBSD40_ENV)
+	      Afscall_icl(SCARG(uap, parm1), SCARG(uap, parm2),
+			  SCARG(uap, parm3), SCARG(uap, parm4),
+			  SCARG(uap, parm5), retval);
+#else
 		Afscall_icl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
 			    uap->parm5, (long *)retval);
+#endif /* !AFS_NBSD40_ENV */
 	    AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
 	    if (!code) {
@@ -821,7 +897,6 @@ Afs_syscall()
 #endif
 #ifdef AFS_LINUX20_ENV
     code = -code;
-    unlock_kernel();
 #endif
     return code;
 }

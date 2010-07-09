@@ -246,7 +246,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 #endif
 
 
-#if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
+#if defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)
 struct afsd_thread_info {
 #if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
@@ -523,7 +523,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef AFS_DARWIN80_ENV
     put_vfs_context();
 #endif
-#if ((defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#if ((defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
 #if defined(AFS_DARWIN80_ENV)
     if (parm == AFSOP_BKG_HANDLER) {
 	/* if afs_uspc_param grows this should be checked */
@@ -780,6 +780,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 			cflags |= CLinkedCell;
 		    }
 		}
+		if (parm4 & 8) {
+		    cflags |= CHush;
+		}
 		if (!code)
 		    code =
 			afs_NewCell(tbuffer1, tcell->hosts, cflags, lcnamep,
@@ -817,13 +820,14 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	 */
 	char *cell = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
-	code = afs_InitDynroot();
-	if (!code) {
-	    AFS_COPYINSTR(AFSKPTR(parm2), cell, AFS_SMALLOCSIZ, &bufferSize, code);
-	}
+	afs_CellInit();
+	AFS_COPYINSTR(AFSKPTR(parm2), cell, AFS_SMALLOCSIZ, &bufferSize, code);
 	if (!code)
 	    afs_SetPrimaryCell(cell);
 	osi_FreeSmallSpace(cell);
+	if (!code) {
+	    code = afs_InitDynroot();
+	}
     } else if (parm == AFSOP_CACHEINIT) {
 	struct afs_cacheParams cparms;
 
@@ -1220,6 +1224,8 @@ afs_shutdown(void)
 
     if (afs_shuttingdown)
 	return;
+    afs_FlushVCBs(2);       /* Reasonable effort to free dynamically allocated callback returns */
+
     afs_shuttingdown = 1;
     if (afs_cold_shutdown)
 	afs_warn("afs: COLD ");
@@ -1281,9 +1287,14 @@ afs_shutdown(void)
 	afs_osi_Sleep(&afs_termState);
     }
 #endif
-#else
-    afs_termState = AFSOP_STOP_COMPLETE;
 #endif
+
+#ifdef AFS_SUN510_ENV
+    afs_warn("NetIfPoller... ");
+    osi_StopNetIfPoller();
+#endif
+
+    afs_termState = AFSOP_STOP_COMPLETE;
 
 #ifdef AFS_AIX51_ENV
     shutdown_daemons();

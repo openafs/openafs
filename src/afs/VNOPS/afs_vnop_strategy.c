@@ -61,7 +61,7 @@ int afs_ustrategy(register struct buf *abp)
     ReleaseReadLock(&tvc->lock);
     osi_Assert(credp);
 #endif
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
     if (abp->b_iocmd == BIO_READ) {
 #else
     if ((abp->b_flags & B_READ) == B_READ) {
@@ -86,7 +86,11 @@ int afs_ustrategy(register struct buf *abp)
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
 #endif
+#if defined(AFS_NBSD40_ENV)
+	UIO_SETUP_SYSSPACE(&tuio);
+#else
 	tuio.afsio_seg = AFS_UIOSYS;
+#endif
 #ifdef AFS_UIOFMODE
 	tuio.afsio_fmode = 0;
 #endif
@@ -152,7 +156,11 @@ int afs_ustrategy(register struct buf *abp)
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
 #endif
+#if defined(AFS_NBSD40_ENV)
+	UIO_SETUP_SYSSPACE(&tuio);
+#else
 	tuio.afsio_seg = AFS_UIOSYS;
+#endif
 #ifdef AFS_UIOFMODE
 	tuio.afsio_fmode = 0;
 #endif
@@ -182,7 +190,7 @@ int afs_ustrategy(register struct buf *abp)
 #if defined (AFS_XBSD_ENV)
     if (code) {
 	abp->b_error = code;
-#if !defined(AFS_FBSD50_ENV)
+#if !defined(AFS_FBSD_ENV)
 	abp->b_flags |= B_ERROR;
 #endif
     }
@@ -192,7 +200,7 @@ int afs_ustrategy(register struct buf *abp)
     crfree(credp);
 #elif defined(AFS_FBSD60_ENV)
     (*abp->b_iodone)(abp);
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
     biodone(&abp->b_io);
 #elif defined(AFS_XBSD_ENV)
     biodone(abp);

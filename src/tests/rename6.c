@@ -55,7 +55,6 @@ main(int argc, char **argv)
 {
     int ret;
     int fd;
-    struct stat old_sb, new_sb, dot_sb;
 
     fd = open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)

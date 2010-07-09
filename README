@@ -30,7 +30,7 @@ A  Configuring
       A directory will be automatically created for binaries to be written 
       into with this name when you build.
 
-      alpha_dux40, alpha_dux50, alpha_dux51
+      alpha_dux40, alpha_dux50, alpha_dux51 (client does not work)
       alpha_linux22, alpha_linux24, alpha_linux26
       alpha_nbsd15, alpha_nbsd16
       amd64_fbsd_53 (client does not work)
@@ -40,11 +40,13 @@ A  Configuring
       hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
          getting missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)
-      i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
-         i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
-         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61,
-         i386_fbsd_62, i386_fbsd_70, i386_fbsd_80
-         (client may work on 70)
+      i386_fbsd_50, i386_fbsd_51, i386_fbsd_52, i386_fbsd_53,
+         i386_fbsd_60, i386_fbsd_61, i386_fbsd_62, i386_fbsd_70,
+         i386_fbsd_80, i386_fbsd_81, i386_fbsd_90, amd64_fbsd_50,
+         amd64_fbsd_51, amd64_fbsd_52, amd64_fbsd_53, amd64_fbsd_60,
+         amd64_fbsd_61, amd64_fbsd_62, amd64_fbsd_70, amd64_fbsd_80,
+         amd64_fbsd_81, amd64_fbsd_90
+         (client may work on 70 and later)
       i386_linux22, i386_linux24, i386_linux26
       i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
          i386_nbsd40
@@ -211,11 +213,6 @@ F  OpenBSD Notes
    --with-bsd-kernel-headers= configure option if your kernel source is
    not in /usr/src/sys.
 
-   If you want to build src/aklog, add the following options to your
-   configure.  Note that you shouldn't need aklog because heimdal afslog
-   does (almost) the same thing.
-     --with-krb5 KRB5CFLAGS=-I/usr/include/kerberosV KRB5LIBS=-lcrypto
-
    src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing
    the client.  There is no server package, but I am told that "make
    install" will put server binaries in /usr/afs.
@@ -230,7 +227,6 @@ G  FreeBSD Notes
 
    The FreeBSD client may now work; It is tested on 7.0 and on current
    as of the commit date.
-
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is
@@ -256,14 +252,10 @@ H  AIX notes
    Verify this before doing configure and make. For example, assuming ksh/bash:
    export OBJECT_MODE=32
 
-   To build aklog (in order to be able to get tokens from your KRB5 ticket)
-   you have to supply --with-krb5 to configure, the following example is for
-   building on AIX 6.1 with the IBM Kerberos5 (krb5.client.rte and
-   krb5.toolkit.adt on the Expansion Pack):
-
-   ./configure --with-afs-sysname=rs_aix61 --enable-transarc-paths \
-	--enable-supergroups \
-	--with-krb5 KRB5CFLAGS=-I/usr/include KRB5LIBS=-lkrb5
+   To build aklog (in order to be able to get tokens from your Kerberos v5
+   ticket), you will need Kerberos libraries.  On AIX 6.1, the IBM
+   Kerberos v5 libraries are in the packages krb5.client.rte and
+   krb5.toolkit.adt on the Expansion Pack.
 
 I  Other configure options
 
@@ -320,6 +312,19 @@ I  Other configure options
        versions of Ubik servers.  See README.PTHREADED_UBIK for more
        information.  (EXPERIMENTAL)
 
+   --enable-reduced-depends
+       Try to minimize the shared library dependencies encoded in the
+       binaries.  This omits from the link line all the libraries included
+       solely because the Kerberos libraries depend on them and instead
+       links the programs only against libraries whose APIs are called
+       directly.  This will only work with shared Kerberos libraries and
+       will only work on platforms where shared libraries properly encode
+       their own dependencies (such as Linux).  It is intended primarily
+       for building packages for Linux distributions to avoid encoding
+       unnecessary shared library dependencies that make shared library
+       migrations more difficult.  If none of the above made any sense to
+       you, don't bother with this flag.
+
    --enable-supergroups
        Enables support of nested groups in the ptserver.  WARNING: Once
        you make use of this option by nesting one group inside another,
@@ -353,3 +358,40 @@ I  Other configure options
        harmless, but the PAM modules that come with OpenAFS are deprecated
        and should not be used unless you're still using the OpenAFS
        kaserver (which is itself deprecated and should not be used).
+
+   You may need to pass one or more of the following options to specify
+   the paths and locations of files needed by the OpenAFS build process:
+
+   --with-krb5[=DIR]
+   --with-krb5-include=DIR
+   --with-krb5-lib=DIR
+       Normally, OpenAFS will automatically build with Kerberos support if
+       Kerberos is found during the build.  If your Kerberos libraries are
+       in an unusual location, however, you may need to pass one or more
+       of these flags.  --with-krb5 forces building with Kerberos support
+       if given and will cause configure to fail if Kerberos is not found.
+       You may optionally specify the root path to your Kerberos
+       installation as an argument to --with-krb5.
+
+       If you have a krb5-config script, it's used to find the flags to
+       build with Kerberos.  If you have no krb5-config script, you can
+       specify the location to the include files with --with-krb5-include
+       and the libraries with --with-krb5-lib.  You may need to do this if
+       Autoconf can't figure out whether to use lib, lib32, or lib64 on
+       your platform.
+
+   There are also some environment variables that you can set to control
+   aspects of the build.  They can be set either on the configure command
+   line (preferred) or in the environment.
+
+   KRB5_CONFIG
+       To specify a particular krb5-config script to use, either set the
+       KRB5_CONFIG environment variable or pass it to configure like:
+
+           ./configure KRB5_CONFIG=/path/to/krb5-config
+
+       To not use krb5-config and force library probing even if there is a
+       krb5-config script on your path, set KRB5_CONFIG to a nonexistent
+       path:
+
+           ./configure KRB5_CONFIG=/nonexistent

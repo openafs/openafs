@@ -148,7 +148,7 @@ struct kaOldKeys {
 
 extern struct kaheader cheader;
 extern struct kadstats dynamic_statistics;
-extern afs_int32 myHost;
+extern afs_uint32 myHost;
 
 extern int kaux_opendb(char *path);
 

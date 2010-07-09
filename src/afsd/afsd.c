@@ -103,7 +103,7 @@
 #include <sys/fs_types.h>
 #endif
 
-#ifdef HAVE_SYS_MOUNT_H
+#if defined(HAVE_SYS_MOUNT_H) && !defined(AFS_ARM_DARWIN_ENV)
 #include <sys/mount.h>
 #endif
 
@@ -121,10 +121,6 @@
 
 #ifdef HAVE_MNTENT_H
 #include <mntent.h>
-#endif
-
-#ifdef HAVE_SYS_MOUNT_H
-#include <sys/mount.h>
 #endif
 
 #ifdef HAVE_SYS_VFS_H
@@ -171,22 +167,20 @@ void set_staticaddrs(void);
 #include <sys/ioctl.h>
 #include <sys/xattr.h>
 #endif
-#include <mach/mach.h>
-#include <mach/mach_port.h>
-#include <mach/mach_interface.h>
-#include <mach/mach_init.h>
-
 #include <CoreFoundation/CoreFoundation.h>
 
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <SystemConfiguration/SCDynamicStore.h>
 
+#ifndef AFS_ARM_DARWIN_ENV
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include <IOKit/IOMessage.h>
 
 static io_connect_t root_port;
 static IONotificationPortRef notify;
 static io_object_t iterator;
+#endif
+
 static CFRunLoopSourceRef source;
 
 static int event_pid;
@@ -331,7 +325,7 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 * -2: file exists in top-level
 				 * >=0: file exists in Dxxx
 				 */
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
 #endif
@@ -351,7 +345,7 @@ static void fork_rx_syscall();
 #endif
 static void fork_syscall();
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 static void
 afsd_sleep_callback(void * refCon, io_service_t service, 
 		    natural_t messageType, void * messageArgument )
@@ -432,10 +426,11 @@ afsd_event_cleanup(int signo) {
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
     CFRelease (source);
+#ifndef AFS_ARM_DARWIN_ENV
     IODeregisterForSystemPower(&iterator);
     IOServiceClose(root_port);
     IONotificationPortDestroy(notify);
-
+#endif
     exit(0);
 }
 
@@ -446,6 +441,7 @@ afsd_install_events(void)
     SCDynamicStoreContext ctx = {0};
     SCDynamicStoreRef store;
 
+#ifndef AFS_ARM_DARWIN_ENV
     root_port = IORegisterForSystemPower(0,&notify,afsd_sleep_callback,&iterator);
     
     if (root_port) {
@@ -492,6 +488,7 @@ afsd_install_events(void)
 	
 	CFRelease (store); 
     }
+#endif
     
     if (source != NULL) {
 	CFRunLoopAddSource (CFRunLoopGetCurrent(),
@@ -1020,7 +1017,7 @@ doSweepAFSCache(int *vFilesFound,
 	     * file's inode, directory, and bump the number of files found
 	     * total and in this directory.
 	     */
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
 	    inode_for_V[vFileNum] = currp->d_ino;
 #endif
 	    dir_for_V[vFileNum] = dirNum;	/* remember this directory */
@@ -1162,7 +1159,7 @@ doSweepAFSCache(int *vFilesFound,
 			   vFileNum);
 		else {
 		    struct stat statb;
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
 #endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
@@ -1175,7 +1172,7 @@ doSweepAFSCache(int *vFilesFound,
 		    if (CreateCacheFile(fullpn_VFile, &statb))
 			printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
 		    else {
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
 			inode_for_V[vFileNum] = statb.st_ino;
 #endif
 			dir_for_V[vFileNum] = thisDir;
@@ -1278,7 +1275,7 @@ CheckCacheBaseDir(char *dir)
 	if (res != 0) {
 	    return "unable to statfs cache base directory";
 	}
-#if !defined(LINUX_USE_FH)
+#if !defined(AFS_LINUX26_ENV)
 	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
 	    return "cannot use reiserfs as cache partition";
 	} else if (statfsbuf.f_type == 0x58465342) {	/* XFS_SUPER_MAGIC */
@@ -1417,9 +1414,11 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 
     /* figure out if this is the home cell */
     isHomeCell = (strcmp(aci->name, LclCellName) == 0);
-    if (!isHomeCell)
+    if (!isHomeCell) {
 	cellFlags = 2;		/* not home, suid is forbidden */
-
+	if (enable_dynroot == 2)
+	    cellFlags |= 8; /* don't display foreign cells until looked up */
+    }
     /* build address list */
     for (i = 0; i < MAXHOSTSPERCELL; i++)
 	memcpy(&hosts[i], &aci->hostAddr[i].sin_addr, sizeof(afs_int32));
@@ -1909,6 +1908,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
         /* -rxmaxmtu */
         rxmaxmtu = atoi(as->parms[36].items->data);
     }
+    if (as->parms[37].items) {
+	/* -dynroot-sparse */
+	enable_dynroot = 2;
+    }
     return 0;
 }
 
@@ -2100,7 +2103,7 @@ afsd_run(void)
 		   cacheStatEntries);
     }
 
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
     /*
      * Create and zero the inode table for the desired cache files.
      */
@@ -2142,6 +2145,11 @@ afsd_run(void)
 #ifdef mac2
     setpgrp(getpid(), 0);
 #endif /* mac2 */
+
+    /*
+     * Set the primary cell name.
+     */
+    afsd_call_syscall(AFSOP_SET_THISCELL, LclCellName);
 
     /* Initialize RX daemons and services */
 
@@ -2306,7 +2314,8 @@ afsd_run(void)
 
     if (enable_dynroot) {
 	if (afsd_verbose)
-	    printf("%s: Enabling dynroot support in kernel.\n", rn);
+	    printf("%s: Enabling dynroot support in kernel%s.\n", rn,
+		   (enable_dynroot==2)?", not showing cells.":"");
 	code = afsd_call_syscall(AFSOP_SET_DYNROOT, 1);
 	if (code)
 	    printf("%s: Error enabling dynroot support.\n", rn);
@@ -2314,7 +2323,9 @@ afsd_run(void)
 
     if (enable_fakestat) {
 	if (afsd_verbose)
-	    printf("%s: Enabling fakestat support in kernel.\n", rn);
+	    printf("%s: Enabling fakestat support in kernel%s.\n", rn,
+		   (enable_fakestat==2)?" for all mountpoints."
+		   :" for crosscell mountpoints");
 	code = afsd_call_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
 	if (code)
 	    printf("%s: Error enabling fakestat support.\n", rn);
@@ -2333,11 +2344,6 @@ afsd_run(void)
      */
     afsconf_CellApply(cdir, ConfigCell, NULL);
     afsconf_CellAliasApply(cdir, ConfigCellAlias, NULL);
-
-    /*
-     * Set the primary cell name.
-     */
-    afsd_call_syscall(AFSOP_SET_THISCELL, LclCellName);
 
     /* Initialize AFS daemon threads. */
     if (afsd_verbose)
@@ -2427,7 +2433,7 @@ afsd_run(void)
 	    afsd_call_syscall(AFSOP_CACHEINODE,
 			 (afs_uint32) (inode_for_V[currVFile] >> 32),
 			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
-#elif !(defined(LINUX_USE_FH) || defined(AFS_CACHE_VNODE_PATH))
+#elif !(defined(AFS_LINUX26_ENV) || defined(AFS_CACHE_VNODE_PATH))
 	    afsd_call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #else
 	    printf
@@ -2555,6 +2561,8 @@ afsd_init(void)
     cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, 
 		"disable stat/vcache cache growing as needed");
     cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
+    cmd_AddParm(ts, "-dynroot-sparse", CMD_FLAG, CMD_OPTIONAL,
+		"Enable dynroot support with minimal cell list");
 }
 
 int

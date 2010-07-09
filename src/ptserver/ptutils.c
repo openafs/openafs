@@ -1694,13 +1694,10 @@ SetMax(struct ubik_trans *at, afs_int32 id, afs_int32 flag)
     return PRSUCCESS;
 }
 
-afs_int32
-read_DbHeader(struct ubik_trans *tt)
+static afs_int32
+UpdateCache(struct ubik_trans *tt, void *rock)
 {
     afs_int32 code;
-
-    if (!ubik_CacheUpdate(tt))
-	return 0;
 
     code = pr_Read(tt, 0, 0, (char *)&cheader, sizeof(cheader));
     if (code != 0) {
@@ -1709,15 +1706,57 @@ read_DbHeader(struct ubik_trans *tt)
     return code;
 }
 
+afs_int32
+read_DbHeader(struct ubik_trans *tt)
+{
+    return ubik_CheckCache(tt, UpdateCache, NULL);
+}
+
 int pr_noAuth;
-afs_int32 initd = 0;
+
+/**
+ * reads in db cache from ubik.
+ *
+ * @param[in] ut ubik transaction
+ * @param[out] rock  opaque pointer to an int*, which on success will be set
+ *                   to 1 if we need to build the database, or 0 if we do not
+ *
+ * @return operation status
+ *   @retval 0 success
+ */
+static afs_int32
+Initdb_check(struct ubik_trans *tt, void *rock)
+{
+    int *build_rock = rock;
+    afs_int32 code;
+    afs_int32 len;
+
+    len = sizeof(cheader);
+    code = pr_Read(tt, 0, 0, (char *)&cheader, len);
+    if (code != 0) {
+	afs_com_err(whoami, code, "couldn't read header");
+	return code;
+    }
+    if ((ntohl(cheader.version) == PRDBVERSION)
+	&& ntohl(cheader.headerSize) == sizeof(cheader)
+	&& ntohl(cheader.eofPtr) != 0
+	&& FindByID(tt, ANONYMOUSID) != 0) {
+	/* database exists, so we don't have to build it */
+	*build_rock = 0;
+	return 0;
+    }
+
+    /* else we need to build a database */
+    *build_rock = 1;
+    return 0;
+}
 
 afs_int32
 Initdb(void)
 {
-    afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 len;
+    int build = 0;
+    afs_int32 code;
 
     /* init the database.  We'll try reading it, but if we're starting
      * from scratch, we'll have to do a write transaction. */
@@ -1732,52 +1771,40 @@ Initdb(void)
 	ubik_AbortTrans(tt);
 	return code;
     }
-    if (!initd) {
-	initd = 1;
-    } else if (!ubik_CacheUpdate(tt)) {
-	code = ubik_EndTrans(tt);
-	return code;
-    }
 
-    len = sizeof(cheader);
-    code = pr_Read(tt, 0, 0, (char *)&cheader, len);
-    if (code != 0) {
-	afs_com_err(whoami, code, "couldn't read header");
+    code = ubik_CheckCache(tt, Initdb_check, &build);
+    if (code) {
 	ubik_AbortTrans(tt);
 	return code;
     }
-    if ((ntohl(cheader.version) == PRDBVERSION)
-	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != 0
-	&& FindByID(tt, ANONYMOUSID) != 0) {
-	/* database exists, so we don't have to build it */
-	code = ubik_EndTrans(tt);
-	if (code)
-	    return code;
-	return PRSUCCESS;
-    }
-    /* else we need to build a database */
-    code = ubik_EndTrans(tt);
-    if (code)
-	return code;
 
-    /* Only rebuild database if the db was deleted (the header is zero) and we
-     * are running noAuth. */
-    {
+    if (build) {
+	/* Only rebuild database if the db was deleted (the header is zero) and we
+	 * are running noAuth. */
 	char *bp = (char *)&cheader;
 	int i;
-	for (i = 0; i < sizeof(cheader); i++)
+	for (i = 0; i < sizeof(cheader); i++) {
 	    if (bp[i]) {
 		code = PRDBBAD;
 		afs_com_err(whoami, code,
 			"Can't rebuild database because it is not empty");
-		return code;
+		break;
 	    }
+	}
+	if (!pr_noAuth) {
+	    code = PRDBBAD;
+	    afs_com_err(whoami, code,
+	                "Can't rebuild database because not running NoAuth");
+	}
     }
-    if (!pr_noAuth) {
-	code = PRDBBAD;
-	afs_com_err(whoami, code,
-		"Can't rebuild database because not running NoAuth");
+
+    if (code) {
+	ubik_EndTrans(tt);
+    } else {
+	code = ubik_EndTrans(tt);
+    }
+    if (code || !build) {
+	/* either we encountered an error, or we don't need to build the db */
 	return code;
     }
 
@@ -1796,6 +1823,12 @@ Initdb(void)
      * actually have been a good database out there.  Now that we have a
      * real write transaction, make sure things are still bad.
      */
+    code = pr_Read(tt, 0, 0, (char *)&cheader, sizeof(cheader));
+    if (code != 0) {
+	afs_com_err(whoami, code, "couldn't read header");
+	ubik_AbortTrans(tt);
+	return code;
+    }
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
 	&& ntohl(cheader.eofPtr) != 0

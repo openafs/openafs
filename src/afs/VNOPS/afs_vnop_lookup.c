@@ -933,6 +933,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    RX_AFS_GUNLOCK();
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
+	    retryonce:
 		code =
 		    RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
 					   &cbParm, &volSync);
@@ -942,8 +943,21 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		    code =
 			RXAFS_BulkStatus(tcp->id, &fidParm, &statParm,
 					 &cbParm, &volSync);
-		} else
+		} else {
 		    inlinebulk = 1;
+		    if (!code && ((&statsp[0])->errorCode)) {
+			/*
+			 * If this is an error needing retry, do so.
+			 * Retryable errors are all whole-volume or
+			 * whole-server.
+			 */
+			if (afs_Analyze(tcp, (&statsp[0])->errorCode,
+					&adp->f.fid, areqp,
+					AFS_STATS_FS_RPCIDX_BULKSTATUS,
+					SHARED_LOCK, NULL) != 0)
+			    goto retryonce;
+		    }
+		}
 	    } else {
 		inlinebulk = 0;
 		code =
@@ -1274,6 +1288,23 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
 static int AFSDOBULK = 1;
 
+static_inline int
+osi_lookup_isdot(const char *aname)
+{
+#ifdef AFS_SUN5_ENV
+    if (!aname[0]) {
+	/* in Solaris, we can get passed "" as a path component if we are the
+	 * root directory, e.g. after a call to chroot. It is equivalent to
+	 * looking up "." */
+	return 1;
+    }
+#endif /* AFS_SUN5_ENV */
+    if (aname[0] == '.' && !aname[1]) {
+	return 1;
+    }
+    return 0;
+}
+
 int
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct pathname *pnp, int flags, struct vnode *rdir, afs_ucred_t *acred)
@@ -1401,7 +1432,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
      * I'm not fiddling with the LRUQ here, either, perhaps I should, or else 
      * invent a lightweight version of GetVCache.
      */
-    if (aname[0] == '.' && !aname[1]) {	/* special case */
+    if (osi_lookup_isdot(aname)) {	/* special case */
 	ObtainReadLock(&afs_xvcache);
 	osi_vnhold(adp, 0);
 	ReleaseReadLock(&afs_xvcache);
@@ -1500,9 +1531,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if (tvc) {
 	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
 	    /* need read access on dir to stat non-directory / non-link */
-#ifndef AFS_FBSD80_ENV
 	    afs_PutVCache(tvc);
-#endif
 	    *avcp = NULL;
 	    code = EACCES;
 	    goto done;
@@ -1607,7 +1636,21 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (!afs_InReadDir(adp))
 	    afs_PutDCache(tdc);
 	if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry && !tryEvalOnly) {
+	    struct cell *tc;
+	    char *cn = (tname[0] == '.') ? tname + 1 : tname;
 	    ReleaseReadLock(&adp->lock);
+	    /* confirm it's not just hushed */
+	    tc = afs_GetCellByName(cn, WRITE_LOCK);
+	    if (tc) {
+		if (tc->states & CHush) {
+		    tc->states &= ~CHush;
+		    ReleaseWriteLock(&tc->lock);
+		    afs_DynrootInvalidate();
+		    goto redo;
+		}
+		ReleaseWriteLock(&tc->lock);
+	    }
+	    /* Allow a second dynroot retry if the cell was hushed before */
 	    dynrootRetry = 0;
 	    if (tname[0] == '.')
 		afs_LookupAFSDB(tname + 1);
@@ -1658,9 +1701,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 
 	    /* if the vcache isn't usable, release it */
 	    if (tvc && !(tvc->f.states & CStatd)) {
-#ifndef  AFS_FBSD80_ENV
 		afs_PutVCache(tvc);
-#endif
 		tvc = NULL;
 	    }
 	} else {
@@ -1723,9 +1764,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		ReleaseWriteLock(&tvc->lock);
 
 		if (code) {
-#ifndef AFS_FBSD80_ENV
 		    afs_PutVCache(tvc);
-#endif
 		    if (tvolp)
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    goto done;
@@ -1747,9 +1786,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    } else {
 			tvc = afs_GetVCache(tvc->mvid, &treq, NULL, NULL);
 		    }
-#ifndef AFS_FBSD80_ENV
 		    afs_PutVCache(uvc);	/* we're done with it */
-#endif
 
 		    if (!tvc) {
 			code = ENOENT;
@@ -1774,9 +1811,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    }
 		} else {
-#ifndef AFS_FBSD80_ENV
 		    afs_PutVCache(tvc);
-#endif
 		    code = ENOENT;
 		    if (tvolp)
 			afs_PutVolume(tvolp, WRITE_LOCK);

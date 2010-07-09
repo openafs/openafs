@@ -34,7 +34,7 @@ static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";
 static int MaxServers[3] = { 30, 254, 254 };	/* max server # permitted in this version */
 
-static afs_int32 Conv4to3(afs_int32 addr);
+static afs_int32 Conv4to3(afs_uint32 addr);
 
 static void convert_vlentry(int, int, int, struct vlheader_1 *,
 			    struct vlheader_1 *, struct vlentry_1 *);
@@ -742,9 +742,9 @@ convert_header(int ofd, int fd, int fromv, int tov, void *fromaddr,
  * Before this can be called, the routine read_mhentries must be called.
  */
 static afs_int32
-Conv4to3(afs_int32 addr)
+Conv4to3(afs_uint32 addr)
 {
-    afs_int32 raddr;
+    afs_uint32 raddr;
     int i;
 
     if (!base[0] || !addr)

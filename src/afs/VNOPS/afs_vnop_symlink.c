@@ -153,8 +153,9 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ObtainWriteLock(&adp->lock, 156);
     if (tdc)
 	ObtainWriteLock(&tdc->lock, 636);
-    ObtainSharedLock(&afs_xvcache, 17);	/* prevent others from creating this entry */
-    /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
+    /* No further locks: if the SymLink succeeds, it does not matter what happens
+     * to our local copy of the directory. If somebody tampers with it in the meantime,
+     * the copy will be invalidated */
     if (!AFS_IS_DISCON_RW) {
 	do {
 	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
@@ -195,7 +196,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 #endif
     }
 
-    UpgradeSToWLock(&afs_xvcache, 40);
+    ObtainWriteLock(&afs_xvcache, 40);
     if (code) {
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 499);
@@ -216,6 +217,8 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 293);
+	/* If the following fails because the name has been created in the meantime, the
+	 * directory is out-of-date - the file server knows best! */
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
 	ReleaseWriteLock(&afs_xdcache);
 	if (code && !AFS_IS_DISCON_RW) {

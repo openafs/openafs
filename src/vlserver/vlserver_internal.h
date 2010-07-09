@@ -51,4 +51,5 @@ extern int UnhashVolname(struct ubik_trans *trans, afs_int32 blockindex,
 			 struct nvlentry *aentry);
 extern afs_int32 NextEntry(struct ubik_trans *trans, afs_int32 blockindex,
 			   struct nvlentry *tentry, afs_int32 *remaining);
+extern int FreeBlock(struct ubik_trans *trans, afs_int32 blockindex);
 #endif

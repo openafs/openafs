@@ -28,12 +28,23 @@
 
 /* afsdump_dirlist.c - List an AFS directory file */
 
+#include <afsconfig.h>
+
 #include <sys/fcntl.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 
+#include <afs/stds.h>
+#include <afs/com_err.h>
+#include <afs/cellconfig.h>
+#include <afs/vlserver.h>
+#include <afs/volser.h>
+#include <rx/rxkad.h>
+
 #include "dumpscan.h"
+#include "dumpscan_errs.h"
+#include "xf_errs.h"
 
 extern int optind;
 extern char *optarg;
@@ -42,7 +53,6 @@ char *argv0;
 static char *input_path;
 static int quiet, verbose, error_count;
 
-static path_hashinfo phi;
 static dump_parser dp;
 
 
@@ -67,7 +77,7 @@ parse_options(int argc, char **argv)
     int c;
 
     /* Set the program name */
-    if (argv0 = strrchr(argv[0], '/'))
+    if ((argv0 = strrchr(argv[0], '/')) != NULL)
 	argv0++;
     else
 	argv0 = argv[0];
@@ -117,11 +127,12 @@ my_error_cb(afs_uint32 code, int fatal, void *ref, char *msg, ...)
 	afs_com_err_va(argv0, code, msg, alist);
 	va_end(alist);
     }
+    return 0;
 }
 
 
 /* Main program */
-void
+int
 main(int argc, char **argv)
 {
     XFILE input_file;
@@ -154,5 +165,5 @@ main(int argc, char **argv)
 	fprintf(stderr, "*** %d errors\n", error_count);
     if (r && !quiet)
 	fprintf(stderr, "*** FAILED: %s\n", afs_error_message(r));
-    exit(0);
+    return 0;
 }

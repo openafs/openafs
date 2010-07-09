@@ -84,7 +84,7 @@ crref(void)
 void
 crset(cred_t * cr)
 {
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     struct cred *new_creds;
 
     /* If our current task doesn't have identical real and effective

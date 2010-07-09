@@ -85,8 +85,8 @@ extern int afs_shuttingdown;
 #define MAXNUMSYSNAMES	32	/* max that current constants allow */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
-#define AFS_NCBRS	300	/* max # of call back return entries */
-#define AFS_MAXCBRSCALL	16	/* max to return in a given call */
+#define AFS_NCBRS	1024	/* max # of call back return entries */
+#define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
 #define	AFS_SALLOC_LOW_WATER	250	/* Min free blocks before allocating more */
 #define	AFS_LRALLOCSIZ 	4096	/* "Large" allocated size */
 #define	VCACHE_FREE	5
@@ -118,7 +118,7 @@ struct sysname_info {
 #define AFS_SYNC  	1
 #define AFS_VMSYNC_INVAL 2	/* sync and invalidate pages */
 #define AFS_LASTSTORE   4
-
+#define AFS_VMSYNC      8       /* sync pages but do not invalidate */
 
 /* background request structure */
 #define	BPARMS		4
@@ -258,6 +258,7 @@ struct afs_cbr {
     struct afs_cbr *hash_next;
 
     struct AFSFid fid;
+    unsigned int dynalloc:1;
 };
 
 /* cellinfo file magic number */
@@ -269,6 +270,7 @@ struct afs_cbr {
 #define CNoAFSDB		0x08	/* never bother trying AFSDB */
 #define CHasVolRef		0x10	/* volumes were referenced */
 #define CLinkedCell		0x20	/* has a linked cell in lcellp */
+#define CHush                   0x40    /* don't display until referenced */
 
 struct cell {
     struct afs_q lruq;		/* lru q next and prev */
@@ -688,7 +690,7 @@ extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 #if defined(AFS_DARWIN80_ENV)
 #define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
 #define AFSTOV(vc) ((vc)->v)
-#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -744,7 +746,7 @@ struct fvcache {
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */
@@ -997,7 +999,7 @@ struct cm_initparams {
 #define	IFFree		2	/* index entry in freeDCList */
 #define	IFDataMod	4	/* file needs to be written out */
 #define	IFFlag		8	/* utility flag */
-#define	IFDirtyPages	16
+#define	IFDirtyPages	16      /* Solaris-only. contains dirty pages */
 #define	IFAnyPages	32
 #define	IFDiscarded	64	/* index entry in discardDCList */
 
@@ -1066,11 +1068,13 @@ typedef char *afs_ufs_dcache_id_t;
  * the size correctly.
  */
 typedef ino64_t afs_ufs_dcache_id_t;
-#elif defined(LINUX_USE_FH)
+#elif defined(AFS_LINUX26_ENV)
 #define MAX_FH_LEN 10
 typedef union {
-     struct fid fh;
-     __u32 raw[MAX_FH_LEN];
+#if defined(NEW_EXPORT_OPS)
+    struct fid fh;
+#endif
+    __u32 raw[MAX_FH_LEN];
 } afs_ufs_dcache_id_t;
 extern int cache_fh_type;
 extern int cache_fh_len;
@@ -1210,7 +1214,7 @@ struct afs_FetchOutput {
 	avc->f.states |= CCore;	/* causes close to be called later */ \
                                                                       \
 	/* The cred and vnode holds will be released in afs_FlushActiveVcaches */  \
-	VN_HOLD(AFSTOV(avc));	/* So it won't disappear */           \
+	AFS_FAST_HOLD(avc);	/* So it won't disappear */           \
 	CRKEEP(avc, acred); /* Should use a better place for the creds */ \
     }                                                                         \
     else {                                                                    \
@@ -1431,7 +1435,9 @@ extern int afsd_dynamic_vcaches;
  * Linux uses the kernel cred structure if available, with the
  * wrappers defined in LINUX/osi_machdep.h
  */
-#if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_HAS_CRED))
+#if defined(AFS_NBSD40_ENV)
+/* in osi_machdep.h as expected */
+#elif !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 #define afs_cr_uid(cred) ((cred)->cr_uid)
 #define afs_cr_gid(cred) ((cred)->cr_gid)
 #define afs_cr_ruid(cred) ((cred)->cr_ruid)

@@ -130,7 +130,7 @@ dest: ${LIBAFSAUTHENT} libafsauthent_pic.a
 	${INSTALL_DATA} libafsauthent_pic.a \
 		${DEST}/lib/libafsauthent_pic.a
 
-${LIBAFSAUTHENT}: ${LIBOBJS}
+${LIBAFSAUTHENT}: ${LIBOBJS} libafsauthent.map
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
 		-L${TOP_LIBDIR} -lafsrpc ${LIBOBJS} ${MT_LIBS}
@@ -304,4 +304,6 @@ pioctl.o: ${SYS}/pioctl.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so* libafsauthent_pic.a libafsauthent.dylib.*
+	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so* \
+		libafsauthent_pic.a libafsauthent.dylib.* \
+		libafsauthent.exp

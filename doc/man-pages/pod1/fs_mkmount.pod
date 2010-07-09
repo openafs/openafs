@@ -110,8 +110,8 @@ To create a read/write mount point, include the B<-rw> flag on the B<fs
 mkmount> command. It is conventional to create only one read/write mount
 point in a cell's filespace, using it to mount the cell's C<root.cell>
 volume just below the AFS filespace root (by convention,
-F</afs/.I<cellname>>). See the I<IBM AFS Quick Beginnings> for
-instructions and the chapter about volume management in the I<IBM AFS
+F</afs/.I<cellname>>). See the I<OpenAFS Quick Start Guide> for
+instructions and the chapter about volume management in the I<OpenAFS
 Administration Guide> for further discussion.
 
 Creating a read/write mount point for a read-only or backup volume is

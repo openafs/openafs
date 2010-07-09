@@ -119,41 +119,41 @@ extern int afs_FlushVS(struct vcache *tvc);
 
 #define M_AFSNODE (M_TEMP-1)	/* XXX */
 
-int afs_nbsd_lookup(void *);
-int afs_nbsd_create(void *);
-int afs_nbsd_mknod(void *);
-int afs_nbsd_open(void *);
-int afs_nbsd_close(void *);
-int afs_nbsd_access(void *);
-int afs_nbsd_getattr(void *);
-int afs_nbsd_setattr(void *);
-int afs_nbsd_read(void *);
-int afs_nbsd_write(void *);
-int afs_nbsd_ioctl(void *);
-int afs_nbsd_select(void *);
-int afs_nbsd_fsync(void *);
-int afs_nbsd_remove(void *);
-int afs_nbsd_link(void *);
-int afs_nbsd_rename(void *);
-int afs_nbsd_mkdir(void *);
-int afs_nbsd_rmdir(void *);
-int afs_nbsd_symlink(void *);
-int afs_nbsd_readdir(void *);
-int afs_nbsd_readlink(void *);
-int afs_nbsd_inactive(void *);
-int afs_nbsd_reclaim(void *);
-int afs_nbsd_lock(void *);
-int afs_nbsd_unlock(void *);
-int afs_nbsd_bmap(void *);
-int afs_nbsd_strategy(void *);
-int afs_nbsd_print(void *);
-int afs_nbsd_islocked(void *);
-int afs_nbsd_pathconf(void *);
-int afs_nbsd_advlock(void *);
+int afs_obsd_lookup(void *);
+int afs_obsd_create(void *);
+int afs_obsd_mknod(void *);
+int afs_obsd_open(void *);
+int afs_obsd_close(void *);
+int afs_obsd_access(void *);
+int afs_obsd_getattr(void *);
+int afs_obsd_setattr(void *);
+int afs_obsd_read(void *);
+int afs_obsd_write(void *);
+int afs_obsd_ioctl(void *);
+int afs_obsd_select(void *);
+int afs_obsd_fsync(void *);
+int afs_obsd_remove(void *);
+int afs_obsd_link(void *);
+int afs_obsd_rename(void *);
+int afs_obsd_mkdir(void *);
+int afs_obsd_rmdir(void *);
+int afs_obsd_symlink(void *);
+int afs_obsd_readdir(void *);
+int afs_obsd_readlink(void *);
+int afs_obsd_inactive(void *);
+int afs_obsd_reclaim(void *);
+int afs_obsd_lock(void *);
+int afs_obsd_unlock(void *);
+int afs_obsd_bmap(void *);
+int afs_obsd_strategy(void *);
+int afs_obsd_print(void *);
+int afs_obsd_islocked(void *);
+int afs_obsd_pathconf(void *);
+int afs_obsd_advlock(void *);
 
-#define afs_nbsd_opnotsupp \
+#define afs_obsd_opnotsupp \
 	((int (*) __P((void *)))eopnotsupp)
-#define afs_nbsd_reallocblks afs_nbsd_opnotsupp
+#define afs_obsd_reallocblks afs_obsd_opnotsupp
 
 /* Global vfs data structures for AFS. */
 int (**afs_vnodeop_p) __P((void *));
@@ -163,43 +163,43 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 #else
     {&vop_default_desc, vn_default_error},
 #endif
-    {&vop_lookup_desc, afs_nbsd_lookup},	/* lookup */
-    {&vop_create_desc, afs_nbsd_create},	/* create */
-    {&vop_mknod_desc, afs_nbsd_mknod},		/* mknod */
-    {&vop_open_desc, afs_nbsd_open},		/* open */
-    {&vop_close_desc, afs_nbsd_close},		/* close */
-    {&vop_access_desc, afs_nbsd_access},	/* access */
-    {&vop_getattr_desc, afs_nbsd_getattr},	/* getattr */
-    {&vop_setattr_desc, afs_nbsd_setattr},	/* setattr */
-    {&vop_read_desc, afs_nbsd_read},		/* read */
-    {&vop_write_desc, afs_nbsd_write},		/* write */
-    {&vop_ioctl_desc, afs_nbsd_ioctl},		/* XXX ioctl */
+    {&vop_lookup_desc, afs_obsd_lookup},	/* lookup */
+    {&vop_create_desc, afs_obsd_create},	/* create */
+    {&vop_mknod_desc, afs_obsd_mknod},		/* mknod */
+    {&vop_open_desc, afs_obsd_open},		/* open */
+    {&vop_close_desc, afs_obsd_close},		/* close */
+    {&vop_access_desc, afs_obsd_access},	/* access */
+    {&vop_getattr_desc, afs_obsd_getattr},	/* getattr */
+    {&vop_setattr_desc, afs_obsd_setattr},	/* setattr */
+    {&vop_read_desc, afs_obsd_read},		/* read */
+    {&vop_write_desc, afs_obsd_write},		/* write */
+    {&vop_ioctl_desc, afs_obsd_ioctl},		/* XXX ioctl */
 #ifdef AFS_OBSD35_ENV
-    {&vop_poll_desc, afs_nbsd_select},		/* select */
+    {&vop_poll_desc, afs_obsd_select},		/* select */
 #else
-    {&vop_select_desc, afs_nbsd_select},	/* select */
+    {&vop_select_desc, afs_obsd_select},	/* select */
 #endif
-    {&vop_fsync_desc, afs_nbsd_fsync},		/* fsync */
-    {&vop_remove_desc, afs_nbsd_remove},	/* remove */
-    {&vop_link_desc, afs_nbsd_link},		/* link */
-    {&vop_rename_desc, afs_nbsd_rename},	/* rename */
-    {&vop_mkdir_desc, afs_nbsd_mkdir},		/* mkdir */
-    {&vop_rmdir_desc, afs_nbsd_rmdir},		/* rmdir */
-    {&vop_symlink_desc, afs_nbsd_symlink},	/* symlink */
-    {&vop_readdir_desc, afs_nbsd_readdir},	/* readdir */
-    {&vop_readlink_desc, afs_nbsd_readlink},	/* readlink */
+    {&vop_fsync_desc, afs_obsd_fsync},		/* fsync */
+    {&vop_remove_desc, afs_obsd_remove},	/* remove */
+    {&vop_link_desc, afs_obsd_link},		/* link */
+    {&vop_rename_desc, afs_obsd_rename},	/* rename */
+    {&vop_mkdir_desc, afs_obsd_mkdir},		/* mkdir */
+    {&vop_rmdir_desc, afs_obsd_rmdir},		/* rmdir */
+    {&vop_symlink_desc, afs_obsd_symlink},	/* symlink */
+    {&vop_readdir_desc, afs_obsd_readdir},	/* readdir */
+    {&vop_readlink_desc, afs_obsd_readlink},	/* readlink */
     {&vop_abortop_desc, vop_generic_abortop},	/* abortop */
-    {&vop_inactive_desc, afs_nbsd_inactive},	/* inactive */
-    {&vop_reclaim_desc, afs_nbsd_reclaim},	/* reclaim */
-    {&vop_lock_desc, afs_nbsd_lock},		/* lock */
-    {&vop_unlock_desc, afs_nbsd_unlock},	/* unlock */
-    {&vop_bmap_desc, afs_nbsd_bmap},		/* bmap */
-    {&vop_strategy_desc, afs_nbsd_strategy},	/* strategy */
-    {&vop_print_desc, afs_nbsd_print},		/* print */
-    {&vop_islocked_desc, afs_nbsd_islocked},	/* islocked */
-    {&vop_pathconf_desc, afs_nbsd_pathconf},	/* pathconf */
-    {&vop_advlock_desc, afs_nbsd_advlock},	/* advlock */
-    {&vop_reallocblks_desc, afs_nbsd_reallocblks},	/* reallocblks */
+    {&vop_inactive_desc, afs_obsd_inactive},	/* inactive */
+    {&vop_reclaim_desc, afs_obsd_reclaim},	/* reclaim */
+    {&vop_lock_desc, afs_obsd_lock},		/* lock */
+    {&vop_unlock_desc, afs_obsd_unlock},	/* unlock */
+    {&vop_bmap_desc, afs_obsd_bmap},		/* bmap */
+    {&vop_strategy_desc, afs_obsd_strategy},	/* strategy */
+    {&vop_print_desc, afs_obsd_print},		/* print */
+    {&vop_islocked_desc, afs_obsd_islocked},	/* islocked */
+    {&vop_pathconf_desc, afs_obsd_pathconf},	/* pathconf */
+    {&vop_advlock_desc, afs_obsd_advlock},	/* advlock */
+    {&vop_reallocblks_desc, afs_obsd_reallocblks},	/* reallocblks */
     {&vop_bwrite_desc, vop_generic_bwrite},
     {(struct vnodeop_desc *)NULL, (int (*)__P((void *)))NULL}
 };
@@ -224,7 +224,7 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 int afs_debug;
 
 int
-afs_nbsd_lookup(void *v)
+afs_obsd_lookup(void *v)
 {
     struct vop_lookup_args	/* {
 				 * struct vnodeop_desc * a_desc;
@@ -305,7 +305,7 @@ afs_nbsd_lookup(void *v)
 }
 
 int
-afs_nbsd_create(void *v)
+afs_obsd_create(void *v)
 {
     struct vop_create_args	/* {
 				 * struct vnode *a_dvp;
@@ -351,7 +351,7 @@ afs_nbsd_create(void *v)
 }
 
 int
-afs_nbsd_mknod(void *v)
+afs_obsd_mknod(void *v)
 {
     struct vop_mknod_args	/* {
 				 * struct vnode *a_dvp;
@@ -365,7 +365,7 @@ afs_nbsd_mknod(void *v)
 }
 
 int
-afs_nbsd_open(void *v)
+afs_obsd_open(void *v)
 {
     struct vop_open_args	/* {
 				 * struct vnode *a_vp;
@@ -387,7 +387,7 @@ afs_nbsd_open(void *v)
 }
 
 int
-afs_nbsd_close(void *v)
+afs_obsd_close(void *v)
 {
     struct vop_close_args	/* {
 				 * struct vnode *a_vp;
@@ -404,7 +404,7 @@ afs_nbsd_close(void *v)
 }
 
 int
-afs_nbsd_access(void *v)
+afs_obsd_access(void *v)
 {
     struct vop_access_args	/* {
 				 * struct vnode *a_vp;
@@ -421,7 +421,7 @@ afs_nbsd_access(void *v)
 }
 
 int
-afs_nbsd_getattr(void *v)
+afs_obsd_getattr(void *v)
 {
     struct vop_getattr_args	/* {
 				 * struct vnode *a_vp;
@@ -438,7 +438,7 @@ afs_nbsd_getattr(void *v)
 }
 
 int
-afs_nbsd_setattr(void *v)
+afs_obsd_setattr(void *v)
 {
     struct vop_setattr_args	/* {
 				 * struct vnode *a_vp;
@@ -455,7 +455,7 @@ afs_nbsd_setattr(void *v)
 }
 
 int
-afs_nbsd_read(void *v)
+afs_obsd_read(void *v)
 {
     struct vop_read_args	/* {
 				 * struct vnode *a_vp;
@@ -474,7 +474,7 @@ afs_nbsd_read(void *v)
 }
 
 int
-afs_nbsd_write(void *v)
+afs_obsd_write(void *v)
 {
     struct vop_write_args	/* {
 				 * struct vnode *a_vp;
@@ -497,7 +497,7 @@ afs_nbsd_write(void *v)
 }
 
 int
-afs_nbsd_ioctl(void *v)
+afs_obsd_ioctl(void *v)
 {
     struct vop_ioctl_args	/* {
 				 * struct vnode *a_vp;
@@ -526,13 +526,13 @@ afs_nbsd_ioctl(void *v)
 }
 
 int
-afs_nbsd_select(void *v)
+afs_obsd_select(void *v)
 {
     return 1;
 }
 
 int
-afs_nbsd_fsync(void *v)
+afs_obsd_fsync(void *v)
 {
     struct vop_fsync_args	/* {
 				 * struct vnode *a_vp;
@@ -552,7 +552,7 @@ afs_nbsd_fsync(void *v)
 }
 
 int
-afs_nbsd_remove(void *v)
+afs_obsd_remove(void *v)
 {
     struct vop_remove_args	/* {
 				 * struct vnode *a_dvp;
@@ -578,7 +578,7 @@ afs_nbsd_remove(void *v)
 }
 
 int
-afs_nbsd_link(void *v)
+afs_obsd_link(void *v)
 {
     struct vop_link_args	/* {
 				 * struct vnode *a_vp;
@@ -619,7 +619,7 @@ afs_nbsd_link(void *v)
 }
 
 int
-afs_nbsd_rename(void *v)
+afs_obsd_rename(void *v)
 {
     struct vop_rename_args	/* {
 				 * struct vnode *a_fdvp;
@@ -720,7 +720,7 @@ afs_nbsd_rename(void *v)
 }
 
 int
-afs_nbsd_mkdir(void *v)
+afs_obsd_mkdir(void *v)
 {
     struct vop_mkdir_args	/* {
 				 * struct vnode *a_dvp;
@@ -736,7 +736,7 @@ afs_nbsd_mkdir(void *v)
     GETNAME();
 #ifdef DIAGNOSTIC
     if ((cnp->cn_flags & HASBUF) == 0)
-	panic("afs_nbsd_mkdir: no name");
+	panic("afs_obsd_mkdir: no name");
 #endif
     AFS_GLOCK();
     code = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, cnp->cn_cred);
@@ -759,7 +759,7 @@ afs_nbsd_mkdir(void *v)
 }
 
 int
-afs_nbsd_rmdir(void *v)
+afs_obsd_rmdir(void *v)
 {
     struct vop_rmdir_args	/* {
 				 * struct vnode *a_dvp;
@@ -789,7 +789,7 @@ afs_nbsd_rmdir(void *v)
 }
 
 int
-afs_nbsd_symlink(void *v)
+afs_obsd_symlink(void *v)
 {
     struct vop_symlink_args	/* {
 				 * struct vnode *a_dvp;
@@ -814,7 +814,7 @@ afs_nbsd_symlink(void *v)
 }
 
 int
-afs_nbsd_readdir(void *v)
+afs_obsd_readdir(void *v)
 {
     struct vop_readdir_args	/* {
 				 * struct vnode *a_vp;
@@ -842,7 +842,7 @@ afs_nbsd_readdir(void *v)
 }
 
 int
-afs_nbsd_readlink(void *v)
+afs_obsd_readlink(void *v)
 {
     struct vop_readlink_args	/* {
 				 * struct vnode *a_vp;
@@ -860,7 +860,7 @@ afs_nbsd_readlink(void *v)
 extern int prtactive;
 
 int
-afs_nbsd_inactive(void *v)
+afs_obsd_inactive(void *v)
 {
     struct vop_inactive_args	/* {
 				 * struct vnode *a_vp;
@@ -872,7 +872,7 @@ afs_nbsd_inactive(void *v)
     AFS_STATCNT(afs_inactive);
 
     if (prtactive && vp->v_usecount != 0)
-	vprint("afs_nbsd_inactive(): pushing active", vp);
+	vprint("afs_obsd_inactive(): pushing active", vp);
 
     if (!haveGlock)
 	AFS_GLOCK();
@@ -885,7 +885,7 @@ afs_nbsd_inactive(void *v)
 }
 
 int
-afs_nbsd_reclaim(void *v)
+afs_obsd_reclaim(void *v)
 {
     struct vop_reclaim_args	/* {
 				 * struct vnode *a_vp;
@@ -929,7 +929,7 @@ afs_nbsd_reclaim(void *v)
 #endif
 
 int
-afs_nbsd_lock(void *v)
+afs_obsd_lock(void *v)
 {
     struct vop_lock_args	/* {
 				 * struct vnode *a_vp;
@@ -940,12 +940,12 @@ afs_nbsd_lock(void *v)
     struct vcache *vc = VTOAFS(vp);
 
     if (!vc)
-	panic("afs_nbsd_lock: null vcache");
+	panic("afs_obsd_lock: null vcache");
     return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, VP_INTERLOCK, ap->a_p);
 }
 
 int
-afs_nbsd_unlock(void *v)
+afs_obsd_unlock(void *v)
 {
     struct vop_unlock_args	/* {
 				 * struct vnode *a_vp;
@@ -956,12 +956,12 @@ afs_nbsd_unlock(void *v)
     struct vcache *vc = VTOAFS(vp);
 
     if (!vc)
-	panic("afs_nbsd_unlock: null vcache");
+	panic("afs_obsd_unlock: null vcache");
     return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, VP_INTERLOCK, ap->a_p);
 }
 
 int
-afs_nbsd_bmap(void *v)
+afs_obsd_bmap(void *v)
 {
     struct vop_bmap_args	/* {
 				 * struct vnode *a_vp;
@@ -981,7 +981,7 @@ afs_nbsd_bmap(void *v)
 }
 
 int
-afs_nbsd_strategy(void *v)
+afs_obsd_strategy(void *v)
 {
     struct vop_strategy_args	/* {
 				 * struct buf *a_bp;
@@ -1018,7 +1018,7 @@ afs_nbsd_strategy(void *v)
 }
 
 int
-afs_nbsd_print(void *v)
+afs_obsd_print(void *v)
 {
     struct vop_print_args	/* {
 				 * struct vnode *a_vp;
@@ -1035,7 +1035,7 @@ afs_nbsd_print(void *v)
 }
 
 int
-afs_nbsd_islocked(void *v)
+afs_obsd_islocked(void *v)
 {
     struct vop_islocked_args	/* {
 				 * struct vnode *a_vp;
@@ -1047,7 +1047,7 @@ afs_nbsd_islocked(void *v)
  * Return POSIX pathconf information applicable to ufs filesystems.
  */
 int
-afs_nbsd_pathconf(void *v)
+afs_obsd_pathconf(void *v)
 {
     struct vop_pathconf_args	/* {
 				 * struct vnode *a_vp;
@@ -1088,7 +1088,7 @@ extern int
  * Advisory record locking support (fcntl() POSIX style)
  */
 int
-afs_nbsd_advlock(void *v)
+afs_obsd_advlock(void *v)
 {
     struct vop_advlock_args	/* {
 				 * struct vnode *a_vp;

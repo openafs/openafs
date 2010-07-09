@@ -123,6 +123,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
      * call FindVCache instead of GetVCache since if the file's really
      * gone, we won't be able to fetch the status info anyway.  */
     if (tvc) {
+	afs_MarinerLog("store$Removing", tvc);
 #ifdef AFS_BOZONLOCK_ENV
 	afs_BozonLock(&tvc->pvnLock, tvc);
 	/* Since afs_TryToSmush will do a pvn_vptrunc */
@@ -433,7 +434,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 	    VREF(AFSTOV(avc));
 #else
-	    VN_HOLD(AFSTOV(avc));
+	    AFS_FAST_HOLD(avc);
 #endif
 
 	    /* We'll only try this once. If it fails, just release the vnode.

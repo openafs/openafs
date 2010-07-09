@@ -306,7 +306,7 @@ char *tmpdir = NULL;
 
 /* Forward declarations */
 /*@printflike@*/ void Log(const char *format, ...);
-/*@printflike@*/ void Abort(const char *format, ...);
+/*@printflike@*/ void Abort(const char *format, ...) AFS_NORETURN;
 static int IsVnodeOrphaned(VnodeId vnode);
 static int AskVolumeSummary(VolumeId singleVolumeNumber);
 
@@ -2319,7 +2319,7 @@ SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
     } header;
     IHandle_t *specH;
     int recreate = 0;
-    afs_int32 code;
+    ssize_t nBytes;
     FdHandle_t *fdP;
 
     if (sp->obsolete)
@@ -2389,8 +2389,8 @@ SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
 	    Abort
 		("Internal error: recreating volume header (%s) in check mode\n",
 		 sp->description);
-	code = FDH_TRUNC(fdP, 0);
-	if (code == -1)
+	nBytes = FDH_TRUNC(fdP, 0);
+	if (nBytes == -1)
 	    Abort("Unable to truncate volume header file (%s) (error = %d)\n",
 		  sp->description, errno);
 
@@ -2417,11 +2417,11 @@ SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
 		    ("Unable to seek to beginning of volume header file (%s) (errno = %d)\n",
 		     sp->description, errno);
 	    }
-	    code =
+	    nBytes =
 		FDH_WRITE(fdP, (char *)&header.volumeInfo,
 			  sizeof(header.volumeInfo));
-	    if (code != sizeof(header.volumeInfo)) {
-		if (code < 0)
+	    if (nBytes != sizeof(header.volumeInfo)) {
+		if (nBytes < 0)
 		    Abort
 			("Unable to write volume header file (%s) (errno = %d)\n",
 			 sp->description, errno);
@@ -2434,9 +2434,9 @@ SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
 		    ("Unable to seek to beginning of volume header file (%s) (errno = %d)\n",
 		     sp->description, errno);
 	    }
-	    code = FDH_WRITE(fdP, (char *)&sp->stamp, sizeof(sp->stamp));
-	    if (code != sizeof(sp->stamp)) {
-		if (code < 0)
+	    nBytes = FDH_WRITE(fdP, (char *)&sp->stamp, sizeof(sp->stamp));
+	    if (nBytes != sizeof(sp->stamp)) {
+		if (nBytes < 0)
 		    Abort
 			("Unable to write version stamp in volume header file (%s) (errno = %d)\n",
 			 sp->description, errno);
@@ -3059,7 +3059,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (/* ShowMounts && */ (vnodeEssence->type == vSymlink)
 	    && !(vnodeEssence->modeBits & 0111)) {
-	    int code, size;
+	    ssize_t nBytes, size;
 	    char buf[1025];
 	    IHandle_t *ihP;
 	    FdHandle_t *fdP;
@@ -3074,7 +3074,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    }
 	    size = FDH_SIZE(fdP);
 	    if (size < 0) {
-		Log("ERROR %s mount point has invalid size %d, vnode %u\n", dir->vname, size, vnodeNumber);
+		Log("ERROR %s mount point has invalid size %d, vnode %u\n", dir->vname, (int)size, vnodeNumber);
 		FDH_REALLYCLOSE(fdP);
 		IH_RELEASE(ihP);
 		return 0;
@@ -3082,8 +3082,8 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	
 	    if (size > 1024)
 		size = 1024;
-	    code = FDH_READ(fdP, buf, size);
-	    if (code == size) {
+	    nBytes = FDH_READ(fdP, buf, size);
+	    if (nBytes == size) {
 		buf[size] = '\0';
 		if ( (*buf != '#' && *buf != '%') || buf[strlen(buf)-1] != '.' ) {
 		    Log("Volume %u (%s) mount point %s/%s to '%s' invalid, %s to symbolic link\n",
@@ -3096,7 +3096,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		    dir->name ? dir->name : "??", name, buf);
 	    } else {
 		Log("Volume %s cound not read mount point vnode %u size %d code %d\n",
-		    dir->vname, vnodeNumber, size, code);
+		    dir->vname, vnodeNumber, (int)size, (int)nBytes);
 	    }
 	    FDH_REALLYCLOSE(fdP);
 	    IH_RELEASE(ihP);
@@ -3786,6 +3786,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	if (code == 0) {
 	    rootdirfound = 1;
 	    newrootdir = 1;
+	    VolumeChanged = 1;
 	}
     }
 
@@ -4027,6 +4028,22 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	    "do not continue to use this volume (%lu) as-is.\n",
 	    afs_printable_uint32_lu(vid));
     }
+
+#ifdef FSSYNC_BUILD_CLIENT
+    if (!Testing && VolumeChanged) {
+	afs_int32 fsync_code;
+
+	fsync_code = FSYNC_VolOp(vid, NULL, FSYNC_VOL_BREAKCBKS, FSYNC_SALVAGE, NULL);
+	if (fsync_code) {
+	    Log("Error trying to tell the fileserver to break callbacks for "
+	        "changed volume %lu; error code %ld\n",
+	        afs_printable_uint32_lu(vid),
+	        afs_printable_int32_ld(fsync_code));
+	} else {
+	    VolumeChanged = 0;
+	}
+    }
+#endif /* FSSYNC_BUILD_CLIENT */
 
     /* Turn off the inUse bit; the volume's been salvaged! */
     volHeader.inUse = 0;	/* clear flag indicating inUse@last crash */
@@ -4289,17 +4306,16 @@ CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume)
     char buf[4096];
     IHandle_t *srcH, *destH;
     FdHandle_t *srcFdP, *destFdP;
-    register int n = 0;
+    ssize_t nBytes = 0;
 
     IH_INIT(srcH, device, rwvolume, inode1);
     srcFdP = IH_OPEN(srcH);
     assert(srcFdP != NULL);
     IH_INIT(destH, device, rwvolume, inode2);
     destFdP = IH_OPEN(destH);
-    assert(n != -1);
-    while ((n = FDH_READ(srcFdP, buf, sizeof(buf))) > 0)
-	assert(FDH_WRITE(destFdP, buf, n) == n);
-    assert(n == 0);
+    while ((nBytes = FDH_READ(srcFdP, buf, sizeof(buf))) > 0)
+	assert(FDH_WRITE(destFdP, buf, nBytes) == nBytes);
+    assert(nBytes == 0);
     FDH_REALLYCLOSE(srcFdP);
     FDH_REALLYCLOSE(destFdP);
     IH_RELEASE(srcH);

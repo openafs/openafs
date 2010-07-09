@@ -7,11 +7,11 @@ fs_listquota - Displays quota information for a volume
 =for html
 <div class="synopsis">
 
-B<fs listquota> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+B<fs listquota> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-human>] [B<-help>]
 
-B<fs listq> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+B<fs listq> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-hu>] [B<-he>]
 
-B<fs lq> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+B<fs lq> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-hu>] [B<-he>]
 
 =for html
 </div>
@@ -43,6 +43,12 @@ produce output. Partial pathnames are interpreted relative to the current
 working directory, which is also the default value if this argument is
 omitted.
 
+=item B<-human>
+
+Print space in a "human-readable" format. Instead of always printing space
+in kilobytes, show disk space in kilobytes, megabytes, gigabytes,
+terabytes, or petabytes, as appropriate.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -69,7 +75,8 @@ unlimited quota.
 
 =item Used
 
-The number of kilobytes of quota used.
+The amount of space used. If B<-human> is not specified, this value is in
+kilobytes.
 
 =item % Used
 

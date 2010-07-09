@@ -14,7 +14,7 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 
 #include <linux/sysctl.h>
-#ifdef CONFIG_H_EXISTS
+#ifdef HAVE_LINUX_CONFIG_H
 #include <linux/config.h>
 #endif
 
@@ -37,7 +37,7 @@ static struct ctl_table_header *afs_sysctl = NULL;
 static ctl_table afs_sysctl_table[] = {
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name 	= 1, 
@@ -51,7 +51,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
         .ctl_name 	= 2, 
@@ -65,7 +65,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 3, 
@@ -79,7 +79,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 4, 
@@ -93,7 +93,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 5, 
@@ -107,7 +107,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 6, 
@@ -121,7 +121,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 7, 
@@ -135,7 +135,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 8, 
@@ -149,7 +149,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 9, 
@@ -163,7 +163,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 10, 
@@ -177,7 +177,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 11, 
@@ -191,7 +191,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 12, 
@@ -205,7 +205,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 13,
@@ -219,7 +219,7 @@ static ctl_table afs_sysctl_table[] = {
     },
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 14, 
@@ -237,7 +237,7 @@ static ctl_table afs_sysctl_table[] = {
 static ctl_table fs_sysctl_table[] = {
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
-#if defined(SYSCTL_TABLE_CHECKING)
+#if defined(CTL_UNNUMBERED)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 1, 

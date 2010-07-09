@@ -36,21 +36,22 @@
  * applications.
  */
 int
-ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost, 
-		     afs_int32 *aothers)
+ubik_ParseServerList(int argc, char **argv, afs_uint32 *ahost,
+		     afs_uint32 *aothers)
 {
     register afs_int32 i;
     register char *tp;
     register struct hostent *th;
     char hostname[64];
-    afs_int32 myHost, temp, counter;
+    afs_uint32 myHost, temp;
+    afs_int32 counter;
     int inServer, sawServer;
 
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th)
 	return UBADHOST;
-    memcpy(&myHost, th->h_addr, sizeof(afs_int32));
+    memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
     *ahost = myHost;
 
     inServer = 0;		/* haven't seen -servers yet */
@@ -68,7 +69,7 @@ ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost,
 		th = gethostbyname(tp);
 		if (!th)
 		    return UBADHOST;
-		memcpy(&temp, th->h_addr, sizeof(afs_int32));
+		memcpy(&temp, th->h_addr, sizeof(afs_uint32));
 		if (temp != myHost) {
 		    if (counter++ >= MAXSERVERS)
 			return UNHOSTS;

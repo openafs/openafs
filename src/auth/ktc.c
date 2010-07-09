@@ -41,7 +41,7 @@
 #endif
 #endif
 #endif
-#ifdef AFS_DARWIN100_ENV
+#ifdef HAVE_CRT_EXTERNS_H
 #include <crt_externs.h>
 #endif
 #ifdef HAVE_UNISTD_H
@@ -1552,11 +1552,12 @@ afs_tf_dest_tkt(void)
 int
 ktc_newpag(void)
 {
-#ifdef AFS_DARWIN100_ENV
-#define environ (*_NSGetEnviron())
-#else
+#if !defined(AFS_DARWIN100_ENV) || defined(HAVE_CRT_EXTERNS_H)
+# if defined(AFS_DARWIN100_ENV)
+#  define environ (*_NSGetEnviron())
+# else
 extern char **environ;
-#endif
+# endif
 
     afs_uint32 pag;
     struct stat sbuf;
@@ -1601,6 +1602,7 @@ extern char **environ;
     *++denv = 0;
     environ = newenv;
     UNLOCK_GLOBAL_MUTEX;
+#endif
     return 0;
 }
 

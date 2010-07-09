@@ -758,6 +758,7 @@ struct volHeader {
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
 extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
+extern Volume *VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolume_r(Volume *);
@@ -774,10 +775,10 @@ extern Volume *VCreateVolume(Error * ec, char *partname, VolId volumeId,
 			     VolId parentId);
 extern Volume *VCreateVolume_r(Error * ec, char *partname, VolId volumeId,
 			       VolId parentId);
-extern VnodeId VAllocBitmapEntry(Error * ec, Volume * vp,
-				 struct vnodeIndex *index);
-extern VnodeId VAllocBitmapEntry_r(Error * ec, Volume * vp,
-				   struct vnodeIndex *index, int flags);
+extern int VAllocBitmapEntry(Error * ec, Volume * vp,
+			     struct vnodeIndex *index);
+extern int VAllocBitmapEntry_r(Error * ec, Volume * vp,
+			       struct vnodeIndex *index, int flags);
 extern void VFreeBitMapEntry(Error * ec, register struct vnodeIndex *index,
 			     unsigned bitNumber);
 extern void VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,

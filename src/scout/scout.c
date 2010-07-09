@@ -52,9 +52,10 @@
 #define P_HOST	    3
 #define P_ATTENTION 4
 #define	P_DEBUG	    5
+#define	P_WIDTHS    6
 
 /*
-  * Define the width in chars for each light object on the mini-line.
+  * Define the default width in chars for each light object on the mini-line.
   */
 #define LIGHTOBJ_CONN_WIDTH	 5
 #define LIGHTOBJ_FETCH_WIDTH	10
@@ -62,6 +63,16 @@
 #define LIGHTOBJ_WK_WIDTH	 5
 #define LIGHTOBJ_SRVNAME_WIDTH	13
 #define LIGHTOBJ_DISK_WIDTH	12
+
+/*
+ * Define column width indices.
+ */
+#define COL_CONN	0
+#define COL_FETCH	1
+#define COL_STORE	2
+#define COL_WK		3
+#define COL_SRVNAME	4
+#define COL_DISK	5
 
 /*
  * Define the types of justification we can perform.
@@ -158,6 +169,14 @@ static struct onode *scout_banner2_lp;	/*Banner light, line 2 */
 static int scout_DiskLightLeftCol = 0;	/*Column for leftmost disk light */
 static struct gwin_sizeparams scout_frameDims;	/*Frame dimensions */
 
+static int scout_col_width[] = { LIGHTOBJ_CONN_WIDTH,
+    LIGHTOBJ_FETCH_WIDTH,
+    LIGHTOBJ_STORE_WIDTH,
+    LIGHTOBJ_WK_WIDTH,
+    LIGHTOBJ_SRVNAME_WIDTH,
+    LIGHTOBJ_DISK_WIDTH
+};
+
 /*
   * Attention thresholds & modes.
   */
@@ -178,10 +197,10 @@ static char scout_attn_disk_pcusedstr[8] = "95";
   * Some strings we'll be using over and over again.
   */
 static char scout_Banner[256];
-static char scout_LightLabels[] =
-    "Conn      Fetch      Store    Ws                Disk attn:";
-static char scout_LightLabelUnd[] =
-    "----   --------   -------- -----                ----------";
+static const char *scout_label[] =
+    { "Conn", "Fetch", "Store", "Ws", "", "Disk attn" };
+static const char *scout_underline[] =
+    { "----", "--------", "--------", "-----", "", "----------" };
 
 
 /*------------------------------------------------------------------------
@@ -372,7 +391,7 @@ scout_initDiskLightObjects(struct mini_line *a_line, struct gwin *a_win)
 	if ((curr_disk->disk_lp = mini_initLightObject("Disk",	/*Object name */
 						       0,	/*X value */
 						       0,	/*Y value */
-						       LIGHTOBJ_DISK_WIDTH,	/*Width */
+						       scout_col_width[COL_DISK],	/*Width */
 						       a_win))	/*Window */
 	    == NULL) {
 	    fprintf(stderr, "[%s:%s] Can't create disk %d light object\n", pn,
@@ -666,18 +685,21 @@ scout_RecomputeLightLocs(struct mini_line *a_srvline)
      * If we haven't yet computed the column for the leftmost disk light,
      * do it now.
      */
-    if (scout_DiskLightLeftCol == 0)
-	scout_DiskLightLeftCol =
-	    LIGHTOBJ_CONN_WIDTH + LIGHTOBJ_FETCH_WIDTH +
-	    LIGHTOBJ_STORE_WIDTH + LIGHTOBJ_WK_WIDTH +
-	    LIGHTOBJ_SRVNAME_WIDTH + 5;
+    if (scout_DiskLightLeftCol == 0) {
+	int i;
+	int num_cols = sizeof(scout_col_width) / sizeof(*scout_col_width);
+	scout_DiskLightLeftCol = 0;
+	for (i = 0; i < (num_cols - 1); i++) {
+	    scout_DiskLightLeftCol += scout_col_width[i] + 1;
+	}
+    }
 
     /*
      * Calculate how many disk light objects can fit in one line.
      */
     lights_per_line =
 	(scout_frameDims.maxx -
-	 scout_DiskLightLeftCol) / (LIGHTOBJ_DISK_WIDTH + 1);
+	 scout_DiskLightLeftCol) / (scout_col_width[COL_DISK] + 1);
     if (scout_debug) {
 	fprintf(scout_debugfd, "[%s] %d lights per line\n", rn,
 		lights_per_line);
@@ -730,7 +752,7 @@ scout_RecomputeLightLocs(struct mini_line *a_srvline)
 	 * light, if any.
 	 */
 	lights_this_line++;
-	curr_x += LIGHTOBJ_DISK_WIDTH + 1;
+	curr_x += scout_col_width[COL_DISK] + 1;
 	curr_idx = sc_disk[curr_idx].next;
 
     }				/*Update each used disk light */
@@ -1067,7 +1089,7 @@ mini_PrintDiskStats(struct mini_line *a_srvline,
 	    }
 	    code = mini_justify(" ",	/*Src buffer */
 				diskdata->label,	/*Dest buffer */
-				LIGHTOBJ_DISK_WIDTH,	/*Dest's width */
+				scout_col_width[COL_DISK],	/*Dest's width */
 				SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
 				SCOUT_LEFT_TRUNC,	/*Left-truncate */
 				SCOUT_ISNT_LDISK);	/*Not a labeled disk */
@@ -1179,7 +1201,7 @@ mini_PrintDiskStats(struct mini_line *a_srvline,
 		}
 		code = mini_justify(s,	/*Src buffer */
 				    diskdata->label,	/*Dest buffer */
-				    LIGHTOBJ_DISK_WIDTH,	/*Dest's width */
+				    scout_col_width[COL_DISK],	/*Dest's width */
 				    SCOUT_LEFT_JUSTIFY,	/*Left-justify */
 				    SCOUT_LEFT_TRUNC,	/*Left-truncate */
 				    SCOUT_IS_LDISK);	/*Labeled disk */
@@ -1343,7 +1365,7 @@ FS_Handler(void)
 	    sp = sblank;
 	code = mini_justify(sp,	/*Src buffer */
 			    lightdata->label,	/*Dest buffer */
-			    LIGHTOBJ_CONN_WIDTH,	/*Dest's width */
+			    scout_col_width[COL_CONN],	/*Dest's width */
 			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
 			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
 			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
@@ -1362,7 +1384,7 @@ FS_Handler(void)
 	    sp = sblank;
 	code = mini_justify(sp,	/*Src buffer */
 			    lightdata->label,	/*Dest buffer */
-			    LIGHTOBJ_FETCH_WIDTH,	/*Dest's width */
+			    scout_col_width[COL_FETCH],	/*Dest's width */
 			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
 			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
 			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
@@ -1381,7 +1403,7 @@ FS_Handler(void)
 	    sp = sblank;
 	code = mini_justify(sp,	/*Src buffer */
 			    lightdata->label,	/*Dest buffer */
-			    LIGHTOBJ_STORE_WIDTH,	/*Dest's width */
+			    scout_col_width[COL_STORE],	/*Dest's width */
 			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
 			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
 			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
@@ -1401,7 +1423,7 @@ FS_Handler(void)
 	    sp = sblank;
 	code = mini_justify(sp,	/*Src buffer */
 			    lightdata->label,	/*Dest buffer */
-			    LIGHTOBJ_WK_WIDTH,	/*Dest's width */
+			    scout_col_width[COL_WK],	/*Dest's width */
 			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
 			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
 			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
@@ -1512,50 +1534,50 @@ init_mini_line(struct sockaddr_in *a_skt, int a_lineNum,
     a_line->base_line = a_lineNum + scout_screen.base_line_num;
     a_line->num_lines = 1;
 
-    curr_x = 0;
+    curr_x = 1;
     curr_y = a_line->base_line;
     if ((a_line->currConns_lp =
-	 mini_initLightObject("Conns", curr_x, curr_y, LIGHTOBJ_CONN_WIDTH,
+	 mini_initLightObject("Conns", curr_x, curr_y, scout_col_width[COL_CONN],
 			      scout_gwin))
 	== NULL) {
 	fprintf(stderr, "[%s:%s] Can't create currConns light object\n", pn,
 		rn);
 	return (-1);
     }
-    curr_x += LIGHTOBJ_CONN_WIDTH + 1;
+    curr_x += scout_col_width[COL_CONN] + 1;
 
     if ((a_line->fetches_lp =
-	 mini_initLightObject("Fetches", curr_x, curr_y, LIGHTOBJ_FETCH_WIDTH,
+	 mini_initLightObject("Fetches", curr_x, curr_y, scout_col_width[COL_FETCH],
 			      scout_frame->window))
 	== NULL) {
 	fprintf(stderr, "[%s:%s] Can't create fetches light object\n", pn,
 		rn);
 	return (-1);
     }
-    curr_x += LIGHTOBJ_FETCH_WIDTH + 1;
+    curr_x += scout_col_width[COL_FETCH] + 1;
 
     if ((a_line->stores_lp =
-	 mini_initLightObject("Stores", curr_x, curr_y, LIGHTOBJ_STORE_WIDTH,
+	 mini_initLightObject("Stores", curr_x, curr_y, scout_col_width[COL_STORE],
 			      scout_frame->window))
 	== NULL) {
 	fprintf(stderr, "[%s:%s] Can't create stores light object\n", pn, rn);
 	return (-1);
     }
-    curr_x += LIGHTOBJ_STORE_WIDTH + 1;
+    curr_x += scout_col_width[COL_STORE] + 1;
 
     if ((a_line->workstations_lp =
-	 mini_initLightObject("WrkStn", curr_x, curr_y, LIGHTOBJ_WK_WIDTH,
+	 mini_initLightObject("WrkStn", curr_x, curr_y, scout_col_width[COL_WK],
 			      scout_frame->window))
 	== NULL) {
 	fprintf(stderr, "[%s:%s] Can't create workstations light object\n",
 		pn, rn);
 	return (-1);
     }
-    curr_x += LIGHTOBJ_WK_WIDTH + 1;
+    curr_x += scout_col_width[COL_WK] + 1;
 
     if ((a_line->srvName_lp =
 	 mini_initLightObject(a_srvname, curr_x, curr_y,
-			      LIGHTOBJ_SRVNAME_WIDTH, scout_frame->window))
+			      scout_col_width[COL_SRVNAME], scout_frame->window))
 	== NULL) {
 	fprintf(stderr, "[%s:%s] Can't create server name light object\n", pn,
 		rn);
@@ -1565,7 +1587,7 @@ init_mini_line(struct sockaddr_in *a_skt, int a_lineNum,
     lightdata = (struct gator_lightobj *)(a_line->srvName_lp->o_data);
     code = mini_justify(s,	/*Src buffer */
 			lightdata->label,	/*Dest buffer */
-			LIGHTOBJ_SRVNAME_WIDTH,	/*Dest's width */
+			scout_col_width[COL_SRVNAME],	/*Dest's width */
 			SCOUT_CENTER,	/*Centered */
 			SCOUT_RIGHT_TRUNC,	/*Right-truncate */
 			SCOUT_ISNT_LDISK);	/*Not a labeled disk */
@@ -1574,7 +1596,7 @@ init_mini_line(struct sockaddr_in *a_skt, int a_lineNum,
 		"[%s] Can't center server name inside of light object\n", rn);
 	return (code);
     }
-    curr_x += LIGHTOBJ_SRVNAME_WIDTH + 1;
+    curr_x += scout_col_width[COL_SRVNAME] + 1;
 
     if (scout_initDiskLightObjects(a_line, scout_frame->window)) {
 	fprintf(stderr, "[%s:%s] Can't create disk light objects\n", pn, rn);
@@ -1792,13 +1814,23 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 					    0, /*X*/ 2, /*Y*/ scout_frameDims.maxx,	/*Width */
 					    scout_gwin);	/*Window */
     if (scout_banner1_lp != NULL) {
+	char attn_label[256];
 	if (scout_attn_disk_mode == SCOUT_DISKM_PCUSED) {
-	    sprintf(scout_Banner, "%s > %s%% used", scout_LightLabels,
-		    scout_attn_disk_pcusedstr);
+	    snprintf(attn_label, sizeof(attn_label), "%s: > %s%% used",
+		     scout_label[5], scout_attn_disk_pcusedstr);
 	} else {
-	    sprintf(scout_Banner, "%s < %d blocks free", scout_LightLabels,
-		    scout_attn_disk_minfree);
+	    snprintf(attn_label, sizeof(attn_label), "%s: < %d blocks free",
+		     scout_label[5], scout_attn_disk_minfree);
 	}
+	snprintf(scout_Banner, sizeof(scout_Banner),
+		 "%*s %*s %*s %*s %*s %s",
+		 scout_col_width[0], scout_label[0],
+		 scout_col_width[1], scout_label[1],
+		 scout_col_width[2], scout_label[2],
+		 scout_col_width[3], scout_label[3],
+		 scout_col_width[4], scout_label[4],
+		 attn_label);
+
 	lightdata = (struct gator_lightobj *)(scout_banner1_lp->o_data);
 	code =
 	    mini_justify(scout_Banner, lightdata->label, scout_frameDims.maxx,
@@ -1812,9 +1844,18 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 					    0, /*X*/ 3, /*Y*/ scout_frameDims.maxx,	/*Width */
 					    scout_gwin);	/*Window */
     if (scout_banner2_lp != NULL) {
+	snprintf(scout_Banner, sizeof(scout_Banner),
+		 "%*s %*s %*s %*s %*s %s",
+		 scout_col_width[0], scout_underline[0],
+		 scout_col_width[1], scout_underline[1],
+		 scout_col_width[2], scout_underline[2],
+		 scout_col_width[3], scout_underline[3],
+		 scout_col_width[4], scout_underline[4],
+		 scout_underline[5]);
+
 	lightdata = (struct gator_lightobj *)(scout_banner2_lp->o_data);
 	code =
-	    mini_justify(scout_LightLabelUnd, lightdata->label,
+	    mini_justify(scout_Banner, lightdata->label,
 			 scout_frameDims.maxx, SCOUT_LEFT_JUSTIFY,
 			 SCOUT_RIGHT_TRUNC, SCOUT_ISNT_LDISK);
 	code = gtxframe_AddToList(scout_frame, scout_banner2_lp);
@@ -2141,6 +2182,43 @@ static void scout_AdoptThresholds(struct cmd_item *a_thresh_item)
 
 }				/*scout_AdoptThresholds */
 
+/**
+ * Setup the user specified column widths.
+ *
+ * The column widths specifies the number of digits which
+ * will be displayed without truncation.  The column widths
+ * are given in the same order in which they are displayed,
+ * from left to right. Not all columns need to be specified
+ * on the command line. The default column widths for those
+ * columns not specified. Column widths can not be set smaller
+ * than the heading underline.
+ *
+ * @param[in] a_width_item	command line width item list
+ */
+void
+scout_SetColumnWidths(struct cmd_item *a_width_item)
+{
+    int i;
+    int width;
+    int num_cols = sizeof(scout_col_width) / sizeof(*scout_col_width);
+
+    for (i = 0; a_width_item && i < num_cols; i++) {
+	width = atoi(a_width_item->data);
+	if (width > 0) {
+	    int min_width = strlen(scout_underline[i]);
+	    if (min_width) {
+	       width = max(width, min_width);
+	    }
+	    scout_col_width[i] = width + 1;
+	}
+	a_width_item = a_width_item->next;
+    }
+    if (a_width_item) {
+        fprintf(stderr, "Too many values given for -columnwidths\n");
+	scout_CleanExit(1);
+    }
+}
+
 /*------------------------------------------------------------------------
  * scoutInit
  *
@@ -2253,6 +2331,10 @@ static int scoutInit(struct cmd_syndesc *as, void *arock)
     if (as->parms[P_ATTENTION].items != 0)
 	scout_AdoptThresholds(as->parms[P_ATTENTION].items);
 
+    if (as->parms[P_WIDTHS].items != 0) {
+        scout_SetColumnWidths(as->parms[P_WIDTHS].items);
+    }
+
     /*
      * Now, drive the sucker.
      */
@@ -2314,6 +2396,8 @@ main(int argc, char **argv)
 		"specify attention (highlighting) level");
     cmd_AddParm(ts, "-debug", CMD_SINGLE, CMD_OPTIONAL,
 		"turn debugging output on to the named file");
+    cmd_AddParm(ts, "-columnwidths", CMD_LIST, CMD_OPTIONAL,
+		"specify column widths");
 
     /*
      * Parse command-line switches & execute the test, then get the heck

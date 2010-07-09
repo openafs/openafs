@@ -754,7 +754,9 @@ PrintVnodes(Volume * vp, VnodeClass class)
     int size;
     char *ctime, *atime, *mtime;
     char nfile[50], buffer[256];
-    int total, ofd, len, code, bad = 0;
+    int ofd, bad = 0;
+    afs_foff_t total;
+    ssize_t len;
 
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
@@ -806,6 +808,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		}
 		total = bad = 0;
 		while (1) {
+		    ssize_t nBytes;
 		    len = FDH_READ(fdP1, buffer, sizeof(buffer));
 		    if (len < 0) {
 			FDH_REALLYCLOSE(fdP1);
@@ -820,8 +823,8 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		    }
 		    if (len == 0)
 			break;	/* No more input */
-		    code = write(ofd, buffer, len);
-		    if (code != len) {
+		    nBytes = write(ofd, buffer, len);
+		    if (nBytes != len) {
 			FDH_REALLYCLOSE(fdP1);
 			IH_RELEASE(ih1);
 			close(ofd);
@@ -839,8 +842,8 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		FDH_REALLYCLOSE(fdP1);
 		IH_RELEASE(ih1);
 		close(ofd);
-		printf("... Copied inode %s to file %s (%d bytes)\n",
-		       PrintInode(NULL, ino), nfile, total);
+		printf("... Copied inode %s to file %s (%lu bytes)\n",
+		       PrintInode(NULL, ino), nfile, (unsigned long)total);
 	    }
 	} else {
 #if defined(AFS_NAMEI_ENV)

@@ -47,6 +47,8 @@ SAMPLELIBS =\
 	${TOP_LIBDIR}/libafsrpc.a \
 	$(TOP_LIBDIR)/libafsutil.a
 
+all test tests: $(SAMPLEPROGS)
+
 cm_client_config: cm_client_config.o $(SAMPLELIBS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)
 
@@ -120,8 +122,6 @@ rxstat_query_process.o: rxstat_query_process.c
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 #######################################################################
-all test tests: $(SAMPLEPROGS)
-
 install:
 
 dest:

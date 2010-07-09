@@ -185,42 +185,60 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     struct vnode *vp;
     int tries, code;
+    int islocked;
 
     SPLVAR;
 
     vp = AFSTOV(avc);
 
+    VI_LOCK(vp);
     if (vp->v_iflag & VI_DOOMED) {
-      USERPRI;
-      return;
+	VI_UNLOCK(vp);
+	USERPRI;
+	return;
     }
+    VI_UNLOCK(vp);
+
+    islocked = VOP_ISLOCKED(vp);
+    if (islocked == LK_EXCLOTHER)
+	panic("Trying to Smush over someone else's lock");
+    else if (islocked == LK_SHARED) {
+	afs_warn("Trying to Smush with a shared lock");
+	vn_lock(vp, LK_UPGRADE);
+    } else if (!islocked)
+	vn_lock(vp, LK_EXCLUSIVE);
 
     if (vp->v_bufobj.bo_object != NULL) {
-      VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
-      /*
-       * Do we really want OBJPC_SYNC?  OBJPC_INVAL would be
-       * faster, if invalidation is really what we are being
-       * asked to do.  (It would make more sense, too, since
-       * otherwise this function is practically identical to
-       * osi_VM_StoreAllSegments().)  -GAW
-       */
+	VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
+	/*
+	 * Do we really want OBJPC_SYNC?  OBJPC_INVAL would be
+	 * faster, if invalidation is really what we are being
+	 * asked to do.  (It would make more sense, too, since
+	 * otherwise this function is practically identical to
+	 * osi_VM_StoreAllSegments().)  -GAW
+	 */
 
-      /*
-       * Dunno.  We no longer resemble osi_VM_StoreAllSegments,
-       * though maybe that's wrong, now.  And OBJPC_SYNC is the
-       * common thing in 70 file systems, it seems.  Matt.
-       */
+	/*
+	 * Dunno.  We no longer resemble osi_VM_StoreAllSegments,
+	 * though maybe that's wrong, now.  And OBJPC_SYNC is the
+	 * common thing in 70 file systems, it seems.  Matt.
+	 */
 
-      vm_object_page_clean(vp->v_bufobj.bo_object, 0, 0, OBJPC_SYNC);
-      VM_OBJECT_UNLOCK(vp->v_bufobj.bo_object);
+	vm_object_page_clean(vp->v_bufobj.bo_object, 0, 0, OBJPC_SYNC);
+	VM_OBJECT_UNLOCK(vp->v_bufobj.bo_object);
     }
 
     tries = 5;
     code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
     while (code && (tries > 0)) {
-      code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
-      --tries;
+	afs_warn("TryToSmush retrying vinvalbuf");
+	code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
+	--tries;
     }
+    if (islocked == LK_SHARED)
+	vn_lock(vp, LK_DOWNGRADE);
+    else if (!islocked)
+	VOP_UNLOCK(vp, 0);
     USERPRI;
 }
 
@@ -241,7 +259,7 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 	vm_object_page_remove(obj, 0, 0, FALSE);
 	VM_OBJECT_UNLOCK(obj);
     }
-    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0); */
+    osi_vinvalbuf(vp, 0, 0, 0);
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.

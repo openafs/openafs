@@ -197,6 +197,7 @@ static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 void *rock);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
+static int DumpCallBackState_r(void);
 #endif
 
 #define GetCB() ((struct CallBack *)iGetCB(&cbstuff.nCBs))
@@ -357,7 +358,7 @@ CDel(struct CallBack *cb, int deletefe)
 	    ViceLog(0,
 		    ("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",
 		     cbi, fe->firstcb, *cbp));
-	    DumpCallBackState();
+	    DumpCallBackState_r();
 	    ShutDownAndCore(PANIC);
 	}
     }
@@ -402,7 +403,7 @@ FindCBPtr(struct FileEntry *fe, struct host *host)
     for (safety = 0, cbp = &fe->firstcb; *cbp; cbp = &cb->cnext, safety++) {
 	if (safety > cbstuff.nblks) {
 	    ViceLog(0, ("FindCBPtr: Internal Error -- shutting down.\n"));
-	    DumpCallBackState();
+	    DumpCallBackState_r();
 	    ShutDownAndCore(PANIC);
 	}
 	cb = itocb(*cbp);
@@ -610,7 +611,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	 lastcb = cb, cb = itocb(cb->cnext), safety++) {
 	if (safety > cbstuff.nblks) {
 	    ViceLog(0, ("AddCallBack1: Internal Error -- shutting down.\n"));
-	    DumpCallBackState();
+	    DumpCallBackState_r();
 	    ShutDownAndCore(PANIC);
 	}
 	if (cb->hhead == h_htoi(host))
@@ -1390,7 +1391,7 @@ CleanupTimedOutCallBacks_r(void)
 		ntimedout++;
 		if (ntimedout > cbstuff.nblks) {
 		    ViceLog(0, ("CCB: Internal Error -- shutting down...\n"));
-		    DumpCallBackState();
+		    DumpCallBackState_r();
 		    ShutDownAndCore(PANIC);
 		}
 	    } while (cbi != *thead);
@@ -1659,6 +1660,8 @@ PrintCallBackStats(void)
     fprintf(stderr, "%d CBs, %d FEs, (%d of total of %d 16-byte blocks)\n",
 	    cbstuff.nCBs, cbstuff.nFEs, cbstuff.nCBs + cbstuff.nFEs,
 	    cbstuff.nblks);
+    fprintf(stderr, "%d GSS1, %d GSS2, %d GSS3, %d GSS4, %d GSS5 (internal counters)\n",
+	    cbstuff.GSS1, cbstuff.GSS2, cbstuff.GSS3, cbstuff.GSS4, cbstuff.GSS5);
 
     return 0;
 }
@@ -2632,8 +2635,8 @@ cb_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-int
-DumpCallBackState(void)
+static int
+DumpCallBackState_r(void)
 {
     int fd, oflag;
     afs_uint32 magic = MAGICV2, now = (afs_int32) FT_ApproxTime(), freelisthead;
@@ -2665,6 +2668,17 @@ DumpCallBackState(void)
     close(fd);
 
     return 0;
+}
+
+int
+DumpCallBackState(void) {
+    int rc;
+
+    H_LOCK;
+    rc = DumpCallBackState_r();
+    H_UNLOCK;
+
+    return(rc);
 }
 
 #endif /* !INTERPRET_DUMP */
@@ -2740,6 +2754,8 @@ ReadDump(char *file, int timebits)
 #include "AFS_component_version_number.c"
 #endif
 
+static afs_uint32 *cbTrack;
+
 int
 main(int argc, char **argv)
 {
@@ -2747,7 +2763,7 @@ main(int argc, char **argv)
     static AFSFid fid;
     register struct FileEntry *fe;
     register struct CallBack *cb;
-    afs_int32 now;
+    time_t now;
     int timebits = 32;
     
     memset(&fid, 0, sizeof(fid));
@@ -2824,6 +2840,9 @@ main(int argc, char **argv)
 	       ctime(&uxtfirst));
 	PrintCallBackStats();
     }
+
+    cbTrack = calloc(cbstuff.nblks, sizeof(cbTrack[0]));
+
     if (all || vol) {
 	int hash;
 	afs_uint32 *feip;
@@ -2833,10 +2852,25 @@ main(int argc, char **argv)
 	for (hash = 0; hash < FEHASH_SIZE; hash++) {
 	    for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
 		if (!vol || (fe->volid == vol)) {
-		    register struct CallBack *cbnext;
-		    for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
+		    afs_uint32 fe_i = fetoi(fe);
+
+		    for (cb = itocb(fe->firstcb); cb; cb = itocb(cb->cnext)) {
+			afs_uint32 cb_i = cbtoi(cb);
+
+			if (cb_i > cbstuff.nblks) {
+			    printf("CB index out of range (%u > %d), stopped for this FE\n",
+				cb_i, cbstuff.nblks);
+			    break;
+			}
+
+			if (cbTrack[cb_i]) {
+			    printf("CB entry already claimed for FE[%u] (this is FE[%u]), stopped\n",
+				cbTrack[cb_i], fe_i);
+			    break;
+			}
+			cbTrack[cb_i] = fe_i;
+
 			PrintCB(cb, now);
-			cbnext = itocb(cb->cnext);
 		    }
 		    *feip = fe->fnext;
 		} else {
@@ -2872,6 +2906,8 @@ main(int argc, char **argv)
 	    printf("%d:%12x%12x%12x%12x\n", i, p[0], p[1], p[2], p[3]);
 	}
     }
+
+    free(cbTrack);
     exit(0);
 }
 

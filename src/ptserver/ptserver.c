@@ -205,7 +205,7 @@ int
 main(int argc, char **argv)
 {
     register afs_int32 code;
-    afs_int32 myHost;
+    afs_uint32 myHost;
     register struct hostent *th;
     char hostname[64];
     struct rx_service *tservice;
@@ -293,15 +293,12 @@ main(int argc, char **argv)
 		       lwps, 3);
 		lwps = 3;
 	    }
-	} else if (strncmp(arg, "-rebuild", alen) == 0)	/* rebuildDB++ */
-	    ;
 #if defined(SUPERGROUPS)
-	else if ((strncmp(arg, "-groupdepth", alen) == 0)
+	} else if ((strncmp(arg, "-groupdepth", alen) == 0)
 		 || (strncmp(arg, "-depth", alen) == 0)) {
 	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
-	}
 #endif
-	else if (strncmp(arg, "-default_access", alen) == 0) {
+	} else if (strncmp(arg, "-default_access", alen) == 0) {
 	    prp_user_default = prp_access_mask(argv[++a]);
 	    prp_group_default = prp_access_mask(argv[++a]);
 	}
@@ -447,7 +444,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "ptserver: couldn't get address of this host.\n");
 	PT_EXIT(1);
     }
-    memcpy(&myHost, th->h_addr, sizeof(afs_int32));
+    memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
 
     /* get list of servers */
     code =

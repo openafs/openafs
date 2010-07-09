@@ -297,7 +297,7 @@ arrange to provide them.
 If a dump operation is interrupted or fails for any reason, data from all
 volumes written to tape before the interrupt are valid can be used in a
 restore operation. The Backup Database includes an entry for the failed
-dump and for each volume that was successfully dumped. See the I<IBM AFS
+dump and for each volume that was successfully dumped. See the I<OpenAFS
 Administration Guide> for information on dealing with interrupted dumps.
 
 If dumping to tape rather than a backup data file, it is best to use only

@@ -35,6 +35,9 @@ fc_test_LIBS=\
 all: ${TOP_LIBDIR}/librxkad.a depinstall
 test: fc_test
 
+generated: \
+	rxkad_errs.c rxkad.h
+
 depinstall: \
 	${TOP_INCDIR}/rx/rxkad.h \
 	${TOP_INCDIR}/rx/rxkad_prototypes.h \
@@ -85,14 +88,11 @@ md4.o: md4.c ${INCLS}
 
 md5.o: md5.c ${INCLS}
 
-fcrypt.o: ${srcdir}/domestic/fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/fcrypt.c
+fcrypt.o: fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
 
-crypt_conn.o: ${srcdir}/domestic/crypt_conn.c fcrypt.h private_data.h ${INCLS}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/crypt_conn.c
+crypt_conn.o: crypt_conn.c fcrypt.h private_data.h ${INCLS}
 
-tcrypt.o: ${srcdir}/domestic/tcrypt.c AFS_component_version_number.o
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/fcrypt.c
+tcrypt.o: tcrypt.c AFS_component_version_number.o
 
 tcrypt: tcrypt.o librxkad.a 
 	${CC} -o tcrypt tcrypt.o librxkad.a
@@ -128,20 +128,9 @@ dest: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
 #
 clean: 
 	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
-		AFS_component_version_number.c \
-		fcrypt.h sboxes.h \
-		fc_test
+		AFS_component_version_number.c fc_test
 
 test:
 	cd test; $(MAKE)
-
-# These sources are kept in a separate directory so that we can use an
-# ACL to comply with source export restrictions.
-
-fcrypt.h: domestic/fcrypt.h
-	${INSTALL_DATA} $? $@
-
-sboxes.h: domestic/sboxes.h
-	${INSTALL_DATA} $? $@
 
 include ../config/Makefile.version

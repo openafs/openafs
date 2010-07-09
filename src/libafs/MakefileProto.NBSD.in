@@ -21,6 +21,7 @@ AFS_OS_OBJS = \
 	osi_inode.o \
 	osi_misc.o \
 	osi_sleep.o \
+	osi_vcache.o \
 	osi_vm.o \
 	osi_vnodeops.o
 
@@ -32,8 +33,15 @@ AFS_OS_NONFSOBJS = \
 
 
 # System specific build commands and flags
-KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
-	-elf -mpreferred-stack-boundary=2 -I/usr/src/sys/sys -I../afs
+KSRC = @BSD_KERNEL_PATH@
+KBLD = @BSD_KERNEL_BUILD@
+KARCHFLAGS = -march=pentiumpro -mtune=pentiumpro -mtune=pentiumpro
+KOPTFLAGS = -D_KERNEL -DLKM -D_LKM -DDEBUG -DLOCKDEBUG
+KDEFS=-Wall -ansi -nostdinc -I/usr/include \
+	${KARCHFLAGS} ${KOPTFLAGS} \
+	-ffreestanding -Wno-pointer-sign -Wno-strict-aliasing \
+	-I${KSRC} -I${KSRC}/sys \
+	-I${KBLD} -I../afs
 DBUG = -O2
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
@@ -42,7 +50,7 @@ CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(K
 
 
 # Name of directory to hold object files and libraries.
-KOBJ = STATIC
+KOBJ = MODLOAD
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
@@ -58,15 +66,15 @@ setup:
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -fs /usr/src/sys/net net
-	-ln -fs /usr/src/sys/i386/include machine
-	-ln -fs /usr/src/sys/netinet netinet
-	-ln -fs /usr/src/sys/nfs nfs
+	-ln -fs ${KSRC}/net net
+	-ln -fs ${KSRC}/i386/include machine
+	-ln -fs ${KSRC}/netinet netinet
+	-ln -fs ${KSRC}/nfs nfs
 	-ln -fs /usr/include/rpc rpc
-	-ln -fs /usr/src/sys/sys sys
-	-ln -fs /usr/src/sys/ufs/ufs ufs
-	-ln -fs /usr/src/sys/sys h
-	-ln -fs /usr/src/sys/vm vm
+	-ln -fs ${KSRC}/sys sys
+	-ln -fs ${KSRC}/ufs/ufs ufs
+	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/vm vm
 	-touch $(KOBJ)/sec_net.h
 
 
@@ -80,13 +88,14 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
-
+<i386_nbsd40>
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
-# libafs:	$(LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS)
 # install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
-# install_libafs:	$(INST_LIBAFSNONFS)
+install_libafs:	$(INST_LIBAFSNONFS)
 # dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-# dest_libafs:	$(DEST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
+<all -i386_nbsd40>
 libafs:
 	echo WARNING: No kernel module for ${SYS_NAME}
 
@@ -95,10 +104,11 @@ install_libafs:
 
 dest_libafs:
 	echo WARNING: No kernel module for ${SYS_NAME}
+<all>
 
-
-${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+# for now, just skip it
+#${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+#	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}

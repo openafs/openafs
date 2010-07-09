@@ -1,7 +1,7 @@
 # API version. When something changes, increment as appropriate. 
 # Ignore at your own risk.
 LIBAFSRPCMAJOR=1
-LIBAFSRPCMINOR=1
+LIBAFSRPCMINOR=2
 
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
@@ -159,7 +159,7 @@ dest: ${LIBAFSRPC} libafsrpc_pic.a
 		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
 	${INSTALL_DATA} libafsrpc_pic.a ${DEST}/lib/libafsrpc_pic.a
 
-${LIBAFSRPC}: ${LIBOBJS}
+${LIBAFSRPC}: ${LIBOBJS} libafsrpc.map
 	../config/shlib-build -d $(srcdir) -l libafsrpc \
 		-M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR} -- \
 		${LIBOBJS} ${MT_LIBS}
@@ -232,10 +232,10 @@ md4.o: ${RXKAD}/md4.c
 md5.o: ${RXKAD}/md5.c
 	${CCRULE}
 
-fcrypt.o: ${RXKAD}/domestic/fcrypt.c
+fcrypt.o: ${RXKAD}/fcrypt.c
 	${CCRULE} -I../rxkad -I${RXKAD}
 
-crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
+crypt_conn.o: ${RXKAD}/crypt_conn.c
 	${CCRULE} -I../rxkad -I${RXKAD}
 
 AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
@@ -433,4 +433,5 @@ afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE} -I../fsint
 
 clean:
-	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so* libafsrpc_pic.a libafsrpc.dylib.*
+	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so* \
+		libafsrpc_pic.a libafsrpc.dylib.* libafsrpc.exp

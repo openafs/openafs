@@ -81,6 +81,16 @@ setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
 
     AFS_STATCNT(setpag);
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
+    /*
+     * If the group list is empty, use the task's primary group as the group
+     * list. Otherwise, when setting the PAG, group 0 will be set to arbitrary
+     * gibberish and the PAG, which starts at group offset 1, will not be
+     * properly set because the group count will be wrong (2 instead of 3).
+     */
+    if (ngroups == 0) {
+	gidset[0] = (*cred)->cr_gid;
+	ngroups = 1;
+    }
     if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS) {

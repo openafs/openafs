@@ -34,6 +34,8 @@ depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/auth.h \
 	${TOP_INCDIR}/afs/ktc.h
 
+generated: acfg_errors.c cellconfig.h ktc_errors.c auth.h
+
 ${TOP_INCDIR}/afs/keys.h: keys.h
 	${INSTALL_DATA} $? $@
 

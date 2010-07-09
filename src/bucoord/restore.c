@@ -60,7 +60,7 @@ struct dumpinfo {
 struct volinfo {
     struct volinfo *next;
     char *volname;
-    afs_int32 server;
+    afs_uint32 server;
     afs_int32 partition;
 };
 
@@ -185,7 +185,7 @@ bc_Restorer(afs_int32 aindex)
     afs_int32 lvl, lv;
     int num_dlevels = 20;
 
-    afs_int32 serverAll;	/* The server to which all volumes are to be restore to */
+    afs_uint32 serverAll;	/* The server to which all volumes are to be restore to */
     afs_int32 partitionAll;	/* Likewise for partition */
     struct hostent *hostPtr;
     long haddr;

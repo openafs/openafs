@@ -40,7 +40,7 @@
 #define WARNSTR  "warn$"  
 #define STOREOFFT 6
 #define FETCHOFFT 6
-#define WARNOFFT  6
+#define WARNOFFT  5
 
 #define NOTIFICATION_NAME CFSTR("OpenAFS Venus Monitor")
 #define APPLICATION_NAME CFSTR("afshelper")

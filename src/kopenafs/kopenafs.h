@@ -38,6 +38,12 @@ int k_hasafs(void);
 int k_setpag(void);
 
 /*
+ * Returns true if the current process is in a PAG and false if it is not or
+ * if an error was encountered in determining whether it is in a PAG.
+ */
+int k_haspag(void);
+
+/*
  * Remove the tokens in the current PAG.  Returns 0 on success, non-zero on
  * system call failure.
  */

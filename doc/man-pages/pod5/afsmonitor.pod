@@ -77,7 +77,7 @@ line.
 Specifies which individual statistic, group of statistics, or section of
 statistics to display on the C<File Servers> screen (C<fs>) or C<Cache
 Managers> screen (C<cm>) and the order in which to display them. The
-appendix of B<afsmonitor> statistics in the I<IBM AFS Administration
+appendix of B<afsmonitor> statistics in the I<OpenAFS Administration
 Guide> specifies the group and section to which each statistic
 belongs. Include as many C<show> lines as necessary to customize the
 screen display as desired, and place them anywhere in the file. The
@@ -101,7 +101,7 @@ the line.
 
 For a list of the values that can appear in the I<field/group/section>
 field of a C<show> instruction, see the B<afsmonitor> statistics appendix
-to the I<IBM AFS Administration Guide>.
+to the I<OpenAFS Administration Guide>.
 
 =head1 SEE ALSO
 

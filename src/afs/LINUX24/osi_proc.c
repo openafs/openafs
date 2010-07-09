@@ -16,7 +16,7 @@
 
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#ifdef HAVE_LINUX_SEQ_FILE_H
 #include <linux/seq_file.h>
 #endif
 #include "afs/sysincludes.h"
@@ -37,7 +37,7 @@
 
 struct proc_dir_entry *openafs_procfs;
 
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#ifdef HAVE_LINUX_SEQ_FILE_H
 static void *c_start(struct seq_file *m, loff_t *pos)
 {
 	struct afs_q *cq, *tq;
@@ -245,7 +245,7 @@ static struct file_operations afs_unixuser_fops = {
 };
 
 
-#else /* HAVE_KERNEL_LINUX_SEQ_FILE_H */
+#else /* HAVE_LINUX_SEQ_FILE_H */
 
 static int
 csdbproc_info(char *buffer, char **start, off_t offset, int
@@ -314,7 +314,7 @@ done:
     return len;
 }
 
-#endif /* HAVE_KERNEL_LINUX_SEQ_FILE_H */
+#endif /* HAVE_LINUX_SEQ_FILE_H */
 
 void
 osi_proc_init(void)
@@ -330,7 +330,7 @@ osi_proc_init(void)
     sprintf(path, "fs/%s", PROC_FSDIRNAME);
     openafs_procfs = proc_mkdir(path, NULL);
 #endif
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#ifdef HAVE_LINUX_SEQ_FILE_H
     entry = create_proc_entry("unixusers", 0, openafs_procfs);
     if (entry) {
 	entry->proc_fops = &afs_unixuser_fops;
@@ -357,7 +357,7 @@ osi_proc_clean(void)
 #endif
 
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#ifdef HAVE_LINUX_SEQ_FILE_H
     remove_proc_entry("unixusers", openafs_procfs);
 #endif
 #if defined(EXPORTED_PROC_ROOT_FS)

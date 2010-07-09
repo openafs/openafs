@@ -381,10 +381,10 @@ prompt(void)
 		strlcpy(prev_input, input, sizeof(prev_input));
 	    }
 
-	    tok = strtok(input, " \t");
+	    tok = strtok(input, " \t\n");
 	}
 	while (tok && !strcmp(tok, ";")) {
-	    tok = strtok(NULL, "; \t");
+	    tok = strtok(NULL, "; \t\n");
 	}
 
 	if (!tok) {

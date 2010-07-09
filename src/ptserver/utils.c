@@ -7,11 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <assert.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
+#include <assert.h>
 #include <sys/types.h>
 #include <lock.h>
 #include <ubik.h>

@@ -281,7 +281,7 @@ copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
     FDH_SEEK(outfdP, 0, 0);
     size = FDH_SIZE(infdP);
     while (size) {
-	afs_int32 tlen;
+	size_t tlen;
         tlen = size > 2048 ? 2048 : size;
         if (FDH_READ(infdP, tbuf, tlen) != tlen) {
        	    sprintf(m->line, "Couldn't read directory %u.%u.%u\n", 
@@ -528,7 +528,8 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     IHandle_t *h;
     struct VnodeDiskObject vnode;
     FdHandle_t *fdP, *fdP2;
-    afs_uint64 offset, size;
+    afs_uint64 size;
+    afs_foff_t offset;
     afs_int32 class = vSmall;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
 #if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)

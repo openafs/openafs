@@ -271,7 +271,7 @@ swap_long_bytes_bit_number(afs_uint32 x)
 #if !defined(KERNEL) && defined(AFS_DARWIN80_ENV)
 char *_darwin_whichstr[] = {
     "#if defined(__ppc__) || defined(__ppc64__)\n",
-    "#elif defined(__i386__) || defined(__amd64__)\n",
+    "#elif defined(__i386__) || defined(__amd64__) || defined(__arm__)\n",
     "#else\n#error architecture unsupported\n#endif\n"
 };
 int _darwin_which = 1;

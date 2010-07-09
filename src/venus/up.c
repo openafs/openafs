@@ -125,6 +125,10 @@ ScanArgs(int argc, char *argv[])
     while (argc > 0 && *argv[0] == '-') {
 	char *cp = *argv;
 
+	if (strlen(cp) > 2) {
+	    goto badoption;
+	}
+
 	switch (*++cp) {
 	case 'v':
 	    verbose = 1;
@@ -151,7 +155,10 @@ ScanArgs(int argc, char *argv[])
 	    break;
 
 	default:
-	    fprintf(stderr, "Unknown option: '%c'\n", *cp);
+	    cp--;
+
+ badoption:
+	    fprintf(stderr, "Unknown option: '%s'\n", cp);
 	    fprintf(stderr, USAGE);
 	    exit(1);
 	}

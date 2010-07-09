@@ -53,7 +53,7 @@
 # include "afs/param.h"
 #endif
 
-#if defined(ENABLE_LINUX_SYSCALL_PROBING) && defined(EXPORTED_INIT_MM)
+#if defined(ENABLE_LINUX_SYSCALL_PROBING)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include <scsi/scsi.h> /* for scsi_command_size */
 #ifndef OSI_PROBE_STANDALONE
@@ -62,7 +62,7 @@
 #endif
 #include <linux/version.h>
 #include <linux/sched.h>
-#ifdef CONFIG_H_EXISTS
+#ifdef HAVE_LINUX_CONFIG_H
 # include <linux/config.h>
 #endif
 #include <linux/linkage.h>

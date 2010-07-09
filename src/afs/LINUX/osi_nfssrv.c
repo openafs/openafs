@@ -109,7 +109,7 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
 	/* XXX maybe we should fail this with rpc_system_err? */
 	return SVC_OK;
     }
-#if HAVE_SVC_ADDR_IN
+#if HAVE_LINUX_SVC_ADDR_IN
     addr = svc_addr_in(rqstp);
 #else
     addr = &rqstp->rq_addr;
@@ -122,12 +122,12 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
     ns->client_addrlen	= rqstp->rq_addrlen;
     ns->client_uid	= afs_cr_uid(&rqstp->rq_cred);
     ns->client_gid	= afs_cr_gid(&rqstp->rq_cred);
-    if (cr_group_info(&rqstp->rq_cred)->ngroups > 0)
-	ns->client_g0	= GROUP_AT(cr_group_info(&rqstp->rq_cred), 0);
+    if (afs_cr_group_info(&rqstp->rq_cred)->ngroups > 0)
+	ns->client_g0	= GROUP_AT(afs_cr_group_info(&rqstp->rq_cred), 0);
     else
 	ns->client_g0	= -1;
-    if (cr_group_info(&rqstp->rq_cred)->ngroups > 1)
-	ns->client_g1	= GROUP_AT(cr_group_info(&rqstp->rq_cred), 1);
+    if (afs_cr_group_info(&rqstp->rq_cred)->ngroups > 1)
+	ns->client_g1	= GROUP_AT(afs_cr_group_info(&rqstp->rq_cred), 1);
     else
 	ns->client_g1	= -1;
 
@@ -140,8 +140,8 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
     credp = crget();
     afs_set_cr_uid(credp, afs_cr_uid(&rqstp->rq_cred));
     afs_set_cr_gid(credp, afs_cr_gid(&rqstp->rq_cred));
-    get_group_info(cr_group_info(&rqstp->rq_cred));
-    set_cr_group_info(credp, cr_group_info(&rqstp->rq_cred));
+    get_group_info(afs_cr_group_info(&rqstp->rq_cred));
+    afs_set_cr_group_info(credp, afs_cr_group_info(&rqstp->rq_cred));
 
     /* avoid creating wildcard entries by mapping anonymous
      * clients to afs_nobody */

@@ -35,12 +35,16 @@
 #include <config.h>
 #endif
 
+#include <grp.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <limits.h>
+
+#include <afs/stds.h>
+#include <afs/sys_prototypes.h>
 
 #include <err.h>
 

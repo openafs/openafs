@@ -214,11 +214,11 @@ md4.o: ${RXKAD}/md4.c
 md5.o: ${RXKAD}/md5.c
 	${CCRULE} -I../rxkad ${RXKAD}/md5.c
 
-fcrypt.o: ${RXKAD}/domestic/fcrypt.c
-	${CCRULE} -I../rxkad ${RXKAD}/domestic/fcrypt.c
+fcrypt.o: ${RXKAD}/fcrypt.c
+	${CCRULE} -I../rxkad ${RXKAD}/fcrypt.c
 
-crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
-	${CCRULE} -I../rxkad ${RXKAD}/domestic/crypt_conn.c
+crypt_conn.o: ${RXKAD}/crypt_conn.c
+	${CCRULE} -I../rxkad ${RXKAD}/crypt_conn.c
 
 AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 	${CCRULE} ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c

@@ -131,7 +131,7 @@ nuke(char *aname, afs_int32 avolid)
 #endif
 #endif /* AFS_NAMEI_ENV */
 #ifndef AFS_NAMEI_ENV
-    char devName[64]
+    char devName[64];
 #endif /* !AFS_NAMEI_ENV */
     IHandle_t *fileH;
     struct ilist *allInodes = 0;

@@ -21,9 +21,7 @@
 
 #include <sys/lock.h>
 #include <sys/time.h>
-#if defined(AFS_FBSD50_ENV)
 #include <sys/mutex.h>
-#endif
 #include <sys/vnode.h>
 #if defined(AFS_FBSD80_ENV)
 #include <sys/priv.h>
@@ -66,6 +64,7 @@ extern int (**afs_vnodeop_p) ();
 #else
 #define osi_vinvalbuf(vp, flags, slpflag, slptimeo) \
   vinvalbuf((vp), (flags), (curthread), (slpflag), (slptimeo))
+#define osi_curproc() (curthread)
 #endif
 
 #undef gop_lookupname
@@ -109,6 +108,7 @@ extern void osi_fbsd_free(void *p);
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
 #define osi_curcred()	(curthread->td_ucred)
+#define osi_curproc()   (curthread)
 #define osi_getpid()	(curthread->td_proc->p_pid)
 #define simple_lock(x)	mtx_lock(x)
 #define simple_unlock(x) mtx_unlock(x)
@@ -149,5 +149,7 @@ extern struct thread *afs_global_owner;
 #define NETPRI splvar=splnet()
 #undef USERPRI
 #define USERPRI splx(splvar)
+
+#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -17,9 +17,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #include <sys/param.h>
-#ifdef AFS_FBSD50_ENV
 #include <sys/sysproto.h>
-#endif
 
 
 #include "afs/sysincludes.h"

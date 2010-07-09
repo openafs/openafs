@@ -17,7 +17,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 # API version. When something changes, increment as appropriate. 
 # Ignore at your own risk.
 MAJOR		= 1
-MINOR		= 0
+MINOR		= 1
 
 CC		= ${MT_CC}
 INCLUDES	= -I. -I${srcdir} -I../sys
@@ -79,7 +79,7 @@ libkopenafs.a: ${LIBOBJS} syscall.o
 	esac
 	${RANLIB} $@
 
-${LIBKOPENAFS}: ${LIBOBJS} syscall.o
+${LIBKOPENAFS}: ${LIBOBJS} syscall.o libkopenafs.map
 	@set -e; set -x; case ${SYS_NAME} in \
 	sgi_* | rs_aix* | hp_ux10*) \
 		../config/shlib-build -d $(srcdir) -l libkopenafs \
@@ -123,6 +123,6 @@ dest: ${LIBKOPENAFS}
 #
 clean:
 	$(RM) -f *.o *.a ${LIBKOPENAFS} AFS_component_version_number.c \
-		test-setpag test-unlog
+		test-setpag test-unlog libkopenafs.exp
 
 include ../config/Makefile.version

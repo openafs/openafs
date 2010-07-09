@@ -65,7 +65,6 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 #else
 #error Not done for this linux type
 #endif 
-#endif /* NEED_IOCTL32 */
     {
 	if (copy_from_user(&sysargs32, (void *)arg,
 			   sizeof(struct afsprocdata32)))
@@ -76,7 +75,9 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 			   (unsigned long)sysargs32.param2,
 			   (unsigned long)sysargs32.param3,
 			   (unsigned long)sysargs32.param4);
-    } else {
+    } else
+#endif /* NEED_IOCTL32 */
+    {
 	if (copy_from_user(&sysargs, (void *)arg, sizeof(struct afsprocdata)))
 	    return -EFAULT;
 

@@ -579,7 +579,7 @@ pr_GetCPS(afs_int32 id, prlist *CPS)
 }
 
 int
-pr_GetCPS2(afs_int32 id, afs_int32 host, prlist *CPS)
+pr_GetCPS2(afs_int32 id, afs_uint32 host, prlist *CPS)
 {
     register afs_int32 code;
     afs_int32 over;
@@ -598,7 +598,7 @@ pr_GetCPS2(afs_int32 id, afs_int32 host, prlist *CPS)
 }
 
 int
-pr_GetHostCPS(afs_int32 host, prlist *CPS)
+pr_GetHostCPS(afs_uint32 host, prlist *CPS)
 {
     register afs_int32 code;
     afs_int32 over;

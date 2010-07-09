@@ -523,7 +523,7 @@ extern struct afs_exporter *afs_nfsexporter;
 extern void afs_nfsclient_init(void);
 extern int afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 				    afs_ucred_t **cred,
-				    afs_int32 host, afs_int32 *pagparam,
+				    afs_uint32 host, afs_int32 *pagparam,
 				    struct afs_exporter **outexporter);
 extern void shutdown_nfsclnt(void);
 
@@ -553,6 +553,7 @@ extern const afs_ucred_t *afs_osi_proc2cred(afs_proc_t * pr);
 extern afs_lock_t osi_fsplock;
 extern afs_lock_t osi_flplock;
 #endif
+
 extern void *afs_osi_Alloc_debug(size_t x, char *func, int line);
 #ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
@@ -707,6 +708,10 @@ extern int usr_setpag(afs_ucred_t **cred, afs_uint32 pagvalue,
 #  if !defined(AFS_DFBSD_ENV)
 #   if defined(AFS_FBSD_ENV)
 extern int setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
+		  afs_uint32 * newpag, int change_parent);
+
+#   elif defined(AFS_NBSD40_ENV)
+extern int setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
 #   else
 extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
@@ -899,6 +904,8 @@ extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
 #elif defined(AFS_FBSD_ENV)
 extern int afs3_syscall(struct thread *p, void *args);
+#elif defined(AFS_NBSD40_ENV)
+extern int afs3_syscall(struct lwp *p, void *args);
 #else
 extern int afs3_syscall(afs_proc_t *p, void *args, long *retval);
 #endif

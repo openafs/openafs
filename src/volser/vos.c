@@ -74,7 +74,7 @@
 
 /* Local Prototypes */
 int PrintDiagnostics(char *astring, afs_int32 acode);
-int GetVolumeInfo(afs_uint32 volid, afs_int32 *server, afs_int32 *part, 
+int GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part,
                   afs_int32 *voltype, struct nvldbentry *rentry);
 
 struct tqElem {
@@ -99,7 +99,7 @@ cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses")
 
 int rxInitDone = 0;
 struct rx_connection *tconn;
-afs_int32 tserver;
+afs_uint32 tserver;
 extern struct ubik_client *cstruct;
 const char *confdir;
 
@@ -203,11 +203,11 @@ IsNumeric(char *name)
 /*
  * Parse a server dotted address and return the address in network byte order
  */
-afs_int32
+afs_uint32
 GetServerNoresolve(char *aname)
 {
     int b1, b2, b3, b4;
-    afs_int32 addr;
+    afs_uint32 addr;
     afs_int32 code;
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
@@ -221,11 +221,11 @@ GetServerNoresolve(char *aname)
 /*
  * Parse a server name/address and return the address in network byte order
  */
-afs_int32
+afs_uint32
 GetServer(char *aname)
 {
     register struct hostent *th;
-    afs_int32 addr; /* in network byte order */
+    afs_uint32 addr; /* in network byte order */
     register afs_int32 code;
     char hostname[MAXHOSTCHARS];
 
@@ -264,7 +264,7 @@ GetVolumeType(char *aname)
 }
 
 int
-IsPartValid(afs_int32 partId, afs_int32 server, afs_int32 *code)
+IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
 {
     struct partList dummyPartList;
     int i, success, cnt;
@@ -497,7 +497,7 @@ DumpFunction(struct rx_call *call, void *rock)
 }
 
 static void
-DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
+DisplayFormat(volintInfo *pntr, afs_uint32 server, afs_int32 part,
 	      int *totalOK, int *totalNotOK, int *totalBusy, int fast,
 	      int longlist, int disp)
 {
@@ -642,7 +642,7 @@ DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
+XDisplayFormat(volintXInfo *a_xInfoP, afs_uint32 a_servID, afs_int32 a_partID,
 	       int *a_totalOKP, int *a_totalNotOKP, int *a_totalBusyP,
 	       int a_fast, int a_int32, int a_showProblems)
 {				/*XDisplayFormat */
@@ -875,7 +875,7 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
+XDisplayFormat2(volintXInfo *a_xInfoP, afs_uint32 a_servID, afs_int32 a_partID,
 		int *a_totalOKP, int *a_totalNotOKP, int *a_totalBusyP,
 		int a_fast, int a_int32, int a_showProblems)
 {				/*XDisplayFormat */
@@ -1163,7 +1163,7 @@ DisplayVolumes2(long server, long partition, volintInfo *pntr, long count)
 }
 
 static void
-DisplayVolumes(afs_int32 server, afs_int32 part, volintInfo *pntr,
+DisplayVolumes(afs_uint32 server, afs_int32 part, volintInfo *pntr,
 	       afs_int32 count, afs_int32 longlist, afs_int32 fast,
 	       int quiet)
 {
@@ -1229,7 +1229,7 @@ DisplayVolumes(afs_int32 server, afs_int32 part, volintInfo *pntr,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayVolumes(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
+XDisplayVolumes(afs_uint32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
 		afs_int32 a_count, afs_int32 a_int32, afs_int32 a_fast,
 		int a_quiet)
 {				/*XDisplayVolumes */
@@ -1313,7 +1313,7 @@ XDisplayVolumes(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayVolumes2(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
+XDisplayVolumes2(afs_uint32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
 		 afs_int32 a_count, afs_int32 a_int32, afs_int32 a_fast,
 		 int a_quiet)
 {				/*XDisplayVolumes */
@@ -1377,7 +1377,7 @@ XDisplayVolumes2(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
 /* set <server> and <part> to the correct values depending on 
  * <voltype> and <entry> */
 static void
-GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 *server,
+GetServerAndPart(struct nvldbentry *entry, int voltype, afs_uint32 *server,
 		 afs_int32 *part, int *previdx)
 {
     int i, istart, vtype;
@@ -1410,12 +1410,37 @@ GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 *server,
 }
 
 static void
+PrintLocked(afs_int32 aflags)
+{
+    afs_int32 flags = aflags & VLOP_ALLOPERS;
+
+    if (flags) {
+	fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+
+	if (flags & VLOP_MOVE) {
+	    fprintf(STDOUT, "    Volume is locked for a move operation\n");
+	}
+	if (flags & VLOP_RELEASE) {
+	    fprintf(STDOUT, "    Volume is locked for a release operation\n");
+	}
+	if (flags & VLOP_BACKUP) {
+	    fprintf(STDOUT, "    Volume is locked for a backup operation\n");
+	}
+	if (flags & VLOP_DELETE) {
+	    fprintf(STDOUT, "    Volume is locked for a delete/misc operation\n");
+	}
+	if (flags & VLOP_DUMP) {
+	    fprintf(STDOUT, "    Volume is locked for a dump/restore operation\n");
+	}
+    }
+}
+
+static void
 PostVolumeStats(struct nvldbentry *entry)
 {
     SubEnumerateEntry(entry);
     /* Check for VLOP_ALLOPERS */
-    if (entry->flags & VLOP_ALLOPERS)
-	fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+    PrintLocked(entry->flags);
     return;
 }
 
@@ -1463,7 +1488,7 @@ XVolumeStats(volintXInfo *a_xInfoP, struct nvldbentry *a_entryP,
 }				/*XVolumeStats */
 
 static void
-VolumeStats_int(volintInfo *pntr, struct nvldbentry *entry, afs_int32 server, 
+VolumeStats_int(volintInfo *pntr, struct nvldbentry *entry, afs_uint32 server,
 	     afs_int32 part, int voltype)
 {
     int totalOK, totalNotOK, totalBusy;
@@ -1481,7 +1506,7 @@ NukeVolume(register struct cmd_syndesc *as)
     afs_uint32 volID;
     afs_int32  err;
     afs_int32 partID;
-    afs_int32 server;
+    afs_uint32 server;
     register char *tp;
 
     server = GetServer(tp = as->parms[0].items->data);
@@ -1550,7 +1575,8 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
     afs_uint32 volid;
     afs_int32 code, err, error = 0;
     int voltype, foundserv = 0, foundentry = 0;
-    afs_int32 aserver, apart;
+    afs_uint32 aserver;
+    afs_int32 apart;
     int previdx = -1;
     int wantExtendedInfo;	/*Do we want extended vol info? */
 
@@ -1696,7 +1722,8 @@ SetFields(register struct cmd_syndesc *as, void *arock)
     volintInfo info;
     afs_uint32 volid;
     afs_int32 code, err;
-    afs_int32 aserver, apart;
+    afs_uint32 aserver;
+    afs_int32 apart;
     int previdx = -1;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);	/* -id */
@@ -1775,7 +1802,8 @@ SetFields(register struct cmd_syndesc *as, void *arock)
 static int
 volOnline(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, partition;
+    afs_uint32 server;
+    afs_int32 partition;
     afs_uint32 volid;
     afs_int32 code, err = 0;
 
@@ -1835,7 +1863,8 @@ volOnline(register struct cmd_syndesc *as, void *arock)
 static int
 volOffline(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, partition;
+    afs_uint32 server;
+    afs_int32 partition;
     afs_uint32 volid;
     afs_int32 code, err = 0;
     afs_int32 transflag, sleeptime, transdone;
@@ -2028,7 +2057,8 @@ static int
 DeleteVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 err, code = 0;
-    afs_int32 server = 0, partition = -1;
+    afs_uint32 server = 0;
+    afs_int32 partition = -1;
     afs_uint32 volid;
     char pname[10];
     afs_int32 idx, j;
@@ -2150,7 +2180,8 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
 {
 
     afs_uint32 volid;
-    afs_int32 fromserver, toserver, frompart, topart;
+    afs_uint32 fromserver, toserver;
+    afs_int32 frompart, topart;
     afs_int32 flags, code, err;
     char fromPartName[10], toPartName[10];
 
@@ -2277,7 +2308,8 @@ static int
 CopyVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid;
-    afs_int32 fromserver, toserver, frompart, topart, code, err, flags;
+    afs_uint32 fromserver, toserver;
+    afs_int32 frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
     struct diskPartition64 partition;	/* for space check */
@@ -2424,7 +2456,8 @@ static int
 ShadowVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid, tovolid;
-    afs_int32 fromserver, toserver, frompart, topart;
+    afs_uint32 fromserver, toserver;
+    afs_int32 frompart, topart;
     afs_int32 code, err, flags;
     char fromPartName[10], toPartName[10], toVolName[32], *tovolume;
     struct diskPartition64 partition;	/* for space check */
@@ -2620,7 +2653,8 @@ static int
 CloneVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid, cloneid;
-    afs_int32 server, part, voltype;
+    afs_uint32 server;
+    afs_int32 part, voltype;
     char partName[10], *volname;
     afs_int32 code, err, flags;
     struct nvldbentry entry;
@@ -2734,11 +2768,13 @@ static int
 BackupVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_int32 aserver, apart, vtype, code, err;
+    afs_uint32 aserver;
+    afs_int32 apart, vtype, code, err;
     struct nvldbentry entry;
 
     afs_uint32 buvolid;
-    afs_int32 buserver, bupart, butype;
+    afs_uint32 buserver;
+    afs_int32 bupart, butype;
     struct nvldbentry buentry;
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -2806,7 +2842,8 @@ ReleaseVolume(register struct cmd_syndesc *as, void *arock)
 
     struct nvldbentry entry;
     afs_uint32 avolid;
-    afs_int32 aserver, apart, vtype, code, err;
+    afs_uint32 aserver;
+    afs_int32 apart, vtype, code, err;
     int force = 0;
 
     if (as->parms[1].items)
@@ -2850,7 +2887,8 @@ static int
 DumpVolumeCmd(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_int32 aserver, apart, voltype, fromdate = 0, code, err, i, flags;
+    afs_uint32 aserver;
+    afs_int32 apart, voltype, fromdate = 0, code, err, i, flags;
     char filename[MAXPATHLEN];
     struct nvldbentry entry;
 
@@ -2951,7 +2989,8 @@ static int
 RestoreVolumeCmd(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid, aparentid;
-    afs_int32 aserver, apart, code, vcode, err;
+    afs_uint32 aserver;
+    afs_int32 apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags = 0;
@@ -3109,7 +3148,8 @@ RestoreVolumeCmd(register struct cmd_syndesc *as, void *arock)
     }
 
     else {			/* volume exists - do we do a full incremental or abort */
-	int Oserver, Opart, Otype, vol_elsewhere = 0;
+	afs_uint32 Oserver;
+	afs_int32 Opart, Otype, vol_elsewhere = 0;
 	struct nvldbentry Oentry;
 	int c, dc;
 
@@ -3273,7 +3313,8 @@ static int
 AddSite(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_int32 aserver, apart, code, err, arovolid, valid = 0;
+    afs_uint32 aserver;
+    afs_int32 apart, code, err, arovolid, valid = 0;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
     vsu_ExtractName(avolname, as->parms[2].items->data);;
@@ -3336,7 +3377,8 @@ RemoveSite(register struct cmd_syndesc *as, void *arock)
 {
 
     afs_uint32 avolid;
-    afs_int32 aserver, apart, code, err;
+    afs_uint32 aserver;
+    afs_int32 apart, code, err;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
     vsu_ExtractName(avolname, as->parms[2].items->data);
@@ -3387,7 +3429,8 @@ static int
 ChangeLocation(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_int32 aserver, apart, code, err;
+    afs_uint32 aserver;
+    afs_int32 apart, code, err;
     char apartName[10];
 
     avolid = vsu_GetVolumeID(as->parms[2].items->data, cstruct, &err);
@@ -3434,7 +3477,8 @@ ChangeLocation(register struct cmd_syndesc *as, void *arock)
 static int
 ListPartitions(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 aserver, code;
+    afs_uint32 aserver;
+    afs_int32 code;
     struct partList dummyPartList;
     int i;
     char pname[10];
@@ -3593,7 +3637,8 @@ static int
 ListVolumes(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart, int32list, fast;
-    afs_int32 aserver, code;
+    afs_uint32 aserver;
+    afs_int32 code;
     volintInfo *pntr;
     volintInfo *oldpntr = NULL;
     afs_int32 count;
@@ -3900,8 +3945,7 @@ VolumeInfoCmd(char *name)
      * If VLOP_ALLOPERS is set, the entry is locked.
      * Leave this routine as is, but put in correct check.
      */
-    if (entry.flags & VLOP_ALLOPERS)
-	fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+    PrintLocked(entry.flags);
 
     return 0;
 }
@@ -3995,7 +4039,8 @@ VolumeZap(register struct cmd_syndesc *as, void *arock)
 static int
 VolserStatus(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, code;
+    afs_uint32 server;
+    afs_int32 code;
     transDebugInfo *pntr, *oldpntr;
     afs_int32 count;
     int i;
@@ -4146,7 +4191,7 @@ RenameVolume(register struct cmd_syndesc *as, void *arock)
 }
 
 int
-GetVolumeInfo(afs_uint32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *voltype, 
+GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *voltype,
               struct nvldbentry *rentry)
 {
     afs_int32 vcode;
@@ -4279,7 +4324,7 @@ DeleteEntry(register struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[2].items) {	/* -server */
-	afs_int32 aserver;
+	afs_uint32 aserver;
 	aserver = GetServer(as->parms[2].items->data);
 	if (aserver == 0) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
@@ -4430,7 +4475,8 @@ static int
 ListVLDB(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_int32 aserver, code;
+    afs_uint32 aserver;
+    afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
@@ -4536,8 +4582,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 		MapHostToNetwork(vllist);
 		EnumerateEntry(vllist);
 
-		if (vllist->flags & VLOP_ALLOPERS)
-		    fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+		PrintLocked(vllist->flags);
 	    }
 	}
 
@@ -4585,8 +4630,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	    MapHostToNetwork(vllist);
 	    EnumerateEntry(vllist);
 
-	    if (vllist->flags & VLOP_ALLOPERS)
-		fprintf(STDOUT, "    Volume is currently LOCKED  \n");
+	    PrintLocked(vllist->flags);
 	}
     }
 
@@ -4603,7 +4647,8 @@ BackSys(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_int32 apart = 0;
-    afs_int32 aserver = 0, code, aserver1, apart1;
+    afs_uint32 aserver = 0, aserver1;
+    afs_int32 code, apart1;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
@@ -4935,7 +4980,7 @@ static int
 UnlockVLDB(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_int32 aserver = 0;
+    afs_uint32 aserver = 0;
     afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
@@ -5065,7 +5110,8 @@ static int
 PartitionInfo(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_int32 aserver, code;
+    afs_uint32 aserver;
+    afs_int32 code;
     char pname[10];
     struct diskPartition64 partition;
     struct partList dummyPartList;
@@ -5221,10 +5267,11 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 {
     afs_int32 vcode, m_uniq=0;
     afs_int32 i, j;
-    afs_int32 *addrp;
+    afs_uint32 *addrp;
     bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
-    afs_int32 m_nentries, *m_addrp;
+    afs_int32 m_nentries;
+    afs_uint32 *m_addrp;
     afs_int32 base, index;
     char buf[1024];
 
@@ -5234,7 +5281,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
     }
 
     /* print out the list of all the server */
-    addrp = (afs_int32 *) addrs->bulkaddrs_val;
+    addrp = (afs_uint32 *) addrs->bulkaddrs_val;
     for (i = 0; i < nentries; i++, addrp++) {
 	/* If it is a multihomed address, then we will need to 
 	 * get the addresses for this multihomed server from
@@ -5263,7 +5310,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 		}
 
 		/* Print the list */
-		m_addrp = (afs_int32 *) m_addrs.bulkaddrs_val;
+		m_addrp = (afs_uint32 *) m_addrs.bulkaddrs_val;
 		for (j = 0; j < m_nentries; j++, m_addrp++) {
 		    *m_addrp = htonl(*m_addrp);
 		    if (noresolve) {
@@ -5331,7 +5378,7 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
     if (as->parms[1].items) {
 	/* -host */
 	struct hostent *he;
-	afs_int32 saddr;
+	afs_uint32 saddr;
 	he = hostutil_GetHostByName((char *)as->parms[1].items->data);
 	if (he == NULL) {
 	    fprintf(STDERR, "vos: Can't get host info for '%s'\n",
@@ -5427,7 +5474,7 @@ SetAddrs(register struct cmd_syndesc *as, void *arock)
     if (as->parms[1].items) {
 	/* -host */
 	struct cmd_item *ti;
-	afs_int32 saddr;
+	afs_uint32 saddr;
 	int i = 0;
 
 	for (ti = as->parms[1].items; ti && i < ADDRSPERSITE; ti = ti->next) {
@@ -5502,14 +5549,15 @@ ConvertRO(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 partition = -1;
     afs_uint32 volid;
-    afs_int32 server, code, i, same;
+    afs_uint32 server;
+    afs_int32 code, i, same;
     struct nvldbentry entry, storeEntry;
     afs_int32 vcode;
     afs_int32 rwindex = 0;
-    afs_int32 rwserver = 0;
+    afs_uint32 rwserver = 0;
     afs_int32 rwpartition = 0;
     afs_int32 roindex = 0;
-    afs_int32 roserver = 0;
+    afs_uint32 roserver = 0;
     afs_int32 ropartition = 0;
     int force = 0;
     struct rx_connection *aconn;
@@ -5666,7 +5714,8 @@ static int
 Sizes(register struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_int32 aserver, apart, voltype, fromdate = 0, code, err, i;
+    afs_uint32 aserver;
+    afs_int32 apart, voltype, fromdate = 0, code, err, i;
     struct nvldbentry entry;
     volintSize vol_size;
 
@@ -5750,7 +5799,8 @@ Sizes(register struct cmd_syndesc *as, void *arock)
 static int
 EndTrans(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, code, tid, rcode;
+    afs_uint32 server;
+    afs_int32 code, tid, rcode;
     struct rx_connection *aconn;
 
     server = GetServer(as->parms[0].items->data);

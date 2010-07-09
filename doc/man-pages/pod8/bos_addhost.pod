@@ -28,7 +28,7 @@ After executing this command (and waiting for the Update Server to
 propagate the changes, if it is used), restart the database server
 processes on all database server machines to force election of a quorum
 that includes the new set of machines listed in the
-F</usr/afs/etc/CellServDB> file. The I<IBM AFS Quick Beginnings> explains
+F</usr/afs/etc/CellServDB> file. The I<OpenAFS Quick Start Guide> explains
 in more detail how to add and remove database server machines.
 
 It is best to maintain a one-to-one mapping between hostnames and IP
@@ -112,7 +112,8 @@ L<bos(8)>,
 L<bos_listhosts(8)>,
 L<bos_removehost(8)>
 
-I<IBM AFS Quick Beginnings>
+The I<OpenAFS Quick Start Guide> at
+L<http://docs.openafs.org/QuickStartUnix/>.
 
 =head1 COPYRIGHT
 

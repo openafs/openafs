@@ -20,6 +20,7 @@
 #define AFS_NAMEI_ENV       1	/* User space interface to file system */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_KRB5_ERROR_ENV  1   /* fetch_krb5_error_message() available in afsutil.lib */
+#define HAVE_SSIZE_T        1
 
 #include <afs/afs_sysnames.h>
 #define SYS_NAME_ID	SYS_NAME_ID_i386_w2k
@@ -37,6 +38,18 @@ typedef int ssize_t;
 
 /* these macros define Unix-style functions missing in  VC++5.0/NT4.0 */
 #define MAXPATHLEN _MAX_PATH
+
+/* map lstat calls to _stat, until an AFS-aware lstat wrapper
+ * can be written */
+#if (_MSC_VER < 1400)
+#define lstat(a, b)       _stat((a), (struct _stat *)(b))
+#else
+#ifdef _USE_32BIT_TIME_T
+#define lstat(a, b)       _stat((a), (struct _stat32 *)(b))
+#else
+#define lstat(a, b)       _stat((a), (struct _stat64i32 *)(b))
+#endif 
+#endif
 
 #if 0
 #define memset(A, 0, S) memset((void*)(A), 0, (size_t)(S))

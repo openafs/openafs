@@ -15,8 +15,12 @@
 #ifdef AFS_OBSD_ENV
 #include "h/syscallargs.h"
 #endif
-#ifdef AFS_FBSD50_ENV
+#ifdef AFS_FBSD_ENV
 #include "h/sysproto.h"
+#endif
+#ifdef AFS_NBSD40_ENV
+#include <sys/ioctl.h>
+#include <sys/ioccom.h>
 #endif
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
@@ -293,7 +297,6 @@ DECL_PIOCTL(PPrecache);
 DECL_PIOCTL(PGetPAG);
 #if defined(AFS_CACHE_BYPASS)
 DECL_PIOCTL(PSetCachingThreshold);
-DECL_PIOCTL(PSetCachingBlkSize);
 #endif
 
 /*
@@ -794,7 +797,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     return (code);
 }
 #elif defined(AFS_XBSD_ENV)
-# if defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD_ENV)
 #  define arg data
 int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap,
@@ -818,7 +821,11 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
+#   if defined(AFS_NBSD40_ENV)
+     fdp = p->l_proc->p_fd;
+#   else
     fdp = p->p_fd;
+#endif
     if ((u_int) uap->fd >= fdp->fd_nfiles
 	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
 	return EBADF;
@@ -855,12 +862,13 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
     }
 
     if (!ioctlDone) {
-# if defined(AFS_FBSD50_ENV)
+# if defined(AFS_FBSD_ENV)
 	return ioctl(td, uap);
-# elif defined(AFS_FBSD_ENV)
-	return ioctl(p, uap);
 # elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
+# elif defined(AFS_NBSD_ENV)
+           struct lwp *l = osi_curproc();
+           code = sys_ioctl(l, uap, retval);
 # endif
     }
 
@@ -942,7 +950,7 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
 # endif
 }
 
-#elif defined(AFS_FBSD50_ENV)
+#elif defined(AFS_FBSD_ENV)
 int
 afs_pioctl(struct thread *td, void *args, int *retval)
 {
@@ -960,11 +968,7 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-# if defined(AFS_FBSD_ENV)
-afs_pioctl(struct thread *td, void *args)
-# else
 afs_pioctl(afs_proc_t *p, void *args, int *retval)
-# endif
 {
     struct a {
 	char *path;
@@ -974,7 +978,7 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
-# ifdef AFS_DARWIN80_ENV
+# if defined(AFS_DARWIN80_ENV) || defined(AFS_NBSD40_ENV)
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     kauth_cred_get()));
@@ -1122,7 +1126,8 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #else
 	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &vp);
 #if defined(AFS_FBSD80_ENV) /* XXX check on 7x */
-	VN_HOLD(vp);
+	if (vp != NULL)
+		VN_HOLD(vp);
 #endif /* AFS_FBSD80_ENV */
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
@@ -1856,20 +1861,11 @@ DECL_PIOCTL(PSetTokens)
     if (set_parent_pag) {
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-# if defined(AFS_DARWIN_ENV)
-	afs_proc_t *p = current_proc(); /* XXX */
 	char procname[256];
-	proc_selfname(procname, 256);
-# elif defined(AFS_FBSD_ENV)
-	struct thread *p = curthread;
-	char *procname = p->td_proc->p_comm;
-# else
-	afs_proc_t *p = curproc;	/* XXX */
-	char *procname = p->p_comm;
-# endif
+	osi_procname(procname, 256);
 	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
 		     MyPidxx2Pid(MyPidxx), procname);
-	if (!setpag(p, acred, -1, &pag, 1)) {
+	if (!setpag(osi_curproc(), acred, -1, &pag, 1)) {
 #else
 	if (!setpag(acred, -1, &pag, 1)) {
 #endif
@@ -3431,17 +3427,13 @@ DECL_PIOCTL(PFlushVolumeData)
 		    goto loop;
 		}
 #ifdef AFS_DARWIN80_ENV
-	    if (tvc->f.states & CDeadVnode) {
-		if (!(tvc->f.states & CBulkFetching)) {
-		    ReleaseReadLock(&afs_xvcache);
-		    afs_osi_Sleep(&tvc->f.states);
-		    goto loop;
+		if (tvc->f.states & CDeadVnode) {
+		    if (!(tvc->f.states & CBulkFetching)) {
+			ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->f.states);
+			goto loop;
+		    }
 		}
-	    }
-#endif
-#if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-		VN_HOLD(AFSTOV(tvc));
-#elif defined(AFS_DARWIN80_ENV)
 		vp = AFSTOV(tvc);
 		if (vnode_get(vp))
 		    continue;
@@ -4494,15 +4486,15 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
 # ifdef AFS_LINUX26_ONEGROUP_ENV
-    set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
+    afs_set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
     h = ((g1-0x3f00) >> 14) + h + h + h;
-    GROUP_AT(cr_group_info(newcred), 0) = ((h << 28) | l);
+    GROUP_AT(afs_cr_group_info(newcred), 0) = ((h << 28) | l);
 # else
-    set_cr_group_info(newcred, groups_alloc(2));
-    GROUP_AT(cr_group_info(newcred), 0) = g0;
-    GROUP_AT(cr_group_info(newcred), 1) = g1;
+    afs_set_cr_group_info(newcred, groups_alloc(2));
+    GROUP_AT(afs_cr_group_info(newcred), 0) = g0;
+    GROUP_AT(afs_cr_group_info(newcred), 1) = g1;
 # endif
 #elif defined(AFS_SUN510_ENV)
     gids[0] = g0;
@@ -5015,7 +5007,7 @@ DECL_PIOCTL(PSetCachingThreshold)
 {
     afs_int32 getting = 1;
     afs_int32 setting = 1;
-    afs_int32 threshold;
+    afs_int32 threshold = AFS_CACHE_BYPASS_DISABLED;
 
     if (afs_pd_getInt(ain, &threshold) != 0)
 	setting = 0;

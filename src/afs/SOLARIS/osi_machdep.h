@@ -56,7 +56,23 @@ local_osi_Time()
 #undef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t size);
 
-#define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
+#ifdef AFS_SUN58_ENV
+# define osi_vnhold(avc, r)  do {    \
+    struct vnode *vp = AFSTOV(avc); \
+    uint_t prevcount;               \
+                                    \
+    mutex_enter(&vp->v_lock);       \
+    prevcount = vp->v_count++;      \
+    mutex_exit(&vp->v_lock);        \
+                                    \
+    if (prevcount == 0) {           \
+	VFS_HOLD(afs_globalVFS);    \
+    }                               \
+} while(0)
+#else /* !AFS_SUN58_ENV */
+# define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
+#endif /* !AFS_SUN58_ENV */
+
 #define gop_rdwr(rw,gp,base,len,offset,segflg,ioflag,ulimit,cr,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(ioflag),(ulimit),(cr),(aresid))
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) \

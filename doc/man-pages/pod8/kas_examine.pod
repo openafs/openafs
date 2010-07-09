@@ -137,7 +137,7 @@ B<-showkey> flag is not included. The checksum is a decimal number derived
 by encrypting a constant with the key. In the case of the C<afs> entry,
 this number must match the checksum with the corresponding key version
 number in the output of the B<bos listkeys> command; if not, follow the
-instructions in the I<IBM AFS Administration Guide> for creating a new
+instructions in the I<OpenAFS Administration Guide> for creating a new
 server encryption key.
 
 =item *

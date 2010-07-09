@@ -72,8 +72,8 @@ EXT int rx_intentionallyDroppedOnReadPer100  GLOBALSINIT(0);	/* Dropped on Read 
 
 /* extra packets to add to the quota */
 EXT int rx_extraQuota GLOBALSINIT(0);
-/* extra packets to alloc (2 windows by deflt) */
-EXT int rx_extraPackets GLOBALSINIT(32);
+/* extra packets to alloc (2 * maxWindowSize by default) */
+EXT int rx_extraPackets GLOBALSINIT(256);
 
 EXT int rx_stackSize GLOBALSINIT(RX_DEFAULT_STACK_SIZE);
 
@@ -133,7 +133,7 @@ EXT int rx_initSendWindow GLOBALSINIT(16);
 EXT int rx_maxSendWindow GLOBALSINIT(128);
 EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
 EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
-					 * packets per datagram */
+                                                 * packets per datagram */
 #define RX_MAX_FRAGS 4
 EXT int rxi_nSendFrags GLOBALSINIT(RX_MAX_FRAGS);	/* max fragments in a datagram */
 EXT int rxi_nRecvFrags GLOBALSINIT(RX_MAX_FRAGS);
@@ -158,7 +158,7 @@ EXT int rxi_HardAckRate GLOBALSINIT(RX_FAST_ACK_RATE + 1);
 
 #define	ACKHACK(p,r) { if (((p)->header.seq & (rxi_SoftAckRate))==0) (p)->header.flags |= RX_REQUEST_ACK; }
 
-EXT int rx_nPackets GLOBALSINIT(100);	/* obsolete; use rx_extraPackets now */
+EXT int rx_nPackets GLOBALSINIT(0);	/* preallocate packets with rx_extraPackets */
 
 /*
  * pthreads thread-specific rx info support
@@ -536,7 +536,11 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 #define rxi_AllocSecurityObject() (struct rx_securityClass *) rxi_Alloc(sizeof(struct rx_securityClass))
 #define	rxi_FreeSecurityObject(obj) rxi_Free(obj, sizeof(struct rx_securityClass))
 #define	rxi_AllocService()	(struct rx_service *) rxi_Alloc(sizeof(struct rx_service))
-#define	rxi_FreeService(obj)	rxi_Free(obj, sizeof(struct rx_service))
+#define	rxi_FreeService(obj) \
+do { \
+    MUTEX_DESTROY(&(obj)->svc_data_lock);  \
+    rxi_Free((obj), sizeof(struct rx_service)); \
+} while (0)
 #define	rxi_AllocPeer()		(struct rx_peer *) rxi_Alloc(sizeof(struct rx_peer))
 #define	rxi_FreePeer(peer)	rxi_Free(peer, sizeof(struct rx_peer))
 #define	rxi_AllocConnection()	(struct rx_connection *) rxi_Alloc(sizeof(struct rx_connection))

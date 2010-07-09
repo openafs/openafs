@@ -9,7 +9,11 @@
 #ifndef AFS_LINUX_OSI_COMPAT_H
 #define AFS_LINUX_OSI_COMPAT_H
 
-#ifndef DO_SYNC_READ
+#if defined(HAVE_LINUX_FREEZER_H)
+# include <linux/freezer.h>
+#endif
+
+#ifndef HAVE_LINUX_DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
     return generic_file_read(fp, buf, count, offp);
@@ -76,7 +80,7 @@ static inline void afs_linux_clear_nfsfs_renamed(void) { return; }
 static inline void afs_linux_set_nfsfs_renamed(void) { return; }
 #endif
 
-#ifndef HAVE_KERNEL_HLIST_UNHASHED
+#ifndef HAVE_LINUX_HLIST_UNHASHED
 static void
 hlist_unhashed(const struct hlist_node *h) {
     return (!h->pprev == NULL);
@@ -87,7 +91,7 @@ hlist_unhashed(const struct hlist_node *h) {
 #define AOP_WRITEPAGE_ACTIVATE WRITEPAGE_ACTIVATE
 #endif
 
-#if defined(HAVE_WRITE_BEGIN) && !defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN) && !defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN)
 static inline struct page *
 grab_cache_page_write_begin(struct address_space *mapping, pgoff_t index,
 			    unsigned int flags) {
@@ -155,7 +159,7 @@ afs_linux_key_alloc(struct key_type *type, const char *desc, uid_t uid,
 #endif
 }
 
-#if defined(STRUCT_TASK_HAS_CRED)
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 static inline struct key*
 afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 {
@@ -204,7 +208,7 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 #endif
 #endif
 
-#ifndef HAVE_PAGE_OFFSET
+#ifndef HAVE_LINUX_PAGE_OFFSET
 static inline loff_t
 page_offset(struct page *pp)
 {
@@ -212,7 +216,7 @@ page_offset(struct page *pp)
 }
 #endif
 
-#ifndef HAVE_ZERO_USER_SEGMENTS
+#ifndef HAVE_LINUX_ZERO_USER_SEGMENTS
 static inline void
 zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
 		   unsigned int from2, unsigned int to2)
@@ -230,3 +234,129 @@ zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
 }
 #endif
 
+#ifndef HAVE_LINUX_KERNEL_SETSOCKOPT
+/* Available from 2.6.19 */
+
+static inline int
+kernel_setsockopt(struct socket *sockp, int level, int name, char *val,
+		  unsigned int len) {
+    mm_segment_t old_fs = get_fs();
+    int ret;
+
+    set_fs(get_ds());
+    ret = sockp->ops->setsockopt(sockp, level, name, val, len);
+    set_fs(old_fs);
+
+    return ret;
+}
+
+static inline int
+kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
+		  int *len) {
+    mm_segment_t old_fs = get_fs();
+    int ret;
+
+    set_fs(get_ds());
+    ret = sockp->ops->setsockopt(sockp, level, name, val, len);
+    set_fs(old_fs);
+
+    return ret;
+}
+#endif
+
+#ifdef HAVE_TRY_TO_FREEZE
+static inline void
+afs_try_to_freeze(void) {
+# ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+    try_to_freeze(PF_FREEZE);
+# else
+    try_to_freeze();
+# endif
+}
+#else
+static inline void
+afs_try_to_freeze(void) {
+# ifdef CONFIG_PM
+    if (current->flags & PF_FREEZE) {
+	refrigerator(PF_FREEZE);
+# endif
+}
+#endif
+
+#if !defined(HAVE_LINUX_PAGECHECKED)
+# if defined(HAVE_LINUX_PAGEFSMISC)
+#  include <linux/page-flags.h>
+
+#  define PageChecked(p)            PageFsMisc((p))
+#  define SetPageChecked(p)         SetPageFsMisc((p))
+#  define ClearPageChecked(p)       ClearPageFsMisc((p))
+
+# endif
+#endif
+
+#if !defined(NEW_EXPORT_OPS)
+extern struct export_operations export_op_default;
+#endif
+
+static inline struct dentry *
+afs_get_dentry_from_fh(struct super_block *afs_cacheSBp, afs_dcache_id_t *ainode,
+		int cache_fh_len, int cache_fh_type,
+		int (*afs_fh_acceptable)(void *, struct dentry *)) {
+#if defined(NEW_EXPORT_OPS)
+    return afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh,
+		cache_fh_len, cache_fh_type);
+#else
+    if (afs_cacheSBp->s_export_op && afs_cacheSBp->s_export_op->decode_fh)
+	return afs_cacheSBp->s_export_op->decode_fh(afs_cacheSBp, ainode->ufs.raw,
+			cache_fh_len, cache_fh_type, afs_fh_acceptable, NULL);
+    else
+	return export_op_default.decode_fh(afs_cacheSBp, ainode->ufs.raw,
+			cache_fh_len, cache_fh_type, afs_fh_acceptable, NULL);
+#endif
+}
+
+static inline int
+afs_get_fh_from_dentry(struct dentry *dp, afs_ufs_dcache_id_t *ainode, int *max_lenp) {
+    if (dp->d_sb->s_export_op->encode_fh)
+        return dp->d_sb->s_export_op->encode_fh(dp, &ainode->raw[0], max_lenp, 0);
+#if defined(NEW_EXPORT_OPS)
+    /* If fs doesn't provide an encode_fh method, assume the default INO32 type */
+    *max_lenp = sizeof(struct fid)/4;
+    ainode->fh.i32.ino = dp->d_inode->i_ino;
+    ainode->fh.i32.gen = dp->d_inode->i_generation;
+    return FILEID_INO32_GEN;
+#else
+    /* or call the default encoding function for the old API */
+    return export_op_default.encode_fh(dp, &ainode->raw[0], max_lenp, 0);
+#endif
+}
+
+static inline void
+afs_init_sb_export_ops(struct super_block *sb) {
+#if !defined(NEW_EXPORT_OPS)
+    /*
+     * decode_fh will call this function.  If not defined for this FS, make
+     * sure it points to the default
+     */
+    if (!sb->s_export_op->find_exported_dentry)
+	sb->s_export_op->find_exported_dentry = find_exported_dentry;
+#endif
+}
+
+static inline void
+afs_linux_lock_inode(struct inode *ip) {
+#ifdef STRUCT_INODE_HAS_I_MUTEX
+    mutex_lock(&ip->i_mutex);
+#else
+    down(&ip->i_sem);
+#endif
+}
+
+static inline void
+afs_linux_unlock_inode(struct inode *ip) {
+#ifdef STRUCT_INODE_HAS_I_MUTEX
+    mutex_unlock(&ip->i_mutex);
+#else
+    up(&ip->i_sem);
+#endif
+}

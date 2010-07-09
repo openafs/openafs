@@ -15,13 +15,14 @@ B<kpwvalid>
 =head1 DESCRIPTION
 
 The B<kpwvalid> command checks the quality of a new password passed to it
-from the B<kpasswd> or B<kas setpassword> command. It is optional. If it
-exists, it must reside in the same AFS directory as the binaries for the
-B<kpasswd> and B<kas> command suites (create a symbolic link from the
-client machine's local disk to this directory). The directory's ACL must
-extend the C<a> (administer) and C<w> (write) permissions to the
-system:administrators group only. These requirements prevent unauthorized
-users from substituting a spurious B<kpwvalid> binary.
+from the B<kpasswd> or B<kas setpassword> command for the obsolete
+Authentication Server. It is optional. If it exists, it must reside in the
+same AFS directory as the binaries for the B<kpasswd> and B<kas> command
+suites (create a symbolic link from the client machine's local disk to
+this directory). The directory's ACL must extend the C<a> (administer) and
+C<w> (write) permissions to the system:administrators group only. These
+requirements prevent unauthorized users from substituting a spurious
+B<kpwvalid> binary.
 
 The AFS distribution includes an example B<kpwvalid> program that checks
 that the password is at least eight characters long; the code for it
@@ -49,6 +50,13 @@ password is not acceptable.
 
 Further, it must write any error messages only to the standard error
 stream, not to the standard output stream.
+
+=head1 CAUTIONS
+
+The B<kpwvalid> command is only used by the obsolete Authentication Server
+It is provided for sites that have not yet migrated to a Kerberos version
+5 KDC. The Authentication Server and supporting commands, including
+B<kpwvalid>, will be removed in a future version of OpenAFS.
 
 =head1 EXAMPLES
 

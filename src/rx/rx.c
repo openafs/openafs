@@ -139,6 +139,7 @@ struct rx_tq_debug {
  * rxi_rpc_peer_stat_cnt counts the total number of peer stat structures
  * currently allocated within rx.  This number is used to allocate the
  * memory required to return the statistics when queried.
+ * Protected by the rx_rpc_stats mutex.
  */
 
 static unsigned int rxi_rpc_peer_stat_cnt;
@@ -147,6 +148,7 @@ static unsigned int rxi_rpc_peer_stat_cnt;
  * rxi_rpc_process_stat_cnt counts the total number of local process stat
  * structures currently allocated within rx.  The number is used to allocate
  * the memory required to return the statistics when queried.
+ * Protected by the rx_rpc_stats mutex.
  */
 
 static unsigned int rxi_rpc_process_stat_cnt;
@@ -334,8 +336,8 @@ struct rx_connection *rxLastConn = 0;
  * freeSQEList_lock
  *
  * serverQueueEntry->lock
- * rx_rpc_stats
  * rx_peerHashTable_lock - locked under rx_connHashTable_lock
+ * rx_rpc_stats
  * peer->lock - locks peer data fields.
  * conn_data_lock - that more than one thread is not updating a conn data
  *		    field at the same time.
@@ -507,12 +509,17 @@ rx_InitHost(u_int host, u_int port)
     rx_nFreePackets = 0;
     queue_Init(&rx_freePacketQueue);
     rxi_NeedMorePackets = FALSE;
+    rx_nPackets = 0;	/* rx_nPackets is managed by rxi_MorePackets* */
+
+    /* enforce a minimum number of allocated packets */
+    if (rx_extraPackets < rxi_nSendFrags * rx_maxSendWindow)
+        rx_extraPackets = rxi_nSendFrags * rx_maxSendWindow;
+
+    /* allocate the initial free packet pool */
 #ifdef RX_ENABLE_TSFPQ
-    rx_nPackets = 0;	/* in TSFPQ version, rx_nPackets is managed by rxi_MorePackets* */
     rxi_MorePacketsTSFPQ(rx_extraPackets + RX_MAX_QUOTA + 2, RX_TS_FPQ_FLUSH_GLOBAL, 0);
 #else /* RX_ENABLE_TSFPQ */
-    rx_nPackets = rx_extraPackets + RX_MAX_QUOTA + 2;	/* fudge */
-    rxi_MorePackets(rx_nPackets);
+    rxi_MorePackets(rx_extraPackets + RX_MAX_QUOTA + 2);        /* fudge */
 #endif /* RX_ENABLE_TSFPQ */
     rx_CheckPackets();
 
@@ -663,8 +670,10 @@ QuotaOK(struct rx_service *aservice)
     /* otherwise, can use only if there are enough to allow everyone
      * to go to their min quota after this guy starts.
      */
+    MUTEX_ENTER(&rx_quota_mutex);
     if (rxi_availProcs > rxi_minDeficit)
 	rc = 1;
+    MUTEX_EXIT(&rx_quota_mutex);
     return rc;
 }
 #endif /* RX_ENABLE_LOCKS */
@@ -1292,6 +1301,9 @@ rx_NewCall(struct rx_connection *conn)
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
 
+    /* Attempt MTU discovery */
+    rxi_GrowMTUOn(call);
+
     /*
      * We are no longer the active thread in rx_NewCall
      */
@@ -1421,6 +1433,11 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 
     tservice = rxi_AllocService();
     NETPRI;
+
+#ifdef	RX_ENABLE_LOCKS
+    MUTEX_INIT(&tservice->svc_data_lock, "svc data lock", MUTEX_DEFAULT, 0);
+#endif
+
     for (i = 0; i < RX_MAX_SERVICES; i++) {
 	struct rx_service *service = rx_services[i];
 	if (service) {
@@ -1467,6 +1484,8 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 	    service->connDeadTime = rx_connDeadTime;
 	    service->executeRequestProc = serviceProc;
 	    service->checkReach = 0;
+	    service->nSpecific = 0;
+	    service->specific = NULL;
 	    rx_services[i] = service;	/* not visible until now */
 	    USERPRI;
 	    return service;
@@ -1843,9 +1862,11 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
     if (cur_service != NULL) {
 	cur_service->nRequestsRunning--;
+        MUTEX_ENTER(&rx_quota_mutex);
 	if (cur_service->nRequestsRunning < cur_service->minProcs)
 	    rxi_minDeficit++;
 	rxi_availProcs++;
+        MUTEX_EXIT(&rx_quota_mutex);
     }
     if (queue_IsNotEmpty(&rx_incomingCallQueue)) {
 	struct rx_call *tcall, *ncall;
@@ -1908,9 +1929,11 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	service->nRequestsRunning++;
 	/* just started call in minProcs pool, need fewer to maintain
 	 * guarantee */
+        MUTEX_ENTER(&rx_quota_mutex);
 	if (service->nRequestsRunning <= service->minProcs)
 	    rxi_minDeficit--;
 	rxi_availProcs--;
+        MUTEX_EXIT(&rx_quota_mutex);
 	rx_nWaiting--;
 	/* MUTEX_EXIT(&call->lock); */
     } else {
@@ -2438,38 +2461,65 @@ rxi_Free(void *addr, size_t size)
 }
 
 void 
-rxi_SetPeerMtu(afs_uint32 host, afs_uint32 port, int mtu)
+rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 {
-    struct rx_peer **peer_ptr, **peer_end;
+    struct rx_peer **peer_ptr = NULL, **peer_end = NULL;
+    struct rx_peer *next = NULL;
     int hashIndex;
 
-    MUTEX_ENTER(&rx_peerHashTable_lock);
-    if (port == 0) {
-       for (peer_ptr = &rx_peerHashTable[0], peer_end =
-                &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
-            peer_ptr++) {
-           struct rx_peer *peer, *next;
-           for (peer = *peer_ptr; peer; peer = next) {
-               next = peer->next;
-               if (host == peer->host) {
-                   MUTEX_ENTER(&peer->peer_lock);
-                   peer->ifMTU=MIN(mtu, peer->ifMTU);
-                   peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
-                   MUTEX_EXIT(&peer->peer_lock);
-               }
-           }
-       }
+    if (!peer) {
+	MUTEX_ENTER(&rx_peerHashTable_lock);
+	if (port == 0) {
+	    peer_ptr = &rx_peerHashTable[0];
+	    peer_end = &rx_peerHashTable[rx_hashTableSize];
+	    next = NULL;
+	resume:
+	    for ( ; peer_ptr < peer_end; peer_ptr++) {
+		if (!peer)
+		    peer = *peer_ptr;
+		for ( ; peer; peer = next) {
+		    next = peer->next;
+		    if (host == peer->host)
+			break;
+		}
+	    }
+	} else {
+	    hashIndex = PEER_HASH(host, port);
+	    for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
+		if ((peer->host == host) && (peer->port == port))
+		    break;
+	    }
+	}
     } else {
-       struct rx_peer *peer;
-       hashIndex = PEER_HASH(host, port);
-       for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
-           if ((peer->host == host) && (peer->port == port)) {
-               MUTEX_ENTER(&peer->peer_lock);
-               peer->ifMTU=MIN(mtu, peer->ifMTU);
-               peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
-               MUTEX_EXIT(&peer->peer_lock);
-           }
-       }
+	MUTEX_ENTER(&rx_peerHashTable_lock);
+    }
+
+    if (peer) {
+        peer->refCount++;
+        MUTEX_EXIT(&rx_peerHashTable_lock);
+
+        MUTEX_ENTER(&peer->peer_lock);
+	/* We don't handle dropping below min, so don't */
+	mtu = MAX(mtu, RX_MIN_PACKET_SIZE);
+        peer->ifMTU=MIN(mtu, peer->ifMTU);
+        peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+	/* if we tweaked this down, need to tune our peer MTU too */
+	peer->MTU = MIN(peer->MTU, peer->natMTU);
+	/* if we discovered a sub-1500 mtu, degrade */
+	if (peer->ifMTU < OLD_MAX_PACKET_SIZE)
+	    peer->maxDgramPackets = 1;
+	/* We no longer have valid peer packet information */
+	if (peer->maxPacketSize-RX_IPUDP_SIZE > peer->ifMTU)
+	    peer->maxPacketSize = 0;
+        MUTEX_EXIT(&peer->peer_lock);
+
+        MUTEX_ENTER(&rx_peerHashTable_lock);
+        peer->refCount--;
+        if (host && !port) {
+            peer = next;
+	    /* pick up where we left off */
+            goto resume;
+        }
     }
     MUTEX_EXIT(&rx_peerHashTable_lock);
 }
@@ -2530,7 +2580,7 @@ rxi_FindPeer(afs_uint32 host, u_short port,
  * server connection is created, it will be created using the supplied
  * index, if the index is valid for this service */
 struct rx_connection *
-rxi_FindConnection(osi_socket socket, afs_int32 host,
+rxi_FindConnection(osi_socket socket, afs_uint32 host,
 		   u_short port, u_short serviceId, afs_uint32 cid,
 		   afs_uint32 epoch, int type, u_int securityIndex)
 {
@@ -3778,6 +3828,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     int newAckCount = 0;
     u_short maxMTU = 0;		/* Set if peer supports AFS 3.4a jumbo datagrams */
     int maxDgramPackets = 0;	/* Set if peer supports AFS 3.5 jumbo datagrams */
+    int pktsize = 0;            /* Set if we need to update the peer mtu */
 
     if (rx_stats_active)
         rx_MutexIncrement(rx_stats.ackPacketsRead, rx_stats_mutex);
@@ -3804,6 +3855,44 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     if (ap->reason == RX_ACK_PING_RESPONSE)
 	rxi_UpdatePeerReach(conn, call);
+
+    if (conn->lastPacketSizeSeq) {
+	MUTEX_ENTER(&conn->conn_data_lock);
+	if ((first > conn->lastPacketSizeSeq) && (conn->lastPacketSize)) {
+	    pktsize = conn->lastPacketSize;
+	    conn->lastPacketSize = conn->lastPacketSizeSeq = 0;
+	}
+	MUTEX_EXIT(&conn->conn_data_lock);
+    }
+    if ((ap->reason == RX_ACK_PING_RESPONSE) && (conn->lastPingSizeSer)) {
+	MUTEX_ENTER(&conn->conn_data_lock);
+	if ((conn->lastPingSizeSer == serial) && (conn->lastPingSize)) {
+	    /* process mtu ping ack */
+	    pktsize = conn->lastPingSize;
+	    conn->lastPingSizeSer = conn->lastPingSize = 0;
+	}
+	MUTEX_EXIT(&conn->conn_data_lock);
+    }
+
+    if (pktsize) {
+	MUTEX_ENTER(&peer->peer_lock);
+	/*
+	 * Start somewhere. Can't assume we can send what we can receive,
+	 * but we are clearly receiving.
+	 */
+	if (!peer->maxPacketSize)
+	    peer->maxPacketSize = RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE;
+
+	if (pktsize > peer->maxPacketSize) {
+	    peer->maxPacketSize = pktsize;
+	    if ((pktsize-RX_IPUDP_SIZE > peer->ifMTU)) {
+		peer->ifMTU=pktsize-RX_IPUDP_SIZE;
+		peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+		rxi_ScheduleGrowMTUEvent(call, 1);
+	    }
+	}
+	MUTEX_EXIT(&peer->peer_lock);
+    }
 
 #ifdef RXDEBUG
 #ifdef AFS_NT40_ENV
@@ -4202,8 +4291,13 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		}
 		call->MTU = RX_HEADER_SIZE + RX_JUMBOBUFFERSIZE;
 	    } else if (call->MTU < peer->maxMTU) {
-		call->MTU += peer->natMTU;
-		call->MTU = MIN(call->MTU, peer->maxMTU);
+		/* don't upgrade if we can't handle it */
+		if ((call->nDgramPackets == 1) && (call->MTU >= peer->ifMTU))
+		    call->MTU = peer->ifMTU;
+		else {
+		    call->MTU += peer->natMTU;
+		    call->MTU = MIN(call->MTU, peer->maxMTU);
+		}
 	    }
 	    call->nAcks = 0;
 	}
@@ -4408,9 +4502,11 @@ rxi_AttachServerProc(struct rx_call *call,
 	CV_SIGNAL(&sq->cv);
 #else
 	service->nRequestsRunning++;
+        MUTEX_ENTER(&rx_quota_mutex);
 	if (service->nRequestsRunning <= service->minProcs)
 	    rxi_minDeficit--;
 	rxi_availProcs--;
+        MUTEX_EXIT(&rx_quota_mutex);
 	osi_rxWakeup(sq);
 #endif
     }
@@ -4920,6 +5016,7 @@ rxi_SendAck(struct rx_call *call,
     struct rx_packet *p;
     u_char offset;
     afs_int32 templ;
+    afs_uint32 padbytes = 0;
 #ifdef RX_ENABLE_TSFPQ
     struct rx_ts_info_t * rx_ts_info;
 #endif
@@ -4929,6 +5026,27 @@ rxi_SendAck(struct rx_call *call,
      */
     if (call->rnext > 1) {
 	call->conn->rwind[call->channel] = call->rwind = rx_maxReceiveWindow;
+    }
+
+    /* Don't attempt to grow MTU if this is a critical ping */
+    if (reason == RX_ACK_MTU) {
+	/* keep track of per-call attempts, if we're over max, do in small
+	 * otherwise in larger? set a size to increment by, decrease
+	 * on failure, here?
+	 */
+	if (call->conn->peer->maxPacketSize &&
+	    (call->conn->peer->maxPacketSize < OLD_MAX_PACKET_SIZE
+	     +RX_IPUDP_SIZE))
+	    padbytes = call->conn->peer->maxPacketSize+16;
+	else
+	    padbytes = call->conn->peer->maxMTU + 128;
+
+	/* do always try a minimum size ping */
+	padbytes = MAX(padbytes, RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE+4);
+
+	/* subtract the ack payload */
+	padbytes -= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32));
+	reason = RX_ACK_PING;
     }
 
     call->nHardAcks = 0;
@@ -4958,7 +5076,7 @@ rxi_SendAck(struct rx_call *call,
     }
 #endif
 
-    templ =
+    templ = padbytes +
 	rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32) -
 	rx_GetDataSize(p);
     if (templ > 0) {
@@ -5058,6 +5176,18 @@ rxi_SendAck(struct rx_call *call,
 #ifdef ADAPT_WINDOW
 	clock_GetTime(&call->pingRequestTime);
 #endif
+	if (padbytes) {
+	    p->length = padbytes +
+		rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32);
+
+	    while (padbytes--)
+		/* not fast but we can potentially use this if truncated
+		 * fragments are delivered to figure out the mtu.
+		 */
+		rx_packetwrite(p, rx_AckDataSize(offset) + 4 *
+			       sizeof(afs_int32), sizeof(afs_int32),
+			       &padbytes);
+	}
     }
     if (call->conn->type == RX_CLIENT_CONNECTION)
 	p->header.flags |= RX_CLIENT_INITIATED;
@@ -5222,7 +5352,10 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
-    call->lastSendData = conn->lastSendTime = call->lastSendTime = clock_Sec();
+    conn->lastSendTime = call->lastSendTime = clock_Sec();
+    /* Let a set of retransmits trigger an idle timeout */
+    if (!resending)
+	call->lastSendData = call->lastSendTime;
 }
 
 /* When sending packets we need to follow these rules:
@@ -5713,12 +5846,19 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
-    conn->lastSendTime = call->lastSendTime = clock_Sec();
-    /* Don't count keepalives here, so idleness can be tracked. */
-    if ((p->header.type != RX_PACKET_TYPE_ACK) || (((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING))
-	call->lastSendData = call->lastSendTime;
+    if ((p->header.type != RX_PACKET_TYPE_ACK) ||
+	(((struct rx_ackPacket *)rx_DataOf(p))->reason == RX_ACK_PING) ||
+	(p->length <= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32))))
+    {
+	conn->lastSendTime = call->lastSendTime = clock_Sec();
+	/* Don't count keepalive ping/acks here, so idleness can be tracked. */
+	if ((p->header.type != RX_PACKET_TYPE_ACK) ||
+	    ((((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING) &&
+	     (((struct rx_ackPacket *)rx_DataOf(p))->reason !=
+	      RX_ACK_PING_RESPONSE)))
+	    call->lastSendData = call->lastSendTime;
+    }
 }
-
 
 /* Check if a call needs to be destroyed.  Called by keep-alive code to ensure
  * that things are fine.  Also called periodically to guarantee that nothing
@@ -5738,6 +5878,8 @@ rxi_CheckCall(struct rx_call *call)
     struct rx_connection *conn = call->conn;
     afs_uint32 now;
     afs_uint32 deadTime;
+    int cerror = 0;
+    int newmtu = 0;
 
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (call->flags & RX_CALL_TQ_BUSY) {
@@ -5765,7 +5907,7 @@ rxi_CheckCall(struct rx_call *call)
 	    netstack_t *ns =  netstack_find_by_stackid(GLOBAL_NETSTACKID);
 	    ip_stack_t *ipst = ns->netstack_ip;
 #endif
-	    ire = ire_cache_lookup(call->conn->peer->host
+	    ire = ire_cache_lookup(conn->peer->host
 #if defined(AFS_SUN510_ENV) && defined(ALL_ZONES)
 				   , ALL_ZONES
 #if defined(AFS_SUN510_ENV) && (defined(ICL_3_ARG) || defined(GLOBAL_NETSTACKID))
@@ -5778,14 +5920,15 @@ rxi_CheckCall(struct rx_call *call)
 		);
 	    
 	    if (ire && ire->ire_max_frag > 0)
-		rxi_SetPeerMtu(call->conn->peer->host, 0, ire->ire_max_frag);
+		rxi_SetPeerMtu(NULL, conn->peer->host, 0,
+			       ire->ire_max_frag);
 #if defined(GLOBAL_NETSTACKID)
 	    netstack_rele(ns);
 #endif
 #endif
 #endif /* ADAPT_PMTU */
-	    rxi_CallError(call, RX_CALL_DEAD);
-	    return -1;
+	    cerror = RX_CALL_DEAD;
+	    goto mtuout;
 	} else {
 #ifdef RX_ENABLE_LOCKS
 	    /* Cancel pending events */
@@ -5813,15 +5956,15 @@ rxi_CheckCall(struct rx_call *call)
 	&& ((call->startWait + conn->idleDeadTime) < now) &&
 	(call->flags & RX_CALL_READER_WAIT)) {
 	if (call->state == RX_STATE_ACTIVE) {
-	    rxi_CallError(call, RX_CALL_TIMEOUT);
-	    return -1;
+	    cerror = RX_CALL_TIMEOUT;
+	    goto mtuout;
 	}
     }
     if (call->lastSendData && conn->idleDeadTime && (conn->idleDeadErr != 0)
         && ((call->lastSendData + conn->idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
-	    rxi_CallError(call, conn->idleDeadErr);
-	    return -1;
+	    cerror = conn->idleDeadErr;
+	    goto mtuout;
 	}
     }
     /* see if we have a hard timeout */
@@ -5832,6 +5975,31 @@ rxi_CheckCall(struct rx_call *call)
 	return -1;
     }
     return 0;
+mtuout:
+    if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT) {
+	/* if we never succeeded, let the error pass out as-is */
+	if (conn->peer->maxPacketSize)
+	    cerror = conn->msgsizeRetryErr;
+
+	/* if we thought we could send more, perhaps things got worse */
+	if (call->conn->peer->maxPacketSize > conn->lastPacketSize)
+	    /* maxpacketsize will be cleared in rxi_SetPeerMtu */
+	    newmtu = MAX(conn->peer->maxPacketSize-RX_IPUDP_SIZE,
+			 conn->lastPacketSize-(128+RX_IPUDP_SIZE));
+	else
+	    newmtu = conn->lastPacketSize-(128+RX_IPUDP_SIZE);
+
+	/* minimum capped in SetPeerMtu */
+	rxi_SetPeerMtu(conn->peer, 0, 0, newmtu);
+
+	/* clean up */
+	conn->lastPacketSize = 0;
+
+	/* needed so ResetCall doesn't clobber us. */
+	call->MTU = conn->peer->ifMTU;
+    }
+    rxi_CallError(call, cerror);
+    return -1;
 }
 
 void
@@ -5965,6 +6133,47 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
     MUTEX_EXIT(&call->lock);
 }
 
+/* Does what's on the nameplate. */
+void
+rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy)
+{
+    struct rx_call *call = arg1;
+    struct rx_connection *conn;
+
+    MUTEX_ENTER(&call->lock);
+    CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
+    if (event == call->growMTUEvent)
+	call->growMTUEvent = NULL;
+
+#ifdef RX_ENABLE_LOCKS
+    if (rxi_CheckCall(call, 0)) {
+	MUTEX_EXIT(&call->lock);
+	return;
+    }
+#else /* RX_ENABLE_LOCKS */
+    if (rxi_CheckCall(call))
+	return;
+#endif /* RX_ENABLE_LOCKS */
+
+    /* Don't bother with dallying calls */
+    if (call->state == RX_STATE_DALLY) {
+	MUTEX_EXIT(&call->lock);
+	return;
+    }
+
+    conn = call->conn;
+
+    /*
+     * keep being scheduled, just don't do anything if we're at peak,
+     * or we're not set up to be properly handled (idle timeout required)
+     */
+    if ((conn->peer->maxPacketSize != 0) &&
+	(conn->peer->natMTU < RX_MAX_PACKET_SIZE) &&
+	(conn->idleDeadErr))
+	(void)rxi_SendAck(call, NULL, 0, RX_ACK_MTU, 0);
+    rxi_ScheduleGrowMTUEvent(call, 0);
+    MUTEX_EXIT(&call->lock);
+}
 
 void
 rxi_ScheduleKeepAliveEvent(struct rx_call *call)
@@ -5980,6 +6189,29 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
     }
 }
 
+void
+rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
+{
+    if (!call->growMTUEvent) {
+	struct clock when, now;
+
+	clock_GetTime(&now);
+	when = now;
+	if (!secs) {
+	    if (call->conn->secondsUntilPing)
+		secs = (6*call->conn->secondsUntilPing)-1;
+
+	    if (call->conn->secondsUntilDead)
+		secs = MIN(secs, (call->conn->secondsUntilDead-1));
+	}
+
+	when.sec += secs;
+	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
+	call->growMTUEvent =
+	    rxevent_PostNow(&when, &now, rxi_GrowMTUEvent, call, 0);
+    }
+}
+
 /* N.B. rxi_KeepAliveOff:  is defined earlier as a macro */
 void
 rxi_KeepAliveOn(struct rx_call *call)
@@ -5991,6 +6223,16 @@ rxi_KeepAliveOn(struct rx_call *call)
      * keep-alive is sent within the ping time */
     call->lastReceiveTime = call->lastSendTime = clock_Sec();
     rxi_ScheduleKeepAliveEvent(call);
+}
+
+void
+rxi_GrowMTUOn(struct rx_call *call)
+{
+    struct rx_connection *conn = call->conn;
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->lastPingSizeSer = conn->lastPingSize = 0;
+    MUTEX_EXIT(&conn->conn_data_lock);
+    rxi_ScheduleGrowMTUEvent(call, 1);
 }
 
 /* This routine is called to send connection abort messages
@@ -6322,19 +6564,60 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
     {
 	struct rx_peer **peer_ptr, **peer_end;
 	int code;
-	MUTEX_ENTER(&rx_rpc_stats);
-	MUTEX_ENTER(&rx_peerHashTable_lock);
+
+        /*
+         * Why do we need to hold the rx_peerHashTable_lock across
+         * the incrementing of peer_ptr since the rx_peerHashTable
+         * array is not changing?  We don't.
+         *
+         * By dropping the lock periodically we can permit other
+         * activities to be performed while a rxi_ReapConnections
+         * call is in progress.  The goal of reap connections
+         * is to clean up quickly without causing large amounts
+         * of contention.  Therefore, it is important that global
+         * mutexes not be held for extended periods of time.
+         */
 	for (peer_ptr = &rx_peerHashTable[0], peer_end =
 	     &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	     peer_ptr++) {
 	    struct rx_peer *peer, *next, *prev;
-	    for (prev = peer = *peer_ptr; peer; peer = next) {
+
+            MUTEX_ENTER(&rx_peerHashTable_lock);
+            for (prev = peer = *peer_ptr; peer; peer = next) {
 		next = peer->next;
 		code = MUTEX_TRYENTER(&peer->peer_lock);
 		if ((code) && (peer->refCount == 0)
 		    && ((peer->idleWhen + rx_idlePeerTime) < now.sec)) {
 		    rx_interface_stat_p rpc_stat, nrpc_stat;
 		    size_t space;
+
+                    /*
+                     * now know that this peer object is one to be
+                     * removed from the hash table.  Once it is removed
+                     * it can't be referenced by other threads.
+                     * Lets remove it first and decrement the struct
+                     * nPeerStructs count.
+                     */
+		    if (peer == *peer_ptr) {
+			*peer_ptr = next;
+			prev = next;
+		    } else
+			prev->next = next;
+
+                    if (rx_stats_active)
+                        rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
+
+                    /*
+                     * Now if we hold references on 'prev' and 'next'
+                     * we can safely drop the rx_peerHashTable_lock
+                     * while we destroy this 'peer' object.
+                     */
+                    if (next)
+                        next->refCount++;
+                    if (prev)
+                        prev->refCount++;
+                    MUTEX_EXIT(&rx_peerHashTable_lock);
+
 		    MUTEX_EXIT(&peer->peer_lock);
 		    MUTEX_DESTROY(&peer->peer_lock);
 		    for (queue_Scan
@@ -6352,16 +6635,23 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 			    sizeof(rx_function_entry_v1_t);
 
 			rxi_Free(rpc_stat, space);
+
+                        MUTEX_ENTER(&rx_rpc_stats);
 			rxi_rpc_peer_stat_cnt -= num_funcs;
+                        MUTEX_EXIT(&rx_rpc_stats);
 		    }
 		    rxi_FreePeer(peer);
-                    if (rx_stats_active)
-                        rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
-		    if (peer == *peer_ptr) {
-			*peer_ptr = next;
-			prev = next;
-		    } else
-			prev->next = next;
+
+                    /*
+                     * Regain the rx_peerHashTable_lock and
+                     * decrement the reference count on 'prev'
+                     * and 'next'.
+                     */
+                    MUTEX_ENTER(&rx_peerHashTable_lock);
+                    if (next)
+                        next->refCount--;
+                    if (prev)
+                        prev->refCount--;
 		} else {
 		    if (code) {
 			MUTEX_EXIT(&peer->peer_lock);
@@ -6369,9 +6659,8 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 		    prev = peer;
 		}
 	    }
+            MUTEX_EXIT(&rx_peerHashTable_lock);
 	}
-	MUTEX_EXIT(&rx_peerHashTable_lock);
-	MUTEX_EXIT(&rx_rpc_stats);
     }
 
     /* THIS HACK IS A TEMPORARY HACK.  The idea is that the race condition in
@@ -7186,8 +7475,12 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 	}
 
 	if (tp) {
+                tp->refCount++;
+                MUTEX_EXIT(&rx_peerHashTable_lock);
+
 		error = 0;
 
+                MUTEX_ENTER(&tp->peer_lock);
 		peerStats->host = tp->host;
 		peerStats->port = tp->port;
 		peerStats->ifMTU = tp->ifMTU;
@@ -7218,6 +7511,10 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->bytesSent.low = tp->bytesSent.low;
 		peerStats->bytesReceived.high = tp->bytesReceived.high;
 		peerStats->bytesReceived.low = tp->bytesReceived.low;
+                MUTEX_EXIT(&tp->peer_lock);
+
+                MUTEX_ENTER(&rx_peerHashTable_lock);
+                tp->refCount--;
 	}
 	MUTEX_EXIT(&rx_peerHashTable_lock);
 
@@ -7274,9 +7571,14 @@ shutdown_rx(void)
 	     &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	     peer_ptr++) {
 	    struct rx_peer *peer, *next;
-	    for (peer = *peer_ptr; peer; peer = next) {
+
+            MUTEX_ENTER(&rx_peerHashTable_lock);
+            for (peer = *peer_ptr; peer; peer = next) {
 		rx_interface_stat_p rpc_stat, nrpc_stat;
 		size_t space;
+
+                MUTEX_ENTER(&rx_rpc_stats);
+                MUTEX_ENTER(&peer->peer_lock);
 		for (queue_Scan
 		     (&peer->rpcStats, rpc_stat, nrpc_stat,
 		      rx_interface_stat)) {
@@ -7292,15 +7594,19 @@ shutdown_rx(void)
 			sizeof(rx_function_entry_v1_t);
 
 		    rxi_Free(rpc_stat, space);
-		    MUTEX_ENTER(&rx_rpc_stats);
+
+                    /* rx_rpc_stats must be held */
 		    rxi_rpc_peer_stat_cnt -= num_funcs;
-		    MUTEX_EXIT(&rx_rpc_stats);
 		}
+                MUTEX_EXIT(&peer->peer_lock);
+                MUTEX_EXIT(&rx_rpc_stats);
+
 		next = peer->next;
 		rxi_FreePeer(peer);
                 if (rx_stats_active)
                     rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
 	    }
+            MUTEX_EXIT(&rx_peerHashTable_lock);
 	}
     }
     for (i = 0; i < RX_MAX_SERVICES; i++) {
@@ -7410,6 +7716,32 @@ rx_SetSpecific(struct rx_connection *conn, int key, void *ptr)
     MUTEX_EXIT(&conn->conn_data_lock);
 }
 
+void
+rx_SetServiceSpecific(struct rx_service *svc, int key, void *ptr)
+{
+    int i;
+    MUTEX_ENTER(&svc->svc_data_lock);
+    if (!svc->specific) {
+	svc->specific = (void **)malloc((key + 1) * sizeof(void *));
+	for (i = 0; i < key; i++)
+	    svc->specific[i] = NULL;
+	svc->nSpecific = key + 1;
+	svc->specific[key] = ptr;
+    } else if (key >= svc->nSpecific) {
+	svc->specific = (void **)
+	    realloc(svc->specific, (key + 1) * sizeof(void *));
+	for (i = svc->nSpecific; i < key; i++)
+	    svc->specific[i] = NULL;
+	svc->nSpecific = key + 1;
+	svc->specific[key] = ptr;
+    } else {
+	if (svc->specific[key] && rxi_keyCreate_destructor[key])
+	    (*rxi_keyCreate_destructor[key]) (svc->specific[key]);
+	svc->specific[key] = ptr;
+    }
+    MUTEX_EXIT(&svc->svc_data_lock);
+}
+
 void *
 rx_GetSpecific(struct rx_connection *conn, int key)
 {
@@ -7422,6 +7754,20 @@ rx_GetSpecific(struct rx_connection *conn, int key)
     MUTEX_EXIT(&conn->conn_data_lock);
     return ptr;
 }
+
+void *
+rx_GetServiceSpecific(struct rx_service *svc, int key)
+{
+    void *ptr;
+    MUTEX_ENTER(&svc->svc_data_lock);
+    if (key >= svc->nSpecific)
+	ptr = NULL;
+    else
+	ptr = svc->specific[key];
+    MUTEX_EXIT(&svc->svc_data_lock);
+    return ptr;
+}
+
 
 #endif /* !KERNEL */
 
@@ -7639,12 +7985,13 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
         return;
 
     MUTEX_ENTER(&rx_rpc_stats);
-    MUTEX_ENTER(&peer->peer_lock);
 
     if (rxi_monitor_peerStats) {
+        MUTEX_ENTER(&peer->peer_lock);
 	rxi_AddRpcStat(&peer->rpcStats, rxInterface, currentFunc, totalFunc,
 		       queueTime, execTime, bytesSent, bytesRcvd, isServer,
 		       peer->host, peer->port, 1, &rxi_rpc_peer_stat_cnt);
+        MUTEX_EXIT(&peer->peer_lock);
     }
 
     if (rxi_monitor_processStats) {
@@ -7653,7 +8000,6 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
 		       0xffffffff, 0xffffffff, 0, &rxi_rpc_process_stat_cnt);
     }
 
-    MUTEX_EXIT(&peer->peer_lock);
     MUTEX_EXIT(&rx_rpc_stats);
 
 }
@@ -8091,8 +8437,6 @@ rx_disablePeerRPCStats(void)
     struct rx_peer **peer_ptr, **peer_end;
     int code;
 
-    MUTEX_ENTER(&rx_rpc_stats);
-
     /*
      * Turn off peer statistics and if process stats is also off, turn
      * off everything
@@ -8103,18 +8447,34 @@ rx_disablePeerRPCStats(void)
 	rx_enable_stats = 0;
     }
 
-    MUTEX_ENTER(&rx_peerHashTable_lock);
     for (peer_ptr = &rx_peerHashTable[0], peer_end =
 	 &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	 peer_ptr++) {
 	struct rx_peer *peer, *next, *prev;
-	for (prev = peer = *peer_ptr; peer; peer = next) {
+
+        MUTEX_ENTER(&rx_peerHashTable_lock);
+        MUTEX_ENTER(&rx_rpc_stats);
+        for (prev = peer = *peer_ptr; peer; peer = next) {
 	    next = peer->next;
 	    code = MUTEX_TRYENTER(&peer->peer_lock);
 	    if (code) {
 		rx_interface_stat_p rpc_stat, nrpc_stat;
 		size_t space;
-		for (queue_Scan
+
+		if (prev == *peer_ptr) {
+		    *peer_ptr = next;
+		    prev = next;
+		} else
+		    prev->next = next;
+
+                if (next)
+                    next->refCount++;
+                if (prev)
+                    prev->refCount++;
+                peer->refCount++;
+                MUTEX_EXIT(&rx_peerHashTable_lock);
+
+                for (queue_Scan
 		     (&peer->rpcStats, rpc_stat, nrpc_stat,
 		      rx_interface_stat)) {
 		    unsigned int num_funcs = 0;
@@ -8132,18 +8492,20 @@ rx_disablePeerRPCStats(void)
 		    rxi_rpc_peer_stat_cnt -= num_funcs;
 		}
 		MUTEX_EXIT(&peer->peer_lock);
-		if (prev == *peer_ptr) {
-		    *peer_ptr = next;
-		    prev = next;
-		} else
-		    prev->next = next;
+
+                MUTEX_ENTER(&rx_peerHashTable_lock);
+                if (next)
+                    next->refCount--;
+                if (prev)
+                    prev->refCount--;
+                peer->refCount--;
 	    } else {
 		prev = peer;
 	    }
 	}
+        MUTEX_EXIT(&rx_rpc_stats);
+        MUTEX_EXIT(&rx_peerHashTable_lock);
     }
-    MUTEX_EXIT(&rx_peerHashTable_lock);
-    MUTEX_EXIT(&rx_rpc_stats);
 }
 
 /*

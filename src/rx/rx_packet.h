@@ -135,7 +135,7 @@
 					 * grows past 13, rxdebug packets
 					 * will need to be modified */
 
-/* Packet classes, for rx_AllocPacket */
+/* Packet classes, for rx_AllocPacket and rx_packetQuota */
 #define	RX_PACKET_CLASS_RECEIVE	    0
 #define	RX_PACKET_CLASS_SEND	    1
 #define	RX_PACKET_CLASS_SPECIAL	    2

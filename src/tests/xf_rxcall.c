@@ -184,7 +184,7 @@ xfon_voldump(XFILE * X, int flag, char *name)
     struct ktc_principal sname;
     struct ktc_token token;
     struct afsconf_dir *confdir;
-    afs_uint32 code, server_addr;
+    afs_uint32 code, server_addr = 0;
     afs_int32 volid, date, partid = 0;
     int isnum, index;
     char *x, *y;

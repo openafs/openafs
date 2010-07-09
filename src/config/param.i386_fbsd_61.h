@@ -25,13 +25,6 @@
 #define AFS_64BIT_CLIENT 1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
-#define AFS_FBSD40_ENV 1
-#define AFS_FBSD42_ENV 1
-#define AFS_FBSD43_ENV 1
-#define AFS_FBSD44_ENV 1
-#define AFS_FBSD45_ENV 1
-#define AFS_FBSD46_ENV 1
-#define AFS_FBSD47_ENV 1
 #define AFS_FBSD50_ENV 1
 #define AFS_FBSD51_ENV 1
 #define AFS_FBSD52_ENV 1
@@ -39,11 +32,6 @@
 #define AFS_FBSD60_ENV 1
 #define AFS_FBSD61_ENV 1
 #define AFS_X86_FBSD_ENV 1
-#define AFS_X86_FBSD40_ENV 1
-#define AFS_X86_FBSD42_ENV 1
-#define AFS_X86_FBSD43_ENV 1
-#define AFS_X86_FBSD46_ENV 1
-#define AFS_X86_FBSD47_ENV 1
 #define AFS_X86_FBSD50_ENV 1
 #define AFS_X86_ENV 1
 #undef  AFS_NONFSTRANS
@@ -141,13 +129,6 @@ enum vcexcl { NONEXCL, EXCL };
 #define UKERNEL			1	/* user space kernel */
 #define AFS_ENV			1
 #define AFS_VFSINCL_ENV         1
-#define AFS_USR_FBSD40_ENV	1
-#define AFS_USR_FBSD42_ENV	1
-#define AFS_USR_FBSD43_ENV	1
-#define AFS_USR_FBSD44_ENV	1
-#define AFS_USR_FBSD45_ENV	1
-#define AFS_USR_FBSD46_ENV	1
-#define AFS_USR_FBSD47_ENV	1
 #define AFS_USR_FBSD50_ENV	1
 #define AFS_USR_FBSD51_ENV	1
 #define AFS_USR_FBSD52_ENV	1

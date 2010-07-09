@@ -14,6 +14,14 @@ initial start-up messages to it. If there is an existing file, the
 Salvager renames is to F<SalvageLog.old>, overwriting the existing
 F<SalvageLog.old> file if it exists.
 
+When the Salvager is salvaging an entire file server, it creates a
+separate log file for each partition it starts salvaging. That file will
+be named F<SalvageLog.I<job>> where I<job> is a job number that will
+normally (but is not guaranteed to) correspond to the index of the
+partition being salvaged. Once salvaging of all partitions is complete,
+the Salvager will accumulate all the partition-specific log files, append
+them to F<SalvageLog>, and then remove the partition-specific files.
+
 The file is in ASCII format. Administrators listed in the
 F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display
 its contents. Alternatively, log onto the file server machine and use a

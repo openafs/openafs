@@ -26,7 +26,7 @@ extern int dbase_fd;
 struct ubik_dbase *dbase;
 
 int
-ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
+ubik_ServerInit(afs_uint32 myHost, short myPort, afs_uint32 serverList[],
                 const char *pathName, struct ubik_dbase **dbase)
 {
     return (0);
@@ -99,7 +99,7 @@ ubik_WaitVersion(register struct ubik_dbase *adatabase,
 }
 
 int
-ubik_CacheUpdate(register struct ubik_trans *atrans)
+ubik_CheckCache(struct ubik_trans *atrans, ubik_updatecache_func cbf, void *rock)
 {
     return (0);
 }

@@ -5402,6 +5402,14 @@ and so may already be available at your site.</para>
           role="bold">system:administrators</emphasis> group. It is a default entry that AFS places on every new volume's root
           directory.</para>
 
+	  <para>The top-level AFS directory, typically /afs, is a special case:
+	    when the client is configured to run in dynroot mode (e.g. 
+	    <emphasis role="bold">afsd -dynroot</emphasis>, attempts to set
+	    the ACL on this directory will return <emphasis role="bold">
+	      Connection timed out</emphasis>. This is because the dynamically-
+	    generated root directory is not a part of the global AFS space,
+	    and cannot have an access control list set on it.</para>
+
           <programlisting>
    # <emphasis role="bold">/usr/afs/bin/fs setacl /afs system:anyuser rl</emphasis>
 </programlisting>

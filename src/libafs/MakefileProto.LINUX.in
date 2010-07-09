@@ -33,6 +33,7 @@ AFS_OS_OBJS = \
 	osi_sleep.o \
 	osi_syscall.o \
 	osi_sysctl.o \
+	osi_vcache.o \
 	osi_vfsops.o \
 	osi_vm.o \
 <ppc64_linux26>
@@ -82,7 +83,7 @@ LINUX_KERNEL_BUILD=@LINUX_KERNEL_BUILD@
 <linux26 linux_26>
 # All the platform-specific and kernel-related things are provided by
 # the kernel build system.  So we should _not_ use COMMON_KERN_CFLAGS!
-CCFLAGS = -Wno-strict-prototypes
+CCFLAGS =
 DEFINES = $(COMMON_DEFINES)
 
 # CFLAGS_* and AFLAGS_* will be copied into the kbuild makefile

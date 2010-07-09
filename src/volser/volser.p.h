@@ -46,7 +46,7 @@ struct volser_trans {
     afs_int32 creationTime;	/* time the transaction started */
     afs_int32 returnCode;	/* transaction error code */
     struct Volume *volume;	/* pointer to open volume */
-    afs_int32 volid;		/* open volume's id */
+    afs_uint32 volid;		/* open volume's id */
     afs_int32 partition;	/* open volume's partition */
     afs_int32 dumpTransId;	/* other side's trans id during a dump */
     afs_int32 dumpSeq;		/* next sequence number to use during a dump */
@@ -68,12 +68,6 @@ struct volser_trans {
  * checks for transactions that have timed out: BKGLoop()
  */
 #define GCWAKEUP            30
-
-struct volser_dest {
-    afs_int32 destHost;
-    afs_int32 destPort;
-    afs_int32 destSSID;
-};
 
 #ifdef AFS_PTHREAD_ENV
 #define VTRANS_OBJ_LOCK_INIT(tt) \

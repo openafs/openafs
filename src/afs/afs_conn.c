@@ -293,9 +293,18 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (service == 52) {
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
+	/* set to a RX_CALL_TIMEOUT error to allow MTU retry to trigger */
+	rx_SetServerConnIdleDeadErr(tc->id, RX_CALL_DEAD);
 	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
+	rx_SetMsgsizeRetryErr(tc->id, RX_MSGSIZE);
 
-	rx_SetConnSecondsUntilNatPing(tc->id, 20);
+	/*
+	 * Only do this for the base connection, not per-user.
+	 * Will need to be revisited if/when CB gets security.
+	 */
+	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
+	    (tu->vid == UNDEFVID))
+	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)

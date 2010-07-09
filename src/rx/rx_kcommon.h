@@ -63,12 +63,14 @@ typedef unsigned short etap_event_t;
 #include "h/dirent.h"
 #include "h/socket.h"
 #include "h/domain.h"
-#if defined(AFS_FBSD50_ENV)
 #include "h/bio.h"
-#endif
 #include "h/buf.h"
 #include "h/mbuf.h"
 #endif /* AFS_FBSD_ENV */
+#if defined(AFS_NBSD40_ENV)
+#include "h/buf.h"
+#include "h/mbuf.h"
+#endif
 #endif /* !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV) */
 #endif /* !defined(AFS_LINUX22_ENV) && !defined(AFS_OBSD_ENV) */
 #ifdef AFS_SGI62_ENV
@@ -112,7 +114,7 @@ typedef unsigned short etap_event_t;
 #endif
 #ifdef AFS_LINUX22_ENV
 #include "h/sched.h"
-#if defined(FREEZER_H_EXISTS)
+#if defined(HAVE_LINUX_FREEZER_H)
 #include "h/freezer.h"
 #endif
 #include "h/netdevice.h"

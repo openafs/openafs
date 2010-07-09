@@ -175,6 +175,9 @@ int ntoh_syserr_conv(int error);
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
 
+/* Set the error to use for retrying a connection during MTU tuning */
+#define rx_SetMsgsizeRetryErr(conn, err) ((conn)->msgsizeRetryErr = (err))
+
 /* If this flag is set,no new requests are processed by rx, all new requests are
 returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define	rx_SetRxTranquil()   		(rx_tranquil = 1)
@@ -244,8 +247,10 @@ struct rx_connection {
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
-/*    afs_int32 maxPacketSize;    max packet size should be per-connection since */
-    /* peer process could be restarted on us. Includes RX Header.       */
+    afs_int32 lastPacketSize; /* last >max attempt */
+    afs_int32 lastPacketSizeSeq; /* seq number of attempt */
+    afs_int32 lastPingSize; /* last MTU ping attempt */
+    afs_int32 lastPingSizeSer; /* serial of last MTU ping attempt */
     struct rxevent *challengeEvent;	/* Scheduled when the server is challenging a     */
     struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
     struct rxevent *checkReachEvent;	/* Scheduled when checking reachability */
@@ -274,6 +279,7 @@ struct rx_connection {
     afs_int32 idleDeadErr;
     afs_int32 secondsUntilNatPing;	/* how often to ping conn */
     struct rxevent *natKeepAliveEvent; /* Scheduled to keep connection open */
+    afs_int32 msgsizeRetryErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 };
@@ -319,6 +325,12 @@ struct rx_service {
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
     afs_int32 idleDeadErr;
+    int nSpecific;		/* number entries in specific data */
+    void **specific;		/* pointer to connection specific data */
+#ifdef	RX_ENABLE_LOCKS
+    afs_kmutex_t svc_data_lock;	/* protect specific data */
+#endif
+
 };
 
 #endif /* KDUMP_RX_LOCK */
@@ -419,6 +431,7 @@ struct rx_peer {
     afs_hyper_t bytesReceived;	/* Number of bytes received from this peer */
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
+    afs_int32 maxPacketSize;    /* peer packetsize hint */
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -509,6 +522,7 @@ struct rx_call {
     struct rxevent *resendEvent;	/* If this is non-Null, there is a retransmission event pending */
     struct rxevent *timeoutEvent;	/* If this is non-Null, then there is an overall timeout for this call */
     struct rxevent *keepAliveEvent;	/* Scheduled periodically in active calls to keep call alive */
+    struct rxevent *growMTUEvent;      /* Scheduled periodically in active calls to discover true maximum MTU */
     struct rxevent *delayedAckEvent;	/* Scheduled after all packets are received to send an ack if a reply or new call is not generated soon */
     struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
     int abortCode;		/* error code from last RPC */
@@ -667,6 +681,7 @@ struct rx_ackPacket {
 #define	RX_ACK_DELAY		8	/* Ack generated since nothing has happened since receiving packet */
 #define RX_ACK_IDLE             9	/* Similar to RX_ACK_DELAY, but can 
 					 * be used to compute RTT */
+#define RX_ACK_MTU             -1       /* will be rewritten to ACK_PING */
 
 /* Packet acknowledgement type */
 #define	RX_ACK_TYPE_NACK	0	/* I Don't have this packet */
@@ -916,7 +931,7 @@ struct rx_debugStats {
 };
 
 struct rx_debugConn_vL {
-    afs_int32 host;
+    afs_uint32 host;
     afs_int32 cid;
     afs_int32 serial;
     afs_int32 callNumber[RX_MAXCALLS];
@@ -935,7 +950,7 @@ struct rx_debugConn_vL {
 };
 
 struct rx_debugConn {
-    afs_int32 host;
+    afs_uint32 host;
     afs_int32 cid;
     afs_int32 serial;
     afs_int32 callNumber[RX_MAXCALLS];

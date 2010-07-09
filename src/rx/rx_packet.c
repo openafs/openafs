@@ -101,7 +101,7 @@ extern char cml_version_number[];
 static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
 
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-				afs_int32 ahost, short aport,
+				afs_uint32 ahost, short aport,
 				afs_int32 istack);
 
 #ifdef RX_ENABLE_TSFPQ
@@ -614,6 +614,7 @@ rxi_MorePackets(int apackets)
 	rx_mallocedP = p;
     }
 
+    rx_nPackets += apackets;
     rx_nFreePackets += apackets;
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
@@ -722,13 +723,12 @@ rxi_MorePacketsNoLock(int apackets)
     }
 
     rx_nFreePackets += apackets;
-#ifdef RX_ENABLE_TSFPQ
-    /* TSFPQ patch also needs to keep track of total packets */
     MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
+#ifdef RX_ENABLE_TSFPQ
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_packets_mutex);
 #endif /* RX_ENABLE_TSFPQ */
+    MUTEX_EXIT(&rx_packets_mutex);
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
 }
@@ -789,7 +789,7 @@ void
 rx_CheckPackets(void)
 {
     if (rxi_NeedMorePackets) {
-	rxi_MorePackets(rx_initSendWindow);
+	rxi_MorePackets(rx_maxSendWindow);
     }
 }
 
@@ -1153,7 +1153,7 @@ rxi_AllocPacketNoLock(int class)
 	    osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
         if (queue_IsEmpty(&rx_freePacketQueue))
-	    rxi_MorePacketsNoLock(4 * rx_initSendWindow);
+	    rxi_MorePacketsNoLock(rx_maxSendWindow);
 #endif /* KERNEL */
 
 
@@ -1212,7 +1212,7 @@ rxi_AllocPacketNoLock(int class)
 	osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
     if (queue_IsEmpty(&rx_freePacketQueue))
-	rxi_MorePacketsNoLock(4 * rx_initSendWindow);
+	rxi_MorePacketsNoLock(rx_maxSendWindow);
 #endif /* KERNEL */
 
     rx_nFreePackets--;
@@ -1247,7 +1247,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
         MUTEX_ENTER(&rx_freePktQ_lock);
 
         if (queue_IsEmpty(&rx_freePacketQueue))
-	    rxi_MorePacketsNoLock(4 * rx_initSendWindow);
+	    rxi_MorePacketsNoLock(rx_maxSendWindow);
 
 	RX_TS_FPQ_GTOL(rx_ts_info);
 
@@ -1546,7 +1546,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
  * last two pad bytes. */
 
 struct rx_packet *
-rxi_SplitJumboPacket(struct rx_packet *p, afs_int32 host, short port,
+rxi_SplitJumboPacket(struct rx_packet *p, afs_uint32 host, short port,
 		     int first)
 {
     struct rx_packet *np;
@@ -1777,7 +1777,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 
 struct rx_packet *
 rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
-		       afs_int32 ahost, short aport, int istack)
+		       afs_uint32 ahost, short aport, int istack)
 {
     struct rx_debugIn tin;
     afs_int32 tl;
@@ -1980,6 +1980,10 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		MUTEX_ENTER(&rx_peerHashTable_lock);
 		for (tp = rx_peerHashTable[i]; tp; tp = tp->next) {
 		    if (tin.index-- <= 0) {
+                        tp->refCount++;
+                        MUTEX_EXIT(&rx_peerHashTable_lock);
+
+                        MUTEX_ENTER(&tp->peer_lock);
 			tpeer.host = tp->host;
 			tpeer.port = tp->port;
 			tpeer.ifMTU = htons(tp->ifMTU);
@@ -2012,8 +2016,12 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			    htonl(tp->bytesReceived.high);
 			tpeer.bytesReceived.low =
 			    htonl(tp->bytesReceived.low);
+                        MUTEX_EXIT(&tp->peer_lock);
 
+                        MUTEX_ENTER(&rx_peerHashTable_lock);
+                        tp->refCount--;
 			MUTEX_EXIT(&rx_peerHashTable_lock);
+
 			rx_packetwrite(ap, 0, sizeof(struct rx_debugPeer),
 				       (char *)&tpeer);
 			tl = ap->length;
@@ -2079,7 +2087,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
 struct rx_packet *
 rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
-			 afs_int32 ahost, short aport, int istack)
+			 afs_uint32 ahost, short aport, int istack)
 {
     afs_int32 tl;
 
@@ -2108,7 +2116,7 @@ rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 /* send a debug packet back to the sender */
 static void
 rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-		    afs_int32 ahost, short aport, afs_int32 istack)
+		    afs_uint32 ahost, short aport, afs_int32 istack)
 {
     struct sockaddr_in taddr;
     unsigned int i, nbytes, savelen = 0;
@@ -2209,6 +2217,16 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
      * serial number means the packet was never sent. */
     MUTEX_ENTER(&conn->conn_data_lock);
     p->header.serial = ++conn->serial;
+    if (p->length > conn->peer->maxPacketSize) {
+	if ((p->header.type == RX_PACKET_TYPE_ACK) &&
+	    (p->header.flags & RX_REQUEST_ACK)) {
+	    conn->lastPingSize = p->length;
+	    conn->lastPingSizeSer = p->header.serial;
+	} else if (p->header.seq != 0) {
+	    conn->lastPacketSize = p->length;
+	    conn->lastPacketSizeSeq = p->header.seq;
+	}
+    }
     MUTEX_EXIT(&conn->conn_data_lock);
     /* This is so we can adjust retransmit time-outs better in the face of 
      * rapidly changing round-trip times.  RTO estimation is not a la Karn.
@@ -2358,6 +2376,24 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     MUTEX_ENTER(&conn->conn_data_lock);
     serial = conn->serial;
     conn->serial += len;
+    for (i = 0; i < len; i++) {
+	p = list[i];
+	if (p->length > conn->peer->maxPacketSize) {
+	    /* a ping *or* a sequenced packet can count */
+	    if ((p->length > conn->peer->maxPacketSize)) {
+		if (((p->header.type == RX_PACKET_TYPE_ACK) &&
+		     (p->header.flags & RX_REQUEST_ACK)) &&
+		    ((i == 0) || (p->length >= conn->lastPingSize))) {
+		    conn->lastPingSize = p->length;
+		    conn->lastPingSizeSer = serial + i;
+		} else if ((p->header.seq != 0) &&
+			   ((i == 0) || (p->length >= conn->lastPacketSize))) {
+		    conn->lastPacketSize = p->length;
+		    conn->lastPacketSizeSeq = p->header.seq;
+		}
+	    }
+	}
+    }
     MUTEX_EXIT(&conn->conn_data_lock);
 
 

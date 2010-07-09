@@ -12,7 +12,6 @@
 #undef _CRTDBG_MAP_ALLOC
 #include "stdio.h"
 #include "io.h"
-#include <assert.h>
 #include "string.h"
 #include "process.h"
 #include "windows.h"
@@ -326,7 +325,7 @@ SetSysEnv(int argc, char *argv[])
 	   , argv[3]
 	);
     SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
-		       (DWORD) "Environment", SMTO_NORMAL, 1, &dwResult);
+		       (LPARAM) "Environment", SMTO_NORMAL, 1, &dwResult);
     return 0;
 }
 

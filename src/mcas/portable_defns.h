@@ -70,7 +70,7 @@ typedef unsigned long int_addr_t;
 
 #define ADD_TO(_v,_x)                                                   \
 do {                                                                    \
-    int __val = (_v), __newval;                                         \
+    unsigned long __val = (_v), __newval;                               \
     while ( (__newval = CASIO(&(_v),__val,__val+(_x))) != __val )       \
         __val = __newval;                                               \
 } while ( 0 )
@@ -80,24 +80,24 @@ do {                                                                    \
  * example, the operation which uniquely incremented _v from 0 to 1, and
  * all equivalent threshold assertions */
 
-#define ADD_TO_RETURNING_OLD(_v,_x,_o)									\
+#define ADD_TO_RETURNING_OLD(_v,_x,_o)                                  \
 do {                                                                    \
-    int __val = (_v), __newval;                                         \
+    unsigned long __val = (_v), __newval;                               \
     while ( (__newval = CASIO(&(_v),__val,__val+(_x))) != __val )       \
         __val = __newval;                                               \
 	_o = __val;															\
 } while ( 0 )
 
-#define SUB_FROM(_v,_x)													\
+#define SUB_FROM(_v,_x)                                                 \
 do {                                                                    \
-    int __val = (_v), __newval;                                         \
+    unsigned long __val = (_v), __newval;                               \
     while ( (__newval = CASIO(&(_v),__val,__val-(_x))) != __val )       \
-        __val = __newval;												\
+        __val = __newval;                                               \
 } while ( 0 )
 
-#define SUB_FROM_RETURNING_OLD(_v,_x,_o)								\
+#define SUB_FROM_RETURNING_OLD(_v,_x,_o)                                \
 do {                                                                    \
-    int __val = (_v), __newval;                                         \
+    unsigned long __val = (_v), __newval;                               \
     while ( (__newval = CASIO(&(_v),__val,__val-(_x))) != __val )       \
         __val = __newval;                                               \
 	_o = __val;															\

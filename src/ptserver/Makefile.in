@@ -10,6 +10,7 @@ INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
@@ -44,6 +45,10 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
 	depinstall readgroup readpwd testpt
+
+generated: \
+	pterror.h pterror.c \
+	ptint.cs.c ptint.ss.c ptint.xdr.c ptint.h
 
 depinstall: \
 	ptint.cs.c ptint.xdr.c \
@@ -98,10 +103,10 @@ ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 # When supergroups is enabled, some parts of ptserver cast between
 # incompatible structs.
 ptutils.o: ptutils.c ${INCLS}
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ptutils.c
+	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/ptutils.c
 
 ptprocs.o: ptprocs.c ${INCLS}
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ptprocs.c
+	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/ptprocs.c
 
 utils.o: utils.c ${INCLS} 
 
@@ -204,11 +209,13 @@ install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver
-	${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts
-	${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts
-	${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util
-	${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check
+	if [ "x$(ENABLE_PTHREADED_UBIK)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
+		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
+		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
+	fi
 	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
 	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
 	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/prerror.h
@@ -227,11 +234,13 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver
-	${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts
-	${INSTALL_PROGRAM} pts ${DEST}/bin/pts
-	${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util
-	${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check
+	if [ "x$(ENABLE_PTHREADED_UBIK)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver; \
+		${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts; \
+		${INSTALL_PROGRAM} pts ${DEST}/bin/pts; \
+		${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util; \
+		${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check; \
+	fi;
 	${INSTALL_DATA} libprot.a ${DEST}/lib/afs/libprot.a
 	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/prclient.h
 	${INSTALL_DATA} pterror.h ${DEST}/include/afs/prerror.h

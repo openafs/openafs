@@ -1146,7 +1146,7 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
 int
 udbLocalInit(void)
 {
-    afs_int32 serverList[MAXSERVERS];
+    afs_uint32 serverList[MAXSERVERS];
     char hostname[256];
     char *args[3];
     int i;
@@ -1217,17 +1217,25 @@ int
 bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
 {
     int code = 0;
+#ifdef HAVE_MKSTEMP
+    int fd;
+#endif
 
-    if (ctPtr->textStream != NULL)
+    if (ctPtr->textStream != NULL) {
 	fclose(ctPtr->textStream);
+	ctPtr->textStream = NULL;
+    }
 
     sprintf(tmpFileName, "%s/bu_XXXXXX", gettmpdir());
-#ifdef AFS_LINUX20_ENV
-    mkstemp(tmpFileName);
+#ifdef HAVE_MKSTEMP
+    fd = mkstemp(tmpFileName);
+    if (fd == -1)
+	ERROR(BUDB_INTERNALERROR);
+    ctPtr->textStream = fdopen(fd, "w+");
 #else
     mktemp(tmpFileName);
-#endif
     ctPtr->textStream = fopen(tmpFileName, "w+");
+#endif
     if (ctPtr->textStream == NULL)
 	ERROR(BUDB_INTERNALERROR);
 

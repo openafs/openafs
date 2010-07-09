@@ -320,5 +320,5 @@ extern dbadr ht_LookupBucket(struct ubik_trans *ut,
 extern afs_int32 dbwrite(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len);
 extern afs_int32 dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len);
 extern afs_int32 cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 len);
-extern void db_panic(char *reason);
+extern void db_panic(char *reason) AFS_NORETURN;
 extern void ht_Reset(struct memoryHashTable *mht);

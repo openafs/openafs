@@ -38,7 +38,7 @@ extern struct vldstats dynamic_statistics;
 struct vlheader {
     struct vital_vlheader vital_header;	/* all small critical stuff are in here */
     afs_uint32 IpMappedAddr[MAXSERVERID + 1];	/* Mapping of ip addresses to relative ones */
-    afs_int32 VolnameHash[HASHSIZE];	/* hash table for vol names */
+    afs_uint32 VolnameHash[HASHSIZE];	/* hash table for vol names */
     afs_uint32 VolidHash[MAXTYPES][HASHSIZE];	/* hash table for vol ids */
     afs_int32 SIT;		/* spare for poss future use */
 };
@@ -65,8 +65,8 @@ struct vlentry {
     afs_int32 LockTimestamp;	/* lock time stamp */
     afs_uint32 cloneId;		/* used during cloning */
     afs_int32 spares0;		/* XXXX was AssociatedChain XXXX */
-    afs_int32 nextIdHash[MAXTYPES];	/* Next id hash table pointer (or freelist ->[0]) */
-    afs_int32 nextNameHash;	/* Next name hash table pointer */
+    afs_uint32 nextIdHash[MAXTYPES];	/* Next id hash table pointer (or freelist ->[0]) */
+    afs_uint32 nextNameHash;	/* Next name hash table pointer */
     afs_int32 spares1[2];	/* long spares */
     char name[VL_MAXNAMELEN];	/* Volume name */
     char spares3;		/* XXX was volumeType XXXX */
@@ -83,8 +83,8 @@ struct nvlentry {
     afs_int32 LockAfsId;	/* Person who locked entry */
     afs_int32 LockTimestamp;	/* lock time stamp */
     afs_uint32 cloneId;		/* used during cloning */
-    afs_int32 nextIdHash[MAXTYPES];	/* Next id hash table pointer (or freelist ->[0]) */
-    afs_int32 nextNameHash;	/* Next name hash table pointer */
+    afs_uint32 nextIdHash[MAXTYPES];	/* Next id hash table pointer (or freelist ->[0]) */
+    afs_uint32 nextNameHash;	/* Next name hash table pointer */
     char name[VL_MAXNAMELEN];	/* Volume name */
     u_char serverNumber[NMAXNSERVERS];	/* Server # for each server that holds volume */
     u_char serverPartition[NMAXNSERVERS];	/* Server Partition number */
@@ -126,9 +126,6 @@ struct extentaddr {
 #define	ex_addrs	_ex_un._ex_addrentry.addrs
 #define	ex_uniquifier	_ex_un._ex_addrentry.uniquifier
 
-#define VLog(level, str)   ViceLog(5, str)
-
-struct ubik_trans;
-extern int FreeBlock(struct ubik_trans *trans, afs_int32 blockindex);
+#define VLog(level, str)   ViceLog(level, str)
 
 #endif /* _VLSERVER_ */

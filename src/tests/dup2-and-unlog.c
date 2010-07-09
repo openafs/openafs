@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <err.h>
 
+#include <afs/stds.h>
+#include <afs/auth.h>
+
 int
 main(int argc, char **argv)
 {

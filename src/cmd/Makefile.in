@@ -19,6 +19,8 @@ all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
 
 all64: all ${TOP_LIBDIR}/libcmd64.a
 
+generated: cmd.h cmd_errors.c
+
 ${TOP_LIBDIR}/libcmd.a: libcmd.a
 	${INSTALL_DATA} $? $@
 

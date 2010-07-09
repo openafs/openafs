@@ -52,7 +52,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #endif
-#if defined(ENABLE_LINUX_SYSCALL_PROBING) && defined(EXPORTED_INIT_MM)
+#if defined(ENABLE_LINUX_SYSCALL_PROBING)
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #ifndef OSI_PROBE_STANDALONE
@@ -61,7 +61,7 @@
 #endif
 #include <linux/version.h>
 #include <linux/sched.h>
-#ifdef CONFIG_H_EXISTS
+#ifdef HAVE_LINUX_CONFIG_H
 #include <linux/config.h>
 #endif
 #include <linux/linkage.h>

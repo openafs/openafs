@@ -11,7 +11,6 @@
 #include "afs/param.h"
 
 
-#ifdef AFS_FBSD40_ENV
 #include <sys/malloc.h>
 #include "rx/rx_kcommon.h"
 
@@ -41,11 +40,7 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
     u.uio_resid = *alength;
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_READ;
-#ifdef AFS_FBSD50_ENV
     u.uio_td = NULL;
-#else
-    u.uio_procp = NULL;
-#endif
 
     if (haveGlock)
 	AFS_GUNLOCK();
@@ -91,17 +86,13 @@ osi_StopListener(void)
     int haveGlock = ISAFS_GLOCK();
     if (haveGlock)
 	AFS_GUNLOCK();
-    soshutdown(rx_socket, 2);
-#ifndef AFS_FBSD70_ENV
+    soshutdown(rx_socket, SHUT_RDWR);
     soclose(rx_socket);
-#endif
     p = pfind(rxk_ListenerPid);
     afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
     if (p)
 	psignal(p, SIGUSR1);
-#ifdef AFS_FBSD50_ENV
     PROC_UNLOCK(p);
-#endif
 #ifdef AFS_FBSD70_ENV
     {
       /* Avoid destroying socket until osi_NetReceive has
@@ -150,11 +141,7 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
     u.uio_resid = alength;
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_WRITE;
-#ifdef AFS_FBSD50_ENV
     u.uio_td = NULL;
-#else
-    u.uio_procp = NULL;
-#endif
 
     addr->sin_len = sizeof(struct sockaddr_in);
 
@@ -163,14 +150,9 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 #if KNET_DEBUG
     printf("+");
 #endif
-#ifdef AFS_FBSD50_ENV
     code =
 	sosend(asocket, (struct sockaddr *)addr, &u, NULL, NULL, 0,
 	       curthread);
-#else
-    code =
-	sosend(asocket, (struct sockaddr *)addr, &u, NULL, NULL, 0, curproc);
-#endif
 #if KNET_DEBUG
     if (code) {
 	if (code == EINVAL)
@@ -540,5 +522,3 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
     return code;
 }
 #endif
-
-#endif /* AFS_FBSD40_ENV */

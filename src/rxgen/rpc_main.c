@@ -355,8 +355,10 @@ c_output(char *infile, char *define, int extend, char *outfile, int append)
     f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
     if (xflag) {
 	if (kflag) {
+	    f_print(fout, "#include \"afsconfig.h\"\n");
 	    f_print(fout, "#include \"afs/param.h\"\n");
 	} else {
+	    f_print(fout, "#include <afsconfig.h>\n");
 	    f_print(fout, "#include <afs/param.h>\n");
 	}
 	f_print(fout, "#ifdef AFS_NT40_ENV\n");
@@ -506,6 +508,7 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
 	f_print(fout, "#include \"rx/rx_globals.h\"\n");
     }
     f_print(fout, "#else	/* KERNEL */\n");
+    f_print(fout, "#include <afsconfig.h>\n");
     f_print(fout, "#include <afs/param.h>\n");
     f_print(fout, "#include <afs/stds.h>\n");
     f_print(fout, "#include <sys/types.h>\n");

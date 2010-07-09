@@ -18,7 +18,7 @@ The B<livesys> command displays the string stored in kernel memory that
 indicates the local machine's CPU/operating system (OS) type,
 conventionally called the I<sysname>.  The Cache Manager substitutes this
 string for the I<@sys> variable which can occur in AFS pathnames; the
-I<IBM AFS Quick Beginnings> and I<IBM AFS Administration Guide> explain
+I<OpenAFS Quick Start Guides> and I<OpenAFS Administration Guide> explain
 how using I<@sys> can simplify cell configuration.
 
 To set a new value in kernel memory, use the B<fs sysname> command, which
@@ -60,9 +60,10 @@ None
 L<fs_sysname(1)>,
 L<sys(1)>
 
-I<IBM AFS Quick Beginnings>
+The I<OpenAFS Quick Start Guides> at L<http://docs.openafs.org/>.
 
-I<IBM AFS Administration Guide>
+The I<OpenAFS Administration Guide> at
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 

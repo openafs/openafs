@@ -1107,6 +1107,112 @@ uafs_SetRxPort(int port)
     usr_rx_port = port;
 }
 
+/*
+ * uafs_Init is for backwards compatibility only! Do not use it; use
+ * uafs_Setup, uafs_ParseArgs, and uafs_Run instead.
+ */
+void
+uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
+          char *cacheBaseDirParam, int cacheBlocksParam, int cacheFilesParam,
+          int cacheStatEntriesParam, int dCacheSizeParam, int vCacheSizeParam,
+          int chunkSizeParam, int closeSynchParam, int debugParam,
+          int nDaemonsParam, int cacheFlagsParam, char *logFile)
+{
+    int code;
+    int argc = 0;
+    char *argv[32];
+    int freeargc = 0;
+    void *freeargv[32];
+    char buf[1024];
+    int i;
+
+    code = uafs_Setup(mountDirParam);
+    usr_assert(code == 0);
+
+    argv[argc++] = rn;
+    if (mountDirParam) {
+	argv[argc++] = "-mountdir";
+	argv[argc++] = mountDirParam;
+    }
+    if (confDirParam) {
+	argv[argc++] = "-confdir";
+	argv[argc++] = confDirParam;
+    }
+    if (cacheBaseDirParam) {
+	argv[argc++] = "-cachedir";
+	argv[argc++] = cacheBaseDirParam;
+    }
+    if (cacheBlocksParam) {
+	snprintf(buf, sizeof(buf), "%d", cacheBlocksParam);
+
+	argv[argc++] = "-blocks";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (cacheFilesParam) {
+	snprintf(buf, sizeof(buf), "%d", cacheFilesParam);
+
+	argv[argc++] = "-files";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (cacheStatEntriesParam) {
+	snprintf(buf, sizeof(buf), "%d", cacheStatEntriesParam);
+
+	argv[argc++] = "-stat";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (dCacheSizeParam) {
+	snprintf(buf, sizeof(buf), "%d", dCacheSizeParam);
+
+	argv[argc++] = "-dcache";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (vCacheSizeParam) {
+	snprintf(buf, sizeof(buf), "%d", vCacheSizeParam);
+
+	argv[argc++] = "-volumes";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (chunkSizeParam) {
+	snprintf(buf, sizeof(buf), "%d", chunkSizeParam);
+
+	argv[argc++] = "-chunksize";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (closeSynchParam) {
+	argv[argc++] = "-waitclose";
+    }
+    if (debugParam) {
+	argv[argc++] = "-debug";
+    }
+    if (nDaemonsParam) {
+	snprintf(buf, sizeof(buf), "%d", nDaemonsParam);
+
+	argv[argc++] = "-daemons";
+	argv[argc++] = freeargv[freeargc++] = strdup(buf);
+    }
+    if (cacheFlagsParam) {
+	if (cacheFlagsParam & AFSCALL_INIT_MEMCACHE) {
+	    argv[argc++] = "-memcache";
+	}
+    }
+    if (logFile) {
+	argv[argc++] = "-logfile";
+	argv[argc++] = logFile;
+    }
+
+    argv[argc] = NULL;
+
+    code = uafs_ParseArgs(argc, argv);
+    usr_assert(code == 0);
+
+    for (i = 0; i < freeargc; i++) {
+	free(freeargv[i]);
+    }
+
+    code = uafs_Run();
+    usr_assert(code == 0);
+}
+
 void
 uafs_mount(void) {
     int rc;

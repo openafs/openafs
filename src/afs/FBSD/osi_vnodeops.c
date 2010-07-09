@@ -54,9 +54,6 @@
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/unistd.h>
-#ifndef AFS_FBSD50_ENV
-#include <vm/vm_zone.h>
-#endif
 #include <vm/vm_page.h>
 #include <vm/vm_object.h>
 #include <vm/vm_pager.h>
@@ -158,9 +155,6 @@ int afs_vop_putpages(struct vop_putpages_args *);
 int afs_vop_ioctl(struct vop_ioctl_args *);
 static int afs_vop_pathconf(struct vop_pathconf_args *);
 int afs_vop_poll(struct vop_poll_args *);
-#ifndef AFS_FBSD50_ENV
-int afs_vop_mmap(struct vop_mmap_args *);
-#endif
 int afs_vop_fsync(struct vop_fsync_args *);
 int afs_vop_remove(struct vop_remove_args *);
 int afs_vop_link(struct vop_link_args *);
@@ -186,9 +180,6 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_access_desc, (vop_t *) afs_vop_access},	/* access */
     {&vop_advlock_desc, (vop_t *) afs_vop_advlock},	/* advlock */
     {&vop_bmap_desc, (vop_t *) afs_vop_bmap},	/* bmap */
-#ifndef AFS_FBSD50_ENV
-    {&vop_bwrite_desc, (vop_t *) vop_stdbwrite},
-#endif
     {&vop_close_desc, (vop_t *) afs_vop_close},	/* close */
     {&vop_createvobject_desc, (vop_t *) vop_stdcreatevobject},
     {&vop_destroyvobject_desc, (vop_t *) vop_stddestroyvobject},
@@ -204,9 +195,6 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_lookup_desc, (vop_t *) afs_vop_lookup},	/* lookup */
     {&vop_mkdir_desc, (vop_t *) afs_vop_mkdir},	/* mkdir */
     {&vop_mknod_desc, (vop_t *) afs_vop_mknod},	/* mknod */
-#ifndef AFS_FBSD50_ENV
-    {&vop_mmap_desc, (vop_t *) afs_vop_mmap},	/* mmap */
-#endif
     {&vop_open_desc, (vop_t *) afs_vop_open},	/* open */
     {&vop_pathconf_desc, (vop_t *) afs_vop_pathconf},	/* pathconf */
     {&vop_poll_desc, (vop_t *) afs_vop_poll},	/* select */
@@ -243,11 +231,6 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
     name[cnp->cn_namelen] = '\0'
 
 #define DROPNAME() FREE(name, M_TEMP)
-
-/* This is a bit of a cheat... */
-#ifdef AFS_FBSD50_ENV
-#define a_p a_td
-#endif
 
 #if defined(AFS_FBSD80_ENV)
 #define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags))
@@ -761,9 +744,6 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     struct vnode *vp;
     struct vcache *avc;
 
-#ifdef AFS_FBSD50_ENV
-    GIANT_REQUIRED;
-#endif
     vp = ap->a_vp;
     avc = VTOAFS(vp);
     if ((object = vp->v_object) == NULL) {
@@ -780,10 +760,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     {
 	vm_page_t m = ap->a_m[ap->a_reqpage];
 
-#ifdef AFS_FBSD50_ENV
 	VM_OBJECT_LOCK(object);
 	vm_page_lock_queues();
-#endif
 	if (m->valid != 0) {
 	    /* handled by vm_fault now        */
 	    /* vm_page_zero_invalid(m, TRUE); */
@@ -791,25 +769,19 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 		if (i != ap->a_reqpage)
 		    vm_page_free(ap->a_m[i]);
 	    }
-#ifdef AFS_FBSD50_ENV
 	    vm_page_unlock_queues();
 	    VM_OBJECT_UNLOCK(object);
-#endif
 	    return (0);
 	}
-#ifdef AFS_FBSD50_ENV
 	vm_page_unlock_queues();
 	VM_OBJECT_UNLOCK(object);
-#endif
     }
     bp = getpbuf(&afs_pbuf_freecnt);
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-#ifdef AFS_FBSD50_ENV
     cnt.v_vnodein++;
     cnt.v_vnodepgsin += npages;
-#endif
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
@@ -830,26 +802,20 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     relpbuf(bp, &afs_pbuf_freecnt);
 
     if (code && (uio.uio_resid == ap->a_count)) {
-#ifdef AFS_FBSD50_ENV
 	VM_OBJECT_LOCK(object);
 	vm_page_lock_queues();
-#endif
 	for (i = 0; i < npages; ++i) {
 	    if (i != ap->a_reqpage)
 		vm_page_free(ap->a_m[i]);
 	}
-#ifdef AFS_FBSD50_ENV
 	vm_page_unlock_queues();
 	VM_OBJECT_UNLOCK(object);
-#endif
 	return VM_PAGER_ERROR;
     }
 
     size = ap->a_count - uio.uio_resid;
-#ifdef AFS_FBSD50_ENV
     VM_OBJECT_LOCK(object);
     vm_page_lock_queues();
-#endif
     for (i = 0, toff = 0; i < npages; i++, toff = nextoff) {
 	vm_page_t m;
 	nextoff = toff + PAGE_SIZE;
@@ -901,10 +867,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	    }
 	}
     }
-#ifdef AFS_FBSD50_ENV
     vm_page_unlock_queues();
     VM_OBJECT_UNLOCK(object);
-#endif
     return 0;
 }
 
@@ -953,10 +917,6 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     struct vnode *vp;
     struct vcache *avc;
 
-#ifdef AFS_FBSD50_ENV
-    GIANT_REQUIRED;
-#endif
-
     vp = ap->a_vp;
     avc = VTOAFS(vp);
     /* Perhaps these two checks should just be KASSERTs instead... */
@@ -975,10 +935,8 @@ afs_vop_putpages(struct vop_putpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-#ifdef AFS_FBSD50_ENV
     cnt.v_vnodeout++;
     cnt.v_vnodepgsout += ap->a_count;
-#endif
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
@@ -1440,8 +1398,8 @@ afs_vop_inactive(ap)
     AFS_GLOCK();
     afs_InactiveVCache(VTOAFS(vp), 0);	/* decrs ref counts */
     AFS_GUNLOCK();
-#ifndef AFS_FBSD80_ENV
-    MA_VOP_UNLOCK(vp, 0, ap->a_p);
+#ifndef AFS_FBSD60_ENV
+    MA_VOP_UNLOCK(vp, 0, ap->a_td);
 #endif
     return 0;
 }
@@ -1480,8 +1438,10 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
      * XXX Pretend it worked, to prevent panic on shutdown
      * Garrett, please fix - Jim Rees
      */
-    if (code)
-	printf("afs_vop_reclaim: afs_FlushVCache failed code %d\n", code);
+    if (code) {
+	printf("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
+	VOP_PRINT(vp);
+    }
 
     /* basically, it must not fail */
     vnode_destroy_vobject(vp);

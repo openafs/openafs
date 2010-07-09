@@ -9,7 +9,9 @@
 
 #ifdef xbsa
 
+#include <afsconfig.h>
 #include <afs/param.h>
+
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <stdio.h>

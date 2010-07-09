@@ -96,6 +96,13 @@ rxi_xmit_init(osi_socket s)
                    &dwIn, sizeof(dwIn),
                    &dwOut, sizeof(dwOut),
                    &NumberOfBytes, NULL, NULL); 
+
+    /* Turn on UDP CIRCULAR QUEUEING messages */
+    dwIn = 1;
+    rc = WSAIoctl( s, SIO_ENABLE_CIRCULAR_QUEUEING,
+                   &dwIn, sizeof(dwIn),
+                   &dwOut, sizeof(dwOut),
+                   &NumberOfBytes, NULL, NULL);
 }
 
 int

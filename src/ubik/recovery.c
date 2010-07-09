@@ -226,6 +226,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 			     sizeof(afs_int32));
 	if (code != sizeof(afs_int32))
 	    break;
+	opcode = ntohl(opcode);
 	if (opcode == LOGNEW) {
 	    /* handle begin trans */
 	    tpos += sizeof(afs_int32);
@@ -250,10 +251,10 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    if (code != 3 * sizeof(afs_int32))
 		break;
 	    /* otherwise, skip over the data bytes, too */
-	    tpos += buffer[2] + 3 * sizeof(afs_int32);
+	    tpos += ntohl(buffer[2]) + 3 * sizeof(afs_int32);
 	} else {
-	    ubik_dprint("corrupt log opcode (%d) at position %d\n", opcode,
-			tpos);
+	    ubik_print("corrupt log opcode (%d) at position %d\n", opcode,
+		       tpos);
 	    break;		/* corrupt log! */
 	}
     }
@@ -269,6 +270,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 				 sizeof(afs_int32));
 	    if (code != sizeof(afs_int32))
 		break;
+	    opcode = ntohl(opcode);
 	    if (opcode == LOGNEW) {
 		/* handle begin trans */
 		tpos += sizeof(afs_int32);
@@ -339,8 +341,8 @@ ReplayLog(register struct ubik_dbase *adbase)
 		    len -= thisSize;
 		}
 	    } else {
-		ubik_dprint("corrupt log opcode (%d) at position %d\n",
-			    opcode, tpos);
+		ubik_print("corrupt log opcode (%d) at position %d\n",
+			   opcode, tpos);
 		break;		/* corrupt log! */
 	    }
 	}
@@ -350,7 +352,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    if (code)
 		return code;
 	} else {
-	    ubik_dprint("Log read error on pass 2\n");
+	    ubik_print("Log read error on pass 2\n");
 	    return UBADLOG;
 	}
     }

@@ -522,7 +522,7 @@ gc_get_blocksize(int alloc_id)
     return (gc_global.blk_sizes[alloc_id]);
 }
 
-int
+char *
 gc_get_tag(int alloc_id)
 {
     return (gc_global.tags[alloc_id]);

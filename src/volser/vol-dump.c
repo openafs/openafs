@@ -560,7 +560,9 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     int code = 0, failed_seek = 0, failed_write = 0;
     afs_int32 pad = 0;
     afs_int32 offset = 0;
-    afs_sfsize_t n, nbytes, howMany, howBig;
+    afs_sfsize_t nbytes, howBig;
+    ssize_t n;
+    size_t howMany;
     byte *p;
     afs_uint32 hi, lo;
 #ifndef AFS_NT40_ENV
@@ -642,7 +644,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	 */
 	if (n < howMany) {
 
-		if (verbose) fprintf(stderr, "  read %u instead of %u bytes.\n", n, howMany);
+		if (verbose) fprintf(stderr, "  read %u instead of %u bytes.\n", (unsigned)n, (unsigned)howMany);
 
 	    /* Record the read error */
 	    if (n < 0) {

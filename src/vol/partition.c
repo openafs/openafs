@@ -1205,7 +1205,11 @@ VLockPartition_r(char *name)
 #endif
 
     for (retries = 25; retries; retries--) {
-	dp->lock_fd = afs_open(partitionName, code);
+	if (code & O_CREAT)
+	    dp->lock_fd = afs_open(partitionName, code, 0644);
+	else
+	    dp->lock_fd = afs_open(partitionName, code);
+
 	if (dp->lock_fd != -1)
 	    break;
 	if (errno == ENOENT)

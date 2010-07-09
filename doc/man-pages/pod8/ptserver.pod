@@ -8,7 +8,7 @@ ptserver - Initializes the Protection Server
 <div class="synopsis">
 
 B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number of threads>>] >>> S<<< [B<-d> <I<debug level>>] >>>
-    [B<-rebuildDB>] S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
+    S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
     S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
     [B<-restricted>] [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-allow-dotted-principals>]
@@ -89,12 +89,6 @@ F</usr/afs/db/prdb>.
 Sets the number of server lightweight processes (LWPs or pthreads) to run.
 Provide a positive integer from the range C<3> to C<16>. The default
 value is C<3>.
-
-=item B<-rebuildDB>
-
-Rebuilds the Protection Database at the beginning of Protection Server
-initialization. Use this argument only in consultation with AFS
-Development or Product Support.
 
 =item B<-groupdepth> <I<# of nested groups>>, B<-depth> <I<# of nested groups>>
 

@@ -176,7 +176,7 @@ vol_DevName(dev_t adev, char *wpath)
 	if (stat(part, &status) == -1) {
 	    continue;
 	}
-#if !defined(AFS_SGI_XFS_IOPS_ENV) && !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_SGI_XFS_IOPS_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 	if ((status.st_ino !=
 	     ROOTINO) /*|| ((status.st_mode & S_IFMT) != S_IFBLK) */ ) {
 	    continue;

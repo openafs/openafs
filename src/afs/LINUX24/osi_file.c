@@ -18,14 +18,6 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "h/smp_lock.h"
-#if defined(AFS_LINUX26_ENV)
-#include "h/namei.h"
-#endif
-#if defined(LINUX_USE_FH)
-#include "h/exportfs.h"
-int cache_fh_type = -1;
-int cache_fh_len = -1;
-#endif
 
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
@@ -34,80 +26,6 @@ extern struct vfsmount *afs_cacheMnt;
 #endif
 extern struct super_block *afs_cacheSBp;
 
-#if defined(AFS_LINUX26_ENV) 
-struct file *
-afs_linux_raw_open(afs_dcache_id_t *ainode)
-{
-    struct inode *tip = NULL;
-    struct dentry *dp = NULL;
-    struct file* filp;
-
-#if !defined(LINUX_USE_FH)
-    tip = iget(afs_cacheSBp, ainode->ufs);
-    if (!tip)
-	osi_Panic("Can't get inode %d\n", (int) ainode->ufs);
-
-    dp = d_alloc_anon(tip);
-#else
-    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh,
-						 cache_fh_len, cache_fh_type);
-    if (!dp)
-           osi_Panic("Can't get dentry\n");
-    tip = dp->d_inode;
-#endif
-
-#if defined(S_NOATIME)
-    tip->i_flags |= S_NOATIME; /* Disable updating access times. */
-#else
-    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
-#endif
-
-#if defined(STRUCT_TASK_HAS_CRED)
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
-#else
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
-#endif
-    if (IS_ERR(filp))
-#if defined(LINUX_USE_FH)
-	osi_Panic("Can't open file\n");
-#else
-	osi_Panic("Can't open inode %d\n", (int) ainode->ufs);
-#endif
-    return filp;
-}
-
-void *
-osi_UFSOpen(afs_dcache_id_t *ainode)
-{
-    struct osi_file *afile = NULL;
-    extern int cacheDiskType;
-    struct file *filp = NULL;
-    AFS_STATCNT(osi_UFSOpen);
-    if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
-	osi_Panic("UFSOpen called for non-UFS cache\n");
-    }
-    if (!afs_osicred_initialized) {
-	/* valid for alpha_osf, SunOS, Ultrix */
-	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
-	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
-	afs_osicred_initialized = 1;
-    }
-    afile = (struct osi_file *)osi_AllocLargeSpace(sizeof(struct osi_file));
-    AFS_GUNLOCK();
-    if (!afile) {
-	osi_Panic("osi_UFSOpen: Failed to allocate %d bytes for osi_file.\n",
-		  (int)sizeof(struct osi_file));
-    }
-    memset(afile, 0, sizeof(struct osi_file));
-
-    afile->filp = afs_linux_raw_open(ainode);
-    afile->size = i_size_read(FILE_INODE(afile->filp));
-    AFS_GLOCK();
-    afile->offset = 0;
-    afile->proc = (int (*)())0;
-    return (void *)afile;
-}
-#else
 void *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
@@ -157,51 +75,10 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->proc = (int (*)())0;
     return (void *)afile;
 }
-#endif
 
-#if defined(LINUX_USE_FH)
-/*
- * Given a dentry, return the file handle as encoded by the filesystem.
- * We can't assume anything about the length (words, not bytes).
- * The cache has to live on a single filesystem with uniform file 
- * handles, otherwise we panic.
- */
-void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
-    int max_len;
-    int type;
-
-    if (cache_fh_len > 0)
-	max_len = cache_fh_len;
-    else
-	max_len = MAX_FH_LEN;
-    if (dp->d_sb->s_export_op->encode_fh) {
-        type = dp->d_sb->s_export_op->encode_fh(dp, &ainode->raw[0], &max_len, 0);
-        if (type == 255) {
-           osi_Panic("File handle encoding failed\n");
-        }
-        if (cache_fh_type < 0)
-            cache_fh_type = type;
-        if (cache_fh_len < 0) {
-            cache_fh_len = max_len;
-        }
-        if (type != cache_fh_type || max_len != cache_fh_len) {
-           osi_Panic("Inconsistent file handles within cache\n");
-        }
-    } else {
-         /* If fs doesn't provide an encode_fh method, assume the default INO32 type */
-	if (cache_fh_type < 0)
-	    cache_fh_type = FILEID_INO32_GEN;
-	if (cache_fh_len < 0)
-	    cache_fh_len = sizeof(struct fid)/4;
-        ainode->fh.i32.ino = dp->d_inode->i_ino;
-        ainode->fh.i32.gen = dp->d_inode->i_generation;
-    }
-}
-#else
 void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
     *ainode = dp->d_inode->i_ino;
 }
-#endif
 
 int
 afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
@@ -210,33 +87,13 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     AFS_STATCNT(osi_Stat);
     ObtainWriteLock(&afs_xosi, 320);
     astat->size = i_size_read(OSIFILE_INODE(afile));
-#if defined(AFS_LINUX26_ENV)
-    astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
-    astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;
-#else
     astat->mtime = OSIFILE_INODE(afile)->i_mtime;
     astat->atime = OSIFILE_INODE(afile)->i_atime;
-#endif
     code = 0;
     ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
-#ifdef AFS_LINUX26_ENV
-int
-osi_UFSClose(register struct osi_file *afile)
-{
-    AFS_STATCNT(osi_Close);
-    if (afile) {
-	if (OSIFILE_INODE(afile)) {
-	    filp_close(afile->filp, NULL);
-	}
-    }
-
-    osi_FreeLargeSpace(afile);
-    return 0;
-}
-#else
 int
 osi_UFSClose(register struct osi_file *afile)
 {
@@ -253,7 +110,6 @@ osi_UFSClose(register struct osi_file *afile)
     osi_FreeLargeSpace(afile);
     return 0;
 }
-#endif
 
 int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
@@ -291,12 +147,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = inode_change_ok(inode, &newattrs);
     if (!code) {
 #ifdef INODE_SETATTR_NOT_VOID
-#if defined(AFS_LINUX26_ENV)
-	if (inode->i_op && inode->i_op->setattr)
-	    code = inode->i_op->setattr(afile->filp->f_dentry, &newattrs);
-	else
-#endif
-	    code = inode_setattr(inode, &newattrs);
+	code = inode_setattr(inode, &newattrs);
 #else
         inode_setattr(inode, &newattrs);
 #endif
@@ -469,11 +320,7 @@ osi_InitCacheInfo(char *aname)
 int
 osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
-#ifdef AFS_LINUX26_ENV
-    struct file *filp = osifile->filp;
-#else
     struct file *filp = &osifile->file;
-#endif
     KERNEL_SPACE_DECL;
     int code = 0;
     struct iovec *iov;

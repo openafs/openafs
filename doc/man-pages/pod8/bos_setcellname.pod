@@ -42,14 +42,14 @@ machine is thus designated as the cell's first database server machine.
 =head1 CAUTIONS
 
 Issue this command only when the installing the cell's first AFS server
-machine. The I<IBM AFS Quick Beginnings> explains how to copy over the
+machine. The I<OpenAFS Quick Start Guide> explains how to copy over the
 F<ThisCell> and F<CellServDB> files from this or another appropriate
 machine during installation of additional server machines.
 
 Be sure to choose a satisfactory cell name when issuing this command,
 because changing a cell's name is very complicated; for one thing, it
 requires changing every password in the Authentication Database.  Consult
-the I<IBM AFS Administration Guide> for advice on choosing a cell name.
+the I<OpenAFS Administration Guide> for advice on choosing a cell name.
 
 =head1 OPTIONS
 
@@ -121,9 +121,11 @@ L<ThisCell(5)>,
 L<UserList(5)>,
 L<bos(8)>
 
-I<IBM AFS Quick Beginnings>
+The I<OpenAFS Quick Start Guide> at
+L<http://docs.openafs.org/QuickStartUnix/>.
 
-I<IBM AFS Administration Guide>
+The I<OpenAFS Administration Guide> at
+L<http://docs.openafs.org/AdminGuide/>.
 
 =head1 COPYRIGHT
 
