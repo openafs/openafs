@@ -32,9 +32,14 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     - Use filehandles for all Linux 2.6 versions to avoid
       incompatibilities with mismatched afsds.
     - Update Linux kernel support for 2.6.35.
+    - The stripped source tree generated for kernel module builds is now
+      truly architecture-independent and can build on i386 for amd64
+      kernels (for example).  (Closes: #518270)
   * Apply upstream deltas:
     - [bbce0515] Add NEWS entries for 1.5.75
     - [c790e7d0] Remove a few erroneous NEWS entries for 1.5.75
+  * openafs-modules-source and openafs-modules-dkms are now architecture:
+    all.  The generated kernel source is now architecture-independent.
   * Remove the lpia architecture.  This was an experiment in Ubuntu that
     has apparently been dropped.
   * Add preliminary support for powerpcspe, mapping that architecture to
