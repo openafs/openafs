@@ -181,7 +181,7 @@ afs_osi_SleepSig(void *event)
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 	schedule();
-	try_to_freeze();
+	afs_try_to_freeze();
 
 	AFS_GLOCK();
 	if (signal_pending(current)) {
@@ -261,7 +261,7 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 	    code = EINTR;
     }
 
-    try_to_freeze();
+    afs_try_to_freeze();
 
     AFS_GLOCK();
     remove_wait_queue(&evp->cond, &wait);
