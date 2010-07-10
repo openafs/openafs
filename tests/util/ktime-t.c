@@ -78,7 +78,7 @@ main(void)
 
     errors = 0;
     for (tt = testTimes; tt->time; tt++) {
-        t = 0;
+	temp = 0;
 	code = ktime_DateToLong(tt->time, &temp);
 	t = temp;
         if (tt->code == 1) {
