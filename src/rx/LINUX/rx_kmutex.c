@@ -21,6 +21,10 @@
 #include "rx_kmutex.h"
 #include "rx/rx_kernel.h"
 
+#ifdef HAVE_LINUX_FREEZER_H
+# include <linux/freezer.h>
+#endif
+
 void
 afs_mutex_init(afs_kmutex_t * l)
 {
