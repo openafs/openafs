@@ -240,29 +240,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     code = kernel_recvmsg(sop, &msg, (struct kvec *)tmpvec, iovcnt,
 			  *lengthp, 0);
     if (code < 0) {
-#ifdef CONFIG_PM
-	if (
-# ifdef PF_FREEZE
-	    current->flags & PF_FREEZE
-# else
-#  if defined(STRUCT_TASK_STRUCT_HAS_TODO)
-	    !current->todo
-#  else
-#   if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-            test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#   else
-            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#   endif
-#  endif
-# endif
-	    )
-# ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-	    refrigerator(PF_FREEZE);
-# else
-	    refrigerator();
-# endif
-	    set_current_state(TASK_INTERRUPTIBLE);
-#endif
+	afs_try_to_freeze();
 
 	/* Clear the error before using the socket again.
 	 * Oh joy, Linux has hidden header files as well. It appears we can
