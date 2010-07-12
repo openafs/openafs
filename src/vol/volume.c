@@ -836,14 +836,15 @@ VInitAttachVolumes(ProgramType pt)
         /* create threads to scan disk partitions. */
 	for (i=0; i < threads; i++) {
 	    struct vinitvolumepackage_thread_param *params;
-	    params = (struct vinitvolumepackage_thread_param *)malloc(sizeof(struct vinitvolumepackage_thread_param));
+            AFS_SIGSET_DECL;
+
+            params = (struct vinitvolumepackage_thread_param *)malloc(sizeof(struct vinitvolumepackage_thread_param));
             assert(params);
             params->pq = &pq;
             params->vq = &vq;
             params->nthreads = threads;
             params->thread = i+1;
 
-            AFS_SIGSET_DECL;
             AFS_SIGSET_CLEAR();
 	    assert(pthread_create (&tid, &attrs, &VInitVolumePackageThread, (void*)params) == 0);
             AFS_SIGSET_RESTORE();
@@ -8451,8 +8452,9 @@ VPrintExtendedCacheStats_r(int flags)
     /* print extended VLRU statistics */
     if (VVLRUExtStats_r(&vlru_stats, vol_sum) == 0) {
 	afs_uint32 idx, cur, lpos;
-	VOL_UNLOCK;
 	VolumeId line[5];
+
+        VOL_UNLOCK;
 
 	Log("VLRU State Dump:\n\n");
 
