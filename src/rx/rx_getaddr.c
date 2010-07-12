@@ -329,7 +329,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 	    }
 	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
-	    if (!rx_IsLoopbackAddr(ntohl(a->sin_addr.s_addr))) ) {
+	    if (!rx_IsLoopbackAddr(ntohl(a->sin_addr.s_addr))) {
 		if (count >= maxSize) {	/* no more space */
 		    dpf(("Too many interfaces..ignoring 0x%x\n",
 			   a->sin_addr.s_addr));
