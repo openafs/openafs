@@ -173,11 +173,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 	return code;
     ObtainWriteLock(&afs_xosi, 321);
     AFS_GUNLOCK();
-#ifdef STRUCT_INODE_HAS_I_MUTEX
-    mutex_lock(&inode->i_mutex);
-#else
-    down(&inode->i_sem);
-#endif
+    afs_linux_lock_inode(inode);
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     down_write(&inode->i_alloc_sem);
 #endif
@@ -203,11 +199,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     up_write(&inode->i_alloc_sem);
 #endif
-#ifdef STRUCT_INODE_HAS_I_MUTEX
-    mutex_unlock(&inode->i_mutex);
-#else
-    up(&inode->i_sem);
-#endif
+    afs_linux_unlock_inode(inode);
     AFS_GLOCK();
     ReleaseWriteLock(&afs_xosi);
     return code;
