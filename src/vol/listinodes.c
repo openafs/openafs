@@ -488,6 +488,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     char tmpName[32];
     b64_string_t stmp;
     int tag;
+    afs_ino_str_t stmp;
 
     *rename = 0;
     (void)sprintf(path, "%s/%s", dir, name);
@@ -495,7 +496,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     if (info->ili_magic != XFS_VICEMAGIC) {
 	Log("%s  magic for %s/%s (inode %s) from %d to %d\n",
 	    Testing ? "Would have changed" : "Changing", dir, name,
-	    PrintInode(NULL, info->ili_info.inodeNumber), info->ili_magic,
+	    PrintInode(stmp, info->ili_info.inodeNumber), info->ili_magic,
 	    XFS_VICEMAGIC);
 	if (!Testing)
 	    update_chown = 1;
@@ -505,7 +506,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     if (info->ili_vno != AFS_XFS_VNO_CLIP(vno)) {
 	Log("%s volume id for %s/%s (inode %s) from %d to %d\n",
 	    Testing ? "Would have changed" : "Changing", dir, name,
-	    PrintInode(NULL, info->ili_info.inodeNumber), info->ili_vno,
+	    PrintInode(stmp, info->ili_info.inodeNumber), info->ili_vno,
 	    AFS_XFS_VNO_CLIP(vno));
 	if (!Testing)
 	    update_chown = 1;
@@ -538,7 +539,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     if (strncmp(name, tmpName, strlen(tmpName))) {
 	Log("%s name %s (inode %s) in directory %s, unique=%d, tag=%d\n",
 	    Testing ? "Would have returned bad" : "Bad", name,
-	    PrintInode(NULL, info->ili_info.inodeNumber), dir,
+	    PrintInode(stmp, info->ili_info.inodeNumber), dir,
 	    info->ili_info.param[2], info->ili_tag);
 	if (!Testing)
 	    *rename = 1;
@@ -554,7 +555,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
 	    p = strchr(tmpName + 1, '.');
 	    if (!p) {
 		Log("No tag found on name %s (inode %s)in directory, %s.\n",
-		    name, PrintInode(NULL, info->ili_info.inodeNumber), dir,
+		    name, PrintInode(stmp, info->ili_info.inodeNumber), dir,
 		    Testing ? "would have renamed" : "will rename");
 		if (!Testing)
 		    *rename = 1;
@@ -562,7 +563,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
 		tag = base64_to_int(p + 1);
 		Log("%s the tag for %s (inode %s) from %d to %d.\n",
 		    Testing ? "Would have changed" : "Will change", path,
-		    PrintInode(NULL, info->ili_info.inodeNumber), dir, tag,
+		    PrintInode(stmp, info->ili_info.inodeNumber), dir, tag,
 		    info->ili_tag);
 		if (!Testing)
 		    update_tag = 1;
@@ -1500,8 +1501,9 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    /* Unlink the old special inode; otherwise we will get duplicate
 	     * special inodes if we recreate the RO again */
 	    if (IH_DEC(ih, specinos[j].inodeNumber, volumeId) == -1) {
+		afs_ino_str_t stmp;
 		Log("IH_DEC failed: %x, %s, %u errno %d\n", ih,
-		    PrintInode(NULL, specinos[j].inodeNumber), volumeId, errno);
+		    PrintInode(stmp, specinos[j].inodeNumber), volumeId, errno);
 	    }
 
 	    IH_RELEASE(ih);

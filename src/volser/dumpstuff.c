@@ -712,6 +712,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_foff_t howFar = 0;
     byte *p;
     afs_uint32 hi, lo;
+    afs_ino_str_t stmp;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
@@ -795,9 +796,9 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    /* Record the read error */
 	    if (n < 0) {
 		n = 0;
-		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d: %s\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode, afs_error_message(errno));
+		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d: %s\n", PrintInode(stmp, handleP->fd_ih->ih_ino), vnode, afs_error_message(errno));
 	    } else if (!pad) {
-		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
+		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d\n", PrintInode(stmp, handleP->fd_ih->ih_ino), vnode);
 	    }
 
 	    /* Pad the rest of the buffer with zeros. Remember offset we started
