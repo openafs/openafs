@@ -1318,6 +1318,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
     DirHandle childdir;		/* Handle for dir package I/O */
     Error errorCode = 0;
     int code;
+    afs_ino_str_t stmp;
 
     /* watch for invalid names */
     if (!strcmp(Name, ".") || !strcmp(Name, ".."))
@@ -1386,7 +1387,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	    if (errorCode == -1) {
 		ViceLog(0,
 			("DT: inode=%s, name=%s, errno=%d\n",
-			 PrintInode(NULL, VN_GET_INO(*targetptr)), Name,
+			 PrintInode(stmp, VN_GET_INO(*targetptr)), Name,
 			 errno));
 		if (errno != ENOENT)
 		{
@@ -1722,6 +1723,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
     Error temp;
     Inode inode = 0;
     Inode nearInode;		/* hint for inode allocation in solaris */
+    afs_ino_str_t stmp;
 
     if ((errorCode =
 	 AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
@@ -1777,7 +1779,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	    if (IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
 		ViceLog(0,
 			("Alloc_NewVnode: partition %s idec %s failed\n",
-			 volptr->partition->name, PrintInode(NULL, inode)));
+			 volptr->partition->name, PrintInode(stmp, inode)));
 	    IH_RELEASE((*targetptr)->handle);
 
 	    return errorCode;
@@ -1793,7 +1795,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	if (IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
 	    ViceLog(0,
 		    ("Alloc_NewVnode: partition %s idec %s failed\n",
-		     volptr->partition->name, PrintInode(NULL, inode)));
+		     volptr->partition->name, PrintInode(stmp, inode)));
 	IH_RELEASE((*targetptr)->handle);
 	return (errorCode);
     }
@@ -3859,6 +3861,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
+    afs_ino_str_t stmp;
 
     FidZero(&olddir);
     FidZero(&newdir);
@@ -4147,7 +4150,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 		if (errorCode == -1) {
 		    ViceLog(0,
 			    ("Del: inode=%s, name=%s, errno=%d\n",
-			     PrintInode(NULL, VN_GET_INO(newfileptr)),
+			     PrintInode(stmp, VN_GET_INO(newfileptr)),
 			     NewName, errno));
 		    if ((errno != ENOENT) && (errno != EIO)
 			&& (errno != ENXIO))
@@ -7270,6 +7273,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     ssize_t nBytes;
     FdHandle_t *fdP, *origfdP = NULL;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
+    afs_ino_str_t stmp;
 
 #if FS_STATS_DETAILED
     /*
@@ -7302,7 +7306,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 */
 	ViceLog(25,
 		("StoreData_RXStyle : Opening inode %s\n",
-		 PrintInode(NULL, VN_GET_INO(targetptr))));
+		 PrintInode(stmp, VN_GET_INO(targetptr))));
 	fdP = IH_OPEN(targetptr->handle);
 	if (fdP == NULL)
 	    return ENOENT;
@@ -7318,7 +7322,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    afs_fsize_t size;
 	    ViceLog(25,
 		    ("StoreData_RXStyle : inode %s has more than onelink\n",
-		     PrintInode(NULL, VN_GET_INO(targetptr))));
+		     PrintInode(stmp, VN_GET_INO(targetptr))));
 	    /* other volumes share this data, better copy it first */
 
 	    /* Adjust the disk block count by the creation of the new inode.

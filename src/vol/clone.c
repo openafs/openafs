@@ -174,6 +174,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     afs_int32 offset = 0;
     afs_int32 dircloned, inodeinced;
     afs_int32 filecount = 0, diskused = 0;
+    afs_ino_str_t stmp;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
@@ -260,7 +261,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
 		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
-			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
+			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
@@ -313,7 +314,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
 		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
-			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
+			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);

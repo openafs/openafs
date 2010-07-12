@@ -1970,6 +1970,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 
     /* Fix actual inode counts */
     if (!Showmode) {
+	afs_ino_str_t stmp;
 	Log("totalInodes %d\n",totalInodes);
 	for (ip = inodes; totalInodes; ip++, totalInodes--) {
 	    static int TraceBadLinkCounts = 0;
@@ -1982,14 +1983,14 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 #endif
 	    if (ip->linkCount != 0 && TraceBadLinkCounts) {
 		TraceBadLinkCounts--;	/* Limit reports, per volume */
-		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %llu, p=(%u,%u,%u,%u)\n", ip->linkCount, PrintInode(NULL, ip->inodeNumber), (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]);
+		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %llu, p=(%u,%u,%u,%u)\n", ip->linkCount, PrintInode(stmp, ip->inodeNumber), (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]);
 	    }
 	    while (ip->linkCount > 0) {
 		/* below used to assert, not break */
 		if (!Testing) {
 		    if (IH_DEC(salvinfo->VGLinkH, ip->inodeNumber, ip->u.param[0])) {
 			Log("idec failed. inode %s errno %d\n",
-			    PrintInode(NULL, ip->inodeNumber), errno);
+			    PrintInode(stmp, ip->inodeNumber), errno);
 			break;
 		    }
 		}
@@ -2000,7 +2001,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 		if (!Testing) {
 		    if (IH_INC(salvinfo->VGLinkH, ip->inodeNumber, ip->u.param[0])) {
 			Log("iinc failed. inode %s errno %d\n",
-			    PrintInode(NULL, ip->inodeNumber), errno);
+			    PrintInode(stmp, ip->inodeNumber), errno);
 			break;
 		    }
 		}
@@ -2200,11 +2201,12 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	}
     }
     for (i = 0; i < isp->nSpecialInodes; i++) {
+	afs_ino_str_t stmp;
 	ip = &inodes[isp->index + i];
 	if (ip->u.special.type <= 0 || ip->u.special.type > MAXINODETYPE) {
 	    if (check) {
 		Log("Rubbish header inode %s of type %d\n",
-		    PrintInode(NULL, ip->inodeNumber),
+		    PrintInode(stmp, ip->inodeNumber),
 		    ip->u.special.type);
 		if (skip) {
 		    free(skip);
@@ -2212,17 +2214,17 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		return -1;
 	    }
 	    Log("Rubbish header inode %s of type %d; deleted\n",
-	        PrintInode(NULL, ip->inodeNumber),
+	        PrintInode(stmp, ip->inodeNumber),
 	        ip->u.special.type);
 	} else if (!stuff[ip->u.special.type - 1].obsolete) {
 	    if (skip && skip[i]) {
 		if (orphans == ORPH_REMOVE) {
 		    Log("Removing orphan special inode %s of type %d\n",
-		        PrintInode(NULL, ip->inodeNumber), ip->u.special.type);
+		        PrintInode(stmp, ip->inodeNumber), ip->u.special.type);
 		    continue;
 		} else {
 		    Log("Ignoring orphan special inode %s of type %d\n",
-		        PrintInode(NULL, ip->inodeNumber), ip->u.special.type);
+		        PrintInode(stmp, ip->inodeNumber), ip->u.special.type);
 		    /* fall through to the ip->linkCount--; line below */
 		}
 	    } else {
@@ -2728,13 +2730,14 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 		    ip++;
 		    nInodes--;
 		} else {	/* no matching inode */
+		    afs_ino_str_t stmp;
 		    if (VNDISK_GET_INO(vnode) != 0
 			|| vnode->type == vDirectory) {
 			/* No matching inode--get rid of the vnode */
 			if (check) {
 			    if (VNDISK_GET_INO(vnode)) {
 				if (!Showmode) {
-				    Log("Vnode %d (unique %u): corresponding inode %s is missing\n", vnodeNumber, vnode->uniquifier, PrintInode(NULL, VNDISK_GET_INO(vnode)));
+				    Log("Vnode %d (unique %u): corresponding inode %s is missing\n", vnodeNumber, vnode->uniquifier, PrintInode(stmp, VNDISK_GET_INO(vnode)));
 				}
 			    } else {
 				if (!Showmode)
@@ -2746,7 +2749,7 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 			if (VNDISK_GET_INO(vnode)) {
 			    if (!Showmode) {
 				time_t serverModifyTime = vnode->serverModifyTime;
-				Log("Vnode %d (unique %u): corresponding inode %s is missing; vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, PrintInode(NULL, VNDISK_GET_INO(vnode)), ctime(&serverModifyTime));
+				Log("Vnode %d (unique %u): corresponding inode %s is missing; vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, PrintInode(stmp, VNDISK_GET_INO(vnode)), ctime(&serverModifyTime));
 			    }
 			} else {
 			    if (!Showmode) {
@@ -4406,6 +4409,7 @@ PrintInodeList(struct SalvInfo *salvinfo)
     struct ViceInodeInfo *buf;
     struct afs_stat status;
     int nInodes;
+    afs_ino_str_t stmp;
 
     assert(afs_fstat(salvinfo->inodeFd, &status) == 0);
     buf = (struct ViceInodeInfo *)malloc(status.st_size);
@@ -4414,7 +4418,7 @@ PrintInodeList(struct SalvInfo *salvinfo)
     assert(read(salvinfo->inodeFd, buf, status.st_size) == status.st_size);
     for (ip = buf; nInodes--; ip++) {
 	Log("Inode:%s, linkCount=%d, size=%#llx, p=(%u,%u,%u,%u)\n",
-	    PrintInode(NULL, ip->inodeNumber), ip->linkCount,
+	    PrintInode(stmp, ip->inodeNumber), ip->linkCount,
 	    (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1],
 	    ip->u.param[2], ip->u.param[3]);
     }

@@ -127,6 +127,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     struct stat st;
     struct VolumeHeader tempHeader;
     struct afs_inode_info stuff[MAXINODETYPE];
+    afs_ino_str_t stmp;
 # ifdef AFS_DEMAND_ATTACH_FS
     int locktype = 0;
 # endif /* AFS_DEMAND_ATTACH_FS */
@@ -271,7 +272,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	fdP = IH_OPEN(handle);
 	if (fdP == NULL) {
 	    Log("VCreateVolume:  Problem iopen inode %s (err=%d)\n",
-		PrintInode(NULL, *(p->inode)), errno);
+		PrintInode(stmp, *(p->inode)), errno);
 	    goto bad;
 	}
 	if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
@@ -283,7 +284,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	if (FDH_WRITE(fdP, (char *)&p->stamp, sizeof(p->stamp)) !=
 	    sizeof(p->stamp)) {
 	    Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
-		PrintInode(NULL, *(p->inode)), errno);
+		PrintInode(stmp, *(p->inode)), errno);
 	    FDH_REALLYCLOSE(fdP);
 	    goto bad;
 	}
@@ -296,7 +297,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     fdP = IH_OPEN(handle);
     if (fdP == NULL) {
 	Log("VCreateVolume:  Problem iopen inode %s (err=%d)\n",
-	    PrintInode(NULL, tempHeader.volumeInfo), errno);
+	    PrintInode(stmp, tempHeader.volumeInfo), errno);
 	goto bad;
     }
     if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
@@ -307,7 +308,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     }
     if (FDH_WRITE(fdP, (char *)&vol, sizeof(vol)) != sizeof(vol)) {
 	Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
-	    PrintInode(NULL, tempHeader.volumeInfo), errno);
+	    PrintInode(stmp, tempHeader.volumeInfo), errno);
 	FDH_REALLYCLOSE(fdP);
 	goto bad;
     }

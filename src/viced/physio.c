@@ -52,13 +52,14 @@ ReallyRead(DirHandle * file, int block, char *data)
     int code;
     ssize_t rdlen;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
 	code = errno;
 	ViceLog(0,
 		("ReallyRead(): open failed device %X inode %s errno %d\n",
-		 file->dirh_handle->ih_dev, PrintInode(NULL,
+		 file->dirh_handle->ih_dev, PrintInode(stmp,
 						       file->dirh_handle->
 						       ih_ino), code));
 	return code;
@@ -81,7 +82,7 @@ ReallyRead(DirHandle * file, int block, char *data)
 	    code = EIO;
 	ViceLog(0,
 		("ReallyRead(): read failed device %X inode %s errno %d\n",
-		 file->dirh_handle->ih_dev, PrintInode(NULL,
+		 file->dirh_handle->ih_dev, PrintInode(stmp,
 						       file->dirh_handle->
 						       ih_ino), code));
 	FDH_REALLYCLOSE(fdP);
@@ -98,12 +99,13 @@ ReallyWrite(DirHandle * file, int block, char *data)
 {
     ssize_t count;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
 	ViceLog(0,
 		("ReallyWrite(): open failed device %X inode %s errno %d\n",
-		 file->dirh_handle->ih_dev, PrintInode(NULL,
+		 file->dirh_handle->ih_dev, PrintInode(stmp,
 						       file->dirh_handle->
 						       ih_ino), errno));
 	lpErrno = errno;
@@ -122,7 +124,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
     if ((count = FDH_WRITE(fdP, data, PAGESIZE)) != PAGESIZE) {
 	ViceLog(0,
 		("ReallyWrite(): write failed device %X inode %s errno %d\n",
-		 file->dirh_handle->ih_dev, PrintInode(NULL,
+		 file->dirh_handle->ih_dev, PrintInode(stmp,
 						       file->dirh_handle->
 						       ih_ino), errno));
 	lpCount = count;

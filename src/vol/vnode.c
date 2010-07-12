@@ -883,6 +883,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
     ssize_t nBytes;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 
     *ec = 0;
     vcp->reads++;
@@ -898,7 +899,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) {
 	Log("VnLoad: can't open index dev=%u, i=%s\n", vp->device,
-	    PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
+	    PrintInode(stmp, vp->vnodeIndex[class].handle->ih_ino));
 	*ec = VIO;
 	goto error_encountered_nolock;
     } else if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, Vn_id(vnp)), SEEK_SET)
@@ -912,7 +913,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	 * or the inode table is full. */
 	if (nBytes == BAD_IGET) {
 	    Log("VnLoad: bad inumber %s\n",
-		PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
+		PrintInode(stmp, vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
 	    dosalv = 0;
 	} else if (nBytes == -1 && errno == EIO) {
@@ -1010,6 +1011,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
     afs_foff_t offset;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 #ifdef AFS_DEMAND_ATTACH_FS
     VnState vn_state_save;
 #endif
@@ -1042,7 +1044,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	FDH_REALLYCLOSE(fdP);
 	if (nBytes == BAD_IGET) {
 	    Log("VnStore: bad inumber %s\n",
-		PrintInode(NULL,
+		PrintInode(stmp,
 			   vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
 	    VOL_LOCK;
