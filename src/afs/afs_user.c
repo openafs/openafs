@@ -490,7 +490,8 @@ afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 	 * structure
 	 */
 	if (pu && pu->exporter) {
-	    (void)EXP_HOLD(tu->exporter = pu->exporter);
+	    tu->exporter = pu->exporter;
+	    (void)EXP_HOLD(tu->exporter);
 	}
     }
     tu->uid = auid;

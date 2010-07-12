@@ -162,6 +162,7 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     int nb, mnb;		/* number of blocks for hashTable */
     int i;
     struct memoryHTBlock **b;
+    afs_int32 *plen;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -203,7 +204,8 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     if ((code = set_word_addr(ut, 0, &db.h, &ht->table, htonl(b[0]->a))))
 	return code;
 
-    if ((code = set_word_addr(ut, 0, &db.h, &ht->length, htonl(len))))
+    plen = &ht->length;
+    if ((code = set_word_addr(ut, 0, &db.h, plen, htonl(len))))
 	return code;
     mht->length = len;
     return 0;
@@ -216,6 +218,7 @@ ht_FreeTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     afs_int32 code;
     struct blockHeader bh;
     dbadr a, na;
+    afs_int32 *plen, *pprog;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -233,9 +236,11 @@ ht_FreeTable(struct ubik_trans *ut, struct memoryHashTable *mht)
 	if ((code = FreeBlock(ut, &bh, a)))
 	    return code;
     }
+    plen = &ht->oldLength;
+    pprog = &ht->progress;
     if (set_word_addr(ut, 0, &db.h, &ht->oldTable, 0)
-	|| set_word_addr(ut, 0, &db.h, &ht->oldLength, 0)
-	|| set_word_addr(ut, 0, &db.h, &ht->progress, 0))
+	|| set_word_addr(ut, 0, &db.h, plen, 0)
+	|| set_word_addr(ut, 0, &db.h, pprog, 0))
 	return BUDB_IO;
     mht->oldLength = mht->progress = 0;
     return 0;
@@ -796,6 +801,7 @@ ht_MoveEntries(struct ubik_trans *ut, struct memoryHashTable *mht)
     int count;
     int bo;
     afs_int32 code;
+    afs_int32 *pprog;
 
     if (mht->oldLength == 0)
 	return 0;
@@ -839,7 +845,8 @@ ht_MoveEntries(struct ubik_trans *ut, struct memoryHashTable *mht)
     if (mht->progress >= mht->oldLength)
 	return (ht_FreeTable(ut, mht));
 
-    if (set_word_addr(ut, 0, &db.h, &mht->ht->progress, htonl(mht->progress))) {
+    pprog = &mht->ht->progress;
+    if (set_word_addr(ut, 0, &db.h, pprog, htonl(mht->progress))) {
 	Log("ht_MoveEntries: progress set failed\n");
 	return BUDB_IO;
     }
@@ -914,6 +921,7 @@ ht_HashIn(struct ubik_trans *ut,
     struct memoryHTBlock *block;
     int bo;
     afs_int32 code;
+    afs_int32 *pentries;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -945,8 +953,9 @@ ht_HashIn(struct ubik_trans *ut,
     LogDebug(5, "Hashin: set %"AFS_PTR_FMT" to %d\n",
 	     &block->b.bucket[bo], htonl(ea));
 
+    pentries = &ht->entries;
     code =
-	set_word_addr(ut, 0, &db.h, &ht->entries,
+	set_word_addr(ut, 0, &db.h, pentries,
 		      htonl(ntohl(ht->entries) + 1));
     if (code)
 	return BUDB_IO;
@@ -1002,6 +1011,7 @@ ht_HashOutT(struct ubik_trans *ut, struct memoryHashTable *mht,
     struct memoryHTBlock *block;
     int bo;
     afs_int32 code;
+    afs_int32 *pentries;
 
     if ((old ? mht->oldLength : mht->length) == 0)
 	return -1;
@@ -1044,8 +1054,9 @@ ht_HashOutT(struct ubik_trans *ut, struct memoryHashTable *mht,
     }
   done:
 #endif
+    pentries = &mht->ht->entries;
     if (set_word_addr
-	(ut, 0, &db.h, &mht->ht->entries, htonl(ntohl(mht->ht->entries) - 1)))
+	(ut, 0, &db.h, pentries, htonl(ntohl(mht->ht->entries) - 1)))
 	return BUDB_IO;
     return 0;
 }
