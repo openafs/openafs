@@ -102,11 +102,6 @@ AC_ARG_ENABLE([unix-sockets],
         [disable use of unix domain sockets for fssync (defaults to enabled)])],
     ,
     [enable_unix_sockets="yes"])
-AC_ARG_ENABLE([icmp-pmtu-discovery],
-    [AS_HELP_STRING([--enable-icmp-pmtu-discovery],
-        [enable path MTU discovery by decoding ICMP unreachable replies])],
-    , 
-    [enable_icmp_pmtu_discovery="no"])
 AC_ARG_ENABLE([tivoli-tsm],
     [AS_HELP_STRING([--enable-tivoli-tsm],
         [enable use of the Tivoli TSM API libraries for butc support])],
@@ -1129,10 +1124,8 @@ else
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
 
-if test "$enable_icmp_pmtu_discovery" = "yes"; then
-   if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
-   fi
 fi
 
 if test "$enable_namei_fileserver" = "yes"; then
