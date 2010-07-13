@@ -261,10 +261,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	osi_Assert(filePos <= avc->f.m.Length);
 #else
 	if (filePos > avc->f.m.Length) {
-#if defined(AFS_DISCON_ENV)
 	    if (AFS_IS_DISCON_RW)
    		afs_PopulateDCache(avc, filePos, &treq);
-#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
@@ -565,10 +563,8 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	osi_Assert(filePos <= avc->f.m.Length);
 #else
 	if (filePos > avc->f.m.Length) {
-#if defined(AFS_DISCON_ENV)
 	    if (AFS_IS_DISCON_RW)
 		afs_PopulateDCache(avc, filePos, &treq);
-#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
@@ -867,22 +863,17 @@ afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
     ObtainSharedLock(&avc->lock, 18);
     code = 0;
     if (avc->execsOrWriters > 0) {
-
     	if (!AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
-		/* Your average flush. */
-
-		/* put the file back */
-		UpgradeSToWLock(&avc->lock, 41);
-		code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
-		ConvertWToSLock(&avc->lock);
-
-#if defined(AFS_DISCON_ENV)
+	    /* Your average flush. */
+	    
+	    /* put the file back */
+	    UpgradeSToWLock(&avc->lock, 41);
+	    code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
+	    ConvertWToSLock(&avc->lock);
 	} else {
-
 	    UpgradeSToWLock(&avc->lock, 711);
 	    afs_DisconAddDirty(avc, VDisconWriteFlush, 1);
 	    ConvertWToSLock(&avc->lock);
-#endif
     	}		/* if not disconnected */
     }			/* if (avc->execsOrWriters > 0) */
 

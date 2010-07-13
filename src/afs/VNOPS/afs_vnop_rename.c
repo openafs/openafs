@@ -191,7 +191,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	      SHARED_LOCK, NULL));
 
     } else {
-#if defined(AFS_DISCON_ENV)
 	/* Disconnected. */
 
 	/* Seek moved file vcache. */
@@ -233,7 +232,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	} else {
 	    code = ENOENT;
 	}			/* if (tvc) */
-#endif
     }				/* if !(AFS_IS_DISCON_RW)*/
     returnCode = code;		/* remember for later */
 
@@ -408,13 +406,11 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    tdc1 = afs_FindDCache(tvc, (afs_size_t) 0);
 	    if (tdc1) {
 		if (AFS_IS_DISCON_RW) {
-#if defined(AFS_DISCON_ENV)
 		    /* If disconnected, we need to fix (not discard) the "..".*/
 		    afs_dir_ChangeFid(tdc1,
 		    	"..",
 		    	&aodp->f.fid.Fid.Vnode,
 			&andp->f.fid.Fid.Vnode);
-#endif
 		} else {
 		    ObtainWriteLock(&tdc1->lock, 648);
 		    ZapDCE(tdc1);	/* mark as unknown */

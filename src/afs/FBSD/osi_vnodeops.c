@@ -1466,12 +1466,8 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
 	AFS_GLOCK();
     if (!haveVlock)
 	ObtainWriteLock(&afs_xvcache, 901);
-#ifndef AFS_DISCON_ENV
-    code = afs_FlushVCache(avc, &slept);	/* tosses our stuff from vnode */
-#else
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
     code = afs_FlushVS(avc);
-#endif
     if (!haveVlock)
 	ReleaseWriteLock(&afs_xvcache);
     if (!haveGlock)

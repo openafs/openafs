@@ -37,7 +37,6 @@ extern afs_rwlock_t afs_xcbhash;
  * is just a performance hit.
  */
 
-#ifdef AFS_DISCON_ENV
 static int
 afs_DisconCreateSymlink(struct vcache *avc, char *aname, 
 		        struct vrequest *areq) {
@@ -63,7 +62,6 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
     ReleaseWriteLock(&tdc->lock);
     return 0;
 }
-#endif
 
 /* don't set CDirty in here because RPC is called synchronously */
 int 
@@ -189,11 +187,9 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 		     SHARED_LOCK, NULL));
     } else {
-#ifdef AFS_DISCON_ENV
 	newFid.Cell = adp->f.fid.Cell;
 	newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afs_GenFakeFid(&newFid, VREG, 0);
-#endif
     }
 
     ObtainWriteLock(&afs_xvcache, 40);
@@ -263,7 +259,6 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ReleaseWriteLock(&afs_xcbhash);
 
     if (AFS_IS_DISCON_RW) {
-#ifdef AFS_DISCON_ENV
 	attrs->va_mode = InStatus.UnixModeBits;
 	afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VLNK);
 	code = afs_DisconCreateSymlink(tvc, atargetName, &treq);
@@ -276,7 +271,6 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    goto done;
 	}
 	afs_DisconAddDirty(tvc, VDisconCreate, 0);
-#endif
     } else {
 	afs_ProcessFS(tvc, &OutFidStatus, &treq);
     }

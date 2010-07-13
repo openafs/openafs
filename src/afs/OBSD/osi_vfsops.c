@@ -237,12 +237,10 @@ afs_mount(mp, path, data, ndp, p)
     AFS_STATCNT(afs_mount);
     AFS_GLOCK();
 
-#ifdef AFS_DISCON_ENV
     /* initialize the vcache entries before we start using them */
 
     /* XXX find a better place for this if possible  */
     init_vcache_entries();
-#endif
     afs_globalVFS = mp;
     mp->osi_vfs_bsize = 8192;
     mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
@@ -276,9 +274,7 @@ afs_unmount(afsp, flags, p)
     }
 
     AFS_STATCNT(afs_unmount);
-#ifdef AFS_DISCON_ENV
     give_up_cbs();
-#endif
     if (afs_globalVFS == NULL) {
 	printf("afs already unmounted\n");
 	return 0;
@@ -385,7 +381,7 @@ int
 afs_sync(struct osi_vfs *afsp)
 {
     AFS_STATCNT(afs_sync);
-#if defined(AFS_DISCON_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_OBSD27_ENV)
     /* Can't do this in OpenBSD 2.7, it faults when called from apm_suspend() */
     store_dirty_vcaches();
 #endif

@@ -69,14 +69,12 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 
     ObtainReadLock(&tvc->lock);
 
-#ifdef AFS_DISCON_ENV
     if (AFS_IS_DISCONNECTED && (afs_DCacheMissingChunks(tvc) != 0)) {
        ReleaseReadLock(&tvc->lock);
        /* printf("Network is down in afs_open: missing chunks\n"); */
        code = ENETDOWN;
        goto done;
     }
-#endif
 
     ReleaseReadLock(&tvc->lock);
 

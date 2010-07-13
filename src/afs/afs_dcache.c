@@ -3284,8 +3284,6 @@ afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos,
     return tdc;
 }
 
-#if defined(AFS_DISCON_ENV)
-
 /*!
  * Make a shadow copy of a dir's dcache. It's used for disconnected
  * operations like remove/create/rename to keep the original directory data.
@@ -3486,5 +3484,3 @@ afs_PopulateDCache(struct vcache *avc, afs_size_t apos, struct vrequest *areq)
 	start++;
     }
 }
-
-#endif

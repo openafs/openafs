@@ -102,11 +102,6 @@ AC_ARG_ENABLE([demand-attach-fs],
         [enable Demand Attach Fileserver (please see documentation)])],
     , 
     [enable_demand_attach_fs="no"])
-AC_ARG_ENABLE([disconnected],
-    [AS_HELP_STRING([--enable-disconnected],
-        [enable disconnected support in cache manager (experimental)])],
-    , 
-    [enable_disconnected="no"])
 AC_ARG_ENABLE([unix-sockets],
     [AS_HELP_STRING([--disable-unix-sockets],
         [disable use of unix domain sockets for fssync (defaults to enabled)])],
@@ -1129,10 +1124,6 @@ else
 	DEMAND_ATTACH="no"
 fi
 AC_SUBST(DEMAND_ATTACH)
-
-if test "$enable_disconnected" = "yes"; then
-	AC_DEFINE(AFS_DISCON_ENV, 1, [define if you want support for disconnected operation])
-fi
 
 if test "$enable_unix_sockets" = "yes"; then
 	AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])

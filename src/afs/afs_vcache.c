@@ -58,9 +58,7 @@ char *makesname();
 #endif /* AFS_SGI64_ENV */
 
 /* Exported variables */
-#ifdef AFS_DISCON_ENV
 afs_rwlock_t afs_xvcdirty;	/*Lock: discon vcache dirty list mgmt */
-#endif
 afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
 afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
@@ -81,10 +79,8 @@ int afs_norefpanic = 0;
 
 /* Disk backed vcache definitions 
  * Both protected by xvcache */
-#ifdef AFS_DISCON_ENV
 static int afs_nextVcacheSlot = 0;
 static struct afs_slotlist *afs_freeSlotList = NULL;
-#endif
 
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc);
@@ -713,7 +709,6 @@ afs_AllocVCache(void)
 
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
 
-#ifdef AFS_DISCON_ENV
     /* If we create a new inode, we either give it a new slot number,
      * or if one's available, use a slot number from the slot free list
      */
@@ -727,7 +722,6 @@ afs_AllocVCache(void)
     }  else {
        tvc->diskSlot = afs_nextVcacheSlot++;
     }
-#endif
 
     return tvc;
 }
@@ -740,17 +734,13 @@ static void
 afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
 		      struct server *serverp) {
 
-#if defined(AFS_DISCON_ENV)
     afs_uint32 slot;
     slot = avc->diskSlot;
-#endif
 
     osi_PrePopulateVCache(avc);
 
-#if defined(AFS_DISCON_ENV)
     avc->diskSlot = slot;
     QZero(&avc->metadirty);
-#endif
 
     AFS_RWLOCK_INIT(&avc->lock, "vcache lock");
 
@@ -1276,7 +1266,6 @@ afs_WriteVCache(register struct vcache *avc,
     return code;
 
 }				/*afs_WriteVCache */
-#if defined(AFS_DISCON_ENV)
 
 /*!
  * Store status info only locally, set the proper disconnection flags
@@ -1355,8 +1344,6 @@ afs_WriteVCacheDiscon(register struct vcache *avc,
 
     return code;
 }
-
-#endif
 
 /*!
  * Copy astat block into vcache info

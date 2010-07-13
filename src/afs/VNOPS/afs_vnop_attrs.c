@@ -596,15 +596,11 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	        osi_dnlc_purgedp(avc);
 	    /* error?  erase any changes we made to vcache entry */
         }
-
-#if defined(AFS_DISCON_ENV)
     } else {
-
 	ObtainSharedLock(&avc->lock, 712);
 	/* Write changes locally. */
 	code = afs_WriteVCacheDiscon(avc, &astat, attrs);
 	ReleaseSharedLock(&avc->lock);
-#endif
     }		/* if (!AFS_IS_DISCONNECTED) */
 
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)

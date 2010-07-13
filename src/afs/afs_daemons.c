@@ -201,9 +201,7 @@ afs_Daemon(void)
 	    ReleaseWriteLock(&afs_xvcache);
 	    afs_FlushActiveVcaches(1);	/* keep flocks held & flush nfs writes */
 #if 0
-#ifdef AFS_DISCON_ENV
 	    afs_StoreDirtyVcaches();
-#endif
 #endif
 	    afs_CheckRXEpoch();
 	    last1MinCheck = now;

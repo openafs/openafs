@@ -280,7 +280,6 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    }
 	}
 
-#if defined(AFS_DISCON_ENV)
     if (AFS_IS_DISCON_RW) {
 	if (!adp->f.shadow.vnode && !(adp->f.ddirty_flags & VDisconCreate)) {
     	    /* Make shadow copy of parent dir. */
@@ -308,7 +307,6 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	if (tdc)
 	    ObtainSharedLock(&tdc->lock, 714);
      }
-#endif
 
     if (tvc && osi_Active(tvc)) {
 	/* about to delete whole file, prefetch it first */
@@ -365,14 +363,12 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    }
 	    tvc->uncred = acred;
 	    tvc->f.states |= CUnlinked;
-#if defined(AFS_DISCON_ENV)
 	    /* if rename succeeded, remove should not */
 	    ObtainWriteLock(&tvc->lock, 715);
 	    if (tvc->f.ddirty_flags & VDisconRemove) {
 		tvc->f.ddirty_flags &= ~VDisconRemove;
 	    }
 	    ReleaseWriteLock(&tvc->lock);
-#endif
 	} else {
 	    osi_FreeSmallSpace(unlname);
 	}

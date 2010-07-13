@@ -1,17 +1,6 @@
 #ifndef _DISCON_H
 #define _DISCON_H
 
-#ifndef AFS_DISCON_ENV
-#define AFS_IS_DISCONNECTED 0
-#define AFS_IS_DISCON_RW 0
-#define AFS_IN_SYNC 0
-#define AFS_DISCON_LOCK()
-#define AFS_DISCON_UNLOCK()
-
-#define afs_DisconAddDirty(x, y, z)
-
-#else
-
 #if !defined(inline) && !defined(__GNUC__)
 #define inline
 #endif
@@ -83,5 +72,4 @@ static inline void afs_DisconRemoveDirty(struct vcache *avc) {
     avc->f.ddirty_flags = 0;
     afs_PutVCache(avc);
 }
-#endif /* AFS_DISCON_ENV */
 #endif /* _DISCON_H */

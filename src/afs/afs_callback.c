@@ -62,11 +62,9 @@ static struct ltable {
       "afs_xvreclaim", (char *)&afs_xvreclaim},
     { "afsdb_client_lock", (char *)&afsdb_client_lock},
     { "afsdb_req_lock", (char *)&afsdb_req_lock},
-#ifdef AFS_DISCON_ENV
     { "afs_discon_lock", (char *)&afs_discon_lock},
     { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
     { "afs_discon_vc_dirty", (char *)&afs_xvcdirty},
-#endif
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;

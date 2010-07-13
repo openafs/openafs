@@ -14,8 +14,6 @@
 #include "afs/lock.h"
 #include "afs/afs_cbqueue.h"
 
-#ifdef AFS_DISCON_ENV
-
 #define dv_match(vc, fstat) 				 \
 	((vc->f.m.DataVersion.low == fstat.DataVersion) && \
      	(vc->f.m.DataVersion.high == fstat.dataVersionHigh))
@@ -1536,4 +1534,3 @@ afs_GenDisconStatus(struct vcache *adp, struct vcache *avc,
     avc->f.states |= CStatd;
     avc->f.states &= ~CBulkFetching;
 }
-#endif

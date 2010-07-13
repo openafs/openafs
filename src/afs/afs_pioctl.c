@@ -33,14 +33,12 @@ afs_int32 afs_waitForever = 0;
 short afs_waitForeverCount = 0;
 afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;	/* show all messages */
 
-#ifdef AFS_DISCON_ENV
 afs_int32 afs_is_disconnected;
 afs_int32 afs_is_discon_rw;
 /* On reconnection, turn this knob on until it finishes,
  * then turn it off.
  */
 afs_int32 afs_in_sync = 0;
-#endif
 
 struct afs_pdata {
     char *ptr;
@@ -5137,7 +5135,6 @@ DECL_PIOCTL(PCallBackAddr)
 
 DECL_PIOCTL(PDiscon)
 {
-#ifdef AFS_DISCON_ENV
     static afs_int32 mode = 1; /* Start up in 'off' */
     afs_int32 force = 0;
     int code = 0;
@@ -5204,9 +5201,6 @@ DECL_PIOCTL(PDiscon)
 	return code;
 
     return afs_pd_putInt(aout, mode);
-#else
-    return EINVAL;
-#endif
 }
 
 DECL_PIOCTL(PNFSNukeCreds)

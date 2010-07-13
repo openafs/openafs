@@ -612,8 +612,6 @@ struct SimpleLocks {
 #define VRevokeWait   0x1
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
-#if defined(AFS_DISCON_ENV)
-
 /* Dirty disconnected vcache flags. */
 #define VDisconSetTime		0x00000001  	/* set time. */
 #define VDisconSetMode		0x00000002	/* set mode. */
@@ -632,7 +630,6 @@ struct SimpleLocks {
 #define VDisconRenameSameDir	0x00020000	/* Rename in same dir. */
 
 /*... to be continued ...  */
-#endif
 
 #if defined(AFS_CACHE_BYPASS)
 /* vcache (file) cachingStates bits */
@@ -731,14 +728,12 @@ struct fvcache {
     /*! state bits */
     afs_uint32 states;
 
-#if defined(AFS_DISCON_ENV)
     /*! Disconnected flags for this vcache element. */
     afs_uint32 ddirty_flags;
     /*! Shadow vnode + unique keep the shadow dir location. */
     struct afs_vnuniq shadow;
     /*! The old parent FID for renamed vnodes */
     struct afs_vnuniq oldParent;
-#endif
 };
     
 /* INVARIANTs: (vlruq.next != NULL) == (vlruq.prev != NULL)
@@ -757,7 +752,6 @@ struct vcache {
 #endif
     struct vcache *hnext;	/* Hash next */
     struct afs_q vhashq;	/* Hashed per-volume list */
-#if defined(AFS_DISCON_ENV)
     /*! Queue of dirty vcaches. Lock with afs_disconDirtyLock */
     struct afs_q dirtyq;
     /*! Queue of vcaches with shadow entries. Lock with afs_disconDirtyLock */
@@ -766,7 +760,6 @@ struct vcache {
     struct afs_q metadirty;
     /*! Vcaches slot number in the disk backup. Protected by tvc->lock */
     afs_uint32 diskSlot;
-#endif
     struct fvcache f;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */
 #if	defined(AFS_SUN5_ENV)
