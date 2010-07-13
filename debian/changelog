@@ -39,6 +39,8 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
   * Apply upstream deltas:
     - [bbce0515] Add NEWS entries for 1.5.75
     - [c790e7d0] Remove a few erroneous NEWS entries for 1.5.75
+    - [9e2aba99] Fix ktime test for errors
+    - [5cc6293c] Provide man pages for more fssync-debug commands
   * Build shared library packages for libafsauthent and libafsrpc.
     Upstream is now more careful about the ABI.  (Closes: #433054)
   * openafs-modules-source and openafs-modules-dkms are now architecture:
