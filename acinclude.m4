@@ -86,11 +86,6 @@ AC_ARG_ENABLE([namei-fileserver],
          fileserver])],
     , 
     [enable_namei_fileserver="default"])
-AC_ARG_ENABLE([cache-bypass],
-    [AS_HELP_STRING([--enable-cache-bypass],
-        [enable client support for cache bypass])],
-    , 
-    [enable_cache_bypass="no"])
 AC_ARG_ENABLE([supergroups],
     [AS_HELP_STRING([--enable-supergroups],
         [enable support for nested pts groups])],
@@ -982,6 +977,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
                 :
 		fi
+dnl Linux-only, but just enable always.
+		AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])
 esac
 
 AC_CACHE_CHECK([if struct sockaddr has sa_len field],
@@ -1149,10 +1146,6 @@ if test "$enable_icmp_pmtu_discovery" = "yes"; then
    if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
    fi
-fi
-
-if test "$enable_cache_bypass" = "yes"; then
-	AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])
 fi
 
 if test "$enable_namei_fileserver" = "yes"; then
