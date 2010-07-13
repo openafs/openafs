@@ -132,10 +132,6 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} daemon_com.h ${DESTDIR}${includedir}/afs/daemon_com.h
 	${INSTALL_DATA} ihandle.h ${DESTDIR}${includedir}/afs/ihandle.h
 	${INSTALL_DATA} namei_ops.h ${DESTDIR}${includedir}/afs/namei_ops.h
-	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
-		${INSTALL_PROGRAM} fssync-debug \
-			${DESTDIR}${afssrvsbindir}/fssync-debug ; \
-	fi
 	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
 		${INSTALL_PROGRAM} xfs_size_check \
 			${DESTDIR}${afssrvsbindir}/xfs_size_check ; \
@@ -162,10 +158,6 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} daemon_com.h ${DEST}/include/afs/daemon_com.h
 	${INSTALL_DATA} ihandle.h ${DEST}/include/afs/ihandle.h
 	${INSTALL_DATA} namei_ops.h ${DEST}/include/afs/namei_ops.h
-	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
-		${INSTALL_PROGRAM} fssync-debug \
-			${DEST}/root.server/usr/afs/bin/fssync-debug ; \
-	fi
 	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
 		${INSTALL_PROGRAM} xfs_size_check \
 			$(DEST)/root.server/usr/afs/bin/xfs_size_check ; \

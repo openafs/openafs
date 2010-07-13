@@ -135,6 +135,8 @@ src/des/Makefile \
 src/des/test/Makefile \
 src/dir/Makefile \
 src/dir/test/Makefile \
+src/dviced/Makefile \
+src/dvolser/Makefile \
 src/export/Makefile \
 src/finale/Makefile \
 src/fsint/Makefile \

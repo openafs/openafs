@@ -15,12 +15,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
+CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
 RX=../rx
 VICED=../viced
+TVICED=../tviced
 VLSERVER=../vlserver
 LWP=../lwp
 LIBACL=../libacl
@@ -52,9 +53,11 @@ RXOBJS = rx_pthread.o
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
+SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a
+
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
 
-all: fileserver
+all: dafileserver state_analyzer
 
 rx_pthread.o: ${RX}/rx_pthread.c
 	${CCRULE} -DDPF_FSLOG
@@ -74,7 +77,7 @@ physio.o: ${VICED}/physio.c
 callback.o: ${VICED}/callback.c
 	${CCRULE}
 
-serialize_state.o: ./serialize_state.c
+serialize_state.o: ${TVICED}/serialize_state.c
 	${CCRULE}
 
 assert.o: ${UTIL}/assert.c
@@ -204,21 +207,31 @@ afsint.ss.o: ${FSINT}/afsint.ss.c
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${CCRULE}
 
-fileserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+state_analyzer.o: ${TVICED}/state_analyzer.c
+	${CCRULE}
 
-install: fileserver
+dafileserver: ${objects} ${LIBS}
+	${CC} ${LDFLAGS} -o dafileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+state_analyzer: ${SDBGOBJS}
+	${CC} ${LDFLAGS} -o state_analyzer ${SDBGOBJS} ${MT_LIBS} ${XLIBS}
+
+install: dafileserver state_analyzer
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
-	${INSTALL} fileserver \
-		${DESTDIR}${afssrvlibexecdir}/fileserver
+	${INSTALL} dafileserver \
+		${DESTDIR}${afssrvlibexecdir}/dafileserver
+	${INSTALL_PROGRAM} state_analyzer \
+		${DESTDIR}${afssrvsbindir}/state_analyzer
 
-dest: fileserver
+dest: dafileserver state_analyzer
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL} fileserver \
-		${DEST}/root.server/usr/afs/bin/fileserver
+	${INSTALL} dafileserver \
+		${DEST}/root.server/usr/afs/bin/dafileserver
+	${INSTALL_PROGRAM} state_analyzer \
+		${DEST}/root.server/usr/afs/bin/state_analyzer
 
 clean:
-	$(RM) -f *.o fileserver core AFS_component_version_number.c
+	$(RM) -f *.o dafileserver state_analyzer core AFS_component_version_number.c
 
 include ../config/Makefile.version

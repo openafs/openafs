@@ -97,11 +97,6 @@ AC_ARG_ENABLE([bitmap-later],
          needed])],
     , 
     [enable_bitmap_later="no"])
-AC_ARG_ENABLE([demand-attach-fs],
-    [AS_HELP_STRING([--enable-demand-attach-fs],
-        [enable Demand Attach Fileserver (please see documentation)])],
-    , 
-    [enable_demand_attach_fs="no"])
 AC_ARG_ENABLE([unix-sockets],
     [AS_HELP_STRING([--disable-unix-sockets],
         [disable use of unix domain sockets for fssync (defaults to enabled)])],
@@ -1125,14 +1120,6 @@ fi
 if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
 fi
-
-if test "$enable_demand_attach_fs" = "yes"; then
-	AC_DEFINE(DEMAND_ATTACH_ENABLE, 1, [define if you want the demand attach fileserver])
-	DEMAND_ATTACH="yes"
-else
-	DEMAND_ATTACH="no"
-fi
-AC_SUBST(DEMAND_ATTACH)
 
 if test "$enable_unix_sockets" = "yes"; then
 	AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])

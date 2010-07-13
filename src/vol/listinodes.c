@@ -114,6 +114,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #include "volinodes.h"
 #include "partition.h"
 #include "fssync.h"
+#include "volume_inline.h"
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
@@ -1403,8 +1404,22 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     char buffer[128];
     struct specino specinos[VI_LINKTABLE+1];
     Inode nearInode = 0;
+# ifdef AFS_DEMAND_ATTACH_FS
+    int locktype = 0;
+# endif /* AFS_DEMAND_ATTACH_FS */
+    int code = 0;
 
     memset(&specinos, 0, sizeof(specinos));
+
+    /* now do the work */
+	   
+    for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
+         partP = partP->next);
+    if (!partP) {
+        Log("1 inode_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
+        code = EIO;
+	goto done;
+    }
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /* DAFS currently doesn't really work with inode, so don't bother putting the
@@ -1414,18 +1429,15 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
  * trying to do, take a look at VLockVolumeByIdNB, and
  * namei_ConvertROtoRWvolume.
  */
-# error must lock volumes before ConvertROtoRW is usable on DAFS inode
+    locktype = VVolLockType(V_VOLUPD, 1);
+    code = VLockVolumeByIdNB(volumeId, partP, locktype);
+    if (code) {
+        locktype = 0;
+        code = EIO;
+        goto done;
+    }
 #endif
 	   
-    /* now do the work */
-	   
-    for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
-         partP = partP->next);
-    if (!partP) {
-        Log("1 inode_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
-        return EIO;
-    }
-
     if (VReadVolumeDiskHeader(volumeId, partP, &h)) {
 	Log("1 inode_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n",
 	    afs_printable_uint32_lu(volumeId));
@@ -1442,7 +1454,8 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 			      &forcep, 0, wpath, &specinos)) < 0)
     {
 	Log("1 inode_ConvertROtoRWvolume: Couldn't get special inodes\n");
-	return EIO;
+	code = EIO;
+	goto done;
     }
 	   
 #if defined(NEARINODE_HINT)
@@ -1460,14 +1473,16 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    fdP = IH_OPEN(ih);
 	    if (!fdP) {
 		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, volumeId); 
-		return -1;
+		code = -1;
+		goto done;
 	    }
 	    
 	    IH_INIT(ih2, partP->device, h.parent, specinos[j].ninodeNumber);
 	    fdP2 = IH_OPEN(ih2); 
 	    if (!fdP2) { 
 		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, h.parent);  
-		return -1; 
+		code = -1;
+		goto done;
 	    } 
 	    
 	    if (j == VI_VOLINFO)
@@ -1480,8 +1495,10 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 		    if (len == 0)
 			break;
 		    nBytes = write(fdP2->fd_fd, buffer, len);
-		    if (nBytes != len)
-			return -1;
+		    if (nBytes != len) {
+			code = -1;
+			goto done;
+		    }		    
 		}
 	    }
 		
@@ -1524,7 +1541,8 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     if (VCreateVolumeDiskHeader(&h, partP)) {
         Log("1 inode_ConvertROtoRWvolume: Couldn't write header for RW-volume %lu\n",
 	    afs_printable_uint32_lu(h.id));
-        return EIO;
+        code = EIO;
+	goto done;
     }
 
     if (VDestroyVolumeDiskHeader(partP, volumeId, h.parent)) {
@@ -1534,7 +1552,14 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
-    return 0;
+
+ done:
+# ifdef AFS_DEMAND_ATTACH_FS
+    if (locktype) {
+        VUnlockVolumeById(volumeId, partP);
+    }
+# endif /* AFS_DEMAND_ATTACH_FS */
+    return code;
 }
 #endif /* FSSYNC_BUILD_CLIENT */
 #endif /* AFS_NAMEI_ENV */

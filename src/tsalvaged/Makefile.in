@@ -16,10 +16,12 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
-	-DSALVSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} $(CFLAGS_NOERROR) -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
+	-DSALVSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
+SCFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${XCFLAGS} ${ARCHFLAGS} $(CFLAGS_NOERROR) -DRXDEBUG -DFSSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
+SCCRULE=${CC} ${SCFLAGS} -c $? -o $@
 
 VICED=../viced
 VLSERVER=../vlserver
@@ -31,6 +33,7 @@ VOL=../vol
 FSINT=../fsint
 
 SALVAGEDOBJS=salvaged.o vol-salvage.o physio.o
+SALVAGEROBJS=salvager.o svol-salvage.o sphysio.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -38,12 +41,12 @@ LWPOBJS=lock.o threadname.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o fstab.o
 
-VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-client.o \
+VLIBOBJS=volume.o vnode.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
-	 namei_ops.o salvsync-server.o salvsync-client.o \
-	 daemon_com.o
+	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
 
 OBJECTS= ${SALVAGEDOBJS} ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+SOBJECTS= ${SALVAGEROBJS}
 
 FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
@@ -51,16 +54,29 @@ SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIR
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
 
-all: salvageserver fssync-debug salvsync-debug
+SLIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/libvlib.a ${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libacl.a	${TOP_LIBDIR}/util.a
+
+all: salvageserver fssync-debug salvsync-debug dasalvager
 
 salvaged.o: ${VOL}/salvaged.c
 	${CCRULE}
 
+salvager.o: ${VOL}/salvager.c
+	${SCCRULE}
+
 vol-salvage.o: ${VOL}/vol-salvage.c
 	${CCRULE}
 
+svol-salvage.o: ${VOL}/vol-salvage.c
+	${SCCRULE}
+
 physio.o: ${VOL}/physio.c
 	${CCRULE}
+
+sphysio.o: ${VOL}/physio.c
+	${SCCRULE}
 
 fssync-debug.o: ${VOL}/fssync-debug.c
 	${CCRULE}
@@ -162,15 +178,20 @@ namei_ops.o: ${VOL}/namei_ops.c
 salvageserver: ${OBJECTS} ${LIBS}
 	${CC} ${LDFLAGS} -o salvageserver ${OBJECTS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
+dasalvager: ${SOBJECTS} ${SLIBS}
+	${CC} ${LDFLAGS} -o dasalvager ${SOBJECTS} ${SLIBS} ${XLIBS}
+
 fssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
 	${CC} ${LDFLAGS} -o fssync-debug ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
 	${CC} ${LDFLAGS} -o salvsync-debug ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
-install: salvageserver fssync-debug salvsync-debug
+install: salvageserver fssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL_PROGRAM} dasalvager \
+		${DESTDIR}${afssrvlibexecdir}/dasalvager
 	${INSTALL_PROGRAM} salvageserver \
 		${DESTDIR}${afssrvlibexecdir}/salvageserver
 	${INSTALL_PROGRAM} fssync-debug \
@@ -178,8 +199,10 @@ install: salvageserver fssync-debug salvsync-debug
 	${INSTALL_PROGRAM} salvsync-debug \
 		${DESTDIR}${afssrvsbindir}/salvsync-debug
 
-dest: salvageserver fssync-debug salvsync-debug
+dest: salvageserver fssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} dasalvager \
+		${DEST}/root.server/usr/afs/bin/dasalvager
 	${INSTALL_PROGRAM} salvageserver \
 		${DEST}/root.server/usr/afs/bin/salvageserver
 	${INSTALL_PROGRAM} fssync-debug \
@@ -188,6 +211,6 @@ dest: salvageserver fssync-debug salvsync-debug
 		${DEST}/root.server/usr/afs/bin/salvsync-debug
 
 clean:
-	$(RM) -f *.o salvageserver core AFS_component_version_number.c fssync-debug salvsync-debug
+	$(RM) -f *.o salvageserver core AFS_component_version_number.c fssync-debug salvsync-debug dasalvager
 
 include ../config/Makefile.version
