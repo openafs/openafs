@@ -1,4 +1,4 @@
-openafs (1.5.75-1) unstable; urgency=low
+openafs (1.5.75-1) experimental; urgency=low
   
   * New upstream testing release.
     - Path MTU discovery for networks with bad fragmentation.
