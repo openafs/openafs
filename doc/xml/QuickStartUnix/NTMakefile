@@ -42,12 +42,14 @@ DOCBOOK_XSL = $(CYGWIN)/usr/share/docbook-xsl
 !ENDIF
 !ENDIF
 XSLTPROC   = xsltproc.exe
+XMLLINT    = xmllint.exe
 HTML_XSL = $(DOCBOOK_XSL)/html/chunk.xsl
 HTML_PARMS = --param navig.graphics 1 --stringparam navig.graphics.path ../
 CHM_XSL    = $(DOCBOOK_XSL)/htmlhelp/htmlhelp.xsl
+BOOK       = auqbg000.xml
 
 XMLSRCS = \
-        auqbg000.xml \
+        $(BOOK) \
         auqbg003.xml \
         auqbg004.xml \
         auqbg005.xml \
@@ -59,17 +61,20 @@ XMLSRCS = \
 
 index.html: $(XMLSRCS)
         @echo Building Unix Quick Start Guide in HTML format
-        $(XSLTPROC) $(HTML_PARMS) $(HTML_XSL) auqbg000.xml 
+        $(XSLTPROC) $(HTML_PARMS) $(HTML_XSL) $(BOOK)
 
 htmlhelp.chm: $(XMLSRCS)
         @echo Building Unix Quick Start Guide in HTML Help format
-        $(XSLTPROC) $(CHM_XSL) auqbg000.xml
+        $(XSLTPROC) $(CHM_XSL) $(BOOK)
         -hhc.exe htmlhelp.hhp
         $(DEL) *.html
         $(DEL) *.hh?
         $(DEL) *.chw
 
-install: htmlhelp.chm index.html
+check: $(XMLSRCS)
+        $(XMLLINT) --noout --valid $(BOOK)
+
+install: check htmlhelp.chm index.html
 
 clean::
         $(DEL) *.html
