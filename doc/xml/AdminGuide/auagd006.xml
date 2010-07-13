@@ -632,7 +632,7 @@
       volume. A volume's contents are not visible or accessible unless it
       is mounted. Unlike some other file systems, AFS volumes can be
       mounted at multiple locations in the file system at the same
-      time.</para>.
+      time.</para>
     </sect2>
 
     <sect2 id="HDRWQ15">
