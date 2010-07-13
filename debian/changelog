@@ -43,6 +43,9 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     - [5cc6293c] Provide man pages for more fssync-debug commands
   * Build shared library packages for libafsauthent and libafsrpc.
     Upstream is now more careful about the ABI.  (Closes: #433054)
+  * Explicitly link libafsauthent with -lresolv -lcrypt.  This is a
+    temporary fix for Linux that will be replaced by a better upstream fix
+    in the next release.
   * openafs-modules-source and openafs-modules-dkms are now architecture:
     all.  The generated kernel source is now architecture-independent.
   * openafs-modules-source and openafs-modules-dkms now recommend an
