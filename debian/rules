@@ -161,6 +161,7 @@ install-stamp: build-stamp
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	cd libafs_tree && find . -print | \
 	    cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
+	cp .version debian/$(srcpkg)/usr/src/modules/$(package)/
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
 	cp debian/copyright debian/module/* \
 	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
