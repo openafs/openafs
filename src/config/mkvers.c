@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
-
+#include <time.h>
 
 #define VERINFO_STRING_CHARS_MAX  950	/* max chars in verinfo string */
 #define CFILE_STRING_CHARS_MAX    2000	/* max chars in C file string */
@@ -282,6 +282,7 @@ PrintStamps(void)
     char *c = NULL;
     int i;
     size_t outMax, outCount = 0;
+    time_t t = time(NULL);
 
     if (cfgFormat == CF_VERINFO) {
 	outMax = VERINFO_STRING_CHARS_MAX;
@@ -305,8 +306,12 @@ PrintStamps(void)
                         "<revision>\n"
                         "<revnumber>\n"
                         "Base configuration %s\n"
-                        "</revnumber>\n",
-			stateDeltas[i].name);
+                        "</revnumber>\n"
+                        "<date>\n"
+                        "%s"
+                        "</date>\n"
+                        "</revision>\n",
+			stateDeltas[i].name, ctime(&t));
 	    } else {
 		fprintf(fpVers, "%sBase configuration %s", cml_string,
 			stateDeltas[i].name);
