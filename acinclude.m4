@@ -402,6 +402,10 @@ case $system in
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(x86_darwin)
                 ;;
+        x86_64-*-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(x86_darwin)
+                ;;
 	i386-*-freebsd*)
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
@@ -534,6 +538,9 @@ else
 			AFS_SYSNAME="x86_darwin_90"
 			;;
 		i?86-apple-darwin10.*)
+			AFS_SYSNAME="x86_darwin_100"
+			;;
+		x86_64-apple-darwin10.*)
 			AFS_SYSNAME="x86_darwin_100"
 			;;
 		sparc-sun-solaris2.5*)
