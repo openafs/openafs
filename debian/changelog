@@ -1,4 +1,4 @@
-openafs (1.5.75-1) UNRELEASED; urgency=low
+openafs (1.5.75-1) unstable; urgency=low
   
   * New upstream testing release.
     - Path MTU discovery for networks with bad fragmentation.
@@ -77,7 +77,7 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
   * Update standards version to 3.9.0.
     - Use Breaks instead of Conflicts where appropriate.
 
- -- Russ Allbery <rra@debian.org>  Fri, 09 Jul 2010 13:46:44 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 13 Jul 2010 14:46:10 -0700
 
 openafs (1.5.74.1-1) experimental; urgency=low
 
