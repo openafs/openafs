@@ -270,7 +270,7 @@
       <para>You can use the <emphasis role="bold">tokens</emphasis> command to verify that you are authenticated,
       as described in the following section.</para>
 
-      <note xml:id="note.a.note.on.kerberos.realms.and.afs.cellnames">
+      <note id="note.a.note.on.kerberos.realms.and.afs.cellnames">
           <title>A Note on Kerberos Realms and AFS Cellnames</title>
           <para>These are two things that are often the same, but each has it's own distinct rules.
           By convention, kerberos realms are always in UPPER CASE and afs cellnames are in lower case.
