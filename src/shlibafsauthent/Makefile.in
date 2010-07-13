@@ -133,7 +133,7 @@ dest: ${LIBAFSAUTHENT} libafsauthent_pic.a
 ${LIBAFSAUTHENT}: ${LIBOBJS} libafsauthent.map
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
-		-L${TOP_LIBDIR} -lafsrpc ${LIBOBJS} ${LIB_AFSDB} ${MT_LIBS}
+		-L${TOP_LIBDIR} -lafsrpc ${LIB_crypt} ${LIBOBJS} ${LIB_AFSDB} ${MT_LIBS}
 
 libafsauthent_pic.a: ${LIBOBJS}
 	$(RM) -f $@
