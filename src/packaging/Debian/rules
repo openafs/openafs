@@ -47,18 +47,17 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fuse \
 IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log	    \
 	-Xfs_chgrp.1 -Xfs_chown.1 -Xfs_cscpolicy.1 -Xfs_flushall.1	    \
 	-Xfs_memdump.1 -Xfs_minidump.1 -Xfs_trace.1 -Xkadb_check -Xkaserver \
-	-Xkdb -Xkdump -Xkpwvalid -Xlibafssetpag.so -Xlibafsrpc.so	    \
-	-Xlibafsauthent.so -Xpackage -Xpagsh.krb -Xsymlink -Xtokens.krb	    \
-	-Xuss -Xvldb_convert -Xvsys -Xxfs_size_check
+	-Xkdb -Xkdump -Xkpwvalid -Xpagsh.krb -Xsymlink -Xtokens.krb -Xuss   \
+	-Xvldb_convert -Xvsys -Xxfs_size_check
 
 # Installed via other means since we have to rename them.
 IGNORE += -Xafsd.fuse.8 -Xpam_afs
 
-# These variables are used by get-orig-source and to construct dkms.conf.
-# You will need to change TAG to package stable releases instead of
-# experimental releases.
-DEBVERS := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
-		| cut -d- -f1)
+# These variables are used by get-orig-source, to construct dkms.conf, and
+# to set the build version.  You will need to change TAG to package stable
+# releases instead of experimental releases.
+DEBIAN  := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2)
+DEBVERS := $(shell echo '$(DEBIAN)' | cut -d- -f1)
 VERSION := $(shell echo '$(DEBVERS)' | sed -e 's/[+-].*//' -e 's/~//g')
 TAG     := $(shell echo 'openafs-devel-$(VERSION)' | sed 's/\./_/g')
 REPO    := git://git.openafs.org/openafs.git
@@ -90,6 +89,7 @@ build-indep:
 build-stamp:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh build --before configure
+	echo '$(DEBIAN)'-debian > .version
 	mv doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
 	rm -f doc/man-pages/man1/up.1
 	sh regen.sh
@@ -97,14 +97,13 @@ build-stamp:
 	    sh configure \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --mandir=\$${prefix}/share/man \
-	    --sysconfdir=/etc --libexecdir=/usr/lib \
-	    --localstatedir=/var/lib --with-krb5-conf=/usr/bin/krb5-config \
-	    --enable-supergroups --enable-demand-attach-fs \
-	    --enable-disconnected --enable-fuse-client \
+	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5 \
+	    --localstatedir=/var/lib --enable-supergroups \
+	    --enable-demand-attach-fs --enable-disconnected \
+	    --enable-fuse-client --enable-debug --enable-debug-lwp \
 	    --with-xslt-processor=xsltproc --with-html-xsl=$(HTML_XSL) \
-	    --enable-debug --enable-debug-lwp $(DEBIAN_OPT_FLAGS) $(SYSTEM)
-	chmod a+x config.sub src/libafs/make_kbuild_makefile.pl \
-	    src/config/make_vnode.pl
+	    --enable-reduced-depends $(DEBIAN_OPT_FLAGS) $(SYSTEM)
+	chmod a+x config.sub
 	dh build --after configure
 	$(MAKE) libafs_tree
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
@@ -112,13 +111,20 @@ build-stamp:
 	done
 	touch $@
 
+# The manipulation of debian/changelog here is unnecessary with a regular
+# Debian build.  It is provided solely so that upstream can share the Debian
+# packaging files, working around problems caused by upstream's distclean
+# removing packaging/Debian/changelog because it's Autoconf-generated.
 clean:
 	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
 	    [ ! -f doc/xml/$$d/Makefile ] || $(MAKE) -C doc/xml/$$d clean ; \
 	done
+	[ ! -f debian/changelog.in ] \
+	    || cp debian/changelog debian/changelog.save
 	dh clean
+	[ -f debian/changelog ] || mv debian/changelog.save debian/changelog
 
 install: install-stamp
 install-stamp: build-stamp
@@ -155,6 +161,7 @@ install-stamp: build-stamp
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	cd libafs_tree && find . -print | \
 	    cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
+	cp .version debian/$(srcpkg)/usr/src/modules/$(package)/
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
 	cp debian/copyright debian/module/* \
 	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
@@ -208,6 +215,7 @@ install-stamp: build-stamp
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 
 	dh_dkms -V $(VERSION)
+	dh_installchangelogs NEWS
 	dh install --after dh_install
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db

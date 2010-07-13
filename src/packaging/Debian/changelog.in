@@ -12,6 +12,87 @@ openafs (@DEB_PKGVER@-1~openafs) unstable; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Thu, 08 Apr 2010 13:20:50 -0700
 
+openafs (1.5.75-1) experimental; urgency=low
+
+  * New upstream testing release.
+    - Path MTU discovery for networks with bad fragmentation.
+    - New -human flag for human-readable units in some fs commands.
+    - Provide reasons for locked volumes in vos when known.
+    - Improvements to Rx ping and NAT handling.
+    - Improvements to the userspace AFS client.
+    - Substantial updates to the Administrator's Guide.
+    - Various bug fixes and improvements to the file server.
+    - Force core file generation in bosserver.
+    - Improve vlclient and vldb_check.
+    - Avoid volume corruption on creation if files were left over from a
+      previous failed cleanup.
+    - Do not tie up fileserver threads with volumes being taken offline.
+    - Break origin's callback on the target of a rename operation.
+    - Do not open /dev/console in the fileserver.  (Closes: #582111)
+    - Avoid unneeded sync() calls in the fileserver.
+    - Update client disk cache version.
+    - Parallelization improvements in lock management in the client.
+    - New -dynroot-sparse mode for afsd to not show all cells in the
+      CellServDB until that cell is needed.
+    - Fix aklog crash with linked cell handling.
+    - Fix fs getserverprefs -vlservers with default CellServDB list.
+    - Report server address when logging warnings.
+    - Avoid panic in GetCapabilities with an unknown cell.
+    - Report process name and ID for advisory lock warnings when
+      possible.
+    - Flush pending changes to server when releasing file locks.
+    - Various other client bug fixes on error handling and callbacks.
+    - Disable syscall probes when keyrings are supported.
+    - Use filehandles for all Linux 2.6 versions to avoid
+      incompatibilities with mismatched afsds.
+    - Update Linux kernel support for 2.6.35.
+    - The stripped source tree generated for kernel module builds is now
+      truly architecture-independent and can build on i386 for amd64
+      kernels (for example).  (Closes: #518270)
+    - Fix build problems on alpha.
+  * Apply upstream deltas:
+    - [bbce0515] Add NEWS entries for 1.5.75
+    - [c790e7d0] Remove a few erroneous NEWS entries for 1.5.75
+    - [9e2aba99] Fix ktime test for errors
+    - [5cc6293c] Provide man pages for more fssync-debug commands
+  * Set the OpenAFS build version to the Debian package version with
+    -debian appended so that the Debian package versions can be
+    distinguished from unmodified upstream versions.
+  * Build shared library packages for libafsauthent and libafsrpc.
+    Upstream is now more careful about the ABI.  (Closes: #433054)
+  * Explicitly link libafsauthent with -lresolv -lcrypt.  This is a
+    temporary fix for Linux that will be replaced by a better upstream fix
+    in the next release.
+  * openafs-modules-source and openafs-modules-dkms are now architecture:
+    all.  The generated kernel source is now architecture-independent.
+  * openafs-modules-source and openafs-modules-dkms now recommend an
+    appropriate version of openafs-client.
+  * Update kernel module packaging scripts:
+    - Remove selection of linux-image vs. kernel-image for kernel names.
+    - Use Breaks instead of Conflicts.
+    - Update standards version to 3.9.0.
+  * Tighten the dependencies on openafs-client in packages that symlink
+    their /usr/share/doc directories to openafs-client's to meet the
+    Policy requirements for changelog files.
+  * Remove the lpia architecture.  This was an experiment in Ubuntu that
+    has apparently been dropped.
+  * Add preliminary support for powerpcspe, mapping that architecture to
+    ppc_linux26.  The kernel build won't work unless uname -m on that
+    architecture returns ppc.
+  * Minor update to README.Debian for openafs-doc: the old IBM release
+    notes are no longer included.
+  * Remove conflicts/replaces/provides for openafs-ptutil, which was
+    ancient (removed in 2001).
+  * Install an upstream changelog file now that upstream provides one.
+  * Add a workaround in the clean target to allow the same packaging files
+    to be used by upstream, which removes changelog during distclean
+    because it's Autoconf-generated.  This workaround will not trigger
+    during a normal Debian package build.
+  * Update standards version to 3.9.0.
+    - Use Breaks instead of Conflicts where appropriate.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 13 Jul 2010 14:46:10 -0700
+
 openafs (1.5.74.1-1) experimental; urgency=low
 
   * New upstream testing release.

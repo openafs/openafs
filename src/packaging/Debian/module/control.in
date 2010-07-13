@@ -4,13 +4,13 @@ Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Uploaders: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 5), flex, bison
-Standards-Version: 3.8.3
+Standards-Version: 3.9.0
 
 Package: openafs-modules-=KVERS
-Conflicts: openafs-client (<< 1.5.61)
+Breaks: openafs-client (<< 1.5.61)
 Provides: openafs-modules3
 Architecture: any
-Recommends: =IMG-=KVERS
+Recommends: linux-image-=KVERS
 Description: AFS distributed filesystem kernel module
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
