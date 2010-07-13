@@ -142,10 +142,8 @@ extern int afs_dir_EnumerateDir(void *dir,
 						 afs_int32 unique),
 				void *hook);
 extern int afs_dir_IsEmpty(void *dir);
-#ifdef AFS_DISCON_ENV
 extern int afs_dir_ChangeFid(void *dir, char *entry, afs_uint32 *old_fid,
                		     afs_uint32 *new_fid);
-#endif
 extern struct DirEntry *afs_dir_GetBlob(void *dir, afs_int32 blobno);
 #endif
 

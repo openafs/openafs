@@ -85,10 +85,7 @@ extern void *DNew(register afs_int32 *fid, register int page);
 #define	EnumerateDir	afs_dir_EnumerateDir
 #define	IsEmpty		afs_dir_IsEmpty
 #define InverseLookup   afs_dir_InverseLookup
-
-#if defined(AFS_DISCON_ENV)
 #define ChangeFid	afs_dir_ChangeFid
-#endif
 
 #else /* KERNEL */
 
@@ -611,7 +608,6 @@ InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name,
     return code;
 }
 
-#if defined(AFS_DISCON_ENV)
 /*!
  * Change an entry fid.
  *
@@ -650,4 +646,3 @@ int ChangeFid(void *dir,
 
     return 0;
 }
-#endif
