@@ -53,11 +53,11 @@ IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log	    \
 # Installed via other means since we have to rename them.
 IGNORE += -Xafsd.fuse.8 -Xpam_afs
 
-# These variables are used by get-orig-source and to construct dkms.conf.
-# You will need to change TAG to package stable releases instead of
-# experimental releases.
-DEBVERS := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
-		| cut -d- -f1)
+# These variables are used by get-orig-source, to construct dkms.conf, and
+# to set the build version.  You will need to change TAG to package stable
+# releases instead of experimental releases.
+DEBIAN  := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2)
+DEBVERS := $(shell echo '$(DEBIAN)' | cut -d- -f1)
 VERSION := $(shell echo '$(DEBVERS)' | sed -e 's/[+-].*//' -e 's/~//g')
 TAG     := $(shell echo 'openafs-devel-$(VERSION)' | sed 's/\./_/g')
 REPO    := git://git.openafs.org/openafs.git
@@ -89,6 +89,7 @@ build-indep:
 build-stamp:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh build --before configure
+	echo '$(DEBIAN)'-debian > .version
 	mv doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
 	rm -f doc/man-pages/man1/up.1
 	sh regen.sh

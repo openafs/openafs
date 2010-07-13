@@ -41,6 +41,9 @@ openafs (1.5.75-1) UNRELEASED; urgency=low
     - [c790e7d0] Remove a few erroneous NEWS entries for 1.5.75
     - [9e2aba99] Fix ktime test for errors
     - [5cc6293c] Provide man pages for more fssync-debug commands
+  * Set the OpenAFS build version to the Debian package version with
+    -debian appended so that the Debian package versions can be
+    distinguished from unmodified upstream versions.
   * Build shared library packages for libafsauthent and libafsrpc.
     Upstream is now more careful about the ABI.  (Closes: #433054)
   * Explicitly link libafsauthent with -lresolv -lcrypt.  This is a
