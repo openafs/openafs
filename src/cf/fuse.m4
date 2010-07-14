@@ -7,8 +7,8 @@ dnl
 AC_DEFUN([OPENAFS_FUSE],[
 
 AC_ARG_ENABLE([fuse-client],
-    [AS_HELP_STRING([--enable-fuse-client],[enable building of the FUSE userspace client, afsd.fuse])],,
-    [enable_fuse_client="no"])
+    [AS_HELP_STRING([--disable-fuse-client],[disable building of the FUSE userspace client, afsd.fuse (defaults to enabled)])],,
+    [enable_fuse_client="yes"])
 
 if test "x$enable_fuse_client" = "xyes" ; then
    PKG_PROG_PKG_CONFIG
