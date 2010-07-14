@@ -1,11 +1,11 @@
-openafs (1.5.75-2) UNRELEASED; urgency=low
+openafs (1.5.75-2) experimental; urgency=low
 
   * Apply upstream deltas:
     - [57d727da] Link libafsauthent with -lresolv if required
     - [c3fc948e] Check for crypt in external library
     - [a1351d48] Fix ktime test on 64-bit systems
 
- -- Russ Allbery <rra@debian.org>  Wed, 14 Jul 2010 11:29:59 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 14 Jul 2010 11:32:17 -0700
 
 openafs (1.5.75-1) experimental; urgency=low
 
