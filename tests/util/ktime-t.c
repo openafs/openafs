@@ -24,10 +24,10 @@
 static struct testTime {
     char *time;
     long code;
-    long sec;
+    time_t sec;
 } testTimes[] = {
     { "now",                1,  0 }, /* lookup current time */
-    { "never",              0,  0xffffffff },
+    { "never",              0,  (afs_int32) -1 },
     { "12/3/89",            0,  628664400 },
     { "1/1/1",              0,  978325200 },
     { "1/0/80",             -2, 0 },
