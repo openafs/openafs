@@ -91,7 +91,7 @@ dest_only_libafs: only_libafs dest_dirs
 
 dpkg:
 	ln -fs ${srcdir}/src/packaging/Debian debian
-	dpkg-buildpackage -rfakeroot -us -uc
+	dpkg-buildpackage -rfakeroot -b -us -uc
 
 packages: dest
 	@case ${SYS_NAME} in \
