@@ -556,6 +556,14 @@ main(int argc, char **argv)
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(pr_rxstat_userok);
 
+    LogCommandLine(argc, argv, "ptserver",
+#if defined(SUPERGROUPS)
+		   "1.1",
+#else
+		   "1.0",
+#endif
+		   "Starting AFS", FSLog);
+
     rx_StartServer(1);
     osi_audit(PTS_FinishEvent, -1, AUD_END);
     exit(0);

@@ -248,8 +248,6 @@ main(int argc, char **argv)
     struct rx_service *service;
     struct ktc_encryptionKey tkey;
     int rxpackets = 100;
-    char commandLine[150];
-    int i;
     int rxJumbograms = 0;	/* default is to send and receive jumbograms. */
     int rxMaxMTU = -1;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
@@ -283,12 +281,6 @@ main(int argc, char **argv)
 	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n",
 		argv[0]);
 	exit(2);
-    }
-
-    for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	if (i > 0)
-	    strcat(commandLine, " ");
-	strcat(commandLine, argv[i]);
     }
 
     TTsleep = TTrun = 0;
@@ -541,7 +533,8 @@ main(int argc, char **argv)
     rx_SetMinProcs(service, 2);
     rx_SetMaxProcs(service, 4);
 
-    Log("Starting AFS Volserver %s (%s)\n", VolserVersion, commandLine);
+    LogCommandLine(argc, argv, "Volserver", VolserVersion, "Starting AFS",
+		   Log);
     if (TTsleep) {
 	Log("Will sleep %d second%s every %d second%s\n", TTsleep,
 	    (TTsleep > 1) ? "s" : "", TTrun + TTsleep,

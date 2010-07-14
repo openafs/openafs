@@ -154,7 +154,7 @@ static pthread_cond_t worker_cv;
 static void * SalvageChildReaperThread(void *);
 static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 
-static void SalvageServer(void);
+static void SalvageServer(int argc, char **argv);
 static void SalvageClient(VolumeId vid, char * pname);
 
 static int Reap_Child(char * prog, int * pid, int * status);
@@ -164,6 +164,11 @@ static int SalvageLogCleanup(int pid);
 
 static void * SalvageLogScanningThread(void *);
 static void ScanLogs(struct rx_queue *log_watch_queue);
+
+struct cmdline_rock {
+    int argc;
+    char **argv;
+};
 
 struct log_cleanup_node {
     struct rx_queue q;
@@ -184,6 +189,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     register struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    struct cmdline_rock *rock = (struct cmdline_rock *)arock;
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -286,7 +292,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	SalvageClient(vid, pname);
 
     } else {  /* salvageserver mode */
-	SalvageServer();
+	SalvageServer(rock->argc, rock->argv);
     }
     return (0);
 }
@@ -302,15 +308,12 @@ int n_save_args = 0;
 pthread_t main_thread;
 #endif
 
-static char commandLine[150];
-
 int
 main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-
-    int i;
+    struct cmdline_rock arock;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -347,11 +350,6 @@ main(int argc, char **argv)
 	    exit(3);
     } else {
 #endif
-	for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	    if (i > 0)
-		strlcat(commandLine, " ", sizeof(commandLine));
-	    strlcat(commandLine, argv[i], sizeof(commandLine));
-	}
 
 #ifndef AFS_NT40_ENV
 	if (geteuid() != 0) {
@@ -367,7 +365,10 @@ main(int argc, char **argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "initialize the program");
+    arock.argc = argc;
+    arock.argv = argv;
+
+    ts = cmd_CreateSyntax("initcmd", handleit, &arock, "initialize the program");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
 		"Name of partition to salvage");
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
@@ -472,7 +473,7 @@ SalvageClient(VolumeId vid, char * pname)
 static int * child_slot;
 
 static void
-SalvageServer(void)
+SalvageServer(int argc, char **argv)
 {
     int pid, ret;
     struct SalvageQueueNode * node;
@@ -496,8 +497,8 @@ SalvageServer(void)
     setlinebuf(logFile);
 
     fprintf(logFile, "%s\n", cml_version_number);
-    Log("Starting OpenAFS Online Salvage Server %s (%s)\n", SalvageVersion, commandLine);
-    
+    LogCommandLine(argc, argv, "Online Salvage Server",
+		   SalvageVersion, "Starting OpenAFS", Log);
     /* Get and hold a lock for the duration of the salvage to make sure
      * that no other salvage runs at the same time.  The routine
      * VInitVolumePackage2 (called below) makes sure that a file server or

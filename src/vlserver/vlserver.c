@@ -141,8 +141,7 @@ main(int argc, char **argv)
     struct afsconf_cell info;
     struct hostent *th;
     char hostname[VL_MAXNAMELEN];
-    int noAuth = 0, index, i;
-    char commandLine[150];
+    int noAuth = 0, index;
     char clones[MAXHOSTSPERCELL];
     char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
@@ -398,13 +397,7 @@ main(int argc, char **argv)
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
 
-    for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	if (i > 0)
-	    strcat(commandLine, " ");
-	strcat(commandLine, argv[i]);
-    }
-    ViceLog(0,
-	    ("Starting AFS vlserver %d (%s)\n", VLDBVERSION_4, commandLine));
+    LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
     printf("%s\n", cml_version_number);	/* Goes to the log */
 
     /* allow super users to manage RX statistics */

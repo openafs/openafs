@@ -171,6 +171,9 @@ extern void SetupLogSignals(void);
 extern int OpenLog(const char *fileName);
 extern int ReOpenLog(const char *fileName);
 extern int LogThreadNum(void);
+extern void LogCommandLine(int argc, char **argv, const char *progname,
+			   const char *version, const char *logstring,
+			   void (*log) (const char *format, ...));
 
 /* snprintf.c */
 

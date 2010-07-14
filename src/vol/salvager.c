@@ -372,9 +372,7 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-    char commandLine[150];
 
-    int i;
     extern char cml_version_number[];
 
 #ifdef	AFS_AIX32_ENV
@@ -412,12 +410,6 @@ main(int argc, char **argv)
 	    exit(3);
     } else {
 #endif
-	for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	    if (i > 0)
-		strcat(commandLine, " ");
-	    strcat(commandLine, argv[i]);
-	}
-
 	/* All entries to the log will be appended.  Useful if there are
 	 * multiple salvagers appending to the log.
 	 */
@@ -443,7 +435,8 @@ main(int argc, char **argv)
 	/* bad for normal help flag processing, but can do nada */
 
 	fprintf(logFile, "%s\n", cml_version_number);
-	Log("STARTING AFS SALVAGER %s (%s)\n", SalvageVersion, commandLine);
+	LogCommandLine(argc, argv, "SALVAGER", SalvageVersion, "STARTING AFS",
+		       Log);
 
 	/* Get and hold a lock for the duration of the salvage to make sure
 	 * that no other salvage runs at the same time.  The routine

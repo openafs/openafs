@@ -35,6 +35,7 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
 #include <afs/stds.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include "afsutil.h"
@@ -166,6 +167,33 @@ FSLog(const char *format, ...)
     vFSLog(format, args);
     va_end(args);
 }				/*FSLog */
+
+void
+LogCommandLine(int argc, char **argv, const char *progname,
+	       const char *version, const char *logstring,
+	       void (*log) (const char *format, ...))
+{
+    int i, l;
+    char *commandLine, *cx;
+
+    for (l = i = 0; i < argc; i++)
+	l += strlen(argv[i]) + 1;
+    if ((commandLine = malloc(l))) {
+	for (cx = commandLine, i = 0; i < argc; i++) {
+	    strcpy(cx, argv[i]);
+	    cx += strlen(cx);
+	    *(cx++) = ' ';
+	}
+	commandLine[l-1] = '\0';
+	(*log)("%s %s %s%s(%s)\n", logstring, progname,
+		    version, strlen(version)>0?" ":"", commandLine);
+	free(commandLine);
+    } else {
+	/* What, we're out of memory already!? */
+	(*log)("%s %s%s%s\n", logstring,
+	      progname, strlen(version)>0?" ":"", version);
+    }
+}
 
 static void*
 DebugOn(void *param)

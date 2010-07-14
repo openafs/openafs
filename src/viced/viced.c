@@ -1984,11 +1984,7 @@ main(int argc, char *argv[])
 	ViceLog(0, ("Both -spare and -pctspare specified, exiting.\n"));
 	exit(-1);
     }
-#ifdef AFS_SGI_XFS_IOPS_ENV
-    ViceLog(0, ("XFS/EFS File server starting\n"));
-#else
-    ViceLog(0, ("File server starting\n"));
-#endif
+    LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
 
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     /* initialize the pthread soft signal handler thread */
