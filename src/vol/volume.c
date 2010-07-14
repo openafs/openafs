@@ -225,8 +225,6 @@ struct Lock vol_listLock;	/* Lock obtained when listing volumes:  prevents a vol
 
 extern struct Lock FSYNC_handler_lock;
 
-static int TimeZoneCorrection;	/* Number of seconds west of GMT */
-
 /* Common message used when the volume goes off line */
 char *VSalvageMessage =
     "Files in this volume are currently unavailable; call operations";
@@ -252,8 +250,6 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 		   int connect, int volcache)
 {
     int errors = 0;		/* Number of errors while finding vice partitions. */
-    struct timeval tv;
-    struct timezone tz;
 
     programType = pt;
 
@@ -271,8 +267,6 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
     Lock_Init(&FSYNC_handler_lock);
 
     srandom(time(0));		/* For VGetVolumeInfo */
-    gettimeofday(&tv, &tz);
-    TimeZoneCorrection = tz.tz_minuteswest * 60;
 
     /* Ok, we have done enough initialization that fileserver can 
      * start accepting calls, even though the volumes may not be 
@@ -1755,7 +1749,34 @@ VolumeExternalName(VolumeId volumeId)
 #define OneDay	(24*60*60)	/* 24 hours */
 #endif /* OPENAFS_VOL_STATS */
 
-#define Midnight(date) ((date-TimeZoneCorrection)/OneDay*OneDay+TimeZoneCorrection)
+static time_t
+Midnight(time_t t) {
+    struct tm local, *l;
+    time_t midnight;
+
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    l = localtime_r(&t, &local);
+#else
+    l = localtime(&t);
+#endif
+
+    if (l != NULL) {
+	/* the following is strictly speaking problematic on the
+	   switching day to daylight saving time, after the switch,
+	   as tm_isdst does not match.  Similarly, on the looong day when
+	   switching back the OneDay check will not do what naively expected!
+	   The effects are minor, though, and more a matter of interpreting
+	   the numbers. */
+#ifndef AFS_PTHREAD_ENV
+	local = *l;
+#endif
+	local.tm_hour = local.tm_min=local.tm_sec = 0;
+	midnight = mktime(&local);
+	if (midnight != (time_t) -1) return(midnight);
+    }
+    return( (t/OneDay)*OneDay );
+
+}
 
 /*------------------------------------------------------------------------
  * [export] VAdjustVolumeStatistics
