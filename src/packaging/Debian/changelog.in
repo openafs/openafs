@@ -12,6 +12,17 @@ openafs (@DEB_PKGVER@-1~openafs) unstable; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Thu, 08 Apr 2010 13:20:50 -0700
 
+openafs (1.5.75-2) experimental; urgency=low
+
+  * Apply upstream deltas:
+    - [57d727da] Link libafsauthent with -lresolv if required
+    - [c3fc948e] Check for crypt in external library
+    - [a1351d48] Fix ktime test on 64-bit systems
+  * Use --after instead of --remaining in binary-indep to avoid running
+    dh_auto_install and doing the installation process again.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 14 Jul 2010 12:05:12 -0700
+
 openafs (1.5.75-1) experimental; urgency=low
 
   * New upstream testing release.
