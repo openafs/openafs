@@ -16,7 +16,7 @@ General Maintenance
     review, which makes it very easy for anyone who wishes to submit
     patches for review using Git.  See:
 
-        http://www.dementia.org/twiki/bin/view/AFSLore/GitDevelopers
+        http://openafs-wiki.stanford.edu/AFSLore/GitDevelopers
 
     for information on how to submit patches upstream.  There are some
     Debian-specific patches to the upstream source in the 1.4 versions of
@@ -133,4 +133,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Tue,  6 Apr 2010 14:27:11 -0700
+ -- Russ Allbery <rra@debian.org>, Tue, 13 Jul 2010 19:30:15 -0700
