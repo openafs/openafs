@@ -794,7 +794,6 @@ rxi_HandleSocketError(int socket)
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
-    struct sockaddr *offender;
     char controlmsgbuf[256];
     int code;
 
