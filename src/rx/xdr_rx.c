@@ -80,7 +80,7 @@ static afs_int32 *xdrrx_inline(XDR *axdrs, u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrrx_ops = {
-#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#if defined(AFS_NT40_ENV) || defined(__SUNPRO_C) || (defined(AFS_SGI_ENV)  && !defined(__c99))
 #ifdef AFS_XDR_64BITOPS
     xdrrx_getint64,     /* deserialize an afs_int64 */
     xdrrx_putint64,     /* serialize an afs_int64 */

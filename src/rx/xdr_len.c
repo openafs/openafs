@@ -84,7 +84,7 @@ xdrlen_inline(XDR *xdrs, u_int len)
 }
 
 static struct xdr_ops xdrlen_ops = {
-#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#if defined(AFS_NT40_ENV) || defined(__SUNPRO_C) || (defined(AFS_SGI_ENV)  && !defined(__c99))
 #ifdef AFS_XDR_64BITOPS
     NULL,
     NULL,
