@@ -6,6 +6,9 @@ debian/tmp/usr/sbin/state_analyzer                 usr/sbin
 debian/tmp/usr/sbin/voldump                        usr/sbin
 debian/tmp/usr/sbin/volinfo                        usr/sbin
 
+debian/tmp/usr/lib/openafs/dafileserver            usr/lib/openafs
+debian/tmp/usr/lib/openafs/dasalvager              usr/lib/openafs
+debian/tmp/usr/lib/openafs/davolserver             usr/lib/openafs
 debian/tmp/usr/lib/openafs/fileserver              usr/lib/openafs
 debian/tmp/usr/lib/openafs/salvager                usr/lib/openafs
 debian/tmp/usr/lib/openafs/salvageserver           usr/lib/openafs
