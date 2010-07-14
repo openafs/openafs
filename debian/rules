@@ -236,7 +236,7 @@ binary-arch: install-stamp
 	rm -rf debian/openafs-dbg/usr/lib/debug/sbin
 	rm -rf debian/openafs-dbg/usr/lib/debug/usr/bin
 	rm -rf debian/openafs-dbg/usr/lib/debug/usr/sbin
-	dh binary-arch --remaining
+	dh binary-arch --after dh_strip
 
 binary: binary-indep binary-arch
 
