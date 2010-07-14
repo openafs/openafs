@@ -784,17 +784,18 @@ rx_SetMaxMTU(int mtu)
     rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
 }
 
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#if defined(ADAPT_PMTU)
 int
 rxi_HandleSocketError(int socket)
 {
+    int ret=0;
+#if defined(HAVE_LINUX_ERRQUEUE_H)
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
     struct sockaddr *offender;
     char controlmsgbuf[256];
-    int ret=0;
     int code;
 
     msg.msg_name = &addr;
@@ -831,6 +832,7 @@ rxi_HandleSocketError(int socket)
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
     
 out:
+#endif
     return ret;
 }
 #endif

@@ -134,7 +134,7 @@ handle_socket_error(osi_socket so)
     if (err->ee_origin == SO_EE_ORIGIN_ICMP &&
 	err->ee_type == ICMP_DEST_UNREACH &&
 	err->ee_code == ICMP_FRAG_NEEDED) {
-	rxi_SetPeerMtu(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
+	rxi_SetPeerMtu(NULL, ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
 		       err->ee_info);
     }
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
