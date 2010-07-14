@@ -159,7 +159,7 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     int code;
 #ifdef ADAPT_PMTU
     int sockerr;
-    size_t esize;
+    int esize;
 
     while (1) {
 	sockerr=0;
@@ -211,7 +211,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     int code;
 #ifdef ADAPT_PMTU
     int sockerr;
-    size_t esize;
+    int esize;
 #endif
     struct iovec tmpvec[RX_MAXWVECS + 2];
     struct socket *sop = (struct socket *)so;
