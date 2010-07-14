@@ -100,7 +100,7 @@ afs_int32 afs_dcentries;	/*!< In-memory dcache entries */
 int dcacheDisabled = 0;
 
 struct afs_cacheOps afs_UfsCacheOps = {
-#if defined(AFS_SGI_ENV) && !defined(__c99)
+#if defined(__SUNPRO_C) || (defined(AFS_SGI_ENV) && !defined(__c99))
     osi_UFSOpen,
     osi_UFSTruncate,
     afs_osi_Read,
@@ -126,7 +126,7 @@ struct afs_cacheOps afs_UfsCacheOps = {
 };
 
 struct afs_cacheOps afs_MemCacheOps = {
-#if (defined(AFS_SGI_ENV) && !defined(__c99))
+#if defined(__SUNPRO_C) || (defined(AFS_SGI_ENV) && !defined(__c99))
     afs_MemCacheOpen,
     afs_MemCacheTruncate,
     afs_MemReadBlk,
