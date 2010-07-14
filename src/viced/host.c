@@ -1219,7 +1219,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
     ViceLog(125, 
             ("h_AddHostToUuidHashTable_r: host 0x%lx (%s:%d) added as uuid %s\n",
              (unsigned long) host, afs_inet_ntoa_r(chain->hostPtr->host, hoststr),
-             ntohs(chain->hostPtr->port), uuid));
+             ntohs(chain->hostPtr->port), uuid2));
 }
 
 /* deletes a HashChain structure corresponding to this host */
