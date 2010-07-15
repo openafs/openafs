@@ -2,7 +2,4 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
-/dasalvager
-/fssync-debug
-/salvageserver
-/salvsync-debug
+/davolserver
