@@ -267,10 +267,10 @@ extern Vnode *VGetVnode(Error * ec, struct Volume *vp, VnodeId vnodeNumber,
 			int locktype);
 extern Vnode *VGetVnode_r(Error * ec, struct Volume *vp, VnodeId vnodeNumber,
 			  int locktype);
-extern void VPutVnode(Error * ec, register Vnode * vnp);
-extern void VPutVnode_r(Error * ec, register Vnode * vnp);
-extern int VVnodeWriteToRead(Error * ec, register Vnode * vnp);
-extern int VVnodeWriteToRead_r(Error * ec, register Vnode * vnp);
+extern void VPutVnode(Error * ec, Vnode * vnp);
+extern void VPutVnode_r(Error * ec, Vnode * vnp);
+extern int VVnodeWriteToRead(Error * ec, Vnode * vnp);
+extern int VVnodeWriteToRead_r(Error * ec, Vnode * vnp);
 extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
 extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
 /*extern VFreeVnode();*/
@@ -278,7 +278,7 @@ extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp);
 extern Vnode *VLookupVnode(struct Volume * vp, VnodeId vnodeId);
 
 extern void AddToVVnList(struct Volume * vp, Vnode * vnp);
-extern void DeleteFromVVnList(register Vnode * vnp);
+extern void DeleteFromVVnList(Vnode * vnp);
 extern void AddToVnLRU(struct VnodeClassInfo * vcp, Vnode * vnp);
 extern void DeleteFromVnLRU(struct VnodeClassInfo * vcp, Vnode * vnp);
 extern void AddToVnHash(Vnode * vnp);

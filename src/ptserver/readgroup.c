@@ -60,7 +60,7 @@ osi_audit(void)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char name[PR_MAXNAMELEN];
     char gname[PR_MAXNAMELEN];
     char owner[PR_MAXNAMELEN];

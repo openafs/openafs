@@ -240,13 +240,13 @@ Command is executed in user's cell.
 static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
-    register char *tcell = NULL;
+    char *tcell = NULL;
     char confdir[200];
     struct afsconf_dir *tdir;
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
-    register afs_int32 code, i;
-    register afs_int32 sauth;
+    afs_int32 code, i;
+    afs_int32 sauth;
 
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
     /* setup to talk to servers */

@@ -173,7 +173,7 @@ static int
 MakeDir(const char *adir)
 {
     struct stat tstat;
-    register afs_int32 code;
+    afs_int32 code;
     if (stat(adir, &tstat) < 0 || (tstat.st_mode & S_IFMT) != S_IFDIR) {
 	int reqPerm;
 	unlink(adir);
@@ -233,9 +233,9 @@ CreateDirs(const char *coredir)
 
 /* strip the \\n from the end of the line, if it is present */
 static int
-StripLine(register char *abuffer)
+StripLine(char *abuffer)
 {
-    register char *tp;
+    char *tp;
 
     tp = abuffer + strlen(abuffer);	/* starts off pointing at the null  */
     if (tp == abuffer)
@@ -248,12 +248,12 @@ StripLine(register char *abuffer)
 
 /* write one bnode's worth of entry into the file */
 static int
-bzwrite(register struct bnode *abnode, void *arock)
+bzwrite(struct bnode *abnode, void *arock)
 {
-    register struct bztemp *at = (struct bztemp *)arock;
-    register int i;
+    struct bztemp *at = (struct bztemp *)arock;
+    int i;
     char tbuffer[BOZO_BSSIZE];
-    register afs_int32 code;
+    afs_int32 code;
 
     if (abnode->notifier)
 	fprintf(at->file, "bnode %s %s %d %s\n", abnode->type->name,
@@ -278,11 +278,11 @@ bzwrite(register struct bnode *abnode, void *arock)
 int
 ReadBozoFile(char *aname)
 {
-    register FILE *tfile;
+    FILE *tfile;
     char tbuffer[BOZO_BSSIZE];
-    register char *tp;
+    char *tp;
     char *instp, *typep, *notifier, *notp;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 ktmask, ktday, kthour, ktmin, ktsec;
     afs_int32 i, goal;
     struct bnode *tb;
@@ -462,9 +462,9 @@ ReadBozoFile(char *aname)
 int
 WriteBozoFile(char *aname)
 {
-    register FILE *tfile;
+    FILE *tfile;
     char tbuffer[AFSDIR_PATH_MAX];
-    register afs_int32 code;
+    afs_int32 code;
     struct bztemp btemp;
 
     if (!aname)
@@ -503,9 +503,9 @@ WriteBozoFile(char *aname)
 }
 
 static int
-bdrestart(register struct bnode *abnode, void *arock)
+bdrestart(struct bnode *abnode, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     if (abnode->fileGoal != BSTAT_NORMAL || abnode->goal != BSTAT_NORMAL)
 	return 0;		/* don't restart stopped bnodes */
@@ -526,7 +526,7 @@ bdrestart(register struct bnode *abnode, void *arock)
 static void *
 BozoDaemon(void *unused)
 {
-    register afs_int32 now;
+    afs_int32 now;
 
     /* now initialize the values */
     bozo_newKTs = 1;
@@ -726,7 +726,7 @@ int
 main(int argc, char **argv, char **envp)
 {
     struct rx_service *tservice;
-    register afs_int32 code;
+    afs_int32 code;
     struct afsconf_dir *tdir;
     int noAuth = 0;
     int i;

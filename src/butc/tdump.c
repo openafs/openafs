@@ -33,8 +33,8 @@ main(argc, argv)
 {
     char tbuffer[10000];
     int fd;
-    register afs_int32 code;
-    register char *lp;
+    afs_int32 code;
+    char *lp;
     afs_int32 count;
 
 #ifdef	AFS_AIX32_ENV

@@ -31,9 +31,9 @@ gtx_InputServer(void *param)
 {
     struct gwin *awin = (struct gwin *) param;
     
-    register int tc;
-    register int code;
-    register struct gtx_frame *tframe;
+    int tc;
+    int code;
+    struct gtx_frame *tframe;
 
     WOP_DISPLAY(awin);		/* start off with a clean display */
     while (1) {
@@ -70,8 +70,8 @@ gtx_Init(int astartInput,
     PROCESS junk;
     struct onode_initparams oi_params;	/* object init params */
     struct gwin_initparams wi_params;	/* window initialization params */
-    register struct gwin *twin;
-    register int code;
+    struct gwin *twin;
+    int code;
 
     /* setup the main window structure */
     wi_params.i_type = GATOR_WIN_CURSES;

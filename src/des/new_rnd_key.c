@@ -219,7 +219,7 @@ pthread_mutex_t des_random_mutex
 void
 des_set_random_generator_seed(des_cblock key)
 {
-    register int i;
+    int i;
 
     /* select the new stream: (note errors are not possible here...) */
     LOCK_RANDOM;

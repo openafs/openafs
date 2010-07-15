@@ -136,10 +136,10 @@ ReallyWrite(DirHandle * file, int block, char *data)
 
 
 void
-SetDirHandle(register DirHandle * dir, register Vnode * vnode)
+SetDirHandle(DirHandle * dir, Vnode * vnode)
 {
-    register Volume *vp = vnode->volumePtr;
-    register IHandle_t *h;
+    Volume *vp = vnode->volumePtr;
+    IHandle_t *h;
     IH_COPY(h, vnode->handle);
     dir->dirh_ino = h->ih_ino;
     dir->dirh_dev = h->ih_dev;

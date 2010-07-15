@@ -186,7 +186,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 {
     struct vcache *avc = VTOAFS(FILE_INODE(fp));
     struct vrequest treq;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     int code;
     int offset;
     int dirpos;

@@ -86,7 +86,7 @@ CheckSignal_Signal(int unused)
 static void *
 CheckSignal(void *unused)
 {
-    register int i, errorcode;
+    int i, errorcode;
     struct ubik_trans *trans;
 
     if ((errorcode =
@@ -131,7 +131,7 @@ vldb_rxstat_userok(struct rx_call *call)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_uint32 myHost;
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;

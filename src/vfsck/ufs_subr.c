@@ -54,8 +54,8 @@ fragacct(fs, fragmap, fraglist, cnt)
      int cnt;
 {
     int inblk;
-    register int field, subfield;
-    register int siz, pos;
+    int field, subfield;
+    int siz, pos;
 
     inblk = (int)(fragtbl[fs->fs_frag][fragmap]) << 1;
     fragmap <<= 1;
@@ -169,10 +169,10 @@ setblock(fs, cp, h)
  */
 scanc(size, cp, table, mask)
      u_int size;
-     register u_char *cp, table[];
-     register u_char mask;
+     u_char *cp, table[];
+     u_char mask;
 {
-    register u_char *end = &cp[size];
+    u_char *end = &cp[size];
 
     while (cp < end && (table[*cp] & mask) == 0)
 	cp++;
@@ -182,11 +182,11 @@ scanc(size, cp, table, mask)
 
 #if !defined(vax) && !defined(tahoe)
 skpc(mask, size, cp)
-     register u_char mask;
+     u_char mask;
      u_int size;
-     register u_char *cp;
+     u_char *cp;
 {
-    register u_char *end = &cp[size];
+    u_char *end = &cp[size];
 
     while (cp < end && *cp == mask)
 	cp++;
@@ -194,11 +194,11 @@ skpc(mask, size, cp)
 }
 
 locc(mask, size, cp)
-     register u_char mask;
+     u_char mask;
      u_int size;
-     register u_char *cp;
+     u_char *cp;
 {
-    register u_char *end = &cp[size];
+    u_char *end = &cp[size];
 
     while (cp < end && *cp != mask)
 	cp++;

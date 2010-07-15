@@ -30,8 +30,8 @@ int
 main(int argc, char **argv)
 {
     char localName[64];
-    register afs_int32 code;
-    register char *cname;
+    afs_int32 code;
+    char *cname;
     struct afsconf_dir *tdir;
     struct ktc_principal tserver;
     struct ktc_token token;

@@ -359,7 +359,7 @@ main(argc, argv)
      IN int argc;
      IN char *argv[];
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     long code;
 
     initialize_U_error_table();

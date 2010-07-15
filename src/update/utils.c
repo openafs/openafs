@@ -29,7 +29,7 @@
 int
 AddToList(struct filestr **ah, char *aname)
 {
-    register struct filestr *tf;
+    struct filestr *tf;
     tf = (struct filestr *)malloc(sizeof(struct filestr));
     tf->next = *ah;
     *ah = tf;
@@ -41,7 +41,7 @@ AddToList(struct filestr **ah, char *aname)
 int
 ZapList(struct filestr **ah)
 {
-    register struct filestr *tf, *nf;
+    struct filestr *tf, *nf;
     for (tf = *ah; tf; tf = nf) {
 	nf = tf->next;		/* save before freeing */
 	free(tf->name);

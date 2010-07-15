@@ -28,13 +28,13 @@
 const char *dbmfile;
 
 static int
-cmdproc(register struct cmd_syndesc *as, void * arock)
+cmdproc(struct cmd_syndesc *as, void * arock)
 {
     DBM *kdb;
     datum key, data;
     kalog_elt rdata;
     afs_int32 cnt = 0;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
 
     if (as->parms[0].items) {
 	dbmfile = as->parms[0].items->data;
@@ -106,8 +106,8 @@ cmdproc(register struct cmd_syndesc *as, void * arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
-    register afs_int32 code;
+    struct cmd_syndesc *ts;
+    afs_int32 code;
     char dbmfile_help[AFSDIR_PATH_MAX];
 
     sprintf(dbmfile_help, "dbmfile to use (default %s)",

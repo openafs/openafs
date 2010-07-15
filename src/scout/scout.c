@@ -1639,7 +1639,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 
     static char rn[] = "execute_scout";	/*Routine name */
     static char fullsrvname[128];	/*Full server name */
-    register int code;		/*Return code */
+    int code;		/*Return code */
     struct sockaddr_in *FSSktArray;	/*Server socket array */
     int sktbytes;		/*Num bytes in above */
     struct sockaddr_in *curr_skt;	/*Ptr to current socket */
@@ -2359,8 +2359,8 @@ int
 main(int argc, char **argv)
 {				/*main */
 
-    register afs_int32 code;	/*Return code */
-    register struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
+    afs_int32 code;	/*Return code */
+    struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
 
 #ifdef	AFS_AIX32_ENV
     /*

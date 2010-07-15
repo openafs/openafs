@@ -226,7 +226,7 @@ psproc1(definition * defp, int callTconnF, char *type, char *prefix,
     if (callTconnF == 1) {
 	f_print(fout, "\t/*IN */ struct rx_call *z_call");
     } else if (callTconnF == 2) {
-	f_print(fout, "\tregister struct ubik_client *aclient, afs_int32 aflags");
+	f_print(fout, "\tstruct ubik_client *aclient, afs_int32 aflags");
     } else {
 	f_print(fout, "\t/*IN */ struct rx_connection *z_conn");
     }

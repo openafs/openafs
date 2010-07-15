@@ -36,12 +36,12 @@ extern struct TM_Elem *TM_GetExpired(struct TM_Elem *tlist);
 extern struct TM_Elem *TM_GetEarliest(struct TM_Elem *tlist);
 #endif
 
-extern int TM_Init(register struct TM_Elem **list);
-extern int TM_Final(register struct TM_Elem **list);
+extern int TM_Init(struct TM_Elem **list);
+extern int TM_Final(struct TM_Elem **list);
 
 #define FOR_ALL_ELTS(var, list, body)\
 	{\
-	    register struct TM_Elem *_LIST_, *var, *_NEXT_;\
+	    struct TM_Elem *_LIST_, *var, *_NEXT_;\
 	    _LIST_ = (list);\
 	    for (var = _LIST_ -> Next; var != _LIST_; var = _NEXT_) {\
 		_NEXT_ = var -> Next;\

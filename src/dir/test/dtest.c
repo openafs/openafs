@@ -83,7 +83,7 @@ main(argc, argv)
 }
 
 LookupDir(dname, ename)
-     register char *dname, *ename;
+     char *dname, *ename;
 {
     dirhandle dir;
     long fid[3], code;
@@ -99,7 +99,7 @@ LookupDir(dname, ename)
 }
 
 AddEntry(dname, ename)
-     register char *dname, *ename;
+     char *dname, *ename;
 {
     dirhandle dir;
     long fid[3], code;
@@ -162,7 +162,7 @@ DelTest(dname, ename)
      char *ename;
 {
     dirhandle dir;
-    register long code;
+    long code;
 
     OpenDir(dname, &dir);
     code = Delete(&dir, ename);
@@ -177,7 +177,7 @@ CRTest(dname, ename, count)
      int count;
 {
     char tbuffer[200];
-    register long i, code;
+    long i, code;
     long fid[3];
     dirhandle dir;
 

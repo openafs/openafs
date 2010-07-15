@@ -106,9 +106,9 @@ NewTrans(afs_uint32 avol, afs_int32 apart)
 
 /* find a trans, again returning with high ref count */
 struct volser_trans *
-FindTrans(register afs_int32 atrans)
+FindTrans(afs_int32 atrans)
 {
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     VTRANS_LOCK;
     for (tt = allTrans; tt; tt = tt->next) {
 	if (tt->tid == atrans) {
@@ -124,9 +124,9 @@ FindTrans(register afs_int32 atrans)
 
 /* delete transaction if refcount == 1, otherwise queue delete for later.  Does implicit TRELE */
 afs_int32 
-DeleteTrans(register struct volser_trans *atrans, afs_int32 lock)
+DeleteTrans(struct volser_trans *atrans, afs_int32 lock)
 {
-    register struct volser_trans *tt, **lt;
+    struct volser_trans *tt, **lt;
     Error error;
 
     if (lock) VTRANS_LOCK;
@@ -162,7 +162,7 @@ DeleteTrans(register struct volser_trans *atrans, afs_int32 lock)
 
 /* put a transaction back */
 afs_int32 
-TRELE(register struct volser_trans *at)
+TRELE(struct volser_trans *at)
 {
     VTRANS_LOCK;
     if (at->refCount == 0) {
@@ -190,7 +190,7 @@ static int GCDeletes = 0;
 afs_int32
 GCTrans(void)
 {
-    register struct volser_trans *tt, *nt;
+    struct volser_trans *tt, *nt;
     afs_int32 now;
 
     now = FT_ApproxTime();

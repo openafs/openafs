@@ -35,7 +35,7 @@
 static afs_int32
 QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 {
-    register struct rx_securityClass *tc;
+    struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
     *astr = tc;
     *aindex = RX_SECIDX_NULL;
@@ -50,7 +50,7 @@ afsconf_ServerAuth(void *arock,
 		   afs_int32 *aindex)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) arock;
-    register struct rx_securityClass *tclass;
+    struct rx_securityClass *tclass;
 
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
@@ -78,7 +78,7 @@ GenericAuth(struct afsconf_dir *adir,
     struct rx_securityClass *tclass;
     afs_int32 kvno;
     afs_int32 ticketLen;
-    register afs_int32 code;
+    afs_int32 code;
 
     /* first, find the right key and kvno to use */
     code = afsconf_GetLatestKey(adir, &kvno, &key);

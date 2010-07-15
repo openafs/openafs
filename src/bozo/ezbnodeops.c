@@ -72,7 +72,7 @@ ez_restartp(struct bnode *bn)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
     struct bnode_token *tt;
-    register afs_int32 code;
+    afs_int32 code;
     struct stat tstat;
 
     code = bnode_ParseLine(abnode->command, &tt);
@@ -145,7 +145,7 @@ ez_getstat(struct bnode *bn, afs_int32 * astatus)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
     
-    register afs_int32 temp;
+    afs_int32 temp;
     if (abnode->waitingForShutdown)
 	temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->running)
@@ -162,7 +162,7 @@ ez_setstat(struct bnode *bn, afs_int32 astatus)
     struct ezbnode *abnode = (struct ezbnode *)bn;
     
     struct bnode_proc *tp;
-    register afs_int32 code;
+    afs_int32 code;
 
     if (abnode->waitingForShutdown)
 	return BZBUSY;
@@ -191,7 +191,7 @@ ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
     struct ezbnode *abnode = (struct ezbnode *)bn;
 
     /* process has exited */
-    register afs_int32 code;
+    afs_int32 code;
 
     abnode->waitingForShutdown = 0;
     abnode->running = 0;

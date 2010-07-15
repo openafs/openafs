@@ -25,7 +25,7 @@ cproc1(struct cmd_syndesc *as, void *arock)
 static int
 cproc2(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     printf("in the pear command\n");
     printf("number is %s\n", as->parms[0].items->data);
     if (as->parms[1].items)
@@ -47,7 +47,7 @@ cproc3(struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     char tline[1000];
     long tc;
     char *tp;

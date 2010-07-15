@@ -79,7 +79,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL, "Manipulate volume blessed bit");

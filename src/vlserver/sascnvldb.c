@@ -93,7 +93,7 @@ static char *
 Parent(apath)
      char *apath;
 {
-    register char *tp;
+    char *tp;
     strcpy(tspace, apath);
     tp = strrchr(tspace, '/');
     if (tp) {
@@ -108,10 +108,10 @@ Parent(apath)
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
 static int
 InAFS(apath)
-     register char *apath;
+     char *apath;
 {
     struct ViceIoctl blob;
-    register afs_int32 code;
+    afs_int32 code;
 
     blob.in_size = 0;
     blob.out_size = AFS_PIOCTL_MAXSIZE;
@@ -147,11 +147,11 @@ QuickPrintStatus(status, name)
 
 
 static int
-ListQuotaCmd(register struct cmd_syndesc *as, void *arock)
+ListQuotaCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ViceIoctl blob;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     struct VolumeStatus *status;
     char *name;
 
@@ -248,7 +248,7 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register afs_int32 code;
+    afs_int32 code;
     int old, new, rc;
     short uvers;
     char ubik[80];		/* space for some ubik header */

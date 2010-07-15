@@ -61,7 +61,7 @@ gw_init(struct gwin_initparams *params)
 {				/*gw_init */
 
     static char rn[] = "gw_init";	/*Routine name */
-    register int code;		/*Return code */
+    int code;		/*Return code */
     int gwin_debug;		/*Is debugging turned on? */
 
     /*

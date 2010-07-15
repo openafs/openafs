@@ -45,14 +45,14 @@
  * convert an arbitrary length string to a DES key
  */
 void
-des_string_to_key(char *str, register des_cblock * key)
+des_string_to_key(char *str, des_cblock * key)
 {
-    register char *in_str;
-    register unsigned temp, i, j;
-    register afs_int32 length;
+    char *in_str;
+    unsigned temp, i, j;
+    afs_int32 length;
     unsigned char *k_p;
     int forward;
-    register char *p_char;
+    char *p_char;
     char k_char[64];
     des_key_schedule key_sked;
 

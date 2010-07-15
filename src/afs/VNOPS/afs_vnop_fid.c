@@ -76,7 +76,7 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 {
     struct SmallFid Sfid;
     long addr[2];
-    register struct cell *tcell;
+    struct cell *tcell;
     extern struct vcache *afs_globalVp;
     int SizeOfSmallFid = SIZEOF_SMALLFID;
     int rootvp = 0;

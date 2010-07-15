@@ -89,9 +89,9 @@ struct bufarea *pbp = 0;
 
 ckinode(dp, idesc)
      struct dinode *dp;
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
 {
-    register daddr_t *ap;
+    daddr_t *ap;
     long ret, n, ndb, offset;
     struct dinode dino;
     UOFF_T indir_data_blks;
@@ -186,15 +186,15 @@ ckinode(dp, idesc)
 
 iblock(idesc, ilevel, isize)
      struct inodesc *idesc;
-     register long ilevel;
+     long ilevel;
      UOFF_T isize;
 {
-    register daddr_t *ap;
-    register daddr_t *aplim;
+    daddr_t *ap;
+    daddr_t *aplim;
     int i, n, (*func) ();
     UOFF_T sizepb;
     OFF_T nif;
-    register struct bufarea *bp;
+    struct bufarea *bp;
     char buf[BUFSIZ];
     extern int dirscan(), pass1check();
 
@@ -297,7 +297,7 @@ chkrange(blk, cnt)
      daddr_t blk;
      int cnt;
 {
-    register int c;
+    int c;
 
     if ((unsigned)(blk + cnt) > maxfsblock)
 	return (1);
@@ -346,7 +346,7 @@ ginode(inumber)
 #ifdef	AFS_SUN5_ENVX
 inocleanup()
 {
-    register struct inoinfo **inpp;
+    struct inoinfo **inpp;
 
     if (inphead == NULL)
 	return;
@@ -365,11 +365,11 @@ inodirty()
 }
 
 clri(idesc, type, flag)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
      char *type;
      int flag;
 {
-    register struct dinode *dp;
+    struct dinode *dp;
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
     struct inodesc cidesc;
 #endif /* ACLS */
@@ -419,7 +419,7 @@ clri(idesc, type, flag)
 findname(idesc)
      struct inodesc *idesc;
 {
-    register struct direct *dirp = idesc->id_dirp;
+    struct direct *dirp = idesc->id_dirp;
 
     if (dirp->d_ino != idesc->id_parent)
 	return (KEEPON);
@@ -430,7 +430,7 @@ findname(idesc)
 findino(idesc)
      struct inodesc *idesc;
 {
-    register struct direct *dirp = idesc->id_dirp;
+    struct direct *dirp = idesc->id_dirp;
 
     if (dirp->d_ino == 0)
 	return (KEEPON);
@@ -445,8 +445,8 @@ findino(idesc)
 pinode(ino)
      ino_t ino;
 {
-    register struct dinode *dp;
-    register char *p;
+    struct dinode *dp;
+    char *p;
     struct passwd *pw;
     char *ctime();
     time_t t;
@@ -559,8 +559,8 @@ allocino(request, type)
      ino_t request;
      int type;
 {
-    register ino_t ino;
-    register struct dinode *dp;
+    ino_t ino;
+    struct dinode *dp;
 
     if (request == 0)
 	request = ROOTINO;

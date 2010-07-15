@@ -106,8 +106,8 @@ static int cclass(char *, char, int);
 char *
 re_comp(const char *sp)
 {
-    register int c;
-    register char *ep = expbuf;
+    int c;
+    char *ep = expbuf;
     int cclcnt, numbra = 0;
     char *lastep = 0;
     char bracket[NBRA];
@@ -225,7 +225,7 @@ re_comp(const char *sp)
 static int
 cclass(char *set, char c, int af)
 {
-    register int n;
+    int n;
 
     if (c == 0)
 	return (0);
@@ -239,7 +239,7 @@ cclass(char *set, char c, int af)
 static int
 backref(int i, char *lp)
 {
-    register char *bp;
+    char *bp;
 
     bp = braslist[i];
     while (*bp++ == *lp++)
@@ -254,7 +254,7 @@ backref(int i, char *lp)
 static int
 advance(char *lp, char *ep)
 {
-    register char *curlp;
+    char *curlp;
     int ct, i;
     int rv;
 
@@ -361,8 +361,8 @@ advance(char *lp, char *ep)
 int
 re_exec(const char *p1)
 {
-    register char *p2 = expbuf;
-    register int c;
+    char *p2 = expbuf;
+    int c;
     int rv;
 
     for (c = 0; c < NBRA; c++) {

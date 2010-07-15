@@ -178,8 +178,8 @@ extern void VUnlockPartition(char *name);
 extern void VUnlockPartition_r(char *name);
 extern void VResetDiskUsage(void);
 extern void VResetDiskUsage_r(void);
-extern void VSetPartitionDiskUsage(register struct DiskPartition64 *dp);
-extern void VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp);
+extern void VSetPartitionDiskUsage(struct DiskPartition64 *dp);
+extern void VSetPartitionDiskUsage_r(struct DiskPartition64 *dp);
 extern char *VPartitionPath(struct DiskPartition64 *p);
 extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
 			     afs_sfsize_t blocks, afs_sfsize_t checkBlocks);

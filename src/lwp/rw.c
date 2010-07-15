@@ -108,7 +108,7 @@ read_process(id)
 
     PRE_PreemptMe();
     for (;;) {
-	register int i;
+	int i;
 
 	/* Wait until there is something in the queue */
 	asleep++;

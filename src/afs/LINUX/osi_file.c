@@ -129,7 +129,7 @@ void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
 }
 
 int
-afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
     AFS_STATCNT(osi_Stat);
     ObtainWriteLock(&afs_xosi, 320);
@@ -142,7 +142,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 }
 
 int
-osi_UFSClose(register struct osi_file *afile)
+osi_UFSClose(struct osi_file *afile)
 {
     AFS_STATCNT(osi_Close);
     if (afile) {
@@ -156,9 +156,9 @@ osi_UFSClose(register struct osi_file *afile)
 }
 
 int
-osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct osi_stat tstat;
     struct iattr newattrs;
     struct inode *inode = OSIFILE_INODE(afile);
@@ -200,7 +200,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 
 /* Generic read interface */
 int
-afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
+afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     struct uio auio;
@@ -239,7 +239,7 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 
 /* Generic write interface */
 int
-afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
+afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     struct uio auio;
@@ -282,7 +282,7 @@ afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
     This routine written from the RT NFS port strategy routine.
     It has been generalized a bit, but should still be pretty clear. */
 int
-afs_osi_MapStrategy(int (*aproc) (struct buf * bp), register struct buf *bp)
+afs_osi_MapStrategy(int (*aproc) (struct buf * bp), struct buf *bp)
 {
     afs_int32 returnCode;
 

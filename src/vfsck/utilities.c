@@ -186,7 +186,7 @@ reply(question)
  */
 bufinit()
 {
-    register struct bufarea *bp;
+    struct bufarea *bp;
     long bufcnt, i;
     char *bufp;
 
@@ -228,7 +228,7 @@ getdatablk(blkno, size)
      daddr_t blkno;
      long size;
 {
-    register struct bufarea *bp;
+    struct bufarea *bp;
 
     for (bp = bufhead.b_next; bp != &bufhead; bp = bp->b_next)
 	if (bp->b_bno == fsbtodb(&sblock, blkno))
@@ -254,7 +254,7 @@ getdatablk(blkno, size)
 
 struct bufarea *
 getblk(bp, blk, size)
-     register struct bufarea *bp;
+     struct bufarea *bp;
      daddr_t blk;
      long size;
 {
@@ -273,9 +273,9 @@ getblk(bp, blk, size)
 
 flush(fd, bp)
      int fd;
-     register struct bufarea *bp;
+     struct bufarea *bp;
 {
-    register int i, j;
+    int i, j;
     caddr_t sip;
     long size;
 
@@ -344,7 +344,7 @@ rwerror(mesg, blk)
 
 ckfini()
 {
-    register struct bufarea *bp, *nbp;
+    struct bufarea *bp, *nbp;
     int cnt = 0;
 
     flush(fswritefd, &sblk);
@@ -537,7 +537,7 @@ bwrite(fd, buf, blk, size)
 allocblk(frags)
      long frags;
 {
-    register int i, j, k;
+    int i, j, k;
 
     if (frags <= 0 || frags > sblock.fs_frag)
 	return (0);
@@ -583,7 +583,7 @@ getpathname(namebuf, curdir, ino)
      ino_t curdir, ino;
 {
     int len;
-    register char *cp;
+    char *cp;
     struct inodesc idesc;
     extern int findname();
 
@@ -676,7 +676,7 @@ voidquit()
  * determine whether an inode should be fixed.
  */
 dofix(idesc, msg)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
      char *msg;
 {
 
@@ -933,8 +933,8 @@ printclean()
 #ifdef	AFS_SUN52_ENV
 char *
 hasvfsopt(vfs, opt)
-     register struct vfstab *vfs;
-     register char *opt;
+     struct vfstab *vfs;
+     char *opt;
 {
     char *f, *opts;
     static char *tmpopts;

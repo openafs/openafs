@@ -176,7 +176,7 @@ main(int argc, char **argv)
 static int
 common_prolog(struct cmd_syndesc * as, struct state * state)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     VolumePackageOptions opts;
 
 #ifdef AFS_NT40_ENV
@@ -224,7 +224,7 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 static int
 common_salv_prolog(struct cmd_syndesc * as, struct state * state)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
 
     state->sop = (struct salv_state *) calloc(1, sizeof(struct salv_state));
     assert(state->sop != NULL);

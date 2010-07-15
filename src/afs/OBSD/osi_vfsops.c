@@ -216,7 +216,7 @@ afs_start(mp, flags, p)
 
 int
 afs_mount(mp, path, data, ndp, p)
-     register struct mount *mp;
+     struct mount *mp;
      char *path;
      caddr_t data;
      struct nameidata *ndp;

@@ -101,7 +101,7 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
     int index, newIndex;
     char *stp;			/* secret token ptr */
     struct ClearToken ct;
-    register char *tp;
+    char *tp;
     afs_int32 temp, gotit = 0;
     int maxLen;			/* biggest ticket we can copy */
     int tktLen;			/* server ticket length */
@@ -340,12 +340,12 @@ NFSCopyToken(afs_int32 ahost, afs_int32 auid)
 }
 
 static int
-cmdproc(register struct cmd_syndesc *as, void *arock)
+cmdproc(struct cmd_syndesc *as, void *arock)
 {
-    register struct hostent *the;
+    struct hostent *the;
     char *tp, *sysname = 0;
     afs_int32 uid, addr;
-    register afs_int32 code;
+    afs_int32 code;
 
     the = (struct hostent *)
 	hostutil_GetHostByName(tp = as->parms[0].items->data);
@@ -428,8 +428,8 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
-    register afs_int32 code;
+    struct cmd_syndesc *ts;
+    afs_int32 code;
 
 #ifdef	AFS_AIX32_ENV
     /*

@@ -416,7 +416,7 @@ static void *IOMGR(void *dummy)
 	    FT_GetTimeOfDay(&junk, 0);    /* force accurate time check */
 	    TM_Rescan(Requests);
 	    for (;;) {
-		register struct IoRequest *req;
+		struct IoRequest *req;
 		struct TM_Elem *expired;
 		expired = TM_GetExpired(Requests);
 		if (expired == NULL) break;
@@ -450,7 +450,7 @@ static void *IOMGR(void *dummy)
 	IOMGR_nfds = 0;
 
 	FOR_ALL_ELTS(r, Requests, {
-	    register struct IoRequest *req;
+	    struct IoRequest *req;
 	    req = (struct IoRequest *) r -> BackPointer;
 	    FDSetSet(req->nfds, &IOMGR_readfds,   req->readfds);
 	    FDSetSet(req->nfds, &IOMGR_writefds,  req->writefds);
@@ -635,8 +635,8 @@ static void SignalIO(int fds, fd_set *readfds, fd_set *writefds,
     int nfds;
     /* Look at everyone who's bit mask was affected */
     FOR_ALL_ELTS(r, Requests, {
-	register struct IoRequest *req;
-	register PROCESS pid;
+	struct IoRequest *req;
+	PROCESS pid;
 	req = (struct IoRequest *) r -> BackPointer;
 	nfds = MIN(fds, req->nfds);
 	if (FDSetCmp(nfds, req->readfds, readfds) ||
@@ -658,8 +658,8 @@ static void SignalTimeout(int code, struct timeval *timeout)
 {
     /* Find everyone who has specified timeout */
     FOR_ALL_ELTS(r, Requests, {
-	register struct IoRequest *req;
-	register PROCESS pid;
+	struct IoRequest *req;
+	PROCESS pid;
 	req = (struct IoRequest *) r -> BackPointer;
 	if (TM_eql(&r->TimeLeft, timeout)) {
 	    req -> result = code;
@@ -693,8 +693,8 @@ static void SigHandler (int signo)
 static int SignalSignals (void)
 {
     bool gotone = FALSE;
-    register int i;
-    register void *(*p)(void *);
+    int i;
+    void *(*p)(void *);
     afs_int32 stackSize;
 
     anySigsDelivered = FALSE;
@@ -731,7 +731,7 @@ static PROCESS IOMGR_Id = NULL;
 
 int IOMGR_SoftSig(void *(*aproc)(void *), void *arock)
 {
-    register int i;
+    int i;
     for (i=0;i<NSOFTSIG;i++) {
 	if (sigProc[i] == 0) {
 	    /* a free entry */
@@ -792,7 +792,7 @@ int IOMGR_Poll(void) {
     FT_GetTimeOfDay(&tv, 0);    /* force accurate time check */
     TM_Rescan(Requests);
     for (;;) {
-	register struct IoRequest *req;
+	struct IoRequest *req;
 	struct TM_Elem *expired;
 	expired = TM_GetExpired(Requests);
 	if (expired == NULL) break;
@@ -827,7 +827,7 @@ int IOMGR_Poll(void) {
     fds = 0;
 
     FOR_ALL_ELTS(r, Requests, {
-	register struct IoRequest *req;
+	struct IoRequest *req;
 	req = (struct IoRequest *) r -> BackPointer;
 	FDSetSet(req->nfds, readfds,   req->readfds);
 	FDSetSet(req->nfds, writefds,  req->writefds);
@@ -861,7 +861,7 @@ int IOMGR_Poll(void) {
 int IOMGR_Select(int fds, fd_set *readfds, fd_set *writefds, 
 		 fd_set *exceptfds, struct timeval *timeout)
 {
-    register struct IoRequest *request;
+    struct IoRequest *request;
     int result;
 
 #ifndef AFS_NT40_ENV
@@ -958,7 +958,7 @@ again:
 
 int IOMGR_Cancel(PROCESS pid)
 {
-    register struct IoRequest *request;
+    struct IoRequest *request;
 
     if ((request = pid->iomgrRequest) == 0) return -1;	/* Pid not found */
 

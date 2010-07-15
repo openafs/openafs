@@ -237,7 +237,7 @@ static int (*old_sigfunc[NSIG]) (int);
 static
 push_signals(void)
 {
-    register i;
+    int i;
     for (i = 0; i < NSIG; i++)
 	old_sigfunc[i] = signal(i, sig_restore);
 }
@@ -245,7 +245,7 @@ push_signals(void)
 static
 pop_signals(void)
 {
-    register i;
+    int i;
     for (i = 0; i < NSIG; i++)
 	signal(i, old_sigfunc[i]);
 }

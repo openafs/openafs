@@ -201,7 +201,7 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
 {
     struct vcache *tvc;
     vnode_t *vp, *rootvp = NULL;
-    register struct afs_q *tq;
+    struct afs_q *tq;
     struct afs_q *uq;
     int error, fv_slept;
     OSI_VFS_CONVERT(afsp);
@@ -260,9 +260,9 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     OSI_VFS_DECL(afsp);
      struct vnode **avpp;
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
     OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_root);
@@ -367,7 +367,7 @@ afs_sync(OSI_VFS_DECL(afsp),
     struct vcache *tvc;
     struct vnode *vp;
     afs_uint32 lvcachegen;
-    register struct afs_q *tq;
+    struct afs_q *tq;
     struct afs_q *uq;
     int s;
     OSI_VFS_CONVERT(afsp);
@@ -511,8 +511,8 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
 {
     struct VenusFid vfid;
     struct vrequest treq;
-    register struct cell *tcell;
-    register afs_int32 code = 0;
+    struct cell *tcell;
+    afs_int32 code = 0;
     afs_int32 ret;
 
 #if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)

@@ -203,9 +203,9 @@ pr_rxstat_userok(struct rx_call *call)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_uint32 myHost;
-    register struct hostent *th;
+    struct hostent *th;
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;

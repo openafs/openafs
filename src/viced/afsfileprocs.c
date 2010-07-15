@@ -110,7 +110,7 @@
 #include <afs/afsutil.h>
 #include <afs/dir.h>
 
-extern void SetDirHandle(register DirHandle * dir, register Vnode * vnode);
+extern void SetDirHandle(DirHandle * dir, Vnode * vnode);
 extern void FidZap(DirHandle * file);
 extern void FidZero(DirHandle * file);
 
@@ -208,7 +208,7 @@ extern int CEs, CEBlocks;
 extern int HTs, HTBlocks;
 
 afs_int32 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
-			    register struct rx_call *Call, afs_sfsize_t Pos,
+			    struct rx_call *Call, afs_sfsize_t Pos,
 			    afs_sfsize_t Len, afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
 			    afs_sfsize_t * a_bytesToFetchP,
@@ -218,7 +218,7 @@ afs_int32 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 
 afs_int32 StoreData_RXStyle(Volume * volptr, Vnode * targetptr,
 			    struct AFSFid *Fid, struct client *client,
-			    register struct rx_call *Call, afs_fsize_t Pos,
+			    struct rx_call *Call, afs_fsize_t Pos,
 			    afs_fsize_t Length, afs_fsize_t FileLength,
 			    int sync,
 #if FS_STATS_DETAILED
@@ -244,7 +244,7 @@ GetLinkCount(Volume * avp, struct stat *astat)
 afs_int32
 SpareComp(Volume * avolp)
 {
-    register afs_int32 temp;
+    afs_int32 temp;
 
     FS_LOCK;
     if (PctSpare) {
@@ -269,7 +269,7 @@ SpareComp(Volume * avolp)
  * the Cache Manager knows that the volume must be purged from the stat cache.
  */
 static void
-SetVolumeSync(register struct AFSVolSync *async, register Volume * avol)
+SetVolumeSync(struct AFSVolSync *async, Volume * avol)
 {
     FS_LOCK;
     /* date volume instance was created */
@@ -293,7 +293,7 @@ SetVolumeSync(register struct AFSVolSync *async, register Volume * avol)
  * Call returns rx connection in passed in *tconn
  */
 static int
-CallPreamble(register struct rx_call *acall, int activecall,
+CallPreamble(struct rx_call *acall, int activecall,
 	     struct rx_connection **tconn, struct host **ahostp)
 {
     struct host *thost;
@@ -416,7 +416,7 @@ CallPreamble(register struct rx_call *acall, int activecall,
 
 
 static afs_int32
-CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
+CallPostamble(struct rx_connection *aconn, afs_int32 ret,
 	      struct host *ahost)
 {
     struct host *thost;
@@ -833,7 +833,7 @@ PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
 }				/*PutVolumePackage */
 
 static int
-VolumeOwner(register struct client *client, register Vnode * targetptr)
+VolumeOwner(struct client *client, Vnode * targetptr)
 {
     afs_int32 owner = V_owner(targetptr->volumePtr);	/* get volume owner */
 
@@ -1113,7 +1113,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     Inode ino, nearInode;
     ssize_t rdlen;
     ssize_t wrlen;
-    register afs_fsize_t size;
+    afs_fsize_t size;
     size_t length;
     char *buff;
     int rc;			/* return code */
@@ -1974,9 +1974,9 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
 
 
 static afs_int32
-FileNameOK(register char *aname)
+FileNameOK(char *aname)
 {
-    register afs_int32 i, tc;
+    afs_int32 i, tc;
     i = strlen(aname);
     if (i >= 4) {
 	/* watch for @sys on the right */
@@ -2030,7 +2030,7 @@ static struct afs_buffer {
 static int afs_buffersAlloced = 0;
 
 static
-FreeSendBuffer(register struct afs_buffer *adata)
+FreeSendBuffer(struct afs_buffer *adata)
 {
     FS_LOCK;
     afs_buffersAlloced--;
@@ -2045,7 +2045,7 @@ FreeSendBuffer(register struct afs_buffer *adata)
 static char *
 AllocSendBuffer()
 {
-    register struct afs_buffer *tp;
+    struct afs_buffer *tp;
 
     FS_LOCK;
     afs_buffersAlloced++;
@@ -2580,7 +2580,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 		  struct AFSBulkStats * OutStats, struct AFSCBs * CallBacks,
 		  struct AFSVolSync * Sync)
 {
-    register int i;
+    int i;
     afs_int32 nfiles;
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
@@ -2588,7 +2588,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    register struct AFSFid *tfid;	/* file id we're dealing with now */
+    struct AFSFid *tfid;	/* file id we're dealing with now */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
     struct host *thost;
     struct client *t_client = NULL;     /* tmp pointer to the client data */
@@ -2729,7 +2729,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			struct AFSBulkStats * OutStats,
 			struct AFSCBs * CallBacks, struct AFSVolSync * Sync)
 {
-    register int i;
+    int i;
     afs_int32 nfiles;
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
@@ -2737,7 +2737,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    register struct AFSFid *tfid;	/* file id we're dealing with now */
+    struct AFSFid *tfid;	/* file id we're dealing with now */
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
@@ -5995,7 +5995,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 		 afs_int32 * a_timeP, AFS_CollData * a_dataP)
 {				/*SRXAFS_GetXStats */
 
-    register int code;		/*Return value */
+    int code;		/*Return value */
     afs_int32 *dataBuffP;	/*Ptr to data to be returned */
     afs_int32 dataBytes;	/*Bytes in data buffer */
 #if FS_STATS_DETAILED
@@ -6181,7 +6181,7 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
 		       struct AFSCBs *CallBackArray)
 {
     afs_int32 errorCode = 0;
-    register int i;
+    int i;
     struct client *client = 0;
     struct rx_connection *tcon;
     struct host *thost;
@@ -6237,7 +6237,7 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
 	errorCode = GetClient(tcon, &client);
 	if (!errorCode) {
 	    for (i = 0; i < FidArray->AFSCBFids_len; i++) {
-		register struct AFSFid *fid = &(FidArray->AFSCBFids_val[i]);
+		struct AFSFid *fid = &(FidArray->AFSCBFids_val[i]);
 		DeleteCallBack(client->host, fid);
 	    }
 	    PutClient(&client);
@@ -6404,10 +6404,10 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
 
 /* worthless hack to let CS keep running ancient software */
 static int
-afs_vtoi(register char *aname)
+afs_vtoi(char *aname)
 {
-    register afs_int32 temp;
-    register int tc;
+    afs_int32 temp;
+    int tc;
 
     temp = 0;
     while ((tc = *aname++)) {
@@ -6424,10 +6424,10 @@ afs_vtoi(register char *aname)
  * or backup volumes by name or #
  */
 static afs_int32
-CopyVolumeEntry(char *aname, register struct vldbentry *ave,
-		register struct VolumeInfo *av)
+CopyVolumeEntry(char *aname, struct vldbentry *ave,
+		struct VolumeInfo *av)
 {
-    register int i, j, vol;
+    int i, j, vol;
     afs_int32 mask, whichType;
     afs_uint32 *serverHost, *typePtr;
 
@@ -6492,7 +6492,7 @@ TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
     static afs_int32 lastDownTime = 0;
     struct vldbentry tve;
     struct rx_securityClass *vlSec;
-    register afs_int32 code;
+    afs_int32 code;
 
     if (!vlConn) {
 	vlSec = rxnull_NewClientSecurityObject();
@@ -7015,7 +7015,7 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
 
 afs_int32
 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
-		  register struct rx_call * Call, afs_sfsize_t Pos,
+		  struct rx_call * Call, afs_sfsize_t Pos,
 		  afs_sfsize_t Len, afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
 		  afs_sfsize_t * a_bytesToFetchP,
@@ -7027,7 +7027,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     IHandle_t *ihP;
     FdHandle_t *fdP;
 #ifdef AFS_NT40_ENV
-    register char *tbuffer;
+    char *tbuffer;
 #else /* AFS_NT40_ENV */
     struct iovec tiov[RX_MAXIOVECS];
     int tnio;
@@ -7240,7 +7240,7 @@ GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc,
  */
 afs_int32
 StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
-		  struct client * client, register struct rx_call * Call,
+		  struct client * client, struct rx_call * Call,
 		  afs_fsize_t Pos, afs_fsize_t Length, afs_fsize_t FileLength,
 		  int sync,
 #if FS_STATS_DETAILED
@@ -7253,7 +7253,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
     Error errorCode = 0;		/* Returned error code to caller */
 #ifdef AFS_NT40_ENV
-    register char *tbuffer;	/* data copying buffer */
+    char *tbuffer;	/* data copying buffer */
 #else /* AFS_NT40_ENV */
     struct iovec tiov[RX_MAXIOVECS];	/* no data copying with iovec */
     int tnio;			/* temp for iovec size */

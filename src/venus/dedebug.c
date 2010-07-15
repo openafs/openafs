@@ -31,8 +31,8 @@ extern struct hostent *hostutil_GetHostByName();
 
 static PrintCacheEntries(struct rx_connection *aconn, int aint32)
 {
-    register int i;
-    register afs_int32 code, addr, inode, flags, time;
+    int i;
+    afs_int32 code, addr, inode, flags, time;
     char *fileName;
 
     for(i=0;i<100000;i++) {
@@ -58,8 +58,8 @@ static int
 CommandProc(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *conn;
-    register char *hostName;
-    register struct hostent *thp;
+    char *hostName;
+    struct hostent *thp;
     afs_int32 port;
     struct rx_securityClass *secobj;
     int int32p;
@@ -93,7 +93,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 main(argc, argv)
 int argc;
 char **argv; {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
     /*

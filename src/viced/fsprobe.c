@@ -61,7 +61,7 @@ main(int argc, char **argv)
 {
     char **av = argv;
     struct sockaddr_in host;
-    register afs_int32 code;
+    afs_int32 code;
     struct hostent *hp;
     char *hostname;
     char hnamebuf[200];
@@ -113,7 +113,7 @@ main(int argc, char **argv)
 	printf("fs> ");
 	if (fgets(line, 499, stdin) != NULL) {
 	    char *oper;
-	    register char **argp = args;
+	    char **argp = args;
 	    GetArgs(line, argp, &nargs);
 	    oper = &argp[0][0];
 	    ++argp, --nargs;
@@ -225,11 +225,11 @@ main(int argc, char **argv)
 
 
 void
-GetArgs(register char *line, register char **args, register int *nargs)
+GetArgs(char *line, char **args, int *nargs)
 {
     *nargs = 0;
     while (*line) {
-	register char *last = line;
+	char *last = line;
 	while (*line == ' ')
 	    line++;
 	if (*last == ' ')
@@ -280,10 +280,10 @@ FetchData(char **argp)
 
 
 static afs_int32
-FetchProc(register struct rx_call *acall)
+FetchProc(struct rx_call *acall)
 {
     extern char *malloc();
-    register char *tbuffer;
+    char *tbuffer;
     afs_int32 tlen, length, code;
 
     code = rx_Read(acall, &length, sizeof(afs_int32));
@@ -421,7 +421,7 @@ StoreData(char **argp)
 
 
 static afs_int32
-StoreProc(register struct rx_call *acall, char *string, int length)
+StoreProc(struct rx_call *acall, char *string, int length)
 {
     afs_int32 tlen, code;
 
@@ -839,10 +839,10 @@ Readdir(char **argp)
 
 
 static afs_int32
-FetchDir(register struct rx_call *acall)
+FetchDir(struct rx_call *acall)
 {
     extern char *malloc();
-    register char *tbuffer;
+    char *tbuffer;
     afs_int32 tlen, length, code;
     struct dirent *dp;
 

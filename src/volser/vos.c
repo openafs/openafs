@@ -224,9 +224,9 @@ GetServerNoresolve(char *aname)
 afs_uint32
 GetServer(char *aname)
 {
-    register struct hostent *th;
+    struct hostent *th;
     afs_uint32 addr; /* in network byte order */
-    register afs_int32 code;
+    afs_int32 code;
     char hostname[MAXHOSTCHARS];
 
     if ((addr = GetServerNoresolve(aname)) == 0) {
@@ -288,7 +288,7 @@ IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
  /*sends the contents of file associated with <fd> and <blksize>  to Rx Stream 
   * associated  with <call> */
 int 
-SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
+SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 {
     char *buffer = (char *)0;
     afs_int32 error = 0;
@@ -1500,14 +1500,14 @@ VolumeStats_int(volintInfo *pntr, struct nvldbentry *entry, afs_uint32 server,
 
 /* command to forcibly remove a volume */
 static int
-NukeVolume(register struct cmd_syndesc *as)
+NukeVolume(struct cmd_syndesc *as)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_uint32 volID;
     afs_int32  err;
     afs_int32 partID;
     afs_uint32 server;
-    register char *tp;
+    char *tp;
 
     server = GetServer(tp = as->parms[0].items->data);
     if (!server) {
@@ -1566,7 +1566,7 @@ NukeVolume(register struct cmd_syndesc *as)
  *------------------------------------------------------------------------
  */
 static int
-ExamineVolume(register struct cmd_syndesc *as, void *arock)
+ExamineVolume(struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     afs_int32 vcode = 0;
@@ -1719,7 +1719,7 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
  *------------------------------------------------------------------------
  */
 static int
-SetFields(register struct cmd_syndesc *as, void *arock)
+SetFields(struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     volintInfo info;
@@ -1803,7 +1803,7 @@ SetFields(register struct cmd_syndesc *as, void *arock)
  *------------------------------------------------------------------------
  */
 static int
-volOnline(register struct cmd_syndesc *as, void *arock)
+volOnline(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 server;
     afs_int32 partition;
@@ -1864,7 +1864,7 @@ volOnline(register struct cmd_syndesc *as, void *arock)
  *------------------------------------------------------------------------
  */
 static int
-volOffline(register struct cmd_syndesc *as, void *arock)
+volOffline(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 server;
     afs_int32 partition;
@@ -1916,7 +1916,7 @@ volOffline(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-CreateVolume(register struct cmd_syndesc *as, void *arock)
+CreateVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum;
     char part[10];
@@ -2179,7 +2179,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 
 #define TESTM	0		/* set for move space tests, clear for production */
 static int
-MoveVolume(register struct cmd_syndesc *as, void *arock)
+MoveVolume(struct cmd_syndesc *as, void *arock)
 {
 
     afs_uint32 volid;
@@ -2308,7 +2308,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-CopyVolume(register struct cmd_syndesc *as, void *arock)
+CopyVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid;
     afs_uint32 fromserver, toserver;
@@ -2456,7 +2456,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
 
 
 static int
-ShadowVolume(register struct cmd_syndesc *as, void *arock)
+ShadowVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid, tovolid;
     afs_uint32 fromserver, toserver;
@@ -2653,7 +2653,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
 
 
 static int
-CloneVolume(register struct cmd_syndesc *as, void *arock)
+CloneVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid, cloneid;
     afs_uint32 server;
@@ -2768,7 +2768,7 @@ CloneVolume(register struct cmd_syndesc *as, void *arock)
 
 
 static int
-BackupVolume(register struct cmd_syndesc *as, void *arock)
+BackupVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_uint32 aserver;
@@ -2840,7 +2840,7 @@ BackupVolume(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ReleaseVolume(register struct cmd_syndesc *as, void *arock)
+ReleaseVolume(struct cmd_syndesc *as, void *arock)
 {
 
     struct nvldbentry entry;
@@ -2887,7 +2887,7 @@ ReleaseVolume(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-DumpVolumeCmd(register struct cmd_syndesc *as, void *arock)
+DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_uint32 aserver;
@@ -2989,7 +2989,7 @@ retry_dump:
 #define TS_NEW	3
 
 static int
-RestoreVolumeCmd(register struct cmd_syndesc *as, void *arock)
+RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid, aparentid;
     afs_uint32 aserver;
@@ -3287,7 +3287,7 @@ RestoreVolumeCmd(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
+LockReleaseCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_int32 code, err;
@@ -3313,7 +3313,7 @@ LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-AddSite(register struct cmd_syndesc *as, void *arock)
+AddSite(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_uint32 aserver;
@@ -3376,7 +3376,7 @@ AddSite(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-RemoveSite(register struct cmd_syndesc *as, void *arock)
+RemoveSite(struct cmd_syndesc *as, void *arock)
 {
 
     afs_uint32 avolid;
@@ -3429,7 +3429,7 @@ RemoveSite(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ChangeLocation(register struct cmd_syndesc *as, void *arock)
+ChangeLocation(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_uint32 aserver;
@@ -3478,7 +3478,7 @@ ChangeLocation(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ListPartitions(register struct cmd_syndesc *as, void *arock)
+ListPartitions(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 aserver;
     afs_int32 code;
@@ -3637,7 +3637,7 @@ XCompareVolID(const void *a_obj1P, const void *a_obj2P)
  *------------------------------------------------------------------------*/
 
 static int
-ListVolumes(register struct cmd_syndesc *as, void *arock)
+ListVolumes(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart, int32list, fast;
     afs_uint32 aserver;
@@ -3792,7 +3792,7 @@ ListVolumes(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-SyncVldb(register struct cmd_syndesc *as, void *arock)
+SyncVldb(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum = 0, code;	/* part name */
     char part[10];
@@ -3874,7 +3874,7 @@ SyncVldb(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-SyncServer(register struct cmd_syndesc *as, void *arock)
+SyncServer(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum, code;	/* part name */
     char part[10];
@@ -3954,7 +3954,7 @@ VolumeInfoCmd(char *name)
 }
 
 static int
-VolumeZap(register struct cmd_syndesc *as, void *arock)
+VolumeZap(struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     afs_uint32 volid, zapbackupid = 0, backupid = 0;
@@ -4040,7 +4040,7 @@ VolumeZap(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-VolserStatus(register struct cmd_syndesc *as, void *arock)
+VolserStatus(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 server;
     afs_int32 code;
@@ -4138,7 +4138,7 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-RenameVolume(register struct cmd_syndesc *as, void *arock)
+RenameVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code1, code2, code;
     struct nvldbentry entry;
@@ -4258,14 +4258,14 @@ GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *
 }
 
 static int
-DeleteEntry(register struct cmd_syndesc *as, void *arock)
+DeleteEntry(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart = 0;
     afs_uint32 avolid;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
-    register struct nvldbentry *vllist;
+    struct nvldbentry *vllist;
     struct cmd_item *itp;
     afs_int32 nentries;
     int j;
@@ -4650,7 +4650,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-BackSys(register struct cmd_syndesc *as, void *arock)
+BackSys(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_int32 apart = 0;
@@ -4659,7 +4659,7 @@ BackSys(register struct cmd_syndesc *as, void *arock)
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
-    register struct nvldbentry *vllist;
+    struct nvldbentry *vllist;
     afs_int32 nentries;
     int j;
     char pname[10];
@@ -4984,7 +4984,7 @@ BackSys(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-UnlockVLDB(register struct cmd_syndesc *as, void *arock)
+UnlockVLDB(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
     afs_uint32 aserver = 0;
@@ -4992,7 +4992,7 @@ UnlockVLDB(register struct cmd_syndesc *as, void *arock)
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
-    register struct nvldbentry *vllist;
+    struct nvldbentry *vllist;
     afs_int32 nentries;
     int j;
     afs_uint32 volid;
@@ -5088,8 +5088,8 @@ UnlockVLDB(register struct cmd_syndesc *as, void *arock)
 static char *
 PrintInt64Size(afs_uint64 in)
 {
-    register afs_uint32 hi, lo;
-    register char * units;
+    afs_uint32 hi, lo;
+    char * units;
     static char output[16];
 
     SplitInt64(in,hi,lo);
@@ -5114,7 +5114,7 @@ PrintInt64Size(afs_uint64 in)
 }
 
 static int
-PartitionInfo(register struct cmd_syndesc *as, void *arock)
+PartitionInfo(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
     afs_uint32 aserver;
@@ -5197,7 +5197,7 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ChangeAddr(register struct cmd_syndesc *as, void *arock)
+ChangeAddr(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 ip1, ip2, vcode;
     int remove = 0;
@@ -5356,7 +5356,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 }
 
 static int
-ListAddrs(register struct cmd_syndesc *as, void *arock)
+ListAddrs(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 vcode, m_uniq=0;
     afs_int32 i, printuuid = 0;
@@ -5461,7 +5461,7 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 
 
 static int
-SetAddrs(register struct cmd_syndesc *as, void *arock)
+SetAddrs(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 vcode;
     bulkaddrs m_addrs;
@@ -5525,7 +5525,7 @@ SetAddrs(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-LockEntry(register struct cmd_syndesc *as, void *arock)
+LockEntry(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_int32 vcode, err;
@@ -5552,7 +5552,7 @@ LockEntry(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ConvertRO(register struct cmd_syndesc *as, void *arock)
+ConvertRO(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 partition = -1;
     afs_uint32 volid;
@@ -5718,7 +5718,7 @@ ConvertRO(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-Sizes(register struct cmd_syndesc *as, void *arock)
+Sizes(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_uint32 aserver;
@@ -5804,7 +5804,7 @@ Sizes(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-EndTrans(register struct cmd_syndesc *as, void *arock)
+EndTrans(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 server;
     afs_int32 code, tid, rcode;
@@ -5878,9 +5878,9 @@ win32_enableCrypt(void)
 static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
-    register char *tcell;
-    register afs_int32 code;
-    register afs_int32 sauth;
+    char *tcell;
+    afs_int32 code;
+    afs_int32 sauth;
 
     /* Initialize the ubik_client connection */
     rx_SetRxDeadTime(90);
@@ -5930,9 +5930,9 @@ osi_audit(void)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
     /*

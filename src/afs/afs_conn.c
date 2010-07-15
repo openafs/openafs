@@ -100,7 +100,7 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
  * @return The conn struct, or NULL.
  */
 struct afs_conn *
-afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
+afs_Conn(struct VenusFid *afid, struct vrequest *areq,
 	 afs_int32 locktype)
 {
     u_short fsport = AFS_FSPORT;
@@ -393,12 +393,12 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
  */
 struct afs_conn *
 afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
-		 afs_int32 acell, register struct vrequest *areq,
+		 afs_int32 acell, struct vrequest *areq,
 		 afs_int32 locktype)
 {
-    register afs_int32 i;
-    register struct afs_conn *tconn;
-    register struct server *ts;
+    afs_int32 i;
+    struct afs_conn *tconn;
+    struct server *ts;
 
     /* try to find any connection from the set */
     AFS_STATCNT(afs_ConnByMHosts);
@@ -421,7 +421,7 @@ afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
  * @param locktype
  */
 void
-afs_PutConn(register struct afs_conn *ac, afs_int32 locktype)
+afs_PutConn(struct afs_conn *ac, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;

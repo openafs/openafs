@@ -129,7 +129,7 @@ static int DoAdd(void);
  *------------------------------------------------------------------------*/
 
 static int
-GetCommon(register struct cmd_syndesc *a_as, void *arock)
+GetCommon(struct cmd_syndesc *a_as, void *arock)
 {				/*GetCommon */
 
     int code;			/*Result of ka_LocalCell */
@@ -218,7 +218,7 @@ SaveRestoreInfo(void)
 #ifdef USS_DB
     static char rn[] = "uss:SaveRestoreInfo";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
     afs_int32 deletedUid;	/*Uid to be nuked */
 
     /*
@@ -539,7 +539,7 @@ static int
 DoBulkAddLine(char *a_buf,  char *a_tp)
 {				/*DoBulkAddLine */
 
-    register int i;		/*Loop variable */
+    int i;		/*Loop variable */
 #ifdef USS_DB
     static char rn[] = "DoBulkAddLine";	/*Routine name */
 #endif
@@ -916,7 +916,7 @@ static int
 DoBulkPurgeVolumeLine(char *a_buf, char *a_tp)
 {				/*DoBulkPurgeVolumeLine */
 
-    register int i;		/*Loop variable */
+    int i;		/*Loop variable */
     int overflow;		/*Did a field copy overflow happen? */
 
     /*
@@ -1094,7 +1094,7 @@ static int
 DoBulkRestoreLine(char *a_buf, char *a_tp)
 {				/*DoBulkRestoreLine */
 
-    register int i;		/*Loop variable */
+    int i;		/*Loop variable */
     int overflow;		/*Overflow occur on field copy? */
 
     /*
@@ -1268,7 +1268,7 @@ static int
 DoBulkExecLine(char *a_buf, char *a_tp)
 {				/*DoBulkExecLine */
 
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
 
     /*
      * Really, uss_procs_Exec does all the work for us!
@@ -1302,7 +1302,7 @@ DoBulkExecLine(char *a_buf, char *a_tp)
  *------------------------------------------------------------------------*/
 extern int Pipe;
 static int
-HandleBulk(register struct cmd_syndesc *a_as, void *a_rock)
+HandleBulk(struct cmd_syndesc *a_as, void *a_rock)
 {				/*HandleBulk */
 
 #define USS_BULK_CMD_CHARS	 128
@@ -1511,11 +1511,11 @@ HandleBulk(register struct cmd_syndesc *a_as, void *a_rock)
  *------------------------------------------------------------------------*/
 
 static int
-AddUser(register struct cmd_syndesc *a_as, void *a_rock)
+AddUser(struct cmd_syndesc *a_as, void *a_rock)
 {				/*AddUser */
 
     int i;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     int code;
 
     /*
@@ -1790,8 +1790,8 @@ int
 main(int argc, char *argv[])
 {				/*Main routine */
 
-    register struct cmd_syndesc *cs;	/*Command line syntax descriptor */
-    register afs_int32 code;	/*Return code */
+    struct cmd_syndesc *cs;	/*Command line syntax descriptor */
+    afs_int32 code;	/*Return code */
 
 #ifdef	AFS_AIX32_ENV
     /*

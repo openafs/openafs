@@ -67,8 +67,8 @@ struct QUEUE {
 int stack_offset;
 
 static remove(p, q)
-    register PROCESS p;
-    register struct QUEUE *q;
+    PROCESS p;
+    struct QUEUE *q;
 {
     /* Special test for only element on queue */
     if (q->count == 1)
@@ -85,8 +85,8 @@ static remove(p, q)
 }
 
 static insert(p, q)
-    register PROCESS p;
-    register struct QUEUE *q;
+    PROCESS p;
+    struct QUEUE *q;
 {
     if (q->head == NULL) {	/* Queue is empty */
 	q -> head = p;
@@ -111,8 +111,8 @@ static move(p, from, to)
 /* Iterator macro */
 #define for_all_elts(var, q, body)\
 	{\
-	    register PROCESS var, _NEXT_;\
-	    register int _I_;\
+	    PROCESS var, _NEXT_;\
+	    int _I_;\
 	    for (_I_=q.count, var = q.head; _I_>0; _I_--, var=_NEXT_) {\
 		_NEXT_ = var -> next;\
 		body\
@@ -248,7 +248,7 @@ int LWP_DispatchProcess()		/* explicit voluntary preemption */
 Dump_Processes()
 {
     if (lwp_init) {
-	register int i;
+	int i;
 	for (i=0; i<MAX_PRIORITIES; i++)
 	    for_all_elts(x, runnable[i], {
 		printf("[Priority %d]\n", i);
@@ -278,7 +278,7 @@ int LWP_InitializeProcessSupport(priority, pid)
 {
     PROCESS temp;
     struct lwp_pcb dummy;
-    register int i;
+    int i;
 
     Debug(0, ("Entered LWP_InitializeProcessSupport"))
     if (lwp_init != NULL) return LWP_EINIT;
@@ -326,7 +326,7 @@ int LWP_INTERNALSIGNAL(event, yield)		/* signal the occurence of an event */
 int LWP_TerminateProcessSupport()	/* terminate all LWP support */
 {
     int pc;
-    register int i;
+    int i;
 
     Debug(0, ("Entered Terminate_Process_Support"))
     if (lwp_init == NULL) return LWP_EINIT;
@@ -354,8 +354,8 @@ int LWP_WaitProcess(event)		/* wait on a single event */
 }
 
 int LWP_MwaitProcess(wcount, evlist, ecount)	/* wait on m of n events */
-    register int wcount, ecount;
-    register char *evlist[];
+    int wcount, ecount;
+    char *evlist[];
 {
     Debug(0, ("Entered Mwait_Process [waitcnt = %d]", wcount))
 
@@ -443,7 +443,7 @@ static Create_Process_Part2 ()	/* creates a context for the new process */
 }
 
 static Delete_PCB(pid) 	/* remove a PCB from the process list */
-    register PROCESS pid;
+    PROCESS pid;
 {
     Debug(4, ("Entered Delete_PCB"))
     remove(pid, (pid->blockflag || pid->status==WAITING || pid->status==DESTROYED
@@ -501,7 +501,7 @@ int LWP_TraceProcesses = 0;
 
 static Dispatcher()		/* Lightweight process dispatcher */
 {
-    register int i;
+    int i;
 #ifdef DEBUG
     static int dispatch_count = 0;
 
@@ -570,7 +570,7 @@ static Initialize_PCB(temp, priority, stack, stacksize, ep, parm, name)
     char *parm;
     char *name,*stack;
 {
-    register int i = 0;
+    int i = 0;
 
     Debug(4, ("Entered Initialize_PCB"))
     if (name != NULL)
@@ -592,10 +592,10 @@ static Initialize_PCB(temp, priority, stack, stacksize, ep, parm, name)
 }
 
 static int Internal_Signal(event)
-    register char *event;
+    char *event;
 {
     int rc = LWP_ENOWAIT;
-    register int i;
+    int i;
 
     Debug(0, ("Entered Internal_Signal [event id 0x%x]", event))
     if (!lwp_init) return LWP_EINIT;
@@ -625,17 +625,17 @@ static Initialize_Stack(stackptr, stacksize)
     char *stackptr;
     int stacksize;
 {
-    register int i;
+    int i;
 
     Debug(4, ("Entered Initialize_Stack"))
     for (i=0; i<stacksize; i++) stackptr[i] = i & 0xff;
 }
 
 static int Stack_Used(stackptr, stacksize)
-   register char *stackptr;
+   char *stackptr;
    int stacksize;
 {
-    register int i;
+    int i;
 
     for (i=0;i<stacksize;i++)
     if ((unsigned char) stackptr[i] != (i & 0xff))

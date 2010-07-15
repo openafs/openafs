@@ -115,13 +115,13 @@ des_quad_cksum(unsigned char *in, afs_uint32 * out, afs_int32 length,
      * checksum is written unto the address pointed to.
      */
 
-    register afs_uint32 z;
-    register afs_uint32 z2;
-    register afs_uint32 x;
-    register afs_uint32 x2;
-    register unsigned char *p;
-    register afs_int32 len;
-    register int i;
+    afs_uint32 z;
+    afs_uint32 z2;
+    afs_uint32 x;
+    afs_uint32 x2;
+    unsigned char *p;
+    afs_int32 len;
+    int i;
 
     /* use all 8 bytes of seed */
 

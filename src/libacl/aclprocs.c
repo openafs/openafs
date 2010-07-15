@@ -177,10 +177,10 @@ acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessL
      * exceeds ACL_MAXENTRIES, or a failure code from the protection server 
      * if the problem occured there. */
 
-    register int i;
-    register int j;
-    register int code;
-    register char *nextc;
+    int i;
+    int j;
+    int code;
+    char *nextc;
     idlist lids;
     namelist lnames;
 
@@ -241,10 +241,10 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
     /* Converts the external access list elist into the access list acl.  
      * Returns 0 on success, -1 if ANY name is not translatable, or if 
      * the number of entries exceeds al_maxExtEntries. */
-    register int i;
-    register int j;
-    register char *nextc;
-    register afs_int32 code;
+    int i;
+    int j;
+    char *nextc;
+    afs_int32 code;
     int p, n;
     namelist lnames;
     idlist lids;

@@ -34,8 +34,8 @@ extern int sysconfig(int cmd, void *arg, int len);
 main(argc, argv)
      char **argv;
 {
-    register add, del;
-    register c;
+    int add, del;
+    int c;
     int res;
     char *file;
     mid_t kmid;

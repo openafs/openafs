@@ -122,7 +122,7 @@ pts_Sleep(struct cmd_syndesc *as, void *arock)
 static int
 popsource(void)
 {
-    register struct sourcestack *sp;
+    struct sourcestack *sp;
     if (!(sp = shead))
 	return 0;
     if (source != stdin)
@@ -261,7 +261,7 @@ CleanUp(struct cmd_syndesc *as, void *arock)
 static int
 CreateGroup(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 id;
     char *owner;
     struct cmd_item *namei;
@@ -321,7 +321,7 @@ CreateGroup(struct cmd_syndesc *as, void *arock)
 static int
 CreateUser(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 id;
     struct cmd_item *namei;
     struct cmd_item *idi;
@@ -367,7 +367,7 @@ CreateUser(struct cmd_syndesc *as, void *arock)
 static int
 GetNameOrId(struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     int n = 0;
     struct cmd_item *i;
     int goodCount;
@@ -459,7 +459,7 @@ static int
 GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	    struct namelist *lnames)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     int n = 0, nd = 0, nm = 0, id, x;
     struct cmd_item *i;
     struct namelist names, tnames;	/* local copy, if not ret. names */
@@ -547,7 +547,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 static int
 AddToGroup(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct cmd_item *u, *g;
 
     for (u = as->parms[0].items; u; u = u->next) {
@@ -568,7 +568,7 @@ AddToGroup(struct cmd_syndesc *as, void *arock)
 static int
 RemoveFromGroup(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct cmd_item *u, *g;
 
     for (u = as->parms[0].items; u; u = u->next) {
@@ -589,7 +589,7 @@ RemoveFromGroup(struct cmd_syndesc *as, void *arock)
 static int
 ListMembership(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     idlist ids;
     namelist names;
     int i;
@@ -658,7 +658,7 @@ ListMembership(struct cmd_syndesc *as, void *arock)
 static int
 Delete(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     idlist ids;
     namelist names;
     int i;
@@ -697,7 +697,7 @@ int flags_shift[5] = { 2, 1, 2, 2, 1 };	/* bits for each */
 static int
 CheckEntry(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 rcode = 1;
     int i, flag = 0, admin = 0;
     namelist lnames, names;
@@ -833,7 +833,7 @@ ListEntries(struct cmd_syndesc *as, void *arock)
 static int
 ChownGroup(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char *name;
     char *owner;
 
@@ -849,7 +849,7 @@ ChownGroup(struct cmd_syndesc *as, void *arock)
 static int
 ChangeName(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char *oldname;
     char *newname;
 
@@ -865,7 +865,7 @@ ChangeName(struct cmd_syndesc *as, void *arock)
 static int
 ListMax(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 maxUser, maxGroup;
 
     code = pr_ListMaxUserId(&maxUser);
@@ -886,7 +886,7 @@ ListMax(struct cmd_syndesc *as, void *arock)
 static int
 SetMaxCommand(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 maxid;
 
     code = 0;
@@ -926,7 +926,7 @@ SetMaxCommand(struct cmd_syndesc *as, void *arock)
 static int
 SetFields(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     idlist ids;
     namelist names;
     int i;
@@ -1021,7 +1021,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
 static int
 ListOwned(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     idlist ids;
     namelist names;
     namelist list;
@@ -1091,7 +1091,7 @@ add_std_args(struct cmd_syndesc *ts)
 
 /*
 static void add_NameOrId_args (ts)
-  register struct cmd_syndesc *ts;
+  struct cmd_syndesc *ts;
 {
     cmd_AddParm(ts,"-name",CMD_LIST,CMD_OPTIONAL,"user or group name");
     cmd_AddParm(ts,"-id",CMD_LIST,CMD_OPTIONAL,"user or group id");
@@ -1103,8 +1103,8 @@ static void add_NameOrId_args (ts)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
-    register struct cmd_syndesc *ts;
+    afs_int32 code;
+    struct cmd_syndesc *ts;
 
     char line[2048];
     char *cp, *lastp;

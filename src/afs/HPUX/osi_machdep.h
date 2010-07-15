@@ -81,7 +81,7 @@ extern void afsHashRelease(tid_t key);
 #endif
 
 /* Uses splnet only in the SP case */
-#define SPLVAR      register ulong_t splvar
+#define SPLVAR      ulong_t splvar
 #define NETPRI      NET_SPLNET(splvar)
 #define USERPRI     NET_SPLX(splvar)
 

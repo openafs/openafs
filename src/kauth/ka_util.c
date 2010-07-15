@@ -69,8 +69,8 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register int i;
-    register long code;
+    int i;
+    long code;
     long cc, upos = 0, gpos;
     struct ubik_hdr *uh;
     char *dfile = 0;
@@ -244,7 +244,7 @@ int
 display_entry(offset)
      int offset;
 {
-    register int i;
+    int i;
     struct kaentry dbentry;
     int count;
     unsigned char x[8];

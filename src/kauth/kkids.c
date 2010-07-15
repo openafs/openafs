@@ -206,10 +206,10 @@ find_me(char *arg, char *parent_dir)
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
 static int
-InAFS(register char *apath)
+InAFS(char *apath)
 {
     struct ViceIoctl blob;
-    register afs_int32 code;
+    afs_int32 code;
     char space[AFS_PIOCTL_MAXSIZE];
 
     blob.in_size = 0;

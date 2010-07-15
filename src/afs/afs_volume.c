@@ -79,10 +79,10 @@ static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 * vID,
  * @return return 0 if can't parse as a number.
  */
 static int
-afs_vtoi(register char *aname)
+afs_vtoi(char *aname)
 {
-    register afs_int32 temp;
-    register int tc;
+    afs_int32 temp;
+    int tc;
     temp = 0;
     AFS_STATCNT(afs_vtoi);
     while ((tc = *aname++)) {
@@ -113,9 +113,9 @@ afs_int32 afs_FVIndex = -1;
 struct volume *
 afs_UFSGetVolSlot(void)
 {
-    register struct volume *tv = NULL, **lv;
+    struct volume *tv = NULL, **lv;
     struct osi_file *tfile;
-    register afs_int32 i = -1, code;
+    afs_int32 i = -1, code;
     afs_int32 bestTime;
     struct volume *bestVp, *oldLp = NULL, **bestLp = NULL;
     char *oldname = NULL;
@@ -239,7 +239,7 @@ afs_UFSGetVolSlot(void)
 struct volume *
 afs_MemGetVolSlot(void)
 {
-    register struct volume *tv;
+    struct volume *tv;
 
     AFS_STATCNT(afs_MemGetVolSlot);
     if (!afs_freeVolList) {
@@ -653,7 +653,7 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
  * @return 
  */
 struct volume *
-afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
+afs_GetVolumeByName(char *aname, afs_int32 acell, int agood,
 		    struct vrequest *areq, afs_int32 locktype)
 {
     afs_int32 i;
@@ -882,9 +882,9 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 void
 InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 {
-    register struct server *ts;
+    struct server *ts;
     struct cell *cellp;
-    register int i, j;
+    int i, j;
     afs_int32 mask;
     afs_uint32 temp;
 
@@ -960,9 +960,9 @@ InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 void
 InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 {
-    register struct server *ts;
+    struct server *ts;
     struct cell *cellp;
-    register int i, j;
+    int i, j;
     afs_int32 mask;
     afs_uint32 temp;
 
@@ -1038,10 +1038,10 @@ void
 InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		    struct cell *tcell, struct vrequest *areq)
 {
-    register struct server *ts;
+    struct server *ts;
     struct afs_conn *tconn;
     struct cell *cellp;
-    register int i, j;
+    int i, j;
     afs_uint32 serverid;
     afs_int32 mask;
     int k;

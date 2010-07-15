@@ -35,13 +35,13 @@
 
 /* also parse a.b.c.d addresses */
 struct hostent *
-hostutil_GetHostByName(register char *ahost)
+hostutil_GetHostByName(char *ahost)
 {
-    register int tc;
+    int tc;
     static struct hostent thostent;
     static char *addrp[2];
     static char addr[4];
-    register char *ptr = ahost;
+    char *ptr = ahost;
     afs_uint32 tval, numeric = 0;
     int dots = 0;
 

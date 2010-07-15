@@ -69,7 +69,7 @@ int pass2check();
 
 pass3()
 {
-    register struct dinode *dp;
+    struct dinode *dp;
     struct inodesc idesc;
     ino_t inumber, orphan;
     int loopcnt;

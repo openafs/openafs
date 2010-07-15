@@ -32,10 +32,10 @@ extern afs_rwlock_t afs_xcbhash;
 
 
 static void
-FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
+FetchWholeEnchilada(struct vcache *avc, struct vrequest *areq)
 {
-    register afs_int32 nextChunk;
-    register struct dcache *tdc;
+    afs_int32 nextChunk;
+    struct dcache *tdc;
     afs_size_t pos, offset, len;
 
     AFS_STATCNT(FetchWholeEnchilada);
@@ -53,12 +53,12 @@ FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
 }
 
 int
-afsremove(register struct vcache *adp, register struct dcache *tdc,
-	  register struct vcache *tvc, char *aname, afs_ucred_t *acred,
+afsremove(struct vcache *adp, struct dcache *tdc,
+	  struct vcache *tvc, char *aname, afs_ucred_t *acred,
 	  struct vrequest *treqp)
 {
-    register afs_int32 code = 0;
-    register struct afs_conn *tc;
+    afs_int32 code = 0;
+    struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
@@ -175,10 +175,10 @@ int
 afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 {
     struct vrequest treq;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     struct VenusFid unlinkFid;
-    register afs_int32 code;
-    register struct vcache *tvc;
+    afs_int32 code;
+    struct vcache *tvc;
     afs_size_t offset, len;
     struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(adp);
@@ -396,14 +396,14 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
  * CAUTION -- may be called with avc unheld. */
 
 int
-afs_remunlink(register struct vcache *avc, register int doit)
+afs_remunlink(struct vcache *avc, int doit)
 {
     afs_ucred_t *cred;
     char *unlname;
     struct vcache *adp;
     struct vrequest treq;
     struct VenusFid dirFid;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     afs_int32 code = 0;
 
     if (NBObtainWriteLock(&avc->lock, 423))

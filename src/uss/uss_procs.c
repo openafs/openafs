@@ -515,7 +515,7 @@ static int
 Copy(char *a_from, char *a_to, int a_mode)
 {				/*Copy */
 
-    register int fd1, fd2;
+    int fd1, fd2;
     char buf[BUFSIZ];
     int cnt, rc;
 
@@ -591,7 +591,7 @@ static int
 Echo(char *a_s, char *a_f, int a_mode)
 {				/*Echo */
 
-    register int fd;
+    int fd;
 
     umask(0);
     fd = open(a_f, O_EXCL | O_CREAT | O_WRONLY, a_mode);

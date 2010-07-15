@@ -1015,7 +1015,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 	fprintf(f, ">%s\n", lcell);
 	for (i = 0; i < cellinfo.numServers; i++) {
-	    register unsigned char *tp =
+	    unsigned char *tp =
 		(unsigned char *)&cellinfo.hostAddr[i].sin_addr;
 	    fprintf(f, "%d.%d.%d.%d\t#%s\n", tp[0], tp[1], tp[2], tp[3],
 		    cellinfo.hostName[i]);
@@ -1057,7 +1057,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(register struct cmd_syndesc *ts)
+add_std_args(struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, 12);
     cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,

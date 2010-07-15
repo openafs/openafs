@@ -782,9 +782,9 @@ extern int VAllocBitmapEntry(Error * ec, Volume * vp,
 			     struct vnodeIndex *index);
 extern int VAllocBitmapEntry_r(Error * ec, Volume * vp,
 			       struct vnodeIndex *index, int flags);
-extern void VFreeBitMapEntry(Error * ec, register struct vnodeIndex *index,
+extern void VFreeBitMapEntry(Error * ec, struct vnodeIndex *index,
 			     unsigned bitNumber);
-extern void VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,
+extern void VFreeBitMapEntry_r(Error * ec, struct vnodeIndex *index,
 			       unsigned bitNumber);
 extern int VolumeNumber(char *name);
 extern char *VolumeExternalName(VolumeId volumeId);
@@ -803,8 +803,8 @@ extern void VDetachVolume(Error * ec, Volume * vp);
 extern void VDetachVolume_r(Error * ec, Volume * vp);
 extern void VForceOffline(Volume * vp);
 extern void VForceOffline_r(Volume * vp, int flags);
-extern void VBumpVolumeUsage(register Volume * vp);
-extern void VBumpVolumeUsage_r(register Volume * vp);
+extern void VBumpVolumeUsage(Volume * vp);
+extern void VBumpVolumeUsage_r(Volume * vp);
 extern void VSetDiskUsage(void);
 extern void VPrintCacheStats(void);
 extern void VReleaseVnodeFiles_r(Volume * vp);
@@ -817,8 +817,8 @@ extern int VInitAttachVolumes(ProgramType pt);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
-extern void VTakeOffline_r(register Volume * vp);
-extern void VTakeOffline(register Volume * vp);
+extern void VTakeOffline_r(Volume * vp);
+extern void VTakeOffline(Volume * vp);
 extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
 extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
 			   char **namep);

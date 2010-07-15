@@ -51,8 +51,8 @@ extern int bcdb_UseTape(struct budb_tapeEntry *, afs_int32 *);
 extern int bcdb_FinishTape(struct budb_tapeEntry *);
 extern int bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq,
 		            struct budb_tapeEntry *teptr);
-extern afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *);
-extern afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *,
+extern afs_int32 bcdb_AddVolume(struct budb_volumeEntry *);
+extern afs_int32 bcdb_AddVolumes(struct budb_volumeEntry *,
 				 afs_int32 );
 extern afs_int32 udbClientInit(int noAuthFlag, int localauth, char *cellName);
 struct ktc_token;

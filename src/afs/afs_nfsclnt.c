@@ -47,10 +47,10 @@ extern struct afs_exporter *afs_nfsexporter;
 /* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't 
  * exist. RefCount is incremented and it's time stamped. */
 static struct nfsclientpag *
-afs_GetNfsClientPag(register afs_int32 uid, register afs_uint32 host)
+afs_GetNfsClientPag(afs_int32 uid, afs_uint32 host)
 {
-    register struct nfsclientpag *np;
-    register afs_int32 i, now;
+    struct nfsclientpag *np;
+    afs_int32 i, now;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -95,7 +95,7 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_uint32 host)
 It's also called whenever a unixuser structure belonging to the remote user associated with the nfsclientpag structure, np, is garbage collected. */
 void
 afs_PutNfsClientPag(np)
-     register struct nfsclientpag *np;
+     struct nfsclientpag *np;
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -111,8 +111,8 @@ afs_PutNfsClientPag(np)
 static struct nfsclientpag *
 afs_FindNfsClientPag(afs_int32 uid, afs_uint32 host, afs_int32 pag)
 {
-    register struct nfsclientpag *np;
-    register afs_int32 i;
+    struct nfsclientpag *np;
+    afs_int32 i;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -178,9 +178,9 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 			 afs_uint32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
-    register struct nfsclientpag *np, *tnp;
+    struct nfsclientpag *np, *tnp;
     extern struct unixuser *afs_FindUser(), *afs_GetUser();
-    register struct unixuser *au = 0;
+    struct unixuser *au = 0;
     afs_int32 uid, pag, code = 0;
 
     AFS_ASSERT_GLOCK();
@@ -417,7 +417,7 @@ done:
 /* It's called whenever a new unixuser structure is created for the remote
  * user associated with the nfsclientpag structure, np */
 void
-afs_nfsclient_hold(register struct nfsclientpag *np)
+afs_nfsclient_hold(struct nfsclientpag *np)
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -429,7 +429,7 @@ afs_nfsclient_hold(register struct nfsclientpag *np)
 
 /* check if this exporter corresponds to the specified host */
 int
-afs_nfsclient_checkhost(register struct nfsclientpag *np, afs_uint32 host)
+afs_nfsclient_checkhost(struct nfsclientpag *np, afs_uint32 host)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -439,7 +439,7 @@ afs_nfsclient_checkhost(register struct nfsclientpag *np, afs_uint32 host)
 
 /* get the host for this exporter, or 0 if there is an error */
 afs_uint32
-afs_nfsclient_gethost(register struct nfsclientpag *np)
+afs_nfsclient_gethost(struct nfsclientpag *np)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -451,11 +451,11 @@ afs_nfsclient_gethost(register struct nfsclientpag *np)
  * user (inname contains the new sysname). In all cases, outname returns
  * the current sysname value for this remote user */
 int 
-afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname, 
+afs_nfsclient_sysname(struct nfsclientpag *np, char *inname, 
 		      char ***outname, int *num, int allpags)
 {
-    register struct nfsclientpag *tnp;
-    register afs_int32 i;
+    struct nfsclientpag *tnp;
+    afs_int32 i;
     char *cp;
     int count, t;
 #if defined(AFS_SGIMP_ENV)
@@ -506,11 +506,11 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
  * "unixuser" structures associated with them (i.e. unixusercnt == 0) and
  * they haven't had any activity the last NFSCLIENTGC seconds */
 void
-afs_nfsclient_GC(register struct afs_exporter *exporter,
-		 register afs_int32 pag)
+afs_nfsclient_GC(struct afs_exporter *exporter,
+		 afs_int32 pag)
 {
-    register struct nfsclientpag *np, **tnp, *nnp;
-    register afs_int32 i, delflag;
+    struct nfsclientpag *np, **tnp, *nnp;
+    afs_int32 i, delflag;
 	int count;
 
 #if defined(AFS_SGIMP_ENV)
@@ -541,7 +541,7 @@ afs_nfsclient_GC(register struct afs_exporter *exporter,
 
 
 int
-afs_nfsclient_stats(register struct afs_exporter *export)
+afs_nfsclient_stats(struct afs_exporter *export)
 {
     /* Nothing much to do here yet since most important stats are collected 
      * directly in the afs_exporter structure itself */

@@ -65,7 +65,6 @@
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
-#undef register
 #endif /* AFS_OSF_ENV */
 #else /* KERNEL */
 # include <sys/types.h>

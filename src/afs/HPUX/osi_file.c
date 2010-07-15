@@ -28,7 +28,7 @@ void *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct inode *ip;
-    register struct osi_file *afile = NULL;
+    struct osi_file *afile = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
     int dummy;
@@ -61,9 +61,9 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 }
 
 int
-afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
     ObtainWriteLock(&afs_xosi, 320);
@@ -80,7 +80,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 }
 
 int
-osi_UFSClose(register struct osi_file *afile)
+osi_UFSClose(struct osi_file *afile)
 {
     AFS_STATCNT(osi_Close);
     if (afile->vnode) {
@@ -92,11 +92,11 @@ osi_UFSClose(register struct osi_file *afile)
 }
 
 int
-osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 {
     afs_ucred_t *oldCred;
     struct vattr tvattr;
-    register afs_int32 code;
+    afs_int32 code;
     struct osi_stat tstat;
     AFS_STATCNT(osi_Truncate);
 
@@ -133,13 +133,13 @@ osi_DisableAtimes(struct vnode *avp)
 
 /* Generic read interface */
 int
-afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
+afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     afs_ucred_t *oldCred;
     long resid;
-    register afs_int32 code;
-    register afs_int32 cnt1 = 0;
+    afs_int32 code;
+    afs_int32 cnt1 = 0;
     AFS_STATCNT(osi_Read);
 
     /**
@@ -184,12 +184,12 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 
 /* Generic write interface */
 int
-afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
+afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     afs_ucred_t *oldCred;
     long resid;
-    register afs_int32 code;
+    afs_int32 code;
     AFS_STATCNT(osi_Write);
     if (!afile)
 	osi_Panic("afs_osi_Write called with null param");

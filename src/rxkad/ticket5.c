@@ -89,10 +89,10 @@
  */
 
 extern afs_int32 des_cbc_encrypt(void * in, void * out,
-                                 register afs_int32 length,
+                                 afs_int32 length,
                                  des_key_schedule key, des_cblock *iv,
                                  int encrypt);
-extern int des_key_sched(register des_cblock k, des_key_schedule schedule);
+extern int des_key_sched(des_cblock k, des_key_schedule schedule);
 
 struct krb_convert {
     char *v4_str;

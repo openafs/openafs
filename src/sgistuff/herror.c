@@ -46,7 +46,7 @@ herror(s)
      char *s;
 {
     struct iovec iov[4];
-    register struct iovec *v = iov;
+    struct iovec *v = iov;
 
     if (s && *s) {
 	v->iov_base = s;

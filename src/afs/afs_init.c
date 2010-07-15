@@ -100,8 +100,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers,
 	      afs_int32 dynamic_vcaches)
 {
-    register afs_int32 i;
-    register struct volume *tv;
+    afs_int32 i;
+    struct volume *tv;
 
     AFS_STATCNT(afs_CacheInit);
     /*
@@ -208,7 +208,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 void
 afs_ComputeCacheParms(void)
 {
-    register afs_int32 i;
+    afs_int32 i;
     afs_int32 afs_maxCacheDirty;
 
     /*
@@ -360,11 +360,11 @@ afs_InitVolumeInfo(char *afile)
  *
  */
 int
-afs_InitCacheInfo(register char *afile)
+afs_InitCacheInfo(char *afile)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct osi_stat tstat;
-    register struct osi_file *tfile;
+    struct osi_file *tfile;
     struct afs_fheader theader;
 #ifndef AFS_LINUX22_ENV
     struct vnode *filevp;
@@ -511,7 +511,7 @@ int afs_resourceinit_flag = 0;
 int
 afs_ResourceInit(int preallocs)
 {
-    register afs_int32 i;
+    afs_int32 i;
     static struct rx_securityClass *secobj;
 
     AFS_STATCNT(afs_ResourceInit);

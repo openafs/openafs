@@ -39,9 +39,9 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 #endif
 {
     struct vrequest treq;
-    register struct dcache *tdc;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    struct dcache *tdc;
+    afs_int32 code;
+    struct afs_conn *tc;
     afs_size_t offset, len;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;

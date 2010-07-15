@@ -90,10 +90,10 @@ afs_MemCacheOpen(afs_dcache_id_t *ainode)
  * this routine simulates a read in the Memory Cache 
  */
 int
-afs_MemReadBlk(register struct osi_file *fP, int offset, void *dest,
+afs_MemReadBlk(struct osi_file *fP, int offset, void *dest,
 	       int size)
 {
-    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
+    struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     int bytesRead;
 
     ObtainReadLock(&mceP->afs_memLock);
@@ -120,7 +120,7 @@ afs_MemReadBlk(register struct osi_file *fP, int offset, void *dest,
  * this routine simulates a readv in the Memory Cache 
  */
 int
-afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
+afs_MemReadvBlk(struct memCacheEntry *mceP, int offset,
 		struct iovec *iov, int nio, int size)
 {
     int i;
@@ -156,7 +156,7 @@ afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
 int
 afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 {
-    register struct memCacheEntry *mceP =
+    struct memCacheEntry *mceP =
 	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
     int length = mceP->size - AFS_UIO_OFFSET(uioP);
     afs_int32 code;
@@ -170,10 +170,10 @@ afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 }
 
 int
-afs_MemWriteBlk(register struct osi_file *fP, int offset, void *src,
+afs_MemWriteBlk(struct osi_file *fP, int offset, void *src,
 		int size)
 {
-    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
+    struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     struct iovec tiov;
 
     tiov.iov_base = src;
@@ -183,7 +183,7 @@ afs_MemWriteBlk(register struct osi_file *fP, int offset, void *src,
 
 /*XXX: this extends a block arbitrarily to support big directories */
 int
-afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
+afs_MemWritevBlk(struct memCacheEntry *mceP, int offset,
 		 struct iovec *iov, int nio, int size)
 {
     int i;
@@ -230,7 +230,7 @@ afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 int
 afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 {
-    register struct memCacheEntry *mceP =
+    struct memCacheEntry *mceP =
 	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
     afs_int32 code;
 
@@ -268,9 +268,9 @@ afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 }
 
 int
-afs_MemCacheTruncate(register struct osi_file *fP, int size)
+afs_MemCacheTruncate(struct osi_file *fP, int size)
 {
-    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
+    struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     AFS_STATCNT(afs_MemCacheTruncate);
 
     ObtainWriteLock(&mceP->afs_memLock, 313);
@@ -300,7 +300,7 @@ afs_MemCacheTruncate(register struct osi_file *fP, int size)
 void
 shutdown_memcache(void)
 {
-    register int index;
+    int index;
 
     if (cacheDiskType != AFS_FCACHE_TYPE_MEM)
 	return;

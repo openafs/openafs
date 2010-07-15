@@ -66,9 +66,9 @@ int hdl_notifier(struct bnode_proc *tp);
 
 /* Remember the name of the process, if any, that failed last */
 static void
-RememberProcName(register struct bnode_proc *ap)
+RememberProcName(struct bnode_proc *ap)
 {
-    register struct bnode *tbnodep;
+    struct bnode *tbnodep;
 
     tbnodep = ap->bnode;
     if (tbnodep->lastErrorName) {
@@ -85,7 +85,7 @@ RememberProcName(register struct bnode_proc *ap)
  * be stored.
  */
 int
-bnode_CoreName(register struct bnode *abnode, char *acoreName, char *abuffer)
+bnode_CoreName(struct bnode *abnode, char *acoreName, char *abuffer)
 {
     if (DoCore) {
 	strcpy(abuffer, DoCore);
@@ -103,12 +103,12 @@ bnode_CoreName(register struct bnode *abnode, char *acoreName, char *abuffer)
 
 /* save core file, if any */
 static void
-SaveCore(register struct bnode *abnode, register struct bnode_proc
+SaveCore(struct bnode *abnode, struct bnode_proc
 	 *aproc)
 {
     char tbuffer[256];
     struct stat tstat;
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     char *corefile = NULL;
 #ifdef BOZO_SAVE_CORES
     struct timeval Start;
@@ -174,33 +174,33 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 }
 
 int
-bnode_GetString(register struct bnode *abnode, register char *abuffer,
-		register afs_int32 alen)
+bnode_GetString(struct bnode *abnode, char *abuffer,
+		afs_int32 alen)
 {
     return BOP_GETSTRING(abnode, abuffer, alen);
 }
 
 int
-bnode_GetParm(register struct bnode *abnode, register afs_int32 aindex,
-	      register char *abuffer, afs_int32 alen)
+bnode_GetParm(struct bnode *abnode, afs_int32 aindex,
+	      char *abuffer, afs_int32 alen)
 {
     return BOP_GETPARM(abnode, aindex, abuffer, alen);
 }
 
 int
-bnode_GetStat(register struct bnode *abnode, register afs_int32 * astatus)
+bnode_GetStat(struct bnode *abnode, afs_int32 * astatus)
 {
     return BOP_GETSTAT(abnode, astatus);
 }
 
 int
-bnode_RestartP(register struct bnode *abnode)
+bnode_RestartP(struct bnode *abnode)
 {
     return BOP_RESTARTP(abnode);
 }
 
 static int
-bnode_Check(register struct bnode *abnode)
+bnode_Check(struct bnode *abnode)
 {
     if (abnode->flags & BNODE_WAIT) {
 	abnode->flags &= ~BNODE_WAIT;
@@ -211,7 +211,7 @@ bnode_Check(register struct bnode *abnode)
 
 /* tell if an instance has a core file */
 int
-bnode_HasCore(register struct bnode *abnode)
+bnode_HasCore(struct bnode *abnode)
 {
     return BOP_HASCORE(abnode);
 }
@@ -220,8 +220,8 @@ bnode_HasCore(register struct bnode *abnode)
 int
 bnode_WaitAll(void)
 {
-    register struct bnode *tb;
-    register afs_int32 code;
+    struct bnode *tb;
+    afs_int32 code;
     afs_int32 stat;
 
   retry:
@@ -245,9 +245,9 @@ bnode_WaitAll(void)
 
 /* wait until bnode status is correct */
 int
-bnode_WaitStatus(register struct bnode *abnode, int astatus)
+bnode_WaitStatus(struct bnode *abnode, int astatus)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 stat;
 
     bnode_Hold(abnode);
@@ -273,7 +273,7 @@ bnode_WaitStatus(register struct bnode *abnode, int astatus)
 }
 
 int
-bnode_SetStat(register struct bnode *abnode, register int agoal)
+bnode_SetStat(struct bnode *abnode, int agoal)
 {
     abnode->goal = agoal;
     bnode_Check(abnode);
@@ -283,7 +283,7 @@ bnode_SetStat(register struct bnode *abnode, register int agoal)
 }
 
 int
-bnode_SetGoal(register struct bnode *abnode, register int agoal)
+bnode_SetGoal(struct bnode *abnode, int agoal)
 {
     abnode->goal = agoal;
     bnode_Check(abnode);
@@ -291,7 +291,7 @@ bnode_SetGoal(register struct bnode *abnode, register int agoal)
 }
 
 int
-bnode_SetFileGoal(register struct bnode *abnode, register int agoal)
+bnode_SetFileGoal(struct bnode *abnode, int agoal)
 {
     if (abnode->fileGoal == agoal)
 	return 0;		/* already done */
@@ -304,8 +304,8 @@ bnode_SetFileGoal(register struct bnode *abnode, register int agoal)
 int
 bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 {
-    register struct bnode *tb, *nb;
-    register afs_int32 code;
+    struct bnode *tb, *nb;
+    afs_int32 code;
 
     for (tb = allBnodes; tb; tb = nb) {
 	nb = tb->next;
@@ -317,9 +317,9 @@ bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 }
 
 struct bnode *
-bnode_FindInstance(register char *aname)
+bnode_FindInstance(char *aname)
 {
-    register struct bnode *tb;
+    struct bnode *tb;
 
     for (tb = allBnodes; tb; tb = tb->next) {
 	if (!strcmp(tb->name, aname))
@@ -329,9 +329,9 @@ bnode_FindInstance(register char *aname)
 }
 
 static struct bnode_type *
-FindType(register char *aname)
+FindType(char *aname)
 {
-    register struct bnode_type *tt;
+    struct bnode_type *tt;
 
     for (tt = allTypes; tt; tt = tt->next) {
 	if (!strcmp(tt->name, aname))
@@ -343,7 +343,7 @@ FindType(register char *aname)
 int
 bnode_Register(char *atype, struct bnode_ops *aprocs, int anparms)
 {
-    register struct bnode_type *tt;
+    struct bnode_type *tt;
 
     for (tt = allTypes; tt; tt = tt->next) {
 	if (!strcmp(tt->name, atype))
@@ -416,7 +416,7 @@ bnode_Create(char *atype, char *ainstance, struct bnode ** abp, char *ap1,
 int
 bnode_DeleteName(char *ainstance)
 {
-    register struct bnode *tb;
+    struct bnode *tb;
 
     tb = bnode_FindInstance(ainstance);
     if (!tb)
@@ -426,14 +426,14 @@ bnode_DeleteName(char *ainstance)
 }
 
 int
-bnode_Hold(register struct bnode *abnode)
+bnode_Hold(struct bnode *abnode)
 {
     abnode->refCount++;
     return 0;
 }
 
 int
-bnode_Release(register struct bnode *abnode)
+bnode_Release(struct bnode *abnode)
 {
     abnode->refCount--;
     if (abnode->refCount == 0 && abnode->flags & BNODE_DELETE) {
@@ -444,10 +444,10 @@ bnode_Release(register struct bnode *abnode)
 }
 
 int
-bnode_Delete(register struct bnode *abnode)
+bnode_Delete(struct bnode *abnode)
 {
-    register afs_int32 code;
-    register struct bnode **lb, *ub;
+    afs_int32 code;
+    struct bnode **lb, *ub;
     afs_int32 temp;
 
     if (abnode->refCount != 0) {
@@ -480,14 +480,14 @@ bnode_Delete(register struct bnode *abnode)
 
 /* function to tell if there's a timeout coming up */
 int
-bnode_PendingTimeout(register struct bnode *abnode)
+bnode_PendingTimeout(struct bnode *abnode)
 {
     return (abnode->flags & BNODE_NEEDTIMEOUT);
 }
 
 /* function called to set / clear periodic bnode wakeup times */
 int
-bnode_SetTimeout(register struct bnode *abnode, afs_int32 atimeout)
+bnode_SetTimeout(struct bnode *abnode, afs_int32 atimeout)
 {
     if (atimeout != 0) {
 	abnode->nextTimeout = FT_ApproxTime() + atimeout;
@@ -502,7 +502,7 @@ bnode_SetTimeout(register struct bnode *abnode, afs_int32 atimeout)
 
 /* used by new bnode creation code to format bnode header */
 int
-bnode_InitBnode(register struct bnode *abnode, struct bnode_ops *abnodeops,
+bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops,
 		char *aname)
 {
     struct bnode **lb, *nb;
@@ -526,9 +526,9 @@ bnode_InitBnode(register struct bnode *abnode, struct bnode_ops *abnodeops,
 }
 
 static int
-DeleteProc(register struct bnode_proc *abproc)
+DeleteProc(struct bnode_proc *abproc)
 {
-    register struct bnode_proc **pb, *tb;
+    struct bnode_proc **pb, *tb;
     struct bnode_proc *nb;
 
     for (pb = &allProcs, tb = *pb; tb; pb = &tb->next, tb = nb) {
@@ -546,10 +546,10 @@ DeleteProc(register struct bnode_proc *abproc)
 static void *
 bproc(void *unused)
 {
-    register afs_int32 code;
-    register struct bnode *tb;
-    register afs_int32 temp;
-    register struct bnode_proc *tp;
+    afs_int32 code;
+    struct bnode *tb;
+    afs_int32 temp;
+    struct bnode_proc *tp;
     struct bnode *nb;
     int options;		/* must not be register */
     struct timeval tv;
@@ -697,11 +697,11 @@ bproc(void *unused)
 }
 
 static afs_int32
-SendNotifierData(register int fd, register struct bnode_proc *tp)
+SendNotifierData(int fd, struct bnode_proc *tp)
 {
-    register struct bnode *tb = tp->bnode;
+    struct bnode *tb = tp->bnode;
     char buffer[1000], *bufp = buffer, *buf1;
-    register int len;
+    int len;
 
     /*
      * First sent out the bnode_proc struct
@@ -845,7 +845,7 @@ int
 bnode_Init(void)
 {
     PROCESS junk;
-    register afs_int32 code;
+    afs_int32 code;
     struct sigaction newaction;
     static int initDone = 0;
 
@@ -876,9 +876,9 @@ bnode_Init(void)
 
 /* free token list returned by parseLine */
 int
-bnode_FreeTokens(register struct bnode_token *alist)
+bnode_FreeTokens(struct bnode_token *alist)
 {
-    register struct bnode_token *nlist;
+    struct bnode_token *nlist;
     for (; alist; alist = nlist) {
 	nlist = alist->next;
 	free(alist->key);
@@ -900,11 +900,11 @@ int
 bnode_ParseLine(char *aline, struct bnode_token **alist)
 {
     char tbuffer[256];
-    register char *tptr = NULL;
+    char *tptr = NULL;
     int inToken;
     struct bnode_token *first, *last;
-    register struct bnode_token *ttok;
-    register int tc;
+    struct bnode_token *ttok;
+    int tc;
 
     inToken = 0;		/* not copying token chars at start */
     first = (struct bnode_token *)0;
@@ -1000,9 +1000,9 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
 }
 
 int
-bnode_StopProc(register struct bnode_proc *aproc, int asignal)
+bnode_StopProc(struct bnode_proc *aproc, int asignal)
 {
-    register int code;
+    int code;
     if (!(aproc->flags & BPROC_STARTED) || (aproc->flags & BPROC_EXITED))
 	return BZNOTACTIVE;
 
@@ -1015,9 +1015,9 @@ bnode_StopProc(register struct bnode_proc *aproc, int asignal)
 }
 
 int
-bnode_Deactivate(register struct bnode *abnode)
+bnode_Deactivate(struct bnode *abnode)
 {
-    register struct bnode **pb, *tb;
+    struct bnode **pb, *tb;
     struct bnode *nb;
     if (!(abnode->flags & BNODE_ACTIVE))
 	return BZNOTACTIVE;

@@ -54,7 +54,7 @@ bc_GetPartitionID(char *aname, afs_int32 *aval)
 
     /*bc_GetPartitionID */
 
-    register char tc;
+    char tc;
     char ascii[3];
 
     /* special-case "anything" */
@@ -127,10 +127,10 @@ bc_ParseHost(char *aname, struct sockaddr_in *asockaddr)
 
 {				/*bc_ParseHost */
 
-    register struct hostent *th;	/*Host entry */
+    struct hostent *th;	/*Host entry */
     afs_uint32 addr;		/*Converted address */
     afs_int32 b1, b2, b3, b4;	/*Byte-sized address chunks */
-    register afs_int32 code;	/*Return code from sscanf() */
+    afs_int32 code;	/*Return code from sscanf() */
     afs_int32 tmp1, tmp2;
 
     /*
@@ -192,7 +192,7 @@ int
 bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
 		   afs_int32 aflags)
 {
-    register struct bc_volumeSet **tlast, *tset, *nset;
+    struct bc_volumeSet **tlast, *tset, *nset;
 
     if (bc_FindVolumeSet(aconfig, avolName))
 	return -1;		/* already exists */
@@ -217,7 +217,7 @@ bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
 }
 
 static int
-FreeVolumeEntry(register struct bc_volumeEntry *aentry)
+FreeVolumeEntry(struct bc_volumeEntry *aentry)
 {
     free(aentry->name);
     free(aentry->serverName);
@@ -227,9 +227,9 @@ FreeVolumeEntry(register struct bc_volumeEntry *aentry)
 }
 
 static int
-FreeVolumeEntryList(register struct bc_volumeEntry *aentry)
+FreeVolumeEntryList(struct bc_volumeEntry *aentry)
 {
-    register struct bc_volumeEntry *tnext;
+    struct bc_volumeEntry *tnext;
 
     while (aentry) {
 	tnext = aentry->next;
@@ -253,7 +253,7 @@ int
 bc_DeleteVolumeSet(struct bc_config *aconfig, char *avolName,
 		   afs_int32 *flags)
 {
-    register struct bc_volumeSet **tlast, *tset;
+    struct bc_volumeSet **tlast, *tset;
 
     *flags = 0;
     tlast = &aconfig->vset;
@@ -274,9 +274,9 @@ int
 bc_DeleteVolumeItem(struct bc_config *aconfig, char *avolName,
 		    afs_int32 anumber)
 {
-    register afs_int32 i;
-    register struct bc_volumeSet *tset;
-    register struct bc_volumeEntry *tentry, **tlast;
+    afs_int32 i;
+    struct bc_volumeSet *tset;
+    struct bc_volumeEntry *tentry, **tlast;
 
     tset = bc_FindVolumeSet(aconfig, avolName);
     if (!tset)
@@ -300,8 +300,8 @@ bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost,
 		 char *apart, char *avol)
 {
     struct bc_volumeSet *tset;
-    register struct bc_volumeEntry **tlast, *tentry;
-    register afs_int32 code;
+    struct bc_volumeEntry **tlast, *tentry;
+    afs_int32 code;
 
     tset = bc_FindVolumeSet(aconfig, avolName);
     if (!tset)
@@ -337,7 +337,7 @@ struct bc_volumeSet *
 bc_FindVolumeSet(struct bc_config *aconfig, char *aname)
 {				/*bc_FindVolumeSet */
 
-    register struct bc_volumeSet *tvs;
+    struct bc_volumeSet *tvs;
 
     for (tvs = aconfig->vset; tvs; tvs = tvs->next) {
 	if (!strcmp(tvs->name, aname))
@@ -365,7 +365,7 @@ int
 bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName, 
 		      afs_int32 expDate, afs_int32 expType)
 {
-    register struct bc_dumpSchedule *tdump;
+    struct bc_dumpSchedule *tdump;
     struct bc_dumpSchedule *parent, *node;
     afs_int32 code;
 
@@ -406,8 +406,8 @@ int
 bc_DeleteDumpScheduleAddr(struct bc_config *aconfig, 
                           struct bc_dumpSchedule *adumpAddr)
 {
-    register struct bc_dumpSchedule **tlast, *tdump;
-    register struct bc_dumpSchedule *tnext;
+    struct bc_dumpSchedule **tlast, *tdump;
+    struct bc_dumpSchedule *tnext;
 
     /* knock off all children first */
     for (tdump = adumpAddr->firstChild; tdump; tdump = tnext) {
@@ -442,7 +442,7 @@ bc_DeleteDumpScheduleAddr(struct bc_config *aconfig,
 struct bc_dumpSchedule *
 bc_FindDumpSchedule(struct bc_config *aconfig, char *aname)
 {
-    register struct bc_dumpSchedule *tds;
+    struct bc_dumpSchedule *tds;
     for (tds = aconfig->dsched; tds; tds = tds->next) {
 	if (!strcmp(tds->name, aname))
 	    return tds;
@@ -457,7 +457,7 @@ bc_FindDumpSchedule(struct bc_config *aconfig, char *aname)
 int
 bc_DeleteDumpSchedule(struct bc_config *aconfig, char *adumpName)
 {
-    register struct bc_dumpSchedule *tdump;
+    struct bc_dumpSchedule *tdump;
 
     /* does a linear search of the dump schedules in order to find
      * the one to delete
@@ -488,7 +488,7 @@ bc_DeleteDumpSchedule(struct bc_config *aconfig, char *adumpName)
 int
 bc_ProcessDumpSchedule(struct bc_config *aconfig)
 {
-    register struct bc_dumpSchedule *tds;
+    struct bc_dumpSchedule *tds;
     struct bc_dumpSchedule *parentptr, *nodeptr;
     int retval;
 

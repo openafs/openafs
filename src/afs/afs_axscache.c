@@ -32,7 +32,7 @@ afs_rwlock_t afs_xaxs;
 struct axscache *
 afs_SlowFindAxs(struct axscache **cachep, afs_int32 id)
 {
-    register struct axscache *i, *j;
+    struct axscache *i, *j;
 
     j = (*cachep);
     i = j->next;

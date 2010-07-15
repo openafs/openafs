@@ -59,8 +59,8 @@ afs_int32 afs_new_inum = 0;
 char *
 afs_cv2string(char *ttp, afs_uint32 aval)
 {
-    register char *tp = ttp;
-    register int i;
+    char *tp = ttp;
+    int i;
     int any;
 
     AFS_STATCNT(afs_cv2string);
@@ -198,7 +198,7 @@ void
 print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		       int flag)
 {
-    register struct server *aserver = sa->server;
+    struct server *aserver = sa->server;
     char *ptr = "\n";
     afs_uint32 address;
 
@@ -231,13 +231,13 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 void
 afs_CheckLocks(void)
 {
-    register int i;
+    int i;
 
     afs_warn("Looking for locked data structures.\n");
     afs_warn("conn %p, volume %p, user %p, cell %p, server %p\n", &afs_xconn,
 	     &afs_xvolume, &afs_xuser, &afs_xcell, &afs_xserver);
     {
-	register struct vcache *tvc;
+	struct vcache *tvc;
 	AFS_STATCNT(afs_CheckLocks);
 
 	for (i = 0; i < VCSIZE; i++) {
@@ -255,7 +255,7 @@ afs_CheckLocks(void)
 	}
     }
     {
-	register struct dcache *tdc;
+	struct dcache *tdc;
 	for (i = 0; i < afs_cacheFiles; i++) {
 	    tdc = afs_indexTable[i];
 	    if (tdc) {

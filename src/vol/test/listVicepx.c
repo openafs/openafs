@@ -544,9 +544,9 @@ printDirs(partitionName)
 ader */
 static
 ComputeUsedPages(dhp)
-     register struct DirHeader *dhp;
+     struct DirHeader *dhp;
 {
-    register afs_int32 usedPages, i;
+    afs_int32 usedPages, i;
 
     if (dhp->header.pgcount != 0) {
 	/* new style */

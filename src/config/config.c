@@ -23,10 +23,10 @@ int mc_copy(FILE *, FILE *, char **);
 int
 main(int argc, char **argv)
 {
-    register FILE *infile;
-    register FILE *outfile;
+    FILE *infile;
+    FILE *outfile;
     char *alist[5];
-    register int code;
+    int code;
     char *sysname;
 
     if (argc != 4) {

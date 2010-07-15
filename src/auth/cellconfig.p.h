@@ -88,7 +88,7 @@ struct afsconf_dir {
 
 extern afs_int32 afsconf_FindService(const char *aname);
 extern const char *afsconf_FindIANAName(const char *aname);
-extern struct afsconf_dir *afsconf_Open(register const char *adir);
+extern struct afsconf_dir *afsconf_Open(const char *adir);
 extern int afsconf_CellApply(struct afsconf_dir *adir,
 			     int (*aproc) (struct afsconf_cell * cell,
 					   void *arock,
@@ -108,7 +108,7 @@ extern int afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 extern int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName,
 			       char *aservice,
 			       struct afsconf_cell *acellInfo);
-extern int afsconf_GetLocalCell(register struct afsconf_dir *adir,
+extern int afsconf_GetLocalCell(struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
@@ -180,7 +180,7 @@ struct rx_call;
 extern int afsconf_CheckAuth(void *arock, struct rx_call *acall);
 extern int afsconf_GetNoAuthFlag(struct afsconf_dir *adir);
 extern void afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag);
-extern int afsconf_DeleteUser(struct afsconf_dir *adir, register char *auser);
+extern int afsconf_DeleteUser(struct afsconf_dir *adir, char *auser);
 extern int afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, 
 			      char *abuffer, afs_int32 abufferLen);
 extern int afsconf_AddUser(struct afsconf_dir *adir, char *aname);

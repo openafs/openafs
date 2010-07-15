@@ -34,8 +34,8 @@ int
 afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	  char *aname2, afs_ucred_t *acred, struct vrequest *areq)
 {
-    register struct afs_conn *tc;
-    register afs_int32 code = 0;
+    struct afs_conn *tc;
+    afs_int32 code = 0;
     afs_int32 returnCode;
     int oneDir, doLocally;
     afs_size_t offset, len;
@@ -445,7 +445,7 @@ afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, s
 afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, afs_ucred_t *acred)
 #endif
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct afs_fakestat_state ofakestate;
     struct afs_fakestat_state nfakestate;
     struct vrequest treq;

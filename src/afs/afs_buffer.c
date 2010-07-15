@@ -101,15 +101,15 @@ static afs_int32 timecounter;
 
 /* Prototypes for static routines */
 static struct buffer *afs_newslot(struct dcache *adc, afs_int32 apage,
-				  register struct buffer *lp);
+				  struct buffer *lp);
 
 static int dinit_flag = 0;
 void
 DInit(int abuffers)
 {
     /* Initialize the venus buffer system. */
-    register int i;
-    register struct buffer *tb;
+    int i;
+    struct buffer *tb;
 
     AFS_STATCNT(DInit);
     if (dinit_flag)
@@ -145,10 +145,10 @@ DInit(int abuffers)
 }
 
 void *
-DRead(register struct dcache *adc, register int page)
+DRead(struct dcache *adc, int page)
 {
     /* Read a page from the disk. */
-    register struct buffer *tb, *tb2;
+    struct buffer *tb, *tb2;
     struct osi_file *tfile;
     int code;
 
@@ -174,7 +174,7 @@ DRead(register struct dcache *adc, register int page)
 	    ReleaseWriteLock(&tb->lock);
 	    return tb->data;
 	} else {
-	    register struct buffer **bufhead;
+	    struct buffer **bufhead;
 	    bufhead = &(phTable[pHash(adc->index, page)]);
 	    while ((tb2 = tb->hashNext)) {
 		if (bufmatch(tb2)) {
@@ -245,10 +245,10 @@ DRead(register struct dcache *adc, register int page)
 }
 
 static void
-FixupBucket(register struct buffer *ap)
+FixupBucket(struct buffer *ap)
 {
-    register struct buffer **lp, *tp;
-    register int i;
+    struct buffer **lp, *tp;
+    int i;
     /* first try to get it out of its current hash bucket, in which it
      * might not be */
     AFS_STATCNT(FixupBucket);
@@ -270,12 +270,12 @@ FixupBucket(register struct buffer *ap)
 
 /* lp is pointer to a fairly-old buffer */
 static struct buffer *
-afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
+afs_newslot(struct dcache *adc, afs_int32 apage, struct buffer *lp)
 {
     /* Find a usable buffer slot */
-    register afs_int32 i;
+    afs_int32 i;
     afs_int32 lt = 0;
-    register struct buffer *tp;
+    struct buffer *tp;
     struct osi_file *tfile;
 
     AFS_STATCNT(afs_newslot);
@@ -379,9 +379,9 @@ DRelease(void *loc, int flag)
 {
     /* Release a buffer, specifying whether or not the buffer has been
      * modified by the locker. */
-    register struct buffer *bp = (struct buffer *)loc;
-    register int index;
-    register struct buffer *tp;
+    struct buffer *bp = (struct buffer *)loc;
+    int index;
+    struct buffer *tp;
 
     AFS_STATCNT(DRelease);
     if (!bp)
@@ -407,11 +407,11 @@ DRelease(void *loc, int flag)
 }
 
 int
-DVOffset(register void *ap)
+DVOffset(void *ap)
 {
     /* Return the byte within a file represented by a buffer pointer. */
-    register int index;
-    register struct buffer *tp;
+    int index;
+    struct buffer *tp;
     AFS_STATCNT(DVOffset);
     /* look for buffer by scanning Unix buffers for appropriate address */
     /* see comment in DRelease about the meaning of ap/bp */
@@ -444,9 +444,9 @@ DVOffset(register void *ap)
 void
 DZap(struct dcache *adc)
 {
-    register int i;
+    int i;
     /* Destroy all buffers pertaining to a particular fid. */
-    register struct buffer *tb;
+    struct buffer *tb;
 
     AFS_STATCNT(DZap);
     ObtainReadLock(&afs_bufferLock);
@@ -504,8 +504,8 @@ void
 DFlush(void)
 {
     /* Flush all the modified buffers. */
-    register int i;
-    register struct buffer *tb;
+    int i;
+    struct buffer *tb;
 
     AFS_STATCNT(DFlush);
     tb = Buffers;
@@ -538,10 +538,10 @@ DFlush(void)
 }
 
 void *
-DNew(register struct dcache *adc, register int page)
+DNew(struct dcache *adc, int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
-    register struct buffer *tb;
+    struct buffer *tb;
     AFS_STATCNT(DNew);
     ObtainWriteLock(&afs_bufferLock, 264);
     if ((tb = afs_newslot(adc, page, NULL)) == 0) {
@@ -567,7 +567,7 @@ DNew(register struct dcache *adc, register int page)
 void
 shutdown_bufferpackage(void)
 {
-    register struct buffer *tp;
+    struct buffer *tp;
     int i;
 
     AFS_STATCNT(shutdown_bufferpackage);

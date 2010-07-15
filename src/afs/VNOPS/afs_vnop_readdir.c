@@ -66,10 +66,10 @@
 int
 BlobScan(struct dcache * afile, afs_int32 ablob)
 {
-    register afs_int32 relativeBlob;
+    afs_int32 relativeBlob;
     afs_int32 pageBlob;
-    register struct PageHeader *tpe;
-    register afs_int32 i;
+    struct PageHeader *tpe;
+    afs_int32 i;
 
     AFS_STATCNT(BlobScan);
     /* advance ablob over free and header blobs */
@@ -582,7 +582,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     afs_size_t origOffset, tlen;
     afs_int32 len;
     int code = 0;
@@ -927,7 +927,7 @@ int
 afs1_readdir(struct vcache *avc, struct uio *auio, afs_ucred_t *acred)
 {
     struct vrequest treq;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     afs_size_t origOffset, len;
     int code = 0;
     struct DirEntry *ode = 0, *nde = 0;

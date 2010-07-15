@@ -32,9 +32,9 @@ main(argc, argv)
      int argc;
      char *argv[];
 {
-    register int encrypt;
-    register afs_int32 length;
-    register int *p;
+    int encrypt;
+    afs_int32 length;
+    int *p;
     afs_int32 ivec[2];
     if (argc != 4) {
 	fprintf(stderr, "%s: Usage: %s infile outfile mode.\n", argv[0],

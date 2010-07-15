@@ -56,7 +56,6 @@
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
-#undef register
 #endif /* AFS_OSF_ENV */
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"

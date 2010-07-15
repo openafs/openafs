@@ -242,7 +242,7 @@ vol_rxstat_userok(struct rx_call *call)
 int 
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
     struct rx_service *service;

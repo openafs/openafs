@@ -211,14 +211,14 @@ kmem_free(p, size)
 }
 
 VN_RELE(vp)
-     register struct vnode *vp;
+     struct vnode *vp;
 {
 
     VNOP_RELE(vp);
 }
 
 VN_HOLD(vp)
-     register struct vnode *vp;
+     struct vnode *vp;
 {
 
     VNOP_HOLD(vp);
@@ -293,14 +293,14 @@ struct k_var kvars[] = {
  */
 kluge_init()
 {
-    register struct k_func *kf;
-    register struct k_var *kv;
+    struct k_func *kf;
+    struct k_var *kv;
 #ifdef __64BIT__
-    register afs_uint64 toc;
+    afs_uint64 toc;
 #else
-    register afs_uint32 toc;
+    afs_uint32 toc;
 #endif
-    register err = 0;
+    int err = 0;
 
     toc = get_toc();
     for (kf = kfuncs; !err && kf->name; ++kf) {

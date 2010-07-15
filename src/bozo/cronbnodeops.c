@@ -89,10 +89,10 @@ cron_hascore(struct bnode *abnode)
     Note that the computation of when we should run again is made in procexit
     and/or create procs.  This guy only schedules the sleep */
 int
-ScheduleCronBnode(register struct cronbnode *abnode)
+ScheduleCronBnode(struct cronbnode *abnode)
 {
-    register afs_int32 code;
-    register afs_int32 temp;
+    afs_int32 code;
+    afs_int32 temp;
     struct bnode_proc *tp;
 
     /* If this proc is shutdown, tell bproc() to no longer run this job */
@@ -187,8 +187,8 @@ static int
 cron_timeout(struct bnode *bn)
 {
     struct cronbnode *abnode = (struct cronbnode *)bn;
-    register afs_int32 temp;
-    register afs_int32 code;
+    afs_int32 temp;
+    afs_int32 code;
     struct bnode_proc *tp;
 
     if (!abnode->running) {
@@ -229,7 +229,7 @@ static int
 cron_getstat(struct bnode *bn, afs_int32 * astatus)
 {
     struct cronbnode *abnode = (struct cronbnode *)bn;
-    register afs_int32 temp;
+    afs_int32 temp;
     if (abnode->waitingForShutdown)
 	temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->b.goal == 0)

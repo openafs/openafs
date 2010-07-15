@@ -397,7 +397,7 @@ Quit(char *msg)
 }
 
 int
-update_SendFile(register int fd, register struct rx_call *call, register struct stat *status)
+update_SendFile(int fd, struct rx_call *call, struct stat *status)
 {
     char *buffer = (char *)0;
     int blockSize;
@@ -425,7 +425,7 @@ update_SendFile(register int fd, register struct rx_call *call, register struct 
     tlen = htonl(length);
     rx_Write(call, (char *)&tlen, sizeof(afs_int32));	/* send length on fetch */
     while (!error && length) {
-	register int nbytes = (length > blockSize ? blockSize : length);
+	int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = read(fd, buffer, nbytes);
 	if (nbytes <= 0) {
 	    fprintf(stderr, "File system read failed\n");
@@ -446,8 +446,8 @@ update_SendFile(register int fd, register struct rx_call *call, register struct 
  */
 int
 update_SendDirInfo(char *name,		/* Name of dir to enumerate */
-     register struct rx_call *call,	/* rx call */
-     register struct stat *status,	/* stat struct for dir */
+     struct rx_call *call,	/* rx call */
+     struct stat *status,	/* stat struct for dir */
      char *origDir)		/* orig name of dir before being localized */
 {
     DIR *dirp;

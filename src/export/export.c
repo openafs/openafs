@@ -76,12 +76,12 @@ export(cmd, uiop)
  * config -	process configuration data
  */
 config(uiop)
-     register struct uio *uiop;
+     struct uio *uiop;
 {
     struct k_conf conf;
-    register struct export_nl *np;
-    register sym_t *sym;
-    register err;
+    struct export_nl *np;
+    sym_t *sym;
+    int err;
 
     if (err = uiomove((char *)&conf, sizeof(conf), UIO_WRITE, uiop))
 	return err;
@@ -163,8 +163,8 @@ u_int32 *myg_toc;
 
 import_kfunc(struct k_func * kfp)
 {
-    register sym_t *sym;
-    register i, pri;
+    sym_t *sym;
+    int i, pri;
 #if 0
     static caddr_t *g_toc;
 #endif
@@ -207,8 +207,8 @@ import_kfunc(struct k_func * kfp)
  */
 import_kvar(struct k_var * kvp, caddr_t * toc)
 {
-    register sym_t *sym;
-    register i, pri;
+    sym_t *sym;
+    int i, pri;
     label_t jmpbuf;
 
     switch (setjmpx(&jmpbuf)) {

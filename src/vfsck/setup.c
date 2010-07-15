@@ -774,7 +774,7 @@ badsb(listerr, s)
 calcsb(dev, devfd, fs)
      char *dev;
      int devfd;
-     register struct fs *fs;
+     struct fs *fs;
 {
     return 0;
 }
@@ -832,7 +832,7 @@ is_swap(devno)
      dev_t devno;
 {
     struct pst_swapinfo pst[PS_BURST];
-    register struct pst_swapinfo *psp = &pst[0];
+    struct pst_swapinfo *psp = &pst[0];
     int idx = 0, count, match = 0;
 
     while ((count = PSTAT(psp, PS_BURST, idx) != 0)) {
@@ -929,8 +929,8 @@ getline(fp, loc, maxlen)
      FILE *fp;
      char *loc;
 {
-    register n;
-    register char *p, *lastloc;
+    int n;
+    char *p, *lastloc;
 
     p = loc;
     lastloc = &p[maxlen - 1];

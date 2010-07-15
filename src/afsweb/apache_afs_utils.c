@@ -191,7 +191,7 @@ parseToken(char *buf)
 {
     afs_int32 len = 0;
     char cellName[64];
-    register char *tp;
+    char *tp;
 
     struct ClearToken {
 	afs_int32 AuthHandle;

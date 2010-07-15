@@ -100,7 +100,7 @@ int
 main(int argc, char *argv[])
 {				/*Main routine */
     struct cmd_syndesc *ts;
-    register afs_int32 code;
+    afs_int32 code;
 
 #ifdef	AFS_AIX32_ENV
     /*

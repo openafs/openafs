@@ -221,7 +221,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     void *mdata = vfs_fsprivate(mp);
     int error;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
 #ifdef AFS_DARWIN80_ENV
     struct ucred *cr = vfs_context_ucred(ctx);
     int needref=0;

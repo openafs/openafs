@@ -205,7 +205,7 @@ et_to_sys_error(afs_int32 in)
 }
 
 void
-afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato)
+afs_CopyError(struct vrequest *afrom, struct vrequest *ato)
 {
     int i = 0;
     AFS_STATCNT(afs_CopyError);
@@ -232,7 +232,7 @@ afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato)
 }
 
 void
-afs_FinalizeReq(register struct vrequest *areq)
+afs_FinalizeReq(struct vrequest *areq)
 {
     int i = 0;
     AFS_STATCNT(afs_FinalizeReq);

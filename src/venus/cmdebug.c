@@ -147,7 +147,7 @@ PrintInterfaces(struct rx_connection *aconn)
 }
 
 static int
-IsLocked(register struct AFSDBLockDesc *alock)
+IsLocked(struct AFSDBLockDesc *alock)
 {
     if (alock->waitStates || alock->exclLocked || alock->numWaiting
 	|| alock->readersReading)
@@ -156,7 +156,7 @@ IsLocked(register struct AFSDBLockDesc *alock)
 }
 
 static int
-PrintLock(register struct AFSDBLockDesc *alock)
+PrintLock(struct AFSDBLockDesc *alock)
 {
     printf("(");
     if (alock->waitStates) {
@@ -185,9 +185,9 @@ PrintLock(register struct AFSDBLockDesc *alock)
 }
 
 static int
-PrintLocks(register struct rx_connection *aconn, int aint32)
+PrintLocks(struct rx_connection *aconn, int aint32)
 {
-    register int i;
+    int i;
     struct AFSDBLock lock;
     afs_int32 code;
 
@@ -258,8 +258,8 @@ GetCellName(struct rx_connection *aconn, afs_int32 cellnum)
 static int
 PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 {
-    register int i;
-    register afs_int32 code;
+    int i;
+    afs_int32 code;
     struct AFSDBCacheEntry centry;
     char *cellname;
 
@@ -354,8 +354,8 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 static int
 PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 {
-    register int i;
-    register afs_int32 code;
+    int i;
+    afs_int32 code;
     struct AFSDBCacheEntry64 centry;
     char *cellname;
 
@@ -460,7 +460,7 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 static int
 PrintCacheEntries(struct rx_connection *aconn, int aint32)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct AFSDBCacheEntry64 centry64;
 
     code = RXAFSCB_GetCE64(aconn, 0, &centry64);
@@ -526,8 +526,8 @@ int
 CommandProc(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *conn;
-    register char *hostName;
-    register struct hostent *thp;
+    char *hostName;
+    struct hostent *thp;
     afs_int32 port;
     struct rx_securityClass *secobj;
     int int32p;
@@ -598,7 +598,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
     /*

@@ -1626,10 +1626,10 @@ DoVosVolumeQuotaChange(struct cmd_syndesc *as, void *arock)
 static afs_uint32
 GetServer(char *aname)
 {
-    register struct hostent *th;
+    struct hostent *th;
     afs_uint32 addr;
     int b1, b2, b3, b4;
-    register afs_int32 code;
+    afs_int32 code;
     char hostname[MAXHOSTCHARS];
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);

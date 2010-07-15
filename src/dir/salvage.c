@@ -51,9 +51,9 @@ extern afs_int32 DErrno;
 /* figure out how many pages in use in a directory, given ptr to its (locked) 
  * header */
 static int
-ComputeUsedPages(register struct DirHeader *dhp)
+ComputeUsedPages(struct DirHeader *dhp)
 {
-    register afs_int32 usedPages, i;
+    afs_int32 usedPages, i;
 
     if (dhp->header.pgcount != 0) {
 	/* new style */
@@ -449,8 +449,8 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     /* First do a MakeDir on the target. */
     afs_int32 dot[3], dotdot[3], lfid[3], code, usedPages;
     char tname[256];
-    register int i;
-    register char *tp;
+    int i;
+    char *tp;
     struct DirHeader *dhp;
     struct DirEntry *ep;
     int entry;

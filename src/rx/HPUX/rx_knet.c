@@ -68,7 +68,7 @@ rxk_fasttimo(void)
 int
 rxk_init()
 {
-    register struct protosw *tpro, *last;
+    struct protosw *tpro, *last;
     if (rxk_initDone)
 	return 0;
 
@@ -90,15 +90,15 @@ rxk_init()
 
 /* basic packet handling routine called at splnet from softnet loop */
 static struct mbuf *
-rxk_input(register struct mbuf *am, struct ifnet *aif)
+rxk_input(struct mbuf *am, struct ifnet *aif)
 {
     int (*tproc) ();
-    register unsigned short *tsp;
+    unsigned short *tsp;
     int hdr;
     struct udphdr *tu;
-    register struct ip *ti;
+    struct ip *ti;
     struct udpiphdr *tvu;
-    register int i;
+    int i;
     char *phandle;
     afs_int32 code;
     struct sockaddr_in taddr;
@@ -215,8 +215,8 @@ rxk_input(register struct mbuf *am, struct ifnet *aif)
 
 /* steal decl from sgi_65 */
 int
-osi_NetSend(register struct socket *asocket, struct sockaddr_in *addr,
-	    struct iovec *dvec, int nvec, register afs_int32 asize,
+osi_NetSend(struct socket *asocket, struct sockaddr_in *addr,
+	    struct iovec *dvec, int nvec, afs_int32 asize,
 	    int istack)
 {
     struct uio uio;

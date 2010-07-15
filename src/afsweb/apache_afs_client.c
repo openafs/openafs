@@ -375,7 +375,7 @@ request_Authentication(char *user, char *passwd, char *cell, char *type,
 static int
 setToken(char *tokenBuf, int tokenLen)
 {
-    register char *temp;
+    char *temp;
     afs_int32 i = 0;
 
     afsassert(tokenBuf);

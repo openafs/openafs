@@ -188,11 +188,11 @@ static void FreeVolume(Volume * vp);
 static void VScanUpdateList(void);
 #endif /* !AFS_DEMAND_ATTACH_FS */
 static void VInitVolumeHeaderCache(afs_uint32 howMany);
-static int GetVolumeHeader(register Volume * vp);
-static void ReleaseVolumeHeader(register struct volHeader *hd);
-static void FreeVolumeHeader(register Volume * vp);
-static void AddVolumeToHashTable(register Volume * vp, int hashid);
-static void DeleteVolumeFromHashTable(register Volume * vp);
+static int GetVolumeHeader(Volume * vp);
+static void ReleaseVolumeHeader(struct volHeader *hd);
+static void FreeVolumeHeader(Volume * vp);
+static void AddVolumeToHashTable(Volume * vp, int hashid);
+static void DeleteVolumeFromHashTable(Volume * vp);
 #if 0
 static int VHold(Volume * vp);
 #endif
@@ -201,8 +201,8 @@ static void VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class);
 static void VReleaseVolumeHandles_r(Volume * vp);
 static void VCloseVolumeHandles_r(Volume * vp);
 static void LoadVolumeHeader(Error * ec, Volume * vp);
-static int VCheckOffline(register Volume * vp);
-static int VCheckDetach(register Volume * vp);
+static int VCheckOffline(Volume * vp);
+static int VCheckDetach(Volume * vp);
 static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
@@ -415,7 +415,7 @@ static void VVByPListEndExclusive_r(struct DiskPartition64 * dp);
 static void VVByPListWait_r(struct DiskPartition64 * dp);
 
 /* online salvager */
-static int VCheckSalvage(register Volume * vp);
+static int VCheckSalvage(Volume * vp);
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 static int VScheduleSalvage_r(Volume * vp);
 #endif
@@ -1314,8 +1314,8 @@ void
 VShutdown_r(void)
 {
     int i;
-    register Volume *vp, *np;
-    register afs_int32 code;
+    Volume *vp, *np;
+    afs_int32 code;
 
     if (VInit < 2) {
         Log("VShutdown:  aborting attach volumes\n");
@@ -1753,7 +1753,7 @@ static int
 ShutdownVByPForPass_r(struct DiskPartition64 * dp, int pass)
 {
     struct rx_queue * q = queue_First(&dp->vol_list, rx_queue);
-    register int i = 0;
+    int i = 0;
 
     while (ShutdownVolumeWalk_r(dp, pass, &q))
 	i++;
@@ -2234,7 +2234,7 @@ VAttachVolumeByName(Error * ec, char *partition, char *name, int mode)
 Volume *
 VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 {
-    register Volume *vp = NULL;
+    Volume *vp = NULL;
     struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
@@ -3439,7 +3439,7 @@ VAttachVolume_r(Error * ec, VolumeId volumeId, int mode)
     char *part, *name;
     VGetVolumePath(ec, volumeId, &part, &name);
     if (*ec) {
-	register Volume *vp;
+	Volume *vp;
 	Error error;
 	vp = VGetVolume_r(&error, volumeId);
 	if (vp) {
@@ -3463,7 +3463,7 @@ VAttachVolume_r(Error * ec, VolumeId volumeId, int mode)
  * is dropped within VHold */
 #ifdef AFS_DEMAND_ATTACH_FS
 static int
-VHold_r(register Volume * vp)
+VHold_r(Volume * vp)
 {
     Error error;
 
@@ -3481,7 +3481,7 @@ VHold_r(register Volume * vp)
 }
 #else /* AFS_DEMAND_ATTACH_FS */
 static int
-VHold_r(register Volume * vp)
+VHold_r(Volume * vp)
 {
     Error error;
 
@@ -3495,7 +3495,7 @@ VHold_r(register Volume * vp)
 
 #if 0
 static int
-VHold(register Volume * vp)
+VHold(Volume * vp)
 {
     int retVal;
     VOL_LOCK;
@@ -3524,7 +3524,7 @@ VHold(register Volume * vp)
  * @internal volume package internal use only
  */
 void
-VPutVolume_r(register Volume * vp)
+VPutVolume_r(Volume * vp)
 {
     assert(--vp->nUsers >= 0);
     if (vp->nUsers == 0) {
@@ -3542,7 +3542,7 @@ VPutVolume_r(register Volume * vp)
 }
 
 void
-VPutVolume(register Volume * vp)
+VPutVolume(Volume * vp)
 {
     VOL_LOCK;
     VPutVolume_r(vp);
@@ -3928,7 +3928,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 /* caller MUST hold a heavyweight ref on vp */
 #ifdef AFS_DEMAND_ATTACH_FS
 void
-VTakeOffline_r(register Volume * vp)
+VTakeOffline_r(Volume * vp)
 {
     Error error;
 
@@ -3946,7 +3946,7 @@ VTakeOffline_r(register Volume * vp)
 }
 #else /* AFS_DEMAND_ATTACH_FS */
 void
-VTakeOffline_r(register Volume * vp)
+VTakeOffline_r(Volume * vp)
 {
     assert(vp->nUsers > 0);
     assert(programType == fileServer);
@@ -3957,7 +3957,7 @@ VTakeOffline_r(register Volume * vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 void
-VTakeOffline(register Volume * vp)
+VTakeOffline(Volume * vp)
 {
     VOL_LOCK;
     VTakeOffline_r(vp);
@@ -4479,7 +4479,7 @@ ReallyFreeVolume(Volume * vp)
  * returns 1 if volume was freed, 0 otherwise */
 #ifdef AFS_DEMAND_ATTACH_FS
 static int
-VCheckDetach(register Volume * vp)
+VCheckDetach(Volume * vp)
 {
     int ret = 0;
     Error ec = 0;
@@ -4513,7 +4513,7 @@ VCheckDetach(register Volume * vp)
 }
 #else /* AFS_DEMAND_ATTACH_FS */
 static int
-VCheckDetach(register Volume * vp)
+VCheckDetach(Volume * vp)
 {
     int ret = 0;
     Error ec = 0;
@@ -4554,7 +4554,7 @@ VCheckDetach(register Volume * vp)
  * return 1 if volume went offline, 0 otherwise */
 #ifdef AFS_DEMAND_ATTACH_FS
 static int
-VCheckOffline(register Volume * vp)
+VCheckOffline(Volume * vp)
 {
     int ret = 0;
 
@@ -4615,7 +4615,7 @@ VCheckOffline(register Volume * vp)
 }
 #else /* AFS_DEMAND_ATTACH_FS */
 static int
-VCheckOffline(register Volume * vp)
+VCheckOffline(Volume * vp)
 {
     int ret = 0;
 
@@ -4900,7 +4900,7 @@ VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
  * @internal volume package internal use only.
  */
 static int
-VCheckSalvage(register Volume * vp)
+VCheckSalvage(Volume * vp)
 {
     int ret = 0;
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
@@ -5576,7 +5576,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		    struct vnodeIndex *index, int flags)
 {
     int ret = 0;
-    register byte *bp, *ep;
+    byte *bp, *ep;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState state_save;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -5695,7 +5695,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 }
 
 int
-VAllocBitmapEntry(Error * ec, Volume * vp, register struct vnodeIndex * index)
+VAllocBitmapEntry(Error * ec, Volume * vp, struct vnodeIndex * index)
 {
     int retVal;
     VOL_LOCK;
@@ -5705,7 +5705,7 @@ VAllocBitmapEntry(Error * ec, Volume * vp, register struct vnodeIndex * index)
 }
 
 void
-VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,
+VFreeBitMapEntry_r(Error * ec, struct vnodeIndex *index,
 		   unsigned bitNumber)
 {
     unsigned int offset;
@@ -5726,7 +5726,7 @@ VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,
 }
 
 void
-VFreeBitMapEntry(Error * ec, register struct vnodeIndex *index,
+VFreeBitMapEntry(Error * ec, struct vnodeIndex *index,
 		 unsigned bitNumber)
 {
     VOL_LOCK;
@@ -6025,12 +6025,12 @@ Midnight(time_t t) {
  *------------------------------------------------------------------------*/
 
 int
-VAdjustVolumeStatistics_r(register Volume * vp)
+VAdjustVolumeStatistics_r(Volume * vp)
 {
     unsigned int now = FT_ApproxTime();
 
     if (now - V_dayUseDate(vp) > OneDay) {
-	register int ndays, i;
+	int ndays, i;
 
 	ndays = (now - V_dayUseDate(vp)) / OneDay;
 	for (i = 6; i > ndays - 1; i--)
@@ -6059,7 +6059,7 @@ VAdjustVolumeStatistics_r(register Volume * vp)
 }				/*VAdjustVolumeStatistics */
 
 int
-VAdjustVolumeStatistics(register Volume * vp)
+VAdjustVolumeStatistics(Volume * vp)
 {
     int retVal;
     VOL_LOCK;
@@ -6069,7 +6069,7 @@ VAdjustVolumeStatistics(register Volume * vp)
 }
 
 void
-VBumpVolumeUsage_r(register Volume * vp)
+VBumpVolumeUsage_r(Volume * vp)
 {
     unsigned int now = FT_ApproxTime();
     V_accessDate(vp) = now;
@@ -6085,7 +6085,7 @@ VBumpVolumeUsage_r(register Volume * vp)
 }
 
 void
-VBumpVolumeUsage(register Volume * vp)
+VBumpVolumeUsage(Volume * vp)
 {
     VOL_LOCK;
     VBumpVolumeUsage_r(vp);
@@ -6189,8 +6189,8 @@ VAddToVolumeUpdateList_r(Error * ec, Volume * vp)
 static void
 VScanUpdateList(void)
 {
-    register int i, gap;
-    register Volume *vp;
+    int i, gap;
+    Volume *vp;
     Error error;
     afs_uint32 now = FT_ApproxTime();
     /* Be careful with this code, since it works with interleaved calls to AddToVolumeUpdateList */
@@ -7290,7 +7290,7 @@ struct volume_hdr_LRU_t volume_hdr_LRU;
 static void
 VInitVolumeHeaderCache(afs_uint32 howMany)
 {
-    register struct volHeader *hp;
+    struct volHeader *hp;
     if (programType != fileServer)
 	return;
     queue_Init(&volume_hdr_LRU);
@@ -7330,10 +7330,10 @@ VInitVolumeHeaderCache(afs_uint32 howMany)
  * @internal volume package internal use only.
  */
 static int
-GetVolumeHeader(register Volume * vp)
+GetVolumeHeader(Volume * vp)
 {
     Error error;
-    register struct volHeader *hd;
+    struct volHeader *hd;
     int old;
     static int everLogged = 0;
 
@@ -7524,7 +7524,7 @@ LoadVolumeHeader(Error * ec, Volume * vp)
  * @internal volume package internal use only.
  */
 static void
-ReleaseVolumeHeader(register struct volHeader *hd)
+ReleaseVolumeHeader(struct volHeader *hd)
 {
     if (programType != fileServer)
 	return;
@@ -7559,9 +7559,9 @@ ReleaseVolumeHeader(register struct volHeader *hd)
  * @internal volume package internal use only.
  */
 static void
-FreeVolumeHeader(register Volume * vp)
+FreeVolumeHeader(Volume * vp)
 {
-    register struct volHeader *hd = vp->header;
+    struct volHeader *hd = vp->header;
     if (!hd)
 	return;
     if (programType == fileServer) {
@@ -7625,7 +7625,7 @@ VSetVolHashSize(int logsize)
 static void
 VInitVolumeHash(void)
 {
-    register int i;
+    int i;
 
     VolumeHashTable.Table = (VolumeHashChainHead *) calloc(VolumeHashTable.Size, 
 							   sizeof(VolumeHashChainHead));
@@ -7656,7 +7656,7 @@ VInitVolumeHash(void)
  *       asynchronous hash chain reordering to finish.
  */
 static void
-AddVolumeToHashTable(register Volume * vp, int hashid)
+AddVolumeToHashTable(Volume * vp, int hashid)
 {
     VolumeHashChainHead * head;
 
@@ -7695,7 +7695,7 @@ AddVolumeToHashTable(register Volume * vp, int hashid)
  *       asynchronous hash chain reordering to finish.
  */
 static void
-DeleteVolumeFromHashTable(register Volume * vp)
+DeleteVolumeFromHashTable(Volume * vp)
 {
     VolumeHashChainHead * head;
 
@@ -7753,7 +7753,7 @@ DeleteVolumeFromHashTable(register Volume * vp)
 Volume *
 VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint)
 {
-    register int looks = 0;
+    int looks = 0;
     Volume * vp, *np;
 #ifdef AFS_DEMAND_ATTACH_FS
     Volume *pp;
@@ -8137,7 +8137,7 @@ void
 VPrintCacheStats_r(void)
 {
     afs_uint32 get_hi, get_lo, load_hi, load_lo;
-    register struct VnodeClassInfo *vcp;
+    struct VnodeClassInfo *vcp;
     vcp = &VnodeClassInfo[vLarge];
     Log("Large vnode cache, %d entries, %d allocs, %d gets (%d reads), %d writes\n", vcp->cacheSize, vcp->allocs, vcp->gets, vcp->reads, vcp->writes);
     vcp = &VnodeClassInfo[vSmall];

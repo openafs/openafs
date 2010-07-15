@@ -35,10 +35,10 @@ extern Date cheaderReadTime;	/* time cheader last read in */
 static int index_OK(afs_int32);
 
 afs_int32
-NameHash(register char *aname, register char *ainstance)
+NameHash(char *aname, char *ainstance)
 {
-    register unsigned int hash;
-    register int i;
+    unsigned int hash;
+    int i;
 
     /* stolen directly from the HashString function in the vol package */
     hash = 0;
@@ -205,7 +205,7 @@ CheckInit(struct ubik_trans *at,
 afs_int32
 AllocBlock(struct ubik_trans *at, struct kaentry *tentry)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 temp;
 
     if (cheader.freePtr) {
@@ -268,8 +268,8 @@ afs_int32
 FindBlock(struct ubik_trans *at, char *aname, char *ainstance, afs_int32 *toP, 
 	  struct kaentry *tentry)
 {
-    register afs_int32 i, code;
-    register afs_int32 to;
+    afs_int32 i, code;
+    afs_int32 to;
 
     *toP = 0;
     i = NameHash(aname, ainstance);
@@ -320,8 +320,8 @@ ThreadBlock(struct ubik_trans *at, afs_int32 index,
 afs_int32
 UnthreadBlock(struct ubik_trans *at, struct kaentry *aentry)
 {
-    register afs_int32 i, code;
-    register afs_int32 to;
+    afs_int32 i, code;
+    afs_int32 to;
     afs_int32 lo;
     struct kaentry tentry;
 

@@ -68,7 +68,7 @@ extern flid_t osi_flid;
 #undef AFS_MUTEX_ENTER
 #define AFS_MUTEX_ENTER(mp) \
   MACRO_BEGIN \
-    register struct kthread *_kthreadP; \
+    struct kthread *_kthreadP; \
     while(mutex_tryenter(mp) == 0) { \
       _kthreadP = (struct kthread*)mutex_owner(mp); \
       if (_kthreadP != NULL && _kthreadP->k_sonproc == CPU_NONE) { \
@@ -112,7 +112,7 @@ extern flid_t osi_flid;
 
 #define AFS_MUTEX_ENTER(mp) \
   MACRO_BEGIN \
-    register struct proc *_procP; \
+    struct proc *_procP; \
     while(mutex_tryenter(mp) == 0) { \
 	_procP = mutex_owner(mp); \
 	if (_procP != NULL && _procP->p_sonproc == CPU_NONE) { \
@@ -183,7 +183,7 @@ extern long afs_global_owner;
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1
 
-#define SPLVAR      register int splvar
+#define SPLVAR      int splvar
 #define NETPRI      splvar=splnet()
 #define USERPRI     splx(splvar)
 

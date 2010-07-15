@@ -209,7 +209,7 @@ main(argc, argv)
 flip(array)
      char *array;
 {
-    register old, new, i, j;
+    int old, new, i, j;
     /* flips the bit order within each byte from 0 lsb to 0 msb */
     for (i = 0; i <= 7; i++) {
 	old = *array;

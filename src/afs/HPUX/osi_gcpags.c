@@ -36,7 +36,7 @@
 void
 afs_osi_TraverseProcTable(void)
 {
-    register proc_t *p;
+    proc_t *p;
     int endchain = 0;
 
     MP_SPINLOCK(activeproc_lock);

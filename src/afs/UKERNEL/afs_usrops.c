@@ -978,7 +978,7 @@ afs_osi_MapStrategy(int (*aproc) (struct usr_buf *), struct usr_buf *bp)
 }
 
 void
-osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
+osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
     ObtainSharedLock(&avc->lock, 555);
     if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
@@ -993,7 +993,7 @@ osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
 }
 
 void
-osi_FlushText_really(register struct vcache *vp)
+osi_FlushText_really(struct vcache *vp)
 {
     if (hcmp(vp->f.m.DataVersion, vp->flushDV) > 0) {
 	hset(vp->flushDV, vp->f.m.DataVersion);

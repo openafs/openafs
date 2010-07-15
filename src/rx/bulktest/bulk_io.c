@@ -20,9 +20,9 @@
 
 int
 bulk_SendFile(fd, call, status)
-     register int fd;
-     register struct rx_call *call;
-     register struct stat *status;
+     int fd;
+     struct rx_call *call;
+     struct stat *status;
 {
     char *buffer = (char *)0;
     int blockSize;
@@ -40,7 +40,7 @@ bulk_SendFile(fd, call, status)
     if (!xdr_long(&xdr, &length))
 	error = BULK_ERROR;
     while (!error && length) {
-	register nbytes = (length > blockSize ? blockSize : length);
+	int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = read(fd, buffer, nbytes);
 	if (nbytes <= 0) {
 	    fprintf(stderr, "File system read failed\n");
@@ -60,14 +60,14 @@ bulk_SendFile(fd, call, status)
 /* Copy the appropriate number of bytes from the call to fd.  The status should reflect the file's status coming into the routine and will reflect it going out of the routine, in the absence of errors */
 int
 bulk_ReceiveFile(fd, call, status)
-     register int fd;
-     register struct rx_call *call;
-     register struct stat *status;
+     int fd;
+     struct rx_call *call;
+     struct stat *status;
 {
-    register char *buffer = (char *)0;
+    char *buffer = (char *)0;
     long length;
     XDR xdr;
-    register int blockSize;
+    int blockSize;
     long error = 0;
 
     xdrrx_create(&xdr, call, XDR_DECODE);
@@ -80,7 +80,7 @@ bulk_ReceiveFile(fd, call, status)
 	return BULK_ERROR;
     }
     while (!error && length) {
-	register nbytes = (length > blockSize ? blockSize : length);
+	int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = rx_Read(call, buffer, nbytes);
 	if (!nbytes)
 	    error = BULK_ERROR;

@@ -55,7 +55,7 @@ static int convert_header(int ofd, int fd, int fromv, int tov, void *fromaddr,
 static char *
 Parent(const char *apath)
 {
-    register char *tp;
+    char *tp;
     strcpy(tspace, apath);
     tp = strrchr(tspace, '/');
     if (tp) {
@@ -979,7 +979,7 @@ rewrite_header(int new, int tovers, void *newheader)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
     ts = cmd_CreateSyntax("initcmd", handleit, NULL, "optional");

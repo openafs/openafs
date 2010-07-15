@@ -69,11 +69,11 @@ extern int afs_close();
  */
 int
 m_cpytoc(m, off, len, cp)
-     register struct mbuf *m;
-     register int off, len;
-     register caddr_t cp;
+     struct mbuf *m;
+     int off, len;
+     caddr_t cp;
 {
-    register int ml;
+    int ml;
 
     if (m == NULL || off < 0 || len < 0 || cp == NULL)
 	osi_Panic("m_cpytoc");
@@ -275,7 +275,7 @@ afs_brelse(vp, bp)
 
 
 afs_bmap(avc, abn, anvp, anbn)
-     register struct vcache *avc;
+     struct vcache *avc;
      kern_daddr_t abn, *anbn;
      struct vcache **anvp;
 {
@@ -288,7 +288,7 @@ afs_bmap(avc, abn, anvp, anbn)
 }
 
 afs_inactive(avc, acred)
-     register struct vcache *avc;
+     struct vcache *avc;
      afs_ucred_t *acred;
 {
     struct vnode *vp = AFSTOV(avc);
@@ -320,9 +320,9 @@ afs_inactive(avc, acred)
 
 
 int
-mp_afs_open(register struct vnode **avcp, int aflags, afs_ucred_t *acred)
+mp_afs_open(struct vnode **avcp, int aflags, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_open(avcp, aflags, acred);
@@ -331,9 +331,9 @@ mp_afs_open(register struct vnode **avcp, int aflags, afs_ucred_t *acred)
 }
 
 int
-mp_afs_close(register struct vnode *avcp, int aflags, afs_ucred_t *acred)
+mp_afs_close(struct vnode *avcp, int aflags, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_close(avcp, aflags, acred);
@@ -342,10 +342,10 @@ mp_afs_close(register struct vnode *avcp, int aflags, afs_ucred_t *acred)
 }
 
 int
-mp_afs_rdwr(register struct vnode *avcp, struct uio *uio, enum uio_rw arw,
+mp_afs_rdwr(struct vnode *avcp, struct uio *uio, enum uio_rw arw,
 	    int aio, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
     long save_resid;
 
     AFS_GLOCK();
@@ -360,10 +360,10 @@ mp_afs_rdwr(register struct vnode *avcp, struct uio *uio, enum uio_rw arw,
 }
 
 int
-mp_afs_getattr(register struct vnode *avcp, struct vattr *attrs,
+mp_afs_getattr(struct vnode *avcp, struct vattr *attrs,
 	       afs_ucred_t *acred, enum vsync unused1)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_getattr(avcp, attrs, acred);
@@ -372,10 +372,10 @@ mp_afs_getattr(register struct vnode *avcp, struct vattr *attrs,
 }
 
 int
-mp_afs_setattr(register struct vnode *avcp, register struct vattr *attrs,
+mp_afs_setattr(struct vnode *avcp, struct vattr *attrs,
 	       afs_ucred_t *acred, int unused1)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_setattr(avcp, attrs, acred);
@@ -384,9 +384,9 @@ mp_afs_setattr(register struct vnode *avcp, register struct vattr *attrs,
 }
 
 int
-mp_afs_access(register struct vnode *avcp, int mode, afs_ucred_t *acred)
+mp_afs_access(struct vnode *avcp, int mode, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_access(avcp, mode, acred);
@@ -395,11 +395,11 @@ mp_afs_access(register struct vnode *avcp, int mode, afs_ucred_t *acred)
 }
 
 int
-mp_afs_lookup(register struct vnode *adp, char *aname,
-	      register struct vnode **avcp, afs_ucred_t *acred,
+mp_afs_lookup(struct vnode *adp, char *aname,
+	      struct vnode **avcp, afs_ucred_t *acred,
 	      struct vnode *unused1)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_lookup(adp, aname, avcp, acred);
@@ -408,11 +408,11 @@ mp_afs_lookup(register struct vnode *adp, char *aname,
 }
 
 int
-mp_afs_create(register struct vnode *adp, char *aname, struct vattr *attrs,
+mp_afs_create(struct vnode *adp, char *aname, struct vattr *attrs,
 	      enum vcexcl aexcl, int amode, struct vnode **avcp,
 	      afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_create(adp, aname, attrs, aexcl, amode, avcp, acred);
@@ -422,10 +422,10 @@ mp_afs_create(register struct vnode *adp, char *aname, struct vattr *attrs,
 
 
 int
-mp_afs_remove(register struct vnode *adp, char *aname,
+mp_afs_remove(struct vnode *adp, char *aname,
 	      afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_remove(adp, aname, acred);
@@ -434,10 +434,10 @@ mp_afs_remove(register struct vnode *adp, char *aname,
 }
 
 int
-mp_afs_link(register struct vnode *avc, register struct vnode *adp,
+mp_afs_link(struct vnode *avc, struct vnode *adp,
 	    char *aname, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_link(avc, adp, aname, acred);
@@ -446,11 +446,11 @@ mp_afs_link(register struct vnode *avc, register struct vnode *adp,
 }
 
 int
-mp_afs_rename(register struct vnode *aodp, char *aname1,
-	      register struct vnode *andp, char *aname2,
+mp_afs_rename(struct vnode *aodp, char *aname1,
+	      struct vnode *andp, char *aname2,
 	      afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_rename(aodp, aname1, andp, aname2, acred);
@@ -459,10 +459,10 @@ mp_afs_rename(register struct vnode *aodp, char *aname1,
 }
 
 int
-mp_afs_mkdir(register struct vnode *adp, char *aname, struct vattr *attrs,
-	     register struct vnode **avcp, afs_ucred_t *acred)
+mp_afs_mkdir(struct vnode *adp, char *aname, struct vattr *attrs,
+	     struct vnode **avcp, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_mkdir(adp, aname, attrs, avcp, acred);
@@ -472,9 +472,9 @@ mp_afs_mkdir(register struct vnode *adp, char *aname, struct vattr *attrs,
 
 
 int
-mp_afs_rmdir(register struct vnode *adp, char *aname, afs_ucred_t *acred)
+mp_afs_rmdir(struct vnode *adp, char *aname, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_rmdir(adp, aname, acred);
@@ -484,10 +484,10 @@ mp_afs_rmdir(register struct vnode *adp, char *aname, afs_ucred_t *acred)
 
 
 int
-mp_afs_readdir(register struct vnode *avc, struct uio *auio,
+mp_afs_readdir(struct vnode *avc, struct uio *auio,
 	       afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_readdir(avc, auio, acred);
@@ -496,10 +496,10 @@ mp_afs_readdir(register struct vnode *avc, struct uio *auio,
 }
 
 int
-mp_afs_symlink(register struct vnode *adp, char *aname, struct vattr *attrs,
+mp_afs_symlink(struct vnode *adp, char *aname, struct vattr *attrs,
 	       char *atargetName, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_symlink(adp, aname, attrs, atargetName, acred);
@@ -509,10 +509,10 @@ mp_afs_symlink(register struct vnode *adp, char *aname, struct vattr *attrs,
 
 
 int
-mp_afs_readlink(register struct vnode *avc, struct uio *auio,
+mp_afs_readlink(struct vnode *avc, struct uio *auio,
 		afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_readlink(avc, auio, acred);
@@ -521,9 +521,9 @@ mp_afs_readlink(register struct vnode *avc, struct uio *auio,
 }
 
 int
-mp_afs_fsync(register struct vnode *avc, afs_ucred_t *acred, int unused1)
+mp_afs_fsync(struct vnode *avc, afs_ucred_t *acred, int unused1)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_fsync(avc, acred);
@@ -532,10 +532,10 @@ mp_afs_fsync(register struct vnode *avc, afs_ucred_t *acred, int unused1)
 }
 
 int
-mp_afs_bread(register struct vnode *avc, kern_daddr_t lbn, struct buf **bpp,
+mp_afs_bread(struct vnode *avc, kern_daddr_t lbn, struct buf **bpp,
 	     struct vattr *unused1, struct ucred *unused2)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_bread(avc, lbn, bpp);
@@ -544,9 +544,9 @@ mp_afs_bread(register struct vnode *avc, kern_daddr_t lbn, struct buf **bpp,
 }
 
 int
-mp_afs_brelse(register struct vnode *avc, struct buf *bp)
+mp_afs_brelse(struct vnode *avc, struct buf *bp)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_brelse(avc, bp);
@@ -556,9 +556,9 @@ mp_afs_brelse(register struct vnode *avc, struct buf *bp)
 
 
 int
-mp_afs_inactive(register struct vnode *avc, afs_ucred_t *acred)
+mp_afs_inactive(struct vnode *avc, afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_inactive(avc, acred);
@@ -571,7 +571,7 @@ mp_afs_lockctl(struct vnode *avc, struct flock *af, int cmd,
 	       afs_ucred_t *acred, struct file *unused1, off_t unused2,
 	       off_t unused3)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_lockctl(avc, af, cmd, acred);
@@ -582,7 +582,7 @@ mp_afs_lockctl(struct vnode *avc, struct flock *af, int cmd,
 int
 mp_afs_fid(struct vnode *avc, struct fid **fidpp)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_fid(avc, fidpp);
@@ -591,10 +591,10 @@ mp_afs_fid(struct vnode *avc, struct fid **fidpp)
 }
 
 int
-mp_afs_readdir2(register struct vnode *avc, struct uio *auio,
+mp_afs_readdir2(struct vnode *avc, struct uio *auio,
 		afs_ucred_t *acred)
 {
-    register int code;
+    int code;
 
     AFS_GLOCK();
     code = afs_readdir2(avc, auio, acred);
@@ -1566,7 +1566,7 @@ afs_pageout(vp, prp, start, end, flags)
 	 * if pageiodone() will not be called automatically.
 	 */
 	if (!(bp->b_flags & B_CALL) && steal) {
-	    register ulong_t context;
+	    ulong_t context;
 
 	    SPINLOCK_USAV(pfdat_lock, context);
 	    parolemem += btorp(nbytes);
@@ -2513,13 +2513,13 @@ afsHashGarbageCollect()
 
 
 afs_hp_strategy(bp)
-     register struct buf *bp;
+     struct buf *bp;
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct uio tuio;
     struct iovec tiovec[1];
     extern caddr_t hdl_kmap_bp();
-    register struct kthread *t = u.u_kthreadp;
+    struct kthread *t = u.u_kthreadp;
 
     AFS_STATCNT(afs_hp_strategy);
     /*

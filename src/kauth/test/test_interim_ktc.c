@@ -301,7 +301,7 @@ CheckAuth2(server)
 static void
 ListCellsCmd()
 {
-    register long code;
+    long code;
     long i, j;
     char *tcp;
     long clear;
@@ -383,7 +383,7 @@ AclToString(acl)
 
 char *
 SkipLine(astr)
-     register char *astr;
+     char *astr;
 {
     while (*astr != '\n')
 	astr++;
@@ -448,7 +448,7 @@ ParseAcl(astr)
 ZapList(alist)
      struct AclEntry *alist;
 {
-    register struct AclEntry *tp, *np;
+    struct AclEntry *tp, *np;
     for (tp = alist; tp; tp = np) {
 	np = tp->next;
 	free(tp);
@@ -482,7 +482,7 @@ static int
 AddTester(pathname)
      char *pathname;
 {
-    register long code;
+    long code;
     struct ViceIoctl blob;
     struct Acl *al;
     char space[AFS_PIOCTL_MAXSIZE];

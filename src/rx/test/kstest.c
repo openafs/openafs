@@ -42,7 +42,7 @@ ParseCmd(argc, argv)
      int argc;
      char **argv;
 {
-    register int i;
+    int i;
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-port")) {
 	    port = atoi(argv[i + 1]);
@@ -83,9 +83,9 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register long code;
+    long code;
     static struct rx_securityClass *sc[3];	/* so other kernel procs can reference it */
-    register struct rx_service *tservice;
+    struct rx_service *tservice;
 
     port = htons(10000);
     if (ParseCmd(argc, argv) != 0) {

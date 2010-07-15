@@ -68,36 +68,36 @@ extern int DoLogging;
 
 
 /* Forward Declarations */
-static int DumpDumpHeader(register struct iod *iodp, register Volume * vp,
+static int DumpDumpHeader(struct iod *iodp, Volume * vp,
 			  afs_int32 fromtime);
-static int DumpPartial(register struct iod *iodp, register Volume * vp,
+static int DumpPartial(struct iod *iodp, Volume * vp,
 		       afs_int32 fromtime, int dumpAllDirs);
-static int DumpVnodeIndex(register struct iod *iodp, Volume * vp,
+static int DumpVnodeIndex(struct iod *iodp, Volume * vp,
 			  VnodeClass class, afs_int32 fromtime,
 			  int forcedump);
-static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
+static int DumpVnode(struct iod *iodp, struct VnodeDiskObject *v,
 		     int volid, int vnodeNumber, int dumpEverything);
-static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp);
-static int ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
+static int ReadDumpHeader(struct iod *iodp, struct DumpHeader *hp);
+static int ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		      afs_int32 * Lbuf, afs_int32 s1, afs_int32 * Sbuf,
 		      afs_int32 s2, afs_int32 delo);
 static afs_fsize_t volser_WriteFile(int vn, struct iod *iodp,
 				    FdHandle_t * handleP, int tag,
 				    Error * status);
 
-static int SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
+static int SizeDumpDumpHeader(struct iod *iodp, Volume * vp,
 			      afs_int32 fromtime,
-			      register struct volintSize *size);
-static int SizeDumpPartial(register struct iod *iodp, register Volume * vp,
+			      struct volintSize *size);
+static int SizeDumpPartial(struct iod *iodp, Volume * vp,
 			   afs_int32 fromtime, int dumpAllDirs,
-			   register struct volintSize *size);
-static int SizeDumpVnodeIndex(register struct iod *iodp, Volume * vp,
+			   struct volintSize *size);
+static int SizeDumpVnodeIndex(struct iod *iodp, Volume * vp,
 			      VnodeClass class, afs_int32 fromtime,
 			      int forcedump,
-			      register struct volintSize *size);
-static int SizeDumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
+			      struct volintSize *size);
+static int SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v,
 			 int volid, int vnodeNumber, int dumpEverything,
-			 register struct volintSize *size);
+			 struct volintSize *size);
 
 #define MAX_SECTIONS    3
 #define MIN_TLV_TAG     5
@@ -142,7 +142,7 @@ initNonStandardTags(void)
 }
 
 static void
-iod_Init(register struct iod *iodp, register struct rx_call *call)
+iod_Init(struct iod *iodp, struct rx_call *call)
 {
     iodp->call = call;
     iodp->haveOldChar = 0;
@@ -211,7 +211,7 @@ iod_ungetc(struct iod *iodp, int achar)
 }
 
 static int
-iod_getc(register struct iod *iodp)
+iod_getc(struct iod *iodp)
 {
     unsigned char t;
 
@@ -225,9 +225,9 @@ iod_getc(register struct iod *iodp)
 }
 
 static int
-ReadShort(register struct iod *iodp, register unsigned short *sp)
+ReadShort(struct iod *iodp, unsigned short *sp)
 {
-    register int b1, b0;
+    int b1, b0;
     b1 = iod_getc(iodp);
     if (b1 == EOF)
 	return 0;
@@ -239,9 +239,9 @@ ReadShort(register struct iod *iodp, register unsigned short *sp)
 }
 
 static int
-ReadInt32(register struct iod *iodp, afs_uint32 * lp)
+ReadInt32(struct iod *iodp, afs_uint32 * lp)
 {
-    afs_uint32 register b3, b2, b1, b0;
+    afs_uint32 b3, b2, b1, b0;
     b3 = iod_getc(iodp);
     if (b3 == EOF)
 	return 0;
@@ -259,9 +259,9 @@ ReadInt32(register struct iod *iodp, afs_uint32 * lp)
 }
 
 static void
-ReadString(register struct iod *iodp, register char *to, register int maxa)
+ReadString(struct iod *iodp, char *to, int maxa)
 {
-    register int c;
+    int c;
 
     *to = '\0';
     if (maxa == 0)
@@ -278,8 +278,8 @@ ReadString(register struct iod *iodp, register char *to, register int maxa)
 }
 
 static void
-ReadByteString(register struct iod *iodp, register byte * to,
-	       register int size)
+ReadByteString(struct iod *iodp, byte * to,
+	       int size)
 {
     while (size--)
 	*to++ = iod_getc(iodp);
@@ -289,7 +289,7 @@ ReadByteString(register struct iod *iodp, register byte * to,
  * returns 1 on success and 0 otherwise
  */
 static afs_int32
-ReadStandardTagLen(register struct iod *iodp, unsigned char tag, afs_int32 section,
+ReadStandardTagLen(struct iod *iodp, unsigned char tag, afs_int32 section,
                         afs_size_t *length)
 {
     afs_int32 code, i;
@@ -331,7 +331,7 @@ ReadStandardTagLen(register struct iod *iodp, unsigned char tag, afs_int32 secti
 static char skipbuf[256];
 
 static afs_int32
-SkipData(register struct iod *iodp, afs_size_t length)
+SkipData(struct iod *iodp, afs_size_t length)
 {
     while (length > 256) {
         if (iod_Read(iodp, (char *)&skipbuf, 256) != 256)
@@ -386,9 +386,9 @@ HandleUnknownTag(struct iod *iodp, int tag, afs_int32 section,
 }
 
 static int
-ReadVolumeHeader(register struct iod *iodp, VolumeDiskData * vol)
+ReadVolumeHeader(struct iod *iodp, VolumeDiskData * vol)
 {
-    register int tag;
+    int tag;
     afs_uint32 trash;
     afs_int32 critical = 0;
     memset(vol, 0, sizeof(*vol));
@@ -526,7 +526,7 @@ ReadVolumeHeader(register struct iod *iodp, VolumeDiskData * vol)
 }
 
 static int
-DumpTag(register struct iod *iodp, register int tag)
+DumpTag(struct iod *iodp, int tag)
 {
     char p;
 
@@ -536,10 +536,10 @@ DumpTag(register struct iod *iodp, register int tag)
 }
 
 static int
-DumpByte(register struct iod *iodp, char tag, byte value)
+DumpByte(struct iod *iodp, char tag, byte value)
 {
     char tbuffer[2];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     *p = value;
     return ((iod_Write(iodp, tbuffer, 2) == 2) ? 0 : VOLSERDUMPERROR);
@@ -549,11 +549,11 @@ DumpByte(register struct iod *iodp, char tag, byte value)
 #define putshort(p, v) *p++ = v>>8, *p++ = v
 
 static int
-DumpDouble(register struct iod *iodp, char tag, register afs_uint32 value1,
-	   register afs_uint32 value2)
+DumpDouble(struct iod *iodp, char tag, afs_uint32 value1,
+	   afs_uint32 value2)
 {
     char tbuffer[9];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     putint32(p, value1);
     putint32(p, value2);
@@ -561,23 +561,23 @@ DumpDouble(register struct iod *iodp, char tag, register afs_uint32 value1,
 }
 
 static int
-DumpInt32(register struct iod *iodp, char tag, register afs_uint32 value)
+DumpInt32(struct iod *iodp, char tag, afs_uint32 value)
 {
     char tbuffer[5];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     putint32(p, value);
     return ((iod_Write(iodp, tbuffer, 5) == 5) ? 0 : VOLSERDUMPERROR);
 }
 
 static int
-DumpArrayInt32(register struct iod *iodp, char tag,
-	       register afs_uint32 * array, register int nelem)
+DumpArrayInt32(struct iod *iodp, char tag,
+	       afs_uint32 * array, int nelem)
 {
     char tbuffer[4];
-    register afs_uint32 v;
+    afs_uint32 v;
     int code = 0;
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     putshort(p, nelem);
     code = iod_Write(iodp, tbuffer, 3);
@@ -596,10 +596,10 @@ DumpArrayInt32(register struct iod *iodp, char tag,
 }
 
 static int
-DumpShort(register struct iod *iodp, char tag, unsigned int value)
+DumpShort(struct iod *iodp, char tag, unsigned int value)
 {
     char tbuffer[3];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     *p++ = value >> 8;
     *p = value;
@@ -607,19 +607,19 @@ DumpShort(register struct iod *iodp, char tag, unsigned int value)
 }
 
 static int
-DumpBool(register struct iod *iodp, char tag, unsigned int value)
+DumpBool(struct iod *iodp, char tag, unsigned int value)
 {
     char tbuffer[2];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     *p = value;
     return ((iod_Write(iodp, tbuffer, 2) == 2) ? 0 : VOLSERDUMPERROR);
 }
 
 static int
-DumpString(register struct iod *iodp, char tag, register char *s)
+DumpString(struct iod *iodp, char tag, char *s)
 {
-    register int n;
+    int n;
     int code = 0;
     code = iod_Write(iodp, &tag, 1);
     if (code != 1)
@@ -632,8 +632,8 @@ DumpString(register struct iod *iodp, char tag, register char *s)
 }
 
 static int
-DumpByteString(register struct iod *iodp, char tag, register byte * bs,
-	       register int nbytes)
+DumpByteString(struct iod *iodp, char tag, byte * bs,
+	       int nbytes)
 {
     int code = 0;
 
@@ -647,7 +647,7 @@ DumpByteString(register struct iod *iodp, char tag, register byte * bs,
 }
 
 static afs_int32
-DumpStandardTag(register struct iod *iodp, char tag, afs_uint32 section)
+DumpStandardTag(struct iod *iodp, char tag, afs_uint32 section)
 {
     afs_int32 code;
     afs_uint32 off = tag >> 5;
@@ -669,7 +669,7 @@ DumpStandardTag(register struct iod *iodp, char tag, afs_uint32 section)
 
 AFS_UNUSED
 static afs_int32
-DumpStandardTagLen(register struct iod *iodp, char tag, afs_uint32 section,
+DumpStandardTagLen(struct iod *iodp, char tag, afs_uint32 section,
                         afs_size_t length)
 {
     char buf[10];
@@ -843,7 +843,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 }
 
 static int
-DumpVolumeHeader(register struct iod *iodp, register Volume * vp)
+DumpVolumeHeader(struct iod *iodp, Volume * vp)
 {
     int code = 0;
     static char nullString[1] = "";	/*The ``contents'' of motd */
@@ -914,7 +914,7 @@ DumpVolumeHeader(register struct iod *iodp, register Volume * vp)
 }
 
 static int
-DumpEnd(register struct iod *iodp)
+DumpEnd(struct iod *iodp)
 {
     return (DumpInt32(iodp, D_DUMPEND, DUMPENDMAGIC));
 }
@@ -923,12 +923,12 @@ DumpEnd(register struct iod *iodp)
 
 /* Dump a whole volume */
 int
-DumpVolume(register struct rx_call *call, register Volume * vp,
+DumpVolume(struct rx_call *call, Volume * vp,
 	   afs_int32 fromtime, int dumpAllDirs)
 {
     struct iod iod;
     int code = 0;
-    register struct iod *iodp = &iod;
+    struct iod *iodp = &iod;
     iod_Init(iodp, call);
 
     if (!code)
@@ -969,7 +969,7 @@ DumpVolMulti(struct rx_call **calls, int ncalls, Volume * vp,
 
 /* A partial dump (no dump header) */
 static int
-DumpPartial(register struct iod *iodp, register Volume * vp,
+DumpPartial(struct iod *iodp, Volume * vp,
 	    afs_int32 fromtime, int dumpAllDirs)
 {
     int code = 0;
@@ -983,18 +983,18 @@ DumpPartial(register struct iod *iodp, register Volume * vp,
 }
 
 static int
-DumpVnodeIndex(register struct iod *iodp, Volume * vp, VnodeClass class,
+DumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
 	       afs_int32 fromtime, int forcedump)
 {
-    register int code = 0;
-    register struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+    int code = 0;
+    struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
     FdHandle_t *fdP;
     afs_sfsize_t size, nVnodes;
     int flag;
-    register int vnodeIndex;
+    int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     assert(fdP != NULL);
@@ -1030,7 +1030,7 @@ DumpVnodeIndex(register struct iod *iodp, Volume * vp, VnodeClass class,
 }
 
 static int
-DumpDumpHeader(register struct iod *iodp, register Volume * vp,
+DumpDumpHeader(struct iod *iodp, Volume * vp,
 	       afs_int32 fromtime)
 {
     int code = 0;
@@ -1055,7 +1055,7 @@ DumpDumpHeader(register struct iod *iodp, register Volume * vp,
 }
 
 static int
-DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v, int volid,
+DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
 	  int vnodeNumber, int dumpEverything)
 {
     int code = 0;
@@ -1123,7 +1123,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
     FdHandle_t *fdP;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE], zero[SIZEOF_LARGEDISKVNODE];
-    register struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
+    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
 
     memset(zero, 0, sizeof(zero));	/* zero out our proto-vnode */
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
@@ -1206,16 +1206,16 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 
 
 int
-RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
+RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 	      struct restoreCookie *cookie)
 {
     VolumeDiskData vol;
     struct DumpHeader header;
     afs_uint32 endMagic;
     Error error = 0, vupdate;
-    register Volume *vp;
+    Volume *vp;
     struct iod iod;
-    register struct iod *iodp = &iod;
+    struct iod *iodp = &iod;
     afs_int32 *b1 = NULL, *b2 = NULL;
     int s1 = 0, s2 = 0, delo = 0, tdelo;
     int tag;
@@ -1309,13 +1309,13 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
 }
 
 static int
-ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
+ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 	   afs_int32 * Lbuf, afs_int32 s1, afs_int32 * Sbuf, afs_int32 s2,
 	   afs_int32 delo)
 {
     afs_int32 vnodeNumber;
     char buf[SIZEOF_LARGEDISKVNODE];
-    register int tag;
+    int tag;
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     struct VnodeDiskObject oldvnode;
     int idx;
@@ -1529,7 +1529,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
     afs_fsize_t filesize;
     afs_fsize_t written = 0;
     size_t size = 8192;
-    register afs_fsize_t nbytes;
+    afs_fsize_t nbytes;
     unsigned char *p;
 
 
@@ -1585,9 +1585,9 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 }
 
 static int
-ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
+ReadDumpHeader(struct iod *iodp, struct DumpHeader *hp)
 {
-    register int tag;
+    int tag;
     afs_uint32 beginMagic;
     afs_int32 critical = 0;
     if (iod_getc(iodp) != D_DUMPHEADER || !ReadInt32(iodp, &beginMagic)
@@ -1598,7 +1598,7 @@ ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
     hp->nDumpTimes = 0;
     while ((tag = iod_getc(iodp)) > D_MAX) {
 	unsigned short arrayLength;
-	register int i;
+	int i;
 	if (critical)
 	    critical--;
 	switch (tag) {
@@ -1637,8 +1637,8 @@ ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
 /* ----- Below are the calls that calculate dump size ----- */
 
 static int
-SizeDumpVolumeHeader(register struct iod *iodp, register Volume * vp,
-		     register struct volintSize *v_size)
+SizeDumpVolumeHeader(struct iod *iodp, Volume * vp,
+		     struct volintSize *v_size)
 {
     int code = 0;
     static char nullString[1] = "";	/*The ``contents'' of motd */
@@ -1732,7 +1732,7 @@ SizeDumpVolumeHeader(register struct iod *iodp, register Volume * vp,
 }
 
 static int
-SizeDumpEnd(register struct iod *iodp, register struct volintSize *v_size)
+SizeDumpEnd(struct iod *iodp, struct volintSize *v_size)
 {
     int code = 0;
     afs_uint64 addvar;
@@ -1742,12 +1742,12 @@ SizeDumpEnd(register struct iod *iodp, register struct volintSize *v_size)
 }
 
 int
-SizeDumpVolume(register struct rx_call *call, register Volume * vp,
+SizeDumpVolume(struct rx_call *call, Volume * vp,
 	       afs_int32 fromtime, int dumpAllDirs,
-	       register struct volintSize *v_size)
+	       struct volintSize *v_size)
 {
     int code = 0;
-    register struct iod *iodp = (struct iod *)0;
+    struct iod *iodp = (struct iod *)0;
 /*    iod_Init(iodp, call); */
 
     if (!code)
@@ -1761,8 +1761,8 @@ SizeDumpVolume(register struct rx_call *call, register Volume * vp,
 }
 
 static int
-SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
-		   afs_int32 fromtime, register struct volintSize *v_size)
+SizeDumpDumpHeader(struct iod *iodp, Volume * vp,
+		   afs_int32 fromtime, struct volintSize *v_size)
 {
     int code = 0;
 /*    int UseLatestReadOnlyClone = 1; */
@@ -1791,9 +1791,9 @@ SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
 }
 
 static int
-SizeDumpVnode(register struct iod *iodp, struct VnodeDiskObject *v, int volid,
+SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
 	      int vnodeNumber, int dumpEverything,
-	      register struct volintSize *v_size)
+	      struct volintSize *v_size)
 {
     int code = 0;
     afs_uint64 addvar;
@@ -1853,9 +1853,9 @@ SizeDumpVnode(register struct iod *iodp, struct VnodeDiskObject *v, int volid,
 
 /* A partial dump (no dump header) */
 static int
-SizeDumpPartial(register struct iod *iodp, register Volume * vp,
+SizeDumpPartial(struct iod *iodp, Volume * vp,
 		afs_int32 fromtime, int dumpAllDirs,
-		register struct volintSize *v_size)
+		struct volintSize *v_size)
 {
     int code = 0;
     if (!code)
@@ -1870,19 +1870,19 @@ SizeDumpPartial(register struct iod *iodp, register Volume * vp,
 }
 
 static int
-SizeDumpVnodeIndex(register struct iod *iodp, Volume * vp, VnodeClass class,
+SizeDumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
 		   afs_int32 fromtime, int forcedump,
-		   register struct volintSize *v_size)
+		   struct volintSize *v_size)
 {
-    register int code = 0;
-    register struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+    int code = 0;
+    struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
     FdHandle_t *fdP;
     afs_sfsize_t size, nVnodes;
     int flag;
-    register int vnodeIndex;
+    int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     assert(fdP != NULL);

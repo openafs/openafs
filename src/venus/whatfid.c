@@ -48,12 +48,12 @@ void PioctlError();
 int WhatFidCmd_FileParm;
 int WhatFidCmd_FollowLinkParm;
 int
-WhatFidCmd(register struct cmd_syndesc *as, void *arock)
+WhatFidCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ViceIoctl blob;
     struct VenusFid vFid;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     struct VolumeStatus *status;
     char *name;
     int follow = 1;
@@ -82,8 +82,8 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register afs_int32 code;
-    register struct cmd_syndesc *ts;
+    afs_int32 code;
+    struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
     /*

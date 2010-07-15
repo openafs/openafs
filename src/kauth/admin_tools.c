@@ -1643,7 +1643,7 @@ ListTickets(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(register struct cmd_syndesc *ts)
+add_std_args(struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, 12);
     /* 12 */ cmd_AddParm(ts, "-admin_username", CMD_SINGLE, CMD_OPTIONAL,
@@ -1660,8 +1660,8 @@ add_std_args(register struct cmd_syndesc *ts)
 afs_int32
 ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 {
-    register int code;
-    register struct cmd_syndesc *ts;
+    int code;
+    struct cmd_syndesc *ts;
 
     char line[BUFSIZ];
     afs_int32 argc;

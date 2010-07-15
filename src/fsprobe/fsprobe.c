@@ -226,7 +226,7 @@ fsprobe_LWP(void *unused)
 {				/*fsprobe_LWP */
 
     static char rn[] = "fsprobe_LWP";	/*Routine name */
-    register afs_int32 code;	/*Results of calls */
+    afs_int32 code;	/*Results of calls */
     struct timeval tv;		/*Time structure */
     int conn_idx;		/*Connection index */
     struct fsprobe_ConnectionInfo *curr_conn;	/*Current connection */
@@ -391,7 +391,7 @@ XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
 {
     struct pIDs partIds;
     struct partEntries partEnts;
-    register int i, j = 0, code;
+    int i, j = 0, code;
 
     *cntp = 0;
     if (newvolserver == 1) {
@@ -482,7 +482,7 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 {				/*fsprobe_Init */
 
     static char rn[] = "fsprobe_Init";	/*Routine name */
-    register afs_int32 code;	/*Return value */
+    afs_int32 code;	/*Return value */
     static struct rx_securityClass *CBsecobj;	/*Callback security object */
     struct rx_securityClass *secobj;	/*Client security object */
     struct rx_service *rxsrv_afsserver;	/*Server for AFS */

@@ -94,7 +94,7 @@ static char *
 rxinfo(char * str, struct rx_call *rxcall)
 {
     int code;
-    register struct rx_connection *tconn;
+    struct rx_connection *tconn;
     char tname[64] = "";
     char tinst[64] = "";
     char tcell[64] = "";
@@ -485,7 +485,7 @@ SVL_GetEntryByIDU(struct rx_call *rxcall,
 static int
 NameIsId(char *aname)
 {
-    register int tc;
+    int tc;
     while ((tc = *aname++)) {
 	if (tc > '9' || tc < '0')
 	    return 0;
@@ -1939,7 +1939,7 @@ SVL_GetStats(struct rx_call *rxcall,
 	     vldstats *stats,
 	     vital_vlheader *vital_header)
 {
-    register afs_int32 errorcode;
+    afs_int32 errorcode;
     struct ubik_trans *trans;
     char rxstr[AFS_RXINFO_LEN];
 
@@ -1970,7 +1970,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
 	     afs_int32 *nentries,
 	     bulkaddrs *addrsp)
 {
-    register afs_int32 errorcode;
+    afs_int32 errorcode;
     struct ubik_trans *trans;
     int nservers, i;
     afs_uint32 *taddrp;
@@ -2390,7 +2390,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	      afs_int32 *nentries,
 	      bulkaddrs *addrsp)
 {
-    register afs_int32 errorcode, index = -1, offset;
+    afs_int32 errorcode, index = -1, offset;
     struct ubik_trans *trans;
     int nservers, i, j, base = 0;
     struct extentaddr *exp = 0;
@@ -2606,7 +2606,7 @@ static int
 RemoveEntry(struct ubik_trans *trans, afs_int32 entryptr,
 	    struct nvlentry *tentry)
 {
-    register int errorcode;
+    int errorcode;
 
     if ((errorcode = UnthreadVLentry(trans, entryptr, tentry)))
 	return errorcode;
@@ -3135,10 +3135,10 @@ InvalidReleasetype(afs_int32 releasetype)
 }
 
 static int
-IpAddrToRelAddr(register afs_uint32 ipaddr, struct ubik_trans *atrans)
+IpAddrToRelAddr(afs_uint32 ipaddr, struct ubik_trans *atrans)
 {
-    register int i, j;
-    register afs_int32 code, base, index;
+    int i, j;
+    afs_int32 code, base, index;
     struct extentaddr *exp;
 
     for (i = 0; i <= MAXSERVERID; i++) {

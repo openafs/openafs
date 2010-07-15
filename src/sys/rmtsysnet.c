@@ -62,7 +62,7 @@ struct ClearToken {
 };
 
 char *
-RSkipLine(register char *astr)
+RSkipLine(char *astr)
 {
     while (*astr != '\n')
 	astr++;
@@ -148,7 +148,7 @@ RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 void
 RCleanAcl(struct Acl *aa)
 {
-    register struct AclEntry *te, *ne;
+    struct AclEntry *te, *ne;
 
     for (te = aa->pluslist; te; te = ne) {
 	ne = te->next;

@@ -23,8 +23,8 @@ main(argc, argv)
      char **argv;
 {
     struct rx_securityClass *rxsc;
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
 
     rx_Init(0);
     rxsc = rxnull_NewClientSecurityObject();

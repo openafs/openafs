@@ -138,7 +138,7 @@ getpipepass()
 {
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
-    register int i, tc;
+    int i, tc;
     memset(gpbuf, 0, sizeof(gpbuf));
     for (i = 0; i < (sizeof(gpbuf) - 1); i++) {
 	tc = fgetc(stdin);

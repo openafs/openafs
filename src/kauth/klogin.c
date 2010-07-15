@@ -47,7 +47,7 @@
 #include <grp.h>
 
 static gid_t tty_gid(int default_gid);
-static void getloginname(register struct utmp *up);
+static void getloginname(struct utmp *up);
 
 #define TTYGRPNAME	"tty"	/* name of group to own ttys */
 #define TTYGID(gid)	tty_gid(gid)	/* gid that owns all ttys */
@@ -122,7 +122,7 @@ osi_audit(void)
 int
 main(int argc, char **argv)
 {
-    register char *namep;
+    char *namep;
     int pflag = 0, hflag = 0, t, f, c;
     int invalid, quietlog;
     FILE *nlfd;
@@ -451,9 +451,9 @@ main(int argc, char **argv)
 }
 
 static void
-getloginname(register struct utmp *up)
+getloginname(struct utmp *up)
 {
-    register char *namep;
+    char *namep;
     int c;
 
     while (up->ut_name[0] == '\0') {
@@ -494,7 +494,7 @@ catch(void)
 int
 rootterm(char *tty)
 {
-    register struct ttyent *t;
+    struct ttyent *t;
 
     if ((t = getttynam(tty)) != NULL) {
 	if (t->ty_status & TTY_SECURE)
@@ -507,7 +507,7 @@ static void
 showmotd(void)
 {
     FILE *mf;
-    register c;
+    int c;
 
     signal(SIGINT, catch);
     if ((mf = fopen("/etc/motd", "r")) != NULL) {
@@ -524,7 +524,7 @@ showmotd(void)
 char *
 stypeof(char *ttyid)
 {
-    register struct ttyent *t;
+    struct ttyent *t;
 
     if (ttyid == NULL || (t = getttynam(ttyid)) == NULL)
 	return (UNKNOWN);
@@ -574,7 +574,7 @@ char *speeds[] = { "0", "50", "75", "110", "134", "150", "200", "300",
 static void
 doremoteterm(char *term, struct sgttyb *tp)
 {
-    register char *cp = strchr(term, '/'), **cpp;
+    char *cp = strchr(term, '/'), **cpp;
     char *speed;
 
     if (cp) {

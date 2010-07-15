@@ -41,7 +41,7 @@ Creation date:
 int 
 PrintOneCell(struct afsconf_cell *ainfo, void *arock, struct afsconf_dir *adir)
 {
-    register int i;
+    int i;
     long temp;
 
     printf("Cell %s:\n", ainfo->name);
@@ -61,7 +61,7 @@ main(int argc, char *argv[])
     char tbuffer[1024];
     struct afsconf_cell theCell;
     long i;
-    register long code;
+    long code;
     char *dirName;
 
 #ifdef AFS_NT40_ENV

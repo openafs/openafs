@@ -79,11 +79,11 @@
 pass5()
 {
     int c, blk, frags, basesize, sumsize, mapsize, savednrpos;
-    register struct fs *fs = &sblock;
-    register struct cg *cg = &cgrp;
+    struct fs *fs = &sblock;
+    struct cg *cg = &cgrp;
     daddr_t dbase, dmax;
-    register daddr_t d;
-    register long i, j;
+    daddr_t d;
+    long i, j;
     struct csum *cs;
     time_t now;
     struct csum cstotal;
@@ -92,11 +92,11 @@ pass5()
     int postype;
 
 #ifdef AFS_NEWCG_ENV
-    register struct cg *newcg = (struct cg *)buf;
+    struct cg *newcg = (struct cg *)buf;
     struct ocg *ocg = (struct ocg *)buf;
 #else /* AFS_NEWCG_ENV */
     /* don't bother with newcg format yet, most systems don't support it */
-    register struct cg *newcg = (struct cg *)buf;
+    struct cg *newcg = (struct cg *)buf;
     struct cg *ocg = (struct cg *)buf;
 #endif /* AFS_NEWCG_ENV */
 
@@ -374,7 +374,7 @@ pass5()
 
 /* returns true if sbdirty should be called */
 sbfine(fs)
-     register struct fs *fs;
+     struct fs *fs;
 {
     int rcode;
     rcode = 0;

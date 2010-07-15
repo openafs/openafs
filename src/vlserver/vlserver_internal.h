@@ -18,10 +18,10 @@ extern afs_int32 vlwrite(struct ubik_trans *trans, afs_int32 offset,
 		         void *buffer, afs_int32 length);
 extern afs_int32 vlentrywrite(struct ubik_trans *trans, afs_int32 offset,
 			      void *buffer, afs_int32 length);
-extern int write_vital_vlheader(register struct ubik_trans *trans);
+extern int write_vital_vlheader(struct ubik_trans *trans);
 extern afs_int32 readExtents(struct ubik_trans *trans);
 extern afs_int32 CheckInit(struct ubik_trans *trans, int builddb);
-extern afs_int32 AllocBlock(register struct ubik_trans *trans,
+extern afs_int32 AllocBlock(struct ubik_trans *trans,
 			    struct nvlentry *tentry);
 extern afs_int32 FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
 				 afs_int32 createit, afs_int32 hostslot,

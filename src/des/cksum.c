@@ -56,17 +56,17 @@
 /*
     des_cblock *in;		* >= length bytes of inputtext *
     des_cblock *out;		* >= length bytes of outputtext *
-    register afs_int32 length;	* in bytes *
+    afs_int32 length;	* in bytes *
     des_key_schedule key;       * precomputed key schedule *
     des_cblock *iv;		* 8 bytes of ivec *
 */
 
 afs_uint32
-des_cbc_cksum(des_cblock * in, des_cblock * out, register afs_int32 length,
+des_cbc_cksum(des_cblock * in, des_cblock * out, afs_int32 length,
 	      des_key_schedule key, des_cblock * iv)
 {
-    register afs_uint32 *input = (afs_uint32 *) in;
-    register afs_uint32 *output = (afs_uint32 *) out;
+    afs_uint32 *input = (afs_uint32 *) in;
+    afs_uint32 *output = (afs_uint32 *) out;
     afs_uint32 *ivec = (afs_uint32 *) iv;
 
     afs_uint32 i, j;

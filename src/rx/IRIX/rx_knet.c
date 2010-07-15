@@ -129,12 +129,12 @@ rxk_input(struct mbuf *am, struct ifnet *aif)
 #endif
 {
     void (*tproc) ();
-    register unsigned short *tsp;
+    unsigned short *tsp;
     int hdr;
     struct udphdr *tu;
-    register struct ip *ti;
+    struct ip *ti;
     struct udpiphdr *tvu;
-    register int i;
+    int i;
     char *phandle;
     struct sockaddr_in taddr;
     int tlen;
@@ -263,7 +263,7 @@ rxk_fasttimo(void)
 void
 rxk_init(void)
 {
-    register struct protosw *tpro, *last;
+    struct protosw *tpro, *last;
     if (rxk_initDone)
 	return;
 
@@ -414,10 +414,10 @@ rxi_GetIFInfo()
 
 #ifdef AFS_SGI65_ENV
 osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register osi_socket *asocket;
+     osi_socket *asocket;
      struct iovec *dvec;
      int nvec;
-     register afs_int32 asize;
+     afs_int32 asize;
      struct sockaddr_in *addr;
      int istack;
 {
@@ -496,18 +496,18 @@ void (*afs_sbunlockp) (struct sockbuf *, int, struct socket *, int) =
  */
 int
 osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register struct socket *asocket;
+     struct socket *asocket;
      struct iovec *dvec;
      int nvec;
-     register afs_int32 asize;
+     afs_int32 asize;
      struct sockaddr_in *addr;
      int istack;
 {
-    register struct mbuf *tm, *um;
-    register afs_int32 code;
+    struct mbuf *tm, *um;
+    afs_int32 code;
     int s;
     struct mbuf *top = 0;
-    register struct mbuf *m, **mp;
+    struct mbuf *m, **mp;
     int len;
     char *tdata;
     caddr_t tpa;

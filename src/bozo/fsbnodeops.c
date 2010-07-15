@@ -208,7 +208,7 @@ fs_restartp(struct bnode *bn)
 {
     struct fsbnode *abnode = (struct fsbnode *)bn;
     struct bnode_token *tt;
-    register afs_int32 code;
+    afs_int32 code;
     struct stat tstat;
 
     code = bnode_ParseLine(abnode->filecmd, &tt);
@@ -292,7 +292,7 @@ fs_restartp(struct bnode *bn)
 /* set needsSalvage flag, creating file SALVAGE.<instancename> if
     we need to salvage the file system (so we can tell over panic reboots */
 static int
-SetSalFlag(register struct fsbnode *abnode, register int aflag)
+SetSalFlag(struct fsbnode *abnode, int aflag)
 {
     char tbuffer[AFSDIR_PATH_MAX];
     int fd;
@@ -314,7 +314,7 @@ SetSalFlag(register struct fsbnode *abnode, register int aflag)
 
 /* set the needsSalvage flag according to the existence of the salvage file */
 static int
-RestoreSalFlag(register struct fsbnode *abnode)
+RestoreSalFlag(struct fsbnode *abnode)
 {
     char tbuffer[AFSDIR_PATH_MAX];
 
@@ -335,9 +335,9 @@ RestoreSalFlag(register struct fsbnode *abnode)
 }
 
 char *
-copystr(register char *a)
+copystr(char *a)
 {
-    register char *b;
+    char *b;
     b = (char *)malloc(strlen(a) + 1);
     strcpy(b, a);
     return b;
@@ -380,7 +380,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	  char *ascancmd, char *dummy)
 {
     struct stat tstat;
-    register struct fsbnode *te;
+    struct fsbnode *te;
     char cmdname[AFSDIR_PATH_MAX];
     char *fileCmdpath, *volCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
@@ -496,7 +496,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	    char * asalsrvcmd, char *asalcmd, char *ascancmd)
 {
     struct stat tstat;
-    register struct fsbnode *te;
+    struct fsbnode *te;
     char cmdname[AFSDIR_PATH_MAX];
     char *fileCmdpath, *volCmdpath, *salsrvCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
@@ -627,7 +627,7 @@ fs_timeout(struct bnode *bn)
 {
     struct fsbnode *abnode = (struct fsbnode *)bn;
     
-    register afs_int32 now;
+    afs_int32 now;
 
     now = FT_ApproxTime();
     /* shutting down */
@@ -685,7 +685,7 @@ fs_getstat(struct bnode *bn, afs_int32 * astatus)
 {
     struct fsbnode *abnode = (struct fsbnode *) bn;
     
-    register afs_int32 temp;
+    afs_int32 temp;
     if (abnode->volSDW || abnode->fileSDW || abnode->salSDW
 	|| abnode->scanSDW || abnode->salsrvSDW)
 	temp = BSTAT_SHUTTINGDOWN;
@@ -763,7 +763,7 @@ fs_procexit(struct bnode *bn, struct bnode_proc *aproc)
 
 /* make sure we're periodically checking the state if we need to */
 static void
-SetNeedsClock(register struct fsbnode *ab)
+SetNeedsClock(struct fsbnode *ab)
 {
     if (ab->b.goal == 1 && ab->fileRunning && ab->volRunning
 	&& (!ab->scancmd || ab->scanRunning)
@@ -781,10 +781,10 @@ SetNeedsClock(register struct fsbnode *ab)
 }
 
 static int
-NudgeProcs(register struct fsbnode *abnode)
+NudgeProcs(struct fsbnode *abnode)
 {
     struct bnode_proc *tp;	/* not register */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 now;
 
     now = FT_ApproxTime();

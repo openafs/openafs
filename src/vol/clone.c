@@ -84,7 +84,7 @@ void CloneVolume(Error *, Volume *, Volume *, Volume *);
 static int
 ci_AddItem(struct clone_head *ah, Inode aino)
 {
-    register struct clone_items *ti;
+    struct clone_items *ti;
 
     /* if no last elt (first call) or last item full, get a new one */
     if ((!ah->last) || ah->last->nitems >= CLONE_MAXITEMS) {
@@ -124,8 +124,8 @@ ci_InitHead(struct clone_head *ah)
 int
 ci_Apply(struct clone_head *ah, int (*aproc) (Inode,  void *), void *arock)
 {
-    register struct clone_items *ti;
-    register int i;
+    struct clone_items *ti;
+    int i;
 
     for (ti = ah->first; ti; ti = ti->next) {
 	for (i = 0; i < ti->nitems; i++) {
@@ -139,7 +139,7 @@ ci_Apply(struct clone_head *ah, int (*aproc) (Inode,  void *), void *arock)
 int
 ci_Destroy(struct clone_head *ah)
 {
-    register struct clone_items *ti, *ni;
+    struct clone_items *ti, *ni;
 
     for (ti = ah->first; ti; ti = ni) {
 	ni = ti->next;		/* guard against freeing */

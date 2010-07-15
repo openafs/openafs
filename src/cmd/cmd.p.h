@@ -76,8 +76,8 @@ extern int cmd_Dispatch(int argc, char **argv);
 extern int cmd_FreeArgv(char **argv);
 extern int cmd_ParseLine(char *aline, char **argv, afs_int32 * an,
 			 afs_int32 amaxn);
-extern int cmd_IsAdministratorCommand(register struct cmd_syndesc *as);
-extern void PrintSyntax(register struct cmd_syndesc *as);
-extern void PrintFlagHelp(register struct cmd_syndesc *as);
+extern int cmd_IsAdministratorCommand(struct cmd_syndesc *as);
+extern void PrintSyntax(struct cmd_syndesc *as);
+extern void PrintFlagHelp(struct cmd_syndesc *as);
 
 #endif /* __CMD_INCL__ */

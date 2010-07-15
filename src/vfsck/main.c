@@ -163,8 +163,8 @@ main(argc, argv)
     struct fstab *fsp;
     int pid, passno, sumstatus;
     char *name;
-    register struct disk *dk, *nextdisk;
-    register struct part *pt;
+    struct disk *dk, *nextdisk;
+    struct part *pt;
     extern char *AFSVersion;	/* generated version */
 #ifdef	AFS_SUN5_ENV
     int other_than_ufs = 0;
@@ -545,8 +545,8 @@ struct disk *
 finddisk(name)
      char *name;
 {
-    register struct disk *dk, **dkp;
-    register char *p;
+    struct disk *dk, **dkp;
+    char *p;
     int len;
 
     for (p = name + strlen(name) - 1; p >= name; --p)
@@ -579,7 +579,7 @@ addpart(name, fsname)
      char *name, *fsname;
 {
     struct disk *dk = finddisk(name);
-    register struct part *pt, **ppt = &dk->part;
+    struct part *pt, **ppt = &dk->part;
 
     for (pt = dk->part; pt; ppt = &pt->next, pt = pt->next)
 	if (strcmp(pt->name, name) == 0) {
@@ -599,7 +599,7 @@ addpart(name, fsname)
 }
 
 startdisk(dk)
-     register struct disk *dk;
+     struct disk *dk;
 {
 
     nrun++;

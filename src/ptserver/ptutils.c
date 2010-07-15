@@ -683,9 +683,9 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
  * entry if appropriate */
 
 afs_int32
-ChangeIDEntry(register struct ubik_trans *at, register afs_int32 aid, afs_int32 newid, register afs_int32 bid)
+ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 bid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     struct contentry centry;
     afs_int32 temp;
@@ -751,9 +751,9 @@ ChangeIDEntry(register struct ubik_trans *at, register afs_int32 aid, afs_int32 
  * continuation entry if appropriate */
 
 afs_int32
-RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, register afs_int32 bid)
+RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     struct prentryg *tentryg;
     struct contentry centry;
@@ -1115,7 +1115,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
 afs_int32
 AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int32 aid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct contentry nentry;
     struct contentry aentry;
@@ -1446,7 +1446,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 afs_int32
 GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP, afs_int32 depth)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     struct prentryg *tentryg = (struct prentryg *)&tentry;
     afs_int32 i;
@@ -1566,7 +1566,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 afs_int32
 GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct contentry centry;
     struct prentryg *tentryg;

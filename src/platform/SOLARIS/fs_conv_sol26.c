@@ -71,7 +71,7 @@ UnConvCmd(struct cmd_syndesc *as, void *arock)
 static int
 handleit(struct cmd_syndesc *as)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char *dname;
     afs_int32 haspart = 0, hasDevice = 0;
     struct vfstab mnt;
@@ -186,7 +186,7 @@ handleit(struct cmd_syndesc *as)
 main(argc, argv)
      char **argv;
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
     if (geteuid() != 0) {

@@ -228,26 +228,26 @@ extern void CheckLogFile(char * log_path);
 extern void TimeStampLogFile(char * log_path);
 #endif
 extern void ClearROInUseBit(struct VolumeSummary *summary);
-extern void CopyAndSalvage(register struct DirSummary *dir);
+extern void CopyAndSalvage(struct DirSummary *dir);
 extern int CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume);
-extern void CopyOnWrite(register struct DirSummary *dir);
-extern void CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
-		       register struct InodeSummary *summary);
-extern void DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp);
+extern void CopyOnWrite(struct DirSummary *dir);
+extern void CountVolumeInodes(struct ViceInodeInfo *ip, int maxInodes,
+		       struct InodeSummary *summary);
+extern void DeleteExtraVolumeHeaderFile(struct VolumeSummary *vsp);
 extern void DistilVnodeEssence(VolumeId vid, VnodeClass class, Inode ino,
 			       Unique * maxu);
 extern int GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber);
 extern int GetVolumeSummary(VolumeId singleVolumeNumber);
 extern int JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		      afs_int32 unique);
-extern void MaybeZapVolume(register struct InodeSummary *isp, char *message,
+extern void MaybeZapVolume(struct InodeSummary *isp, char *message,
 			   int deleteMe, int check);
 extern void ObtainSalvageLock(void);
 extern void ObtainSharedSalvageLock(void);
 extern void PrintInodeList(void);
 extern void PrintInodeSummary(void);
 extern void PrintVolumeSummary(void);
-extern int QuickCheck(register struct InodeSummary *isp, int nVols);
+extern int QuickCheck(struct InodeSummary *isp, int nVols);
 extern void RemoveTheForce(char *path);
 extern void SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
 		       IHandle_t * alinkH, int i, struct DirSummary *rootdir,
@@ -256,23 +256,23 @@ extern void SalvageFileSysParallel(struct DiskPartition64 *partP);
 extern void SalvageFileSys(struct DiskPartition64 *partP, VolumeId singleVolumeNumber);
 extern void SalvageFileSys1(struct DiskPartition64 *partP,
 			    VolumeId singleVolumeNumber);
-extern int SalvageHeader(register struct stuff *sp, struct InodeSummary *isp,
+extern int SalvageHeader(struct stuff *sp, struct InodeSummary *isp,
 			 int check, int *deleteMe);
 extern int SalvageIndex(Inode ino, VnodeClass class, int RW,
-			register struct ViceInodeInfo *ip, int nInodes,
+			struct ViceInodeInfo *ip, int nInodes,
 			struct VolumeSummary *volSummary, int check);
-extern int SalvageVnodes(register struct InodeSummary *rwIsp,
-			 register struct InodeSummary *thisIsp,
-			 register struct ViceInodeInfo *inodes, int check);
-extern int SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH);
-extern void DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols);
+extern int SalvageVnodes(struct InodeSummary *rwIsp,
+			 struct InodeSummary *thisIsp,
+			 struct ViceInodeInfo *inodes, int check);
+extern int SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH);
+extern void DoSalvageVolumeGroup(struct InodeSummary *isp, int nVols);
 #ifdef AFS_NT40_ENV
-extern void SalvageVolumeGroup(register struct InodeSummary *isp, int nVols);
+extern void SalvageVolumeGroup(struct InodeSummary *isp, int nVols);
 #else
 #define SalvageVolumeGroup DoSalvageVolumeGroup
 #endif
-extern int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
-				   register struct ViceInodeInfo *inodes, int RW,
+extern int SalvageVolumeHeaderFile(struct InodeSummary *isp,
+				   struct ViceInodeInfo *inodes, int RW,
 				   int check, int *deleteMe);
 extern void showlog(void);
 extern int UseTheForceLuke(char *path);

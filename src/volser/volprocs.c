@@ -136,7 +136,7 @@ static afs_int32 VolSetDate(struct rx_call *, afs_int32, afs_int32);
 int 
 VPFullUnlock_r(void)
 {
-    register struct DiskPartition64 *tp;
+    struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
 	if (tp->lock_fd != INVALID_FD) {
 	    close(tp->lock_fd);	/* releases flock held on this partition */
@@ -160,8 +160,8 @@ VPFullUnlock(void)
 afs_int32
 PartitionID(char *aname)
 {
-    register char tc;
-    register int code = 0;
+    char tc;
+    int code = 0;
     char ascii[3];
 
     tc = *aname;
@@ -446,7 +446,7 @@ afs_int32
 VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64 
 		 *partition)
 {
-    register struct DiskPartition64 *dp;
+    struct DiskPartition64 *dp;
 
 /*
     if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;
@@ -481,7 +481,7 @@ VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_uint32 avolID)
     char partName[50];
     afs_int32 error;
     Error verror;
-    register afs_int32 code;
+    afs_int32 code;
     struct Volume *tvp;
     char caller[MAXKTCNAMELEN];
 
@@ -531,11 +531,11 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 		    afs_int32 *atrans)
 {
     Error error;
-    register Volume *vp;
+    Volume *vp;
     Error junk;		/* discardable error code */
     afs_uint32 volumeID;
     afs_int32 doCreateRoot = 1;
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char ppath[30];
     char caller[MAXKTCNAMELEN];
 
@@ -622,7 +622,7 @@ SAFSVolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 static afs_int32
 VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 {
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     Error error;
     char caller[MAXKTCNAMELEN];
 
@@ -681,9 +681,9 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	     afs_int32 newType, char *newName, afs_uint32 *newNumber)
 {
     afs_uint32 newId;
-    register struct Volume *originalvp, *purgevp, *newvp;
+    struct Volume *originalvp, *purgevp, *newvp;
     Error error, code;
-    register struct volser_trans *tt, *ttc;
+    struct volser_trans *tt, *ttc;
     char caller[MAXKTCNAMELEN];
 #ifdef AFS_DEMAND_ATTACH_FS
     struct Volume *salv_vp = NULL;
@@ -877,10 +877,10 @@ SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 cloneId)
 static afs_int32
 VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 {
-    register struct Volume *originalvp, *clonevp;
+    struct Volume *originalvp, *clonevp;
     Error error, code;
     afs_int32 newType;
-    register struct volser_trans *tt, *ttc;
+    struct volser_trans *tt, *ttc;
     char caller[MAXKTCNAMELEN];
 
     /*not a super user */
@@ -1052,8 +1052,8 @@ static afs_int32
 VolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
 		   afs_int32 iflags, afs_int32 *ttid)
 {
-    register struct volser_trans *tt;
-    register Volume *tv;
+    struct volser_trans *tt;
+    Volume *tv;
     afs_int32 error;
     Error code;
     afs_int32 mode;
@@ -1140,7 +1140,7 @@ SAFSVolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
 static afs_int32
 VolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
 {
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
 
     tt = FindTrans(atid);
     if (!tt)
@@ -1178,8 +1178,8 @@ SAFSVolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
 static afs_int32
 VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
 {
-    register struct volser_trans *tt;
-    register struct Volume *vp;
+    struct volser_trans *tt;
+    struct Volume *vp;
     Error error;
     char caller[MAXKTCNAMELEN];
 
@@ -1250,11 +1250,11 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	       struct destServer *destination, afs_int32 destTrans, 
 	       struct restoreCookie *cookie)
 {
-    register struct volser_trans *tt;
-    register afs_int32 code;
-    register struct rx_connection *tcon;
+    struct volser_trans *tt;
+    afs_int32 code;
+    struct rx_connection *tcon;
     struct rx_call *tcall;
-    register struct Volume *vp;
+    struct Volume *vp;
     struct rx_securityClass *securityObject;
     afs_int32 securityIndex;
     char caller[MAXKTCNAMELEN];
@@ -1485,7 +1485,7 @@ VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	afs_int32 flags)
 {
     int code = 0;
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -1532,8 +1532,8 @@ static afs_int32
 VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
 	   struct restoreCookie *cookie)
 {
-    register struct volser_trans *tt;
-    register afs_int32 code, tcode;
+    struct volser_trans *tt;
+    afs_int32 code, tcode;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -1572,7 +1572,7 @@ SAFSVolEndTrans(struct rx_call *acid, afs_int32 destTrans, afs_int32 *rcode)
 static afs_int32
 VolEndTrans(struct rx_call *acid, afs_int32 destTrans, afs_int32 *rcode)
 {
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -1601,7 +1601,7 @@ SAFSVolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 static afs_int32
 VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 {
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
     char partName[16];
 
@@ -1630,7 +1630,7 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 
 afs_int32
 SAFSVolGetStatus(struct rx_call *acid, afs_int32 atrans,
-		 register struct volser_status *astatus)
+		 struct volser_status *astatus)
 {
     afs_int32 code;
 
@@ -1641,10 +1641,10 @@ SAFSVolGetStatus(struct rx_call *acid, afs_int32 atrans,
 
 static afs_int32
 VolGetStatus(struct rx_call *acid, afs_int32 atrans,
-	     register struct volser_status *astatus)
+	     struct volser_status *astatus)
 {
-    register struct Volume *tv;
-    register struct VolumeDiskData *td;
+    struct Volume *tv;
+    struct VolumeDiskData *td;
     struct volser_trans *tt;
 
 
@@ -1691,7 +1691,7 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
 
 afs_int32
 SAFSVolSetInfo(struct rx_call *acid, afs_int32 atrans,
-	       register struct volintInfo *astatus)
+	       struct volintInfo *astatus)
 {
     afs_int32 code;
 
@@ -1702,10 +1702,10 @@ SAFSVolSetInfo(struct rx_call *acid, afs_int32 atrans,
 
 static afs_int32
 VolSetInfo(struct rx_call *acid, afs_int32 atrans,
-	       register struct volintInfo *astatus)
+	       struct volintInfo *astatus)
 {
-    register struct Volume *tv;
-    register struct VolumeDiskData *td;
+    struct Volume *tv;
+    struct VolumeDiskData *td;
     struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
     Error error;
@@ -1763,10 +1763,10 @@ SAFSVolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 static afs_int32
 VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 {
-    register struct Volume *tv;
-    register struct VolumeDiskData *td;
+    struct Volume *tv;
+    struct VolumeDiskData *td;
     struct volser_trans *tt;
-    register int len;
+    int len;
 
     /* We need to at least fill it in */
     *aname = (char *)malloc(1);
@@ -1997,7 +1997,7 @@ static int
 FillVolInfo(Volume * vp, volint_info_handle_t * handle)
 {
     unsigned int numStatBytes, now;
-    register struct VolumeDiskData *hdr = &vp->header->diskstuff;
+    struct VolumeDiskData *hdr = &vp->header->diskstuff;
 
     /*read in the relevant info */
     strcpy((char *)VOLINT_INFO_PTR(handle, name), hdr->name);
@@ -2892,7 +2892,7 @@ VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
 {
     struct Volume *tv;
     Error error = 0;
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
     if (strlen(name) > 31)
@@ -2950,7 +2950,7 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
 {
     struct Volume *tv;
     Error error = 0;
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -2995,7 +2995,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 #else
     char caller[MAXKTCNAMELEN];
     DIR *dirp;
-    register struct volser_trans *ttc;
+    struct volser_trans *ttc;
     char pname[16], volname[20];
     struct DiskPartition64 *partP;
     afs_int32 ret = ENODEV;
@@ -3049,10 +3049,10 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 
 afs_int32
 SAFSVolGetSize(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
-	       register struct volintSize *size)
+	       struct volintSize *size)
 {
     int code = 0;
-    register struct volser_trans *tt;
+    struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))

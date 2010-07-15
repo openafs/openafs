@@ -94,7 +94,7 @@ SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag,
 {
     afs_uint32 blob[PIOCTL_HEADER];
     struct ViceIoctl data;
-    register afs_int32 error;
+    afs_int32 error;
 
     *errornumber = 0;
     SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
@@ -121,7 +121,7 @@ SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path,
 	       afs_int32 cmd, afs_int32 follow, rmtbulk *InData, 
 	       rmtbulk *OutData, afs_int32 *errornumber)
 {
-    register afs_int32 error;
+    afs_int32 error;
     struct ViceIoctl data;
     char *pathp = path;
     afs_uint32 blob[PIOCTL_HEADER];

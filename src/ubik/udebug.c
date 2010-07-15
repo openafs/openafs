@@ -44,10 +44,10 @@
 static_inline int afs_cast_time_t(time_t d) { return (int) d; }
 
 static short
-PortNumber(register char *aport)
+PortNumber(char *aport)
 {
-    register int tc;
-    register afs_int32 total;
+    int tc;
+    afs_int32 total;
 
     total = 0;
     while ((tc = *aport++)) {
@@ -88,7 +88,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char *hostName, *portName, *times;
     afs_int32 hostAddr;
-    register afs_int32 i, j, code;
+    afs_int32 i, j, code;
     short port;
     int int32p;
     time_t now, then, diff, newtime;

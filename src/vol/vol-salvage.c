@@ -329,7 +329,7 @@ IUnique(Unique u)
 }
 
 static int
-BadError(register int aerror)
+BadError(int aerror)
 {
     if (aerror == EPERM || aerror == ENXIO || aerror == ENOENT)
 	return 1;
@@ -937,7 +937,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 }
 
 void
-DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
+DeleteExtraVolumeHeaderFile(struct VolumeSummary *vsp)
 {
     char path[64];
     sprintf(path, "%s/%s", fileSysPath, vsp->fileName);
@@ -966,8 +966,8 @@ DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
 int
 CompareInodes(const void *_p1, const void *_p2)
 {
-    register const struct ViceInodeInfo *p1 = _p1;
-    register const struct ViceInodeInfo *p2 = _p2;
+    const struct ViceInodeInfo *p1 = _p1;
+    const struct ViceInodeInfo *p2 = _p2;
     if (p1->u.vnode.vnodeNumber == INODESPECIAL
 	|| p2->u.vnode.vnodeNumber == INODESPECIAL) {
 	VolumeId p1rwid, p2rwid;
@@ -1061,13 +1061,13 @@ CompareInodes(const void *_p1, const void *_p2)
 }
 
 void
-CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
-		  register struct InodeSummary *summary)
+CountVolumeInodes(struct ViceInodeInfo *ip, int maxInodes,
+		  struct InodeSummary *summary)
 {
     VolumeId volume = ip->u.vnode.volumeId;
     VolumeId rwvolume = volume;
-    register int n, nSpecial;
-    register Unique maxunique;
+    int n, nSpecial;
+    Unique maxunique;
     n = nSpecial = 0;
     maxunique = 0;
     while (maxInodes-- && volume == ip->u.vnode.volumeId) {
@@ -1265,8 +1265,8 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 int
 CompareVolumes(const void *_p1, const void *_p2)
 {
-    register const struct VolumeSummary *p1 = _p1;
-    register const struct VolumeSummary *p2 = _p2;
+    const struct VolumeSummary *p1 = _p1;
+    const struct VolumeSummary *p2 = _p2;
     if (p1->header.parent != p2->header.parent)
 	return p1->header.parent < p2->header.parent ? -1 : 1;
     if (p1->header.id == p1->header.parent)	/* p1 is rw volume */
@@ -1717,7 +1717,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
  * a RO only site, then the RO volume. For now, be cautious and hunt carefully.
  */
 Inode
-FindLinkHandle(register struct InodeSummary *isp, int nVols,
+FindLinkHandle(struct InodeSummary *isp, int nVols,
 	       struct ViceInodeInfo *allInodes)
 {
     int i, j;
@@ -1734,7 +1734,7 @@ FindLinkHandle(register struct InodeSummary *isp, int nVols,
 }
 
 int
-CreateLinkTable(register struct InodeSummary *isp, Inode ino)
+CreateLinkTable(struct InodeSummary *isp, Inode ino)
 {
     struct versionStamp version;
     FdHandle_t *fdP;
@@ -1786,7 +1786,7 @@ nt_SVG(void *arg)
 }
 
 void
-SalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
+SalvageVolumeGroup(struct InodeSummary *isp, int nVols)
 {
     pthread_t tid;
     pthread_attr_t tattr;
@@ -1823,7 +1823,7 @@ SalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 #endif /* AFS_NT40_ENV */
 
 void
-DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
+DoSalvageVolumeGroup(struct InodeSummary *isp, int nVols)
 {
     struct ViceInodeInfo *inodes, *allInodes, *ip;
     int i, totalInodes, size, salvageTo;
@@ -2014,10 +2014,10 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 }
 
 int
-QuickCheck(register struct InodeSummary *isp, int nVols)
+QuickCheck(struct InodeSummary *isp, int nVols)
 {
     /* Check headers BEFORE forking */
-    register int i;
+    int i;
     IHandle_t *h;
 
     for (i = 0; i < nVols; i++) {
@@ -2066,12 +2066,12 @@ QuickCheck(register struct InodeSummary *isp, int nVols)
  */
 
 int
-SalvageVolumeHeaderFile(register struct InodeSummary *isp,
-			register struct ViceInodeInfo *inodes, int RW,
+SalvageVolumeHeaderFile(struct InodeSummary *isp,
+			struct ViceInodeInfo *inodes, int RW,
 			int check, int *deleteMe)
 {
     int i;
-    register struct ViceInodeInfo *ip;
+    struct ViceInodeInfo *ip;
     int allinodesobsolete = 1;
     struct VolumeDiskHeader diskHeader;
     afs_int32 (*writefunc)(VolumeDiskHeader_t *, struct DiskPartition64 *) = NULL;
@@ -2312,7 +2312,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 }
 
 int
-SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
+SalvageHeader(struct stuff *sp, struct InodeSummary *isp, int check,
 	      int *deleteMe)
 {
     union {
@@ -2476,9 +2476,9 @@ SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
 }
 
 int
-SalvageVnodes(register struct InodeSummary *rwIsp,
-	      register struct InodeSummary *thisIsp,
-	      register struct ViceInodeInfo *inodes, int check)
+SalvageVnodes(struct InodeSummary *rwIsp,
+	      struct InodeSummary *thisIsp,
+	      struct ViceInodeInfo *inodes, int check)
 {
     int ilarge, ismall, ioffset, RW, nInodes;
     ioffset = rwIsp->index + rwIsp->nSpecialInodes;	/* first inode */
@@ -2499,7 +2499,7 @@ SalvageVnodes(register struct InodeSummary *rwIsp,
 
 int
 SalvageIndex(Inode ino, VnodeClass class, int RW,
-	     register struct ViceInodeInfo *ip, int nInodes,
+	     struct ViceInodeInfo *ip, int nInodes,
 	     struct VolumeSummary *volSummary, int check)
 {
     VolumeId volumeNumber;
@@ -2586,8 +2586,8 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
 		    /* For RW volume, look for vnode with matching inode number;
 		     * if no such match, take the first determined by our sort
 		     * order */
-		    register struct ViceInodeInfo *lip = ip;
-		    register int lnInodes = nInodes;
+		    struct ViceInodeInfo *lip = ip;
+		    int lnInodes = nInodes;
 		    while (lnInodes
 			   && lip->u.vnode.vnodeNumber == vnodeNumber) {
 			if (VNDISK_GET_INO(vnode) == lip->inodeNumber) {
@@ -2772,7 +2772,7 @@ CheckVnodeNumber(VnodeId vnodeNumber)
 }
 
 void
-CopyOnWrite(register struct DirSummary *dir)
+CopyOnWrite(struct DirSummary *dir)
 {
     /* Copy the directory unconditionally if we are going to change it:
      * not just if was cloned.
@@ -2825,7 +2825,7 @@ CopyOnWrite(register struct DirSummary *dir)
  * old dir.
  */
 void
-CopyAndSalvage(register struct DirSummary *dir)
+CopyAndSalvage(struct DirSummary *dir)
 {
     struct VnodeDiskObject vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
@@ -3164,7 +3164,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 void
 DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino, Unique * maxu)
 {
-    register struct VnodeInfo *vip = &vnodeInfo[class];
+    struct VnodeInfo *vip = &vnodeInfo[class];
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
@@ -3203,7 +3203,7 @@ DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino, Unique * maxu)
 	 nVnodes && STREAM_READ(vnode, vcp->diskSize, 1, file) == 1;
 	 nVnodes--, vnodeIndex++) {
 	if (vnode->type != vNull) {
-	    register struct VnodeEssence *vep = &vip->vnodes[vnodeIndex];
+	    struct VnodeEssence *vep = &vip->vnodes[vnodeIndex];
 	    afs_fsize_t vnodeLength;
 	    vip->nAllocatedVnodes++;
 	    vep->count = vnode->linkCount;
@@ -3733,12 +3733,12 @@ CreateRootDir(VolumeDiskData *volHeader, IHandle_t *alinkH, VolumeId vid,
 }
 
 int
-SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
+SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 {
     /* This routine, for now, will only be called for read-write volumes */
     int i, j, code;
     int BlocksInVolume = 0, FilesInVolume = 0;
-    register VnodeClass class;
+    VnodeClass class;
     struct DirSummary rootdir, oldrootdir;
     struct VnodeInfo *dirVnodeInfo;
     struct VnodeDiskObject vnode;
@@ -3933,7 +3933,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	FilesInVolume += vnodeInfo[class].nAllocatedVnodes;
 	BlocksInVolume += vnodeInfo[class].volumeBlockCount;
 	for (i = 0; i < nVnodes; i++) {
-	    register struct VnodeEssence *vnp = &vnodes[i];
+	    struct VnodeEssence *vnp = &vnodes[i];
 	    VnodeId vnodeNumber = bitNumberToVnodeNumber(i, class);
 
 	    /* If the vnode is good but is unclaimed (not listed in
@@ -4005,7 +4005,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
     }
 
     for (class = 0; class < nVNODECLASSES; class++) {
-	register struct VnodeInfo *vip = &vnodeInfo[class];
+	struct VnodeInfo *vip = &vnodeInfo[class];
 	for (i = 0; i < vip->nVnodes; i++)
 	    if (vip->vnodes[i].name)
 		free(vip->vnodes[i].name);
@@ -4101,7 +4101,7 @@ ClearROInUseBit(struct VolumeSummary *summary)
  * deleteMe - Always do so, only a partial volume.
  */
 void
-MaybeZapVolume(register struct InodeSummary *isp, char *message, int deleteMe,
+MaybeZapVolume(struct InodeSummary *isp, char *message, int deleteMe,
 	       int check)
 {
     if (readOnly(isp) || deleteMe) {
@@ -4333,10 +4333,10 @@ CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume)
 void
 PrintInodeList(void)
 {
-    register struct ViceInodeInfo *ip;
+    struct ViceInodeInfo *ip;
     struct ViceInodeInfo *buf;
     struct afs_stat status;
-    register int nInodes;
+    int nInodes;
 
     assert(afs_fstat(inodeFd, &status) == 0);
     buf = (struct ViceInodeInfo *)malloc(status.st_size);
@@ -4585,7 +4585,7 @@ Abort(const char *format, ...)
 char *
 ToString(const char *s)
 {
-    register char *p;
+    char *p;
     p = (char *)malloc(strlen(s) + 1);
     assert(p != NULL);
     strcpy(p, s);
