@@ -208,7 +208,7 @@ AFSPAGOBJS = \
 	rx_event.o	\
 	rx_globals.o	\
 	rx_kmutex.o	\
-	rx_knet.o	\
+	rx_pag_knet.o	\
 	rx_kcommon.o	\
 	rx_misc.o	\
 	rx_null.o	\
@@ -462,6 +462,8 @@ afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
 # Special objects for the PAG module
 afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE_OPT) -DAFS_PAG_MANAGER
+rx_pag_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
+	$(CRULE_NOOPT)
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating
