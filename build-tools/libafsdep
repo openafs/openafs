@@ -1,1 +1,6 @@
+config.guess
+config.sub
 git-version
+install-sh
+missing
+mkinstalldirs
