@@ -437,9 +437,9 @@ afs_CheckRootVolume(void)
 
 /* ptr_parm 0 is the pathname, size_parm 0 to the fetch is the chunk number */
 static void
-BPath(register struct brequest *ab)
+BPath(struct brequest *ab)
 {
-    register struct dcache *tdc = NULL;
+    struct dcache *tdc = NULL;
     struct vcache *tvc = NULL;
     struct vnode *tvn = NULL;
 #ifdef AFS_LINUX22_ENV
@@ -494,10 +494,10 @@ BPath(register struct brequest *ab)
  * size_parm 1 is true iff we should release the dcache entry here.
  */
 static void
-BPrefetch(register struct brequest *ab)
+BPrefetch(struct brequest *ab)
 {
-    register struct dcache *tdc;
-    register struct vcache *tvc;
+    struct dcache *tdc;
+    struct vcache *tvc;
     afs_size_t offset, len, abyte, totallen = 0;
     struct vrequest treq;
 
@@ -535,7 +535,7 @@ BPrefetch(register struct brequest *ab)
 
 #if defined(AFS_CACHE_BYPASS)
 static void
-BPrefetchNoCache(register struct brequest *ab)
+BPrefetchNoCache(struct brequest *ab)
 {
     struct vrequest treq;
     afs_size_t len;
@@ -551,10 +551,10 @@ BPrefetchNoCache(register struct brequest *ab)
 #endif
 
 static void
-BStore(register struct brequest *ab)
+BStore(struct brequest *ab)
 {
-    register struct vcache *tvc;
-    register afs_int32 code;
+    struct vcache *tvc;
+    afs_int32 code;
     struct vrequest treq;
 #if defined(AFS_SGI_ENV)
     struct cred *tmpcred;
@@ -601,7 +601,7 @@ BStore(register struct brequest *ab)
 
 /* release a held request buffer */
 void
-afs_BRelease(register struct brequest *ab)
+afs_BRelease(struct brequest *ab)
 {
 
     AFS_STATCNT(afs_BRelease);
@@ -625,13 +625,13 @@ afs_BBusy(void)
 }
 
 struct brequest *
-afs_BQueue(register short aopcode, register struct vcache *avc,
+afs_BQueue(short aopcode, struct vcache *avc,
 	   afs_int32 dontwait, afs_int32 ause, afs_ucred_t *acred,
 	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0,
 	   void *apparm1, void *apparm2)
 {
-    register int i;
-    register struct brequest *tb;
+    int i;
+    struct brequest *tb;
 
     AFS_STATCNT(afs_BQueue);
     ObtainWriteLock(&afs_xbrs, 296);

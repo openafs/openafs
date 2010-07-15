@@ -277,7 +277,7 @@ SSAMPLE_Test(struct rx_call *call)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code, i;
+    afs_int32 code, i;
     afs_uint32 serverList[MAXSERVERS];
     afs_uint32 myHost;
     struct rx_service *tservice;

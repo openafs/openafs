@@ -85,7 +85,7 @@ void
 gen(FILE * stream)
 {
     /*  Local Declarations */
-    register int i, j, iter;
+    int i, j, iter;
 
     /*
      * initialize the key_position array s.t. key_position[i] = i;

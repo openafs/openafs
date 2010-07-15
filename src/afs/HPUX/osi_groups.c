@@ -122,7 +122,7 @@ afs_setgroups(struct ucred **cred, int ngroups, gid_t * gidset,
     struct ucred *newcr;
     ulong_t s;
 #if defined(AFS_HPUX110_ENV)
-    register ulong_t context;
+    ulong_t context;
 #endif
 
     AFS_STATCNT(afs_setgroups);

@@ -1130,7 +1130,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		    goto out;
 		}
 	    } else {
-		register int bj, bk;
+		int bj, bk;
 		dptr = inodes;
 		for (bj = bk = 0; bj < bufsize; bj = bj + 512, bk++) {
 		    if ((code = read(pfd, dptr, 512)) != 512) {

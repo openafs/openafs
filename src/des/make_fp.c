@@ -24,7 +24,7 @@
 void
 gen(FILE * stream)
 {
-    register int i;
+    int i;
 #ifdef AFS_DARWIN80_ENV
     int j;
 

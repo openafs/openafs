@@ -469,7 +469,7 @@ getTokenLen(char *buf)
     afs_int32 len = 0;
     afs_int32 rc = 0;
     char cellName[WEBLOG_CELLNAME_MAX];
-    register char *tp;
+    char *tp;
     int n = sizeof(afs_int32);
     struct ClearToken {
 	afs_int32 AuthHandle;
@@ -505,7 +505,7 @@ long
 getExpiration(char *buf)
 {
     afs_int32 len = 0;
-    register char *tp;
+    char *tp;
     int n = sizeof(afs_int32);
     struct ClearToken {
 	afs_int32 AuthHandle;

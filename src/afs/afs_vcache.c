@@ -297,7 +297,7 @@ static struct afs_cbr *afs_cbrHeads[16];
 struct afs_cbr *
 afs_AllocCBR(void)
 {
-    register struct afs_cbr *tsp;
+    struct afs_cbr *tsp;
     int i;
 
     if (!afs_cbrSpace) {
@@ -341,7 +341,7 @@ afs_AllocCBR(void)
  * \rerurn 0
  */
 int
-afs_FreeCBR(register struct afs_cbr *asp)
+afs_FreeCBR(struct afs_cbr *asp)
 {
     *(asp->pprev) = asp->next;
     if (asp->next)
@@ -897,12 +897,12 @@ afs_NewBulkVCache(struct VenusFid *afid, struct server *serverp, int seq)
  * \param doflocks : Do we handle flocks?
  */
 void
-afs_FlushActiveVcaches(register afs_int32 doflocks)
+afs_FlushActiveVcaches(afs_int32 doflocks)
 {
-    register struct vcache *tvc;
-    register int i;
-    register struct afs_conn *tc;
-    register afs_int32 code;
+    struct vcache *tvc;
+    int i;
+    struct afs_conn *tc;
+    afs_int32 code;
     afs_ucred_t *cred = NULL;
     struct vrequest treq, ureq;
     struct AFSVolSync tsync;
@@ -1076,7 +1076,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 int
 afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
 {
-    register struct vcache *tvc;
+    struct vcache *tvc;
 
     AFS_STATCNT(afs_VerifyVCache);
 
@@ -1124,8 +1124,8 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
  *
  */
 static void
-afs_SimpleVStat(register struct vcache *avc,
-		register struct AFSFetchStatus *astat, struct vrequest *areq)
+afs_SimpleVStat(struct vcache *avc,
+		struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
     AFS_STATCNT(afs_SimpleVStat);
@@ -1217,8 +1217,8 @@ afs_SimpleVStat(register struct vcache *avc,
  */
 
 int
-afs_WriteVCache(register struct vcache *avc,
-		register struct AFSStoreStatus *astatus,
+afs_WriteVCache(struct vcache *avc,
+		struct AFSStoreStatus *astatus,
 		struct vrequest *areq)
 {
     afs_int32 code;
@@ -1280,8 +1280,8 @@ afs_WriteVCache(register struct vcache *avc,
  * \note Must be called with a shared lock on the vnode
  */
 int
-afs_WriteVCacheDiscon(register struct vcache *avc,
-		      register struct AFSStoreStatus *astatus,
+afs_WriteVCacheDiscon(struct vcache *avc,
+		      struct AFSStoreStatus *astatus,
 		      struct vattr *attrs)
 {
     afs_int32 code = 0;
@@ -1361,8 +1361,8 @@ afs_WriteVCacheDiscon(register struct vcache *avc,
  * \param areq Ptr to associated request.
  */
 void
-afs_ProcessFS(register struct vcache *avc,
-	      register struct AFSFetchStatus *astat, struct vrequest *areq)
+afs_ProcessFS(struct vcache *avc,
+	      struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
     AFS_STATCNT(afs_ProcessFS);
@@ -1458,7 +1458,7 @@ afs_ProcessFS(register struct vcache *avc,
  * \return Success status of operation.
  */
 int
-afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
+afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 		 char *name, struct VenusFid *nfid,
 		 struct AFSFetchStatus *OutStatusp,
 		 struct AFSCallBack *CallBackp, struct server **serverp,
@@ -1466,7 +1466,7 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 {
     afs_int32 code;
     afs_uint32 start;
-    register struct afs_conn *tc;
+    struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
     if (!name)
@@ -1530,12 +1530,12 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
  *  already be held by the caller 
  */
 struct vcache *
-afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
+afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 	      afs_int32 * cached, struct vcache *avc)
 {
 
     afs_int32 code, newvcache = 0;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct volume *tvp;
     afs_int32 retry;
 
@@ -1779,7 +1779,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 {
     afs_int32 code, now, newvcache = 0;
     struct VenusFid nfid;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct volume *tvp;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
@@ -1953,7 +1953,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_int32 getNewFid = 0;
     afs_uint32 start;
     struct VenusFid nfid;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct server *serverp = 0;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
@@ -2250,7 +2250,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 {
     int code;
     afs_uint32 start = 0;
-    register struct afs_conn *tc;
+    struct afs_conn *tc;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
@@ -2313,13 +2313,13 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
  *	Nothing interesting.
  */
 void
-afs_StuffVcache(register struct VenusFid *afid,
+afs_StuffVcache(struct VenusFid *afid,
 		struct AFSFetchStatus *OutStatus,
-		struct AFSCallBack *CallBack, register struct afs_conn *tc,
+		struct AFSCallBack *CallBack, struct afs_conn *tc,
 		struct vrequest *areq)
 {
-    register afs_int32 code, i, newvcache = 0;
-    register struct vcache *tvc;
+    afs_int32 code, i, newvcache = 0;
+    struct vcache *tvc;
     struct AFSVolSync tsync;
     struct volume *tvp;
     struct axscache *ac;
@@ -2447,7 +2447,7 @@ afs_StuffVcache(register struct VenusFid *afid,
  * \note Environment: Nothing interesting.
  */
 void
-afs_PutVCache(register struct vcache *avc)
+afs_PutVCache(struct vcache *avc)
 {
     AFS_STATCNT(afs_PutVCache);
 #ifdef AFS_DARWIN80_ENV
@@ -2588,7 +2588,7 @@ struct vcache *
 afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 {
 
-    register struct vcache *tvc;
+    struct vcache *tvc;
     afs_int32 i;
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
@@ -2716,7 +2716,7 @@ int afs_duplicate_nfs_fids = 0;
 afs_int32
 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 {
-    register struct vcache *tvc;
+    struct vcache *tvc;
     afs_int32 i;
     afs_int32 count = 0;
     struct vcache *found_tvc = NULL;
@@ -2857,7 +2857,7 @@ void
 afs_vcacheInit(int astatSize)
 {
 #if !defined(AFS_LINUX22_ENV)
-    register struct vcache *tvp;
+    struct vcache *tvp;
 #endif
     int i;
     if (!afs_maxvcount) {
@@ -2924,8 +2924,8 @@ shutdown_vcache(void)
      */
 
     {
-	register struct afs_q *tq, *uq = NULL;
-	register struct vcache *tvc;
+	struct afs_q *tq, *uq = NULL;
+	struct vcache *tvc;
 	for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);

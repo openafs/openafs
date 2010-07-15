@@ -35,7 +35,7 @@ sym_lookup(name, value)
 {
     static sym_t *symsrch(), *search();
     char buf[64];
-    register sym_t *sym;
+    sym_t *sym;
 
     if (name) {
 	/*
@@ -62,8 +62,8 @@ static sym_t *
 search(addr)
      unsigned addr;
 {
-    register sym_t *sp;
-    register sym_t *save;
+    sym_t *sp;
+    sym_t *save;
     unsigned value;
 
     value = 0;
@@ -82,12 +82,12 @@ search(addr)
 
 static sym_t *
 symsrch(s)
-     register char *s;
+     char *s;
 {
-    register sym_t *sp;
-    register sym_t *found;
-    register len;
-    register char *p;
+    sym_t *sp;
+    sym_t *found;
+    int len;
+    char *p;
 
     /*
      * determine length of symbol
@@ -128,7 +128,7 @@ symsrch(s)
  */
 sym_t *
 sym_flex(sym)
-     register sym_t *sym;
+     sym_t *sym;
 {
     static sym_t symbol;
     static char name[48];

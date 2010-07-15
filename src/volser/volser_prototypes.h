@@ -26,7 +26,7 @@ extern int UV_CreateVolume(afs_uint32 aserver, afs_int32 apart, char *aname,
 extern int UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart,
 			   afs_uint32 avolid);
 
-extern int UV_SetSecurity(register struct rx_securityClass *as,
+extern int UV_SetSecurity(struct rx_securityClass *as,
                           afs_int32 aindex);
 
 extern int UV_ListOneVolume(afs_uint32 aserver, afs_int32 apart,

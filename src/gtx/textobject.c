@@ -417,7 +417,7 @@ gator_text_Write(struct onode *onp, char *strToWrite, int numChars,
 {				/*gator_text_Write */
 
     static char rn[] = "gator_text_Write";	/*Routine name */
-    register int code;		/*Return value on routines */
+    int code;		/*Return value on routines */
     struct gator_textobj *text_data;	/*Ptr to text obj data */
     struct gator_textcb_hdr *cbHdr;	/*Ptr to text CB header */
     int i;			/*Loop variable */
@@ -557,7 +557,7 @@ gator_text_BlankLine(struct onode *onp, int numBlanks)
 {				/*gator_text_BlankLine */
 
     static char rn[] = "gator_text_BlankLine";	/*Routine name */
-    register int code;		/*Return value on routines */
+    int code;		/*Return value on routines */
     struct gator_textobj *text_data;	/*Ptr to text obj data */
 
     /*

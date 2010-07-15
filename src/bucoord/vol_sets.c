@@ -58,7 +58,7 @@ static int ListVolSet(struct bc_volumeSet *aset);
 int
 bc_AddVolEntryCmd(struct cmd_syndesc *as, void *arock)
 {
-    register int code;
+    int code;
     char *volSetName, *serverName, *partitionName, *volRegExp;
     udbClientTextP ctPtr;
     struct bc_volumeSet *tset;
@@ -130,8 +130,8 @@ int
 bc_AddVolSetCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is vol set name */
-    register int code;
-    register struct cmd_item *ti;
+    int code;
+    struct cmd_item *ti;
     udbClientTextP ctPtr;
     afs_int32 flags;
 
@@ -188,7 +188,7 @@ bc_AddVolSetCmd(struct cmd_syndesc *as, void *arock)
 int
 bc_DeleteVolEntryCmd(struct cmd_syndesc *as, void *arock)
 {
-    register int code;
+    int code;
     afs_int32 entry;
     char *vsname;
     udbClientTextP ctPtr;
@@ -276,8 +276,8 @@ int
 bc_DeleteVolSetCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is vol set name */
-    register int code;
-    register struct cmd_item *ti;
+    int code;
+    struct cmd_item *ti;
     udbClientTextP ctPtr;
     afs_int32 c;
     afs_int32 flags, tosave = 0;
@@ -359,8 +359,8 @@ int
 bc_ListVolSetCmd(struct cmd_syndesc *as, void *arock)
 {
     /* parm 0 is optional volume set to display */
-    register struct bc_volumeSet *tset;
-    register struct cmd_item *ti;
+    struct bc_volumeSet *tset;
+    struct cmd_item *ti;
     int code = 0;
 
     code = bc_UpdateVolumeSet();
@@ -437,16 +437,16 @@ bc_ParseVolumeSet(void)
     char vsname[256];		/*Volume set name */
     char serverName[256];	/*Server name */
     char partName[256];		/*Partition name */
-    register struct bc_volumeEntry *tve;	/*Ptr to generated volume spec struct */
-    register struct bc_volumeSet *tvs = NULL;	/*Ptr to volume set struct */
+    struct bc_volumeEntry *tve;	/*Ptr to generated volume spec struct */
+    struct bc_volumeSet *tvs = NULL;	/*Ptr to volume set struct */
     struct bc_volumeEntry **ppve, *pve;
     struct bc_volumeSet **ppvs, *pvs;
-    register afs_int32 code;	/*Generalized return code */
+    afs_int32 code;	/*Generalized return code */
     char *tp;			/*Result of fgets(), malloc() */
     int readHeader;		/*Is next thing to read a volume set hdr? */
 
     udbClientTextP ctPtr;
-    register FILE *stream;
+    FILE *stream;
     struct bc_config *configPtr;
 
     extern struct bc_config *bc_globalConfig;
@@ -595,12 +595,12 @@ bc_ParseVolumeSet(void)
 int
 bc_SaveVolumeSet(void)
 {
-    register afs_int32 code = 0;
-    register struct bc_volumeSet *tset;
-    register struct bc_volumeEntry *tentry;
+    afs_int32 code = 0;
+    struct bc_volumeSet *tset;
+    struct bc_volumeEntry *tentry;
 
     udbClientTextP ctPtr;
-    register FILE *stream;
+    FILE *stream;
     struct bc_config *configPtr;
 
     extern struct bc_config *bc_globalConfig;

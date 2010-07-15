@@ -49,9 +49,9 @@ short ubik_initializationState;	/*!< initial state is zero */
 int
 ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers)
 {
-    register afs_int32 i;
-    register char *tp;
-    register struct hostent *th;
+    afs_int32 i;
+    char *tp;
+    struct hostent *th;
     afs_uint32 temp;
     afs_int32 counter;
     int inServer;
@@ -194,13 +194,13 @@ afs_randomMod15(void)
 #endif /* abs */
 #define abs(a) ((a) < 0 ? -1*(a) : (a))
 int
-ubik_ClientInit(register struct rx_connection **serverconns,
+ubik_ClientInit(struct rx_connection **serverconns,
 		struct ubik_client **aclient)
 {
     int i, j;
     int count;
     int offset;
-    register struct ubik_client *tc;
+    struct ubik_client *tc;
 
     initialize_U_error_table();
 
@@ -275,7 +275,7 @@ ubik_ClientInit(register struct rx_connection **serverconns,
 afs_int32
 ubik_ClientDestroy(struct ubik_client * aclient)
 {
-    register int c;
+    int c;
 
     if (aclient == 0)
 	return 0;
@@ -367,7 +367,7 @@ static int synccount = 0;
  * operation won't work until you find a sync site
  */
 static int
-try_GetSyncSite(register struct ubik_client *aclient, afs_int32 apos)
+try_GetSyncSite(struct ubik_client *aclient, afs_int32 apos)
 {
     struct rx_peer *rxp;
     afs_int32 code;
@@ -423,12 +423,12 @@ try_GetSyncSite(register struct ubik_client *aclient, afs_int32 apos)
  * been locked.
  */
 static afs_int32
-CallIter(int (*aproc) (), register struct ubik_client *aclient, 
+CallIter(int (*aproc) (), struct ubik_client *aclient, 
 	 afs_int32 aflags, int *apos, long p1, long p2, long p3, long p4, 
 	 long p5, long p6, long p7, long p8, long p9, long p10, long p11, 
 	 long p12, long p13, long p14, long p15, long p16, int needlock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct rx_connection *tc;
     short origLevel;
 
@@ -512,7 +512,7 @@ ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
  * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
-ubik_Call_New(int (*aproc) (), register struct ubik_client *aclient, 
+ubik_Call_New(int (*aproc) (), struct ubik_client *aclient, 
 	      afs_int32 aflags, long p1, long p2, long p3, long p4, long p5, 
 	      long p6, long p7, long p8, long p9, long p10, long p11, 
 	      long p12, long p13, long p14, long p15, long p16)
@@ -573,7 +573,7 @@ ubik_Call_New(int (*aproc) (), register struct ubik_client *aclient,
  * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
-ubik_Call(int (*aproc) (), register struct ubik_client *aclient,
+ubik_Call(int (*aproc) (), struct ubik_client *aclient,
 	  afs_int32 aflags, long p1, long p2, long p3, long p4,
 	  long p5, long p6, long p7, long p8, long p9, long p10,
 	  long p11, long p12, long p13, long p14, long p15, long p16)

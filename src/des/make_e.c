@@ -20,7 +20,7 @@
 
 main()
 {
-    register i;
+    int i;
 
     /* clear the output */
     fprintf(stdout, "\n\tL2 = 0; R2 = 0;");

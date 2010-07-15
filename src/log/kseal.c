@@ -34,7 +34,7 @@ main(int argc, char **argv)
 {
     struct ktc_token token;
     struct ktc_principal sname;
-    register afs_int32 code;
+    afs_int32 code;
     struct afsconf_dir *dir;
     afs_int32 now;
     char skey[9];

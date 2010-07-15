@@ -52,7 +52,7 @@ extern void afs_rwunlock(OSI_VN_DECL(vp), AFS_RWLOCK_T b);
 
 extern int afs_fid2();
 
-static int afsrwvp(register struct vcache *avc, register struct uio *uio,
+static int afsrwvp(struct vcache *avc, struct uio *uio,
 		   enum uio_rw rw, int ioflag,
 #ifdef AFS_SGI64_ENV
 		   struct cred *cr, struct flid *flp);
@@ -341,7 +341,7 @@ static int acchk = 0;
 static int acdrop = 0;
 
 static int
-afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
+afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	int ioflag,
 #ifdef AFS_SGI64_ENV
 	struct cred *cr, struct flid *flp)
@@ -349,7 +349,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	struct cred *cr)
 #endif
 {
-    register struct vnode *vp = AFSTOV(avc);
+    struct vnode *vp = AFSTOV(avc);
     struct buf *bp;
     daddr_t bn;
     off_t acnt, cnt;
@@ -927,7 +927,7 @@ OSI_VC_DECL(avc);
 {
     OSI_VC_CONVERT(avc);
     struct vnode *vp = AFSTOV(avc);
-    register struct brequest *tb;
+    struct brequest *tb;
     struct vrequest treq;
     afs_int32 code;
 

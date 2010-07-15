@@ -140,7 +140,7 @@ extern int umin(afs_uint32 a, afs_uint32 b);
 
 extern afs_int32 ka_KeyCheckSum(char *key, afs_uint32 * cksumP);
 
-extern int ka_KeyIsZero(register char *akey, register int alen);
+extern int ka_KeyIsZero(char *akey, int alen);
 
 extern void ka_timestr(afs_int32 time, char *tstr, afs_int32 tlen);
 

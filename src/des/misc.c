@@ -38,7 +38,7 @@ swap_bits(char *array)
     /* just return */
     return;
 #else /* LSBFIRST */
-    register int old, new, i, j;
+    int old, new, i, j;
 
     /* for an eight byte block-- */
     /* flips the bit order within each byte from 0 lsb to 0 msb */
@@ -65,7 +65,7 @@ long_swap_bits(afs_uint32 x)
     return x;
 #else
     char *array = (char *)&x;
-    register int old, new, i, j;
+    int old, new, i, j;
 
     /* flips the bit order within each byte from 0 lsb to 0 msb */
     for (i = 0; i <= (sizeof(afs_int32) - 1); i++) {
@@ -89,7 +89,7 @@ long_swap_bits(afs_uint32 x)
 afs_uint32
 swap_six_bits_to_ansi(afs_uint32 old)
 {
-    register afs_uint32 new, j;
+    afs_uint32 new, j;
 
     /* flips the bit order within each byte from 0 lsb to 0 msb */
     new = 0;
@@ -107,7 +107,7 @@ swap_six_bits_to_ansi(afs_uint32 old)
 afs_uint32
 swap_four_bits_to_ansi(afs_uint32 old)
 {
-    register afs_uint32 new, j;
+    afs_uint32 new, j;
 
     /* flips the bit order within each byte from 0 lsb to 0 msb */
     new = 0;
@@ -131,7 +131,7 @@ swap_bit_pos_1(afs_uint32 x)
      * given the number of a bit position, >=1, flips the bit order
      * each byte. e.g. bit 3 --> bit 6, bit 13 --> bit 12
      */
-    register int y, z;
+    int y, z;
 
     /* always do it, only used by des_make_key_perm.c so far */
     y = (x - 1) / 8;
@@ -155,7 +155,7 @@ swap_bit_pos_0(afs_uint32 x)
 #ifdef MSBFIRST
     return x;
 #else /* LSBFIRST */
-    register int y, z;
+    int y, z;
 
     /*
      * given the number of a bit position, >=0, flips the bit order
@@ -180,7 +180,7 @@ swap_bit_pos_0_to_ansi(afs_uint32 x)
      * bit 0 ==> msb, bit 7 lsb.
      */
 
-    register int y, z;
+    int y, z;
     /*
      * given the number of a bit position, >=0, flips the bit order each
      * byte. e.g. bit 3 --> bit 6, bit 13 --> bit 12
@@ -209,7 +209,7 @@ rev_swap_bit_pos_0(afs_uint32 x)
     return x;
 #else /* MSBFIRST */
 
-    register int y, z;
+    int y, z;
 
     /*
      * given the number of a bit position, >=0, flips the bit order each
@@ -232,7 +232,7 @@ swap_byte_bits(afs_uint32 x)
 #else /* LSBFIRST */
 
     char *array = (char *)&x;
-    register afs_uint32 old, new, j;
+    afs_uint32 old, new, j;
 
     /* flips the bit order within each byte from 0 lsb to 0 msb */
     old = *array;

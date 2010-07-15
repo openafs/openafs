@@ -42,10 +42,10 @@
 */
 
 static int
-VerifyEntries(register struct afsconf_cell *aci)
+VerifyEntries(struct afsconf_cell *aci)
 {
-    register int i;
-    register struct hostent *th;
+    int i;
+    struct hostent *th;
 
     for (i = 0; i < aci->numServers; i++) {
 	if (aci->hostAddr[i].sin_addr.s_addr == 0) {
@@ -97,11 +97,11 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 			    const char *apath, 
 			    struct afsconf_cell *acellInfo, char clones[])
 {
-    register afs_int32 code;
-    register int fd;
+    afs_int32 code;
+    int fd;
     char tbuffer[1024];
-    register FILE *tf;
-    register afs_int32 i;
+    FILE *tf;
+    afs_int32 i;
 
     LOCK_GLOBAL_MUTEX;
     /* write ThisCell file */

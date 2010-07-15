@@ -61,7 +61,7 @@ int
 bc_Dumper(int aindex)
 {
     struct rx_connection *tconn;
-    register struct bc_volumeDump *tde;
+    struct bc_volumeDump *tde;
     afs_int32 count, port;
     struct tc_dumpDesc *volDesc = 0;
     struct tc_dumpArray volArray;
@@ -70,9 +70,9 @@ bc_Dumper(int aindex)
 
     struct tc_dumpInterface dumpInterface;
     struct tc_dumpInterface *tcdiPtr = &dumpInterface;
-    register struct bc_dumpTask *dumpTaskPtr;
+    struct bc_dumpTask *dumpTaskPtr;
 
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
 
@@ -201,8 +201,8 @@ void *
 bc_DmpRstStart(void *param)
 {
     afs_int32 aindex = (intptr_t)param;
-    register struct bc_dumpTask *tdump;
-    register afs_int32 code;
+    struct bc_dumpTask *tdump;
+    afs_int32 code;
 
     tdump = &bc_dumpTasks[aindex];
 
@@ -247,8 +247,8 @@ bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname,
 	       int (*aproc) (int), afs_int32 *ports, afs_int32 portCount, 
 	       struct bc_dumpSchedule *dsptr, int append, int dontExecute)
 {
-    register int i;
-    register afs_int32 code;
+    int i;
+    afs_int32 code;
     void *junk = NULL;
 
     for (i = 0; i < BC_MAXSIMDUMPS; i++)

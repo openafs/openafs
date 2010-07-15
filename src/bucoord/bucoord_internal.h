@@ -145,7 +145,7 @@ extern int bc_SaveHosts(void);
 extern afs_int32 filesize(FILE *stream);
 extern int bc_CheckTextVersion(udbClientTextP ctPtr);
 extern int bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName);
-extern int bcdb_GetTextFile(register udbClientTextP ctPtr);
+extern int bcdb_GetTextFile(udbClientTextP ctPtr);
 extern afs_int32 bcdb_FindVolumes(afs_int32 dumpID, char *volumeName,
 		                  struct budb_volumeEntry *returnArray,
 				  afs_int32 last, afs_int32 *next,

@@ -35,16 +35,16 @@ extern afs_rwlock_t afs_xcbhash;
 
 int
 afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-     register struct vcache **avcp, afs_ucred_t *acred)
+     struct vcache **avcp, afs_ucred_t *acred)
 {
     struct vrequest treq;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    afs_int32 code;
+    struct afs_conn *tc;
     struct VenusFid newFid;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     struct dcache *new_dc;
     afs_size_t offset, len;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSCallBack CallBack;
@@ -255,10 +255,10 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;
-    register struct dcache *tdc;
-    register struct vcache *tvc = NULL;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    struct dcache *tdc;
+    struct vcache *tvc = NULL;
+    afs_int32 code;
+    struct afs_conn *tc;
     afs_size_t offset, len;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;

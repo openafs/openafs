@@ -76,7 +76,7 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
 {
     struct ilist **allInodes = (struct ilist **)arock;
     struct ilist *ti;
-    register afs_int32 i;
+    afs_int32 i;
 
 #ifndef AFS_PTHREAD_ENV
     IOMGR_Poll();		/* poll so we don't kill the RPC connection */
@@ -115,7 +115,7 @@ nuke(char *aname, afs_int32 avolid)
     /* first process the partition containing this junk */
     struct afs_stat tstat;
     struct ilist *ti, *ni, *li=NULL;
-    register afs_int32 code;
+    afs_int32 code;
     int i, forceSal;
     char wpath[100];
     char *lastDevComp;

@@ -99,9 +99,9 @@ static void AcceptOff(void);
 static void InitHandler(void);
 static void CallHandler(fd_set * fdsetp);
 static int AddHandler(osi_socket afd, void (*aproc) (int));
-static int FindHandler(register osi_socket afd);
-static int FindHandler_r(register osi_socket afd);
-static int RemoveHandler(register osi_socket afd);
+static int FindHandler(osi_socket afd);
+static int FindHandler_r(osi_socket afd);
+static int RemoveHandler(osi_socket afd);
 static void GetHandler(fd_set * fdsetp, int *maxfdp);
 
 static int AllocNode(struct SalvageQueueNode ** node);
@@ -796,7 +796,7 @@ AcceptOff(void)
 static void
 InitHandler(void)
 {
-    register int i;
+    int i;
     ObtainWriteLock(&SALVSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++) {
 	HandlerFD[i] = -1;
@@ -808,7 +808,7 @@ InitHandler(void)
 static void
 CallHandler(fd_set * fdsetp)
 {
-    register int i;
+    int i;
     ObtainReadLock(&SALVSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++) {
 	if (HandlerFD[i] >= 0 && FD_ISSET(HandlerFD[i], fdsetp)) {
@@ -823,7 +823,7 @@ CallHandler(fd_set * fdsetp)
 static int
 AddHandler(osi_socket afd, void (*aproc) (int))
 {
-    register int i;
+    int i;
     ObtainWriteLock(&SALVSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] == -1)
@@ -839,9 +839,9 @@ AddHandler(osi_socket afd, void (*aproc) (int))
 }
 
 static int
-FindHandler(register osi_socket afd)
+FindHandler(osi_socket afd)
 {
-    register int i;
+    int i;
     ObtainReadLock(&SALVSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] == afd) {
@@ -854,9 +854,9 @@ FindHandler(register osi_socket afd)
 }
 
 static int
-FindHandler_r(register osi_socket afd)
+FindHandler_r(osi_socket afd)
 {
-    register int i;
+    int i;
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] == afd) {
 	    return i;
@@ -866,7 +866,7 @@ FindHandler_r(register osi_socket afd)
 }
 
 static int
-RemoveHandler(register osi_socket afd)
+RemoveHandler(osi_socket afd)
 {
     ObtainWriteLock(&SALVSYNC_handler_lock);
     HandlerFD[FindHandler_r(afd)] = -1;
@@ -877,8 +877,8 @@ RemoveHandler(register osi_socket afd)
 static void
 GetHandler(fd_set * fdsetp, int *maxfdp)
 {
-    register int i;
-    register int maxfd = -1;
+    int i;
+    int maxfd = -1;
     FD_ZERO(fdsetp);
     ObtainReadLock(&SALVSYNC_handler_lock);	/* just in case */
     for (i = 0; i < MAXHANDLERS; i++)

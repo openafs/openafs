@@ -126,7 +126,7 @@ convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_uint32 *myHost,
  *      If it were, this routine would never have been called.
  */
 static int
-MyBeforeProc(register struct cmd_syndesc *as, void *arock)
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     helpOption = 0;
     return 0;

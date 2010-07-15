@@ -25,7 +25,7 @@
 extern struct afs_exporter *afs_nfsexporter;
 #endif
 
-#define AFS_VFSLOCK_DECL register int glockOwner = ISAFS_GLOCK()
+#define AFS_VFSLOCK_DECL int glockOwner = ISAFS_GLOCK()
 #define AFS_VFSLOCK()	if (!glockOwner) AFS_GLOCK()
 #define AFS_VFSUNLOCK() if (!glockOwner) AFS_GUNLOCK()
 
@@ -110,9 +110,9 @@ afs_unmount(struct vfs *afsp, int flag)
 static int
 afs_root_nolock(struct vfs *afsp, struct vnode **avpp)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {

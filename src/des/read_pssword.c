@@ -130,7 +130,7 @@ des_read_pw_string(char *s, int maxa, char *prompt, int verify)
     int ok = 0, cnt1 = 0;
     char *ptr;
 #if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    register int fno;
+    int fno;
     struct sigaction newsig, oldsig;
     struct termios save_ttyb, ttyb;
 #endif
@@ -372,7 +372,7 @@ static sigtype(*old_sigfunc[NSIG]) ();
 static
 push_signals()
 {
-    register i;
+    int i;
     for (i = 0; i < NSIG; i++)
 	old_sigfunc[i] = signal(i, sig_restore);
 }
@@ -380,7 +380,7 @@ push_signals()
 static
 pop_signals()
 {
-    register i;
+    int i;
     for (i = 0; i < NSIG; i++)
 	(void)signal(i, old_sigfunc[i]);
 }

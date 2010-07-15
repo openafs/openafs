@@ -71,7 +71,7 @@ int update_ReceiveFile(int, struct rx_call *, struct stat *);
 afs_int32
 GetServer(char *aname)
 {
-    register struct hostent *th;
+    struct hostent *th;
     afs_int32 addr;
 
     th = gethostbyname(aname);
@@ -466,11 +466,11 @@ FetchFile(struct rx_call *call, char *remoteFile, char *localFile, int dirFlag)
 
 
 int
-update_ReceiveFile(register int fd, register struct rx_call *call, register struct stat *status)
+update_ReceiveFile(int fd, struct rx_call *call, struct stat *status)
 {
-    register char *buffer = (char *)0;
+    char *buffer = (char *)0;
     afs_int32 length;
-    register int blockSize;
+    int blockSize;
     afs_int32 error = 0, len;
 #ifdef	AFS_AIX_ENV
     struct statfs tstatfs;
@@ -495,7 +495,7 @@ update_ReceiveFile(register int fd, register struct rx_call *call, register stru
 	return UPDATE_ERROR;
     }
     while (!error && length) {
-	register int nbytes = (length > blockSize ? blockSize : length);
+	int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = rx_Read(call, buffer, nbytes);
 	if (!nbytes)
 	    error = UPDATE_ERROR;

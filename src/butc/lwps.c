@@ -715,7 +715,7 @@ afs_int32
 PromptForTape(int flag, char *name, afs_uint32 dbDumpId, afs_uint32 taskId,
 	      int tapecount)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     afs_int32 wcode;
     afs_int32 start = 0;
     char inchr;

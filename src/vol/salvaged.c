@@ -182,7 +182,7 @@ struct {
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;

@@ -109,7 +109,7 @@ static afs_int32 vnLogPtr = 0;
 void
 VNLog(afs_int32 aop, afs_int32 anparms, ... )
 {
-    register afs_int32 temp;
+    afs_int32 temp;
     va_list ap;
 
     va_start(ap, anparms);
@@ -196,7 +196,7 @@ AddToVVnList(Volume * vp, Vnode * vnp)
  * @internal volume package internal use only
  */
 void
-DeleteFromVVnList(register Vnode * vnp)
+DeleteFromVVnList(Vnode * vnp)
 {
     Vn_volume(vnp) = NULL;
 
@@ -344,7 +344,7 @@ DeleteFromVnHash(Vnode * vnp)
  * @internal vnode package internal use only
  */
 void
-VInvalidateVnode_r(register struct Vnode *avnode)
+VInvalidateVnode_r(struct Vnode *avnode)
 {
     avnode->changed_newTime = 0;	/* don't let it get flushed out again */
     avnode->changed_oldTime = 0;
@@ -375,7 +375,7 @@ int
 VInitVnodes(VnodeClass class, int nVnodes)
 {
     byte *va;
-    register struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+    struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
 
     vcp->allocs = vcp->gets = vcp->reads = vcp->writes = 0;
     vcp->cacheSize = nVnodes;
@@ -470,7 +470,7 @@ VInitVnodes(VnodeClass class, int nVnodes)
 Vnode *
 VGetFreeVnode_r(struct VnodeClassInfo * vcp)
 {
-    register Vnode *vnp;
+    Vnode *vnp;
 
     vnp = vcp->lruHead->lruPrev;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -585,10 +585,10 @@ VAllocVnode(Error * ec, Volume * vp, VnodeType type)
 Vnode *
 VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 {
-    register Vnode *vnp;
+    Vnode *vnp;
     VnodeId vnodeNumber;
     int bitNumber;
-    register struct VnodeClassInfo *vcp;
+    struct VnodeClassInfo *vcp;
     VnodeClass class;
     Unique unique;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1124,7 +1124,7 @@ VGetVnode(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 Vnode *
 VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 {				/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
-    register Vnode *vnp;
+    Vnode *vnp;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
 
@@ -1298,7 +1298,7 @@ int TrustVnodeCacheEntry = 1;
 /* This variable is bogus--when it's set to 0, the hash chains fill
    up with multiple versions of the same vnode.  Should fix this!! */
 void
-VPutVnode(Error * ec, register Vnode * vnp)
+VPutVnode(Error * ec, Vnode * vnp)
 {
     VOL_LOCK;
     VPutVnode_r(ec, vnp);
@@ -1321,7 +1321,7 @@ VPutVnode(Error * ec, register Vnode * vnp)
  * @internal volume package internal use only
  */
 void
-VPutVnode_r(Error * ec, register Vnode * vnp)
+VPutVnode_r(Error * ec, Vnode * vnp)
 {
     int writeLocked;
     VnodeClass class;
@@ -1430,7 +1430,7 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
  * been deleted.
  */
 int
-VVnodeWriteToRead(Error * ec, register Vnode * vnp)
+VVnodeWriteToRead(Error * ec, Vnode * vnp)
 {
     int retVal;
     VOL_LOCK;
@@ -1457,7 +1457,7 @@ VVnodeWriteToRead(Error * ec, register Vnode * vnp)
  * @internal volume package internal use only
  */
 int
-VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
+VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
 {
     int writeLocked;
     VnodeClass class;

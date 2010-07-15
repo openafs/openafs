@@ -51,10 +51,10 @@ static int globalInitDone = 0;
 
 /* t1 = t2 - t3 */
 static void
-subtract(register struct timeval *t1, register struct timeval *t2, 
-	 register struct timeval *t3)
+subtract(struct timeval *t1, struct timeval *t2, 
+	 struct timeval *t3)
 {
-    register int sec2, usec2, sec3, usec3;
+    int sec2, usec2, sec3, usec3;
 
     sec2 = t2->tv_sec;
     usec2 = t2->tv_usec;
@@ -84,7 +84,7 @@ subtract(register struct timeval *t1, register struct timeval *t2,
 /* t1 += t2; */
 
 static void
-add(register struct timeval *t1, register struct timeval *t2)
+add(struct timeval *t1, struct timeval *t2)
 {
     t1->tv_usec += t2->tv_usec;
     t1->tv_sec += t2->tv_sec;
@@ -106,7 +106,7 @@ TM_eql(struct timeval *t1, struct timeval *t2)
 
 /*
 obsolete, commentless procedure, all done by hand expansion now.
-static bool geq(register struct timeval *t1, register struct timeval *t2)
+static bool geq(struct timeval *t1, struct timeval *t2)
 {
     return (t1->tv_sec > t2->tv_sec) ||
 	   (t1->tv_sec == t2->tv_sec && t1->tv_usec >= t2->tv_usec);
@@ -114,7 +114,7 @@ static bool geq(register struct timeval *t1, register struct timeval *t2)
 */
 
 static bool
-blocking(register struct TM_Elem *t)
+blocking(struct TM_Elem *t)
 {
     return (t->TotalTime.tv_sec < 0 || t->TotalTime.tv_usec < 0);
 }
@@ -126,7 +126,7 @@ blocking(register struct TM_Elem *t)
 */
 
 int
-TM_Init(register struct TM_Elem **list)
+TM_Init(struct TM_Elem **list)
 {
     if (!globalInitDone) {
 	FT_Init(0, 0);
@@ -149,7 +149,7 @@ TM_Init(register struct TM_Elem **list)
 }
 
 int
-TM_Final(register struct TM_Elem **list)
+TM_Final(struct TM_Elem **list)
 {
     if (list == NULL || *list == NULL)
 	return -1;
@@ -167,7 +167,7 @@ TM_Final(register struct TM_Elem **list)
 void
 TM_Insert(struct TM_Elem *tlistPtr, struct TM_Elem *elem)
 {
-    register struct TM_Elem *next;
+    struct TM_Elem *next;
 
     /* TimeLeft must be set for function IOMGR with infinite timeouts */
     elem->TimeLeft = elem->TotalTime;
@@ -208,7 +208,7 @@ int
 TM_Rescan(struct TM_Elem *tlist)	/* head pointer of timer list */
 {
     struct timeval time;
-    register int expired;
+    int expired;
 
     FT_AGetTimeOfDay(&time, 0);
     expired = 0;
@@ -250,7 +250,7 @@ TM_GetExpired(struct TM_Elem *tlist)	/* head pointer of timer list */
 struct TM_Elem *
 TM_GetEarliest(struct TM_Elem *tlist)
 {
-    register struct TM_Elem *e;
+    struct TM_Elem *e;
 
     e = tlist->Next;
     return (e == tlist ? NULL : e);

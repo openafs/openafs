@@ -29,12 +29,12 @@
 
 
 /* Static prototypes */
-static int HandleGetLock(register struct vcache *avc,
-			 register struct AFS_FLOCK *af,
-			 register struct vrequest *areq, int clid);
+static int HandleGetLock(struct vcache *avc,
+			 struct AFS_FLOCK *af,
+			 struct vrequest *areq, int clid);
 static int GetFlockCount(struct vcache *avc, struct vrequest *areq);
 static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
-		      register struct SimpleLocks *alp, int onlymine,
+		      struct SimpleLocks *alp, int onlymine,
 		      int clid);
 static void DoLockWarning(afs_ucred_t * acred);
 
@@ -178,11 +178,11 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 
 static int
 lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
-	   register struct SimpleLocks *alp, int onlymine, int clid)
+	   struct SimpleLocks *alp, int onlymine, int clid)
 {
-    register struct SimpleLocks *slp;
+    struct SimpleLocks *slp;
 #if	defined(AFS_SUN5_ENV)
-    register proc_t *procp = ttoproc(curthread);
+    proc_t *procp = ttoproc(curthread);
 #else
 #if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI64_ENV
@@ -251,7 +251,7 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 */
 /* clid - nonzero on sgi sunos osf1 only */
 int
-HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
+HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 	    pid_t clid, int onlymine)
 {
     struct afs_conn *tc;
@@ -504,7 +504,7 @@ static afs_int32 lastWarnPid = 0;
 static void
 DoLockWarning(afs_ucred_t * acred)
 {
-    register afs_int32 now;
+    afs_int32 now;
     pid_t pid = MyPidxx2Pid(MyPidxx);
     char *procname;
 
@@ -639,10 +639,10 @@ done:
  *       PID has the file read locked.
  */
 static int
-HandleGetLock(register struct vcache *avc, register struct AFS_FLOCK *af,
-	      register struct vrequest *areq, int clid)
+HandleGetLock(struct vcache *avc, struct AFS_FLOCK *af,
+	      struct vrequest *areq, int clid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct AFS_FLOCK flock;
 
     lockIdSet(&flock, NULL, clid);
@@ -838,8 +838,8 @@ HandleGetLock(register struct vcache *avc, register struct AFS_FLOCK *af,
 static int
 GetFlockCount(struct vcache *avc, struct vrequest *areq)
 {
-    register struct afs_conn *tc;
-    register afs_int32 code;
+    struct afs_conn *tc;
+    afs_int32 code;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;

@@ -828,9 +828,9 @@ symsrch(s)
 
 #ifndef AFS_KDUMP_LIB
 static int
-cmdproc(register struct cmd_syndesc *as, void *arock)
+cmdproc(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
 #if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV) 
     if (as->parms[0].items) {	/* -kobj */
@@ -943,8 +943,8 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
-    register afs_int32 code;
+    struct cmd_syndesc *ts;
+    afs_int32 code;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1021,7 +1021,7 @@ main(int argc, char **argv)
 int
 Knlist(struct afs_nlist *sp, int cnt, int size)
 {
-    register int code;
+    int code;
 
     if (UserLevel)
 	code = nlist(obj, sp);
@@ -3156,7 +3156,7 @@ print_callout(int kmem)
     struct callo Co, *Coe = &Co, *Cop;
     struct tos To, *Toe = &To, *tos;
     struct trb Trb, *Trbe = &Trb, *trb;
-    register int i = 0;
+    int i = 0;
 
 
     printf("\n\nPrinting callout table info...\n\n");

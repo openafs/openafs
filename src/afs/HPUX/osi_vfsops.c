@@ -114,7 +114,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp, char *unused1)
 {
     int code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
 
@@ -152,7 +152,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp, char *unused1)
 }
 
 int
-afs_statfs(register struct vfs *afsp, struct k_statvfs *abp)
+afs_statfs(struct vfs *afsp, struct k_statvfs *abp)
 {
     AFS_GLOCK();
     AFS_STATCNT(afs_statfs);
@@ -251,7 +251,7 @@ b_sema_t afs_global_sema = { 0 };
 void
 osi_InitGlock()
 {
-    register ulong_t context;
+    ulong_t context;
 
     SPINLOCK_USAV(sched_lock, context);
     if (!afs_Starting) {

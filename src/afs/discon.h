@@ -17,8 +17,8 @@ extern afs_int32    afs_ConflictPolicy;
 
 extern afs_uint32 afs_DisconVnode; /* XXX: not protected. */
 
-extern int afs_WriteVCacheDiscon(register struct vcache *avc,
-					register struct AFSStoreStatus *astatus,
+extern int afs_WriteVCacheDiscon(struct vcache *avc,
+					struct AFSStoreStatus *astatus,
 					struct vattr *attrs);
 extern int afs_ResyncDisconFiles(struct vrequest *areq,
 					afs_ucred_t *acred);

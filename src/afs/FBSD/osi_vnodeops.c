@@ -478,7 +478,7 @@ afs_vop_lookup(ap)
     int error;
     struct vcache *vcp;
     struct vnode *vp, *dvp;
-    register int flags = ap->a_cnp->cn_flags;
+    int flags = ap->a_cnp->cn_flags;
     int lockparent;		/* 1 => lockparent flag is set */
     int wantparent;		/* 1 => wantparent or lockparent flag */
     struct thread *p = ap->a_cnp->cn_thread;
@@ -572,7 +572,7 @@ afs_vop_create(ap)
 {
     int error = 0;
     struct vcache *vcp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *dvp = ap->a_dvp;
     struct thread *p = ap->a_cnp->cn_thread;
     GETNAME();
 
@@ -1085,7 +1085,7 @@ afs_vop_fsync(ap)
 				 * } */ *ap;
 {
     int error;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
 
     AFS_GLOCK();
     /*vflushbuf(vp, wait); */
@@ -1110,8 +1110,8 @@ afs_vop_remove(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *vp = ap->a_vp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
     AFS_GLOCK();
@@ -1131,8 +1131,8 @@ afs_vop_link(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *dvp = ap->a_tdvp;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_tdvp;
+    struct vnode *vp = ap->a_vp;
     struct thread *p = ap->a_cnp->cn_thread;
 
     GETNAME();
@@ -1174,9 +1174,9 @@ afs_vop_rename(ap)
     struct componentname *tcnp = ap->a_tcnp;
     char *tname;
     struct vnode *tvp = ap->a_tvp;
-    register struct vnode *tdvp = ap->a_tdvp;
+    struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
-    register struct vnode *fdvp = ap->a_fdvp;
+    struct vnode *fdvp = ap->a_fdvp;
     struct thread *p = fcnp->cn_thread;
 
     /*
@@ -1275,8 +1275,8 @@ afs_vop_mkdir(ap)
 				 * struct vattr *a_vap;
 				 * } */ *ap;
 {
-    register struct vnode *dvp = ap->a_dvp;
-    register struct vattr *vap = ap->a_vap;
+    struct vnode *dvp = ap->a_dvp;
+    struct vattr *vap = ap->a_vap;
     int error = 0;
     struct vcache *vcp;
     struct thread *p = ap->a_cnp->cn_thread;
@@ -1311,7 +1311,7 @@ afs_vop_rmdir(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
     AFS_GLOCK();
@@ -1433,7 +1433,7 @@ afs_vop_inactive(ap)
 				 * struct thread *td;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
 
     if (prtactive && vp->v_usecount != 0)
 	vprint("afs_vop_inactive(): pushing active", vp);
@@ -1535,8 +1535,8 @@ afs_vop_print(ap)
 				 * struct vnode *a_vp;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
-    register struct vcache *vc = VTOAFS(ap->a_vp);
+    struct vnode *vp = ap->a_vp;
+    struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->f.states;
 
     printf("tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vp->v_tag,

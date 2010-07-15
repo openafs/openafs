@@ -174,9 +174,9 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register char *tp;
+    char *tp;
     struct ClearToken ct;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 temp;
 
     if (strcmp(aserver->name, "afs") != 0) {
@@ -395,11 +395,11 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     int index;
     char *stp, *cellp;		/* secret token ptr */
     struct ClearToken ct;
-    register char *tp;
+    char *tp;
     afs_int32 temp;
     int maxLen;			/* biggest ticket we can copy */
     int tktLen;			/* server ticket length */
@@ -594,8 +594,8 @@ ktc_ListTokens(int aprevIndex,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code = 0 ;
-    register char *tp;
+    afs_int32 code = 0 ;
+    char *tp;
     afs_int32 temp, index;
 
     memset(tbuffer, 0, sizeof(tbuffer));
@@ -738,7 +738,7 @@ static int
 ForgetAll(void)
 {
     struct ViceIoctl iob;
-    register afs_int32 code;
+    afs_int32 code;
     int i;
 
     for (i = 0; i < MAXLOCALTOKENS; i++)
@@ -1194,9 +1194,9 @@ afs_tf_close(void)
  */
 
 static int
-tf_gets(register char *s, int n)
+tf_gets(char *s, int n)
 {
-    register int count;
+    int count;
 
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1229,9 +1229,9 @@ tf_gets(register char *s, int n)
  */
 
 static int
-tf_read(register char *s, register int n)
+tf_read(char *s, int n)
 {
-    register int count;
+    int count;
 
     for (count = n; count > 0; --count) {
 	if (curpos >= sizeof(tfbfr)) {
@@ -1439,7 +1439,7 @@ afs_tf_create(char *pname, char *pinst)
     int count;
     char *file = ktc_tkt_string();
     int fd;
-    register int i;
+    int i;
     char zerobuf[1024];
     struct stat sbuf;
 

@@ -45,8 +45,8 @@ void *
 afs_osi_Alloc(size_t x)
 {
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
-    register struct osimem *tm = NULL;
-    register int size;
+    struct osimem *tm = NULL;
+    int size;
 #endif
 
     AFS_STATCNT(osi_Alloc);
@@ -78,8 +78,8 @@ afs_osi_Alloc(size_t x)
 void *
 afs_osi_Alloc_NoSleep(size_t x)
 {
-    register struct osimem *tm;
-    register int size;
+    struct osimem *tm;
+    int size;
 
     AFS_STATCNT(osi_Alloc);
     /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
@@ -158,7 +158,7 @@ osi_FreeSmallSpace(void *adata)
 void *
 osi_AllocLargeSpace(size_t size)
 {
-    register struct osi_packet *tp;
+    struct osi_packet *tp;
 
     AFS_ASSERT_GLOCK();
 
@@ -194,7 +194,7 @@ osi_AllocLargeSpace(size_t size)
 void *
 osi_AllocSmallSpace(size_t size)
 {
-    register struct osi_packet *tp;
+    struct osi_packet *tp;
 
     AFS_STATCNT(osi_AllocSmallSpace);
     if (size > AFS_SMALLOCSIZ)

@@ -127,8 +127,8 @@ Twiddle(struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
-    register struct cmd_syndesc *ts;
+    afs_int32 code;
+    struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
     /*

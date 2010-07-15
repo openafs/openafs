@@ -383,7 +383,7 @@ extern int LWP_DispatchProcess(void);
 extern int LWP_WaitProcess(void *event);
 extern PROCESS LWP_ThreadId(void);
 extern int LWP_QWait(void);
-extern int LWP_QSignal(register PROCESS pid);
+extern int LWP_QSignal(PROCESS pid);
 #endif
 
 extern afs_int32 savecontext(void (*ep)(void), 

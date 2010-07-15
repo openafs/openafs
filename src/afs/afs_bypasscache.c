@@ -131,8 +131,8 @@ extern afs_rwlock_t afs_xcbhash;
  * times we go back and forth from caching to bypass.
  */
 void
-afs_TransitionToBypass(register struct vcache *avc,
-		       register afs_ucred_t *acred, int aflags)
+afs_TransitionToBypass(struct vcache *avc,
+		       afs_ucred_t *acred, int aflags)
 {
 
     afs_int32 code;
@@ -210,8 +210,8 @@ done:
  * the number of times we go back and forth from caching to bypass.
  */
 void
-afs_TransitionToCaching(register struct vcache *avc,
-		        register afs_ucred_t *acred,
+afs_TransitionToCaching(struct vcache *avc,
+		        afs_ucred_t *acred,
 			int aflags)
 {
     int resetDesire = 0;
@@ -301,9 +301,9 @@ afs_TransitionToCaching(register struct vcache *avc,
 
 /* no-cache prefetch routine */
 static afs_int32
-afs_NoCacheFetchProc(register struct rx_call *acall, 
-                     register struct vcache *avc, 
-					 register uio_t *auio, 
+afs_NoCacheFetchProc(struct rx_call *acall, 
+                     struct vcache *avc, 
+					 uio_t *auio, 
                      afs_int32 release_pages,
 		     afs_int32 size)
 {
@@ -464,8 +464,8 @@ done:
 
 /* dispatch a no-cache read request */
 afs_int32
-afs_ReadNoCache(register struct vcache *avc, 
-		register struct nocache_read_request *bparms,
+afs_ReadNoCache(struct vcache *avc, 
+		struct nocache_read_request *bparms,
 		afs_ucred_t *acred)
 {
     afs_int32 code;
@@ -542,9 +542,9 @@ cleanup:
 
 /* Cannot have static linkage--called from BPrefetch (afs_daemons) */
 afs_int32
-afs_PrefetchNoCache(register struct vcache *avc, 
-		    register afs_ucred_t *acred,
-		    register struct nocache_read_request *bparms)
+afs_PrefetchNoCache(struct vcache *avc, 
+		    afs_ucred_t *acred,
+		    struct nocache_read_request *bparms)
 {
     uio_t *auio;
     struct iovec *iovecp;
@@ -554,7 +554,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
     afs_int32 length_hi, bytes, locked;
 #endif
 	
-    register struct afs_conn *tc;
+    struct afs_conn *tc;
     afs_int32 i;
     struct rx_call *tcall;
     struct tlocal1 {

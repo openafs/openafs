@@ -69,7 +69,7 @@ gator_objects_init(struct onode_initparams *params)
 
     static char rn[] = "gator_objects_init";	/*Routine name */
     static int initialized = 0;	/*Have we been called? */
-    register int code;		/*Return code */
+    int code;		/*Return code */
 
     /*
      * If we've already been called, just return.
@@ -172,7 +172,7 @@ gator_objects_create(struct onode_createparams *params)
 {				/*gator_objects_create */
 
     static char rn[] = "gator_objects_create";	/*Routine name */
-    register int code;		/*Return code */
+    int code;		/*Return code */
     struct onode *new_onode;	/*Ptr to new onode */
 
     if (objects_debug) {

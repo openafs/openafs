@@ -174,8 +174,8 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
  */
 syscall(syscall, p1, p2, p3, p4, p5, p6)
 {
-    register rval1 = 0, code;
-    register monster;
+    int rval1 = 0, code;
+    int monster;
     int retval = 0;
 #ifndef AFS_AIX41_ENV
     extern lock_t kernel_lock;
@@ -466,7 +466,7 @@ struct afssysa {
 };
 # endif
 
-Afs_syscall(register struct afssysa *uap, rval_t * rvp)
+Afs_syscall(struct afssysa *uap, rval_t * rvp)
 {
     int *retval = &rvp->r_val1;
 #elif defined(AFS_DARWIN100_ENV)
@@ -497,7 +497,7 @@ afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval)
 int
 afs3_syscall(struct thread *p, void *args)
 {
-    register struct a {
+    struct a {
 	long syscall;
 	long parm1;
 	long parm2;
@@ -518,7 +518,7 @@ afs3_syscall(struct lwp *p, void *args)
 int
 afs3_syscall(afs_proc_t *p, void *args, long *retval)
 {
-    register struct a {
+    struct a {
 	long syscall;
 	long parm1;
 	long parm2;
@@ -554,7 +554,7 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
 int
 Afs_syscall()
 {
-    register struct a {
+    struct a {
 	long syscall;
 	long parm1;
 	long parm2;
@@ -567,7 +567,7 @@ Afs_syscall()
 int
 Afs_syscall()
 {
-    register struct a {
+    struct a {
 	long syscall;
 	long parm1;
 	long parm2;
@@ -585,7 +585,7 @@ Afs_syscall()
     int *retval = &u.u_rval1;
 # endif
 #endif
-    register int code = 0;
+    int code = 0;
 
     AFS_STATCNT(afs_syscall);
 #ifdef        AFS_SUN5_ENV
@@ -709,7 +709,7 @@ Afs_syscall()
 	} else if (uap->syscall == AFSCALL_SETPAG) {
 #endif
 #ifdef	AFS_SUN5_ENV
-	    register proc_t *procp;
+	    proc_t *procp;
 
 	    procp = ttoproc(curthread);
 	    AFS_GLOCK();

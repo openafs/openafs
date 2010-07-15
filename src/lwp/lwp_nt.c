@@ -94,8 +94,8 @@ struct QUEUE {
 /* Iterator macro */
 #define for_all_elts(var, q, body)\
 	{\
-	    register PROCESS var, _NEXT_;\
-	    register int _I_;\
+	    PROCESS var, _NEXT_;\
+	    int _I_;\
 	    for (_I_=q.count, var = q.head; _I_>0; _I_--, var=_NEXT_) {\
 		_NEXT_ = var -> next;\
 		body\
@@ -140,7 +140,7 @@ int lwp_MinStackSize = 0;
 int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 {
     PROCESS pcb;
-    register int i;
+    int i;
     char* value;
 
     Debug(0, ("Entered LWP_InitializeProcessSupport"))
@@ -324,7 +324,7 @@ int LWP_DispatchProcess(void)		/* explicit voluntary preemption */
 static void Dump_Processes(void)
 {
     if (lwp_init) {
-	register int i;
+	int i;
 	for (i=0; i<MAX_PRIORITIES; i++)
 	    for_all_elts(x, runnable[i], {
 		printf("[Priority %d]\n", i);
@@ -392,7 +392,7 @@ int LWP_INTERNALSIGNAL(void *event, int yield)
 
 int LWP_TerminateProcessSupport()	/* terminate all LWP support */
 {
-    register int i;
+    int i;
 
     Debug(0, ("Entered Terminate_Process_Support"))
     if (lwp_init == NULL) return LWP_EINIT;
@@ -566,7 +566,7 @@ int LWP_TraceProcesses = 0;
 
 static void Dispatcher(void)
 {
-    register int i;
+    int i;
 #ifdef DEBUG
     static int dispatch_count = 0;
 

@@ -60,7 +60,7 @@ test_this_package(pkg)
 {				/*test_this_package */
 
     static char rn[] = "test_this_package";	/*Routine name */
-    register int code;		/*Return code */
+    int code;		/*Return code */
     struct gwin_initparams init_params;	/*Window initialization params */
     struct gator_cursesgwin_params c_crparams;	/*Curses window creation params */
     struct gator_dumbgwin_params d_crparams;	/*Dumb terminal window creation params */
@@ -268,8 +268,8 @@ main(argc, argv)
 {				/*main */
 
     static char rn[] = "main";	/*Routine name */
-    register afs_int32 code;	/*Return code */
-    register struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
+    afs_int32 code;	/*Return code */
+    struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
 
     /*
      * There really aren't any opcodes here, but we do want to interpret switches

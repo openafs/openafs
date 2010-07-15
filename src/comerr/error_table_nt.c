@@ -361,9 +361,9 @@ __yy_memcpy(from, to, count)
      char *to;
      int count;
 {
-    register char *f = from;
-    register char *t = to;
-    register int i = count;
+    char *f = from;
+    char *t = to;
+    int i = count;
 
     while (i-- > 0)
 	*t++ = *f++;
@@ -376,9 +376,9 @@ __yy_memcpy(from, to, count)
 static void
 __yy_memcpy(char *from, char *to, int count)
 {
-    register char *f = from;
-    register char *t = to;
-    register int i = count;
+    char *f = from;
+    char *t = to;
+    int i = count;
 
     while (i-- > 0)
 	*t++ = *f++;
@@ -406,10 +406,10 @@ int
 yyparse(YYPARSE_PARAM)
     YYPARSE_PARAM_DECL
 {
-    register int yystate;
-    register int yyn;
-    register short *yyssp;
-    register YYSTYPE *yyvsp;
+    int yystate;
+    int yyn;
+    short *yyssp;
+    int YYSTYPE *yyvsp;
     int yyerrstatus;		/*  number of tokens to shift before error messages enabled */
     int yychar1 = 0;		/*  lookahead token as an internal (translated) token number */
 
@@ -1138,7 +1138,7 @@ set_table_num(char *string)
 void
 set_table_fun(char *astring)
 {
-    register char *tp;
+    char *tp;
     unsigned int tc;
 
     for (tp = astring; (tc = *tp) != 0; tp++) {

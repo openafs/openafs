@@ -41,10 +41,10 @@ extern struct vfs *afs_globalVFS;
 
 /* copy out attributes from cache entry */
 int
-afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
+afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 {
-    register struct volume *tvp;
-    register struct cell *tcell;
+    struct volume *tvp;
+    struct cell *tcell;
     int fakedir = 0;
 
     AFS_STATCNT(afs_CopyOutAttrs);
@@ -268,7 +268,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 		}
 	    }
 	    if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
-		register struct afs_exporter *exporter = au->exporter;
+		struct afs_exporter *exporter = au->exporter;
 
 		if (exporter && !(afs_nfsexporter->exp_states & EXP_UNIXMODE)) {
 		    unsigned int ubits;
@@ -336,10 +336,10 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
 /* convert a Unix request into a status store request */
 int
-afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
-	      register struct AFSStoreStatus *as)
+afs_VAttrToAS(struct vcache *avc, struct vattr *av,
+	      struct AFSStoreStatus *as)
 {
-    register int mask;
+    int mask;
     mask = 0;
     AFS_STATCNT(afs_VAttrToAS);
 #if     defined(AFS_DARWIN80_ENV)
@@ -434,17 +434,17 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
  */
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 int
-afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, int flags,
+afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags,
 	    afs_ucred_t *acred)
 #else
 int
-afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
+afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	    afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;
     struct AFSStoreStatus astat;
-    register afs_int32 code;
+    afs_int32 code;
     struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc);
 

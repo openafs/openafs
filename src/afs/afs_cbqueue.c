@@ -188,11 +188,11 @@ void
 afs_CheckCallbacks(unsigned int secs)
 {
     struct vcache *tvc;
-    register struct afs_q *tq;
+    struct afs_q *tq;
     struct afs_q *uq;
     afs_uint32 now;
     struct volume *tvp;
-    register int safety;
+    int safety;
 
     ObtainWriteLock(&afs_xcbhash, 85);	/* pretty likely I'm going to remove something */
     now = osi_Time();
@@ -296,8 +296,8 @@ afs_CheckCallbacks(unsigned int secs)
 void
 afs_FlushCBs(void)
 {
-    register int i;
-    register struct vcache *tvc;
+    int i;
+    struct vcache *tvc;
 
     ObtainWriteLock(&afs_xcbhash, 86);	/* pretty likely I'm going to remove something */
 
@@ -326,8 +326,8 @@ afs_FlushCBs(void)
 void
 afs_FlushServerCBs(struct server *srvp)
 {
-    register int i;
-    register struct vcache *tvc;
+    int i;
+    struct vcache *tvc;
 
     ObtainWriteLock(&afs_xcbhash, 86);	/* pretty likely I'm going to remove something */
 
@@ -356,7 +356,7 @@ afs_FlushServerCBs(struct server *srvp)
 void
 afs_InitCBQueue(int doLockInit)
 {
-    register int i;
+    int i;
 
     memset(cbHashT, 0, CBHTSIZE * sizeof(struct bucket));
     for (i = 0; i < CBHTSIZE; i++) {

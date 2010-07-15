@@ -109,9 +109,9 @@ int
 DInit(int abuffers)
 {
     /* Initialize the venus buffer system. */
-    register int i, tsize;
-    register struct buffer *tb;
-    register char *tp;
+    int i, tsize;
+    struct buffer *tb;
+    char *tp;
 
     Lock_Init(&afs_bufferLock);
     /* Align each element of Buffers on a doubleword boundary */
@@ -149,10 +149,10 @@ DInit(int abuffers)
  *    @retval NULL read failed
  */
 void *
-DRead(register afs_int32 *fid, register int page)
+DRead(afs_int32 *fid, int page)
 {
     /* Read a page from the disk. */
-    register struct buffer *tb, *tb2, **bufhead;
+    struct buffer *tb, *tb2, **bufhead;
 
     ObtainWriteLock(&afs_bufferLock);
     calls++;
@@ -228,10 +228,10 @@ DRead(register afs_int32 *fid, register int page)
 }
 
 static int
-FixupBucket(register struct buffer *ap)
+FixupBucket(struct buffer *ap)
 {
-    register struct buffer **lp, *tp;
-    register int i;
+    struct buffer **lp, *tp;
+    int i;
 
     /* first try to get it out of its current hash bucket, in which it might not be */
     i = ap->hashIndex;
@@ -252,12 +252,12 @@ FixupBucket(register struct buffer *ap)
 }
 
 struct buffer *
-newslot(afs_int32 *afid, afs_int32 apage, register struct buffer *lp)
+newslot(afs_int32 *afid, afs_int32 apage, struct buffer *lp)
 {
     /* Find a usable buffer slot */
-    register afs_int32 i;
+    afs_int32 i;
     afs_int32 lt;
-    register struct buffer **tbp;
+    struct buffer **tbp;
 
     if (lp && (lp->lockers == 0)) {
 	lt = lp->accesstime;
@@ -310,7 +310,7 @@ void
 DRelease(void *loc, int flag)
 {
     struct buffer *bp = (struct buffer *)loc;
-    register int index;
+    int index;
 
     if (!bp)
 	return;
@@ -324,11 +324,11 @@ DRelease(void *loc, int flag)
 }
 
 int
-DVOffset(register void *ap)
+DVOffset(void *ap)
 {
     /* Return the byte within a file represented by a buffer pointer. */
-    register struct buffer *bp = ap;
-    register int index;
+    struct buffer *bp = ap;
+    int index;
 
     index = ((char *)bp - BufferData) >> LOGPS;
     if (index < 0 || index >= nbuffers)
@@ -338,10 +338,10 @@ DVOffset(register void *ap)
 }
 
 void
-DZap(register afs_int32 *fid)
+DZap(afs_int32 *fid)
 {
     /* Destroy all buffers pertaining to a particular fid. */
-    register struct buffer *tb;
+    struct buffer *tb;
     ObtainReadLock(&afs_bufferLock);
     for (tb = phTable[pHash(fid)]; tb; tb = tb->hashNext)
 	if (FidEq(tb->fid, fid)) {
@@ -354,11 +354,11 @@ DZap(register afs_int32 *fid)
 }
 
 int
-DFlushVolume(register afs_int32 vid)
+DFlushVolume(afs_int32 vid)
 {
     /* Flush all data and release all inode handles for a particular volume */
-    register struct buffer *tb;
-    register int code, rcode = 0;
+    struct buffer *tb;
+    int code, rcode = 0;
     ObtainReadLock(&afs_bufferLock);
     for (tb = phTable[vHash(vid)]; tb; tb = tb->hashNext)
 	if (FidVolEq(tb->fid, vid)) {
@@ -377,10 +377,10 @@ DFlushVolume(register afs_int32 vid)
 }
 
 int
-DFlushEntry(register afs_int32 *fid)
+DFlushEntry(afs_int32 *fid)
 {
     /* Flush pages modified by one entry. */
-    register struct buffer *tb;
+    struct buffer *tb;
     int code;
 
     ObtainReadLock(&afs_bufferLock);
@@ -406,8 +406,8 @@ int
 DFlush(void)
 {
     /* Flush all the modified buffers. */
-    register int i;
-    register struct buffer **tbp;
+    int i;
+    struct buffer **tbp;
     afs_int32 code, rcode;
 
     rcode = 0;
@@ -436,12 +436,12 @@ DFlush(void)
 }
 
 void *
-DNew(register afs_int32 *fid, register int page)
+DNew(afs_int32 *fid, int page)
 {
     /* Same as read, only do *not* even try to read the page,
      * since it probably doesn't exist.
      */
-    register struct buffer *tb;
+    struct buffer *tb;
     ObtainWriteLock(&afs_bufferLock);
     if ((tb = newslot(fid, page, 0)) == 0) {
 	ReleaseWriteLock(&afs_bufferLock);

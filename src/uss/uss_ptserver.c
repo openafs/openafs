@@ -71,7 +71,7 @@ InitThisModule(void)
 #ifdef USS_PTSERVER_DB
     static char rn[] = "uss_ptserver:InitThisModule";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
 
     /*
      * Only once, guys.
@@ -295,7 +295,7 @@ uss_ptserver_XlateUser(char *a_user, afs_int32 *a_uidP)
 #ifdef USS_PTSERVER_DB
     static char rn[] = "uss_ptserver_XlateUser";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Various return codes */
+    afs_int32 code;	/*Various return codes */
 
     if (uss_verbose)
 	fprintf(stderr, "Translating user '%s' via the Protection DB\n",

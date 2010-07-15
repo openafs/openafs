@@ -34,8 +34,8 @@ ChangeMenuCmd(void *param1, void *param2)
     struct gwin * awin = (struct gwin *) param1;
     afs_int32 arock = (intptr_t)param2;
     
-    register struct gtx_frame *tf;
-    register afs_int32 code;
+    struct gtx_frame *tf;
+    afs_int32 code;
 
     tf = awin->w_frame;
     if (!tf)
@@ -61,8 +61,8 @@ ChangeListCmd(void *param1, void *param2)
     struct gwin *awin = (struct gwin *) param1;
     afs_int32 arock = (intptr_t)param2;
     
-    register struct gtx_frame *tf;
-    register afs_int32 code;
+    struct gtx_frame *tf;
+    afs_int32 code;
 
     tf = awin->w_frame;
     if (!tf)
@@ -97,7 +97,7 @@ ChangeCmd(void *param, void *unused)
 {
     struct gwin *awin = (struct gwin *) param;
     char tbuffer[100];
-    register afs_int32 code;
+    afs_int32 code;
 
     code =
 	gtxframe_AskForString(awin->w_frame, "New object string: ", "TestNew",
@@ -143,7 +143,7 @@ main(int argc, char **argv)
     struct gwin *win;
     struct gator_textobj_params textcrparams;
     struct gator_light_crparams lightcrparams;
-    register struct keymap_map *tmap;
+    struct keymap_map *tmap;
 
     win = gtx_Init(0, -1);
 

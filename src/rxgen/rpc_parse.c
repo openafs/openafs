@@ -1116,9 +1116,9 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 
     if (ansic_flag) {
 	if (split_flag) {
-	    first_arg = "register struct rx_call *z_call";
+	    first_arg = "struct rx_call *z_call";
 	} else {
-	    first_arg = "register struct rx_connection *z_conn";
+	    first_arg = "struct rx_connection *z_conn";
 	}
     } else {
 	if (split_flag) {
@@ -1167,9 +1167,9 @@ cs_ProcParams_setup(definition * defp, int split_flag)
 	return;
 
     if (!split_flag)
-	f_print(fout, "\tregister struct rx_connection *z_conn;\n");
+	f_print(fout, "\tstruct rx_connection *z_conn;\n");
     if (split_flag) {
-	f_print(fout, "\tregister struct rx_call *z_call;\n");
+	f_print(fout, "\tstruct rx_call *z_call;\n");
     }
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
@@ -1767,7 +1767,7 @@ ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 
     if (!cflag) {
      	if (ansic_flag) {
-	    f_print(fout, "int %s%s%s%s(register struct ubik_client *aclient, afs_int32 aflags",
+	    f_print(fout, "int %s%s%s%s(struct ubik_client *aclient, afs_int32 aflags",
 			  procheader, prefix, PackagePrefix[PackageIndex],
 			  defp->pc.proc_name);
 	} else {
@@ -1810,7 +1810,7 @@ ucs_ProcParams_setup(definition * defp, int split_flag)
     if (ansic_flag)
 	return;
 
-    f_print(fout, "\tregister struct ubik_client *aclient;\n\tafs_int32 aflags;\n");
+    f_print(fout, "\tstruct ubik_client *aclient;\n\tafs_int32 aflags;\n");
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
 	    && !(plist->pl.param_flag & PROCESSED_PARAM)) {
@@ -2071,7 +2071,7 @@ er_ProcProcsArray_setup(void)
 static void
 er_ProcMainBody_setup(void)
 {
-    f_print(fout, "int %s%sExecuteRequest(register struct rx_call *z_call)\n",
+    f_print(fout, "int %s%sExecuteRequest(struct rx_call *z_call)\n",
 	    prefix, PackagePrefix[PackageIndex]);
     f_print(fout, "{\n\tint op;\n");
     f_print(fout, "\tXDR z_xdrs;\n");
@@ -2093,7 +2093,7 @@ static void
 er_HeadofOldStyleProc_setup(void)
 {
     f_print(fout,
-	    "\nint %s%sExecuteRequest (register struct rx_call *z_call)\n",
+	    "\nint %s%sExecuteRequest (struct rx_call *z_call)\n",
 	    prefix,
 	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
     f_print(fout, "{\n");

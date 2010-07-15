@@ -94,7 +94,7 @@ struct CEBlock {		/* block of CESPERBLOCK file entries */
     struct client entry[CESPERBLOCK];
 };
 
-void h_TossStuff_r(register struct host *host);
+void h_TossStuff_r(struct host *host);
 
 /*
  * Make sure the subnet macros have been defined.
@@ -120,8 +120,8 @@ void h_TossStuff_r(register struct host *host);
 static void
 GetCEBlock(void)
 {
-    register struct CEBlock *block;
-    register int i;
+    struct CEBlock *block;
+    int i;
 
     block = (struct CEBlock *)malloc(sizeof(struct CEBlock));
     if (!block) {
@@ -145,7 +145,7 @@ GetCEBlock(void)
 static struct client *
 GetCE(void)
 {
-    register struct client *entry;
+    struct client *entry;
 
     if (CEFree == 0)
 	GetCEBlock();
@@ -165,7 +165,7 @@ GetCE(void)
 
 /* return an entry to the free list */
 static void
-FreeCE(register struct client *entry)
+FreeCE(struct client *entry)
 {
     entry->VenusEpoch = 0;
     entry->sid = 0;
@@ -202,8 +202,8 @@ struct HTBlock {		/* block of HTSPERBLOCK file entries */
 static void
 GetHTBlock(void)
 {
-    register struct HTBlock *block;
-    register int i;
+    struct HTBlock *block;
+    int i;
     static int index = 0;
 
     if (HTBlocks == h_MAXHOSTTABLES) {
@@ -237,7 +237,7 @@ GetHTBlock(void)
 static struct host *
 GetHT(void)
 {
-    register struct host *entry;
+    struct host *entry;
 
     if (HTFree == NULL)
 	GetHTBlock();
@@ -253,7 +253,7 @@ GetHT(void)
 
 /* return an entry to the free list */
 static void
-FreeHT(register struct host *entry)
+FreeHT(struct host *entry)
 {
     entry->next = HTFree;
     HTFree = entry;
@@ -350,7 +350,7 @@ int
 hpr_GetHostCPS(afs_int32 host, prlist *CPS)
 {
 #ifdef AFS_PTHREAD_ENV
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 over;
     struct ubik_client *uclient = 
 	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
@@ -384,8 +384,8 @@ int
 hpr_NameToId(namelist *names, idlist *ids)
 {
 #ifdef AFS_PTHREAD_ENV
-    register afs_int32 code;
-    register afs_int32 i;
+    afs_int32 code;
+    afs_int32 i;
     struct ubik_client *uclient = 
 	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
 
@@ -410,7 +410,7 @@ int
 hpr_IdToName(idlist *ids, namelist *names)
 {
 #ifdef AFS_PTHREAD_ENV
-    register afs_int32 code;
+    afs_int32 code;
     struct ubik_client *uclient = 
 	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
     
@@ -433,7 +433,7 @@ int
 hpr_GetCPS(afs_int32 id, prlist *CPS)
 {
 #ifdef AFS_PTHREAD_ENV
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 over;
     struct ubik_client *uclient = 
 	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
@@ -465,7 +465,7 @@ hpr_GetCPS(afs_int32 id, prlist *CPS)
 static short consolePort = 0;
 
 int
-h_Lock_r(register struct host *host)
+h_Lock_r(struct host *host)
 {
     H_UNLOCK;
     h_Lock(host);
@@ -480,7 +480,7 @@ h_Lock_r(register struct host *host)
   */
 
 int
-h_NBLock_r(register struct host *host)
+h_NBLock_r(struct host *host)
 {
     struct Lock *hostLock = &host->lock;
     int locked = 0;
@@ -582,9 +582,9 @@ h_AddrInSameNetwork(afs_uint32 a_targetAddr, afs_uint32 a_candAddr)
 
 /* Assumptions: called with held host */
 void
-h_gethostcps_r(register struct host *host, register afs_int32 now)
+h_gethostcps_r(struct host *host, afs_int32 now)
 {
-    register int code;
+    int code;
     int slept = 0;
 
     /* wait if somebody else is already doing the getCPS call */
@@ -663,7 +663,7 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
 
 /* args in net byte order */
 void
-h_flushhostcps(register afs_uint32 hostaddr, register afs_uint16 hport)
+h_flushhostcps(afs_uint32 hostaddr, afs_uint16 hport)
 {
     struct host *host;
 
@@ -685,7 +685,7 @@ h_flushhostcps(register afs_uint32 hostaddr, register afs_uint16 hport)
 #define	DEF_ROPCONS 2115
 
 struct host *
-h_Alloc_r(register struct rx_connection *r_con)
+h_Alloc_r(struct rx_connection *r_con)
 {
     struct servent *serverentry;
     struct host *host;
@@ -839,9 +839,9 @@ h_LookupUuid_r(afsUUID * uuidp)
  * or host->clientDeleted must be set.
  */
 void
-h_TossStuff_r(register struct host *host)
+h_TossStuff_r(struct host *host)
 {
-    register struct client **cp, *client;
+    struct client **cp, *client;
     int code;
 
     /* make sure host doesn't go away over h_NBLock_r */
@@ -916,7 +916,7 @@ h_TossStuff_r(register struct host *host)
     host->hostFlags &= ~CLIENTDELETED;
 
     if (host->hostFlags & HOSTDELETED) {
-	register struct rx_connection *rxconn;
+	struct rx_connection *rxconn;
 	struct AddrPort hostAddrPort;
 	int i;
 
@@ -978,9 +978,9 @@ h_TossStuff_r(register struct host *host)
 void
 h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
 {
-    register struct host *host, **list;
-    register int *flags;
-    register int i, count;
+    struct host *host, **list;
+    int *flags;
+    int i, count;
     int totalCount;
 
     H_LOCK;
@@ -1048,7 +1048,7 @@ void
 h_Enumerate_r(int (*proc) (struct host *, int, void *), 
 	      struct host *enumstart, void *param)
 {
-    register struct host *host, *next;
+    struct host *host, *next;
     int flags = 0;
     int nflags = 0;
     int count;
@@ -1175,7 +1175,7 @@ int
 h_DeleteHostFromUuidHashTable_r(struct host *host)
 {
      int index;
-     register struct h_UuidHashChain **uhp, *uth;
+     struct h_UuidHashChain **uhp, *uth;
      char uuid1[128];
      char hoststr[16];
  
@@ -2316,8 +2316,8 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 struct client *
 h_ID2Client(afs_int32 vid)
 {
-    register struct client *client;
-    register struct host *host;
+    struct client *client;
+    struct host *host;
     int count;
 
     H_LOCK;
@@ -2357,7 +2357,7 @@ h_ID2Client(afs_int32 vid)
 struct client *
 h_FindClient_r(struct rx_connection *tcon)
 {
-    register struct client *client;
+    struct client *client;
     struct host *host = NULL;
     struct client *oldClient;
     afs_int32 viceid = 0;
@@ -2645,7 +2645,7 @@ h_ReleaseClient_r(struct client *client)
 int
 GetClient(struct rx_connection *tcon, struct client **cp)
 {
-    register struct client *client;
+    struct client *client;
     char hoststr[16];
 
     H_LOCK;
@@ -2735,10 +2735,10 @@ h_PrintStats(void)
 
 
 static int
-h_PrintClient(register struct host *host, int flags, void *rock)
+h_PrintClient(struct host *host, int flags, void *rock)
 {
     StreamHandle_t *file = (StreamHandle_t *)rock;
-    register struct client *client;
+    struct client *client;
     int i;
     char tmpStr[256];
     char tbuffer[32];
@@ -2825,7 +2825,7 @@ h_PrintClients(void)
 
 
 static int
-h_DumpHost(register struct host *host, int flags, void *rock)
+h_DumpHost(struct host *host, int flags, void *rock)
 {
     StreamHandle_t *file = (StreamHandle_t *)rock;
     
@@ -3474,8 +3474,8 @@ h_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
 void
 h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 {
-    register struct host *host;
-    register int num = 0, active = 0, del = 0;
+    struct host *host;
+    int num = 0, active = 0, del = 0;
     int count;
 
     H_LOCK;
@@ -3646,8 +3646,8 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP)
 {				/*h_GetHostNetStats */
 
-    register struct host *hostP;	/*Ptr to current host entry */
-    register afs_uint32 currAddr_HBO;	/*Curr host addr, host byte order */
+    struct host *hostP;	/*Ptr to current host entry */
+    afs_uint32 currAddr_HBO;	/*Curr host addr, host byte order */
     int count;
 
     /*
@@ -3694,9 +3694,9 @@ static struct AFSFid zerofid;
  */
 #if 0
 static int
-CheckHost(register struct host *host, int flags, void *rock)
+CheckHost(struct host *host, int flags, void *rock)
 {
-    register struct client *client;
+    struct client *client;
     struct rx_connection *cb_conn = NULL;
     int code;
 
@@ -3800,9 +3800,9 @@ CheckHost(register struct host *host, int flags, void *rock)
 #endif
 
 int
-CheckHost_r(register struct host *host, int flags, void *dummy)
+CheckHost_r(struct host *host, int flags, void *dummy)
 {
-    register struct client *client;
+    struct client *client;
     struct rx_connection *cb_conn = NULL;
     int code;
 
@@ -4079,7 +4079,7 @@ h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port,
 				struct host *host)
 {
     char hoststr[16];
-    register struct h_AddrHashChain **hp, *th;
+    struct h_AddrHashChain **hp, *th;
 
     if (addr == 0 && port == 0)
 	return 1;

@@ -41,7 +41,7 @@ int
 main(afs_int32 argc, char **argv)
 {
 
-    register afs_int32 code;
+    afs_int32 code;
     char name[PR_MAXNAMELEN];
     afs_int32 id;
     char buf[150];

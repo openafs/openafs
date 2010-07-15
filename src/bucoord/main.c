@@ -155,7 +155,7 @@ bc_HandleMisc(afs_int32 code)
 static int
 LineIsBlank(char *aline)
 {
-    register int tc;
+    int tc;
 
     while ((tc = *aline++))
 	if ((tc != ' ') && (tc != '\t') && (tc != '\n'))
@@ -213,7 +213,7 @@ bc_InitTextConfig(void)
 static int
 backupInit(void)
 {
-    register afs_int32 code;
+    afs_int32 code;
     static int initd = 0;	/* ever called? */
     PROCESS watcherPid;
     PROCESS pid;		/* LWP process ID */
@@ -298,7 +298,7 @@ backupInit(void)
  */
 
 static int
-MyBeforeProc(register struct cmd_syndesc *as, void *arock)
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
 
@@ -453,7 +453,7 @@ main(int argc, char **argv)
     char *targv[MAXV];		/*Ptr to parsed argv stuff */
     afs_int32 targc;		/*Num parsed arguments */
     afs_int32 code;		/*Return code */
-    register struct cmd_syndesc *ts;	/*Ptr to parsed command line */
+    struct cmd_syndesc *ts;	/*Ptr to parsed command line */
     int i;
 
 

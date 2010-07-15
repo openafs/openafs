@@ -50,7 +50,7 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
  */
 static int
 EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
-              struct volume **avolpp, register struct vrequest *areq,
+              struct volume **avolpp, struct vrequest *areq,
 	      afs_uint32 *acellidxp, afs_uint32 *avolnump,
 	      afs_uint32 *avnoidp, afs_uint32 *auniqp)
 {
@@ -271,8 +271,8 @@ done:
 }
 
 int
-EvalMountPoint(register struct vcache *avc, struct vcache *advc,
-	       struct volume **avolpp, register struct vrequest *areq)
+EvalMountPoint(struct vcache *avc, struct vcache *advc,
+	       struct volume **avolpp, struct vrequest *areq)
 {
     afs_int32 code;
     afs_uint32 avnoid, auniq;
@@ -503,9 +503,9 @@ afs_PutFakeStat(struct afs_fakestat_state *state)
 }
 
 int
-afs_ENameOK(register char *aname)
+afs_ENameOK(char *aname)
 {
-    register int tlen;
+    int tlen;
 
     AFS_STATCNT(ENameOK);
     tlen = strlen(aname);
@@ -515,11 +515,11 @@ afs_ENameOK(register char *aname)
 }
 
 static int
-afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
-	       register char *bufp, int *num, char **sysnamelist[])
+afs_getsysname(struct vrequest *areq, struct vcache *adp,
+	       char *bufp, int *num, char **sysnamelist[])
 {
-    register struct unixuser *au;
-    register afs_int32 error;
+    struct unixuser *au;
+    afs_int32 error;
 
     AFS_STATCNT(getsysname);
 
@@ -546,7 +546,7 @@ afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
 }
 
 void
-Check_AtSys(register struct vcache *avc, const char *aname,
+Check_AtSys(struct vcache *avc, const char *aname,
 	    struct sysname_info *state, struct vrequest *areq)
 {
     int num = 0;
@@ -567,7 +567,7 @@ Check_AtSys(register struct vcache *avc, const char *aname,
 }
 
 int
-Next_AtSys(register struct vcache *avc, struct vrequest *areq,
+Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	   struct sysname_info *state)
 {
     int num = afs_sysnamecount;
@@ -578,7 +578,7 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 
     /* Check for the initial state of aname != "@sys" in Check_AtSys */
     if (state->offset == -1 && state->allocked == 0) {
-	register char *tname;
+	char *tname;
 
 	/* Check for .*@sys */
 	for (tname = state->name; *tname; tname++)
@@ -598,8 +598,8 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	} else
 	    return 0;		/* .*@sys doesn't match either */
     } else {
-	register struct unixuser *au;
-	register afs_int32 error;
+	struct unixuser *au;
+	afs_int32 error;
 
 	*sysnamelist = afs_sysnamelist;
 
@@ -1316,9 +1316,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 {
     struct vrequest treq;
     char *tname = NULL;
-    register struct vcache *tvc = 0;
-    register afs_int32 code;
-    register afs_int32 bulkcode = 0;
+    struct vcache *tvc = 0;
+    afs_int32 code;
+    afs_int32 bulkcode = 0;
     int pass = 0, hit = 0;
     int force_eval = afs_fakestat_enable ? 0 : 1;
     long dirCookie;
@@ -1553,7 +1553,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     }
 
     {				/* sub-block just to reduce stack usage */
-	register struct dcache *tdc;
+	struct dcache *tdc;
 	afs_size_t dirOffset, dirLen;
 	struct VenusFid tfid;
 

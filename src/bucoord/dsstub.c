@@ -35,14 +35,14 @@
 
 /* protos */
 
-static char * TapeName(register char *);
-static char * DumpName(register afs_int32 adumpID);
+static char * TapeName(char *);
+static char * DumpName(afs_int32 adumpID);
 static FILE * OpenDump(afs_int32 , char * );
 FILE * OpenTape(char * , char * );
 static afs_int32 ScanForChildren(afs_int32 );
 static afs_int32 DeleteDump(afs_int32 );
 char * tailCompPtr(char *);
-afs_int32 ScanDumpHdr(register FILE *, char *, char *, afs_int32 *, afs_int32 *,
+afs_int32 ScanDumpHdr(FILE *, char *, char *, afs_int32 *, afs_int32 *,
   afs_int32 *, afs_int32 *);
 afs_int32 ScanTapeVolume(FILE *, char *, afs_int32 *, char *, afs_int32 *, afs_int32 *,
    afs_int32 *, afs_int32 *);
@@ -68,7 +68,7 @@ afs_int32 ScanVolClone(FILE *, char *, afs_int32 *);
 
 /* return the tape file name corresponding to a particular tape */
 
-static char * TapeName(register char *atapeName)
+static char * TapeName(char *atapeName)
 {
     static char tbuffer[AFSDIR_PATH_MAX];
 
@@ -82,7 +82,7 @@ static char * TapeName(register char *atapeName)
 
 /* return the dump file name corresponding to a particular dump ID */
 
-static char * DumpName(register afs_int32 adumpID)
+static char * DumpName(afs_int32 adumpID)
 {
     static char tbuffer[AFSDIR_PATH_MAX];
     char buf[AFSDIR_PATH_MAX];
@@ -96,8 +96,8 @@ static char * DumpName(register afs_int32 adumpID)
 
 static FILE * OpenDump(afs_int32 adumpID, char * awrite)
 {
-    register char *tp;
-    register FILE *tfile;
+    char *tp;
+    FILE *tfile;
 
     tp = DumpName(adumpID);
     tfile = fopen(tp, awrite);
@@ -111,8 +111,8 @@ static FILE * OpenDump(afs_int32 adumpID, char * awrite)
 
 FILE * OpenTape(char * atapeName, char * awrite)
 {
-    register char *tp;
-    register FILE *tfile;
+    char *tp;
+    FILE *tfile;
     tp = TapeName(atapeName);
     tfile = fopen(tp, awrite);
     return tfile;
@@ -123,10 +123,10 @@ FILE * OpenTape(char * atapeName, char * awrite)
 static afs_int32 ScanForChildren(afs_int32 aparentID)
 {
     DIR *tdir;
-    register struct dirent *tde;
+    struct dirent *tde;
     afs_int32 dumpID, parent;
-    register FILE *tfile;
-    register afs_int32 code;
+    FILE *tfile;
+    afs_int32 code;
     afs_int32 j2, j3, j4;
     char dname[256];
     char dumpName[1024];
@@ -165,8 +165,8 @@ static afs_int32 ScanForChildren(afs_int32 aparentID)
 
 static afs_int32 DeleteDump(afs_int32 adumpID)
 {
-    register char *tp;
-    register afs_int32 code;
+    char *tp;
+    afs_int32 code;
     tp = DumpName(adumpID);
     code = unlink(tp);
     if (code)
@@ -178,8 +178,8 @@ static afs_int32 DeleteDump(afs_int32 adumpID)
 #if 0
 static afs_int32 DeleteTape(char * atapeName)
 {
-    register char *tp;
-    register afs_int32 code;
+    char *tp;
+    afs_int32 code;
     tp = TapeName(atapeName);
     code = unlink(tp);
     return code;
@@ -220,12 +220,12 @@ tailCompPtr(char *pathNamePtr)
  *	alevel - level of dump (0 = full, 1+ are incrementals)
  */
 afs_int32
-ScanDumpHdr(register FILE *afile, char *aname, char *dumpName, afs_int32 *aparent, afs_int32 *aincTime, afs_int32 *acreateTime, afs_int32 *alevel)
+ScanDumpHdr(FILE *afile, char *aname, char *dumpName, afs_int32 *aparent, afs_int32 *aincTime, afs_int32 *acreateTime, afs_int32 *alevel)
 {
     char tbuffer[256];
     char *tp;
     afs_int32 dbmagic, dbversion;
-    register afs_int32 code;
+    afs_int32 code;
 
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
     if (!tp)
@@ -246,11 +246,11 @@ ScanDumpHdr(register FILE *afile, char *aname, char *dumpName, afs_int32 *aparen
 
 #if 0
 /* scan a tape header out of a tape file, leaving the file ptr positioned just past the header */
-static afs_int32 ScanTapeHdr(register FILE *afile, afs_int32 *adumpID, afs_int32 *aseq, afs_int32 *adamage)
+static afs_int32 ScanTapeHdr(FILE *afile, afs_int32 *adumpID, afs_int32 *aseq, afs_int32 *adamage)
 {
     char tbuffer[256];
     char *tp;
-    register afs_int32 code;
+    afs_int32 code;
 
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
     if (!tp)
@@ -275,8 +275,8 @@ static afs_int32 ScanTapeHdr(register FILE *afile, afs_int32 *adumpID, afs_int32
 afs_int32 ScanTapeVolume(FILE *afile, char *avolName, afs_int32 *avolID, char *atapeName, afs_int32 *apos, afs_int32 *aseq, afs_int32 *alastp, afs_int32 *cloneTime)
 {
     char tbuffer[256];
-    register afs_int32 code;
-    register char *tp;
+    afs_int32 code;
+    char *tp;
 
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
     if (!tp) {			/* something went wrong, or eof hit */
@@ -323,10 +323,10 @@ afs_int32 ScanVolClone(FILE *tdump, char *volName, afs_int32 *cloneTime)
 
 #if 0
 /* seek a dump file (after a header scan has been done) to position apos */
-static int SeekDump(register FILE *afile, afs_int32 apos)
+static int SeekDump(FILE *afile, afs_int32 apos)
 {
-    register afs_int32 i;
-    register char *tp;
+    afs_int32 i;
+    char *tp;
     char tbuffer[256];
 
     /* now skip to appropriate position */

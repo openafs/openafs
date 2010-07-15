@@ -73,8 +73,8 @@ static int oldreported;
 
 pass1()
 {
-    register int c, i, j;
-    register struct dinode *dp;
+    int c, i, j;
+    struct dinode *dp;
     struct zlncnt *zlnp;
     int ndb, cgd;
     struct inodesc idesc;
@@ -395,12 +395,12 @@ pass1()
 }
 
 pass1check(idesc)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
 {
     int res = KEEPON;
     int anyout, nfrags;
     daddr_t blkno = idesc->id_blkno;
-    register struct dups *dlp;
+    struct dups *dlp;
     struct dups *new;
 
     if ((anyout = chkrange(blkno, idesc->id_numfrags)) != 0) {

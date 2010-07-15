@@ -545,10 +545,10 @@ VAttachPartitions(void)
  * (This function was grabbed from df.c)
  */
 int
-getmount(register struct vmount **vmountpp)
+getmount(struct vmount **vmountpp)
 {
     int size;
-    register struct vmount *vm;
+    struct vmount *vm;
     int nmounts;
 
     /* set initial size of mntctl buffer to a MAGIC NUMBER */
@@ -874,7 +874,7 @@ VPartitionPath(struct DiskPartition64 *part)
 struct DiskPartition64 *
 VGetPartition_r(char *name, int abortp)
 {
-    register struct DiskPartition64 *dp;
+    struct DiskPartition64 *dp;
 #ifdef AFS_DEMAND_ATTACH_FS
     dp = VLookupPartition_r(name);
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -900,7 +900,7 @@ VGetPartition(char *name, int abortp)
 
 #ifdef AFS_NT40_ENV
 void
-VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
+VSetPartitionDiskUsage_r(struct DiskPartition64 *dp)
 {
     ULARGE_INTEGER free_user, total, free_total;
     int ufree, tot, tfree;
@@ -924,7 +924,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 
 #else
 void
-VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
+VSetPartitionDiskUsage_r(struct DiskPartition64 *dp)
 {
     int bsize, code;
     afs_int64 totalblks, free, used, availblks;
@@ -990,7 +990,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 #endif /* AFS_NT40_ENV */
 
 void
-VSetPartitionDiskUsage(register struct DiskPartition64 *dp)
+VSetPartitionDiskUsage(struct DiskPartition64 *dp)
 {
     VOL_LOCK;
     VSetPartitionDiskUsage_r(dp);
@@ -1144,7 +1144,7 @@ VLockPartition_r(char *name)
 void
 VUnlockPartition_r(char *name)
 {
-    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     OVERLAPPED lap;
 
     if (!dp)
@@ -1167,7 +1167,7 @@ VUnlockPartition_r(char *name)
 void
 VLockPartition_r(char *name)
 {
-    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     char *partitionName;
     int retries, code;
     struct timeval pausing;
@@ -1274,7 +1274,7 @@ VLockPartition_r(char *name)
 void
 VUnlockPartition_r(char *name)
 {
-    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     if (!dp)
 	return;			/* no partition, will fail later */
     close(dp->lock_fd);

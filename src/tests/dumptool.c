@@ -2430,9 +2430,9 @@ int
 DirHash(char *string)
 {
     /* Hash a string to a number between 0 and NHASHENT. */
-    register unsigned char tc;
-    register int hval;
-    register int tval;
+    unsigned char tc;
+    int hval;
+    int tval;
     hval = 0;
     while ((tc = (*string++)) != '\0') {
 	hval *= 173;

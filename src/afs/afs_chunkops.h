@@ -58,15 +58,15 @@ struct afs_cacheOps {
     int (*fwrite) (struct osi_file * fp, afs_int32 offset, void *buf,
 		   afs_int32 len);
     int (*close) (struct osi_file * fp);
-    int (*vread) (register struct vcache * avc, struct uio * auio,
+    int (*vread) (struct vcache * avc, struct uio * auio,
 		  afs_ucred_t * acred, daddr_t albn, struct buf ** abpp,
 		  int noLock);
-    int (*vwrite) (register struct vcache * avc, struct uio * auio, int aio,
+    int (*vwrite) (struct vcache * avc, struct uio * auio, int aio,
 		   afs_ucred_t * acred, int noLock);
-    struct dcache *(*GetDSlot) (register afs_int32 aslot,
-				register struct dcache * tmpdc);
+    struct dcache *(*GetDSlot) (afs_int32 aslot,
+				struct dcache * tmpdc);
     struct volume *(*GetVolSlot) (void);
-    int (*HandleLink) (register struct vcache * avc, struct vrequest * areq);
+    int (*HandleLink) (struct vcache * avc, struct vrequest * areq);
 };
 
 /* Ideally we should have used consistent naming - like COP_OPEN, COP_TRUNCATE, etc. */

@@ -435,7 +435,7 @@ static struct rx_securityClass *uvclass = 0;
 static int uvindex = -1;
 /* called by VLDBClient_Init to set the security module to be used in the RPC */
 int
-UV_SetSecurity(register struct rx_securityClass *as, afs_int32 aindex)
+UV_SetSecurity(struct rx_securityClass *as, afs_int32 aindex)
 {
     uvindex = aindex;
     uvclass = as;
@@ -447,7 +447,7 @@ UV_SetSecurity(register struct rx_securityClass *as, afs_int32 aindex)
 struct rx_connection *
 UV_Bind(afs_uint32 aserver, afs_int32 port)
 {
-    register struct rx_connection *tc;
+    struct rx_connection *tc;
 
     tc = rx_NewConnection(aserver, htons(port), VOLSERVICE_ID, uvclass,
 			  uvindex);
@@ -633,8 +633,8 @@ EnumerateEntry(struct nvldbentry *entry)
 int
 UV_NukeVolume(afs_uint32 server, afs_int32 partid, afs_uint32 volid)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
 
     tconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     if (tconn) {
@@ -650,7 +650,7 @@ int
 UV_PartitionInfo64(afs_uint32 server, char *pname,
 		   struct diskPartition64 *partition)
 {
-    register struct rx_connection *aconn;
+    struct rx_connection *aconn;
     afs_int32 code = 0;
 
     aconn = (struct rx_connection *)0;
@@ -723,9 +723,9 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
 		 afs_int32 aspare3, afs_int32 aspare4, afs_uint32 * anewid,
 		 afs_uint32 * aroid, afs_uint32 * abkid)
 {
-    register struct rx_connection *aconn;
+    struct rx_connection *aconn;
     afs_int32 tid;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 error;
     afs_int32 rcode, vcode;
     afs_int32 lastid;
@@ -855,7 +855,7 @@ int
 UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
 		afs_uint32 aid)
 {
-    register struct rx_connection *aconn;
+    struct rx_connection *aconn;
     afs_int32 error;
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;	/*the new vldb entry */
@@ -1210,7 +1210,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     afs_int32 tmp;
     afs_uint32 tmpVol;
     struct restoreCookie cookie;
-    register afs_int32 vcode, code;
+    afs_int32 vcode, code;
     struct volser_status tstatus;
     struct destServer destination;
 
@@ -2238,7 +2238,7 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     afs_int32 rcode;
     afs_int32 fromDate, cloneFromDate;
     struct restoreCookie cookie;
-    register afs_int32 vcode, code;
+    afs_int32 vcode, code;
     afs_uint32 newVol;
     afs_int32 volflag;
     struct volser_status tstatus;
@@ -5131,7 +5131,7 @@ UV_ListPartitions(afs_uint32 aserver, struct partList *ptrPartList,
     struct rx_connection *aconn;
     struct pIDs partIds;
     struct partEntries partEnts;
-    register int i, j = 0, code;
+    int i, j = 0, code;
 
     *cntp = 0;
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);

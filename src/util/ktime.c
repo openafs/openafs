@@ -45,9 +45,9 @@ static char *day[] = {
 #ifdef undef
 static
 LocalFreeTokens(alist)
-     register struct token *alist;
+     struct token *alist;
 {
-    register struct token *nlist;
+    struct token *nlist;
     for (; alist; alist = nlist) {
 	nlist = alist->next;
 	free(alist->key);
@@ -70,11 +70,11 @@ static int
 LocalParseLine(char *aline, struct token **alist)
 {
     char tbuffer[256];
-    register char *tptr = NULL;
+    char *tptr = NULL;
     int inToken;
     struct token *first, *last;
-    register struct token *ttok;
-    register int tc;
+    struct token *ttok;
+    int tc;
 
     inToken = 0;		/* not copying token chars at start */
     first = NULL;
@@ -156,7 +156,7 @@ char *
 ktime_DateOf(afs_int32 atime)
 {
     static char tbuffer[30];
-    register char *tp;
+    char *tp;
     time_t t = atime;
     tp = ctime(&t);
     if (tp) {
@@ -178,12 +178,12 @@ ktime_DateOf(afs_int32 atime)
  */
 
 static int
-ParseTime(register struct ktime *ak, register char *astr)
+ParseTime(struct ktime *ak, char *astr)
 {
     int field;
     afs_int32 temp;
-    register char *tp;
-    register int tc;
+    char *tp;
+    int tc;
 
     field = 0;			/* 0=hour, 1=min, 2=sec */
     temp = 0;
@@ -217,7 +217,7 @@ ParseTime(register struct ktime *ak, register char *astr)
 }
 
 afs_int32
-ktime_Str2int32(register char *astr)
+ktime_Str2int32(char *astr)
 {
     struct ktime tk;
 
@@ -242,10 +242,10 @@ ktime_Str2int32(register char *astr)
 
 /* -1 means error, 0 means now, otherwise returns time of next event */
 int
-ktime_ParsePeriodic(char *adate, register struct ktime *ak)
+ktime_ParsePeriodic(char *adate, struct ktime *ak)
 {
     struct token *tt;
-    register afs_int32 code;
+    afs_int32 code;
     struct ptemp *tp;
 
     memset(ak, 0, sizeof(*ak));
@@ -319,7 +319,7 @@ ktime_ParsePeriodic(char *adate, register struct ktime *ak)
  *	0 - astring contains ktime string.
  */
 int
-ktime_DisplayString(struct ktime *aparm, register char *astring)
+ktime_DisplayString(struct ktime *aparm, char *astring)
 {
     char tempString[50];
 
@@ -414,9 +414,9 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
 /* compare date in both formats, and return as in strcmp */
 #ifdef undef
 static int
-KTimeCmp(register struct ktime *aktime, register struct tm *atm)
+KTimeCmp(struct ktime *aktime, struct tm *atm)
 {
-    register afs_int32 tmask;
+    afs_int32 tmask;
 
     /* don't compare day of the week, since we can't tell the
      * order in a cyclical set.  Caller must check for equality, if
@@ -446,7 +446,7 @@ KTimeCmp(register struct ktime *aktime, register struct tm *atm)
 
 /* compare date in both formats, and return as in strcmp */
 static int
-KDateCmp(register struct ktime_date *akdate, register struct tm *atm)
+KDateCmp(struct ktime_date *akdate, struct tm *atm)
 {
     if (akdate->year > atm->tm_year)
 	return 1;
@@ -620,10 +620,10 @@ ktime_GetDateUsage(void)
 afs_int32
 ktime_InterpretDate(struct ktime_date * akdate)
 {
-    register afs_uint32 tresult;
-    register afs_uint32 tbit;
+    afs_uint32 tresult;
+    afs_uint32 tbit;
     time_t temp;
-    register struct tm *tsp;
+    struct tm *tsp;
 
     if (akdate->mask & KTIMEDATE_NOW)
 	return time(0);

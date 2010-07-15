@@ -19,7 +19,7 @@
 #endif
 
 int
-osi_Active(register struct vcache *avc)
+osi_Active(struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -45,7 +45,7 @@ osi_Active(register struct vcache *avc)
    us, of course).
 */
 void
-osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
+osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
 #ifdef AFS_FBSD70_ENV
     int vfslocked;
@@ -121,7 +121,7 @@ osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
  * it is written to the file system. */
 
 void
-osi_FlushText_really(register struct vcache *vp)
+osi_FlushText_really(struct vcache *vp)
 {
     afs_hyper_t fdv;		/* version before which we'll flush */
 

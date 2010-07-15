@@ -109,7 +109,7 @@ struct remote {
 
 /* Hack to unfold code for multiple devices */
 #define rmt     (*rmtp)
-#define devhack(dev) register struct remote *rmtp = &remote[minor(dev)]
+#define devhack(dev) struct remote *rmtp = &remote[minor(dev)]
 
 /* Flags for rmt.rt_flags */
 #define RT_RBUF		1	/* processing venus read request */

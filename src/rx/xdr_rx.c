@@ -37,7 +37,6 @@
 #   undef kmem_free
 #   undef mem_alloc
 #   undef mem_free
-#   undef register
 #  endif /* AFS_OSF_ENV */
 #  ifdef AFS_LINUX22_ENV
 #   ifndef quad_t

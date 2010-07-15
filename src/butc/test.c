@@ -49,7 +49,7 @@ UV_Bind(aserver, port)
      afs_uint32 aserver;
      afs_int32 port;
 {
-    register struct rx_connection *tc;
+    struct rx_connection *tc;
     struct rx_securityClass *uvclass;
 
     uvclass = rxnull_NewClientSecurityObject();
@@ -63,10 +63,10 @@ afs_uint32
 GetServer(aname)
      char *aname;
 {
-    register struct hostent *th;
+    struct hostent *th;
     afs_uint32 addr;
     char b1, b2, b3, b4;
-    register afs_int32 code;
+    afs_int32 code;
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
     if (code == 4) {
@@ -82,7 +82,7 @@ GetServer(aname)
 
 
 static int
-PerformDump(register struct cmd_syndesc *as, void *arock)
+PerformDump(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_uint32 server;
@@ -132,7 +132,7 @@ PerformDump(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-PerformRestore(register struct cmd_syndesc *as, void *arock)
+PerformRestore(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_uint32 server;
@@ -174,7 +174,7 @@ PerformRestore(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-CheckDump(register struct cmd_syndesc *as, void *arock)
+CheckDump(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_uint32 server;
@@ -194,7 +194,7 @@ CheckDump(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-AbortDump(register struct cmd_syndesc *as, void *arock)
+AbortDump(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_uint32 server;
@@ -214,7 +214,7 @@ AbortDump(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-WaitForDump(register struct cmd_syndesc *as, void *arock)
+WaitForDump(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_uint32 server;
@@ -234,7 +234,7 @@ WaitForDump(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-EndDump(register struct cmd_syndesc *as, void *arock)
+EndDump(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *aconn;
     afs_uint32 server;
@@ -274,9 +274,9 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register afs_int32 code;
+    afs_int32 code;
 
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
     /*

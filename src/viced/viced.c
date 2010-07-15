@@ -285,8 +285,8 @@ CheckDescriptors(void *unused)
 {
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
-    register int tsize = getdtablesize();
-    register int i;
+    int tsize = getdtablesize();
+    int i;
     for (i = 0; i < tsize; i++) {
 	if (afs_fstat(i, &status) != -1) {
 	    printf("%d: dev %x, inode %u, length %u, type/mode %x\n", i,
@@ -1493,10 +1493,10 @@ static void
 NewParms(int initializing)
 {
     static struct afs_stat sbuf;
-    register int i, fd;
+    int i, fd;
     char *parms;
     char *argv[MAXPARMS];
-    register int argc;
+    int argc;
 
     if (!(afs_stat("/vice/file/parms", &sbuf))) {
 	parms = (char *)malloc(sbuf.st_size);
@@ -1819,7 +1819,7 @@ WriteSysIdFile(void)
 static afs_int32
 Do_VLRegisterRPC(void)
 {
-    register int code;
+    int code;
     bulkaddrs addrs;
     afs_uint32 FS_HostAddrs_HBO[ADDRSPERSITE];
     int i = 0;

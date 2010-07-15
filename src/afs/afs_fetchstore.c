@@ -19,7 +19,6 @@
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
-#undef register
 #endif /* AFS_ALPHA_ENV */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */

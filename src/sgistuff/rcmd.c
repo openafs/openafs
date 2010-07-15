@@ -365,7 +365,7 @@ ruserok(rhost, superuser, ruser, luser)
     FILE *hostf;
     char fhost[MAXHOSTNAMELEN];
     int first = 1;
-    register char *sp, *p;
+    char *sp, *p;
     int baselen = -1;
     int suid, sgid;
     int group_list_size = -1;
@@ -446,7 +446,7 @@ _validuser(hostf, rhost, luser, ruser, baselen)
 {
     char *user;
     char ahost[MAXHOSTNAMELEN * 4];
-    register char *p;
+    char *p;
 #ifdef	AFS_AIX32_ENV
 #include <arpa/nameser.h>
     int hostmatch, usermatch;
@@ -542,7 +542,7 @@ _checkhost(rhost, lhost, len)
     static char ldomain[MAXHOSTNAMELEN + 1];
     static char *domainp = NULL;
     static int nodomain = 0;
-    register char *cp;
+    char *cp;
 
 #ifdef	AFS_AIX32_ENV
     struct hostent *hp;

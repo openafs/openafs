@@ -50,8 +50,8 @@
 static short
 PortNumber(char *aport)
 {
-    register int tc;
-    register short total;
+    int tc;
+    short total;
 
     total = 0;
     while ((tc = *aport++)) {
@@ -66,7 +66,7 @@ PortNumber(char *aport)
 static short
 PortName(char *aname)
 {
-    register struct servent *ts;
+    struct servent *ts;
     ts = getservbyname(aname, NULL);
     if (!ts)
 	return -1;
@@ -76,7 +76,7 @@ PortName(char *aname)
 int
 MainCommand(struct cmd_syndesc *as, void *arock)
 {
-    register int i;
+    int i;
     osi_socket s;
     int j;
     struct sockaddr_in taddr;
@@ -84,7 +84,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     struct in_addr hostAddr;
     short port;
     struct hostent *th;
-    register afs_int32 code;
+    afs_int32 code;
     int nodally;
     int allconns;
     int rxstats;

@@ -160,9 +160,9 @@ ka_KeyCheckSum(char *key, afs_uint32 * cksumP)
 
 /* is the key all zeros? */
 int
-ka_KeyIsZero(register char *akey, register int alen)
+ka_KeyIsZero(char *akey, int alen)
 {
-    register int i;
+    int i;
     for (i = 0; i < alen; i++) {
 	if (*akey++ != 0)
 	    return 0;

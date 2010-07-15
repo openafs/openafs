@@ -54,7 +54,7 @@ static void
 ovlentry_to_nvlentry(struct vldbentry *oentryp,
                      struct nvldbentry *nentryp)
 {
-    register int i;
+    int i;
 
     memset(nentryp, 0, sizeof(struct nvldbentry));
     strncpy(nentryp->name, oentryp->name, sizeof(nentryp->name));
@@ -74,7 +74,7 @@ static int
 nvlentry_to_ovlentry(struct nvldbentry *nentryp,
                      struct vldbentry *oentryp)
 {
-    register int i;
+    int i;
 
     memset(oentryp, 0, sizeof(struct vldbentry));
     strncpy(oentryp->name, nentryp->name, sizeof(oentryp->name));
@@ -104,7 +104,7 @@ int
 VLDB_CreateEntry(struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -130,7 +130,7 @@ int
 VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -156,7 +156,7 @@ int
 VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -181,7 +181,7 @@ int
 VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -214,7 +214,7 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
                     nbulkentries *blkentriesp)
 {
     bulkentries arrayEntries;
-    register int code, i;
+    int code, i;
 
     if (newvlserver == 1) {
       tryold:
@@ -283,7 +283,7 @@ int cacheip_index = 0;
 int
 VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
 {
-    register int code;
+    int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
     afs_uint32 *addrp, i, j, f1, f2;

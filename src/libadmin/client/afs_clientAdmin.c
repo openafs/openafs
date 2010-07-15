@@ -1237,7 +1237,7 @@ client_ExtractDriveLetter(char *path)
 static int
 Parent(char *directory, char *parentDirectory)
 {
-    register char *tp;
+    char *tp;
     int rc = 0;
 
     strcpy(parentDirectory, directory);

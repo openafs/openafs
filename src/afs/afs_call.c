@@ -1194,7 +1194,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 int
 afs_CheckInit(void)
 {
-    register int code = 0;
+    int code = 0;
 
     AFS_STATCNT(afs_CheckInit);
     if (afs_initState <= 100)

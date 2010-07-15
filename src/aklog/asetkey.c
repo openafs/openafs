@@ -55,7 +55,7 @@ int
 main(int argc, char *argv[])
 {
     struct afsconf_dir *tdir;
-    register long code;
+    long code;
     const char *confdir;
 
     if (argc == 1) {
@@ -173,7 +173,7 @@ main(int argc, char *argv[])
     }
     else if (strcmp(argv[1], "list") == 0) {
 	struct afsconf_keys tkeys;
-	register int i, j;
+	int i, j;
 	
 	code = afsconf_GetKeys(tdir, &tkeys);
 	if (code) {

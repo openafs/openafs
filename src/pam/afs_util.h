@@ -19,7 +19,7 @@ void lc_cleanup(pam_handle_t * pamh, void *data, int pam_end_status);
 
 void nil_cleanup(pam_handle_t * pamh, void *data, int pam_end_status);
 
-extern char *cv2string(register char *ttp, register unsigned long aval);
+extern char *cv2string(char *ttp, unsigned long aval);
 extern int do_klog(const char *user, const char *password,
 		   const char *lifetime, const char *cell_name);
 extern afs_int32 getPAG(void);

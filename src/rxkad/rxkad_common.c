@@ -199,7 +199,7 @@ int
 rxkad_SetupEndpoint(struct rx_connection *aconnp,
 		    struct rxkad_endpoint *aendpointp)
 {
-    register afs_int32 i;
+    afs_int32 i;
 
     aendpointp->cuid[0] = htonl(aconnp->epoch);
     i = aconnp->cid & RX_CIDMASK;
@@ -272,7 +272,7 @@ ComputeSum(struct rx_packet *apacket, fc_KeySchedule * aschedule,
 	   afs_int32 * aivec)
 {
     afs_uint32 word[2];
-    register afs_uint32 t;
+    afs_uint32 t;
 
     t = apacket->header.callNumber;
     word[0] = htonl(t);

@@ -553,7 +553,7 @@ create_user(struct ubik_trans *tt, char *name, char *instance,
 	    struct ktc_encryptionKey *key, afs_int32 caller,
 	    afs_int32 flags)
 {
-    register int code;
+    int code;
     afs_int32 to;
     struct kaentry tentry;
     afs_int32 maxLifetime;
@@ -624,7 +624,7 @@ afs_int32
 kamCreateUser(struct rx_call *call, char *aname, char *ainstance, 
 	      EncryptionKey ainitpw)
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 caller;		/* Disk offset of caller's entry */
 
@@ -669,7 +669,7 @@ afs_int32
 ChangePassWord(struct rx_call *call, char *aname, char *ainstance, 
 	       ka_CBS *arequest, ka_BBS *oanswer)
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 to;		/* offset of block */
     struct kaentry tentry;
@@ -881,7 +881,7 @@ afs_int32
 kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
 	       afs_int32 akvno, EncryptionKey apassword)
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 caller;		/* Disk offset of caller's entry */
     struct kaentry tentry;
@@ -1481,7 +1481,7 @@ SKAM_DeleteUser(struct rx_call *call, char *aname, char *ainstance)
 afs_int32
 kamDeleteUser(struct rx_call *call, char *aname, char *ainstance)
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 caller;
     afs_int32 to;
@@ -1562,7 +1562,7 @@ kamGetEntry(struct rx_call *call,
 	    afs_int32 aversion,		/* major version assumed by caller */
 	    kaentryinfo *aentry)	/* entry data copied here */
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ubik_trans *tt;
     afs_int32 callerIndex;
     struct kaentry caller;
@@ -1688,7 +1688,7 @@ kamListEntry(struct rx_call *call,
 	     afs_int32 *count,		/* total entries in database */
 	     kaident *name)		/* name & instance of this entry */
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 caller;
     struct kaentry tentry;
@@ -2237,7 +2237,7 @@ SKAM_Unlock(struct rx_call *call,
 	    afs_int32 spare3, 
 	    afs_int32 spare4)
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 caller;
     afs_int32 to;
@@ -2282,7 +2282,7 @@ SKAM_LockStatus(struct rx_call *call,
 		afs_int32 spare3, 
 		afs_int32 spare4)
 {
-    register int code;
+    int code;
     struct ubik_trans *tt;
     afs_int32 callerIndex;
     afs_int32 to;

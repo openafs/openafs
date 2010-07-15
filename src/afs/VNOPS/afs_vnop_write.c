@@ -36,8 +36,8 @@ extern unsigned char *afs_indexFlags;
  * avc->lock must be write-locked.
  */
 int
-afs_StoreOnLastReference(register struct vcache *avc,
-			 register struct vrequest *treq)
+afs_StoreOnLastReference(struct vcache *avc,
+			 struct vrequest *treq)
 {
     int code = 0;
 
@@ -95,7 +95,7 @@ afs_StoreOnLastReference(register struct vcache *avc,
 }
 
 int
-afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
+afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
@@ -105,7 +105,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_int32 tlen, trimlen;
     afs_int32 startDate;
     afs_int32 max;
-    register struct dcache *tdc;
+    struct dcache *tdc;
 #ifdef _HIGHC_
     volatile
 #endif
@@ -117,7 +117,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
 #endif
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
 
     AFS_STATCNT(afs_MemWrite);
@@ -305,7 +305,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 
 /* called on writes */
 int
-afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
+afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
@@ -316,7 +316,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_int32 trimlen;
     afs_int32 startDate;
     afs_int32 max;
-    register struct dcache *tdc;
+    struct dcache *tdc;
 #ifdef _HIGHC_
     volatile
 #endif
@@ -329,7 +329,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     struct iovec *tvec;		/* again, should have define */
 #endif
     struct osi_file *tfile;
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
 
     AFS_STATCNT(afs_UFSWrite);
@@ -630,9 +630,9 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 
 /* do partial write if we're low on unmodified chunks */
 int
-afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
+afs_DoPartialWrite(struct vcache *avc, struct vrequest *areq)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <=
 	afs_stats_cmperf.cacheMaxDirtyChunks
@@ -668,8 +668,8 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, offset_t offset,
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
-    register afs_int32 code;
-    register struct brequest *tb;
+    afs_int32 code;
+    struct brequest *tb;
     struct vrequest treq;
 #ifdef AFS_SGI65_ENV
     struct flid flid;
@@ -836,7 +836,7 @@ afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred
 afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 #endif 
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
     OSI_VC_CONVERT(avc);
 

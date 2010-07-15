@@ -39,9 +39,9 @@ int
 ubik_ParseServerList(int argc, char **argv, afs_uint32 *ahost,
 		     afs_uint32 *aothers)
 {
-    register afs_int32 i;
-    register char *tp;
-    register struct hostent *th;
+    afs_int32 i;
+    char *tp;
+    struct hostent *th;
     char hostname[64];
     afs_uint32 myHost, temp;
     afs_int32 counter;

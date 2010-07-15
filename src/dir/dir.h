@@ -90,7 +90,7 @@ extern int Length(void *dir);
 extern int Delete(void *dir, char *entry);
 extern int FindBlobs(void *dir, int nblobs);
 extern void AddPage(void *dir, int pageno);
-extern void FreeBlobs(void *dir, register int firstblob, int nblobs);
+extern void FreeBlobs(void *dir, int firstblob, int nblobs);
 extern int MakeDir(void *dir, afs_int32 * me, afs_int32 * parent);
 extern int Lookup(void *dir, char *entry, void *fid);
 extern int LookupOffset(void *dir, char *entry, void *fid, long *offsetp);
@@ -100,13 +100,13 @@ extern int EnumerateDir(void *dir,
 			void *hook);
 extern int IsEmpty(void *dir);
 extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
-extern int DirHash(register char *string);
+extern int DirHash(char *string);
 
 extern int DStat(int *abuffers, int *acalls, int *aios);
 extern void DRelease(void *loc, int flag);
-extern int DVOffset(register void *ap);
-extern int DFlushVolume(register afs_int32 vid);
-extern int DFlushEntry(register afs_int32 *fid);
+extern int DVOffset(void *ap);
+extern int DFlushVolume(afs_int32 vid);
+extern int DFlushEntry(afs_int32 *fid);
 extern int InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique,
 			  char *name, afs_uint32 length);
 
@@ -114,10 +114,10 @@ extern int InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique,
    in afs_prototypes.h */
 #ifndef KERNEL
 extern int DInit(int abuffers);
-extern void *DRead(register afs_int32 *fid, register int page);
+extern void *DRead(afs_int32 *fid, int page);
 extern int DFlush(void);
-extern void *DNew(register afs_int32 *fid, register int page);
-extern void DZap(register afs_int32 *fid);
+extern void *DNew(afs_int32 *fid, int page);
+extern void DZap(afs_int32 *fid);
 
 /* salvage.c */
 

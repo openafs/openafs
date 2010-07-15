@@ -144,7 +144,7 @@ getpipepass(void)
 {
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
-    register int i, tc;
+    int i, tc;
     memset(gpbuf, 0, sizeof(gpbuf));
     for (i = 0; i < (sizeof(gpbuf) - 1); i++) {
 	tc = fgetc(stdin);
@@ -162,7 +162,7 @@ InitThisModule(void)
 #ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth:InitThisModule";
 #endif
-    register afs_int32 code;
+    afs_int32 code;
     char prompt[2 * MAXKTCNAMELEN + 20];
     char *reasonString, longPassBuff[1024], shortPassBuff[9];
     struct ktc_encryptionKey key;
@@ -432,7 +432,7 @@ uss_kauth_DelUser(char *a_user)
 #ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_DelUser";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
 
     if (uss_SkipKaserver) {
 	/*
@@ -511,7 +511,7 @@ uss_kauth_CheckUserName(void)
 #ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_CheckUserName";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
 
     if (uss_SkipKaserver) {
 	/*

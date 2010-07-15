@@ -24,7 +24,7 @@ int des_debug;
 void
 gen(FILE * stream)
 {
-    register afs_uint32 i, j, k, l, m, n;
+    afs_uint32 i, j, k, l, m, n;
 
     /* rearrange the S table entries, and adjust for host bit order */
 

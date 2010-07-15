@@ -224,7 +224,7 @@ static void *
 xstat_fs_LWP(void *unused)
 {
     static char rn[] = "xstat_fs_LWP";	/*Routine name */
-    register afs_int32 code;	/*Results of calls */
+    afs_int32 code;	/*Results of calls */
     int oneShotCode;		/*Result of one-shot signal */
     struct timeval tv;		/*Time structure */
     int conn_idx;		/*Connection index */
@@ -410,7 +410,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	      int a_numCollections, afs_int32 * a_collIDP)
 {
     static char rn[] = "xstat_fs_Init";	/*Routine name */
-    register afs_int32 code;	/*Return value */
+    afs_int32 code;	/*Return value */
     static struct rx_securityClass *CBsecobj;	/*Callback security object */
     struct rx_securityClass *secobj;	/*Client security object */
     struct rx_service *rxsrv_afsserver;	/*Server for AFS */

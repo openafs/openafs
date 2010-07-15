@@ -310,7 +310,7 @@ afs_nfs2_dispatcher(int type, afs_int32 which, char *argp,
 void
 afs_nfs2_smallfidder(struct nfsdiropres *dr)
 {
-    register fhandle_t *fhp = (fhandle_t *) & dr->dr_fhandle;
+    fhandle_t *fhp = (fhandle_t *) & dr->dr_fhandle;
     afs_int32 addr[2];
     struct vcache *vcp;
 

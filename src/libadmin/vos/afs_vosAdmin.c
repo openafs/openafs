@@ -327,7 +327,7 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
     size_t prefix_len = 0;
     nbulkentries arrayEntries;
     afs_int32 nentries = 0;
-    register struct nvldbentry *entry;
+    struct nvldbentry *entry;
     int i;
     afs_int32 rw_volid, rw_server, rw_partition;
     int previdx;

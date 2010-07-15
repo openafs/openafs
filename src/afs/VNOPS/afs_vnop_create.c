@@ -42,8 +42,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 {
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    afs_int32 code;
+    struct afs_conn *tc;
     struct VenusFid newFid;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
@@ -510,10 +510,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
  * and dcache entry write-locked.
  */
 int
-afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
-	      register AFSFetchStatus * astat, register int aincr)
+afs_LocalHero(struct vcache *avc, struct dcache *adc,
+	      AFSFetchStatus * astat, int aincr)
 {
-    register afs_int32 ok;
+    afs_int32 ok;
     afs_hyper_t avers;
 
     AFS_STATCNT(afs_LocalHero);

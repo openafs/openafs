@@ -108,9 +108,9 @@ urecovery_LostServer(void)
  * and we must have a currently-good sync site.
  */
 int
-urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
+urecovery_AllBetter(struct ubik_dbase *adbase, int areadAny)
 {
-    register afs_int32 rcode;
+    afs_int32 rcode;
 
     ubik_dprint_25("allbetter checking\n");
     rcode = 0;
@@ -145,7 +145,7 @@ urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
 int
 urecovery_AbortAll(struct ubik_dbase *adbase)
 {
-    register struct ubik_trans *tt;
+    struct ubik_trans *tt;
     for (tt = adbase->activeTrans; tt; tt = tt->next) {
 	udisk_abort(tt);
     }
@@ -156,7 +156,7 @@ urecovery_AbortAll(struct ubik_dbase *adbase)
  * \brief this routine aborts the current remote transaction, if any, if the tid is wrong
  */
 int
-urecovery_CheckTid(register struct ubik_tid *atid)
+urecovery_CheckTid(struct ubik_tid *atid)
 {
     if (ubik_currentTrans) {
 	/* there is remote write trans, see if we match, see if this
@@ -203,10 +203,10 @@ urecovery_CheckTid(register struct ubik_tid *atid)
  * the log.
  */
 static int
-ReplayLog(register struct ubik_dbase *adbase)
+ReplayLog(struct ubik_dbase *adbase)
 {
     afs_int32 opcode;
-    register afs_int32 code, tpos;
+    afs_int32 code, tpos;
     int logIsGood;
     afs_int32 len, thisSize, tfile, filePos;
     afs_int32 buffer[4];
@@ -368,9 +368,9 @@ ReplayLog(register struct ubik_dbase *adbase)
  * This routine is called after replaying the log; it reads the restored labels.
  */
 static int
-InitializeDB(register struct ubik_dbase *adbase)
+InitializeDB(struct ubik_dbase *adbase)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = (*adbase->getlabel) (adbase, 0, &adbase->version);
     if (code) {
@@ -399,9 +399,9 @@ InitializeDB(register struct ubik_dbase *adbase)
  * We replay the logs and then read the resulting file to figure out what version we've really got.
  */
 int
-urecovery_Initialize(register struct ubik_dbase *adbase)
+urecovery_Initialize(struct ubik_dbase *adbase)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = ReplayLog(adbase);
     if (code)

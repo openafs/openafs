@@ -80,7 +80,7 @@ FT_Init(int printErrors, int notReally)
 int
 FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
 {
-    register int ret;
+    int ret;
     ret = gettimeofday(tv, tz);
     if (!ret) {
 	/* need to bounds check 'cause Unix can fail these checks, (esp on Suns)

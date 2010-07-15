@@ -195,7 +195,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 {
     int error;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
 #if !defined(AFS_FBSD53_ENV) || defined(AFS_FBSD80_ENV)
     struct thread *td = curthread;
 #endif

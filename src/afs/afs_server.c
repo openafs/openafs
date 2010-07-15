@@ -130,8 +130,8 @@ GetUpDownStats(struct server *srv)
 void
 afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 {
-    register struct server *a_serverP = sa->server;
-    register struct srvAddr *sap;
+    struct server *a_serverP = sa->server;
+    struct srvAddr *sap;
     osi_timeval_t currTime, *currTimeP;	/*Current time */
     afs_int32 downTime;		/*Computed downtime, in seconds */
     struct afs_stats_SrvUpDownInfo *upDownP;	/*Ptr to up/down info record */
@@ -240,7 +240,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 afs_int32
 afs_ServerDown(struct srvAddr *sa)
 {
-    register struct server *aserver = sa->server;
+    struct server *aserver = sa->server;
 
     AFS_STATCNT(ServerDown);
     if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN) 
@@ -260,9 +260,9 @@ afs_ServerDown(struct srvAddr *sa)
 int
 afs_HaveCallBacksFrom(struct server *aserver)
 {
-    register afs_int32 now;
-    register int i;
-    register struct vcache *tvc;
+    afs_int32 now;
+    int i;
+    struct vcache *tvc;
 
     AFS_STATCNT(HaveCallBacksFrom);
     now = osi_Time();		/* for checking for expired callbacks */
@@ -283,11 +283,11 @@ afs_HaveCallBacksFrom(struct server *aserver)
 
 
 static void
-CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
+CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
 {
-    register struct server *aserver = sa->server;
-    register struct afs_conn *tc;
-    register afs_int32 code;
+    struct server *aserver = sa->server;
+    struct afs_conn *tc;
+    afs_int32 code;
 
     AFS_STATCNT(CheckVLServer);
     /* Ping dead servers to see if they're back */
@@ -879,7 +879,7 @@ unsigned int
 afs_random(void)
 {
     static afs_int32 state = 0;
-    register int i;
+    int i;
 
     AFS_STATCNT(afs_random);
     if (!state) {

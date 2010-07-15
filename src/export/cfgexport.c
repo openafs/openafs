@@ -40,8 +40,8 @@ char *xstrings;
 main(argc, argv)
      char **argv;
 {
-    register add, del, opts;
-    register c;
+    int add, del, opts;
+    int c;
     char *file;
     mid_t kmid;
     struct cfg_load cload;
@@ -377,12 +377,12 @@ get_syms(conf, syms)
  */
 #define SYMBUFSIZE 1048576
 xlate_xtok(xp, kp, strp, szp)
-     register struct syment *xp;
-     register sym_t *kp;
+     struct syment *xp;
+     sym_t *kp;
      char **strp;
      uint *szp;
 {
-    register len;
+    int len;
     static char *export_strings = NULL, *prev = "";
     static left, offset, sz;
 
@@ -499,11 +499,11 @@ xlate_xtok(xp, kp, strp, szp)
  *	This is rather inefficient.
  */
 find_suffix(p, strings, max, offp)
-     register char *p, *strings;
+     char *p, *strings;
      uint *offp;
 {
-    register char *q, *e;
-    register len = strlen(p) - 1;
+    char *q, *e;
+    int len = strlen(p) - 1;
 
     strings += sizeof(uint);
     max -= sizeof(uint);
@@ -541,10 +541,10 @@ find_suffix(p, strings, max, offp)
  * C_EXT < C_HIDEXT;
  */
 xsym_compar(xp, xq)
-     register struct syment *xp, *xq;
+     struct syment *xp, *xq;
 {
-    register char *p, *q;
-    register compar;
+    char *p, *q;
+    int compar;
 
 #ifndef __XCOFF64__
     p = (xp->n_zeroes ? xp->n_name : xp->n_nptr);

@@ -118,8 +118,8 @@ FreeNode(afs_int32 taskID)
 afs_int32
 GetNthNode(afs_int32 aindex, afs_int32 *aresult)
 {
-    register struct dumpNode *tn;
-    register int i;
+    struct dumpNode *tn;
+    int i;
 
     tn = dumpQHeader->next;
     for (i = 0;; i++) {

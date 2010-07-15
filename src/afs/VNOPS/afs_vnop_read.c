@@ -42,7 +42,7 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 		       afs_ucred_t *acred, struct vrequest *areq);
 
 int
-afs_MemRead(register struct vcache *avc, struct uio *auio,
+afs_MemRead(struct vcache *avc, struct uio *auio,
 	    afs_ucred_t *acred, daddr_t albn, struct buf **abpp,
 	    int noLock)
 {
@@ -418,7 +418,7 @@ void
 afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 		  afs_ucred_t *acred, struct vrequest *areq)
 {
-    register struct dcache *tdc;
+    struct dcache *tdc;
     afs_size_t offset;
     afs_size_t j1, j2;		/* junk vbls for GetDCache to trash */
 
@@ -486,7 +486,7 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 }
 
 int
-afs_UFSRead(register struct vcache *avc, struct uio *auio,
+afs_UFSRead(struct vcache *avc, struct uio *auio,
 	    afs_ucred_t *acred, daddr_t albn, struct buf **abpp,
 	    int noLock)
 {

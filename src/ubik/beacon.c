@@ -88,7 +88,7 @@ static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR
 
 /*! \brief procedure called from debug rpc call to get this module's state for debugging */
 void
-ubeacon_Debug(register struct ubik_debug *aparm)
+ubeacon_Debug(struct ubik_debug *aparm)
 {
     /* fill in beacon's state fields in the ubik_debug structure */
     aparm->syncSiteUntil = syncSiteUntil;
@@ -114,8 +114,8 @@ ubeacon_Debug(register struct ubik_debug *aparm)
 int
 ubeacon_AmSyncSite(void)
 {
-    register afs_int32 now;
-    register afs_int32 rcode;
+    afs_int32 now;
+    afs_int32 rcode;
 
     /* special case for fast startup */
     if (nServers == 1 && !amIClone) {
@@ -161,7 +161,7 @@ ubeacon_InitServerListByInfo(afs_uint32 ame, struct afsconf_cell *info,
  * \see ubeacon_InitServerListCommon()
  */
 int
-ubeacon_InitServerList(afs_uint32 ame, register afs_uint32 aservers[])
+ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[])
 {
     afs_int32 code;
 
@@ -198,12 +198,12 @@ ubeacon_InitServerList(afs_uint32 ame, register afs_uint32 aservers[])
  */
 int
 ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
-			     char clones[], register afs_uint32 aservers[])
+			     char clones[], afs_uint32 aservers[])
 {
-    register struct ubik_server *ts;
+    struct ubik_server *ts;
     afs_int32 me = -1;
-    register afs_int32 servAddr;
-    register afs_int32 i, code;
+    afs_int32 servAddr;
+    afs_int32 i, code;
     afs_int32 magicHost;
     struct ubik_server *magicServer;
 
@@ -340,12 +340,12 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 void *
 ubeacon_Interact(void *dummy)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct timeval tt;
     struct rx_connection *connections[MAXSERVERS];
     struct ubik_server *servers[MAXSERVERS];
-    register afs_int32 i;
-    register struct ubik_server *ts;
+    afs_int32 i;
+    struct ubik_server *ts;
     afs_int32 temp, yesVotes, lastWakeupTime, oldestYesVote, syncsite;
     struct ubik_tid ttid;
     afs_int32 startTime;

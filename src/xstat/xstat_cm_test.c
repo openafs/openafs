@@ -115,7 +115,7 @@ void
 PrintCallInfo(void)
 {				/*PrintCallInfo */
 
-    register int i;		/*Loop variable */
+    int i;		/*Loop variable */
     int numInt32s;		/*# int32words returned */
     afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
     char *printableTime;	/*Ptr to printable time string */
@@ -1423,7 +1423,7 @@ main(int argc, char **argv)
 {				/*Main routine */
 
     static char rn[] = "xstat_cm_test";	/*Routine name */
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
     struct cmd_syndesc *ts;	/*Ptr to cmd line syntax desc */
 
     /*

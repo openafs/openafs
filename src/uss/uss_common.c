@@ -198,7 +198,7 @@ uss_common_FieldCp(char *a_to, char *a_from, char a_separator,
 		   int a_maxChars, int *a_overflowP)
 {				/*uss_common_FieldCp */
 
-    register int chars_read;	/*Number of chars read so far */
+    int chars_read;	/*Number of chars read so far */
 
     chars_read = 0;
     *a_overflowP = 0;

@@ -238,7 +238,7 @@ afs_osi_SetTime(osi_timeval_t * atv)
 	/* drop the setting of the clock for now. spl7 is not
 	 * known on hpux11.22
 	 */
-	register ulong_t s;
+	ulong_t s;
 	struct timeval t;
 	t.tv_sec = atv->tv_sec;
 	t.tv_usec = atv->tv_usec;
@@ -250,7 +250,7 @@ afs_osi_SetTime(osi_timeval_t * atv)
     }
 #else
     {
-	register int s;
+	int s;
 	s = splclock();
 	time = *atv;
 	(void)splx(s);

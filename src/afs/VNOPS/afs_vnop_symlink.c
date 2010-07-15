@@ -295,13 +295,13 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 }
 
 int
-afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
+afs_MemHandleLink(struct vcache *avc, struct vrequest *areq)
 {
-    register struct dcache *tdc;
-    register char *tp, *rbuf;
+    struct dcache *tdc;
+    char *tp, *rbuf;
     afs_size_t offset, len;
     afs_int32 tlen, alen;
-    register afs_int32 code;
+    afs_int32 code;
 
     AFS_STATCNT(afs_MemHandleLink);
     /* two different formats, one for links protected 644, have a "." at
@@ -345,14 +345,14 @@ afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
 }
 
 int
-afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
+afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 {
-    register struct dcache *tdc;
-    register char *tp, *rbuf;
+    struct dcache *tdc;
+    char *tp, *rbuf;
     void *tfile;
     afs_size_t offset, len;
     afs_int32 tlen, alen;
-    register afs_int32 code;
+    afs_int32 code;
 
     /* two different formats, one for links protected 644, have a "." at the
      * end of the file name, which we turn into a null.  Others, protected
@@ -403,9 +403,9 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 int
 afs_readlink(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
-    register char *tp;
+    char *tp;
     struct afs_fakestat_state fakestat;
     OSI_VC_CONVERT(avc);
 

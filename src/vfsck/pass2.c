@@ -83,7 +83,7 @@ int pass2check();
 
 pass2()
 {
-    register struct dinode *dp;
+    struct dinode *dp;
     struct inodesc rootdesc;
 
     memset(&rootdesc, 0, sizeof(struct inodesc));
@@ -168,7 +168,7 @@ pass2()
 pass2check(idesc)
      struct inodesc *idesc;
 {
-    register struct direct *dirp = idesc->id_dirp;
+    struct direct *dirp = idesc->id_dirp;
     char *curpathloc;
     int n, entrysize, ret = 0;
     struct dinode *dp;

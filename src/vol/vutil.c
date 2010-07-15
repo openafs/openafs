@@ -85,7 +85,7 @@
 static void
 RemoveInodes(Device dev, VolumeId vid)
 {
-    register int i;
+    int i;
     IHandle_t *handle;
 
     /* This relies on the fact that IDEC only needs the device and NT only
@@ -207,7 +207,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     device = partition->device;
 
     for (i = 0; i < nFILES; i++) {
-	register struct stuff *p = &stuff[i];
+	struct stuff *p = &stuff[i];
 	if (p->obsolete)
 	    continue;
 #ifdef AFS_NAMEI_ENV
@@ -334,7 +334,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 
 
 void
-AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext)
+AssignVolumeName(VolumeDiskData * vol, char *name, char *ext)
 {
     VOL_LOCK;
     AssignVolumeName_r(vol, name, ext);
@@ -342,9 +342,9 @@ AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext)
 }
 
 void
-AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext)
+AssignVolumeName_r(VolumeDiskData * vol, char *name, char *ext)
 {
-    register char *dot;
+    char *dot;
     strncpy(vol->name, name, VNAMESIZE - 1);
     vol->name[VNAMESIZE - 1] = '\0';
     dot = strrchr(vol->name, '.');
@@ -391,7 +391,7 @@ CopyVolumeHeader(VolumeDiskData * from, VolumeDiskData * to)
 }
 
 void
-ClearVolumeStats(register VolumeDiskData * vol)
+ClearVolumeStats(VolumeDiskData * vol)
 {
     VOL_LOCK;
     ClearVolumeStats_r(vol);
@@ -399,7 +399,7 @@ ClearVolumeStats(register VolumeDiskData * vol)
 }
 
 void
-ClearVolumeStats_r(register VolumeDiskData * vol)
+ClearVolumeStats_r(VolumeDiskData * vol)
 {
     memset(vol->weekUse, 0, sizeof(vol->weekUse));
     vol->dayUse = 0;

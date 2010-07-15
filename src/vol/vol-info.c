@@ -84,13 +84,13 @@ int fixheader = 0, saveinodes = 0, orphaned = 0;
 int VolumeChanged;
 
 /* Forward Declarations */
-void PrintHeader(register Volume * vp);
+void PrintHeader(Volume * vp);
 void HandleAllPart(void);
 void HandlePart(struct DiskPartition64 *partP);
 void HandleVolume(struct DiskPartition64 *partP, char *name);
 struct DiskPartition64 *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
-		     register struct VolumeHeader *header);
+		     struct VolumeHeader *header);
 #if defined(AFS_NAMEI_ENV)
 void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
@@ -169,9 +169,9 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 
 Volume *
 AttachVolume(struct DiskPartition64 * dp, char *volname,
-	     register struct VolumeHeader * header)
+	     struct VolumeHeader * header)
 {
-    register Volume *vp;
+    Volume *vp;
     afs_int32 ec = 0;
 
     vp = (Volume *) calloc(1, sizeof(Volume));
@@ -218,7 +218,7 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     int err = 0;
     afs_uint32 volumeId = 0;
     char *partName = 0;
@@ -445,7 +445,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
     struct afs_stat status, stat;
-    register int fd;
+    int fd;
     Volume *vp;
     IHandle_t *ih;
     char headerName[1024];
@@ -615,7 +615,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL, "Dump volume's internal state");
@@ -651,7 +651,7 @@ main(int argc, char **argv)
 #define typestring(type) (type == RWVOL? "read/write": type == ROVOL? "readonly": type == BACKVOL? "backup": "unknown")
 
 void
-PrintHeader(register Volume * vp)
+PrintHeader(Volume * vp)
 {
     Vdiskused = V_diskused(vp);
     if (dsizeOnly || saveinodes)
@@ -748,7 +748,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
-    register int vnodeIndex, nVnodes, offset = 0;
+    int vnodeIndex, nVnodes, offset = 0;
     Inode ino;
     IHandle_t *ih = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;

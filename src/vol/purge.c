@@ -108,15 +108,15 @@ static int
 ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
 		 afs_int32 * aoffset)
 {
-    register struct VnodeClassInfo *vcp;
+    struct VnodeClassInfo *vcp;
     Inode inodes[MAXOBLITATONCE];
-    register afs_int32 iindex, nscanned;
+    afs_int32 iindex, nscanned;
     afs_int32 offset;
     char buf[SIZEOF_LARGEDISKVNODE];
     int hitEOF;
-    register int i;
-    register afs_int32 code;
-    register struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
+    int i;
+    afs_int32 code;
+    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
 
     hitEOF = 0;
     vcp = &VnodeClassInfo[aclass];
@@ -187,7 +187,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
     StreamHandle_t *ifile;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     afs_int32 offset;
-    register afs_int32 code;
+    afs_int32 code;
     FdHandle_t *fdP;
 
 

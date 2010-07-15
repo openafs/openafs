@@ -60,7 +60,7 @@ void afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p)
 afs_int32
 GetAfsServerAddr(char *syscall)
 {
-    register struct hostent *th;
+    struct hostent *th;
 
     if (hostAddrLookup) {
 	/* Take advantage of caching and assume that the remote host

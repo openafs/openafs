@@ -76,10 +76,10 @@ sigsetmask(int mask)
 /* converts string to integer */
 
 char *
-cv2string(register char *ttp, register unsigned long aval)
+cv2string(char *ttp, unsigned long aval)
 {
-    register char *tp = ttp;
-    register int i;
+    char *tp = ttp;
+    int i;
     int any = 0;
 
     *(--tp) = 0;

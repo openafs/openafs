@@ -130,9 +130,9 @@ afs_read_super(struct super_block *sb, void *data, int silent)
 static int
 afs_root(struct super_block *afsp)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {

@@ -26,7 +26,7 @@ main(argc, argv)
 
 {				/*main */
 
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
     struct gator_textcb_hdr *newCB;	/*Ptr to new CB hdr */
     char buf[1024];		/*Text buffer */
     int do_debugging;		/*Print out debugging info? */

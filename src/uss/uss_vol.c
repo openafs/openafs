@@ -105,7 +105,7 @@ InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
 #ifdef USS_VOL_DB
     static char rn[] = "uss_vol:InitThisModule";
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
     struct afsconf_dir *tdir;	/*Ptr to conf dir info */
     struct afsconf_cell info;	/*Info about chosen cell */
     afs_int32 scIndex;		/*Chosen security index */
@@ -334,10 +334,10 @@ afs_int32
 uss_vol_GetServer(char *a_name)
 {				/*uss_vol_GetServer */
 
-    register struct hostent *th;
+    struct hostent *th;
     afs_int32 addr;
     afs_int32 b1, b2, b3, b4;
-    register afs_int32 code;
+    afs_int32 code;
 
     code = sscanf(a_name, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
     if (code == 4) {
@@ -409,7 +409,7 @@ afs_int32
 uss_vol_GetPartitionID(char *a_name)
 {				/*uss_vol_GetPartitionID */
 
-    register char tc;
+    char tc;
     char ascii[3];
 
     tc = *a_name;
@@ -870,7 +870,7 @@ uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName,
 #ifdef USS_VOL_DB
     static char rn[] = "uss_vol_DeleteVol";	/*Routine name */
 #endif
-    register afs_int32 code = 0;	/*Return code */
+    afs_int32 code = 0;	/*Return code */
 
     /*
      * Make sure we've initialized our VLDB connection(s) before
@@ -967,7 +967,7 @@ static void
 ovlentry_to_nvlentry(struct vldbentry *oentryp,
                      struct nvldbentry *nentryp)
 {
-    register int i;
+    int i;
 
     memset(nentryp, 0, sizeof(struct nvldbentry));
     strncpy(nentryp->name, oentryp->name, sizeof(nentryp->name));
@@ -1042,7 +1042,7 @@ uss_vol_GetVolInfoFromMountPoint(char *a_mountpoint)
 #ifdef USS_VOL_DB
     static char rn[] = "uss_vol_GetVolInfoFromMountPoint";
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
     uss_VolumeStatus_t *statusP;	/*Ptr to returned status */
     afs_int32 volID;		/*Volume ID */
     struct nvldbentry vldbEntry;	/*VLDB entry for volume */

@@ -54,7 +54,7 @@ bc_AddHostCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     udbClientTextP ctPtr;
     afs_int32 port = 0;
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
     ctPtr = &bc_globalConfig->configText[TB_TAPEHOSTS];
     code = bc_LockText(ctPtr);
@@ -110,7 +110,7 @@ bc_DeleteHostCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     afs_int32 port = 0;
     udbClientTextP ctPtr;
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
     ctPtr = &bc_globalConfig->configText[TB_TAPEHOSTS];
     code = bc_LockText(ctPtr);
@@ -173,7 +173,7 @@ int
 bc_ListHostsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    register struct bc_hostEntry *tentry;
+    struct bc_hostEntry *tentry;
 
     code = bc_UpdateHosts();
     if (code) {
@@ -200,7 +200,7 @@ bc_ListHostsCmd(struct cmd_syndesc *as, void *arock)
 int
 bc_ClearHosts(void)
 {
-    register struct bc_hostEntry *tentry, *temp;
+    struct bc_hostEntry *tentry, *temp;
 
     tentry = bc_globalConfig->tapeHosts;
     while (tentry != 0) {
@@ -299,10 +299,10 @@ bc_ParseHosts(void)
 int
 bc_SaveHosts(void)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
     udbClientTextP ctPtr;
-    register FILE *stream;
+    FILE *stream;
     struct bc_hostEntry *hePtr;
 
     extern struct bc_config *bc_globalConfig;

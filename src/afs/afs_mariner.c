@@ -36,10 +36,10 @@ afs_int32 afs_mariner = 0;
 afs_int32 afs_marinerHost = 0;
 
 int
-afs_AddMarinerName(register char *aname, register struct vcache *avc)
+afs_AddMarinerName(char *aname, struct vcache *avc)
 {
-    register int i;
-    register char *tp;
+    int i;
+    char *tp;
 
     AFS_STATCNT(afs_AddMarinerName);
     i = marinerPtr++;
@@ -55,9 +55,9 @@ afs_AddMarinerName(register char *aname, register struct vcache *avc)
 }
 
 char *
-afs_GetMariner(register struct vcache *avc)
+afs_GetMariner(struct vcache *avc)
 {
-    register int i;
+    int i;
     AFS_STATCNT(afs_GetMariner);
     for (i = 0; i < NMAR; i++) {
 	if (marinerVCs[i] == avc) {
@@ -68,17 +68,17 @@ afs_GetMariner(register struct vcache *avc)
 }
 
 void
-afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off,
-		    register afs_int32 bytes, register afs_int32 idx)
+afs_MarinerLogFetch(struct vcache *avc, afs_int32 off,
+		    afs_int32 bytes, afs_int32 idx)
 {
     afs_MarinerLog("fetch$Fetching", avc);
 }				/*afs_MarinerLogFetch */
 
 void
-afs_MarinerLog(register char *astring, register struct vcache *avc)
+afs_MarinerLog(char *astring, struct vcache *avc)
 {
     struct sockaddr_in taddr;
-    register char *tp, *tp1, *buf;
+    char *tp, *tp1, *buf;
     struct iovec dvec;
 
     AFS_STATCNT(afs_MarinerLog);

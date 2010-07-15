@@ -18,10 +18,10 @@ extern int (*vol_PollProc) (void);
 extern int nuke(char *, afs_int32);
 
 /* vutil.c */
-extern void AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext);
-extern void AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext);
-extern void ClearVolumeStats(register VolumeDiskData * vol);
-extern void ClearVolumeStats_r(register VolumeDiskData * vol);
+extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
+extern void AssignVolumeName_r(VolumeDiskData * vol, char *name, char *ext);
+extern void ClearVolumeStats(VolumeDiskData * vol);
+extern void ClearVolumeStats_r(VolumeDiskData * vol);
 extern afs_int32 CopyVolumeHeader(VolumeDiskData *, VolumeDiskData *);
 
 #endif

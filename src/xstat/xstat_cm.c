@@ -195,7 +195,7 @@ static void *
 xstat_cm_LWP(void *unused)
 {
     static char rn[] = "xstat_cm_LWP";	/*Routine name */
-    register afs_int32 code;	/*Results of calls */
+    afs_int32 code;	/*Results of calls */
     int oneShotCode;		/*Result of one-shot signal */
     struct timeval tv;		/*Time structure */
     int conn_idx;		/*Connection index */
@@ -384,7 +384,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 {
 
     static char rn[] = "xstat_cm_Init";	/*Routine name */
-    register afs_int32 code;	/*Return value */
+    afs_int32 code;	/*Return value */
     struct rx_securityClass *secobj;	/*Client security object */
     int arg_errfound;		/*Argument error found? */
     int curr_srv;		/*Current server idx */

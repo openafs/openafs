@@ -24,9 +24,9 @@
  * debugging routine - invoked by calling kp vnode xx
  */
 static void
-printflags(register unsigned int flags, register char **strings)
+printflags(unsigned int flags, char **strings)
 {
-    register int mask = 1;
+    int mask = 1;
 
     while (flags != 0) {
 	if (mask & flags) {
@@ -104,7 +104,7 @@ int
 idbg_afsvfslist()
 {
     struct vcache *tvc;
-    register struct afs_q *tq;
+    struct afs_q *tq;
     struct afs_q *uq;
     afs_int32 nodeid;		/* what ls prints as 'inode' */
 

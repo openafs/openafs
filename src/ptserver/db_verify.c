@@ -138,11 +138,11 @@ IDHash(afs_int32 x)
 }
 
 static afs_int32
-NameHash(register char *aname)
+NameHash(char *aname)
 {
     /* returns hash bucket for aname */
-    register unsigned int hash = 0;
-    register int i;
+    unsigned int hash = 0;
+    int i;
 /* stolen directly from the HashString function in the vol package */
     for (i = strlen(aname), aname += i - 1; i--; aname--)
 	hash = (hash * 31) + (*(unsigned char *)aname - 31);

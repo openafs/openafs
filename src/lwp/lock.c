@@ -195,7 +195,7 @@ Afs_Lock_ReleaseW(struct Lock *lock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessR(register void *addr, register struct Lock *alock)
+LWP_WaitProcessR(void *addr, struct Lock *alock)
 {
     ReleaseReadLock(alock);
     LWP_WaitProcess(addr);
@@ -203,7 +203,7 @@ LWP_WaitProcessR(register void *addr, register struct Lock *alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessW(register void *addr, register struct Lock *alock)
+LWP_WaitProcessW(void *addr, struct Lock *alock)
 {
     ReleaseWriteLock(alock);
     LWP_WaitProcess(addr);
@@ -211,7 +211,7 @@ LWP_WaitProcessW(register void *addr, register struct Lock *alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessS(register void *addr, register struct Lock *alock)
+LWP_WaitProcessS(void *addr, struct Lock *alock)
 {
     ReleaseSharedLock(alock);
     LWP_WaitProcess(addr);

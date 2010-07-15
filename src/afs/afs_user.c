@@ -58,12 +58,12 @@ void afs_ResetAccessCache(afs_int32 uid, int alock);
  * appropriate conn structures for au
  */
 static void
-RemoveUserConns(register struct unixuser *au)
+RemoveUserConns(struct unixuser *au)
 {
-    register int i;
-    register struct server *ts;
-    register struct srvAddr *sa;
-    register struct afs_conn *tc, **lc;
+    int i;
+    struct server *ts;
+    struct srvAddr *sa;
+    struct afs_conn *tc, **lc;
 
     AFS_STATCNT(RemoveUserConns);
     for (i = 0; i < NSERVERS; i++) {
@@ -98,8 +98,8 @@ RemoveUserConns(register struct unixuser *au)
 void
 afs_GCUserData(int aforce)
 {
-    register struct unixuser *tu, **lu, *nu;
-    register int i;
+    struct unixuser *tu, **lu, *nu;
+    int i;
     afs_int32 now, delFlag;
 
     AFS_STATCNT(afs_GCUserData);
@@ -163,8 +163,8 @@ afs_GCUserData(int aforce)
 void
 afs_CheckTokenCache(void)
 {
-    register int i;
-    register struct unixuser *tu;
+    int i;
+    struct unixuser *tu;
     afs_int32 now;
 
     AFS_STATCNT(afs_CheckCacheResets);
@@ -173,7 +173,7 @@ afs_CheckTokenCache(void)
     now = osi_Time();
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
-	    register afs_int32 uid;
+	    afs_int32 uid;
 
 	    /*
 	     * If tokens are still good and user has Kerberos tickets,
@@ -210,8 +210,8 @@ afs_CheckTokenCache(void)
 void
 afs_ResetAccessCache(afs_int32 uid, int alock)
 {
-    register int i;
-    register struct vcache *tvc;
+    int i;
+    struct vcache *tvc;
     struct axscache *ac;
 
     AFS_STATCNT(afs_ResetAccessCache);
@@ -237,7 +237,7 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
  * access info.
  */
 void
-afs_ResetUserConns(register struct unixuser *auser)
+afs_ResetUserConns(struct unixuser *auser)
 {
     int i;
     struct srvAddr *sa;
@@ -268,8 +268,8 @@ afs_ResetUserConns(register struct unixuser *auser)
 struct unixuser *
 afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    register struct unixuser *tu;
-    register afs_int32 i;
+    struct unixuser *tu;
+    afs_int32 i;
 
     AFS_STATCNT(afs_FindUser);
     i = UHash(auid);
@@ -312,9 +312,9 @@ afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 void
 afs_ComputePAGStats(void)
 {
-    register struct unixuser *currPAGP;	/*Ptr to curr PAG */
-    register struct unixuser *cmpPAGP;	/*Ptr to PAG being compared */
-    register struct afs_stats_AuthentInfo *authP;	/*Ptr to stats area */
+    struct unixuser *currPAGP;	/*Ptr to curr PAG */
+    struct unixuser *cmpPAGP;	/*Ptr to PAG being compared */
+    struct afs_stats_AuthentInfo *authP;	/*Ptr to stats area */
     int curr_Record;		/*Curr record */
     int currChain;		/*Curr hash chain */
     int currChainLen;		/*Length of curr hash chain */
@@ -445,11 +445,11 @@ afs_ComputePAGStats(void)
 
 
 struct unixuser *
-afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
+afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    register struct unixuser *tu, *pu = 0;
-    register afs_int32 i;
-    register afs_int32 RmtUser = 0;
+    struct unixuser *tu, *pu = 0;
+    afs_int32 i;
+    afs_int32 RmtUser = 0;
 
     AFS_STATCNT(afs_GetUser);
     i = UHash(auid);
@@ -506,7 +506,7 @@ afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 
 
 void
-afs_PutUser(register struct unixuser *au, afs_int32 locktype)
+afs_PutUser(struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
     --au->refCount;
@@ -518,10 +518,10 @@ afs_PutUser(register struct unixuser *au, afs_int32 locktype)
  * dude has the flag set at any time for a particular unix uid.
  */
 void
-afs_SetPrimary(register struct unixuser *au, register int aflag)
+afs_SetPrimary(struct unixuser *au, int aflag)
 {
-    register struct unixuser *tu;
-    register int i;
+    struct unixuser *tu;
+    int i;
     struct unixuser *pu;
 
     AFS_STATCNT(afs_SetPrimary);
