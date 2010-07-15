@@ -76,7 +76,7 @@ finddepth(\&find_libafsdep, $projdir);
 &copyit("$projdir/src/libafs/MakefileProto.$ostype.in",
         "$treedir/src/libafs/MakefileProto.in");
 
-$showonly || system("$projdir/build-tools/git-version $projdir/.version > $treedir/.version");
+$showonly || system("$projdir/build-tools/git-version $projdir > $treedir/.version");
 
 # We need to regenerate this to support building amd64 kernels from a
 # libafs_tree built on i386.
