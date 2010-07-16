@@ -38,31 +38,7 @@ Displays user and machine entries.
 
 Displays group entries.
 
-=item B<-cell> <I<cell name>>
-
-Names the cell in which to run the command. For more details, see
-L<pts(1)>.
-
-=item B<-noauth>
-
-Assigns the unprivileged identity anonymous to the issuer. For more
-details, see L<pts(1)>.
-
-=item B<-localauth>
-
-Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
-B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
-
-=item B<-force>
-
-Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first error.
-
-=item B<-help>
-
-Prints the online help for this command. All other valid options are
-ignored.
+=include fragments/pts-common.pod
 
 =back
 

@@ -45,28 +45,7 @@ B<pts interactive> only takes the standard B<pts> options.
 
 =over 4
 
-=item B<-cell> <I<cell name>>
-
-Names the cell in which to run the command. For more details, see
-L<pts(1)>.
-
-=item B<-force>
-
-Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first error.
-This is useful for bulk operations where you would like to continue even
-if one of many operations fails.
-
-=item B<-noauth>
-
-Assigns the unprivileged identity anonymous to the issuer. For more
-details, see L<pts(1)>.
-
-=item B<-localauth>
-
-Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
-B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
+=include fragments/pts-common.pod
 
 =back
 
