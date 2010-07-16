@@ -46,6 +46,7 @@ else
     if test -d doc/man-pages ; then
         echo "Building man pages"
         perl doc/man-pages/merge-pod doc/man-pages/pod1/*.in
+        perl doc/man-pages/merge-pod doc/man-pages/pod8/*.in
         (cd doc/man-pages && ./generate-man)
     fi
 fi
