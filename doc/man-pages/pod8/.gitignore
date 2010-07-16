@@ -3,4 +3,6 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /dafileserver.pod
+/davolserver.pod
 /fileserver.pod
+/volserver.pod

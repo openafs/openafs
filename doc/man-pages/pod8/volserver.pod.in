@@ -1,0 +1,53 @@
+=head1 NAME
+
+volserver - Initializes the Volume Server component of the fs process
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+=include fragments/volserver-synopsis.pod
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<volserver> command initializes the Volume Server component of the
+C<fs> process. In the conventional configuration, its binary file is
+located in the F</usr/afs/bin> directory on a file server machine.
+
+The B<volserver> command is not normally issued at the command shell
+prompt but rather placed into a file server machine's
+F</usr/afs/local/BosConfig> file with the B<bos create> command. If it is
+ever issued at the command shell prompt, the issuer must be logged onto a
+database server machine as the local superuser C<root>.
+
+=include fragments/volserver-description.pod
+
+=head1 OPTIONS
+
+=include fragments/volserver-options.pod
+
+=head1 EXAMPLES
+
+The following B<bos create> command creates a C<volserver> process on the
+machine C<fs2.abc.com> as part of the fs process:
+
+   % bos create -server fs2.abc.com -instance fs -type fs \
+                -cmd "/usr/afs/bin/fileserver" \
+                /usr/afs/bin/volserver /usr/afs/bin/salvager
+
+=head1 PRIVILEGE REQUIRED
+
+=include fragments/volserver-privilege.pod
+
+=head1 SEE ALSO
+
+=include fragments/volserver-also.pod
+L<davolserver(8)>,
+
+=head1 COPYRIGHT
+
+=include fragments/fileserver-copyright.pod
