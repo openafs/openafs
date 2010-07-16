@@ -47,9 +47,8 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "common.h"
 #include <rx/rx_queue.h>
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*

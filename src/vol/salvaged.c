@@ -118,6 +118,7 @@
 #include "viceinode.h"
 #include "salvage.h"
 #include "vol-salvage.h"
+#include "common.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -130,11 +131,6 @@
 #if defined(AFS_NT40_ENV)
 #error "online salvager not supported on NT"
 #endif /* AFS_NT40_ENV */
-
-
-/* Forward declarations */
-/*@printflike@*/ void Log(const char *format, ...);
-
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE

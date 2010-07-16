@@ -53,14 +53,13 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "common.h"
 #include <rx/rx_queue.h>
 
 #ifdef USE_UNIX_SOCKETS
 #include <afs/afsutil.h>
 #include <sys/un.h>
 #endif
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 int (*V_BreakVolumeCallbacks) (VolumeId);
 

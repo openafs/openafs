@@ -87,6 +87,7 @@
 #include "volume_inline.h"
 #include "partition.h"
 #include "vg_cache.h"
+#include "common.h"
 
 #ifdef HAVE_POLL
 #include <sys/poll.h>
@@ -98,8 +99,6 @@
 #endif /* USE_UNIX_SOCKETS */
 
 #ifdef FSSYNC_BUILD_SERVER
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 int (*V_BreakVolumeCallbacks) (VolumeId volume);
 

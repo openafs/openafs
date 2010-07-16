@@ -120,19 +120,13 @@
 #include "viceinode.h"
 #include "salvage.h"
 #include "vol-salvage.h"
+#include "common.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 pthread_t main_thread;
 #endif
 
-
 static int get_salvage_lock = 0;
-
-
-/* Forward declarations */
-/*@printflike@*/ void Log(const char *format, ...);
-/*@printflike@*/ void Abort(const char *format, ...);
-
 
 static int
 handleit(struct cmd_syndesc *as, void *arock)

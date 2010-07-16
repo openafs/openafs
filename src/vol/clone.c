@@ -53,8 +53,7 @@
 #include "partition.h"
 #include "viceinode.h"
 #include "vol_prototypes.h"
-
-/*@printflike@*/ extern void Log(const char *format, ...);
+#include "common.h"
 
 int (*vol_PollProc) (void) = 0;	/* someone must init this */
 
@@ -260,7 +259,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    } else if (rwinode) {
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_INC failed: %x, %s, %u errno %d\n",
+		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);
@@ -313,7 +312,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    if (inodeinced) {
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_DEC failed: %x, %s, %u errno %d\n",
+		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);

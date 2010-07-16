@@ -45,6 +45,7 @@
 #include "vnode_inline.h"
 #include "partition.h"
 #include "salvsync.h"
+#include "common.h"
 #if defined(AFS_SGI_ENV)
 #include "sys/types.h"
 #include "fcntl.h"
@@ -67,11 +68,6 @@
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
-
-/*@printflike@*/ extern void Log(const char *format, ...);
-
-/*@printflike@*/ extern void Abort(const char *format, ...) AFS_NORETURN;
-
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
@@ -1032,8 +1028,9 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	goto error_encountered;
     }
     if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-	Log("VnStore: can't seek on index file! fdp=0x%x offset=%d, errno=%d\n",
-	    fdP, offset, errno);
+	Log("VnStore: can't seek on index file! fdp=%"AFS_PTR_FMT
+	    " offset=%d, errno=%d\n",
+	    fdP, (int) offset, errno);
 	goto error_encountered;
     }
 
@@ -1356,7 +1353,7 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 						changed_oldTime) << 1) | vnp->
 	      delete, 0, 0);
 	if (thisProcess != vnp->writer)
-	    Abort("VPutVnode: Vnode at 0x%x locked by another process!\n",
+	    Abort("VPutVnode: Vnode at %"AFS_PTR_FMT" locked by another process!\n",
 		  vnp);
 
 
@@ -1412,7 +1409,8 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
     } else {			/* Not write locked */
 	if (vnp->changed_newTime || vnp->changed_oldTime || vnp->delete)
 	    Abort
-		("VPutVnode: Change or delete flag for vnode 0x%x is set but vnode is not write locked!\n",
+		("VPutVnode: Change or delete flag for vnode "
+		 "%"AFS_PTR_FMT" is set but vnode is not write locked!\n",
 		 vnp);
 #ifdef AFS_DEMAND_ATTACH_FS
 	VnEndRead_r(vnp);
@@ -1499,8 +1497,8 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
     LWP_CurrentProcess(&thisProcess);
 #endif /* AFS_PTHREAD_ENV */
     if (thisProcess != vnp->writer)
-	Abort("VPutVnode: Vnode at 0x%x locked by another process!\n",
-	      (intptr_t)vnp);
+	Abort("VPutVnode: Vnode at %"AFS_PTR_FMT
+	      " locked by another process!\n", vnp);
 
     if (vnp->delete) {
 	return 0;

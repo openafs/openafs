@@ -48,6 +48,7 @@
 #include "partition.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "common.h"
 
 /* forward declarations */
 static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
@@ -59,8 +60,6 @@ static void PurgeHeader(Volume * vp);
 
 static void PurgeIndex_r(Volume * vp, VnodeClass class);
 static void PurgeHeader_r(Volume * vp);
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 /* No lock needed. Only the volserver will call this, and only one transaction
  * can have a given volume (volid/partition pair) in use at a time 

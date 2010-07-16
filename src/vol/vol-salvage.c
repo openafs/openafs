@@ -189,6 +189,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "salvage.h"
 #include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
+#include "common.h"
 #include "vol_internal.h"
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
@@ -305,8 +306,6 @@ char *tmpdir = NULL;
 
 
 /* Forward declarations */
-/*@printflike@*/ void Log(const char *format, ...);
-/*@printflike@*/ void Abort(const char *format, ...) AFS_NORETURN;
 static int IsVnodeOrphaned(VnodeId vnode);
 static int AskVolumeSummary(VolumeId singleVolumeNumber);
 
@@ -1255,7 +1254,7 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 	assert(ret == st_status);
     }
     nVolumesInInodeFile =(unsigned long)(status.st_size) / sizeof(struct InodeSummary);
-    Log("%d nVolumesInInodeFile %d \n",nVolumesInInodeFile,(unsigned long)(status.st_size));
+    Log("%d nVolumesInInodeFile %lu \n",nVolumesInInodeFile,(unsigned long)(status.st_size));
     fclose(summaryFile);
     return 0;
 }

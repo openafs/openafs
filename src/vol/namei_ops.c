@@ -41,6 +41,7 @@
 #include "partition.h"
 #include "fssync.h"
 #include "volume_inline.h"
+#include "common.h"
 #include <afs/errors.h>
 
 /*@+fcnmacros +macrofcndecl@*/
@@ -64,8 +65,6 @@ extern off_t afs_lseek(int FD, off_t O, int F);
 #define afs_fopen		fopen
 #endif /* !O_LARGEFILE */
 /*@=fcnmacros =macrofcndecl@*/
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 #ifndef LOCK_SH
 #define   LOCK_SH   1    /* shared lock */
@@ -1261,8 +1260,9 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	return -2;
     }
     if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
-	Log("Wrong size (%d instead of %d) in inode file for %s\n",
-	    status.st_size, ninodes * sizeof(struct ViceInodeInfo),
+	Log("Wrong size (%d instead of %lu) in inode file for %s\n",
+	    (int) status.st_size,
+	    (long unsigned int) ninodes * sizeof(struct ViceInodeInfo),
 	    mountedOn);
 	return -2;
     }
@@ -1557,7 +1557,8 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
 
     if (read(fdr, &vd, sizeof(struct VolumeDiskData)) !=
 	sizeof(struct VolumeDiskData)) {
-	Log("1 convertVolumeInfo: read failed for %lu with code %d\n", vid,
+	Log("1 convertVolumeInfo: read failed for %lu with code %d\n",
+	    afs_printable_uint32_lu(vid),
 	    errno);
 	return -1;
     }
@@ -1575,7 +1576,8 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
     }
     if (write(fdw, &vd, sizeof(struct VolumeDiskData)) !=
 	sizeof(struct VolumeDiskData)) {
-	Log("1 convertVolumeInfo: write failed for %lu with code %d\n", vid,
+	Log("1 convertVolumeInfo: write failed for %lu with code %d\n",
+	    afs_printable_uint32_lu(vid),
 	    errno);
 	return -1;
     }
@@ -1697,7 +1699,9 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 		    continue;
 		}
 	    }
-	    Log("1 namei_ConvertROtoRWvolume: found special file %s/%s for volume %lu\n", dir_name, dp->d_name, info.u.param[0]);
+	    Log("1 namei_ConvertROtoRWvolume: found special file %s/%s"
+		" for volume %lu\n", dir_name, dp->d_name,
+		afs_printable_uint32_lu(info.u.param[0]));
 	    closedir(dirp);
 	    code = VVOLEXISTS;
 	    goto done;

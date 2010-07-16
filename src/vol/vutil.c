@@ -58,6 +58,7 @@
 
 #include "volinodes.h"
 #include "vol_prototypes.h"
+#include "common.h"
 
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
@@ -73,8 +74,6 @@
 #else /* !O_LARGEFILE */
 #define afs_open	open
 #endif /* !O_LARGEFILE */
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 

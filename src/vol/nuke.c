@@ -45,15 +45,13 @@
 #include "salvage.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "common.h"
 
 #ifdef O_LARGEFILE
 #define afs_stat	stat64
 #else /* !O_LARGEFILE */
 #define afs_stat	stat
 #endif /* !O_LARGEFILE */
-
-/*@printflike@*/ extern void Log(const char *format, ...);
-
 
 struct Lock localLock;
 

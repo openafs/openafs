@@ -115,6 +115,7 @@
 #include "lwp.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
+#include "common.h"
 #ifdef AFS_NAMEI_ENV
 #ifdef AFS_NT40_ENV
 #include "ntops.h"
@@ -176,8 +177,6 @@
 #endif /* !AFS_NT40_ENV */
 
 #endif /* !O_LARGEFILE */
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 int aixlow_water = 8;		/* default 8% */
 struct DiskPartition64 *DiskPartitionList;
@@ -1093,12 +1092,14 @@ VPrintDiskStats_r(void)
     struct DiskPartition64 *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	if (dp->free < 0) {
-	    Log("Partition %s: %d available 1K blocks (minfree=%d), "
-	        "overallocated by %d blocks\n", dp->name,
+	    Log("Partition %s: %"AFS_INT64_FMT
+		" available 1K blocks (minfree=%"AFS_INT64_FMT"), "
+	        "overallocated by %"AFS_INT64_FMT" blocks\n", dp->name,
 	        dp->totalUsable, dp->minFree, -dp->free);
 	} else {
-	    Log("Partition %s: %d available 1K blocks (minfree=%d), "
-	        "%d free blocks\n", dp->name,
+	    Log("Partition %s: %"AFS_INT64_FMT
+		" available 1K blocks (minfree=%"AFS_INT64_FMT"), "
+	        "%"AFS_INT64_FMT" free blocks\n", dp->name,
 	        dp->totalUsable, dp->minFree, dp->free);
 	}
     }

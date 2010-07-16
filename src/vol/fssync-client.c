@@ -70,10 +70,9 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "common.h"
 
 #ifdef FSSYNC_BUILD_CLIENT
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 extern int LogLevel;
 

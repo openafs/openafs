@@ -23,6 +23,8 @@
 
 #include <afs/afsutil.h>
 
+#include "common.h"
+
 int Statistics = 0;
 
 /*@printflike@*/ void

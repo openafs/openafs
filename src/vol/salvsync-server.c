@@ -57,6 +57,7 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "common.h"
 #include <rx/rx_queue.h>
 #include <afs/procmgmt.h>
 
@@ -72,8 +73,6 @@
 #ifndef WCOREDUMP
 #define WCOREDUMP(x)    ((x) & 0200)
 #endif
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */

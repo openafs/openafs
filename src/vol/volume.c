@@ -123,6 +123,8 @@
 #include "volume.h"
 #include "partition.h"
 #include "volume_inline.h"
+#include "common.h"
+
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
@@ -173,8 +175,6 @@ static volatile sig_atomic_t vol_disallow_salvsync = 0;
 #ifdef	AFS_OSF_ENV
 extern void *calloc(), *realloc();
 #endif
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 /* Forward declarations */
 static Volume *attach2(Error * ec, VolId volumeId, char *path,
