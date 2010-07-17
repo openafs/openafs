@@ -942,7 +942,8 @@ ht_HashIn(struct ubik_trans *ut,
 		      htonl(ea));
     if (code)
 	return BUDB_IO;
-    LogDebug(5, "Hashin: set %d to %d\n", &block->b.bucket[bo], htonl(ea));
+    LogDebug(5, "Hashin: set %"AFS_PTR_FMT" to %d\n",
+	     &block->b.bucket[bo], htonl(ea));
 
     code =
 	set_word_addr(ut, 0, &db.h, &ht->entries,

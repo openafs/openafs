@@ -757,7 +757,7 @@ GetVolInfo(struct ubik_trans *ut, struct budb_volumeEntry *volP, dbadr *viaP,
 	if (eval)
 	    ERROR(eval);
 
-	LogDebug(4, "volume Info for %s placed at %d\n", db.volName, via);
+	LogDebug(4, "volume Info for %s placed at %d\n", volP->name, via);
     }
 
     else if (!VolInfoMatch(volP, viP)) {	/* Not the head volinfo struct */

@@ -206,8 +206,8 @@ AllocStructure(struct ubik_trans *ut, char type, dbadr related, dbadr *saP, void
     *(afs_int32 *) s = 1;	/* make sure structure is not free */
     *saP = a + ((char *)bs - (char *)&b);
 
-    LogDebug(3, "allocated at %d, block at %d, offset %d\n", *saP, a,
-	     ((char *)bs - (char *)&b));
+    LogDebug(3, "allocated at %d, block at %d, offset %ld\n", *saP, a,
+	     (long int)((char *)bs - (char *)&b));
     /* caller must write back at least first word of structure */
     return 0;
 }
