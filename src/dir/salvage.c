@@ -33,7 +33,8 @@
 
 #include "dir.h"
 /* Defined in vol/vol-salvage.c */
-extern void Log(const char *format, ...);
+extern void Log(const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 /* Defined in vol/physio.c */
 extern void Die(char *);
     
@@ -299,8 +300,8 @@ DirOK(void *file)
 
 	    /* A null name is no good */
 	    if (ep->name[0] == '\000') {
-		printf("Dir entry %x in chain %d has bogus (null) name.\n",
-		       (intptr_t)ep, i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " in chain %d has bogus (null) name.\n", ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -308,8 +309,8 @@ DirOK(void *file)
 
 	    /* The entry flag better be FFIRST */
 	    if (ep->flag != FFIRST) {
-		printf("Dir entry %x in chain %d has bogus flag field.\n", (intptr_t)ep,
-		       i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " in chain %d has bogus flag field.\n", ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -318,8 +319,8 @@ DirOK(void *file)
 	    /* Check the size of the name */
 	    j = strlen(ep->name);
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
-		printf("Dir entry %x in chain %d has too-long name.\n", (intptr_t)ep,
-		       i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " in chain %d has too-long name.\n", ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -335,9 +336,9 @@ DirOK(void *file)
 
 	    /* Hash the name and make sure it is in the correct name hash */
 	    if ((j = DirHash(ep->name)) != i) {
-		printf
-		    ("Dir entry %x should be in hash bucket %d but IS in %d.\n",
-		     (intptr_t)ep, j, i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " should be in hash bucket %d but IS in %d.\n",
+		       ep, j, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -349,8 +350,9 @@ DirOK(void *file)
 		    havedot = 1;
 		} else {
 		    printf
-			("Dir entry %x, index 13 has name '%s' should be '.'\n",
-			 (intptr_t)ep, ep->name);
+			("Dir entry %"AFS_PTR_FMT
+			 ", index 13 has name '%s' should be '.'\n",
+			 ep, ep->name);
 		    DRelease(ep, 0);
 		    DRelease(dhp, 0);
 		    return 0;
@@ -363,8 +365,9 @@ DirOK(void *file)
 		    havedotdot = 1;
 		} else {
 		    printf
-			("Dir entry %x, index 14 has name '%s' should be '..'\n",
-			 (intptr_t)ep, ep->name);
+			("Dir entry %"AFS_PTR_FMT
+			 ", index 14 has name '%s' should be '..'\n",
+			 ep, ep->name);
 		    DRelease(ep, 0);
 		    DRelease(dhp, 0);
 		    return 0;
