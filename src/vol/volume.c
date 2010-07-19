@@ -3326,6 +3326,27 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    V_inUse(vp) = fileServer;
 	    V_offlineMessage(vp)[0] = '\0';
 	}
+	if (!V_inUse(vp)) {
+	    *ec = VNOVOL;
+	    /* mimic e.g. GetVolume errors */
+	    if (!V_blessed(vp))
+		Log("Volume %lu offline: not blessed\n", afs_printable_uint32_lu(V_id(vp)));
+	    else if (!V_inService(vp))
+		Log("Volume %lu offline: not in service\n", afs_printable_uint32_lu(V_id(vp)));
+	    else {
+		Log("Volume %lu offline: needs salvage\n", afs_printable_uint32_lu(V_id(vp)));
+		*ec = VOFFLINE;
+#ifdef AFS_DEMAND_ATTACH_FS
+		/* see if we can recover */
+		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+		vp->nUsers = 0;
+
+		goto error;
+#endif
+	    }
+	    VPutVolume_r(vp);
+	    vp = NULL;
+	}
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
 	if ((mode != V_PEEK) && (mode != V_SECRETLY))
