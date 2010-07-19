@@ -666,6 +666,8 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	    refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
 	} else if (QNext(uq) != tq) {
 	    refpanic("VLRU inconsistent");
+	} else if (tvc->f.states & CVInit) {
+	    continue;
 	}
 
 	fv_slept = 0;
