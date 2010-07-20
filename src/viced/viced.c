@@ -242,6 +242,7 @@ static void FlagMsg(void);
 #define PTHREAD_RWLOCK_INITIALIZER {0x2DA8B3B4, {0}}
 #endif
 
+#ifndef AFS_NT40_ENV
 struct fs_state fs_state = 
     { FS_MODE_NORMAL, 
       0, 
@@ -252,6 +253,26 @@ struct fs_state fs_state =
       PTHREAD_COND_INITIALIZER,
       PTHREAD_RWLOCK_INITIALIZER
     };
+#else /* AFS_NT40_ENV */
+struct fs_state fs_state;
+
+static int fs_stateInit(void)
+{
+    fs_state.mode = FS_MODE_NORMAL;
+    fs_state.FiveMinuteLWP_tranquil = 0;
+    fs_state.HostCheckLWP_tranquil = 0;
+    fs_state.FsyncCheckLWP_tranquil = 0;
+    fs_state.salvsync_fatal_error = 0;
+
+    fs_state.options.fs_state_save = 1;
+    fs_state.options.fs_state_restore = 1;
+    fs_state.options.fs_state_verify_before_save = 1;
+    fs_state.options.fs_state_verify_after_restore = 1;
+
+    assert(pthread_cond_init(&fs_state.worker_done_cv, NULL) == 0);
+    assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
+}
+#endif /* AFS_NT40_ENV */
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 /*

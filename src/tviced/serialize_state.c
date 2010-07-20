@@ -99,13 +99,15 @@ extern off_t afs_lseek(int FD, off_t O, int F);
  * have been written so that it will be very simple to go
  * back to standard I/O for just those poorly written platforms
  */
-#ifndef _WIN32
-#define FS_STATE_USE_MMAP
+#ifndef AFS_NT40_ENV
+#define FS_STATE_USE_MMAP 1
 #endif
 
 #ifdef FS_STATE_USE_MMAP
 #define FS_STATE_INIT_FILESIZE (8 * 1024 * 1024)  /* truncate to 8MB initially */
+#ifndef AFS_NT40_ENV
 #include <sys/mman.h>
+#endif
 #endif
 
 static int fs_stateCreateDump(struct fs_dump_state * state);
@@ -135,6 +137,17 @@ static int fs_stateFree(struct fs_dump_state * state);
 
 extern afsUUID FS_HostUUID;
 extern char cml_version_number[];
+
+int
+fs_stateFileOpen(struct fs_dump_state *state)
+{
+#ifdef AFS_NT40_ENV
+    return(state->fd != -1);
+#else
+    return(state->fd >= 0);
+#endif
+}
+
 
 /*
  * demand attach fs
@@ -235,8 +248,8 @@ fs_stateSave(void)
 		    state.fn));
     }
 
- done:
-    if (state.fd >= 0)
+  done:
+    if (fs_stateFileOpen(&state))
 	fs_stateCloseDump(&state);
     fs_stateFree(&state);
     H_UNLOCK;
@@ -626,11 +639,21 @@ fs_stateWriteV(struct fs_dump_state * state,
 	fs_stateIncCursor(state, iov[i].iov_len);
     }
 #else
+#ifndef AFS_NT40_ENV
     if (writev(state->fd, iov, niov) != len) {
 	ViceLog(0, ("fs_stateWriteV: write failed\n"));
 	ret = 1;
 	goto done;
     }
+#else /* AFS_NT40_ENV */
+    for (i=0; i < niov; i++) {
+        if (write(state->fd, iov[i].iov_base, iov[i].iov_len) != iov[i].iov_len) {
+            ViceLog(0, ("fs_stateWriteV: write failed\n"));
+            ret = 1;
+            goto done;
+        }
+    }
+#endif /* AFS_NT40_ENV */
 #endif
 
  done:
@@ -661,11 +684,21 @@ fs_stateReadV(struct fs_dump_state * state,
 	fs_stateIncCursor(state, iov[i].iov_len);
     }
 #else
+#ifndef AFS_NT40_ENV
     if (readv(state->fd, iov, niov) != len) {
 	ViceLog(0, ("fs_stateReadV: read failed\n"));
 	ret = 1;
 	goto done;
     }
+#else
+    for (i=0; i < niov; i++) {
+        if (read(state->fd, iov[i].iov_base, iov[i].iov_len) != iov[i].iov_len) {
+            ViceLog(0, ("fs_stateReadV: read failed\n"));
+            ret = 1;
+            goto done;
+        }
+    }
+#endif /* AFS_NT40_ENV */
 #endif
 
  done:
@@ -737,9 +770,7 @@ fs_stateResizeFile(struct fs_dump_state * state, size_t min_add)
     int ret = 0;
     afs_foff_t inc;
 
-#ifdef FS_STATE_USE_MMAP
     fs_stateUnmapFile(state);
-#endif
 
     inc = ((min_add / FS_STATE_INIT_FILESIZE)+1) * FS_STATE_INIT_FILESIZE;
     state->file_len += inc;
@@ -750,13 +781,11 @@ fs_stateResizeFile(struct fs_dump_state * state, size_t min_add)
 	goto done;
     }
 
-#ifdef FS_STATE_USE_MMAP
     if (fs_stateMapFile(state)) {
 	ViceLog(0, ("fs_stateResizeFile: remapping memory mapped file failed\n"));
 	ret = 1;
 	goto done;
     }
-#endif
 
  done:
     return ret;
@@ -773,9 +802,7 @@ fs_stateTruncateFile(struct fs_dump_state * state)
 
     return ret;
 }
-#endif
 
-#ifdef FS_STATE_USE_MMAP
 static int
 fs_stateMapFile(struct fs_dump_state * state)
 {
@@ -844,9 +871,7 @@ fs_stateUnmapFile(struct fs_dump_state * state)
  done:
     return ret;
 }
-#endif /* FS_STATE_USE_MMAP */
 
-#ifdef FS_STATE_USE_MMAP
 int
 fs_stateSync(struct fs_dump_state * state)
 {
@@ -865,7 +890,6 @@ fs_stateSync(struct fs_dump_state * state)
     if (fsync(state->fd) == -1)
 	ret = 1;
 
- done:
     return ret;
 }
 #endif /* !FS_STATE_USE_MMAP */

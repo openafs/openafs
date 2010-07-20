@@ -202,3 +202,7 @@
 #if (_MSC_VER < 1400)
 typedef int errno_t;
 #endif
+
+/* Windows only supports BSD variants */
+#define S_IRUSR _S_IREAD
+#define S_IWUSR _S_IWRITE

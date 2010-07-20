@@ -25,12 +25,16 @@
 #include <dirent.h>
 #include <afs/assert.h>
 #include <string.h>
+#ifdef AFS_NT40_ENV
+#include <io.h>
+#else
 #include <sys/file.h>
 #include <sys/param.h>
-#include <lock.h>
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
 #include <unistd.h>
 #endif
+#endif /* AFS_NT40_ENV */
+#include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
 #include "nfs.h"

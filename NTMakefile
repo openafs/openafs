@@ -283,7 +283,7 @@ ptserver: ubik
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
+	$(CD) ..\..
 
 libacl: ptserver
      @echo ***** $@
@@ -431,7 +431,21 @@ tvolser: tviced
 	$(NTMAKE)
 	$(CD) ..\..
 
-tbutc:  tvolser
+dviced: tvolser
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+dvolser: dviced
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tbutc:  dvolser
      @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@

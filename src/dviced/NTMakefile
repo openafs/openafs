@@ -11,15 +11,13 @@ RELDIR=dviced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
-SRC_DIR = ..\viced
-
 ############################################################################
-# Build the fileserver
+# Build the dafs-fileserver
 
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\dafileserver.exe
 
 VICED = ..\viced
-TVICED = .
+TVICED = ..\tviced
 LWP = ..\lwp
 LIBACL = ..\libacl
 DIR = ..\dir
@@ -31,9 +29,9 @@ RXOBJS = $(OUT)\xdr_int64.obj \
 
 VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj 
 
-TVICEDRES =  $(OUT)\dafileserver.res
-
 TVICEDOBJS = $(OUT)\serialize_state.obj
+
+DAFS_VICEDRES =  $(OUT)\dafileserver.res
 
 LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 
@@ -43,12 +41,12 @@ DIROBJS = $(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
-EXEOBJS = $(VICEDOBJS) $(TVICEDRES) $(LWPOBJS) $(LIBACLOBJS) \
-	  $(DIROBJS) $(FSINTOBJS) $(RXOBJS) #$(TVICEDOBJS)
+EXEOBJS = $(VICEDOBJS) $(TVICEDOBJS) $(DAFS_VICEDRES) $(LWPOBJS) $(LIBACLOBJS) \
+	  $(DIROBJS) $(FSINTOBJS) $(RXOBJS)
 
 noversion: install
 
-all: dafileserver
+all: $(EXEFILE)
 
 $(RXOBJS): $(RX)\$$(@B).c
 	$(C2OBJ) -I$(RX) $**
@@ -56,8 +54,8 @@ $(RXOBJS): $(RX)\$$(@B).c
 $(VICEDOBJS): $(VICED)\$$(@B).c
 	$(C2OBJ) -I$(VICED) $**
 
-$(TVICEDRES): $(VICED)\dafileserver.rc AFS_component_version_number.h
-	$(RC) /fo $(TVICEDRES) $(TVICED)\dafileserver.rc 
+$(DAFS_VICEDRES): dafileserver.rc AFS_component_version_number.h
+	$(RC) /fo $(DAFS_VICEDRES) dafileserver.rc
 
 $(TVICEDOBJS): $(TVICED)\$$(@B).c
 	$(C2OBJ) -I$(TVICED) $**
@@ -84,7 +82,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
-        $(DESTDIR)\lib\afs\mtafsvol.lib \
+        $(DESTDIR)\lib\afs\daafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afspthread.lib
 
@@ -100,6 +98,7 @@ install:  $(EXEFILE)
 mkdir:
 	
 clean::
-	$(DEL) $(TVICEDRES)
+	-$(DEL) $(EXEFILE)
+        -$(DEL) $(DAFS_VICEDRES)
 
 	

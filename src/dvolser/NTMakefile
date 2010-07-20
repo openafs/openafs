@@ -11,10 +11,8 @@ RELDIR=dvolser
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
-SRC_DIR = ..\volser
-
 VOLSER = ..\volser
-TVOLSER = .
+DVOLSER = .
 VLSERVER = ..\vlserver
 LWP = ..\lwp
 LIBACL = ..\libacl
@@ -39,23 +37,27 @@ LOCAL_INCFILES = \
 	volint.h
 
 ############################################################################
-# Build afstvolser.lib
+# Build afsdavolser.lib
 
-LIBFILE = $(DESTDIR)\lib\afs\afstvolser.lib
+LIBFILE = $(DESTDIR)\lib\afs\afsdvolser.lib
 
 LIBOBJS = $(OUT)\volint.cs.obj  \
-          $(OUT)\vsprocs.obj \
-          $(OUT)\vsutils.obj \
-          $(OUT)\lockprocs.obj  \
           $(OUT)\volint.xdr.obj \
           $(OUT)\volerr.obj  \
           $(OUT)\volint.ss.obj  \
           $(OUT)\AFS_component_version_number.obj 
 
-$(LIBOBJS): $(VOLSER)\$$(@B).c
-        $(C2OBJ) -I$(TVOLSER) -I$(UTIL) $**
+LIBOBJS2 = $(OUT)\vsprocs.obj \
+          $(OUT)\vsutils.obj \
+          $(OUT)\lockprocs.obj
 
-$(LIBFILE): $(LIBOBJS)
+# $(LIBOBJS): $(DVOLSER)\$$(@B).c
+#         $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
+
+$(LIBOBJS2): $(VOLSER)\$$(@B).c
+        $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
+
+$(LIBFILE): $(LIBOBJS) $(LIBOBJS2)
 	$(LIBARCH)
 
 
@@ -84,8 +86,8 @@ VOLSERVER_EXEOBJS = $(VOLSEROBJS) \
 VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afs\afstvolser.lib \
-        $(DESTDIR)\lib\afs\mtafsvol.lib \
+        $(LIBFILE) \
+        $(DESTDIR)\lib\afs\daafsvol.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib/afs/afscom_err.lib \
@@ -95,7 +97,7 @@ VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afspthread.lib
 
-$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) 
+$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -158,7 +160,9 @@ install: install_lib $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) volerr.c volser.h volerr.et volser.p.h $(INCFILES)
-	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c
+      -	-$(DEL) volerr.c volser.h volerr.et volser.p.h $(INCFILES)
+	-$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c
+        -$(DEL) $(OUT)\davolserver.res
+        -$(DEL) $(VOLSERVER_EXEFILE)
 
 mkdir:

@@ -3,3 +3,8 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /davolserver
+/volerr.c
+/volerr.et
+/volint.h
+/volser.h
+/volser.p.h

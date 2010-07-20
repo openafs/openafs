@@ -50,7 +50,7 @@ struct disk_version_stamp {
 /* 1024 byte header structure */
 struct fs_state_header {
     struct disk_version_stamp stamp;  /* version stamp */
-    afs_uint32 timestamp;             /* timestamp of save */
+    time_t timestamp;                 /* timestamp of save */
     afs_uint32 sys_name;              /* sys name id for this machine */
     afsUUID server_uuid;              /* server's UUID */
     byte valid;                       /* whether header contents are valid */
@@ -267,10 +267,10 @@ struct fs_dump_state {
     } cb_map;
 };
 
-
 /* prototypes */
 
 /* serialize_state.c */
+extern int fs_stateFileOpen(struct fs_dump_state *state);
 extern int fs_stateWrite(struct fs_dump_state * state,
 			 void * buf, size_t len);
 extern int fs_stateRead(struct fs_dump_state * state,

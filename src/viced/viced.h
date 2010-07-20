@@ -245,7 +245,11 @@ struct fs_state {
 extern struct fs_state fs_state;
 
 /* this lock is defined to be directly above FS_LOCK in the locking hierarchy */
+#ifdef AFS_NT40_ENV
+#define FS_STATE_INIT    fs_stateInit()
+#else
 #define FS_STATE_INIT    assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0)
+#endif
 #define FS_STATE_RDLOCK  assert(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
 #define FS_STATE_WRLOCK  assert(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
 #define FS_STATE_UNLOCK  assert(pthread_rwlock_unlock(&fs_state.state_lock) == 0)
