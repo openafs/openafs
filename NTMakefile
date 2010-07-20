@@ -68,6 +68,13 @@ afsreg_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
+libafscp_headers:
+     @echo ***** $@
+	$(DOCD) $(SRC)\libafscp
+	$(CD) $(SRC)\libafscp
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
 lwp_headers:
      @echo ***** $@
 	$(DOCD) $(SRC)\lwp
@@ -676,7 +683,7 @@ rpctestlib: fsint libafsrpc
 	$(NTMAKE)
 	$(CD) ..\..
 
-libafscp: util afs volser vlserver rx auth fsint afsdobjs
+libafscp: libafscp_headers util afs volser vlserver rx auth fsint afsdobjs
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

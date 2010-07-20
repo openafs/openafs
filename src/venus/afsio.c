@@ -24,6 +24,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ * Revised in 2010 by Chaz Chandler to enhance clientless operations.
+ * Now utilizes libafscp by Chaskiel Grundman.
+ * Work funded in part by Sine Nomine Associates (http://www.sinenomine.net/)
+ */
 
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -31,8 +36,7 @@
 
 #include <roken.h>
 
-#include <setjmp.h>
-#include <ctype.h>
+#include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #define _CRT_RAND_S
@@ -43,72 +47,66 @@
 #include <afs/pioctl_nt.h>
 #include <WINNT/syscfg.h>
 #else
-#include <afs/venus.h>
+#include <netdb.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
 #endif
-#include <afs/vice.h>
+#include <sys/stat.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
-#include <afs/cellconfig.h>
-#include <afs/afsutil.h>
-#include <rx/rx.h>
-#include <rx/xdr.h>
-#include <afs/afs_consts.h>
-#include <afs/afscbint.h>
-#include <afs/vldbint.h>
 #include <afs/vlserver.h>
-#include <afs/volser.h>
-#include <afs/ptint.h>
-#include <afs/dir.h>
-#include <afs/nfs.h>
 #include <afs/ihandle.h>
-#include <afs/vnode.h>
 #include <afs/com_err.h>
+#include <afs/afscp.h>
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif
-
+#ifdef AFS_DARWIN_ENV
+#include <sys/malloc.h>
+#else
+#include <malloc.h>
+#endif
 #include <hcrypto/md5.h>
-
-#include <afs/errors.h>
-#include <afs/sys_prototypes.h>
-#include <rx/rx_prototypes.h>
-
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 pthread_key_t uclient_key;
 #endif
 
-int readFile(struct cmd_syndesc *as, void *);
-int writeFile(struct cmd_syndesc *as, void *);
-struct rx_connection *FindRXConnection(afs_uint32 host, u_short port, u_short service, struct rx_securityClass *securityObject, int serviceSecurityIndex);
-struct cellLookup * FindCell(char *cellName);
+static int readFile(struct cmd_syndesc *, void *);
+static int writeFile(struct cmd_syndesc *, void *);
+static void printDatarate(void);
+static void summarizeDatarate(struct timeval *, const char *);
+static int CmdProlog(struct cmd_syndesc *, char **, char **,
+                     char **, char **);
+static int ScanFid(char *, struct AFSFid *);
+static afs_int32 GetVenusFidByFid(char *, char *, int, struct afscp_venusfid **);
+static afs_int32 GetVenusFidByPath(char *, char *, struct afscp_venusfid **);
+static int BreakUpPath(char *, char *, char *);
 
-char pnp[255];
-int rxInitDone = 0;
+static char pnp[AFSPATHMAX];	/* filename of this program when called */
 static int verbose = 0;		/* Set if -verbose option given */
-static int CBServiceNeeded = 0;
+static int cellGiven = 0;	/* Set if -cell option given */
+static int force = 0;		/* Set if -force option given */
+static int useFid = 0;		/* Set if fidwrite/fidread/fidappend invoked */
+static int append = 0;		/* Set if append/fidappend invoked */
 static struct timeval starttime, opentime, readtime, writetime;
-afs_uint64 xfered=0, oldxfered=0;
+static afs_uint64 xfered = 0;
 static struct timeval now;
-static float seconds, datarate, oldseconds;
-extern int rxInitDone;
 #ifdef AFS_NT40_ENV
-static afs_int32 rx_mtu = -1;
+static int Timezone;            /* Roken gettimeofday ignores the timezone */
+#else
+static struct timezone Timezone;
 #endif
-afs_uint64 transid = 0;
-afs_uint32 expires = 0;
-afs_uint32 server_List[MAXHOSTSPERCELL];
-char tmpstr[1024];
-char tmpstr2[1024];
-static struct ubik_client *uclient;
-#define BUFFLEN 65536
-#define WRITEBUFFLEN 1024*1024*64
 
-afsUUID uuid;
-MD5_CTX md5;
-int md5sum = 0;
+#define BUFFLEN 65536
+#define WRITEBUFLEN (BUFFLEN * 1024)
+#define MEGABYTE_F 1048576.0f
+
+static MD5_CTX md5;
+static int md5sum = 0;		/* Set if -md5 option given */
 
 struct wbuf {
     struct wbuf *next;
@@ -118,812 +116,463 @@ struct wbuf {
     char buf[BUFFLEN];
 };
 
-struct connectionLookup {
-    afs_uint32 host;
-    u_short port;
-    struct rx_connection *conn;
-};
+/*!
+ *  returns difference in seconds between two times
+ *
+ *  \param[in]	from	start time
+ *  \param[in]	to	end time
+ *
+ *  \post returns "to" minus "from" in seconds
+ *
+ */
+static_inline float
+time_elapsed(struct timeval *from, struct timeval *to)
+{
+    return (float)(to->tv_sec + (to->tv_usec * 0.000001) - from->tv_sec -
+		   (from->tv_usec * 0.000001));
+} /* time_elapsed */
 
-struct cellLookup {
-    struct cellLookup *next;
-    struct afsconf_cell info;
-    struct rx_securityClass *sc;
-    afs_int32 scIndex;
-};
-
-struct dirLookup {
-    struct dirLookup *next;
-    struct dirLookup *prev;
-    afs_int32 host;
-    struct cellLookup *cell;
-    AFSFid fid;
-    char name[VL_MAXNAMELEN];
-};
-
-struct cellLookup *Cells = 0;
-struct dirLookup  *Dirs = 0;
-char cellFname[256];
-
-#define MAX_HOSTS 256
-static struct connectionLookup ConnLookup[MAX_HOSTS];
-static int ConnLookupInitialized = 0;
-
-struct FsCmdInputs PioctlInputs;
-struct FsCmdOutputs PioctlOutputs;
-
-void
+/*!
+ * prints current average data transfer rate at no less than 30-second intervals
+ */
+static void
 printDatarate(void)
 {
-    seconds = (float)(now.tv_sec + now.tv_usec *.000001
-	-opentime.tv_sec - opentime.tv_usec *.000001);
-    if ((seconds - oldseconds) > 30.) {
-	afs_int64 tmp;
-	tmp = xfered - oldxfered;
-        datarate = ((afs_uint32) (tmp >> 20)) / (seconds - oldseconds);
-        fprintf(stderr,"%llu MB transferred, present date rate = %.03f MB/sec.\n",
-		xfered >> 20, datarate);
+    static float oldseconds = 0.0;
+    static afs_uint64 oldxfered = 0;
+    float seconds;
+
+    gettimeofday(&now, &Timezone);
+    seconds = time_elapsed(&opentime, &now);
+    if ((seconds - oldseconds) > 30) {
+	fprintf(stderr, "%llu MB transferred, present data rate = %.3f MB/sec.\n", xfered >> 20,	/* total bytes transferred, in MB */
+		(xfered - oldxfered) / (seconds - oldseconds) / MEGABYTE_F);
 	oldxfered = xfered;
 	oldseconds = seconds;
     }
-}
+} /* printDatarate */
 
-void
-SetCellFname(char *name)
+/*!
+ * prints overall average data transfer rate and elapsed time
+ *
+ * \param[in]	tvp		current time (to compare with file open time)
+ * \param[in]	xfer_type	string identify transfer type ("read" or "write")
+ */
+static void
+summarizeDatarate(struct timeval *tvp, const char *xfer_type)
 {
-    struct afsconf_dir *tdir;
+    float seconds = time_elapsed(&opentime, tvp);
 
-    strcpy((char *) &cellFname,"/afs/");
-    if (name)
-	strcat((char *) &cellFname, name);
-    else {
-	tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-	afsconf_GetLocalCell(tdir, &cellFname[5], MAXCELLCHARS);
+    fprintf(stderr, "Transfer of %llu bytes took %.3f sec.\n",
+	    xfered, seconds);
+    fprintf(stderr, "Total data rate = %.03f MB/sec. for %s\n",
+	    xfered / seconds / MEGABYTE_F, xfer_type);
+} /* summarizeDatarate */
+
+/*!
+ * prints final MD5 sum of all file data transferred
+ *
+ * \param[in]	fname	file name or FID
+ */
+static void
+summarizeMD5(char *fname)
+{
+    afs_uint32 md5int[4];
+    char *p;
+
+    MD5_Final((char *) &md5int[0], &md5);
+    p = fname + strlen(fname);
+    while (p > fname) {
+	if (*(--p) == '/') {
+	    ++p;
+	    break;
+	}
     }
-}
+    fprintf(stderr, "%08x%08x%08x%08x  %s\n", htonl(md5int[0]),
+	    htonl(md5int[1]), htonl(md5int[2]), htonl(md5int[3]), p);
+} /* summarizeMD5 */
 
-afs_int32
-main (int argc, char **argv)
+/*!
+ * parses all command-line arguments
+ *
+ * \param[in]  as	arguments list
+ * \param[out] cellp	cell name
+ * \param[out] realmp	realm name
+ * \param[out] fnp	filename (either fid or path)
+ * \param[out] slp	"synthesized" (made up) data given
+ *
+ * \post returns 0 on success or -1 on error
+ *
+ */
+static int
+CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
+          char **fnp, char **slp)
 {
-    afs_int32 code;
-    struct cmd_syndesc *ts;
+    int i;
+    struct cmd_parmdesc *pdp;
 
-    strcpy(pnp, argv[0]);
+    if (as == NULL) {
+	afs_com_err(pnp, EINVAL, "(syndesc is null)");
+	return -1;
+    }
+
+    /* determine which command was requested */
+    if (strncmp(as->name, "fid", 3) == 0) /* fidread/fidwrite/fidappend */
+	useFid = 1;
+    if ( (strcmp(as->name, "append") == 0) ||
+         (strcmp(as->name, "fidappend") == 0) )
+	append = 1;		/* global */
+
+    /* attempts to ensure loop is bounded: */
+    for (pdp = as->parms, i = 0; pdp && (i < as->nParms); i++, pdp++) {
+	if (pdp->items != NULL) {
+	    if (strcmp(pdp->name, "-verbose") == 0)
+	        verbose = 1;
+            else if (strcmp(pdp->name, "-md5") == 0)
+		md5sum = 1;	/* global */
+            else if (strcmp(pdp->name, "-cell") == 0) {
+		cellGiven = 1;	/* global */
+		*cellp = pdp->items->data;
+            } else if ( (strcmp(pdp->name, "-file") == 0) ||
+                        (strcmp(pdp->name, "-fid") == 0) ||
+                        (strcmp(pdp->name, "-vnode") == 0) )
+		*fnp = pdp->items->data;
+            else if (strcmp(pdp->name, "-force") == 0)
+		force = 1;	/* global */
+            else if (strcmp(pdp->name, "-synthesize") == 0)
+		*slp = pdp->items->data;
+            else if (strcmp(pdp->name, "-realm") == 0)
+		*realmp = pdp->items->data;
+	}
+    }
+    return 0;
+}				/* CmdProlog */
+
+int
+main(int argc, char **argv)
+{
+    afs_int32 code = 0;
+    struct cmd_syndesc *ts;
+    char baseName[AFSNAMEMAX];
+
+    /* try to get only the base name of this executable for use in logs */
+    if (BreakUpPath(argv[0], NULL, baseName) > 0)
+	strlcpy(pnp, baseName, AFSNAMEMAX);
+    else
+	strlcpy(pnp, argv[0], AFSPATHMAX);
 
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_key_create(&uclient_key, NULL) == 0);
 #endif
+
     ts = cmd_CreateSyntax("read", readFile, CMD_REQUIRED,
 			  "read a file from AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *) 0);
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED,
 			  "read on a non AFS-client a file from AFS");
     cmd_IsAdministratorCommand(ts);
-    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "volume.vnode.uniquifier");
+    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
+		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *) 0);
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     ts = cmd_CreateSyntax("write", writeFile, CMD_REQUIRED,
 			  "write a file into AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "AFS-filename");
+    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *) 0);
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL, "create data pattern of specified length instead reading from stdin");
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
+		"overwrite existing file");
+    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL,
+		"create data pattern of specified length instead reading from stdin");
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED,
 			  "write a file into AFS");
     cmd_IsAdministratorCommand(ts);
-    cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED, "volume.vnode.uniquifier");
+    cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
+		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *) 0);
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
+		"overwrite existing file");
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     ts = cmd_CreateSyntax("append", writeFile, CMD_REQUIRED,
 			  "append to a file in AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "AFS-filename");
+    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *) 0);
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     ts = cmd_CreateSyntax("fidappend", writeFile, CMD_REQUIRED,
 			  "append to a file in AFS");
     cmd_IsAdministratorCommand(ts);
-    cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED, "volume.vnode.uniquifier");
+    cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
+		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *) 0);
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+
+    if (afscp_Init(NULL) != 0)
+	exit(1);
 
     code = cmd_Dispatch(argc, argv);
-    exit (0);
-}
 
-AFS_UNUSED
-afs_int32
-HandleLocalAuth(struct rx_securityClass **sc, afs_int32 *scIndex)
-{
-    static struct afsconf_dir *tdir = NULL;
-    afs_int32 code;
+    afscp_Finalize();
+    exit(0);
+} /* main */
 
-    *sc = NULL;
-    *scIndex = RX_SECIDX_NULL;
-
-    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
-    if (!tdir) {
-        fprintf(stderr,"Could not open configuration directory: %s.\n",
-		AFSDIR_SERVER_ETC_DIRPATH);
-        return -1;
-    }
-    code = afsconf_ClientAuth(tdir, sc, scIndex);
-    if (code) {
-        fprintf(stderr,"afsconf_ClientAuth returned %d\n", code);
-        return -1;
-    }
-    return 0;
-}
-
-afs_int32
-AFS_Lookup(struct rx_connection *conn, AFSFid *dirfid, char *name,
-	   AFSFid *outfid, AFSFetchStatus *outstatus, AFSFetchStatus
-	   *dirstatus, AFSCallBack *callback, AFSVolSync *sync)
-{
-    afs_int32 code = VBUSY;
-    while (code == VBUSY) {
-	code = RXAFS_Lookup(conn, dirfid, name, outfid, outstatus, dirstatus,
-			    callback, sync);
-	if (code == VBUSY) {
-	    fprintf(stderr, "waiting for busy AFS volume %u.\n",
-		    dirfid->Volume);
-#ifdef AFS_PTHREAD_ENV
-	    sleep(10);
-#else
-	    IOMGR_Sleep(10);
-#endif
-	}
-    }
-    return code;
-}
-
-afs_int32
-AFS_FetchStatus(struct rx_connection *conn, AFSFid *fid, AFSFetchStatus
-		*Status, AFSCallBack *callback, AFSVolSync *sync)
-{
-    afs_int32 code = VBUSY;
-
-    while (code == VBUSY) {
-        code = RXAFS_FetchStatus(conn, fid, Status, callback, sync);
-	if (code == VBUSY) {
-	    fprintf(stderr, "waiting for busy AFS volume %u.\n",
-		    fid->Volume);
-#ifdef AFS_PTHREAD_ENV
-	    sleep(10);
-#else
-	    IOMGR_Sleep(10);
-#endif
-	}
-    }
-    return code;
-}
-
-afs_int32
-StartAFS_FetchData(struct rx_call *call, AFSFid *fid, afs_int32 pos,
-		   afs_int32 len)
-{
-    afs_int32 code = VBUSY;
-    while (code == VBUSY) {
-	code = StartRXAFS_FetchData (call, fid, pos, len);
-	if (code == VBUSY) {
-	    fprintf(stderr, "waiting for busy AFS volume %u.\n",
-		    fid->Volume);
-#ifdef AFS_PTHREAD_ENV
-	    sleep(10);
-#else
-	    IOMGR_Sleep(10);
-#endif
-	}
-    }
-    return code;
-}
-
-afs_int32
-StartAFS_FetchData64(struct rx_call *call, AFSFid *fid, afs_int64 pos,
-                     afs_int64 len)
-{
-    afs_int32 code = VBUSY;
-    while (code == VBUSY) {
-	code = StartRXAFS_FetchData64 (call, fid, pos, len);
-	if (code == VBUSY) {
-	    fprintf(stderr, "waiting for busy AFS volume %u.\n",
-		    fid->Volume);
-#ifdef AFS_PTHREAD_ENV
-	    sleep(10);
-#else
-	    IOMGR_Sleep(10);
-#endif
-	}
-    }
-    return code;
-}
-
-afs_int32
-StartAFS_StoreData(struct rx_call *call, AFSFid *fid, AFSStoreStatus *status,
-		   afs_int32 pos, afs_int32 len, afs_int32 len2)
-{
-    afs_int32 code = VBUSY;
-    while (code == VBUSY) {
-	code = StartRXAFS_StoreData (call, fid, status, pos, len, len2);
-	if (code == VBUSY) {
-	    fprintf(stderr, "waiting for busy AFS volume %u.\n",
-		    fid->Volume);
-#ifdef AFS_PTHREAD_ENV
-	    sleep(10);
-#else
-	    IOMGR_Sleep(10);
-#endif
-	}
-    }
-    return code;
-}
-
-afs_uint32
-StartAFS_StoreData64(struct rx_call *call, AFSFid *fid, AFSStoreStatus *status,
-		     afs_int64 pos, afs_int64 len, afs_int64 len2)
-{
-    afs_int32 code = VBUSY;
-    while (code == VBUSY) {
-	code = StartRXAFS_StoreData64 (call, fid, status, pos, len, len2);
-	if (code == VBUSY) {
-	    fprintf(stderr, "waiting for busy AFS volume %u.\n",
-		    fid->Volume);
-#ifdef AFS_PTHREAD_ENV
-	    sleep(10);
-#else
-	    IOMGR_Sleep(10);
-#endif
-	}
-    }
-    return code;
-}
-
-afs_int32
-SRXAFSCB_CallBack(struct rx_call *rxcall, AFSCBFids *Fids_Array,
-		  AFSCBs *CallBack_Array)
-{
-    return 0;
-}
-
-afs_int32
-SRXAFSCB_InitCallBackState(struct rx_call *rxcall)
-{
-    return 0;
-}
-
-afs_int32
-SRXAFSCB_Probe(struct rx_call *rxcall)
-{
-    return 0;
-}
-
-afs_int32
-SRXAFSCB_GetCE(struct rx_call *rxcall,
-	       afs_int32 index,
-	       AFSDBCacheEntry * ce)
-{
-    return(0);
-}
-
-afs_int32
-SRXAFSCB_GetLock(struct rx_call *rxcall,
-		 afs_int32 index,
-		 AFSDBLock * lock)
-{
-    return(0);
-}
-
-afs_int32
-SRXAFSCB_XStatsVersion(struct rx_call *rxcall,
-		       afs_int32 * versionNumberP)
-{
-    return(0);
-}
-
-afs_int32
-SRXAFSCB_GetXStats(struct rx_call *rxcall,
-		   afs_int32 clientVersionNumber,
-		   afs_int32 collectionNumber,
-		   afs_int32 * srvVersionNumberP,
-		   afs_int32 * timeP,
-		   AFSCB_CollData * dataP)
-{
-    return(0);
-}
-
-afs_int32
-SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid)
-{
-    if ( !afs_uuid_equal(&uuid, a_uuid) )
-        return(1);
-    else
-        return(0);
-}
-
-
-afs_int32
-SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
-{
-    return SRXAFSCB_TellMeAboutYourself(a_call, addr, NULL);
-}
-
-afs_int32
-SRXAFSCB_InitCallBackState2(struct rx_call *a_call, struct interfaceAddr *
-			    addr)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SRXAFSCB_InitCallBackState3(struct rx_call *a_call, afsUUID *a_uuid)
-{
-    return 0;
-}
-
-afs_int32
-SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
-			afs_uint32 *serverVersion, afs_uint32 *configCount,
-			cacheConfig *config)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
-		       char **a_name, serverList *a_hosts)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
-			afs_int32 *a_srvr_addr, afs_int32 *a_srvr_rank)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call, struct interfaceAddr *
-			     addr, Capabilities *capabilities)
-{
-#ifdef AFS_NT40_ENV
-    int code;
-    int cm_noIPAddr;                        /* number of client network interfaces */
-    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
-    int i;
-
-    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-    code = syscfg_GetIFInfo(&cm_noIPAddr,
-                            cm_IPAddr, cm_SubnetMask,
-                            cm_NetMtu, cm_NetFlags);
-    if (code > 0) {
-        /* return all network interface addresses */
-        addr->numberOfInterfaces = cm_noIPAddr;
-        for ( i=0; i < cm_noIPAddr; i++ ) {
-            addr->addr_in[i] = cm_IPAddr[i];
-            addr->subnetmask[i] = cm_SubnetMask[i];
-            addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ?
-                cm_NetMtu[i] : rx_mtu;
-        }
-    } else {
-        addr->numberOfInterfaces = 0;
-    }
-#else
-    addr->numberOfInterfaces = 0;
-#ifdef notdef
-    /* return all network interface addresses */
-    addr->numberOfInterfaces = afs_cb_interface.numberOfInterfaces;
-    for ( i=0; i < afs_cb_interface.numberOfInterfaces; i++) {
-        addr->addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
-        addr->subnetmask[i] = ntohl(afs_cb_interface.subnetmask[i]);
-        addr->mtu[i] = ntohl(afs_cb_interface.mtu[i]);
-    }
-#endif
-#endif
-
-    addr->uuid = uuid;
-
-    if (capabilities) {
-        afs_uint32 *dataBuffP;
-        afs_int32 dataBytes;
-
-        dataBytes = 1 * sizeof(afs_uint32);
-        dataBuffP = (afs_uint32 *) xdr_alloc(dataBytes);
-        dataBuffP[0] = CLIENT_CAPABILITY_ERRORTRANS;
-        capabilities->Capabilities_len = dataBytes / sizeof(afs_uint32);
-        capabilities->Capabilities_val = dataBuffP;
-    }
-    return 0;
-}
-
-afs_int32
-SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
-		      char **a_name, serverList *a_hosts)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
-		 struct AFSDBCacheEntry64 *a_result)
-{
-    return RXGEN_OPCODE;
-}
-
-void *
-InitializeCBService_LWP(void *unused)
-{
-    struct rx_securityClass *CBsecobj;
-    struct rx_service *CBService;
-
-    afs_uuid_create(&uuid);
-
-    CBsecobj = (struct rx_securityClass *)rxnull_NewServerSecurityObject();
-    if (!CBsecobj) {
-	fprintf(stderr,"rxnull_NewServerSecurityObject failed for callback service.\n");
-	exit(1);
-    }
-    CBService = rx_NewService(0, 1, "afs", &CBsecobj, 1,
-			      RXAFSCB_ExecuteRequest);
-    if (!CBService) {
-	fprintf(stderr,"rx_NewService failed for callback service.\n");
-	exit(1);
-    }
-    rx_StartServer(1);
-    return 0;
-}
-
-
-int
-InitializeCBService(void)
-{
-#define RESTOOL_CBPORT 7102
-#define MAX_PORT_TRIES 1000
-#define LWP_STACK_SIZE	(16 * 1024)
-    afs_int32 code;
-#ifdef AFS_PTHREAD_ENV
-    pthread_t CBservicePid;
-    pthread_attr_t tattr;
-#else
-    PROCESS CBServiceLWP_ID, parentPid;
-#endif
-    int InitialCBPort;
-    int CBPort;
-
-#ifndef NO_AFS_CLIENT
-    if (!CBServiceNeeded)
-        return 0;
-#endif
-#ifndef AFS_PTHREAD_ENV
-    code = LWP_InitializeProcessSupport(LWP_MAX_PRIORITY - 2, &parentPid);
-    if (code != LWP_SUCCESS) {
-	fprintf(stderr,"Unable to initialize LWP support, code %d\n",
-		code);
-	exit(1);
-    }
-#endif
-
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI_ENV)
-    srandom(getpid());
-    InitialCBPort = RESTOOL_CBPORT + random() % 1000;
-#else /* AFS_AIX_ENV || AFS_SUN_ENV || AFS_OSF_ENV || AFS_SGI_ENV */
-#if defined(AFS_HPUX_ENV)
-    srand48(getpid());
-    InitialCBPort = RESTOOL_CBPORT + lrand48() % 1000;
-#else /* AFS_HPUX_ENV */
-#if defined AFS_NT40_ENV
-    srand(_getpid());
-    InitialCBPort = RESTOOL_CBPORT + rand() % 1000;
-#else /* AFS_NT40_ENV */
-    srand(getpid());
-    InitialCBPort = RESTOOL_CBPORT + rand() % 1000;
-#endif /* AFS_NT40_ENV */
-#endif /* AFS_HPUX_ENV */
-#endif /* AFS_AIX_ENV || AFS_SUN_ENV || AFS_OSF_ENV || AFS_SGI_ENV */
-
-    CBPort = InitialCBPort;
-    do {
-	code = rx_Init(htons(CBPort));
-	if (code) {
-	    if ((code == RX_ADDRINUSE) &&
-		(CBPort < MAX_PORT_TRIES + InitialCBPort)) {
-		CBPort++;
-	    } else if (CBPort < MAX_PORT_TRIES + InitialCBPort) {
-		fprintf(stderr, "rx_Init didn't succeed for callback service."
-			" Tried port numbers %d through %d\n",
-			InitialCBPort, CBPort);
-		exit(1);
-	    } else {
-		fprintf(stderr,"Couldn't initialize callback service "
-			"because too many users are running this program. "
-			"Try again later.\n");
-		exit(1);
-	    }
-	}
-    } while(code);
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_attr_init(&tattr) == 0);
-    assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    assert(pthread_create(
-	       &CBservicePid, &tattr, InitializeCBService_LWP, 0)
-	   == 0);
-#else
-    code = LWP_CreateProcess(InitializeCBService_LWP, LWP_STACK_SIZE,
-			     LWP_MAX_PRIORITY - 2, (int *) 0, "CBService",
-			     &CBServiceLWP_ID);
-    if (code != LWP_SUCCESS) {
-	fprintf(stderr,"Unable to create the callback service LWP, code %d\n",
-		code);
-	exit(1);
-    }
-#endif
-    return 0;
-}
-
-int
-ScanVnode(char *fname, char *cell)
-{
-    afs_int32 i, code = 0;
-
-    SetCellFname(cell);
-    i = sscanf(fname, "%u.%u.%u",
-	       &PioctlInputs.fid.Volume,
-	       &PioctlInputs.fid.Vnode,
-	       &PioctlInputs.fid.Unique);
-    if (i != 3) {
-	PioctlInputs.fid.Volume = 0;
-	PioctlInputs.fid.Vnode = 0;
-	PioctlInputs.fid.Unique = 0;
-        fprintf(stderr,"fs: invalid vnode triple: %s\n", fname);
-        code = EINVAL;
-    }
-    /*
-     * The following is used to handle the case of unknown uniquifier. We
-     * just need a valid reference to the volume to direct the RPC to the
-     * right fileserver. Therefore we take the root directory of the volume.
-     */
-    if (PioctlInputs.fid.Unique == 0) {
-	PioctlInputs.int32s[0] = PioctlInputs.fid.Vnode;
-	PioctlInputs.fid.Vnode = 1;
-	PioctlInputs.fid.Unique = 1;
-    }
-    return code;
-}
-
-int
-VLDBInit(int noAuthFlag, struct afsconf_cell *info)
-{
-    afs_int32 code;
-
-    code = ugen_ClientInit(noAuthFlag, (char *) AFSDIR_CLIENT_ETC_DIRPATH,
-                           info->name, 0, &uclient,
-                           NULL, pnp, rxkad_clear,
-                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
-                           0, 0, USER_SERVICE_ID);
-    rxInitDone = 1;
-    return code;
-}
-
-afs_int32
-get_vnode_hosts(char *fname, char **cellp, afs_int32 *hosts, AFSFid *Fid,
-		int onlyRW)
-{
-    struct afsconf_dir *tdir;
-    struct vldbentry vldbEntry;
-    afs_int32 i, j, code, *h, len;
-    struct afsconf_cell info;
-    afs_int32 mask;
-
-    tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-    if (!tdir) {
-        fprintf(stderr,"Could not process files in configuration directory "
-		"(%s).\n",AFSDIR_CLIENT_ETC_DIRPATH);
-        return -1;
-    }
-    if (!*cellp) {
-	len = MAXCELLCHARS;
-	*cellp = (char *) malloc(MAXCELLCHARS);
-	code = afsconf_GetLocalCell(tdir, *cellp, len);
-	if (code) return code;
-    }
-    code = afsconf_GetCellInfo(tdir, *cellp, AFSCONF_VLDBSERVICE, &info);
-    if (code) {
-        fprintf(stderr,"fs: cell %s not in %s/CellServDB\n",
-		*cellp, AFSDIR_CLIENT_ETC_DIRPATH);
-        return code;
-    }
-
-    i = sscanf(fname, "%u.%u.%u", &Fid->Volume, &Fid->Vnode, &Fid->Unique);
-    if (i != 3) {
-	fprintf(stderr,"fs: invalid vnode triple: %s\n", fname);
-	return 1;
-    }
-    code = VLDBInit(1, &info);
-    if (code == 0) {
-        code = ubik_VL_GetEntryByID(uclient, 0, Fid->Volume,
-				    -1, &vldbEntry);
-        if (code == VL_NOENT)
-            fprintf(stderr,"fs: volume %u does not exist in this cell.\n",
-		    Fid->Volume);
-        if (code) return code;
-    }
-    h = hosts;
-    mask = VLSF_RWVOL;
-    if (!onlyRW) mask |= VLSF_RWVOL;
-    for (i=0, j=0; j<vldbEntry.nServers; j++) {
-        if (vldbEntry.serverFlags[j] & mask) {
-            *h++ = ntohl(vldbEntry.serverNumber[j]);
-            i++;
-        }
-    }
-    for (; i<AFS_MAXHOSTS; i++) *h++ = 0;
-    return 0;
-}
-
-/* get_file_cell()
- *     Determine which AFS cell file 'fn' lives in, the list of servers that
- *     offer it, and the FID.
+/*!
+ * standardized way of parsing a File ID (FID) from command line input
+ *
+ * \param[in]	fidString	dot-delimited FID triple
+ * \param[out]	fid		pointer to the AFSFid to fill in
+ *
+ * \post The FID pointed to by "fid" is filled in which the parsed Volume,
+ *       Vnode, and Uniquifier data.  The string should be in the format
+ *       of three numbers separated by dot (.) delimiters, representing
+ *       (in order) the volume id, vnode number, and uniquifier.
+ *       Example: "576821346.1.1"
  */
-afs_int32
-get_file_cell(char *fn, char **cellp, afs_int32 hosts[AFS_MAXHOSTS], AFSFid *Fid,
-	      struct AFSFetchStatus *Status, afs_int32 create)
+static int
+ScanFid(char *fidString, struct AFSFid *fid)
 {
-    afs_int32 code;
-    char buf[256];
-    struct ViceIoctl status;
-    int j;
-    afs_int32 *Tmpafs_int32;
+    int i = 0, code = 0;
+    long unsigned int f1, f2, f3;
 
-    memset( Status, 0, sizeof(struct AFSFetchStatus));
-    memset(buf, 0, sizeof(buf));
-    status.in_size = 0;
-    status.out_size = sizeof(buf);
-    status.in = buf;
-    status.out = buf;
-    errno = 0;
-    code = pioctl(fn, VIOC_FILE_CELL_NAME, &status, 0);
-    if (code && create) {
-	char *c;
-	int fd;
-	strcpy(buf,fn);
-#ifdef AFS_NT40_ENV
-        c = strrchr(buf,'\\');
-#else
-        c = strrchr(buf,'/');
-#endif
-	if (c) {
-	    *c = 0;
-	    code = pioctl(buf,VIOC_FILE_CELL_NAME, &status, 0);
-	    if (!code) {
-		fd = open(fn, O_CREAT, 0644);
-		close(fd);
-	    }
-	    code = pioctl(fn, VIOC_FILE_CELL_NAME, &status, 0);
+    if (fidString) {
+	i = sscanf(fidString, "%lu.%lu.%lu", &f1, &f2, &f3);
+	fid->Volume = (afs_uint32) f1;
+	fid->Vnode = (afs_uint32) f2;
+	fid->Unique = (afs_uint32) f3;
+    }
+    if (i != 3) {
+	fid->Volume = 0;
+	fid->Vnode = 0;
+	fid->Unique = 0;
+	code = EINVAL;
+	afs_com_err(pnp, code, "(invalid FID triple: %s)", fidString);
+    }
+
+    return code;
+} /* ScanFid */
+
+/*!
+ * look up cell info and verify FID info from user input
+ *
+ * \param[in]	fidString	string containing FID info
+ * \param[in]	cellName	cell name string
+ * \param[in]	onlyRW		bool: 1 = RW vol only, 0 = any vol type
+ * \param[out]	avfpp		pointer to venusfid info
+ *
+ * \post *avfpp will contain the VenusFid info found for the FID
+ *       given by the used in the string fidString and zero is
+ *       returned.  If not found, an appropriate afs error code
+ *       is returned and *avfpp will be NULL.
+ *
+ * \note Any non-NULL avfpp returned should later be freed with
+ *       afscp_FreeFid() when no longer needed.
+ */
+static afs_int32
+GetVenusFidByFid(char *fidString, char *cellName, int onlyRW,
+                 struct afscp_venusfid **avfpp)
+{
+    afs_int32 code = 0;
+    struct stat sbuf;
+    struct afscp_volume *avolp;
+
+    if (*avfpp == NULL) {
+	*avfpp = malloc(sizeof(struct afscp_venusfid));
+	if ( *avfpp == NULL ) {
+	    code = ENOMEM;
+	    return code;
 	}
     }
-    if (code) {
-	fprintf(stderr, "Unable to determine cell for %s\n", fn);
-	if (errno) {
-	    perror(fn);
-	    if (errno == EINVAL)
-		fprintf(stderr, "(File might not be in AFS)\n");
-	} else
-	    afs_com_err(pnp, code, (char *) 0);
+    memset(*avfpp, 0, sizeof(struct afscp_venusfid));
+
+    if (cellName == NULL) {
+	(*avfpp)->cell = afscp_DefaultCell();
     } else {
-	*cellp = (char *) malloc(strlen(buf)+1);
-	strcpy(*cellp, buf);
-	SetCellFname(*cellp);
-	memset(buf, 0, sizeof(buf));
-	status.in = 0;
-	status.in_size = 0;
-	status.out = buf;
-	status.out_size = sizeof(buf);
-	code = pioctl(fn, VIOCWHEREIS, &status, 0);
-	if (code) {
-	    fprintf(stderr, "Unable to determine fileservers for %s\n", fn);
-	    if (errno) {
-		perror(fn);
-	    }
+	(*avfpp)->cell = afscp_CellByName(cellName, NULL);
+    }
+    if ((*avfpp)->cell == NULL) {
+	if (afscp_errno == 0)
+	    code = EINVAL;
+	else
+	    code = afscp_errno;
+	return code;
+    }
+
+    code = ScanFid(fidString, &((*avfpp)->fid));
+    if (code != 0) {
+	code = EINVAL;
+	return code;
+    }
+
+    avolp = afscp_VolumeById((*avfpp)->cell, (*avfpp)->fid.Volume);
+    if (avolp == NULL) {
+	if (afscp_errno == 0)
+	    code = ENOENT;
+	else
+	    code = afscp_errno;
+	afs_com_err(pnp, code, "(finding volume %lu)",
+		    afs_printable_uint32_lu((*avfpp)->fid.Volume));
+	return code;
+    }
+
+    if ( onlyRW && (avolp->voltype != RWVOL) ) {
+	avolp = afscp_VolumeByName((*avfpp)->cell, avolp->name, RWVOL);
+	if (avolp == NULL) {
+	    if (afscp_errno == 0)
+		code = ENOENT;
 	    else
-	        afs_com_err(pnp, code, (char *) 0);
-	} else {
-	    Tmpafs_int32 = (afs_int32 *)buf;
-	    for (j=0;j<AFS_MAXHOSTS;++j) {
-		hosts[j] = Tmpafs_int32[j];
-		if (!Tmpafs_int32[j])
-		    break;
-	    }
+		code = afscp_errno;
+	    afs_com_err(pnp, code, "(finding volume %lu)",
+		        afs_printable_uint32_lu((*avfpp)->fid.Volume));
+	    return code;
 	}
-	memset(buf, 0, sizeof(buf));
-	status.in_size = 0;
-	status.out_size = sizeof(buf);
-	status.in = 0;
-	status.out = buf;
-	code = pioctl(fn, VIOCGETFID, &status, 0);
-	if (code) {
-	    fprintf(stderr, "Unable to determine FID for %s\n", fn);
-	    if (errno) {
-		perror(fn);
-	    } else {
-	        afs_com_err(pnp, code, (char *) 0);
-	    }
-	} else {
-	    Tmpafs_int32 = (afs_int32 *)buf;
-	    Fid->Volume = Tmpafs_int32[1];
-	    Fid->Vnode = Tmpafs_int32[2];
-	    Fid->Unique = Tmpafs_int32[3];
+	(*avfpp)->fid.Volume = avolp->id; /* is this safe? */
+    }
+
+    code = afscp_Stat((*avfpp), &sbuf);
+    if (code != 0) {
+	afs_com_err(pnp, code, "(stat failed with code %d)", code);
+	return code;
+    }
+    return 0;
+} /* GetVenusFidByFid */
+
+/*!
+ * Split a full path up into dirName and baseName components
+ *
+ * \param[in]	fullPath	can be absolute, relative, or local
+ * \param[out]	dirName		pointer to allocated char buffer or NULL
+ * \param[out]	baseName	pointer to allocated char buffer or NULL
+ *
+ * \post To the fulleset extent possible, the rightmost full path
+ *       component will be copied into baseName and all other
+ *       components into dirName (minus the trailing path separator).
+ *       If either dirName or baseName are NULL, only the non-NULL
+ *       pointer will be filled in (but both can't be null or it would
+ *       be pointless) -- so the caller can retrieve, say, only baseName
+ *       if desired.  The return code is the number of strings copied:
+ *       0 if neither dirName nor baseName could be filled in
+ *       1 if either dirName or baseName were filled in
+ *       2 if both dirName and baseName were filled in
+ */
+static int
+BreakUpPath(char *fullPath, char *dirName, char *baseName)
+{
+    char *lastSlash;
+    size_t dirNameLen = 0;
+    int code = 0, useDirName = 1, useBaseName = 1;
+
+    if (fullPath == NULL) {
+	return code;
+    }
+
+    if (dirName == NULL)
+	useDirName = 0;
+    if (baseName == NULL)
+	useBaseName = 0;
+    if (!useBaseName && !useDirName) {
+	/* would be pointless to continue -- must be error in call */
+	return code;
+    }
+#ifdef AFS_NT40_ENV
+    lastSlash = strrchr(fullPath, '\\');
+#else
+    lastSlash = strrchr(fullPath, '/');
+#endif
+    if (lastSlash != NULL) {
+	/* then lastSlash points to the last path separator in fullPath */
+	if (useDirName) {
+	    dirNameLen = strlen(fullPath) - strlen(lastSlash);
+	    strlcpy(dirName, fullPath, dirNameLen + 1);
+	    code++;
+	}
+	if (useBaseName) {
+	    lastSlash++;
+	    strlcpy(baseName, lastSlash, strlen(lastSlash) + 1);
+	    code++;
+	}
+    } else {
+	/* there are no path separators in fullPath -- it's just a baseName */
+	if (useBaseName) {
+	    strlcpy(baseName, fullPath, strlen(fullPath) + 1);
+	    code++;
 	}
     }
     return code;
-}
+} /* BreakUpPath */
 
-int
-DestroyConnections(void)
+/*!
+ * Get the VenusFid info available for the file at AFS path 'fullPath'.
+ * Works without pioctls/afsd by using libafscp.  Analogous to
+ * get_file_cell() in the previous iteration of afsio.
+ *
+ * \param[in]	fullPath	the file name
+ * \param[in]	cellName	the cell name to look up
+ * \param[out]	avfpp		pointer to Venus FID info to be filled in
+ *
+ * \post If the path resolves successfully (using afscp_ResolvePath),
+ *       then vfpp will contain the Venus FID info (cell info plus
+ *       AFSFid) of the last path segment in fullPath.
+ */
+static afs_int32
+GetVenusFidByPath(char *fullPath, char *cellName,
+                  struct afscp_venusfid **avfpp)
 {
-    int i;
+    afs_int32 code = 0;
 
-    if (!ConnLookupInitialized) return 0;
-    for (i = 0; i < MAX_HOSTS; i++) {
-        if (!ConnLookup[i].conn) break;
-	RXAFS_GiveUpAllCallBacks(ConnLookup[i].conn);
-	rx_DestroyConnection(ConnLookup[i].conn);
+    if (fullPath == NULL) {
+	return -1;
     }
-    if (!rxInitDone)
-	rx_Finalize();
-    return 0;
-}
 
+    if (cellName != NULL) {
+	code = (afs_int32) afscp_SetDefaultCell(cellName);
+	if (code != 0) {
+	    return code;
+	}
+    }
 
-int
-LogErrors (int level, const char *fmt, ...)
-{
-    va_list ap;
+    *avfpp = afscp_ResolvePath(fullPath);
+    if (*avfpp == NULL) {
+	if (afscp_errno == 0)
+	    code = ENOENT;
+	else
+	    code = afscp_errno;
+    }
 
-    va_start(ap, fmt);
-    return vfprintf(stderr, fmt, ap);
-}
+    return code;
+} /* GetVenusFidByPath */
 
-int
+static int
 readFile(struct cmd_syndesc *as, void *unused)
 {
-    char *fname;
-    char *cell = 0;
-    afs_int32 code;
-    afs_int32 hosts[AFS_MAXHOSTS];
-    AFSFid Fid;
-    int j;
-    struct rx_connection *RXConn;
-    struct cellLookup *cl;
-    struct rx_call *tcall;
-    struct AFSVolSync tsync;
+    char *fname = NULL;
+    char *cell = NULL;
+    char *realm = NULL;
+    afs_int32 code = 0;
     struct AFSFetchStatus OutStatus;
-    struct AFSCallBack CallBack;
+    struct afscp_venusfid *avfp = NULL;
     afs_int64 Pos;
     afs_int32 len;
-    afs_int64 length, Len;
-    u_char vnode = 0;
-    u_char first = 1;
+    afs_int64 length = 0, Len;
     int bytes;
     int worstCode = 0;
     char *buf = 0;
+    char ipv4_addr[16];
     int bufflen = BUFFLEN;
 
 #ifdef AFS_NT40_ENV
@@ -931,298 +580,265 @@ readFile(struct cmd_syndesc *as, void *unused)
     _setmode(1, _O_BINARY);
 #endif
 
-    if (as->name[0] == 'f')
-	vnode = 1;
-    if (as->parms[2].items)
-	verbose = 1;
-    if (as->parms[3].items) {
-	md5sum = 1;
+    gettimeofday(&starttime, &Timezone);
+
+    CmdProlog(as, &cell, &realm, &fname, NULL);
+    afscp_AnonymousAuth(1);
+
+    if (md5sum)
 	MD5_Init(&md5);
-    }
 
-    CBServiceNeeded = 1;
-    InitializeCBService();
+    if (realm != NULL)
+	code = afscp_SetDefaultRealm(realm);
 
-    gettimeofday (&starttime, NULL);
-    fname = as->parms[0].items->data;
-    cell = 0;
-    if (as->parms[1].items)
-	cell = as->parms[1].items->data;
-    if (vnode)
-	code = get_vnode_hosts(fname, &cell, hosts, &Fid, 1);
+    if (cell != NULL)
+	code = afscp_SetDefaultCell(cell);
+
+    if (useFid)
+	code = GetVenusFidByFid(fname, cell, 0, &avfp);
     else
-        code = get_file_cell(fname, &cell, hosts, &Fid, &OutStatus, 0);
-    if (code) {
-        fprintf(stderr,"File not found %s\n", fname);
-        return code;
+	code = GetVenusFidByPath(fname, cell, &avfp);
+    if (code != 0) {
+	afs_com_err(pnp, code, "(file not found: %s)", fname);
+	return code;
     }
-    if (Fid.Vnode & 1) {
-	fprintf(stderr,"%s is a directory, not a file\n", fname);
-	return ENOENT;
-    }
-    cl = FindCell(cell);
-    for (j=0;j<AFS_MAXHOSTS;++j) {
-	int useHost;
 
-        if (first && as->parms[6].items) {
-	    afs_uint32 fields, ip1, ip2, ip3, ip4;
-	    fields = sscanf(as->parms[6].items->data, "%d.%d.%d.%d",
-			    &ip1, &ip2, &ip3, &ip4);
-	    useHost = (ip1 << 24) + (ip2 << 16) + (ip3 << 8) + ip4;
-	    j--;
-        } else {
-            if (!hosts[j])
-                break;
-	    useHost = hosts[j];
-	}
-	first = 0;
-        RXConn = FindRXConnection(useHost, htons(AFSCONF_FILEPORT), 1,
-				  cl->sc, cl->scIndex);
-        if (!RXConn) {
-            fprintf(stderr,"rx_NewConnection failed to server 0x%X\n",
-                    useHost);
-            continue;
-        }
-        code = AFS_FetchStatus(RXConn, &Fid, &OutStatus, &CallBack, &tsync);
-        if (code) {
-           fprintf(stderr,"RXAFS_FetchStatus failed to server 0x%X for"
-                   " file %s, code was %d\n",
-		   useHost, fname, code);
-	   continue;
-	}
-        gettimeofday(&opentime, NULL);
-	if (verbose) {
-            seconds = (float)(opentime.tv_sec + opentime.tv_usec *.000001
-		-starttime.tv_sec - starttime.tv_usec *.000001);
-	    fprintf(stderr,"Startup to find the file took %.3f sec.\n",
-		    seconds);
-	}
-	Len = OutStatus.Length_hi;
-	Len <<= 32;
-	Len += OutStatus.Length;
-	ZeroInt64(Pos);
-	{
-	    afs_uint32 high, low;
-
-            tcall = rx_NewCall(RXConn);
-            code = StartAFS_FetchData64 (tcall, &Fid, Pos, Len);
-            if (code == RXGEN_OPCODE) {
-	        afs_int32 tmpPos,  tmpLen;
-	        tmpPos = (afs_int32)Pos; tmpLen = (afs_int32)Len;
-                code = StartAFS_FetchData (tcall, &Fid, tmpPos, tmpLen);
-	        bytes = rx_Read(tcall, (char *)&low, sizeof(afs_int32));
-		length = ntohl(low);
-	        if (bytes != 4) code = -3;
-            } else if (!code) {
-                bytes = rx_Read(tcall, (char *)&high, 4);
-	        length = ntohl(high);
-		length <<= 32;
-                bytes += rx_Read(tcall, (char *)&low, 4);
-		length += ntohl(low);
-	        if (bytes != 8) code = -3;
-            }
-            if (code) {
-                if (code == RXGEN_OPCODE) {
-                    fprintf(stderr, "File server for %s might not be running a"
-			    " multi-resident AFS server\n",
-			    fname);
-		} else {
-                    fprintf(stderr, "%s for %s ended with error code %d\n",
-                            (char *) &as->name, fname, code);
-		    exit(1);
-	        }
-            }
-	    if (length > bufflen)
-		len = bufflen;
-	    else
-		len = (afs_int32) length;
-	    buf = (char *)malloc(len);
-	    if (!buf) {
-	        fprintf(stderr, "couldn't allocate buffer\n");
-	        exit(1);
-	    }
-	    while (!code && NonZeroInt64(length)) {
-	        if (length > bufflen)
-		    len = bufflen;
-	        else
-		    len = (afs_int32) length;
-	        bytes = rx_Read(tcall, (char *) buf, len);
-	        if (bytes != len) {
-		    code = -3;
-	        }
-		if (md5sum)
-	    	    MD5_Update(&md5, buf, len);
-	        if (!code)
-		    write(1, buf, len);
-	        length -= len;
-		xfered += len;
-		gettimeofday(&now, NULL);
-	        if (verbose)
-		    printDatarate();
-	    }
-	    worstCode = code;
-	    code = EndRXAFS_FetchData (tcall, &OutStatus, &CallBack, &tsync);
-	    rx_EndCall(tcall, 0);
-	    if (!worstCode)
-		worstCode = code;
-	}
-        break;
+    if (avfp->fid.Vnode & 1) {
+	code = ENOENT;
+	afs_com_err(pnp, code, "(%s is a directory, not a file)", fname);
+	afscp_FreeFid(avfp);
+	return code;
     }
-    gettimeofday(&readtime, NULL);
-    if (worstCode) {
-	fprintf(stderr,"%s failed with code %d\n",
-		(char *) &as->name, worstCode);
-    } else {
-        if (md5sum) {
-	    afs_uint32 md5int[4];
-	    char *p;
-	    MD5_Final((char *) &md5int[0], &md5);
-#ifdef AFS_NT40_ENV
-            p = strrchr(fname,'\\');
-#else
-            p = strrchr(fname,'/');
-#endif
-            if (p)
-                p++;
-	    else
-                p = fname;
 
-	    fprintf(stderr, "%08x%08x%08x%08x  %s\n",
-                    htonl(md5int[0]), htonl(md5int[1]),
-		    htonl(md5int[2]), htonl(md5int[3]), p);
-        }
-	if(verbose) {
-            seconds = (float)(readtime.tv_sec + readtime.tv_usec *.000001
-		-opentime.tv_sec - opentime.tv_usec *.000001);
-            fprintf(stderr,"Transfer of %llu bytes took %.3f sec.\n",
-		    xfered, seconds);
-            datarate = (xfered >> 20) / seconds;
-            fprintf(stderr,"Total data rate = %.03f MB/sec. for read\n",
-		    datarate);
-	}
+    code = afscp_GetStatus(avfp, &OutStatus);
+    if (code != 0) {
+	afs_inet_ntoa_r(avfp->cell->fsservers[0]->addrs[0], ipv4_addr);
+	afs_com_err(pnp, code, "(failed to get status of file %s from"
+		    "server %s, code = %d)", fname, ipv4_addr, code);
+	afscp_FreeFid(avfp);
+	return code;
     }
-    DestroyConnections();
+
+    gettimeofday(&opentime, &Timezone);
+    if (verbose)
+	fprintf(stderr, "Startup to find the file took %.3f sec.\n",
+		time_elapsed(&starttime, &opentime));
+    Len = OutStatus.Length_hi;
+    Len <<= 32;
+    Len += OutStatus.Length;
+    ZeroInt64(Pos);
+    buf = (char *) malloc(bufflen * sizeof(char));
+    if (buf == NULL) {
+	code = ENOMEM;
+	afs_com_err(pnp, code, "(cannot allocate buffer)");
+	afscp_FreeFid(avfp);
+	return code;
+    }
+    memset(buf, 0, bufflen * sizeof(char));
+    length = Len;
+    while (!code && NonZeroInt64(length)) {
+	if (length > bufflen)
+	    len = bufflen;
+	else
+	    len = (afs_int32) length;
+	bytes = afscp_PRead(avfp, buf, len, Pos);
+	if (bytes != len)
+	    code = -3; /* what error name should we use here? */
+	if (md5sum)
+	    MD5_Update(&md5, buf, len);
+	if (code == 0) {
+	    len = write(1, buf, len); /* to stdout */
+	    if (len == 0)
+		code = errno;
+	}
+	length -= len;
+	xfered += len;
+	if (verbose)
+	    printDatarate();
+	Pos += len;
+	worstCode = code;
+    }
+    afscp_FreeFid(avfp);
+
+    gettimeofday(&readtime, &Timezone);
+    if (md5sum)
+	summarizeMD5(fname);
+    if (verbose)
+	summarizeDatarate(&readtime, "read");
+    if (buf != NULL)
+	free(buf);
+
     return worstCode;
-}
+} /* readFile */
 
-int
+static int
 writeFile(struct cmd_syndesc *as, void *unused)
 {
     char *fname = NULL;
-    char *cell = 0;
-    afs_int32 code, localcode = 0;
-    afs_int32 hosts[AFS_MAXHOSTS];
-    afs_uint32 useHost;
-    AFSFid Fid;
-    struct rx_connection *RXConn;
-    struct cellLookup *cl;
-    struct rx_call *tcall;
-    struct AFSVolSync tsync;
+    char *cell = NULL;
+    char *sSynthLen = NULL;
+    char *realm = NULL;
+    afs_int32 code = 0;
+    afs_int32 byteswritten;
     struct AFSFetchStatus OutStatus;
     struct AFSStoreStatus InStatus;
-    struct AFSCallBack CallBack;
+    struct afscp_venusfid *dirvfp = NULL, *newvfp = NULL;
     afs_int64 Pos;
     afs_int64 length, Len, synthlength = 0, offset = 0;
-    u_char vnode = 0;
     afs_int64 bytes;
     int worstCode = 0;
-    int append = 0;
     int synthesize = 0;
-    afs_int32 byteswritten;
+    int overWrite = 0;
     struct wbuf *bufchain = 0;
     struct wbuf *previous, *tbuf;
+    char dirName[AFSPATHMAX];
+    char baseName[AFSNAMEMAX];
+    char ipv4_addr[16];
 
 #ifdef AFS_NT40_ENV
     /* stdin on Windows defaults to _O_TEXT mode */
     _setmode(0, _O_BINARY);
 #endif
 
-    if (as->name[0] == 'f') {
-	vnode = 1;
-        if (as->name[3] == 'a')
-	    append = 1;
-    } else
-        if (as->name[0] == 'a')
-	    append = 1;
-    if (as->parms[2].items)
-	verbose = 1;
-    if (as->parms[3].items)
-	md5sum = 1;
-    if (as->parms[4].items) {
-	code = util_GetInt64(as->parms[4].items->data, &synthlength);
-	if (code) {
-	    fprintf(stderr, "Invalid value for synthesize length %s\n",
-		    as->parms[4].items->data);
+    CmdProlog(as, &cell, &realm, &fname, &sSynthLen);
+    afscp_AnonymousAuth(1);
+
+    if (realm != NULL)
+	code = afscp_SetDefaultRealm(realm);
+
+    if (cell != NULL)
+	code = afscp_SetDefaultCell(cell);
+
+    if (sSynthLen) {
+	code = util_GetInt64(sSynthLen, &synthlength);
+	if (code != 0) {
+	    afs_com_err(pnp, code, "(invalid value for synthesize length %s)",
+			sSynthLen);
 	    return code;
 	}
 	synthesize = 1;
     }
-    CBServiceNeeded = 1;
-    InitializeCBService();
 
-    if (as->parms[0].items)
-	fname = as->parms[0].items->data;
-
-    cell = 0;
-    if (as->parms[1].items) cell = as->parms[1].items->data;
-    if (vnode) {
-	code = get_vnode_hosts(fname, &cell, hosts, &Fid, 1);
-	if (code)
+    if (useFid) {
+	code = GetVenusFidByFid(fname, cell, 1, &newvfp);
+	if (code != 0) {
+	    afs_com_err(pnp, code, "(GetVenusFidByFid returned code %d)", code);
 	    return code;
-    } else
-        code = get_file_cell(fname, &cell, hosts, &Fid, &OutStatus, append ? 0 : 1);
-    if (code) {
-        fprintf(stderr,"File or directory not found: %s\n",
-                    fname);
-        return code;
+	}
+    } else {
+	code = GetVenusFidByPath(fname, cell, &newvfp);
+	if (code == 0) { /* file was found */
+	    if (force)
+		overWrite = 1;
+	    else if (!append) {
+		/*
+		 * file cannot already exist if specified by path and not
+		 * appending to it unless user forces overwrite
+		 */
+		code = EEXIST;
+		afscp_FreeFid(newvfp);
+		afs_com_err(pnp, code, "(use -force to overwrite)");
+		return code;
+	    }
+	} else { /* file not found */
+	    if (append) {
+		code = ENOENT;
+		afs_com_err(pnp, code, "(cannot append to non-existent file)");
+		return code;
+	    }
+	}
+	if (!append && !overWrite) { /* must create a new file in this case */
+	    if ( BreakUpPath(fname, dirName, baseName) != 2 ) {
+		code = EINVAL;
+		afs_com_err(pnp, code, "(must provide full AFS path)");
+		afscp_FreeFid(newvfp);
+		return code;
+	    }
+
+	    code = GetVenusFidByPath(dirName, cell, &dirvfp);
+	    afscp_FreeFid(newvfp); /* release now-unneeded fid */
+	    newvfp = NULL;
+	    if (code != 0) {
+		afs_com_err(pnp, code, "(is dir %s in AFS?)", dirName);
+		return code;
+	    }
+	}
     }
-    if (Fid.Vnode & 1) {
-	fprintf(stderr,"%s is a directory, not a file\n", fname);
-	return ENOENT;
+
+    if ( (newvfp != NULL) && (newvfp->fid.Vnode & 1) ) {
+	code = EISDIR;
+	afs_com_err(pnp, code, "(%s is a directory, not a file)", fname);
+	afscp_FreeFid(newvfp);
+	afscp_FreeFid(dirvfp);
+	return code;
     }
-    if (!hosts[0]) {
-	fprintf(stderr,"AFS file not found: %s\n", fname);
-	return ENOENT;
-    }
-    cl = FindCell(cell);
-    gettimeofday (&starttime, NULL);
-    useHost = hosts[0];
-    RXConn = FindRXConnection(useHost, htons(AFSCONF_FILEPORT), 1,
-			      cl->sc, cl->scIndex);
-    if (!RXConn) {
-        fprintf(stderr,"rx_NewConnection failed to server 0x%X\n",
-		hosts[0]);
-        return -1;
-    }
-    code = AFS_FetchStatus(RXConn, &Fid, &OutStatus, &CallBack, &tsync);
-    if (code) {
-        fprintf(stderr,"RXAFS_FetchStatus failed to server 0x%X for file %s, code was%d\n",
-                            useHost, fname, code);
-       return -1;
-    }
-    if (!append && (OutStatus.Length || OutStatus.Length_hi)) {
-        fprintf(stderr,"AFS file %s not empty, request aborted.\n", fname);
-	DestroyConnections();
-        return -5;
-    }
-    InStatus.Mask = AFS_SETMODE + AFS_FSYNC;
+    gettimeofday(&starttime, &Timezone);
+
     InStatus.UnixModeBits = 0644;
+    if (newvfp == NULL) {
+	code = afscp_CreateFile(dirvfp, baseName, &InStatus, &newvfp);
+	if (code != 0) {
+	    afs_com_err(pnp, code,
+		        "(could not create file %s in directory %lu.%lu.%lu)",
+		        baseName, afs_printable_uint32_lu(dirvfp->fid.Volume),
+		        afs_printable_uint32_lu(dirvfp->fid.Vnode),
+		        afs_printable_uint32_lu(dirvfp->fid.Unique));
+	    return code;
+	}
+    }
+    code = afscp_GetStatus(newvfp, &OutStatus);
+    if (code != 0) {
+	afs_inet_ntoa_r(newvfp->cell->fsservers[0]->addrs[0], ipv4_addr);
+	afs_com_err(pnp, code, "(failed to get status of file %s from"
+		    "server %s, code = %d)", fname, ipv4_addr, code);
+	afscp_FreeFid(newvfp);
+	afscp_FreeFid(dirvfp);
+	return code;
+    }
+
+    if ( !append && !force &&
+	 (OutStatus.Length != 0 || OutStatus.Length_hi !=0 ) ) {
+	/*
+	 * file exists, is of non-zero length, and we're not appending
+	 * to it: user must force overwrite
+	 * (covers fidwrite edge case)
+	 */
+	code = EEXIST;
+	afscp_FreeFid(newvfp);
+	afscp_FreeFid(dirvfp);
+	afs_com_err(pnp, code, "(use -force to overwrite)");
+	return code;
+    }
+
+    InStatus.Mask = AFS_SETMODE + AFS_FSYNC;
     if (append) {
 	Pos = OutStatus.Length_hi;
 	Pos = (Pos << 32) | OutStatus.Length;
     } else
-        Pos = 0;
+	Pos = 0;
     previous = (struct wbuf *)&bufchain;
     if (md5sum)
 	MD5_Init(&md5);
 
+    /*
+     * currently, these two while loops (1) read the whole source file in
+     * before (2) writing any of it out, meaning that afsio can't deal with
+     * files larger than the maximum amount of memory designated for
+     * reading a file in (WRITEBUFLEN).
+     * Consider going to a single loop, like in readFile(), though will
+     * have implications on timing statistics (such as the "Startup to
+     * find the file" time, below).
+     */
     Len = 0;
-    while (Len<WRITEBUFFLEN) {
+    while (Len < WRITEBUFLEN) {
 	tbuf = (struct wbuf *)malloc(sizeof(struct wbuf));
-	if (!tbuf) {
+	if (tbuf == NULL) {
 	    if (!bufchain) {
-		fprintf(stderr, "Couldn't allocate buffer, aborting\n");
-		exit(1);
+		code = ENOMEM;
+		afscp_FreeFid(newvfp);
+		afscp_FreeFid(dirvfp);
+		afs_com_err(pnp, code, "(cannot allocate buffer)");
+		return code;
 	    }
 	    break;
 	}
@@ -1233,16 +849,16 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	    if (l > synthlength)
 		l = synthlength;
 	    for (ll = 0; ll < l; ll += 4096) {
-                sprintf(&tbuf->buf[ll],"Offset (0x%x, 0x%x)\n",
+		sprintf(&tbuf->buf[ll], "Offset (0x%x, 0x%x)\n",
 			(unsigned int)((offset + ll) >> 32),
 			(unsigned int)((offset + ll) & 0xffffffff));
 	    }
 	    offset += l;
 	    synthlength -= l;
-	    tbuf->used = (afs_int32)l;
+	    tbuf->used = (afs_int32) l;
 	} else
-	    tbuf->used = read(0, &tbuf->buf, tbuf->buflen);
-	if (!tbuf->used) {
+	    tbuf->used = read(0, &tbuf->buf, tbuf->buflen); /* from stdin */
+	if (tbuf->used == 0) {
 	    free(tbuf);
 	    break;
 	}
@@ -1252,231 +868,79 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	previous = tbuf;
 	Len += tbuf->used;
     }
-    gettimeofday(&opentime, NULL);
-    if (verbose) {
-        seconds = (float) (opentime.tv_sec + opentime.tv_usec *.000001
-	    -starttime.tv_sec - starttime.tv_usec *.000001);
-        fprintf(stderr,"Startup to find the file took %.3f sec.\n",
-		seconds);
-    }
+    gettimeofday(&opentime, &Timezone);
+    if (verbose)
+	fprintf(stderr, "Startup to find the file took %.3f sec.\n",
+		time_elapsed(&starttime, &opentime));
     bytes = Len;
     while (!code && bytes) {
-        afs_int32 code2;
-        Len = bytes;
-    restart:
-        tcall = rx_NewCall(RXConn);
-        code = StartAFS_StoreData64 (tcall, &Fid, &InStatus, Pos, Len, Pos+Len);
-        if (code == RXGEN_OPCODE) {
-	    afs_uint32 tmpLen, tmpPos;
-	    tmpPos = (afs_int32) Pos;
-	    tmpLen = (afs_int32) Len;
-	    if (Pos+Len > 0x7fffffff) {
-	        fprintf(stderr,"AFS fileserver does not support files >= 2 GB\n");
-	        return EFBIG;
-	    }
-	    code = StartAFS_StoreData (tcall, &Fid, &InStatus, tmpPos, tmpLen,
-				       tmpPos+tmpLen);
-        }
-        if (code) {
-            fprintf(stderr, "StartRXAFS_StoreData had error code %d\n", code);
-	    return code;
-        }
-        length = Len;
+	Len = bytes;
+	length = Len;
 	tbuf = bufchain;
 	if (Len) {
-            for (tbuf= bufchain; tbuf; tbuf=tbuf->next) {
-	        if (!tbuf->used)
+	    for (tbuf = bufchain; tbuf; tbuf = tbuf->next) {
+		if (tbuf->used == 0)
 		    break;
-	        byteswritten = rx_Write(tcall, tbuf->buf, tbuf->used);
-	        if (byteswritten != tbuf->used) {
+		byteswritten = afscp_PWrite(newvfp, tbuf->buf,
+					    tbuf->used, Pos + xfered);
+		if (byteswritten != tbuf->used) {
 	            fprintf(stderr,"Only %d instead of %" AFS_INT64_FMT " bytes transferred by rx_Write()\n", byteswritten, length);
 	            fprintf(stderr, "At %" AFS_UINT64_FMT " bytes from the end\n", length);
-	            code = -4;
+		    code = -4;
 		    break;
-	        }
+		}
 		xfered += tbuf->used;
-		gettimeofday(&now, NULL);
-	        if (verbose)
+		if (verbose)
 		    printDatarate();
-	        length -= tbuf->used;
-            }
-	}
-        worstCode = code;
-        code = EndRXAFS_StoreData64 (tcall, &OutStatus, &tsync);
-	if (code) {
-	    fprintf(stderr, "EndRXAFS_StoreData64 returned %d\n", code);
-            worstCode = code;
-        }
-        code2 = rx_Error(tcall);
-	if (code2) {
-	    fprintf(stderr, "rx_Error returned %d\n", code2);
-            worstCode = code2;
-        }
-        code2 = rx_EndCall(tcall, localcode);
-	if (code2) {
-	    fprintf(stderr, "rx_EndCall returned %d\n", code2);
-            worstCode = code2;
-        }
-	code = worstCode;
-	if (code == 110) {
-	    fprintf(stderr, "Waiting for busy volume\n");
-	    sleep(10);
-	    goto restart;
+		length -= tbuf->used;
+	    }
 	}
 	Pos += Len;
 	bytes = 0;
 	if (!code) {
-            for (tbuf = bufchain; tbuf; tbuf=tbuf->next) {
-	        tbuf->offset = 0;
+	    for (tbuf = bufchain; tbuf; tbuf = tbuf->next) {
+		tbuf->offset = 0;
 		if (synthesize) {
-	    	    afs_int64 ll, l = tbuf->buflen;
-	    	    if (l > synthlength)
+		    afs_int64 ll, l = tbuf->buflen;
+		    if (l > synthlength)
 			l = synthlength;
-	     	    for (ll = 0; ll < l; ll += 4096) {
-			sprintf(&tbuf->buf[ll],"Offset (0x%x, 0x%x)\n",
+		    for (ll = 0; ll < l; ll += 4096) {
+			sprintf(&tbuf->buf[ll], "Offset (0x%x, 0x%x)\n",
 				(unsigned int)((offset + ll) >> 32),
 				(unsigned int)((offset + ll) & 0xffffffff));
-	    	    }
-	    	    offset += l;
-	    	    synthlength -= l;
-	    	    tbuf->used = (afs_int32) l;
+		    }
+		    offset += l;
+		    synthlength -= l;
+		    tbuf->used = (afs_int32) l;
 		} else
-	            tbuf->used = read(0, &tbuf->buf, tbuf->buflen);
-	        if (!tbuf->used)
-	            break;
+		    tbuf->used = read(0, &tbuf->buf, tbuf->buflen); /* from stdin */
+		if (!tbuf->used)
+		    break;
 		if (md5sum)
-	    	    MD5_Update(&md5, &tbuf->buf, tbuf->used);
-	        Len += tbuf->used;
+		    MD5_Update(&md5, &tbuf->buf, tbuf->used);
+		Len += tbuf->used;
 		bytes += tbuf->used;
-            }
-        }
+	    }
+	}
     }
-    gettimeofday(&writetime, NULL);
-    if (worstCode) {
-	fprintf(stderr,"%s failed with code %d\n", as->name, worstCode);
-    } else if(verbose) {
-        seconds = (float) (writetime.tv_sec + writetime.tv_usec *.000001
-	    -opentime.tv_sec - opentime.tv_usec *.000001);
-        fprintf(stderr,"Transfer of %llu bytes took %.3f sec.\n",
-		xfered, seconds);
-        datarate = (xfered >> 20) / seconds;
-        fprintf(stderr,"Total data rate = %.03f MB/sec. for write\n",
-		datarate);
+    afscp_FreeFid(newvfp);
+    afscp_FreeFid(dirvfp);
+
+    gettimeofday(&writetime, &Timezone);
+    if (code) {
+	afs_com_err(pnp, code, "(%s failed with code %d)", as->name,
+		    code);
+    } else if (verbose) {
+	summarizeDatarate(&writetime, "write");
     }
     while (bufchain) {
 	tbuf = bufchain;
 	bufchain = tbuf->next;
 	free(tbuf);
     }
-    DestroyConnections();
-    if (md5sum) {
-	afs_uint32 md5int[4];
-	char *p;
-	MD5_Final((char *) &md5int[0], &md5);
-#ifdef AFS_NT40_ENV
-        p = strrchr(fname,'\\');
-#else
-        p = strrchr(fname,'/');
-#endif
-        if (p)
-            p++;
-	else
-            p = fname;
 
-        fprintf(stderr, "%08x%08x%08x%08x  %s\n",
-		htonl(md5int[0]), htonl(md5int[1]),
-		htonl(md5int[2]), htonl(md5int[3]), p);
-    }
+    if (md5sum)
+	summarizeMD5(fname);
+
     return worstCode;
-}
-
-struct cellLookup *
-FindCell(char *cellName)
-{
-    char name[MAXCELLCHARS];
-    char *np;
-    struct cellLookup *p, *p2;
-    static struct afsconf_dir *tdir;
-    time_t expires;
-    afs_int32 len, code;
-
-    if (cellName) {
-	np = cellName;
-    } else {
-        if (!tdir)
-	    tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-	len = MAXCELLCHARS;
-	afsconf_GetLocalCell(tdir, name, len);
-	np = (char *) &name;
-    }
-    SetCellFname(np);
-
-    p2 = (struct cellLookup *) &Cells;
-    for (p = Cells; p; p = p->next) {
-	if (!strcmp((char *)&p->info.name, np)) {
-#ifdef NO_AFS_CLIENT
-	    if (!strcmp((char *)&lastcell, np))
-	        code = VLDBInit(1, &p->info);
-#endif
-	    return p;
-	}
-	p2 = p;
-    }
-    p2->next = (struct cellLookup *) malloc(sizeof(struct cellLookup));
-    p = p2->next;
-    memset(p, 0, sizeof(struct cellLookup));
-    p->next = (struct cellLookup *) 0;
-    if (!tdir)
-	tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-    if (afsconf_GetCellInfo(tdir, np, AFSCONF_VLDBSERVICE, &p->info)) {
-	p2->next = (struct cellLookup *) 0;
-	free(p);
-	p = (struct cellLookup *) 0;
-    } else {
-#ifdef NO_AFS_CLIENT
-	if (code = VLDBInit(1, &p->info))
-            fprintf(stderr,"VLDBInit failed for cell %s\n", p->info.name);
-#endif
-	code = afsconf_ClientAuthToken(&p->info, 0, &p->sc, &p->scIndex, &expires);
-	if (code) {
-	    p->scIndex = RX_SECIDX_NULL;
-            p->sc = rxnull_NewClientSecurityObject();
-	}
-    }
-
-    if (p)
-        return p;
-    else
-	return 0;
-}
-
-struct rx_connection *
-FindRXConnection(afs_uint32 host, u_short port, u_short service,
-		 struct rx_securityClass *securityObject,
-		 int serviceSecurityIndex)
-{
-    int i;
-
-    if (!ConnLookupInitialized) {
-	memset(ConnLookup, 0, MAX_HOSTS * sizeof(struct connectionLookup));
-	ConnLookupInitialized = 1;
-    }
-
-    for (i = 0; i < MAX_HOSTS; i++) {
-        if ((ConnLookup[i].host == host) && (ConnLookup[i].port == port))
-	    return ConnLookup[i].conn;
-	if (!ConnLookup[i].conn)
-	    break;
-    }
-
-    if (i >= MAX_HOSTS)
-	return 0;
-
-    ConnLookup[i].conn = rx_NewConnection(host, port, service, securityObject, serviceSecurityIndex);
-    if (ConnLookup[i].conn) {
-	ConnLookup[i].host = host;
-	ConnLookup[i].port = port;
-    }
-
-    return ConnLookup[i].conn;
-}
+} /* writeFile */

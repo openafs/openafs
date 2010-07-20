@@ -349,7 +349,7 @@ dvolser: project tviced usd libafsrpc libafsauthent volser
 rxosdsrc: rxgen
 	+${COMPILE_PART1} rxosd ${COMPILE_PART2A} source
 
-venus: cmd comerr volser ptserver
+venus: cmd comerr volser ptserver libafscp
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
 

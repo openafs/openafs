@@ -388,7 +388,6 @@ EXELIBS3 = \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
-
 # klog.exe
 $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
@@ -462,7 +461,7 @@ $(EXEDIR)\fs.exe: $(FSOBJS) $(OUT)\fs.res $(EXELIBS)
         $(SYMSTORE_IMPORT)
 
 # cmdebug.exe
-$(EXEDIR)\cmdebug.exe: $(CMDBGOBJS) $(OUT)\cmdebug.res $(EXELIBS2)
+$(EXEDIR)\cmdebug.exe: $(CMDBGOBJS) $(OUT)\cmdebug.res
 	$(EXECONLINK) $(EXELIBS2) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
@@ -470,8 +469,25 @@ $(EXEDIR)\cmdebug.exe: $(CMDBGOBJS) $(OUT)\cmdebug.res $(EXELIBS2)
         $(SYMSTORE_IMPORT)
 
 # afsio.exe
-$(EXEDIR)\afsio.exe: $(AFSIOOBJS) $(OUT)\afsio.res $(RXOBJS) $(AFSD_EXELIBS) $(EXELIBS3)
-	$(EXECONLINK)  $(RXOBJS) $(AFSD_EXELIBS) $(EXELIBS3) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
+AFSCPLIB = \
+        $(DESTDIR)\lib\afs\afscp.lib
+
+!IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
+KFWLIBS = \
+    ..\kfw\lib\$(CPU)\krb5_64.lib \
+    ..\kfw\lib\$(CPU)\comerr64.lib \
+    dnsapi.lib mpr.lib delayimp.lib
+LINKOPTS = /DELAYLOAD:krb5_64.dll /DELAYLOAD:comerr64.dll
+!else
+KFWLIBS = \
+    ..\kfw\lib\$(CPU)\krb5_32.lib \
+    ..\kfw\lib\$(CPU)\comerr32.lib \
+    dnsapi.lib mpr.lib delayimp.lib
+LINKOPTS = /DELAYLOAD:krbv4w32.dll /DELAYLOAD:krb5_32.dll /DELAYLOAD:comerr32.dll
+!endif
+
+$(EXEDIR)\afsio.exe: $(AFSIOOBJS) $(OUT)\afsio.res $(RXOBJS) $(AFSD_EXELIBS) $(EXELIBS3) $(AFSCPLIB)
+	$(EXECONLINK) $(KFWLIBS) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
