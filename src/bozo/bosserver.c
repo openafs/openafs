@@ -287,6 +287,7 @@ ReadBozoFile(char *aname)
     afs_int32 i, goal;
     struct bnode *tb;
     char *parms[MAXPARMS];
+    char *thisparms[MAXPARMS];
     int rmode;
 
     /* rename BozoInit to BosServer for the user */
@@ -402,6 +403,8 @@ ReadBozoFile(char *aname)
 	} else if (code == 3)
 	    notifier = NULL;
 
+	memset(thisparms, 0, sizeof(thisparms));
+
 	for (i = 0; i < MAXPARMS; i++) {
 	    /* now read the parms, until we see an "end" line */
 	    tp = fgets(tbuffer, sizeof(tbuffer), tfile);
@@ -419,12 +422,13 @@ ReadBozoFile(char *aname)
 	    if (!parms[i])	/* make sure there's space */
 		parms[i] = (char *)malloc(BOZO_BSSIZE);
 	    strcpy(parms[i], tbuffer + 5);	/* remember the parameter for later */
+	    thisparms[i] = parms[i];
 	}
 
 	/* ok, we have the type and parms, now create the object */
 	code =
-	    bnode_Create(typep, instp, &tb, parms[0], parms[1], parms[2],
-			 parms[3], parms[4], notifier,
+	    bnode_Create(typep, instp, &tb, thisparms[0], thisparms[1],
+			 thisparms[2], thisparms[3], thisparms[4], notifier,
 			 goal ? BSTAT_NORMAL : BSTAT_SHUTDOWN, 0);
 	if (code)
 	    goto fail;
