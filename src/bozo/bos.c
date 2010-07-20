@@ -1414,6 +1414,36 @@ GetLogCmd(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
+IsDAFS(struct rx_connection *aconn)
+{
+    char buffer[BOZO_BSSIZE];
+    char *tp;
+    struct bozo_status istatus;
+    afs_int32 code;
+
+    tp = &buffer[0];
+
+    code = BOZO_GetInstanceInfo(aconn, "dafs", &tp, &istatus);
+    if (code) {
+	/* no dafs bnode; cannot be dafs */
+	return 0;
+    }
+    if (istatus.goal) {
+	/* dafs bnode is running; we must be dafs */
+	return 1;
+    }
+
+    /* At this point, either we have neither a dafs nor fs bnode running, or
+     * we have an fs bnode running but the dafs bnode is stopped.
+     *
+     * If an fs bnode is running, we are obviously not DAFS. If an fs bnode
+     * is not running and a dafs bnode is not running... it's not certain if
+     * we are DAFS or not DAFS. Just return 0 in that case; it shouldn't much
+     * matter what we return, anyway */
+    return 0;
+}
+
+static int
 SalvageCmd(struct cmd_syndesc *as, void *arock)
 {
     register struct rx_connection *tconn;
@@ -1438,7 +1468,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     tp = &tname[0];
 
     /* find out whether fileserver is running demand attach fs */
-    if ((code = BOZO_GetInstanceParm(tconn, "dafs", 0, &tp) == 0)) {
+    if (IsDAFS(tconn)) {
 	dafs = 1;
 	serviceName = "dafs";
 	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
