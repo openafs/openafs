@@ -23,6 +23,7 @@ LIBOBJS = \
 	afscp_init.o \
 	afscp_util.o \
 	afscp_dirops.o \
+	afscp_roken.o \
 	afscp_acl.o
 
 all: \
@@ -30,6 +31,8 @@ all: \
 	${TOP_LIBDIR}/libafscp.a \
 	depinstall
 
+afscp_roken.o: afscp_roken.c
+	${CCRULE}
 afscp_callback.o: afscp_callback.c
 	${CCRULE}
 afscp_server.o: afscp_server.c

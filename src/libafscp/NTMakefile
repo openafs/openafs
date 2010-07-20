@@ -35,6 +35,7 @@ LIBOBJS =\
 	$(OUT)\afscp_init.obj \
 	$(OUT)\afscp_util.obj \
 	$(OUT)\afscp_dirops.obj \
+	$(OUT)\afscp_roken.obj \
 	$(OUT)\afscp_acl.obj \
 	$(OUT)\AFS_component_version_number.obj
 

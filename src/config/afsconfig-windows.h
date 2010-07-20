@@ -64,6 +64,9 @@
 /* Define if you have the socket function.  */
 #define HAVE_SOCKET
 
+/* Define if you have the strnlen function.  */
+#define HAVE_STRNLEN 1
+
 /* Define if you have the <direct.h> header file.  */
 #undef HAVE_DIRECT_H
 

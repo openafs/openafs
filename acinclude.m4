@@ -1248,6 +1248,7 @@ AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/sta
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h)
 AC_CHECK_HEADERS(ncurses.h curses.h)
+AC_CHECK_HEADERS(search.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
@@ -1297,7 +1298,7 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
-AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
+AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit strnlen tsearch)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
