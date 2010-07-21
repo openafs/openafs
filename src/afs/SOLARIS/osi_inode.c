@@ -295,7 +295,13 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
      * XXX We should set the fp to null since we don't need it in the icalls
      */
     setf(fd, fp);
-#ifdef AFS_SUN57_64BIT_ENV
+
+    /* rvp->r_val{1,2} are really members into a union and are re-extracted
+     * later by solaris. If we're not 64-bit, they appear to just be the same
+     * thing, but on 64-bit they point to two different 32-bit locations that
+     * make up one 64-bit int; so on 64-bit big-endian we need to set the
+     * second one. */
+#if defined(AFS_SUN57_64BIT_ENV) && !defined(AFSLITTLE_ENDIAN)
     rvp->r_val2 = fd;
 #else
     rvp->r_val1 = fd;
