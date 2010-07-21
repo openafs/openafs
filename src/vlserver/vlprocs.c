@@ -1421,7 +1421,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
     int pollcount = 0;
     int namematchRWBK, namematchRO, thismatch;
     int matchtype = 0;
-    char volumename[VL_MAXNAMELEN];
+    char volumename[VL_MAXNAMELEN+2]; /* regex anchors */
     char rxstr[AFS_RXINFO_LEN];
 #ifdef HAVE_POSIX_REGEX
     regex_t re;
