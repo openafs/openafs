@@ -1422,13 +1422,6 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
-/* DAFS currently doesn't really work with inode, so don't bother putting the
- * locking code here right now. But in case someday someone makes DAFS work
- * with the inode backend, make sure they remember to add the volume locking
- * code here (make the build fail until that happens). If that is what you're
- * trying to do, take a look at VLockVolumeByIdNB, and
- * namei_ConvertROtoRWvolume.
- */
     locktype = VVolLockType(V_VOLUPD, 1);
     code = VLockVolumeByIdNB(volumeId, partP, locktype);
     if (code) {
