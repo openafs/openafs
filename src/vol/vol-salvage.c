@@ -3472,7 +3472,7 @@ CreateReadme(VolumeDiskData *volHeader, IHandle_t *alinkH,
     }
 
     /* create the vnode and write it out */
-    rvnode = malloc(SIZEOF_SMALLDISKVNODE);
+    rvnode = calloc(1, SIZEOF_SMALLDISKVNODE);
     if (!rvnode) {
 	Log("CreateRootDir: error alloc'ing memory\n");
 	goto error;
@@ -3630,7 +3630,7 @@ CreateRootDir(VolumeDiskData *volHeader, IHandle_t *alinkH, VolumeId vid,
     DZap((void *)&rootdir->dirHandle);
 
     /* create the new root dir vnode */
-    rootvnode = malloc(SIZEOF_LARGEDISKVNODE);
+    rootvnode = calloc(1, SIZEOF_LARGEDISKVNODE);
     if (!rootvnode) {
 	Log("CreateRootDir: malloc failed\n");
 	goto error;
