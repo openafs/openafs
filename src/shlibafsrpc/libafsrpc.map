@@ -131,12 +131,15 @@
 	afs_xdr_array;
 	afs_xdr_bytes;
 	afs_xdr_char;
+	afs_xdr_enum;
 	afs_xdr_free;
 	afs_xdr_int;
 	afs_xdr_opaque;
 	afs_xdr_short;
 	afs_xdr_string;
 	afs_xdr_vector;
+	afs_xdrmem_create;
+	xdrlen_create;
     local:
 	*;
 };
