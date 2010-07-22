@@ -979,6 +979,20 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
 	    V_inUse(vp) = 1;
 	    V_offlineMessage(vp)[0] = '\0';
 	}
+	if (!V_inUse(vp)) {
+	    *ec = VNOVOL;
+	    /* mimic e.g. GetVolume errors */
+	    if (!V_blessed(vp))
+		Log("Volume %u offline: not blessed\n", V_id(vp));
+	    else if (!V_inService(vp))
+		Log("Volume %u offline: not in service\n", V_id(vp));
+	    else {
+		Log("Volume %u offline: needs salvage\n", V_id(vp));
+		*ec = VOFFLINE;
+	    }
+	    VPutVolume_r(vp);
+	    vp = NULL;
+	}
     }
 
     return vp;
