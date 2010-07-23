@@ -1491,7 +1491,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 static int
 DecodeVolumeName(char *name, unsigned int *vid)
 {
-    if (strlen(name) <= 2)
+    if (strlen(name) < 1)
 	return -1;
     *vid = (unsigned int)flipbase64_to_int64(name);
     return 0;
