@@ -168,7 +168,6 @@ afs_FreeAllAxs(struct axscache **headp)
 }
 
 
-/* doesn't appear to be used at all */
 void
 shutdown_xscache(void)
 {
