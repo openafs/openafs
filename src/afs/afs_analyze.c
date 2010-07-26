@@ -498,7 +498,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 	    return serversleft;
 	}
     }
-    return 1;
+    return serversleft;
 }
 
 
