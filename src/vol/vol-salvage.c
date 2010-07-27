@@ -3329,6 +3329,7 @@ SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
 	if (!Testing) {
 	    CopyAndSalvage(&dir);
 	    dirok = 1;
+	    dirVnodeInfo->inodes[i] = dir.dirHandle.dirh_inode;
 	}
     }
     dirHandle = dir.dirHandle;
