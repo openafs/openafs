@@ -3946,7 +3946,6 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 
 	    if (vnp->changed || vnp->count) {
 		int oldCount;
-		int code;
 		nBytes =
 		    IH_IREAD(vnodeInfo[class].handle,
 			     vnodeIndexOffset(vcp, vnodeNumber),
