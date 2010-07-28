@@ -69,10 +69,10 @@ handleit(struct cmd_syndesc *as, void *arock)
     VUpdateVolume(&ec, vp);
     if (ec) {
 	fprintf(stderr,"VUpdateVolume failed: %d\n", ec);
-	VPutVolume(vp);
+	VDetachVolume(&ec, vp);
 	exit(1);
     }
-    VPutVolume(vp);
+    VDetachVolume(&ec, vp);
     return 0;
 }
 
