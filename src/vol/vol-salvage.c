@@ -3908,7 +3908,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 
     /* Delete the old rootinode directory if the rootdir was CopyOnWrite */
     DFlush();
-    if (!oldrootdir.copied && rootdir.copied) {
+    if (rootdirfound && !oldrootdir.copied && rootdir.copied) {
 	code =
 	    IH_DEC(oldrootdir.ds_linkH, oldrootdir.dirHandle.dirh_inode,
 		   oldrootdir.rwVid);
