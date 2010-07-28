@@ -2377,6 +2377,9 @@ SalvageHeader(register struct stuff *sp, struct InodeSummary *isp, int check,
 	Log("Part of the header (%s) is corrupted; recreating\n",
 	    sp->description);
 	recreate = 1;
+	/* header can be garbage; make sure we don't read garbage data from
+	 * it below */
+	memset(&header, 0, sizeof(header));
     }
     if (sp->inodeType == VI_VOLINFO
 	&& header.volumeInfo.destroyMe == DESTROY_ME) {
