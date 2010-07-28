@@ -3072,6 +3072,12 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
      * cleanup? */
     int forcefree = 0;
 
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* in the case of an error, to what state should the volume be
+     * transitioned? */
+    VolState error_state = VOL_STATE_ERROR;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
     *ec = 0;
 
     vp->vnodeIndex[vLarge].handle = NULL;
@@ -3328,24 +3334,34 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	}
 	if (!V_inUse(vp)) {
 	    *ec = VNOVOL;
-	    /* mimic e.g. GetVolume errors */
-	    if (!V_blessed(vp))
-		Log("Volume %lu offline: not blessed\n", afs_printable_uint32_lu(V_id(vp)));
-	    else if (!V_inService(vp))
-		Log("Volume %lu offline: not in service\n", afs_printable_uint32_lu(V_id(vp)));
-	    else {
-		Log("Volume %lu offline: needs salvage\n", afs_printable_uint32_lu(V_id(vp)));
-		*ec = VOFFLINE;
 #ifdef AFS_DEMAND_ATTACH_FS
+	    /* Put the vol into PREATTACHED state, so if someone tries to
+	     * access it again, we try to attach, see that we're not blessed,
+	     * and give a VNOVOL error again. Putting it into UNATTACHED state
+	     * would result in a VOFFLINE error instead. */
+	    error_state = VOL_STATE_PREATTACHED;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+	    /* mimic e.g. GetVolume errors */
+	    if (!V_blessed(vp)) {
+		Log("Volume %lu offline: not blessed\n", afs_printable_uint32_lu(V_id(vp)));
+		FreeVolumeHeader(vp);
+	    } else if (!V_inService(vp)) {
+		Log("Volume %lu offline: not in service\n", afs_printable_uint32_lu(V_id(vp)));
+		FreeVolumeHeader(vp);
+	    } else {
+		Log("Volume %lu offline: needs salvage\n", afs_printable_uint32_lu(V_id(vp)));
+		*ec = VSALVAGE;
+#ifdef AFS_DEMAND_ATTACH_FS
+		error_state = VOL_STATE_ERROR;
 		/* see if we can recover */
 		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
-		vp->nUsers = 0;
-
-		goto error;
 #endif
 	    }
-	    VPutVolume_r(vp);
-	    vp = NULL;
+#ifdef AFS_DEMAND_ATTACH_FS
+	    vp->nUsers = 0;
+#endif
+	    goto error;
 	}
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3375,7 +3391,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
  error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
-	VChangeState_r(vp, VOL_STATE_ERROR);
+	VChangeState_r(vp, error_state);
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
