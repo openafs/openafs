@@ -60,14 +60,6 @@ L<vos(1)>.
 
 Specifies either the complete name or volume ID number of the volume.
 
-=item B<-unbless>
-
-If the volume resides on a fileserver running as a I<dafs> (Demand
-Attach File Server), then the volume may be marked as I<blessed> or
-I<unblessed>.  A I<dafs> server will not bring I<unblessed> volumes
-online unless the B<-bless> option to L<vos_online> is specified.
-See L<vos_online(1)> for setting a volume to be I<blessed>.
-
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. Do not combine this argument
@@ -117,12 +109,6 @@ ignored.
 The following example takes an online volume offline:
 
    % vos offline -server sv7.stateu.edu -partition /vicepb -id root.afs
-
-The following example takes an online volume offline and marks it
-so that a B<vos online> without B<-bless> will not bring it online:
-
-   % vos offline -server sv7.stateu.edu -partition /vicepb -id root.afs \
-  -unbless
 
 =head1 PRIVILEGE REQUIRED
 

@@ -10,14 +10,14 @@ vos_online - Brings a volume online
 B<vos online> S<<< B<-server> <I<machine name>> >>>
     S<<< B<-partition> <I<partition name>> >>> 
     S<<< B<-id> <I<volume name or ID>> >>>
-    [B<-bless>] S<<< [B<-cell> <I<cell name>>] >>> 
+    S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] B<-localauth>]
     [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos on> S<<< B<-s> <I<machine name>> >>>
     S<<< B<-p> <I<partition name>> >>> 
     S<<< B<-i> <I<volume name or ID>> >>>
-    [B<-b>] S<<< [B<-c> <I<cell name>>] >>> 
+    S<<< [B<-c> <I<cell name>>] >>>
     [B<-noa>] B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
@@ -54,14 +54,6 @@ L<vos(1)>.
 =item B<-id> <I<volume name or ID>>
 
 Specifies either the complete name or volume ID number of the volume.
-
-=item B<-bless>
-
-If the volume resides on a fileserver running as a I<dafs> (Demand
-Attach File Server), then the volume may be marked as I<blessed> or
-I<unblessed>.  A I<dafs> server will not bring I<unblessed> volumes
-online unless the B<-bless> option to L<vos_online> is specified.
-See L<vos_offline(1)> for setting a volume to be I<unblessed>.
 
 =item B<-cell> <I<cell name>>
 
@@ -112,10 +104,6 @@ ignored.
 The following example brings an offline volume online:
 
    % vos online -server sv7.stateu.edu -partition /vicepb -id root.afs
-
-The following example brings an offline, unblessed volume online:
-
-   % vos online -server sv7.stateu.edu -partition /vicepb -id root.afs -bless
 
 =head1 PRIVILEGE REQUIRED
 
