@@ -263,8 +263,6 @@ Known Problems
    Changes needed to have vos suite commands completely up to date,
    including the 1.5 branch:
 
-   * Document vos offline -busy / -sleep
-
    * Document vos create -minquota which is available since 1.5.61
 
    * Document vos restore -creation/-lastupdate and -nodelete

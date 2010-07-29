@@ -60,6 +60,37 @@ L<vos(1)>.
 
 Specifies either the complete name or volume ID number of the volume.
 
+=item B<-sleep> <I<seconds to sleep>>
+
+Specifies to sleep for a certain number of seconds after taking the
+volume offline before bringing it online again. If this option is
+specified, the volume will be online when B<vos offline> successfully
+completes. If this option is not specified, B<vos online> must be run to
+bring the volume online.
+
+=item B<-busy>
+
+Specifies to mark the volume as `busy' instead of `offline'. This
+means that a program trying to access this volume will receive a VBUSY
+error instead of a VOFFLINE error (until the volume is brought back
+online).
+
+Different programs may react differently when they see these two
+different states, but in general a `busy' volume is only unavailable
+for a short period of time and will become online soon. An `offline'
+volume, on the other hand, is typically unavailable for longer periods
+and may not come back online until an administrator intervenes.
+
+As an example of when these states occur normally, a volume can be
+`busy' when it is being cloned (perhaps as the result of a
+B<vos backup> or B<vos release> operation). A volume can be `offline'
+if a non-DAFS fileserver has detected a problem in the volume, and an
+administrator must manually schedule a salvage for that volume before
+it becomes available again.
+
+If B<-busy> is specified, the B<-sleep> option must also be specified, to
+indicate for how long to keep the volume busy.
+
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. Do not combine this argument
