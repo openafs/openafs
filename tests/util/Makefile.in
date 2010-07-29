@@ -7,17 +7,17 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 MODULE_CFLAGS = -I$(srcdir)/..
 
+LIBS = ../tap/libtap.a $(abs_top_builddir)/lib/util.a
+
 tests = ktime-t exec-alt-t
 
 all check test tests: $(tests)
 
-ktime-t: ktime-t.o
-	$(AFS_LDRULE) ktime-t.o ../tap/libtap.a \
-		$(abs_top_builddir)/lib/util.a $(XLIBS)
+ktime-t: ktime-t.o $(LIBS)
+	$(AFS_LDRULE) ktime-t.o $(LIBS) $(XLIBS)
 
-exec-alt-t: exec-alt-t.o
-	$(AFS_LDRULE) exec-alt-t.o ../tap/libtap.a \
-	    $(abs_top_builddir)/lib/util.a $(XLIBS)
+exec-alt-t: exec-alt-t.o $(LIBS)
+	$(AFS_LDRULE) exec-alt-t.o $(LIBS) $(XLIBS)
 
 install:
 
