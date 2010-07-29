@@ -58,7 +58,7 @@ SLIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/libvlib.a ${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libacl.a	${TOP_LIBDIR}/util.a
 
-all: salvageserver fssync-debug salvsync-debug dasalvager
+all: salvageserver dafssync-debug salvsync-debug dasalvager
 
 salvaged.o: ${VOL}/salvaged.c
 	${CCRULE}
@@ -181,36 +181,36 @@ salvageserver: ${OBJECTS} ${LIBS}
 dasalvager: ${SOBJECTS} ${SLIBS}
 	${CC} ${LDFLAGS} -o dasalvager ${SOBJECTS} ${SLIBS} ${XLIBS}
 
-fssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
-	${CC} ${LDFLAGS} -o fssync-debug ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+dafssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
+	${CC} ${LDFLAGS} -o dafssync-debug ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
 	${CC} ${LDFLAGS} -o salvsync-debug ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
-install: salvageserver fssync-debug salvsync-debug dasalvager
+install: salvageserver dafssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
 	${INSTALL_PROGRAM} dasalvager \
 		${DESTDIR}${afssrvlibexecdir}/dasalvager
 	${INSTALL_PROGRAM} salvageserver \
 		${DESTDIR}${afssrvlibexecdir}/salvageserver
-	${INSTALL_PROGRAM} fssync-debug \
-		${DESTDIR}${afssrvsbindir}/fssync-debug
+	${INSTALL_PROGRAM} dafssync-debug \
+		${DESTDIR}${afssrvsbindir}/dafssync-debug
 	${INSTALL_PROGRAM} salvsync-debug \
 		${DESTDIR}${afssrvsbindir}/salvsync-debug
 
-dest: salvageserver fssync-debug salvsync-debug dasalvager
+dest: salvageserver dafssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL_PROGRAM} dasalvager \
 		${DEST}/root.server/usr/afs/bin/dasalvager
 	${INSTALL_PROGRAM} salvageserver \
 		${DEST}/root.server/usr/afs/bin/salvageserver
-	${INSTALL_PROGRAM} fssync-debug \
-		${DEST}/root.server/usr/afs/bin/fssync-debug
+	${INSTALL_PROGRAM} dafssync-debug \
+		${DEST}/root.server/usr/afs/bin/dafssync-debug
 	${INSTALL_PROGRAM} salvsync-debug \
 		${DEST}/root.server/usr/afs/bin/salvsync-debug
 
 clean:
-	$(RM) -f *.o salvageserver core AFS_component_version_number.c fssync-debug salvsync-debug dasalvager
+	$(RM) -f *.o salvageserver core AFS_component_version_number.c dafssync-debug salvsync-debug dasalvager
 
 include ../config/Makefile.version

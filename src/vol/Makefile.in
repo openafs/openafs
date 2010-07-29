@@ -119,6 +119,7 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DESTDIR}${afssrvlibexecdir}/salvager
 	${INSTALL_PROGRAM} volinfo ${DESTDIR}${afssrvsbindir}/volinfo
+	${INSTALL_PROGRAM} fssync-debug ${DESTDIR}${afssrvsbindir}/fssync-debug
 	${INSTALL_DATA} nfs.h ${DESTDIR}${includedir}/afs/nfs.h
 	${INSTALL_DATA} vnode.h ${DESTDIR}${includedir}/afs/vnode.h
 	${INSTALL_DATA} vnode_inline.h ${DESTDIR}${includedir}/afs/vnode_inline.h
@@ -145,6 +146,7 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DEST}/root.server/usr/afs/bin/salvager
 	${INSTALL_PROGRAM} volinfo ${DEST}/root.server/usr/afs/bin/volinfo
+	${INSTALL_PROGRAM} fssync-debug ${DEST}/root.server/usr/afs/bin/fssync-debug
 	${INSTALL_DATA} nfs.h ${DEST}/include/afs/nfs.h
 	${INSTALL_DATA} vnode.h ${DEST}/include/afs/vnode.h
 	${INSTALL_DATA} vnode_inline.h ${DEST}/include/afs/vnode_inline.h
