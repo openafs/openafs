@@ -60,6 +60,10 @@ extern int ConstructLocalLogPath(const char *cpath, char **fullPathBufp);
 /* errmap_nt.c */
 extern int nterr_nt2unix(long ntErr, int defaultErr);
 
+/* exec.c */
+extern char* afs_exec_alt(int argc, char **argv, const char *prefix,
+                          const char *suffix);
+
 /* fileutil.c */
 extern int renamefile(const char *oldname, const char *newname);
 extern void FilepathNormalizeEx(char *path, int slashType);
