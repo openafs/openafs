@@ -191,8 +191,16 @@ CorrectUserName(char *name)
     /* We accept foreign names, so we will deal with '@' later */
     if (strchr(name, ':') || strchr(name, '\n'))
 	return 0;
-    if (strlen(name) >= PR_MAXNAMELEN - pr_realmNameLen - 1)
-	return 0;
+    if (strchr(name, '@')) {
+	/* foreign user; we don't need to worry about pr_realmNameLen, since
+	 * our local realm name will never be appended to this */
+	if (strlen(name) >= PR_MAXNAMELEN) {
+	    return 0;
+	}
+    } else {
+	if (strlen(name) >= PR_MAXNAMELEN - pr_realmNameLen - 1)
+	    return 0;
+    }
     return 1;
 }
 
