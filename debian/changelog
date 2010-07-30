@@ -1,3 +1,12 @@
+openafs (1.5.75-3) UNRELEASED; urgency=low
+
+  * The openafs-fileserver init script now depends on $named since
+    apparently the volserver requires DNS during startup.  Thanks, Jaap
+    Winius.  (Closes: #589783)
+  * Add a status command to thet openafs-fileserver init script.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 27 Aug 2010 19:15:56 -0700
+
 openafs (1.5.75-2) experimental; urgency=low
 
   * Apply upstream deltas:
