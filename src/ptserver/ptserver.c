@@ -156,7 +156,6 @@ extern afs_int32 depthsg;
 extern int afsconf_ServerAuth();
 extern int afsconf_CheckAuth();
 
-int pr_realmNameLen;
 char *pr_realmName;
 
 int debuglevel = 0;
@@ -448,7 +447,6 @@ main(int argc, char **argv)
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
-    pr_realmNameLen = strlen(pr_realmName);
 
 #if 0
     /* get keys */

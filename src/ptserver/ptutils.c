@@ -174,22 +174,18 @@ pt_hook_write()
 #endif /* SUPERGROUPS */
 
 /* CorrectUserName - Check to make sure a user name is OK.  It must not include
- *   either a colon (or it would look like a group) or an atsign (or it would
- *   look like a foreign user).  The length is checked as well to make sure
- *   that the user name, an atsign, and the local cell name will fit in
- *   PR_MAXNAMELEN.  This is so this user can fit in another cells database as
- *   a foreign user with our cell name tacked on.  This is a predicate, so it
- *   return one if name is OK and zero if name is bogus. */
+ *   either a colon (or it would look like a group) or a newline (which can
+ *   confuse some ptdb code, depending on the format we're reading from).
+ *   This is a predicate, so it return one if name is OK and zero if name is
+ *   bogus. */
 
 static int
 CorrectUserName(char *name)
 {
-    extern int pr_realmNameLen;
-
     /* We accept foreign names, so we will deal with '@' later */
     if (strchr(name, ':') || strchr(name, '\n'))
 	return 0;
-    if (strlen(name) >= PR_MAXNAMELEN - pr_realmNameLen - 1)
+    if (strlen(name) >= PR_MAXNAMELEN)
 	return 0;
     return 1;
 }
