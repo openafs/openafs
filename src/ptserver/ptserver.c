@@ -153,7 +153,6 @@ struct afsconf_dir *prdir;
 extern afs_int32 depthsg;
 #endif
 
-int pr_realmNameLen;
 char *pr_realmName;
 
 int debuglevel = 0;
@@ -454,7 +453,6 @@ main(int argc, char **argv)
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
-    pr_realmNameLen = strlen(pr_realmName);
 
     {
 	afs_int32 kvno;		/* see if there is a KeyFile here */
