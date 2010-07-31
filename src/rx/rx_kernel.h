@@ -54,7 +54,7 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #endif
 #define rx_ifnet_mtu(x) (x)->if_mtu
 #define rx_ifnet_flags(x) (x?(x)->if_flags:0)
-#ifdef AFS_OBSD46_ENV
+#if defined(AFS_OBSD46_ENV) || defined(AFS_FBSD81_ENV)
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0)
 #else
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x)
