@@ -408,6 +408,9 @@ int cm_reInitLocalMountPoints() {
     cm_fid_t aFid;
     unsigned int i, hash;
     cm_scache_t *scp, **lscpp, *tscp;
+    cm_req_t req;
+
+    cm_InitReq(&req);
 	
     osi_Log0(afsd_logp,"----- freelance reinitialization starts ----- ");
 
@@ -456,8 +459,11 @@ int cm_reInitLocalMountPoints() {
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
+    lock_ReleaseMutex(&cm_Freelance_Lock);
     osi_Log0(afsd_logp,"\tall old scp cleared!");
 
+    lock_ObtainWrite(&cm_data.rootSCachep->rw);
+    lock_ObtainMutex(&cm_Freelance_Lock);
     // we must free the memory that was allocated in the prev
     // cm_InitLocalMountPoints call
     osi_Log0(afsd_logp,"Removing old localmountpoints...  ");
@@ -477,6 +483,9 @@ int cm_reInitLocalMountPoints() {
     osi_Log0(afsd_logp,"\t\tcreated new fakedir!");
 
     lock_ReleaseMutex(&cm_Freelance_Lock);
+
+    cm_GetCallback(cm_data.rootSCachep, cm_rootUserp, &req, 0);
+    lock_ReleaseWrite(&cm_data.rootSCachep->rw);
 
     osi_Log0(afsd_logp,"----- freelance reinit complete -----");
     return 0;
