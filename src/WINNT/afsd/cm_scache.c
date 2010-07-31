@@ -42,6 +42,22 @@ osi_queue_t * cm_allFreeWaiters;        /* protected by cm_scacheLock */
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
 
+cm_scache_t *
+cm_RootSCachep(cm_user_t *userp, cm_req_t *reqp)
+{
+    afs_int32 code;
+
+    lock_ObtainWrite(&cm_data.rootSCachep->rw);
+    code = cm_SyncOp(cm_data.rootSCachep, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
+    if (!code)
+        cm_SyncOpDone(cm_data.rootSCachep, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&cm_data.rootSCachep->rw);
+
+    return cm_data.rootSCachep;
+}
+
+
 /* must be called with cm_scacheLock write-locked! */
 void cm_AdjustScacheLRU(cm_scache_t *scp)
 {

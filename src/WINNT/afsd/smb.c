@@ -1928,6 +1928,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         fschar_t ftemp[1024];
         clientchar_t * p = shareName; 
         int rw = 0;
+        cm_scache_t * rscp;
+        cm_user_t *userp;
 
         /*  attempt to locate a partial match in root.afs.  This is because
             when using the ANSI RAP calls, the share name is limited to 13 chars
@@ -1942,10 +1944,12 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         vrock.match = NULL;
         vrock.matchType = 0;
 
-        cm_HoldSCache(cm_data.rootSCachep);
-        code = cm_ApplyDir(cm_data.rootSCachep, smb_FindShareProc, &vrock, &thyper,
-                           (uidp? (uidp->unp ? uidp->unp->userp : NULL) : NULL), &req, NULL);
-        cm_ReleaseSCache(cm_data.rootSCachep);
+        userp = (uidp? (uidp->unp ? uidp->unp->userp : cm_rootUserp) : cm_rootUserp);
+        rscp = cm_RootSCachep(userp, &req);
+        cm_HoldSCache(rscp);
+        code = cm_ApplyDir(rscp, smb_FindShareProc, &vrock, &thyper,
+                           userp, &req, NULL);
+        cm_ReleaseSCache(rscp);
 
         free(vrock.shareName);
         vrock.shareName = NULL;
@@ -4868,7 +4872,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         cm_ClientStrCpy(dsp->tidPath, lengthof(dsp->tidPath), tidPathp ? tidPathp : _C("/"));
         cm_ClientStrCpy(dsp->relPath, lengthof(dsp->relPath), spacep->wdata);
 
-        code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+        code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                         caseFold | CM_FLAG_FOLLOW, userp, tidPathp, &req, &scp);
         if (code == 0) {
 #ifdef DFS_SUPPORT
@@ -5291,9 +5295,9 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     osi_Log1(smb_logp, "SMB receive check path %S",
              osi_LogSaveClientString(smb_logp, pathp));
         
-    rootScp = cm_data.rootSCachep;
-        
     userp = smb_GetUserFromVCP(vcp, inp);
+
+    rootScp = cm_RootSCachep(userp, &req);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -5380,9 +5384,9 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     osi_Log2(smb_logp, "SMB receive setfile attributes time %d, attr 0x%x",
              dosTime, attribute);
 
-    rootScp = cm_data.rootSCachep;
-        
     userp = smb_GetUserFromVCP(vcp, inp);
+
+    rootScp = cm_RootSCachep(userp, &req);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -5495,9 +5499,9 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     osi_Log1(smb_logp, "SMB receive getfile attributes path %S",
              osi_LogSaveClientString(smb_logp, pathp));
 
-    rootScp = cm_data.rootSCachep;
-        
     userp = smb_GetUserFromVCP(vcp, inp);
+
+    rootScp = cm_RootSCachep(userp, &req);
 
     /* we shouldn't need this for V3 requests, but we seem to */
     caseFold = CM_FLAG_CASEFOLD;
@@ -5723,7 +5727,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, pathp, caseFold | CM_FLAG_FOLLOW, userp,
+    code = cm_NameI(cm_RootSCachep(userp, &req), pathp, caseFold | CM_FLAG_FOLLOW, userp,
                     tidPathp, &req, &scp);
         
     if (code) {
@@ -5905,7 +5909,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold, userp, tidPathp,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold, userp, tidPathp,
                     &req, &dscp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -6097,7 +6101,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
     smb_StripLastComponent(spacep->wdata, &oldLastNamep, oldPathp);
 
     caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold,
                     userp, tidPathp, &req, &oldDscp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -6117,7 +6121,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
 #endif /* DFS_SUPPORT */
 
     smb_StripLastComponent(spacep->wdata, &newLastNamep, newPathp);
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold,
                     userp, tidPathp, &req, &newDscp);
 
     if (code) {
@@ -6307,7 +6311,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &oldLastNamep, oldPathp);
     
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold,
                     userp, tidPathp, &req, &oldDscp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -6327,7 +6331,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t
 #endif /* DFS_SUPPORT */
 
     smb_StripLastComponent(spacep->wdata, &newLastNamep, newPathp);
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold,
                     userp, tidPathp, &req, &newDscp);
     if (code) {
         cm_ReleaseSCache(oldDscp);
@@ -6554,7 +6558,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold | CM_FLAG_FOLLOW,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold | CM_FLAG_FOLLOW,
                     userp, tidPathp, &req, &dscp);
 
     if (code) {
@@ -8052,7 +8056,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         return CM_ERROR_NOSUCHPATH;
     }
 
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                     caseFold | CM_FLAG_FOLLOW | CM_FLAG_CHECKPATH,
                     userp, tidPathp, &req, &dscp);
 
@@ -8191,7 +8195,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata, caseFold | CM_FLAG_FOLLOW,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata, caseFold | CM_FLAG_FOLLOW,
                     userp, tidPathp, &req, &dscp);
 
     if (code) {

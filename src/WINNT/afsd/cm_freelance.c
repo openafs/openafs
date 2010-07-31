@@ -1137,7 +1137,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             cm_reInitLocalMountPoints();	// start reinit
         }
 
-        code = cm_NameI(cm_data.rootSCachep, cpath,
+        code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                         cm_rootUserp, NULL, &req, &scp);
         free(cpath);
@@ -1381,7 +1381,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
                 cm_reInitLocalMountPoints();	// start reinit
             }
 
-            code = cm_NameI(cm_data.rootSCachep, cpath,
+            code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
                              CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                              cm_rootUserp, NULL, &req, &scp);
             free(cpath);

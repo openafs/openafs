@@ -1813,8 +1813,8 @@ long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
             StringCbCopyA((char *) tsp->data, sizeof(tsp->data), linkp+cm_mountRootLen+1);
         else
             tsp->data[0] = 0;
-        *newRootScpp = cm_data.rootSCachep;
-        cm_HoldSCache(cm_data.rootSCachep);
+        *newRootScpp = cm_RootSCachep(userp, reqp);
+        cm_HoldSCache(*newRootScpp);
     } else if (linkp[0] == '\\' && linkp[1] == '\\') {
         if (!strnicmp(&linkp[2], cm_NetbiosName, (len = (long)strlen(cm_NetbiosName)))) 
         {
@@ -1827,8 +1827,8 @@ long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
                 if (*p == '\\')
                     *p = '/';
             }
-            *newRootScpp = cm_data.rootSCachep;
-            cm_HoldSCache(cm_data.rootSCachep);
+            *newRootScpp = cm_RootSCachep(userp, reqp);
+            cm_HoldSCache(*newRootScpp);
         } else {
             linkScp->fileType = CM_SCACHETYPE_DFSLINK;
             StringCchCopyA(tsp->data,lengthof(tsp->data), linkp);
@@ -1845,8 +1845,8 @@ long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
          * but this seems to create problems.  instead, we will just
          * reject the link */
         StringCchCopyA(tsp->data,lengthof(tsp->data), linkp+1);
-        *newRootScpp = cm_data.rootSCachep;
-        cm_HoldSCache(cm_data.rootSCachep);
+        *newRootScpp = cm_RootSCachep(userp, reqp);
+        cm_HoldSCache(*newRootScpp);
 #else
         /* we still copy the link data into the response so that 
          * the user can see what the link points to

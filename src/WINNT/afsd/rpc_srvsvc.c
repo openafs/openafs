@@ -455,7 +455,7 @@ NET_API_STATUS NetrShareEnum(
 {
     cm_direnum_t *enump = NULL;
     cm_direnum_entry_t * entryp = NULL;
-    cm_scache_t * dscp = cm_data.rootSCachep;
+    cm_scache_t * dscp;
     cm_user_t *userp = MSRPC_GetCmUser();
     cm_req_t      req;
     int           stopnow = 0;
@@ -469,6 +469,8 @@ NET_API_STATUS NetrShareEnum(
     osi_Log1(afsd_logp, "NetrShareEnum level %u", InfoStruct->Level);
 
     cm_InitReq(&req);
+
+    dscp = cm_RootSCachep(userp, &req);
 
     RPC_SRVSVC_ShareEnumAgeCheck();
 
@@ -711,7 +713,7 @@ NET_API_STATUS NetrShareGetInfo(
     /* [in] */ DWORD Level,
     /* [switch_is][out] */ LPSHARE_INFO InfoStruct)
 {
-    cm_scache_t * dscp = cm_data.rootSCachep;
+    cm_scache_t * dscp;
     cm_scache_t * scp = NULL;
     cm_user_t *userp = MSRPC_GetCmUser();
     cm_req_t      req;
@@ -725,6 +727,8 @@ NET_API_STATUS NetrShareGetInfo(
     osi_Log1(afsd_logp, "NetrShareGetInfo level %u", Level);
 
     cm_InitReq(&req);
+
+    dscp = cm_RootSCachep(userp, &req);
 
     /* Allocate the memory for the response */
     switch (Level) {

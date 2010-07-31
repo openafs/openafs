@@ -1793,6 +1793,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     cm_req_t req;
     cm_user_t * userp;
     osi_hyper_t thyper;
+    cm_scache_t *rootScp;
 
     tp = p->parmsp + 1; /* skip over function number (always 0) */
 
@@ -1862,9 +1863,10 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     thyper.HighPart = 0;
     thyper.LowPart = 0;
 
-    cm_HoldSCache(cm_data.rootSCachep);
-    cm_ApplyDir(cm_data.rootSCachep, smb_rapCollectSharesProc, &rootShares, &thyper, userp, &req, NULL);
-    cm_ReleaseSCache(cm_data.rootSCachep);
+    rootScp = cm_RootSCachep(userp, &req);
+    cm_HoldSCache(rootScp);
+    cm_ApplyDir(rootScp, smb_rapCollectSharesProc, &rootShares, &thyper, userp, &req, NULL);
+    cm_ReleaseSCache(rootScp);
 
     cm_ReleaseUser(userp);
 
@@ -2034,7 +2036,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
             osi_Log1(smb_logp,"ReceiveRAPNetShareGetInfo unable to resolve user [%d]", p->uid);
             return CM_ERROR_BADSMB;
         }   
-        code = cm_NameI(cm_data.rootSCachep, shareName,
+        code = cm_NameI(cm_RootSCachep(userp, &req), shareName,
                          CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                          userp, NULL, &req, &scp);
         if (code == 0) {
@@ -2637,11 +2639,11 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     }
 
     dscp = NULL;
-    code = cm_NameI(cm_data.rootSCachep, pathp,
+    code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                      userp, tidPathp, &req, &scp);
     if (code != 0) {
-        code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+        code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                          CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                          userp, tidPathp, &req, &dscp);
         cm_FreeSpace(spacep);
@@ -3076,7 +3078,7 @@ long cm_GetShortName(clientchar_t *pathp, cm_user_t *userp, cm_req_t *reqp,
     /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+    code = cm_NameI(cm_RootSCachep(userp, reqp), spacep->wdata,
                     caseFold, userp, tidPathp,
                     reqp, &dscp);
     cm_FreeSpace(spacep);
@@ -3231,7 +3233,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
             if (cm_ClientStrCmpIA(lastComp,  _C("\\desktop.ini")) == 0) {
-                code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+                code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                                  CM_FLAG_CASEFOLD
                                  | CM_FLAG_DIRSEARCH
                                  | CM_FLAG_FOLLOW,
@@ -3275,7 +3277,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     /* now do namei and stat, and copy out the info */
-    code = cm_NameI(cm_data.rootSCachep, pathp,
+    code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
 
     if (code) {
@@ -3556,7 +3558,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
             if (cm_ClientStrCmpI(lastComp,  _C("\\desktop.ini")) == 0) {
-                code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+                code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                                  CM_FLAG_CASEFOLD
                                  | CM_FLAG_DIRSEARCH
                                  | CM_FLAG_FOLLOW,
@@ -3599,7 +3601,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     }
 
     /* now do namei and stat, and copy out the info */
-    code = cm_NameI(cm_data.rootSCachep, pathp,
+    code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -4171,7 +4173,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
              * for might be a known name with the final character stripped
              * off.
              */
-            code = cm_NameI(cm_data.rootSCachep, &requestFileName[nbnLen+2],
+            code = cm_NameI(cm_RootSCachep(userp, &req), &requestFileName[nbnLen+2],
                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                             userp, NULL, &req, &scp);
             if (code == 0 ||
@@ -4210,7 +4212,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     /* smb_StripLastComponent will strip "::$DATA" if present */
                     smb_StripLastComponent(pathName, &lastComponent, temp);
 
-                    code = cm_NameI(cm_data.rootSCachep, pathName,
+                    code = cm_NameI(cm_RootSCachep(userp, &req), pathName,
                                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                                     userp, NULL, &req, &dscp);
                     if (code == 0) {
@@ -4244,7 +4246,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 *q = '\0';
                 
                 if (smb_FindShare(vcp, vcp->usersp, shareName, &p)) {
-                    code = cm_NameI(cm_data.rootSCachep, _C(""), 
+                    code = cm_NameI(cm_RootSCachep(userp, &req), _C(""),
                                     CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                                     userp, p, &req, &scp);
                     free(p);
@@ -4822,7 +4824,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         return 0;
     }
 
-    code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+    code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                     userp, tidPathp, &req, &scp);
     cm_FreeSpace(spacep);
@@ -5349,7 +5351,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         cm_ClientStrCpy(dsp->tidPath, lengthof(dsp->tidPath), tidPathp ? tidPathp : _C("/"));
         cm_ClientStrCpy(dsp->relPath, lengthof(dsp->relPath), spacep->wdata);
 
-        code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+        code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
         cm_FreeSpace(spacep);
@@ -6062,7 +6064,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     userp = smb_GetUserFromVCP(vcp, inp);
 
     dscp = NULL;
-    code = cm_NameI(cm_data.rootSCachep, pathp,
+    code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                     userp, tidPathp, &req, &scp);
 
@@ -6079,7 +6081,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif /* DFS_SUPPORT */
 
     if (code != 0) {
-        code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
+        code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
         if (code) {
@@ -7213,7 +7215,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     if (baseFid == 0) {
 	baseFidp = NULL;
-        baseDirp = cm_data.rootSCachep;
+        baseDirp = cm_RootSCachep(cm_rootUserp, &req);
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code == CM_ERROR_TIDIPC) {
             /* Attempt to use a TID allocated for IPC.  The client
@@ -8164,7 +8166,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     if (baseFid == 0) {
 	baseFidp = NULL;
-        baseDirp = cm_data.rootSCachep;
+        baseDirp = cm_RootSCachep(cm_rootUserp, &req);
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code == CM_ERROR_TIDIPC) {
             /* Attempt to use a TID allocated for IPC.  The client

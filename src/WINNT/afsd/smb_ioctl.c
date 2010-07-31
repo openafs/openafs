@@ -624,7 +624,7 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
         if ( shareFound ) {
             /* we found a sharename, therefore use the resulting path */
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+            code = cm_NameI(cm_RootSCachep(userp, reqp), ioctlp->prefix->wdata,
                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, sharePath, reqp, &substRootp);
             free(sharePath);
@@ -677,7 +677,7 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             shareName[i] = 0;       /* terminate string */
 
 
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+            code = cm_NameI(cm_RootSCachep(userp, reqp), ioctlp->prefix->wdata,
                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, shareName, reqp, &substRootp);
             if (code) {
@@ -714,7 +714,7 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
         }
     } else {
-        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+        code = cm_NameI(cm_RootSCachep(userp, reqp), ioctlp->prefix->wdata,
                          CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) {
@@ -867,7 +867,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
         if ( shareFound ) {
             /* we found a sharename, therefore use the resulting path */
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+            code = cm_NameI(cm_RootSCachep(userp, reqp), ioctlp->prefix->wdata,
                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, sharePath, reqp, &substRootp);
             free(sharePath);
@@ -894,7 +894,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             shareName[i++] = '/';	/* add trailing slash */
             shareName[i] = 0;       /* terminate string */
 
-            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+            code = cm_NameI(cm_RootSCachep(userp, reqp), ioctlp->prefix->wdata,
                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                             userp, shareName, reqp, &substRootp);
             if (code) return code;
@@ -905,7 +905,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             if (code) return code;
         }
     } else {
-        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->wdata,
+        code = cm_NameI(cm_RootSCachep(userp, reqp), ioctlp->prefix->wdata,
                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;

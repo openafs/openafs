@@ -429,4 +429,6 @@ extern void cm_AdjustScacheLRU(cm_scache_t *scp);
 extern int cm_DumpSCache(FILE *outputFile, char *cookie, int lock);
 
 extern void cm_ResetSCacheDirectory(cm_scache_t *scp, afs_int32 locked);
+
+extern cm_scache_t * cm_RootSCachep(cm_user_t *userp, cm_req_t *reqp);
 #endif /*  __CM_SCACHE_H_ENV__ */

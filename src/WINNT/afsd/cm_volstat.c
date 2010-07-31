@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2007 Secure Endpoints Inc.
+ * Copyright (c) 2007-2010 Secure Endpoints Inc.
  *
  * All rights reserved.
  * 
@@ -332,7 +332,7 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
         goto done;
     }
 
-    code = cm_NameI(cm_data.rootSCachep, cpath,
+    code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
                     CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                     cm_rootUserp, cshare, &req, &scp);
     if (code)
@@ -399,7 +399,7 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
         goto done;
     }
 
-    code = cm_NameI(cm_data.rootSCachep, cpath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW, 
+    code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                     cm_rootUserp, cshare, &req, &scp);
     if (code)
         goto done;
