@@ -216,7 +216,7 @@ ECHO = echo
 CD = cd
 !ENDIF
 !IF !DEFINED(MC)
-MC = mc -vcsU
+MC = mc -vcU
 !ENDIF
 !IF !DEFINED(MAKECMD)
 MAKECMD = nmake.exe
