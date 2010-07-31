@@ -227,15 +227,19 @@
           <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Custom"</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Next]">
-		  <Publish Event="NewDialog" Value="ConfigClientDlg">
-			<![CDATA[ &feaClient = 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
-		  </Publish>
+          <?ifndef BinsOnly ?>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">
+            <![CDATA[ &feaClient = 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
+          </Publish>
           <Publish Event="NewDialog" Value="VerifyReadyDlg">
             <![CDATA[ &feaClient <> 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
           </Publish>
           <Publish Event="NewDialog" Value="AddServerDepsDlg">
             <![CDATA[ ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) )) ]]>
           </Publish>
+          <?else?>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+          <?endif?>
           <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
@@ -274,16 +278,17 @@
         </Control>
       </Dialog>
 
+      <?ifndef BinsOnly ?>
       <Dialog Id="AddServerDepsDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes" TrackDiskSpace="yes">
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Next]">
-		  <Publish Event="AddLocal" Value="feaClient"><![CDATA[&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3)]]></Publish>
-		  <Publish Event="AddLocal" Value="feaControlCenter"><![CDATA[&feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3)]]></Publish>
-		  <Publish Event="NewDialog" Value="ConfigClientDlg">
-			<![CDATA[ &feaClient = 3 ]]>
-		  </Publish>
+          <Publish Event="AddLocal" Value="feaClient"><![CDATA[&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3)]]></Publish>
+          <Publish Event="AddLocal" Value="feaControlCenter"><![CDATA[&feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3)]]></Publish>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">
+            <![CDATA[ &feaClient = 3 ]]>
+          </Publish>
           <Publish Event="NewDialog" Value="VerifyReadyDlg">
             <![CDATA[ &feaClient <> 3 ]]>
           </Publish>
@@ -319,6 +324,7 @@
           <Text>[DlgTitleFont]Server Dependencies</Text>
         </Control>
       </Dialog>
+      <?endif?>
 
       <Dialog Id="DiskCostDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="OK" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_OK]">
@@ -683,7 +689,11 @@
         <Control Id="TypicalButton" Type="PushButton" X="50" Y="65" Width="38" Height="38" ToolTip="Typical Installation" Default="yes" Icon="yes" FixedSize="yes" IconSize="32" Text="[InstallerIcon]">
           <Publish Property="InstallMode" Value="Typical">1</Publish>
           <Publish Event="SetInstallLevel" Value="100">1</Publish>
+          <?ifndef BinsOnly?>
 	  <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+          <?else?>
+	  <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+          <?endif?>
         </Control>
         <Control Id="CustomLabel" Type="Text" X="105" Y="118" Width="100" Height="10" TabSkip="no">
           <Text>[DlgTitleFont]C&amp;ustom</Text>
@@ -698,7 +708,11 @@
         <Control Id="CompleteButton" Type="PushButton" X="50" Y="171" Width="38" Height="38" ToolTip="Complete Installation" Icon="yes" FixedSize="yes" IconSize="32" Text="[CompleteSetupIcon]">
           <Publish Property="InstallMode" Value="Complete">1</Publish>
           <Publish Event="SetInstallLevel" Value="1000">1</Publish>
+          <?ifndef BinsOnly ?>
           <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+          <?else?>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+          <?endif?>
         </Control>
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="LicenseAgreementDlg">ShowUserRegistrationDlg &lt;&gt; 1 AND NOT (IBMAFS_UPGRADE OR OPENAFS_UPGRADE)</Publish>
@@ -729,6 +743,7 @@
         </Control>
       </Dialog>
 
+      <?ifndef BinsOnly ?>
       <Dialog Id="ConfigClientDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="CustomizeDlg">InstallMode &lt;&gt; "Typical" AND InstallMode &lt;&gt; "Complete"</Publish>
@@ -807,6 +822,7 @@
         <Control Id="CredQuiet" Type="CheckBox" X="50" Y="173" Width="300" Height="15" Property="CREDSQUIET" CheckBoxValue="-q" Text="Quiet mode" />
         <Control Id="CredShow" Type="CheckBox" X="50" Y="193" Width="300" Height="15" Property="CREDSSHOW" CheckBoxValue="-s" Text="Show credentials window on startup" />
       </Dialog>
+      <?endif?>                 <!-- ifndef BinsOnly -->
 
       <Dialog Id="UserExit" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_Finish]">
@@ -870,10 +886,15 @@
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="374" Height="44" FixedSize="yes" TabSkip="no" Text="[BannerBitmap]" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="AdminInstallPointDlg">InstallMode = "Server Image"</Publish>
+          <?ifndef BinsOnly ?>
           <Publish Event="NewDialog" Value="CustomizeDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient &lt;&gt; 3</Publish>
           <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3</Publish>
-          <Publish Event="NewDialog" Value="MaintenanceTypeDlg">InstallMode = "Repair"</Publish>
           <Publish Event="NewDialog" Value="ConfigCredsDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
+          <?else?>
+          <Publish Event="NewDialog" Value="CustomizeDlg">InstallMode = "Custom" OR InstallMode = "Change"</Publish>
+          <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
+          <?endif?>
+          <Publish Event="NewDialog" Value="MaintenanceTypeDlg">InstallMode = "Repair"</Publish>
         </Control>
         <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
           <Text>The [Wizard] is ready to begin the [InstallMode] installation</Text>
