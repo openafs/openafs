@@ -43,5 +43,6 @@ $(VERSFILE).xml:
 <?xml version="1.0" encoding="UTF-8"?>
 <revision>
 <revnumber>$(AFSPRODUCT_VERSION)</revnumber>
+<date></date>
 </revision>
 <<KEEP
