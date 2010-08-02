@@ -3452,7 +3452,6 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-#ifdef AFS_DISCON_ENV
 static char *modenames[] = {
     "offline",
     "online",
@@ -3535,7 +3534,6 @@ DisconCmd(struct cmd_syndesc *as, void *arock)
 
     return 0;
 }
-#endif
 
 #include "AFS_component_version_number.c"
 
@@ -3863,13 +3861,11 @@ defect 3069
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-#ifdef AFS_DISCON_ENV
     ts = cmd_CreateSyntax("discon", DisconCmd, NULL,
 			  "disconnection mode");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_REQUIRED, "offline | online");
     cmd_AddParm(ts, "-policy", CMD_SINGLE, CMD_OPTIONAL, "client | server");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "Force reconnection, despite any synchronization issues.");
-#endif
 
     ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
