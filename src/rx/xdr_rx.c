@@ -40,11 +40,6 @@
 #include "xdr.h"
 
 /* Static prototypes */
-#ifdef AFS_XDR_64BITOPS
-static bool_t xdrrx_getint64(XDR *axdrs, long *lp);
-static bool_t xdrrx_putint64(XDR *axdrs, long *lp);
-#endif /* AFS_XDR_64BITOPS */
-
 static bool_t xdrrx_getint32(XDR *axdrs, afs_int32 * lp);
 static bool_t xdrrx_putint32(XDR *axdrs, afs_int32 * lp);
 static bool_t xdrrx_getbytes(XDR *axdrs, caddr_t addr,
@@ -59,31 +54,16 @@ static afs_int32 *xdrrx_inline(XDR *axdrs, u_int len);
  */
 static struct xdr_ops xdrrx_ops = {
 #ifndef HAVE_STRUCT_LABEL_SUPPORT
-#ifdef AFS_XDR_64BITOPS
-    xdrrx_getint64,     /* deserialize an afs_int64 */
-    xdrrx_putint64,     /* serialize an afs_int64 */
-#endif
     /* Windows does not support labeled assigments */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrrx_getint32,	/* deserialize an afs_int32 */
     xdrrx_putint32,	/* serialize an afs_int32 */
-#endif
     xdrrx_getbytes,	/* deserialize counted bytes */
     xdrrx_putbytes,	/* serialize counted bytes */
     NULL,		/* get offset in the stream: not supported. */
     NULL,		/* set offset in the stream: not supported. */
     xdrrx_inline,	/* prime stream for inline macros */
     NULL,		/* destroy stream */
-#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
-    NULL,               /* control - not implemented */
-    xdrrx_getint32,     /* not supported */
-    xdrrx_putint32,     /* serialize an afs_int32 */
-#endif
 #else
-#ifdef AFS_XDR_64BITOPS
-    .x_getint64 = xdrrx_getint64,
-    .x_putint64 = xdrrx_putint64,
-#endif /* AFS_XDR_64BITOPS */
     .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
     .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
     .x_getbytes = xdrrx_getbytes,	/* deserialize counted bytes */
@@ -92,9 +72,6 @@ static struct xdr_ops xdrrx_ops = {
     .x_setpostn = NULL,		/* set offset in the stream: not supported. */
     .x_inline = xdrrx_inline,		/* prime stream for inline macros */
     .x_destroy = NULL,			/* destroy stream */
-#if defined(KERNEL) && defined(AFS_SUN57_ENV)
-    .x_control = NULL,
-#endif
 #endif
 };
 
@@ -115,33 +92,6 @@ xdrrx_create(XDR * xdrs, struct rx_call *call,
 #define STACK_TO_PIN	2*PAGESIZE	/* 8K */
 int rx_pin_failed = 0;
 #endif
-
-#ifdef AFS_XDR_64BITOPS
-static bool_t
-xdrrx_getint64(XDR *axdrs, long *lp)
-{
-    XDR * xdrs = (XDR *)axdrs;
-    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
-    afs_int32 i;
-
-    if (rx_Read32(call, &i) == sizeof(i)) {
-	*lp = ntohl(i);
-	return TRUE;
-    }
-    return FALSE;
-}
-
-static bool_t
-xdrrx_putint64(XDR *axdrs, long *lp)
-{
-    XDR * xdrs = (XDR *)axdrs;
-    afs_int32 code, i = htonl(*lp);
-    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
-
-    code = (rx_Write32(call, &i) == sizeof(i));
-    return code;
-}
-#endif /* AFS_XDR_64BITOPS */
 
 static bool_t
 xdrrx_getint32(XDR *axdrs, afs_int32 * lp)
