@@ -753,11 +753,19 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     if (substRootp)
 	cm_ReleaseSCache(substRootp);
 
-    /* and return success */
-    osi_Log1(afsd_logp,"cm_ParseIoctlPath [8] code 0x%x", code);
-
     if (relativePath)
         free(relativePath);
+
+    /* Ensure that the status object is up to date */
+    lock_ObtainWrite(&(*scpp)->rw);
+    code = cm_SyncOp( *scpp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0)
+        cm_SyncOpDone( *scpp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&(*scpp)->rw);
+
+    /* and return success */
+    osi_Log1(afsd_logp,"cm_ParseIoctlPath [8] code 0x%x", code);
     return 0;
 }
 
@@ -919,6 +927,14 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     /* # of bytes of path */
     code = (long)strlen(ioctlp->ioctl.inDatap) + 1;
     ioctlp->ioctl.inDatap += code;
+
+    /* Ensure that the status object is up to date */
+    lock_ObtainWrite(&(*scpp)->rw);
+    code = cm_SyncOp( *scpp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0)
+        cm_SyncOpDone( *scpp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&(*scpp)->rw);
 
     /* and return success */
     return 0;
