@@ -79,7 +79,6 @@
 #include <smb_iocons.h>
 
 #define stat _stat
-#define lstat stat
 #define __S_ISTYPE(mode, mask) (((mode) & _S_IFMT) == (mask))
 #define S_ISDIR(mode)          __S_ISTYPE((mode), _S_IFDIR)
 
