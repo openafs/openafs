@@ -3399,7 +3399,7 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 	ObtainWriteLock(&afs_xvcache, 763);
 	ObtainWriteLock(&afs_disconDirtyLock, 765);
 	QAdd(&afs_disconShadow, &avc->shadowq);
-	osi_vnhold(avc, 0);
+	osi_Assert((afs_RefVCache(avc) == 0));
 	ReleaseWriteLock(&afs_disconDirtyLock);
 	ReleaseWriteLock(&afs_xvcache);
 

@@ -2531,6 +2531,45 @@ findvc_sleep(struct vcache *avc, int flag)
 	}
     }
 }
+
+/*!
+ * Add a reference on an existing vcache entry.
+ *
+ * \param tvc Pointer to the vcache.
+ *
+ * \note Environment: Must be called with at least one reference from
+ * elsewhere on the vcache, even if that reference will be dropped.
+ * The global lock is required.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+
+int
+afs_RefVCache(struct vcache *tvc)
+{
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
+
+    /* AFS_STATCNT(afs_RefVCache); */
+
+#ifdef  AFS_DARWIN80_ENV
+    tvp = AFSTOV(tvc);
+    if (vnode_get(tvp))
+	return -1;
+    if (vnode_ref(tvp)) {
+	AFS_GUNLOCK();
+	/* AFSTOV(tvc) may be NULL */
+	vnode_put(tvp);
+	AFS_GLOCK();
+	return -1;
+    }
+#else
+	osi_vnhold(tvc, 0);
+#endif
+    return 0;
+}				/*afs_RefVCache */
+
 /*!
  * Find a vcache entry given a fid.
  *

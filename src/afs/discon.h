@@ -56,7 +56,7 @@ static_inline void afs_DisconAddDirty(struct vcache *avc, int operation, int loc
 	    ObtainWriteLock(&afs_xvcache, 702);
 	ObtainWriteLock(&afs_disconDirtyLock, 703);
 	QAdd(&afs_disconDirty, &avc->dirtyq);
-	osi_vnhold(avc, 0);
+	osi_Assert((afs_RefVCache(avc) == 0));
 	ReleaseWriteLock(&afs_disconDirtyLock);
 	if (lock)
 	    ReleaseWriteLock(&afs_xvcache);

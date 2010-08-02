@@ -1044,6 +1044,7 @@ extern struct vcache *afs_GetVCache(register struct VenusFid *afid,
 				    struct vrequest *areq, afs_int32 * cached,
 				    struct vcache *avc);
 extern void afs_PutVCache(register struct vcache *avc);
+extern int afs_RefVCache(struct vcache *avc);
 extern void afs_ProcessFS(register struct vcache *avc,
 			  register struct AFSFetchStatus *astat,
 			  struct vrequest *areq);

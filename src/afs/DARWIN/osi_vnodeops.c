@@ -2206,6 +2206,26 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
 	}
 	avc->v = nvp;
 	avc->f.states &=~ CDeadVnode;
+	/* If we were carrying an extra ref for dirty, hold/push it. */
+	if (avc->f.ddirty_flags) {
+	    vnode_get(nvp);
+	    vnode_ref(nvp);
+	}
+	/* If we were carrying an extra ref for shadow, hold/push it. */
+	if (avc->f.shadow.vnode) {
+	    vnode_get(nvp);
+	    vnode_ref(nvp);
+	}
+    }
+    /* Drop any extra dirty ref on the old vnode */
+    if (avc->f.ddirty_flags) {
+	vnode_put(ovp);
+	vnode_rele(ovp);
+    }
+    /* Drop any extra shadow ref on the old vnode */
+    if (avc->f.shadow.vnode) {
+	vnode_put(ovp);
+	vnode_rele(ovp);
     }
     vnode_put(ovp);
     vnode_rele(ovp);
