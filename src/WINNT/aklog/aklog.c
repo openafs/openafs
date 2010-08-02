@@ -67,6 +67,7 @@
 #include <krb5.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
+#include <afs/pterror.h>
 
 #ifdef WIN32
 #include <windows.h>
