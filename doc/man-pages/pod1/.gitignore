@@ -20,3 +20,6 @@
 /pts_setmax.pod
 /pts_sleep.pod
 /pts_source.pod
+/vos_addsite.pod
+/vos_copy.pod
+/vos_zap.pod
