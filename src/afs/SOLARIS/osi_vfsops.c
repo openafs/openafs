@@ -581,7 +581,8 @@ _init()
 #if     defined(AFS_SUN55_ENV)
     if ((!(mp = mod_find_by_filename("misc", "nfssrv"))
 	 && !(mp = mod_find_by_filename(NULL, NFSSRV))
-	 && !(mp = mod_find_by_filename(NULL, NFSSRV_V9))) || (mp
+	 && !(mp = mod_find_by_filename(NULL, NFSSRV_V9))
+	 && !(mp = mod_find_by_filename(NULL, NFSSRV_AMD64))) || (mp
 							       && !mp->
 							       mod_installed))
     {

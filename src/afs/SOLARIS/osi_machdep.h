@@ -31,6 +31,7 @@
   */
 #define NFSSRV 		"/kernel/misc/nfssrv"
 #define NFSSRV_V9 	"/kernel/misc/sparcv9/nfssrv"
+#define NFSSRV_AMD64 	"/kernel/misc/amd64/nfssrv"
 
 typedef struct cred afs_ucred_t;
 typedef struct proc afs_proc_t;
