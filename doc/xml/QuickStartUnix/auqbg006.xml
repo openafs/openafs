@@ -2100,13 +2100,42 @@
           </listitem>
 
           <listitem>
-            <para>Start the <emphasis role="bold">fs</emphasis> process, which binds together the File Server, Volume Server, and
+            <para>Issue the <emphasis role="bold">bos create</emphasis> command
+            to start the <emphasis role="bold">fs</emphasis> process or the
+            <emphasis role="bold">dafs</emphasis> process, depending on if you
+            want to run the Demand-Attach File Server or not. See <link
+            linkend="DAFS">Appendix C, The Demand-Attach File Server</link> for
+            more information on whether you want to run it or not.
+
+	    <itemizedlist>
+              <listitem>
+
+            <para>If you do not want to run the Demand-Attach File Server, start the <emphasis role="bold">fs</emphasis> process, which binds together the File Server, Volume Server, and
             Salvager. <programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs fs</emphasis>   \ 
          <emphasis role="bold">/usr/afs/bin/fileserver /usr/afs/bin/volserver</emphasis>  \ 
          <emphasis role="bold">/usr/afs/bin/salvager -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
                   role="bold">-noauth</emphasis>
 </programlisting></para>
+          </listitem>
+
+          <listitem>
+
+            <para>If you want to run the Demand-Attach File Server, start the
+            <emphasis role="bold">dafs</emphasis> process, which binds together
+            the File Server, Volume Server, Salvage Server, and Salvager.
+            <programlisting>
+   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs</emphasis>   \ 
+         <emphasis role="bold">/usr/afs/bin/dafileserver /usr/afs/bin/davolserver</emphasis>  \ 
+         <emphasis role="bold">/usr/afs/bin/salvageserver</emphasis>  \ 
+         <emphasis role="bold">/usr/afs/bin/dasalvager -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
+                  role="bold">-noauth</emphasis>
+</programlisting></para>
+          </listitem>
+
+          </itemizedlist>
+
+          </para>
           </listitem>
         </orderedlist></para>
 

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appendix id="DAFS">
+  <title>The Demand-Attach File Server</title>
+
+  <para>This chapter explains and describes the Demand-Attach File Server (DAFS
+  for short), a new feature in OpenAFS 1.6. A few things are different when
+  setting up and maintaining a DAFS fileserver vs a traditional fileserver, so
+  it is important to know which one you are running.</para>
+
+  <para>If you are trying to decide whether or not to run DAFS on a fileserver,
+  note that you can switch between DAFS and the traditional fileserver fairly
+  easily at any time. Aside from performance differences, the two fileservers
+  generally look and act similarly, so choosing one over the other in the
+  beginning should not hurt you later on. So, if you are not overly concerned
+  with performance, you can just pick one and follow the directions for it, and
+  you should be fine.</para>
+
+  <sect1 id="DAFS001">
+    <title>Justification and Background</title>
+
+    <para>DAFS changes many things with how the fileserver and other server
+    processes access volumes on disk. Most of these changes are only of concern
+    to developers, as there are no visible differences to users or
+    administrators. A few changes are only of concern to administrators while
+    debugging a problem, and only one or two changes affect the day-to-day
+    administration of a fileserver. See the sections on <link
+    linkend="DAFS002">DAFS Binaries</link> and <link
+    linkend="DAFS003">Salvaging</link> for the main functional
+    differences.</para>
+    
+    <para>Among other things, DAFS provides a new way for the fileserver and
+    other server programs to access volumes. It does not change how file data is
+    accessed inside a volume (like namei or inode do), but rather how a volume
+    as a whole is accessed by the fileserver. When a traditional fileserver is
+    started, it will locate and attach all AFS volumes it can find on all AFS
+    partitions on the server. This attachment process involves reading the
+    volume header and setting a flag to say that the volume is in use. On a
+    clean shutdown, the fileserver detach all volumes it attached by clearing
+    that flag. If the fileserver encounters a volume where the flag is already
+    set before it attached the volume, it will know that volume was not detached
+    cleanly, and that it needs to be salvaged.</para>
+
+    <para>This process of attaching and detaching at startup and shutdown takes
+    time. When fileservers start to have thousands of volumes, it can take
+    several minutes to start or cleanly shutdown. Additionally, when a
+    fileserver is shutdown uncleanly, all of the volumes on the server must be
+    salvaged before the fileserver can be brought up again. Even volumes that
+    nobody has ever accessed must be salvaged.</para>
+
+    <para>To improve this situation, DAFS does not attach all volumes on
+    startup. Instead, volumes are only attached when they are first accessed,
+    and are detached if idle for a long period of time (see the -vlru* options
+    for the fileserver; this is configurable but is generally several
+    hours).</para>
+
+    <para>Thus, after an unclean shutdown with DAFS, only the volumes in use at
+    the time of the shutdown need to be salvaged. In addition, the fileserver
+    does not need to wait for salvaging to finish before starting up. Instead of
+    salvaging everything before the fileserver starts, the fileserver causes
+    salvages to be issued on a volume when a damanged volume is accessed (called
+    "demand-salvages").</para>
+
+    <para>The result of all of this is that a fileserver running DAFS can
+    generally be started and stopped in a manner of seconds, where a traditional
+    fileserver could take dozens of minutes, or even hours in the case of an
+    unclean shutdown.</para>
+  </sect1>
+  <sect1 id="DAFS002">
+    <title>DAFS Binaries</title>
+
+    <para>OpenAFS ships with binaries for DAFS and non-DAFS alongside each
+    other. Programs that exist in both DAFS and non-DAFS variants typically have
+    a <emphasis role="bold">da</emphasis> prefix to indicate the DAFS variant.
+    For example, <emphasis role="bold">dafileserver</emphasis> is the DAFS
+    version of the traditional <emphasis role="bold">fileserver</emphasis>
+    binary. Similarly for <emphasis role="bold">davolserver</emphasis> and
+    <emphasis role="bold">volserver</emphasis>, <emphasis
+    role="bold">dasalvager</emphasis> and <emphasis
+    role="bold">salvager</emphasis>, and even some other tools like <emphasis
+    role="bold">dafssync-debug</emphasis> and <emphasis
+    role="bold">fssync-debug</emphasis>.</para>
+
+    <para>A DAFS-enabled fileserver will run the <emphasis
+    role="bold">dafs</emphasis> bnode in bosserver, instead of the traditional
+    fileserver's <emphasis role="bold">fs</emphasis> bnode. The <emphasis
+    role="bold">dafs</emphasis> bnode runs four different binaries as opposed to
+    the <emphasis role="bold">fs</emphasis> bnode's three. Three of the programs
+    in the <emphasis role="bold">dafs</emphasis> bnode are just DAFS equivalents
+    of the corresponding <emphasis role="bold">fs</emphasis> bnode programs, but
+    the fourth one is an entirely new daemon that has no non-DAFS equivalent:
+    the salvageserver.</para>
+
+    <informaltable>
+      <tgroup cols="2">
+        <colspec colwidth="50*" />
+        <colspec colwidth="50*" />
+        <thead>
+          <row>
+            <entry><emphasis role="bold">Traditional binary</emphasis></entry>
+            <entry><emphasis role="bold">DAFS binary</emphasis></entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">/usr/afs/bin/fileserver</emphasis></entry>
+            <entry><emphasis role="bold">/usr/afs/bin/dafileserver</emphasis></entry>
+          </row>
+          <row>
+            <entry><emphasis role="bold">/usr/afs/bin/volserver</emphasis></entry>
+            <entry><emphasis role="bold">/usr/afs/bin/davolserver</emphasis></entry>
+          </row>
+          <row>
+            <entry>No equivalent</entry>
+            <entry><emphasis role="bold">/usr/afs/bin/salvageserver</emphasis></entry>
+          </row>
+          <row>
+            <entry><emphasis role="bold">/usr/afs/bin/salvager</emphasis></entry>
+            <entry><emphasis role="bold">/usr/afs/bin/dasalvager</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="DAFS003">
+    <title>Salvaging</title>
+
+    <para>With a traditional fileserver, salvages usually occur in two
+    situations:
+      <orderedlist>
+        <listitem>
+          <para>The fileserver shuts down uncleanly, and when brought back up,
+          all partitions are salvaged before the fileserver is available.</para>
+        </listitem>
+        <listitem>
+          <para>A volume experiences some corruption after it has been brought
+          online, and an administrator manually schedules a salvage for an
+          individual volume with <emphasis role="bold">bos salvage</emphasis>.
+          Usually the way you notice this is that the fileserver noticed a
+          volume has become corrupt and has taken it offline.</para>
+        </listitem>
+      </orderedlist>
+    </para>
+
+    <para>With DAFS, neither of these occur in normal operation. With DAFS, a
+    volume will be salvaged automatically when a problem is detected in a
+    volume. This occurs whether the fileserver detects the volume was not
+    detached cleanly, or if the fileserver detects corrupt volume data.</para>
+
+    <para>In normal DAFS operation, you should not need to ever run <emphasis
+    role="bold">bos salvage</emphasis>. However, if you suspect a bug, or that
+    there is corruption in a volume that the fileserver has not detected, you
+    can run <emphasis role="bold">bos salvage</emphasis> to manually issue a
+    salvage.</para>
+
+    <para>All salvages scheduled from the salvageserver will be logged in
+    <emphasis role="bold">/usr/afs/logs/SalsrvLog</emphasis>, in the same format
+    as salvages for traditional fileservers are logged. If you issue a
+    whole-partition or whole-server salvage, the logs for that will still be
+    located in <emphasis role="bold">/usr/afs/logs/SalvageLog</emphasis>.</para>
+  </sect1>
+
+  <sect1 id="DAFS004">
+    <title>Converting a Fileserver to DAFS</title>
+
+    <para>If you have an existing traditional fileserver, you can convert it to
+    DAFS fairly easily. The conversion is in-place, but there is at least a
+    small amount of downtime involved even if nothing goes wrong, since the
+    fileserver processes must be restarted. If you want to avoid any downtime,
+    move any volumes on the fileserver to another fileserver before performing
+    the conversion.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>If the fileserver is currently running a version of OpenAFS
+        earlier than 1.6.0, upgrade the fileserver to a version in the 1.6
+        series or later. This is not strictly necessary, but if you encounter
+        problems here, it is helpful to catch them before converting to DAFS so
+        as to isolate the problem.</para>
+
+        <para>If you do not upgrade the fileserver before converting to DAFS,
+        install the new OpenAFS binaries somewhere on the server.</para>
+      </listitem>
+
+      <listitem>
+        <para>If the current bosserver process running on the fileserver is
+        older than OpenAFS 1.6.0, you must upgrade it first. This can be done by
+        replacing the bosserver binary and running <emphasis role="bold">bos
+        restart -bosserver</emphasis>.  This will cause <emphasis>all</emphasis>
+        AFS processes controlled by the bosserver to be restarted. You can do
+        this at the same as upgrading the fileserver in the previous step if
+        desired, to avoid restarting the fileserver twice.</para>
+      </listitem>
+
+      <listitem>
+        <para>Shutdown and stop the old <emphasis role="bold">fs</emphasis> bnode:
+          <programlisting>
+ # <emphasis role="bold">bos stop </emphasis>&lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs -wait -cell </emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+          </programlisting>
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>Create and start the new <emphasis role="bold">dafs</emphasis> bnode.
+          <programlisting>
+ # <emphasis role="bold">bos create  </emphasis>&lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs</emphasis> \
+               <emphasis role="bold">-cmd /usr/afs/bin/dafileserver</emphasis> &lt;<replaceable>dafileserver options</replaceable>&gt; \
+               <emphasis role="bold">-cmd /usr/afs/bin/davolserver</emphasis> &lt;<replaceable>davolserver options</replaceable>&gt; \
+               <emphasis role="bold">-cmd /usr/afs/bin/salvageserver</emphasis> &lt;<replaceable>salvageserver options</replaceable>&gt; \
+               <emphasis role="bold">-cmd /usr/afs/bin/dasalvager</emphasis> &lt;<replaceable>dasalvager options</replaceable>&gt; \
+               <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;
+          </programlisting>
+        You can use the same options for the <emphasis
+        role="bold">dafileserver</emphasis> process as you did for the <emphasis
+        role="bold">fileserver</emphasis> process, and the same options for
+        <emphasis role="bold">davolserver</emphasis> as you did for <emphasis
+        role="bold">volserver</emphasis>.</para>
+        
+        <para>You can also use most of the same options for the <emphasis
+        role="bold">salvageserver</emphasis> and <emphasis
+        role="bold">dasalvager</emphasis> processes as you did for the <emphasis
+        role="bold">salvager</emphasis> process; see their respective man pages.
+        However, if you are upgrading from the 1.4.x series of OpenAFS, be aware
+        that the <emphasis role="bold">-DontSalvage</emphasis> option does not
+        exist anymore for the salvager (with or without DAFS).</para>
+
+        <para>Also note that the <emphasis role="bold">dafileserver</emphasis>
+        process has many more options to tune dafs-specific parameters. See the
+        <emphasis role="bold">dafileserver</emphasis> man page for information
+        about them.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>After you have performed these steps, switching back and forth between
+    running a DAFS and a traditional fileserver is as simple a running <emphasis
+    role="bold">bos stop</emphasis> on one bnode, and <emphasis role="bold">bos
+    start</emphasis> on the other. Once you are confident that the DAFS
+    processes are running smoothly and you do not anticipate switching back to
+    the traditional fileserver, you can <emphasis role="bold">bos
+    delete</emphasis> the <emphasis role="bold">fs</emphasis> bnode.</para>
+  </sect1>
+</appendix>

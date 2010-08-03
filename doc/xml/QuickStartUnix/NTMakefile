@@ -57,6 +57,7 @@ XMLSRCS = \
         auqbg007.xml \
         auqbg008.xml \
         appendix.xml \
+        appendix_dafs.xml \
         $(VERSFILE).xml
 
 index.html: $(XMLSRCS)
