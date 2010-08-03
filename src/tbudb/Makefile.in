@@ -185,7 +185,7 @@ install: \
 	${DESTDIR}${afssrvlibexecdir}/buserver
 
 ${DEST}/root.server/usr/afs/bin/buserver: budb_server
-	${INSTALL} -f $? $@
+	${INSTALL_PROGRAM} $? $@
 
 #
 # Misc targets
@@ -196,7 +196,7 @@ clean:
 
 include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
-	${INSTALL} -f $? $@
+	${INSTALL_PROGRAM} $? $@
 
 dest: \
 	${DEST}/root.server/usr/afs/bin/buserver
