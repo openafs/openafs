@@ -24,8 +24,6 @@ extern void afsi_log(char *pattern, ...);
 static unsigned int cm_noLocalMountPoints = 0;
 char * cm_FakeRootDir = NULL;
 int cm_fakeDirSize = 0;
-int cm_fakeDirCallback=0;
-int cm_fakeGettingCallback=0;
 static cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 static int cm_localMountPointChangeFlag = 0;
@@ -176,6 +174,10 @@ void cm_InitFreelance() {
     // then we make a call to InitFakeRootDir to create
     // a fake root directory based on the local mount points
     cm_InitFakeRootDir();
+
+    // increment the fakeDirVersion to force status updates for
+    // all cached Freelance objects
+    cm_data.fakeDirVersion++;
     // --- end of yj code
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
@@ -368,8 +370,7 @@ void cm_InitFakeRootDir() {
     }
 
     // we know the fakeDir is setup properly, so we claim that we have callback
-    osi_Log0(afsd_logp,"cm_InitFakeRootDir fakeDirCallback=1");
-    cm_fakeDirCallback=1;
+    osi_Log0(afsd_logp,"cm_InitFakeRootDir completed!");
 
     // when we get here, we've set up everything! done!
 }

@@ -1538,42 +1538,16 @@ void cm_InitCallback(void)
 int cm_HaveCallback(cm_scache_t *scp)
 {
 #ifdef AFS_FREELANCE_CLIENT
-    // yj: we handle callbacks specially for callbacks on the root directory
-    // Since it's local, we almost always say that we have callback on it
-    // The only time we send back a 0 is if we're need to initialize or
-    // reinitialize the fake directory
-
-    // There are 2 state variables cm_fakeGettingCallback and cm_fakeDirCallback
-    // cm_fakeGettingCallback is 1 if we're in the process of initialization and
-    // hence should return false. it's 0 otherwise
-    // cm_fakeDirCallback is 0 if we haven't loaded the fake directory, it's 1
-    // if the fake directory is loaded and this is the first time cm_HaveCallback
-    // is called since then. We return false in this case to allow cm_GetCallback
-    // to be called because cm_GetCallback has some initialization work to do.
-    // If cm_fakeDirCallback is 2, then it means that the fake directory is in
-    // good shape and we simply return true, provided no change is detected.
-    int fdc, fgc;
-
     if (cm_freelanceEnabled && 
-         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
-        lock_ObtainMutex(&cm_Freelance_Lock);
-        fdc = cm_fakeDirCallback;
-        fgc = cm_fakeGettingCallback;
-        lock_ReleaseMutex(&cm_Freelance_Lock);
-	    
-        if (fdc==1) {	// first call since init
-            return 0;
-        } else if (fdc==2 && !fgc) { 	// we're in good shape
-            if (cm_getLocalMountPointChange()) {	// check for changes
-                cm_clearLocalMountPointChange(); // clear the changefile
-                lock_ReleaseWrite(&scp->rw);      // this is re-locked in reInitLocalMountPoints
-                cm_reInitLocalMountPoints();	// start reinit
-                lock_ObtainWrite(&scp->rw);      // now get the lock back 
-                return 0;
-            }
-            return (cm_data.fakeDirVersion == scp->dataVersion);
+        scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+        scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
+        if (cm_getLocalMountPointChange()) {
+            cm_clearLocalMountPointChange();
+            lock_ReleaseWrite(&scp->rw);
+            cm_reInitLocalMountPoints();
+            lock_ObtainWrite(&scp->rw);
         }
-        return 0;
+        return (cm_data.fakeDirVersion == scp->dataVersion);
     }
 #endif
     if (cm_readonlyVolumeVersioning &&
@@ -1787,7 +1761,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 #ifdef AFS_FREELANCE_CLIENT
     // The case where a callback is needed on /afs is handled
     // specially. We need to fetch the status by calling
-    // cm_MergeStatus and mark that cm_fakeDirCallback is 2
+    // cm_MergeStatus
     if (cm_freelanceEnabled &&
         (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
          scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)) {
@@ -1798,28 +1772,12 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             goto done;
         syncop_done = 1;
 
-        if (cm_fakeDirCallback != 2) {
-            // Start by indicating that we're in the process
-            // of fetching the callback
-            lock_ObtainMutex(&cm_Freelance_Lock);
-            osi_Log0(afsd_logp,"GetCallback Freelance fakeGettingCallback=1");
-            cm_fakeGettingCallback = 1;
-            lock_ReleaseMutex(&cm_Freelance_Lock);
-
+        if (scp->dataVersion != cm_data.fakeDirVersion) {
             memset(&afsStatus, 0, sizeof(afsStatus));
+            memset(&volSync, 0, sizeof(volSync));
 
             // Fetch the status info 
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
-
-            // Indicate that the callback is not done
-            lock_ObtainMutex(&cm_Freelance_Lock);
-            osi_Log0(afsd_logp,"GetCallback Freelance fakeDirCallback=2");
-            cm_fakeDirCallback = 2;
-
-            // Indicate that we're no longer fetching the callback
-            osi_Log0(afsd_logp,"GetCallback Freelance fakeGettingCallback=0");
-            cm_fakeGettingCallback = 0;
-            lock_ReleaseMutex(&cm_Freelance_Lock);
         }
         goto done;
     }

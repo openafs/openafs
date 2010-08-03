@@ -766,9 +766,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         lock_ReleaseWrite(&cm_scacheLock);
         osi_Log0(afsd_logp,"cm_GetSCache Freelance and special");
 
-        if (cm_getLocalMountPointChange()) {	// check for changes
-            cm_clearLocalMountPointChange();    // clear the changefile
-            cm_reInitLocalMountPoints();	// start reinit
+        if (cm_getLocalMountPointChange()) {
+            cm_clearLocalMountPointChange();
+            cm_reInitLocalMountPoints();
         }
 
         lock_ObtainWrite(&cm_scacheLock);
@@ -1248,18 +1248,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             }
         }
 
-        // yj: modified this so that callback only checked if we're
-        // not checking something on /afs
-        /* fix the conditional to match the one in cm_HaveCallback */
-        if ((flags & CM_SCACHESYNC_NEEDCALLBACK)
-#ifdef AFS_FREELANCE_CLIENT
-             && (!cm_freelanceEnabled || 
-                  !(scp->fid.vnode==0x1 && scp->fid.unique==0x1) ||
-                  scp->fid.cell!=AFS_FAKE_ROOT_CELL_ID ||
-                  scp->fid.volume!=AFS_FAKE_ROOT_VOL_ID ||
-                  cm_fakeDirCallback < 2)
-#endif /* AFS_FREELANCE_CLIENT */
-             ) {
+        if ((flags & CM_SCACHESYNC_NEEDCALLBACK)) {
             if ((flags & CM_SCACHESYNC_FORCECB) || !cm_HaveCallback(scp)) {
                 osi_Log1(afsd_logp, "CM SyncOp getting callback on scp 0x%p",
                           scp);
