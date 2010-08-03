@@ -297,6 +297,10 @@ typedef unsigned short etap_event_t;
 #  include "limits.h"
 # endif
 
+# ifdef AFS_HPUX_ENV
+#  include "limits.h"
+# endif
+
 # if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || \
   defined(AFS_FBSD_ENV) || defined(AFS_NBSD40_ENV)
 #  include "h/dirent.h"
