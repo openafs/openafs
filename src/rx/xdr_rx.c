@@ -86,14 +86,21 @@ static struct xdr_ops xdrrx_ops = {
     xdrrx_putint64,     /* serialize an afs_int64 */
 #endif
     /* Windows does not support labeled assigments */
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrrx_getint32,	/* deserialize an afs_int32 */
     xdrrx_putint32,	/* serialize an afs_int32 */
+#endif
     xdrrx_getbytes,	/* deserialize counted bytes */
     xdrrx_putbytes,	/* serialize counted bytes */
     NULL,		/* get offset in the stream: not supported. */
     NULL,		/* set offset in the stream: not supported. */
     xdrrx_inline,	/* prime stream for inline macros */
-    NULL		/* destroy stream */
+    NULL,		/* destroy stream */
+#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+    NULL,               /* control - not implemented */
+    xdrrx_getint32,     /* not supported */
+    xdrrx_putint32,     /* serialize an afs_int32 */
+#endif
 #else
 #ifdef AFS_XDR_64BITOPS
     .x_getint64 = xdrrx_getint64,

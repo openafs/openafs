@@ -64,14 +64,21 @@ static struct xdr_ops xdrstdio_ops = {
     NULL,
 #endif
     /* Windows does not support labeled assignments */
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrstdio_getint32,	        /* deserialize an afs_int32 */
     xdrstdio_putint32,	        /* serialize an afs_int32 */
+#endif
     xdrstdio_getbytes,	        /* deserialize counted bytes */
     xdrstdio_putbytes,	        /* serialize counted bytes */
     xdrstdio_getpos,	        /* get offset in the stream */
     xdrstdio_setpos,	        /* set offset in the stream */
     xdrstdio_inline,	        /* prime stream for inline macros */
-    xdrstdio_destroy	        /* destroy stream */
+    xdrstdio_destroy,	        /* destroy stream */
+#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+    NULL,
+    xdrstdio_getint32,    /* deserialize an afs_int32 */
+    xdrstdio_putint32,    /* serialize an afs_int32 */
+#endif
 #else
 #ifdef AFS_XDR_64BITOPS
     .x_getint64 = NULL,

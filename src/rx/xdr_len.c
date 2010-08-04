@@ -90,14 +90,21 @@ static struct xdr_ops xdrlen_ops = {
     NULL,
 #endif
     /* Windows does not support labeled assigments */
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrlen_getint32,    /* not supported */
     xdrlen_putint32,    /* serialize an afs_int32 */
+#endif
     xdrlen_getbytes,    /* not supported */
     xdrlen_putbytes,    /* serialize counted bytes */
     xdrlen_getpos,      /* get offset in the stream */
     xdrlen_setpos,      /* set offset in the stream */
     xdrlen_inline,      /* not supported */
-    xdrlen_destroy      /* destroy stream */
+    xdrlen_destroy,     /* destroy stream */
+#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+    NULL,               /* control - not implemented */
+    xdrlen_getint32,    /* not supported */
+    xdrlen_putint32,    /* serialize an afs_int32 */
+#endif
 #else
 #ifdef AFS_XDR_64BITOPS
     .x_getint64 = NULL,

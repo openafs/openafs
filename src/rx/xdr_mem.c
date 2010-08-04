@@ -68,14 +68,21 @@ static struct xdr_ops xdrmem_ops = {
     NULL,
 #endif
     /* Windows does not support labeled assigments */
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrmem_getint32,    /* deserialize an afs_int32 */
     xdrmem_putint32,    /* serialize an afs_int32 */
+#endif
     xdrmem_getbytes,    /* deserialize counted bytes */
     xdrmem_putbytes,    /* serialize counted bytes */
     xdrmem_getpos,      /* get offset in the stream: not supported. */
     xdrmem_setpos,      /* set offset in the stream: not supported. */
     xdrmem_inline,      /* prime stream for inline macros */
-    xdrmem_destroy      /* destroy stream */
+    xdrmem_destroy,     /* destroy stream */
+#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+    NULL,               /* control - not implemented */
+    xdrmem_getint32,    /* not supported */
+    xdrmem_putint32,    /* serialize an afs_int32 */
+#endif
 #else
 #ifdef AFS_XDR_64BITOPS
     .x_getint64 = NULL,
