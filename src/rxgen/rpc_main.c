@@ -91,6 +91,7 @@ char zflag = 0;			/* If set, abort server stub if rpc call returns non-zero */
 char xflag = 0;			/* if set, add stats code to stubs */
 char yflag = 0;			/* if set, only emit function name arrays to xdr file */
 int debug = 0;
+static int pclose_fin = 0;
 static char *cmdname;
 #ifdef AFS_NT40_ENV
 static char *CPP = NULL;
@@ -223,6 +224,12 @@ main(int argc, char *argv[])
 	    reinitialize();
 	}
     }
+    if (fin && pclose_fin) {
+	/* the cpp command we called returned a non-zero exit status */
+	if (pclose(fin)) {
+	    crash();
+	}
+    }
     exit(0);
 }
 
@@ -313,6 +320,7 @@ open_input(char *infile, char *define)
 	fin = popen(cpp_cmdline, "r");
 	if (fin == NULL)
 	    perror("popen");
+	pclose_fin = 1;
 
     } else {
 	if (infile == NULL) {
