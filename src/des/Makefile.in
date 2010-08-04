@@ -206,20 +206,20 @@ install: libdes.a des.h des_prototypes.h des_conf.h mit-cpyright.h odd.h
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
 	${INSTALL_DATA} libdes.a ${DESTDIR}${libdir}/libdes.a
-	${INSTALL_DATA} des.h ${DESTDIR}${includedir}/des.h
-	${INSTALL_DATA} des_prototypes.h ${DESTDIR}${includedir}/des_prototypes.h
-	${INSTALL_DATA} des_conf.h ${DESTDIR}${includedir}/des_conf.h
-	${INSTALL_DATA} mit-cpyright.h ${DESTDIR}${includedir}/mit-cpyright.h
+	${INSTALL_DATA} ${srcdir}/des.h ${DESTDIR}${includedir}/des.h
+	${INSTALL_DATA} ${srcdir}/des_prototypes.h ${DESTDIR}${includedir}/des_prototypes.h
+	${INSTALL_DATA} ${srcdir}/des_conf.h ${DESTDIR}${includedir}/des_conf.h
+	${INSTALL_DATA} ${srcdir}/mit-cpyright.h ${DESTDIR}${includedir}/mit-cpyright.h
 	${INSTALL_DATA} odd.h ${DESTDIR}${includedir}/des_odd.h
 
 dest: libdes.a des.h des_prototypes.h des_conf.h mit-cpyright.h odd.h
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} libdes.a ${DEST}/lib/libdes.a
-	${INSTALL_DATA} des.h ${DEST}/include/des.h
-	${INSTALL_DATA} des_prototypes.h ${DEST}/include/des_prototypes.h
-	${INSTALL_DATA} des_conf.h ${DEST}/include/des_conf.h
-	${INSTALL_DATA} mit-cpyright.h ${DEST}/include/mit-cpyright.h
+	${INSTALL_DATA} ${srcdir}/des.h ${DEST}/include/des.h
+	${INSTALL_DATA} ${srcdir}/des_prototypes.h ${DEST}/include/des_prototypes.h
+	${INSTALL_DATA} ${srcdir}/des_conf.h ${DEST}/include/des_conf.h
+	${INSTALL_DATA} ${srcdir}/mit-cpyright.h ${DEST}/include/mit-cpyright.h
 	${INSTALL_DATA} odd.h ${DEST}/include/des_odd.h
 
 #

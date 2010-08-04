@@ -217,15 +217,15 @@ install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
 	fi
 	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
-	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
+	${INSTALL_DATA} ${srcdir}/ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
 	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/prerror.h
 	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/print.h
-	${INSTALL_DATA} ptserver.h ${DESTDIR}${includedir}/afs/prserver.h
-	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/ptclient.h
-	${INSTALL_DATA} ptuser.h ${DESTDIR}${includedir}/afs/ptuser.h
+	${INSTALL_DATA} ${srcdir}/ptserver.h ${DESTDIR}${includedir}/afs/prserver.h
+	${INSTALL_DATA} ${srcdir}/ptclient.h ${DESTDIR}${includedir}/afs/ptclient.h
+	${INSTALL_DATA} ${srcdir}/ptuser.h ${DESTDIR}${includedir}/afs/ptuser.h
 	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/pterror.h
 	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/ptint.h
-	${INSTALL_DATA} ptserver.h ${DESTDIR}${includedir}/afs/ptserver.h
+	${INSTALL_DATA} ${srcdir}/ptserver.h ${DESTDIR}${includedir}/afs/ptserver.h
 
 dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 		ptint.h ptserver.h
@@ -242,15 +242,15 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 		${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check; \
 	fi;
 	${INSTALL_DATA} libprot.a ${DEST}/lib/afs/libprot.a
-	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/prclient.h
+	${INSTALL_DATA} ${srcdir}/ptclient.h ${DEST}/include/afs/prclient.h
 	${INSTALL_DATA} pterror.h ${DEST}/include/afs/prerror.h
 	${INSTALL_DATA} ptint.h ${DEST}/include/afs/print.h
-	${INSTALL_DATA} ptserver.h ${DEST}/include/afs/prserver.h
-	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/ptclient.h
-	${INSTALL_DATA} ptuser.h ${DEST}/include/afs/ptuser.h
+	${INSTALL_DATA} ${srcdir}/ptserver.h ${DEST}/include/afs/prserver.h
+	${INSTALL_DATA} ${srcdir}/ptclient.h ${DEST}/include/afs/ptclient.h
+	${INSTALL_DATA} ${srcdir}/ptuser.h ${DEST}/include/afs/ptuser.h
 	${INSTALL_DATA} pterror.h ${DEST}/include/afs/pterror.h
 	${INSTALL_DATA} ptint.h ${DEST}/include/afs/ptint.h
-	${INSTALL_DATA} ptserver.h ${DEST}/include/afs/ptserver.h
+	${INSTALL_DATA} ${srcdir}/ptserver.h ${DEST}/include/afs/ptserver.h
 
 #
 # Misc. targets

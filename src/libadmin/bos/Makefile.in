@@ -35,13 +35,13 @@ ${TOP_LIBDIR}/libbosadmin.a: libbosadmin.a
 install: libbosadmin.a afs_bosAdmin.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} afs_bosAdmin.h ${DESTDIR}${includedir}/afs/afs_bosAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_bosAdmin.h ${DESTDIR}${includedir}/afs/afs_bosAdmin.h
 	${INSTALL_DATA} libbosadmin.a ${DESTDIR}${libdir}/afs/libbosadmin.a
 
 dest: libbosadmin.a afs_bosAdmin.h
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} afs_bosAdmin.h ${DEST}/include/afs/afs_bosAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_bosAdmin.h ${DEST}/include/afs/afs_bosAdmin.h
 	${INSTALL_DATA} libbosadmin.a ${DEST}/lib/afs/libbosadmin.a
 
 libbosadmin.a: ${LIBOBJS}

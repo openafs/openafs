@@ -271,7 +271,7 @@ install: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 	${INSTALL_PROGRAM} ka-forwarder ${DESTDIR}${afssrvsbindir}/ka-forwarder
 	${INSTALL_DATA} kautils.h ${DESTDIR}${includedir}/afs/kautils.h
 	${INSTALL_DATA} kauth.h ${DESTDIR}${includedir}/afs/kauth.h
-	${INSTALL_DATA} kaport.h ${DESTDIR}${includedir}/afs/kaport.h
+	${INSTALL_DATA} ${srcdir}/kaport.h ${DESTDIR}${includedir}/afs/kaport.h
 
 dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 		libkauth.krb.a rebuild kdb ka-forwarder kautils.h kauth.h \
@@ -300,7 +300,7 @@ dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 	${INSTALL_PROGRAM} ka-forwarder ${DEST}/root.server/usr/afs/bin/ka-forwarder
 	${INSTALL_DATA} kautils.h ${DEST}/include/afs/kautils.h
 	${INSTALL_DATA} kauth.h ${DEST}/include/afs/kauth.h
-	${INSTALL_DATA} kaport.h ${DEST}/include/afs/kaport.h
+	${INSTALL_DATA} ${srcdir}/kaport.h ${DEST}/include/afs/kaport.h
 
 #
 # Misc. targets

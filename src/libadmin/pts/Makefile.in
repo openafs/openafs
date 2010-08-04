@@ -38,13 +38,13 @@ ${TOP_LIBDIR}/libptsadmin.a: libptsadmin.a
 install: afs_ptsAdmin.h libptsadmin.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} afs_ptsAdmin.h ${DESTDIR}${includedir}/afs/afs_ptsAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_ptsAdmin.h ${DESTDIR}${includedir}/afs/afs_ptsAdmin.h
 	${INSTALL_DATA} libptsadmin.a ${DESTDIR}${libdir}/afs/libptsadmin.a
 
 dest: afs_ptsAdmin.h libptsadmin.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} afs_ptsAdmin.h ${DEST}/include/afs/afs_ptsAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_ptsAdmin.h ${DEST}/include/afs/afs_ptsAdmin.h
 	${INSTALL_DATA} libptsadmin.a ${DEST}/lib/afs/libptsadmin.a
 
 libptsadmin.a: ${LIBOBJS}

@@ -160,41 +160,41 @@ install: librx.a
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}/rx
 	${INSTALL_DATA} librx.a ${DESTDIR}${libdir}/librx.a
-	${INSTALL_DATA} rx_packet.h ${DESTDIR}${includedir}/rx/rx_packet.h
-	${INSTALL_DATA} rx_prototypes.h ${DESTDIR}${includedir}/rx/rx_prototypes.h
-	${INSTALL_DATA} rx.h ${DESTDIR}${includedir}/rx/rx.h
-	${INSTALL_DATA} rx_user.h ${DESTDIR}${includedir}/rx/rx_user.h
-	${INSTALL_DATA} rx_event.h ${DESTDIR}${includedir}/rx/rx_event.h
-	${INSTALL_DATA} rx_queue.h ${DESTDIR}${includedir}/rx/rx_queue.h
-	${INSTALL_DATA} rx_globals.h ${DESTDIR}${includedir}/rx/rx_globals.h
-	${INSTALL_DATA} rx_clock.h ${DESTDIR}${includedir}/rx/rx_clock.h
-	${INSTALL_DATA} rx_multi.h ${DESTDIR}${includedir}/rx/rx_multi.h
-	${INSTALL_DATA} rx_pthread.h ${DESTDIR}${includedir}/rx/rx_pthread.h
-	${INSTALL_DATA} rx_lwp.h ${DESTDIR}${includedir}/rx/rx_lwp.h
-	${INSTALL_DATA} rx_misc.h ${DESTDIR}${includedir}/rx/rx_misc.h
-	${INSTALL_DATA} rx_null.h ${DESTDIR}${includedir}/rx/rx_null.h
-	${INSTALL_DATA} xdr.h ${DESTDIR}${includedir}/rx/xdr.h
-	${INSTALL_DATA} xdr_prototypes.h ${DESTDIR}${includedir}/rx/xdr_prototypes.h
+	${INSTALL_DATA} ${srcdir}/rx_packet.h ${DESTDIR}${includedir}/rx/rx_packet.h
+	${INSTALL_DATA} ${srcdir}/rx_prototypes.h ${DESTDIR}${includedir}/rx/rx_prototypes.h
+	${INSTALL_DATA} ${srcdir}/rx.h ${DESTDIR}${includedir}/rx/rx.h
+	${INSTALL_DATA} ${srcdir}/rx_user.h ${DESTDIR}${includedir}/rx/rx_user.h
+	${INSTALL_DATA} ${srcdir}/rx_event.h ${DESTDIR}${includedir}/rx/rx_event.h
+	${INSTALL_DATA} ${srcdir}/rx_queue.h ${DESTDIR}${includedir}/rx/rx_queue.h
+	${INSTALL_DATA} ${srcdir}/rx_globals.h ${DESTDIR}${includedir}/rx/rx_globals.h
+	${INSTALL_DATA} ${srcdir}/rx_clock.h ${DESTDIR}${includedir}/rx/rx_clock.h
+	${INSTALL_DATA} ${srcdir}/rx_multi.h ${DESTDIR}${includedir}/rx/rx_multi.h
+	${INSTALL_DATA} ${srcdir}/rx_pthread.h ${DESTDIR}${includedir}/rx/rx_pthread.h
+	${INSTALL_DATA} ${srcdir}/rx_lwp.h ${DESTDIR}${includedir}/rx/rx_lwp.h
+	${INSTALL_DATA} ${srcdir}/rx_misc.h ${DESTDIR}${includedir}/rx/rx_misc.h
+	${INSTALL_DATA} ${srcdir}/rx_null.h ${DESTDIR}${includedir}/rx/rx_null.h
+	${INSTALL_DATA} ${srcdir}/xdr.h ${DESTDIR}${includedir}/rx/xdr.h
+	${INSTALL_DATA} ${srcdir}/xdr_prototypes.h ${DESTDIR}${includedir}/rx/xdr_prototypes.h
 
 dest: librx.a
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include/rx
 	${INSTALL_DATA} librx.a ${DEST}/lib/librx.a
-	${INSTALL_DATA} rx_packet.h ${DEST}/include/rx/rx_packet.h
-	${INSTALL_DATA} rx_prototypes.h ${DEST}/include/rx/rx_prototypes.h
-	${INSTALL_DATA} rx.h ${DEST}/include/rx/rx.h
-	${INSTALL_DATA} rx_user.h ${DEST}/include/rx/rx_user.h
-	${INSTALL_DATA} rx_event.h ${DEST}/include/rx/rx_event.h
-	${INSTALL_DATA} rx_queue.h ${DEST}/include/rx/rx_queue.h
-	${INSTALL_DATA} rx_globals.h ${DEST}/include/rx/rx_globals.h
-	${INSTALL_DATA} rx_clock.h ${DEST}/include/rx/rx_clock.h
-	${INSTALL_DATA} rx_multi.h ${DEST}/include/rx/rx_multi.h
-	${INSTALL_DATA} rx_pthread.h ${DEST}/include/rx/rx_pthread.h
-	${INSTALL_DATA} rx_lwp.h ${DEST}/include/rx/rx_lwp.h
-	${INSTALL_DATA} rx_misc.h ${DEST}/include/rx/rx_misc.h
-	${INSTALL_DATA} rx_null.h ${DEST}/include/rx/rx_null.h
-	${INSTALL_DATA} xdr.h ${DEST}/include/rx/xdr.h
-	${INSTALL_DATA} xdr_prototypes.h ${DEST}/include/rx/xdr_prototypes.h
+	${INSTALL_DATA} ${srcdir}/rx_packet.h ${DEST}/include/rx/rx_packet.h
+	${INSTALL_DATA} ${srcdir}/rx_prototypes.h ${DEST}/include/rx/rx_prototypes.h
+	${INSTALL_DATA} ${srcdir}/rx.h ${DEST}/include/rx/rx.h
+	${INSTALL_DATA} ${srcdir}/rx_user.h ${DEST}/include/rx/rx_user.h
+	${INSTALL_DATA} ${srcdir}/rx_event.h ${DEST}/include/rx/rx_event.h
+	${INSTALL_DATA} ${srcdir}/rx_queue.h ${DEST}/include/rx/rx_queue.h
+	${INSTALL_DATA} ${srcdir}/rx_globals.h ${DEST}/include/rx/rx_globals.h
+	${INSTALL_DATA} ${srcdir}/rx_clock.h ${DEST}/include/rx/rx_clock.h
+	${INSTALL_DATA} ${srcdir}/rx_multi.h ${DEST}/include/rx/rx_multi.h
+	${INSTALL_DATA} ${srcdir}/rx_pthread.h ${DEST}/include/rx/rx_pthread.h
+	${INSTALL_DATA} ${srcdir}/rx_lwp.h ${DEST}/include/rx/rx_lwp.h
+	${INSTALL_DATA} ${srcdir}/rx_misc.h ${DEST}/include/rx/rx_misc.h
+	${INSTALL_DATA} ${srcdir}/rx_null.h ${DEST}/include/rx/rx_null.h
+	${INSTALL_DATA} ${srcdir}/xdr.h ${DEST}/include/rx/xdr.h
+	${INSTALL_DATA} ${srcdir}/xdr_prototypes.h ${DEST}/include/rx/xdr_prototypes.h
 
 #
 # Misc. targets

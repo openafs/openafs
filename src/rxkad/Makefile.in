@@ -109,18 +109,18 @@ install: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}/rx
 	${INSTALL_DATA} librxkad.a ${DESTDIR}${libdir}/librxkad.a
-	${INSTALL_DATA} fcrypt.h ${DESTDIR}${includedir}/rx/fcrypt.h
+	${INSTALL_DATA} ${srcdir}/fcrypt.h ${DESTDIR}${includedir}/rx/fcrypt.h
 	${INSTALL_DATA} rxkad.h ${DESTDIR}${includedir}/rx/rxkad.h
-	${INSTALL_DATA} rxkad_prototypes.h \
+	${INSTALL_DATA} ${srcdir}/rxkad_prototypes.h \
 		${DESTDIR}${includedir}/rx/rxkad_prototypes.h
 
 dest: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include/rx
 	${INSTALL_DATA} librxkad.a ${DEST}/lib/librxkad.a
-	${INSTALL_DATA} fcrypt.h ${DEST}/include/rx/fcrypt.h
+	${INSTALL_DATA} ${srcdir}/fcrypt.h ${DEST}/include/rx/fcrypt.h
 	${INSTALL_DATA} rxkad.h ${DEST}/include/rx/rxkad.h
-	${INSTALL_DATA} rxkad_prototypes.h \
+	${INSTALL_DATA} ${srcdir}/rxkad_prototypes.h \
 		${DEST}/include/rx/rxkad_prototypes.h
 
 #

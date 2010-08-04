@@ -48,15 +48,15 @@ install: libacl.a acl.h prs_fs.h
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libacl.a ${DESTDIR}${libdir}/afs/libacl.a
-	${INSTALL_DATA} acl.h ${DESTDIR}${includedir}/afs/acl.h
-	${INSTALL_DATA} prs_fs.h ${DESTDIR}${includedir}/afs/prs_fs.h
+	${INSTALL_DATA} ${srcdir}/acl.h ${DESTDIR}${includedir}/afs/acl.h
+	${INSTALL_DATA} ${srcdir}/prs_fs.h ${DESTDIR}${includedir}/afs/prs_fs.h
 
 dest: libacl.a acl.h prs_fs.h
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libacl.a ${DEST}/lib/afs/libacl.a
-	${INSTALL_DATA} acl.h ${DEST}/include/afs/acl.h
-	${INSTALL_DATA} prs_fs.h ${DEST}/include/afs/prs_fs.h
+	${INSTALL_DATA} ${srcdir}/acl.h ${DEST}/include/afs/acl.h
+	${INSTALL_DATA} ${srcdir}/prs_fs.h ${DEST}/include/afs/prs_fs.h
 
 #
 # Misc. targets

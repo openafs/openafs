@@ -229,10 +229,10 @@ install: libsys.a rmtsysd afssyscalls.h pagsh pagsh.krb afs.exp xfsattrs.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libsys.a ${DESTDIR}${libdir}/afs/libsys.a
 	${INSTALL_PROGRAM} rmtsysd ${DESTDIR}${sbindir}/rmtsysd
-	${INSTALL_DATA} afssyscalls.h ${DESTDIR}${includedir}/afs/afssyscalls.h
+	${INSTALL_DATA} ${srcdir}/afssyscalls.h ${DESTDIR}${includedir}/afs/afssyscalls.h
 	${INSTALL_PROGRAM} pagsh ${DESTDIR}${bindir}/pagsh
 	${INSTALL_PROGRAM} pagsh.krb ${DESTDIR}${bindir}/pagsh.krb
-	${INSTALL_DATA} xfsattrs.h ${DESTDIR}${includedir}/afs/xfsattrs.h
+	${INSTALL_DATA} ${srcdir}/xfsattrs.h ${DESTDIR}${includedir}/afs/xfsattrs.h
 	@set -x; case ${SYS_NAME} in \
 	rs_aix*) \
 		${INSTALL_DATA} afs.exp ${DESTDIR}${includedir}/afs/afs.exp;; \
@@ -247,8 +247,8 @@ dest: libsys.a rmtsysd afssyscalls.h pagsh pagsh.krb afs.exp xfsattrs.h
 	${INSTALL_PROGRAM} rmtsysd ${DEST}/etc/rmtsysd
 	${INSTALL_PROGRAM} pagsh ${DEST}/bin/pagsh
 	${INSTALL_PROGRAM} pagsh.krb ${DEST}/bin/pagsh.krb
-	${INSTALL_DATA} afssyscalls.h ${DEST}/include/afs/afssyscalls.h
-	${INSTALL_DATA} xfsattrs.h ${DEST}/include/afs/xfsattrs.h
+	${INSTALL_DATA} ${srcdir}/afssyscalls.h ${DEST}/include/afs/afssyscalls.h
+	${INSTALL_DATA} ${srcdir}/xfsattrs.h ${DEST}/include/afs/xfsattrs.h
 	@set -x; case ${SYS_NAME} in \
 	rs_aix*) \
 		${INSTALL_DATA} afs.exp ${DEST}/include/afs/afs.exp ;; \

@@ -30,13 +30,13 @@ ${TOP_LIBDIR}/libclientadmin.a: libclientadmin.a
 install: afs_clientAdmin.h libclientadmin.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} afs_clientAdmin.h ${DESTDIR}${includedir}/afs/afs_clientAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_clientAdmin.h ${DESTDIR}${includedir}/afs/afs_clientAdmin.h
 	${INSTALL_DATA} libclientadmin.a ${DESTDIR}${libdir}/afs/libclientadmin.a
 
 dest: afs_clientAdmin.h libclientadmin.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} afs_clientAdmin.h ${DEST}/include/afs/afs_clientAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_clientAdmin.h ${DEST}/include/afs/afs_clientAdmin.h
 	${INSTALL_DATA} libclientadmin.a ${DEST}/lib/afs/libclientadmin.a
 
 libclientadmin.a: ${LIBOBJS}

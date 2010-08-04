@@ -183,19 +183,19 @@ install: liblwp.a lock.h lwp.h preempt.h timer.h
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
 	${INSTALL_DATA} liblwp.a ${DESTDIR}${libdir}/liblwp.a
-	${INSTALL_DATA} lock.h ${DESTDIR}${includedir}/lock.h
-	${INSTALL_DATA} lwp.h ${DESTDIR}${includedir}/lwp.h
-	${INSTALL_DATA} preempt.h ${DESTDIR}${includedir}/preempt.h
-	${INSTALL_DATA} timer.h ${DESTDIR}${includedir}/timer.h
+	${INSTALL_DATA} ${srcdir}/lock.h ${DESTDIR}${includedir}/lock.h
+	${INSTALL_DATA} ${srcdir}/lwp.h ${DESTDIR}${includedir}/lwp.h
+	${INSTALL_DATA} ${srcdir}/preempt.h ${DESTDIR}${includedir}/preempt.h
+	${INSTALL_DATA} ${srcdir}/timer.h ${DESTDIR}${includedir}/timer.h
 
 dest: liblwp.a lock.h lwp.h preempt.h timer.h
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
-	${INSTALL_DATA} lock.h ${DEST}/include/lock.h
-	${INSTALL_DATA} lwp.h ${DEST}/include/lwp.h
-	${INSTALL_DATA} preempt.h ${DEST}/include/preempt.h
-	${INSTALL_DATA} timer.h ${DEST}/include/timer.h
+	${INSTALL_DATA} ${srcdir}/lock.h ${DEST}/include/lock.h
+	${INSTALL_DATA} ${srcdir}/lwp.h ${DEST}/include/lwp.h
+	${INSTALL_DATA} ${srcdir}/preempt.h ${DEST}/include/preempt.h
+	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/timer.h
 
 #
 # Misc. targets

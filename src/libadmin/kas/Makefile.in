@@ -38,13 +38,13 @@ ${TOP_LIBDIR}/libkasadmin.a: libkasadmin.a
 install: afs_kasAdmin.h libkasadmin.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} afs_kasAdmin.h ${DESTDIR}${includedir}/afs/afs_kasAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_kasAdmin.h ${DESTDIR}${includedir}/afs/afs_kasAdmin.h
 	${INSTALL_DATA} libkasadmin.a ${DESTDIR}${libdir}/afs/libkasadmin.a
 
 dest: afs_kasAdmin.h libkasadmin.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} afs_kasAdmin.h ${DEST}/include/afs/afs_kasAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_kasAdmin.h ${DEST}/include/afs/afs_kasAdmin.h
 	${INSTALL_DATA} libkasadmin.a ${DEST}/lib/afs/libkasadmin.a
 
 libkasadmin.a: ${LIBOBJS}

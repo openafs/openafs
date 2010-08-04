@@ -88,8 +88,8 @@ install: xstat_fs.h xstat_cm.h libxstat_fs.a libxstat_cm.a xstat_fs_test \
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${bindir}
-	${INSTALL_DATA} xstat_fs.h ${DESTDIR}${includedir}/afs/xstat_fs.h
-	${INSTALL_DATA} xstat_cm.h ${DESTDIR}${includedir}/afs/xstat_cm.h
+	${INSTALL_DATA} ${srcdir}/xstat_fs.h ${DESTDIR}${includedir}/afs/xstat_fs.h
+	${INSTALL_DATA} ${srcdir}/xstat_cm.h ${DESTDIR}${includedir}/afs/xstat_cm.h
 	${INSTALL_DATA} libxstat_fs.a ${DESTDIR}${libdir}/afs/libxstat_fs.a
 	${INSTALL_DATA} libxstat_cm.a ${DESTDIR}${libdir}/afs/libxstat_cm.a
 	${INSTALL_PROGRAM} xstat_fs_test ${DESTDIR}${bindir}/xstat_fs_test
@@ -100,8 +100,8 @@ dest: xstat_fs.h xstat_cm.h libxstat_fs.a libxstat_cm.a xstat_fs_test \
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/bin
-	${INSTALL_DATA} xstat_fs.h ${DEST}/include/afs/xstat_fs.h
-	${INSTALL_DATA} xstat_cm.h ${DEST}/include/afs/xstat_cm.h
+	${INSTALL_DATA} ${srcdir}/xstat_fs.h ${DEST}/include/afs/xstat_fs.h
+	${INSTALL_DATA} ${srcdir}/xstat_cm.h ${DEST}/include/afs/xstat_cm.h
 	${INSTALL_DATA} libxstat_fs.a ${DEST}/lib/afs/libxstat_fs.a
 	${INSTALL_DATA} libxstat_cm.a ${DEST}/lib/afs/libxstat_cm.a
 	${INSTALL_PROGRAM} xstat_fs_test ${DEST}/bin/xstat_fs_test

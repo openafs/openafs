@@ -100,7 +100,7 @@ cbd: cbd.o
 install: fileserver fs_stats.h
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_DATA} fs_stats.h ${DESTDIR}${includedir}/afs/fs_stats.h
+	${INSTALL_DATA} ${srcdir}/fs_stats.h ${DESTDIR}${includedir}/afs/fs_stats.h
 	@case ${SYS_NAME} in \
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install fileserver for ${SYS_NAME}" ;; \
@@ -117,7 +117,7 @@ install: fileserver fs_stats.h
 dest: fileserver fs_stats.h
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_DATA} fs_stats.h ${DEST}/include/afs/fs_stats.h
+	${INSTALL_DATA} ${srcdir}/fs_stats.h ${DEST}/include/afs/fs_stats.h
 	@case ${SYS_NAME} in \
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install fileserver for ${SYS_NAME}" ;; \
