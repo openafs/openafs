@@ -66,7 +66,7 @@ librxkad.a: ${OBJS} AFS_component_version_number.o
 rxkad_client.o: fcrypt.h private_data.h rxkad_client.c ${INCLS}
 
 rxkad_server.o: rxkad_server.c fcrypt.h private_data.h  ${INCLS}
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/rxkad_server.c
 
 rxkad_common.o: fcrypt.h private_data.h rxkad_common.c ${INCLS}
 
@@ -77,10 +77,10 @@ rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
 	${COMPILE_ET} -p ${srcdir} rxkad_errs -h rxkad
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/ticket.c
 
 ticket5.o: ticket5.c v5gen.c v5der.c v5gen-rewrite.h ${INCLS}
-	$(CC) -I${srcdir} $(CFLAGS) -c $<
+	$(CC) -I${srcdir} $(CFLAGS) -c ${srcdir}/ticket5.c
 
 crc.o: crc.c ${INCLS}
 

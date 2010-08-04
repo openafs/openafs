@@ -53,7 +53,7 @@ libkasadmin.a: ${LIBOBJS}
 	${RANLIB} $@
 
 afs_kasAdmin.o: afs_kasAdmin.c afs_kasAdmin.h
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/afs_kasAdmin.c
 
 kauth.cs.o: ../../kauth/kauth.cs.c
 	${CCRULE}

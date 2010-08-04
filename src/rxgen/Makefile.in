@@ -28,7 +28,7 @@ rxgen: $(OBJS) AFS_component_version_number.c $(HDRS)
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
 
 rpc_main.o: rpc_main.c
-	$(CCOBJ) $(CFLAGS) -c $< -DPATH_CPP="\"$(PATH_CPP)\""
+	$(CCOBJ) $(CFLAGS) -c ${srcdir}/rpc_main.c -DPATH_CPP="\"$(PATH_CPP)\""
 
 #
 # Install targets

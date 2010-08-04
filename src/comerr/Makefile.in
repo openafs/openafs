@@ -49,7 +49,7 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 # so we need to add the source directory to the includes to pick up local headers.
 #
 error_table.o: error_table.c
-	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ -c $<
+	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ -c error_table.c
 
 #
 # Installation targets

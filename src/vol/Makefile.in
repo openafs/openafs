@@ -175,7 +175,7 @@ vol-salvage.o salvager.o: vol-salvage.h
 vol-salvage.o: salvsync.h daemon_com.h
 
 salvager.o: salvager.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/salvager.c
 
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@

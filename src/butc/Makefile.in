@@ -68,18 +68,19 @@ butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	esac
 
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/tcmain.c
+
 dbentries.o: dbentries.c ${INCLS}
 tcprocs.o: tcprocs.c ${INCLS}
 test.o: test.c ${INCLS} AFS_component_version_number.c
 lwps.o: lwps.c ${INCLS}
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/lwps.c
 list.o: list.c ${INCLS}
 recoverDb.o: recoverDb.c ${INCLS}
 tcudbprocs.o: tcudbprocs.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/tcudbprocs.c
 dump.o: dump.c ${INCLS}
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/dump.c
 tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c

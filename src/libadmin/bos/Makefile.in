@@ -50,7 +50,7 @@ libbosadmin.a: ${LIBOBJS}
 	${RANLIB} $@
 
 afs_bosAdmin.o: afs_bosAdmin.c afs_bosAdmin.h
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/afs_bosAdmin.c
 
 bosint.xdr.o: ${BOZO}/bosint.xdr.c
 	${CCRULE}
