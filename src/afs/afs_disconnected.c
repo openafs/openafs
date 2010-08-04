@@ -531,8 +531,10 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
     }
 
 end:
-    if (code && *adp)
+    if (code && *adp) {
 	afs_PutVCache(*adp);
+	*adp = NULL;
+    }
     return code;
 }
 
