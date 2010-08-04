@@ -1338,14 +1338,15 @@ afs_DisconDiscardAll(afs_ucred_t *acred)
     ObtainWriteLock(&afs_disconDirtyLock, 717);
     while (!QEmpty(&afs_disconDirty)) {
 	tvc = QEntry(QPrev(&afs_disconDirty), struct vcache, dirtyq);
+	QRemove(&tvc->dirtyq);
 	ReleaseWriteLock(&afs_disconDirtyLock);
 
 	ObtainWriteLock(&tvc->lock, 718);
 	afs_ResetVCache(tvc, acred);
 	tvc->f.truncPos = AFS_NOTRUNC;
 	ReleaseWriteLock(&tvc->lock);
-	afs_PutVCache(tvc);
 	ObtainWriteLock(&afs_disconDirtyLock, 719);
+	afs_PutVCache(tvc);
     }
 
     afs_DisconDiscardAllShadows(1, acred);
