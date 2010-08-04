@@ -16,7 +16,7 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} 
-CCRULE=${CC} ${CFLAGS} -c $?
+CCRULE=${CC} ${CFLAGS} -c $<
 
 RX=../rx
 UTIL=../util
@@ -35,7 +35,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/rx/xdr.h \
              ${TOP_INCDIR}/afs/keys.h \
              ${TOP_INCDIR}/afs/cellconfig.h \
-	vlserver.h ${VLSERVER}/vlclient.h vldbint.h
+	vlserver.h vldbint.h
 
 LIBS=	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
@@ -130,13 +130,13 @@ vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
 	$(CC) ${LDFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
-vlserver.o: ${VLSERVER}/vlserver.c 
+vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
 	${CCRULE}
 
-vlutils.o: ${VLSERVER}/vlutils.c 
+vlutils.o: ${VLSERVER}/vlutils.c ${INCLS}
 	${CCRULE}
 
-vlprocs.o: ${VLSERVER}/vlprocs.c 
+vlprocs.o: ${VLSERVER}/vlprocs.c ${INCLS}
 	${CCRULE}
 
 vldbint.ss.o: vldbint.ss.c 
@@ -149,28 +149,28 @@ vldbint.xdr.o: vldbint.xdr.c
 	${CCRULE}
 
 vldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -u -x -C -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -u -x -C -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vldbint.ss.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -S -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -c -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vldbint.h: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -u -x -h -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -u -x -h -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vldbint.cs.c: vldbint.h
 vldbint.ss.c: vldbint.h
 vldbint.xdr.c: vldbint.h
 
 Kvldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -k -C -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -k -C -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -k -c -o $@ ${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
-vlclient: vlclient.o $(OBJS) $(LIBS) 
+vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
 	$(CC) ${LDFLAGS} -o vlclient vlclient.o $(OBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libcmd.a
 
 vlclient.o: ${VLSERVER}/vlclient.c
@@ -180,7 +180,7 @@ vl_errors.o: vl_errors.c
 	${CCRULE}
 
 vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
+	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${srcdir}/${VLSERVER} vl_errors -h vlserver
 
 system: install
 

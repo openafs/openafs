@@ -14,7 +14,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
+CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $<
 
 RX=../rx
 UTIL=../util
@@ -38,7 +38,7 @@ INCLS=\
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/com_err.h \
 	${TOP_INCDIR}/afs/bubasics.h \
-	budb.h budb_client.h ${BUDB}/database.h
+	budb.h budb_client.h
 
 # library ordering defined by top level makefile
 LIBS=${RXOBJS} ${UTILOBJS} \
@@ -63,10 +63,10 @@ all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_err
 budb_errs.o: budb_errs.c budb_client.h budb_errs.h
 
 budb_errs.c budb_client.h: ${BUDB}/budb_errs.et ${BUDB}/budb_client.p.h
-	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${BUDB} budb_errs -h budb_client
+	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${srcdir}/${BUDB} budb_errs -h budb_client
 
 budb_errs.h: ${BUDB}/budb_errs.et
-	${COMPILE_ET} -p ${BUDB} budb_errs
+	${COMPILE_ET} -p ${srcdir}/${BUDB} budb_errs
 
 #
 # Build targets
@@ -120,37 +120,37 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 	${CCRULE}
 
 
-database.o: ${BUDB}/database.c
+database.o: ${BUDB}/database.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-db_alloc.o: ${BUDB}/db_alloc.c
+db_alloc.o: ${BUDB}/db_alloc.c budb_errs.h ${INCLS}
 	${CCRULE}
 
 db_dump.o: ${BUDB}/db_dump.c
 	${CCRULE}
 
-dbs_dump.o: ${BUDB}/dbs_dump.c
+dbs_dump.o: ${BUDB}/dbs_dump.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-db_lock.o:  ${BUDB}/db_lock.c
+db_lock.o:  ${BUDB}/db_lock.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-db_text.o:  ${BUDB}/db_text.c
+db_text.o:  ${BUDB}/db_text.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-db_hash.o: ${BUDB}/db_hash.c
+db_hash.o: ${BUDB}/db_hash.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-ol_verify.o: ${BUDB}/ol_verify.c
+ol_verify.o: ${BUDB}/ol_verify.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-procs.o: ${BUDB}/procs.c
+procs.o: ${BUDB}/procs.c budb_errs.h ${INCLS}
 	${CCRULE}
 
-struct_ops.o: ${BUDB}/struct_ops.c
+struct_ops.o: ${BUDB}/struct_ops.c budb_errs.h ${TOP_INCDIR}/afs/budb_client.h
 	${CCRULE}
 
-server.o: ${BUDB}/server.c
+server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
 	${CCRULE}
 
 
@@ -158,16 +158,16 @@ budb_server: $(SERVER_OBJS) ${LIBS}
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
-	${RXGEN} -u -C -o $@ ${BUDB}/budb.rg
+	${RXGEN} -u -C -o $@ ${srcdir}/${BUDB}/budb.rg
 
 budb.ss.c: ${BUDB}/budb.rg
-	${RXGEN} -S -o $@ ${BUDB}/budb.rg
+	${RXGEN} -S -o $@ ${srcdir}/${BUDB}/budb.rg
 
 budb.xdr.c: ${BUDB}/budb.rg
-	${RXGEN} -c -o $@ ${BUDB}/budb.rg
+	${RXGEN} -c -o $@ ${srcdir}/${BUDB}/budb.rg
 
 budb.h: ${BUDB}/budb.rg
-	${RXGEN} -u -h -o $@ ${BUDB}/budb.rg
+	${RXGEN} -u -h -o $@ ${srcdir}/${BUDB}/budb.rg
 
 budb.cs.c: budb.h
 budb.xdr.c: budb.h

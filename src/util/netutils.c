@@ -44,7 +44,7 @@
 
 #include "assert.h"
 #include "afsutil.h"
-#include "dirpath.h"
+#include <afs/dirpath.h>
 
 #define AFS_IPINVALID        0xffffffff	/* invalid IP address */
 #define AFS_IPINVALIDIGNORE  0xfffffffe	/* no input given to extractAddr */
