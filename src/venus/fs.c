@@ -3476,13 +3476,13 @@ DisconCmd(struct cmd_syndesc *as, void *arock)
     char *modename;
     char *policyname;
     int modelen, policylen;
-    afs_int32 mode, policy, code;
+    afs_int32 mode, policy, code, unixuid = 0;
     struct ViceIoctl blob;
 
     blob.in = NULL;
     blob.in_size = 0;
 
-    space[0] = space[1] = space[2] = 0;
+    space[0] = space[1] = space[2] = space[3] = 0;
 
     ti = as->parms[0].items;
     if (ti) {
@@ -3516,8 +3516,19 @@ DisconCmd(struct cmd_syndesc *as, void *arock)
     	printf("force on\n");
     }
 
+    ti = as->parms[3].items;
+    if (ti) {
+	code = util_GetInt32(ti->data, &unixuid);
+	if (code) {
+	    fprintf(stderr, "%s: bad integer specified for uid.\n", pn);
+            return 1;
+        }
+	space[3] = unixuid;
+    } else
+	space[3] = 0;
+
     blob.in = space;
-    blob.in_size = 3 * sizeof(afs_int32);
+    blob.in_size = 4 * sizeof(afs_int32);
 
     blob.out_size = sizeof(mode);
     blob.out = space;
@@ -3866,6 +3877,7 @@ defect 3069
     cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_REQUIRED, "offline | online");
     cmd_AddParm(ts, "-policy", CMD_SINGLE, CMD_OPTIONAL, "client | server");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "Force reconnection, despite any synchronization issues.");
+    cmd_AddParm(ts, "-uid", CMD_SINGLE, CMD_OPTIONAL, "Numeric UID of user whose tokens to use at reconnect.");
 
     ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");

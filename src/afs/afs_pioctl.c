@@ -5138,9 +5138,10 @@ DECL_PIOCTL(PDiscon)
     static afs_int32 mode = 1; /* Start up in 'off' */
     afs_int32 force = 0;
     int code = 0;
-    char flags[3];
+    char flags[4];
+    struct vrequest lreq;
 
-    if (afs_pd_getBytes(ain, &flags, 3) == 0) {
+    if (afs_pd_getBytes(ain, &flags, 4) == 0) {
 	if (!afs_osi_suser(*acred))
 	    return EPERM;
 
@@ -5150,6 +5151,12 @@ DECL_PIOCTL(PDiscon)
 	    afs_ConflictPolicy = flags[1] - 1;
 	if (flags[2])
 	    force = 1;
+	if (flags[3]) {
+	    /* Fake InitReq support for UID override */
+	    memset(&lreq, 0, sizeof(lreq));
+	    lreq.uid = flags[3];
+	    areq = &lreq; /* override areq we got */
+	}
 
 	/*
 	 * All of these numbers are hard coded in fs.c. If they
