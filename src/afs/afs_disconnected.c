@@ -1312,12 +1312,10 @@ afs_DisconDiscardAllShadows(int squash, afs_ucred_t *acred)
 	ReleaseWriteLock(&afs_disconDirtyLock);
 	ObtainWriteLock(&tvc->lock, 706);
 
-	afs_DeleteShadowDir(tvc);
-	tvc->f.shadow.vnode = 0;
-	tvc->f.shadow.unique = 0;
-
 	if (squash)
 	   afs_ResetVCache(tvc, acred);
+
+	afs_DeleteShadowDir(tvc);
 
 	ReleaseWriteLock(&tvc->lock);
 	ObtainWriteLock(&afs_disconDirtyLock, 709);
