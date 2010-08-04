@@ -1390,4 +1390,22 @@ mkdir -p ${TOP_OBJDIR}/src/JAVA/libjafs
 dnl Check to see if crypt lives in a different library
 AC_CHECK_LIB(crypt, crypt, LIB_crypt="-lcrypt")
 AC_SUBST(LIB_crypt)
+
+dnl Check to see if the compiler support labels in structs
+AC_MSG_CHECKING(for label support in structs)
+AC_TRY_COMPILE([], [
+extern void osi_UFSOpen(void);
+struct labeltest {
+   void (*open) (void);
+};
+struct labeltest struct_labeltest = {
+   .open       = osi_UFSOpen,
+}
+],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_STRUCT_LABEL_SUPPORT, 1, [Define to 1 if your compiler supports labels in structs.])
+],
+[AC_MSG_RESULT(no)
+])
+
 ])

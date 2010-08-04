@@ -62,7 +62,7 @@ static afs_int32 *xdrmem_inline(XDR *, u_int);
 static void xdrmem_destroy(XDR *);
 
 static struct xdr_ops xdrmem_ops = {
-#if defined(AFS_NT40_ENV) || defined(__SUNPRO_C) || (defined(AFS_SGI_ENV)  && !defined(__c99))
+#ifndef HAVE_STRUCT_LABEL_SUPPORT
 #ifdef AFS_XDR_64BITOPS
     NULL,
     NULL,

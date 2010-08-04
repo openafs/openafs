@@ -314,7 +314,7 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
 
 static
 struct storeOps rxfs_storeUfsOps = {
-#if defined(__SUNPRO_C) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifndef HAVE_STRUCT_LABEL_SUPPORT
     rxfs_storeUfsPrepare,
     rxfs_storeUfsRead,
     rxfs_storeUfsWrite,
@@ -341,7 +341,7 @@ struct storeOps rxfs_storeUfsOps = {
 
 static
 struct storeOps rxfs_storeMemOps = {
-#if defined(__SUNPRO_C) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifndef HAVE_STRUCT_LABEL_SUPPORT
     rxfs_storeMemPrepare,
     rxfs_storeMemRead,
     rxfs_storeMemWrite,
