@@ -49,7 +49,7 @@ afsd_kernel.o: afsd_kernel.c
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 afsd_fuse.o: afsd_fuse.c AFS_component_version_number.c
-	${CC} -c ${CPPFLAGS} ${UAFS_CFLAGS} afsd_fuse.c -o afsd_fuse.o
+	$(CC) $(UAFS_CFLAGS) -c $<
 
 vsys.o: vsys.c AFS_component_version_number.c
 
