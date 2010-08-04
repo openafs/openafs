@@ -145,9 +145,6 @@ typedef struct proc afs_proc_t;
 #define VN_RELE(vp) vrele(vp);
 
 void darwin_vn_hold(struct vnode *vp);
-#ifdef AFS_DARWIN80_ENV
-void darwin_vn_rele(struct vnode *vp);
-#endif
 
 #define gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid),current_proc())
