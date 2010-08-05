@@ -1655,6 +1655,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     cm_buf_t *nbp;
     int didRelease;
     afs_uint32 i;
+    afs_uint32 stable = 0;
 
     i = BUF_FILEHASH(&scp->fid);
 
@@ -1664,12 +1665,23 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     if (bp) 
         buf_HoldLocked(bp);
     lock_ReleaseRead(&buf_globalLock);
-    
+
     for (; bp; bp = nbp) {
         didRelease = 0;	/* haven't released this buffer yet */
 
         /* clean buffer synchronously */
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
+
+            /*
+             * if the object is not located on a read/write volume
+             * we must stabilize the object to ensure that buffer
+             * changes cannot occur while the flush is performed.
+             */
+            if (!stable && code == 0 && !(scp->flags & CM_SCACHEFLAG_RO)) {
+                code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
+                stable = (code == 0);
+            }
+
             lock_ObtainMutex(&bp->mx);
 
             /* start cleaning the buffer, and wait for it to finish */
@@ -1677,16 +1689,6 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             buf_WaitIO(scp, bp);
             lock_ReleaseMutex(&bp->mx);
 
-            /* 
-             * if the error for the previous buffer was BADFD
-             * then all buffers for the FID are bad.  Do not
-             * attempt to stabalize.
-             */
-            if (code != CM_ERROR_BADFD) {
-                code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
-                if (code && code != CM_ERROR_BADFD) 
-                    goto skip;
-            }
             if (code == CM_ERROR_BADFD) {
                 /* if the scp's FID is bad its because we received VNOVNODE 
                  * when attempting to FetchStatus before the write.  This
@@ -1701,6 +1703,8 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 bp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
                 bp->dirtyCounter++;
                 lock_ReleaseMutex(&bp->mx);
+            } else if (!stable && code) {
+                goto skip;
             }
 
             /* actually, we only know that buffer is clean if ref
@@ -1718,9 +1722,6 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 }
                 lock_ReleaseWrite(&buf_globalLock);
             }
-
-	    if (code == 0)
-		(*cm_buf_opsp->Unstabilizep)(scp, userp);
         }
 
       skip:
@@ -1733,6 +1734,9 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             lock_ReleaseRead(&buf_globalLock);
         }
     }	/* for loop over a bunch of buffers */
+
+    if (stable)
+        (*cm_buf_opsp->Unstabilizep)(scp, userp);
 
 #ifdef TESTING
     buf_ValidateBufQueues();
