@@ -33,7 +33,7 @@
 #include <cm_dir.h>
 #include <cm_utils.h>
 #include <cm_ioctl.h>
-
+#include <smb_iocons.h>
 #include <smb.h>
 #include <pioctl_nt.h>
 #include <WINNT/afsreg.h>
@@ -1231,8 +1231,97 @@ pioctl_int(char *pathp, afs_int32 opcode, struct ViceIoctl *blobp, afs_int32 fol
     long code;
     long temp;
     char fullPath[1000];
+    char altPath[1024];
     HANDLE reqHandle;
     int save;
+    int i,j,count,all;
+
+    /*
+     * The pioctl operations for creating a mount point and a symlink are broken.
+     * Instead of 'pathp' referring to the directory object in which the symlink
+     * or mount point within which the new object is to be created, 'pathp' refers
+     * to the object itself.  This results in a problem when the object being created
+     * is located within the Freelance root.afs volume.  \\afs\foo will not be a
+     * valid share name since the 'foo' object does not yet exist.  Therefore,
+     * \\afs\foo\_._.afs_ioctl_._ cannot be opened.  Instead in these two cases
+     * we must force the use of the \\afs\all\foo form of the path.
+     *
+     * We cannot use this form in all cases because of smb submounts which are
+     * not located within the Freelance local root.
+     */
+    switch ( opcode ) {
+    case VIOC_AFS_CREATE_MT_PT:
+    case VIOC_SYMLINK:
+        if (pathp &&
+             (pathp[0] == '\\' && pathp[1] == '\\' ||
+              pathp[0] == '/' && pathp[1] == '/')) {
+            for (all = count = j = 0; pathp[j]; j++) {
+                if (pathp[j] == '\\' || pathp[j] == '/')
+                    count++;
+
+                /* Test to see if the second component is 'all' */
+                if (count == 3) {
+                    all = 1;
+                    for (i=0; pathp[i+j]; i++) {
+                        switch(i) {
+                        case 0:
+                            if (pathp[i+j] != 'a' &&
+                                pathp[i+j] != 'A') {
+                                all = 0;
+                                goto notall;
+                            }
+                            break;
+                        case 1:
+                        case 2:
+                            if (pathp[i+j] != 'l' &&
+                                 pathp[i+j] != 'L') {
+                                all = 0;
+                                goto notall;
+                            }
+                            break;
+                        default:
+                            all = 0;
+                            goto notall;
+                        }
+                    }
+                    if (i != 3)
+                        all = 0;
+                }
+
+              notall:
+                if (all)
+                    break;
+            }
+
+            /*
+             * if count is three and the second component is not 'all',
+             * then we are attempting to create an object in the
+             * Freelance root.afs volume.  Substitute the path.
+             */
+
+            if (count == 3 && !all) {
+                /* Normalize the name to use \\afs\all as the root */
+                for (count = i = j = 0; pathp[j] && i < sizeof(altPath); j++) {
+                    if (pathp[j] == '\\' || pathp[j] == '/') {
+                        altPath[i++] = '\\';
+                        count++;
+
+                        if (count == 3) {
+                            altPath[i++] = 'a';
+                            altPath[i++] = 'l';
+                            altPath[i++] = 'l';
+                            altPath[i++] = '\\';
+                            count++;
+                        }
+                    } else {
+                        altPath[i++] = pathp[j];
+                    }
+                }
+                altPath[i] = '\0';
+                pathp = altPath;
+            }
+        }
+    }
 
     code = GetIoctlHandle(pathp, &reqHandle);
     if (code) {
