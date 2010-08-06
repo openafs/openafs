@@ -1330,6 +1330,7 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
     V_pref(vp, nearInode);
     while (tag == D_VNODE) {
 	int haveStuff = 0;
+	int saw_f = 0;
 	memset(buf, 0, sizeof(buf));
 	if (!ReadInt32(iodp, (afs_uint32 *) & vnodeNumber))
 	    break;
@@ -1401,6 +1402,15 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 		    Inode ino;
 		    Error error;
 		    afs_fsize_t vnodeLength;
+
+		    if (saw_f) {
+			Log("Volser: ReadVnodes: warning: ignoring duplicate "
+			    "file entries for vnode %lu in dump\n",
+			    (unsigned long)vnodeNumber);
+			volser_WriteFile(vnodeNumber, iodp, NULL, tag, &error);
+			break;
+		    }
+		    saw_f = 1;
 
 		    ino =
 			IH_CREATE(V_linkHandle(vp), V_device(vp),
@@ -1506,6 +1516,9 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 /* called with disk file only.  Note that we don't have to worry about rx_Read
  * needing to read an ungetc'd character, since the ReadInt32 will have read
  * it instead.
+ *
+ * if handleP == NULL, don't write the file anywhere; just read and discard
+ * the file contents
  */
 static afs_fsize_t
 volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
@@ -1556,13 +1569,15 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	    *status = 3;
 	    break;
 	}
-	nBytes = FDH_WRITE(handleP, p, size);
-	if (nBytes > 0)
-	    written += nBytes;
-	if (nBytes != size) {
-	    Log("1 Volser: WriteFile: Error writing (%u) bytes to vnode %d: %s; restore aborted\n", (int)(nBytes & 0xffffffff), vn, afs_error_message(errno));
-	    *status = 4;
-	    break;
+	if (handleP) {
+	    nBytes = FDH_WRITE(handleP, p, size);
+	    if (nBytes > 0)
+		written += nBytes;
+	    if (nBytes != size) {
+		Log("1 Volser: WriteFile: Error writing (%u) bytes to vnode %d; %s; restore aborted\n", (int)(nBytes & 0xffffffff), vn, afs_error_message(errno));
+		*status = 4;
+		break;
+	    }
 	}
     }
     free(p);
