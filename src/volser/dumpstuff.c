@@ -45,6 +45,7 @@
 #include "dump.h"
 #include <afs/fssync.h>
 #include <afs/acl.h>
+#include <afs/com_err.h>
 #include "volser.h"
 #include "volint.h"
 
