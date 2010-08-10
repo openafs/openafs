@@ -1780,6 +1780,7 @@ ShutdownVolumeWalk_r(struct DiskPartition64 * dp, int pass,
 	case 0:
 	    if ((V_attachState(vp) != VOL_STATE_UNATTACHED) &&
 		(V_attachState(vp) != VOL_STATE_ERROR) &&
+		(V_attachState(vp) != VOL_STATE_DELETED) &&
 		(V_attachState(vp) != VOL_STATE_PREATTACHED)) {
 		break;
 	    }
@@ -1835,6 +1836,7 @@ VShutdownVolume_r(Volume * vp)
     case VOL_STATE_ERROR:
 	VChangeState_r(vp, VOL_STATE_UNATTACHED);
     case VOL_STATE_UNATTACHED:
+    case VOL_STATE_DELETED:
 	break;
     case VOL_STATE_GOING_OFFLINE:
     case VOL_STATE_SHUTTING_DOWN:
@@ -2133,7 +2135,8 @@ VPreAttachVolumeByVp_r(Error * ec,
 
     /* check to see if pre-attach already happened */
     if (vp && 
-	(V_attachState(vp) != VOL_STATE_UNATTACHED) && 
+	(V_attachState(vp) != VOL_STATE_UNATTACHED) &&
+	(V_attachState(vp) != VOL_STATE_DELETED) &&
 	(V_attachState(vp) != VOL_STATE_PREATTACHED) &&
 	!VIsErrorState(V_attachState(vp))) {
 	/*
@@ -2285,6 +2288,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	     *   - GOING_OFFLINE
 	     *   - SALVAGING
 	     *   - ERROR
+	     *   - DELETED
 	     */
 
 	    if (vp->specialStatus == VBUSY)
@@ -2317,6 +2321,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	/* pre-attach volume if it hasn't been done yet */
 	if (!vp || 
 	    (V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+	    (V_attachState(vp) == VOL_STATE_DELETED) ||
 	    (V_attachState(vp) == VOL_STATE_ERROR)) {
 	    svp = vp;
 	    vp = VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
@@ -2561,6 +2566,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     /* pre-attach volume if it hasn't been done yet */
     if (!vp || 
 	(V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+	(V_attachState(vp) == VOL_STATE_DELETED) ||
 	(V_attachState(vp) == VOL_STATE_ERROR)) {
 	nvp = VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
 	if (*ec) {
@@ -3699,13 +3705,15 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	}
 
 	/*
-	 * short circuit with VOFFLINE in the following circumstances:
-	 *
-	 *   - VOL_STATE_UNATTACHED
+	 * short circuit with VOFFLINE for VOL_STATE_UNATTACHED and
+	 *                    VNOVOL   for VOL_STATE_DELETED
 	 */
-       if (V_attachState(vp) == VOL_STATE_UNATTACHED) {
+       if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+           (V_attachState(vp) == VOL_STATE_DELETED)) {
 	   if (vp->specialStatus) {
 	       *ec = vp->specialStatus;
+	   } else if (V_attachState(vp) == VOL_STATE_DELETED) {
+	       *ec = VNOVOL;
 	   } else {
 	       *ec = VOFFLINE;
 	   }
@@ -4556,7 +4564,8 @@ VCheckOffline(register Volume * vp)
 	assert((V_attachState(vp) != VOL_STATE_ATTACHED) &&
 	       (V_attachState(vp) != VOL_STATE_FREED) &&
 	       (V_attachState(vp) != VOL_STATE_PREATTACHED) &&
-	       (V_attachState(vp) != VOL_STATE_UNATTACHED));
+	       (V_attachState(vp) != VOL_STATE_UNATTACHED) &&
+	       (V_attachState(vp) != VOL_STATE_DELETED));
 
 	/* valid states:
 	 *
@@ -7192,6 +7201,7 @@ VSoftDetachVolume_r(Volume * vp, afs_uint32 thresh)
     case VOL_STATE_GOING_OFFLINE:
     case VOL_STATE_SHUTTING_DOWN:
     case VOL_STATE_SALVAGING:
+    case VOL_STATE_DELETED:
 	volume_LRU.q[vp->vlru.idx].len--;
 
 	/* create and cancel a reservation to

@@ -315,6 +315,7 @@ VIsOfflineState(VolState state)
     case VOL_STATE_UNATTACHED:
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
+    case VOL_STATE_DELETED:
 	return 1;
     default:
 	return 0;

@@ -177,9 +177,10 @@ typedef enum {
     VOL_STATE_VNODE_CLOSE       = 17,   /**< volume is busy closing vnodes */
     VOL_STATE_VNODE_RELEASE     = 18,   /**< volume is busy releasing vnodes */
     VOL_STATE_VLRU_ADD          = 19,   /**< volume is busy being added to a VLRU queue */
+    VOL_STATE_DELETED           = 20,   /**< volume has been deleted by the volserver */
     /* please add new states directly above this line */
-    VOL_STATE_FREED             = 20,   /**< debugging aid */
-    VOL_STATE_COUNT             = 21,   /**< total number of valid states */
+    VOL_STATE_FREED             = 21,   /**< debugging aid */
+    VOL_STATE_COUNT             = 22,   /**< total number of valid states */
 } VolState;
 
 /**

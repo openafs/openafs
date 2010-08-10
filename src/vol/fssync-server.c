@@ -1185,10 +1185,8 @@ static afs_int32
 FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     afs_int32 code = SYNC_FAILED;
-#ifdef AFS_DEMAND_ATTACH_FS
     Error error;
     Volume * vp;
-#endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -1201,19 +1199,33 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vcom->v)
 	vcom->v->volumeID = 0;
 
-#ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp) {
 	if (FSYNC_partMatch(vcom, vp, 1)) {
+#ifdef AFS_DEMAND_ATTACH_FS
 	    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 		(V_attachState(vp) == VOL_STATE_PREATTACHED)) {
-		VChangeState_r(vp, VOL_STATE_UNATTACHED);
+
+		/* Change state to DELETED, not UNATTACHED, so clients get
+		 * a VNOVOL error when they try to access from now on. */
+
+		VChangeState_r(vp, VOL_STATE_DELETED);
 		VDeregisterVolOp_r(vp);
+
+		/* Someday we should free the vp, too, after about 2 hours,
+		 * possibly by putting the vp back on the VLRU. */
+
 		code = SYNC_OK;
 	    } else {
 		code = SYNC_DENIED;
 		res->hdr.reason = FSYNC_BAD_STATE;
 	    }
+#else /* AFS_DEMAND_ATTACH_FS */
+	    if (!vp->specialStatus) {
+		vp->specialStatus = VNOVOL;
+	    }
+	    code = SYNC_OK;
+#endif /* !AFS_DEMAND_ATTACH_FS */
 	} else {
 	    code = SYNC_OK; /* XXX is this really a good idea? */
 	    res->hdr.reason = FSYNC_WRONG_PART;
@@ -1221,7 +1233,6 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
-#endif
 
  done:
     return code;
