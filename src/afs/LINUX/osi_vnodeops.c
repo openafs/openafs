@@ -546,7 +546,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
 #endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
 
     AFS_GLOCK();
-    code = afs_lockctl(vcp, &flock, cmd, credp);
+    code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
@@ -567,7 +567,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     flp->fl_pid = flock.l_pid;
 
     crfree(credp);
-    return afs_convert_code(code);
+    return code;
 }
 #endif
 
