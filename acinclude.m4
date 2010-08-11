@@ -775,6 +775,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
 				       [fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_operations], [evict_inode],
+				       [fs.h])
                  AC_CHECK_LINUX_STRUCT([task_struct], [cred], [sched.h])
 		 AC_CHECK_LINUX_STRUCT([task_struct], [exit_state], [sched.h])
 		 AC_CHECK_LINUX_STRUCT([task_struct], [parent], [sched.h])
