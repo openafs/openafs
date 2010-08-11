@@ -95,8 +95,12 @@ static int c_show(struct seq_file *m, void *p)
 		if (!tc->cellHosts[j]) break;
 
 		addr = tc->cellHosts[j]->addr->sa_ip;
+#if defined(NIPQUAD)
 		seq_printf(m, "%u.%u.%u.%u #%u.%u.%u.%u\n",
 			   NIPQUAD(addr), NIPQUAD(addr));
+#else
+		seq_printf(m, "%pI4 #%pI4\n", &addr, &addr);
+#endif
 	}
 
 	return 0;
@@ -208,7 +212,11 @@ static int uu_show(struct seq_file *m, void *p)
         char ipaddr[16];
 	int i;
 
+#if defined(NIPQUAD)
         sprintf(ipaddr, "%u.%u.%u.%u", NIPQUAD(np->host));
+#else
+        sprintf(ipaddr, "%pI4", &np->host);
+#endif
 	seq_printf(m, "  %-15s %10d %10d", ipaddr, np->uid, np->client_uid);
 	if (np->sysnamecount) {
 	    for (i = 0; i < np->sysnamecount; i++)
