@@ -183,16 +183,8 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 
     /* avoid notify_change() since it wants to update dentry->d_parent */
     code = inode_change_ok(inode, &newattrs);
-    if (!code) {
-#ifdef INODE_SETATTR_NOT_VOID
-	if (inode->i_op && inode->i_op->setattr)
-	    code = inode->i_op->setattr(afile->filp->f_dentry, &newattrs);
-	else
-	    code = inode_setattr(inode, &newattrs);
-#else
-        inode_setattr(inode, &newattrs);
-#endif
-    }
+    if (!code)
+	code = afs_inode_setattr(afile, &newattrs);
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
     code = -code;
