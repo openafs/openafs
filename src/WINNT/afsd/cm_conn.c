@@ -230,6 +230,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     long code;
     char addr[16]="unknown";
     int forcing_new = 0;
+    int location_updated = 0;
     char *format;
     DWORD msgID;
 
@@ -559,15 +560,50 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
         }
 
-        /* 
-         * Mark server offline for this volume or delete the volume
-         * from the server list if it was moved or is not present.
-         */
-        if (!serversp && fidp) {
-            code = cm_GetServerList(fidp, userp, reqp, &serverspp);
-            if (code == 0) {
-                serversp = *serverspp;
-                free_svr_list = 1;
+        if (fidp) { /* File Server query */
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
+                                      CM_GETVOL_FLAG_NO_LRU_UPDATE,
+                                      &volp);
+            if (code == 0)
+                statep = cm_VolumeStateByID(volp, fidp->volume);
+
+            if ((errorCode == VMOVED || errorCode == VNOVOL || errorCode == VOFFLINE) &&
+                !(reqp->flags & CM_REQ_VOLUME_UPDATED))
+            {
+                code = cm_ForceUpdateVolume(fidp, userp, reqp);
+                if (code == 0)
+                    location_updated = 1;
+
+                /* Even if the update fails, there might still be another replica */
+
+                reqp->flags |= CM_REQ_VOLUME_UPDATED;
+                osi_Log3(afsd_logp, "cm_Analyze called cm_ForceUpdateVolume cell %u vol %u code 0x%x",
+                        fidp->cell, fidp->volume, code);
+            }
+
+            if (statep) {
+                cm_UpdateVolumeStatus(volp, statep->ID);
+                osi_Log3(afsd_logp, "cm_Analyze NewVolState cell %u vol %u state %u",
+                         fidp->cell, fidp->volume, statep->state);
+            }
+
+            if (volp) {
+                lock_ObtainRead(&cm_volumeLock);
+                cm_PutVolume(volp);
+                lock_ReleaseRead(&cm_volumeLock);
+                volp = NULL;
+            }
+
+            /*
+             * Mark server offline for this volume or delete the volume
+             * from the server list if it was moved or is not present.
+             */
+            if (!serversp || location_updated) {
+                code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+                if (code == 0) {
+                    serversp = *serverspp;
+                    free_svr_list = 1;
+                }
             }
         }
 
@@ -580,27 +616,27 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                      ((tsrp->server->addr.sin_addr.s_addr & 0xff)),
                      ((tsrp->server->addr.sin_addr.s_addr & 0xff00)>> 8),
                      ((tsrp->server->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                     ((tsrp->server->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+                     ((tsrp->server->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
             if (tsrp->server == serverp) {
                 /* REDIRECT */
                 if (errorCode == VMOVED || errorCode == VNOVOL) {
-                    osi_Log2(afsd_logp, "volume %d not present on server %s", 
+                    osi_Log2(afsd_logp, "volume %d not present on server %s",
                              fidp->volume, osi_LogSaveString(afsd_logp,addr));
                     tsrp->status = srv_deleted;
                     if (fidp)
                         cm_RemoveVolumeFromServer(serverp, fidp->volume);
                 } else {
-                    osi_Log2(afsd_logp, "volume %d instance on server %s marked offline", 
+                    osi_Log2(afsd_logp, "volume %d instance on server %s marked offline",
                              fidp->volume, osi_LogSaveString(afsd_logp,addr));
                     tsrp->status = srv_offline;
                 }
                 /* break; */
             } else {
-                osi_Log3(afsd_logp, "volume %d exists on server %s with status %u", 
+                osi_Log3(afsd_logp, "volume %d exists on server %s with status %u",
                          fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
             }
-        }   
+        }
         lock_ReleaseWrite(&cm_serverLock);
 
         /* Free the server list before cm_ForceUpdateVolume is called */
@@ -608,39 +644,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             cm_FreeServerList(serverspp, 0);
             serversp = NULL;
             free_svr_list = 0;
-        }
-
-        if (fidp) { /* File Server query */
-            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                      CM_GETVOL_FLAG_NO_LRU_UPDATE, 
-                                      &volp);
-            if (code == 0)
-                statep = cm_VolumeStateByID(volp, fidp->volume);
-
-            if ((errorCode == VMOVED || errorCode == VNOVOL) &&
-                !(reqp->flags & CM_REQ_VOLUME_UPDATED)) 
-            {
-                code = cm_ForceUpdateVolume(fidp, userp, reqp);
-                if (code) 
-                    timeLeft = 0;   /* prevent a retry on failure */
-                else
-                    reqp->flags |= CM_REQ_VOLUME_UPDATED;
-                osi_Log3(afsd_logp, "cm_Analyze called cm_ForceUpdateVolume cell %u vol %u code 0x%x",
-                        fidp->cell, fidp->volume, code);
-            }
-
-            if (statep) {
-                cm_UpdateVolumeStatus(volp, statep->ID);
-                osi_Log3(afsd_logp, "cm_Analyze NewVolState cell %u vol %u state %u", 
-                         fidp->cell, fidp->volume, statep->state);
-            }
-
-            if (volp) {
-                lock_ObtainRead(&cm_volumeLock);
-                cm_PutVolume(volp);
-                lock_ReleaseRead(&cm_volumeLock);
-                volp = NULL;
-            }
         }
 
         if ( timeLeft > 2 )
