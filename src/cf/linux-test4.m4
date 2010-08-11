@@ -467,6 +467,18 @@ printk("%p\n", _super.alloc_inode);],
   AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_EVICT_INODE], [
+  AC_MSG_CHECKING([for evict_inode in struct super_operations])
+  AC_CACHE_VAL([ac_cv_linux_fs_struct_super_has_evict_inode], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct super_operations _super;
+printk("%p\n", _super.evict_inode);],
+      ac_cv_linux_fs_struct_super_has_evict_inode=yes,
+      ac_cv_linux_fs_struct_super_has_evict_inode=no)])
+  AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_evict_inode)])
+
+
 AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
   AC_MSG_CHECKING([for 3rd argument in posix_lock_file found in new kernels])
   AC_CACHE_VAL([ac_cv_linux_kernel_posix_lock_file_wait_arg], [
