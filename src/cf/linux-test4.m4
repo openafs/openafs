@@ -269,7 +269,10 @@ AC_DEFUN([LINUX_STATFS_TAKES_DENTRY], [
 		       [ac_cv_linux_statfs_takes_dentry],
 [#include <linux/fs.h>
 #include <linux/statfs.h>],
-		       [extern int vfs_statfs(struct dentry *, struct kstatfs *);],
+[struct super_block _sb;
+struct dentry _dentry;
+struct kstatfs _kstatfs;
+(void)_sb.s_op->statfs(&_dentry, &_kstatfs);],
 		       [STATFS_TAKES_DENTRY],
 		       [define if your statfs takes a dentry argument])
 ])
