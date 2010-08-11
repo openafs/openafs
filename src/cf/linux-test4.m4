@@ -1274,3 +1274,19 @@ _bdi.name = NULL;],
   if test "x$ac_cv_linux_struct_bdi_has_name" = "xyes"; then
     AC_DEFINE([STRUCT_BDI_HAS_NAME], 1, [define if struct backing_dev_info has a name member])
   fi])
+
+AC_DEFUN([LINUX_HAVE_INODE_SETATTR], [
+  AC_MSG_CHECKING([for linux inode_setattr()])
+  AC_CACHE_VAL([ac_cv_linux_inode_setattr], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[inode_setattr(NULL);],
+      ac_cv_linux_inode_setattr=yes,
+      ac_cv_linux_inode_setattr=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_inode_setattr)
+  if test "x$ac_cv_linux_inode_setattr" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_INODE_SETATTR], 1, [define if your kernel has inode_setattr()])
+  fi])

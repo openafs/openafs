@@ -137,3 +137,23 @@ init_once_func(void * foo) {
 #endif
 
 #endif
+
+static inline int
+afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
+
+    int code = 0;
+    struct inode *inode = OSIFILE_INODE(afile);
+#if !defined(HAVE_LINUX_INODE_SETATTR)
+    code = inode->i_op->setattr(afile->filp->f_dentry, newattrs);
+#elif defined(INODE_SETATTR_NOT_VOID)
+#if defined(AFS_LINUX26_ENV)
+    if (inode->i_op && inode->i_op->setattr)
+	code = inode->i_op->setattr(afile->filp->f_dentry, newattrs);
+    else
+#endif
+	code = inode_setattr(inode, newattrs);
+#else
+    inode_setattr(inode, newattrs);
+#endif
+    return code;
+}

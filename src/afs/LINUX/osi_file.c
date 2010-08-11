@@ -21,6 +21,7 @@
 #if !defined(HAVE_IGET)
 #include "h/exportfs.h"
 #endif
+#include "osi_compat.h"
 
 int afs_osicred_initialized = 0;
 struct AFS_UCRED afs_osi_cred;
@@ -237,16 +238,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     lock_kernel();
     code = inode_change_ok(inode, &newattrs);
     if (!code)
-#ifdef INODE_SETATTR_NOT_VOID
-#if defined(AFS_LINUX26_ENV)
-	if (inode->i_op && inode->i_op->setattr)
-	    code = inode->i_op->setattr(afile->filp->f_dentry, &newattrs);
-	else
-#endif
-	    code = inode_setattr(inode, &newattrs);
-#else
-        inode_setattr(inode, &newattrs);
-#endif
+	code = afs_inode_setattr(afile, &newattrs);
     unlock_kernel();
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
