@@ -134,8 +134,12 @@ static int c_show(struct seq_file *m, void *p)
 		if (!tc->cellHosts[j]) break;
 
 		addr = tc->cellHosts[j]->addr->sa_ip;
+#if defined(NIPQUAD)
 		seq_printf(m, "%u.%u.%u.%u #%u.%u.%u.%u\n",
 			   NIPQUAD(addr), NIPQUAD(addr));
+#else
+		seq_printf(m, "%pI4 #%pI4\n", &addr, &addr);
+#endif
 	}
 
 	return 0;
