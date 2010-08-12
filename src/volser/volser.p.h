@@ -118,8 +118,6 @@ extern struct volser_trans *QI_GlobalWriteTrans;
 #define VMOVED		111	/* Volume has moved to another server; do a VGetVolumeInfo
 				 * to THIS server to find out where */
 
-#define MyPort 5003
-#define NameLen 80
 #define VLDB_MAXSERVERS 10
 #define VOLSERVICE_ID 4
 #define INVALID_BID 0
