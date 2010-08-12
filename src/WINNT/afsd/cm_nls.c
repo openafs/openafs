@@ -1113,6 +1113,9 @@ int cm_strnicmp_utf8(const char * str1, const char * str2, int n)
     if (!nls_init)
         cm_InitNormalization();
 
+    if (n == 0)
+        return 0;
+
     /* first check for NULL pointers (assume NULL < "") */
     if (str1 == NULL) {
         if (str2 == NULL)
@@ -1158,6 +1161,9 @@ int cm_strnicmp_utf16(const cm_unichar_t * str1, const cm_unichar_t * str2, int 
 
     if (!nls_init)
         cm_InitNormalization();
+
+    if (len == 0)
+        return 0;
 
     /* first check for NULL pointers */
     if (str1 == NULL) {
