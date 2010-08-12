@@ -929,6 +929,36 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK);
 	if (tcp) {
 	    hostp = tcp->parent->srvr->server;
+
+	    for (i = 0; i < fidIndex; i++) {
+		/* we must set tvcp->callback before the BulkStatus call, so
+		 * we can detect concurrent InitCallBackState's */
+
+		afid.Cell = adp->f.fid.Cell;
+		afid.Fid.Volume = adp->f.fid.Fid.Volume;
+		afid.Fid.Vnode = fidsp[i].Vnode;
+		afid.Fid.Unique = fidsp[i].Unique;
+
+		do {
+		    retry = 0;
+		    ObtainReadLock(&afs_xvcache);
+		    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */);
+		    ReleaseReadLock(&afs_xvcache);
+		} while (tvcp && retry);
+
+		if (!tvcp) {
+		    continue;
+		}
+
+		if ((tvcp->f.states & CBulkFetching) &&
+		     (tvcp->f.m.Length == statSeqNo)) {
+		    tvcp->callback = hostp;
+		}
+
+		afs_PutVCache(tvcp);
+		tvcp = NULL;
+	    }
+
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
 
 	    if (!(tcp->parent->srvr->server->flags & SNO_INLINEBULK)) {
