@@ -1125,9 +1125,9 @@ else
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
 
-if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
-	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
-fi
+dnl if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+dnl 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
+dnl fi
 
 if test "$enable_namei_fileserver" = "yes"; then
 	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
