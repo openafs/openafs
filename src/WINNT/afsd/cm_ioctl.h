@@ -138,6 +138,10 @@ extern const int  utf8_prefix_size;
 #define AFSCALL_RXSTATS_DISABLE 0x2     /* Disable RX stats */
 #define AFSCALL_RXSTATS_CLEAR   0x4     /* Clear RX stats */
 
+/* pioctl flags */
+
+#define AFSCALL_FLAG_LOCAL_SYSTEM 0x1
+
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
 
 extern void cm_InitIoctl(void);

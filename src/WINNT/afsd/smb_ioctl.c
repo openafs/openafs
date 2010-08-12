@@ -205,21 +205,37 @@ smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     afs_int32 leftToCopy;
     char *op;
     afs_int32 code;
-    cm_user_t *userp;
+    smb_user_t *uidp;
+    cm_user_t *userp = NULL;
+    smb_t *smbp;
+    int isSystem = 0;
 
     iop = fidp->ioctlp;
     count = smb_GetSMBParm(inp, 1);
-    userp = smb_GetUserFromVCP(vcp, inp);
+
+    /* Get the user and determine if it is the local machine account */
+    smbp = (smb_t *) inp;
+    uidp = smb_FindUID(vcp, smbp->uid, 0);
+    if (uidp) {
+        isSystem = smb_userIsLocalSystem(uidp);
+        userp = smb_GetUserFromUID(uidp);
+        smb_ReleaseUID(uidp);
+    }
+
+    if (!userp) {
+        userp = cm_rootUserp;
+        cm_HoldUser(userp);
+    }
 
     /* Identify tree */
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
-    if(code) {
+    if (code) {
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
 
     /* turn the connection around, if required */
-    code = smb_IoctlPrepareRead(fidp, iop, userp, 0);
+    code = smb_IoctlPrepareRead(fidp, iop, userp, isSystem ? AFSCALL_FLAG_LOCAL_SYSTEM : 0);
 
     if (code) {
         cm_ReleaseUser(userp);
@@ -1016,7 +1032,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         uname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
         tp += strlen(tp) + 1;
 
-        if (flags & PIOCTL_LOGON) {
+        if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
             /* SMB user name with which to associate tokens */
             smbname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
             osi_Log2(smb_logp,"cm_IoctlSetToken for user [%S] smbname [%S]",
@@ -1040,7 +1056,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
     }
 
-    if (flags & PIOCTL_LOGON) {
+    if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
         userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname,
 				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
 	release_userp = 1;
@@ -1077,7 +1093,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     ucellp->flags |= CM_UCELLFLAG_RXKAD;
     lock_ReleaseMutex(&userp->mx);
 
-    if (flags & PIOCTL_LOGON) {
+    if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_LOGON;
     }
 

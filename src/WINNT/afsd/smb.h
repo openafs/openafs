@@ -170,6 +170,8 @@ typedef struct smb {
 #define NTNEGOTIATE_CAPABILITY_COMPRESSED		0x40000000L
 #define NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY	0x80000000L
 
+#define NTSID_LOCAL_SYSTEM L"S-1-5-18"
+
 /* a packet structure for receiving SMB messages; locked by smb_globalLock.
  * Most of the work involved is in handling chained requests and responses.
  *
@@ -599,6 +601,8 @@ extern void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked);
 #endif
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
+
+extern afs_int32 smb_userIsLocalSystem(smb_user_t *userp);
 
 extern smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
 

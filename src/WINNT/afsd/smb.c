@@ -15,6 +15,7 @@
 #pragma warning(disable: 4005)
 #include <ntstatus.h>
 #pragma warning(pop)
+#include <sddl.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -1229,6 +1230,63 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
     lock_ReleaseWrite(&smb_rctLock);
     return uidp;
 }       	
+
+afs_int32 smb_userIsLocalSystem(smb_user_t *uidp)
+{
+    SID *pSid = NULL;
+    DWORD dwSize1 = 0, dwSize2 = 0;
+    wchar_t *pszRefDomain = NULL;
+    SID_NAME_USE snu = SidTypeGroup;
+    clientchar_t * secSidString = NULL;
+    DWORD gle;
+    afs_int32 isSystem = 0;
+
+    /*
+     * The input name is probably not a SID for the user which is how
+     * the user is now being identified as a result of the SMB
+     * extended authentication.  See if we can obtain the SID for the
+     * specified name.  If we can, use that instead of the name
+     * provided.
+     */
+
+    LookupAccountNameW( NULL /* System Name to begin Search */,
+                        uidp->unp->name,
+                        NULL, &dwSize1,
+                        NULL, &dwSize2,
+                        &snu);
+    gle = GetLastError();
+    if (gle == ERROR_INSUFFICIENT_BUFFER) {
+        pSid = malloc(dwSize1);
+        /*
+         * Although dwSize2 is supposed to include the terminating
+         * NUL character, on Win7 it does not.
+         */
+        pszRefDomain = malloc((dwSize2 + 1) * sizeof(wchar_t));
+    }
+
+    if ( pSid && pszRefDomain ) {
+        memset(pSid, 0, dwSize1);
+
+        if (LookupAccountNameW( NULL /* System Name to begin Search */,
+                                uidp->unp->name,
+                                pSid, &dwSize1,
+                                pszRefDomain, &dwSize2,
+                                &snu))
+            ConvertSidToStringSidW(pSid, &secSidString);
+    }
+
+    if (secSidString) {
+        isSystem = !cm_ClientStrCmp(NTSID_LOCAL_SYSTEM, secSidString);
+        LocalFree(secSidString);
+    }
+
+    if (pSid)
+        free(pSid);
+    if (pszRefDomain)
+        free(pszRefDomain);
+
+    return isSystem;
+}
 
 smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *machine,
                                    afs_uint32 flags)
