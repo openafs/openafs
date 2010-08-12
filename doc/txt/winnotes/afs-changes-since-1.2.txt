@@ -1,3 +1,75 @@
+Since 1.5.75
+ * A crash could occur if a single letter share name was
+   dynamically evaluated as matching a cell name.  This was
+   due to a failure to treat the comparison of two nul
+   strings as identical.
+
+ * Docbook validation is performed by xmllint during builds.
+
+ * Volume package bugs in the file server can result in VOFFLINE
+   being returned to the client instead of VNOVOL or VMOVED.  As
+   a result the Unix CM treats VOFFLINE the same as VMOVED and VNOVOL.
+   The Windows client has not.  As a result, bugs in the file server
+   can cause the Windows client to lose if the volume has in fact
+   been moved to another server.
+
+   As part of this change, the volume location list is updated prior
+   to the volume status being applied to the server from which the
+   error was received.
+
+ * If the pages to be flushed are from a readonly or backup volume
+   they can't be dirty.  In this case there is no need to stabilize
+   the pages before they are locked and recycled.
+   Stablilization is performed on the cm_scache_t object so do not
+   stabilize and unstablize for each cm_buf_t object.
+
+ * Over the years the processing of the Freelance callbacks have
+   added functionality that behaves much more like FetchStatus checks
+   to a file server.  If the data version of the object has changed,
+   get the new data.  Given that is the case, we can remove much of
+   the original refresh logic that is rather race prone.   Say goodbye
+   to cm_fakeGettingCallback and cm_fakeDirCallback.
+
+ * When processing a pioctl path with either smb_ParseIoctlPath or
+   smb_ParseIoctlParent, cm_SyncOp(CM_SCACHESYNC_NEEDCALLBACK|GETSTATUS)
+   must be called on the cm_scache_t object to ensure that it is up
+   to date before we permit cm_Lookup or other operations to be performed
+   on it.  Add the cm_SyncOp() call to smb_ParseIoctlPath and
+   smb_ParseIoctlParent to ensure it is done for all pioctl operations.
+
+ * The 32-bit tools installer was displaying client configuration wizard
+   pages.  Since, the 32-bit tools share configuration with the AFS
+   service, the 32-bit tools installer should not be attempting to change
+   client configuration.  Remove said wizard pages from the 32-bit tools
+   installer.
+
+ * cm_data.rootSCachep is a global pointer to the cm_scache_t that
+   represents the root.afs volume root directory.  Throughout the
+   code this cm_scache_t was being used without ensuring that a
+   callback to the volume is in fact valid.
+
+   Under most circumstances this would not be a problem.  However,
+   it is possible for a request to fail due to the lack of a callback
+   at a critical moment.  Add a new function cm_rootScachep() that
+   attempts to ensure that a callback is present (if possible) prior
+   to use the cm_scache_t object.
+
+ * When the contents of the Freelance root directory changes the fake
+   directory buffers are updated and a fakeDirVersion is incremented.
+   The dataVersion of the cm_scache_t object is supposed to be updated
+   on the next access by performing a fake get callback request.
+   Unfortunately, this did not always occur because of a race.  If another
+   Freelance object is updated first, the root directory object would
+   never successfully get a fake callback.
+
+   This patchset ensures that the generation of the fake directory
+   buffer content and the callback are obtained under the same set
+   of locks thereby removing the race.
+
+ * Enforce in afsd_service that tokens can be set for alternate
+   userids only if the SetToken pioctl is called from the
+   Local System account.
+
 Since 1.5.74
  * Revise SMB QuerySecurityInfo Response for MS10-020
 
