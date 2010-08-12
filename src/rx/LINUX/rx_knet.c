@@ -110,7 +110,7 @@ handle_socket_error(osi_socket so)
     msg.msg_controllen = 256;
     msg.msg_flags = 0;
 
-    code = kernel_recvmsg(sop, &msg, NULL, 0, 256,
+    code = kernel_recvmsg(sop, &msg, NULL, 0, 0,
 			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
