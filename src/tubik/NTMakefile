@@ -1,0 +1,103 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=tubik
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DAFS_PTHREAD_ENV
+
+SRC_DIR = ..\ubik
+
+############################################################################
+# Install header files
+
+INCFILEDIR = $(DESTDIR)\include
+
+INCFILES =\
+	$(INCFILEDIR)\ubik.h \
+	$(INCFILEDIR)\ubik_int.h
+
+install_headers: $(INCFILES)
+
+############################################################################
+# build mtafsubik.lib
+
+MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsubik.lib
+
+MT_LIBOBJS =\
+	$(OUT)\disk.obj \
+	$(OUT)\remote.obj \
+	$(OUT)\beacon.obj \
+	$(OUT)\recovery.obj \
+	$(OUT)\ubik.obj \
+	$(OUT)\uinit.obj \
+	$(OUT)\vote.obj \
+	$(OUT)\lock.obj \
+	$(OUT)\phys.obj \
+	$(OUT)\ubik_int.cs.obj \
+	$(OUT)\ubik_int.ss.obj \
+	$(OUT)\ubik_int.xdr.obj \
+	$(OUT)\ubikcmd.obj \
+	$(OUT)\ubikclient.obj \
+	$(OUT)\uerrors.obj	\
+	$(OUT)\AFS_component_version_number.obj
+
+$(MT_LIBOBJS): $(SRC_DIR)\$$(@B).c
+        $(C2OBJ) -I$(SRC_DIR) $**
+
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
+
+############################################################################
+# Definitions for building a EXE.
+
+RS_UDBG_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\udebug.exe
+CL_UDBG_EXEFILE = $(DESTDIR)\bin\udebug.exe
+
+UDBG_EXEOBJS =\
+	$(OUT)\udebug.obj
+
+UDBG_EXERES =\
+	$(OUT)\udebug.res
+
+$(UDBG_EXEOBJS): $(SRC_DIR)\$$(@B).c
+        $(C2OBJ) -I$(SRC_DIR) $**
+
+UDBG_EXELIBS =\
+	$(DESTDIR)\lib\afs\mtafsubik.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib
+
+$(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXERES) $(UDBG_EXELIBS)
+	$(EXECONLINK) iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
+
+$(CL_UDBG_EXEFILE): $(RS_UDBG_EXEFILE)
+	$(COPY) $** $@
+
+############################################################################
+# generate versioninfo resources
+
+$(OUT)\udebug.res: AFS_component_version_number.h
+#	$(RC) $*.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(MT_LIBFILE) $(CL_UDBG_EXEFILE)
+
+clean::
+        -$(DEL) $(MT_LIBFILE)
+        -$(DEL) $(CL_UDBG_EXEFILE)
+
+mkdir:
