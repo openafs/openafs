@@ -492,6 +492,57 @@ int cm_reInitLocalMountPoints() {
     return 0;
 }
 
+/*
+ * cm_enforceTrailingDot
+ *
+ * return 0 on failure, non-zero on success
+ *
+ */
+static int
+cm_enforceTrailingDot(char * line, size_t cchLine, DWORD *pdwSize)
+{
+    if (line[(*pdwSize)-1] == '\0' && line[(*pdwSize)-2] != '.') {
+        /* remove trailing whitespace */
+        while (isspace(line[(*pdwSize)-2])) {
+            line[(*pdwSize)-2] = '\0';
+            (*pdwSize)--;
+        }
+
+        if ((*pdwSize) >= cchLine) {
+            afsi_log("no room for trailing dot");
+            return 0;
+        }
+        line[(*pdwSize)-1] = '.';
+        line[(*pdwSize)] = '\0';
+    } else if (line[(*pdwSize)-1] != '\0' && line[(*pdwSize)-1] != '.') {
+        /* remove trailing whitespace */
+        while (isspace(line[(*pdwSize)-1])) {
+            line[(*pdwSize)-1] = '\0';
+            (*pdwSize)--;
+        }
+
+        if ((*pdwSize) >= cchLine) {
+            afsi_log("no room for trailing dot and nul");
+            return 0;
+        }
+        line[(*pdwSize)] = '.';
+        line[(*pdwSize)+1] = '\0';
+    } else if (line[(*pdwSize)-1] != '\0') {
+        /* remove trailing whitespace */
+        while (isspace(line[(*pdwSize)-1])) {
+            line[(*pdwSize)-1] = '\0';
+            (*pdwSize)--;
+        }
+
+        if ((*pdwSize) >= cchLine) {
+            afsi_log("no room for trailing nul");
+            return 0;
+        }
+        line[(*pdwSize)] = '\0';
+    }
+    return 1;
+}
+
 
 // yj: open up the registry and read all the local mount 
 // points that are stored there. Part of the initialization
@@ -600,12 +651,13 @@ long cm_InitLocalMountPoints() {
                 continue;
             }
 
-            afsi_log("Mountpoint[%d] = %s",dwIndex, line);
+            /* make sure there is a trailing dot and a nul terminator */
+            if (!cm_enforceTrailingDot(line, sizeof(line), &dwSize)) {
+                cm_noLocalMountPoints--;
+                continue;
+            }
 
-            /* find the trailing dot; null terminate after it */
-            t2 = strrchr(line, '.');
-            if (t2)
-                *(t2+1) = '\0';
+            afsi_log("Mountpoint[%d] = %s", dwIndex, line);
 
             for ( t=line;*t;t++ ) {
                 if ( !isprint(*t) ) {
@@ -657,12 +709,13 @@ long cm_InitLocalMountPoints() {
                 continue;
             }
 
-            afsi_log("Symlink[%d] = %s",dwIndex, line);
+            /* make sure there is a trailing dot and a nul terminator */
+            if (!cm_enforceTrailingDot(line, sizeof(line), &dwSize)) {
+                cm_noLocalMountPoints--;
+                continue;
+            }
 
-            /* find the trailing dot; null terminate after it */
-            t2 = strrchr(line, '.');
-            if (t2)
-                *(t2+1) = '\0';
+            afsi_log("Symlink[%d] = %s", dwIndex, line);
 
             for ( t=line;*t;t++ ) {
                 if ( !isprint(*t) ) {
