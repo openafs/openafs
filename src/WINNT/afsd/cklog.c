@@ -192,7 +192,15 @@ CommandProc (struct cmd_syndesc *as, void *arock)
 	 * the given cell name differs from our own, we don't do a lookup.
 	 */
 	foundExplicitCell = 1;
+        if (strlen(as->parms[aCELL].items->data) >= sizeof(realm)) {
+            if (!Silent)
+                fprintf(stderr,
+                        "Cell name too long - maximum length is %d\n",
+                        sizeof(realm) - 1);
+            return -1;
+        }
 	strncpy (realm, as->parms[aCELL].items->data, sizeof(realm));
+        realm[sizeof(realm) - 1] = '\0';
     }
 
     if (as->parms[aSERVERS].items) {
@@ -217,7 +225,15 @@ CommandProc (struct cmd_syndesc *as, void *arock)
 		return -1;
 	    }
 	    foundExplicitCell = 1;
+            if (strlen(cell) >= sizeof(realm)) {
+                if (!Silent)
+                    fprintf(stderr,
+                            "Cell too long - maximum length is %d\n",
+                            sizeof(realm) - 1);
+                return -1;
+            }
 	    strncpy (realm, cell, sizeof(realm));
+            realm[sizeof(realm) - 1] = '\0';
 	}
     } else {
 	/* No explicit name provided. */
@@ -237,7 +253,15 @@ CommandProc (struct cmd_syndesc *as, void *arock)
 	 * see it there with ps!
 	 */
 	foundPassword = 1;
+        if (strlen(as->parms[aPASSWORD].items->data) >= sizeof(passwd)) {
+            if (!Silent)
+                fprintf(stderr,
+                        "Password too long - maximum length is %d\n",
+                        sizeof(passwd) - 1);
+            return -1;
+        }
 	strncpy (passwd, as->parms[aPASSWORD].items->data, sizeof(passwd));
+        passwd[sizeof(passwd) - 1] = '\0';
 	memset (as->parms[aPASSWORD].items->data, 0,
 	       strlen(as->parms[aPASSWORD].items->data));
     }
