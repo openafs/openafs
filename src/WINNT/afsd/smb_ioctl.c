@@ -1032,7 +1032,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         uname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
         tp += strlen(tp) + 1;
 
-        if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
+        if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
             smbname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
             osi_Log2(smb_logp,"cm_IoctlSetToken for user [%S] smbname [%S]",
@@ -1049,6 +1049,11 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         memcpy(&uuid, tp, sizeof(uuid));
         if (!cm_FindTokenEvent(uuid, sessionKey)) {
             code = CM_ERROR_INVAL;
+            goto done;
+        }
+
+        if (!(pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
+            code = CM_ERROR_NOACCESS;
             goto done;
         }
     } else {
@@ -1100,6 +1105,8 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     cm_ResetACLCache(cellp, userp);
 
   done:
+    SecureZeroMemory(sessionKey, sizeof(sessionKey));
+
     if (release_userp)
 	cm_ReleaseUser(userp);
 
