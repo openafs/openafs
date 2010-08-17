@@ -542,7 +542,7 @@ YY_MALLOC_DECL
 
 YY_DECL
 	{
-	int yy_state_type yy_current_state;
+	yy_state_type yy_current_state;
 	char *yy_cp, *yy_bp;
 	int yy_act;
 
@@ -598,7 +598,7 @@ YY_DECL
 yy_match:
 		do
 			{
-			int YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)];
+			YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)];
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
@@ -974,7 +974,7 @@ static int yy_get_next_buffer()
 
 static yy_state_type yy_get_previous_state()
 	{
-	int yy_state_type yy_current_state;
+	yy_state_type yy_current_state;
 	char *yy_cp;
 
 	yy_current_state = yy_start;
@@ -983,7 +983,7 @@ static yy_state_type yy_get_previous_state()
 
 	for ( yy_cp = yytext_ptr + YY_MORE_ADJ; yy_cp < yy_c_buf_p; ++yy_cp )
 		{
-		int YY_CHAR yy_c = (*yy_cp ? yy_ec[YY_SC_TO_UI(*yy_cp)] : 1);
+		YY_CHAR yy_c = (*yy_cp ? yy_ec[YY_SC_TO_UI(*yy_cp)] : 1);
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
@@ -1013,7 +1013,7 @@ yy_state_type yy_current_state;
 	{
 	int yy_is_jam;
 
-	int YY_CHAR yy_c = 1;
+	YY_CHAR yy_c = 1;
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];

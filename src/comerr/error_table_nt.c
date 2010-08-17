@@ -409,7 +409,7 @@ yyparse(YYPARSE_PARAM)
     int yystate;
     int yyn;
     short *yyssp;
-    int YYSTYPE *yyvsp;
+    YYSTYPE *yyvsp;
     int yyerrstatus;		/*  number of tokens to shift before error messages enabled */
     int yychar1 = 0;		/*  lookahead token as an internal (translated) token number */
 
