@@ -501,13 +501,21 @@ int cm_reInitLocalMountPoints() {
 static int
 cm_enforceTrailingDot(char * line, size_t cchLine, DWORD *pdwSize)
 {
-    if (line[(*pdwSize)-1] == '\0' && line[(*pdwSize)-2] != '.') {
-        /* remove trailing whitespace */
+    /* trailing white space first. */
+    if (line[(*pdwSize)-1] == '\0') {
         while (isspace(line[(*pdwSize)-2])) {
             line[(*pdwSize)-2] = '\0';
             (*pdwSize)--;
         }
+    } else {
+        while (isspace(line[(*pdwSize)-1])) {
+            line[(*pdwSize)-1] = '\0';
+            (*pdwSize)--;
+        }
+    }
 
+    /* then enforce the trailing dot requirement */
+    if (line[(*pdwSize)-1] == '\0' && line[(*pdwSize)-2] != '.') {
         if ((*pdwSize) >= cchLine) {
             afsi_log("no room for trailing dot");
             return 0;
@@ -515,12 +523,6 @@ cm_enforceTrailingDot(char * line, size_t cchLine, DWORD *pdwSize)
         line[(*pdwSize)-1] = '.';
         line[(*pdwSize)] = '\0';
     } else if (line[(*pdwSize)-1] != '\0' && line[(*pdwSize)-1] != '.') {
-        /* remove trailing whitespace */
-        while (isspace(line[(*pdwSize)-1])) {
-            line[(*pdwSize)-1] = '\0';
-            (*pdwSize)--;
-        }
-
         if ((*pdwSize) >= cchLine) {
             afsi_log("no room for trailing dot and nul");
             return 0;
@@ -528,12 +530,6 @@ cm_enforceTrailingDot(char * line, size_t cchLine, DWORD *pdwSize)
         line[(*pdwSize)] = '.';
         line[(*pdwSize)+1] = '\0';
     } else if (line[(*pdwSize)-1] != '\0') {
-        /* remove trailing whitespace */
-        while (isspace(line[(*pdwSize)-1])) {
-            line[(*pdwSize)-1] = '\0';
-            (*pdwSize)--;
-        }
-
         if ((*pdwSize) >= cchLine) {
             afsi_log("no room for trailing nul");
             return 0;
