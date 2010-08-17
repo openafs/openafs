@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -289,9 +289,9 @@ typedef struct smb_username {
     time_t last_logoff_t;		/* most recent logoff time */
 } smb_username_t;
 
-/* The SMB_USERNAMEFLAG_AFSLOGON is used to preserve the existence of an 
+/* The SMB_USERNAMEFLAG_AFSLOGON is used to preserve the existence of an
  * smb_username_t even when the refCount is zero.  This is used to ensure
- * that tokens set to a username during the integrated logon process are 
+ * that tokens set to a username during the integrated logon process are
  * preserved until the SMB Session that will require the tokens is created.
  * The cm_IoctlSetTokens() function when executed from the Network Provider
  * connects to the AFS Client Service using the credentials of the machine
@@ -300,7 +300,7 @@ typedef struct smb_username {
 
 /* The SMB_USERNAMEFLAG_LOGOFF is used to indicate that the user most
  * recently logged off at 'last_logoff_t'.  The smb_username_t should not
- * be deleted even if the refCount is zero before 'last_logoff_t' + 
+ * be deleted even if the refCount is zero before 'last_logoff_t' +
  * 'smb_LogoffTransferTimeout' if 'smb_LogoffTokenTransfer' is non-zero.
  * The smb_Daemon() thread is responsible for purging the expired objects */
 
@@ -470,7 +470,7 @@ typedef struct smb_dirSearch {
     unsigned short attribute;	        /* search attribute
 					 * (used for extended protocol) */
     clientchar_t tidPath[256];          /* tid path */
-    clientchar_t relPath[1024];         /* relative path */        
+    clientchar_t relPath[1024];         /* relative path */
     clientchar_t mask[256];	        /* search mask for V3 */
 } smb_dirSearch_t;
 
@@ -489,9 +489,9 @@ typedef struct smb_dirListPatch {
 } smb_dirListPatch_t;
 
 /* dirListPatch Flags */
-#define SMB_DIRLISTPATCH_DOTFILE 1  
+#define SMB_DIRLISTPATCH_DOTFILE 1
 /* the file referenced is a dot file
- * Note: will not be set if smb_hideDotFiles is false 
+ * Note: will not be set if smb_hideDotFiles is false
  */
 
 /* individual lock on a waiting lock request */
@@ -608,7 +608,7 @@ extern smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *mac
 
 extern cm_user_t *smb_FindCMUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
 
-extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, clientchar_t *usern); 
+extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, clientchar_t *usern);
 
 extern void smb_ReleaseUsername(smb_username_t *unp);
 
@@ -770,12 +770,12 @@ extern LONG smb_UseUnicode;
 extern DWORD smb_monitorReqs;
 
 /* used for getting a challenge for SMB auth */
-typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {  
+typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {
     MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
 } MSV1_0_LM20_CHALLENGE_REQUEST, *PMSV1_0_LM20_CHALLENGE_REQUEST;
 
-typedef struct _MSV1_0_LM20_CHALLENGE_RESPONSE {  
-    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;  
+typedef struct _MSV1_0_LM20_CHALLENGE_RESPONSE {
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
     UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
 } MSV1_0_LM20_CHALLENGE_RESPONSE, *PMSV1_0_LM20_CHALLENGE_RESPONSE;
 /**/
@@ -787,7 +787,7 @@ extern long smb_GetNormalizedUsername(clientchar_t * usern, const clientchar_t *
 extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);
 
-extern char *myCrt_Dispatch(int i); 
+extern char *myCrt_Dispatch(int i);
 
 extern char *myCrt_2Dispatch(int i);
 
@@ -866,7 +866,7 @@ typedef struct _MSV1_0_SETPROCESSOPTION_REQUEST {
     MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
     ULONG ProcessOptions;
     BOOLEAN DisableOptions;
-} MSV1_0_SETPROCESSOPTION_REQUEST, *PMSV1_0_SETPROCESSOPTION_REQUEST; 
+} MSV1_0_SETPROCESSOPTION_REQUEST, *PMSV1_0_SETPROCESSOPTION_REQUEST;
 #endif
 
 #endif /* whole file */

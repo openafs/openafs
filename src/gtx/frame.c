@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,7 +49,7 @@ int
 gtxframe_CtrlHCmd(void *aparam, void *arock)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
+
     struct gtx_frame *tframe;
     char *tp;
     int pos;
@@ -68,7 +68,7 @@ int
 gtxframe_RecursiveEndCmd(void *aparam, void *arock)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
+
     struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
@@ -81,7 +81,7 @@ int
 gtxframe_RecursiveErrCmd(void *aparam, void *arock)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
+
     struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
@@ -94,9 +94,9 @@ int
 gtxframe_SelfInsertCmd(void *aparam, void *rockparam)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
+
     int arock = (intptr_t)rockparam;
-    
+
     struct gtx_frame *tframe;
     int pos;
     char *tp;
@@ -252,7 +252,7 @@ gtxframe_ClearMenus(struct gtx_frame *aframe)
 }
 
 int
-gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt, 
+gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt,
 		      char *adefault, char *aresult, int aresultSize)
 {
     int code;

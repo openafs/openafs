@@ -2,7 +2,7 @@
  * COPYRIGHT  ©  2000
  * THE REGENTS OF THE UNIVERSITY OF MICHIGAN
  * ALL RIGHTS RESERVED
- * 
+ *
  * Permission is granted to use, copy, create derivative works
  * and redistribute this software and such derivative works
  * for any purpose, so long as the name of The University of
@@ -13,10 +13,10 @@
  * University of Michigan is included in any copy of any
  * portion of this software, then the disclaimer below must
  * also be included.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION
  * FROM THE UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY
- * PURPOSE, AND WITHOUT WARRANTY BY THE UNIVERSITY O 
+ * PURPOSE, AND WITHOUT WARRANTY BY THE UNIVERSITY O
  * MICHIGAN OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING
  * WITHOUT LIMITATION THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
@@ -27,7 +27,7 @@
  * IF IT HAS BEEN OR IS HEREAFTER ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGES.
  */
- 
+
  /*
  * Portions Copyright (c) 2008
  * The Linux Box Corporation
@@ -50,10 +50,10 @@
  * of any kind, either express or implied, including
  * without limitation the implied warranties of
  * merchantability and fitness for a particular purpose.  The
- * Linux Box Corporation shall not be liable for any damages, 
- * including special, indirect, incidental, or consequential 
- * damages, with respect to any claim arising out of or in 
- * connection with the use of the software, even if it has been 
+ * Linux Box Corporation shall not be liable for any damages,
+ * including special, indirect, incidental, or consequential
+ * damages, with respect to any claim arising out of or in
+ * connection with the use of the software, even if it has been
  * or is hereafter advised of the possibility of such damages.
  */
 
@@ -72,7 +72,7 @@
 #include "afs/sysincludes.h" /* Standard vendor system headers */
 #include "afs/afsincludes.h" /* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* statistics */
-#include "afs/nfsclient.h"  
+#include "afs/nfsclient.h"
 #include "rx/rx_globals.h"
 
 #if defined(AFS_LINUX26_ENV)
@@ -92,7 +92,7 @@
 		if(!var) \
 			RX_AFS_GLOCK(); \
 	} while(0)
-	
+
 #define COND_RE_GUNLOCK(var) \
 	do { \
 		if(var)	\
@@ -142,22 +142,22 @@ afs_TransitionToBypass(struct vcache *avc,
 
     if (!avc)
 	return;
-		
+
     if (avc->f.states & FCSBypass)
-	osi_Panic("afs_TransitionToBypass: illegal transition to bypass--already FCSBypass\n");		
-		
+	osi_Panic("afs_TransitionToBypass: illegal transition to bypass--already FCSBypass\n");
+
     if (aflags & TRANSChangeDesiredBit)
 	setDesire = 1;
     if (aflags & TRANSSetManualBit)
 	setManual = 1;
-		
+
 #ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #else
     AFS_GLOCK();
 #endif
     ObtainWriteLock(&avc->lock, 925);
-	
+
     /* If we never cached this, just change state */
     if (setDesire && (!(avc->cachingStates & FCSBypass))) {
 	avc->f.states |= FCSBypass;
@@ -173,7 +173,7 @@ afs_TransitionToBypass(struct vcache *avc,
 
 #if 0
     /* also cg2v, don't dequeue the callback */
-    ObtainWriteLock(&afs_xcbhash, 956);	
+    ObtainWriteLock(&afs_xcbhash, 956);
     afs_DequeueCallback(avc);
     ReleaseWriteLock(&afs_xcbhash);
 #endif
@@ -184,7 +184,7 @@ afs_TransitionToBypass(struct vcache *avc,
     if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
-    }		
+    }
 
     avc->cachingStates |= FCSBypass;    /* Set the bypass flag */
     if(setDesire)
@@ -221,8 +221,8 @@ afs_TransitionToCaching(struct vcache *avc,
 	return;
 
     if (!(avc->f.states & FCSBypass))
-	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");		
-		
+	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");
+
     if (aflags & TRANSChangeDesiredBit)
 	resetDesire = 1;
     if (aflags & TRANSSetManualBit)
@@ -247,7 +247,7 @@ afs_TransitionToCaching(struct vcache *avc,
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
     }
-		
+
     avc->cachingStates &= ~(FCSBypass);    /* Reset the bypass flag */
     if (resetDesire)
 	avc->cachingStates &= ~(FCSDesireBypass);
@@ -301,9 +301,9 @@ afs_TransitionToCaching(struct vcache *avc,
 
 /* no-cache prefetch routine */
 static afs_int32
-afs_NoCacheFetchProc(struct rx_call *acall, 
-                     struct vcache *avc, 
-					 uio_t *auio, 
+afs_NoCacheFetchProc(struct rx_call *acall,
+                     struct vcache *avc,
+					 uio_t *auio,
                      afs_int32 release_pages,
 		     afs_int32 size)
 {
@@ -323,7 +323,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
     ciov = auio->uio_iov;
     pp = (struct page*) ciov->iov_base;
     iovmax = auio->uio_iovcnt - 1;
-    iovno = iovoff = result = 0;	
+    iovno = iovoff = result = 0;
     do {
 
 	COND_GUNLOCK(locked);
@@ -337,7 +337,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    unlock_and_release_pages(auio);
 	    goto done;
 	} else
-	    length = ntohl(length);		
+	    length = ntohl(length);
 
 	if (length > size) {
 	    result = EIO;
@@ -346,7 +346,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    unlock_and_release_pages(auio);
 	    goto done;
 	}
-					
+
 	/*
 	 * The fetch protocol is extended for the AFS/DFS translator
 	 * to allow multiple blocks of data, each with its own length,
@@ -362,19 +362,19 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	} else {
 	    moredata = 0;
 	}
-				
+
 	while (length > 0) {
 
-	    clen = ciov->iov_len - iovoff; 
+	    clen = ciov->iov_len - iovoff;
 	    tlen = afs_min(length, clen);
 #ifdef AFS_LINUX24_ENV
 #ifndef AFS_KMAP_ATOMIC
 	    if(pp)
 		address = kmap(pp);
-	    else { 
+	    else {
 		/* rx doesn't provide an interface to simply advance
-		   or consume n bytes.  for now, allocate a PAGE_SIZE 
-		   region of memory to receive bytes in the case that 
+		   or consume n bytes.  for now, allocate a PAGE_SIZE
+		   region of memory to receive bytes in the case that
 		   there were holes in readpages */
 		if(page_buffer == NULL)
 		    page_buffer = osi_Alloc(PAGE_SIZE);
@@ -391,7 +391,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    COND_GUNLOCK(locked);
 	    code = rx_Read(acall, address, tlen);
 	    COND_RE_GLOCK(locked);
-		
+
 	    if (code < 0) {
 	        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", code);
 		result = 0;
@@ -405,7 +405,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    }
 	    length -= code;
 	    tlen -= code;
-		
+
 	    if(tlen > 0) {
 		iovoff += code;
 		address += code;
@@ -447,14 +447,14 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		iovno++;
 		if (iovno > iovmax)
 		    goto done;
-			
+
 		ciov = (auio->uio_iov + iovno);
 		pp = (struct page*) ciov->iov_base;
 		iovoff = 0;
 	    }
 	}
     } while (moredata);
-	
+
 done:
     if(page_buffer)
     	osi_Free(page_buffer, PAGE_SIZE);
@@ -464,7 +464,7 @@ done:
 
 /* dispatch a no-cache read request */
 afs_int32
-afs_ReadNoCache(struct vcache *avc, 
+afs_ReadNoCache(struct vcache *avc,
 		struct nocache_read_request *bparms,
 		afs_ucred_t *acred)
 {
@@ -472,10 +472,10 @@ afs_ReadNoCache(struct vcache *avc,
     afs_int32 bcnt;
     struct brequest *breq;
     struct vrequest *areq;
-		
+
     /* the reciever will free this */
     areq = osi_Alloc(sizeof(struct vrequest));
-	
+
     if (avc && avc->vc_error) {
 	code = EIO;
 	afs_warn("afs_ReadNoCache VCache Error!\n");
@@ -486,18 +486,18 @@ afs_ReadNoCache(struct vcache *avc,
 	goto cleanup;
     }
 
-    AFS_GLOCK();		
+    AFS_GLOCK();
     code = afs_VerifyVCache(avc, areq);
     AFS_GUNLOCK();
-	
+
     if (code) {
 	code = afs_CheckCode(code, areq, 11);	/* failed to get it */
 	afs_warn("afs_ReadNoCache Failed to verify VCache!\n");
 	goto cleanup;
     }
-	
+
     bparms->areq = areq;
-	
+
     /* and queue this one */
     bcnt = 1;
     AFS_GLOCK();
@@ -511,7 +511,7 @@ afs_ReadNoCache(struct vcache *avc,
 	afs_osi_Wait(10 * bcnt, 0, 0);
     }
     AFS_GUNLOCK();
-    
+
     if(!breq) {
     	code = EBUSY;
 	goto cleanup;
@@ -542,7 +542,7 @@ cleanup:
 
 /* Cannot have static linkage--called from BPrefetch (afs_daemons) */
 afs_int32
-afs_PrefetchNoCache(struct vcache *avc, 
+afs_PrefetchNoCache(struct vcache *avc,
 		    afs_ucred_t *acred,
 		    struct nocache_read_request *bparms)
 {
@@ -553,7 +553,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 #ifdef AFS_64BIT_CLIENT
     afs_int32 length_hi, bytes, locked;
 #endif
-	
+
     struct afs_conn *tc;
     afs_int32 i;
     struct rx_call *tcall;
@@ -562,12 +562,12 @@ afs_PrefetchNoCache(struct vcache *avc,
 	struct AFSFetchStatus OutStatus;
 	struct AFSCallBack CallBack;
     };
-    struct tlocal1 *tcallspec;	
-			
+    struct tlocal1 *tcallspec;
+
     auio = bparms->auio;
     areq = bparms->areq;
-    iovecp = auio->uio_iov;	
-	
+    iovecp = auio->uio_iov;
+
     tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */);
@@ -586,7 +586,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 		    bytes = rx_Read(tcall, (char *)&length_hi,
 				    sizeof(afs_int32));
 		    COND_RE_GLOCK(locked);
-					
+
 		    if (bytes != sizeof(afs_int32)) {
 			length_hi = 0;
 			code = rx_Error(tcall);
@@ -659,7 +659,7 @@ done:
 
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(tcallspec, sizeof(struct tlocal1));
-    osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));	
+    osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));
     osi_Free(bparms, sizeof(struct nocache_read_request));
     osi_Free(auio, sizeof(uio_t));
     return code;

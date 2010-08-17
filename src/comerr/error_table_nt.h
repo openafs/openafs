@@ -1,7 +1,7 @@
 typedef union {
 
 char *dynstr;
- 
+
 } YYSTYPE;
 
 #define	ERROR_TABLE	258

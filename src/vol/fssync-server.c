@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -117,7 +117,7 @@ static struct offlineInfo OfflineVolumes[MAXHANDLERS][MAXOFFLINEVOLUMES];
 /**
  * fssync server socket handle.
  */
-static SYNC_server_state_t fssync_server_state = 
+static SYNC_server_state_t fssync_server_state =
     { -1,                       /* file descriptor */
       FSSYNC_ENDPOINT_DECL,     /* server endpoint */
       FSYNC_PROTO_VERSION,      /* protocol version */
@@ -699,11 +699,11 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp &&
 	FSYNC_partMatch(vcom, vp, 1) &&
-	vp->pending_vol_op && 
+	vp->pending_vol_op &&
 	(vcom->hdr->programType != vp->pending_vol_op->com.programType)) {
 	/* a different program has this volume checked out. deny. */
 	Log("FSYNC_VolOn: WARNING: program type %u has attempted to manipulate "
-	    "state for volume %u using command code %u while the volume is " 
+	    "state for volume %u using command code %u while the volume is "
 	    "checked out by program type %u for command code %u.\n",
 	    vcom->hdr->programType,
 	    vcom->vop->volume,
@@ -786,7 +786,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
  * @note this is an FSYNC RPC server stub
  *
  * @note this procedure handles the following FSSYNC command codes:
- *       - FSYNC_VOL_OFF 
+ *       - FSYNC_VOL_OFF
  *       - FSYNC_VOL_NEEDVOLUME
  *
  * @note the supplementary reason code contains additional details.
@@ -873,7 +873,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		Log("volume %u already checked out\n", vp->hashid);
 		/* XXX debug */
 		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%u, part='%s' } }\n",
-		    vp->pending_vol_op->com.proto_version, 
+		    vp->pending_vol_op->com.proto_version,
 		    vp->pending_vol_op->com.programType,
 		    vp->pending_vol_op->com.command,
 		    vp->pending_vol_op->com.reason,
@@ -913,7 +913,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	 */
 	switch (type) {
 	case salvageServer:
-	    /* it is possible for the salvageserver to checkout a 
+	    /* it is possible for the salvageserver to checkout a
 	     * volume for salvage before its scheduling request
 	     * has been sent to the salvageserver */
 	    if (vp->salvage.requested && !vp->salvage.scheduled) {
@@ -1017,11 +1017,11 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (VVolOpLeaveOnline_r(vp, &info)) {
 	    VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT);	/* At least get volume stats right */
 	    if (LogLevel) {
-		Log("FSYNC: Volume %u (%s) was left on line for an external %s request\n", 
-		    V_id(vp), V_name(vp), 
-		    vcom->hdr->reason == V_CLONE ? "clone" : 
-		    vcom->hdr->reason == V_READONLY ? "readonly" : 
-		    vcom->hdr->reason == V_DUMP ? "dump" : 
+		Log("FSYNC: Volume %u (%s) was left on line for an external %s request\n",
+		    V_id(vp), V_name(vp),
+		    vcom->hdr->reason == V_CLONE ? "clone" :
+		    vcom->hdr->reason == V_READONLY ? "readonly" :
+		    vcom->hdr->reason == V_DUMP ? "dump" :
 		    vcom->hdr->reason == FSYNC_SALVAGE ? "salvage" :
 		    "UNKNOWN");
 	    }
@@ -1047,7 +1047,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
             VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
             if (error==0) {
                 assert(vp->nUsers==0);
-                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline; 
+                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
             }
             else {
 		VDeregisterVolOp_r(vp);
@@ -1800,7 +1800,7 @@ FSYNC_com_StatsOpViceP(FSSYNC_StatsOp_command * scom, SYNC_response * res)
 	stats->minFree = dp->minFree;
 	stats->f_files = dp->f_files;
 	stats->vol_list_len = dp->vol_list.len;
-	
+
 	res->hdr.response_len += sizeof(struct DiskPartitionStats64);
     }
 
@@ -1830,7 +1830,7 @@ FSYNC_com_StatsOpHash(FSSYNC_StatsOp_command * scom, SYNC_response * res)
     AssignInt64(head->reorders, &stats->chain_reorders);
 
     res->hdr.response_len += sizeof(struct VolumeHashChainStats);
-    
+
     return code;
 }
 
@@ -1876,7 +1876,7 @@ FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
 }
 
 /**
- * check whether command packet partition name matches volume 
+ * check whether command packet partition name matches volume
  * object's partition name.
  *
  * @param[in] vcom        pointer to command packet
@@ -1893,11 +1893,11 @@ FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
  *
  * @internal
  */
-static int 
+static int
 FSYNC_partMatch(FSSYNC_VolOp_command * vcom, Volume * vp, int match_anon)
 {
     return ((match_anon && vcom->vop->partName[0] == 0) ||
-	    (strncmp(vcom->vop->partName, V_partition(vp)->name, 
+	    (strncmp(vcom->vop->partName, V_partition(vp)->name,
 		     sizeof(vcom->vop->partName)) == 0));
 }
 

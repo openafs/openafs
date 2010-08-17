@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -160,7 +160,7 @@ extern void osi_AttachVnode(struct vcache *, int seq);
 #endif
 #endif
 
-/* 
+/*
  * Time related macros
  */
 #define osi_GetuTime(x) osi_GetTime(x)
@@ -421,7 +421,7 @@ typedef struct timeval osi_timeval_t;
 
 
 /*
-** Macro for Solaris 2.6 returns 1 if file is larger than 2GB; else returns 0 
+** Macro for Solaris 2.6 returns 1 if file is larger than 2GB; else returns 0
 */
 #define AfsLargeFileUio(uio)       0
 #define AfsLargeFileSize(pos, off) 0

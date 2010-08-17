@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -104,8 +104,8 @@
          // take a few moments and examine their headers individually to
          // see what they can do for your application.
          //
-         // Each header is associated with one source file, and each pair 
-         // can easily (well, hopefully easily) be copied off to other 
+         // Each header is associated with one source file, and each pair
+         // can easily (well, hopefully easily) be copied off to other
          // applications.
          //
 #include <WINNT/hashlist.h>	// general-purpose list management code
@@ -486,7 +486,7 @@ EXPORTED void cdecl ImmediateErrorDialog (DWORD dwStatus, int idsError, LPTSTR p
  *       TranslateMessage (&msg);
  *       DispatchMessage (&msg);
  *       }
- * 
+ *
  * An equivalent technique is:
  *
  *    AfsAppLib_MainPump();

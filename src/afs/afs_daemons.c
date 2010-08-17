@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -298,7 +298,7 @@ afs_Daemon(void)
 
 	/* 18285 is because we're trying to divide evenly into 128, that is,
 	 * CBSlotLen, while staying just under 20 seconds.  If CBSlotLen
-	 * changes, should probably change this interval, too. 
+	 * changes, should probably change this interval, too.
 	 * Some of the preceding actions may take quite some time, so we
 	 * might not want to wait the entire interval */
 	now = 18285 - (osi_Time() - now);
@@ -372,11 +372,11 @@ afs_CheckRootVolume(void)
 		    cred_t *credp;
 		    struct dentry *dp;
 		    struct vcache *vcp;
-		    
+
 		    afs_rootFid.Fid.Volume = volid;
 		    afs_rootFid.Fid.Vnode = 1;
 		    afs_rootFid.Fid.Unique = 1;
-		    
+
 		    credp = crref();
 		    if (afs_InitReq(&treq, credp))
 			goto out;
@@ -385,9 +385,9 @@ afs_CheckRootVolume(void)
 			goto out;
 		    afs_getattr(vcp, &vattr, credp);
 		    afs_fill_inode(AFSTOV(vcp), &vattr);
-		    
+
 		    dp = d_find_alias(AFSTOV(afs_globalVp));
-		    
+
 #if defined(AFS_LINUX24_ENV)
 		    spin_lock(&dcache_lock);
 #if defined(AFS_LINUX26_ENV)
@@ -404,7 +404,7 @@ afs_CheckRootVolume(void)
 		    spin_unlock(&dcache_lock);
 #endif
 		    dput(dp);
-		    
+
 		    AFS_FAST_RELE(afs_globalVp);
 		    afs_globalVp = vcp;
 		out:
@@ -511,7 +511,7 @@ BPrefetch(struct brequest *ab)
 	if (tdc) {
 	    afs_PutDCache(tdc);
 	}
-	abyte+=len; 
+	abyte+=len;
 	totallen += len;
     } while ((totallen < afs_preCache) && tdc && (len > 0));
     /* now, dude may be waiting for us to clear DFFetchReq bit; do so.  Can't
@@ -539,7 +539,7 @@ BPrefetchNoCache(struct brequest *ab)
 {
     struct vrequest treq;
     afs_size_t len;
-	
+
     if ((len = afs_InitReq(&treq, ab->cred)))
 	return;
 
@@ -680,7 +680,7 @@ afs_BQueue(short aopcode, struct vcache *avc,
 }
 
 #ifdef AFS_AIX41_ENV
-/* AIX 4.1 has a much different sleep/wakeup mechanism available for use. 
+/* AIX 4.1 has a much different sleep/wakeup mechanism available for use.
  * The modifications here will work for either a UP or MP machine.
  */
 struct buf *afs_asyncbuf = (struct buf *)0;
@@ -688,7 +688,7 @@ tid_t afs_asyncbuf_cv = EVENT_NULL;
 afs_int32 afs_biodcnt = 0;
 
 /* in implementing this, I assumed that all external linked lists were
- * null-terminated.  
+ * null-terminated.
  *
  * Several places in this code traverse a linked list.  The algorithm
  * used here is probably unfamiliar to most people.  Careful examination
@@ -701,7 +701,7 @@ afs_int32 afs_biodcnt = 0;
  *
  * This function obtains, and returns, a pointer to a buffer for
  * processing by a daemon.  It sleeps until such a buffer is available.
- * The source of buffers for it is the list afs_asyncbuf (see also 
+ * The source of buffers for it is the list afs_asyncbuf (see also
  * afs_gn_strategy).  This function may be invoked concurrently by
  * several processes, that is, several instances of the same daemon.
  * afs_gn_strategy, which adds buffers to the list, runs at interrupt
@@ -709,7 +709,7 @@ afs_int32 afs_biodcnt = 0;
  *
  * Since AIX 4.1 can wake just one process at a time, the separate sleep
  * addresses have been removed.
- * Note that the kernel_lock is held until the e_sleep_thread() occurs. 
+ * Note that the kernel_lock is held until the e_sleep_thread() occurs.
  * The afs_asyncbuf_lock is primarily used to serialize access between
  * process and interrupts.
  */
@@ -729,7 +729,7 @@ afs_get_bioreq()
     /* ??? Does the forward pointer of the returned buffer need to be NULL?
      */
 
-    /* Disable interrupts from the strategy function, and save the 
+    /* Disable interrupts from the strategy function, and save the
      * prior priority level and lock access to the afs_asyncbuf.
      */
     AFS_GUNLOCK();
@@ -782,7 +782,7 @@ afs_get_bioreq()
 
     /* For the convenience of other code, replace the gnodes in
      * the b_vp field of bp and the other buffers on the b_work
-     * chain with the corresponding vnodes.   
+     * chain with the corresponding vnodes.
      *
      * ??? what happens to the gnodes?  They're not just cut loose,
      * are they?
@@ -856,9 +856,9 @@ afs_BioDaemon(afs_int32 nbiods)
 	limit_sigs(&sigbits, &osigbits);	/*   and already masked */
     }
     /* Main body starts here -- this is an intentional infinite loop, and
-     * should NEVER exit 
+     * should NEVER exit
      *
-     * Now, the loop will exit if get_bioreq() returns NULL, indicating 
+     * Now, the loop will exit if get_bioreq() returns NULL, indicating
      * that we've been interrupted.
      */
     while (1) {
@@ -899,7 +899,7 @@ afs_BioDaemon(afs_int32 nbiods)
 	    ReleaseWriteLock(&vcp->lock);
 	}
 	/* If the buffer represents a protection violation, rather than
-	 * an actual request for I/O, no special action need be taken.  
+	 * an actual request for I/O, no special action need be taken.
 	 */
 	if (bp->b_flags & B_PFPROT) {
 	    iodone(bp);		/* Notify all users of the buffer that we're done */
@@ -932,7 +932,7 @@ afs_BioDaemon(afs_int32 nbiods)
 	 * buffer may be linked with other buffers via the b_work field.
 	 * See also afs_gn_strategy.  For each buffer in the chain (including
 	 * bp) notify all users of the buffer that the daemon is finished
-	 * using it by calling iodone.  
+	 * using it by calling iodone.
 	 * assumes iodone can modify the b_work field.
 	 */
 	for (tbp1 = bp;;) {
@@ -1071,10 +1071,10 @@ afs_BackgroundDaemon(void)
 		       tb->opcode);
 	    if (tb->opcode == BOP_FETCH)
 		BPrefetch(tb);
-#if defined(AFS_CACHE_BYPASS)		
+#if defined(AFS_CACHE_BYPASS)
 	    else if (tb->opcode == BOP_FETCH_NOCACHE)
 		BPrefetchNoCache(tb);
-#endif		
+#endif
 	    else if (tb->opcode == BOP_STORE)
 		BStore(tb);
 	    else if (tb->opcode == BOP_PATH)

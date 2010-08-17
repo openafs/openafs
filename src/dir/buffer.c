@@ -69,7 +69,7 @@ int nbuffers;
 int timecounter;
 static int calls = 0, ios = 0;
 
-struct buffer *newslot(afs_int32 *afid, afs_int32 apage, 
+struct buffer *newslot(afs_int32 *afid, afs_int32 apage,
 		       struct buffer *lp);
 
 /* XXX - This sucks. The correct prototypes for these functions are ...

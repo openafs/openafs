@@ -52,15 +52,15 @@ osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 #endif
     afs_hyper_t origDV;
 #if defined(AFS_CACHE_BYPASS)
-    /* The optimization to check DV under read lock below is identical a 
-     * change in CITI cache bypass work.  The problem CITI found in 1999 
-     * was that this code and background daemon doing prefetching competed 
-     * for the vcache entry shared lock.  It's not clear to me from the 
+    /* The optimization to check DV under read lock below is identical a
+     * change in CITI cache bypass work.  The problem CITI found in 1999
+     * was that this code and background daemon doing prefetching competed
+     * for the vcache entry shared lock.  It's not clear to me from the
      * tech report, but it looks like CITI fixed the general prefetch code
      * path as a bonus when experimenting on prefetch for cache bypass, see
      * citi-tr-01-3.
      */
-#endif        
+#endif
     ObtainReadLock(&avc->lock);
     /* If we've already purged this version, or if we're the ones
      * writing this version, don't flush it (could lose the

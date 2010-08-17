@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -16,7 +16,7 @@
 /* user structure
  * no free references outside of cm_allUsersp
  * there are held references from cm_conn_t.
- * 
+ *
  * All the fields in this structure are locked by the
  * corresponding userp's userp->mx mutex.
  */

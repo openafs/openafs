@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -390,10 +390,10 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
 
 	/* If we're trying to obtain a write lock on a real disk, then the
 	 * aggregate must not be attached by the kernel.  If so, unlock it
-	 * and fail. 
+	 * and fail.
 	 * WARNING: The code to check for the above has been removed when this
 	 * file was ported from DFS src. It should be put back if
-	 * this library is used to access hard disks 
+	 * this library is used to access hard disks
 	 */
     }
 

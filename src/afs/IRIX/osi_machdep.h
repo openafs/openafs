@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -145,11 +145,11 @@ extern flid_t osi_flid;
  * CAUTION -- The ISAFS_(RX)?GLOCK macros are not safe to use when the lock is
  *     not held if the test may be made at interrupt level as the code may
  *     appear to be running as the process that is (or last was) running at
- *     non-interrupt level. Worse yet, the interrupt may occur just as the 
+ *     non-interrupt level. Worse yet, the interrupt may occur just as the
  *     process is exiting, in which case, the pid may change from the start
  *     of the interrupt to the end, since the u area has been changed. So,
  *     at interrupt level, I'm using the base of the current interrupt stack.
- *     Note that afs_osinet.c also modifies afs_global_owner for osi_Sleep and 
+ *     Note that afs_osinet.c also modifies afs_global_owner for osi_Sleep and
  *     afs_osi_Wakeup. Changes made here should be reflected there as well.
  * NOTE - As of 6.2, we can no longer use mutexes in interrupts, so the above
  *     concern no longer exists.

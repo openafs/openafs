@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -61,7 +61,7 @@
  * be the sync site.  Thus, any time that the sync site has not heard from a
  * majority of the servers in the last #SMALLTIME seconds, it voluntarily
  * relinquishes its role as sync site.
- * 
+ *
  * While attempting to nominate a new sync site, certain rules apply.  First,
  * a server can not reply "ok" (return 1 from ServBeacon) to two different
  * hosts in less than #BIGTIME seconds; this allows a server that has heard
@@ -236,7 +236,7 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
      * lowestHost after BIGTIME seconds to limit the damage if this host
      * actually crashes.  Finally, we also count in this computation: don't
      * pick someone else if we're even better!
-     * 
+     *
      * Note that the test below must be <=, not <, so that we keep refreshing
      * lowestTime.  Otherwise it will look like we haven't heard from
      * lowestHost in a while and another host could slip in.  */
@@ -427,7 +427,7 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
 
     ulock_Debug(aparm);
 
-    /* Get the recovery state. The label of the database may not have 
+    /* Get the recovery state. The label of the database may not have
      * been written yet but set the flag so udebug behavior remains.
      * Defect 9477.
      */
@@ -510,7 +510,7 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 
     ulock_Debug((ubik_debug *)aparm);
 
-    /* Get the recovery state. The label of the database may not have 
+    /* Get the recovery state. The label of the database may not have
      * been written yet but set the flag so udebug behavior remains.
      * Defect 9477.
      */

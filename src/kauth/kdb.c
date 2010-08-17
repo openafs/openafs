@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -62,15 +62,15 @@ cmdproc(struct cmd_syndesc *as, void * arock)
 		if (! as->parms[3].items) {
 		    char *hostName;
 		    hostName = hostutil_GetNameByINet(rdata.host);
-		    printf("%s: last operation from host %s at %s", 
-			   (char *)key.dptr, hostName, 
+		    printf("%s: last operation from host %s at %s",
+			   (char *)key.dptr, hostName,
 			   ctime(&rdata.last_use));
 		} else {
 		    char *hostIP;
 		    char hoststr[16];
 		    hostIP = afs_inet_ntoa_r(rdata.host, hoststr);
-		    printf("%s: last operation from host %s at %s", 
-			   (char *)key.dptr, hostIP, 
+		    printf("%s: last operation from host %s at %s",
+			   (char *)key.dptr, hostIP,
 			   ctime(&rdata.last_use));
 		}
             } else {

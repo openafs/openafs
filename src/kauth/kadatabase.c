@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -265,7 +265,7 @@ FreeBlock(struct ubik_trans *at, afs_int32 index)
    returned. */
 
 afs_int32
-FindBlock(struct ubik_trans *at, char *aname, char *ainstance, afs_int32 *toP, 
+FindBlock(struct ubik_trans *at, char *aname, char *ainstance, afs_int32 *toP,
 	  struct kaentry *tentry)
 {
     afs_int32 i, code;
@@ -295,7 +295,7 @@ FindBlock(struct ubik_trans *at, char *aname, char *ainstance, afs_int32 *toP,
    returns zero if there were no errors. */
 
 afs_int32
-ThreadBlock(struct ubik_trans *at, afs_int32 index, 
+ThreadBlock(struct ubik_trans *at, afs_int32 index,
 	    struct kaentry *tentry)
 {
     int code;
@@ -364,7 +364,7 @@ UnthreadBlock(struct ubik_trans *at, struct kaentry *aentry)
    remaining count is negative.  */
 
 afs_int32
-NextBlock(struct ubik_trans *at, afs_int32 index, struct kaentry *tentry, 
+NextBlock(struct ubik_trans *at, afs_int32 index, struct kaentry *tentry,
 	  afs_int32 *remaining)
 {
     int code;
@@ -401,7 +401,7 @@ NextBlock(struct ubik_trans *at, afs_int32 index, struct kaentry *tentry,
    and pointer to the user entry. */
 
 afs_int32
-ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr, 
+ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 	  struct kaentry *tentry, struct ktc_encryptionKey *key)
 {
     struct kaOldKeys okeys;	/* old keys block */
@@ -575,7 +575,7 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 }
 
 afs_int32
-ka_DelKey(struct ubik_trans *tt, afs_int32 tentryaddr, 
+ka_DelKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 	  struct kaentry *tentry)
 {
     int code;
@@ -678,7 +678,7 @@ ka_debugKeyCache(struct ka_debugInfo *info)
 /* Add a key to the key cache, expanding it if necessary. */
 
 void
-ka_Encache(char *name, char *inst, afs_int32 kvno, 
+ka_Encache(char *name, char *inst, afs_int32 kvno,
 	   struct ktc_encryptionKey *key, Date superseded)
 {
     int i;
@@ -727,7 +727,7 @@ ka_Encache(char *name, char *inst, afs_int32 kvno,
    with tt==0, since Rx can't call Ubik. */
 
 afs_int32
-ka_LookupKvno(struct ubik_trans *tt, char *name, char *inst, afs_int32 kvno, 
+ka_LookupKvno(struct ubik_trans *tt, char *name, char *inst, afs_int32 kvno,
 	      struct ktc_encryptionKey *key)
 {
     int i;
@@ -792,9 +792,9 @@ ka_LookupKvno(struct ubik_trans *tt, char *name, char *inst, afs_int32 kvno,
 /* Look up the primary key and key version for a principal. */
 
 afs_int32
-ka_LookupKey(struct ubik_trans *tt, 
-	     char *name, 
-	     char *inst, 
+ka_LookupKey(struct ubik_trans *tt,
+	     char *name,
+	     char *inst,
 	     afs_int32 *kvno, 			/* returned */
 	     struct ktc_encryptionKey *key)	/* copied out */
 {

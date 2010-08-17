@@ -1,7 +1,7 @@
 /*
  * Copyright 2006, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -272,7 +272,7 @@ openFile(char * path)
 {
     int ret = 0;
     struct afs_stat status;
-    
+
     dump_fd = afs_open(path, O_RDWR);
     if (dump_fd == -1) {
 	fprintf(stderr, "dump file '%s' failed to open\n", path);
@@ -571,7 +571,7 @@ prompt(void)
 	    tok = strtok(NULL, " \t");
 	    if (!tok || strcasecmp(tok, "by")) {
 		tok = NULL;
-		fprintf(stderr, "find syntax error 1 (%s)\n", 
+		fprintf(stderr, "find syntax error 1 (%s)\n",
 			(tok) ? tok : "nil");
 		continue;
 	    }
@@ -1095,7 +1095,7 @@ dump_next_he(void)
 	fprintf(stderr, "no more HEs\n");
 	return;
     }
-    
+
     dump_he(he_cursor.idx+1);
 }
 
@@ -1111,7 +1111,7 @@ dump_next_fe(void)
 	fprintf(stderr, "no more FEs\n");
 	return;
     }
-    
+
     dump_fe(fe_cursor.idx+1);
 }
 
@@ -1127,7 +1127,7 @@ dump_next_cb(void)
 	fprintf(stderr, "no more CBs\n");
 	return;
     }
-    
+
     dump_cb(cb_cursor.idx+1);
 }
 
@@ -1138,7 +1138,7 @@ dump_prev_he(void)
 	fprintf(stderr, "no more HEs\n");
 	return;
     }
-    
+
     dump_he(he_cursor.idx-1);
 }
 
@@ -1149,7 +1149,7 @@ dump_prev_fe(void)
 	fprintf(stderr, "no more FEs\n");
 	return;
     }
-    
+
     dump_fe(fe_cursor.idx-1);
 }
 
@@ -1160,7 +1160,7 @@ dump_prev_cb(void)
 	fprintf(stderr, "no more CBs\n");
 	return;
     }
-    
+
     dump_cb(cb_cursor.idx-1);
 }
 
@@ -1176,7 +1176,7 @@ dump_first_fe(void)
 	fprintf(stderr, "no FEs present\n");
 	return;
     }
-    
+
     dump_fe(0);
 }
 
@@ -1192,7 +1192,7 @@ dump_first_he(void)
 	fprintf(stderr, "no HEs present\n");
 	return;
     }
-    
+
     dump_he(0);
 }
 
@@ -1208,7 +1208,7 @@ dump_first_cb(void)
 	fprintf(stderr, "no CBs present\n");
 	return;
     }
-    
+
     dump_cb(0);
 }
 
@@ -1224,7 +1224,7 @@ dump_last_he(void)
 	fprintf(stderr, "no HEs present\n");
 	return;
     }
-    
+
     dump_he(hdrs.h_hdr.records-1);
 }
 
@@ -1240,7 +1240,7 @@ dump_last_fe(void)
 	fprintf(stderr, "no FEs present\n");
 	return;
     }
-    
+
     dump_fe(hdrs.cb_hdr.nFEs-1);
 }
 
@@ -1492,7 +1492,7 @@ get_h_hdr(void)
 	fprintf(stderr, "hi offset bits set in h_offset; can't get host_state_header\n");
 	return 1;
     }
-    if ((lo >= map_len) || 
+    if ((lo >= map_len) ||
 	((lo + sizeof(struct host_state_header)) > map_len) ||
 	(lo + sizeof(struct host_state_header) < lo)) {
 	fprintf(stderr, "h_offset puts host_state_header beyond end of memory map\n");
@@ -1526,7 +1526,7 @@ get_cb_hdr(void)
 	fprintf(stderr, "hi offset bits set in cb_offset; can't get callback_state_header\n");
 	return 1;
     }
-    if ((lo >= map_len) || 
+    if ((lo >= map_len) ||
 	((lo + sizeof(struct callback_state_header)) > map_len) ||
 	(lo + sizeof(struct callback_state_header) < lo)) {
 	fprintf(stderr, "cb_offset puts callback_state_header beyond end of memory map\n");
@@ -1579,7 +1579,7 @@ get_cb_timeout_hdr(void)
 	fprintf(stderr, "hi offset bits set in timeout_offset; can't get callback_state_timeout_header\n");
 	return 1;
     }
-    if ((lo >= map_len) || 
+    if ((lo >= map_len) ||
 	((lo + sizeof(struct callback_state_timeout_header)) > map_len) ||
 	(lo + sizeof(struct callback_state_timeout_header) < lo)) {
 	fprintf(stderr, "timeout_offset puts callback_state_timeout_header beyond end of memory map\n");
@@ -1630,7 +1630,7 @@ get_cb_fehash_hdr(void)
 	fprintf(stderr, "hi offset bits set in fehash_offset; can't get callback_state_fehash_header\n");
 	return 1;
     }
-    if ((lo >= map_len) || 
+    if ((lo >= map_len) ||
 	((lo + sizeof(struct callback_state_fehash_header)) > map_len) ||
 	(lo + sizeof(struct callback_state_fehash_header) < lo)) {
 	fprintf(stderr, "timeout_offset puts callback_state_fehash_header beyond end of memory map\n");
@@ -1821,7 +1821,7 @@ get_fe_hdr(void)
 	    return 1;
         }
     }
-    
+
     memcpy(&fe_cursor.hdr, fe_cursor.cursor, sizeof(struct callback_state_entry_header));
     fe_cursor.hdr_valid = 1;
     return 0;

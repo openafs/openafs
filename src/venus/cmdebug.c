@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -133,7 +133,7 @@ PrintInterfaces(struct rx_connection *aconn)
     if (caps.Capabilities_val) {
         printf("Capabilities:\n");
         if (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS) {
-            printf("Error Translation\n");  
+            printf("Error Translation\n");
         }
         printf("\n");
     }
@@ -515,7 +515,7 @@ PrintCellServDBEntry(struct rx_connection *aconn, afs_int32 cellnum)
 }
 
 static void
-PrintCellServDB(struct rx_connection *aconn) 
+PrintCellServDB(struct rx_connection *aconn)
 {
     afs_int32 index;
 
@@ -602,8 +602,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -628,19 +628,19 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
-    cmd_AddParm(ts, "-refcounts", CMD_FLAG, CMD_OPTIONAL, 
+    cmd_AddParm(ts, "-refcounts", CMD_FLAG, CMD_OPTIONAL,
                  "print only cache entries with positive reference counts");
-    cmd_AddParm(ts, "-callbacks", CMD_FLAG, CMD_OPTIONAL, 
+    cmd_AddParm(ts, "-callbacks", CMD_FLAG, CMD_OPTIONAL,
                  "print only cache entries with callbacks");
-    cmd_AddParm(ts, "-ctime", CMD_FLAG, CMD_OPTIONAL, 
+    cmd_AddParm(ts, "-ctime", CMD_FLAG, CMD_OPTIONAL,
                 "print human readable expiration time");
 
-    
+
     cmd_AddParm(ts, "-addrs", CMD_FLAG, CMD_OPTIONAL,
 		"print only host interfaces");
     cmd_AddParm(ts, "-cache", CMD_FLAG, CMD_OPTIONAL,
 		"print only cache configuration");
-    cmd_AddParm(ts, "-cellservdb", CMD_FLAG, CMD_OPTIONAL, 
+    cmd_AddParm(ts, "-cellservdb", CMD_FLAG, CMD_OPTIONAL,
                 "print only cellservdb info");
 
     cmd_Dispatch(argc, argv);

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
  *
  * (C) COPYRIGHT IBM CORPORATION 1987, 1988

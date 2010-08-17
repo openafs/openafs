@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -634,7 +634,7 @@ CountListItems(struct cmd_item *a_firstItem)
  *	meat of the program.  We count the number of File Servers
  *	to watch, allocate enough space to remember all the connection
  *	info for them, then go for it.
- *	
+ *
  *
  * Arguments:
  *	a_s : Ptr to the command line syntax descriptor.

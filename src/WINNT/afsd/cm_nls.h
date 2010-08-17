@@ -167,7 +167,7 @@ extern __success(return != 0) int
 extern __out_ecount_full_z(*pcch_dest) __checkReturn __success(return != NULL) cm_utf8char_t *
     cm_Utf16ToUtf8Alloc
     (__in_ecount(cch_src) const cm_unichar_t * s,
-     int cch_src, 
+     int cch_src,
      __out_ecount_full_opt(1) int *pcch_dest);
 
 extern __out_ecount_full_z(*pcch_dest) __checkReturn __success(return != NULL) cm_unichar_t *

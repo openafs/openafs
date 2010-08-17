@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -357,7 +357,7 @@ weblog_login_checksum(char *user, char *cell, char *passwd, char *cksum)
 
 /*
  * Look up a login ID in the cache. If an entry name is found for the
- * given username, and the SHA checksums match, then 
+ * given username, and the SHA checksums match, then
  * set the token parameter and return 1, otherwise return 0.
  */
 int

@@ -4,7 +4,7 @@
  *
  * Copyright (c) 1998, 2001, 2004 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
@@ -66,7 +66,7 @@ static afs_dir_page page;
 
 /* Hash function used in AFS directories.  */
 static int namehash(char *name, int buckets, int seed)
-{   
+{
   int hval = seed, tval;
 
   while (*name) hval = (hval * 173) + *name++;
@@ -297,7 +297,7 @@ afs_uint32 Dir_AddEntry(struct dir_state *ds, char *name,
 afs_uint32 Dir_Finalize(struct dir_state *ds)
 {
   int pages = ds->pageno + 1;
-  
+
   if (ds->pageno < 128) ds->dh->allomap[ds->pageno] = ds->used;
   ds->dh->pagehdr.pgcount = htons(pages);
   return 0;
@@ -346,7 +346,7 @@ afs_uint32 Dir_Free(struct dir_state *ds)
  * consists of a 32-bit number containing the size, immediately followed
  * by the data itself.  The interesting structures and constants are
  * defined in <afs/dir.h>
- * 
+ *
  * A directory consists of one or more 'pages', each of which is 2K
  * (AFS_PAGESIZE).  Each page contains EPP (currently 64) 'entries', each
  * of which is 32 bytes.  The first page begins with a DirHeader, which

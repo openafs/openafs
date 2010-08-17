@@ -1,7 +1,7 @@
 /*
  * Copyright 2004, Secure Endpoints Inc.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@ typedef struct cm_config_data {
     afs_uint32          dirty;
 
     cm_volume_t *       volumeBaseAddress;
-    cm_cell_t   *       cellBaseAddress; 
+    cm_cell_t   *       cellBaseAddress;
     cm_aclent_t *       aclBaseAddress;
     cm_scache_t *       scacheBaseAddress;
     cm_nc_t     *       dnlcBaseAddress;
@@ -76,7 +76,7 @@ typedef struct cm_config_data {
 
     cm_nc_t 	*       ncfreelist;
     cm_nc_t 	*       nameCache;
-    cm_nc_t 	**      nameHash; 
+    cm_nc_t 	**      nameHash;
 
     cm_buf_t	*       buf_freeListp;
     cm_buf_t    *       buf_freeListEndp;

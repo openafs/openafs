@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -1297,11 +1297,11 @@ FlushVolumeCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-/* 
+/*
  * The Windows version of UuidCmd displays the UUID.
  * When the UNIX version is updated to do the same
  * be sure to replace the CMD_REQUIRED flag with
- * CMD_OPTIONAL in the cmd_AddParam(-generate) call 
+ * CMD_OPTIONAL in the cmd_AddParam(-generate) call
  */
 static int
 UuidCmd(struct cmd_syndesc *as, void *arock)
@@ -1311,7 +1311,7 @@ UuidCmd(struct cmd_syndesc *as, void *arock)
 
     blob.in_size = 0;
     blob.out_size = 0;
-    
+
     if (as->parms[0].items) {
         if (geteuid()) {
             fprintf (stderr, "Permission denied: requires root access.\n");
@@ -1340,25 +1340,25 @@ UuidCmd(struct cmd_syndesc *as, void *arock)
  * With a threshold of 0, the cache is always bypassed.  With a threshold of -1,
  * cache bypass is disabled.
  */
- 
+
 static int
 BypassThresholdCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
     afs_int32 threshold_i, threshold_o;
-    char *tp;	
-    
+    char *tp;
+
     /* if new threshold supplied, then set and confirm, else,
      * get current threshold and print
      */
-	 
+
     if(as->parms[0].items) {
 	int digit, ix, len;
-				
+
 	tp = as->parms[0].items->data;
 	len = strlen(tp);
-	digit = 1; 
+	digit = 1;
 	for(ix = 0; ix < len; ++ix) {
 	    if(!isdigit(tp[0])) {
 		digit = 0;
@@ -1370,7 +1370,7 @@ BypassThresholdCmd(struct cmd_syndesc *as, void *arock)
 	    return EINVAL;
 	}
 	threshold_i = atoi(tp);
-	if(ix > 9 && threshold_i < 2147483647) 
+	if(ix > 9 && threshold_i < 2147483647)
 	    threshold_i = 2147483647;
 	blob.in = (char *) &threshold_i;
 	blob.in_size = sizeof(threshold_i);
@@ -1385,7 +1385,7 @@ BypassThresholdCmd(struct cmd_syndesc *as, void *arock)
     if (code) {
 	Die(errno, NULL);
 	return 1;
-    } else {		
+    } else {
 	printf("Cache bypass threshold %d", threshold_o);
 	if(threshold_o ==  -1)
 	    printf(" (disabled)");
@@ -2131,7 +2131,7 @@ PreCacheCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     afs_int32 temp;
-    
+
     if (!as->parms[0].items && !as->parms[1].items) {
 	fprintf(stderr, "%s: syntax error in precache cmd.\n", pn);
 	return 1;
@@ -2153,7 +2153,7 @@ PreCacheCmd(struct cmd_syndesc *as, void *arock)
 	Die(errno, NULL);
 	return 1;
     }
-    
+
     printf("New precache size set.\n");
     return 0;
 }
@@ -2251,26 +2251,26 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
 	    percentFiles, filesUsed, parms[2]);
     if (flags == 2){
 	printf("	afs_cacheFiles: %10d\n", parms[2]);
-	printf("	IFFree:         %10d\n", parms[3]); 
-	printf("	IFEverUsed:     %10d\n", parms[4]); 
-	printf("	IFDataMod:      %10d\n", parms[5]); 
+	printf("	IFFree:         %10d\n", parms[3]);
+	printf("	IFEverUsed:     %10d\n", parms[4]);
+	printf("	IFDataMod:      %10d\n", parms[5]);
 	printf("	IFDirtyPages:   %10d\n", parms[6]);
-	printf("	IFAnyPages:     %10d\n", parms[7]); 
+	printf("	IFAnyPages:     %10d\n", parms[7]);
 	printf("	IFDiscarded:    %10d\n", parms[8]);
 	printf("	DCentries:  %10d\n", parms[9]);
-	printf("	  0k-   4K: %10d\n", parms[10]); 
-	printf("	  4k-  16k: %10d\n", parms[11]); 
-	printf("	 16k-  64k: %10d\n", parms[12]); 
-	printf("	 64k- 256k: %10d\n", parms[13]); 
-	printf("	256k-   1M: %10d\n", parms[14]); 
-	printf("	      >=1M: %10d\n", parms[15]); 
+	printf("	  0k-   4K: %10d\n", parms[10]);
+	printf("	  4k-  16k: %10d\n", parms[11]);
+	printf("	 16k-  64k: %10d\n", parms[12]);
+	printf("	 64k- 256k: %10d\n", parms[13]);
+	printf("	256k-   1M: %10d\n", parms[14]);
+	printf("	      >=1M: %10d\n", parms[15]);
     }
 
     if (percentBlocks > 90)
 	printf("[cache size usage over 90%%, consider increasing cache size]\n");
     if (percentFiles > 90)
 	printf("[cache file usage over 90%%, consider increasing '-files' argument to afsd]\n");
-	 
+
     return 0;
 }
 
@@ -2363,7 +2363,7 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 hostAddr;
     struct hostent *thp;
     int setp;
-    
+
     ti = as->parms[0].items;
     setp = 1;
     if (ti) {
@@ -2377,13 +2377,13 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
         hostAddr = 0;   /* means don't set host */
 	setp = 0;       /* aren't setting host */
     }
-    
+
     /* now do operation */
     blob.in_size = sizeof(afs_int32);
     blob.out_size = sizeof(afs_int32);
     blob.in = (char *) &hostAddr;
     blob.out = (char *) &hostAddr;
-    
+
     code = pioctl(0, VIOC_CBADDR, &blob, 1);
     if (code < 0) {
 	Die(errno, 0);
@@ -2400,7 +2400,7 @@ NukeNFSCredsCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     afs_int32 hostAddr;
     struct hostent *thp;
-    
+
     ti = as->parms[0].items;
     thp = hostutil_GetHostByName(ti->data);
     if (!thp) {
@@ -2408,13 +2408,13 @@ NukeNFSCredsCmd(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
     else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
-    
+
     /* now do operation */
     blob.in_size = sizeof(afs_int32);
     blob.out_size = sizeof(afs_int32);
     blob.in = (char *) &hostAddr;
     blob.out = (char *) &hostAddr;
-    
+
     code = pioctl(0, VIOC_NFS_NUKE_CREDS, &blob, 1);
     if (code < 0) {
 	Die(errno, 0);
@@ -2998,7 +2998,7 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
     afs_int32 code;
 
     code = ugen_ClientInit(noAuthFlag, (char *) AFSDIR_CLIENT_ETC_DIRPATH,
-			   info->name, 0, &uclient, 
+			   info->name, 0, &uclient,
                            NULL, pn, rxkad_clear,
                            VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
                            0, 0, USER_SERVICE_ID);
@@ -4253,11 +4253,11 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     for (ti = as->parms[0].items; ti; ti = ti->next) {
       struct VenusFid vfid;
-      
+
       blob.out_size = sizeof(struct VenusFid);
       blob.out = (char *) &vfid;
       blob.in_size = 0;
-      
+
       if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
 	printf("File %s (%u.%u.%u) contained in volume %u\n",
 	       ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,

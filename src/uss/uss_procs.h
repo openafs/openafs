@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -32,7 +32,7 @@
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_procs_BuildDir(char *a_path, char *a_mode, 
+extern afs_int32 uss_procs_BuildDir(char *a_path, char *a_mode,
 				    char *a_owner, char *a_access);
     /*
      * Summary:
@@ -50,7 +50,7 @@ extern afs_int32 uss_procs_BuildDir(char *a_path, char *a_mode,
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_CpFile(char *a_path, char *a_mode, 
+extern afs_int32 uss_procs_CpFile(char *a_path, char *a_mode,
 				  char *a_owner, char *a_proto);
     /*
      * Summary:
@@ -68,7 +68,7 @@ extern afs_int32 uss_procs_CpFile(char *a_path, char *a_mode,
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_EchoToFile(char *a_path, char *a_mode, 
+extern afs_int32 uss_procs_EchoToFile(char *a_path, char *a_mode,
 		                      char *a_owner, char *a_content);
     /*
      * Summary:
@@ -100,7 +100,7 @@ extern afs_int32 uss_procs_Exec(char *a_command);
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_SetLink(char *a_path1, char *a_path2, 
+extern afs_int32 uss_procs_SetLink(char *a_path1, char *a_path2,
 				   char a_type);
     /*
      * Summary:

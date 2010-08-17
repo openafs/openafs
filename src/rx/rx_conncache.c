@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -257,7 +257,7 @@ rx_ReleaseCachedConnection(struct rx_connection *conn)
 	    cacheConn->inUse--;
 	    /*
 	     * check to see if the connection is in error.
-	     * If it is, mark its cache entry so it won't be 
+	     * If it is, mark its cache entry so it won't be
 	     * given out subsequently.  If nobody is using it, delete
 	     * it from the cache
 	     */

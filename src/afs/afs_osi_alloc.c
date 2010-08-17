@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -245,11 +245,11 @@ shutdown_osinet(void)
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
 	LOCK_INIT(&osi_flplock, "osi_flplock");
     }
-    if (afs_stats_cmperf.LargeBlocksActive || 
-	afs_stats_cmperf.SmallBlocksActive) 
+    if (afs_stats_cmperf.LargeBlocksActive ||
+	afs_stats_cmperf.SmallBlocksActive)
     {
-	afs_warn("WARNING: not all blocks freed: large %d small %d\n", 
-		 afs_stats_cmperf.LargeBlocksActive, 
+	afs_warn("WARNING: not all blocks freed: large %d small %d\n",
+		 afs_stats_cmperf.LargeBlocksActive,
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }

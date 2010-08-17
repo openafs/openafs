@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -35,7 +35,7 @@ typedef struct smb_ioctl {
 
     /* pathname associated with the Tree ID */
     clientchar_t *tidPathp;
-    
+
     /* prefix for subst drives */
     cm_space_t *prefix;
 
@@ -83,7 +83,7 @@ extern afs_int32
 smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                      cm_scache_t **scpp, clientchar_t *leafp);
 
-extern afs_int32 
+extern afs_int32
 smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
 
 extern afs_int32

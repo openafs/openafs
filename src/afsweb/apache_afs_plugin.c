@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -9,7 +9,7 @@
 
 /* Apache plugin for AFS authentication - should be archived to libapacheafs.a
  * contains calls to functions in apache_afs_client.o - and is the intermediary
- * between the module that plugs into apache's source code and the 
+ * between the module that plugs into apache's source code and the
  * apache_afs_client. Shares global variables with the module and the client.
  */
 
@@ -184,11 +184,11 @@ afs_plugin_init(int tokenExpiration, char *weblogPath, char *error_fname,
 	close(pipe2[1]);
 	fclose(fp);
 
-	/* exit by sending a SIGTERM to the httpd process (how to get the pid?) 
-	 * since at this point the pid file is outdated and only if we sleep for 
-	 * a while to allow httpd_main to put it's pid in the pidfile can we 
+	/* exit by sending a SIGTERM to the httpd process (how to get the pid?)
+	 * since at this point the pid file is outdated and only if we sleep for
+	 * a while to allow httpd_main to put it's pid in the pidfile can we
 	 * attempt to send it a SIGTERM for graceful shuttdown)
-	 * so that everything is brought down - if you want to bring everything 
+	 * so that everything is brought down - if you want to bring everything
 	 * down!! Else continue with httpd without AFS authentication.
 	 */
 /*#ifdef SHUTDOWN_IF_AFS_FAILS in afs_module.c */
@@ -267,10 +267,10 @@ sort_stat_error(request_rec * r)
 }
 
 /*
- * recursively stats the path to see where we're going wrong and 
- * chops off the path_info part of it - 
+ * recursively stats the path to see where we're going wrong and
+ * chops off the path_info part of it -
  * Returns OK or an HTTP status code
- * Called if we get a ENOTDIR from the first stab at statting the 
+ * Called if we get a ENOTDIR from the first stab at statting the
  * entire path - so we assume that we have some PATH_INFO and try to
  * chop it off the end and return the path itself
  * Side effects on request_rec
@@ -320,7 +320,7 @@ remove_path_info(request_rec * r, char *path, struct stat *buf)
 	    while (cp > path && cp[-1] == '/')
 		--cp;
 	} else if (errno != EACCES) {
-	    /* 
+	    /*
 	     * this would be really bad since we checked the entire path
 	     * earlier and got ENOTDIR instead of EACCES - so why are we getting
 	     * it now? Anyway, we ought to return FORBIDDEN
@@ -364,7 +364,7 @@ can_access(request_rec * r)
 	       ("%s: pid:%d\tpath:%s\tstat error:%s", module_name, getpid(),
 		path, strerror(errno)));
 
-	/* 
+	/*
 	 * if the requested method is an HTTP PUT and the file does not
 	 * exist then well, we'll get a stat error but we shouldn't return
 	 * an error - we should try and open the file in append mode and then
@@ -389,10 +389,10 @@ can_access(request_rec * r)
 		}
 	    }
 	} else if (errno == ENOTDIR) {
-	    /* 
-	     * maybe the special case of CGI PATH_INFO to be translated to 
+	    /*
+	     * maybe the special case of CGI PATH_INFO to be translated to
 	     * PATH_TRANSLATED - check each component of this path
-	     * and stat it to see what portion of the url is actually 
+	     * and stat it to see what portion of the url is actually
 	     * the path and discard the rest for our purposes.
 	     */
 	    rc = remove_path_info(r, path, &buf);
@@ -405,7 +405,7 @@ can_access(request_rec * r)
 	    return sort_stat_error(r);
 	}
     }
-    /* 
+    /*
      * If we get here then we have something - either a file or a directory
      */
     else {
@@ -536,7 +536,7 @@ afs_auth_internal(request_rec * r, char *cell)
 	 */
 	type = (char *)get_afsauthtype(r);
 
-	/* 
+	/*
 	 * UserDir (tilde) support
 	 */
 #ifndef APACHE_1_3

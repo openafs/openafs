@@ -619,7 +619,7 @@ bic_map(struct map *mp1, struct map *mp2)
 }
 
 #ifdef PRINT_MAP_ERROR
-void 
+void
 print_map(struct map *parm)
 {
     struct bitmap *map;
@@ -722,7 +722,7 @@ read_map(int (*f) (void *), char *arg)
     return (struct map *)result;
 }
 
-int 
+int
 write_map(struct map *parm, int (*f) (void *, int), char *arg)
 {
     struct bitmap *map;

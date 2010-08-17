@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -154,7 +154,7 @@ afs_int32
 vl_Initialize(int auth, char *confDir, int server, char *cellp)
 {
     return ugen_ClientInit(auth?0:1, confDir, cellp, 0,
-			  &cstruct, NULL, "vl_Initialize", rxkad_clear, 
+			  &cstruct, NULL, "vl_Initialize", rxkad_clear,
 			  MAXSERVERS, AFSCONF_VLDBSERVICE, 50, server,
 			  htons(AFSCONF_VLDBPORT), USER_SERVICE_ID);
 }

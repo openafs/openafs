@@ -37,7 +37,7 @@
 #define SIZEOF_LONG 4
 
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
-//#undef size_t unsigned int 
+//#undef size_t unsigned int
 
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS

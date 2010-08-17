@@ -1,7 +1,7 @@
 /*
  * Copyright 2006, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -212,8 +212,8 @@ struct idx_map_entry_t {
 
 /* verification process sanity check constants
  *
- * make them fairly large so we don't get 
- * false positives 
+ * make them fairly large so we don't get
+ * false positives
  */
 #define FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN    100000     /* max elements in a host uuid-hash chain */
 #define FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN    2000000    /* max elements in a host ipv4-hash chain */

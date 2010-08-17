@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -97,7 +97,7 @@ typedef unsigned char bool;
 #endif
 
 static int SignalSignals(void);
-
+
 /********************************\
 * 				 *
 *  Stuff for managing IoRequests *
@@ -150,7 +150,7 @@ static int sigDelivered[NSIG];		/* True for signals delivered so far.
 static void *(*sigProc[NSOFTSIG])(void *);
 static void *sigRock[NSOFTSIG];
 
-
+
 static struct IoRequest *iorFreeList = 0;
 
 static struct TM_Elem *Requests;	/* List of requests */
@@ -164,7 +164,7 @@ static void SignalIO(int fds, fd_set *rfds, fd_set *wfds, fd_set *efs,
 		    int code);
 static void SignalTimeout(int code, struct timeval *timeout);
 
-/* fd_set pool managment. 
+/* fd_set pool managment.
  * Use the pool instead of creating fd_set's on the stack. fd_set's can be
  * 8K in size, so making three could put 24K in the limited space of an LWP
  * stack.
@@ -221,7 +221,7 @@ static struct IoRequest *NewRequest(void)
 
 #define Purge(list) FOR_ALL_ELTS(req, list, { free(req->BackPointer); })
 
-
+
 /* FD_SET support routines. All assume the fd_set size is a multiple of an int
  * so we can at least do logical operations on ints instead of chars.
  *
@@ -306,7 +306,7 @@ static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
 #endif
 }
 
-/* FDSetAnd - fd_set1  <- fd_set1 & fd_set2. 
+/* FDSetAnd - fd_set1  <- fd_set1 & fd_set2.
  */
 #ifdef AFS_NT40_ENV
 static void FDSetAnd(int nfds, fd_set *fd_set1, fd_set *fd_set2)
@@ -316,7 +316,7 @@ static void FDSetAnd(int nfds, fd_set *fd_set1, fd_set *fd_set2)
 
     if (fd_set1 == NULL || fd_set1->fd_count == 0)
 	return;
-    
+
     if (fd_set2 == NULL || fd_set2->fd_count == 0) {
 	FD_ZERO(fd_set1);
     }
@@ -343,8 +343,8 @@ static void FDSetAnd(int nfds, fd_set *fd_set1, fd_set *fd_set2)
     }
 }
 #endif
-	    
-/* FDSetEmpty - return true if fd_set is empty 
+
+/* FDSetEmpty - return true if fd_set is empty
  */
 static int FDSetEmpty(int nfds, fd_set *fds)
 {
@@ -622,7 +622,7 @@ static void *IOMGR(void *dummy)
     }
     return (void *)-1; /* keeps compilers happy. */
 }
-
+
 /************************\
 * 			 *
 *  Signalling routines 	 *
@@ -670,7 +670,7 @@ static void SignalTimeout(int code, struct timeval *timeout)
 	    return;
     })
 }
-
+
 /*****************************************************\
 *						      *
 *  Signal handling routine (not to be confused with   *
@@ -704,7 +704,7 @@ static int SignalSignals (void)
     for (i=0; i < NSOFTSIG; i++) {
 	PROCESS pid;
 	if ((p=sigProc[i])) /* This yields!!! */
-	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, 
+	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY,
 			       sigRock[i], "SignalHandler", &pid);
 	sigProc[i] = 0;
     }
@@ -718,7 +718,7 @@ static int SignalSignals (void)
     return gotone;
 }
 
-
+
 /***************************\
 * 			    *
 *  User-callable routines   *
@@ -766,7 +766,7 @@ int IOMGR_Initialize(void)
     anySigsDelivered = TRUE; /* A soft signal may have happened before
 	IOMGR_Initialize:  so force a check for signals regardless */
 
-    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0, 
+    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0,
 			     "IO MANAGER", &IOMGR_Id);
 }
 
@@ -780,7 +780,7 @@ int IOMGR_Finalize(void)
     IOMGR_Id = NULL;
     return status;
 }
-
+
 /* signal I/O for anyone who is waiting for a FD or a timeout; not too cheap,
  * since forces select and timeofday check */
 int IOMGR_Poll(void) {
@@ -835,7 +835,7 @@ int IOMGR_Poll(void) {
 	if (fds < req->nfds)
 	    fds = req->nfds;
     })
-	
+
     tv.tv_sec = 0;
     tv.tv_usec = 0;
 #ifdef AFS_NT40_ENV
@@ -858,7 +858,7 @@ int IOMGR_Poll(void) {
     return 0;
 }
 
-int IOMGR_Select(int fds, fd_set *readfds, fd_set *writefds, 
+int IOMGR_Select(int fds, fd_set *readfds, fd_set *writefds,
 		 fd_set *exceptfds, struct timeval *timeout)
 {
     struct IoRequest *request;
@@ -893,7 +893,7 @@ again:
 	     * can also get this error return
 	     */
 	    if (code < 0 && errno == EAGAIN)
-		goto again;	
+		goto again;
 #endif
 #ifdef AFS_NT40_ENV
 	    if (code == SOCKET_ERROR) {
@@ -955,7 +955,7 @@ again:
     FreeRequest(request);
     return (result > 1 ? 1 : result);
 }
-
+
 int IOMGR_Cancel(PROCESS pid)
 {
     struct IoRequest *request;
@@ -978,7 +978,7 @@ int IOMGR_Cancel(PROCESS pid)
 
     return 0;
 }
-
+
 #ifndef AFS_NT40_ENV
 /* Cause delivery of signal signo to result in a LWP_SignalProcess of
    event. */

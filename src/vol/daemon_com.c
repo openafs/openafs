@@ -1,7 +1,7 @@
 /*
  * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -294,7 +294,7 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 
     now = FT_ApproxTime();
     timeout = now + state->hard_timeout;
-    for (tries = 0; 
+    for (tries = 0;
 	 (tries <= state->retry_limit) && (now <= timeout);
 	 tries++, now = FT_ApproxTime()) {
 	code = SYNC_ask_internal(state, com, res);
@@ -311,9 +311,9 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 	    SYNC_reconnect(state);
 	    /* try again */
 	} else {
-	    /* 
-	     * unknown (probably protocol-specific) response code, pass it up to 
-	     * the caller, and let them deal with it 
+	    /*
+	     * unknown (probably protocol-specific) response code, pass it up to
+	     * the caller, and let them deal with it
 	     */
 	    break;
 	}
@@ -321,7 +321,7 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 
     if (code == SYNC_COM_ERROR) {
 	Log("SYNC_ask: fatal protocol error on circuit '%s'; disabling sync "
-	    "protocol until next server restart\n", 
+	    "protocol until next server restart\n",
 	    state->proto_name);
 	state->fatal_error = 1;
     }
@@ -389,7 +389,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 
     memcpy(buf, &com->hdr, sizeof(com->hdr));
     if (com->payload.len) {
-	memcpy(buf + sizeof(com->hdr), com->payload.buf, 
+	memcpy(buf + sizeof(com->hdr), com->payload.buf,
 	       com->hdr.command_len - sizeof(com->hdr));
     }
 
@@ -448,7 +448,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
     res->recv_len = n;
 
     if (n < sizeof(res->hdr)) {
-	Log("SYNC_ask:  response too short on circuit '%s'\n", 
+	Log("SYNC_ask:  response too short on circuit '%s'\n",
 	    state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
@@ -458,7 +458,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 #endif
 
     if ((n - sizeof(res->hdr)) > res->payload.len) {
-	Log("SYNC_ask:  response too long on circuit '%s'\n", 
+	Log("SYNC_ask:  response too long on circuit '%s'\n",
 	    state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
@@ -482,8 +482,8 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 }
 
 
-/* 
- * daemon com SYNC server-side interfaces 
+/*
+ * daemon com SYNC server-side interfaces
  */
 
 /**
@@ -574,7 +574,7 @@ SYNC_getCom(SYNC_server_state_t * state,
  *    @retval SYNC_COM_ERROR
  */
 afs_int32
-SYNC_putRes(SYNC_server_state_t * state, 
+SYNC_putRes(SYNC_server_state_t * state,
 	    osi_socket fd,
 	    SYNC_response * res)
 {
@@ -603,7 +603,7 @@ SYNC_putRes(SYNC_server_state_t * state,
 
     memcpy(buf, &res->hdr, sizeof(res->hdr));
     if (res->payload.len) {
-	memcpy(buf + sizeof(res->hdr), res->payload.buf, 
+	memcpy(buf + sizeof(res->hdr), res->payload.buf,
 	       res->hdr.response_len - sizeof(res->hdr));
     }
 
@@ -676,8 +676,8 @@ SYNC_bindSock(SYNC_server_state_t * state)
 	Log("SYNC_bindSock: setsockopt failed with (%d)\n", errno);
 
     for (numTries = 0; numTries < state->bind_retry_limit; numTries++) {
-	code = bind(state->fd, 
-		    (struct sockaddr *)&state->addr, 
+	code = bind(state->fd,
+		    (struct sockaddr *)&state->addr,
 		    AFS_SOCKADDR_LEN(&state->addr));
 	if (code == 0)
 	    break;

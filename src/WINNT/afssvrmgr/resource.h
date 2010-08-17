@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -575,7 +575,7 @@
 #define IDS_SERVICES_IN_CELL                 762
 #define IDS_SERVICE_STARTDATE                763
 #define IDS_SERVICE_STOPDATE                 764
-                                        
+
 #define IDC_CELL                        1000
 #define IDC_SERVERS                     1001
 #define IDC_TABS                        1002
@@ -1092,7 +1092,7 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1

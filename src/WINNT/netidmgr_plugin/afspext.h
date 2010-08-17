@@ -27,7 +27,7 @@
 #ifndef __AFSPLUGIN_EXT_H
 #define __AFSPLUGIN_EXT_H
 
-/*! \defgroup afs_ext OpenAFS Plugin extensions 
+/*! \defgroup afs_ext OpenAFS Plugin extensions
 
     This section documents messages and data structures used by AFS
     extension plugins.  These are plugins which augment the behavior
@@ -51,7 +51,7 @@
 #define AFS_TOKENNAME_KRB524 L"Kerberos524"
 #define AFS_TOKENNAME_KRB4 L"Kerberos4"
 
-/*! \brief An AFS token acquisition method identifier 
+/*! \brief An AFS token acquisition method identifier
 
     This takes on a value from ::afs_token_method or a token
     acquisition method identifier assigned to an extension plugin.

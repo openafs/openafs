@@ -1,8 +1,8 @@
 /******************************************************************************
  * skip_cas_func.c
- * 
- * Skip lists, allowing concurrent update by use of CAS primitives. 
- * 
+ *
+ * Skip lists, allowing concurrent update by use of CAS primitives.
+ *
  * Matt Benjamin <matt@linuxbox.com>
  *
  * Adapts MCAS skip list to use a pointer-key and typed comparison

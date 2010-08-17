@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -135,8 +135,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     QInit(&afs_disconShadow);
     osi_dnlc_init();
 
-    /* 
-     * create volume list structure 
+    /*
+     * create volume list structure
      */
     if (aVolumes < 50)
 	aVolumes = 50;
@@ -282,7 +282,7 @@ afs_InitCellInfo(char *afile)
 {
     afs_dcache_id_t inode;
     int code = 0;
-    
+
     code = afs_LookupInodeByPath(afile, &inode.ufs, NULL);
     return afs_cellname_init(&inode, code);
 }
@@ -345,7 +345,7 @@ afs_InitVolumeInfo(char *afile)
  * Parameters:
  *	afile : Name of the file assumed to be the cache info file
  *		for the Cache Manager; it will be used as such.
- * Side Effects:  This sets afs_fragsize, which is used in the cache usage 
+ * Side Effects:  This sets afs_fragsize, which is used in the cache usage
  *                calculations such as in afs_adjustsize()
  *
  * Environment:
@@ -830,8 +830,8 @@ shutdown_AFS(void)
 
 	shutdown_volume();
 
-	/* 
-	 * Free FreeVolList allocations 
+	/*
+	 * Free FreeVolList allocations
 	 */
 	afs_osi_Free(Initialafs_freeVolList,
 		     afs_memvolumes * sizeof(struct volume));
@@ -843,8 +843,8 @@ shutdown_AFS(void)
 	 * we simply malloc more; we won't be able to free those additional volumes.
 	 */
 
-	/* 
-	 * Free Users table allocation 
+	/*
+	 * Free Users table allocation
 	 */
 	{
 	    struct unixuser *tu, *ntu;

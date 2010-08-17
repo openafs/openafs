@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -34,7 +34,7 @@ EXPORTED BOOL RegisterCheckListClass (void);
 #define WC_CHECKLIST  TEXT("OpenAFS_CheckList")
 
 
-#define LB_GETCHECK   (WM_USER+300)   // int iItem=wp  
+#define LB_GETCHECK   (WM_USER+300)   // int iItem=wp
 #define LB_SETCHECK   (WM_USER+301)   // int iItem=wp, BOOL fChecked=lp
 
 #define LBN_CLICKED   BN_CLICKED

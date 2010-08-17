@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -177,7 +177,7 @@ VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
     return code;
 }
 
-int 
+int
 VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
 {
     struct vldbentry oentry;
@@ -389,7 +389,7 @@ vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sa
                struct ubik_client **uclientp,
 	       int (*secproc)(struct rx_securityClass *, afs_int32))
 {
-    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, 
+    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp,
 			   secproc, "vsu_ClientInit", vsu_rxkad_level,
 			   VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
 			   0, 0, USER_SERVICE_ID);

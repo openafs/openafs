@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -478,6 +478,6 @@ extern int ADMINAPI vos_ClearVolUpdateCounter(const void *cellHandle,
 				  const void *serverHandle,
 				  unsigned int partition,
 				  unsigned int volumeId,
-				  afs_status_p st);				  
+				  afs_status_p st);
 
 #endif /* OPENAFS_VOS_ADMIN_H */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -77,7 +77,7 @@ int lastcode;
  * 0   if the vldb record for a specific volume is different from what
  *     we have cached -- perhaps the volume has moved.
  * 1   if the vldb record is the same
- * 2   if we can't tell if it's the same or not. 
+ * 2   if we can't tell if it's the same or not.
  *
  * If 0, the caller will probably start over at the beginning of our
  * list of servers for this volume and try to find one that is up.  If
@@ -219,8 +219,8 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
  *	areq  : The request record associated with this operation.
  *	afid  : The FID of the file involved in the action.  This argument
  *		may be null if none was involved.
- *      tsp   : pointer to a server struct for the server we wish to 
- *              blacklist. 
+ *      tsp   : pointer to a server struct for the server we wish to
+ *              blacklist.
  *
  * Returns:
  *	Non-zero value if further servers are available to try,
@@ -234,11 +234,11 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
  *	As advertised.
  *
  * NOTE:
- *	The afs_Conn* routines use the list of invalidated servers to 
+ *	The afs_Conn* routines use the list of invalidated servers to
  *      avoid reusing a server marked as invalid for this request.
  *------------------------------------------------------------------------*/
-static afs_int32 
-afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid, 
+static afs_int32
+afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		  struct server *tsp)
 {
     struct volume *tvp;
@@ -253,7 +253,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		    areq->skipserver[i] = 1;
 		}
 		if (tvp->serverHost[i] &&
-		    (tvp->serverHost[i]->addr->sa_flags & 
+		    (tvp->serverHost[i]->addr->sa_flags &
 		      SRVR_ISDOWN)) {
 		    areq->skipserver[i] = 1;
 		}
@@ -318,7 +318,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
     struct afs_stats_RPCErrors *aerrP;
     afs_int32 markeddown;
     afs_uint32 address;
- 
+
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
 	/* On reconnection, act as connected. XXX: for now.... */
         /* SXW - This may get very tired after a while. We should try and
@@ -332,7 +332,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 	}
 	return 0;
     }
-    
+
     AFS_STATCNT(afs_Analyze);
     afs_Trace4(afs_iclSetp, CM_TRACE_ANALYZE, ICL_TYPE_INT32, op,
 	       ICL_TYPE_POINTER, aconn, ICL_TYPE_INT32, acode, ICL_TYPE_LONG,
@@ -452,7 +452,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
     }
 
     /* If network troubles, mark server as having bogued out again. */
-    /* VRESTARTING is < 0 because of backward compatibility issues 
+    /* VRESTARTING is < 0 because of backward compatibility issues
      * with 3.4 file servers and older cache managers */
 #ifdef AFS_64BIT_CLIENT
     if (acode == -455)
@@ -478,13 +478,13 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 	    if (tvp)
 		afs_PutVolume(tvp, READ_LOCK);
 	    /* By doing this, we avoid ever marking a server down
-	     * in an idle timeout case. That's because the server is 
+	     * in an idle timeout case. That's because the server is
 	     * still responding and may only be letting a single vnode
 	     * time out. We otherwise risk having the server continually
-	     * be marked down, then up, then down again... 
+	     * be marked down, then up, then down again...
 	     */
 	    goto out;
-	} 
+	}
 	markeddown = afs_ServerDown(sa);
 	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)

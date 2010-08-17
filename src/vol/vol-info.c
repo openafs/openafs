@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,7 +11,7 @@
    System:		VICE-TWO
    Module:		vol-info.c
    Institution:	The Information Technology Center, Carnegie-Mellon University
-   
+
    */
 
 #include <afsconfig.h>
@@ -49,7 +49,7 @@
 #include "viceinode.h"
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
-    
+
 #ifdef _AIX
 #include <time.h>
 #endif

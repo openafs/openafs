@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -59,7 +59,7 @@ extern void osi_QAddH(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *e
  */
 extern void osi_QRemove(osi_queue_t **headpp, osi_queue_t *eltp);
 
-/* remove an element from a queue with both head and tail pointers; 
+/* remove an element from a queue with both head and tail pointers;
  * takes address of head and tail lists, and element to remove as parameters.
  */
 extern void osi_QRemoveHT(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *eltp);

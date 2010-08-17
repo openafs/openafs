@@ -1,7 +1,7 @@
 /*
  * Copyright 2005-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -338,7 +338,7 @@ VIsOfflineState(VolState state)
 static_inline int
 VIsValidState(VolState state)
 {
-    if ((state >= 0) && 
+    if ((state >= 0) &&
 	(state < VOL_STATE_COUNT)) {
 	return 1;
     }

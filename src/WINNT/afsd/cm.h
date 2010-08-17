@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -144,7 +144,7 @@
 #define LOCK_HIERARCHY_SERVER                  640
 #define LOCK_HIERARCHY_CALLBACK_GLOBAL         645
 #define LOCK_HIERARCHY_SERVER_GLOBAL           650
-#define LOCK_HIERARCHY_CONN                    660 
+#define LOCK_HIERARCHY_CONN                    660
 #define LOCK_HIERARCHY_VOLUME_GLOBAL           670
 #define LOCK_HIERARCHY_DNLC_GLOBAL             690
 #define LOCK_HIERARCHY_FREELANCE_GLOBAL        700

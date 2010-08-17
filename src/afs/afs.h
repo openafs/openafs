@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -184,7 +184,7 @@ struct SmallFid {
 /* The actual number of bytes in the SmallFid, not the sizeof struct. */
 #define SIZEOF_SMALLFID 10
 
-/* Queues 
+/* Queues
  * ------
  *
  *  Circular queues, implemented with pointers. Structures may contain as many
@@ -448,7 +448,7 @@ struct server {
 
 #define	afs_PutServer(servp, locktype)
 
-/* structs for some pioctls  - these are (or should be) 
+/* structs for some pioctls  - these are (or should be)
  * also in venus.h
  */
 struct spref {
@@ -639,12 +639,12 @@ struct SimpleLocks {
  				 				   and should not be overridden by the file's name */
 
 /* Flag values used by the Transition routines */
-#define TRANSChangeDesiredBit		0x1	/* The Transition routine should set or 
+#define TRANSChangeDesiredBit		0x1	/* The Transition routine should set or
 										 * reset the FCSDesireBypass bit */
 #define TRANSVcacheIsLocked			0x2	/* The Transition routine does not need to
 										 * lock vcache (it's already locked) */
 #define TRANSSetManualBit		0x4	/* The Transition routine should set FCSManuallySet so that
-									 * filename checking does not override pioctl requests */	
+									 * filename checking does not override pioctl requests */
 #endif /* AFS_CACHE_BYPASS */
 
 #define	CPSIZE	    2
@@ -735,7 +735,7 @@ struct fvcache {
     /*! The old parent FID for renamed vnodes */
     struct afs_vnuniq oldParent;
 };
-    
+
 /* INVARIANTs: (vlruq.next != NULL) == (vlruq.prev != NULL)
  *             nextfree => !vlruq.next && ! vlruq.prev
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
@@ -826,7 +826,7 @@ struct vcache {
 	off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
 #endif
 #endif
-	
+
 #if	defined(AFS_SUN5_ENV)
     afs_uint32 vstates;		/* vstate bits */
 #endif				/* defined(AFS_SUN5_ENV) */
@@ -1041,7 +1041,7 @@ struct afs_ioctl32 {
 /* CacheItems file has a header of type struct afs_fheader
  * (keep aligned properly). Since we already have sgi_62 clients running
  * with a 32 bit inode, a change is required to the header so that
- * they can distinguish the old 32 bit inode CacheItems file and zap it 
+ * they can distinguish the old 32 bit inode CacheItems file and zap it
  * instead of using it.
  */
 struct afs_fheader {
@@ -1184,11 +1184,11 @@ struct afs_FetchOutput {
     } while(0)
 
 /* FakeOpen and Fake Close used to be real subroutines.  They're only used in
- * sun_subr and afs_vnodeops, and they're very frequently called, so I made 
+ * sun_subr and afs_vnodeops, and they're very frequently called, so I made
  * them into macros.  They do:
  * FakeOpen:  fake the file being open for writing.  avc->lock must be held
  * in write mode.  Having the file open for writing is like having a DFS
- * write-token: you're known to have the best version of the data around, 
+ * write-token: you're known to have the best version of the data around,
  * and so the CM won't let it be overwritten by random server info.
  * FakeClose:  undo the effects of FakeOpen, noting that we want to ensure
  * that a real close eventually gets done.  We use CCore to achieve this if
@@ -1265,7 +1265,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define	FVHash(acell,avol)  (((avol)+(acell)) & (NFENTRIES-1))
 
 /* Performance hack - we could replace VerifyVCache2 with the appropriate
- * GetVCache incantation, and could eliminate even this code from afs_UFSRead 
+ * GetVCache incantation, and could eliminate even this code from afs_UFSRead
  * by making intentionally invalidating quick.stamp in the various callbacks
  * expiration/breaking code */
 #ifdef AFS_DARWIN_ENV
@@ -1336,7 +1336,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define refpanic(foo) if (afs_norefpanic) \
         { printf( foo ); afs_norefpanic++;} else osi_Panic( foo )
 
-/* 
+/*
 ** these are defined in the AIX source code sys/fs_locks.h but are not
 ** defined anywhere in the /usr/include directory
 */
@@ -1366,7 +1366,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #endif
 
 /* declare something so that prototypes don't flip out */
-/* appears struct buf stuff is only actually passed around as a pointer, 
+/* appears struct buf stuff is only actually passed around as a pointer,
    except with libuafs, in which case it is actually defined */
 
 struct buf;

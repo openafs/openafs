@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -34,7 +34,7 @@
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "bucoord_internal.h"
-    
+
 struct ubik_client *cstructp;	/*Ptr to Ubik client structure */
 
 static int FreeVolumeEntryList(struct bc_volumeEntry *aentry);
@@ -296,7 +296,7 @@ bc_DeleteVolumeItem(struct bc_config *aconfig, char *avolName,
 }
 
 int
-bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost, 
+bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost,
 		 char *apart, char *avol)
 {
     struct bc_volumeSet *tset;
@@ -361,8 +361,8 @@ bc_FindVolumeSet(struct bc_config *aconfig, char *aname)
  *	expType - absolute or relative
  */
 
-int 
-bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName, 
+int
+bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
 		      afs_int32 expDate, afs_int32 expType)
 {
     struct bc_dumpSchedule *tdump;
@@ -403,7 +403,7 @@ bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
  * to strange places), so we must call bc_ProcessDumpSchedule when we're done.
  */
 int
-bc_DeleteDumpScheduleAddr(struct bc_config *aconfig, 
+bc_DeleteDumpScheduleAddr(struct bc_config *aconfig,
                           struct bc_dumpSchedule *adumpAddr)
 {
     struct bc_dumpSchedule **tlast, *tdump;
@@ -537,8 +537,8 @@ bc_ProcessDumpSchedule(struct bc_config *aconfig)
  */
 
 int
-FindDump(struct bc_config *aconfig, char *nodeString, 
-	 struct bc_dumpSchedule **parentptr, 
+FindDump(struct bc_config *aconfig, char *nodeString,
+	 struct bc_dumpSchedule **parentptr,
 	 struct bc_dumpSchedule **nodeptr)
 {
     struct bc_dumpSchedule *dsptr;

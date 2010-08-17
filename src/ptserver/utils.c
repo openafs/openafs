@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -874,7 +874,7 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 
 #if defined(SUPERGROUPS)
 afs_int32
-IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 depth) 
+IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 depth)
 {
     /* returns true if aid is a member of gid */
     struct prentry tentry;

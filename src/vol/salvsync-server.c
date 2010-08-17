@@ -1,7 +1,7 @@
 /*
  * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -112,14 +112,14 @@ static void AddToPendingQueue(struct SalvageQueueNode * node);
 static void DeleteFromPendingQueue(struct SalvageQueueNode * node);
 static struct SalvageQueueNode * LookupPendingCommandByPid(int pid);
 static void UpdateCommandPrio(struct SalvageQueueNode * node);
-static void HandlePrio(struct SalvageQueueNode * clone, 
+static void HandlePrio(struct SalvageQueueNode * clone,
 		       struct SalvageQueueNode * parent,
 		       afs_uint32 new_prio);
 
 static int LinkNode(struct SalvageQueueNode * parent,
 		    struct SalvageQueueNode * clone);
 
-static struct SalvageQueueNode * LookupNode(VolumeId vid, char * partName, 
+static struct SalvageQueueNode * LookupNode(VolumeId vid, char * partName,
 					    struct SalvageQueueNode ** parent);
 static struct SalvageQueueNode * LookupNodeByCommand(SALVSYNC_command_hdr * qry,
 						     struct SalvageQueueNode ** parent);
@@ -139,7 +139,7 @@ extern pthread_mutex_t vol_salvsync_mutex;
 /**
  * salvsync server socket handle.
  */
-static SYNC_server_state_t salvsync_server_state = 
+static SYNC_server_state_t salvsync_server_state =
     { -1,                       /* file descriptor */
       SALVSYNC_ENDPOINT_DECL,   /* server endpoint */
       SALVSYNC_PROTO_VERSION,   /* protocol version */
@@ -392,7 +392,7 @@ SALVSYNC_com(osi_socket fd)
     memset(&scom, 0, sizeof(scom));
     memset(&sres, 0, sizeof(sres));
     memset(&sres_hdr, 0, sizeof(sres_hdr));
-    
+
     com.payload.buf = (void *)buf;
     com.payload.len = SYNC_PROTO_MAX_LEN;
     res.payload.buf = (void *) &sres_hdr;
@@ -505,9 +505,9 @@ SALVSYNC_com(osi_socket fd)
  *
  * @internal
  *
- * @post the volume is enqueued in the to-be-salvaged queue.  
- *       if the volume was already in the salvage queue, its 
- *       priority (and thus its location in the queue) are 
+ * @post the volume is enqueued in the to-be-salvaged queue.
+ *       if the volume was already in the salvage queue, its
+ *       priority (and thus its location in the queue) are
  *       updated.
  */
 static afs_int32
@@ -548,7 +548,7 @@ SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res)
 	memcpy(&clone->command.com, com->hdr, sizeof(SYNC_command_hdr));
 	memcpy(&clone->command.sop, com->sop, sizeof(SALVSYNC_command_hdr));
 
-	/* 
+	/*
 	 * make sure volgroup parent partition path is kept coherent
 	 *
 	 * If we ever want to support non-COW clones on a machine holding
@@ -616,7 +616,7 @@ SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res)
 	res->hdr->flags |= SALVSYNC_FLAG_VOL_STATS_VALID;
 	res->sop->prio = node->command.sop.prio;
 	res->sop->state = node->state;
-	if ((node->type == SALVSYNC_VOLGROUP_PARENT) && 
+	if ((node->type == SALVSYNC_VOLGROUP_PARENT) &&
 	    (node->state == SALVSYNC_STATE_QUEUED)) {
 	    DeleteFromSalvageQueue(node);
 	}
@@ -908,7 +908,7 @@ AllocNode(struct SalvageQueueNode ** node_out)
     int code = 0;
     struct SalvageQueueNode * node;
 
-    *node_out = node = (struct SalvageQueueNode *) 
+    *node_out = node = (struct SalvageQueueNode *)
 	malloc(sizeof(struct SalvageQueueNode));
     if (node == NULL) {
 	code = 1;
@@ -1003,7 +1003,7 @@ LinkNode(struct SalvageQueueNode * parent,
 }
 
 static void
-HandlePrio(struct SalvageQueueNode * clone, 
+HandlePrio(struct SalvageQueueNode * clone,
 	   struct SalvageQueueNode * node,
 	   afs_uint32 new_prio)
 {
@@ -1109,7 +1109,7 @@ LookupPendingCommand(SALVSYNC_command_hdr * qry)
     struct SalvageQueueNode * np, * nnp;
 
     for (queue_Scan(&pendingQueue, np, nnp, SalvageQueueNode)) {
-	if ((np->command.sop.volume == qry->volume) && 
+	if ((np->command.sop.volume == qry->volume) &&
 	    !strncmp(np->command.sop.partName, qry->partName,
 		     sizeof(qry->partName)))
 	    break;
@@ -1169,7 +1169,7 @@ UpdateCommandPrio(struct SalvageQueueNode * node)
 
 /* this will need to be rearchitected if we ever want more than one thread
  * to wait for new salvage nodes */
-struct SalvageQueueNode * 
+struct SalvageQueueNode *
 SALVSYNC_getWork(void)
 {
     int i;
@@ -1187,7 +1187,7 @@ SALVSYNC_getWork(void)
 	VOL_CV_WAIT(&salvageQueue.cv);
     }
 
-    /* 
+    /*
      * short circuit for simple case where only one partition has
      * scheduled salvages
      */
@@ -1198,9 +1198,9 @@ SALVSYNC_getWork(void)
     }
 
 
-    /* 
+    /*
      * ok, more than one partition has scheduled salvages.
-     * now search for partitions with scheduled salvages, but no pending salvages. 
+     * now search for partitions with scheduled salvages, but no pending salvages.
      */
     dp = VGetPartitionById_r(next_part_sched, 0);
     if (!dp) {
@@ -1208,8 +1208,8 @@ SALVSYNC_getWork(void)
     }
     fdp = dp;
 
-    for (i=0 ; 
-	 !i || dp != fdp ; 
+    for (i=0 ;
+	 !i || dp != fdp ;
 	 dp = (dp->next) ? dp->next : DiskPartitionList, i++ ) {
 	if (!partition_salvaging[dp->index] && salvageQueue.len[dp->index]) {
 	    node = queue_First(&salvageQueue.part[dp->index], SalvageQueueNode);
@@ -1224,8 +1224,8 @@ SALVSYNC_getWork(void)
      */
     dp = fdp;
 
-    for (i=0 ; 
-	 !i || dp != fdp ; 
+    for (i=0 ;
+	 !i || dp != fdp ;
 	 dp = (dp->next) ? dp->next : DiskPartitionList, i++ ) {
 	if (salvageQueue.len[dp->index]) {
 	    node = queue_First(&salvageQueue.part[dp->index], SalvageQueueNode);
@@ -1308,9 +1308,9 @@ SALVSYNC_doneWork_r(struct SalvageQueueNode * node, int result)
 static int
 ChildFailed(int status)
 {
-    return (WCOREDUMP(status) || 
-	    WIFSIGNALED(status) || 
-	    ((WEXITSTATUS(status) != 0) && 
+    return (WCOREDUMP(status) ||
+	    WIFSIGNALED(status) ||
+	    ((WEXITSTATUS(status) != 0) &&
 	     (WEXITSTATUS(status) != SALSRV_EXIT_VOLGROUP_LINK)));
 }
 

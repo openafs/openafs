@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -119,7 +119,7 @@ static int SaveKeys(struct afsconf_dir *adir);
 /* Solaris through 10 in 32 bit mode will return EMFILE if fopen can't
    get an fd <= 255. We allow the fileserver to claim more fds than that.
    This has always been a problem since pr_Initialize would have the same
-   issue, but hpr_Initialize makes it more likely that we would see this. 
+   issue, but hpr_Initialize makes it more likely that we would see this.
    Work around it. This is not generic. It's coded with the needs of
    afsconf_* in mind only.
 
@@ -142,11 +142,11 @@ afsconf_fopen(const char *fname, const char *fmode)
 {
     int fd;
     afsconf_FILE *iop;
-    
+
     if ((fd = open(fname, O_RDONLY)) == -1) {
 	return NULL;
     }
-    
+
     iop = malloc(sizeof(struct afsconf_iobuffer));
     if (iop == NULL) {
 	(void) close(fd);
@@ -182,14 +182,14 @@ static char *
 afsconf_fgets(char *s, int n, afsconf_FILE *iop)
 {
     char *p;
-    
+
     p = s;
     for (;;) {
 	char c;
-	
+
 	if (iop->ptr == iop->endptr) {
 	    ssize_t len;
-	    
+
 	    if ((len = read(iop->_file, (void *)iop->buffer, BUFFER)) == -1) {
 		return NULL;
 	    }
@@ -233,7 +233,7 @@ afsconf_FindService(const char *aname)
     if (aname == NULL || aname[0] == '\0')
 	return -1;
 
-#if     defined(AFS_OSF_ENV) 
+#if     defined(AFS_OSF_ENV)
     ts = getservbyname(aname, "");
 #else
     ts = (struct servent *) getservbyname(aname, NULL);
@@ -513,7 +513,7 @@ GetCellUnix(struct afsconf_dir *adir)
     char tbuffer[256];
     char *start, *p;
     afsconf_FILE *fp;
-    
+
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE, NULL);
     fp = fopen(tbuffer, "r");
     if (fp == 0) {
@@ -553,7 +553,7 @@ GetCellNT(struct afsconf_dir *adir)
 }
 
 /* The following procedures and structs are used on Windows only
- * to enumerate the Cell information distributed within the 
+ * to enumerate the Cell information distributed within the
  * Windows registry.  (See src/WINNT/afsd/cm_config.c)
  */
 typedef struct _cm_enumCellRegistry {
@@ -562,7 +562,7 @@ typedef struct _cm_enumCellRegistry {
 } cm_enumCellRegistry_t;
 
 static long
-cm_serverConfigProc(void *rockp, struct sockaddr_in *addrp, 
+cm_serverConfigProc(void *rockp, struct sockaddr_in *addrp,
                     char *hostNamep, unsigned short rank)
 {
     struct afsconf_cell *cellInfop = (struct afsconf_cell *)rockp;
@@ -613,7 +613,7 @@ cm_enumCellRegistryProc(void *rockp, char * cellNamep)
         free(newEntry);
     }
     return code;
-}       
+}
 #endif /* AFS_NT40_ENV */
 
 
@@ -696,15 +696,15 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	return -1;
     }
 
-    /* The CellServDB file is now open.  
-     * The following code parses the contents of the 
+    /* The CellServDB file is now open.
+     * The following code parses the contents of the
      * file and creates a list with the first cell entry
      * in the CellServDB file at the end of the list.
-     * 
+     *
      * No checking is performed for duplicates.
      * The side effects of this process are that duplicate
      * entries appended to the end of the CellServDB file
-     * take precedence and are found in a shorter period 
+     * take precedence and are found in a shorter period
      * of time.
      */
 
@@ -748,13 +748,13 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	    if (i < MAXHOSTSPERCELL) {
 		if (cell && !strcmp(cell, curEntry->cellInfo.name))
 		    code =
-			ParseHostLine(tbuffer, 
+			ParseHostLine(tbuffer,
 				      &curEntry->cellInfo.hostAddr[i],
-				      curEntry->cellInfo.hostName[i], 
+				      curEntry->cellInfo.hostName[i],
 				      &clones[i]);
 		else
 		    code =
-			ParseHostLine(tbuffer, 
+			ParseHostLine(tbuffer,
 				      &curEntry->cellInfo.hostAddr[i],
 				      curEntry->cellInfo.hostName[i], 0);
 
@@ -777,7 +777,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 		curEntry->cellInfo.numServers = ++i;
 	    } else {
 		fprintf(stderr,
-			"Too many hosts for cell %s in configuration file %s\n", 
+			"Too many hosts for cell %s in configuration file %s\n",
 			curEntry->cellInfo.name, tbuf1);
 	    }
 	}
@@ -791,10 +791,10 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     }
 
 #ifdef AFS_NT40_ENV
-     /* 
+     /*
       * Windows maintains a CellServDB list in the Registry
       * that supercedes the contents of the CellServDB file.
-      * Prepending these entries to the head of the list 
+      * Prepending these entries to the head of the list
       * is sufficient to enforce the precedence.
       */
      cm_EnumerateCellRegistry( enumCellRegistry.client,
@@ -856,7 +856,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 /* parse a line of the form
  *"128.2.1.3   #hostname" or
  *"[128.2.1.3]  #hostname" for clones
- * into the appropriate pieces.  
+ * into the appropriate pieces.
  */
 static int
 ParseHostLine(char *aline, struct sockaddr_in *addr, char *aname,
@@ -1399,12 +1399,12 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	}
 	acellInfo->timeout = 0;
 
-        /* 
+        /*
          * Until we figure out how to separate out ubik server
          * queries from other server queries, only perform gethostbyname()
          * lookup on the specified hostnames for the client CellServDB files.
          */
-        if (IsClientConfigDirectory(adir->name) && 
+        if (IsClientConfigDirectory(adir->name) &&
             !(acellInfo->flags & AFSCONF_CELL_FLAG_DNS_QUERIED)) {
             int j;
             short numServers=0;		                        /*Num active servers for the cell */
@@ -1474,7 +1474,7 @@ afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname,
 
     LOCK_GLOBAL_MUTEX;
     /*
-     * If a cell switch was specified in a command, then it should override the 
+     * If a cell switch was specified in a command, then it should override the
      * AFSCELL variable.  If a cell was specified, then the afsconf_SawCell flag
      * is set and the cell name in the adir structure is used.
      * Read the AFSCELL var each time: in case it changes (unsetenv AFSCELL).
@@ -1629,7 +1629,7 @@ afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 
 /* get latest key */
 afs_int32
-afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, 
+afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno,
 		     struct ktc_encryptionKey *akey)
 {
     int i;

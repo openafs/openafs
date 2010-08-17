@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -1566,7 +1566,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 		    namematchRWBK = (thismatch ? 1 : 2);
 		}
 
-		/* Match with the RO volume name. Compare once and 
+		/* Match with the RO volume name. Compare once and
 		 * remember results in namematchRO. Note that this will
 		 * pick up entries marked NEWREPSITEs and DONTUSE.
 		 */
@@ -2192,10 +2192,10 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	if (count == 1)
 	    VLog(0, ("   You must 'vos changeaddr' this other server entry\n"));
 	else
-	    VLog(0, 
+	    VLog(0,
 		("   You must 'vos changeaddr' these other server entries\n"));
 	if (foundUuidEntry)
-	    VLog(0, 
+	    VLog(0,
 		("   and/or remove the sysid file from the registering fileserver\n"));
 	VLog(0, ("   before the fileserver can be registered in the VLDB.\n"));
 
@@ -2238,7 +2238,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
     VLog(0, ("]\n"));
 
     if (foundUuidEntry) {
-	VLog(0, 
+	VLog(0,
 	    ("   It will replace the following existing entry in the VLDB (same uuid):\n"));
 	VLog(0, ("      entry %d: [", FoundUuid));
 	for (k = 0; k < VL_MAXIPADDRS_PERMH; k++) {
@@ -2264,7 +2264,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    index = HostAddress[ReplaceEntry] & 0x0000ffff;
 	    exp = &ex_addr[fbase][index];
 
-	    VLog(0, 
+	    VLog(0,
 		("   It will replace the following existing entry in the VLDB (new uuid):\n"));
 	    VLog(0, ("      entry %d: [", ReplaceEntry));
 	    for (k = 0; k < VL_MAXIPADDRS_PERMH; k++) {
@@ -2276,7 +2276,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    }
 	    VLog(0, ("]\n"));
 	} else {
-	    /* Not a mh entry. So we have to create a new mh entry and 
+	    /* Not a mh entry. So we have to create a new mh entry and
 	     * put it on the ReplaceEntry slot of the HostAddress array.
 	     */
 	    VLog(0, ("   It will replace existing entry %d, ", ReplaceEntry));
@@ -2326,7 +2326,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	return VL_IO;
     }
 
-    /* Remove any common addresses from other mh entres. We know these entries 
+    /* Remove any common addresses from other mh entres. We know these entries
      * are being changed and not replaced so they are mh entries.
      */
     m = 0;
@@ -2342,7 +2342,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	tex = &ex_addr[fbase][index];
 
 	if (++m == 1)
-	    VLog(0, 
+	    VLog(0,
 		("   The following existing entries in the VLDB will be updated:\n"));
 
 	VLog(0, ("      entry %d: [", WillChange[i]));
@@ -2536,7 +2536,7 @@ put_attributeentry(struct vldbentry **Vldbentry,
 	    return VL_SIZEEXCEEDED;	/* no growing if smallMem defined */
 
 	/* Allocate another set of memory; each time allocate twice as
-	 * many blocks as the last time. When we reach VLDBALLOCLIMIT, 
+	 * many blocks as the last time. When we reach VLDBALLOCLIMIT,
 	 * then grow in increments of VLDBALLOCINCR.
 	 */
 	allo = (*alloccnt > VLDBALLOCLIMIT) ? VLDBALLOCINCR : *alloccnt;
@@ -2577,7 +2577,7 @@ put_nattributeentry(struct nvldbentry **Vldbentry,
 	    return VL_SIZEEXCEEDED;	/* no growing if smallMem defined */
 
 	/* Allocate another set of memory; each time allocate twice as
-	 * many blocks as the last time. When we reach VLDBALLOCLIMIT, 
+	 * many blocks as the last time. When we reach VLDBALLOCLIMIT,
 	 * then grow in increments of VLDBALLOCINCR.
 	 */
 	allo = (*alloccnt > VLDBALLOCLIMIT) ? VLDBALLOCINCR : *alloccnt;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -210,7 +210,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    /* Because we know that all the vldb entries are the same size and type we 
+    /* Because we know that all the vldb entries are the same size and type we
      * can just read them sequentially, fiddle with the fields, and write
      * them out again.  If we invent a vldb format that has different
      * types of entries, then we're going to have to invent new logic for
@@ -377,7 +377,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
     if (!mh_addr)
 	return;
 
-    /* Check if the first extent block is beyond eof. If 
+    /* Check if the first extent block is beyond eof. If
      * it is, it's not real.
      */
     if (mh_addr > dbsize - VL_ADDREXTBLK_SIZE)
@@ -419,7 +419,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
 
 	sit = ntohl(base[0]->ex_contaddrs[j]);
 
-	/* Every time we allocate a new extent block, it is allocated after 
+	/* Every time we allocate a new extent block, it is allocated after
 	 * the previous ones. But it must be before the EOF.
 	 */
 	if ((sit < (a + VL_ADDREXTBLK_SIZE))
@@ -461,7 +461,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
  * extent blocks and verify that the pointers are good. And fix.
  * Then convert the multihomed addresses to single address if we
  * are converting back from version 4.
- * 
+ *
  * Before this can be called, the routine read_mhentries must be called.
  */
 void
@@ -525,7 +525,7 @@ convert_mhentries(int oldfd, int newfd, struct vlheader_2 *header,
 	}
     }
 
-    /* If we are converting from version 4 to version 3, then 
+    /* If we are converting from version 4 to version 3, then
      * translate any multihome ptrs in the IpMappedAddr array
      * to true IP addresses.
      */
@@ -734,7 +734,7 @@ convert_header(int ofd, int fd, int fromv, int tov, void *fromaddr,
 
 /* Convert an address pointer to a vlentry from version 4 to version 3.
  * This involves checking if the address is after any of the four
- * MH block and if it is, subtract the size of the MH block. 
+ * MH block and if it is, subtract the size of the MH block.
  *
  * In going from version 4 to 3, the mh blocks go away and all entries
  * move up in their place. The adresses then need to be updated.
@@ -760,7 +760,7 @@ Conv4to3(afs_uint32 addr)
     return (raddr);
 }
 
-/* this only works because the vlheader struct is essentially the same 
+/* this only works because the vlheader struct is essentially the same
  * from version 1 to version 2 -- that is, the first bunch of fields
  * aren't any more or any larger, so they match up pretty well.
 */

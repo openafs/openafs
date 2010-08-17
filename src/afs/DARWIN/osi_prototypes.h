@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -37,7 +37,7 @@ extern int osi_VM_Setup(struct vcache *avc, int force);
 
 /* osi_vnodeops.c */
 extern int afs_darwin_getnewvnode(struct vcache *avc, int recycle);
-extern int afs_darwin_finalizevnode(struct vcache *avc, struct vnode *parent, 
+extern int afs_darwin_finalizevnode(struct vcache *avc, struct vnode *parent,
 				    struct componentname *cnp, int isroot,
 				    int locked);
 #endif /* _OSI_PROTO_H_ */

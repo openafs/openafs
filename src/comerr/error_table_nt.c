@@ -347,7 +347,7 @@ int yydebug;			/*  nonzero means print parse trace     */
 #ifdef __GNUC__
 int yyparse(void);
 #endif
-
+
 #if __GNUC__ > 1		/* GNU C and GNU C++ define this.  */
 #define __yy_memcpy(FROM,TO,COUNT)	__builtin_memcpy(TO,FROM,COUNT)
 #else /* not GNU C or C++ */
@@ -386,7 +386,7 @@ __yy_memcpy(char *from, char *to, int count)
 
 #endif
 #endif
-
+
 #line 192 "bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
@@ -747,7 +747,7 @@ yyparse(YYPARSE_PARAM)
     }
     /* the action file gets copied in in place of this dollarsign */
 #line 487 "bison.simple"
-
+
     yyvsp -= yylen;
     yyssp -= yylen;
 #ifdef YYLSP_NEEDED
@@ -959,10 +959,10 @@ yyparse(YYPARSE_PARAM)
 #include "mit-sipb-cr.h"
 #include <stdio.h>
 
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html

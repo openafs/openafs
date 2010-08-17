@@ -125,15 +125,15 @@ pass4()
 	    break;
 
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	    /* 
-	     * UNreferenced continuation inode 
+	    /*
+	     * UNreferenced continuation inode
 	     */
 	case CSTATE:
 	    clri(&idesc, "UNREF", 2);
 	    break;
 
-	    /* 
-	     * referenced continuation inode 
+	    /*
+	     * referenced continuation inode
 	     */
 	case CRSTATE:
 	    if ((dp = ginode(inumber)) == NULL)

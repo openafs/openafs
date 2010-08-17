@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -88,7 +88,7 @@ afs_int32 tapeblocks;		/* Number of 16K tape datablocks in buffer (!CONF_XBSA) *
  * 6) Ensure bucoord status calls work
  *
  * notes
- * pass 3: 
+ * pass 3:
  *	keep token timeout. If no user reponse (idle time > some period)
  *	and tokens about to time out, terminate dump. This provides at
  *	least something usable.
@@ -206,10 +206,10 @@ Bind(afs_uint32 server)
 /* notes
  * 1) save the chunksize or otherwise ensure tape space remaining is
  *	check frequently enough
- * 2) This is called once. For partial dumps, need to 
+ * 2) This is called once. For partial dumps, need to
  *	ensure that the tape device is left in the correct state for
  *	further dumps.
- * 
+ *
  */
 #define BIGCHUNK 102400
 
@@ -284,7 +284,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     buffer = bufferBlock + BUTM_HDRSIZE;
 
     /* Dump one volume fragment at a time until we dump the full volume.
-     * A volume with more than 1 fragment means the volume will 'span' 
+     * A volume with more than 1 fragment means the volume will 'span'
      * 2 or more tapes.
      */
     for (fragmentNumber = 1; !endofvolume; fragmentNumber++) {	/*frag */
@@ -338,11 +338,11 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	    /* Determine how much data to read in upcoming RX_Read() call */
 	    toread = dataSize;
 	    /* Check if we are close to the EOT. There should at least be some
-	     * data on the tape before it is switched. HACK: we have to split a 
-	     * volume across tapes because the volume trailer says the dump 
-	     * continues on the next tape (and not the filemark). This could 
-	     * result in a volume starting on one tape (no volume data dumped) and 
-	     * continued on the next tape. It'll work, just requires restore to 
+	     * data on the tape before it is switched. HACK: we have to split a
+	     * volume across tapes because the volume trailer says the dump
+	     * continues on the next tape (and not the filemark). This could
+	     * result in a volume starting on one tape (no volume data dumped) and
+	     * continued on the next tape. It'll work, just requires restore to
 	     * switch tapes. This allows many small volumes (<16K) to be dumped.
 	     */
 	    kRemaining = butm_remainingKSpace(tapeInfoPtr);
@@ -482,7 +482,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     dparamsPtr->curVolumeStatus = DUMP_SUCCESS;
 
   error_exit:
-    /* 
+    /*
      * If we hit the end, see if this is the first volume on the tape or not.
      * Also, mark the tape as finished if the tape contains other dumps.
      */
@@ -505,7 +505,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	}
     }
 
-    /* 
+    /*
      * This is used when an error occurs part way into a volume dump. Clean
      * the tape state by writing an FileEnd mark. Forgo this action if we hit
      * the end of tape.
@@ -712,7 +712,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	    bytesread += sizeof(hostVolumeHeader);
 
 	    /* End the dump and transaction with the volserver. We end it now, before
-	     * we make the XBSA call because if XBSA blocks, we could time out on the 
+	     * we make the XBSA call because if XBSA blocks, we could time out on the
 	     * volserver (After last read, the transaction with the volserver is idle).
 	     */
 	    rc = rx_EndCall(fromcall, 0);
@@ -978,8 +978,8 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 	if (checkAbortByTaskId(taskId))
 	    ERROR_EXIT(TC_ABORTEDBYREQUEST);
 
-	/* Establish connection to volume - UV_ routine expects 
-	 * host address in network order 
+	/* Establish connection to volume - UV_ routine expects
+	 * host address in network order
 	 */
 	if (CONF_XBSA) {
 	    dvcode = xbsaDumpVolume(curDump, dparamsPtr);
@@ -1272,7 +1272,7 @@ Dumper(void *param)
 	    break;
     }
 
-    /* 
+    /*
      * Log the error but ignore it since the dump is effectively done.
      * Scantape may assume another volume and ask for next tape.
      */
@@ -1392,7 +1392,7 @@ Dumper(void *param)
  *	volume parameters describe the volume that failed
  * entry:
  *	volumeName - name of volume
- *	volumeId - volume id 
+ *	volumeId - volume id
  *	taskId - for job contrl
  * fn return:
  *	character typed by user, one of r, o or a
@@ -1754,7 +1754,7 @@ getDumpTape(struct dumpRock *dparamsPtr, int interactiveFlag,
 
 	/*
 	 * Now have the right tape. Create a new label for the tape
-	 * Appended labels have the dump's dumpId - labels at beginnings of 
+	 * Appended labels have the dump's dumpId - labels at beginnings of
 	 *     tape have the initial dump's dumpId.
 	 * Appended labels do not increment the useCount.
 	 * Labels at beginnings of tape use the most future expiration of the dump set.
@@ -1884,7 +1884,7 @@ makeVolumeHeader(struct volumeHeader *vhptr, struct dumpRock *dparamsPtr,
     strcpy(vhptr->dumpSetName, nodePtr->dumpSetName);
     strcpy(vhptr->preamble, "H++NAME#");
     strcpy(vhptr->postamble, "T--NAME#");
-  
+
     return (code);
 }
 

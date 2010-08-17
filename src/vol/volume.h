@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -476,7 +476,7 @@ typedef struct VolumeDiskData {
 /* Memory resident volume information */
 /**************************************/
 
-/** 
+/**
  * global volume package stats.
  */
 typedef struct VolPkgStats {
@@ -646,7 +646,7 @@ typedef struct Volume {
 				 * value nextVnodeVersion */
     IHandle_t *diskDataHandle;	/* Unix inode holding general volume info */
     bit16 vnodeHashOffset;	/* Computed by HashOffset function in vnode.h.
-				 * Assigned to the volume when initialized. 
+				 * Assigned to the volume when initialized.
 				 * Added to vnode number for hash table index */
     byte shuttingDown;		/* This volume is going to be detached */
     byte goingOffline;		/* This volume is going offline */
@@ -834,9 +834,9 @@ extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
-extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition, 
+extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition,
 				      VolId volumeId);
-extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp, 
+extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp,
 				      Volume * vp, VolId volume_id);
 extern Volume *VGetVolumeByVp_r(Error * ec, Volume * vp);
 extern int VShutdownByPartition_r(struct DiskPartition64 * dp);

@@ -252,7 +252,7 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
             gc_unsafe_free(ptst, ent->new, t->gc_data_id);
         }
         return FALSE;
-    } 
+    }
 
     /*
      * We put (hopefully rare) failure case out-of-line here.

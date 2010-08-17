@@ -438,7 +438,7 @@ des_ecb_encrypt(void * clear, void * cipher,
     } else
 #endif
     {
-        *((afs_uint32*)cipher)= L2;	
+        *((afs_uint32*)cipher)= L2;
 	cipher = ((afs_int32 *)cipher)+1;
 	*((afs_uint32 *)cipher) = R2;
     }

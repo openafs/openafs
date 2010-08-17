@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -121,7 +121,7 @@ extern int UV_SetVolumeInfo(afs_uint32 server, afs_int32 partition,
 			    afs_uint32 volid, volintInfo * infop);
 extern void MapNetworkToHost(struct nvldbentry *old, struct nvldbentry *new);
 extern int UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver,
-                          afs_int32 afrompart, char *atovolname, 
+                          afs_int32 afrompart, char *atovolname,
                           afs_uint32 atoserver, afs_int32 atopart,
                           afs_uint32 atovolid, int flags);
 extern int UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
@@ -132,7 +132,7 @@ extern int UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 					  (struct rx_call *, void *),
 			       void *rock, afs_int32 flags);
 extern int UV_GetSize(afs_uint32 afromvol, afs_uint32 afromserver,
-                      afs_int32 afrompart, afs_int32 fromdate, 
+                      afs_int32 afrompart, afs_int32 fromdate,
                       struct volintSize *vol_size);
 
 extern int verbose;

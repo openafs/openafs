@@ -49,7 +49,7 @@
  *
  * The DUMPEND section consists of one part: the DUMPENDMAGIC magic
  * number (32 bits).
- * 
+ *
  * Notes:
  *
  * The tagged elements are all ASCII letters, as opposed to the section
@@ -1855,7 +1855,7 @@ DumpAllResidencies(FILE * f, struct vnodeData *vdata,
 /*
  * Given a directory vnode and a filename, return the vnode corresponding
  * to the file in that directory.
- * 
+ *
  * We now handle pathnames with directories in them.
  */
 

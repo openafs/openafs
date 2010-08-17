@@ -316,7 +316,7 @@ permute(unsigned char *cp, C_block *out, C_block *p, int chars_in)
 #endif /* LARGEDATA */
 
 STATIC void init_des(void);
-STATIC void init_perm(C_block [64 / CHUNKBITS][1 << CHUNKBITS], 
+STATIC void init_perm(C_block [64 / CHUNKBITS][1 << CHUNKBITS],
 		      unsigned char [64], int, int);
 STATIC int des_setkey(const char *key);
 STATIC int des_cipher(const char *in, char *out, long salt, int num_iter);
@@ -897,7 +897,7 @@ init_des(void)
  * "perm" must be all-zeroes on entry to this routine.
  */
 STATIC void
-init_perm(C_block perm[64 / CHUNKBITS][1 << CHUNKBITS], 
+init_perm(C_block perm[64 / CHUNKBITS][1 << CHUNKBITS],
 	  unsigned char p[64], int chars_in, int chars_out)
 {
     int i, j, k, l;

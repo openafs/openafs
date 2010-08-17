@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -42,9 +42,9 @@ extern afs_int32 uss_vol_GetPartitionID(char *a_name);
      *    Numeric partition name, or -1 on failure.
      */
 
-extern afs_int32 uss_vol_CreateVol(char *a_volname, char *a_server, 
-				   char *a_partition, char *a_quota, 
-				   char *a_mpoint, char *a_owner, 
+extern afs_int32 uss_vol_CreateVol(char *a_volname, char *a_server,
+				   char *a_partition, char *a_quota,
+				   char *a_mpoint, char *a_owner,
 				   char *a_acl);
     /*
      * Summary:
@@ -66,8 +66,8 @@ extern afs_int32 uss_vol_CreateVol(char *a_volname, char *a_server,
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, 
-				   char *a_servName, afs_int32 a_servID, 
+extern afs_int32 uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID,
+				   char *a_servName, afs_int32 a_servID,
 				   char *a_partName, afs_int32 a_partID);
     /*
      * Summary:

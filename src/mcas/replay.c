@@ -196,7 +196,7 @@ static int linearise_ops_for_key(
     int i;
     log_t **sp = stack;
     interval_t cutoff;
- 
+
     /* Construct cutoff heap. */
     cutoff_heap[0] = (void *)nr_items;
     for ( i = 0; i < nr_items; i++ )
@@ -218,15 +218,15 @@ static int linearise_ops_for_key(
             if ( !do_op(&log[i], key_state) ) { i++; continue; }
 
             *sp++ = &log[i];
- 
+
             /* Done? */
             if ( (sp - stack) == nr_items ) goto success;
- 
+
             remove_entry(cutoff_heap, heap_offsets, log, &log[i]);
             cutoff = cutoff_heap[1]->end;
             i = 0;
         }
- 
+
         /* Failure? */
         if ( (sp - stack) == 0 )
         {
@@ -400,7 +400,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error opening log\n");
         exit(-1);
     }
- 
+
     /* Grok the log header. */
     read(fd, log_header, sizeof(log_header));
     nr_threads = log_header[0];
@@ -418,7 +418,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error allocating space for log\n");
         exit(-1);
     }
- 
+
     /* Read log entries, and sort into key and timestamp order. */
     read(fd, global_log, nr_threads*nr_updates*sizeof(log_t));
     global_log[nr_threads*nr_updates].data = LOG_KEY_MASK; /* sentinel */

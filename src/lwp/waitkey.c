@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,7 +11,7 @@
  * LWP_WaitForKeystroke - wait indefinitely or for a specified number of
  * seconds for keyboard input.
  *
- * If seconds < 0, LWP_WaitForKeystroke will wait indefinitely. 
+ * If seconds < 0, LWP_WaitForKeystroke will wait indefinitely.
  * If seconds == 0, LWP_WaitForKeystroke will just determine if data is now
  *	present.
  * Otherwise, wait "seconds" for data.
@@ -77,7 +77,7 @@ LWP_WaitForKeystroke(int seconds)
 	 * process run some*/
 	IOMGR_Select(0, 0, 0, 0, &twait);
 
-	if (seconds > 0) {	/* we only worry about elapsed time if 
+	if (seconds > 0) {	/* we only worry about elapsed time if
 				 * not looping forever (seconds < 0) */
 	    /* now check elapsed time */
 	    time(&nowTime);
@@ -91,7 +91,7 @@ LWP_WaitForKeystroke(int seconds)
 
 /* LWP_GetLine() - Waits indefinitely until a newline has been typed
  * and then returns the line typed.
- * 
+ *
  * This is trivial in unix, but requires some processing on NT.
  *   we basically read all chars into a buffer until we hit a newline and
  *   then return it to the user.
@@ -142,7 +142,7 @@ LWP_GetLine(char *linebuf, int len)
 #else
 /* LWP_WaitForKeystroke(Unix) :Wait until a key has been struck or time (secconds)
  * runs out and return to caller. The Unix version will actually wait until
- * a <cr> has been entered before returning. 
+ * a <cr> has been entered before returning.
  * Input:
  *   seconds: wait for <seconds> seconds before returning. If seconds < 0,
  *            wait infinitely.
@@ -169,7 +169,7 @@ LWP_WaitForKeystroke(int seconds)
       int     _size;
     };
     struct APPX_FILE
-    {      
+    {
       struct __FILE_public    pub;
       struct  appx_sbuf _bf;     /* the buffer (at least 1 byte, if !NULL) */
     };
@@ -202,7 +202,7 @@ LWP_WaitForKeystroke(int seconds)
 
 /* LWP_GetLine() - Waits indefinitely until a newline has been typed
  * and then returns the line typed.
- * 
+ *
  * This is trivial in unix, but requires some processing on NT.
  *   we basically read all chars into a buffer until we hit a newline and
  *   then return it to the user.
@@ -238,7 +238,7 @@ LWP_GetLine(char *linebuf, int len)
  * Input:
  *    seconds - how long to wait for a key press.
  *    *key    - char entered by user
- * Return Values: 
+ * Return Values:
  *    0 - Time ran out before the user typed a key.
  *    1 - Valid char is being returned.
  */

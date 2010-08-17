@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -211,9 +211,9 @@ SDISK_Abort(struct rx_call *rxcall, struct ubik_tid *atid)
 
 /* apos and alen are not used */
 afs_int32
-SDISK_Lock(struct rx_call *rxcall, struct ubik_tid *atid, 
+SDISK_Lock(struct rx_call *rxcall, struct ubik_tid *atid,
 	   afs_int32 afile, afs_int32 apos, afs_int32 alen, afs_int32 atype)
-{	
+{
     afs_int32 code;
     struct ubik_dbase *dbase;
     struct ubik_trans *ubik_thisTrans;
@@ -259,7 +259,7 @@ SDISK_Lock(struct rx_call *rxcall, struct ubik_tid *atid,
  * \brief Write a vector of data
  */
 afs_int32
-SDISK_WriteV(struct rx_call *rxcall, struct ubik_tid *atid, 
+SDISK_WriteV(struct rx_call *rxcall, struct ubik_tid *atid,
 	     iovec_wrt *io_vector, iovec_buf *io_buffer)
 {
     afs_int32 code, i, offset;
@@ -308,7 +308,7 @@ SDISK_WriteV(struct rx_call *rxcall, struct ubik_tid *atid,
 }
 
 afs_int32
-SDISK_Write(struct rx_call *rxcall, struct ubik_tid *atid, 
+SDISK_Write(struct rx_call *rxcall, struct ubik_tid *atid,
 	    afs_int32 afile, afs_int32 apos, bulkdata *adata)
 {
     afs_int32 code;
@@ -340,7 +340,7 @@ SDISK_Write(struct rx_call *rxcall, struct ubik_tid *atid,
 }
 
 afs_int32
-SDISK_Truncate(struct rx_call *rxcall, struct ubik_tid *atid, 
+SDISK_Truncate(struct rx_call *rxcall, struct ubik_tid *atid,
 	       afs_int32 afile, afs_int32 alen)
 {
     afs_int32 code;
@@ -370,7 +370,7 @@ SDISK_Truncate(struct rx_call *rxcall, struct ubik_tid *atid,
 }
 
 afs_int32
-SDISK_GetVersion(struct rx_call *rxcall, 
+SDISK_GetVersion(struct rx_call *rxcall,
 		 struct ubik_version *aversion)
 {
     afs_int32 code;
@@ -407,7 +407,7 @@ SDISK_GetVersion(struct rx_call *rxcall,
 }
 
 afs_int32
-SDISK_GetFile(struct rx_call *rxcall, afs_int32 file, 
+SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
 	      struct ubik_version *version)
 {
     afs_int32 code;
@@ -422,7 +422,7 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
 	return code;
     }
 /* temporarily disabled because it causes problems for migration tool.  Hey, it's just
- * a sanity check, anyway. 
+ * a sanity check, anyway.
     if (ubeacon_AmSyncSite()) {
       return UDEADLOCK;
     }
@@ -466,7 +466,7 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
 }
 
 afs_int32
-SDISK_SendFile(struct rx_call *rxcall, afs_int32 file, 
+SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	       afs_int32 length, struct ubik_version *avers)
 {
     afs_int32 code;
@@ -580,7 +580,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     code = close(fd);
     if (code)
 	goto failed;
-#endif     
+#endif
 
     /* sync data first, then write label and resync (resync done by setlabel call).
      * This way, good label is only on good database. */
@@ -595,7 +595,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	code = rename(tbuffer, pbuffer);
     afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
-    if (!code) 
+    if (!code)
 	code = rename(pbuffer, tbuffer);
     if (!code) {
 	(*ubik_dbase->open) (ubik_dbase, 0);
@@ -649,8 +649,8 @@ SDISK_Probe(struct rx_call *rxcall)
  * \return zero on success, else 1.
  */
 afs_int32
-SDISK_UpdateInterfaceAddr(struct rx_call *rxcall, 
-			  UbikInterfaceAddr *inAddr, 
+SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
+			  UbikInterfaceAddr *inAddr,
 			  UbikInterfaceAddr *outAddr)
 {
     struct ubik_server *ts, *tmp;
@@ -731,8 +731,8 @@ printServerInfo(void)
 }
 
 afs_int32
-SDISK_SetVersion(struct rx_call *rxcall, struct ubik_tid *atid, 
-		 struct ubik_version *oldversionp, 
+SDISK_SetVersion(struct rx_call *rxcall, struct ubik_tid *atid,
+		 struct ubik_version *oldversionp,
 		 struct ubik_version *newversionp)
 {
     afs_int32 code = 0;

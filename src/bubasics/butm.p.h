@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,13 +36,13 @@ struct butm_tapeInfo {
 	afs_int32(*dismount) (struct butm_tapeInfo *);
 	afs_int32(*create) (struct butm_tapeInfo *, struct butm_tapeLabel *,
 			    afs_int32);
-	afs_int32(*readLabel) (struct butm_tapeInfo *, 
+	afs_int32(*readLabel) (struct butm_tapeInfo *,
 			       struct butm_tapeLabel *,
 			       afs_int32);
 	afs_int32(*seek) (struct butm_tapeInfo *, afs_int32);
 	afs_int32(*seekEODump) (struct butm_tapeInfo *, afs_int32);
 	afs_int32(*readFileBegin) (struct butm_tapeInfo *);
-	afs_int32(*readFileData) (struct butm_tapeInfo *, char *, int len, 
+	afs_int32(*readFileData) (struct butm_tapeInfo *, char *, int len,
 				  int *);
 	afs_int32(*readFileEnd) (struct butm_tapeInfo *);
 	afs_int32(*writeFileBegin) (struct butm_tapeInfo *);

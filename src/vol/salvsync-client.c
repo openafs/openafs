@@ -1,7 +1,7 @@
 /*
  * Copyright 2006-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -59,7 +59,7 @@ extern int LogLevel;
 extern int VInit;
 extern pthread_mutex_t vol_salvsync_mutex;
 
-static SYNC_client_state salvsync_client_state = 
+static SYNC_client_state salvsync_client_state =
     { -1,                     /* file descriptor */
       SALVSYNC_ENDPOINT_DECL, /* server endpoint */
       SALVSYNC_PROTO_VERSION, /* protocol version */
@@ -123,7 +123,7 @@ SALVSYNC_askSalv(SYNC_command * com, SYNC_response * res)
 }
 
 afs_int32
-SALVSYNC_SalvageVolume(VolumeId volume, char *partName, int command, int reason, 
+SALVSYNC_SalvageVolume(VolumeId volume, char *partName, int command, int reason,
 		       afs_uint32 prio, SYNC_response * res_in)
 {
     SYNC_command com;
@@ -163,7 +163,7 @@ SALVSYNC_SalvageVolume(VolumeId volume, char *partName, int command, int reason,
 }
 
 afs_int32
-SALVSYNC_LinkVolume(VolumeId parent, 
+SALVSYNC_LinkVolume(VolumeId parent,
 		    VolumeId clone,
 		    char * partName,
 		    SYNC_response * res_in)

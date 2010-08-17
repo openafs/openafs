@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -97,7 +97,7 @@ enum vcexcl { EXCL, NONEXCL };
 #define va_atime va_access_time
 #define va_mtime va_modify_time
 #define va_ctime va_change_time
-#define va_bytes va_total_alloc 
+#define va_bytes va_total_alloc
 #define va_blocksize va_iosize
 #define va_nodeid va_fileid
 
@@ -120,7 +120,7 @@ extern int afs_osi_ctxtp_initialized;
 extern u_int32_t afs_darwin_realmodes;
 extern u_int32_t afs_darwin_fsevents;
 
-/* 
+/*
  * Time related macros
  */
 #ifdef AFS_DARWIN80_ENV
@@ -222,7 +222,7 @@ extern int igetinode(mount_t vfsp, dev_t dev , ino_t inode, vnode_t *vpp,
 #define osi_curproc() current_proc()
 
 /* FIXME */
-#define osi_curcred() &afs_osi_cred 
+#define osi_curcred() &afs_osi_cred
 
 #ifdef AFS_DARWIN80_ENV
 uio_t afsio_darwin_partialcopy(uio_t auio, int size);

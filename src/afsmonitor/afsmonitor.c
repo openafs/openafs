@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -156,7 +156,7 @@ struct afsmon_fs_Results_CBuffer *afsmon_fs_ResultsCB;
 
 int afsmon_fs_curr_CBindex = 0;	/* current fs CB slot */
 
-/* Probe number variables. The current probe number is incremented 
+/* Probe number variables. The current probe number is incremented
 when the first probe from a new probe cycle is received. The prev probe
 number is incremented when the last probe of the current cycle is
 received. This difference is because of the purpose for which these
@@ -187,7 +187,7 @@ struct afsmon_cm_Results_CBuffer *afsmon_cm_ResultsCB;
 int afsmon_cm_curr_CBindex = 0;	/* current cm CB slot */
 
 
-/* Probe number variables. The current probe number is incremented 
+/* Probe number variables. The current probe number is incremented
 when the first probe from a new probe cycle is received. The prev probe
 number is incremented when the last probe of the current cycle is
 received. This difference is because of the purpose for which these
@@ -234,7 +234,7 @@ int numHosts_onfs_alerts;
 int num_cm_alerts;
 int numHosts_oncm_alerts;
 
-/* flag to indicate that atleast one probe cycle has completed and 
+/* flag to indicate that atleast one probe cycle has completed and
 data is available for updating the display */
 extern int fs_Data_Available;
 extern int cm_Data_Available;
@@ -246,7 +246,7 @@ are to be displayed on the File Servers screen. For example, suppose the
 user wishes to display only the vcache statistics then the following array
 will contain indices 2 to 14 corresponding to the position of the
 vcache data items in the fs_varNames[] array. If the config file contains
-no "show fs .." directives, it will contain the indices of all the 
+no "show fs .." directives, it will contain the indices of all the
 items in the fs_varNames[] array */
 
 short fs_Display_map[NUM_FS_STAT_ENTRIES];
@@ -265,7 +265,7 @@ extern int fs_curr_LCol;	/* current leftmost column on display on FS frame */
 extern int cm_currPage;		/* current page number in the Cache Managers frame */
 extern int cm_curr_LCol;	/* current leftmost column on display on CM frame */
 
-/* File server and Cache manager data is classified into sections & 
+/* File server and Cache manager data is classified into sections &
 groups to help the user choose what he wants displayed */
 extern char *fs_categories[];	/* file server data category names */
 extern char *cm_categories[];	/* cache manager data category names */
@@ -279,12 +279,12 @@ static int fs_CallBackStats_ltoa(struct fs_Display_Data *a_fsData,
 #ifdef HAVE_STRCASESTR
 extern char * strcasestr(const char *, const char *);
 #else
-/*	
-        strcasestr(): Return first occurence of pattern s2 in s1, case 
-	insensitive. 
+/*
+        strcasestr(): Return first occurence of pattern s2 in s1, case
+	insensitive.
 
 	This routine is required since I made pattern matching of the
-	config file to be case insensitive. 
+	config file to be case insensitive.
 */
 
 char *
@@ -338,17 +338,17 @@ GetHostByName(char *name)
  *
  * Description
  * 	Exit gracefully from the afsmonitor. Frees memory where appropriate,
- *	cleans up after gtx and closes all open file descriptors. If a user 
+ *	cleans up after gtx and closes all open file descriptors. If a user
  *	provided threshold handler is to be exec'ed then gtx cleanup is
- *	not performed and an exec() is made instead of an exit(). 
+ *	not performed and an exec() is made instead of an exit().
  *
  * Returns
  *	Nothing.
  *
- * Comments 
- *	This function is called to execute a user handler only 
+ * Comments
+ *	This function is called to execute a user handler only
  *	by a child process.
- * 
+ *
  *----------------------------------------------------------------------*/
 
 int
@@ -810,7 +810,7 @@ parse_hostEntry(char *a_line)
  *
  * Description
  *	Parse the threshold entry line in the config file. This function is
- *	called in the the first pass of the config file. It checks the syntax 
+ *	called in the the first pass of the config file. It checks the syntax
  *	of the config lines and verifies their positional validity - eg.,
  *	a cm threshold cannot appear after a fs hostname entry, etc.
  *	It also counts the thresholds applicable to each host.
@@ -913,7 +913,7 @@ parse_threshEntry(char *a_line)
  *	for cache managers. For global thresholds the info is recorded for
  *	all the hosts. This function is called in the second pass of the
  *	config file. In the first pass a count of the number of global
- *	thresholds is determined and this information is used in this 
+ *	thresholds is determined and this information is used in this
  *	routine. If threshold entries are duplicated the first entry is
  *	overwritten.
  *	Each threshold entry also has an index field. This is a positional
@@ -1092,9 +1092,9 @@ store_threshold(int a_type,		/* 1 = fs , 2 = cm */
  *	This data is mapped to the screen thru fs_Display_map[] and
  *	cm_Display_map[]. This routine parses the "show" entry against the
  * 	section/group names in the [fs/cm]_categories[] array. If there is
- *	no match it tries to match it against a variable name in 
+ *	no match it tries to match it against a variable name in
  *	[fs/cm]_varNames[] array. In each case the corresponding indices to
- * 	the data is the [fs/cm]_displayInfo[] is recorded. 
+ * 	the data is the [fs/cm]_displayInfo[] is recorded.
  *
  * Returns:
  *	Success: 0
@@ -1386,15 +1386,15 @@ parse_showEntry(char *a_line)
  * process_config_file()
  *
  * Description:
- *	Parse config file entries in two passes. In the first pass: 
+ *	Parse config file entries in two passes. In the first pass:
  *		- the syntax of all the entries is checked
- *		- host names are noted and the FSnamesList and CMnamesList 
- *		  constructed. 
- *		- a count of the global thresholds and local thresholds of 
- *		  each host are counted. 
+ *		- host names are noted and the FSnamesList and CMnamesList
+ *		  constructed.
+ *		- a count of the global thresholds and local thresholds of
+ *		  each host are counted.
  *		- "show" entries are processed.
  *	In the second pass:
- *		- thresholds are stored 
+ *		- thresholds are stored
  *
  * Returns:
  *	Success: 0
@@ -1499,7 +1499,7 @@ process_config_file(char *a_config_filename)
     }
 
     /* the threshold count of all hosts in increased by 1 for each global
-     * threshold. If one of the hosts has a local threshold for the same 
+     * threshold. If one of the hosts has a local threshold for the same
      * variable it would end up being counted twice. whats a few bytes of memory
      * wasted anyway ? */
 
@@ -1596,7 +1596,7 @@ process_config_file(char *a_config_filename)
 	    strncpy(last_cmHost, he->h_name, HOST_NAME_LEN);
 	} else if (strcasecmp(opcode, "thresh") == 0) {
 	    /* if we have a threshold handler it may have arguments
-	     * and the sscanf() above would not get them, so do the 
+	     * and the sscanf() above would not get them, so do the
 	     * following */
 	    if (strlen(arg4)) {
 		handlerPtr = line;
@@ -1821,10 +1821,10 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
  * fs_Results_ltoa()
  *
  * Description:
- *	The results of xstat probes are stored in a string format in 
+ *	The results of xstat probes are stored in a string format in
  *	the arrays curr_fsData and prev_fsData. The information stored in
- *	prev_fsData is copied to the screen. 
- *	This function converts xstat FS results from longs to strings and 
+ *	prev_fsData is copied to the screen.
+ *	This function converts xstat FS results from longs to strings and
  *	place them in the given buffer (a pointer to an item in curr_fsData).
  *	When a probe cycle completes, curr_fsData is copied to prev_fsData
  *	in afsmon_FS_Hnadler().
@@ -1886,7 +1886,7 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
     fullPerfP = (struct fs_stats_FullPerfStats *)
 	(a_fsResults->data.AFS_CollData_val);
 
-    /* there are two parts to the xstat FS statistics 
+    /* there are two parts to the xstat FS statistics
      * - fullPerfP->overall which give the overall performance statistics, and
      * - fullPerfP->det which gives detailed info about file server operation
      * execution times */
@@ -2030,10 +2030,10 @@ fs_CallBackStats_ltoa(struct fs_Display_Data *a_fsData,
  * execute_thresh_handler()
  *
  * Description:
- *	Execute a threshold handler. An agrv[] array of pointers is 
- *	constructed from the given data. A child process is forked 
+ *	Execute a threshold handler. An agrv[] array of pointers is
+ *	constructed from the given data. A child process is forked
  *	which immediately calls afsmon_Exit() with indication that a
- *	threshold handler is to be exec'ed insted of exiting. 
+ *	threshold handler is to be exec'ed insted of exiting.
  *
  * Returns:
  *	Success: 0
@@ -2132,11 +2132,11 @@ execute_thresh_handler(char *a_handler,		/* ptr to handler function + args */
  * Description:
  *	Checks the thresholds and sets the overflow flag. Recall that the
  *	thresholds for each host are stored in the hostEntry lists
- *	[fs/cm]nameList arrays. The probe results are passed to this 
+ *	[fs/cm]nameList arrays. The probe results are passed to this
  *	function in the display-ready format - ie., as strings. Though
  *	this looks stupid the overhead incurred in converting the strings
- *	back to floats and comparing them is insignificant and 
- *	programming is easier this way. 
+ *	back to floats and comparing them is insignificant and
+ *	programming is easier this way.
  *	The threshold flags are a part of the display structures
  *	curr_[fs/cm]Data.
  *
@@ -2226,11 +2226,11 @@ check_fs_thresholds(struct afsmon_hostEntry *a_hostEntry, /* ptr to hostEntry */
  * Description:
  *	Does the following:
  *	- if the probe number changed (ie, a cycle completed) curr_fsData
- *	is copied to prev_fsData, curr_fsData zeroed and refresh the 
+ *	is copied to prev_fsData, curr_fsData zeroed and refresh the
  *	overview screen and file server screen with the new data.
  *	- store the results of the current probe from xstat_fs_Results into
  *	curr_fsData. ie., convert longs to strings.
- *	- check the thresholds 
+ *	- check the thresholds
  *
  * Returns:
  *	Success: 0
@@ -2281,7 +2281,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
     }
 
     /*  Check the status of the probe. If it succeeded, we store its
-     * results in the display data structure. If it failed we only mark 
+     * results in the display data structure. If it failed we only mark
      * the failed status in the display data structure. */
 
     if (a_fsResults->probeOK) {	/* 1 => notOK the xstat results */
@@ -2302,7 +2302,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
 	fs_Results_ltoa(curr_fsDataP, a_fsResults);
 
 	/* compare with thresholds and set the overflow flags.
-	 * note that the threshold information is in the hostEntry structure and 
+	 * note that the threshold information is in the hostEntry structure and
 	 * each threshold item has a positional index associated with it */
 
 	/* locate the hostEntry for this host */
@@ -2456,7 +2456,7 @@ afsmon_FS_Handler(void)
 	}
     }
 
-    /* Update current probe number and circular buffer index. if current 
+    /* Update current probe number and circular buffer index. if current
      * probenum changed make sure it is only by 1 */
 
     newProbeCycle = 0;
@@ -2482,7 +2482,7 @@ afsmon_FS_Handler(void)
 
     /* store the results of the current probe in the fs data display structure.
      * if the current probe number changed, swap the current and previous display
-     * structures. note that the display screen is updated from these structures 
+     * structures. note that the display screen is updated from these structures
      * and should start showing the data of the just completed probe cycle */
 
     save_FS_data_forDisplay(&xstat_fs_Results);
@@ -2492,12 +2492,12 @@ afsmon_FS_Handler(void)
 
 
 
-/*----------------------------------------------------------------------- * 
- * Print_CM_CB()     
+/*----------------------------------------------------------------------- *
+ * Print_CM_CB()
  *
  * Description:
  *	Debug routine.
- *	Prints the  Cache Manager circular buffer 
+ *	Prints the  Cache Manager circular buffer
  *----------------------------------------------------------------------*/
 
 void
@@ -2671,10 +2671,10 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
  * cm_Results_ltoa()
  *
  * Description:
- *	The results of xstat probes are stored in a string format in 
+ *	The results of xstat probes are stored in a string format in
  *	the arrays curr_cmData and prev_cmData. The information stored in
- *	prev_cmData is copied to the screen. 
- *	This function converts xstat FS results from longs to strings and 
+ *	prev_cmData is copied to the screen.
+ *	This function converts xstat FS results from longs to strings and
  *	places them in the given buffer (a pointer to an item in curr_cmData).
  *	When a probe cycle completes, curr_cmData is copied to prev_cmData
  *	in afsmon_CM_Handler().
@@ -2708,7 +2708,7 @@ cm_Results_ltoa(struct cm_Display_Data *a_cmData,	/* target buffer */
 
     /* There are 4 parts to CM statistics
      * - Overall performance statistics (including up/down statistics)
-     * - This CMs FS RPC operations info 
+     * - This CMs FS RPC operations info
      * - This CMs FS RPC errors info
      * - This CMs FS transfers info
      * - Authentication info
@@ -2919,11 +2919,11 @@ cm_Results_ltoa(struct cm_Display_Data *a_cmData,	/* target buffer */
  * Description:
  *	Checks the thresholds and sets the overflow flag. Recall that the
  *	thresholds for each host are stored in the hostEntry lists
- *	[fs/cm]nameList arrays. The probe results are passed to this 
+ *	[fs/cm]nameList arrays. The probe results are passed to this
  *	function in the display-ready format - ie., as strings. Though
  *	this looks stupid the overhead incurred in converting the strings
- *	back to floats and comparing them is insignificant and 
- *	programming is easier this way. 
+ *	back to floats and comparing them is insignificant and
+ *	programming is easier this way.
  *	The threshold flags are a part of the display structures
  *	curr_[fs/cm]Data.
  *
@@ -3014,11 +3014,11 @@ check_cm_thresholds(struct afsmon_hostEntry *a_hostEntry,	/* ptr to hostEntry */
  * Description:
  *	Does the following:
  *	- if the probe number changed (ie, a cycle completed) curr_cmData
- *	is copied to prev_cmData, curr_cmData zeroed and refresh the 
+ *	is copied to prev_cmData, curr_cmData zeroed and refresh the
  *	overview screen and file server screen with the new data.
  *	- store the results of the current probe from xstat_cm_Results into
  *	curr_cmData. ie., convert longs to strings.
- *	- check the thresholds 
+ *	- check the thresholds
  *
  * Returns:
  *	Success: 0
@@ -3069,7 +3069,7 @@ save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
     }
 
     /*  Check the status of the probe. If it succeeded, we store its
-     * results in the display data structure. If it failed we only mark 
+     * results in the display data structure. If it failed we only mark
      * the failed status in the display data structure. */
 
 
@@ -3092,7 +3092,7 @@ save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
 	cm_Results_ltoa(curr_cmDataP, a_cmResults);
 
 	/* compare with thresholds and set the overflow flags.
-	 * note that the threshold information is in the hostEntry structure and 
+	 * note that the threshold information is in the hostEntry structure and
 	 * each threshold item has a positional index associated with it */
 
 	/* locate the hostEntry for this host */
@@ -3283,7 +3283,7 @@ afsmon_CM_Handler(void)
 	}
     }
 
-    /* Update current probe number and circular buffer index. if current 
+    /* Update current probe number and circular buffer index. if current
      * probenum changed make sure it is only by 1 */
 
     newProbeCycle = 0;
@@ -3307,7 +3307,7 @@ afsmon_CM_Handler(void)
 
     /* store the results of the current probe in the cm data display structure.
      * if the current probe number changed, swap the current and previous display
-     * structures. note that the display screen is updated from these structures 
+     * structures. note that the display screen is updated from these structures
      * and should start showing the data of the just completed probe cycle */
 
     save_CM_data_forDisplay(&xstat_cm_Results);
@@ -3354,7 +3354,7 @@ init_fs_buffers(void)
 	afsmon_fs_ResultsCB[i].probeNum = 0;
     }
 
-    /* create  a list of numFS items to store fs probe results for 
+    /* create  a list of numFS items to store fs probe results for
      * each slot in CB */
 
     if (numFS) {		/* if we have file servers to monitor */
@@ -3363,7 +3363,7 @@ init_fs_buffers(void)
 	    while (numfs--) {
 
 		/* if any of these mallocs fail we only need to free the memory we
-		 * have allocated in this iteration. the rest of it which is in a 
+		 * have allocated in this iteration. the rest of it which is in a
 		 * proper linked list will be freed in afsmon_Exit */
 
 		/* allocate memory for an fs list item */
@@ -3471,7 +3471,7 @@ init_cm_buffers(void)
 	afsmon_cm_ResultsCB[i].probeNum = 0;
     }
 
-    /* create  a list of numCM items to store fs probe results for 
+    /* create  a list of numCM items to store fs probe results for
      * each slot in CB */
 
     if (numCM) {		/* if we have file servers to monitor */
@@ -3480,7 +3480,7 @@ init_cm_buffers(void)
 	    while (numcm--) {
 
 		/* if any of these mallocs fail we only need to free the memory we
-		 * have allocated in this iteration. the rest of it which is in a 
+		 * have allocated in this iteration. the rest of it which is in a
 		 * proper linked list will be freed in afsmon_Exit */
 
 		/* allocate memory for an fs list item */
@@ -3563,8 +3563,8 @@ init_cm_buffers(void)
  *
  * Description:
  *	Allocate and initialize the buffers used for printing results
- *	to the display screen. These buffers store the current and 
- *	previous probe results in ascii format. 
+ *	to the display screen. These buffers store the current and
+ *	previous probe results in ascii format.
  *
  * Returns:
  *	Success: 0
@@ -3595,7 +3595,7 @@ init_print_buffers(void)
     /* we need two instances of this structure - one (curr_fsData) for storing
      * the results of the fs probes currently in progress and another (prev_fsData)
      * for the last completed probe. The display is updated from the contents of
-     * prev_fsData. The pointers curr_fsData & prev_fsData are switched whenever 
+     * prev_fsData. The pointers curr_fsData & prev_fsData are switched whenever
      * the probe number changes */
 
     if (numFS) {
@@ -3695,7 +3695,7 @@ quit_signal(int sig)
  * Description:
  *	This is where we start it all. Initialize an array of sockets for
  *	file servers and cache cache managers and call the xstat_[fs/cm]_Init
- *	routines. The last step is to call the gtx input server which 
+ *	routines. The last step is to call the gtx input server which
  *	grabs control of the keyboard.
  *
  * Returns:
@@ -3893,7 +3893,7 @@ afsmon_execute(void)
 
 
     /* end of process cache manager entries */
-    /* if only one probe was required setup a waiting process for the 
+    /* if only one probe was required setup a waiting process for the
      * termination signal */
     if (afsmon_onceOnly) {
 	code = LWP_WaitProcess(&terminationEvent);
@@ -4074,7 +4074,7 @@ afsmonInit(struct cmd_syndesc *as, void *arock)
     FSnameList = (struct afsmon_hostEntry *)0;
     CMnameList = (struct afsmon_hostEntry *)0;
 
-    /* The -config option is mutually exclusive with the -fshosts,-cmhosts 
+    /* The -config option is mutually exclusive with the -fshosts,-cmhosts
      * options */
 
     if (as->parms[P_CONFIG].items) {
@@ -4093,7 +4093,7 @@ afsmonInit(struct cmd_syndesc *as, void *arock)
 
 
     /* If a file server host is specified on the command line we reuse
-     * parse_hostEntry() function . Just the pass the info as if it were 
+     * parse_hostEntry() function . Just the pass the info as if it were
      * read off the config file */
 
     if (as->parms[P_FSHOSTS].items) {
@@ -4279,7 +4279,7 @@ main(int argc, char **argv)
 		"number of buffer slots");
 
     /*
-     * Parse command-line switches & execute afsmonitor 
+     * Parse command-line switches & execute afsmonitor
      */
 
     code = cmd_Dispatch(argc, argv);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -43,12 +43,12 @@ extern long cm_EnumerateCellFile(afs_uint32 client,
                                  cm_enumCellProc_t *procp,
                                  void *rockp);
 
-extern long cm_SearchCellRegistry(afs_uint32 client, 
+extern long cm_SearchCellRegistry(afs_uint32 client,
                                   char *cellNamep, char *newCellNamep,
                                   char *linkedNamep,
                                   cm_configProc_t *procp, void *rockp);
 
-extern long cm_EnumerateCellRegistry(afs_uint32 client, 
+extern long cm_EnumerateCellRegistry(afs_uint32 client,
                                      cm_enumCellProc_t *procp,
                                      void *rockp);
 

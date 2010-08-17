@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright (C) 1989,2004 by the Massachusetts Institute of Technology
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright

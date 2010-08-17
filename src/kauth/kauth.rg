@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -64,9 +64,9 @@ const KAMINORVERSION = 2;
 %#define Date afs_uint32
 %#endif
 #define Date afs_uint32
-/* We log to AuthLog and a dbm-based log file on most platforms. 
+/* We log to AuthLog and a dbm-based log file on most platforms.
  * On NT & some HPs  we only log to AuthLog
- * For HPs, AUTH_DBM_LOG is defined in their respective Makefiles for 
+ * For HPs, AUTH_DBM_LOG is defined in their respective Makefiles for
  * platforms that can log using dbm.
  * On Linux, dbm is not part of the standard installation, and we can't
  * statically link it in. So, ignore it for now.

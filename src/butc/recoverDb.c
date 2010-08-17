@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -99,7 +99,7 @@ PrintDumpLabel(struct butm_tapeLabel *labelptr)
 }
 
 /* PrintVolumeHeader
- *	print the contents of a volume header. 
+ *	print the contents of a volume header.
  */
 static void
 PrintVolumeHeader(struct volumeHeader *volHeader)
@@ -233,8 +233,8 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 	    chunkSize += BIGCHUNK;
 	}
 
-	/* 
-	 * Read volume date - If prematurely hit the HW EOF 
+	/*
+	 * Read volume date - If prematurely hit the HW EOF
 	 * marker, check to see if data contains a volumetrailer.
 	 */
 	rcode =
@@ -272,9 +272,9 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 	*bytesRead -= sizeof(struct volumeHeader);
     }
 
-    /* 
-     * If we didn't hit the EOF while reading data, read FileEnd marker 
-     * or EOF marker. 
+    /*
+     * If we didn't hit the EOF while reading data, read FileEnd marker
+     * or EOF marker.
      */
     if (!rcode) {
 	tcode = butm_ReadFileEnd(curTapePtr);
@@ -293,7 +293,7 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 
 /* nextTapeLabel
  *	generate the name of the next tape label expected
- * exit: 
+ * exit:
  *	ptr to static string
  */
 
@@ -387,7 +387,7 @@ readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr,
 		    continue;
 		}
 
-		/* No volume was found. We may have hit the EOT or a 
+		/* No volume was found. We may have hit the EOT or a
 		 * bad-spot. Try to skip over this spot.
 		 */
 		if (badscan < 2) {	/* allow 2 errors, then fail */
@@ -409,7 +409,7 @@ readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr,
 	    PrintVolumeHeader(&volHeader);
 
 	    /* If this is not the first volume fragment, make sure it follows
-	     * the last volume fragment 
+	     * the last volume fragment
 	     */
 	    if (volEntry.dump) {
 		if ((volEntry.dump != volHeader.dumpID)
@@ -705,14 +705,14 @@ getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname,
 /* ScanDumps
  *	This set of code fragments read a tape, and add the information to
  * 	the database. Builds a literal structure.
- *	
+ *
  */
 
 void *
 ScanDumps(void *param)
 {
     struct scanTapeIf *ptr = (struct scanTapeIf *)param;
-    
+
     struct butm_tapeInfo curTapeInfo;
     struct tapeScanInfo tapeScanInfo;
     afs_uint32 taskId;
@@ -872,8 +872,8 @@ extractDumpName(char *ptr)
  *	The routine assumes that tape names have an embedded sequence number
  *	as the trialing component. It is suggested that any tape naming
  *	changes retain the trailing seq. number
- * entry: 
- *	tapename - ptr to tape name 
+ * entry:
+ *	tapename - ptr to tape name
  * exit:
  *	0 or positive - sequence number
  *	-1 - error, couldn't extract sequence number
@@ -892,7 +892,7 @@ extractTapeSeq(char *tapename)
 }
 
 /* databaseTape
- *   returns true or false depending on whether the tape is 
+ *   returns true or false depending on whether the tape is
  *   a database tape or not.
  */
 int

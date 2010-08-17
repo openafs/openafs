@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -931,12 +931,12 @@ GC(char map[], struct misc_data *misc)
 	    id = ntohl(e.id);
 #if defined(SUPERGROUPS)
 	    if ((id != ANONYMOUSID)
-		&& ((refCount = idcount(&misc->idmap, id)) != ntohl(e.count))) 
+		&& ((refCount = idcount(&misc->idmap, id)) != ntohl(e.count)))
 #else
 	    if ((id >= misc->minId) && (id <= misc->maxId)
 		&& (id != ANONYMOUSID)
 		&& ((refCount = misc->idmap[id - misc->minId]) !=
-		    ntohl(e.count))) 
+		    ntohl(e.count)))
 #endif /* SUPERGROUPS */
 	      {
 		afs_int32 na;
@@ -1040,9 +1040,9 @@ DumpRecreate(char map[], struct misc_data *misc)
 		/* check for duplicate id.  This may still lead to duplicate
 		 * names. */
 #if defined(SUPERGROUPS)
-		if (idcount(&idmap, id)) 
+		if (idcount(&idmap, id))
 #else
-		if (idmap[id - misc->minId]) 
+		if (idmap[id - misc->minId])
 #endif
 		  {
 		    fprintf(stderr, "Skipping entry with duplicate id %di\n",
@@ -1151,9 +1151,9 @@ DumpRecreate(char map[], struct misc_data *misc)
 
 	    owner = ntohl(e.owner);
 #if defined(SUPERGROUPS)
-	    if (!idcount(&idmap, owner)) 
+	    if (!idcount(&idmap, owner))
 #else
-	    if (idmap[owner - misc->minId] == 0) 
+	    if (idmap[owner - misc->minId] == 0)
 #endif
 	      {
 		fprintf(stderr,
@@ -1383,7 +1383,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     free(map);
     return code;
 }
-    
+
 #include "AFS_component_version_number.c"
 
 int

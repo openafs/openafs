@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -271,7 +271,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    /* If a directory, mark vnode in old volume as cloned */
 	    if ((rwvnode->type == vDirectory) && ReadWriteOriginal) {
 #ifdef DVINC
-		/* 
+		/*
 		 * It is my firmly held belief that immediately after
 		 * copy-on-write, the two directories can be identical.
 		 * If the new copy is changed (presumably, that is the very

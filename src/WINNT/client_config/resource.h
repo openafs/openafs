@@ -1,26 +1,26 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 #define IDS_TITLE_NT                    0
-#define IDS_TITLE_95                    1 
-#define IDS_STATE_STOPPED               2 
-#define IDS_STATE_RUNNING               3 
-#define IDS_STATE_STARTING              4 
-#define IDS_STATE_STOPPING              5 
-#define IDS_STATE_UNKNOWN               6 
-#define IDS_SERVICE_FAIL_START          7 
-#define IDS_SERVICE_FAIL_STOP           8 
+#define IDS_TITLE_95                    1
+#define IDS_STATE_STOPPED               2
+#define IDS_STATE_RUNNING               3
+#define IDS_STATE_STARTING              4
+#define IDS_STATE_STOPPING              5
+#define IDS_STATE_UNKNOWN               6
+#define IDS_SERVICE_FAIL_START          7
+#define IDS_SERVICE_FAIL_STOP           8
 #define IDS_WARN_STOPPED                9
 #define IDS_WARN_ADMIN                  10
 #define IDS_CELL_UNKNOWN                11
 #define IDS_GATEWAY_UNKNOWN             12
-                                        
+
 #define IDS_BADLOOKUP_DESC              16
 #define IDS_NEWSUB_DESC                 17
 #define IDS_BADSUB_DESC                 18
@@ -32,7 +32,7 @@
 #define IDS_TITLE_ERROR_95              24
 #define IDS_SHRINKCACHE                 25
 #define IDS_BADCELL_DESC_CC             26
-                                        
+
 #define IDS_STOP_DESC                   32
 #define IDS_PREFCOL_SERVER              33
 #define IDS_PREFCOL_RANK                34
@@ -47,7 +47,7 @@
 #define IDS_SVRCOL_COMMENT              43
 #define IDS_TIP_DRIVES                  44
 #define IDS_MAP_LETTER                  45
-                                        
+
 #define IDS_DRIVE_MAP                   48
 #define IDS_ERROR_MAP                   49
 #define IDS_ERROR_MAP_DESC              50
@@ -180,7 +180,7 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1

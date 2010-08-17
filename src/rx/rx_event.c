@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -123,11 +123,11 @@ rxevent_adjTimes(struct clock *adjTime)
     int nAdjusted = 0;
     struct rxepoch *qep, *nqep;
     struct rxevent *qev, *nqev;
-    
+
     for (queue_Scan(&rxepoch_queue, qep, nqep, rxepoch)) {
 	for (queue_Scan(&qep->events, qev, nqev, rxevent)) {
 	    if (clock_Gt(&qev->eventTime, adjTime)) {
-		clock_Sub(&qev->eventTime, adjTime); 
+		clock_Sub(&qev->eventTime, adjTime);
 		nAdjusted++;
 	    }
 	}
@@ -212,8 +212,8 @@ rxepoch_Allocate(struct clock *when)
  * units. */
 
 static struct rxevent *
-_rxevent_Post(struct clock *when, struct clock *now, 
-	      void (*func) (struct rxevent *, void *, void *, int), 
+_rxevent_Post(struct clock *when, struct clock *now,
+	      void (*func) (struct rxevent *, void *, void *, int),
 	      void *arg, void *arg1, int arg2, int newargs)
 {
     struct rxevent *ev, *evqe, *evqpr;
@@ -344,20 +344,20 @@ _rxevent_Post(struct clock *when, struct clock *now,
 }
 
 struct rxevent *
-rxevent_Post(struct clock *when, 
-	     void (*func) (struct rxevent *, void *, void *), 
+rxevent_Post(struct clock *when,
+	     void (*func) (struct rxevent *, void *, void *),
 	     void *arg, void *arg1)
 {
     struct clock now;
     clock_Zero(&now);
-    return _rxevent_Post(when, &now, 
+    return _rxevent_Post(when, &now,
 			 (void (*)(struct rxevent *, void *, void *, int))func,
 			 arg, arg1, 0, 0);
 }
 
 struct rxevent *
-rxevent_Post2(struct clock *when, 
-	      void (*func) (struct rxevent *, void *, void *, int), 
+rxevent_Post2(struct clock *when,
+	      void (*func) (struct rxevent *, void *, void *, int),
 	      void *arg, void *arg1, int arg2)
 {
     struct clock now;
@@ -366,18 +366,18 @@ rxevent_Post2(struct clock *when,
 }
 
 struct rxevent *
-rxevent_PostNow(struct clock *when, struct clock *now, 
-		void (*func) (struct rxevent *, void *, void *), 
+rxevent_PostNow(struct clock *when, struct clock *now,
+		void (*func) (struct rxevent *, void *, void *),
 		void *arg, void *arg1)
 {
-    return _rxevent_Post(when, now, 
+    return _rxevent_Post(when, now,
 			 (void (*)(struct rxevent *, void *, void *, int))func,
 			 arg, arg1, 0, 0);
 }
 
 struct rxevent *
-rxevent_PostNow2(struct clock *when, struct clock *now, 
-                 void (*func) (struct rxevent *, void *, void *, int), 
+rxevent_PostNow2(struct clock *when, struct clock *now,
+                 void (*func) (struct rxevent *, void *, void *, int),
 		 void *arg, void *arg1, int arg2)
 {
     return _rxevent_Post(when, now, func, arg, arg1, arg2, 1);

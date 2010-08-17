@@ -2,7 +2,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -46,7 +46,7 @@ typedef proc_t afs_proc_t;
 #define getppid()               (afs_uint32)p_ppid(u.u_procp)
 
 /*
- * Global lock support. 
+ * Global lock support.
  *
  * HP uses global mutex to protect afs land
  */
@@ -86,7 +86,7 @@ extern void afsHashRelease(tid_t key);
 #define USERPRI     NET_SPLX(splvar)
 
 #if !defined(AFS_HPUX110_ENV)
-/* 
+/*
  * On HP, the global lock is an alpha semaphore, hence it is automatically
  * released and reacquired aroubd a sleep() and wakeup().
  */

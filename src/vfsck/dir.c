@@ -123,8 +123,8 @@ descend(parentino, inumber)
     if (statemap[inumber] != DSTATE)
 	errexit("BAD INODE %d TO DESCEND", statemap[inumber]);
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-    /* 
-     * keep any continuation inode information 
+    /*
+     * keep any continuation inode information
      */
     if (statemap[inumber] & HASCINODE)
 	statemap[inumber] = HASCINODE | DFOUND;
@@ -138,8 +138,8 @@ descend(parentino, inumber)
 	direrror(inumber, "ZERO LENGTH DIRECTORY");
 	if (reply("REMOVE") == 1)
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	    /* 
-	     * keep any continuation inode information 
+	    /*
+	     * keep any continuation inode information
 	     */
 	    if (statemap[inumber] & HASCINODE)
 		statemap[inumber] = HASCINODE | DCLEAR;

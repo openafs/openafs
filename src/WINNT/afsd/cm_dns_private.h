@@ -97,7 +97,7 @@ typedef struct dns_rr_hdr
 #define DNS_RRCLASS_HS    4    // Hesiod
 #define DNS_RRCLASS_WILD  255  // WildCard - all classes
 
-/* 
+/*
  * DNS AFSDB Resource Data Field
  */
 typedef struct dns_afsdb_rr_hdr
@@ -111,7 +111,7 @@ typedef struct dns_afsdb_rr_hdr
 
 #define DNS_AFSDB_RR_HDR_LEN sizeof(DNS_AFSDB_RR_HDR)
 
-/* 
+/*
  * DNS A Resource Data Field
  */
 typedef struct dns_a_rr_hdr

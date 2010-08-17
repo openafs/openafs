@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -93,7 +93,7 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
  * Try setting up a connection to the server containing the specified fid.
  * Gets the volume, checks if it's up and does the connection by server address.
  *
- * @param afid 
+ * @param afid
  * @param areq Request filled in by the caller.
  * @param locktype Type of lock that will be used.
  *
@@ -145,7 +145,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
      */
     for (notbusy = not_busy; (!lowp && (notbusy <= end_not_busy)); notbusy++) {
 	for (i = 0; i < AFS_MAXHOSTS && tv->serverHost[i]; i++) {
-	    if (((areq->tokenError > 0)||(areq->idleError > 0)) 
+	    if (((areq->tokenError > 0)||(areq->idleError > 0))
 		&& (areq->skipserver[i] == 1))
 		continue;
 	    if (tv->status[i] != notbusy) {
@@ -221,7 +221,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	ReleaseSharedLock(&afs_xconn);
 	return NULL;
     }
-    
+
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
         afs_warnuser("afs_ConnBySA: disconnected\n");
         ReleaseSharedLock(&afs_xconn);
@@ -347,7 +347,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
         return NULL;
     }
 
-/* 
+/*
   1.  look for an existing connection
   2.  create a connection at an address believed to be up
       (if aforce is true, create a connection at the first address)
@@ -428,9 +428,9 @@ afs_PutConn(struct afs_conn *ac, afs_int32 locktype)
 }				/*afs_PutConn */
 
 
-/** 
- * For multi homed clients, a RPC may timeout because of a 
- * client network interface going down. We need to reopen new 
+/**
+ * For multi homed clients, a RPC may timeout because of a
+ * client network interface going down. We need to reopen new
  * connections in this case.
  *
  * @param sap Server address.

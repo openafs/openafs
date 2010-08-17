@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -43,7 +43,7 @@ typedef struct cm_file_lock {
                                    cm_scacheLock] */
     osi_queue_t fileq;		/* per-file list of locks [protected
                                    by scp->rw]*/
-    
+
     cm_user_t *userp;           /* The user to which this lock belongs
                                    to [immutable; held] */
     cm_scache_t *scp;           /* The scache to which this lock
@@ -197,7 +197,7 @@ typedef struct cm_scache {
                                  * by the file server in the most
                                  * recent fetch status.
                                  */
-	
+
     /* bulk stat progress */
     osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 
@@ -320,7 +320,7 @@ typedef struct cm_scache {
 						 * in old info.
                                                  */
 #define CM_MERGEFLAG_STOREDATA		2	/* Merge due to storedata op */
-#define CM_MERGEFLAG_DIROP              4       /* Merge due to directory op */ 
+#define CM_MERGEFLAG_DIROP              4       /* Merge due to directory op */
 
 /* hash define.  Must not include the cell, since the callback revocation code
  * doesn't necessarily know the cell in the case of a multihomed server
@@ -367,10 +367,10 @@ extern long cm_SyncOp(cm_scache_t *, struct cm_buf *, struct cm_user *,
 
 extern void cm_SyncOpDone(cm_scache_t *, struct cm_buf *, afs_uint32);
 
-extern void cm_MergeStatus(cm_scache_t * dscp, cm_scache_t * scp, 
-			   struct AFSFetchStatus * statusp, 
+extern void cm_MergeStatus(cm_scache_t * dscp, cm_scache_t * scp,
+			   struct AFSFetchStatus * statusp,
 			   struct AFSVolSync * volsyncp,
-			   struct cm_user *userp, 
+			   struct cm_user *userp,
                            cm_req_t *reqp,
 			   afs_uint32 flags);
 

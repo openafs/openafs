@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -105,7 +105,7 @@ static FILE * OpenDump(afs_int32 adumpID, char * awrite)
 }
 
 /* OpenTape
- * notes: 
+ * notes:
  * 	non-static for recoverDB
  */
 
@@ -207,7 +207,7 @@ tailCompPtr(char *pathNamePtr)
 
 /* ScanDumpHdr
  *	scan a dump header out of a dump file, leaving the file ptr set after
- *	the header. 
+ *	the header.
  * entry:
  *	afile - ptr to file, for reading.
  *	various - ptrs for return values
@@ -232,7 +232,7 @@ ScanDumpHdr(FILE *afile, char *aname, char *dumpName, afs_int32 *aparent, afs_in
 	return -1;
     code =
 	sscanf(tbuffer, "%d %d %s %s %ld %ld %ld %ld", &dbmagic, &dbversion,
-	       aname, dumpName, (long int *) aparent, (long int *) aincTime, 
+	       aname, dumpName, (long int *) aparent, (long int *) aincTime,
 	       (long int *) acreateTime, (long int *) alevel);
     if (code != 8)
 	return -1;
@@ -255,7 +255,7 @@ static afs_int32 ScanTapeHdr(FILE *afile, afs_int32 *adumpID, afs_int32 *aseq, a
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
     if (!tp)
 	return -1;
-    code = sscanf(tbuffer, "%ld %ld %ld", (long int *)adumpID, 
+    code = sscanf(tbuffer, "%ld %ld %ld", (long int *)adumpID,
 		  (long int *)aseq, (long int *)adamage);
     if (code != 3)
 	return -1;
@@ -286,9 +286,9 @@ afs_int32 ScanTapeVolume(FILE *afile, char *avolName, afs_int32 *avolID, char *a
 	    return 1;		/* eof */
     }
     code =
-	sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName, 
-	       (long int *) avolID, atapeName, (long int *)apos, 
-	       (long int *) aseq, (long int *) alastp, 
+	sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName,
+	       (long int *) avolID, atapeName, (long int *)apos,
+	       (long int *) aseq, (long int *) alastp,
 	       (long int *) cloneTime);
     if (code != 7)
 	return -1;		/* bad input line */

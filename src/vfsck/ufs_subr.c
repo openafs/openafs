@@ -44,7 +44,7 @@ extern int inside[9];
 extern u_char *fragtbl[];
 
 /*
- * Update the frsum fields to reflect addition or deletion 
+ * Update the frsum fields to reflect addition or deletion
  * of some frags.
  */
 fragacct(fs, fragmap, fraglist, cnt)

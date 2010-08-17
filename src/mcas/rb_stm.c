@@ -129,7 +129,7 @@ static void delete_fixup(ptst_t *ptst, stm_tx *tx, set_t *s,
     {
         pb = x->p;
         p  = write_stm_blk(ptst, tx, pb);
- 
+
         if ( xb == p->l )
         {
             wb = p->r;
@@ -164,7 +164,7 @@ static void delete_fixup(ptst_t *ptst, stm_tx *tx, set_t *s,
                     wb = p->r;
                     w  = write_stm_blk(ptst, tx, wb);
                 }
- 
+
                 wrb = w->r;
                 wr  = write_stm_blk(ptst, tx, wrb);
                 w->v = SET_COLOUR(GET_VALUE(w->v), GET_COLOUR(p->v));
@@ -186,7 +186,7 @@ static void delete_fixup(ptst_t *ptst, stm_tx *tx, set_t *s,
                 wb = p->l;
                 w  = write_stm_blk(ptst, tx, wb);
             }
- 
+
             wlb = w->l;
             wl  = read_stm_blk(ptst, tx, wlb);
             wrb = w->r;
@@ -208,7 +208,7 @@ static void delete_fixup(ptst_t *ptst, stm_tx *tx, set_t *s,
                     wb = p->l;
                     w  = write_stm_blk(ptst, tx, wb);
                 }
- 
+
                 wlb = w->l;
                 wl  = write_stm_blk(ptst, tx, wlb);
                 w->v = SET_COLOUR(GET_VALUE(w->v), GET_COLOUR(p->v));
@@ -410,7 +410,7 @@ setval_t set_remove(set_t *s, setkey_t k)
         new_stm_tx(tx, ptst, MEMORY);
         ov = NULL;
         b  = s;
-    
+
         while ( b != NULLB )
         {
             zb = b;
@@ -422,7 +422,7 @@ setval_t set_remove(set_t *s, setkey_t k)
             }
             b = (k < z->k) ? z->l : z->r;
         }
- 
+
         if ( ov != NULL )
         {
             z = write_stm_blk(ptst, tx, zb);
@@ -492,7 +492,7 @@ setval_t set_lookup(set_t *s, setkey_t k)
         new_stm_tx(tx, ptst, MEMORY);
         v  = NULL;
         nb = s;
- 
+
         while ( nb != NULLB )
         {
             n = read_stm_blk(ptst, tx, nb);

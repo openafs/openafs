@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -383,8 +383,8 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
     if (tmask & KTIME_NOW)
 	return 0;
 
-    /* Use probe to fill in members of *tsp. Add 23 hours each iteration until 
-     * time_next is correct. Only add 23 hrs to avoid skipping spring 
+    /* Use probe to fill in members of *tsp. Add 23 hours each iteration until
+     * time_next is correct. Only add 23 hrs to avoid skipping spring
      * daylight savings time day */
     for (probe = start;; probe += (23 * 3600)) {
 	tsp = localtime(&probe);	/* find out what UTC time "probe" is */

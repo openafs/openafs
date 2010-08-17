@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -243,7 +243,7 @@ krb_write_ticket_file(char *realm)
 	return code;
 
     /* Use the KRBTKFILE environment variable if it exists, otherwise fall
-     * back upon /tmp/tkt(uid}. 
+     * back upon /tmp/tkt(uid}.
      */
     if ((tf_name = (char *)getenv("KRBTKFILE")))
 	(void)sprintf(ticket_file, "%s", tf_name);
@@ -361,8 +361,8 @@ krb_write_ticket_file(char *realm)
 #endif  /* AFSLITTLE_ENDIAN */
     close(fd);
     return 0;
-      
-    
+
+
   bad:
     close(fd);
     return -1;

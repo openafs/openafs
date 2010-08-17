@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -125,7 +125,7 @@ main(int argc, char **argv)
 		temp = 0;
 		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0) {
-		    printf("SAMPLE_Inc #1 failed with code %ld\n", 
+		    printf("SAMPLE_Inc #1 failed with code %ld\n",
 			   afs_printable_int32_ld(code));
 		} else {
 		    printf("SAMPLE_Inc #1 succeeded, incremented integer\n");
@@ -143,7 +143,7 @@ main(int argc, char **argv)
 		temp = 0;
 		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0)
-		    printf("SAMPLE_Inc #2 failed with code %ld\n", 
+		    printf("SAMPLE_Inc #2 failed with code %ld\n",
 			   afs_printable_int32_ld(code));
 		else
 		    printf("SAMPLE_Inc #2 succeeded, incremented integer\n");

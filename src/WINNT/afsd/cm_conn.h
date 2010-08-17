@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
-extern DWORD          RDRtimeout; 
+extern DWORD          RDRtimeout;
 
 typedef struct cm_conn {
 	struct cm_conn *nextp;		/* locked by cm_connLock */
@@ -42,9 +42,9 @@ typedef struct cm_conn {
 
 #define CM_CONN_FLAG_FORCE_NEW	1
 
-/* 
+/*
  * structure used for tracking RPC progress
- * and for passing path info from the smb layer 
+ * and for passing path info from the smb layer
  * to the cache manager functions.
  */
 typedef struct cm_req {
@@ -83,7 +83,7 @@ typedef struct cm_req {
 
 #define VSALVAGE	101	/* Volume needs salvage */
 #define VNOVNODE	102	/* Bad vnode number quoted */
-#define VNOVOL		103	/* Volume not attached, doesn't exist, 
+#define VNOVOL		103	/* Volume not attached, doesn't exist,
 				   not created or not online */
 #define VVOLEXISTS	104	/* Volume already exists */
 #define VNOSERVICE	105	/* Volume is not in service (i.e. it's
@@ -109,7 +109,7 @@ typedef struct cm_req {
                                  * vos examine to find out the current
                                  * restrictions. */
 
-#define VRESTARTING	-100    /* server is restarting, otherwise similar to 
+#define VRESTARTING	-100    /* server is restarting, otherwise similar to
 				   VBUSY above.  This is negative so that old
 				   cache managers treat it as "server is down"*/
 
@@ -137,7 +137,7 @@ extern long cm_ConnByServer(struct cm_server *, struct cm_user *, cm_conn_t **);
 extern long cm_ConnFromFID(struct cm_fid *, struct cm_user *, struct cm_req *,
 	cm_conn_t **);
 
-extern long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, 
+extern long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid,
                               struct cm_user *userp, cm_req_t *reqp,
                               cm_conn_t **connpp);
 

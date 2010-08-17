@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -123,7 +123,7 @@ FindTrans(afs_int32 atrans)
 }
 
 /* delete transaction if refcount == 1, otherwise queue delete for later.  Does implicit TRELE */
-afs_int32 
+afs_int32
 DeleteTrans(struct volser_trans *atrans, afs_int32 lock)
 {
     struct volser_trans *tt, **lt;
@@ -161,7 +161,7 @@ DeleteTrans(struct volser_trans *atrans, afs_int32 lock)
 /* THOLD is a macro defined in volser.h */
 
 /* put a transaction back */
-afs_int32 
+afs_int32
 TRELE(struct volser_trans *at)
 {
     VTRANS_LOCK;

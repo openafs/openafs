@@ -1,16 +1,16 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* This is the directory salvager.  It consists of two routines.  The first, 
- * DirOK, checks to see if the directory looks good.  If the directory does 
- * NOT look good, the approved procedure is to then call Salvage, which 
- * copies all the good entries from the damaged dir into a new directory. 
+/* This is the directory salvager.  It consists of two routines.  The first,
+ * DirOK, checks to see if the directory looks good.  If the directory does
+ * NOT look good, the approved procedure is to then call Salvage, which
+ * copies all the good entries from the damaged dir into a new directory.
  */
 
 #include <afsconfig.h>
@@ -37,18 +37,18 @@ extern void Log(const char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 /* Defined in vol/physio.c */
 extern void Die(char *);
-    
+
 #define printf	Log		/* To make it work with volume salvager */
 
-/* This routine is called with one parameter, the id (the same thing that is 
- * passed to physio or the buffer package) of a directory to check.  It 
+/* This routine is called with one parameter, the id (the same thing that is
+ * passed to physio or the buffer package) of a directory to check.  It
  * returns 1 if the directory looks good, and 0 otherwise. */
 
 #define MAXENAME 256
 
 extern afs_int32 DErrno;
 
-/* figure out how many pages in use in a directory, given ptr to its (locked) 
+/* figure out how many pages in use in a directory, given ptr to its (locked)
  * header */
 static int
 ComputeUsedPages(struct DirHeader *dhp)
@@ -165,7 +165,7 @@ DirOK(void *file)
 	}
     }
 
-    /* Compute number of used directory pages and max entries in all 
+    /* Compute number of used directory pages and max entries in all
      ** those pages, the value of 'up' must be less than pgcount. The above
      ** loop only checks the first MAXPAGES in a directory. An alloMap does
      ** not exists for pages between MAXPAGES and BIGMAXPAGES */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -79,7 +79,7 @@ extern off_t afs_lseek(int FD, off_t O, int F);
 /*
  * This function emulates a subset of flock()
  */
-int 
+int
 emul_flock(int fd, int cmd)
 {    struct flock f;
 
@@ -144,7 +144,7 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 
 /* Inode number format:
  * low 26 bits - vnode number - all 1's if volume special file.
- * next 3 bits - tag 
+ * next 3 bits - tag
  * next 3 bits spare (0's)
  * high 32 bits - uniquifier (regular) or type if spare
  */
@@ -341,9 +341,9 @@ namei_CreateDataDirectories(namei_t * name, int *created)
  * Output:
  *  errp : errno of the first error encountered during the directory cleanup.
  *         *errp should have been initialized to 0.
- * 
+ *
  * Return Values:
- *  -1  : If errors were encountered during cleanup and error is set to 
+ *  -1  : If errors were encountered during cleanup and error is set to
  *        the first errno.
  *   0  : Success.
  *
@@ -376,7 +376,7 @@ delTree(char *root, char *tree, int *errp)
 		if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
 		    continue;
 		/* since root is big enough, we reuse the space to
-		 * concatenate the dirname to the current tree 
+		 * concatenate the dirname to the current tree
 		 */
 		strcat(root, "/");
 		strcat(root, dirp->d_name);
@@ -386,8 +386,8 @@ delTree(char *root, char *tree, int *errp)
 		} else
 		    *errp = *errp ? *errp : errno;
 
-		/* recover path to our cur tree by truncating it to 
-		 * its original len 
+		/* recover path to our cur tree by truncating it to
+		 * its original len
 		 */
 		*cp = 0;
 	    }
@@ -740,7 +740,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %" AFS_INT64_FMT "\n",
 		th->ih_dev, th->ih_vid, (afs_int64)th->ih_ino);
 	    IH_RELEASE(th);
-	  
+
 	    /* If we're less than 0, someone presumably unlinked;
 	       don't bother setting count to 0, but we need to drop a lock */
 	    if (namei_SetLinkCount(fdP, ino, 0, 1) < 0) {
@@ -808,11 +808,11 @@ namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget)
     afs_int32 code;
     namei_t nameLink;
     namei_t nameTarget;
-    
+
     /* Convert handle to file name. */
     namei_HandleToName(&nameLink, hLink);
     namei_HandleToName(&nameTarget, hTarget);
-    
+
     unlink(nameLink.n_path);
     code = link(nameTarget.n_path, nameLink.n_path);
     return code;
@@ -825,16 +825,16 @@ namei_copy_on_write(IHandle_t *h)
     namei_t name;
     FdHandle_t *fdP;
     struct afs_stat tstat;
-    
+
     namei_HandleToName(&name, h);
-    if (afs_stat(name.n_path, &tstat) < 0) 
+    if (afs_stat(name.n_path, &tstat) < 0)
 	return EIO;
     if (tstat.st_nlink > 1) {                   /* do a copy on write */
 	char path[259];
 	char *buf;
 	afs_size_t size;
 	ssize_t tlen;
-	
+
 	fdP = IH_OPEN(h);
 	if (!fdP)
 	    return EIO;
@@ -855,9 +855,9 @@ namei_copy_on_write(IHandle_t *h)
 	FDH_SEEK(fdP, 0, 0);
 	while (size) {
 	    tlen = size > 8192 ? 8192 : size;
-	    if (FDH_READ(fdP, buf, tlen) != tlen) 
+	    if (FDH_READ(fdP, buf, tlen) != tlen)
 		break;
-	    if (write(fd, buf, tlen) != tlen) 
+	    if (write(fd, buf, tlen) != tlen)
 		break;
 	    size -= tlen;
 	}
@@ -890,23 +890,23 @@ namei_copy_on_write(IHandle_t *h)
  *
  * Using this information we can see that a layout of 256 directories, each
  * with 512 subdirectories and each of those having 512 files gives us
- * 256*512*512 = 67108864 AFS files and directories. 
+ * 256*512*512 = 67108864 AFS files and directories.
  *
  * The volume, vnode, uniquifier and data version, as well as the tag
- * are required, either for finding the file or for salvaging. It's best to 
+ * are required, either for finding the file or for salvaging. It's best to
  * restrict the name to something that can be mapped into 64 bits so the
  * "Inode" is easily comparable (using "==") to other "Inodes". The tag
  * is used to distinguish between different versions of the same file
  * which are currently in the RW and clones of a volume. See "Link Table
- * Organization" below for more information on the tag. The tag is 
- * required in the name of the file to ensure a unique name. 
+ * Organization" below for more information on the tag. The tag is
+ * required in the name of the file to ensure a unique name.
  *
  * We can store data in the uid, gid and mode bits of the files, provided
  * the directories have root only access. This gives us 15 bits for each
  * of uid and gid (GNU chown considers 65535 to mean "don't change").
- * There are 9 available mode bits. Adn we need to store a total of 
+ * There are 9 available mode bits. Adn we need to store a total of
  * 32 (volume id) + 26 (vnode) + 32 (uniquifier) + 32 (data-version) + 3 (tag)
- * or 131 bits somewhere. 
+ * or 131 bits somewhere.
  *
  * The format of a file name for a regular file is:
  * /vicepX/AFSIDat/V1/V2/AA/BB/<tag><uniq><vno>
@@ -927,7 +927,7 @@ namei_copy_on_write(IHandle_t *h)
  * should be formed so that the leading characters are different as quickly
  * as possible, leading to faster discards of incorrect matches in the
  * lookup code.
- * 
+ *
  */
 
 
@@ -1015,7 +1015,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
         if (rc != sizeof(row))
 	    goto bad_getLinkByte;
     }
- 
+
     return (int)((row >> index) & NAMEI_TAGMASK);
 
   bad_getLinkByte:
@@ -1025,7 +1025,7 @@ namei_GetLinkCount2(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrit
 }
 
 int
-namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit) 
+namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
 {
     return namei_GetLinkCount2(h, ino, lockit, 0, 1);
 }
@@ -1173,7 +1173,7 @@ static int namei_ListAFSSubDirs(IHandle_t * dirIH,
 
 /* WriteInodeInfo
  *
- * Write the inode data to the results file. 
+ * Write the inode data to the results file.
  *
  * Returns -2 on error, 0 on success.
  *
@@ -1213,14 +1213,14 @@ VerifyDirPerms(char *path)
  * -2 - not enough space on partition, salvager has error message for this.
  *
  * This code optimizes single volume salvages by just looking at that one
- * volume's directory. 
+ * volume's directory.
  *
  * If the resultFile is NULL, then don't call the write routine.
  */
 int
 ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
-	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath, 
+	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath,
 	       void *rock)
 {
     int ninodes;
@@ -1524,7 +1524,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     int64_to_flipbase64(check, info->inodeNumber);
     if (strcmp(name, check))
 	return -1;
-    
+
     GetOGMFromStat(&status, &parm, &tag);
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
 	/* p1 - vid, p2 - -1, p3 - type, p4 - rwvid */

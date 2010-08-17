@@ -6,8 +6,8 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
- 
- 
+
+
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
@@ -497,7 +497,7 @@ afs_DbgListDirEntries(struct VenusFid *afid)
  */
 
 int
-afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid, 
+afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
 		    char *aname, struct vcache **adp)
 {
     int code;
@@ -669,7 +669,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	return ENOMEM;
 
     code = afs_GetParentVCache(avc, 0, &pdir_fid, tname, &tdp);
-    if (code) 
+    if (code)
 	goto end;
 
     /* This data may also be in linkData, but then we have to deal with
@@ -707,7 +707,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	ReleaseReadLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
-	
+
     /* Set status. */
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = avc->f.m.Date;
@@ -796,11 +796,11 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	 */
 	tdc = afs_FindDCacheByFid(&avc->f.fid);
 	if (tdc) {
-   	    afs_dir_ChangeFid(tdc, ".", &avc->f.fid.Fid.Vnode, 
+   	    afs_dir_ChangeFid(tdc, ".", &avc->f.fid.Fid.Vnode,
 			      &newFid.Fid.Vnode);
 
 	    if (avc->f.m.LinkCount >= 2)
-	        /* For non empty dirs, fix children's parentVnode and 
+	        /* For non empty dirs, fix children's parentVnode and
 		 * parentUnique reference.
 	     	 */
 	    	afs_FixChildrenFids(&avc->f.fid, &newFid);
@@ -884,7 +884,7 @@ end:
     if (tdp)
     	afs_PutVCache(tdp);
     afs_osi_Free(tname, AFSNAMEMAX);
-    if (ttargetName) 
+    if (ttargetName)
 	afs_osi_Free(ttargetName, tlen);
     return code;
 }
@@ -1253,14 +1253,14 @@ unlock_srv_file:
 next_file:
 	ObtainWriteLock(&afs_disconDirtyLock, 710);
 	if (code == 0) {
-	    /* Replayed successfully - pull the vcache from the 
+	    /* Replayed successfully - pull the vcache from the
 	     * disconnected list */
 	    tvc->f.ddirty_flags = 0;
 	    QRemove(&tvc->dirtyq);
 	    afs_PutVCache(tvc);
 	} else {
 	    if (code == EAGAIN)	{
-		/* Operation was deferred. Pull it from the current place in 
+		/* Operation was deferred. Pull it from the current place in
 		 * the list, and stick it at the end again */
 		QRemove(&tvc->dirtyq);
 	   	QAdd(&afs_disconDirty, &tvc->dirtyq);
@@ -1292,7 +1292,7 @@ next_file:
  * Discard all of our shadow directory copies. If squash is true, then
  * we also invalidate the vcache holding the shadow directory, to ensure
  * that any disconnected changes are deleted
- * 
+ *
  * \param squash
  * \param acred
  *
@@ -1330,7 +1330,7 @@ afs_DisconDiscardAllShadows(int squash, afs_ucred_t *acred)
  * \param acred
  *
  */
-void 
+void
 afs_DisconDiscardAll(afs_ucred_t *acred)
 {
     struct vcache *tvc;

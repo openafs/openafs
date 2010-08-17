@@ -1,7 +1,7 @@
 /*
  * Copyright 2006-2010, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -159,7 +159,7 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    
+
     ts = cmd_CreateSyntax("online", VolOnline, NULL, "bring a volume online (FSYNC_VOL_ON opcode)");
     VOLOP_PARMS_DECL(ts);
 
@@ -364,7 +364,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 	res->payload.buf = res_buf;
     }
 
-    fprintf(stderr, "calling FSYNC_VolOp with command code %d (%s)\n", 
+    fprintf(stderr, "calling FSYNC_VolOp with command code %d (%s)\n",
 	    command, FSYNC_com2string(command));
 
     code = FSYNC_VolOp(state->vop->volume,
@@ -399,7 +399,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
         } \
     } while (0)
 
-static int 
+static int
 VolOnline(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
@@ -412,7 +412,7 @@ VolOnline(struct cmd_syndesc * as, void * rock)
     return 0;
 }
 
-static int 
+static int
 VolOffline(struct cmd_syndesc * as, void * rock)
 {
     struct state state;
@@ -669,7 +669,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tneedsPutBack    = %d\n", v.needsPutBack);
 	printf("\tspecialStatus   = %d\n", v.specialStatus);
 	printf("\tupdateTime      = %u\n", v.updateTime);
-	
+
 	printf("\tvnodeIndex[vSmall] = {\n");
         printf("\t\thandle       = %p\n", v.vnodeIndex[vSmall].handle);
         printf("\t\tbitmap       = %p\n", v.vnodeIndex[vSmall].bitmap);
@@ -689,7 +689,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    printf("\tattach_flags    = %s\n", vol_flags_to_string(v.attach_flags));
 	    printf("\tnWaiters        = %d\n", v.nWaiters);
 	    printf("\tchainCacheCheck = %d\n", v.chainCacheCheck);
-	    
+
 	    /* online salvage structure */
 	    printf("\tsalvage = {\n");
 	    printf("\t\tprio      = %u\n", v.salvage.prio);
@@ -697,7 +697,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    printf("\t\trequested = %d\n", v.salvage.requested);
 	    printf("\t\tscheduled = %d\n", v.salvage.scheduled);
 	    printf("\t}\n");
-	    
+
 	    /* statistics structure */
 	    printf("\tstats = {\n");
 
@@ -724,12 +724,12 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    printf("\t\t\thi = %u\n", hi);
 	    printf("\t\t\tlo = %u\n", lo);
 	    printf("\t\t}\n");
-	    
+
 	    printf("\t\tattaches         = %u\n", v.stats.attaches);
 	    printf("\t\tsoft_detaches    = %u\n", v.stats.soft_detaches);
 	    printf("\t\tsalvages         = %u\n", v.stats.salvages);
 	    printf("\t\tvol_ops          = %u\n", v.stats.vol_ops);
-	    
+
 	    printf("\t\tlast_attach      = %u\n", v.stats.last_attach);
 	    printf("\t\tlast_get         = %u\n", v.stats.last_get);
 	    printf("\t\tlast_promote     = %u\n", v.stats.last_promote);
@@ -739,10 +739,10 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    printf("\t\tlast_salvage_req = %u\n", v.stats.last_salvage_req);
 	    printf("\t\tlast_vol_op      = %u\n", v.stats.last_vol_op);
 	    printf("\t}\n");
-	    
+
 	    /* VLRU state */
 	    printf("\tvlru = {\n");
-	    printf("\t\tidx = %d (%s)\n", 
+	    printf("\t\tidx = %d (%s)\n",
 		   v.vlru.idx, vlru_idx_to_string(v.vlru.idx));
 	    printf("\t}\n");
 
@@ -788,7 +788,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tmagic   = 0x%x\n", v.stamp.magic);
 	printf("\t\tversion = %u\n", v.stamp.version);
 	printf("\t}\n");
-	
+
 	printf("\tid               = %u\n", v.id);
 	printf("\tname             = '%s'\n", v.name);
 	if (v.inUse != 0) {
@@ -868,13 +868,13 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tproto_version  = %u\n", vop.com.proto_version);
 	printf("\t\tpkt_seq        = %u\n", vop.com.pkt_seq);
 	printf("\t\tcom_seq        = %u\n", vop.com.com_seq);
-	printf("\t\tprogramType    = %d (%s)\n", 
+	printf("\t\tprogramType    = %d (%s)\n",
 	       vop.com.programType, VPTypeToString(vop.com.programType));
 	printf("\t\tpid            = %d\n", vop.com.pid);
 	printf("\t\ttid            = %d\n", vop.com.tid);
-	printf("\t\tcommand        = %d (%s)\n", 
+	printf("\t\tcommand        = %d (%s)\n",
 	       vop.com.command, FSYNC_com2string(vop.com.command));
-	printf("\t\treason         = %d (%s)\n", 
+	printf("\t\treason         = %d (%s)\n",
 	       vop.com.reason, FSYNC_reason2string(vop.com.reason));
 	printf("\t\tcommand_len    = %u\n", vop.com.command_len);
 	printf("\t\tflags          = 0x%lux\n", afs_printable_uint32_lu(vop.com.flags));
@@ -944,7 +944,7 @@ do_vnqry(struct state * state, SYNC_response * res)
     qry.spare = 0;
     strlcpy(qry.partName, state->vop->partName, sizeof(qry.partName));
 
-    fprintf(stderr, "calling FSYNC_GenericOp with command code %d (%s)\n", 
+    fprintf(stderr, "calling FSYNC_GenericOp with command code %d (%s)\n",
 	    command, FSYNC_com2string(command));
 
     code = FSYNC_GenericOp(&qry, sizeof(qry), command, FSYNC_OPERATOR, res);
@@ -1125,7 +1125,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
 
     common_prolog(as, &state);
 
-    fprintf(stderr, "calling FSYNC_askfs with command code %d (%s)\n", 
+    fprintf(stderr, "calling FSYNC_askfs with command code %d (%s)\n",
 	    command, FSYNC_com2string(command));
 
     code = FSYNC_StatsOp(&scom, command, FSYNC_WHATEVER, &res);
@@ -1139,9 +1139,9 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     }
 
     fprintf(stderr, "FSYNC_VolOp returned %d (%s)\n", code, SYNC_res2string(code));
-    fprintf(stderr, "protocol response code was %d (%s)\n", 
+    fprintf(stderr, "protocol response code was %d (%s)\n",
 	    res.hdr.response, SYNC_res2string(res.hdr.response));
-    fprintf(stderr, "protocol reason code was %d (%s)\n", 
+    fprintf(stderr, "protocol reason code was %d (%s)\n",
 	    res.hdr.reason, FSYNC_reason2string(res.hdr.reason));
 
     VDisconnectFS();
@@ -1195,7 +1195,7 @@ print_vol_stats_general(VolPkgStats * stats)
     printf("VolPkgStats = {\n");
 #ifdef AFS_DEMAND_ATTACH_FS
     for (i = 0; i < VOL_STATE_COUNT; i++) {
-	printf("\tvol_state_count[%s] = %d\n", 
+	printf("\tvol_state_count[%s] = %d\n",
 	       vol_state_to_string(i),
 	       stats->state_levels[i]);
     }
@@ -1249,7 +1249,7 @@ print_vol_stats_general(VolPkgStats * stats)
     printf("\t}\n");
 
     printf("\thdr_cache_size = %d\n", stats->hdr_cache_size);
-	    
+
     printf("}\n");
 }
 

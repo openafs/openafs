@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -70,9 +70,9 @@ static int EvalVolumeSet2(struct bc_config *aconfig, struct bc_volumeSet *avs,
 static int DBLookupByVolume(char *volumeName);
 
 int
-bc_EvalVolumeSet(struct bc_config *aconfig, 
-		 struct bc_volumeSet *avs, 
-		 struct bc_volumeDump **avols, 
+bc_EvalVolumeSet(struct bc_config *aconfig,
+		 struct bc_volumeSet *avs,
+		 struct bc_volumeDump **avols,
 		 struct ubik_client *uclient)
 {				/*bc_EvalVolumeSet */
     int code = -1;
@@ -104,9 +104,9 @@ struct serversort {
 };
 
 afs_int32
-getSPEntries(afs_uint32 server, afs_int32 partition, 
-	     struct serversort **serverlist, 
-	     struct serversort **ss, 
+getSPEntries(afs_uint32 server, afs_int32 partition,
+	     struct serversort **serverlist,
+	     struct serversort **ss,
 	     struct partitionsort **ps)
 {
     if (!(*ss) || ((*ss)->ipaddr != server)) {
@@ -156,7 +156,7 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
 }
 
 afs_int32
-randSPEntries(struct serversort *serverlist, 
+randSPEntries(struct serversort *serverlist,
 	      struct bc_volumeDump **avols)
 {
     struct serversort *ss, **pss;
@@ -198,9 +198,9 @@ randSPEntries(struct serversort *serverlist,
 }
 
 static int
-EvalVolumeSet2(struct bc_config *aconfig, 
-	       struct bc_volumeSet *avs, 
-	       struct bc_volumeDump **avols, 
+EvalVolumeSet2(struct bc_config *aconfig,
+	       struct bc_volumeSet *avs,
+	       struct bc_volumeDump **avols,
 	       struct ubik_client *uclient)
 {				/*EvalVolumeSet2 */
     struct bc_volumeEntry *tve;
@@ -222,7 +222,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
     /* For each of the volume set entries - collect the volumes that match it */
     for (tve = avs->ventries; tve; tve = tve->next) {
-	/* Put together a call to the vlserver for this vlentry. The 
+	/* Put together a call to the vlserver for this vlentry. The
 	 * performance gain is from letting the vlserver expand the
 	 * volumeset and not this routine.
 	 */
@@ -381,29 +381,29 @@ EvalVolumeSet2(struct bc_config *aconfig,
  * EvalVolumeSetOld
  *
  * Description:
- *	Takes the entries in a volumeset and expands them into a list of 
+ *	Takes the entries in a volumeset and expands them into a list of
  *      volumes. Every VLDB volume entry is looked at and compared to the
  *      volumeset entries.
  *
- *      When matching a VLDB volume entry to a volumeset entry, 
+ *      When matching a VLDB volume entry to a volumeset entry,
  *       1. If the RW volume entry matches, that RW volume is used.
  *       2. Otherwise, if the BK volume entry matches, the BK volume is used.
  *       3. Finally, if the RO volume entry matches, the RO volume is used.
- *      For instance: A volumeset entry of ".* .* user.t.*" will match volume 
- *                    "user.troy" and "user.troy.backup". The rules will use 
+ *      For instance: A volumeset entry of ".* .* user.t.*" will match volume
+ *                    "user.troy" and "user.troy.backup". The rules will use
  *                    the RW volume "user.troy".
  *
  *      When a VLDB volume entry matches a volumeset entry (be it RW, BK or RO),
- *      that volume is used and matches against any remaining volumeset entries 
+ *      that volume is used and matches against any remaining volumeset entries
  *      are not even done.
  *      For instance: A 1st volumeset entry ".* .* .*.backup" will match with
- *                    "user.troy.backup". Its 2nd volumeset entry ".* .* .*" 
- *                    would have matched its RW volume "user.troy", but the first 
+ *                    "user.troy.backup". Its 2nd volumeset entry ".* .* .*"
+ *                    would have matched its RW volume "user.troy", but the first
  *                    match is used and the second match isn't even done.
  *
  * Arguments:
  *	aconfig	: Global configuration info.
- *	avs	: 
+ *	avs	:
  *	avols	: Ptr to linked list of entries describing volumes to dump.
  *	uclient	: Ptr to Ubik client structure.
  *
@@ -419,9 +419,9 @@ EvalVolumeSet2(struct bc_config *aconfig,
  *-----------------------------------------------------------------------------
  */
 static int
-EvalVolumeSet1(struct bc_config *aconfig, 
+EvalVolumeSet1(struct bc_config *aconfig,
 	       struct bc_volumeSet *avs,
-	       struct bc_volumeDump **avols, 
+	       struct bc_volumeDump **avols,
 	       struct ubik_client *uclient)
 {				/*EvalVolumeSet1 */
     afs_int32 code;		/*Result of various calls */
@@ -529,7 +529,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
 			}
 		    }
 
-		    /* If the BK name matches the volume set entry, take 
+		    /* If the BK name matches the volume set entry, take
 		     * it and exit. Second choice is to use the BK volume.
 		     */
 		    if (entry.flags & BACK_EXISTS) {
@@ -752,7 +752,7 @@ bc_CopyString(char *astring)
 }
 
 /* concatParams
- * 
+ *
  *    Concatenates the parameters of an option and returns the string.
  *
  */
@@ -796,7 +796,7 @@ concatParams(struct cmd_item *itemPtr)
 /* printIfStatus
  *	print out an interface status node as received from butc
  */
- 
+
 void
 printIfStatus(struct tciStatusS *statusPtr)
 {
@@ -1003,7 +1003,7 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    /* 
+    /*
      * Now print the scheduled dumps.
      */
     if (!dlqEmpty(&statusHead) && as)
@@ -1235,7 +1235,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
     oldFlag = 0;
 
     /* Read all the port offsets into the ports array. The first element in the
-     * array is for full restore and the rest are for incremental restores 
+     * array is for full restore and the rest are for incremental restores
      */
     if (as->parms[5].items) {
 	for (ti = as->parms[5].items; ti; ti = ti->next)
@@ -1261,7 +1261,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 	if (dumpID <= 0)
 	  dumpID = 0;
       }
-    
+
     /*
      * Perform the call to start the restore.
      */
@@ -1309,7 +1309,7 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
 
     /* parm 0 is the server to restore
      * parm 1 is the partition to restore
-     
+
      * parm 8 and above as in VolRestoreCmd:
      * parm 8 is the new server to restore to
      * parm 9 is the new partition to restore to
@@ -1397,7 +1397,7 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
 	return (-1);
     }
 
-    /* Since we want only RW volumes, remove any 
+    /* Since we want only RW volumes, remove any
      * BK or RO volumes from the list.
      */
     for (prev = 0, tvol = volsToRestore; tvol; tvol = nextvol) {
@@ -1668,10 +1668,10 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	return (code);
     }
 
-    /* 
+    /*
      * Some parameters cannot be specified together
-     * The "-file" option cannot exist with the "-volume", "-dump", 
-     * "-portoffset", or "-append" option 
+     * The "-file" option cannot exist with the "-volume", "-dump",
+     * "-portoffset", or "-append" option
      */
     if (as->parms[6].items) {
 	loadfile = 1;
@@ -1689,7 +1689,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    /* 
+    /*
      * Get the time we are to perform this dump
      */
     if (as->parms[3].items) {
@@ -1714,7 +1714,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 
     dontExecute = (as->parms[5].items ? 1 : 0);	/* -n */
 
-    /* 
+    /*
      * If this dump is not a load file, then check the parameters.
      */
     if (!loadfile) {		/*6 */
@@ -1758,12 +1758,12 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 
     /*6 */
     /*
-     * If given the "-at" option, then add this to the jobs list and return 
+     * If given the "-at" option, then add this to the jobs list and return
      * with no error.
      *
      * Create a status node for this timed dump.
      * Fill in the time to dump and the cmd line for the dump leaving off
-     * the -at option.  If the -n option is there, it is scheduled with 
+     * the -at option.  If the -n option is there, it is scheduled with
      * the Timed dump as opposed to not scheduling the time dump at all.
      */
     if (doAt) {
@@ -1851,7 +1851,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	return (0);
     }
 
-    /* 
+    /*
      * Read and execute the load file if specified.  The work of reading is done
      * in the main routine prior the dispatch call. loadFile and dontExecute are
      * global variables so this can take place in main.
@@ -1866,7 +1866,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	return 0;
     }
 
-    /* 
+    /*
      * We are doing a real dump (no load file or timed dump).
      */
     printf("Starting dump of volume set '%s' (dump level '%s')\n", vsName,
@@ -1889,9 +1889,9 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* We found the most recent dump at this level. Now check
-	 * if we should use it by seeing if its full dump hierarchy 
+	 * if we should use it by seeing if its full dump hierarchy
 	 * exists. If it doesn't, we don't want to base our incremental
-	 * off of this dump. 
+	 * off of this dump.
 	 */
 	if (!parent || (dumpEntry.id > parent)) {
 	    /* Follow the parent dumps to see if they are all there */
@@ -1917,7 +1917,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    /* If the problemflag was raise, it means we are not doing the 
+    /* If the problemflag was raise, it means we are not doing the
      * dump at the level we requested it be done at.
      */
     if (problemFindingDump) {
@@ -2179,7 +2179,7 @@ bc_ScanDumpsCmd(struct cmd_syndesc *as, void *arock)
  */
 
 afs_int32
-bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType, 
+bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
 		   afs_int32 *expDate)
 {
     struct cmd_item *itemPtr;
@@ -2348,7 +2348,7 @@ deleteDump(afs_uint32 dumpid,		/* The dumpid to delete */
 
 	/* If dump is to an XBSA server, connect to butc and send it
 	 * the dump to delete. Butc will contact the XBSA server.
-	 * The dump will not be an appended dump because XBSA butc 
+	 * The dump will not be an appended dump because XBSA butc
 	 * does not support the append option.
 	 */
 	if (xbsadump && dumpEntry.nVolumes) {
@@ -2691,7 +2691,7 @@ bc_restoreDbCmd(struct cmd_syndesc *as, void *arock)
 }
 
 /* ----------------------------------
- * supporting routines for database examination 
+ * supporting routines for database examination
  * ----------------------------------
  */
 
@@ -3137,7 +3137,7 @@ printRecentDumps(int ndumps)
     return (code);
 }
 
-/* bc_dumpInfoCmd 
+/* bc_dumpInfoCmd
  *	list the dumps and contens of the dumps.
  * params:
  *	as - name of tape

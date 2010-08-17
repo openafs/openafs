@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -152,7 +152,7 @@ rxi_IsLoopbackIface(struct sockaddr_in *a, unsigned long flags)
     return 0;
 }
 
-/* this function returns the total number of interface addresses 
+/* this function returns the total number of interface addresses
 ** the buffer has to be passed in by the caller
 */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -347,7 +347,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 			   a->sin_addr.s_addr));
 		} else {
 		    struct ifreq ifr;
-		    
+
 		    addrBuffer[count] = a->sin_addr.s_addr;
 		    a = (struct sockaddr_in *) info.rti_info[RTAX_NETMASK];
 		    if (a)
@@ -420,9 +420,9 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))
 #endif
 #endif
-	) 
+	)
 #else
-    for (i = 0; i < len; ++i) 
+    for (i = 0; i < len; ++i)
 #endif
     {
 #if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -445,7 +445,7 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
                 if (rxi_IsLoopbackIface(a, ifr->ifr_flags))
 		    continue;	/* skip loopback address as well. */
             } else {
-                if (ifr->ifr_flags & IFF_LOOPBACK) 
+                if (ifr->ifr_flags & IFF_LOOPBACK)
 		    continue;	/* skip aliased loopbacks as well. */
 	    }
 	    if (count >= maxSize)	/* no more space */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -76,7 +76,7 @@
 
 extern int LogLevel;
 
-static SYNC_client_state fssync_state = 
+static SYNC_client_state fssync_state =
     { -1,                    /* file descriptor */
       FSSYNC_ENDPOINT_DECL,  /* server endpoint */
       FSYNC_PROTO_VERSION,   /* protocol version */
@@ -192,7 +192,7 @@ FSYNC_GenericOp(void * ext_hdr, size_t ext_len,
 }
 
 afs_int32
-FSYNC_VolOp(VolumeId volume, char * partition, 
+FSYNC_VolOp(VolumeId volume, char * partition,
 	    int command, int reason,
 	    SYNC_response * res)
 {

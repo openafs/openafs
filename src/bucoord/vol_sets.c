@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -29,7 +29,7 @@
 #include "error_macros.h"
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
-    
+
 /* code to manage volumesets
  * specific to the ubik database implementation
  */
@@ -505,7 +505,7 @@ bc_ParseVolumeSet(void)
 	    tvs->next = (struct bc_volumeSet *)0;
 	} /*r */
 	else {			/*e */
-	    /* Scan a volume name entry, which contains the server name, 
+	    /* Scan a volume name entry, which contains the server name,
 	     * partition pattern, and volume pattern.
 	     */
 	    code = sscanf(tbuffer, "%s %s %s", serverName, partName, vsname);
@@ -517,8 +517,8 @@ bc_ParseVolumeSet(void)
 		continue;
 	    }
 
-	    /* The line just read in is a volume spec.  Create a new volume 
-	     * spec record, then get the rest of the information regarding 
+	    /* The line just read in is a volume spec.  Create a new volume
+	     * spec record, then get the rest of the information regarding
 	     * the host, and stuff everything into place.
 	     */
 	    tve = (struct bc_volumeEntry *)
@@ -575,7 +575,7 @@ bc_ParseVolumeSet(void)
 	}
     }				/*forever loop */
 
-    /* If we hit an EOF in the middle of a volume set record, we bitch and 
+    /* If we hit an EOF in the middle of a volume set record, we bitch and
      * moan.
      */
     if (!readHeader)

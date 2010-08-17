@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -217,9 +217,9 @@ typedef struct vnode1 {
     unsigned int v_bufgen;	/* buf list generation number */
     mutex_t v_buf_lock;		/* mutex for buffer tree */
 
-    vnode_pcache_t v_pc;	/* Page cache structure. 
+    vnode_pcache_t v_pc;	/* Page cache structure.
 				 * per vnode. Refer to
-				 * vnode_pcache.h 
+				 * vnode_pcache.h
 				 * for details.
 				 */
 #ifdef VNODE_TRACING

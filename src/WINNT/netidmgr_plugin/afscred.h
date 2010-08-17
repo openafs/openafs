@@ -127,7 +127,7 @@ extern kconf_schema schema_afsconfig[];
 
 
 /* plugin callback procedure */
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_plugin_cb(khm_int32 msg_type,
               khm_int32 msg_subtype,
               khm_ui_4 uparam,

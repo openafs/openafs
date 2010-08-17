@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -884,7 +884,7 @@ cmd_Dispatch(int argc, char **argv)
     }
 
     /*
-     * Before calling the beforeProc and afterProc and all the implications 
+     * Before calling the beforeProc and afterProc and all the implications
      * from those calls, check if the help procedure was called and call it now.
      */
     if ((ts->proc == HelpProc) || (ts->proc == AproposProc)) {

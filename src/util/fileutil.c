@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -60,7 +60,7 @@ renamefile(const char *oldname, const char *newname)
 
 
 /*
- * FilepathNormalizeEx() -- normalize file path; i.e., use only forward (or only 
+ * FilepathNormalizeEx() -- normalize file path; i.e., use only forward (or only
  *     backward) slashes, remove multiple and trailing slashes.
  */
 void

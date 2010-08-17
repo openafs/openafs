@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -429,7 +429,7 @@ SRXAFSCB_GetXStats(struct rx_call * rxcall, afs_int32 clientVersionNumber,
  *      rxcall : Ptr to Rx call on which this request came in.
  *
  * Returns:
- *      RXGEN_OPCODE (always). 
+ *      RXGEN_OPCODE (always).
  *
  * Environment:
  *      Nothing interesting.

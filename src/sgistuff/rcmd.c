@@ -119,7 +119,7 @@ rcmd(ahost, rport, locuser, remuser, cmd, fd2p)
 	return (-1);
     }
     *ahost = hp->h_name;
-    /* was: syslog(LOG_ERR, "rcmd: host=%s, rport=%d, luser=%s,ruser=%s,cmd=%s,fd2p=%s\n", *ahost,rport,locuser,remuser,cmd,fd2p) 
+    /* was: syslog(LOG_ERR, "rcmd: host=%s, rport=%d, luser=%s,ruser=%s,cmd=%s,fd2p=%s\n", *ahost,rport,locuser,remuser,cmd,fd2p)
      * but that trashes hp... */
     sigprocmask(SIG_BLOCK, &sigBlock, &oldset);
     for (;;) {

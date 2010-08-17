@@ -1,7 +1,7 @@
 /*
  * Copyright 2006, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -265,7 +265,7 @@ do_salvop(struct state * state, afs_int32 command, SYNC_response * res)
 	hdr = (SALVSYNC_response_hdr *) res->payload.buf;
     }
 
-    fprintf(stderr, "calling SALVSYNC_SalvageVolume with command code %d (%s)\n", 
+    fprintf(stderr, "calling SALVSYNC_SalvageVolume with command code %d (%s)\n",
 	    command, command_code_to_string(command));
 
     code = SALVSYNC_SalvageVolume(state->sop->volume,
@@ -284,9 +284,9 @@ do_salvop(struct state * state, afs_int32 command, SYNC_response * res)
     }
 
     fprintf(stderr, "SALVSYNC_SalvageVolume returned %d (%s)\n", code, response_code_to_string(code));
-    fprintf(stderr, "protocol response code was %d (%s)\n", 
+    fprintf(stderr, "protocol response code was %d (%s)\n",
 	    res->hdr.response, response_code_to_string(res->hdr.response));
-    fprintf(stderr, "protocol reason code was %d (%s)\n", 
+    fprintf(stderr, "protocol reason code was %d (%s)\n",
 	    res->hdr.reason, reason_code_to_string(res->hdr.reason));
 
     printf("state = {\n");

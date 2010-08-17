@@ -1,13 +1,13 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* 
+/*
  *                      (5) Add functions to process supergroups:
  *                          ChangeIDEntry(), RemoveFromSGEntry(),
  *                          AddToSGEntry(), GetListSG2().
@@ -163,7 +163,7 @@ pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, void *bp, afs_int32 pos, afs_i
  *  just after ubik_ServerInit.
  */
 
-void 
+void
 pt_hook_write(void)
 {
     extern struct ubik_dbase *ubik_dbase;
@@ -405,7 +405,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	}
     } else {
 	/* A foreign user: <name>@<cell>. The foreign user is added to
-	 * its representing group. It is 
+	 * its representing group. It is
 	 */
 	char *cellGroup;
 	afs_int32 pos, n;
@@ -435,7 +435,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 		return PRBADARG;
 	    tentry.id = *aid;
 	} else {
-	    /* Allocate an ID special for this foreign user. It is based 
+	    /* Allocate an ID special for this foreign user. It is based
 	     * on the representing group's id and nusers count.
 	     */
 	    tentry.id = allocNextId(at, &centry);
@@ -535,7 +535,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	    }
 
 	    /* Admins don't get charged for creating a group.
-	     * If in noAuth mode, you get changed for it but you 
+	     * If in noAuth mode, you get changed for it but you
 	     * are still allowed to create as many groups as you want.
 	     */
 	    admin = ((creator == SYSADMINID)
@@ -1906,7 +1906,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
     code = pr_ReadEntry(at, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
-    if (restricted && !IsAMemberOf(at, cid, SYSADMINID)) 
+    if (restricted && !IsAMemberOf(at, cid, SYSADMINID))
 	return PRPERM;
     if (tentry.owner != cid && !IsAMemberOf(at, cid, SYSADMINID)
 	&& !IsAMemberOf(at, cid, tentry.owner) && !pr_noAuth)
@@ -2034,7 +2034,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		return code;
 	}
 	/* Look through cont entries too. This needs to be broken into
-	 * seperate transaction so that no one transaction becomes too 
+	 * seperate transaction so that no one transaction becomes too
 	 * large to complete.
 	 */
 	for (nptr = tentry.next; nptr; nptr = centry.next) {
@@ -2173,13 +2173,13 @@ allocNextId(struct ubik_trans * at, struct prentry * cellEntry)
     }
 
     cellEntry->nusers = htonl(id);
-    /* use the field nusers to keep 
+    /* use the field nusers to keep
      * the next available id in that
      * foreign cell's group. Note :
      * It would seem more appropriate
      * to use ngroup for that and nusers
      * to enforce the quota, however pts
-     * does not have an option to change 
+     * does not have an option to change
      * foreign users quota yet  */
 
     id = (id << 16) | cellid;
@@ -2195,7 +2195,7 @@ inRange(struct prentry *cellEntry, afs_int32 aid)
     /*
      * The only thing that we want to make sure here is that
      * the id is in the legal range of this group. If it is
-     * a duplicate we don't care since it will get caught 
+     * a duplicate we don't care since it will get caught
      * in a different check.
      */
 
@@ -2204,9 +2204,9 @@ inRange(struct prentry *cellEntry, afs_int32 aid)
     if (cellid != groupid)
 	return 0;		/* not in range */
 
-    /* 
+    /*
      * if we got here we're ok but we need to update the nusers
-     * field in order to get the id correct the next time that 
+     * field in order to get the id correct the next time that
      * we try to allocate it automatically
      */
 

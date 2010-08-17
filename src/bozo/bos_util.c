@@ -1,12 +1,12 @@
-/* 
+/*
  *  Copyright (C) 1989 by the Massachusetts Institute of Technology
- * 
+ *
  *    Export of software employing encryption from the United States of
  *    America is assumed to require a specific license from the United
  *    States Government.  It is the responsibility of any person or
  *    organization contemplating export to obtain such a license before
  *    exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright

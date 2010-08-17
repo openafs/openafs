@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -73,9 +73,9 @@ protected:
     // NOTE - the ClassWizard will add and remove member functions here.
     //}}AFX_DISPATCH
     DECLARE_DISPATCH_MAP()
-	
+
     DECLARE_OLECREATE(CShellExt)
-    
+
 	// IFileViewer interface
     BEGIN_INTERFACE_PART(MenuExt, IContextMenu)
 	STDMETHOD(QueryContextMenu)( HMENU hmenu,UINT indexMenu,UINT idCmdFirst,

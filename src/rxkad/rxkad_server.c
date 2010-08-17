@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 
 #include <afs/stds.h>
 #include <sys/types.h>
-#if (defined(AFS_AIX_ENV) && defined(KERNEL) && !defined(UKERNEL)) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#if (defined(AFS_AIX_ENV) && defined(KERNEL) && !defined(UKERNEL)) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include <sys/systm.h>
 #endif
 #include <time.h>
@@ -43,7 +43,7 @@
  * Currently only used by the AFS/DFS protocol translator to recognize
  * Kerberos V5 tickets. The actual code to do that is provided externally.
  */
-afs_int32(*rxkad_AlternateTicketDecoder) (afs_int32, char *, afs_int32, 
+afs_int32(*rxkad_AlternateTicketDecoder) (afs_int32, char *, afs_int32,
 		                          char *, char *, char *,
 					  struct ktc_encryptionKey *,
 					  afs_int32 *, afs_uint32 *,
@@ -336,7 +336,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	code =
 	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_rock,
 			      kvno, client.name, client.instance, client.cell,
-			      &sessionkey, &host, &start, &end, 
+			      &sessionkey, &host, &start, &end,
 			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
 	if (code)
 	    return code;
@@ -359,7 +359,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	    return code;
     }
     code = tkt_CheckTimes(start, end, time(0));
-    if (code == 0) 
+    if (code == 0)
 	return RXKADNOAUTH;
     else if (code == -1)
 	return RXKADEXPIRED;
@@ -465,18 +465,18 @@ rxkad_GetServerInfo(struct rx_connection * aconn, rxkad_level * level,
 
 /* Set security object configuration variables */
 afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
-                                 struct rx_connection *aconn, 
+                                 struct rx_connection *aconn,
                                  rx_securityConfigVariables atype,
 		                         void * avalue, void **currentValue)
 {
-    struct rxkad_sprivate *private = 
+    struct rxkad_sprivate *private =
     (struct rxkad_sprivate *) aobj->privateData;
 
     switch (atype) {
     case RXS_CONFIG_FLAGS:
         if (currentValue) {
             *((afs_uint32 *)currentValue) = private->flags;
-        } else { 
+        } else {
             private->flags = (intptr_t)avalue;
         }
         break;

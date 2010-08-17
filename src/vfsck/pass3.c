@@ -81,7 +81,7 @@ pass3()
 	if (statemap[inumber] & HASCINODE) {
 	    if ((dp = ginode(inumber)) == NULL)
 		break;
-	    /* 
+	    /*
 	     * Make sure di_contin is not out of range and then
 	     * check and make sure that the inode #di_contin
 	     * is a continuation inode that has not already been

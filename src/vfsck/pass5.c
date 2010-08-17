@@ -163,7 +163,7 @@ pass5()
     /* this is the original from UCB/McKusick, but it is clearly wrong.  It is
      * rounding the # of fragments to the next 1024 (in our case, with a 1K/8K file system),
      * while instead it should be rounding to the next block.
-     * 
+     *
      * In addition, we should be sure that we allocate enough space, but that seems to be
      * ensured by the fact that the bitmap is rounded up to the nearest short, and that there
      * are never more than 16 frags per block.

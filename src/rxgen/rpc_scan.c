@@ -6,31 +6,31 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
- * 
+ *
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
 
 /*
- * rpc_scan.c, Scanner for the RPC protocol compiler 
- * Copyright (C) 1987, Sun Microsystems, Inc. 
+ * rpc_scan.c, Scanner for the RPC protocol compiler
+ * Copyright (C) 1987, Sun Microsystems, Inc.
  */
 
 /* Portions Copyright (c) 2003 Apple Computer, Inc. */
@@ -68,7 +68,7 @@ static void deverbatim(void);
 
 
 /*
- * scan expecting 1 given token 
+ * scan expecting 1 given token
  */
 void
 scan(tok_kind expect, token * tokp)
@@ -80,7 +80,7 @@ scan(tok_kind expect, token * tokp)
 }
 
 /*
- * scan expecting 2 given tokens 
+ * scan expecting 2 given tokens
  */
 void
 scan2(tok_kind expect1, tok_kind expect2, token * tokp)
@@ -92,7 +92,7 @@ scan2(tok_kind expect1, tok_kind expect2, token * tokp)
 }
 
 /*
- * scan expecting 3 given token 
+ * scan expecting 3 given token
  */
 void
 scan3(tok_kind expect1, tok_kind expect2, tok_kind expect3, token * tokp)
@@ -120,7 +120,7 @@ scan4(tok_kind expect1, tok_kind expect2, tok_kind expect3, tok_kind expect4,
 }
 
 /*
- * scan expecting a constant, possibly symbolic 
+ * scan expecting a constant, possibly symbolic
  */
 void
 scan_num(token * tokp)
@@ -136,7 +136,7 @@ scan_num(token * tokp)
 
 
 /*
- * Peek at the next token 
+ * Peek at the next token
  */
 void
 peek(token * tokp)
@@ -147,7 +147,7 @@ peek(token * tokp)
 
 
 /*
- * Peek at the next token and scan it if it matches what you expect 
+ * Peek at the next token and scan it if it matches what you expect
  */
 int
 peekscan(tok_kind expect, token * tokp)
@@ -163,7 +163,7 @@ peekscan(tok_kind expect, token * tokp)
 
 
 /*
- * Get the next token, printing out any directive that are encountered. 
+ * Get the next token, printing out any directive that are encountered.
  */
 void
 get_token(token * tokp)
@@ -233,7 +233,7 @@ get_token(token * tokp)
     }
 
     /*
-     * 'where' is not whitespace, comment or directive Must be a token! 
+     * 'where' is not whitespace, comment or directive Must be a token!
      */
     switch (*where) {
     case ':':

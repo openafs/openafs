@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,7 +94,7 @@ struct uio;
 #define memcmp(A, B, S) bcmp(A, B, S)
 #endif
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 /* Non-standard definitions */
 #ifndef	EDQUOT
 #define	EDQUOT		69	/* Disc quota exceeded 		*/

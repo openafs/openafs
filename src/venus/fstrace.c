@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) 
+#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43)
 #include <time.h>
 /*#ifdef	AFS_AIX_ENV*/
 #include <sys/time.h>
@@ -548,7 +548,7 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
  */
 
 void
-dce1_error_inq_text(afs_uint32 status_to_convert, 
+dce1_error_inq_text(afs_uint32 status_to_convert,
 		   char *error_text, int *status)
 {
     unsigned short facility_code;
@@ -1114,7 +1114,7 @@ icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 
 #if !defined(AFS_SGI_ENV)
 int
-afs_syscall(long call, long parm0, long parm1, long parm2, long parm3, 
+afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 	    long parm4, long parm5, long parm6)
 {
     int code, rval;
@@ -1184,7 +1184,7 @@ icl_Init(void)
 }
 
 int
-icl_CreateSet(char *name, struct afs_icl_log *baseLogp, 
+icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
 	      struct afs_icl_log *fatalLogp, struct afs_icl_set **outSetpp)
 {
     return icl_CreateSetWithFlags(name, baseLogp, fatalLogp, /*flags */ 0,
@@ -1198,8 +1198,8 @@ icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
  * those references will be released.
  */
 int
-icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp, 
-		       struct afs_icl_log *fatalLogp, afs_uint32 flags, 
+icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
+		       struct afs_icl_log *fatalLogp, afs_uint32 flags,
 		       struct afs_icl_set **outSetpp)
 {
     struct afs_icl_set *setp;
@@ -1389,7 +1389,7 @@ icl_ZeroSet(struct afs_icl_set *setp)
 }
 
 int
-icl_EnumerateSets(int (*aproc) (char *, void *, struct afs_icl_set *), 
+icl_EnumerateSets(int (*aproc) (char *, void *, struct afs_icl_set *),
 		  void *arock)
 {
     struct afs_icl_set *tp, *np;
@@ -1468,7 +1468,7 @@ icl_SetSetStat(struct afs_icl_set *setp, int op)
 	break;
 
     case ICL_OP_SS_FREE:	/* deassert design for log */
-	/* 
+	/*
 	 * if we are already in this state, do nothing; otherwise
 	 * deassert desire for log
 	 */
