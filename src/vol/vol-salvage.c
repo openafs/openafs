@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -71,7 +71,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 	Logs missing inode numbers.
 
     2.3 features:
-	    Increments directory version number by 200 (rather than by 1) when it is salvaged, in order to prevent problems due to the fact that a version number can be promised to a workstation before it is written to disk.  If the server crashes, it may have an older version.  Salvaging it could bring the version number up to the same version the workstation believed it already had a call back on. 
+	    Increments directory version number by 200 (rather than by 1) when it is salvaged, in order to prevent problems due to the fact that a version number can be promised to a workstation before it is written to disk.  If the server crashes, it may have an older version.  Salvaging it could bring the version number up to the same version the workstation believed it already had a call back on.
 
     2.4 features:
 	    Locks the file /vice/vol/salvage.lock before starting.  Aborts if it can't acquire the lock.
@@ -411,7 +411,7 @@ IsRootInode(struct afs_stat *status)
 {
     /*
      * The root inode is not a fixed value in XFS partitions. So we need to
-     * see if the partition is in the list of mounted partitions. This only 
+     * see if the partition is in the list of mounted partitions. This only
      * affects the SalvageFileSys path, so we check there.
      */
     return (status->st_ino == ROOTINODE);
@@ -544,12 +544,12 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
     }
 
     if (thisjob) {
-	/* Check to see if thisjob is for a disk that we are already 
+	/* Check to see if thisjob is for a disk that we are already
 	 * salvaging. If it is, link it in as the next job to do. The
-	 * jobs array has 1 entry per disk being salvages. numjobs is 
-	 * the total number of disks currently being salvaged. In 
+	 * jobs array has 1 entry per disk being salvages. numjobs is
+	 * the total number of disks currently being salvaged. In
 	 * order to keep thejobs array compact, when a disk is
-	 * completed, the hightest element in the jobs array is moved 
+	 * completed, the hightest element in the jobs array is moved
 	 * down to now open slot.
 	 */
 	for (j = 0; j < numjobs; j++) {
@@ -588,7 +588,7 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 	    jobs[j] = jobs[j]->nextjob;	/* Step to next part on same disk */
 	    free(oldjob);	/* free the old job */
 
-	    /* If there is another partition on the disk to salvage, then 
+	    /* If there is another partition on the disk to salvage, then
 	     * say we will start it (startjob). If not, then put thisjob there
 	     * and say we will start it.
 	     */
@@ -801,8 +801,8 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
 
     /*
-     * Remove any leftover /vicepa/salvage.inodes.* or /vicepa/salvage.temp.* 
-     * files 
+     * Remove any leftover /vicepa/salvage.inodes.* or /vicepa/salvage.temp.*
+     * files
      */
     {
 	DIR *dirp;
@@ -1541,7 +1541,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 	     * the last try looking at it; avoid AskOffline'ing the same vol
 	     * multiple times */
 
-	    if (singleVolumeNumber 
+	    if (singleVolumeNumber
 	        && summary.header.id != singleVolumeNumber) {
 		/* don't offline singleVolumeNumber; we already did that
 		 * earlier */
@@ -2611,7 +2611,7 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
 			/*
 			 * Because of the possibility of the uniquifier overflows (> 4M)
 			 * we compare them modulo the low 22-bits; we shouldn't worry
-			 * about mismatching since they shouldn't to many old 
+			 * about mismatching since they shouldn't to many old
 			 * uniquifiers of the same vnode...
 			 */
 			if (IUnique(vu) != IUnique(iu)) {
@@ -2729,7 +2729,7 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
 			memset(vnode, 0, vcp->diskSize);
 			vnodeChanged = 1;
 		    } else {
-			/* Should not reach here becuase we checked for 
+			/* Should not reach here becuase we checked for
 			 * (inodeNumber == 0) above. And where we zero the vnode,
 			 * we also goto vnodeDone.
 			 */
@@ -2819,9 +2819,9 @@ CopyOnWrite(struct DirSummary *dir)
 }
 
 /*
- * This function should either successfully create a new dir, or give up 
- * and leave things the way they were.  In particular, if it fails to write 
- * the new dir properly, it should return w/o changing the reference to the 
+ * This function should either successfully create a new dir, or give up
+ * and leave things the way they were.  In particular, if it fails to write
+ * the new dir properly, it should return w/o changing the reference to the
  * old dir.
  */
 void
@@ -2858,9 +2858,9 @@ CopyAndSalvage(struct DirSummary *dir)
     assert(VALID_INO(newinode));
     SetSalvageDirHandle(&newdir, dir->rwVid, fileSysDevice, newinode);
 
-    /* Assign . and .. vnode numbers from dir and vnode.parent. 
+    /* Assign . and .. vnode numbers from dir and vnode.parent.
      * The uniquifier for . is in the vnode.
-     * The uniquifier for .. might be set to a bogus value of 1 and 
+     * The uniquifier for .. might be set to a bogus value of 1 and
      * the salvager will later clean it up.
      */
     if (vnode.parent && (vnodeEssence = CheckVnodeNumber(vnode.parent))) {
@@ -2912,7 +2912,7 @@ CopyAndSalvage(struct DirSummary *dir)
     /* make sure old directory file is really closed */
     fdP = IH_OPEN(dir->dirHandle.dirh_handle);
     FDH_REALLYCLOSE(fdP);
-    
+
     code = IH_DEC(dir->ds_linkH, oldinode, dir->rwVid);
     assert(code == 0);
     dir->dirHandle = newdir;
@@ -2941,7 +2941,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
     }
 #ifdef AFS_AIX_ENV
 #ifndef AFS_NAMEI_ENV
-    /* On AIX machines, don't allow entries to point to inode 0. That is a special 
+    /* On AIX machines, don't allow entries to point to inode 0. That is a special
      * mount inode for the partition. If this inode were deleted, it would crash
      * the machine.
      */
@@ -2981,7 +2981,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	if (!vnodeEssence->unique
 	    && ((strcmp(name, "..") == 0) || (strcmp(name, ".") == 0))) {
 	    /* This is an orphaned directory. Don't delete the . or ..
-	     * entry. Otherwise, it will get created in the next 
+	     * entry. Otherwise, it will get created in the next
 	     * salvage and deleted again here. So Just skip it.
 	     */
 	    return 0;
@@ -3086,7 +3086,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		IH_RELEASE(ihP);
 		return 0;
 	    }
-	
+
 	    if (size > 1024)
 		size = 1024;
 	    nBytes = FDH_READ(fdP, buf, size);
@@ -3119,8 +3119,8 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	}
 
 	/* The directory entry points to the vnode. Check to see if the
-	 * vnode points back to the directory. If not, then let the 
-	 * directory claim it (else it might end up orphaned). Vnodes 
+	 * vnode points back to the directory. If not, then let the
+	 * directory claim it (else it might end up orphaned). Vnodes
 	 * already claimed by another directory are deleted from this
 	 * directory: hardlinks to the same vnode are not allowed
 	 * from different directories.
@@ -3845,7 +3845,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 		LFVnode = rootdir.vnodeNumber;	/* Lost+Found vnode number */
 		LFUnique = rootdir.unique;	/* Lost+Found uniquifier */
 
-		/* Update this orphaned vnode's info. Its parent info and 
+		/* Update this orphaned vnode's info. Its parent info and
 		 * link count (do for orphaned directories and files).
 		 */
 		vep->parent = LFVnode;	/* Parent is the root dir */
@@ -3854,7 +3854,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 		vep->claimed = 1;
 		vep->count--;	/* Inc link count (root dir will pt to it) */
 
-		/* If this orphaned vnode is a directory, change '..'. 
+		/* If this orphaned vnode is a directory, change '..'.
 		 * The name of the orphaned dir/file is unknown, so we
 		 * build a unique name. No need to CopyOnWrite the directory
 		 * since it is not connected to tree in BK or RO volume and

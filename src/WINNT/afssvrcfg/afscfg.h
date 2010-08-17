@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -54,11 +54,11 @@ enum StateID {
 #define	CS_NULL					0		// NULL state
 #define	CS_DONT_CONFIGURE		1		// Do not perform the configuration step
 #define	CS_CONFIGURE			2		// Perform the configuration step
-#define	CS_ALREADY_CONFIGURED	3		// The step has already been performed, so we don't 
+#define	CS_ALREADY_CONFIGURED	3		// The step has already been performed, so we don't
 										// need to do it.
 #define CS_UNCONFIGURE			4		// Unconfigure the step
 #define CS_DISABLED				32		// The step cannot be performed because it is dependent
-										// on some other step that is not to be performed and 
+										// on some other step that is not to be performed and
 										// has not already been performed.
 
 // I know I could have used an enum for this, but then tacking on the CS_DISABLED
@@ -85,7 +85,7 @@ typedef int CONFIG_STATE;
  */
 struct CFG_DATA {
 	BOOL bWizard;
-	
+
 	CONFIG_STATE configFS;			// File server
 	CONFIG_STATE configDB;			// Database server
 	CONFIG_STATE configBak;			// Backup server
@@ -102,11 +102,11 @@ struct CFG_DATA {
 
 	BOOL bRootAfsExists;
 	BOOL bRootCellExists;
- 
-    // If we cannot determine if the root volumes exist, then this 
+
+    // If we cannot determine if the root volumes exist, then this
     // variable will be FALSE.
     BOOL bRootVolumesExistanceKnown;
-	
+
     BOOL bRootAfsReplicated;
 	BOOL bRootCellReplicated;
     BOOL bRootVolumesReplicationKnown;

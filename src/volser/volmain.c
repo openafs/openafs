@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -84,7 +84,7 @@ struct volser_trans *QI_GlobalWriteTrans = 0;
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
-int debuglevel = 0; 
+int debuglevel = 0;
 #define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
@@ -127,7 +127,7 @@ MyAfterProc(struct rx_call *acall, afs_int32 code)
 }
 
 /* Called every GCWAKEUP seconds to try to unlock all our partitions,
- * if we're idle and there are no active transactions 
+ * if we're idle and there are no active transactions
  */
 static void
 TryUnlock(void)
@@ -239,7 +239,7 @@ vol_rxstat_userok(struct rx_call *call)
 }
 
 #include "AFS_component_version_number.c"
-int 
+int
 main(int argc, char **argv)
 {
     afs_int32 code;
@@ -257,8 +257,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -298,8 +298,8 @@ main(int argc, char **argv)
 	    rxkadDisableDotCheck = 1;
 	} else if (strcmp(argv[code], "-d") == 0) {
 	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -d\n");
+		return -1;
 	    }
 	    debuglevel = atoi(argv[++code]);
 	    LogLevel = debuglevel;
@@ -326,14 +326,14 @@ main(int argc, char **argv)
 	    rxJumbograms = 1;
 	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
 	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
-		exit(1); 
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		exit(1);
 	    }
 	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       rxMaxMTU, RX_MIN_PACKET_SIZE,
 		       RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
 	    }
@@ -440,18 +440,18 @@ main(int argc, char **argv)
 	rx_SetUdpBufSize(udpBufSize);	/* set the UDP buffer size for receive */
     if (rxBind) {
 	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
+        } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
-        if (ccode == 1) 
+        if (ccode == 1)
             host = SHostAddrs[0];
     }
 

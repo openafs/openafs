@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -16,7 +16,7 @@ typedef struct cm_bulkIO {
     osi_hyper_t offset;		        /* offset of buffers */
     long length;			/* # of bytes to be transferred */
     int reserved;			/* did we reserve multiple buffers? */
-        
+
     /* all of these buffers are held */
     osi_queueData_t *bufListp;	/* list of buffers involved in I/O */
     osi_queueData_t *bufListEndp;	/* list of buffers involved in I/O */
@@ -50,7 +50,7 @@ extern afs_int32 cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs
 	struct cm_user *userp);
 
 extern void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
-                                afs_uint32 count, 
+                                afs_uint32 count,
                                 cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_ValidateDCache(void);

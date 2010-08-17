@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -40,7 +40,7 @@
 
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
- * If server is zero, will match first index of ANY server and partition 
+ * If server is zero, will match first index of ANY server and partition
  * Zero is a valid partition field.
  */
 int
@@ -115,7 +115,7 @@ Lp_SetROValue(struct nvldbentry *entry, afs_uint32 oserver,
 }
 
 /* Returns success if this server and partition matches the RW entry */
-int 
+int
 Lp_Match(afs_uint32 server, afs_int32 part,
          struct nvldbentry *entry)
 {
@@ -125,14 +125,14 @@ Lp_Match(afs_uint32 server, afs_int32 part,
 }
 
 /* Return the index of the RO entry (plus 1) if it exists, else return 0 */
-int 
+int
 Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
 {
     return (FindIndex(entry, server, part, ITSROVOL) + 1);
 }
 
 /* Return the index of the RW entry if it exists, else return -1 */
-int 
+int
 Lp_GetRwIndex(struct nvldbentry *entry)
 {
     return (FindIndex(entry, 0, 0, ITSRWVOL));
@@ -164,7 +164,7 @@ Lp_QAdd(struct qHead *ahead, struct aqueue *elem)
     }
 }
 
-int 
+int
 Lp_QScan(struct qHead *ahead, afs_int32 id, int *success, struct aqueue **elem)
 {
     struct aqueue *cptr;

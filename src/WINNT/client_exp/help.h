@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -16,7 +16,7 @@
 #define GET_TOKENS_HELP_ID			17
 #define DISCARD_TOKENS_HELP_ID		18
 #define SET_AFS_ACL_HELP_ID			19
-#define ADD_ACL_ENTRY_HELP_ID		20		
+#define ADD_ACL_ENTRY_HELP_ID		20
 #define COPY_ACL_HELP_ID			21
 #define VOLUME_INFO_HELP_ID			27
 #define PARTITION_INFO_HELP_ID		28

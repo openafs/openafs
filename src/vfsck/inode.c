@@ -394,8 +394,8 @@ clri(idesc, type, flag)
 	    n_files--;
 
 	/*
-	 * If there is a CI associated with this inode, we must 
-	 * clear it as well.  
+	 * If there is a CI associated with this inode, we must
+	 * clear it as well.
 	 */
 	if (statemap[idesc->id_number] & HASCINODE) {
 	    if (!(dp->di_contin < ROOTINO || dp->di_contin > maxino))
@@ -515,7 +515,7 @@ blkerror(ino, type, blk)
 #endif /* VICE */
     case FSTATE:
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	/* 
+	/*
 	 *  Keep the continuation inode info
 	 */
 	if (statemap[ino] & HASCINODE)
@@ -529,7 +529,7 @@ blkerror(ino, type, blk)
 
     case DSTATE:
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	/* 
+	/*
 	 *  Keep the continuation inode info
 	 */
 	if (statemap[ino] & HASCINODE)

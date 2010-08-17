@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -31,7 +31,7 @@ extern char *uss_fs_OutBuff;	/*Cache Manager output buff */
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_fs_GetACL(char *a_dirPath, char *a_aclBuff, 
+extern afs_int32 uss_fs_GetACL(char *a_dirPath, char *a_aclBuff,
        			       afs_int32 a_aclBuffBytes);
     /*
      * Summary:
@@ -48,7 +48,7 @@ extern afs_int32 uss_fs_GetACL(char *a_dirPath, char *a_aclBuff,
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_SetACL(char *a_dirPath, char *a_aclBuff, 
+extern afs_int32 uss_fs_SetACL(char *a_dirPath, char *a_aclBuff,
 			       afs_int32 a_aclBuffBytes);
     /*
      * Summary:
@@ -113,7 +113,7 @@ extern afs_int32 uss_fs_CkBackups(void);
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_MkMountPoint(char *a_volname, char *a_cellname, 
+extern afs_int32 uss_fs_MkMountPoint(char *a_volname, char *a_cellname,
 				     afs_int32 a_rw, char *a_mountpoint);
     /*
      * Summary: *NEW*

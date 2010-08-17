@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -29,7 +29,7 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-    
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <stdio.h>
@@ -196,7 +196,7 @@ afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
 
 /* returns nth super user from the UserList file */
 int
-afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer, 
+afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer,
 		   afs_int32 abufferLen)
 {
     char tbuffer[256];
@@ -297,11 +297,11 @@ afsconf_AddUser(struct afsconf_dir *adir, char *aname)
 }
 
 /* special CompFindUser routine that builds up a princ and then
-	calls finduser on it. If found, returns char * to user string, 
+	calls finduser on it. If found, returns char * to user string,
 	otherwise returns NULL. The resulting string should be immediately
 	copied to other storage prior to release of mutex. */
 static char *
-CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst, 
+CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
 	     char *realm)
 {
     static char fullname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
@@ -443,7 +443,7 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 	    }
 	}
 
-	/* If yes, then make sure that the name is not present in 
+	/* If yes, then make sure that the name is not present in
 	 * an exclusion list */
 	if (lrealm_match) {
 	    if (tinst[0])

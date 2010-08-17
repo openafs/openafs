@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -133,7 +133,7 @@ Need offset to SP in jmp_buf for this platform.
 typedef __uint64_t jmp_buf_type;
 #endif
 #else
-#if defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV) 
+#if defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
 typedef long jmp_buf_type;
 #else
 typedef int jmp_buf_type;
@@ -155,13 +155,13 @@ static jmp_buf_type *jmpBuffer;
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 
 #if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_SPARC_LINUX24_ENV)
-/* technically we should use POINTER_GUARD 
+/* technically we should use POINTER_GUARD
  * ( == offsetof (tcbhead_t, pointer_guard) )
  * instead of 0x18
  */
 #undef ptr_mangle
 static int ptr_mangle(int p)
-{   
+{
     register char *tls_ptr __asm__("%g7");
     return p ^ *(int*)(tls_ptr + 0x18);
 }

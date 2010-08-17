@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -52,8 +52,8 @@ extern int ADMINAPI util_RPCStatsGetBegin(struct rx_connection *conn,
 					  int (*rpc) (struct rx_connection *,
 						      afs_uint32, afs_uint32 *,
 						      afs_uint32 *, afs_uint32 *,
-						      afs_uint32 *, 
-						      struct rpcStats *), 
+						      afs_uint32 *,
+						      struct rpcStats *),
 					  void **iterationIdP,
 					  afs_status_p st);
 
@@ -71,15 +71,15 @@ extern int ADMINAPI util_RPCStatsStateGet(struct rx_connection *conn,
 					  afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsStateEnable(struct rx_connection *conn,
-					     int (*rpc) (struct rx_connection *), 
+					     int (*rpc) (struct rx_connection *),
 					     afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsStateDisable(struct rx_connection *conn,
-					      int (*rpc) (struct rx_connection *), 
+					      int (*rpc) (struct rx_connection *),
 					      afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsClear(struct rx_connection *conn,
-				       int (*rpc) (struct rx_connection *, 
+				       int (*rpc) (struct rx_connection *,
 					           afs_RPCStatsClearFlag_t),
 				       afs_RPCStatsClearFlag_t flag,
 				       afs_status_p st);

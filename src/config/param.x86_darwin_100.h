@@ -34,7 +34,7 @@
 #define DARWIN_REFBASE 3
 #define AFS_WARNUSER_MARINER_ENV 1
 #define AFS_CACHE_VNODE_PATH
-#define NEED_IOCTL32 
+#define NEED_IOCTL32
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
@@ -65,7 +65,7 @@
 #define SYS_NAME		"ppc64_darwin_100"
 #define SYS_NAME_ID		SYS_NAME_ID_ppc64_darwin_100
 #define AFSBIG_ENDIAN		1
-#elif defined(__i386__) 
+#elif defined(__i386__)
 #define sys_x86_darwin_12	1
 #define sys_x86_darwin_13	1
 #define sys_x86_darwin_14	1
@@ -77,7 +77,7 @@
 #define SYS_NAME		"x86_darwin_100"
 #define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_100
 #define AFSLITTLE_ENDIAN	1
-#elif defined(__amd64__) 
+#elif defined(__amd64__)
 #define sys_x86_darwin_12	1
 #define sys_x86_darwin_13	1
 #define sys_x86_darwin_14	1

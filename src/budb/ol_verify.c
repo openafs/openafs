@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -38,8 +38,8 @@
 /* notes
  * 1) volInfo structures refering to a volume of the same name are
  *	chained together, i.e. the volumes described differ in volid, partition
- *	etc. The structure at the head of this list (the sameNameChain) is 
- *	treated specially. When a delete volInfo request is processed, heads 
+ *	etc. The structure at the head of this list (the sameNameChain) is
+ *	treated specially. When a delete volInfo request is processed, heads
  *	are not deleted unless all other items on the sameNameChain are gone.
  *
  *	The result is that volInfo (head) structures may be present
@@ -52,7 +52,7 @@
  *	is only for the off-line case.
  */
 
-/* flags associated with each structure. These are set and checked in 
+/* flags associated with each structure. These are set and checked in
  * the blockMap entries
  */
 
@@ -186,10 +186,10 @@ char *textName[TB_NUM] = {
 extern int sizeFunctions[];
 extern int nHTBuckets;
 
-afs_int32 DbVerify(struct rx_call *call, afs_int32 *status, 
+afs_int32 DbVerify(struct rx_call *call, afs_int32 *status,
 		   afs_int32 *orphans, afs_int32 *host);
 afs_int32 verifyTextChain(struct ubik_trans *ut, struct textBlock *tbPtr);
-	
+
 
 #define DBBAD BUDB_DATABASEINCONSISTENT
 
@@ -225,7 +225,7 @@ BumpErrors(void)
  */
 
 afs_int32
-checkDiskAddress(unsigned long address, int type, int *blockIndexPtr, 
+checkDiskAddress(unsigned long address, int type, int *blockIndexPtr,
 		 int *entryIndexPtr)
 {
     int index, offset;
@@ -315,7 +315,7 @@ getDumpID(struct ubik_trans *ut,
  */
 
 /* verifyDumpEntry
- *      Follow the tapes entries hanging off of a dump and verify they belong 
+ *      Follow the tapes entries hanging off of a dump and verify they belong
  *      to the dump.
  */
 afs_int32
@@ -323,7 +323,7 @@ verifyDumpEntry(struct ubik_trans *ut, afs_int32 dumpAddr, int ai, int ao,
 		void *param)
 {
     struct dump *dumpPtr = (struct dump *)param;
-    
+
     struct tape tape;
     afs_int32 tapeAddr, tapeCount = 0, volCount = 0, appDumpCount = 0;
     afs_int32 appDumpAddr, appDumpIndex, appDumpOffset;
@@ -448,7 +448,7 @@ verifyDumpEntry(struct ubik_trans *ut, afs_int32 dumpAddr, int ai, int ao,
 
 /*
  * verifyTapeEntry
- *      Follw the volume fragments hanging off of a tape entry and verify 
+ *      Follw the volume fragments hanging off of a tape entry and verify
  *      they belong to the tape.
  */
 afs_int32
@@ -544,11 +544,11 @@ verifyVolFragEntry(struct ubik_trans *ut, afs_int32 va, int ai, int ao,
  *      also verify all entries are also on the chain.
  */
 afs_int32
-verifyVolInfoEntry(struct ubik_trans *ut, afs_int32 volInfoAddr, int ai, 
+verifyVolInfoEntry(struct ubik_trans *ut, afs_int32 volInfoAddr, int ai,
 		   int ao, void *param)
 {
     struct volInfo *volInfo = (struct volInfo *) param;
-    
+
     int volCount = 0, ccheck = 1;
     afs_int32 volFragAddr;
     int blockIndex, entryIndex;
@@ -603,7 +603,7 @@ verifyVolInfoEntry(struct ubik_trans *ut, afs_int32 volInfoAddr, int ai,
     if (volCount > misc->maxVolsPerVolInfo)
 	misc->maxVolsPerVolInfo = volCount;
 
-    /* Check that all volInfo structures with same name point to the same 
+    /* Check that all volInfo structures with same name point to the same
      * head. If sameNameHead == 0, this is the head structure so we check,
      * otherwise ignore
      */
@@ -670,7 +670,7 @@ verifyVolInfoEntry(struct ubik_trans *ut, afs_int32 volInfoAddr, int ai,
  */
 
 /* verifyBlocks
- *     Read each block header of every 2K block and remember it in our global 
+ *     Read each block header of every 2K block and remember it in our global
  *     blockMap array. Also check that the type of block is good.
  */
 afs_int32
@@ -726,7 +726,7 @@ int minvols, maxvols, ttlvols;
 
 /* verifyHashTableBlock
  *      Take a 2K hash table block and traverse its entries. Make sure each entry
- *      is of the correct type for the hash table, is hashed into the correct 
+ *      is of the correct type for the hash table, is hashed into the correct
  *      entry and is not threaded on multiple lists.
  */
 afs_int32
@@ -826,13 +826,13 @@ verifyHashTableBlock(struct ubik_trans *ut,
 }
 
 /* verifyHashTable
- *      Read each 2K block a hashtable has (both its old hastable and 
+ *      Read each 2K block a hashtable has (both its old hastable and
  *      new hashtable) and verify the block has not been read before.
  *      Will also make call to verify entries within each 2K block of
  *      the hash table.
  */
 afs_int32
-verifyHashTable(struct ubik_trans *ut, struct memoryHashTable *mhtPtr, 
+verifyHashTable(struct ubik_trans *ut, struct memoryHashTable *mhtPtr,
 		int mapBit)
 {
     struct hashTable *htPtr = mhtPtr->ht;
@@ -942,7 +942,7 @@ verifyEntryChains(struct ubik_trans *ut)
     int type;
     int nFree;
 
-    static afs_int32(*checkEntry[NBLOCKTYPES]) (struct ubik_trans *, 
+    static afs_int32(*checkEntry[NBLOCKTYPES]) (struct ubik_trans *,
 		    				afs_int32, int, int, void *)
 	= {
 	/* FIXME: this list does not match typeName[] and may be incorrect */
@@ -1421,7 +1421,7 @@ SBUDB_DbVerify(struct rx_call *call, afs_int32 *status, afs_int32 *orphans,
 }
 
 afs_int32
-DbVerify(struct rx_call *call, afs_int32 *status, afs_int32 *orphans, 
+DbVerify(struct rx_call *call, afs_int32 *status, afs_int32 *orphans,
 	 afs_int32 *host)
 {
     struct ubik_trans *ut = 0;

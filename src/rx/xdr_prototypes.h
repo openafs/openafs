@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -88,7 +88,7 @@ extern bool_t xdrrec_endofrecord(XDR * xdrs, bool_t sendnow);
 
 /* xdr_refernce.c */
 
-extern bool_t xdr_reference(XDR *xdrs, caddr_t *pp, u_int size, 
+extern bool_t xdr_reference(XDR *xdrs, caddr_t *pp, u_int size,
 			    xdrproc_t proc);
 
 /* xdr_stdio.c */

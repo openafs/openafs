@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -87,7 +87,7 @@ afs_MemCacheOpen(afs_dcache_id_t *ainode)
 }
 
 /*
- * this routine simulates a read in the Memory Cache 
+ * this routine simulates a read in the Memory Cache
  */
 int
 afs_MemReadBlk(struct osi_file *fP, int offset, void *dest,
@@ -117,7 +117,7 @@ afs_MemReadBlk(struct osi_file *fP, int offset, void *dest,
 }
 
 /*
- * this routine simulates a readv in the Memory Cache 
+ * this routine simulates a readv in the Memory Cache
  */
 int
 afs_MemReadvBlk(struct memCacheEntry *mceP, int offset,

@@ -1,8 +1,8 @@
-/* 
+/*
  * $Id$
- * 
+ *
  * This file contains general linked list routines.
- * 
+ *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
  */
@@ -27,7 +27,7 @@
 #endif
 
 void ll_init(linked_list *list)
-  /* 
+  /*
    * Requires:
    *   List must point to a linked list structure.  It is not acceptable
    *   to pass a null pointer to this routine.
@@ -51,16 +51,16 @@ ll_node *ll_add_node(linked_list *list, ll_end which_end)
   /*
    * Modifies:
    *   list
-   * Effects: 
+   * Effects:
    *   Adds a node to one end of the list (as specified by which_end)
    *   and returns a pointer to the node added.  which_end is of type
-   *   ll_end and should be either ll_head or ll_tail as specified in 
-   *   list.h.  If there is not enough memory to allocate a node, 
+   *   ll_end and should be either ll_head or ll_tail as specified in
+   *   list.h.  If there is not enough memory to allocate a node,
    *   the program returns NULL.
    */
 {
     ll_node *node = NULL;
-    
+
     if ((node = (ll_node *)calloc(1, sizeof(ll_node))) != NULL) {
 	if (list->nelements == 0) {
 	    list->first = node;
@@ -88,17 +88,17 @@ ll_node *ll_add_node(linked_list *list, ll_end which_end)
 	    list->nelements++;
 	}
     }
-	
+
     return(node);
 }
 
 
 int ll_delete_node(linked_list *list, ll_node *node)
-  /* 
-   * Modifies: 
+  /*
+   * Modifies:
    *   list
    * Effects:
-   *   If node is in list, deletes node and returns LL_SUCCESS.  
+   *   If node is in list, deletes node and returns LL_SUCCESS.
    *   Otherwise, returns LL_FAILURE.  If node contains other data,
    *   it is the responsibility of the caller to free it.  Also, since
    *   this routine frees node, after the routine is called, "node"
@@ -151,7 +151,7 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
     switch(action) {
       case ll_s_check:
 	/* Scan the list until we find the string in question */
-	for (cur_node = list->first; cur_node && (status == FALSE); 
+	for (cur_node = list->first; cur_node && (status == FALSE);
 	     cur_node = cur_node->next)
 	    status = (strcmp(string, cur_node->data) == 0);
 	break;
@@ -160,12 +160,12 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
 	if (!ll_string(list, ll_s_check, string)) {
 	    if ((cur_node = ll_add_node(list, ll_tail))) {
 		char *new_string;
-		if ((new_string = (char *)calloc(strlen(string) + 1, 
+		if ((new_string = (char *)calloc(strlen(string) + 1,
 						sizeof(char)))) {
 		    strcpy(new_string, string);
 		    ll_add_data(cur_node, new_string);
 		}
-		else 
+		else
 		    status = LL_FAILURE;
 	    }
 	    else

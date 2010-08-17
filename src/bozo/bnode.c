@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -400,7 +400,7 @@ bnode_Create(char *atype, char *ainstance, struct bnode ** abp, char *ap1,
     *abp = tb;
     tb->type = type;
 
-    /* The fs_create above calls bnode_InitBnode() which always sets the 
+    /* The fs_create above calls bnode_InitBnode() which always sets the
      ** fileGoal to BSTAT_NORMAL .... overwrite it with whatever is passed into
      ** this function as a parameter... */
     tb->fileGoal = fileGoal;
@@ -791,7 +791,7 @@ hdl_notifier(struct bnode_proc *tp)
 	ec = setsid();
 #elif defined(AFS_DARWIN90_ENV)
 	ec = setpgid(0, 0);
-#elif defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV)  
+#elif defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV)
 	ec = setpgrp();
 #else
 	ec = setpgrp(0, 0);

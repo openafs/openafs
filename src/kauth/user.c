@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -62,7 +62,7 @@ GetTickets(char *name, char *instance, char *realm,
     return code;
 }
 
-/* 
+/*
  * Requires that you already possess a TGT.
  */
 afs_int32
@@ -133,8 +133,8 @@ ka_GetAFSTicket(char *name, char *instance, char *realm, Date lifetime,
 #endif
 
 afs_int32
-ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, 
-			   char *realm, char *password, Date lifetime, 
+ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
+			   char *realm, char *password, Date lifetime,
 			   afs_int32 * password_expires,	/* days 'til, or don't change if not set */
 			   afs_int32 spare2, char **reasonP)
 {
@@ -160,7 +160,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
 
     ka_StringToKey(password, realm, &key);
 
-/* 
+/*
  * alarm is set by klogin and kpasswd only so ignore for
  * NT
  */

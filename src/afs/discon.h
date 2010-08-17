@@ -23,7 +23,7 @@ extern int afs_WriteVCacheDiscon(struct vcache *avc,
 extern int afs_ResyncDisconFiles(struct vrequest *areq,
 					afs_ucred_t *acred);
 extern void afs_RemoveAllConns(void);
-extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, 
+extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype,
 			   int lock);
 extern void afs_GenShadowFid(struct VenusFid *afid);
 extern void afs_GenDisconStatus(struct vcache *adp,
@@ -52,7 +52,7 @@ extern void afs_DisconDiscardAll(afs_ucred_t *);
 /* Call with avc lock held */
 static_inline void afs_DisconAddDirty(struct vcache *avc, int operation, int lock) {
     if (!avc->f.ddirty_flags) {
-	if (lock) 
+	if (lock)
 	    ObtainWriteLock(&afs_xvcache, 702);
 	ObtainWriteLock(&afs_disconDirtyLock, 703);
 	QAdd(&afs_disconDirty, &avc->dirtyq);
@@ -62,7 +62,7 @@ static_inline void afs_DisconAddDirty(struct vcache *avc, int operation, int loc
 	    ReleaseWriteLock(&afs_xvcache);
     }
     avc->f.ddirty_flags |= operation;
-} 
+}
 
 /* Call with avc lock held */
 static_inline void afs_DisconRemoveDirty(struct vcache *avc) {

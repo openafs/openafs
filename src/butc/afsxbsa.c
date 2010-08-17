@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -667,7 +667,7 @@ void * dynlib = NULL ;
     	printf("dsm_MountLibrary : SUCCESS to Open the libApiDS shared library. \n");
 #endif
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
-	AFSdsmBeginQuery = (dsInt16_t (*)( dsUint32_t dsmHandle, dsmQueryType queryType, dsmQueryBuff *queryBuffer)) dlsym((void *)dynlib, "dsmBeginQuery"); 
+	AFSdsmBeginQuery = (dsInt16_t (*)( dsUint32_t dsmHandle, dsmQueryType queryType, dsmQueryBuff *queryBuffer)) dlsym((void *)dynlib, "dsmBeginQuery");
 	AFSdsmGetNextQObj = (dsInt16_t (*)( dsUint32_t dsmHandle, DataBlk *dataBlkPtr))dlsym((void *)dynlib, "dsmGetNextQObj") ;
 	AFSdsmEndQuery = (dsInt16_t (*)( dsUint32_t dsmHandle))dlsym((void *)dynlib, "dsmEndQuery");
 	AFSdsmRCMsg = (dsInt16_t (*)( dsUint32_t dsmHandle, dsInt16_t dsmRC, char *msg))dlsym((void *)dynlib, "dsmRCMsg");
@@ -694,13 +694,13 @@ void * dynlib = NULL ;
 
 
 	if (	!AFSdsmBeginQuery || !AFSdsmGetNextQObj || !AFSdsmEndQuery ||
-		!AFSdsmRCMsg || !AFSdsmLogEventEx || !AFSdsmTrace || 
-		!AFSdsmTerminate || !AFSdsmEndGetObj || !AFSdsmSendData || 
+		!AFSdsmRCMsg || !AFSdsmLogEventEx || !AFSdsmTrace ||
+		!AFSdsmTerminate || !AFSdsmEndGetObj || !AFSdsmSendData ||
 		!AFSdsmBeginTxn || !AFSdsmDeleteObj || !AFSdsmEndGetData ||
-        	!AFSdsmEndTxn || !AFSdsmQueryApiVersion || !AFSdsmInit || 
+        	!AFSdsmEndTxn || !AFSdsmQueryApiVersion || !AFSdsmInit ||
 		!AFSdsmGetData || !AFSdsmQuerySessInfo || !AFSdsmBeginGetData ||
-		!AFSdsmGetObj || !AFSdsmEndSendObj || !AFSdsmRegisterFS || 
-		!AFSdsmBindMC || !AFSdsmSendObj || !AFSdsmChangePW ) 
+		!AFSdsmGetObj || !AFSdsmEndSendObj || !AFSdsmRegisterFS ||
+		!AFSdsmBindMC || !AFSdsmSendObj || !AFSdsmChangePW )
 	{
         	ELog(0,"dsm_MountLibrary: The dlopen call to load the TSM shared library failed\n");
         	return(BUTX_NOLIBRARY);

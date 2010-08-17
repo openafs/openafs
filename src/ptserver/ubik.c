@@ -33,7 +33,7 @@ ubik_ServerInit(afs_uint32 myHost, short myPort, afs_uint32 serverList[],
 }
 
 int
-ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode, 
+ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 		struct ubik_trans **transPtr)
 {
     static int init = 0;
@@ -112,7 +112,7 @@ panic(char *format, ...)
     va_start(ap, format);
     vprintf(format, ap);
     va_end(ap);
-    
+
     abort();
     printf("BACK FROM ABORT\n");	/* shouldn't come back from floating pt exception */
     exit(1);			/* never know, though */
@@ -178,7 +178,7 @@ struct rx_securityClass *ubik_sc[3];
 
 /* Other declarations */
 
-int 
+int
 afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 {
     return (1);

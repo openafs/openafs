@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -20,7 +20,7 @@ typedef struct nc {
     unsigned int key;
     struct nc *next, *prev;
     cm_scache_t *dirp, *vp;
-    normchar_t name[CM_AFSNCNAMESIZE];   
+    normchar_t name[CM_AFSNCNAMESIZE];
 } cm_nc_t;
 
 typedef struct {

@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 	int kvno, keymode = 0;
 
 	if (argc != 5) {
-	    if (argc == 4) 
+	    if (argc == 4)
 		keymode = 1;
 	    else {
 		fprintf(stderr, "%s add: usage is '%s add <kvno> <keyfile> "
@@ -125,17 +125,17 @@ main(int argc, char *argv[])
 		afs_com_err(argv[0], retval, "while extracting AFS service key");
 		exit(1);
 	    }
-	    
+
 #ifdef USING_HEIMDAL
 #define deref_key_length(key)			\
 	    key->keyvalue.length
-	    
+
 #define deref_key_contents(key)			\
 	    key->keyvalue.data
 #else
 #define deref_key_length(key)			\
 	    key->length
-	    
+
 #define deref_key_contents(key)			\
 	    key->contents
 #endif
@@ -174,7 +174,7 @@ main(int argc, char *argv[])
     else if (strcmp(argv[1], "list") == 0) {
 	struct afsconf_keys tkeys;
 	int i, j;
-	
+
 	code = afsconf_GetKeys(tdir, &tkeys);
 	if (code) {
 	    fprintf(stderr, "%s: failed to get keys, code %ld\n", argv[0], code);

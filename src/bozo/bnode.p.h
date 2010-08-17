@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,7 +27,7 @@ struct bnode_ops {
     int (*delete) ( struct bnode * );
     int (*procexit) ( struct bnode *, struct bnode_proc * );
     int (*getstring) ( struct bnode *, char *abuffer, afs_int32 alen );
-    int (*getparm) ( struct bnode *, afs_int32 aindex, char *abuffer, 
+    int (*getparm) ( struct bnode *, afs_int32 aindex, char *abuffer,
 		     afs_int32 alen);
     int (*restartp) ( struct bnode *);
     int (*hascore) ( struct bnode *);
@@ -89,8 +89,8 @@ struct ezbnode {
     char killSent;		/* have we tried sigkill signal? */
 };
 
-/* this struct is used to construct a list of dirpaths, along with 
- * their recommended permissions 
+/* this struct is used to construct a list of dirpaths, along with
+ * their recommended permissions
  */
 struct bozo_bosEntryStats {
     const char *path;		/* pathname to check */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 /*
  * PROGRESS DIALOGS ___________________________________________________________
  *
- * The PROGRESSDISPLAY object is probably one of the most esoteric 
+ * The PROGRESSDISPLAY object is probably one of the most esoteric
  * utilities in this library. It provides a convenient way to package
  * up a background thread, and associate it with a dialog telling the user
  * what's going on. It sounds a little hokey, and honestly isn't that

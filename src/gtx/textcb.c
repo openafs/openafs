@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -506,7 +506,7 @@ gator_textcb_Write(struct gator_textcb_hdr *a_cbhdr, char *a_textToWrite,
  *------------------------------------------------------------------------*/
 
 int
-gator_textcb_BlankLine(struct gator_textcb_hdr *a_cbhdr, 
+gator_textcb_BlankLine(struct gator_textcb_hdr *a_cbhdr,
 		       int a_numBlanks)
 {				/*gator_textcb_BlankLine */
 

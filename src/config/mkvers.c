@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -301,7 +301,7 @@ PrintStamps(void)
 		fprintf(fpVers, "Base configuration %s\n",
 			stateDeltas[i].name);
 	    } else if (cfgFormat == CF_XML) {
-                fprintf(fpVers, 
+                fprintf(fpVers,
                         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         "<revision>\n"
                         "<revnumber>\n"
@@ -331,7 +331,7 @@ PrintStamps(void)
 		fprintf(fpVers, "%c%s\n", stateDeltas[i].type,
 			stateDeltas[i].name);
 	    } else if (cfgFormat == CF_XML) {
-		fprintf(fpVers, 
+		fprintf(fpVers,
                         "<revremark>\n"
                         ";%c%s"
                          "</revremark>\n",
@@ -354,7 +354,7 @@ PrintStamps(void)
 		fprintf(fpVers, "%c%s\n", stateDeltas[i].type,
 			stateDeltas[i].name);
 	    } else if (cfgFormat == CF_XML) {
-		fprintf(fpVers, 
+		fprintf(fpVers,
                         "<revremark>\n"
                         ";%c%s"
                          "</revremark>\n",

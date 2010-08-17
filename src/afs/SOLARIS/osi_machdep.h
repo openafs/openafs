@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,7 +36,7 @@
 typedef struct cred afs_ucred_t;
 typedef struct proc afs_proc_t;
 
-/* 
+/*
  * Time related macros
  */
 #define	afs_hz	    hz
@@ -89,7 +89,7 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 #endif
 
 /*
- * Global lock support. 
+ * Global lock support.
  */
 #include <sys/mutex.h>
 extern kmutex_t afs_global_lock;
@@ -118,7 +118,7 @@ extern kmutex_t afs_global_lock;
 
 #if	defined(AFS_SUN56_ENV)
 /*
-** Macro returns 1 if file is larger than 2GB; else returns 0 
+** Macro returns 1 if file is larger than 2GB; else returns 0
 */
 #undef AfsLargeFileUio
 #define AfsLargeFileUio(uio)       ( (uio)->_uio_offset._p._u ? 1 : 0 )

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -75,11 +75,11 @@ extern int npwSums;
 static afs_int32 autoCPWInterval;
 static afs_int32 autoCPWUpdates;
 
-static afs_int32 set_password(struct ubik_trans *tt, char *name, 
+static afs_int32 set_password(struct ubik_trans *tt, char *name,
 			      char *instance,
 			      struct ktc_encryptionKey *password,
 			      afs_int32 kvno, afs_int32 caller);
-static afs_int32 impose_reuse_limits(EncryptionKey *password, 
+static afs_int32 impose_reuse_limits(EncryptionKey *password,
 				     struct kaentry *tentry);
 static int create_user(struct ubik_trans *tt, char *name, char *instance,
 		       struct ktc_encryptionKey *key, afs_int32 caller,
@@ -621,7 +621,7 @@ SKAM_CreateUser(struct rx_call *call, char *aname, char *ainstance,
 
 
 afs_int32
-kamCreateUser(struct rx_call *call, char *aname, char *ainstance, 
+kamCreateUser(struct rx_call *call, char *aname, char *ainstance,
 	      EncryptionKey ainitpw)
 {
     int code;
@@ -666,7 +666,7 @@ SKAA_ChangePassword(struct rx_call *call, char *aname, char *ainstance,
 }
 
 afs_int32
-ChangePassWord(struct rx_call *call, char *aname, char *ainstance, 
+ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
 	       ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
@@ -801,7 +801,7 @@ impose_reuse_limits(EncryptionKey *password, struct kaentry *tentry)
 
 
 static afs_int32
-set_password(struct ubik_trans *tt, char *name, char *instance, 
+set_password(struct ubik_trans *tt, char *name, char *instance,
 	     struct ktc_encryptionKey *password, afs_int32 kvno, afs_int32 caller)
 {
     afs_int32 code;
@@ -980,7 +980,7 @@ GetEndTime(Date start,		/* start time of ticket */
 static afs_int32
 PrepareTicketAnswer(ka_BBS *oanswer, afs_int32 challenge, char *ticket,
 		    afs_int32 ticketLen, struct ktc_encryptionKey *sessionKey,
-		    Date start, Date end, struct kaentry *caller, 
+		    Date start, Date end, struct kaentry *caller,
 		    struct kaentry *server, char *cell, char *label)
 {
     afs_int32 code;
@@ -1042,7 +1042,7 @@ PrepareTicketAnswer(ka_BBS *oanswer, afs_int32 challenge, char *ticket,
    is normally disabled for these two principals. */
 
 static afs_int32
-Authenticate(int version, struct rx_call *call, char *aname, char *ainstance, 
+Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
 	     Date start, Date end, ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
@@ -1086,7 +1086,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     }
 #ifdef LOCKPW
     /* have to check for locked before verifying the password, otherwise all
-     * KALOCKED means is "yup, you guessed the password all right, now wait a 
+     * KALOCKED means is "yup, you guessed the password all right, now wait a
      * few minutes and we'll let you in"
      */
     if (kaux_islocked
@@ -1260,7 +1260,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
 
 afs_int32
 SKAA_Authenticate_old(struct rx_call *call, char *aname, char *ainstance,
-		      Date start, Date end, ka_CBS *arequest, 
+		      Date start, Date end, ka_CBS *arequest,
 		      ka_BBS *oanswer)
 {
     int code;
@@ -1276,7 +1276,7 @@ SKAA_Authenticate_old(struct rx_call *call, char *aname, char *ainstance,
 }
 
 afs_int32
-SKAA_Authenticate(struct rx_call *call, char *aname, char *ainstance, 
+SKAA_Authenticate(struct rx_call *call, char *aname, char *ainstance,
 		  Date start, Date end, ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
@@ -1291,7 +1291,7 @@ SKAA_Authenticate(struct rx_call *call, char *aname, char *ainstance,
 }
 
 afs_int32
-SKAA_AuthenticateV2(struct rx_call *call, char *aname, char *ainstance, 
+SKAA_AuthenticateV2(struct rx_call *call, char *aname, char *ainstance,
 		    Date start, Date end, ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
@@ -1402,13 +1402,13 @@ kamSetFields(struct rx_call *call,
 	tentry.max_ticket_lifetime = htonl(alifetime);
 
 #ifndef NOPWCONTROLS
-    /* 
+    /*
      * We've packed a bunch of bytes into a long for backward compatibility.
      * These include password expiration time, and some failed login limits
      * counters.  Now let's unpack them and stick them into the
      * kaentry struct.  All the bytes have values in the range
      * 1..255, else they were not specified in the interface, and are
-     * set to zero. 
+     * set to zero.
      * In the case of password expiration times, 1 means password never
      * expires (==>0), 2 means password only lives for one day (==>1),
      * and so on.
@@ -1627,7 +1627,7 @@ kamGetEntry(struct rx_call *call,
 
     temp = pack_long(tentry.misc_auth_bytes);
     aentry->misc_auth_bytes = temp;
-    /* 
+    /*
      * only return user's key if security disabled or if admin and
      * we have an encrypted connection to the user
      */
@@ -1984,7 +1984,7 @@ SKAT_GetTicket(struct rx_call *call,
 }
 
 afs_int32
-SKAM_GetStats(struct rx_call *call, afs_int32 version, 
+SKAM_GetStats(struct rx_call *call, afs_int32 version,
 	      afs_int32 *admin_accounts, kasstats *statics,
 	      kadstats *dynamics)
 {
@@ -1996,7 +1996,7 @@ SKAM_GetStats(struct rx_call *call, afs_int32 version,
 }
 
 afs_int32
-kamGetStats(struct rx_call *call, afs_int32 version, 
+kamGetStats(struct rx_call *call, afs_int32 version,
 	    afs_int32 *admin_accounts, kasstats *statics,
 	    kadstats *dynamics)
 {
@@ -2223,7 +2223,7 @@ kamDebug(struct rx_call *call,
     return 0;
 }
 
-/* these are auxiliary routines. They don't do any Ubik stuff.  They use 
+/* these are auxiliary routines. They don't do any Ubik stuff.  They use
  * a tacked-on-the-side data file.
  * prob'ly ought to check the noauth flag.
  */
@@ -2232,9 +2232,9 @@ afs_int32
 SKAM_Unlock(struct rx_call *call,
 	    char *aname,
 	    char *ainstance,
-	    afs_int32 spare1, 
-	    afs_int32 spare2, 
-	    afs_int32 spare3, 
+	    afs_int32 spare1,
+	    afs_int32 spare2,
+	    afs_int32 spare3,
 	    afs_int32 spare4)
 {
     int code;
@@ -2277,9 +2277,9 @@ SKAM_LockStatus(struct rx_call *call,
 		char *aname,
 		char *ainstance,
 		afs_int32 *lockeduntil,
-		afs_int32 spare1, 
-		afs_int32 spare2, 
-		afs_int32 spare3, 
+		afs_int32 spare1,
+		afs_int32 spare2,
+		afs_int32 spare3,
 		afs_int32 spare4)
 {
     int code;

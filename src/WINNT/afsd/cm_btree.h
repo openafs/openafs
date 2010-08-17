@@ -1,6 +1,6 @@
-/* 
- * Copyright 2007 Secure Endpoints Inc.  
- * 
+/*
+ * Copyright 2007 Secure Endpoints Inc.
+ *
  * All Rights Reserved.
  *
  * This software has been released under the terms of the IBM Public
@@ -172,7 +172,7 @@ typedef struct cm_direnum {
     cm_direnum_entry_t 	entry[1];
 } cm_direnum_t;
 
-long cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp, 
+long cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp,
                           afs_uint32 locked, clientchar_t *maskp, afs_uint32 fetchStatus, cm_direnum_t **enumpp);
 long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
 long cm_BPlusDirPeekNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
@@ -190,7 +190,7 @@ extern afs_uint64 bplus_free_time;
 
 
 /************ Accessor Macros *****************************************/
-			
+
 /* low level definition of Nptr value usage */
 #define nAdr(n) (n)->X
 

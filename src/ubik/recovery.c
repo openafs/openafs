@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -62,10 +62,10 @@
  */
 
 /*!
- * if this flag is set, then ubik will use only the primary address 
- * (the address specified in the CellServDB) to contact other 
- * ubik servers. Ubik recovery will not try opening connections 
- * to the alternate interface addresses. 
+ * if this flag is set, then ubik will use only the primary address
+ * (the address specified in the CellServDB) to contact other
+ * ubik servers. Ubik recovery will not try opening connections
+ * to the alternate interface addresses.
  */
 int ubikPrimaryAddrOnly;
 
@@ -86,7 +86,7 @@ urecovery_ResetState(void)
  * routine called when a non-sync site server goes down; restarts recovery
  * process to send missing server the new db when it comes back up.
  *
- * \note This routine should not do anything with variables used by non-sync site servers. 
+ * \note This routine should not do anything with variables used by non-sync site servers.
  */
 int
 urecovery_LostServer(void)
@@ -483,7 +483,7 @@ urecovery_Interact(void *dummy)
 
 	/* Every 30 seconds, check all the down servers and mark them
 	 * as up if they respond. When a server comes up or found to
-	 * not be current, then re-find the the best database and 
+	 * not be current, then re-find the the best database and
 	 * propogate it.
 	 */
 	if ((now = FT_ApproxTime()) > 30 + lastProbeTime) {
@@ -511,7 +511,7 @@ urecovery_Interact(void *dummy)
 	}
 	urecovery_state |= UBIK_RECSYNCSITE;
 
-	/* If a server has just come up or if we have not found the 
+	/* If a server has just come up or if we have not found the
 	 * most current database, then go find the most current db.
 	 */
 	if (!(urecovery_state & UBIK_RECFOUNDDB)) {
@@ -659,7 +659,7 @@ urecovery_Interact(void *dummy)
 	    code = close(fd);
 	    if (code)
 		goto FetchEndCall;
-#endif	    
+#endif
 	    code = EndDISK_GetFile(rxcall, &tversion);
 	  FetchEndCall:
 	    tcode = rx_EndCall(rxcall, code);
@@ -681,7 +681,7 @@ urecovery_Interact(void *dummy)
 		    code = rename(tbuffer, pbuffer);
 		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
-		if (!code) 
+		if (!code)
 		    code = rename(pbuffer, tbuffer);
 		if (!code) {
 		    (*ubik_dbase->open) (ubik_dbase, 0);
@@ -701,7 +701,7 @@ urecovery_Interact(void *dummy)
 	    if (code) {
 #ifndef OLD_URECOVERY
 		unlink(pbuffer);
-		/* 
+		/*
 		 * We will effectively invalidate the old data forever now.
 		 * Unclear if we *should* but we do.
 		 */
@@ -859,8 +859,8 @@ urecovery_Interact(void *dummy)
 }
 
 /*!
- * \brief send a Probe to all the network address of this server 
- * 
+ * \brief send a Probe to all the network address of this server
+ *
  * \return 0 if success, else return 1
  */
 int

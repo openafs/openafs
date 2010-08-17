@@ -1,27 +1,27 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 #define IDS_NEXT                         0
-#define IDS_FINISH                       1 
-#define IDS_HELP_TITLE                   2 
-#define IDS_HELP_DESC                    3 
-#define IDS_CANCEL_DESC                  4 
-#define IDS_PARTITION_ALREADY_CREATED    5 
-#define IDS_NOT_A_FS_SERVER              6 
-#define IDS_ROOT_AFS_ALREADY_EXISTS      7 
-#define IDS_NO_PARTITION_EXISTS          8 
-#define IDS_ALREADY_REPLICATED           9 
+#define IDS_FINISH                       1
+#define IDS_HELP_TITLE                   2
+#define IDS_HELP_DESC                    3
+#define IDS_CANCEL_DESC                  4
+#define IDS_PARTITION_ALREADY_CREATED    5
+#define IDS_NOT_A_FS_SERVER              6
+#define IDS_ROOT_AFS_ALREADY_EXISTS      7
+#define IDS_NO_PARTITION_EXISTS          8
+#define IDS_ALREADY_REPLICATED           9
 #define IDS_ROOT_AFS_DOESNT_EXIST        10
 #define IDS_ALREADY_CONFIGURED           11
 #define IDS_NOTHING_TO_CONFIGURE         12
 #define IDS_EXIT                         13
-                                         
+
 #define IDS_START_FS_STEP                16
 #define IDS_CANCEL_CONFIG_MSG            17
 #define IDS_WIZARD_APP_TITLE             18
@@ -88,7 +88,7 @@
 #define IDS_PARTITIONS_PAGE_TITLE                76
 #define IDS_CONFIGURE                            77
 #define IDS_DB_AND_BK_STEP_DESC                  78
-                                                 
+
 #define IDS_PARTITION_STEP                       80
 #define IDS_CONFIG_COMMON_FUNCS                  81
 #define IDS_START_DB_STEP                        82
@@ -106,10 +106,10 @@
 #define IDS_SET_SERVER_LICENSE_STEP              94
 #define IDS_DEFINE_CELL_NAME_STEP                95
 
-#define IDS_DEFINE_CELL_MEMBERSHIP_STEP          96 
-#define IDS_START_BOS_SERVER_STEP                97 
-#define IDS_START_AUTH_SERVER_STEP               98 
-#define IDS_CREATE_PRINCIPAL_AND_KEY_STEP        99 
+#define IDS_DEFINE_CELL_MEMBERSHIP_STEP          96
+#define IDS_START_BOS_SERVER_STEP                97
+#define IDS_START_AUTH_SERVER_STEP               98
+#define IDS_CREATE_PRINCIPAL_AND_KEY_STEP        99
 #define IDS_START_DB_AND_BK_STEP                 100
 #define IDS_CREATE_ADMIN_PRINCIPAL_STEP          101
 #define IDS_START_CLIENT_STEP                    102
@@ -198,7 +198,7 @@
 #define IDS_BK_WILL_RUN                          205
 #define IDS_BK_WILL_STOP                         206
 #define IDS_SCS_WILL_RUN                         207
-                                                 
+
 #define IDS_SCS_WILL_STOP                        208
 #define IDS_ERROR_DRIVE_ALREADY_HAS_AFS          209
 #define IDS_VOLUME_HAS_NO_NAME                   210
@@ -503,7 +503,7 @@
 #define IDC_SALVAGE_STATUS              1200
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -23,7 +23,7 @@ extern int lpioctl(char *, int, void *, int);
 
 /* rmtsysc.c */
 struct ViceIoctl;
-extern int pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, 
+extern int pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data,
 		  afs_int32 follow);
 #ifdef AFS_DUX40_ENV
 extern int afs_setpag(void);

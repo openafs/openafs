@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -48,7 +48,7 @@
 #define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
 #define AFSOP_SET_RXPCK		 38	/* set rx_extraPackets*/
 #define AFSOP_BUCKETPCT          39     /* bucket percentage */
-#define AFSOP_SET_RXMAXMTU       40     /* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */  
+#define AFSOP_SET_RXMAXMTU       40     /* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */
 #define AFSOP_BKG_HANDLER        41     /* userspace-capable Bkg daemon */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
@@ -80,7 +80,7 @@
 
 #ifdef	AFS_SGI53_ENV
 #define AFSOP_NFSSTATICADDR	 32	/* to contents addr of nfs kernel addr */
-#define AFSOP_NFSSTATICADDRPTR	 33	/* pass addr of variable containing 
+#define AFSOP_NFSSTATICADDRPTR	 33	/* pass addr of variable containing
 					 * address into kernel. */
 #define AFSOP_NFSSTATICADDR2	 34	/* pass address in as hyper. */
 #define AFSOP_SBLOCKSTATICADDR2  35	/* for sblock and sbunlock */
@@ -94,7 +94,7 @@
 #define AFSOP_CACHEDIRS          51     /* number of files per dir */
 #define AFSOP_CACHEFILES         52     /* number of files */
 
-#define AFSOP_SETINT             60     /* we should just set key/value pairs 
+#define AFSOP_SETINT             60     /* we should just set key/value pairs
                                           for things which are just ints */
 
 /* these are for initialization flags */
@@ -215,7 +215,7 @@ typedef struct cm_initparams_v1 {
 /* Defines and structures for the AFS proc replacement layer for the original syscall (AFS_SYSCALL) strategy */
 
 #ifdef AFS_LINUX20_ENV
- 
+
 #define PROC_FSDIRNAME "openafs"
 #define PROC_SYSCALL_NAME "afs_ioctl"
 #define PROC_SYSCALL_FNAME "/proc/fs/openafs/afs_ioctl"
@@ -227,10 +227,10 @@ typedef struct cm_initparams_v1 {
 #define PROC_RX_NAME "rx"
 #define PROC_SERVICES_NAME "rx_services"
 #define PROC_RXSTATS_NAME "rx_stats"
-#define VIOC_SYSCALL_TYPE 'C' 
+#define VIOC_SYSCALL_TYPE 'C'
 #define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
 #define VIOC_SYSCALL32 _IOW(VIOC_SYSCALL_TYPE,1,int)
- 
+
 struct afsprocdata {
   long param4;
   long param3;
@@ -246,7 +246,7 @@ struct afsprocdata32 {
   unsigned int param1;
   unsigned int syscall;
 };
- 
+
 #endif
 
 #ifdef AFS_DARWIN80_ENV
@@ -272,7 +272,7 @@ struct afssysargs64 {
     unsigned int syscall;
     unsigned int retval;
 };
-#define VIOC_SYSCALL_TYPE 'C' 
+#define VIOC_SYSCALL_TYPE 'C'
 #define VIOC_SYSCALL _IOWR(VIOC_SYSCALL_TYPE,1,struct afssysargs)
 #define VIOC_SYSCALL64 _IOWR(VIOC_SYSCALL_TYPE,2,struct afssysargs64)
 #define SYSCALL_DEV_FNAME "/dev/openafs_ioctl"

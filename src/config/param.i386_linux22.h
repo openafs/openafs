@@ -18,7 +18,7 @@
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #ifdef AFS_SMP
-#ifndef CONFIG_X86_LOCAL_APIC 
+#ifndef CONFIG_X86_LOCAL_APIC
 #define CONFIG_X86_LOCAL_APIC 1
 #endif
 #endif

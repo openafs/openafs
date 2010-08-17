@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -234,7 +234,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
 #endif /* INSTRUMENT_LOCKS */
-#if !defined(AFS_64BIT_ENV) 
+#if !defined(AFS_64BIT_ENV)
     a_result->Length.high = 0;
     a_result->Length.low = tvc->f.m.Length;
 #else
@@ -382,7 +382,7 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
  *
  * Description:
  *	Clear out callback information for the specified file, or
- *	even a whole volume.  Used to worry about callback was from 
+ *	even a whole volume.  Used to worry about callback was from
  *      within the particular cell or not.  Now we don't bother with
  *      that anymore; it's not worth the time.
  *
@@ -442,7 +442,7 @@ loop1:
 		i = VCHashV(&localFid);
 		for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
 		    uq = QPrev(tq);
-		    tvc = QTOVH(tq);      
+		    tvc = QTOVH(tq);
 		    if (tvc->f.fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
 			if (!localFid.Cell)
@@ -1065,7 +1065,7 @@ shutdown_CB(void)
  *      a_call : Ptr to Rx call on which this request came in.
  *
  * Returns:
- *      RXGEN_OPCODE (always). 
+ *      RXGEN_OPCODE (always).
  *
  * Environment:
  *      Nothing interesting.
@@ -1706,7 +1706,7 @@ resume:
 	 * All done at this level ... ascend and resume the search.
 	 */
 	if (this_parent != parent) {
-		next = this_parent->d_child.next; 
+		next = this_parent->d_child.next;
 		this_parent = this_parent->d_parent;
 		goto resume;
 	}
@@ -1715,7 +1715,7 @@ resume:
  searchdone3:
     if (d_unhashed(dentry))
       *flags = 1;
-    else 
+    else
       *flags = 0;
 
     *fileName = afs_strdup(dentry->d_name.name?dentry->d_name.name:"");
@@ -1752,9 +1752,9 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
     cur = head;
     while ((cur = cur->next) != head) {
       dentry = list_entry(cur, struct dentry, d_alias);
-      
+
       dget_locked(dentry);
-      
+
 #if defined(AFS_LINUX24_ENV)
       spin_unlock(&dcache_lock);
 #endif
@@ -1768,7 +1768,7 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
 	goto fcnDone;
       }
       dput(dentry);
-    }                   
+    }
  searchdone2:
     if (cur == head) {
 	/*Past EOF*/
@@ -1779,7 +1779,7 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
 
     if (d_unhashed(dentry))
       *flags = 1;
-    else 
+    else
       *flags = 0;
 
     *fileName = afs_strdup(dentry->d_name.name?dentry->d_name.name:"");

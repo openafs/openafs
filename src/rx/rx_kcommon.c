@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -660,7 +660,7 @@ rxi_GetIFInfo(void)
 			addrs[i++] = ifinaddr;
 			if (!rx_IsLoopbackAddr(ifinaddr) &&
 			    (maxmtu > rx_maxReceiveSize)) {
-			    rx_maxReceiveSize = 
+			    rx_maxReceiveSize =
 				MIN(RX_MAX_PACKET_SIZE, maxmtu);
 			    rx_maxReceiveSize =
 				MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
@@ -846,7 +846,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     AFS_GUNLOCK();
 #if	defined(AFS_HPUX102_ENV)
 #if     defined(AFS_HPUX110_ENV)
-    /* we need a file associated with the socket so sosend in NetSend 
+    /* we need a file associated with the socket so sosend in NetSend
      * will not fail */
     /* blocking socket */
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, 0);
@@ -911,7 +911,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     freeb(bindnam);
 #else /* AFS_HPUX110_ENV */
 #if defined(AFS_DARWIN80_ENV)
-    { 
+    {
        int buflen = 50000;
        int i,code2;
        for (i=0;i<2;i++) {
@@ -1011,8 +1011,8 @@ rxk_FreeSocket(struct socket *asocket)
     if (asocket->so_fp) {
 	struct file *fp = asocket->so_fp;
 #if !defined(AFS_HPUX1123_ENV)
-	/* 11.23 still has falloc, but not FPENTRYFREE ! 
-	 * so for now if we shutdown, we will waist a file 
+	/* 11.23 still has falloc, but not FPENTRYFREE !
+	 * so for now if we shutdown, we will waist a file
 	 * structure */
 	FPENTRYFREE(fp);
 	asocket->so_fp = NULL;
@@ -1120,7 +1120,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
     } else
 	tlen = rlen;
 
-    /* add some padding to the last iovec, it's just to make sure that the 
+    /* add some padding to the last iovec, it's just to make sure that the
      * read doesn't return more data than we expect, and is done to get around
      * our problems caused by the lack of a length field in the rx header. */
     savelen = p->wirevec[p->niovecs - 1].iov_len;
@@ -1186,7 +1186,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	return code;
 }
 
-/* rxk_Listener() 
+/* rxk_Listener()
  *
  * Listen for packets on socket. This thread is typically started after
  * rx_Init has called rxi_StartListener(), but nevertheless, ensures that
@@ -1351,7 +1351,7 @@ osi_Panic(char *msg, ...)
     vprintf(msg, ap);
     va_end(ap);
 # ifdef AFS_LINUX20_ENV
-    * ((char *) 0) = 0; 
+    * ((char *) 0) = 0;
 # else
     panic(msg);
 # endif

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -70,7 +70,7 @@ typedef long long afs_int64;
 typedef unsigned long long afs_uint64;
 #endif
 #define ZeroInt64(a)       (a = 0)
-#define AssignInt64(a, b) *(b) = (a) 
+#define AssignInt64(a, b) *(b) = (a)
 #define IncInt64(a) (*(a))++
 #define IncUInt64(a) (*(a))++
 #define DecInt64(a) (*(a))--
@@ -116,12 +116,12 @@ typedef struct u_Int64 afs_uint64;
 #define GEInt64(a,b) (((a).high > (b).high) || (((a).high == (b).high) && ((a).low >= (b).low)))
 #define LEInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low <= (b).low)))
 #define LTInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low < (b).low)))
-#define CompareInt64(a,b) (((afs_int32)(a).high - (afs_int32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
-#define AddInt64(a, b, c) {  afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
-#define SubtractInt64(a, b, c) { afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
-#define CompareUInt64(a,b) (((afs_uint32)(a).high - (afs_uint32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
-#define AddUInt64(a, b, c) {  afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
-#define SubtractUInt64(a, b, c) { afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
+#define CompareInt64(a,b) (((afs_int32)(a).high - (afs_int32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low)))
+#define AddInt64(a, b, c) {  afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); }
+#define SubtractInt64(a, b, c) { afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); }
+#define CompareUInt64(a,b) (((afs_uint32)(a).high - (afs_uint32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low)))
+#define AddUInt64(a, b, c) {  afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); }
+#define SubtractUInt64(a, b, c) { afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); }
 #define NonZeroInt64(a)   (a).low || (a).high
 #define Int64ToInt32(a)    (a).low
 #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
@@ -277,7 +277,7 @@ typedef struct afsUUID afsUUID;
 #define AFS_DEMAND_ATTACH_FS 1
 #endif
 
-/* A macro that can be used when printf'ing 64 bit integers, as Unix and 
+/* A macro that can be used when printf'ing 64 bit integers, as Unix and
  * windows use a different format string
  */
 #ifdef AFS_NT40_ENV
@@ -296,7 +296,7 @@ typedef struct afsUUID afsUUID;
 # endif /* PRINTF_TAKES_Z_LEN */
 #endif /* AFS_NT40_ENV */
 
-/* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
+/* Functions to safely cast afs_int32 and afs_uint32 so they can be used in
  * printf statemements with %ld and %lu
  */
 #ifdef AFS_NT40_ENV

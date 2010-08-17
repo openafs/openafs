@@ -140,9 +140,9 @@ pass1()
 	    }
 	    lastino = inumber;
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	    /* 
-	     * Don't check blocks and sizes of  
-	     * continuation inodes 
+	    /*
+	     * Don't check blocks and sizes of
+	     * continuation inodes
 	     */
 	    if (CONT) {
 		statemap[inumber] = CSTATE;
@@ -255,9 +255,9 @@ pass1()
 #endif /* AFS_OSF_ENV */
 		for (j = ndb; j < NDADDR; j++) {
 #if defined(AFS_HPUX_ENV) && (defined(DUX) || defined(CNODE_DEV))
-		    /*  
+		    /*
 		     * DUX uses db[2] on cnode-specific
-		     * device files, so skip 'em 
+		     * device files, so skip 'em
 		     */
 		    if (j == 2 && SPECIAL)
 			continue;
@@ -335,8 +335,8 @@ pass1()
 		(dp->di_mode & IFMT) == IFDIR ? DSTATE : FSTATE;
 #endif /* VICE */
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	    /* 
-	     * keep track of associated contin inodes 
+	    /*
+	     * keep track of associated contin inodes
 	     */
 	    if (dp->di_contin != 0)
 		statemap[inumber] |= HASCINODE;

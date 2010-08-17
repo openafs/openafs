@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -86,7 +86,7 @@ threadEntryDir(void *anEntry, afs_int32 size, afs_int32 type)
 /*
  * threadEntry.
  *     Creates an entry and puts it onto the savedEntries list.
- *     Will retry up to 5 times if not enough memory. Hopfully, the 
+ *     Will retry up to 5 times if not enough memory. Hopfully, the
  *     Watcher thread will free up some memory for it to continue.
  */
 
@@ -250,7 +250,7 @@ freeEntry(void *e)
 
 /*
  * flushSavedEntries
- *     Runs through the list of savedEntries and adds the volumes and 
+ *     Runs through the list of savedEntries and adds the volumes and
  *     tapes to the database.
  *     A status of DUMP_NORETRYEOT means the tape(s) contains no useful data,
  *     and tapes and volumes should not be added to the DB.
@@ -281,8 +281,8 @@ flushSavedEntries(afs_int32 status)
 	    free(entryPtr);
     }
 
-    /* 
-     * Add dump, tape, and volume entries to the list for the dbWatcher to 
+    /*
+     * Add dump, tape, and volume entries to the list for the dbWatcher to
      * flush. Volume entries are not added if the volume failed to dump.
      */
     while ((entryPtr = dlqUnlinkf(&savedEntries))) {

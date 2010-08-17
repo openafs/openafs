@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -168,8 +168,8 @@ iod_InitMulti(struct iod *iodp, struct rx_call **calls, int ncalls,
 /* For the single dump case, it's ok to just return the "bytes written"
  * that rx_Write returns, since all the callers of iod_Write abort when
  * the returned value is less than they expect.  For the multi dump case,
- * I don't think we want half the replicas to go bad just because one 
- * connection timed out, but if they all time out, then we should give up. 
+ * I don't think we want half the replicas to go bad just because one
+ * connection timed out, but if they all time out, then we should give up.
  */
 static int
 iod_Write(struct iod *iodp, char *buf, int nbytes)
@@ -737,7 +737,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     howBig = status.st_size;
 
 #ifdef	AFS_AIX_ENV
-    /* Unfortunately in AIX valuable fields such as st_blksize are 
+    /* Unfortunately in AIX valuable fields such as st_blksize are
      * gone from the stat structure.
      */
 #if defined(AFS_AIX52_ENV)
@@ -801,7 +801,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
 	    }
 
-	    /* Pad the rest of the buffer with zeros. Remember offset we started 
+	    /* Pad the rest of the buffer with zeros. Remember offset we started
 	     * padding. Keep total tally of padding.
 	     */
 	    memset(p + n, 0, howMany - n);
@@ -1142,8 +1142,8 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 		    if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
 			cnt1++;
 			if (DoLogging) {
-			    Log("RestoreVolume %u Cleanup: Removing old vnode=%u inode=%llu size=unknown\n", 
-                     V_id(vp), bitNumberToVnodeNumber(i, class), 
+			    Log("RestoreVolume %u Cleanup: Removing old vnode=%u inode=%llu size=unknown\n",
+                     V_id(vp), bitNumberToVnodeNumber(i, class),
                      (afs_uintmax_t) VNDISK_GET_INO(vnode));
 			}
 			IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(vnode),

@@ -17,9 +17,9 @@
  * krb_get_lrealm takes a pointer to a string, and a number, n.  It fills
  * in the string, r, with the name of the nth realm specified on the
  * first line of the kerberos config file (KRB_CONF, defined in "krb.h").
- * It returns 0 (KSUCCESS) on success, and KFAILURE on failure. 
+ * It returns 0 (KSUCCESS) on success, and KFAILURE on failure.
  *
- * On the kerberos version if the config file does not exist, and if n=1, a 
+ * On the kerberos version if the config file does not exist, and if n=1, a
  * successful return will occur with r = KRB_REALM (also defined in "krb.h").
  *
  */
@@ -113,7 +113,7 @@ afs_krb_exclusion(char * name)
     return exclude;
 }
 
-int 
+int
 afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localrealm)
 {
     int foreign = 0;
@@ -151,7 +151,7 @@ afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localre
 	    }
 	}
 
-	/* If yes, then make sure that the name is not present in 
+	/* If yes, then make sure that the name is not present in
 	 * an exclusion list */
 	if (lrealm_match) {
 	    if (tinst && tinst[0])

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -285,9 +285,9 @@ IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
 
 
 
- /*sends the contents of file associated with <fd> and <blksize>  to Rx Stream 
+ /*sends the contents of file associated with <fd> and <blksize>  to Rx Stream
   * associated  with <call> */
-int 
+int
 SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 {
     char *buffer = (char *)0;
@@ -343,9 +343,9 @@ WriteData(struct rx_call *call, void *rock)
     long blksize;
     afs_int32 error, code;
     int ufdIsOpen = 0;
-    afs_hyper_t filesize, currOffset; 
-    afs_uint32 buffer;		
-    afs_uint32 got; 		
+    afs_hyper_t filesize, currOffset;
+    afs_uint32 buffer;
+    afs_uint32 got;
 
     error = 0;
 
@@ -917,11 +917,11 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_uint32 a_servID, afs_int32 a_partID,
 		fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
 		fprintf(STDOUT, "part\t\t%s\n", pname);
                 fprintf(STDOUT, "status\t\tOK\n");
-		fprintf(STDOUT, "backupID\t%lu\n", 
+		fprintf(STDOUT, "backupID\t%lu\n",
 			afs_printable_uint32_lu(a_xInfoP->backupID));
-		fprintf(STDOUT, "parentID\t%lu\n", 
+		fprintf(STDOUT, "parentID\t%lu\n",
 			afs_printable_uint32_lu(a_xInfoP->parentID));
-		fprintf(STDOUT, "cloneID\t\t%lu\n", 
+		fprintf(STDOUT, "cloneID\t\t%lu\n",
 			afs_printable_uint32_lu(a_xInfoP->cloneID));
 		fprintf(STDOUT, "inUse\t\t%s\n", a_xInfoP->inUse ? "Y" : "N");
 		switch (a_xInfoP->type) {
@@ -939,30 +939,30 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_uint32 a_servID, afs_int32 a_partID,
 			break;
 		}
 		t = a_xInfoP->creationDate;
-		fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
+		fprintf(STDOUT, "creationDate\t%-9lu\t%s",
 			afs_printable_uint32_lu(a_xInfoP->creationDate),
 			ctime(&t));
 
 		t = a_xInfoP->accessDate;
-		fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
+		fprintf(STDOUT, "accessDate\t%-9lu\t%s",
 			afs_printable_uint32_lu(a_xInfoP->accessDate),
 			ctime(&t));
 
 		t = a_xInfoP->updateDate;
-		fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
+		fprintf(STDOUT, "updateDate\t%-9lu\t%s",
 			afs_printable_uint32_lu(a_xInfoP->updateDate),
 			ctime(&t));
 
 		t = a_xInfoP->backupDate;
-		fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
+		fprintf(STDOUT, "backupDate\t%-9lu\t%s",
 			afs_printable_uint32_lu(a_xInfoP->backupDate),
 			ctime(&t));
 
 		t = a_xInfoP->copyDate;
-		fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
+		fprintf(STDOUT, "copyDate\t%-9lu\t%s",
 			afs_printable_uint32_lu(a_xInfoP->copyDate),
 			ctime(&t));
-		
+
 		fprintf(STDOUT, "diskused\t%u\n", a_xInfoP->size);
 		fprintf(STDOUT, "maxquota\t%u\n", a_xInfoP->maxquota);
 
@@ -1067,7 +1067,7 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
     if (pntr->status == VOK)
         fprintf(STDOUT, "name\t\t%s\n", pntr->name);
 
-    fprintf(STDOUT, "id\t\t%lu\n", 
+    fprintf(STDOUT, "id\t\t%lu\n",
 	    afs_printable_uint32_lu(pntr->volid));
     fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
     fprintf(STDOUT, "part\t\t%s\n", pname);
@@ -1082,11 +1082,11 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
 	fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
 	return;
     }
-    fprintf(STDOUT, "backupID\t%lu\n", 
+    fprintf(STDOUT, "backupID\t%lu\n",
 	    afs_printable_uint32_lu(pntr->backupID));
-    fprintf(STDOUT, "parentID\t%lu\n", 
+    fprintf(STDOUT, "parentID\t%lu\n",
 	    afs_printable_uint32_lu(pntr->parentID));
-    fprintf(STDOUT, "cloneID\t\t%lu\n", 
+    fprintf(STDOUT, "cloneID\t\t%lu\n",
 	    afs_printable_uint32_lu(pntr->cloneID));
     fprintf(STDOUT, "inUse\t\t%s\n", pntr->inUse ? "Y" : "N");
     fprintf(STDOUT, "needsSalvaged\t%s\n", pntr->needsSalvaged ? "Y" : "N");
@@ -1107,43 +1107,43 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
 	break;
     }
     t = pntr->creationDate;
-    fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
+    fprintf(STDOUT, "creationDate\t%-9lu\t%s",
 	    afs_printable_uint32_lu(pntr->creationDate),
 	    ctime(&t));
 
     t = pntr->accessDate;
-    fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
+    fprintf(STDOUT, "accessDate\t%-9lu\t%s",
 	    afs_printable_uint32_lu(pntr->accessDate),
 	    ctime(&t));
 
     t = pntr->updateDate;
-    fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
+    fprintf(STDOUT, "updateDate\t%-9lu\t%s",
 	    afs_printable_uint32_lu(pntr->updateDate),
 	    ctime(&t));
 
     t = pntr->backupDate;
-    fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
+    fprintf(STDOUT, "backupDate\t%-9lu\t%s",
 	    afs_printable_uint32_lu(pntr->backupDate),
 	    ctime(&t));
 
     t = pntr->copyDate;
-    fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
+    fprintf(STDOUT, "copyDate\t%-9lu\t%s",
 	    afs_printable_uint32_lu(pntr->copyDate),
 	    ctime(&t));
 
-    fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", 
+    fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n",
 	    afs_printable_uint32_lu(pntr->flags));
     fprintf(STDOUT, "diskused\t%u\n", pntr->size);
     fprintf(STDOUT, "maxquota\t%u\n", pntr->maxquota);
-    fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", 
+    fprintf(STDOUT, "minquota\t%lu\t(Optional)\n",
 	    afs_printable_uint32_lu(pntr->spare0));
     fprintf(STDOUT, "filecount\t%u\n", pntr->filecount);
     fprintf(STDOUT, "dayUse\t\t%u\n", pntr->dayUse);
     fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n",
 	    afs_printable_uint32_lu(pntr->spare1));
-    fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", 
+    fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n",
 	    afs_printable_uint32_lu(pntr->spare2));
-    fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", 
+    fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n",
 	    afs_printable_uint32_lu(pntr->spare3));
     return;
 }
@@ -1374,7 +1374,7 @@ XDisplayVolumes2(afs_uint32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
 }				/*XDisplayVolumes2 */
 
 
-/* set <server> and <part> to the correct values depending on 
+/* set <server> and <part> to the correct values depending on
  * <voltype> and <entry> */
 static void
 GetServerAndPart(struct nvldbentry *entry, int voltype, afs_uint32 *server,
@@ -2715,7 +2715,7 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
 	    return E2BIG;
 	}
 #if 0
-	/* 
+	/*
 	 * In order that you be able to make clones of RO or BK, this
 	 * check must be omitted.
 	 */
@@ -2752,7 +2752,7 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
     if (as->parms[6].items) flags |= RV_RDONLY;
 
 
-    code = 
+    code =
 	UV_CloneVolume(server, part, volid, cloneid, volname, flags);
 
     if (code) {
@@ -3266,7 +3266,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[10].items) {
 	restoreflags |= RV_NODEL;
     }
-    
+
 
     code =
 	UV_RestoreVolume2(aserver, apart, avolid, aparentid,
@@ -5046,7 +5046,7 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
 	volid = vllist->volumeId[RWVOL];
 	vcode =
 	    ubik_VL_ReleaseLock(cstruct, 0, volid, -1,
-				LOCKREL_OPCODE | LOCKREL_AFSID | 
+				LOCKREL_OPCODE | LOCKREL_AFSID |
 				LOCKREL_TIMESTAMP);
 	if (vcode) {
 	    fprintf(STDERR, "Could not unlock entry for volume %s\n",
@@ -5190,7 +5190,7 @@ PartitionInfo(struct cmd_syndesc *as, void *arock)
 		PrintInt64Size(sumFree));
         fprintf(STDOUT,
                 "%s on %d partitions\n",
-                PrintInt64Size(sumStorage), 
+                PrintInt64Size(sumStorage),
                 sumPartitions);
     }
     return 0;
@@ -5229,7 +5229,7 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
 	}
     } else {
 	/* Play a trick here. If we are removing an address, ip1 will be -1
-	 * and ip2 will be the original address. This switch prevents an 
+	 * and ip2 will be the original address. This switch prevents an
 	 * older revision vlserver from removing the IP address.
 	 */
 	remove = 1;
@@ -5290,7 +5290,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
     /* print out the list of all the server */
     addrp = (afs_uint32 *) addrs->bulkaddrs_val;
     for (i = 0; i < nentries; i++, addrp++) {
-	/* If it is a multihomed address, then we will need to 
+	/* If it is a multihomed address, then we will need to
 	 * get the addresses for this multihomed server from
 	 * the vlserver and print them.
 	 */
@@ -5375,7 +5375,7 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
     if (as->parms[0].items) {
 	/* -uuid */
         if (afsUUID_from_string(as->parms[0].items->data, &askuuid) < 0) {
-	    fprintf(STDERR, "vos: invalid UUID '%s'\n", 
+	    fprintf(STDERR, "vos: invalid UUID '%s'\n",
 		    as->parms[0].items->data);
 	    exit(-1);
 	}
@@ -5936,8 +5936,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */

@@ -1,6 +1,6 @@
 //
 //	AFSD_FLUSHVOL.H
-// 
+//
 //	Include file for routines that handle flushing AFS volumes
 //	in response to System Power event notification such as
 //	Hibernate request.
@@ -13,7 +13,7 @@
 #include <Winnetwk.h>
 #include "fs_utils.h"
 
-// handles 
+// handles
 typedef struct _tagFLUSHVOLTHREADINFO {
 	HANDLE	hEventPowerEvent;
 	HANDLE	hEventResumeMain;

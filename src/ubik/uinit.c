@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -46,9 +46,9 @@
  */
 afs_int32
 ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
-	       struct ubik_client **uclientp, 
+	       struct ubik_client **uclientp,
 	       int (*secproc) (struct rx_securityClass *, afs_int32),
-	       char *funcName, afs_int32 gen_rxkad_level, 
+	       char *funcName, afs_int32 gen_rxkad_level,
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {

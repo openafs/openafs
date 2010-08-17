@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -29,7 +29,7 @@ LARGE_INTEGER LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b);
 LARGE_INTEGER LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b);
 LARGE_INTEGER ExtendedLargeIntegerDivide(LARGE_INTEGER a, unsigned long b, unsigned long *remainder);
 LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER *remainder);
-LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a); 
+LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a);
 #define LargeIntegerGreaterThan(a, b) \
  ((a).HighPart > (b).HighPart || \
   ((a).HighPart == (b).HighPart && (a).LowPart > (b).LowPart))
@@ -37,7 +37,7 @@ LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a);
 #define LargeIntegerGreaterThanOrEqualTo(a, b) \
  ((a).HighPart > (b).HighPart || \
   ((a).HighPart == (b).HighPart && (a).LowPart >= (b).LowPart))
-  
+
 #define LargeIntegerLessThan(a, b) \
  ((a).HighPart < (b).HighPart || \
   ((a).HighPart == (b).HighPart && (a).LowPart < (b).LowPart))
@@ -48,12 +48,12 @@ LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a);
 
 #define LargeIntegerEqualTo(a, b) \
   ((a).HighPart == (b).HighPart && (a).LowPart == (b).LowPart)
-  
+
 #define LargeIntegerGreaterThanZero(a) \
  ((a).HighPart > 0 || ((a).HighPart == 0 && (a).LowPart != 0))
 
 #define LargeIntegerGreaterOrEqualToZero(a) ((a).HighPart >= 0)
-  
+
 #define LargeIntegerLessThanZero(a) ((a).HighPart < 0)
 
 #define LargeIntegerNotEqualToZero(a) ((a).HighPart || (a).LowPart)

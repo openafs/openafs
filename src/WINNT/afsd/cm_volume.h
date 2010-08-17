@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -14,7 +14,7 @@
 
 #define CM_VOLUME_MAGIC    ('V' | 'O' <<8 | 'L'<<16 | 'M'<<24)
 
-/* 
+/*
  *
  */
 
@@ -60,12 +60,12 @@ typedef struct cm_volumeRef {
 
 extern void cm_InitVolume(int newFile, long maxVols);
 
-extern long cm_FindVolumeByName(struct cm_cell *cellp, char *volNamep, 
-                               struct cm_user *userp, struct cm_req *reqp, 
+extern long cm_FindVolumeByName(struct cm_cell *cellp, char *volNamep,
+                               struct cm_user *userp, struct cm_req *reqp,
                                afs_uint32 flags, cm_volume_t **outVolpp);
 
 extern long cm_FindVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
-                             cm_user_t *userp, cm_req_t *reqp, 
+                             cm_user_t *userp, cm_req_t *reqp,
                              afs_uint32 flags, cm_volume_t **outVolpp);
 
 #define CM_GETVOL_FLAG_CREATE               1
@@ -95,7 +95,7 @@ extern long cm_GetROVolumeID(cm_volume_t *volp);
 extern long cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
 	cm_req_t *reqp);
 
-extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, 
+extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume,
                                          cm_user_t *userp, cm_req_t *reqp);
 
 extern void cm_ChangeRankVolume(cm_server_t *tsp);
@@ -128,8 +128,8 @@ extern void cm_CheckOfflineVolumes(void);
 
 extern long cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID);
 
-extern void cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, 
-                                       afs_uint32 volID,  afs_uint32 *onlinep, 
+extern void cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep,
+                                       afs_uint32 volID,  afs_uint32 *onlinep,
                                        afs_uint32 *volumeUpdatedp);
 
 extern void cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID);

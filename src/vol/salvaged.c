@@ -1,13 +1,13 @@
 /*
  * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* 
+/*
  * demand attach fs
  * online salvager daemon
  */
@@ -313,8 +313,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -427,7 +427,7 @@ SalvageClient(VolumeId vid, char * pname)
 	                "trying to continue anyway\n");
     }
     SALVSYNC_clientInit();
-    
+
     code = SALVSYNC_SalvageVolume(vid, pname, SALVSYNC_SALVAGE, SALVSYNC_OPERATOR, 0, NULL);
     if (code != SYNC_OK) {
 	goto sync_error;
@@ -500,7 +500,7 @@ SalvageServer(int argc, char **argv)
      * VInitVolumePackage2 (called below) makes sure that a file server or
      * other volume utilities don't interfere with the salvage.
      */
-    
+
     /* even demand attach online salvager
      * still needs this because we don't want
      * a stand-alone salvager to conflict with
@@ -527,12 +527,12 @@ SalvageServer(int argc, char **argv)
 
     /* start up the reaper and log cleaner threads */
     assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
-    assert(pthread_create(&tid, 
-			  &attrs, 
+    assert(pthread_create(&tid,
+			  &attrs,
 			  &SalvageChildReaperThread,
 			  NULL) == 0);
-    assert(pthread_create(&tid, 
-			  &attrs, 
+    assert(pthread_create(&tid,
+			  &attrs,
 			  &SalvageLogCleanupThread,
 			  NULL) == 0);
     assert(pthread_create(&tid,
@@ -570,13 +570,13 @@ SalvageServer(int argc, char **argv)
 	    child_slot[slot] = pid;
 	    node->pid = pid;
 	    VOL_UNLOCK;
-	    
+
 	    assert(pthread_mutex_lock(&worker_lock) == 0);
 	    current_workers++;
-	    
+
 	    /* let the reaper thread know another worker was spawned */
 	    assert(pthread_cond_broadcast(&worker_cv) == 0);
-	    
+
 	    /* if we're overquota, wait for the reaper */
 	    while (current_workers >= Parallel) {
 		assert(pthread_cond_wait(&worker_cv, &worker_lock) == 0);
@@ -599,7 +599,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
      * another thread may have held the lock on the FILE
      * structure when fork was called! */
 
-    afs_snprintf(childLog, sizeof(childLog), "%s.%d", 
+    afs_snprintf(childLog, sizeof(childLog), "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid());
 
     logFile = afs_fopen(childLog, "a");
@@ -612,10 +612,10 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 	Log("salvageServer: invalid volume id specified; salvage aborted\n");
 	return 1;
     }
-    
+
     partP = VGetPartition(node->command.sop.partName, 0);
     if (!partP) {
-	Log("salvageServer: Unknown or unmounted partition %s; salvage aborted\n", 
+	Log("salvageServer: Unknown or unmounted partition %s; salvage aborted\n",
 	    node->command.sop.partName);
 	return 1;
     }
@@ -728,7 +728,7 @@ SalvageLogCleanupThread(void * arg)
 	    SalvageLogCleanup(cleanup->pid);
 	    free(cleanup);
 	    assert(pthread_mutex_lock(&worker_lock) == 0);
-	}	    
+	}
     }
 
     assert(pthread_mutex_unlock(&worker_lock) == 0);
@@ -743,9 +743,9 @@ SalvageLogCleanup(int pid)
     char fn[AFSDIR_PATH_MAX];
     static char buf[LOG_XFER_BUF_SIZE];
 
-    afs_snprintf(fn, sizeof(fn), "%s.%d", 
+    afs_snprintf(fn, sizeof(fn), "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, pid);
-    
+
 
     pidlog = open(fn, O_RDONLY);
     unlink(fn);

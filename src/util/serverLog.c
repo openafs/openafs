@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -105,7 +105,7 @@ WriteLogBuffer(char *buf, afs_uint32 len)
 }
 
 int
-LogThreadNum(void) 
+LogThreadNum(void)
 {
   return (*threadNumProgram) ();
 }
@@ -216,7 +216,7 @@ SetDebug_Signal(int signo)
 	LogLevel *= 5;
 
 #if defined(AFS_PTHREAD_ENV)
-        if (LogLevel > 1 && threadNumProgram != NULL && 
+        if (LogLevel > 1 && threadNumProgram != NULL &&
             threadIdLogs == 0) {
             threadIdLogs = 1;
         }
@@ -309,7 +309,7 @@ OpenLog(const char *fileName)
         time_t t;
 	struct stat buf;
 	FT_GetTimeOfDay(&Start, 0);
-        t = Start.tv_sec;	
+        t = Start.tv_sec;
 	TimeFields = localtime(&t);
 	if (fileName) {
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))

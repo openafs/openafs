@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -207,7 +207,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     }
 #else /* defined(UKERNEL) */
     if (!cell) {
-        if (!tdir) 
+        if (!tdir)
             tdir = afsconf_Open(confDir);
 	if (!tdir) {
 	    if (confDir && strcmp(confDir, ""))
@@ -373,7 +373,7 @@ pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 
 }
 
-int 
+int
 pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id)
 {
     afs_int32 code;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -315,8 +315,8 @@ fsprobe_LWP(void *unused)
 			    strcpy(curr_stats->Disk[i].Name, pname);
 			}
 			if (code == RXGEN_OPCODE) {
-			    code = 
-				AFSVolPartitionInfo(curr_conn->rxVolconn, 
+			    code =
+				AFSVolPartitionInfo(curr_conn->rxVolconn,
 						    pname, &partition);
 			    if (!code) {
 				curr_stats->Disk[i].BlocksAvailable =
@@ -476,7 +476,7 @@ XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
  *------------------------------------------------------------------------*/
 
 int
-fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray, 
+fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	     int a_ProbeFreqInSecs, int (*a_ProbeHandler)(void),
 	     int a_debug)
 {				/*fsprobe_Init */

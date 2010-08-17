@@ -11,7 +11,7 @@
  *
  * Under U.S. law, this software may not be exported outside the US
  * without license from the U.S. Commerce department.
- * 
+ *
  * These routines form the library interface to the DES facilities.
  *
  *	spm	8/85	MIT project athena

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -1040,18 +1040,18 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     if (rxBind) {
         afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
+        } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
-        if (ccode == 1) 
+        if (ccode == 1)
             host = SHostAddrs[0];
     }
 
@@ -1084,7 +1084,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     /* Create a single security object, in this case the null security
      * object, for unauthenticated connections, which will be used to control
-     * security on connections made to this server 
+     * security on connections made to this server
      */
 
     securityObjects[0] = rxnull_NewServerSecurityObject();
@@ -1109,7 +1109,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     /* This call is here to verify that we are authentiated.
-     * The call does nothing and will return BUDB_NOTPERMITTED 
+     * The call does nothing and will return BUDB_NOTPERMITTED
      * if we don't belong.
      */
     code = bcdb_deleteDump(0, 0, 0, 0);
@@ -1166,8 +1166,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */

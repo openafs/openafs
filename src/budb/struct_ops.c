@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -68,7 +68,7 @@ printDump(FILE *fid, struct dump *dptr)
 
 }
 
-void 
+void
 printDumpEntry(struct budb_dumpEntry *deptr)
 {
     time_t created = deptr->created;
@@ -296,7 +296,7 @@ printVolInfo(FILE *fid, struct volInfo *viptr)
 
 /* -----------------------------------------
  * structure xdr routines
- * ----------------------------------------- 
+ * -----------------------------------------
  */
 
 /* utilities - network to host conversion
@@ -304,7 +304,7 @@ printVolInfo(FILE *fid, struct volInfo *viptr)
  */
 
 void
-volFragment_ntoh(struct volFragment *netVfPtr, 
+volFragment_ntoh(struct volFragment *netVfPtr,
 		 struct volFragment *hostVfPtr)
 {
     hostVfPtr->vol = ntohl(netVfPtr->vol);
@@ -321,7 +321,7 @@ volFragment_ntoh(struct volFragment *netVfPtr,
 }
 
 void
-volInfo_ntoh(struct volInfo *netViPtr, 
+volInfo_ntoh(struct volInfo *netViPtr,
 	     struct volInfo *hostViPtr)
 {
     strcpy(hostViPtr->name, netViPtr->name);
@@ -337,7 +337,7 @@ volInfo_ntoh(struct volInfo *netViPtr,
 }
 
 void
-tape_ntoh(struct tape *netTapePtr, 
+tape_ntoh(struct tape *netTapePtr,
 	  struct tape *hostTapePtr)
 {
     strcpy(hostTapePtr->name, netTapePtr->name);
@@ -359,12 +359,12 @@ tape_ntoh(struct tape *netTapePtr,
 }
 
 void
-dump_ntoh(struct dump *netDumpPtr, 
+dump_ntoh(struct dump *netDumpPtr,
 	  struct dump *hostDumpPtr)
 {
     hostDumpPtr->id = ntohl(netDumpPtr->id);
     hostDumpPtr->idHashChain = ntohl(netDumpPtr->idHashChain);
-    strlcpy(hostDumpPtr->dumpName, netDumpPtr->dumpName, 
+    strlcpy(hostDumpPtr->dumpName, netDumpPtr->dumpName,
 	    sizeof(hostDumpPtr->dumpName));
     strlcpy(hostDumpPtr->dumpPath, netDumpPtr->dumpPath,
 	    sizeof(hostDumpPtr->dumpPath));
@@ -385,7 +385,7 @@ dump_ntoh(struct dump *netDumpPtr,
 }
 
 void
-DbHeader_ntoh(struct DbHeader *netptr, 
+DbHeader_ntoh(struct DbHeader *netptr,
 	      struct DbHeader *hostptr)
 {
     hostptr->dbversion = ntohl(netptr->dbversion);
@@ -397,7 +397,7 @@ DbHeader_ntoh(struct DbHeader *netptr,
 }
 
 void
-dumpEntry_ntoh(struct budb_dumpEntry *netptr, 
+dumpEntry_ntoh(struct budb_dumpEntry *netptr,
 	       struct budb_dumpEntry *hostptr)
 {
     hostptr->id = ntohl(netptr->id);
@@ -418,7 +418,7 @@ dumpEntry_ntoh(struct budb_dumpEntry *netptr,
 }
 
 void
-principal_hton(struct budb_principal *hostptr, 
+principal_hton(struct budb_principal *hostptr,
 	       struct budb_principal *netptr)
 {
     strcpy(netptr->name, hostptr->name);
@@ -427,7 +427,7 @@ principal_hton(struct budb_principal *hostptr,
 }
 
 void
-principal_ntoh(struct budb_principal *netptr, 
+principal_ntoh(struct budb_principal *netptr,
 	       struct budb_principal *hostptr)
 {
     strcpy(hostptr->name, netptr->name);
@@ -436,7 +436,7 @@ principal_ntoh(struct budb_principal *netptr,
 }
 
 void
-structDumpHeader_hton(struct structDumpHeader *hostPtr, 
+structDumpHeader_hton(struct structDumpHeader *hostPtr,
 		      struct structDumpHeader *netPtr)
 {
     netPtr->type = htonl(hostPtr->type);
@@ -445,7 +445,7 @@ structDumpHeader_hton(struct structDumpHeader *hostPtr,
 }
 
 void
-structDumpHeader_ntoh(struct structDumpHeader *netPtr, 
+structDumpHeader_ntoh(struct structDumpHeader *netPtr,
 		      struct structDumpHeader *hostPtr)
 {
     hostPtr->type = ntohl(netPtr->type);
@@ -454,7 +454,7 @@ structDumpHeader_ntoh(struct structDumpHeader *netPtr,
 }
 
 void
-tapeEntry_ntoh(struct budb_tapeEntry *netptr, 
+tapeEntry_ntoh(struct budb_tapeEntry *netptr,
 	       struct budb_tapeEntry *hostptr)
 {
     strcpy(hostptr->name, netptr->name);
@@ -473,7 +473,7 @@ tapeEntry_ntoh(struct budb_tapeEntry *netptr,
 }
 
 int
-tapeSet_hton(struct budb_tapeSet *hostptr, 
+tapeSet_hton(struct budb_tapeSet *hostptr,
 	     struct budb_tapeSet *netptr)
 {
     netptr->id = htonl(hostptr->id);
@@ -486,7 +486,7 @@ tapeSet_hton(struct budb_tapeSet *hostptr,
 }
 
 int
-tapeSet_ntoh(struct budb_tapeSet *netptr, 
+tapeSet_ntoh(struct budb_tapeSet *netptr,
 	     struct budb_tapeSet *hostptr)
 {
     hostptr->id = ntohl(netptr->id);
@@ -499,7 +499,7 @@ tapeSet_ntoh(struct budb_tapeSet *netptr,
 }
 
 void
-textBlock_hton(struct textBlock *hostptr, 
+textBlock_hton(struct textBlock *hostptr,
 	       struct textBlock *netptr)
 {
     netptr->version = htonl(hostptr->version);
@@ -510,7 +510,7 @@ textBlock_hton(struct textBlock *hostptr,
 }
 
 void
-textBlock_ntoh(struct textBlock *netptr, 
+textBlock_ntoh(struct textBlock *netptr,
 	       struct textBlock *hostptr)
 {
     hostptr->version = ntohl(netptr->version);
@@ -543,7 +543,7 @@ textLock_ntoh(db_lockP netptr, db_lockP hostptr)
 }
 
 void
-volumeEntry_ntoh(struct budb_volumeEntry *netptr, 
+volumeEntry_ntoh(struct budb_volumeEntry *netptr,
 		 struct budb_volumeEntry *hostptr)
 {
     strcpy(hostptr->name, netptr->name);
@@ -565,7 +565,7 @@ volumeEntry_ntoh(struct budb_volumeEntry *netptr,
 }
 
 /* -------------------------------------
- * structure conversion & copy routines 
+ * structure conversion & copy routines
  * -------------------------------------
  */
 
@@ -644,7 +644,7 @@ volsToBudbVol(struct volFragment *volFragPtr, struct volInfo *volInfoPtr,
 }
 
 /* ----------------------------------
- * structure initialization routines 
+ * structure initialization routines
  *  ---------------------------------
  */
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -98,7 +98,7 @@
  * // Find all objects with 473 as a dwKey element. Since we're walking the
  * // whole list, the ENUMERATION object will be deleted automatically.
  *
- * for (LPENUM pEnum = pKey->FindFirst (&dwKeyFind); pEnum; pEnum = pEnum->FindNext()) 
+ * for (LPENUM pEnum = pKey->FindFirst (&dwKeyFind); pEnum; pEnum = pEnum->FindNext())
  * {
  *    OBJECT *pObj = (OBJECT*)(pEnum->GetObject());
  *    printf ("%s", pObj->szText);
@@ -129,7 +129,7 @@
  * // to free the ENUMERATION object explicitly.
  *
  * LPENUM pEnum;
- * if ((pEnum = pKey->FindFirst (&dwKeyFind)) != NULL) 
+ * if ((pEnum = pKey->FindFirst (&dwKeyFind)) != NULL)
  * {
  *    hl.Remove (pEnum->GetObject());
  *    delete pEnum;

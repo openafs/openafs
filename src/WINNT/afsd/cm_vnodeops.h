@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -97,7 +97,7 @@ extern long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags,
 #endif
 
 extern long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *namep, long flags,
-                              cm_user_t *userp, cm_req_t *reqp, 
+                              cm_user_t *userp, cm_req_t *reqp,
                               cm_scache_t **outpScpp);
 
 extern afs_int32 cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp,
@@ -120,11 +120,11 @@ extern long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep,
                       cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
-                        osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp, 
+                        osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp,
                         cm_scache_t **retscp);
 
 extern long cm_MakeDir(cm_scache_t *dscp, clientchar_t *lastNamep, long flags,
-                       cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp, 
+                       cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp,
                        cm_scache_t **scpp);
 
 extern long cm_RemoveDir(cm_scache_t *dscp, fschar_t *lastNamep, clientchar_t *originalNamep,
@@ -177,7 +177,7 @@ extern long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
                            unsigned int createDisp, cm_user_t *userp,
                            cm_req_t *reqp, cm_lock_data_t ** ldpp);
 
-extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
+extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 			       cm_lock_data_t ** ldpp);
 
 extern long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp,
@@ -210,9 +210,9 @@ extern long cm_Unlock(cm_scache_t *scp, unsigned char sLockType,
                       LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
                       afs_uint32 flags, cm_user_t *userp, cm_req_t *reqp);
 
-extern long cm_LockCheckRead(cm_scache_t *scp, 
-                             LARGE_INTEGER LOffset, 
-                             LARGE_INTEGER LLength, 
+extern long cm_LockCheckRead(cm_scache_t *scp,
+                             LARGE_INTEGER LOffset,
+                             LARGE_INTEGER LLength,
                              cm_key_t key);
 
 extern long cm_LockCheckWrite(cm_scache_t *scp,
@@ -256,7 +256,7 @@ typedef struct cm_bulkStat {
     AFSCallBack callbacks[CM_BULKMAX];
 } cm_bulkStat_t;
 
-extern afs_int32 cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, 
+extern afs_int32 cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp,
                                    cm_user_t *userp, cm_req_t *reqp);
 
 #endif /*  __CM_VNODEOPS_H_ENV__ */

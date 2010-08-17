@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -101,7 +101,7 @@ InAFS(char *a_path)
  *	char *a_path         : Pathname to ancestorize.
  *	char *a_parentBuff   : Ptr to parent buffer to use.
  *	char **a_componentPP : Ptr to the final component.
- *	
+ *
  *
  * Returns:
  *	Ptr to the buffer containing the parent dir name.
@@ -335,7 +335,7 @@ uss_fs_GetVolStat(char *a_mountpoint, char *a_volStatBuff,
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_SetVolStat(char *a_mountpoint, char *a_volStatBuff, 
+uss_fs_SetVolStat(char *a_mountpoint, char *a_volStatBuff,
 		  afs_int32 a_volStatBuffBytes)
 {				/*uss_fs_SetVolStat */
 #ifdef USS_FS_DB
@@ -548,7 +548,7 @@ struct tokenInfo {
 };
 
 /*
- * Build a list of tokens, delete the bad ones (the ones to remove from the 
+ * Build a list of tokens, delete the bad ones (the ones to remove from the
  * permissions list,) destroy all tokens, and then re-register the good ones.
  * Ugly, but it works.
  */

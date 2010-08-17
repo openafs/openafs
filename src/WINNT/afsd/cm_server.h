@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -76,7 +76,7 @@ typedef struct cm_serverRef {
 #define CM_IPRANK_MED	30000	/* on same network */
 #define CM_IPRANK_LOW	40000	/* on different networks */
 
-/* the maximum number of network interfaces that this client has */ 
+/* the maximum number of network interfaces that this client has */
 
 #define CM_MAXINTERFACE_ADDR          16
 
@@ -115,9 +115,9 @@ extern void cm_SetServerPrefs(cm_server_t * serverp);
 
 extern void cm_InsertServerList(cm_serverRef_t** list,cm_serverRef_t* element);
 
-extern long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t* server); 
+extern long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t* server);
 
-extern void cm_RandomizeServer(cm_serverRef_t** list); 
+extern void cm_RandomizeServer(cm_serverRef_t** list);
 
 extern void cm_FreeServer(cm_server_t* server);
 

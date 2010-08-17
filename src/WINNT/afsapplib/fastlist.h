@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -275,7 +275,7 @@ typedef BOOL (CALLBACK * LPFASTLISTTEXTCALLBACK)( HWND hList, LPFLN_GETITEMTEXT_
  *    struct {
  *       NMHDR hdr;
  *       // window- and message-specific elements ...
- *    } 
+ *    }
  * Thus, by casing the LPARAM value to LPNMHDR, information about the
  * notification can be obtained from any notification structure.
  * If a notification message is handled, the handler must return TRUE.
@@ -633,11 +633,11 @@ typedef BOOL (CALLBACK * LPFASTLISTTEXTCALLBACK)( HWND hList, LPFLN_GETITEMTEXT_
         // HLISTITEM FastList_FindPrevious (HWND hList, HLISTITEM hItem)
         //
 #define FastList_FindFirst(_hList)  \
-           FastList_FindList(_hList,0,FLM_FINDLIST_FIRST) 
+           FastList_FindList(_hList,0,FLM_FINDLIST_FIRST)
 #define FastList_FindNext(_hList,_hItem)  \
-           FastList_FindList(_hList,_hItem,FLM_FINDLIST_NEXT) 
+           FastList_FindList(_hList,_hItem,FLM_FINDLIST_NEXT)
 #define FastList_FindPrevious(_hList,_hItem)  \
-           FastList_FindList(_hList,_hItem,FLM_FINDLIST_PREVIOUS) 
+           FastList_FindList(_hList,_hItem,FLM_FINDLIST_PREVIOUS)
 #define FastList_FindList(_hList,_hItem,_dwCode) \
            (HLISTITEM)SendMessage (_hList, FLM_FINDLIST, (WPARAM)(_hItem), (LPARAM)(_dwCode))
 #define FLM_FINDLIST            (FLM_FIRST + 0x001D)
@@ -652,15 +652,15 @@ typedef BOOL (CALLBACK * LPFASTLISTTEXTCALLBACK)( HWND hList, LPFLN_GETITEMTEXT_
         // HLISTITEM FastList_FindNextSibling (HWND hList, HLISTITEM hItem)
         //
 #define FastList_FindFirstInRoot(_hList)  \
-           FastList_FindTree(_hList,0,FLM_FINDTREE_CHILD) 
+           FastList_FindTree(_hList,0,FLM_FINDTREE_CHILD)
 #define FastList_FindParent(_hList,_hItem)  \
-           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_PARENT) 
+           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_PARENT)
 #define FastList_FindFirstChild(_hList,_hItem)  \
-           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_CHILD) 
+           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_CHILD)
 #define FastList_FindPreviousSibling(_hList,_hItem)  \
-           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_PREVIOUS) 
+           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_PREVIOUS)
 #define FastList_FindNextSibling(_hList,_hItem)  \
-           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_NEXT) 
+           FastList_FindTree(_hList,_hItem,FLM_FINDTREE_NEXT)
 #define FastList_FindTree(_hList,_hItem,_dwCode) \
            (HLISTITEM)SendMessage (_hList, FLM_FINDTREE, (WPARAM)(_hItem), (LPARAM)(_dwCode))
 #define FLM_FINDTREE            (FLM_FIRST + 0x001E)
@@ -673,7 +673,7 @@ typedef BOOL (CALLBACK * LPFASTLISTTEXTCALLBACK)( HWND hList, LPFLN_GETITEMTEXT_
         // HLISTITEM FastList_FindNextSelected (HWND hList, HLISTITEM hItemPrevious)
         //
 #define FastList_FindFirstSelected(_hList)  \
-           FastList_FindNextSelected(_hList,0) 
+           FastList_FindNextSelected(_hList,0)
 #define FastList_FindNextSelected(_hList,_hItem) \
            (HLISTITEM)SendMessage (_hList, FLM_FINDSELECTED, (WPARAM)(_hItem), 0)
 #define FLM_FINDSELECTED        (FLM_FIRST + 0x001F)
@@ -690,7 +690,7 @@ typedef BOOL (CALLBACK * LPFASTLISTTEXTCALLBACK)( HWND hList, LPFLN_GETITEMTEXT_
 #define FastList_FindNextItem(_hList,_ppEnum)  \
            (HLISTITEM)SendMessage (_hList, FLM_FINDNEXTITEM, (WPARAM)(_ppEnum), 0)
 #define FastList_FindClose(_hList,_ppEnum) \
-           (void)SendMessage (_hList, FLM_FINDCLOSE, (WPARAM)(_ppEnum), 0) 
+           (void)SendMessage (_hList, FLM_FINDCLOSE, (WPARAM)(_ppEnum), 0)
 #define FLM_FINDITEM            (FLM_FIRST + 0x0020)
 #define FLM_FINDNEXTITEM        (FLM_FIRST + 0x0021)
 #define FLM_FINDCLOSE           (FLM_FIRST + 0x0022)
@@ -708,9 +708,9 @@ typedef BOOL (CALLBACK * LPFASTLISTTEXTCALLBACK)( HWND hList, LPFLN_GETITEMTEXT_
         // HLISTITEM FastList_FindNextVisible (HWND hList, HLISTITEM hItem)
         //
 #define FastList_FindFirstVisible(_hList)  \
-           FastList_FindVisible(_hList,0,FLM_FINDVISIBLE_FIRST) 
+           FastList_FindVisible(_hList,0,FLM_FINDVISIBLE_FIRST)
 #define FastList_FindNextVisible(_hList,_hItem)  \
-           FastList_FindVisible(_hList,_hItem,FLM_FINDVISIBLE_NEXT) 
+           FastList_FindVisible(_hList,_hItem,FLM_FINDVISIBLE_NEXT)
 #define FastList_FindVisible(_hList,_hItem,_dwCode) \
            (HLISTITEM)SendMessage (_hList, FLM_FINDVISIBLE, (WPARAM)(_hItem), (LPARAM)(_dwCode))
 #define FLM_FINDVISIBLE         (FLM_FIRST + 0x0024)

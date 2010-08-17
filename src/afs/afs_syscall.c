@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -63,7 +63,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     int code;
 #if defined(AFS_DARWIN100_ENV)
     struct afs_ioctl32 dst32;
-    
+
     if (!proc_is64bit(current_proc())) {
 	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
 	if (!code)
@@ -133,10 +133,10 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 
 #elif defined(AFS_PPC64_LINUX26_ENV)
 #if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-    if (current->thread_info->flags & _TIF_32BIT) 
+    if (current->thread_info->flags & _TIF_32BIT)
 #else
-    if (task_thread_info(current)->flags & _TIF_32BIT) 
-#endif      
+    if (task_thread_info(current)->flags & _TIF_32BIT)
+#endif
 #elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT)
 
@@ -408,17 +408,17 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 
 #elif defined(AFS_PPC64_LINUX26_ENV)
 #if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-    if (current->thread_info->flags & _TIF_32BIT) 
+    if (current->thread_info->flags & _TIF_32BIT)
 #else
-    if (task_thread_info(current)->flags & _TIF_32BIT) 
-#endif      
+    if (task_thread_info(current)->flags & _TIF_32BIT)
+#endif
 #elif defined(AFS_PPC64_LINUX20_ENV)
-    if (current->thread.flags & PPC_FLAG_32BIT) 
+    if (current->thread.flags & PPC_FLAG_32BIT)
 
 #elif defined(AFS_S390X_LINUX26_ENV)
     if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
-    if (current->thread.flags & S390_FLAG_31BIT) 
+    if (current->thread.flags & S390_FLAG_31BIT)
 
 #else
 #error iparam32 not done for this linux platform

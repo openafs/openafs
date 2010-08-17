@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -259,7 +259,7 @@ DeleteFromVnLRU(struct VnodeClassInfo * vcp, Vnode * vnp)
     if (vnp == vcp->lruHead)
 	vcp->lruHead = vcp->lruHead->lruNext;
 
-    if ((vnp == vcp->lruHead) || 
+    if ((vnp == vcp->lruHead) ||
 	(vcp->lruHead == NULL))
 	Abort("DeleteFromVnLRU: lru chain addled!\n");
 
@@ -458,9 +458,9 @@ VInitVnodes(VnodeClass class, int nVnodes)
  *       state is set to VN_STATE_INVALID.
  *       inode handle is released.
  *
- * @note we traverse backwards along the lru circlist.  It shouldn't 
- *       be necessary to specify that nUsers == 0 since if it is in the list, 
- *       nUsers should be 0.  Things shouldn't be in lruq unless no one is 
+ * @note we traverse backwards along the lru circlist.  It shouldn't
+ *       be necessary to specify that nUsers == 0 since if it is in the list,
+ *       nUsers should be 0.  Things shouldn't be in lruq unless no one is
  *       using them.
  *
  * @warning DAFS: VOL_LOCK is dropped while doing inode handle release
@@ -483,9 +483,9 @@ VGetFreeVnode_r(struct VnodeClassInfo * vcp)
 #endif
     VNLog(1, 2, Vn_id(vnp), (intptr_t)vnp, 0, 0);
 
-    /* 
+    /*
      * it's going to be overwritten soon enough.
-     * remove from LRU, delete hash entry, and 
+     * remove from LRU, delete hash entry, and
      * disassociate from old parent volume before
      * we have a chance to drop the vol glock
      */
@@ -506,7 +506,7 @@ VGetFreeVnode_r(struct VnodeClassInfo * vcp)
 	 *   - ihandle package lock contention
 	 *   - closing file descriptor(s) associated with ih
 	 *
-	 * Hance, we perform outside of the volume package lock in order to 
+	 * Hance, we perform outside of the volume package lock in order to
 	 * reduce the probability of contention.
 	 */
 	IH_RELEASE(vnp->handle);
@@ -548,8 +548,8 @@ VLookupVnode(Volume * vp, VnodeId vnodeId)
 
     newHash = VNODE_HASH(vp, vnodeId);
     for (vnp = VnodeHashTable[newHash];
-	 (vnp && 
-	  ((Vn_id(vnp) != vnodeId) || 
+	 (vnp &&
+	  ((Vn_id(vnp) != vnodeId) ||
 	   (Vn_volume(vnp) != vp) ||
 	   (vp->cacheCheck != Vn_cacheCheck(vnp))));
 	 vnp = vnp->hashNext);
@@ -745,7 +745,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	     *
 	     * if this becomes a bottleneck, there are ways to
 	     * improve parallelism for this code path
-	     *   -- tkeiser 11/28/2007 
+	     *   -- tkeiser 11/28/2007
 	     */
 	    VCreateReservation_r(vp);
 	    VWaitExclusiveState_r(vp);
@@ -808,7 +808,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 
 
 	error_encountered:
-	    /* 
+	    /*
 	     * close the file handle
 	     * acquire VOL_LOCK
 	     * invalidate the vnode
@@ -874,7 +874,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
  * @internal vnode package internal use only
  */
 static void
-VnLoad(Error * ec, Volume * vp, Vnode * vnp, 
+VnLoad(Error * ec, Volume * vp, Vnode * vnp,
        struct VnodeClassInfo * vcp, VnodeClass class)
 {
     /* vnode not cached */
@@ -920,8 +920,8 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	    Log("VnLoad: Couldn't read vnode %u, volume %u (%s); volume needs salvage\n", Vn_id(vnp), V_id(vp), V_name(vp));
 	} else {
 	    /* vnode is not allocated */
-	    if (LogLevel >= 5) 
-		Log("VnLoad: Couldn't read vnode %u, volume %u (%s); read %d bytes, errno %d\n", 
+	    if (LogLevel >= 5)
+		Log("VnLoad: Couldn't read vnode %u, volume %u (%s); read %d bytes, errno %d\n",
 		    Vn_id(vnp), V_id(vp), V_name(vp), (int)nBytes, errno);
 	    *ec = VIO;
 	    dosalv = 0;
@@ -1003,7 +1003,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
  * @internal vnode package internal use only
  */
 static void
-VnStore(Error * ec, Volume * vp, Vnode * vnp, 
+VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	struct VnodeClassInfo * vcp, VnodeClass class)
 {
     ssize_t nBytes;
@@ -1069,7 +1069,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
     VnChangeState_r(vnp, vn_state_save);
 #endif
     return;
-    
+
  error_encountered:
 #ifdef AFS_DEMAND_ATTACH_FS
     /* XXX instead of dumping core, let's try to request a salvage
@@ -1537,7 +1537,7 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
     return 0;
 }
 
-/** 
+/**
  * initial size of ihandle pointer vector.
  *
  * @see VInvalidateVnodesByVolume_r
@@ -1595,8 +1595,8 @@ VInvalidateVnodesByVolume_r(Volume * vp,
     if (ih_vec == NULL)
 	return ENOMEM;
 
-    /* 
-     * Traverse the volume's vnode list.  Pull all the ihandles out into a 
+    /*
+     * Traverse the volume's vnode list.  Pull all the ihandles out into a
      * thread-private array for later asynchronous processing.
      */
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1620,7 +1620,7 @@ restart_traversal:
 		ih_vec = ih_vec_new;
 #ifdef AFS_DEMAND_ATTACH_FS
 		/*
-		 * Theoretically, the volume's VVn list should not change 
+		 * Theoretically, the volume's VVn list should not change
 		 * because the volume is in an exclusive state.  For the
 		 * sake of safety, we will restart the traversal from the
 		 * the beginning (which is not expensive because we're
@@ -1704,7 +1704,7 @@ VCloseVnodeFiles_r(Volume * vp)
  *       during this exclusive operation.  This is due to the fact that we are
  *       generally called during the refcount 1->0 transition.
  *
- * @todo we should handle failures in VInvalidateVnodesByVolume_r more 
+ * @todo we should handle failures in VInvalidateVnodesByVolume_r more
  *       gracefully.
  *
  * @see VInvalidateVnodesByVolume_r

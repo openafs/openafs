@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -605,7 +605,7 @@ tweak_config(void)
  * fundamental errors occur.
  *
  * This routine requires
- * 
+ *
  * #include <sys/types.h>
  * #include <sys/stat.h>
  * #include <fcntl.h>
@@ -627,7 +627,7 @@ tweak_config(void)
 static void
 background(void)
 {
-    /* 
+    /*
      * A process is a process group leader if its process ID
      * (getpid()) and its process group ID (getpgrp()) are the same.
      */
@@ -744,14 +744,14 @@ main(int argc, char **argv, char **envp)
     struct sigaction nsa;
 
     /* for some reason, this permits user-mode RX to run a lot faster.
-     * we do it here in the bosserver, so we don't have to do it 
+     * we do it here in the bosserver, so we don't have to do it
      * individually in each server.
      */
     tweak_config();
 
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -840,14 +840,14 @@ main(int argc, char **argv, char **envp)
 	}
 	else if (!strcmp(argv[code], "-rxmaxmtu")) {
 	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
-		exit(1); 
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		exit(1);
 	    }
 	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-			rxMaxMTU, RX_MIN_PACKET_SIZE, 
+			rxMaxMTU, RX_MIN_PACKET_SIZE,
 			RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
 	    }
@@ -926,7 +926,7 @@ main(int argc, char **argv, char **envp)
     fflush(stdout);
 #endif
 
-    /* go into the background and remove our controlling tty, close open 
+    /* go into the background and remove our controlling tty, close open
        file desriptors
      */
 
@@ -937,7 +937,7 @@ main(int argc, char **argv, char **envp)
 
     if ((!DoSyslog)
 #ifndef AFS_NT40_ENV
-	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) && 
+	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) &&
 	!(S_ISFIFO(sb.st_mode)))
 #endif
 	) {
@@ -1053,18 +1053,18 @@ main(int argc, char **argv, char **envp)
 
     if (rxBind) {
 	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
+        } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
-        if (ccode == 1) 
+        if (ccode == 1)
             host = SHostAddrs[0];
     }
 

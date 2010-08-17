@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -97,14 +97,14 @@ static int
 ez_delete(struct bnode *bn)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
-    
+
     free(abnode->command);
     free(abnode);
     return 0;
 }
 
 struct bnode *
-ez_create(char *ainstance, char *acommand, char *unused1, char *unused2, 
+ez_create(char *ainstance, char *acommand, char *unused1, char *unused2,
 	  char *unused3, char *unused4)
 {
     struct ezbnode *te;
@@ -130,7 +130,7 @@ static int
 ez_timeout(struct bnode *bn)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
-	
+
     if (!abnode->waitingForShutdown)
 	return 0;		/* spurious */
     /* send kill and turn off timer */
@@ -144,7 +144,7 @@ static int
 ez_getstat(struct bnode *bn, afs_int32 * astatus)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
-    
+
     afs_int32 temp;
     if (abnode->waitingForShutdown)
 	temp = BSTAT_SHUTTINGDOWN;
@@ -160,7 +160,7 @@ static int
 ez_setstat(struct bnode *bn, afs_int32 astatus)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
-    
+
     struct bnode_proc *tp;
     afs_int32 code;
 

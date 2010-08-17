@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -33,12 +33,12 @@
 
 int isafile = 0, debugLevel = 1;
 
-/* Format of the config file is now 
+/* Format of the config file is now
  * <capacity devicename portno isafile>
  * capacity - size of tape or file in bytes
  * devicename - tape device or file name to write data into
- * portno - tape coordinator port no. (irrelevant) 
- * isafile - Is this entry a file or a tape? 
+ * portno - tape coordinator port no. (irrelevant)
+ * isafile - Is this entry a file or a tape?
  *
  * test_ftm goes through the lines in the config file and selects the
  * entry that has a port no. of 0 and tries to open the device.

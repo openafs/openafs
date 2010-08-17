@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -478,7 +478,7 @@ VAttachPartitions(void)
 #endif
 	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
 	    continue;
-	
+
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;
@@ -1363,7 +1363,7 @@ VPartHeaderUnlock(struct DiskPartition64 *dp, int locktype)
  * @internal volume package internal use only
  */
 
-struct DiskPartition64 * 
+struct DiskPartition64 *
 VGetPartitionById_r(afs_int32 id, int abortp)
 {
     struct DiskPartition64 *dp = NULL;
@@ -1403,7 +1403,7 @@ VGetPartitionById(afs_int32 id, int abortp)
     return dp;
 }
 
-static struct DiskPartition64 * 
+static struct DiskPartition64 *
 VLookupPartition_r(char * path)
 {
     afs_int32 id = volutil_GetPartitionID(path);
@@ -1414,7 +1414,7 @@ VLookupPartition_r(char * path)
     return DiskPartitionTable[id];
 }
 
-static void 
+static void
 AddPartitionToTable_r(struct DiskPartition64 *dp)
 {
     assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
@@ -1422,7 +1422,7 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
 }
 
 #if 0
-static void 
+static void
 DeletePartitionFromTable_r(struct DiskPartition64 *dp)
 {
     assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);

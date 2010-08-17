@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@ static int afs_xaxscnt = 0;
 afs_rwlock_t afs_xaxs;
 
 /* takes an address of an access cache & uid, returns ptr */
-/* PRECONDITION: first field has been checked and doesn't match! 
+/* PRECONDITION: first field has been checked and doesn't match!
  * INVARIANT:  isparent(i,j) ^ isparent(j,i)  (ie, they switch around)
  */
 struct axscache *
@@ -132,7 +132,7 @@ afs_RemoveAxs(struct axscache **headp, struct axscache *axsp)
 }
 
 
-/* 
+/*
  * Takes an entire list of access cache structs and prepends them, lock, stock,
  * and barrel, to the front of the freelist.
  */

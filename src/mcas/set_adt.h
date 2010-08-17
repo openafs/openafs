@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /******************************************************************************
  * set_func.h
- * 
+ *
  * Matt Benjamin <matt@linuxbox.com>
  *
  * Adapts MCAS set interface to use a pointer-key and typed comparison
@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Caution, pointer values 0x0, 0x01, and 0x02 are reserved.  Fortunately,
  * no real pointer is likely to have one of these values.
- * 
+ *
  */
 
 #ifndef __SET_ADT_H__
@@ -123,7 +123,7 @@ set_t *set_alloc(osi_set_cmp_func cmpf);
 /*
  * Add mapping (@k -> @v) into set @s. Return previous mapped value if
  * one existed, or NULL if no previous mapping for @k existed.
- * 
+ *
  * If @overwrite is FALSE, then if a mapping already exists it is not
  * modified, and the existing value is returned unchanged. It is possible
  * to see if the value was changed by observing if the return value is NULL.

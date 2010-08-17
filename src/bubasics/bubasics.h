@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -81,7 +81,7 @@
 #define RX_SCINDEX_VAB 	1	/* vice tokens, with bcrypt */
 #define RX_SCINDEX_KAD	2	/* Kerberos/DES */
 
-/* maximums for various text strings 
+/* maximums for various text strings
  * DON'T alter these values until all disk/tape structures can be handled
  * correctly. In particular, volume names are 64.
  */

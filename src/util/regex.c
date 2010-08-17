@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -22,10 +22,10 @@
  *	re_exec(s)
  *		char *s;
  *	 ... returns 1 if the string s matches the last compiled regular
- *		       expression, 
+ *		       expression,
  *		     0 if the string s failed to match the last compiled
  *		       regular expression, and
- *		    -1 if the compiled regular expression was invalid 
+ *		    -1 if the compiled regular expression was invalid
  *		       (indicating an internal error).
  *
  * The strings passed to both re_comp and re_exec may have trailing or
@@ -50,7 +50,7 @@
  *	    matches that character.
  *	4.  A nonempty string s bracketed [s] (or [^s]) matches any
  *	    character in (or not in) s. In s, \ has no special meaning,
- *	    and ] may only appear as the first letter. A substring 
+ *	    and ] may only appear as the first letter. A substring
  *	    a-b, with a and b in ascending ASCII order, stands for
  *	    the inclusive range of ASCII characters.
  *	5.  A regular expression of form 1-4 followed by * matches a
@@ -248,7 +248,7 @@ backref(int i, char *lp)
     return (0);
 }
 
-/* 
+/*
  * try to match the next thing in the dfa
  */
 static int

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -67,7 +67,7 @@ typedef struct cm_buf {
     char *datap;		/* data in this buffer */
     afs_uint32 error;	        /* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
-        
+
     /* fields added for the CM; locked by scp->mx */
     afs_uint64 dataVersion;	/* data version of this page */
     afs_uint32 cmFlags;		/* flags for cm */
@@ -161,9 +161,9 @@ extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_FindAllLocked(struct cm_scache *, osi_hyper_t *, afs_uint32 flags);
- 
+
 extern cm_buf_t *buf_FindAll(struct cm_scache *, osi_hyper_t *, afs_uint32 flags);
- 
+
 extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
 extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);

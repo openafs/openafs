@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -598,7 +598,7 @@ afs_MarkUserExpired(afs_int32 pag)
 #if AFS_GCPAGS
 
 /*
- * Called by osi_TraverseProcTable (from afs_GCPAGs) for each 
+ * Called by osi_TraverseProcTable (from afs_GCPAGs) for each
  * process in the system.
  * If the specified process uses a PAG, clear that PAG's temporary
  * 'deleteme' flag.
@@ -649,12 +649,12 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 #endif
     hash = UHash(uid);
 
-    /* if this token is PAG based, or it's UID based and 
+    /* if this token is PAG based, or it's UID based and
      * UID-based tokens exist */
     if ((pag != NOPAG) || (afs_GCPAGs_UIDBaseTokenCount)) {
 	/* find the entries for this uid in all cells and clear the not
 	 * referenced flag.  Can't use afs_FindUser, because it just returns
-	 * the specific cell asked for, or the first one found. 
+	 * the specific cell asked for, or the first one found.
 	 */
 	struct unixuser *pu;
 	for (pu = afs_users[hash]; pu; pu = pu->next) {
@@ -663,7 +663,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 		    /* clear the 'deleteme' flag for this entry */
 		    pu->states &= ~TMP_UPAGNotReferenced;
 		    if (pag == NOPAG) {
-			/* This is a uid based token that hadn't 
+			/* This is a uid based token that hadn't
 			 * previously been cleared, so decrement the
 			 * outstanding uid based token count */
 			afs_GCPAGs_UIDBaseTokenCount--;
@@ -676,7 +676,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 #endif
 
 /*
- * Go through the process table, find all unused PAGs 
+ * Go through the process table, find all unused PAGs
  * and cause them to be deleted during the next GC.
  *
  * returns the number of PAGs marked for deletion
@@ -714,7 +714,7 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
 	}
     }
 
-    /* Now, iterate through the systems process table, 
+    /* Now, iterate through the systems process table,
      * for each process, mark it's PAGs (if any) in use.
      * i.e. clear the temporary deleteme flag.
      */
@@ -750,8 +750,8 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
 		 * i.e. nfs translator, etc.
 		 */
 		if (!pu->exporter && afs_gcpags == AFS_GCPAGS_OK) {
-		    /* set the expire times to 0, causes 
-		     * afs_GCUserData to remove this entry 
+		    /* set the expire times to 0, causes
+		     * afs_GCUserData to remove this entry
 		     */
 		    pu->ct.EndTimestamp = 0;
 		    pu->tokenTime = 0;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -15,7 +15,7 @@
 #define CM_CELL_MAGIC    ('C' | 'E' <<8 | 'L'<<16 | 'L'<<24)
 
 /* a cell structure */
-typedef struct cm_cell {        
+typedef struct cm_cell {
     afs_uint32  magic;
     afs_int32 cellID;		        /* cell ID */
     struct cm_cell *allNextp;	        /* locked by cm_cellLock */
@@ -76,7 +76,7 @@ extern void cm_AddCellToIDHashTable(cm_cell_t * cellp);
 
 extern void cm_RemoveCellFromIDHashTable(cm_cell_t *cellp);
 
-extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep, 
+extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep,
                            unsigned short ipRank);
 
 extern cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags);

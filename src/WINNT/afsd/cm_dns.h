@@ -23,12 +23,12 @@ int getAFSServer(const char *service, const char *protocol, const char *cellname
 int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, const cm_unichar_t *cellName,
                   unsigned short afsdbPort,
                   int *cellHostAddrs,
-                  cm_unichar_t cellHostNames[][MAXHOSTCHARS], 
+                  cm_unichar_t cellHostNames[][MAXHOSTCHARS],
                   unsigned short ports[],
                   unsigned short ipRanks[],
                   int *numServers, int *ttl);
 
-/* a supplement for the DJGPP gethostbyname ... which 
+/* a supplement for the DJGPP gethostbyname ... which
    never bothers calling a DNS server ... so this function
    takes care of that. This should be called when you
    failed with gethostbyname (as that WILL check for

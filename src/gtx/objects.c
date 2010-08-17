@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -35,7 +35,7 @@
 static char mn[] = "gator_objects";	/*Module name */
 int objects_debug;		/*Is debugging output on? */
 
-int (*on_create[GATOR_NUM_OBJTYPES]) (struct onode *, 
+int (*on_create[GATOR_NUM_OBJTYPES]) (struct onode *,
 				      struct onode_createparams *);
 				        /*Array of ptrs to creation functions */
 
@@ -60,7 +60,7 @@ struct onodeops objops[GATOR_NUM_OBJTYPES];	/*Per-type op arrays */
  *	      THIS PACKAGE ***
  *
  * Side Effects:
- *	
+ *
  *--------------------------------------------------------------------------------*/
 
 int
@@ -269,7 +269,7 @@ gator_objects_create(struct onode_createparams *params)
  * gator_objects_lookup
  *
  * Description:
- *	
+ *
  *
  * Arguments:
  *	char *onode_name: Onode string name to find.

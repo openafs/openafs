@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -847,13 +847,13 @@ ih_reallyclose(IHandle_t * ihP)
     if (ihP->ih_synced) {
 	FdHandle_t *fdP;
 	IH_UNLOCK;
-	
+
 	fdP = IH_OPEN(ihP);
-	if (fdP) { 
+	if (fdP) {
 	    OS_SYNC(fdP->fd_fd);
 	    FDH_CLOSE(fdP);
 	}
-	
+
 	IH_LOCK;
     }
 
@@ -939,7 +939,7 @@ ih_sync_all(void) {
 	if (ihP)
 	    ihP->ih_refcnt++;	/* must not disappear over unlock */
 	for (; ihP; ihP = ihPnext) {
-	    
+
 	    if (ihP->ih_synced) {
 		FdHandle_t *fdP;
 
@@ -947,7 +947,7 @@ ih_sync_all(void) {
 		IH_UNLOCK;
 
 		fdP = IH_OPEN(ihP);
-		if (fdP) { 
+		if (fdP) {
 		    OS_SYNC(fdP->fd_fd);
 		    FDH_CLOSE(fdP);
 		}

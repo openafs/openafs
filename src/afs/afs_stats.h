@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -817,9 +817,9 @@ struct afs_stats_CMPerf {
     afs_uint32 cbloops;
     afs_uint32 osiread_efaults;
     afs_int32 cacheBlocksDiscarded;	/*# cache blocks free but not truncated */
-    afs_int32 cacheBucket0_Discarded;  
-    afs_int32 cacheBucket1_Discarded;  
-    afs_int32 cacheBucket2_Discarded;  
+    afs_int32 cacheBucket0_Discarded;
+    afs_int32 cacheBucket1_Discarded;
+    afs_int32 cacheBucket2_Discarded;
 
     /*
      * Spares for future expansion.
@@ -1009,7 +1009,7 @@ struct afs_stats_xferData {
  * integer portion (this will be taken care of when we ensure that y'
  * is less than 1000000).
  *
- * The only other non-obvious calculation involves y^2.  The key to 
+ * The only other non-obvious calculation involves y^2.  The key to
  * understanding this part of the calculation is to expand y again
  * in a nonobvious manner.  We do this via the following expansion:
  *

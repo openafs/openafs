@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -56,13 +56,13 @@ static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * af
 #if 0
 static void PurgeIndex(Volume * vp, VnodeClass class);
 static void PurgeHeader(Volume * vp);
-#endif 
+#endif
 
 static void PurgeIndex_r(Volume * vp, VnodeClass class);
 static void PurgeHeader_r(Volume * vp);
 
 /* No lock needed. Only the volserver will call this, and only one transaction
- * can have a given volume (volid/partition pair) in use at a time 
+ * can have a given volume (volid/partition pair) in use at a time
  */
 void
 VPurgeVolume(Error * ec, Volume * vp)

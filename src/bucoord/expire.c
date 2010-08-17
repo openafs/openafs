@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -186,7 +186,7 @@ ktimeDate_FromLong(timeSecs, ktimePtr)
 
 
 /* AddKtimeToNow
- *	Returns current time with a relative time added. Note that the 
+ *	Returns current time with a relative time added. Note that the
  *	computation adds in most significant fields first, i.e. year, month
  *	day etc. Addition of least significant fields would produce different
  *	results (depending on the data).
@@ -380,7 +380,7 @@ RelDatetoString(datePtr)
  */
 
 afs_int32
-bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType, 
+bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
 		   afs_int32 *expDate)
 {
     struct cmd_item *itemPtr, *tempPtr;

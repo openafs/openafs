@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -37,7 +37,7 @@ extern int nt_unlink(char *name);
 
 /* Inode operations */
 extern Inode nt_MakeSpecIno(int type);
-extern Inode nt_icreate(IHandle_t * h, char *p, afs_uint32 p1, afs_uint32 p2, 
+extern Inode nt_icreate(IHandle_t * h, char *p, afs_uint32 p1, afs_uint32 p2,
                         afs_uint32 p3, afs_uint32 p4);
 extern FD_t nt_iopen(IHandle_t * h);
 extern int nt_irelease(IHandle_t * h);

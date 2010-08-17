@@ -1,28 +1,28 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 #define IDS_APP_TITLE                   0
-#define IDS_USRCOL_NAME                 1 
-#define IDS_GRPCOL_NAME                 2 
-#define IDS_BADCREDS_DESC               3 
-#define IDS_TAB_USERS                   4 
-#define IDS_TAB_GROUPS                  5 
-#define IDS_CELL_NONE                   6 
-#define IDS_CRED_NONE                   7 
-#define IDS_CRED_EXP                    8 
-#define IDS_CRED_OK                     9 
+#define IDS_USRCOL_NAME                 1
+#define IDS_GRPCOL_NAME                 2
+#define IDS_BADCREDS_DESC               3
+#define IDS_TAB_USERS                   4
+#define IDS_TAB_GROUPS                  5
+#define IDS_CELL_NONE                   6
+#define IDS_CRED_NONE                   7
+#define IDS_CRED_EXP                    8
+#define IDS_CRED_OK                     9
 #define IDS_USERS_ALL                   10
 #define IDS_USERS_PATTERN               11
 #define IDS_GROUPS_ALL                  12
 #define IDS_GROUPS_PATTERN              13
 #define IDS_QUERYING_LONG               14
-                                        
+
 #define IDS_ACTION_DESC_NONE            16
 #define IDS_ACTION_DESC_ONE             17
 #define IDS_ACTION_DESC_MULT            18
@@ -461,7 +461,7 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1

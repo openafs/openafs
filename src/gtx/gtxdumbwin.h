@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -152,7 +152,7 @@ extern int gator_dumbgwin_drawline(struct gwin *, struct gwin_lineparams *);
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_drawrectangle(struct gwin *, 
+extern int gator_dumbgwin_drawrectangle(struct gwin *,
 					struct gwin_rectparams *);
     /*
      * Summary:
@@ -217,7 +217,7 @@ extern int gator_dumbgwin_invert(struct gwin *, struct gwin_invparams *);
 extern int gator_dumbgwin_getchar(struct gwin *gwp);
     /* get a character from a window */
 
-extern int gator_dumbgwin_getdimensions(struct gwin *, 
+extern int gator_dumbgwin_getdimensions(struct gwin *,
 					struct gwin_sizeparams *);
 
 extern int gator_dumbgwin_wait(struct gwin *gwp);

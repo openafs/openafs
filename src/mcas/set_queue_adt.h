@@ -1,6 +1,6 @@
 /******************************************************************************
  * set_queue_adt.h
- * 
+ *
  * Matt Benjamin <matt@linuxbox.com>
  *
  * Adapts MCAS set interface to use a pointer-key and typed comparison
@@ -11,7 +11,7 @@
  *
  * Caution, pointer values 0x0, 0x01, and 0x02 are reserved.  Fortunately,
  * no real pointer is likely to have one of these values.
- * 
+ *
 
 Copyright (c) 2003, Keir Fraser All rights reserved.
 
@@ -59,7 +59,7 @@ typedef void *setval_t;
 
 /* Fine for 2^NUM_LEVELS nodes. */
 #define NUM_LEVELS 20
-//#define NUM_LEVELS 19 
+//#define NUM_LEVELS 19
 
 
 /* Internal key values with special meanings. */
@@ -128,7 +128,7 @@ osi_set_t *osi_cas_skip_alloc(int (*cmpf) (const void *, const void *));
 /*
  * Add mapping (@k -> @v) into set @s. Return previous mapped value if
  * one existed, or NULL if no previous mapping for @k existed.
- * 
+ *
  * If @overwrite is FALSE, then if a mapping already exists it is not
  * modified, and the existing value is returned unchanged. It is possible
  * to see if the value was changed by observing if the return value is NULL.

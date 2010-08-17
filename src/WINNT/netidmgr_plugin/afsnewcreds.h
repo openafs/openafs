@@ -102,28 +102,28 @@ typedef struct tag_afs_dlg_data {
 
 #define AFS_DLG_ROW_ALLOC 4
 
-INT_PTR CALLBACK 
+INT_PTR CALLBACK
 afs_dlg_proc(HWND hwnd,
              UINT uMsg,
              WPARAM wParam,
              LPARAM lParam);
 
-void 
+void
 afs_dlg_update_rows(HWND hwnd, afs_dlg_data * d);
 
-void 
+void
 afs_cred_flush_rows(afs_cred_list * l);
 
-void 
+void
 afs_cred_free_rows(afs_cred_list * l);
 
-void 
+void
 afs_cred_assert_rows(afs_cred_list * l, int n);
 
-void 
+void
 afs_cred_delete_row(afs_cred_list * l, int i);
 
-afs_cred_row * 
+afs_cred_row *
 afs_cred_get_new_row(afs_cred_list * l);
 
 khm_int32 KHMAPI
@@ -133,8 +133,8 @@ void
 afs_cred_get_context_creds(afs_cred_list *l,
                            khui_action_context * ctx);
 
-void 
-afs_cred_get_identity_creds(afs_cred_list * l, 
+void
+afs_cred_get_identity_creds(afs_cred_list * l,
                             khm_handle ident,
                             khm_boolean * enabled);
 
@@ -142,8 +142,8 @@ void
 afs_cred_write_ident_data(afs_dlg_data * d);
 
 khm_int32
-afs_msg_newcred(khm_int32 msg_subtype, 
-                khm_ui_4 uparam, 
+afs_msg_newcred(khm_int32 msg_subtype,
+                khm_ui_4 uparam,
                 void * vparam);
 
 #endif

@@ -1,14 +1,14 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*
- * xdr_rx.c.  XDR using RX. 
+ * xdr_rx.c.  XDR using RX.
  */
 
 #include <afsconfig.h>
@@ -174,7 +174,7 @@ xdrrx_getint32(XDR *axdrs, afs_int32 * lp)
     char *saddr = (char *)&l;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx
@@ -213,7 +213,7 @@ xdrrx_putint32(XDR *axdrs, afs_int32 * lp)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx
@@ -244,7 +244,7 @@ xdrrx_getbytes(XDR *axdrs, caddr_t addr, u_int len)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx
@@ -276,7 +276,7 @@ xdrrx_putbytes(XDR *axdrs, caddr_t addr, u_int len)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx

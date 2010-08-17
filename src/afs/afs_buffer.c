@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 #include "h/param.h"
 #include "h/types.h"
 #include "h/time.h"
-#if	defined(AFS_AIX31_ENV) 
+#if	defined(AFS_AIX31_ENV)
 #include "h/limits.h"
 #endif
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
@@ -159,10 +159,10 @@ DRead(struct dcache *adc, int page)
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
 
     /* this apparently-complicated-looking code is simply an example of
-     * a little bit of loop unrolling, and is a standard linked-list 
+     * a little bit of loop unrolling, and is a standard linked-list
      * traversal trick. It saves a few assignments at the the expense
      * of larger code size.  This could be simplified by better use of
-     * macros. 
+     * macros.
      */
     if ((tb = phTable[pHash(adc->index, page)])) {
 	if (bufmatch(tb)) {
@@ -208,7 +208,7 @@ DRead(struct dcache *adc, int page)
     AFS_STATS(afs_stats_cmperf.bufMisses++);
     /* can't find it */
     /* The last thing we looked at was either tb or tb2 (or nothing). That
-     * is at least the oldest buffer on one particular hash chain, so it's 
+     * is at least the oldest buffer on one particular hash chain, so it's
      * a pretty good place to start looking for the truly oldest buffer.
      */
     tb = afs_newslot(adc, page, (tb ? tb : tb2));
@@ -430,13 +430,13 @@ DVOffset(void *ap)
     return AFS_BUFFER_PAGESIZE * tp->page + (int)(((char *)ap) - tp->data);
 }
 
-/*! 
+/*!
  * Zap one dcache entry: destroy one FID's buffers.
  *
  * 1/1/91 - I've modified the hash function to take the page as well
  * as the *fid, so that lookup will be a bit faster.  That presents some
  * difficulties for Zap, which now has to have some knowledge of the nature
- * of the hash function.  Oh well.  This should use the list traversal 
+ * of the hash function.  Oh well.  This should use the list traversal
  * method of DRead...
  *
  * \param adc The dcache entry to be zapped.
@@ -467,7 +467,7 @@ static void
 DFlushBuffer(struct buffer *ab)
 {
     struct osi_file *tfile;
-    
+
     tfile = afs_CFileOpen(&ab->inode);
     afs_CFileWrite(tfile, ab->page * AFS_BUFFER_PAGESIZE,
 		   ab->data, AFS_BUFFER_PAGESIZE);
@@ -476,7 +476,7 @@ DFlushBuffer(struct buffer *ab)
 }
 
 void
-DFlushDCache(struct dcache *adc) 
+DFlushDCache(struct dcache *adc)
 {
     int i;
     struct buffer *tb;
@@ -519,7 +519,7 @@ DFlush(void)
 		/* it seems safe to do this I/O without having the dcache
 		 * locked, since the only things that will update the data in
 		 * a directory are the buffer package, which holds the relevant
-		 * tb->lock while doing the write, or afs_GetDCache, which 
+		 * tb->lock while doing the write, or afs_GetDCache, which
 		 * DZap's the directory while holding the dcache lock.
 		 * It is not possible to lock the dcache or even call
 		 * afs_GetDSlot to map the index to the dcache since the dir

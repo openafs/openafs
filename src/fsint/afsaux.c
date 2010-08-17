@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -57,8 +57,8 @@ static afs_int32 bslosers = 0;
 #ifdef	AFS_AIXNFS11
 #define	AUTH_DES 1
 #endif
-/* 
- * Wrapper for xdr_string that can be called directly from 
+/*
+ * Wrapper for xdr_string that can be called directly from
  * routines like clnt_call; from user-mode xdr package.
  */
 #ifndef	AFS_SUN5_ENV

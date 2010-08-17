@@ -152,7 +152,7 @@ reply(question)
     printf("\n");
     if (!persevere && (nflag || fswritefd < 0)) {
 	printf("%s? no\n\n", question);
-#if	defined(AFS_SUN_ENV) 
+#if	defined(AFS_SUN_ENV)
 	iscorrupt = 1;		/* known to be corrupt */
 #endif
 	return (0);

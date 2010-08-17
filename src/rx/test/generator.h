@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -68,7 +68,7 @@ typedef struct {
 #define FATAL( y ) {fprintf(stderr, y); exit(1);}
 
 /* for vary/conf array for testing pusrposes we will assume a
-high index of at least 5, so IDL_FIX_ARRAY_SIZE should never be 
+high index of at least 5, so IDL_FIX_ARRAY_SIZE should never be
 smaller than MIN_HIGH */
 #define MIN_HIGH 2
 

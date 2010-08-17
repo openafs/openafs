@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -66,7 +66,7 @@ if(!(x)) { printf("assertion failed: line %d, file %s\n",\
 #define MAXMODS_DEBUG	20
 
 #ifdef	AFSDEBUG_DECLARE
-/* 
+/*
  *  Should get here only once per kernel instance!
  */
 char afsdebug[MAXMODS_DEBUG] =

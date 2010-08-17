@@ -103,7 +103,7 @@ des_random_key(des_cblock key)
  *
  * Note: this routine calls des_set_random_generator_seed.
  */
-#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) 
+#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 you lose ... (aka, you get to implement an analog of this for your system ...)
 #else
 

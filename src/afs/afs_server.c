@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -20,14 +20,14 @@
  * afsi_SetServerIPRank
  * afs_GetServer
  * afs_ActivateServer
- * 
+ *
  *
  * Local:
  * HaveCallBacksFrom
  * CheckVLServer
  * afs_SortOneServer
  * afs_SetServerPrefs
- * 
+ *
  */
 #include <afsconfig.h>
 #include "afs/param.h"
@@ -153,7 +153,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 		return;
 	    }
 	}
-	/* 
+	/*
 	 * All ips are down we treat the whole server down
 	 */
 	a_serverP->flags |= SRVR_ISDOWN;
@@ -243,7 +243,7 @@ afs_ServerDown(struct srvAddr *sa)
     struct server *aserver = sa->server;
 
     AFS_STATCNT(ServerDown);
-    if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN) 
+    if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN)
 	return 0;
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
@@ -422,7 +422,7 @@ afs_CountServers(void)
 
 	    /*
 	     * Any further tallying for this record will only be done if it has
-	     * been activated. 
+	     * been activated.
 	     */
 	    if ((currSrvP->flags & AFS_SERVER_FLAG_ACTIVATED)
 		&& currSrvP->addr && currSrvP->cell) {
@@ -540,13 +540,13 @@ afs_CheckServers(int adown, struct cell *acellp)
     struct srvAddr **addrs;
     struct afs_conn **conns;
     int nconns;
-    struct rx_connection **rxconns;      
+    struct rx_connection **rxconns;
     afs_int32 *conntimer, *deltas, *results;
     Capabilities *caps = NULL;
 
     AFS_STATCNT(afs_CheckServers);
 
-    /* 
+    /*
      * No sense in doing the server checks if we are running in disconnected
      * mode
      */
@@ -628,7 +628,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 
 	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
 	    || (tc->srvr->server == afs_setTimeHost)) {
-	    conns[nconns]=tc; 
+	    conns[nconns]=tc;
 	    rxconns[nconns]=tc->id;
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {
 		rx_SetConnDeadTime(tc->id, 3);
@@ -706,21 +706,21 @@ afs_CheckServers(int adown, struct cell *acellp)
 	}
 	AFS_GLOCK();
     }
-    
+
     for(i=0;i<nconns;i++){
       tc = conns[i];
       sa = tc->srvr;
-      
+
       if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
 	/* server back up */
 	print_internet_address("afs: file server ", sa, " is back up", 2);
-	
+
 	ObtainWriteLock(&afs_xserver, 244);
-	ObtainWriteLock(&afs_xsrvAddr, 245);        
+	ObtainWriteLock(&afs_xsrvAddr, 245);
 	afs_MarkServerUpOrDown(sa, 0);
 	ReleaseWriteLock(&afs_xsrvAddr);
 	ReleaseWriteLock(&afs_xserver);
-	
+
 	if (afs_waitForeverCount) {
 	  afs_osi_Wakeup(&afs_waitForever);
 	}
@@ -744,7 +744,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	    delta = deltas[i];
 	    tc = conns[i];
 	    sa = tc->srvr;
-	    
+
 	    if ((tc->srvr->server == afs_setTimeHost ||
 		 /* Sync only to a server in the local cell */
 		 (afs_setTimeHost == (struct server *)0 &&
@@ -752,7 +752,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 		/* set the time */
 		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
 		delta = end - tv.tv_sec;   /* how many secs fast we are */
-		
+
 		afs_setTimeHost = tc->srvr->server;
 		/* see if clock has changed enough to make it worthwhile */
 		if (delta >= AFS_MINCHANGE || delta <= -AFS_MINCHANGE) {
@@ -767,33 +767,33 @@ afs_CheckServers(int adown, struct cell *acellp)
 		    if (delta > 0) {
 			strcpy(msgbuf, "afs: setting clock back ");
 			if (delta > AFS_MAXCHANGEBACK) {
-			    afs_strcat(msgbuf, 
-				       afs_cv2string(&tbuffer[CVBS], 
+			    afs_strcat(msgbuf,
+				       afs_cv2string(&tbuffer[CVBS],
 						     AFS_MAXCHANGEBACK));
 			    afs_strcat(msgbuf, " seconds (of ");
-			    afs_strcat(msgbuf, 
-				       afs_cv2string(&tbuffer[CVBS], 
-						     delta - 
+			    afs_strcat(msgbuf,
+				       afs_cv2string(&tbuffer[CVBS],
+						     delta -
 						     AFS_MAXCHANGEBACK));
 			    afs_strcat(msgbuf, ", via ");
-			    print_internet_address(msgbuf, sa, 
+			    print_internet_address(msgbuf, sa,
 						   "); clock is still fast.",
 						   0);
 			} else {
-			    afs_strcat(msgbuf, 
+			    afs_strcat(msgbuf,
 				       afs_cv2string(&tbuffer[CVBS], delta));
 			    afs_strcat(msgbuf, " seconds (via ");
 			    print_internet_address(msgbuf, sa, ").", 0);
 			}
 		    } else {
 			strcpy(msgbuf, "afs: setting clock ahead ");
-			afs_strcat(msgbuf, 
+			afs_strcat(msgbuf,
 				   afs_cv2string(&tbuffer[CVBS], -delta));
 			afs_strcat(msgbuf, " seconds (via ");
 			print_internet_address(msgbuf, sa, ").", 0);
 		    }
                     /* We're only going to set it once; why bother looping? */
-		    break; 
+		    break;
 		}
 	    }
 	}
@@ -801,7 +801,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     for (i = 0; i < nconns; i++) {
 	afs_PutConn(conns[i], SHARED_LOCK);     /* done with it now */
     }
-    
+
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
     afs_osi_Free(conns, j * sizeof(struct afs_conn *));
     afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
@@ -809,7 +809,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     afs_osi_Free(deltas, j * sizeof(afs_int32));
     afs_osi_Free(results, j * sizeof(afs_int32));
     afs_osi_Free(caps, j * sizeof(Capabilities));
-    
+
 } /*afs_CheckServers*/
 
 
@@ -856,19 +856,19 @@ afs_FindServer(afs_int32 aserver, afs_uint16 aport, afsUUID * uuidp,
 
 /* Rules:
    X = (aX + c) % m
-   m is a power of two 
+   m is a power of two
    a % 8 is 5
    a is 0.73m  should be 0.01m .. 0.99m
    c is more or less immaterial.  1 or a is suggested.
-  
+
 NB:  LOW ORDER BITS are not very random.  To get small random numbers,
-     treat result as <1, with implied binary point, and multiply by 
+     treat result as <1, with implied binary point, and multiply by
      desired modulus.
 NB:  Has to be unsigned, since shifts on signed quantities may preserve
      the sign bit.
 */
-/* added rxi_getaddr() to try to get as much initial randomness as 
-   possible, since at least one customer reboots ALL their clients 
+/* added rxi_getaddr() to try to get as much initial randomness as
+   possible, since at least one customer reboots ALL their clients
    simultaneously -- so osi_Time is bound to be the same on some of the
    clients.  This is probably OK, but I don't want to see too much of it.
 */
@@ -904,7 +904,7 @@ afs_random(void)
 /* returns int 0..14 using the high bits of a pseudo-random number instead of
    the low bits, as the low bits are "less random" than the high ones...
    slight roundoff error exists, an excercise for the reader.
-   need to multiply by something with lots of ones in it, so multiply by 
+   need to multiply by something with lots of ones in it, so multiply by
    8 or 16 is right out.
  */
 int
@@ -993,7 +993,7 @@ afs_SortServers(struct server *aservers[], int count)
 }				/*afs_SortServers */
 
 /* afs_SetServerPrefs is rather system-dependent.  It pokes around in kernel
-   data structures to determine what the local IP addresses and subnet masks 
+   data structures to determine what the local IP addresses and subnet masks
    are in order to choose which server(s) are on the local subnet.
 
    As I see it, there are several cases:
@@ -1005,19 +1005,19 @@ afs_SortServers(struct server *aservers[], int count)
    4. The server is on a different logical subnet or net than this host, but
    this host is a 'metric 0 gateway' to it.  Ie, two address-spaces share
    one physical medium.
-   5. This host has a direct (point-to-point, ie, PPP or SLIP) link to the 
+   5. This host has a direct (point-to-point, ie, PPP or SLIP) link to the
    server.
    6. This host and the server are disjoint.
 
    That is a rough order of preference.  If a point-to-point link has a high
-   metric, I'm assuming that it is a very slow link, and putting it at the 
-   bottom of the list (at least until RX works better over slow links).  If 
-   its metric is 1, I'm assuming that it's relatively fast (T1) and putting 
+   metric, I'm assuming that it is a very slow link, and putting it at the
+   bottom of the list (at least until RX works better over slow links).  If
+   its metric is 1, I'm assuming that it's relatively fast (T1) and putting
    it ahead of #6.
    It's not easy to check for case #4, so I'm ignoring it for the time being.
 
    BSD "if" code keeps track of some rough network statistics (cf 'netstat -i')
-   That could be used to prefer certain servers fairly easily.  Maybe some 
+   That could be used to prefer certain servers fairly easily.  Maybe some
    other time...
 
    NOTE: this code is very system-dependent, and very dependent on the TCP/IP
@@ -1146,8 +1146,8 @@ typedef struct ill_s {
 /*
  * The IP addresses and ranks are determined by afsd (in user space) and
  * passed into the kernel at startup time through the AFSOP_ADVISEADDR
- * system call. These are stored in the data structure 
- * called 'afs_cb_interface'. 
+ * system call. These are stored in the data structure
+ * called 'afs_cb_interface'.
  *
  * struct srvAddr *sa;         remote server
  * afs_int32 addr;                one of my local addr in net order
@@ -1392,7 +1392,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
             }
         }
     }
-    
+
     rw_exit(&afsifinfo_lock);
 #else
     for (ill = (struct ill_s *)*addr /*ill_g_headp */ ; ill;
@@ -1406,7 +1406,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 	    subnet = ipif->ipif_local_addr & ipif->ipif_net_mask;
 	    subnetmask = ipif->ipif_net_mask;
 	    /*
-	     * Generate the local net using the local address and 
+	     * Generate the local net using the local address and
 	     * whate we know about Class A, B and C networks.
 	     */
 	    if (IN_CLASSA(ipif->ipif_local_addr)) {
@@ -1896,7 +1896,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 
 		/* Add the orphaned server to the afs_servers[] hash chain.
 		 * Its iphash does not matter since we never look up the server
-		 * in the afs_servers table by its ip address (only by uuid - 
+		 * in the afs_servers table by its ip address (only by uuid -
 		 * which this has none).
 		 */
 		iphash = SHash(aserverp[k]);
@@ -1978,7 +1978,7 @@ afs_RemoveAllConns(void)
 
     ObtainReadLock(&afs_xserver);
     ObtainWriteLock(&afs_xconn, 1001);
-    
+
     /*printf("Destroying connections ... ");*/
     for (i = 0; i < NSERVERS; i++) {
         for (ts = afs_servers[i]; ts; ts = nts) {
@@ -2003,7 +2003,7 @@ afs_RemoveAllConns(void)
 
     ReleaseWriteLock(&afs_xconn);
     ReleaseReadLock(&afs_xserver);
-    
+
 }
 
 void

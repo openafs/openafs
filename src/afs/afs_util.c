@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -171,7 +171,7 @@ char *
 afs_strrchr(char *s, int c)
 {
     char *p = NULL;
-    
+
     do {
 	if (*s == c)
 	    p = (char*) s;
@@ -371,11 +371,11 @@ afs_data_pointer_to_int32(const void *p)
 
 afs_int32
 afs_calc_inum(afs_int32 volume, afs_int32 vnode)
-{ 
+{
     afs_int32 ino, vno = vnode;
     char digest[16];
     struct afs_md5 ct;
-    
+
     if (afs_new_inum) {
 	AFS_MD5_Init(&ct);
 	AFS_MD5_Update(&ct, &volume, 4);

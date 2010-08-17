@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -51,7 +51,7 @@ static int globalInitDone = 0;
 
 /* t1 = t2 - t3 */
 static void
-subtract(struct timeval *t1, struct timeval *t2, 
+subtract(struct timeval *t1, struct timeval *t2,
 	 struct timeval *t3)
 {
     int sec2, usec2, sec3, usec3;
@@ -93,7 +93,7 @@ add(struct timeval *t1, struct timeval *t2)
 	t1->tv_usec -= MILLION;
     }
 }
-
+
 /* t1 == t2 */
 
 int
@@ -118,7 +118,7 @@ blocking(struct TM_Elem *t)
 {
     return (t->TotalTime.tv_sec < 0 || t->TotalTime.tv_usec < 0);
 }
-
+
 
 
 /*
@@ -198,7 +198,7 @@ TM_Insert(struct TM_Elem *tlistPtr, struct TM_Elem *elem)
 	    next = tlistPtr;
     openafs_insque(elem, next->Prev);
 }
-
+
 /*
     Walks through the specified list and updates the TimeLeft fields in it.
     Returns number of expired elements in the list.

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -98,8 +98,8 @@ InitErrTabs(void)
     initialize_KTC_error_table();
 }
 
-/* 
- * got to account for the errors which are volume related but 
+/*
+ * got to account for the errors which are volume related but
  * not dealt with by standard errno and com_err stuff.
  */
 void
@@ -339,14 +339,14 @@ extern int dontExecute;		/* declared in commands.c */
 extern char *loadFile;		/* declared in commands.c */
 char lineBuffer[1024];		/* Line typed in by user or read from load file */
 
-/* 
+/*
  * This will dispatch a command.  It holds a recursive loop for the
  * "dump -file" option. This option reads backup commands from a file.
  *
  * Cannot put this code on other side of cmd_Dispatch call (in
  * commands.c) because when make a dispatch call when in a dispatch
  * call, environment is mucked up.
- * 
+ *
  * To avoid multiple processes stepping on each other in the dispatch code,
  * put a lock around it so only 1 process gets in at a time.
  */
@@ -357,7 +357,7 @@ struct Lock dispatchLock;	/* lock on the Dispatch call */
 
 afs_int32
 doDispatch(afs_int32 targc,
-	   char *targv[MAXV], 
+	   char *targv[MAXV],
 	   afs_int32 dispatchCount) /* to prevent infinite recursion */
 {
     char *sargv[MAXV];
@@ -459,8 +459,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -42,11 +42,11 @@ extern lock_t *rx_sleepLock;
  * and reacquire the mutex when it wakes up.
  */
 
-/* With 11.23, ksleep_prepare is not defined anywhere  and 
- * ksleep_one is only referenced in a comment. sleep, get_sleep_lock 
+/* With 11.23, ksleep_prepare is not defined anywhere  and
+ * ksleep_one is only referenced in a comment. sleep, get_sleep_lock
  * and wakeup are defined in driver manuals.
  * This works with 11.0, 11i, and 11.23
- * Note: wakeup wakes up all threads waiting on cv. 
+ * Note: wakeup wakes up all threads waiting on cv.
  */
 
 #define CV_WAIT(cv, lck) \
@@ -58,7 +58,7 @@ extern lock_t *rx_sleepLock;
 		sleep((caddr_t)(cv), PRIBIO); \
 		b_psema(lck); \
 	} while(0)
-		
+
 #define CV_SIGNAL(cv)  \
 	do { \
 		lock_t * sleep_lock = get_sleep_lock((caddr_t)(cv)); \

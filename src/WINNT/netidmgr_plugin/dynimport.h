@@ -31,13 +31,13 @@
 #include<khdefs.h>
 #include<tlhelp32.h>
 
-#if defined(_WIN32_WINNT) 
+#if defined(_WIN32_WINNT)
 #  if (_WIN32_WINNT < 0x0501)
 #    define AFS_WIN32_WINNT _WIN32_WINNT
 #    undef _WIN32_WINNT
 #    define _WIN32_WINNT 0x0501
 #  endif
-#else 
+#else
 #  define _WIN32_WINNT 0x0501
 #endif
 

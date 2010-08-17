@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -60,11 +60,11 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
 #endif
 
 #if defined(AFS_LINUX20_ENV)
-    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, 
+    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
 			    follow, &errcode);
 
     if(rval)
-	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, 
+	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg,
 			  follow);
 #elif defined(AFS_DARWIN80_ENV)
     rval = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,

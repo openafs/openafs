@@ -56,43 +56,43 @@
 #include <sys/socket.h>
 #endif
 
-/* This is an enhanced version of the *printf functionality shipped 
+/* This is an enhanced version of the *printf functionality shipped
  * with Heimdal.  In addition to the standard Unix formatting types
  * this version also supports Microsoft's I32 and I64 type modifiers
- * and the OpenAFS I type which is used to generate output from 
- * network byte order IPv4 addresses (either dotted notation or 
+ * and the OpenAFS I type which is used to generate output from
+ * network byte order IPv4 addresses (either dotted notation or
  * hostname lookups.  Implementation details follow:
  *
  *   - Actually obeys the length limit, which (unfortunately) many
  *     implementations of snprintf do not.
- *  
+ *
  *   - Supports all the standard format specifiers for integers
  *     (d, i, o, u, x, X), floating-point values (f, e, E, g, G),
  *     and strings and characters (c, s, %), plus a few unusual
  *     but useful ones described below.
  *
- *   - The Microsoft integral size modifiers I32 and I64 are 
+ *   - The Microsoft integral size modifiers I32 and I64 are
  *     supported.  I32 is equivalent to 'l'.
  *     I64 is equivalent to 'll'.
- *  
+ *
  *   - Supports all the standard flags (-, 0, +, space, #).  These
  *     flags are ignored if used when they are not appropriate.
- *  
+ *
  *   - Supports the standard size modifiers for short (h), long (h),
  *     and double (L) arguments.  These modifiers are ignored if used
  *     when they are not appropriate.
- *  
+ *
  *   - Supports minimum field width and precision, where appropriate,
  *     including the use of '*' to specify a value given as an argument
  *     instead of in the format string.  There is a maximum precision
  *     of 100 digits.
- *  
+ *
  *   - The 'p' specifier for printing pointers is implemented using
  *     compile time knowledge.  (AFS_64BITUSERPOINTER_ENV)
  *
  *   - Floating-point specifier (%e, %f, %g) are implemented by
  *     calling the standard sprintf, and thus may be unsafe.
- *  
+ *
  *   - The '%...$' notation is used primarily when the format string
  *     is specified by the user, who knows but cannot change the order
  *     of the arguments.  Such usage is inherently dangerous and
@@ -101,20 +101,20 @@
  *   - Passing in a format and an NULL buffer is supported.  This
  *     will compute the size of the buffer required by the format
  *     and the provided input parameters.
- *  
+ *
  * The custom format specifier '%I' is supported.  This specifier
  * takes as its argument an unsigned long integer containing an
  * IPv4 address in network byte order.  The address is rendered
  * either as a hostname or as a dotted quad, as follows:
- *  
+ *
  *   - If precision is nonzero or unspecified, a hostname lookup
  *     is attempted; if it is successful, the hostname is printed.
  *     If the hostname lookup fails, the address is printed in
  *     dotted-quad notation.
- *  
+ *
  *   - If precision is explicitly specified as 0, then the hostname
  *     lookup is skipped, and dotted-quad notation is always used.
- *  
+ *
  *   - If a hostname is to be printed:
  *     + The precision controls the maximum number of characters
  *       printed, as with %s.
@@ -124,7 +124,7 @@
  *       will be forced to upper case before printing.  If both
  *       '#' and '+' are given, the '+' flag will be ignored.
  *     + The '0' and ' ' flags have no effect.
- *  
+ *
  *   - If a dotted quad is to be printed:
  *     + The precision has no effect; dotted quads are always
  *       7 to 12 characters in length, depending on the value
@@ -139,7 +139,7 @@
  * A test program exists in src/util/tests/snprintf_tests.c.
  */
 
-#define MAXPREC 100 
+#define MAXPREC 100
 
 enum format_flags {
     minus_flag     =  1,
@@ -287,7 +287,7 @@ append_number(struct snprintf_state *state,
            no such wording for %x. This would mean that %#.o would
            output "0", but %#.x "". This does not make sense, and is
            also not what other printf implementations are doing. */
-	
+
 	if(prec <= nlen && nstr[nstart] != '0' && nstr[nstart] != '\0')
 	    prec = nlen + 1;
     }
@@ -305,13 +305,13 @@ append_number(struct snprintf_state *state,
 	    width -= prec;
 	else
 	    width -= nlen;
-	
+
 	if(use_alternative(flags, num, base))
 	    width -= 2;
-	
+
 	if(signchar != '\0')
 	    width--;
-	
+
 	/* pad to width */
 	len += pad(state, width, ' ');
     }
@@ -333,12 +333,12 @@ append_number(struct snprintf_state *state,
     } else
 	/* pad to prec with zeros */
 	len += pad(state, prec - nlen, '0');
-	
+
     while(nstr[nstart] != '\0') {
 	(*state->append_char)(state, nstr[nstart++]);
 	++len;
     }
-	
+
     if(flags & minus_flag)
 	len += pad(state, width - len, ' ');
 
@@ -405,7 +405,7 @@ append_char(struct snprintf_state *state,
     return 0;
 }
 
-#define MAXPREC 100 
+#define MAXPREC 100
 static int
 append_float(struct snprintf_state *state,
              char type,
@@ -417,7 +417,7 @@ append_float(struct snprintf_state *state,
     int len = 0;
     char fbuf[20], xbuf[MAXPREC + 21];
 
-    sprintf(fbuf, "%%%s%s.*L%c", 
+    sprintf(fbuf, "%%%s%s.*L%c",
             (flags & plus_flag) ? "+" : ((flags & space_flag) ? " " : ((flags & minus_flag) ? "-" : "")),
             (flags & alternate_flag) ? "#" : "", type);
     if (prec == -1)
@@ -459,7 +459,7 @@ append_address(struct snprintf_state *state,
         len = (int)strlen(x);
         if (prec != -1 && prec < len)
             width = prec;
-        else 
+        else
             width = len;
         if (flags & alternate_flag) {
             for (y = x; *y; y++)
@@ -483,11 +483,11 @@ append_address(struct snprintf_state *state,
         }
         /* typecast to whatever '%u' is! */
         sprintf(xbuf, x, (unsigned int)((arg & 0xff000000) >> 24),
-                         (unsigned int)((arg & 0x00ff0000) >> 16), 
+                         (unsigned int)((arg & 0x00ff0000) >> 16),
                          (unsigned int)((arg & 0x0000ff00) >> 8),
                          (unsigned int)(arg & 0x000000ff));
         len = append_string(state, (unsigned char *)xbuf, 0, -1, 0);
-    }        
+    }
 
     return len;
 }
@@ -657,7 +657,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
                     long_long_flag = 1;
                 else if (sizeof(void *) == sizeof(afs_uint32))
                     long_flag = 1;
-                else 
+                else
                     long_flag = 1;
             }
 

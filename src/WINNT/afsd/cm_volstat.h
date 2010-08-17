@@ -1,18 +1,18 @@
-/* 
+/*
  * Copyright (c) 2007 Secure Endpoints Inc.
  *
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
- * 
- *     * Redistributions of source code must retain the above copyright 
+ *
+ *     * Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
- *     * Neither the name of the Secure Endpoints Inc. nor the names of its 
- *       contributors may be used to endorse or promote products derived 
+ *     * Neither the name of the Secure Endpoints Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -26,7 +26,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* This header file provides the definitions and prototypes 
+/* This header file provides the definitions and prototypes
  * which specify the AFS Cache Manager Volume Status Event
  * Notification API
  */
@@ -84,10 +84,10 @@ typedef struct dll_VolStatus_Funcs {
     long (__fastcall * dll_VolStatus_Network_Addr_Change)(void);
     long (__fastcall * dll_VolStatus_Change_Notification)(afs_uint32 cellID, afs_uint32 volID, enum volstatus status);
     /* version 2 */
-    long (__fastcall * dll_VolStatus_Notify_DFS_Mapping)(afs_uint32 cellID, afs_uint32 volID, 
+    long (__fastcall * dll_VolStatus_Notify_DFS_Mapping)(afs_uint32 cellID, afs_uint32 volID,
                                                          afs_uint32 vnodeID, afs_uint32 uniqID,
                                                          char *src, char *target);
-    long (__fastcall * dll_VolStatus_Invalidate_DFS_Mapping)(afs_uint32 cellID, afs_uint32 volID, 
+    long (__fastcall * dll_VolStatus_Invalidate_DFS_Mapping)(afs_uint32 cellID, afs_uint32 volID,
                                                              afs_uint32 vnodeID, afs_uint32 uniqID);
 } dll_VolStatus_Funcs_t;
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -39,12 +39,12 @@ struct gtx_frame {
 
 extern int gtxframe_SetFrame(struct gwin *awin, struct gtx_frame *aframe);
 extern struct gtx_frame *gtxframe_GetFrame(struct gwin *);
-extern int gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel, 
+extern int gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel,
 			    char *astring);
 extern int gtxframe_DeleteMenu(struct gtx_frame *aframe, char *alabel);
 extern int gtxframe_ClearMenus(struct gtx_frame *aframe);
-extern int gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt, 
-				 char *adefault, char *aresult, 
+extern int gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt,
+				 char *adefault, char *aresult,
 				 int aresultSize);
 extern int gtxframe_DisplayString(struct gtx_frame *, char *);
 extern int gtxframe_ClearMessageLine(struct gtx_frame *aframe);
@@ -52,7 +52,7 @@ extern struct gtx_frame *gtxframe_Create(void);
 extern int gtxframe_Delete(struct gtx_frame *aframe);
 extern int gtxframe_Display(struct gtx_frame *aframe, struct gwin *awm);
 extern int gtxframe_AddToList(struct gtx_frame *aframe, struct onode *aobj);
-extern int gtxframe_RemoveFromList(struct gtx_frame *aframe, 
+extern int gtxframe_RemoveFromList(struct gtx_frame *aframe,
 				   struct onode *aobj);
 extern int gtxframe_ClearList(struct gtx_frame *aframe);
 

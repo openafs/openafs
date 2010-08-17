@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -79,7 +79,7 @@ ht_ResetT(struct memoryHTBlock ***blocksP, int *sizeP, int length)
 }
 
 /* ht_Reset
- *	reinitialize a memory hash table. 
+ *	reinitialize a memory hash table.
  * 	Calls ht_ResetT to invalidate the two block arrays.
  */
 
@@ -247,8 +247,8 @@ ht_FreeTable(struct ubik_trans *ut, struct memoryHashTable *mht)
 }
 
 afs_int32
-ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht, 
-		 afs_uint32 hash, int old, struct memoryHTBlock **blockP, 
+ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
+		 afs_uint32 hash, int old, struct memoryHTBlock **blockP,
 		 int *boP)
 {
     struct hashTable *ht = NULL;
@@ -382,7 +382,7 @@ ht_MaybeAdjust(struct ubik_trans *ut, struct memoryHashTable *mht)
 }
 
 dbadr
-ht_LookupBucket(struct ubik_trans *ut, struct memoryHashTable *mht, 
+ht_LookupBucket(struct ubik_trans *ut, struct memoryHashTable *mht,
 		afs_uint32 hash, int old)
 {
     struct memoryHTBlock *block;
@@ -546,7 +546,7 @@ ht_minHBlocks(struct memoryHashTable *mht)
 }
 
 afs_uint32
-ht_HashEntry(struct memoryHashTable *mht, 
+ht_HashEntry(struct memoryHashTable *mht,
 	     char *e) 				/* entry's address (in b) */
 {
     int type = ntohl(mht->ht->functionType);
@@ -653,8 +653,8 @@ ht_KeyMatch(int type, char *key, char *e)
  */
 
 afs_int32
-ht_LookupEntry(struct ubik_trans *ut, 
-	       struct memoryHashTable *mht, 
+ht_LookupEntry(struct ubik_trans *ut,
+	       struct memoryHashTable *mht,
 	       void *key,	/* pointer to lookup key to match */
 	       dbadr *eaP, 	/* db addr of entry found or zero */
 	       void *e)		/* contents of located entry */
@@ -704,7 +704,7 @@ ht_LookupEntry(struct ubik_trans *ut,
  */
 
 static afs_int32
-ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht, 
+ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 	      int *opQuota, struct memoryHTBlock *block, int blockOffset)
 {
     struct hashTable *ht = mht->ht;
@@ -1063,7 +1063,7 @@ ht_HashOutT(struct ubik_trans *ut, struct memoryHashTable *mht,
 
 afs_int32
 ht_HashOut(struct ubik_trans *ut, struct memoryHashTable *mht, dbadr ea,
-	   void *e) 
+	   void *e)
 {
     afs_uint32 hash;
     afs_int32 code;
@@ -1158,8 +1158,8 @@ scanHashTableBlock(struct ubik_trans *ut,
 
 afs_int32
 scanHashTable(struct ubik_trans *ut, struct memoryHashTable *mhtPtr,
-     	      int (*selectFn) (dbadr, void *, void *), 
-	      int (*operationFn) (dbadr, void *, void *), 
+     	      int (*selectFn) (dbadr, void *, void *),
+	      int (*operationFn) (dbadr, void *, void *),
 	      void *rockPtr)
 {
     struct htBlock hashTableBlock;

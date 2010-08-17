@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,7 +11,7 @@
    System:		VICE-TWO
    Module:		vol-dump.c
    Institution:	The Information Technology Center, Carnegie-Mellon University
-   
+
    */
 
 #include <afsconfig.h>
@@ -586,7 +586,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     howBig = status.st_size;
 
 #ifdef	AFS_AIX_ENV
-    /* Unfortunately in AIX valuable fields such as st_blksize are 
+    /* Unfortunately in AIX valuable fields such as st_blksize are
      * gone from the stat structure.
      */
     fstatfs(handleP->fd_fd, &tstatfs);
@@ -657,7 +657,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 			PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
 	    }
 
-	    /* Pad the rest of the buffer with zeros. Remember offset we started 
+	    /* Pad the rest of the buffer with zeros. Remember offset we started
 	     * padding. Keep total tally of padding.
 	     */
 	    memset(p + n, 0, howMany - n);

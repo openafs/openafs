@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,7 +49,7 @@
 #include <afs/volser.h>
 
 static int IStatServer(struct cmd_syndesc *as, int int32p);
-static int DoStat(char *aname, struct rx_connection *aconn, 
+static int DoStat(char *aname, struct rx_connection *aconn,
 		  int aint32p, int firstTime);
 
 #include "bosint.h"
@@ -1142,9 +1142,9 @@ StopServer(struct cmd_syndesc *as, void *arock)
 #define PARMBUFFERSSIZE 32
 
 static afs_int32
-DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2, 
-	  char * aoutName, afs_int32 showlog, char * parallel, 
-	  char * atmpDir, char * orphans, int dafs, 
+DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
+	  char * aoutName, afs_int32 showlog, char * parallel,
+	  char * atmpDir, char * orphans, int dafs,
 	  struct MRAFSSalvageParms * mrafsParm)
 {
     afs_int32 code;
@@ -1244,7 +1244,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     /* For DAFS, specifying a single volume does not result in a standard
      * salvager call.  Instead, it simply results in a SALVSYNC call to the
      * online salvager daemon.  This interface does not give us the same rich
-     * set of call flags.  Thus, we skip these steps for DAFS single-volume 
+     * set of call flags.  Thus, we skip these steps for DAFS single-volume
      * calls */
     if (!dafs || (*aparm2 == 0)) {
 	/* add the parallel option if given */
@@ -1314,7 +1314,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	if (mrafsParm->OptRxDebug)
 	    strcat(tbuffer, " -rxdebug");
 	if (mrafsParm->OptResidencies) {
-	    sprintf(pbuffer, " -Residencies %lu", 
+	    sprintf(pbuffer, " -Residencies %lu",
 		    afs_printable_uint32_lu(mrafsParm->OptResidencies));
 	    strcat(tbuffer, pbuffer);
 	}
@@ -1739,9 +1739,9 @@ IStatServer(struct cmd_syndesc *as, int int32p)
 }
 
 static int
-DoStat(IN char *aname, 
-       IN struct rx_connection *aconn, 
-       IN int aint32p, 
+DoStat(IN char *aname,
+       IN struct rx_connection *aconn,
+       IN int aint32p,
        IN int firstTime) 	/* true iff first instance in cmd */
 {
     afs_int32 temp;
@@ -1908,8 +1908,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -131,7 +131,7 @@ char fsync_wait[1];
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_NT40_ENV
-#define NT_OPEN_MAX    1024	/* This is an arbitrary no. we came up with for 
+#define NT_OPEN_MAX    1024	/* This is an arbitrary no. we came up with for
 				 * now. We hope this will be replaced by a more
 				 * intelligent estimate later. */
 #endif
@@ -162,9 +162,9 @@ int debuglevel = 0;
 int printBanner = 0;
 int rxJumbograms = 0;		/* default is to not send and receive jumbograms. */
 int rxBind = 0;		/* don't bind */
-int rxkadDisableDotCheck = 0;      /* disable check for dot in principal name */ 
+int rxkadDisableDotCheck = 0;      /* disable check for dot in principal name */
 int rxMaxMTU = -1;
-afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
+afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is
 						 * already implied */
 afs_int32 readonlyServer = 0;
 
@@ -243,11 +243,11 @@ static void FlagMsg(void);
 #endif
 
 #ifndef AFS_NT40_ENV
-struct fs_state fs_state = 
-    { FS_MODE_NORMAL, 
-      0, 
-      0, 
-      0, 
+struct fs_state fs_state =
+    { FS_MODE_NORMAL,
+      0,
+      0,
+      0,
       0,
       { 1,1,1,1 },
       PTHREAD_COND_INITIALIZER,
@@ -843,7 +843,7 @@ ShutDownAndCore(int dopanic)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (fs_state.options.fs_state_save) {
-	/* 
+	/*
 	 * demand attach fs
 	 * save fileserver state to disk */
 
@@ -1088,8 +1088,8 @@ ParseArgs(int argc, char *argv[])
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-d")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -d\n");
+		return -1;
 	    }
 	    debuglevel = atoi(argv[++i]);
 	    LogLevel = debuglevel;
@@ -1097,8 +1097,8 @@ ParseArgs(int argc, char *argv[])
 	    printBanner = 1;
 	} else if (!strcmp(argv[i], "-implicit")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -implicit\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -implicit\n");
+		return -1;
 	    }
 	    implicitAdminRights = ParseRights(argv[++i]);
 	    if (implicitAdminRights < 0)
@@ -1114,8 +1114,8 @@ ParseArgs(int argc, char *argv[])
 		max_fileserver_thread() - FILESERVER_HELPER_THREADS;
 	    Sawlwps = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -p\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -p\n");
+		return -1;
 	    }
 	    lwps = atoi(argv[++i]);
 	    if (lwps > lwps_max)
@@ -1125,22 +1125,22 @@ ParseArgs(int argc, char *argv[])
 	} else if (!strcmp(argv[i], "-b")) {
 	    Sawbufs = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -b\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -b\n");
+		return -1;
 	    }
 	    buffs = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-l")) {
 	    Sawlarge = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -l\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -l\n");
+		return -1;
 	    }
 	    large = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-vc")) {
 	    SawVC = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -vc\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -vc\n");
+		return -1;
 	    }
 	    volcache = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-novbc")) {
@@ -1148,15 +1148,15 @@ ParseArgs(int argc, char *argv[])
 	} else if (!strcmp(argv[i], "-rxpck")) {
 	    Sawrxpck = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxpck\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -rxpck\n");
+		return -1;
 	    }
 	    rxpackets = atoi(argv[++i]);
 #ifdef AFS_PTHREAD_ENV
 	} else if (!strcmp(argv[i], "-vattachpar")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for %s\n", argv[i]); 
-		return -1; 
+		fprintf(stderr, "missing argument for %s\n", argv[i]);
+		return -1;
 	    }
 	    vol_attach_threads = atoi(argv[++i]);
 #endif /* AFS_PTHREAD_ENV */
@@ -1185,8 +1185,8 @@ ParseArgs(int argc, char *argv[])
 	    fs_state.options.fs_state_restore = 0;
 	} else if (!strcmp(argv[i], "-fs-state-verify")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for %s\n", argv[i]); 
-		return -1; 
+		fprintf(stderr, "missing argument for %s\n", argv[i]);
+		return -1;
 	    }
 	    i++;
 	    if (!strcmp(argv[i], "none")) {
@@ -1204,28 +1204,28 @@ ParseArgs(int argc, char *argv[])
 	    }
 	} else if (!strcmp(argv[i], "-vhashsize")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for %s\n", argv[i]); 
-		return -1; 
+		fprintf(stderr, "missing argument for %s\n", argv[i]);
+		return -1;
 	    }
 	    VSetVolHashSize(atoi(argv[++i]));
 	} else if (!strcmp(argv[i], "-vlrudisable")) {
 	    VLRU_SetOptions(VLRU_SET_ENABLED, 0);
 	} else if (!strcmp(argv[i], "-vlruthresh")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for %s\n", argv[i]); 
-		return -1; 
+		fprintf(stderr, "missing argument for %s\n", argv[i]);
+		return -1;
 	    }
 	    VLRU_SetOptions(VLRU_SET_THRESH, 60*atoi(argv[++i]));
 	} else if (!strcmp(argv[i], "-vlruinterval")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for %s\n", argv[i]); 
-		return -1; 
+		fprintf(stderr, "missing argument for %s\n", argv[i]);
+		return -1;
 	    }
 	    VLRU_SetOptions(VLRU_SET_INTERVAL, atoi(argv[++i]));
 	} else if (!strcmp(argv[i], "-vlrumax")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for %s\n", argv[i]); 
-		return -1; 
+		fprintf(stderr, "missing argument for %s\n", argv[i]);
+		return -1;
 	    }
 	    VLRU_SetOptions(VLRU_SET_MAX, atoi(argv[++i]));
 	} else if (!strcmp(argv[i], "-unsafe-nosalvage")) {
@@ -1234,20 +1234,20 @@ ParseArgs(int argc, char *argv[])
 	} else if (!strcmp(argv[i], "-s")) {
 	    Sawsmall = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -s\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -s\n");
+		return -1;
 	    }
 	    nSmallVns = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-abortthreshold")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -abortthreshold\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -abortthreshold\n");
+		return -1;
 	    }
 	    abort_threshold = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-k")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -k\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -k\n");
+		return -1;
 	    }
 	    stack = atoi(argv[++i]);
 	}
@@ -1258,30 +1258,30 @@ ParseArgs(int argc, char *argv[])
 #endif
 	else if (!strcmp(argv[i], "-spare")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -spare\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -spare\n");
+		return -1;
 	    }
 	    BlocksSpare = atoi(argv[++i]);
 	    SawSpare = 1;
 	} else if (!strcmp(argv[i], "-pctspare")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -pctspare\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -pctspare\n");
+		return -1;
 	    }
 	    PctSpare = atoi(argv[++i]);
 	    BlocksSpare = 0;	/* has non-zero default */
 	    SawPctSpare = 1;
 	} else if (!strcmp(argv[i], "-w")) {
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -w\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -w\n");
+		return -1;
 	    }
 	    fiveminutes = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-hr")) {
 	    int hr;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -hr\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -hr\n");
+		return -1;
 	    }
 	    hr = atoi(argv[++i]);
 	    if ((hr < 1) || (hr > 36)) {
@@ -1298,8 +1298,8 @@ ParseArgs(int argc, char *argv[])
 	else if (!strcmp(argv[i], "-cb")) {
 	    Sawcbs = 1;
             if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -cb\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -cb\n");
+		return -1;
 	    }
 	    numberofcbs = atoi(argv[++i]);
 	    if ((numberofcbs < 10000) || (numberofcbs > 2147483647)) {
@@ -1311,8 +1311,8 @@ ParseArgs(int argc, char *argv[])
 	} else if (!strcmp(argv[i], "-busyat")) {
 	    Sawbusy = 1;
 	    if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -busyat\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -busyat\n");
+		return -1;
 	    }
 	    busy_threshold = atoi(argv[++i]);
 	    if (busy_threshold < 10) {
@@ -1327,8 +1327,8 @@ ParseArgs(int argc, char *argv[])
 	else if (!strcmp(argv[i], "-m")) {
 	    extern int aixlow_water;
 	    if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -m\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -m\n");
+		return -1;
 	    }
 	    aixlow_water = atoi(argv[++i]);
 	    if ((aixlow_water < 0) || (aixlow_water > 30)) {
@@ -1348,14 +1348,14 @@ ParseArgs(int argc, char *argv[])
 	    rxkadDisableDotCheck = 1;
 	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
 	    if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		return -1;
 	    }
 	    rxMaxMTU = atoi(argv[++i]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d%% invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       rxMaxMTU, RX_MIN_PACKET_SIZE,
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
 		}
@@ -1363,8 +1363,8 @@ ParseArgs(int argc, char *argv[])
 	    extern char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
 	    extern int  num_lrealms;
 	    if ((i + 1) >= argc) {
-		fprintf(stderr, "missing argument for -realm\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -realm\n");
+		return -1;
 	    }
 	    if (strlen(argv[++i]) >= AFS_REALM_SZ) {
 		printf
@@ -1372,7 +1372,7 @@ ParseArgs(int argc, char *argv[])
 		     AFS_REALM_SZ);
 		return -1;
 	    }
-	    if (num_lrealms == -1) 
+	    if (num_lrealms == -1)
 		num_lrealms = 0;
 	    if (num_lrealms >= AFS_NUM_LREALMS) {
 		printf
@@ -1433,7 +1433,7 @@ ParseArgs(int argc, char *argv[])
 	else if (strcmp(argv[i], "-mrafslogs") == 0) {
 	    /* set syslog logging flag */
 	    mrafsStyleLogs = 1;
-	} 
+	}
 	else if (strcmp(argv[i], "-saneacls") == 0) {
 	    saneacls = 1;
 	}
@@ -1810,10 +1810,10 @@ WriteSysIdFile(void)
 }
 
 /*
- * defect 10966 
+ * defect 10966
  * This routine sets up the buffers for the VL_RegisterAddrs RPC. All addresses
  * in FS_HostAddrs[] are in NBO, while the RPC treats them as a "blob" of data
- * and so we need to convert each of them into HBO which is what the extra 
+ * and so we need to convert each of them into HBO which is what the extra
  * array called FS_HostAddrs_HBO is used here.
  */
 static afs_int32
@@ -1861,8 +1861,8 @@ SetupVL(void)
 
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
-	 * Find addresses we are supposed to register as per the netrestrict 
-	 * and netinfo files (/usr/afs/local/NetInfo and 
+	 * Find addresses we are supposed to register as per the netrestrict
+	 * and netinfo files (/usr/afs/local/NetInfo and
 	 * /usr/afs/local/NetRestict)
 	 */
 	char reason[1024];
@@ -1882,7 +1882,7 @@ SetupVL(void)
 
     if (FS_HostAddr_cnt == 1 && rxBind == 1)
 	code = FS_HostAddrs[0];
-    else 
+    else
 	code = htonl(INADDR_ANY);
     return code;
 }
@@ -2040,8 +2040,8 @@ main(int argc, char *argv[])
 #endif
     CheckAdminName();
 
-    /* if we support more than 16 threads, then we better have the ability 
-     ** to keep open a large number of files simultaneously 
+    /* if we support more than 16 threads, then we better have the ability
+     ** to keep open a large number of files simultaneously
      */
 #if	defined(AFS_AIX_ENV) && !defined(AFS_AIX42_ENV)
     curLimit = OPEN_MAX;	/* for pre AIX 4.2 systems */
@@ -2136,7 +2136,7 @@ main(int argc, char *argv[])
     afsconf_BuildServerSecurityObjects(confDir, AFSCONF_SEC_OBJS_RXKAD_CRYPT,
 				       &securityClasses, &numClasses);
 
-    tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */ 
+    tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */
 				 1,	/*service name */
 				 "AFS",
 				 securityClasses, numClasses,
@@ -2207,7 +2207,7 @@ main(int argc, char *argv[])
 #endif
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
-    /* 
+    /*
      * For DAFS, we do not start the Rx server threads until after
      * the volume package is initialized, and fileserver state is
      * restored.  This is necessary in order to keep host and callback
@@ -2220,11 +2220,11 @@ main(int argc, char *argv[])
 #endif
 
     /* we ensure that there is enough space in the vnode buffer to satisfy
-     ** requests from all concurrent threads. 
+     ** requests from all concurrent threads.
      ** the maximum number of vnodes used by a single thread at any one time
      ** is three ( "link" uses three vnodes simultaneously, one vLarge and
      ** two vSmall for linking files and two vLarge and one vSmall for linking
-     ** files  ) : dhruba 
+     ** files  ) : dhruba
      */
     minVnodesRequired = 2 * lwps + 1;
     if (minVnodesRequired > nSmallVns) {
@@ -2240,7 +2240,7 @@ main(int argc, char *argv[])
 
     /* We now do this after getting the listener up and running, so that client
      * connections don't timeout (maybe) if a file server is restarted, since it
-     * will be available "real soon now".  Worry about whether we can satisfy the 
+     * will be available "real soon now".  Worry about whether we can satisfy the
      * calls in the volume package itself.
      */
     VOptDefaults(fileServer, &opts);

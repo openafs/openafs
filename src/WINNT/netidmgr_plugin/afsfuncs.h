@@ -31,19 +31,19 @@
 BOOL
 afs_is_running(void);
 
-int 
+int
 afs_princ_to_string(struct ktc_principal * p, wchar_t * buf, size_t cbbuf);
 
-int 
+int
 afs_list_tokens(void);
 
 khm_handle
 afs_find_token(khm_handle credset, wchar_t * cell);
 
-int 
+int
 afs_list_tokens_internal(void);
 
-int 
+int
 afs_klog(khm_handle identity,
          char *service,
          char *cell,
@@ -60,14 +60,14 @@ afs_unlog(void);
 int
 afs_unlog_cred(khm_handle cred);
 
-DWORD 
-GetServiceStatus(LPSTR lpszMachineName, 
-                 LPSTR lpszServiceName, 
+DWORD
+GetServiceStatus(LPSTR lpszMachineName,
+                 LPSTR lpszServiceName,
                  DWORD *lpdwCurrentState,
                  DWORD *lpdwWaitHint);
 
-DWORD 
-ServiceControl(LPSTR lpszMachineName, 
+DWORD
+ServiceControl(LPSTR lpszMachineName,
                LPSTR lpszServiceName,
                DWORD dwNewState);
 

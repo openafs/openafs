@@ -6,30 +6,30 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
- * 
+ *
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
 
 /*
- * rpc_parse.c, Parser for the RPC protocol compiler 
+ * rpc_parse.c, Parser for the RPC protocol compiler
  * Copyright (C) 1987 Sun Microsystems, Inc.
  */
 #include <afsconfig.h>
@@ -1149,7 +1149,7 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 				plist->pl.param_name);
 		    }
 		} else {
-		    f_print(fout, ", %s", plist->pl.param_name);    
+		    f_print(fout, ", %s", plist->pl.param_name);
 		    plist->pl.param_flag &= ~PROCESSED_PARAM;
 		}
 	    }
@@ -1930,7 +1930,7 @@ ucs_ProcTail_setup(definition * defp, int split_flag)
     f_print(fout, "\t\tif ((pass == 0) && (aclient->states[_ucount] & CFLastFailed)) {\n");
     f_print(fout, "\t\t\tcontinue;       /* this guy's down */\n");
     f_print(fout, "\t\t}\n");
-    
+
     f_print(fout, "\t\trcode = %s%s%s(tc\n", prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM) {

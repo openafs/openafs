@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -307,7 +307,7 @@
 #define SYS_NAME_ID_amd64_obsd46        4015
 
 /*
- * Placeholder to keep system-wide standard flags since this file is included by all 
+ * Placeholder to keep system-wide standard flags since this file is included by all
  * files (i.e in afs/param.h)
  */
 #ifdef	notdef

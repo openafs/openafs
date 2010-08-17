@@ -44,7 +44,7 @@ kmutex_t afs_global_lock;
 long afs_global_owner;
 #endif
 
-#if defined(AFS_DARWIN_ENV) 
+#if defined(AFS_DARWIN_ENV)
 thread_t afs_global_owner;
 #ifdef AFS_DARWIN80_ENV
 lck_mtx_t  *afs_global_lock;
@@ -124,7 +124,7 @@ afs_osi_UnmaskRxkSignals(void)
 }
 
 /* Two hacks to try and fix afsdb */
-void 
+void
 afs_osi_MaskUserLoop(void)
 {
 #ifdef AFS_DARWIN_ENV
@@ -135,7 +135,7 @@ afs_osi_MaskUserLoop(void)
 #endif
 }
 
-void 
+void
 afs_osi_UnmaskUserLoop(void)
 {
 #ifdef AFS_DARWIN_ENV

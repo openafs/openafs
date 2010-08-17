@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -232,7 +232,7 @@ FindList(struct AclEntry *a_alist, char *a_name)
  *------------------------------------------------------------------------*/
 
 static void
-ChangeList(struct Acl *a_al, afs_int32 a_plus, char *a_name, 
+ChangeList(struct Acl *a_al, afs_int32 a_plus, char *a_name,
 	   afs_int32 a_rights)
 {				/*ChangeList */
 

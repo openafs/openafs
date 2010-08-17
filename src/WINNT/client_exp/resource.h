@@ -2,7 +2,7 @@
 //
 // Copyright 2000, International Business Machines Corporation and others.
 // All Rights Reserved.
-// 
+//
 // This software has been released under the terms of the IBM Public
 // License.  For details, see the LICENSE file in the top-level source
 // directory or online at http://www.openafs.org/dl/license10.html
@@ -11,15 +11,15 @@
 //
 
 #define ID_ACL_CLEAN                           0
-#define ID_ACL_COPY                            1 
-#define ID_ACL_LIST                            2 
-#define ID_ACL_SET                             3 
-#define ID_VOLUME_CHECK                        4 
-#define ID_VOLUME_DISKFREE                     5 
-#define ID_VOLUME_EXAMINE                      6 
-#define ID_VOLUME_FLUSH                        7 
-#define ID_VOLUME_QUOTA_BRIEF                  8 
-#define ID_VOLUME_QUOTA_FULL                   9 
+#define ID_ACL_COPY                            1
+#define ID_ACL_LIST                            2
+#define ID_ACL_SET                             3
+#define ID_VOLUME_CHECK                        4
+#define ID_VOLUME_DISKFREE                     5
+#define ID_VOLUME_EXAMINE                      6
+#define ID_VOLUME_FLUSH                        7
+#define ID_VOLUME_QUOTA_BRIEF                  8
+#define ID_VOLUME_QUOTA_FULL                   9
 #define ID_VOLUME_QUOTA_SET                    10
 #define ID_VOLUME_SET                          11
 
@@ -271,7 +271,7 @@
 
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        163

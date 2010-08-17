@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -46,7 +46,7 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 /* Return an appropriate security class and index */
 afs_int32
 afsconf_ServerAuth(void *arock,
-		   struct rx_securityClass **astr, 
+		   struct rx_securityClass **astr,
 		   afs_int32 *aindex)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) arock;
@@ -68,9 +68,9 @@ afsconf_ServerAuth(void *arock,
 #endif /* !defined(UKERNEL) */
 
 static afs_int32
-GenericAuth(struct afsconf_dir *adir, 
-	    struct rx_securityClass **astr, 
-	    afs_int32 *aindex, 
+GenericAuth(struct afsconf_dir *adir,
+	    struct rx_securityClass **astr,
+	    afs_int32 *aindex,
 	    rxkad_level enclevel)
 {
     char tbuffer[256];
@@ -139,8 +139,8 @@ afsconf_ClientAuth(void *arock, struct rx_securityClass ** astr,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthSecure(void *arock, 
-			 struct rx_securityClass **astr, 
+afsconf_ClientAuthSecure(void *arock,
+			 struct rx_securityClass **astr,
 			 afs_int32 *aindex)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) arock;

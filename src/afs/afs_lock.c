@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -53,7 +53,7 @@ Lock_Init(struct afs_lock *lock)
     lock->time_waiting.tv_sec = 0;
     lock->time_waiting.tv_usec = 0;
 }
-
+
 void
 ObtainLock(struct afs_lock *lock, int how,
 	   unsigned int src_indicator)

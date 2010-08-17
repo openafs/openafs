@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -101,7 +101,7 @@ extern char PRE_Block;		/* from preempt.c */
     ;									\
 } while (0)
 #endif
-
+
 static void Dispatcher(void);
 static void Create_Process_Part2(void);
 static void Exit_LWP(void);
@@ -111,14 +111,14 @@ static int Stack_Used(char *stackptr, int stacksize);
 static void Abort_LWP(char *msg);
 static void Overflow_Complain(void);
 static void Initialize_PCB(PROCESS temp, int priority, char *stack,
-			   int stacksize, void *(*ep)(void *), void *parm, 
+			   int stacksize, void *(*ep)(void *), void *parm,
 			   char *name);
 static void Dispose_of_Dead_PCB(PROCESS cur);
 static void Free_PCB(PROCESS pid);
 static int Internal_Signal(void *event);
 static int purge_dead_pcbs(void);
 static int LWP_MwaitProcess(int wcount, void *evlist[]);
-	
+
 
 #define MAX_PRIORITIES	(LWP_MAX_PRIORITY+1)
 
@@ -126,8 +126,8 @@ struct QUEUE {
     PROCESS head;
     int count;
 } runnable[MAX_PRIORITIES], blocked, qwaiting;
-/* Invariant for runnable queues: The head of each queue points to the 
- * currently running process if it is in that queue, or it points to the 
+/* Invariant for runnable queues: The head of each queue points to the
+ * currently running process if it is in that queue, or it points to the
  * next process in that queue that should run. */
 
 /* Offset of stack field within pcb -- used by stack checking stuff */
@@ -205,7 +205,7 @@ move(PROCESS p, struct QUEUE *from, struct QUEUE *to)
 		body\
 	    }\
 	}
-
+
 /*									    */
 /*****************************************************************************\
 * 									      *
@@ -314,8 +314,8 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 #ifdef	AFS_AIX32_ENV
 	if (!stackptr) {
 	    /*
-	     * The following signal action for AIX is necessary so that in case of a 
-	     * crash (i.e. core is generated) we can include the user's data section 
+	     * The following signal action for AIX is necessary so that in case of a
+	     * crash (i.e. core is generated) we can include the user's data section
 	     * in the core dump. Unfortunately, by default, only a partial core is
 	     * generated which, in many cases, isn't too useful.
 	     *
@@ -333,7 +333,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	    /*
 	     * First we need to increase the default resource limits,
 	     * if necessary, so that we can guarantee that we have the
-	     * resources to create the core file, but we can't always 
+	     * resources to create the core file, but we can't always
 	     * do it as an ordinary user.
 	     */
 	    if (!geteuid()) {
@@ -770,7 +770,7 @@ LWP_StackUsed(PROCESS pid, int *maxa, int *used)
 	return LWP_NO_STACK;
     return LWP_SUCCESS;
 }
-
+
 /*
  *  The following functions are strictly
  *  INTERNAL to the LWP support package.
@@ -814,7 +814,7 @@ Delete_PCB(PROCESS pid)
     lwp_remove(pid,
 	       (pid->blockflag || pid->status == WAITING
 		|| pid->status ==
-		DESTROYED ? &blocked : 
+		DESTROYED ? &blocked :
 		(pid->status == QWAITING) ? &qwaiting :
 		&runnable[pid->priority]));
     LWPANCHOR.processcnt--;
@@ -977,7 +977,7 @@ Dispatcher(void)
     lwp_cpptr = runnable[i].head;
 
     returnto(&lwp_cpptr->context);
-    
+
     return; /* not reachable */
 }
 
@@ -1154,7 +1154,7 @@ LWP_NewRock(int Tag, char *Value)
      * LWP_SUCCESS      Rock did not exist and a new one was used
      * LWP_EBADROCK     Rock already exists.
      * LWP_ENOROCKS     All rocks are in use.
-     * 
+     *
      * From the above semantics, you can only set a rock value once.  This is specifically
      * to prevent multiple users of the LWP package from accidentally using the same Tag
      * value and clobbering others.  You can always use one level of indirection to obtain

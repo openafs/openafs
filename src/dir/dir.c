@@ -391,7 +391,7 @@ LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
 
 int
 EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
-				         afs_int32 vnode, afs_int32 unique), 
+				         afs_int32 vnode, afs_int32 unique),
 	     void *hook)
 {
     /* Enumerate the contents of a directory.
@@ -552,10 +552,10 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 static struct DirEntry *
 FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 {
-    /* Find a directory entry, given the vnode and uniquifier of a object.  
+    /* Find a directory entry, given the vnode and uniquifier of a object.
      * This entry returns a pointer to a locked buffer.  If no entry is found,
-     * however, no items are left locked, and a null pointer is returned 
-     * instead. 
+     * however, no items are left locked, and a null pointer is returned
+     * instead.
      */
     int i;
     struct DirHeader *dhp;
@@ -571,8 +571,8 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 		return 0;
 	    }
 	    while(tp) {
-		if (vnode == ntohl(tp->fid.vnode) 
-		    && unique == ntohl(tp->fid.vunique)) { 
+		if (vnode == ntohl(tp->fid.vnode)
+		    && unique == ntohl(tp->fid.vunique)) {
 		    DRelease(dhp, 0);
 		    return tp;
 		}
@@ -590,13 +590,13 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 }
 
 int
-InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name, 
+InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name,
 	       afs_uint32 length)
 {
     /* Look for the name pointing to given vnode and unique in a directory */
     struct DirEntry *entry;
     int code = 0;
-    
+
     entry = FindFid(dir, vnode, unique);
     if (!entry)
 	return ENOENT;

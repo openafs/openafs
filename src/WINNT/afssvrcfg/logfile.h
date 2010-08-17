@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@ public:
 	LOGFILE();
 	~LOGFILE();
 
-	BOOL Open(	const char				*pszLogFilePath, 
+	BOOL Open(	const char				*pszLogFilePath,
 				LOGFILE_OPEN_MODE		eOpenMode = OM_OVERWRITE,
 				LOGFILE_TIMESTAMP_MODE	eTimeStampMode = TSM_EACH_ENTRY
 			 );

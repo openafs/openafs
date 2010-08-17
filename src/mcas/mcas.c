@@ -237,7 +237,7 @@ static CasDescriptor_t *new_descriptor (per_thread_state_t *ptst, int length)
 
         for ( i = 0; i < num_threads; i++ )
             result->pt[i] = result;
- 
+
         result->length = length;
         result->rc = 2;
     }

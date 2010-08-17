@@ -6,11 +6,11 @@ Module Name:
 
 Abstract:
 
-    Include file for sample Large Integer Arithmetic routines.  
-    This file includes all of the prototypes for the routines found in 
+    Include file for sample Large Integer Arithmetic routines.
+    This file includes all of the prototypes for the routines found in
     largeint.lib.  For complete descriptions of these functions, see the
-    largeint.s source file for MIPS, or the divlarge.c and largeint.asm 
-    source files for x86. 
+    largeint.s source file for MIPS, or the divlarge.c and largeint.asm
+    source files for x86.
 
 Revision History:
 

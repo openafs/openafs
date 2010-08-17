@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@ error_table BUCD
 	ec BC_VOLSETEXISTS, "Volume set already exists"
 
 # general
-	ec BC_NOHOST, "No such server"	
+	ec BC_NOHOST, "No such server"
 	ec BC_NOPARTITION, "No such partition"
 	ec BC_VERSIONFAIL, "Version number mismatch"
 

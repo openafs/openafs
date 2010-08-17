@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -21,7 +21,7 @@
  */
 typedef struct cm_aclent {
     osi_queue_t q;		/* for quick removal from LRUQ */
-    afs_uint32 magic;           
+    afs_uint32 magic;
     struct cm_aclent *nextp;	/* next guy same vnode */
     struct cm_scache *backp;	/* back ptr to vnode */
     struct cm_user *userp;	/* user whose access is cached */

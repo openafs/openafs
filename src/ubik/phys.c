@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -88,7 +88,7 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
     }
 
     /* not found, open it and try to enter in cache */
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName, 
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
 		 (afid<0)?"SYS":"", (afid<0)?-afid:afid);
     fd = open(pbuffer, O_CREAT | O_RDWR, 0600);
     if (fd < 0) {
@@ -118,7 +118,7 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
     }
     if (bestfd) {		/* found a usable slot */
 	tfd = bestfd;
-	if (tfd->fd >= 0) 
+	if (tfd->fd >= 0)
 	    close(tfd->fd);
 	tfd->fd = fd;
 	tfd->refCount = 1;	/* us */

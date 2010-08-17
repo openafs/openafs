@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -144,7 +144,7 @@ struct afs_lock {
     unsigned short spare;	/* not used now */
     osi_timeval_t time_waiting;	/* for statistics gathering */
 #if defined(INSTRUMENT_LOCKS)
-    /* the following are useful for debugging 
+    /* the following are useful for debugging
      ** the field 'src_indicator' is updated only by ObtainLock() and
      ** only for writes/shared  locks. Hence, it indictes where in the
      ** source code the shared/write lock was set.

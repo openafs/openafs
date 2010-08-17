@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -42,14 +42,14 @@
 #include <afs/afsutil.h>
 
 /* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
-   Autoconf manual, memcpy is a generally portable fallback. */          
-#ifndef va_copy              
+   Autoconf manual, memcpy is a generally portable fallback. */
+#ifndef va_copy
 # ifdef __va_copy
-#  define va_copy(d, s)         __va_copy((d), (s))             
+#  define va_copy(d, s)         __va_copy((d), (s))
 # else
-#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list)) 
+#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list))
 # endif
-#endif      
+#endif
 
 extern struct osi_audit_ops audit_file_ops;
 #ifdef HAVE_SYS_IPC_H
@@ -182,7 +182,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     time_t currenttime;
     char *timeStamp;
     char tbuffer[26];
-    
+
     /* Don't print the timestamp or thread id if we recursed */
     if (rec == 0) {
 	currenttime = time(0);
@@ -194,7 +194,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	if (num > -1)
 	    audit_ops->append_msg("[%d] ", num);
     }
-    
+
     audit_ops->append_msg("EVENT %s CODE %d ", audEvent, errCode);
 
     if (afsName) {
@@ -260,13 +260,13 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 
 	    if (vaFids) {
                 unsigned int i;
-                
+
                 vaFid = vaFids->AFSCBFids_val;
-                
+
                 if (vaFid) {
                     audit_ops->append_msg("FIDS %u FID %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
                              vaFid->Vnode, vaFid->Unique);
-                    for ( i = 1; i < vaFids->AFSCBFids_len; i++, vaFid++ ) 
+                    for ( i = 1; i < vaFids->AFSCBFids_len; i++, vaFid++ )
                         audit_ops->append_msg("FID %u:%u:%u ", vaFid->Volume,
                                 vaFid->Vnode, vaFid->Unique);
                 } else
@@ -326,7 +326,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 
 #ifdef AFS_PTHREAD_ENV
     /* i'm pretty sure all the server apps now call osi_audit_init(),
-     * but to be extra careful we'll leave this assert in here for a 
+     * but to be extra careful we'll leave this assert in here for a
      * while to make sure */
     assert(audit_lock_initialized);
 #endif /* AFS_PTHREAD_ENV */
@@ -409,7 +409,7 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 }
 
 /* ************************************************************************** */
-/* Given a RPC call structure, this routine extracts the name and host id from the 
+/* Given a RPC call structure, this routine extracts the name and host id from the
  * call and includes it within the audit information.
  * ************************************************************************** */
 int
@@ -484,7 +484,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 				break;
 			    }
 			}
-			/* If yes, then make sure that the name is not present in 
+			/* If yes, then make sure that the name is not present in
   			 * an exclusion list */
 			if (lrealm_match) {
 			    char uname[256];
@@ -497,7 +497,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 				lrealm_match = 0;
 			}
 
-			if (!lrealm_match) {	
+			if (!lrealm_match) {
                             if (strlen(vname) + 1 + clen >= sizeof(vname))
                                 goto done;
                             strcat(vname, "@");
@@ -531,7 +531,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 
 /* ************************************************************************** */
 /* Determines whether auditing is on or off by looking at the Audit file.
- * If the string AFS_AUDIT_AllEvents is defined in the file, then auditing will be 
+ * If the string AFS_AUDIT_AllEvents is defined in the file, then auditing will be
  * enabled.
  * ************************************************************************** */
 

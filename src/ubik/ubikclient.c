@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -112,12 +112,12 @@ afs_random_once(void)
 #endif
 
 #if !defined(UKERNEL)
-/*! 
+/*!
  * \brief use time and pid to try to get some initial randomness.
  */
 #define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
 
-/*! 
+/*!
  * \brief Random number generator and constants from KnuthV2 2d ed, p170
  *
  * Rules: \n
@@ -128,15 +128,15 @@ afs_random_once(void)
  * c is more or less immaterial.  1 or a is suggested. \n
  *
  * NB:  LOW ORDER BITS are not very random.  To get small random numbers,
- *      treat result as <1, with implied binary point, and multiply by 
+ *      treat result as <1, with implied binary point, and multiply by
  *      desired modulus.
  *
  * NB:  Has to be unsigned, since shifts on signed quantities may preserve
  *      the sign bit.
- * 
+ *
  * In this case, m == 2^32, the mod operation is implicit. a == pi, which
  * is used because it has some interesting characteristics (lacks any
- * interesting bit-patterns).   
+ * interesting bit-patterns).
  */
 unsigned int
 afs_random(void)
@@ -171,10 +171,10 @@ afs_random(void)
 /*!
  * \brief Returns int 0..14 using the high bits of a pseudo-random number instead of
  * the low bits, as the low bits are "less random" than the high ones...
- * 
+ *
  * \todo Slight roundoff error exists, an excercise for the reader.
  *
- * Need to multiply by something with lots of ones in it, so multiply by 
+ * Need to multiply by something with lots of ones in it, so multiply by
  * 8 or 16 is right out.
  */
 static unsigned int
@@ -266,7 +266,7 @@ ubik_ClientInit(struct rx_connection **serverconns,
     return 0;
 }
 
-/*! 
+/*!
  * \brief Destroy an ubik connection.
  *
  * It calls rx to destroy the component rx connections, then frees the ubik
@@ -417,15 +417,15 @@ try_GetSyncSite(struct ubik_client *aclient, afs_int32 apos)
 #define NEED_LOCK 1
 #define NO_LOCK 0
 
-/*! 
+/*!
  * \brief Create an internal version of ubik_CallIter that takes an additional
  * parameter - to indicate whether the ubik client handle has already
  * been locked.
  */
 static afs_int32
-CallIter(int (*aproc) (), struct ubik_client *aclient, 
-	 afs_int32 aflags, int *apos, long p1, long p2, long p3, long p4, 
-	 long p5, long p6, long p7, long p8, long p9, long p10, long p11, 
+CallIter(int (*aproc) (), struct ubik_client *aclient,
+	 afs_int32 aflags, int *apos, long p1, long p2, long p3, long p4,
+	 long p5, long p6, long p7, long p8, long p9, long p10, long p11,
 	 long p12, long p13, long p14, long p15, long p16, int needlock)
 {
     afs_int32 code;
@@ -506,15 +506,15 @@ ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
 		    p8, p9, p10, p11, p12, p13, p14, p15, p16, NEED_LOCK);
 }
 
-/*! 
+/*!
  * \brief Call this instead of stub and we'll guarantee to find a host that's up.
  *
  * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
-ubik_Call_New(int (*aproc) (), struct ubik_client *aclient, 
-	      afs_int32 aflags, long p1, long p2, long p3, long p4, long p5, 
-	      long p6, long p7, long p8, long p9, long p10, long p11, 
+ubik_Call_New(int (*aproc) (), struct ubik_client *aclient,
+	      afs_int32 aflags, long p1, long p2, long p3, long p4, long p5,
+	      long p6, long p7, long p8, long p9, long p10, long p11,
 	      long p12, long p13, long p14, long p15, long p16)
 {
     afs_int32 code, rcode;

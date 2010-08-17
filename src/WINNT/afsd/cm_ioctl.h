@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -28,7 +28,7 @@ typedef struct cm_SPref {
         unsigned short rank;
 } cm_SPref_t;
 
-typedef struct cm_SPrefRequest {             
+typedef struct cm_SPrefRequest {
         unsigned short offset;
         unsigned short num_servers;
         unsigned short flags;
@@ -62,7 +62,7 @@ typedef struct cm_ioctl {
     char *outDatap;			/* output results assembled so far */
     char *outAllocp;		        /* output results assembled so far */
     afs_uint32 outCopied;		/* # of output bytes copied back so far
-	
+
     /* flags */
     afs_uint32 flags;
 } cm_ioctl_t;
@@ -74,13 +74,13 @@ typedef struct cm_ioctl {
 #define CM_IOCTLFLAG_DATAOUT    8       /* sending data from server to client */
 
 
-/* 
+/*
  * The cm_IoctlQueryOptions structure is designed to be extendible.
- * None of the fields are required but when specified 
- * by the client and understood by the server will be 
+ * None of the fields are required but when specified
+ * by the client and understood by the server will be
  * used to more precisely specify the desired data.
  *
- * size must be set to the size of the structure 
+ * size must be set to the size of the structure
  * sent by the client including any variable length
  * data appended to the end of the static structure.
  *
@@ -88,7 +88,7 @@ typedef struct cm_ioctl {
  * been filled in and should be used.
  *
  * variable length data can be specified with fields
- * that include offsets to data appended to the 
+ * that include offsets to data appended to the
  * structure.
  *
  * when adding new fields you must:
@@ -98,12 +98,12 @@ typedef struct cm_ioctl {
  *
  * It is critical that flags be consistent across all
  * implementations of the pioctl interface for a given
- * platform.  This should be considered a public 
+ * platform.  This should be considered a public
  * interface used by third party application developers.
  */
 
 typedef struct cm_IoctlQueryOptions {
-    afs_uint32  size; 
+    afs_uint32  size;
     afs_uint32  field_flags;
     afs_uint32  literal;
     cm_fid_t    fid;

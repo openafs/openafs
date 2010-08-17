@@ -2,7 +2,7 @@
  * COPYRIGHT  ©  2000
  * THE REGENTS OF THE UNIVERSITY OF MICHIGAN
  * ALL RIGHTS RESERVED
- * 
+ *
  * Permission is granted to use, copy, create derivative works
  * and redistribute this software and such derivative works
  * for any purpose, so long as the name of The University of
@@ -13,10 +13,10 @@
  * University of Michigan is included in any copy of any
  * portion of this software, then the disclaimer below must
  * also be included.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION
  * FROM THE UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY
- * PURPOSE, AND WITHOUT WARRANTY BY THE UNIVERSITY O 
+ * PURPOSE, AND WITHOUT WARRANTY BY THE UNIVERSITY O
  * MICHIGAN OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING
  * WITHOUT LIMITATION THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
@@ -27,7 +27,7 @@
  * IF IT HAS BEEN OR IS HEREAFTER ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGES.
  */
- 
+
  /*
  * Portions Copyright (c) 2008
  * The Linux Box Corporation
@@ -50,10 +50,10 @@
  * of any kind, either express or implied, including
  * without limitation the implied warranties of
  * merchantability and fitness for a particular purpose.  The
- * Linux Box Corporation shall not be liable for any damages, 
- * including special, indirect, incidental, or consequential 
- * damages, with respect to any claim arising out of or in 
- * connection with the use of the software, even if it has been 
+ * Linux Box Corporation shall not be liable for any damages,
+ * including special, indirect, incidental, or consequential
+ * damages, with respect to any claim arising out of or in
+ * connection with the use of the software, even if it has been
  * or is hereafter advised of the possibility of such damages.
  */
 
@@ -139,7 +139,7 @@ void afs_TransitionToCaching(struct vcache *, afs_ucred_t *, int);
 
 /* dispatch a no-cache read request */
 afs_int32
-afs_ReadNoCache(struct vcache *avc, struct nocache_read_request *bparms, 
+afs_ReadNoCache(struct vcache *avc, struct nocache_read_request *bparms,
 		afs_ucred_t *acred);
 
 /* no-cache prefetch routine */

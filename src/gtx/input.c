@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -30,7 +30,7 @@ void *
 gtx_InputServer(void *param)
 {
     struct gwin *awin = (struct gwin *) param;
-    
+
     int tc;
     int code;
     struct gtx_frame *tframe;
@@ -64,7 +64,7 @@ gtx_InputServer(void *param)
 }
 
 struct gwin *
-gtx_Init(int astartInput, 
+gtx_Init(int astartInput,
 	 int atype)			/* type of window to create */
 {
     PROCESS junk;

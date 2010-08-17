@@ -1,6 +1,6 @@
 /******************************************************************************
  * bst_lock_fraser.c
- * 
+ *
  * Lock-free binary serach trees (BSTs), based on per-node spinlocks.
  * Uses threaded tree presentation as described in my PhD dissertation:
  *  "Practical Lock-Freedom", University of Cambridge, 2003.
@@ -196,9 +196,9 @@ setval_t set_update(set_t *s, setkey_t k, setval_t v, int overwrite)
                 new->k = k;
                 new->v = v;
             }
- 
+
             LOCK(p, qp, P_LOCKED);
- 
+
             if ( p->k < k )
             {
                 if ( (p->r != n) || (UNTHREAD(n)->k < k) ) goto retry;
