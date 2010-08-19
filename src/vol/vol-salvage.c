@@ -1801,7 +1801,7 @@ void *
 nt_SVG(void *arg)
 {
     SVGParms_t *parms = (SVGParms_t *) arg;
-    DoSalvageVolumeGroup(parms->salvinfo, parms->svgp_inodeSummaryp, parms->svgp_count);
+    DoSalvageVolumeGroup(parms->svgp_salvinfo, parms->svgp_inodeSummaryp, parms->svgp_count);
     return NULL;
 }
 
