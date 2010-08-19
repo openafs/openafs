@@ -165,7 +165,7 @@ dsa.o: ${UPSTREAM}/hcrypto/dsa.c
 	${CCRULE}
 
 evp.o: ${UPSTREAM}/hcrypto/evp.c
-	${CCRULE}
+	${CCRULE} -DHAVE_CONFIG_H
 
 evp-hcrypto.o: ${UPSTREAM}/hcrypto/evp-hcrypto.c
 	${CCRULE}

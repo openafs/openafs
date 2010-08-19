@@ -37,5 +37,15 @@ ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL
     strlcpy (char *, const char *, size_t);
 #endif
 
+#ifndef HAVE_DIRFD
+# ifdef HAVE_DIR_DD_FD
+#  define dirfd(x) ((x)->dd_fd)
+# else
+#  ifndef _WIN32 /* Windows code never calls dirfd */
+#   error Missing dirfd() and ->dd_fd
+#  endif
+# endif
+#endif
+
 /* This is a bodge, but it's only used by the tests */
 #define emalloc(x) malloc(x)
