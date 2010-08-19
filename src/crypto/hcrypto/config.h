@@ -23,6 +23,7 @@
  */
 
 #include <afsconfig.h>
+#include <afs/param.h>
 
 #include <errno.h>
 #include <stdio.h>
