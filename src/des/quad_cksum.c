@@ -87,13 +87,43 @@
 #define vaxtohl(x) (*((afs_uint32 *)(x)))
 #define vaxtohs(x) (*((unsigned short *)(x)))
 #else
-static afs_uint32 four_bytes_vax_to_nets();
 #define vaxtohl(x) four_bytes_vax_to_nets((char *)(x))
-static unsigned short two_bytes_vax_to_nets();
 #define vaxtohs(x) two_bytes_vax_to_nets((char *)(x))
 #endif
 
 /*** Routines ***************************************************** */
+
+#ifdef MSBFIRST
+
+static unsigned short
+two_bytes_vax_to_nets(char *p)
+{
+    union {
+	char pieces[2];
+	unsigned short result;
+    } short_conv;
+
+    short_conv.pieces[0] = p[1];
+    short_conv.pieces[1] = p[0];
+    return (short_conv.result);
+}
+
+static afs_uint32
+four_bytes_vax_to_nets(char *p)
+{
+    union {
+	char pieces[4];
+	afs_uint32 result;
+    } long_conv;
+
+    long_conv.pieces[0] = p[3];
+    long_conv.pieces[1] = p[2];
+    long_conv.pieces[2] = p[1];
+    long_conv.pieces[3] = p[0];
+    return (long_conv.result);
+}
+
+#endif
 
 /*
     des_cblock *c_seed;		* secret seed, 8 bytes *
@@ -159,35 +189,3 @@ des_quad_cksum(unsigned char *in, afs_uint32 * out, afs_int32 length,
     /* return final z value as 32 bit version of checksum */
     return z;
 }
-
-#ifdef MSBFIRST
-
-static unsigned short
-two_bytes_vax_to_nets(char *p)
-{
-    union {
-	char pieces[2];
-	unsigned short result;
-    } short_conv;
-
-    short_conv.pieces[0] = p[1];
-    short_conv.pieces[1] = p[0];
-    return (short_conv.result);
-}
-
-static afs_uint32
-four_bytes_vax_to_nets(char *p)
-{
-    union {
-	char pieces[4];
-	afs_uint32 result;
-    } long_conv;
-
-    long_conv.pieces[0] = p[3];
-    long_conv.pieces[1] = p[2];
-    long_conv.pieces[2] = p[1];
-    long_conv.pieces[3] = p[0];
-    return (long_conv.result);
-}
-
-#endif
