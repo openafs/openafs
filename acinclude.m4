@@ -1243,13 +1243,38 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
-AC_CHECK_FUNCS(arc4random)
-AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
-AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
-AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64)
-AC_CHECK_FUNCS(setitimer issetugidi getuid geteuid getgid getegid)
+AC_CHECK_FUNCS([ \
+	arc4random \
+	daemon \
+	flock \
+	fseeko64 \
+	ftello64 \
+	getcwd \
+	getegid \
+	geteuid \
+	getgid \
+	getuid \
+	getprogname \
+	getrlimit \
+	issetugid \
+	mkstemp \
+	regcomp \
+	regerror \
+	regexec \
+	setitimer \
+	setprogname \
+	setvbuf \
+	sigaction \
+	snprintf \
+	strcasestr \
+	strerror \
+	strlcat \
+	strlcpy \
+	timegm \
+	vsnprintf \
+	vsyslog \
+])
+
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
 	test "$ac_cv_func_regcomp" = "yes" && \
@@ -1285,8 +1310,6 @@ AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST
 
-AC_CHECK_FUNCS(timegm)
-AC_CHECK_FUNCS(daemon)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 
