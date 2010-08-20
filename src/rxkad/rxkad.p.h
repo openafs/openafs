@@ -74,7 +74,7 @@ typedef char rxkad_type;
 #define rxkad_client 1		/* bits definitions */
 #define rxkad_server 2
 
-typedef char rxkad_level;
+typedef signed char rxkad_level;
 #define rxkad_clear 0		/* send packets in the clear */
 #define rxkad_auth 1		/* send encrypted sequence numbers */
 #define rxkad_crypt 2		/* encrypt packet data */

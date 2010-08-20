@@ -5568,7 +5568,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     afs_int32 ropartition = 0;
     int force = 0;
     struct rx_connection *aconn;
-    char c, dc;
+    int c, dc;
 
     server = GetServer(as->parms[0].items->data);
     if (!server) {
