@@ -1074,6 +1074,12 @@ else
   CFLAGS_NOUNUSED=
 fi
 
+if test "x$GCC" = "xyes"; then
+  CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
+else
+  CFLAGS_NOOLDSTYLE=
+fi
+
 dnl horribly cheating, assuming double / is ok.
 case $INSTALL in
   ./* ) 
@@ -1126,6 +1132,7 @@ AC_SUBST(XCFLAGS)
 AC_SUBST(CFLAGS_NOERROR)
 AC_SUBST(CFLAGS_NOSTRICT)
 AC_SUBST(CFLAGS_NOUNUSED)
+AC_SUBST(CFLAGS_NOOLDSTYLE)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLDFLAGS64)
