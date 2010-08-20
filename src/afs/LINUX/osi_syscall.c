@@ -82,7 +82,9 @@ static SYSCALLTYPE afs_ni_syscall = 0;
 
 #ifdef AFS_S390X_LINUX24_ENV
 static void *afs_sys_setgroups_page = 0;
+#if defined(__NR_setgroups32)
 static void *afs_sys_setgroups32_page = 0;
+#endif
 static void *afs_syscall_page = 0;
 
 /* Because of how the syscall table is handled, we need to ensure our 
