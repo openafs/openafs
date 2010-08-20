@@ -1243,6 +1243,7 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
+AC_CHECK_FUNCS(arc4random)
 AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
