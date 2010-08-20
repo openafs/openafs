@@ -1387,12 +1387,41 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
-AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit strnlen tsearch)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
-AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
-AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64 poll pread preadv pwrite pwritev preadv64 pwritev64)
-AC_CHECK_FUNCS([setenv unsetenv])
+AC_CHECK_FUNCS([ \
+	daemon \
+	flock \
+	fseeko64 \
+	ftello64 \
+	getcwd \
+	getprogname \
+	getrlimit \
+	mkstemp \
+	poll \
+	pread \
+	preadv \
+	preadv64 \
+	pwrite \
+	pwritev \
+	pwritev64 \
+	regcomp \
+	regerror \
+	regexec \
+	setenv \
+	setprogname \
+	setvbuf \
+	sigaction \
+	snprintf \
+	strcasestr \
+	strerror \
+	strlcat \
+	strlcpy \
+	strnlen \
+	timegm \
+	tsearch \
+	unsetenv \
+	vsnprintf \
+	vsyslog \
+])
 
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)
@@ -1452,8 +1481,6 @@ AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST
 
-AC_CHECK_FUNCS(timegm)
-AC_CHECK_FUNCS(daemon)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 
