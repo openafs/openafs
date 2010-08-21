@@ -94,7 +94,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     if (scp->fileType > 0 && scp->fileType != CM_SCACHETYPE_DIRECTORY) {
 	/* check mode bits */
 	if ((scp->unixModeBits & 0400) == 0) {
-	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing READ scp 0x%p unix 0x%x", 
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing READ scp 0x%p unix 0%o",
 		      scp, scp->unixModeBits);
 	    *outRightsp &= ~PRSFS_READ;
 	}
