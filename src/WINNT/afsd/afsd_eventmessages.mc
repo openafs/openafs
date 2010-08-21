@@ -114,7 +114,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VNOVOL
 Language=English
-Server %1 reported volume %2 as not attached (may have been moved or deleted).
+Server %1 reported volume %2 in cell %3 as not attached (may have been moved or deleted).
 .
 
 MessageId=
@@ -122,7 +122,7 @@ Severity=Informational
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VMOVED
 Language=English
-Server %1 reported volume %2 as moved.
+Server %1 reported volume %2 in cell %3 as moved.
 .
 
 MessageId=
@@ -130,7 +130,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VOFFLINE
 Language=English
-Server %1 reported volume %2 as offline.
+Server %1 reported volume %2 in cell %3 as offline.
 .
 
 MessageId=
@@ -138,7 +138,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VSALVAGE
 Language=English
-Server %1 reported volume %2 as needs salvage.
+Server %1 reported volume %2 in cell %3 as needs salvage.
 .
 
 MessageId=
@@ -146,7 +146,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VNOSERVICE
 Language=English
-Server %1 reported volume %2 as not in service.
+Server %1 reported volume %2 in cell %3 as not in service.
 .
 
 MessageId=
@@ -154,7 +154,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VIO
 Language=English
-Server %1 reported volume %2 as temporarily unaccessible.
+Server %1 reported volume %2 in cell %3 as temporarily unaccessible.
 .
 
 
@@ -387,7 +387,7 @@ Severity=Informational
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VBUSY
 Language=English
-Server %1 reported busy when accessing volume %2.
+Server %1 reported busy when accessing volume %2 in cell %3.
 .
 
 MessageId=
@@ -395,7 +395,7 @@ Severity=Informational
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VRESTARTING
 Language=English
-Server %1 reported restarting when accessing volume %2.
+Server %1 reported restarting when accessing volume %2 in cell %3.
 .
 
 MessageId=

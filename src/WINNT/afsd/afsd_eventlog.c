@@ -233,6 +233,12 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVER_REPORTS_VIO:
     case MSG_SERVER_REPORTS_VBUSY:
     case MSG_SERVER_REPORTS_VRESTARTING:
+	wNumArgs = 3;
+	lpArgs[0] = va_arg(listArgs, LPTSTR);
+	StringCbPrintf(lpStrings[1],STRLEN,"%d",va_arg(listArgs,afs_int32));
+	lpArgs[1] = lpStrings[1];
+	lpArgs[2] = va_arg(listArgs, LPTSTR);
+        break;
     case MSG_ALL_SERVERS_BUSY:
     case MSG_ALL_SERVERS_OFFLINE:
     case MSG_ALL_SERVERS_DOWN:
