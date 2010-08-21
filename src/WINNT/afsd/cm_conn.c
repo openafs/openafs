@@ -458,11 +458,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         switch ( errorCode ) {
         case VBUSY:
 	    msgID = MSG_SERVER_REPORTS_VBUSY;
-            format = "Server %s reported busy when accessing volume %d.";
+            format = "Server %s reported busy when accessing volume %d in cell %s.";
             break;
         case VRESTARTING:
 	    msgID = MSG_SERVER_REPORTS_VRESTARTING;
-            format = "Server %s reported restarting when accessing volume %d.";
+            format = "Server %s reported restarting when accessing volume %d in cell %s.";
             break;
         }
 
@@ -474,8 +474,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
-	    osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
-	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
+	    osi_Log3(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
+	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume, cellp->name);
         }
 
         lock_ObtainWrite(&cm_serverLock);
@@ -524,43 +524,43 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         switch ( errorCode ) {
         case VNOVOL:
 	    msgID = MSG_SERVER_REPORTS_VNOVOL;
-            format = "Server %s reported volume %d as not attached (does not exist).";
+            format = "Server %s reported volume %d in cell %s as not attached (does not exist).";
             break;
         case VMOVED:
 	    msgID = MSG_SERVER_REPORTS_VMOVED;
-            format = "Server %s reported volume %d as moved.";
+            format = "Server %s reported volume %d in cell %s as moved.";
             break;
         case VOFFLINE:
 	    msgID = MSG_SERVER_REPORTS_VOFFLINE;
-            format = "Server %s reported volume %d as offline.";
+            format = "Server %s reported volume %d in cell %s as offline.";
             break;
         case VSALVAGE:
 	    msgID = MSG_SERVER_REPORTS_VSALVAGE;
-            format = "Server %s reported volume %d as needs salvage.";
+            format = "Server %s reported volume %d in cell %s as needs salvage.";
             break;
         case VNOSERVICE:
 	    msgID = MSG_SERVER_REPORTS_VNOSERVICE;
-            format = "Server %s reported volume %d as not in service.";
+            format = "Server %s reported volume %d in cell %s as not in service.";
             break;
         case VIO:
 	    msgID = MSG_SERVER_REPORTS_VIO;
-            format = "Server %s reported volume %d as temporarily unaccessible.";
+            format = "Server %s reported volume %d in cell %s as temporarily unaccessible.";
             break;
         }
 
-        if (serverp && fidp) {
-            /* Log server being offline for this volume */
-            sprintf(addr, "%d.%d.%d.%d", 
-                   ((serverp->addr.sin_addr.s_addr & 0xff)),
-                   ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                   ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                   ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
-
-	    osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
-	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
-        }
-
         if (fidp) { /* File Server query */
+            if (serverp) {
+                /* Log server being offline for this volume */
+                sprintf(addr, "%d.%d.%d.%d",
+                         ((serverp->addr.sin_addr.s_addr & 0xff)),
+                         ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                         ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                         ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+                osi_Log3(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
+                LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume, cellp->name);
+            }
+
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                       &volp);
@@ -972,7 +972,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (retry && dead_session)
         retry = 0;
 
-  out:
     /* drop this on the way out */
     if (connp)
         cm_PutConn(connp);
