@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <afs/cmd.h>
 #include <afs/cellconfig.h>
+#include <afs/afsint.h>
+#include <afs/vlserver.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
 
@@ -31,35 +33,92 @@
 #include <afs/kauth.h>
 #include <afs/afsutil.h>
 
-/*
-File servers in NW byte order.
-*/
-
-int server_count = 0;
-afs_int32 server_id[256];
-
-struct ubik_client *client;
-
-struct ViceIds {
-    int ViceIds_len;
-    afs_int32 *ViceIds_val;
-};
-
-struct IPAddrs {
-    int IPAddrs_len;
-    afs_int32 *IPAddrs_val;
-};
-
-struct ubik_dbase *VL_dbase;
-struct afsconf_dir *vldb_confdir;
-struct kadstats dynamic_statistics;
-struct rx_securityClass *junk;
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-extern int VL_GetAddrs();
+/*
+File servers in NW byte order.
+*/
+
+static afs_int32 server_count = 0;
+static afs_int32 server_id[256];
+
+static struct ubik_client *client;
+
+static struct rx_securityClass *junk;
+
+/*
+Obtain list of file servers as known to VLDB. These may
+not actually be configured as file servers in the cell.
+*/
+
+static afs_int32
+ListServers(void)
+{
+    afs_int32 code;
+    int i;
+    struct VLCallBack vlcb;
+    struct VLCallBack spare3;
+    bulkaddrs addrs, m_addrs;
+    afs_uint32 ip;
+    afs_int32 base, index;
+    afsUUID m_uuid;
+    afs_int32 m_uniq = 0;
+    afs_int32 m_nentries;
+    char hoststr[16];
+    ListAddrByAttributes m_attrs;
+
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&spare3, 0, sizeof(spare3));
+    code =
+	ubik_VL_GetAddrs(client, 0, 0, 0, &vlcb,
+		  &server_count, &addrs);
+    if (code) {
+	printf("Fatal error: could not get list of file servers\n");
+	return 1;
+    }
+
+    for (i = 0; i < server_count; ++i) {
+	ip = addrs.bulkaddrs_val[i];
+
+	if (((ip & 0xff000000) == 0xff000000) && (ip & 0xffff)) {
+	    base = (ip >> 16) & 0xff;
+	    index = ip & 0xffff;
+
+	    /* server is a multihomed host; query the vldb for its addresses,
+	     * and just pick the first one */
+
+	    if ((base >= 0) && (base <= VL_MAX_ADDREXTBLKS) && (index >= 1)
+	        && (index <= VL_MHSRV_PERBLK)) {
+
+	        m_attrs.Mask = VLADDR_INDEX;
+		m_attrs.index = (base * VL_MHSRV_PERBLK) + index;
+		m_nentries = 0;
+		m_addrs.bulkaddrs_val = 0;
+		m_addrs.bulkaddrs_len = 0;
+
+		code = ubik_VL_GetAddrsU(client, 0, &m_attrs, &m_uuid, &m_uniq,
+		                         &m_nentries, &m_addrs);
+
+		if (code || m_addrs.bulkaddrs_len == 0) {
+		    printf("Error getting multihomed addresses for server "
+		           "%s (index %ld)\n",
+			   afs_inet_ntoa_r(m_addrs.bulkaddrs_val[0], hoststr),
+			   afs_printable_int32_ld(m_attrs.index));
+		    server_id[i] = 0;
+		} else {
+		    server_id[i] = htonl(m_addrs.bulkaddrs_val[0]);
+		}
+	    }
+	} else {
+	    server_id[i] = htonl(addrs.bulkaddrs_val[i]);
+	}
+    }
+
+    return code;
+}
+
 
 static int
 InvalidateCache(struct cmd_syndesc *as, void *arock)
@@ -69,6 +128,8 @@ InvalidateCache(struct cmd_syndesc *as, void *arock)
     struct rx_connection *conn;
     int i;
     afs_int32 port = 7000;
+    char hoststr[16];
+    int err = 0;
 
     afs_int32 spare1 = 0;
     afs_int32 spare2, spare3;
@@ -115,10 +176,15 @@ InvalidateCache(struct cmd_syndesc *as, void *arock)
     ipa.IPAddrs_val = ip;
 
     for (i = 0; i < server_count; ++i) {
-	conn = rx_NewConnection(server_id[i], htonl(port), 1, junk, 0);
+	if (!server_id[i]) {
+	    err = 1;
+	    continue;
+	}
+	conn = rx_NewConnection(server_id[i], htons(port), 1, junk, 0);
 	if (!conn) {
 	    printf("Informational: could not connect to \
-file server %lx\n", server_id[i]);
+file server %s\n", afs_inet_ntoa_r(server_id[i], hoststr));
+	    err = 1;
 	    continue;
 	}
 
@@ -133,80 +199,16 @@ file server %lx\n", server_id[i]);
 	 * cell.
 	 */
 
-	if (code)
+	if (code) {
 	    printf("Informational: failed to invalidate \
-file server %lx cache code = %ld\n", server_id[i], code);
+file server %s cache code = %ld\n", afs_inet_ntoa_r(server_id[i], hoststr),
+	    afs_printable_int32_ld(code));
+	    err = 1;
+	}
 
 	rx_DestroyConnection(conn);
     }
-    return 0;
-}
-
-/*
-Obtain list of file servers as known to VLDB. These may
-not actually be configured as file servers in the cell.
-*/
-
-afs_int32
-ListServers()
-{
-    afs_int32 code;
-    struct rx_connection *conn;
-    struct rx_call *call;
-    int i;
-    int byte_count;
-    int nentries;
-    afs_int32 base, index;
-
-    afs_int32 Handle = 0;
-    afs_int32 spare2 = 0;
-    struct VLCallBack spare3;
-
-    bulkaddrs addrs, m_addrs;
-    ListAddrByAttributes m_attrs;
-    afs_int32 m_unique, m_nentries;
-    afs_uint32 *p;
-
-    /* get list of file servers in NW byte order */
-    memset(&addrs, 0, sizeof(addrs));
-    memset(&spare3, 0, sizeof(spare3));
-    code =
-	ubik_VL_GetAddrs(client, 0, Handle, spare2, &spare3,
-		  &server_count, &addrs);
-    if (code) {
-	printf("Fatal error: could not get list of file servers\n");
-	return 1;
-    }
-
-    for (i = 0, p = addrs.bulkaddrs_val; i < server_count; ++i, ++p) {
-	if (((*p & 0xff000000) == 0xff000000) && ((*p) & 0xffff)) {
-	    if ((base >= 0) && (base <= VL_MAX_ADDREXTBLKS) && (index >= 1)
-		&& (index <= VL_MHSRV_PERBLK)) {
-		m_attrs.Mask = VLADDR_INDEX;
-		m_attrs.index = (base * VL_MHSRV_PERBLK) + index;
-		m_nentries = 0;
-		m_addrs.bulkaddrs_val = 0;
-		m_addrs.bulkaddrs_len = 0;
-		code =
-		    ubik_VL_GetAddrsU(client, 0, &m_attrs, &m_uuid,
-			      &m_unique, &m_nentries, &m_addrs);
-		if (vcode)
-		    return code;
-
-		m_addrp = (afs_int32 *) m_addrs.bulkaddrs_val;
-		for (j = 0; j < m_nentries; j++, m_addrp++) {
-		    server_id[i] = *m_addrp;
-		    *m_addrp = htonl(*m_addrp);
-		    printf("host %s\n", hostutil_GetNameByINet(*p));
-		}
-	    }
-	} else {
-	    server_id[i] = *p;
-	    *p = htonl(*p);
-	    printf("host %s\n", hostutil_GetNameByINet(*p));
-	}
-    }
-    return code;
+    return err;
 }
 
 static int
@@ -246,7 +248,6 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
     afs_int32 code, i;
-    afs_int32 sauth;
 
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
     /* setup to talk to servers */
@@ -276,17 +277,15 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     code = ubik_ClientInit(serverconns, &client);
     if (code)
 	printf("Warning: could not initialize RPC interface.\n");
+    return 0;
 }
 
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     afs_int32 code = 0;
     struct cmd_syndesc *ts;
-    int i;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
