@@ -1229,7 +1229,7 @@ afsd_InitCM(char **reasonP)
     if (code == ERROR_SUCCESS) {
         cm_OfflineROIsValid = (unsigned short) dwValue;
     } 
-    afsi_log("CM OfflineReadOnlyIsValid is %u", cm_deleteReadOnly);
+    afsi_log("CM OfflineReadOnlyIsValid is %u", cm_OfflineROIsValid);
     
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "GiveUpAllCallBacks", NULL, NULL,
