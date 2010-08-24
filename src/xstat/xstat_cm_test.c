@@ -124,13 +124,13 @@ PrintCallInfo()
     int numInt32s;		/*# int32words returned */
     afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
     char *printableTime;	/*Ptr to printable time string */
-
+    time_t probeTime = xstat_cm_Results.probeTime;
     /*
      * Just print out the results of the particular probe.
      */
     numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
     currInt32 = (afs_int32 *) (xstat_cm_Results.data.AFSCB_CollData_val);
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
 
     printf
@@ -156,8 +156,9 @@ print_cmCallStats()
     static char rn[] = "print_cmCallStats";	/*Routine name */
     char *printableTime;	/*Ptr to printable time string */
     struct afs_CMStats *cmp;
+    time_t probeTime = xstat_cm_Results.probeTime;
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
 
     printf
@@ -794,6 +795,7 @@ PrintPerfInfo()
     afs_int32 numInt32s;	/*# int32words received */
     struct afs_stats_CMPerf *perfP;	/*Ptr to performance stats */
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime = xstat_cm_Results.probeTime;
 
     numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
     if (numInt32s != perfInt32s) {
@@ -803,7 +805,7 @@ PrintPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     perfP = (struct afs_stats_CMPerf *)
 	(xstat_cm_Results.data.AFSCB_CollData_val);
@@ -1025,6 +1027,7 @@ PrintFullPerfInfo()
     struct afs_stats_CMFullPerf *fullP;	/*Ptr to full perf info */
 
     char *printableTime;	/*Ptr to printable time string */
+    time_t probeTime = xstat_cm_Results.probeTime;
 
     numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
     if (numInt32s != fullPerfInt32s) {
@@ -1034,7 +1037,7 @@ PrintFullPerfInfo()
 	return;
     }
 
-    printableTime = ctime((time_t *) & (xstat_cm_Results.probeTime));
+    printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
     fullP = (struct afs_stats_CMFullPerf *)
 	(xstat_cm_Results.data.AFSCB_CollData_val);
