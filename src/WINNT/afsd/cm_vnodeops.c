@@ -2421,6 +2421,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                 case VOFFLINE:
                 case VSALVAGE:
                 case VNOSERVICE:
+                case VIO:
                     code = (&bbp->stats[0])->errorCode;
                     break;
                 default:
