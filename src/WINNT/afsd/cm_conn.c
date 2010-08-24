@@ -740,8 +740,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                      osi_LogSaveString(afsd_logp,addr));
         }
 
-        if (timeLeft > 2)
-            retry = 1;
+        retry = 1;
     }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
@@ -967,7 +966,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* If not allowed to retry, don't */
-    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY))
+    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY) && (errorCode != RX_MSGSIZE))
 	retry = 0;
     else if (retry && dead_session)
         retry = 0;
