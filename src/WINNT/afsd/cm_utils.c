@@ -209,10 +209,13 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
     error = et_to_sys_error(error);
 
     if (error == RX_CALL_DEAD ||
-        error == RX_CALL_TIMEOUT)
+        error == RX_CALL_TIMEOUT ||
+        error == RX_MSGSIZE)
         error = CM_ERROR_RETRY;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
+    else if (error == EINVAL)
+        error = CM_ERROR_INVAL;
     else if (error == EROFS) 
         error = CM_ERROR_READONLY;
     else if (error == EACCES) 
@@ -270,7 +273,8 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
     error = et_to_sys_error(error);
 
     if (error == RX_CALL_DEAD ||
-        error == RX_CALL_TIMEOUT)
+        error == RX_CALL_TIMEOUT ||
+        error == RX_MSGSIZE)
         error = CM_ERROR_RETRY;
     else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
@@ -288,6 +292,8 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
         error = CM_ERROR_NOACCESS;
     else if (error == ENOENT) 
         error = CM_ERROR_NOSUCHFILE;
+    else if (error == EINVAL)
+        error = CM_ERROR_INVAL;
     else if (error == ENOTEMPTY 
               || error == 17		/* AIX */
               || error == 66		/* SunOS 4, Digital UNIX */
@@ -315,12 +321,15 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
     error = et_to_sys_error(error);
 
     if (error == RX_CALL_DEAD ||
-        error == RX_CALL_TIMEOUT)
+        error == RX_CALL_TIMEOUT ||
+        error == RX_MSGSIZE)
         error = CM_ERROR_RETRY;
     else if (error == RX_RESTARTING)
         error = CM_ERROR_ALLBUSY;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
+    else if (error == EINVAL)
+        error = CM_ERROR_INVAL;
     else if (error == VL_NOENT || error == VL_BADNAME) 
 	error = CM_ERROR_NOSUCHVOLUME;
     return error;
