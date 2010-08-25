@@ -89,15 +89,22 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct vm_object *obj;
     struct vnode *vp;
-    if (VREFCOUNT(avc) > 1)
+    if (VREFCOUNT(avc) > 1) {
 	return EBUSY;
+    }
 
-    if (avc->opens)
+    /* XXX
+     * The value of avc->opens here came to be, at some point,
+     * typically -1.  This was caused by incorrectly performing afs_close
+     * processing on vnodes being recycled */
+    if (avc->opens) {
 	return EBUSY;
+    }
 
     /* if a lock is held, give up */
-    if (CheckLock(&avc->lock))
+    if (CheckLock(&avc->lock)) {
 	return EBUSY;
+    }
 
     return(0);
 

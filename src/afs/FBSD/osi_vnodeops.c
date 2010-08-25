@@ -666,8 +666,24 @@ afs_vop_close(ap)
 				 * struct thread *a_td;
 				 * } */ *ap;
 {
-    int code;
-    struct vcache *avc = VTOAFS(ap->a_vp);
+    int code, iflag;
+    struct vnode *vp = ap->a_vp;
+    struct vcache *avc = VTOAFS(vp);
+
+#if defined(AFS_FBSD80_ENV)
+    VI_LOCK(vp);
+    iflag = vp->v_iflag & VI_DOOMED;
+    VI_UNLOCK(vp);
+    if (iflag & VI_DOOMED) {
+        /* osi_FlushVCache (correctly) calls vgone() on recycled vnodes, we don't
+         * have an afs_close to process, in that case */
+        if (avc->opens != 0)
+            panic("afs_vop_close: doomed vnode %p has vcache %p with non-zero opens %d\n",
+                  vp, avc, avc->opens);
+        return 0;
+    }
+#endif
+
     AFS_GLOCK();
     if (ap->a_cred)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred);
@@ -1473,12 +1489,8 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
     if (!haveGlock)
 	AFS_GUNLOCK();
 
-    /*
-     * XXX Pretend it worked, to prevent panic on shutdown
-     * Garrett, please fix - Jim Rees
-     */
     if (code) {
-	printf("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
+	afs_warn("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
 	VOP_PRINT(vp);
     }
 
@@ -1539,7 +1551,7 @@ afs_vop_print(ap)
     struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->f.states;
 
-    printf("tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vp->v_tag,
+    printf("vc %p vp %p tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vc, vp, vp->v_tag,
 	   (int)vc->f.fid.Cell, (u_int) vc->f.fid.Fid.Volume,
 	   (u_int) vc->f.fid.Fid.Vnode, (u_int) vc->f.fid.Fid.Unique, vc->opens,
 	   vc->execsOrWriters);
