@@ -87,7 +87,6 @@ osi_StopListener(void)
     if (haveGlock)
 	AFS_GUNLOCK();
     soshutdown(rx_socket, SHUT_RDWR);
-    soclose(rx_socket);
     p = pfind(rxk_ListenerPid);
     afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
     if (p)
@@ -104,12 +103,13 @@ osi_StopListener(void)
       MUTEX_ENTER(&s_mtx);
       tries = 3;
       while ((tries > 0) && (!so_is_disconn(rx_socket))) {
+          afs_warn("osi_StopListener: waiting (%d) ", tries);
 	msleep(&osi_StopListener, &s_mtx, PSOCK | PCATCH,
 	       "rx_shutdown_timedwait", 1 * hz);
 	--tries;
       }
       if (so_is_disconn(rx_socket))
-	soclose(rx_socket);
+          soclose(rx_socket);
       MUTEX_EXIT(&s_mtx);
       MUTEX_DESTROY(&s_mtx);
     }
