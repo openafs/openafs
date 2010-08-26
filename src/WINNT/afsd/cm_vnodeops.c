@@ -671,6 +671,15 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
         tp = bufferp->datap + entryInBuffer;
         dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
 
+        /*
+         * here are some consistency checks
+         */
+        if (dep->flag != CM_DIR_FFIRST ||
+            strlen(dep->name) > 256) {
+            code = CM_ERROR_INVAL;
+            break;
+        }
+
         /* while we're here, compute the next entry's location, too,
          * since we'll need it when writing out the cookie into the
          * dir listing stream.
