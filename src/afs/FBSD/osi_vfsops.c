@@ -20,40 +20,50 @@ int afs_pbuf_freecnt = -1;
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
-static sy_call_t *old_handler;
+static struct sysent old_sysent;
 
+static struct sysent afs_sysent = {
+    5,			/* int sy_narg */
+    afs3_syscall,	/* sy_call_t *sy_call */
+#ifdef AFS_FBSD60_ENV
+    AUE_NULL,		/* au_event_t sy_auevent */
+#ifdef AFS_FBSD70_ENV
+    NULL,		/* systrace_args_funt_t sy_systrace_args_func */
+    0,			/* u_int32_t sy_entry */
+    0,			/* u_int32_t sy_return */
+#ifdef AFS_FBSD90_ENV
+    0,			/* u_int32_t sy_flags */
+    0			/* u_int32_t sy_thrcnt */
+#endif
+#endif
+#endif /* FBSD60 */
+};
 
 int
 afs_init(struct vfsconf *vfc)
 {
-    if (sysent[AFS_SYSCALL].sy_call != nosys
-	&& sysent[AFS_SYSCALL].sy_call != lkmnosys) {
-	printf("AFS_SYSCALL in use. aborting\n");
-	return EBUSY;
+    int code;
+    int offset = AFS_SYSCALL;
+
+    code = syscall_register(&offset, &afs_sysent, &old_sysent);
+    if (code) {
+	printf("AFS_SYSCALL in use, error %i. aborting\n", code);
+	return code;
     }
     osi_Init();
     afs_pbuf_freecnt = nswbuf / 2 + 1;
-#if 0
-    sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
-    sysent[SYS_ioctl].sy_call = afs_xioctl;
-#endif
-    old_handler = sysent[AFS_SYSCALL].sy_call;
-    sysent[AFS_SYSCALL].sy_call = afs3_syscall;
-    sysent[AFS_SYSCALL].sy_narg = 5;
+
     return 0;
 }
 
 int
 afs_uninit(struct vfsconf *vfc)
 {
+    int offset = AFS_SYSCALL;
+
     if (afs_globalVFS)
 	return EBUSY;
-#if 0
-    sysent[SYS_ioctl].sy_call = ioctl;
-    sysent[SYS_setgroups].sy_call = setgroups;
-#endif
-    sysent[AFS_SYSCALL].sy_narg = 0;
-    sysent[AFS_SYSCALL].sy_call = old_handler;
+    syscall_deregister(&offset, &old_sysent);
     return 0;
 }
 
