@@ -108,8 +108,7 @@ osi_StopListener(void)
 	       "rx_shutdown_timedwait", 1 * hz);
 	--tries;
       }
-      if (so_is_disconn(rx_socket))
-          soclose(rx_socket);
+      soclose(rx_socket);
       MUTEX_EXIT(&s_mtx);
       MUTEX_DESTROY(&s_mtx);
     }

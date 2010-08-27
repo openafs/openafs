@@ -1823,7 +1823,7 @@ _settok_setParentPag(afs_ucred_t **cred) {
     osi_procname(procname, 256);
     afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
 	         MyPidxx2Pid(MyPidxx), procname);
-    return setpag(osi_curporc(), cred, -1, &pag, 1);
+    return setpag(osi_curproc(), cred, -1, &pag, 1);
 #else
     return setpag(cred, -1, &pag, 1);
 #endif
