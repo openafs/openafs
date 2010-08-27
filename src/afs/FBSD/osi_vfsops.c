@@ -20,6 +20,9 @@ int afs_pbuf_freecnt = -1;
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
+#if !defined(AFS_FBSD90_ENV)
+static sy_call_t *old_handler;
+#else
 static struct sysent old_sysent;
 
 static struct sysent afs_sysent = {
@@ -38,32 +41,51 @@ static struct sysent afs_sysent = {
 #endif
 #endif /* FBSD60 */
 };
+#endif /* FBSD90 */
 
 int
 afs_init(struct vfsconf *vfc)
 {
     int code;
     int offset = AFS_SYSCALL;
-
+#if defined(AFS_FBSD90_ENV)
     code = syscall_register(&offset, &afs_sysent, &old_sysent);
     if (code) {
 	printf("AFS_SYSCALL in use, error %i. aborting\n", code);
 	return code;
     }
+#else
+    if (sysent[AFS_SYSCALL].sy_call != nosys
+        && sysent[AFS_SYSCALL].sy_call != lkmnosys) {
+        printf("AFS_SYSCALL in use. aborting\n");
+        return EBUSY;
+    }
+#endif
     osi_Init();
     afs_pbuf_freecnt = nswbuf / 2 + 1;
-
+#if !defined(AFS_FBSD90_ENV)
+    old_handler = sysent[AFS_SYSCALL].sy_call;
+    sysent[AFS_SYSCALL].sy_call = afs3_syscall;
+    sysent[AFS_SYSCALL].sy_narg = 5;
+#endif
     return 0;
 }
 
 int
 afs_uninit(struct vfsconf *vfc)
 {
+#if defined(AFS_FBSD90_ENV)
     int offset = AFS_SYSCALL;
+#endif
 
     if (afs_globalVFS)
 	return EBUSY;
+#if defined(AFS_FBSD90_ENV)
     syscall_deregister(&offset, &old_sysent);
+#else
+    sysent[AFS_SYSCALL].sy_narg = 0;
+    sysent[AFS_SYSCALL].sy_call = old_handler;
+#endif
     return 0;
 }
 
