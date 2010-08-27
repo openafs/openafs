@@ -56,6 +56,9 @@ all:
 setup:
 	echo "skipping"
 
+install:
+	echo "skipping"
+
 # Below this line are targets when in the COMMON directory:
 LIBAFS = libafsnfs.ko
 LIBAFSNONFS = libafs.ko

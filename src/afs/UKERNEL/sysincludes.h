@@ -11,7 +11,7 @@
 #define __AFS_SYSINCLUDESH__ 1
 
 #include  <stdio.h>
-#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV)	/* must be included after KERNEL undef'd */
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <errno.h>
 #endif
 #include  <stdlib.h>
@@ -20,7 +20,7 @@
 #include  <assert.h>
 #include  <stdarg.h>
 
-#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) /* must be included after KERNEL undef'd */
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <unistd.h>
 #include  <ctype.h>
 #include  <sys/types.h>
@@ -114,7 +114,10 @@
 #define FREAD			0x0001
 #endif /* AFS_USR_LINUX22_ENV */
 
-#if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
+#if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
+#ifdef _KERNEL
+#undef _KERNEL
+#endif
 #ifdef KERNEL
 #undef KERNEL
 #define AFS_USR_UNDEF_KERNEL_ENV 1

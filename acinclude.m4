@@ -463,11 +463,11 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
 			;;
-		i386-*-dragonfly2.2*)
-			AFS_SYSNAME="i386_dfbsd_23"
-			;;
-		i386-*-dragonfly2.3*)
-			AFS_SYSNAME="i386_dfbsd_23"
+		i386-*-dragonfly?.*)
+			v=${host#*dragonfly}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_dfbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.6[[M-Z]]*)
 			AFS_SYSNAME="i386_nbsd20"
