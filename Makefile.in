@@ -165,7 +165,7 @@ cmd: comerr
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
-hcrypto:
+hcrypto: config
 	+${COMPILE_PART1} crypto/hcrypto ${COMPILE_PART2}
 
 lwp: util lwp_depinstall
