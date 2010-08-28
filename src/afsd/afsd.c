@@ -406,6 +406,10 @@ afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
     } else
 	printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 	       reason);
+
+    /* Since it's likely this means our DNS server changed, reinit now */
+    if (enable_afsdb)
+	res_init();
 }
 
 /* This function is called when the system's ip addresses may have changed. */
