@@ -185,7 +185,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 	return (EFBIG);
     }
 #endif
-#ifdef AFS_VM_RDWR_ENV
+#if defined(AFS_VM_RDWR_ENV) && !defined(AFS_FAKEOPEN_ENV)
     /*
      * If write is implemented via VM, afs_FakeOpen() is called from the
      * high-level write op.
@@ -292,7 +292,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 	}
 #endif
     }
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_FAKEOPEN_ENV)
     afs_FakeClose(avc, acred);
 #endif
     if (error && !avc->vc_error)
@@ -406,7 +406,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	return (EFBIG);
     }
 #endif
-#ifdef	AFS_VM_RDWR_ENV
+#if defined(AFS_VM_RDWR_ENV) && !defined(AFS_FAKEOPEN_ENV)
     /*
      * If write is implemented via VM, afs_FakeOpen() is called from the
      * high-level write op.
@@ -601,7 +601,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	}
 #endif
     }
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_FAKEOPEN_ENV)
     afs_FakeClose(avc, acred);
 #endif
     error = afs_CheckCode(error, &treq, 7);
