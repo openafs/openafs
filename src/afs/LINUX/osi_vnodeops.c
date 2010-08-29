@@ -1829,7 +1829,7 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
 	      PAGE_SIZE, UIO_READ, AFS_UIOSYS);
 
     /* save the page for background map */
-    /* XXX - Shouldn't we get a reference count here? */
+    get_page(pp); /* see above */
     auio->uio_iov->iov_base = (void*) pp;
     /* the background thread will free this */
     ancr = osi_Alloc(sizeof(struct nocache_read_request));
