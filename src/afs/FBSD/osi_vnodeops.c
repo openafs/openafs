@@ -723,9 +723,11 @@ afs_vop_getattr(ap)
 				 * } */ *ap;
 {
     int code;
+
     AFS_GLOCK();
     code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
+
     return code;
 }
 

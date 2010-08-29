@@ -45,6 +45,9 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 {
     struct volume *tvp;
     struct cell *tcell;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+    struct vnode *vp = AFSTOV(avc);
+#endif
     int fakedir = 0;
 
     AFS_STATCNT(afs_CopyOutAttrs);
@@ -115,6 +118,9 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
     attrs->va_nlink = fakedir ? 100 : avc->f.m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->f.m.Length;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+        vnode_pager_setsize(vp, (u_long) attrs->va_size);
+#endif
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
 	fakedir ? 0 : (int)avc->f.m.Date;
     /* set microseconds to be dataversion # so that we approximate NFS-style
@@ -445,6 +451,9 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     struct vrequest treq;
     struct AFSStoreStatus astat;
     afs_int32 code;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+    struct vnode *vp = AFSTOV(avc);
+#endif
     struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc);
 
@@ -553,6 +562,9 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	 * pdflush */
 	if (code == 0)
 	    i_size_write(AFSTOV(avc), tsize);
+#endif
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+        vnode_pager_setsize(vp, (u_long) tsize);
 #endif
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
