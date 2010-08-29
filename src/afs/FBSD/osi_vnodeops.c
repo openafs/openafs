@@ -548,7 +548,7 @@ afs_vop_lookup(ap)
 	    MA_VOP_UNLOCK(dvp, 0, p);	/* done with parent. */
 #endif
 	}
-	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(vp, LK_EXCLUSIVE | LK_CANRECURSE | LK_RETRY, p);
 	/* always return the child locked */
     }
     *ap->a_vpp = vp;
@@ -1162,7 +1162,7 @@ afs_vop_link(ap)
 	error = EISDIR;
 	goto out;
     }
-    if ((error = ma_vn_lock(vp, LK_EXCLUSIVE, p)) != 0) {
+    if ((error = ma_vn_lock(vp, LK_CANRECURSE | LK_EXCLUSIVE, p)) != 0) {
 	goto out;
     }
     AFS_GLOCK();
