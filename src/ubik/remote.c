@@ -70,18 +70,7 @@ SDISK_Begin(struct rx_call *rxcall, struct ubik_tid *atid)
 	return code;
     }
     DBHOLD(ubik_dbase);
-    urecovery_CheckTid(atid);
-    if (ubik_currentTrans) {
-	/* If the thread is not waiting for lock - ok to end it */
-#if !defined(UBIK_PAUSE)
-	if (ubik_currentTrans->locktype != LOCKWAIT) {
-#endif /* UBIK_PAUSE */
-	    udisk_end(ubik_currentTrans);
-#if !defined(UBIK_PAUSE)
-	}
-#endif /* UBIK_PAUSE */
-	ubik_currentTrans = (struct ubik_trans *)0;
-    }
+    urecovery_CheckTid(atid, 1);
     code = udisk_begin(ubik_dbase, UBIK_WRITETRANS, &ubik_currentTrans);
     if (!code && ubik_currentTrans) {
 	/* label this trans with the right trans id */
@@ -119,7 +108,7 @@ SDISK_Commit(struct rx_call *rxcall, struct ubik_tid *atid)
 
     DBHOLD(dbase);
 
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	ReleaseWriteLock(&dbase->cache_lock);
@@ -156,7 +145,7 @@ SDISK_ReleaseLocks(struct rx_call *rxcall, struct ubik_tid *atid)
 
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;
@@ -195,7 +184,7 @@ SDISK_Abort(struct rx_call *rxcall, struct ubik_tid *atid)
 
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;
@@ -239,7 +228,7 @@ SDISK_Lock(struct rx_call *rxcall, struct ubik_tid *atid,
     }
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;
@@ -286,7 +275,7 @@ SDISK_WriteV(struct rx_call *rxcall, struct ubik_tid *atid,
 
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;
@@ -333,7 +322,7 @@ SDISK_Write(struct rx_call *rxcall, struct ubik_tid *atid,
 
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;
@@ -365,7 +354,7 @@ SDISK_Truncate(struct rx_call *rxcall, struct ubik_tid *atid,
 
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;
@@ -763,7 +752,7 @@ SDISK_SetVersion(struct rx_call *rxcall, struct ubik_tid *atid,
 
     dbase = ubik_currentTrans->dbase;
     DBHOLD(dbase);
-    urecovery_CheckTid(atid);
+    urecovery_CheckTid(atid, 0);
     if (!ubik_currentTrans) {
 	DBRELE(dbase);
 	return USYNC;

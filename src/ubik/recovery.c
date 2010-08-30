@@ -156,13 +156,13 @@ urecovery_AbortAll(struct ubik_dbase *adbase)
  * \brief this routine aborts the current remote transaction, if any, if the tid is wrong
  */
 int
-urecovery_CheckTid(struct ubik_tid *atid)
+urecovery_CheckTid(struct ubik_tid *atid, int abortalways)
 {
     if (ubik_currentTrans) {
 	/* there is remote write trans, see if we match, see if this
 	 * is a new transaction */
 	if (atid->epoch != ubik_currentTrans->tid.epoch
-	    || atid->counter > ubik_currentTrans->tid.counter) {
+	    || atid->counter > ubik_currentTrans->tid.counter || abortalways) {
 	    /* don't match, abort it */
 	    /* If the thread is not waiting for lock - ok to end it */
 #if !defined(UBIK_PAUSE)

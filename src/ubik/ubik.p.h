@@ -396,7 +396,7 @@ extern int urecovery_LostServer(void);
 extern int urecovery_AllBetter(struct ubik_dbase *adbase,
 			       int areadAny);
 extern int urecovery_AbortAll(struct ubik_dbase *adbase);
-extern int urecovery_CheckTid(struct ubik_tid *atid);
+extern int urecovery_CheckTid(struct ubik_tid *atid, int abortalways);
 extern int urecovery_Initialize(struct ubik_dbase *adbase);
 extern void *urecovery_Interact(void *);
 extern int DoProbe(struct ubik_server *server);
