@@ -189,16 +189,16 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 		    cm_lock_data_t **ldpp)
 {
     long rights;
-    long code;
+    long code = 0;
 
     osi_assertx(ldpp != NULL, "null cm_lock_data_t");
     *ldpp = NULL;
 
     /* Always allow delete; the RPC will tell us if it's OK */
-    if (desiredAccess == DELETE)
-        return 0;
-
     rights = 0;
+
+    if (desiredAccess == DELETE)
+        goto done_2;
 
     if (desiredAccess & (AFS_ACCESS_READ|AFS_ACCESS_EXECUTE))
         rights |= (scp->fileType == CM_SCACHETYPE_DIRECTORY ? PRSFS_LOOKUP : PRSFS_READ);
@@ -209,6 +209,9 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
        scp implies that we don't need to create it. */
     if (desiredAccess & AFS_ACCESS_WRITE)
         rights |= PRSFS_WRITE;
+
+    if (desiredAccess & DELETE)
+        rights |= PRSFS_DELETE;
 
     lock_ObtainWrite(&scp->rw);
 
@@ -291,6 +294,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
  _done:
     lock_ReleaseWrite(&scp->rw);
 
+ done_2:
     osi_Log3(afsd_logp,"cm_CheckNTOpen scp 0x%p ldp 0x%p code 0x%x", scp, *ldpp, code);
     return code;
 }
