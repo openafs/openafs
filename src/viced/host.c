@@ -3504,6 +3504,19 @@ h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 
 }				/*h_GetWorkStats */
 
+void
+h_GetWorkStats64(afs_uint64 *nump, afs_uint64 *activep, afs_uint64 *delp, 
+		 afs_int32 cutofftime)
+{
+    int num, active, del;
+    h_GetWorkStats(&num, &active, &del, cutofftime);
+    if (nump)
+        *nump = num;
+    if (activep)
+        *activep = active;
+    if (delp)
+        *delp = del;
+}
 
 /*------------------------------------------------------------------------
  * PRIVATE h_ClassifyAddress
