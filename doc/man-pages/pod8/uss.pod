@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss - Introduction to the uss command suite
+uss - Introduction to the uss command suite (deprecated)
 
 =head1 CAUTIONS
 
