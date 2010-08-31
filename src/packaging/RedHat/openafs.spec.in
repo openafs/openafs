@@ -1462,6 +1462,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/bosserver
 %{_prefix}/afs/bin/bos_util
 %{_prefix}/afs/bin/buserver
+%{_prefix}/afs/bin/dafileserver
+%{_prefix}/afs/bin/dafssync-debug
+%{_prefix}/afs/bin/dasalvager
+%{_prefix}/afs/bin/davolserver
 %{_prefix}/afs/bin/fileserver
 %{_prefix}/afs/bin/fssync-debug
 # Should we support KAServer?
@@ -1470,6 +1474,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/pt_util
 %{_prefix}/afs/bin/ptserver
 %{_prefix}/afs/bin/salvager
+%{_prefix}/afs/bin/salvageserver
+%{_prefix}/afs/bin/salvsync-debug
 %{_prefix}/afs/bin/state_analyzer
 %{_prefix}/afs/bin/upclient
 %{_prefix}/afs/bin/upserver
@@ -1503,12 +1509,16 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/kaserver.DB0.*
 %{_mandir}/man5/kaserverauxdb.*
 %{_mandir}/man5/krb.conf.*
+%{_mandir}/man5/krb.excl.*
 %{_mandir}/man5/prdb.DB0.*
 %{_mandir}/man5/salvage.lock.*
 %{_mandir}/man5/tapeconfig.*
 %{_mandir}/man5/vldb.DB0.*
 %{_mandir}/man8/buserver.*
 %{_mandir}/man8/fileserver.*
+%{_mandir}/man8/dafileserver.*
+%{_mandir}/man8/dasalvager.*
+%{_mandir}/man8/davolserver.*
 %{_mandir}/man8/kadb_check.*
 %{_mandir}/man8/ka-forwarder.*
 %{_mandir}/man8/prdb_check.*
