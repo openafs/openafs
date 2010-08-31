@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss_help - Displays help for uss commands
+uss_help - Displays help for uss commands (deprecated)
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss_bulk - Provides instructions for the uss bulk command
+uss_bulk - Provides instructions for the uss bulk command (deprecated)
 
 =head1 CAUTIONS
 

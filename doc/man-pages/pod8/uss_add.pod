@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss_add - Creates a user account
+uss_add - Creates a user account (deprecated)
 
 =head1 SYNOPSIS
 
