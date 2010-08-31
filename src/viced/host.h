@@ -234,6 +234,7 @@ extern int PutClient(struct client **cp);
 extern void h_PrintStats(void);
 extern void h_PrintClients(void);
 extern void h_GetWorkStats(int *, int *, int *, afs_int32);
+extern void h_GetWorkStats64(afs_uint64 *, afs_uint64 *, afs_uint64 *, afs_int32);
 extern void h_flushhostcps(afs_uint32 hostaddr,
 			   afs_uint16 hport);
 extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,

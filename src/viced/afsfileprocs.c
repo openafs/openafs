@@ -5731,10 +5731,10 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
 	(afs_int32) ((long)sbrk(0) >> 10);
 #endif
     FS_UNLOCK;
-    h_GetWorkStats((int *)&(Statistics->ViceStatistics64_val[STATS64_WORKSTATIONS]),
-                   (int *)&(Statistics->ViceStatistics64_val[STATS64_ACTIVEWORKSTATIONS]),
-		   (int *)0,
-                   (afs_int32) (FT_ApproxTime()) - (15 * 60));
+    h_GetWorkStats64(&(Statistics->ViceStatistics64_val[STATS64_WORKSTATIONS]),
+                     &(Statistics->ViceStatistics64_val[STATS64_ACTIVEWORKSTATIONS]),
+		     0,
+                     (afs_int32) (FT_ApproxTime()) - (15 * 60));
 
 
 
