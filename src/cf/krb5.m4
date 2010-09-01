@@ -28,6 +28,10 @@ dnl change library ordering in that case.
 dnl
 dnl Depends on RRA_ENABLE_REDUCED_DEPENDS and RRA_SET_LDFLAGS.
 dnl
+dnl Also provides RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS, which checks
+dnl whether krb5_get_init_creds_opt_free takes one argument or two.  Defines
+dnl HAVE_KRB5_GET_INIT_CREDS_OPT_FREE_2_ARGS if it takes two arguments.
+dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2005, 2006, 2007, 2008, 2009, 2010
 dnl     Board of Trustees, Leland Stanford Jr. University
@@ -166,7 +170,8 @@ AC_DEFUN([_RRA_LIB_KRB5_INTERNAL],
      AS_IF([test x"$rra_krb5_root" != x && test -z "$KRB5_CONFIG"],
          [AS_IF([test -x "${rra_krb5_root}/bin/krb5-config"],
              [KRB5_CONFIG="${rra_krb5_root}/bin/krb5-config"])],
-         [AC_PATH_PROG([KRB5_CONFIG], [krb5-config])])
+         [AC_PATH_PROG([KRB5_CONFIG], [krb5-config], ,
+             [${PATH}:/usr/kerberos/bin])])
      AS_IF([test x"$KRB5_CONFIG" != x && test -x "$KRB5_CONFIG"],
          [AC_CACHE_CHECK([for krb5 support in krb5-config],
              [rra_cv_lib_krb5_config],
@@ -259,3 +264,20 @@ AC_DEFUN([RRA_LIB_KRB5_OPTIONAL],
          [_RRA_LIB_KRB5_INTERNAL([false])])])
  AS_IF([test x"$KRB5_LIBS" != x],
     [AC_DEFINE([HAVE_KERBEROS], 1, [Define to enable Kerberos features.])])])
+
+dnl Check whether krb5_get_init_creds_opt_free takes one argument or two.
+dnl Early Heimdal used to take a single argument.  Defines
+dnl HAVE_KRB5_GET_INIT_CREDS_OPT_FREE_2_ARGS if it takes two arguments.
+dnl
+dnl Should be called with RRA_LIB_KRB5_SWITCH active.
+AC_DEFUN([RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS],
+[AC_CACHE_CHECK([if krb5_get_init_creds_opt_free takes two arguments],
+    [rra_cv_func_krb5_get_init_creds_opt_free_args],
+    [AC_TRY_COMPILE([#include <krb5.h>],
+        [krb5_get_init_creds_opt *opts; krb5_context c;
+         krb5_get_init_creds_opt_free(c, opts);],
+        [rra_cv_func_krb5_get_init_creds_opt_free_args=yes],
+        [rra_cv_func_krb5_get_init_creds_opt_free_args=no])])
+ AS_IF([test $rra_cv_func_krb5_get_init_creds_opt_free_args = yes],
+    [AC_DEFINE([HAVE_KRB5_GET_INIT_CREDS_OPT_FREE_2_ARGS], 1,
+        [Define if krb5_get_init_creds_opt_free takes two arguments.])])])
