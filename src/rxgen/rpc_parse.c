@@ -45,7 +45,7 @@
 #include "rpc_util.h"
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
-    *uniondef_defined;
+    *uniondef_defined, *complex_defined;
 char *SplitStart = NULL;
 char *SplitEnd = NULL;
 char *MasterPrefix = NULL;
@@ -249,6 +249,7 @@ def_struct(definition * defp)
     declaration dec;
     decl_list *decls;
     decl_list **tailp;
+    int special = 0;
 
     defp->def_kind = DEF_STRUCT;
 
@@ -258,6 +259,11 @@ def_struct(definition * defp)
     tailp = &defp->def.st.decls;
     do {
 	get_declaration(&dec, DEF_STRUCT);
+	/* If a structure contains an array, then we're going
+	 * to need to be clever about freeing it */
+	if (dec.rel == REL_ARRAY) {
+	   special = 1;
+	}
 	decls = ALLOC(decl_list);
 	decls->decl = dec;
 	*tailp = decls;
@@ -267,6 +273,9 @@ def_struct(definition * defp)
     } while (tok.kind != TOK_RBRACE);
     get_token(&tok);
     *tailp = NULL;
+
+    if (special)
+	STOREVAL(&complex_defined, defp);
 }
 
 static void
@@ -1487,6 +1496,7 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 
     for (listp = special_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
+
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM
 		&& (plist->pl.param_kind == DEF_INPARAM
@@ -1534,6 +1544,20 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 	    }
 	}
     }
+    for (listp = complex_defined; listp != NULL; listp = listp->next) {
+	defp1 = (definition *) listp->val;
+	for (plist = defp->pc.plists; plist; plist = plist->next) {
+	    if (plist->component_kind == DEF_PARAM) {
+		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
+		    plist->pl.param_flag |= FREETHIS_PARAM;
+		    *somefrees = 1;
+		    fprintf(fout, "\n\tmemset(&%s, 0, sizeof(%s));",
+				 plist->pl.param_name, defp1->def_name);
+		}
+	    }
+	}
+    }
+
     f_print(fout, "\n");
 }
 
