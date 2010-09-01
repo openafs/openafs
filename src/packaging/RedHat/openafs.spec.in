@@ -1542,6 +1542,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
 %{_libdir}/libkopenafs.so.*
+%{_libdir}/libafshcrypto.so.*
 %endif
 
 %files authlibs-devel
@@ -1552,10 +1553,12 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafsrpc_pic.a
 %{_libdir}/libkopenafs.a
+%{_libdir}/libafshcrypto.a
 %if %{build_authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
 %{_libdir}/libkopenafs.so
+%{_libdir}/libafshcrypto.so
 %endif
 
 %files devel
