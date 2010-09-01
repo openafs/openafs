@@ -30,7 +30,8 @@ if (! -f $srcball) {
 my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
 
 system("tar -C $tmpdir -xvjf $srcball '\*/configure.ac' ".
-       "'\*/src/packaging/RedHat' > /dev/null")==0
+       "'\*/src/packaging/RedHat' ".
+       "'\*/build-tools' > /dev/null")==0
   or die "Unable to unpack src tar ball\n";
 
 my $dirh = IO::Dir->new($tmpdir);
@@ -64,6 +65,10 @@ while(<$fh>) {
   }
 }
 undef $fh;
+
+if (not defined($afsversion)) {
+  $afsversion = `"$srcdir/build-tools/git-version" "$srcdir"`;
+}
 
 # Build the RPM root
 
