@@ -786,11 +786,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 
     if (transMode == UBIK_WRITETRANS) {
 	/* for a write trans, we have to keep track of the write tid counter too */
-#if defined(UBIK_PAUSE)
 	dbase->writeTidCounter = tt->tid.counter;
-#else
-	dbase->writeTidCounter += 2;
-#endif /* UBIK_PAUSE */
 
 	/* next try to start transaction on appropriate number of machines */
 	code = ContactQuorum_NoArguments(DISK_Begin, tt, 0);
