@@ -852,6 +852,11 @@ fi
 
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
+%if %{krb5support}
+KRB5_CONFIG="%{krb5config}"
+export KRB5_CONFIG
+%endif
+
 ./configure --with-afs-sysname=${sysname} \
        --prefix=%{_prefix} \
        --libdir=%{_libdir} \
@@ -859,12 +864,11 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --sbindir=%{_sbindir} \
        --disable-strip-binaries \
        --with-linux-kernel-packaging \
-       --enable-disconnected \
 %if %{build_modules}
        --with-linux-kernel-headers=${ksrc} \
 %endif
 %if %{krb5support}
-	--with-krb5-conf=%{krb5config} \
+	--with-krb5 \
 %endif
        $config_opts \
        || exit 1
