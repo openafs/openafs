@@ -102,12 +102,6 @@
 # to distribute aklog and asetkey
 %define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
 
-%if %{krb5support}
-%if %{?krb5config:0}%{!?krb5config:1}
-%define krb5config /usr/kerberos/bin/krb5-config
-%endif
-%endif
-
 # Set 'bootkernelsupport' to 1 if you want to build the
 # kernel module for Red Hat BOOT Kernels on x86.
 %define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
@@ -862,6 +856,18 @@ fi
 
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
+%if %{krb5support}
+%if %{?krb5config:0}%{!?krb5config:1}
+if [ -x /usr/kerberos/bin/krb5-config ] ; then
+  KRB5_CONFIG=/usr/kerberos/bin/krb5-config
+else
+  KRB5_CONFIG=/usr/bin/krb5-config
+fi
+%else
+KRB5_CONFIG="%{krb5config}"
+%endif
+%endif
+
 ./configure --with-afs-sysname=${sysname} \
        --prefix=%{_prefix} \
        --libdir=%{_libdir} \
@@ -872,7 +878,7 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --with-linux-kernel-headers=${ksrc} \
 %endif
 %if %{krb5support}
-	--with-krb5-conf=%{krb5config} \
+	--with-krb5-conf="$KRB5_CONFIG" \
 %endif
        $config_opts \
        || exit 1
