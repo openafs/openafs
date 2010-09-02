@@ -602,8 +602,8 @@ namei_RemoveDataDirectories(namei_t * name)
 
     strlcpy(path, name->n_path, sizeof(pbuf));
 
-    /* move past the prefix */
-    path = path + prefixlen + 1;	/* skip over the trailing / */
+    /* move past the prefix and n_voldir1 */
+    path = path + prefixlen + 1 + vollen + 1;	/* skip over the trailing / */
 
     /* now delete all dirs upto path */
     code = delTree(pbuf, path, &err);
