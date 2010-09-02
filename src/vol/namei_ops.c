@@ -415,15 +415,29 @@ namei_RemoveDataDirectories(namei_t * name)
 {
     char pbuf[MAXPATHLEN], *path = pbuf;
     int prefixlen = strlen(name->n_base), err = 0;
+    int vollen = strlen(name->n_voldir1);
+    int code, code2;
 
     strlcpy(path, name->n_path, sizeof(pbuf));
 
-    /* move past the prefix */
-    path = path + prefixlen + 1;	/* skip over the trailing / */
+    /* move past the prefix and n_voldir1 */
+    path = path + prefixlen + 1 + vollen + 1;	/* skip over the trailing / */
 
     /* now delete all dirs upto path */
-    return delTree(pbuf, path, &err);
+    code = delTree(pbuf, path, &err);
 
+    /* We deleted everything under /n_base/n_voldir1/n_voldir2 if we could,
+     * but now try to rmdir /n_base/n_voldir1 if we can. delTree modified
+     * pbuf, so just reconstruct /n_base/n_voldir1 from scratch oureslves. */
+    afs_snprintf(pbuf, sizeof(pbuf)-1, "%s/%s", name->n_base, name->n_voldir1);
+    pbuf[sizeof(pbuf)-1] = '\0';
+
+    code2 = rmdir(pbuf);
+    if (!code) {
+	code = code2;
+    }
+
+    return code;
 }
 
 /* Create the file in the name space.
