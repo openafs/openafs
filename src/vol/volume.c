@@ -156,6 +156,7 @@ pthread_mutex_t vol_trans_mutex;
 pthread_cond_t vol_put_volume_cond;
 pthread_cond_t vol_sleep_cond;
 pthread_cond_t vol_init_attach_cond;
+pthread_cond_t vol_vinit_cond;
 int vol_attach_threads = 1;
 #endif /* AFS_PTHREAD_ENV */
 
@@ -544,6 +545,22 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     }
 }
 
+/**
+ * Set VInit to a certain value, and signal waiters.
+ *
+ * @param[in] value  the value to set VInit to
+ *
+ * @pre VOL_LOCK held
+ */
+static void
+VSetVInit_r(int value)
+{
+    VInit = value;
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_broadcast(&vol_vinit_cond) == 0);
+#endif
+}
+
 int
 VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 {
@@ -572,6 +589,7 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     assert(pthread_cond_init(&vol_put_volume_cond, NULL) == 0);
     assert(pthread_cond_init(&vol_sleep_cond, NULL) == 0);
     assert(pthread_cond_init(&vol_init_attach_cond, NULL) == 0);
+    assert(pthread_cond_init(&vol_vinit_cond, NULL) == 0);
 #else /* AFS_PTHREAD_ENV */
     IOMGR_Initialize();
 #endif /* AFS_PTHREAD_ENV */
@@ -666,7 +684,7 @@ VInitAttachVolumes(ProgramType pt)
 	}
     }
     VOL_LOCK;
-    VInit = 2;			/* Initialized, and all volumes have been attached */
+    VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
     LWP_NoYieldSignal(VInitAttachVolumes);
     VOL_UNLOCK;
     return 0;
@@ -748,7 +766,7 @@ VInitAttachVolumes(ProgramType pt)
 	assert(pthread_cond_destroy(&params.thread_done_cv) == 0);
     }
     VOL_LOCK;
-    VInit = 2;			/* Initialized, and all volumes have been attached */
+    VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
     assert(pthread_cond_broadcast(&vol_init_attach_cond) == 0);
     VOL_UNLOCK;
     return 0;
@@ -872,7 +890,7 @@ VInitAttachVolumes(ProgramType pt)
     }
 
     VOL_LOCK;
-    VInit = 2;			/* Initialized, and all volumes have been attached */
+    VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
     assert(pthread_cond_broadcast(&vol_init_attach_cond) == 0);
     VOL_UNLOCK;
 
@@ -5430,8 +5448,9 @@ VConnectFS_r(void)
 	   (programType != fileServer) &&
 	   (programType != salvager));
     rc = FSYNC_clientInit();
-    if (rc)
-	VInit = 3;
+    if (rc) {
+	VSetVInit_r(3);
+    }
     return rc;
 }
 
@@ -5457,7 +5476,7 @@ VDisconnectFS_r(void)
     assert((programType != fileServer) &&
 	   (programType != salvager));
     FSYNC_clientFinis();
-    VInit = 2;
+    VSetVInit_r(2);
 }
 
 /**
@@ -6094,7 +6113,7 @@ VSetDiskUsage_r(void)
 	 * initialization level indicates that all volumes are attached,
 	 * which implies that all partitions are initialized. */
 #ifdef AFS_PTHREAD_ENV
-	sleep(10);
+	VOL_CV_WAIT(&vol_vinit_cond);
 #else /* AFS_PTHREAD_ENV */
 	IOMGR_Sleep(10);
 #endif /* AFS_PTHREAD_ENV */

@@ -68,6 +68,7 @@ extern pthread_mutex_t vol_glock_mutex;
 extern pthread_mutex_t vol_trans_mutex;
 extern pthread_cond_t vol_put_volume_cond;
 extern pthread_cond_t vol_sleep_cond;
+extern pthread_cond_t vol_vinit_cond;
 extern ih_init_params vol_io_params;
 extern int vol_attach_threads;
 #ifdef VOL_LOCK_DEBUG
