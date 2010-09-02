@@ -262,6 +262,10 @@ FSYNC_sync(void * args)
     int min_vinit = 1;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+    /* we must not be called before vol package initialization, since we use
+     * vol package mutexes and conds etc */
+    osi_Assert(VInit);
+
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
 
@@ -278,17 +282,22 @@ FSYNC_sync(void * args)
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
 
+    VOL_LOCK;
+
     while (VInit < min_vinit) {
 	/* Let somebody else run until all volumes have been preattached
 	 * (DAFS), or we have started attaching volumes (non-DAFS). This
 	 * doesn't mean that all volumes have been attached.
 	 */
 #ifdef AFS_PTHREAD_ENV
-	pthread_yield();
+	VOL_CV_WAIT(&vol_vinit_cond);
 #else /* AFS_PTHREAD_ENV */
 	LWP_DispatchProcess();
 #endif /* AFS_PTHREAD_ENV */
     }
+
+    VOL_UNLOCK;
+
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
     osi_Assert(!code);
