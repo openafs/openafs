@@ -82,6 +82,9 @@ AS_IF([test x"$KRB5_LIBS" != x],
 AC_SUBST([BUILD_KRB5])
 AC_SUBST([MAKE_KRB5])
 
+dnl Probe for GSSAPI
+RRA_LIB_GSSAPI
+
 if test -d 'doc/man-pages' ; then
     MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"
 else
