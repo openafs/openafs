@@ -252,19 +252,25 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
     /* setup to talk to servers */
     code = rx_Init(0);
-    if (code)
+    if (code) {
 	printf("Warning: could not initialize network communication.\n");
+	return 1;
+    }
 
     junk = rxnull_NewClientSecurityObject();
     tdir = afsconf_Open(confdir);
-    if (!tdir)
+    if (!tdir) {
 	printf("Warning: could not get cell configuration.\n");
+	return 1;
+    }
 
     if (as->parms[2].items)	/* if -cell specified */
 	tcell = as->parms[2].items->data;
     code = afsconf_GetCellInfo(tdir, tcell, AFSCONF_VLDBSERVICE, &info);
-    if (info.numServers > MAXSERVERS)
+    if (code || info.numServers > MAXSERVERS) {
 	printf("Warning: could not init cell info.\n");
+	return 1;
+    }
 
     for (i = 0; i < info.numServers; ++i)
 	serverconns[i] =
@@ -275,8 +281,10 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	serverconns[i] = (struct rx_connection *)0;
     }
     code = ubik_ClientInit(serverconns, &client);
-    if (code)
+    if (code) {
 	printf("Warning: could not initialize RPC interface.\n");
+	return 1;
+    }
     return 0;
 }
 
