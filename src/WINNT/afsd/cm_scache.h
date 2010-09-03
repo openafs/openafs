@@ -253,6 +253,7 @@ typedef struct cm_scache {
 						 * this is a truncate op. */
 #define CM_SCACHEFLAG_INHASH		0x40	/* in the hash table */
 #define CM_SCACHEFLAG_BULKSTATTING	0x80	/* doing a bulk stat */
+#define CM_SCACHEFLAG_SIZESETTING       0x100   /* Stabilized; Truncate */
 #define CM_SCACHEFLAG_WAITING		0x200	/* waiting for fetch/store
 						 * state to change */
 #define CM_SCACHEFLAG_PURERO		0x400	/* read-only (not even backup);
