@@ -106,7 +106,8 @@ extern afs_int32 VolumeExists(afs_uint32 server, afs_int32 partition,
 extern afs_int32 CheckVldbRWBK(struct nvldbentry *entry,
 			       afs_int32 * modified);
 extern int CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified);
-extern afs_int32 CheckVldb(struct nvldbentry *entry, afs_int32 * modified);
+extern afs_int32 CheckVldb(struct nvldbentry *entry, afs_int32 * modified,
+                           afs_int32 *deleted);
 extern int UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags,
 			 int force);
 extern int UV_RenameVolume(struct nvldbentry *entry, char oldname[],

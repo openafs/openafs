@@ -181,7 +181,7 @@ static int SimulateForwardMultiple(struct rx_connection *fromconn,
 				   void *cookie, manyResults * results);
 static afs_int32 CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver,
 			     afs_int32 apart, afs_int32 * modentry,
-			     afs_uint32 * maxvolid);
+			     afs_uint32 * maxvolid, struct nvldbentry *aentry);
 
 
 /*map the partition <partId> into partition name <partName>*/
@@ -5556,7 +5556,8 @@ UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
  */
 static afs_int32
 CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
-	    afs_int32 * modentry, afs_uint32 * maxvolid)
+	    afs_int32 * modentry, afs_uint32 * maxvolid,
+            struct nvldbentry *aentry)
 {
     int idx = 0;
     int j;
@@ -5595,22 +5596,26 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     addvolume = 0;		/* Add this volume to the VLDB entry */
     modified = 0;		/* The VLDB entry was modified */
 
-    /* Read the entry from VLDB by its RW volume id */
-    code = VLDB_GetEntryByID(rwvolid, RWVOL, &entry);
-    if (code) {
-	if (code != VL_NOENT) {
-	    fprintf(STDOUT,
-		    "Could not retreive the VLDB entry for volume %lu \n",
-		    (unsigned long)rwvolid);
-	    ERROR_EXIT(code);
-	}
-
-	memset(&entry, 0, sizeof(entry));
-	vsu_ExtractName(entry.name, volumeinfo->name);	/* Store name of RW */
-
-	createentry = 1;
+    if (aentry) {
+	memcpy(&entry, aentry, sizeof(entry));
     } else {
-	MapHostToNetwork(&entry);
+	/* Read the entry from VLDB by its RW volume id */
+	code = VLDB_GetEntryByID(rwvolid, RWVOL, &entry);
+	if (code) {
+	    if (code != VL_NOENT) {
+		fprintf(STDOUT,
+		        "Could not retreive the VLDB entry for volume %lu \n",
+		        (unsigned long)rwvolid);
+		ERROR_EXIT(code);
+	    }
+
+	    memset(&entry, 0, sizeof(entry));
+	    vsu_ExtractName(entry.name, volumeinfo->name);	/* Store name of RW */
+
+	    createentry = 1;
+	} else {
+	    MapHostToNetwork(&entry);
+	}
     }
 
     if (verbose && (pass == 1)) {
@@ -5984,6 +5989,10 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	*modentry = 1;
     }
 
+    if (aentry) {
+	memcpy(aentry, &entry, sizeof(entry));
+    }
+
     if (verbose) {
 	fprintf(STDOUT, "-- status after --\n");
 	if (modified)
@@ -6041,12 +6050,12 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
     struct rx_connection *aconn = 0;
     afs_int32 j, k, code, vcode, error = 0;
     afs_int32 tverbose;
-    afs_int32 mod, modified = 0;
+    afs_int32 mod, modified = 0, deleted = 0;
     struct nvldbentry vldbentry;
     afs_uint32 volumeid = 0;
     volEntries volumeInfo;
     struct partList PartList;
-    afs_int32 pcnt, rv;
+    afs_int32 pcnt;
     afs_uint32 maxvolid = 0;
 
     volumeInfo.volEntries_val = (volintInfo *) 0;
@@ -6099,7 +6108,7 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 	    mod = 1;
 	else
 	    mod = 0;
-	code = CheckVldb(&vldbentry, &mod);
+	code = CheckVldb(&vldbentry, &mod, &deleted);
 	if (code) {
 	    fprintf(STDERR, "Could not process VLDB entry for volume %s\n",
 		    vldbentry.name);
@@ -6145,7 +6154,7 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 		    /* Found one, sync it with VLDB entry */
 		    code =
 			CheckVolume(volumeInfo.volEntries_val, aserver,
-				    PartList.partId[j], &mod, &maxvolid);
+				    PartList.partId[j], &mod, &maxvolid, &vldbentry);
 		    if (code)
 			ERROR_EXIT(code);
 		    if (mod)
@@ -6162,21 +6171,7 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 	/* Check to see if the RW, BK, and RO IDs exist on any
 	 * partitions. We get the volume IDs from the VLDB.
 	 */
-	rv = 1;			/* Read the VLDB entry ? */
 	for (j = 0; j < MAXTYPES; j++) {	/* for RW, RO, and BK IDs */
-	    if (rv) {
-		vcode = VLDB_GetEntryByName(avolname, &vldbentry);
-		if (vcode) {
-		    if (vcode == VL_NOENT)
-			break;
-		    fprintf(STDERR,
-			    "Could not access the VLDB for volume %s\n",
-			    avolname);
-		    ERROR_EXIT(vcode);
-		}
-		rv = 0;
-	    }
-
 	    if (vldbentry.volumeId[j] == 0)
 		continue;
 
@@ -6199,11 +6194,11 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 		    /* Found one, sync it with VLDB entry */
 		    code =
 			CheckVolume(volumeInfo.volEntries_val, aserver,
-				    PartList.partId[k], &mod, &maxvolid);
+				    PartList.partId[k], &mod, &maxvolid, &vldbentry);
 		    if (code)
 			ERROR_EXIT(code);
 		    if (mod)
-			modified++, rv++;
+			modified++;
 		}
 
 		if (volumeInfo.volEntries_val)
@@ -6216,18 +6211,11 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 
     /* if (aserver) */
     /* If verbose output, print a summary of what changed */
-    if (tverbose && !(flags & 2)) {
+    if (tverbose) {
 	fprintf(STDOUT, "-- status after --\n");
-	code = VLDB_GetEntryByName(avolname, &vldbentry);
-	if (code && (code != VL_NOENT)) {
-	    fprintf(STDERR, "Could not access the VLDB for volume %s\n",
-		    avolname);
-	    ERROR_EXIT(code);
-	}
-	if (modified && (code == VL_NOENT)) {
+	if (deleted) {
 	    fprintf(STDOUT, "\n**entry deleted**\n");
 	} else if (modified) {
-	    MapHostToNetwork(&vldbentry);
 	    EnumerateEntry(&vldbentry);
 	} else {
 	    fprintf(STDOUT, "\n**no change**\n");
@@ -6355,7 +6343,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 		modified = 1;
 	    else
 		modified = 0;
-	    code = CheckVolume(vi, aserver, apart, &modified, &maxvolid);
+	    code = CheckVolume(vi, aserver, apart, &modified, &maxvolid, NULL);
 	    if (code) {
 		PrintError("", code);
 		failures++;
@@ -6629,7 +6617,7 @@ CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified)
  *      Ensure that <entry> matches with the info on file servers
  */
 afs_int32
-CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
+CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
 {
     afs_int32 code, error = 0;
     struct nvldbentry storeEntry;
@@ -6740,6 +6728,9 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
     if (modified && modentry) {
 	*modified = 1;
     }
+    if (deleted && delentry) {
+	*deleted = 1;
+    }
 
     if (verbose) {
 	fprintf(STDOUT, "-- status after --\n");
@@ -6829,7 +6820,7 @@ UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 		modified = 1;
 	    else
 		modified = 0;
-	    code = CheckVldb(vlentry, &modified);
+	    code = CheckVldb(vlentry, &modified, NULL);
 	    if (code) {
 		PrintError("", code);
 		fprintf(STDERR,
