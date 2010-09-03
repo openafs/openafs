@@ -3239,12 +3239,16 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 #ifdef COMMENT
         NTStatus = 0xC000022DL; /* Retry */
 #else
-        NTStatus = 0xC00000B5L; /* I/O Timeout */
+        NTStatus = 0xC0020018L; /* RPC_NT_SERVER_TOO_BUSY */
 #endif
-    } 
+    }
     else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
+#ifdef COMMENT
         NTStatus = 0xC000003AL; /* Path not found */
-    } 
+#else
+        NTStatus = 0xC0020017L; /* RPC_NT_SERVER_UNAVAILABLE */
+#endif
+    }
     else if (code >= ERROR_TABLE_BASE_RXK && code < ERROR_TABLE_BASE_RXK + 256) {
 	NTStatus = 0xC0000322L; /* No Kerberos key */
     } 
