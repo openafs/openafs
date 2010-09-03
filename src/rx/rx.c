@@ -5976,9 +5976,7 @@ rxi_CheckCall(struct rx_call *call)
     return 0;
 mtuout:
     if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT) {
-	/* if we never succeeded, let the error pass out as-is */
-	if (conn->peer->maxPacketSize)
-	    cerror = conn->msgsizeRetryErr;
+	int oldMTU = conn->peer->ifMTU;
 
 	/* if we thought we could send more, perhaps things got worse */
 	if (call->conn->peer->maxPacketSize > conn->lastPacketSize)
@@ -5996,6 +5994,11 @@ mtuout:
 
 	/* needed so ResetCall doesn't clobber us. */
 	call->MTU = conn->peer->ifMTU;
+
+	/* if we never succeeded, let the error pass out as-is */
+	if (conn->peer->maxPacketSize && oldMTU != conn->peer->ifMTU)
+	    cerror = conn->msgsizeRetryErr;
+
     }
     rxi_CallError(call, cerror);
     return -1;
