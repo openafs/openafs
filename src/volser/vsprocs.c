@@ -5971,8 +5971,6 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 		ERROR_EXIT(code);
 	    }
 	}
-	if (modentry)
-	    *modentry = modified;
     } else if (pass == 2) {
 	code =
 	    ubik_VL_ReleaseLock(cstruct, 0, rwvolid, RWVOL,
@@ -5982,7 +5980,11 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	}
     }
 
-    if (verbose && doit) {
+    if (modified && modentry) {
+	*modentry = 1;
+    }
+
+    if (verbose) {
 	fprintf(STDOUT, "-- status after --\n");
 	if (modified)
 	    EnumerateEntry(&entry);
@@ -6732,12 +6734,14 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified)
 		ERROR_EXIT(code);
 	    }
 	}
-	if (modified)
-	    *modified = 1;
 	islocked = 0;
     }
 
-    if (verbose && doit) {
+    if (modified && modentry) {
+	*modified = 1;
+    }
+
+    if (verbose) {
 	fprintf(STDOUT, "-- status after --\n");
 	if (delentry)
 	    fprintf(STDOUT, "\n**entry deleted**\n");
