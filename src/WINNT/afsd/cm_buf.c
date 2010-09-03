@@ -249,7 +249,7 @@ buf_Sync(int quitOnShutdown)
             case vl_unknown:
                 cm_InitReq(&req);
                 req.flags |= CM_REQ_NORETRY;
-                buf_CleanAsyncLocked(bp, &req, &dirty);
+                buf_CleanAsyncLocked(NULL, bp, &req, 0, &dirty);
                 wasDirty |= dirty;
             }
             cm_PutVolume(volp);
@@ -741,45 +741,45 @@ cm_buf_t *buf_FindAll(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uint32 fl
  *
  * Returns non-zero if the buffer was dirty.
  */
-afs_uint32 buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdirty)
+afs_uint32 buf_CleanAsyncLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
+                                afs_uint32 flags, afs_uint32 *pisdirty)
 {
     afs_uint32 code = 0;
     afs_uint32 isdirty = 0;
-    cm_scache_t * scp = NULL;
     osi_hyper_t offset;
+    int release_scp = 0;
 
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
+    if (scp = cm_FindSCache(&bp->fid))
+        release_scp = 1;
+
+    if (!scp) {
+        osi_Log1(buf_logp, "buf_CleanAsyncLocked unable to start I/O - scp not found buf 0x%p", bp);
+        code = CM_ERROR_NOSUCHFILE;
+    }
+
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
-	isdirty = 1;
+        isdirty = 1;
         lock_ReleaseMutex(&bp->mx);
 
-	scp = cm_FindSCache(&bp->fid);
-	if (scp) {
-	    osi_Log2(buf_logp, "buf_CleanAsyncLocked starts I/O on scp 0x%p buf 0x%p", scp, bp);
+        osi_Log2(buf_logp, "buf_CleanAsyncLocked starts I/O on scp 0x%p buf 0x%p", scp, bp);
 
-            offset = bp->offset;
-            LargeIntegerAdd(offset, ConvertLongToLargeInteger(bp->dirty_offset));
-	    code = (*cm_buf_opsp->Writep)(scp, &offset, 
+        offset = bp->offset;
+        LargeIntegerAdd(offset, ConvertLongToLargeInteger(bp->dirty_offset));
+        code = (*cm_buf_opsp->Writep)(scp, &offset,
 #if 1
-                                           /* we might as well try to write all of the contiguous 
-                                            * dirty buffers in one RPC 
-                                            */
-                                           cm_chunkSize,
+                                       /* we might as well try to write all of the contiguous
+                                       * dirty buffers in one RPC
+                                       */
+                                       cm_chunkSize,
 #else
-                                          bp->dirty_length, 
+                                       bp->dirty_length,
 #endif
-                                          0, bp->userp, reqp);
-	    osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
+                                       flags, bp->userp, reqp);
+        osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
 
-	    cm_ReleaseSCache(scp);
-	    scp = NULL;
-	} else {
-	    osi_Log1(buf_logp, "buf_CleanAsyncLocked unable to start I/O - scp not found buf 0x%p", bp);
-	    code = CM_ERROR_NOSUCHFILE;
-	}    
-        
-	lock_ObtainMutex(&bp->mx);
+        lock_ObtainMutex(&bp->mx);
 	/* if the Write routine returns No Such File, clear the dirty flag
 	 * because we aren't going to be able to write this data to the file
 	 * server.
@@ -817,6 +817,9 @@ afs_uint32 buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdir
             break;
         }
     }
+
+    if (release_scp)
+        cm_ReleaseSCache(scp);
 
     /* if someone was waiting for the I/O that just completed or failed,
      * wake them up.
@@ -1018,7 +1021,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                  * have the WRITING flag set, so we won't get
                  * back here.
                  */
-                buf_CleanAsync(bp, reqp, NULL);
+                buf_CleanAsync(scp, bp, reqp, 0, NULL);
 
                 /* now put it back and go around again */
                 buf_Release(bp);
@@ -1322,13 +1325,14 @@ long buf_CountFreeList(void)
 }
 
 /* clean a buffer synchronously */
-afs_uint32 buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdirty)
+afs_uint32 buf_CleanAsync(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp, afs_uint32 flags, afs_uint32 *pisdirty)
 {
     long code;
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
+    osi_assertx(!(flags & CM_BUF_WRITE_SCP_LOCKED), "scp->rw must not be held when calling buf_CleanAsync");
 
     lock_ObtainMutex(&bp->mx);
-    code = buf_CleanAsyncLocked(bp, reqp, pisdirty);
+    code = buf_CleanAsyncLocked(scp, bp, reqp, flags, pisdirty);
     lock_ReleaseMutex(&bp->mx);
 
     return code;
@@ -1459,7 +1463,7 @@ long buf_CleanAndReset(void)
                 cm_InitReq(&req);
 		req.flags |= CM_REQ_NORETRY;
 
-		buf_CleanAsync(bp, &req, NULL);
+		buf_CleanAsync(NULL, bp, &req, 0, NULL);
 		buf_CleanWait(NULL, bp, FALSE);
 
                 /* relock and release buffer */
@@ -1672,22 +1676,16 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         /* clean buffer synchronously */
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
 
-            /*
-             * if the object is not located on a read/write volume
-             * we must stabilize the object to ensure that buffer
-             * changes cannot occur while the flush is performed.
-             */
-            if (!stable && code == 0 && !(scp->flags & CM_SCACHEFLAG_RO)) {
+            if (code == 0 && !stable && (bp->flags & CM_BUF_DIRTY)) {
+                /*
+                 * we must stabilize the object to ensure that buffer
+                 * changes cannot occur while the flush is performed.
+                 * However, we do not want to Stabilize if we do not
+                 * need to because Stabilize obtains a callback.
+                 */
                 code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
                 stable = (code == 0);
             }
-
-            lock_ObtainMutex(&bp->mx);
-
-            /* start cleaning the buffer, and wait for it to finish */
-            buf_CleanAsyncLocked(bp, reqp, NULL);
-            buf_WaitIO(scp, bp);
-            lock_ReleaseMutex(&bp->mx);
 
             if (code == CM_ERROR_BADFD) {
                 /* if the scp's FID is bad its because we received VNOVNODE 
@@ -1703,8 +1701,18 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 bp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
                 bp->dirtyCounter++;
                 lock_ReleaseMutex(&bp->mx);
-            } else if (!stable && code) {
-                goto skip;
+            } else if (!(scp->flags & CM_SCACHEFLAG_RO)) {
+                if (code) {
+                    goto skip;
+                }
+
+                lock_ObtainMutex(&bp->mx);
+
+                /* start cleaning the buffer, and wait for it to finish */
+                buf_CleanAsyncLocked(scp, bp, reqp, 0, NULL);
+                buf_WaitIO(scp, bp);
+
+                lock_ReleaseMutex(&bp->mx);
             }
 
             /* actually, we only know that buffer is clean if ref
@@ -1834,7 +1842,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                      */
                     break;
                 default:
-                    code = buf_CleanAsyncLocked(bp, reqp, &wasDirty);
+                    code = buf_CleanAsyncLocked(scp, bp, reqp, 0, &wasDirty);
                     if (bp->flags & CM_BUF_ERROR) {
                         code = bp->error;
                         if (code == 0)

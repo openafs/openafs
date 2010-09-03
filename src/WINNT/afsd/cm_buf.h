@@ -115,12 +115,17 @@ typedef struct cm_buf {
 #define CM_BUF_EOF	0x80	/* read 0 bytes; used for detecting EOF */
 
 typedef struct cm_buf_ops {
-    long (*Writep)(void *, osi_hyper_t *, long, long, struct cm_user *,
-			struct cm_req *);
-    long (*Readp)(cm_buf_t *, long, long *, struct cm_user *);
-    long (*Stabilizep)(void *, struct cm_user *, struct cm_req *);
-    long (*Unstabilizep)(void *, struct cm_user *);
+    long (*Writep)(void *vscp, osi_hyper_t *offsetp,
+                   long length, long flags,
+                   struct cm_user *userp,
+                   struct cm_req *reqp);
+    long (*Readp)(cm_buf_t *bufp, long length,
+                  long *bytesReadp, struct cm_user *userp);
+    long (*Stabilizep)(void *vscp, struct cm_user *userp, struct cm_req *reqp);
+    long (*Unstabilizep)(void *vscp, struct cm_user *userp);
 } cm_buf_ops_t;
+
+#define CM_BUF_WRITE_SCP_LOCKED 0x1
 
 /* global locks */
 extern osi_rwlock_t buf_globalLock;
@@ -170,9 +175,9 @@ extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
 extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
-extern afs_uint32 buf_CleanAsyncLocked(cm_buf_t *, cm_req_t *, afs_uint32 *);
+extern afs_uint32 buf_CleanAsyncLocked(cm_scache_t *, cm_buf_t *, cm_req_t *, afs_uint32 flags, afs_uint32 *);
 
-extern afs_uint32 buf_CleanAsync(cm_buf_t *, cm_req_t *, afs_uint32 *);
+extern afs_uint32 buf_CleanAsync(cm_scache_t *, cm_buf_t *, cm_req_t *, afs_uint32 flags, afs_uint32 *);
 
 extern void buf_CleanWait(cm_scache_t *, cm_buf_t *, afs_uint32 locked);
 
