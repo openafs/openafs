@@ -463,8 +463,16 @@ long cm_BufRead(cm_buf_t *bufp, long nbytes, long *bytesReadp, cm_user_t *userp)
     return 0;
 }
 
-/* stabilize scache entry, and return with it locked so 
- * it stays stable.
+/*
+ * stabilize scache entry with CM_SCACHESYNC_SETSIZE.  This prevents any new
+ * data buffers to be allocated, new data to be fetched from the file server,
+ * and writes to be accepted from the application but permits dirty buffers
+ * to be written to the file server.
+ *
+ * Stabilize uses cm_SyncOp to maintain the cm_scache_t in this stable state
+ * instead of holding the rwlock exclusively.  This permits background stores
+ * to be performed in parallel and in particular allow FlushFile to be
+ * implemented without violating the locking hierarchy.
  */
 long cm_BufStabilize(void *vscp, cm_user_t *userp, cm_req_t *reqp)
 {
@@ -474,12 +482,9 @@ long cm_BufStabilize(void *vscp, cm_user_t *userp, cm_req_t *reqp)
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, reqp, 0, 
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_SETSIZE);
-    if (code) {
-        lock_ReleaseWrite(&scp->rw);
-        return code;
-    }
-        
-    return 0;
+    lock_ReleaseWrite(&scp->rw);
+
+    return code;
 }
 
 /* undoes the work that cm_BufStabilize does: releases lock so things can change again */
@@ -487,6 +492,7 @@ long cm_BufUnstabilize(void *vscp, cm_user_t *userp)
 {
     cm_scache_t *scp = vscp;
         
+    lock_ObtainWrite(&scp->rw);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_SETSIZE);
 
     lock_ReleaseWrite(&scp->rw);

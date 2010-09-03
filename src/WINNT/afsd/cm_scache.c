@@ -1110,9 +1110,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
              * operation ran first, or even which order a read and
              * a write occurred in.
              */
-            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
-                               | CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHSTATUS", scp);
+            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESETTING |
+                              CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESETTING|SIZESTORING|GETCALLBACK want FETCHSTATUS", scp);
                 goto sleep;
             }
         }
@@ -1121,9 +1121,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             /* if we're going to make an RPC to change the status, make sure
              * that no one is bringing in or sending out the status.
              */
-            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING |
+            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESETTING |
                               CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESETTING|SIZESTORING|GETCALLBACK want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
                 goto sleep;
             }
             if ((!bufp || bufp && scp->fileType == CM_SCACHETYPE_FILE) &&
@@ -1137,9 +1137,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
              * nothing is happening to that chunk, and that we aren't
              * changing the basic file status info, either.
              */
-            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
-                               | CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHDATA", scp);
+            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESETTING |
+                              CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESETTING|SIZESTORING|GETCALLBACK want FETCHDATA", scp);
                 goto sleep;
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING | CM_BUF_CMWRITING))) {
@@ -1203,8 +1203,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
              * operations don't change any of the data that we're
              * changing here.
              */
-            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESTORING)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING want SETSTATUS", scp);
+            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING |
+                              CM_SCACHEFLAG_SIZESETTING | CM_SCACHEFLAG_SIZESTORING)) {
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESETTING|SIZESTORING want SETSTATUS", scp);
                 goto sleep;
             }
         }
@@ -1230,9 +1231,9 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             /* don't write unless the status is stable and the chunk
              * is stable.
              */
-            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
-                               | CM_SCACHEFLAG_SIZESTORING)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING want WRITE", scp);
+            if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESETTING |
+                              CM_SCACHEFLAG_SIZESTORING)) {
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESETTING|SIZESTORING want WRITE", scp);
                 goto sleep;
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING |
@@ -1349,6 +1350,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         scp->flags |= CM_SCACHEFLAG_FETCHING;
     if (flags & CM_SCACHESYNC_STORESTATUS)
         scp->flags |= CM_SCACHEFLAG_STORING;
+    if (flags & CM_SCACHESYNC_SETSIZE)
+        scp->flags |= CM_SCACHEFLAG_SIZESETTING;
     if (flags & CM_SCACHESYNC_STORESIZE)
         scp->flags |= CM_SCACHEFLAG_SIZESTORING;
     if (flags & CM_SCACHESYNC_GETCALLBACK)
@@ -1418,6 +1421,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
         scp->flags &= ~CM_SCACHEFLAG_FETCHING;
     if (flags & CM_SCACHESYNC_STORESTATUS)
         scp->flags &= ~CM_SCACHEFLAG_STORING;
+    if (flags & CM_SCACHESYNC_SETSIZE)
+        scp->flags &= ~CM_SCACHEFLAG_SIZESETTING;
     if (flags & CM_SCACHESYNC_STORESIZE)
         scp->flags &= ~CM_SCACHEFLAG_SIZESTORING;
     if (flags & CM_SCACHESYNC_GETCALLBACK)
