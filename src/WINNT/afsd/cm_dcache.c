@@ -75,6 +75,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     int require_64bit_ops = 0;
     int call_was_64bit = 0;
+    int scp_locked = flags & CM_BUF_WRITE_SCP_LOCKED;
 
     osi_assertx(userp != NULL, "null cm_user_t");
     osi_assertx(scp != NULL, "null cm_scache_t");
@@ -85,10 +86,11 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
      * drops lots of locks, and may indeed return a properly initialized
      * buffer, although more likely it will just return a new, empty, buffer.
      */
-
-    lock_ObtainWrite(&scp->rw);
+    if (!scp_locked)
+        lock_ObtainWrite(&scp->rw);
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
-	lock_ReleaseWrite(&scp->rw);
+        if (!scp_locked)
+            lock_ReleaseWrite(&scp->rw);
 	return CM_ERROR_NOSUCHFILE;
     }
 
@@ -101,7 +103,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     if (code) {
         osi_Log1(afsd_logp, "cm_SetupStoreBIOD code %x", code);
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
-        lock_ReleaseWrite(&scp->rw);
+        if (!scp_locked)
+            lock_ReleaseWrite(&scp->rw);
         return code;
     }
 
@@ -109,7 +112,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         osi_Log0(afsd_logp, "cm_SetupStoreBIOD length 0");
         cm_ReleaseBIOD(&biod, 1, 0, 1);	/* should be a NOOP */
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
-        lock_ReleaseWrite(&scp->rw);
+        if (!scp_locked)
+            lock_ReleaseWrite(&scp->rw);
         return 0;
     }
 
@@ -325,7 +329,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         else if (code == CM_ERROR_QUOTA)
             scp->flags |= CM_SCACHEFLAG_OVERQUOTA;
     }
-    lock_ReleaseWrite(&scp->rw);
+    if (!scp_locked)
+        lock_ReleaseWrite(&scp->rw);
 
     return code;
 }
