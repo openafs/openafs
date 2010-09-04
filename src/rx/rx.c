@@ -1679,8 +1679,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {			/* otherwise allocate a new one and return that */
 	MUTEX_EXIT(&freeSQEList_lock);
-	sq = (struct rx_serverQueueEntry *)
-	    rxi_Alloc(sizeof(struct rx_serverQueueEntry));
+	sq = rxi_Alloc(sizeof(struct rx_serverQueueEntry));
 	MUTEX_INIT(&sq->lock, "server Queue lock", MUTEX_DEFAULT, 0);
 	CV_INIT(&sq->cv, "server Queue lock", CV_DEFAULT, 0);
     }
@@ -1852,8 +1851,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {			/* otherwise allocate a new one and return that */
 	MUTEX_EXIT(&freeSQEList_lock);
-	sq = (struct rx_serverQueueEntry *)
-	    rxi_Alloc(sizeof(struct rx_serverQueueEntry));
+	sq = rxi_Alloc(sizeof(struct rx_serverQueueEntry));
 	MUTEX_INIT(&sq->lock, "server Queue lock", MUTEX_DEFAULT, 0);
 	CV_INIT(&sq->cv, "server Queue lock", CV_DEFAULT, 0);
     }
@@ -2318,7 +2316,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
 	rxi_ResetCall(call, 1);
     } else {
 
-	call = (struct rx_call *)rxi_Alloc(sizeof(struct rx_call));
+	call = rxi_Alloc(sizeof(struct rx_call));
 #ifdef RXDEBUG_PACKET
         call->allNextp = rx_allCallsp;
         rx_allCallsp = call;
@@ -2431,7 +2429,7 @@ rxi_FreeCall(struct rx_call *call)
 }
 
 afs_int32 rxi_Alloccnt = 0, rxi_Allocsize = 0;
-char *
+void *
 rxi_Alloc(size_t size)
 {
     char *p;
@@ -7887,7 +7885,7 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	    sizeof(rx_interface_stat_t) +
 	    totalFunc * sizeof(rx_function_entry_v1_t);
 
-	rpc_stat = (rx_interface_stat_p) rxi_Alloc(space);
+	rpc_stat = rxi_Alloc(space);
 	if (rpc_stat == NULL) {
 	    rc = 1;
 	    goto fail;
@@ -8151,7 +8149,7 @@ rx_RetrieveProcessRPCStats(afs_uint32 callerVersion, afs_uint32 * myVersion,
 
     if (space > (size_t) 0) {
 	*allocSize = space;
-	ptr = *stats = (afs_uint32 *) rxi_Alloc(space);
+	ptr = *stats = rxi_Alloc(space);
 
 	if (ptr != NULL) {
 	    rx_interface_stat_p rpc_stat, nrpc_stat;
@@ -8250,7 +8248,7 @@ rx_RetrievePeerRPCStats(afs_uint32 callerVersion, afs_uint32 * myVersion,
 
     if (space > (size_t) 0) {
 	*allocSize = space;
-	ptr = *stats = (afs_uint32 *) rxi_Alloc(space);
+	ptr = *stats = rxi_Alloc(space);
 
 	if (ptr != NULL) {
 	    rx_interface_stat_p rpc_stat, nrpc_stat;

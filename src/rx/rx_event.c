@@ -176,7 +176,7 @@ rxepoch_Allocate(struct clock *when)
      * and add them to the free queue */
     if (queue_IsEmpty(&rxepoch_free)) {
 #if    defined(AFS_AIX32_ENV) && defined(KERNEL)
-	ep = (struct rxepoch *)rxi_Alloc(sizeof(struct rxepoch));
+	ep = rxi_Alloc(sizeof(struct rxepoch));
 	queue_Append(&rxepoch_free, &ep[0]), rxepoch_nFree++;
 #else
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
@@ -273,7 +273,7 @@ _rxevent_Post(struct clock *when, struct clock *now,
     if (queue_IsEmpty(&rxevent_free)) {
 	int i;
 #if	defined(AFS_AIX32_ENV) && defined(KERNEL)
-	ev = (struct rxevent *)rxi_Alloc(sizeof(struct rxevent));
+	ev = rxi_Alloc(sizeof(struct rxevent));
 	queue_Append(&rxevent_free, &ev[0]), rxevent_nFree++;
 #else
 

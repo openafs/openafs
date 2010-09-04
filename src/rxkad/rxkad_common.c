@@ -337,13 +337,13 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 
     if (rx_IsServerConn(aconn)) {
 	int size = sizeof(struct rxkad_sconn);
-	aconn->securityData = (char *)rxi_Alloc(size);
+	aconn->securityData = rxi_Alloc(size);
 	memset(aconn->securityData, 0, size);	/* initialize it conveniently */
     } else {			/* client */
 	struct rxkad_cprivate *tcp;
 	struct rxkad_cconn *tccp;
 	int size = sizeof(struct rxkad_cconn);
-	tccp = (struct rxkad_cconn *)rxi_Alloc(size);
+	tccp = rxi_Alloc(size);
 	aconn->securityData = (char *)tccp;
 	memset(aconn->securityData, 0, size);	/* initialize it conveniently */
 	tcp = (struct rxkad_cprivate *)aobj->privateData;

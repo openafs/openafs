@@ -177,13 +177,13 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     int size, psize;
 
     size = sizeof(struct rx_securityClass);
-    tsc = (struct rx_securityClass *)rxi_Alloc(size);
+    tsc = rxi_Alloc(size);
     memset((void *)tsc, 0, size);
     tsc->refCount = 1;		/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
     psize = PDATA_SIZE(ticketLen);
-    tcp = (struct rxkad_cprivate *)rxi_Alloc(psize);
+    tcp = rxi_Alloc(psize);
     memset((void *)tcp, 0, psize);
     tsc->privateData = (char *)tcp;
     tcp->type |= rxkad_client;

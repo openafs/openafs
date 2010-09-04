@@ -546,17 +546,17 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 #define rxi_KeepAliveOff(call) rxevent_Cancel((call)->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE)
 #define rxi_NatKeepAliveOff(conn) rxevent_Cancel((conn)->natKeepAliveEvent, (struct rx_call*)0, 0)
 
-#define rxi_AllocSecurityObject() (struct rx_securityClass *) rxi_Alloc(sizeof(struct rx_securityClass))
+#define rxi_AllocSecurityObject() rxi_Alloc(sizeof(struct rx_securityClass))
 #define	rxi_FreeSecurityObject(obj) rxi_Free(obj, sizeof(struct rx_securityClass))
-#define	rxi_AllocService()	(struct rx_service *) rxi_Alloc(sizeof(struct rx_service))
+#define	rxi_AllocService()	rxi_Alloc(sizeof(struct rx_service))
 #define	rxi_FreeService(obj) \
 do { \
     MUTEX_DESTROY(&(obj)->svc_data_lock);  \
     rxi_Free((obj), sizeof(struct rx_service)); \
 } while (0)
-#define	rxi_AllocPeer()		(struct rx_peer *) rxi_Alloc(sizeof(struct rx_peer))
+#define	rxi_AllocPeer()		rxi_Alloc(sizeof(struct rx_peer))
 #define	rxi_FreePeer(peer)	rxi_Free(peer, sizeof(struct rx_peer))
-#define	rxi_AllocConnection()	(struct rx_connection *) rxi_Alloc(sizeof(struct rx_connection))
+#define	rxi_AllocConnection()	rxi_Alloc(sizeof(struct rx_connection))
 #define rxi_FreeConnection(conn) (rxi_Free(conn, sizeof(struct rx_connection)))
 
 EXT afs_int32 rx_stats_active GLOBALSINIT(1);	/* boolean - rx statistics gathering */
