@@ -930,19 +930,22 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	if (tcp) {
 	    hostp = tcp->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
-	    RX_AFS_GUNLOCK();
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
 	    retryonce:
+		RX_AFS_GUNLOCK();
 		code =
 		    RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
 					   &cbParm, &volSync);
+		RX_AFS_GLOCK();
 		if (code == RXGEN_OPCODE) {
 		    tcp->srvr->server->flags |= SNO_INLINEBULK;
 		    inlinebulk = 0;
+		    RX_AFS_GUNLOCK();
 		    code =
 			RXAFS_BulkStatus(tcp->id, &fidParm, &statParm,
 					 &cbParm, &volSync);
+		    RX_AFS_GLOCK();
 		} else {
 		    inlinebulk = 1;
 		    if (!code && ((&statsp[0])->errorCode)) {
@@ -960,11 +963,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		}
 	    } else {
 		inlinebulk = 0;
+		RX_AFS_GUNLOCK();
 		code =
 		    RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
 				     &volSync);
+		RX_AFS_GLOCK();
 	    }
-	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
