@@ -445,12 +445,12 @@ CommandProc(struct cmd_syndesc *as, void *arock)
      * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
      * Heimdal.
      */
-#if defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
-    krb5_allow_weak_crypto(k5context, 1);
-#elif defined(HAVE_KRB5_ENCTYPE_ENABLE)
+#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
     i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
     if (i)
         krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
+#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+    krb5_allow_weak_crypto(k5context, 1);
 #endif
 
     /* Parse remaining arguments. */
