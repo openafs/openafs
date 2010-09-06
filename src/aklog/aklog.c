@@ -1501,12 +1501,12 @@ main(int argc, char *argv[])
      * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
      * Heimdal.
      */
-#if defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
-    krb5_allow_weak_crypto(context, 1);
-#elif defined(HAVE_KRB5_ENCTYPE_ENABLE)
+#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
     i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
     if (i)
         krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
+#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+    krb5_allow_weak_crypto(context, 1);
 #endif
 
     /* Initialize list of cells to which we have authenticated */
