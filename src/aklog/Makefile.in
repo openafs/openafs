@@ -4,7 +4,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -12,13 +12,12 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 XCFLAGS=@XCFLAGS@ @KRB5_CPPFLAGS@ -DALLOW_REGISTER
-AKLIBS = ${LIBS} @KRB5_LDFLAGS@ @KRB5_LIBS@
-AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
-	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/librxkad.a \
-	  ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
-	  ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/liblwp.a \
-	  ${TOP_LIBDIR}/libafshcrypto_lwp.a ${TOP_LIBDIR}/libcom_err.a \
-	  ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a
+AKLIBS= ${LIBS} @KRB5_LDFLAGS@ @KRB5_LIBS@
+AFSLIBS= ${TOP_LIBDIR}/libafsauthent.a \
+         ${TOP_LIBDIR}/libafsrpc.a \
+	 ${TOP_LIBDIR}/libafshcrypto.a \
+	 ${TOP_LIBDIR}/libcmd.a \
+         ${TOP_LIBDIR}/util.a
 
 SRCS=	aklog.c krb_util.c linked_list.c
 OBJS=   aklog.o krb_util.o linked_list.o
@@ -26,14 +25,14 @@ OBJS=   aklog.o krb_util.o linked_list.o
 all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
-	$(AFS_LDRULE) ${OBJS} ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${XLIBS}
+	$(AFS_LDRULE) ${OBJS} ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
 
 asetkey: asetkey.o ${AFSLIBS}
-	$(AFS_LDRULE) asetkey.o ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${XLIBS}
+	$(AFS_LDRULE) asetkey.o ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
 
 klog:	klog.o skipwrap.o ${AFSLIBS}
 	$(AFS_LDRULE) klog.o skipwrap.o \
-		${AKLIBS} ${AFSLIBS} $(LIB_roken) ${XLIBS}
+		${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
 
 #
 # Installation targets
