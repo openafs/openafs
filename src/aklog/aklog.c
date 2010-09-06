@@ -1985,8 +1985,8 @@ get_credv5_akimpersonate(krb5_context context,
 
         if(buf_len != buf_size) {
             afs_com_err(progname, code,
-		    "%d != %d while encoding ticket (internal ASN.1 encoder error",
-		    buf_len, buf_size);
+		    "%u != %u while encoding ticket (internal ASN.1 encoder error",
+		    (unsigned int)buf_len, (unsigned int)buf_size);
             goto cleanup;
         }
         what = "krb5_crypto_init";
