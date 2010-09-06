@@ -140,8 +140,8 @@ main(int argc, char *argv[])
 	    key->contents
 #endif
 	    if (deref_key_length(key) != 8) {
-		fprintf(stderr, "Key length should be 8, but is really %d!\n",
-			deref_key_length(key));
+		fprintf(stderr, "Key length should be 8, but is really %u!\n",
+			(unsigned int)deref_key_length(key));
 		exit(1);
 	    }
 	    code = afsconf_AddKey(tdir, kvno, (char *) deref_key_contents(key), 1);
