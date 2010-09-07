@@ -444,4 +444,9 @@ extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
 #define NO_REPARSETAG 0x0004
 #define NO_SUBSTREAMS 0x0002
 #define NO_EAS        0x0001
+
+extern afs_uint32 smb_GetLogonSID(HANDLE hToken, PSID *ppsid);
+extern afs_uint32 smb_GetUserSID(HANDLE hToken, PSID *ppsid);
+extern void smb_FreeSID (PSID psid);
+
 #endif /*  __SMB3_H_ENV__ */

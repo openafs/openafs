@@ -11,6 +11,7 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#include <sddl.h>
 #include <rpc.h>
 #include <malloc.h>
 
@@ -36,6 +37,7 @@
 extern void afsi_log(char *pattern, ...);
 
 typedef struct tokenEvent {
+    clientchar_t *SidString;
     afs_uuid_t uuid;
     char sessionKey[8];
     struct tokenEvent *next;
@@ -52,9 +54,11 @@ EVENT_HANDLE rpc_ShutdownEvent = NULL;
  */
 void cm_RegisterNewTokenEvent(
 	afs_uuid_t uuid,
-	char sessionKey[8])
+	char sessionKey[8],
+        clientchar_t *SidString)
 {
     tokenEvent_t *te = malloc(sizeof(tokenEvent_t));
+    te->SidString = SidString;
     te->uuid = uuid;
     memcpy(te->sessionKey, sessionKey, sizeof(te->sessionKey));
     lock_ObtainMutex(&tokenEventLock);
@@ -69,7 +73,7 @@ void cm_RegisterNewTokenEvent(
  *
  * Return TRUE if found, FALSE if not found
  */
-BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8])
+BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8], clientchar_t **SidString)
 {
     RPC_STATUS status;
     tokenEvent_t *te;
@@ -84,6 +88,10 @@ BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8])
             lock_ReleaseMutex(&tokenEventLock);
             memcpy(sessionKey, te->sessionKey,
                     sizeof(te->sessionKey));
+            if (SidString)
+                *SidString = te->SidString;
+            else
+                LocalFree(te->SidString);
             free(te);
             return TRUE;
         }
@@ -102,7 +110,40 @@ long AFSRPC_SetToken(
 	afs_uuid_t uuid,
 	unsigned char __RPC_FAR sessionKey[8])
 {
-    cm_RegisterNewTokenEvent(uuid, sessionKey);
+    clientchar_t      *secSidString = 0;
+
+    if (RpcImpersonateClient(0) == RPC_S_OK) {
+        HANDLE       hToken = 0;
+        PSID         pSid = 0;
+        DWORD gle = 0;
+        DWORD retlen;
+        TOKEN_STATISTICS tokenStats;
+
+        if (!OpenThreadToken( GetCurrentThread(), TOKEN_READ, FALSE, &hToken)) {
+            gle = GetLastError();
+            goto done;
+        }
+
+        if (!GetTokenInformation( hToken, TokenStatistics, &tokenStats, sizeof(tokenStats), &retlen)) {
+            gle = GetLastError();
+            goto done;
+        }
+
+        if (!smb_GetUserSID( hToken, &pSid))
+            goto done;
+
+        if (!ConvertSidToStringSidW(pSid, &secSidString))
+            goto done;
+
+      done:
+        if (hToken)
+            CloseHandle( hToken);
+
+        RpcRevertToSelf();
+    }
+
+    cm_RegisterNewTokenEvent(uuid, sessionKey, secSidString);
+
     return 0;
 }
 
@@ -112,7 +153,7 @@ long AFSRPC_GetToken(
 {
     BOOL found;
 
-    found = cm_FindTokenEvent(uuid, sessionKey);
+    found = cm_FindTokenEvent(uuid, sessionKey, NULL);
     if (!found)
         return 1;
 

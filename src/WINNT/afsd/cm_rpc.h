@@ -12,8 +12,8 @@
 
 #include "afsrpc.h"
 
-void cm_RegisterNewTokenEvent(afs_uuid_t uuid, char sessionKey[8]);
-BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8]);
+void cm_RegisterNewTokenEvent(afs_uuid_t uuid, char sessionKey[8], clientchar_t *);
+BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8], clientchar_t **);
 
 extern long RpcInit(void);
 extern void RpcShutdown(void);

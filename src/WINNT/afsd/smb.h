@@ -306,6 +306,12 @@ typedef struct smb_username {
 
 #define SMB_USERNAMEFLAG_LOGOFF     2
 
+/*
+ * The SMB_USERNAMEFLAG_SID flag indicates that the name is not a username
+ * but a SID string.
+ */
+#define SMB_USERNAMEFLAG_SID        4
+
 #define SMB_MAX_USERNAME_LENGTH 256
 
 /* one per tree-connect */
@@ -607,6 +613,8 @@ extern afs_int32 smb_userIsLocalSystem(smb_user_t *userp);
 extern smb_username_t *smb_FindUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
 
 extern cm_user_t *smb_FindCMUserByName(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
+
+extern cm_user_t *smb_FindCMUserBySID(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags);
 
 extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, clientchar_t *usern);
 
