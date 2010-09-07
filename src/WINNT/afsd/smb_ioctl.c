@@ -11,6 +11,7 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#include <sddl.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -219,7 +220,18 @@ smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     if (uidp) {
         isSystem = smb_userIsLocalSystem(uidp);
         userp = smb_GetUserFromUID(uidp);
+        if (uidp->unp) {
+            osi_Log3(afsd_logp, "smb_IoctlRead uid %d user %x name %s",
+                      uidp->userID, userp,
+                      osi_LogSaveClientString(afsd_logp, uidp->unp->name));
+        } else {
+            osi_Log2(afsd_logp, "smb_IoctlRead uid %d user %x no name",
+                      uidp->userID, userp);
+        }
         smb_ReleaseUID(uidp);
+    } else {
+        osi_Log1(afsd_logp, "smb_IoctlRead no uid user %x no name", userp);
+        return CM_ERROR_BADSMB;
     }
 
     if (!userp) {
@@ -375,28 +387,36 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     char *op;
     cm_user_t *userp;
     smb_user_t *uidp;
+    int isSystem = 0;
 
     iop = fidp->ioctlp;
     count = smb_GetSMBParm(inp, 5);
-	
+
+    /* Get the user and determine if it is the local machine account */
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-    if (!uidp)
-        return CM_ERROR_BADSMB;
-    userp = smb_GetUserFromUID(uidp);
-    osi_assertx(userp != NULL, "null cm_user_t");
-    iop->uidp = uidp;
-    if (uidp && uidp->unp) {
-        osi_Log3(afsd_logp, "Ioctl uid %d user %x name %S",
-                  uidp->userID, userp,
-                  osi_LogSaveClientString(afsd_logp, uidp->unp->name));
-    } else {
-        if (uidp)
-	    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
-                     uidp->userID, userp);
-        else
-	    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
-		     userp);
+    if (uidp) {
+        isSystem = smb_userIsLocalSystem(uidp);
+        userp = smb_GetUserFromUID(uidp);
+        if (uidp->unp) {
+            osi_Log3(afsd_logp, "smb_IoctlV3Read uid %d user %x name %s",
+                      uidp->userID, userp,
+                      osi_LogSaveClientString(afsd_logp, uidp->unp->name));
+        } else {
+            osi_Log2(afsd_logp, "smb_IoctlV3Read uid %d user %x no name",
+                      uidp->userID, userp);
+        }
+     } else {
+         osi_Log0(afsd_logp, "smb_IoctlV3Read no uid");
+         return CM_ERROR_BADSMB;
+     }
+
+    if (!userp) {
+        userp = cm_rootUserp;
+        cm_HoldUser(userp);
     }
+
+    iop->uidp = uidp;
+
 
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
     if (code) {
@@ -406,7 +426,7 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
         return CM_ERROR_NOSUCHPATH;
     }
 
-    code = smb_IoctlPrepareRead(fidp, iop, userp, 0);
+    code = smb_IoctlPrepareRead(fidp, iop, userp, isSystem ? AFSCALL_FLAG_LOCAL_SYSTEM : 0);
     if (uidp) {
         iop->uidp = 0;
         smb_ReleaseUID(uidp);
@@ -473,26 +493,32 @@ smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     afs_int32 code;
     cm_user_t *userp;
     smb_user_t *uidp;
+    int isSystem = 0;
 
     iop = fidp->ioctlp;
 
-    userp = smb_GetUserFromVCP(vcp, inp);
-
-    /* Log the user */
+    /* Get the user and determine if it is the local machine account */
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-    if (uidp && uidp->unp) {
-        osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-                 uidp->userID, userp,
-                 osi_LogSaveClientString(afsd_logp, uidp->unp->name));
-    } else if (uidp) {
-        osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
-                 uidp->userID, userp);
-    } else {
-        osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
-                  userp);
-    }
-    if (uidp) 
+    if (uidp) {
+        isSystem = smb_userIsLocalSystem(uidp);
+        userp = smb_GetUserFromUID(uidp);
+        if (uidp->unp) {
+            osi_Log3(afsd_logp, "smb_IoctlRawRead uid %d user %x name %s",
+                      uidp->userID, userp,
+                      osi_LogSaveClientString(afsd_logp, uidp->unp->name));
+        } else {
+            osi_Log2(afsd_logp, "smb_IoctlRawRead uid %d user %x no name",
+                      uidp->userID, userp);
+        }
         smb_ReleaseUID(uidp);
+    } else {
+        osi_Log0(afsd_logp, "smb_IoctlRawRead no uid");
+    }
+
+    if (!userp) {
+        userp = cm_rootUserp;
+        cm_HoldUser(userp);
+    }
 
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
     if (code) {
@@ -500,7 +526,7 @@ smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
         goto done;
     }
 
-    code = smb_IoctlPrepareRead(fidp, iop, userp, 0);
+    code = smb_IoctlPrepareRead(fidp, iop, userp, isSystem ? AFSCALL_FLAG_LOCAL_SYSTEM : 0);
     if (code) {
         goto done;
     }
@@ -974,6 +1000,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     clientchar_t *uname = NULL;
     clientchar_t *smbname = NULL;
     clientchar_t *wdir = NULL;
+    clientchar_t *rpc_sid = NULL;
     afs_int32 code = 0;
 
     saveDataPtr = ioctlp->ioctl.inDatap;
@@ -1035,21 +1062,28 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
             smbname = cm_ParseIoctlStringAlloc(&ioctlp->ioctl, tp);
-            osi_Log2(smb_logp,"cm_IoctlSetToken for user [%S] smbname [%S]",
+            osi_Log2(smb_logp,"smb_IoctlSetToken for user [%S] smbname [%S]",
                      osi_LogSaveClientString(smb_logp,uname),
                      osi_LogSaveClientString(smb_logp,smbname));
             fprintf(stderr, "SMB name = %S\n", smbname);
             tp += strlen(tp) + 1;
         } else {
-            osi_Log1(smb_logp,"cm_IoctlSetToken for user [%S]",
+            osi_Log1(smb_logp,"smb_IoctlSetToken for user [%S]",
                      osi_LogSaveClientString(smb_logp, uname));
         }
 
         /* uuid */
         memcpy(&uuid, tp, sizeof(uuid));
-        if (!cm_FindTokenEvent(uuid, sessionKey)) {
+        if (!cm_FindTokenEvent(uuid, sessionKey, &rpc_sid)) {
             code = CM_ERROR_INVAL;
             goto done;
+        }
+
+        if (!(pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && rpc_sid) {
+            osi_Log1(smb_logp,"smb_IoctlSetToken Rpc Sid [%S]",
+                     osi_LogSaveClientString(smb_logp, rpc_sid));
+            if (!cm_ClientStrCmp(NTSID_LOCAL_SYSTEM, rpc_sid))
+                pflags |= AFSCALL_FLAG_LOCAL_SYSTEM;
         }
 
         if (!(pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
@@ -1058,19 +1092,83 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         }
     } else {
         cellp = cm_data.rootCellp;
-        osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
+        osi_Log0(smb_logp,"smb_IoctlSetToken - no name specified");
     }
 
     if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
-        userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname,
-				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
-	release_userp = 1;
+        PSID pSid = NULL;
+        DWORD dwSize1 = 0, dwSize2 = 0;
+        wchar_t *pszRefDomain = NULL;
+        SID_NAME_USE snu = SidTypeGroup;
+        clientchar_t * secSidString = NULL;
+        DWORD gle;
+
+        /*
+         * The specified smbname is may not be a SID for the user.
+         * See if we can obtain the SID for the specified name.
+         * If we can, use that instead of the name provided.
+         */
+
+        LookupAccountNameW( NULL /* System Name to begin Search */,
+                            smbname,
+                            NULL, &dwSize1,
+                            NULL, &dwSize2,
+                            &snu);
+        gle = GetLastError();
+        if (gle == ERROR_INSUFFICIENT_BUFFER) {
+            pSid = LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, dwSize1);
+            /*
+             * Although dwSize2 is supposed to include the terminating
+             * NUL character, on Win7 it does not.
+             */
+            pszRefDomain = malloc((dwSize2 + 1) * sizeof(wchar_t));
+        }
+
+        if ( pSid && pszRefDomain ) {
+            if (LookupAccountNameW( NULL /* System Name to begin Search */,
+                                    smbname,
+                                    pSid, &dwSize1,
+                                    pszRefDomain, &dwSize2,
+                                    &snu))
+                ConvertSidToStringSidW(pSid, &secSidString);
+        }
+
+        if (secSidString) {
+            userp = smb_FindCMUserBySID( secSidString, ioctlp->fidp->vcp->rname,
+                                         SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
+            LocalFree(secSidString);
+        } else {
+            /* Free the SID so we can reuse the variable */
+            if (pSid) {
+                LocalFree(pSid);
+                pSid = NULL;
+            }
+
+            /*
+             * If the SID for the name could not be found,
+             * perhaps it already is a SID
+             */
+            if (!ConvertStringSidToSidW( smbname, &pSid)) {
+                userp = smb_FindCMUserBySID( smbname, ioctlp->fidp->vcp->rname,
+                                             SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
+            } else {
+                userp = smb_FindCMUserByName( smbname, ioctlp->fidp->vcp->rname,
+                                              SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
+            }
+        }
+
+        if (pSid)
+            LocalFree(pSid);
+        if (pszRefDomain)
+            free(pszRefDomain);
+
+        release_userp = 1;
     }
 
     /* store the token */
     lock_ObtainMutex(&userp->mx);
     ucellp = cm_GetUCell(userp, cellp);
-    osi_Log1(smb_logp,"cm_IoctlSetToken ucellp %lx", ucellp);
+    osi_Log1(smb_logp,"smb_IoctlSetToken ucellp %lx", ucellp);
     ucellp->ticketLen = ticketLen;
     if (ucellp->ticketp)
         free(ucellp->ticketp);	/* Discard old token if any */
@@ -1944,7 +2042,7 @@ smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 }
 
 /* 
- * VIOC_GETOWNER
+ * VIOC_SETGROUP
  * 
  * This pioctl requires the use of the cm_ioctlQueryOptions_t structure.
  *

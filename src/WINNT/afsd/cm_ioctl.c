@@ -2718,7 +2718,7 @@ cm_IoctlGetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     lock_ReleaseMutex(&userp->mx);
 
-    cm_RegisterNewTokenEvent(uuid, ucellp->sessionKey.data);
+    cm_RegisterNewTokenEvent(uuid, ucellp->sessionKey.data, NULL);
 
     return 0;
 }

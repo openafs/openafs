@@ -16,6 +16,7 @@
 #include <ntstatus.h>
 #define SECURITY_WIN32
 #include <security.h>
+#include <sddl.h>
 #include <lmaccess.h>
 #pragma warning(pop)
 #include <stdlib.h>
@@ -263,6 +264,149 @@ void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength) {
     return;
 }
 
+afs_uint32
+smb_GetLogonSID(HANDLE hToken, PSID *ppsid)
+{
+    BOOL bSuccess = FALSE;
+    DWORD dwIndex;
+    DWORD dwLength = 0;
+    PTOKEN_GROUPS ptg = NULL;
+
+    // Verify the parameter passed in is not NULL.
+    if (NULL == ppsid)
+        goto Cleanup;
+
+    // Get required buffer size and allocate the TOKEN_GROUPS buffer.
+
+    if (!GetTokenInformation( hToken,         // handle to the access token
+                              TokenGroups,    // get information about the token's groups
+                              (LPVOID) ptg,   // pointer to TOKEN_GROUPS buffer
+                              0,              // size of buffer
+                              &dwLength       // receives required buffer size
+                              ))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            goto Cleanup;
+
+        ptg = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(),
+                                        HEAP_ZERO_MEMORY, dwLength);
+
+        if (ptg == NULL)
+            goto Cleanup;
+    }
+
+    // Get the token group information from the access token.
+
+    if (!GetTokenInformation( hToken,         // handle to the access token
+                              TokenGroups,    // get information about the token's groups
+                              (LPVOID) ptg,   // pointer to TOKEN_GROUPS buffer
+                              dwLength,       // size of buffer
+                              &dwLength       // receives required buffer size
+                              ))
+    {
+        goto Cleanup;
+    }
+
+    // Loop through the groups to find the logon SID.
+    for (dwIndex = 0; dwIndex < ptg->GroupCount; dwIndex++) {
+        if ((ptg->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID) ==  SE_GROUP_LOGON_ID)
+        {
+            // Found the logon SID; make a copy of it.
+
+            dwLength = GetLengthSid(ptg->Groups[dwIndex].Sid);
+            *ppsid = (PSID) HeapAlloc(GetProcessHeap(),
+                                       HEAP_ZERO_MEMORY, dwLength);
+            if (*ppsid == NULL)
+                goto Cleanup;
+            if (!CopySid(dwLength, *ppsid, ptg->Groups[dwIndex].Sid))
+            {
+                HeapFree(GetProcessHeap(), 0, (LPVOID)*ppsid);
+                goto Cleanup;
+            }
+            bSuccess = TRUE;
+            break;
+        }
+    }
+
+  Cleanup:
+
+    // Free the buffer for the token groups.
+    if (ptg != NULL)
+        HeapFree(GetProcessHeap(), 0, (LPVOID)ptg);
+
+    return bSuccess;
+}
+
+afs_uint32
+smb_GetUserSID(HANDLE hToken, PSID *ppsid)
+{
+    BOOL bSuccess = FALSE;
+    DWORD dwLength = 0;
+    PTOKEN_USER ptu = NULL;
+
+    // Verify the parameter passed in is not NULL.
+    if (NULL == ppsid)
+        goto Cleanup;
+
+    // Get required buffer size and allocate the TOKEN_USER buffer.
+
+    if (!GetTokenInformation( hToken,         // handle to the access token
+                              TokenUser,      // get information about the token's user
+                              (LPVOID) ptu,   // pointer to TOKEN_USER buffer
+                              0,              // size of buffer
+                              &dwLength       // receives required buffer size
+                              ))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            goto Cleanup;
+
+        ptu = (PTOKEN_USER)HeapAlloc(GetProcessHeap(),
+                                        HEAP_ZERO_MEMORY, dwLength);
+
+        if (ptu == NULL)
+            goto Cleanup;
+    }
+
+    // Get the token group information from the access token.
+
+    if (!GetTokenInformation( hToken,         // handle to the access token
+                              TokenUser,      // get information about the token's user
+                              (LPVOID) ptu,   // pointer to TOKEN_USER buffer
+                              dwLength,       // size of buffer
+                              &dwLength       // receives required buffer size
+                              ))
+    {
+        goto Cleanup;
+    }
+
+    // Found the user SID; make a copy of it.
+    dwLength = GetLengthSid(ptu->User.Sid);
+    *ppsid = (PSID) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
+    if (*ppsid == NULL)
+        goto Cleanup;
+    if (!CopySid(dwLength, *ppsid, ptu->User.Sid))
+    {
+        HeapFree(GetProcessHeap(), 0, (LPVOID)*ppsid);
+        goto Cleanup;
+    }
+    bSuccess = TRUE;
+
+  Cleanup:
+
+    // Free the buffer for the token groups.
+    if (ptu != NULL)
+        HeapFree(GetProcessHeap(), 0, (LPVOID)ptu);
+
+    return bSuccess;
+}
+
+void
+smb_FreeSID (PSID psid)
+{
+    HeapFree(GetProcessHeap(), 0, (LPVOID)psid);
+}
+
+
 struct smb_ext_context {
     CredHandle creds;
     CtxtHandle ctx;
@@ -272,7 +416,8 @@ struct smb_ext_context {
 
 long smb_AuthenticateUserExt(smb_vc_t * vcp, clientchar_t * usern,
                              char * secBlobIn, int secBlobInLength,
-                             char ** secBlobOut, int * secBlobOutLength) {
+                             char ** secBlobOut, int * secBlobOutLength,
+                             wchar_t **secSidString) {
     SECURITY_STATUS status, istatus;
     CredHandle creds;
     TimeStamp expiry;
@@ -292,6 +437,7 @@ long smb_AuthenticateUserExt(smb_vc_t * vcp, clientchar_t * usern,
 
     *secBlobOut = NULL;
     *secBlobOutLength = 0;
+    *secSidString = NULL;
 
     if (vcp->flags & SMB_VCFLAG_AUTH_IN_PROGRESS) {
         secCtx = vcp->secCtx;
@@ -427,6 +573,7 @@ long smb_AuthenticateUserExt(smb_vc_t * vcp, clientchar_t * usern,
 
     if (status == SEC_E_OK || status == SEC_I_COMPLETE_NEEDED) {
         /* woo hoo! */
+        HANDLE hToken = 0;
         SecPkgContext_NamesW names;
 
         OutputDebugF(_C("Authentication completed"));
@@ -441,6 +588,21 @@ long smb_AuthenticateUserExt(smb_vc_t * vcp, clientchar_t * usern,
             /* Force the user to retry if the context is invalid */
             OutputDebugF(_C("QueryContextAttributes Names failed [%x]"), GetLastError());
             code = CM_ERROR_BADPASSWORD; 
+        }
+
+        /* Obtain the user's SID */
+        if (code == 0 && !QuerySecurityContextToken(((secCtx)?&ctx:NULL), &hToken)) {
+            PSID pSid = 0;
+            OutputDebugF(_C("Received hToken"));
+
+            if (smb_GetUserSID(hToken, &pSid))
+                ConvertSidToStringSidW(pSid, secSidString);
+
+            if (pSid)
+                smb_FreeSID(pSid);
+            CloseHandle(hToken);
+        } else {
+            OutputDebugF(_C("QueryContextToken failed [%x]"), GetLastError());
         }
     } else if (!code) {
         switch ( status ) {
@@ -679,8 +841,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     clientchar_t *s1 = _C(" ");
     long code = 0; 
     clientchar_t usern[SMB_MAX_USERNAME_LENGTH];
+    int usernIsSID = 0;
     char *secBlobOut = NULL;
     int  secBlobOutLength = 0;
+    wchar_t *secSidString = 0;
     int  maxBufferSize = 0;
     int  maxMpxCount = 0;
     int  vcNumber = 0;
@@ -729,7 +893,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             secBlobInLength = smb_GetSMBParm(inp, 7);
             secBlobIn = smb_GetSMBData(inp, NULL);
 
-            code = smb_AuthenticateUserExt(vcp, usern, secBlobIn, secBlobInLength, &secBlobOut, &secBlobOutLength);
+            code = smb_AuthenticateUserExt(vcp, usern, secBlobIn, secBlobInLength, &secBlobOut, &secBlobOutLength, &secSidString);
 
             if (code == CM_ERROR_GSSCONTINUE) {
                 size_t cb_data = 0;
@@ -875,7 +1039,18 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
        early to avoid accidently stealing someone else's tokens. */
 
     if (code) {
+        if (secSidString)
+            LocalFree(secSidString);
         return code;
+    }
+
+    /*
+     * If the SidString for the user could be obtained, use that
+     * for the user id
+     */
+    if (secSidString) {
+        cm_ClientStrCpy(usern, SMB_MAX_USERNAME_LENGTH, secSidString);
+        usernIsSID = 1;
     }
 
     OutputDebugF(_C("Received username=[%s]"), usern);
@@ -909,6 +1084,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
  	     */
  	    unp->flags &= ~SMB_USERNAMEFLAG_AFSLOGON;
  	}
+    if (usernIsSID)
+        unp->flags |= SMB_USERNAMEFLAG_SID;
  	lock_ReleaseMutex(&unp->mx);
 
         /* Create a new UID and cm_user_t structure */
@@ -986,6 +1163,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         }
     }
 
+    if (secSidString)
+        LocalFree(secSidString);
     return 0;
 }
 
@@ -9463,3 +9642,23 @@ cm_user_t *smb_FindCMUserByName(clientchar_t *usern, clientchar_t *machine, afs_
     return userp;
 }
 
+cm_user_t *smb_FindCMUserBySID(clientchar_t *usern, clientchar_t *machine, afs_uint32 flags)
+{
+    smb_username_t *unp;
+    cm_user_t *     userp;
+
+    unp = smb_FindUserByName(usern, machine, flags);
+    if (!unp->userp) {
+        lock_ObtainMutex(&unp->mx);
+        unp->flags |= SMB_USERNAMEFLAG_SID;
+        unp->userp = cm_NewUser();
+        lock_ReleaseMutex(&unp->mx);
+        osi_Log2(smb_logp,"smb_FindCMUserBySID New user name[%S] machine[%S]",osi_LogSaveClientString(smb_logp,usern),osi_LogSaveClientString(smb_logp,machine));
+    }  else	{
+        osi_Log2(smb_logp,"smb_FindCMUserBySID Found name[%S] machine[%S]",osi_LogSaveClientString(smb_logp,usern),osi_LogSaveClientString(smb_logp,machine));
+    }
+    userp = unp->userp;
+    cm_HoldUser(userp);
+    smb_ReleaseUsername(unp);
+    return userp;
+}

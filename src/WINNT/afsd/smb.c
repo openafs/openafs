@@ -1241,12 +1241,15 @@ afs_int32 smb_userIsLocalSystem(smb_user_t *uidp)
     DWORD gle;
     afs_int32 isSystem = 0;
 
+    if (uidp->unp->flags & SMB_USERNAMEFLAG_SID) {
+        isSystem = !cm_ClientStrCmp(NTSID_LOCAL_SYSTEM, uidp->unp->name);
+        return isSystem;
+    }
+
     /*
-     * The input name is probably not a SID for the user which is how
-     * the user is now being identified as a result of the SMB
-     * extended authentication.  See if we can obtain the SID for the
-     * specified name.  If we can, use that instead of the name
-     * provided.
+     * The input name is not a SID for the user.  See if we can
+     * obtain the SID for the specified name.  If we can, use
+     * that instead of the name provided for the comparison.
      */
 
     LookupAccountNameW( NULL /* System Name to begin Search */,
