@@ -593,7 +593,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     if (!code)
 	code = rename(pbuffer, tbuffer);
     if (!code) {
-	(*ubik_dbase->open) (ubik_dbase, 0);
+	(*ubik_dbase->open) (ubik_dbase, file);
 #endif
 	code = (*ubik_dbase->setlabel) (dbase, file, avers);
 #ifndef OLD_URECOVERY

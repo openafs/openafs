@@ -694,7 +694,7 @@ urecovery_Interact(void *dummy)
 		if (!code)
 		    code = rename(pbuffer, tbuffer);
 		if (!code) {
-		    (*ubik_dbase->open) (ubik_dbase, 0);
+		    (*ubik_dbase->open) (ubik_dbase, file);
 #endif
 		    /* after data is good, sync disk with correct label */
 		    code =
