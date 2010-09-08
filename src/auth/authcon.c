@@ -29,6 +29,7 @@
 #include <rx/rx.h>
 #include "cellconfig.h"
 #include "keys.h"
+#include "ktc.h"
 #include "auth.h"
 
 /* return a null security object if nothing else can be done */
@@ -181,7 +182,7 @@ afsconf_ClientAuthToken(struct afsconf_cell *info,
 			afs_int32 *scIndex,
 			time_t *expires)
 {
-    struct ktc_principal sname;
+    struct ktc_setTokenData *tokenSet = NULL;
     struct ktc_token ttoken;
     int encryptLevel;
     afs_int32 code;
@@ -189,11 +190,11 @@ afsconf_ClientAuthToken(struct afsconf_cell *info,
     *sc = NULL;
     *scIndex = RX_SECIDX_NULL;
 
-    strcpy(sname.cell, info->name);
-    sname.instance[0] = 0;
-    strcpy(sname.name, "afs");
-    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+    code = ktc_GetTokenEx(info->name, &tokenSet);
+    if (code)
+	goto out;
 
+    code = token_extractRxkad(tokenSet, &ttoken, NULL, NULL);
     if (code == 0) {
 	/* XXX - We should think about how to handle this */
 	if (ttoken.kvno < 0 || ttoken.kvno > 256) {
@@ -214,6 +215,10 @@ afsconf_ClientAuthToken(struct afsconf_cell *info,
 	if (expires)
 	    *expires = ttoken.endTime;
     }
+
+out:
+    token_FreeSet(&tokenSet);
+
     if (*sc == NULL)
 	return AFSCONF_NO_SECURITY_CLASS;
 
