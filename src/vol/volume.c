@@ -7742,8 +7742,8 @@ FreeVolumeHeader(Volume * vp)
 int
 VSetVolHashSize(int logsize)
 {
-    /* 64 to 16384 hash buckets seems like a reasonable range */
-    if ((logsize < 6 ) || (logsize > 14)) {
+    /* 64 to 268435456 hash buckets seems like a reasonable range */
+    if ((logsize < 6 ) || (logsize > 28)) {
         return -1;
     }
 
