@@ -12,14 +12,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-
-  LIBSA = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a
-AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
-	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
-	  ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libaudit.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a \
-	  ${TOP_LIBDIR}/util.a
-
 LDFLAGS = ${SHLIB_LDFLAGS}
    LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
 	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
