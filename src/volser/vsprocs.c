@@ -3478,6 +3478,72 @@ SimulateForwardMultiple(struct rx_connection *fromconn, afs_int32 fromtid,
     return 0;
 }
 
+/**
+ * Check if a trans has timed out, and recreate it if necessary.
+ *
+ * @param[in] aconn  RX connection to the relevant server
+ * @param[inout] atid  Transaction ID to check; if we recreated the trans,
+ *                     contains the new trans ID on success
+ * @param[in] apart  Partition for the transaction
+ * @param[in] astat  The status of the original transaction
+ *
+ * @return operation status
+ *  @retval 0 existing transaction is still valid, or we managed to recreate
+ *            the trans successfully
+ *  @retval nonzero Fatal error; bail out
+ */
+static int
+CheckTrans(struct rx_connection *aconn, afs_int32 *atid, afs_int32 apart,
+           struct volser_status *astat)
+{
+    struct volser_status new_status;
+    afs_int32 code;
+
+    memset(&new_status, 0, sizeof(new_status));
+    code = AFSVolGetStatus(aconn, *atid, &new_status);
+    if (code) {
+	if (code == ENOENT) {
+	    *atid = 0;
+	    VPRINT1("Old transaction on cloned volume %lu timed out, "
+	            "restarting transaction\n", (long unsigned) astat->volID);
+	    code = AFSVolTransCreate_retry(aconn, astat->volID, apart,
+	                                   ITBusy, atid);
+	    if (code) {
+		PrintError("Failed to recreate cloned RO volume transaction\n",
+		           code);
+		return 1;
+	    }
+
+	    memset(&new_status, 0, sizeof(new_status));
+	    code = AFSVolGetStatus(aconn, *atid, &new_status);
+	    if (code) {
+		PrintError("Failed to get status on recreated transaction\n",
+		           code);
+		return 1;
+	    }
+
+	    if (memcmp(&new_status, astat, sizeof(new_status)) != 0) {
+		PrintError("Recreated transaction on cloned RO volume, but "
+		           "the volume has changed!\n", 0);
+		return 1;
+	    }
+	} else {
+	    PrintError("Unable to get status of current cloned RO transaction\n",
+	               code);
+	    return 1;
+	}
+    } else {
+	if (memcmp(&new_status, astat, sizeof(new_status)) != 0) {
+	    /* sanity check */
+	    PrintError("Internal error: current GetStatus does not match "
+	               "original GetStatus?\n", 0);
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
 
 /* UV_ReleaseVolume()
  *    Release volume <afromvol> on <afromserver> <afrompart> to all
@@ -3531,6 +3597,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     struct volser_status volstatus;
     char hoststr[16];
     afs_int32 origflags[NMAXNSERVERS];
+    struct volser_status orig_status;
 
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
@@ -3836,6 +3903,10 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     VPRINT1("Starting transaction on cloned volume %u...", cloneVolId);
     code =
 	AFSVolTransCreate_retry(fromconn, cloneVolId, afrompart, ITBusy, &fromtid);
+    if (!code) {
+	memset(&orig_status, 0, sizeof(orig_status));
+	code = AFSVolGetStatus(fromconn, fromtid, &orig_status);
+    }
     if (!fullrelease && code)
 	ONERROR(VOLSERNOVOL, afromvol,
 		"Old clone is inaccessible. Try vos release -f %u.\n");
@@ -3931,6 +4002,12 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	}
 	if (!volcount)
 	    continue;
+
+	code = CheckTrans(fromconn, &fromtid, afrompart, &orig_status);
+	if (code) {
+	    code = ENOENT;
+	    goto rfail;
+	}
 
 	if (verbose) {
 	    fprintf(STDOUT, "Starting ForwardMulti from %lu to %u on %s",
