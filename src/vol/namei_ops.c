@@ -416,7 +416,7 @@ namei_RemoveDataDirectories(namei_t * name)
     char pbuf[MAXPATHLEN], *path = pbuf;
     int prefixlen = strlen(name->n_base), err = 0;
     int vollen = strlen(name->n_voldir1);
-    int code, code2;
+    int code;
 
     strlcpy(path, name->n_path, sizeof(pbuf));
 
@@ -426,16 +426,12 @@ namei_RemoveDataDirectories(namei_t * name)
     /* now delete all dirs upto path */
     code = delTree(pbuf, path, &err);
 
-    /* We deleted everything under /n_base/n_voldir1/n_voldir2 if we could,
-     * but now try to rmdir /n_base/n_voldir1 if we can. delTree modified
-     * pbuf, so just reconstruct /n_base/n_voldir1 from scratch oureslves. */
-    afs_snprintf(pbuf, sizeof(pbuf)-1, "%s/%s", name->n_base, name->n_voldir1);
-    pbuf[sizeof(pbuf)-1] = '\0';
-
-    code2 = rmdir(pbuf);
-    if (!code) {
-	code = code2;
-    }
+    /* We've now deleted everything under /n_base/n_voldir1/n_voldir2 that
+     * we could. Do not delete /n_base/n_voldir1, since doing such might
+     * interrupt another thread trying to create a volume. We could introduce
+     * some locking to make this safe (or only remove it for whole-partition
+     * salvages), but by not deleting it we only leave behind a maximum of
+     * 256 empty directories. So at least for now, don't bother. */
 
     return code;
 }
