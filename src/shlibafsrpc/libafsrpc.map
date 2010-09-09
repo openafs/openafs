@@ -128,6 +128,7 @@
 	rx_SetMaxSendWindow;
 	rx_GetMinPeerTimeout;
 	rx_SetMinPeerTimeout;
+	afs_xdr_alloc;
 	afs_xdr_array;
 	afs_xdr_bytes;
 	afs_xdr_char;
@@ -140,6 +141,15 @@
 	afs_xdr_vector;
 	afs_xdrmem_create;
 	xdrlen_create;
+	rxi_GetCallNumberVector;
+	rxi_SetCallNumberVector;
+	rxi_RoundUpPacket;
+	rx_SlowReadPacket;
+	rx_SlowWritePacket;
+	rxi_Alloc;
+	rxi_AllocDataBuf;
+	rx_MyMaxSendSize;
+	rxi_Free;
     local:
 	*;
 };
