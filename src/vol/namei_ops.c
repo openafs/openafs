@@ -595,6 +595,7 @@ namei_RemoveDataDirectories(namei_t * name)
     int code = 0;
     char *path;
     int prefixlen = strlen(name->n_base), err = 0;
+    int vollen = strlen(name->n_voldir1);
     char pbuf[MAXPATHLEN];
 
     path = pbuf;
