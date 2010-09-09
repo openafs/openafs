@@ -91,8 +91,8 @@ checks done by the L<fileserver(8)> and L<salvager(8)>.
 
 =item B<-file> <I<dump file>>
 
-Specifies the output file for the dump.  If this option is not given, the
-volume will be dumped to standard output.
+Specifies the volume dump file to be read and restored to the local filesystem.
+If this option is not given, the volume dump will be read from standard input.
 
 =item B<-dir> <I<restore dir>>
 
