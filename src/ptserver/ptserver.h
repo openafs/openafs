@@ -47,12 +47,12 @@ struct prheader {
 extern struct prheader cheader;
 
 #define set_header_word(tt,field,value) \
-  pr_Write ((tt), 0, (afs_int32)((char *)&(cheader.field) - (char *)&cheader),   \
+  pr_Write ((tt), 0, ((char *)&(cheader.field) - (char *)&cheader),   \
 	    ((cheader.field = (value)), (char *)&(cheader.field)),    \
 	    sizeof(afs_int32))
 
 #define inc_header_word(tt,field,inc) \
-  pr_Write ((tt), 0, (afs_int32)((char *)&(cheader.field) - (char *)&cheader), \
+  pr_Write ((tt), 0, ((char *)&(cheader.field) - (char *)&cheader), \
 	    ((cheader.field = (htonl(ntohl(cheader.field)+(inc)))),	    \
 	     (char *)&(cheader.field)),				    \
 	    sizeof(afs_int32))
