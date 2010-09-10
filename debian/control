@@ -188,7 +188,7 @@ Package: openafs-modules-dkms
 Section: kernel
 Priority: extra
 Architecture: all
-Depends: ${misc:Depends}, dkms, bison, flex
+Depends: ${misc:Depends}, dkms, bison, flex, libc6-dev
 Recommends: openafs-client (>= ${source:Version})
 Description: AFS distributed filesystem kernel module DKMS source
  AFS is a distributed filesystem allowing cross-platform sharing of

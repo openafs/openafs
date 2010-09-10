@@ -6,6 +6,9 @@ openafs (1.5.75-3) UNRELEASED; urgency=low
   * Use dpkg --print-architecture, not --print-installation-architecture,
     in the openafs-fileserver config script.  The latter is deprecated.
     Thanks, Peter Palfrader.  (Closes: #594488)
+  * Add a dependency on libc6-dev to openafs-modules-dkms.  dkms doesn't
+    depend on it because most kernel modules don't need it, but openafs
+    builds userspace helper programs.  Thanks, Peter Palfrader.
   * Run the DKMS build commands in a subshell to work around a DKMS bug
     that caused the module build logs to be discarded.  (LP: #593509)
   * Add a status command to the openafs-fileserver init script.
