@@ -3241,11 +3241,50 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 	goto fail;		/* server is down */
 
     volid = vldbEntryPtr->volumeId[ROVOL];
-    if (volid)
+    if (volid) {
 	code =
 	    AFSVolTransCreate_retry(*connPtr, volid,
 			      vldbEntryPtr->serverPartition[index], ITOffline,
 			      transPtr);
+
+	if (!code && (vldbEntryPtr->serverFlags[index] & RO_DONTUSE)) {
+	    /* If RO_DONTUSE is set, this is supposed to be an entirely new
+	     * site. Don't trust any data on it, since it is possible we
+	     * have encountered some temporary volume from some other
+	     * incomplete volume operation. It is difficult to detect if
+	     * that has happened vs if this is a legit volume, so just
+	     * delete it to be safe. */
+
+	    VPRINT1("Deleting extant RO_DONTUSE site on %s...",
+                    noresolve ? afs_inet_ntoa_r(vldbEntryPtr->
+                                                serverNumber[index], hoststr) :
+                    hostutil_GetNameByINet(vldbEntryPtr->
+					   serverNumber[index]));
+
+	    code = AFSVolDeleteVolume(*connPtr, *transPtr);
+	    if (code) {
+		PrintError("Failed to delete RO_DONTUSE site: ", code);
+		goto fail;
+	    }
+
+	    tcode = AFSVolEndTrans(*connPtr, *transPtr, &rcode);
+	    *transPtr = 0;
+	    if (!tcode) {
+		tcode = rcode;
+	    }
+	    if (tcode) {
+		PrintError("Failed to end transaction on RO_DONTUSE site: ",
+		           tcode);
+		goto fail;
+	    }
+
+	    VDONE;
+
+	    /* emulate what TransCreate would have returned, so we try to
+	     * create the volume below */
+	    code = VNOVOL;
+	}
+    }
 
     /* If the volume does not exist, create it */
     if (!volid || code) {
