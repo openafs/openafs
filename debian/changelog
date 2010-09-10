@@ -9,6 +9,9 @@ openafs (1.5.75-3) UNRELEASED; urgency=low
   * Add a dependency on libc6-dev to openafs-modules-dkms.  dkms doesn't
     depend on it because most kernel modules don't need it, but openafs
     builds userspace helper programs.  Thanks, Peter Palfrader.
+  * Fix the sample CellServDB entry printed by afs-newcell if the cell
+    isn't found in /etc/openafs/CellServDB to include the correct server
+    syntax.  Thanks, Peter Palfrader.
   * Run the DKMS build commands in a subshell to work around a DKMS bug
     that caused the module build logs to be discarded.  (LP: #593509)
   * Add a status command to the openafs-fileserver init script.

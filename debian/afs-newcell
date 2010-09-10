@@ -175,7 +175,7 @@ unless ($found) {
     print "The new cell $cell is not configured in /etc/openafs/CellServDB\n";
     print "Add configuration like:\n\n";
     print ">$cell\n";
-    print inet_ntoa($ip), "\n\n";
+    print inet_ntoa($ip), "\t\t\t#$server\n\n";
     print "to that file before continuing.\n";
     exit(1);
 }
