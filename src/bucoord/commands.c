@@ -1640,7 +1640,6 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 problemFindingDump;	/* can't find parent(s) */
 
     afs_int32 *portp = NULL;
-    afs_int32 portCount = 0;
     afs_int32 doAt, atTime;	/* Time a timed-dump is to start at */
     afs_int32 length;
     char *timeString;
@@ -1723,7 +1722,6 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 
 	/* get the port number, if one was specified */
 	if (as->parms[2].items) {
-	    portCount = 1;
 	    portp = (afs_int32 *) malloc(sizeof(afs_int32));
 	    if (!portp) {
 		afs_com_err(whoami, BC_NOMEM, NULL);

@@ -447,13 +447,11 @@ bc_ParseVolumeSet(void)
 
     udbClientTextP ctPtr;
     FILE *stream;
-    struct bc_config *configPtr;
 
     extern struct bc_config *bc_globalConfig;
 
     ctPtr = &bc_globalConfig->configText[TB_VOLUMESET];
     stream = ctPtr->textStream;
-    configPtr = bc_globalConfig;
 
     /*
      * Open up the volume set configuration file, fail if it can't be done.
@@ -601,13 +599,11 @@ bc_SaveVolumeSet(void)
 
     udbClientTextP ctPtr;
     FILE *stream;
-    struct bc_config *configPtr;
 
     extern struct bc_config *bc_globalConfig;
 
     ctPtr = &bc_globalConfig->configText[TB_VOLUMESET];
     stream = ctPtr->textStream;
-    configPtr = bc_globalConfig;
 
     /* must be locked */
     if (ctPtr->lockHandle == 0)
