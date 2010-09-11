@@ -28,6 +28,17 @@
 
 #include <linux/smp_lock.h>
 
+#if defined(LINUX_KEYRING_SUPPORT)
+# include <linux/rwsem.h>
+# include <linux/key.h>
+# if defined(HAVE_LINUX_KEY_TYPE_H)
+#  include <linux/key-type.h>
+# endif
+# ifndef KEY_ALLOC_IN_QUOTA
+#  define KEY_ALLOC_IN_QUOTA 1
+# endif
+#endif
+
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 # define NUMPAGGROUPS 1
 
