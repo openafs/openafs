@@ -1221,13 +1221,10 @@ restoreDbDump(struct butm_tapeInfo *tapeInfo,
     struct budb_tapeEntry netTapeEntry, hostTapeEntry;
     struct budb_volumeEntry netVolumeEntry, hostVolumeEntry;
     struct structDumpHeader netItemHeader;
-    afs_int32 taskId;
     int restoreThisDump = 1;
     afs_int32 code = 0;
 
     extern struct udbHandleS udbHandle;
-
-    taskId = rstTapeInfoPtr->taskId;
 
     /* read dump entry */
     memset(&netDumpEntry, 0, sizeof(netDumpEntry));
