@@ -2328,7 +2328,6 @@ static afs_int32
 VolListOneVolume(struct rx_call *acid, afs_int32 partid,
                  afs_uint32 volumeId, volEntries *volumeInfo)
 {
-    volintInfo *pntr;
     struct DiskPartition64 *partP;
     char pname[9], volname[20];
     DIR *dirp;
@@ -2342,7 +2341,6 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
 	return ENOMEM;
     memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
 
-    pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 1;
     if (GetPartName(partid, pname))
 	return VOLSERILLEGAL_PARTITION;
@@ -2428,7 +2426,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
                   afs_uint32 a_volID, volXEntries *a_volumeXInfoP)
 {				/*SAFSVolXListOneVolume */
 
-    volintXInfo *xInfoP;	/*Ptr to the extended vol info */
     struct DiskPartition64 *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
     DIR *dirp;			/*Partition directory ptr */
@@ -2447,7 +2444,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	return ENOMEM;
     memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
 
-    xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 1;
     code = ENODEV;
 

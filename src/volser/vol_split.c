@@ -665,12 +665,10 @@ deleteVnodes(Volume *vol, afs_int32 class,
 	code = EIO;
 	goto Bad_Delete;
     }
-    size = FDH_SIZE(fdP);
 
     for (i=0; i<length; i++) {
 	e = &list[i];
 	if (e->flag & NEEDED) {
-	    afs_uint64 size;
 	    offset = (e->vN + 1 - class) << (vcp->logSize -1);
 	    if (FDH_PREAD(fdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
 		Log("Couldn't read in %s Index of volume %u at offset %"
