@@ -2998,12 +2998,9 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags = 0;
     int readonly = 0, offline = 0, voltype = RWVOL;
-    char prompt;
     char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
     struct nvldbentry entry;
-
-    prompt = 'n';
 
     aparentid = 0;
     if (as->parms[4].items) {

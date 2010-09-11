@@ -398,9 +398,6 @@ PrintError(char *msg, afs_int32 errcode)
 	break;
     default:
 	{
-
-	    afs_int32 offset;
-
 	    initialize_KA_error_table();
 	    initialize_RXK_error_table();
 	    initialize_KTC_error_table();
@@ -408,7 +405,6 @@ PrintError(char *msg, afs_int32 errcode)
 	    initialize_CMD_error_table();
 	    initialize_VL_error_table();
 
-	    offset = errcode & ((1 << ERRCODE_RANGE) - 1);
 	    fprintf(STDERR, "%s: %s\n", afs_error_table_name(errcode),
 		    afs_error_message(errcode));
 	    break;
@@ -2244,13 +2240,10 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     struct volser_status tstatus;
     struct destServer destination;
     struct nvldbentry entry, newentry, storeEntry;
-    int islocked;
     afs_int32 error;
     afs_int32 tmp;
     afs_uint32 tmpVol;
-    int justclone = 0;
 
-    islocked = 0;
     fromconn = (struct rx_connection *)0;
     toconn = (struct rx_connection *)0;
     fromtid = 0;
@@ -2275,12 +2268,6 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     toconn = UV_Bind(atoserver, AFSCONF_VOLUMEPORT);	/* get connections to the servers */
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
     fromtid = totid = 0;	/* initialize to uncreated */
-
-
-    /* check if we can shortcut and use a local clone instead of a full copy */
-    if (afromserver == atoserver && afrompart == atopart) {
-	justclone = 1;
-    }
 
     /* ***
      * clone the read/write volume locally.
@@ -3402,7 +3389,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     manyResults results;
     int rwindex, roindex, roclone, roexists;
     afs_uint32 rwcrdate = 0;
-    afs_uint32 rwupdate, clcrdate;
+    afs_uint32 clcrdate;
     struct rtime {
 	int validtime;
 	afs_uint32 uptime;
@@ -3503,7 +3490,6 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    ONERROR(code, afromvol,
 		    "Failed to get the status of RW volume %u\n");
 	    rwcrdate = volstatus.creationDate;
-	    rwupdate = volstatus.updateDate;
 
 	    /* End transaction on RW */
 	    code = AFSVolEndTrans(fromconn, fromtid, &rcode);
@@ -3611,7 +3597,6 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		"Failed to get the status of the RW volume %u\n");
 	VDONE;
 	rwcrdate = volstatus.creationDate;
-	rwupdate = volstatus.updateDate;
 
 	/* End the transaction on the RW volume */
 	VPRINT1("Ending cloning transaction on RW volume %u...", afromvol);
@@ -4988,7 +4973,6 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 {
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;
-    int islocked;
 
     vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (vcode) {
@@ -4997,7 +4981,6 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 	PrintError("", vcode);
 	return (vcode);
     }
-    islocked = 1;
     vcode = VLDB_GetEntryByID(volid, RWVOL, &entry);
     if (vcode) {
 	fprintf(STDERR,
@@ -5564,7 +5547,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     afs_int32 code, error = 0;
     struct nvldbentry entry, storeEntry;
     char pname[10];
-    int pass = 0, islocked = 0, createentry, addvolume, modified, mod, doit = 1;
+    int pass = 0, createentry, addvolume, modified, mod, doit = 1;
     afs_uint32 rwvolid;
     char hoststr[16];
 
@@ -5589,7 +5572,6 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 		    (unsigned long)rwvolid);
 	    ERROR_EXIT(code);
 	}
-	islocked = 1;
     }
 
     createentry = 0;		/* Do we need to create a VLDB entry */
