@@ -2522,7 +2522,6 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 	     struct ViceInodeInfo *ip, int nInodes,
              struct VolumeSummary *volSummary, int check)
 {
-    VolumeId volumeNumber;
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     int err = 0;
@@ -2536,7 +2535,6 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
     IHandle_t *handle;
     FdHandle_t *fdP;
 
-    volumeNumber = volSummary->header.id;
     IH_INIT(handle, salvinfo->fileSysDevice, volSummary->header.parent, ino);
     fdP = IH_OPEN(handle);
     assert(fdP != NULL);
@@ -2558,12 +2556,6 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 	if (vnode->type != vNull) {
 	    int vnodeChanged = 0;
 	    int vnodeNumber = bitNumberToVnodeNumber(vnodeIndex, class);
-	    /* Log programs that belong to root (potentially suid root);
-	     * don't bother for read-only or backup volumes */
-#ifdef	notdef			/* This is done elsewhere */
-	    if (ShowRootFiles && RW && vnode->owner == 0 && vnodeNumber != 1)
-		Log("OWNER IS ROOT %s %u dir %u vnode %u author %u owner %u mode %o\n", salvinfo->VolInfo.name, volumeNumber, vnode->parent, vnodeNumber, vnode->author, vnode->owner, vnode->modeBits);
-#endif
 	    if (VNDISK_GET_INO(vnode) == 0) {
 		if (RW) {
 		    /* Log("### DEBUG ### Deleted Vnode with 0 inode (vnode %d)\n", vnodeNumber); */
