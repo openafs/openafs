@@ -2026,7 +2026,6 @@ afs_int32
 rx_EndCall(struct rx_call *call, afs_int32 rc)
 {
     struct rx_connection *conn = call->conn;
-    struct rx_service *service;
     afs_int32 error;
     SPLVAR;
 
@@ -2058,7 +2057,6 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	if (call->mode == RX_MODE_SENDING) {
 	    rxi_FlushWrite(call);
 	}
-	service = conn->service;
 	rxi_calltrace(RX_CALL_END, call);
 	/* Call goes to hold state until reply packets are acknowledged */
 	if (call->tfirst + call->nSoftAcked < call->tnext) {
@@ -3825,7 +3823,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     int acked;
     int nNacked = 0;
     int newAckCount = 0;
-    u_short maxMTU = 0;		/* Set if peer supports AFS 3.4a jumbo datagrams */
     int maxDgramPackets = 0;	/* Set if peer supports AFS 3.5 jumbo datagrams */
     int pktsize = 0;            /* Set if we need to update the peer mtu */
 
@@ -4136,7 +4133,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	     * network MTU confused with the loopback MTU. Calculate the
 	     * maximum MTU here for use in the slow start code below.
 	     */
-	    maxMTU = peer->maxMTU;
 	    /* Did peer restart with older RX version? */
 	    if (peer->maxDgramPackets > 1) {
 		peer->maxDgramPackets = 1;
@@ -7085,7 +7081,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      void *outputData, size_t outputLength)
 {
     static afs_int32 counter = 100;
-    time_t waitTime, waitCount, startTime;
+    time_t waitTime, waitCount;
     struct rx_header theader;
     char tbuffer[1500];
     afs_int32 code;
@@ -7099,7 +7095,6 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     fd_set imask;
     char *tp;
 
-    startTime = time(0);
     waitTime = 1;
     waitCount = 5;
     LOCK_RX_DEBUG;

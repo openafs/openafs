@@ -580,12 +580,6 @@ int
 rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 	      int nbytes)
 {
-    int requestCount;
-    int nextio;
-
-    requestCount = nbytes;
-    nextio = 0;
-
     /* Free any packets from the last call to ReadvProc/WritevProc */
     if (queue_IsNotEmpty(&call->iovq)) {
 #ifdef RXDEBUG_PACKET
