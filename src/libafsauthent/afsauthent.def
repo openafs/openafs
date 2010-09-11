@@ -148,3 +148,4 @@ EXPORTS
 	token_FreeSet					@146
         xdr_ktc_tokenUnion                              @147
         xdr_ktc_setTokenData                            @148
+	ktc_ListTokensEx				@149

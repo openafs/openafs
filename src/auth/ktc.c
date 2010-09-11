@@ -736,6 +736,63 @@ ktc_ForgetToken(struct ktc_principal *aserver)
 }
 #endif /* NO_AFS_CLIENT */
 
+int
+ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
+    struct ViceIoctl iob;
+    char tbuffer[MAXPIOCTLTOKENLEN];
+    afs_int32 code;
+    afs_int32 index;
+    struct ktc_setTokenData tokenSet;
+    XDR xdrs;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
+    *cellName = NULL;
+    *newIndex = prevIndex;
+
+    index = prevIndex;
+
+    while (index<100) { /* Safety, incase of pioctl failure */
+	memset(tbuffer, 0, sizeof(tbuffer));
+	iob.in = tbuffer;
+	memcpy(tbuffer, &index, sizeof(afs_int32));
+	iob.in_size = sizeof(afs_int32);
+	iob.out = tbuffer;
+	iob.out_size = sizeof(tbuffer);
+
+	code = PIOCTL(0, VIOC_GETTOK2, &iob, 0);
+
+	/* Can't use new pioctl, so must use old one */
+	if (code == -1 && errno == EINVAL) {
+	    struct ktc_principal server;
+
+	    code = ktc_ListTokens(index, newIndex, &server);
+	    if (code == 0)
+		*cellName = strdup(server.cell);
+	    return code;
+	}
+
+	if (code == 0) {
+	    /* Got a token from the pioctl. Now we throw it away,
+	     * so we can return just a cellname. This is rather wasteful,
+	     * but it's what the old API does. Ho hum.  */
+
+	    xdrmem_create(&xdrs, iob.out, iob.out_size, XDR_DECODE);
+	    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+		xdr_destroy(&xdrs);
+		return EINVAL;
+	    }
+	    xdr_destroy(&xdrs);
+	    *cellName = strdup(tokenSet.cell);
+	    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+	    *newIndex = index + 1;
+	    return 0;
+	}
+	index++;
+    }
+    return KTC_PIOCTLFAIL;
+}
+
 /* ktc_ListTokens - list all tokens.  start aprevIndex at 0, it returns the
  * next rock in (*aindex).  (*aserver) is set to the relevant ticket on
  * success.  */

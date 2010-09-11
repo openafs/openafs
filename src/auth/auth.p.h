@@ -32,6 +32,7 @@ int ktc_GetToken(struct ktc_principal *, struct ktc_token *,
 struct ktc_setTokenData;
 int ktc_SetTokenEx(struct ktc_setTokenData *);
 int ktc_GetTokenEx(char *, struct ktc_setTokenData **);
+int ktc_ListTokensEx(int, int *, char **cellName);
 
 int ktc_ListTokens(int, int *, struct ktc_principal *);
 int ktc_ForgetToken(struct ktc_principal *);

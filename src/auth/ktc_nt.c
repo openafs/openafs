@@ -959,3 +959,10 @@ ForgetOneLocalToken(struct ktc_principal *aserver)
     UNLOCK_GLOBAL_MUTEX;
     return KTC_NOENT;
 }
+
+int
+ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
+    /* Not yet implemented */
+    return KTC_PIOCTLFAIL;
+}
+
