@@ -335,6 +335,147 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
     }
 }
 
+static int
+kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
+		  char *tcell, char *namep)
+{
+    char tcell_l[MAXKTCREALMLEN];
+    char *tmp;
+
+    /* keep track of which one actually authorized request */
+    char uname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
+
+    static char lcell[MAXCELLCHARS] = "";
+    static char lrealms[AFS_NUM_LREALMS][AFS_REALM_SZ];
+    static int  num_lrealms = -1;
+    int lrealm_match = 0, i;
+    int flag;
+
+    /* generate lowercased version of cell name */
+    strcpy(tcell_l, tcell);
+    tmp = tcell_l;
+    while (*tmp) {
+	*tmp = tolower(*tmp);
+	tmp++;
+    }
+
+    /* determine local cell name. It's static, so will only get
+     * calculated the first time through */
+    if (!lcell[0])
+	afsconf_GetLocalCell(adir, lcell, sizeof(lcell));
+
+    /* if running a krb environment, also get the local realm */
+    /* note - this assumes AFS_REALM_SZ <= MAXCELLCHARS */
+    /* just set it to lcell if it fails */
+    if (num_lrealms == -1) {
+	for (i=0; i<AFS_NUM_LREALMS; i++) {
+	    if (afs_krb_get_lrealm(lrealms[i], i) != 0 /*KSUCCESS*/)
+		break;
+	}
+
+	if (i == 0) {
+	    strncpy(lrealms[0], lcell, AFS_REALM_SZ);
+	    num_lrealms = 1;
+	} else {
+	    num_lrealms = i;
+	}
+    }
+
+    /* See if the ticket cell matches one of the local realms */
+    lrealm_match = 0;
+    for ( i=0;i<num_lrealms;i++ ) {
+	if (!strcasecmp(lrealms[i], tcell)) {
+	    lrealm_match = 1;
+	    break;
+	}
+    }
+
+    /* If yes, then make sure that the name is not present in
+     * an exclusion list */
+    if (lrealm_match) {
+	if (tinst[0])
+	    snprintf(uname,sizeof(uname),"%s.%s@%s",tname,tinst,tcell);
+	else
+	    snprintf(uname,sizeof(uname),"%s@%s",tname,tcell);
+
+	if (afs_krb_exclusion(uname))
+	    lrealm_match = 0;
+    }
+
+    /* start with no uname and no authorization */
+    strcpy(uname, "");
+    flag = 0;
+
+    /* localauth special case */
+    if (strlen(tinst) == 0 && strlen(tcell) == 0
+	&& !strcmp(tname, AUTH_SUPERUSER)) {
+	strcpy(uname, "<LocalAuth>");
+	flag = 1;
+
+	/* cell of connection matches local cell or one of the realms */
+    } else if (!strcasecmp(tcell, lcell) || lrealm_match) {
+	if ((tmp = CompFindUser(adir, tname, ".", tinst, NULL))) {
+	    strcpy(uname, tmp);
+	    flag = 1;
+#ifdef notyet
+	} else if ((tmp = CompFindUser(adir, tname, "/", tinst, NULL))) {
+	    strcpy(uname, tmp);
+	    flag = 1;
+#endif
+	}
+	/* cell of conn doesn't match local cell or realm */
+    } else {
+	if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell))) {
+	    strcpy(uname, tmp);
+	    flag = 1;
+#ifdef notyet
+	} else if ((tmp = CompFindUser(adir, tname, "/", tinst, tcell))) {
+	    strcpy(uname, tmp);
+	    flag = 1;
+#endif
+	} else if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell_l))) {
+	    strcpy(uname, tmp);
+	    flag = 1;
+#ifdef notyet
+	} else if ((tmp = CompFindUser(adir, tname, "/", tinst, tcell_l))) {
+	    strcpy(uname, tmp);
+	    flag = 1;
+#endif
+	}
+    }
+
+    if (namep)
+	strcpy(namep, uname);
+
+    return flag;
+}
+
+static int
+rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
+{
+    char tname[MAXKTCNAMELEN];	/* authentication from ticket */
+    char tinst[MAXKTCNAMELEN];
+    char tcell[MAXKTCREALMLEN];
+
+    afs_uint32 exp;
+    int code;
+
+    /* get auth details from server connection */
+    code = rxkad_GetServerInfo(acall->conn, NULL, &exp, tname, tinst, tcell,
+			       NULL);
+    if (code)
+	return 0;		/* bogus connection/other error */
+
+    /* don't bother checking anything else if tix have expired */
+#ifdef AFS_PTHREAD_ENV
+    if (exp < clock_Sec())
+#else
+    if (exp < FT_ApproxTime())
+#endif
+	return 0;		/* expired tix */
+
+    return kerberosSuperUser(adir, tname, tinst, tcell, namep);
+}
 
 /* make sure user authenticated on rx call acall is in list of valid
     users. Copy the "real name" of the authenticated user into namep
@@ -370,135 +511,7 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;		/* not supported any longer */
     } else if (code == 2) {
-	char tname[MAXKTCNAMELEN];	/* authentication from ticket */
-	char tinst[MAXKTCNAMELEN];
-	char tcell[MAXKTCREALMLEN];
-	char tcell_l[MAXKTCREALMLEN];
-	char *tmp;
-
-	/* keep track of which one actually authorized request */
-	char uname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
-
-	afs_uint32 exp;
-	static char lcell[MAXCELLCHARS] = "";
-	static char lrealms[AFS_NUM_LREALMS][AFS_REALM_SZ];
-	static int  num_lrealms = -1;
-	int lrealm_match = 0, i;
-
-	/* get auth details from server connection */
-	code =
-	    rxkad_GetServerInfo(acall->conn, NULL, &exp, tname, tinst, tcell,
-				NULL);
-	if (code) {
-	    UNLOCK_GLOBAL_MUTEX;
-	    return 0;		/* bogus connection/other error */
-	}
-
-	/* don't bother checking anything else if tix have expired */
-#ifdef AFS_PTHREAD_ENV
-	if (exp < clock_Sec()) {
-#else
-	if (exp < FT_ApproxTime()) {
-#endif
-	    UNLOCK_GLOBAL_MUTEX;
-	    return 0;		/* expired tix */
-	}
-
-	/* generate lowercased version of cell name */
-	strcpy(tcell_l, tcell);
-	tmp = tcell_l;
-	while (*tmp) {
-	    *tmp = tolower(*tmp);
-	    tmp++;
-	}
-
-	/* determine local cell name. It's static, so will only get
-	 * calculated the first time through */
-	if (!lcell[0])
-	    afsconf_GetLocalCell(adir, lcell, sizeof(lcell));
-
-	/* if running a krb environment, also get the local realm */
-	/* note - this assumes AFS_REALM_SZ <= MAXCELLCHARS */
-	/* just set it to lcell if it fails */
-	if (num_lrealms == -1) {
-	    for (i=0; i<AFS_NUM_LREALMS; i++) {
-		if (afs_krb_get_lrealm(lrealms[i], i) != 0 /*KSUCCESS*/)
-		    break;
-	    }
-
-	    if (i == 0) {
-		strncpy(lrealms[0], lcell, AFS_REALM_SZ);
-		num_lrealms = 1;
-	    } else {
-		num_lrealms = i;
-	    }
-	}
-
-	/* See if the ticket cell matches one of the local realms */
-	lrealm_match = 0;
-	for ( i=0;i<num_lrealms;i++ ) {
-	    if (!strcasecmp(lrealms[i], tcell)) {
-		lrealm_match = 1;
-		break;
-	    }
-	}
-
-	/* If yes, then make sure that the name is not present in
-	 * an exclusion list */
-	if (lrealm_match) {
-	    if (tinst[0])
-		snprintf(uname,sizeof(uname),"%s.%s@%s",tname,tinst,tcell);
-	    else
-		snprintf(uname,sizeof(uname),"%s@%s",tname,tcell);
-
-	    if (afs_krb_exclusion(uname))
-		lrealm_match = 0;
-	}
-
-	/* start with no uname and no authorization */
-	strcpy(uname, "");
-	flag = 0;
-
-	/* localauth special case */
-	if (strlen(tinst) == 0 && strlen(tcell) == 0
-	    && !strcmp(tname, AUTH_SUPERUSER)) {
-	    strcpy(uname, "<LocalAuth>");
-	    flag = 1;
-
-	    /* cell of connection matches local cell or one of the realms */
-	} else if (!strcasecmp(tcell, lcell) || lrealm_match) {
-	    if ((tmp = CompFindUser(adir, tname, ".", tinst, NULL))) {
-		strcpy(uname, tmp);
-		flag = 1;
-#ifdef notyet
-	    } else if ((tmp = CompFindUser(adir, tname, "/", tinst, NULL))) {
-		strcpy(uname, tmp);
-		flag = 1;
-#endif
-	    }
-	    /* cell of conn doesn't match local cell or realm */
-	} else {
-	    if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell))) {
-		strcpy(uname, tmp);
-		flag = 1;
-#ifdef notyet
-	    } else if ((tmp = CompFindUser(adir, tname, "/", tinst, tcell))) {
-		strcpy(uname, tmp);
-		flag = 1;
-#endif
-	    } else if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell_l))) {
-		strcpy(uname, tmp);
-		flag = 1;
-#ifdef notyet
-	    } else if ((tmp = CompFindUser(adir, tname, "/", tinst, tcell_l))) {
-		strcpy(uname, tmp);
-		flag = 1;
-#endif
-	    }
-	}
-
-	if (namep)
-	    strcpy(namep, uname);
+	flag = rxkadSuperUser(adir, acall, namep);
 	UNLOCK_GLOBAL_MUTEX;
 	return flag;
     } else {			/* some other auth type */
