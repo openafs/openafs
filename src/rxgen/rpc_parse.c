@@ -1650,14 +1650,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 	f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
-	    && (plist->pl.param_flag & FREETHIS_PARAM)) {
-	    char *dot = "", *extens = "";
-	    if (plist->pl.string_name) {
-		dot = ".";
-		extens = plist->pl.string_name;
-	    }
+		&& (plist->pl.param_flag & FREETHIS_PARAM))
 	    f_print(fout, "\tif (!%s) goto fail1;\n", plist->scode);
-	}
     }
     for (listp = typedef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;

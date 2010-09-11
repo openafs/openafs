@@ -411,7 +411,10 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
     Date now = time(0);
     afs_int32 newkeyver;	/* new key version number */
     afs_int32 newtotalkeyentries = 0, oldtotalkeyentries = 0, keyentries;
-    int foundcurrentkey = 0, addednewkey = 0, modified;
+    int addednewkey = 0, modified;
+#ifdef AUTH_DBM_LOG
+    int foundcurrentkey = 0;
+#endif
 
     es_Report("Newkey for %s.%s\n", tentry->userID.name,
 	      tentry->userID.instance);
@@ -460,8 +463,8 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 			    ("Warning: Entry %s.%s contains more than one valid key: fixing\n",
 			     tentry->userID.name, tentry->userID.instance));
 		}
-#endif
 		foundcurrentkey = 1;
+#endif
 	    }
 
 	    /* If we find an oldkey of the same version or
