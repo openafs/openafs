@@ -936,9 +936,11 @@ fs_stateSeek(struct fs_dump_state * state, afs_uint64 * offset)
 {
     int ret = 0;
     char * p;
+#ifndef AFS_64BIT_ENV
     afs_uint32 hi, lo;
 
     SplitInt64(*offset, hi, lo);
+#endif
 
     /* update cursor */
     p = (char *) state->mmap.map;

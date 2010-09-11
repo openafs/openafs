@@ -687,7 +687,6 @@ h_Alloc_r(struct rx_connection *r_con)
 {
     struct servent *serverentry;
     struct host *host;
-    afs_int32 now;
 #if FS_STATS_DETAILED
     afs_uint32 newHostAddr_HBO;	/*New host IP addr, in host byte order */
 #endif /* FS_STATS_DETAILED */
@@ -715,7 +714,7 @@ h_Alloc_r(struct rx_connection *r_con)
     /* Make a callback channel even for the console, on the off chance that it
      * makes a request that causes a break call back.  It shouldn't. */
     h_SetupCallbackConn_r(host);
-    now = host->LastCall = host->cpsCall = host->ActiveCall = FT_ApproxTime();
+    host->LastCall = host->cpsCall = host->ActiveCall = FT_ApproxTime();
     host->hostFlags = 0;
     host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
