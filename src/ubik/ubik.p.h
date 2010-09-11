@@ -12,30 +12,6 @@
 
 #include <stdarg.h>
 
-/* these are now appended by the error table compiler */
-#if 0
-/* ubik error codes */
-#define	UMINCODE	100000	/* lowest ubik error code */
-#define	UNOQUORUM	100000	/* no quorum elected */
-#define	UNOTSYNC	100001	/* not synchronization site (should work on sync site) */
-#define	UNHOSTS		100002	/* too many hosts */
-#define	UIOERROR	100003	/* I/O error writing dbase or log */
-#define	UINTERNAL	100004	/* mysterious internal error */
-#define	USYNC		100005	/* major synchronization error */
-#define	UNOENT		100006	/* file not found when processing dbase */
-#define	UBADLOCK	100007	/* bad lock range size (must be 1) */
-#define	UBADLOG		100008	/* read error reprocessing log */
-#define	UBADHOST	100009	/* problems with host name */
-#define	UBADTYPE	100010	/* bad operation for this transaction type */
-#define	UTWOENDS	100011	/* two commits or aborts done to transaction */
-#define	UDONE		100012	/* operation done after abort (or commmit) */
-#define	UNOSERVERS	100013	/* no servers appear to be up */
-#define	UEOF		100014	/* premature EOF */
-#define	ULOGIO		100015	/* error writing log file */
-#define	UMAXCODE	100100	/* largest ubik error code */
-
-#endif
-
 #include <ubik_int.h>
 
 /*! \name ubik_trans types */
