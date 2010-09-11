@@ -736,6 +736,27 @@ ktc_ForgetToken(struct ktc_principal *aserver)
 }
 #endif /* NO_AFS_CLIENT */
 
+/*!
+ * An iterator which can list all cells with tokens in the cache
+ *
+ * This function may be used to list the names of all cells for which
+ * tokens exist in the current cache. The first time that it is called,
+ * prevIndex should be set to 0. On all subsequent calls, prevIndex
+ * should be set to the value returned in newIndex by the last call
+ * to the function. Note that there is no guarantee that the index value
+ * is monotonically increasing.
+ *
+ * @param prevIndex
+ * 	The index returned by the last call, or 0 if this is the first
+ * 	call in an iteration
+ * @param newIndex
+ * 	A pointer to an int which, upon return, will hold the next value
+ * 	to be used.
+ * @param cellName
+ * 	A pointer to a char * which, upon return, will hold a cellname.
+ * 	This must be freed by the caller using free()
+ */
+
 int
 ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
     struct ViceIoctl iob;
