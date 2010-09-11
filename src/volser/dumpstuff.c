@@ -664,6 +664,8 @@ DumpStandardTag(struct iod *iodp, char tag, afs_uint32 section)
         return VOLSERDUMPERROR;
     }
     code = iod_Write(iodp, &tag, 1);
+    if (code != 1)
+	return VOLSERDUMPERROR;
     return 0;
 }
 
