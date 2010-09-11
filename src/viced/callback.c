@@ -1003,7 +1003,6 @@ int
 BreakDelayedCallBacks_r(struct host *host)
 {
     struct AFSFid fids[AFSCBMAX];
-    u_byte thead[AFSCBMAX];	/* This should match thead in struct Callback */
     int cbi, first, nfids;
     struct CallBack *cb;
     int code;
@@ -1058,7 +1057,6 @@ BreakDelayedCallBacks_r(struct host *host)
 		cbi = cb->hnext;
 		if (cb->status == CB_DELAYED) {
 		    struct FileEntry *fe = itofe(cb->fhead);
-		    thead[nfids] = cb->thead;
 		    fids[nfids].Volume = fe->volid;
 		    fids[nfids].Vnode = fe->vnode;
 		    fids[nfids].Unique = fe->unique;
@@ -2462,9 +2460,6 @@ cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe,
     int ret = 0, idx;
     struct CallBack * cb;
     struct CBDiskEntry * cbdsk;
-    afs_uint32 fei;
-
-    fei = fetoi(fe);
 
     for (idx = 0; idx < niovecs; idx++) {
 	cbdsk = (struct CBDiskEntry *) iov[idx].iov_base;

@@ -4979,7 +4979,6 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    Vnode debugvnode1, debugvnode2;
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
@@ -5006,7 +5005,6 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 			  &rights, &anyrights))) {
 	goto Bad_RemoveDir;
     }
-    debugvnode1 = *parentptr;
 
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
@@ -5016,7 +5014,6 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 	goto Bad_RemoveDir;
     }
 
-    debugvnode2 = *parentptr;
     /* Do the actual delete of the desired (empty) directory, Name */
     if ((errorCode =
 	 DeleteTarget(parentptr, volptr, &targetptr, &dir, &fileFid, Name,
