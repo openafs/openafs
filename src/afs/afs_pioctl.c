@@ -2333,6 +2333,11 @@ DECL_PIOCTL(PGetTokens)
     }
     token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
 
+    /* If they don't have an RXKAD token, but do have other tokens,
+     * then sadly there's nothing this interface can do to help them. */
+    if (token == NULL)
+	return ENOTCONN;
+
     /* for compat, we try to return 56 byte tix if they fit */
     iterator = token->rxkad.ticketLen;
     if (iterator < 56)
