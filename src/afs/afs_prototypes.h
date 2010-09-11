@@ -618,6 +618,9 @@ extern int afs_linux_storeproc(struct vcache *, struct storeOps *, void *,
 			       struct dcache *, int *, afs_size_t *);
 #endif
 
+/* ARCH/osi_crypto.c */
+extern int osi_readRandom(void *, afs_size_t);
+
 /* ARCH/osi_misc.c */
 extern void afs_osi_SetTime(osi_timeval_t * atv);
 

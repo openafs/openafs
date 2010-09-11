@@ -23,6 +23,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 AFS_OS_OBJS = \
 	osi_alloc.o \
 	osi_cred.o \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \

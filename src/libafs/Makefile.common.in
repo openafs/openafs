@@ -553,6 +553,8 @@ osi_fetchstore.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_fetchstore.c
 	$(CRULE_NOOPT)
 osi_vcache.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
 	$(CRULE_NOOPT)
+osi_crypto.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
+	$(CRULE_OPT)
 
 clean:
 	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)

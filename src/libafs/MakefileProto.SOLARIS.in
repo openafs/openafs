@@ -15,6 +15,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # OS specific object files:
 AFS_OS_OBJS = \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \
