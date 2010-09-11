@@ -310,8 +310,6 @@ hpr_Initialize(struct ubik_client **uclient)
 	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
         if (code)
             scIndex = RX_SECIDX_NULL;
-    } else {
-	afsconf_ClientAuthToken(&info, 0, &sc, &scIndex, NULL);
     }
     if ((scIndex == RX_SECIDX_NULL) && (sc == NULL))
         sc = rxnull_NewClientSecurityObject();
