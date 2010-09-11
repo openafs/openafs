@@ -429,7 +429,9 @@ token_setPag(struct ktc_setTokenData *jar, int setpag) {
 
 void
 token_FreeSet(struct ktc_setTokenData **jar) {
-    xdr_free((xdrproc_t)xdr_ktc_setTokenData, *jar);
-    memset(*jar, 0, sizeof(struct ktc_setTokenData));
-    *jar = NULL;
+    if (*jar) {
+	xdr_free((xdrproc_t)xdr_ktc_setTokenData, *jar);
+	memset(*jar, 0, sizeof(struct ktc_setTokenData));
+	*jar = NULL;
+    }
 }
