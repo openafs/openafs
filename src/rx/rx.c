@@ -81,7 +81,7 @@ extern afs_int32 afs_termState;
 #include "sys/lockl.h"
 #include "sys/lock_def.h"
 #endif /* AFS_AIX41_ENV */
-# include "rxgen_consts.h"
+# include "afs/rxgen_consts.h"
 #else /* KERNEL */
 # include <sys/types.h>
 # include <string.h>

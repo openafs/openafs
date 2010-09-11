@@ -391,7 +391,7 @@ c_output(char *infile, char *define, int extend, char *outfile, int append)
 	    f_print(fout, "#include \"netinet/in.h\"\n");
 	    f_print(fout, "#include \"h/time.h\"\n");
 	    f_print(fout, "#include \"rx/xdr.h\"\n");
-	    f_print(fout, "#include \"rxgen_consts.h\"\n");
+	    f_print(fout, "#include \"afs/rxgen_consts.h\"\n");
 	} else {
 	    f_print(fout, "#include <rx/xdr.h>\n");
 	}
@@ -514,7 +514,7 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     f_print(fout, "#include \"rx/xdr.h\"\n");
     f_print(fout, "#endif /* XDR_GETLONG */\n");
     f_print(fout, "#endif   /* UKERNEL */\n");
-    f_print(fout, "#include \"rxgen_consts.h\"\n");
+    f_print(fout, "#include \"afs/rxgen_consts.h\"\n");
     f_print(fout, "#include \"afs_osi.h\"\n");
     f_print(fout, "#include \"rx/rx.h\"\n");
     if (xflag) {
@@ -680,7 +680,7 @@ C_output(char *infile, char *define, int extend, char *outfile, int append)
 	    f_print(fout, "#include \"h/time.h\"\n");
 	    f_print(fout, "#include \"rpc/types.h\"\n");
 	    f_print(fout, "#include \"rx/xdr.h\"\n");
-	    f_print(fout, "#include \"rxgen_consts.h\"\n");
+	    f_print(fout, "#include \"afs/rxgen_consts.h\"\n");
 	    f_print(fout, "#include \"afs/afs_osi.h\"\n");
 	    f_print(fout, "#include \"rx/rx.h\"\n");
 	    if (xflag) {
@@ -751,7 +751,7 @@ S_output(char *infile, char *define, int extend, char *outfile, int append)
 	    f_print(fout, "#include \"h/time.h\"\n");
 	    f_print(fout, "#include \"rpc/types.h\"\n");
 	    f_print(fout, "#include \"rx/xdr.h\"\n");
-	    f_print(fout, "#include \"rxgen_consts.h\"\n");
+	    f_print(fout, "#include \"afs/rxgen_consts.h\"\n");
 	    f_print(fout, "#include \"afs/afs_osi.h\"\n");
 	    f_print(fout, "#include \"rx/rx.h\"\n");
 	    if (xflag) {

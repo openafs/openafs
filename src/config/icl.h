@@ -14,7 +14,7 @@
 #define _ICL_H__ENV_ 1
 
 #ifdef	KERNEL
-#include "param.h"
+#include "afs/param.h"
 #include "afs_osi.h"
 #include "lock.h"
 #include "afs_trace.h"
