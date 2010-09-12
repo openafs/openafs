@@ -22,21 +22,31 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <afsconfig.h>
-#include "afs/param.h"
+#include "config.h"
 
-#include "afs/stds.h"
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
+void *
+_afscrypto_calloc(int num, size_t len)
+{
+    void *ptr;
 
-#define assert osi_Assert
+    ptr = afs_osi_Alloc(num * len);
 
-/* We need wrappers for the various memory management functions */
-#define calloc _afscrypto_calloc
-void * _afscrypto_calloc(int, size_t);
+    return ptr;
+}
 
-#define malloc _afscrypto_malloc
-void * _afscrypto_malloc(size_t);
+void *
+_afscrypto_malloc(size_t len)
+{
+    void *ptr;
 
-#define free _afscrypto_free
-void _afscrypto_free(void *);
+    ptr = afs_osi_Alloc(len);
+
+    return ptr;
+}
+
+void
+_afscrypto_free(void *ptr)
+{
+    if (ptr != NULL)
+	afs_osi_Free(ptr, 0);
+}

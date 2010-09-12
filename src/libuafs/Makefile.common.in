@@ -43,17 +43,17 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_SRCDIR}/rxkad \
         -I${TOP_SRCDIR}/util \
         -I${TOP_OBJDIR}/src \
+	-I${TOP_OBJDIR}/src/afs \
         -I${TOP_OBJDIR}/src/afs/UKERNEL \
-        -I${TOP_OBJDIR}/src/afs \
-        -I${TOP_OBJDIR}/src/util \
         -I${TOP_OBJDIR}/src/rxkad \
         -I${TOP_OBJDIR}/src/config \
         -I${TOP_OBJDIR}/src/fsint \
         -I${TOP_OBJDIR}/src/vlserver \
 	-I${TOP_OBJDIR}/src/libuafs \
 	-I${TOP_OBJDIR}/src/auth \
+	-I${TOP_INCDIR}/afs \
         -I${TOP_INCDIR} \
-        -I${TOP_INCDIR}/afs @INCLUDE_libintl@
+        @INCLUDE_libintl@
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
