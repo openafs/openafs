@@ -340,7 +340,7 @@ static int
 kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 		  char *tcell, char *namep)
 {
-    char tcell_l[MAXKTCREALMLEN];
+    char tcell_l[MAXKTCREALMLEN] = "";
     char *tmp;
 
     /* keep track of which one actually authorized request */
@@ -353,11 +353,13 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
     int flag;
 
     /* generate lowercased version of cell name */
-    strcpy(tcell_l, tcell);
-    tmp = tcell_l;
-    while (*tmp) {
-	*tmp = tolower(*tmp);
-	tmp++;
+    if (tcell) {
+	strcpy(tcell_l, tcell);
+	tmp = tcell_l;
+	while (*tmp) {
+	    *tmp = tolower(*tmp);
+	    tmp++;
+	}
     }
 
     /* determine local cell name. It's static, so will only get
@@ -394,7 +396,7 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
     /* If yes, then make sure that the name is not present in
      * an exclusion list */
     if (lrealm_match) {
-	if (tinst[0])
+	if (tinst && tinst[0])
 	    snprintf(uname,sizeof(uname),"%s.%s@%s",tname,tinst,tcell);
 	else
 	    snprintf(uname,sizeof(uname),"%s@%s",tname,tcell);
@@ -408,7 +410,8 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
     flag = 0;
 
     /* localauth special case */
-    if (strlen(tinst) == 0 && strlen(tcell) == 0
+    if ((tinst == NULL || strlen(tinst) == 0) &&
+	(tcell == NULL || strlen(tcell) == 0)
 	&& !strcmp(tname, AUTH_SUPERUSER)) {
 	strcpy(uname, "<LocalAuth>");
 	flag = 1;
