@@ -466,14 +466,6 @@ rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
     if (code)
 	return 0;		/* bogus connection/other error */
 
-    /* don't bother checking anything else if tix have expired */
-#ifdef AFS_PTHREAD_ENV
-    if (exp < clock_Sec())
-#else
-    if (exp < FT_ApproxTime())
-#endif
-	return 0;		/* expired tix */
-
     return kerberosSuperUser(adir, tname, tinst, tcell, namep);
 }
 
