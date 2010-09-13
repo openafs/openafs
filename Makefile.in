@@ -168,6 +168,9 @@ cmd: comerr
 hcrypto: config $(DIR_roken)
 	+${COMPILE_PART1} crypto/hcrypto ${COMPILE_PART2}
 
+rfc3961: config hcrypto
+	+${COMPILE_PART1} crypto/rfc3961 ${COMPILE_PART2}
+
 lwp: util lwp_depinstall
 	+${COMPILE_PART1} lwp ${COMPILE_PART2}
 
@@ -479,7 +482,7 @@ ${DEST}/bin/dedebug: dedebug
 #
 # libafs build targets
 #
-libafs: config export hcrypto lwp_depinstall \
+libafs: config export rfc3961 hcrypto lwp_depinstall \
 	rx_depinstall vlserver_depinstall tvlserver_depinstall \
 	rxkad_depinstall fsint_depinstall \
 	libacl_depinstall afs_depinstall dir_depinstall \
@@ -668,7 +671,7 @@ build_tools: config des comerr rxgen
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser \
-	venus update xstat afsmonitor rxdebug libafsrpc hcrypto \
+	venus update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -676,7 +679,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser \
-	venus update xstat afsmonitor rxdebug libafsrpc hcrypto \
+	venus update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -793,6 +796,7 @@ clean2:
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-${COMPILE_PART1} crypto/hcrypto ${COMPILE_CLEAN}
 	-${COMPILE_PART1} roken ${COMPILE_CLEAN}
+	-${COMPILE_PART1} crypto/rfc3961 ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
@@ -837,6 +841,7 @@ distclean: clean
 	src/config/shlib-build \
 	src/config/shlib-install \
 	src/crypto/hcrypto/Makefile \
+	src/crypto/rfc3961/Makefile \
 	src/dir/Makefile \
 	src/dir/test/Makefile \
 	src/dviced/Makefile \

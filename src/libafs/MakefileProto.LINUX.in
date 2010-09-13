@@ -97,6 +97,22 @@ CFLAGS_sha.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_md5.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_random.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 
+RFC3961_INCLUDES = -I$(TOP_SRCDIR)/crypto/rfc3961 \
+		   -I$(TOP_SRCDIR)/external/heimdal/krb5
+
+CFLAGS_crypto.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-aes.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-context.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-copy.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-ct.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-evp.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-data.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-keyblock.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-store-int.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-random.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-algs.o = $(RFC3961_INCLUDES)
+CFLAGS_n-fold.o = $(RFC3961_INCLUDES)
+
 # System specific build commands and flags
 <linux26 linux_26>
 # All the platform-specific and kernel-related things are provided by

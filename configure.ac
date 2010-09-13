@@ -143,6 +143,7 @@ src/config/Makefile.version-NOCML \
 src/config/shlib-build \
 src/config/shlib-install \
 src/crypto/hcrypto/Makefile \
+src/crypto/rfc3961/Makefile \
 src/dir/Makefile \
 src/dir/test/Makefile \
 src/dviced/Makefile \

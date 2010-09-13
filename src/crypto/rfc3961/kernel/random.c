@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Your File System Inc. All rights reserved.
+ * Copyright (c) 2010 Your Filesystem Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,63 +22,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include <afsconfig.h>
+#include "afs/param.h"
+#include "afs/stds.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 
-void *
-_afscrypto_calloc(int num, size_t len)
+#include "rfc3961.h"
+
+krb5_error_code
+krb5_generate_random_block(void *buf, size_t len)
 {
-    void *ptr;
-
-    ptr = afs_osi_Alloc(num * len);
-
-    return ptr;
-}
-
-void *
-_afscrypto_malloc(size_t len)
-{
-    void *ptr;
-
-    ptr = afs_osi_Alloc(len);
-
-    return ptr;
-}
-
-void
-_afscrypto_free(void *ptr)
-{
-    if (ptr != NULL)
-	afs_osi_Free(ptr, 0);
-}
-
-char*
-_afscrypto_strdup(const char *str) {
-    char *ptr;
-
-    ptr = malloc(strlen(str));
-    if (ptr == NULL)
-       return ptr;
-    memcpy(ptr, str, strlen(str));
-
-    return ptr;
-}
-
-/* This is a horrible, horrible bodge, but the crypto code uses realloc,
- * so we need to handle it too.
- *
- * There are two different call sites for realloc. Firstly, it's used
- * in the decrypt case to shrink the size of the allotted buffer. In
- * this case, we can just ignore the realloc and return the original
- * pointer.
- *
- * Secondly, it's used when computing derived keys. In this case, the
- * first call will be with a NULL input, and the size of a single
- * derived key. So, we just give back space for 20 keys, and pray.
- */
-
-void *
-_afscrypto_realloc(void *ptr, size_t len) {
-   if (ptr == NULL)
-	return calloc(20, len);
-   return ptr;
+    return osi_readRandom(buf, len);
 }

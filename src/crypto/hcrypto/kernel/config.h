@@ -40,3 +40,9 @@ void * _afscrypto_malloc(size_t);
 
 #define free _afscrypto_free
 void _afscrypto_free(void *);
+
+#define strdup _afscrypto_strdup
+char * _afscrypto_strdup(const char *);
+
+#define realloc _afscrypto_realloc
+void * _afscrypto_realloc(void *, size_t);

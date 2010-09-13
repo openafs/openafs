@@ -175,6 +175,18 @@ AFSAOBJS = \
 	aes.o		\
 	rijndael-alg-fst.o \
 	sha.o		\
+	n-fold.o	\
+	crypto.o	\
+	crypto-algs.o   \
+	crypto-aes.o	\
+	crypto-context.o \
+	crypto-copy.o	\
+	crypto-ct.o	\
+	crypto-evp.o	\
+	crypto-data.o 	\
+	crypto-keyblock.o \
+	crypto-store-int.o \
+	crypto-random.o	\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -523,6 +535,57 @@ rijndael-alg-fst.o:  $(TOP_SRCDIR)/external/heimdal/hcrypto/rijndael-alg-fst.c
 
 sha.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/sha.c
 	$(CRULE_OPT)
+
+RFC3961_INCLUDES = -I$(TOP_SRCDIR)/crypto/rfc3961 \
+		   -I$(TOP_SRCDIR)/external/heimdal/krb5
+
+n-fold.o: $(TOP_SRCDIR)/external/heimdal/krb5/n-fold.c
+	$(CRULE_OPT)
+CFLAGS-n-fold.o = $(RFC3961_INCLUDES)
+
+crypto.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto.c
+	$(CRULE_OPT)
+CFLAGS-crypto.o = $(RFC3961_INCLUDES)
+
+crypto-aes.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto-aes.c
+	$(CRULE_OPT)
+CFLAGS-crypto-aes.o = $(RFC3961_INCLUDES)
+
+crypto-evp.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto-evp.c
+	$(CRULE_OPT)
+CFLAGS-crypto-evp.o = $(RFC3961_INCLUDES)
+
+crypto-data.o: $(TOP_SRCDIR)/external/heimdal/krb5/data.c
+	$(CRULE_OPT)
+CFLAGS-crypto-data.o = $(RFC3961_INCLUDES)
+
+crypto-keyblock.o: $(TOP_SRCDIR)/external/heimdal/krb5/keyblock.c
+	$(CRULE_OPT)
+CFLAGS-crypto-keyblock.o = $(RFC3961_INCLUDES)
+
+crypto-store-int.o: $(TOP_SRCDIR)/external/heimdal/krb5/store-int.c
+	$(CRULE_OPT)
+CFLAGS-crypto-store-int.o = $(RFC3961_INCLUDES)
+
+crypto-random.o: $(TOP_SRCDIR)/crypto/rfc3961/kernel/random.c
+	$(CRULE_OPT)
+CFLAGS-crypto-random.o = -I$(TOP_SRCDIR)/crypto/kernel
+
+crypto-algs.o: $(TOP_SRCDIR)/crypto/rfc3961/kernel/algs.c
+	$(CRULE_OPT)
+CFLAGS-crypto-algs.o = $(RFC3961_INCLUDES)
+
+crypto-copy.o: $(TOP_SRCDIR)/crypto/rfc3961/copy.c
+	$(CRULE_OPT)
+CFLAGS-crypto-copy.o = $(RFC3961_INCLUDES)
+
+crypto-context.o: $(TOP_SRCDIR)/crypto/rfc3961/context.c
+	$(CRULE_OPT)
+CFLAGS-crypto-context.o = $(RFC3961_INCLUDES)
+
+crypto-ct.o: $(TOP_SRCDIR)/external/heimdal/roken/ct.c
+	$(CRULE_OPT)
+CFLAGS-crypto-ct.o = $(RFC3961_INCLUDES)
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating

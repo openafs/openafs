@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Your File System Inc. All rights reserved.
+ * Copyright (c) 2010 Your Filesystem Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,63 +22,24 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-
-void *
-_afscrypto_calloc(int num, size_t len)
-{
-    void *ptr;
-
-    ptr = afs_osi_Alloc(num * len);
-
-    return ptr;
-}
-
-void *
-_afscrypto_malloc(size_t len)
-{
-    void *ptr;
-
-    ptr = afs_osi_Alloc(len);
-
-    return ptr;
-}
-
-void
-_afscrypto_free(void *ptr)
-{
-    if (ptr != NULL)
-	afs_osi_Free(ptr, 0);
-}
-
-char*
-_afscrypto_strdup(const char *str) {
-    char *ptr;
-
-    ptr = malloc(strlen(str));
-    if (ptr == NULL)
-       return ptr;
-    memcpy(ptr, str, strlen(str));
-
-    return ptr;
-}
-
-/* This is a horrible, horrible bodge, but the crypto code uses realloc,
- * so we need to handle it too.
- *
- * There are two different call sites for realloc. Firstly, it's used
- * in the decrypt case to shrink the size of the allotted buffer. In
- * this case, we can just ignore the realloc and return the original
- * pointer.
- *
- * Secondly, it's used when computing derived keys. In this case, the
- * first call will be with a NULL input, and the size of a single
- * derived key. So, we just give back space for 20 keys, and pray.
+/* Algorithm list for the in-kernel hcrypto implementation. We use a really cut
+ * down list of algorithms, to reduce the code-footprint of our kernel module.
  */
 
-void *
-_afscrypto_realloc(void *ptr, size_t len) {
-   if (ptr == NULL)
-	return calloc(20, len);
-   return ptr;
-}
+#include "krb5_locl.h"
+
+struct checksum_type *_krb5_checksum_types[] = {
+    &_krb5_checksum_sha1,
+    &_krb5_checksum_hmac_sha1_aes128,
+    &_krb5_checksum_hmac_sha1_aes256,
+};
+
+int _krb5_num_checksums
+        = sizeof(_krb5_checksum_types) / sizeof(_krb5_checksum_types[0]);
+
+struct encryption_type *_krb5_etypes[] = {
+    &_krb5_enctype_aes256_cts_hmac_sha1,
+    &_krb5_enctype_aes128_cts_hmac_sha1,
+};
+
+int _krb5_num_etypes = sizeof(_krb5_etypes) / sizeof(_krb5_etypes[0]);

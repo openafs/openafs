@@ -1,0 +1,24 @@
+# Copyright 2010, Your File System Inc
+# All Rights Reserved
+#
+# This software is released under the terms of the two clause BSD
+# License. For details, see the LICENSE file at the top level of
+# this distribution.
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+all:  ${TOP_INCDIR}/afs/rfc3961.h
+
+${TOP_INCDIR}/afs/rfc3961.h: rfc3961.h
+	${INSTALL_DATA} $? $@
+
+install:
+
+dest:
+
+clean:
