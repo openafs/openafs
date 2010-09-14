@@ -152,6 +152,20 @@ where <instance> is the instance of a class C<filsrv> Zephyr subscription.
 
 =back
 
+=head1 ENVIRONMENT
+
+=over 4
+
+=item KRB5CCNAME
+
+As with most programs that use an existing Kerberos ticket cache, B<aklog>
+can be told to use a cache other than the default by setting the
+environment variable KRB5CCNAME.  On UNIX and Linux systems, this variable
+is normally set to a file name, but may point to other types of caches.
+See the documentation of your Kerberos implementation for more details.
+
+=back
+
 =head1 FILES
 
 =over 4
