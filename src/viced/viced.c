@@ -716,6 +716,9 @@ PrintCounters(void)
     int workstations, activeworkstations, delworkstations;
     int processSize = 0;
     char tbuffer[32];
+#ifdef AFS_DEMAND_ATTACH_FS
+    int stats_flags = 0;
+#endif
 
     FT_GetTimeOfDay(&tpl, 0);
     Statistics = 1;
@@ -724,9 +727,12 @@ PrintCounters(void)
 	     afs_ctime(&StartTime, tbuffer, sizeof(tbuffer))));
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    /* XXX perhaps set extended stats verbosity flags
-     * based upon LogLevel ?? */
-    VPrintExtendedCacheStats(VOL_STATS_PER_CHAIN2);
+    if (LogLevel >= 125) {
+	stats_flags = VOL_STATS_PER_CHAIN2;
+    } else if (LogLevel >= 25) {
+	stats_flags = VOL_STATS_PER_CHAIN;
+    }
+    VPrintExtendedCacheStats(stats_flags);
 #endif
     VPrintCacheStats();
     VPrintDiskStats();
