@@ -208,7 +208,26 @@ GCTrans(void)
 	    continue;
 	if (tt->time + OLDTRANSTIME < now) {
 	    Log("trans %u on volume %u has timed out\n", tt->tid, tt->volid);
+
 	    tt->refCount++;	/* we're using it now */
+
+	    if (tt->volume && V_destroyMe(tt->volume) == DESTROY_ME
+	        && !(tt->vflags & VTDeleted)) {
+
+		Error error;
+
+		Log("Deleting timed-out temporary volume %lu\n",
+		    (long unsigned) tt->volid);
+
+		VTRANS_OBJ_LOCK(tt);
+		tt->vflags |= VTDeleted;
+		VTRANS_OBJ_UNLOCK(tt);
+
+		VTRANS_UNLOCK;
+		VPurgeVolume(&error, tt->volume);
+		VTRANS_LOCK;
+	    }
+
 	    DeleteTrans(tt, 0);	/* drops refCount or deletes it */
 	    GCDeletes++;
 	}
