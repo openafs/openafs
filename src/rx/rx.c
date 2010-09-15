@@ -2123,7 +2123,9 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
      * kernel version, and may interrupt the macros rx_Read or
      * rx_Write, which run at normal priority for efficiency. */
     if (call->currentPacket) {
+#ifdef RX_TRACK_PACKETS
         call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+#endif
 	rxi_FreePacket(call->currentPacket);
 	call->currentPacket = (struct rx_packet *)0;
     }
@@ -3472,7 +3474,9 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	    /* It's the next packet. Stick it on the receive queue
 	     * for this call. Set newPackets to make sure we wake
 	     * the reader once all packets have been processed */
+#ifdef RX_TRACK_PACKETS
 	    np->flags |= RX_PKTFLAG_RQ;
+#endif
 	    queue_Prepend(&call->rq, np);
 #ifdef RXDEBUG_PACKET
             call->rqc++;
@@ -3607,7 +3611,9 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	     * packet before which to insert the new packet, or at the
 	     * queue head if the queue is empty or the packet should be
 	     * appended. */
+#ifdef RX_TRACK_PACKETS
             np->flags |= RX_PKTFLAG_RQ;
+#endif
 #ifdef RXDEBUG_PACKET
             call->rqc++;
 #endif /* RXDEBUG_PACKET */
@@ -3971,7 +3977,9 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	{
 	    queue_Remove(tp);
+#ifdef RX_TRACK_PACKETS
 	    tp->flags &= ~RX_PKTFLAG_TQ;
+#endif
 #ifdef RXDEBUG_PACKET
             call->tqc--;
 #endif /* RXDEBUG_PACKET */
@@ -4890,8 +4898,10 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     /* why init the queue if you just emptied it? queue_Init(&call->rq); */
 
     if (call->currentPacket) {
+#ifdef RX_TRACK_PACKETS
         call->currentPacket->flags &= ~RX_PKTFLAG_CP;
         call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
+#endif
         queue_Prepend(&call->iovq, call->currentPacket);
 #ifdef RXDEBUG_PACKET
         call->iovqc++;
@@ -5608,6 +5618,7 @@ rxi_Start(struct rxevent *event,
 			     *(call->callNumber)));
 			break;
 		    }
+#ifdef RX_TRACK_PACKETS
 		    if ((p->flags & RX_PKTFLAG_FREE)
 			|| (!queue_IsEnd(&call->tq, nxp)
 			    && (nxp->flags & RX_PKTFLAG_FREE))
@@ -5615,6 +5626,7 @@ rxi_Start(struct rxevent *event,
 			|| (nxp == (struct rx_packet *)&rx_freePacketQueue)) {
 			osi_Panic("rxi_Start: xmit queue clobbered");
 		    }
+#endif
 		    if (p->flags & RX_PKTFLAG_ACKED) {
 			/* Since we may block, don't trust this */
 			usenow.sec = usenow.usec = 0;
@@ -5721,7 +5733,9 @@ rxi_Start(struct rxevent *event,
 			if (p->header.seq < call->tfirst
 			    && (p->flags & RX_PKTFLAG_ACKED)) {
 			    queue_Remove(p);
+#ifdef RX_TRACK_PACKETS
 			    p->flags &= ~RX_PKTFLAG_TQ;
+#endif
 #ifdef RXDEBUG_PACKET
                             call->tqc--;
 #endif

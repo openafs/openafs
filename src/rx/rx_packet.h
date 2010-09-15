@@ -170,11 +170,13 @@
  * most part.  These live in rx_packet->flags.
  */
 #define	RX_PKTFLAG_ACKED	0x01
+#ifdef RX_TRACK_PACKETS
 #define	RX_PKTFLAG_FREE		0x02
 #define RX_PKTFLAG_TQ           0x04
 #define RX_PKTFLAG_RQ           0x08
 #define RX_PKTFLAG_IOVQ         0x10
 #define RX_PKTFLAG_CP           0x20
+#endif
 
 /* The rx part of the header of a packet, in host form */
 struct rx_header {
