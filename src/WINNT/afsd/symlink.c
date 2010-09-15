@@ -256,13 +256,18 @@ static BOOL IsAdmin (void)
 }
 
 /* return a static pointer to a buffer */
-static char *Parent(apath)
-char *apath; {
+static char *Parent(char *apath)
+{
     char *tp;
     strcpy(tspace, apath);
     tp = strrchr(tspace, '\\');
     if (tp) {
-	*(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
+        if (tp - tspace > 2 &&
+            tspace[1] == ':' &&
+            &tspace[2] == tp)
+	    *(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
+        else
+            *tp = 0;
     }
     else {
 	fs_ExtractDriveLetter(apath, tspace);

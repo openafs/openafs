@@ -293,7 +293,12 @@ Parent(char *apath)
     }
     tp = strrchr(tspace, '\\');
     if (tp) {
-	*(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
+        if (tp - tspace > 2 &&
+            tspace[1] == ':' &&
+            &tspace[2] == tp)
+	    *(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
+        else
+            *tp = 0;
     }
     else {
 	fs_ExtractDriveLetter(apath, tspace);
