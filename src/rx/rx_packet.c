@@ -603,7 +603,9 @@ rxi_MorePackets(int apackets)
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
+#ifdef RX_TRACK_PACKETS
 	p->flags |= RX_PKTFLAG_FREE;
+#endif
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
@@ -711,7 +713,9 @@ rxi_MorePacketsNoLock(int apackets)
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
+#ifdef RX_TRACK_PACKETS
 	p->flags |= RX_PKTFLAG_FREE;
+#endif
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);

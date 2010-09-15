@@ -207,6 +207,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
  * in which the first tier is thread-specific, and the second tier is
  * a global free packet queue */
 EXT struct rx_queue rx_freePacketQueue;
+#ifdef RX_TRACK_PACKETS
 #define RX_FPQ_MARK_FREE(p) \
     do { \
         if ((p)->flags & RX_PKTFLAG_FREE) \
@@ -223,6 +224,18 @@ EXT struct rx_queue rx_freePacketQueue;
         (p)->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */ \
         (p)->header.flags = 0; \
     } while(0)
+#else
+#define RX_FPQ_MARK_FREE(p) \
+    do { \
+        (p)->length = 0; \
+        (p)->niovecs = 0; \
+    } while(0)
+#define RX_FPQ_MARK_USED(p) \
+    do { \
+        (p)->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */ \
+        (p)->header.flags = 0; \
+    } while(0)
+#endif
 #define RX_PACKET_IOV_INIT(p) \
     do { \
 	(p)->wirevec[0].iov_base = (char *)((p)->wirehead); \
