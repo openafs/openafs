@@ -5628,6 +5628,13 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
                 return code;
             }
         }
+        else if (code != CM_ERROR_NOSUCHFILE &&
+                 code != CM_ERROR_NOSUCHPATH &&
+                 code != CM_ERROR_BPLUS_NOMATCH)
+        {
+            cm_ReleaseUser(userp);
+            return code;
+        }
     }
 #endif /* SPECIAL_FOLDERS */
 

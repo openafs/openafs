@@ -2822,9 +2822,12 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                      userp, tidPathp, &req, &scp);
     if (code != 0) {
-        code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
-                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                         userp, tidPathp, &req, &dscp);
+        if (code == CM_ERROR_NOSUCHFILE ||
+            code == CM_ERROR_NOSUCHPATH ||
+            code == CM_ERROR_BPLUS_NOMATCH)
+            code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
+                            CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                            userp, tidPathp, &req, &dscp);
         cm_FreeSpace(spacep);
 
         if (code) {
@@ -3455,9 +3458,14 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         cm_FreeSpace(spacep);
     }
 
-    /* now do namei and stat, and copy out the info */
-    code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
-                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+    if (code == 0 ||
+        code == CM_ERROR_NOSUCHFILE ||
+        code == CM_ERROR_NOSUCHPATH ||
+        code == CM_ERROR_BPLUS_NOMATCH) {
+        /* now do namei and stat, and copy out the info */
+        code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+    }
 
     if (code) {
         cm_ReleaseUser(userp);
@@ -3779,9 +3787,15 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         cm_FreeSpace(spacep);
     }
 
-    /* now do namei and stat, and copy out the info */
-    code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
-                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+    if (code == 0 ||
+        code == CM_ERROR_NOSUCHFILE ||
+        code == CM_ERROR_NOSUCHPATH ||
+        code == CM_ERROR_BPLUS_NOMATCH) {
+        /* now do namei and stat, and copy out the info */
+        code = cm_NameI(cm_RootSCachep(userp, &req), pathp,
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+    }
+
     if (code) {
         cm_ReleaseUser(userp);
         smb_SendTran2Error(vcp, p, opx, code);
@@ -6260,9 +6274,12 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif /* DFS_SUPPORT */
 
     if (code != 0) {
-        code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
-                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                        userp, tidPathp, &req, &dscp);
+        if (code == CM_ERROR_NOSUCHFILE ||
+            code == CM_ERROR_NOSUCHPATH ||
+            code == CM_ERROR_BPLUS_NOMATCH)
+            code = cm_NameI(cm_RootSCachep(userp, &req), spacep->wdata,
+                            CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                            userp, tidPathp, &req, &dscp);
         if (code) {
             cm_ReleaseUser(userp);
             return code;
@@ -7578,13 +7595,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     cm_ReleaseSCache(dscp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
-		    if (baseFidp) 
+		    if (baseFidp)
 			smb_ReleaseFID(baseFidp);
                     return CM_ERROR_EXISTS;
                 }
             }
+            /* we have both scp and dscp */
         }
-        /* we have both scp and dscp */
     } else {
         code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
@@ -7603,6 +7620,17 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 #endif /* DFS_SUPPORT */
         /* we might have scp but not dscp */
+    }
+
+    if (code &&
+        code != CM_ERROR_NOSUCHFILE &&
+        code != CM_ERROR_NOSUCHPATH &&
+        code != CM_ERROR_BPLUS_NOMATCH) {
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        if (baseFidp)
+            smb_ReleaseFID(baseFidp);
+        return code;
     }
 
     if (scp)
@@ -7644,6 +7672,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif /* DFS_SUPPORT */
 
                 if (code &&
+                    (code == CM_ERROR_NOSUCHFILE ||
+                     code == CM_ERROR_NOSUCHPATH ||
+                     code == CM_ERROR_BPLUS_NOMATCH) &&
                     (tp = cm_ClientStrRChr(spacep->wdata, '\\')) &&
                     (createDisp == FILE_CREATE) &&
                     (realDirFlag == 1)) {
@@ -8444,8 +8475,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                     return CM_ERROR_EXISTS;
                 }
             }
-        } else 
-            dscp = NULL;
+        }
     } else {
         code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
@@ -8468,7 +8498,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (code == 0) 
         foundscp = TRUE;
 
-    if (code != 0 || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
+    if (code == CM_ERROR_NOSUCHFILE ||
+        code == CM_ERROR_NOSUCHPATH ||
+        code == CM_ERROR_BPLUS_NOMATCH ||
+        (code == 0 && (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)))) {
         /* look up parent directory */
         if ( !dscp ) {
             code = cm_NameI(baseDirp, spacep->wdata,

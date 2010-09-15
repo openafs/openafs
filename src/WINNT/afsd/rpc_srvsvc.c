@@ -835,9 +835,11 @@ NET_API_STATUS NetrShareGetInfo(
 
             if (cblen) {
                 code = cm_NameI(dscp, pathstr, CM_FLAG_FOLLOW, userp, NULL, &req, &scp);
-                if (code && code != CM_ERROR_NOACCESS)
+                if (code == CM_ERROR_NOSUCHFILE ||
+                    code == CM_ERROR_NOSUCHPATH ||
+                    code == CM_ERROR_BPLUS_NOMATCH)
                     code = cm_NameI(dscp, pathstr, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                                      userp, NULL, &req, &scp);
+                                    userp, NULL, &req, &scp);
             }
         }
     }
