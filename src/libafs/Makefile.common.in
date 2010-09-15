@@ -142,6 +142,7 @@ AFSAOBJS = \
 	rx_clock.o	\
 	rx_event.o	\
 	rx_globals.o	\
+	rx_identity.o	\
 	rx_kmutex.o	\
 	rx_knet.o	\
 	rx_kcommon.o	\
@@ -212,6 +213,7 @@ AFSPAGOBJS = \
 	rx_clock.o	\
 	rx_event.o	\
 	rx_globals.o	\
+	rx_identity.o	\
 	rx_kmutex.o	\
 	rx_pag_knet.o	\
 	rx_kcommon.o	\
@@ -397,6 +399,8 @@ rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
 rx_event.o: $(TOP_SRC_RX)/rx_event.c
 	$(CRULE_NOOPT)
 rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
+	$(CRULE_NOOPT)
+rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
 	$(CRULE_NOOPT)
 rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
 	$(CRULE_NOOPT)

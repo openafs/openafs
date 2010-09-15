@@ -158,6 +158,12 @@
 	rx_opaque_zeroFreeContents;
 	rx_opaque_free;
 	rx_opaque_zeroFree;
+	rx_identity_match;
+	rx_identity_populate;
+	rx_identity_copy;
+	rx_identity_new;
+	rx_identity_freeContents;
+	rx_identity_free;
     local:
 	*;
 };

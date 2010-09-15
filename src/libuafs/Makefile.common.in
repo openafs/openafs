@@ -161,6 +161,7 @@ UAFSOBJ = \
 	$(UOBJ)/rx_clock.o \
 	$(UOBJ)/rx_event.o \
 	$(UOBJ)/rx_globals.o \
+	$(UOBJ)/rx_identity.o \
 	$(UOBJ)/rx_kmutex.o \
 	$(UOBJ)/rx_knet.o \
 	$(UOBJ)/rx_kcommon.o \
@@ -301,6 +302,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/rx_clock.o \
 	$(WEBOBJ)/rx_event.o \
 	$(WEBOBJ)/rx_globals.o \
+	$(WEBOBJ)/rx_identity.o \
 	$(WEBOBJ)/rx_kmutex.o \
 	$(WEBOBJ)/rx_knet.o \
 	$(WEBOBJ)/rx_kcommon.o \
@@ -437,6 +439,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/rx_clock.o \
 	$(WEBOBJ)/rx_event.o \
 	$(WEBOBJ)/rx_globals.o \
+	$(WEBOBJ)/rx_identity.o \
 	$(WEBOBJ)/rx_kmutex.o \
 	$(WEBOBJ)/rx_knet.o \
 	$(WEBOBJ)/rx_kcommon.o \
@@ -576,6 +579,7 @@ JUAFSOBJ = \
 	$(JUAFS)/rx_clock.o \
 	$(JUAFS)/rx_event.o \
 	$(JUAFS)/rx_globals.o \
+	$(JUAFS)/rx_identity.o \
 	$(JUAFS)/rx_knet.o \
 	$(JUAFS)/rx_kcommon.o \
 	$(JUAFS)/rx_misc.o \
@@ -768,6 +772,8 @@ $(UOBJ)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
 $(UOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 	$(CRULE1)
 $(UOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
+	$(CRULE1)
+$(UOBJ)/rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
 	$(CRULE1)
 $(UOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
 	$(CRULE1)
@@ -1055,6 +1061,8 @@ $(WEBOBJ)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
 $(WEBOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 	$(CRULE2)
 $(WEBOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
+	$(CRULE2)
+$(WEBOBJ)/rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
 	$(CRULE2)
 $(WEBOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
 	$(CRULE2)
@@ -1346,6 +1354,8 @@ $(JUAFS)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
 $(JUAFS)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 	$(CRULE1)
 $(JUAFS)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
+	$(CRULE1)
+$(JUAFS)/rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
 	$(CRULE1)
 $(JUAFS)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
 	$(CRULE1)

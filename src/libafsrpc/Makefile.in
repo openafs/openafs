@@ -70,6 +70,7 @@ RXOBJS =\
 	rx_opaque.o \
 	rx_conncache.o \
 	rx_globals.o \
+	rx_identity.o \
 	rx_getaddr.o \
 	rx_misc.o \
 	rx_packet.o \
@@ -173,6 +174,9 @@ rx_opaque.o: ${RX}/rx_opaque.c
 
 rx_globals.o: ${RX}/rx_globals.c 
 	${CCRULE} ${RX}/rx_globals.c
+
+rx_identity.o: ${RX}/rx_identity.o
+	${CCRULE} ${RX}/rx_identity.c
 
 rx_getaddr.o: ${RX}/rx_getaddr.c
 	${CCRULE} ${RX}/rx_getaddr.c
