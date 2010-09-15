@@ -177,15 +177,23 @@ int afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath,
 /* userok.c */
 
 struct rx_call;
+struct rx_identity;
 extern int afsconf_CheckAuth(void *arock, struct rx_call *acall);
 extern int afsconf_GetNoAuthFlag(struct afsconf_dir *adir);
 extern void afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag);
 extern int afsconf_DeleteUser(struct afsconf_dir *adir, char *auser);
+extern int afsconf_DeleteIdentity(struct afsconf_dir *, struct rx_identity *);
 extern int afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an,
 			      char *abuffer, afs_int32 abufferLen);
+extern int afsconf_GetNthIdentity(struct afsconf_dir *, int,
+				  struct rx_identity **);
 extern int afsconf_AddUser(struct afsconf_dir *adir, char *aname);
+extern int afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *);
 extern int afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall,
                              char *namep);
+extern int afsconf_SuperIdentity(struct afsconf_dir *, struct rx_call *,
+				 struct rx_identity **);
+extern int afsconf_IsSuperIdentity(struct afsconf_dir *, struct rx_identity *);
 
 /* some well-known ports and their names; new additions to table in cellconfig.c, too */
 #define	AFSCONF_FILESERVICE		"afs"

@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include "base64.h"
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -33,6 +34,7 @@
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rx_identity.h>
 #include <stdio.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
@@ -45,6 +47,16 @@
 #include "cellconfig.h"
 #include "keys.h"
 #include "afs/audit.h"
+
+static int ParseLine(char *buffer, struct rx_identity *user);
+
+static void
+UserListFileName(struct afsconf_dir *adir,
+		 char *buffer, size_t len)
+{
+    strcompose(buffer, len, adir->name, "/",
+	       AFSDIR_ULIST_FILE, NULL);
+}
 
 #if !defined(UKERNEL)
 int
@@ -105,24 +117,42 @@ afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag)
     UNLOCK_GLOBAL_MUTEX;
 }
 
-/* deletes a user from the UserList file */
+/*!
+ * Remove an identity from the UserList file
+ *
+ * This function removes the given identity from the user list file.
+ * For the purposes of identifying entries to remove, only the
+ * type and exportedName portions of the identity are used. Callers
+ * should remember that a given identity may be listed in the file in
+ * a number of different ways.
+ *
+ * @param adir
+ * 	A structure representing the configuration directory currently
+ * 	in use
+ * @param user
+ * 	The RX identity to delete
+ *
+ * @returns
+ * 	0 on success, an error code on failure
+ */
+
 int
-afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
+afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 {
     char tbuffer[1024];
     char nbuffer[1024];
+    char *copy;
     FILE *tf;
     FILE *nf;
     int flag;
-    char tname[64 + 1];
     char *tp;
     int found;
     struct stat tstat;
+    struct rx_identity identity;
     afs_int32 code;
 
     LOCK_GLOBAL_MUTEX;
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
-	       AFSDIR_ULIST_FILE, NULL);
+    UserListFileName(adir, tbuffer, sizeof tbuffer);
 #ifndef AFS_NT40_ENV
     {
 	/*
@@ -162,14 +192,22 @@ afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
 	tp = fgets(nbuffer, sizeof(nbuffer), tf);
 	if (tp == NULL)
 	    break;
-	code = sscanf(nbuffer, "%64s", tname);
-	if (code == 1 && strcmp(tname, auser) == 0) {
+
+	copy = strdup(nbuffer);
+	if (copy == NULL) {
+	    flag = 1;
+	    break;
+	}
+	code = ParseLine(copy, &identity);
+	if (code == 0 && rx_identity_match(user, &identity)) {
 	    /* found the guy, don't copy to output file */
 	    found = 1;
 	} else {
-	    /* otherwise copy original line  to output */
+	    /* otherwise copy original line to output */
 	    fprintf(nf, "%s", nbuffer);
 	}
+	free(copy);
+	rx_identity_freeContents(&identity);
     }
     fclose(tf);
     if (ferror(nf))
@@ -195,87 +233,278 @@ afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
     return 0;			/* everything was fine */
 }
 
-/* returns nth super user from the UserList file */
+/*!
+ * Remove a legacy Kerberos 4 name from the UserList file.
+ *
+ * This function removes a Kerberos 4 name from the super user list. It
+ * can only remove names which were added by the afsconf_AddUser interface,
+ * or with an explicit Kerberos v4 type.
+ *
+ * @param[in] adir
+ * 	A structure representing the configuration directory
+ * @param[in] name
+ * 	The Kerberos v4 name to remove
+ *
+ * @returns
+ * 	0 on success, an error code upon failure.
+ *
+ * Note that this function is deprecated. New callers should use
+ * afsconf_DeleteIdentity instead.
+ */
+
+int
+afsconf_DeleteUser(struct afsconf_dir *adir, char *name)
+{
+    struct rx_identity *user;
+    int code;
+
+    user = rx_identity_new(RX_ID_KRB4, name, name, strlen(name));
+    if (!user)
+	return ENOMEM;
+
+    code = afsconf_DeleteIdentity(adir, user);
+
+    rx_identity_free(&user);
+
+    return code;
+}
+
+/* This is a multi-purpose funciton for use by either
+ * GetNthIdentity or GetNthUser. The parameter 'id' indicates
+ * whether we are counting all identities (if true), or just
+ * ones which can be represented by the old-style interfaces
+ */
+static int
+GetNthIdentityOrUser(struct afsconf_dir *dir, int count,
+		     struct rx_identity **identity, int id)
+{
+    bufio_p bp;
+    char tbuffer[1024];
+    struct rx_identity fileUser;
+    afs_int32 code;
+
+    LOCK_GLOBAL_MUTEX;
+    UserListFileName(dir, tbuffer, sizeof(tbuffer));
+    bp = BufioOpen(tbuffer, O_RDONLY, 0);
+    if (!bp) {
+	UNLOCK_GLOBAL_MUTEX;
+	return EIO;
+    }
+    while (1) {
+	code = BufioGets(bp, tbuffer, sizeof(tbuffer));
+	if (code < 0)
+	    break;
+
+	code = ParseLine(tbuffer, &fileUser);
+	if (code != 0)
+	    break;
+
+	if (id || fileUser.kind == RX_ID_KRB4)
+	    count--;
+
+	if (count < 0)
+	    break;
+        else
+	    rx_identity_freeContents(&fileUser);
+    }
+    if (code == 0) {
+	*identity = rx_identity_copy(&fileUser);
+	rx_identity_freeContents(&fileUser);
+    }
+
+    BufioClose(bp);
+
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
+}
+
+/*!
+ * Return the Nth super user identity from the UserList
+ *
+ * @param[in] dir
+ * 	A structure representing the configuration directory
+ * @param[in] count
+ * 	A count (from zero) of the entries to return from the
+ * 	UserList
+ * @param[out] identity
+ * 	A pointer to the Nth identity
+ * @returns
+ * 	0 on success, non-zero on failure
+ */
+
+int
+afsconf_GetNthIdentity(struct afsconf_dir *dir, int count,
+		       struct rx_identity **identity)
+{
+   return GetNthIdentityOrUser(dir, count, identity, 1);
+}
+
+/*!
+ * Return the Nth Kerberos v4 identity from the UserList
+ *
+ * This returns the Nth old, kerberos v4 style name from
+ * the UserList file. In counting entries it skips any other
+ * name types it encounters - so will hide any new-style
+ * identities from its callers.
+ *
+ * @param[in] dir
+ * 	A structure representing the configuration directory
+ * @param[in] count
+ * 	A count (from zero) of the entries to return from the
+ * 	UserList
+ * @param abuffer
+ * 	A string in which to write the name of the Nth identity
+ * @param abufferLen
+ * 	The length of the buffer passed in abuffer
+ * @returns
+ * 	0 on success, non-zero on failure
+ *
+ * This function is deprecated, all new callers should use
+ * GetNthIdentity instead. This function is particularly dangerous
+ * as it will hide any new-style identities from callers.
+ */
+
 int
 afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer,
 		   afs_int32 abufferLen)
 {
-    char tbuffer[256];
-    FILE *tf;
-    char tname[64 + 1];
-    char *tp;
-    int flag;
-    afs_int32 code;
+    struct rx_identity *identity;
+    int code;
 
-    LOCK_GLOBAL_MUTEX;
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
-	       AFSDIR_ULIST_FILE, NULL);
-    tf = fopen(tbuffer, "r");
-    if (!tf) {
-	UNLOCK_GLOBAL_MUTEX;
-	return 1;
+    code = GetNthIdentityOrUser(adir, an, &identity, 0);
+    if (code == 0) {
+	strlcpy(abuffer, identity->displayName, abufferLen);
+	rx_identity_free(&identity);
     }
-    flag = 1;
-    while (1) {
-	/* check for our user id */
-	tp = fgets(tbuffer, sizeof(tbuffer), tf);
-	if (tp == NULL)
-	    break;
-	code = sscanf(tbuffer, "%64s", tname);
-	if (code == 1 && an-- == 0) {
-	    flag = 0;
-	    break;
-	}
-    }
-    if (flag == 0)
-	strcpy(abuffer, tname);
-    fclose(tf);
-    UNLOCK_GLOBAL_MUTEX;
-    return flag;
+    return code;
 }
 
-/* returns true iff user is in the UserList file */
+/*!
+ * Parse a UserList list
+ *
+ * Parse a line of data from a UserList file
+ *
+ * This parses a line of data in a UserList, and populates the passed
+ * rx_identity structure with the information about the user.
+ *
+ * @param buffer	A string containing the line to be parsed
+ * @param user		The user structure to be populated
+ *
+ * Note that the user->displayName, and user->exportedName.val fields
+ * must be freed with free() by the caller.
+ *
+ * This function damages the buffer thats passed to it. Callers are
+ * expected to make a copy if they want the buffer preserved.
+ *
+ * @return
+ * 	0 on success, non-zero on failure.
+ */
+
 static int
-FindUser(struct afsconf_dir *adir, char *auser)
+ParseLine(char *buffer, struct rx_identity *user)
 {
-    char tbuffer[256];
+    char *ptr;
+    char *ename;
+    char *displayName;
+    char *decodedName;
+    char name[64+1];
+    int len;
+    int kind;
+    int code;
+
+    if (buffer[0] == ' ') { /* extended names have leading space */
+	ptr = buffer + 1;
+	code = sscanf(ptr, "%i", &kind);
+	if (code != 1)
+	    return EINVAL;
+
+	strsep(&ptr, " "); /* skip the bit we just read with scanf */
+	ename = strsep(&ptr, " "); /* Pull out the ename */
+	displayName = strsep(&ptr, " "); /* Display name runs to the end */
+	if (ename == NULL || displayName == NULL)
+	    return EINVAL;
+
+	decodedName = malloc(strlen(ename));
+	if (decodedName == NULL)
+	    return ENOMEM;
+
+	len = base64_decode(ename, decodedName);
+	if (len<0) {
+	    free(decodedName);
+	    return EINVAL;
+	}
+
+	rx_identity_populate(user, kind, displayName, decodedName, len);
+	free(decodedName);
+
+	return 0; /* Success ! */
+    }
+
+    /* No extended name, try for a legacy name */
+    code = sscanf(buffer, "%64s", name);
+    if (code != 1)
+	return EINVAL;
+
+    rx_identity_populate(user, RX_ID_KRB4, name, name, strlen(name));
+    return 0;
+}
+
+/*!
+ * Check if a given identity is in the UserList file,
+ * and thus is a super user
+ *
+ * @param adir
+ * 	A structure representing the configuration directory to check
+ * @param user
+ * 	The identity to check
+ * @returns
+ * 	True if the user is listed in the UserList, otherwise false
+ */
+
+int
+afsconf_IsSuperIdentity(struct afsconf_dir *adir,
+			struct rx_identity *user)
+{
     bufio_p bp;
-    char tname[64 + 1];
-    int flag;
+    char tbuffer[1024];
+    struct rx_identity fileUser;
+    int match;
     afs_int32 code;
-    int rc;
 
     strcompose(tbuffer, sizeof tbuffer, adir->name, "/", AFSDIR_ULIST_FILE,
 	       NULL);
     bp = BufioOpen(tbuffer, O_RDONLY, 0);
     if (!bp)
 	return 0;
-    flag = 0;
-    while (1) {
-	/* check for our user id */
-	rc = BufioGets(bp, tbuffer, sizeof(tbuffer));
-	if (rc < 0)
+    match = 0;
+    while (!match) {
+	code = BufioGets(bp, tbuffer, sizeof(tbuffer));
+        if (code < 0)
 	    break;
-	code = sscanf(tbuffer, "%64s", tname);
-	if (code == 1 && strcmp(tname, auser) == 0) {
-	    flag = 1;
-	    break;
-	}
+
+	code = ParseLine(tbuffer, &fileUser);
+	if (code != 0)
+	   break;
+
+	match = rx_identity_match(user, &fileUser);
+
+	rx_identity_freeContents(&fileUser);
     }
     BufioClose(bp);
-    return flag;
+    return match;
 }
 
 /* add a user to the user list, checking for duplicates */
 int
-afsconf_AddUser(struct afsconf_dir *adir, char *aname)
+afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 {
     FILE *tf;
     afs_int32 code;
+    char *ename;
     char tbuffer[256];
 
     LOCK_GLOBAL_MUTEX;
-    if (FindUser(adir, aname)) {
+    if (afsconf_IsSuperIdentity(adir, user)) {
 	UNLOCK_GLOBAL_MUTEX;
 	return EEXIST;		/* already in the list */
     }
@@ -287,7 +516,14 @@ afsconf_AddUser(struct afsconf_dir *adir, char *aname)
 	UNLOCK_GLOBAL_MUTEX;
 	return EIO;
     }
-    fprintf(tf, "%s\n", aname);
+    if (user->kind == RX_ID_KRB4) {
+	fprintf(tf, "%s\n", user->displayName);
+    } else {
+	base64_encode(user->exportedName.val, user->exportedName.len,
+		      &ename);
+	fprintf(tf, " %d %s %s\n", user->kind, ename, user->displayName);
+	free(ename);
+    }
     code = 0;
     if (ferror(tf))
 	code = EIO;
@@ -297,26 +533,44 @@ afsconf_AddUser(struct afsconf_dir *adir, char *aname)
     return code;
 }
 
+int
+afsconf_AddUser(struct afsconf_dir *adir, char *aname)
+{
+    struct rx_identity *user;
+    int code;
+
+    user = rx_identity_new(RX_ID_KRB4, aname, aname, strlen(aname));
+    if (user == NULL)
+	return ENOMEM;
+
+    code = afsconf_AddIdentity(adir, user);
+
+    rx_identity_free(&user);
+
+    return code;
+}
+
 /* special CompFindUser routine that builds up a princ and then
 	calls finduser on it. If found, returns char * to user string,
 	otherwise returns NULL. The resulting string should be immediately
 	copied to other storage prior to release of mutex. */
-static char *
+static int
 CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
-	     char *realm)
+	     char *realm, struct rx_identity **identity)
 {
     static char fullname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
+    struct rx_identity *testId;
 
     /* always must have name */
     if (!name || !name[0]) {
-	return NULL;
+	return 0;
     }
     strcpy(fullname, name);
 
     /* might have instance */
     if (inst && inst[0]) {
 	if (!sep || !sep[0]) {
-	    return NULL;
+	    return 0;
 	}
 
 	strcat(fullname, sep);
@@ -329,16 +583,22 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
 	strcat(fullname, realm);
     }
 
-    if (FindUser(adir, fullname)) {
-	return fullname;
-    } else {
-	return NULL;
+    testId = rx_identity_new(RX_ID_KRB4, fullname, fullname, strlen(fullname));
+    if (afsconf_IsSuperIdentity(adir, testId)) {
+	if (*identity)
+	     *identity = testId;
+	else
+	     rx_identity_free(&testId);
+	return 1;
     }
+
+    rx_identity_free(&testId);
+    return 0;
 }
 
 static int
 kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
-		  char *tcell, char *namep)
+		  char *tcell, struct rx_identity **identity)
 {
     char tcell_l[MAXKTCREALMLEN] = "";
     char *tmp;
@@ -418,44 +678,24 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 
 	/* cell of connection matches local cell or one of the realms */
     } else if (!strcasecmp(tcell, lcell) || lrealm_match) {
-	if ((tmp = CompFindUser(adir, tname, ".", tinst, NULL))) {
-	    strcpy(uname, tmp);
+	if (CompFindUser(adir, tname, ".", tinst, NULL, identity)) {
 	    flag = 1;
-#ifdef notyet
-	} else if ((tmp = CompFindUser(adir, tname, "/", tinst, NULL))) {
-	    strcpy(uname, tmp);
-	    flag = 1;
-#endif
 	}
 	/* cell of conn doesn't match local cell or realm */
     } else {
-	if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell))) {
-	    strcpy(uname, tmp);
+	if (CompFindUser(adir, tname, ".", tinst, tcell, identity)) {
 	    flag = 1;
-#ifdef notyet
-	} else if ((tmp = CompFindUser(adir, tname, "/", tinst, tcell))) {
-	    strcpy(uname, tmp);
+	} else if (CompFindUser(adir, tname, ".", tinst, tcell_l, identity)) {
 	    flag = 1;
-#endif
-	} else if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell_l))) {
-	    strcpy(uname, tmp);
-	    flag = 1;
-#ifdef notyet
-	} else if ((tmp = CompFindUser(adir, tname, "/", tinst, tcell_l))) {
-	    strcpy(uname, tmp);
-	    flag = 1;
-#endif
 	}
     }
-
-    if (namep)
-	strcpy(namep, uname);
 
     return flag;
 }
 
 static int
-rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
+rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall,
+	       struct rx_identity **identity)
 {
     char tname[MAXKTCNAMELEN];	/* authentication from ticket */
     char tinst[MAXKTCNAMELEN];
@@ -470,15 +710,27 @@ rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
     if (code)
 	return 0;		/* bogus connection/other error */
 
-    return kerberosSuperUser(adir, tname, tinst, tcell, namep);
+    return kerberosSuperUser(adir, tname, tinst, tcell, identity);
 }
 
-/* make sure user authenticated on rx call acall is in list of valid
-    users. Copy the "real name" of the authenticated user into namep
-    if a pointer is passed.
-*/
+/*!
+ * Check whether the user authenticated on a given RX call is a super
+ * user or not. If they are, return a pointer to the identity of that
+ * user.
+ *
+ * @param[in] adir
+ * 	The configuration directory currently in use
+ * @param[in] acall
+ * 	The RX call whose authenticated identity is being checked
+ * @param[out] identity
+ * 	The RX identity of the user. Caller must free this structure.
+ * @returns
+ * 	True if the user is a super user, or if the server is running
+ * 	in noauth mode. Otherwise, false.
+ */
 afs_int32
-afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
+afsconf_SuperIdentity(struct afsconf_dir *adir, struct rx_call *acall,
+		      struct rx_identity **identity)
 {
     struct rx_connection *tconn;
     afs_int32 code;
@@ -491,8 +743,8 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
     }
 
     if (afsconf_GetNoAuthFlag(adir)) {
-	if (namep)
-	    strcpy(namep, "<NoAuth>");
+	if (identity)
+	    *identity = rx_identity_new(RX_ID_KRB4, "<NoAuth>", "<NoAuth>", 8);
 	UNLOCK_GLOBAL_MUTEX;
 	return 1;
     }
@@ -507,11 +759,51 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;		/* not supported any longer */
     } else if (code == 2) {
-	flag = rxkadSuperUser(adir, acall, namep);
+	flag = rxkadSuperUser(adir, acall, identity);
 	UNLOCK_GLOBAL_MUTEX;
 	return flag;
     } else {			/* some other auth type */
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;		/* mysterious, just say no */
     }
+}
+
+/*!
+ * Check whether the user authenticated on a given RX call is a super
+ * user or not. If they are, return a pointer to the name of that
+ * user.
+ *
+ * @param[in] adir
+ * 	The configuration directory currently in use
+ * @param[in] acall
+ * 	The RX call whose authenticated identity is being checked
+ * @param[out] namep
+ * 	A printable version of the name of the user
+ * @returns
+ * 	True if the user is a super user, or if the server is running
+ * 	in noauth mode. Otherwise, false.
+ *
+ * This function is provided for backwards compatibility. New callers
+ * should use the afsconf_SuperIdentity function.
+ */
+
+afs_int32
+afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall,
+		  char *namep)
+{
+    struct rx_identity *identity;
+    int code;
+
+    code = afsconf_SuperIdentity(adir, acall, &identity);
+    if (namep) {
+	if (identity->kind == RX_ID_KRB4) {
+	    strlcpy(namep, identity->displayName, MAXKTCNAMELEN-1);
+	} else {
+	    snprintf(namep, MAXKTCNAMELEN-1, "eName: %s",
+		     identity->displayName);
+	}
+    }
+    rx_identity_free(&identity);
+
+    return code;
 }

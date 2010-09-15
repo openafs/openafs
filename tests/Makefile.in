@@ -11,6 +11,8 @@ MODULE_CFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 
 all: runtests
 	cd tap && $(MAKE) $@
+	cd auth && $(MAKE) $@
+	cd rxgk && $(MAKE) $@
 	cd util && $(MAKE) $@
 
 runtests: runtests.o
@@ -18,6 +20,7 @@ runtests: runtests.o
 
 check test tests: runtests
 	cd tap && $(MAKE) $@
+	cd auth && $(MAKE) $@
 	cd util && $(MAKE) $@
 	./runtests $(abs_top_srcdir)/tests/TESTS
 
@@ -25,5 +28,6 @@ install:
 
 clean distclean:
 	cd tap && $(MAKE) $@
+	cd auth && $(MAKE) $@
 	cd util && $(MAKE) $@
 	$(RM) -f *.o core runtests

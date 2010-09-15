@@ -1,0 +1,22 @@
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+TESTS = superuser-t
+
+MODULE_CFLAGS=-I$(srcdir)/..
+
+all check test tests: $(TESTS)
+
+superuser-t: superuser-t.o
+	$(AFS_LDRULE) superuser-t.o ../tap/libtap.a \
+		$(abs_top_builddir)/lib/libafsauthent.a \
+		$(abs_top_builddir)/lib/librxgk.a \
+		$(abs_top_builddir)/lib/libafsrpc.a \
+		$(abs_top_builddir)/lib/libafshcrypto.a \
+		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
+		$(XLIBS)
+clean:
+	rm -f *.o superuser-t

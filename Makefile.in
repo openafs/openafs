@@ -893,6 +893,7 @@ distclean: clean
 	src/tbutc/Makefile \
 	src/tests/Makefile \
 	src/tests/run-tests \
+	src/tests/auth/Makefile \
 	src/tsalvaged/Makefile \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \

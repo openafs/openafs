@@ -237,6 +237,7 @@ src/volser/Makefile \
 src/xstat/Makefile \
 src/helper-splint.sh \
 tests/Makefile \
+tests/auth/Makefile \
 tests/rpctestlib/Makefile \
 tests/tap/Makefile \
 tests/util/Makefile,
