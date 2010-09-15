@@ -306,8 +306,8 @@ afs_nfsclient_getcreds(struct unixuser *au)
     struct nfsclientpag *np = (struct nfsclientpag *)(au->exporter);
     struct rx_securityClass *csec;
     struct rx_connection *tconn;
-    struct tokenUnion *tokenPtr;
-    struct rkxadToken *token;
+    union tokenUnion *tokenPtr;
+    struct rxkadToken *token;
     SysNameList tsysnames;
     CredInfos tcreds;
     CredInfo *tcred;
@@ -384,8 +384,8 @@ afs_nfsclient_getcreds(struct unixuser *au)
 
 	/* Add a new rxkad token. Using the afs_AddRxkadToken interface
 	 * would require another copy, so we do this the hard way */
-	tokenptr = afs_AddToken(&tu->tokens, 2);
-	token = &tokenptr->rxkad;
+	tokenPtr = afs_AddToken(&tu->tokens, 2);
+	token = &tokenPtr->rxkad;
 	token->ticket = tcred->st.st_val;
 	token->ticketLen = tcred->st.st_len;
 
