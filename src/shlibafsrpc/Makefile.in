@@ -71,6 +71,7 @@ RXOBJS =\
 	rx_pthread.o \
 	rx.o \
 	rx_null.o \
+	rx_opaque.o \
 	rx_conncache.o \
 	rx_globals.o \
 	rx_getaddr.o \
@@ -185,6 +186,9 @@ rx_conncache.o: ${RX}/rx_conncache.c
 	${CCRULE}
 
 rx_null.o: ${RX}/rx_null.c
+	${CCRULE}
+
+rx_opaque.o: ${RX}/rx_opaque.c
 	${CCRULE}
 
 rx_globals.o: ${RX}/rx_globals.c

@@ -24,7 +24,8 @@ XDROBJS = xdr_arrayn.o ${XDROBJS_common}
 
 RXOBJS_common = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o \
 	rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o rx_trace.o \
-	rx_conncache.o xdr_int32.o xdr_int64.o xdr_update.o xdr_refernce.o
+	rx_conncache.o rx_opaque.o \
+	xdr_int32.o xdr_int64.o xdr_update.o xdr_refernce.o
 
 RXOBJS = ${RXOBJS_common} 
 
@@ -97,6 +98,7 @@ includes: \
 	${TOP_INCDIR}/rx/rx_lwp.h \
 	${TOP_INCDIR}/rx/rx_misc.h \
 	${TOP_INCDIR}/rx/rx_null.h \
+	${TOP_INCDIR}/rx/rx_opaque.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/rx/xdr_prototypes.h
 
@@ -142,6 +144,9 @@ ${TOP_INCDIR}/rx/rx_misc.h: rx_misc.h
 ${TOP_INCDIR}/rx/rx_null.h: rx_null.h
 	${INSTALL_DATA} $? $@
 
+${TOP_INCDIR}/rx/rx_opaque.h: rx_opaque.h
+	${INSTALL_DATA} $? $@
+
 ${TOP_INCDIR}/rx/xdr.h: xdr.h
 	${INSTALL_DATA} $? $@
 
@@ -168,6 +173,8 @@ install: librx.a
 	${INSTALL_DATA} ${srcdir}/rx_lwp.h ${DESTDIR}${includedir}/rx/rx_lwp.h
 	${INSTALL_DATA} ${srcdir}/rx_misc.h ${DESTDIR}${includedir}/rx/rx_misc.h
 	${INSTALL_DATA} ${srcdir}/rx_null.h ${DESTDIR}${includedir}/rx/rx_null.h
+	${INSTALL_DATA} ${srcdir}/rx_opaque.h \
+		${DESTDIR}${includedir}/rx/rx_opaque.h
 	${INSTALL_DATA} ${srcdir}/xdr.h ${DESTDIR}${includedir}/rx/xdr.h
 	${INSTALL_DATA} ${srcdir}/xdr_prototypes.h ${DESTDIR}${includedir}/rx/xdr_prototypes.h
 
@@ -188,6 +195,7 @@ dest: librx.a
 	${INSTALL_DATA} ${srcdir}/rx_lwp.h ${DEST}/include/rx/rx_lwp.h
 	${INSTALL_DATA} ${srcdir}/rx_misc.h ${DEST}/include/rx/rx_misc.h
 	${INSTALL_DATA} ${srcdir}/rx_null.h ${DEST}/include/rx/rx_null.h
+	${INSTALL_DATA} ${srcdir}/rx_opaque.h ${DEST}/include/rx/rx_opaque.h
 	${INSTALL_DATA} ${srcdir}/xdr.h ${DEST}/include/rx/xdr.h
 	${INSTALL_DATA} ${srcdir}/xdr_prototypes.h ${DEST}/include/rx/xdr_prototypes.h
 

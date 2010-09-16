@@ -147,6 +147,7 @@ AFSAOBJS = \
 	rx_kcommon.o	\
 	rx_misc.o	\
 	rx_null.o	\
+	rx_opaque.o	\
 	rx_getaddr.o	\
 	rx_packet.o	\
 	rx_multi.o	\
@@ -216,6 +217,7 @@ AFSPAGOBJS = \
 	rx_kcommon.o	\
 	rx_misc.o	\
 	rx_null.o	\
+	rx_opaque.o	\
 	rx_getaddr.o	\
 	rx_packet.o	\
 	rx_multi.o	\
@@ -402,6 +404,8 @@ rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
 	$(CRULE_NOOPT)
 rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE_NOOPT)
+rx_opaque.o: $(TOP_SRC_RX)/rx_opaque.c
+	$(CRULE_OPT)
 rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
 	$(CRULE_NOOPT)
 rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
