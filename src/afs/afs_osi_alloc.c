@@ -40,7 +40,7 @@ struct osimem {
     struct osimem *next;
 };
 
-#if !defined(AFS_NBSD_ENV)
+#if !defined(AFS_NBSD_ENV) || defined(AFS_NBSD50_ENV)
 void *
 afs_osi_Alloc(size_t x)
 {
@@ -218,7 +218,7 @@ osi_AllocSmallSpace(size_t size)
     return (char *)tp;
 }
 
-#endif /* !AFS_NBSD_ENV */
+#endif /* !AFS_NBSD_ENV && !defined(AFS_NBSD50_ENV) */
 
 void
 shutdown_osinet(void)

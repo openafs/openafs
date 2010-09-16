@@ -11,9 +11,26 @@
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 210
 
+
+#ifdef AFS_KALLOC
+#undef AFS_KALLOC
+#endif
+#define AFS_KALLOC(s) (osi_nbsd_Alloc((s), 1 /* cansleep */))
+
+#ifdef AFS_KFREE
+#undef AFS_KFREE
+#endif
+#define AFS_KFREE(p, s) (osi_nbsd_Free((p), (s)))
+
+#if 0
+/* including this file before sysincludes.h is canonical, but
+ * NBSD40's mount.h defines MOUNT_AFS */
+
 #ifndef	MOUNT_AFS
 #define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
+
+#endif /* 0 */
 
 #define AFS_XBSD_ENV 1		/* {Free,Open,Net}BSD */
 
@@ -48,10 +65,7 @@
 #define ICHG 0x0040
 #define IMOD 0x0080
 
-#define IN_LOCK(ip)     lockmgr(&ip->i_lock, LK_EXCLUSIVE, \
-                                NULL, curproc)
-#define IN_UNLOCK(ip)   lockmgr(&ip->i_lock, LK_RELEASE, \
-                                NULL, curproc)
+#define RXK_LISTENER_ENV  1
 
 #include <afs/afs_sysnames.h>
 
@@ -61,10 +75,10 @@
 
 #define AFS_GCPAGS	        0	/* if nonzero, garbage collect PAGs */
 #define AFS_USE_GETTIMEOFDAY    1	/* use gettimeofday to implement rx clock */
+#define AFS_GLOBAL_SUNLOCK      1
 
 /* Extra kernel definitions (from kdefs file) */
-#ifdef _KERNEL
-#define AFS_GLOBAL_SUNLOCK        1
+#ifdef _KERNEL_DEPRECATED
 #define	AFS_VFS34	1	/* What is VFS34??? */
 #define	AFS_SHORTGID	1	/* are group id's short? */
 #define	afsio_iov	uio_iov
@@ -85,7 +99,6 @@
 #define va_nodeid	va_fileid
 #define vfs_vnodecovered mnt_vnodecovered
 #define direct		dirent
-#define vnode_t		struct vnode
 
 #ifndef MUTEX_DEFAULT
 #define MUTEX_DEFAULT   0
@@ -113,7 +126,7 @@ enum vcexcl { NONEXCL, EXCL };
 #endif /* KERNEL */
 
 #endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ && !defined(IGNORE_STDS_H) */
-#endif /* _KERNEL */
+#endif /* _KERNEL_DEPRECATED */
 
 #else /* !defined(UKERNEL) */
 
@@ -145,7 +158,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define CMSERVERPREF
 #endif
 
-#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
+#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H) && !defined()
 #include <limits.h>
 #include <sys/param.h>
 #include <sys/types.h>

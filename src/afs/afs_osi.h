@@ -37,6 +37,13 @@ struct xfs_inode_info {
 #include "h/mm.h"
 #endif
 
+#if defined(AFS_NBSD50_ENV)
+# if !defined(DEF_CADDR_T)
+typedef char * caddr_t;
+#define DEF_CADDR_T
+# endif
+#endif
+
 
 /* this is just a dummy type decl, we're really using struct sockets here */
 struct osi_socket {
@@ -368,7 +375,7 @@ typedef struct timeval osi_timeval_t;
 	    uio_setrw((UIO),(RW));				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || (defined(AFS_XBSD_ENV) && !defined(AFS_NBSD40_ENV))
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\

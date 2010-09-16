@@ -181,6 +181,26 @@ afs_Daemon(void)
 	if (afs_nfsexporter)
 	    afs_FlushActiveVcaches(0);	/* flush NFS writes */
 	afs_FlushVCBs(1);	/* flush queued callbacks */
+
+#if defined(AFS_NBSD50_ENV)
+	/* XXXX */
+	{
+	  int c1, c2;
+	  c1 = ISAFS_GLOCK(); /* this thread owns the GLOCK */
+	  if (!c1) {
+	    c2 = mutex_tryenter(&afs_global_mtx); /* not held either */
+	    if (c2)
+	      AFS_GUNLOCK();
+	  }
+	  else
+	    c2 = 0;
+	  printf("afs_daemons periodic glock check: curthread owns glock %s; "
+		 "glock held somewhere %s\n",
+		 c1 ? "true" : "false",
+		 c2 ? "true" : "false");
+	}
+#endif
+
 	afs_MaybeWakeupTruncateDaemon();	/* free cache space if have too */
 	rx_CheckPackets();	/* Does RX need more packets? */
 

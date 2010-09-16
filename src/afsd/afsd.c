@@ -1932,7 +1932,7 @@ afsd_run(void)
     int vFilesFound;		/*How many data cache files were found in sweep */
     int currVFile;		/*Current AFS cache file number passed in */
 
-    /*
+	/*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
      */
@@ -2170,7 +2170,7 @@ afsd_run(void)
 	if (code > 0) {
 	    if (enable_rxbind)
 		code = code | 0x80000000;
-	    afsd_call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+		afsd_call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
 	} else
 	    printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 		   reason);
@@ -2222,7 +2222,6 @@ afsd_run(void)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
 	afsd_fork(0, afsdb_thread, NULL);
     }
-
     code = afsd_call_syscall(AFSOP_BASIC_INIT, 1);
     if (code) {
 	printf("%s: Error %d in basic initialization.\n", rn, code);
@@ -2247,7 +2246,7 @@ afsd_run(void)
     cparams.setTimeFlag = cacheSetTime;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-    afsd_call_syscall(AFSOP_CACHEINIT, &cparams);
+	afsd_call_syscall(AFSOP_CACHEINIT, &cparams);
 
     /* do it before we init the cache inodes */
     if (enable_splitcache) {
@@ -2306,7 +2305,7 @@ afsd_run(void)
     if (afsd_debug)
 	printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
 	       fullpn_CellInfoFile);
-    afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+	afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
 
     if (rxmaxmtu) {
 	if (afsd_verbose)
@@ -2455,7 +2454,7 @@ afsd_run(void)
     if (afsd_debug)
 	printf("%s: Calling AFSOP_GO with cacheSetTime = %d\n", rn,
 	       cacheSetTime);
-    afsd_call_syscall(AFSOP_GO, cacheSetTime);
+	afsd_call_syscall(AFSOP_GO, cacheSetTime);
 
     /*
      * At this point, we have finished passing the kernel all the info

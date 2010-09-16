@@ -65,9 +65,20 @@ int
 afs_osi_suser(void *credp)
 {
     int code;
+/*
+ *	lwp->l_acflag is gone in NBSD50. It was "Accounting" stuff.
+ *	lwp->l_ru is what is listed as "accounting information" now, so this
+ *	may or may not work...
+ */
+#ifdef AFS_NBSD50_ENV
+	code = kauth_authorize_generic(credp,
+				   KAUTH_GENERIC_ISSUSER,
+				   &curlwp->l_ru);
+#else
     code = kauth_authorize_generic(credp,
 				   KAUTH_GENERIC_ISSUSER,
 				   &curlwp->l_acflag);
+#endif
     return (code == 0);
 }
 
@@ -158,6 +169,8 @@ osi_AllocSmallSpace(size_t size)
 
 #endif /* Space undef */
 
+#endif /* Space undef */
+
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
     long *retval;
@@ -165,8 +178,6 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
 {
     return EINVAL;
 }
-
-#endif /* Space undef */
 
 int
 afs_syscall_iopen(dev, inode, usrmod, retval)

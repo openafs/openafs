@@ -784,10 +784,11 @@ Afs_syscall()
 					iparams.param2, iparams.param3,
 					iparams.param4, rvp, CRED());
 #elif defined(AFS_NBSD40_ENV)
-
-		code = afs_syscall_create(SCARG(uap, parm1), SCARG(uap, parm2),
-					  SCARG(uap, parm3), SCARG(uap, parm4),
-					  retval);
+		code =
+			afs_syscall_icreate(SCARG(uap, parm1), SCARG(uap, parm2),
+				iparams.param1, iparams.param2, iparams.param3,
+				iparams.param4, retval
+			);
 #else
 		code =
 		    afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1,

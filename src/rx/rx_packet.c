@@ -30,7 +30,7 @@
 #ifndef AFS_LINUX20_ENV
 #include "h/systm.h"
 #endif
-#if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV) || defined(AFS_NBSD50_ENV)
 #include "afs/sysincludes.h"
 #endif
 #if defined(AFS_OBSD_ENV)

@@ -214,7 +214,6 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     int code;
     struct afsd_thread_info info;
     thread_t thread;
-
     if (parm == AFSOP_START_RXCALLBACK) {
 	if (afs_CB_Running)
 	    return;
@@ -581,7 +580,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #endif /* !RXK_LISTENER_ENV */
 	{
 #ifdef RXK_LISTENER_ENV
-	    while (afs_RX_Running != 2)
+		while (afs_RX_Running != 2)
 		afs_osi_Sleep(&afs_RX_Running);
 #else /* !RXK_LISTENER_ENV */
 	    afs_initState = AFSOP_START_AFS;

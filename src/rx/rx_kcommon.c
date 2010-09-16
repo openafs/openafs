@@ -112,7 +112,7 @@ rxi_GetHostUDPSocket(u_int host, u_short port)
     sockp = (osi_socket *)rxk_NewSocketHost(host, port);
     if (sockp == (osi_socket *)0)
 	return OSI_NULLSOCKET;
-    rxk_AddPort(port, (char *)sockp);
+	rxk_AddPort(port, (char *)sockp);
     return (osi_socket) sockp;
 }
 
@@ -870,6 +870,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 		    afs_osi_credp, curthread);
 #elif defined(AFS_DARWIN80_ENV)
     code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
+#elif defined(AFS_NBSD50_ENV)
+	code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, osi_curproc(), NULL);
 #elif defined(AFS_NBSD40_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, osi_curproc());
 #else

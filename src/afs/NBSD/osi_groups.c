@@ -61,8 +61,11 @@ Afs_xsetgroups(struct proc *p, void *args, int *retval)
     /*
      * XXX Does treq.uid == osi_crgetruid(cred)?
      */
-
-    code = kauth_cred_setgroups(cred, args, retval, osi_crgetruid(cred));
+#ifdef AFS_NBSD50_ENV
+	code = kauth_cred_setgroups(cred, args, retval, osi_crgetruid(cred), UIO_SYSSPACE);
+#else
+	code = kauth_cred_setgroups(cred, args, retval, osi_crgetruid(cred));
+#endif
     /*
      * Note that if there is a pag already in the new groups we don't
      * overwrite it with the old pag.

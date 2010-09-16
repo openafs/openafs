@@ -190,7 +190,7 @@ int afs_ustrategy(struct buf *abp)
 #if defined (AFS_XBSD_ENV)
     if (code) {
 	abp->b_error = code;
-#if !defined(AFS_FBSD_ENV)
+#if !defined(AFS_FBSD_ENV) && !defined(AFS_NBSD50_ENV)
 	abp->b_flags |= B_ERROR;
 #endif
     }

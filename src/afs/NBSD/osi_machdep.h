@@ -23,11 +23,27 @@
 #define AFS_DIRENT 1
 
 #include <sys/lock.h>
+#if defined(AFS_NBSD50_ENV)
+#include <sys/kmem.h>
+#include <sys/specificdata.h>
+#include <sys/mutex.h>
+#include <sys/rwlock.h>
+#endif
 #include <sys/malloc.h>
 #include <sys/syscall.h>
 #include <sys/syscallargs.h>
 
+#ifndef AFS_NBSD50_ENV
+/* Why are we including the rump debugger? */
 #include "opt_ddb.h" /* Debugger() */
+#endif
+
+#if defined(AFS_NBSD50_ENV)
+# if !defined(DEF_CADDR_T)
+typedef char * caddr_t;
+#define DEF_CADDR_T
+# endif
+#endif
 
 #define M_AFSFID	(M_TEMP-1)
 #define M_AFSBUFHDR	(M_TEMP-2)
@@ -47,17 +63,18 @@
 #define v_vfsp		v_mount
 #define VFS_STATFS      afs_statvfs
 
+#ifndef AFS_NBSD50_ENV
+/* Defined in sys/syscallargs.h */
 int
 sys_ioctl(struct lwp *l, void *v, register_t *retval);
+#endif
 
 /* vnode */
 #define VN_HOLD(vp)	(vref(vp))
 #define VN_RELE(vp)	(vrele(vp))
 #define osi_vnhold(avc, r) (VN_HOLD(AFSTOV(avc)))
 
-
 #define va_nodeid	va_fileid
-#define vnode_t		struct vnode
 
 /* syscall */
 struct afs_sysargs {
@@ -82,8 +99,6 @@ struct afs_sysargs {
 /* malloc */
 inline void * afs_osi_Alloc(size_t asize);
 inline void * afs_osi_Alloc_NoSleep(size_t asize);
-inline void afs_osi_Free(void *buf, size_t asize);
-inline void afs_osi_FreeStr(char *x);
 extern void *osi_nbsd_Alloc(size_t asize, int cansleep);
 extern void osi_nbsd_Free(void *p, size_t asize);
 
@@ -97,10 +112,12 @@ extern void osi_nbsd_Free(void *p, size_t asize);
 #define AFS_KFREE(p, s) (osi_nbsd_Free((p), (s)))
 #endif
 
+
 /* proc */
 typedef struct lwp afs_proc_t;
 #define osi_curproc()	curlwp
 #define getpid()	(osi_curproc())->l_proc->p_pid
+#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
 /*
  * XXX  I'm exporting the internal definition of kauth_cred_t
@@ -111,7 +128,37 @@ typedef struct lwp afs_proc_t;
 #define KAUTH_EXPORT 1
 #if defined(KAUTH_EXPORT)
 /* internal type from kern_auth.c */
-#ifdef AFS_NBSD40_ENV
+#if defined(AFS_NBSD50_ENV)
+/*
+ * Credentials.
+ *
+ * A subset of this structure is used in kvm(3) (src/lib/libkvm/kvm_proc.c)
+ * and should be synchronized with this structure when the update is
+ * relevant.
+ */
+struct kauth_cred {
+	/*
+	 * Ensure that the first part of the credential resides in its own
+	 * cache line.  Due to sharing there aren't many kauth_creds in a
+	 * typical system, but the reference counts change very often.
+	 * Keeping it seperate from the rest of the data prevents false
+	 * sharing between CPUs.
+	 */
+	u_int cr_refcnt;		/* reference count */
+#if COHERENCY_UNIT > 4
+	uint8_t cr_pad[COHERENCY_UNIT - 4];
+#endif
+	uid_t cr_uid;			/* user id */
+	uid_t cr_euid;			/* effective user id */
+	uid_t cr_svuid;			/* saved effective user id */
+	gid_t cr_gid;			/* group id */
+	gid_t cr_egid;			/* effective group id */
+	gid_t cr_svgid;			/* saved effective group id */
+	u_int cr_ngroups;		/* number of groups */
+	gid_t cr_groups[NGROUPS];	/* group memberships */
+	specificdata_reference cr_sd;	/* specific data */
+};
+#elif defined(AFS_NBSD40_ENV)
 struct kauth_cred {
 	struct simplelock cr_lock;	/* lock on cr_refcnt */
 	u_int cr_refcnt;		/* reference count */
@@ -182,8 +229,24 @@ extern int afs_vget();
 
 #ifdef KERNEL
 #ifdef AFS_GLOBAL_SUNLOCK
-extern struct lock afs_global_lock;
 
+#if defined(AFS_NBSD50_ENV)
+extern kmutex_t afs_global_mtx;
+#define AFS_GLOCK() \
+    do { \
+	mutex_enter(&afs_global_mtx); \
+    } while (0)
+#define AFS_GUNLOCK() \
+    do { \
+	mutex_exit(&afs_global_mtx); \
+    } while (0)
+#define ISAFS_GLOCK() (mutex_owned(&afs_global_mtx))
+#define osi_InitGlock() \
+    do { \
+	mutex_init(&afs_global_mtx, MUTEX_DEFAULT, IPL_NONE); \
+    } while (0)
+#else /* !50 */
+extern struct lock afs_global_lock;
 #if defined(LOCKDEBUG)
 #define AFS_GLOCK() \
   do { \
@@ -203,14 +266,15 @@ extern struct lock afs_global_lock;
     lockmgr(&afs_global_lock, LK_RELEASE, NULL); \
   } while(0);
 #endif /* LOCKDEBUG */
-#define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
+#endif /* !50 */
 #else
+#define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
 extern struct lock afs_global_lock;
 #define AFS_GLOCKP(p)
 #define AFS_GUNLOCKP(p)
 #define AFS_ASSERT_GLOCK()
 #define ISAFS_GLOCK() 1
-#endif
+#endif /* !AFS_GLOBAL_SUNLOCK */
 
 #undef SPLVAR
 #define SPLVAR int splvar
@@ -239,5 +303,6 @@ extern int (**afs_vnodeop_p) ();
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
+
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -313,7 +313,7 @@ typedef struct afsUUID afsUUID;
 #elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
 #define static_inline static
 #define hdr_static_inline(x) x
-#elif defined(AFS_NBSD_ENV)
+#elif defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV)
 #define static_inline static __inline __attribute__((always_inline))
 #define hdr_static_inline(x) static __inline __attribute__((always_inline)) x
 #else

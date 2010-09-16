@@ -52,15 +52,19 @@ void
 osi_AttachVnode(struct vcache *avc, int seq) {
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
-    afs_obsd_getnewvnode(avc);	/* includes one refcount */
+    afs_nbsd_getnewvnode(avc);	/* includes one refcount */
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache,337);
+#ifdef AFS_NBSD50_ENV
+	mutex_init(&avc->rwlock, MUTEX_DEFAULT, IPL_NONE);
+#else
     lockinit(&avc->rwlock, PINOD, "vcache", 0, 0);
+#endif
 }
 
 void
 osi_PostPopulateVCache(struct vcache *avc) {
     AFSTOV(avc)->v_mount = afs_globalVFS;
-    vSetType(vc, VREG);
+    vSetType(avc, VREG);
 }
 

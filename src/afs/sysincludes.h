@@ -52,6 +52,9 @@
 # include <sys/timeout.h>
 
 #elif defined(AFS_NBSD40_ENV)
+# ifdef AFS_NBSD50_ENV
+#  include <sys/simplelock.h>
+# endif
 # include <sys/errno.h>
 # include <sys/types.h>
 # include <sys/mount.h> /* may define MOUNT_AFS */

@@ -54,8 +54,12 @@ struct lock__bsd__ afs_global_lock;
 #endif
 
 #if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD_ENV)
+# if defined(AFS_NBSD50_ENV)
+struct kmutex afs_global_mtx;
+# else
 struct lock afs_global_lock;
 afs_proc_t *afs_global_owner;
+# endif
 #elif defined(AFS_FBSD_ENV)
 struct mtx afs_global_mtx;
 struct thread *afs_global_owner;
@@ -163,6 +167,8 @@ afs_osi_Invisible(void)
 #elif defined(AFS_DARWIN_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
+#elif defined(AFS_NBSD50_ENV)
+    /* XXX in netbsd a system thread is more than invisible */
 #elif defined(AFS_XBSD_ENV)
     curproc->p_flag |= P_SYSTEM;
 #elif defined(AFS_SGI_ENV)
@@ -181,6 +187,8 @@ afs_osi_Visible(void)
 #elif defined(AFS_DARWIN_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag &= ~P_SYSTEM;
+#elif defined(AFS_NBSD50_ENV)
+    /* XXX in netbsd a system thread is more than invisible */
 #elif defined(AFS_XBSD_ENV)
     curproc->p_flag &= ~P_SYSTEM;
 #endif

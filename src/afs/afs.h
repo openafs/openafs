@@ -807,7 +807,9 @@ struct vcache {
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
-#if !defined(AFS_DFBSD_ENV)
+# if defined(AFS_NBSD50_ENV)
+  struct krwlock rwlock;
+# elif !defined(AFS_DFBSD_ENV)
     struct lock rwlock;
 #endif
 #endif

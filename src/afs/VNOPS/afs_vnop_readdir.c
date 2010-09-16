@@ -503,13 +503,27 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 #if defined(AFS_NBSD40_ENV)
     {
 	struct dirent *dp;
-	dp = (struct dirent *) pool_get(&ufs_direct_pool, PR_WAITOK);
-	dp->d_ino =  (Volume << 16) + ntohl(Vnode);
-	FIXUPSTUPIDINODE(dp->d_ino);
-	dp->d_reclen = rlen;
-	strcpy(dp->d_name, de->name);
-	AFS_UIOMOVE((char*) dp, sizeof(struct dirent), UIO_READ, auio, code);
-	pool_put(&ufs_direct_pool, dp);
+	dp = (struct dirent *)
+#if defined(AFS_NBSD50_ENV)
+	  osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+#else
+	  pool_get(&ufs_direct_pool, PR_WAITOK);
+#endif
+	memset(dp, 0, sizeof(struct dirent));
+        dp->d_ino =  (Volume << 16) + ntohl(Vnode);
+        FIXUPSTUPIDINODE(dp->d_ino);
+        dp->d_namlen = slen;
+        dp->d_type = afs_readdir_type(vc, de);
+        strcpy(dp->d_name, de->name);
+        dp->d_reclen = _DIRENT_SIZE(dp) /* rlen */;
+	afs_warn("afs_readdir_move %s type %d slen %d rlen %d act. rlen %d\n",
+		 dp->d_name, dp->d_type, slen, rlen, _DIRENT_SIZE(dp));
+        AFS_UIOMOVE((char*) dp, sizeof(struct dirent), UIO_READ, auio, code);
+#if defined(AFS_NBSD50_ENV)
+        osi_FreeLargeSpace((char *)dp);
+#else
+        pool_put(&ufs_direct_pool, dp);
+#endif
     }
 #else
     AFS_UIOMOVE((char *) &sdirEntry, sizeof(sdirEntry), UIO_READ, auio, code);

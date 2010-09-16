@@ -55,6 +55,13 @@
 #endif /* !TRUE */
 #define __dontcare__	-1
 
+#if defined(AFS_NBSD50_ENV)
+# if !defined(DEF_CADDR_T)
+typedef char * caddr_t;
+#define DEF_CADDR_T
+# endif
+#endif
+
 #ifndef mem_alloc
 #define mem_alloc(bsize)	malloc(bsize)
 #endif

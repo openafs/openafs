@@ -25,7 +25,11 @@
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
+#ifdef AFS_NBSD50_ENV
+#include <sys/mutex.h>
+#else
 #include <sys/lock.h>
+#endif
 
 /* You can't have AFS_GLOBAL_SUNLOCK and not RX_ENABLE_LOCKS */
 #define RX_ENABLE_LOCKS 1
@@ -76,9 +80,42 @@
 typedef int afs_kcondvar_t;
 
 typedef struct {
-    struct lock lock;
+#ifdef AFS_NBSD50_ENV
+    struct kmutex mtx;
+#else
+	struct lock lock;
+#endif
     struct lwp *owner;
 } afs_kmutex_t;
+
+#ifdef AFS_NBSD50_ENV
+#define MUTEX_INIT(a,b,c,d) \
+	do { \
+		mutex_init(&(a)->mtx, (c), IPL_NONE); \
+	} while(0);
+
+#define MUTEX_DESTROY(a) \
+	do { \
+		mutex_destroy(&(a)->mtx); \
+	} while(0);
+
+#define MUTEX_ENTER(a) \
+	do { \
+		mutex_enter(&(a)->mtx); \
+	} while(0);
+
+#define MUTEX_TRYENTER(a) \
+	( mutex_tryenter(&(a)->mtx) )
+
+#define MUTEX_EXIT(a) \
+	do { \
+		mutex_exit(&(a)->mtx); \
+	} while(0);
+
+#define MUTEX_ISMINE(a) \
+	( mutex_owned(&(a)->mtx) )
+
+#else  /* AFS_NBSD50_ENV */
 
 #define MUTEX_INIT(a,b,c,d) \
     do { \
@@ -89,7 +126,6 @@ typedef struct {
     do { \
 	(a)->owner = (struct lwp *)-1; \
     } while(0);
-
 #if defined(LOCKDEBUG)
 #define MUTEX_ENTER(a) \
     do { \
@@ -122,10 +158,13 @@ typedef struct {
 	(a)->owner = 0; \
 	lockmgr(&(a)->lock, LK_RELEASE, 0); \
     } while(0);
-#endif /* LOCKDEBUG */
+#endif  /* LOCKDEBUG */
+
 #define MUTEX_ISMINE(a) \
     (lockstatus(a) == LK_EXCLUSIVE)
 #define MUTEX_LOCKED(a) \
     (lockstatus(a) == LK_EXCLUSIVE)
+
+#endif  /* AFS_NBSD50_ENV */
 
 #endif /* _RX_KMUTEX_H_ */

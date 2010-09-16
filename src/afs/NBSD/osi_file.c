@@ -57,17 +57,21 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     struct vattr tvattr;
 
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
+#ifdef AFS_NBSD50_ENV
+	code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
+#else
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp,
 		       osi_curproc());
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = afile->size = tvattr.va_size;
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -101,18 +105,22 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     if (code || tstat.size <= asize)
 	return code;
 
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
     AFS_GUNLOCK();
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
+#ifdef AFS_NBSD50_ENV
+	code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp);
+#else
     code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp,
 		       osi_curproc());
+#endif
     VOP_UNLOCK(afile->vnode, 0);
     AFS_GLOCK();
     if (code == 0)
 	afile->size = asize;
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

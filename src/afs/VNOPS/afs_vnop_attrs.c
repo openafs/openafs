@@ -299,8 +299,10 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 		    }
 #else
 		    if (
-#ifdef AFS_DARWIN_ENV		    
+#if defined(AFS_DARWIN_ENV)
 			vnode_isvroot(AFSTOV(avc))
+#elif defined(AFS_NBSD50_ENV)
+			AFSTOV(avc)->v_vflag & VV_ROOT
 #else
 			AFSTOV(avc)->v_flag & VROOT
 #endif
