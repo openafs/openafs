@@ -40,6 +40,8 @@ AUTHOBJS = \
 	$(OUT)\authcon.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
+        $(OUT)\token.obj \
+        $(OUT)\token.xdr.obj \
 	$(OUT)\acfg_errors.obj
 
 KAUTHOBJS = \

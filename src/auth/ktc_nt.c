@@ -28,6 +28,7 @@
 #include <afs/vice.h>
 #include "auth.h"
 #include <afs/afsutil.h>
+#include "token.h"
 
 /* TBUFFERSIZE must be at least 512 larger than KTCMAXTICKETSIZE */
 #define TBUFFERSIZE 12512
@@ -432,6 +433,13 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 }
 
 int
+ktc_SetTokenEx(struct ktc_setTokenData *token)
+{
+    /* Not yet implemented */
+    return KTC_PIOCTLFAIL;
+}
+
+int
 ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 	     int tokenLen, struct ktc_principal *client)
 {
@@ -609,6 +617,18 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     }
 
     return 0;
+}
+
+/*!
+ * Get a token, given the cell that we need to get information for
+ *
+ * @param cellName
+ * 	The name of the cell we're getting the token for - if NULL, we'll
+ * 	get information for the primary cell
+ */
+int
+ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
+    return KTC_PIOCTLFAIL;
 }
 
 int

@@ -14,7 +14,17 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(INCFILEDIR)\auth.h \
 	$(INCFILEDIR)\cellconfig.h \
-	$(INCFILEDIR)\keys.h
+	$(INCFILEDIR)\keys.h \
+        $(INCFILEDIR)\token.h
+
+############################################################################
+# rxgen on token.xg
+
+token.xdr.c: token.xg token.h
+	$(RXGEN) -x -c -o $@ token.xg
+
+token.h: token.xg
+	$(RXGEN) -x -h -u -o $@ token.xg
 
 
 ############################################################################
@@ -32,6 +42,8 @@ AFSAUTH_LIBOBJS =\
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
+        $(OUT)\token.obj \
+        $(OUT)\token.xdr.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 AFSDOBJS =\

@@ -142,4 +142,9 @@ EXPORTS
         ugen_ClientInit                                 @140
         afsconf_BuildServerSecurityObjects              @141
         afsconf_ClientAuthToken                         @142
-
+	ktc_GetTokenEx					@143
+	ktc_SetTokenEx					@144
+	token_extractRxkad				@145
+	token_FreeSet					@146
+        xdr_ktc_tokenUnion                              @147
+        xdr_ktc_setTokenData                            @148
