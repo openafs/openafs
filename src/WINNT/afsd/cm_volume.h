@@ -45,6 +45,7 @@ typedef struct cm_volume {
     struct cm_server *cbServerpRO;      /* server granting RO callback; by cm_scacheLock */
     time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
     time_t creationDateRO;              /* latest volume creation date; 0 if unknown; by cm_scacheLock */
+    time_t lastUpdateTime;              /* most recent volume location update cm_volumeLock */
 } cm_volume_t;
 
 #define CM_VOLUMEFLAG_RESET	   1	/* reload this info on next use */
@@ -52,6 +53,7 @@ typedef struct cm_volume {
 #define CM_VOLUMEFLAG_IN_LRU_QUEUE 4
 #define CM_VOLUMEFLAG_UPDATING_VL  8
 #define CM_VOLUMEFLAG_DFS_VOLUME  16
+#define CM_VOLUMEFLAG_NOEXIST     32
 
 typedef struct cm_volumeRef {
     struct cm_volumeRef * next;
@@ -100,7 +102,7 @@ extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume,
 
 extern void cm_ChangeRankVolume(cm_server_t *tsp);
 
-extern void cm_RefreshVolumes(void);
+extern void cm_RefreshVolumes(int lifetime);
 
 extern long cm_ValidateVolume(void);
 

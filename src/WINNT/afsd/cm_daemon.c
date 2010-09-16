@@ -507,11 +507,15 @@ void cm_Daemon(long parm)
             cm_VolStatus_Network_Addr_Change();
         }
 
-        if (now > lastVolCheck + cm_daemonCheckVolInterval &&
+        /*
+         * Once every five minutes inspect the volume list and enforce
+         * the volume location expiration time.
+         */
+        if (now > lastVolCheck + 300 &&
             daemon_ShutdownFlag == 0 &&
             powerStateSuspended == 0) {
             lastVolCheck = now;
-            cm_RefreshVolumes();
+            cm_RefreshVolumes(cm_daemonCheckVolInterval);
             if (daemon_ShutdownFlag == 1)
                 break;
 	    now = osi_Time();
