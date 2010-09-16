@@ -193,8 +193,8 @@ client.o: ${KAUTH}/client.c
 authclient.o: ${KAUTH}/authclient.c
 	${CCRULE}
 
-katoken.o: ${KAUTH}/token.c
-	${CCRULE} -o katoken.o
+katoken.o: ${KAUTH}/katoken.c
+	${CCRULE}
 
 kautils.o: ${KAUTH}/kautils.c
 	${CCRULE}

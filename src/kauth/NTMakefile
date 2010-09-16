@@ -33,7 +33,7 @@ KAUTH_LIBOBJS =\
 	$(OUT)\kaaux.obj \
 	$(OUT)\client.obj \
 	$(OUT)\authclient.obj \
-	$(OUT)\token.obj \
+	$(OUT)\katoken.obj \
 	$(OUT)\kautils.obj \
 	$(OUT)\kalocalcell.obj \
 	$(OUT)\kaerrors.obj \
@@ -55,7 +55,7 @@ KAUTH_KRB_LIBOBJS =\
 	$(OUT)\kaaux.obj \
 	$(OUT)\client.obj \
 	$(OUT)\authclient.obj \
-	$(OUT)\token.obj \
+	$(OUT)\katoken.obj \
 	$(OUT)\kautils.obj \
 	$(OUT)\kalocalcell.obj \
 	$(OUT)\kaerrors.obj \

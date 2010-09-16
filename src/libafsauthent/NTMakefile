@@ -48,11 +48,11 @@ KAUTHOBJS = \
 	$(OUT)\kaaux.obj \
 	$(OUT)\client.obj \
 	$(OUT)\authclient.obj \
-	$(OUT)\token.obj \
 	$(OUT)\kautils.obj \
 	$(OUT)\kalocalcell.obj \
 	$(OUT)\kaerrors.obj \
-	$(OUT)\user_nt.obj
+	$(OUT)\user_nt.obj \
+        $(OUT)\katoken.obj
 
 UBIKOBJS = \
 	$(OUT)\uinit.obj \

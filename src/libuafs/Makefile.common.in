@@ -867,8 +867,8 @@ $(UOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE1)
 $(UOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE1)
-$(UOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/token.c
-	$(CRULE1) -o katoken.o
+$(UOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
+	$(CRULE1)
 $(UOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE1)
 $(UOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
@@ -1155,8 +1155,8 @@ $(WEBOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE2)
 $(WEBOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE2)
-$(WEBOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/token.c
-	$(CRULE2) -o katoken.o
+$(WEBOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
+	$(CRULE2)
 $(WEBOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE2)
 $(WEBOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
@@ -1437,8 +1437,8 @@ $(JUAFS)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE1)
 $(JUAFS)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE1)
-$(JUAFS)/katoken.o: $(TOP_SRCDIR)/kauth/token.c
-	$(CRULE1) -o katoken.o
+$(JUAFS)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
+	$(CRULE1)
 $(JUAFS)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE1)
 $(JUAFS)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
