@@ -1285,7 +1285,7 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
 afs_int32 
 cm_IoctlCheckVolumes(cm_ioctl_t *ioctlp, cm_user_t *userp)
 {
-    cm_RefreshVolumes();
+    cm_RefreshVolumes(0);
     return 0;
 }       
 

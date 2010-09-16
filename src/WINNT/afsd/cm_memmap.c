@@ -874,7 +874,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
         cm_data.buf_blockSize = blockSize;
         cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cacheBlocks/7 + 1));
 
-        cm_data.mountRootGen = time(NULL);
+        cm_data.mountRootGen = 0;
 
         baseAddress += ComputeSizeOfConfigData();
         cm_data.volumeBaseAddress = (cm_volume_t *) baseAddress;

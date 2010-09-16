@@ -190,6 +190,17 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
     lock_AssertWrite(&volp->rw);
 
+    /*
+     * If the last volume update was in the last five
+     * minutes and it did not exist, then avoid the RPC
+     * and return No Such Volume immediately.
+     */
+    if ((volp->flags & CM_VOLUMEFLAG_NOEXIST) &&
+        volp->lastUpdateTime + 600 < time(0))
+    {
+        return CM_ERROR_NOSUCHVOLUME;
+    }
+
 #ifdef AFS_FREELANCE_CLIENT
     if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->vol[RWVOL].ID == AFS_FAKE_ROOT_VOL_ID ) 
     {
@@ -614,28 +625,13 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_RandomizeServer(&volp->vol[ROVOL].serversp);
         }
 
-
         rwNewstate = rwServers_alldown ? vl_alldown : vl_online;
         roNewstate = roServers_alldown ? vl_alldown : vl_online;
         bkNewstate = bkServers_alldown ? vl_alldown : vl_online;
+
+        volp->flags &= ~CM_VOLUMEFLAG_NOEXIST;
     } else if (code == CM_ERROR_NOSUCHVOLUME || code == VL_NOENT || code == VL_BADNAME) {
-        /* this volume does not exist - we should discard it */
-        if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
-            cm_RemoveVolumeFromNameHashTable(volp);
-        for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
-            if (volp->vol[volType].flags & CM_VOLUMEFLAG_IN_HASH)
-                cm_RemoveVolumeFromIDHashTable(volp, volType);
-            if (volp->vol[volType].ID) {
-                cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_alldown);
-                volp->vol[volType].ID = 0;
-            }
-            cm_SetFid(&volp->vol[volType].dotdotFid, 0, 0, 0, 0);
-        }
-
-        /* Move to the end so it will be recycled first */
-        cm_MoveVolumeToLRULast(volp);
-
-        volp->namep[0] ='\0';
+        volp->flags |= CM_VOLUMEFLAG_NOEXIST;
     } else {
         rwNewstate = roNewstate = bkNewstate = vl_alldown;
     }
@@ -655,6 +651,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_VolumeStatusNotification(volp, volp->vol[BACKVOL].ID, volp->vol[BACKVOL].state, bkNewstate);
         volp->vol[BACKVOL].state = bkNewstate;
     }
+
+    volp->lastUpdateTime = time(0);
 
     if (code == 0)
         volp->flags &= ~CM_VOLUMEFLAG_RESET;
@@ -1144,48 +1142,40 @@ long cm_GetROVolumeID(cm_volume_t *volp)
     return id;
 }
 
-void cm_RefreshVolumes(void)
+void cm_RefreshVolumes(int lifetime)
 {
     cm_volume_t *volp;
     cm_scache_t *scp;
     afs_int32 refCount;
+    time_t now;
 
-    cm_data.mountRootGen = time(NULL);
+    now = time(NULL);
 
-    /* force a re-loading of volume data from the vldb */
+    /* force mount point target updates */
+    if (cm_data.mountRootGen + lifetime <= now)
+        cm_data.mountRootGen = now;
+
+    /*
+     * force a re-loading of volume data from the vldb
+     * if the lifetime for the cached data has expired
+     */
     lock_ObtainRead(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
 	InterlockedIncrement(&volp->refCount);
 	lock_ReleaseRead(&cm_volumeLock);
 
-	lock_ObtainWrite(&volp->rw);
-	volp->flags |= CM_VOLUMEFLAG_RESET;
-	lock_ReleaseWrite(&volp->rw);
-	
+        if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
+            lock_ObtainWrite(&volp->rw);
+            if (volp->lastUpdateTime + lifetime <= now)
+                volp->flags |= CM_VOLUMEFLAG_RESET;
+            lock_ReleaseWrite(&volp->rw);
+        }
+
         lock_ObtainRead(&cm_volumeLock);
         refCount = InterlockedDecrement(&volp->refCount);
 	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
     }
     lock_ReleaseRead(&cm_volumeLock);
-
-    /* force mount points to be re-evaluated so that 
-     * if the volume location has changed we will pick 
-     * that up
-     */
-    for ( scp = cm_data.scacheLRUFirstp; 
-          scp;
-          scp = (cm_scache_t *) osi_QNext(&scp->q)) {
-        if ( scp->fileType == CM_SCACHETYPE_MOUNTPOINT 
-#ifdef AFS_FREELANCE_CLIENT
-             && !(scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID)
-#endif
-             ) {
-            lock_ObtainWrite(&scp->rw);
-            scp->mountPointStringp[0] = '\0';
-            lock_ReleaseWrite(&scp->rw);
-        }
-    }
-
 }
 
 void

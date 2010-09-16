@@ -145,7 +145,7 @@ typedef struct cm_scache {
 					 * the link contents here.
                                          */
     cm_fid_t  mountRootFid;	        /* mounted on root */
-    time_t    mountRootGen;	        /* time to update mountRootFidp? */
+    time_t    mountRootGen;	        /* time to update mountRootFid? */
     cm_fid_t  dotdotFid;		/* parent of volume root */
 
     /* callback info */
