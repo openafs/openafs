@@ -5568,8 +5568,9 @@ rxi_Start(struct rxevent *event,
 	 * recent additions.
 	 * Do a dance to avoid blocking after setting now. */
 	MUTEX_ENTER(&peer->peer_lock);
-	retryTime = peer->timeout;
+        retryTime = peer->timeout;
 	MUTEX_EXIT(&peer->peer_lock);
+
 	clock_GetTime(&now);
 	clock_Add(&retryTime, &now);
 	usenow = now;
@@ -6768,7 +6769,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
 	} else {
 	    return;
 	}
-	xferSize = rx_AckDataSize(rx_Window) + RX_HEADER_SIZE;
+	xferSize = rx_AckDataSize(rx_maxSendWindow) + RX_HEADER_SIZE;
 	break;
 
     default:
@@ -6823,9 +6824,9 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
      * one packet exchange */
     if (clock_Gt(&newTO, &peer->timeout)) {
 
-	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u, ps %u)",
+	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u)",
               ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec,
-              newTO.sec, newTO.usec, peer->smRtt, peer->packetSize));
+              newTO.sec, newTO.usec, peer->smRtt));
 
 	peer->timeout = newTO;
     }
@@ -6835,18 +6836,18 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
     /* Now, convert to the number of full packets that could fit in a
      * reasonable fraction of that interval */
     minTime /= (peer->smRtt << 1);
+    minTime = MAX(minTime, rx_minPeerTimeout);
     xferSize = minTime;		/* (make a copy) */
 
     /* Now clamp the size to reasonable bounds. */
     if (minTime <= 1)
 	minTime = 1;
-    else if (minTime > rx_Window)
-	minTime = rx_Window;
+    else if (minTime > rx_maxSendWindow)
+	minTime = rx_maxSendWindow;
 /*    if (minTime != peer->maxWindow) {
-      dpf(("CONG peer %lx/%u: windowsize %lu ==> %lu (to %lu.%06lu, rtt %u, ps %u)",
+      dpf(("CONG peer %lx/%u: windowsize %lu ==> %lu (to %lu.%06lu, rtt %u)",
 	     ntohl(peer->host), ntohs(peer->port), peer->maxWindow, minTime,
-	     peer->timeout.sec, peer->timeout.usec, peer->smRtt,
-	     peer->packetSize));
+	     peer->timeout.sec, peer->timeout.usec, peer->smRtt));
       peer->maxWindow = minTime;
 	elide... call->twind = minTime;
     }
@@ -6855,13 +6856,13 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
     /* Cut back on the peer timeout if it had earlier grown unreasonably.
      * Discern this by calculating the timeout necessary for rx_Window
      * packets. */
-    if ((xferSize > rx_Window) && (peer->timeout.sec >= 3)) {
+    if ((xferSize > rx_maxSendWindow) && (peer->timeout.sec >= 3)) {
 	/* calculate estimate for transmission interval in milliseconds */
-	minTime = rx_Window * peer->smRtt;
+	minTime = rx_maxSendWindow * peer->smRtt;
 	if (minTime < 1000) {
-	    dpf(("CONG peer %lx/%u: cut TO %d.%06d by 0.5 (rtt %u, ps %u)",
+	    dpf(("CONG peer %lx/%u: cut TO %d.%06d by 0.5 (rtt %u)",
 		 ntohl(peer->host), ntohs(peer->port), peer->timeout.sec,
-		 peer->timeout.usec, peer->smRtt, peer->packetSize));
+		 peer->timeout.usec, peer->smRtt));
 
 	    newTO.sec = 0;	/* cut back on timeout by half a second */
 	    newTO.usec = 500000;
@@ -7064,7 +7065,7 @@ void
 rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 {
     fprintf(file, "Peer %x.%d.  " "Burst size %d, " "burst wait %d.%06d.\n",
-	    ntohl(peer->host), (int)peer->port, (int)peer->burstSize,
+	    ntohl(peer->host), (int)ntohs(peer->port), (int)peer->burstSize,
 	    (int)peer->burstWait.sec, (int)peer->burstWait.usec);
 
     fprintf(file,
