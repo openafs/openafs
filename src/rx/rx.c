@@ -5281,9 +5281,14 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     peer->nSent += len;
     if (resending)
 	peer->reSends += len;
-    if (rx_stats_active)
-        rx_MutexAdd(rx_stats.dataPacketsSent, len, rx_stats_mutex);
     MUTEX_EXIT(&peer->peer_lock);
+
+    if (rx_stats_active) {
+        if (resending)
+            rx_MutexAdd(rx_stats.dataPacketsReSent, len, rx_stats_mutex);
+        else
+            rx_MutexAdd(rx_stats.dataPacketsSent, len, rx_stats_mutex);
+    }
 
     if (list[len - 1]->header.flags & RX_LAST_PACKET) {
 	lastPacket = 1;
@@ -5317,8 +5322,6 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 	 * packet until the congestion window reaches the ack rate. */
 	if (list[i]->header.serial) {
 	    requestAck = 1;
-            if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.dataPacketsReSent, rx_stats_mutex);
 	} else {
 	    /* improved RTO calculation- not Karn */
 	    list[i]->firstSent = *now;
