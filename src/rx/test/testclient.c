@@ -44,10 +44,6 @@ int fillPackets;
 int burst;
 struct clock burstTime;
 struct clock retryTime;
-extern int rx_initSendWindow, rx_initReceiveWindow;
-extern int rxi_nSendFrags, rxi_nRecvFrags;
-extern rx_intentionallyDroppedPacketsPer100;
-extern int (*rxi_syscallp) ();
 FILE *debugFile;
 int timeout;
 struct clock waitTime, computeTime;
@@ -100,10 +96,11 @@ main(argc, argv)
     struct rx_call *call;
     int err = 0;
     int nCalls = 1, nBytes = 1;
-    int bufferSize = 2000;
+    int bufferSize = 4000000;
     char *buffer;
     char *sendFile = 0;
     int setFD = 0;
+    int jumbo = 0;
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
     setlinebuf(stdout);
@@ -116,11 +113,13 @@ main(argc, argv)
     while (argc && **argv == '-') {
 	if (strcmp(*argv, "-silent") == 0)
 	    print = 0;
+	if (strcmp(*argv, "-jumbo") == 0)
+	    jumbo = 1;
 	else if (strcmp(*argv, "-nc") == 0)
 	    nCalls = atoi(*++argv), argc--;
 	else if (strcmp(*argv, "-nb") == 0)
 	    nBytes = atoi(*++argv), argc--;
-	else if (strcmp(*argv, "-npb") == 0)
+	else if (strcmp(*argv, "-np") == 0)
 	    rx_nPackets = atoi(*++argv), argc--;
 	else if (!strcmp(*argv, "-nsf"))
 	    rxi_nSendFrags = atoi(*++argv), argc--;
@@ -136,8 +135,13 @@ main(argc, argv)
 	    logstdout = 1;
 	else if (strcmp(*argv, "-eventlog") == 0)
 	    eventlog = 1;
-	else if (strcmp(*argv, "-drop") == 0)
+	else if (strcmp(*argv, "-drop") == 0) {
+#ifdef RXDEBUG
 	    rx_intentionallyDroppedPacketsPer100 = atoi(*++argv), argc--;
+#else
+            fprintf(stderr, "ERROR: Compiled without RXDEBUG\n");
+#endif
+        }
 	else if (strcmp(*argv, "-burst") == 0) {
 	    burst = atoi(*++argv), argc--;
 	    burstTime.sec = atoi(*++argv), argc--;
@@ -197,7 +201,13 @@ main(argc, argv)
 	printf("Can't initialize winsock.\n");
 	exit(1);
     }
+    rx_EnableHotThread();
 #endif
+
+    rx_SetUdpBufSize(256 * 1024);
+
+    if (!jumbo)
+        rx_SetNoJumbo();
 
     hostent = gethostbyname(hostname);
     if (!hostent)
@@ -292,15 +302,15 @@ main(argc, argv)
 		IOMGR_Sleep(t.tv_sec);
 #endif
 	    }
+            if (debugFile)
+                rx_PrintPeerStats(debugFile, rx_PeerOf(conn));
+            rx_PrintPeerStats(stdout, rx_PeerOf(conn));
 	}
-	if (debugFile)
-	    rx_PrintPeerStats(debugFile, rx_PeerOf(conn));
-	rx_PrintPeerStats(stdout, rx_PeerOf(conn));
     }
     Quit("testclient: done!\n");
 }
 
-SendFile(file, conn)
+int SendFile(file, conn)
      char *file;
      struct rx_connection *conn;
 {
@@ -388,6 +398,8 @@ SendFile(file, conn)
 	}
     }
     close(fd);
+
+    return(0);
 }
 
 Abort(msg, a, b, c, d, e)
@@ -402,7 +414,7 @@ Abort(msg, a, b, c, d, e)
     exit(1);
 }
 
-Quit(msg, a, b, c, d, e)
+Quit(char *msg, int a, int b, int c, int d, int e)
 {
     printf((char *)msg, a, b, c, d, e);
     printf("\n");
