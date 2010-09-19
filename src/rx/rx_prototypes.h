@@ -518,6 +518,11 @@ extern int rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb);
 extern int rxi_AllocDataBuf(struct rx_packet *p, int nb, int cla_ss);
 extern void rxi_MorePackets(int apackets);
 extern void rxi_MorePacketsNoLock(int apackets);
+#if defined(AFS_PTHREAD_ENV)
+extern void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
+extern void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
+extern void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
+#endif
 extern void rxi_FreeAllPackets(void);
 extern void rx_CheckPackets(void);
 extern void rxi_FreePacketNoLock(struct rx_packet *p);
