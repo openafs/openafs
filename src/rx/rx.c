@@ -3829,6 +3829,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     int newAckCount = 0;
     int maxDgramPackets = 0;	/* Set if peer supports AFS 3.5 jumbo datagrams */
     int pktsize = 0;            /* Set if we need to update the peer mtu */
+    int conn_data_locked = 0;
 
     if (rx_stats_active)
         rx_MutexIncrement(rx_stats.ackPacketsRead, rx_stats_mutex);
@@ -3858,42 +3859,28 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     if (conn->lastPacketSizeSeq) {
 	MUTEX_ENTER(&conn->conn_data_lock);
+        conn_data_locked = 1;
 	if ((first > conn->lastPacketSizeSeq) && (conn->lastPacketSize)) {
 	    pktsize = conn->lastPacketSize;
 	    conn->lastPacketSize = conn->lastPacketSizeSeq = 0;
 	}
-	MUTEX_EXIT(&conn->conn_data_lock);
     }
     if ((ap->reason == RX_ACK_PING_RESPONSE) && (conn->lastPingSizeSer)) {
-	MUTEX_ENTER(&conn->conn_data_lock);
+        if (!conn_data_locked) {
+            MUTEX_ENTER(&conn->conn_data_lock);
+            conn_data_locked = 1;
+        }
 	if ((conn->lastPingSizeSer == serial) && (conn->lastPingSize)) {
 	    /* process mtu ping ack */
 	    pktsize = conn->lastPingSize;
 	    conn->lastPingSizeSer = conn->lastPingSize = 0;
 	}
+    }
+
+    if (conn_data_locked) {
 	MUTEX_EXIT(&conn->conn_data_lock);
+        conn_data_locked = 0;
     }
-
-    if (pktsize) {
-	MUTEX_ENTER(&peer->peer_lock);
-	/*
-	 * Start somewhere. Can't assume we can send what we can receive,
-	 * but we are clearly receiving.
-	 */
-	if (!peer->maxPacketSize)
-	    peer->maxPacketSize = RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE;
-
-	if (pktsize > peer->maxPacketSize) {
-	    peer->maxPacketSize = pktsize;
-	    if ((pktsize-RX_IPUDP_SIZE > peer->ifMTU)) {
-		peer->ifMTU=pktsize-RX_IPUDP_SIZE;
-		peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
-		rxi_ScheduleGrowMTUEvent(call, 1);
-	    }
-	}
-	MUTEX_EXIT(&peer->peer_lock);
-    }
-
 #ifdef RXDEBUG
 #ifdef AFS_NT40_ENV
     if (rxdebug_active) {
@@ -3934,11 +3921,29 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 #endif /* AFS_NT40_ENV */
 #endif
 
+    MUTEX_ENTER(&peer->peer_lock);
+    if (pktsize) {
+	/*
+	 * Start somewhere. Can't assume we can send what we can receive,
+	 * but we are clearly receiving.
+	 */
+	if (!peer->maxPacketSize)
+	    peer->maxPacketSize = RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE;
+
+	if (pktsize > peer->maxPacketSize) {
+	    peer->maxPacketSize = pktsize;
+	    if ((pktsize-RX_IPUDP_SIZE > peer->ifMTU)) {
+		peer->ifMTU=pktsize-RX_IPUDP_SIZE;
+		peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
+		rxi_ScheduleGrowMTUEvent(call, 1);
+	    }
+	}
+    }
+
     /* Update the outgoing packet skew value to the latest value of
      * the peer's incoming packet skew value.  The ack packet, of
      * course, could arrive out of order, but that won't affect things
      * much */
-    MUTEX_ENTER(&peer->peer_lock);
     peer->outPacketSkew = skew;
 
     /* Check for packets that no longer need to be transmitted, and
