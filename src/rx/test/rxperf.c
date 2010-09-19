@@ -39,8 +39,18 @@ nn * We are using getopt since we want it to be possible to link to
  * transarc libs.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <stdarg.h>
 #include <sys/types.h>
+#ifdef AFS_NT40_ENV
+#include <io.h>
+#include <winsock2.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <time.h>
+#else
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/file.h>
@@ -48,6 +58,7 @@ nn * We are using getopt since we want it to be possible to link to
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -67,15 +78,10 @@ nn * We are using getopt since we want it to be possible to link to
 #include <err.h>		/* not stricly right, but if we have a errx() there
 				 * is hopefully a err.h */
 #endif
+#include <getopt.h>
 #include "rx.h"
 #include "rx_null.h"
 #include "rx_globals.h"
-
-#if defined(u_int32)
-#define u_int32_t u_int32
-#elif defined(hget32)
-#define u_int32_t afs_uint32
-#endif
 
 static const char *__progname;
 
@@ -150,12 +156,15 @@ err(int eval, const char *fmt, ...)
 #define DEFAULT_PORT 7009	/* To match tcpdump */
 #define DEFAULT_HOST "127.0.0.1"
 #define DEFAULT_BYTES 1000000
-#define RXPERF_BUFSIZE 10000
+#define RXPERF_BUFSIZE 512 * 1024
 
 enum { RX_PERF_VERSION = 3 };
 enum { RX_SERVER_ID = 147 };
-enum { RX_PERF_UNKNOWN = -1, RX_PERF_SEND = 0, RX_PERF_RECV = 1,
-    RX_PERF_RPC = 3, RX_PERF_FILE = 4
+enum { RX_PERF_UNKNOWN = -1,
+       RX_PERF_SEND = 0,
+       RX_PERF_RECV = 1,
+       RX_PERF_RPC = 3,
+       RX_PERF_FILE = 4
 };
 
 enum { RXPERF_MAGIC_COOKIE = 0x4711 };
@@ -164,7 +173,7 @@ enum { RXPERF_MAGIC_COOKIE = 0x4711 };
  *
  */
 
-#if DEBUG
+#if RXPERF_DEBUG
 #define DBFPRINT(x) do { printf x ; } while(0)
 #else
 #define DBFPRINT(x)
@@ -261,13 +270,13 @@ get_sec(int serverp, struct rx_securityClass **sec, int *secureindex)
 
 char somebuf[RXPERF_BUFSIZE];
 
-int32_t rxwrite_size = sizeof(somebuf);
-int32_t rxread_size = sizeof(somebuf);
+afs_int32 rxwrite_size = sizeof(somebuf);
+afs_int32 rxread_size = sizeof(somebuf);
 
 static int
-readbytes(struct rx_call *call, int32_t bytes)
+readbytes(struct rx_call *call, afs_int32 bytes)
 {
-    int32_t size;
+    afs_int32 size;
 
     while (bytes > 0) {
 	size = rxread_size;
@@ -281,9 +290,9 @@ readbytes(struct rx_call *call, int32_t bytes)
 }
 
 static int
-sendbytes(struct rx_call *call, int32_t bytes)
+sendbytes(struct rx_call *call, afs_int32 bytes)
 {
-    int32_t size;
+    afs_int32 size;
 
     while (bytes > 0) {
 	size = rxwrite_size;
@@ -297,18 +306,18 @@ sendbytes(struct rx_call *call, int32_t bytes)
 }
 
 
-static int32_t
+static afs_int32
 rxperf_ExecuteRequest(struct rx_call *call)
 {
-    int32_t version;
-    int32_t command;
-    u_int32_t bytes;
-    u_int32_t recvb;
-    u_int32_t sendb;
-    u_int32_t data;
-    u_int32_t num;
-    u_int32_t *readwrite;
-    int i;
+    afs_int32 version;
+    afs_int32 command;
+    afs_uint32 bytes;
+    afs_uint32 recvb;
+    afs_uint32 sendb;
+    afs_uint32 data;
+    afs_uint32 num;
+    afs_uint32 *readwrite;
+    afs_uint32 i;
     int readp = TRUE;
 
     DBFPRINT(("got a request\n"));
@@ -409,12 +418,12 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	    errx(1, "failed to read num from client");
 	num = ntohl(data);
 
-	readwrite = malloc(num * sizeof(u_int32_t));
+	readwrite = malloc(num * sizeof(afs_uint32));
 	if (readwrite == NULL)
 	    err(1, "malloc");
 
-	if (rx_Read(call, readwrite, num * sizeof(u_int32_t)) !=
-	    num * sizeof(u_int32_t))
+	if (rx_Read(call, (char*)readwrite, num * sizeof(afs_uint32)) !=
+	    num * sizeof(afs_uint32))
 	    errx(1, "failed to read recvlist from client");
 
 	for (i = 0; i < num; i++) {
@@ -423,7 +432,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 		readp = !readp;
 	    }
 
-	    bytes = ntohl(readwrite[i]) * sizeof(u_int32_t);
+	    bytes = ntohl(readwrite[i]) * sizeof(afs_uint32);
 
 	    if (readp) {
 		DBFPRINT(("read\n"));
@@ -469,21 +478,31 @@ rxperf_ExecuteRequest(struct rx_call *call)
  */
 
 static void
-do_server(int port, int nojumbo, int maxmtu)
+do_server(short port, int nojumbo, int maxmtu)
 {
     struct rx_service *service;
     struct rx_securityClass *secureobj;
     int secureindex;
     int ret;
 
-    ret = rx_Init(port);
+#ifdef AFS_NT40_ENV
+    if (afs_winsockInit() < 0) {
+	printf("Can't initialize winsock.\n");
+	exit(1);
+    }
+    rx_EnableHotThread();
+#endif
+
+    ret = rx_Init(htons(port));
     if (ret)
 	errx(1, "rx_Init failed");
 
     if (nojumbo)
       rx_SetNoJumbo();
+
     if (maxmtu)
       rx_SetMaxMTU(maxmtu);
+
     get_sec(1, &secureobj, &secureindex);
 
     service =
@@ -491,6 +510,10 @@ do_server(int port, int nojumbo, int maxmtu)
 		      rxperf_ExecuteRequest);
     if (service == NULL)
 	errx(1, "Cant create server");
+
+    rx_SetMinProcs(service, 2);
+    rx_SetMaxProcs(service, 100);
+    rx_SetCheckReach(service, 1);
 
     rx_StartServer(1);
     abort();
@@ -501,16 +524,16 @@ do_server(int port, int nojumbo, int maxmtu)
  */
 
 static void
-readfile(const char *filename, u_int32_t ** readwrite, u_int32_t * size)
+readfile(const char *filename, afs_uint32 ** readwrite, afs_uint32 * size)
 {
     FILE *f;
-    u_int32_t len = 16;
-    u_int32_t num = 0;
-    u_int32_t data;
+    afs_uint32 len = 16;
+    afs_uint32 num = 0;
+    afs_uint32 data;
     char *ptr;
     char buf[RXPERF_BUFSIZE];
 
-    *readwrite = malloc(sizeof(u_int32_t) * len);
+    *readwrite = malloc(sizeof(afs_uint32) * len);
 
     if (*readwrite == NULL)
 	err(1, "malloc");
@@ -522,7 +545,7 @@ readfile(const char *filename, u_int32_t ** readwrite, u_int32_t * size)
     while (fgets(buf, sizeof(buf), f) != NULL) {
 	if (num >= len) {
 	    len = len * 2;
-	    *readwrite = realloc(*readwrite, len * sizeof(u_int32_t));
+	    *readwrite = realloc(*readwrite, len * sizeof(afs_uint32));
 	    if (*readwrite == NULL)
 		err(1, "realloc");
 	}
@@ -552,24 +575,34 @@ readfile(const char *filename, u_int32_t ** readwrite, u_int32_t * size)
  */
 
 static void
-do_client(const char *server, int port, char *filename, int32_t command,
-	  int32_t times, int32_t bytes, int32_t sendtimes, int32_t recvtimes,
+do_client(const char *server, short port, char *filename, afs_int32 command,
+	  afs_int32 times, afs_int32 bytes, afs_int32 sendtimes, afs_int32 recvtimes,
           int dumpstats, int nojumbo, int maxmtu)
 {
     struct rx_connection *conn;
     struct rx_call *call;
-    u_int32_t addr = str2addr(server);
+    afs_uint32 addr;
     struct rx_securityClass *secureobj;
     int secureindex;
-    int32_t data;
-    int32_t num;
+    afs_int32 data;
+    afs_int32 num;
     int ret;
     int i;
     int readp = FALSE;
     char stamp[1024];
-    u_int32_t size;
+    afs_uint32 size;
 
-    u_int32_t *readwrite;
+    afs_uint32 *readwrite;
+
+#ifdef AFS_NT40_ENV
+    if (afs_winsockInit() < 0) {
+	printf("Can't initialize winsock.\n");
+	exit(1);
+    }
+    rx_EnableHotThread();
+#endif
+
+    addr = str2addr(server);
 
     ret = rx_Init(0);
     if (ret)
@@ -577,11 +610,13 @@ do_client(const char *server, int port, char *filename, int32_t command,
 
     if (nojumbo)
       rx_SetNoJumbo();
+
     if (maxmtu)
       rx_SetMaxMTU(maxmtu);
+
     get_sec(0, &secureobj, &secureindex);
 
-    conn = rx_NewConnection(addr, port, RX_SERVER_ID, secureobj, secureindex);
+    conn = rx_NewConnection(addr, htons(port), RX_SERVER_ID, secureobj, secureindex);
     if (conn == NULL)
 	errx(1, "failed to contact server");
 
@@ -689,15 +724,15 @@ do_client(const char *server, int port, char *filename, int32_t command,
 	    if (rx_Write32(call, &data) != 4)
 		errx(1, "rx_Write failed to send size (err %d)", rx_Error(call));
 
-	    if (rx_Write(call, readwrite, num * sizeof(u_int32_t))
-		!= num * sizeof(u_int32_t))
+	    if (rx_Write(call, (char *)readwrite, num * sizeof(afs_uint32))
+		!= num * sizeof(afs_uint32))
 		errx(1, "rx_Write failed to send list (err %d)", rx_Error(call));
 
 	    for (i = 0; i < num; i++) {
 		if (readwrite[i] == 0)
 		    readp = !readp;
 
-		size = ntohl(readwrite[i]) * sizeof(u_int32_t);
+		size = ntohl(readwrite[i]) * sizeof(afs_uint32);
 
 		if (readp) {
 		    if (readbytes(call, size))
@@ -754,7 +789,7 @@ usage()
 static int
 rxperf_server(int argc, char **argv)
 {
-    int port = DEFAULT_PORT;
+    short port = DEFAULT_PORT;
     int nojumbo = 0;
     int maxmtu = 0;
     char *ptr;
@@ -811,7 +846,7 @@ rxperf_server(int argc, char **argv)
     if (optind != argc)
 	usage();
 
-    do_server(htons(port), nojumbo, maxmtu);
+    do_server(port, nojumbo, maxmtu);
 
     return 0;
 }
@@ -825,9 +860,9 @@ rxperf_client(int argc, char **argv)
 {
     char *host = DEFAULT_HOST;
     int bytes = DEFAULT_BYTES;
-    int port = DEFAULT_PORT;
+    short port = DEFAULT_PORT;
     char *filename = NULL;
-    int32_t cmd;
+    afs_int32 cmd;
     int sendtimes = 3;
     int recvtimes = 30;
     int times = 100;
@@ -896,27 +931,23 @@ rxperf_client(int argc, char **argv)
 	case 'T':
 	    times = strtol(optarg, &ptr, 0);
 	    if (ptr && *ptr != '\0')
-		errx(1, "can't resolve number of bytes to transfer");
+		errx(1, "can't resolve number of times to execute rpc");
 	    break;
 	case 'S':
 	    sendtimes = strtol(optarg, &ptr, 0);
 	    if (ptr && *ptr != '\0')
-		errx(1, "can't resolve number of bytes to transfer");
+		errx(1, "can't resolve number of bytes to send");
 	    break;
 	case 'R':
 	    recvtimes = strtol(optarg, &ptr, 0);
 	    if (ptr && *ptr != '\0')
-		errx(1, "can't resolve number of bytes to transfer");
+		errx(1, "can't resolve number of bytes to receive");
 	    break;
 	case 'f':
 	    filename = optarg;
 	    break;
 	case 'D':
-#ifdef RXDEBUG
 	    dumpstats = 1;
-#else
-	    errx(1, "compiled without RXDEBUG");
-#endif
 	    break;
 	case 'j':
 	  nojumbo=1;
@@ -940,7 +971,7 @@ rxperf_client(int argc, char **argv)
     if (cmd == RX_PERF_UNKNOWN)
 	errx(1, "no command given to the client");
 
-    do_client(host, htons(port), filename, cmd, times, bytes, sendtimes,
+    do_client(host, port, filename, cmd, times, bytes, sendtimes,
 	      recvtimes, dumpstats, nojumbo, maxmtu);
 
     return 0;
@@ -953,16 +984,22 @@ rxperf_client(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
+#ifndef AFS_PTHREAD_ENV
     PROCESS pid;
+#endif
 
     __progname = strrchr(argv[0], '/');
     if (__progname == 0)
 	__progname = argv[0];
 
+#ifndef AFS_NT40_ENV
     signal(SIGUSR1, sigusr1);
     signal(SIGINT, sigint);
+#endif
 
+#ifndef AFS_PTHREAD_ENV
     LWP_InitializeProcessSupport(LWP_NORMAL_PRIORITY, &pid);
+#endif
 
     memset(somebuf, 0, sizeof(somebuf));
 

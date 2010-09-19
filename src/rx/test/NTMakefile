@@ -5,22 +5,31 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+!IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG
+!ENDIF
 
 RELDIR=rx\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
 LIBS = \
-	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\afsrx.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afspthread.lib
 
 
 RXTESTOBJS = $(OUT)\testclient.obj $(OUT)\testserver.obj
 
-tests: $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
+tests: $(OUT)\rxperf.exe $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
+
+$(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(LIBS)
+	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\testclient.exe: $(OUT)\testclient.obj $(LIBS)
 	$(EXECONLINK)
