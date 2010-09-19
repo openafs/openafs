@@ -14,7 +14,6 @@
 #include <afs/param.h>
 #endif
 
-
 #ifdef KERNEL
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -1505,30 +1504,31 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
 	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-	    struct rx_peer *peer;
-            if (rx_stats_active)
+            if (rx_stats_active) {
+                struct rx_peer *peer;
                 rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
-	    /*
-	     * Try to look up this peer structure.  If it doesn't exist,
-	     * don't create a new one -
-	     * we don't keep count of the bytes sent/received if a peer
-	     * structure doesn't already exist.
-	     *
-	     * The peer/connection cleanup code assumes that there is 1 peer
-	     * per connection.  If we actually created a peer structure here
-	     * and this packet was an rxdebug packet, the peer structure would
-	     * never be cleaned up.
-	     */
-	    peer = rxi_FindPeer(*host, *port, 0, 0);
-	    /* Since this may not be associated with a connection,
-	     * it may have no refCount, meaning we could race with
-	     * ReapConnections
-	     */
-	    if (peer && (peer->refCount > 0)) {
-		MUTEX_ENTER(&peer->peer_lock);
-		hadd32(peer->bytesReceived, p->length);
-		MUTEX_EXIT(&peer->peer_lock);
-	    }
+                /*
+                 * Try to look up this peer structure.  If it doesn't exist,
+                 * don't create a new one -
+                 * we don't keep count of the bytes sent/received if a peer
+                 * structure doesn't already exist.
+                 *
+                 * The peer/connection cleanup code assumes that there is 1 peer
+                 * per connection.  If we actually created a peer structure here
+                 * and this packet was an rxdebug packet, the peer structure would
+                 * never be cleaned up.
+                 */
+                peer = rxi_FindPeer(*host, *port, 0, 0);
+                /* Since this may not be associated with a connection,
+                 * it may have no refCount, meaning we could race with
+                 * ReapConnections
+                 */
+                if (peer && (peer->refCount > 0)) {
+                    MUTEX_ENTER(&peer->peer_lock);
+                    hadd32(peer->bytesReceived, p->length);
+                    MUTEX_EXIT(&peer->peer_lock);
+                }
+            }
 	}
 
 #ifdef RX_TRIMDATABUFS
@@ -2336,11 +2336,12 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
-    if (rx_stats_active)
+    if (rx_stats_active) {
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
-    MUTEX_ENTER(&peer->peer_lock);
-    hadd32(peer->bytesSent, p->length);
-    MUTEX_EXIT(&peer->peer_lock);
+        MUTEX_ENTER(&peer->peer_lock);
+        hadd32(peer->bytesSent, p->length);
+        MUTEX_EXIT(&peer->peer_lock);
+    }
 }
 
 /* Send a list of packets to appropriate destination for the specified
@@ -2541,11 +2542,12 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
-    if (rx_stats_active)
+    if (rx_stats_active) {
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
-    MUTEX_ENTER(&peer->peer_lock);
-    hadd32(peer->bytesSent, p->length);
-    MUTEX_EXIT(&peer->peer_lock);
+        MUTEX_ENTER(&peer->peer_lock);
+        hadd32(peer->bytesSent, p->length);
+        MUTEX_EXIT(&peer->peer_lock);
+    }
 }
 
 
