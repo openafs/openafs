@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=libafsrpc
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
@@ -19,7 +19,9 @@ FSINT = ..\fsint
 COMERR = ..\comerr
 
 # Additional debugging flag for RX.
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG -DAFS_PTHREAD_ENV
+!IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG -DRXDEBUG_PACKET -DRX_TRACK_PACKETS -DRX_REFCOUNT_CHECK
+!ENDIF
 
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
