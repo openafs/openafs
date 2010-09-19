@@ -1581,7 +1581,7 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	if (tservice->beforeProc)
 	    (*tservice->beforeProc) (call);
 
-	code = call->conn->service->executeRequestProc(call);
+	code = tservice->executeRequestProc(call);
 
 	if (tservice->afterProc)
 	    (*tservice->afterProc) (call, code);
