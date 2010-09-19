@@ -64,8 +64,8 @@ EXT struct clock rx_hardAckDelay;
  * Normally we wait and send a hard ack when the receiver consumes the packet */
 EXT struct clock rx_softAckDelay;
 
-/* Variable to allow introduction of network unreliability */
-#ifdef RXDEBUG
+#if defined(RXDEBUG) || defined(AFS_NT40_ENV)
+/* Variable to allow introduction of network unreliability; exported from libafsrpc */
 EXT int rx_intentionallyDroppedPacketsPer100 GLOBALSINIT(0);	/* Dropped on Send */
 EXT int rx_intentionallyDroppedOnReadPer100  GLOBALSINIT(0);	/* Dropped on Read */
 #endif
