@@ -267,6 +267,12 @@ EXPORTS
         rx_TSFPQLocalMax                        @2002 DATA
         rx_TSFPQMaxProcs                        @2003 DATA
         rxi_MorePackets                         @2007
+        rxi_nRecvFrags                          @2008 DATA
+        rxi_nSendFrags                          @2009 DATA
+        rx_initReceiveWindow                    @2010 DATA
+        rx_initSendWindow                       @2011 DATA
+        rx_intentionallyDroppedPacketsPer100    @2012 DATA
+        rx_intentionallyDroppedOnReadPer100     @2013 DATA
 
 ; for debugging
         rx_DumpCalls                            @9998
