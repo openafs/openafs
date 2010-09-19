@@ -55,8 +55,6 @@ ${MULTIOBJS}: rx.h rx_multi.h rx_prototypes.h
 
 ${XDROBJS}: xdr.h xdr_prototypes.h
 
-rxperf.o: rx.h rx_null.h rx_globals.h rx_prototypes.h
-
 rx_user.o: rx.h rx_user.h rx_prototypes.h
 
 rx_packet.o: rx_packet.c rx_packet.h rx.h
@@ -76,9 +74,6 @@ rx_globals.o: rx.h rx_user.h rx_globals.h rx_prototypes.h
 xdr_rx.o: xdr.h rx.h xdr_prototypes.h rx_prototypes.h
 
 xdr_refernce.o: xdr_refernce.c xdr.h xdr_prototypes.h
-
-rxperf: rxperf.o librx.a
-	${CC} -o $@ rxperf.o ${LIBS}
 
 librx.a: ${LIBOBJS} RX_component_version_number.o
 	-$(RM) -f $@

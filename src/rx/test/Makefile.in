@@ -51,6 +51,9 @@ kstest: ../librx.a kstest.o
 kctest: ../librx.a kctest.o
 	-${LINK}
 
+rxperf: rxperf.o ../librx.a
+	-${LINK}
+
 # th_ versions only have link lines for Solaris now.
 th_testclient: th_testclient.o ../../libafsrpc/libafsrpc.so 
 	${CC} ${CFLAGS} -mt -o th_testclient th_testclient.o \
