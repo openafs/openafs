@@ -436,6 +436,11 @@ struct rx_peer {
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
     afs_int32 maxPacketSize;    /* peer packetsize hint */
+
+#ifdef ADAPT_WINDOW
+    afs_int32 smRtt;
+    afs_int32 countDown;
+#endif
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -578,6 +583,9 @@ struct rx_call {
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
 
+#ifdef ADAPT_WINDOW
+    struct clock pingRequestTime;
+#endif
 #ifdef RXDEBUG_PACKET
     u_short tqc;                /* packet count in tq */
     u_short rqc;                /* packet count in rq */
