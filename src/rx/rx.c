@@ -6976,7 +6976,6 @@ void
 rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 		   afs_int32 freePackets, char version)
 {
-#ifdef RXDEBUG
     int i;
 
     if (size != sizeof(struct rx_statistics)) {
@@ -7050,9 +7049,6 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 
 #if	!defined(AFS_PTHREAD_ENV) && !defined(AFS_USE_GETTIMEOFDAY)
     fprintf(file, "   %d clock updates\n", clock_nUpdates);
-#endif
-#else
-    fprintf(file, "ERROR: compiled without RXDEBUG\n");
 #endif
 }
 

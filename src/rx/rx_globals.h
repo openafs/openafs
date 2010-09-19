@@ -578,11 +578,11 @@ EXT int rxdebug_active;
 #endif
 #endif
 #define rx_Log_event rxevent_debugFile
-
-EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
 #else
 #define dpf(args)
 #endif /* RXDEBUG */
+
+EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
 
 #ifndef KERNEL
 /*
