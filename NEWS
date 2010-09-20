@@ -1,5 +1,184 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.5.77 (2010-09-08)
+
+  All platforms
+
+    * Rx path MTU detection will terminate detection in cases where the
+      minimum required packet size cannot be transferred.
+
+    * vos dryrun mode now shows effects for syncvldb single volume case.
+
+    * vos dryrun mode now shows "status after" for syncvldb and syncserv.
+
+  All server platforms
+
+    * RXAFS_GetStatistics64 now returns statistics properly.
+
+  Microsoft Windows
+
+    * Attempt to properly identify the local system SMB connection for
+      token tracking.
+
+    * Remap timeout and offline errors to proper NT RPC errors.
+
+    * Properly fail over to other replicas on bulkstat IO errors.
+
+    * Properly error delete-mode createfile if a file is set readonly.
+
+    * Validate directory entry buffers to avoid crashing the service.
+
+    * Log file modes properly.
+
+    * Log cell name when logging server information.
+
+  All UNIX client platforms
+
+    * cacheout program for discarding callbacks is now built.
+
+    * bulkstatus kernel locking is corrected to avoid a potential panic.
+
+  Dragonfly BSD
+
+    * userspace support update
+
+  FreeBSD
+
+    * Updated vnode locking for children returned via lookup().
+
+    * Avoid file open undercount with needed calls to
+      FakeOpen/FakeClose().
+
+    * Use vnode_pager_setsize to properly track file size during kernel
+      IO.
+
+    * Update system call installation.
+
+    * Fix shutdown of Rx kernel listener to avoid potential dereference
+      after it's gone.
+
+    * Avoid closing vnodes during vnode recycle.
+
+    * Fix bogus call to FlushVS for vnode reclaims.
+
+  Linux
+
+    * Packaging updated for current configure options and built files.
+
+    * Cache bypass now holds reference on pages during readpage.
+
+    * s390x setgroups32 patching update.
+
+  MacOS
+
+    * DNS resolver is reinitialized on IP address change. (126440)
+
+
+OpenAFS 1.5.76 (2010-08-16)
+
+  All platforms
+
+    * Updates to build-time configuration.
+
+    * Fix XDR support in Rx to match header definition.
+
+    * vos status now shows transaction creation, not action creation.
+
+    * Rx avoids reporting loopback adapters when listing interfaces.
+
+  All server platforms
+
+    * Demand-Attach Fileserver always built and installed (dafileserver,
+      davolserver, dasalvager).
+
+    * Return VNOVOL from fileserver when a volume is deleted.
+
+    * Ignore duplicate tags during volume restore operation.
+
+    * Update inode array after salvage repairs volume.
+
+    * Zero a corrupted header in memory during salvage to avoid further
+      corruption.
+
+    * Fix NAMEI backend to allow low-numbered volumes to work properly.
+
+    * ptserver does not include cell name as part of length check for
+      names.
+
+    * Updated error messages for unblessed volumes.
+
+    * vlserver avoids buffer overflow with regex pattern
+
+    * Attach-time failures now note failures as the rest of the fileserver
+      would.
+
+    * Server argument logging will no longer overflow stack.
+
+    * Provide fast-restart-like unsafe-nosalvage option for DAFS.
+
+    * Deal with host hash collisions in the fileserver.
+
+  Microsoft Windows
+
+    * Avoid crashing when interpreting a drive letter as potentially
+      matching a cell name.
+
+    * Properly handle volume package errors.
+
+    * Allow page recycling from known-readonly content without ensuring
+      they are not dirty.
+
+    * 32 bit tools installer should not override client configuration.
+
+    * Ensure root scache item has a valid callback when use is attempted.
+
+    * Freelance directory changes now properly invalidate and replace the
+      old root object.
+
+  All UNIX client platforms
+
+    * Support disconnected reconnecting with specified UID for PAGless
+      platforms.
+
+    * Proper disconnected vnode reference tracking.
+
+    * Update server site blacklisting to not return success if nothing was
+      blacklisted.
+
+    * Avoid a panic during vcache contention due to CVInit vcache
+      racing. (127645)
+
+  FreeBSD
+
+    * Update for network stack in 8.1/9.0.
+
+  HP-UX
+
+    * Bug fixes.
+
+  Linux
+
+    * 2.6.36 support
+
+    * Disable PMTU error packet handling.
+
+    * flock() fixes.
+
+    * Debian packaging updated.
+
+    * freezer interface updates.
+
+  MacOS
+
+    * Hold references to disconnected mode written vnodes properly.
+
+  Solaris
+
+    * Handle NFS translator module references for amd64.
+
+    * INODE fileserver backend support now exists for amd64.
+
+
 OpenAFS 1.5.75 (2010-07-07)
 
   All platforms
