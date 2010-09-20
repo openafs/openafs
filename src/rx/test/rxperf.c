@@ -478,7 +478,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
  */
 
 static void
-do_server(short port, int nojumbo, int maxmtu)
+do_server(short port, int nojumbo, int maxmtu, int udpbufsz)
 {
     struct rx_service *service;
     struct rx_securityClass *secureobj;
@@ -502,6 +502,8 @@ do_server(short port, int nojumbo, int maxmtu)
 
     if (maxmtu)
       rx_SetMaxMTU(maxmtu);
+
+    rx_SetUdpBufSize(udpbufsz);
 
     get_sec(1, &secureobj, &secureindex);
 
@@ -577,7 +579,7 @@ readfile(const char *filename, afs_uint32 ** readwrite, afs_uint32 * size)
 static void
 do_client(const char *server, short port, char *filename, afs_int32 command,
 	  afs_int32 times, afs_int32 bytes, afs_int32 sendtimes, afs_int32 recvtimes,
-          int dumpstats, int nojumbo, int maxmtu)
+          int dumpstats, int nojumbo, int maxmtu, int udpbufsz)
 {
     struct rx_connection *conn;
     struct rx_call *call;
@@ -613,6 +615,8 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 
     if (maxmtu)
       rx_SetMaxMTU(maxmtu);
+
+    rx_SetUdpBufSize(udpbufsz);
 
     get_sec(0, &secureobj, &secureindex);
 
@@ -792,10 +796,11 @@ rxperf_server(int argc, char **argv)
     short port = DEFAULT_PORT;
     int nojumbo = 0;
     int maxmtu = 0;
+    int udpbufsz = 64 * 1024;
     char *ptr;
     int ch;
 
-    while ((ch = getopt(argc, argv, "r:d:p:w:jm:4")) != -1) {
+    while ((ch = getopt(argc, argv, "r:d:p:w:jm:u:4")) != -1) {
 	switch (ch) {
 	case 'd':
 #ifdef RXDEBUG
@@ -835,6 +840,11 @@ rxperf_server(int argc, char **argv)
 	  if (ptr && *ptr != '\0')
 	    errx(1, "can't resolve rx maxmtu to use");
 	    break;
+	case 'u':
+	    udpbufsz = strtol(optarg, &ptr, 0) * 1024;
+	    if (ptr && *ptr != '\0')
+		errx(1, "can't resolve upd buffer size (Kbytes)");
+	    break;
 	case '4':
 	  RX_IPUDP_SIZE = 28;
 	  break;
@@ -846,7 +856,7 @@ rxperf_server(int argc, char **argv)
     if (optind != argc)
 	usage();
 
-    do_server(port, nojumbo, maxmtu);
+    do_server(port, nojumbo, maxmtu, udpbufsz);
 
     return 0;
 }
@@ -869,12 +879,13 @@ rxperf_client(int argc, char **argv)
     int dumpstats = 0;
     int nojumbo = 0;
     int maxmtu = 0;
+    int udpbufsz = 64 * 1024;
     char *ptr;
     int ch;
 
     cmd = RX_PERF_UNKNOWN;
 
-    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:r:s:w:f:Djm:4")) != -1) {
+    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:r:s:w:f:Djm:u:4")) != -1) {
 	switch (ch) {
 	case 'b':
 	    bytes = strtol(optarg, &ptr, 0);
@@ -957,6 +968,11 @@ rxperf_client(int argc, char **argv)
 	  if (ptr && *ptr != '\0')
 	    errx(1, "can't resolve rx maxmtu to use");
 	    break;
+	case 'u':
+	    udpbufsz = strtol(optarg, &ptr, 0) * 1024;
+	    if (ptr && *ptr != '\0')
+		errx(1, "can't resolve upd buffer size (Kbytes)");
+	    break;
 	case '4':
 	  RX_IPUDP_SIZE = 28;
 	  break;
@@ -972,7 +988,7 @@ rxperf_client(int argc, char **argv)
 	errx(1, "no command given to the client");
 
     do_client(host, port, filename, cmd, times, bytes, sendtimes,
-	      recvtimes, dumpstats, nojumbo, maxmtu);
+	      recvtimes, dumpstats, nojumbo, maxmtu, udpbufsz);
 
     return 0;
 }
