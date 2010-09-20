@@ -124,7 +124,7 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 #define RX_FAST_ACK_RATE 1	/* as of 3.4, ask for an ack every
 				 * other packet. */
 
-EXT int rx_minPeerTimeout GLOBALSINIT(350); /* in milliseconds */
+EXT int rx_minPeerTimeout GLOBALSINIT(2); /* in milliseconds */
 EXT int rx_minWindow GLOBALSINIT(1);
 EXT int rx_maxWindow GLOBALSINIT(65535);        /* twind is u_short */
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
