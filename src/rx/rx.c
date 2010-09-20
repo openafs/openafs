@@ -7094,7 +7094,7 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 #define UNLOCK_RX_DEBUG
 #endif /* AFS_PTHREAD_ENV */
 
-#ifdef RXDEBUG
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
 static int
 MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      u_char type, void *inputData, size_t inputLength,
@@ -7210,9 +7210,7 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint16 remotePort, struct rx_debugStats * stat,
 		  afs_uint32 * supportedValues)
 {
-#ifndef RXDEBUG
-     afs_int32 rc = -1;
-#else
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
     afs_int32 rc = 0;
     struct rx_debugIn in;
 
@@ -7265,6 +7263,8 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
         stat->nWaited = ntohl(stat->nWaited);
         stat->nPackets = ntohl(stat->nPackets);
     }
+#else
+    afs_int32 rc = -1;
 #endif
     return rc;
 }
@@ -7274,9 +7274,7 @@ rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint16 remotePort, struct rx_statistics * stat,
 		  afs_uint32 * supportedValues)
 {
-#ifndef RXDEBUG
-     afs_int32 rc = -1;
-#else
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
     afs_int32 rc = 0;
     struct rx_debugIn in;
     afs_int32 *lp = (afs_int32 *) stat;
@@ -7305,6 +7303,8 @@ rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 	    *lp = ntohl(*lp);
 	}
     }
+#else
+    afs_int32 rc = -1;
 #endif
     return rc;
 }
@@ -7314,7 +7314,7 @@ rx_GetServerVersion(osi_socket socket, afs_uint32 remoteAddr,
 		    afs_uint16 remotePort, size_t version_length,
 		    char *version)
 {
-#ifdef RXDEBUG
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
     char a[1] = { 0 };
     return MakeDebugCall(socket, remoteAddr, remotePort,
 			 RX_PACKET_TYPE_VERSION, a, 1, version,
@@ -7331,9 +7331,7 @@ rx_GetServerConnections(osi_socket socket, afs_uint32 remoteAddr,
 			struct rx_debugConn * conn,
 			afs_uint32 * supportedValues)
 {
-#ifndef RXDEBUG
-    afs_int32 rc = -1;
-#else
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
     afs_int32 rc = 0;
     struct rx_debugIn in;
     int i;
@@ -7407,6 +7405,8 @@ rx_GetServerConnections(osi_socket socket, afs_uint32 remoteAddr,
 	conn->epoch = ntohl(conn->epoch);
 	conn->natMTU = ntohl(conn->natMTU);
     }
+#else
+    afs_int32 rc = -1;
 #endif
     return rc;
 }
@@ -7417,9 +7417,7 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint32 debugSupportedValues, struct rx_debugPeer * peer,
 		  afs_uint32 * supportedValues)
 {
-#ifndef RXDEBUG
-    afs_int32 rc = -1;
-#else
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
     afs_int32 rc = 0;
     struct rx_debugIn in;
 
@@ -7472,6 +7470,8 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->bytesReceived.high = ntohl(peer->bytesReceived.high);
 	peer->bytesReceived.low = ntohl(peer->bytesReceived.low);
     }
+#else
+    afs_int32 rc = -1;
 #endif
     return rc;
 }
