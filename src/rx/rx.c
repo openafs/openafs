@@ -3825,7 +3825,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     afs_uint32 skew = 0;
     int nbytes;
     int missing;
-    int backedOff = 0;
     int acked;
     int nNacked = 0;
     int newAckCount = 0;
@@ -4058,14 +4057,14 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
          * timeout value for future packets until a successful response
          * is received for an initial transmission.
          */
-        if (missing && !backedOff) {
+        if (missing && !peer->backedOff) {
             struct clock c = peer->timeout;
             struct clock max_to = {3, 0};
 
             clock_Add(&peer->timeout, &c);
             if (clock_Gt(&peer->timeout, &max_to))
                 peer->timeout = max_to;
-            backedOff = 1;
+            peer->backedOff = 1;
         }
 
 	/* If packet isn't yet acked, and it has been transmitted at least
@@ -6485,6 +6484,9 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev), rx_minPeerTimeout);
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
+
+    /* Reset the backedOff flag since we just computed a new timeout value */
+    peer->backedOff = 0;
 
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n",
           p->header.callNumber, p, MSEC(rttp), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
