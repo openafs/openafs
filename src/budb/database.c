@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -52,7 +52,7 @@ InitDB(void)
 
 /* package up seek and write into one procedure for ease of use */
 
-/* dbwrite 
+/* dbwrite
  * 	write a portion of the database
  * entry:
  *	pos - offset into the database (disk address). If this is in the
@@ -113,8 +113,8 @@ dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
     }
     code = ubik_Read(ut, buff, len);
     if (code) {
-	LogError(code, "dbread: ubik_Read pos %d, buff %d, len %d\n", pos,
-		 buff, len);
+	LogError(code, "dbread: ubik_Read pos %d, buff %"AFS_PTR_FMT
+		 ", len %d\n", pos, buff, len);
 	ERROR(code);
     }
 
@@ -148,8 +148,8 @@ cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 le
     }
     code = ubik_Read(ut, buff, len);
     if (code) {
-	LogError(code, "cdbread: ubik_Read pos 0x%x, buff %d, len %d\n", pos,
-		 buff, len);
+	LogError(code, "cdbread: ubik_Read pos 0x%x, buff %"AFS_PTR_FMT
+		 ", len %d\n", pos, buff, len);
 	ERROR(code);
     }
 

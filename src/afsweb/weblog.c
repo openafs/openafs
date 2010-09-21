@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -10,10 +10,10 @@
 /*
  * Implements the weblog binary which links with the AFS libraries and acts
  * as the server for authenticating users for apache access to AFS. Code
- * structure is based on klog.c. The communication with clients is done 
+ * structure is based on klog.c. The communication with clients is done
  * via pipes whose file descriptors are passed as command line arguments
- * thus making it necessary for a common parent to start this process and 
- * the processes that will communicate with it for them to inherit the 
+ * thus making it necessary for a common parent to start this process and
+ * the processes that will communicate with it for them to inherit the
  * pipes. Also passed as a command line argument is a Silent flag (like klog)
  * and a cache expiration flag which allows cache expiration times for
  * tokens to be set for testing purposes
@@ -73,8 +73,8 @@ static char **zero_argv;
 static int readPipe;
 static int writePipe;
 
-/* 
- * now I know why this was necessary! - it's a hokie thing - 
+/*
+ * now I know why this was necessary! - it's a hokie thing -
  * the call to ka_UserAuthenticateGeneral doesn't compile otherwise
  */
 int
@@ -91,8 +91,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -105,9 +105,9 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-/* 
+/*
  * we ignore SIGPIPE so that EPIPE is returned if there is no one reading
- * data being written to the pipe 
+ * data being written to the pipe
  */
 
 #ifdef AIX
@@ -146,7 +146,7 @@ main(int argc, char **argv)
 
 
 /*
- * send a buffer over the pipe 
+ * send a buffer over the pipe
  */
 static int
 sendToken(int len, void *buf)
@@ -191,13 +191,13 @@ readFromClient(char *buf)
     return n;
 }
 
-/* 
+/*
  * copies the string spereated by the sep into retbuf and returns the position
- * from the beginning of the string that this string ends at so you can call 
- * it againword seperated by the sep character and give that value as th start 
+ * from the beginning of the string that this string ends at so you can call
+ * it againword seperated by the sep character and give that value as th start
  * parameter - used to parse incoming buffer from clients over the pipe
  */
-/* 
+/*
  * NOTE - the space seperated credentials failed for passwds with spaces, thus
  * we use newline for seperators instead
  */
@@ -223,7 +223,7 @@ getNullSepWord(char *buf, char sep, char *retBuf, int start)
 }
 
 
-/* 
+/*
  * parses the NEWLINE seperated buffer giving the username, passwd and cell
  * coming over the pipe from the clients and sets the variables accordingly
  */
@@ -352,8 +352,8 @@ CommandProc(struct cmd_syndesc *as, void *arock)
      */
     token_cache_init();
 
-    /* 
-     * discard any tokens held for this PAG - 
+    /*
+     * discard any tokens held for this PAG -
      * should we create a seperate PAG for weblog first? makeNewPAG does that
      */
 #ifdef DEBUG

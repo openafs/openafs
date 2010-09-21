@@ -188,7 +188,7 @@ static _u32 strong_ll(_u64 *ptr, int p)
 #endif /* !INTEL */
 
 
-static int strong_vl(_u64 *ptr, int p) 
+static int strong_vl(_u64 *ptr, int p)
 {
     _u64 val_read;
     _u64 flag;
@@ -200,7 +200,7 @@ static int strong_vl(_u64 *ptr, int p)
 }
 
 #if !defined(INTEL) && !defined(X86_64)
-static int strong_sc(_u64 *ptr, int p, _u32 n) 
+static int strong_sc(_u64 *ptr, int p, _u32 n)
 {
     _u64 val_read;
     _u64 new_val;
@@ -226,7 +226,7 @@ static int strong_sc(_u64 *ptr, int p, _u32 n)
 #endif /* !INTEL */
 
 
-static void s_store(_u64 *ptr, _u32 n) 
+static void s_store(_u64 *ptr, _u32 n)
 {
     _u64 new_val;
 
@@ -234,7 +234,7 @@ static void s_store(_u64 *ptr, _u32 n)
     *ptr = new_val;
 }
 
-static _u32 s_load(_u64 *ptr) 
+static _u32 s_load(_u64 *ptr)
 {
     _u64 val_read;
 
@@ -342,7 +342,7 @@ static void rd_lock(mrsw_lock_t *lock, mrsw_qnode_t *qn)
     WMB_NEAR_CAS();
 
     pred = FASPO(&lock->tail, qn);
-    
+
     if ( pred == NULL )
     {
         ADD_TO(lock->reader_count, 1);
@@ -398,7 +398,7 @@ static void rd_unlock(mrsw_lock_t *lock, mrsw_qnode_t *qn)
     /* Bounded to maximum # readers if no native atomic_decrement */
     c = lock->reader_count;
     while ( (oc = CASIO(&lock->reader_count, c, c-1)) != c ) c = oc;
-   
+
     if ( c == 1 )
     {
         WEAK_DEP_ORDER_MB();
@@ -425,7 +425,7 @@ static void wr_lock(mrsw_lock_t *lock, mrsw_qnode_t *qn)
     qn->state = ST_NOSUCC | ST_BLOCKED;
 
     WMB_NEAR_CAS();
-    
+
     pred = FASPO(&lock->tail, qn);
 
     if ( pred == NULL )

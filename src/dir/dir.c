@@ -61,8 +61,8 @@ extern void *DNew(struct dcache *adc, int page);
 
 /* afs_buffer.c */
 /* These are needed because afs_prototypes.h is not included here */
-extern void *DRead(register afs_int32 *fid, register int page);
-extern void *DNew(register afs_int32 *fid, register int page);
+extern void *DRead(afs_int32 *fid, int page);
+extern void *DNew(afs_int32 *fid, int page);
 
 #endif /* !defined(UKERNEL) */
 #include "afs/afs_osi.h"
@@ -85,10 +85,7 @@ extern void *DNew(register afs_int32 *fid, register int page);
 #define	EnumerateDir	afs_dir_EnumerateDir
 #define	IsEmpty		afs_dir_IsEmpty
 #define InverseLookup   afs_dir_InverseLookup
-
-#if defined(AFS_DISCON_ENV)
 #define ChangeFid	afs_dir_ChangeFid
-#endif
 
 #else /* KERNEL */
 
@@ -118,7 +115,7 @@ static struct DirEntry *FindItem(void *dir, char *ename,
 int
 NameBlobs(char *name)
 {
-    register int i;
+    int i;
     i = strlen(name) + 1;
     return 1 + ((i + 15) >> 5);
 }
@@ -130,10 +127,10 @@ Create(void *dir, char *entry, void *voidfid)
 {
     afs_int32 *vfid = (afs_int32 *) voidfid;
     int blobs, firstelt;
-    register int i;
-    register struct DirEntry *ep;
+    int i;
+    struct DirEntry *ep;
     unsigned short *pp = NULL;
-    register struct DirHeader *dhp;
+    struct DirHeader *dhp;
 
     /* check name quality */
     if (*entry == 0)
@@ -197,7 +194,7 @@ Delete(void *dir, char *entry)
 {
     /* Delete an entry from a directory, including update of all free entry descriptors. */
     int nitems, index;
-    register struct DirEntry *firstitem;
+    struct DirEntry *firstitem;
     unsigned short *previtem;
     firstitem = FindItem(dir, entry, &previtem);
     if (firstitem == 0)
@@ -215,9 +212,9 @@ int
 FindBlobs(void *dir, int nblobs)
 {
     /* Find a bunch of contiguous entries; at least nblobs in a row. */
-    register int i, j, k;
+    int i, j, k;
     int failed = 0;
-    register struct DirHeader *dhp;
+    struct DirHeader *dhp;
     struct PageHeader *pp;
     int pgcount;
 
@@ -284,8 +281,8 @@ FindBlobs(void *dir, int nblobs)
 void
 AddPage(void *dir, int pageno)
 {				/* Add a page to a directory. */
-    register int i;
-    register struct PageHeader *pp;
+    int i;
+    struct PageHeader *pp;
 
     pp = (struct PageHeader *)DNew(dir, pageno);	/* Get a new buffer labelled dir,pageno */
     pp->tag = htons(1234);
@@ -301,9 +298,9 @@ AddPage(void *dir, int pageno)
 /* Free a whole bunch of directory entries. */
 
 void
-FreeBlobs(void *dir, register int firstblob, int nblobs)
+FreeBlobs(void *dir, int firstblob, int nblobs)
 {
-    register int i;
+    int i;
     int page;
     struct DirHeader *dhp;
     struct PageHeader *pp;
@@ -331,8 +328,8 @@ FreeBlobs(void *dir, register int firstblob, int nblobs)
 int
 MakeDir(void *dir, afs_int32 * me, afs_int32 * parent)
 {
-    register int i;
-    register struct DirHeader *dhp;
+    int i;
+    struct DirHeader *dhp;
     dhp = (struct DirHeader *)DNew(dir, 0);
     dhp->header.pgcount = htons(1);
     dhp->header.tag = htons(1234);
@@ -358,7 +355,7 @@ int
 Lookup(void *dir, char *entry, void *voidfid)
 {
     afs_int32 *fid = (afs_int32 *) voidfid;
-    register struct DirEntry *firstitem;
+    struct DirEntry *firstitem;
     unsigned short *previtem;
 
     firstitem = FindItem(dir, entry, &previtem);
@@ -377,7 +374,7 @@ int
 LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
 {
     afs_int32 *fid = (afs_int32 *) voidfid;
-    register struct DirEntry *firstitem;
+    struct DirEntry *firstitem;
     unsigned short *previtem;
 
     firstitem = FindItem(dir, entry, &previtem);
@@ -394,16 +391,16 @@ LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
 
 int
 EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
-				         afs_int32 vnode, afs_int32 unique), 
+				         afs_int32 vnode, afs_int32 unique),
 	     void *hook)
 {
     /* Enumerate the contents of a directory.
      * Break when hook function returns non 0.
      */
-    register int i;
+    int i;
     int num;
-    register struct DirHeader *dhp;
-    register struct DirEntry *ep;
+    struct DirHeader *dhp;
+    struct DirEntry *ep;
     int code = 0;
 
     dhp = (struct DirHeader *)DRead(dir, 0);
@@ -442,10 +439,10 @@ int
 IsEmpty(void *dir)
 {
     /* Enumerate the contents of a directory. */
-    register int i;
+    int i;
     int num;
-    register struct DirHeader *dhp;
-    register struct DirEntry *ep;
+    struct DirHeader *dhp;
+    struct DirEntry *ep;
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
 	return 0;
@@ -482,12 +479,12 @@ GetBlob(void *dir, afs_int32 blobno)
 }
 
 int
-DirHash(register char *string)
+DirHash(char *string)
 {
     /* Hash a string to a number between 0 and NHASHENT. */
-    register unsigned char tc;
+    unsigned char tc;
     unsigned int hval;
-    register int tval;
+    int tval;
     hval = 0;
     while ((tc = (*string++))) {
 	hval *= 173;
@@ -511,10 +508,10 @@ DirHash(register char *string)
 static struct DirEntry *
 FindItem(void *dir, char *ename, unsigned short **previtem)
 {
-    register int i;
-    register struct DirHeader *dhp;
-    register unsigned short *lp;
-    register struct DirEntry *tp;
+    int i;
+    struct DirHeader *dhp;
+    unsigned short *lp;
+    struct DirEntry *tp;
     i = DirHash(ename);
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
@@ -555,15 +552,15 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 static struct DirEntry *
 FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 {
-    /* Find a directory entry, given the vnode and uniquifier of a object.  
+    /* Find a directory entry, given the vnode and uniquifier of a object.
      * This entry returns a pointer to a locked buffer.  If no entry is found,
-     * however, no items are left locked, and a null pointer is returned 
-     * instead. 
+     * however, no items are left locked, and a null pointer is returned
+     * instead.
      */
-    register int i;
-    register struct DirHeader *dhp;
-    register unsigned short *lp;
-    register struct DirEntry *tp;
+    int i;
+    struct DirHeader *dhp;
+    unsigned short *lp;
+    struct DirEntry *tp;
     dhp = (struct DirHeader *) DRead(dir,0);
     if (!dhp) return 0;
     for (i=0; i<NHASHENT; i++) {
@@ -574,8 +571,8 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 		return 0;
 	    }
 	    while(tp) {
-		if (vnode == ntohl(tp->fid.vnode) 
-		    && unique == ntohl(tp->fid.vunique)) { 
+		if (vnode == ntohl(tp->fid.vnode)
+		    && unique == ntohl(tp->fid.vunique)) {
 		    DRelease(dhp, 0);
 		    return tp;
 		}
@@ -593,13 +590,13 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 }
 
 int
-InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name, 
+InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name,
 	       afs_uint32 length)
 {
     /* Look for the name pointing to given vnode and unique in a directory */
-    register struct DirEntry *entry;
+    struct DirEntry *entry;
     int code = 0;
-    
+
     entry = FindFid(dir, vnode, unique);
     if (!entry)
 	return ENOENT;
@@ -611,7 +608,6 @@ InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name,
     return code;
 }
 
-#if defined(AFS_DISCON_ENV)
 /*!
  * Change an entry fid.
  *
@@ -650,4 +646,3 @@ int ChangeFid(void *dir,
 
     return 0;
 }
-#endif

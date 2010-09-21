@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -80,7 +80,7 @@ FT_Init(int printErrors, int notReally)
 int
 FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
 {
-    register int ret;
+    int ret;
     ret = gettimeofday(tv, tz);
     if (!ret) {
 	/* need to bounds check 'cause Unix can fail these checks, (esp on Suns)

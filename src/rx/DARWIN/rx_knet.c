@@ -142,7 +142,7 @@ osi_NetSend(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     struct socket *asocket = (struct socket *)so;
     struct uio u;
 #endif
-    register afs_int32 code;
+    afs_int32 code;
     int i;
     struct iovec iov[RX_MAXIOVECS];
     int haveGlock = ISAFS_GLOCK();

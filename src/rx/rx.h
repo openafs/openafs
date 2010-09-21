@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -122,6 +122,12 @@ int ntoh_syserr_conv(int error);
 #define	rx_SecurityClassOf(conn)	((conn)->securityIndex)
 #define rx_SecurityObjectOf(conn)	((conn)->securityObject)
 
+static_inline int
+rx_IsLoopbackAddr(afs_uint32 addr)
+{
+    return ((addr & 0xffff0000) == 0x7f000000);
+}
+
 /*******************
  * Macros callable by the user to further define attributes of a
  * service.  Must be called before rx_StartServer
@@ -217,7 +223,7 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
 
-/* A connection is an authenticated communication path, allowing 
+/* A connection is an authenticated communication path, allowing
    limited multiple asynchronous conversations. */
 #ifdef KDUMP_RX_LOCK
 struct rx_connection_rx_lock {
@@ -463,8 +469,8 @@ struct rx_call {
      * The following fields are accessed while the call is unlocked.
      * These fields are used by the caller/server thread to marshall
      * and unmarshall RPC data. The only time they may be changed by
-     * other threads is when the RX_CALL_IOVEC_WAIT flag is set. 
-     * 
+     * other threads is when the RX_CALL_IOVEC_WAIT flag is set.
+     *
      * NOTE: Be sure that these fields start and end on a double
      *       word boundary. Otherwise threads that are changing
      *       adjacent fields will cause problems.
@@ -556,7 +562,7 @@ struct rx_call {
     short refCDebug[RX_CALL_REFCOUNT_MAX];
 #endif				/* RX_REFCOUNT_CHECK */
 
-    /* 
+    /*
      * iov, iovNBytes, iovMax, and iovNext are set in rxi_ReadvProc()
      * and adjusted by rxi_FillReadVec().  iov does not own the buffers
      * it refers to.  The buffers belong to the packets stored in iovq.
@@ -679,7 +685,7 @@ struct rx_ackPacket {
 #define	RX_ACK_PING		6	/* This is a keep-alive ack */
 #define	RX_ACK_PING_RESPONSE	7	/* Ack'ing because we were pinged */
 #define	RX_ACK_DELAY		8	/* Ack generated since nothing has happened since receiving packet */
-#define RX_ACK_IDLE             9	/* Similar to RX_ACK_DELAY, but can 
+#define RX_ACK_IDLE             9	/* Similar to RX_ACK_DELAY, but can
 					 * be used to compute RTT */
 #define RX_ACK_MTU             -1       /* will be rewritten to ACK_PING */
 
@@ -748,7 +754,7 @@ struct rx_securityObjectStats {
 
 /* Configuration settings */
 
-/* Enum for storing configuration variables which can be set via the 
+/* Enum for storing configuration variables which can be set via the
  * SetConfiguration method in the rx_securityClass, below
  */
 
@@ -1161,7 +1167,7 @@ extern int rx_DumpCalls(FILE *outputFile, char *cookie);
         object--; \
         MUTEX_EXIT(&mutex); \
     } while(0)
-#endif 
+#endif
 
 #endif /* _RX_   End of rx.h */
 

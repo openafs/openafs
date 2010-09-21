@@ -60,9 +60,9 @@ afs_unmount(struct vfs *afsp)
 int
 afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
     OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_root);
@@ -105,7 +105,7 @@ afs_sync(struct vfs *afsp)
 }
 
 int
-afs_statfs(register struct vfs *afsp, struct statfs *abp)
+afs_statfs(struct vfs *afsp, struct statfs *abp)
 {
     AFS_STATCNT(afs_statfs);
     abp->f_type = 0;

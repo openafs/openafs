@@ -110,7 +110,7 @@ handle_socket_error(osi_socket so)
     msg.msg_controllen = 256;
     msg.msg_flags = 0;
 
-    code = kernel_recvmsg(sop, &msg, NULL, 0, 256,
+    code = kernel_recvmsg(sop, &msg, NULL, 0, 0,
 			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
@@ -134,7 +134,7 @@ handle_socket_error(osi_socket so)
     if (err->ee_origin == SO_EE_ORIGIN_ICMP &&
 	err->ee_type == ICMP_DEST_UNREACH &&
 	err->ee_code == ICMP_FRAG_NEEDED) {
-	rxi_SetPeerMtu(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
+	rxi_SetPeerMtu(NULL, ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
 		       err->ee_info);
     }
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
@@ -159,7 +159,7 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     int code;
 #ifdef ADAPT_PMTU
     int sockerr;
-    size_t esize;
+    int esize;
 
     while (1) {
 	sockerr=0;
@@ -211,7 +211,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     int code;
 #ifdef ADAPT_PMTU
     int sockerr;
-    size_t esize;
+    int esize;
 #endif
     struct iovec tmpvec[RX_MAXWVECS + 2];
     struct socket *sop = (struct socket *)so;
@@ -240,29 +240,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     code = kernel_recvmsg(sop, &msg, (struct kvec *)tmpvec, iovcnt,
 			  *lengthp, 0);
     if (code < 0) {
-#ifdef CONFIG_PM
-	if (
-# ifdef PF_FREEZE
-	    current->flags & PF_FREEZE
-# else
-#  if defined(STRUCT_TASK_STRUCT_HAS_TODO)
-	    !current->todo
-#  else
-#   if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-            test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#   else
-            test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#   endif
-#  endif
-# endif
-	    )
-# ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-	    refrigerator(PF_FREEZE);
-# else
-	    refrigerator();
-# endif
-	    set_current_state(TASK_INTERRUPTIBLE);
-#endif
+	afs_try_to_freeze();
 
 	/* Clear the error before using the socket again.
 	 * Oh joy, Linux has hidden header files as well. It appears we can

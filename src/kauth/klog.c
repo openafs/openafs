@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -80,8 +80,8 @@ main(int argc, char *argv[])
     afs_int32 code;
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -137,7 +137,7 @@ getpipepass(void)
 {
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
-    register int i, tc;
+    int i, tc;
     memset(gpbuf, 0, sizeof(gpbuf));
     for (i = 0; i < (sizeof(gpbuf) - 1); i++) {
 	tc = fgetc(stdin);

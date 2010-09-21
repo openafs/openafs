@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -86,7 +86,7 @@ int restoreText(struct butm_tapeInfo *, struct rstTapeInfo *,
 
 void * KeepAlive(void *);
 /* CreateDBDump
- *      create a dump entry for a saved database 
+ *      create a dump entry for a saved database
  */
 
 afs_int32
@@ -198,7 +198,7 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 		goto getNewTape;
 	    }
 
-	    /* On first tape, the savedb has not started yet, so the database is not locked 
+	    /* On first tape, the savedb has not started yet, so the database is not locked
 	     * and we can therefore, access information from it. This is easier to do because
 	     * database dumps don't have appended dumps (nor appended).
 	     */
@@ -207,7 +207,7 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 		struct budb_dumpEntry de, de2;
 
 		/* Verify the tape has not expired
-		 * Early database dumps don't have a dumpid 
+		 * Early database dumps don't have a dumpid
 		 */
 		if (!tapeExpired(&oldTapeLabel)) {
 		    TLog(taskId, "This tape has not expired\n");
@@ -248,7 +248,7 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 	    }
 
 	    /* Otherwise, the savedb is in progress and we can't
-	     * access the database (it's locked). So we rely on the 
+	     * access the database (it's locked). So we rely on the
 	     * information available (and not the backup database).
 	     */
 	    else {
@@ -344,7 +344,7 @@ freeTapeList(void)
 }
 
 /* addTapesToDb
- *       With the list of tapes, add them to the database. 
+ *       With the list of tapes, add them to the database.
  *       Also delete any olddumpids that are around.
  */
 
@@ -439,12 +439,12 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
     memset(writeBuffer, 0, BUTM_BLKSIZE);
     maxReadSize = 1024;
 
-    /* 
-     * The margin of space to check for end of tape is set to the 
-     * amount of space used to write an end-of-tape multiplied by 2. 
+    /*
+     * The margin of space to check for end of tape is set to the
+     * amount of space used to write an end-of-tape multiplied by 2.
      * The amount of space is size of a 16K EODump marker, its EOF
      * marker, and up to two EOF markers done on close (1 16K blocks +
-     * 3 EOF * markers). 
+     * 3 EOF * markers).
      */
     tc_EndMargin = (16384 + 3 * globalTapeConfig.fileMarkSize) * 2;
     tc_KEndMargin = tc_EndMargin / 1024;
@@ -699,7 +699,7 @@ saveDbToTape(void *param)
 		  &wroteLabel);
 
     /*
-     * If did not write the label, remove created dump 
+     * If did not write the label, remove created dump
      * Else if wrote the label, remove old dump from db so it's not saved.
      */
     if (!wroteLabel) {
@@ -1117,12 +1117,12 @@ restoreDbFromTape(void *param)
 }
 
 /* KeepAlive
- * 
- *      While dumping the database, keeps the connection alive.  
+ *
+ *      While dumping the database, keeps the connection alive.
  *      Every 10 seconds, wake up and ask to read 0 bytes of the database.
- *      This resets the database's internal timer so that it does not 
+ *      This resets the database's internal timer so that it does not
  *      prematuraly quit (on asking for new tapes and such).
- *      
+ *
  *      Use the same udbHandle as writeDbDump so we go to the same server.
  */
 void *
@@ -1207,7 +1207,7 @@ restoreDbHeader(struct butm_tapeInfo *tapeInfo,
  *	nextHeader - ptr to structure for return value
  * exit:
  *	nextHeader - next structure header from tape
- * notes: 
+ * notes:
  *	upon entry, the dump structure header has been read confirming that
  *	a database dump tree exists on the tape
  */
@@ -1532,7 +1532,7 @@ static char *tapeReadBufferPtr = 0;	/* position in buffer */
 
 /* getTapeData
  *	Read information from tape, and place the requested number of bytes
- *	in the buffer supplied 
+ *	in the buffer supplied
  * entry:
  *	tapeInfo
  *	rstTapeInfoPtr - Info about the dump being restored.

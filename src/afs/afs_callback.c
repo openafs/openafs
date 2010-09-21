@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -62,11 +62,9 @@ static struct ltable {
       "afs_xvreclaim", (char *)&afs_xvreclaim},
     { "afsdb_client_lock", (char *)&afsdb_client_lock},
     { "afsdb_req_lock", (char *)&afsdb_req_lock},
-#ifdef AFS_DISCON_ENV
     { "afs_discon_lock", (char *)&afs_discon_lock},
     { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
     { "afs_discon_vc_dirty", (char *)&afs_xvcdirty},
-#endif
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;
@@ -103,8 +101,8 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
 	       struct AFSDBCacheEntry *a_result)
 {
 
-    register int i;		/*Loop variable */
-    register struct vcache *tvc;	/*Ptr to current cache entry */
+    int i;		/*Loop variable */
+    struct vcache *tvc;	/*Ptr to current cache entry */
     int code;			/*Return code */
     XSTATS_DECLS;
 
@@ -189,8 +187,8 @@ int
 SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
 		 struct AFSDBCacheEntry64 *a_result)
 {
-    register int i;		/*Loop variable */
-    register struct vcache *tvc;	/*Ptr to current cache entry */
+    int i;		/*Loop variable */
+    struct vcache *tvc;	/*Ptr to current cache entry */
     int code;			/*Return code */
     XSTATS_DECLS;
 
@@ -236,7 +234,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
 #endif /* INSTRUMENT_LOCKS */
-#if !defined(AFS_64BIT_ENV) 
+#if !defined(AFS_64BIT_ENV)
     a_result->Length.high = 0;
     a_result->Length.low = tvc->f.m.Length;
 #else
@@ -384,7 +382,7 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
  *
  * Description:
  *	Clear out callback information for the specified file, or
- *	even a whole volume.  Used to worry about callback was from 
+ *	even a whole volume.  Used to worry about callback was from
  *      within the particular cell or not.  Now we don't bother with
  *      that anymore; it's not worth the time.
  *
@@ -406,11 +404,11 @@ Appears to need to be called with GLOCK held, as the icl_Event4 stuff asserts ot
  *------------------------------------------------------------------------*/
 
 static int
-ClearCallBack(register struct rx_connection *a_conn,
-	      register struct AFSFid *a_fid)
+ClearCallBack(struct rx_connection *a_conn,
+	      struct AFSFid *a_fid)
 {
-    register struct vcache *tvc;
-    register int i;
+    struct vcache *tvc;
+    int i;
     struct VenusFid localFid;
     struct volume *tv;
 #ifdef AFS_DARWIN80_ENV
@@ -444,7 +442,7 @@ loop1:
 		i = VCHashV(&localFid);
 		for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
 		    uq = QPrev(tq);
-		    tvc = QTOVH(tq);      
+		    tvc = QTOVH(tq);
 		    if (tvc->f.fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
 			if (!localFid.Cell)
@@ -639,12 +637,12 @@ loop2:
  *------------------------------------------------------------------------*/
 
 int
-SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids,
+SRXAFSCB_CallBack(struct rx_call *a_call, struct AFSCBFids *a_fids,
 		  struct AFSCBs *a_callbacks)
 {
-    register int i;		/*Loop variable */
+    int i;		/*Loop variable */
     struct AFSFid *tfid;	/*Ptr to current fid */
-    register struct rx_connection *tconn;	/*Call's connection */
+    struct rx_connection *tconn;	/*Call's connection */
     int code = 0;
     XSTATS_DECLS;
 
@@ -736,10 +734,10 @@ SRXAFSCB_Probe(struct rx_call *a_call)
 int
 SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 {
-    register int i;
-    register struct vcache *tvc;
-    register struct rx_connection *tconn;
-    register struct rx_peer *peer;
+    int i;
+    struct vcache *tvc;
+    struct rx_connection *tconn;
+    struct rx_peer *peer;
     struct server *ts;
     int code = 0;
     XSTATS_DECLS;
@@ -782,8 +780,8 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 
 	/* find any volumes residing on this server and flush their state */
 	{
-	    register struct volume *tv;
-	    register int j;
+	    struct volume *tv;
+	    int j;
 
 	    for (i = 0; i < NVOLS; i++)
 		for (tv = afs_volumes[i]; tv; tv = tv->next) {
@@ -877,7 +875,7 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 		   afs_int32 a_collectionNumber, afs_int32 * a_srvVersionNumP,
 		   afs_int32 * a_timeP, AFSCB_CollData * a_dataP)
 {
-    register int code;		/*Return value */
+    int code;		/*Return value */
     afs_int32 *dataBuffP;	/*Ptr to data to be returned */
     afs_int32 dataBytes;	/*Bytes in data buffer */
     XSTATS_DECLS;
@@ -1067,7 +1065,7 @@ shutdown_CB(void)
  *      a_call : Ptr to Rx call on which this request came in.
  *
  * Returns:
- *      RXGEN_OPCODE (always). 
+ *      RXGEN_OPCODE (always).
  *
  * Environment:
  *      Nothing interesting.
@@ -1708,7 +1706,7 @@ resume:
 	 * All done at this level ... ascend and resume the search.
 	 */
 	if (this_parent != parent) {
-		next = this_parent->d_child.next; 
+		next = this_parent->d_child.next;
 		this_parent = this_parent->d_parent;
 		goto resume;
 	}
@@ -1717,7 +1715,7 @@ resume:
  searchdone3:
     if (d_unhashed(dentry))
       *flags = 1;
-    else 
+    else
       *flags = 0;
 
     *fileName = afs_strdup(dentry->d_name.name?dentry->d_name.name:"");
@@ -1738,8 +1736,8 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
 { /*SRXAFSCB_GetDE*/
     int code = 0;				/*Return code*/
 #if 0 && defined(AFS_LINUX24_ENV)
-    register int i;			/*Loop variable*/
-    register struct vcache *tvc = afs_globalVp;
+    int i;			/*Loop variable*/
+    struct vcache *tvc = afs_globalVp;
     struct dentry *dentry;
     struct list_head *cur, *head = &(AFSTOI(tvc))->i_dentry;
 
@@ -1754,9 +1752,9 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
     cur = head;
     while ((cur = cur->next) != head) {
       dentry = list_entry(cur, struct dentry, d_alias);
-      
+
       dget_locked(dentry);
-      
+
 #if defined(AFS_LINUX24_ENV)
       spin_unlock(&dcache_lock);
 #endif
@@ -1770,7 +1768,7 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
 	goto fcnDone;
       }
       dput(dentry);
-    }                   
+    }
  searchdone2:
     if (cur == head) {
 	/*Past EOF*/
@@ -1781,7 +1779,7 @@ SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
 
     if (d_unhashed(dentry))
       *flags = 1;
-    else 
+    else
       *flags = 0;
 
     *fileName = afs_strdup(dentry->d_name.name?dentry->d_name.name:"");

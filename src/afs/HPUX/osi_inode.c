@@ -46,7 +46,7 @@ igetinode(struct vfs *vfsp, dev_t dev, ino_t inode, int *perror)
 {
     struct inode *pip, *ip;
     extern struct osi_dev cacheDev;
-    register int code = 0;
+    int code = 0;
 
     *perror = 0;
     AFS_STATCNT(igetinode);
@@ -125,7 +125,7 @@ afs_syscall_iopen(dev, inode, usrmod)
     struct vnode *vp = NULL;
     int dummy;
     extern struct fileops vnodefops;
-    register int code;
+    int code;
     int fd;
 
     AFS_STATCNT(afs_syscall_iopen);
@@ -187,7 +187,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
 {
     int dummy;
     struct inode *ip;
-    register afs_int32 code;
+    afs_int32 code;
 
     if (!afs_suser(NULL)) {
 	u.u_error = EPERM;

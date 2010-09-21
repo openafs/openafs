@@ -35,18 +35,16 @@ extern afs_rwlock_t afs_xcbhash;
 
 int
 afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-     register struct vcache **avcp, afs_ucred_t *acred)
+     struct vcache **avcp, afs_ucred_t *acred)
 {
     struct vrequest treq;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    afs_int32 code;
+    struct afs_conn *tc;
     struct VenusFid newFid;
-    register struct dcache *tdc;
-#ifdef AFS_DISCON_ENV
+    struct dcache *tdc;
     struct dcache *new_dc;
-#endif
     afs_size_t offset, len;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSCallBack CallBack;
@@ -145,7 +143,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
         }
 
     } else {
-#if defined(AFS_DISCON_ENV)
     	/* Disconnected. */
 
 	/* We have the dir entry now, we can use it while disconnected. */
@@ -160,7 +157,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	/* Operations with the actual dir's cache entry are further
 	 * down, where the dir entry gets created.
 	 */
-#endif
     }			/* if (!AFS_IS_DISCON_RW) */
 
     /* otherwise, we should see if we can make the change to the dir locally */
@@ -190,7 +186,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     newFid.Fid.Volume = adp->f.fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
     if (AFS_IS_DISCON_RW) {
-#if defined(AFS_DISCON_ENV)
     	/* When disconnected, we have to create the full dir here. */
 
 	/* Generate a new vcache and fill it. */
@@ -230,7 +225,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
 	afs_DisconAddDirty(tvc, VDisconCreate, 1);
 	ReleaseWriteLock(&tvc->lock);
-#endif				/* #ifdef AFS_DISCON_ENV */
     } else {
     	/* now we're done with parent dir, create the real dir's cache entry */
     	tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
@@ -261,10 +255,10 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;
-    register struct dcache *tdc;
-    register struct vcache *tvc = NULL;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    struct dcache *tdc;
+    struct vcache *tvc = NULL;
+    afs_int32 code;
+    struct afs_conn *tc;
     afs_size_t offset, len;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
@@ -377,7 +371,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     	adp->f.m.LinkCount = OutDirStatus.LinkCount;
 
     } else {
-#if defined(AFS_DISCON_ENV)
     	/* Disconnected. */
 
 	if (!tdc) {
@@ -430,7 +423,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	}
 
 	adp->f.m.LinkCount--;
-#endif				/* #ifdef AFS_DISCON_ENV */
     }				/* if (!AFS_IS_DISCON_RW) */
 
     if (tdc)
@@ -456,7 +448,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     if (tvc) {
 	ObtainWriteLock(&tvc->lock, 155);
 	tvc->f.states &= ~CUnique;	/* For the dfs xlator */
-#if defined(AFS_DISCON_ENV)
 	if (AFS_IS_DISCON_RW) {
 	    if (tvc->f.ddirty_flags & VDisconCreate) {
 		/* If we we were created whilst disconnected, removal doesn't
@@ -466,7 +457,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 		afs_DisconAddDirty(tvc, VDisconRemove, 1);
 	    }
 	}
-#endif
 	ReleaseWriteLock(&tvc->lock);
 	afs_PutVCache(tvc);
     }

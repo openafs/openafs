@@ -15,7 +15,7 @@
 /* bnode.c */
 int bnode_CoreName(struct bnode *abnode, char *acoreName, char *abuffer);
 int bnode_GetString(struct bnode *abnode, char *abuffer, afs_int32 alen);
-int bnode_GetParm(struct bnode *abnode, afs_int32 aindex, char *abuffer, 
+int bnode_GetParm(struct bnode *abnode, afs_int32 aindex, char *abuffer,
 		  afs_int32 alen);
 int bnode_GetStat(struct bnode *abnode, afs_int32 * astatus);
 int bnode_RestartP(struct bnode *abnode);
@@ -45,7 +45,7 @@ int bozo_ReBozo(void);
 int WriteBozoFile(char *aname);
 
 /* bosoprocs.c */
-int GetRequiredDirPerm(const char *path);	
+int GetRequiredDirPerm(const char *path);
 void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
 int initBosEntryStats(void);
 int DirAccessOK(void);

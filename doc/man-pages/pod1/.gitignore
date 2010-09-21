@@ -1,0 +1,25 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/pts_adduser.pod
+/pts_chown.pod
+/pts_creategroup.pod
+/pts_createuser.pod
+/pts_delete.pod
+/pts_examine.pod
+/pts_interactive.pod
+/pts_listentries.pod
+/pts_listmax.pod
+/pts_listowned.pod
+/pts_membership.pod
+/pts_quit.pod
+/pts_removeuser.pod
+/pts_rename.pod
+/pts_setfields.pod
+/pts_setmax.pod
+/pts_sleep.pod
+/pts_source.pod
+/vos_addsite.pod
+/vos_copy.pod
+/vos_zap.pod

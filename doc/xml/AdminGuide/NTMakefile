@@ -42,12 +42,15 @@ DOCBOOK_XSL = $(CYGWIN)/usr/share/docbook-xsl
 !ENDIF
 !ENDIF
 XSLTPROC   = xsltproc.exe
+XMLLINT    = xmllint.exe
 HTML_XSL = $(DOCBOOK_XSL)/html/chunk.xsl
 HTML_PARMS = --param navig.graphics 1 --stringparam navig.graphics.path ../
 CHM_XSL    = $(DOCBOOK_XSL)/htmlhelp/htmlhelp.xsl
 
+BOOK    = auagd000.xml
+
 XMLSRCS = \
-        auagd000.xml \
+        $(BOOK) \
         auagd005.xml \
         auagd006.xml \
         auagd007.xml \
@@ -73,17 +76,24 @@ XMLSRCS = \
 
 index.html: $(XMLSRCS)
         @echo Building OpenAFS Administrator Guide in HTML format
-        $(XSLTPROC) $(HTML_PARMS) $(HTML_XSL) auagd000.xml 
+        $(XSLTPROC) $(HTML_PARMS) $(HTML_XSL) $(BOOK)
 
 htmlhelp.chm: $(XMLSRCS)
         @echo Building OpenAFS Administrator Guide in HTML Help format
-        $(XSLTPROC) $(CHM_XSL) auagd000.xml
+        $(XSLTPROC) $(CHM_XSL) $(BOOK)
         -hhc.exe htmlhelp.hhp
         $(DEL) *.html
         $(DEL) *.hh?
         $(DEL) *.chw
 
-install: htmlhelp.chm index.html
+pdf: $(XMLSRCS)
+        @echo Building OpenAFS Administrator Guide in PDF format
+        bash -c "dblatex --pdf --verbose $(BOOK)"
+
+check: $(XMLSRCS)
+        $(XMLLINT) --noout --valid $(BOOK)
+
+install: check htmlhelp.chm index.html
 
 clean::
         $(DEL) *.html

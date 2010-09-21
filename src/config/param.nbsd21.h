@@ -114,7 +114,7 @@ enum vcexcl { NONEXCL, EXCL };
 #endif
 #endif /* KERNEL */
 
-#endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ && !defined(IGNORE_STDS_H) */ 
+#endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ && !defined(IGNORE_STDS_H) */
 #endif /* _KERNEL */
 
 #else /* !defined(UKERNEL) */

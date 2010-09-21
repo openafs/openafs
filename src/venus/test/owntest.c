@@ -26,8 +26,8 @@ main(int argc, char **argv)
 {
     struct timeval tv[2];
     struct stat tstat;
-    register long code;
-    register char *pn;		/* path name we're dealing with */
+    long code;
+    char *pn;		/* path name we're dealing with */
 
     if (argc != 2) {
 	printf

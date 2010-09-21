@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -24,7 +24,7 @@
  *    cache larger names, perhaps by using a better,longer key (SHA) and discarding
  *    the actual name itself.
  *    precompute a key and stuff for \sys, and combine the HandleAtName function with
- *    this, since we're looking at the name anyway.  
+ *    this, since we're looking at the name anyway.
  */
 
 struct afs_lock afs_xdnlc;
@@ -60,14 +60,6 @@ int dnlct;
 #define TRACE(e,s)		/* if (dnlct == 256) dnlct = 0; dnlctracetable[dnlct].event = e; dnlctracetable[dnlct++].slot = s; */
 
 #define dnlcHash(ts, hval) for (hval=0; *ts; ts++) { hval *= 173;  hval  += *ts;   }
-
-#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
-#define ma_critical_enter critical_enter
-#define ma_critical_exit critical_exit
-#else
-#define ma_critical_enter() {}
-#define ma_critical_exit() {}
-#endif
 
 static struct nc *
 GetMeAnEntry(void)
@@ -207,18 +199,12 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
     vnode_t tvp;
 #endif
 
-    ma_critical_enter();
-
-    if (!afs_usednlc) {
-      ma_critical_exit();
+    if (!afs_usednlc)
       return 0;
-    }
 
     dnlcHash(ts, key);		/* leaves ts pointing at the NULL */
-    if (ts - aname >= AFSNCNAMESIZE) {
-      ma_critical_exit();
+    if (ts - aname >= AFSNCNAMESIZE)
       return 0;
-    }
     skey = key & (NHSIZE - 1);
 
     TRACE(osi_dnlc_lookupT, skey);
@@ -242,7 +228,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xdnlc);
 	    ReleaseReadLock(&afs_xvcache);
 	    osi_dnlc_purge();
-	    ma_critical_exit();
 	    return (0);
 	}
     }
@@ -258,12 +243,11 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 #ifdef  AFS_DARWIN80_ENV
 	    ||(tvc->f.states & CDeadVnode)
 #endif
-	    )      
+	    )
 	{
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
-	    ma_critical_exit();
 	    return 0;
 	}
 #if defined(AFS_DARWIN80_ENV)
@@ -272,7 +256,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
-	    ma_critical_exit();
 	    return 0;
 	}
 	if (vnode_ref(tvp)) {
@@ -282,32 +265,26 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    AFS_GLOCK();
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
-	    ma_critical_exit();
 	    return 0;
 	}
-#elif defined(AFS_FBSD_ENV)
-	/* can't sleep in a critical section */
-	ma_critical_exit();
-	osi_vnhold(tvc, 0);
-	ma_critical_enter();
 #else
 	osi_vnhold(tvc, 0);
 #endif
 	ReleaseReadLock(&afs_xvcache);
 
 #ifdef	notdef
-	/* 
+	/*
 	 * XX If LRUme ever is non-zero change the if statement around because
 	 * aix's cc with optimizer on won't necessarily check things in order XX
 	 */
 	if (LRUme && (0 == NBObtainWriteLock(&afs_xdnlc))) {
 	    /* don't block to do this */
 	    /* tnc might have been moved during race condition, */
-	    /* but it's always in a legit hash chain when a lock is granted, 
-	     * or else it's on the freelist so prev == NULL, 
+	    /* but it's always in a legit hash chain when a lock is granted,
+	     * or else it's on the freelist so prev == NULL,
 	     * so at worst this is redundant */
-	    /* Now that we've got it held, and a lock on the dnlc, we 
-	     * should check to be sure that there was no race, and 
+	    /* Now that we've got it held, and a lock on the dnlc, we
+	     * should check to be sure that there was no race, and
 	     * bail out if there was. */
 	    if (tnc->prev) {
 		/* special case for only two elements on list - relative ordering
@@ -329,7 +306,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 #endif
     }
 
-    ma_critical_exit();
     return tvc;
 }
 
@@ -404,11 +380,11 @@ osi_dnlc_remove(struct vcache *adp, char *aname, struct vcache *avc)
     return 0;
 }
 
-/*! 
+/*!
  * Remove anything pertaining to this directory.  I can invalidate
  * things without the lock, since I am just looking through the array,
  * but to move things off the lists or into the freelist, I need the
- * write lock 
+ * write lock
  *
  * \param adp vcache entry for the directory to be purged.
  * \return 0
@@ -451,8 +427,8 @@ osi_dnlc_purgedp(struct vcache *adp)
     return 0;
 }
 
-/*! 
- * Remove anything pertaining to this file 
+/*!
+ * Remove anything pertaining to this file
  *
  * \param File vcache entry.
  * \return 0

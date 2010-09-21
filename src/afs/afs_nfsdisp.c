@@ -223,7 +223,7 @@ acl2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp)
 	    fhp = &sargs->fh;
 	    break;
 	}
-#if defined(AFS_SUN510_ENV) 
+#if defined(AFS_SUN510_ENV)
     case ACLPROC2_GETXATTRDIR:
 	{
 	    struct GETXATTRDIR2args *sargs = (struct GETXATTRDIR2args *)args;
@@ -310,7 +310,7 @@ afs_nfs2_dispatcher(int type, afs_int32 which, char *argp,
 void
 afs_nfs2_smallfidder(struct nfsdiropres *dr)
 {
-    register fhandle_t *fhp = (fhandle_t *) & dr->dr_fhandle;
+    fhandle_t *fhp = (fhandle_t *) & dr->dr_fhandle;
     afs_int32 addr[2];
     struct vcache *vcp;
 
@@ -695,7 +695,7 @@ afs_acl2_access(char *args, char *xp, char *exp, char *rp, char *crp)
     return;
 }
 
-#if defined(AFS_SUN510_ENV) 
+#if defined(AFS_SUN510_ENV)
 void
 afs_acl2_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
@@ -720,7 +720,7 @@ struct afs_nfs_disp_tbl afs_acl_disp_tbl[ACL2_NPROC] = {
     {afs_acl2_setacl},
     {afs_acl2_getattr},
     {afs_acl2_access},
-#if defined(AFS_SUN510_ENV) 
+#if defined(AFS_SUN510_ENV)
     {afs_acl2_getxattrdir}
 #endif
 };
@@ -1002,7 +1002,7 @@ acl3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp)
 	    fhp = &sargs->fh;
 	    break;
 	}
-#if defined(AFS_SUN510_ENV) 
+#if defined(AFS_SUN510_ENV)
     case ACLPROC3_GETXATTRDIR:
 	{
 	    struct GETXATTRDIR3args *sargs = (struct GETXATTRDIR3args *)args;
@@ -1038,7 +1038,7 @@ afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
 	return 2;
 
     sa = (struct sockaddr *)svc_getrpccaller(rp->rq_xprt)->buf;
-    if (sa == NULL) 
+    if (sa == NULL)
 	return;
 
     if (sa->sa_family == AF_INET)
@@ -1598,7 +1598,7 @@ afs_acl3_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
     return;
 }
 
-#if defined(AFS_SUN510_ENV) 
+#if defined(AFS_SUN510_ENV)
 void
 afs_acl3_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
@@ -1621,7 +1621,7 @@ struct afs_nfs_disp_tbl afs_acl3_disp_tbl[ACL3_NPROC] = {
     {afs_nfs2_null},
     {afs_acl3_getacl},
     {afs_acl3_setacl},
-#if defined(AFS_SUN510_ENV) 
+#if defined(AFS_SUN510_ENV)
     {afs_acl3_getxattrdir},
 #endif
 };

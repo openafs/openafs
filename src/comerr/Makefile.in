@@ -49,7 +49,7 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 # so we need to add the source directory to the includes to pick up local headers.
 #
 error_table.o: error_table.c
-	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ -c $<
+	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@ -c error_table.c
 
 #
 # Installation targets
@@ -59,9 +59,9 @@ install: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL_PROGRAM} compile_et ${DESTDIR}${bindir}/afs_compile_et
-	${INSTALL_DATA} com_err.h ${DESTDIR}${includedir}/afs/com_err.h
-	${INSTALL_DATA} error_table.h ${DESTDIR}${includedir}/afs/error_table.h
-	${INSTALL_DATA} mit-sipb-cr.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h
+	${INSTALL_DATA} ${srcdir}/com_err.h ${DESTDIR}${includedir}/afs/com_err.h
+	${INSTALL_DATA} ${srcdir}/error_table.h ${DESTDIR}${includedir}/afs/error_table.h
+	${INSTALL_DATA} ${srcdir}/mit-sipb-cr.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h
 	${INSTALL_DATA} libcom_err.a ${DESTDIR}${libdir}/afs/libcom_err.a
 
 dest: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
@@ -69,9 +69,9 @@ dest: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL_PROGRAM} compile_et ${DEST}/bin/afs_compile_et
-	${INSTALL_DATA} com_err.h ${DEST}/include/afs/com_err.h
-	${INSTALL_DATA} error_table.h ${DEST}/include/afs/error_table.h
-	${INSTALL_DATA} mit-sipb-cr.h ${DEST}/include/afs/mit-sipb-cr.h
+	${INSTALL_DATA} ${srcdir}/com_err.h ${DEST}/include/afs/com_err.h
+	${INSTALL_DATA} ${srcdir}/error_table.h ${DEST}/include/afs/error_table.h
+	${INSTALL_DATA} ${srcdir}/mit-sipb-cr.h ${DEST}/include/afs/mit-sipb-cr.h
 	${INSTALL_DATA} libcom_err.a ${DEST}/lib/afs/libcom_err.a
 
 clean:

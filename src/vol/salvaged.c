@@ -1,13 +1,13 @@
 /*
  * Copyright 2006-2007, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* 
+/*
  * demand attach fs
  * online salvager daemon
  */
@@ -118,6 +118,7 @@
 #include "viceinode.h"
 #include "salvage.h"
 #include "vol-salvage.h"
+#include "common.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -130,11 +131,6 @@
 #if defined(AFS_NT40_ENV)
 #error "online salvager not supported on NT"
 #endif /* AFS_NT40_ENV */
-
-
-/* Forward declarations */
-/*@printflike@*/ void Log(const char *format, ...);
-
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
@@ -154,7 +150,7 @@ static pthread_cond_t worker_cv;
 static void * SalvageChildReaperThread(void *);
 static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 
-static void SalvageServer(void);
+static void SalvageServer(int argc, char **argv);
 static void SalvageClient(VolumeId vid, char * pname);
 
 static int Reap_Child(char * prog, int * pid, int * status);
@@ -164,6 +160,11 @@ static int SalvageLogCleanup(int pid);
 
 static void * SalvageLogScanningThread(void *);
 static void ScanLogs(struct rx_queue *log_watch_queue);
+
+struct cmdline_rock {
+    int argc;
+    char **argv;
+};
 
 struct log_cleanup_node {
     struct rx_queue q;
@@ -181,9 +182,10 @@ struct {
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    struct cmdline_rock *rock = (struct cmdline_rock *)arock;
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -286,7 +288,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	SalvageClient(vid, pname);
 
     } else {  /* salvageserver mode */
-	SalvageServer();
+	SalvageServer(rock->argc, rock->argv);
     }
     return (0);
 }
@@ -302,20 +304,17 @@ int n_save_args = 0;
 pthread_t main_thread;
 #endif
 
-static char commandLine[150];
-
 int
 main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-
-    int i;
+    struct cmdline_rock arock;
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -347,11 +346,6 @@ main(int argc, char **argv)
 	    exit(3);
     } else {
 #endif
-	for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	    if (i > 0)
-		strlcat(commandLine, " ", sizeof(commandLine));
-	    strlcat(commandLine, argv[i], sizeof(commandLine));
-	}
 
 #ifndef AFS_NT40_ENV
 	if (geteuid() != 0) {
@@ -367,7 +361,10 @@ main(int argc, char **argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "initialize the program");
+    arock.argc = argc;
+    arock.argv = argv;
+
+    ts = cmd_CreateSyntax("initcmd", handleit, &arock, "initialize the program");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
 		"Name of partition to salvage");
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
@@ -430,7 +427,7 @@ SalvageClient(VolumeId vid, char * pname)
 	                "trying to continue anyway\n");
     }
     SALVSYNC_clientInit();
-    
+
     code = SALVSYNC_SalvageVolume(vid, pname, SALVSYNC_SALVAGE, SALVSYNC_OPERATOR, 0, NULL);
     if (code != SYNC_OK) {
 	goto sync_error;
@@ -472,7 +469,7 @@ SalvageClient(VolumeId vid, char * pname)
 static int * child_slot;
 
 static void
-SalvageServer(void)
+SalvageServer(int argc, char **argv)
 {
     int pid, ret;
     struct SalvageQueueNode * node;
@@ -496,14 +493,14 @@ SalvageServer(void)
     setlinebuf(logFile);
 
     fprintf(logFile, "%s\n", cml_version_number);
-    Log("Starting OpenAFS Online Salvage Server %s (%s)\n", SalvageVersion, commandLine);
-    
+    LogCommandLine(argc, argv, "Online Salvage Server",
+		   SalvageVersion, "Starting OpenAFS", Log);
     /* Get and hold a lock for the duration of the salvage to make sure
      * that no other salvage runs at the same time.  The routine
      * VInitVolumePackage2 (called below) makes sure that a file server or
      * other volume utilities don't interfere with the salvage.
      */
-    
+
     /* even demand attach online salvager
      * still needs this because we don't want
      * a stand-alone salvager to conflict with
@@ -530,12 +527,12 @@ SalvageServer(void)
 
     /* start up the reaper and log cleaner threads */
     assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
-    assert(pthread_create(&tid, 
-			  &attrs, 
+    assert(pthread_create(&tid,
+			  &attrs,
 			  &SalvageChildReaperThread,
 			  NULL) == 0);
-    assert(pthread_create(&tid, 
-			  &attrs, 
+    assert(pthread_create(&tid,
+			  &attrs,
 			  &SalvageLogCleanupThread,
 			  NULL) == 0);
     assert(pthread_create(&tid,
@@ -573,13 +570,13 @@ SalvageServer(void)
 	    child_slot[slot] = pid;
 	    node->pid = pid;
 	    VOL_UNLOCK;
-	    
+
 	    assert(pthread_mutex_lock(&worker_lock) == 0);
 	    current_workers++;
-	    
+
 	    /* let the reaper thread know another worker was spawned */
 	    assert(pthread_cond_broadcast(&worker_cv) == 0);
-	    
+
 	    /* if we're overquota, wait for the reaper */
 	    while (current_workers >= Parallel) {
 		assert(pthread_cond_wait(&worker_cv, &worker_lock) == 0);
@@ -602,7 +599,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
      * another thread may have held the lock on the FILE
      * structure when fork was called! */
 
-    afs_snprintf(childLog, sizeof(childLog), "%s.%d", 
+    afs_snprintf(childLog, sizeof(childLog), "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid());
 
     logFile = afs_fopen(childLog, "a");
@@ -615,10 +612,10 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 	Log("salvageServer: invalid volume id specified; salvage aborted\n");
 	return 1;
     }
-    
+
     partP = VGetPartition(node->command.sop.partName, 0);
     if (!partP) {
-	Log("salvageServer: Unknown or unmounted partition %s; salvage aborted\n", 
+	Log("salvageServer: Unknown or unmounted partition %s; salvage aborted\n",
 	    node->command.sop.partName);
 	return 1;
     }
@@ -731,7 +728,7 @@ SalvageLogCleanupThread(void * arg)
 	    SalvageLogCleanup(cleanup->pid);
 	    free(cleanup);
 	    assert(pthread_mutex_lock(&worker_lock) == 0);
-	}	    
+	}
     }
 
     assert(pthread_mutex_unlock(&worker_lock) == 0);
@@ -746,9 +743,9 @@ SalvageLogCleanup(int pid)
     char fn[AFSDIR_PATH_MAX];
     static char buf[LOG_XFER_BUF_SIZE];
 
-    afs_snprintf(fn, sizeof(fn), "%s.%d", 
+    afs_snprintf(fn, sizeof(fn), "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, pid);
-    
+
 
     pidlog = open(fn, O_RDONLY);
     unlink(fn);

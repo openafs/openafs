@@ -1,7 +1,7 @@
 /******************************************************************************
  * skip_cas_adt.c
- * 
- * Skip lists, allowing concurrent update by use of CAS primitives. 
+ *
+ * Skip lists, allowing concurrent update by use of CAS primitives.
  *
  * Matt Benjamin <matt@linuxbox.com>
  *

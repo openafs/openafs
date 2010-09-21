@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -58,12 +58,12 @@ void afs_ResetAccessCache(afs_int32 uid, int alock);
  * appropriate conn structures for au
  */
 static void
-RemoveUserConns(register struct unixuser *au)
+RemoveUserConns(struct unixuser *au)
 {
-    register int i;
-    register struct server *ts;
-    register struct srvAddr *sa;
-    register struct afs_conn *tc, **lc;
+    int i;
+    struct server *ts;
+    struct srvAddr *sa;
+    struct afs_conn *tc, **lc;
 
     AFS_STATCNT(RemoveUserConns);
     for (i = 0; i < NSERVERS; i++) {
@@ -98,8 +98,8 @@ RemoveUserConns(register struct unixuser *au)
 void
 afs_GCUserData(int aforce)
 {
-    register struct unixuser *tu, **lu, *nu;
-    register int i;
+    struct unixuser *tu, **lu, *nu;
+    int i;
     afs_int32 now, delFlag;
 
     AFS_STATCNT(afs_GCUserData);
@@ -163,8 +163,8 @@ afs_GCUserData(int aforce)
 void
 afs_CheckTokenCache(void)
 {
-    register int i;
-    register struct unixuser *tu;
+    int i;
+    struct unixuser *tu;
     afs_int32 now;
 
     AFS_STATCNT(afs_CheckCacheResets);
@@ -173,7 +173,7 @@ afs_CheckTokenCache(void)
     now = osi_Time();
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
-	    register afs_int32 uid;
+	    afs_int32 uid;
 
 	    /*
 	     * If tokens are still good and user has Kerberos tickets,
@@ -210,8 +210,8 @@ afs_CheckTokenCache(void)
 void
 afs_ResetAccessCache(afs_int32 uid, int alock)
 {
-    register int i;
-    register struct vcache *tvc;
+    int i;
+    struct vcache *tvc;
     struct axscache *ac;
 
     AFS_STATCNT(afs_ResetAccessCache);
@@ -237,7 +237,7 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
  * access info.
  */
 void
-afs_ResetUserConns(register struct unixuser *auser)
+afs_ResetUserConns(struct unixuser *auser)
 {
     int i;
     struct srvAddr *sa;
@@ -268,8 +268,8 @@ afs_ResetUserConns(register struct unixuser *auser)
 struct unixuser *
 afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    register struct unixuser *tu;
-    register afs_int32 i;
+    struct unixuser *tu;
+    afs_int32 i;
 
     AFS_STATCNT(afs_FindUser);
     i = UHash(auid);
@@ -312,9 +312,9 @@ afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 void
 afs_ComputePAGStats(void)
 {
-    register struct unixuser *currPAGP;	/*Ptr to curr PAG */
-    register struct unixuser *cmpPAGP;	/*Ptr to PAG being compared */
-    register struct afs_stats_AuthentInfo *authP;	/*Ptr to stats area */
+    struct unixuser *currPAGP;	/*Ptr to curr PAG */
+    struct unixuser *cmpPAGP;	/*Ptr to PAG being compared */
+    struct afs_stats_AuthentInfo *authP;	/*Ptr to stats area */
     int curr_Record;		/*Curr record */
     int currChain;		/*Curr hash chain */
     int currChainLen;		/*Length of curr hash chain */
@@ -445,11 +445,11 @@ afs_ComputePAGStats(void)
 
 
 struct unixuser *
-afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
+afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    register struct unixuser *tu, *pu = 0;
-    register afs_int32 i;
-    register afs_int32 RmtUser = 0;
+    struct unixuser *tu, *pu = 0;
+    afs_int32 i;
+    afs_int32 RmtUser = 0;
 
     AFS_STATCNT(afs_GetUser);
     i = UHash(auid);
@@ -490,7 +490,8 @@ afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 	 * structure
 	 */
 	if (pu && pu->exporter) {
-	    (void)EXP_HOLD(tu->exporter = pu->exporter);
+	    tu->exporter = pu->exporter;
+	    (void)EXP_HOLD(tu->exporter);
 	}
     }
     tu->uid = auid;
@@ -505,7 +506,7 @@ afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 
 
 void
-afs_PutUser(register struct unixuser *au, afs_int32 locktype)
+afs_PutUser(struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
     --au->refCount;
@@ -517,10 +518,10 @@ afs_PutUser(register struct unixuser *au, afs_int32 locktype)
  * dude has the flag set at any time for a particular unix uid.
  */
 void
-afs_SetPrimary(register struct unixuser *au, register int aflag)
+afs_SetPrimary(struct unixuser *au, int aflag)
 {
-    register struct unixuser *tu;
-    register int i;
+    struct unixuser *tu;
+    int i;
     struct unixuser *pu;
 
     AFS_STATCNT(afs_SetPrimary);
@@ -597,7 +598,7 @@ afs_MarkUserExpired(afs_int32 pag)
 #if AFS_GCPAGS
 
 /*
- * Called by osi_TraverseProcTable (from afs_GCPAGs) for each 
+ * Called by osi_TraverseProcTable (from afs_GCPAGs) for each
  * process in the system.
  * If the specified process uses a PAG, clear that PAG's temporary
  * 'deleteme' flag.
@@ -648,12 +649,12 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 #endif
     hash = UHash(uid);
 
-    /* if this token is PAG based, or it's UID based and 
+    /* if this token is PAG based, or it's UID based and
      * UID-based tokens exist */
     if ((pag != NOPAG) || (afs_GCPAGs_UIDBaseTokenCount)) {
 	/* find the entries for this uid in all cells and clear the not
 	 * referenced flag.  Can't use afs_FindUser, because it just returns
-	 * the specific cell asked for, or the first one found. 
+	 * the specific cell asked for, or the first one found.
 	 */
 	struct unixuser *pu;
 	for (pu = afs_users[hash]; pu; pu = pu->next) {
@@ -662,7 +663,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 		    /* clear the 'deleteme' flag for this entry */
 		    pu->states &= ~TMP_UPAGNotReferenced;
 		    if (pag == NOPAG) {
-			/* This is a uid based token that hadn't 
+			/* This is a uid based token that hadn't
 			 * previously been cleared, so decrement the
 			 * outstanding uid based token count */
 			afs_GCPAGs_UIDBaseTokenCount--;
@@ -675,7 +676,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 #endif
 
 /*
- * Go through the process table, find all unused PAGs 
+ * Go through the process table, find all unused PAGs
  * and cause them to be deleted during the next GC.
  *
  * returns the number of PAGs marked for deletion
@@ -713,7 +714,7 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
 	}
     }
 
-    /* Now, iterate through the systems process table, 
+    /* Now, iterate through the systems process table,
      * for each process, mark it's PAGs (if any) in use.
      * i.e. clear the temporary deleteme flag.
      */
@@ -749,8 +750,8 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
 		 * i.e. nfs translator, etc.
 		 */
 		if (!pu->exporter && afs_gcpags == AFS_GCPAGS_OK) {
-		    /* set the expire times to 0, causes 
-		     * afs_GCUserData to remove this entry 
+		    /* set the expire times to 0, causes
+		     * afs_GCUserData to remove this entry
 		     */
 		    pu->ct.EndTimestamp = 0;
 		    pu->tokenTime = 0;

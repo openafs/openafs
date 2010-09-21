@@ -78,14 +78,14 @@ ${TOP_INCDIR}/afs/unified_afs.h: unified_afs.h
 
 install: unified_afs.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_DATA} afs.h ${DESTDIR}${includedir}/afs/afs.h
-	${INSTALL_DATA} afs_consts.h ${DESTDIR}${includedir}/afs/afs_consts.h
-	${INSTALL_DATA} afs_stats.h ${DESTDIR}${includedir}/afs/afs_stats.h
-	${INSTALL_DATA} exporter.h ${DESTDIR}${includedir}/afs/exporter.h
-	${INSTALL_DATA} nfsclient.h ${DESTDIR}${includedir}/afs/nfsclient.h
-	${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_inode.h \
+	${INSTALL_DATA} ${srcdir}/afs.h ${DESTDIR}${includedir}/afs/afs.h
+	${INSTALL_DATA} ${srcdir}/afs_consts.h ${DESTDIR}${includedir}/afs/afs_consts.h
+	${INSTALL_DATA} ${srcdir}/afs_stats.h ${DESTDIR}${includedir}/afs/afs_stats.h
+	${INSTALL_DATA} ${srcdir}/exporter.h ${DESTDIR}${includedir}/afs/exporter.h
+	${INSTALL_DATA} ${srcdir}/nfsclient.h ${DESTDIR}${includedir}/afs/nfsclient.h
+	${INSTALL_DATA} ${srcdir}/${MKAFS_OSTYPE}/osi_inode.h \
 	    ${DESTDIR}${includedir}/afs/osi_inode.h
-	${INSTALL_DATA} sysctl.h ${DESTDIR}${includedir}/afs/sysctl.h
+	${INSTALL_DATA} ${srcdir}/sysctl.h ${DESTDIR}${includedir}/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DESTDIR}${includedir}/afs/unified_afs.h
 	case ${SYS_NAME} in \
 	    i386_fbsd*) \
@@ -96,7 +96,7 @@ install: unified_afs.h
 	esac
 	case ${SYS_NAME} in \
 	    *linux*) \
-		${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_vfs.h \
+		${INSTALL_DATA} ${srcdir}/${MKAFS_OSTYPE}/osi_vfs.h \
 		    ${DESTDIR}${includedir}/afs/osi_vfs.h || true ;;\
 	    *) \
 		echo No vfs headers to install for ${SYS_NAME};; \
@@ -104,13 +104,13 @@ install: unified_afs.h
 
 dest: unified_afs.h
 	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_DATA} afs.h ${DEST}/include/afs/afs.h
-	${INSTALL_DATA} afs_consts.h ${DEST}/include/afs/afs_consts.h
-	${INSTALL_DATA} afs_stats.h ${DEST}/include/afs/afs_stats.h
-	${INSTALL_DATA} exporter.h ${DEST}/include/afs/exporter.h
-	${INSTALL_DATA} nfsclient.h ${DEST}/include/afs/nfsclient.h
-	${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_inode.h ${DEST}/include/afs/osi_inode.h
-	${INSTALL_DATA} sysctl.h ${DEST}/include/afs/sysctl.h
+	${INSTALL_DATA} ${srcdir}/afs.h ${DEST}/include/afs/afs.h
+	${INSTALL_DATA} ${srcdir}/afs_consts.h ${DEST}/include/afs/afs_consts.h
+	${INSTALL_DATA} ${srcdir}/afs_stats.h ${DEST}/include/afs/afs_stats.h
+	${INSTALL_DATA} ${srcdir}/exporter.h ${DEST}/include/afs/exporter.h
+	${INSTALL_DATA} ${srcdir}/nfsclient.h ${DEST}/include/afs/nfsclient.h
+	${INSTALL_DATA} ${srcdir}/${MKAFS_OSTYPE}/osi_inode.h ${DEST}/include/afs/osi_inode.h
+	${INSTALL_DATA} ${srcdir}/sysctl.h ${DEST}/include/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DEST}/include/afs/unified_afs.h
 	case ${SYS_NAME} in \
 	    i386_fbsd*) \
@@ -121,7 +121,7 @@ dest: unified_afs.h
 	esac
 	case ${SYS_NAME} in \
 	    *linux*) \
-		${INSTALL_DATA} ${MKAFS_OSTYPE}/osi_vfs.h \
+		${INSTALL_DATA} ${srcdir}/${MKAFS_OSTYPE}/osi_vfs.h \
 		    ${DEST}/include/afs/osi_vfs.h || true ;;\
 	    *) \
 		echo No vfs headers to install for ${SYS_NAME};; \

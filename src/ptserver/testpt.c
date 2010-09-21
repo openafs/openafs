@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -1015,7 +1015,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 	fprintf(f, ">%s\n", lcell);
 	for (i = 0; i < cellinfo.numServers; i++) {
-	    register unsigned char *tp =
+	    unsigned char *tp =
 		(unsigned char *)&cellinfo.hostAddr[i].sin_addr;
 	    fprintf(f, "%d.%d.%d.%d\t#%s\n", tp[0], tp[1], tp[2], tp[3],
 		    cellinfo.hostName[i]);
@@ -1057,7 +1057,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(register struct cmd_syndesc *ts)
+add_std_args(struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, 12);
     cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
@@ -1079,7 +1079,7 @@ osi_audit(void)
 
 #include "AFS_component_version_number.c"
 
-int 
+int
 main(int argc, char *argv[])
 {
     afs_int32 code;

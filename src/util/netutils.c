@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -30,7 +30,7 @@
 #else
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
-#else 
+#else
 #ifdef __FreeBSD__
 #include <sys/types.h>
 #endif
@@ -44,23 +44,19 @@
 
 #include "assert.h"
 #include "afsutil.h"
-#include "dirpath.h"
+#include <afs/dirpath.h>
 
 #define AFS_IPINVALID        0xffffffff	/* invalid IP address */
 #define AFS_IPINVALIDIGNORE  0xfffffffe	/* no input given to extractAddr */
 #define MAX_NETFILE_LINE       2048	/* length of a line in the netrestrict file */
 #define MAXIPADDRS             1024	/* from afsd.c */
 
-#ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK (afs_uint32)0x7f000001
-#endif
-
 int ParseNetInfoFile_int(afs_uint32 *, afs_uint32 *, afs_uint32 *,
                          int, char reason[], const char *,
                          int);
-/* 
- * The line parameter is a pointer to a buffer containing a string of 
- * bytes of the form 
+/*
+ * The line parameter is a pointer to a buffer containing a string of
+ * bytes of the form
 ** w.x.y.z 	# machineName
  * returns the network interface IP Address in NBO
  */
@@ -111,7 +107,7 @@ extract_Addr(char *line, int maxSize)
 /* parseNetRestrictFile()
  * Get a list of IP addresses for this host removing any address found
  * in the config file (fileName parameter): /usr/vice/etc/NetRestrict
- * for clients and /usr/afs/local/NetRestrict for servers.  
+ * for clients and /usr/afs/local/NetRestrict for servers.
  *
  * Returns the number of valid addresses in outAddrs[] and count in
  * nAddrs.  Returns 0 on success; or 1 if the config file was not
@@ -135,7 +131,7 @@ extract_Addr(char *line, int maxSize)
 int
 parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 * mask,
 			 afs_uint32 * mtu, afs_uint32 maxAddrs,
-			 afs_uint32 * nAddrs, char reason[], 
+			 afs_uint32 * nAddrs, char reason[],
 			 const char *fileName, const char *fileName_ni)
 {
     FILE *fp;
@@ -164,8 +160,8 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 * mask,
 	return -1;
     }
     i = 0;
-    if ((neaddrs < MAXIPADDRS) && fileName_ni) 
-	i = ParseNetInfoFile_int(&(eAddrs[neaddrs]), &(eMask[neaddrs]), 
+    if ((neaddrs < MAXIPADDRS) && fileName_ni)
+	i = ParseNetInfoFile_int(&(eAddrs[neaddrs]), &(eMask[neaddrs]),
 				 &(eMtu[neaddrs]), MAXIPADDRS-neaddrs, reason,
 				 fileName_ni, 1);
 
@@ -236,7 +232,7 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 * mask,
 int
 parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
 			 afs_uint32 * mtu, afs_uint32 maxAddrs,
-			 afs_uint32 * nAddrs, char reason[], 
+			 afs_uint32 * nAddrs, char reason[],
 			 const char *fileName)
 {
     return parseNetRestrictFile_int(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName, NULL);
@@ -245,14 +241,14 @@ parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
 /*
  * this function reads in stuff from InterfaceAddr file in
  * /usr/vice/etc ( if it exists ) and verifies the addresses
- * specified. 
- * 'final' contains all those addresses that are found to 
+ * specified.
+ * 'final' contains all those addresses that are found to
  * be valid. This function returns the number of valid
  * interface addresses. Pulled out from afsd.c
  */
 int
 ParseNetInfoFile_int(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
-		     int max, char reason[], const char *fileName, 
+		     int max, char reason[], const char *fileName,
 		     int fakeonly)
 {
 
@@ -345,7 +341,7 @@ ParseNetInfoFile_int(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
 		    "afs:Too many interfaces. The current kernel configuration supports a maximum of %d interfaces\n",
 		    max);
 	} else if (fake) {
-	    if (!fake) 
+	    if (!fake)
 		fprintf(stderr, "Client (2) also has address %s\n", line);
 	    final[count] = addr;
 	    mask[count] = 0xffffffff;
@@ -412,7 +408,7 @@ filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[], afs_uint32 mask1[],
 	}
 
 	/* Always mask loopback address */
-	if (found && addr1[i] == INADDR_LOOPBACK) 
+	if (found && rx_IsLoopbackAddr(addr1[i]))
 	    found = 0;
 
 	if (found) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -28,13 +28,13 @@
 const char *dbmfile;
 
 static int
-cmdproc(register struct cmd_syndesc *as, void * arock)
+cmdproc(struct cmd_syndesc *as, void * arock)
 {
     DBM *kdb;
     datum key, data;
     kalog_elt rdata;
     afs_int32 cnt = 0;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
 
     if (as->parms[0].items) {
 	dbmfile = as->parms[0].items->data;
@@ -62,15 +62,15 @@ cmdproc(register struct cmd_syndesc *as, void * arock)
 		if (! as->parms[3].items) {
 		    char *hostName;
 		    hostName = hostutil_GetNameByINet(rdata.host);
-		    printf("%s: last operation from host %s at %s", 
-			   (char *)key.dptr, hostName, 
+		    printf("%s: last operation from host %s at %s",
+			   (char *)key.dptr, hostName,
 			   ctime(&rdata.last_use));
 		} else {
 		    char *hostIP;
 		    char hoststr[16];
 		    hostIP = afs_inet_ntoa_r(rdata.host, hoststr);
-		    printf("%s: last operation from host %s at %s", 
-			   (char *)key.dptr, hostIP, 
+		    printf("%s: last operation from host %s at %s",
+			   (char *)key.dptr, hostIP,
 			   ctime(&rdata.last_use));
 		}
             } else {
@@ -106,8 +106,8 @@ cmdproc(register struct cmd_syndesc *as, void * arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
-    register afs_int32 code;
+    struct cmd_syndesc *ts;
+    afs_int32 code;
     char dbmfile_help[AFSDIR_PATH_MAX];
 
     sprintf(dbmfile_help, "dbmfile to use (default %s)",

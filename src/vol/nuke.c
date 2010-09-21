@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -32,7 +32,7 @@
 #endif
 
 #include <afs/afsutil.h>
-    
+
 #include "nfs.h"
 #include "lwp.h"
 #include "lock.h"
@@ -45,15 +45,13 @@
 #include "salvage.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "common.h"
 
 #ifdef O_LARGEFILE
 #define afs_stat	stat64
 #else /* !O_LARGEFILE */
 #define afs_stat	stat
 #endif /* !O_LARGEFILE */
-
-/*@printflike@*/ extern void Log(const char *format, ...);
-
 
 struct Lock localLock;
 
@@ -78,7 +76,7 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
 {
     struct ilist **allInodes = (struct ilist **)arock;
     struct ilist *ti;
-    register afs_int32 i;
+    afs_int32 i;
 
 #ifndef AFS_PTHREAD_ENV
     IOMGR_Poll();		/* poll so we don't kill the RPC connection */
@@ -117,7 +115,7 @@ nuke(char *aname, afs_int32 avolid)
     /* first process the partition containing this junk */
     struct afs_stat tstat;
     struct ilist *ti, *ni, *li=NULL;
-    register afs_int32 code;
+    afs_int32 code;
     int i, forceSal;
     char wpath[100];
     char *lastDevComp;

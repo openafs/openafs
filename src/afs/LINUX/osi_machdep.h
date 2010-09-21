@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -77,7 +77,7 @@
 #define afs_hz HZ
 #include "h/sched.h"
 #if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
-static inline time_t osi_Time(void) { 
+static inline time_t osi_Time(void) {
     struct timespec xtime;
     xtime = current_kernel_time();
     return xtime.tv_sec;

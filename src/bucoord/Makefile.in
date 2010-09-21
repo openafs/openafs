@@ -77,16 +77,16 @@ bucoord_errs.c bc.h:	bucoord_errs.et bc.p.h
 # Errors
 #
 ubik_db_if.o: ubik_db_if.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/ubik_db_if.c
 
 volstub.o: volstub.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/volstub.c
 
 commands.o: commands.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/commands.c
 
 regex.o: regex.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/regex.c
 
 #
 # Install targets

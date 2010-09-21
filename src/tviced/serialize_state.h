@@ -1,7 +1,7 @@
 /*
  * Copyright 2006, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,7 +50,7 @@ struct disk_version_stamp {
 /* 1024 byte header structure */
 struct fs_state_header {
     struct disk_version_stamp stamp;  /* version stamp */
-    afs_uint32 timestamp;             /* timestamp of save */
+    time_t timestamp;                 /* timestamp of save */
     afs_uint32 sys_name;              /* sys name id for this machine */
     afsUUID server_uuid;              /* server's UUID */
     byte valid;                       /* whether header contents are valid */
@@ -212,8 +212,8 @@ struct idx_map_entry_t {
 
 /* verification process sanity check constants
  *
- * make them fairly large so we don't get 
- * false positives 
+ * make them fairly large so we don't get
+ * false positives
  */
 #define FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN    100000     /* max elements in a host uuid-hash chain */
 #define FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN    2000000    /* max elements in a host ipv4-hash chain */
@@ -267,10 +267,10 @@ struct fs_dump_state {
     } cb_map;
 };
 
-
 /* prototypes */
 
 /* serialize_state.c */
+extern int fs_stateFileOpen(struct fs_dump_state *state);
 extern int fs_stateWrite(struct fs_dump_state * state,
 			 void * buf, size_t len);
 extern int fs_stateRead(struct fs_dump_state * state,

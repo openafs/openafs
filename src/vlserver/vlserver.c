@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -86,7 +86,7 @@ CheckSignal_Signal(int unused)
 static void *
 CheckSignal(void *unused)
 {
-    register int i, errorcode;
+    int i, errorcode;
     struct ubik_trans *trans;
 
     if ((errorcode =
@@ -131,7 +131,7 @@ vldb_rxstat_userok(struct rx_call *call)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_uint32 myHost;
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;
@@ -141,16 +141,15 @@ main(int argc, char **argv)
     struct afsconf_cell info;
     struct hostent *th;
     char hostname[VL_MAXNAMELEN];
-    int noAuth = 0, index, i;
-    char commandLine[150];
+    int noAuth = 0, index;
     char clones[MAXHOSTSPERCELL];
     char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -178,8 +177,8 @@ main(int argc, char **argv)
 	    }
 	} else if (strcmp(argv[index], "-d") == 0) {
 	    if ((index + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -d\n");
+		return -1;
 	    }
 	    debuglevel = atoi(argv[++index]);
 	    LogLevel = debuglevel;
@@ -193,14 +192,14 @@ main(int argc, char **argv)
 	    rxkadDisableDotCheck = 1;
 	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
 	    if ((index + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		return -1;
 	    }
 	    rxMaxMTU = atoi(argv[++index]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       rxMaxMTU, RX_MIN_PACKET_SIZE,
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
 	    }
@@ -324,15 +323,15 @@ main(int argc, char **argv)
     if (rxBind) {
 	afs_int32 ccode;
 #ifndef AFS_NT40_ENV
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
 				  ADDRSPERSITE, reason,
 				  AFSDIR_SERVER_NETINFO_FILEPATH,
 				  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
-#endif	
+        } else
+#endif
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
@@ -398,13 +397,7 @@ main(int argc, char **argv)
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
 
-    for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	if (i > 0)
-	    strcat(commandLine, " ");
-	strcat(commandLine, argv[i]);
-    }
-    ViceLog(0,
-	    ("Starting AFS vlserver %d (%s)\n", VLDBVERSION_4, commandLine));
+    LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
     printf("%s\n", cml_version_number);	/* Goes to the log */
 
     /* allow super users to manage RX statistics */

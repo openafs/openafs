@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -38,9 +38,9 @@ customized struct AFSAccessList {
 typedef afs_int32 ViceDataType;
 
 %#define Invalid 0
-%#define File 1 
-%#define Directory 2 
-%#define SymbolicLink 3 
+%#define File 1
+%#define Directory 2
+%#define SymbolicLink 3
 
 %#ifdef       KERNEL
 %#define      afs_xdr_array(a,b,c,d,e,f)  afs_xdr_arrayN(a,b,c,d,e,f)
@@ -105,7 +105,7 @@ struct AFSFetchStatus {
 };
 
 struct AFSStoreStatus {
-    afs_uint32 Mask;	
+    afs_uint32 Mask;
     afs_uint32 ClientModTime;
     afs_uint32 Owner;
     afs_uint32 Group;
@@ -577,7 +577,7 @@ GetRootVolume(
 ) = 151;
 
 CheckToken(
-  IN  afs_int32 ViceId, 
+  IN  afs_int32 ViceId,
   AFSOpaque *token
 ) = 152;
 
@@ -678,21 +678,21 @@ InlineBulkStatus(
 ) = 65536;
 
 FetchData64(
-  IN  AFSFid *Fid, 
-  afs_int64 Pos, 
-  afs_int64 Length, 
-  OUT AFSFetchStatus *OutStatus, 
-  AFSCallBack *CallBack, 
+  IN  AFSFid *Fid,
+  afs_int64 Pos,
+  afs_int64 Length,
+  OUT AFSFetchStatus *OutStatus,
+  AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) split = 65537;
 
 StoreData64(
-  IN  AFSFid *Fid, 
-  AFSStoreStatus *InStatus, 
-  afs_uint64 Pos, 
-  afs_uint64 Length, 
-  afs_uint64 FileLength, 
-  OUT AFSFetchStatus *OutStatus, 
+  IN  AFSFid *Fid,
+  AFSStoreStatus *InStatus,
+  afs_uint64 Pos,
+  afs_uint64 Length,
+  afs_uint64 FileLength,
+  OUT AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) split = 65538;
 
@@ -727,7 +727,7 @@ CallBackRxConnAddr(
 const STATS64_VERSION = 16;
 typedef afs_uint64 ViceStatistics64<STATS64_VERSION>;
 
-/* the "version" is a number representing the number of 
+/* the "version" is a number representing the number of
    array elements to return, from 0 to N-1 */
 
 GetStatistics64(

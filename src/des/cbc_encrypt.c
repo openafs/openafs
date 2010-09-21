@@ -53,18 +53,18 @@
 /*
     des_cblock *in;		* >= length bytes of input text *
     des_cblock *out;		* >= length bytes of output text *
-    register afs_int32 length;	* in bytes *
+    afs_int32 length;	* in bytes *
     int encrypt;		* 0 ==> decrypt, else encrypt *
     des_key_schedule key;		* precomputed key schedule *
     des_cblock *iv;		* 8 bytes of ivec *
 */
 afs_int32
-des_cbc_encrypt(void * in, void * out, register afs_int32 length,
+des_cbc_encrypt(void * in, void * out, afs_int32 length,
 		des_key_schedule key, des_cblock * iv, int encrypt)
 {
-    register afs_uint32 *input = (afs_uint32 *) in;
-    register afs_uint32 *output = (afs_uint32 *) out;
-    register afs_uint32 *ivec = (afs_uint32 *) iv;
+    afs_uint32 *input = (afs_uint32 *) in;
+    afs_uint32 *output = (afs_uint32 *) out;
+    afs_uint32 *ivec = (afs_uint32 *) iv;
 
     afs_uint32 i, j;
     afs_uint32 t_input[2];

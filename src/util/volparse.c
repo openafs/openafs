@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,7 +36,7 @@
 afs_int32
 volutil_GetPartitionID(char *aname)
 {
-    register char tc;
+    char tc;
     afs_int32 temp;
     char ascii[3];
 
@@ -104,7 +104,7 @@ afs_int32
 volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t buflen)
 {
     char tempString[3];
-    register int i;
+    int i;
 
     if (part < 0 || part >= VOLMAXPARTS) {
 	return -2;
@@ -190,7 +190,7 @@ volutil_PartitionName(int avalue)
 
 /* is this a digit or a digit-like thing? */
 static int
-ismeta(register int ac, register int abase)
+ismeta(int ac, int abase)
 {
 /*    if (ac == '-' || ac == 'x' || ac == 'X') return 1; */
     if (ac >= '0' && ac <= '7')
@@ -210,7 +210,7 @@ ismeta(register int ac, register int abase)
 
 /* given that this is a digit or a digit-like thing, compute its value */
 static int
-getmeta(register int ac)
+getmeta(int ac)
 {
     if (ac >= '0' && ac <= '9')
 	return ac - '0';
@@ -222,10 +222,10 @@ getmeta(register int ac)
 }
 
 afs_int32
-util_GetInt32(register char *as, afs_int32 * aval)
+util_GetInt32(char *as, afs_int32 * aval)
 {
-    register afs_int32 total;
-    register int tc;
+    afs_int32 total;
+    int tc;
     int base;
     int negative;
 
@@ -271,10 +271,10 @@ util_GetInt32(register char *as, afs_int32 * aval)
 }
 
 afs_uint32
-util_GetUInt32(register char *as, afs_uint32 * aval)
+util_GetUInt32(char *as, afs_uint32 * aval)
 {
-    register afs_uint32 total;
-    register int tc;
+    afs_uint32 total;
+    int tc;
     int base;
 
     total = 0;			/* initialize things */
@@ -316,7 +316,7 @@ static const char power_letter[] = {
 };
 
 afs_int32
-util_GetHumanInt32(register char *as, afs_int32 * aval)
+util_GetHumanInt32(char *as, afs_int32 * aval)
 {
     long value;
     char * unit;

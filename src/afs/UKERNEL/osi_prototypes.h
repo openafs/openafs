@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -19,7 +19,7 @@ extern int afs_mount(struct vfs *afsp, char *path, void *data);
 extern int afs_unmount(struct vfs *afsp);
 extern int afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp);
 extern int afs_sync(struct vfs *afsp);
-extern int afs_statfs(register struct vfs *afsp, struct statfs *abp);
+extern int afs_statfs(struct vfs *afsp, struct statfs *abp);
 extern int afs_mountroot(void);
 extern int afs_swapvp(void);
 

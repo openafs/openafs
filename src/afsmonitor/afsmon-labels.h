@@ -1,25 +1,25 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*
-   Include file for the afsmonitor 
+   Include file for the afsmonitor
 
    This file defines the following arrays:
    fs_varNames	- file server variable names
    fs_labels	- file server column label names (fs_varNames split into
 		  atmost 3 parts)
-   fs_categories - names of sections & groups into which file server 
+   fs_categories - names of sections & groups into which file server
 		   variables are categorized.
    cm_varNames	- cache manager variable names
    cm_labels	- cache manager column label names (cm_varNames split into
 		  atmost 3 parts)
-   cm_categories - names of sections & groups into which cache manager 
+   cm_categories - names of sections & groups into which cache manager
 		   variables are categorized.
 
 -------------------------------------------------------------------------*/

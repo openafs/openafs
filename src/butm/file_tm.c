@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -80,9 +80,9 @@ extern int isafile;
  * blockMark contains a magic number and counts of real data bytes
  * written out in the block.
  *
- * each file is preceeded by a fileMark, which acts as the file 
+ * each file is preceeded by a fileMark, which acts as the file
  * delimiter. A file consists of contigous data blocks. TM does
- * understand or interrpet the data in data blocks. 
+ * understand or interrpet the data in data blocks.
  *
  * The tape begins with a tape label and ends with EOF file markers
  * in succession (2 or 4 of them ).
@@ -133,9 +133,9 @@ char tapeBlock[BUTM_BLOCKSIZE];	/* Tape buffer for reads and writes */
 
 /* ----------------------------------------------------------------------
  * These routines use the usd library to perform tape operations.
- * ForkIoctl, ForkOpen, ForkClose, ForwardSpace, BackwardSpace, WriteEOF, 
+ * ForkIoctl, ForkOpen, ForkClose, ForwardSpace, BackwardSpace, WriteEOF,
  * PrepareAccess(nt), ShutdownAccess(nt)
- * 
+ *
  * Return Values: USD functions return 0 if successful or errno if failed.
  */
 /* ------------------ USD Interface Functions Begin ------------------------ */
@@ -642,7 +642,7 @@ incSize(struct butm_tapeInfo *info, afs_uint32 dataSize)
  *      TO ALSO MAKE THE SAME CHANGES IN bu_utils/fms.c.
  *
  *	add the supplied no. of bytes to the byte count of data placed
- *	on the tape. Also check for reaching 2GB limit and reset the 
+ *	on the tape. Also check for reaching 2GB limit and reset the
  *      pointer if necessary.  This allows us to use >2GB tapes.
  * entry:
  *      fid      - file id for the tape.
@@ -670,7 +670,7 @@ incPosition(struct butm_tapeInfo *info, usd_handle_t fid, afs_uint32 dataSize)
 }
 
 /*
- * This accounts for tape drives with a block size different from variable or 16K 
+ * This accounts for tape drives with a block size different from variable or 16K
  * blocks and only reads that block size.
  */
 afs_int32 TapeBlockSize;
@@ -772,7 +772,7 @@ NextFile(struct butm_tapeInfo *info)
 }
 
 static afs_int32
-WriteTapeBlock(struct butm_tapeInfo *info, 
+WriteTapeBlock(struct butm_tapeInfo *info,
 	       char *buffer,     /* assumed to be 16384 bytes with data in it */
 	       afs_int32 length, /* amount data in buffer */
 	       afs_int32 blockType)
@@ -856,7 +856,7 @@ WriteTapeBlock(struct butm_tapeInfo *info,
 }
 
 static afs_int32
-ReadTapeBlock(struct butm_tapeInfo *info, 
+ReadTapeBlock(struct butm_tapeInfo *info,
 	      char *buffer, /* assumed to be 16384 bytes */
 	      afs_int32 *blockType)
 {
@@ -931,7 +931,7 @@ ReadTapeBlock(struct butm_tapeInfo *info,
  */
 
 static afs_int32
-check(struct butm_tapeInfo *info, 
+check(struct butm_tapeInfo *info,
       int write) /* write operation requested */
 {
     struct progress *p;
@@ -1126,7 +1126,7 @@ file_Dismount(struct butm_tapeInfo *info)
  */
 
 static afs_int32
-file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label, 
+file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
 		afs_int32 rewind)
 {
     afs_int32 code = 0;
@@ -1182,9 +1182,9 @@ file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
     tlabel->label.useCount = htonl(tlabel->label.useCount);
     tlabel->label.dumpid = htonl(tlabel->label.dumpid);
 
-    /* 
-     * write the tape label - For appends, the write may need to skip 
-     * over 1 or 2 EOF marks that were written when tape was closed after 
+    /*
+     * write the tape label - For appends, the write may need to skip
+     * over 1 or 2 EOF marks that were written when tape was closed after
      * the last dump. Plus, some AIX tape drives require we try forwarding
      * over the last EOF and take an error before we can write the new label.
      * ---------------------------------------------------------------------- */
@@ -1232,7 +1232,7 @@ file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
 }
 
 static afs_int32
-file_ReadLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label, 
+file_ReadLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
 	       afs_int32 rewind)
 {
     struct tapeLabel *tlabel;
@@ -1259,7 +1259,7 @@ file_ReadLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
 
     /*
      * When appended labels were written, either 1 or 2 EOF marks may
-     * have had to be skipped.  When reading a label, these EOF marks 
+     * have had to be skipped.  When reading a label, these EOF marks
      * must also be skipped. When an EOF is read, 0 bytes are returned
      * (refer to the write calls in file_WriteLabel routine).
      * ---------------------------------------------------------------- */
@@ -1490,8 +1490,8 @@ file_WriteFileEnd(struct butm_tapeInfo *info)
     return (code);
 }
 
-/* Read a SW filemark, verify that it is a SW filemark, then skip to the next 
- * HW filemark. If the read of the SW filemark shows it's an EOF, then 
+/* Read a SW filemark, verify that it is a SW filemark, then skip to the next
+ * HW filemark. If the read of the SW filemark shows it's an EOF, then
  * ignore that the SW filemark is not there and return 0 (found the SW filemark
  * missing with some 3.1 dumps).
  */
@@ -1612,8 +1612,8 @@ file_Seek(struct butm_tapeInfo *info, afs_int32 position)
 }
 
 /*
- * Seek to the EODump (end-of-dump) after the given position. This is 
- * the position after the EOF filemark immediately after the EODump mark. 
+ * Seek to the EODump (end-of-dump) after the given position. This is
+ * the position after the EOF filemark immediately after the EODump mark.
  * This is for tapes of version 4 or greater.
  */
 static afs_int32

@@ -1,0 +1,298 @@
+=over 4
+
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.  The audit
+log records information about RPC calls, including the name of the RPC
+call, the host that submitted the call, the authenticated entity (user)
+that issued the call, the parameters for the call, and if the call
+succeeded or failed.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. The C<file> interface writes audit
+messages to the file passed to B<-auditlog>. The C<sysvmq> interface
+writes audit messages to a SYSV message (see L<msgget(2)> and
+L<msgrcv(2)>). The message queue the C<sysvmq> interface writes to has the
+key C<ftok(path, 1)>, where C<path> is the path specified in the
+B<-auditlog> option.
+
+Defaults to C<file>.
+
+=item B<-d> <I<debug level>>
+
+Sets the detail level for the debugging trace written to the
+F</usr/afs/logs/FileLog> file. Provide one of the following values, each
+of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
+and C<125>. The default value of C<0> produces only a few messages.
+
+=item B<-p> <I<number of processes>>
+
+Sets the number of threads (or LWPs) to run. Provide a positive integer. 
+The File Server creates and uses five threads for special purposes, 
+in addition to the number specified (but if this argument specifies 
+the maximum possible number, the File Server automatically uses five 
+of the threads for its own purposes).
+
+The maximum number of threads can differ in each release of OpenAFS.
+Consult the I<OpenAFS Release Notes> for the current release.
+
+=item B<-spare> <I<number of spare blocks>>
+
+Specifies the number of additional kilobytes an application can store in a
+volume after the quota is exceeded. Provide a positive integer; a value of
+C<0> prevents the volume from ever exceeding its quota. Do not combine
+this argument with the B<-pctspare> argument.
+
+=item B<-pctspare> <I<percentage spare>>
+
+Specifies the amount by which the File Server allows a volume to exceed
+its quota, as a percentage of the quota. Provide an integer between C<0>
+and C<99>. A value of C<0> prevents the volume from ever exceeding its
+quota. Do not combine this argument with the B<-spare> argument.
+
+=item B<-b> <I<buffers>>
+
+Sets the number of directory buffers. Provide a positive integer.
+
+=item B<-l> <I<large vnodes>>
+
+Sets the number of large vnodes available in memory for caching directory
+elements. Provide a positive integer.
+
+=item B<-s> <I<small nodes>>
+
+Sets the number of small vnodes available in memory for caching file
+elements. Provide a positive integer.
+
+=item B<-vc> <I<volume cachesize>>
+
+Sets the number of volumes the File Server can cache in memory.  Provide a
+positive integer.
+
+=item B<-w> <I<call back wait interval>>
+
+Sets the interval at which the daemon spawned by the File Server performs
+its maintenance tasks. Do not use this argument; changing the default
+value can cause unpredictable behavior.
+
+=item B<-cb> <I<number of callbacks>>
+
+Sets the number of callbacks the File Server can track. Provide a positive
+integer.
+
+=item B<-banner>
+
+Prints the following banner to F</dev/console> about every 10 minutes.
+
+   File Server is running at I<time>.
+
+=item B<-novbc>
+
+Prevents the File Server from breaking the callbacks that Cache Managers
+hold on a volume that the File Server is reattaching after the volume was
+offline (as a result of the B<vos restore> command, for example). Use of
+this flag is strongly discouraged.
+
+=item B<-implicit> <I<admin mode bits>>
+
+Defines the set of permissions granted by default to the
+system:administrators group on the ACL of every directory in a volume
+stored on the file server machine. Provide one or more of the standard
+permission letters (C<rlidwka>) and auxiliary permission letters
+(C<ABCDEFGH>), or one of the shorthand notations for groups of permissions
+(C<all>, C<none>, C<read>, and C<write>). To review the meaning of the
+permissions, see the B<fs setacl> reference page.
+
+=item B<-readonly>
+
+Don't allow writes to this fileserver.
+
+=item B<-hr> <I<number of hours between refreshing the host cps>>
+
+Specifies how often the File Server refreshes its knowledge of the
+machines that belong to protection groups (refreshes the host CPSs for
+machines). The File Server must update this information to enable users
+from machines recently added to protection groups to access data for which
+those machines now have the necessary ACL permissions.
+
+=item B<-busyat> <I<< redirect clients when queue > n >>>
+
+Defines the number of incoming RPCs that can be waiting for a response
+from the File Server before the File Server returns the error code
+C<VBUSY> to the Cache Manager that sent the latest RPC. In response, the
+Cache Manager retransmits the RPC after a delay. This argument prevents
+the accumulation of so many waiting RPCs that the File Server can never
+process them all. Provide a positive integer.  The default value is
+C<600>.
+
+=item B<-rxpck> <I<number of rx extra packets>>
+
+Controls the number of Rx packets the File Server uses to store data for
+incoming RPCs that it is currently handling, that are waiting for a
+response, and for replies that are not yet complete. Provide a positive
+integer.
+
+=item B<-rxdbg>
+
+Writes a trace of the File Server's operations on Rx packets to the file
+F</usr/afs/logs/rx_dbg>.
+
+=item B<-rxdbge>
+
+Writes a trace of the File Server's operations on Rx events (such as
+retransmissions) to the file F</usr/afs/logs/rx_dbg>.
+
+=item B<-rxmaxmtu> <I<bytes>>
+
+Defines the maximum size of an MTU.  The value must be between the
+minimum and maximum packet data sizes for Rx.
+
+=item B<-jumbo>
+
+Allows the server to send and receive jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The fileserver does not use jumbograms by default, as some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+
+=item B<-nojumbo>
+
+Deprecated; jumbograms are disabled by default.
+
+=item B<-rxbind>
+
+Force the fileserver to only bind to one IP address.
+
+=item B<-allow-dotted-principals>
+
+By default, the RXKAD security layer will disallow access by Kerberos
+principals with a dot in the first component of their name. This is to avoid
+the confusion where principals user/admin and user.admin are both mapped to the
+user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
+between principal names may disable this check by starting the server
+with this option.
+
+=item B<-L>
+
+Sets values for many arguments in a manner suitable for a large file
+server machine. Combine this flag with any option except the B<-S> flag;
+omit both flags to set values suitable for a medium-sized file server
+machine.
+
+=item B<-S>
+
+Sets values for many arguments in a manner suitable for a small file
+server machine. Combine this flag with any option except the B<-L> flag;
+omit both flags to set values suitable for a medium-sized file server
+machine.
+
+=item B<-k> <I<stack size>>
+
+Sets the LWP stack size in units of 1 kilobyte. Do not use this argument,
+and in particular do not specify a value less than the default of C<24>.
+
+=item B<-realm> <I<Kerberos realm name>>
+
+Defines the Kerberos realm name for the File Server to use. If this
+argument is not provided, it uses the realm name corresponding to the cell
+listed in the local F</usr/afs/etc/ThisCell> file.
+
+=item B<-udpsize> <I<size of socket buffer in bytes>>
+
+Sets the size of the UDP buffer, which is 64 KB by default. Provide a
+positive integer, preferably larger than the default.
+
+=item B<-sendsize> <I<size of send buffer in bytes>>
+
+Sets the size of the send buffer, which is 16384 bytes by default.
+
+=item B<-abortthreshold> <I<abort threshold>>
+
+Sets the abort threshold, which is triggered when an AFS client sends
+a number of FetchStatus requests in a row and all of them fail due to
+access control or some other error. When the abort threshold is
+reached, the file server starts to slow down the responses to the
+problem client in order to reduce the load on the file server.
+
+The throttling behaviour can cause issues especially for some versions
+of the Windows OpenAFS client. When using Windows Explorer to navigate
+the AFS directory tree, directories with only "look" access for the
+current user may load more slowly because of the throttling. This is
+because the Windows OpenAFS client sends FetchStatus calls one at a
+time instead of in bulk like the Unix Open AFS client.
+
+Setting the threshold to 0 disables the throttling behavior. This
+option is available in OpenAFS versions 1.4.1 and later.
+
+=item B<-enable_peer_stats>
+
+Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific UDP port on another machine,
+a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+so on) sent or received. To display or otherwise access the records, use
+the Rx Monitoring API.
+
+=item B<-enable_process_stats>
+
+Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of RPC (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring API.
+
+=item B<-syslog [<loglevel>]
+
+Use syslog instead of the normal logging location for the fileserver
+process.  If provided, log messages are at <loglevel> instead of the
+default LOG_USER.
+
+=item B<-mrafslogs>
+
+Use MR-AFS (Multi-Resident) style logging.  This option is deprecated.
+
+=item B<-saneacls>
+
+Offer the SANEACLS capability for the fileserver.  This option is
+currently unimplemented.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=item B<-vhandle-setaside> <I<fds reserved for non-cache io>>
+
+Number of file handles set aside for I/O not in the cache. Defaults to 128.
+
+=item B<-vhandle-max-cachesize> <I<max open files>>
+
+Maximum number of available file handles.
+
+=item B<-vhandle-initial-cachesize> <I<initial open file cache>>
+
+Number of file handles set aside for I/O in the cache. Defaults to 128.
+
+=item B<-vattachpar> <I<number of volume attach threads>>
+
+The number of threads assigned to attach and detach volumes.  The default
+is 1.  Warning: many of the I/O parallism features of Demand-Attach
+Fileserver are turned off when the number of volume attach threads is only
+1.
+
+This option is only meaningful for a file server built with pthreads
+support.
+
+=item B<-m> <I<min percentage spare in partition>>
+
+Specifies the percentage of each AFS server partition that the AIX version
+of the File Server creates as a reserve. Specify an integer value between
+C<0> and C<30>; the default is 8%. A value of C<0> means that the
+partition can become completely full, which can have serious negative
+consequences.  This option is not supported on platforms other than AIX.
+
+=item B<-lock>
+
+Prevents any portion of the fileserver binary from being paged (swapped)
+out of memory on a file server machine running the IRIX operating system.
+This option is not supported on platforms other than IRIX.

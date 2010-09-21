@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -38,11 +38,11 @@
  */
 
 /* BUDB_GetText
- * notes: 
+ * notes:
  *	routine mallocs storage for charListPtr, freed by stub
  */
 
-afs_int32 GetText(struct rx_call *, afs_uint32, afs_int32, afs_int32, 
+afs_int32 GetText(struct rx_call *, afs_uint32, afs_int32, afs_int32,
 		  afs_int32, afs_int32 *, charListT *);
 afs_int32 GetTextVersion(struct rx_call *, afs_int32, afs_uint32 *);
 afs_int32 SaveText(struct rx_call *, afs_uint32, afs_int32, afs_int32,
@@ -63,7 +63,7 @@ SBUDB_GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 }
 
 afs_int32
-GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType, 
+GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 	afs_int32 maxLength, afs_int32 offset, afs_int32 *nextOffset,
 	charListT *charListPtr)
 {
@@ -78,8 +78,8 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
     char *textPtr;
     afs_int32 code;
 
-    LogDebug(5, "GetText: type %d, offset %d, nextOffset %d, maxLength %d\n",
-	     textType, offset, nextOffset, maxLength);
+    LogDebug(5, "GetText: type %d, offset %d, nextOffset %"AFS_PTR_FMT
+	     ", maxLength %d\n", textType, offset, nextOffset, maxLength);
 
     if (callPermitted(call) == 0) {
 	code = BUDB_NOTPERMITTED;
@@ -223,7 +223,7 @@ freeOldBlockChain(struct ubik_trans *ut, dbadr diskAddr)
  */
 
 afs_int32
-SBUDB_GetTextVersion(struct rx_call *call, afs_int32 textType, 
+SBUDB_GetTextVersion(struct rx_call *call, afs_int32 textType,
 		     afs_uint32 *tversion)
 {
     afs_int32 code;
@@ -234,7 +234,7 @@ SBUDB_GetTextVersion(struct rx_call *call, afs_int32 textType,
 }
 
 afs_int32
-GetTextVersion(struct rx_call *call, afs_int32 textType, 
+GetTextVersion(struct rx_call *call, afs_int32 textType,
 	       afs_uint32 *tversion)
 {
     afs_int32 code;
@@ -266,7 +266,7 @@ GetTextVersion(struct rx_call *call, afs_int32 textType,
  */
 
 afs_int32
-SBUDB_SaveText(struct rx_call *call, afs_uint32 lockHandle, 
+SBUDB_SaveText(struct rx_call *call, afs_uint32 lockHandle,
 	       afs_int32 textType, afs_int32 offset, afs_int32 flags,
 	       charListT *charListPtr)
 {
@@ -278,7 +278,7 @@ SBUDB_SaveText(struct rx_call *call, afs_uint32 lockHandle,
 }
 
 afs_int32
-SaveText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType, 
+SaveText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 	 afs_int32 offset, afs_int32 flags, charListT *charListPtr)
 {
     struct ubik_trans *ut;

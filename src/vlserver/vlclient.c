@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -122,8 +122,8 @@ char *(args[50]);
 struct Vlent *
 GetVolume(int vol, struct vldbentry *entry)
 {
-    register int i;
-    register struct Vlent *vl;
+    int i;
+    struct Vlent *vl;
 
     if (!vol)
 	return NULL;
@@ -154,7 +154,7 @@ afs_int32
 vl_Initialize(int auth, char *confDir, int server, char *cellp)
 {
     return ugen_ClientInit(auth?0:1, confDir, cellp, 0,
-			  &cstruct, NULL, "vl_Initialize", rxkad_clear, 
+			  &cstruct, NULL, "vl_Initialize", rxkad_clear,
 			  MAXSERVERS, AFSCONF_VLDBSERVICE, 50, server,
 			  htons(AFSCONF_VLDBPORT), USER_SERVICE_ID);
 }
@@ -163,10 +163,10 @@ vl_Initialize(int auth, char *confDir, int server, char *cellp)
 afs_int32
 GetServer(char *aname)
 {
-    register struct hostent *th;
+    struct hostent *th;
     afs_uint32 addr;
     int b1, b2, b3, b4;
-    register afs_int32 code;
+    afs_int32 code;
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
     if (code == 4) {
@@ -184,8 +184,8 @@ GetServer(char *aname)
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
-    register afs_int32 code, server = 0, sawserver = 0;
+    struct cmd_item *ti;
+    afs_int32 code, server = 0, sawserver = 0;
     afs_int32 id, voltype;
     struct vldbentry entry;
     char *cellp = 0;
@@ -241,7 +241,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    exit(0);
 	} else {
 	    char *oper, *vname;
-	    register char **argp = args;
+	    char **argp = args;
 
 	    GetArgs(line, argp, &nargs);
 	    oper = &argp[0][0];
@@ -1024,7 +1024,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
@@ -1319,7 +1319,7 @@ GetArgs(char *line, char **args, int *nargs)
 {
     *nargs = 0;
     while (*line) {
-	register char *last = line;
+	char *last = line;
 	while (isspace(*line))
 	    line++;
 	if (isspace(*last))

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -63,10 +63,10 @@ INT
 #include <errno.h>
 
 
-/* 
+/*
  * WSASendMsg is only supported on Vista and above
  * Neither function is part of the public WinSock API
- * and therefore the function pointers must be 
+ * and therefore the function pointers must be
  * obtained via WSAIoctl()
  */
 static LPFN_WSARECVMSG pWSARecvMsg = NULL;
@@ -83,19 +83,19 @@ rxi_xmit_init(osi_socket s)
     rc = WSAIoctl( s, SIO_GET_EXTENSION_FUNCTION_POINTER,
                    &WSARecvMsg_GUID, sizeof(WSARecvMsg_GUID),
                    &pWSARecvMsg, sizeof(pWSARecvMsg),
-                   &NumberOfBytes, NULL, NULL); 
+                   &NumberOfBytes, NULL, NULL);
 
     rc = WSAIoctl( s, SIO_GET_EXTENSION_FUNCTION_POINTER,
                    &WSASendMsg_GUID, sizeof(WSASendMsg_GUID),
                    &pWSASendMsg, sizeof(pWSASendMsg),
-                   &NumberOfBytes, NULL, NULL); 
+                   &NumberOfBytes, NULL, NULL);
 
     /* Turn on UDP PORT_UNREACHABLE messages */
     dwIn = 1;
-    rc = WSAIoctl( s, SIO_UDP_CONNRESET, 
+    rc = WSAIoctl( s, SIO_UDP_CONNRESET,
                    &dwIn, sizeof(dwIn),
                    &dwOut, sizeof(dwOut),
-                   &NumberOfBytes, NULL, NULL); 
+                   &NumberOfBytes, NULL, NULL);
 
     /* Turn on UDP CIRCULAR QUEUEING messages */
     dwIn = 1;
@@ -124,7 +124,7 @@ recvmsg(osi_socket socket, struct msghdr *msgP, int flags)
         wsaMsg.dwFlags = flags;
 
         code = pWSARecvMsg(socket, &wsaMsg, &dwBytes, NULL, NULL);
-        if (code == 0) { 
+        if (code == 0) {
             /* success - return the number of bytes read */
             code = (int)dwBytes;
         } else {
@@ -199,7 +199,7 @@ sendmsg(osi_socket socket, struct msghdr *msgP, int flags)
         wsaMsg.dwFlags = 0;
 
         code = pWSASendMsg(socket, &wsaMsg, flags, &dwBytes, NULL, NULL);
-        if (code == 0) { 
+        if (code == 0) {
             /* success - return the number of bytes read */
             code = (int)dwBytes;
         } else {

@@ -123,7 +123,7 @@ rxi_GetIFInfo()
 	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 	    addrs[i] = ifinaddr;
 
-	    if (ifinaddr != 0x7f000001 && maxmtu > rx_maxReceiveSize) {
+	    if (!rx_IsLoopbackAddr(ifinaddr) && maxmtu > rx_maxReceiveSize) {
 		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
 		rx_maxReceiveSize =
 		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
@@ -184,7 +184,7 @@ rxi_GetIFInfo()
 	    addrs[i] = ifinaddr;
 	    i++;
 
-	    if (ifinaddr != 0x7f000001 && maxmtu > rx_maxReceiveSize) {
+	    if (!rx_IsLoopbackAddr(ifinaddr) && maxmtu > rx_maxReceiveSize) {
 		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
 		rx_maxReceiveSize =
 		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
@@ -445,7 +445,7 @@ rxk_NewSocket(short aport)
 }
 
 int
-osi_FreeSocket(register osi_socket asocket)
+osi_FreeSocket(osi_socket asocket)
 {
     extern int rxk_ListenerPid;
     struct sonode *so = (struct sonode *)asocket;
@@ -907,7 +907,7 @@ rxk_NewSocket(short aport)
 }
 
 int
-osi_FreeSocket(register osi_socket *asocket)
+osi_FreeSocket(osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
     TIUSER *udp_tiptr = (TIUSER *) asocket;

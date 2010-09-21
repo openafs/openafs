@@ -26,7 +26,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_STOREALL, "StoreAll vp 0x%lx len (0x%x, 0x%x)"
 	ec	CM_TRACE_INVALL, "InvalAll vp 0x%lx len 0x%x"
 	ec	CM_TRACE_TRUNCALL, "TruncAll vp 0x%lx old len (0x%x, 0x%x) new len (0x%x, 0x%x)"
-	
+
 	ec	CM_TRACE_GNLINK, "Gn_link vp 0x%lx name %s (returns 0x%x)"
 	ec	CM_TRACE_GMKDIR, "Gn_mkdir vp 0x%lx name %s mode 0x%x (returns 0x%x)"
 	ec	CM_TRACE_GMKNOD, "Gn_mknod vp 0x%lx name %s mode 0x%x (returns 0x%x)"
@@ -153,9 +153,9 @@ error_table 2 ZCM
 	ec	CM_TRACE_STOREPROC2, "StoreProc got (0x%x, 0x%x) length 0x%x"
 	ec	CM_TRACE_ADJUSTSIZE, "AdjustSize index %d oldSize %d newSize %d blocksUsed %d"
 	ec	CM_TRACE_SETLENGTH, "%s line %d: m.Length was (0x%x, 0x%x), now (0x%x, 0x%x)"
-	ec	CM_TRACE_DCACHEWAIT, "%s line %d: waiting for 0x%x flags 0x%x" 
-	ec	CM_TRACE_VNODEREAD, "UFSRead: tdc 0x%lx, offset (0x%x, 0x%x) len (0x%x 0x%x)" 
-	ec	CM_TRACE_SLEEP, "Sleep: evp 0x%lx, count %d seq 0x%x evp->seq 0x%x" 
+	ec	CM_TRACE_DCACHEWAIT, "%s line %d: waiting for 0x%x flags 0x%x"
+	ec	CM_TRACE_VNODEREAD, "UFSRead: tdc 0x%lx, offset (0x%x, 0x%x) len (0x%x 0x%x)"
+	ec	CM_TRACE_SLEEP, "Sleep: evp 0x%lx, count %d seq 0x%x evp->seq 0x%x"
 	ec	CM_TRACE_WAKE, "Wakeup: evp 0x%lx, evp->seq 0x%x"
 	ec	CM_TRACE_DENTRYDELETE, "d_delete inode 0x%x d_name %s/%s"
 	ec	CM_TRACE_DENTRYIPUT, "d_iput inode 0x%x d_name %s/%s"

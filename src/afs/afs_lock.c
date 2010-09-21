@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -37,7 +37,7 @@ void Lock_ReleaseR(struct afs_lock *lock);
 void Lock_ReleaseW(struct afs_lock *lock);
 
 void
-Lock_Init(register struct afs_lock *lock)
+Lock_Init(struct afs_lock *lock)
 {
 
     AFS_STATCNT(Lock_Init);
@@ -53,9 +53,9 @@ Lock_Init(register struct afs_lock *lock)
     lock->time_waiting.tv_sec = 0;
     lock->time_waiting.tv_usec = 0;
 }
-
+
 void
-ObtainLock(register struct afs_lock *lock, int how,
+ObtainLock(struct afs_lock *lock, int how,
 	   unsigned int src_indicator)
 {
     switch (how) {
@@ -92,7 +92,7 @@ ObtainLock(register struct afs_lock *lock, int how,
 }
 
 void
-ReleaseLock(register struct afs_lock *lock, int how)
+ReleaseLock(struct afs_lock *lock, int how)
 {
     if (how == READ_LOCK) {
 	if (!--lock->readers_reading && lock->wait_states) {
@@ -120,7 +120,7 @@ ReleaseLock(register struct afs_lock *lock, int how)
 }
 
 void
-Afs_Lock_Obtain(register struct afs_lock *lock, int how)
+Afs_Lock_Obtain(struct afs_lock *lock, int how)
 {
     osi_timeval_t tt1, tt2, et;
     afs_uint32 us;
@@ -189,7 +189,7 @@ Afs_Lock_Obtain(register struct afs_lock *lock, int how)
 
 /* release a lock, giving preference to new readers */
 void
-Afs_Lock_ReleaseR(register struct afs_lock *lock)
+Afs_Lock_ReleaseR(struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseR);
     AFS_ASSERT_GLOCK();
@@ -204,7 +204,7 @@ Afs_Lock_ReleaseR(register struct afs_lock *lock)
 
 /* release a lock, giving preference to new writers */
 void
-Afs_Lock_ReleaseW(register struct afs_lock *lock)
+Afs_Lock_ReleaseW(struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseW);
     AFS_ASSERT_GLOCK();
@@ -219,7 +219,7 @@ Afs_Lock_ReleaseW(register struct afs_lock *lock)
 
 /*
 Wait for some change in the lock status.
-void Lock_Wait(register struct afs_lock *lock)
+void Lock_Wait(struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_Wait);
     if (lock->readers_reading || lock->excl_locked) return 1;
@@ -235,7 +235,7 @@ void Lock_Wait(register struct afs_lock *lock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-afs_osi_SleepR(register char *addr, register struct afs_lock *alock)
+afs_osi_SleepR(char *addr, struct afs_lock *alock)
 {
     AFS_STATCNT(osi_SleepR);
     ReleaseReadLock(alock);
@@ -244,7 +244,7 @@ afs_osi_SleepR(register char *addr, register struct afs_lock *alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-afs_osi_SleepW(register char *addr, register struct afs_lock *alock)
+afs_osi_SleepW(char *addr, struct afs_lock *alock)
 {
     AFS_STATCNT(osi_SleepW);
     ReleaseWriteLock(alock);
@@ -253,7 +253,7 @@ afs_osi_SleepW(register char *addr, register struct afs_lock *alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-afs_osi_SleepS(register char *addr, register struct afs_lock *alock)
+afs_osi_SleepS(char *addr, struct afs_lock *alock)
 {
     AFS_STATCNT(osi_SleepS);
     ReleaseSharedLock(alock);

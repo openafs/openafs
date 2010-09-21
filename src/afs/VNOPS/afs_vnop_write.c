@@ -36,8 +36,8 @@ extern unsigned char *afs_indexFlags;
  * avc->lock must be write-locked.
  */
 int
-afs_StoreOnLastReference(register struct vcache *avc,
-			 register struct vrequest *treq)
+afs_StoreOnLastReference(struct vcache *avc,
+			 struct vrequest *treq)
 {
     int code = 0;
 
@@ -95,7 +95,7 @@ afs_StoreOnLastReference(register struct vcache *avc,
 }
 
 int
-afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
+afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
@@ -105,11 +105,14 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_int32 tlen, trimlen;
     afs_int32 startDate;
     afs_int32 max;
-    register struct dcache *tdc;
+    struct dcache *tdc;
 #ifdef _HIGHC_
     volatile
 #endif
     afs_int32 error;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+    struct vnode *vp = AFSTOV(avc);
+#endif
 #ifdef AFS_DARWIN80_ENV
     uio_t tuiop = NULL;
 #else
@@ -117,7 +120,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
 #endif
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
 
     AFS_STATCNT(afs_MemWrite);
@@ -182,7 +185,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	return (EFBIG);
     }
 #endif
-#ifdef AFS_VM_RDWR_ENV
+#if defined(AFS_VM_RDWR_ENV) && !defined(AFS_FAKEOPEN_ENV)
     /*
      * If write is implemented via VM, afs_FakeOpen() is called from the
      * high-level write op.
@@ -261,15 +264,16 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	osi_Assert(filePos <= avc->f.m.Length);
 #else
 	if (filePos > avc->f.m.Length) {
-#if defined(AFS_DISCON_ENV)
 	    if (AFS_IS_DISCON_RW)
    		afs_PopulateDCache(avc, filePos, &treq);
-#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
 	    avc->f.m.Length = filePos;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+            vnode_pager_setsize(vp, filePos);
+#endif
 	}
 #endif
 	ReleaseWriteLock(&tdc->lock);
@@ -288,7 +292,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	}
 #endif
     }
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_FAKEOPEN_ENV)
     afs_FakeClose(avc, acred);
 #endif
     if (error && !avc->vc_error)
@@ -307,7 +311,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 
 /* called on writes */
 int
-afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
+afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
@@ -318,11 +322,14 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_int32 trimlen;
     afs_int32 startDate;
     afs_int32 max;
-    register struct dcache *tdc;
+    struct dcache *tdc;
 #ifdef _HIGHC_
     volatile
 #endif
     afs_int32 error;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+    struct vnode *vp = AFSTOV(avc);
+#endif
 #ifdef AFS_DARWIN80_ENV
     uio_t tuiop = NULL;
 #else
@@ -331,7 +338,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     struct iovec *tvec;		/* again, should have define */
 #endif
     struct osi_file *tfile;
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
 
     AFS_STATCNT(afs_UFSWrite);
@@ -399,7 +406,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	return (EFBIG);
     }
 #endif
-#ifdef	AFS_VM_RDWR_ENV
+#if defined(AFS_VM_RDWR_ENV) && !defined(AFS_FAKEOPEN_ENV)
     /*
      * If write is implemented via VM, afs_FakeOpen() is called from the
      * high-level write op.
@@ -565,15 +572,16 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	osi_Assert(filePos <= avc->f.m.Length);
 #else
 	if (filePos > avc->f.m.Length) {
-#if defined(AFS_DISCON_ENV)
 	    if (AFS_IS_DISCON_RW)
 		afs_PopulateDCache(avc, filePos, &treq);
-#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
 	    avc->f.m.Length = filePos;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+            vnode_pager_setsize(vp, filePos);
+#endif
 	}
 #endif
 	osi_UFSClose(tfile);
@@ -593,7 +601,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	}
 #endif
     }
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_FAKEOPEN_ENV)
     afs_FakeClose(avc, acred);
 #endif
     error = afs_CheckCode(error, &treq, 7);
@@ -634,9 +642,9 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 
 /* do partial write if we're low on unmodified chunks */
 int
-afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
+afs_DoPartialWrite(struct vcache *avc, struct vrequest *areq)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <=
 	afs_stats_cmperf.cacheMaxDirtyChunks
@@ -672,8 +680,8 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, offset_t offset,
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
-    register afs_int32 code;
-    register struct brequest *tb;
+    afs_int32 code;
+    struct brequest *tb;
     struct vrequest treq;
 #ifdef AFS_SGI65_ENV
     struct flid flid;
@@ -819,6 +827,22 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 	    code = avc->vc_error;
 	    avc->vc_error = 0;
 	}
+#if defined(AFS_FBSD80_ENV)
+        /* XXX */
+        if (!avc->opens) {
+            afs_int32 opens, is_free, is_gone, is_doomed, iflag;
+            struct vnode *vp = AFSTOV(avc);
+            VI_LOCK(vp);
+            is_doomed =  vp->v_iflag & VI_DOOMED;
+            is_free = vp->v_iflag & VI_FREE;
+            is_gone = vp->v_iflag & VI_DOINGINACT;
+            iflag = vp->v_iflag;
+            VI_UNLOCK(vp);
+            opens = avc->opens;
+            afs_warn("afs_close avc %p vp %p opens %d free %d doinginact %d doomed %d iflag %d\n",
+                     avc, vp, opens, is_free, is_gone, is_doomed, iflag);
+        }
+#endif
 	avc->opens--;
 	ReleaseWriteLock(&avc->lock);
     }
@@ -840,7 +864,7 @@ afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred
 afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 #endif 
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
     OSI_VC_CONVERT(avc);
 
@@ -867,22 +891,17 @@ afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
     ObtainSharedLock(&avc->lock, 18);
     code = 0;
     if (avc->execsOrWriters > 0) {
-
     	if (!AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
-		/* Your average flush. */
-
-		/* put the file back */
-		UpgradeSToWLock(&avc->lock, 41);
-		code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
-		ConvertWToSLock(&avc->lock);
-
-#if defined(AFS_DISCON_ENV)
+	    /* Your average flush. */
+	    
+	    /* put the file back */
+	    UpgradeSToWLock(&avc->lock, 41);
+	    code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
+	    ConvertWToSLock(&avc->lock);
 	} else {
-
 	    UpgradeSToWLock(&avc->lock, 711);
 	    afs_DisconAddDirty(avc, VDisconWriteFlush, 1);
 	    ConvertWToSLock(&avc->lock);
-#endif
     	}		/* if not disconnected */
     }			/* if (avc->execsOrWriters > 0) */
 

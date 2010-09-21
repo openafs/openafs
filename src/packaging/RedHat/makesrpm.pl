@@ -29,8 +29,9 @@ if (! -f $srcball) {
 
 my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
 
-system("tar -C $tmpdir -xvjf $srcball '\*/configure.in' ".
-       "'\*/src/packaging/RedHat' > /dev/null")==0
+system("tar -C $tmpdir -xvjf $srcball '\*/configure.ac' ".
+       "'\*/src/packaging/RedHat' ".
+       "'\*/build-tools' > /dev/null")==0
   or die "Unable to unpack src tar ball\n";
 
 my $dirh = IO::Dir->new($tmpdir);
@@ -41,12 +42,12 @@ die "Unable to find unpacked source code\n" if !$vdir;
 
 my $srcdir = $tmpdir."/".$vdir;
 
-# Work out which version we're dealing with from the configure.in file
+# Work out which version we're dealing with from the configure.ac file
 my $afsversion;
 my $linuxver;
 my $linuxrel;
-my $fh = new IO::File $srcdir."/configure.in"
-  or die "Unable to find unpacked configure.in file";
+my $fh = new IO::File $srcdir."/configure.ac"
+  or die "Unable to find unpacked configure.ac file";
 while(<$fh>) {
   next if (/^\s*\#/);
 
@@ -64,6 +65,10 @@ while(<$fh>) {
   }
 }
 undef $fh;
+
+if (not defined($afsversion)) {
+  $afsversion = `"$srcdir/build-tools/git-version" "$srcdir"`;
+}
 
 # Build the RPM root
 

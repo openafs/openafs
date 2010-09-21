@@ -19,7 +19,6 @@
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
-#undef register
 #endif /* AFS_ALPHA_ENV */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -314,7 +313,7 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
 
 static
 struct storeOps rxfs_storeUfsOps = {
-#if (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifndef HAVE_STRUCT_LABEL_SUPPORT
     rxfs_storeUfsPrepare,
     rxfs_storeUfsRead,
     rxfs_storeUfsWrite,
@@ -341,7 +340,7 @@ struct storeOps rxfs_storeUfsOps = {
 
 static
 struct storeOps rxfs_storeMemOps = {
-#if (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifndef HAVE_STRUCT_LABEL_SUPPORT
     rxfs_storeMemPrepare,
     rxfs_storeMemRead,
     rxfs_storeMemWrite,

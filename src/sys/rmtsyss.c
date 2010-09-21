@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -60,9 +60,9 @@ rmtsysd(void)
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);
     struct rx_service *service;
 
-    /* 
+    /*
      * Ignore SIGHUP signal since apparently is sent to the processes that
-     * start up from /etc/rc for some systems like hpux and aix3.1... 
+     * start up from /etc/rc for some systems like hpux and aix3.1...
      */
     signal(SIGHUP, SIG_IGN);
 
@@ -89,12 +89,12 @@ rmtsysd(void)
  * here we also get back the new pag value; we need this so that the caller
  * can add it to its group list via setgroups() */
 afs_int32
-SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag, 
+SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag,
 	       afs_int32 *errornumber)
 {
     afs_uint32 blob[PIOCTL_HEADER];
     struct ViceIoctl data;
-    register afs_int32 error;
+    afs_int32 error;
 
     *errornumber = 0;
     SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
@@ -117,11 +117,11 @@ SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag,
 
 /* Implements the remote pioctl(2) call */
 afs_int32
-SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path, 
-	       afs_int32 cmd, afs_int32 follow, rmtbulk *InData, 
+SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path,
+	       afs_int32 cmd, afs_int32 follow, rmtbulk *InData,
 	       rmtbulk *OutData, afs_int32 *errornumber)
 {
-    register afs_int32 error;
+    afs_int32 error;
     struct ViceIoctl data;
     char *pathp = path;
     afs_uint32 blob[PIOCTL_HEADER];
@@ -162,7 +162,7 @@ void
 rmt_Quit(char *msg, ...)
 {
     va_list ap;
-    
+
     va_start(ap, msg);
     vfprintf(stderr, msg, ap);
     va_end(ap);

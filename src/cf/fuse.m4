@@ -1,25 +1,23 @@
-dnl
-dnl $Id$
-dnl
-dnl FUSE autoconf glue
-dnl
+dnl FUSE Autoconf glue.  Build with FUSE if it's available; if it's not,
+dnl don't enable the FUSE build.  If --enable is given explicitly, FUSE
+dnl must be found or we bail out.
 
-AC_DEFUN([OPENAFS_FUSE],[
-
-AC_ARG_ENABLE([fuse-client],
-    [AS_HELP_STRING([--enable-fuse-client],[enable building of the FUSE userspace client, afsd.fuse])],,
-    [enable_fuse_client="no"])
-
-if test "x$enable_fuse_client" = "xyes" ; then
-   PKG_PROG_PKG_CONFIG
-   PKG_CHECK_MODULES([FUSE], [fuse])
-   ENABLE_FUSE_CLIENT=afsd.fuse
-   CLIENT_UAFS_DEP=libuafs
-fi
-
-AC_SUBST(ENABLE_FUSE_CLIENT)
-AC_SUBST(CLIENT_UAFS_DEP)
-AC_SUBST(FUSE_CFLAGS)
-AC_SUBST(FUSE_LIBS)
-
-])dnl
+AC_DEFUN([OPENAFS_FUSE],
+[openafs_fuse=
+ ENABLE_FUSE_CLIENT=
+ CLIENT_UAFS_DEP=
+ AC_ARG_ENABLE([fuse-client],
+    [AS_HELP_STRING([--disable-fuse-client],
+        [disable building of the FUSE userspace client, afsd.fuse
+         (defaults to enabled)])],
+    [openafs_fuse="$enableval"])
+ AS_IF([test -z "$openafs_fuse"],
+    [PKG_CHECK_EXISTS([fuse], [openafs_fuse=yes])])
+ AS_IF([test x"$openafs_fuse" = xyes],
+    [PKG_CHECK_MODULES([FUSE], [fuse])
+     ENABLE_FUSE_CLIENT=afsd.fuse
+     CLIENT_UAFS_DEP=libuafs])
+ AC_SUBST([ENABLE_FUSE_CLIENT])
+ AC_SUBST([CLIENT_UAFS_DEP])
+ AC_SUBST([FUSE_CFLAGS])
+ AC_SUBST([FUSE_LIBS])])

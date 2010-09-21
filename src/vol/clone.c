@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -53,8 +53,7 @@
 #include "partition.h"
 #include "viceinode.h"
 #include "vol_prototypes.h"
-
-/*@printflike@*/ extern void Log(const char *format, ...);
+#include "common.h"
 
 int (*vol_PollProc) (void) = 0;	/* someone must init this */
 
@@ -85,7 +84,7 @@ void CloneVolume(Error *, Volume *, Volume *, Volume *);
 static int
 ci_AddItem(struct clone_head *ah, Inode aino)
 {
-    register struct clone_items *ti;
+    struct clone_items *ti;
 
     /* if no last elt (first call) or last item full, get a new one */
     if ((!ah->last) || ah->last->nitems >= CLONE_MAXITEMS) {
@@ -125,8 +124,8 @@ ci_InitHead(struct clone_head *ah)
 int
 ci_Apply(struct clone_head *ah, int (*aproc) (Inode,  void *), void *arock)
 {
-    register struct clone_items *ti;
-    register int i;
+    struct clone_items *ti;
+    int i;
 
     for (ti = ah->first; ti; ti = ti->next) {
 	for (i = 0; i < ti->nitems; i++) {
@@ -140,7 +139,7 @@ ci_Apply(struct clone_head *ah, int (*aproc) (Inode,  void *), void *arock)
 int
 ci_Destroy(struct clone_head *ah)
 {
-    register struct clone_items *ti, *ni;
+    struct clone_items *ti, *ni;
 
     for (ti = ah->first; ti; ti = ni) {
 	ni = ti->next;		/* guard against freeing */
@@ -260,7 +259,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    } else if (rwinode) {
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_INC failed: %x, %s, %u errno %d\n",
+		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);
@@ -272,7 +271,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    /* If a directory, mark vnode in old volume as cloned */
 	    if ((rwvnode->type == vDirectory) && ReadWriteOriginal) {
 #ifdef DVINC
-		/* 
+		/*
 		 * It is my firmly held belief that immediately after
 		 * copy-on-write, the two directories can be identical.
 		 * If the new copy is changed (presumably, that is the very
@@ -313,7 +312,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    if (inodeinced) {
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_DEC failed: %x, %s, %u errno %d\n",
+		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
 			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);

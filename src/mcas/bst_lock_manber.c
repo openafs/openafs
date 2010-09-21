@@ -173,7 +173,7 @@ static void redundancy_removal(ptst_t *ptst, void *x)
         if ( IS_GARBAGE(d) ) UNLOCK(d, &d_qn);
     }
     while ( IS_GARBAGE(d) );
- 
+
     LOCK(e, &e_qn);
 
     if ( IS_GARBAGE(e) || !IS_REDUNDANT(e) ) goto out_de;
@@ -195,7 +195,7 @@ static void redundancy_removal(ptst_t *ptst, void *x)
     assert(!e->copy);
 
     MK_GARBAGE(e);
- 
+
     if ( e->l != NULL ) e->l->p = d;
 
     e->r->copy = 0;

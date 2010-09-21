@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -40,8 +40,8 @@ char *xstrings;
 main(argc, argv)
      char **argv;
 {
-    register add, del, opts;
-    register c;
+    int add, del, opts;
+    int c;
     char *file;
     mid_t kmid;
     struct cfg_load cload;
@@ -51,8 +51,8 @@ main(argc, argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -202,7 +202,7 @@ get_syms(conf, syms)
 
     if (syms == NULL)
       sys_error("syms is NULL");
-    fp = fopen(syms, "r"); 
+    fp = fopen(syms, "r");
     if (fp == NULL)
 	sys_error(syms);
 
@@ -377,12 +377,12 @@ get_syms(conf, syms)
  */
 #define SYMBUFSIZE 1048576
 xlate_xtok(xp, kp, strp, szp)
-     register struct syment *xp;
-     register sym_t *kp;
+     struct syment *xp;
+     sym_t *kp;
      char **strp;
      uint *szp;
 {
-    register len;
+    int len;
     static char *export_strings = NULL, *prev = "";
     static left, offset, sz;
 
@@ -481,7 +481,7 @@ xlate_xtok(xp, kp, strp, szp)
     if (debug)
 	dump_ksym(kp, *strp);
 }
-
+
 /*
  * find_suffix	-	look for a string that arg string is suffix of
  *
@@ -499,11 +499,11 @@ xlate_xtok(xp, kp, strp, szp)
  *	This is rather inefficient.
  */
 find_suffix(p, strings, max, offp)
-     register char *p, *strings;
+     char *p, *strings;
      uint *offp;
 {
-    register char *q, *e;
-    register len = strlen(p) - 1;
+    char *q, *e;
+    int len = strlen(p) - 1;
 
     strings += sizeof(uint);
     max -= sizeof(uint);
@@ -533,7 +533,7 @@ find_suffix(p, strings, max, offp)
 
     return 0;
 }
-
+
 /*
  * xsym_compar -	compare two XCOFF symbol table entries
  *
@@ -541,10 +541,10 @@ find_suffix(p, strings, max, offp)
  * C_EXT < C_HIDEXT;
  */
 xsym_compar(xp, xq)
-     register struct syment *xp, *xq;
+     struct syment *xp, *xq;
 {
-    register char *p, *q;
-    register compar;
+    char *p, *q;
+    int compar;
 
 #ifndef __XCOFF64__
     p = (xp->n_zeroes ? xp->n_name : xp->n_nptr);
@@ -564,7 +564,7 @@ xsym_compar(xp, xq)
 
     return compar;
 }
-
+
 /*
  * dump_xsym -	print to XCOFF symbol
  */

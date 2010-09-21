@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -113,10 +113,10 @@ char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, i
     static char krbrlm[REALM_SZ+1];
     char **hrealms = 0;
     krb5_error_code retval;
-    
+
     if (!cellconfig)
         return 0;
-    
+
     if (fallback) {
         char * p;
         p = strchr(cellconfig->hostName[0], '.');
@@ -125,16 +125,16 @@ char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, i
         else
             strcpy(krbrlm, cellconfig->name);
         for (p=krbrlm; *p; p++) {
-            if (islower(*p)) 
+            if (islower(*p))
                 *p = toupper(*p);
         }
     } else {
         if (retval = krb5_get_host_realm(context,
                                          cellconfig->hostName[0], &hrealms))
-            return 0; 
+            return 0;
         if(!hrealms[0]) return 0;
         strcpy(krbrlm, hrealms[0]);
-	
+
         if (hrealms) krb5_free_host_realm(context, hrealms);
     }
     return krbrlm;
@@ -148,13 +148,13 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
     int code, unixauthneeded, password_expires = -1;
     int status;
     krb5_context context;
-    
+
     krb5_init_context(&context);
     *reenter = 0;
     *message = (char *)0;
-    
+
     status = auth_to_cell(context, userName, NULL, NULL);
-    
+
     if (status) {
 	char *str = afs_error_message(status);
 	*message = (char *)malloc(1024);
@@ -170,30 +170,30 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
 		    str);
 	return AUTH_FAILURE; /* NOTFOUND? */
     }
-    
+
 #if 0
     /*
      * Local hack - if the person has a file in their home
      * directory called ".xlog", read that for a list of
      * extra cells to authenticate to
      */
-    
+
     if ((pwd = getpwuid(getuid())) != NULL) {
 	struct stat sbuf;
 	FILE *f;
 	char fcell[100], xlog_path[512];
-	
+
 	strcpy(xlog_path, pwd->pw_dir);
 	strcat(xlog_path, "/.xlog");
-	
+
 	if ((stat(xlog_path, &sbuf) == 0) &&
 	    ((f = fopen(xlog_path, "r")) != NULL)) {
-	    
+
 	    while (fgets(fcell, 100, f) != NULL) {
 		int auth_status;
-		
+
 		fcell[strlen(fcell) - 1] = '\0';
-		
+
 		auth_status = auth_to_cell(context, userName, fcell, NULL);
 		if (status == AKLOG_SUCCESS)
 		    status = auth_status;
@@ -206,7 +206,7 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
     return AUTH_SUCCESS;
 }
 
-static krb5_error_code get_credv5(krb5_context context, char *user,  
+static krb5_error_code get_credv5(krb5_context context, char *user,
 				  char *name, char *inst, char *realm,
 				  krb5_creds **creds)
 {
@@ -214,7 +214,7 @@ static krb5_error_code get_credv5(krb5_context context, char *user,
     krb5_error_code r;
     static krb5_principal client_principal = 0;
     char *str;
-    
+
     memset(&increds, 0, sizeof(increds));
     /* instance may be ptr to a null string. Pass null then */
     if ((r = krb5_build_principal(context, &increds.server,
@@ -229,18 +229,18 @@ static krb5_error_code get_credv5(krb5_context context, char *user,
         syslog(LOG_AUTH|LOG_ERR, "LAM aklog: krb5_cc_default returns %d", r);
         return r;
     }
-    r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal); 
+    r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
     if (r) {
 	syslog(LOG_AUTH|LOG_ERR, "LAM aklog: krb5_cc_get_principal returns %d", r);
 	return r;
-    } 
+    }
     increds.client = client_principal;
     increds.times.endtime = 0;
     /* Ask for DES since that is what V4 understands */
     get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
-    
+
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
-    
+
     return r;
 }
 
@@ -249,17 +249,17 @@ static int get_user_realm(krb5_context context, char *realm)
 {
     static krb5_principal client_principal = 0;
     int i;
-    
+
     if (!_krb425_ccache)
         krb5_cc_default(context, &_krb425_ccache);
     if (!client_principal)
         krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
-    
+
     i = realm_len(context, client_principal);
     if (i > REALM_SZ-1) i = REALM_SZ-1;
     strncpy(realm,realm_data(context, client_principal), i);
     realm[i] = 0;
-    
+
     return 0;
 }
 
@@ -294,34 +294,34 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
 {
     int status = 0;
     struct afsconf_dir *configdir;
-    
+
     memset(local_cell, 0, sizeof(local_cell));
     memset(cellconfig, 0, sizeof(*cellconfig));
-    
+
     if (!(configdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	return AFSCONF_NODB;
     }
-    
+
     if (afsconf_GetLocalCell(configdir, local_cell, MAXCELLCHARS)) {
 	return AFSCONF_FAILURE;
     }
-    
+
     if ((cell == NULL) || (cell[0] == 0))
 	cell = local_cell;
-    
+
     linkedcell[0] = '\0';
     if (afsconf_GetCellInfo(configdir, cell, NULL, cellconfig)) {
 	status = AFSCONF_NOTFOUND;
     }
-    if (cellconfig->linkedCell) 
+    if (cellconfig->linkedCell)
 	strncpy(linkedcell,cellconfig->linkedCell,MAXCELLCHARS);
-    
+
     (void) afsconf_Close(configdir);
-    
+
     return(status);
 }
 
-/* 
+/*
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
  * to.
@@ -331,7 +331,7 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
     int status = 0;
     char username[BUFSIZ];	/* To hold client username structure */
     afs_int32 viceId;		/* AFS uid of user */
-    
+
     char name[ANAME_SZ];	/* Name of afs key */
     char primary_instance[INST_SZ];	/* Instance of afs key */
     char secondary_instance[INST_SZ];	/* Backup instance to try */
@@ -348,7 +348,7 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
     struct ktc_token atoken, btoken;
     int afssetpag = 0, uid = -1;
     struct passwd *pwd;
-    
+
     memset(name, 0, sizeof(name));
     memset(primary_instance, 0, sizeof(primary_instance));
     memset(secondary_instance, 0, sizeof(secondary_instance));
@@ -359,38 +359,38 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 	strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
 	confname[sizeof(confname) - 2] = '\0';
     }
-    
+
     /* NULL or empty cell returns information on local cell */
     if ((status = get_cellconfig(cell, &ak_cellconfig,
 				 local_cell, linkedcell))) {
         syslog(LOG_AUTH|LOG_ERR, "LAM aklog: get_cellconfig returns %d", status);
 	return(status);
     }
-    
+
     strncpy(cell_to_use, ak_cellconfig.name, MAXCELLCHARS);
     cell_to_use[MAXCELLCHARS] = 0;
-    
+
     /*
      * Find out which realm we're supposed to authenticate to.  If one
      * is not included, use the kerberos realm found in the credentials
      * cache.
      */
-    
+
     if (realm && realm[0]) {
 	strcpy(realm_of_cell, realm);
     }
     else {
 	char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, FALSE);
-	
+
 	if (!afs_realm) {
             syslog(LOG_AUTH|LOG_ERR, "LAM aklog: afs_realm_of_cell returns %d", status);
 	    return AFSCONF_FAILURE;
 	}
-	
+
 	strcpy(realm_of_cell, afs_realm);
     }
-    
-    /* We use the afs.<cellname> convention here... 
+
+    /* We use the afs.<cellname> convention here...
      *
      * Doug Engert's original code had principals of the form:
      *
@@ -408,9 +408,9 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
      * try the second one.  You can select which one you prefer with
      * a configure option.
      */
-    
+
     strcpy(name, AFSKEY);
-    
+
     if (1 || strcasecmp(cell_to_use, realm_of_cell) != 0) {
 	strncpy(primary_instance, cell_to_use, sizeof(primary_instance));
 	primary_instance[sizeof(primary_instance)-1] = '\0';
@@ -425,12 +425,12 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 		sizeof(secondary_instance));
 	secondary_instance[sizeof(secondary_instance)-1] = '\0';
     }
-    
-    /* 
+
+    /*
      * Extract the session key from the ticket file and hand-frob an
      * afs style authenticator.
      */
-    
+
     /*
      * Try to obtain AFS tickets.  Because there are two valid service
      * names, we will try both, but trying the more specific first.
@@ -438,61 +438,61 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
      *	afs/<cell>@<realm> i.e. allow for single name with "."
      * 	afs@<realm>
      */
-    
+
     status = get_credv5(context, user, name, primary_instance, realm_of_cell,
 			&v5cred);
-    
-    if ((status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || 
+
+    if ((status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
 	 status == KRB5KRB_ERR_GENERIC) && !realm_of_cell[0]) {
 	char *afs_realm = afs_realm_of_cell(context, &ak_cellconfig, TRUE);
-	
+
 	if (!afs_realm) {
             syslog(LOG_AUTH|LOG_ERR, "LAM aklog: afs_realm_of_cell returns %d", status);
 	    return AFSCONF_FAILURE;
 	}
-	
+
 	strcpy(realm_of_cell, afs_realm);
-	
+
 	if (strcasecmp(cell_to_use, realm_of_cell) == 0) {
 	    try_secondary = 1;
 	    secondary_instance[0] = '\0';
 	}
-	
-	status = get_credv5(context, user, name, primary_instance, 
+
+	status = get_credv5(context, user, name, primary_instance,
 			    realm_of_cell, &v5cred);
     }
-    if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || 
+    if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
 	status == KRB5KRB_ERR_GENERIC) {
 	if (try_secondary)
 	    status = get_credv5(context, user, name, secondary_instance,
 				realm_of_cell, &v5cred);
     }
-    
+
     if (status) {
         syslog(LOG_AUTH|LOG_ERR, "LAM aklog: get_credv5 returns %d", status);
 	return status;
     }
-    
+
     strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
     strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
     strncpy(aserver.cell, cell_to_use, MAXKTCREALMLEN - 1);
-    
+
     /*
      * The default is to use rxkad2b, which means we put in a full
      * V5 ticket.  If the user specifies -524, we talk to the
      * 524 ticket converter.
      */
-    
+
     {
 	char *p;
 	int len;
-	
+
 	len = min(get_princ_len(context, v5cred->client, 0),
 		  second_comp(context, v5cred->client) ?
 		  MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
 	strncpy(username, get_princ_str(context, v5cred->client, 0), len);
 	username[len] = '\0';
-	
+
 	if (second_comp(context, v5cred->client)) {
 	    strcat(username, ".");
 	    p = username + strlen(username);
@@ -501,7 +501,7 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 	    strncpy(p, get_princ_str(context, v5cred->client, 1), len);
 	    p[len] = '\0';
 	}
-	
+
 	memset(&atoken, 0, sizeof(atoken));
 	atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
 	atoken.startTime = v5cred->times.starttime;;
@@ -511,7 +511,7 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 	atoken.ticketLen = v5cred->ticket.length;
 	memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
     }
-    
+
     if ((status = get_user_realm(context, realm_of_user))) {
         syslog(LOG_AUTH|LOG_ERR, "LAM aklog: get_user_realm returns %d", status);
 	return KRB5_REALM_UNKNOWN;
@@ -520,7 +520,7 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 	strcat(username, "@");
 	strcat(username, realm_of_user);
     }
-    
+
     strcpy(lastcell, aserver.cell);
 
     /*
@@ -540,20 +540,20 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
     if ((status == 0) && (viceId != ANONYMOUSID))
 	sprintf (username, "AFS ID %d", (int) viceId);
 #else
-    /* 
-     * This actually only works assuming that your uid and pts space match 
+    /*
+     * This actually only works assuming that your uid and pts space match
      * and probably this works only for the local cell anyway.
      */
-    
+
     if ((uid = getuid()) == 0) {
 	if ((pwd = getpwnam(user)) == NULL) {
 	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: getpwnam %s failed", user);
 	    return AUTH_FAILURE;
 	}
     }
-    
+
     /* Don't do first-time registration. Handle only the simple case */
-    if ((status == 0) && (viceId != ANONYMOUSID)) 
+    if ((status == 0) && (viceId != ANONYMOUSID))
  	sprintf (username, "AFS ID %d", ((uid==0)?(int)pwd->pw_uid:(int)uid));
 #endif
 
@@ -564,10 +564,10 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
     strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
     strcpy(aclient.instance, "");
     strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
-    
+
 #ifndef AFS_AIX51_ENV
-    /* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
-     * this routine, it will not add the token. It is not clear what 
+    /* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
+     * this routine, it will not add the token. It is not clear what
      * is going on here! So we will do the following operation.
      * On AIX 5 this kills our parent. So we won't.
      */
@@ -578,7 +578,7 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 	struct sigaction newAction, origAction;
 	pid_t cid, pcid;
 	int wstatus;
-	
+
 	sigemptyset(&newAction.sa_mask);
 	newAction.sa_handler = SIG_DFL;
 	newAction.sa_flags = 0;
@@ -602,9 +602,9 @@ static int auth_to_cell(krb5_context context, char *user, char *cell, char *real
 	    } while ((pcid == -1) && (errno == EINTR));
 	    if ((pcid == cid) && WIFEXITED(wstatus))
 		status = WEXITSTATUS(wstatus);
-	    else 
+	    else
 		status = -1;
-	} 
+	}
 	syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: collected child status %d", status);
 	sigaction(SIGCHLD, &origAction, NULL);
     } else {
@@ -621,7 +621,7 @@ int
 aklog_initialize(struct secmethod_table *meths)
 {
     memset(meths, 0, sizeof(struct secmethod_table));
-    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog loaded: uid %d pag %d", getuid(), getpagvalue("afs"));    
+    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog loaded: uid %d pag %d", getuid(), getpagvalue("afs"));
     /*
      * Initialize the exported interface routines.
      * Aside from method_authenticate, these are just no-ops.
@@ -631,7 +631,7 @@ aklog_initialize(struct secmethod_table *meths)
     meths->method_passwdexpired = aklog_passwdexpired;
     meths->method_passwdrestrictions = aklog_passwdrestrictions;
     meths->method_getpasswd = aklog_getpasswd;
-    
+
     return (0);
 }
 #endif /* AFS_AIX51_ENV */

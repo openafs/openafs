@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -9,10 +9,10 @@
 
 /*
  * afs_module  Version 1.3     < for Apache Server version 1.2.6 and 1.3.1 >
- * 
+ *
  * Add to Configuration file (before any of the Authentication modules)
  * Module afs_module    afs_module.o
- * 
+ *
  * Add to server configuration file:
  * SetAFSDefaultCell <cell name>
  * SetAFSCacheExpiration <seconds for AFS client cache expiration>
@@ -34,7 +34,7 @@
 #include "http_conf_globals.h"
 
 
-/* 
+/*
  * default parameters - if none are specified in the config file
  * these are used
  */
@@ -188,8 +188,8 @@ check_weblog(char *path)
     return 0;
 }
 
-/* 
- * per-server configuration creator 
+/*
+ * per-server configuration creator
  */
 void *
 create_afs_server_config(pool * p, server_rec * s)
@@ -203,7 +203,7 @@ create_afs_server_config(pool * p, server_rec * s)
 }
 
 /*
- * per-dir configuration record creator 
+ * per-dir configuration record creator
  */
 void *
 create_afs_dir_config(pool * p, char *dummy)
@@ -215,7 +215,7 @@ create_afs_dir_config(pool * p, char *dummy)
 
 /*
  * Handlers for server config lines - set afs default cell, weblog path, access log,
- * token and cache expiration time to the server configuration. As well as per-dir 
+ * token and cache expiration time to the server configuration. As well as per-dir
  * configs like AFSAuthentication.
  */
 const char *

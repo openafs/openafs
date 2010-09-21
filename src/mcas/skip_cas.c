@@ -304,7 +304,7 @@ setval_t set_update(set_t *l, setkey_t k, setval_t v, int overwrite)
     ptst = critical_enter();
 
     succ = weak_search_predecessors(l, k, preds, succs);
- 
+
  retry:
     ov = NULL;
 

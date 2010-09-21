@@ -435,7 +435,7 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
     priv->cur_tx = NULL;
 
     MB();
- 
+
     for ( ent = t->reads; ent != NULL; ent = ent->next )
     {
         if ( ent->b->loc != ent->l )
@@ -467,10 +467,10 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
                 (st == TXS_SUCCESSFUL) ? ent->l->old : ent->l->new,
                 t->gc_data_id);
     }
- 
+
     if ( t->dummy != NULL )
         gc_unsafe_free(ptst, t->dummy, t->gc_data_id);
- 
+
     rc_down_descriptor(ptst, t);
 
     return st == TXS_SUCCESSFUL;

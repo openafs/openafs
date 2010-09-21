@@ -43,13 +43,13 @@ vsys: vsys.o
 # Objects
 #
 afsd.o: afsd.c AFS_component_version_number.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/afsd.c
 
 afsd_kernel.o: afsd_kernel.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/afsd_kernel.c
 
 afsd_fuse.o: afsd_fuse.c AFS_component_version_number.c
-	${CC} -c ${CPPFLAGS} ${UAFS_CFLAGS} afsd_fuse.c -o afsd_fuse.o
+	$(CC) $(UAFS_CFLAGS) -c ${srcdir}/afsd_fuse.c
 
 vsys.o: vsys.c AFS_component_version_number.c
 

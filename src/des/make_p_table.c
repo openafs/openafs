@@ -25,7 +25,7 @@ static afs_uint32 P_prime[4][256];
 void
 gen(FILE * stream)
 {
-    register int i, j, k, m;
+    int i, j, k, m;
     /* P permutes 32 bit input R1 into 32 bit output R2 */
 
 #ifdef BIG

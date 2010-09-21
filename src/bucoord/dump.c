@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -54,14 +54,14 @@ extern afs_int32 lastTaskCode;
 /* bc_Dumper
  *	called (indirectly) to make a dump
  * entry:
- *	aindex - index into dumpTask array, contains all the information 
+ *	aindex - index into dumpTask array, contains all the information
  * 		 relevant to the dump
  */
 int
 bc_Dumper(int aindex)
 {
     struct rx_connection *tconn;
-    register struct bc_volumeDump *tde;
+    struct bc_volumeDump *tde;
     afs_int32 count, port;
     struct tc_dumpDesc *volDesc = 0;
     struct tc_dumpArray volArray;
@@ -70,9 +70,9 @@ bc_Dumper(int aindex)
 
     struct tc_dumpInterface dumpInterface;
     struct tc_dumpInterface *tcdiPtr = &dumpInterface;
-    register struct bc_dumpTask *dumpTaskPtr;
+    struct bc_dumpTask *dumpTaskPtr;
 
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
 
@@ -86,7 +86,7 @@ bc_Dumper(int aindex)
 	return (code);
 
     /* count number of volumes to be dumped and
-     * build array of volumes to be sent to backup system 
+     * build array of volumes to be sent to backup system
      */
     for (count = 0, tde = dumpTaskPtr->volumes; tde;
 	 tde = tde->next, count++);
@@ -194,15 +194,15 @@ freeDumpTaskVolumeList(struct bc_volumeDump *vdptr)
 }
 
 /* bc_DmpRstStart
- *     The other half of the dump/restore create process call. In bc_StartDmpRst, 
+ *     The other half of the dump/restore create process call. In bc_StartDmpRst,
  *     we allocated a dumpTask entry. Here we do the task and then free the entry.
  */
 void *
 bc_DmpRstStart(void *param)
 {
     afs_int32 aindex = (intptr_t)param;
-    register struct bc_dumpTask *tdump;
-    register afs_int32 code;
+    struct bc_dumpTask *tdump;
+    afs_int32 code;
 
     tdump = &bc_dumpTasks[aindex];
 
@@ -229,7 +229,7 @@ bc_DmpRstStart(void *param)
 /* bc_StartDmpRst
  *	function to start dump running. Packages the relevant information
  *	(from params) into any free dumpTask structure (globally allocated),
- *	and then invokes bc_DmpRstStart to do the work, passing it a single 
+ *	and then invokes bc_DmpRstStart to do the work, passing it a single
  *      parameter, the index into the dumpTask array.
  *
  * entry:
@@ -239,16 +239,16 @@ bc_DmpRstStart(void *param)
  */
 
 int
-bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname, 
-	       struct bc_volumeDump *avolsToDump, 
+bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname,
+	       struct bc_volumeDump *avolsToDump,
 	       struct sockaddr_in *adestServer,
-	       afs_int32 adestPartition, afs_int32 afromDate, char *anewExt, 
+	       afs_int32 adestPartition, afs_int32 afromDate, char *anewExt,
 	       int aoldFlag, afs_int32 aparent, afs_int32 alevel,
-	       int (*aproc) (int), afs_int32 *ports, afs_int32 portCount, 
+	       int (*aproc) (int), afs_int32 *ports, afs_int32 portCount,
 	       struct bc_dumpSchedule *dsptr, int append, int dontExecute)
 {
-    register int i;
-    register afs_int32 code;
+    int i;
+    afs_int32 code;
     void *junk = NULL;
 
     for (i = 0; i < BC_MAXSIMDUMPS; i++)
@@ -348,7 +348,7 @@ bc_FindDumpSlot(afs_int32 dumpID, afs_int32 port)
  */
 
 int
-bc_LabelTape(char *afsname, char *pname, afs_int32 size, 
+bc_LabelTape(char *afsname, char *pname, afs_int32 size,
 	     struct bc_config *config, afs_int32 port)
 {
     struct rx_connection *tconn;
@@ -474,7 +474,7 @@ bc_ScanDumps(struct bc_config *config, afs_int32 dbAddFlag, afs_int32 port)
 
 /* get a connection to the tape controller */
 afs_int32
-bc_GetConn(struct bc_config *aconfig, afs_int32 aport, 
+bc_GetConn(struct bc_config *aconfig, afs_int32 aport,
 	   struct rx_connection **tconn)
 {
     afs_uint32 host;
@@ -509,7 +509,7 @@ bc_GetConn(struct bc_config *aconfig, afs_int32 aport,
 
 /* CheckTCVersion
  *	make sure we are talking to a compatible butc process.
- * exit: 
+ * exit:
  *	0 - ok
  *	-1 - not compatible
  */
@@ -531,7 +531,7 @@ CheckTCVersion(struct rx_connection *tconn)
 }
 
 int
-ConnectButc(struct bc_config *config, afs_int32 port, 
+ConnectButc(struct bc_config *config, afs_int32 port,
 	    struct rx_connection **tconn)
 {
     afs_int32 code;

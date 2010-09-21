@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -40,7 +40,7 @@ aix_ktc_setup_ticket_file(char * userName)
     setpwent();			/* open the pwd database */
     pwd = getpwnam(userName);
     if (pwd) {
-	if (chown(ktc_tkt_string_uid(pwd->pw_uid), 
+	if (chown(ktc_tkt_string_uid(pwd->pw_uid),
 		  pwd->pw_uid, pwd->pw_gid) < 0) {
 	    perror("chown: ");
 	}

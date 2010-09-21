@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,10 +50,8 @@ int afs_memvolumes = 0;
 #if defined(AFS_XBSD_ENV)
 static struct vnode *volumeVnode;
 #endif
-#if defined(AFS_DISCON_ENV)
 afs_rwlock_t afs_discon_lock;
 extern afs_rwlock_t afs_disconDirtyLock;
-#endif
 #if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
 const struct cred *cache_creds;
 #endif
@@ -102,8 +100,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers,
 	      afs_int32 dynamic_vcaches)
 {
-    register afs_int32 i;
-    register struct volume *tv;
+    afs_int32 i;
+    struct volume *tv;
 
     AFS_STATCNT(afs_CacheInit);
     /*
@@ -131,16 +129,14 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
     AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
-#ifdef AFS_DISCON_ENV
     AFS_RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
     AFS_RWLOCK_INIT(&afs_disconDirtyLock, "afs_disconDirtyLock");
     QInit(&afs_disconDirty);
     QInit(&afs_disconShadow);
-#endif
     osi_dnlc_init();
 
-    /* 
-     * create volume list structure 
+    /*
+     * create volume list structure
      */
     if (aVolumes < 50)
 	aVolumes = 50;
@@ -212,7 +208,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 void
 afs_ComputeCacheParms(void)
 {
-    register afs_int32 i;
+    afs_int32 i;
     afs_int32 afs_maxCacheDirty;
 
     /*
@@ -286,7 +282,7 @@ afs_InitCellInfo(char *afile)
 {
     afs_dcache_id_t inode;
     int code = 0;
-    
+
     code = afs_LookupInodeByPath(afile, &inode.ufs, NULL);
     return afs_cellname_init(&inode, code);
 }
@@ -349,7 +345,7 @@ afs_InitVolumeInfo(char *afile)
  * Parameters:
  *	afile : Name of the file assumed to be the cache info file
  *		for the Cache Manager; it will be used as such.
- * Side Effects:  This sets afs_fragsize, which is used in the cache usage 
+ * Side Effects:  This sets afs_fragsize, which is used in the cache usage
  *                calculations such as in afs_adjustsize()
  *
  * Environment:
@@ -364,11 +360,11 @@ afs_InitVolumeInfo(char *afile)
  *
  */
 int
-afs_InitCacheInfo(register char *afile)
+afs_InitCacheInfo(char *afile)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct osi_stat tstat;
-    register struct osi_file *tfile;
+    struct osi_file *tfile;
     struct afs_fheader theader;
 #ifndef AFS_LINUX22_ENV
     struct vnode *filevp;
@@ -515,7 +511,7 @@ int afs_resourceinit_flag = 0;
 int
 afs_ResourceInit(int preallocs)
 {
-    register afs_int32 i;
+    afs_int32 i;
     static struct rx_securityClass *secobj;
 
     AFS_STATCNT(afs_ResourceInit);
@@ -834,8 +830,8 @@ shutdown_AFS(void)
 
 	shutdown_volume();
 
-	/* 
-	 * Free FreeVolList allocations 
+	/*
+	 * Free FreeVolList allocations
 	 */
 	afs_osi_Free(Initialafs_freeVolList,
 		     afs_memvolumes * sizeof(struct volume));
@@ -847,8 +843,8 @@ shutdown_AFS(void)
 	 * we simply malloc more; we won't be able to free those additional volumes.
 	 */
 
-	/* 
-	 * Free Users table allocation 
+	/*
+	 * Free Users table allocation
 	 */
 	{
 	    struct unixuser *tu, *ntu;

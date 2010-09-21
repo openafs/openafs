@@ -12,12 +12,10 @@ All of the manuals are included because, even including significant
 portions that are not relevant to Debian, because they all do contain some
 valuable information.  Debian users should ignore the installation
 information and much of the Quick Start Guide in favor of the
-documentation that comes with the Debian OpenAFS packages, and should be
-aware that the IBM AFS 3.6 Release Notes are for the IBM release
-immediately prior to OpenAFS 1.0 (and are therefore rather dated).
+documentation that comes with the Debian OpenAFS packages.
 
 The AFS protocol information included here is dated and may not be
 accurate in all details, but is the best protocol information currently
 available.
 
- -- Russ Allbery <rra@debian.org>, Sat Nov 19 12:45:55 2005
+ -- Russ Allbery <rra@debian.org>, Mon, 14 Jun 2010 18:18:35 -0700

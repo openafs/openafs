@@ -90,21 +90,21 @@ ReallyWrite(fid, block, data)
 
 int
 FidZap(afid)
-     register long *afid;
+     long *afid;
 {				/* Zero out a file */
     *afid = 0;
 }
 
 int
 FidZero(afid)
-     register long *afid;
+     long *afid;
 {				/* Zero out a file */
     *afid = 0;
 }
 
 int
 FidEq(afid, bfid)
-     register long *afid, *bfid;
+     long *afid, *bfid;
 {				/* Compare two fids for equality. */
     if (*afid != *bfid)
 	return 0;
@@ -113,14 +113,14 @@ FidEq(afid, bfid)
 
 int
 FidVolEq(afid, bfid)
-     register long *afid, *bfid;
+     long *afid, *bfid;
 {				/* Is fid in a particular volume */
     return 1;
 }
 
 int
 FidCpy(dfid, sfid)
-     register long *dfid, *sfid;
+     long *dfid, *sfid;
 {				/* Assign one fid to another. */
     *dfid = *sfid;
 }

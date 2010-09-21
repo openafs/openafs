@@ -1,7 +1,7 @@
 /*
  * Copyright 2006-2010, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -28,7 +28,7 @@
 #define SALVSYNC_PROTO_VERSION        SALVSYNC_PROTO_VERSION_V3
 
 
-/** 
+/**
  * SALVSYNC protocol command codes.
  */
 typedef enum {
@@ -73,7 +73,7 @@ typedef enum {
 /* SALVSYNC flags */
 #define SALVSYNC_FLAG_VOL_STATS_VALID SYNC_FLAG_CODE_DECL(0) /* volume stats in response are valid */
 
-/** 
+/**
  * SALVSYNC command state.
  */
 typedef enum {

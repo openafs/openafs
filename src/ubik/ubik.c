@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -41,7 +41,7 @@
  * \file
  * This system is organized in a hierarchical set of related modules.  Modules
  * at one level can only call modules at the same level or below.
- * 
+ *
  * At the bottom level (0) we have R, RFTP, LWP and IOMGR, i.e. the basic
  * operating system primitives.
  *
@@ -55,13 +55,13 @@
  * \li DISK--The module responsible for representing atomic transactions
  * on the local disk.  It maintains a new-value only log.
  * \li LOCK--The module responsible for locking byte ranges in the database file.
- * 	
+ *
  * At the next level (2) we have
- *  
+ *
  * \li RECOVERY--The module responsible for ensuring that all members of a quorum
  * have the same up-to-date database after a new synchronization site is
  * elected.  This module runs only on the synchronization site.
- *	
+ *
  * At the next level (3) we have
  *
  * \li REMOTE--The module responsible for interpreting requests from the sync
@@ -86,33 +86,33 @@ void *ubik_SRXSecurityRock;
 struct ubik_server *ubik_servers;
 short ubik_callPortal;
 
-static int BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
+static int BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	   	      struct ubik_trans **transPtr, int readAny);
 
 struct rx_securityClass *ubik_sc[3];
 
 #define	CStampVersion	    1	/* meaning set ts->version */
 
-/*! 
+/*!
  * \brief Perform an operation at a quorum, handling error conditions.
  * \return 0 if all worked and a quorum was contacted successfully
  * \return otherwise mark failing server as down and return #UERROR
  *
  * \note If any server misses an update, we must wait #BIGTIME seconds before
- * allowing the transaction to commit, to ensure that the missing and 
- * possibly still functioning server times out and stops handing out old 
- * data.  This is done in the commit code, where we wait for a server marked 
- * down to have stayed down for #BIGTIME seconds before we allow a transaction 
- * to commit.  A server that fails but comes back up won't give out old data 
+ * allowing the transaction to commit, to ensure that the missing and
+ * possibly still functioning server times out and stops handing out old
+ * data.  This is done in the commit code, where we wait for a server marked
+ * down to have stayed down for #BIGTIME seconds before we allow a transaction
+ * to commit.  A server that fails but comes back up won't give out old data
  * because it is sent the sync count along with the beacon message that
  * marks it as \b really up (\p beaconSinceDown).
  */
 afs_int32
 ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
-	       		  register struct ubik_trans *atrans, int aflags)
+	       		  struct ubik_trans *atrans, int aflags)
 {
-    register struct ubik_server *ts;
-    register afs_int32 code;
+    struct ubik_server *ts;
+    afs_int32 code;
     afs_int32 rcode, okcalls;
 
     rcode = 0;
@@ -146,11 +146,11 @@ ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
 }
 
 afs_int32
-ContactQuorum_DISK_Lock(register struct ubik_trans *atrans, int aflags,afs_int32 file,
+ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
 			afs_int32 position, afs_int32 length, afs_int32 type)
 {
-    register struct ubik_server *ts;
-    register afs_int32 code;
+    struct ubik_server *ts;
+    afs_int32 code;
     afs_int32 rcode, okcalls;
 
     rcode = 0;
@@ -185,11 +185,11 @@ ContactQuorum_DISK_Lock(register struct ubik_trans *atrans, int aflags,afs_int32
 }
 
 afs_int32
-ContactQuorum_DISK_Write(register struct ubik_trans *atrans, int aflags,
+ContactQuorum_DISK_Write(struct ubik_trans *atrans, int aflags,
 			 afs_int32 file, afs_int32 position, bulkdata *data)
 {
-    register struct ubik_server *ts;
-    register afs_int32 code;
+    struct ubik_server *ts;
+    afs_int32 code;
     afs_int32 rcode, okcalls;
 
     rcode = 0;
@@ -223,11 +223,11 @@ ContactQuorum_DISK_Write(register struct ubik_trans *atrans, int aflags,
 }
 
 afs_int32
-ContactQuorum_DISK_Truncate(register struct ubik_trans *atrans, int aflags,
+ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 			    afs_int32 file, afs_int32 length)
 {
-    register struct ubik_server *ts;
-    register afs_int32 code;
+    struct ubik_server *ts;
+    afs_int32 code;
     afs_int32 rcode, okcalls;
 
     rcode = 0;
@@ -261,11 +261,11 @@ ContactQuorum_DISK_Truncate(register struct ubik_trans *atrans, int aflags,
 }
 
 afs_int32
-ContactQuorum_DISK_WriteV(register struct ubik_trans *atrans, int aflags,
+ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 			  iovec_wrt * io_vector, iovec_buf *io_buffer)
 {
-    register struct ubik_server *ts;
-    register afs_int32 code;
+    struct ubik_server *ts;
+    afs_int32 code;
     afs_int32 rcode, okcalls;
 
     rcode = 0;
@@ -330,12 +330,12 @@ ContactQuorum_DISK_WriteV(register struct ubik_trans *atrans, int aflags,
 }
 
 afs_int32
-ContactQuorum_DISK_SetVersion(register struct ubik_trans *atrans, int aflags, 
+ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
 			      ubik_version *OldVersion,
 			      ubik_version *NewVersion)
 {
-    register struct ubik_server *ts;
-    register afs_int32 code;
+    struct ubik_server *ts;
+    afs_int32 code;
     afs_int32 rcode, okcalls;
 
     rcode = 0;
@@ -346,7 +346,7 @@ ContactQuorum_DISK_SetVersion(register struct ubik_trans *atrans, int aflags,
 	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
 	    continue;		/* not up-to-date, don't bother */
 	}
-	code = DISK_SetVersion(ts->disk_rxcid, &atrans->tid, OldVersion, 
+	code = DISK_SetVersion(ts->disk_rxcid, &atrans->tid, OldVersion,
 			       NewVersion);
 	if (code) {		/* failure */
 	    rcode = code;
@@ -369,12 +369,12 @@ ContactQuorum_DISK_SetVersion(register struct ubik_trans *atrans, int aflags,
 	return rcode;
 }
 
-/*! 
+/*!
  * \brief This routine initializes the ubik system for a set of servers.
  * \return 0 for success, or an error code on failure.
  * \param serverList set of servers specified; nServers gives the number of entries in this array.
- * \param pathName provides an initial prefix used for naming storage files used by this system.  
- * \param dbase the returned structure representing this instance of an ubik; it is passed to various calls below.  
+ * \param pathName provides an initial prefix used for naming storage files used by this system.
+ * \param dbase the returned structure representing this instance of an ubik; it is passed to various calls below.
  *
  * \todo This routine should perhaps be generalized to a low-level disk interface providing read, write, file enumeration and sync operations.
  *
@@ -388,8 +388,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 		      afs_uint32 serverList[], const char *pathName,
 		      struct ubik_dbase **dbase)
 {
-    register struct ubik_dbase *tdb;
-    register afs_int32 code;
+    struct ubik_dbase *tdb;
+    afs_int32 code;
 #ifdef AFS_PTHREAD_ENV
     pthread_t rxServerThread;        /* pthread variables */
     pthread_t ubeacon_InteractThread;
@@ -462,7 +462,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	    ubik_sc[secIndex] = secClass;
 	}
     }
-    /* for backwards compat this should keep working as it does now 
+    /* for backwards compat this should keep working as it does now
        and not host bind */
 #if 0
     /* This really needs to be up above, where I have put it.  It works
@@ -496,7 +496,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 3);
 
-    /* start an rx_ServerProc to handle incoming RPC's in particular the 
+    /* start an rx_ServerProc to handle incoming RPC's in particular the
      * UpdateInterfaceAddr RPC that occurs in ubeacon_InitServerList. This avoids
      * the "steplock" problem in ubik initialization. Defect 11037.
      */
@@ -555,7 +555,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
            (void *)urecovery_Interact, NULL) == 0);
 
     return 0;  /* is this correct?  - klm */
-#else  
+#else
     code = LWP_CreateProcess(urecovery_Interact, 16384 /*8192 */ ,
 			     LWP_MAX_PRIORITY - 1, (void *)0, "recovery",
 			     &junk);
@@ -599,21 +599,21 @@ ubik_ServerInit(afs_uint32 myHost, short myPort, afs_uint32 serverList[],
  * \brief This routine begins a read or write transaction on the transaction
  * identified by transPtr, in the dbase named by dbase.
  *
- * An open mode of ubik_READTRANS identifies this as a read transaction, 
+ * An open mode of ubik_READTRANS identifies this as a read transaction,
  * while a mode of ubik_WRITETRANS identifies this as a write transaction.
- * transPtr is set to the returned transaction control block. 
- * The readAny flag is set to 0 or 1 by the wrapper functions ubik_BeginTrans() or 
+ * transPtr is set to the returned transaction control block.
+ * The readAny flag is set to 0 or 1 by the wrapper functions ubik_BeginTrans() or
  * ubik_BeginTransReadAny() below.
  *
  * \note We can only begin transaction when we have an up-to-date database.
  */
 static int
-BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
+BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	   struct ubik_trans **transPtr, int readAny)
 {
     struct ubik_trans *jt;
-    register struct ubik_trans *tt;
-    register afs_int32 code;
+    struct ubik_trans *tt;
+    afs_int32 code;
 #if defined(UBIK_PAUSE)
     int count;
 #endif /* UBIK_PAUSE */
@@ -624,7 +624,7 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 #if defined(UBIK_PAUSE)
     /* if we're polling the slave sites, wait until the returns
      *  are all in.  Otherwise, the urecovery_CheckTid call may
-     *  glitch us. 
+     *  glitch us.
      */
     if (transMode == UBIK_WRITETRANS)
 	for (count = 75; dbase->flags & DBVOTING; --count) {
@@ -723,7 +723,7 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
  * \see BeginTrans()
  */
 int
-ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
+ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 		struct ubik_trans **transPtr)
 {
     return BeginTrans(dbase, transMode, transPtr, 0);
@@ -733,7 +733,7 @@ ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
  * \see BeginTrans()
  */
 int
-ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode,
+ubik_BeginTransReadAny(struct ubik_dbase *dbase, afs_int32 transMode,
 		       struct ubik_trans **transPtr)
 {
     return BeginTrans(dbase, transMode, transPtr, 1);
@@ -743,11 +743,11 @@ ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode,
  * \brief This routine ends a read or write transaction by aborting it.
  */
 int
-ubik_AbortTrans(register struct ubik_trans *transPtr)
+ubik_AbortTrans(struct ubik_trans *transPtr)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 code2;
-    register struct ubik_dbase *dbase;
+    struct ubik_dbase *dbase;
 
     dbase = transPtr->dbase;
 
@@ -799,14 +799,14 @@ ubik_AbortTrans(register struct ubik_trans *transPtr)
  * \return an error code.
  */
 int
-ubik_EndTrans(register struct ubik_trans *transPtr)
+ubik_EndTrans(struct ubik_trans *transPtr)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct timeval tv;
     afs_int32 realStart;
-    register struct ubik_server *ts;
+    struct ubik_server *ts;
     afs_int32 now;
-    register struct ubik_dbase *dbase;
+    struct ubik_dbase *dbase;
 
     if (transPtr->type == UBIK_WRITETRANS) {
 	code = ubik_Flush(transPtr);
@@ -929,16 +929,16 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
 
 /*!
  * \brief This routine reads length bytes into buffer from the current position in the database.
- * 
+ *
  * The file pointer is updated appropriately (by adding the number of bytes actually transferred), and the length actually transferred is stored in the long integer pointed to by length.  A short read returns zero for an error code.
  *
  * \note *length is an INOUT parameter: at the start it represents the size of the buffer, and when done, it contains the number of bytes actually transferred.
  */
 int
-ubik_Read(register struct ubik_trans *transPtr, void *buffer,
+ubik_Read(struct ubik_trans *transPtr, void *buffer,
 	  afs_int32 length)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     /* reads are easy to do: handle locally */
     DBHOLD(transPtr->dbase);
@@ -958,7 +958,7 @@ ubik_Read(register struct ubik_trans *transPtr, void *buffer,
 }
 
 /*!
- * \brief This routine will flush the io data in the iovec structures. 
+ * \brief This routine will flush the io data in the iovec structures.
  *
  * It first flushes to the local disk and then uses ContactQuorum to write it
  * to the other servers.
@@ -1002,7 +1002,7 @@ ubik_Flush(struct ubik_trans *transPtr)
 }
 
 int
-ubik_Write(register struct ubik_trans *transPtr, void *vbuffer,
+ubik_Write(struct ubik_trans *transPtr, void *vbuffer,
 	   afs_int32 length)
 {
     struct ubik_iovec *iovec;
@@ -1096,10 +1096,10 @@ ubik_Write(register struct ubik_trans *transPtr, void *vbuffer,
  * and a byte position relative to the specified file \p position.
  */
 int
-ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid,
+ubik_Seek(struct ubik_trans *transPtr, afs_int32 fileid,
 	  afs_int32 position)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     DBHOLD(transPtr->dbase);
     if (!urecovery_AllBetter(transPtr->dbase, transPtr->flags & TRREADANY)) {
@@ -1118,7 +1118,7 @@ ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid,
  * transaction in \p fileid and \p position.
  */
 int
-ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
+ubik_Tell(struct ubik_trans *transPtr, afs_int32 * fileid,
 	  afs_int32 * position)
 {
     DBHOLD(transPtr->dbase);
@@ -1133,7 +1133,7 @@ ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
  * bytes, if length is less than the file's current size.
  */
 int
-ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
+ubik_Truncate(struct ubik_trans *transPtr, afs_int32 length)
 {
     afs_int32 code, error = 0;
 
@@ -1220,8 +1220,8 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
  * \brief utility to wait for a version # to change
  */
 int
-ubik_WaitVersion(register struct ubik_dbase *adatabase,
-		 register struct ubik_version *aversion)
+ubik_WaitVersion(struct ubik_dbase *adatabase,
+		 struct ubik_version *aversion)
 {
     DBHOLD(adatabase);
     while (1) {
@@ -1244,23 +1244,23 @@ ubik_WaitVersion(register struct ubik_dbase *adatabase,
  * \brief utility to get the version of the dbase a transaction is dealing with
  */
 int
-ubik_GetVersion(register struct ubik_trans *atrans,
-		register struct ubik_version *avers)
+ubik_GetVersion(struct ubik_trans *atrans,
+		struct ubik_version *avers)
 {
     *avers = atrans->dbase->version;
     return 0;
 }
 
 /*!
- * \brief Facility to simplify database caching.  
+ * \brief Facility to simplify database caching.
  * \return zero if last trans was done on the local server and was successful.
  * \return -1 means bad (NULL) argument.
- * 
- * If return value is non-zero and the caller is a server caching part of the 
+ *
+ * If return value is non-zero and the caller is a server caching part of the
  * Ubik database, it should invalidate that cache.
  */
 static int
-ubik_CacheUpdate(register struct ubik_trans *atrans)
+ubik_CacheUpdate(struct ubik_trans *atrans)
 {
     if (!(atrans && atrans->dbase))
 	return -1;
@@ -1335,7 +1335,7 @@ ubik_CheckCache(struct ubik_trans *atrans, ubik_updatecache_func cbf, void *rock
 }
 
 /*!
- * "Who said anything about panicking?" snapped Arthur. 
+ * "Who said anything about panicking?" snapped Arthur.
  * "This is still just the culture shock. You wait till I've settled down
  * into the situation and found my bearings. \em Then I'll start panicking!"
  * --Authur Dent

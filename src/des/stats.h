@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -55,7 +55,7 @@ struct rxkad_stats {
 };
 #ifdef AFS_NT40_ENV
 struct rxkad_stats rxkad_stats;         /* put this here for convenience */
-#endif 
+#endif
 #endif /* AFS_PTHREAD_ENV */
 
 

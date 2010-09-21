@@ -19,7 +19,7 @@
 #endif
 
 int
-osi_Active(register struct vcache *avc)
+osi_Active(struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -45,22 +45,22 @@ osi_Active(register struct vcache *avc)
    us, of course).
 */
 void
-osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
+osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
 #ifdef AFS_FBSD70_ENV
     int vfslocked;
 #endif
     afs_hyper_t origDV;
 #if defined(AFS_CACHE_BYPASS)
-    /* The optimization to check DV under read lock below is identical a 
-     * change in CITI cache bypass work.  The problem CITI found in 1999 
-     * was that this code and background daemon doing prefetching competed 
-     * for the vcache entry shared lock.  It's not clear to me from the 
+    /* The optimization to check DV under read lock below is identical a
+     * change in CITI cache bypass work.  The problem CITI found in 1999
+     * was that this code and background daemon doing prefetching competed
+     * for the vcache entry shared lock.  It's not clear to me from the
      * tech report, but it looks like CITI fixed the general prefetch code
      * path as a bonus when experimenting on prefetch for cache bypass, see
      * citi-tr-01-3.
      */
-#endif        
+#endif
     ObtainReadLock(&avc->lock);
     /* If we've already purged this version, or if we're the ones
      * writing this version, don't flush it (could lose the
@@ -121,7 +121,7 @@ osi_FlushPages(register struct vcache *avc, afs_ucred_t *credp)
  * it is written to the file system. */
 
 void
-osi_FlushText_really(register struct vcache *vp)
+osi_FlushText_really(struct vcache *vp)
 {
     afs_hyper_t fdv;		/* version before which we'll flush */
 

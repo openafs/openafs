@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -120,32 +120,26 @@
 #include "viceinode.h"
 #include "salvage.h"
 #include "vol-salvage.h"
+#include "common.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 pthread_t main_thread;
 #endif
 
-
 static int get_salvage_lock = 0;
-
-
-/* Forward declarations */
-/*@printflike@*/ void Log(const char *format, ...);
-/*@printflike@*/ void Abort(const char *format, ...);
-
 
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0;
     ProgramType pt;
-   
+
 #ifdef FAST_RESTART
     afs_int32  seenany = 0;
 #endif
-    
+
     VolumePackageOptions opts;
     struct DiskPartition64 *partP;
 
@@ -372,15 +366,13 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-    char commandLine[150];
 
-    int i;
     extern char cml_version_number[];
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -412,12 +404,6 @@ main(int argc, char **argv)
 	    exit(3);
     } else {
 #endif
-	for (commandLine[0] = '\0', i = 0; i < argc; i++) {
-	    if (i > 0)
-		strcat(commandLine, " ");
-	    strcat(commandLine, argv[i]);
-	}
-
 	/* All entries to the log will be appended.  Useful if there are
 	 * multiple salvagers appending to the log.
 	 */
@@ -443,7 +429,8 @@ main(int argc, char **argv)
 	/* bad for normal help flag processing, but can do nada */
 
 	fprintf(logFile, "%s\n", cml_version_number);
-	Log("STARTING AFS SALVAGER %s (%s)\n", SalvageVersion, commandLine);
+	LogCommandLine(argc, argv, "SALVAGER", SalvageVersion, "STARTING AFS",
+		       Log);
 
 	/* Get and hold a lock for the duration of the salvage to make sure
 	 * that no other salvage runs at the same time.  The routine

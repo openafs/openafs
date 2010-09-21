@@ -6,7 +6,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -90,11 +90,11 @@
 /* Default administrator's address */
 #define DEFAULT_ADMIN "[no address given]"
 
-/* 
+/*
  * --------- You shouldn't have to edit anything below this line ----------
  *
- * Any modifications to any defaults not defined above should be done in the 
- * respective config. file. 
+ * Any modifications to any defaults not defined above should be done in the
+ * respective config. file.
  *
  */
 
@@ -259,7 +259,7 @@
 /* If you have altered Apache and wish to change the SERVER_VERSION
  * identifier below, please keep to the HTTP specification.  This states that
  * the identification string should consist of product tokens with an optional
- * slash and version designator.  Sub-products which form a significant part 
+ * slash and version designator.  Sub-products which form a significant part
  * of the application can be listed, separated by whitespace, by adding
  * their product tokens to EXTRA_CFLAGS in the Configuration file like so.
  *
@@ -268,10 +268,10 @@
  * The tokens are listed in order of their significance for identifying the
  * application.
  *
- * "Product tokens should be short and to the point -- use of them for 
+ * "Product tokens should be short and to the point -- use of them for
  * advertizing or other non-essential information is explicitly forbidden."
  *
- * Example: "Apache/1.1.0 MrWidget/0.1-alpha" 
+ * Example: "Apache/1.1.0 MrWidget/0.1-alpha"
  */
 
 #define SERVER_BASEVERSION "Apache/1.2.6"	/* SEE COMMENTS ABOVE */
@@ -447,7 +447,7 @@ struct request_rec {
 				 * pointer to where we redirected *from*.
 				 */
 
-    request_rec *main;		/* If this is a sub_request (see request.h) 
+    request_rec *main;		/* If this is a sub_request (see request.h)
 				 * pointer back to the main request.
 				 */
 

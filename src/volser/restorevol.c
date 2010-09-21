@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,14 +27,14 @@
  *    uses your current umask. Mode bits for directories are 0777 (then
  *    AND'ed with the umask). Mode bits for files are the owner mode bits
  *    duplicated accross group and user (then AND'ed with the umask).
- * 5. For restores of full dumps, if a directory says it has a file and 
- *    the file is not found, then a symbolic link "AFSFile-<#>" will 
- *    appear in that restored tree. Restores of incremental dumps remove 
- *    all these files at the end (expensive because it is a tree search).  
- * 6. If a file or directory was found in the dump but found not to be 
- *    connected to the hierarchical tree, then the file or directory 
- *    will be connected at the root of the tree as "__ORPHANEDIR__.<#>" 
- *    or "__ORPHANFILE__.<#>".  
+ * 5. For restores of full dumps, if a directory says it has a file and
+ *    the file is not found, then a symbolic link "AFSFile-<#>" will
+ *    appear in that restored tree. Restores of incremental dumps remove
+ *    all these files at the end (expensive because it is a tree search).
+ * 6. If a file or directory was found in the dump but found not to be
+ *    connected to the hierarchical tree, then the file or directory
+ *    will be connected at the root of the tree as "__ORPHANEDIR__.<#>"
+ *    or "__ORPHANFILE__.<#>".
  * 7. ACLs are not restored.
  *
  */
@@ -573,7 +573,7 @@ ReadVNode(afs_int32 count)
 			if (this_vn & 1) {
 			     /*ADIRENTRY*/
 				/* dirname is the directory to create.
-				 * vflink is what will link to it. 
+				 * vflink is what will link to it.
 				 */
 				afs_snprintf(dirname, sizeof dirname, "%s/%s",
 					     parentdir, this_name);

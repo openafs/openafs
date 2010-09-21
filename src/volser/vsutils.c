@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -54,7 +54,7 @@ static void
 ovlentry_to_nvlentry(struct vldbentry *oentryp,
                      struct nvldbentry *nentryp)
 {
-    register int i;
+    int i;
 
     memset(nentryp, 0, sizeof(struct nvldbentry));
     strncpy(nentryp->name, oentryp->name, sizeof(nentryp->name));
@@ -74,7 +74,7 @@ static int
 nvlentry_to_ovlentry(struct nvldbentry *nentryp,
                      struct vldbentry *oentryp)
 {
-    register int i;
+    int i;
 
     memset(oentryp, 0, sizeof(struct vldbentry));
     strncpy(oentryp->name, nentryp->name, sizeof(oentryp->name));
@@ -104,7 +104,7 @@ int
 VLDB_CreateEntry(struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -130,7 +130,7 @@ int
 VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -156,7 +156,7 @@ int
 VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -177,11 +177,11 @@ VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
     return code;
 }
 
-int 
+int
 VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
 {
     struct vldbentry oentry;
-    register int code;
+    int code;
 
     if (newvlserver == 1) {
       tryold:
@@ -214,7 +214,7 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
                     nbulkentries *blkentriesp)
 {
     bulkentries arrayEntries;
-    register int code, i;
+    int code, i;
 
     if (newvlserver == 1) {
       tryold:
@@ -283,7 +283,7 @@ int cacheip_index = 0;
 int
 VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
 {
-    register int code;
+    int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
     afs_uint32 *addrp, i, j, f1, f2;
@@ -389,7 +389,7 @@ vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sa
                struct ubik_client **uclientp,
 	       int (*secproc)(struct rx_securityClass *, afs_int32))
 {
-    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, 
+    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp,
 			   secproc, "vsu_ClientInit", vsu_rxkad_level,
 			   VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
 			   0, 0, USER_SERVICE_ID);

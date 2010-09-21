@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -20,7 +20,7 @@
 #include <afs/sys_prototypes.h>
 #include <unistd.h>
 #include <stdio.h>
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
 # include <sys/syscall.h>
 #endif
 #include "afssyscalls.h"
@@ -51,9 +51,9 @@ lsetpag(void)
 
 #ifdef AFS_LINUX20_ENV
     int rval;
-    
+
     rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
-    
+
     if(rval)
       errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
 #elif defined(AFS_DARWIN80_ENV)
@@ -61,7 +61,7 @@ lsetpag(void)
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
 #endif
-    
+
     return (errcode);
 }
 

@@ -45,8 +45,8 @@ getinode(fs, dev, inode, ipp, perror)
     *ipp = 0;
     *perror = 0;
     if (!fs) {
-	register struct ufsmount *ump;
-	register struct mount *mp;
+	struct ufsmount *ump;
+	struct mount *mp;
 
 	mtx_lock(&mountlist_mtx);
 	if ((mp = TAILQ_FIRST(&mountlist)) != NULL)
@@ -93,7 +93,7 @@ igetinode(vfsp, dev, inode, ipp, perror)
      int *perror;
 {
     struct inode *ip;
-    register int code = 0;
+    int code = 0;
 
     *perror = 0;
 
@@ -128,7 +128,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
 {
     int dummy, err = 0;
     struct inode *ip, *newip;
-    register int code;
+    int code;
     struct vnode *vp;
 
     AFS_STATCNT(afs_syscall_icreate);
@@ -207,7 +207,7 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
     int dummy;
     int fd;
     extern struct fileops vnops;
-    register int code;
+    int code;
 
     AFS_STATCNT(afs_syscall_iopen);
 
@@ -248,7 +248,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
 {
     int dummy;
     struct inode *ip;
-    register int code;
+    int code;
 
     if (!afs_suser(NULL))
 	return (EPERM);

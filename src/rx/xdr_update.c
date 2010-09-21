@@ -36,9 +36,9 @@
  *  }
  *
  * > objpp: Pointer to the pointer to the object.
- * > obj_size: size of the object.   
+ * > obj_size: size of the object.
  * > xdr_obj: routine to XDR an object.
- *    
+ *
  */
 bool_t
 xdr_pointer(XDR * xdrs, char **objpp, u_int obj_size,

@@ -148,9 +148,9 @@ afs_freevfs(struct vfs *afsp)
 int
 afs_root(struct vfs *afsp, struct vnode **avpp)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
     struct vcache *gvp;
     struct proc *proc = ttoproc(curthread);
     struct vnode *vp = afsp->vfs_vnodecovered;
@@ -581,7 +581,8 @@ _init()
 #if     defined(AFS_SUN55_ENV)
     if ((!(mp = mod_find_by_filename("misc", "nfssrv"))
 	 && !(mp = mod_find_by_filename(NULL, NFSSRV))
-	 && !(mp = mod_find_by_filename(NULL, NFSSRV_V9))) || (mp
+	 && !(mp = mod_find_by_filename(NULL, NFSSRV_V9))
+	 && !(mp = mod_find_by_filename(NULL, NFSSRV_AMD64))) || (mp
 							       && !mp->
 							       mod_installed))
     {

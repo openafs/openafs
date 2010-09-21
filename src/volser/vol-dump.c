@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,7 +11,7 @@
    System:		VICE-TWO
    Module:		vol-dump.c
    Institution:	The Information Technology Center, Carnegie-Mellon University
-   
+
    */
 
 #include <afsconfig.h>
@@ -95,7 +95,7 @@ int verbose = 0;
 /* Forward Declarations */
 void HandleVolume(struct DiskPartition64 *partP, char *name, char *filename, int fromtime);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
-		     register struct VolumeHeader *header);
+		     struct VolumeHeader *header);
 static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
 			char *dumpfile, int fromtime);
 
@@ -121,9 +121,9 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 
 Volume *
 AttachVolume(struct DiskPartition64 * dp, char *volname,
-	     register struct VolumeHeader * header)
+	     struct VolumeHeader * header)
 {
-    register Volume *vp;
+    Volume *vp;
     afs_int32 ec = 0;
 
     vp = (Volume *) calloc(1, sizeof(Volume));
@@ -170,7 +170,7 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     int err = 0;
     afs_uint32 volumeId = 0;
     char *partName = 0;
@@ -254,7 +254,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
     struct afs_stat status;
-    register int fd;
+    int fd;
     Volume *vp;
     char headerName[1024];
 
@@ -297,7 +297,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
     VolumePackageOptions opts;
 
@@ -323,12 +323,12 @@ main(int argc, char **argv)
 
 
 static int
-DumpDouble(int dumpfd, char tag, register afs_uint32 value1,
-	   register afs_uint32 value2)
+DumpDouble(int dumpfd, char tag, afs_uint32 value1,
+	   afs_uint32 value2)
 {
     int res;
     char tbuffer[9];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     putint32(p, value1);
     putint32(p, value2);
@@ -338,19 +338,19 @@ DumpDouble(int dumpfd, char tag, register afs_uint32 value1,
 }
 
 static int
-DumpInt32(int dumpfd, char tag, register afs_uint32 value)
+DumpInt32(int dumpfd, char tag, afs_uint32 value)
 {
     char tbuffer[5];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     putint32(p, value);
     return ((write(dumpfd, tbuffer, 5) == 5) ? 0 : VOLSERDUMPERROR);
 }
 
 static int
-DumpString(int dumpfd, char tag, register char *s)
+DumpString(int dumpfd, char tag, char *s)
 {
-    register int n;
+    int n;
     int code = 0;
     code = write(dumpfd, &tag, 1);
     if (code != 1)
@@ -364,13 +364,13 @@ DumpString(int dumpfd, char tag, register char *s)
 
 
 static int
-DumpArrayInt32(int dumpfd, char tag, register afs_uint32 * array,
-	       register int nelem)
+DumpArrayInt32(int dumpfd, char tag, afs_uint32 * array,
+	       int nelem)
 {
     char tbuffer[4];
-    register afs_uint32 v;
+    afs_uint32 v;
     int code = 0;
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     putshort(p, nelem);
     code = write(dumpfd, tbuffer, 3);
@@ -392,7 +392,7 @@ DumpArrayInt32(int dumpfd, char tag, register afs_uint32 * array,
 
 
 static int
-DumpDumpHeader(int dumpfd, register Volume * vp, afs_int32 fromtime)
+DumpDumpHeader(int dumpfd, Volume * vp, afs_int32 fromtime)
 {
     int code = 0;
     afs_int32 dumpTimes[2];
@@ -428,14 +428,14 @@ static int
 DumpByte(int dumpfd, char tag, byte value)
 {
     char tbuffer[2];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     *p = value;
     return ((write(dumpfd, tbuffer, 2) == 2) ? 0 : VOLSERDUMPERROR);
 }
 
 static int
-DumpTag(int dumpfd, register int tag)
+DumpTag(int dumpfd, int tag)
 {
     char p;
 
@@ -448,7 +448,7 @@ static int
 DumpBool(int dumpfd, char tag, unsigned int value)
 {
     char tbuffer[2];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     *p = value;
     return ((write(dumpfd, tbuffer, 2) == 2) ? 0 : VOLSERDUMPERROR);
@@ -457,7 +457,7 @@ DumpBool(int dumpfd, char tag, unsigned int value)
 
 
 static int
-DumpVolumeHeader(int dumpfd, register Volume * vp)
+DumpVolumeHeader(int dumpfd, Volume * vp)
 {
     int code = 0;
 
@@ -532,7 +532,7 @@ static int
 DumpShort(int dumpfd, char tag, unsigned int value)
 {
     char tbuffer[3];
-    register byte *p = (unsigned char *)tbuffer;
+    byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
     *p++ = value >> 8;
     *p = value;
@@ -540,7 +540,7 @@ DumpShort(int dumpfd, char tag, unsigned int value)
 }
 
 static int
-DumpByteString(int dumpfd, char tag, register byte * bs, register int nbytes)
+DumpByteString(int dumpfd, char tag, byte * bs, int nbytes)
 {
     int code = 0;
 
@@ -586,7 +586,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     howBig = status.st_size;
 
 #ifdef	AFS_AIX_ENV
-    /* Unfortunately in AIX valuable fields such as st_blksize are 
+    /* Unfortunately in AIX valuable fields such as st_blksize are
      * gone from the stat structure.
      */
     fstatfs(handleP->fd_fd, &tstatfs);
@@ -657,7 +657,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 			PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
 	    }
 
-	    /* Pad the rest of the buffer with zeros. Remember offset we started 
+	    /* Pad the rest of the buffer with zeros. Remember offset we started
 	     * padding. Keep total tally of padding.
 	     */
 	    memset(p + n, 0, howMany - n);
@@ -776,16 +776,16 @@ static int
 DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
 	       int forcedump)
 {
-    register int code = 0;
-    register struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+    int code = 0;
+    struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
     FdHandle_t *fdP;
-    int size;
+    afs_sfsize_t size;
     int flag;
     int offset = 0;
-    register int vnodeIndex, nVnodes = 0;
+    int vnodeIndex, nVnodes = 0;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     file = FDH_FDOPEN(fdP, "r+");
@@ -822,7 +822,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
 
 /* A partial dump (no dump header) */
 static int
-DumpPartial(int dumpfd, register Volume * vp, afs_int32 fromtime,
+DumpPartial(int dumpfd, Volume * vp, afs_int32 fromtime,
 	    int dumpAllDirs)
 {
     int code = 0;

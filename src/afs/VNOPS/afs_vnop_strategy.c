@@ -28,16 +28,16 @@
 
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-int afs_ustrategy(register struct buf *abp, afs_ucred_t *credp)
+int afs_ustrategy(struct buf *abp, afs_ucred_t *credp)
 #else
-int afs_ustrategy(register struct buf *abp)
+int afs_ustrategy(struct buf *abp)
 #endif
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct uio tuio;
     struct iovec tiovec[1];
-    register struct vcache *tvc = VTOAFS(abp->b_vp);
-    register afs_int32 len = abp->b_bcount;
+    struct vcache *tvc = VTOAFS(abp->b_vp);
+    afs_int32 len = abp->b_bcount;
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp;
 #elif defined(UKERNEL)

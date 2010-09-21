@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -46,7 +46,7 @@ extern FILE *inode_debug_log;
 
 /* Glue layer. */
 #ifdef AFS_LINUX20_ENV
-int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
+int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 		     long param4, int *rval);
 #endif
 

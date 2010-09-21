@@ -147,7 +147,7 @@ static void fix_unbalance_up(node_t *x)
         gg = g->p;
 
         wr_lock(&gg->lock, &gg_qn);
-        if ( !ADJACENT(gg, g) || IS_UNBALANCED(gg->v) || IS_GARBAGE(gg) ) 
+        if ( !ADJACENT(gg, g) || IS_UNBALANCED(gg->v) || IS_GARBAGE(gg) )
             goto unlock_gg;
 
         wr_lock(&g->lock, &g_qn);
@@ -157,7 +157,7 @@ static void fix_unbalance_up(node_t *x)
         if ( !ADJACENT(p, x) || IS_UNBALANCED(p->v) ) goto unlock_pggg;
 
         wr_lock(&x->lock, &x_qn);
- 
+
         assert(IS_RED(x->v));
         assert(IS_UNBALANCED(x->v));
 
@@ -254,7 +254,7 @@ static void fix_unbalance_up(node_t *x)
         wr_unlock(&g->lock, &g_qn);
     unlock_gg:
         wr_unlock(&gg->lock, &gg_qn);
- 
+
         if ( done == 2 )
         {
             x = g;
@@ -324,7 +324,7 @@ static void fix_unbalance_down(node_t *x)
         }
 
         assert(!IS_LEAF(w));
- 
+
         if ( x == p->l )
         {
             wn = w->l;
@@ -431,7 +431,7 @@ static void fix_unbalance_down(node_t *x)
         wr_unlock(&p->lock, &p_qn);
     unlock_g:
         wr_unlock(&g->lock, &g_qn);
- 
+
         if ( done == 2 )
         {
             x = p;
@@ -457,7 +457,7 @@ static void delete_finish(ptst_t *ptst, node_t *x)
         wr_lock(&g->lock, &g_qn);
         if ( !ADJACENT(g, p) || IS_UNBALANCED(g->v) || IS_GARBAGE(g) )
             goto unlock_g;
- 
+
         wr_lock(&p->lock, &p_qn);
         /* Removing unbalanced red nodes is okay. */
         if ( !ADJACENT(p, x) || (IS_UNBALANCED(p->v) && IS_BLACK(p->v)) )

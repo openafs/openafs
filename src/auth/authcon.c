@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -35,7 +35,7 @@
 static afs_int32
 QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 {
-    register struct rx_securityClass *tc;
+    struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
     *astr = tc;
     *aindex = RX_SECIDX_NULL;
@@ -46,11 +46,11 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 /* Return an appropriate security class and index */
 afs_int32
 afsconf_ServerAuth(void *arock,
-		   struct rx_securityClass **astr, 
+		   struct rx_securityClass **astr,
 		   afs_int32 *aindex)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) arock;
-    register struct rx_securityClass *tclass;
+    struct rx_securityClass *tclass;
 
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
@@ -68,9 +68,9 @@ afsconf_ServerAuth(void *arock,
 #endif /* !defined(UKERNEL) */
 
 static afs_int32
-GenericAuth(struct afsconf_dir *adir, 
-	    struct rx_securityClass **astr, 
-	    afs_int32 *aindex, 
+GenericAuth(struct afsconf_dir *adir,
+	    struct rx_securityClass **astr,
+	    afs_int32 *aindex,
 	    rxkad_level enclevel)
 {
     char tbuffer[256];
@@ -78,7 +78,7 @@ GenericAuth(struct afsconf_dir *adir,
     struct rx_securityClass *tclass;
     afs_int32 kvno;
     afs_int32 ticketLen;
-    register afs_int32 code;
+    afs_int32 code;
 
     /* first, find the right key and kvno to use */
     code = afsconf_GetLatestKey(adir, &kvno, &key);
@@ -139,8 +139,8 @@ afsconf_ClientAuth(void *arock, struct rx_securityClass ** astr,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthSecure(void *arock, 
-			 struct rx_securityClass **astr, 
+afsconf_ClientAuthSecure(void *arock,
+			 struct rx_securityClass **astr,
 			 afs_int32 *aindex)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) arock;

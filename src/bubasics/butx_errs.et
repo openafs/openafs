@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@ error_table BUTX
 	ec BUTX_INVALIDBSANAME,      "XBSA invalid bsaObjectOwner specified"
 	ec BUTX_INVALIDAPPNAME,      "XBSA invalid appObjectOwner specified"
 	ec BUTX_INVALIDSECTOKEN,     "XBSA invalid secToken specified"
-	ec BUTX_INVALIDOBJECTSPNAME, "XBSA invalid objectSpaceName specified" 
+	ec BUTX_INVALIDOBJECTSPNAME, "XBSA invalid objectSpaceName specified"
 	ec BUTX_INVALIDPATHNAME,     "XBSA invalid pathName specified"
 	ec BUTX_INVALIDBUFFERSIZE,   "XBSA invalid bufferSize specified"
 	ec BUTX_INVALIDDATABUFFER,   "XBSA invalid dataBuffer specified"

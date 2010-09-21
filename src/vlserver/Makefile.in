@@ -148,10 +148,10 @@ install: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 		${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check; \
 	fi;
 	${INSTALL_DATA} libvldb.a ${DESTDIR}${libdir}/afs/libvldb.a
-	${INSTALL_DATA} vl_opcodes.h ${DESTDIR}${includedir}/afs/vl_opcodes.h
+	${INSTALL_DATA} ${srcdir}/vl_opcodes.h ${DESTDIR}${includedir}/afs/vl_opcodes.h
 	${INSTALL_DATA} vlserver.h ${DESTDIR}${includedir}/afs/vlserver.h
 	${INSTALL_DATA} vldbint.h ${DESTDIR}${includedir}/afs/vldbint.h
-	${INSTALL_DATA} cnvldb.h ${DESTDIR}${includedir}/afs/cnvldb.h
+	${INSTALL_DATA} ${srcdir}/cnvldb.h ${DESTDIR}${includedir}/afs/cnvldb.h
 
 dest: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 		vldbint.h cnvldb.h
@@ -165,10 +165,10 @@ dest: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 		${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check; \
 	fi;
 	${INSTALL_DATA} libvldb.a ${DEST}/lib/afs/libvldb.a
-	${INSTALL_DATA} vl_opcodes.h ${DEST}/include/afs/vl_opcodes.h
+	${INSTALL_DATA} ${srcdir}/vl_opcodes.h ${DEST}/include/afs/vl_opcodes.h
 	${INSTALL_DATA} vlserver.h ${DEST}/include/afs/vlserver.h
 	${INSTALL_DATA} vldbint.h ${DEST}/include/afs/vldbint.h
-	${INSTALL_DATA} cnvldb.h ${DEST}/include/afs/cnvldb.h
+	${INSTALL_DATA} ${srcdir}/cnvldb.h ${DEST}/include/afs/cnvldb.h
 
 #
 # Misc targets

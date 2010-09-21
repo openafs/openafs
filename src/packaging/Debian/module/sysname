@@ -31,7 +31,7 @@ arm|armel|armv5tel)
         ;;
     esac
     ;;
-i[3456]86|lpia)
+i[3456]86)
     case $KVERS in
     2.2*)
         echo i386_linux22

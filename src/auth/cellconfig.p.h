@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -88,7 +88,7 @@ struct afsconf_dir {
 
 extern afs_int32 afsconf_FindService(const char *aname);
 extern const char *afsconf_FindIANAName(const char *aname);
-extern struct afsconf_dir *afsconf_Open(register const char *adir);
+extern struct afsconf_dir *afsconf_Open(const char *adir);
 extern int afsconf_CellApply(struct afsconf_dir *adir,
 			     int (*aproc) (struct afsconf_cell * cell,
 					   void *arock,
@@ -108,7 +108,7 @@ extern int afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 extern int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName,
 			       char *aservice,
 			       struct afsconf_cell *acellInfo);
-extern int afsconf_GetLocalCell(register struct afsconf_dir *adir,
+extern int afsconf_GetLocalCell(struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
@@ -116,7 +116,7 @@ extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
 struct ktc_encryptionKey;
 extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir,
-				      afs_int32 * avno, 
+				      afs_int32 * avno,
 				      struct ktc_encryptionKey *akey);
 extern int afsconf_GetKey(void *rock, int avno,
 			  struct ktc_encryptionKey *akey);
@@ -126,7 +126,7 @@ extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);
 
 /* authcon.c */
 struct rx_securityClass;
-extern afs_int32 afsconf_ServerAuth(void *arock, 
+extern afs_int32 afsconf_ServerAuth(void *arock,
 				    struct rx_securityClass **,
 				    afs_int32 *);
 extern afs_int32 afsconf_ClientAuth(void *arock,
@@ -168,9 +168,9 @@ extern void afsconf_BuildServerSecurityObjects(struct afsconf_dir *,
 					       afs_int32 *);
 
 /* writeconfig.c */
-int afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, const char *apath, 
+int afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, const char *apath,
 				struct afsconf_cell *acellInfo, char clones[]);
-int afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath, 
+int afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath,
 		        struct afsconf_cell *acellInfo);
 
 
@@ -180,8 +180,8 @@ struct rx_call;
 extern int afsconf_CheckAuth(void *arock, struct rx_call *acall);
 extern int afsconf_GetNoAuthFlag(struct afsconf_dir *adir);
 extern void afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag);
-extern int afsconf_DeleteUser(struct afsconf_dir *adir, register char *auser);
-extern int afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, 
+extern int afsconf_DeleteUser(struct afsconf_dir *adir, char *auser);
+extern int afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an,
 			      char *abuffer, afs_int32 abufferLen);
 extern int afsconf_AddUser(struct afsconf_dir *adir, char *aname);
 extern int afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall,

@@ -89,9 +89,9 @@ dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
-dpkg: dest
+dpkg:
 	ln -fs ${srcdir}/src/packaging/Debian debian
-	dpkg-buildpackage -rfakeroot -us -uc
+	dpkg-buildpackage -rfakeroot -b -us -uc
 
 packages: dest
 	@case ${SYS_NAME} in \
@@ -265,21 +265,14 @@ vol: cmd comerr dir afs sgiefs
 	+${COMPILE_PART1} vol ${COMPILE_PART2}
 
 tsalvaged: vol libafsrpc libafsauthent cmd util
-	+set -x; \
-	if test "@DEMAND_ATTACH@" = "yes" ; then \
-		case ${SYS_NAME} in \
-		alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+	+case ${SYS_NAME} in \
+		alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*|*_darwin_*) \
 			${COMPILE_PART1} tsalvaged ${COMPILE_PART2} ;; \
-		*_darwin_[1-6][0-9]) \
-			echo Not building MT tsalvaged for ${SYS_NAME} ;; \
 		*_darwin_*) \
 			${COMPILE_PART1} tsalvaged  ${COMPILE_PART2} ;; \
 		*) \
 			echo Not building MT tsalvaged for ${SYS_NAME} ;; \
-		esac \
-	else \
-		echo skipping tsalvaged ; \
-	fi
+	esac
 
 
 vlserver: cmd comerr vol audit vlserver_depinstall
@@ -303,14 +296,18 @@ viced: cmd comerr vlserver tvlserver audit
 
 tviced: cmd comerr viced vlserver tvlserver libafsrpc libafsauthent
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*|*_darwin_*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT viced for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
+	esac
+
+dviced: cmd comerr viced vlserver tvlserver libafsrpc libafsauthent
+	+case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*|*_darwin_*) \
+		${COMPILE_PART1} dviced ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building DAFS viced for ${SYS_NAME} ;; \
 	esac
 
 volser: cmd comerr tviced usd kauth audit
@@ -318,8 +315,6 @@ volser: cmd comerr tviced usd kauth audit
 
 tvolser: project tviced usd libafsrpc libafsauthent volser
 	+@case ${SYS_NAME} in						\
-	*_darwin_[1-6][0-9])						\
-		echo Not building MT volser for ${SYS_NAME} ;;          \
 	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
 		${COMPILE_PART1} tvolser ${COMPILE_PART2} &&            \
 		if [ "xyes" = "x$(ENABLE_PTHREADED_UNIK)" ] ; then	\
@@ -327,6 +322,14 @@ tvolser: project tviced usd libafsrpc libafsauthent volser
 		fi;;							\
 	*)                                                              \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
+	esac
+
+dvolser: project tviced usd libafsrpc libafsauthent volser
+	+@case ${SYS_NAME} in						\
+	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
+		${COMPILE_PART1} dvolser ${COMPILE_PART2} ;;            \
+	*)                                                              \
+		echo Not building DAFS volser for ${SYS_NAME} ;;          \
 	esac
 
 venus: cmd comerr volser ptserver
@@ -554,7 +557,7 @@ xstat: cmd comerr fsint viced
 afsmonitor: cmd comerr gtx xstat
 	+${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
-tests: rxtests ubiktests
+tests: rxtests ubiktests rpctestlib
 
 # pthread based user space RX library
 libafsrpc: rx rxkad des
@@ -644,6 +647,7 @@ build_tools: config des comerr rxgen
 
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
+	dviced dvolser \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
@@ -651,6 +655,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
+	dviced dvolser \
 	venus update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
@@ -711,8 +716,10 @@ clean2:
 	-${COMPILE_PART1} tvlserver ${COMPILE_CLEAN}
 	-${COMPILE_PART1} viced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tviced ${COMPILE_CLEAN}
+	-${COMPILE_PART1} dviced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} volser ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tvolser ${COMPILE_CLEAN}
+	-${COMPILE_PART1} dvolser ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tsalvaged ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
@@ -809,6 +816,8 @@ distclean: clean
 	src/des/test/Makefile \
 	src/dir/Makefile \
 	src/dir/test/Makefile \
+	src/dviced/Makefile \
+	src/dvolser/Makefile \
 	src/export/Makefile \
 	src/finale/Makefile \
 	src/fsint/Makefile \
@@ -900,6 +909,7 @@ distclean: clean
 	src/volser/Makefile \
 	src/xstat/Makefile  \
 	tests/Makefile \
+	tests/rpctestlib/Makefile \
 	tests/tap/Makefile \
 	src/helper-splint.sh
 	if test -d doc/man-pages ; then \

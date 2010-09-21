@@ -59,9 +59,9 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 }
 
 int
-afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
     ObtainWriteLock(&afs_xosi, 320);
@@ -86,7 +86,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 }
 
 int
-osi_UFSClose(register struct osi_file *afile)
+osi_UFSClose(struct osi_file *afile)
 {
     AFS_STATCNT(osi_Close);
     if (afile->vnode) {
@@ -98,11 +98,11 @@ osi_UFSClose(register struct osi_file *afile)
 }
 
 int
-osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 {
     struct vattr tvattr;
     struct vnode *vp;
-    register afs_int32 code, glocked;
+    afs_int32 code, glocked;
     AFS_STATCNT(osi_Truncate);
 
     ObtainWriteLock(&afs_xosi, 321);
@@ -155,11 +155,11 @@ osi_DisableAtimes(struct vnode *avp)
 
 /* Generic read interface */
 int
-afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
+afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     unsigned int resid;
-    register afs_int32 code;
+    afs_int32 code;
     AFS_STATCNT(osi_Read);
 
     /**
@@ -194,11 +194,11 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 
 /* Generic write interface */
 int
-afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
+afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     unsigned int resid;
-    register afs_int32 code;
+    afs_int32 code;
     AFS_STATCNT(osi_Write);
     if (!afile)
 	osi_Panic("afs_osi_Write called with null param");
@@ -229,7 +229,7 @@ afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
     This routine written from the RT NFS port strategy routine.
     It has been generalized a bit, but should still be pretty clear. */
 int
-afs_osi_MapStrategy(int (*aproc) (), register struct buf *bp)
+afs_osi_MapStrategy(int (*aproc) (), struct buf *bp)
 {
     afs_int32 returnCode;
 

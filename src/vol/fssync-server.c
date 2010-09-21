@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -87,6 +87,7 @@
 #include "volume_inline.h"
 #include "partition.h"
 #include "vg_cache.h"
+#include "common.h"
 
 #ifdef HAVE_POLL
 #include <sys/poll.h>
@@ -98,8 +99,6 @@
 #endif /* USE_UNIX_SOCKETS */
 
 #ifdef FSSYNC_BUILD_SERVER
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 int (*V_BreakVolumeCallbacks) (VolumeId volume);
 
@@ -118,7 +117,7 @@ static struct offlineInfo OfflineVolumes[MAXHANDLERS][MAXOFFLINEVOLUMES];
 /**
  * fssync server socket handle.
  */
-static SYNC_server_state_t fssync_server_state = 
+static SYNC_server_state_t fssync_server_state =
     { -1,                       /* file descriptor */
       FSSYNC_ENDPOINT_DECL,     /* server endpoint */
       FSYNC_PROTO_VERSION,      /* protocol version */
@@ -700,11 +699,11 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp &&
 	FSYNC_partMatch(vcom, vp, 1) &&
-	vp->pending_vol_op && 
+	vp->pending_vol_op &&
 	(vcom->hdr->programType != vp->pending_vol_op->com.programType)) {
 	/* a different program has this volume checked out. deny. */
 	Log("FSYNC_VolOn: WARNING: program type %u has attempted to manipulate "
-	    "state for volume %u using command code %u while the volume is " 
+	    "state for volume %u using command code %u while the volume is "
 	    "checked out by program type %u for command code %u.\n",
 	    vcom->hdr->programType,
 	    vcom->vop->volume,
@@ -787,7 +786,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
  * @note this is an FSYNC RPC server stub
  *
  * @note this procedure handles the following FSSYNC command codes:
- *       - FSYNC_VOL_OFF 
+ *       - FSYNC_VOL_OFF
  *       - FSYNC_VOL_NEEDVOLUME
  *
  * @note the supplementary reason code contains additional details.
@@ -874,7 +873,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		Log("volume %u already checked out\n", vp->hashid);
 		/* XXX debug */
 		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%u, part='%s' } }\n",
-		    vp->pending_vol_op->com.proto_version, 
+		    vp->pending_vol_op->com.proto_version,
 		    vp->pending_vol_op->com.programType,
 		    vp->pending_vol_op->com.command,
 		    vp->pending_vol_op->com.reason,
@@ -914,7 +913,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	 */
 	switch (type) {
 	case salvageServer:
-	    /* it is possible for the salvageserver to checkout a 
+	    /* it is possible for the salvageserver to checkout a
 	     * volume for salvage before its scheduling request
 	     * has been sent to the salvageserver */
 	    if (vp->salvage.requested && !vp->salvage.scheduled) {
@@ -1018,11 +1017,11 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (VVolOpLeaveOnline_r(vp, &info)) {
 	    VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT);	/* At least get volume stats right */
 	    if (LogLevel) {
-		Log("FSYNC: Volume %u (%s) was left on line for an external %s request\n", 
-		    V_id(vp), V_name(vp), 
-		    vcom->hdr->reason == V_CLONE ? "clone" : 
-		    vcom->hdr->reason == V_READONLY ? "readonly" : 
-		    vcom->hdr->reason == V_DUMP ? "dump" : 
+		Log("FSYNC: Volume %u (%s) was left on line for an external %s request\n",
+		    V_id(vp), V_name(vp),
+		    vcom->hdr->reason == V_CLONE ? "clone" :
+		    vcom->hdr->reason == V_READONLY ? "readonly" :
+		    vcom->hdr->reason == V_DUMP ? "dump" :
 		    vcom->hdr->reason == FSYNC_SALVAGE ? "salvage" :
 		    "UNKNOWN");
 	    }
@@ -1048,7 +1047,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
             VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
             if (error==0) {
                 assert(vp->nUsers==0);
-                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline; 
+                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
             }
             else {
 		VDeregisterVolOp_r(vp);
@@ -1186,10 +1185,8 @@ static afs_int32
 FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     afs_int32 code = SYNC_FAILED;
-#ifdef AFS_DEMAND_ATTACH_FS
     Error error;
     Volume * vp;
-#endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -1202,19 +1199,33 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vcom->v)
 	vcom->v->volumeID = 0;
 
-#ifdef AFS_DEMAND_ATTACH_FS
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp) {
 	if (FSYNC_partMatch(vcom, vp, 1)) {
+#ifdef AFS_DEMAND_ATTACH_FS
 	    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 		(V_attachState(vp) == VOL_STATE_PREATTACHED)) {
-		VChangeState_r(vp, VOL_STATE_UNATTACHED);
+
+		/* Change state to DELETED, not UNATTACHED, so clients get
+		 * a VNOVOL error when they try to access from now on. */
+
+		VChangeState_r(vp, VOL_STATE_DELETED);
 		VDeregisterVolOp_r(vp);
+
+		/* Someday we should free the vp, too, after about 2 hours,
+		 * possibly by putting the vp back on the VLRU. */
+
 		code = SYNC_OK;
 	    } else {
 		code = SYNC_DENIED;
 		res->hdr.reason = FSYNC_BAD_STATE;
 	    }
+#else /* AFS_DEMAND_ATTACH_FS */
+	    if (!vp->specialStatus) {
+		vp->specialStatus = VNOVOL;
+	    }
+	    code = SYNC_OK;
+#endif /* !AFS_DEMAND_ATTACH_FS */
 	} else {
 	    code = SYNC_OK; /* XXX is this really a good idea? */
 	    res->hdr.reason = FSYNC_WRONG_PART;
@@ -1222,7 +1233,6 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
-#endif
 
  done:
     return code;
@@ -1790,7 +1800,7 @@ FSYNC_com_StatsOpViceP(FSSYNC_StatsOp_command * scom, SYNC_response * res)
 	stats->minFree = dp->minFree;
 	stats->f_files = dp->f_files;
 	stats->vol_list_len = dp->vol_list.len;
-	
+
 	res->hdr.response_len += sizeof(struct DiskPartitionStats64);
     }
 
@@ -1820,7 +1830,7 @@ FSYNC_com_StatsOpHash(FSSYNC_StatsOp_command * scom, SYNC_response * res)
     AssignInt64(head->reorders, &stats->chain_reorders);
 
     res->hdr.response_len += sizeof(struct VolumeHashChainStats);
-    
+
     return code;
 }
 
@@ -1866,7 +1876,7 @@ FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
 }
 
 /**
- * check whether command packet partition name matches volume 
+ * check whether command packet partition name matches volume
  * object's partition name.
  *
  * @param[in] vcom        pointer to command packet
@@ -1883,11 +1893,11 @@ FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
  *
  * @internal
  */
-static int 
+static int
 FSYNC_partMatch(FSSYNC_VolOp_command * vcom, Volume * vp, int match_anon)
 {
     return ((match_anon && vcom->vop->partName[0] == 0) ||
-	    (strncmp(vcom->vop->partName, V_partition(vp)->name, 
+	    (strncmp(vcom->vop->partName, V_partition(vp)->name,
 		     sizeof(vcom->vop->partName)) == 0));
 }
 
@@ -1954,7 +1964,7 @@ static void (*HandlerProc[MAXHANDLERS]) (osi_socket);
 static void
 InitHandler(void)
 {
-    register int i;
+    int i;
     ObtainWriteLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++) {
 	HandlerFD[i] = -1;
@@ -1984,7 +1994,7 @@ CallHandler(struct pollfd *fds, int nfds, int mask)
 static void
 CallHandler(fd_set * fdsetp)
 {
-    register int i;
+    int i;
     ObtainReadLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++) {
 	if (HandlerFD[i] >= 0 && FD_ISSET(HandlerFD[i], fdsetp)) {
@@ -2000,7 +2010,7 @@ CallHandler(fd_set * fdsetp)
 static int
 AddHandler(osi_socket afd, void (*aproc) (osi_socket))
 {
-    register int i;
+    int i;
     ObtainWriteLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] == -1)
@@ -2016,9 +2026,9 @@ AddHandler(osi_socket afd, void (*aproc) (osi_socket))
 }
 
 static int
-FindHandler(register osi_socket afd)
+FindHandler(osi_socket afd)
 {
-    register int i;
+    int i;
     ObtainReadLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] == afd) {
@@ -2031,9 +2041,9 @@ FindHandler(register osi_socket afd)
 }
 
 static int
-FindHandler_r(register osi_socket afd)
+FindHandler_r(osi_socket afd)
 {
-    register int i;
+    int i;
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] == afd) {
 	    return i;
@@ -2043,7 +2053,7 @@ FindHandler_r(register osi_socket afd)
 }
 
 static int
-RemoveHandler(register osi_socket afd)
+RemoveHandler(osi_socket afd)
 {
     ObtainWriteLock(&FSYNC_handler_lock);
     HandlerFD[FindHandler_r(afd)] = -1;
@@ -2073,8 +2083,8 @@ GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds)
 static void
 GetHandler(fd_set * fdsetp, int *maxfdp)
 {
-    register int i;
-    register int maxfd = -1;
+    int i;
+    int maxfd = -1;
     FD_ZERO(fdsetp);
     ObtainReadLock(&FSYNC_handler_lock);	/* just in case */
     for (i = 0; i < MAXHANDLERS; i++)

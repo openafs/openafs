@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,10 +11,10 @@
  * Revision 1.5  88/11/18  09:17:53
  * This is now obsolete, opcodes are defined in kauth.rg, no opcode names
  *   are used.
- * 
+ *
  * Revision 1.4  88/09/20  11:37:36
  * Added IBM Copyright
- * 
+ *
  * Revision 1.3  88/08/29  12:46:27
  * This checks in several new modules and many updates.  The AuthServer
  *   at this point works more or less as described in the NAFS document
@@ -22,7 +22,7 @@
  * Tickets are as described in the kerberos.ticket file.
  * Intergrated w/ MIT's des implementation and the Andrew one-way password
  *   encryption.  Uses bcrypt for RSECURE connections.  Uses R not Rx.
- * 
+ *
  * Revision 1.2  88/07/19  16:19:58
  * Added GetEntry and ListEntry; other internal changes.
  *  */

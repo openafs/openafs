@@ -20,40 +20,72 @@ int afs_pbuf_freecnt = -1;
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
+#if !defined(AFS_FBSD90_ENV)
 static sy_call_t *old_handler;
+#else
+static struct sysent old_sysent;
 
+static struct sysent afs_sysent = {
+    5,			/* int sy_narg */
+    afs3_syscall,	/* sy_call_t *sy_call */
+#ifdef AFS_FBSD60_ENV
+    AUE_NULL,		/* au_event_t sy_auevent */
+#ifdef AFS_FBSD70_ENV
+    NULL,		/* systrace_args_funt_t sy_systrace_args_func */
+    0,			/* u_int32_t sy_entry */
+    0,			/* u_int32_t sy_return */
+#ifdef AFS_FBSD90_ENV
+    0,			/* u_int32_t sy_flags */
+    0			/* u_int32_t sy_thrcnt */
+#endif
+#endif
+#endif /* FBSD60 */
+};
+#endif /* FBSD90 */
 
 int
 afs_init(struct vfsconf *vfc)
 {
-    if (sysent[AFS_SYSCALL].sy_call != nosys
-	&& sysent[AFS_SYSCALL].sy_call != lkmnosys) {
-	printf("AFS_SYSCALL in use. aborting\n");
-	return EBUSY;
+    int code;
+    int offset = AFS_SYSCALL;
+#if defined(AFS_FBSD90_ENV)
+    code = syscall_register(&offset, &afs_sysent, &old_sysent);
+    if (code) {
+	printf("AFS_SYSCALL in use, error %i. aborting\n", code);
+	return code;
     }
+#else
+    if (sysent[AFS_SYSCALL].sy_call != nosys
+        && sysent[AFS_SYSCALL].sy_call != lkmnosys) {
+        printf("AFS_SYSCALL in use. aborting\n");
+        return EBUSY;
+    }
+#endif
     osi_Init();
     afs_pbuf_freecnt = nswbuf / 2 + 1;
-#if 0
-    sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
-    sysent[SYS_ioctl].sy_call = afs_xioctl;
-#endif
+#if !defined(AFS_FBSD90_ENV)
     old_handler = sysent[AFS_SYSCALL].sy_call;
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
     sysent[AFS_SYSCALL].sy_narg = 5;
+#endif
     return 0;
 }
 
 int
 afs_uninit(struct vfsconf *vfc)
 {
+#if defined(AFS_FBSD90_ENV)
+    int offset = AFS_SYSCALL;
+#endif
+
     if (afs_globalVFS)
 	return EBUSY;
-#if 0
-    sysent[SYS_ioctl].sy_call = ioctl;
-    sysent[SYS_setgroups].sy_call = setgroups;
-#endif
+#if defined(AFS_FBSD90_ENV)
+    syscall_deregister(&offset, &old_sysent);
+#else
     sysent[AFS_SYSCALL].sy_narg = 0;
     sysent[AFS_SYSCALL].sy_call = old_handler;
+#endif
     return 0;
 }
 
@@ -195,7 +227,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 {
     int error;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
 #if !defined(AFS_FBSD53_ENV) || defined(AFS_FBSD80_ENV)
     struct thread *td = curthread;
 #endif

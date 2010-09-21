@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -14,32 +14,32 @@
  * Revision 1.11  89/02/10  11:56:23
  * Added union to kaentry structure which allows overloading several
  *   fields depending on which type of user it is.
- * 
+ *
  * Revision 1.10  89/02/02  14:24:22
  * Removed calls to gethostid() which doesn't return IP address on Suns.
- * 
+ *
  * Revision 1.9  88/12/22  14:43:48
  * COUNT_REQ remembers name of last operation.
- * 
+ *
  * Revision 1.8  88/12/09  14:42:00
- * Greatly improved the external key version number management code. 
+ * Greatly improved the external key version number management code.
  * Added new entry type called kaOldKeys.
- * 
+ *
  * Revision 1.7  88/11/22  09:30:40
  * Change RPC statistics to be more robust.
- * 
+ *
  * Revision 1.6  88/11/18  09:21:09
  * Conversion to Rx and the new RxGen.
  * Key version number is now a long.
  * Conversion to use of <afs/auth.h> include file.
  * Changed macros for statistics code since opcode hacking was punted.
- * 
+ *
  * Revision 1.5  88/10/12  16:26:34
  * Added much better (working) support of key version number maintenance.
- * 
+ *
  * Revision 1.4  88/09/20  11:53:12
  * Added IBM Copyright
- * 
+ *
  * Revision 1.3  88/08/29  12:46:39
  * This checks in several new modules and many updates.  The AuthServer
  *   at this point works more or less as described in the NAFS document
@@ -47,7 +47,7 @@
  * Tickets are as described in the kerberos.ticket file.
  * Intergrated w/ MIT's des implementation and the Andrew one-way password
  *   encryption.  Uses bcrypt for RSECURE connections.  Uses R not Rx.
- * 
+ *
  * Revision 1.2  88/07/19  16:20:33
  * Added GetEntry and ListEntry; other internal changes.
  *  */

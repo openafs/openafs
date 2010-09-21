@@ -1,7 +1,7 @@
 /*
  * Copyright 2004, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -69,17 +69,17 @@ handleit(struct cmd_syndesc *as, void *arock)
     VUpdateVolume(&ec, vp);
     if (ec) {
 	fprintf(stderr,"VUpdateVolume failed: %d\n", ec);
-	VPutVolume(vp);
+	VDetachVolume(&ec, vp);
 	exit(1);
     }
-    VPutVolume(vp);
+    VDetachVolume(&ec, vp);
     return 0;
 }
 
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL, "Manipulate volume blessed bit");

@@ -281,7 +281,7 @@ afs_vop_lookup(ap)
     int error;
     struct vcache *vcp;
     struct vnode *vp, *dvp;
-    register int flags = ap->a_cnp->cn_flags;
+    int flags = ap->a_cnp->cn_flags;
     int lockparent;		/* 1 => lockparent flag is set */
     int wantparent;		/* 1 => wantparent or lockparent flag */
     struct proc *p;
@@ -402,7 +402,7 @@ afs_vop_create(ap)
 {
     int error = 0;
     struct vcache *vcp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *dvp = ap->a_dvp;
     struct proc *p;
     GETNAME();
     p = vop_cn_proc;
@@ -829,7 +829,7 @@ afs_vop_pagein(ap)
 				 * int a_flags;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
     upl_t pl = ap->a_pl;
     size_t size = ap->a_size;
     off_t f_offset = ap->a_f_offset;
@@ -974,7 +974,7 @@ afs_vop_pageout(ap)
 				 * int           a_flags
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
     upl_t pl = ap->a_pl;
     size_t size = ap->a_size;
     off_t f_offset = ap->a_f_offset;
@@ -1207,7 +1207,7 @@ afs_vop_fsync(ap)
 {
     int wait = ap->a_waitfor == MNT_WAIT;
     int error;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
     int haveGlock = ISAFS_GLOCK();
 
     /* afs_vop_lookup glocks, can call us through vinvalbuf from GetVCache */
@@ -1245,8 +1245,8 @@ afs_vop_remove(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *vp = ap->a_vp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_dvp;
 
 #ifdef AFS_DARWIN80_ENV
     if (ap->a_flags & VNODE_REMOVE_NODELETEBUSY) {
@@ -1310,8 +1310,8 @@ afs_vop_link(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *dvp = ap->a_tdvp;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_tdvp;
+    struct vnode *vp = ap->a_vp;
     struct proc *p;
 
     GETNAME();
@@ -1362,9 +1362,9 @@ afs_vop_rename(ap)
     struct componentname *tcnp = ap->a_tcnp;
     char *tname;
     struct vnode *tvp = ap->a_tvp;
-    register struct vnode *tdvp = ap->a_tdvp;
+    struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
-    register struct vnode *fdvp = ap->a_fdvp;
+    struct vnode *fdvp = ap->a_fdvp;
     struct proc *p; 
 
     p = cn_proc(fcnp);
@@ -1562,8 +1562,8 @@ afs_vop_mkdir(ap)
 				 * struct vattr *a_vap;
 				 * } */ *ap;
 {
-    register struct vnode *dvp = ap->a_dvp;
-    register struct vattr *vap = ap->a_vap;
+    struct vnode *dvp = ap->a_dvp;
+    struct vattr *vap = ap->a_vap;
     int error = 0;
     struct vcache *vcp;
     struct proc *p;
@@ -1613,8 +1613,8 @@ afs_vop_rmdir(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *vp = ap->a_vp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
     if (dvp == vp) {
@@ -1650,7 +1650,7 @@ afs_vop_symlink(ap)
 				 * char *a_target;
 				 * } */ *ap;
 {
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *dvp = ap->a_dvp;
     int error = 0;
     /* NFS ignores a_vpp; so do we. */
 
@@ -1750,7 +1750,7 @@ afs_vop_inactive(ap)
 				 * struct proc *a_p;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
 #ifndef AFS_DARWIN80_ENV
     if (prtactive && vp->v_usecount != 0)
@@ -1784,7 +1784,7 @@ afs_vop_reclaim(ap)
 {
     int error = 0;
     int sl, writelocked;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
 
     osi_Assert(!ISAFS_GLOCK());
@@ -1959,8 +1959,8 @@ afs_vop_lock(ap)
 				 * struct vnode *a_vp;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
-    register struct vcache *avc = VTOAFS(vp);
+    struct vnode *vp = ap->a_vp;
+    struct vcache *avc = VTOAFS(vp);
 
     if (vp->v_tag == VT_NON)
 	return (ENOENT);
@@ -2057,8 +2057,8 @@ afs_vop_print(ap)
 				 * struct vnode *a_vp;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
-    register struct vcache *vc = VTOAFS(ap->a_vp);
+    struct vnode *vp = ap->a_vp;
+    struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->f.states;
     printf("tag %d, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag,
 	   vc->f.fid.Cell, vc->f.fid.Fid.Volume, vc->f.fid.Fid.Vnode,
@@ -2206,6 +2206,26 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
 	}
 	avc->v = nvp;
 	avc->f.states &=~ CDeadVnode;
+	/* If we were carrying an extra ref for dirty, hold/push it. */
+	if (avc->f.ddirty_flags) {
+	    vnode_get(nvp);
+	    vnode_ref(nvp);
+	}
+	/* If we were carrying an extra ref for shadow, hold/push it. */
+	if (avc->f.shadow.vnode) {
+	    vnode_get(nvp);
+	    vnode_ref(nvp);
+	}
+    }
+    /* Drop any extra dirty ref on the old vnode */
+    if (avc->f.ddirty_flags) {
+	vnode_put(ovp);
+	vnode_rele(ovp);
+    }
+    /* Drop any extra shadow ref on the old vnode */
+    if (avc->f.shadow.vnode) {
+	vnode_put(ovp);
+	vnode_rele(ovp);
     }
     vnode_put(ovp);
     vnode_rele(ovp);

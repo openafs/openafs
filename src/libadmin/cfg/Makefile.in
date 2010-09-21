@@ -41,13 +41,13 @@ ${TOP_LIBDIR}/libcfgadmin.a: libcfgadmin.a
 install: libcfgadmin.a afs_cfgAdmin.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} afs_cfgAdmin.h ${DESTDIR}${includedir}/afs/afs_cfgAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_cfgAdmin.h ${DESTDIR}${includedir}/afs/afs_cfgAdmin.h
 	${INSTALL_DATA} libcfgadmin.a ${DESTDIR}${libdir}/afs/libcfgadmin.a
 
 dest: libcfgadmin.a afs_cfgAdmin.h
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} afs_cfgAdmin.h ${DEST}/include/afs/afs_cfgAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_cfgAdmin.h ${DEST}/include/afs/afs_cfgAdmin.h
 	${INSTALL_DATA} libcfgadmin.a ${DEST}/lib/afs/libcfgadmin.a
 
 libcfgadmin.a: ${LIBOBJS}

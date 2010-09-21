@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -51,10 +51,10 @@ NName(char *a1, char *a2)
 
 /* return true if asub is a substring of amain */
 static int
-SubString(register char *amain, register char *asub)
+SubString(char *amain, char *asub)
 {
     int mlen, slen;
-    register int i, j;
+    int i, j;
     mlen = (int) strlen(amain);
     slen = (int) strlen(asub);
     j = mlen - slen;
@@ -69,9 +69,9 @@ SubString(register char *amain, register char *asub)
 }
 
 static int
-FindType(register struct cmd_syndesc *as, register char *aname)
+FindType(struct cmd_syndesc *as, char *aname)
 {
-    register int i;
+    int i;
     size_t cmdlen;
     int ambig;
     int best;
@@ -108,7 +108,7 @@ FindType(register struct cmd_syndesc *as, register char *aname)
 static struct cmd_syndesc *
 FindSyntax(char *aname, int *aambig)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     struct cmd_syndesc *best;
     size_t cmdLen;
     int ambig;
@@ -151,7 +151,7 @@ FindSyntax(char *aname, int *aambig)
 
 /* print the help for a single parameter */
 static void
-PrintParmHelp(register struct cmd_parmdesc *aparm)
+PrintParmHelp(struct cmd_parmdesc *aparm)
 {
     if (aparm->type == CMD_FLAG) {
 #ifdef notdef
@@ -172,17 +172,17 @@ PrintParmHelp(register struct cmd_parmdesc *aparm)
 extern char *AFSVersion;
 
 static int
-VersionProc(register struct cmd_syndesc *as, void *arock)
+VersionProc(struct cmd_syndesc *as, void *arock)
 {
     printf("%s\n", AFSVersion);
     return 0;
 }
 
 void
-PrintSyntax(register struct cmd_syndesc *as)
+PrintSyntax(struct cmd_syndesc *as)
 {
-    register int i;
-    register struct cmd_parmdesc *tp;
+    int i;
+    struct cmd_parmdesc *tp;
 
     /* now print usage, from syntax table */
     if (noOpcodes)
@@ -213,9 +213,9 @@ PrintSyntax(register struct cmd_syndesc *as)
 
 /* must print newline in any case, to terminate preceding line */
 static void
-PrintAliases(register struct cmd_syndesc *as)
+PrintAliases(struct cmd_syndesc *as)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
     if (as->flags & CMD_ALIAS) {
 	ts = as->aliasOf;
@@ -233,10 +233,10 @@ PrintAliases(register struct cmd_syndesc *as)
 }
 
 void
-PrintFlagHelp(register struct cmd_syndesc *as)
+PrintFlagHelp(struct cmd_syndesc *as)
 {
-    register int i;
-    register struct cmd_parmdesc *tp;
+    int i;
+    struct cmd_parmdesc *tp;
     int flag_width;
     char *flag_prefix;
 
@@ -276,9 +276,9 @@ PrintFlagHelp(register struct cmd_syndesc *as)
 }
 
 static int
-AproposProc(register struct cmd_syndesc *as, void *arock)
+AproposProc(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
     char *tsub;
     int didAny;
 
@@ -301,10 +301,10 @@ AproposProc(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-HelpProc(register struct cmd_syndesc *as, void *arock)
+HelpProc(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_syndesc *ts;
-    register struct cmd_item *ti;
+    struct cmd_syndesc *ts;
+    struct cmd_item *ti;
     int ambig;
     int code = 0;
 
@@ -369,7 +369,7 @@ cmd_SetAfterProc(int (*aproc) (struct cmd_syndesc * ts, void *afterRock),
 static int
 SortSyntax(struct cmd_syndesc *as)
 {
-    register struct cmd_syndesc **ld, *ud;
+    struct cmd_syndesc **ld, *ud;
 
     for (ld = &allSyntax, ud = *ld; ud; ld = &ud->next, ud = *ld) {
 	if (strcmp(ud->name, as->name) > 0) {	/* next guy is bigger than us */
@@ -387,7 +387,7 @@ cmd_CreateSyntax(char *aname,
 		 int (*aproc) (struct cmd_syndesc * ts, void *arock),
 		 void *arock, char *ahelp)
 {
-    register struct cmd_syndesc *td;
+    struct cmd_syndesc *td;
 
     /* can't have two cmds in no opcode mode */
     if (noOpcodes)
@@ -430,9 +430,9 @@ cmd_CreateSyntax(char *aname,
 }
 
 int
-cmd_CreateAlias(register struct cmd_syndesc *as, char *aname)
+cmd_CreateAlias(struct cmd_syndesc *as, char *aname)
 {
-    register struct cmd_syndesc *td;
+    struct cmd_syndesc *td;
 
     td = (struct cmd_syndesc *)malloc(sizeof(struct cmd_syndesc));
     assert(td);
@@ -455,14 +455,14 @@ cmd_CreateAlias(register struct cmd_syndesc *as, char *aname)
 }
 
 int
-cmd_IsAdministratorCommand(register struct cmd_syndesc *as)
+cmd_IsAdministratorCommand(struct cmd_syndesc *as)
 {
     as->flags |= CMD_ADMIN;
     return 0;
 }
 
 int
-cmd_Seek(register struct cmd_syndesc *as, int apos)
+cmd_Seek(struct cmd_syndesc *as, int apos)
 {
     if (apos >= CMD_MAXPARMS)
 	return CMD_EXCESSPARMS;
@@ -471,10 +471,10 @@ cmd_Seek(register struct cmd_syndesc *as, int apos)
 }
 
 int
-cmd_AddParm(register struct cmd_syndesc *as, char *aname, int atype,
+cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
 	    afs_int32 aflags, char *ahelp)
 {
-    register struct cmd_parmdesc *tp;
+    struct cmd_parmdesc *tp;
 
     if (as->nParms >= CMD_MAXPARMS)
 	return CMD_EXCESSPARMS;
@@ -497,9 +497,9 @@ cmd_AddParm(register struct cmd_syndesc *as, char *aname, int atype,
 
 /* add a text item to the end of the parameter list */
 static int
-AddItem(register struct cmd_parmdesc *aparm, register char *aval)
+AddItem(struct cmd_parmdesc *aparm, char *aval)
 {
-    register struct cmd_item *ti, *ni;
+    struct cmd_item *ti, *ni;
     ti = (struct cmd_item *)calloc(1, sizeof(struct cmd_item));
     assert(ti);
     ti->data = (char *)malloc(strlen(aval) + 1);
@@ -518,10 +518,10 @@ AddItem(register struct cmd_parmdesc *aparm, register char *aval)
 
 /* skip to next non-flag item, if any */
 static int
-AdvanceType(register struct cmd_syndesc *as, register afs_int32 aval)
+AdvanceType(struct cmd_syndesc *as, afs_int32 aval)
 {
-    register afs_int32 next;
-    register struct cmd_parmdesc *tp;
+    afs_int32 next;
+    struct cmd_parmdesc *tp;
 
     /* first see if we should try to grab rest of line for this dude */
     if (as->parms[aval].flags & CMD_EXPANDS)
@@ -538,11 +538,11 @@ AdvanceType(register struct cmd_syndesc *as, register afs_int32 aval)
 
 /* discard parameters filled in by dispatch */
 static void
-ResetSyntax(register struct cmd_syndesc *as)
+ResetSyntax(struct cmd_syndesc *as)
 {
     int i;
-    register struct cmd_parmdesc *tp;
-    register struct cmd_item *ti, *ni;
+    struct cmd_parmdesc *tp;
+    struct cmd_item *ti, *ni;
 
     tp = as->parms;
     for (i = 0; i < CMD_MAXPARMS; i++, tp++) {
@@ -566,10 +566,10 @@ ResetSyntax(register struct cmd_syndesc *as)
 
 /* move the expands flag to the last one in the list */
 static int
-SetupExpandsFlag(register struct cmd_syndesc *as)
+SetupExpandsFlag(struct cmd_syndesc *as)
 {
-    register struct cmd_parmdesc *tp;
-    register int last, i;
+    struct cmd_parmdesc *tp;
+    int last, i;
 
     last = -1;
     /* find last CMD_LIST type parameter, optional or not, and make it expandable
@@ -628,10 +628,10 @@ InsertInitOpcode(int *aargc, char **aargv)
 }				/*InsertInitOpcode */
 
 static int
-NoParmsOK(register struct cmd_syndesc *as)
+NoParmsOK(struct cmd_syndesc *as)
 {
-    register int i;
-    register struct cmd_parmdesc *td;
+    int i;
+    struct cmd_parmdesc *td;
 
     for (i = 0; i < CMD_MAXPARMS; i++) {
 	td = &as->parms[i];
@@ -884,7 +884,7 @@ cmd_Dispatch(int argc, char **argv)
     }
 
     /*
-     * Before calling the beforeProc and afterProc and all the implications 
+     * Before calling the beforeProc and afterProc and all the implications
      * from those calls, check if the help procedure was called and call it now.
      */
     if ((ts->proc == HelpProc) || (ts->proc == AproposProc)) {
@@ -911,9 +911,9 @@ cmd_Dispatch(int argc, char **argv)
 
 /* free token list returned by parseLine */
 static int
-FreeTokens(register struct cmd_token *alist)
+FreeTokens(struct cmd_token *alist)
 {
-    register struct cmd_token *nlist;
+    struct cmd_token *nlist;
     for (; alist; alist = nlist) {
 	nlist = alist->next;
 	free(alist->key);
@@ -924,9 +924,9 @@ FreeTokens(register struct cmd_token *alist)
 
 /* free an argv list returned by parseline */
 int
-cmd_FreeArgv(register char **argv)
+cmd_FreeArgv(char **argv)
 {
-    register char *tp;
+    char *tp;
     for (tp = *argv; tp; argv++, tp = *argv)
 	free(tp);
     return 0;
@@ -937,10 +937,10 @@ cmd_FreeArgv(register char **argv)
     later on */
 #define INITSTR ""
 static int
-CopyBackArgs(register struct cmd_token *alist, register char **argv,
+CopyBackArgs(struct cmd_token *alist, char **argv,
 	     afs_int32 * an, afs_int32 amaxn)
 {
-    register struct cmd_token *next;
+    struct cmd_token *next;
     afs_int32 count;
 
     count = 0;
@@ -970,7 +970,7 @@ CopyBackArgs(register struct cmd_token *alist, register char **argv,
 }
 
 static int
-quote(register int x)
+quote(int x)
 {
     if (x == '"' || x == 39 /* single quote */ )
 	return 1;
@@ -979,7 +979,7 @@ quote(register int x)
 }
 
 static int
-space(register int x)
+space(int x)
 {
     if (x == 0 || x == ' ' || x == '\t' || x == '\n')
 	return 1;
@@ -991,11 +991,11 @@ int
 cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 {
     char tbuffer[256];
-    register char *tptr = 0;
+    char *tptr = 0;
     int inToken, inQuote;
     struct cmd_token *first, *last;
-    register struct cmd_token *ttok;
-    register int tc;
+    struct cmd_token *ttok;
+    int tc;
 
     inToken = 0;		/* not copying token chars at start */
     first = (struct cmd_token *)0;

@@ -253,7 +253,7 @@
  @discussion The cache info is read from the file pointed by filePath param
  @param      filePath file location for the CacheInfo
  */
--(void) readCacheInfo:(NSString*)filePath;
+-(int) readCacheInfo:(NSString*)filePath;
 
 /*!
  @function	 writeCacheInfo
@@ -278,20 +278,20 @@
  @param      filePath file path to afsd.option like file
  @result     <#(description)#>
  */
--(void) readOldAfsdOption:(NSString*)filePath;
+-(int) readOldAfsdOption:(NSString*)filePath;
 /*!
  @function	 readAFSDParamLineContent
  @abstract   Try to decode one line of afsd.option or afs.conf
  @param      paramLine one line of file afsd.option(the only one that is present) os afs.conf
  */
--(void) readAFSDParamLineContent:(NSString*)paramLine;
+-(int) readAFSDParamLineContent:(NSString*)paramLine;
 /*!
  @function	 readNewAfsdOption
  @abstract   Read the new afs.conf file format
  @discussion Scann every line f the afs.conf file ad for each one call the readAFSDParamLineContent with it's content
  @param      filePath path of the new file with afs.conf file format
  */
--(void) readNewAfsdOption:(NSString*)filePath;
+-(int) readNewAfsdOption:(NSString*)filePath;
 /*!
  @function	 writeAfsdOption
  @abstract   <#(description)#>

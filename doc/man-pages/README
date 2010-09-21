@@ -263,15 +263,6 @@ Known Problems
    Changes needed to have vos suite commands completely up to date,
    including the 1.5 branch:
 
-   * Document vos offline -busy / -sleep
-
-   * Do vos online/offline support -bless/-unbless? By looking at the
-     source they dont, and according to Git log that goes back to 2000
-     they never did.
-     According to Derrick, there was a patch to support them that vanished.
-     Either the patch should be found, or bless/unbless removed from
-     vos online/offline.
-
    * Document vos create -minquota which is available since 1.5.61
 
    * Document vos restore -creation/-lastupdate and -nodelete

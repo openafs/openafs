@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -77,9 +77,9 @@ int listentries, listservers, listheader, listuheader, verbose, quiet;
 int fix = 0;
 int passes = 0;
 /* if quiet, don't send anything to stdout */
-int quiet = 0; 
+int quiet = 0;
 /*  error level. 0 = no error, 1 = warning, 2 = error, 4 = fatal */
-int error_level  = 0; 
+int error_level  = 0;
 
 struct er {
     long addr;
@@ -89,28 +89,28 @@ afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
 
 /*  Used to control what goes to stdout based on quiet flag */
-void 
+void
 quiet_println(const char *fmt,...) {
-    va_list args;                                             
+    va_list args;
     if (!quiet) {
-        va_start(args, fmt);                                      
-        vfprintf(stdout, fmt, args);                              
-        va_end(args);                                             
+        va_start(args, fmt);
+        vfprintf(stdout, fmt, args);
+        va_end(args);
     }
 }
 
 /*  Used to set the error level and ship messages to stderr */
-void                                                   
-log_error(int eval, const char *fmt, ...)                          
-{                                                             
-    va_list args;                                             
+void
+log_error(int eval, const char *fmt, ...)
+{
+    va_list args;
     if (error_level < eval) error_level  = eval ;  /*  bump up the severity */
-    va_start(args, fmt);                                      
-    vfprintf(stderr, fmt, args);                              
-    va_end(args);                                             
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
 
     if (error_level  == VLDB_CHECK_FATAL) exit(VLDB_CHECK_FATAL);
-}  
+}
 
 
 #if 0
@@ -178,9 +178,9 @@ vldbio(int position, void *buffer, int size, int rdwr)
 	return (-1);
     }
 
-    if (rdwr == 1) 
+    if (rdwr == 1)
 	r = write(fd, buffer, size);
-    else 
+    else
 	r = read(fd, buffer, size);
 
     if (r != size) {
@@ -597,7 +597,7 @@ ReadAllEntries(struct vlheader *header)
 		    continue;
  		}
 		if (e) {
-		   log_error 
+		   log_error
 			(VLDB_CHECK_ERROR,"VLDB entry '%s' contains an unknown RW/RO index serverFlag\n",
 			 vlentry.name);
 		    e = 0;
@@ -686,12 +686,12 @@ FollowNameHash(struct vlheader *header)
 	     * checked it either above or below
 	     */
 	    if (record[rindex].addr != addr && record[rindex].addr) {
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
 		     record[rindex].addr, addr, rindex);
 	    }
 	    if (record[rindex].type & NH) {
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"Name Hash %d: Bad entry '%s': Already in the name hash\n",
 		     i, vlentry.name);
 		record[rindex].type |= MULTN;
@@ -713,7 +713,7 @@ FollowNameHash(struct vlheader *header)
 
 	    /* Hash the name and check if in correct hash table */
 	    if (NameHash(vlentry.name) != i) {
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"Name Hash %d: Bad entry '%s': Incorrect name hash chain (should be in %d)\n",
 		     i, vlentry.name, NameHash(vlentry.name));
 		record[rindex].type |= MULTN;
@@ -802,7 +802,7 @@ FollowIdHash(struct vlheader *header)
 
 		/* Hash the id and check if in correct hash table */
 		if (IdHash(vlentry.volumeId[i]) != j) {
-		   log_error 
+		   log_error
 			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Incorrect Id hash chain (should be in %d)\n",
 			 vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
@@ -842,7 +842,7 @@ FollowFreeChain(struct vlheader *header)
 	 addr = vlentry.nextIdHash[0]) {
 	readentry(addr, &vlentry, &type);
 	if (type != FR) {
-	   log_error 
+	   log_error
 		(VLDB_CHECK_ERROR,"Free Chain %d: Bad entry at %u: Not a valid free vlentry (0x%x)\n",
 		 count, addr, type);
 	    continue;
@@ -850,7 +850,7 @@ FollowFreeChain(struct vlheader *header)
 
 	rindex = addr / sizeof(vlentry);
 	if (record[rindex].addr != addr && record[rindex].addr) {
-	   log_error 
+	   log_error
 		(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %ld use same record slot %d\n",
 		 record[rindex].addr, addr, rindex);
 	}
@@ -872,16 +872,16 @@ FollowFreeChain(struct vlheader *header)
  * Read each multihomed block and mark it as found in the record.
  * Read each entry in each multihomed block and mark the serveraddrs
  * array with the number of ip addresses found for this entry.
- * 
+ *
  * Then read the IpMappedAddr array in the header.
  * Verify that multihomed entries base and index are valid and points to
  * a good multhomed entry.
  * Mark the serveraddrs array with 1 ip address for regular entries.
- * 
- * By the end, the severaddrs array will have a 0 if the entry has no 
+ *
+ * By the end, the severaddrs array will have a 0 if the entry has no
  * IP addresses in it or the count of the number of IP addresses.
  *
- * The code does not verify if there are duplicate IP addresses in the 
+ * The code does not verify if there are duplicate IP addresses in the
  * list. The vlserver does this when a fileserver registeres itself.
  */
 void
@@ -903,12 +903,12 @@ CheckIpAddrs(struct vlheader *header)
 	quiet_println("Check Multihomed blocks\n");
 
     if (header->SIT) {
-	/* Read the first MH block and from it, gather the 
+	/* Read the first MH block and from it, gather the
 	 * addresses of all the mh blocks.
 	 */
 	readMH(header->SIT, MHblock);
 	if (MHblock->ex_flags != VLCONTBLOCK) {
-	   log_error 
+	   log_error
 		(VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		 header->SIT);
 	}
@@ -918,7 +918,7 @@ CheckIpAddrs(struct vlheader *header)
 	}
 
 	if (header->SIT != caddrs[0]) {
-	   log_error 
+	   log_error
 		(VLDB_CHECK_ERROR,"MH block does not point to self %u in header, %u in block\n",
 		 header->SIT, caddrs[0]);
 	}
@@ -930,19 +930,19 @@ CheckIpAddrs(struct vlheader *header)
 
 	    readMH(caddrs[i], MHblock);
 	    if (MHblock->ex_flags != VLCONTBLOCK) {
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		     header->SIT);
 	    }
 
 	    rindex = caddrs[i] / sizeof(vlentry);
 	    if (record[rindex].addr != caddrs[i] && record[rindex].addr) {
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
 		     record[rindex].addr, caddrs[i], rindex);
 	    }
 	    if (record[rindex].type & FRC) {
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"MH Blocks Chain %d: Bad entry at %ld: Already a MH block\n",
 		     i, record[rindex].addr);
 		break;
@@ -951,7 +951,7 @@ CheckIpAddrs(struct vlheader *header)
 
 	    mhblocks++;
 
-	    /* Read each entry in a multihomed block. 
+	    /* Read each entry in a multihomed block.
 	     * Find the pointer to the entry in the IpMappedAddr array and
 	     * verify that the entry is good (has IP addresses in it).
 	     */
@@ -978,7 +978,7 @@ CheckIpAddrs(struct vlheader *header)
 
 		if (memcmp(&e->ex_hostuuid, &nulluuid, sizeof(afsUUID)) == 0) {
 		    if (ipindex != -1) {
-		        log_error	
+		        log_error
 			    (VLDB_CHECK_ERROR,"Server Addrs index %d references null MH block %d, index %d\n",
 			     ipindex, i, j);
 			serveraddrs[ipindex] = 0;	/* avoids printing 2nd error below */
@@ -997,7 +997,7 @@ CheckIpAddrs(struct vlheader *header)
 		if (ipaddrs) {
 		    mhentries++;
 		    if (ipindex == -1) {
-		        log_error    	
+		        log_error
 			    (VLDB_CHECK_ERROR,"MH block %d, index %d: Not referenced by server addrs\n",
 			     i, j);
 		    } else {
@@ -1040,16 +1040,16 @@ CheckIpAddrs(struct vlheader *header)
 		mhentries++;
 		if (((header->IpMappedAddr[i] & 0x00ff0000) >> 16) >
 		    VL_MAX_ADDREXTBLKS)
-		   log_error 
+		   log_error
 			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome block is bad (%d)\n",
 			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
 		if (((header->IpMappedAddr[i] & 0x0000ffff) > VL_MHSRV_PERBLK)
 		    || ((header->IpMappedAddr[i] & 0x0000ffff) < 1))
-		    log_error 
+		    log_error
 			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome index is bad (%d)\n",
 			 i, (header->IpMappedAddr[i] & 0x0000ffff));
 		if (serveraddrs[i] == -1) {
-		    log_error 
+		    log_error
 			(VLDB_CHECK_WARNING,"warning: IP Addr for entry %d: Multihome entry has no ip addresses\n",
 			 i);
 		    serveraddrs[i] = 0;
@@ -1213,7 +1213,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     FollowFreeChain(&header);
 
     /* Now check the record we have been keeping for inconsistencies
-     * For valid vlentries, also check that the server we point to is 
+     * For valid vlentries, also check that the server we point to is
      * valid (the serveraddrs array).
      */
     if (verbose)
@@ -1366,39 +1366,39 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    for (j = 0; j < NMAXNSERVERS; j++) {
 		if ((vlentry.serverNumber[j] != 255)
 		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
-		   log_error 
+		   log_error
 			(VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
 			 vlentry.name, j, vlentry.serverNumber[j]);
 		}
 	    }
-	
+
 	    if (record[i].type & 0xffff0f00)
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"Volume '%s' id %u also found on other chains (0x%x)\n",
 		     vlentry.name, vlentry.volumeId[0], record[i].type);
-	    
+
 	    /* A free entry */
 	} else if (record[i].type & FR) {
 	    if (!(record[i].type & FRC))
 		log_error(VLDB_CHECK_ERROR,"Free vlentry at %ld not on free chain\n",
 		       record[i].addr);
-	    
+
 	    if (record[i].type & 0xfffffdf0)
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"Free vlentry at %ld also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
-	    
+
 	    /* A multihomed entry */
 	} else if (record[i].type & MH) {
 	    if (!(record[i].type & MHC))
 		log_error(VLDB_CHECK_ERROR,"Multihomed block at %ld is orphaned\n",
 		       record[i].addr);
-	    
+
 	    if (record[i].type & 0xfffffef0)
-	        log_error	
+	        log_error
 		    (VLDB_CHECK_ERROR,"Multihomed block at %ld also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
-	    
+
 	} else {
 	    log_error(VLDB_CHECK_ERROR,"Unknown entry type at %u (0x%x)\n", record[i].addr,
 		   record[i].type);
@@ -1423,7 +1423,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	if (record[i].type & VL) {
 	    readentry(record[i].addr, &vlentry, &type);
 	    if (!(record[i].type & REFN)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a name chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a name chain\n", i,
 		       record[i].addr, record[i].type);
 	    }
 	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
@@ -1431,11 +1431,11 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		       record[i].addr, record[i].type);
 	    }
 	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RO chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RO chain\n", i,
 		       record[i].addr, record[i].type);
 	    }
 	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a BK chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a BK chain\n", i,
 		       record[i].addr, record[i].type);
 	    }
 	    if (fix) {

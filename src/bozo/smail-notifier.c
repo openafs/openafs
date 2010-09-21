@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -39,7 +39,7 @@ main(argc, argv)
     struct stat tstat;
     FILE *fin = stdin;
     char buf[BUFSIZ], *bufp, *bufp1, *typep, *cmd, *bp;
-    register afs_int32 code, c, fd, id, pflags = -1, len, core = 0, lastE = 0;
+    afs_int32 code, c, fd, id, pflags = -1, len, core = 0, lastE = 0;
     char comLine[60], coreName[40], name[40], lastErrorName[50];
     afs_int32 pid = -1, lastExit = -1, lastSignal = -1, rsCount = -1;
     afs_int32 procStarts = -1;

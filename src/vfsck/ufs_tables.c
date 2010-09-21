@@ -43,7 +43,7 @@ int inside[9] = {
 
 /*
  * Given a block map bit pattern, the frag tables tell whether a
- * particular size fragment is available. 
+ * particular size fragment is available.
  *
  * used as:
  * if ((1 << (size - 1)) & fragtbl[fs->fs_frag][map] {

@@ -113,8 +113,8 @@ int
 main(int argc, char **argv)
 {
 
-    register struct cmd_syndesc *cs;	/*Command line syntax descriptor */
-    register afs_int32 code;	/*Return code */
+    struct cmd_syndesc *cs;	/*Command line syntax descriptor */
+    afs_int32 code;	/*Return code */
 
     cs = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "access protection database");
@@ -139,9 +139,9 @@ main(int argc, char **argv)
 }
 
 static int
-CommandProc(register struct cmd_syndesc *a_as, void *arock)
+CommandProc(struct cmd_syndesc *a_as, void *arock)
 {
-    register int i;
+    int i;
     long code = 0;
     long upos;
     long gpos = 0;
@@ -342,7 +342,7 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
 		long newpos;
 		newpos = display_entry(upos);
 		if (newpos == upos) {
-		    fprintf(stderr, "pt_util: hash error in %s chain %d\n", 
+		    fprintf(stderr, "pt_util: hash error in %s chain %d\n",
 			    nflag ? "name":"id", i);
 		    exit(1);
 		} else
@@ -401,7 +401,7 @@ static void
 add_group(long id)
 {
     struct grp_list *g;
-    register long i;
+    long i;
 
     i = grp_count++ % 1024;
     if (i == 0) {
@@ -416,7 +416,7 @@ add_group(long id)
 static void
 display_groups(void)
 {
-    register int i, id;
+    int i, id;
     struct grp_list *g;
 
     g = grp_head;
@@ -435,7 +435,7 @@ display_groups(void)
 static void
 display_group(int id)
 {
-    register int i, offset;
+    int i, offset;
     int print_grp = 0;
 
     offset = ntohl(prh.idHash[IDHash(id)]);
@@ -506,7 +506,7 @@ display_group(int id)
 static void
 fix_pre(struct prentry *pre)
 {
-    register int i;
+    int i;
 
     pre->flags = ntohl(pre->flags);
     pre->id = ntohl(pre->id);
@@ -533,7 +533,7 @@ fix_pre(struct prentry *pre)
 static char *
 id_to_name(int id)
 {
-    register int offset;
+    int offset;
     static struct prentry pre;
     char *name;
 
@@ -561,7 +561,7 @@ static char *
 checkin(struct prentry *pre)
 {
     struct hash_entry *he, *last;
-    register int id;
+    int id;
 
     id = pre->id;
     last = (struct hash_entry *)0;
@@ -588,7 +588,7 @@ checkin(struct prentry *pre)
 }
 
 static char *
-check_core(register int id)
+check_core(int id)
 {
     struct hash_entry *he;
     he = hat[IDHash(id)];

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -71,7 +71,7 @@ int update_ReceiveFile(int, struct rx_call *, struct stat *);
 afs_int32
 GetServer(char *aname)
 {
-    register struct hostent *th;
+    struct hostent *th;
     afs_int32 addr;
 
     th = gethostbyname(aname);
@@ -126,8 +126,8 @@ main(int argc, char **argv)
     struct filestr *dirname, *ModFiles, *okhostfiles;
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -320,13 +320,13 @@ main(int argc, char **argv)
 		if (verbose >= 3)
 		    printf("    checking %s\n", filename);
 		if (!IsCompatible(filename, time, length)) {
-		    /* if the file info has changed , record all the 
+		    /* if the file info has changed , record all the
 		     *changed files in the ModFiles array*/
 		    if (verbose >= 2)
 			printf("  getting %s\n", filename);
 		    AddToList(&ModFiles, filename);
 
-		    /* now get the file from the server. The received 
+		    /* now get the file from the server. The received
 		     * file is created under the name filename.NEW */
 		    errcode =
 			GetFileFromUpServer(conn, filename, uid, gid, mode,
@@ -404,7 +404,7 @@ main(int argc, char **argv)
 /* returns 1 if the file is upto date else returns 0*/
 /*check the dir case more carefully */
 int
-IsCompatible(char *filename, afs_int32 time, afs_int32 length)	
+IsCompatible(char *filename, afs_int32 time, afs_int32 length)
 {
     struct stat status;
     afs_int32 error;
@@ -466,11 +466,11 @@ FetchFile(struct rx_call *call, char *remoteFile, char *localFile, int dirFlag)
 
 
 int
-update_ReceiveFile(register int fd, register struct rx_call *call, register struct stat *status)
+update_ReceiveFile(int fd, struct rx_call *call, struct stat *status)
 {
-    register char *buffer = (char *)0;
+    char *buffer = (char *)0;
     afs_int32 length;
-    register int blockSize;
+    int blockSize;
     afs_int32 error = 0, len;
 #ifdef	AFS_AIX_ENV
     struct statfs tstatfs;
@@ -495,7 +495,7 @@ update_ReceiveFile(register int fd, register struct rx_call *call, register stru
 	return UPDATE_ERROR;
     }
     while (!error && length) {
-	register int nbytes = (length > blockSize ? blockSize : length);
+	int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = rx_Read(call, buffer, nbytes);
 	if (!nbytes)
 	    error = UPDATE_ERROR;
@@ -631,12 +631,12 @@ RenameNewFiles(struct filestr *modFiles)
 
 
 /* GetFileFromUpServer() - Makes the FetchFile() call and gets the
- * file from the upserver. 
+ * file from the upserver.
  * Return Values:
  *   0 -  Alls well
  *   -1 - Serious error. Quit right away.
- *   1  - Error, but keep trying for the other files 
- * 
+ *   1  - Error, but keep trying for the other files
+ *
  * The file obtained is written to the localized version of the filename.NEW
  * and the uid, gid, file mode, access and modification times will be set to
  * the passed in values.

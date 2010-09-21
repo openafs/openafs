@@ -1,37 +1,37 @@
-/* 
+/*
  * $Id$
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
  */
 /*
- * Copyright (c) 2005, 2006                                     
- * The Linux Box Corporation                                    
- * ALL RIGHTS RESERVED                                          
- *                                                              
- * Permission is granted to use, copy, create derivative works  
- * and redistribute this software and such derivative works     
- * for any purpose, so long as the name of the Linux Box        
- * Corporation is not used in any advertising or publicity      
- * pertaining to the use or distribution of this software       
- * without specific, written prior authorization.  If the       
- * above copyright notice or any other identification of the    
- * Linux Box Corporation is included in any copy of any         
- * portion of this software, then the disclaimer below must     
- * also be included.                                            
- *                                                              
- * This software is provided as is, without representation      
- * from the Linux Box Corporation as to its fitness for any     
- * purpose, and without warranty by the Linux Box Corporation   
- * of any kind, either express or implied, including            
- * without limitation the implied warranties of                 
- * merchantability and fitness for a particular purpose.  The   
- * regents of the Linux Box Corporation shall not be liable     
- * for any damages, including special, indirect, incidental, or 
- * consequential damages, with respect to any claim arising     
- * out of or in connection with the use of the software, even   
- * if it has been or is hereafter advised of the possibility of 
- * such damages.                                                
+ * Copyright (c) 2005, 2006
+ * The Linux Box Corporation
+ * ALL RIGHTS RESERVED
+ *
+ * Permission is granted to use, copy, create derivative works
+ * and redistribute this software and such derivative works
+ * for any purpose, so long as the name of the Linux Box
+ * Corporation is not used in any advertising or publicity
+ * pertaining to the use or distribution of this software
+ * without specific, written prior authorization.  If the
+ * above copyright notice or any other identification of the
+ * Linux Box Corporation is included in any copy of any
+ * portion of this software, then the disclaimer below must
+ * also be included.
+ *
+ * This software is provided as is, without representation
+ * from the Linux Box Corporation as to its fitness for any
+ * purpose, and without warranty by the Linux Box Corporation
+ * of any kind, either express or implied, including
+ * without limitation the implied warranties of
+ * merchantability and fitness for a particular purpose.  The
+ * regents of the Linux Box Corporation shall not be liable
+ * for any damages, including special, indirect, incidental, or
+ * consequential damages, with respect to any claim arising
+ * out of or in connection with the use of the software, even
+ * if it has been or is hereafter advised of the possibility of
+ * such damages.
  */
 
 #include <afsconfig.h>
@@ -188,7 +188,7 @@ static int get_user_realm(krb5_context, char **);
 #error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
 #endif
 
-#if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT) 
+#if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT)
 extern krb5_error_code encode_krb5_enc_tkt_part (const krb5_enc_tkt_part *rep,
 						 krb5_data **code);
 
@@ -200,7 +200,7 @@ krb5_encrypt_tkt_part(krb5_context context,
     krb5_data *data = 0;
     int code;
     size_t enclen;
-    
+
     if ((code = encode_krb5_enc_tkt_part(ticket->enc_part2, &data)))
 	goto Done;
     if ((code = krb5_c_encrypt_length(context, key->enctype,
@@ -369,7 +369,7 @@ copy_cellinfo(cellinfo_t *cellinfo)
 
     if ((new_cellinfo = (cellinfo_t *)malloc(sizeof(cellinfo_t))))
 	memcpy(new_cellinfo, cellinfo, sizeof(cellinfo_t));
-    
+
     return ((char *)new_cellinfo);
 }
 
@@ -390,7 +390,7 @@ get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char **local_cell)
     }
 
     if (!(configdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
-	fprintf(stderr, 
+	fprintf(stderr,
 		"%s: can't get afs configuration (afsconf_Open(%s))\n",
 		progname, AFSDIR_CLIENT_ETC_DIRPATH);
 	exit(AKLOG_AFS);
@@ -946,7 +946,7 @@ tokens_equal(struct ktc_token *tokenA, struct ktc_token *tokenB) {
 	    !memcmp(tokenA->ticket, tokenB->ticket, tokenA->ticketLen));
 }
 
-/* 
+/*
  * Log to a cell.  If the cell has already been logged to, return without
  * doing anything.  Otherwise, log to it and mark that it has been logged
  * to.
@@ -986,14 +986,14 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	goto out;
     }
 
-    /* 
+    /*
      * Record that we have attempted to log to this cell.  We do this
      * before we try rather than after so that we will not try
      * and fail repeatedly for one cell.
      */
     ll_string(&authedcells, ll_s_add, cellconf.name);
 
-    /* 
+    /*
      * Record this cell in the list of zephyr subscriptions.  We may
      * want zephyr subscriptions even if authentication fails.
      * If this is done after we attempt to get tokens, aklog -zsubs
@@ -1001,13 +1001,13 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
      * are in -noauth mode.
      */
     if (ll_string(&zsublist, ll_s_add, cellconf.name) == LL_FAILURE) {
-	fprintf(stderr, 
+	fprintf(stderr,
 		"%s: failure adding cell %s to zephyr subscriptions list.\n",
 		progname, cellconf.name);
 	exit(AKLOG_MISC);
     }
     if (ll_string(&zsublist, ll_s_add, local_cell) == LL_FAILURE) {
-	fprintf(stderr, 
+	fprintf(stderr,
 		"%s: failure adding cell %s to zephyr subscriptions list.\n",
 		progname, local_cell);
 	exit(AKLOG_MISC);
@@ -1049,7 +1049,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 		afs_dprintf("Error %d\n", status);
 	    else
 		afs_dprintf("Id %d\n", (int) viceId);
-	    
+
 
 	    /*
 	     * This code is taken from cklog -- it lets people
@@ -1120,7 +1120,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 
 #ifndef AFS_AIX51_ENV
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
-	 * this routine, it will not add the token. It is not clear what 
+	 * this routine, it will not add the token. It is not clear what
 	 * is going on here! So we will do the following operation.
 	 * On AIX 5, it causes the parent program to die, so we won't.
 	 */
@@ -1167,8 +1167,8 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
     else {
 	last_component = our_file;
 	parent_dir = ".";
-    }    
-    
+    }
+
     memset(cellname, 0, sizeof(cellname));
 
     vio.in = last_component;
@@ -1182,7 +1182,7 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
 	    vio.in_size = strlen(file) + 1;
 	    vio.out_size = sizeof(cellname);
 	    vio.out = cellname;
-	    
+
 	    if (!pioctl(file, VIOC_FILE_CELL_NAME, &vio, 1)) {
 		strcat(cellname, VOLMARKERSTRING);
 		strcat(cellname, mountpoint + 1);
@@ -1196,8 +1196,8 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
 	return(FALSE);
 }
 
-/* 
- * This routine each time it is called returns the next directory 
+/*
+ * This routine each time it is called returns the next directory
  * down a pathname.  It resolves all symbolic links.  The first time
  * it is called, it should be called with the name of the path
  * to be descended.  After that, it should be called with the arguemnt
@@ -1217,9 +1217,9 @@ next_path(char *origpath)
     static char *elast_comp;	/* End of last component */
     char *t;
     int len;
-    
+
     static int symlinkcount = 0; /* We can't exceed MAXSYMLINKS */
-    
+
     /* If we are given something for origpath, we are initializing only. */
     if (origpath) {
 	memset(path, 0, sizeof(path));
@@ -1231,7 +1231,7 @@ next_path(char *origpath)
     }
 
     /* We were not given origpath; find then next path to check */
-    
+
     /* If we've gotten all the way through already, return NULL */
     if (last_comp == NULL)
 	return(NULL);
@@ -1239,11 +1239,11 @@ next_path(char *origpath)
     do {
 	while (*last_comp == DIR)
 	    strncat(pathtocheck, last_comp++, 1);
-	len = (elast_comp = strchr(last_comp, DIR)) 
+	len = (elast_comp = strchr(last_comp, DIR))
 	    ? elast_comp - last_comp : strlen(last_comp);
 	strncat(pathtocheck, last_comp, len);
 	memset(linkbuf, 0, sizeof(linkbuf));
-	if ((link = (readlink(pathtocheck, linkbuf, 
+	if ((link = (readlink(pathtocheck, linkbuf,
 				    sizeof(linkbuf)) > 0))) {
 	    if (++symlinkcount > MAXSYMLINKS) {
 		fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
@@ -1253,8 +1253,8 @@ next_path(char *origpath)
 	    if (elast_comp)
 		strcpy(tmpbuf, elast_comp);
 	    if (linkbuf[0] == DIR) {
-		/* 
-		 * If this is a symbolic link to an absolute path, 
+		/*
+		 * If this is a symbolic link to an absolute path,
 		 * replace what we have by the absolute path.
 		 */
 		memset(path, 0, strlen(path));
@@ -1265,8 +1265,8 @@ next_path(char *origpath)
 		memset(pathtocheck, 0, sizeof(pathtocheck));
 	    }
 	    else {
-		/* 
-		 * If this is a symbolic link to a relative path, 
+		/*
+		 * If this is a symbolic link to a relative path,
 		 * replace only the last component with the link name.
 		 */
 		strncpy(last_comp, linkbuf, strlen(linkbuf) + 1);
@@ -1300,7 +1300,7 @@ add_hosts(char *file)
     int i;
     struct hostent *hp;
     struct in_addr in;
-    
+
     memset(outbuf, 0, sizeof(outbuf));
 
     vio.out_size = sizeof(outbuf);
@@ -1322,7 +1322,7 @@ add_hosts(char *file)
 	 * If it is replicated on many servers, then none are included.
 	 * This is not perfect, but the result is that people don't
 	 * get subscribed to a lot of instances of FILSRV that they
-	 * probably won't need which reduces the instances of 
+	 * probably won't need which reduces the instances of
 	 * people getting messages that don't apply to them.
 	 */
 #ifndef ALLHOSTS
@@ -1344,7 +1344,7 @@ add_hosts(char *file)
 }
 
 /*
- * This routine descends through a path to a directory, logging to 
+ * This routine descends through a path to a directory, logging to
  * every cell it encounters along the way.
  */
 static int
@@ -1383,9 +1383,9 @@ auth_to_path(krb5_context context, char *path)
     while ((nextpath = next_path(NULL))) {
 	strcpy(pathtocheck, nextpath);
 	afs_dprintf("Checking directory %s\n", pathtocheck);
-	/* 
-	 * If this is an afs mountpoint, determine what cell from 
-	 * the mountpoint name which is of the form 
+	/*
+	 * If this is an afs mountpoint, determine what cell from
+	 * the mountpoint name which is of the form
 	 * #cellname:volumename or %cellname:volumename.
 	 */
 	if (get_afs_mountpoint(pathtocheck, mountpoint, sizeof(mountpoint))) {
@@ -1410,9 +1410,9 @@ auth_to_path(krb5_context context, char *path)
 	    if (isdir(pathtocheck, &isdirectory) < 0) {
 		/*
 		 * If we've logged and still can't stat, there's
-		 * a problem... 
+		 * a problem...
 		 */
-		fprintf(stderr, "%s: stat(%s): %s\n", progname, 
+		fprintf(stderr, "%s: stat(%s): %s\n", progname,
 			pathtocheck, strerror(errno));
 		return(AKLOG_BADPATH);
 	    }
@@ -1424,7 +1424,7 @@ auth_to_path(krb5_context context, char *path)
 	    }
 	}
     }
-    
+
 
     return(status);
 }
@@ -1533,7 +1533,7 @@ main(int argc, char *argv[])
     for (i = 1; i < argc; i++) {
 	if (strcmp(argv[i], "-d") == 0)
 	    dflag++;
-	else if (strcmp(argv[i], "-noauth") == 0) 
+	else if (strcmp(argv[i], "-noauth") == 0)
 	    noauth++;
 	else if (strcmp(argv[i], "-zsubs") == 0)
 	    zsubs++;
@@ -1579,7 +1579,7 @@ main(int argc, char *argv[])
 	    }
 	    else
 		usage();
-	    
+
 	else if (argv[i][0] == '-')
 	    usage();
 	else if (!pmode && !cmode) {
@@ -1588,7 +1588,7 @@ main(int argc, char *argv[])
 		pmode++;
 		strcpy(path, argv[i]);
 	    }
-	    else { 
+	    else {
 		cmode++;
 		strcpy(cell, argv[i]);
 	    }
@@ -1612,7 +1612,7 @@ main(int argc, char *argv[])
 		if ((new_cellinfo = copy_cellinfo(&cellinfo)))
 		    ll_add_data(cur_node, new_cellinfo);
 		else {
-		    fprintf(stderr, 
+		    fprintf(stderr,
 			    "%s: failure copying cellinfo.\n", progname);
 		    exit(AKLOG_MISC);
 		}
@@ -1654,7 +1654,7 @@ main(int argc, char *argv[])
 	struct passwd *pwd;
 
 	status = auth_to_cell(context, NULL, NULL, &linkedcell);
-	
+
 	/* If this cell is linked to a DCE cell, and user requested -linked,
 	 * get tokens for both. This is very useful when the AFS cell is
 	 * linked to a DFS cell and this system does not also have DFS.
@@ -1731,9 +1731,9 @@ main(int argc, char *argv[])
 	    if ((status = auth_to_path(context, cur_node->data)))
 		somethingswrong++;
 	}
-	
-	/* 
-	 * If only one thing was logged to, we'll return the status 
+
+	/*
+	 * If only one thing was logged to, we'll return the status
 	 * of the single call.  Otherwise, we'll return a generic
 	 * something failed status.
 	 */
@@ -1742,7 +1742,7 @@ main(int argc, char *argv[])
     }
 
     /* If we are keeping track of zephyr subscriptions, print them. */
-    if (zsubs) 
+    if (zsubs)
 	for (cur_node = zsublist.first; cur_node; cur_node = cur_node->next) {
 	    printf("zsub: %s\n", cur_node->data);
 	}
@@ -1764,12 +1764,12 @@ isdir(char *path, unsigned char *val)
     if (lstat(path, &statbuf) < 0)
 	return (-1);
     else {
-	if ((statbuf.st_mode & S_IFMT) == S_IFDIR) 
+	if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
 	    *val = TRUE;
 	else
 	    *val = FALSE;
 	return (0);
-    }  
+    }
 }
 
 static krb5_error_code
@@ -1928,7 +1928,7 @@ get_credv5_akimpersonate(krb5_context context,
     enc_tkt_reply->times.starttime = starttime; /* krb524init needs this */
     enc_tkt_reply->times.endtime = endtime;
 #endif  /* USING_HEIMDAL */
-    /* NB:  We will discard address for now--ignoring caddr field               
+    /* NB:  We will discard address for now--ignoring caddr field
        in any case.  MIT branch does what it always did. */
 
     if (paddress && *paddress) {
@@ -2103,7 +2103,7 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 
     afs_dprintf("Getting tickets: %s%s%s@%s\n", name,
 	    (inst && inst[0]) ? "/" : "", inst ? inst : "", realm);
-    
+
     memset(&increds, 0, sizeof(increds));
 /* ANL - instance may be ptr to a null string. Pass null then */
     if ((r = krb5_build_principal(context, &increds.server,
@@ -2113,7 +2113,7 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 				  (void *) NULL))) {
         return r;
     }
-    
+
 
     if (!_krb425_ccache) {
         r = krb5_cc_default(context, &_krb425_ccache);
@@ -2129,12 +2129,12 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 	if (r)
 	    return r;
     }
-    
+
     increds.client = client_principal;
     increds.times.endtime = 0;
     /* Ask for DES since that is what V4 understands */
     get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
-    
+
     if (keytab) {
 	int allowed_enctypes[] = {
 	    ENCTYPE_DES_CBC_CRC, 0
@@ -2150,7 +2150,7 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 				     creds /* out */);
     } else {
 	r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
-    }    
+    }
     return r;
 }
 

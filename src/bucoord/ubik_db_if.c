@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -45,7 +45,7 @@
 extern char *whoami;
 
 /* -------------------------------------
- * Globals 
+ * Globals
  * -------------------------------------
  */
 
@@ -56,7 +56,7 @@ struct udbHandleS udbHandle;
  * -------------------------------------
  */
 
-afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *veptr)
+afs_int32 bcdb_AddVolume(struct budb_volumeEntry *veptr)
 {
     afs_int32 code;
 
@@ -64,7 +64,7 @@ afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *veptr)
     return (code);
 }
 
-afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *veptr, afs_int32 count)
+afs_int32 bcdb_AddVolumes(struct budb_volumeEntry *veptr, afs_int32 count)
 {
     struct budb_volumeList volumeList;
     afs_int32 code;
@@ -76,7 +76,7 @@ afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *veptr, afs_int32 cou
 }
 
 
-afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *deptr)
+afs_int32 bcdb_CreateDump(struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
 
@@ -84,7 +84,7 @@ afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *deptr)
     return (code);
 }
 
-afs_int32 bcdb_deleteDump(afs_int32 dumpID, afs_int32 fromTime, afs_int32 toTime, 
+afs_int32 bcdb_deleteDump(afs_int32 dumpID, afs_int32 fromTime, afs_int32 toTime,
   budb_dumpsList *dumps)
 {
     afs_int32 code;
@@ -181,7 +181,7 @@ afs_int32 bcdb_FindClone(afs_int32 dumpID, char *volName, afs_int32 *clonetime)
  */
 
 int
-bcdb_FindDump(char *volumeName, afs_int32 beforeDate, 
+bcdb_FindDump(char *volumeName, afs_int32 beforeDate,
 	      struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
@@ -200,7 +200,7 @@ bcdb_FindDump(char *volumeName, afs_int32 beforeDate,
 int
 bcdb_FindDumpByID(afs_int32 dumpID, struct budb_dumpEntry *deptr)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 nextindex;
     afs_int32 dbTime;
     budb_dumpList dl;
@@ -258,7 +258,7 @@ bcdb_FindDumpByID(afs_int32 dumpID, struct budb_dumpEntry *deptr)
  */
 
 afs_int32
-bcdb_FindLastVolClone(char *volSetName, char *dumpName, char *volName, 
+bcdb_FindLastVolClone(char *volSetName, char *dumpName, char *volName,
 		      afs_int32 *clonetime)
 {
     /* server notes
@@ -287,7 +287,7 @@ bcdb_FindLastVolClone(char *volSetName, char *dumpName, char *volName,
  */
 
 int
-bcdb_FindLatestDump(char *volSetName, char *dumpPath, 
+bcdb_FindLatestDump(char *volSetName, char *dumpPath,
 		    struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
@@ -306,7 +306,7 @@ bcdb_FindLatestDump(char *volSetName, char *dumpPath,
  */
 
 int
-bcdb_FindTape(afs_int32 dumpid, char *tapeName, 
+bcdb_FindTape(afs_int32 dumpid, char *tapeName,
 	      struct budb_tapeEntry *teptr)
 {
     budb_tapeList tl;
@@ -338,7 +338,7 @@ bcdb_FindTape(afs_int32 dumpid, char *tapeName,
 }
 
 int
-bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq, 
+bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq,
 		 struct budb_tapeEntry *teptr)
 {
     budb_tapeList tl;
@@ -369,7 +369,7 @@ bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq,
 }
 
 /* bcdb_FindVolumes
- * notes: 
+ * notes:
  *	- this is part of dblookup. The existing semantics will not work since
  *	they do lookups based on dump id.
  *	- in the restore code, it uses this to extract information about
@@ -382,9 +382,9 @@ bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq,
  */
 
 afs_int32
-bcdb_FindVolumes(afs_int32 dumpID, char *volumeName, 
-		 struct budb_volumeEntry *returnArray, 
-		 afs_int32 last, afs_int32 *next, afs_int32 maxa, 
+bcdb_FindVolumes(afs_int32 dumpID, char *volumeName,
+		 struct budb_volumeEntry *returnArray,
+		 afs_int32 last, afs_int32 *next, afs_int32 maxa,
 		 afs_int32 *nEntries)
 {
     budb_volumeList vl;
@@ -407,7 +407,7 @@ bcdb_FindVolumes(afs_int32 dumpID, char *volumeName,
 }
 
 int
-bcdb_FinishDump(register struct budb_dumpEntry *deptr)
+bcdb_FinishDump(struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
     code = ubik_BUDB_FinishDump(udbHandle.uh_client, 0, deptr);
@@ -415,7 +415,7 @@ bcdb_FinishDump(register struct budb_dumpEntry *deptr)
 }
 
 int
-bcdb_FinishTape(register struct budb_tapeEntry *teptr)
+bcdb_FinishTape(struct budb_tapeEntry *teptr)
 {
     afs_int32 code;
     code = ubik_BUDB_FinishTape(udbHandle.uh_client, 0, teptr);
@@ -427,8 +427,8 @@ bcdb_FinishTape(register struct budb_tapeEntry *teptr)
  */
 
 afs_int32
-bcdb_LookupVolume(char *volumeName, struct budb_volumeEntry *returnArray, 
-		  afs_int32 last, afs_int32 *next, afs_int32 maxa, 
+bcdb_LookupVolume(char *volumeName, struct budb_volumeEntry *returnArray,
+		  afs_int32 last, afs_int32 *next, afs_int32 maxa,
 		  afs_int32 *nEntries)
 {
     budb_volumeList vl;
@@ -463,10 +463,10 @@ bcdb_UseTape(struct budb_tapeEntry *teptr, afs_int32 *newFlag)
 
 
 /* ---- text configuration handling routines ----
- * 
- * notes: 
+ *
+ * notes:
  *	The caller should pass in/out a fid for an unlinked, open file to prevent
- *	tampering with the files contents; 
+ *	tampering with the files contents;
  */
 
 /* bcdb_GetTextFile
@@ -477,7 +477,7 @@ bcdb_UseTape(struct budb_tapeEntry *teptr, afs_int32 *newFlag)
  */
 
 int
-bcdb_GetTextFile(register udbClientTextP ctPtr)
+bcdb_GetTextFile(udbClientTextP ctPtr)
 {
     afs_int32 bufferSize;
     afs_int32 offset, nextOffset;
@@ -788,12 +788,12 @@ parseSecFlags(int noAuthFlag, int localauth, const char **confdir) {
     return secFlags;
 }
 
-/* vldbClientInit 
+/* vldbClientInit
  *      Initialize a client for the vl ubik database.
  */
 int
-vldbClientInit(int noAuthFlag, int localauth, char *cellName, 
-	       struct ubik_client **cstruct, 
+vldbClientInit(int noAuthFlag, int localauth, char *cellName,
+	       struct ubik_client **cstruct,
 	       time_t *expires)
 {
     afs_int32 code = 0;
@@ -998,16 +998,16 @@ static struct ubikCallState uServer;
  */
 
 afs_int32
-ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient, 
-		       afs_int32 aflags, char *p1, char *p2, char *p3, 
+ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
+		       afs_int32 aflags, char *p1, char *p2, char *p3,
 		       char *p4, char *p5, char *p6, char *p7, char *p8,
-		       char *p9, char *p10, char *p11, char *p12, char *p13, 
+		       char *p9, char *p10, char *p11, char *p12, char *p13,
 		       char *p14, char *p15, char *p16)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 someCode, newHost, thisHost;
-    register afs_int32 i;
-    register afs_int32 count;
+    afs_int32 i;
+    afs_int32 count;
     int chaseCount;
     int pass;
     struct rx_connection *tc;
@@ -1131,7 +1131,7 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
 
 
 /* -------------------------------------
- * debug and test routines 
+ * debug and test routines
  * -------------------------------------
  */
 
@@ -1209,7 +1209,7 @@ udbLocalInit(void)
  *           the udbClientTextP.textStream member.
  * Output: The temp file name is returned in tmpFileName. This should be used
  *   to delete the file when done with it.
- * Return Values: 
+ * Return Values:
  *     !0: error code
  *     0: Success.
  */
@@ -1261,10 +1261,10 @@ bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
 
 
 /* bc_closeTextFile: This function closes any actual temp files associated with
- * a udbClientText structure. 
+ * a udbClientText structure.
  * Input: ctPtr->textStream - stream to close
  *        tmpFileName - temp file name to delete
- * RetVal: 
+ * RetVal:
  *    0  - Success
  *    !0 - error code
  */

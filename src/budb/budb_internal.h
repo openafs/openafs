@@ -54,9 +54,12 @@ afs_int32 InitRPC(struct ubik_trans **, int lock, int this_op);
 
 /* server.c */
 
-void Log(char *fmt, ... );
-void LogError(long code, char *fmt, ... );
-void LogDebug(int level, char *fmt, ... );
+void Log(char *fmt, ... )
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+void LogError(long code, char *fmt, ... )
+    AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
+void LogDebug(int level, char *fmt, ... )
+    AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
 
 /* struct_ops.c */
 

@@ -129,7 +129,7 @@ void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
 }
 
 int
-afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
     AFS_STATCNT(osi_Stat);
     ObtainWriteLock(&afs_xosi, 320);
@@ -142,7 +142,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 }
 
 int
-osi_UFSClose(register struct osi_file *afile)
+osi_UFSClose(struct osi_file *afile)
 {
     AFS_STATCNT(osi_Close);
     if (afile) {
@@ -156,9 +156,9 @@ osi_UFSClose(register struct osi_file *afile)
 }
 
 int
-osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct osi_stat tstat;
     struct iattr newattrs;
     struct inode *inode = OSIFILE_INODE(afile);
@@ -173,11 +173,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 	return code;
     ObtainWriteLock(&afs_xosi, 321);
     AFS_GUNLOCK();
-#ifdef STRUCT_INODE_HAS_I_MUTEX
-    mutex_lock(&inode->i_mutex);
-#else
-    down(&inode->i_sem);
-#endif
+    afs_linux_lock_inode(inode);
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     down_write(&inode->i_alloc_sem);
 #endif
@@ -187,27 +183,15 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 
     /* avoid notify_change() since it wants to update dentry->d_parent */
     code = inode_change_ok(inode, &newattrs);
-    if (!code) {
-#ifdef INODE_SETATTR_NOT_VOID
-	if (inode->i_op && inode->i_op->setattr)
-	    code = inode->i_op->setattr(afile->filp->f_dentry, &newattrs);
-	else
-	    code = inode_setattr(inode, &newattrs);
-#else
-        inode_setattr(inode, &newattrs);
-#endif
-    }
+    if (!code)
+	code = afs_inode_setattr(afile, &newattrs);
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
     code = -code;
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     up_write(&inode->i_alloc_sem);
 #endif
-#ifdef STRUCT_INODE_HAS_I_MUTEX
-    mutex_unlock(&inode->i_mutex);
-#else
-    up(&inode->i_sem);
-#endif
+    afs_linux_unlock_inode(inode);
     AFS_GLOCK();
     ReleaseWriteLock(&afs_xosi);
     return code;
@@ -216,7 +200,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 
 /* Generic read interface */
 int
-afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
+afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     struct uio auio;
@@ -255,7 +239,7 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 
 /* Generic write interface */
 int
-afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
+afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     struct uio auio;
@@ -298,7 +282,7 @@ afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
     This routine written from the RT NFS port strategy routine.
     It has been generalized a bit, but should still be pretty clear. */
 int
-afs_osi_MapStrategy(int (*aproc) (struct buf * bp), register struct buf *bp)
+afs_osi_MapStrategy(int (*aproc) (struct buf * bp), struct buf *bp)
 {
     afs_int32 returnCode;
 

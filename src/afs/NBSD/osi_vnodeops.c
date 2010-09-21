@@ -114,10 +114,6 @@ NONINFRINGEMENT.
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
 
-#ifdef AFS_DISCON_ENV
-extern int afs_FlushVS(struct vcache *tvc);
-#endif
-
 #define M_AFSNODE (M_TEMP-1)	/* XXX */
 
 int afs_nbsd_lookup(void *);
@@ -960,12 +956,8 @@ afs_nbsd_reclaim(void *v)
 	AFS_GLOCK();
     if (!haveVlock)
 	ObtainWriteLock(&afs_xvcache, 901);
-#ifndef AFS_DISCON_ENV
-    code = afs_FlushVCache(avc, &slept);	/* tosses our stuff from vnode */
-#else
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
-    code = afs_FlushVS(avc);
-#endif
+    code = afs_FlushVCache(avc, &slept);
     if (!haveVlock)
 	ReleaseWriteLock(&afs_xvcache);
     if (!haveGlock)

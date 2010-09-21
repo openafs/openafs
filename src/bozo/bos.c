@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -48,8 +48,8 @@
 #include <afs/kautils.h>
 #include <afs/volser.h>
 
-static int IStatServer(register struct cmd_syndesc *as, int int32p);
-static int DoStat(char *aname, register struct rx_connection *aconn, 
+static int IStatServer(struct cmd_syndesc *as, int int32p);
+static int DoStat(char *aname, struct rx_connection *aconn,
 		  int aint32p, int firstTime);
 
 #include "bosint.h"
@@ -106,7 +106,7 @@ em(afs_int32 acode)
 static afs_int32
 GetPartitionID(char *aname)
 {
-    register char tc;
+    char tc;
     char ascii[3];
 
     tc = *aname;
@@ -149,7 +149,7 @@ static char *
 DateOf(afs_int32 atime)
 {
     static char tbuffer[30];
-    register char *tp;
+    char *tp;
     time_t t = (time_t) atime;
     tp = ctime(&t);
     if (tp) {
@@ -171,8 +171,8 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     char *hostname;
     char *cellname = NULL;
     const char *confdir;
-    register afs_int32 code;
-    register struct rx_connection *tconn;
+    afs_int32 code;
+    struct rx_connection *tconn;
     afs_int32 addr;
     struct afsconf_dir *tdir = NULL;
     afsconf_secflags secFlags;
@@ -235,10 +235,10 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
 static int
 SetAuth(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
-    register struct rx_connection *tconn;
+    afs_int32 code;
+    struct rx_connection *tconn;
     afs_int32 flag;
-    register char *tp;
+    char *tp;
 
     tconn = GetConn(as, 0);
     tp = as->parms[1].items->data;
@@ -263,7 +263,7 @@ SetAuth(struct cmd_syndesc *as, void *arock)
 static int
 ComputeDestDir(char *aname, char *adir, char *aresult, afs_int32 alen)
 {
-    register char *tp;
+    char *tp;
 
     strcpy(aresult, adir);
     tp = strrchr(aname, '/');
@@ -280,10 +280,10 @@ ComputeDestDir(char *aname, char *adir, char *aresult, afs_int32 alen)
 
 /* copy data from fd afd to rx call acall */
 static int
-CopyBytes(int afd, register struct rx_call *acall)
+CopyBytes(int afd, struct rx_call *acall)
 {
-    register afs_int32 code;
-    register afs_int32 len;
+    afs_int32 code;
+    afs_int32 len;
     char tbuffer[256];
 
     while (1) {
@@ -299,11 +299,11 @@ CopyBytes(int afd, register struct rx_call *acall)
 }
 
 static int
-Prune(register struct cmd_syndesc *as, void *arock)
+Prune(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
-    register struct rx_connection *tconn;
-    register afs_int32 flags;
+    afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 flags;
 
     tconn = GetConn(as, 0);
     flags = 0;
@@ -322,10 +322,10 @@ Prune(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-Exec(register struct cmd_syndesc *as, void *arock)
+Exec(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
 
     tconn = GetConn(as, 0);
     code = BOZO_Exec(tconn, as->parms[1].items->data);
@@ -335,14 +335,14 @@ Exec(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-GetDate(register struct cmd_syndesc *as, void *arock)
+GetDate(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char tbuffer[256];
     char destDir[256];
     afs_int32 time, bakTime, oldTime;
-    register struct rx_connection *tconn;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    struct cmd_item *ti;
 
     tconn = GetConn(as, 0);
     if (!as->parms[1].items) {
@@ -385,13 +385,13 @@ GetDate(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-UnInstall(register struct cmd_syndesc *as, void *arock)
+UnInstall(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char tbuffer[256];
     char destDir[256];
-    register struct cmd_item *ti;
-    register struct rx_connection *tconn;
+    struct cmd_item *ti;
+    struct rx_connection *tconn;
 
     tconn = GetConn(as, 0);
     if (!as->parms[1].items) {
@@ -423,7 +423,7 @@ GetServerGoal(struct rx_connection *aconn, char *aname)
 {
     char buffer[500];
     char *tp;
-    register afs_int32 code;
+    afs_int32 code;
     struct bozo_status istatus;
 
     tp = buffer;
@@ -444,8 +444,8 @@ static int
 Install(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    afs_int32 code;
+    struct cmd_item *ti;
     struct stat tstat;
     char tbuffer[256];
     int fd;
@@ -500,9 +500,9 @@ Install(struct cmd_syndesc *as, void *arock)
 static int
 Shutdown(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     tconn = GetConn(as, 0);
     if (as->parms[1].items == 0) {
@@ -529,7 +529,7 @@ Shutdown(struct cmd_syndesc *as, void *arock)
 static int
 BlockScannerCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct rx_connection *tconn;
     char BlockCommand[] = "/usr/afs/bin/scanner -block";
 
@@ -545,7 +545,7 @@ BlockScannerCmd(struct cmd_syndesc *as, void *arock)
 static int
 UnBlockScannerCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct rx_connection *tconn;
     char UnBlockCommand[] = "/usr/afs/bin/scanner -unblock";
 
@@ -561,7 +561,7 @@ UnBlockScannerCmd(struct cmd_syndesc *as, void *arock)
 static int
 GetRestartCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ktime generalTime, newBinaryTime;
     char messageBuffer[256];
     struct rx_connection *tconn;
@@ -605,7 +605,7 @@ static int
 SetRestartCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 count = 0;
-    register afs_int32 code;
+    afs_int32 code;
     struct ktime restartTime;
     afs_int32 type = 0 ;
     struct rx_connection *tconn;
@@ -644,9 +644,9 @@ SetRestartCmd(struct cmd_syndesc *as, void *arock)
 static int
 Startup(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     tconn = GetConn(as, 0);
     if (as->parms[1].items == 0) {
@@ -667,9 +667,9 @@ Startup(struct cmd_syndesc *as, void *arock)
 static int
 Restart(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     tconn = GetConn(as, 0);
     if (as->parms[2].items) {
@@ -712,8 +712,8 @@ Restart(struct cmd_syndesc *as, void *arock)
 static int
 SetCellName(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
 
     tconn = GetConn(as, 0);
     code = BOZO_SetCellName(tconn, as->parms[1].items->data);
@@ -723,11 +723,11 @@ SetCellName(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-AddHost(register struct cmd_syndesc *as, void *arock)
+AddHost(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
     char name[MAXHOSTCHARS];
 
     tconn = GetConn(as, 0);
@@ -750,11 +750,11 @@ AddHost(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-RemoveHost(register struct cmd_syndesc *as, void *arock)
+RemoveHost(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     tconn = GetConn(as, 0);
     for (ti = as->parms[1].items; ti; ti = ti->next) {
@@ -767,13 +767,13 @@ RemoveHost(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ListHosts(register struct cmd_syndesc *as, void *arock)
+ListHosts(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
     char tbuffer[256];
     char *tp;
-    register afs_int32 i;
+    afs_int32 i;
 
     tp = tbuffer;
     tconn = GetConn(as, 0);
@@ -797,10 +797,10 @@ ListHosts(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-AddKey(register struct cmd_syndesc *as, void *arock)
+AddKey(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
     struct ktc_encryptionKey tkey;
     afs_int32 temp;
     char *tcell;
@@ -866,12 +866,12 @@ AddKey(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-RemoveKey(register struct cmd_syndesc *as, void *arock)
+RemoveKey(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
     afs_int32 temp;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
 
     tconn = GetConn(as, 0);
     for (ti = as->parms[1].items; ti; ti = ti->next) {
@@ -886,15 +886,15 @@ RemoveKey(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ListKeys(register struct cmd_syndesc *as, void *arock)
+ListKeys(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
     struct ktc_encryptionKey tkey;
     afs_int32 kvno;
     struct bozo_keyInfo keyInfo;
     int everWorked;
-    register afs_int32 i;
+    afs_int32 i;
 
     tconn = GetConn(as, 1);
     everWorked = 0;
@@ -926,12 +926,12 @@ ListKeys(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-AddSUser(register struct cmd_syndesc *as, void *arock)
+AddSUser(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
     int failed;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
 
     failed = 0;
     tconn = GetConn(as, 0);
@@ -946,11 +946,11 @@ AddSUser(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-RemoveSUser(register struct cmd_syndesc *as, void *arock)
+RemoveSUser(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register struct cmd_item *ti;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    struct cmd_item *ti;
+    afs_int32 code;
     int failed;
 
     failed = 0;
@@ -971,11 +971,11 @@ RemoveSUser(register struct cmd_syndesc *as, void *arock)
 
 #define	NPERLINE    10		/* dudes to print per line */
 static int
-ListSUsers(register struct cmd_syndesc *as, void *arock)
+ListSUsers(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register int i;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    int i;
+    afs_int32 code;
     char tbuffer[256];
     char *tp;
     int lastNL, printGreeting;
@@ -1010,11 +1010,11 @@ ListSUsers(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-StatServer(register struct cmd_syndesc *as, void *arock)
+StatServer(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register int i;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    int i;
     char ibuffer[BOZO_BSSIZE];
     char *tp;
     int int32p;
@@ -1044,13 +1044,13 @@ StatServer(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-CreateServer(register struct cmd_syndesc *as, void *arock)
+CreateServer(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
+    struct rx_connection *tconn;
+    afs_int32 code;
     char *parms[6];
-    register struct cmd_item *ti;
-    register int i;
+    struct cmd_item *ti;
+    int i;
     char *type, *name, *notifier = NONOTIFIER;
 
     tconn = GetConn(as, 0);
@@ -1076,11 +1076,11 @@ CreateServer(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-DeleteServer(register struct cmd_syndesc *as, void *arock)
+DeleteServer(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     code = 0;
     tconn = GetConn(as, 0);
@@ -1098,11 +1098,11 @@ DeleteServer(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-StartServer(register struct cmd_syndesc *as, void *arock)
+StartServer(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     code = 0;
     tconn = GetConn(as, 0);
@@ -1116,11 +1116,11 @@ StartServer(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-StopServer(register struct cmd_syndesc *as, void *arock)
+StopServer(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    afs_int32 code;
+    struct cmd_item *ti;
 
     code = 0;
     tconn = GetConn(as, 0);
@@ -1142,12 +1142,12 @@ StopServer(register struct cmd_syndesc *as, void *arock)
 #define PARMBUFFERSSIZE 32
 
 static afs_int32
-DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2, 
-	  char * aoutName, afs_int32 showlog, char * parallel, 
-	  char * atmpDir, char * orphans, int dafs, 
+DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
+	  char * aoutName, afs_int32 showlog, char * parallel,
+	  char * atmpDir, char * orphans, int dafs,
 	  struct MRAFSSalvageParms * mrafsParm)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char *parms[6];
     char buffer;
     char tbuffer[BOZO_BSSIZE];
@@ -1244,7 +1244,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     /* For DAFS, specifying a single volume does not result in a standard
      * salvager call.  Instead, it simply results in a SALVSYNC call to the
      * online salvager daemon.  This interface does not give us the same rich
-     * set of call flags.  Thus, we skip these steps for DAFS single-volume 
+     * set of call flags.  Thus, we skip these steps for DAFS single-volume
      * calls */
     if (!dafs || (*aparm2 == 0)) {
 	/* add the parallel option if given */
@@ -1314,7 +1314,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	if (mrafsParm->OptRxDebug)
 	    strcat(tbuffer, " -rxdebug");
 	if (mrafsParm->OptResidencies) {
-	    sprintf(pbuffer, " -Residencies %lu", 
+	    sprintf(pbuffer, " -Residencies %lu",
 		    afs_printable_uint32_lu(mrafsParm->OptResidencies));
 	    strcat(tbuffer, pbuffer);
 	}
@@ -1376,11 +1376,11 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 }
 
 static int
-GetLogCmd(register struct cmd_syndesc *as, void *arock)
+GetLogCmd(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
-    register struct rx_call *tcall;
-    register afs_int32 code;
+    struct rx_call *tcall;
+    afs_int32 code;
     char buffer;
     int error;
 
@@ -1414,10 +1414,40 @@ GetLogCmd(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
+IsDAFS(struct rx_connection *aconn)
+{
+    char buffer[BOZO_BSSIZE];
+    char *tp;
+    struct bozo_status istatus;
+    afs_int32 code;
+
+    tp = &buffer[0];
+
+    code = BOZO_GetInstanceInfo(aconn, "dafs", &tp, &istatus);
+    if (code) {
+	/* no dafs bnode; cannot be dafs */
+	return 0;
+    }
+    if (istatus.goal) {
+	/* dafs bnode is running; we must be dafs */
+	return 1;
+    }
+
+    /* At this point, either we have neither a dafs nor fs bnode running, or
+     * we have an fs bnode running but the dafs bnode is stopped.
+     *
+     * If an fs bnode is running, we are obviously not DAFS. If an fs bnode
+     * is not running and a dafs bnode is not running... it's not certain if
+     * we are DAFS or not DAFS. Just return 0 in that case; it shouldn't much
+     * matter what we return, anyway */
+    return 0;
+}
+
+static int
 SalvageCmd(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
-    register afs_int32 code, rc, i;
+    struct rx_connection *tconn;
+    afs_int32 code, rc, i;
     char *outName;
     char tname[BOZO_BSSIZE];
     afs_int32 newID;
@@ -1438,7 +1468,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     tp = &tname[0];
 
     /* find out whether fileserver is running demand attach fs */
-    if ((code = BOZO_GetInstanceParm(tconn, "dafs", 0, &tp) == 0)) {
+    if (IsDAFS(tconn)) {
 	dafs = 1;
 	serviceName = "dafs";
 	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
@@ -1694,10 +1724,10 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-IStatServer(register struct cmd_syndesc *as, int int32p)
+IStatServer(struct cmd_syndesc *as, int int32p)
 {
-    register struct rx_connection *tconn;
-    register struct cmd_item *ti;
+    struct rx_connection *tconn;
+    struct cmd_item *ti;
     int firstTime = 1;
 
     tconn = GetConn(as, 0);
@@ -1709,15 +1739,15 @@ IStatServer(register struct cmd_syndesc *as, int int32p)
 }
 
 static int
-DoStat(IN char *aname, 
-       IN register struct rx_connection *aconn, 
-       IN int aint32p, 
+DoStat(IN char *aname,
+       IN struct rx_connection *aconn,
+       IN int aint32p,
        IN int firstTime) 	/* true iff first instance in cmd */
 {
     afs_int32 temp;
     char buffer[500];
-    register afs_int32 code;
-    register afs_int32 i;
+    afs_int32 code;
+    afs_int32 i;
     struct bozo_status istatus;
     char *tp;
     char *is1, *is2, *is3, *is4;	/* instance strings */
@@ -1829,7 +1859,7 @@ DoStat(IN char *aname,
 static int
 GetRestrict(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
+    struct rx_connection *tconn;
     afs_int32 code, val;
 
     tconn = GetConn(as, 0);
@@ -1845,7 +1875,7 @@ GetRestrict(struct cmd_syndesc *as, void *arock)
 static int
 SetRestrict(struct cmd_syndesc *as, void *arock)
 {
-    register struct rx_connection *tconn;
+    struct rx_connection *tconn;
     afs_int32 code, val;
 
     tconn = GetConn(as, 0);
@@ -1857,7 +1887,7 @@ SetRestrict(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(register struct cmd_syndesc *ts)
+add_std_args(struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, ADDPARMOFFSET);
     /* + 0 */ cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -1872,14 +1902,14 @@ add_std_args(register struct cmd_syndesc *ts)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
-    register struct cmd_syndesc *ts;
+    afs_int32 code;
+    struct cmd_syndesc *ts;
     extern int afsconf_SawCell;
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */

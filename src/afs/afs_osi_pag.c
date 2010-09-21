@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -448,7 +448,7 @@ AddPag(afs_int32 aval, afs_ucred_t **credpp)
 
 
 int
-afs_InitReq(register struct vrequest *av, afs_ucred_t *acred)
+afs_InitReq(struct vrequest *av, afs_ucred_t *acred)
 {
 #if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     int code;

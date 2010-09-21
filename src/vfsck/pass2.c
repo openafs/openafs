@@ -83,7 +83,7 @@ int pass2check();
 
 pass2()
 {
-    register struct dinode *dp;
+    struct dinode *dp;
     struct inodesc rootdesc;
 
     memset(&rootdesc, 0, sizeof(struct inodesc));
@@ -168,7 +168,7 @@ pass2()
 pass2check(idesc)
      struct inodesc *idesc;
 {
-    register struct direct *dirp = idesc->id_dirp;
+    struct direct *dirp = idesc->id_dirp;
     char *curpathloc;
     int n, entrysize, ret = 0;
     struct dinode *dp;
@@ -178,7 +178,7 @@ pass2check(idesc)
     int holdstate;
 #endif /* ACLS */
 
-    /* 
+    /*
      * check for "."
      */
     if (idesc->id_entryno != 0)
@@ -200,12 +200,12 @@ pass2check(idesc)
     if (dirp->d_ino != 0 && strcmp(dirp->d_name, "..") != 0) {
 	pfatal("CANNOT FIX, FIRST ENTRY IN DIRECTORY CONTAINS %s\n",
 	       dirp->d_name);
-#if	defined(AFS_SUN_ENV) 
+#if	defined(AFS_SUN_ENV)
 	iscorrupt = 1;
 #endif
     } else if (dirp->d_reclen < entrysize) {
 	pfatal("CANNOT FIX, INSUFFICIENT SPACE TO ADD '.'\n");
-#if	defined(AFS_SUN_ENV) 
+#if	defined(AFS_SUN_ENV)
 	iscorrupt = 1;
 #endif
     } else if (dirp->d_reclen < 2 * entrysize) {
@@ -257,12 +257,12 @@ pass2check(idesc)
     if (dirp->d_ino != 0 && strcmp(dirp->d_name, ".") != 0) {
 	pfatal("CANNOT FIX, SECOND ENTRY IN DIRECTORY CONTAINS %s\n",
 	       dirp->d_name);
-#if	defined(AFS_SUN_ENV) 
+#if	defined(AFS_SUN_ENV)
 	iscorrupt = 1;
 #endif
     } else if (dirp->d_reclen < entrysize) {
 	pfatal("CANNOT FIX, INSUFFICIENT SPACE TO ADD '..'\n");
-#if	defined(AFS_SUN_ENV) 
+#if	defined(AFS_SUN_ENV)
 	iscorrupt = 1;
 #endif
     } else {

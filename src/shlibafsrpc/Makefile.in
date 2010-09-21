@@ -311,7 +311,7 @@ des.o: ${DES}/des.c
 	case ${SYS_NAME} in \
 	hp_ux11*) \
 		set X `echo ${CCRULE} | sed s/-g//`; shift; \
-		"-I../des $$@" \
+		"$$@" -I../des \
 		;; \
 	*) \
 		${CCRULE} -I../des \

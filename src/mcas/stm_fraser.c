@@ -354,9 +354,9 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
             {
                 data = CASPO(&ent->b->data, ent->old, marked_tx);
                 if ( (data == ent->old) || (data == marked_tx) ) break;
- 
+
                 if ( !is_descriptor(data) ) goto fail;
- 
+
                 other = ptr_to_descriptor(data);
                 rc_up_descriptor(other);
                 if ( ent->b->data != data )
@@ -364,7 +364,7 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
                     rc_down_descriptor(ptst, other);
                     continue;
                 }
- 
+
                 commit_stm_tx(ptst, other);
             }
         }
@@ -385,7 +385,7 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
             MB_NEAR_CAS();
         }
         else MB();
- 
+
         for ( ent = t->reads; ent != NULL; ent = ent->next )
         {
             for ( ; ; )
@@ -408,7 +408,7 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
                     rc_down_descriptor(ptst, other);
                     continue;
                 }
- 
+
                 /*
                  * What we do now depends on the status of the contending
                  * operation. This is easy for any status other than
@@ -463,7 +463,7 @@ bool_t commit_stm_tx(ptst_t *ptst, stm_tx *t)
         old_status = new_status;
     }
     WMB_NEAR_CAS();
- 
+
     /*
      * PHASE 3: CLEAN-UP.
      */
@@ -608,7 +608,7 @@ void remove_from_tx(ptst_t *ptst, stm_tx *t, stm_blk *b)
     pent = search_stm_tx_entry(&t->writes, b);
     ent  = *pent;
     if ( (ent != NULL) && (ent->b == b) )
-    { 
+    {
         *pent = ent->next;
         data = ent->new;
         assert(!is_descriptor(data));

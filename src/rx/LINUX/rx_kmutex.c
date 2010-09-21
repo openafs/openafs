@@ -21,6 +21,8 @@
 #include "rx_kmutex.h"
 #include "rx/rx_kernel.h"
 
+#include "osi_compat.h"
+
 void
 afs_mutex_init(afs_kmutex_t * l)
 {
@@ -111,29 +113,8 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 
     while(seq == cv->seq) {
 	schedule();
-#ifdef CONFIG_PM
-	if (
-#ifdef PF_FREEZE
-	    current->flags & PF_FREEZE
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_TODO)
-	    !current->todo
-#else
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
-	    test_ti_thread_flag(current->thread_info, TIF_FREEZE)
-#else
-	    test_ti_thread_flag(task_thread_info(current), TIF_FREEZE)
-#endif
-#endif
-#endif
-	    )
-#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-	    refrigerator(PF_FREEZE);
-#else
-	    refrigerator();
-#endif
-	    set_current_state(TASK_INTERRUPTIBLE);
-#endif
+	afs_try_to_freeze();
+	set_current_state(TASK_INTERRUPTIBLE);
     }
 
     remove_wait_queue(&cv->waitq, &wait);

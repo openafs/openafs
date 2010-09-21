@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -30,9 +30,9 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register int i;
-    register afs_int32 code;
-    register struct rx_service *tservice;
+    int i;
+    afs_int32 code;
+    struct rx_service *tservice;
     struct rx_securityClass *rxsc[1];
 
     for (i = 1; i < argc; i++) {
@@ -76,9 +76,9 @@ STC_PerformDump(acall, adumpName, atapeSet, adumpArray, aparent, alevel,
      struct tc_dumpArray *adumpArray;
      afs_int32 *adumpID;
 {
-    register int i;
-    register struct tc_dumpDesc *tdescr;
-    register afs_int32 code;
+    int i;
+    struct tc_dumpDesc *tdescr;
+    afs_int32 code;
     struct sockaddr_in taddr;
     struct budb_dumpEntry tdentry;
     struct budb_volumeEntry tventry;
@@ -172,8 +172,8 @@ STC_PerformRestore(acall, aname, arestore, adumpID)
      struct tc_restoreArray *arestore;
      afs_int32 *adumpID;
 {
-    register int i;
-    register struct tc_restoreDesc *tdescr;
+    int i;
+    struct tc_restoreDesc *tdescr;
     struct sockaddr_in taddr;
 
     printf("tape controller received request to start restore %s.\n", aname);
@@ -216,7 +216,7 @@ STC_AbortDump(acall, adumpID)
     return 0;
 }
 
-/* this call waits for a dump to complete; it ties up an LWP on the tape 
+/* this call waits for a dump to complete; it ties up an LWP on the tape
 coordinator */
 STC_WaitForDump()
 {

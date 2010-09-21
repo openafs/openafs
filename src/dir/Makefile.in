@@ -47,13 +47,13 @@ install: libdir.a dir.h
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libdir.a ${DESTDIR}${libdir}/afs/libdir.a
-	${INSTALL_DATA} dir.h ${DESTDIR}${includedir}/afs/dir.h
+	${INSTALL_DATA} ${srcdir}/dir.h ${DESTDIR}${includedir}/afs/dir.h
 
 dest: libdir.a dir.h
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libdir.a ${DEST}/lib/afs/libdir.a
-	${INSTALL_DATA} dir.h ${DEST}/include/afs/dir.h
+	${INSTALL_DATA} ${srcdir}/dir.h ${DEST}/include/afs/dir.h
 
 #
 # Misc. targets

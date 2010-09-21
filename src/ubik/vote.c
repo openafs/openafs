@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -61,7 +61,7 @@
  * be the sync site.  Thus, any time that the sync site has not heard from a
  * majority of the servers in the last #SMALLTIME seconds, it voluntarily
  * relinquishes its role as sync site.
- * 
+ *
  * While attempting to nominate a new sync site, certain rules apply.  First,
  * a server can not reply "ok" (return 1 from ServBeacon) to two different
  * hosts in less than #BIGTIME seconds; this allows a server that has heard
@@ -131,7 +131,7 @@ struct ubik_tid ubik_dbTid;	/*!< sync site's tid, or 0 if none */
 int
 uvote_ShouldIRun(void)
 {
-    register afs_int32 now;
+    afs_int32 now;
 
     now = FT_ApproxTime();
     if (BIGTIME + ubik_lastYesTime < now)
@@ -163,8 +163,8 @@ uvote_ShouldIRun(void)
 afs_int32
 uvote_GetSyncSite(void)
 {
-    register afs_int32 now;
-    register afs_int32 code;
+    afs_int32 now;
+    afs_int32 code;
 
     if (!lastYesState)
 	code = 0;
@@ -187,12 +187,12 @@ uvote_GetSyncSite(void)
  * non-zero.
  */
 afs_int32
-SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
+SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	     afs_int32 astart, struct ubik_version * avers,
 	     struct ubik_tid * atid)
 {
-    register afs_int32 otherHost;
-    register afs_int32 now;
+    afs_int32 otherHost;
+    afs_int32 now;
     afs_int32 vote;
     struct rx_connection *aconn;
     struct rx_peer *rxp;
@@ -236,7 +236,7 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
      * lowestHost after BIGTIME seconds to limit the damage if this host
      * actually crashes.  Finally, we also count in this computation: don't
      * pick someone else if we're even better!
-     * 
+     *
      * Note that the test below must be <=, not <, so that we keep refreshing
      * lowestTime.  Otherwise it will look like we haven't heard from
      * lowestHost in a while and another host could slip in.  */
@@ -351,7 +351,7 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
  */
 afs_int32
 SVOTE_SDebug(struct rx_call * rxcall, afs_int32 awhich,
-	     register struct ubik_sdebug * aparm)
+	     struct ubik_sdebug * aparm)
 {
     afs_int32 code, isClone;
     code = SVOTE_XSDebug(rxcall, awhich, aparm, &isClone);
@@ -360,10 +360,10 @@ SVOTE_SDebug(struct rx_call * rxcall, afs_int32 awhich,
 
 afs_int32
 SVOTE_XSDebug(struct rx_call * rxcall, afs_int32 awhich,
-	      register struct ubik_sdebug * aparm, afs_int32 * isclone)
+	      struct ubik_sdebug * aparm, afs_int32 * isclone)
 {
-    register struct ubik_server *ts;
-    register int i;
+    struct ubik_server *ts;
+    int i;
     for (ts = ubik_servers; ts; ts = ts->next) {
 	if (awhich-- == 0) {
 	    /* we're done */
@@ -386,7 +386,7 @@ SVOTE_XSDebug(struct rx_call * rxcall, afs_int32 awhich,
 }
 
 afs_int32
-SVOTE_XDebug(struct rx_call * rxcall, register struct ubik_debug * aparm,
+SVOTE_XDebug(struct rx_call * rxcall, struct ubik_debug * aparm,
 	     afs_int32 * isclone)
 {
     afs_int32 code;
@@ -400,7 +400,7 @@ SVOTE_XDebug(struct rx_call * rxcall, register struct ubik_debug * aparm,
  * \brief Handle basic network debug command.  This is the global state dumper.
  */
 afs_int32
-SVOTE_Debug(struct rx_call * rxcall, register struct ubik_debug * aparm)
+SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
 {
     int i;
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
@@ -427,7 +427,7 @@ SVOTE_Debug(struct rx_call * rxcall, register struct ubik_debug * aparm)
 
     ulock_Debug(aparm);
 
-    /* Get the recovery state. The label of the database may not have 
+    /* Get the recovery state. The label of the database may not have
      * been written yet but set the flag so udebug behavior remains.
      * Defect 9477.
      */
@@ -459,9 +459,9 @@ SVOTE_Debug(struct rx_call * rxcall, register struct ubik_debug * aparm)
 
 afs_int32
 SVOTE_SDebugOld(struct rx_call * rxcall, afs_int32 awhich,
-		register struct ubik_sdebug_old * aparm)
+		struct ubik_sdebug_old * aparm)
 {
-    register struct ubik_server *ts;
+    struct ubik_server *ts;
 
     for (ts = ubik_servers; ts; ts = ts->next) {
 	if (awhich-- == 0) {
@@ -487,7 +487,7 @@ SVOTE_SDebugOld(struct rx_call * rxcall, afs_int32 awhich,
  */
 afs_int32
 SVOTE_DebugOld(struct rx_call * rxcall,
-	       register struct ubik_debug_old * aparm)
+	       struct ubik_debug_old * aparm)
 {
 
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
@@ -510,7 +510,7 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 
     ulock_Debug((ubik_debug *)aparm);
 
-    /* Get the recovery state. The label of the database may not have 
+    /* Get the recovery state. The label of the database may not have
      * been written yet but set the flag so udebug behavior remains.
      * Defect 9477.
      */
@@ -545,10 +545,10 @@ SVOTE_DebugOld(struct rx_call * rxcall,
  * \brief Get the sync site; called by remote servers to find where they should go.
  */
 afs_int32
-SVOTE_GetSyncSite(register struct rx_call * rxcall,
-		  register afs_int32 * ahost)
+SVOTE_GetSyncSite(struct rx_call * rxcall,
+		  afs_int32 * ahost)
 {
-    register afs_int32 temp;
+    afs_int32 temp;
 
     temp = uvote_GetSyncSite();
     *ahost = ntohl(temp);

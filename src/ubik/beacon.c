@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -80,7 +80,7 @@ static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR
  * not to vote for someone else.  This parameter (BIG seconds) is not actually passed in
  * the interface (perhaps it should be?) but is instead a compile time constant that both
  * sides know about.
- 
+
  * The beacon and vote modules work intimately together; the vote module decides how long
  * it should promise the beacon module its vote, and the beacon module takes all of these
  * votes and decides for how long it is the synchronization site.
@@ -88,7 +88,7 @@ static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR
 
 /*! \brief procedure called from debug rpc call to get this module's state for debugging */
 void
-ubeacon_Debug(register struct ubik_debug *aparm)
+ubeacon_Debug(struct ubik_debug *aparm)
 {
     /* fill in beacon's state fields in the ubik_debug structure */
     aparm->syncSiteUntil = syncSiteUntil;
@@ -114,8 +114,8 @@ ubeacon_Debug(register struct ubik_debug *aparm)
 int
 ubeacon_AmSyncSite(void)
 {
-    register afs_int32 now;
-    register afs_int32 rcode;
+    afs_int32 now;
+    afs_int32 rcode;
 
     /* special case for fast startup */
     if (nServers == 1 && !amIClone) {
@@ -161,7 +161,7 @@ ubeacon_InitServerListByInfo(afs_uint32 ame, struct afsconf_cell *info,
  * \see ubeacon_InitServerListCommon()
  */
 int
-ubeacon_InitServerList(afs_uint32 ame, register afs_uint32 aservers[])
+ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[])
 {
     afs_int32 code;
 
@@ -177,8 +177,8 @@ ubeacon_InitServerList(afs_uint32 ame, register afs_uint32 aservers[])
  * \param ame "address of me"
  * \param aservers list of other servers
  *
- * called only at initialization to set up the list of servers to 
- * contact for votes.  Just creates the server structure.  
+ * called only at initialization to set up the list of servers to
+ * contact for votes.  Just creates the server structure.
  *
  * The "magic" host is the one with the lowest internet address.  It is
  * magic because its vote counts epsilon more than the others.  This acts
@@ -188,22 +188,22 @@ ubeacon_InitServerList(afs_uint32 ame, register afs_uint32 aservers[])
  * site system, we'd be out of business.
  *
  * \note There are two connections in every server structure, one for
- * vote calls (which must always go through quickly) and one for database 
- * operations, which are subject to waiting for locks.  If we used only 
- * one, the votes would sometimes get held up behind database operations, 
- * and the sync site guarantees would timeout even though the host would be 
+ * vote calls (which must always go through quickly) and one for database
+ * operations, which are subject to waiting for locks.  If we used only
+ * one, the votes would sometimes get held up behind database operations,
+ * and the sync site guarantees would timeout even though the host would be
  * up for communication.
  *
  * \see ubeacon_InitServerList(), ubeacon_InitServerListByInfo()
  */
 int
 ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
-			     char clones[], register afs_uint32 aservers[])
+			     char clones[], afs_uint32 aservers[])
 {
-    register struct ubik_server *ts;
+    struct ubik_server *ts;
     afs_int32 me = -1;
-    register afs_int32 servAddr;
-    register afs_int32 i, code;
+    afs_int32 servAddr;
+    afs_int32 i, code;
     afs_int32 magicHost;
     struct ubik_server *magicServer;
 
@@ -307,7 +307,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	return code;
 
 /* Shoud we set some defaults for RX??
-    r_retryInterval = 2;	
+    r_retryInterval = 2;
     r_nRetries = (RPCTIMEOUT/r_retryInterval);
 */
     if (info) {
@@ -331,21 +331,21 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     return 0;
 }
 
-/*! 
+/*!
  * \brief main lwp loop for code that sends out beacons.
- * 
+ *
  * This code only runs while we're sync site or we want to be the sync site.
  * It runs in its very own light-weight process.
  */
 void *
 ubeacon_Interact(void *dummy)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct timeval tt;
     struct rx_connection *connections[MAXSERVERS];
     struct ubik_server *servers[MAXSERVERS];
-    register afs_int32 i;
-    register struct ubik_server *ts;
+    afs_int32 i;
+    struct ubik_server *ts;
     afs_int32 temp, yesVotes, lastWakeupTime, oldestYesVote, syncsite;
     struct ubik_tid ttid;
     afs_int32 startTime;
@@ -391,7 +391,7 @@ ubeacon_Interact(void *dummy)
 	    }
 	}
 	servers[i] = (struct ubik_server *)0;	/* end of list */
-	/* note that we assume in the vote module that we'll always get at least BIGTIME 
+	/* note that we assume in the vote module that we'll always get at least BIGTIME
 	 * seconds of vote from anyone who votes for us, which means we can conservatively
 	 * assume we'll be fine until SMALLTIME seconds after we start collecting votes */
 	/* this next is essentially an expansion of rgen's ServBeacon routine */
@@ -503,15 +503,15 @@ ubeacon_Interact(void *dummy)
  * \brief Verify that a given IP addresses does actually exist on this machine.
  *
  * \param ame      the pointer to my IP address specified in the
- *                 CellServDB file. 
- * \param aservers an array containing IP 
- *                 addresses of remote ubik servers. The array is 
+ *                 CellServDB file.
+ * \param aservers an array containing IP
+ *                 addresses of remote ubik servers. The array is
  *                 terminated by a zero address.
  *
  * Algorithm     : Verify that my IP addresses \p ame does actually exist
- *                 on this machine.  If any of my IP addresses are there 
- *                 in the remote server list \p aserver, remove them from 
- *                 this list.  Update global variable \p ubik_host[] with 
+ *                 on this machine.  If any of my IP addresses are there
+ *                 in the remote server list \p aserver, remove them from
+ *                 this list.  Update global variable \p ubik_host[] with
  *                 my IP addresses.
  *
  * \return 0 on success, non-zero on failure
@@ -535,7 +535,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
 	 * Find addresses we are supposed to register as per the netrestrict file
-	 * if it exists, else just register all the addresses we find on this 
+	 * if it exists, else just register all the addresses we find on this
 	 * host as returned by rx_getAllAddr (in NBO)
 	 */
 	char reason[1024];
@@ -597,7 +597,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     }
 
     /* if any of my addresses are there in serverList, then
-     ** use that as my primary addresses : the higher level 
+     ** use that as my primary addresses : the higher level
      ** application screwed up in dealing with multihomed concepts
      */
     for (j = 0, found = 0; j < count; j++) {
@@ -618,8 +618,8 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	ubik_print("Using %s as my primary address\n", afs_inet_ntoa_r(*ame, hoststr));
 
     if (!info) {
-	/* get rid of servers which were purged because all 
-	 ** those interface addresses are myself 
+	/* get rid of servers which were purged because all
+	 ** those interface addresses are myself
 	 */
 	for (start = 0, end = totalServers - 1; (start < end); start++, end--) {
 	    /* find the first zero entry from the beginning */
@@ -638,8 +638,8 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	}
     }
 
-    /* update all my addresses in ubik_host in such a way 
-     ** that ubik_host[0] has the primary address 
+    /* update all my addresses in ubik_host in such a way
+     ** that ubik_host[0] has the primary address
      */
     ubik_host[0] = *ame;
     for (j = 0, i = 1; j < count; j++)
@@ -650,12 +650,12 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 }
 
 
-/*! 
+/*!
  * \brief Exchange IP address information with remote servers.
  *
  * \param ubik_host an array containing all my IP addresses.
  *
- * Algorithm     : Do an RPC to all remote ubik servers infroming them 
+ * Algorithm     : Do an RPC to all remote ubik servers infroming them
  *                 about my IP addresses. Get their IP addresses and
  *                 update my linked list of ubik servers \p ubik_servers
  *

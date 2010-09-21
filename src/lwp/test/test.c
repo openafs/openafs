@@ -32,7 +32,7 @@ main(argc, argv)
 {
     struct timeval t1, t2;
     int pid, otherpid;
-    register int i, count, x;
+    int i, count, x;
     char *waitarray[2];
     static char c[] = "OtherProcess";
 

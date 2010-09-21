@@ -165,7 +165,7 @@ igetinode(dev, vfsp, inode, vpp, perror)
      int *perror;
 {
     struct inode *ip;
-    register was_locked;
+    int was_locked;
     struct vfs *nvfsp = NULL;
     int code;
     *perror = 0;
@@ -257,9 +257,9 @@ igetinode(dev, vfsp, inode, vpp, perror)
 SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4), (long dev, long near_inode, long param1, long param2, long param3, long param4))
 {
     struct inode *ip, *newip, *pip;
-    register int err, rval1, rc = 0;
+    int err, rval1, rc = 0;
     struct vnode *vp = NULL;
-    register struct vfs *vfsp;
+    struct vfs *vfsp;
     struct vfs *nvfsp = NULL;
     char error;
     ino_t ino = near_inode;
@@ -320,10 +320,10 @@ SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4), (long dev, lo
 SYSENT(iopen, (dev, inode, usrmod),(int dev, int inode, int usrmod))
 {
     struct file *fp;
-    register struct inode *ip;
+    struct inode *ip;
     struct vnode *vp = NULL;
     extern struct fileops vnodefops;
-    register struct vfs *vfsp;
+    struct vfs *vfsp;
     int fd;
     char error;
     struct ucred *credp;
@@ -387,7 +387,7 @@ idec(dev, inode, inode_p1)
 
 SYSENT(iincdec, (dev, inode, inode_p1, amount),(int dev, int inode, int inode_p1, int amount))
 {
-    register struct inode *ip;
+    struct inode *ip;
     char error;
     struct vnode *vp = NULL;
     int dummy;

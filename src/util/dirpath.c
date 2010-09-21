@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -89,7 +89,7 @@ initAFSDirPath(void)
 }
 
 
-/* initDirPathArray() -- Initializes the afs dir paths for the 
+/* initDirPathArray() -- Initializes the afs dir paths for the
  *     server and client installations.
  *
  *     For NT these are determined dynamically; for Unix they are static.
@@ -421,7 +421,7 @@ initDirPathArray(void)
 
 /* getDirPath - returns a const char pointer to the requested string
  * from the internal path array.
- * string_id - index into the path array 
+ * string_id - index into the path array
  */
 const char *
 getDirPath(afsdir_id_t string_id)
@@ -477,7 +477,7 @@ static void
 LocalizePathHead(const char **path, const char **relativeTo)
 {
      struct canonmapping *map;
- 
+
      if (**path == '/') {
 	 for (map = CanonicalTranslations; map->local != NULL; map++) {
 	     int canonlength = strlen(map->canonical);

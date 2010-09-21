@@ -348,3 +348,39 @@ install: html\index.html
 clean::
         $(CD) html
         $(DEL) /s *.html
+        $(CD) ..
+        $(DEL) pod1\pts_adduser.pod
+        $(DEL) pod1\pts_chown.pod
+        $(DEL) pod1\pts_creategroup.pod
+        $(DEL) pod1\pts_createuser.pod
+        $(DEL) pod1\pts_delete.pod
+        $(DEL) pod1\pts_examine.pod
+        $(DEL) pod1\pts_interactive.pod
+        $(DEL) pod1\pts_listentries.pod
+        $(DEL) pod1\pts_listmax.pod
+        $(DEL) pod1\pts_listowned.pod
+        $(DEL) pod1\pts_membership.pod
+        $(DEL) pod1\pts_quit.pod
+        $(DEL) pod1\pts_removeuser.pod
+        $(DEL) pod1\pts_rename.pod
+        $(DEL) pod1\pts_setfields.pod
+        $(DEL) pod1\pts_setmax.pod
+        $(DEL) pod1\pts_sleep.pod
+        $(DEL) pod1\pts_source.pod
+        $(DEL) pod8\dafileserver.pod
+        $(DEL) pod8\dasalvager.pod
+        $(DEL) pod8\davolserver.pod
+        $(DEL) pod8\fileserver.pod
+        $(DEL) pod8\salvager.pod
+        $(DEL) pod8\volserver.pod
+
+.SUFFIXES: .pod.in
+
+{pod1}.pod.in{pod1}.pod::
+        perl merge-pod $<
+
+{pod5}.pod.in{pod5}.pod::
+        perl merge-pod $<
+
+{pod8}.pod.in{pod8}.pod::
+        perl merge-pod $<

@@ -2,12 +2,6 @@
 # Note, do not copy configure-libafs, or Makefile-libafs, as they are 
 # copied and renamed in the make_libafs_tree.pl script.
 #
-config.guess
-config.sub
-install-sh
-missing
-mkinstalldirs
-#
 # Following are listed in here cause the include/ dir doesn't exist in
 # source tree. For now, just copying everything, though this could easily
 # be shrunk to only copying minimal list of files if you're willing to accept

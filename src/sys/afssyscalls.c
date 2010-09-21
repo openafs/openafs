@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -388,7 +388,7 @@ iops_debug_t *iops_debug[MAX_I + 1];
 #define IOPS_DEBUG_MALLOC_STEP 64
 
 /* check_iops
- * Returns 1 if first time we've seen this file/line. 
+ * Returns 1 if first time we've seen this file/line.
  * Puts file/line in array so we only print the first time we encounter
  * this entry.
  */

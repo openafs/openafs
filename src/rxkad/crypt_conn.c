@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -101,7 +101,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
     ADD_RXKAD_STATS(bytesEncrypted[rxkad_TypeIndex(tp->type)],len);
     /*
      * afs_int32 cksum;
-     * cksum = htonl(0);                
+     * cksum = htonl(0);
      * * Future option to add cksum here, but for now we just put 0
      */
     rx_PutInt32(packet, 1 * sizeof(afs_int32), 0);

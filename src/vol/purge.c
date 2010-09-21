@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -48,6 +48,7 @@
 #include "partition.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "common.h"
 
 /* forward declarations */
 static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
@@ -55,15 +56,13 @@ static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * af
 #if 0
 static void PurgeIndex(Volume * vp, VnodeClass class);
 static void PurgeHeader(Volume * vp);
-#endif 
+#endif
 
 static void PurgeIndex_r(Volume * vp, VnodeClass class);
 static void PurgeHeader_r(Volume * vp);
 
-/*@printflike@*/ extern void Log(const char *format, ...);
-
 /* No lock needed. Only the volserver will call this, and only one transaction
- * can have a given volume (volid/partition pair) in use at a time 
+ * can have a given volume (volid/partition pair) in use at a time
  */
 void
 VPurgeVolume(Error * ec, Volume * vp)
@@ -109,15 +108,15 @@ static int
 ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
 		 afs_int32 * aoffset)
 {
-    register struct VnodeClassInfo *vcp;
+    struct VnodeClassInfo *vcp;
     Inode inodes[MAXOBLITATONCE];
-    register afs_int32 iindex, nscanned;
+    afs_int32 iindex, nscanned;
     afs_int32 offset;
     char buf[SIZEOF_LARGEDISKVNODE];
     int hitEOF;
-    register int i;
-    register afs_int32 code;
-    register struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
+    int i;
+    afs_int32 code;
+    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
 
     hitEOF = 0;
     vcp = &VnodeClassInfo[aclass];
@@ -188,7 +187,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
     StreamHandle_t *ifile;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     afs_int32 offset;
-    register afs_int32 code;
+    afs_int32 code;
     FdHandle_t *fdP;
 
 

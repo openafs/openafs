@@ -36,15 +36,15 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
 	*slept = 1;
 
 #if defined(AFS_FBSD80_ENV)
-	/* vgone() is correct, but v_usecount is assumed not
-	 * to be 0, and I suspect that currently our usage ensures that
-	 * in fact it will */
-	if (vrefcnt(vp) < 1) {
+	/* vgone() is correct, but vgonel() panics if v_usecount is 0--
+         * this is particularly confusing since vgonel() will trigger
+         * vop_reclaim, in the call path of which we'll check v_usecount
+         * and decide that the vnode is busy.  Splat. */
+	if (vrefcnt(vp) < 1)
 	    vref(vp);
-	}
+
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
 #endif
-
         vgone(vp);
 #if defined(AFS_FBSD80_ENV)
 	VOP_UNLOCK(vp, 0);

@@ -1,5 +1,224 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.5.75 (2010-07-07)
+
+  All platforms
+
+    * Prevent rx_rpc_stats global lock from being a bottleneck.
+
+    * Path MTU discovery is now provided to allow traffic to pass networks
+      with sub-1500 byte MTUs and poor fragment handling.
+
+    * Further reduce Rx NAT ping transmission when enabled.
+
+    * Update Kerberos 5-based token handling in rxkad from upstream
+      Heimdal.  (127554)
+
+    * Update version numbers emitted during build to reflect what is
+      actually being built.
+
+    * Add "-human" switch for human-readable units in fs diskfree and
+      listquota. (124529)
+
+    * vos provides reasons for locked volumes when known.
+
+    * Do not count retransmission and ping acks as non-idle for Rx
+      connections.
+
+    * Rx: provide service-specific data getter and setter routines.
+
+    * Update build-time Kerberos detection.
+
+    * Updated userspace AFS client.
+
+    * Beginning of a modernized test suite.
+
+    * Additional documentation.
+
+    * Updated documentation, notably the Administrators Guide.
+
+    * Substantial code cleanup.
+
+  All server platforms
+
+    * Update handling of vnode allocation failures.
+
+    * DAFS: allow salvaging volumes not known to the fileserver, to allow
+      cleanup of data not attached to a current volume.
+
+    * Properly handle volumes slated for destruction.
+
+    * Handle volumes with many files properly.
+
+    * Force core file generation in bosserver by overriding default
+      resource limits when possible.
+
+    * Update vlclient and vldb_check.
+
+    * Avoid potentially corrupting a volume on creation if files are left
+      from previous failed cleanup.
+
+    * Note volume changed during salvage as needed.
+
+    * DAFS: do not assume invalid addresses are in fileserver address hash
+      table.
+
+    * Avoid tying up fileserver threads with volumes that are being taken
+      offline.
+
+    * Do not set inUse on volumes for non-DAFS other than in fileserver.
+
+    * Break origin's callback on target of rename operation.
+
+    * Avoid unneeded parent directory link updates during some rename
+      operations.
+
+    * Do not open /dev/console for writing in the fileserver.
+
+    * DAFS: avoid spurious restarts when binary restarts are configured.
+
+    * Avoid spurious and unneeded calls to sync(), which can slow down the
+      fileserver.
+
+  Microsoft Windows
+
+    * Revised SMB QuerySecurityInfo to address issues caused by MS10-020
+      (http://support.microsoft.com/kb/980232)
+
+    * Prevent use of the AFSCache file contents if mapped to a new
+      address.
+
+    * Make fs newcell include behavior compatible with the non-Windows
+      version.
+
+    * Provide a registry option (FreelanceImportCellServDB) to pre-create
+      mount points in the AFS root for all cells in CellServDB.
+
+    * Fix a memory leak in the cm_FreeServerList() routine.
+
+    * Reduce privilege when reading registry CellServDB.
+
+    * Add support for RPC Pipe Service NetWkstaGetInfo levels needed for
+      Windows 7.
+
+    * Prevent overflow when computing quota percentage in Explorer Shell.
+      (126846)
+
+    * Generate meaningful errors for ACL operations on freelance AFS root.
+
+    * Fix error handling on InlineBulkStatus RPCs.
+
+    * Show configuration pages for all types of MSI installations.
+
+    * Improve freemount AFS root directory handling and operations.
+
+    * Properly validate GetVolumeStatus pioctl responses.
+
+    * Commit file length changes and dirty buffers when flushing a file.
+
+  All UNIX client platforms
+
+    * Update version of files for disk cache.
+
+    * Do not call afs_FlushVCBs with xvcache lock held, to improve
+      parallelization.
+
+    * Add mariner log messages for creating and removing files.
+
+    * Don't hold xvcache lock while creating symlinks, to improve
+      parallelization.
+
+    * Provide -dynroot-sparse mode to not show all cells in CellServDB in
+      dynroot mode.
+
+    * Avoid a potential crash in aklog in linked cell handling.
+
+    * Log MTU-caused packet retransmission.
+
+    * Prevent crashes caused be fs checkservers while cache is being set
+      up.
+
+    * fs getserverprefs now has a buffer large enough for the default
+      CellServDB.
+
+    * Report server address when logging warnings.
+
+    * Avoid panic in GetCapabilities when cell is not known.
+
+    * Lock process name and id for advisory lock warnings when possible.
+
+    * Handle need for allocating additional Rx packets.
+
+    * Properly handle errors from InlineBulkStatus operations.
+
+    * Fix errors returned from fcntl() on readonly files locked for write.
+
+    * Flush pending changes to the server on LOCK_EX unlock.
+
+    * Reflect length changes as a result of callbacks even when file is
+      open for write.
+
+    * Avoid hanging due to error exit when attempting to store a large
+      file to a non-largefile fileserver.
+
+    * Recover from afs_GetVolSlot errors.
+
+  FreeBSD
+
+    * Bugfixes for kernel VFS and network routines.
+
+  IRIX
+
+    * Provide makesname().
+
+  Linux
+
+    * Avoid syscall probes when keyrings are present, by default. (125215)
+
+    * Remove "Big Kernel Lock" from VFS operations.
+
+    * Use filehandles for all Linux 2.6 versions to avoid need for matched
+      afsd. (127530)
+
+    * Updated RPM packaging.
+
+    * Fix dkms configuration provided with RPMs.
+
+    * Hold reference on pages during background I/O for cache bypass.
+
+    * Fix cache bypass handling of non-largefile fileservers.
+
+    * Protect truncate_inode_pages mappings with mutex or semaphore as
+      needed.
+
+    * Fix pagevec use in cache bypass. (127505)
+
+    * Updates for 2.6.35
+
+  MacOS
+
+    * Improve launchd configuration.
+
+    * Avoid hanging on recursive cache file lock acquisition when user
+      notification is enabled.
+
+    * Fix and re-enable bulkstat mode.
+
+  OpenBSD
+
+    * Build updates.
+
+  Solaris
+
+    * Precluding unmount while AFS is busy.
+
+    * Avoid deadlocking when releasing the VFS object.
+
+    * Stop network interface poller in kernel on AFS shutdown.
+
+    * Avoid issues with lookups on empty directory names. (127356)
+
+
 OpenAFS 1.5.74 (2010-04-22)
 
   All platforms
@@ -1769,7 +1988,7 @@ OpenAFS 1.5.36 (2008-05-09)
       file server, if VNOVNODE is received, mark all buffers as invalid
       without further attempts to contact the file server.
 
-      
+
 =======> Changes back to 1.3 have not yet been incorporated here <=======
 
 

@@ -2,22 +2,22 @@
  * Copyright (c) 1995, 1996, 1997, 2002 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -38,7 +38,7 @@
  *   require a specific license from the United States Government.
  *   It is the responsibility of any person or organization contemplating
  *   export to obtain such a license before exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -89,10 +89,10 @@
  */
 
 extern afs_int32 des_cbc_encrypt(void * in, void * out,
-                                 register afs_int32 length,
+                                 afs_int32 length,
                                  des_key_schedule key, des_cblock *iv,
                                  int encrypt);
-extern int des_key_sched(register des_cblock k, des_key_schedule schedule);
+extern int des_key_sched(des_cblock k, des_key_schedule schedule);
 
 struct krb_convert {
     char *v4_str;
@@ -218,7 +218,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	    goto cleanup;
     }
 
-    /* If kvno is null, it's probably not included because it was kvno==0 
+    /* If kvno is null, it's probably not included because it was kvno==0
      * in the ticket */
     if (t5.enc_part.kvno == NULL) {
 	v5_serv_kvno = 0;
@@ -303,7 +303,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     }
 
     if (!disableCheckdot) {
-        /* 
+        /*
          * If the first part of the name_string contains a dot, punt since
          * then we can't see the diffrence between the kerberos 5
          * principals foo.root and foo/root later in the fileserver.

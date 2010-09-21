@@ -1987,11 +1987,11 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 }
 
 static int
-ReceiveFile(register int fd, register struct rx_call *call,
-	    register struct stat *status)
+ReceiveFile(int fd, struct rx_call *call,
+	    struct stat *status)
 {
-    register char *buffer = (char *)0;
-    register int blockSize;
+    char *buffer = (char *)0;
+    int blockSize;
     afs_int32 bytesread, nbytes, bytesleft, w;
     fd_set out;
     afs_int32 error = 0;
@@ -2184,8 +2184,8 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 }
 
 int
-SendFile(register int fd, register struct rx_call *call,
-	 register struct stat *status)
+SendFile(int fd, struct rx_call *call,
+	 struct stat *status)
 {
     char *buffer = (char *)0;
     int blockSize;
@@ -2736,7 +2736,7 @@ UV_ListPartitions(struct rx_connection *server, struct partList *ptrPartList,
     afs_status_t tst = 0;
     struct pIDs partIds;
     struct partEntries partEnts;
-    register int i, j = 0;
+    int i, j = 0;
 
     *cntp = 0;
 
@@ -3632,8 +3632,8 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
     int totalF;
-    register struct nvldbentry *vllist;
-    register int j;
+    struct nvldbentry *vllist;
+    int j;
     afs_int32 si, nsi;
     afs_int32 modified = 0;
 

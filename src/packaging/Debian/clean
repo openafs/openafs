@@ -1,3 +1,4 @@
+.version
 aclocal.m4
 configure
 configure-libafs

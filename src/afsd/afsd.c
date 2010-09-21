@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -34,14 +34,14 @@
   *	-rxmaxmtu   Set the max mtu to help with VPN issues.
   *	-verbose     Be chatty.
   *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
-  *                          the size of the vcache/stat cache pool, 
+  *                          the size of the vcache/stat cache pool,
   *                          but increase that pool dynamically as needed.
   *	-debug	   Print out additional debugging info.
   *	-kerndev    [OBSOLETE] The kernel device for AFS.
   *	-dontfork   [OBSOLETE] Don't fork off as a new process.
   *	-daemons   The number of background daemons to start (Default: 2).
   *	-rmtsys	   Also fires up an afs remote sys call (e.g. pioctl, setpag)
-  *                support daemon 
+  *                support daemon
   *     -chunksize [n]   2^n is the chunksize to be used.  0 is default.
   *     -dcache    The number of data cache entries.
   *     -biods     Number of bkg I/O daemons (AIX3.1 only)
@@ -347,38 +347,38 @@ static void fork_syscall();
 
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 static void
-afsd_sleep_callback(void * refCon, io_service_t service, 
+afsd_sleep_callback(void * refCon, io_service_t service,
 		    natural_t messageType, void * messageArgument )
 {
     switch (messageType) {
     case kIOMessageCanSystemSleep:
-	/* Idle sleep is about to kick in; can 
-	   prevent sleep by calling IOCancelPowerChange, otherwise 
+	/* Idle sleep is about to kick in; can
+	   prevent sleep by calling IOCancelPowerChange, otherwise
 	   if we don't ack in 30s the system sleeps anyway */
-	
+
 	/* allow it */
 	IOAllowPowerChange(root_port, (long)messageArgument);
 	break;
-	
+
     case kIOMessageSystemWillSleep:
 	/* The system WILL go to sleep. Ack or suffer delay */
-	
+
 	IOAllowPowerChange(root_port, (long)messageArgument);
 	break;
-	
+
     case kIOMessageSystemWillRestart:
 	/* The system WILL restart. Ack or suffer delay */
-	
+
 	IOAllowPowerChange(root_port, (long)messageArgument);
 	break;
-	
+
     case kIOMessageSystemWillPowerOn:
     case kIOMessageSystemHasPoweredOn:
 	/* coming back from sleep */
-	
+
 	IOAllowPowerChange(root_port, (long)messageArgument);
 	break;
-	
+
     default:
 	IOAllowPowerChange(root_port, (long)messageArgument);
 	break;
@@ -406,6 +406,10 @@ afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
     } else
 	printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 	       reason);
+
+    /* Since it's likely this means our DNS server changed, reinit now */
+    if (enable_afsdb)
+	res_init();
 }
 
 /* This function is called when the system's ip addresses may have changed. */
@@ -421,7 +425,7 @@ afsd_ipaddr_callback (SCDynamicStoreRef store, CFArrayRef changed_keys, void *in
       CFRelease (timer);
 }
 
-static void 
+static void
 afsd_event_cleanup(int signo) {
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
@@ -443,58 +447,58 @@ afsd_install_events(void)
 
 #ifndef AFS_ARM_DARWIN_ENV
     root_port = IORegisterForSystemPower(0,&notify,afsd_sleep_callback,&iterator);
-    
+
     if (root_port) {
 	CFRunLoopAddSource(CFRunLoopGetCurrent(),
 			   IONotificationPortGetRunLoopSource(notify),
 			   kCFRunLoopDefaultMode);
     }
-    
-    
+
+
     store = SCDynamicStoreCreate (NULL,
 				  CFSTR ("AddIPAddressListChangeCallbackSCF"),
 				  afsd_ipaddr_callback, &ctx);
-    
+
     if (store) {
 	const void *keys[1];
-	
+
 	/* Request IPV4 address change notification */
 	keys[0] = (SCDynamicStoreKeyCreateNetworkServiceEntity
 		   (NULL, kSCDynamicStoreDomainState,
 		    kSCCompAnyRegex, kSCEntNetIPv4));
-	
+
 #if 0
 	/* This should tell us when the hostname(s) change. do we care? */
 	keys[N] = SCDynamicStoreKeyCreateHostNames (NULL);
 #endif
-	
+
 	if (keys[0] != NULL) {
 	    CFArrayRef pattern_array;
-	    
+
 	    pattern_array = CFArrayCreate (NULL, keys, 1,
 					   &kCFTypeArrayCallBacks);
-	    
+
 	    if (pattern_array != NULL)
 	    {
 		SCDynamicStoreSetNotificationKeys (store, NULL, pattern_array);
 		source = SCDynamicStoreCreateRunLoopSource (NULL, store, 0);
-		
+
 		CFRelease (pattern_array);
 	    }
-	    
+
 	    if (keys[0] != NULL)
 		CFRelease (keys[0]);
 	}
-	
-	CFRelease (store); 
+
+	CFRelease (store);
     }
 #endif
-    
+
     if (source != NULL) {
 	CFRunLoopAddSource (CFRunLoopGetCurrent(),
 			    source, kCFRunLoopDefaultMode);
     }
-    
+
     signal(SIGTERM, afsd_event_cleanup);
 
     CFRunLoopRun();
@@ -597,8 +601,8 @@ ParseCacheInfoFile(void)
 }
 
 /*
- * All failures to open the partition are ignored. Also if the cache dir 
- * isn't a mounted partition it's also ignored since we can't guarantee 
+ * All failures to open the partition are ignored. Also if the cache dir
+ * isn't a mounted partition it's also ignored since we can't guarantee
  * what will be stored afterwards. Too many if's. This is now purely
  * advisory. ODS with over 2G partition also gives warning message.
  *
@@ -809,7 +813,7 @@ SetNoBackupAttr(char *fullpn)
 }
 
 static int
-MoveCacheFile(char *basename, int fromDir, int toDir, int cacheFile, 
+MoveCacheFile(char *basename, int fromDir, int toDir, int cacheFile,
 	      int maxDir)
 {
     static char rn[] = "MoveCacheFile";
@@ -941,7 +945,7 @@ UnlinkUnwantedFile(char *rn, char *fullpn_FileToDelete, char *fileToDelete)
 
 
 static int
-doSweepAFSCache(int *vFilesFound, 
+doSweepAFSCache(int *vFilesFound,
      	        char *directory,	/* /path/to/cache/directory */
 		int dirNum,		/* current directory number */
 		int maxDir)		/* maximum directory number */
@@ -994,7 +998,7 @@ doSweepAFSCache(int *vFilesFound,
 #if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN90_ENV)
 	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
-#elif defined(AFS_DFBSD_ENV)
+#elif defined(AFS_DFBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
 	    printf("\tinode=%ld, name='%s'\n", (long)currp->d_ino, currp->d_name);
 #else
 	    printf("\tinode=%ld, reclen=%d, name='%s'\n", (long)currp->d_ino,
@@ -1790,7 +1794,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     if (as->parms[20].items) {
 	/* -shutdown */
 	afs_shutdown = 1;
-	/* 
+	/*
 	 * Cold shutdown is the default
 	 */
 	printf("afsd: Shutting down all afs processes and afs state\n");
@@ -2012,7 +2016,7 @@ afsd_run(void)
 	/* Disk cache:
 	 * Compute the number of cache files based on cache size,
 	 * but only if -files isn't given on the command line.
-	 * Don't let # files be so small as to prevent full utilization 
+	 * Don't let # files be so small as to prevent full utilization
 	 * of the cache unless user has explicitly asked for it.
 	 */
 	if (chunkSize == 0) {
@@ -2030,7 +2034,7 @@ afsd_run(void)
 
 	    cacheFiles = max(cacheFiles, 1000);
 
-	    /* Always allow more files than chunks.  Presume average V-file 
+	    /* Always allow more files than chunks.  Presume average V-file
 	     * is ~67% of a chunk...  (another guess, perhaps Honeyman will
 	     * have a grad student write a paper).  i is KILOBYTES.
 	     */
@@ -2068,7 +2072,7 @@ afsd_run(void)
        /* This actually needs to
           1) use powers of 2
           2) not second-guess when a chunksize comes from the command line
-          3) be less, um, small. 2^2?? 
+          3) be less, um, small. 2^2??
        */
 	/* Sanity check chunkSize */
 	i = max(cacheBlocks / 1000, cacheBlocks / cacheFiles);
@@ -2285,7 +2289,7 @@ afsd_run(void)
 	printf("%s: Using memory cache, not swept\n", rn);
 
     /*
-     * Pass the kernel the name of the workstation cache file holding the 
+     * Pass the kernel the name of the workstation cache file holding the
      * dcache entries.
      */
     if (afsd_debug)
@@ -2454,7 +2458,7 @@ afsd_run(void)
     afsd_call_syscall(AFSOP_GO, cacheSetTime);
 
     /*
-     * At this point, we have finished passing the kernel all the info 
+     * At this point, we have finished passing the kernel all the info
      * it needs to set up the AFS.  Mount the AFS root.
      */
     printf("%s: All AFS daemons started.\n", rn);
@@ -2558,7 +2562,7 @@ afsd_init(void)
 		"set rx_extraPackets to this value");
     cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
 		"Percentage RW versus RO in cache (specify as 60/40)");
-    cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, 
+    cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL,
 		"disable stat/vcache cache growing as needed");
     cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
     cmd_AddParm(ts, "-dynroot-sparse", CMD_FLAG, CMD_OPTIONAL,

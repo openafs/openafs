@@ -49,7 +49,7 @@
  *
  * The DUMPEND section consists of one part: the DUMPENDMAGIC magic
  * number (32 bits).
- * 
+ *
  * Notes:
  *
  * The tagged elements are all ASCII letters, as opposed to the section
@@ -75,6 +75,7 @@
 #include <termios.h>
 #include <fnmatch.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 
 #include <lock.h>
 #include <afs/afsint.h>
@@ -95,6 +96,16 @@
 #endif /* RESIDENCY */
 
 #include <afs/dir.h>
+
+#ifndef HAVE_OFF64_T
+typedef off_t off64_t;
+#endif /* !HAVE_OFF64_T */
+#ifndef HAVE_FSEEKO64
+#define fseeko64 fseeko
+#endif /* HAVE_FSEEKO64 */
+#ifndef HAVE_FTELLO64
+#define ftello64 ftello
+#endif /* HAVE_FTELLO64 */
 
 /*
  * Sigh.  Linux blows it again
@@ -1419,8 +1430,8 @@ DirListInternal(struct vnodeData *vdata, char *pathnames[], int numpathnames,
 			c = '*';
 		    else
 			c = ' ';
-		    printf("%s%-*c", ep->name, longestname - strlen(ep->name),
-			   c);
+		    printf("%s%-*c", ep->name, (int)(longestname -
+						     strlen(ep->name)), c);
 		} else
 		    printf("%-*s", longestname, ep->name);
 	    }
@@ -1844,7 +1855,7 @@ DumpAllResidencies(FILE * f, struct vnodeData *vdata,
 /*
  * Given a directory vnode and a filename, return the vnode corresponding
  * to the file in that directory.
- * 
+ *
  * We now handle pathnames with directories in them.
  */
 
@@ -2419,9 +2430,9 @@ int
 DirHash(char *string)
 {
     /* Hash a string to a number between 0 and NHASHENT. */
-    register unsigned char tc;
-    register int hval;
-    register int tval;
+    unsigned char tc;
+    int hval;
+    int tval;
     hval = 0;
     while ((tc = (*string++)) != '\0') {
 	hval *= 173;

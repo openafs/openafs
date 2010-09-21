@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -160,7 +160,7 @@ extern int gator_cursesgwin_drawline(struct gwin *, struct gwin_lineparams *);
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_drawrectangle(struct gwin *, 
+extern int gator_cursesgwin_drawrectangle(struct gwin *,
 					  struct gwin_rectparams *);
     /*
      * Summary:

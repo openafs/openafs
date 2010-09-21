@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -69,7 +69,7 @@ kaux_closedb(void)
 }
 
 
-/* 
+/*
  * The read and write routines take as a parameter, the offset into
  * the main database at which a particular user's entry resides.  They
  * then convert that into an offset into the auxiliary database.  This
@@ -77,7 +77,7 @@ kaux_closedb(void)
  * detail.
  */
 int
-kaux_read(afs_int32 to,		/* this is the offset of the user id in the main database. 
+kaux_read(afs_int32 to,		/* this is the offset of the user id in the main database.
 				 * we do the conversion here - probably a bad idea. */
 	  unsigned int *nfailures, afs_uint32 * lasttime)
 {
@@ -95,7 +95,7 @@ kaux_read(afs_int32 to,		/* this is the offset of the user id in the main databa
     if (offset > lseek(fd, offset, SEEK_SET))
 	return 0;
 
-    /* we should just end up with 0 for nfailures and lasttime if EOF is 
+    /* we should just end up with 0 for nfailures and lasttime if EOF is
      * encountered here, I hope */
     if ((0 > read(fd, nfailures, sizeof(int)))
 	|| (0 > read(fd, lasttime, sizeof(afs_int32)))) {
@@ -157,7 +157,7 @@ kaux_inc(afs_int32 to, afs_uint32 locktime)
 
 }
 
-/* 
+/*
  * report on whether a particular id is locked or not...
  * has to get some dirt from ubik.
  * We multiply the actual number of permitted attempts by two because
@@ -165,7 +165,7 @@ kaux_inc(afs_int32 to, afs_uint32 locktime)
  * with the ka_string_to_key, and once with des_string_to_key, for
  * Kerberos compatibility.  It's easier to frob here than to explain
  * to users/admins.
- * RETURNS: time when the ID will be unlocked, or 0 if it's not locked. 
+ * RETURNS: time when the ID will be unlocked, or 0 if it's not locked.
  */
 int
 kaux_islocked(afs_int32 to, u_int attempts, u_int locktime)

@@ -38,6 +38,8 @@ LIBFILE = $(DESTDIR)\lib\afs\afsvol.lib
 
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsvol.lib
 
+DAFS_LIBFILE = $(DESTDIR)\lib\afs\daafsvol.lib
+
 LIBOBJS =\
 	$(OUT)\common.obj \
 	$(OUT)\clone.obj \
@@ -52,7 +54,7 @@ LIBOBJS =\
 	$(OUT)\volume.obj \
 	$(OUT)\vutil.obj \
 	$(OUT)\ihandle.obj \
-	$(OUT)\AFS_component_version_number.obj	
+	$(OUT)\AFS_component_version_number.obj
 
 MT_LIBOBJS =\
 	$(OUT)\common.obj \
@@ -68,7 +70,7 @@ MT_LIBOBJS =\
 	$(OUT)\volume_mt.obj \
 	$(OUT)\vutil_mt.obj \
 	$(OUT)\ihandle_mt.obj \
-	$(OUT)\AFS_component_version_number.obj	
+	$(OUT)\AFS_component_version_number.obj
 
 $(OUT)\clone_mt.obj:clone.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
@@ -104,6 +106,63 @@ $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
 $(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
+
+DAFS_LIBOBJS =\
+	$(OUT)\common.obj \
+	$(OUT)\clone_dafs.obj \
+	$(OUT)\fssync-client_dafs.obj \
+	$(OUT)\fssync-server_dafs.obj \
+	$(OUT)\daemon_com_dafs.obj \
+	$(OUT)\ntops.obj \
+	$(OUT)\nuke_dafs.obj \
+	$(OUT)\partition_dafs.obj \
+	$(OUT)\purge.obj \
+	$(OUT)\vnode_dafs.obj \
+	$(OUT)\volume_dafs.obj \
+	$(OUT)\vutil_dafs.obj \
+	$(OUT)\ihandle_dafs.obj \
+        $(OUT)\vg_cache.obj \
+        $(OUT)\vg_scan.obj \
+	$(OUT)\AFS_component_version_number.obj
+
+$(OUT)\clone_dafs.obj:clone.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\daemon_com_dafs.obj:daemon_com.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\fssync-client_dafs.obj:fssync-client.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\fssync-server_dafs.obj:fssync-server.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\ihandle_dafs.obj:ihandle.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\nuke_dafs.obj:nuke.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\partition_dafs.obj:partition.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\vnode_dafs.obj:vnode.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\volume_dafs.obj:volume.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\vutil_dafs.obj:vutil.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\vg_cache.obj:vg_cache.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(OUT)\vg_scan.obj:vg_scan.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV -DAFS_DEMAND_ATTACH_FS
+
+$(DAFS_LIBFILE): $(DAFS_LIBOBJS)
 	$(LIBARCH)
 
 ############################################################################
@@ -186,7 +245,7 @@ $(OUT)\volinfo.res: AFS_component_version_number.h
 
 ############################################################################
 # Install targets
-install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(SALVAGER) $(VOLINFO) 
+install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(DAFS_LIBFILE) $(SALVAGER) $(VOLINFO)
 
 mkdir:
 	

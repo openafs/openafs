@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,10 +27,10 @@
 /* routine to make copy of uio structure in ainuio, using aoutvec for space */
 int
 afsio_copy(struct uio *ainuio, struct uio *aoutuio,
-	   register struct iovec *aoutvec)
+	   struct iovec *aoutvec)
 {
-    register int i;
-    register struct iovec *tvec;
+    int i;
+    struct iovec *tvec;
 
     AFS_STATCNT(afsio_copy);
     if (ainuio->afsio_iovcnt > AFS_MAXIOVCNT)
@@ -48,10 +48,10 @@ afsio_copy(struct uio *ainuio, struct uio *aoutuio,
 
 /* trim the uio structure to the specified size */
 int
-afsio_trim(register struct uio *auio, register afs_int32 asize)
+afsio_trim(struct uio *auio, afs_int32 asize)
 {
-    register int i;
-    register struct iovec *tv;
+    int i;
+    struct iovec *tv;
 
     AFS_STATCNT(afsio_trim);
     auio->afsio_resid = asize;
@@ -79,10 +79,10 @@ afsio_trim(register struct uio *auio, register afs_int32 asize)
 
 /* skip asize bytes in the current uio structure */
 int
-afsio_skip(register struct uio *auio, register afs_int32 asize)
+afsio_skip(struct uio *auio, afs_int32 asize)
 {
-    register struct iovec *tv;	/* pointer to current iovec */
-    register int cnt;
+    struct iovec *tv;	/* pointer to current iovec */
+    int cnt;
 
     AFS_STATCNT(afsio_skip);
 #ifdef AFS_DARWIN80_ENV

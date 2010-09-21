@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -79,10 +79,10 @@ static int PruneList(struct AclEntry **a_aclPP);
  *------------------------------------------------------------------------*/
 
 static int
-foldcmp(register char *a_str1, register char *a_str2)
+foldcmp(char *a_str1, char *a_str2)
 {				/*foldcmp */
 
-    register char t, u;
+    char t, u;
 
     while (1) {
 	t = *a_str1++;
@@ -121,12 +121,12 @@ foldcmp(register char *a_str1, register char *a_str2)
  *------------------------------------------------------------------------*/
 
 static afs_int32
-Convert(register char *a_rights)
+Convert(char *a_rights)
 {				/*Convert */
 
-    register int i, len;
+    int i, len;
     afs_int32 mode;
-    register char tc;
+    char tc;
 
     if (!strcmp(a_rights, "read"))
 	return (PRSFS_READ | PRSFS_LOOKUP);
@@ -194,7 +194,7 @@ Convert(register char *a_rights)
  *------------------------------------------------------------------------*/
 
 static struct AclEntry *
-FindList(register struct AclEntry *a_alist, char *a_name)
+FindList(struct AclEntry *a_alist, char *a_name)
 {				/*FindList */
 
     while (a_alist) {
@@ -232,7 +232,7 @@ FindList(register struct AclEntry *a_alist, char *a_name)
  *------------------------------------------------------------------------*/
 
 static void
-ChangeList(struct Acl *a_al, afs_int32 a_plus, char *a_name, 
+ChangeList(struct Acl *a_al, afs_int32 a_plus, char *a_name,
 	   afs_int32 a_rights)
 {				/*ChangeList */
 
@@ -340,7 +340,7 @@ PruneList(struct AclEntry **a_aclPP)
  *------------------------------------------------------------------------*/
 
 static char *
-SkipLine(register char *a_str)
+SkipLine(char *a_str)
 {				/*SkipLine */
 
     while (*a_str != '\n')
@@ -374,7 +374,7 @@ static struct Acl *
 EmptyAcl(void)
 {				/*EmptyAcl */
 
-    register struct Acl *tp;
+    struct Acl *tp;
 
     tp = (struct Acl *)malloc(sizeof(struct Acl));
     tp->nplus = tp->nminus = 0;
@@ -543,7 +543,7 @@ afs_int32
 uss_acl_SetAccess(char *a_access, int a_clear, int a_negative)
 {				/*uss_acl_SetAccess */
 
-    register afs_int32 code;
+    afs_int32 code;
 #ifdef USS_ACL_DB
     static char rn[] = "uss_acl_SetAccess";
 #endif
@@ -667,7 +667,7 @@ afs_int32
 uss_acl_SetDiskQuota(char *a_path, int a_q)
 {				/*uss_acl_SetDiskQuota */
 
-    register afs_int32 code;
+    afs_int32 code;
 #ifdef USS_ACL_DB
     static char rn[] = "uss_acl_SetDiskQuota";
 #endif

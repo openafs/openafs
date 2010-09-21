@@ -67,13 +67,13 @@
 
 afs_int32
 des_ecb_encrypt(void * clear, void * cipher,
-		register des_key_schedule schedule, int encrypt)
+		des_key_schedule schedule, int encrypt)
 {
     /* better pass 8 bytes, length not checked here */
 
-    register afs_uint32 R1 = 0;
-    register afs_uint32 L1 = 0;	/* R1 = r10, L1 = r9 */
-    register afs_uint32 R2 = 0, L2 = 0;	/* R2 = r8, L2 = r7 */
+    afs_uint32 R1 = 0;
+    afs_uint32 L1 = 0;	/* R1 = r10, L1 = r9 */
+    afs_uint32 R2 = 0, L2 = 0;	/* R2 = r8, L2 = r7 */
     afs_int32 i;
     /* one more registers left on VAX, see below P_temp_p */
 #ifdef BITS16
@@ -438,7 +438,7 @@ des_ecb_encrypt(void * clear, void * cipher,
     } else
 #endif
     {
-        *((afs_uint32*)cipher)= L2;	
+        *((afs_uint32*)cipher)= L2;
 	cipher = ((afs_int32 *)cipher)+1;
 	*((afs_uint32 *)cipher) = R2;
     }

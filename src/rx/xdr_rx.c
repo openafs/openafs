@@ -1,14 +1,14 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*
- * xdr_rx.c.  XDR using RX. 
+ * xdr_rx.c.  XDR using RX.
  */
 
 #include <afsconfig.h>
@@ -37,7 +37,6 @@
 #   undef kmem_free
 #   undef mem_alloc
 #   undef mem_free
-#   undef register
 #  endif /* AFS_OSF_ENV */
 #  ifdef AFS_LINUX22_ENV
 #   ifndef quad_t
@@ -80,20 +79,27 @@ static afs_int32 *xdrrx_inline(XDR *axdrs, u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrrx_ops = {
-#if defined(AFS_NT40_ENV) || (defined(AFS_SGI_ENV) && !defined(__c99))
+#ifndef HAVE_STRUCT_LABEL_SUPPORT
 #ifdef AFS_XDR_64BITOPS
     xdrrx_getint64,     /* deserialize an afs_int64 */
     xdrrx_putint64,     /* serialize an afs_int64 */
 #endif
     /* Windows does not support labeled assigments */
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrrx_getint32,	/* deserialize an afs_int32 */
     xdrrx_putint32,	/* serialize an afs_int32 */
+#endif
     xdrrx_getbytes,	/* deserialize counted bytes */
     xdrrx_putbytes,	/* serialize counted bytes */
     NULL,		/* get offset in the stream: not supported. */
     NULL,		/* set offset in the stream: not supported. */
     xdrrx_inline,	/* prime stream for inline macros */
-    NULL		/* destroy stream */
+    NULL,		/* destroy stream */
+#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+    NULL,               /* control - not implemented */
+    xdrrx_getint32,     /* not supported */
+    xdrrx_putint32,     /* serialize an afs_int32 */
+#endif
 #else
 #ifdef AFS_XDR_64BITOPS
     .x_getint64 = xdrrx_getint64,
@@ -168,7 +174,7 @@ xdrrx_getint32(XDR *axdrs, afs_int32 * lp)
     char *saddr = (char *)&l;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx
@@ -207,7 +213,7 @@ xdrrx_putint32(XDR *axdrs, afs_int32 * lp)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx
@@ -238,7 +244,7 @@ xdrrx_getbytes(XDR *axdrs, caddr_t addr, u_int len)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx
@@ -270,7 +276,7 @@ xdrrx_putbytes(XDR *axdrs, caddr_t addr, u_int len)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
     /*
-     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under 
+     * Hack of hacks: Aix3.2 only guarantees that the next 2K of stack in pinned. Under
      * splnet (disables interrupts), which is set throughout rx, we can't swap in stack
      * pages if we need so we panic. Since sometimes, under splnet, we'll use more than
      * 2K stack we could try to bring the next few stack pages in here before we call the rx

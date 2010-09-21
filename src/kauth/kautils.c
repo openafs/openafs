@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -160,9 +160,9 @@ ka_KeyCheckSum(char *key, afs_uint32 * cksumP)
 
 /* is the key all zeros? */
 int
-ka_KeyIsZero(register char *akey, register int alen)
+ka_KeyIsZero(char *akey, int alen)
 {
-    register int i;
+    int i;
     for (i = 0; i < alen; i++) {
 	if (*akey++ != 0)
 	    return 0;

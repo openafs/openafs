@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -177,9 +177,10 @@ typedef enum {
     VOL_STATE_VNODE_CLOSE       = 17,   /**< volume is busy closing vnodes */
     VOL_STATE_VNODE_RELEASE     = 18,   /**< volume is busy releasing vnodes */
     VOL_STATE_VLRU_ADD          = 19,   /**< volume is busy being added to a VLRU queue */
+    VOL_STATE_DELETED           = 20,   /**< volume has been deleted by the volserver */
     /* please add new states directly above this line */
-    VOL_STATE_FREED             = 20,   /**< debugging aid */
-    VOL_STATE_COUNT             = 21,   /**< total number of valid states */
+    VOL_STATE_FREED             = 21,   /**< debugging aid */
+    VOL_STATE_COUNT             = 22,   /**< total number of valid states */
 } VolState;
 
 /**
@@ -249,6 +250,8 @@ typedef struct VolumePackageOptions {
                                    * find a bad vol) */
     afs_int32 canUseFSSYNC;       /**< can we use the FSSYNC channel? */
     afs_int32 canUseSALVSYNC;     /**< can we use the SALVSYNC channel? (DAFS) */
+    afs_int32 unsafe_attach;      /**< can we bypass checking the inUse vol
+                                   *   header on attach? */
 } VolumePackageOptions;
 
 /* Magic numbers and version stamps for each type of file */
@@ -473,7 +476,7 @@ typedef struct VolumeDiskData {
 /* Memory resident volume information */
 /**************************************/
 
-/** 
+/**
  * global volume package stats.
  */
 typedef struct VolPkgStats {
@@ -643,7 +646,7 @@ typedef struct Volume {
 				 * value nextVnodeVersion */
     IHandle_t *diskDataHandle;	/* Unix inode holding general volume info */
     bit16 vnodeHashOffset;	/* Computed by HashOffset function in vnode.h.
-				 * Assigned to the volume when initialized. 
+				 * Assigned to the volume when initialized.
 				 * Added to vnode number for hash table index */
     byte shuttingDown;		/* This volume is going to be detached */
     byte goingOffline;		/* This volume is going offline */
@@ -779,9 +782,9 @@ extern int VAllocBitmapEntry(Error * ec, Volume * vp,
 			     struct vnodeIndex *index);
 extern int VAllocBitmapEntry_r(Error * ec, Volume * vp,
 			       struct vnodeIndex *index, int flags);
-extern void VFreeBitMapEntry(Error * ec, register struct vnodeIndex *index,
+extern void VFreeBitMapEntry(Error * ec, struct vnodeIndex *index,
 			     unsigned bitNumber);
-extern void VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,
+extern void VFreeBitMapEntry_r(Error * ec, struct vnodeIndex *index,
 			       unsigned bitNumber);
 extern int VolumeNumber(char *name);
 extern char *VolumeExternalName(VolumeId volumeId);
@@ -800,8 +803,8 @@ extern void VDetachVolume(Error * ec, Volume * vp);
 extern void VDetachVolume_r(Error * ec, Volume * vp);
 extern void VForceOffline(Volume * vp);
 extern void VForceOffline_r(Volume * vp, int flags);
-extern void VBumpVolumeUsage(register Volume * vp);
-extern void VBumpVolumeUsage_r(register Volume * vp);
+extern void VBumpVolumeUsage(Volume * vp);
+extern void VBumpVolumeUsage_r(Volume * vp);
 extern void VSetDiskUsage(void);
 extern void VPrintCacheStats(void);
 extern void VReleaseVnodeFiles_r(Volume * vp);
@@ -814,8 +817,8 @@ extern int VInitAttachVolumes(ProgramType pt);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
-extern void VTakeOffline_r(register Volume * vp);
-extern void VTakeOffline(register Volume * vp);
+extern void VTakeOffline_r(Volume * vp);
+extern void VTakeOffline(Volume * vp);
 extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
 extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
 			   char **namep);
@@ -831,9 +834,9 @@ extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
-extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition, 
+extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition,
 				      VolId volumeId);
-extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp, 
+extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp,
 				      Volume * vp, VolId volume_id);
 extern Volume *VGetVolumeByVp_r(Error * ec, Volume * vp);
 extern int VShutdownByPartition_r(struct DiskPartition64 * dp);
@@ -871,6 +874,7 @@ extern void VPurgeVolume(Error * ec, Volume * vp);
 extern afs_int32 VCanScheduleSalvage(void);
 extern afs_int32 VCanUseFSSYNC(void);
 extern afs_int32 VCanUseSALVSYNC(void);
+extern afs_int32 VCanUnsafeAttach(void);
 extern afs_int32 VReadVolumeDiskHeader(VolumeId volid,
 				       struct DiskPartition64 * dp,
 				       VolumeDiskHeader_t * hdr);

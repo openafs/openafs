@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,14 +36,14 @@ afs_uint32 afs_stampValue = 0;
  */
 
 static int
-afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
+afs_StoreMini(struct vcache *avc, struct vrequest *areq)
 {
-    register struct afs_conn *tc;
+    struct afs_conn *tc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
-    register afs_int32 code;
-    register struct rx_call *tcall;
+    afs_int32 code;
+    struct rx_call *tcall;
     afs_size_t tlen, xlen = 0;
     XSTATS_DECLS;
     AFS_STATCNT(afs_StoreMini);
@@ -157,13 +157,13 @@ int afs_dvhack = 0;
 
 
 int
-afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
+afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 		     int sync)
 {
-    register struct dcache *tdc;
-    register afs_int32 code = 0;
-    register afs_int32 index;
-    register afs_int32 origCBs, foreign = 0;
+    struct dcache *tdc;
+    afs_int32 code = 0;
+    afs_int32 index;
+    afs_int32 origCBs, foreign = 0;
     int hash;
     afs_hyper_t newDV, oldDV;	/* DV when we start, and finish, respectively */
     struct dcache **dcList;
@@ -225,13 +225,13 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
      * - Have to get a write lock on xdcache because GetDSlot might need it (if
      *   the chunk doesn't have a dcache struct).
      *   This seems like overkill in most cases.
-     * - I'm not sure that it's safe to do "index = .hvNextp", then unlock 
+     * - I'm not sure that it's safe to do "index = .hvNextp", then unlock
      *   xdcache, then relock xdcache and try to use index.  It is done
      *   a lot elsewhere in the CM, but I'm not buying that argument.
      * - should be able to check IFDataMod without doing the GetDSlot (just
      *   hold afs_xdcache).  That way, it's easy to do this without the
      *   writelock on afs_xdcache, and we save unneccessary disk
-     *   operations. I don't think that works, 'cuz the next pointers 
+     *   operations. I don't think that works, 'cuz the next pointers
      *   are still on disk.
      */
     origCBs = afs_allCBs;
@@ -245,7 +245,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	high = 0;
 	moredata = FALSE;
 
-	/* lock and start over from beginning of hash chain 
+	/* lock and start over from beginning of hash chain
 	 * in order to avoid a race condition. */
 	ObtainWriteLock(&afs_xdcache, 284);
 	index = afs_dvhashTbl[hash];
@@ -324,7 +324,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	 * Call StoreMini if we haven't written enough data to extend the
 	 * file at the fileserver to the client's notion of the file length.
 	 */
-	if ((avc->f.truncPos != AFS_NOTRUNC) 
+	if ((avc->f.truncPos != AFS_NOTRUNC)
 	    || ((avc->f.states & CExtendedFile)
 		&& (maxStoredLength < avc->f.m.Length))) {
 	    code = afs_StoreMini(avc, areq);
@@ -337,7 +337,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     /*
      * Finally, turn off DWriting, turn on DFEntryMod,
      * update f.versionNo.
-     * A lot of this could be integrated into the loop above 
+     * A lot of this could be integrated into the loop above
      */
     if (!code) {
 	afs_hyper_t h_unset;
@@ -573,8 +573,8 @@ afs_InvalidateAllSegments(struct vcache *avc)
     return 0;
 }
 
-/*! 
- * 
+/*!
+ *
  * Extend a cache file
  *
  * \param avc pointer to vcache to extend data for
@@ -617,8 +617,8 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
 	     towrite = (avc->f.m.Length + toAdd) - tdc->validPos;
 	     if (towrite > AFS_PAGESIZE) towrite = AFS_PAGESIZE;
 
-	     code = afs_CFileWrite(tfile, 
-			           tdc->validPos - AFS_CHUNKTOBASE(tdc->f.chunk), 
+	     code = afs_CFileWrite(tfile,
+			           tdc->validPos - AFS_CHUNKTOBASE(tdc->f.chunk),
 				   zeros, towrite);
 	     tdc->validPos += towrite;
 	}
@@ -649,12 +649,12 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
  *	held.
  */
 int
-afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
+afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 			struct vrequest *areq, afs_ucred_t *acred)
 {
-    register struct dcache *tdc;
-    register afs_int32 code;
-    register afs_int32 index;
+    struct dcache *tdc;
+    afs_int32 code;
+    afs_int32 index;
     afs_size_t newSize;
 
     int dcCount, dcPos;

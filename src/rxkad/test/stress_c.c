@@ -41,7 +41,7 @@ static long
 GetServer(aname)
      IN char *aname;
 {
-    register struct hostent *th;
+    struct hostent *th;
     long addr;
 
     th = gethostbyname(aname);

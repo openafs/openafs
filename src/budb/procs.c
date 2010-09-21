@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -63,21 +63,21 @@ afs_int32 AddVolumes(struct rx_call *, struct budb_volumeList *);
 afs_int32 CreateDump(struct rx_call *, struct budb_dumpEntry *);
 afs_int32 DoDeleteDump(struct rx_call *, dumpId, Date, Date, budb_dumpsList *);
 afs_int32 DoDeleteTape(struct rx_call *, struct budb_tapeEntry *);
-afs_int32 ListDumps(struct rx_call *, afs_int32, afs_int32, Date, Date, 
+afs_int32 ListDumps(struct rx_call *, afs_int32, afs_int32, Date, Date,
 		    budb_dumpsList *, budb_dumpsList *);
 afs_int32 DeleteVDP(struct rx_call *, char *, char *, afs_int32);
 afs_int32 FindClone(struct rx_call *, afs_int32, char *, afs_int32 *);
-afs_int32 FindDump(struct rx_call *, char *, afs_int32, 
+afs_int32 FindDump(struct rx_call *, char *, afs_int32,
 		   struct budb_dumpEntry *);
-afs_int32 FindLatestDump(struct rx_call *, char *, char *, 
+afs_int32 FindLatestDump(struct rx_call *, char *, char *,
 			 struct budb_dumpEntry *);
 afs_int32 FinishDump(struct rx_call *, struct budb_dumpEntry *);
 afs_int32 FinishTape(struct rx_call *, struct budb_tapeEntry *);
-afs_int32 GetDumps(struct rx_call *, afs_int32, afs_int32, char *, 
+afs_int32 GetDumps(struct rx_call *, afs_int32, afs_int32, char *,
 		   afs_int32, afs_int32, afs_int32, afs_int32 *,
 		   afs_int32 *, budb_dumpList *);
 afs_int32 getExpiration(struct ubik_trans *ut, struct tape *);
-afs_int32 makeAppended(struct ubik_trans *ut, afs_int32, afs_int32, 
+afs_int32 makeAppended(struct ubik_trans *ut, afs_int32, afs_int32,
 		       afs_int32);
 afs_int32 MakeDumpAppended(struct rx_call *, afs_int32, afs_int32,
 			   afs_int32);
@@ -125,7 +125,7 @@ static int procsInited = 0;
 
 static int (*rebuildDatabase) (struct ubik_trans *);
 
-/* AwaitInitialization 
+/* AwaitInitialization
  * Wait unitl budb has initialized (InitProcs). If it hasn't
  * within 5 seconds, then return no quorum.
  */
@@ -369,7 +369,7 @@ AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
 	return 0;
     }
 
-    /* Up to 5 plus a maximum so SendReturnList() knows if we 
+    /* Up to 5 plus a maximum so SendReturnList() knows if we
      * need to come back for more.
      */
     if (list->nElements >= BUDB_MAX_RETURN_LIST + 5)
@@ -519,7 +519,7 @@ FillTapeEntry(struct ubik_trans *ut, dbadr ta, void *rock)
 static afs_int32
 SendReturnList(struct ubik_trans *ut,
 	       struct returnList *list,	/* list of elements to return */
-	       afs_int32(*FillProc) (struct ubik_trans *, dbadr da, 
+	       afs_int32(*FillProc) (struct ubik_trans *, dbadr da,
 				     void *),
 	       				/* proc to fill entry */
 	       int e_size,		/* size of each element */
@@ -757,7 +757,7 @@ GetVolInfo(struct ubik_trans *ut, struct budb_volumeEntry *volP, dbadr *viaP,
 	if (eval)
 	    ERROR(eval);
 
-	LogDebug(4, "volume Info for %s placed at %d\n", db.volName, via);
+	LogDebug(4, "volume Info for %s placed at %d\n", volP->name, via);
     }
 
     else if (!VolInfoMatch(volP, viP)) {	/* Not the head volinfo struct */
@@ -807,7 +807,7 @@ GetVolInfo(struct ubik_trans *ut, struct budb_volumeEntry *volP, dbadr *viaP,
 }
 
 /* deletesomevolumesfromtape
- *	Deletes a specified number of volumes from a tape. The tape 
+ *	Deletes a specified number of volumes from a tape. The tape
  *	and dump are modified to reflect the smaller number of volumes.
  *	The transaction is not terminated, it is up to the caller to
  *	finish the transaction and start a new one (if desired).
@@ -1550,8 +1550,8 @@ DoDeleteDump(struct rx_call *call, dumpId id, Date fromTime, Date toTime,
 }
 
 afs_int32
-SBUDB_ListDumps(struct rx_call *call, afs_int32 sflags, char *name, 
-		afs_int32 groupid, Date fromTime, Date toTime, 
+SBUDB_ListDumps(struct rx_call *call, afs_int32 sflags, char *name,
+		afs_int32 groupid, Date fromTime, Date toTime,
 		budb_dumpsList *dumps, budb_dumpsList *flags)
 {
     afs_int32 code;
@@ -1562,8 +1562,8 @@ SBUDB_ListDumps(struct rx_call *call, afs_int32 sflags, char *name,
 }
 
 afs_int32
-ListDumps(struct rx_call *call, afs_int32 sflags, afs_int32 groupid, 
-	  Date fromTime, Date toTime, budb_dumpsList *dumps, 
+ListDumps(struct rx_call *call, afs_int32 sflags, afs_int32 groupid,
+	  Date fromTime, Date toTime, budb_dumpsList *dumps,
 	  budb_dumpsList *flags)
 {
     struct ubik_trans *ut;
@@ -1833,11 +1833,11 @@ DeleteVDP(struct rx_call *call, char *dsname, char *dumpPath,
 
 /* BUDB_FindClone
  * notes:
- *      Given a volume name, and a dumpID, find the volume in that dump and 
- *      return the clone date of the volume (this is the clone date of the 
+ *      Given a volume name, and a dumpID, find the volume in that dump and
+ *      return the clone date of the volume (this is the clone date of the
  *      volume at the time it was dumped).
- *   
- *      Hashes on the volume name and traverses the fragments. Will need to read 
+ *
+ *      Hashes on the volume name and traverses the fragments. Will need to read
  *      the volumes tape entry to determine if it belongs to the dump. If the
  *      volume is not found in the dump, then look for it in its parent dump.
  */
@@ -2403,12 +2403,12 @@ FinishTape(struct rx_call *call, struct budb_tapeEntry *tape)
  *	flags - for search and select operations. Broken down into flags
  *		for name, start point, end point and time.
  *	name - name to search for. Interpretation based on flags
- *	end 
+ *	end
  *	index
  *	nextIndexP
  *	dbTimeP
  * exit:
- *	nextIndexP 
+ *	nextIndexP
  *	dbTimeP - time at which the database was last modified. Up to
  *		caller (client) to take appropriate action if database
  *		modified between successive calls
@@ -2622,9 +2622,9 @@ GetDumps(struct rx_call *call,
     return code;
 }
 
-/* 
+/*
  * Get the expiration of a tape.  Since the dump could have appended dumps,
- * we should use the most recent expiration date. Put the most recent 
+ * we should use the most recent expiration date. Put the most recent
  * expiration tape into the given tape structure.
  */
 afs_int32
@@ -2679,7 +2679,7 @@ getExpiration(struct ubik_trans *ut, struct tape *tapePtr)
 
 /* Mark the following dump as appended to another, intial dump */
 afs_int32
-makeAppended(struct ubik_trans *ut, afs_int32 appendedDumpID, 
+makeAppended(struct ubik_trans *ut, afs_int32 appendedDumpID,
 	     afs_int32 initialDumpID, afs_int32 startTapeSeq)
 {
     dbadr ada, da, lastDumpAddr;
@@ -2717,8 +2717,8 @@ makeAppended(struct ubik_trans *ut, afs_int32 appendedDumpID,
     /* Update the appended dump's tape format with that of the initial */
     strcpy(ad.tapes.format, d.tapes.format);
 
-    /* starting with the initial dump step through its appended dumps till 
-     * we reach the last appended dump. 
+    /* starting with the initial dump step through its appended dumps till
+     * we reach the last appended dump.
      */
     lastDumpAddr = da;
     while (d.appendedDumpChain) {
@@ -2754,7 +2754,7 @@ makeAppended(struct ubik_trans *ut, afs_int32 appendedDumpID,
 }
 
 afs_int32
-SBUDB_MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID, 
+SBUDB_MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID,
 		       afs_int32 initialDumpID, afs_int32 startTapeSeq)
 {
     afs_int32 code;
@@ -2767,7 +2767,7 @@ SBUDB_MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID,
 }
 
 afs_int32
-MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID, 
+MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID,
 		 afs_int32 initialDumpID, afs_int32 startTapeSeq)
 {
     struct ubik_trans *ut;
@@ -2794,9 +2794,9 @@ MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID,
 
 /* Find the last tape of a dump-set. This includes any appended dumps */
 afs_int32
-SBUDB_FindLastTape(struct rx_call *call, afs_int32 dumpID, 
-		   struct budb_dumpEntry *dumpEntry, 
-		   struct budb_tapeEntry *tapeEntry, 
+SBUDB_FindLastTape(struct rx_call *call, afs_int32 dumpID,
+		   struct budb_dumpEntry *dumpEntry,
+		   struct budb_tapeEntry *tapeEntry,
 		   struct budb_volumeEntry *volEntry)
 {
     afs_int32 code;
@@ -2807,9 +2807,9 @@ SBUDB_FindLastTape(struct rx_call *call, afs_int32 dumpID,
 }
 
 afs_int32
-FindLastTape(struct rx_call *call, afs_int32 dumpID, 
-	     struct budb_dumpEntry *dumpEntry, 
-	     struct budb_tapeEntry *tapeEntry, 
+FindLastTape(struct rx_call *call, afs_int32 dumpID,
+	     struct budb_dumpEntry *dumpEntry,
+	     struct budb_tapeEntry *tapeEntry,
 	     struct budb_volumeEntry *volEntry)
 {
     struct ubik_trans *ut;
@@ -3715,7 +3715,7 @@ volFragsDump(struct ubik_trans *ut, FILE *dumpfid, dbadr dbAddr)
  */
 
 void
-volFragmentDiskToHost(struct volFragment *diskVfPtr, 
+volFragmentDiskToHost(struct volFragment *diskVfPtr,
 		      struct volFragment *hostVfPtr)
 {
     hostVfPtr->vol = ntohl(diskVfPtr->vol);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -52,7 +52,7 @@ typedef int afs_inode_params_t[4];	/* Use to pass param[4] to kernel. */
 #define AFS_XFS_NAME_VERS  AFS_XFS_NAME_VERS2
 #define AFS_INODE_DIR_NAME ".afsinodes."
 
-/* Unfortunately, to get all this in 39 bytes requires proper packing. 
+/* Unfortunately, to get all this in 39 bytes requires proper packing.
  * So, the version number is at an offset instead of first.
  */
 typedef struct {

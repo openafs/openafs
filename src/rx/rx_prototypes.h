@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -57,7 +57,7 @@ extern struct rx_service *rx_NewService(u_short port, u_short serviceId,
 					afs_int32(*serviceProc) (struct
 								 rx_call *
 								 acall));
-extern struct rx_service *rx_NewServiceHost(afs_uint32 host, u_short port, 
+extern struct rx_service *rx_NewServiceHost(afs_uint32 host, u_short port,
 					    u_short serviceId,
 					    char *serviceName,
 					    struct rx_securityClass
@@ -155,7 +155,7 @@ extern struct rx_packet *rxi_SendAck(struct rx_call *call, struct rx_packet
 extern void rxi_StartUnlocked(struct rxevent *event,
 			      void *call, /* struct rx_call */
 			      void *arg1, int istack);
-extern void rxi_Start(struct rxevent *event, 
+extern void rxi_Start(struct rxevent *event,
 		      void *call, /* struct rx_call */
 		      void *arg1, int istack);
 extern void rxi_Send(struct rx_call *call,
@@ -166,7 +166,7 @@ extern int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 extern int rxi_CheckCall(struct rx_call *call);
 #endif /* RX_ENABLE_LOCKS */
 extern void rxi_KeepAliveEvent(struct rxevent *event,
-			       void *call /* struct rx_call *call */, 
+			       void *call /* struct rx_call *call */,
 			       void *dummy);
 extern void rxi_GrowMTUEvent(struct rxevent *event,
 			     void *call /* struct rx_call *call */,
@@ -191,7 +191,7 @@ extern void rxi_ChallengeOn(struct rx_connection *conn);
 extern void rxi_ComputeRoundTripTime(struct rx_packet *p,
 				     struct clock *sentp,
 				     struct rx_peer *peer);
-extern void rxi_ReapConnections(struct rxevent *unused, void *unused1, 
+extern void rxi_ReapConnections(struct rxevent *unused, void *unused1,
 				void *unused2);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
@@ -324,16 +324,16 @@ extern struct rxevent *rxevent_Post(struct clock *when,
 /* this func seems to be called with tons of different style routines, need to look
 at another time. */
 #else
-extern struct rxevent *rxevent_Post(struct clock *when, 
+extern struct rxevent *rxevent_Post(struct clock *when,
 				    void (*func) (struct rxevent *, void *, void *),
 				    void *arg, void *arg1);
-extern struct rxevent *rxevent_Post2(struct clock *when, 
+extern struct rxevent *rxevent_Post2(struct clock *when,
 				    void (*func) (struct rxevent *, void *, void *, int),
 				    void *arg, void *arg1, int arg2);
 extern struct rxevent *rxevent_PostNow(struct clock *when, struct clock *now,
 				       void (*func) (struct rxevent *, void *, void *), void *arg, void *arg1);
 extern struct rxevent *rxevent_PostNow2(struct clock *when, struct clock *now,
-					void (*func) (struct rxevent *, void *, void *, int), void *arg, 
+					void (*func) (struct rxevent *, void *, void *, int), void *arg,
 					void *arg1, int arg2);
 #endif
 extern void shutdown_rxevent(void);
@@ -351,7 +351,7 @@ extern int rxevent_RaiseEvents(struct clock *next);
 extern void rxi_setaddr(afs_uint32 x);
 extern afs_uint32 rxi_getaddr(void);
 extern int rx_getAllAddr(afs_uint32 * buffer, int maxSize);
-extern int rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], 
+extern int rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[],
 			  	 afs_uint32 maskBuffer[],
 				 afs_uint32 mtuBuffer[],
 				 int maxSize);

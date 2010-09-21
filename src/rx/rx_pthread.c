@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -168,8 +168,8 @@ event_handler(void *argp)
 	error = CV_TIMEDWAIT(&rx_event_handler_cond, &event_handler_mutex, &rx_pthread_next_event_time);
         if (error == 0) {
 	    rx_pthread_n_event_woken++;
-        } 
-#ifdef AFS_NT40_ENV        
+        }
+#ifdef AFS_NT40_ENV
         else if (error == ETIMEDOUT) {
 	    rx_pthread_n_event_expired++;
 	} else {
@@ -287,7 +287,7 @@ rx_ServerProc(void * dummy)
     /* threadID is used for making decisions in GetCall.  Get it by bumping
      * number of threads handling incoming calls */
     /* Unique thread ID: used for scheduling purposes *and* as index into
-     * the host hold table (fileserver). 
+     * the host hold table (fileserver).
      * The previously used rxi_availProcs is unsuitable as it
      * will already go up and down as packets arrive while the server
      * threads are still initialising! The recently introduced
@@ -324,7 +324,7 @@ rx_ServerProc(void * dummy)
  * listener processes (one for each socket); these are started by GetUdpSocket.
  *
  * The event handling process *is* started here (the old listener used
- * to also handle events). The listener threads can't actually start 
+ * to also handle events). The listener threads can't actually start
  * listening until rxi_StartListener is called because most of R may not
  * be initialized when rxi_Listen is called.
  */

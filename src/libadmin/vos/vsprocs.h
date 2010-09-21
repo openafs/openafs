@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -104,7 +104,7 @@ extern int UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
 extern int UV_ListOneVolume(struct rx_connection *server, afs_int32 a_partID,
                             afs_uint32 a_volID, struct volintInfo **a_resultPP,
                             afs_status_p st);
-			    
+
 extern int UV_SyncVldb(afs_cell_handle_p cellHandle,
 		       struct rx_connection *server, afs_int32 apart,
 		       int flags, int force, afs_status_p st);

@@ -132,7 +132,7 @@ static void delete_fixup(ptst_t *ptst, set_t *s, node_t *x)
     while ( (x->p != &s->root) && IS_BLACK(x->v) )
     {
         p = x->p;
- 
+
         if ( x == p->l )
         {
             w = p->r;
@@ -145,7 +145,7 @@ static void delete_fixup(ptst_t *ptst, set_t *s, node_t *x)
                 /* Get new sibling W. */
                 w = p->r;
             }
- 
+
             if ( IS_BLACK(w->l->v) && IS_BLACK(w->r->v) )
             {
                 w->v = MK_RED(w->v);
@@ -162,7 +162,7 @@ static void delete_fixup(ptst_t *ptst, set_t *s, node_t *x)
                     /* Old w is new w->r. Old w->l is new w.*/
                     w = p->r;
                 }
- 
+
                 w->v = SET_COLOUR(GET_VALUE(w->v), GET_COLOUR(p->v));
                 p->v = MK_BLACK(p->v);
                 w->r->v = MK_BLACK(w->r->v);
@@ -182,7 +182,7 @@ static void delete_fixup(ptst_t *ptst, set_t *s, node_t *x)
                 /* Get new sibling W. */
                 w = p->l;
             }
- 
+
             if ( IS_BLACK(w->l->v) && IS_BLACK(w->r->v) )
             {
                 w->v = MK_RED(w->v);
@@ -199,7 +199,7 @@ static void delete_fixup(ptst_t *ptst, set_t *s, node_t *x)
                     /* Old w is new w->l. Old w->r is new w.*/
                     w = p->l;
                 }
- 
+
                 w->v = SET_COLOUR(GET_VALUE(w->v), GET_COLOUR(p->v));
                 p->v = MK_BLACK(p->v);
                 w->l->v = MK_BLACK(w->l->v);
@@ -259,7 +259,7 @@ setval_t set_update(set_t *s, setkey_t k, setval_t v, int overwrite)
         x = y;
         if ( k == x->k ) break;
     }
- 
+
     if ( k == x->k )
     {
         ov = x->v;

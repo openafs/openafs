@@ -15,17 +15,17 @@ extern afs_int32 ka_AdminInteractive(int cmd_argc, char *cmd_argv[]);
 /* kadatabase.c */
 extern void init_kadatabase(int initFlags);
 
-extern afs_int32 ka_LookupKey(struct ubik_trans *tt, 
-			      char *name, char *inst, 
+extern afs_int32 ka_LookupKey(struct ubik_trans *tt,
+			      char *name, char *inst,
 			      afs_int32 *kvno,
 			      struct ktc_encryptionKey *key);
 
 struct kaentry;
-extern afs_int32 FindBlock(struct ubik_trans *at, char *aname, 
-			   char *ainstance, afs_int32 *toP, 
+extern afs_int32 FindBlock(struct ubik_trans *at, char *aname,
+			   char *ainstance, afs_int32 *toP,
 			   struct kaentry *tentry);
 
-extern afs_int32 ThreadBlock(struct ubik_trans *at, afs_int32 index, 
+extern afs_int32 ThreadBlock(struct ubik_trans *at, afs_int32 index,
 		             struct kaentry *tentry);
 
 extern afs_int32 ka_FillKeyCache(struct ubik_trans *tt);
@@ -35,7 +35,7 @@ extern afs_int32 CheckInit(struct ubik_trans *at,
 
 extern afs_int32 AllocBlock(struct ubik_trans *at, struct kaentry *tentry);
 
-extern afs_int32 ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr, 
+extern afs_int32 ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 		           struct kaentry *tentry,
 			   struct ktc_encryptionKey *key);
 

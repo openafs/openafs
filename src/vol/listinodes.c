@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -114,6 +114,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #include "volinodes.h"
 #include "partition.h"
 #include "fssync.h"
+#include "volume_inline.h"
 
 /*@+fcnmacros +macrofcndecl@*/
 #ifdef O_LARGEFILE
@@ -457,9 +458,9 @@ ginode(inum)
 /* xfs_ListViceInodes
  *
  * xfs_ListViceInodes verifies and correct the XFS namespace as it collects
- * the inode information. The name is required for the idec operation to work. 
+ * the inode information. The name is required for the idec operation to work.
  * Steps 2 and 3 below are for the AFS_XFS_NAME_VERS == 1. If the name space
- * changes, the algorithm will need to change. 
+ * changes, the algorithm will need to change.
  * 1) If the parent inode number does not match the directory's inod number,
  *    change it in the attribute.
  * 2) If the unqifier in the attribute does not match the name, rename the
@@ -473,7 +474,7 @@ ginode(inum)
  */
 
 /* xfs_VerifyInode
- * 
+ *
  * Does the verifications listed above.
  * We can't change the names until the readdir is complete, so we set the
  * rename flag if the file needs renaming.
@@ -1129,7 +1130,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		    goto out;
 		}
 	    } else {
-		register int bj, bk;
+		int bj, bk;
 		dptr = inodes;
 		for (bj = bk = 0; bj < bufsize; bj = bj + 512, bk++) {
 		    if ((code = read(pfd, dptr, 512)) != 512) {
@@ -1244,7 +1245,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	    err = -2;
 	    goto out1;
 	}
-	
+
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
@@ -1326,7 +1327,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
     vd.type = RWVOL;
     vd.dontSalvage = 0;
     vd.inUse = 0;
-    vd.uniquifier += 5000;      /* just in case there are still file copies 
+    vd.uniquifier += 5000;      /* just in case there are still file copies
 				   from the old RW volume around */
 
     p = strrchr(vd.name, '.');
@@ -1351,13 +1352,13 @@ struct specino {
 
 
 int
-UpdateThisVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber, 
+UpdateThisVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber,
 		 struct specino *specinos)
 {
     struct dinode *p;
     if ((inodeinfo->u.vnode.vnodeNumber == INODESPECIAL) &&
 	(inodeinfo->u.vnode.volumeId == singleVolumeNumber)) {
-	specinos[inodeinfo->u.special.type].inodeNumber = 
+	specinos[inodeinfo->u.special.type].inodeNumber =
 	    inodeinfo->inodeNumber;
     }
     return 0; /* We aren't using a result file, we're caching */
@@ -1403,28 +1404,32 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     char buffer[128];
     struct specino specinos[VI_LINKTABLE+1];
     Inode nearInode = 0;
+# ifdef AFS_DEMAND_ATTACH_FS
+    int locktype = 0;
+# endif /* AFS_DEMAND_ATTACH_FS */
+    int code = 0;
 
     memset(&specinos, 0, sizeof(specinos));
 
-#ifdef AFS_DEMAND_ATTACH_FS
-/* DAFS currently doesn't really work with inode, so don't bother putting the
- * locking code here right now. But in case someday someone makes DAFS work
- * with the inode backend, make sure they remember to add the volume locking
- * code here (make the build fail until that happens). If that is what you're
- * trying to do, take a look at VLockVolumeByIdNB, and
- * namei_ConvertROtoRWvolume.
- */
-# error must lock volumes before ConvertROtoRW is usable on DAFS inode
-#endif
-	   
     /* now do the work */
-	   
+
     for (partP = DiskPartitionList; partP && strcmp(partP->name, pname);
          partP = partP->next);
     if (!partP) {
         Log("1 inode_ConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
-        return EIO;
+        code = EIO;
+	goto done;
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    locktype = VVolLockType(V_VOLUPD, 1);
+    code = VLockVolumeByIdNB(volumeId, partP, locktype);
+    if (code) {
+        locktype = 0;
+        code = EIO;
+        goto done;
+    }
+#endif
 
     if (VReadVolumeDiskHeader(volumeId, partP, &h)) {
 	Log("1 inode_ConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n",
@@ -1437,14 +1442,15 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     strcpy(tmpDevName, partP->devName);
     name = getDevName(tmpDevName, wpath);
 
-    if ((err = ListViceInodes(name, VPartitionPath(partP), 
-			      NULL, UpdateThisVolume, volumeId, 
+    if ((err = ListViceInodes(name, VPartitionPath(partP),
+			      NULL, UpdateThisVolume, volumeId,
 			      &forcep, 0, wpath, &specinos)) < 0)
     {
 	Log("1 inode_ConvertROtoRWvolume: Couldn't get special inodes\n");
-	return EIO;
+	code = EIO;
+	goto done;
     }
-	   
+
 #if defined(NEARINODE_HINT)
     nearInodeHash(volumeId, nearInode);
     nearInode %= partP->f_files;
@@ -1452,24 +1458,26 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     for (j = VI_VOLINFO; j < VI_LINKTABLE+1; j++) {
 	if (specinos[j].inodeNumber > 0) {
-	    specinos[j].ninodeNumber = 
+	    specinos[j].ninodeNumber =
 		IH_CREATE(NULL, partP->device, VPartitionPath(partP),
 			  nearInode, h.parent, INODESPECIAL, j, h.parent);
-	    IH_INIT(ih, partP->device, volumeId, 
+	    IH_INIT(ih, partP->device, volumeId,
 		    specinos[j].inodeNumber);
 	    fdP = IH_OPEN(ih);
 	    if (!fdP) {
-		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, volumeId); 
-		return -1;
+		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, volumeId);
+		code = -1;
+		goto done;
 	    }
-	    
+
 	    IH_INIT(ih2, partP->device, h.parent, specinos[j].ninodeNumber);
-	    fdP2 = IH_OPEN(ih2); 
-	    if (!fdP2) { 
-		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, h.parent);  
-		return -1; 
-	    } 
-	    
+	    fdP2 = IH_OPEN(ih2);
+	    if (!fdP2) {
+		Log("1 inode_ConvertROtoRWvolume: Couldn't find special inode %d for %d\n", j, h.parent);
+		code = -1;
+		goto done;
+	    }
+
 	    if (j == VI_VOLINFO)
 		convertVolumeInfo(fdP->fd_fd, fdP2->fd_fd, ih2->ih_vid);
 	    else {
@@ -1480,11 +1488,13 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 		    if (len == 0)
 			break;
 		    nBytes = write(fdP2->fd_fd, buffer, len);
-		    if (nBytes != len)
-			return -1;
+		    if (nBytes != len) {
+			code = -1;
+			goto done;
+		    }
 		}
 	    }
-		
+
 	    FDH_CLOSE(fdP);
 	    FDH_CLOSE(fdP2);
 
@@ -1499,7 +1509,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    IH_RELEASE(ih2);
 	}
     }
-   
+
     h.id = h.parent;
 #ifdef AFS_64BIT_IOPS_ENV
     h.volumeInfo_lo = (afs_int32)specinos[VI_VOLINFO].ninodeNumber & 0xffffffff;
@@ -1524,7 +1534,8 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     if (VCreateVolumeDiskHeader(&h, partP)) {
         Log("1 inode_ConvertROtoRWvolume: Couldn't write header for RW-volume %lu\n",
 	    afs_printable_uint32_lu(h.id));
-        return EIO;
+        code = EIO;
+	goto done;
     }
 
     if (VDestroyVolumeDiskHeader(partP, volumeId, h.parent)) {
@@ -1534,7 +1545,14 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
-    return 0;
+
+ done:
+# ifdef AFS_DEMAND_ATTACH_FS
+    if (locktype) {
+        VUnlockVolumeById(volumeId, partP);
+    }
+# endif /* AFS_DEMAND_ATTACH_FS */
+    return code;
 }
 #endif /* FSSYNC_BUILD_CLIENT */
 #endif /* AFS_NAMEI_ENV */

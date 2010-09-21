@@ -41,10 +41,13 @@ extern struct vfs *afs_globalVFS;
 
 /* copy out attributes from cache entry */
 int
-afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
+afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 {
-    register struct volume *tvp;
-    register struct cell *tcell;
+    struct volume *tvp;
+    struct cell *tcell;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+    struct vnode *vp = AFSTOV(avc);
+#endif
     int fakedir = 0;
 
     AFS_STATCNT(afs_CopyOutAttrs);
@@ -115,6 +118,9 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
     attrs->va_nlink = fakedir ? 100 : avc->f.m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->f.m.Length;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+        vnode_pager_setsize(vp, (u_long) attrs->va_size);
+#endif
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
 	fakedir ? 0 : (int)avc->f.m.Date;
     /* set microseconds to be dataversion # so that we approximate NFS-style
@@ -268,7 +274,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 		}
 	    }
 	    if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
-		register struct afs_exporter *exporter = au->exporter;
+		struct afs_exporter *exporter = au->exporter;
 
 		if (exporter && !(afs_nfsexporter->exp_states & EXP_UNIXMODE)) {
 		    unsigned int ubits;
@@ -336,10 +342,10 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
 /* convert a Unix request into a status store request */
 int
-afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
-	      register struct AFSStoreStatus *as)
+afs_VAttrToAS(struct vcache *avc, struct vattr *av,
+	      struct AFSStoreStatus *as)
 {
-    register int mask;
+    int mask;
     mask = 0;
     AFS_STATCNT(afs_VAttrToAS);
 #if     defined(AFS_DARWIN80_ENV)
@@ -434,17 +440,20 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
  */
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 int
-afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, int flags,
+afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags,
 	    afs_ucred_t *acred)
 #else
 int
-afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
+afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	    afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;
     struct AFSStoreStatus astat;
-    register afs_int32 code;
+    afs_int32 code;
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+    struct vnode *vp = AFSTOV(avc);
+#endif
     struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc);
 
@@ -554,6 +563,9 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	if (code == 0)
 	    i_size_write(AFSTOV(avc), tsize);
 #endif
+#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+        vnode_pager_setsize(vp, (u_long) tsize);
+#endif
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
 	if (!(astat.Mask & AFS_SETMODTIME)) {
@@ -596,15 +608,11 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	        osi_dnlc_purgedp(avc);
 	    /* error?  erase any changes we made to vcache entry */
         }
-
-#if defined(AFS_DISCON_ENV)
     } else {
-
 	ObtainSharedLock(&avc->lock, 712);
 	/* Write changes locally. */
 	code = afs_WriteVCacheDiscon(avc, &astat, attrs);
 	ReleaseSharedLock(&avc->lock);
-#endif
     }		/* if (!AFS_IS_DISCONNECTED) */
 
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -19,7 +19,7 @@
 struct keymap_map *
 keymap_Create(void)
 {
-    register struct keymap_map *tmap;
+    struct keymap_map *tmap;
 
     tmap = (struct keymap_map *)malloc(sizeof(struct keymap_map));
     if (tmap != (struct keymap_map *)0)
@@ -29,9 +29,9 @@ keymap_Create(void)
 
 /* make a copy of a string; generic utility */
 char *
-gtx_CopyString(register char *aval)
+gtx_CopyString(char *aval)
 {
-    register char *tp;
+    char *tp;
 
     if (!aval)
 	return NULL;		/* propagate null strings around */
@@ -44,8 +44,8 @@ gtx_CopyString(register char *aval)
 static int
 BindIt(struct keymap_map *amap, int aslot, int atype, void *aproc, char *aname, void *arock)
 {
-    register char *tp;
-    register struct keymap_entry *tentry;
+    char *tp;
+    struct keymap_entry *tentry;
 
     if (aslot < 0 || aslot >= KEYMAP_NENTRIES)
 	return -1;
@@ -65,13 +65,13 @@ BindIt(struct keymap_map *amap, int aslot, int atype, void *aproc, char *aname, 
 }
 
 int
-keymap_BindToString(struct keymap_map *amap, char *astring, 
-		    int (*aproc)(void *, void *), 
+keymap_BindToString(struct keymap_map *amap, char *astring,
+		    int (*aproc)(void *, void *),
 		    char *aname, void *arock)
 {
-    register char *cptr;
-    register int tc;
-    register afs_int32 code;
+    char *cptr;
+    int tc;
+    afs_int32 code;
     struct keymap_map *tmap;
 
     cptr = astring;
@@ -111,8 +111,8 @@ keymap_BindToString(struct keymap_map *amap, char *astring,
 int
 keymap_Delete(struct keymap_map *amap)
 {
-    register int i;
-    register struct keymap_entry *tentry;
+    int i;
+    struct keymap_entry *tentry;
 
     for (i = 0; i < KEYMAP_NENTRIES; i++) {
 	tentry = &amap->entries[i];
@@ -137,8 +137,8 @@ keymap_InitState(struct keymap_state *astate, struct keymap_map *amap)
 int
 keymap_ProcessKey(struct keymap_state *astate, int akey, void *arock)
 {
-    register struct keymap_entry *tentry;
-    register afs_int32 code;
+    struct keymap_entry *tentry;
+    afs_int32 code;
 
     if (akey < 0 || akey >= KEYMAP_NENTRIES)
 	return -1;

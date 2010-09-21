@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -51,10 +51,10 @@ int namei_ListAFSFiles(char *dev,
 					 struct ViceInodeInfo * info,
 					 char *dir, char *file), FILE * fp,
 		       int (*judge_fun) (struct ViceInodeInfo * info,
-					 afs_uint32 vid, void *rock), 
+					 afs_uint32 vid, void *rock),
 		       afs_uint32 singleVolumeNumber, void *rock);
 int ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
-		   int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, 
+		   int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid,
 				      void *rock),
 		   afs_uint32 singleVolumeNumber, int *forcep, int forceR,
 		   char *wpath, void *rock);

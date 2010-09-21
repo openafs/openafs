@@ -116,10 +116,10 @@ rxstat_query_process: rxstat_query_process.o $(SAMPLELIBS)
 # Errors
 #
 rxstat_query_peer.o: rxstat_query_peer.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/rxstat_query_peer.c
 
 rxstat_query_process.o: rxstat_query_process.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/rxstat_query_process.c
 
 #######################################################################
 install:

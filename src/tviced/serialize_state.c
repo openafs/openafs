@@ -1,7 +1,7 @@
 /*
  * Copyright 2006, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -99,13 +99,15 @@ extern off_t afs_lseek(int FD, off_t O, int F);
  * have been written so that it will be very simple to go
  * back to standard I/O for just those poorly written platforms
  */
-#ifndef _WIN32
-#define FS_STATE_USE_MMAP
+#ifndef AFS_NT40_ENV
+#define FS_STATE_USE_MMAP 1
 #endif
 
 #ifdef FS_STATE_USE_MMAP
 #define FS_STATE_INIT_FILESIZE (8 * 1024 * 1024)  /* truncate to 8MB initially */
+#ifndef AFS_NT40_ENV
 #include <sys/mman.h>
+#endif
 #endif
 
 static int fs_stateCreateDump(struct fs_dump_state * state);
@@ -136,9 +138,20 @@ static int fs_stateFree(struct fs_dump_state * state);
 extern afsUUID FS_HostUUID;
 extern char cml_version_number[];
 
+int
+fs_stateFileOpen(struct fs_dump_state *state)
+{
+#ifdef AFS_NT40_ENV
+    return(state->fd != -1);
+#else
+    return(state->fd >= 0);
+#endif
+}
+
+
 /*
  * demand attach fs
- * save all fileserver state 
+ * save all fileserver state
  */
 int
 fs_stateSave(void)
@@ -147,7 +160,7 @@ fs_stateSave(void)
     struct fs_dump_state state;
 
     /* save and restore need to be atomic wrt other host package operations */
-    H_LOCK; 
+    H_LOCK;
 
     ViceLog(0, ("fs_stateSave: commencing fileserver state dump\n"));
 
@@ -223,7 +236,7 @@ fs_stateSave(void)
 
     if (fs_stateCommitDump(&state)) {
 	ViceLog(0, ("fs_stateSave: error: dump commit failed\n"));
-	ret = 1; 
+	ret = 1;
 	goto done;
     }
 
@@ -235,8 +248,8 @@ fs_stateSave(void)
 		    state.fn));
     }
 
- done:
-    if (state.fd >= 0)
+  done:
+    if (fs_stateFileOpen(&state))
 	fs_stateCloseDump(&state);
     fs_stateFree(&state);
     H_UNLOCK;
@@ -351,8 +364,8 @@ fs_stateCreateDump(struct fs_dump_state * state)
 	renamefile(state->fn, savedump);
     }
 
-    if (((fd = afs_open(state->fn, 
-			O_RDWR | O_CREAT | O_TRUNC, 
+    if (((fd = afs_open(state->fn,
+			O_RDWR | O_CREAT | O_TRUNC,
 			S_IRUSR | S_IWUSR)) == -1) ||
 	(afs_fstat(fd, &status) == -1)) {
 	ViceLog(0, ("fs_stateCreateDump: failed to create state dump file '%s'\n",
@@ -438,7 +451,7 @@ fs_stateCommitDump(struct fs_dump_state * state)
     }
 #endif
 
-    /* ensure that all pending data I/Os for the state file have been committed 
+    /* ensure that all pending data I/Os for the state file have been committed
      * _before_ we make the metadata I/Os */
     if (fs_stateSync(state)) {
 	ViceLog(0, ("fs_stateCommitDump: failed to sync changes to disk\n"));
@@ -450,8 +463,8 @@ fs_stateCommitDump(struct fs_dump_state * state)
     /* XXX madvise may not exist on all platforms, so
      * we may need to add some ifdefs at some point... */
     {
-	madvise((((char *)state->mmap.map) + sizeof(struct fs_state_header)), 
-		state->mmap.size - sizeof(struct fs_state_header), 
+	madvise((((char *)state->mmap.map) + sizeof(struct fs_state_header)),
+		state->mmap.size - sizeof(struct fs_state_header),
 		MADV_DONTNEED);
     }
 #endif
@@ -557,7 +570,7 @@ fs_stateWrite(struct fs_dump_state * state,
 	    goto done;
 	}
     }
-	    
+
     memcpy(state->mmap.cursor, buf, len);
     fs_stateIncCursor(state, len);
 #else
@@ -626,11 +639,21 @@ fs_stateWriteV(struct fs_dump_state * state,
 	fs_stateIncCursor(state, iov[i].iov_len);
     }
 #else
+#ifndef AFS_NT40_ENV
     if (writev(state->fd, iov, niov) != len) {
 	ViceLog(0, ("fs_stateWriteV: write failed\n"));
 	ret = 1;
 	goto done;
     }
+#else /* AFS_NT40_ENV */
+    for (i=0; i < niov; i++) {
+        if (write(state->fd, iov[i].iov_base, iov[i].iov_len) != iov[i].iov_len) {
+            ViceLog(0, ("fs_stateWriteV: write failed\n"));
+            ret = 1;
+            goto done;
+        }
+    }
+#endif /* AFS_NT40_ENV */
 #endif
 
  done:
@@ -661,11 +684,21 @@ fs_stateReadV(struct fs_dump_state * state,
 	fs_stateIncCursor(state, iov[i].iov_len);
     }
 #else
+#ifndef AFS_NT40_ENV
     if (readv(state->fd, iov, niov) != len) {
 	ViceLog(0, ("fs_stateReadV: read failed\n"));
 	ret = 1;
 	goto done;
     }
+#else
+    for (i=0; i < niov; i++) {
+        if (read(state->fd, iov[i].iov_base, iov[i].iov_len) != iov[i].iov_len) {
+            ViceLog(0, ("fs_stateReadV: read failed\n"));
+            ret = 1;
+            goto done;
+        }
+    }
+#endif /* AFS_NT40_ENV */
 #endif
 
  done:
@@ -737,9 +770,7 @@ fs_stateResizeFile(struct fs_dump_state * state, size_t min_add)
     int ret = 0;
     afs_foff_t inc;
 
-#ifdef FS_STATE_USE_MMAP
     fs_stateUnmapFile(state);
-#endif
 
     inc = ((min_add / FS_STATE_INIT_FILESIZE)+1) * FS_STATE_INIT_FILESIZE;
     state->file_len += inc;
@@ -750,13 +781,11 @@ fs_stateResizeFile(struct fs_dump_state * state, size_t min_add)
 	goto done;
     }
 
-#ifdef FS_STATE_USE_MMAP
     if (fs_stateMapFile(state)) {
 	ViceLog(0, ("fs_stateResizeFile: remapping memory mapped file failed\n"));
 	ret = 1;
 	goto done;
     }
-#endif
 
  done:
     return ret;
@@ -773,9 +802,7 @@ fs_stateTruncateFile(struct fs_dump_state * state)
 
     return ret;
 }
-#endif
 
-#ifdef FS_STATE_USE_MMAP
 static int
 fs_stateMapFile(struct fs_dump_state * state)
 {
@@ -793,11 +820,11 @@ fs_stateMapFile(struct fs_dump_state * state)
 	return 1;
     }
 
-    state->mmap.map = afs_mmap(NULL, 
-			       state->file_len, 
-			       flags, 
+    state->mmap.map = afs_mmap(NULL,
+			       state->file_len,
+			       flags,
 			       MAP_SHARED,
-			       state->fd, 
+			       state->fd,
 			       0);
 
     if (state->mmap.map == MAP_FAILED) {
@@ -844,9 +871,7 @@ fs_stateUnmapFile(struct fs_dump_state * state)
  done:
     return ret;
 }
-#endif /* FS_STATE_USE_MMAP */
 
-#ifdef FS_STATE_USE_MMAP
 int
 fs_stateSync(struct fs_dump_state * state)
 {
@@ -865,7 +890,6 @@ fs_stateSync(struct fs_dump_state * state)
     if (fsync(state->fd) == -1)
 	ret = 1;
 
- done:
     return ret;
 }
 #endif /* !FS_STATE_USE_MMAP */
@@ -1025,14 +1049,14 @@ fs_stateCheckHeader(struct fs_state_header * hdr)
      * uncomment the following code.  uncommenting this code is _strongly discouraged_ because
      * we already make use of the version stamps in the various dump headers to deal with
      * data structure version incompatabilities.
-    else if (strncmp(hdr->server_version_string, cml_version_number, 
+    else if (strncmp(hdr->server_version_string, cml_version_number,
 		     sizeof(hdr->server_version_string)) != 0) {
 	ViceLog(0, ("fs_stateCheckHeader: dump from different server version\n"));
 	ret = 1;
     }
     */
 
-    else if (strncmp(hdr->server_version_string, cml_version_number, 
+    else if (strncmp(hdr->server_version_string, cml_version_number,
 		     sizeof(hdr->server_version_string)) != 0) {
 	ViceLog(0, ("fs_stateCheckHeader: dump from different server version ; attempting state reload anyway\n"));
     }

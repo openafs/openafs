@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -115,6 +115,7 @@
 #include "lwp.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
+#include "common.h"
 #ifdef AFS_NAMEI_ENV
 #ifdef AFS_NT40_ENV
 #include "ntops.h"
@@ -176,8 +177,6 @@
 #endif /* !AFS_NT40_ENV */
 
 #endif /* !O_LARGEFILE */
-
-/*@printflike@*/ extern void Log(const char *format, ...);
 
 int aixlow_water = 8;		/* default 8% */
 struct DiskPartition64 *DiskPartitionList;
@@ -479,7 +478,7 @@ VAttachPartitions(void)
 #endif
 	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
 	    continue;
-	
+
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;
@@ -546,10 +545,10 @@ VAttachPartitions(void)
  * (This function was grabbed from df.c)
  */
 int
-getmount(register struct vmount **vmountpp)
+getmount(struct vmount **vmountpp)
 {
     int size;
-    register struct vmount *vm;
+    struct vmount *vm;
     int nmounts;
 
     /* set initial size of mntctl buffer to a MAGIC NUMBER */
@@ -875,7 +874,7 @@ VPartitionPath(struct DiskPartition64 *part)
 struct DiskPartition64 *
 VGetPartition_r(char *name, int abortp)
 {
-    register struct DiskPartition64 *dp;
+    struct DiskPartition64 *dp;
 #ifdef AFS_DEMAND_ATTACH_FS
     dp = VLookupPartition_r(name);
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -901,7 +900,7 @@ VGetPartition(char *name, int abortp)
 
 #ifdef AFS_NT40_ENV
 void
-VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
+VSetPartitionDiskUsage_r(struct DiskPartition64 *dp)
 {
     ULARGE_INTEGER free_user, total, free_total;
     int ufree, tot, tfree;
@@ -925,7 +924,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 
 #else
 void
-VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
+VSetPartitionDiskUsage_r(struct DiskPartition64 *dp)
 {
     int bsize, code;
     afs_int64 totalblks, free, used, availblks;
@@ -991,7 +990,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 #endif /* AFS_NT40_ENV */
 
 void
-VSetPartitionDiskUsage(register struct DiskPartition64 *dp)
+VSetPartitionDiskUsage(struct DiskPartition64 *dp)
 {
     VOL_LOCK;
     VSetPartitionDiskUsage_r(dp);
@@ -1092,12 +1091,17 @@ VPrintDiskStats_r(void)
 {
     struct DiskPartition64 *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
-	Log("Partition %s: %d available 1K blocks (minfree=%d), ", dp->name,
-	    dp->totalUsable, dp->minFree);
-	if (dp->free < 0)
-	    Log("overallocated by %d blocks\n", -dp->free);
-	else
-	    Log("%d free blocks\n", dp->free);
+	if (dp->free < 0) {
+	    Log("Partition %s: %"AFS_INT64_FMT
+		" available 1K blocks (minfree=%"AFS_INT64_FMT"), "
+	        "overallocated by %"AFS_INT64_FMT" blocks\n", dp->name,
+	        dp->totalUsable, dp->minFree, -dp->free);
+	} else {
+	    Log("Partition %s: %"AFS_INT64_FMT
+		" available 1K blocks (minfree=%"AFS_INT64_FMT"), "
+	        "%"AFS_INT64_FMT" free blocks\n", dp->name,
+	        dp->totalUsable, dp->minFree, dp->free);
+	}
     }
 }
 
@@ -1140,7 +1144,7 @@ VLockPartition_r(char *name)
 void
 VUnlockPartition_r(char *name)
 {
-    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     OVERLAPPED lap;
 
     if (!dp)
@@ -1163,7 +1167,7 @@ VUnlockPartition_r(char *name)
 void
 VLockPartition_r(char *name)
 {
-    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     char *partitionName;
     int retries, code;
     struct timeval pausing;
@@ -1270,7 +1274,7 @@ VLockPartition_r(char *name)
 void
 VUnlockPartition_r(char *name)
 {
-    register struct DiskPartition64 *dp = VGetPartition_r(name, 0);
+    struct DiskPartition64 *dp = VGetPartition_r(name, 0);
     if (!dp)
 	return;			/* no partition, will fail later */
     close(dp->lock_fd);
@@ -1359,7 +1363,7 @@ VPartHeaderUnlock(struct DiskPartition64 *dp, int locktype)
  * @internal volume package internal use only
  */
 
-struct DiskPartition64 * 
+struct DiskPartition64 *
 VGetPartitionById_r(afs_int32 id, int abortp)
 {
     struct DiskPartition64 *dp = NULL;
@@ -1399,7 +1403,7 @@ VGetPartitionById(afs_int32 id, int abortp)
     return dp;
 }
 
-static struct DiskPartition64 * 
+static struct DiskPartition64 *
 VLookupPartition_r(char * path)
 {
     afs_int32 id = volutil_GetPartitionID(path);
@@ -1410,7 +1414,7 @@ VLookupPartition_r(char * path)
     return DiskPartitionTable[id];
 }
 
-static void 
+static void
 AddPartitionToTable_r(struct DiskPartition64 *dp)
 {
     assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
@@ -1418,7 +1422,7 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
 }
 
 #if 0
-static void 
+static void
 DeletePartitionFromTable_r(struct DiskPartition64 *dp)
 {
     assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);

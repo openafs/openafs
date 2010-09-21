@@ -101,7 +101,7 @@ kadatabase.o: kadatabase.c ${INCLS}
 	${CC} ${CFLAGS} -c ${srcdir}/kadatabase.c 
 
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
-	${CC} ${CFLAGS} -c $<
+	${CC} ${CFLAGS} -c ${srcdir}/kaprocs.c
 
 authclient.o: authclient.c ${INCLS}
 
@@ -164,10 +164,10 @@ token.o: token.c ${INCLS}
 client.o: client.c ${INCLS} AFS_component_version_number.o
 
 kas.o: kas.c ${INCLS} AFS_component_version_number.o
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/kas.c
 
 admin_tools.o: admin_tools.c ${INCLS} kaport.h
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/admin_tools.c
 
 kkids.o: kkids.c ${INCLS}
 
@@ -224,7 +224,7 @@ kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
 kdb.o: kdb.c AFS_component_version_number.o
 
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS_component_version_number.o
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/krb_udp.c
 
 krb_udp: krb_udp.o libkauth.a $(KLIBS)
 	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS)
@@ -271,7 +271,7 @@ install: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 	${INSTALL_PROGRAM} ka-forwarder ${DESTDIR}${afssrvsbindir}/ka-forwarder
 	${INSTALL_DATA} kautils.h ${DESTDIR}${includedir}/afs/kautils.h
 	${INSTALL_DATA} kauth.h ${DESTDIR}${includedir}/afs/kauth.h
-	${INSTALL_DATA} kaport.h ${DESTDIR}${includedir}/afs/kaport.h
+	${INSTALL_DATA} ${srcdir}/kaport.h ${DESTDIR}${includedir}/afs/kaport.h
 
 dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 		libkauth.krb.a rebuild kdb ka-forwarder kautils.h kauth.h \
@@ -300,7 +300,7 @@ dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 	${INSTALL_PROGRAM} ka-forwarder ${DEST}/root.server/usr/afs/bin/ka-forwarder
 	${INSTALL_DATA} kautils.h ${DEST}/include/afs/kautils.h
 	${INSTALL_DATA} kauth.h ${DEST}/include/afs/kauth.h
-	${INSTALL_DATA} kaport.h ${DEST}/include/afs/kaport.h
+	${INSTALL_DATA} ${srcdir}/kaport.h ${DEST}/include/afs/kaport.h
 
 #
 # Misc. targets

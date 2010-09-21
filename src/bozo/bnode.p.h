@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,7 +27,7 @@ struct bnode_ops {
     int (*delete) ( struct bnode * );
     int (*procexit) ( struct bnode *, struct bnode_proc * );
     int (*getstring) ( struct bnode *, char *abuffer, afs_int32 alen );
-    int (*getparm) ( struct bnode *, afs_int32 aindex, char *abuffer, 
+    int (*getparm) ( struct bnode *, afs_int32 aindex, char *abuffer,
 		     afs_int32 alen);
     int (*restartp) ( struct bnode *);
     int (*hascore) ( struct bnode *);
@@ -89,8 +89,8 @@ struct ezbnode {
     char killSent;		/* have we tried sigkill signal? */
 };
 
-/* this struct is used to construct a list of dirpaths, along with 
- * their recommended permissions 
+/* this struct is used to construct a list of dirpaths, along with
+ * their recommended permissions
  */
 struct bozo_bosEntryStats {
     const char *path;		/* pathname to check */
@@ -130,11 +130,11 @@ struct bozo_bosEntryStats {
 #define	FSSDTIME	(30 * 60)	/* seconds */
 
 /* calls back up to the generic bnode layer */
-extern int bnode_SetTimeout(register struct bnode *abnode, afs_int32 atimeout);
+extern int bnode_SetTimeout(struct bnode *abnode, afs_int32 atimeout);
 extern int bnode_Init(void);
 extern int bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName, struct bnode_proc **aproc);
-extern int bnode_InitBnode(register struct bnode *abnode, struct bnode_ops *abnodeops, char *aname);
+extern int bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops, char *aname);
 extern afs_int32 bnode_Create(char *atype, char *ainstance, struct bnode ** abp, char *ap1, char *ap2, char *ap3, char *ap4, char *ap5, char *notifier, int fileGoal, int rewritefile);
-extern struct bnode *bnode_FindInstance(register char *aname);
-extern int bnode_WaitStatus(register struct bnode *abnode, int astatus);
-extern int bnode_SetStat(register struct bnode *abnode, register int agoal);
+extern struct bnode *bnode_FindInstance(char *aname);
+extern int bnode_WaitStatus(struct bnode *abnode, int astatus);
+extern int bnode_SetStat(struct bnode *abnode, int agoal);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,7 +94,7 @@ static char *
 rxinfo(char * str, struct rx_call *rxcall)
 {
     int code;
-    register struct rx_connection *tconn;
+    struct rx_connection *tconn;
     char tname[64] = "";
     char tinst[64] = "";
     char tcell[64] = "";
@@ -485,7 +485,7 @@ SVL_GetEntryByIDU(struct rx_call *rxcall,
 static int
 NameIsId(char *aname)
 {
-    register int tc;
+    int tc;
     while ((tc = *aname++)) {
 	if (tc > '9' || tc < '0')
 	    return 0;
@@ -1421,7 +1421,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
     int pollcount = 0;
     int namematchRWBK, namematchRO, thismatch;
     int matchtype = 0;
-    char volumename[VL_MAXNAMELEN];
+    char volumename[VL_MAXNAMELEN+2]; /* regex anchors */
     char rxstr[AFS_RXINFO_LEN];
 #ifdef HAVE_POSIX_REGEX
     regex_t re;
@@ -1566,7 +1566,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 		    namematchRWBK = (thismatch ? 1 : 2);
 		}
 
-		/* Match with the RO volume name. Compare once and 
+		/* Match with the RO volume name. Compare once and
 		 * remember results in namematchRO. Note that this will
 		 * pick up entries marked NEWREPSITEs and DONTUSE.
 		 */
@@ -1939,7 +1939,7 @@ SVL_GetStats(struct rx_call *rxcall,
 	     vldstats *stats,
 	     vital_vlheader *vital_header)
 {
-    register afs_int32 errorcode;
+    afs_int32 errorcode;
     struct ubik_trans *trans;
     char rxstr[AFS_RXINFO_LEN];
 
@@ -1970,7 +1970,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
 	     afs_int32 *nentries,
 	     bulkaddrs *addrsp)
 {
-    register afs_int32 errorcode;
+    afs_int32 errorcode;
     struct ubik_trans *trans;
     int nservers, i;
     afs_uint32 *taddrp;
@@ -2192,10 +2192,10 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	if (count == 1)
 	    VLog(0, ("   You must 'vos changeaddr' this other server entry\n"));
 	else
-	    VLog(0, 
+	    VLog(0,
 		("   You must 'vos changeaddr' these other server entries\n"));
 	if (foundUuidEntry)
-	    VLog(0, 
+	    VLog(0,
 		("   and/or remove the sysid file from the registering fileserver\n"));
 	VLog(0, ("   before the fileserver can be registered in the VLDB.\n"));
 
@@ -2238,7 +2238,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
     VLog(0, ("]\n"));
 
     if (foundUuidEntry) {
-	VLog(0, 
+	VLog(0,
 	    ("   It will replace the following existing entry in the VLDB (same uuid):\n"));
 	VLog(0, ("      entry %d: [", FoundUuid));
 	for (k = 0; k < VL_MAXIPADDRS_PERMH; k++) {
@@ -2264,7 +2264,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    index = HostAddress[ReplaceEntry] & 0x0000ffff;
 	    exp = &ex_addr[fbase][index];
 
-	    VLog(0, 
+	    VLog(0,
 		("   It will replace the following existing entry in the VLDB (new uuid):\n"));
 	    VLog(0, ("      entry %d: [", ReplaceEntry));
 	    for (k = 0; k < VL_MAXIPADDRS_PERMH; k++) {
@@ -2276,7 +2276,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    }
 	    VLog(0, ("]\n"));
 	} else {
-	    /* Not a mh entry. So we have to create a new mh entry and 
+	    /* Not a mh entry. So we have to create a new mh entry and
 	     * put it on the ReplaceEntry slot of the HostAddress array.
 	     */
 	    VLog(0, ("   It will replace existing entry %d, ", ReplaceEntry));
@@ -2326,7 +2326,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	return VL_IO;
     }
 
-    /* Remove any common addresses from other mh entres. We know these entries 
+    /* Remove any common addresses from other mh entres. We know these entries
      * are being changed and not replaced so they are mh entries.
      */
     m = 0;
@@ -2342,7 +2342,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	tex = &ex_addr[fbase][index];
 
 	if (++m == 1)
-	    VLog(0, 
+	    VLog(0,
 		("   The following existing entries in the VLDB will be updated:\n"));
 
 	VLog(0, ("      entry %d: [", WillChange[i]));
@@ -2390,7 +2390,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	      afs_int32 *nentries,
 	      bulkaddrs *addrsp)
 {
-    register afs_int32 errorcode, index = -1, offset;
+    afs_int32 errorcode, index = -1, offset;
     struct ubik_trans *trans;
     int nservers, i, j, base = 0;
     struct extentaddr *exp = 0;
@@ -2536,7 +2536,7 @@ put_attributeentry(struct vldbentry **Vldbentry,
 	    return VL_SIZEEXCEEDED;	/* no growing if smallMem defined */
 
 	/* Allocate another set of memory; each time allocate twice as
-	 * many blocks as the last time. When we reach VLDBALLOCLIMIT, 
+	 * many blocks as the last time. When we reach VLDBALLOCLIMIT,
 	 * then grow in increments of VLDBALLOCINCR.
 	 */
 	allo = (*alloccnt > VLDBALLOCLIMIT) ? VLDBALLOCINCR : *alloccnt;
@@ -2577,7 +2577,7 @@ put_nattributeentry(struct nvldbentry **Vldbentry,
 	    return VL_SIZEEXCEEDED;	/* no growing if smallMem defined */
 
 	/* Allocate another set of memory; each time allocate twice as
-	 * many blocks as the last time. When we reach VLDBALLOCLIMIT, 
+	 * many blocks as the last time. When we reach VLDBALLOCLIMIT,
 	 * then grow in increments of VLDBALLOCINCR.
 	 */
 	allo = (*alloccnt > VLDBALLOCLIMIT) ? VLDBALLOCINCR : *alloccnt;
@@ -2606,7 +2606,7 @@ static int
 RemoveEntry(struct ubik_trans *trans, afs_int32 entryptr,
 	    struct nvlentry *tentry)
 {
-    register int errorcode;
+    int errorcode;
 
     if ((errorcode = UnthreadVLentry(trans, entryptr, tentry)))
 	return errorcode;
@@ -3135,10 +3135,10 @@ InvalidReleasetype(afs_int32 releasetype)
 }
 
 static int
-IpAddrToRelAddr(register afs_uint32 ipaddr, struct ubik_trans *atrans)
+IpAddrToRelAddr(afs_uint32 ipaddr, struct ubik_trans *atrans)
 {
-    register int i, j;
-    register afs_int32 code, base, index;
+    int i, j;
+    afs_int32 code, base, index;
     struct extentaddr *exp;
 
     for (i = 0; i <= MAXSERVERID; i++) {

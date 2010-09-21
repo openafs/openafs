@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,7 +36,7 @@
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
-/* code to manage dump schedules 
+/* code to manage dump schedules
  * specific to the ubik database implementation
  */
 
@@ -61,10 +61,10 @@ static int ListDumpSchedule(struct bc_dumpSchedule *adump, int alevel);
 int
 bc_AddDumpCmd(struct cmd_syndesc *as, void *arock)
 {
-    register char *dname;	/* dump schedule name */
-    register int code;
+    char *dname;	/* dump schedule name */
+    int code;
     afs_int32 expType, expDate;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     udbClientTextP ctPtr;
 
     /* if an expiration date has been specified */
@@ -150,8 +150,8 @@ bc_DeleteDumpCmd(struct cmd_syndesc *as, void *arock)
     /* parm 0 is vol set name
      * parm 1 is dump schedule name
      */
-    register char *dname;
-    register int code;
+    char *dname;
+    int code;
     udbClientTextP ctPtr;
 
     /* lock schedules and check validity */
@@ -201,10 +201,10 @@ bc_DeleteDumpCmd(struct cmd_syndesc *as, void *arock)
  */
 
 static int
-ListDumpSchedule(register struct bc_dumpSchedule *adump, int alevel)
+ListDumpSchedule(struct bc_dumpSchedule *adump, int alevel)
 {
-    register int i;
-    register struct bc_dumpSchedule *child;
+    int i;
+    struct bc_dumpSchedule *child;
 
     /* sanity check for loops */
     if (alevel > 100) {
@@ -264,7 +264,7 @@ bc_ListDumpScheduleCmd(struct cmd_syndesc *as, void *arock)
 {
     /* no parms */
     int code;
-    register struct bc_dumpSchedule *tdump;
+    struct bc_dumpSchedule *tdump;
 
     /* first check to see if schedules must be updated */
     code = bc_UpdateDumpSchedule();
@@ -295,12 +295,12 @@ bc_ListDumpScheduleCmd(struct cmd_syndesc *as, void *arock)
 int
 bc_SetExpCmd(struct cmd_syndesc *as, void *arock)
 {
-    register char *dname;	/* dump schedule name */
-    register struct cmd_item *ti;
+    char *dname;	/* dump schedule name */
+    struct cmd_item *ti;
     struct bc_dumpSchedule *node, *parent;
     afs_int32 expType, expDate;
     udbClientTextP ctPtr;
-    register int code;
+    int code;
 
     /* if an expiration date has been specified */
     if (as->parms[1].items) {
@@ -380,11 +380,11 @@ bc_ParseDumpSchedule(void)
     char *tp;
     afs_int32 code;
     udbClientTextP ctPtr;
-    register struct bc_dumpSchedule *tds;
+    struct bc_dumpSchedule *tds;
     struct bc_dumpSchedule **ppds, *pds;
     afs_int32 expDate, expType;
 
-    register FILE *stream;
+    FILE *stream;
 
     /* initialize locally used variables */
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -89,10 +89,10 @@ cron_hascore(struct bnode *abnode)
     Note that the computation of when we should run again is made in procexit
     and/or create procs.  This guy only schedules the sleep */
 int
-ScheduleCronBnode(register struct cronbnode *abnode)
+ScheduleCronBnode(struct cronbnode *abnode)
 {
-    register afs_int32 code;
-    register afs_int32 temp;
+    afs_int32 code;
+    afs_int32 temp;
     struct bnode_proc *tp;
 
     /* If this proc is shutdown, tell bproc() to no longer run this job */
@@ -144,7 +144,7 @@ cron_restartp(struct bnode *abnode)
 }
 
 static int
-cron_delete(struct bnode *bn) 
+cron_delete(struct bnode *bn)
 {
     struct cronbnode *abnode = (struct cronbnode *)bn;
     free(abnode->command);
@@ -187,8 +187,8 @@ static int
 cron_timeout(struct bnode *bn)
 {
     struct cronbnode *abnode = (struct cronbnode *)bn;
-    register afs_int32 temp;
-    register afs_int32 code;
+    afs_int32 temp;
+    afs_int32 code;
     struct bnode_proc *tp;
 
     if (!abnode->running) {
@@ -229,7 +229,7 @@ static int
 cron_getstat(struct bnode *bn, afs_int32 * astatus)
 {
     struct cronbnode *abnode = (struct cronbnode *)bn;
-    register afs_int32 temp;
+    afs_int32 temp;
     if (abnode->waitingForShutdown)
 	temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->b.goal == 0)

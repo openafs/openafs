@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -118,8 +118,8 @@ FreeNode(afs_int32 taskID)
 afs_int32
 GetNthNode(afs_int32 aindex, afs_int32 *aresult)
 {
-    register struct dumpNode *tn;
-    register int i;
+    struct dumpNode *tn;
+    int i;
 
     tn = dumpQHeader->next;
     for (i = 0;; i++) {

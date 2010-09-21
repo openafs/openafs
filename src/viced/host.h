@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -78,7 +78,7 @@ struct host {
     char hcpsfailed;		/* Retry the cps call next time */
     prlist hcps;		/* cps for hostip acls */
     afs_uint32 LastCall;	/* time of last call from host */
-    afs_uint32 ActiveCall;	/* time of any call but gettime, 
+    afs_uint32 ActiveCall;	/* time of any call but gettime,
                                    getstats and getcaps */
     struct client *FirstClient;	/* first connection from host */
     afs_uint32 cpsCall;		/* time of last cps call from this host */
@@ -155,7 +155,7 @@ extern int rxcon_client_key;
 /* N.B. h_UserName returns pointer to static data; also relatively expensive */
 extern char *h_UserName(struct client *client);
 #define h_Lock(host)    ObtainWriteLock(&(host)->lock)
-extern int h_Lock_r(register struct host *host);
+extern int h_Lock_r(struct host *host);
 #define h_Unlock(host)  ReleaseWriteLock(&(host)->lock)
 #define h_Unlock_r(host)  ReleaseWriteLock(&(host)->lock)
 
@@ -217,8 +217,8 @@ extern int PrintCallBackStats(void);
 extern void *ShutDown(void *);
 extern void ShutDownAndCore(int dopanic);
 
-extern struct host *h_Alloc(register struct rx_connection *r_con);
-extern struct host *h_Alloc_r(register struct rx_connection *r_con);
+extern struct host *h_Alloc(struct rx_connection *r_con);
+extern struct host *h_Alloc_r(struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 		      struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
@@ -227,18 +227,19 @@ extern void h_Enumerate_r(int (*proc) (struct host *, int, void *), struct host 
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
-extern void h_TossStuff_r(register struct host *host);
+extern void h_TossStuff_r(struct host *host);
 extern struct client *h_ID2Client(afs_int32 vid);
 extern int GetClient(struct rx_connection *tcon, struct client **cp);
 extern int PutClient(struct client **cp);
 extern void h_PrintStats(void);
 extern void h_PrintClients(void);
 extern void h_GetWorkStats(int *, int *, int *, afs_int32);
-extern void h_flushhostcps(register afs_uint32 hostaddr,
-			   register afs_uint16 hport);
+extern void h_GetWorkStats64(afs_uint64 *, afs_uint64 *, afs_uint64 *, afs_int32);
+extern void h_flushhostcps(afs_uint32 hostaddr,
+			   afs_uint16 hport);
 extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
-extern int h_NBLock_r(register struct host *host);
+extern int h_NBLock_r(struct host *host);
 extern void h_DumpHosts(void);
 extern void h_InitHostPackage(void);
 extern void h_CheckHosts(void );

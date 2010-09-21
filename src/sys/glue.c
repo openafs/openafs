@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@
 #include "afssyscalls.h"
 
 #ifdef AFS_LINUX20_ENV
-int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
+int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 		     long param4, int *rval) {
   struct afsprocdata syscall_data;
   int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
@@ -50,7 +50,7 @@ int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 #endif
 
 #if defined(AFS_DARWIN80_ENV)
-int ioctl_afs_syscall(long syscall, long param1, long param2, long param3, 
+int ioctl_afs_syscall(long syscall, long param1, long param2, long param3,
 		      long param4, long param5, long param6, int *rval) {
     struct afssysargs syscall_data;
     void *ioctldata;

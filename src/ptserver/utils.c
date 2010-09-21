@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -39,11 +39,11 @@ IDHash(afs_int32 x)
 }
 
 afs_int32
-NameHash(register char *aname)
+NameHash(char *aname)
 {
     /* returns hash bucket for aname */
-    register unsigned int hash = 0;
-    register size_t i;
+    unsigned int hash = 0;
+    size_t i;
 /* stolen directly from the HashString function in the vol package */
     for (i = strlen(aname), aname += i - 1; i--; aname--)
 	hash = (hash * 31) + (*(unsigned char *)aname - 31);
@@ -84,7 +84,7 @@ int
 pr_WriteEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
 {
     afs_int32 code;
-    register afs_int32 i;
+    afs_int32 i;
     struct prentry nentry;
 
     if (ntohl(1) != 1) {	/* Need to swap bytes. */
@@ -125,7 +125,7 @@ int
 pr_ReadEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
 {
     afs_int32 code;
-    register afs_int32 i;
+    afs_int32 i;
     struct prentry nentry;
     code = ubik_Seek(tt, afd, pos);
     if (code)
@@ -171,7 +171,7 @@ int
 pr_WriteCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
 {
     afs_int32 code;
-    register afs_int32 i;
+    afs_int32 i;
     struct contentry nentry;
 
     if (ntohl(1) != 1) {	/* No need to swap */
@@ -192,7 +192,7 @@ int
 pr_ReadCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
 {
     afs_int32 code;
-    register afs_int32 i;
+    afs_int32 i;
     struct contentry nentry;
     code = ubik_Seek(tt, afd, pos);
     if (code)
@@ -218,9 +218,9 @@ pr_ReadCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct conte
  * new entry */
 
 afs_int32
-AllocBlock(register struct ubik_trans *at)
+AllocBlock(struct ubik_trans *at)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 temp;
     struct prentry tentry;
 
@@ -251,10 +251,10 @@ AllocBlock(register struct ubik_trans *at)
 }
 
 afs_int32
-FreeBlock(register struct ubik_trans *at, afs_int32 pos)
+FreeBlock(struct ubik_trans *at, afs_int32 pos)
 {
     /* add a block of storage to the free list */
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
 
     memset(&tentry, 0, sizeof(tentry));
@@ -272,10 +272,10 @@ FreeBlock(register struct ubik_trans *at, afs_int32 pos)
 }
 
 afs_int32
-FindByID(register struct ubik_trans *at, afs_int32 aid)
+FindByID(struct ubik_trans *at, afs_int32 aid)
 {
     /* returns address of entry if found, 0 otherwise */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct prentry tentry;
     afs_int32 entry;
@@ -308,10 +308,10 @@ FindByID(register struct ubik_trans *at, afs_int32 aid)
 }
 
 afs_int32
-FindByName(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *tentryp)
+FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *tentryp)
 {
     /* ditto */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     afs_int32 entry;
 
@@ -341,12 +341,12 @@ FindByName(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct pre
 }
 
 afs_int32
-AllocID(register struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
+AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 {
     /* allocs an id from the proper area of address space, based on flag */
-    register afs_int32 code = 1;
-    register afs_int32 i = 0;
-    register int maxcount = 50;	/* to prevent infinite loops */
+    afs_int32 code = 1;
+    afs_int32 i = 0;
+    int maxcount = 50;	/* to prevent infinite loops */
 
     if (flag & PRGRP) {
 	*aid = ntohl(cheader.maxGroup);
@@ -400,11 +400,11 @@ AllocID(register struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 }
 
 afs_int32
-IDToName(register struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
+IDToName(struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
 {
     afs_int32 temp;
     struct prentry tentry;
-    register afs_int32 code;
+    afs_int32 code;
 
     temp = FindByID(at, aid);
     if (temp == 0)
@@ -417,7 +417,7 @@ IDToName(register struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN
 }
 
 afs_int32
-NameToID(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid)
+NameToID(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid)
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -446,7 +446,7 @@ afs_int32
 RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? in case ID hashed twice ??? */
 {
     /* remove entry designated by aid from id hash table */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 current, trail, i;
     struct prentry tentry;
     struct prentry bentry;
@@ -498,7 +498,7 @@ afs_int32
 AddToIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 loc)
 {
     /* add entry at loc designated by aid to id hash table */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct prentry tentry;
 
@@ -526,7 +526,7 @@ afs_int32
 RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
 {
     /* remove from name hash */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 current, trail, i;
     struct prentry tentry;
     struct prentry bentry;
@@ -576,7 +576,7 @@ afs_int32
 AddToNameHash(struct ubik_trans *tt, char *aname, afs_int32 loc)
 {
     /* add to name hash */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct prentry tentry;
 
@@ -602,7 +602,7 @@ afs_int32
 AddToOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 {
     /* add entry designated by gid to owner chain of entry designated by oid */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 loc;
     struct prentry tentry;
     struct prentry gentry;
@@ -639,7 +639,7 @@ AddToOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 afs_int32
 RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 nptr;
     struct prentry thisEntry;
     struct prentry thatEntry;
@@ -698,7 +698,7 @@ RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 afs_int32
 AddToOrphan(struct ubik_trans *at, afs_int32 gid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 loc;
     struct prentry tentry;
 
@@ -723,7 +723,7 @@ afs_int32
 RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid)
 {
     /* remove gid from the orphan list */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 loc;
     afs_int32 nptr;
     struct prentry tentry;
@@ -778,7 +778,7 @@ afs_int32
 IsOwnerOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 {
     /* returns 1 if aid is the owner of gid, 0 otherwise */
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     afs_int32 loc;
 
@@ -797,7 +797,7 @@ afs_int32
 OwnerOf(struct ubik_trans *at, afs_int32 gid)
 {
     /* returns the owner of gid */
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 loc;
     struct prentry tentry;
 
@@ -818,7 +818,7 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 #if !defined(SUPERGROUPS)
     struct prentry tentry;
     struct contentry centry;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     afs_int32 loc;
 #endif
@@ -874,12 +874,12 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 
 #if defined(SUPERGROUPS)
 afs_int32
-IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 depth) 
+IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 depth)
 {
     /* returns true if aid is a member of gid */
     struct prentry tentry;
     struct contentry centry;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     afs_int32 loc;
 
