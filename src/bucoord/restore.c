@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -45,7 +45,7 @@ extern char *whoami;
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
 
 /* local structure to keep track of volumes and the dumps from which
- * they should be restored 
+ * they should be restored
  */
 struct dumpinfo {
     struct dumpinfo *next;
@@ -205,7 +205,7 @@ bc_Restorer(afs_int32 aindex)
 	ERROR(BC_NOMEM);
     }
 
-    /* For each volume to restore, find which dump it's most recent full or 
+    /* For each volume to restore, find which dump it's most recent full or
      * incremental is on and thread onto our dump list (from oldest to newest
      * dump). Also hang the volume off of the dump (no particular order).
      */
@@ -330,8 +330,8 @@ bc_Restorer(afs_int32 aindex)
 	di->lastinlist = vi;
     }				/*tvol */
 
-    /* For each of the above dumps we found (they could be increments), find 
-     * the dump's lineage (up to the full dump). 
+    /* For each of the above dumps we found (they could be increments), find
+     * the dump's lineage (up to the full dump).
      */
     for (di = dumpinfolist; di; di = di->next) {
 	/* Find each of the parent dumps */
@@ -365,8 +365,8 @@ bc_Restorer(afs_int32 aindex)
 	/* For each of the volumes that has a dump in this lineage (vi),
 	 * find where it is in each dump level (lv) starting at level 0 and
 	 * going to higest. Each dump level could contain one or more
-	 * fragments (vecount) of the volume (volume fragments span tapes). 
-	 * Each volume fragment is sorted by tapeid, tape sequence, and tape 
+	 * fragments (vecount) of the volume (volume fragments span tapes).
+	 * Each volume fragment is sorted by tapeid, tape sequence, and tape
 	 * position.
 	 */
 	for (vi = di->volinfolist; vi; vi = vi->next) {
@@ -436,9 +436,9 @@ bc_Restorer(afs_int32 aindex)
 				(tle->initialDumpID ? tle->
 				 initialDumpID : tle->dumpID);
 
-			    /* Sort by tapeids. BUT, we don't want add an entry in the middle 
-			     * of a dumpset (might split a volume fragmented across tapes). 
-			     * So make sure we step to next dumpset. tlid is the tapeid of 
+			    /* Sort by tapeids. BUT, we don't want add an entry in the middle
+			     * of a dumpset (might split a volume fragmented across tapes).
+			     * So make sure we step to next dumpset. tlid is the tapeid of
 			     * the last tape we added a volume to. This can happen when an
 			     * incremental was appended to a tape created prior its parent-
 			     * dump's tape, and needs to be restored after it.
@@ -450,7 +450,7 @@ bc_Restorer(afs_int32 aindex)
 				}	/* Allocate and insert a tape entry */
 			    }
 
-			    /* Found the tapeid (the dumpset). Check if its the correct 
+			    /* Found the tapeid (the dumpset). Check if its the correct
 			     * tape sequence
 			     */
 			    else if (tapeid == tid) {
@@ -466,8 +466,8 @@ bc_Restorer(afs_int32 aindex)
 				foundtape = 1;	/* Found dumpset but not the tape */
 			    }
 
-			    /* Prevously found the tapeid (the dumpset) but this tape 
-			     * sequence not included (the tapeid has changed). So add 
+			    /* Prevously found the tapeid (the dumpset) but this tape
+			     * sequence not included (the tapeid has changed). So add
 			     * this tape entry to the end of its dumpset.
 			     */
 			    else if (foundtape) {
@@ -514,7 +514,7 @@ bc_Restorer(afs_int32 aindex)
 			    (tle->initialDumpID ? tle->initialDumpID : tle->
 			     dumpID);
 
-			/* Now place the volume fragment into the correct position on 
+			/* Now place the volume fragment into the correct position on
 			 * this tapelist entry. Duplicate entries are ignored.
 			 */
 			for (pti = 0, ti = tle->restoreList; ti;

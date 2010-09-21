@@ -1,0 +1,69 @@
+=head1 NAME
+
+pts_sleep - Pauses for a few seconds
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts sleep> S<<< [B<-delay>] <I<# of seconds>> >>>
+   S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-localauth>] [B<-force>]
+
+B<pts sl> S<<< [B<-d>] <I<# of seconds>> >>> S<<< [B<-c>] <I<cell name>> >>>
+   [B<-n>] [B<-l>] [B<-f>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts sleep> pauses for a specified number of seconds. The command can
+be run from the command line or interactively, although from the command
+line it's essentially equivalent to the B<sleep> command. It is intended
+for use in interactive mode to pause for a few seconds between batch
+commands to allow the Protection Server to catch up.
+
+=head1 CAUTIONS
+
+Prior to OpenAFS 1.4.5 and OpenAFS 1.5.23, the B<pts sleep> command was
+only available on Unix or Linux and when OpenAFS was compiled with the
+supergroups option (disabled by default).  As of OpenAFS 1.4.5 and 1.5.23,
+it is always available.
+
+=head1 OPTIONS
+
+Although they have no effect, B<pts sleep> takes the following standard
+B<pts> options:
+
+=over 4
+
+=include fragments/pts-common.pod
+
+=back
+
+=head1 OUTPUT
+
+This command produces no output.
+
+=head1 EXAMPLES
+
+Here is an example of a B<pts interactive> session:
+
+   % pts interactive
+   pts> sleep 5
+   pts> quit
+   %
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_interactive(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.

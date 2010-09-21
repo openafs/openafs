@@ -6,30 +6,30 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
- * 
+ *
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
 
 /*
- * rpc_parse.c, Parser for the RPC protocol compiler 
+ * rpc_parse.c, Parser for the RPC protocol compiler
  * Copyright (C) 1987 Sun Microsystems, Inc.
  */
 #include <afsconfig.h>
@@ -1116,9 +1116,9 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 
     if (ansic_flag) {
 	if (split_flag) {
-	    first_arg = "register struct rx_call *z_call";
+	    first_arg = "struct rx_call *z_call";
 	} else {
-	    first_arg = "register struct rx_connection *z_conn";
+	    first_arg = "struct rx_connection *z_conn";
 	}
     } else {
 	if (split_flag) {
@@ -1149,7 +1149,7 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 				plist->pl.param_name);
 		    }
 		} else {
-		    f_print(fout, ", %s", plist->pl.param_name);    
+		    f_print(fout, ", %s", plist->pl.param_name);
 		    plist->pl.param_flag &= ~PROCESSED_PARAM;
 		}
 	    }
@@ -1167,9 +1167,9 @@ cs_ProcParams_setup(definition * defp, int split_flag)
 	return;
 
     if (!split_flag)
-	f_print(fout, "\tregister struct rx_connection *z_conn;\n");
+	f_print(fout, "\tstruct rx_connection *z_conn;\n");
     if (split_flag) {
-	f_print(fout, "\tregister struct rx_call *z_call;\n");
+	f_print(fout, "\tstruct rx_call *z_call;\n");
     }
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
@@ -1767,7 +1767,7 @@ ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
 
     if (!cflag) {
      	if (ansic_flag) {
-	    f_print(fout, "int %s%s%s%s(register struct ubik_client *aclient, afs_int32 aflags",
+	    f_print(fout, "int %s%s%s%s(struct ubik_client *aclient, afs_int32 aflags",
 			  procheader, prefix, PackagePrefix[PackageIndex],
 			  defp->pc.proc_name);
 	} else {
@@ -1810,7 +1810,7 @@ ucs_ProcParams_setup(definition * defp, int split_flag)
     if (ansic_flag)
 	return;
 
-    f_print(fout, "\tregister struct ubik_client *aclient;\n\tafs_int32 aflags;\n");
+    f_print(fout, "\tstruct ubik_client *aclient;\n\tafs_int32 aflags;\n");
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
 	    && !(plist->pl.param_flag & PROCESSED_PARAM)) {
@@ -1930,7 +1930,7 @@ ucs_ProcTail_setup(definition * defp, int split_flag)
     f_print(fout, "\t\tif ((pass == 0) && (aclient->states[_ucount] & CFLastFailed)) {\n");
     f_print(fout, "\t\t\tcontinue;       /* this guy's down */\n");
     f_print(fout, "\t\t}\n");
-    
+
     f_print(fout, "\t\trcode = %s%s%s(tc\n", prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM) {
@@ -2071,7 +2071,7 @@ er_ProcProcsArray_setup(void)
 static void
 er_ProcMainBody_setup(void)
 {
-    f_print(fout, "int %s%sExecuteRequest(register struct rx_call *z_call)\n",
+    f_print(fout, "int %s%sExecuteRequest(struct rx_call *z_call)\n",
 	    prefix, PackagePrefix[PackageIndex]);
     f_print(fout, "{\n\tint op;\n");
     f_print(fout, "\tXDR z_xdrs;\n");
@@ -2093,7 +2093,7 @@ static void
 er_HeadofOldStyleProc_setup(void)
 {
     f_print(fout,
-	    "\nint %s%sExecuteRequest (register struct rx_call *z_call)\n",
+	    "\nint %s%sExecuteRequest (struct rx_call *z_call)\n",
 	    prefix,
 	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
     f_print(fout, "{\n");

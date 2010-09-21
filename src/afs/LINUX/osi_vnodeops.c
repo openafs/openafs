@@ -186,7 +186,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 {
     struct vcache *avc = VTOAFS(FILE_INODE(fp));
     struct vrequest treq;
-    register struct dcache *tdc;
+    struct dcache *tdc;
     int code;
     int offset;
     int dirpos;
@@ -480,7 +480,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
 
     AFS_GLOCK();
-    code = afs_lockctl(vcp, &flock, cmd, credp);
+    code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
@@ -517,7 +517,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 	flp->fl_end = flock.l_start + flock.l_len - 1;
 
     crfree(credp);
-    return afs_convert_code(code);
+    return code;
 }
 
 #ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
@@ -546,7 +546,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
 #endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
 
     AFS_GLOCK();
-    code = afs_lockctl(vcp, &flock, cmd, credp);
+    code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
@@ -567,7 +567,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     flp->fl_pid = flock.l_pid;
 
     crfree(credp);
-    return afs_convert_code(code);
+    return code;
 }
 #endif
 
@@ -1829,7 +1829,7 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
 	      PAGE_SIZE, UIO_READ, AFS_UIOSYS);
 
     /* save the page for background map */
-    /* XXX - Shouldn't we get a reference count here? */
+    get_page(pp); /* see above */
     auio->uio_iov->iov_base = (void*) pp;
     /* the background thread will free this */
     ancr = osi_Alloc(sizeof(struct nocache_read_request));

@@ -1,4 +1,4 @@
-/* 
+/*
  * $Id$
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
@@ -91,7 +91,7 @@ struct afsconf_cell {
     short flags;                    /* useful flags */
     struct sockaddr_in hostAddr[MAXHOSTSPERCELL];
 	                            /* IP addresses for cell's servers*/
-    char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];       
+    char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];
                                     /* Names for cell's servers */
     char *linkedCell;               /* Linked cell name, if any */
 };

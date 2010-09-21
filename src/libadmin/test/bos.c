@@ -65,7 +65,7 @@ static char *day[] = {
 static int
 LocalFreeTokens(struct token *alist)
 {
-    register struct token *nlist;
+    struct token *nlist;
     for (; alist; alist = nlist) {
 	nlist = alist->next;
 	free(alist->key);
@@ -90,8 +90,8 @@ LocalParseLine(char *aline, struct token **alist)
     char *tptr = NULL;
     int inToken;
     struct token *first, *last;
-    register struct token *ttok;
-    register int tc;
+    struct token *ttok;
+    int tc;
 
     inToken = 0;		/* not copying token chars at start */
     first = NULL;
@@ -154,8 +154,8 @@ ParseTime(bos_RestartTime_p ak, char *astr)
 {
     int field;
     short temp;
-    register char *tp;
-    register int tc;
+    char *tp;
+    int tc;
 
     field = 0;			/* 0=hour, 1=min, 2=sec */
     temp = 0;
@@ -194,7 +194,7 @@ int
 ktime_ParsePeriodic(char *adate, bos_RestartTime_p ak)
 {
     struct token *tt;
-    register afs_int32 code;
+    afs_int32 code;
     struct ptemp *tp;
 
     memset(ak, 0, sizeof(*ak));

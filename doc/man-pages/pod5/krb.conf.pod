@@ -13,6 +13,10 @@ then this file can be omitted. krb.conf is only needed when the
 Kerberos5 realm does not match the cell name or multiple Kerberos5
 realms authenticate to the same AFS cell.
 
+=head1 SEE ALSO
+
+L<krb.excl(5)>
+
 =head1 COPYRIGHT
 
 Copyright 2008 Jason Edgecombe <jason@rampaginggeek.com>

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -136,10 +136,10 @@ ReallyWrite(DirHandle * file, int block, char *data)
 
 
 void
-SetDirHandle(register DirHandle * dir, register Vnode * vnode)
+SetDirHandle(DirHandle * dir, Vnode * vnode)
 {
-    register Volume *vp = vnode->volumePtr;
-    register IHandle_t *h;
+    Volume *vp = vnode->volumePtr;
+    IHandle_t *h;
     IH_COPY(h, vnode->handle);
     dir->dirh_ino = h->ih_ino;
     dir->dirh_dev = h->ih_dev;

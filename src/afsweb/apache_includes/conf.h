@@ -6,7 +6,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -529,8 +529,8 @@ typedef int rlim_t;
 
 /*
  * The particular directory style your system supports. If you have dirent.h
- * in /usr/include (POSIX) or /usr/include/sys (SYSV), #include 
- * that file and define DIR_TYPE to be dirent. Otherwise, if you have 
+ * in /usr/include (POSIX) or /usr/include/sys (SYSV), #include
+ * that file and define DIR_TYPE to be dirent. Otherwise, if you have
  * /usr/include/sys/dir.h, define DIR_TYPE to be direct and include that
  * file. If you have neither, I'm confused.
  */

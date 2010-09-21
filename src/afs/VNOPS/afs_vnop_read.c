@@ -42,7 +42,7 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 		       afs_ucred_t *acred, struct vrequest *areq);
 
 int
-afs_MemRead(register struct vcache *avc, struct uio *auio,
+afs_MemRead(struct vcache *avc, struct uio *auio,
 	    afs_ucred_t *acred, daddr_t albn, struct buf **abpp,
 	    int noLock)
 {
@@ -418,7 +418,7 @@ void
 afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 		  afs_ucred_t *acred, struct vrequest *areq)
 {
-    register struct dcache *tdc;
+    struct dcache *tdc;
     afs_size_t offset;
     afs_size_t j1, j2;		/* junk vbls for GetDCache to trash */
 
@@ -436,14 +436,12 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 	ReleaseReadLock(&adc->lock);
 
 	tdc = afs_GetDCache(avc, offset, areq, &j1, &j2, 2);	/* type 2 never returns 0 */
-#ifdef AFS_DISCON_ENV
         /*
          * In disconnected mode, type 2 can return 0 because it doesn't
          * make any sense to allocate a dcache we can never fill
          */
          if (tdc == NULL)
              return;
-#endif /* AFS_DISCON_ENV */
 
 	ObtainSharedLock(&tdc->mflock, 651);
 	if (!(tdc->mflags & DFFetchReq)) {
@@ -488,7 +486,7 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 }
 
 int
-afs_UFSRead(register struct vcache *avc, struct uio *auio,
+afs_UFSRead(struct vcache *avc, struct uio *auio,
 	    afs_ucred_t *acred, daddr_t albn, struct buf **abpp,
 	    int noLock)
 {
@@ -628,13 +626,10 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 		afs_PutDCache(tdc);	/* before reusing tdc */
 	    }
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
-#ifdef AFS_DISCON_ENV
 	    if (!tdc) {
-		printf("Network down in afs_read");
 	        error = ENETDOWN;
 	        break;
 	    }
-#endif /* AFS_DISCON_ENV */
 
 	    ObtainReadLock(&tdc->lock);
 	    /* now, first try to start transfer, if we'll need the data.  If

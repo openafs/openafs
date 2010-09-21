@@ -116,15 +116,15 @@ descend(parentino, inumber)
      struct inodesc *parentino;
      ino_t inumber;
 {
-    register struct dinode *dp;
+    struct dinode *dp;
     struct inodesc curino;
 
     memset(&curino, 0, sizeof(struct inodesc));
     if (statemap[inumber] != DSTATE)
 	errexit("BAD INODE %d TO DESCEND", statemap[inumber]);
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-    /* 
-     * keep any continuation inode information 
+    /*
+     * keep any continuation inode information
      */
     if (statemap[inumber] & HASCINODE)
 	statemap[inumber] = HASCINODE | DFOUND;
@@ -138,8 +138,8 @@ descend(parentino, inumber)
 	direrror(inumber, "ZERO LENGTH DIRECTORY");
 	if (reply("REMOVE") == 1)
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	    /* 
-	     * keep any continuation inode information 
+	    /*
+	     * keep any continuation inode information
 	     */
 	    if (statemap[inumber] & HASCINODE)
 		statemap[inumber] = HASCINODE | DCLEAR;
@@ -183,10 +183,10 @@ descend(parentino, inumber)
 }
 
 dirscan(idesc)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
 {
-    register struct direct *dp;
-    register struct bufarea *bp;
+    struct direct *dp;
+    struct bufarea *bp;
     int dsize, n;
     long blksiz;
     char dbuf[DIRBLKSIZ];
@@ -223,10 +223,10 @@ dirscan(idesc)
  */
 struct direct *
 fsck_readdir(idesc)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
 {
-    register struct direct *dp, *ndp;
-    register struct bufarea *bp;
+    struct direct *dp, *ndp;
+    struct bufarea *bp;
     long size, blksiz;
 
     blksiz = idesc->id_numfrags * sblock.fs_fsize;
@@ -274,10 +274,10 @@ fsck_readdir(idesc)
  */
 dircheck(idesc, dp)
      struct inodesc *idesc;
-     register struct direct *dp;
+     struct direct *dp;
 {
-    register int size;
-    register char *cp;
+    int size;
+    char *cp;
     int spaceleft;
 
     size = DIRSIZ(dp);
@@ -308,7 +308,7 @@ direrror(ino, errmesg)
      ino_t ino;
      char *errmesg;
 {
-    register struct dinode *dp;
+    struct dinode *dp;
 
     pwarn("%s ", errmesg);
     pinode(ino);
@@ -326,10 +326,10 @@ direrror(ino, errmesg)
 }
 
 adjust(idesc, lcnt)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
      short lcnt;
 {
-    register struct dinode *dp;
+    struct dinode *dp;
 
     dp = ginode(idesc->id_number);
     if (dp->di_nlink == lcnt) {
@@ -359,7 +359,7 @@ adjust(idesc, lcnt)
 mkentry(idesc)
      struct inodesc *idesc;
 {
-    register struct direct *dirp = idesc->id_dirp;
+    struct direct *dirp = idesc->id_dirp;
     struct direct newent;
     int newlen, oldlen;
 
@@ -384,7 +384,7 @@ mkentry(idesc)
 chgino(idesc)
      struct inodesc *idesc;
 {
-    register struct direct *dirp = idesc->id_dirp;
+    struct direct *dirp = idesc->id_dirp;
 
     if (memcmp(dirp->d_name, idesc->id_name, (int)dirp->d_namlen + 1))
 	return (KEEPON);
@@ -396,7 +396,7 @@ linkup(orphan, parentdir)
      ino_t orphan;
      ino_t parentdir;
 {
-    register struct dinode *dp;
+    struct dinode *dp;
     int lostdir, len;
     ino_t oldlfdir;
     struct inodesc idesc;
@@ -549,10 +549,10 @@ makeentry(parent, ino, name)
  * Attempt to expand the size of a directory
  */
 expanddir(dp)
-     register struct dinode *dp;
+     struct dinode *dp;
 {
     daddr_t lastbn, newblk;
-    register struct bufarea *bp;
+    struct bufarea *bp;
     char *cp, firstblk[DIRBLKSIZ];
 
     lastbn = lblkno(&sblock, dp->di_size);
@@ -607,7 +607,7 @@ allocdir(parent, request, mode)
     ino_t ino;
     char *cp;
     struct dinode *dp;
-    register struct bufarea *bp;
+    struct bufarea *bp;
 
     ino = allocino(request, IFDIR | mode);
     dirhead.dot_ino = ino;
@@ -684,8 +684,8 @@ lftempname(bufp, ino)
      char *bufp;
      ino_t ino;
 {
-    register ino_t in;
-    register char *cp;
+    ino_t in;
+    char *cp;
     int namlen;
 
     cp = bufp + 2;

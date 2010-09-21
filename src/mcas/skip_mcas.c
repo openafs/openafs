@@ -171,7 +171,7 @@ static setval_t finish_delete(sh_node_pt x, sh_node_pt *preds)
     cd = new_descriptor(mcas_ptst, (level << 1) + 1);
     cd->status = STATUS_IN_PROGRESS;
     cd->length = (level << 1) + 1;
- 
+
     /* First, the deleted node's value field. */
     READ_FIELD(v, x->v);
     PROCESS(v, &x->v);
@@ -193,7 +193,7 @@ static setval_t finish_delete(sh_node_pt x, sh_node_pt *preds)
         cd->entries[i+level+1].old = x;
         cd->entries[i+level+1].new = x_next;
     }
- 
+
     ret = mcas0(mcas_ptst, cd);
     if ( ret == 0 ) v = NULL;
 
@@ -258,7 +258,7 @@ setval_t set_update(set_t *l, setkey_t k, setval_t v, int overwrite)
         ov = NULL;
 
         succ = search_predecessors(l, k, preds, succs);
- 
+
         if ( succ->k == k )
         {
             /* Already a @k node in the list: update its mapping. */
@@ -324,9 +324,9 @@ setval_t set_remove(set_t *l, setkey_t k)
     sh_node_pt preds[NUM_LEVELS], x;
 
     k = CALLER_TO_INTERNAL_KEY(k);
- 
+
     ptst = critical_enter();
- 
+
     do {
         x = search_predecessors(l, k, preds, NULL);
         if ( x->k > k ) goto out;
@@ -370,5 +370,5 @@ void _init_set_subsystem(void)
     {
         gc_id[i] = gc_add_allocator(sizeof(node_t) + i*sizeof(node_t *));
     }
- 
+
 }

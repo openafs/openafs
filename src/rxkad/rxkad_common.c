@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,7 +27,7 @@
 #ifndef UKERNEL
 #include "afs/stds.h"
 #include "afs/afs_osi.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_OBSD_ENV)
@@ -82,7 +82,7 @@ pthread_mutex_t rxkad_global_stats_lock;
 pthread_key_t rxkad_stats_key;
 #else /* AFS_PTHREAD_ENV */
 #if defined(KERNEL) && !defined(UKERNEL)
-struct rxkad_stats rxkad_stats = { { 0 } }; 
+struct rxkad_stats rxkad_stats = { { 0 } };
 #else
 /* Move delaration of this to des/key_sched.c */
 #endif
@@ -112,7 +112,7 @@ void rxkad_global_stats_init(void) {
     memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
 }
 
-rxkad_stats_t * 
+rxkad_stats_t *
 rxkad_thr_stats_init(void) {
     rxkad_stats_t * rxkad_stats;
     rxkad_stats = (rxkad_stats_t *)malloc(sizeof(rxkad_stats_t));
@@ -199,7 +199,7 @@ int
 rxkad_SetupEndpoint(struct rx_connection *aconnp,
 		    struct rxkad_endpoint *aendpointp)
 {
-    register afs_int32 i;
+    afs_int32 i;
 
     aendpointp->cuid[0] = htonl(aconnp->epoch);
     i = aconnp->cid & RX_CIDMASK;
@@ -259,7 +259,7 @@ rxkad_SetLevel(struct rx_connection *conn, rxkad_level level)
 	rx_SetSecurityMaxTrailerSize(conn, 4);
     } else if (level == rxkad_crypt) {
 	rx_SetSecurityHeaderSize(conn, 8);
-	rx_SetSecurityMaxTrailerSize(conn, 8);	/* XXX was 7, but why screw with 
+	rx_SetSecurityMaxTrailerSize(conn, 8);	/* XXX was 7, but why screw with
 						 * unaligned accesses? */
     }
 }
@@ -272,7 +272,7 @@ ComputeSum(struct rx_packet *apacket, fc_KeySchedule * aschedule,
 	   afs_int32 * aivec)
 {
     afs_uint32 word[2];
-    register afs_uint32 t;
+    afs_uint32 t;
 
     t = apacket->header.callNumber;
     word[0] = htonl(t);
@@ -489,7 +489,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	return RXKADSEALEDINCON;
     nlen = word & 0xffff;	/* get real user data length */
 
-    /* The sealed length should be no larger than the initial length, since the  
+    /* The sealed length should be no larger than the initial length, since the
      * reverse (round-up) occurs in ...PreparePacket */
     if (nlen > len)
 	return RXKADDATALEN;

@@ -108,6 +108,12 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\libacl))
 		$(MKDIR) $(OJT)\libacl
 !	ENDIF
+!	IF (!EXIST($(OJT)\tests))
+		$(MKDIR) $(OJT)\tests
+!	ENDIF
+!	IF (!EXIST($(OJT)\tests\rpctestlib))
+		$(MKDIR) $(OJT)\tests\rpctestlib
+!	ENDIF
 !	IF (!EXIST($(OJT)\libadmin))
 		$(MKDIR) $(OJT)\libadmin
 !	ENDIF
@@ -159,6 +165,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\ptserver))
 		$(MKDIR) $(OJT)\ptserver
 !	ENDIF
+!	IF (!EXIST($(OJT)\tptserver))
+		$(MKDIR) $(OJT)\ptserver
+!	ENDIF
 !	IF (!EXIST($(OJT)\rx))
 		$(MKDIR) $(OJT)\rx
 !	ENDIF
@@ -195,8 +204,17 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\tvolser))
 		$(MKDIR) $(OJT)\tvolser
 !	ENDIF
+!	IF (!EXIST($(OJT)\dviced))
+		$(MKDIR) $(OJT)\dviced
+!	ENDIF
+!	IF (!EXIST($(OJT)\dvolser))
+		$(MKDIR) $(OJT)\dvolser
+!	ENDIF
 !	IF (!EXIST($(OJT)\ubik))
 		$(MKDIR) $(OJT)\ubik
+!	ENDIF
+!	IF (!EXIST($(OJT)\tubik))
+		$(MKDIR) $(OJT)\tubik
 !	ENDIF
 !	IF (!EXIST($(OJT)\update))
 		$(MKDIR) $(OJT)\update

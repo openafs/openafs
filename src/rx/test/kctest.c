@@ -64,8 +64,8 @@ ParseCmd(argc, argv)
      int argc;
      char **argv;
 {
-    register int i;
-    register struct hostent *th;
+    int i;
+    struct hostent *th;
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-port")) {
 	    port = atoi(argv[i + 1]);

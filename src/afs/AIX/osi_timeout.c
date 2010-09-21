@@ -58,14 +58,14 @@ extern void tstart(struct trb *);
 extern void i_enable(int);
 
 void
-timeout(register void (*func) (),	/* function to call at timeout */
-	register caddr_t arg,	/*   It's argument. */
-	register int ticks,	/* when to set timeout for */
-	register int type, register char *p1)
+timeout(void (*func) (),	/* function to call at timeout */
+	caddr_t arg,	/*   It's argument. */
+	int ticks,	/* when to set timeout for */
+	int type, char *p1)
 {
-    register int ipri;		/* caller's interrupt priority  */
-    register struct tos *tos;	/* tos to use for timeout       */
-    register struct trb *trb;	/* trb in the tos being used    */
+    int ipri;		/* caller's interrupt priority  */
+    struct tos *tos;	/* tos to use for timeout       */
+    struct trb *trb;	/* trb in the tos being used    */
     struct itimerstruc_t tv;	/* timeout interval             */
 
     tv.it_value.tv_sec = ticks / HZ;
@@ -135,11 +135,11 @@ timeout(register void (*func) (),	/* function to call at timeout */
 
 
 void
-untimeout(register void (*func) (), register ulong arg)
+untimeout(void (*func) (), ulong arg)
 {
-    register int ipri;		/* caller's interrupt priority  */
-    register struct tos *tos;	/* tos to walk callout table    */
-    register struct trb *trb;	/* trb for this tos             */
+    int ipri;		/* caller's interrupt priority  */
+    struct tos *tos;	/* tos to walk callout table    */
+    struct trb *trb;	/* trb for this tos             */
 
   untimeout_retry:
 
@@ -173,7 +173,7 @@ untimeout(register void (*func) (), register ulong arg)
 static void
 timeout_end(struct trb *trb)
 {				/* trb of the current timeout     */
-    register void (*func) ();	/* function to call at timeout  */
+    void (*func) ();	/* function to call at timeout  */
     int ipri;
     ipri = AFS_DISABLE_LOCK(INTMAX, &afs_callout_lock);
 
@@ -189,12 +189,12 @@ timeout_end(struct trb *trb)
 
 
 int
-timeoutcf(register int cocnt)
+timeoutcf(int cocnt)
 {				/* # entries to change callout table by   */
-    register int ipri;		/* caller's interrupt priority  */
-    register int rv;		/* return value to the caller           */
-    register struct tos *tos;	/* tos to add to/remove from table    */
-    register struct trb *trb;	/* trb in the tos to be added/removed */
+    int ipri;		/* caller's interrupt priority  */
+    int rv;		/* return value to the caller           */
+    struct tos *tos;	/* tos to add to/remove from table    */
+    struct trb *trb;	/* trb in the tos to be added/removed */
 
     rv = 0;
 

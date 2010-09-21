@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,7 +50,7 @@
 #define AFS_SYSCALL		227
 #define AFSBIG_ENDIAN		1
 
-/* glibc doesn't implement getcontext/savecontext for 32-bit sparc, so 
+/* glibc doesn't implement getcontext/savecontext for 32-bit sparc, so
    never use UCONTEXT here. */
 #undef USE_UCONTEXT
 

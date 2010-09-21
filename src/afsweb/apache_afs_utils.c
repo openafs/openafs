@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -18,7 +18,7 @@
 #include "apache_afs_utils.h"
 #include "apache_afs_utils.h"
 
-/* 
+/*
  * do_pioctl does the actual call to pioctl (or equivalent for that platform)
  * sets up the ViceIoctl buffer with all the parameters required
  * NOTE: in_buffer and out_buffer may point to the same memory buffer
@@ -68,9 +68,9 @@ haveToken()
 }
 
 
-/* 
- * flipPrimary sets the primary cell longword - 
- * enabling a SETPAG if the same buffer is used with VICESETTOK 
+/*
+ * flipPrimary sets the primary cell longword -
+ * enabling a SETPAG if the same buffer is used with VICESETTOK
  */
 flipPrimary(char *tokenBuf)
 {
@@ -160,9 +160,9 @@ hexDump(char *tbuffer, int len)
     fprintf(stderr, "\n");
 }
 
-/* 
- * debugging utility to see if the group id changes - if SETPAG worked 
- * call this before and after the routine to dosetpag and verify results 
+/*
+ * debugging utility to see if the group id changes - if SETPAG worked
+ * call this before and after the routine to dosetpag and verify results
  */
 
 int
@@ -182,8 +182,8 @@ printGroups()
     return 0;
 }
 
-/* 
- * prints clear token fields, cell name and primary flag to stdout 
+/*
+ * prints clear token fields, cell name and primary flag to stdout
  */
 
 void
@@ -191,7 +191,7 @@ parseToken(char *buf)
 {
     afs_int32 len = 0;
     char cellName[64];
-    register char *tp;
+    char *tp;
 
     struct ClearToken {
 	afs_int32 AuthHandle;

@@ -1,0 +1,82 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG
+
+RELDIR=tests\rpctestlib
+!INCLUDE $(AFSROOT)\src\config\NTMakefile.$(SYS_NAME)
+!INCLUDE $(AFSROOT)\src\config\NTMakefile.version
+
+SRC_DIR = .
+
+############################################################################
+# Build rpc_test.lib and xmpl_driver.exe
+
+EXEFILE = $(OUT)\xmpl_driver.exe
+LIBFILE = $(OUT)\rpc_test.lib
+
+RTL = $(AFSROOT)\tests\rpctestlib
+RX = $(AFSROOT)\src\rx
+VICED = $(AFSROOT)\src\viced
+UTIL = $(AFSROOT)\src\util
+FSINT = $(AFSROOT)\src\fsint
+
+HEADERS =  $(RTL)\rpc_test_procs.h
+
+RXOBJS = $(OUT)\xdr_int64.obj \
+         $(OUT)\xdr_int32.obj
+
+RTLOBJS= $(OUT)\rpc_test_procs.obj $(OUT)\rpc_test_cb_procs.obj
+
+FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.ss.obj $(OUT)\afsint.cs.obj \
+	$(OUT)\afscbint.xdr.obj $(OUT)\afsint.xdr.obj
+
+LIBOBJS = $(RTLOBJS) $(FSINTOBJS) $(RXOBJS)
+
+EXEOBJS = $(OUT)\rpc_test_main.obj
+
+all: $(EXEFILE)
+
+$(RTLOBJS) $(OUT)\rpc_test_main.obj: $(RTL)\$$(@B).c $(HEADERS)
+	$(C2OBJ) -I$(RTL) $**
+
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
+
+$(FSINTOBJS): $(FSINT)\$$(@B).C
+	$(C2OBJ) -I$(FSINT) $**
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+EXELIBS = \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+        $(DESTDIR)\lib\afs\mtafsvol.lib \
+        $(DESTDIR)\lib\afs\mtafsvldb.lib \
+	$(DESTDIR)\lib\afspthread.lib
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS) $(LIBFILE)
+	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
+
+install:  $(EXEFILE)
+
+mkdir:
+	$(ECHO) "(mkdir: no target)"
+clean::
+	-$(DEL) $(EXEFILE) $(LIBFILE) $(LIBOBJS) $(EXEOBJS)

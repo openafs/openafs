@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -116,18 +116,18 @@ struct gwinops {
     int (*gw_clear) (struct gwin *);	/* Clear out a window */
     int (*gw_destroy) (struct gwin *);	/* Destroy a window */
     int (*gw_display) (struct gwin *);	/* [Re]display a window */
-    int (*gw_drawline) (struct gwin *, struct gwin_lineparams *);	
+    int (*gw_drawline) (struct gwin *, struct gwin_lineparams *);
     			/* Draw a line between two points */
-    int (*gw_drawrectangle) (struct gwin *, struct gwin_rectparams *);	
+    int (*gw_drawrectangle) (struct gwin *, struct gwin_rectparams *);
     			/* Draw a rectangle at the given loc & dimensions */
-    int (*gw_drawchar) (struct gwin *, struct gwin_charparams *);	
+    int (*gw_drawchar) (struct gwin *, struct gwin_charparams *);
     			/* Draw a char at the given location */
-    int (*gw_drawstring) (struct gwin *, struct gwin_strparams *);	
+    int (*gw_drawstring) (struct gwin *, struct gwin_strparams *);
     			/* Draw a char string at the given location */
-    int (*gw_invert) (struct gwin *, struct gwin_invparams *);	
+    int (*gw_invert) (struct gwin *, struct gwin_invparams *);
     			/* Invert region */
     int (*gw_getchar) (struct gwin *);	/* Get a character from a window */
-    int (*gw_getdimensions) (struct gwin *, struct gwin_sizeparams *);	
+    int (*gw_getdimensions) (struct gwin *, struct gwin_sizeparams *);
     			/* Get dimensions of a window */
     int (*gw_wait) (struct gwin *);     /* Wait for input */
 };
@@ -152,7 +152,7 @@ struct gwinops {
  * Base operations on the lower-level window system.
  */
 struct gwinbaseops {
-    struct gwin *(*gw_createwin) (void *);	
+    struct gwin *(*gw_createwin) (void *);
     					/*Create a window */
     int (*gw_cleanup) (struct gwin *);	/*Clean up before program exit */
 };

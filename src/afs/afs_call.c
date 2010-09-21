@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -403,7 +403,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 {
     int code;
     DECLARE_COMPLETION(c);
-#if defined(AFS_LINUX26_ENV) 
+#if defined(AFS_LINUX26_ENV)
 #if defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
 #endif
@@ -728,7 +728,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	case 2:
 	    afs_tpct2 = parm3;
 	    break;
-	}           
+	}
     } else if (parm == AFSOP_ADDCELL) {
 	/* add a cell.  Parameter 2 is 8 hosts (in net order),  parm 3 is the null-terminated
 	 * name.  Parameter 4 is the length of the name, including the null.  Parm 5 is the
@@ -850,7 +850,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_CacheInit(cparms.cacheScaches, cparms.cacheFiles,
 			  cparms.cacheBlocks, cparms.cacheDcaches,
 			  cparms.cacheVolumes, cparms.chunkSize,
-			  cparms.memCacheFlag, cparms.inodes, cparms.users, 
+			  cparms.memCacheFlag, cparms.inodes, cparms.users,
 			  cparms.dynamic_vcaches);
 
     } else if (parm == AFSOP_CACHEINODE) {
@@ -932,7 +932,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_tpct1 = 0;
 	    afs_tpct2 = 0;
 	    splitdcache = 0;
-	} else {        
+	} else {
 	    splitdcache = 1;
 	}
 	afs_osi_Wakeup(&afs_initState);
@@ -967,7 +967,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    refresh = 1;
 	}
 
-	/* Bind, but only if there's only one address configured */ 
+	/* Bind, but only if there's only one address configured */
 	if ( count & 0x80000000) {
 	    count &= ~0x80000000;
 	    if (count == 1)
@@ -1102,8 +1102,8 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	extern u_long sb_max_dflt;
 	if (!adjusted) {
 	  adjusted = 1;
-	  if (sb_max_dflt < 131072) sb_max_dflt = 131072; 
-	  if (sb_max < 131072) sb_max = 131072; 
+	  if (sb_max_dflt < 131072) sb_max_dflt = 131072;
+	  if (sb_max < 131072) sb_max = 131072;
 	}
       } */
 #endif /* AFS_AIX32_ENV */
@@ -1194,7 +1194,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 int
 afs_CheckInit(void)
 {
-    register int code = 0;
+    int code = 0;
 
     AFS_STATCNT(afs_CheckInit);
     if (afs_initState <= 100)

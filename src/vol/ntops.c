@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -330,7 +330,7 @@ nt_seek(FD_t fd, int off, int where)
 int nt_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked);
 
 
-/* nt_DevToDrive 
+/* nt_DevToDrive
  * converts a device number (2-25) into a drive letter name.
  *
  * Arguments:
@@ -419,7 +419,7 @@ nt_HandleToName(char *name, IHandle_t * h)
  * The data for each volume is in a separate directory. The name of the
  * volume is of the form: Vol_NNNNNN.data, where NNNNNN is a base 32
  * representation of the RW volume ID (even where the RO is the only volume
- * on the partition). Below that are separate subdirectories for the 
+ * on the partition). Below that are separate subdirectories for the
  * AFS directories and special files. There are also 16 directories for files,
  * hashed on the low 5 bits (recall bit0 is always 0) of the vnode number.
  * These directories are named:
@@ -858,10 +858,10 @@ nt_GetLinkCountInternal(FdHandle_t * h, Inode ino, int lockit, int fixup)
     if (!SetFilePointer(h->fd_fd, (LONG) offset, NULL, FILE_BEGIN))
 	goto bad_getLinkByte;
 
-    if (!ReadFile(h->fd_fd, (void *)&row, 2, &bytesRead, NULL)) 
+    if (!ReadFile(h->fd_fd, (void *)&row, 2, &bytesRead, NULL))
 	goto bad_getLinkByte;
-    
-    if (bytesRead == 0 && fixup) { 
+
+    if (bytesRead == 0 && fixup) {
 	LARGE_INTEGER size;
 
 	if (!GetFileSizeEx(h->fd_fd, &size) || size.QuadPart >= offset+sizeof(row))
@@ -876,7 +876,7 @@ nt_GetLinkCountInternal(FdHandle_t * h, Inode ino, int lockit, int fixup)
         row |= 1<<index;
         goto rewrite;
     }
- 
+
     return (int)((row >> index) & NT_TAGMASK);
 
   bad_getLinkByte:
@@ -892,7 +892,7 @@ nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
 }
 
 void
-nt_SetNonZLC(FdHandle_t * h, Inode ino) 
+nt_SetNonZLC(FdHandle_t * h, Inode ino)
 {
     (void)nt_GetLinkCountInternal(h, ino, 0, 1);
 }
@@ -970,7 +970,7 @@ static int nt_ListAFSSubDirs(IHandle_t * dirIH,
 
 /* WriteInodeInfo
  *
- * Write the inode data to the results file. 
+ * Write the inode data to the results file.
  *
  * Returns -2 on error, 0 on success.
  *
@@ -995,14 +995,14 @@ WriteInodeInfo(FILE * fp, struct ViceInodeInfo *info, char *dir, char *name)
  * -2 - not enough space on partition, salvager has error message for this.
  *
  * This code optimizes single volume salvages by just looking at that one
- * volume's directory. 
+ * volume's directory.
  *
  * If the inodeFile is NULL, then don't call the write routine.
  */
 int
 ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
-	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath, 
+	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath,
 	       void *rock)
 {
     int ninodes;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -33,7 +33,7 @@
 # include <unistd.h>
 #endif
 # include <fcntl.h>
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
 # include <sys/syscall.h>
 #endif
 #include <afs/afs_args.h>
@@ -94,7 +94,7 @@ afs_kmutex_t rx_if_mutex;
  * Make a socket for receiving/sending IP packets.  Set it into non-blocking
  * and large buffering modes.  If port isn't specified, the kernel will pick
  * one.  Returns the socket (>= 0) on success.  Returns OSI_NULLSOCKET on
- * failure. Port must be in network byte order.	
+ * failure. Port must be in network byte order.
  */
 osi_socket
 rxi_GetHostUDPSocket(u_int ahost, u_short port)
@@ -112,7 +112,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 #endif
 #endif
 
-#if !defined(AFS_NT40_ENV) 
+#if !defined(AFS_NT40_ENV)
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
 /*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
 */ ;
@@ -154,9 +154,9 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	(osi_Msg "%sbind failed\n", name);
 	goto error;
     }
-#if !defined(AFS_NT40_ENV) 
+#if !defined(AFS_NT40_ENV)
     /*
-     * Set close-on-exec on rx socket 
+     * Set close-on-exec on rx socket
      */
     fcntl(socketFd, F_SETFD, 1);
 #endif
@@ -181,7 +181,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
                 len2 /= 2;
         }
 
-        /* but do not let it get smaller than 32K */ 
+        /* but do not let it get smaller than 32K */
         if (len2 < len1)
             len2 = len1;
 
@@ -267,9 +267,9 @@ static const char memZero;
 void *
 osi_Alloc(afs_int32 x)
 {
-    /* 
+    /*
      * 0-length allocs may return NULL ptr from malloc, so we special-case
-     * things so that NULL returned iff an error occurred 
+     * things so that NULL returned iff an error occurred
      */
     if (x == 0)
 	return (void *)&memZero;
@@ -296,7 +296,7 @@ static int myNetFlags[ADDRSPERSITE];
 static u_int rxi_numNetAddrs;
 static int Inited = 0;
 
-#if defined(AFS_NT40_ENV) 
+#if defined(AFS_NT40_ENV)
 int
 rxi_getaddr(void)
 {
@@ -306,15 +306,15 @@ rxi_getaddr(void)
     /* we don't want to use the loopback adapter which is first */
     /* this is a bad bad hack */
     if (rxi_numNetAddrs > 1)
-	return htonl(rxi_NetAddrs[1]);  
+	return htonl(rxi_NetAddrs[1]);
     else if (rxi_numNetAddrs > 0)
 	return htonl(rxi_NetAddrs[0]);
     else
 	return 0;
 }
 
-/* 
-** return number of addresses 
+/*
+** return number of addresses
 ** and the addresses themselves in the buffer
 ** maxSize - max number of interfaces to return.
 */
@@ -347,7 +347,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
     /* The IP address list can change so we must query for it */
     rx_GetIFInfo();
 
-    for (count = 0; 
+    for (count = 0;
          offset < rxi_numNetAddrs && maxSize > 0;
          count++, offset++, maxSize--) {
 	addrBuffer[count] = htonl(rxi_NetAddrs[offset]);
@@ -360,7 +360,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 
 #ifdef AFS_NT40_ENV
 extern int rxinit_status;
-void 
+void
 rxi_InitMorePackets(void) {
     int npackets, ncbufs;
 
@@ -444,7 +444,7 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) 
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
 int
 rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
@@ -541,7 +541,7 @@ rx_GetIFInfo(void)
 	if (a->sin_family != AF_INET)
 	    continue;
 	rxi_NetAddrs[rxi_numNetAddrs] = ntohl(a->sin_addr.s_addr);
-	if (rxi_NetAddrs[rxi_numNetAddrs] == 0x7f000001) {
+	if (rx_IsLoopbackAddr(rxi_NetAddrs[rxi_numNetAddrs])) {
 	    /* we don't really care about "localhost" */
 	    continue;
 	}
@@ -564,7 +564,7 @@ rx_GetIFInfo(void)
 	    if (ifr->ifr_flags & IFF_LOOPBACK)
 		continue;
 #endif
-	    /* fprintf(stderr, "if %s flags=%x\n", 
+	    /* fprintf(stderr, "if %s flags=%x\n",
 	     * ifr->ifr_name, ifr->ifr_flags); */
 	} else {		/*
 				 * fputs(stderr, "ioctl error IFFLAGS\n");
@@ -577,8 +577,8 @@ rx_GetIFInfo(void)
 	rxi_syscallp = rxi_syscall;
 #endif
 
-	/* If I refer to kernel extensions that aren't loaded on AIX, the 
-	 * program refuses to load and run, so I simply can't include the 
+	/* If I refer to kernel extensions that aren't loaded on AIX, the
+	 * program refuses to load and run, so I simply can't include the
 	 * following code.  Fortunately, AIX is the one operating system in
 	 * which the subsequent ioctl works reliably. */
 	if (rxi_syscallp) {
@@ -598,7 +598,7 @@ rx_GetIFInfo(void)
 	    } else
 		myNetMasks[rxi_numNetAddrs] =
 		    ntohl(myNetMasks[rxi_numNetAddrs]);
-	    /* fprintf(stderr, "if %s mask=0x%x\n", 
+	    /* fprintf(stderr, "if %s mask=0x%x\n",
 	     * ifr->ifr_name, myNetMasks[rxi_numNetAddrs]); */
 	}
 
@@ -608,7 +608,7 @@ rx_GetIFInfo(void)
 	    res = ioctl(s, SIOCGIFMTU, ifr);
 	    if ((res == 0) && (ifr->ifr_metric > 128)) {	/* sanity check */
 		myNetMTUs[rxi_numNetAddrs] = ifr->ifr_metric;
-		/* fprintf(stderr, "if %s mtu=%d\n", 
+		/* fprintf(stderr, "if %s mtu=%d\n",
 		 * ifr->ifr_name, ifr->ifr_metric); */
 	    } else {
 		/* fputs(stderr, "ioctl error IFMTU\n");
@@ -625,7 +625,7 @@ rx_GetIFInfo(void)
 	    if ((res == 0)) {
 		a = (struct sockaddr_in *)&ifr->ifr_addr;
 		myNetMasks[rxi_numNetAddrs] = ntohl(a->sin_addr.s_addr);
-		/* fprintf(stderr, "if %s subnetmask=0x%x\n", 
+		/* fprintf(stderr, "if %s subnetmask=0x%x\n",
 		 * ifr->ifr_name, myNetMasks[rxi_numNetAddrs]); */
 	    } else {
 		/* fputs(stderr, "ioctl error IFMASK\n");
@@ -634,7 +634,7 @@ rx_GetIFInfo(void)
 #endif
 	}
 
-	if (rxi_NetAddrs[rxi_numNetAddrs] != 0x7f000001) {	/* ignore lo0 */
+	if (!rx_IsLoopbackAddr(rxi_NetAddrs[rxi_numNetAddrs])) {	/* ignore lo0 */
 	    int maxsize;
 	    maxsize =
 		rxi_nRecvFrags * (myNetMTUs[rxi_numNetAddrs] - RX_IP_SIZE);
@@ -707,7 +707,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
     pp->ifMTU = 0;
     pp->timeout.sec = 2;
     pp->rateFlag = 2;		/* start timing after two full packets */
-    /* I don't initialize these, because I presume they are bzero'd... 
+    /* I don't initialize these, because I presume they are bzero'd...
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
      * pp->timeout.usec */
 
@@ -776,7 +776,7 @@ rx_SetNoJumbo(void)
     rxi_nSendFrags = rxi_nRecvFrags = 1;
 }
 
-/* Override max MTU.  If rx_SetNoJumbo is called, it must be 
+/* Override max MTU.  If rx_SetNoJumbo is called, it must be
    called before calling rx_SetMaxMTU since SetNoJumbo clobbers rx_maxReceiveSize */
 void
 rx_SetMaxMTU(int mtu)
@@ -784,17 +784,17 @@ rx_SetMaxMTU(int mtu)
     rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
 }
 
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#if defined(ADAPT_PMTU)
 int
 rxi_HandleSocketError(int socket)
 {
+    int ret=0;
+#if defined(HAVE_LINUX_ERRQUEUE_H)
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
-    struct sockaddr *offender;
     char controlmsgbuf[256];
-    int ret=0;
     int code;
 
     msg.msg_name = &addr;
@@ -823,14 +823,15 @@ rxi_HandleSocketError(int socket)
         goto out;
     ret=1;
     err =(struct sock_extended_err *) CMSG_DATA(cmsg);
-    
+
     if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
 	rxi_SetPeerMtu(NULL, addr.sin_addr.s_addr, addr.sin_port,
                        err->ee_info - RX_IPUDP_SIZE);
     }
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
-    
+
 out:
+#endif
     return ret;
 }
 #endif

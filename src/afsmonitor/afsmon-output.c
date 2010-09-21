@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -104,7 +104,7 @@ static char *CbCounterStrings[] = {
 };
 
 /*________________________________________________________________________
-				FS STATS ROUTINES 
+				FS STATS ROUTINES
  *_______________________________________________________________________*/
 
 /*------------------------------------------------------------------------
@@ -471,7 +471,7 @@ Print_fs_CallBackStats(struct xstat_fs_ProbeResults *a_fs_Results)
  * afsmon_fsOutput()
  *
  * Description:
- *	Prints the contents of xstat_fs_Results to an output file. The 
+ *	Prints the contents of xstat_fs_Results to an output file. The
  *	output is either in a compact (longs only) format or a detailed
  *	format giving the names of each of the datums. Output is appended.
  *
@@ -846,7 +846,7 @@ Print_cm_OpTiming(int a_opIdx, char *a_opNames[],
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_XferTiming(int a_opIdx, char *a_opNames[], 
+Print_cm_XferTiming(int a_opIdx, char *a_opNames[],
 		    struct afs_stats_xferData *a_xferP)
 {				/*Print_cm_XferTiming */
 
@@ -1044,7 +1044,7 @@ Print_cm_FullPerfInfo(void)
  * afsmon_cmOutput()
  *
  * Description:
- *	Prints the contents of xstat_cm_Results to an output file. The 
+ *	Prints the contents of xstat_cm_Results to an output file. The
  *	output is either in a compact (longs only) format or a detailed
  *	format giving the names of each of the datums. Output is appended.
  *

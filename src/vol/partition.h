@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -149,7 +149,7 @@ struct DiskPartitionStats64 {
 };
 
 #define	PART_DONTUPDATE	1
-#define PART_DUPLICATE  2	/* NT - used if we find more than one partition 
+#define PART_DUPLICATE  2	/* NT - used if we find more than one partition
 				 * using the same drive. Will be dumped before
 				 * all partitions attached.
 				 */
@@ -178,8 +178,8 @@ extern void VUnlockPartition(char *name);
 extern void VUnlockPartition_r(char *name);
 extern void VResetDiskUsage(void);
 extern void VResetDiskUsage_r(void);
-extern void VSetPartitionDiskUsage(register struct DiskPartition64 *dp);
-extern void VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp);
+extern void VSetPartitionDiskUsage(struct DiskPartition64 *dp);
+extern void VSetPartitionDiskUsage_r(struct DiskPartition64 *dp);
 extern char *VPartitionPath(struct DiskPartition64 *p);
 extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
 			     afs_sfsize_t blocks, afs_sfsize_t checkBlocks);

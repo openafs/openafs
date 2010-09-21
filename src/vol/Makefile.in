@@ -119,23 +119,20 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DESTDIR}${afssrvlibexecdir}/salvager
 	${INSTALL_PROGRAM} volinfo ${DESTDIR}${afssrvsbindir}/volinfo
-	${INSTALL_DATA} nfs.h ${DESTDIR}${includedir}/afs/nfs.h
-	${INSTALL_DATA} vnode.h ${DESTDIR}${includedir}/afs/vnode.h
-	${INSTALL_DATA} vnode_inline.h ${DESTDIR}${includedir}/afs/vnode_inline.h
-	${INSTALL_DATA} viceinode.h ${DESTDIR}${includedir}/afs/viceinode.h
-	${INSTALL_DATA} volume.h ${DESTDIR}${includedir}/afs/volume.h
-	${INSTALL_DATA} volume_inline.h ${DESTDIR}${includedir}/afs/volume_inline.h
-	${INSTALL_DATA} voldefs.h ${DESTDIR}${includedir}/afs/voldefs.h
-	${INSTALL_DATA} partition.h ${DESTDIR}${includedir}/afs/partition.h
-	${INSTALL_DATA} fssync.h ${DESTDIR}${includedir}/afs/fssync.h
-	${INSTALL_DATA} salvsync.h ${DESTDIR}${includedir}/afs/salvsync.h
-	${INSTALL_DATA} daemon_com.h ${DESTDIR}${includedir}/afs/daemon_com.h
-	${INSTALL_DATA} ihandle.h ${DESTDIR}${includedir}/afs/ihandle.h
-	${INSTALL_DATA} namei_ops.h ${DESTDIR}${includedir}/afs/namei_ops.h
-	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
-		${INSTALL_PROGRAM} fssync-debug \
-			${DESTDIR}${afssrvsbindir}/fssync-debug ; \
-	fi
+	${INSTALL_PROGRAM} fssync-debug ${DESTDIR}${afssrvsbindir}/fssync-debug
+	${INSTALL_DATA} ${srcdir}/nfs.h ${DESTDIR}${includedir}/afs/nfs.h
+	${INSTALL_DATA} ${srcdir}/vnode.h ${DESTDIR}${includedir}/afs/vnode.h
+	${INSTALL_DATA} ${srcdir}/vnode_inline.h ${DESTDIR}${includedir}/afs/vnode_inline.h
+	${INSTALL_DATA} ${srcdir}/viceinode.h ${DESTDIR}${includedir}/afs/viceinode.h
+	${INSTALL_DATA} ${srcdir}/volume.h ${DESTDIR}${includedir}/afs/volume.h
+	${INSTALL_DATA} ${srcdir}/volume_inline.h ${DESTDIR}${includedir}/afs/volume_inline.h
+	${INSTALL_DATA} ${srcdir}/voldefs.h ${DESTDIR}${includedir}/afs/voldefs.h
+	${INSTALL_DATA} ${srcdir}/partition.h ${DESTDIR}${includedir}/afs/partition.h
+	${INSTALL_DATA} ${srcdir}/fssync.h ${DESTDIR}${includedir}/afs/fssync.h
+	${INSTALL_DATA} ${srcdir}/salvsync.h ${DESTDIR}${includedir}/afs/salvsync.h
+	${INSTALL_DATA} ${srcdir}/daemon_com.h ${DESTDIR}${includedir}/afs/daemon_com.h
+	${INSTALL_DATA} ${srcdir}/ihandle.h ${DESTDIR}${includedir}/afs/ihandle.h
+	${INSTALL_DATA} ${srcdir}/namei_ops.h ${DESTDIR}${includedir}/afs/namei_ops.h
 	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
 		${INSTALL_PROGRAM} xfs_size_check \
 			${DESTDIR}${afssrvsbindir}/xfs_size_check ; \
@@ -149,23 +146,20 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DEST}/root.server/usr/afs/bin/salvager
 	${INSTALL_PROGRAM} volinfo ${DEST}/root.server/usr/afs/bin/volinfo
-	${INSTALL_DATA} nfs.h ${DEST}/include/afs/nfs.h
-	${INSTALL_DATA} vnode.h ${DEST}/include/afs/vnode.h
-	${INSTALL_DATA} vnode_inline.h ${DEST}/include/afs/vnode_inline.h
-	${INSTALL_DATA} viceinode.h ${DEST}/include/afs/viceinode.h
-	${INSTALL_DATA} volume.h ${DEST}/include/afs/volume.h
-	${INSTALL_DATA} volume_inline.h ${DEST}/include/afs/volume_inline.h
-	${INSTALL_DATA} voldefs.h ${DEST}/include/afs/voldefs.h
-	${INSTALL_DATA} partition.h ${DEST}/include/afs/partition.h
-	${INSTALL_DATA} fssync.h ${DEST}/include/afs/fssync.h
-	${INSTALL_DATA} salvsync.h ${DEST}/include/afs/salvsync.h
-	${INSTALL_DATA} daemon_com.h ${DEST}/include/afs/daemon_com.h
-	${INSTALL_DATA} ihandle.h ${DEST}/include/afs/ihandle.h
-	${INSTALL_DATA} namei_ops.h ${DEST}/include/afs/namei_ops.h
-	set -x; if test "@DEMAND_ATTACH@" = "no" ; then \
-		${INSTALL_PROGRAM} fssync-debug \
-			${DEST}/root.server/usr/afs/bin/fssync-debug ; \
-	fi
+	${INSTALL_PROGRAM} fssync-debug ${DEST}/root.server/usr/afs/bin/fssync-debug
+	${INSTALL_DATA} ${srcdir}/nfs.h ${DEST}/include/afs/nfs.h
+	${INSTALL_DATA} ${srcdir}/vnode.h ${DEST}/include/afs/vnode.h
+	${INSTALL_DATA} ${srcdir}/vnode_inline.h ${DEST}/include/afs/vnode_inline.h
+	${INSTALL_DATA} ${srcdir}/viceinode.h ${DEST}/include/afs/viceinode.h
+	${INSTALL_DATA} ${srcdir}/volume.h ${DEST}/include/afs/volume.h
+	${INSTALL_DATA} ${srcdir}/volume_inline.h ${DEST}/include/afs/volume_inline.h
+	${INSTALL_DATA} ${srcdir}/voldefs.h ${DEST}/include/afs/voldefs.h
+	${INSTALL_DATA} ${srcdir}/partition.h ${DEST}/include/afs/partition.h
+	${INSTALL_DATA} ${srcdir}/fssync.h ${DEST}/include/afs/fssync.h
+	${INSTALL_DATA} ${srcdir}/salvsync.h ${DEST}/include/afs/salvsync.h
+	${INSTALL_DATA} ${srcdir}/daemon_com.h ${DEST}/include/afs/daemon_com.h
+	${INSTALL_DATA} ${srcdir}/ihandle.h ${DEST}/include/afs/ihandle.h
+	${INSTALL_DATA} ${srcdir}/namei_ops.h ${DEST}/include/afs/namei_ops.h
 	set -x; if test x"$(install_XFS_SIZE_CHECK)" != x"" ; then \
 		${INSTALL_PROGRAM} xfs_size_check \
 			$(DEST)/root.server/usr/afs/bin/xfs_size_check ; \
@@ -181,7 +175,7 @@ vol-salvage.o salvager.o: vol-salvage.h
 vol-salvage.o: salvsync.h daemon_com.h
 
 salvager.o: salvager.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/salvager.c
 
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@

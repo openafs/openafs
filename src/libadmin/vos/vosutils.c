@@ -27,7 +27,7 @@ static int
 OldVLDB_to_NewVLDB(struct vldbentry *source, struct nvldbentry *dest,
 		   afs_status_p st)
 {
-    register int i;
+    int i;
     int rc = 0;
     afs_status_t tst = 0;
 
@@ -62,7 +62,7 @@ static int
 NewVLDB_to_OldVLDB(struct nvldbentry *source, struct vldbentry *dest,
 		   afs_status_p st)
 {
-    register int i;
+    int i;
     afs_status_t tst = 0;
     int rc = 0;
 

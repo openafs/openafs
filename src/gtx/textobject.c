@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -412,12 +412,12 @@ gator_text_Scroll(struct onode *onp, int nlines, int direction)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_Write(struct onode *onp, char *strToWrite, int numChars, 
+gator_text_Write(struct onode *onp, char *strToWrite, int numChars,
 		 int highlight, int skip)
 {				/*gator_text_Write */
 
     static char rn[] = "gator_text_Write";	/*Routine name */
-    register int code;		/*Return value on routines */
+    int code;		/*Return value on routines */
     struct gator_textobj *text_data;	/*Ptr to text obj data */
     struct gator_textcb_hdr *cbHdr;	/*Ptr to text CB header */
     int i;			/*Loop variable */
@@ -428,7 +428,7 @@ gator_text_Write(struct onode *onp, char *strToWrite, int numChars,
     int bumpAmount;		/*Amount to bump count */
 
     /*
-     * 
+     *
      */
     if (objects_debug) {
 	fprintf(stderr,
@@ -557,7 +557,7 @@ gator_text_BlankLine(struct onode *onp, int numBlanks)
 {				/*gator_text_BlankLine */
 
     static char rn[] = "gator_text_BlankLine";	/*Routine name */
-    register int code;		/*Return value on routines */
+    int code;		/*Return value on routines */
     struct gator_textobj *text_data;	/*Ptr to text obj data */
 
     /*

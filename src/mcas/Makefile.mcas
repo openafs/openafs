@@ -66,15 +66,15 @@ replay: %: %.c $(COMMON_DEPS)
 	$(CC) -o $@ $(patsubst %.c,%.o,$<) $(LDFLAGS)
 
 tree_mcas.o: tree_mcas.c mcas.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c ${srcdir}/tree_mcas.c
 skip_lock_perpointer.o: skip_lock.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -DTINY_MTX -c -o $@ $<
+	$(CC) $(CFLAGS) -DTINY_MTX -c -o skip_lock_perpointer.o ${srcdir}/skip_lock.c
 skip_lock_pernode.o: skip_lock.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o skip_lock_pernode.o ${srcdir}/skip_lock.c
 skip_lock_perlist.o: skip_lock.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -DFAT_MTX -c -o $@ $<
+	$(CC) $(CFLAGS) -DFAT_MTX -c -o skip_lock_perlist.o ${srcdir}/skip_lock.c
 skip_mcas.o: skip_mcas.c mcas.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c ${srcdir}/skip_mcas.c
 
 %.o: %.c $(COMMON_DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<

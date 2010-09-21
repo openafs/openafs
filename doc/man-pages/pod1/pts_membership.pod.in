@@ -1,0 +1,223 @@
+=head1 NAME
+
+pts_membership - Displays the membership list for a user or group
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts membership> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
+    [B<-supergroups>] [B<-expandgroups>] S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-localauth>] [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts m> S<<< B<-na> <I<user or group name or id>>+ >>>
+    [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+
+B<pts groups> S<<< B<-na> <I<user or group name or id>>+ >>>
+    [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+
+B<pts g> S<<< B<-na> <I<user or group name or id>>+ >>>
+    [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts membership> command lists the groups to which each user or
+machine specified by the B<-nameorid> argument belongs, or lists the users
+and machines that belong to each group specified by the B<-nameorid>
+argument.
+
+It is not possible to list the members of the system:anyuser or
+system:authuser groups, and they do not appear in the list of groups to
+which a user belongs.
+
+To add users or machine to groups, use the B<pts adduser> command; to remove
+them, use the B<pts removeuser> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-nameorid> <I<user or group name or id>>+
+
+Specifies the name or AFS UID of each user entry, the IP address (complete
+or wildcard-style) or AFS UID of each machine entry, or the name or AFS
+GID of each group, for which to list group membership. It is acceptable to
+mix users, machines, and groups on the same command line, as well as names
+and IDs. Precede the GID of each group with a hyphen to indicate that it
+is negative.
+
+=item B<-supergroups>
+
+List the groups to which each group specified by the B<-nameorid>
+argument belongs, in addition to user and machine members. Group
+membership may be nested when B<ptserver> is compilied with the
+SUPERGROUPS option enabled.
+
+=item B<-expandgroups>
+
+Instead of listing only the groups in which the user or machine is a direct
+member, list every group in which the user or machine belongs, including
+membership due to nested groups, for each user or machine specified by
+the B<-nameorid> argument.
+
+Instead of listing groups which are members of a group, list every user and
+machine which is a member of a group, including the users and machines which
+are members due to nested groups, for each group specified by the B<-nameorid>
+argument.
+
+Group membership may be nested when B<ptserver> is compilied with the
+SUPERGROUPS option enabled.
+
+=include fragments/pts-common.pod
+
+=back
+
+=head1 OUTPUT
+
+For each user and machine, the output begins with the following header
+line, followed by a list of the groups to which the user or machine
+belongs:
+
+   Groups <name> (id: <AFS UID>) is a member of:
+
+For each group, the output begins with the following header line, followed
+by a list of the users and machines who belong to the group:
+
+   Members of <group_name> (id: <AFS GID>) are:
+
+=head1 EXAMPLES
+
+The following example lists the groups to which the user C<pat> belongs
+and the members of the group C<smith:friends>.  Note that third privacy
+flag for the C<pat> entry was changed from the default hyphen to enable a
+non-administrative user to obtain this listing.
+
+   % pts membership pat smith:friends
+   Groups pat (id: 1144) is a member of:
+     smith:friends
+     staff
+     johnson:project-team
+   Members of smith:friends (id: -562) are:
+     pat
+     terry
+     jones
+     richard
+     thompson
+
+The following example shows how to list the groups to which nested groups
+belong. In this example the group C<executives> is a member of the group
+C<management> and the group C<management> is a member of the group C<staff>.
+The group C<management> is called a supergroup of the group C<executives> and the
+group C<staff> is called a supergroup of the group C<management>.
+
+   % pts membership executives
+   Members of executives (id: -208) are:
+     jane
+
+   % pts membership executives -supergroups
+   Members of executives (id: -208) are:
+     jane
+   Groups executives (id: -208) is a member of:
+     management
+
+   % pts membership management -supergroups
+   Members of management (id: -207) are:
+     executives
+     mary
+     sarah
+     carol
+   Groups management (id: -207) is a member of:
+      staff
+
+   % pts membership staff -supergroups
+   Members of staff (id: -206) are:
+     sales
+     marketing
+     engineering
+     management
+   Groups staff (id: -206) is a member of:
+
+The following example shows how to find all the users which belong
+to a group, including users of nested groups. In this example, the
+user C<jane> is listed as an expanded member of the group C<management>
+instead of the group C<executives>.
+
+   % pts membership management -expandgroups
+   Expanded Members of management (id: -207) are:
+     jane
+     mary
+     sarah
+     carol
+
+The following example shows how to find all the groups a user
+is a member of, including membership due to nested groups.  In
+this example the user C<jane> is a direct member of the group
+C<executives>. The C<-expandgroups> flag shows all the groups
+to which C<jane> has membership status.
+
+   % pts membership jane
+   Groups jane (id: 7) is a member of:
+     executives
+
+   % pts membership jane -expandgroups
+   Expanded Groups jane (id: 7) is a member of:
+     staff
+     management
+     executives
+
+=head1 PRIVILEGE REQUIRED
+
+Members of the system:ptsviewers and system:administrators groups can
+always use this command in any of its variations.  Additionally, a user
+can always list the groups to which they belong, and the owner of a group
+can always list the members of the group.
+
+Additional privileges may be granted by the setting of the third privacy
+flag in the Protection Database entry of each user or group indicated by
+the B<-nameorid> argument (use the B<pts examine> command to display the
+flags):
+
+=over 4
+
+=item *
+
+If it is a hyphen, the default permissions described above apply.
+
+=item *
+
+If it is lowercase C<m> and the B<-nameorid> argument specifies a group,
+then members of that group can also list the other members.  A privacy
+flag of C<m> only changes the permissions when set for a group.  Setting
+this flag for a user or a machine has no effect.
+
+=item *
+
+If it is uppercase C<M>, anyone who can access the cell's database server
+machines can list the membership of the group or the groups to which that
+user or machine belongs, depending on what type of entry the flag is set
+on.
+
+=back
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_adduser(1)>,
+L<pts_examine(1)>,
+L<pts_removeuser(1)>,
+L<pts_setfields(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

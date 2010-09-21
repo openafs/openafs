@@ -176,29 +176,26 @@
       <para>This section summarizes how AFS modifies the functionality of
       some UNIX commands.
         <variablelist>
-          <indexterm>
-            <primary>chmod command</primary>
-
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>chmod (AFS compared to UNIX)</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>setuid programs</primary>
-
-            <secondary>setting mode bits</secondary>
-          </indexterm>
-
           <varlistentry>
             <term><emphasis role="bold">The chmod
             command</emphasis></term>
 
             <listitem>
+              <indexterm>
+                <primary>chmod command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>chmod (AFS compared to UNIX)</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>setuid programs</primary>
+                <secondary>setting mode bits</secondary>
+              </indexterm>
+
               <para>Only members of the <emphasis
               role="bold">system:administrators</emphasis> group can use
               this command to turn on the setuid, setgid or sticky mode
@@ -208,77 +205,73 @@
             </listitem>
           </varlistentry>
 
-          <indexterm>
-            <primary>chown command</primary>
-
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>chown (AFS compared to UNIX)</secondary>
-          </indexterm>
-
           <varlistentry>
             <term><emphasis role="bold">The chown
             command</emphasis></term>
 
             <listitem>
+              <indexterm>
+                <primary>chown command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>chown (AFS compared to UNIX)</secondary>
+              </indexterm>
+
               <para>Only members of the <emphasis
               role="bold">system:administrators</emphasis> group can issue
               this command on AFS files.</para>
             </listitem>
           </varlistentry>
 
-          <indexterm>
-            <primary>chgrp command</primary>
-
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>chgrp (AFS compared to UNIX)</secondary>
-          </indexterm>
-
           <varlistentry>
             <term><emphasis role="bold">The chgrp
             command</emphasis></term>
 
             <listitem>
+              <indexterm>
+                <primary>chgrp command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>chgrp (AFS compared to UNIX)</secondary>
+              </indexterm>
+
               <para>Only members of the <emphasis
               role="bold">system:administrators</emphasis> can issue this
               command on AFS files and directories.</para>
             </listitem>
           </varlistentry>
 
-          <indexterm>
-            <primary>groups command</primary>
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>id command</primary>
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-            <secondary>groups (AFS compared to UNIX)</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-            <secondary>id (AFS compared to UNIX)</secondary>
-          </indexterm>
-
           <varlistentry>
             <term><emphasis role="bold">The groups and id
             commands</emphasis></term>
 
             <listitem>
+              <indexterm>
+                <primary>groups command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>id command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>groups (AFS compared to UNIX)</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>id (AFS compared to UNIX)</secondary>
+              </indexterm>
+
               <para>If the user's AFS tokens are associated with a process
               authentication group (PAG), the output of these commands may
               include one or two large numbers. These are artificial
@@ -291,57 +284,51 @@
             </listitem>
           </varlistentry>
 
-          <indexterm>
-            <primary>ln command</primary>
-
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>ln (AFS compared to UNIX)</secondary>
-          </indexterm>
-
           <varlistentry>
             <term><emphasis role="bold">The ln command</emphasis></term>
 
             <listitem>
+              <indexterm>
+                <primary>ln command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>ln (AFS compared to UNIX)</secondary>
+              </indexterm>
+
               <para>This command cannot create hard links between files in
               different AFS directories. See <link
               linkend="HDRWQ32">Creating Hard Links</link>.</para>
             </listitem>
           </varlistentry>
 
-          <indexterm>
-            <primary>sshd command</primary>
-
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>sshd (AFS compared to UNIX)</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>ssh command</primary>
-
-            <secondary>AFS compared to UNIX</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>ssh (AFS compared to UNIX)</secondary>
-          </indexterm>
-
           <varlistentry>
             <term><emphasis role="bold">The sshd daemon and ssh
             command</emphasis></term>
 
             <listitem>
+              <indexterm>
+                <primary>sshd command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>sshd (AFS compared to UNIX)</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>ssh command</primary>
+                <secondary>AFS compared to UNIX</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>commands</primary>
+                <secondary>ssh (AFS compared to UNIX)</secondary>
+              </indexterm>
+
               <para>In order for a user to have access to files stored in
               AFS, that user needs to have Kerberos tickets and an AFS token
               on the system from which they're accessing AFS. This has an

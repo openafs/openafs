@@ -15,7 +15,7 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 
 objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
-	 hostparse.o \
+	 hostparse.o exec.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o strnlen.o \
@@ -164,6 +164,9 @@ config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
 
 hostparse.o: ${srcdir}/hostparse.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/hostparse.c
+
+exec.o: ${srcdir}/exec.c ${includes}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/exec.c
 
 ktime.o: ${srcdir}/ktime.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/ktime.c

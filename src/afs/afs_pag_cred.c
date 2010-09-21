@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,8 +94,8 @@ afspag_SetPrimaryCell(char *acell)
 int
 afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
-    register afs_int32 i;
-    register struct unixuser *tu;
+    afs_int32 i;
+    struct unixuser *tu;
     afs_int32 pag, uid;
 
     AFS_STATCNT(PUnlog);
@@ -130,7 +130,7 @@ int
 afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     afs_int32 i;
-    register struct unixuser *tu;
+    struct unixuser *tu;
     struct afspag_cell *tcell;
     struct ClearToken clear;
     char *stp;

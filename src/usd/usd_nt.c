@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -403,8 +403,8 @@ usd_DeviceClose(usd_handle_t usd)
 
 /*
  * usd_DeviceOpen() -- open WinNT device (or regular file)
- * 
- * PARAMETERS -- 
+ *
+ * PARAMETERS --
  *     oflag -- Various combinations of USD_OPEN_XXX defined in usd.h.
  *     pmode -- ignored; file's security descriptor set to default on create.
  *     usdP -- if NULL device is immediately closed after being opened.
@@ -433,7 +433,7 @@ usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
 	attr = 0;
 
     /* should we always set:
-     *     FILE_FLAG_NO_BUFFERING? 
+     *     FILE_FLAG_NO_BUFFERING?
      *     FILE_FLAG_RANDOM_ACCESS?
      */
 
@@ -495,10 +495,10 @@ usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
 
     /* If we're trying to obtain a write lock on a real disk, then the
      * aggregate must not be attached by the kernel.  If so, unlock it
-     * and fail. 
+     * and fail.
      * WARNING: The code to check for the above has been removed when this
      * file was ported from DFS src. It should be put back if
-     * this library is used to access hard disks 
+     * this library is used to access hard disks
      */
 
     if (code == 0 && usdP)

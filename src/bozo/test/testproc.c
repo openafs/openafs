@@ -25,7 +25,7 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register int i;
+    int i;
 
 #ifdef	AFS_AIX31_ENV
     /*

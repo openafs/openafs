@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -226,7 +226,7 @@ fsprobe_LWP(void *unused)
 {				/*fsprobe_LWP */
 
     static char rn[] = "fsprobe_LWP";	/*Routine name */
-    register afs_int32 code;	/*Results of calls */
+    afs_int32 code;	/*Results of calls */
     struct timeval tv;		/*Time structure */
     int conn_idx;		/*Connection index */
     struct fsprobe_ConnectionInfo *curr_conn;	/*Current connection */
@@ -315,8 +315,8 @@ fsprobe_LWP(void *unused)
 			    strcpy(curr_stats->Disk[i].Name, pname);
 			}
 			if (code == RXGEN_OPCODE) {
-			    code = 
-				AFSVolPartitionInfo(curr_conn->rxVolconn, 
+			    code =
+				AFSVolPartitionInfo(curr_conn->rxVolconn,
 						    pname, &partition);
 			    if (!code) {
 				curr_stats->Disk[i].BlocksAvailable =
@@ -391,7 +391,7 @@ XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
 {
     struct pIDs partIds;
     struct partEntries partEnts;
-    register int i, j = 0, code;
+    int i, j = 0, code;
 
     *cntp = 0;
     if (newvolserver == 1) {
@@ -476,13 +476,13 @@ XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
  *------------------------------------------------------------------------*/
 
 int
-fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray, 
+fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	     int a_ProbeFreqInSecs, int (*a_ProbeHandler)(void),
 	     int a_debug)
 {				/*fsprobe_Init */
 
     static char rn[] = "fsprobe_Init";	/*Routine name */
-    register afs_int32 code;	/*Return value */
+    afs_int32 code;	/*Return value */
     static struct rx_securityClass *CBsecobj;	/*Callback security object */
     struct rx_securityClass *secobj;	/*Client security object */
     struct rx_service *rxsrv_afsserver;	/*Server for AFS */

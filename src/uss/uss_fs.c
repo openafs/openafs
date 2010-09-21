@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -71,9 +71,9 @@ static struct ViceIoctl *blobP = &blob;	/*Ptr to above */
  *------------------------------------------------------------------------*/
 
 static int
-InAFS(register char *a_path)
+InAFS(char *a_path)
 {				/*InAFS */
-    register afs_int32 code;
+    afs_int32 code;
 
     blob.in = NULL;
     blob.in_size = 0;
@@ -101,7 +101,7 @@ InAFS(register char *a_path)
  *	char *a_path         : Pathname to ancestorize.
  *	char *a_parentBuff   : Ptr to parent buffer to use.
  *	char **a_componentPP : Ptr to the final component.
- *	
+ *
  *
  * Returns:
  *	Ptr to the buffer containing the parent dir name.
@@ -171,7 +171,7 @@ CarefulPioctl(char *a_path, int a_opcode, struct ViceIoctl *a_blobP, int a_sl)
 #ifdef USS_FS_DB
     static char rn[] = "uss_fs:CarefulPioctl";
 #endif
-    register afs_int32 code;
+    afs_int32 code;
 
     /*
      * Call the pioctl() the first time, return if things worked
@@ -218,7 +218,7 @@ uss_fs_GetACL(char *a_dirPath, char *a_aclBuff, afs_int32 a_aclBuffBytes)
 #ifdef USS_FS_DB
     static char rn[] = "uss_fs_GetACL";	/*Routine name */
 #endif
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
 
     blob.in = NULL;
     blob.in_size = 0;
@@ -258,7 +258,7 @@ uss_fs_SetACL(char *a_dirPath, char *a_aclBuff, afs_int32 a_aclBuffBytes)
 #ifdef USS_FS_DB
     static char rn[] = "uss_fs_SetACL";	/*Routine name */
 #endif
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
 
     blob.in = a_aclBuff;
     blob.in_size = a_aclBuffBytes;
@@ -300,7 +300,7 @@ uss_fs_GetVolStat(char *a_mountpoint, char *a_volStatBuff,
 #ifdef USS_FS_DB
     static char rn[] = "uss_fs_GetVolStat";	/*Routine name */
 #endif
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
 
     blob.in = NULL;
     blob.in_size = 0;
@@ -335,13 +335,13 @@ uss_fs_GetVolStat(char *a_mountpoint, char *a_volStatBuff,
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_SetVolStat(char *a_mountpoint, char *a_volStatBuff, 
+uss_fs_SetVolStat(char *a_mountpoint, char *a_volStatBuff,
 		  afs_int32 a_volStatBuffBytes)
 {				/*uss_fs_SetVolStat */
 #ifdef USS_FS_DB
     static char rn[] = "uss_fs_SetVolStat";	/*Routine name */
 #endif
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
 
     blob.in = a_volStatBuff;
     blob.in_size = a_volStatBuffBytes;
@@ -381,7 +381,7 @@ uss_fs_CkBackups(void)
 #ifdef USS_FS_DB
     static char rn[] = "uss_fs_CkBackups";	/*Routine name */
 #endif
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
 
     blob.in = NULL;
     blob.in_size = 0;
@@ -423,7 +423,7 @@ uss_fs_MkMountPoint(char *a_volname, char *a_cellname, afs_int32 a_rw,
 {				/*uss_fs_MkMountPoint */
     extern int local_Cell;
     static char rn[] = "uss_fs_MkMountPoint";	/*Routine name */
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
     char *tp;			/*Temporary */
 
 #ifdef USS_FS_DB
@@ -481,7 +481,7 @@ afs_int32
 uss_fs_RmMountPoint(char *a_mountpoint)
 {				/*uss_fs_RmMountPoint */
     static char rn[] = "uss_fs_RmMountPoint";	/*Routine name */
-    register afs_int32 code;	/*pioctl() result */
+    afs_int32 code;	/*pioctl() result */
     char *parentDirP;		/*Ptr to parent */
     char *componentP;		/*Ptr to last component */
 
@@ -548,7 +548,7 @@ struct tokenInfo {
 };
 
 /*
- * Build a list of tokens, delete the bad ones (the ones to remove from the 
+ * Build a list of tokens, delete the bad ones (the ones to remove from the
  * permissions list,) destroy all tokens, and then re-register the good ones.
  * Ugly, but it works.
  */

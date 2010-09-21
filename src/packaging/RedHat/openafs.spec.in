@@ -99,12 +99,6 @@
 # to distribute aklog and asetkey
 %define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
 
-%if %{krb5support}
-%if %{?krb5config:0}%{!?krb5config:1}
-%define krb5config /usr/kerberos/bin/krb5-config
-%endif
-%endif
-
 # Set 'bootkernelsupport' to 1 if you want to build the
 # kernel module for Red Hat BOOT Kernels on x86.
 %define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
@@ -852,6 +846,13 @@ fi
 
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
+%if %{krb5support}
+%if %{?krb5config:1}%{!?krb5config:0}
+KRB5_CONFIG="%{krb5config}"
+export KRB5_CONFIG
+%endif
+%endif
+
 ./configure --with-afs-sysname=${sysname} \
        --prefix=%{_prefix} \
        --libdir=%{_libdir} \
@@ -859,12 +860,11 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --sbindir=%{_sbindir} \
        --disable-strip-binaries \
        --with-linux-kernel-packaging \
-       --enable-disconnected \
 %if %{build_modules}
        --with-linux-kernel-headers=${ksrc} \
 %endif
 %if %{krb5support}
-	--with-krb5-conf=%{krb5config} \
+	--with-krb5 \
 %endif
        $config_opts \
        || exit 1
@@ -1121,7 +1121,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 	>openafs-man5files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
-	|egrep '^backup|^bos|^butc|^fms|^fstrace|^kas|^read_tape|^uss' \
+	|egrep '^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
 	>openafs-man8files
 
 #
@@ -1462,6 +1462,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/bosserver
 %{_prefix}/afs/bin/bos_util
 %{_prefix}/afs/bin/buserver
+%{_prefix}/afs/bin/dafileserver
+%{_prefix}/afs/bin/dafssync-debug
+%{_prefix}/afs/bin/dasalvager
+%{_prefix}/afs/bin/davolserver
 %{_prefix}/afs/bin/fileserver
 %{_prefix}/afs/bin/fssync-debug
 # Should we support KAServer?
@@ -1470,6 +1474,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/pt_util
 %{_prefix}/afs/bin/ptserver
 %{_prefix}/afs/bin/salvager
+%{_prefix}/afs/bin/salvageserver
+%{_prefix}/afs/bin/salvsync-debug
 %{_prefix}/afs/bin/state_analyzer
 %{_prefix}/afs/bin/upclient
 %{_prefix}/afs/bin/upserver
@@ -1503,12 +1509,16 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/kaserver.DB0.*
 %{_mandir}/man5/kaserverauxdb.*
 %{_mandir}/man5/krb.conf.*
+%{_mandir}/man5/krb.excl.*
 %{_mandir}/man5/prdb.DB0.*
 %{_mandir}/man5/salvage.lock.*
 %{_mandir}/man5/tapeconfig.*
 %{_mandir}/man5/vldb.DB0.*
 %{_mandir}/man8/buserver.*
 %{_mandir}/man8/fileserver.*
+%{_mandir}/man8/dafileserver.*
+%{_mandir}/man8/dasalvager.*
+%{_mandir}/man8/davolserver.*
 %{_mandir}/man8/kadb_check.*
 %{_mandir}/man8/ka-forwarder.*
 %{_mandir}/man8/prdb_check.*

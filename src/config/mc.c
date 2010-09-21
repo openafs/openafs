@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,9 +27,9 @@ struct token {
 
 /* free token list returned by parseLine */
 static int
-FreeTokens(register struct token *alist)
+FreeTokens(struct token *alist)
 {
-    register struct token *nlist;
+    struct token *nlist;
     for (; alist; alist = nlist) {
 	nlist = alist->next;
 	free(alist->key);
@@ -43,11 +43,11 @@ static int
 ParseLine(char *aline, struct token **alist)
 {
     char tbuffer[MAXTOKLEN + 1];
-    register char *tptr = NULL;
+    char *tptr = NULL;
     int inToken;
     struct token *first, *last;
-    register struct token *ttok;
-    register int tc;
+    struct token *ttok;
+    int tc;
     int dontUse = 0;
 
     inToken = 0;		/* not copying token chars at start */
@@ -108,9 +108,9 @@ ParseLine(char *aline, struct token **alist)
 /* read a line into a buffer, putting in null termination and stopping on appropriate
     end of line char.  Returns 0 at eof, > 0 at normal line end, and < 0 on error */
 static int
-GetLine(FILE * afile, register char *abuffer, int amax)
+GetLine(FILE * afile, char *abuffer, int amax)
 {
-    register int tc;
+    int tc;
     int first;
 
     first = 1;
@@ -133,13 +133,13 @@ GetLine(FILE * afile, register char *abuffer, int amax)
 }
 
 int
-mc_copy(register FILE * ain, register FILE * aout, char *alist[])
+mc_copy(FILE * ain, FILE * aout, char *alist[])
 {
     char tbuffer[MAXLINELEN];
     struct token *tokens;
-    register char **tp;
-    register struct token *tt;
-    register int code;
+    char **tp;
+    struct token *tt;
+    int code;
     int copying;
     int done;
 

@@ -195,35 +195,35 @@ install: libgtx.a
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libgtx.a ${DESTDIR}${libdir}/afs/libgtx.a
-	${INSTALL_DATA} gtxcurseswin.h ${DESTDIR}${includedir}/afs/gtxcurseswin.h
-	${INSTALL_DATA} gtxdumbwin.h ${DESTDIR}${includedir}/afs/gtxdumbwin.h
-	${INSTALL_DATA} gtxframe.h ${DESTDIR}${includedir}/afs/gtxframe.h
-	${INSTALL_DATA} gtxinput.h ${DESTDIR}${includedir}/afs/gtxinput.h
-	${INSTALL_DATA} gtxkeymap.h ${DESTDIR}${includedir}/afs/gtxkeymap.h
-	${INSTALL_DATA} gtxlightobj.h ${DESTDIR}${includedir}/afs/gtxlightobj.h
-	${INSTALL_DATA} gtxobjdict.h ${DESTDIR}${includedir}/afs/gtxobjdict.h
-	${INSTALL_DATA} gtxobjects.h ${DESTDIR}${includedir}/afs/gtxobjects.h
-	${INSTALL_DATA} gtxtextcb.h ${DESTDIR}${includedir}/afs/gtxtextcb.h
-	${INSTALL_DATA} gtxtextobj.h ${DESTDIR}${includedir}/afs/gtxtextobj.h
-	${INSTALL_DATA} gtxwindows.h ${DESTDIR}${includedir}/afs/gtxwindows.h
-	${INSTALL_DATA} gtxX11win.h ${DESTDIR}${includedir}/afs/gtxX11win.h
+	${INSTALL_DATA} ${srcdir}/gtxcurseswin.h ${DESTDIR}${includedir}/afs/gtxcurseswin.h
+	${INSTALL_DATA} ${srcdir}/gtxdumbwin.h ${DESTDIR}${includedir}/afs/gtxdumbwin.h
+	${INSTALL_DATA} ${srcdir}/gtxframe.h ${DESTDIR}${includedir}/afs/gtxframe.h
+	${INSTALL_DATA} ${srcdir}/gtxinput.h ${DESTDIR}${includedir}/afs/gtxinput.h
+	${INSTALL_DATA} ${srcdir}/gtxkeymap.h ${DESTDIR}${includedir}/afs/gtxkeymap.h
+	${INSTALL_DATA} ${srcdir}/gtxlightobj.h ${DESTDIR}${includedir}/afs/gtxlightobj.h
+	${INSTALL_DATA} ${srcdir}/gtxobjdict.h ${DESTDIR}${includedir}/afs/gtxobjdict.h
+	${INSTALL_DATA} ${srcdir}/gtxobjects.h ${DESTDIR}${includedir}/afs/gtxobjects.h
+	${INSTALL_DATA} ${srcdir}/gtxtextcb.h ${DESTDIR}${includedir}/afs/gtxtextcb.h
+	${INSTALL_DATA} ${srcdir}/gtxtextobj.h ${DESTDIR}${includedir}/afs/gtxtextobj.h
+	${INSTALL_DATA} ${srcdir}/gtxwindows.h ${DESTDIR}${includedir}/afs/gtxwindows.h
+	${INSTALL_DATA} ${srcdir}/gtxX11win.h ${DESTDIR}${includedir}/afs/gtxX11win.h
 
 dest: libgtx.a
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libgtx.a ${DEST}/lib/afs/libgtx.a
-	${INSTALL_DATA} gtxcurseswin.h ${DEST}/include/afs/gtxcurseswin.h
-	${INSTALL_DATA} gtxdumbwin.h ${DEST}/include/afs/gtxdumbwin.h
-	${INSTALL_DATA} gtxframe.h ${DEST}/include/afs/gtxframe.h
-	${INSTALL_DATA} gtxinput.h ${DEST}/include/afs/gtxinput.h
-	${INSTALL_DATA} gtxkeymap.h ${DEST}/include/afs/gtxkeymap.h
-	${INSTALL_DATA} gtxlightobj.h ${DEST}/include/afs/gtxlightobj.h
-	${INSTALL_DATA} gtxobjdict.h ${DEST}/include/afs/gtxobjdict.h
-	${INSTALL_DATA} gtxobjects.h ${DEST}/include/afs/gtxobjects.h
-	${INSTALL_DATA} gtxtextcb.h ${DEST}/include/afs/gtxtextcb.h
-	${INSTALL_DATA} gtxtextobj.h ${DEST}/include/afs/gtxtextobj.h
-	${INSTALL_DATA} gtxwindows.h ${DEST}/include/afs/gtxwindows.h
-	${INSTALL_DATA} gtxX11win.h ${DEST}/include/afs/gtxX11win.h
+	${INSTALL_DATA} ${srcdir}/gtxcurseswin.h ${DEST}/include/afs/gtxcurseswin.h
+	${INSTALL_DATA} ${srcdir}/gtxdumbwin.h ${DEST}/include/afs/gtxdumbwin.h
+	${INSTALL_DATA} ${srcdir}/gtxframe.h ${DEST}/include/afs/gtxframe.h
+	${INSTALL_DATA} ${srcdir}/gtxinput.h ${DEST}/include/afs/gtxinput.h
+	${INSTALL_DATA} ${srcdir}/gtxkeymap.h ${DEST}/include/afs/gtxkeymap.h
+	${INSTALL_DATA} ${srcdir}/gtxlightobj.h ${DEST}/include/afs/gtxlightobj.h
+	${INSTALL_DATA} ${srcdir}/gtxobjdict.h ${DEST}/include/afs/gtxobjdict.h
+	${INSTALL_DATA} ${srcdir}/gtxobjects.h ${DEST}/include/afs/gtxobjects.h
+	${INSTALL_DATA} ${srcdir}/gtxtextcb.h ${DEST}/include/afs/gtxtextcb.h
+	${INSTALL_DATA} ${srcdir}/gtxtextobj.h ${DEST}/include/afs/gtxtextobj.h
+	${INSTALL_DATA} ${srcdir}/gtxwindows.h ${DEST}/include/afs/gtxwindows.h
+	${INSTALL_DATA} ${srcdir}/gtxX11win.h ${DEST}/include/afs/gtxX11win.h
 
 #
 # Misc targets

@@ -1,20 +1,20 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* the wrapper nanny process around weblog that would restart it in case it 
- * failed and hopefully log the error somewhere! The need for this nanny 
- * process arises because the pipe descriptors need to be maintained. The 
- * process catches SIGTERM and kills the weblog process and exits. 
+/* the wrapper nanny process around weblog that would restart it in case it
+ * failed and hopefully log the error somewhere! The need for this nanny
+ * process arises because the pipe descriptors need to be maintained. The
+ * process catches SIGTERM and kills the weblog process and exits.
  * The following line needs to precede the kill -TERM line for httpd.pid
  * in the stopd script to stop the server
           kill -TERM `<cat /local/stronghold/apache/logs/httpd.pid>.afs`
- * or whatever the pid file 
+ * or whatever the pid file
  */
 
 #include <afs/stds.h>

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -41,8 +41,8 @@ connect_buserver()
 
     rx_SetRxDeadTime(60);
 
-    /* 
-     * Connect to buserver 
+    /*
+     * Connect to buserver
      */
     cellName[0] = '\0';
     code = udbClientInit(0, 0, cellName);

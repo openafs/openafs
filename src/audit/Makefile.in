@@ -48,13 +48,13 @@ install: audit.h libaudit.a
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libaudit.a ${DESTDIR}${libdir}/afs/libaudit.a
-	${INSTALL_DATA} audit.h ${DESTDIR}${includedir}/afs/audit.h
+	${INSTALL_DATA} ${srcdir}/audit.h ${DESTDIR}${includedir}/afs/audit.h
 
 dest: libaudit.a audit.h
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libaudit.a ${DEST}/lib/afs/libaudit.a
-	${INSTALL_DATA} audit.h ${DEST}/include/afs/audit.h
+	${INSTALL_DATA} ${srcdir}/audit.h ${DEST}/include/afs/audit.h
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	   ${INSTALL} -d ${DEST}/root.server/usr/afs/local ; \

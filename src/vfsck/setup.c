@@ -98,7 +98,7 @@ struct bufarea *pbp;
 /*
  * The size of a cylinder group is calculated by CGSIZE. The maximum size
  * is limited by the fact that cylinder groups are at most one block.
- * Its size is derived from the size of the maps maintained in the 
+ * Its size is derived from the size of the maps maintained in the
  * cylinder group and the (struct cg) size.
  */
 #define CGSIZE(fs) \
@@ -205,7 +205,7 @@ setup(dev)
      * The rules are:
      *      1) if nflag is set, it's pretty safe to fsck the target dev
      *      2) if the target device is a swap, exit
-     *      3) if hotroot is set, and "-F" is not specified prompt the 
+     *      3) if hotroot is set, and "-F" is not specified prompt the
      *              user and wait for reply
      *      4) if the target is a mounted file system, and "-F" is not
      *              specified, prompt the user and wait for reply
@@ -774,7 +774,7 @@ badsb(listerr, s)
 calcsb(dev, devfd, fs)
      char *dev;
      int devfd;
-     register struct fs *fs;
+     struct fs *fs;
 {
     return 0;
 }
@@ -832,7 +832,7 @@ is_swap(devno)
      dev_t devno;
 {
     struct pst_swapinfo pst[PS_BURST];
-    register struct pst_swapinfo *psp = &pst[0];
+    struct pst_swapinfo *psp = &pst[0];
     int idx = 0, count, match = 0;
 
     while ((count = PSTAT(psp, PS_BURST, idx) != 0)) {
@@ -929,8 +929,8 @@ getline(fp, loc, maxlen)
      FILE *fp;
      char *loc;
 {
-    register n;
-    register char *p, *lastloc;
+    int n;
+    char *p, *lastloc;
 
     p = loc;
     lastloc = &p[maxlen - 1];
@@ -966,7 +966,7 @@ freply(s)
 
 #if   defined(AFS_HPUX110_ENV)
 /*
- *  Refer to function compare_sblocks() in HP's fsck.c 
+ *  Refer to function compare_sblocks() in HP's fsck.c
  *
  *  DESCRIPTION:
  *     This routine will compare the primary superblock (PRIM_SBLOCK) to the

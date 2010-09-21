@@ -81,7 +81,7 @@ getfsent(void)
     else
 	fstabent.fs_type = FSTAB_RW;
     fstabent.fs_vfstype = mntent->f_fstypename;
-    
+
     mntent++;
     mntcnt--;
     return &fstabent;

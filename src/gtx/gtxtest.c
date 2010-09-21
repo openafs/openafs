@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -33,9 +33,9 @@ ChangeMenuCmd(void *param1, void *param2)
 {
     struct gwin * awin = (struct gwin *) param1;
     afs_int32 arock = (intptr_t)param2;
-    
-    register struct gtx_frame *tf;
-    register afs_int32 code;
+
+    struct gtx_frame *tf;
+    afs_int32 code;
 
     tf = awin->w_frame;
     if (!tf)
@@ -60,9 +60,9 @@ ChangeListCmd(void *param1, void *param2)
 {
     struct gwin *awin = (struct gwin *) param1;
     afs_int32 arock = (intptr_t)param2;
-    
-    register struct gtx_frame *tf;
-    register afs_int32 code;
+
+    struct gtx_frame *tf;
+    afs_int32 code;
 
     tf = awin->w_frame;
     if (!tf)
@@ -86,7 +86,7 @@ static int
 NoCallCmd(void *param, void *unused)
 {
     struct gwin *awin = (struct gwin *)param;
-    
+
     gtxframe_DisplayString(awin->w_frame,
 			   "Function should be mapped on '$d', not 'd'");
     return 0;
@@ -97,7 +97,7 @@ ChangeCmd(void *param, void *unused)
 {
     struct gwin *awin = (struct gwin *) param;
     char tbuffer[100];
-    register afs_int32 code;
+    afs_int32 code;
 
     code =
 	gtxframe_AskForString(awin->w_frame, "New object string: ", "TestNew",
@@ -113,7 +113,7 @@ static int
 StupidCmd(void *param, void *unused)
 {
     struct gwin *awin = (struct gwin *)param;
-    
+
     gtxframe_DisplayString(awin->w_frame,
 			   "You're already showing that frame!");
     return 0;
@@ -143,7 +143,7 @@ main(int argc, char **argv)
     struct gwin *win;
     struct gator_textobj_params textcrparams;
     struct gator_light_crparams lightcrparams;
-    register struct keymap_map *tmap;
+    struct keymap_map *tmap;
 
     win = gtx_Init(0, -1);
 

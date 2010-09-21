@@ -19,6 +19,7 @@ version.xml:
 	echo '<?xml version="1.0" encoding="UTF-8"?>' >version.xml && \
 	echo '<revision>' >>version.xml && \
 	echo '<revnumber>'$$VERSION'</revnumber>' >>version.xml && \
+	echo '<date></date>' >>version.xml && \
 	echo '</revision>' >>version.xml
 
 version.txt:

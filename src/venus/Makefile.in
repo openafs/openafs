@@ -45,7 +45,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 
 LIBS = ${FSLIBS} 
 
-all: fs up fstrace cmdebug livesys kdump-build
+all: fs up fstrace cmdebug livesys kdump-build cacheout
 
 #
 # Build targets

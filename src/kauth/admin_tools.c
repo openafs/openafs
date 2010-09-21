@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -1114,7 +1114,7 @@ Statistics(struct cmd_syndesc *as, void *arock)
     printf("Hash table utilization = %f%%\n",
 	   (double)dynamics.hashTableUtilization / 100.0);
     ka_timestr(dynamics.start_time, bob, KA_TIMESTR_LEN);
-    printf("From host %lx started at %s:\n", 
+    printf("From host %lx started at %s:\n",
 	   afs_printable_uint32_lu(dynamics.host), bob);
 
 #define print_stat(name) if (dynamics.name.requests) printf ("  of %d requests for %s, %d were aborted.\n", dynamics.name.requests, # name, dynamics.name.aborts)
@@ -1205,7 +1205,7 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
 	     timeOffset, now - start);
     }
     ka_timestr(info.startTime, bob, KA_TIMESTR_LEN);
-    printf("From host %lx started %sat %s:\n", 
+    printf("From host %lx started %sat %s:\n",
 	   afs_printable_uint32_lu(info.host),
 	   (info.noAuth ? "w/o authorization " : ""), bob);
     ka_timestr(info.lastTrans, bob, KA_TIMESTR_LEN);
@@ -1220,7 +1220,7 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
     printf("Next autoCPW at %s or in %d updates.\n", bob,
 	   info.updatesRemaining);
     if (info.cheader_lock || info.keycache_lock)
-	printf("locks: cheader %08lx, keycache %08lx\n", 
+	printf("locks: cheader %08lx, keycache %08lx\n",
 		afs_printable_uint32_lu(info.cheader_lock),
 	        afs_printable_uint32_lu(info.keycache_lock));
     printf("Last authentication for %s, last admin user was %s\n",
@@ -1263,7 +1263,7 @@ MyAfterProc(struct cmd_syndesc *as, void *arock)
 	return 0;
 
     /* Determine if we need to destory the ubik connection.
-     * Closing it avoids resends of packets. 
+     * Closing it avoids resends of packets.
      */
     if (conn) {
 	ubik_ClientDestroy(conn);
@@ -1643,7 +1643,7 @@ ListTickets(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(register struct cmd_syndesc *ts)
+add_std_args(struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, 12);
     /* 12 */ cmd_AddParm(ts, "-admin_username", CMD_SINGLE, CMD_OPTIONAL,
@@ -1660,8 +1660,8 @@ add_std_args(register struct cmd_syndesc *ts)
 afs_int32
 ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 {
-    register int code;
-    register struct cmd_syndesc *ts;
+    int code;
+    struct cmd_syndesc *ts;
 
     char line[BUFSIZ];
     afs_int32 argc;
@@ -1679,7 +1679,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     ts = cmd_CreateSyntax("noauthentication", NoAuth, NULL,
 			  "connect to AuthServer w/o using token");
 
-    ts = cmd_CreateSyntax("list", ListUsers, NULL, 
+    ts = cmd_CreateSyntax("list", ListUsers, NULL,
 			  "list all users in database");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show detailed info about each user");

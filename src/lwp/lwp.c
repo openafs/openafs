@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -101,24 +101,24 @@ extern char PRE_Block;		/* from preempt.c */
     ;									\
 } while (0)
 #endif
-
+
 static void Dispatcher(void);
 static void Create_Process_Part2(void);
 static void Exit_LWP(void);
 static afs_int32 Initialize_Stack(char *stackptr, int stacksize);
-static int Stack_Used(register char *stackptr, int stacksize);
+static int Stack_Used(char *stackptr, int stacksize);
 
 static void Abort_LWP(char *msg);
 static void Overflow_Complain(void);
 static void Initialize_PCB(PROCESS temp, int priority, char *stack,
-			   int stacksize, void *(*ep)(void *), void *parm, 
+			   int stacksize, void *(*ep)(void *), void *parm,
 			   char *name);
 static void Dispose_of_Dead_PCB(PROCESS cur);
 static void Free_PCB(PROCESS pid);
 static int Internal_Signal(void *event);
 static int purge_dead_pcbs(void);
 static int LWP_MwaitProcess(int wcount, void *evlist[]);
-	
+
 
 #define MAX_PRIORITIES	(LWP_MAX_PRIORITY+1)
 
@@ -126,8 +126,8 @@ struct QUEUE {
     PROCESS head;
     int count;
 } runnable[MAX_PRIORITIES], blocked, qwaiting;
-/* Invariant for runnable queues: The head of each queue points to the 
- * currently running process if it is in that queue, or it points to the 
+/* Invariant for runnable queues: The head of each queue points to the
+ * currently running process if it is in that queue, or it points to the
  * next process in that queue that should run. */
 
 /* Offset of stack field within pcb -- used by stack checking stuff */
@@ -151,7 +151,7 @@ int lwp_nextindex;
 int lwp_MinStackSize = 0;
 
 static int
-lwp_remove(register PROCESS p, register struct QUEUE *q)
+lwp_remove(PROCESS p, struct QUEUE *q)
 {
     /* Special test for only element on queue */
     if (q->count == 1)
@@ -170,7 +170,7 @@ lwp_remove(register PROCESS p, register struct QUEUE *q)
 }
 
 static int
-insert(register PROCESS p, register struct QUEUE *q)
+insert(PROCESS p, struct QUEUE *q)
 {
     if (q->head == NULL) {	/* Queue is empty */
 	q->head = p;
@@ -198,14 +198,14 @@ move(PROCESS p, struct QUEUE *from, struct QUEUE *to)
 /* Iterator macro */
 #define for_all_elts(var, q, body)\
 	{\
-	    register PROCESS var, _NEXT_;\
-	    register int _I_;\
+	    PROCESS var, _NEXT_;\
+	    int _I_;\
 	    for (_I_=q.count, var = q.head; _I_>0; _I_--, var=_NEXT_) {\
 		_NEXT_ = var -> next;\
 		body\
 	    }\
 	}
-
+
 /*									    */
 /*****************************************************************************\
 * 									      *
@@ -240,7 +240,7 @@ static struct lwp_ctl *lwp_init = 0;
 int
 LWP_QWait(void)
 {
-    register PROCESS tp;
+    PROCESS tp;
     (tp = lwp_cpptr)->status = QWAITING;
     move(tp, &runnable[tp->priority], &qwaiting);
     Set_LWP_RC();
@@ -248,7 +248,7 @@ LWP_QWait(void)
 }
 
 int
-LWP_QSignal(register PROCESS pid)
+LWP_QSignal(PROCESS pid)
 {
     if (pid->status == QWAITING) {
 	pid->status = READY;
@@ -260,7 +260,7 @@ LWP_QSignal(register PROCESS pid)
 
 #ifdef	AFS_AIX32_ENV
 char *
-reserveFromStack(register afs_int32 size)
+reserveFromStack(afs_int32 size)
 {
     char *x;
     x = alloca(size);
@@ -314,8 +314,8 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 #ifdef	AFS_AIX32_ENV
 	if (!stackptr) {
 	    /*
-	     * The following signal action for AIX is necessary so that in case of a 
-	     * crash (i.e. core is generated) we can include the user's data section 
+	     * The following signal action for AIX is necessary so that in case of a
+	     * crash (i.e. core is generated) we can include the user's data section
 	     * in the core dump. Unfortunately, by default, only a partial core is
 	     * generated which, in many cases, isn't too useful.
 	     *
@@ -333,7 +333,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	    /*
 	     * First we need to increase the default resource limits,
 	     * if necessary, so that we can guarantee that we have the
-	     * resources to create the core file, but we can't always 
+	     * resources to create the core file, but we can't always
 	     * do it as an ordinary user.
 	     */
 	    if (!geteuid()) {
@@ -573,7 +573,7 @@ int
 Dump_Processes(void)
 {
     if (lwp_init) {
-	register int i;
+	int i;
 	for (i = 0; i < MAX_PRIORITIES; i++)
 	    for_all_elts(x, runnable[i], {
 			 printf("[Priority %d]\n", i);
@@ -608,7 +608,7 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
 {
     PROCESS temp;
     struct lwp_pcb dummy;
-    register int i;
+    int i;
     char *value;
 
     Debug(0, ("Entered LWP_InitializeProcessSupport"));
@@ -673,7 +673,7 @@ LWP_INTERNALSIGNAL(void *event, int yield)
 int
 LWP_TerminateProcessSupport(void)
 {				/* terminate all LWP support */
-    register int i;
+    int i;
 
     Debug(0, ("Entered Terminate_Process_Support"));
     if (lwp_init == NULL)
@@ -711,7 +711,7 @@ LWP_WaitProcess(void *event)
 int
 LWP_MwaitProcess(int wcount, void *evlist[])
 {				/* wait on m of n events */
-    register int ecount, i;
+    int ecount, i;
 
 
     Debug(0, ("Entered Mwait_Process [waitcnt = %d]", wcount));
@@ -770,7 +770,7 @@ LWP_StackUsed(PROCESS pid, int *maxa, int *used)
 	return LWP_NO_STACK;
     return LWP_SUCCESS;
 }
-
+
 /*
  *  The following functions are strictly
  *  INTERNAL to the LWP support package.
@@ -808,13 +808,13 @@ Create_Process_Part2(void)
 }
 
 static int
-Delete_PCB(register PROCESS pid)
+Delete_PCB(PROCESS pid)
 {				/* remove a PCB from the process list */
     Debug(4, ("Entered Delete_PCB"));
     lwp_remove(pid,
 	       (pid->blockflag || pid->status == WAITING
 		|| pid->status ==
-		DESTROYED ? &blocked : 
+		DESTROYED ? &blocked :
 		(pid->status == QWAITING) ? &qwaiting :
 		&runnable[pid->priority]));
     LWPANCHOR.processcnt--;
@@ -886,7 +886,7 @@ int LWP_TraceProcesses = 0;
 static void
 Dispatcher(void)
 {				/* Lightweight process dispatcher */
-    register int i;
+    int i;
 #ifdef DEBUG
     static int dispatch_count = 0;
 
@@ -977,7 +977,7 @@ Dispatcher(void)
     lwp_cpptr = runnable[i].head;
 
     returnto(&lwp_cpptr->context);
-    
+
     return; /* not reachable */
 }
 
@@ -1038,7 +1038,7 @@ static void
 Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 	       void *(*ep) (void *), void *parm, char *name)
 {
-    register int i = 0;
+    int i = 0;
 
     Debug(4, ("Entered Initialize_PCB"));
     if (name != NULL)
@@ -1074,10 +1074,10 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 }
 
 static int
-Internal_Signal(register void *event)
+Internal_Signal(void *event)
 {
     int rc = LWP_ENOWAIT;
-    register int i;
+    int i;
 
     Debug(0, ("Entered Internal_Signal [event id 0x%x]", event));
     if (!lwp_init)
@@ -1105,7 +1105,7 @@ Internal_Signal(register void *event)
 static afs_int32
 Initialize_Stack(char *stackptr, int stacksize)
 {
-    register int i;
+    int i;
 
     Debug(4, ("Entered Initialize_Stack"));
     if (lwp_stackUseEnabled)
@@ -1121,9 +1121,9 @@ Initialize_Stack(char *stackptr, int stacksize)
 }
 
 static int
-Stack_Used(register char *stackptr, int stacksize)
+Stack_Used(char *stackptr, int stacksize)
 {
-    register int i;
+    int i;
 
 #if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
     if (*(afs_int32 *) (stackptr + stacksize - 4) == STACKMAGIC)
@@ -1154,15 +1154,15 @@ LWP_NewRock(int Tag, char *Value)
      * LWP_SUCCESS      Rock did not exist and a new one was used
      * LWP_EBADROCK     Rock already exists.
      * LWP_ENOROCKS     All rocks are in use.
-     * 
+     *
      * From the above semantics, you can only set a rock value once.  This is specifically
      * to prevent multiple users of the LWP package from accidentally using the same Tag
      * value and clobbering others.  You can always use one level of indirection to obtain
      * a rock whose contents can change.
      */
 {
-    register int i;
-    register struct rock *ra;	/* rock array */
+    int i;
+    struct rock *ra;	/* rock array */
 
     ra = lwp_cpptr->lwp_rlist;
 
@@ -1188,8 +1188,8 @@ LWP_GetRock(int Tag, char **Value)
      * LWP_EBADROCK     rock specified does not exist
      */
 {
-    register int i;
-    register struct rock *ra;
+    int i;
+    struct rock *ra;
 
     ra = lwp_cpptr->lwp_rlist;
 

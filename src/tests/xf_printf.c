@@ -4,7 +4,7 @@
  *
  * Copyright (c) 1998 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
@@ -110,24 +110,24 @@ wsp(XFILE * X, int count)
  *
  *   - Actually obeys the length limit, which (unfortunately) many
  *     implementations of snprintf do not.
- *  
+ *
  *   - Supports all the standard format specifiers for integers
  *     (d, i, o, u, x, X), floating-point values (f, e, E, g, G),
  *     and strings and characters (c, s, %), plus a few unusual
  *     but useful ones described below.
- *  
+ *
  *   - Supports all the standard flags (-, 0, +, space, #).  These
  *     flags are ignored if used when they are not appropriate.
- *  
+ *
  *   - Supports the standard size modifiers for short (h), long (h),
  *     and double (L) arguments.  These modifiers are ignored if used
  *     when they are not appropriate.
- *  
+ *
  *   - Supports minimum field width and precision, where appropriate,
  *     including the use of '*' to specify a value given as an argument
  *     instead of in the format string.  There is a maximum precision
  *     of 100 digits.
- *  
+ *
  *   - At present, the 'p' specifier for printing pointers is not
  *     implemented, because it is inherently non-portable and thus
  *     can be implemented correctly only by the compiler's run-time
@@ -135,25 +135,25 @@ wsp(XFILE * X, int count)
  *
  *   - Floating-point specifier (%e, %f, %g) are implemented by
  *     calling the standard sprintf, and thus may be unsafe.
- *  
+ *
  *   - The '%...$' notation is used primarily when the format string
  *     is specified by the user, who knows but cannot change the order
  *     of the arguments.  Such usage is inherently dangerous and
  *     insecure; thus, it is not supported.
- *  
+ *
  * The custom format specifier '%I' is supported.  This specifier
  * takes as its argument an unsigned long integer containing an
  * IPv4 address in network byte order.  The address is rendered
  * either as a hostname or as a dotted quad, as follows:
- *  
+ *
  *   - If precision is nonzero or unspecified, a hostname lookup
  *     is attempted; if it is successful, the hostname is printed.
  *     If the hostname lookup fails, the address is printed in
  *     dotted-quad notation.
- *  
+ *
  *   - If precision is explicitly specified as 0, then the hostname
  *     lookup is skipped, and dotted-quad notation is always used.
- *  
+ *
  *   - If a hostname is to be printed:
  *     + The precision controls the maximum number of characters
  *       printed, as with %s.
@@ -163,7 +163,7 @@ wsp(XFILE * X, int count)
  *       will be forced to upper case before printing.  If both
  *       '#' and '+' are given, the '+' flag will be ignored.
  *     + The '0' and ' ' flags have no effect.
- *  
+ *
  *   - If a dotted quad is to be printed:
  *     + The precision has no effect; dotted quads are always
  *       7 to 12 characters in length, depending on the value

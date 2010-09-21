@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -12,7 +12,7 @@
  * switch) and print it in a readable form. It does not make any statistical
  * analysis of the data.
  *
- * Most of the code here is cloned from afsmon-output.c. It is made as a 
+ * Most of the code here is cloned from afsmon-output.c. It is made as a
  * separate file so that it can be independently given to customers.
  *
  *-------------------------------------------------------------------------*/
@@ -83,7 +83,7 @@ static char *xferOpNames[] = {
 };
 
 /*________________________________________________________________________
-				FS STATS ROUTINES 
+				FS STATS ROUTINES
  *_______________________________________________________________________*/
 
 /*------------------------------------------------------------------------

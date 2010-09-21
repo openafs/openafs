@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -58,7 +58,7 @@ InitDBalloc(void)
  */
 
 afs_int32
-AllocBlock(struct ubik_trans *ut, 
+AllocBlock(struct ubik_trans *ut,
 	   struct block *block, /* copy of data */
 	   dbadr *aP)		/* db addr of block */
 {
@@ -167,7 +167,7 @@ AllocStructure(struct ubik_trans *ut, char type, dbadr related, dbadr *saP, void
 		db_panic("nFree is zero");
 
 	    /* Completely empty blocks go to generic free list if there are
-	     * more blocks on this free list 
+	     * more blocks on this free list
 	     */
 	    if (b.h.next && (nFree == nEntries[(int) type]) && (count-- > 0)) {
 		if (set_header_word(ut, freePtrs[(int) type], b.h.next)
@@ -206,8 +206,8 @@ AllocStructure(struct ubik_trans *ut, char type, dbadr related, dbadr *saP, void
     *(afs_int32 *) s = 1;	/* make sure structure is not free */
     *saP = a + ((char *)bs - (char *)&b);
 
-    LogDebug(3, "allocated at %d, block at %d, offset %d\n", *saP, a,
-	     ((char *)bs - (char *)&b));
+    LogDebug(3, "allocated at %d, block at %d, offset %ld\n", *saP, a,
+	     (long int)((char *)bs - (char *)&b));
     /* caller must write back at least first word of structure */
     return 0;
 }

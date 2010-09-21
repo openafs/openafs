@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -9,7 +9,7 @@
 
 /*
 This utility is used to increase the ref count on inodes moved to
-lost+found by the non-AFS fsck. The program needs to be run once 
+lost+found by the non-AFS fsck. The program needs to be run once
 for every volume located on the partition that was fsck'ed.
 Procedure:
      cc -o fixit fixit.c

@@ -1,0 +1,62 @@
+=head1 NAME
+
+krb.excl - Lists exclusions for mapping kerberos principals to AFS identities
+
+=head1 DESCRIPTION
+
+F</usr/afs/etc/krb.excl> is an optional file that resides on an OpenAFS
+server and is used to list exceptions to the algorithm of mapping kerberos
+principals to AFS identities. It contains the name of one or more
+principals; each principal should be on a line by itself. If a principal
+appears in this file, that principal will never be recognized by an
+OpenAFS server as a local identity, even if the realm is specified as a
+local realm in L<krb.conf(5)>.
+
+The principal names specified in this file must include the realm, and
+should be in Kerberos 4 format. That is, specify C<user.inst@REALM>, not
+C<user/inst@REALM>, C<user.inst>, nor C<user/inst>.
+
+=head1 RATIONALE
+
+It is possible to use the L<krb.conf(5)> configuration file to specify
+that multiple Kerberos realms can be considered `local' realms by OpenAFS
+fileservers, and those realms can be used nearly interchangeably. A site
+may list C<FOO.EXAMPLE.COM> and C<BAR.EXAMPLE.COM> to allow users to
+access AFS by using Kerberos tickets from either C<FOO.EXAMPLE.COM> or
+C<BAR.EXAMPLE.COM>, and be treated as AFS users local to that cell.
+
+In many setups, one realm is really a `local' realm that is managed by the
+AFS administrators, and another `foreign' realm is specified in
+F<krb.conf> that is managed by someone else, but in the same organization.
+In such a case, the principal names for users are the same, so users
+should be able to use either realm to authenticate to AFS.  However, the
+principals for administrators are not the same between the two realms, and
+so the administrators in the `foreign' realm should not be considered AFS
+administrators. Specifying the administrator principals in the `foreign'
+realm prevents this, but still allows users to use either realm.
+
+=head1 EXAMPLES
+
+The realms C<FOO.EXAMPLE.COM> and C<AD.EXAMPLE.COM> are configured to both
+be local realms, but C<AD.EXAMPLE.COM> should not be used by AFS
+administrators. The AFS administrators are C<admin> and C<smith.admin>.
+F<krb.excl> contains:
+
+   admin@AD.EXAMPLE.COM
+   smith.admin@AD.EXAMPLE.COM
+
+Now if someone authenticates with tickets for C<smith/admin@AD.EXAMPLE.COM>,
+they will not be recognized as the C<smith.admin> AFS identity. However,
+C<smith@AD.EXAMPLE.COM> will be treated as the C<smith> AFS identity, and
+C<smith/admin@FOO.EXAMPLE.COM> will still be treated as C<smith.admin>.
+
+=head1 SEE ALSO
+
+L<krb.conf(5)>
+
+=head1 COPYRIGHT
+
+Copyright 2010 Sine Nomine Associates
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Andrew Deason for OpenAFS.

@@ -68,12 +68,12 @@ int pass4check();
 
 pass4()
 {
-    register ino_t inumber;
-    register struct zlncnt *zlnp;
+    ino_t inumber;
+    struct zlncnt *zlnp;
     struct inodesc idesc;
     int n;
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-    register struct dinode *dp;
+    struct dinode *dp;
 #endif /* ACLS */
 
 
@@ -125,15 +125,15 @@ pass4()
 	    break;
 
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	    /* 
-	     * UNreferenced continuation inode 
+	    /*
+	     * UNreferenced continuation inode
 	     */
 	case CSTATE:
 	    clri(&idesc, "UNREF", 2);
 	    break;
 
-	    /* 
-	     * referenced continuation inode 
+	    /*
+	     * referenced continuation inode
 	     */
 	case CRSTATE:
 	    if ((dp = ginode(inumber)) == NULL)
@@ -167,9 +167,9 @@ pass4()
 }
 
 pass4check(idesc)
-     register struct inodesc *idesc;
+     struct inodesc *idesc;
 {
-    register struct dups *dlp;
+    struct dups *dlp;
     int nfrags, res = KEEPON;
     daddr_t blkno = idesc->id_blkno;
 

@@ -1,5 +1,5 @@
 /*
- * Thanks to Jim Rees and University of Michigan CITI, for the initial 
+ * Thanks to Jim Rees and University of Michigan CITI, for the initial
  * OpenBSD porting work.
  */
 

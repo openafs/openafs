@@ -63,7 +63,7 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
 {
     vnode_t pvp, vp;
     extern struct osi_dev cacheDev;
-    register int code = 0;
+    int code = 0;
     
     *perror = 0;
     
@@ -116,12 +116,12 @@ getinode(fs, dev, inode, vpp, perror)
     *vpp = 0;
     *perror = 0;
     if (!fs) {
-	register struct ufsmount *ump;
+	struct ufsmount *ump;
 #ifdef VFSTOHFS
-	register struct hfsmount *hmp;
+	struct hfsmount *hmp;
 #endif
-	register struct vnode *vp;
-	register struct mount *mp;
+	struct vnode *vp;
+	struct mount *mp;
 	extern struct mount *rootfs;
 	if (mp = rootfs)
 	    do {
@@ -174,7 +174,7 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
 {
     struct vnode *pvp, *vp;
     extern struct osi_dev cacheDev;
-    register int code = 0;
+    int code = 0;
 
     *perror = 0;
 

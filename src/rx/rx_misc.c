@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -33,7 +33,7 @@
 #include <unistd.h>
 #endif
 #ifdef AFS_NT40_ENV
-#ifndef EDQUOT 
+#ifndef EDQUOT
 #define EDQUOT WSAEDQUOT
 #endif /* EDQUOT */
 #endif /* AFS_NT40_ENV */
@@ -46,7 +46,7 @@
  */
 
 /*
- * Convert from the local (host) to the standard 
+ * Convert from the local (host) to the standard
  * (network) system error code.
  */
 int
@@ -116,9 +116,9 @@ static const char memZero;
 char *
 osi_alloc(afs_int32 x)
 {
-    /* 
+    /*
      * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
-     * things so that NULL returned iff an error occurred 
+     * things so that NULL returned iff an error occurred
      */
     if (x == 0)
 	return (char *)&memZero;

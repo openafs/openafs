@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -69,7 +69,7 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
     ((((q2->a->b=q1)->a->b=q2->b)->a=q1->a, q1->a=q2->a), queue_Init(q2))
 
 /* This one removes part of queue (*q1) and attaches it to queue (*q2).
- * If (a,b) is (next,prev) then the subchain is prepended to (*q2), 
+ * If (a,b) is (next,prev) then the subchain is prepended to (*q2),
  * otherwise the subchain is appended to (*q2).
  * If (c,d) is (prev,next) then the subchain is the elements in (*q1) before (i),
  * otherwise the subchain is the elements in (*q1) after (i).

@@ -44,7 +44,7 @@ main(argc, argv)
      char **argv;
 {
     struct rx_securityClass *null_securityObject;
-    register int i, nHosts = 0;
+    int i, nHosts = 0;
     struct {
 	u_long ipaddr;
 	char *name;
@@ -52,9 +52,9 @@ main(argc, argv)
     int arg[50];
     struct rx_connection *conns[50];
     int nSuccesses = 0;
-    register int trials = 1;
-    register int verbose = 0;
-    register int abort = 0;
+    int trials = 1;
+    int verbose = 0;
+    int abort = 0;
     int msec;
     struct clock startTime, endTime;
     int result;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -122,7 +122,7 @@ static int rxi_FreeDataBufsToQueue(struct rx_packet *p,
 */
 
 /* Preconditions:
- *        all packet buffers (iov_base) are integral multiples of 
+ *        all packet buffers (iov_base) are integral multiples of
  *	  the word size.
  *        offset is an integral multiple of the word size.
  */
@@ -305,7 +305,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
     MUTEX_ENTER(&rx_freePktQ_lock);
 
 #ifdef KERNEL
-    for (; (num_pkts > 0) && (rxi_OverQuota2(class,num_pkts)); 
+    for (; (num_pkts > 0) && (rxi_OverQuota2(class,num_pkts));
 	 num_pkts--, overq++);
 
     if (overq) {
@@ -345,7 +345,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 #endif /* KERNEL */
 
     for (i=0, c=queue_First(&rx_freePacketQueue, rx_packet);
-	 i < num_pkts; 
+	 i < num_pkts;
 	 i++, c=queue_Next(c, rx_packet)) {
         RX_FPQ_MARK_USED(c);
     }
@@ -462,7 +462,7 @@ rxi_FreePackets(int num_pkts, struct rx_queue *q)
 #endif /* RX_ENABLE_TSFPQ */
 
 /* this one is kind of awful.
- * In rxkad, the packet has been all shortened, and everything, ready for 
+ * In rxkad, the packet has been all shortened, and everything, ready for
  * sending.  All of a sudden, we discover we need some of that space back.
  * This isn't terribly general, because it knows that the packets are only
  * rounded up to the EBS (userdata + security header).
@@ -651,7 +651,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
         RX_PACKET_IOV_INIT(p);
 	p->niovecs = 2;
 	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
-	
+
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
 #ifdef RXDEBUG_PACKET
@@ -664,7 +664,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     }
     rx_ts_info->_FPQ.delta += apackets;
 
-    if (flush_global && 
+    if (flush_global &&
         (num_keep_local < apackets)) {
         NETPRI;
 	MUTEX_ENTER(&rx_freePktQ_lock);
@@ -707,7 +707,7 @@ rxi_MorePacketsNoLock(int apackets)
 #ifdef RX_ENABLE_TSFPQ
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_GLOBAL_ALLOC(rx_ts_info,apackets);
-#endif /* RX_ENABLE_TSFPQ */ 
+#endif /* RX_ENABLE_TSFPQ */
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
@@ -800,9 +800,9 @@ rx_CheckPackets(void)
    In any event, we assume the former, and append the packets to the end
    of the free list.  */
 /* This explanation is bogus.  The free list doesn't remain in any kind of
-   useful order for afs_int32: the packets in use get pretty much randomly scattered 
+   useful order for afs_int32: the packets in use get pretty much randomly scattered
    across all the pages.  In order to permit unused {packets,bufs} to page out, they
-   must be stored so that packets which are adjacent in memory are adjacent in the 
+   must be stored so that packets which are adjacent in memory are adjacent in the
    free list.  An array springs rapidly to mind.
    */
 
@@ -857,7 +857,7 @@ rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 }
 #endif /* RX_ENABLE_TSFPQ */
 
-/* 
+/*
  * free continuation buffers off a packet into a queue
  *
  * [IN] p      -- packet from which continuation buffers will be freed
@@ -965,7 +965,7 @@ rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
 
 int rxi_nBadIovecs = 0;
 
-/* rxi_RestoreDataBufs 
+/* rxi_RestoreDataBufs
  *
  * Restore the correct sizes to the iovecs. Called when reusing a packet
  * for reading off the wire.
@@ -1105,7 +1105,7 @@ rxi_FreePacket(struct rx_packet *p)
 }
 #endif /* RX_ENABLE_TSFPQ */
 
-/* rxi_AllocPacket sets up p->length so it reflects the number of 
+/* rxi_AllocPacket sets up p->length so it reflects the number of
  * bytes in the packet at this point, **not including** the header.
  * The header is absolutely necessary, besides, this is the way the
  * length field is usually used */
@@ -1166,7 +1166,7 @@ rxi_AllocPacketNoLock(int class)
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
-     * order to truncate outbound packets.  In the near future, may need 
+     * order to truncate outbound packets.  In the near future, may need
      * to allocate bufs from a static pool here, and/or in AllocSendPacket
      */
     RX_PACKET_IOV_FULLINIT(p);
@@ -1224,7 +1224,7 @@ rxi_AllocPacketNoLock(int class)
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
-     * order to truncate outbound packets.  In the near future, may need 
+     * order to truncate outbound packets.  In the near future, may need
      * to allocate bufs from a static pool here, and/or in AllocSendPacket
      */
     RX_PACKET_IOV_FULLINIT(p);
@@ -1261,7 +1261,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
     dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
-     * order to truncate outbound packets.  In the near future, may need 
+     * order to truncate outbound packets.  In the near future, may need
      * to allocate bufs from a static pool here, and/or in AllocSendPacket
      */
     RX_PACKET_IOV_FULLINIT(p);
@@ -1382,7 +1382,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 }
 
 #ifndef KERNEL
-#ifdef AFS_NT40_ENV	 
+#ifdef AFS_NT40_ENV
 /* Windows does not use file descriptors. */
 #define CountFDs(amax) 0
 #else
@@ -1441,7 +1441,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     } else
 	tlen = rlen;
 
-    /* Extend the last iovec for padding, it's just to make sure that the 
+    /* Extend the last iovec for padding, it's just to make sure that the
      * read doesn't return more data than we expect, and is done to get around
      * our problems caused by the lack of a length field in the rx header.
      * Use the extra buffer that follows the localdata in each packet
@@ -1475,7 +1475,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 		 ntohs(from.sin_port), nbytes));
 	}
 	return 0;
-    } 
+    }
 #ifdef RXDEBUG
     else if ((rx_intentionallyDroppedOnReadPer100 > 0)
 		&& (random() % 100 < rx_intentionallyDroppedOnReadPer100)) {
@@ -1485,14 +1485,14 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	*port = from.sin_port;
 
 	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d",
-	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial, 
-	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, 
+	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial,
+	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags,
 	      p->length));
 #ifdef RX_TRIMDATABUFS
 	rxi_TrimDataBufs(p, 1);
 #endif
 	return 0;
-    } 
+    }
 #endif
     else {
 	/* Extract packet header. */
@@ -1506,7 +1506,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
                 rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
 	    /*
 	     * Try to look up this peer structure.  If it doesn't exist,
-	     * don't create a new one - 
+	     * don't create a new one -
 	     * we don't keep count of the bytes sent/received if a peer
 	     * structure doesn't already exist.
 	     *
@@ -1530,7 +1530,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 #ifdef RX_TRIMDATABUFS
 	/* Free any empty packet buffers at the end of this packet */
 	rxi_TrimDataBufs(p, 1);
-#endif 
+#endif
 	return 1;
     }
 }
@@ -1657,8 +1657,8 @@ cpytoc(mblk_t * mp, int off, int len, char *cp)
 }
 
 /* MTUXXX Supposed to skip <off> bytes and copy <len> bytes,
- * but it doesn't really.  
- * This sucks, anyway, do it like m_cpy.... below 
+ * but it doesn't really.
+ * This sucks, anyway, do it like m_cpy.... below
  */
 static int
 cpytoiovec(mblk_t * mp, int off, int len, struct iovec *iovs,
@@ -1795,7 +1795,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
     }
 
     rx_packetread(ap, 0, sizeof(struct rx_debugIn), (char *)&tin);
-    /* all done with packet, now set length to the truth, so we can 
+    /* all done with packet, now set length to the truth, so we can
      * reuse this packet */
     rx_computelen(ap, ap->length);
 
@@ -1866,7 +1866,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 #endif
 #endif
 		MUTEX_ENTER(&rx_connHashTable_lock);
-		/* We might be slightly out of step since we are not 
+		/* We might be slightly out of step since we are not
 		 * locking each call, but this is only debugging output.
 		 */
 		for (tc = rx_connHashTable[i]; tc; tc = tc->next) {
@@ -2228,7 +2228,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	}
     }
     MUTEX_EXIT(&conn->conn_data_lock);
-    /* This is so we can adjust retransmit time-outs better in the face of 
+    /* This is so we can adjust retransmit time-outs better in the face of
      * rapidly changing round-trip times.  RTO estimation is not a la Karn.
      */
     if (p->firstSerial == 0) {
@@ -2246,7 +2246,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 
     /* Get network byte order header */
-    rxi_EncodePacketHeader(p);	/* XXX in the event of rexmit, etc, don't need to 
+    rxi_EncodePacketHeader(p);	/* XXX in the event of rexmit, etc, don't need to
 				 * touch ALL the fields */
 
     /* Send the packet out on the same socket that related packets are being
@@ -2294,11 +2294,11 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    clock_Addmsec(&(p->retryTime),
 			  10 + (((afs_uint32) p->backoff) << 8));
 	    /* Some systems are nice and tell us right away that we cannot
-	     * reach this recipient by returning an error code. 
+	     * reach this recipient by returning an error code.
 	     * So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-	    if (call && 
+	    if (call &&
 #ifdef AFS_NT40_ENV
 		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
 #elif defined(AFS_LINUX20_ENV)
@@ -2445,7 +2445,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	/* Pre-increment, to guarantee no zero serial number; a zero
 	 * serial number means the packet was never sent. */
 	p->header.serial = ++serial;
-	/* This is so we can adjust retransmit time-outs better in the face of 
+	/* This is so we can adjust retransmit time-outs better in the face of
 	 * rapidly changing round-trip times.  RTO estimation is not a la Karn.
 	 */
 	if (p->firstSerial == 0) {
@@ -2463,7 +2463,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 #endif
 
 	/* Get network byte order header */
-	rxi_EncodePacketHeader(p);	/* XXX in the event of rexmit, etc, don't need to 
+	rxi_EncodePacketHeader(p);	/* XXX in the event of rexmit, etc, don't need to
 					 * touch ALL the fields */
     }
 
@@ -2505,11 +2505,11 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 			      10 + (((afs_uint32) p->backoff) << 8));
 	    }
 	    /* Some systems are nice and tell us right away that we cannot
-	     * reach this recipient by returning an error code. 
+	     * reach this recipient by returning an error code.
 	     * So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-	    if (call && 
+	    if (call &&
 #ifdef AFS_NT40_ENV
 		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
 #elif defined(AFS_LINUX20_ENV)
@@ -2799,7 +2799,7 @@ rxi_AdjustDgramPackets(int frags, int mtu)
 }
 
 #ifndef KERNEL
-/* 
+/*
  * This function can be used by the Windows Cache Manager
  * to dump the list of all rx packets so that we can determine
  * where the packet leakage is.
@@ -2827,10 +2827,10 @@ int rx_DumpPackets(FILE *outputFile, char *cookie)
 
     for (p = rx_mallocedP; p; p = p->allNextp) {
         RXDPRINTF(RXDPRINTOUT, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
-                cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec, 
+                cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec,
                 p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->backoff, (afs_uint32)p->length,
                 p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.serial,
-                (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus, 
+                (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus,
                 (afs_uint32)p->header.securityIndex, (afs_uint32)p->header.serviceId);
 #ifdef AFS_NT40_ENV
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);

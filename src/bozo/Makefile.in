@@ -93,13 +93,13 @@ bnode.o: bnode.c ${INCLS}
 bosoprocs.o: bosoprocs.c ${INCLS}
 
 bos.o: bos.c ${INCLS} AFS_component_version_number.o
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/bos.c
 
 bos: bos.o $(LIBS) libbos.a
 	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS}
 
 bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o ${TOP_INCDIR}/afs/bnode.h
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c ${srcdir}/bos_util.c
 
 bos_util: bos_util.o $(LIBS) 
 	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS)  ${XLIBS}

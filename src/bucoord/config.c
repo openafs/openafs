@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -29,7 +29,7 @@ struct bc_config *bc_globalConfig;
 static int
 TrimLine(char *abuffer, afs_int32 *aport)
 {
-    register int tc;
+    int tc;
     char garb[100];
 
     *aport = 0;
@@ -48,7 +48,7 @@ TrimLine(char *abuffer, afs_int32 *aport)
 FILE *
 bc_open(struct bc_config *aconfig, char *aname, char *aext, char *amode)
 {
-    register FILE *tf;
+    FILE *tf;
     char tpath[256];
 
     strcpy(tpath, aconfig->path);
@@ -63,7 +63,7 @@ bc_open(struct bc_config *aconfig, char *aname, char *aext, char *amode)
 int
 bc_InitConfig(char *apath)
 {
-    register struct bc_config *tb;
+    struct bc_config *tb;
 
     /* initialize global config structure */
     tb = (struct bc_config *)malloc(sizeof(struct bc_config));
@@ -88,7 +88,7 @@ bc_InitConfig(char *apath)
 static int
 HostAdd(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 {
-    register struct bc_hostEntry **tlast, *tentry;
+    struct bc_hostEntry **tlast, *tentry;
     struct hostent *th;
 
     /* check that the host address is real */
@@ -125,7 +125,7 @@ HostAdd(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 static int
 HostDelete(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 {
-    register struct bc_hostEntry **tlast, *tentry;
+    struct bc_hostEntry **tlast, *tentry;
 
     /* find guy to zap */
     tlast = alist;
@@ -145,7 +145,7 @@ HostDelete(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 int
 bc_AddTapeHost(struct bc_config *aconfig, char *aname, afs_int32 aport)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = HostAdd(&aconfig->tapeHosts, aname, aport);
 
@@ -155,7 +155,7 @@ bc_AddTapeHost(struct bc_config *aconfig, char *aname, afs_int32 aport)
 int
 bc_DeleteTapeHost(struct bc_config *aconfig, char *aname, afs_int32 aport)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = HostDelete(&aconfig->tapeHosts, aname, aport);
 

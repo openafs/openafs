@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -95,7 +95,7 @@ setupDbDump(void *param)
 
 
 afs_int32
-SBUDB_DumpDB(struct rx_call *call, int firstcall, afs_int32 maxLength, 
+SBUDB_DumpDB(struct rx_call *call, int firstcall, afs_int32 maxLength,
 	     charListT *charListPtr, afs_int32 *done)
 {
     afs_int32 code;
@@ -128,7 +128,7 @@ DumpDB(struct rx_call *call,
     ObtainWriteLock(&dumpSyncPtr->ds_lock);
 
     /* If asking for zero bytes, then this is a call to reset the timeToLive
-     * timer. Reset it if there is a dump in progress. 
+     * timer. Reset it if there is a dump in progress.
      */
     if (maxLength == 0) {
 	charListPtr->charListT_val = NULL;
@@ -320,9 +320,9 @@ RestoreDbHeader(struct rx_call *call, struct DbHeader *header)
 }
 
 /* dumpWatcher
- *	monitors the state of a database dump. If the dump calls do not 
+ *	monitors the state of a database dump. If the dump calls do not
  *	reset the time to live value, the dump times out. In that case,
- *	we kill the database traversal thread and clean up all the other 
+ *	we kill the database traversal thread and clean up all the other
  *	state. Most importantly, the database is unlocked so that other
  *	transactions can proceed.
  */

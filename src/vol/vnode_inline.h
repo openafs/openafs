@@ -1,7 +1,7 @@
 /*
  * Copyright 2007-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -59,7 +59,7 @@ VnCancelReservation_r(Vnode * vnp)
     if (--Vn_refcount(vnp) == 0) {
 	AddToVnLRU(Vn_class(vnp), vnp);
 
-	/* If caching is turned off, 
+	/* If caching is turned off,
 	 * disassociate vnode cache entry from volume object */
 	if (!TrustVnodeCacheEntry) {
 	    DeleteFromVVnList(vnp);
@@ -195,7 +195,7 @@ VnIsExclusiveState(VnState state)
     case VN_STATE_EXCLUSIVE:
     case VN_STATE_STORE:
 	return 1;
-    default: 
+    default:
 	return 0;
     }
 }
@@ -236,7 +236,7 @@ VnIsErrorState(VnState state)
 static_inline int
 VnIsValidState(VnState state)
 {
-    if ((state >= 0) && 
+    if ((state >= 0) &&
 	(state < VN_STATE_COUNT)) {
 	return 1;
     }

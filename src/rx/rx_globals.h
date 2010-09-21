@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -107,7 +107,7 @@ void  rx_SetUdpBufSize(int x);
 /*
  * Variables to control RX overload management. When the number of calls
  * waiting for a thread exceed the threshold, new calls are aborted
- * with the busy error. 
+ * with the busy error.
  */
 EXT int rx_BusyThreshold GLOBALSINIT(-1);	/* default is disabled */
 EXT int rx_BusyError GLOBALSINIT(-1);
@@ -121,7 +121,7 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 #define	RX_REAP_TIME	60	/* Check for tossable connections every 60 seconds */
 #endif
 
-#define RX_FAST_ACK_RATE 1	/* as of 3.4, ask for an ack every 
+#define RX_FAST_ACK_RATE 1	/* as of 3.4, ask for an ack every
 				 * other packet. */
 
 EXT int rx_minPeerTimeout GLOBALSINIT(350); /* in milliseconds */
@@ -174,7 +174,7 @@ typedef struct rx_ts_info_t {
         struct rx_queue queue;
         int len;                /* local queue length */
         int delta;              /* number of new packets alloc'd locally since last sync w/ global queue */
-        
+
         /* FPQ stats */
         int checkin_ops;
         int checkin_xfer;
@@ -262,7 +262,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
  * also set minimum values of 15 and 3.  Given the algorithms, the number of buffers allocated
  * by each call to AllocPacketBufs() will increase indefinitely without a cap on the transfer
  * glob size.  A cap of 64 is selected because that will produce an allocation of greater than
- * three times that amount which is greater than half of ncalls * maxReceiveWindow. 
+ * three times that amount which is greater than half of ncalls * maxReceiveWindow.
  * Must be called under rx_packets_mutex.
  */
 #define RX_TS_FPQ_COMPUTE_LIMITS \
@@ -275,14 +275,14 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         rx_TSFPQLocalMax = newmax; \
         rx_TSFPQGlobSize = newglob; \
     } while(0)
-/* record the number of packets allocated by this thread 
+/* record the number of packets allocated by this thread
  * and stored in the thread local queue */
 #define RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info_p,num_alloc) \
     do { \
         (rx_ts_info_p)->_FPQ.lalloc_ops++; \
         (rx_ts_info_p)->_FPQ.lalloc_xfer += num_alloc; \
     } while (0)
-/* record the number of packets allocated by this thread 
+/* record the number of packets allocated by this thread
  * and stored in the global queue */
 #define RX_TS_FPQ_GLOBAL_ALLOC(rx_ts_info_p,num_alloc) \
     do { \
@@ -400,8 +400,8 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         (rx_ts_info_p)->_FPQ.checkin_xfer++; \
     } while(0)
 /* check multiple packets into the thread-specific free packet queue */
-/* num_transfer must equal length of (q); it is not a means of checking 
- * in part of (q).  passing num_transfer just saves us instructions 
+/* num_transfer must equal length of (q); it is not a means of checking
+ * in part of (q).  passing num_transfer just saves us instructions
  * since caller already knows length of (q) for other reasons */
 #define RX_TS_FPQ_QCHECKIN(rx_ts_info_p,num_transfer,q) \
     do { \
@@ -565,7 +565,7 @@ EXT int rxdebug_active;
 #define dpf(args) FSLog args
 #else
 #define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
-#endif 
+#endif
 #endif
 #define rx_Log_event rxevent_debugFile
 
@@ -606,7 +606,7 @@ EXT int rxi_callAbortDelay GLOBALSINIT(3000);
 #if defined(AFS_PTHREAD_ENV)
 EXT int rxi_fcfs_thread_num GLOBALSINIT(0);
 EXT pthread_key_t rx_thread_id_key;
-/* keep track of pthread numbers - protected by rx_stats_mutex, 
+/* keep track of pthread numbers - protected by rx_stats_mutex,
  * except in rx_Init() before mutex exists! */
 EXT int rxi_pthread_hinum GLOBALSINIT(0);
 #else

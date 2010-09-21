@@ -7,12 +7,12 @@
  * This file contains configuration information for the DES library
  * which is machine specific; currently, this file contains
  * configuration information for the vax, the "ibm032" (RT), and
- * the "PC8086" (IBM PC). 
+ * the "PC8086" (IBM PC).
  *
  * Note:  cross-compiled targets must appear BEFORE their corresponding
  * cross-compiler host.  Otherwise, both will be defined when running
  * the native compiler on the programs that construct cross-compiled
- * sources. 
+ * sources.
  */
 
 #include <afs/param.h>

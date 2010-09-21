@@ -7,7 +7,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -68,8 +68,8 @@
  */
 
 /* Arenas for configuration info and transaction info
- * --- actual layout of the pool structure is private to 
- * alloc.c.  
+ * --- actual layout of the pool structure is private to
+ * alloc.c.
  */
 
 typedef struct pool pool;
@@ -165,7 +165,7 @@ array_header *table_elts(table *);
  * to keep CGI scripts and the like from inheriting access to things
  * they shouldn't be able to touch, and one for actually cleaning up,
  * when the actual server process wants to get rid of the thing,
- * whatever it is.  
+ * whatever it is.
  *
  * kill_cleanup disarms a cleanup, presumably because the resource in
  * question has been closed, freed, or whatever, and it's scarce
@@ -201,7 +201,7 @@ extern void block_alarms();
 extern void unblock_alarms();
 
 /* Common cases which want utility support..
- * the note_cleanups_for_foo routines are for 
+ * the note_cleanups_for_foo routines are for
  */
 
 FILE *pfopen(struct pool *, const char *name, const char *fmode);

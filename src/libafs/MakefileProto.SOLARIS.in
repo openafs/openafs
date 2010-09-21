@@ -110,7 +110,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		export ARCH_DEFS ; \
 		export BITS ; \
 		cd $$t  ; \
-		$(MAKE) $@_libafs ; \
+		$(MAKE) $@_libafs || exit $$? ; \
 		cd ../ ;\
 	done
 

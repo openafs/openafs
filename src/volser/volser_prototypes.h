@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@ extern int UV_CreateVolume(afs_uint32 aserver, afs_int32 apart, char *aname,
 extern int UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart,
 			   afs_uint32 avolid);
 
-extern int UV_SetSecurity(register struct rx_securityClass *as,
+extern int UV_SetSecurity(struct rx_securityClass *as,
                           afs_int32 aindex);
 
 extern int UV_ListOneVolume(afs_uint32 aserver, afs_int32 apart,

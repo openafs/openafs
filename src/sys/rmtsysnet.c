@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -62,7 +62,7 @@ struct ClearToken {
 };
 
 char *
-RSkipLine(register char *astr)
+RSkipLine(char *astr)
 {
     while (*astr != '\n')
 	astr++;
@@ -148,7 +148,7 @@ RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 void
 RCleanAcl(struct Acl *aa)
 {
-    register struct AclEntry *te, *ne;
+    struct AclEntry *te, *ne;
 
     for (te = aa->pluslist; te; te = ne) {
 	ne = te->next;

@@ -42,8 +42,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 {
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
-    register afs_int32 code;
-    register struct afs_conn *tc;
+    afs_int32 code;
+    struct afs_conn *tc;
     struct VenusFid newFid;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
@@ -362,12 +362,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
 
     } else {
-#if defined(AFS_DISCON_ENV)
 	/* Generate a fake FID for disconnected mode. */
 	newFid.Cell = adp->f.fid.Cell;
 	newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afs_GenFakeFid(&newFid, VREG, 1);
-#endif
     }				/* if (!AFS_IS_DISCON_RW) */
 
     /* otherwise, we should see if we can make the change to the dir locally */
@@ -452,10 +450,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
 	    if (AFS_IS_DISCON_RW) {
-#if defined(AFS_DISCON_ENV)
 		afs_DisconAddDirty(tvc, VDisconCreate, 0);
 		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
-#endif
 	    } else {
 		afs_ProcessFS(tvc, &OutFidStatus, &treq);
 	    }
@@ -514,10 +510,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
  * and dcache entry write-locked.
  */
 int
-afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
-	      register AFSFetchStatus * astat, register int aincr)
+afs_LocalHero(struct vcache *avc, struct dcache *adc,
+	      AFSFetchStatus * astat, int aincr)
 {
-    register afs_int32 ok;
+    afs_int32 ok;
     afs_hyper_t avers;
 
     AFS_STATCNT(afs_LocalHero);

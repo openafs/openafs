@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -20,7 +20,7 @@
 #include <string.h>
 #include "fsprobe.h"		/*Interface for fsprobe module */
 #include <afs/afsutil.h>
-    
+
 /*------------------------------------------------------------------------
  * FS_Handler
  *
@@ -145,7 +145,7 @@ main(int argc, char **argv)
 {				/*Main routine */
 
     static char rn[] = "fsprobe_test";	/*Routine name */
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
     struct sockaddr_in FSSktArray[3];	/*socket array */
     struct hostent *he;		/*Host entry */
     struct timeval tv;		/*Time structure */

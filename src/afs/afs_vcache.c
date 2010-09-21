@@ -58,9 +58,7 @@ char *makesname();
 #endif /* AFS_SGI64_ENV */
 
 /* Exported variables */
-#ifdef AFS_DISCON_ENV
 afs_rwlock_t afs_xvcdirty;	/*Lock: discon vcache dirty list mgmt */
-#endif
 afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
 afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
@@ -79,19 +77,17 @@ afs_int32 afs_bulkStatsLost;
 int afs_norefpanic = 0;
 
 
-/* Disk backed vcache definitions 
+/* Disk backed vcache definitions
  * Both protected by xvcache */
-#ifdef AFS_DISCON_ENV
 static int afs_nextVcacheSlot = 0;
 static struct afs_slotlist *afs_freeSlotList = NULL;
-#endif
 
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc);
 
 /*!
  * Generate an index into the hash table for a given Fid.
- * \param fid 
+ * \param fid
  * \return The hash value.
  */
 static int
@@ -262,7 +258,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 /*!
  *  The core of the inactive vnode op for all but IRIX.
  *
- * \param avc 
+ * \param avc
  * \param acred
  */
 void
@@ -301,7 +297,7 @@ static struct afs_cbr *afs_cbrHeads[16];
 struct afs_cbr *
 afs_AllocCBR(void)
 {
-    register struct afs_cbr *tsp;
+    struct afs_cbr *tsp;
     int i;
 
     if (!afs_cbrSpace) {
@@ -345,7 +341,7 @@ afs_AllocCBR(void)
  * \rerurn 0
  */
 int
-afs_FreeCBR(register struct afs_cbr *asp)
+afs_FreeCBR(struct afs_cbr *asp)
 {
     *(asp->pprev) = asp->next;
     if (asp->next)
@@ -578,13 +574,13 @@ afs_RemoveVCB(struct VenusFid *afid)
     ReleaseWriteLock(&afs_xvcb);
 }
 
-void 
+void
 afs_FlushReclaimedVcaches(void)
 {
 #if !defined(AFS_LINUX22_ENV)
     struct vcache *tvc;
     int code, fv_slept;
-    struct vcache *tmpReclaimedVCList = NULL;	
+    struct vcache *tmpReclaimedVCList = NULL;
 
     ObtainWriteLock(&afs_xvreclaim, 76);
     while (ReclaimedVCList) {
@@ -615,7 +611,7 @@ afs_FlushReclaimedVcaches(void)
 	   afs_osi_Wakeup(&tvc->f.states);
 	}
     }
-    if (tmpReclaimedVCList) 
+    if (tmpReclaimedVCList)
 	ReclaimedVCList = tmpReclaimedVCList;
 
     ReleaseWriteLock(&afs_xvreclaim);
@@ -670,6 +666,8 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	    refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
 	} else if (QNext(uq) != tq) {
 	    refpanic("VLRU inconsistent");
+	} else if (tvc->f.states & CVInit) {
+	    continue;
 	}
 
 	fv_slept = 0;
@@ -697,7 +695,7 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 /* Alloc new vnode. */
 
 static struct vcache *
-afs_AllocVCache(void) 
+afs_AllocVCache(void)
 {
     struct vcache *tvc;
 
@@ -713,13 +711,12 @@ afs_AllocVCache(void)
 
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
 
-#ifdef AFS_DISCON_ENV
     /* If we create a new inode, we either give it a new slot number,
      * or if one's available, use a slot number from the slot free list
      */
     if (afs_freeSlotList != NULL) {
        struct afs_slotlist *tmp;
-   
+
        tvc->diskSlot = afs_freeSlotList->slot;
        tmp = afs_freeSlotList;
        afs_freeSlotList = tmp->next;
@@ -727,7 +724,6 @@ afs_AllocVCache(void)
     }  else {
        tvc->diskSlot = afs_nextVcacheSlot++;
     }
-#endif
 
     return tvc;
 }
@@ -740,17 +736,13 @@ static void
 afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
 		      struct server *serverp) {
 
-#if defined(AFS_DISCON_ENV)
     afs_uint32 slot;
     slot = avc->diskSlot;
-#endif
 
     osi_PrePopulateVCache(avc);
 
-#if defined(AFS_DISCON_ENV)
     avc->diskSlot = slot;
     QZero(&avc->metadirty);
-#endif
 
     AFS_RWLOCK_INIT(&avc->lock, "vcache lock");
 
@@ -845,7 +837,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     tvc->hnext = afs_vhashT[i];
     afs_vhashT[i] = tvc;
     QAdd(&afs_vhashTV[j], &tvc->vhashq);
-    
+
     if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
         refpanic("NewVCache VLRU inconsistent");
     }
@@ -905,12 +897,12 @@ afs_NewBulkVCache(struct VenusFid *afid, struct server *serverp, int seq)
  * \param doflocks : Do we handle flocks?
  */
 void
-afs_FlushActiveVcaches(register afs_int32 doflocks)
+afs_FlushActiveVcaches(afs_int32 doflocks)
 {
-    register struct vcache *tvc;
-    register int i;
-    register struct afs_conn *tc;
-    register afs_int32 code;
+    struct vcache *tvc;
+    int i;
+    struct afs_conn *tc;
+    afs_int32 code;
     afs_ucred_t *cred = NULL;
     struct vrequest treq, ureq;
     struct AFSVolSync tsync;
@@ -1066,9 +1058,9 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
  */
 
 /*!
- * 
+ *
  *   Make sure a cache entry is up-to-date status-wise.
- *   
+ *
  *   NOTE: everywhere that calls this can potentially be sped up
  *       by checking CStatd first, and avoiding doing the InitReq
  *       if this is up-to-date.
@@ -1084,7 +1076,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 int
 afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
 {
-    register struct vcache *tvc;
+    struct vcache *tvc;
 
     AFS_STATCNT(afs_VerifyVCache);
 
@@ -1132,8 +1124,8 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
  *
  */
 static void
-afs_SimpleVStat(register struct vcache *avc,
-		register struct AFSFetchStatus *astat, struct vrequest *areq)
+afs_SimpleVStat(struct vcache *avc,
+		struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
     AFS_STATCNT(afs_SimpleVStat);
@@ -1225,8 +1217,8 @@ afs_SimpleVStat(register struct vcache *avc,
  */
 
 int
-afs_WriteVCache(register struct vcache *avc,
-		register struct AFSStoreStatus *astatus,
+afs_WriteVCache(struct vcache *avc,
+		struct AFSStoreStatus *astatus,
 		struct vrequest *areq)
 {
     afs_int32 code;
@@ -1276,7 +1268,6 @@ afs_WriteVCache(register struct vcache *avc,
     return code;
 
 }				/*afs_WriteVCache */
-#if defined(AFS_DISCON_ENV)
 
 /*!
  * Store status info only locally, set the proper disconnection flags
@@ -1289,8 +1280,8 @@ afs_WriteVCache(register struct vcache *avc,
  * \note Must be called with a shared lock on the vnode
  */
 int
-afs_WriteVCacheDiscon(register struct vcache *avc,
-		      register struct AFSStoreStatus *astatus,
+afs_WriteVCacheDiscon(struct vcache *avc,
+		      struct AFSStoreStatus *astatus,
 		      struct vattr *attrs)
 {
     afs_int32 code = 0;
@@ -1356,13 +1347,11 @@ afs_WriteVCacheDiscon(register struct vcache *avc,
     return code;
 }
 
-#endif
-
 /*!
  * Copy astat block into vcache info
  *
  * \note This code may get dataversion and length out of sync if the file has
- * been modified.  This is less than ideal.  I haven't thought about it sufficiently 
+ * been modified.  This is less than ideal.  I haven't thought about it sufficiently
  * to be certain that it is adequate.
  *
  * \note Environment: Must be called under a write lock
@@ -1372,8 +1361,8 @@ afs_WriteVCacheDiscon(register struct vcache *avc,
  * \param areq Ptr to associated request.
  */
 void
-afs_ProcessFS(register struct vcache *avc,
-	      register struct AFSFetchStatus *astat, struct vrequest *areq)
+afs_ProcessFS(struct vcache *avc,
+	      struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
     AFS_STATCNT(afs_ProcessFS);
@@ -1458,18 +1447,18 @@ afs_ProcessFS(register struct vcache *avc,
 /*!
  * Get fid from server.
  *
- * \param afid 
+ * \param afid
  * \param areq Request to be passed on.
  * \param name Name of ?? to lookup.
  * \param OutStatus Fetch status.
- * \param CallBackp 
+ * \param CallBackp
  * \param serverp
  * \param tsyncp
  *
  * \return Success status of operation.
  */
 int
-afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
+afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 		 char *name, struct VenusFid *nfid,
 		 struct AFSFetchStatus *OutStatusp,
 		 struct AFSCallBack *CallBackp, struct server **serverp,
@@ -1477,11 +1466,11 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 {
     afs_int32 code;
     afs_uint32 start;
-    register struct afs_conn *tc;
+    struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
     if (!name)
-	name = "";		/* XXX */    
+	name = "";		/* XXX */
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	if (tc) {
@@ -1534,19 +1523,19 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
  *	of a parent dir cache entry, given a file (to check its access
  *	control list).  It also allows renames to be handled easily by
  *	locking directories in a constant order.
- * 
+ *
  * \note NB.  NewVCache -> FlushVCache presently (4/10/95) drops the xvcache lock.
  *
  * \note Might have a vcache structure already, which must
- *  already be held by the caller 
+ *  already be held by the caller
  */
 struct vcache *
-afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
+afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 	      afs_int32 * cached, struct vcache *avc)
 {
 
     afs_int32 code, newvcache = 0;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct volume *tvp;
     afs_int32 retry;
 
@@ -1628,12 +1617,12 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, current_proc());
 	/* this is messy. we can call fsync which will try to reobtain this */
-	if (VTOAFS(vp) == tvc) 
+	if (VTOAFS(vp) == tvc)
 	  ReleaseWriteLock(&tvc->lock);
 	if (UBCINFOEXISTS(vp)) {
 	  vinvalbuf(vp, V_SAVE, &afs_osi_cred, current_proc(), PINOD, 0);
 	}
-	if (VTOAFS(vp) == tvc) 
+	if (VTOAFS(vp) == tvc)
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
@@ -1775,9 +1764,9 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
  * Lookup a vcache by fid. Look inside the cache first, if not
  * there, lookup the file on the server, and then get it's fresh
  * cache entry.
- * 
+ *
  * \param afid
- * \param areq 
+ * \param areq
  * \param cached Is element cached? If NULL, don't answer.
  * \param adp
  * \param aname
@@ -1790,7 +1779,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 {
     afs_int32 code, now, newvcache = 0;
     struct VenusFid nfid;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct volume *tvp;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
@@ -1840,13 +1829,13 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     nfid = *afid;
     now = osi_Time();
     origCBs = afs_allCBs;	/* if anything changes, we don't have a cb */
-    
+
     if (AFS_IS_DISCONNECTED) {
 	/* printf("Network is down in afs_LookupVcache\n"); */
         code = ENETDOWN;
-    } else 
+    } else
         code =
-	    afs_RemoteLookup(&adp->f.fid, areq, aname, &nfid, &OutStatus, 
+	    afs_RemoteLookup(&adp->f.fid, areq, aname, &nfid, &OutStatus,
 	                     &CallBack, &serverp, &tsync);
 
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
@@ -1964,7 +1953,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_int32 getNewFid = 0;
     afs_uint32 start;
     struct VenusFid nfid;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     struct server *serverp = 0;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
@@ -2261,7 +2250,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 {
     int code;
     afs_uint32 start = 0;
-    register struct afs_conn *tc;
+    struct afs_conn *tc;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
@@ -2324,13 +2313,13 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
  *	Nothing interesting.
  */
 void
-afs_StuffVcache(register struct VenusFid *afid,
+afs_StuffVcache(struct VenusFid *afid,
 		struct AFSFetchStatus *OutStatus,
-		struct AFSCallBack *CallBack, register struct afs_conn *tc,
+		struct AFSCallBack *CallBack, struct afs_conn *tc,
 		struct vrequest *areq)
 {
-    register afs_int32 code, i, newvcache = 0;
-    register struct vcache *tvc;
+    afs_int32 code, i, newvcache = 0;
+    struct vcache *tvc;
     struct AFSVolSync tsync;
     struct volume *tvp;
     struct axscache *ac;
@@ -2458,7 +2447,7 @@ afs_StuffVcache(register struct VenusFid *afid,
  * \note Environment: Nothing interesting.
  */
 void
-afs_PutVCache(register struct vcache *avc)
+afs_PutVCache(struct vcache *avc)
 {
     AFS_STATCNT(afs_PutVCache);
 #ifdef AFS_DARWIN80_ENV
@@ -2478,9 +2467,9 @@ afs_PutVCache(register struct vcache *avc)
 /*!
  * Reset a vcache entry, so local contents are ignored, and the
  * server will be reconsulted next time the vcache is used
- * 
+ *
  * \param avc Pointer to the cache entry to reset
- * \param acred 
+ * \param acred
  *
  * \note avc must be write locked on entry
  */
@@ -2507,7 +2496,7 @@ afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred)
  * \param vcache Enter sleep state.
  * \param flag Determines what locks to use.
  *
- * \return 
+ * \return
  */
 static void
 findvc_sleep(struct vcache *avc, int flag)
@@ -2542,6 +2531,45 @@ findvc_sleep(struct vcache *avc, int flag)
 	}
     }
 }
+
+/*!
+ * Add a reference on an existing vcache entry.
+ *
+ * \param tvc Pointer to the vcache.
+ *
+ * \note Environment: Must be called with at least one reference from
+ * elsewhere on the vcache, even if that reference will be dropped.
+ * The global lock is required.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+
+int
+afs_RefVCache(struct vcache *tvc)
+{
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
+
+    /* AFS_STATCNT(afs_RefVCache); */
+
+#ifdef  AFS_DARWIN80_ENV
+    tvp = AFSTOV(tvc);
+    if (vnode_get(tvp))
+	return -1;
+    if (vnode_ref(tvp)) {
+	AFS_GUNLOCK();
+	/* AFSTOV(tvc) may be NULL */
+	vnode_put(tvp);
+	AFS_GLOCK();
+	return -1;
+    }
+#else
+	osi_vnhold(tvc, 0);
+#endif
+    return 0;
+}				/*afs_RefVCache */
+
 /*!
  * Find a vcache entry given a fid.
  *
@@ -2560,7 +2588,7 @@ struct vcache *
 afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 {
 
-    register struct vcache *tvc;
+    struct vcache *tvc;
     afs_int32 i;
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
@@ -2688,7 +2716,7 @@ int afs_duplicate_nfs_fids = 0;
 afs_int32
 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 {
-    register struct vcache *tvc;
+    struct vcache *tvc;
     afs_int32 i;
     afs_int32 count = 0;
     struct vcache *found_tvc = NULL;
@@ -2829,7 +2857,7 @@ void
 afs_vcacheInit(int astatSize)
 {
 #if !defined(AFS_LINUX22_ENV)
-    register struct vcache *tvp;
+    struct vcache *tvp;
 #endif
     int i;
     if (!afs_maxvcount) {
@@ -2896,8 +2924,8 @@ shutdown_vcache(void)
      */
 
     {
-	register struct afs_q *tq, *uq = NULL;
-	register struct vcache *tvc;
+	struct afs_q *tq, *uq = NULL;
+	struct vcache *tvc;
 	for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);
@@ -2990,9 +3018,9 @@ afs_DisconGiveUpCallbacks(void)
     int i;
     struct vcache *tvc;
     int nq=0;
-            
+
     ObtainWriteLock(&afs_xvcache, 1002); /* XXX - should be a unique number */
-    
+
     /* Somehow, walk the set of vcaches, with each one coming out as tvc */
     for (i = 0; i < VCSIZE; i++) {
         for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
@@ -3012,7 +3040,7 @@ afs_DisconGiveUpCallbacks(void)
  *
  * Clear the Statd flag from all vcaches
  *
- * This function removes the Statd flag from all vcaches. It's used by 
+ * This function removes the Statd flag from all vcaches. It's used by
  * disconnected mode to tidy up during reconnection
  *
  */
@@ -3021,7 +3049,7 @@ afs_ClearAllStatdFlag(void)
 {
     int i;
     struct vcache *tvc;
-   
+
     ObtainWriteLock(&afs_xvcache, 715);
 
     for (i = 0; i < VCSIZE; i++) {

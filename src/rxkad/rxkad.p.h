@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -22,8 +22,8 @@
 #define MAXKTCREALMLEN	      64	/* should be 256 */
 #define KTC_TIME_UNCERTAINTY (15*60)	/* max skew bet. machines' clocks */
 
-#define MAXRANDOMNAMELEN 16	/* length of random generated 
-				 * usernames used by afslog for high 
+#define MAXRANDOMNAMELEN 16	/* length of random generated
+				 * usernames used by afslog for high
 				 * security must be < MAXKTCNAMELEN && < MAXSMBNAMELEN */
 #define MAXSMBNAMELEN    256	/* max length of an SMB name */
 
@@ -74,7 +74,7 @@ typedef char rxkad_type;
 #define rxkad_client 1		/* bits definitions */
 #define rxkad_server 2
 
-typedef char rxkad_level;
+typedef signed char rxkad_level;
 #define rxkad_clear 0		/* send packets in the clear */
 #define rxkad_auth 1		/* send encrypted sequence numbers */
 #define rxkad_crypt 2		/* encrypt packet data */

@@ -109,7 +109,7 @@ install: libbubasics.a bumon.h butc.h bubasics.h tcdata.h butm.h butx.h
 	${INSTALL_DATA} libbubasics.a ${DESTDIR}${libdir}/afs/libbubasics.a
 	${INSTALL_DATA} bumon.h ${DESTDIR}${includedir}/afs/bumon.h
 	${INSTALL_DATA} butc.h ${DESTDIR}${includedir}/afs/butc.h
-	${INSTALL_DATA} bubasics.h ${DESTDIR}${includedir}/afs/bubasics.h
+	${INSTALL_DATA} ${srcdir}/bubasics.h ${DESTDIR}${includedir}/afs/bubasics.h
 	${INSTALL_DATA} tcdata.h ${DESTDIR}${includedir}/afs/tcdata.h
 	${INSTALL_DATA} butm.h ${DESTDIR}${includedir}/afs/butm.h
 	${INSTALL_DATA} butx.h ${DESTDIR}${includedir}/afs/butx.h
@@ -120,7 +120,7 @@ dest: libbubasics.a bumon.h butc.h bubasics.h tcdata.h butm.h butx.h
 	${INSTALL_DATA} libbubasics.a ${DEST}/lib/afs/libbubasics.a
 	${INSTALL_DATA} bumon.h ${DEST}/include/afs/bumon.h
 	${INSTALL_DATA} butc.h ${DEST}/include/afs/butc.h
-	${INSTALL_DATA} bubasics.h ${DEST}/include/afs/bubasics.h
+	${INSTALL_DATA} ${srcdir}/bubasics.h ${DEST}/include/afs/bubasics.h
 	${INSTALL_DATA} tcdata.h ${DEST}/include/afs/tcdata.h
 	${INSTALL_DATA} butm.h ${DEST}/include/afs/butm.h
 	${INSTALL_DATA} butx.h ${DEST}/include/afs/butx.h

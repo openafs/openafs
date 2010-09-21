@@ -120,11 +120,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CAS64O CAS64
 
 /*
- * II. Memory barriers. 
+ * II. Memory barriers.
  *  WMB(): All preceding write operations must commit before any later writes.
  *  RMB(): All preceding read operations must commit before any later reads.
  *  MB():  All preceding memory accesses must commit before any later accesses.
- * 
+ *
  *  If the compiler does not observe these barriers (but any sane compiler
  *  will!), then VOLATILE should be defined as 'volatile'.
  */

@@ -20,14 +20,8 @@ LINKEDPAGES = klog pagsh tokens
 dest:
 	chmod +x install-man
 	mkdir -p $(DEST)/man/man1 $(DEST)/man/man5 $(DEST)/man/man8
-	set -e; cd man1 && for M in *.1 ; do \
-	    ../install-man $$M $(DEST)/man/man1/$$M ; \
-	done
-	set -e; cd man5 && for M in *.5 ; do \
-	    ../install-man $$M $(DEST)/man/man5/$$M ; \
-	done
-	set -e; cd man8 && for M in *.8 ; do \
-	    ../install-man $$M $(DEST)/man/man8/$$M ; \
+	set -e; for M in man1/*.1 man5/*.5 man8/*.8 ; do \
+	    ./install-man $$M $(DEST)/man/$$M ; \
 	done
 	set -e; for M in ${LINKEDPAGES}; do \
 	    test -h $(DEST)/man/man1/$$M.krb.1 \
@@ -42,14 +36,8 @@ install: $(MAN1) $(MAN8)
 	chmod +x install-man
 	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man5 \
 	    $(DESTDIR)$(mandir)/man8
-	set -e; cd man1 && for M in *.1 ; do \
-	    ../install-man $$M $(DESTDIR)$(mandir)/man1/$$M ; \
-	done
-	set -e; cd man5 && for M in *.5 ; do \
-	    ../install-man $$M $(DESTDIR)$(mandir)/man5/$$M ; \
-	done
-	set -e; cd man8 && for M in *.8 ; do \
-	    ../install-man $$M $(DESTDIR)$(mandir)/man8/$$M ; \
+	set -e; for M in man1/*.1 man5/*.5 man8/*.8 ; do \
+	    ./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
 	done
 	set -e; for M in ${LINKEDPAGES}; do \
 	    test -h $(DESTDIR)$(mandir)/man1/$$M.krb.1 \

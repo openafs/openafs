@@ -1,17 +1,6 @@
 #ifndef _DISCON_H
 #define _DISCON_H
 
-#ifndef AFS_DISCON_ENV
-#define AFS_IS_DISCONNECTED 0
-#define AFS_IS_DISCON_RW 0
-#define AFS_IN_SYNC 0
-#define AFS_DISCON_LOCK()
-#define AFS_DISCON_UNLOCK()
-
-#define afs_DisconAddDirty(x, y, z)
-
-#else
-
 #if !defined(inline) && !defined(__GNUC__)
 #define inline
 #endif
@@ -28,13 +17,13 @@ extern afs_int32    afs_ConflictPolicy;
 
 extern afs_uint32 afs_DisconVnode; /* XXX: not protected. */
 
-extern int afs_WriteVCacheDiscon(register struct vcache *avc,
-					register struct AFSStoreStatus *astatus,
+extern int afs_WriteVCacheDiscon(struct vcache *avc,
+					struct AFSStoreStatus *astatus,
 					struct vattr *attrs);
 extern int afs_ResyncDisconFiles(struct vrequest *areq,
 					afs_ucred_t *acred);
 extern void afs_RemoveAllConns(void);
-extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, 
+extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype,
 			   int lock);
 extern void afs_GenShadowFid(struct VenusFid *afid);
 extern void afs_GenDisconStatus(struct vcache *adp,
@@ -61,27 +50,26 @@ extern void afs_DisconDiscardAll(afs_ucred_t *);
 #define AFS_DISCON_UNLOCK() ReleaseReadLock(&afs_discon_lock)
 
 /* Call with avc lock held */
-static inline void afs_DisconAddDirty(struct vcache *avc, int operation, int lock) {
+static_inline void afs_DisconAddDirty(struct vcache *avc, int operation, int lock) {
     if (!avc->f.ddirty_flags) {
-	if (lock) 
+	if (lock)
 	    ObtainWriteLock(&afs_xvcache, 702);
 	ObtainWriteLock(&afs_disconDirtyLock, 703);
 	QAdd(&afs_disconDirty, &avc->dirtyq);
-	osi_vnhold(avc, 0);
+	osi_Assert((afs_RefVCache(avc) == 0));
 	ReleaseWriteLock(&afs_disconDirtyLock);
 	if (lock)
 	    ReleaseWriteLock(&afs_xvcache);
     }
     avc->f.ddirty_flags |= operation;
-} 
+}
 
 /* Call with avc lock held */
-static inline void afs_DisconRemoveDirty(struct vcache *avc) {
+static_inline void afs_DisconRemoveDirty(struct vcache *avc) {
     ObtainWriteLock(&afs_disconDirtyLock, 704);
     QRemove(&avc->dirtyq);
     ReleaseWriteLock(&afs_disconDirtyLock);
     avc->f.ddirty_flags = 0;
     afs_PutVCache(avc);
 }
-#endif /* AFS_DISCON_ENV */
 #endif /* _DISCON_H */

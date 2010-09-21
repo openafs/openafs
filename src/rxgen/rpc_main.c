@@ -6,31 +6,31 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
- * 
+ *
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
 
 /*
- * rpc_main.c, Top level of the RPC protocol compiler. 
- * Copyright (C) 1987, Sun Microsystems, Inc. 
+ * rpc_main.c, Top level of the RPC protocol compiler.
+ * Copyright (C) 1987, Sun Microsystems, Inc.
  */
 
 #include <afsconfig.h>
@@ -91,6 +91,7 @@ char zflag = 0;			/* If set, abort server stub if rpc call returns non-zero */
 char xflag = 0;			/* if set, add stats code to stubs */
 char yflag = 0;			/* if set, only emit function name arrays to xdr file */
 int debug = 0;
+static int pclose_fin = 0;
 static char *cmdname;
 #ifdef AFS_NT40_ENV
 static char *CPP = NULL;
@@ -153,11 +154,11 @@ main(int argc, char *argv[])
     if (!CPP)
 	CPP = "cl /EP /C /nologo";
 #endif /* AFS_NT40_ENV */
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -223,11 +224,17 @@ main(int argc, char *argv[])
 	    reinitialize();
 	}
     }
+    if (fin && pclose_fin) {
+	/* the cpp command we called returned a non-zero exit status */
+	if (pclose(fin)) {
+	    crash();
+	}
+    }
     exit(0);
 }
 
 /*
- * add extension to filename 
+ * add extension to filename
  */
 static char *
 extendfile(char *file, char *ext)
@@ -255,7 +262,7 @@ extendfile(char *file, char *ext)
 }
 
 /*
- * Open output file with given extension 
+ * Open output file with given extension
  */
 static void
 open_output(char *infile, char *outfile)
@@ -278,7 +285,7 @@ open_output(char *infile, char *outfile)
 }
 
 /*
- * Open input file with given define for C-preprocessor 
+ * Open input file with given define for C-preprocessor
  */
 static void
 open_input(char *infile, char *define)
@@ -313,6 +320,7 @@ open_input(char *infile, char *define)
 	fin = popen(cpp_cmdline, "r");
 	if (fin == NULL)
 	    perror("popen");
+	pclose_fin = 1;
 
     } else {
 	if (infile == NULL) {
@@ -508,7 +516,6 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
 	f_print(fout, "#include \"rx/rx_globals.h\"\n");
     }
     f_print(fout, "#else	/* KERNEL */\n");
-    f_print(fout, "#include <afsconfig.h>\n");
     f_print(fout, "#include <afs/param.h>\n");
     f_print(fout, "#include <afs/stds.h>\n");
     f_print(fout, "#include <sys/types.h>\n");
@@ -609,7 +616,7 @@ l_output(char *infile, char *define, int extend, char *outfile)
 }
 
 /*
- * Perform registrations for service output 
+ * Perform registrations for service output
  */
 static void
 do_registers(int argc, char *argv[])
@@ -774,7 +781,7 @@ uppercase(char *str)
 }
 
 /*
- * Parse command line arguments 
+ * Parse command line arguments
  */
 static int
 parseargs(int argc, char *argv[], struct commandline *cmd)

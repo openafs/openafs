@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,12 +26,12 @@
  *                      is a member of (since the entries field is used to
  *                      list it's members). This new field is supergroups and
  *                      has two entries. If more are required, a continuation
- *                      record is formed. 
+ *                      record is formed.
  *                      There are two additional fields required, nextsg is
  *                      an address of the next continuation record for this
- *                      group, and countsg is the count for the number of 
+ *                      group, and countsg is the count for the number of
  *                      groups this group is a member of.
- *                   
+ *
  *
  *
  *      09/18/95 jjm    Add mdw's changes to afs-3.3a Changes:
@@ -153,7 +153,6 @@ struct afsconf_dir *prdir;
 extern afs_int32 depthsg;
 #endif
 
-int pr_realmNameLen;
 char *pr_realmName;
 
 int debuglevel = 0;
@@ -204,9 +203,9 @@ pr_rxstat_userok(struct rx_call *call)
 int
 main(int argc, char **argv)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_uint32 myHost;
-    register struct hostent *th;
+    struct hostent *th;
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;
@@ -226,8 +225,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -274,8 +273,8 @@ main(int argc, char **argv)
 	alen = strlen(arg);
 	if (strcmp(argv[a], "-d") == 0) {
 	    if ((a + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -d\n");
+		return -1;
 	    }
 	    debuglevel = atoi(argv[++a]);
 	    LogLevel = debuglevel;
@@ -348,7 +347,7 @@ main(int argc, char **argv)
 			RX_MAX_PACKET_DATA_SIZE);
 		PT_EXIT(1);
 	    }
-	} 
+	}
 	else if (*arg == '-') {
 	    /* hack in help flag support */
 
@@ -454,7 +453,6 @@ main(int argc, char **argv)
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
-    pr_realmNameLen = strlen(pr_realmName);
 
     {
 	afs_int32 kvno;		/* see if there is a KeyFile here */
@@ -487,14 +485,14 @@ main(int argc, char **argv)
 
     if (rxBind) {
 	afs_int32 ccode;
-	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
 	    AFSDIR_SERVER_NETINFO_FILEPATH) {
 	    char reason[1024];
 	    ccode = parseNetFiles(SHostAddrs, NULL, NULL,
 					   ADDRSPERSITE, reason,
 					   AFSDIR_SERVER_NETINFO_FILEPATH,
 					   AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-	} else 
+	} else
 	{
 	    ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
 	}
@@ -555,6 +553,14 @@ main(int argc, char **argv)
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(pr_rxstat_userok);
+
+    LogCommandLine(argc, argv, "ptserver",
+#if defined(SUPERGROUPS)
+		   "1.1",
+#else
+		   "1.0",
+#endif
+		   "Starting AFS", FSLog);
 
     rx_StartServer(1);
     osi_audit(PTS_FinishEvent, -1, AUD_END);

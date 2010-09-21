@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -64,7 +64,7 @@ struct volser_trans {
 
 };
 
-/* This is how often the garbage collection thread wakes up and 
+/* This is how often the garbage collection thread wakes up and
  * checks for transactions that have timed out: BKGLoop()
  */
 #define GCWAKEUP            30
@@ -100,7 +100,7 @@ extern struct volser_trans *QI_GlobalWriteTrans;
 
 #define VSALVAGE	101	/* Volume needs salvage */
 #define VNOVNODE	102	/* Bad vnode number quoted */
-#define VNOVOL		103	/* Volume not attached, doesn't exist, 
+#define VNOVOL		103	/* Volume not attached, doesn't exist,
 				 * not created or not online */
 #define VVOLEXISTS	104	/* Volume already exists */
 #define VNOSERVICE	105	/* Volume is not in service (i.e. it's

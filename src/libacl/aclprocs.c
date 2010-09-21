@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -66,7 +66,7 @@ CmpMinus(const void *arg1, const void *arg2)
 {
     const struct acl_accessEntry *a = (struct acl_accessEntry *) arg1;
     const struct acl_accessEntry *b = (struct acl_accessEntry *) arg2;
-		
+
     if (a->id > b->id)
 	return (-1);
     if (a->id == b->id)
@@ -137,7 +137,7 @@ acl_NewExternalACL(int nEntries, char **r)
     struct freeListEntry *e;
 
     t = 20 + (nEntries) * (PR_MAXNAMELEN + 20);
-    /* Conservative estimate: enough space in each entry for longest 
+    /* Conservative estimate: enough space in each entry for longest
      * name plus decimal 2**32 (for largest rights mask) plus some formatting */
 
     if (GetFromList(&freeList, &e, t)) {
@@ -171,16 +171,16 @@ acl_FreeExternalACL(char **r)
 int
 acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessList *acl, char **elist)
 {
-    /* Converts the access list defined by acl into the external access list 
-     * in elist.  Non-translatable id's are converted to their ASCII string 
-     * representations.  Returns 0 on success, -1 if number of entries 
-     * exceeds ACL_MAXENTRIES, or a failure code from the protection server 
+    /* Converts the access list defined by acl into the external access list
+     * in elist.  Non-translatable id's are converted to their ASCII string
+     * representations.  Returns 0 on success, -1 if number of entries
+     * exceeds ACL_MAXENTRIES, or a failure code from the protection server
      * if the problem occured there. */
 
-    register int i;
-    register int j;
-    register int code;
-    register char *nextc;
+    int i;
+    int j;
+    int code;
+    char *nextc;
     idlist lids;
     namelist lnames;
 
@@ -238,13 +238,13 @@ acl_Externalize(struct acl_accessList *acl, char **elist)
 int
 acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struct acl_accessList **acl)
 {
-    /* Converts the external access list elist into the access list acl.  
-     * Returns 0 on success, -1 if ANY name is not translatable, or if 
+    /* Converts the external access list elist into the access list acl.
+     * Returns 0 on success, -1 if ANY name is not translatable, or if
      * the number of entries exceeds al_maxExtEntries. */
-    register int i;
-    register int j;
-    register char *nextc;
-    register afs_int32 code;
+    int i;
+    int j;
+    char *nextc;
+    afs_int32 code;
     int p, n;
     namelist lnames;
     idlist lids;
@@ -456,12 +456,12 @@ AddToList(struct freeListEntry **pflist, struct freeListEntry *elem)
 }
 
 static int
-GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem, 
+GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem,
 	    afs_int32 minsize)
 {
-    /* Looks for an element whose body is at least minsize bytes in the 
-     * freelist flist.  If found, unlinks it, puts its address in elem, 
-     * and returns 0, else returns -1.  A trivial first-fit algorithm is 
+    /* Looks for an element whose body is at least minsize bytes in the
+     * freelist flist.  If found, unlinks it, puts its address in elem,
+     * and returns 0, else returns -1.  A trivial first-fit algorithm is
      * used. */
 
     struct freeListEntry *y, *z;

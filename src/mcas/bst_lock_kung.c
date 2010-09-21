@@ -123,7 +123,7 @@ static node_t *find(node_t *n, setkey_t k, qnode_t *qn, int *pdir)
         }
     }
     while ( (s != NULL) && (s->k != k) );
- 
+
     LOCK(f, qn);
     if ( IS_BLUE(f) )
     {
@@ -179,7 +179,7 @@ static node_t *rotate(ptst_t *ptst, node_t *a, int dir1,
     UNLOCK(a, pqn[0]);
     UNLOCK(b, pqn[1]);
     UNLOCK(c, &c_qn);
- 
+
     *pc = bp;
     return cp;
 }
@@ -289,7 +289,7 @@ setval_t set_update(set_t *s, setkey_t k, setval_t v, int overwrite)
 
  retry:
     f = find(&s->root, k, &f_qn, &dir);
- 
+
     if ( (w = FOLLOW(f, dir)) != NULL )
     {
         /* Protected by parent lock. */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -101,7 +101,7 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
     int index, newIndex;
     char *stp;			/* secret token ptr */
     struct ClearToken ct;
-    register char *tp;
+    char *tp;
     afs_int32 temp, gotit = 0;
     int maxLen;			/* biggest ticket we can copy */
     int tktLen;			/* server ticket length */
@@ -340,12 +340,12 @@ NFSCopyToken(afs_int32 ahost, afs_int32 auid)
 }
 
 static int
-cmdproc(register struct cmd_syndesc *as, void *arock)
+cmdproc(struct cmd_syndesc *as, void *arock)
 {
-    register struct hostent *the;
+    struct hostent *the;
     char *tp, *sysname = 0;
     afs_int32 uid, addr;
-    register afs_int32 code;
+    afs_int32 code;
 
     the = (struct hostent *)
 	hostutil_GetHostByName(tp = as->parms[0].items->data);
@@ -428,13 +428,13 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
-    register afs_int32 code;
+    struct cmd_syndesc *ts;
+    afs_int32 code;
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */

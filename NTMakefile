@@ -19,6 +19,7 @@
 # These three macros define the source, object, and destination folders
 SRC=$(AFSROOT)\src
 DOC=$(AFSROOT)\doc
+TESTS=$(AFSROOT)\tests
 
 #If AFS_OBJDIR is not defined then use obj as relative obj folder
 !IFNDEF AFS_OBJDIR
@@ -282,7 +283,7 @@ ptserver: ubik
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
+	$(CD) ..\..
 
 libacl: ptserver
      @echo ***** $@
@@ -430,7 +431,21 @@ tvolser: tviced
 	$(NTMAKE)
 	$(CD) ..\..
 
-tbutc:  tvolser
+dviced: tvolser
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+dvolser: dviced
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tbutc:  dvolser
      @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
@@ -619,7 +634,14 @@ netidmgr_plugin: xstat
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-extra: netidmgr_plugin
+rpctestlib: fsint libafsrpc
+     @echo ***** $@
+	$(DOCD) $(TESTS)\$@
+	$(CD) $(TESTS)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+extra: netidmgr_plugin rpctestlib
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      @echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@

@@ -39,7 +39,7 @@ afs_open(bhv_desc_t * bhv, struct vcache **avcp, afs_int32 aflags,
 afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
     struct vcache *tvc;
     int writing;
@@ -69,14 +69,12 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 
     ObtainReadLock(&tvc->lock);
 
-#ifdef AFS_DISCON_ENV
     if (AFS_IS_DISCONNECTED && (afs_DCacheMissingChunks(tvc) != 0)) {
        ReleaseReadLock(&tvc->lock);
        /* printf("Network is down in afs_open: missing chunks\n"); */
        code = ENETDOWN;
        goto done;
     }
-#endif
 
     ReleaseReadLock(&tvc->lock);
 
@@ -168,7 +166,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
     ReleaseReadLock(&tvc->lock);
     if ((afs_preCache != 0) && (writing == 0) && (vType(tvc) != VDIR) && 
 	(!afs_BBusy())) {
-	register struct dcache *tdc;
+	struct dcache *tdc;
 	afs_size_t offset, len;
 
 	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);

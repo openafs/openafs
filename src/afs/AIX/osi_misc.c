@@ -95,7 +95,7 @@ gop_rdwr(rw, vp, base, len, offset, segflg, unit, aresid)
 {
     struct uio uio_struct;
     struct iovec uiovector;
-    register int code;
+    int code;
 
     AFS_STATCNT(gop_rdwr);
     /* Set up the uio structure */
@@ -137,8 +137,8 @@ gop_rdwr(rw, vp, base, len, offset, segflg, unit, aresid)
 aix_gnode_rele(vp)
      struct vnode *vp;
 {
-    register struct vnode *tvp;
-    register struct vfs *vfsp = vp->v_vfsp;
+    struct vnode *tvp;
+    struct vfs *vfsp = vp->v_vfsp;
 
     /* Unlink the vnode from the list the vfs has hanging of it */
     tvp = vfsp->vfs_vnodes;
@@ -167,7 +167,7 @@ aix_gnode_rele(vp)
 
 afs_suser(void *credp)
 {
-    register rc;
+    int rc;
     char err;
 
     rc = suser(&err);

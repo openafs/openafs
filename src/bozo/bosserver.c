@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -173,7 +173,7 @@ static int
 MakeDir(const char *adir)
 {
     struct stat tstat;
-    register afs_int32 code;
+    afs_int32 code;
     if (stat(adir, &tstat) < 0 || (tstat.st_mode & S_IFMT) != S_IFDIR) {
 	int reqPerm;
 	unlink(adir);
@@ -233,9 +233,9 @@ CreateDirs(const char *coredir)
 
 /* strip the \\n from the end of the line, if it is present */
 static int
-StripLine(register char *abuffer)
+StripLine(char *abuffer)
 {
-    register char *tp;
+    char *tp;
 
     tp = abuffer + strlen(abuffer);	/* starts off pointing at the null  */
     if (tp == abuffer)
@@ -248,12 +248,12 @@ StripLine(register char *abuffer)
 
 /* write one bnode's worth of entry into the file */
 static int
-bzwrite(register struct bnode *abnode, void *arock)
+bzwrite(struct bnode *abnode, void *arock)
 {
-    register struct bztemp *at = (struct bztemp *)arock;
-    register int i;
+    struct bztemp *at = (struct bztemp *)arock;
+    int i;
     char tbuffer[BOZO_BSSIZE];
-    register afs_int32 code;
+    afs_int32 code;
 
     if (abnode->notifier)
 	fprintf(at->file, "bnode %s %s %d %s\n", abnode->type->name,
@@ -278,15 +278,16 @@ bzwrite(register struct bnode *abnode, void *arock)
 int
 ReadBozoFile(char *aname)
 {
-    register FILE *tfile;
+    FILE *tfile;
     char tbuffer[BOZO_BSSIZE];
-    register char *tp;
+    char *tp;
     char *instp, *typep, *notifier, *notp;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 ktmask, ktday, kthour, ktmin, ktsec;
     afs_int32 i, goal;
     struct bnode *tb;
     char *parms[MAXPARMS];
+    char *thisparms[MAXPARMS];
     int rmode;
 
     /* rename BozoInit to BosServer for the user */
@@ -402,6 +403,8 @@ ReadBozoFile(char *aname)
 	} else if (code == 3)
 	    notifier = NULL;
 
+	memset(thisparms, 0, sizeof(thisparms));
+
 	for (i = 0; i < MAXPARMS; i++) {
 	    /* now read the parms, until we see an "end" line */
 	    tp = fgets(tbuffer, sizeof(tbuffer), tfile);
@@ -419,12 +422,13 @@ ReadBozoFile(char *aname)
 	    if (!parms[i])	/* make sure there's space */
 		parms[i] = (char *)malloc(BOZO_BSSIZE);
 	    strcpy(parms[i], tbuffer + 5);	/* remember the parameter for later */
+	    thisparms[i] = parms[i];
 	}
 
 	/* ok, we have the type and parms, now create the object */
 	code =
-	    bnode_Create(typep, instp, &tb, parms[0], parms[1], parms[2],
-			 parms[3], parms[4], notifier,
+	    bnode_Create(typep, instp, &tb, thisparms[0], thisparms[1],
+			 thisparms[2], thisparms[3], thisparms[4], notifier,
 			 goal ? BSTAT_NORMAL : BSTAT_SHUTDOWN, 0);
 	if (code)
 	    goto fail;
@@ -458,9 +462,9 @@ ReadBozoFile(char *aname)
 int
 WriteBozoFile(char *aname)
 {
-    register FILE *tfile;
+    FILE *tfile;
     char tbuffer[AFSDIR_PATH_MAX];
-    register afs_int32 code;
+    afs_int32 code;
     struct bztemp btemp;
 
     if (!aname)
@@ -499,9 +503,9 @@ WriteBozoFile(char *aname)
 }
 
 static int
-bdrestart(register struct bnode *abnode, void *arock)
+bdrestart(struct bnode *abnode, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     if (abnode->fileGoal != BSTAT_NORMAL || abnode->goal != BSTAT_NORMAL)
 	return 0;		/* don't restart stopped bnodes */
@@ -522,7 +526,7 @@ bdrestart(register struct bnode *abnode, void *arock)
 static void *
 BozoDaemon(void *unused)
 {
-    register afs_int32 now;
+    afs_int32 now;
 
     /* now initialize the values */
     bozo_newKTs = 1;
@@ -601,7 +605,7 @@ tweak_config(void)
  * fundamental errors occur.
  *
  * This routine requires
- * 
+ *
  * #include <sys/types.h>
  * #include <sys/stat.h>
  * #include <fcntl.h>
@@ -623,7 +627,7 @@ tweak_config(void)
 static void
 background(void)
 {
-    /* 
+    /*
      * A process is a process group leader if its process ID
      * (getpid()) and its process group ID (getpgrp()) are the same.
      */
@@ -722,7 +726,7 @@ int
 main(int argc, char **argv, char **envp)
 {
     struct rx_service *tservice;
-    register afs_int32 code;
+    afs_int32 code;
     struct afsconf_dir *tdir;
     int noAuth = 0;
     int i;
@@ -740,14 +744,14 @@ main(int argc, char **argv, char **envp)
     struct sigaction nsa;
 
     /* for some reason, this permits user-mode RX to run a lot faster.
-     * we do it here in the bosserver, so we don't have to do it 
+     * we do it here in the bosserver, so we don't have to do it
      * individually in each server.
      */
     tweak_config();
 
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -836,14 +840,14 @@ main(int argc, char **argv, char **envp)
 	}
 	else if (!strcmp(argv[code], "-rxmaxmtu")) {
 	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
-		exit(1); 
+		fprintf(stderr, "missing argument for -rxmaxmtu\n");
+		exit(1);
 	    }
 	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-			rxMaxMTU, RX_MIN_PACKET_SIZE, 
+			rxMaxMTU, RX_MIN_PACKET_SIZE,
 			RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
 	    }
@@ -922,7 +926,7 @@ main(int argc, char **argv, char **envp)
     fflush(stdout);
 #endif
 
-    /* go into the background and remove our controlling tty, close open 
+    /* go into the background and remove our controlling tty, close open
        file desriptors
      */
 
@@ -933,7 +937,7 @@ main(int argc, char **argv, char **envp)
 
     if ((!DoSyslog)
 #ifndef AFS_NT40_ENV
-	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) && 
+	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) &&
 	!(S_ISFIFO(sb.st_mode)))
 #endif
 	) {
@@ -1049,18 +1053,18 @@ main(int argc, char **argv, char **envp)
 
     if (rxBind) {
 	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
+        } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
-        if (ccode == 1) 
+        if (ccode == 1)
             host = SHostAddrs[0];
     }
 

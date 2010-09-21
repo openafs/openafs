@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>    
+#include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -50,7 +50,7 @@ static afs_int32 SetClientCreds(struct clientcred *creds, afs_uint32 * groups);
 int afs_get_pag_from_groups(afs_uint32 g0, afs_uint32 g1);
 void afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p);
 
-/* Picks up the name of the remote afs client host where the rmtsys 
+/* Picks up the name of the remote afs client host where the rmtsys
  * daemon resides. Since the clients may be diskless and/or readonly
  * ones we felt it's better to rely on an shell environment
  * (AFSSERVER) for the host name first. If that is not set, the
@@ -60,7 +60,7 @@ void afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p)
 afs_int32
 GetAfsServerAddr(char *syscall)
 {
-    register struct hostent *th;
+    struct hostent *th;
 
     if (hostAddrLookup) {
 	/* Take advantage of caching and assume that the remote host
@@ -162,7 +162,7 @@ setpag(void)
     clientcred creds;
     afs_int32 errorcode, errornumber, newpag, ngroups, j;
     afs_uint32 groups[NGROUPS_MAX];
-    
+
     if (!(conn = rx_connection(&errorcode, "setpag"))) {
 	/* Remote call can't be performed for some reason.
 	 * Try the local 'setpag' system call ... */
@@ -242,7 +242,7 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     inparam_conversion(cmd, InData.rmtbulk_val, 0);
 
     OutData.rmtbulk_len = MAXBUFFERLEN * sizeof(*OutData.rmtbulk_val);
-    OutData.rmtbulk_val = malloc(OutData.rmtbulk_len); 
+    OutData.rmtbulk_val = malloc(OutData.rmtbulk_len);
     if (!OutData.rmtbulk_val) {
 	free(inbuffer);
 	return -1;

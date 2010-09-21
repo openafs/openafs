@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -16,7 +16,7 @@
 #include <stdlib.h>		/* for malloc() */
 
 #include <afs/cmd.h>
-    
+
 #if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 /* Here be hacks. */
 #ifdef AFS_LINUX24_ENV
@@ -148,7 +148,7 @@ struct ncp_sb_info {
  * kseg_to_phys()
  * is_kseg_va()
  * is_seg1_va()
- * 
+ *
  * when _KERNEL is defined, and expressions otherwise.  Since need
  * to define _KERNEL, we redefine these kernel functions as macros
  * for the expressions that we would have gotten if _KERNEL had not
@@ -828,11 +828,11 @@ symsrch(s)
 
 #ifndef AFS_KDUMP_LIB
 static int
-cmdproc(register struct cmd_syndesc *as, void *arock)
+cmdproc(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
 
-#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV) 
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (as->parms[0].items) {	/* -kobj */
 	obj = as->parms[0].items->data;
     }
@@ -943,8 +943,8 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
-    register struct cmd_syndesc *ts;
-    register afs_int32 code;
+    struct cmd_syndesc *ts;
+    afs_int32 code;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1021,7 +1021,7 @@ main(int argc, char **argv)
 int
 Knlist(struct afs_nlist *sp, int cnt, int size)
 {
-    register int code;
+    int code;
 
     if (UserLevel)
 	code = nlist(obj, sp);
@@ -2347,8 +2347,8 @@ kread(int kmem, off_t loc, void *buf, KDUMP_SIZE_T len)
 	perror("lseek");
 	exit(1);
     }
-    if (loc == 0) 
-	printf("WARNING: Read failed: loc=0\n"); 
+    if (loc == 0)
+	printf("WARNING: Read failed: loc=0\n");
     else
 	if ((i = read(kmem, buf, len)) != len) {
 	    printf("WARNING: Read failed: ");
@@ -2473,7 +2473,7 @@ opencore(char *core)
 
 
 void
-print_exporter(int kmem, struct afs_exporter *exporter, 
+print_exporter(int kmem, struct afs_exporter *exporter,
 	       struct afs_exporter *ptr, int pnt)
 {
     if (pnt) {
@@ -2488,7 +2488,7 @@ print_exporter(int kmem, struct afs_exporter *exporter,
 
 
 void
-print_nfsclient(int kmem, struct nfsclientpag *ep, 
+print_nfsclient(int kmem, struct nfsclientpag *ep,
 		struct nfsclientpag *ptr, int pnt)
 {
     char sysname[100];
@@ -2524,7 +2524,7 @@ pmutex(char *sp, kmutex_t *mp)
 #endif
 
 void
-print_unixuser(int kmem, struct unixuser *uep, 
+print_unixuser(int kmem, struct unixuser *uep,
 	       struct unixuser *ptr, int pnt)
 {
     Sum_userstp += uep->stLen;
@@ -2576,7 +2576,7 @@ print_cell(int kmem, struct cell *clep, struct cell *ptr, int pnt)
 
 
 void
-print_server(int kmem, struct server *sep, struct server *ptr, int conns, 
+print_server(int kmem, struct server *sep, struct server *ptr, int conns,
 	     int pnt)
 {
     struct srvAddr sa, *sap = &sa, *sap1;
@@ -2643,7 +2643,7 @@ print_server(int kmem, struct server *sep, struct server *ptr, int conns,
 
 
 void
-print_conns(int kmem, struct srvAddr *srv, struct afs_conn *conns, int Con, 
+print_conns(int kmem, struct srvAddr *srv, struct afs_conn *conns, int Con,
 	    int pnt)
 {
     struct afs_conn *cep, ce, *centry = &ce;
@@ -3156,7 +3156,7 @@ print_callout(int kmem)
     struct callo Co, *Coe = &Co, *Cop;
     struct tos To, *Toe = &To, *tos;
     struct trb Trb, *Trbe = &Trb, *trb;
-    register int i = 0;
+    int i = 0;
 
 
     printf("\n\nPrinting callout table info...\n\n");

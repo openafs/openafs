@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -38,10 +38,10 @@ SetPag(	IN	clientcred *cred,
 		afs_int32 *errornumber) = 1;
 
 Pioctl(	IN	clientcred *cred,
-		string path<MAXPATHLEN>, 
-		afs_int32 cmd, 
-		afs_int32 follow, 
-		rmtbulk *InData, 
+		string path<MAXPATHLEN>,
+		afs_int32 cmd,
+		afs_int32 follow,
+		rmtbulk *InData,
 	INOUT	rmtbulk *OutData,
 	OUT	afs_int32 *errornumber) = 2;
 

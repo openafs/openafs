@@ -2,7 +2,7 @@
  * This file replaces some of the routines in the Kerberos utilities.
  * It is based on the Kerberos library modules:
  * 	send_to_kdc.c
- * 
+ *
  * Copyright 1987, 1988, 1992 by the Massachusetts Institute of Technology.
  *
  * For copying and distribution information, please see the file
@@ -46,13 +46,13 @@ char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, i
 	else
 	    strcpy(krbrlm, cellconfig->name);
 	for (p=krbrlm; *p; p++) {
-	    if (islower(*p)) 
+	    if (islower(*p))
 		*p = toupper(*p);
 	}
     } else {
 	if ((retval = krb5_get_host_realm(context,
 					 cellconfig->hostName[0], &hrealms)))
-	    return 0; 
+	    return 0;
 	if(!hrealms[0]) return 0;
 	strcpy(krbrlm, hrealms[0]);
 

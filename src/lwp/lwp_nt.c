@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,8 +94,8 @@ struct QUEUE {
 /* Iterator macro */
 #define for_all_elts(var, q, body)\
 	{\
-	    register PROCESS var, _NEXT_;\
-	    register int _I_;\
+	    PROCESS var, _NEXT_;\
+	    int _I_;\
 	    for (_I_=q.count, var = q.head; _I_>0; _I_--, var=_NEXT_) {\
 		_NEXT_ = var -> next;\
 		body\
@@ -134,13 +134,13 @@ int lwp_MinStackSize = 0;
  *	pid - return this process
  *	value:
  *	LWP_SUCCESS (else aborts)
- *	
+ *
  */
 
 int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 {
     PROCESS pcb;
-    register int i;
+    int i;
     char* value;
 
     Debug(0, ("Entered LWP_InitializeProcessSupport"))
@@ -153,7 +153,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 	Abort_LWP("Insufficient Storage to Initialize LWP PCB");
     (void) memset((void*)pcb, 0, sizeof(*pcb));
     pcb->fiber = ConvertThreadToFiber(pcb);
-    if (pcb == NULL) 
+    if (pcb == NULL)
 	Abort_LWP("Cannot convert main thread to LWP fiber");
 
     lwp_init = (struct lwp_ctl *) malloc(sizeof(struct lwp_ctl));
@@ -174,18 +174,18 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 
 
     Initialize_PCB(pcb, priority, 0, NULL, NULL,
-		"Main Process [created by LWP]");   
+		"Main Process [created by LWP]");
 
     lwp_cpptr = pcb;
     Debug(10, ("Init: Insert 0x%p into runnable at priority %d\n", pcb, priority))
     insert(pcb, &runnable[priority]);
 
     if ( ( value = getenv("AFS_LWP_STACK_SIZE")) == NULL )
-	lwp_MinStackSize = AFS_LWP_MINSTACKSIZE;	
+	lwp_MinStackSize = AFS_LWP_MINSTACKSIZE;
     else
 	lwp_MinStackSize = (AFS_LWP_MINSTACKSIZE>atoi(value)?
 				AFS_LWP_MINSTACKSIZE : atoi(value));
-   
+
     *pid = pcb;
 
     return LWP_SUCCESS;
@@ -195,7 +195,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
  *
  * Arguments:
  *	funP - start function
- *	stacksize - size of 
+ *	stacksize - size of
  *	priority - LWP priority
  *	argP - initial parameter for start function
  *	name - name of LWP
@@ -211,7 +211,7 @@ int LWP_CreateProcess(int (*funP)(), int stacksize, int priority, void *argP,
 		      char *name, PROCESS *pid)
 {
     PROCESS pcb;
-    
+
     purge_dead_pcbs();
 
     pcb = (PROCESS)malloc(sizeof(*pcb));
@@ -257,7 +257,7 @@ int LWP_DestroyProcess(PROCESS pid)
     if (!lwp_init)
 	return LWP_EINIT;
 
-    
+
     if (lwp_cpptr != pid) {
 	Dispose_of_Dead_PCB(pid);
     } else {
@@ -324,7 +324,7 @@ int LWP_DispatchProcess(void)		/* explicit voluntary preemption */
 static void Dump_Processes(void)
 {
     if (lwp_init) {
-	register int i;
+	int i;
 	for (i=0; i<MAX_PRIORITIES; i++)
 	    for_all_elts(x, runnable[i], {
 		printf("[Priority %d]\n", i);
@@ -392,7 +392,7 @@ int LWP_INTERNALSIGNAL(void *event, int yield)
 
 int LWP_TerminateProcessSupport()	/* terminate all LWP support */
 {
-    register int i;
+    int i;
 
     Debug(0, ("Entered Terminate_Process_Support"))
     if (lwp_init == NULL) return LWP_EINIT;
@@ -566,7 +566,7 @@ int LWP_TraceProcesses = 0;
 
 static void Dispatcher(void)
 {
-    register int i;
+    int i;
 #ifdef DEBUG
     static int dispatch_count = 0;
 

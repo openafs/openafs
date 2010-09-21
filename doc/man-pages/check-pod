@@ -28,7 +28,7 @@ for ( @ARGV ? @ARGV : @poddirs ) {
 	if ( -f ) {
 		push @list, $_
 	} elsif ( -d ) {
-		push @list, all_pod_files( $_ )
+		push @list, grep { !m,fragments/, } all_pod_files( $_ )
 	}
 }
 

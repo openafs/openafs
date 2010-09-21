@@ -1,0 +1,99 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+# impermanent build glue
+#@ENABLE_XCB@include @TOP_OBJDIR@/src/mcas/Makefile.osi
+
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+RTL=@TOP_OBJDIR@/tests/rpctestlib
+RX=@TOP_OBJDIR@/src/rx
+VICED=@TOP_OBJDIR@/src/viced
+UTIL=@TOP_OBJDIR@/src/util
+FSINT=@TOP_OBJDIR@/src/fsint
+MCAS=@TOP_OBJDIR@/src/mcas
+OSI=@TOP_OBJDIR@/src/osi
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG \
+	-DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT \
+	-I${TOP_SRCDIR} -I${RX} -I${MCAS} ${OSI_XCFLAGS} ${MCAS_CFLAGS} \
+	-DSUBSYS_LOG_MACRO=RTLLog
+
+CCRULE=${CC} ${CFLAGS} -c $?
+CCRULE2=${CC} ${CFLAGS} -c $? -o $@
+
+headers= ${RTL}/rpc_test_procs.h
+
+RTLOBJS= rpc_test_procs.o rpc_test_cb_procs.o
+
+FSINTOBJS= afsaux.o afscbint.ss.o afsint.cs.o afscbint.xdr.o \
+	afsint.xdr.o
+
+RXOBJS = rx_pthread.o
+
+LIBOBJS= ${RTLOBJS} ${FSINTOBJS} ${RXOBJS}
+
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+
+all: xmpl_driver
+
+rx_pthread.o: ${RX}/rx_pthread.c
+	${CCRULE} -DDPF_FSLOG
+
+rpc_test_main.o: ${RTL}/rpc_test_main.c ${headers}
+	${CCRULE}
+
+rpc_test_procs.o: ${RTL}/rpc_test_procs.c ${headers}
+	${CCRULE}
+
+rpc_test_cb_procs.o: ${RTL}/rpc_test_cb_procs.c ${headers}
+	${CCRULE}
+
+afsaux.o: ${FSINT}/afsaux.c
+	${CCRULE} -I{FSINT}
+
+afscbint.ss.o: ${FSINT}/afscbint.ss.c
+	${CCRULE}
+
+afsint.cs.o: ${FSINT}/afsint.cs.c
+	${CCRULE}
+
+afsint.ss.o: ${FSINT}/afsint.ss.c
+	${CCRULE}
+
+afsint.xdr.o: ${FSINT}/afsint.xdr.c
+	${CCRULE}
+
+afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
+	${CCRULE}
+
+xmpl_driver: librpc_test_lib.a rpc_test_main.o ${LIBS}
+	${CC} ${LDFLAGS} -o $@ rpc_test_main.o \
+	librpc_test_lib.a ${LIBS} ${MT_LIBS} ${XLIBS}
+
+librpc_test_lib.a: ${LIBOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
+
+install:
+
+dest:
+
+clean:
+	$(RM) -f *.o *.a *.gch xmpl_driver core
+
+include @TOP_OBJDIR@/src/config/Makefile.version

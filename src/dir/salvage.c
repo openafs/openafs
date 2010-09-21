@@ -1,16 +1,16 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* This is the directory salvager.  It consists of two routines.  The first, 
- * DirOK, checks to see if the directory looks good.  If the directory does 
- * NOT look good, the approved procedure is to then call Salvage, which 
- * copies all the good entries from the damaged dir into a new directory. 
+/* This is the directory salvager.  It consists of two routines.  The first,
+ * DirOK, checks to see if the directory looks good.  If the directory does
+ * NOT look good, the approved procedure is to then call Salvage, which
+ * copies all the good entries from the damaged dir into a new directory.
  */
 
 #include <afsconfig.h>
@@ -33,26 +33,27 @@
 
 #include "dir.h"
 /* Defined in vol/vol-salvage.c */
-extern void Log(const char *format, ...);
+extern void Log(const char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 /* Defined in vol/physio.c */
 extern void Die(char *);
-    
+
 #define printf	Log		/* To make it work with volume salvager */
 
-/* This routine is called with one parameter, the id (the same thing that is 
- * passed to physio or the buffer package) of a directory to check.  It 
+/* This routine is called with one parameter, the id (the same thing that is
+ * passed to physio or the buffer package) of a directory to check.  It
  * returns 1 if the directory looks good, and 0 otherwise. */
 
 #define MAXENAME 256
 
 extern afs_int32 DErrno;
 
-/* figure out how many pages in use in a directory, given ptr to its (locked) 
+/* figure out how many pages in use in a directory, given ptr to its (locked)
  * header */
 static int
-ComputeUsedPages(register struct DirHeader *dhp)
+ComputeUsedPages(struct DirHeader *dhp)
 {
-    register afs_int32 usedPages, i;
+    afs_int32 usedPages, i;
 
     if (dhp->header.pgcount != 0) {
 	/* new style */
@@ -164,7 +165,7 @@ DirOK(void *file)
 	}
     }
 
-    /* Compute number of used directory pages and max entries in all 
+    /* Compute number of used directory pages and max entries in all
      ** those pages, the value of 'up' must be less than pgcount. The above
      ** loop only checks the first MAXPAGES in a directory. An alloMap does
      ** not exists for pages between MAXPAGES and BIGMAXPAGES */
@@ -299,8 +300,8 @@ DirOK(void *file)
 
 	    /* A null name is no good */
 	    if (ep->name[0] == '\000') {
-		printf("Dir entry %x in chain %d has bogus (null) name.\n",
-		       (intptr_t)ep, i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " in chain %d has bogus (null) name.\n", ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -308,8 +309,8 @@ DirOK(void *file)
 
 	    /* The entry flag better be FFIRST */
 	    if (ep->flag != FFIRST) {
-		printf("Dir entry %x in chain %d has bogus flag field.\n", (intptr_t)ep,
-		       i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " in chain %d has bogus flag field.\n", ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -318,8 +319,8 @@ DirOK(void *file)
 	    /* Check the size of the name */
 	    j = strlen(ep->name);
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
-		printf("Dir entry %x in chain %d has too-long name.\n", (intptr_t)ep,
-		       i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " in chain %d has too-long name.\n", ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -335,9 +336,9 @@ DirOK(void *file)
 
 	    /* Hash the name and make sure it is in the correct name hash */
 	    if ((j = DirHash(ep->name)) != i) {
-		printf
-		    ("Dir entry %x should be in hash bucket %d but IS in %d.\n",
-		     (intptr_t)ep, j, i);
+		printf("Dir entry %"AFS_PTR_FMT
+		       " should be in hash bucket %d but IS in %d.\n",
+		       ep, j, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -349,8 +350,9 @@ DirOK(void *file)
 		    havedot = 1;
 		} else {
 		    printf
-			("Dir entry %x, index 13 has name '%s' should be '.'\n",
-			 (intptr_t)ep, ep->name);
+			("Dir entry %"AFS_PTR_FMT
+			 ", index 13 has name '%s' should be '.'\n",
+			 ep, ep->name);
 		    DRelease(ep, 0);
 		    DRelease(dhp, 0);
 		    return 0;
@@ -363,8 +365,9 @@ DirOK(void *file)
 		    havedotdot = 1;
 		} else {
 		    printf
-			("Dir entry %x, index 14 has name '%s' should be '..'\n",
-			 (intptr_t)ep, ep->name);
+			("Dir entry %"AFS_PTR_FMT
+			 ", index 14 has name '%s' should be '..'\n",
+			 ep, ep->name);
 		    DRelease(ep, 0);
 		    DRelease(dhp, 0);
 		    return 0;
@@ -446,8 +449,8 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     /* First do a MakeDir on the target. */
     afs_int32 dot[3], dotdot[3], lfid[3], code, usedPages;
     char tname[256];
-    register int i;
-    register char *tp;
+    int i;
+    char *tp;
     struct DirHeader *dhp;
     struct DirEntry *ep;
     int entry;

@@ -37,7 +37,7 @@
 #define SIZEOF_LONG 4
 
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
-//#undef size_t unsigned int 
+//#undef size_t unsigned int
 
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
@@ -202,3 +202,7 @@
 #if (_MSC_VER < 1400)
 typedef int errno_t;
 #endif
+
+/* Windows only supports BSD variants */
+#define S_IRUSR _S_IREAD
+#define S_IWUSR _S_IWRITE

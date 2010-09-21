@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -10,7 +10,7 @@
 /*
  * Revision 1.2  88/11/18  15:13:00
  * remove spurious rcsid dcl
- * 
+ *
  * Revision 1.1  88/11/18  10:43:25
  * Initial revision
  *  */

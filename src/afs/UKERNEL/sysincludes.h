@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,7 +11,7 @@
 #define __AFS_SYSINCLUDESH__ 1
 
 #include  <stdio.h>
-#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV)	/* must be included after KERNEL undef'd */
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <errno.h>
 #endif
 #include  <stdlib.h>
@@ -20,7 +20,7 @@
 #include  <assert.h>
 #include  <stdarg.h>
 
-#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) /* must be included after KERNEL undef'd */
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <unistd.h>
 #include  <ctype.h>
 #include  <sys/types.h>
@@ -114,7 +114,10 @@
 #define FREAD			0x0001
 #endif /* AFS_USR_LINUX22_ENV */
 
-#if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
+#if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
+#ifdef _KERNEL
+#undef _KERNEL
+#endif
 #ifdef KERNEL
 #undef KERNEL
 #define AFS_USR_UNDEF_KERNEL_ENV 1
@@ -1221,23 +1224,23 @@ struct vcache;
 struct usr_vnodeops {
     int (*vn_open) (struct vcache **, afs_int32, afs_ucred_t *);
     int (*vn_close) (struct vcache *, afs_int32, afs_ucred_t *);
-    int (*vn_rdwr) (struct usr_vnode *avc, struct usr_uio *uio, 
+    int (*vn_rdwr) (struct usr_vnode *avc, struct usr_uio *uio,
 		    int rw, int io, struct usr_ucred *cred);
     int (*vn_ioctl) (void);
     int (*vn_select) (void);
     int (*vn_getattr) (struct vcache *avc, struct vattr *, afs_ucred_t *);
     int (*vn_setattr) (struct vcache *avc, struct vattr *, afs_ucred_t *);
     int (*vn_access) (struct vcache *avc, afs_int32, afs_ucred_t *);
-    int (*vn_lookup) (struct vcache *adp, char *, struct vcache **, 
+    int (*vn_lookup) (struct vcache *adp, char *, struct vcache **,
 		      afs_ucred_t *, int);
-    int (*vn_create) (struct vcache *adp, char *, struct vattr *, 
+    int (*vn_create) (struct vcache *adp, char *, struct vattr *,
 		      enum vcexcl, int, struct vcache **, afs_ucred_t *);
     int (*vn_remove) (struct vcache *adp, char *, afs_ucred_t *);
-    int (*vn_link) (struct vcache *avc, struct vcache *adp, char *, 
+    int (*vn_link) (struct vcache *avc, struct vcache *adp, char *,
 		    afs_ucred_t *);
     int (*vn_rename) (struct vcache *aodp, char *, struct vcache *, char *,
 		      afs_ucred_t *);
-    int (*vn_mkdir) (struct vcache *adp, char *, struct vattr *, 
+    int (*vn_mkdir) (struct vcache *adp, char *, struct vattr *,
 		     struct vcache **, afs_ucred_t *);
     int (*vn_rmdir) (struct vcache *adp, char *, afs_ucred_t *);
     int (*vn_readdir) (struct vcache *avc, struct uio *, afs_ucred_t *);

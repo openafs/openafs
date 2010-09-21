@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -44,7 +44,7 @@
  * as it requires ulock_getLock to be called with await = 0. And ulock_SetLock
  * isn't even used in this code base. Since NT doesn't have a native
  * #EAGAIN, we are replacing all instances of #EWOULDBLOCK with #EAGAIN.
- * 
+ *
  */
 
 #define WouldReadBlock(lock)\
@@ -106,9 +106,9 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
      * * locktype.  Before doing that, set TRSETLOCK,
      * * to tell udisk_end that another thread (us) is waiting.
      * #else
-     * * locktype. This field also tells us if the thread is 
+     * * locktype. This field also tells us if the thread is
      * * waiting for a lock: It will be equal to LOCKWAIT.
-     * #endif 
+     * #endif
      */
 #if defined(UBIK_PAUSE)
     if (atrans->flags & TRSETLOCK) {

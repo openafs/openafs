@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -324,7 +324,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    goto try_auth;
 	}
 
-	/* pam_sm_authenticate should have set this 
+	/* pam_sm_authenticate should have set this
 	 * if (auth_ok && !got_authtok) {
 	 *     torch_password = 0;
 	 *     (void) pam_set_item(pamh, PAM_AUTHTOK, password);

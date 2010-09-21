@@ -28,7 +28,7 @@ fi
 echo "Running autoconf"
 autoconf
 echo "Running autoconf for configure-libafs"
-autoconf configure-libafs.in > configure-libafs
+autoconf configure-libafs.ac > configure-libafs
 chmod +x configure-libafs
 echo "Running autoheader"
 autoheader
@@ -45,6 +45,8 @@ else
     # pod2man available.
     if test -d doc/man-pages ; then
         echo "Building man pages"
+        perl doc/man-pages/merge-pod doc/man-pages/pod1/*.in
+        perl doc/man-pages/merge-pod doc/man-pages/pod8/*.in
         (cd doc/man-pages && ./generate-man)
     fi
 fi

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -207,7 +207,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     }
 #else /* defined(UKERNEL) */
     if (!cell) {
-        if (!tdir) 
+        if (!tdir)
             tdir = afsconf_Open(confDir);
 	if (!tdir) {
 	    if (confDir && strcmp(confDir, ""))
@@ -360,7 +360,7 @@ pr_End(void)
 int
 pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     stolower(name);
     if (*id) {
@@ -373,10 +373,10 @@ pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 
 }
 
-int 
+int
 pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 oid = 0;
     afs_int32 flags = 0;
 
@@ -401,7 +401,7 @@ pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *i
 int
 pr_Delete(char *name)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 id;
 
     stolower(name);
@@ -417,7 +417,7 @@ pr_Delete(char *name)
 int
 pr_DeleteByID(afs_int32 id)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = ubik_PR_Delete(pruclient, 0, id);
     return code;
@@ -426,7 +426,7 @@ pr_DeleteByID(afs_int32 id)
 int
 pr_AddToGroup(char *user, char *group)
 {
-    register afs_int32 code;
+    afs_int32 code;
     namelist lnames;
     idlist lids;
 
@@ -459,7 +459,7 @@ pr_AddToGroup(char *user, char *group)
 int
 pr_RemoveUserFromGroup(char *user, char *group)
 {
-    register afs_int32 code;
+    afs_int32 code;
     namelist lnames;
     idlist lids;
 
@@ -493,8 +493,8 @@ pr_RemoveUserFromGroup(char *user, char *group)
 int
 pr_NameToId(namelist *names, idlist *ids)
 {
-    register afs_int32 code;
-    register afs_int32 i;
+    afs_int32 code;
+    afs_int32 i;
 
     for (i = 0; i < names->namelist_len; i++)
 	stolower(names->namelist_val[i]);
@@ -507,7 +507,7 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
 {
     namelist lnames;
     idlist lids;
-    register afs_int32 code;
+    afs_int32 code;
 
     lids.idlist_len = 0;
     lids.idlist_val = 0;
@@ -528,7 +528,7 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
 int
 pr_IdToName(idlist *ids, namelist *names)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = ubik_PR_IDToName(pruclient, 0, ids, names);
     return code;
@@ -539,7 +539,7 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
 {
     namelist lnames;
     idlist lids;
-    register afs_int32 code;
+    afs_int32 code;
 
     lids.idlist_len = 1;
     lids.idlist_val = malloc(sizeof(afs_int32));
@@ -562,7 +562,7 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
 int
 pr_GetCPS(afs_int32 id, prlist *CPS)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 over;
 
     over = 0;
@@ -581,7 +581,7 @@ pr_GetCPS(afs_int32 id, prlist *CPS)
 int
 pr_GetCPS2(afs_int32 id, afs_uint32 host, prlist *CPS)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 over;
 
     over = 0;
@@ -600,7 +600,7 @@ pr_GetCPS2(afs_int32 id, afs_uint32 host, prlist *CPS)
 int
 pr_GetHostCPS(afs_uint32 host, prlist *CPS)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 over;
 
     over = 0;
@@ -620,7 +620,7 @@ pr_GetHostCPS(afs_uint32 host, prlist *CPS)
 int
 pr_ListMembers(char *group, namelist *lnames)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 gid;
 
     code = pr_SNameToId(group, &gid);
@@ -635,7 +635,7 @@ pr_ListMembers(char *group, namelist *lnames)
 int
 pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
 {
-    register afs_int32 code;
+    afs_int32 code;
     prlist alist;
     idlist *lids;
 
@@ -664,7 +664,7 @@ pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
 int
 pr_IDListMembers(afs_int32 gid, namelist *lnames)
 {
-    register afs_int32 code;
+    afs_int32 code;
     prlist alist;
     idlist *lids;
     afs_int32 over;
@@ -785,7 +785,7 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
 int
 pr_ListEntry(afs_int32 id, struct prcheckentry *aentry)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = ubik_PR_ListEntry(pruclient, 0, id, aentry);
     return code;
@@ -815,7 +815,7 @@ int
 pr_CheckEntryByName(char *name, afs_int32 *id, char *owner, char *creator)
 {
     /* struct prcheckentry returns other things, which aren't useful to show at this time. */
-    register afs_int32 code;
+    afs_int32 code;
     struct prcheckentry aentry;
 
     code = pr_SNameToId(name, id);
@@ -840,7 +840,7 @@ int
 pr_CheckEntryById(char *name, afs_int32 id, char *owner, char *creator)
 {
     /* struct prcheckentry returns other things, which aren't useful to show at this time. */
-    register afs_int32 code;
+    afs_int32 code;
     struct prcheckentry aentry;
 
     code = pr_SIdToName(id, name);
@@ -864,7 +864,7 @@ pr_CheckEntryById(char *name, afs_int32 id, char *owner, char *creator)
 int
 pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 id;
     afs_int32 oid = 0;
 
@@ -890,7 +890,7 @@ pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
 int
 pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
 {
-    register afs_int32 code;
+    afs_int32 code;
     namelist lnames;
     idlist lids;
 
@@ -921,7 +921,7 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
 int
 pr_ListMaxUserId(afs_int32 *mid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 gid;
     code = ubik_PR_ListMax(pruclient, 0, mid, &gid);
     return code;
@@ -930,7 +930,7 @@ pr_ListMaxUserId(afs_int32 *mid)
 int
 pr_SetMaxUserId(afs_int32 mid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 flag = 0;
     code = ubik_PR_SetMax(pruclient, 0, mid, flag);
     return code;
@@ -939,7 +939,7 @@ pr_SetMaxUserId(afs_int32 mid)
 int
 pr_ListMaxGroupId(afs_int32 *mid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 id;
     code = ubik_PR_ListMax(pruclient, 0, &id, mid);
     return code;
@@ -948,7 +948,7 @@ pr_ListMaxGroupId(afs_int32 *mid)
 int
 pr_SetMaxGroupId(afs_int32 mid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 flag = 0;
 
     flag |= PRGRP;
@@ -959,7 +959,7 @@ pr_SetMaxGroupId(afs_int32 mid)
 afs_int32
 pr_SetFieldsEntry(afs_int32 id, afs_int32 mask, afs_int32 flags, afs_int32 ngroups, afs_int32 nusers)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code =
 	ubik_PR_SetFieldsEntry(pruclient, 0, id, mask, flags, ngroups,

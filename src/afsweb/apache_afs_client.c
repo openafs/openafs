@@ -1,17 +1,17 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*
- * Implements most of the client side web authentication protocol 
+ * Implements most of the client side web authentication protocol
  */
 
-/* 
+/*
  */
 
 #include "apache_afs_utils.h"
@@ -196,7 +196,7 @@ recvFrom_afsAuthenticator(char *buf)
 
 #ifndef NO_AFSAPACHE_CACHE
 /*
- * check local cache for the token associated with user crds. 
+ * check local cache for the token associated with user crds.
  */
 static int
 check_Cache(char *user, char *passwd, char *cell, char *tokenBuf)
@@ -242,8 +242,8 @@ updateCache(char *user, char *passwd, char *cell, char *tokenBuf,
 #endif /* NO_APACHEAFS_CACHE */
 
 
-/* 
- * locking routines to provide exclusive access to the pipes 
+/*
+ * locking routines to provide exclusive access to the pipes
  */
 static int
 start_lock(int fd, int cmd, int type)
@@ -290,10 +290,10 @@ test_lock(int fd, int type)
 #define Is_writelock(fd) \
             test_lock(fd, F_WRLCK)
 
-/* 
+/*
  * communication between this process and weblog - sends user credentials
  * over a shared pipe (mutex provided using locks) and recieves either a
- * token or an error message 
+ * token or an error message
  */
 static int
 request_Authentication(char *user, char *passwd, char *cell, char *type,
@@ -310,7 +310,7 @@ request_Authentication(char *user, char *passwd, char *cell, char *type,
     afsassert(type);
     afsassert(tokenbuf);
 
-/* 
+/*
  * lock the pipe before beginning communication or in case of AIX it is an
  * error to attempt to lock a pipe or FIFO (EINVAL) therefore we have to create
  * a temporary file and use that fd instead
@@ -375,14 +375,14 @@ request_Authentication(char *user, char *passwd, char *cell, char *type,
 static int
 setToken(char *tokenBuf, int tokenLen)
 {
-    register char *temp;
+    char *temp;
     afs_int32 i = 0;
 
     afsassert(tokenBuf);
 
-    /* 
-     * set the primary flag only if we haven't done a SETPAG previoulsy 
-     * by flipping this bit 
+    /*
+     * set the primary flag only if we haven't done a SETPAG previoulsy
+     * by flipping this bit
      */
     if (!doneSETPAG) {
 #ifdef OLDSETPAG
@@ -426,8 +426,8 @@ getToken(char *buf, int bufsize)
 }
 
 
-/* 
- * discard all authentication information for this PAG ie. this process 
+/*
+ * discard all authentication information for this PAG ie. this process
  */
 int
 unlog()
@@ -436,12 +436,12 @@ unlog()
 }
 
 
-/* 
+/*
  * Does the following things:
  * Checks whether there is a Basic Authentication header - obtains creds.
  * Checks local cache for the token associated with the user creds.
  * - if no token in cache - obtains token from weblog using pipes
- * - sets the token and returns appropriate return code 
+ * - sets the token and returns appropriate return code
  * Return values: OK, SERVER_ERROR, AUTH_REQUIRED, FORBIDDEN
  */
 int
@@ -476,9 +476,9 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
     memset(cell, 0, APACHEAFS_CELLNAME_MAX);
 
     if (auth_line == NULL) {	/* No Authorization field - we don't do anything */
-	/* 
+	/*
 	 * No Authorization field recieved - that's fine by us.
-	 * go ahead and attempt to service the request and if we get 
+	 * go ahead and attempt to service the request and if we get
 	 * back FORBIDDEN then we'll take care of it then
 	 */
 	afslog(15, ("%s: No authline recieved", module_name));
@@ -501,8 +501,8 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 	return OK;
     }
 
-    /* 
-     * We should get here only if there IS an Authorization field 
+    /*
+     * We should get here only if there IS an Authorization field
      */
 
     if ((rc = parse_authhdr(r, user, passwd, cell, defaultCell)) != 0) {
@@ -512,7 +512,7 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 	return rc;		/* SERVER ERROR */
     }
 
-    /* 
+    /*
      *  should get here only after obtaining the username and password and cell
      *  check to make sure anyway
      */
@@ -540,9 +540,9 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
     fprintf(stderr, "Cell:%s\tUser:%s\tPasswd:%s\n", cell, user, passwd);
 #endif
 
-    /* 
-     * compare with previous username/cell/cksum - update it 
-     * unlog if required 
+    /*
+     * compare with previous username/cell/cksum - update it
+     * unlog if required
      */
 
     weblog_login_checksum(user, cell, passwd, cksum);
@@ -554,8 +554,8 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
     }
     if (strcmp(user, lastUser) || strcmp(cell, lastCell)
 	|| strcmp(cksum, lastCksum)) {
-	/* 
-	 * unlog the old user from the cell if a new username/passwd is recievd 
+	/*
+	 * unlog the old user from the cell if a new username/passwd is recievd
 	 */
 
 	userChanged = 1;
@@ -590,11 +590,11 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 
     rc = check_Cache(user, passwd, cell, tokenbuf);
     if (rc) {
-	/* if found then just send the request without going through  
+	/* if found then just send the request without going through
 	 * weblog - this means the user has already been authenticated
-	 * once and we have a valid token just need to set it - 
-	 * only if it is different from the token already set. No need to 
-	 * even unlog because this token is set for the entire PAG which 
+	 * once and we have a valid token just need to set it -
+	 * only if it is different from the token already set. No need to
+	 * even unlog because this token is set for the entire PAG which
 	 * of course consists of just this child process
 	 */
 	afslog(35,
@@ -602,7 +602,7 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 		module_name, getpid(), user,
 		(getExpiration(tokenbuf) - time(NULL))));
 
-	/* if the user changed then set this token else leave it since it should 
+	/* if the user changed then set this token else leave it since it should
 	 * be set */
 	if (userChanged) {
 	    /* set this token obtained from the local cache */
@@ -618,20 +618,20 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 #ifdef DEBUG_CACHE
 		parseToken(tokenbuf);
 #endif
-		/* 
-		 * BUG WORKAROUND: sometimes we fail while setting token 
-		 * with errno ESRCH indicating the named cell 
-		 * in the last field of the token is not recognized - but that's 
+		/*
+		 * BUG WORKAROUND: sometimes we fail while setting token
+		 * with errno ESRCH indicating the named cell
+		 * in the last field of the token is not recognized - but that's
 		 * not quite true according to parseToken()!! Possibly corrupted
 		 * tokens from the cache?
-		 * Anyway we just get a new token from weblog 
+		 * Anyway we just get a new token from weblog
 		 */
 		goto reqAuth;
 	    }
 	} /* if userChanged */
 	else {
 	    /* if this is a child process getting the request for the first time
-	     * then there's no way this guy's got a token for us in which case 
+	     * then there's no way this guy's got a token for us in which case
 	     * getToken should fail with EDOM and that means we should set the token
 	     * first and maybe set a static variable saying we have set a token?
 	     */
@@ -640,7 +640,7 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 		if (errno == EDOM) {
 		    /* try setting the cached token */
 		    if (setToken(tokenbuf, rc)) {
-			/* 
+			/*
 			 * same bug workaround here. ie. go to weblog if setting
 			 * the cached token fails.
 			 */
@@ -666,9 +666,9 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 	strcpy(r->connection->user, user);
 	return OK;
     }
-    /* 
-     * else - request afs_Authenticator's for it and update local cache  
-     * then go about serving the request URI 
+    /*
+     * else - request afs_Authenticator's for it and update local cache
+     * then go about serving the request URI
      */
     else {
       reqAuth:
@@ -703,7 +703,7 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 #endif /* NO_AFSAPACHE_CACHE */
 
 	    /* now we've got a token, updated the cache and set it so we should
-	     * have no problems accessing AFS files - however if we do then 
+	     * have no problems accessing AFS files - however if we do then
 	     * we handle it in afs_accessCheck() when the error comes back
 	     */
 
@@ -725,9 +725,9 @@ authenticateUser(request_rec * r, char *defaultCell, int cacheExpiration,
 	}
 
 	else {
-	    /* 
+	    /*
 	     * unknown error from weblog - this should not occur
-	     * if afs_Authenticator can't authenticate you, then return FORBIDDEN 
+	     * if afs_Authenticator can't authenticate you, then return FORBIDDEN
 	     */
 	    sprintf(err_msg,
 		    "%s: AFS could not authenticate user %s in cell %s."
@@ -989,8 +989,8 @@ setCellAuthHeader(request_rec * r)
 
 
 /*
- * Checks if we have some authentication credentials, if we do returns 
- * FORBIDDEN and if we don't then returns AUTH_REQUIRED with the appropriate 
+ * Checks if we have some authentication credentials, if we do returns
+ * FORBIDDEN and if we don't then returns AUTH_REQUIRED with the appropriate
  * www-authenticate header. Should be called if we can't access a file because
  * permission is denied.
  */

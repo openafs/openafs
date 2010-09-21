@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -59,12 +59,12 @@ static char pbuffer[1024];
  * \warning Beware, when using this function, of the header in front of most files.
  */
 static int
-uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
+uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
 {
-    register int fd;
+    int fd;
     static int initd;
-    register int i;
-    register struct fdcache *tfd;
+    int i;
+    struct fdcache *tfd;
     struct fdcache *bestfd;
 
     /* initialize package */
@@ -88,7 +88,7 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     }
 
     /* not found, open it and try to enter in cache */
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName, 
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
 		 (afid<0)?"SYS":"", (afid<0)?-afid:afid);
     fd = open(pbuffer, O_CREAT | O_RDWR, 0600);
     if (fd < 0) {
@@ -118,7 +118,7 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     }
     if (bestfd) {		/* found a usable slot */
 	tfd = bestfd;
-	if (tfd->fd >= 0) 
+	if (tfd->fd >= 0)
 	    close(tfd->fd);
 	tfd->fd = fd;
 	tfd->refCount = 1;	/* us */
@@ -133,10 +133,10 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
  * \brief Close the file, maintaining ref count in cache structure.
  */
 int
-uphys_close(register int afd)
+uphys_close(int afd)
 {
-    register int i;
-    register struct fdcache *tfd;
+    int i;
+    struct fdcache *tfd;
 
     if (afd < 0)
 	return EBADF;
@@ -166,9 +166,9 @@ uphys_close(register int afd)
 int
 uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
 {
-    register int fd;
+    int fd;
     struct stat tstat;
-    register afs_int32 code;
+    afs_int32 code;
 
     fd = uphys_open(adbase, afid);
     if (fd < 0)
@@ -188,11 +188,11 @@ uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
 }
 
 int
-uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
-	   register void *abuffer, afs_int32 apos, afs_int32 alength)
+uphys_read(struct ubik_dbase *adbase, afs_int32 afile,
+	   void *abuffer, afs_int32 apos, afs_int32 alength)
 {
-    register int fd;
-    register afs_int32 code;
+    int fd;
+    afs_int32 code;
 
     fd = uphys_open(adbase, afile);
     if (fd < 0)
@@ -208,11 +208,11 @@ uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
 }
 
 int
-uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
-	    register void *abuffer, afs_int32 apos, afs_int32 alength)
+uphys_write(struct ubik_dbase *adbase, afs_int32 afile,
+	    void *abuffer, afs_int32 apos, afs_int32 alength)
 {
-    register int fd;
-    register afs_int32 code;
+    int fd;
+    afs_int32 code;
     afs_int32 length;
 
     fd = uphys_open(adbase, afile);
@@ -232,10 +232,10 @@ uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
 }
 
 int
-uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
+uphys_truncate(struct ubik_dbase *adbase, afs_int32 afile,
 	       afs_int32 asize)
 {
-    register afs_int32 code, fd;
+    afs_int32 code, fd;
     fd = uphys_open(adbase, afile);
     if (fd < 0)
 	return UNOENT;
@@ -250,7 +250,7 @@ uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
  * \todo Really should scan dir for data.
  */
 int
-uphys_getnfiles(register struct ubik_dbase *adbase)
+uphys_getnfiles(struct ubik_dbase *adbase)
 {
     /* really should scan dir for data */
     return 1;
@@ -260,11 +260,11 @@ uphys_getnfiles(register struct ubik_dbase *adbase)
  * \brief Get database label, with \p aversion in host order.
  */
 int
-uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
+uphys_getlabel(struct ubik_dbase *adbase, afs_int32 afile,
 	       struct ubik_version *aversion)
 {
     struct ubik_hdr thdr;
-    register afs_int32 code, fd;
+    afs_int32 code, fd;
 
     fd = uphys_open(adbase, afile);
     if (fd < 0)
@@ -284,11 +284,11 @@ uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
  * \brief Label database, with \p aversion in host order.
  */
 int
-uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
+uphys_setlabel(struct ubik_dbase *adbase, afs_int32 afile,
 	       struct ubik_version *aversion)
 {
     struct ubik_hdr thdr;
-    register afs_int32 code, fd;
+    afs_int32 code, fd;
 
     fd = uphys_open(adbase, afile);
     if (fd < 0)
@@ -307,9 +307,9 @@ uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 }
 
 int
-uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile)
+uphys_sync(struct ubik_dbase *adbase, afs_int32 afile)
 {
-    register afs_int32 code, fd;
+    afs_int32 code, fd;
     fd = uphys_open(adbase, afile);
     code = fsync(fd);
     uphys_close(fd);
@@ -317,10 +317,10 @@ uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile)
 }
 
 void
-uphys_invalidate(register struct ubik_dbase *adbase, afs_int32 afid)
+uphys_invalidate(struct ubik_dbase *adbase, afs_int32 afid)
 {
-    register int i;
-    register struct fdcache *tfd;
+    int i;
+    struct fdcache *tfd;
 
     /* scan file descr cache */
     for (tfd = fdcache, i = 0; i < MAXFDCACHE; i++, tfd++) {

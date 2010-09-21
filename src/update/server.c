@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -191,8 +191,8 @@ main(int argc, char *argv[])
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -278,18 +278,18 @@ main(int argc, char *argv[])
 
     if (rxBind) {
 	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
+        } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
-        if (ccode == 1) 
+        if (ccode == 1)
             host = SHostAddrs[0];
     }
 
@@ -397,7 +397,7 @@ Quit(char *msg)
 }
 
 int
-update_SendFile(register int fd, register struct rx_call *call, register struct stat *status)
+update_SendFile(int fd, struct rx_call *call, struct stat *status)
 {
     char *buffer = (char *)0;
     int blockSize;
@@ -425,7 +425,7 @@ update_SendFile(register int fd, register struct rx_call *call, register struct 
     tlen = htonl(length);
     rx_Write(call, (char *)&tlen, sizeof(afs_int32));	/* send length on fetch */
     while (!error && length) {
-	register int nbytes = (length > blockSize ? blockSize : length);
+	int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = read(fd, buffer, nbytes);
 	if (nbytes <= 0) {
 	    fprintf(stderr, "File system read failed\n");
@@ -442,12 +442,12 @@ update_SendFile(register int fd, register struct rx_call *call, register struct 
     return error;
 }
 
-/* Enumerate dir (name) and write dir entry info into temp file. 
+/* Enumerate dir (name) and write dir entry info into temp file.
  */
 int
 update_SendDirInfo(char *name,		/* Name of dir to enumerate */
-     register struct rx_call *call,	/* rx call */
-     register struct stat *status,	/* stat struct for dir */
+     struct rx_call *call,	/* rx call */
+     struct stat *status,	/* stat struct for dir */
      char *origDir)		/* orig name of dir before being localized */
 {
     DIR *dirp;
@@ -526,9 +526,9 @@ update_SendDirInfo(char *name,		/* Name of dir to enumerate */
 /* AddObject() - Adds the object to the list of exported objects after
  *     converting to a local path.
  *
- * expPath : points to allocated storage in which the exportable path is 
+ * expPath : points to allocated storage in which the exportable path is
  *           passed back.
- * dir     : dir name passed in for export 
+ * dir     : dir name passed in for export
  *
  */
 static int

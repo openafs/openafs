@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -109,7 +109,7 @@ struct remote {
 
 /* Hack to unfold code for multiple devices */
 #define rmt     (*rmtp)
-#define devhack(dev) register struct remote *rmtp = &remote[minor(dev)]
+#define devhack(dev) struct remote *rmtp = &remote[minor(dev)]
 
 /* Flags for rmt.rt_flags */
 #define RT_RBUF		1	/* processing venus read request */
@@ -273,7 +273,7 @@ extern int RemoteMaybe();
  * Vice 1 Response:
  *		0: file identifier assigned (for subsequent
  * 	  	   messages dealing with open files).
- *		1: pathname of the local, cached file.	
+ *		1: pathname of the local, cached file.
  *		im_error
  * Note:	the returned filename is not created, truncated(?),
  *  		or otherwise fiddled with by the kernel.  It must
@@ -439,7 +439,7 @@ extern int RemoteMaybe();
 
 
 /* The following error codes are set by Venus when a pathname argument supplied
- * by the kernel resolves to an absolute pathname outside of the name space 
+ * by the kernel resolves to an absolute pathname outside of the name space
  * of this venus.  The resolved absolute pathname is returned in argument 0.
  * The kernel is expected to retry the system call with this new information.
  * The kernel never passes this error on to the original issuer of the system

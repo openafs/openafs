@@ -358,7 +358,7 @@ static void gc_reclaim(void)
     int           two_ago, three_ago, i, j;
 
     ViceLog(11, ("GC: gc_reclaim enter\n"));
- 
+
     /* Barrier to entering the reclaim critical section. */
     if ( gc_global.inreclaim || CASIO(&gc_global.inreclaim, 0, 1) ) return;
 

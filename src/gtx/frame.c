@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,10 +49,10 @@ int
 gtxframe_CtrlHCmd(void *aparam, void *arock)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
-    register struct gtx_frame *tframe;
-    register char *tp;
-    register int pos;
+
+    struct gtx_frame *tframe;
+    char *tp;
+    int pos;
 
     tframe = awindow->w_frame;
     if (!(tp = tframe->defaultLine))
@@ -68,8 +68,8 @@ int
 gtxframe_RecursiveEndCmd(void *aparam, void *arock)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
-    register struct gtx_frame *tframe;
+
+    struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
     tframe->flags |= GTXFRAME_RECURSIVEEND;
@@ -81,8 +81,8 @@ int
 gtxframe_RecursiveErrCmd(void *aparam, void *arock)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
-    register struct gtx_frame *tframe;
+
+    struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
     tframe->flags |= GTXFRAME_RECURSIVEEND;
@@ -94,12 +94,12 @@ int
 gtxframe_SelfInsertCmd(void *aparam, void *rockparam)
 {
     struct gwin *awindow = (struct gwin *) aparam;
-    
+
     int arock = (intptr_t)rockparam;
-    
-    register struct gtx_frame *tframe;
-    register int pos;
-    register char *tp;
+
+    struct gtx_frame *tframe;
+    int pos;
+    char *tp;
 
     tframe = awindow->w_frame;
     if (!(tp = tframe->defaultLine))
@@ -115,7 +115,7 @@ static int
 SaveMap(struct gtx_frame *aframe)
 {
     char tstring[2];
-    register int i;
+    int i;
 
     if (!recursiveMap) {
 	/* setup recursive edit map if not previously done */
@@ -182,7 +182,7 @@ gtxframe_GetFrame(struct gwin *awin)
 int
 gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel, char *astring)
 {
-    register struct gtxframe_menu *tmenu;
+    struct gtxframe_menu *tmenu;
 
     if (aframe->menus)
 	for (tmenu = aframe->menus; tmenu; tmenu = tmenu->next) {
@@ -216,7 +216,7 @@ gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel, char *astring)
 int
 gtxframe_DeleteMenu(struct gtx_frame *aframe, char *alabel)
 {
-    register struct gtxframe_menu *tm, **lm;
+    struct gtxframe_menu *tm, **lm;
 
     for (lm = &aframe->menus, tm = *lm; tm; lm = &tm->next, tm = *lm) {
 	if (strcmp(alabel, tm->name) == 0) {
@@ -236,7 +236,7 @@ int
 gtxframe_ClearMenus(struct gtx_frame *aframe)
 {
 
-    register struct gtxframe_menu *tm, *nm;
+    struct gtxframe_menu *tm, *nm;
 
     if (aframe->menus != (struct gtxframe_menu *)0) {
 	for (tm = aframe->menus; tm; tm = nm) {
@@ -252,11 +252,11 @@ gtxframe_ClearMenus(struct gtx_frame *aframe)
 }
 
 int
-gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt, 
+gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt,
 		      char *adefault, char *aresult, int aresultSize)
 {
-    register int code;
-    register char *tp;
+    int code;
+    char *tp;
 
     /* Ensure recursive-edit map is initialized */
     SaveMap(aframe);
@@ -332,7 +332,7 @@ ShowMessageLine(struct gtx_frame *aframe)
 {
     struct gwin_strparams strparms;
     struct gwin_sizeparams sizeparms;
-    register char *tp;
+    char *tp;
 
     if (!aframe->window)
 	return -1;
@@ -444,8 +444,8 @@ gtxframe_Delete(struct gtx_frame *aframe)
 int
 gtxframe_Display(struct gtx_frame *aframe, struct gwin *awm)
 {
-    register struct gtxframe_dlist *tlist;
-    register struct gtxframe_menu *tm;
+    struct gtxframe_dlist *tlist;
+    struct gtxframe_menu *tm;
     struct gwin_strparams strparms;
 
     /* Run through the menus, displaying them on the top line */
@@ -479,7 +479,7 @@ gtxframe_Display(struct gtx_frame *aframe, struct gwin *awm)
 int
 gtxframe_AddToList(struct gtx_frame *aframe, struct onode *aobj)
 {
-    register struct gtxframe_dlist *tlist;
+    struct gtxframe_dlist *tlist;
 
     for (tlist = aframe->display; tlist; tlist = tlist->next) {
 	if (tlist->data == (char *)aobj) {
@@ -507,7 +507,7 @@ gtxframe_AddToList(struct gtx_frame *aframe, struct onode *aobj)
 int
 gtxframe_RemoveFromList(struct gtx_frame *aframe, struct onode *aobj)
 {
-    register struct gtxframe_dlist *tlist, **plist;
+    struct gtxframe_dlist *tlist, **plist;
 
     plist = &aframe->display;
     for (tlist = *plist; tlist; plist = &tlist->next, tlist = *plist) {
@@ -524,7 +524,7 @@ gtxframe_RemoveFromList(struct gtx_frame *aframe, struct onode *aobj)
 int
 gtxframe_ClearList(struct gtx_frame *aframe)
 {
-    register struct gtxframe_dlist *tlist, *nlist;
+    struct gtxframe_dlist *tlist, *nlist;
 
     if (aframe->display != (struct gtxframe_dlist *)0) {
 	/*

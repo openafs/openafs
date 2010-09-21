@@ -34,8 +34,8 @@ int
 afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	  char *aname2, afs_ucred_t *acred, struct vrequest *areq)
 {
-    register struct afs_conn *tc;
-    register afs_int32 code = 0;
+    struct afs_conn *tc;
+    afs_int32 code = 0;
     afs_int32 returnCode;
     int oneDir, doLocally;
     afs_size_t offset, len;
@@ -191,7 +191,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	      SHARED_LOCK, NULL));
 
     } else {
-#if defined(AFS_DISCON_ENV)
 	/* Disconnected. */
 
 	/* Seek moved file vcache. */
@@ -233,7 +232,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	} else {
 	    code = ENOENT;
 	}			/* if (tvc) */
-#endif
     }				/* if !(AFS_IS_DISCON_RW)*/
     returnCode = code;		/* remember for later */
 
@@ -408,13 +406,11 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    tdc1 = afs_FindDCache(tvc, (afs_size_t) 0);
 	    if (tdc1) {
 		if (AFS_IS_DISCON_RW) {
-#if defined(AFS_DISCON_ENV)
 		    /* If disconnected, we need to fix (not discard) the "..".*/
 		    afs_dir_ChangeFid(tdc1,
 		    	"..",
 		    	&aodp->f.fid.Fid.Vnode,
 			&andp->f.fid.Fid.Vnode);
-#endif
 		} else {
 		    ObtainWriteLock(&tdc1->lock, 648);
 		    ZapDCE(tdc1);	/* mark as unknown */
@@ -449,7 +445,7 @@ afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, s
 afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, afs_ucred_t *acred)
 #endif
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct afs_fakestat_state ofakestate;
     struct afs_fakestat_state nfakestate;
     struct vrequest treq;

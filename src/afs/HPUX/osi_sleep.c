@@ -22,8 +22,8 @@ static char waitV;
 /* call procedure aproc with arock as an argument, in ams milliseconds */
 static int
 afs_osi_CallProc(aproc, arock, ams)
-     register void (*aproc) ();
-     register char *arock;
+     void (*aproc) ();
+     char *arock;
      afs_int32 ams;
 {
     int code;
@@ -43,8 +43,8 @@ afs_osi_CallProc(aproc, arock, ams)
 /* cancel a timeout, whether or not it has already occurred */
 static int
 afs_osi_CancelProc(aproc, arock)
-     register void (*aproc) ();
-     register char *arock;
+     void (*aproc) ();
+     char *arock;
 {
     int code = 0;
     AFS_STATCNT(osi_CancelProc);

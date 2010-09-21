@@ -1,13 +1,13 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* 
+/*
  *                      (5) Add functions to process supergroups:
  *                          ChangeIDEntry(), RemoveFromSGEntry(),
  *                          AddToSGEntry(), GetListSG2().
@@ -163,7 +163,7 @@ pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, void *bp, afs_int32 pos, afs_i
  *  just after ubik_ServerInit.
  */
 
-void 
+void
 pt_hook_write(void)
 {
     extern struct ubik_dbase *ubik_dbase;
@@ -176,22 +176,18 @@ pt_hook_write(void)
 #endif /* SUPERGROUPS */
 
 /* CorrectUserName - Check to make sure a user name is OK.  It must not include
- *   either a colon (or it would look like a group) or an atsign (or it would
- *   look like a foreign user).  The length is checked as well to make sure
- *   that the user name, an atsign, and the local cell name will fit in
- *   PR_MAXNAMELEN.  This is so this user can fit in another cells database as
- *   a foreign user with our cell name tacked on.  This is a predicate, so it
- *   return one if name is OK and zero if name is bogus. */
+ *   either a colon (or it would look like a group) or a newline (which can
+ *   confuse some ptdb code, depending on the format we're reading from).
+ *   This is a predicate, so it return one if name is OK and zero if name is
+ *   bogus. */
 
 static int
 CorrectUserName(char *name)
 {
-    extern int pr_realmNameLen;
-
     /* We accept foreign names, so we will deal with '@' later */
     if (strchr(name, ':') || strchr(name, '\n'))
 	return 0;
-    if (strlen(name) >= PR_MAXNAMELEN - pr_realmNameLen - 1)
+    if (strlen(name) >= PR_MAXNAMELEN)
 	return 0;
     return 1;
 }
@@ -409,7 +405,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	}
     } else {
 	/* A foreign user: <name>@<cell>. The foreign user is added to
-	 * its representing group. It is 
+	 * its representing group. It is
 	 */
 	char *cellGroup;
 	afs_int32 pos, n;
@@ -439,7 +435,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 		return PRBADARG;
 	    tentry.id = *aid;
 	} else {
-	    /* Allocate an ID special for this foreign user. It is based 
+	    /* Allocate an ID special for this foreign user. It is based
 	     * on the representing group's id and nusers count.
 	     */
 	    tentry.id = allocNextId(at, &centry);
@@ -539,7 +535,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	    }
 
 	    /* Admins don't get charged for creating a group.
-	     * If in noAuth mode, you get changed for it but you 
+	     * If in noAuth mode, you get changed for it but you
 	     * are still allowed to create as many groups as you want.
 	     */
 	    admin = ((creator == SYSADMINID)
@@ -687,9 +683,9 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
  * entry if appropriate */
 
 afs_int32
-ChangeIDEntry(register struct ubik_trans *at, register afs_int32 aid, afs_int32 newid, register afs_int32 bid)
+ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 bid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     struct contentry centry;
     afs_int32 temp;
@@ -755,9 +751,9 @@ ChangeIDEntry(register struct ubik_trans *at, register afs_int32 aid, afs_int32 
  * continuation entry if appropriate */
 
 afs_int32
-RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, register afs_int32 bid)
+RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     struct prentryg *tentryg;
     struct contentry centry;
@@ -1119,7 +1115,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
 afs_int32
 AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int32 aid)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct contentry nentry;
     struct contentry aentry;
@@ -1450,7 +1446,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 afs_int32
 GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP, afs_int32 depth)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct prentry tentry;
     struct prentryg *tentryg = (struct prentryg *)&tentry;
     afs_int32 i;
@@ -1570,7 +1566,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 afs_int32
 GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 i;
     struct contentry centry;
     struct prentryg *tentryg;
@@ -1910,7 +1906,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
     code = pr_ReadEntry(at, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
-    if (restricted && !IsAMemberOf(at, cid, SYSADMINID)) 
+    if (restricted && !IsAMemberOf(at, cid, SYSADMINID))
 	return PRPERM;
     if (tentry.owner != cid && !IsAMemberOf(at, cid, SYSADMINID)
 	&& !IsAMemberOf(at, cid, tentry.owner) && !pr_noAuth)
@@ -2038,7 +2034,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		return code;
 	}
 	/* Look through cont entries too. This needs to be broken into
-	 * seperate transaction so that no one transaction becomes too 
+	 * seperate transaction so that no one transaction becomes too
 	 * large to complete.
 	 */
 	for (nptr = tentry.next; nptr; nptr = centry.next) {
@@ -2177,13 +2173,13 @@ allocNextId(struct ubik_trans * at, struct prentry * cellEntry)
     }
 
     cellEntry->nusers = htonl(id);
-    /* use the field nusers to keep 
+    /* use the field nusers to keep
      * the next available id in that
      * foreign cell's group. Note :
      * It would seem more appropriate
      * to use ngroup for that and nusers
      * to enforce the quota, however pts
-     * does not have an option to change 
+     * does not have an option to change
      * foreign users quota yet  */
 
     id = (id << 16) | cellid;
@@ -2199,7 +2195,7 @@ inRange(struct prentry *cellEntry, afs_int32 aid)
     /*
      * The only thing that we want to make sure here is that
      * the id is in the legal range of this group. If it is
-     * a duplicate we don't care since it will get caught 
+     * a duplicate we don't care since it will get caught
      * in a different check.
      */
 
@@ -2208,9 +2204,9 @@ inRange(struct prentry *cellEntry, afs_int32 aid)
     if (cellid != groupid)
 	return 0;		/* not in range */
 
-    /* 
+    /*
      * if we got here we're ok but we need to update the nusers
-     * field in order to get the id correct the next time that 
+     * field in order to get the id correct the next time that
      * we try to allocate it automatically
      */
 

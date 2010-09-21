@@ -1,7 +1,7 @@
 /*
  * Copyright 2005-2008, Sine Nomine Associates and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -105,6 +105,9 @@ VMustCheckoutVolume(int mode)
 static_inline int
 VShouldCheckInUse(int mode)
 {
+    if (VCanUnsafeAttach()) {
+	return 0;
+    }
     if (programType == fileServer) {
        return 1;
     }
@@ -312,6 +315,7 @@ VIsOfflineState(VolState state)
     case VOL_STATE_UNATTACHED:
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
+    case VOL_STATE_DELETED:
 	return 1;
     default:
 	return 0;
@@ -334,7 +338,7 @@ VIsOfflineState(VolState state)
 static_inline int
 VIsValidState(VolState state)
 {
-    if ((state >= 0) && 
+    if ((state >= 0) &&
 	(state < VOL_STATE_COUNT)) {
 	return 1;
     }

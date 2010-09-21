@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -28,9 +28,9 @@ afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
 {
     struct VenusFid vfid;
     struct SmallFid Sfid;
-    register struct cell *tcell;
+    struct cell *tcell;
     struct vrequest treq;
-    register afs_int32 code = 0, cellindex;
+    afs_int32 code = 0, cellindex;
     afs_int32 ret;
 
     memcpy((char *)&Sfid, afidp->fid_data, SIZEOF_SMALLFID);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -126,7 +126,7 @@ IoctlDebug(void)
     if ( !init ) {
         HKEY hk;
 
-        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
+        if (RegOpenKey (HKEY_LOCAL_MACHINE,
                          TEXT("Software\\OpenAFS\\Client"), &hk) == 0)
         {
             DWORD dwSize = sizeof(BOOL);
@@ -150,7 +150,7 @@ DisableServiceManagerCheck(void)
     if ( !init ) {
         HKEY hk;
 
-        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
+        if (RegOpenKey (HKEY_LOCAL_MACHINE,
                          TEXT("Software\\OpenAFS\\Client"), &hk) == 0)
         {
             DWORD dwSize = sizeof(BOOL);
@@ -165,61 +165,61 @@ DisableServiceManagerCheck(void)
     return smcheck;
 }
 
-static DWORD 
+static DWORD
 GetServiceStatus(
-    LPSTR lpszMachineName, 
+    LPSTR lpszMachineName,
     LPSTR lpszServiceName,
-    DWORD *lpdwCurrentState) 
-{ 
-    DWORD           hr               = NOERROR; 
-    SC_HANDLE       schSCManager     = NULL; 
-    SC_HANDLE       schService       = NULL; 
-    DWORD           fdwDesiredAccess = 0; 
-    SERVICE_STATUS  ssServiceStatus  = {0}; 
-    BOOL            fRet             = FALSE; 
+    DWORD *lpdwCurrentState)
+{
+    DWORD           hr               = NOERROR;
+    SC_HANDLE       schSCManager     = NULL;
+    SC_HANDLE       schService       = NULL;
+    DWORD           fdwDesiredAccess = 0;
+    SERVICE_STATUS  ssServiceStatus  = {0};
+    BOOL            fRet             = FALSE;
 
-    *lpdwCurrentState = 0; 
- 
-    fdwDesiredAccess = GENERIC_READ; 
- 
-    schSCManager = OpenSCManager(lpszMachineName,  
+    *lpdwCurrentState = 0;
+
+    fdwDesiredAccess = GENERIC_READ;
+
+    schSCManager = OpenSCManager(lpszMachineName,
                                  NULL,
-                                 fdwDesiredAccess); 
- 
-    if(schSCManager == NULL) 
-    { 
+                                 fdwDesiredAccess);
+
+    if(schSCManager == NULL)
+    {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     schService = OpenService(schSCManager,
                              lpszServiceName,
-                             fdwDesiredAccess); 
- 
-    if(schService == NULL) 
-    { 
+                             fdwDesiredAccess);
+
+    if(schService == NULL)
+    {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     fRet = QueryServiceStatus(schService,
-                              &ssServiceStatus); 
- 
-    if(fRet == FALSE) 
-    { 
-        hr = GetLastError(); 
-        goto cleanup; 
-    } 
- 
-    *lpdwCurrentState = ssServiceStatus.dwCurrentState; 
- 
-cleanup: 
- 
-    CloseServiceHandle(schService); 
-    CloseServiceHandle(schSCManager); 
- 
-    return(hr); 
-} 
+                              &ssServiceStatus);
+
+    if(fRet == FALSE)
+    {
+        hr = GetLastError();
+        goto cleanup;
+    }
+
+    *lpdwCurrentState = ssServiceStatus.dwCurrentState;
+
+cleanup:
+
+    CloseServiceHandle(schService);
+    CloseServiceHandle(schSCManager);
+
+    return(hr);
+}
 
 // krb5 functions
 DECL_FUNC_PTR(krb5_cc_default_name);
@@ -425,7 +425,7 @@ DriveSubstitution(char *drivestr, char *subststr, size_t substlen)
                 subststr[2] = '\0';
                 return TRUE;
             }
-        } else 
+        } else
         if ( device[0] == '\\' &&
              device[1] == '?' &&
              device[2] == '?' &&
@@ -445,7 +445,7 @@ DriveSubstitution(char *drivestr, char *subststr, size_t substlen)
     return FALSE;
 }
 
-// 
+//
 // drivestr - is "<drive-letter>:"
 //
 static BOOL
@@ -468,7 +468,7 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
     if ( DriveSubstitution(drivestr, subststr, MAX_PATH) )
     {
         if (subststr[0] == '\\' &&
-            subststr[1] == '\\') 
+            subststr[1] == '\\')
         {
             if (_strnicmp( &subststr[2], NetbiosName, strlen(NetbiosName)) == 0)
                 return TRUE;
@@ -535,7 +535,7 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
             break;
     }
     while (dwResultEnum != ERROR_NO_MORE_ITEMS);
-    
+
     //
     // Call the GlobalFree function to free the memory.
     //
@@ -557,8 +557,8 @@ DriveIsGlobalAutoMapped(char *drivestr)
     char szSubMount[260];
     DWORD dwType;
 
-    dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                            AFSREG_CLT_SVC_PARAM_SUBKEY "\\GlobalAutoMapper", 
+    dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                            AFSREG_CLT_SVC_PARAM_SUBKEY "\\GlobalAutoMapper",
                             0, KEY_QUERY_VALUE, &hKey);
     if (dwResult != ERROR_SUCCESS)
         return FALSE;
@@ -620,16 +620,16 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (DriveIsMappedToAFS(tbuffer, netbiosName) ||
                     DriveIsGlobalAutoMapped(tbuffer))
                     strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
-                else 
+                else
                     return -1;
                 break;
             default:
                 if (DriveIsGlobalAutoMapped(tbuffer))
                     strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
-                else 
+                else
                     return -1;
             }
-        } else if (fileNamep[0] == fileNamep[1] && 
+        } else if (fileNamep[0] == fileNamep[1] &&
 		   (fileNamep[0] == '\\' || fileNamep[0] == '/'))
         {
             int count = 0, i = 0;
@@ -661,17 +661,17 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                     if (DriveIsMappedToAFS(tbuffer, netbiosName) ||
                         DriveIsGlobalAutoMapped(tbuffer))
                         strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
-                    else 
+                    else
                         return -1;
                     break;
                 default:
                     if (DriveIsGlobalAutoMapped(tbuffer))
                         strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
-                    else 
+                    else
                         return -1;
                 }
             } else if (curdir[0] == curdir[1] &&
-                       (curdir[0] == '\\' || curdir[0] == '/')) 
+                       (curdir[0] == '\\' || curdir[0] == '/'))
             {
                 int count = 0, i = 0;
 
@@ -713,7 +713,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
-            
+
             saveerrno = errno;
             if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                                NULL,
@@ -738,7 +738,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
 
-        if (RegOpenKey (HKEY_CURRENT_USER, 
+        if (RegOpenKey (HKEY_CURRENT_USER,
                          TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
         {
             DWORD dwType = REG_SZ;
@@ -1131,7 +1131,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	pathHasDrive = 0;
     }
 
-    if ( firstp[0] == '\\' && firstp[1] == '\\' || 
+    if ( firstp[0] == '\\' && firstp[1] == '\\' ||
 	 firstp[0] == '/' && firstp[1] == '/') {
         /* UNC path - strip off the server and sharename */
         int i, count;
@@ -1211,7 +1211,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
         int len = (int)strlen(outPathp);
-        if (outPathp[len-1] != '\\' && outPathp[len-1] != '/') 
+        if (outPathp[len-1] != '\\' && outPathp[len-1] != '/')
             strcat(outPathp, "\\");
         strcat(outPathp, firstp);
     }

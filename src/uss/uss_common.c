@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -194,11 +194,11 @@ uss_common_Reset(void)
  *------------------------------------------------------------------------*/
 
 char *
-uss_common_FieldCp(char *a_to, char *a_from, char a_separator, 
+uss_common_FieldCp(char *a_to, char *a_from, char a_separator,
 		   int a_maxChars, int *a_overflowP)
 {				/*uss_common_FieldCp */
 
-    register int chars_read;	/*Number of chars read so far */
+    int chars_read;	/*Number of chars read so far */
 
     chars_read = 0;
     *a_overflowP = 0;

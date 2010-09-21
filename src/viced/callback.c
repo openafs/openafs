@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -12,7 +12,7 @@
 /*
  * NEW callback package callback.c (replaces vicecb.c)
  * Updated call back routines, NOW with:
- * 
+ *
  *     Faster DeleteVenus (Now called DeleteAllCallBacks)
  *     Call back breaking for volumes
  *     Adaptive timeouts on call backs
@@ -28,39 +28,39 @@
  *     nblocks must be < 65536
  *     Space used is nblocks*16 bytes
  *     Note that space will be reclaimed by breaking callbacks of old hosts
- * 
+ *
  * time = AddCallBack(host, fid)
  *     Add a call back.
  *     Returns the expiration time at the workstation.
- * 
+ *
  * BreakCallBack(host, fid)
  *     Break all call backs for fid, except for the specified host.
  *     Delete all of them.
- * 
+ *
  * BreakVolumeCallBacksLater(volume)
  *     Break all call backs on volume, using single call to each host
  *     Delete all the call backs.
- * 
+ *
  * DeleteCallBack(host,fid)
  *     Delete (do not break) single call back for fid.
- * 
+ *
  * DeleteFileCallBacks(fid)
  *     Delete (do not break) all call backs for fid.
  *
  * DeleteAllCallBacks(host)
  *     Delete (do not break) all call backs for host.
- * 
+ *
  * CleanupTimedOutCallBacks()
  *     Delete all timed out call back entries
  *     Must be called periodically by file server.
- * 
+ *
  * BreakDelayedCallBacks(host)
  *     Break all delayed call backs for host.
  *     Returns 1: one or more failed, 0: success.
- * 
+ *
  * PrintCallBackStats()
  *     Print statistics about call backs to stdout.
- * 
+ *
  * DumpCallBacks() ---wishful thinking---
  *     Dump call back state to /tmp/callback.state.
  *     This is separately interpretable by the program pcb.
@@ -171,22 +171,22 @@ struct object {
 };
 
 /* Prototypes for static routines */
-static struct FileEntry *FindFE(register AFSFid * fid);
+static struct FileEntry *FindFE(AFSFid * fid);
 
 #ifndef INTERPRET_DUMP
-static struct CallBack *iGetCB(register int *nused);
-static int iFreeCB(register struct CallBack *cb, register int *nused);
-static struct FileEntry *iGetFE(register int *nused);
-static int iFreeFE(register struct FileEntry *fe, register int *nused);
-static int TAdd(register struct CallBack *cb, register afs_uint32 * thead);
-static int TDel(register struct CallBack *cb);
-static int HAdd(register struct CallBack *cb, register struct host *host);
-static int HDel(register struct CallBack *cb);
+static struct CallBack *iGetCB(int *nused);
+static int iFreeCB(struct CallBack *cb, int *nused);
+static struct FileEntry *iGetFE(int *nused);
+static int iFreeFE(struct FileEntry *fe, int *nused);
+static int TAdd(struct CallBack *cb, afs_uint32 * thead);
+static int TDel(struct CallBack *cb);
+static int HAdd(struct CallBack *cb, struct host *host);
+static int HDel(struct CallBack *cb);
 static int CDel(struct CallBack *cb, int deletefe);
-static int CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
+static int CDelPtr(struct FileEntry *fe, afs_uint32 * cbp,
 		   int deletefe);
 static afs_uint32 *FindCBPtr(struct FileEntry *fe, struct host *host);
-static int FDel(register struct FileEntry *fe);
+static int FDel(struct FileEntry *fe);
 static int AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead,
 			  int type, int locked);
 static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
@@ -207,16 +207,16 @@ static int DumpCallBackState_r(void);
 
 
 /* Other protos - move out sometime */
-void PrintCB(register struct CallBack *cb, afs_uint32 now);
+void PrintCB(struct CallBack *cb, afs_uint32 now);
 
 static afs_uint32 HashTable[FEHASH_SIZE];	/* File entry hash table */
 
 static struct FileEntry *
-FindFE(register AFSFid * fid)
+FindFE(AFSFid * fid)
 {
     int hash;
-    register int fei;
-    register struct FileEntry *fe;
+    int fei;
+    struct FileEntry *fe;
 
     hash = FEHash(fid->Volume, fid->Unique);
     for (fei = HashTable[hash]; fei; fei = fe->fnext) {
@@ -231,9 +231,9 @@ FindFE(register AFSFid * fid)
 #ifndef INTERPRET_DUMP
 
 static struct CallBack *
-iGetCB(register int *nused)
+iGetCB(int *nused)
 {
-    register struct CallBack *ret;
+    struct CallBack *ret;
 
     if ((ret = CBfree)) {
 	CBfree = (struct CallBack *)(((struct object *)ret)->next);
@@ -243,7 +243,7 @@ iGetCB(register int *nused)
 }
 
 static int
-iFreeCB(register struct CallBack *cb, register int *nused)
+iFreeCB(struct CallBack *cb, int *nused)
 {
     ((struct object *)cb)->next = (struct object *)CBfree;
     CBfree = cb;
@@ -252,9 +252,9 @@ iFreeCB(register struct CallBack *cb, register int *nused)
 }
 
 static struct FileEntry *
-iGetFE(register int *nused)
+iGetFE(int *nused)
 {
-    register struct FileEntry *ret;
+    struct FileEntry *ret;
 
     if ((ret = FEfree)) {
 	FEfree = (struct FileEntry *)(((struct object *)ret)->next);
@@ -264,7 +264,7 @@ iGetFE(register int *nused)
 }
 
 static int
-iFreeFE(register struct FileEntry *fe, register int *nused)
+iFreeFE(struct FileEntry *fe, int *nused)
 {
     ((struct object *)fe)->next = (struct object *)FEfree;
     FEfree = fe;
@@ -274,12 +274,12 @@ iFreeFE(register struct FileEntry *fe, register int *nused)
 
 /* Add cb to end of specified timeout list */
 static int
-TAdd(register struct CallBack *cb, register afs_uint32 * thead)
+TAdd(struct CallBack *cb, afs_uint32 * thead)
 {
     if (!*thead) {
 	(*thead) = cb->tnext = cb->tprev = cbtoi(cb);
     } else {
-	register struct CallBack *thp = itocb(*thead);
+	struct CallBack *thp = itocb(*thead);
 
 	cb->tprev = thp->tprev;
 	cb->tnext = *thead;
@@ -296,9 +296,9 @@ TAdd(register struct CallBack *cb, register afs_uint32 * thead)
 
 /* Delete call back entry from timeout list */
 static int
-TDel(register struct CallBack *cb)
+TDel(struct CallBack *cb)
 {
-    register afs_uint32 *thead = itot(cb->thead);
+    afs_uint32 *thead = itot(cb->thead);
 
     if (*thead == cbtoi(cb))
 	*thead = (*thead == cb->tnext ? 0 : cb->tnext);
@@ -311,13 +311,13 @@ TDel(register struct CallBack *cb)
 
 /* Add cb to end of specified host list */
 static int
-HAdd(register struct CallBack *cb, register struct host *host)
+HAdd(struct CallBack *cb, struct host *host)
 {
     cb->hhead = h_htoi(host);
     if (!host->cblist) {
 	host->cblist = cb->hnext = cb->hprev = cbtoi(cb);
     } else {
-	register struct CallBack *fcb = itocb(host->cblist);
+	struct CallBack *fcb = itocb(host->cblist);
 
 	cb->hprev = fcb->hprev;
 	cb->hnext = cbtoi(fcb);
@@ -328,9 +328,9 @@ HAdd(register struct CallBack *cb, register struct host *host)
 
 /* Delete call back entry from host list */
 static int
-HDel(register struct CallBack *cb)
+HDel(struct CallBack *cb)
 {
-    register afs_uint32 *hhead = &h_itoh(cb->hhead)->cblist;
+    afs_uint32 *hhead = &h_itoh(cb->hhead)->cblist;
 
     if (*hhead == cbtoi(cb))
 	*hhead = (*hhead == cb->hnext ? 0 : cb->hnext);
@@ -348,8 +348,8 @@ CDel(struct CallBack *cb, int deletefe)
 {
     int cbi = cbtoi(cb);
     struct FileEntry *fe = itofe(cb->fhead);
-    register afs_uint32 *cbp;
-    register int safety;
+    afs_uint32 *cbp;
+    int safety;
 
     for (safety = 0, cbp = &fe->firstcb; *cbp && *cbp != cbi;
 	 cbp = &itocb(*cbp)->cnext, safety++) {
@@ -374,10 +374,10 @@ CDel(struct CallBack *cb, int deletefe)
 static int Ccdelpt = 0, CcdelB = 0;
 
 static int
-CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
+CDelPtr(struct FileEntry *fe, afs_uint32 * cbp,
 	int deletefe)
 {
-    register struct CallBack *cb;
+    struct CallBack *cb;
 
     if (!*cbp)
 	return 0;
@@ -395,10 +395,10 @@ CDelPtr(register struct FileEntry *fe, register afs_uint32 * cbp,
 static afs_uint32 *
 FindCBPtr(struct FileEntry *fe, struct host *host)
 {
-    register afs_uint32 hostindex = h_htoi(host);
-    register struct CallBack *cb;
-    register afs_uint32 *cbp;
-    register int safety;
+    afs_uint32 hostindex = h_htoi(host);
+    struct CallBack *cb;
+    afs_uint32 *cbp;
+    int safety;
 
     for (safety = 0, cbp = &fe->firstcb; *cbp; cbp = &cb->cnext, safety++) {
 	if (safety > cbstuff.nblks) {
@@ -415,10 +415,10 @@ FindCBPtr(struct FileEntry *fe, struct host *host)
 
 /* Delete file entry from hash table */
 static int
-FDel(register struct FileEntry *fe)
+FDel(struct FileEntry *fe)
 {
-    register int fei = fetoi(fe);
-    register afs_uint32 *p = &HashTable[FEHash(fe->volid, fe->unique)];
+    int fei = fetoi(fe);
+    afs_uint32 *p = &HashTable[FEHash(fe->volid, fe->unique)];
 
     while (*p && *p != fei)
 	p = &itofe(*p)->fnext;
@@ -464,7 +464,7 @@ afs_int32
 XCallBackBulk_r(struct host * ahost, struct AFSFid * fids, afs_int32 nfids)
 {
     struct AFSCallBack tcbs[AFSCBMAX];
-    register int i;
+    int i;
     struct AFSCBFids tf;
     struct AFSCBs tc;
     int code;
@@ -504,7 +504,7 @@ XCallBackBulk_r(struct host * ahost, struct AFSFid * fids, afs_int32 nfids)
     return code;
 }
 
-/* the locked flag tells us if the host entry has already been locked 
+/* the locked flag tells us if the host entry has already been locked
  * by our parent.  I don't think anybody actually calls us with the
  * host locked, but here's how to make that work:  GetSomeSpace has to
  * change so that it doesn't attempt to lock any hosts < "host".  That
@@ -549,7 +549,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     host->Console |= 2;
 
     /* allocate these guys first, since we can't call the allocator with
-     * the host structure locked -- or we might deadlock. However, we have 
+     * the host structure locked -- or we might deadlock. However, we have
      * to avoid races with FindFE... */
     while (!(newcb = GetCB())) {
 	GetSomeSpace_r(host, locked);
@@ -593,7 +593,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     host->Console &= ~2;
 
     if (!fe) {
-	register afs_uint32 hash;
+	afs_uint32 hash;
 
 	fe = newfe;
 	newfe = NULL;
@@ -666,19 +666,19 @@ CompareCBA(const void *e1, const void *e2)
     return ((cba1->hp)->index - (cba2->hp)->index);
 }
 
-/* Take an array full of hosts, all held.  Break callbacks to them, and 
- * release the holds once you're done, except don't release xhost.  xhost 
+/* Take an array full of hosts, all held.  Break callbacks to them, and
+ * release the holds once you're done, except don't release xhost.  xhost
  * may be NULL.  Currently only works for a single Fid in afidp array.
  * If you want to make this work with multiple fids, you need to fix
  * the error handling.  One approach would be to force a reset if a
  * multi-fid call fails, or you could add delayed callbacks for each
  * fid.   You probably also need to sort and remove duplicate hosts.
- * When this is called from the BreakVolumeCallBacks path, it does NOT 
- * force a reset if the RPC fails, it just marks the host down and tries 
+ * When this is called from the BreakVolumeCallBacks path, it does NOT
+ * force a reset if the RPC fails, it just marks the host down and tries
  * to create a delayed callback. */
 /* N.B.  be sure that code works when ncbas == 0 */
 /* N.B.  requires all the cba[*].hp pointers to be valid... */
-/* This routine does not hold a lock on the host for the duration of 
+/* This routine does not hold a lock on the host for the duration of
  * the BreakCallBack RPC, which is a significant deviation from tradition.
  * It _does_ get a lock on the host before setting VenusDown = 1,
  * which is sufficient only if VenusDown = 0 only happens when the
@@ -733,7 +733,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 			    ("BCB: INTERNAL ERROR: hp=%p, cba=%p, thead=%u\n",
 			     hp, cba, idx));
 		} else {
-		    /* 
+		    /*
 		     ** try breaking callbacks on alternate interface addresses
 		     */
 		    if (MultiBreakCallBackAlternateAddress(hp, afidp)) {
@@ -750,7 +750,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 			}
 
 			H_LOCK;
-			h_Lock_r(hp); 
+			h_Lock_r(hp);
                         if (!(hp->hostFlags & HOSTDELETED)) {
                             hp->hostFlags |= VENUSDOWN;
                             /**
@@ -759,7 +759,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
                             AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
                                            CB_DELAYED, 1);
                         }
-			h_Unlock_r(hp); 
+			h_Unlock_r(hp);
 			H_UNLOCK;
 		    }
 		}
@@ -795,10 +795,10 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
  * Break all call backs for fid, except for the specified host (unless flag
  * is true, in which case all get a callback message. Assumption: the specified
  * host is h_Held, by the caller; the others aren't.
- * Specified host may be bogus, that's ok.  This used to check to see if the 
- * host was down in two places, once right after the host was h_held, and 
+ * Specified host may be bogus, that's ok.  This used to check to see if the
+ * host was down in two places, once right after the host was h_held, and
  * again after it was locked.  That race condition is incredibly rare and
- * relatively harmless even when it does occur, so we don't check for it now. 
+ * relatively harmless even when it does occur, so we don't check for it now.
  */
 /* if flag is true, send a break callback msg to "host", too */
 int
@@ -856,7 +856,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 		    }
 		    TDel(cb);
 		    HDel(cb);
-		    CDel(cb, 1);	/* Usually first; so this delete 
+		    CDel(cb, 1);	/* Usually first; so this delete
 					 * is reasonably inexpensive */
 		}
 	    }
@@ -887,8 +887,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 int
 DeleteCallBack(struct host *host, AFSFid * fid)
 {
-    register struct FileEntry *fe;
-    register afs_uint32 *pcb;
+    struct FileEntry *fe;
+    afs_uint32 *pcb;
     char hoststr[16];
 
     H_LOCK;
@@ -932,10 +932,10 @@ DeleteCallBack(struct host *host, AFSFid * fid)
 int
 DeleteFileCallBacks(AFSFid * fid)
 {
-    register struct FileEntry *fe;
-    register struct CallBack *cb;
-    register afs_uint32 cbi;
-    register int n;
+    struct FileEntry *fe;
+    struct CallBack *cb;
+    afs_uint32 cbi;
+    int n;
 
     H_LOCK;
     cbstuff.DeleteFiles++;
@@ -965,8 +965,8 @@ DeleteFileCallBacks(AFSFid * fid)
 int
 DeleteAllCallBacks_r(struct host *host, int deletefe)
 {
-    register struct CallBack *cb;
-    register int cbi, first;
+    struct CallBack *cb;
+    int cbi, first;
 
     cbstuff.DeleteAllCallBacks++;
     cbi = first = host->cblist;
@@ -1057,7 +1057,7 @@ BreakDelayedCallBacks_r(struct host *host)
 		cb = itocb(cbi);
 		cbi = cb->hnext;
 		if (cb->status == CB_DELAYED) {
-		    register struct FileEntry *fe = itofe(cb->fhead);
+		    struct FileEntry *fe = itofe(cb->fhead);
 		    thead[nfids] = cb->thead;
 		    fids[nfids].Volume = fe->volid;
 		    fids[nfids].Vnode = fe->vnode;
@@ -1139,8 +1139,8 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
-	DeleteAllCallBacks_r(host, deletefe);	/* Delete all callback state 
-						 * rather than attempting to 
+	DeleteAllCallBacks_r(host, deletefe);	/* Delete all callback state
+						 * rather than attempting to
 						 * selectively remember to
 						 * delete the volume callbacks
 						 * later */
@@ -1217,7 +1217,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     for (hash = 0; hash < FEHASH_SIZE; hash++) {
 	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe->volid == volume) {
-		register struct CallBack *cbnext;
+		struct CallBack *cbnext;
 		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
 		    host = h_itoh(cb->hhead);
 		    host->hostFlags |= HFE_LATER;
@@ -1300,7 +1300,7 @@ BreakLaterCallBacks(void)
     /* loop over FEs from myfe and free/break */
     tthead = 0;
     for (fe = myfe; fe;) {
-	register struct CallBack *cbnext;
+	struct CallBack *cbnext;
 	for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
 	    cbnext = itocb(cb->cnext);
 	    host = h_itoh(cb->hhead);
@@ -1368,13 +1368,13 @@ int
 CleanupTimedOutCallBacks_r(void)
 {
     afs_uint32 now = CBtime(FT_ApproxTime());
-    register afs_uint32 *thead;
-    register struct CallBack *cb;
-    register int ntimedout = 0;
+    afs_uint32 *thead;
+    struct CallBack *cb;
+    int ntimedout = 0;
     char hoststr[16];
 
     while (tfirst <= now) {
-	register int cbi;
+	int cbi;
 	cbi = *(thead = THead(tfirst));
 	if (cbi) {
 	    do {
@@ -1428,7 +1428,7 @@ struct lih_params {
  * host may be held by some other thread */
 #define OTHER_MUSTHOLD_LIH 2
 
-/* This version does not allow 'host' to be selected unless its ActiveCall 
+/* This version does not allow 'host' to be selected unless its ActiveCall
  * is newer than 'params->lastlih' which is the host with the oldest
  * ActiveCall from the last pass (if it is provided).  We filter out any hosts
  * that are are held by other threads.
@@ -1447,7 +1447,7 @@ struct lih_params {
  * theory not give these to us anyway, but be paranoid.
  */
 static int
-lih0_r(register struct host *host, register int flags, void *rock)
+lih0_r(struct host *host, int flags, void *rock)
 {
     struct lih_params *params = (struct lih_params *)rock;
 
@@ -1470,7 +1470,7 @@ lih0_r(register struct host *host, register int flags, void *rock)
 
 /* same as lih0_r, except we do not prevent held hosts from being selected. */
 static int
-lih1_r(register struct host *host, register int flags, void *rock)
+lih1_r(struct host *host, int flags, void *rock)
 {
     struct lih_params *params = (struct lih_params *)rock;
 
@@ -1493,12 +1493,12 @@ lih1_r(register struct host *host, register int flags, void *rock)
 /* first pass: sequentially find the oldest host which isn't held by
                anyone for which we can clear callbacks;
 	       skipping 'hostp' */
-/* second pass: sequentially find the oldest host regardless of 
+/* second pass: sequentially find the oldest host regardless of
                whether or not the host is held; skipping 'hostp' */
 /* third pass: attempt to clear callbacks from 'hostp' */
 /* always called with hostp unlocked */
 
-/* Note: hostlist is ordered most recently created host first and 
+/* Note: hostlist is ordered most recently created host first and
  * its order has no relationship to the most recently used. */
 extern struct host *hostList;
 static int
@@ -1685,7 +1685,7 @@ static int cb_stateRestoreTimeouts(struct fs_dump_state * state);
 static int cb_stateRestoreFEHash(struct fs_dump_state * state);
 static int cb_stateRestoreFEs(struct fs_dump_state * state);
 static int cb_stateRestoreFE(struct fs_dump_state * state);
-static int cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe, 
+static int cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe,
 			      struct iovec * iov, int niovecs);
 
 static int cb_stateVerifyFEHash(struct fs_dump_state * state);
@@ -1748,7 +1748,7 @@ cb_stateSave(struct fs_dump_state * state)
 	ret = 1;
 	goto done;
     }
-    
+
  done:
     return ret;
 }
@@ -1822,7 +1822,7 @@ cb_stateRestoreIndices(struct fs_dump_state * state)
 	    }
 	}
     }
-    
+
     /* restore indices in the CallBack structures */
     for (i = 1; i < state->cb_map.len; i++) {
 	if (state->cb_map.entries[i].new_idx) {
@@ -1833,7 +1833,7 @@ cb_stateRestoreIndices(struct fs_dump_state * state)
 		ret = 1;
 		goto done;
 	    }
-	    
+
 	    /* restore the cb->fhead entry */
 	    if (fe_OldToNew(state, cb->fhead, &cb->fhead)) {
 		ret = 1;
@@ -2161,7 +2161,7 @@ cb_stateRestoreTimeouts(struct fs_dump_state * state)
     int ret = 0, len;
 
     if (fs_stateReadHeader(state, &state->cb_hdr->timeout_offset,
-			   state->cb_timeout_hdr, 
+			   state->cb_timeout_hdr,
 			   sizeof(struct callback_state_timeout_header))) {
 	ret = 1;
 	goto done;
@@ -2234,7 +2234,7 @@ cb_stateRestoreFEHash(struct fs_dump_state * state)
     int ret = 0, len;
 
     if (fs_stateReadHeader(state, &state->cb_hdr->fehash_offset,
-			   state->cb_fehash_hdr, 
+			   state->cb_fehash_hdr,
 			   sizeof(struct callback_state_fehash_header))) {
 	ret = 1;
 	goto done;
@@ -2270,8 +2270,8 @@ static int
 cb_stateSaveFEs(struct fs_dump_state * state)
 {
     int ret = 0;
-    register int fei, hash;
-    register struct FileEntry *fe;
+    int fei, hash;
+    struct FileEntry *fe;
 
     AssignInt64(state->eof_offset, &state->cb_hdr->fe_offset);
 
@@ -2336,8 +2336,8 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
     iov[1].iov_len = sizeof(struct FEDiskEntry);
     iovcnt = 2;
 
-    for (cbi = fe->firstcb, cb = itocb(cbi); 
-	 cb != NULL; 
+    for (cbi = fe->firstcb, cb = itocb(cbi);
+	 cb != NULL;
 	 cbi = cb->cnext, cb = itocb(cbi), hdr.nCBs++) {
 	if (cbi > state->cb_hdr->cb_max) {
 	    state->cb_hdr->cb_max = cbi;
@@ -2361,7 +2361,7 @@ cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe)
     }
 
     hdr.magic = CALLBACK_STATE_ENTRY_MAGIC;
-    hdr.len = sizeof(hdr) + sizeof(struct FEDiskEntry) + 
+    hdr.len = sizeof(hdr) + sizeof(struct FEDiskEntry) +
 	(hdr.nCBs * sizeof(struct CBDiskEntry));
 
     if (!written) {
@@ -2450,17 +2450,17 @@ cb_stateRestoreFE(struct fs_dump_state * state)
 	    }
 	}
     }
-    
+
  done:
     return ret;
 }
 
 static int
-cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe, 
+cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe,
 		   struct iovec * iov, int niovecs)
 {
     int ret = 0, idx;
-    register struct CallBack * cb;
+    struct CallBack * cb;
     struct CBDiskEntry * cbdsk;
     afs_uint32 fei;
 
@@ -2520,7 +2520,7 @@ cb_stateFEToDiskEntry(struct FileEntry * in, struct FEDiskEntry * out)
 }
 
 static int
-cb_stateDiskEntryToFE(struct fs_dump_state * state, 
+cb_stateDiskEntryToFE(struct fs_dump_state * state,
 		      struct FEDiskEntry * in, struct FileEntry * out)
 {
     int ret = 0;
@@ -2761,11 +2761,11 @@ main(int argc, char **argv)
 {
     int err = 0, cbi = 0, stats = 0, noptions = 0, all = 0, vol = 0, raw = 0;
     static AFSFid fid;
-    register struct FileEntry *fe;
-    register struct CallBack *cb;
+    struct FileEntry *fe;
+    struct CallBack *cb;
     time_t now;
     int timebits = 32;
-    
+
     memset(&fid, 0, sizeof(fid));
     argc--;
     argv++;
@@ -2808,7 +2808,7 @@ main(int argc, char **argv)
 #ifdef AFS_64BIT_ENV
 		&& (timebits != 64)
 #endif
-		) 
+		)
 		err++;
 	} else if (!strcmp(*argv, "-volume")) {
 	    if (argc < 1) {
@@ -2912,7 +2912,7 @@ main(int argc, char **argv)
 }
 
 void
-PrintCB(register struct CallBack *cb, afs_uint32 now)
+PrintCB(struct CallBack *cb, afs_uint32 now)
 {
     struct FileEntry *fe = itofe(cb->fhead);
     time_t expires = TIndexToTime(cb->thead);
@@ -2984,7 +2984,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 
 	interfaces[j] = host->interface->interface[i];
 	conns[j] =
-	    rx_NewConnection(interfaces[j].addr, 
+	    rx_NewConnection(interfaces[j].addr,
 			     interfaces[j].port, 1, sc, 0);
 	rx_SetConnDeadTime(conns[j], 2);
 	rx_SetConnHardDeadTime(conns[j], AFS_HARDDEADTIME);
@@ -3037,7 +3037,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 
 
 /*
-** try multi_RX probes to host. 
+** try multi_RX probes to host.
 ** return 0 on success, non-0 on failure
 */
 int
@@ -3079,7 +3079,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 
 	interfaces[j] = host->interface->interface[i];
 	conns[j] =
-	    rx_NewConnection(interfaces[j].addr, 
+	    rx_NewConnection(interfaces[j].addr,
 			     interfaces[j].port, 1, sc, 0);
 	rx_SetConnDeadTime(conns[j], 2);
 	rx_SetConnHardDeadTime(conns[j], AFS_HARDDEADTIME);
@@ -3118,11 +3118,11 @@ MultiProbeAlternateAddress_r(struct host *host)
 		    ("multiprobe failure with addr %s:%d\n",
 		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
                      ntohs(interfaces[multi_i].port)));
-            
+
             /* This is less than desirable but its the best we can do.
-             * The AFS Cache Manager will return either 0 for a Uuid  
-             * match and a 1 for a non-match.   If the error is 1 we 
-             * therefore know that our mapping of IP address to Uuid 
+             * The AFS Cache Manager will return either 0 for a Uuid
+             * match and a 1 for a non-match.   If the error is 1 we
+             * therefore know that our mapping of IP address to Uuid
              * is wrong.   We should attempt to find the correct
              * Uuid and fix the host tables.
              */

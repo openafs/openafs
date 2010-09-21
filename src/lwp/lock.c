@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -64,7 +64,7 @@ Lock_Destroy(struct Lock *lock)
     assert(pthread_cond_destroy(&lock->write_cv) == 0);
 #endif /* AFS_PTHRED_ENV */
 }
-
+
 void
 Afs_Lock_Obtain(struct Lock *lock, int how)
 {
@@ -195,7 +195,7 @@ Afs_Lock_ReleaseW(struct Lock *lock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessR(register void *addr, register struct Lock *alock)
+LWP_WaitProcessR(void *addr, struct Lock *alock)
 {
     ReleaseReadLock(alock);
     LWP_WaitProcess(addr);
@@ -203,7 +203,7 @@ LWP_WaitProcessR(register void *addr, register struct Lock *alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessW(register void *addr, register struct Lock *alock)
+LWP_WaitProcessW(void *addr, struct Lock *alock)
 {
     ReleaseWriteLock(alock);
     LWP_WaitProcess(addr);
@@ -211,7 +211,7 @@ LWP_WaitProcessW(register void *addr, register struct Lock *alock)
 
 /* release a write lock and sleep on an address, atomically */
 void
-LWP_WaitProcessS(register void *addr, register struct Lock *alock)
+LWP_WaitProcessS(void *addr, struct Lock *alock)
 {
     ReleaseSharedLock(alock);
     LWP_WaitProcess(addr);

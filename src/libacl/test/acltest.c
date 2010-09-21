@@ -35,7 +35,7 @@ char *externalstore[20];
 
 int
 PRights(arights)
-     register long arights;
+     long arights;
 {
     if (arights & PRSFS_READ)
 	printf("r");
@@ -55,11 +55,11 @@ PRights(arights)
 
 long
 Convert(arights)
-     register char *arights;
+     char *arights;
 {
-    register int i, len;
+    int i, len;
     long mode;
-    register char tc;
+    char tc;
     if (!strcmp(arights, "read"))
 	return PRSFS_READ | PRSFS_LOOKUP;
     if (!strcmp(arights, "write"))
@@ -102,7 +102,7 @@ Convert(arights)
 
 main()
 {
-    register long code;
+    long code;
 
     char op[3];
     char name[64];

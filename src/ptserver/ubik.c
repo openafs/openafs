@@ -33,7 +33,7 @@ ubik_ServerInit(afs_uint32 myHost, short myPort, afs_uint32 serverList[],
 }
 
 int
-ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode, 
+ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 		struct ubik_trans **transPtr)
 {
     static int init = 0;
@@ -53,33 +53,33 @@ ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 }
 
 int
-ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode,
+ubik_BeginTransReadAny(struct ubik_dbase *dbase, afs_int32 transMode,
                        struct ubik_trans **transPtr)
 {
     return (0);
 }
 
 int
-ubik_AbortTrans(register struct ubik_trans *transPtr)
+ubik_AbortTrans(struct ubik_trans *transPtr)
 {
     return (0);
 }
 
 int
-ubik_EndTrans(register struct ubik_trans *transPtr)
+ubik_EndTrans(struct ubik_trans *transPtr)
 {
     return (0);
 }
 
 int
-ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
+ubik_Tell(struct ubik_trans *transPtr, afs_int32 * fileid,
           afs_int32 * position)
 {
     return (0);
 }
 
 int
-ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
+ubik_Truncate(struct ubik_trans *transPtr, afs_int32 length)
 {
     return (0);
 }
@@ -92,8 +92,8 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
 }
 
 int
-ubik_WaitVersion(register struct ubik_dbase *adatabase,
-                 register struct ubik_version *aversion)
+ubik_WaitVersion(struct ubik_dbase *adatabase,
+                 struct ubik_version *aversion)
 {
     return (0);
 }
@@ -112,7 +112,7 @@ panic(char *format, ...)
     va_start(ap, format);
     vprintf(format, ap);
     va_end(ap);
-    
+
     abort();
     printf("BACK FROM ABORT\n");	/* shouldn't come back from floating pt exception */
     exit(1);			/* never know, though */
@@ -178,7 +178,7 @@ struct rx_securityClass *ubik_sc[3];
 
 /* Other declarations */
 
-int 
+int
 afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 {
     return (1);
@@ -187,5 +187,4 @@ afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 
 char *prdir = "/dev/null";
 struct prheader cheader;
-int pr_realmNameLen;
 char *pr_realmName;

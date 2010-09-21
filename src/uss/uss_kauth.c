@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -144,7 +144,7 @@ getpipepass(void)
 {
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
-    register int i, tc;
+    int i, tc;
     memset(gpbuf, 0, sizeof(gpbuf));
     for (i = 0; i < (sizeof(gpbuf) - 1); i++) {
 	tc = fgetc(stdin);
@@ -162,7 +162,7 @@ InitThisModule(void)
 #ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth:InitThisModule";
 #endif
-    register afs_int32 code;
+    afs_int32 code;
     char prompt[2 * MAXKTCNAMELEN + 20];
     char *reasonString, longPassBuff[1024], shortPassBuff[9];
     struct ktc_encryptionKey key;
@@ -374,7 +374,7 @@ uss_kauth_AddUser(char *a_user, char *a_passwd)
     ka_StringToKey(a_passwd, uss_Cell, &ktc_key);
 
     memcpy(&key, &ktc_key, sizeof(key)); /* XXX - we could just cast */
-    
+
     if (!uss_DryRun) {
 	if (uss_verbose)
 	    fprintf(stderr, "Adding user '%s' to the Authentication DB\n",
@@ -385,7 +385,7 @@ uss_kauth_AddUser(char *a_user, char *a_passwd)
 		"%s: KAM_CreateUser: user='%s', CreatorInstance='%s', %d bytes\n",
 		rn, a_user, CreatorInstance, strlen(CreatorInstance));
 #endif /* USS_KAUTH_DB_INSTANCE */
-	code = ubik_KAM_CreateUser(uconn_kauthP, 0, a_user, 
+	code = ubik_KAM_CreateUser(uconn_kauthP, 0, a_user,
 			           UserInstance,	/*set by CheckUsername() */
 			 	   key);
 	if (code) {
@@ -432,7 +432,7 @@ uss_kauth_DelUser(char *a_user)
 #ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_DelUser";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
 
     if (uss_SkipKaserver) {
 	/*
@@ -511,7 +511,7 @@ uss_kauth_CheckUserName(void)
 #ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_CheckUserName";	/*Routine name */
 #endif
-    register afs_int32 code;	/*Return code */
+    afs_int32 code;	/*Return code */
 
     if (uss_SkipKaserver) {
 	/*
@@ -537,7 +537,7 @@ uss_kauth_CheckUserName(void)
     /*
      * Use the AuthServer's own routine to decide if the parsed user name
      * is legal.  Specifically, it can't have any weird characters or
-     * embedded instance or cell names. 
+     * embedded instance or cell names.
      */
     code = ka_ParseLoginName(uss_User, UserPrincipal, UserInstance, UserCell);
     if (strlen(UserInstance) > 0) {
@@ -585,7 +585,7 @@ uss_kauth_CheckUserName(void)
  */
 
 afs_int32
-uss_kauth_SetFields(char *username, char *expirestring, char *reuse, 
+uss_kauth_SetFields(char *username, char *expirestring, char *reuse,
 		    char *failures, char *lockout)
 {
 #ifdef USS_KAUTH_DB

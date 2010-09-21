@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,7 +94,7 @@ extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
 							      int (*get_key)
 
 
-							       
+
 							      (void
 							       *get_key_rock,
 							       int kvno,
@@ -104,7 +104,7 @@ extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
 							      int (*user_ok)
 
 
-							       
+
 							      (char *name,
 							       char
 							       *instance,
@@ -127,7 +127,7 @@ extern afs_int32 rxkad_GetServerInfo(struct rx_connection *aconn,
 				     char *instance, char *cell,
 				     afs_int32 * kvno);
 extern afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
-                                        struct rx_connection *aconn, 
+                                        struct rx_connection *aconn,
                                         rx_securityConfigVariables atype,
                                         void * avalue, void **aresult);
 

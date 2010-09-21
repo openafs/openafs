@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -157,7 +157,7 @@ struct ubik_stat {
 /*!
  * \brief representation of a ubik database.
  *
- * Contains info on low-level disk access routines 
+ * Contains info on low-level disk access routines
  * for use by disk transaction module.
  */
 struct ubik_dbase {
@@ -271,7 +271,7 @@ extern void *ubik_CheckRXSecurityRock;
 
 /*!
  * \name timer constants
- * time constant for replication algorithms: the R time period is 20 seconds.  Both 
+ * time constant for replication algorithms: the R time period is 20 seconds.  Both
  * #SMALLTIME and #BIGTIME must be larger than #RPCTIMEOUT+max(#RPCTIMEOUT, #POLLTIME),
  * so that timeouts do not prevent us from getting through to our servers in time.
  *
@@ -352,53 +352,53 @@ extern int ubikPrimaryAddrOnly;	/* use only primary address */
 /* this extern gives the sync site's db version, with epoch of 0 if none yet */
 
 /* phys.c */
-extern int uphys_close(register int afd);
+extern int uphys_close(int afd);
 extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid,
 		      struct ubik_stat *astat);
-extern int uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
-		      register void *abuffer, afs_int32 apos,
+extern int uphys_read(struct ubik_dbase *adbase, afs_int32 afile,
+		      void *abuffer, afs_int32 apos,
 		      afs_int32 alength);
-extern int uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
-		       register void *abuffer, afs_int32 apos,
+extern int uphys_write(struct ubik_dbase *adbase, afs_int32 afile,
+		       void *abuffer, afs_int32 apos,
 		       afs_int32 alength);
-extern int uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
+extern int uphys_truncate(struct ubik_dbase *adbase, afs_int32 afile,
 			  afs_int32 asize);
-extern int uphys_getnfiles(register struct ubik_dbase *adbase);
-extern int uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
+extern int uphys_getnfiles(struct ubik_dbase *adbase);
+extern int uphys_getlabel(struct ubik_dbase *adbase, afs_int32 afile,
 			  struct ubik_version *aversion);
-extern int uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
+extern int uphys_setlabel(struct ubik_dbase *adbase, afs_int32 afile,
 			  struct ubik_version *aversion);
-extern int uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile);
-extern void uphys_invalidate(register struct ubik_dbase *adbase, 
+extern int uphys_sync(struct ubik_dbase *adbase, afs_int32 afile);
+extern void uphys_invalidate(struct ubik_dbase *adbase,
 			     afs_int32 afid);
 
 /*! \name recovery.c */
 extern int urecovery_ResetState(void);
 extern int urecovery_LostServer(void);
-extern int urecovery_AllBetter(register struct ubik_dbase *adbase,
+extern int urecovery_AllBetter(struct ubik_dbase *adbase,
 			       int areadAny);
 extern int urecovery_AbortAll(struct ubik_dbase *adbase);
-extern int urecovery_CheckTid(register struct ubik_tid *atid);
-extern int urecovery_Initialize(register struct ubik_dbase *adbase);
+extern int urecovery_CheckTid(struct ubik_tid *atid);
+extern int urecovery_Initialize(struct ubik_dbase *adbase);
 extern void *urecovery_Interact(void *);
 extern int DoProbe(struct ubik_server *server);
 /*\}*/
 
 /*! \name ubik.c */
 extern afs_int32 ContactQuorum_NoArguments(afs_int32 (*proc)
-						       (struct rx_connection *, 
+						       (struct rx_connection *,
 							ubik_tid *),
 					   struct ubik_trans *atrans,
 					   int aflags);
 
 extern afs_int32 ContactQuorum_DISK_Lock(struct ubik_trans *atrans,
 					 int aflags,
-					 afs_int32 file, afs_int32 position, 
+					 afs_int32 file, afs_int32 position,
 					 afs_int32 length, afs_int32 type);
 
 extern afs_int32 ContactQuorum_DISK_Write(struct ubik_trans *atrans,
-					  int aflags, 
-					  afs_int32 file, afs_int32 position, 
+					  int aflags,
+					  afs_int32 file, afs_int32 position,
 					  bulkdata *data);
 
 extern afs_int32 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans,
@@ -407,18 +407,18 @@ extern afs_int32 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans,
 
 extern afs_int32 ContactQuorum_DISK_WriteV(struct ubik_trans *atrans,
 					   int aflags,
-					   iovec_wrt * io_vector, 
+					   iovec_wrt * io_vector,
 					   iovec_buf *io_buffer);
 
-extern afs_int32 ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, 
+extern afs_int32 ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans,
 					       int aflags,
 					       ubik_version *OldVersion,
 					       ubik_version *NewVersion);
-                                              
+
 extern void panic(char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
-extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr); 
+extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
 /*\}*/
 
 /*! \name beacon.c */
@@ -435,13 +435,13 @@ extern void *ubeacon_Interact(void *);
 /*! \name disk.c */
 extern void udisk_Debug(struct ubik_debug *aparm);
 extern int udisk_Invalidate(struct ubik_dbase *adbase, afs_int32 afid);
-extern int udisk_read(struct ubik_trans *atrans, afs_int32 afile, 
+extern int udisk_read(struct ubik_trans *atrans, afs_int32 afile,
 		      void *abuffer, afs_int32 apos, afs_int32 alen);
-extern int udisk_truncate(struct ubik_trans *atrans, afs_int32 afile, 
+extern int udisk_truncate(struct ubik_trans *atrans, afs_int32 afile,
 			  afs_int32 alength);
-extern int udisk_write(struct ubik_trans *atrans, afs_int32 afile, 
+extern int udisk_write(struct ubik_trans *atrans, afs_int32 afile,
 		       void *abuffer, afs_int32 apos, afs_int32 alen);
-extern int udisk_begin(struct ubik_dbase *adbase, int atype, 
+extern int udisk_begin(struct ubik_dbase *adbase, int atype,
 		       struct ubik_trans **atrans);
 extern int udisk_commit(struct ubik_trans *atrans);
 extern int udisk_abort(struct ubik_trans *atrans);
@@ -488,31 +488,31 @@ extern int ubik_ServerInitByInfo(afs_uint32 myHost, short myPort,
 extern int ubik_ServerInit(afs_uint32 myHost, short myPort,
 			   afs_uint32 serverList[],
 			   const char *pathName, struct ubik_dbase **dbase);
-extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
+extern int ubik_BeginTrans(struct ubik_dbase *dbase,
 			   afs_int32 transMode, struct ubik_trans **transPtr);
-extern int ubik_BeginTransReadAny(register struct ubik_dbase *dbase,
+extern int ubik_BeginTransReadAny(struct ubik_dbase *dbase,
 				  afs_int32 transMode,
 				  struct ubik_trans **transPtr);
-extern int ubik_AbortTrans(register struct ubik_trans *transPtr);             
+extern int ubik_AbortTrans(struct ubik_trans *transPtr);
 
-extern int ubik_EndTrans(register struct ubik_trans *transPtr);
-extern int ubik_Read(register struct ubik_trans *transPtr, void *buffer,
+extern int ubik_EndTrans(struct ubik_trans *transPtr);
+extern int ubik_Read(struct ubik_trans *transPtr, void *buffer,
 		     afs_int32 length);
 extern int ubik_Flush(struct ubik_trans *transPtr);
-extern int ubik_Write(register struct ubik_trans *transPtr, void *buffer,
-		      afs_int32 length);                        
-extern int ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid,
+extern int ubik_Write(struct ubik_trans *transPtr, void *buffer,
+		      afs_int32 length);
+extern int ubik_Seek(struct ubik_trans *transPtr, afs_int32 fileid,
 		     afs_int32 position);
-extern int ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
+extern int ubik_Tell(struct ubik_trans *transPtr, afs_int32 * fileid,
 		     afs_int32 * position);
-extern int ubik_Truncate(register struct ubik_trans *transPtr, 
+extern int ubik_Truncate(struct ubik_trans *transPtr,
 			 afs_int32 length);
-extern int ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, 
+extern int ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos,
 			afs_int32 alen, int atype);
-extern int ubik_WaitVersion(register struct ubik_dbase *adatabase,
-			    register struct ubik_version *aversion);
-extern int ubik_GetVersion(register struct ubik_trans *atrans,
-			   register struct ubik_version *avers);
+extern int ubik_WaitVersion(struct ubik_dbase *adatabase,
+			    struct ubik_version *aversion);
+extern int ubik_GetVersion(struct ubik_trans *atrans,
+			   struct ubik_version *avers);
 extern int ubik_CheckCache(struct ubik_trans *atrans,
                            ubik_updatecache_func check,
                            void *rock);
@@ -522,7 +522,7 @@ extern int ubik_CheckCache(struct ubik_trans *atrans,
 
 extern int ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers);
 extern unsigned int afs_random(void);
-extern int ubik_ClientInit(register struct rx_connection **serverconns,
+extern int ubik_ClientInit(struct rx_connection **serverconns,
 			   struct ubik_client **aclient);
 extern afs_int32 ubik_ClientDestroy(struct ubik_client *aclient);
 extern struct rx_connection *ubik_RefreshConn(struct rx_connection *tc);
@@ -532,7 +532,7 @@ extern afs_int32 ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
 			       long p3, long p4, long p5, long p6, long p7,
 			       long p8, long p9, long p10, long p11, long p12,
 			       long p13, long p14, long p15, long p16);
-extern afs_int32 ubik_Call_New(int (*aproc) (), register struct ubik_client
+extern afs_int32 ubik_Call_New(int (*aproc) (), struct ubik_client
 			       *aclient, afs_int32 aflags, long p1, long p2,
 			       long p3, long p4, long p5, long p6, long p7,
 			       long p8, long p9, long p10, long p11, long p12,
@@ -552,11 +552,11 @@ extern afs_int32 ugen_ClientInit(int noAuthFlag, const char *confDir,
 				 char *cellName, afs_int32 sauth,
 				 struct ubik_client **uclientp,
 				 int (*secproc) (struct rx_securityClass *sc,
-					 	 afs_int32 scIndex), 
-				 char *funcName, 
-				 afs_int32 gen_rxkad_level, 
-				 afs_int32 maxservers, char *serviceid, 
-				 afs_int32 deadtime, afs_uint32 server, 
+					 	 afs_int32 scIndex),
+				 char *funcName,
+				 afs_int32 gen_rxkad_level,
+				 afs_int32 maxservers, char *serviceid,
+				 afs_int32 deadtime, afs_uint32 server,
 				 afs_uint32 port, afs_int32 usrvid);
 
 #endif /* UBIK_H */

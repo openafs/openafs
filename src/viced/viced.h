@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 /*
  * Revision 2.2  90/08/29  15:12:11
  * Cleanups.
- * 
+ *
  * Revision 2.1  90/08/07  19:46:16
  * Start with clean version to sync test and dev trees.
  * */
@@ -226,7 +226,7 @@ struct fs_state {
     volatile byte FsyncCheckLWP_tranquil;      /* fsync check thread is shutdown or sleeping */
     volatile byte salvsync_fatal_error;        /* fatal error with salvsync comm */
 
-    /* some command-line options we use in 
+    /* some command-line options we use in
      * various places
      *
      * these fields are immutable once we
@@ -245,7 +245,11 @@ struct fs_state {
 extern struct fs_state fs_state;
 
 /* this lock is defined to be directly above FS_LOCK in the locking hierarchy */
+#ifdef AFS_NT40_ENV
+#define FS_STATE_INIT    fs_stateInit()
+#else
 #define FS_STATE_INIT    assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0)
+#endif
 #define FS_STATE_RDLOCK  assert(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
 #define FS_STATE_WRLOCK  assert(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
 #define FS_STATE_UNLOCK  assert(pthread_rwlock_unlock(&fs_state.state_lock) == 0)

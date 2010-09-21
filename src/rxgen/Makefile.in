@@ -28,7 +28,7 @@ rxgen: $(OBJS) AFS_component_version_number.c $(HDRS)
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
 
 rpc_main.o: rpc_main.c
-	$(CCOBJ) $(CFLAGS) -c $< -DPATH_CPP="\"$(PATH_CPP)\""
+	$(CCOBJ) $(CFLAGS) -c ${srcdir}/rpc_main.c -DPATH_CPP="\"$(PATH_CPP)\""
 
 #
 # Install targets
@@ -37,14 +37,14 @@ install: rxgen rxgen_consts.h
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_PROGRAM} rxgen ${DESTDIR}${bindir}/rxgen
-	${INSTALL_DATA} rxgen_consts.h \
+	${INSTALL_DATA} ${srcdir}/rxgen_consts.h \
 		${DESTDIR}${includedir}/afs/rxgen_consts.h
 
 dest: rxgen rxgen_consts.h
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_PROGRAM} rxgen ${DEST}/bin/rxgen
-	${INSTALL_DATA} rxgen_consts.h ${DEST}/include/afs/rxgen_consts.h
+	${INSTALL_DATA} ${srcdir}/rxgen_consts.h ${DEST}/include/afs/rxgen_consts.h
 
 #
 # Misc. targets

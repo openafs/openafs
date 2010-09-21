@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -93,7 +93,7 @@ Remove(q)
     free(old);
     return (s);
 }
-
+
 queue *q;
 
 int asleep;			/* Number of processes sleeping -- used for
@@ -108,7 +108,7 @@ read_process(id)
 
     PRE_PreemptMe();
     for (;;) {
-	register int i;
+	int i;
 
 	/* Wait until there is something in the queue */
 	asleep++;

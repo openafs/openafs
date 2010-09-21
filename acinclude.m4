@@ -86,11 +86,6 @@ AC_ARG_ENABLE([namei-fileserver],
          fileserver])],
     , 
     [enable_namei_fileserver="default"])
-AC_ARG_ENABLE([cache-bypass],
-    [AS_HELP_STRING([--enable-cache-bypass],
-        [enable client support for cache bypass])],
-    , 
-    [enable_cache_bypass="no"])
 AC_ARG_ENABLE([supergroups],
     [AS_HELP_STRING([--enable-supergroups],
         [enable support for nested pts groups])],
@@ -102,26 +97,11 @@ AC_ARG_ENABLE([bitmap-later],
          needed])],
     , 
     [enable_bitmap_later="no"])
-AC_ARG_ENABLE([demand-attach-fs],
-    [AS_HELP_STRING([--enable-demand-attach-fs],
-        [enable Demand Attach Fileserver (please see documentation)])],
-    , 
-    [enable_demand_attach_fs="no"])
-AC_ARG_ENABLE([disconnected],
-    [AS_HELP_STRING([--enable-disconnected],
-        [enable disconnected support in cache manager (experimental)])],
-    , 
-    [enable_disconnected="no"])
 AC_ARG_ENABLE([unix-sockets],
     [AS_HELP_STRING([--disable-unix-sockets],
         [disable use of unix domain sockets for fssync (defaults to enabled)])],
     ,
     [enable_unix_sockets="yes"])
-AC_ARG_ENABLE([icmp-pmtu-discovery],
-    [AS_HELP_STRING([--enable-icmp-pmtu-discovery],
-        [enable path MTU discovery by decoding ICMP unreachable replies])],
-    , 
-    [enable_icmp_pmtu_discovery="no"])
 AC_ARG_ENABLE([tivoli-tsm],
     [AS_HELP_STRING([--enable-tivoli-tsm],
         [enable use of the Tivoli TSM API libraries for butc support])],
@@ -281,7 +261,10 @@ AC_PROG_LN_S
 AC_PROG_RANLIB
 AC_PROG_YACC
 AM_PROG_LEX
+dnl if we are flex, be lex-compatible
+OPENAFS_LEX_IS_FLEX([AC_SUBST([LEX], ["$LEX -l"])])
 
+OPENAFS_FORCE_ABS_INSTALL
 OPENAFS_CHECK_BIGENDIAN
 OPENAFS_PRINTF_TAKES_Z_LEN
 
@@ -412,6 +395,10 @@ case $system in
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(x86_darwin)
                 ;;
+        x86_64-*-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(x86_darwin)
+                ;;
 	i386-*-freebsd*)
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
@@ -476,11 +463,11 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
 			;;
-		i386-*-dragonfly2.2*)
-			AFS_SYSNAME="i386_dfbsd_23"
-			;;
-		i386-*-dragonfly2.3*)
-			AFS_SYSNAME="i386_dfbsd_23"
+		i386-*-dragonfly?.*)
+			v=${host#*dragonfly}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_dfbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.6[[M-Z]]*)
 			AFS_SYSNAME="i386_nbsd20"
@@ -544,6 +531,9 @@ else
 			AFS_SYSNAME="x86_darwin_90"
 			;;
 		i?86-apple-darwin10.*)
+			AFS_SYSNAME="x86_darwin_100"
+			;;
+		x86_64-apple-darwin10.*)
 			AFS_SYSNAME="x86_darwin_100"
 			;;
 		sparc-sun-solaris2.5*)
@@ -785,6 +775,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
 				       [fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_operations], [evict_inode],
+				       [fs.h])
                  AC_CHECK_LINUX_STRUCT([task_struct], [cred], [sched.h])
 		 AC_CHECK_LINUX_STRUCT([task_struct], [exit_state], [sched.h])
 		 AC_CHECK_LINUX_STRUCT([task_struct], [parent], [sched.h])
@@ -837,6 +829,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([i_size_read],
 				     [#include <linux/fs.h>],
 				     [i_size_read(NULL);])
+		 AC_CHECK_LINUX_FUNC([inode_setattr],
+				     [#include <linux/fs.h>],
+				     [inode_setattr(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
@@ -982,6 +977,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
                 :
 		fi
+dnl Linux-only, but just enable always.
+		AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])
 esac
 
 AC_CACHE_CHECK([if struct sockaddr has sa_len field],
@@ -1125,18 +1122,6 @@ if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER, 1, [define if you want to salvager to check bitmasks later])
 fi
 
-if test "$enable_demand_attach_fs" = "yes"; then
-	AC_DEFINE(DEMAND_ATTACH_ENABLE, 1, [define if you want the demand attach fileserver])
-	DEMAND_ATTACH="yes"
-else
-	DEMAND_ATTACH="no"
-fi
-AC_SUBST(DEMAND_ATTACH)
-
-if test "$enable_disconnected" = "yes"; then
-	AC_DEFINE(AFS_DISCON_ENV, 1, [define if you want support for disconnected operation])
-fi
-
 if test "$enable_unix_sockets" = "yes"; then
 	AC_DEFINE(USE_UNIX_SOCKETS, 1, [define if you want to use UNIX sockets for fssync.])
 	USE_UNIX_SOCKETS="yes"
@@ -1145,15 +1130,9 @@ else
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
 
-if test "$enable_icmp_pmtu_discovery" = "yes"; then
-   if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
-	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
-   fi
-fi
-
-if test "$enable_cache_bypass" = "yes"; then
-	AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])
-fi
+dnl if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
+dnl 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
+dnl fi
 
 if test "$enable_namei_fileserver" = "yes"; then
 	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
@@ -1268,6 +1247,7 @@ AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
+AC_CHECK_FUNCS(fseeko64 ftello64)
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
 	test "$ac_cv_func_regcomp" = "yes" && \
@@ -1297,6 +1277,7 @@ AC_CHECK_TYPE([socklen_t],[],
         [Define to int if <sys/socket.h> does not define.])],
 [#include <sys/types.h>
 #include <sys/socket.h>])
+AC_CHECK_TYPES(off64_t)
 AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST
@@ -1409,4 +1390,22 @@ mkdir -p ${TOP_OBJDIR}/src/JAVA/libjafs
 dnl Check to see if crypt lives in a different library
 AC_CHECK_LIB(crypt, crypt, LIB_crypt="-lcrypt")
 AC_SUBST(LIB_crypt)
+
+dnl Check to see if the compiler support labels in structs
+AC_MSG_CHECKING(for label support in structs)
+AC_TRY_COMPILE([], [
+extern void osi_UFSOpen(void);
+struct labeltest {
+   void (*open) (void);
+};
+struct labeltest struct_labeltest = {
+   .open       = osi_UFSOpen,
+}
+],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_STRUCT_LABEL_SUPPORT, 1, [Define to 1 if your compiler supports labels in structs.])
+],
+[AC_MSG_RESULT(no)
+])
+
 ])

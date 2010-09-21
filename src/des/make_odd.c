@@ -21,7 +21,7 @@ gen(FILE *stream)
      * map a byte into its equivalent with odd parity, where odd
      * parity is in the least significant bit
      */
-    register int i, j, k, odd;
+    int i, j, k, odd;
 
     fprintf(stream, "static unsigned char const odd_parity[256] = {\n");
 

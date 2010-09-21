@@ -520,7 +520,7 @@ int main (int argc, char **argv)
 
         if ( j != num_threads )
         {
-            printf("Urk! Not enough CPUs for threads (%d < %d)\n", 
+            printf("Urk! Not enough CPUs for threads (%d < %d)\n",
                    j, num_threads);
             abort();
         }

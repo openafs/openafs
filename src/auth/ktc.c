@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -123,7 +123,7 @@ int afs_tf_init(char *, int);
 int afs_tf_get_pname(char *);
 int afs_tf_get_pinst(char *);
 int afs_tf_get_cred(struct ktc_principal *, struct ktc_token *);
-int afs_tf_save_cred(struct ktc_principal *, struct ktc_token *, 
+int afs_tf_save_cred(struct ktc_principal *, struct ktc_token *,
 		     struct ktc_principal *);
 int afs_tf_close(void);
 int afs_tf_create(char *, char *);
@@ -174,9 +174,9 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register char *tp;
+    char *tp;
     struct ClearToken ct;
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 temp;
 
     if (strcmp(aserver->name, "afs") != 0) {
@@ -390,16 +390,16 @@ ktc_SetToken(struct ktc_principal *aserver,
  * be set to our identity to the server.
  */
 int
-ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken, 
+ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	     int atokenLen, struct ktc_principal *aclient)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     int index;
     char *stp, *cellp;		/* secret token ptr */
     struct ClearToken ct;
-    register char *tp;
+    char *tp;
     afs_int32 temp;
     int maxLen;			/* biggest ticket we can copy */
     int tktLen;			/* server ticket length */
@@ -594,8 +594,8 @@ ktc_ListTokens(int aprevIndex,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code = 0 ;
-    register char *tp;
+    afs_int32 code = 0 ;
+    char *tp;
     afs_int32 temp, index;
 
     memset(tbuffer, 0, sizeof(tbuffer));
@@ -738,7 +738,7 @@ static int
 ForgetAll(void)
 {
     struct ViceIoctl iob;
-    register afs_int32 code;
+    afs_int32 code;
     int i;
 
     for (i = 0; i < MAXLOCALTOKENS; i++)
@@ -890,7 +890,7 @@ ktc_curpag(void)
  *	   are invalid (ie. when deciding whether afs_tf_init has been
  *	   called.)
  *	c. In tf_close, be sure it gets reinitialized to a negative
- *	   number. 
+ *	   number.
  */
 static int fd = -1;
 static int curpos;			/* Position in tfbfr */
@@ -940,7 +940,7 @@ static int tf_read(char *, int);
  * afs_tf_close() closes the ticket file and releases the lock.
  *
  * tf_gets() returns the next null-terminated string.  It's an internal
- * routine used by afs_tf_get_pname(), afs_tf_get_pinst(), and 
+ * routine used by afs_tf_get_pname(), afs_tf_get_pinst(), and
  * afs_tf_get_cred().
  *
  * tf_read() reads a given number of bytes.  It's an internal routine
@@ -950,13 +950,13 @@ static int tf_read(char *, int);
 /*
  * afs_tf_init() should be called before the other ticket file routines.
  * It takes the name of the ticket file to use, "tf_name", and a
- * read/write flag "rw" as arguments. 
+ * read/write flag "rw" as arguments.
  *
  * It tries to open the ticket file, checks the mode, and if everything
  * is okay, locks the file.  If it's opened for reading, the lock is
- * shared.  If it's opened for writing, the lock is exclusive. 
+ * shared.  If it's opened for writing, the lock is exclusive.
  *
- * Returns 0 if all went well, otherwise one of the following: 
+ * Returns 0 if all went well, otherwise one of the following:
  *
  * NO_TKT_FIL   - file wasn't there
  * TKT_FIL_ACC  - file was in wrong mode, etc.
@@ -996,7 +996,7 @@ afs_tf_init(char *tf_name, int rw)
      * If "wflag" is set, open the ticket file in append-writeonly mode
      * and lock the ticket file in exclusive mode.  If unable to lock
      * the file, sleep and try again.  If we fail again, return with the
-     * proper error message. 
+     * proper error message.
      */
 
     curpos = sizeof(tfbfr);
@@ -1024,7 +1024,7 @@ afs_tf_init(char *tf_name, int rw)
     }
     /*
      * Otherwise "wflag" is not set and the ticket file should be opened
-     * for read-only operations and locked for shared access. 
+     * for read-only operations and locked for shared access.
      */
 
     fd = open(tf_name, O_RDONLY, 0600);
@@ -1054,7 +1054,7 @@ afs_tf_init(char *tf_name, int rw)
  * principal's name is filled into the "p" parameter.  If all goes well,
  * 0 is returned.  If afs_tf_init() wasn't called, TKT_FIL_INI is
  * returned.  If the name was null, or EOF was encountered, or the name
- * was longer than MAXKTCNAMELEN, TKT_FIL_FMT is returned. 
+ * was longer than MAXKTCNAMELEN, TKT_FIL_FMT is returned.
  */
 
 int
@@ -1075,7 +1075,7 @@ afs_tf_get_pname(char *p)
  * goes well, 0 is returned.  If afs_tf_init() wasn't called,
  * TKT_FIL_INI is returned.  If EOF was encountered, or the instance
  * was longer than MAXKTCNAMELEN, TKT_FIL_FMT is returned.  Note that the
- * instance may be null. 
+ * instance may be null.
  */
 
 int
@@ -1092,8 +1092,8 @@ afs_tf_get_pinst(char *inst)
 /*
  * afs_tf_get_cred() reads a CREDENTIALS record from a ticket file and fills
  * in the given structure "c".  It should only be called after afs_tf_init(),
- * afs_tf_get_pname(), and afs_tf_get_pinst() have been called. If all goes 
- * well, 0 is returned.  Possible error codes are: 
+ * afs_tf_get_pname(), and afs_tf_get_pinst() have been called. If all goes
+ * well, 0 is returned.  Possible error codes are:
  *
  * TKT_FIL_INI  - afs_tf_init wasn't called first
  * TKT_FIL_FMT  - bad format
@@ -1194,9 +1194,9 @@ afs_tf_close(void)
  */
 
 static int
-tf_gets(register char *s, int n)
+tf_gets(char *s, int n)
 {
-    register int count;
+    int count;
 
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1229,9 +1229,9 @@ tf_gets(register char *s, int n)
  */
 
 static int
-tf_read(register char *s, register int n)
+tf_read(char *s, int n)
 {
-    register int count;
+    int count;
 
     for (count = n; count > 0; --count) {
 	if (curpos >= sizeof(tfbfr)) {
@@ -1258,8 +1258,8 @@ tf_read(register char *s, register int n)
  */
 
 int
-afs_tf_save_cred(struct ktc_principal *aserver, 
-		 struct ktc_token *atoken, 
+afs_tf_save_cred(struct ktc_principal *aserver,
+		 struct ktc_token *atoken,
 		 struct ktc_principal *aclient)
 {
     char realm[MAXKTCREALMLEN + 1];
@@ -1439,7 +1439,7 @@ afs_tf_create(char *pname, char *pinst)
     int count;
     char *file = ktc_tkt_string();
     int fd;
-    register int i;
+    int i;
     char zerobuf[1024];
     struct stat sbuf;
 

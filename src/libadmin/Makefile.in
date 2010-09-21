@@ -19,10 +19,10 @@ ${TOP_INCDIR}/afs/afs_Admin.h: afs_Admin.h
 
 install:
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_DATA} afs_Admin.h ${DESTDIR}${includedir}/afs/afs_Admin.h
+	${INSTALL_DATA} ${srcdir}/afs_Admin.h ${DESTDIR}${includedir}/afs/afs_Admin.h
 
 dest:
 	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_DATA} afs_Admin.h ${DEST}/include/afs/afs_Admin.h
+	${INSTALL_DATA} ${srcdir}/afs_Admin.h ${DEST}/include/afs/afs_Admin.h
 
 clean:

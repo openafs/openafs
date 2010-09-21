@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -241,7 +241,7 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
     XBSAGetData                 = BSAGetData;
     XBSAQueryApiVersion         = BSAQueryApiVersion;
     XBSAGetEnvironment          = BSAGetEnvironment;
-    
+
     if (!XBSAInit || !XBSABeginTxn || !XBSAEndTxn || !XBSATerminate ||
 	!XBSAQueryObject || !XBSAGetObject || !XBSAEndData ||
 	!XBSACreateObject || !XBSADeleteObject || !XBSAMarkObjectInactive ||
@@ -262,7 +262,7 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
      */
     if ((info->apiVersion.version == XBSA_TS_VERSION)
 	&& (info->apiVersion.release == XBSA_TS_RELEASE)) {
-	/* XOPEN Techincal Standard Level! 
+	/* XOPEN Techincal Standard Level!
 	 * We are coded to the Preliminary Spec!  Time to go boom!
 	 */
 	ELog(0,

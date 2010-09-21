@@ -61,7 +61,7 @@ ptst_t *critical_enter(void)
                 break;
             }
         }
- 
+
         if ( ptst == NULL )
         {
             ptst = ALIGNED_ALLOC(sizeof(*ptst));
@@ -80,7 +80,7 @@ ptst_t *critical_enter(void)
             }
             while ( (new_next = CASPO(&ptst_list, next, ptst)) != next );
         }
- 
+
         pthread_setspecific(ptst_key, ptst);
     }
 

@@ -33,14 +33,12 @@ afs_int32 afs_waitForever = 0;
 short afs_waitForeverCount = 0;
 afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;	/* show all messages */
 
-#ifdef AFS_DISCON_ENV
 afs_int32 afs_is_disconnected;
 afs_int32 afs_is_discon_rw;
 /* On reconnection, turn this knob on until it finishes,
  * then turn it off.
  */
 afs_int32 afs_in_sync = 0;
-#endif
 
 struct afs_pdata {
     char *ptr;
@@ -293,7 +291,7 @@ DECL_PIOCTL(PCallBackAddr);
 DECL_PIOCTL(PDiscon);
 DECL_PIOCTL(PNFSNukeCreds);
 DECL_PIOCTL(PNewUuid);
-DECL_PIOCTL(PPrecache); 
+DECL_PIOCTL(PPrecache);
 DECL_PIOCTL(PGetPAG);
 #if defined(AFS_CACHE_BYPASS)
 DECL_PIOCTL(PSetCachingThreshold);
@@ -313,10 +311,10 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com,
 			       afs_ucred_t **acred,
 			       afs_ucred_t *credp);
 #endif
-int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
+int HandleIoctl(struct vcache *avc, afs_int32 acom,
 		struct afs_ioctl *adata);
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
-		     register struct afs_ioctl *ablob, int afollow,
+		     struct afs_ioctl *ablob, int afollow,
 		     afs_ucred_t **acred);
 static int Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 		    afs_ucred_t *acred);
@@ -429,10 +427,10 @@ static pioctlFunction OpioctlSw[]  = {
 int afs_nobody = NFS_NOBODY;
 
 int
-HandleIoctl(register struct vcache *avc, register afs_int32 acom,
+HandleIoctl(struct vcache *avc, afs_int32 acom,
 	    struct afs_ioctl *adata)
 {
-    register afs_int32 code;
+    afs_int32 code;
 
     code = 0;
     AFS_STATCNT(HandleIoctl);
@@ -450,8 +448,8 @@ HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 
     case 3:{
 	    /* return the name of the cell this file is open on */
-	    register struct cell *tcell;
-	    register afs_int32 i;
+	    struct cell *tcell;
+	    afs_int32 i;
 
 	    tcell = afs_GetCell(avc->f.fid.Cell, READ_LOCK);
 	    if (tcell) {
@@ -539,8 +537,8 @@ kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
 #  endif
     } u_uap, *uap = &u_uap;
     struct file *fd;
-    register struct vcache *tvc;
-    register int ioctlDone = 0, code = 0;
+    struct vcache *tvc;
+    int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
     uap->fd = fdes;
@@ -559,7 +557,7 @@ kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
-		register struct afs_ioctl *datap;
+		struct afs_ioctl *datap;
 		AFS_GLOCK();
 		datap =
 		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
@@ -652,12 +650,12 @@ struct afs_ioctl_sys {
     int arg;
 };
 
-int 
+int
 afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
     struct file *fd;
-    register struct vcache *tvc;
-    register int ioctlDone = 0, code = 0;
+    struct vcache *tvc;
+    int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
 # if defined(AFS_SUN57_ENV)
@@ -678,7 +676,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
-		register struct afs_ioctl *datap;
+		struct afs_ioctl *datap;
 		AFS_GLOCK();
 		datap =
 		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
@@ -722,8 +720,8 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
     struct afs_ioctl_sys ua, *uap = &ua;
-    register struct vcache *tvc;
-    register int ioctlDone = 0, code = 0;
+    struct vcache *tvc;
+    int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
     ua.com = com;
@@ -733,7 +731,7 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
     if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	/* This is an AFS vnode */
 	if (((uap->com >> 8) & 0xff) == 'V') {
-	    register struct afs_ioctl *datap;
+	    struct afs_ioctl *datap;
 	    AFS_GLOCK();
 	    datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 	    code = copyin_afs_ioctl((char *)uap->arg, datap);
@@ -760,11 +758,11 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
+afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 {
     struct file *fd;
-    register struct vcache *tvc;
-    register int ioctlDone = 0, code = 0;
+    struct vcache *tvc;
+    int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
     if ((code = fdgetf(p, uap->fd, &fd)))
@@ -774,7 +772,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
-		register struct afs_ioctl *datap;
+		struct afs_ioctl *datap;
 		AFS_GLOCK();
 		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code = copyin_afs_ioctl((char *)uap->arg, datap);
@@ -800,7 +798,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 # if defined(AFS_FBSD_ENV)
 #  define arg data
 int
-afs_xioctl(struct thread *td, register struct ioctl_args *uap,
+afs_xioctl(struct thread *td, struct ioctl_args *uap,
 	   register_t *retval)
 {
     afs_proc_t *p = td->td_proc;
@@ -812,12 +810,12 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
+afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 {
 # endif
-    register struct filedesc *fdp;
-    register struct vcache *tvc;
-    register int ioctlDone = 0, code = 0;
+    struct filedesc *fdp;
+    struct vcache *tvc;
+    int ioctlDone = 0, code = 0;
     struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
@@ -844,7 +842,7 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
-		register struct afs_ioctl *datap;
+		struct afs_ioctl *datap;
 		AFS_GLOCK();
 		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code = copyin_afs_ioctl((char *)uap->arg, datap);
@@ -878,14 +876,14 @@ afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 int
 afs_xioctl(void)
 {
-    register struct a {
+    struct a {
 	int fd;
 	int com;
 	caddr_t arg;
     } *uap = (struct a *)get_user_struct()->u_ap;
-    register struct file *fd;
-    register struct vcache *tvc;
-    register int ioctlDone = 0, code = 0;
+    struct file *fd;
+    struct vcache *tvc;
+    int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
 
@@ -899,7 +897,7 @@ afs_xioctl(void)
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
-		register struct afs_ioctl *datap;
+		struct afs_ioctl *datap;
 		AFS_GLOCK();
 		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code=copyin_afs_ioctl((char *)uap->arg, datap);
@@ -1004,14 +1002,14 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
 
 int
 #ifdef	AFS_SUN5_ENV
-afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow,
 		   rval_t *vvp, afs_ucred_t *credp)
 #else
 #ifdef AFS_DARWIN100_ENV
 afs_syscall64_pioctl(user_addr_t path, unsigned int com, user_addr_t cmarg,
 		   int follow, afs_ucred_t *credp)
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow,
 		   afs_ucred_t *credp)
 #else
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
@@ -1025,7 +1023,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     afs_ucred_t *foreigncreds = NULL;
 #endif
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vnode *vp = NULL;
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp = crref();	/* don't free until done! */
@@ -1147,13 +1145,13 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	struct vnode *realvp;
 	if
 #ifdef AFS_SUN511_ENV
-          (VOP_REALVP(vp, &realvp, NULL) == 0) 
+          (VOP_REALVP(vp, &realvp, NULL) == 0)
 #else
-	  (VOP_REALVP(vp, &realvp) == 0) 
+	  (VOP_REALVP(vp, &realvp) == 0)
 #endif
 {
 	    struct vnode *oldvp = vp;
-	    
+
 	    VN_HOLD(realvp);
 	    vp = realvp;
 	    AFS_RELE(oldvp);
@@ -1262,13 +1260,13 @@ afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
 
 int
 afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
-		 register struct afs_ioctl *ablob, int afollow,
+		 struct afs_ioctl *ablob, int afollow,
 		 afs_ucred_t **acred)
 {
     struct vcache *avc;
     struct vrequest treq;
-    register afs_int32 code;
-    register afs_int32 function, device;
+    afs_int32 code;
+    afs_int32 function, device;
     struct afs_pdata input, output;
     struct afs_pdata copyInput, copyOutput;
     size_t outSize;
@@ -1411,7 +1409,7 @@ dummy_PSetAcl(char *ain, char *aout)
 
 DECL_PIOCTL(PSetAcl)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct afs_conn *tconn;
     struct AFSOpaque acl;
     struct AFSVolSync tsync;
@@ -1673,7 +1671,7 @@ DECL_PIOCTL(PBogus)
  */
 DECL_PIOCTL(PGetFileCell)
 {
-    register struct cell *tcell;
+    struct cell *tcell;
 
     AFS_STATCNT(PGetFileCell);
     if (!avc)
@@ -1737,9 +1735,9 @@ DECL_PIOCTL(PGetWSCell)
  */
 DECL_PIOCTL(PGetUserCell)
 {
-    register afs_int32 i;
-    register struct unixuser *tu;
-    register struct cell *tcell;
+    afs_int32 i;
+    struct unixuser *tu;
+    struct cell *tcell;
 
     AFS_STATCNT(PGetUserCell);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -1794,9 +1792,9 @@ DECL_PIOCTL(PGetUserCell)
 DECL_PIOCTL(PSetTokens)
 {
     afs_int32 i;
-    register struct unixuser *tu;
+    struct unixuser *tu;
     struct ClearToken clear;
-    register struct cell *tcell;
+    struct cell *tcell;
     char *stp;
     char *cellName;
     int stLen;
@@ -1930,8 +1928,8 @@ DECL_PIOCTL(PGetVolumeStatus)
     char volName[32];
     char *offLineMsg = afs_osi_Alloc(256);
     char *motd = afs_osi_Alloc(256);
-    register struct afs_conn *tc;
-    register afs_int32 code = 0;
+    struct afs_conn *tc;
+    afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
     char *Name;
     XSTATS_DECLS;
@@ -2004,11 +2002,11 @@ DECL_PIOCTL(PSetVolumeStatus)
     char *volName;
     char *offLineMsg;
     char *motd;
-    register struct afs_conn *tc;
-    register afs_int32 code = 0;
+    struct afs_conn *tc;
+    afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
     struct AFSStoreVolumeStatus storeStat;
-    register struct volume *tvp;
+    struct volume *tvp;
     XSTATS_DECLS;
 
     AFS_STATCNT(PSetVolumeStatus);
@@ -2137,9 +2135,9 @@ DECL_PIOCTL(PFlush)
  */
 DECL_PIOCTL(PNewStatMount)
 {
-    register afs_int32 code;
-    register struct vcache *tvc;
-    register struct dcache *tdc;
+    afs_int32 code;
+    struct vcache *tvc;
+    struct dcache *tdc;
     struct VenusFid tfid;
     char *bufp;
     char *name;
@@ -2213,12 +2211,12 @@ DECL_PIOCTL(PNewStatMount)
 
 /*!
  * VIOCGETTOK (8) - Get authentication tokens
- *  
+ *
  * \ingroup pioctl
- *      
+ *
  * \param[in] ain       cellid to return tokens for
  * \param[out] aout     token
- * 
+ *
  * \retval EIO
  * 	Error if the afs daemon hasn't started yet
  * \retval EDOM
@@ -2226,7 +2224,7 @@ DECL_PIOCTL(PNewStatMount)
  * 	tokens
  * \retval ENOTCONN
  * 	Error if there aren't tokens for this cell
- *  
+ *
  * \post
  * 	If the input paramater exists, get the token that corresponds to
  * 	the parameter value, if there is no token at this value, get the
@@ -2237,9 +2235,9 @@ DECL_PIOCTL(PNewStatMount)
 
 DECL_PIOCTL(PGetTokens)
 {
-    register struct cell *tcell;
-    register afs_int32 i;
-    register struct unixuser *tu;
+    struct cell *tcell;
+    afs_int32 i;
+    struct unixuser *tu;
     afs_int32 iterator = 0;
     int newStyle;
     int code = E2BIG;
@@ -2351,8 +2349,8 @@ out:
  */
 DECL_PIOCTL(PUnlog)
 {
-    register afs_int32 i;
-    register struct unixuser *tu;
+    afs_int32 i;
+    struct unixuser *tu;
 
     AFS_STATCNT(PUnlog);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -2455,8 +2453,8 @@ DECL_PIOCTL(PMariner)
  */
 DECL_PIOCTL(PCheckServers)
 {
-    register int i;
-    register struct server *ts;
+    int i;
+    struct server *ts;
     afs_int32 temp;
     char *cellName = NULL;
     struct cell *cellp;
@@ -2629,8 +2627,8 @@ static int
 Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 	 afs_ucred_t *acred)
 {
-    register char *tp;
-    register afs_int32 code;
+    char *tp;
+    afs_int32 code;
 #if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
 #else
@@ -2672,9 +2670,9 @@ Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
  */
 DECL_PIOCTL(PFindVolume)
 {
-    register struct volume *tvp;
-    register struct server *ts;
-    register afs_int32 i;
+    struct volume *tvp;
+    struct server *ts;
+    afs_int32 i;
     int code = 0;
 
     AFS_STATCNT(PFindVolume);
@@ -2720,7 +2718,7 @@ out:
  */
 DECL_PIOCTL(PViceAccess)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_int32 temp;
 
     AFS_STATCNT(PViceAccess);
@@ -2840,9 +2838,9 @@ DECL_PIOCTL(PGetCacheSize)
 {
     afs_int32 results[MAXGCSTATS];
     afs_int32 flags;
-    register struct dcache * tdc;
+    struct dcache * tdc;
     int i, size;
-    
+
     AFS_STATCNT(PGetCacheSize);
 
     if (afs_pd_remaining(ain) == sizeof(afs_int32)) {
@@ -2852,12 +2850,12 @@ DECL_PIOCTL(PGetCacheSize)
     } else {
 	return EINVAL;
     }
-    
+
     memset(results, 0, sizeof(results));
     results[0] = afs_cacheBlocks;
     results[1] = afs_blocksUsed;
     results[2] = afs_cacheFiles;
-    
+
     if (1 == flags){
         for (i = 0; i < afs_cacheFiles; i++) {
 	    if (afs_indexFlags[i] & IFFree) results[3]++;
@@ -2905,8 +2903,8 @@ DECL_PIOCTL(PGetCacheSize)
  */
 DECL_PIOCTL(PRemoveCallBack)
 {
-    register struct afs_conn *tc;
-    register afs_int32 code = 0;
+    struct afs_conn *tc;
+    afs_int32 code = 0;
     struct AFSCallBack CallBacks_Array[1];
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
@@ -3079,8 +3077,8 @@ DECL_PIOCTL(PNewAlias)
 DECL_PIOCTL(PListCells)
 {
     afs_int32 whichCell;
-    register struct cell *tcell = 0;
-    register afs_int32 i;
+    struct cell *tcell = 0;
+    afs_int32 i;
     int code;
 
     AFS_STATCNT(PListCells);
@@ -3118,7 +3116,7 @@ out:
 DECL_PIOCTL(PListAliases)
 {
     afs_int32 whichAlias;
-    register struct cell_alias *tcalias = 0;
+    struct cell_alias *tcalias = 0;
     int code;
 
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
@@ -3165,14 +3163,14 @@ out:
  */
 DECL_PIOCTL(PRemoveMount)
 {
-    register afs_int32 code;
+    afs_int32 code;
     char *bufp;
     char *name;
     struct sysname_info sysState;
     afs_size_t offset, len;
-    register struct afs_conn *tc;
-    register struct dcache *tdc;
-    register struct vcache *tvc;
+    struct afs_conn *tc;
+    struct dcache *tdc;
+    struct vcache *tvc;
     struct AFSFetchStatus OutDirStatus;
     struct VenusFid tfid;
     struct AFSVolSync tsync;
@@ -3302,7 +3300,7 @@ DECL_PIOCTL(PRemoveMount)
  */
 DECL_PIOCTL(PGetCellStatus)
 {
-    register struct cell *tcell;
+    struct cell *tcell;
     char *cellName;
     afs_int32 temp;
 
@@ -3342,7 +3340,7 @@ DECL_PIOCTL(PGetCellStatus)
  */
 DECL_PIOCTL(PSetCellStatus)
 {
-    register struct cell *tcell;
+    struct cell *tcell;
     char *cellName;
     afs_int32 flags0, flags1;
 
@@ -3391,10 +3389,10 @@ DECL_PIOCTL(PSetCellStatus)
  */
 DECL_PIOCTL(PFlushVolumeData)
 {
-    register afs_int32 i;
-    register struct dcache *tdc;
-    register struct vcache *tvc;
-    register struct volume *tv;
+    afs_int32 i;
+    struct dcache *tdc;
+    struct vcache *tvc;
+    struct volume *tv;
     afs_int32 cell, volume;
     struct afs_q *tq, *uq;
 #ifdef AFS_DARWIN80_ENV
@@ -3493,7 +3491,7 @@ DECL_PIOCTL(PFlushVolumeData)
 		     * then someone probably has the file open and is writing
 		     * into it. Better to skip flushing such a file, it will be
 		     * brought back immediately on the next write anyway.
-		     * 
+		     *
 		     * If we *must* flush, then this code has to be rearranged
 		     * to call afs_storeAllSegments() first */
 		    afs_FlushDCache(tdc);
@@ -3548,7 +3546,7 @@ DECL_PIOCTL(PFlushVolumeData)
  */
 DECL_PIOCTL(PGetVnodeXStatus)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vcxstat stat;
     afs_int32 mode, i;
 
@@ -3596,7 +3594,7 @@ DECL_PIOCTL(PGetVnodeXStatus)
 
 DECL_PIOCTL(PGetVnodeXStatus2)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vcxstat2 stat;
     afs_int32 mode;
 
@@ -3655,9 +3653,9 @@ DECL_PIOCTL(PSetSysName)
     char outname[MAXSYSNAME];
     afs_int32 setsysname;
     int foundname = 0;
-    register struct afs_exporter *exporter;
-    register struct unixuser *au;
-    register afs_int32 pag, error;
+    struct afs_exporter *exporter;
+    struct unixuser *au;
+    afs_int32 pag, error;
     int t, count, num = 0, allpags = 0;
     char **sysnamelist;
     struct afs_pdata validate;
@@ -3823,7 +3821,7 @@ ReSortCells(int s, afs_int32 * l, int vlonly)
 {
     int i;
     struct volume *j;
-    register int k;
+    int k;
 
     if (vlonly) {
 	afs_int32 *p;
@@ -3971,7 +3969,7 @@ DECL_PIOCTL(PSetSPrefs)
     return 0;
 }
 
-/* 
+/*
  * VIOC_SETPREFS33 (42) - Set server ranks (deprecated)
  *
  * \param[in] ain	the server preferences to be set
@@ -4000,7 +3998,7 @@ DECL_PIOCTL(PSetSPrefs33)
     return 0;
 }
 
-/* 
+/*
  * VIOC_GETSPREFS (43) - Get server ranks
  *
  * \ingroup pioctl
@@ -4122,7 +4120,7 @@ DECL_PIOCTL(PExportAfs)
     afs_int32 export, newint = 0;
     afs_int32 type, changestate, handleValue, convmode, pwsync, smounts;
     afs_int32 rempags = 0, pagcb = 0;
-    register struct afs_exporter *exporter;
+    struct afs_exporter *exporter;
 
     AFS_STATCNT(PExportAfs);
     if (afs_pd_getInt(ain, &handleValue) != 0)
@@ -4551,14 +4549,14 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     } else if (!code) {
 	EXP_RELE(outexporter);
     }
-    if (!code) 
+    if (!code)
 	*com = (*com) | comp;
     return code;
 }
 #endif /* AFS_NEED_CLIENTCONTEXT */
 
 
-/*! 
+/*!
  * VIOC_GETCPREFS (50) - Get client interface
  *
  * \ingroup pioctl
@@ -4691,9 +4689,9 @@ DECL_PIOCTL(PSetCPrefs)
  */
 DECL_PIOCTL(PFlushMount)
 {
-    register afs_int32 code;
-    register struct vcache *tvc;
-    register struct dcache *tdc;
+    afs_int32 code;
+    struct vcache *tvc;
+    struct dcache *tdc;
     struct VenusFid tfid;
     char *bufp;
     char *mount;
@@ -4852,7 +4850,7 @@ DECL_PIOCTL(PRxStatPeer)
 
 DECL_PIOCTL(PPrefetchFromTape)
 {
-    register afs_int32 code, code1;
+    afs_int32 code, code1;
     afs_int32 bytes, outval;
     struct afs_conn *tc;
     struct rx_call *tcall;
@@ -4918,7 +4916,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 
 DECL_PIOCTL(PFsCmd)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct afs_conn *tc;
     struct vcache *tvc;
     struct FsCmdInputs *Inputs;
@@ -4958,7 +4956,7 @@ DECL_PIOCTL(PFsCmd)
 	    if (tc) {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_FsCmd(tc->id, Fid, Inputs, 
+		    RXAFS_FsCmd(tc->id, Fid, Inputs,
 					(struct FsCmdOutputs *)aout);
 		RX_AFS_GLOCK();
 	    } else
@@ -5017,19 +5015,19 @@ DECL_PIOCTL(PSetCachingThreshold)
 
     if (setting == 0 && getting == 0)
 	return EINVAL;
-	
-    /* 
+
+    /*
      * If setting, set first, and return the value now in effect
      */
     if (setting) {
 	if (!afs_osi_suser(*acred))
 	    return EPERM;
 	cache_bypass_threshold = threshold;
-        afs_warn("Cache Bypass Threshold set to: %d\n", threshold);		
+        afs_warn("Cache Bypass Threshold set to: %d\n", threshold);
 	/* TODO:  move to separate pioctl, or enhance pioctl */
 	cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
     }
-	
+
     /* Return the current size threshold */
     if (getting)
 	return afs_pd_putInt(aout, cache_bypass_threshold);
@@ -5137,13 +5135,13 @@ DECL_PIOCTL(PCallBackAddr)
 
 DECL_PIOCTL(PDiscon)
 {
-#ifdef AFS_DISCON_ENV
     static afs_int32 mode = 1; /* Start up in 'off' */
     afs_int32 force = 0;
     int code = 0;
-    char flags[3];
+    char flags[4];
+    struct vrequest lreq;
 
-    if (afs_pd_getBytes(ain, &flags, 3) == 0) {
+    if (afs_pd_getBytes(ain, &flags, 4) == 0) {
 	if (!afs_osi_suser(*acred))
 	    return EPERM;
 
@@ -5153,6 +5151,12 @@ DECL_PIOCTL(PDiscon)
 	    afs_ConflictPolicy = flags[1] - 1;
 	if (flags[2])
 	    force = 1;
+	if (flags[3]) {
+	    /* Fake InitReq support for UID override */
+	    memset(&lreq, 0, sizeof(lreq));
+	    lreq.uid = flags[3];
+	    areq = &lreq; /* override areq we got */
+	}
 
 	/*
 	 * All of these numbers are hard coded in fs.c. If they
@@ -5204,16 +5208,13 @@ DECL_PIOCTL(PDiscon)
 	return code;
 
     return afs_pd_putInt(aout, mode);
-#else
-    return EINVAL;
-#endif
 }
 
 DECL_PIOCTL(PNFSNukeCreds)
 {
     afs_uint32 addr;
-    register afs_int32 i;
-    register struct unixuser *tu;
+    afs_int32 i;
+    struct unixuser *tu;
 
     AFS_STATCNT(PUnlog);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */

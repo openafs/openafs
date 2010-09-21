@@ -152,9 +152,9 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 static int
 afs_root(struct super_block *afsp)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp = 0;
+    struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
@@ -286,6 +286,25 @@ afs_destroy_inodecache(void)
 }
 #endif
 
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_EVICT_INODE)
+static void
+afs_evict_inode(struct inode *ip)
+{
+    struct vcache *vcp = VTOAFS(ip);
+
+    if (vcp->vlruq.prev || vcp->vlruq.next)
+	osi_Panic("inode freed while on LRU");
+    if (vcp->hnext)
+	osi_Panic("inode freed while still hashed");
+
+    truncate_inode_pages(&ip->i_data, 0);
+    end_writeback(ip);
+
+#if !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
+    afs_osi_Free(ip->u.generic_ip, sizeof(struct vcache));
+#endif
+}
+#else
 static void
 afs_clear_inode(struct inode *ip)
 {
@@ -300,6 +319,7 @@ afs_clear_inode(struct inode *ip)
     afs_osi_Free(ip->u.generic_ip, sizeof(struct vcache));
 #endif
 }
+#endif
 
 /* afs_put_super
  * Called from unmount to release super_block. */
@@ -364,7 +384,11 @@ struct super_operations afs_sops = {
   .alloc_inode =	afs_alloc_inode,
   .destroy_inode =	afs_destroy_inode,
 #endif
+#if defined(STRUCT_SUPER_OPERATIONS_HAS_EVICT_INODE)
+  .evict_inode =	afs_evict_inode,
+#else
   .clear_inode =	afs_clear_inode,
+#endif
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,
 };

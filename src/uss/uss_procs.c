@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -33,7 +33,7 @@
 
 #include <string.h>
 #include <stdarg.h>
-    
+
 #include <afs/kautils.h> /*MAXKTCREALMLEN*/
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE
@@ -277,7 +277,7 @@ uss_procs_CpFile(char *a_path, char *a_mode, char *a_owner, char *a_proto)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_EchoToFile(char *a_path, char *a_mode, char *a_owner, 
+uss_procs_EchoToFile(char *a_path, char *a_mode, char *a_owner,
 		     char *a_content)
 {				/*uss_procs_EchoToFile */
 
@@ -493,7 +493,7 @@ uss_procs_GetOwner(char *a_ownerStr)
  * static Copy
  *
  * Description:
- *	 Copies the "from" file to the "to" file and sets the mode. 
+ *	 Copies the "from" file to the "to" file and sets the mode.
  *
  * Arguments:
  *	a_from : File to copy from.
@@ -515,7 +515,7 @@ static int
 Copy(char *a_from, char *a_to, int a_mode)
 {				/*Copy */
 
-    register int fd1, fd2;
+    int fd1, fd2;
     char buf[BUFSIZ];
     int cnt, rc;
 
@@ -591,7 +591,7 @@ static int
 Echo(char *a_s, char *a_f, int a_mode)
 {				/*Echo */
 
-    register int fd;
+    int fd;
 
     umask(0);
     fd = open(a_f, O_EXCL | O_CREAT | O_WRONLY, a_mode);
@@ -691,7 +691,7 @@ uss_procs_PickADir(char *path, char *cp)
 	cd[1] = '\0';
     }
 
-    /* 
+    /*
      * We now have the current dir (cd).  Search all of the given
      * subdirs (by G in template), count the number of entries in
      * each and pick the minimum.
@@ -855,7 +855,7 @@ void
 uss_procs_PrintErr(int a_lineNum, char *a_fmt, ... )
 {				/*uss_procs_PrintErr */
     va_list ap;
-    
+
     va_start(ap, a_fmt);
     uss_syntax_err++;
     fprintf(stderr, "%s: Template file, line %d: ", uss_whoami, a_lineNum);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -11,7 +11,7 @@
  * pass the elements required to identify a file to the underlying file
  * systen. For the usual Vice inode operations, this is no more than the
  * usual device and inode numbers. For the user space file system used on NT
- * we also need the volume id to identify the file. 
+ * we also need the volume id to identify the file.
  *
  * An FdHandle_t is an abstraction used to associate file descroptors
  * with Inode handles. IH_OPEN is used to get a file descriptor that

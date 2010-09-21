@@ -106,7 +106,7 @@ install: ${LIBKOPENAFS}
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
 	${INSTALL_DATA} libkopenafs.a ${DESTDIR}${libdir}/libkopenafs.a
-	${INSTALL_DATA} kopenafs.h ${DESTDIR}${includedir}/kopenafs.h
+	${INSTALL_DATA} ${srcdir}/kopenafs.h ${DESTDIR}${includedir}/kopenafs.h
 	../config/shlib-install -d ${DESTDIR}${libdir} \
 		-l libkopenafs -M ${MAJOR} -m ${MINOR}
 
@@ -114,7 +114,7 @@ dest: ${LIBKOPENAFS}
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} libkopenafs.a ${DEST}/lib/libkopenafs.a
-	${INSTALL_DATA} kopenafs.h ${DEST}/include/kopenafs.h
+	${INSTALL_DATA} ${srcdir}/kopenafs.h ${DEST}/include/kopenafs.h
 	../config/shlib-install -d ${DEST}/lib \
 		-l libkopenafs -M ${MAJOR} -m ${MINOR}
 

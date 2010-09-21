@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 #include "h/param.h"
 #include "h/types.h"
 #include "h/time.h"
-#if	defined(AFS_AIX31_ENV) 
+#if	defined(AFS_AIX31_ENV)
 #include "h/limits.h"
 #endif
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
@@ -101,15 +101,15 @@ static afs_int32 timecounter;
 
 /* Prototypes for static routines */
 static struct buffer *afs_newslot(struct dcache *adc, afs_int32 apage,
-				  register struct buffer *lp);
+				  struct buffer *lp);
 
 static int dinit_flag = 0;
 void
 DInit(int abuffers)
 {
     /* Initialize the venus buffer system. */
-    register int i;
-    register struct buffer *tb;
+    int i;
+    struct buffer *tb;
 
     AFS_STATCNT(DInit);
     if (dinit_flag)
@@ -145,10 +145,10 @@ DInit(int abuffers)
 }
 
 void *
-DRead(register struct dcache *adc, register int page)
+DRead(struct dcache *adc, int page)
 {
     /* Read a page from the disk. */
-    register struct buffer *tb, *tb2;
+    struct buffer *tb, *tb2;
     struct osi_file *tfile;
     int code;
 
@@ -159,10 +159,10 @@ DRead(register struct dcache *adc, register int page)
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
 
     /* this apparently-complicated-looking code is simply an example of
-     * a little bit of loop unrolling, and is a standard linked-list 
+     * a little bit of loop unrolling, and is a standard linked-list
      * traversal trick. It saves a few assignments at the the expense
      * of larger code size.  This could be simplified by better use of
-     * macros. 
+     * macros.
      */
     if ((tb = phTable[pHash(adc->index, page)])) {
 	if (bufmatch(tb)) {
@@ -174,7 +174,7 @@ DRead(register struct dcache *adc, register int page)
 	    ReleaseWriteLock(&tb->lock);
 	    return tb->data;
 	} else {
-	    register struct buffer **bufhead;
+	    struct buffer **bufhead;
 	    bufhead = &(phTable[pHash(adc->index, page)]);
 	    while ((tb2 = tb->hashNext)) {
 		if (bufmatch(tb2)) {
@@ -208,7 +208,7 @@ DRead(register struct dcache *adc, register int page)
     AFS_STATS(afs_stats_cmperf.bufMisses++);
     /* can't find it */
     /* The last thing we looked at was either tb or tb2 (or nothing). That
-     * is at least the oldest buffer on one particular hash chain, so it's 
+     * is at least the oldest buffer on one particular hash chain, so it's
      * a pretty good place to start looking for the truly oldest buffer.
      */
     tb = afs_newslot(adc, page, (tb ? tb : tb2));
@@ -245,10 +245,10 @@ DRead(register struct dcache *adc, register int page)
 }
 
 static void
-FixupBucket(register struct buffer *ap)
+FixupBucket(struct buffer *ap)
 {
-    register struct buffer **lp, *tp;
-    register int i;
+    struct buffer **lp, *tp;
+    int i;
     /* first try to get it out of its current hash bucket, in which it
      * might not be */
     AFS_STATCNT(FixupBucket);
@@ -270,12 +270,12 @@ FixupBucket(register struct buffer *ap)
 
 /* lp is pointer to a fairly-old buffer */
 static struct buffer *
-afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
+afs_newslot(struct dcache *adc, afs_int32 apage, struct buffer *lp)
 {
     /* Find a usable buffer slot */
-    register afs_int32 i;
+    afs_int32 i;
     afs_int32 lt = 0;
-    register struct buffer *tp;
+    struct buffer *tp;
     struct osi_file *tfile;
 
     AFS_STATCNT(afs_newslot);
@@ -379,9 +379,9 @@ DRelease(void *loc, int flag)
 {
     /* Release a buffer, specifying whether or not the buffer has been
      * modified by the locker. */
-    register struct buffer *bp = (struct buffer *)loc;
-    register int index;
-    register struct buffer *tp;
+    struct buffer *bp = (struct buffer *)loc;
+    int index;
+    struct buffer *tp;
 
     AFS_STATCNT(DRelease);
     if (!bp)
@@ -407,11 +407,11 @@ DRelease(void *loc, int flag)
 }
 
 int
-DVOffset(register void *ap)
+DVOffset(void *ap)
 {
     /* Return the byte within a file represented by a buffer pointer. */
-    register int index;
-    register struct buffer *tp;
+    int index;
+    struct buffer *tp;
     AFS_STATCNT(DVOffset);
     /* look for buffer by scanning Unix buffers for appropriate address */
     /* see comment in DRelease about the meaning of ap/bp */
@@ -430,13 +430,13 @@ DVOffset(register void *ap)
     return AFS_BUFFER_PAGESIZE * tp->page + (int)(((char *)ap) - tp->data);
 }
 
-/*! 
+/*!
  * Zap one dcache entry: destroy one FID's buffers.
  *
  * 1/1/91 - I've modified the hash function to take the page as well
  * as the *fid, so that lookup will be a bit faster.  That presents some
  * difficulties for Zap, which now has to have some knowledge of the nature
- * of the hash function.  Oh well.  This should use the list traversal 
+ * of the hash function.  Oh well.  This should use the list traversal
  * method of DRead...
  *
  * \param adc The dcache entry to be zapped.
@@ -444,9 +444,9 @@ DVOffset(register void *ap)
 void
 DZap(struct dcache *adc)
 {
-    register int i;
+    int i;
     /* Destroy all buffers pertaining to a particular fid. */
-    register struct buffer *tb;
+    struct buffer *tb;
 
     AFS_STATCNT(DZap);
     ObtainReadLock(&afs_bufferLock);
@@ -467,7 +467,7 @@ static void
 DFlushBuffer(struct buffer *ab)
 {
     struct osi_file *tfile;
-    
+
     tfile = afs_CFileOpen(&ab->inode);
     afs_CFileWrite(tfile, ab->page * AFS_BUFFER_PAGESIZE,
 		   ab->data, AFS_BUFFER_PAGESIZE);
@@ -476,7 +476,7 @@ DFlushBuffer(struct buffer *ab)
 }
 
 void
-DFlushDCache(struct dcache *adc) 
+DFlushDCache(struct dcache *adc)
 {
     int i;
     struct buffer *tb;
@@ -504,8 +504,8 @@ void
 DFlush(void)
 {
     /* Flush all the modified buffers. */
-    register int i;
-    register struct buffer *tb;
+    int i;
+    struct buffer *tb;
 
     AFS_STATCNT(DFlush);
     tb = Buffers;
@@ -519,7 +519,7 @@ DFlush(void)
 		/* it seems safe to do this I/O without having the dcache
 		 * locked, since the only things that will update the data in
 		 * a directory are the buffer package, which holds the relevant
-		 * tb->lock while doing the write, or afs_GetDCache, which 
+		 * tb->lock while doing the write, or afs_GetDCache, which
 		 * DZap's the directory while holding the dcache lock.
 		 * It is not possible to lock the dcache or even call
 		 * afs_GetDSlot to map the index to the dcache since the dir
@@ -538,10 +538,10 @@ DFlush(void)
 }
 
 void *
-DNew(register struct dcache *adc, register int page)
+DNew(struct dcache *adc, int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
-    register struct buffer *tb;
+    struct buffer *tb;
     AFS_STATCNT(DNew);
     ObtainWriteLock(&afs_bufferLock, 264);
     if ((tb = afs_newslot(adc, page, NULL)) == 0) {
@@ -567,7 +567,7 @@ DNew(register struct dcache *adc, register int page)
 void
 shutdown_bufferpackage(void)
 {
-    register struct buffer *tp;
+    struct buffer *tp;
     int i;
 
     AFS_STATCNT(shutdown_bufferpackage);

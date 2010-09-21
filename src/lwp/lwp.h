@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -306,7 +306,7 @@ extern
 #endif
 char lwp_debug;			/* ON = show LWP debugging trace */
 
-/* 
+/*
  * Under hpux, any stack size smaller than 16K seems prone to
  * overflow problems.
  *
@@ -383,15 +383,15 @@ extern int LWP_DispatchProcess(void);
 extern int LWP_WaitProcess(void *event);
 extern PROCESS LWP_ThreadId(void);
 extern int LWP_QWait(void);
-extern int LWP_QSignal(register PROCESS pid);
+extern int LWP_QSignal(PROCESS pid);
 #endif
 
-extern afs_int32 savecontext(void (*ep)(void), 
+extern afs_int32 savecontext(void (*ep)(void),
 			     struct lwp_context *savearea, char *sp);
 extern void returnto(struct lwp_context *savearea);
 
 #ifdef AFS_LINUX24_ENV
-/* max time we are allowed to spend in a select call on Linux to avoid 
+/* max time we are allowed to spend in a select call on Linux to avoid
  lost signal issues */
 #define IOMGR_MAXWAITTIME        60	/* seconds */
 #else

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -201,11 +201,11 @@ statusWatcher(void *unused)
 	/* A task not started yet - check its start time */
 	if (localTaskFlags & STARTING || atTime) {
 	    /*
-	     * Start a timed dump if its time has come.  When the job is 
-	     * started, it will allocate its own status structure so this 
-	     * one is no longer needed: delete it. 
+	     * Start a timed dump if its time has come.  When the job is
+	     * started, it will allocate its own status structure so this
+	     * one is no longer needed: delete it.
 	     *
-	     * Avoid multiple processes trouncing the cmdLine by placing 
+	     * Avoid multiple processes trouncing the cmdLine by placing
 	     * lock around it.
 	     */
 	    if (atTime && (atTime <= time(0))) {

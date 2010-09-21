@@ -1,0 +1,8 @@
+B<volserver>
+    [B<-log>] S<<< [B<-p> <I<number of processes>>] >>>
+    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
+    S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
+    S<<< [B<-d> <I<debug level>>] >>>
+    [B<-nojumbo>] [B<-jumbo>] 
+    [B<-enable_peer_stats>] [B<-enable_process_stats>] 
+    [B<-allow-dotted-principals>] [B<-help>]

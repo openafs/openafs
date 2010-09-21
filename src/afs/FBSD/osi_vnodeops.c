@@ -232,6 +232,22 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 
 #define DROPNAME() FREE(name, M_TEMP)
 
+/*
+ * Here we define compatibility functions/macros for interfaces that
+ * have changed between different FreeBSD versions.
+ */
+#if defined(AFS_FBSD90_ENV)
+static __inline void ma_vm_page_lock_queues(void) {};
+static __inline void ma_vm_page_unlock_queues(void) {};
+static __inline void ma_vm_page_lock(vm_page_t m) { vm_page_lock(m); };
+static __inline void ma_vm_page_unlock(vm_page_t m) { vm_page_unlock(m); };
+#else
+static __inline void ma_vm_page_lock_queues(void) { vm_page_lock_queues(); };
+static __inline void ma_vm_page_unlock_queues(void) { vm_page_unlock_queues(); };
+static __inline void ma_vm_page_lock(vm_page_t m) {};
+static __inline void ma_vm_page_unlock(vm_page_t m) {};
+#endif
+
 #if defined(AFS_FBSD80_ENV)
 #define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags))
 #define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags))
@@ -240,6 +256,14 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 #define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags, p))
 #define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags, p))
 #define MA_VOP_UNLOCK(vp, flags, p) (VOP_UNLOCK(vp, flags, p))
+#endif
+
+#if defined(AFS_FBSD70_ENV)
+#define MA_PCPU_INC(c) PCPU_INC(c)
+#define	MA_PCPU_ADD(c, n) PCPU_ADD(c, n)
+#else
+#define MA_PCPU_INC(c) PCPU_LAZY_INC(c)
+#define	MA_PCPU_ADD(c, n) (c) += (n)
 #endif
 
 #ifdef AFS_FBSD70_ENV
@@ -454,7 +478,7 @@ afs_vop_lookup(ap)
     int error;
     struct vcache *vcp;
     struct vnode *vp, *dvp;
-    register int flags = ap->a_cnp->cn_flags;
+    int flags = ap->a_cnp->cn_flags;
     int lockparent;		/* 1 => lockparent flag is set */
     int wantparent;		/* 1 => wantparent or lockparent flag */
     struct thread *p = ap->a_cnp->cn_thread;
@@ -524,7 +548,7 @@ afs_vop_lookup(ap)
 	    MA_VOP_UNLOCK(dvp, 0, p);	/* done with parent. */
 #endif
 	}
-	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(vp, LK_EXCLUSIVE | LK_CANRECURSE | LK_RETRY, p);
 	/* always return the child locked */
     }
     *ap->a_vpp = vp;
@@ -548,7 +572,7 @@ afs_vop_create(ap)
 {
     int error = 0;
     struct vcache *vcp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *dvp = ap->a_dvp;
     struct thread *p = ap->a_cnp->cn_thread;
     GETNAME();
 
@@ -642,8 +666,24 @@ afs_vop_close(ap)
 				 * struct thread *a_td;
 				 * } */ *ap;
 {
-    int code;
-    struct vcache *avc = VTOAFS(ap->a_vp);
+    int code, iflag;
+    struct vnode *vp = ap->a_vp;
+    struct vcache *avc = VTOAFS(vp);
+
+#if defined(AFS_FBSD80_ENV)
+    VI_LOCK(vp);
+    iflag = vp->v_iflag & VI_DOOMED;
+    VI_UNLOCK(vp);
+    if (iflag & VI_DOOMED) {
+        /* osi_FlushVCache (correctly) calls vgone() on recycled vnodes, we don't
+         * have an afs_close to process, in that case */
+        if (avc->opens != 0)
+            panic("afs_vop_close: doomed vnode %p has vcache %p with non-zero opens %d\n",
+                  vp, avc, avc->opens);
+        return 0;
+    }
+#endif
+
     AFS_GLOCK();
     if (ap->a_cred)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred);
@@ -683,9 +723,11 @@ afs_vop_getattr(ap)
 				 * } */ *ap;
 {
     int code;
+
     AFS_GLOCK();
     code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
+
     return code;
 }
 
@@ -761,27 +803,30 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	vm_page_t m = ap->a_m[ap->a_reqpage];
 
 	VM_OBJECT_LOCK(object);
-	vm_page_lock_queues();
+	ma_vm_page_lock_queues();
 	if (m->valid != 0) {
 	    /* handled by vm_fault now        */
 	    /* vm_page_zero_invalid(m, TRUE); */
 	    for (i = 0; i < npages; ++i) {
-		if (i != ap->a_reqpage)
+		if (i != ap->a_reqpage) {
+		    ma_vm_page_lock(ap->a_m[i]);
 		    vm_page_free(ap->a_m[i]);
+		    ma_vm_page_unlock(ap->a_m[i]);
+		}
 	    }
-	    vm_page_unlock_queues();
+	    ma_vm_page_unlock_queues();
 	    VM_OBJECT_UNLOCK(object);
 	    return (0);
 	}
-	vm_page_unlock_queues();
+	ma_vm_page_unlock_queues();
 	VM_OBJECT_UNLOCK(object);
     }
     bp = getpbuf(&afs_pbuf_freecnt);
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    cnt.v_vnodein++;
-    cnt.v_vnodepgsin += npages;
+    MA_PCPU_INC(cnt.v_vnodein);
+    MA_PCPU_ADD(cnt.v_vnodepgsin, npages);
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
@@ -803,24 +848,25 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 
     if (code && (uio.uio_resid == ap->a_count)) {
 	VM_OBJECT_LOCK(object);
-	vm_page_lock_queues();
+	ma_vm_page_lock_queues();
 	for (i = 0; i < npages; ++i) {
 	    if (i != ap->a_reqpage)
 		vm_page_free(ap->a_m[i]);
 	}
-	vm_page_unlock_queues();
+	ma_vm_page_unlock_queues();
 	VM_OBJECT_UNLOCK(object);
 	return VM_PAGER_ERROR;
     }
 
     size = ap->a_count - uio.uio_resid;
     VM_OBJECT_LOCK(object);
-    vm_page_lock_queues();
+    ma_vm_page_lock_queues();
     for (i = 0, toff = 0; i < npages; i++, toff = nextoff) {
 	vm_page_t m;
 	nextoff = toff + PAGE_SIZE;
 	m = ap->a_m[i];
 
+	/* XXX not in nfsclient? */
 	m->flags &= ~PG_ZERO;
 
 	if (nextoff <= size) {
@@ -828,15 +874,22 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * Read operation filled an entire page
 	     */
 	    m->valid = VM_PAGE_BITS_ALL;
+#ifndef AFS_FBSD80_ENV
 	    vm_page_undirty(m);
+#else
+	    KASSERT(m->dirty == 0, ("afs_getpages: page %p is dirty", m));
+#endif
 	} else if (size > toff) {
 	    /*
 	     * Read operation filled a partial page.
 	     */
 	    m->valid = 0;
-	    vm_page_set_validclean(m, 0, size - toff);
-	    /* handled by vm_fault now        */
-	    /* vm_page_zero_invalid(m, TRUE); */
+	    vm_page_set_valid(m, 0, size - toff);
+#ifndef AFS_FBSD80_ENV
+	    vm_page_undirty(m);
+#else
+	    KASSERT(m->dirty == 0, ("afs_getpages: page %p is dirty", m));
+#endif
 	}
 
 	if (i != ap->a_reqpage) {
@@ -854,20 +907,28 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     */
 	    if (!code) {
 #if defined(AFS_FBSD70_ENV)
-		if (m->oflags & VPO_WANTED)
+		if (m->oflags & VPO_WANTED) {
 #else
-		if (m->flags & PG_WANTED)
+		if (m->flags & PG_WANTED) {
 #endif
+		    ma_vm_page_lock(m);
 		    vm_page_activate(m);
-		else
+		    ma_vm_page_unlock(m);
+		}
+		else {
+		    ma_vm_page_lock(m);
 		    vm_page_deactivate(m);
+		    ma_vm_page_unlock(m);
+		}
 		vm_page_wakeup(m);
 	    } else {
+		ma_vm_page_lock(m);
 		vm_page_free(m);
+		ma_vm_page_unlock(m);
 	    }
 	}
     }
-    vm_page_unlock_queues();
+    ma_vm_page_unlock_queues();
     VM_OBJECT_UNLOCK(object);
     return 0;
 }
@@ -935,8 +996,8 @@ afs_vop_putpages(struct vop_putpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    cnt.v_vnodeout++;
-    cnt.v_vnodepgsout += ap->a_count;
+    MA_PCPU_INC(cnt.v_vnodeout);
+    MA_PCPU_ADD(cnt.v_vnodepgsout, ap->a_count);
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
@@ -1042,7 +1103,7 @@ afs_vop_fsync(ap)
 				 * } */ *ap;
 {
     int error;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
 
     AFS_GLOCK();
     /*vflushbuf(vp, wait); */
@@ -1067,8 +1128,8 @@ afs_vop_remove(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *vp = ap->a_vp;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
     AFS_GLOCK();
@@ -1088,8 +1149,8 @@ afs_vop_link(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *dvp = ap->a_tdvp;
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *dvp = ap->a_tdvp;
+    struct vnode *vp = ap->a_vp;
     struct thread *p = ap->a_cnp->cn_thread;
 
     GETNAME();
@@ -1101,7 +1162,7 @@ afs_vop_link(ap)
 	error = EISDIR;
 	goto out;
     }
-    if ((error = ma_vn_lock(vp, LK_EXCLUSIVE, p)) != 0) {
+    if ((error = ma_vn_lock(vp, LK_CANRECURSE | LK_EXCLUSIVE, p)) != 0) {
 	goto out;
     }
     AFS_GLOCK();
@@ -1131,9 +1192,9 @@ afs_vop_rename(ap)
     struct componentname *tcnp = ap->a_tcnp;
     char *tname;
     struct vnode *tvp = ap->a_tvp;
-    register struct vnode *tdvp = ap->a_tdvp;
+    struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
-    register struct vnode *fdvp = ap->a_fdvp;
+    struct vnode *fdvp = ap->a_fdvp;
     struct thread *p = fcnp->cn_thread;
 
     /*
@@ -1232,8 +1293,8 @@ afs_vop_mkdir(ap)
 				 * struct vattr *a_vap;
 				 * } */ *ap;
 {
-    register struct vnode *dvp = ap->a_dvp;
-    register struct vattr *vap = ap->a_vap;
+    struct vnode *dvp = ap->a_dvp;
+    struct vattr *vap = ap->a_vap;
     int error = 0;
     struct vcache *vcp;
     struct thread *p = ap->a_cnp->cn_thread;
@@ -1268,7 +1329,7 @@ afs_vop_rmdir(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    register struct vnode *dvp = ap->a_dvp;
+    struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
     AFS_GLOCK();
@@ -1390,7 +1451,7 @@ afs_vop_inactive(ap)
 				 * struct thread *td;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
 
     if (prtactive && vp->v_usecount != 0)
 	vprint("afs_vop_inactive(): pushing active", vp);
@@ -1423,23 +1484,15 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
 	AFS_GLOCK();
     if (!haveVlock)
 	ObtainWriteLock(&afs_xvcache, 901);
-#ifndef AFS_DISCON_ENV
-    code = afs_FlushVCache(avc, &slept);	/* tosses our stuff from vnode */
-#else
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
-    code = afs_FlushVS(avc);
-#endif
+    code = afs_FlushVCache(avc, &slept);
     if (!haveVlock)
 	ReleaseWriteLock(&afs_xvcache);
     if (!haveGlock)
 	AFS_GUNLOCK();
 
-    /*
-     * XXX Pretend it worked, to prevent panic on shutdown
-     * Garrett, please fix - Jim Rees
-     */
     if (code) {
-	printf("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
+	afs_warn("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
 	VOP_PRINT(vp);
     }
 
@@ -1496,11 +1549,11 @@ afs_vop_print(ap)
 				 * struct vnode *a_vp;
 				 * } */ *ap;
 {
-    register struct vnode *vp = ap->a_vp;
-    register struct vcache *vc = VTOAFS(ap->a_vp);
+    struct vnode *vp = ap->a_vp;
+    struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->f.states;
 
-    printf("tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vp->v_tag,
+    printf("vc %p vp %p tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vc, vp, vp->v_tag,
 	   (int)vc->f.fid.Cell, (u_int) vc->f.fid.Fid.Volume,
 	   (u_int) vc->f.fid.Fid.Vnode, (u_int) vc->f.fid.Fid.Unique, vc->opens,
 	   vc->execsOrWriters);

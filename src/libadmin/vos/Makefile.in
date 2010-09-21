@@ -53,13 +53,13 @@ ${TOP_LIBDIR}/libvosadmin.a: libvosadmin.a
 install: afs_vosAdmin.h libvosadmin.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_DATA} afs_vosAdmin.h ${DESTDIR}${includedir}/afs/afs_vosAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_vosAdmin.h ${DESTDIR}${includedir}/afs/afs_vosAdmin.h
 	${INSTALL_DATA} libvosadmin.a ${DESTDIR}${libdir}/afs/libvosadmin.a
 
 dest: afs_vosAdmin.h libvosadmin.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_DATA} afs_vosAdmin.h ${DEST}/include/afs/afs_vosAdmin.h
+	${INSTALL_DATA} ${srcdir}/afs_vosAdmin.h ${DEST}/include/afs/afs_vosAdmin.h
 	${INSTALL_DATA} libvosadmin.a ${DEST}/lib/afs/libvosadmin.a
 
 libvosadmin.a: ${LIBOBJS}

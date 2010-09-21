@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -363,7 +363,7 @@ WaitForKeystroke(int seconds)
 	 * process run some*/
 	select(0, 0, 0, 0, &twait);
 
-	if (seconds > 0) {	/* we only worry about elapsed time if 
+	if (seconds > 0) {	/* we only worry about elapsed time if
 				 * not looping forever (seconds < 0) */
 	    time(&nowTime);
 	    timeleft = seconds - difftime(nowTime, startTime);
@@ -409,7 +409,7 @@ WaitForKeystroke(int seconds)
  * Input:
  *    seconds - how long to wait for a key press.
  *    *key    - char entered by user
- * Return Values: 
+ * Return Values:
  *    0 - Time ran out before the user typed a key.
  *    1 - Valid char is being returned.
  *
@@ -705,7 +705,7 @@ PrintPrompt(int flag, char *name, int dumpid)
 }
 
 /* PromptForTape
- *	Prompt the operator to change the tape. 
+ *	Prompt the operator to change the tape.
  *      Use to be a void routine but now returns an error. Some calls
  *      don't use the error code.
  * notes:
@@ -715,7 +715,7 @@ afs_int32
 PromptForTape(int flag, char *name, afs_uint32 dbDumpId, afs_uint32 taskId,
 	      int tapecount)
 {
-    register afs_int32 code = 0;
+    afs_int32 code = 0;
     afs_int32 wcode;
     afs_int32 start = 0;
     char inchr;
@@ -1362,7 +1362,7 @@ restoreVolumeData(struct rx_call *call, void *rock)
 	}
 
 	/* lastbuf is last block read and it has nbytes of data
-	 * startWbuf is the 2nd to last block read 
+	 * startWbuf is the 2nd to last block read
 	 * Seach for the volume trailer in these two blocks.
 	 */
 	if (lastbuf == startWbuf)
@@ -1404,7 +1404,7 @@ restoreVolumeData(struct rx_call *call, void *rock)
 	if (!tapeVolTrailer.contd)
 	    break;		/* We've read the entire volume */
 
-	/* Volume is continued on next tape. 
+	/* Volume is continued on next tape.
 	 * Step to the next volume fragment and prompt for its tape.
 	 * When a volume has multiple frags, those frags are on different
 	 * tapes. So we know that we need to prompt for a tape.
@@ -1848,7 +1848,7 @@ Restorer(void *param) {
 
 	/* restoreVolume function takes care of all the related fragments
 	 * spanning various tapes. On return the complete volume has been
-	 * restored 
+	 * restored
 	 */
 	if (CONF_XBSA) {
 	    tcode = xbsaRestoreVolume(taskId, RestoreDesc, &rparams);
@@ -2116,7 +2116,7 @@ tapeExpired(struct butm_tapeLabel *tapeLabelPtr)
 
 /* updateTapeLabel
  *	given the label on the tape, delete any old information from the
- *	database. 
+ *	database.
 
  * Deletes all entries that match the volset.dumpnode
  *	and the dump path.
@@ -2161,7 +2161,7 @@ updateTapeLabel(struct labelTapeIf *labelIfPtr,
 
 	    if ((strcmp(newLabelPtr->AFSName, "") != 0)
 		&& (strcmp(oldLabel.pName, "") != 0)) {
-		/* We are setting the AFS name, yet tape 
+		/* We are setting the AFS name, yet tape
 		 * has a permanent name (not allowed).
 		 */
 		TLog(taskId, "Can't label. Tape has permanent label '%s'\n",
@@ -2319,7 +2319,7 @@ PrintTapeLabel(struct butm_tapeLabel *labelptr)
     printf("-- End of tape label --\n\n");
 }
 
-/* ReadLabel 
+/* ReadLabel
  * 	Read the label from a tape.
  *	Currently prints out a "detailed" summary of the label but passes
  *	back only selected fields.
@@ -2425,7 +2425,7 @@ readVolumeHeader(char *buffer,		/* in - buffer to read header from */
     int nextSplice = sizeof(struct volumeHeader) - firstSplice - padLen;
 
     /* Four cases are to be handled
-     * 
+     *
      * Volume Header (byte alignment)
      * -----------------------
      * Tape   In Core
@@ -2435,7 +2435,7 @@ readVolumeHeader(char *buffer,		/* in - buffer to read header from */
      * Case 3:  1       1
      * Case 4:  1       4
      * -----------------------
-     * 
+     *
      * Case 2 and Case 3 are identical cases and handled the same way.
      * Case 1 and Case 4 are separate cases. In one case the pad needs
      * to be removed and in the other, it needs to be spliced in. The

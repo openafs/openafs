@@ -348,7 +348,7 @@
 //  readCacheInfo:
 //  file template "/afs:/var/db/openafs/cache:30000"
 // -------------------------------------------------------------------------------
--(void) readCacheInfo:(NSString*)filePath
+-(int) readCacheInfo:(NSString*)filePath
 {
 	int cicle = 0;
 	NSString *tmpString = nil;
@@ -359,6 +359,7 @@
 	
 	NSCharacterSet *returnCS = [NSCharacterSet characterSetWithCharactersInString:@"\n"];
 	NSFileHandle *fileH = [NSFileHandle fileHandleForReadingAtPath:filePath];
+	if (!fileH) return nil;
 	NSData *fileHData = [fileH readDataToEndOfFile];
 	NSString *cacheInfoStrData = [[NSString alloc] initWithData:fileHData
 													   encoding:NSASCIIStringEncoding];
@@ -394,7 +395,7 @@
 		//if(cacheInfoStrData) [cacheInfoStrData release];
 		if(chunkStartCS) [chunkStartCS release];
 	}
-	
+	return noErr;
 }
 
 
@@ -443,9 +444,11 @@
 {
 	@try{
 		if(useAfsdConfVersion) {
-			[self readNewAfsdOption:filePath];
-		} else {
+		    if ([self readNewAfsdOption:filePath] != noErr)
 			[self readOldAfsdOption:filePath];
+		} else {
+		    if ([self readOldAfsdOption:filePath] != noErr)
+			[self readNewAfsdOption:filePath];
 		}
 	
 	}@catch(NSException *e){
@@ -459,15 +462,10 @@
 // -------------------------------------------------------------------------------
 //  readOldAfsdOption:
 // -------------------------------------------------------------------------------
--(void) readOldAfsdOption:(NSString*)filePath
+-(int) readOldAfsdOption:(NSString*)filePath
 {
-
-	/*NSFileHandle *fileH = [NSFileHandle fileHandleForReadingAtPath:filePath];
-	NSData *fileHData = [fileH readDataToEndOfFile];
-	NSString *afsdOptionStrData = [[NSString alloc] initWithData:fileHData
-														encoding:NSASCIIStringEncoding];*/
-	if(!filePath) return;
-	[self readAFSDParamLineContent:[[NSString stringWithContentsOfFile:filePath 
+	if(!filePath) return nil;
+	return [self readAFSDParamLineContent:[[NSString stringWithContentsOfFile:filePath 
 															  encoding:NSUTF8StringEncoding 
 																 error:nil] stringByStandardizingPath]];
 }
@@ -475,7 +473,9 @@
 // -------------------------------------------------------------------------------
 //  readAFSDParamLineContent:
 // -------------------------------------------------------------------------------
--(void) readAFSDParamLineContent:(NSString*) paramLine{
+-(int) readAFSDParamLineContent:(NSString*) paramLine{
+	if (!paramLine) return nil;
+
 	NSString *tmpString = nil;
 	NSCharacterSet *space = [NSCharacterSet characterSetWithCharactersInString:@" "];
 	NSScanner *afsdOptionS = [NSScanner  scannerWithString:paramLine];
@@ -528,15 +528,15 @@
 		
 		
 	}while(![afsdOptionS isAtEnd]);
-	
+	return noErr;
 }
 
 // -------------------------------------------------------------------------------
 //  readNewAfsdOption:
 // -------------------------------------------------------------------------------
--(void) readNewAfsdOption:(NSString*)filePath
+-(int) readNewAfsdOption:(NSString*)filePath
 {
-	if(!filePath) return;
+	if(!filePath) return nil;
 	NSString *currentLines = nil;
 	NSString *paramValue = nil;
 	NSScanner *lineScanner = nil;
@@ -545,6 +545,7 @@
 	NSString *newAFSDConfContent = [NSString stringWithContentsOfFile:filePath 
 															 encoding:NSUTF8StringEncoding 
 																error:nil];
+	if (!newAFSDConfContent) return nil;
 	
 	//get lines in array
 	NSArray *confLines = [newAFSDConfContent componentsSeparatedByString:@"\n"];
@@ -575,6 +576,7 @@
 			
 		}
 	}
+	return noErr;
 }
 
 
@@ -664,6 +666,7 @@
 {
 	NSString *tmpString = nil;
 	NSString *result = [TaskUtil executeTaskSearchingPath:@"fs" args:[NSArray arrayWithObjects:@"-version", nil]];
+	if (!result) return nil;
 	NSCharacterSet *endVersionCS = [NSCharacterSet characterSetWithCharactersInString:@"qwertyuiopasdfghjklzxcvbnmMNBVCXZLKJHGFDSAPOIUYTREWQ"];
 	NSCharacterSet *spaceCS = [NSCharacterSet characterSetWithCharactersInString:@" "];
 	NSScanner *versionS = [NSScanner  scannerWithString:result];
@@ -683,6 +686,7 @@
 {
 	NSString *tmpString = nil;
 	NSString *totalVersion = [self getAfsVersion];
+	if (!totalVersion) return 0;
 	NSCharacterSet *pointCS = [NSCharacterSet characterSetWithCharactersInString:@"."];
 	NSScanner *versionMS = [NSScanner  scannerWithString:totalVersion];
 	[versionMS scanUpToCharactersFromSet:pointCS intoString:&tmpString];
@@ -696,6 +700,7 @@
 {
 	NSString *tmpString = nil;
 	NSString *totalVersion = [self getAfsVersion];
+	if (!totalVersion) return 0;
 	NSCharacterSet *numCS = [NSCharacterSet characterSetWithCharactersInString:@"1234567890"];
 	NSCharacterSet *pointCS = [NSCharacterSet characterSetWithCharactersInString:@"."];
 	NSScanner *versionMS = [NSScanner  scannerWithString:totalVersion];
@@ -709,6 +714,7 @@
 -(int) getAfsPatchVersionVersion
 {
 	NSString *totalVersion = [self getAfsVersion];
+	if (!totalVersion) return 0;
 	NSCharacterSet *pointCS = [NSCharacterSet characterSetWithCharactersInString:@"."];
 	int lastPointIndex = [totalVersion rangeOfCharacterFromSet:pointCS 
 													   options:NSBackwardsSearch].location;
@@ -827,7 +833,8 @@
 		@throw [NSException exceptionWithName:@"readCellInfo" 
 									   reason:kConfFileNotExits
 									 userInfo:nil];
-	}
+	} else if (!result)
+	    return;
 	NSScanner *scanner = [NSScanner scannerWithString:result];
 	[scanner scanUpToString:@"\n" 
 				 intoString:&tmpStr];
@@ -848,6 +855,7 @@
 	NSCharacterSet *spaceCS = [NSCharacterSet characterSetWithCharactersInString:@" \t"];
 	
 	NSFileHandle *fileH = [NSFileHandle fileHandleForReadingAtPath:configFile];
+	if (!fileH) return;
 	NSData *dbCellData = [fileH readDataToEndOfFile];
 	NSString *strData = [[NSString alloc] initWithData:dbCellData
 											  encoding:NSASCIIStringEncoding];
@@ -903,6 +911,7 @@
 //  scanIpForCell:
 // -------------------------------------------------------------------------------
 -(void) scanIpForCell:(DBCellElement*) cellElement allIP:(NSString*)allIP {
+    if (!allIP) return;
 	NSScanner *ipScann = [NSScanner scannerWithString:allIP];
 	NSCharacterSet *returnCS = [NSCharacterSet characterSetWithCharactersInString:@"\n"];
 	NSCharacterSet *spaceCS = [NSCharacterSet characterSetWithCharactersInString:@" \t"];
@@ -958,7 +967,8 @@
 	NSMutableArray *tokenList = [[NSMutableArray alloc] init];
 	NSString *tokensOutput = [TaskUtil executeTaskSearchingPath:@"tokens" args:[NSArray arrayWithObjects:nil]];
 	
-	// scann the tokens
+	if (!tokensOutput) return tokenList;
+	// scan the tokens
 	NSScanner *tokenScan = [NSScanner scannerWithString:tokensOutput];
 	NSCharacterSet *returnCS = [NSCharacterSet characterSetWithCharactersInString:@"\n"];
 	

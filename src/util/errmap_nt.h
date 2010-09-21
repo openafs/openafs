@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -61,7 +61,7 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define EHOSTUNREACH            WSAEHOSTUNREACH
 #ifdef ENOTEMPTY
 #undef ENOTEMPTY
-#endif 
+#endif
 #define ENOTEMPTY               WSAENOTEMPTY
 #define EPROCLIM                WSAEPROCLIM
 #define EUSERS                  WSAEUSERS
@@ -69,8 +69,8 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
 
-/* 
- * New codes 
+/*
+ * New codes
  * Highest known value is WSA_QOS_RESERVED_PETYPE (WSABASEERR + 1031)
  */
 #define AFS_NT_ERRNO_BASE  WSABASEERR + 1100

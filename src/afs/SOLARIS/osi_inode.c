@@ -43,7 +43,7 @@ getinode(vfsp, dev, inode, ipp, credp, perror)
      int *perror;
 {
     struct inode *ip;
-    register afs_int32 code;
+    afs_int32 code;
     struct vnode *vp;
     struct fs *fs;
     struct inode *pip;
@@ -91,7 +91,7 @@ igetinode(vfsp, dev, inode, ipp, credp, perror)
 {
     struct inode *pip, *ip;
     extern struct osi_dev cacheDev;
-    register int code = 0;
+    int code = 0;
 
     *perror = 0;
 
@@ -150,7 +150,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
 {
     int dummy, err = 0;
     struct inode *ip, *newip;
-    register int code;
+    int code;
     dev_t newdev;
     struct ufsvfs *ufsvfsp;
 
@@ -247,7 +247,7 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
     struct vnode *vp = NULL;
     int dummy;
     int fd;
-    register int code;
+    int code;
     dev_t newdev;
 
     AFS_STATCNT(afs_syscall_iopen);
@@ -295,7 +295,13 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
      * XXX We should set the fp to null since we don't need it in the icalls
      */
     setf(fd, fp);
-#ifdef AFS_SUN57_64BIT_ENV
+
+    /* rvp->r_val{1,2} are really members into a union and are re-extracted
+     * later by solaris. If we're not 64-bit, they appear to just be the same
+     * thing, but on 64-bit they point to two different 32-bit locations that
+     * make up one 64-bit int; so on 64-bit big-endian we need to set the
+     * second one. */
+#if defined(AFS_SUN57_64BIT_ENV) && !defined(AFSLITTLE_ENDIAN)
     rvp->r_val2 = fd;
 #else
     rvp->r_val1 = fd;
@@ -314,7 +320,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
 {
     int dummy;
     struct inode *ip;
-    register afs_int32 code;
+    afs_int32 code;
     dev_t newdev;
 
     if (!afs_osi_suser(credp))

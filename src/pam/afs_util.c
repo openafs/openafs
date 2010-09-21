@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,12 +50,12 @@ nil_cleanup(pam_handle_t * pamh, void *data, int pam_end_status)
     return;
 }
 
-/* The PAM module needs to be free from libucb dependency. Otherwise, 
+/* The PAM module needs to be free from libucb dependency. Otherwise,
 dynamic linking is a problem, the AFS PAM library refuses to coexist
 with the DCE library. The sigvec() and sigsetmask() are the only two
 calls that neccesiate the inclusion of libucb.a.  There are used by
-the lwp library to support premeptive threads and signalling between 
-threads. Since the lwp support used by the PAM module uses none of 
+the lwp library to support premeptive threads and signalling between
+threads. Since the lwp support used by the PAM module uses none of
 these facilities, we can safely define these to be null functions */
 
 #if !defined(AFS_HPUX110_ENV)
@@ -76,10 +76,10 @@ sigsetmask(int mask)
 /* converts string to integer */
 
 char *
-cv2string(register char *ttp, register unsigned long aval)
+cv2string(char *ttp, unsigned long aval)
 {
-    register char *tp = ttp;
-    register int i;
+    char *tp = ttp;
+    int i;
     int any = 0;
 
     *(--tp) = 0;

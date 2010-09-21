@@ -44,7 +44,7 @@ kmutex_t afs_global_lock;
 long afs_global_owner;
 #endif
 
-#if defined(AFS_DARWIN_ENV) 
+#if defined(AFS_DARWIN_ENV)
 thread_t afs_global_owner;
 #ifdef AFS_DARWIN80_ENV
 lck_mtx_t  *afs_global_lock;
@@ -124,7 +124,7 @@ afs_osi_UnmaskRxkSignals(void)
 }
 
 /* Two hacks to try and fix afsdb */
-void 
+void
 afs_osi_MaskUserLoop(void)
 {
 #ifdef AFS_DARWIN_ENV
@@ -135,7 +135,7 @@ afs_osi_MaskUserLoop(void)
 #endif
 }
 
-void 
+void
 afs_osi_UnmaskUserLoop(void)
 {
 #ifdef AFS_DARWIN_ENV
@@ -238,7 +238,7 @@ afs_osi_SetTime(osi_timeval_t * atv)
 	/* drop the setting of the clock for now. spl7 is not
 	 * known on hpux11.22
 	 */
-	register ulong_t s;
+	ulong_t s;
 	struct timeval t;
 	t.tv_sec = atv->tv_sec;
 	t.tv_usec = atv->tv_usec;
@@ -250,7 +250,7 @@ afs_osi_SetTime(osi_timeval_t * atv)
     }
 #else
     {
-	register int s;
+	int s;
 	s = splclock();
 	time = *atv;
 	(void)splx(s);

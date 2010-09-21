@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -29,7 +29,7 @@
 int
 AddToList(struct filestr **ah, char *aname)
 {
-    register struct filestr *tf;
+    struct filestr *tf;
     tf = (struct filestr *)malloc(sizeof(struct filestr));
     tf->next = *ah;
     *ah = tf;
@@ -41,7 +41,7 @@ AddToList(struct filestr **ah, char *aname)
 int
 ZapList(struct filestr **ah)
 {
-    register struct filestr *tf, *nf;
+    struct filestr *tf, *nf;
     for (tf = *ah; tf; tf = nf) {
 	nf = tf->next;		/* save before freeing */
 	free(tf->name);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -82,11 +82,11 @@ stoupper(char *s)
 }
 
 /* strcompose - concatenate strings passed to it.
- * Input: 
+ * Input:
  *   buf: storage for the composed string. Any data in it will be lost.
  *   len: length of the buffer.
  *   ...: variable number of string arguments. The last argument must be
- *        NULL. 
+ *        NULL.
  * Returns buf or NULL if the buffer was not sufficiently large.
  */
 char *

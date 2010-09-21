@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,8 +50,8 @@
 static short
 PortNumber(char *aport)
 {
-    register int tc;
-    register short total;
+    int tc;
+    short total;
 
     total = 0;
     while ((tc = *aport++)) {
@@ -66,7 +66,7 @@ PortNumber(char *aport)
 static short
 PortName(char *aname)
 {
-    register struct servent *ts;
+    struct servent *ts;
     ts = getservbyname(aname, NULL);
     if (!ts)
 	return -1;
@@ -76,7 +76,7 @@ PortName(char *aname)
 int
 MainCommand(struct cmd_syndesc *as, void *arock)
 {
-    register int i;
+    int i;
     osi_socket s;
     int j;
     struct sockaddr_in taddr;
@@ -84,7 +84,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     struct in_addr hostAddr;
     short port;
     struct hostent *th;
-    register afs_int32 code;
+    afs_int32 code;
     int nodally;
     int allconns;
     int rxstats;
@@ -255,7 +255,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 
     if (withPackets)
         printf("Free packets: %d/%d, packet reclaims: %d, calls: %d, used FDs: %d\n",
-               tstats.nFreePackets, tstats.nPackets, tstats.packetReclaims, 
+               tstats.nFreePackets, tstats.nPackets, tstats.packetReclaims,
                tstats.callsExecuted, tstats.usedFDs);
     else
         printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
@@ -559,7 +559,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	    /* now display the peer */
 	    hostAddr.s_addr = tpeer.host;
 	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
-	    printf("Peer at host %s, port %hu\n", hoststr, 
+	    printf("Peer at host %s, port %hu\n", hoststr,
 		   ntohs(tpeer.port));
 	    printf("\tifMTU %hu\tnatMTU %hu\tmaxMTU %hu\n", tpeer.ifMTU,
 		   tpeer.natMTU, tpeer.maxMTU);

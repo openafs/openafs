@@ -4,7 +4,7 @@
  *	File:	fsx.c
  *	Author:	Avadis Tevanian, Jr.
  *
- *	File system exerciser. 
+ *	File system exerciser.
  *
  *	Rewritten 8/98 by Conrad Minshall.
  */

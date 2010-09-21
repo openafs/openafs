@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -126,7 +126,7 @@ convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_uint32 *myHost,
  *      If it were, this routine would never have been called.
  */
 static int
-MyBeforeProc(register struct cmd_syndesc *as, void *arock)
+MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     helpOption = 0;
     return 0;
@@ -393,8 +393,8 @@ main(int argc, char **argv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
@@ -435,7 +435,7 @@ main(int argc, char **argv)
 /*
     globalConfPtr->log = fopen(DEFAULT_LOGNAME,"a");
     if ( globalConfPtr->log == NULL )
-    {   
+    {
 	printf("Can't open log file %s - aborting\n", DEFAULT_LOGNAME);
 	BUDB_EXIT(-1);
     }
@@ -530,14 +530,14 @@ main(int argc, char **argv)
 
     if (rxBind) {
 	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
+        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
             ccode = parseNetFiles(SHostAddrs, NULL, NULL,
                                            ADDRSPERSITE, reason,
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else 
+        } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
@@ -548,9 +548,9 @@ main(int argc, char **argv)
     }
 
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
-				  htons(AFSCONF_BUDBPORT), 
+				  htons(AFSCONF_BUDBPORT),
 				  &cellinfo,
-				  clones,              
+				  clones,
 				  dbNamePtr,           /* name prefix */
 				  &BU_dbase);
 
@@ -626,7 +626,7 @@ LogDebug(int level, char *fmt, ... )
     va_list ap;
 
     va_start(ap, fmt);
-	
+
     if (debugging >= level) {
 	/* log normally closed so can remove it */
 	globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");

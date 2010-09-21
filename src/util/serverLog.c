@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -35,6 +35,7 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
 #include <afs/stds.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include "afsutil.h"
@@ -104,7 +105,7 @@ WriteLogBuffer(char *buf, afs_uint32 len)
 }
 
 int
-LogThreadNum(void) 
+LogThreadNum(void)
 {
   return (*threadNumProgram) ();
 }
@@ -167,6 +168,33 @@ FSLog(const char *format, ...)
     va_end(args);
 }				/*FSLog */
 
+void
+LogCommandLine(int argc, char **argv, const char *progname,
+	       const char *version, const char *logstring,
+	       void (*log) (const char *format, ...))
+{
+    int i, l;
+    char *commandLine, *cx;
+
+    for (l = i = 0; i < argc; i++)
+	l += strlen(argv[i]) + 1;
+    if ((commandLine = malloc(l))) {
+	for (cx = commandLine, i = 0; i < argc; i++) {
+	    strcpy(cx, argv[i]);
+	    cx += strlen(cx);
+	    *(cx++) = ' ';
+	}
+	commandLine[l-1] = '\0';
+	(*log)("%s %s %s%s(%s)\n", logstring, progname,
+		    version, strlen(version)>0?" ":"", commandLine);
+	free(commandLine);
+    } else {
+	/* What, we're out of memory already!? */
+	(*log)("%s %s%s%s\n", logstring,
+	      progname, strlen(version)>0?" ":"", version);
+    }
+}
+
 static void*
 DebugOn(void *param)
 {
@@ -188,7 +216,7 @@ SetDebug_Signal(int signo)
 	LogLevel *= 5;
 
 #if defined(AFS_PTHREAD_ENV)
-        if (LogLevel > 1 && threadNumProgram != NULL && 
+        if (LogLevel > 1 && threadNumProgram != NULL &&
             threadIdLogs == 0) {
             threadIdLogs = 1;
         }
@@ -281,7 +309,7 @@ OpenLog(const char *fileName)
         time_t t;
 	struct stat buf;
 	FT_GetTimeOfDay(&Start, 0);
-        t = Start.tv_sec;	
+        t = Start.tv_sec;
 	TimeFields = localtime(&t);
 	if (fileName) {
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))

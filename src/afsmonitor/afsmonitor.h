@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -58,7 +58,7 @@ struct afsmon_hostEntry {
 #define FS_CB_ENTRY_START (FS_FULLPERF_ENTRY_END + 1)
 #define FS_CB_ENTRY_END   (FS_CB_ENTRY_START + NUM_FS_CB_ENTRIES - 1)
 
-/* structures to store statistics in a format convenient to dump to the 
+/* structures to store statistics in a format convenient to dump to the
 screen */
 /* for file servers */
 struct fs_Display_Data {
@@ -97,12 +97,12 @@ what he wants displayed. */
 #define DETAILED_DEBUG 0
 
 /* afsmon-output.c */
-  
+
 extern int afsmon_fsOutput(char *, int);
 extern int afsmon_cmOutput(char *, int);
 
 /* afsmon-win.c */
- 
+
 extern int ovw_refresh(int, int);
 extern int fs_refresh(int, int);
 extern int cm_refresh(int, int);

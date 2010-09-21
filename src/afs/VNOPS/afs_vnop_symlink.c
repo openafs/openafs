@@ -37,7 +37,6 @@ extern afs_rwlock_t afs_xcbhash;
  * is just a performance hit.
  */
 
-#ifdef AFS_DISCON_ENV
 static int
 afs_DisconCreateSymlink(struct vcache *avc, char *aname, 
 		        struct vrequest *areq) {
@@ -63,7 +62,6 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
     ReleaseWriteLock(&tdc->lock);
     return 0;
 }
-#endif
 
 /* don't set CDirty in here because RPC is called synchronously */
 int 
@@ -189,11 +187,9 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 		     SHARED_LOCK, NULL));
     } else {
-#ifdef AFS_DISCON_ENV
 	newFid.Cell = adp->f.fid.Cell;
 	newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afs_GenFakeFid(&newFid, VREG, 0);
-#endif
     }
 
     ObtainWriteLock(&afs_xvcache, 40);
@@ -263,7 +259,6 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ReleaseWriteLock(&afs_xcbhash);
 
     if (AFS_IS_DISCON_RW) {
-#ifdef AFS_DISCON_ENV
 	attrs->va_mode = InStatus.UnixModeBits;
 	afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VLNK);
 	code = afs_DisconCreateSymlink(tvc, atargetName, &treq);
@@ -276,7 +271,6 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    goto done;
 	}
 	afs_DisconAddDirty(tvc, VDisconCreate, 0);
-#endif
     } else {
 	afs_ProcessFS(tvc, &OutFidStatus, &treq);
     }
@@ -301,13 +295,13 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 }
 
 int
-afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
+afs_MemHandleLink(struct vcache *avc, struct vrequest *areq)
 {
-    register struct dcache *tdc;
-    register char *tp, *rbuf;
+    struct dcache *tdc;
+    char *tp, *rbuf;
     afs_size_t offset, len;
     afs_int32 tlen, alen;
-    register afs_int32 code;
+    afs_int32 code;
 
     AFS_STATCNT(afs_MemHandleLink);
     /* two different formats, one for links protected 644, have a "." at
@@ -351,14 +345,14 @@ afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
 }
 
 int
-afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
+afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 {
-    register struct dcache *tdc;
-    register char *tp, *rbuf;
+    struct dcache *tdc;
+    char *tp, *rbuf;
     void *tfile;
     afs_size_t offset, len;
     afs_int32 tlen, alen;
-    register afs_int32 code;
+    afs_int32 code;
 
     /* two different formats, one for links protected 644, have a "." at the
      * end of the file name, which we turn into a null.  Others, protected
@@ -409,9 +403,9 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 int
 afs_readlink(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct vrequest treq;
-    register char *tp;
+    char *tp;
     struct afs_fakestat_state fakestat;
     OSI_VC_CONVERT(avc);
 

@@ -47,17 +47,17 @@ static int make_key_sched(key Key, des_key_schedule Schedule);
 #ifdef AFS_DUX40_ENV
 #pragma weak des_key_sched = afs_des_key_sched
 int
-afs_des_key_sched(register des_cblock k, des_key_schedule schedule)
+afs_des_key_sched(des_cblock k, des_key_schedule schedule)
 #else
 int
-des_key_sched(register des_cblock k, des_key_schedule schedule)
+des_key_sched(des_cblock k, des_key_schedule schedule)
 #endif
 {
     /* better pass 8 bytes, length not checked here */
 
-    register int i, j, n;	/* i = r10, j = r9, n = r8 */
-    register unsigned int temp;	/*  r7 */
-    register char *p_char;	/* r6 */
+    int i, j, n;	/* i = r10, j = r9, n = r8 */
+    unsigned int temp;	/*  r7 */
+    char *p_char;	/* r6 */
     key k_char;
     i = 8;
     n = 0;
@@ -123,7 +123,7 @@ des_key_sched(register des_cblock k, des_key_schedule schedule)
 }
 
 static int
-make_key_sched(register key Key, des_key_schedule Schedule)
+make_key_sched(key Key, des_key_schedule Schedule)
 {
     /*
      * The key has been converted to an array to make this run faster;
@@ -137,10 +137,10 @@ make_key_sched(register key Key, des_key_schedule Schedule)
      */
 
     /* r10, unroll by AUTH_DES_ITER */
-    register int iter = AUTH_DES_ITER;
-    register afs_uint32 *k;	/* r9 */
-    register int *kp;		/* r8 */
-    register afs_uint32 temp;	/* r7 */
+    int iter = AUTH_DES_ITER;
+    afs_uint32 *k;	/* r9 */
+    int *kp;		/* r8 */
+    afs_uint32 temp;	/* r7 */
 
     kp = (int *)key_perm;
     k = (afs_uint32 *) Schedule;

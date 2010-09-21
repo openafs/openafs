@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -34,7 +34,7 @@ afs_initialize(struct secmethod_table *meths)
 {
     /*
      * Initialize kauth package here so we don't have to call it
-     * each time we call the authenticate routine.      
+     * each time we call the authenticate routine.
      */
     ka_Init(0);
     memset(meths, 0, sizeof(struct secmethod_table));

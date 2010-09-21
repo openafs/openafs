@@ -30,7 +30,7 @@ extern void (*afs_reset_com_err_hook(void)) (const char *, afs_int32,
 					 const char *, va_list);
 
 #define __AFS_COM_ERR_H
-#ifdef AFS_OLD_COM_ERR 
+#ifdef AFS_OLD_COM_ERR
 #define com_err                 afs_com_err
 #define com_err_va              afs_com_err_va
 #define error_table_name        afs_error_table_name

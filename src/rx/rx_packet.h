@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -9,7 +9,7 @@
 
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
-#if defined(AFS_NT40_ENV) 
+#if defined(AFS_NT40_ENV)
 #include "rx_xmit_nt.h"
 #endif
 #ifndef AFS_NT40_ENV
@@ -18,8 +18,8 @@
 /* this file includes the macros and decls which depend on packet
  * format, and related packet manipulation macros.  Note that code
  * which runs at NETPRI should not sleep, or AIX will panic */
-/* There are some assumptions that various code makes -- I'll try to 
- * express them all here: 
+/* There are some assumptions that various code makes -- I'll try to
+ * express them all here:
  * 1.  rx_ReceiveAckPacket assumes that it can get an entire ack
  * contiguous in the first iovec.  As a result, the iovec buffers must
  * be >= sizeof (struct rx_ackpacket)
@@ -31,7 +31,7 @@
  */
 
 
-#if defined(AFS_NT40_ENV) 
+#if defined(AFS_NT40_ENV)
 #ifndef MIN
 #define MIN(a,b)  ((a)<(b)?(a):(b))
 #endif
@@ -52,8 +52,8 @@
 #define	_RX_IPUDP_SIZE		(RX_IP_SIZE + UDP_HDR_SIZE)
 
 /* REMOTE_PACKET_SIZE is currently the same as local.  This is because REMOTE
- * is defined much too generally for my tastes, and includes the case of 
- * multiple class C nets connected with a router within one campus or MAN. 
+ * is defined much too generally for my tastes, and includes the case of
+ * multiple class C nets connected with a router within one campus or MAN.
  * I don't want to make local performance suffer just because of some
  * out-dated protocol that used to be in use on the NSFANET that's
  * practically unused anymore.  Any modern IP implementation will be
@@ -66,14 +66,14 @@
  * size will be larger than that. */
 
 #ifdef notdef
-/*  some sample MTUs 
-           4352   what FDDI(RFC1188) uses... Larger? 
-           4096   VJ's recommendation for FDDI 
-          17914   what IBM 16MB TR  uses   
-           8166   IEEE 802.4 
+/*  some sample MTUs
+           4352   what FDDI(RFC1188) uses... Larger?
+           4096   VJ's recommendation for FDDI
+          17914   what IBM 16MB TR  uses
+           8166   IEEE 802.4
            4464   IEEE 802.5 MAX
-           2002   IEEE 802.5 Recommended 
-	   1500   what Ethernet uses 
+           2002   IEEE 802.5 Recommended
+	   1500   what Ethernet uses
 	   1492   what 802.3 uses ( 8 bytes for 802.2 SAP )
 	   9180   Classical IP over ATM (RFC2225)
 */
@@ -231,8 +231,8 @@ struct rx_jumboHeader {
 #define RX_JUMBOBUFFERSIZE 1412
 #define RX_JUMBOHEADERSIZE 4
 /*
- * RX_FIRSTBUFFERSIZE must be larger than the largest ack packet, 
- * the largest possible challenge or response packet. 
+ * RX_FIRSTBUFFERSIZE must be larger than the largest ack packet,
+ * the largest possible challenge or response packet.
  * Both Firstbuffersize and cbuffersize must be integral multiples of 8,
  * so the security header and trailer stuff works for rxkad_crypt.  yuck.
  */
@@ -268,7 +268,7 @@ struct rx_packet {
      * The Linux port uses this knowledge as well in osi_NetSend.
      *
      * The extradata field is padding in case the recvmsg implementation
-     * writes beyond the end of the final iovec buffer.  We do not know 
+     * writes beyond the end of the final iovec buffer.  We do not know
      * what platforms had this problem so we are reluctant to remove it.
      * the extradata must be adjacent to localdata.
      * See rxk_ReadPacket and rxi_ReadPacket.

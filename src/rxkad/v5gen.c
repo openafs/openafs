@@ -3437,7 +3437,7 @@ copy_TicketFlags(const TicketFlags * from, TicketFlags * to)
     return 0;
 }
 
-unsigned 
+unsigned
 TicketFlags2int(TicketFlags f)
 {
     unsigned r = 0;
@@ -3474,7 +3474,7 @@ TicketFlags2int(TicketFlags f)
     return r;
 }
 
-TicketFlags 
+TicketFlags
 int2TicketFlags(unsigned n)
 {
     TicketFlags flags;

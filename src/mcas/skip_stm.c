@@ -209,9 +209,9 @@ setval_t set_remove(set_t *l, setkey_t k)
     int       i;
 
     k = CALLER_TO_INTERNAL_KEY(k);
- 
+
     ptst = critical_enter();
- 
+
     do {
         new_stm_tx(tx, ptst, MEMORY);
         x = search_predecessors(ptst, tx, l, k, bpreds, bsuccs);

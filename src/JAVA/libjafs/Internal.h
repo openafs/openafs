@@ -14,7 +14,7 @@
 #define JAFSADMMETHODNOTFOUND 1052    // Trouble finding a Java method
 #define JAFSADMFIELDNOTFOUND  1053    // Trouble finding a Java field
 
-// make an identity out of a full name (possibly including an instance ) 
+// make an identity out of a full name (possibly including an instance )
 void internal_makeKasIdentity( const char *fullName, kas_identity_p who );
 
 void internal_getUserClass( JNIEnv *env, jobject user );
@@ -51,7 +51,7 @@ void throwAFSSecurityException( JNIEnv *env, int code );
 // throw an exception with an error code
 void throwException( JNIEnv *env, jclass *excCls, char *excClsName, jmethodID *initID, int code );
 
-// reclaim global memory used by exceptions 
+// reclaim global memory used by exceptions
 void reclaimExceptionMemory( JNIEnv *env, jclass cls );
 
 int setError(JNIEnv *env, jobject *obj, int code);

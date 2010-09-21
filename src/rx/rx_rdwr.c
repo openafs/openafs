@@ -1,7 +1,7 @@
  /*
   * Copyright 2000, International Business Machines Corporation and others.
   * All Rights Reserved.
-  * 
+  *
   * This software has been released under the terms of the IBM Public
   * License.  For details, see the LICENSE file in the top-level source
   * directory or online at http://www.openafs.org/dl/license10.html
@@ -26,7 +26,7 @@
 #include "h/types.h"
 #include "h/time.h"
 #include "h/stat.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
 #endif
 #ifdef	AFS_OSF_ENV
@@ -65,7 +65,6 @@
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
-#undef register
 #endif /* AFS_OSF_ENV */
 #else /* KERNEL */
 # include <sys/types.h>
@@ -150,8 +149,8 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 			if ((error =
 			     RXS_CheckPacket(conn->securityObject, call,
 					     rp))) {
-			    /* Used to merely shut down the call, but now we 
-			     * shut down the whole connection since this may 
+			    /* Used to merely shut down the call, but now we
+			     * shut down the whole connection since this may
 			     * indicate an attempt to hijack it */
 
 			    MUTEX_EXIT(&call->lock);
@@ -168,7 +167,7 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 			cp = call->currentPacket = rp;
 			call->currentPacket->flags |= RX_PKTFLAG_CP;
 			call->curvec = 1;	/* 0th vec is always header */
-			/* begin at the beginning [ more or less ], continue 
+			/* begin at the beginning [ more or less ], continue
 			 * on until the end, then stop. */
 			call->curpos =
 			    (char *)cp->wirevec[1].iov_base +
@@ -221,7 +220,7 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 		    }
 		}
 
-                /* 
+                /*
                  * If we reach this point either we have no packets in the
                  * receive queue or the next packet in the queue is not the
                  * one we are looking for.  There is nothing else for us to
@@ -441,8 +440,8 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 		     * data + the header. */
 		    if ((error =
 			 RXS_CheckPacket(conn->securityObject, call, rp))) {
-			/* Used to merely shut down the call, but now we 
-			 * shut down the whole connection since this may 
+			/* Used to merely shut down the call, but now we
+			 * shut down the whole connection since this may
 			 * indicate an attempt to hijack it */
 
 			MUTEX_EXIT(&call->lock);
@@ -460,7 +459,7 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 		    call->currentPacket->flags |= RX_PKTFLAG_CP;
 		    call->curvec = 1;	/* 0th vec is always header */
 		    cur_iov = &curp->wirevec[1];
-		    /* begin at the beginning [ more or less ], continue 
+		    /* begin at the beginning [ more or less ], continue
 		     * on until the end, then stop. */
 		    call->curpos =
 			(char *)curp->wirevec[1].iov_base +
@@ -704,8 +703,8 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 	if (call->nFree == 0) {
 	    if (!call->error && cp) {
                 /* Clear the current packet now so that if
-                 * we are forced to wait and drop the lock 
-                 * the packet we are planning on using 
+                 * we are forced to wait and drop the lock
+                 * the packet we are planning on using
                  * cannot be freed.
                  */
                 cp->flags &= ~RX_PKTFLAG_CP;
@@ -728,7 +727,7 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		clock_NewTime();	/* Bogus:  need new time package */
-		/* The 0, below, specifies that it is not the last packet: 
+		/* The 0, below, specifies that it is not the last packet:
 		 * there will be others. PrepareSendPacket may
 		 * alter the packet length by up to
 		 * conn->securityMaxTrailerSize */
@@ -776,7 +775,7 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		call->currentPacket = cp;
 		call->nFree = cp->length;
 		call->curvec = 1;	/* 0th vec is always header */
-		/* begin at the beginning [ more or less ], continue 
+		/* begin at the beginning [ more or less ], continue
 		 * on until the end, then stop. */
 		call->curpos =
 		    (char *)cp->wirevec[1].iov_base +
@@ -1144,7 +1143,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     do {
 	if (call->nFree == 0 && cp) {
 	    clock_NewTime();	/* Bogus:  need new time package */
-	    /* The 0, below, specifies that it is not the last packet: 
+	    /* The 0, below, specifies that it is not the last packet:
 	     * there will be others. PrepareSendPacket may
 	     * alter the packet length by up to
 	     * conn->securityMaxTrailerSize */
@@ -1221,7 +1220,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 
     /* Move the packets from the temporary queue onto the transmit queue.
      * We may end up with more than call->twind packets on the queue. */
-    
+
     for (queue_Scan(&tmpq, p, np, rx_packet))
     {
         p->flags |= RX_PKTFLAG_TQ;
@@ -1330,7 +1329,7 @@ rxi_FlushWrite(struct rx_call *call)
 
 	if (cp) {
 	    /* cp->length is only supposed to be the user's data */
-	    /* cp->length was already set to (then-current) 
+	    /* cp->length was already set to (then-current)
 	     * MaxUserDataSize or less. */
 	    cp->flags &= ~RX_PKTFLAG_CP;
 	    cp->length -= call->nFree;

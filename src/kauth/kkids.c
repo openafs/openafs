@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -69,7 +69,7 @@ simplify_name(char *orig_name, char *true_name)
 	int link_chars_read;
 	char *last_component;
 	if (lstat(orig_name, &statbuff) < 0) {
-	    /* if lstat fails, it's possible that it's transient, but 
+	    /* if lstat fails, it's possible that it's transient, but
 	     * unlikely.  Let's hope it isn't, and continue... */
 	    *true_name = '\0';
 	    return 0;
@@ -117,7 +117,7 @@ simplify_name(char *orig_name, char *true_name)
    * if it exists, it must be us, eh?
    * NB there may be possible security implications involving
    * symlinks; I think they are only relevant if the symlink points
-   * directly at kpasswd, not when it points at kpasswd's parent directory. 
+   * directly at kpasswd, not when it points at kpasswd's parent directory.
    */
 static int
 find_me(char *arg, char *parent_dir)
@@ -206,10 +206,10 @@ find_me(char *arg, char *parent_dir)
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
 static int
-InAFS(register char *apath)
+InAFS(char *apath)
 {
     struct ViceIoctl blob;
-    register afs_int32 code;
+    afs_int32 code;
     char space[AFS_PIOCTL_MAXSIZE];
 
     blob.in_size = 0;
@@ -294,8 +294,8 @@ safestrtok(char *str, char *tok)
  * there's not much point in being more secure than the kpasswd executable.
  */
 /* 1.  is this directory in AFS?
- * 2.  Is every component of the pathname secure 
- *     (ie, only system:administrators have w or a rights)? 
+ * 2.  Is every component of the pathname secure
+ *     (ie, only system:administrators have w or a rights)?
  */
 static int
 is_secure(char *dir)
@@ -312,7 +312,7 @@ is_secure(char *dir)
 
 #ifndef INSECURE
     for (temp = safestrtok(dir, "/"); temp; temp = safestrtok(NULL, "/")) {
-	/* strtok keeps sticking NUL in place of /, so we can look at 
+	/* strtok keeps sticking NUL in place of /, so we can look at
 	 * ever-longer chunks of the path.
 	 */
 	if (!InAFS(dir))
@@ -342,7 +342,7 @@ is_secure(char *dir)
 }
 
 /* Then, once we've found our own location, we look for a program named
- * kpwvalid.  
+ * kpwvalid.
  */
 
 /* look for a password-checking program named kpwvalid.
@@ -358,7 +358,7 @@ kpwvalid_is(char *dir)
     strcpy(dir + len, "/kpwvalid");
 
     if (stat(dir, &statbuff) < 0) {
-	/* if lstat fails, it's possible that it's transient, but 
+	/* if lstat fails, it's possible that it's transient, but
 	 * unlikely.  Let's hope it isn't, and continue... */
 	*(dir + len) = '\0';
 	return 0;
@@ -370,7 +370,7 @@ kpwvalid_is(char *dir)
 
 #ifdef AFS_NT40_ENV
 /* We don't allow the use of kpwvalid executable scripts to set policy
- * for passwd changes. 
+ * for passwd changes.
  */
 int
 init_child(char *myname)

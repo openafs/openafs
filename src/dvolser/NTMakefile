@@ -1,0 +1,168 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG -DFSSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
+
+RELDIR=dvolser
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+VOLSER = ..\volser
+DVOLSER = .
+VLSERVER = ..\vlserver
+LWP = ..\lwp
+LIBACL = ..\libacl
+UTIL = ..\util
+DIR = ..\dir
+VOL = ..\vol
+FSINT = ..\fsint
+RX = ..\rx
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+
+INCFILES = \
+	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\volser.h \
+	$(INCFILEDIR)\volint.h
+
+LOCAL_INCFILES = \
+	volser.h \
+	volint.h
+
+############################################################################
+# Build afsdavolser.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsdvolser.lib
+
+LIBOBJS = $(OUT)\volint.cs.obj  \
+          $(OUT)\volint.xdr.obj \
+          $(OUT)\volerr.obj  \
+          $(OUT)\volint.ss.obj  \
+          $(OUT)\AFS_component_version_number.obj 
+
+LIBOBJS2 = $(OUT)\vsprocs.obj \
+          $(OUT)\vsutils.obj \
+          $(OUT)\lockprocs.obj
+
+# $(LIBOBJS): $(DVOLSER)\$$(@B).c
+#         $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
+
+$(LIBOBJS2): $(VOLSER)\$$(@B).c
+        $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
+
+$(LIBFILE): $(LIBOBJS) $(LIBOBJS2)
+	$(LIBARCH)
+
+
+############################################################################
+# Build davolserver
+
+VOLSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\davolserver.exe
+
+VOLSEROBJS=$(OUT)\volmain.obj $(OUT)\volprocs.obj $(OUT)\physio.obj $(OUT)\voltrans.obj $(OUT)\dumpstuff.obj
+
+LWPOBJS=$(OUT)\lock.obj $(OUT)\threadname.obj $(OUT)\fasttime.obj
+
+LIBACLOBJS=$(OUT)\aclprocs.obj $(OUT)\netprocs.obj
+
+DIROBJS=$(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
+
+VOLSERVER_EXEOBJS = $(VOLSEROBJS) \
+        $(VLSERVEROBJS) \
+        $(LWPOBJS) \
+        $(LIBACLOBJS) \
+        $(DIROBJS) \
+        $(FSINTOBJS) \
+        $(OUT)\vscommon.obj \
+        $(OUT)\davolserver.res
+
+VOLSERVER_EXELIBS = \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+        $(LIBFILE) \
+        $(DESTDIR)\lib\afs\daafsvol.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib/afs/afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\afspthread.lib
+
+$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
+
+$(OUT)\vscommon.obj: $(VOLSER)\common.c
+        $(C2OBJ) /Fo$(OUT)\vscommon.obj -I$(VOLSER) -I$(UTIL) $**
+
+$(VOLSEROBJS): $(VOLSER)\$$(@B).c
+        $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
+
+$(LWPOBJS): $(LWP)\$$(@B).C
+	$(C2OBJ) -I$(LWP) $**
+
+$(LIBACLOBJS): $(LIBACL)\$$(@B).C
+	$(C2OBJ) -I$(LIBACL) $**
+
+$(DIROBJS): $(DIR)\$$(@B).C
+	$(C2OBJ) -I$(DIR) $**
+
+############################################################################
+# Generate versioninfo resources
+$(OUT)\davolserver.res: AFS_component_version_number.h
+
+############################################################################
+# Definitions for generating files via RXGEN
+
+volint.cs.c: $(VOLSER)\volint.xg volint.h
+	$(RXGEN) -x -C -o $@ $(VOLSER)\volint.xg
+
+volint.ss.c: $(VOLSER)\volint.xg volint.h
+	$(RXGEN) -x -S -o $@ $(VOLSER)\volint.xg
+
+volint.xdr.c: $(VOLSER)\volint.xg volint.h
+	$(RXGEN) -x -c -o $@ $(VOLSER)\volint.xg
+
+volint.h: $(VOLSER)\volint.xg
+	$(RXGEN) -x -h -o $@ $(VOLSER)\volint.xg
+
+############################################################################
+# Definitions for generating files via COMPILE_ET
+
+volser.h volerr.c: $(VOLSER)\volerr.et $(VOLSER)\volser.p.h
+	$(DEL) volerr.c volser.h
+        $(COPY) $(VOLSER)\volerr.et .
+        $(COPY) $(VOLSER)\volser.p.h .
+	$(COMPILE_ET) volerr -h volser
+
+############################################################################
+# Install target; primary makefile target
+
+install_lib: $(LIBFILE) 
+
+install: install_lib $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
+		$(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+      -	-$(DEL) volerr.c volser.h volerr.et volser.p.h $(INCFILES)
+	-$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c
+        -$(DEL) $(OUT)\davolserver.res
+        -$(DEL) $(VOLSERVER_EXEFILE)
+
+mkdir:

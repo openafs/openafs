@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -79,7 +79,7 @@ ht_ResetT(struct memoryHTBlock ***blocksP, int *sizeP, int length)
 }
 
 /* ht_Reset
- *	reinitialize a memory hash table. 
+ *	reinitialize a memory hash table.
  * 	Calls ht_ResetT to invalidate the two block arrays.
  */
 
@@ -162,6 +162,7 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     int nb, mnb;		/* number of blocks for hashTable */
     int i;
     struct memoryHTBlock **b;
+    afs_int32 *plen;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -203,7 +204,8 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     if ((code = set_word_addr(ut, 0, &db.h, &ht->table, htonl(b[0]->a))))
 	return code;
 
-    if ((code = set_word_addr(ut, 0, &db.h, &ht->length, htonl(len))))
+    plen = &ht->length;
+    if ((code = set_word_addr(ut, 0, &db.h, plen, htonl(len))))
 	return code;
     mht->length = len;
     return 0;
@@ -216,6 +218,7 @@ ht_FreeTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     afs_int32 code;
     struct blockHeader bh;
     dbadr a, na;
+    afs_int32 *plen, *pprog;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -233,17 +236,19 @@ ht_FreeTable(struct ubik_trans *ut, struct memoryHashTable *mht)
 	if ((code = FreeBlock(ut, &bh, a)))
 	    return code;
     }
+    plen = &ht->oldLength;
+    pprog = &ht->progress;
     if (set_word_addr(ut, 0, &db.h, &ht->oldTable, 0)
-	|| set_word_addr(ut, 0, &db.h, &ht->oldLength, 0)
-	|| set_word_addr(ut, 0, &db.h, &ht->progress, 0))
+	|| set_word_addr(ut, 0, &db.h, plen, 0)
+	|| set_word_addr(ut, 0, &db.h, pprog, 0))
 	return BUDB_IO;
     mht->oldLength = mht->progress = 0;
     return 0;
 }
 
 afs_int32
-ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht, 
-		 afs_uint32 hash, int old, struct memoryHTBlock **blockP, 
+ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
+		 afs_uint32 hash, int old, struct memoryHTBlock **blockP,
 		 int *boP)
 {
     struct hashTable *ht = NULL;
@@ -377,7 +382,7 @@ ht_MaybeAdjust(struct ubik_trans *ut, struct memoryHashTable *mht)
 }
 
 dbadr
-ht_LookupBucket(struct ubik_trans *ut, struct memoryHashTable *mht, 
+ht_LookupBucket(struct ubik_trans *ut, struct memoryHashTable *mht,
 		afs_uint32 hash, int old)
 {
     struct memoryHTBlock *block;
@@ -541,7 +546,7 @@ ht_minHBlocks(struct memoryHashTable *mht)
 }
 
 afs_uint32
-ht_HashEntry(struct memoryHashTable *mht, 
+ht_HashEntry(struct memoryHashTable *mht,
 	     char *e) 				/* entry's address (in b) */
 {
     int type = ntohl(mht->ht->functionType);
@@ -648,8 +653,8 @@ ht_KeyMatch(int type, char *key, char *e)
  */
 
 afs_int32
-ht_LookupEntry(struct ubik_trans *ut, 
-	       struct memoryHashTable *mht, 
+ht_LookupEntry(struct ubik_trans *ut,
+	       struct memoryHashTable *mht,
 	       void *key,	/* pointer to lookup key to match */
 	       dbadr *eaP, 	/* db addr of entry found or zero */
 	       void *e)		/* contents of located entry */
@@ -699,7 +704,7 @@ ht_LookupEntry(struct ubik_trans *ut,
  */
 
 static afs_int32
-ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht, 
+ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 	      int *opQuota, struct memoryHTBlock *block, int blockOffset)
 {
     struct hashTable *ht = mht->ht;
@@ -796,6 +801,7 @@ ht_MoveEntries(struct ubik_trans *ut, struct memoryHashTable *mht)
     int count;
     int bo;
     afs_int32 code;
+    afs_int32 *pprog;
 
     if (mht->oldLength == 0)
 	return 0;
@@ -839,7 +845,8 @@ ht_MoveEntries(struct ubik_trans *ut, struct memoryHashTable *mht)
     if (mht->progress >= mht->oldLength)
 	return (ht_FreeTable(ut, mht));
 
-    if (set_word_addr(ut, 0, &db.h, &mht->ht->progress, htonl(mht->progress))) {
+    pprog = &mht->ht->progress;
+    if (set_word_addr(ut, 0, &db.h, pprog, htonl(mht->progress))) {
 	Log("ht_MoveEntries: progress set failed\n");
 	return BUDB_IO;
     }
@@ -914,6 +921,7 @@ ht_HashIn(struct ubik_trans *ut,
     struct memoryHTBlock *block;
     int bo;
     afs_int32 code;
+    afs_int32 *pentries;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -942,10 +950,12 @@ ht_HashIn(struct ubik_trans *ut,
 		      htonl(ea));
     if (code)
 	return BUDB_IO;
-    LogDebug(5, "Hashin: set %d to %d\n", &block->b.bucket[bo], htonl(ea));
+    LogDebug(5, "Hashin: set %"AFS_PTR_FMT" to %d\n",
+	     &block->b.bucket[bo], htonl(ea));
 
+    pentries = &ht->entries;
     code =
-	set_word_addr(ut, 0, &db.h, &ht->entries,
+	set_word_addr(ut, 0, &db.h, pentries,
 		      htonl(ntohl(ht->entries) + 1));
     if (code)
 	return BUDB_IO;
@@ -1001,6 +1011,7 @@ ht_HashOutT(struct ubik_trans *ut, struct memoryHashTable *mht,
     struct memoryHTBlock *block;
     int bo;
     afs_int32 code;
+    afs_int32 *pentries;
 
     if ((old ? mht->oldLength : mht->length) == 0)
 	return -1;
@@ -1043,15 +1054,16 @@ ht_HashOutT(struct ubik_trans *ut, struct memoryHashTable *mht,
     }
   done:
 #endif
+    pentries = &mht->ht->entries;
     if (set_word_addr
-	(ut, 0, &db.h, &mht->ht->entries, htonl(ntohl(mht->ht->entries) - 1)))
+	(ut, 0, &db.h, pentries, htonl(ntohl(mht->ht->entries) - 1)))
 	return BUDB_IO;
     return 0;
 }
 
 afs_int32
 ht_HashOut(struct ubik_trans *ut, struct memoryHashTable *mht, dbadr ea,
-	   void *e) 
+	   void *e)
 {
     afs_uint32 hash;
     afs_int32 code;
@@ -1146,8 +1158,8 @@ scanHashTableBlock(struct ubik_trans *ut,
 
 afs_int32
 scanHashTable(struct ubik_trans *ut, struct memoryHashTable *mhtPtr,
-     	      int (*selectFn) (dbadr, void *, void *), 
-	      int (*operationFn) (dbadr, void *, void *), 
+     	      int (*selectFn) (dbadr, void *, void *),
+	      int (*operationFn) (dbadr, void *, void *),
 	      void *rockPtr)
 {
     struct htBlock hashTableBlock;

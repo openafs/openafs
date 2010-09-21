@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -211,7 +211,7 @@ struct pIDs {
 
 struct diskPartition {
 	 char	name[32];	/* Mounted partition name */
-   	 char	devName[32];	
+   	 char	devName[32];
 	 int	lock_fd;
 	int	totalUsable;
 	int 	free;
@@ -221,7 +221,7 @@ struct diskPartition {
 
 struct diskPartition64 {
     char	name[256];	/* Mounted partition name */
-    char	devName[256];	
+    char	devName[256];
     int	        lock_fd;
     afs_int64	totalUsable;
     afs_int64 	free;

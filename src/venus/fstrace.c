@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) 
+#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43)
 #include <time.h>
 /*#ifdef	AFS_AIX_ENV*/
 #include <sys/time.h>
@@ -77,12 +77,12 @@ void dce1_error_inq_text(afs_uint32 status_to_convert,
 int icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
 		           struct afs_icl_log *fatalLogp, afs_uint32 flags,
 		           struct afs_icl_set **outSetpp);
-int icl_LogHold(register struct afs_icl_log *logp);
-int icl_LogUse(register struct afs_icl_log *logp);
-int icl_LogReleNL(register struct afs_icl_log *logp);
-int icl_LogRele(register struct afs_icl_log *logp);
-int icl_ZeroLog(register struct afs_icl_log *logp);
-int icl_LogFreeUse(register struct afs_icl_log *logp);
+int icl_LogHold(struct afs_icl_log *logp);
+int icl_LogUse(struct afs_icl_log *logp);
+int icl_LogReleNL(struct afs_icl_log *logp);
+int icl_LogRele(struct afs_icl_log *logp);
+int icl_ZeroLog(struct afs_icl_log *logp);
+int icl_LogFreeUse(struct afs_icl_log *logp);
 
 #define BUFFER_MULTIPLIER     1024
 
@@ -134,7 +134,7 @@ icl_GetSize(afs_int32 type, char *addr)
 static int
 CheckTypes(char *bufferp, int *typesp, int typeCount, char *outMsgBuffer)
 {
-    register char tc;
+    char tc;
     int inPercent;
     int tix;
 
@@ -209,7 +209,7 @@ CheckTypes(char *bufferp, int *typesp, int typeCount, char *outMsgBuffer)
 static int
 CheckTypes(char *bufferp, int *typesp, int typeCount)
 {
-    register char tc;
+    char tc;
     int inPercent;
     int tix;
 
@@ -260,7 +260,7 @@ CheckTypes(char *bufferp, int *typesp, int typeCount)
 #define uint64_t long long
 #endif
 static void
-DisplayRecord(FILE *outFilep, register afs_int32 *alp, afs_int32 rsize)
+DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 {
     char msgBuffer[1024];
 #if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
@@ -548,7 +548,7 @@ DisplayRecord(FILE *outFilep, register afs_int32 *alp, afs_int32 rsize)
  */
 
 void
-dce1_error_inq_text(afs_uint32 status_to_convert, 
+dce1_error_inq_text(afs_uint32 status_to_convert,
 		   char *error_text, int *status)
 {
     unsigned short facility_code;
@@ -1114,7 +1114,7 @@ icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 
 #if !defined(AFS_SGI_ENV)
 int
-afs_syscall(long call, long parm0, long parm1, long parm2, long parm3, 
+afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 	    long parm4, long parm5, long parm6)
 {
     int code, rval;
@@ -1184,7 +1184,7 @@ icl_Init(void)
 }
 
 int
-icl_CreateSet(char *name, struct afs_icl_log *baseLogp, 
+icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
 	      struct afs_icl_log *fatalLogp, struct afs_icl_set **outSetpp)
 {
     return icl_CreateSetWithFlags(name, baseLogp, fatalLogp, /*flags */ 0,
@@ -1198,12 +1198,12 @@ icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
  * those references will be released.
  */
 int
-icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp, 
-		       struct afs_icl_log *fatalLogp, afs_uint32 flags, 
+icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
+		       struct afs_icl_log *fatalLogp, afs_uint32 flags,
 		       struct afs_icl_set **outSetpp)
 {
-    register struct afs_icl_set *setp;
-    register int i;
+    struct afs_icl_set *setp;
+    int i;
     afs_int32 states = ICL_DEFAULT_SET_STATES;
 
     if (!icl_inited)
@@ -1300,7 +1300,7 @@ icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID, int *getValuep)
 
 /* hold and release event sets */
 int
-icl_SetHold(register struct afs_icl_set *setp)
+icl_SetHold(struct afs_icl_set *setp)
 {
     setp->refCount++;
     return 0;
@@ -1308,11 +1308,11 @@ icl_SetHold(register struct afs_icl_set *setp)
 
 /* free a set.  Called with icl_lock locked */
 int
-icl_ZapSet(register struct afs_icl_set *setp)
+icl_ZapSet(struct afs_icl_set *setp)
 {
-    register struct afs_icl_set **lpp, *tp;
+    struct afs_icl_set **lpp, *tp;
     int i;
-    register struct afs_icl_log *tlp;
+    struct afs_icl_log *tlp;
 
     for (lpp = &icl_allSets, tp = *lpp; tp; lpp = &tp->nextp, tp = *lpp) {
 	if (tp == setp) {
@@ -1333,7 +1333,7 @@ icl_ZapSet(register struct afs_icl_set *setp)
 
 /* do the release, watching for deleted entries */
 int
-icl_SetRele(register struct afs_icl_set *setp)
+icl_SetRele(struct afs_icl_set *setp)
 {
     if (--setp->refCount == 0 && (setp->states & ICL_SETF_DELETED)) {
 	icl_ZapSet(setp);	/* destroys setp's lock! */
@@ -1343,7 +1343,7 @@ icl_SetRele(register struct afs_icl_set *setp)
 
 /* free a set entry, dropping its reference count */
 int
-icl_SetFree(register struct afs_icl_set *setp)
+icl_SetFree(struct afs_icl_set *setp)
 {
     setp->states |= ICL_SETF_DELETED;
     icl_SetRele(setp);
@@ -1354,7 +1354,7 @@ icl_SetFree(register struct afs_icl_set *setp)
 struct afs_icl_set *
 icl_FindSet(char *name)
 {
-    register struct afs_icl_set *tp;
+    struct afs_icl_set *tp;
 
     for (tp = icl_allSets; tp; tp = tp->nextp) {
 	if (strcmp(tp->name, name) == 0) {
@@ -1370,7 +1370,7 @@ icl_FindSet(char *name)
 int
 icl_ZeroSet(struct afs_icl_set *setp)
 {
-    register int i;
+    int i;
     int code = 0;
     int tcode;
     struct afs_icl_log *logp;
@@ -1389,11 +1389,11 @@ icl_ZeroSet(struct afs_icl_set *setp)
 }
 
 int
-icl_EnumerateSets(int (*aproc) (char *, void *, struct afs_icl_set *), 
+icl_EnumerateSets(int (*aproc) (char *, void *, struct afs_icl_set *),
 		  void *arock)
 {
-    register struct afs_icl_set *tp, *np;
-    register afs_int32 code;
+    struct afs_icl_set *tp, *np;
+    afs_int32 code;
 
     code = 0;
     for (tp = icl_allSets; tp; tp = np) {
@@ -1411,7 +1411,7 @@ icl_EnumerateSets(int (*aproc) (char *, void *, struct afs_icl_set *),
 int
 icl_AddLogToSet(struct afs_icl_set *setp, struct afs_icl_log *newlogp)
 {
-    register int i;
+    int i;
     int code = -1;
 
     for (i = 0; i < ICL_LOGSPERSET; i++) {
@@ -1468,7 +1468,7 @@ icl_SetSetStat(struct afs_icl_set *setp, int op)
 	break;
 
     case ICL_OP_SS_FREE:	/* deassert design for log */
-	/* 
+	/*
 	 * if we are already in this state, do nothing; otherwise
 	 * deassert desire for log
 	 */
@@ -1501,7 +1501,7 @@ struct afs_icl_log *afs_icl_allLogs = 0;
 
 /* hold and release logs */
 int
-icl_LogHold(register struct afs_icl_log *logp)
+icl_LogHold(struct afs_icl_log *logp)
 {
     logp->refCount++;
     return 0;
@@ -1509,7 +1509,7 @@ icl_LogHold(register struct afs_icl_log *logp)
 
 /* hold and release logs, called with lock already held */
 int
-icl_LogHoldNL(register struct afs_icl_log *logp)
+icl_LogHoldNL(struct afs_icl_log *logp)
 {
     logp->refCount++;
     return 0;
@@ -1517,7 +1517,7 @@ icl_LogHoldNL(register struct afs_icl_log *logp)
 
 /* keep track of how many sets believe the log itself is allocated */
 int
-icl_LogUse(register struct afs_icl_log *logp)
+icl_LogUse(struct afs_icl_log *logp)
 {
     if (logp->setCount == 0) {
 	/* this is the first set actually using the log -- allocate it */
@@ -1534,7 +1534,7 @@ icl_LogUse(register struct afs_icl_log *logp)
 
 /* decrement the number of real users of the log, free if possible */
 int
-icl_LogFreeUse(register struct afs_icl_log *logp)
+icl_LogFreeUse(struct afs_icl_log *logp)
 {
     if (--logp->setCount == 0) {
 	/* no more users -- free it (but keep log structure around) */
@@ -1548,7 +1548,7 @@ icl_LogFreeUse(register struct afs_icl_log *logp)
 
 /* set the size of the log to 'logSize' */
 int
-icl_LogSetSize(register struct afs_icl_log *logp, afs_int32 logSize)
+icl_LogSetSize(struct afs_icl_log *logp, afs_int32 logSize)
 {
     if (!logp->datap) {
 	/* nothing to worry about since it's not allocated */
@@ -1569,9 +1569,9 @@ icl_LogSetSize(register struct afs_icl_log *logp, afs_int32 logSize)
 
 /* free a log.  Called with icl_lock locked. */
 int
-icl_ZapLog(register struct afs_icl_log *logp)
+icl_ZapLog(struct afs_icl_log *logp)
 {
-    register struct afs_icl_log **lpp, *tp;
+    struct afs_icl_log **lpp, *tp;
 
     for (lpp = &afs_icl_allLogs, tp = *lpp; tp; lpp = &tp->nextp, tp = *lpp) {
 	if (tp == logp) {
@@ -1588,7 +1588,7 @@ icl_ZapLog(register struct afs_icl_log *logp)
 
 /* do the release, watching for deleted entries */
 int
-icl_LogRele(register struct afs_icl_log *logp)
+icl_LogRele(struct afs_icl_log *logp)
 {
     if (--logp->refCount == 0 && (logp->states & ICL_LOGF_DELETED)) {
 	icl_ZapLog(logp);	/* destroys logp's lock! */
@@ -1598,7 +1598,7 @@ icl_LogRele(register struct afs_icl_log *logp)
 
 /* do the release, watching for deleted entries, log already held */
 int
-icl_LogReleNL(register struct afs_icl_log *logp)
+icl_LogReleNL(struct afs_icl_log *logp)
 {
     if (--logp->refCount == 0 && (logp->states & ICL_LOGF_DELETED)) {
 	icl_ZapLog(logp);	/* destroys logp's lock! */
@@ -1608,7 +1608,7 @@ icl_LogReleNL(register struct afs_icl_log *logp)
 
 /* zero out the log */
 int
-icl_ZeroLog(register struct afs_icl_log *logp)
+icl_ZeroLog(struct afs_icl_log *logp)
 {
     logp->firstUsed = logp->firstFree = 0;
     logp->logElements = 0;
@@ -1617,7 +1617,7 @@ icl_ZeroLog(register struct afs_icl_log *logp)
 
 /* free a log entry, and drop its reference count */
 int
-icl_LogFree(register struct afs_icl_log *logp)
+icl_LogFree(struct afs_icl_log *logp)
 {
     logp->states |= ICL_LOGF_DELETED;
     icl_LogRele(logp);
@@ -1630,8 +1630,8 @@ icl_EnumerateLogs(int (*aproc)
 		    (char *name, void *arock, struct afs_icl_log * tp),
 		  void *arock)
 {
-    register struct afs_icl_log *tp;
-    register afs_int32 code;
+    struct afs_icl_log *tp;
+    afs_int32 code;
 
     code = 0;
     for (tp = afs_icl_allLogs; tp; tp = tp->nextp) {
@@ -1775,7 +1775,7 @@ SetUpDump(void)
 }
 
 static int
-DoShowLog(register struct cmd_syndesc *as, void *arock)
+DoShowLog(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -1846,7 +1846,7 @@ SetUpShowLog(void)
 }
 
 static int
-DoShowSet(register struct cmd_syndesc *as, void *arock)
+DoShowSet(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -1900,7 +1900,7 @@ SetUpShowSet(void)
 }
 
 static int
-DoClear(register struct cmd_syndesc *as, void *arock)
+DoClear(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -1960,7 +1960,7 @@ SetUpClear(void)
 }
 
 static int
-DoSet(register struct cmd_syndesc *as, void *arock)
+DoSet(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;
@@ -2047,7 +2047,7 @@ SetUpSet(void)
 }
 
 static int
-DoResize(register struct cmd_syndesc *as, void *arock)
+DoResize(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 retVal = 0;
     afs_int32 code = 0;

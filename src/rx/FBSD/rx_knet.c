@@ -87,7 +87,6 @@ osi_StopListener(void)
     if (haveGlock)
 	AFS_GUNLOCK();
     soshutdown(rx_socket, SHUT_RDWR);
-    soclose(rx_socket);
     p = pfind(rxk_ListenerPid);
     afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
     if (p)
@@ -104,12 +103,13 @@ osi_StopListener(void)
       MUTEX_ENTER(&s_mtx);
       tries = 3;
       while ((tries > 0) && (!so_is_disconn(rx_socket))) {
+          afs_warn("osi_StopListener: waiting (%d) ", tries);
 	msleep(&osi_StopListener, &s_mtx, PSOCK | PCATCH,
 	       "rx_shutdown_timedwait", 1 * hz);
 	--tries;
       }
       if (so_is_disconn(rx_socket))
-	soclose(rx_socket);
+          soclose(rx_socket);
       MUTEX_EXIT(&s_mtx);
       MUTEX_DESTROY(&s_mtx);
     }
@@ -122,7 +122,7 @@ int
 osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	    int nvecs, afs_int32 alength, int istack)
 {
-    register afs_int32 code;
+    afs_int32 code;
     int i;
     struct iovec iov[RX_MAXIOVECS];
     struct uio u;
@@ -174,7 +174,7 @@ static void rxk_fasttimo(void);
 /* start intercepting basic calls */
 rxk_init()
 {
-    register struct protosw *tpro, *last;
+    struct protosw *tpro, *last;
     if (rxk_initDone)
 	return 0;
 
@@ -204,12 +204,12 @@ static void
 rxk_input(struct mbuf *am, int iphlen)
 {
     void (*tproc) ();
-    register unsigned short *tsp;
+    unsigned short *tsp;
     int hdr;
     struct udphdr *tu;
-    register struct ip *ti;
+    struct ip *ti;
     struct udpiphdr *tvu;
-    register int i;
+    int i;
     char *phandle;
     afs_int32 code;
     struct sockaddr_in taddr;
@@ -354,7 +354,7 @@ rxk_fasttimo(void)
  * sometimes */
 static
 trysblock(sb)
-     register struct sockbuf *sb;
+     struct sockbuf *sb;
 {
     AFS_STATCNT(trysblock);
     if (sb->sb_flags & SB_LOCK) {
@@ -370,11 +370,11 @@ int
 osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	    int nvec, afs_int32 asize, int istack)
 {
-    register struct mbuf *tm, *um;
-    register afs_int32 code;
+    struct mbuf *tm, *um;
+    afs_int32 code;
     int s;
     struct mbuf *top = 0;
-    register struct mbuf *m, **mp;
+    struct mbuf *m, **mp;
     int len;
     char *tdata;
     caddr_t tpa;

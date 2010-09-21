@@ -9,6 +9,7 @@
 <!ENTITY chapter4 SYSTEM "auqbg007.xml">
 <!ENTITY appendixA SYSTEM "auqbg008.xml">
 <!ENTITY appendixB SYSTEM "appendix.xml">
+<!ENTITY appendixC SYSTEM "appendix_dafs.xml">
 ]>
 
 <book>
@@ -46,6 +47,7 @@
   &chapter4;
   &appendixA;
   &appendixB;
+  &appendixC;
   <index></index>
 </book>
 <!-- Keep this comment at the end of the file

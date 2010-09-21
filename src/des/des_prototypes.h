@@ -34,19 +34,19 @@ charptr_to_cblockptr(char *key) {
 
 /* cbc_encrypt.c */
 extern afs_int32 des_cbc_encrypt(void * in, void * out,
-				 register afs_int32 length,
+				 afs_int32 length,
 				 des_key_schedule key, des_cblock * iv,
 				 int encrypt);
 
 /* pcbc_encrypt.c */
 extern afs_int32 des_pcbc_encrypt(void * in, void * out,
-				  register afs_int32 length,
+				  afs_int32 length,
 				  des_key_schedule key, des_cblock * iv,
 				  int encrypt);
 
 /* des.c */
 extern afs_int32 des_ecb_encrypt(void * clear, void * cipher,
-				 register des_key_schedule schedule,
+				 des_key_schedule schedule,
 				 int encrypt);
 
 /* util.c */
@@ -63,12 +63,12 @@ extern void gen(FILE * stream);
 extern int des_is_weak_key(des_cblock key);
 
 /* key_parity.c */
-extern void des_fixup_key_parity(register des_cblock key);
-extern int des_check_key_parity(register des_cblock key);
+extern void des_fixup_key_parity(des_cblock key);
+extern int des_check_key_parity(des_cblock key);
 
 /* cksum.c */
 extern afs_uint32 des_cbc_cksum(des_cblock * in, des_cblock * out,
-				register afs_int32 length,
+				afs_int32 length,
 				des_key_schedule key, des_cblock * iv);
 
 /* quad_cksum.c */
@@ -77,13 +77,13 @@ extern afs_uint32 des_quad_cksum(unsigned char *in, afs_uint32 * out,
 				 des_cblock * c_seed);
 
 /* key_sched.c */
-extern int afs_des_key_sched(register des_cblock k,
+extern int afs_des_key_sched(des_cblock k,
 			     des_key_schedule schedule);
-extern int des_key_sched(register des_cblock k, des_key_schedule schedule);
+extern int des_key_sched(des_cblock k, des_key_schedule schedule);
 
 
 /* strng_to_key.c */
-extern void des_string_to_key(char *str, register des_cblock * key);
+extern void des_string_to_key(char *str, des_cblock * key);
 
 /* new_rnd_key.c */
 extern int des_random_key(des_cblock key);

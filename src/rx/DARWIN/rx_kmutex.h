@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,13 +36,13 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
  * In Digital Unix (OSF/1), we use something akin to the ancient sleep/wakeup
  * mechanism.  The condition variable itself plays no role; we just use its
  * address as a convenient unique number.
- * 
+ *
  * XXX in darwin, both mach and bsd facilities are available. Should really
  * stick to one or the other (but mach locks don't have a _try.....)
  *
  * in darwin 8.0, the bsd lock facility is no longer available, and only one
  * sleep variant is available. Still no lock_try, but we can work around that.
- * We can't pass the mutex into msleep, even if we didn't need the two mutex 
+ * We can't pass the mutex into msleep, even if we didn't need the two mutex
  * hack for lock_try emulation, since msleep won't fixup the owner variable
  * and we'll panic.
  */

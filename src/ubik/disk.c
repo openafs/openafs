@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -558,7 +558,7 @@ DRelease(char *ap, int flag)
 
 /*!
  * \brief Flush all modified buffers, leaves dirty bits set (they're cleared
- * by DSync()).  
+ * by DSync()).
  *
  * \note Note interaction with DSync(): you call this thing first,
  * writing the buffers to the disk.  Then you call DSync() to sync all the
@@ -844,7 +844,7 @@ udisk_commit(struct ubik_trans *atrans)
 	    dbase->version = newversion;
 
 	    /* Ignore the error here. If the call fails, the site is
-	     * marked down and when we detect it is up again, we will 
+	     * marked down and when we detect it is up again, we will
 	     * send the entire database to it.
 	     */
 	    ContactQuorum_DISK_SetVersion( atrans, 1 /*CStampVersion */ ,
@@ -865,7 +865,7 @@ udisk_commit(struct ubik_trans *atrans)
 	}
 
 	/* If we fail anytime after this, then panic and let the
-	 * recovery replay the log. 
+	 * recovery replay the log.
 	 */
 	code = DFlush(dbase);	/* write dirty pages to respective files */
 	if (code)
@@ -909,9 +909,9 @@ udisk_abort(struct ubik_trans *atrans)
 	return UTWOENDS;
 
     /* Check if we are the write trans before logging abort, lest we
-     * abort a good write trans in progress. 
-     * We don't really care if the LOGABORT gets to the log because we 
-     * truncate the log next. If the truncate fails, we panic; for 
+     * abort a good write trans in progress.
+     * We don't really care if the LOGABORT gets to the log because we
+     * truncate the log next. If the truncate fails, we panic; for
      * otherwise, the log entries remain. On restart, replay of the log
      * will do nothing because the abort is there or no LogEnd opcode.
      */

@@ -1,12 +1,12 @@
-/* 
+/*
  *  Copyright (C) 1989 by the Massachusetts Institute of Technology
- * 
+ *
  *    Export of software employing encryption from the United States of
  *    America is assumed to require a specific license from the United
  *    States Government.  It is the responsibility of any person or
  *    organization contemplating export to obtain such a license before
  *    exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -42,7 +42,7 @@ int
 main(int argc, char **argv)
 {
     struct afsconf_dir *tdir;
-    register afs_int32 code;
+    afs_int32 code;
 
     if (argc == 1) {
 	printf("bos_util: usage is 'bos_util <opcode> options, e.g.\n");
@@ -99,7 +99,7 @@ main(int argc, char **argv)
     } else if (strcmp(argv[1], "adddes") == 0) {
 	struct ktc_encryptionKey tkey;
 	int kvno;
-	register afs_int32 code;
+	afs_int32 code;
 	char buf[BUFSIZ], ver[BUFSIZ];
 
 	if (argc != 3) {
@@ -174,7 +174,7 @@ main(int argc, char **argv)
 	}
     } else if (strcmp(argv[1], "list") == 0) {
 	struct afsconf_keys tkeys;
-	register int i;
+	int i;
 	unsigned char tbuffer[9];
 
 	code = afsconf_GetKeys(tdir, &tkeys);

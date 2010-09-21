@@ -311,7 +311,7 @@ void set_table_num(char *string)
 
 void set_table_fun(char *astring)
 {
-    register char *tp;
+    char *tp;
     unsigned int tc;
 
     for(tp=astring; (tc = *tp) != 0; tp++) {

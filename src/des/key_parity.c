@@ -32,7 +32,7 @@
  *                       vax order.
  */
 void
-des_fixup_key_parity(register des_cblock key)
+des_fixup_key_parity(des_cblock key)
 {
     int i;
 
@@ -48,7 +48,7 @@ des_fixup_key_parity(register des_cblock key)
  *                       correct des parity.
  */
 int
-des_check_key_parity(register des_cblock key)
+des_check_key_parity(des_cblock key)
 {
     int i;
 

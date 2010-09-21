@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -35,13 +35,13 @@
 
 /* also parse a.b.c.d addresses */
 struct hostent *
-hostutil_GetHostByName(register char *ahost)
+hostutil_GetHostByName(char *ahost)
 {
-    register int tc;
+    int tc;
     static struct hostent thostent;
     static char *addrp[2];
     static char addr[4];
-    register char *ptr = ahost;
+    char *ptr = ahost;
     afs_uint32 tval, numeric = 0;
     int dots = 0;
 
@@ -126,10 +126,10 @@ hostutil_GetNameByINet(afs_uint32 addr)
     return tbuffer;
 }
 
-/* the parameter is a pointer to a buffer containing a string of 
-** bytes of the form 
+/* the parameter is a pointer to a buffer containing a string of
+** bytes of the form
 ** w.x.y.z 	# machineName
-** returns the network interface in network byte order 
+** returns the network interface in network byte order
 */
 afs_uint32
 extractAddr(char *line, int maxSize)

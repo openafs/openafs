@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -293,6 +293,10 @@
 
 #define SYS_NAME_ID_i386_dfbsd_22        3900
 #define SYS_NAME_ID_i386_dfbsd_23        3901
+#define SYS_NAME_ID_i386_dfbsd_24        3902
+#define SYS_NAME_ID_i386_dfbsd_25        3903
+#define SYS_NAME_ID_i386_dfbsd_26        3904
+#define SYS_NAME_ID_i386_dfbsd_27        3905
 
 #define SYS_NAME_ID_amd64_obsd36        4005
 #define SYS_NAME_ID_amd64_obsd37        4006
@@ -307,7 +311,7 @@
 #define SYS_NAME_ID_amd64_obsd46        4015
 
 /*
- * Placeholder to keep system-wide standard flags since this file is included by all 
+ * Placeholder to keep system-wide standard flags since this file is included by all
  * files (i.e in afs/param.h)
  */
 #ifdef	notdef

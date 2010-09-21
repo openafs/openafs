@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -44,13 +44,13 @@ struct nfsclientpag *afs_nfspags[NNFSCLIENTS];
 afs_lock_t afs_xnfspag /*, afs_xnfsreq */ ;
 extern struct afs_exporter *afs_nfsexporter;
 
-/* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't 
+/* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't
  * exist. RefCount is incremented and it's time stamped. */
 static struct nfsclientpag *
-afs_GetNfsClientPag(register afs_int32 uid, register afs_uint32 host)
+afs_GetNfsClientPag(afs_int32 uid, afs_uint32 host)
 {
-    register struct nfsclientpag *np;
-    register afs_int32 i, now;
+    struct nfsclientpag *np;
+    afs_int32 i, now;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -95,7 +95,7 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_uint32 host)
 It's also called whenever a unixuser structure belonging to the remote user associated with the nfsclientpag structure, np, is garbage collected. */
 void
 afs_PutNfsClientPag(np)
-     register struct nfsclientpag *np;
+     struct nfsclientpag *np;
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -105,14 +105,14 @@ afs_PutNfsClientPag(np)
 }
 
 
-/* Return the nfsclientpag structure associated with the (uid, host) or 
- * {pag, host} pair, if pag is nonzero. RefCount is incremented and it's 
+/* Return the nfsclientpag structure associated with the (uid, host) or
+ * {pag, host} pair, if pag is nonzero. RefCount is incremented and it's
  * time stamped. */
 static struct nfsclientpag *
 afs_FindNfsClientPag(afs_int32 uid, afs_uint32 host, afs_int32 pag)
 {
-    register struct nfsclientpag *np;
-    register afs_int32 i;
+    struct nfsclientpag *np;
+    afs_int32 i;
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -178,9 +178,9 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 			 afs_uint32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
-    register struct nfsclientpag *np, *tnp;
+    struct nfsclientpag *np, *tnp;
     extern struct unixuser *afs_FindUser(), *afs_GetUser();
-    register struct unixuser *au = 0;
+    struct unixuser *au = 0;
     afs_int32 uid, pag, code = 0;
 
     AFS_ASSERT_GLOCK();
@@ -190,9 +190,9 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 
     afs_nfsexporter->exp_stats.calls++;
     if (!(afs_nfsexporter->exp_states & EXP_EXPORTED)) {
-	/* No afs requests accepted as long as EXPORTED flag is turned 'off'. 
-	 * Set/Reset via a pioctl call (fs exportafs). Note that this is on 
-	 * top of the /etc/exports nfs requirement (i.e. /afs must be 
+	/* No afs requests accepted as long as EXPORTED flag is turned 'off'.
+	 * Set/Reset via a pioctl call (fs exportafs). Note that this is on
+	 * top of the /etc/exports nfs requirement (i.e. /afs must be
 	 * exported to all or whomever there too!)
 	 */
 	afs_nfsexporter->exp_stats.rejectedcalls++;
@@ -237,10 +237,10 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS))
        	pag = NOPAG;
     if (!np) {
-	/* Even if there is a "good" pag coming in we don't accept it if no 
-	 * nfsclientpag struct exists for the user since that would mean 
-	 * that the translator rebooted and therefore we ignore all older 
-	 * pag values 
+	/* Even if there is a "good" pag coming in we don't accept it if no
+	 * nfsclientpag struct exists for the user since that would mean
+	 * that the translator rebooted and therefore we ignore all older
+	 * pag values
 	 */
 	if ((code = setpag(cred, -1, &pag, 0))) {
 	    if (au)
@@ -335,7 +335,7 @@ afs_nfsclient_getcreds(struct unixuser *au)
 	    tsysnames.SysNameList_len <= 0 ||
 	    tsysnames.SysNameList_len > MAXNUMSYSNAMES)
 	    goto done;
-    
+
 	for(i = 0; i < np->sysnamecount; i++)
 	    afs_osi_Free(np->sysname[i], MAXSYSNAME);
 
@@ -417,7 +417,7 @@ done:
 /* It's called whenever a new unixuser structure is created for the remote
  * user associated with the nfsclientpag structure, np */
 void
-afs_nfsclient_hold(register struct nfsclientpag *np)
+afs_nfsclient_hold(struct nfsclientpag *np)
 {
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -429,7 +429,7 @@ afs_nfsclient_hold(register struct nfsclientpag *np)
 
 /* check if this exporter corresponds to the specified host */
 int
-afs_nfsclient_checkhost(register struct nfsclientpag *np, afs_uint32 host)
+afs_nfsclient_checkhost(struct nfsclientpag *np, afs_uint32 host)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -439,7 +439,7 @@ afs_nfsclient_checkhost(register struct nfsclientpag *np, afs_uint32 host)
 
 /* get the host for this exporter, or 0 if there is an error */
 afs_uint32
-afs_nfsclient_gethost(register struct nfsclientpag *np)
+afs_nfsclient_gethost(struct nfsclientpag *np)
 {
     if (np->type != EXP_NFS)
 	return 0;
@@ -450,12 +450,12 @@ afs_nfsclient_gethost(register struct nfsclientpag *np)
 /* if inname is non-null, a new system name value is set for the remote
  * user (inname contains the new sysname). In all cases, outname returns
  * the current sysname value for this remote user */
-int 
-afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname, 
+int
+afs_nfsclient_sysname(struct nfsclientpag *np, char *inname,
 		      char ***outname, int *num, int allpags)
 {
-    register struct nfsclientpag *tnp;
-    register afs_int32 i;
+    struct nfsclientpag *tnp;
+    afs_int32 i;
     char *cp;
     int count, t;
 #if defined(AFS_SGIMP_ENV)
@@ -506,11 +506,11 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
  * "unixuser" structures associated with them (i.e. unixusercnt == 0) and
  * they haven't had any activity the last NFSCLIENTGC seconds */
 void
-afs_nfsclient_GC(register struct afs_exporter *exporter,
-		 register afs_int32 pag)
+afs_nfsclient_GC(struct afs_exporter *exporter,
+		 afs_int32 pag)
 {
-    register struct nfsclientpag *np, **tnp, *nnp;
-    register afs_int32 i, delflag;
+    struct nfsclientpag *np, **tnp, *nnp;
+    afs_int32 i, delflag;
 	int count;
 
 #if defined(AFS_SGIMP_ENV)
@@ -541,9 +541,9 @@ afs_nfsclient_GC(register struct afs_exporter *exporter,
 
 
 int
-afs_nfsclient_stats(register struct afs_exporter *export)
+afs_nfsclient_stats(struct afs_exporter *export)
 {
-    /* Nothing much to do here yet since most important stats are collected 
+    /* Nothing much to do here yet since most important stats are collected
      * directly in the afs_exporter structure itself */
     AFS_STATCNT(afs_nfsclient_stats);
     return 0;
@@ -618,7 +618,7 @@ afs_iauth_register(void)
     }
 }
 
-/* afs_iauth_unregister - unregister the iauth verify routine. Called on shutdown. 
+/* afs_iauth_unregister - unregister the iauth verify routine. Called on shutdown.
  */
 void
 afs_iauth_unregister(void)

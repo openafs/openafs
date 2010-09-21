@@ -1,0 +1,121 @@
+=head1 NAME
+
+dafileserver - Initializes the File Server component of the dafs process
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+=include fragments/dafileserver-synopsis.pod
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<dafileserver> command initializes the File Server component of the
+C<dafs> process. In the conventional configuration, its binary file is
+located in the F</usr/afs/bin> directory on a file server machine.
+
+The B<dafileserver> command is not normally issued at the command shell
+prompt, but rather placed into a database server machine's
+F</usr/afs/local/BosConfig> file with the B<bos create> command. If it is
+ever issued at the command shell prompt, the issuer must be logged onto a
+file server machine as the local superuser C<root>.
+
+=include fragments/fileserver-description.pod
+
+=head1 CAUTIONS
+
+=include fragments/fileserver-cautions.pod
+
+=head1 OPTIONS
+
+=include fragments/fileserver-options.pod
+
+=item B<-fs-state-dont-save>
+
+When present, fileserver state will not be saved during shutdown.  Default
+is to save state.
+
+=item B<-fs-state-dont-restore>
+
+When present, fileserver state will not be restored during startup.
+Default is to restore state on startup.
+
+=item B<-fs-state-verify> (none | save | restore | both)
+
+This argument controls the behavior of the state verification mechanism.
+A value of C<none> turns off all verification.  A value of C<save> only
+performs the verification steps prior to saving state to disk.  A value
+of C<restore> only performs the verification steps after restoring state
+from disk.  A value of C<both> performs all verifications steps both
+prior to save and following a restore.
+
+The default is C<both>.
+
+=item B<-vhashsize <I<size>>
+
+The log(2) number of of volume hash buckets.  Default is 8 (i.e., by
+default, there are 2^8 = 256 volume hash buckets).
+
+=item B<-vlruthresh <I<minutes>>
+
+The number of minutes of inactivity before a volume is eligible for soft
+detachment.  Default is 120 minutes.
+
+=item B<-vlruinterval <I<seconds>>
+
+The number of seconds between VLRU candidate queue scan.  The default is
+120 seconds.
+
+=item B<-vlrumax <I<positive integer>>
+
+The maximum number of volumes which can be soft detached in a single pass
+of the scanner.  Default is 8 volumes.
+
+=item B<-unsafe-nosalvage>
+
+This option causes the fileserver to bypass the normal safety check when
+attaching volumes that checks the inUse field in the volume header. With
+this option, volumes that were in use at the time of an unclean shutdown
+will not be salvaged immediately the next time they are accessed, and thus
+risk (possibly silent and/or irrevocable) corruption. Volumes will still
+be salvaged when an internal inconsistency is detected or other cases
+where a salvage would normally occur.
+
+Due to the increased risk of data corruption, the use of this flag is
+strongly discouraged. Only use it if you really know what you are doing.
+
+=back
+
+=head1 EXAMPLES
+
+The following B<bos create> command creates a dafs process on
+the file server machine C<fs2.abc.com> that uses the large configuration
+size, and allows volumes to exceed their quota by 10%. Type the command on
+a single line:
+
+   % bos create -server fs2.abc.com -instance dafs -type dafs \
+                -cmd "/usr/afs/bin/fileserver -pctspare 10 -L" \
+                /usr/afs/bin/volserver \
+                /usr/afs/bin/salvageserver \
+                /usr/afs/bin/salvager
+
+=head1 TROUBLESHOOTING
+
+=include fragments/fileserver-troubleshooting.pod
+
+=head1 PRIVILEGE REQUIRED
+
+=include fragments/fileserver-privilege.pod
+
+=head1 SEE ALSO
+
+=include fragments/fileserver-also.pod
+L<fileserver(8)>,
+
+=head1 COPYRIGHT
+
+=include fragments/fileserver-copyright.pod

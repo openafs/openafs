@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -63,7 +63,7 @@ test_objects(pkg)
 {				/*test_objects */
 
     static char rn[] = "test_objects";	/*Routine name */
-    register int code;		/*Return code */
+    int code;		/*Return code */
     struct onode_initparams oi_params;	/*Init params */
     struct gwin_initparams wi_params;	/*Window initialization params */
 #if 0
@@ -431,8 +431,8 @@ main(argc, argv)
 {				/*main */
 
     static char rn[] = "main";	/*Routine name */
-    register afs_int32 code;	/*Return code */
-    register struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
+    afs_int32 code;	/*Return code */
+    struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
 
     /*
      * Set up the commands we understand.

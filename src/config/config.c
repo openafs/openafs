@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -23,10 +23,10 @@ int mc_copy(FILE *, FILE *, char **);
 int
 main(int argc, char **argv)
 {
-    register FILE *infile;
-    register FILE *outfile;
+    FILE *infile;
+    FILE *outfile;
     char *alist[5];
-    register int code;
+    int code;
     char *sysname;
 
     if (argc != 4) {
@@ -49,7 +49,7 @@ main(int argc, char **argv)
     alist[1] = "all";
 
     /* This allows JUST arch or JUST OS/version,
-     * Linux 2.6 uses the in-kernel build system, so 
+     * Linux 2.6 uses the in-kernel build system, so
      * just 'linux26' is enough. */
     sysname = strdup (alist[0]);
     alist[2] = strchr (sysname, '_');

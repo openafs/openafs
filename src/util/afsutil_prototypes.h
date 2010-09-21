@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -60,6 +60,10 @@ extern int ConstructLocalLogPath(const char *cpath, char **fullPathBufp);
 /* errmap_nt.c */
 extern int nterr_nt2unix(long ntErr, int defaultErr);
 
+/* exec.c */
+extern char* afs_exec_alt(int argc, char **argv, const char *prefix,
+                          const char *suffix);
+
 /* fileutil.c */
 extern int renamefile(const char *oldname, const char *newname);
 extern void FilepathNormalizeEx(char *path, int slashType);
@@ -88,7 +92,7 @@ extern int afs_krb_get_lrealm(char *r, int n);
 extern int afs_krb_exclusion(char *name);
 extern int afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localrealm);
 /* hostparse.c */
-extern struct hostent *hostutil_GetHostByName(register char *ahost);
+extern struct hostent *hostutil_GetHostByName(char *ahost);
 extern char *hostutil_GetNameByINet(afs_uint32 addr);
 extern afs_uint32 extractAddr(char *line, int maxSize);
 extern char *afs_inet_ntoa_r(afs_uint32 addr, char *buf);
@@ -126,9 +130,9 @@ extern afs_int32 Add_RelDate_to_Time(struct ktime_date *relDatePtr,
 
 /* ktime.c */
 extern char *ktime_DateOf(afs_int32 atime);
-extern afs_int32 ktime_Str2int32(register char *astr);
-extern int ktime_ParsePeriodic(char *adate, register struct ktime *ak);
-extern int ktime_DisplayString(struct ktime *aparm, register char *astring);
+extern afs_int32 ktime_Str2int32(char *astr);
+extern int ktime_ParsePeriodic(char *adate, struct ktime *ak);
+extern int ktime_DisplayString(struct ktime *aparm, char *astring);
 extern afs_int32 ktime_next(struct ktime *aktime, afs_int32 afrom);
 extern afs_int32 ktime_DateToInt32(char *adate, afs_int32 * aint32);
 extern char *ktime_GetDateUsage(void);
@@ -171,6 +175,9 @@ extern void SetupLogSignals(void);
 extern int OpenLog(const char *fileName);
 extern int ReOpenLog(const char *fileName);
 extern int LogThreadNum(void);
+extern void LogCommandLine(int argc, char **argv, const char *progname,
+			   const char *version, const char *logstring,
+			   void (*log) (const char *format, ...));
 
 /* snprintf.c */
 
@@ -207,11 +214,11 @@ extern afs_int32 volutil_GetPartitionID(char *aname);
 extern char *volutil_PartitionName_r(int avalue, char *tbuffer, int buflen);
 extern afs_int32 volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t buflen);
 extern char *volutil_PartitionName(int avalue);
-extern afs_int32 util_GetInt32(register char *as, afs_int32 * aval);
-extern afs_uint32 util_GetUInt32(register char *as, afs_uint32 * aval);
+extern afs_int32 util_GetInt32(char *as, afs_int32 * aval);
+extern afs_uint32 util_GetUInt32(char *as, afs_uint32 * aval);
 extern afs_int32 util_GetInt64(char *as, afs_int64 * aval);
 extern afs_uint32 util_GetUInt64(char *as, afs_uint64 * aval);
-extern afs_int32 util_GetHumanInt32(register char *as, afs_int32 * aval);
+extern afs_int32 util_GetHumanInt32(char *as, afs_int32 * aval);
 
 /* winsock_nt.c */
 

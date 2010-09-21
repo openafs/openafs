@@ -149,10 +149,10 @@ int mnt_passno = 0;
 #include "AFS_component_version_number.c"
 
 #ifdef	AFS_HPUX_ENV
-int ge_danger = 0;		/* on when fsck is not able to fix the dirty file 
+int ge_danger = 0;		/* on when fsck is not able to fix the dirty file
 				 * system within single run. Problems like dup table
 				 * overflow, maxdup is exceeding MAXDUP.. etc. could
-				 * potentailly prevent fsck from doing a complete 
+				 * potentailly prevent fsck from doing a complete
 				 * repair. This is found in a GE hotsite. */
 #endif
 
@@ -163,8 +163,8 @@ main(argc, argv)
     struct fstab *fsp;
     int pid, passno, sumstatus;
     char *name;
-    register struct disk *dk, *nextdisk;
-    register struct part *pt;
+    struct disk *dk, *nextdisk;
+    struct part *pt;
     extern char *AFSVersion;	/* generated version */
 #ifdef	AFS_SUN5_ENV
     int other_than_ufs = 0;
@@ -545,8 +545,8 @@ struct disk *
 finddisk(name)
      char *name;
 {
-    register struct disk *dk, **dkp;
-    register char *p;
+    struct disk *dk, **dkp;
+    char *p;
     int len;
 
     for (p = name + strlen(name) - 1; p >= name; --p)
@@ -579,7 +579,7 @@ addpart(name, fsname)
      char *name, *fsname;
 {
     struct disk *dk = finddisk(name);
-    register struct part *pt, **ppt = &dk->part;
+    struct part *pt, **ppt = &dk->part;
 
     for (pt = dk->part; pt; ppt = &pt->next, pt = pt->next)
 	if (strcmp(pt->name, name) == 0) {
@@ -599,7 +599,7 @@ addpart(name, fsname)
 }
 
 startdisk(dk)
-     register struct disk *dk;
+     struct disk *dk;
 {
 
     nrun++;
@@ -637,7 +637,7 @@ checkfilesys(filesys, parname)
     isconvert = 0;
 #endif
 #ifdef	AFS_HPUX_ENV
-    ge_danger = 0;		/* set to 1 by any table overflow or more 
+    ge_danger = 0;		/* set to 1 by any table overflow or more
 				 * dup/bad blocks than expected */
 
     fixed = 1;			/* set to 0 by any 'no' reply */
@@ -824,7 +824,7 @@ checkfilesys(filesys, parname)
 		    sblock.fs_clean = FS_CLEAN;
 		/*
 		 *  Fix fs_clean if there were no 'no' replies.
-		 *  This is done for both the s300 and s800.  The s800 root will be 
+		 *  This is done for both the s300 and s800.  The s800 root will be
 		 *  guaranteed clean as of 7.0.
 		 */
 		if (fixed && (sblock.fs_clean != FS_OK)) {
@@ -1158,7 +1158,7 @@ check_sanity(filename)
     /*
      * We mount the ufs root file system read-only first.  After fsck
      * runs, we remount the root as read-write.  Therefore, we no longer
-     * check for different values for fs_state between the root file 
+     * check for different values for fs_state between the root file
      * system and the rest of file systems.
      */
     if (!((sblock.fs_state + (time_t) sblock.fs_time == FSOKAY)
@@ -1234,7 +1234,7 @@ check_sanity(filename)
     /*
      * We mount the ufs root file system read-only first.  After fsck
      * runs, we remount the root as read-write.  Therefore, we no longer
-     * check for different values for fs_state between the root file 
+     * check for different values for fs_state between the root file
      * system and the rest of file systems.
      */
     if (!((sblock.fs_clean == FS_CLEAN || sblock.fs_clean == FS_OK))) {
@@ -1260,9 +1260,9 @@ numbers(yp)
 }
 #endif
 
-/* Convert a raw device name into a block device name. 
+/* Convert a raw device name into a block device name.
  * If the block device is not found, return the raw device name.
- * For HP and SUN, the returned value is not changed. For other 
+ * For HP and SUN, the returned value is not changed. For other
  * platforms it is changed (I see no rhyme or reason -jpm).
  */
 char *
@@ -1297,7 +1297,7 @@ unrawname(rawdev)
     return (rawdev);
 }
 
-/* Convert a block device name into a raw device name. 
+/* Convert a block device name into a raw device name.
  * If the block device is not found, return null
  */
 char *
