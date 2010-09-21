@@ -1,9 +1,4 @@
 #!/usr/bin/make -f
-# Based on the sample debian/rules that uses debhelper. 
-# GNU copyright 1997 by Joey Hess.
-
-# Uncomment this to turn on verbose mode. 
-#export DH_VERBOSE=1
 
 # Tell Autoconf the correct system types.
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -38,9 +33,10 @@ HTML_XSL   = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
 
 # The /usr/share/doc directory for these packages should be a symlink to
 # /usr/share/doc/openafs-client.  Any package on this list must depend on
-# openafs-client.
-DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fuse \
-	openafs-kpasswd
+# openafs-client.  This variable is used as options to dh_installdocs with
+# the --link-doc option.
+DOC_PACKAGES = -plibpam-openafs-kaserver -popenafs-dbserver -popenafs-fuse \
+	-popenafs-kpasswd
 
 # These are files that we know we don't want to install.  List them so that we
 # can use dh_install --fail-missing and catch anything new that shows up.
@@ -81,14 +77,14 @@ get-orig-source:
 	rm -r openafs_$(DEBVERS).orig
 	gzip -9 openafs_$(DEBVERS).orig.tar
 
+# Use dh for most actions, with overrides below.
+%:
+	dh $@
+
 # Handle the renaming of the up man page to afs-up here since the man pages
 # are generated from POD source by regen.sh.
-build: build-arch build-indep
-build-arch: build-stamp
-build-indep:
-build-stamp:
+override_dh_auto_configure:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
-	dh build --before configure
 	echo '$(DEBIAN)'-debian > .version
 	mv doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
 	rm -f doc/man-pages/man1/up.1
@@ -104,18 +100,19 @@ build-stamp:
 	    --with-xslt-processor=xsltproc --with-html-xsl=$(HTML_XSL) \
 	    --enable-reduced-depends $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 	chmod a+x config.sub
-	dh build --after configure
+
+# Also build a libafs_tree and build the XML documentation.
+override_dh_auto_build:
 	$(MAKE) libafs_tree
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
 	    $(MAKE) -C doc/xml/$$d all ; \
 	done
-	touch $@
 
 # The manipulation of debian/changelog here is unnecessary with a regular
 # Debian build.  It is provided solely so that upstream can share the Debian
 # packaging files, working around problems caused by upstream's distclean
 # removing packaging/Debian/changelog because it's Autoconf-generated.
-clean:
+override_dh_auto_clean:
 	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
@@ -123,21 +120,25 @@ clean:
 	done
 	[ ! -f debian/changelog.in ] \
 	    || cp debian/changelog debian/changelog.save
-	dh clean
+	dh_auto_clean
 	[ -f debian/changelog ] || mv debian/changelog.save debian/changelog
 
-install: install-stamp
-install-stamp: build-stamp
-	dh install --until dh_prep
+# We have to use a non-standard install target and then do some fiddling
+# with the results.
+override_dh_auto_install:
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
 	rm -f debian/tmp/usr/bin/klog.krb
 	rm -f debian/tmp/usr/share/man/man1/klog.krb.1
+
+# Override dh_install to handle installation of all the extra documentation
+# that upstream doesn't install by default, install the source required for
+# the kernel source package and the DKMS package, move some files about and
+# do some manually installation of additional things like PAM modules, and
+# to ensure that the extra scripts we install are executable.
+override_dh_install:
 	chmod +x debian/afs-rootvol debian/afs-newcell
-	dh_installdirs
 	dh_install --fail-missing $(IGNORE)
-	dh_installinit -popenafs-client -r -- defaults 25 20
-	dh_installinit -popenafs-fileserver -r
 
 	mkdir -p $(DOCS)/html
 	cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
@@ -181,10 +182,7 @@ install-stamp: build-stamp
 	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
 	rm -rf debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/debian
 	rmdir debian/$(srcpkg)/usr/src/modules
-
-	set -e; for pkg in $(DOC_PACKAGES) ; do \
-	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
-	done
+	dh_dkms -V $(VERSION)
 
 	mv debian/openafs-client/usr/bin/pagsh \
 	    debian/openafs-client/usr/bin/pagsh.openafs
@@ -214,31 +212,34 @@ install-stamp: build-stamp
 	install -m 644 debian/openafs-client.NEWS \
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 
-	dh_dkms -V $(VERSION)
+# We have multiple init scripts with some non-standard defaults.
+override_dh_installinit:
+	dh_installinit -popenafs-client -r -- defaults 25 20
+	dh_installinit -popenafs-fileserver -r
+
+# Create the documentation symlinks.
+override_dh_installdocs:
+	dh_installdocs $(DOC_PACKAGES) --link-doc=openafs-client
+	dh_installdocs --remaining-packages
+
+# Install the upstream NEWS file as the upstream changelog.
+override_dh_installchangelogs:
 	dh_installchangelogs NEWS
-	dh install --after dh_install
+
+# Override some of our permissions.
+override_dh_fixperms:
+	dh_fixperms
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
 	chmod 700 debian/openafs-fileserver/var/lib/openafs/local
-	touch $@
-
-binary-indep: install-stamp
-	dh binary-indep
 
 # Only include debugging information for the servers installed into
 # /usr/lib/openafs rather than for all binaries.  The servers are where
 # debugging backtraces really matter, and a 10MB debugging package is
 # overkill.
-binary-arch: install-stamp
-	dh binary-arch --before dh_strip
+override_dh_strip:
 	dh_strip --dbg-package=openafs-dbg
 	rm -rf debian/openafs-dbg/usr/lib/debug/lib
 	rm -rf debian/openafs-dbg/usr/lib/debug/sbin
 	rm -rf debian/openafs-dbg/usr/lib/debug/usr/bin
 	rm -rf debian/openafs-dbg/usr/lib/debug/usr/sbin
-	dh binary-arch --after dh_strip
-
-binary: binary-indep binary-arch
-
-.PHONY: binary binary-arch binary-indep build build-arch build-indep clean
-.PHONY: install
