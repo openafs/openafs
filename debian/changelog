@@ -1,5 +1,7 @@
 openafs (1.5.77-1) UNRELEASED; urgency=low
 
+  * Apply upstream deltas:
+    - [7594331c] Add NEWS entries for OpenAFS 1.5.77 and 1.5.76
   * New upstream testing release.
     - Demand-attach servers are now always built and installed under
       separate names (dafileserver, davolserver, dasalvager).  This means
