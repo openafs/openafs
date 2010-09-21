@@ -19,6 +19,8 @@ openafs (1.5.77-1) UNRELEASED; urgency=low
     - Fix potential kernel panic during bulkstatus.
     - Better vos dry-run mode for syncvldb and syncserv.
     - Fix s390x kernel build support.
+  * Update afs-newcell and README.servers to recommend using the
+    demand-attach fileserver binaries and dafs bos type.
   * The openafs-fileserver init script now depends on $named since
     apparently the volserver requires DNS during startup.  Thanks, Jaap
     Winius.  (Closes: #589783)

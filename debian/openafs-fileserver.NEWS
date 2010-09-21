@@ -1,6 +1,8 @@
-openafs (1.5.73.3-1) experimental; urgency=low
+openafs (1.5.77-1) experimental; urgency=low
 
-  This version of the OpenAFS file server is built with demand-attach.
+  This version of the OpenAFS file server includes a version built with
+  demand-attach, but as binaries with a different name.
+
   Demand-attach completely changes how the file server shuts down and
   starts up.  Instead of detaching all volumes on shutdown and reattaching
   them on startup, the file server saves state to disk and restores state
@@ -8,12 +10,10 @@ openafs (1.5.73.3-1) experimental; urgency=low
   attached when used and are detached again if they go unused for an
   extended period.  Volumes can also be salvaged on demand.
 
-  Demand-attach is experimental.  Please only use this file server for
-  testing.  It is not yet ready to run in a production environment.
-
-  This change REQUIRES changes to your BosConfig file so that the file
-  server will start properly.  After installing the new openafs-fileserver
-  package, run:
+  Demand-attach is recommended for new deployments and for evaluation in
+  current production deployments, but requires a change to your bos
+  configuration to use.  If you want to switch your file server to
+  demand-attach, run:
 
       bos status localhost -instance fs -long
 
@@ -23,11 +23,26 @@ openafs (1.5.73.3-1) experimental; urgency=low
       bos stop localhost fs -localauth
       bos delete localhost fs -localauth
       bos create localhost dafs dafs \
-          "/usr/lib/openafs/fileserver <fileserver-flags>" \
-          "/usr/lib/openafs/volserver <volserver-flags>" \
-          /usr/lib/openafs/salvageserver /usr/lib/openafs/salvager
+          "/usr/lib/openafs/dafileserver <fileserver-flags>" \
+          "/usr/lib/openafs/davolserver <volserver-flags>" \
+          /usr/lib/openafs/salvageserver /usr/lib/openafs/dasalvager
 
   to create the correct new BosConfig entry for demand-attach AFS.
+
+  If you were running an earlier version of the experimental
+  openafs-filserver package, the way that demand-attach was handled has
+  changed and you have to change your bos configuration to use the new
+  demand-attach binary names.  Run:
+
+      bos stop localhost dafs -localauth
+      bos delete localhost dafs -localauth
+
+  and then run the bos create command above.  This only applies to users
+  of the previous experimental packages, not to upgrades from unstable.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 21 Sep 2010 14:08:04 -0700
+
+openafs (1.5.73.3-1) experimental; urgency=low
 
   As of this release, the default permissions for /etc/openafs/server are
   now 0755, matching upstream.  The only file in that directory that needs

@@ -6,6 +6,9 @@ debian/tmp/usr/sbin/state_analyzer                 usr/sbin
 debian/tmp/usr/sbin/voldump                        usr/sbin
 debian/tmp/usr/sbin/volinfo                        usr/sbin
 
+debian/tmp/usr/lib/openafs/dafileserver            usr/lib/openafs
+debian/tmp/usr/lib/openafs/dasalvager              usr/lib/openafs
+debian/tmp/usr/lib/openafs/davolserver             usr/lib/openafs
 debian/tmp/usr/lib/openafs/fileserver              usr/lib/openafs
 debian/tmp/usr/lib/openafs/salvager                usr/lib/openafs
 debian/tmp/usr/lib/openafs/salvageserver           usr/lib/openafs
@@ -30,6 +33,9 @@ debian/tmp/usr/share/man/man5/sysid.5              usr/share/man/man5
 
 debian/tmp/usr/share/man/man8/bos_util.8                usr/share/man/man8
 debian/tmp/usr/share/man/man8/bosserver.8               usr/share/man/man8
+debian/tmp/usr/share/man/man8/dafileserver.8            usr/share/man/man8
+debian/tmp/usr/share/man/man8/dasalvager.8              usr/share/man/man8
+debian/tmp/usr/share/man/man8/davolserver.8             usr/share/man/man8
 debian/tmp/usr/share/man/man8/fileserver.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/fssync-debug.8            usr/share/man/man8
 debian/tmp/usr/share/man/man8/fssync-debug_attach.8     usr/share/man/man8
