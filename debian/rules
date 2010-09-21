@@ -99,7 +99,6 @@ override_dh_auto_configure:
 	    --enable-fuse-client --enable-debug --enable-debug-lwp \
 	    --with-xslt-processor=xsltproc --with-html-xsl=$(HTML_XSL) \
 	    --enable-reduced-depends $(DEBIAN_OPT_FLAGS) $(SYSTEM)
-	chmod a+x config.sub
 
 # Also build a libafs_tree and build the XML documentation.
 override_dh_auto_build:
