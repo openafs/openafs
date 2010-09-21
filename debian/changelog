@@ -36,6 +36,7 @@ openafs (1.5.77-1) UNRELEASED; urgency=low
   * Run the DKMS build commands in a subshell to work around a DKMS bug
     that caused the module build logs to be discarded.  (LP: #593509)
   * Add a status command to the openafs-fileserver init script.
+  * Update to debhelper compatibility level V8.
   * Update standards version to 3.9.1 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Fri, 27 Aug 2010 19:15:56 -0700
