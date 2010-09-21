@@ -68,8 +68,8 @@ The Backup Server process.
 =item dafs
 
 The process that combines the Demand Attach File Server, Volume Server, 
-Salvageserver and Salvager processes (B<fileserver>, B<volserver>, 
-B<salvageserver>, and B<salvager>).
+Salvageserver and Salvager processes (B<dafileserver>, B<davolserver>,
+B<salvageserver>, and B<dasalvager>).
 
 =item fs
 
@@ -173,8 +173,8 @@ directory is F</usr/afs/bin>.  If including any of an initialization
 command's options, surround the entire command in double quotes (C<"">).
 
 For the B<dafs> process, provide the complete pathname of the local disk
-binary file for each of the component processes: B<fileserver>,
-B<volserver>, B<salvageserver>, and B<salvager>, in that order. The
+binary file for each of the component processes: B<dafileserver>,
+B<davolserver>, B<salvageserver>, and B<dasalvager>, in that order. The
 standard binary directory is F</usr/afs/bin>.  If including any of an
 initialization command's options, surround the entire command in double
 quotes (C<"">).
@@ -288,8 +288,9 @@ C<fs4.abc.com> (a demand-attach File Server with associated processes).
 Type the command on a single line.
 
    % bos create -server fs4.abc.com -instance dafs -type dafs \
-                -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \
-                /usr/afs/bin/salvageserver /usr/afs/bin/salvager
+                -cmd /usr/afs/bin/dafileserver \
+                /usr/afs/bin/davolserver \
+                /usr/afs/bin/salvageserver /usr/afs/bin/dasalvager
 
 The following command creates a cron process called C<userbackup> on the
 machine C<fs5.abc.com>, so that the BOS Server issues the indicated B<vos
@@ -314,9 +315,9 @@ for an existing demand-attach File Server.) Then, run:
    % bos stop localhost fs -localauth
    % bos delete localhost fs -localauth
    % bos create localhost dafs dafs \
-       "/usr/afs/bin/fileserver <fileserver-flags>" \
-       "/usr/afs/bin/volserver <volserver-flags>" \
-       /usr/afs/bin/salvageserver /usr/afs/bin/salvager
+       "/usr/afs/bin/dafileserver <fileserver-flags>" \
+       "/usr/afs/bin/davolserver <volserver-flags>" \
+       /usr/afs/bin/salvageserver /usr/afs/bin/dasalvager
 
 replacing <fileserver-flags> and <volserver-flags> with the flags from the
 previous configuration. This will stop the traditional File Server and
@@ -436,6 +437,9 @@ L<KeyFile(5)>,
 L<UserList(5)>,
 L<bos(8)>,
 L<buserver(8)>,
+L<dafileserver(8)>,
+L<dasalvager(8)>,
+L<davolserver(8)>,
 L<fileserver(8)>,
 L<kaserver(8)>,
 L<ptserver(8)>,
