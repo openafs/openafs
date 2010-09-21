@@ -3,6 +3,6 @@ Section: kernel
 Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Uploaders: Sam Hartman <hartmans@debian.org>
-Build-Depends: debhelper (>= 5), flex, bison
-Standards-Version: 3.9.0
+Build-Depends: debhelper (>= 8), flex, bison
+Standards-Version: 3.9.1
 Homepage: http://www.openafs.org/

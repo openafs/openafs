@@ -39,6 +39,8 @@ openafs (1.5.77-1) UNRELEASED; urgency=low
   * Update to debhelper compatibility level V8.
     - Rewrite debian/rules to use dh and overrides.
     - Use dh_installdocs --link-doc to handle linked doc directories.
+    - Rewrite debian/module/rules to use dh and overrides.
+    - Bump -source package dependency and compat to debhelper 8.
   * Update standards version to 3.9.1 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Fri, 27 Aug 2010 19:15:56 -0700
