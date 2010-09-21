@@ -1,5 +1,24 @@
-openafs (1.5.75-3) UNRELEASED; urgency=low
+openafs (1.5.77-1) UNRELEASED; urgency=low
 
+  * New upstream testing release.
+    - Demand-attach servers are now always built and installed under
+      separate names (dafileserver, davolserver, dasalvager).  This means
+      that the default names are no longer demand-attach, which means that
+      upgrades from previous experimental versions will fail (but upgrades
+      from non-experimental versions will be much cleaner).
+    - Linux 2.6.36 support and improved freezer interface support.
+    - More robust path MTU detection.
+    - Return VNOVOL from fileserver when a volume is deleted.
+    - Improve handling of some corruption in the salvager.
+    - Relax too-strict checks in ptserver on foreign names.
+    - Better reporting of failures during volume attach.
+    - Better fileserver handling of host hash collisions.
+    - Fix statistics reporting in RXAFS_GetStatistics64.
+    - Improved disconnected mode reference tracking.
+    - Avoid a kernel panic during vcache contention.
+    - Fix potential kernel panic during bulkstatus.
+    - Better vos dry-run mode for syncvldb and syncserv.
+    - Fix s390x kernel build support.
   * The openafs-fileserver init script now depends on $named since
     apparently the volserver requires DNS during startup.  Thanks, Jaap
     Winius.  (Closes: #589783)
