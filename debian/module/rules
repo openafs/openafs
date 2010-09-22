@@ -42,7 +42,7 @@ override_dh_auto_configure:
 	sh configure --prefix=$(CURDIR)/debian/tmp \
 	    --with-afs-sysname=$(SYS_NAME) \
 	    --with-linux-kernel-headers=$(KSRC) \
-	    --with-linux-kernel-packaging --enable-disconnected \
+	    --with-linux-kernel-packaging \
 	    --enable-debug --enable-debug-lwp --enable-debug-kernel \
 	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
 

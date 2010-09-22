@@ -8,7 +8,7 @@ BUILT_MODULE_NAME[0]="$PACKAGE_NAME"
 DEST_MODULE_LOCATION[0]="/updates/dkms/"
 AUTOINSTALL=yes
 
-MAKE[0]="(./configure --enable-disconnected --with-linux-kernel-packaging \
+MAKE[0]="(./configure --with-linux-kernel-packaging \
                       --with-linux-kernel-headers=${kernel_source_dir}
           && make
           && mv src/libafs/MODLOAD-*/openafs.ko .)"
