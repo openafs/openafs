@@ -216,8 +216,10 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 				    rxevent_Cancel(call->delayedAckEvent,
 						   call,
 						   RX_CALL_REFCOUNT_DELAY);
+                                    MUTEX_ENTER(&rx_refcnt_mutex);
 				    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-				    call->delayedAckEvent =
+                                    MUTEX_EXIT(&rx_refcnt_mutex);
+                                    call->delayedAckEvent =
 				      rxevent_PostNow(&when, &now,
 						     rxi_SendDelayedAck, call,
 						     0);
@@ -580,7 +582,9 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 		|| clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
+                MUTEX_ENTER(&rx_refcnt_mutex);
 		CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
+                MUTEX_EXIT(&rx_refcnt_mutex);
 		call->delayedAckEvent =
 		    rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
 	    }
