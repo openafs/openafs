@@ -146,7 +146,7 @@ openafs (1.5.74.1-1) experimental; urgency=low
       and invalidate the old cache.
     - Resolve symlinks in fs rmmount.
     - Include PID in byte-range lock warning.
-  * Preserve the AFS mount point and cache directorys set in
+  * Preserve the AFS mount point and cache directories set in
     /etc/openafs/cacheinfo if the file already exists rather than
     overwriting them with the defaults.  Thanks, Liam Healy.
     (Closes: #580077)
