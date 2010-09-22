@@ -35,7 +35,9 @@ HEADERS= ${TOP_INCDIR}/hcrypto/aes.h \
 
 SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
-all: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} ${TOP_LIBDIR}/libafshcrypto.a
+all: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
+	${TOP_LIBDIR}/libafshcrypto.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 install: libafshcrypto.a ${SHLIBOBJ}
 	${TOP_OBJDIR}/src/config/shlib-install -d ${DESTDIR}${libdir} \
@@ -51,17 +53,23 @@ clean:
 	$(RM) -f ${OBJECTS} ${SHLIBOBJ} libafshcrypto.a libafshcrypto.exp \
 		 test_cipher test_cipher.o hex.o
 
-# Ignore for now : rand-egd.o
+COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
+	     evp-hcrypto.o evp-cc.o hmac.o md2.o md4.o md5.o pkcs5.o \
+	     rand-egd.o rand-timer.o rand-unix.o rand.o \
+	     rc2.o rc4.o rijndael-alg-fst.o rnd_keys.o sha.o sha256.o ui.o \
+	     cloexec.o ct.o issuid.o net_read.o net_write.o strlcpy.o
 
-OBJECTS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
-	 evp-hcrypto.o evp-cc.o hmac.o md2.o md4.o md5.o pkcs5.o \
-	 rand-egd.o rand-fortuna.o rand-timer.o rand-unix.o rand.o \
-	 rc2.o rc4.o rijndael-alg-fst.o rnd_keys.o sha.o sha256.o ui.o \
-	 cloexec.o ct.o issuid.o net_read.o net_write.o strlcpy.o
+OBJECTS = $(COMMON_OBJS) rand-fortuna.o
+
+LWP_OBJS = $(COMMON_OBJS) rand-fortuna_lwp.o
 
 UPSTREAM= ${TOP_SRCDIR}/external/heimdal
 
-CCRULE = ${CC} -I${TOP_INCDIR}/hcrypto ${CFLAGS} -I${UPSTREAM}/hcrypto -c $?
+CFLAGS=$(COMMON_CFLAGS) $(MT_CFLAGS) $(SHLIB_CFLAGS)
+CCRULE = $(MT_CC) -I${TOP_INCDIR}/hcrypto ${CFLAGS} -I${UPSTREAM}/hcrypto -c $?
+
+LWPRULE=$(CC) $(COMMON_CFLAGS) $(XCFLAGS) $(ARCHFLAGS) \
+	-I$(TOP_INCDIR)/hcrypto -I$(UPSTREAM)/hcrypto -c $?
 
 ${TOP_LIBDIR}/${SHLIBOBJ}: ${SHLIBOBJ}
 	${TOP_OBJDIR}/src/config/shlib-install -d ${TOP_LIBDIR} \
@@ -75,6 +83,11 @@ ${SHLIBOBJ}: ${OBJECTS} libafshcrypto.map
 libafshcrypto.a: ${OBJECTS}
 	$(RM) -f $@
 	$(AR) crv $@ ${OBJECTS}
+	$(RANLIB) $@
+
+libafshcrypto_lwp.a: $(LWP_OBJS)
+	$(RM) -f $@
+	$(AR) crv $@ $(LWP_OBJS)
 	$(RANLIB) $@
 
 test_cipher: test_cipher.o hex.o libafshcrypto.a
@@ -143,6 +156,10 @@ ${TOP_INCDIR}/hcrypto/ui.h: ${UPSTREAM}/hcrypto/ui.h
 ${TOP_LIBDIR}/libafshcrypto.a: libafshcrypto.a
 	${INSTALL_DATA} $? $@
 
+${TOP_LIBDIR}/libafshcrypto_lwp.a: libafshcrypto_lwp.a
+	${INSTALL_DATA} $? $@
+
+
 aes.o: ${UPSTREAM}/hcrypto/aes.c
 	${CCRULE}
 
@@ -199,6 +216,9 @@ rand-egd.o: ${UPSTREAM}/hcrypto/rand-egd.c
 
 rand-fortuna.o: ${UPSTREAM}/hcrypto/rand-fortuna.c
 	${CCRULE}
+
+rand-fortuna_lwp.o: ${UPSTREAM}/hcrypto/rand-fortuna.c
+	${LWPRULE} -o rand-fortuna_lwp.o
 
 rand-timer.o: ${UPSTREAM}/hcrypto/rand-timer.c
 	${CCRULE}
