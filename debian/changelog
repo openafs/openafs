@@ -43,6 +43,9 @@ openafs (1.5.77-1) UNRELEASED; urgency=low
     - Use dh_installdocs --link-doc to handle linked doc directories.
     - Rewrite debian/module/rules to use dh and overrides.
     - Bump -source package dependency and compat to debhelper 8.
+  * Add ${perl:Depends} to openafs-modules-dkms and perl to the
+    dependencies of openafs-modules-source, since Perl is used as part of
+    the module build system now.
   * Update standards version to 3.9.1 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Fri, 27 Aug 2010 19:15:56 -0700
