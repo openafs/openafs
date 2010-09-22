@@ -1,4 +1,4 @@
-openafs (1.5.77-1) UNRELEASED; urgency=low
+openafs (1.5.77-1) experimental; urgency=low
 
   * Apply upstream deltas:
     - [7594331c] Add NEWS entries for OpenAFS 1.5.77 and 1.5.76
@@ -54,7 +54,7 @@ openafs (1.5.77-1) UNRELEASED; urgency=low
     build the full source tree.
   * Update standards version to 3.9.1 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Fri, 27 Aug 2010 19:15:56 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 21 Sep 2010 17:59:42 -0700
 
 openafs (1.5.75-2) experimental; urgency=low
 
