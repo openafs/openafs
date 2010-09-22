@@ -26,6 +26,7 @@
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
 #include <afs/auth.h>
+#include <des_prototypes.h>
 #include "stress.h"
 #include "stress_internal.h"
 #ifdef AFS_PTHREAD_ENV
@@ -38,8 +39,7 @@ extern int maxSkew;
 static char *whoami;
 
 static long
-GetServer(aname)
-     IN char *aname;
+GetServer(const char *aname)
 {
     struct hostent *th;
     long addr;
@@ -54,11 +54,8 @@ GetServer(aname)
 }
 
 static long
-GetToken(versionP, session, ticketLenP, ticket, cell)
-     OUT long *versionP;
-     OUT struct ktc_encryptionKey *session;
-     OUT int *ticketLenP;
-     OUT char *ticket;
+GetToken(long *versionP, struct ktc_encryptionKey *session,
+	 int *ticketLenP, char *ticket, char *cell)
 {
     struct ktc_principal sname;
     struct ktc_token ttoken;
@@ -79,17 +76,14 @@ GetToken(versionP, session, ticketLenP, ticket, cell)
 }
 
 static long
-GetTicket(versionP, session, ticketLenP, ticket, cell)
-     OUT long *versionP;
-     OUT struct ktc_encryptionKey *session;
-     OUT int *ticketLenP;
-     OUT char *ticket;
+GetTicket(long *versionP, struct ktc_encryptionKey *session,
+	  int *ticketLenP, char *ticket, char *cell)
 {
     long code;
 
     /* create random session key, using key for seed to good random */
-    des_init_random_number_generator(&serviceKey);
-    code = des_random_key(session);
+    des_init_random_number_generator(ktc_to_cblock(&serviceKey));
+    code = des_random_key(ktc_to_cblock(session));
     if (code)
 	return code;
 
@@ -118,10 +112,7 @@ struct client {
 };
 
 static long
-Copious(c, buf, buflen)
-     IN struct client *c;
-     IN u_char *buf;
-     IN u_long buflen;
+Copious(struct client *c, char *buf, u_long buflen)
 {
     long code;
     struct rx_call *call;
@@ -130,7 +121,7 @@ Copious(c, buf, buflen)
     long outlen = c->recvLen;
     long d = 23;
     long mysum;
-    long outsum;
+    size_t outsum;
 
     mysum = 0;
     for (i = 0; i < inlen; i++)
@@ -192,12 +183,10 @@ Copious(c, buf, buflen)
 }
 
 static long
-DoClient(index, rock)
-     IN u_int index;
-     IN opaque rock;
+DoClient(int index, opaque rock)
 {
     struct client *c = (struct client *)rock;
-    long code;
+    long code = 0;
     int i;
     u_long n, inc_n;
 
@@ -224,7 +213,7 @@ DoClient(index, rock)
 
     if (c->copiousCalls[index] > 0) {
 	u_long buflen = 10000;
-	u_char *buf = (u_char *) osi_Alloc(buflen);
+	char *buf = osi_Alloc(buflen);
 	for (i = 0; i < c->copiousCalls[index]; i++) {
 	    code = Copious(c, buf, buflen);
 	    if (code)
@@ -242,7 +231,7 @@ struct worker {
     long exitCode;		/* is PROCESSRUNNING until exit */
     int index;
     opaque rock;
-    long (*proc) ();
+    long (*proc) (int, opaque);
 };
 
 #ifdef AFS_PTHREAD_ENV
@@ -258,10 +247,10 @@ WorkerInit(void)
 #endif
 static struct worker *workers;
 
-static long
-DoWorker(w)
-     IN struct worker *w;
+static void *
+DoWorker(void * rock)
 {
+    struct worker *w = rock;
     long code;
     code = (*w->proc) (w->index, w->rock);
 #ifdef AFS_PTHREAD_ENV
@@ -276,16 +265,13 @@ DoWorker(w)
 #else
     LWP_NoYieldSignal(&workers);
 #endif
-    return code;
+    return (void *)(intptr_t)code;
 }
 
 #define MAX_CTHREADS 25
 
 static long
-CallSimultaneously(threads, rock, proc)
-     IN u_int threads;
-     IN opaque rock;
-     IN long (*proc) ();
+CallSimultaneously(u_int threads, opaque rock, long (*proc)(int, opaque))
 {
     long code;
     int i;
@@ -379,10 +365,7 @@ CallSimultaneously(threads, rock, proc)
 }
 
 static void
-DivideUpCalls(calls, threads, threadCalls)
-     IN u_long calls;
-     IN u_int threads;
-     IN u_long threadCalls[];
+DivideUpCalls(u_long calls, u_int threads, u_long threadCalls[])
 {
     int i;
     for (i = 0; i < threads; i++) {
@@ -392,7 +375,7 @@ DivideUpCalls(calls, threads, threadCalls)
 }
 
 static double
-ftime()
+ftime(void)
 {
     struct timeval tv;
     gettimeofday(&tv, 0);
@@ -400,9 +383,7 @@ ftime()
 }
 
 static long
-RunLoadTest(parms, conn)
-     IN struct clientParms *parms;
-     IN struct rx_connection *conn;
+RunLoadTest(struct clientParms *parms, struct rx_connection *conn)
 {
     long code;
     struct client c;
@@ -436,7 +417,7 @@ RunLoadTest(parms, conn)
 	    parms->fastCalls + parms->slowCalls + parms->copiousCalls;
 	int t = (interval / totalCalls) * 1000.0 + 0.5;
 	if (totalCalls > 0) {
-	    printf("For %d calls: %d msec/call\n", totalCalls, t);
+	    printf("For %lu calls: %d msec/call\n", totalCalls, t);
 	}
 	if (parms->copiousCalls > 0) {
 	    long n = parms->sendLen + parms->recvLen;
@@ -458,7 +439,7 @@ RunLoadTest(parms, conn)
 	    }
 #endif
 	    printf
-		("For %d copious calls, %d send + %d recv = %d bytes each: %d kbytes/sec\n",
+		("For %lu copious calls, %lu send + %lu recv = %lu bytes each: %d kbytes/sec\n",
 		 parms->copiousCalls, parms->sendLen, parms->recvLen, n, b);
 #if 0
 	    printf("%g\n", kbps);
@@ -469,9 +450,7 @@ RunLoadTest(parms, conn)
 }
 
 static long
-RepeatLoadTest(parms, conn)
-     IN struct clientParms *parms;
-     IN struct rx_connection *conn;
+RepeatLoadTest(struct clientParms *parms, struct rx_connection *conn)
 {
     long code;
     long count;
@@ -528,14 +507,13 @@ struct multiChannel {
     int done;
     long *codes;
     int changes[RX_MAXCALLS];
-    long callNumbers[RX_MAXCALLS];
+    afs_int32 callNumbers[RX_MAXCALLS];
 };
 #define BIG_PRIME 1257056893	/* 0x4AED2A7d */
 static u_long sequence = 0;
 
 static long
-FastCall(conn)
-     IN struct rx_connection *conn;
+FastCall(struct rx_connection *conn)
 {
     long code;
     u_long n = (sequence = sequence * BIG_PRIME + BIG_PRIME);
@@ -550,13 +528,11 @@ FastCall(conn)
 }
 
 static long
-UniChannelCall(index, rock)
-     IN u_int index;
-     IN opaque rock;
+UniChannelCall(int index, opaque rock)
 {
     struct multiChannel *mc = (struct multiChannel *)rock;
     long code;
-    long callNumbers[RX_MAXCALLS];
+    afs_int32 callNumbers[RX_MAXCALLS];
     int unchanged;
 
     code = 0;
@@ -585,11 +561,8 @@ UniChannelCall(index, rock)
 }
 
 static long
-MakeMultiChannelCall(conn, each, expectedCode, codes)
-     IN struct rx_connection *conn;
-     IN int each;		/* calls to make on each channel */
-     IN long expectedCode;
-     OUT long codes[];
+MakeMultiChannelCall(struct rx_connection *conn, int each, 
+	             long expectedCode, long codes[])
 {
     long code;
     int i;
@@ -618,11 +591,8 @@ MakeMultiChannelCall(conn, each, expectedCode, codes)
 }
 
 static long
-CheckCallFailure(conn, codes, code, msg)
-     IN struct rx_connection *conn;
-     IN long codes[];
-     IN long code;
-     IN char *msg;
+CheckCallFailure(struct rx_connection *conn, long codes[], long code,
+		 char *msg)
 {
     if (code == 0) {
 	fprintf(stderr, "Failed to detect %s\n", msg);
@@ -651,7 +621,7 @@ CheckCallFailure(conn, codes, code, msg)
 		sprintf(buf, "connection dead following %s", msg);
 		code = FastCall(conn);
 		if (code)
-		    afs_com_err(whoami, code, buf);
+		    afs_com_err(whoami, code, "%s", buf);
 	    }
 	}
     }
@@ -661,11 +631,8 @@ CheckCallFailure(conn, codes, code, msg)
 #endif /* rx_GetPacketCksum */
 
 static long
-RunCallTest(parms, host, sc, si)
-     IN struct clientParms *parms;
-     IN long host;
-     IN struct rx_securityClass *sc;
-     IN long si;
+RunCallTest(struct clientParms *parms, long host,
+	    struct rx_securityClass *sc, long si)
 {
     long code;
 
@@ -681,7 +648,7 @@ RunCallTest(parms, host, sc, si)
     int i, ch;
     struct rx_connection *conn;
     long firstCall;
-    long callNumbers[RX_MAXCALLS];
+    afs_int32 callNumbers[RX_MAXCALLS];
     long codes[RX_MAXCALLS];
     long retCode = 0;		/* ret. if nothing fatal goes wrong */
 
@@ -877,9 +844,7 @@ static struct {
 #define IO_REDIRECTCHALLENGE	2
 
 static int
-HandleIncoming(p, addr)
-     INOUT struct rx_packet *p;
-     INOUT struct sockaddr_in *addr;
+HandleIncoming(struct rx_packet *p, struct sockaddr_in *addr)
 {
     int client;			/* packet sent by client */
     u_char type;		/* packet type */
@@ -933,9 +898,7 @@ static struct {
 #define OO_MUNGCKSUM	3
 
 static int
-HandleOutgoing(p, addr)
-     INOUT struct rx_packet *p;
-     INOUT struct sockaddr_in *addr;
+HandleOutgoing(struct rx_packet *p, struct sockaddr_in *addr)
 {
     int client;			/* packet sent by client */
     u_char type;		/* packet type */
@@ -1001,10 +964,10 @@ SlowCallInit(void)
 }
 #endif
 static long slowCallCode;
-static long
-SlowCall(conn)
-     IN opaque conn;
+static void *
+SlowCall(void * rock)
 {
+    struct rx_connection *conn = rock;
     u_long ntime;
     u_long now;
     long temp_rc;
@@ -1031,17 +994,14 @@ SlowCall(conn)
 #else
     LWP_NoYieldSignal(&slowCallCode);
 #endif
-    return temp_rc;
+    return (void *)(intptr_t)temp_rc;
 }
 
 #endif /* rx_GetPacketCksum */
 
 static long
-RunHijackTest(parms, host, sc, si)
-     IN struct clientParms *parms;
-     IN long host;
-     IN struct rx_securityClass *sc;
-     IN long si;
+RunHijackTest(struct clientParms *parms, long host,
+	      struct rx_securityClass *sc, long si)
 {
 
 #ifndef rx_GetPacketCksum
@@ -1052,9 +1012,6 @@ RunHijackTest(parms, host, sc, si)
     return code;
 
 #else
-
-    extern int (*rx_justReceived) ();
-    extern int (*rx_almostSent) ();
 
     long code;
     struct rx_connection *conn = 0;
@@ -1269,8 +1226,7 @@ RunHijackTest(parms, host, sc, si)
 }
 
 long
-rxkst_StartClient(parms)
-     IN struct clientParms *parms;
+rxkst_StartClient(struct clientParms *parms)
 {
     long code;
     long host;
@@ -1282,7 +1238,7 @@ rxkst_StartClient(parms)
     host = GetServer(parms->server);
 
     if (parms->authentication >= 0) {
-	long kvno;
+	long kvno = 0;
 	char ticket[MAXKTCTICKETLEN];
 	int ticketLen;
 	struct ktc_encryptionKey Ksession;
