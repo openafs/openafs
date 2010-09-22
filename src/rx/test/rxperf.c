@@ -311,10 +311,10 @@ rxperf_ExecuteRequest(struct rx_call *call)
 {
     afs_int32 version;
     afs_int32 command;
-    afs_uint32 bytes;
-    afs_uint32 recvb;
-    afs_uint32 sendb;
-    afs_uint32 data;
+    afs_int32 bytes;
+    afs_int32 recvb;
+    afs_int32 sendb;
+    afs_int32 data;
     afs_uint32 num;
     afs_uint32 *readwrite;
     afs_uint32 i;
@@ -587,7 +587,7 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     struct rx_securityClass *secureobj;
     int secureindex;
     afs_int32 data;
-    afs_int32 num;
+    afs_uint32 num;
     int ret;
     int i;
     int readp = FALSE;
@@ -767,7 +767,7 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 }
 
 static void
-usage()
+usage(void)
 {
 #define COMMON ""
 
