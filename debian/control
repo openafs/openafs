@@ -173,7 +173,7 @@ Package: openafs-modules-source
 Section: kernel
 Priority: extra
 Architecture: all
-Depends: ${misc:Depends}, bison, flex, debhelper (>= 5),
+Depends: ${misc:Depends}, bison, flex, debhelper (>= 8),
  module-assistant | kernel-package, perl
 Recommends: openafs-client (>= ${source:Version})
 Description: AFS distributed filesystem kernel module source
