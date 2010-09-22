@@ -621,6 +621,7 @@ EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
 EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
 EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
 EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
+EXT afs_kmutex_t rx_refcnt_mutex;       /* used to protect conn/call ref counts */
 #endif
 
 EXT int rx_enable_stats GLOBALSINIT(0);

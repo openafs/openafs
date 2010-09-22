@@ -264,7 +264,7 @@ struct rx_connection {
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
-    afs_uint32 refCount;		/* Reference count */
+    afs_uint32 refCount;	/* Reference count (rx_refcnt_mutex) */
     u_char flags;		/* Defined below - (conn_data_lock) */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
@@ -391,7 +391,7 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    afs_uint32 refCount;	/* Reference count for this structure */
+    afs_uint32 refCount;	/* Reference count for this structure (rx_peerHashTable_lock) */
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
@@ -552,8 +552,8 @@ struct rx_call {
     u_short MTU;		/* size of packets currently sending */
 #ifdef RX_ENABLE_LOCKS
     short refCount;		/* Used to keep calls from disappearring
-				 * when we get them from a queue. */
-#endif				/* RX_ENABLE_LOCKS */
+				 * when we get them from a queue. (rx_refcnt_lock) */
+#endif                          /* RX_ENABLE_LOCKS */
 /* Call refcount modifiers */
 #define RX_CALL_REFCOUNT_BEGIN  0	/* GetCall/NewCall/EndCall */
 #define RX_CALL_REFCOUNT_RESEND 1	/* resend event */
