@@ -23,6 +23,7 @@ openafs (1.5.77-1) UNRELEASED; urgency=low
     - Fix s390x kernel build support.
   * Update afs-newcell and README.servers to recommend using the
     demand-attach fileserver binaries and dafs bos type.
+  * Force disabling of Linux syscall probing in kernel module builds.
   * Remove obsolete --enable-demand-attach-fs and --enable-disconnected
     configure flags.  These are now unconditional upstream.
   * The openafs-fileserver init script now depends on $named since
