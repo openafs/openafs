@@ -1379,7 +1379,7 @@ FS_Handler(void)
 	lightdata = (struct gator_lightobj *)(curr_line->fetches_lp->o_data);
 	if (*curr_probeOK == 0) {
 	    sp = s;
-	    sprintf(sp, "%d", curr_stats->TotalFetchs);
+	    sprintf(sp, "%u", curr_stats->TotalFetchs);
 	} else
 	    sp = sblank;
 	code = mini_justify(sp,	/*Src buffer */
@@ -1398,7 +1398,7 @@ FS_Handler(void)
 	lightdata = (struct gator_lightobj *)(curr_line->stores_lp->o_data);
 	if (*curr_probeOK == 0) {
 	    sp = s;
-	    sprintf(sp, "%d", curr_stats->TotalStores);
+	    sprintf(sp, "%u", curr_stats->TotalStores);
 	} else
 	    sp = sblank;
 	code = mini_justify(sp,	/*Src buffer */
