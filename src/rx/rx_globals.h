@@ -128,9 +128,9 @@ EXT int rx_minPeerTimeout GLOBALSINIT(2); /* in milliseconds */
 EXT int rx_minWindow GLOBALSINIT(1);
 EXT int rx_maxWindow GLOBALSINIT(65535);        /* twind is u_short */
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
-EXT int rx_maxReceiveWindow GLOBALSINIT(128);	/* how much to accept */
+EXT int rx_maxReceiveWindow GLOBALSINIT(32);	/* how much to accept */
 EXT int rx_initSendWindow GLOBALSINIT(16);
-EXT int rx_maxSendWindow GLOBALSINIT(128);
+EXT int rx_maxSendWindow GLOBALSINIT(32);
 EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
 EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
                                                  * packets per datagram */
