@@ -224,9 +224,6 @@ typedef unsigned int fsblkcnt_t;
 #define vattr			usr_vattr
 #define buf			usr_buf
 #define statfs			usr_statfs
-/* #define ucred		usr_ucred */
-#define user			usr_user
-/* #define proc			usr_proc */
 #define file			usr_file
 #define dirent			usr_dirent
 #define flock			usr_flock
