@@ -603,7 +603,7 @@ struct client_data {
     afs_int32 recvtimes;
 };
 
-static void
+static void *
 client_thread( void *vparams)
 {
     struct client_data *params = (struct client_data *)vparams;
@@ -613,7 +613,7 @@ client_thread( void *vparams)
     afs_uint32 *readwrite;
     int readp = FALSE;
     afs_uint32 size;
-    afs_int32 num;
+    afs_uint32 num;
 
     for (i = 0; i < params->times; i++) {
 
@@ -747,6 +747,8 @@ client_thread( void *vparams)
 #ifdef AFS_PTHREAD_ENV
     pthread_exit(NULL);
 #endif
+
+    return NULL;
 }
 
 /*
@@ -764,11 +766,11 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     struct rx_securityClass *secureobj;
     int secureindex;
     int ret;
-    int i;
     char stamp[2048];
     struct client_data params;
 
 #ifdef AFS_PTHREAD_ENV
+    int i;
     pthread_t thread[MAX_THREADS];
     pthread_attr_t tattr;
     void *status;
