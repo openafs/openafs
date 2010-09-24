@@ -385,33 +385,34 @@ PrintDetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
 void
 PrintFullPerfInfo(void)
 {
-
-    static afs_int32 fullPerfInt32s = (sizeof(struct fs_stats_FullPerfStats) >> 2);	/*Correct # int32s to rcv */
-    afs_int32 numInt32s;	/*# int32words received */
+    int code;
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
+    struct fs_stats_FullPerfStats buffer;  /* to decode the stats */
     char *printableTime;	/*Ptr to printable time
 				 * string */
     time_t probeTime = xstat_fs_Results.probeTime;
-
-    numInt32s = xstat_fs_Results.data.AFS_CollData_len;
-    if (numInt32s != fullPerfInt32s) {
-	printf("** Data size mismatch in full performance collection!");
-	printf("** Expecting %u, got %u\n", fullPerfInt32s, numInt32s);
-	return;
-    }
+    static afs_int32 fullPerfInt32s = (sizeof(struct fs_stats_FullPerfStats) >> 2);	/*Correct # int32s to rcv */
 
     printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
-    fullPerfP = (struct fs_stats_FullPerfStats *)
-	(xstat_fs_Results.data.AFS_CollData_val);
-
     printf
 	("AFS_XSTATSCOLL_FULL_PERF_INFO (coll %d) for FS %s\n[Probe %u, %s]\n\n",
 	 xstat_fs_Results.collectionNumber, xstat_fs_Results.connP->hostName,
 	 xstat_fs_Results.probeNum, printableTime);
 
-    PrintOverallPerfInfo(&(fullPerfP->overall));
-    PrintDetailedPerfInfo(&(fullPerfP->det));
+    code =
+	xstat_fs_DecodeFullPerfStats(&fullPerfP,
+				     xstat_fs_Results.data.AFS_CollData_val,
+				     xstat_fs_Results.data.AFS_CollData_len,
+				     &buffer);
+    if (code) {
+	afs_int32 numInt32s = xstat_fs_Results.data.AFS_CollData_len;	/*# int32words received */
+	printf("** Data size mismatch in full performance collection!\n");
+	printf("** Expecting %u, got %u\n", fullPerfInt32s, numInt32s);
+    } else {
+	PrintOverallPerfInfo(&(fullPerfP->overall));
+	PrintDetailedPerfInfo(&(fullPerfP->det));
+    }
 }
 
 

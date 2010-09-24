@@ -145,4 +145,12 @@ extern int xstat_fs_Cleanup(int);
      *          with the xstat_fs connection array.
      */
 
+/*
+ * Decode the full performance statistics collection data.
+ */
+extern int xstat_fs_DecodeFullPerfStats(struct fs_stats_FullPerfStats **stats,
+					afs_int32 * ain, afs_int32 alen,
+					struct fs_stats_FullPerfStats
+					*buffer);
+
 #endif /* _xstat_fs_h_ */
