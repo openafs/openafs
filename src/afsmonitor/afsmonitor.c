@@ -1878,34 +1878,25 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 {
     afs_int32 *srcbuf;
     struct fs_stats_FullPerfStats *fullPerfP;
+    struct fs_stats_FullPerfStats buffer;
     int idx;
     int i, j;
     afs_int32 *tmpbuf;
-    afs_int32 numInt32s;
-
-    fullPerfP = (struct fs_stats_FullPerfStats *)
-	(a_fsResults->data.AFS_CollData_val);
+    int code;
 
     /* there are two parts to the xstat FS statistics
      * - fullPerfP->overall which give the overall performance statistics, and
      * - fullPerfP->det which gives detailed info about file server operation
      * execution times */
 
-    /*
-     * Unfortunately, the full perf stats contain timeval structures which
-     * do not have the same size everywhere. Avoid displaying gargbage,
-     * but at least try to show the overall stats.
-     */
-    numInt32s = a_fsResults->data.AFS_CollData_len;
-    if (numInt32s !=
-	(sizeof(struct fs_stats_FullPerfStats) / sizeof(afs_int32))) {
-	srcbuf = a_fsResults->data.AFS_CollData_val;
+    code = xstat_fs_DecodeFullPerfStats(&fullPerfP,
+					a_fsResults->data.AFS_CollData_val,
+					a_fsResults->data.AFS_CollData_len,
+					&buffer);
+    if (code) {
+	/* Not able to decode the full perf stats. Avoid displaying garbage. */
 	for (i = 0; i < NUM_FS_STAT_ENTRIES; i++) {
-	    if (i < numInt32s && i < NUM_XSTAT_FS_AFS_PERFSTATS_LONGS) {
-		sprintf(a_fsData->data[i], "%d", srcbuf[i]);
-	    } else {
-		sprintf(a_fsData->data[i], "%s", "--");
-	    }
+	    sprintf(a_fsData->data[i], "%s", "--");
 	}
 	return 0;
     }

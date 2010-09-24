@@ -317,11 +317,17 @@ Print_fs_FullPerfInfo(a_fs_Results)
     static long fullPerfLongs = (sizeof(struct fs_stats_FullPerfStats) >> 2);	/*Correct # longs to rcv */
     long numLongs;		/*# longwords received */
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
+    struct fs_stats_FullPerfStats buffer;
     char *printableTime;	/*Ptr to printable time string */
     time_t probeTime;
+    int code;
 
-    numLongs = a_fs_Results->data.AFS_CollData_len;
-    if (numLongs != fullPerfLongs) {
+    code = xstat_fs_DecodeFullPerfStats(&fullPerfP,
+					a_fs_Results->data.AFS_CollData_val,
+					a_fs_Results->data.AFS_CollData_len,
+					&buffer);
+    if (code) {
+	numLongs = a_fs_Results->data.AFS_CollData_len;
 	printf(" ** Data size mismatch in full performance collection!\n");
 	printf(" ** Expecting %d, got %d\n", fullPerfLongs, numLongs);
 	return;
@@ -330,8 +336,6 @@ Print_fs_FullPerfInfo(a_fs_Results)
     probeTime = a_fs_Results->probeTime;
     printableTime = ctime(&probeTime);
     printableTime[strlen(printableTime) - 1] = '\0';
-    fullPerfP = (struct fs_stats_FullPerfStats *)
-	(a_fs_Results->data.AFS_CollData_val);
 
     printf
 	("AFS_XSTATSCOLL_FULL_PERF_INFO (coll %d) for FS %s\n[Probe %d, %s]\n\n",
