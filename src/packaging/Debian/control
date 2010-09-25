@@ -3,11 +3,11 @@ Section: net
 Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Uploaders: Sam Hartman <hartmans@debian.org>
-Build-Depends: debhelper (>= 7), autoconf, automake, bison, comerr-dev,
+Build-Depends: debhelper (>= 8), autoconf, automake, bison, comerr-dev,
  cpio, dblatex, dkms (>= 2.1.1.1), docbook-xsl, doxygen, flex,
  libfuse-dev, libkrb5-dev, libncurses5-dev, libpam0g-dev, libxml2-utils,
  perl, pkg-config, xsltproc
-Standards-Version: 3.9.0
+Standards-Version: 3.9.1
 Homepage: http://www.openafs.org/
 Vcs-Git: git://git.debian.org/git/pkg-k5-afs/openafs.git
 Vcs-Browser: http://git.debian.org/?p=pkg-k5-afs/openafs.git
@@ -173,8 +173,8 @@ Package: openafs-modules-source
 Section: kernel
 Priority: extra
 Architecture: all
-Depends: ${misc:Depends}, bison, flex, debhelper (>= 5),
- module-assistant | kernel-package
+Depends: ${misc:Depends}, debhelper (>= 8),
+ module-assistant | kernel-package, perl
 Recommends: openafs-client (>= ${source:Version})
 Description: AFS distributed filesystem kernel module source
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -188,7 +188,7 @@ Package: openafs-modules-dkms
 Section: kernel
 Priority: extra
 Architecture: all
-Depends: ${misc:Depends}, dkms, bison, flex
+Depends: ${misc:Depends}, ${perl:Depends}, dkms, libc6-dev
 Recommends: openafs-client (>= ${source:Version})
 Description: AFS distributed filesystem kernel module DKMS source
  AFS is a distributed filesystem allowing cross-platform sharing of

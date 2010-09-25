@@ -49,48 +49,13 @@ is_on() {
     fi
 }
 
-# If choose_client can't correctly determine which client to use, set
-# LIBAFS manually.
-choose_client() {
-    # Use the second field of the uname -v output instead of just doing a
-    # match on the whole thing to protect against matching a timezone named
-    # SMP -- I don't know of one, but let's be paranoid.
-    set X `uname -v`; shift
-    case $2 in
-    SMP) MP=.mp ;;      # MP system
-    *)   MP=    ;;      # SP system
-    esac
-
-    # The Debian OpenAFS packages do not add the .mp by default as of 1.3, but
-    # modules obtained from other sources may.  If a module with the .mp
-    # exists and this is an SMP system, use it; otherwise, use the default
-    # value.  Unset $MP if not using it so that we can use it later in the
-    # call to modprobe.
-    #
-    # Assume that if we're using DKMS, we won't have a .mp and we'll always
-    # have a *.ko module name.
-    if [ -f "$DKMSDIR/openafs.ko" ] ; then
-        LIBAFS=openafs.ko
-    elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.o" ] ; then
-        LIBAFS=openafs${MP}.o
-    elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.ko" ] ; then
-        LIBAFS=openafs${MP}.ko
-    elif [ -f "$MODULEDIR/openafs.ko" ] ; then
-        MP=
-        LIBAFS=openafs.ko
-    else
-        MP=
-        LIBAFS=openafs.o
-    fi
-}
-
 # Load the AFS client module if it's not already loaded.  Set $MODULEDIR and
 # $LIBAFS to override the default location and module name.  Also check before
 # loading whether the module is listed in the module dependencies so that we
 # can exit with a 0 status in that case.
 load_client() {
     if [ -z "$LIBAFS" ] ; then
-        choose_client
+        LIBAFS=openafs.ko
     fi
     if [ ! -f "$MODULEDIR/$LIBAFS" -a ! -f "$DKMSDIR/$LIBAFS" ] ; then
         echo ""

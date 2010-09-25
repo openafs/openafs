@@ -6,7 +6,7 @@ Introduction
   packages.  If you are not already familiar with the basic concepts of
   OpenAFS, you should review the documentation at:
 
-      <http://www.openafs.org/doc/index.htm>
+      http://docs.openafs.org/
 
   particularly the AFS Administrator's Guide.  This documentation is
   somewhat out of date (it doesn't talk about how to use a Kerberos v5 KDC
@@ -313,8 +313,9 @@ Adding Additional Servers
   3.  If the machine is to be a file server, create an fs instance using
       bos create:
 
-          bos create <host> fs fs -cmd /usr/lib/openafs/fileserver \
-              -cmd /usr/lib/openafs/volserver \
+          bos create <host> fs fs -cmd /usr/lib/openafs/dafileserver \
+              -cmd /usr/lib/openafs/davolserver \
+              -cmd /usr/lib/openafs/salvageserver \
               -cmd /usr/lib/openafs/salvager -localauth
 
       For a file server, this is all you have to do.  The above uses the
@@ -326,8 +327,12 @@ Adding Additional Servers
           -b 240 -vc 1200
 
       If you want to add any additional fileserver options, enclose
-      /usr/lib/openafs/fileserver and the following options in double
+      /usr/lib/openafs/dafileserver and the following options in double
       quotes when giving the bos create command.
+
+      This creates a demand-attach fileserver, which is recommended for
+      new installations.  You can also create a regular fileserver if you
+      prefer.  See the bos_create(8) man page for more information.
 
   4.  For database servers, also install openafs-dbserver and then use bos
       addhost to add the new server to /etc/openafs/server/CellServDB:
