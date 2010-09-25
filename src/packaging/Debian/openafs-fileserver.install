@@ -1,5 +1,6 @@
 debian/tmp/usr/sbin/bos_util                       usr/sbin
 debian/tmp/usr/sbin/bosserver                      usr/sbin
+debian/tmp/usr/sbin/dafssync-debug                 usr/sbin
 debian/tmp/usr/sbin/fssync-debug                   usr/sbin
 debian/tmp/usr/sbin/salvsync-debug                 usr/sbin
 debian/tmp/usr/sbin/state_analyzer                 usr/sbin
@@ -28,11 +29,16 @@ debian/tmp/usr/share/man/man5/UserList.5           usr/share/man/man5
 debian/tmp/usr/share/man/man5/VolserLog.5          usr/share/man/man5
 debian/tmp/usr/share/man/man5/afs_volume_header.5  usr/share/man/man5
 debian/tmp/usr/share/man/man5/krb.conf.5           usr/share/man/man5
+debian/tmp/usr/share/man/man5/krb.excl.5           usr/share/man/man5
 debian/tmp/usr/share/man/man5/salvage.lock.5       usr/share/man/man5
 debian/tmp/usr/share/man/man5/sysid.5              usr/share/man/man5
 
 debian/tmp/usr/share/man/man8/bos_util.8                usr/share/man/man8
 debian/tmp/usr/share/man/man8/bosserver.8               usr/share/man/man8
+debian/tmp/usr/share/man/man8/dafileserver.8            usr/share/man/man8
+debian/tmp/usr/share/man/man8/dafssync-debug.8          usr/share/man/man8
+debian/tmp/usr/share/man/man8/dasalvager.8              usr/share/man/man8
+debian/tmp/usr/share/man/man8/davolserver.8             usr/share/man/man8
 debian/tmp/usr/share/man/man8/fileserver.8              usr/share/man/man8
 debian/tmp/usr/share/man/man8/fssync-debug.8            usr/share/man/man8
 debian/tmp/usr/share/man/man8/fssync-debug_attach.8     usr/share/man/man8

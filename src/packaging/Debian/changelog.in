@@ -12,6 +12,85 @@ openafs (@DEB_PKGVER@-1~openafs) unstable; urgency=low
 
  -- Russ Allbery <rra@debian.org>  Thu, 08 Apr 2010 13:20:50 -0700
 
+openafs (1.5.77-2) experimental; urgency=low
+
+  * Apply upstream deltas:
+    - [ca2a7363] libuafs: Don't #define user (fixes armel build)
+    - [f7f366d0] Link dafssync-debug(8) to fssync-debug(8)
+    - [a2cf6b8d] Fix POD errors in fileserver and dasalvager
+    - [e36b4e00] Update bos create man page for new demand-attach
+  * Add backslashes to the DKMS command, which will be required once DKMS
+    uses proper shell quoting.
+  * In openafs-modules-source, use /lib/modules/`uname -r`/build as the
+    default path to the kernel headers rather than /usr/src/linux.
+    Current kernel header packages will create an appropriate symlink
+    there.  This default is only used when neither module-assistant nor
+    kernel-package are used.
+  * In the openafs-client init script, stop looking for openafs.o; Debian
+    hasn't supported 2.4 kernels for quite some time.  Remove all the $MP
+    handling since we force a module name of openafs.ko using
+    --with-linux-kernel-packaging.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 24 Sep 2010 21:37:03 -0700
+
+openafs (1.5.77-1) experimental; urgency=low
+
+  * Apply upstream deltas:
+    - [7594331c] Add NEWS entries for OpenAFS 1.5.77 and 1.5.76
+  * New upstream testing release.
+    - Demand-attach servers are now always built and installed under
+      separate names (dafileserver, davolserver, dasalvager).  This means
+      that the default names are no longer demand-attach, which means that
+      upgrades from previous experimental versions will fail (but upgrades
+      from non-experimental versions will be much cleaner).
+    - Linux 2.6.36 support and improved freezer interface support.
+    - More robust path MTU detection.
+    - Return VNOVOL from fileserver when a volume is deleted.
+    - Improve handling of some corruption in the salvager.
+    - Relax too-strict checks in ptserver on foreign names.
+    - Better reporting of failures during volume attach.
+    - Better fileserver handling of host hash collisions.
+    - Fix statistics reporting in RXAFS_GetStatistics64.
+    - Improved disconnected mode reference tracking.
+    - Avoid a kernel panic during vcache contention.
+    - Fix potential kernel panic during bulkstatus.
+    - Better vos dry-run mode for syncvldb and syncserv.
+    - Fix s390x kernel build support.
+  * Update afs-newcell and README.servers to recommend using the
+    demand-attach fileserver binaries and dafs bos type.
+  * Force disabling of Linux syscall probing in kernel module builds.
+  * Remove obsolete --enable-demand-attach-fs and --enable-disconnected
+    configure flags.  These are now unconditional upstream.
+  * The openafs-fileserver init script now depends on $named since
+    apparently the volserver requires DNS during startup.  Thanks, Jaap
+    Winius.  (Closes: #589783)
+  * Use dpkg --print-architecture, not --print-installation-architecture,
+    in the openafs-fileserver config script.  The latter is deprecated.
+    Thanks, Peter Palfrader.  (Closes: #594488)
+  * Add a dependency on libc6-dev to openafs-modules-dkms.  dkms doesn't
+    depend on it because most kernel modules don't need it, but openafs
+    builds userspace helper programs.  Thanks, Peter Palfrader.
+  * Fix the sample CellServDB entry printed by afs-newcell if the cell
+    isn't found in /etc/openafs/CellServDB to include the correct server
+    syntax.  Thanks, Peter Palfrader.
+  * Run the DKMS build commands in a subshell to work around a DKMS bug
+    that caused the module build logs to be discarded.  (LP: #593509)
+  * Add a status command to the openafs-fileserver init script.
+  * Update to debhelper compatibility level V8.
+    - Rewrite debian/rules to use dh and overrides.
+    - Use dh_installdocs --link-doc to handle linked doc directories.
+    - Rewrite debian/module/rules to use dh and overrides.
+    - Bump -source package dependency and compat to debhelper 8.
+  * Add ${perl:Depends} to openafs-modules-dkms and perl to the
+    dependencies of openafs-modules-source, since Perl is used as part of
+    the module build system now.
+  * Remove bison and flex dependencies for the module build packages.  We
+    now ship the results of rxgen, so don't need all the tools required to
+    build the full source tree.
+  * Update standards version to 3.9.1 (no changes required).
+
+ -- Russ Allbery <rra@debian.org>  Tue, 21 Sep 2010 17:59:42 -0700
+
 openafs (1.5.75-2) experimental; urgency=low
 
   * Apply upstream deltas:
@@ -111,7 +190,7 @@ openafs (1.5.74.1-1) experimental; urgency=low
       and invalidate the old cache.
     - Resolve symlinks in fs rmmount.
     - Include PID in byte-range lock warning.
-  * Preserve the AFS mount point and cache directorys set in
+  * Preserve the AFS mount point and cache directories set in
     /etc/openafs/cacheinfo if the file already exists rather than
     overwriting them with the defaults.  Thanks, Liam Healy.
     (Closes: #580077)
