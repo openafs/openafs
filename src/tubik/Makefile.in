@@ -175,8 +175,6 @@ utst_client.o: ${srcdir}/utst_client.c
 udebug.o: ${srcdir}/udebug.c
 	${CCRULE}
 
-#	${CC} ${CFLAGS} -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs -c ${srcdir}/udebug.c
-
 uerrors.o: uerrors.c
 	${CCRULE}
 
@@ -236,10 +234,9 @@ ubik_int.xdr.o: ubik_int.xdr.c
 #
 test: all
 
-install: \
-	${DESTDIR}${libdir}/libubik_pthread.a \
-	${DESTDIR}${bindir}/udebug \
-	${DESTDIR}${afssrvbindir}/udebug
+install: ${DESTDIR}${libdir}/libubik_pthread.a udebug
+	${INSTALL} udebug ${DESTDIR}${bindir}/udebug
+	${INSTALL} udebug ${DESTDIR}${afssrvbindir}/udebug
 
 ${DEST}/bin/udebug ${DEST}/root.server/usr/afs/bin/udebug: udebug
 	${INSTALL} $? $@
@@ -279,12 +276,6 @@ ${DESTDIR}${includedir}/ubik_int.h: ubik_int.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/udebug: udebug
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/udebug: udebug
 	${INSTALL} $? $@
 
 dest: \
