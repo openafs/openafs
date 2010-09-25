@@ -7,6 +7,11 @@ openafs (1.5.77-2) UNRELEASED; urgency=low
     - [e36b4e00] Update bos create man page for new demand-attach
   * Add backslashes to the DKMS command, which will be required once DKMS
     uses proper shell quoting.
+  * In openafs-modules-source, use /lib/modules/`uname -r`/source as the
+    default path to the kernel headers rather than /usr/src/linux.
+    Current kernel header packages will create an appropriate symlink
+    there.  This default is only used when neither module-assistant nor
+    kernel-package are used.
 
  -- Russ Allbery <rra@debian.org>  Fri, 24 Sep 2010 17:05:35 -0700
 
