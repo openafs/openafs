@@ -12,7 +12,7 @@ endif
 
 # Find kernel build information.
 ifndef KSRC
-    KSRC := /lib/modules/$(shell uname -r)/source
+    KSRC := /lib/modules/$(shell uname -r)/build
 endif
 ifndef KPKG_DEST_DIR
     KPKG_DEST_DIR = ..
