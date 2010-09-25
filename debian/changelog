@@ -5,6 +5,8 @@ openafs (1.5.77-2) UNRELEASED; urgency=low
     - [f7f366d0] Link dafssync-debug(8) to fssync-debug(8)
     - [a2cf6b8d] Fix POD errors in fileserver and dasalvager
     - [e36b4e00] Update bos create man page for new demand-attach
+  * Add backslashes to the DKMS command, which will be required once DKMS
+    uses proper shell quoting.
 
  -- Russ Allbery <rra@debian.org>  Fri, 24 Sep 2010 17:05:35 -0700
 
