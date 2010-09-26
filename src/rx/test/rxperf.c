@@ -555,9 +555,10 @@ readfile(const char *filename, afs_uint32 ** readwrite, afs_uint32 * size)
     afs_uint32 num = 0;
     afs_uint32 data;
     char *ptr;
-    char buf[RXPERF_BUFSIZE];
+    char *buf;
 
     *readwrite = malloc(sizeof(afs_uint32) * len);
+    buf = malloc(RXPERF_BUFSIZE);
 
     if (*readwrite == NULL)
 	err(1, "malloc");
@@ -591,6 +592,7 @@ readfile(const char *filename, afs_uint32 ** readwrite, afs_uint32 * size)
 
     if (fclose(f) == -1)
 	err(1, "fclose");
+    free(buf);
 }
 
 struct client_data {
@@ -767,7 +769,7 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     int secureindex;
     int ret;
     char stamp[2048];
-    struct client_data params;
+    struct client_data *params;
 
 #ifdef AFS_PTHREAD_ENV
     int i;
@@ -775,6 +777,9 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     pthread_attr_t tattr;
     void *status;
 #endif
+
+    params = malloc(sizeof(struct client_data));
+    memset(params, 0, sizeof(struct client_data));
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -822,13 +827,13 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_JOINABLE);
 #endif
 
-    params.conn = conn;
-    params.filename = filename;
-    params.command = command;
-    params.times = times;
-    params.bytes = bytes;
-    params.sendtimes = sendtimes;
-    params.recvtimes = recvtimes;
+    params->conn = conn;
+    params->filename = filename;
+    params->command = command;
+    params->times = times;
+    params->bytes = bytes;
+    params->sendtimes = sendtimes;
+    params->recvtimes = recvtimes;
 
     switch (command) {
     case RX_PERF_RPC:
@@ -853,9 +858,9 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 
 #ifdef AFS_PTHREAD_ENV
     for ( i=0; i<threads; i++)
-        pthread_create(&thread[i], &tattr, client_thread, &params);
+        pthread_create(&thread[i], &tattr, client_thread, params);
 #else
-        client_thread(&params);
+        client_thread(params);
 #endif
 
 #ifdef AFS_PTHREAD_ENV
@@ -875,6 +880,8 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 #ifdef AFS_PTHREAD_ENV
     pthread_attr_destroy(&tattr);
 #endif
+
+    free(params);
 }
 
 static void
