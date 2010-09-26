@@ -4901,23 +4901,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     rxi_ClearReceiveQueue(call);
     /* why init the queue if you just emptied it? queue_Init(&call->rq); */
 
-    if (call->currentPacket) {
-#ifdef RX_TRACK_PACKETS
-        call->currentPacket->flags &= ~RX_PKTFLAG_CP;
-        call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
-#endif
-        queue_Prepend(&call->iovq, call->currentPacket);
-#ifdef RXDEBUG_PACKET
-        call->iovqc++;
-#endif /* RXDEBUG_PACKET */
-        call->currentPacket = (struct rx_packet *)0;
-    }
-    call->curlen = call->nLeft = call->nFree = 0;
-
-#ifdef RXDEBUG_PACKET
-    call->iovqc -=
-#endif
-        rxi_FreePackets(0, &call->iovq);
 
     call->error = 0;
     call->twind = call->conn->twind[call->channel];
