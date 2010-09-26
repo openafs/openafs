@@ -37,7 +37,7 @@ static const char *new_homestring = "HOME=/tmp";
 #endif
 
 
-void
+int
 main(int argc, char *argv[])
 {
     int authenticated = 0;
@@ -101,7 +101,7 @@ main(int argc, char *argv[])
     putenv((char *)new_homestring);
     chdir("/tmp");
     printf("Type exit to back out.\n");
-    execl("/bin/csh", "/bin/csh", NULL);
+    return execl("/bin/csh", "/bin/csh", NULL);
 }
 
 
