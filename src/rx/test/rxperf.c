@@ -505,6 +505,8 @@ do_server(short port, int nojumbo, int maxmtu, int maxwsize, int minpeertimeout,
     if (nostats)
         rx_enable_stats = 0;
 
+    rx_SetUdpBufSize(udpbufsz);
+
     ret = rx_Init(htons(port));
     if (ret)
 	errx(1, "rx_Init failed");
@@ -523,7 +525,6 @@ do_server(short port, int nojumbo, int maxmtu, int maxwsize, int minpeertimeout,
     if (minpeertimeout)
         rx_SetMinPeerTimeout(minpeertimeout);
 
-    rx_SetUdpBufSize(udpbufsz);
 
     get_sec(1, &secureobj, &secureindex);
 
@@ -796,6 +797,8 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 
     addr = str2addr(server);
 
+    rx_SetUdpBufSize(udpbufsz);
+
     ret = rx_Init(0);
     if (ret)
 	errx(1, "rx_Init failed");
@@ -814,7 +817,6 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     if (minpeertimeout)
         rx_SetMinPeerTimeout(minpeertimeout);
 
-    rx_SetUdpBufSize(udpbufsz);
 
     get_sec(0, &secureobj, &secureindex);
 
