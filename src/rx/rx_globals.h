@@ -126,7 +126,7 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 
 EXT int rx_minPeerTimeout GLOBALSINIT(2); /* in milliseconds */
 EXT int rx_minWindow GLOBALSINIT(1);
-EXT int rx_maxWindow GLOBALSINIT(65535);        /* twind is u_short */
+EXT int rx_maxWindow GLOBALSINIT(RX_MAXACKS);   /* must ack what we receive */
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
 EXT int rx_maxReceiveWindow GLOBALSINIT(32);	/* how much to accept */
 EXT int rx_initSendWindow GLOBALSINIT(16);
