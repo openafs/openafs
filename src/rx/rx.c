@@ -150,6 +150,9 @@ rx_atomic_t rx_nWaited = RX_ATOMIC_INIT(0);
 afs_kmutex_t rx_atomic_mutex;
 #endif
 
+/* Forward prototypes */
+static struct rx_call * rxi_NewCall(struct rx_connection *, int);
+
 #ifdef AFS_PTHREAD_ENV
 
 /*
@@ -298,7 +301,7 @@ pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
 
 #if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 static afs_kmutex_t rx_rpc_stats;
-void rxi_StartUnlocked(struct rxevent *event, void *call,
+static void rxi_StartUnlocked(struct rxevent *event, void *call,
                        void *arg1, int istack);
 #endif
 
@@ -687,7 +690,7 @@ QuotaOK(struct rx_service *aservice)
 /* Called by rx_StartServer to start up lwp's to service calls.
    NExistingProcs gives the number of procs already existing, and which
    therefore needn't be created. */
-void
+static void
 rxi_StartServerProcs(int nExistingProcs)
 {
     struct rx_service *service;
@@ -934,7 +937,7 @@ int rxi_lowConnRefCount = 0;
  * Cleanup a connection that was destroyed in rxi_DestroyConnectioNoLock.
  * NOTE: must not be called with rx_connHashTable_lock held.
  */
-void
+static void
 rxi_CleanupConnection(struct rx_connection *conn)
 {
     /* Notify the service exporter, if requested, that this connection
@@ -1448,7 +1451,7 @@ rx_NewCall(struct rx_connection *conn)
     return call;
 }
 
-int
+static int
 rxi_HasActiveCalls(struct rx_connection *aconn)
 {
     int i;
@@ -2369,7 +2372,7 @@ rxi_PacketsUnWait(void)
 
 /* Return this process's service structure for the
  * specified socket and service */
-struct rx_service *
+static struct rx_service *
 rxi_FindService(osi_socket socket, u_short serviceId)
 {
     struct rx_service **sp;
@@ -2391,7 +2394,7 @@ static struct rx_call *rx_allCallsp = 0;
 /* Allocate a call structure, for the indicated channel of the
  * supplied connection.  The mode and state of the call must be set by
  * the caller. Returns the call with mutex locked. */
-struct rx_call *
+static struct rx_call *
 rxi_NewCall(struct rx_connection *conn, int channel)
 {
     struct rx_call *call;
@@ -2494,7 +2497,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
  * call->lock amd rx_refcnt_mutex are held upon entry.
  * haveCTLock is set when called from rxi_ReapConnections.
  */
-void
+static void
 rxi_FreeCall(struct rx_call *call, int haveCTLock)
 {
     int channel = call->channel;

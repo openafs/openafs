@@ -944,7 +944,7 @@ rx_WriteProc32(struct rx_call *call, afs_int32 * value)
  * LOCKS USED -- called at netpri.
  */
 
-int
+static int
 rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 		int nbytes)
 {

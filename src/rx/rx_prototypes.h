@@ -30,9 +30,6 @@ extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
 extern void rx_StartClientThread(void);
 #endif
-#ifndef KERNEL
-extern void rxi_StartServerProcs(int nExistingProcs);
-#endif
 extern void rx_StartServer(int donateMe);
 extern struct rx_connection *rx_NewConnection(afs_uint32 shost,
 					      u_short sport, u_short sservice,
@@ -43,12 +40,10 @@ extern void rx_SetConnDeadTime(struct rx_connection *conn,
 			       int seconds);
 extern void rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds);
 extern void rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds);
-extern void rxi_CleanupConnection(struct rx_connection *conn);
 extern void rxi_DestroyConnection(struct rx_connection *conn);
 extern void rx_GetConnection(struct rx_connection *conn);
 extern void rx_DestroyConnection(struct rx_connection *conn);
 extern struct rx_call *rx_NewCall(struct rx_connection *conn);
-extern int rxi_HasActiveCalls(struct rx_connection *aconn);
 extern int rxi_GetCallNumberVector(struct rx_connection *aconn,
 				   afs_int32 * aint32s);
 extern int rxi_SetCallNumberVector(struct rx_connection *aconn,
@@ -85,11 +80,6 @@ extern afs_int32 rx_EndCall(struct rx_call *call, afs_int32 rc);
 extern void rx_InterruptCall(struct rx_call *call, afs_int32 error);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
-extern struct rx_service *rxi_FindService(osi_socket socket,
-                                          u_short serviceId);
-extern struct rx_call *rxi_NewCall(struct rx_connection *conn,
-                                   int channel);
-extern void rxi_FreeCall(struct rx_call *call, int haveCTLock);
 extern void *rxi_Alloc(size_t size);
 extern void rxi_Free(void *addr, size_t size);
 extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
@@ -150,9 +140,6 @@ extern void rxi_ResetCall(struct rx_call *call,
 extern struct rx_packet *rxi_SendAck(struct rx_call *call, struct rx_packet
 				     *optionalPacket, int serial, int reason,
 				     int istack);
-extern void rxi_StartUnlocked(struct rxevent *event,
-			      void *call, /* struct rx_call */
-			      void *arg1, int istack);
 extern void rxi_Start(struct rxevent *event,
 		      void *call, /* struct rx_call */
 		      void *arg1, int istack);
@@ -608,8 +595,6 @@ extern int rxi_WriteProc(struct rx_call *call, char *buf,
 extern int rx_WriteProc(struct rx_call *call, char *buf, int nbytes);
 extern int rx_WriteProc32(struct rx_call *call,
 			  afs_int32 * value);
-extern int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio,
-			   int maxio, int nbytes);
 extern int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio,
 			  int maxio, int nbytes);
 extern int rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
