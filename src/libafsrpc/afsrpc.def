@@ -262,6 +262,8 @@ EXPORTS
         rx_GetServiceSpecific                   @267
         rx_SetServiceSpecific                   @268
 	rx_NewThreadId				@269
+        rx_GetStatistics                        @270
+        rx_FreeStatistics                       @271
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

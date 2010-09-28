@@ -616,6 +616,10 @@ extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 extern void rxi_FlushWrite(struct rx_call *call);
 extern void rx_FlushWrite(struct rx_call *call);
 
+/* rx_stats.c */
+extern struct rx_statistics * rx_GetStatistics(void);
+extern void rx_FreeStatistics(struct rx_statistics **);
+
 /* rx_trace.c */
 
 

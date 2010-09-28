@@ -16,6 +16,8 @@
 
 
 #include "rx/rx_kcommon.h"
+#include "rx_atomic.h"
+#include "rx_stats.h"
 
 #ifdef AFS_HPUX110_ENV
 #include "h/tihdr.h"
@@ -1156,7 +1158,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    if (nbytes <= 0) {
                 if (rx_stats_active) {
                     MUTEX_ENTER(&rx_stats_mutex);
-                    rx_stats.bogusPacketOnRead++;
+                    rx_atomic_inc(&rx_stats.bogusPacketOnRead);
                     rx_stats.bogusHost = from.sin_addr.s_addr;
                     MUTEX_EXIT(&rx_stats_mutex);
                 }
@@ -1172,9 +1174,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    *port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
                 if (rx_stats_active) {
-                    MUTEX_ENTER(&rx_stats_mutex);
-                    rx_stats.packetsRead[p->header.type - 1]++;
-                    MUTEX_EXIT(&rx_stats_mutex);
+                    rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
                 }
 	    }
 

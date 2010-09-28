@@ -521,8 +521,6 @@ EXT afs_kcondvar_t rx_waitingForPackets_cv;
 #endif
 EXT char rx_waitingForPackets;	/* Processes set and wait on this variable when waiting for packet buffers */
 
-EXT struct rx_statistics rx_stats;
-
 EXT struct rx_peer **rx_peerHashTable;
 EXT struct rx_connection **rx_connHashTable;
 EXT struct rx_connection *rx_connCleanup_list GLOBALSINIT(0);
@@ -619,7 +617,6 @@ EXT pthread_key_t rx_thread_id_key;
 #endif
 
 #if defined(RX_ENABLE_LOCKS)
-EXT afs_kmutex_t rx_stats_mutex;	/* used to protect stats gathering */
 EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
 EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
 EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */

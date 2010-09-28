@@ -79,6 +79,7 @@ RXOBJS =\
 	rx_misc.o \
 	rx_packet.o \
 	rx_rdwr.o \
+	rx_stats.o \
 	rx_trace.o \
 	rx_multi.o
 
@@ -208,6 +209,9 @@ rx_packet.o: ${RX}/rx_packet.c
 	${CCRULE}
 
 rx_rdwr.o: ${RX}/rx_rdwr.c
+	${CCRULE}
+
+rx_stats.o: ${RX}/rx_stats.c
 	${CCRULE}
 
 rx_trace.o: ${RX}/rx_trace.c

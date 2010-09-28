@@ -5864,6 +5864,7 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     int dir_Buffers;		/*# buffers in use by dir package */
     int dir_Calls;		/*# read calls in dir package */
     int dir_IOs;		/*# I/O ops in dir package */
+    struct rx_statistics *stats;
 
     /*
      * Vnode cache section.
@@ -5895,58 +5896,60 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     /*
      * Rx section.
      */
-    a_perfP->rx_packetRequests = (afs_int32) rx_stats.packetRequests;
+    stats = rx_GetStatistics();
+
+    a_perfP->rx_packetRequests = (afs_int32) stats->packetRequests;
     a_perfP->rx_noPackets_RcvClass =
-	(afs_int32) rx_stats.receivePktAllocFailures;
+	(afs_int32) stats->receivePktAllocFailures;
     a_perfP->rx_noPackets_SendClass =
-	(afs_int32) rx_stats.sendPktAllocFailures;
+	(afs_int32) stats->sendPktAllocFailures;
     a_perfP->rx_noPackets_SpecialClass =
-	(afs_int32) rx_stats.specialPktAllocFailures;
-    a_perfP->rx_socketGreedy = (afs_int32) rx_stats.socketGreedy;
-    a_perfP->rx_bogusPacketOnRead = (afs_int32) rx_stats.bogusPacketOnRead;
-    a_perfP->rx_bogusHost = (afs_int32) rx_stats.bogusHost;
-    a_perfP->rx_noPacketOnRead = (afs_int32) rx_stats.noPacketOnRead;
+	(afs_int32) stats->specialPktAllocFailures;
+    a_perfP->rx_socketGreedy = (afs_int32) stats->socketGreedy;
+    a_perfP->rx_bogusPacketOnRead = (afs_int32) stats->bogusPacketOnRead;
+    a_perfP->rx_bogusHost = (afs_int32) stats->bogusHost;
+    a_perfP->rx_noPacketOnRead = (afs_int32) stats->noPacketOnRead;
     a_perfP->rx_noPacketBuffersOnRead =
-	(afs_int32) rx_stats.noPacketBuffersOnRead;
-    a_perfP->rx_selects = (afs_int32) rx_stats.selects;
-    a_perfP->rx_sendSelects = (afs_int32) rx_stats.sendSelects;
+	(afs_int32) stats->noPacketBuffersOnRead;
+    a_perfP->rx_selects = (afs_int32) stats->selects;
+    a_perfP->rx_sendSelects = (afs_int32) stats->sendSelects;
     a_perfP->rx_packetsRead_RcvClass =
-	(afs_int32) rx_stats.packetsRead[RX_PACKET_CLASS_RECEIVE];
+	(afs_int32) stats->packetsRead[RX_PACKET_CLASS_RECEIVE];
     a_perfP->rx_packetsRead_SendClass =
-	(afs_int32) rx_stats.packetsRead[RX_PACKET_CLASS_SEND];
+	(afs_int32) stats->packetsRead[RX_PACKET_CLASS_SEND];
     a_perfP->rx_packetsRead_SpecialClass =
-	(afs_int32) rx_stats.packetsRead[RX_PACKET_CLASS_SPECIAL];
-    a_perfP->rx_dataPacketsRead = (afs_int32) rx_stats.dataPacketsRead;
-    a_perfP->rx_ackPacketsRead = (afs_int32) rx_stats.ackPacketsRead;
-    a_perfP->rx_dupPacketsRead = (afs_int32) rx_stats.dupPacketsRead;
+	(afs_int32) stats->packetsRead[RX_PACKET_CLASS_SPECIAL];
+    a_perfP->rx_dataPacketsRead = (afs_int32) stats->dataPacketsRead;
+    a_perfP->rx_ackPacketsRead = (afs_int32) stats->ackPacketsRead;
+    a_perfP->rx_dupPacketsRead = (afs_int32) stats->dupPacketsRead;
     a_perfP->rx_spuriousPacketsRead =
-	(afs_int32) rx_stats.spuriousPacketsRead;
+	(afs_int32) stats->spuriousPacketsRead;
     a_perfP->rx_packetsSent_RcvClass =
-	(afs_int32) rx_stats.packetsSent[RX_PACKET_CLASS_RECEIVE];
+	(afs_int32) stats->packetsSent[RX_PACKET_CLASS_RECEIVE];
     a_perfP->rx_packetsSent_SendClass =
-	(afs_int32) rx_stats.packetsSent[RX_PACKET_CLASS_SEND];
+	(afs_int32) stats->packetsSent[RX_PACKET_CLASS_SEND];
     a_perfP->rx_packetsSent_SpecialClass =
-	(afs_int32) rx_stats.packetsSent[RX_PACKET_CLASS_SPECIAL];
-    a_perfP->rx_ackPacketsSent = (afs_int32) rx_stats.ackPacketsSent;
-    a_perfP->rx_pingPacketsSent = (afs_int32) rx_stats.pingPacketsSent;
-    a_perfP->rx_abortPacketsSent = (afs_int32) rx_stats.abortPacketsSent;
-    a_perfP->rx_busyPacketsSent = (afs_int32) rx_stats.busyPacketsSent;
-    a_perfP->rx_dataPacketsSent = (afs_int32) rx_stats.dataPacketsSent;
-    a_perfP->rx_dataPacketsReSent = (afs_int32) rx_stats.dataPacketsReSent;
-    a_perfP->rx_dataPacketsPushed = (afs_int32) rx_stats.dataPacketsPushed;
-    a_perfP->rx_ignoreAckedPacket = (afs_int32) rx_stats.ignoreAckedPacket;
-    a_perfP->rx_totalRtt_Sec = (afs_int32) rx_stats.totalRtt.sec;
-    a_perfP->rx_totalRtt_Usec = (afs_int32) rx_stats.totalRtt.usec;
-    a_perfP->rx_minRtt_Sec = (afs_int32) rx_stats.minRtt.sec;
-    a_perfP->rx_minRtt_Usec = (afs_int32) rx_stats.minRtt.usec;
-    a_perfP->rx_maxRtt_Sec = (afs_int32) rx_stats.maxRtt.sec;
-    a_perfP->rx_maxRtt_Usec = (afs_int32) rx_stats.maxRtt.usec;
-    a_perfP->rx_nRttSamples = (afs_int32) rx_stats.nRttSamples;
-    a_perfP->rx_nServerConns = (afs_int32) rx_stats.nServerConns;
-    a_perfP->rx_nClientConns = (afs_int32) rx_stats.nClientConns;
-    a_perfP->rx_nPeerStructs = (afs_int32) rx_stats.nPeerStructs;
-    a_perfP->rx_nCallStructs = (afs_int32) rx_stats.nCallStructs;
-    a_perfP->rx_nFreeCallStructs = (afs_int32) rx_stats.nFreeCallStructs;
+	(afs_int32) stats->packetsSent[RX_PACKET_CLASS_SPECIAL];
+    a_perfP->rx_ackPacketsSent = (afs_int32) stats->ackPacketsSent;
+    a_perfP->rx_pingPacketsSent = (afs_int32) stats->pingPacketsSent;
+    a_perfP->rx_abortPacketsSent = (afs_int32) stats->abortPacketsSent;
+    a_perfP->rx_busyPacketsSent = (afs_int32) stats->busyPacketsSent;
+    a_perfP->rx_dataPacketsSent = (afs_int32) stats->dataPacketsSent;
+    a_perfP->rx_dataPacketsReSent = (afs_int32) stats->dataPacketsReSent;
+    a_perfP->rx_dataPacketsPushed = (afs_int32) stats->dataPacketsPushed;
+    a_perfP->rx_ignoreAckedPacket = (afs_int32) stats->ignoreAckedPacket;
+    a_perfP->rx_totalRtt_Sec = (afs_int32) stats->totalRtt.sec;
+    a_perfP->rx_totalRtt_Usec = (afs_int32) stats->totalRtt.usec;
+    a_perfP->rx_minRtt_Sec = (afs_int32) stats->minRtt.sec;
+    a_perfP->rx_minRtt_Usec = (afs_int32) stats->minRtt.usec;
+    a_perfP->rx_maxRtt_Sec = (afs_int32) stats->maxRtt.sec;
+    a_perfP->rx_maxRtt_Usec = (afs_int32) stats->maxRtt.usec;
+    a_perfP->rx_nRttSamples = (afs_int32) stats->nRttSamples;
+    a_perfP->rx_nServerConns = (afs_int32) stats->nServerConns;
+    a_perfP->rx_nClientConns = (afs_int32) stats->nClientConns;
+    a_perfP->rx_nPeerStructs = (afs_int32) stats->nPeerStructs;
+    a_perfP->rx_nCallStructs = (afs_int32) stats->nCallStructs;
+    a_perfP->rx_nFreeCallStructs = (afs_int32) stats->nFreeCallStructs;
 
     a_perfP->host_NumHostEntries = HTs;
     a_perfP->host_HostBlocks = HTBlocks;
@@ -5958,8 +5961,9 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->host_ClientBlocks = CEBlocks;
 
     a_perfP->sysname_ID = afs_perfstats.sysname_ID;
-    a_perfP->rx_nBusies = (afs_int32) rx_stats.nBusies;
+    a_perfP->rx_nBusies = (afs_int32) stats->nBusies;
     a_perfP->fs_nBusies = afs_perfstats.fs_nBusies;
+    rx_FreeStatistics(&stats);
 }				/*FillPerfValues */
 
 

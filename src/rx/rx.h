@@ -1125,57 +1125,6 @@ typedef struct rx_interface_stat {
 
 #ifdef AFS_NT40_ENV
 extern int rx_DumpCalls(FILE *outputFile, char *cookie);
-
-#define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
-#define rx_MutexAdd(object, addend, mutex) InterlockedExchangeAdd(&object, addend)
-#define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
-#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        InterlockedIncrement(&object2); \
-        MUTEX_EXIT(&mutex); \
-    } while (0)
-#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        InterlockedDecrement(&object2); \
-        MUTEX_EXIT(&mutex); \
-    } while (0)
-#else
-#define rx_MutexIncrement(object, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object++; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd(object, addend, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object += addend; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        object2++; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        object2--; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexDecrement(object, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object--; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
 #endif
 
 #endif /* _RX_   End of rx.h */

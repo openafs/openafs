@@ -57,9 +57,10 @@
 #ifndef AFS_NT40_ENV
 # include <sys/time.h>
 #endif
-# include "rx.h"
-# include "rx_globals.h"
-
+#include "rx.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_stats.h"
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 
@@ -200,11 +201,8 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (!greedy)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
-        if (rx_stats_active) {
-            MUTEX_ENTER(&rx_stats_mutex);
-            rx_stats.socketGreedy = greedy;
-            MUTEX_EXIT(&rx_stats_mutex);
-        }
+        if (rx_stats_active)
+            rx_atomic_set(&rx_stats.socketGreedy, greedy);
     }
 
 #ifdef AFS_LINUX22_ENV

@@ -70,7 +70,6 @@
 	rx_tranquil;
 	rx_getAllAddr;
 	rx_nWaiting;
-	rx_stats;
 	rx_SetNoJumbo;
 	rx_SetConnDeadTime;
 	rx_FlushWrite;
@@ -91,7 +90,6 @@
 	rx_GetServerStats;
 	rx_GetServerVersion;
 	rx_GetServerConnections;
-	rx_stats_mutex;
 	rx_GetServerPeers;
 	rx_RetrieveProcessRPCStats;
 	rx_RetrievePeerRPCStats;

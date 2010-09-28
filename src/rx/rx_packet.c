@@ -24,6 +24,7 @@
 #include "rx/rx_packet.h"
 #include "rx/rx_atomic.h"
 #include "rx/rx_internal.h"
+#include "rx/rx_stats.h"
 #else /* defined(UKERNEL) */
 #ifdef RX_KERNEL_TRACE
 #include "../rx/rx_kcommon.h"
@@ -56,6 +57,7 @@
 #endif
 #include "rx/rx_packet.h"
 #include "rx_internal.h"
+#include "rx_stats.h"
 #endif /* defined(UKERNEL) */
 #include "rx/rx_globals.h"
 #else /* KERNEL */
@@ -84,6 +86,7 @@
 #include "rx_atomic.h"
 #include "rx_globals.h"
 #include "rx_internal.h"
+#include "rx_stats.h"
 #include <lwp.h>
 #include <assert.h>
 #include <string.h>
@@ -318,19 +321,19 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receivePktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.specialPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receiveCbufPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendCbufPktAllocFailures);
                 break;
             }
 	}
@@ -1133,19 +1136,19 @@ rxi_AllocPacketNoLock(int class)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(rx_stats.receivePktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.specialPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receiveCbufPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendCbufPktAllocFailures);
                 break;
             }
 	}
@@ -1154,7 +1157,7 @@ rxi_AllocPacketNoLock(int class)
 #endif /* KERNEL */
 
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetRequests);
     if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
 
 #ifdef KERNEL
@@ -1193,19 +1196,19 @@ rxi_AllocPacketNoLock(int class)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receivePktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.specialPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receiveCbufPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendCbufPktAllocFailures);
                 break;
             }
         }
@@ -1214,7 +1217,7 @@ rxi_AllocPacketNoLock(int class)
 #endif /* KERNEL */
 
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetRequests);
 
 #ifdef KERNEL
     if (queue_IsEmpty(&rx_freePacketQueue))
@@ -1251,7 +1254,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
     RX_TS_INFO_GET(rx_ts_info);
 
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetRequests);
     if (pull_global && queue_IsEmpty(&rx_ts_info->_FPQ)) {
         MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -1472,13 +1475,11 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
             if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.noPacketOnRead);
 	} else if (nbytes <= 0) {
             if (rx_stats_active) {
-                MUTEX_ENTER(&rx_stats_mutex);
-                rx_stats.bogusPacketOnRead++;
+                rx_atomic_inc(&rx_stats.bogusPacketOnRead);
                 rx_stats.bogusHost = from.sin_addr.s_addr;
-                MUTEX_EXIT(&rx_stats_mutex);
             }
 	    dpf(("B: bogus packet from [%x,%d] nb=%d", ntohl(from.sin_addr.s_addr),
 		 ntohs(from.sin_port), nbytes));
@@ -1512,7 +1513,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
             if (rx_stats_active) {
                 struct rx_peer *peer;
-                rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
                 /*
                  * Try to look up this peer structure.  If it doesn't exist,
                  * don't create a new one -
@@ -2299,7 +2300,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			 p->length + RX_HEADER_SIZE, istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.netSendFailures);
 	    p->retryTime = p->timeSent;	/* resend it very soon */
 	    clock_Addmsec(&(p->retryTime),
 			  10 + (((afs_uint32) p->backoff) << 8));
@@ -2343,7 +2344,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     if (rx_stats_active) {
-        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetsSent[p->header.type - 1]);
         MUTEX_ENTER(&peer->peer_lock);
         hadd32(peer->bytesSent, p->length);
         MUTEX_EXIT(&peer->peer_lock);
@@ -2508,7 +2509,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 			 istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.netSendFailures);
 	    for (i = 0; i < len; i++) {
 		p = list[i];
 		p->retryTime = p->timeSent;	/* resend it very soon */
@@ -2549,7 +2550,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
 #endif
     if (rx_stats_active) {
-        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetsSent[p->header.type - 1]);
         MUTEX_ENTER(&peer->peer_lock);
         hadd32(peer->bytesSent, p->length);
         MUTEX_EXIT(&peer->peer_lock);

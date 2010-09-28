@@ -44,7 +44,9 @@
 #endif
 # include <assert.h>
 # include "rx.h"
+# include "rx_atomic.h"
 # include "rx_globals.h"
+# include "rx_stats.h"
 # include <lwp.h>
 
 #define MAXTHREADNAMELENGTH 64
@@ -213,7 +215,8 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 	    tv.tv_usec = cv.usec;
 	    tvp = &tv;
 	}
-	rx_stats.selects++;
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.selects);
 
 	*rfds = rx_selectMask;
 
@@ -436,7 +439,8 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     fd_set *sfds = (fd_set *) 0;
     while (sendmsg(socket, msg_p, flags) == -1) {
 	int err;
-	rx_stats.sendSelects++;
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.sendSelects);
 
 	if (!sfds) {
 	    if (!(sfds = IOMGR_AllocFDSet())) {
