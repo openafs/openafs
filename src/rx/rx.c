@@ -70,6 +70,7 @@
 #include "rx_globals.h"
 #include "rx_trace.h"
 #include "rx_atomic.h"
+#include "rx_internal.h"
 #define	AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
 #define	AFSOP_STOP_AFS		211	/* Stop AFS process */
 #define	AFSOP_STOP_BKG		212	/* Stop BKG process */
@@ -108,6 +109,7 @@ extern afs_int32 afs_termState;
 # include "rx_atomic.h"
 # include "rx_globals.h"
 # include "rx_trace.h"
+# include "rx_internal.h"
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
@@ -154,6 +156,9 @@ static unsigned int rxi_rpc_peer_stat_cnt;
 
 static unsigned int rxi_rpc_process_stat_cnt;
 
+rx_atomic_t rx_nWaiting = RX_ATOMIC_INIT(0);
+rx_atomic_t rx_nWaited = RX_ATOMIC_INIT(0);
+
 #if !defined(offsetof)
 #include <stddef.h>		/* for definition of offsetof() */
 #endif
@@ -171,7 +176,6 @@ afs_kmutex_t rx_atomic_mutex;
  */
 
 extern afs_kmutex_t rx_stats_mutex;
-extern afs_kmutex_t rx_waiting_mutex;
 extern afs_kmutex_t rx_quota_mutex;
 extern afs_kmutex_t rx_pthread_mutex;
 extern afs_kmutex_t rx_packets_mutex;
@@ -201,7 +205,6 @@ rxi_InitPthread(void)
 {
     MUTEX_INIT(&rx_clock_mutex, "clock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_waiting_mutex, "waiting", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_atomic_mutex, "atomic", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_quota_mutex, "quota", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_pthread_mutex, "pthread", MUTEX_DEFAULT, 0);
@@ -478,7 +481,6 @@ rx_InitHost(u_int host, u_int port)
     rxdb_init();
 #endif /* RX_LOCKS_DB */
     MUTEX_INIT(&rx_stats_mutex, "rx_stats_mutex", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_waiting_mutex, "rx_waiting_mutex", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_quota_mutex, "rx_quota_mutex", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_pthread_mutex, "rx_pthread_mutex", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_packets_mutex, "rx_packets_mutex", MUTEX_DEFAULT, 0);
@@ -1755,9 +1757,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
 	    if (call->flags & RX_CALL_WAIT_PROC) {
 		call->flags &= ~RX_CALL_WAIT_PROC;
-                MUTEX_ENTER(&rx_waiting_mutex);
-                rx_nWaiting--;
-                MUTEX_EXIT(&rx_waiting_mutex);
+		rx_atomic_dec(&rx_nWaiting);
 	    }
 
 	    if (call->state != RX_STATE_PRECALL || call->error) {
@@ -1939,7 +1939,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    rxi_minDeficit--;
 	rxi_availProcs--;
         MUTEX_EXIT(&rx_quota_mutex);
-	rx_nWaiting--;
+	rx_atomic_dec(&rx_nWaiting);
 	/* MUTEX_EXIT(&call->lock); */
     } else {
 	/* If there are no eligible incoming calls, add this process
@@ -2912,7 +2912,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     * If the number of queued calls exceeds the overload
 	     * threshold then abort this call.
 	     */
-	    if ((rx_BusyThreshold > 0) && (rx_nWaiting > rx_BusyThreshold)) {
+	    if ((rx_BusyThreshold > 0) &&
+		(rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
 		struct rx_packet *tp;
 
 		rxi_CallError(call, rx_BusyError);
@@ -2980,7 +2981,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     * If the number of queued calls exceeds the overload
 	     * threshold then abort this call.
 	     */
-	    if ((rx_BusyThreshold > 0) && (rx_nWaiting > rx_BusyThreshold)) {
+	    if ((rx_BusyThreshold > 0) &&
+	        (rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
 		struct rx_packet *tp;
 
 		rxi_CallError(call, rx_BusyError);
@@ -4456,10 +4458,8 @@ rxi_AttachServerProc(struct rx_call *call,
 
 	if (!(call->flags & RX_CALL_WAIT_PROC)) {
 	    call->flags |= RX_CALL_WAIT_PROC;
-            MUTEX_ENTER(&rx_waiting_mutex);
-            rx_nWaiting++;
-            rx_nWaited++;
-            MUTEX_EXIT(&rx_waiting_mutex);
+	    rx_atomic_inc(&rx_nWaiting);
+	    rx_atomic_inc(&rx_nWaited);
 	    rxi_calltrace(RX_CALL_ARRIVAL, call);
 	    SET_CALL_QUEUE_LOCK(call, &rx_serverPool_lock);
 	    queue_Append(&rx_incomingCallQueue, call);
@@ -4487,9 +4487,7 @@ rxi_AttachServerProc(struct rx_call *call,
 	    if (queue_IsOnQueue(call)) {
 		queue_Remove(call);
 
-                MUTEX_ENTER(&rx_waiting_mutex);
-                rx_nWaiting--;
-                MUTEX_EXIT(&rx_waiting_mutex);
+		rx_atomic_dec(&rx_nWaiting);
 	    }
 	}
 	call->state = RX_STATE_ACTIVE;
@@ -4958,10 +4956,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	if (queue_IsOnQueue(call)) {
 	    queue_Remove(call);
 	    if (flags & RX_CALL_WAIT_PROC) {
-
-                MUTEX_ENTER(&rx_waiting_mutex);
-                rx_nWaiting--;
-                MUTEX_EXIT(&rx_waiting_mutex);
+		rx_atomic_dec(&rx_nWaiting);
 	    }
 	}
 	MUTEX_EXIT(call->call_queue_lock);
@@ -4971,7 +4966,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     if (queue_IsOnQueue(call)) {
 	queue_Remove(call);
 	if (flags & RX_CALL_WAIT_PROC)
-	    rx_nWaiting--;
+	    rx_atomic_dec(&rx_nWaiting);
     }
 #endif /* RX_ENABLE_LOCKS */
 

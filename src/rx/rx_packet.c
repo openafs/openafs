@@ -22,6 +22,8 @@
 #include "rx/rx_clock.h"
 #include "rx/rx_queue.h"
 #include "rx/rx_packet.h"
+#include "rx/rx_atomic.h"
+#include "rx/rx_internal.h"
 #else /* defined(UKERNEL) */
 #ifdef RX_KERNEL_TRACE
 #include "../rx/rx_kcommon.h"
@@ -48,10 +50,12 @@
 #include "rx_kmutex.h"
 #include "rx/rx_clock.h"
 #include "rx/rx_queue.h"
+#include "rx_atomic.h"
 #ifdef	AFS_SUN5_ENV
 #include <sys/sysmacros.h>
 #endif
 #include "rx/rx_packet.h"
+#include "rx_internal.h"
 #endif /* defined(UKERNEL) */
 #include "rx/rx_globals.h"
 #else /* KERNEL */
@@ -77,7 +81,9 @@
 #include <sys/sysmacros.h>
 #endif
 #include "rx_packet.h"
+#include "rx_atomic.h"
 #include "rx_globals.h"
+#include "rx_internal.h"
 #include <lwp.h>
 #include <assert.h>
 #include <string.h>
@@ -1821,8 +1827,8 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    tstat.callsExecuted = htonl(rxi_nCalls);
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
-	    tstat.nWaiting = htonl(rx_nWaiting);
-	    tstat.nWaited = htonl(rx_nWaited);
+	    tstat.nWaiting = htonl(rx_atomic_read(&rx_nWaiting));
+	    tstat.nWaited = htonl(rx_atomic_read(&rx_nWaited));
 	    queue_Count(&rx_idleServerQueue, np, nqe, rx_serverQueueEntry,
 			tstat.idleThreads);
 	    MUTEX_EXIT(&rx_serverPool_lock);

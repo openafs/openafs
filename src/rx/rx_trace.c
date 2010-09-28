@@ -30,7 +30,9 @@ main(int argc, char **argv)
 #include <unistd.h>
 #endif
 #include "rx.h"
+#include "rx_atomic.h"
 #include "rx_globals.h"
+#include "rx_internal.h"
 #include "rx_trace.h"
 
 #ifdef RXTRACEON
@@ -81,7 +83,7 @@ rxi_calltrace(unsigned int event, struct rx_call *call)
     rxtinfo.now = now.sec * 1000 + now.usec / 1000;
     rxtinfo.cid = call->conn->cid;
     rxtinfo.call = *(call->callNumber);
-    rxtinfo.qlen = rx_nWaiting;
+    rxtinfo.qlen = rx_atomic_read(&rx_nWaiting);
     rxtinfo.servicetime = 0;
     rxtinfo.waittime = 0;
 

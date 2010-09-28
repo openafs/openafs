@@ -429,8 +429,6 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
 /* Number of free packets */
 EXT int rx_nFreePackets GLOBALSINIT(0);
 EXT int rxi_NeedMorePackets GLOBALSINIT(0);
-EXT int rx_nWaiting GLOBALSINIT(0);
-EXT int rx_nWaited GLOBALSINIT(0);
 EXT int rx_packetReclaims GLOBALSINIT(0);
 
 /* largest packet which we can safely receive, initialized to AFS 3.2 value
