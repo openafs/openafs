@@ -69,6 +69,7 @@
 #include "rx.h"
 #include "rx_globals.h"
 #include "rx_trace.h"
+#include "rx_atomic.h"
 #define	AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
 #define	AFSOP_STOP_AFS		211	/* Stop AFS process */
 #define	AFSOP_STOP_BKG		212	/* Stop BKG process */
@@ -104,6 +105,7 @@ extern afs_int32 afs_termState;
 # include "rx_user.h"
 # include "rx_clock.h"
 # include "rx_queue.h"
+# include "rx_atomic.h"
 # include "rx_globals.h"
 # include "rx_trace.h"
 # include <afs/rxgen_consts.h>
@@ -156,6 +158,10 @@ static unsigned int rxi_rpc_process_stat_cnt;
 #include <stddef.h>		/* for definition of offsetof() */
 #endif
 
+#ifdef RX_ENABLE_LOCKS
+afs_kmutex_t rx_atomic_mutex;
+#endif
+
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 
@@ -196,6 +202,7 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rx_clock_mutex, "clock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_waiting_mutex, "waiting", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_atomic_mutex, "atomic", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_quota_mutex, "quota", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_pthread_mutex, "pthread", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_packets_mutex, "packets", MUTEX_DEFAULT, 0);
@@ -346,6 +353,7 @@ struct rx_connection *rxLastConn = 0;
  *	multi_handle->lock
  *	rxevent_lock
  *	rx_stats_mutex
+ *	rx_atomic_mutex
  *
  * Do we need a lock to protect the peer field in the conn structure?
  *      conn->peer was previously a constant for all intents and so has no
