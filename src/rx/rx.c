@@ -2374,13 +2374,8 @@ rxi_NewCall(struct rx_connection *conn, int channel)
  * Call is locked upon entry.
  * haveCTLock set if called from rxi_ReapConnections
  */
-#ifdef RX_ENABLE_LOCKS
 void
 rxi_FreeCall(struct rx_call *call, int haveCTLock)
-#else /* RX_ENABLE_LOCKS */
-void
-rxi_FreeCall(struct rx_call *call)
-#endif				/* RX_ENABLE_LOCKS */
 {
     int channel = call->channel;
     struct rx_connection *conn = call->conn;
@@ -5952,7 +5947,7 @@ rxi_CheckCall(struct rx_call *call)
 	    }
 	    return -1;
 #else /* RX_ENABLE_LOCKS */
-	    rxi_FreeCall(call);
+	    rxi_FreeCall(call, 0);
 	    return -2;
 #endif /* RX_ENABLE_LOCKS */
 	}

@@ -81,17 +81,10 @@ extern afs_int32 rx_EndCall(struct rx_call *call, afs_int32 rc);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
 extern struct rx_service *rxi_FindService(osi_socket socket,
-					  u_short serviceId);
+                                          u_short serviceId);
 extern struct rx_call *rxi_NewCall(struct rx_connection *conn,
-				   int channel);
-
-/* Don't like this - change source at some point to make calls identical */
-#ifdef RX_ENABLE_LOCKS
+                                   int channel);
 extern void rxi_FreeCall(struct rx_call *call, int haveCTLock);
-#else /* RX_ENABLE_LOCKS */
-extern void rxi_FreeCall(struct rx_call *call);
-#endif /* RX_ENABLE_LOCKS */
-
 extern void *rxi_Alloc(size_t size);
 extern void rxi_Free(void *addr, size_t size);
 extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
