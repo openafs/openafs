@@ -279,9 +279,7 @@ FSYNC_sync(void * args)
 
 #ifdef AFS_PTHREAD_ENV
     /* set our 'thread-id' so that the host hold table works */
-    MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
-    tid = ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_stats_mutex);
+    tid = rx_NewThreadId();
     pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)tid);
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */

@@ -441,10 +441,8 @@ setThreadId(char *s)
 {
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     /* set our 'thread-id' so that the host hold table works */
-    MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
-    ++rxi_pthread_hinum;
-    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)rxi_pthread_hinum);
-    MUTEX_EXIT(&rx_stats_mutex);
+    pthread_setspecific(rx_thread_id_key,
+			(void *)(intptr_t)rx_NewThreadId());
     ViceLog(0,
 	    ("Set thread id %p for '%s'\n",
 	     pthread_getspecific(rx_thread_id_key), s));

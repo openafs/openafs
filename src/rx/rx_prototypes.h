@@ -577,6 +577,7 @@ extern int rxi_AdjustDgramPackets(int frags, int mtu);
 
 
 /* rx_pthread.c */
+extern int rx_NewThreadId(void);
 extern void rxi_Delay(int sec);
 extern void rxi_InitializeThreadSupport(void);
 extern void rxi_StartServerProc(void *(*proc) (void *), int stacksize);

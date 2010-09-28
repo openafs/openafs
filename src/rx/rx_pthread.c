@@ -42,6 +42,7 @@
 #include <assert.h>
 #include <rx/rx_pthread.h>
 #include <rx/rx_clock.h>
+#include "rx_atomic.h"
 
 /* Set rx_pthread_event_rescheduled if event_handler should just try
  * again instead of sleeping.
@@ -66,6 +67,13 @@ afs_kmutex_t listener_mutex;
 static int listeners_started = 0;
 afs_kmutex_t rx_clock_mutex;
 struct clock rxi_clockNow;
+
+static rx_atomic_t threadHiNum;
+
+int
+rx_NewThreadId(void) {
+    return rx_atomic_inc_and_read(&threadHiNum);
+}
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -298,7 +306,7 @@ rx_ServerProc(void * dummy)
      * thread... chose the latter.
      */
     MUTEX_ENTER(&rx_pthread_mutex);
-    threadID = ++rxi_pthread_hinum;
+    threadID = rx_NewThreadId();
     if (rxi_fcfs_thread_num == 0 && rxi_fcfs_thread_num != threadID)
 	rxi_fcfs_thread_num = threadID;
     MUTEX_EXIT(&rx_pthread_mutex);
@@ -355,9 +363,7 @@ rxi_StartListener(void)
 	dpf(("Unable to create Rx event handling thread\n"));
 	assert(0);
     }
-    MUTEX_ENTER(&rx_pthread_mutex);
-    ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_pthread_mutex);
+    rx_NewThreadId();
     AFS_SIGSET_RESTORE();
 
     MUTEX_ENTER(&listener_mutex);
@@ -394,9 +400,7 @@ rxi_Listen(osi_socket sock)
 	dpf(("Unable to create socket listener thread\n"));
 	assert(0);
     }
-    MUTEX_ENTER(&rx_pthread_mutex);
-    ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_pthread_mutex);
+    rx_NewThreadId();
     AFS_SIGSET_RESTORE();
     return 0;
 }

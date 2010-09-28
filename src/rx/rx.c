@@ -287,7 +287,7 @@ assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
 
 /*
  * The rx_pthread_mutex mutex protects the following global variables:
- * rxi_pthread_hinum
+ * rxi_fcfs_thread_num
  */
 #else
 #define INIT_PTHREAD_LOCKS
