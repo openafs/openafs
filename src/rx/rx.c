@@ -2436,14 +2436,18 @@ rxi_FreeCall(struct rx_call *call)
     }
 }
 
-afs_int32 rxi_Alloccnt = 0, rxi_Allocsize = 0;
+rx_atomic_t rxi_Allocsize = RX_ATOMIC_INIT(0);
+rx_atomic_t rxi_Alloccnt = RX_ATOMIC_INIT(0);
+
 void *
 rxi_Alloc(size_t size)
 {
     char *p;
 
-    if (rx_stats_active)
-        rx_MutexAdd1Increment2(rxi_Allocsize, (afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
+    if (rx_stats_active) {
+	rx_atomic_add(&rxi_Allocsize, (int) size);
+	rx_atomic_inc(&rxi_Alloccnt);
+    }
 
 p = (char *)
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
@@ -2460,8 +2464,10 @@ p = (char *)
 void
 rxi_Free(void *addr, size_t size)
 {
-    if (rx_stats_active)
-        rx_MutexAdd1Decrement2(rxi_Allocsize, -(afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
+    if (rx_stats_active) {
+	rx_atomic_sub(&rxi_Allocsize, (int) size);
+        rx_atomic_dec(&rxi_Alloccnt);
+    }
     osi_Free(addr, size);
 }
 
