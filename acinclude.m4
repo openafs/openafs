@@ -927,7 +927,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 ])
 
 		 dnl Packaging and SMP build
-		 if test "x$with_linux_kernel_packaging" = "xno" ; then
+		 if test "x$with_linux_kernel_packaging" != "xyes" ; then
 		   LINUX_WHICH_MODULES
 		 else
 		   AC_SUBST(MPS,'SP')
