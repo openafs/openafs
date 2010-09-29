@@ -903,6 +903,8 @@ extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN100_ENV
 extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
+#elif defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
+/* afs3_syscall prototype is in sys/sysproto.h */
 #elif defined(AFS_FBSD_ENV)
 extern int afs3_syscall(struct thread *p, void *args);
 #elif defined(AFS_NBSD40_ENV)
