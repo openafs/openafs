@@ -306,6 +306,8 @@ struct SalvInfo {
                                                 *   vnodes in the volume that
                                                 *   we are currently looking
                                                 *   at */
+    int useFSYNC; /**< 0 if the fileserver is unavailable; 1 if we should try
+                   *   to contact the fileserver over FSYNC */
 };
 
 char *tmpdir = NULL;
@@ -786,6 +788,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	    Abort("Couldn't connect to file server\n");
 	}
 
+	salvinfo->useFSYNC = 1;
 	AskOffline(salvinfo, singleVolumeNumber);
 #ifdef AFS_DEMAND_ATTACH_FS
 	if (LockVolume(salvinfo, singleVolumeNumber)) {
@@ -794,6 +797,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     } else {
+	salvinfo->useFSYNC = 0;
 	VLockPartition(partP->name);
 	if (ForceSalvage) {
 	    ForceSalvage = 1;
@@ -4101,7 +4105,7 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
     }
 
 #ifdef FSSYNC_BUILD_CLIENT
-    if (!Testing && salvinfo->VolumeChanged) {
+    if (!Testing && salvinfo->VolumeChanged && salvinfo->useFSYNC) {
 	afs_int32 fsync_code;
 
 	fsync_code = FSYNC_VolOp(vid, NULL, FSYNC_VOL_BREAKCBKS, FSYNC_SALVAGE, NULL);
