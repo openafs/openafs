@@ -194,7 +194,7 @@ openOutFile(struct volumeHeader *headerPtr)
     int rc;
     int oflag;
     int skip, first;
-    afs_hyper_t size;
+    afs_int64 size;
 
     /* If we were asked to skip this volume, then skip it */
     if (nskip) {
@@ -260,7 +260,7 @@ openOutFile(struct volumeHeader *headerPtr)
 	return 0;
     }
     if (headerPtr->contd != TC_VOLCONTD) {
-	hzero(size);
+	size = 0;
 	rc = USD_IOCTL(ofd, USD_IOCTL_SETSIZE, &size);
 	if (rc != 0) {
 	    fprintf(stderr, "Unable to open file %s. Skipping. Code = %d\n",

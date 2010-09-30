@@ -49,19 +49,8 @@ typedef off_t osi_lloff_t;
  * conversion occur.  A good compiler in a 64 bit environment will
  * elide the entire statement if the offset type is 64 bits wide.
  */
-#define osi_hFitsInOff(ahyper, noff) \
-    ((sizeof(noff) == 4) ? hfitsin32(ahyper) : 1)
-
-#define osi_h2off(ahyper, noff)               \
-    ((sizeof(noff) == 4)                      \
-    ? ((noff) = (osi_lloff_t)hgetlo(ahyper))\
-     : ((noff) = ((osi_lloff_t)hgethi(ahyper)<<32) | (osi_lloff_t)hgetlo(ahyper)))
-
-#define osi_off2h(noff, ahyper)            \
-     ((sizeof(noff) == 4)                   \
-     ? (hset32(ahyper, (int)noff)) \
-     : (hset64(ahyper, (int)((noff>>32)&0xffffffff), ((int)noff&0xffffffff))))
-
+#define osi_hFitsInOff(val) \
+    ((sizeof(osi_lloff_t) == 4) ? (((val) & 0xffffffff00000000LL) == 0) : 1)
 
 /************ End of osi wrappers ***********************************/
 
@@ -106,21 +95,20 @@ usd_FileWrite(usd_handle_t usd, char *buf, afs_uint32 nbytes,
 extern osi_lloff_t osi_llseek(int, osi_lloff_t, int);
 
 static int
-usd_FileSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
-	     afs_hyper_t * curOffP)
+usd_FileSeek(usd_handle_t usd, afs_int64 reqOff, int whence,
+	     afs_int64 * curOffP)
 {
     int fd = (intptr_t)(usd->handle);
     osi_lloff_t lloff;
 
-    if (!osi_hFitsInOff(reqOff, lloff))
+    if (!osi_hFitsInOff(reqOff))
 	return EINVAL;
 
-    osi_h2off(reqOff, lloff);
-    lloff = osi_llseek(fd, lloff, whence);
+    lloff = osi_llseek(fd, reqOff, whence);
     if (lloff == (((osi_lloff_t) 0) - 1))
 	return errno;
     if (curOffP)
-	osi_off2h(lloff, *curOffP);
+	*curOffP = lloff;
 
     return 0;
 }
@@ -137,8 +125,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 #ifdef AFS_AIX_ENV
     struct statfs fsinfo;	/* AIX stat structure doesn't have st_blksize */
 #endif /* AFS_AIX_ENV */
-    afs_hyper_t size;
-    osi_lloff_t off;
+    afs_int64 size;
     int code = 0;
 
     switch (req) {
@@ -176,7 +163,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
     case USD_IOCTL_GETSIZE:
 	if (S_ISCHR(info.st_mode) || S_ISBLK(info.st_mode))
 	    return ENOTTY;	/* shouldn't be a device */
-	osi_off2h(info.st_size, *(afs_hyper_t *) arg);
+	*(afs_int64 *)arg = info.st_size;
 	break;
     case USD_IOCTL_GETFULLNAME:
 	*(char **)arg = usd->fullPathName;
@@ -190,14 +177,13 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 	/* However, I'm pretty sure this doesn't work on Ultrix so I am
 	 * unsure about OSF/1 and HP/UX. 931118 */
 
-	size = *(afs_hyper_t *) arg;
-	if (!osi_hFitsInOff(size, off))
+	size = *(afs_int64 *) arg;
+	if (!osi_hFitsInOff(size))
 	    return EFBIG;
-	osi_h2off(size, off);
 #ifdef O_LARGEFILE
-	code = ftruncate64(fd, off);
+	code = ftruncate64(fd, size);
 #else /* O_LARGEFILE */
-	code = ftruncate(fd, off);
+	code = ftruncate(fd, size);
 #endif /* O_LARGEFILE */
 	if (code == -1)
 	    code = errno;

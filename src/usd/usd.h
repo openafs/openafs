@@ -38,7 +38,7 @@
  *
  * As a consequence of this method of reporting errors, output values are
  * returned in reference parameters instead of being encoded in the return
- * value.  Also, offsets and lengths use the afs_hyper_t type. */
+ * value.  Also, offsets and lengths use the afs_int64 type. */
 
 /* NOTE -- this module is preempt safe.  It assume it is being called from a
  *     preemptive environment.  Treat all calls as if they had an "_r"
@@ -51,8 +51,8 @@ struct usd_handle {
 		 afs_uint32 * xferdP);
     int (*write) (usd_handle_t usd, char *buf, afs_uint32 nbyte,
 		  afs_uint32 * xferdP);
-    int (*seek) (usd_handle_t usd, afs_hyper_t inOff, int whence,
-		 afs_hyper_t * outOffP);
+    int (*seek) (usd_handle_t usd, afs_int64 inOff, int whence,
+		 afs_int64 * outOffP);
     int (*ioctl) (usd_handle_t usd, int req, void *arg);
     int (*close) (usd_handle_t usd);
 
@@ -118,12 +118,12 @@ extern int usd_StandardOutput(usd_handle_t * usdP);
 
 #define USD_IOCTL_GETDEV	3
 
-/* GetSize(afs_hyper_t *sizeP) -- returns the size of the file.  Doesn't work
+/* GetSize(afs_int64 *sizeP) -- returns the size of the file.  Doesn't work
  *     on BLK or CHR devices. */
 
 #define USD_IOCTL_GETSIZE	6
 
-/* SetSize(afs_hyper_t *sizeP) -- sets the size of the file.  Doesn't work
+/* SetSize(afs_int64 *sizeP) -- sets the size of the file.  Doesn't work
  *     on BLK or CHR devices. */
 
 #define USD_IOCTL_SETSIZE	7

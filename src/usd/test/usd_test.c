@@ -36,7 +36,7 @@ static int ForwardSpace(usd_handle_t hTape, int cnt);
 static int BackSpace(usd_handle_t hTape, int cnt);
 static int PrepTape(usd_handle_t hTape);
 static int ShutdownTape(usd_handle_t hTape);
-static int PrintTapePos(usd_handle_t hTape);
+static afs_int64 PrintTapePos(usd_handle_t hTape);
 
 int
 main(int argc, char **argv)
@@ -271,7 +271,7 @@ ShutdownTape(usd_handle_t hTape)
 }
 
 #ifdef AFS_NT40_ENV
-static int
+static afs_int64
 PrintTapePos(usd_handle_t hTape)
 {
     DWORD rcode;
@@ -289,21 +289,21 @@ PrintTapePos(usd_handle_t hTape)
     return (offLow);
 }
 #else
-static int
+static afs_int64
 PrintTapePos(usd_handle_t hTape)
 {
-    afs_hyper_t startOff, stopOff;
+    afs_int64 startOff, stopOff;
     int rcode;
 
-    hset64(startOff, 0, 0);
-    hset64(stopOff, 0, 0);
+    startOff = 0;
+    stopOff = 0;
 
     rcode = USD_SEEK(hTape, startOff, SEEK_CUR, &stopOff);
     err_exit("Seek", "Tape Seek Test Failed", rcode);
 
     if (USDTEST_DEBUG)
-	printf("%s: Cur Tape Pos : %d bytes\n", whoami, stopOff.low);
+	printf("%s: Cur Tape Pos : %"AFS_INT64_FMT" bytes\n", whoami, stopOff);
 
-    return (stopOff.low);
+    return stopOff;
 }
 #endif

@@ -134,7 +134,7 @@ FileExists(char *filename)
 {
     usd_handle_t ufd;
     int code;
-    afs_hyper_t size;
+    afs_int64 size;
 
     code = usd_Open(filename, USD_OPEN_RDONLY, 0, &ufd);
     if (code) {
@@ -331,7 +331,7 @@ WriteData(struct rx_call *call, void *rock)
     long blksize;
     afs_int32 error, code;
     int ufdIsOpen = 0;
-    afs_hyper_t filesize, currOffset;
+    afs_int64 currOffset;
     afs_uint32 buffer;
     afs_uint32 got;
 
@@ -354,19 +354,15 @@ WriteData(struct rx_call *call, void *rock)
 	    goto wfail;
 	}
 	/* test if we have a valid dump */
-	hset64(filesize, 0, 0);
-	USD_SEEK(ufd, filesize, SEEK_END, &currOffset);
-	hset64(filesize, hgethi(currOffset), hgetlo(currOffset)-sizeof(afs_uint32));
-	USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+	USD_SEEK(ufd, 0, SEEK_END, &currOffset);
+	USD_SEEK(ufd, currOffset - sizeof(afs_uint32), SEEK_SET, &currOffset);
 	USD_READ(ufd, (char *)&buffer, sizeof(afs_uint32), &got);
 	if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
 	    fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
 	    error = VOLSERBADOP;
 	    goto wfail;
 	}
-	/* rewind, we are done */
-	hset64(filesize, 0, 0);
-	USD_SEEK(ufd, filesize, SEEK_SET, &currOffset);
+	USD_SEEK(ufd, 0, SEEK_SET, &currOffset);
     }
     code = SendFile(ufd, call, blksize);
     if (code) {
@@ -438,7 +434,7 @@ DumpFunction(struct rx_call *call, void *rock)
     char *filename = (char *)rock;
     usd_handle_t ufd;		/* default is to stdout */
     afs_int32 error = 0, code;
-    afs_hyper_t size;
+    afs_int64 size;
     long blksize;
     int ufdIsOpen = 0;
 
@@ -452,7 +448,7 @@ DumpFunction(struct rx_call *call, void *rock)
 	    usd_Open(filename, USD_OPEN_CREATE | USD_OPEN_RDWR, 0666, &ufd);
 	if (code == 0) {
 	    ufdIsOpen = 1;
-	    hzero(size);
+	    size = 0;
 	    code = USD_IOCTL(ufd, USD_IOCTL_SETSIZE, &size);
 	}
 	if (code == 0) {
