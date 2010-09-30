@@ -22,7 +22,6 @@
 #define	AFS_HPUX1122_ENV 1
 #define	AFS_HPUX1123_ENV 1
 
-#define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1
 #if defined(__LP64__)
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */

@@ -206,16 +206,6 @@ as_append_char (struct snprintf_state *state, unsigned char c)
 	*state->s++ = c;
 }
 
-/* longest integer types */
-
-#ifdef AFS_64BIT_ENV
-typedef afs_uint64 u_longest;
-typedef afs_int64 longest;
-#else
-typedef afs_uint32 u_longest;
-typedef afs_int32 longest;
-#endif
-
 static int
 pad(struct snprintf_state *state, int width, char c)
 {
@@ -229,18 +219,18 @@ pad(struct snprintf_state *state, int width, char c)
 
 /* return true if we should use alternatve hex form */
 static int
-use_alternative (int flags, u_longest num, unsigned base)
+use_alternative (int flags, afs_uint64 num, unsigned base)
 {
     return (flags & alternate_flag) && base == 16 && num != 0;
 }
 
 static int
 append_number(struct snprintf_state *state,
-	      u_longest num, unsigned base, const char *rep,
+	      afs_uint64 num, unsigned base, const char *rep,
 	      int width, int prec, int flags, int minusp)
 {
     int len = 0;
-    u_longest n = num;
+    afs_uint64 n = num;
     char nstr[MAXPREC]; /* enough for <192 bit octal integers */
     int nstart, nlen;
     char signchar;
@@ -496,7 +486,6 @@ append_address(struct snprintf_state *state,
  * This can't be made into a function...
  */
 
-#if defined(AFS_64BIT_ENV)
 #if defined(AFS_NT40_ENV)
 
 #define PARSE_INT_FORMAT(res, arg, unsig) \
@@ -526,19 +515,6 @@ else \
      res = (unsig int)va_arg(arg, unsig int)
 #endif
 
-#else
-
-#define PARSE_INT_FORMAT(res, arg, unsig) \
-if (long_flag || addr_flag) \
-     res = (afs_uint32)va_arg(arg, afs_uint32); \
-else if (size_t_flag) \
-     res = (size_t)va_arg(arg, size_t); \
-else if (short_flag) \
-     res = (unsig short)va_arg(arg, unsig int); \
-else \
-     res = (unsig int)va_arg(arg, unsig int)
-
-#endif
 
 /*
  * zyxprintf - return length, as snprintf
@@ -678,8 +654,8 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    case 'd' :
 	    case 'i' : {
-		longest arg;
-		u_longest num;
+		afs_int64 arg;
+		afs_uint64 num;
 		int minusp = 0;
 
 		PARSE_INT_FORMAT(arg, ap, signed);
@@ -695,7 +671,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
 	    case 'u' : {
-		u_longest arg;
+		afs_uint64 arg;
 
 		PARSE_INT_FORMAT(arg, ap, unsigned);
 
@@ -704,7 +680,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
 	    case 'o' : {
-		u_longest arg;
+		afs_uint64 arg;
 
 		PARSE_INT_FORMAT(arg, ap, unsigned);
 
@@ -713,7 +689,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
 	    case 'x' : {
-		u_longest arg;
+		afs_uint64 arg;
 
 		PARSE_INT_FORMAT(arg, ap, unsigned);
 
@@ -722,7 +698,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
 	    case 'X' :{
-		u_longest arg;
+		afs_uint64 arg;
 
 		PARSE_INT_FORMAT(arg, ap, unsigned);
 
@@ -732,9 +708,9 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 	    }
 	    case 'p' : {
 #ifdef AFS_64BITUSERPOINTER_ENV
-		u_longest arg = (u_longest)va_arg(ap, void*);
+		afs_uint64 arg = (afs_uint64)va_arg(ap, void*);
 #else
-                u_longest arg = (unsigned long)va_arg(ap, void*);
+                afs_uint64 arg = (unsigned long)va_arg(ap, void*);
 #endif
 		len += append_number (state, arg, 0x10, "0123456789ABCDEF",
 				      width, prec, flags, 0);
@@ -746,7 +722,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
             case 'I' : {
-                u_longest arg;
+                afs_uint64 arg;
 
                 PARSE_INT_FORMAT(arg, ap, unsigned);
 

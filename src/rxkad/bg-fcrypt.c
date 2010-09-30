@@ -546,7 +546,6 @@ fc_keysched(void *key_, fc_KeySchedule sched)
     const unsigned char *key = key_;
 
     /* Do we have 56 bit longs or even longer longs? */
-#ifdef AFS_64BIT_ENV
     afs_uint64 k;		/* k holds all 56 non parity bits */
 
     /* Compress out parity bits */
@@ -601,64 +600,7 @@ fc_keysched(void *key_, fc_KeySchedule sched)
     *sched++ = EFF_NTOHL((afs_uint32) k);
     ROT56R64(k, 11);
     *sched++ = EFF_NTOHL((afs_uint32) k);
-#else
-    afs_uint32 hi, lo;		/* hi is upper 24 bits and lo lower 32, total 56 */
 
-    /* Compress out parity bits */
-    lo = (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    hi = lo >> 4;
-    lo &= 0xf;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key) >> 1;
-
-    /* Use lower 32 bits for schedule, rotate by 11 each round (16 times) */
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-#endif
     INC_RXKAD_STATS(fc_key_scheds);
     return 0;
 }

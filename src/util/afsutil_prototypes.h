@@ -76,15 +76,9 @@ extern int base32_to_int(char *s);
 /* base 64 converters for namei interface. Flip bits to differences are
  * early in name.
  */
-#ifdef AFS_64BIT_ENV
 #define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_uint64)(A))
 extern char *int64_to_flipbase64(lb64_string_t s, afs_uint64 a);
 extern afs_int64 flipbase64_to_int64(char *s);
-#else
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))
-extern char *int64_to_flipbase64(lb64_string_t s, u_int64_t a);
-extern int64_t flipbase64_to_int64(char *s);
-#endif
 #endif
 
 /* get_krbrlm.c */

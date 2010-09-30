@@ -234,12 +234,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
 #endif /* INSTRUMENT_LOCKS */
-#if !defined(AFS_64BIT_ENV)
-    a_result->Length.high = 0;
-    a_result->Length.low = tvc->f.m.Length;
-#else
     a_result->Length = tvc->f.m.Length;
-#endif
     a_result->DataVersion = hgetlo(tvc->f.m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;

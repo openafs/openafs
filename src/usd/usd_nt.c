@@ -138,7 +138,6 @@ usd_DeviceSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
 
 	DWORDLONG k = (DWORDLONG) ((afs_uint32) usd->privateData);
 
-	/* _ASSERT(AFS_64BIT_ENV); */
 	if (offset >= (k << 10))
 	    return EINVAL;
     }

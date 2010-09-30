@@ -31,7 +31,6 @@
 #define RXK_LISTENER_ENV   1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 
-#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */

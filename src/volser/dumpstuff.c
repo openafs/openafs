@@ -1514,7 +1514,6 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 
 
     *status = 0;
-#ifdef AFS_64BIT_ENV
     {
 	afs_uint32 filesize_high = 0L, filesize_low = 0L;
 	if (tag == 'h') {
@@ -1529,12 +1528,6 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	}
 	FillInt64(filesize, filesize_high, filesize_low);
     }
-#else /* !AFS_64BIT_ENV */
-    if (!ReadInt32(iodp, &filesize)) {
-	*status = 1;
-	return (0);
-    }
-#endif /* !AFS_64BIT_ENV */
     p = (unsigned char *)malloc(size);
     if (p == NULL) {
 	*status = 2;

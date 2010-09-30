@@ -12,7 +12,6 @@
 #define AFS_X86_XBSD_ENV 1
 
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
-#define AFS_64BIT_ENV 1
 #define AFS_64BIT_CLIENT 1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
@@ -139,7 +138,6 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 339
 #define AFS_NAMEI_ENV         1	/* User space interface to file system */
-#define AFS_64BIT_ENV 1
 #define AFS_64BIT_IOPS_ENV    1	/* Needed for NAMEI */
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV      1

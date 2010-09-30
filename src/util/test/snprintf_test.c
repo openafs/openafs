@@ -167,7 +167,7 @@ cmp_with_sprintf_long_long (void)
 
 #endif
 
-#if defined(AFS_64BIT_ENV) && defined(AFS_NT40_ENV)
+#if defined(AFS_NT40_ENV)
 
 static int
 cmp_with_sprintf_I64 (void)
@@ -390,7 +390,7 @@ main (int argc, char **argv)
 #ifdef HAVE_LONG_LONG
     ret += cmp_with_sprintf_long_long ();
 #endif
-#if defined(AFS_64BIT_ENV) && defined(AFS_NT40_ENV)
+#if defined(AFS_NT40_ENV)
     ret += cmp_with_sprintf_I64 ();
 #endif
     ret += cmp_with_sprintf_float ();

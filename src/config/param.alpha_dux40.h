@@ -22,7 +22,6 @@
 #define	__alpha		1
 #define	AFS_ALPHA_ENV	1
 #define	AFS_DECOSF_ENV	1
-#define	AFS_64BIT_ENV	1
 #define AFS_BOZONLOCK_ENV       1
 
 #include <afs/afs_sysnames.h>
@@ -138,7 +137,6 @@ enum vcexcl { NONEXCL, EXCL };
 
 #define UKERNEL			1	/* user space kernel */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
-#define AFS_64BIT_ENV		1
 #define AFS_ENV			1
 #define AFS_USR_OSF_ENV		1
 #define AFS_USR_DUX40_ENV	1

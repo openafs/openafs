@@ -2368,15 +2368,8 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
     int code;
     afs_sfsize_t tPos, tLen;
 
-#ifdef AFS_64BIT_ENV
     tPos = (afs_sfsize_t) Pos;
     tLen = (afs_sfsize_t) Len;
-#else /* AFS_64BIT_ENV */
-    if (Pos.high || Len.high)
-	return EFBIG;
-    tPos = Pos.low;
-    tLen = Len.low;
-#endif /* AFS_64BIT_ENV */
 
     code =
 	common_FetchData64(acall, Fid, tPos, tLen, OutStatus, CallBack, Sync,
@@ -3210,17 +3203,9 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
     afs_fsize_t tLength;
     afs_fsize_t tFileLength;
 
-#ifdef AFS_64BIT_ENV
     tPos = (afs_fsize_t) Pos;
     tLength = (afs_fsize_t) Length;
     tFileLength = (afs_fsize_t) FileLength;
-#else /* AFS_64BIT_ENV */
-    if (FileLength.high)
-	return EFBIG;
-    tPos = Pos.low;
-    tLength = Length.low;
-    tFileLength = FileLength.low;
-#endif /* AFS_64BIT_ENV */
 
     code =
 	common_StoreData64(acall, Fid, InStatus, tPos, tLength, tFileLength,
@@ -6335,9 +6320,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_uint32 *) malloc(dataBytes);
     dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
-#if defined(AFS_64BIT_ENV)
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
-#endif
     if (saneacls)
 	dataBuffP[0] |= VICED_CAPABILITY_SANEACLS;
 

@@ -2688,9 +2688,7 @@ ReadDump(char *file, int timebits)
     int fd, oflag;
     afs_uint32 magic, freelisthead;
     afs_uint32 now;
-#ifdef AFS_64BIT_ENV
     afs_int64 now64;
-#endif
 
     oflag = O_RDONLY;
 #ifdef AFS_NT40_ENV
@@ -2714,13 +2712,12 @@ ReadDump(char *file, int timebits)
 	    exit(1);
 	}
     }
-#ifdef AFS_64BIT_ENV
     if (timebits == 64) {
 	read(fd, &now64, sizeof(afs_int64));
 	now = (afs_int32) now64;
     } else
-#endif
 	read(fd, &now, sizeof(afs_int32));
+
     read(fd, &cbstuff, sizeof(cbstuff));
     read(fd, TimeOuts, sizeof(TimeOuts));
     read(fd, timeout, sizeof(timeout));
@@ -2800,9 +2797,7 @@ main(int argc, char **argv)
 	    argc--;
 	    timebits = atoi(*++argv);
 	    if ((timebits != 32)
-#ifdef AFS_64BIT_ENV
 		&& (timebits != 64)
-#endif
 		)
 		err++;
 	} else if (!strcmp(*argv, "-volume")) {
@@ -2819,9 +2814,7 @@ main(int argc, char **argv)
     if (err || argc != 1) {
 	fprintf(stderr,
 		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] [-timebits 32"
-#ifdef AFS_64BIT_ENV
 		"|64"
-#endif
 		"] callbackdumpfile\n");
 	fprintf(stderr,
 		"[cbid is shown for each host in the hosts.dump file]\n");

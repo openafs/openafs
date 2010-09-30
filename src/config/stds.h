@@ -59,7 +59,6 @@ pragma Off(Prototype_override_warnings);
 
 typedef short afs_int16;
 typedef unsigned short afs_uint16;
-#ifdef  AFS_64BIT_ENV
 typedef int afs_int32;
 typedef unsigned int afs_uint32;
 #if defined(AFS_NT40_ENV) && defined(_MSC_VER)
@@ -91,46 +90,6 @@ typedef unsigned long long afs_uint64;
 #define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & MAX_AFS_UINT32;
 #define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a;
 #define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a;
-#else /* AFS_64BIT_ENV */
-typedef long afs_int32;
-typedef unsigned long afs_uint32;
-
-struct Int64 {
-    afs_int32 high;
-    afs_uint32 low;
-};
-typedef struct Int64 afs_int64;
-
-struct u_Int64 {
-    afs_uint32 high;
-    afs_uint32 low;
-};
-typedef struct u_Int64 afs_uint64;
-#define ZeroInt64(a) ((a).high = (a).low = 0)
-#define AssignInt64(a, b) (b)->high = (a).high; (b)->low = (a).low
-#define IncInt64(a) ((++((a)->low)) ? 0 : (a)->high++ )
-#define IncUInt64(a) ((++((a)->low)) ? 0 : (a)->high++ )
-#define DecInt64(a) (((a)->low)-- ? 0 : (a)->high-- )
-#define DecUInt64(a) (((a)->low)-- ? 0 : (a)->high-- )
-#define GTInt64(a,b) (((a).high > (b).high) || (((a).high == (b).high) && ((a).low > (b).low)))
-#define GEInt64(a,b) (((a).high > (b).high) || (((a).high == (b).high) && ((a).low >= (b).low)))
-#define LEInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low <= (b).low)))
-#define LTInt64(a,b) (((a).high < (b).high) || (((a).high == (b).high) && ((a).low < (b).low)))
-#define CompareInt64(a,b) (((afs_int32)(a).high - (afs_int32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low)))
-#define AddInt64(a, b, c) {  afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); }
-#define SubtractInt64(a, b, c) { afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); }
-#define CompareUInt64(a,b) (((afs_uint32)(a).high - (afs_uint32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low)))
-#define AddUInt64(a, b, c) {  afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); }
-#define SubtractUInt64(a, b, c) { afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); }
-#define NonZeroInt64(a)   (a).low || (a).high
-#define Int64ToInt32(a)    (a).low
-#define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
-#define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
-#define RoundInt64ToInt32(a)    (a.high > 0) ? MAX_AFS_UINT32 : a.low;
-#define RoundInt64ToInt31(a)    (a.high > 0) ? MAX_AFS_INT32 : a.low;
-#endif /* AFS_64BIT_ENV */
-
-/* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */
 
 #ifdef AFS_64BIT_CLIENT
 typedef afs_int64 afs_size_t;
@@ -167,7 +126,7 @@ typedef afs_uint32 afs_uintmax_t;
  * some assistence in this matter.  The hyper type is supposed to be compatible
  * with the afsHyper type: the same macros will work on both. */
 
-#if	defined(AFS_64BIT_ENV) && 0
+#if 0
 
 typedef unsigned long afs_hyper_t;
 
@@ -189,7 +148,7 @@ typedef unsigned long afs_hyper_t;
 #define	hadd32(a,b)	((a) += (b))
 #define hshlft(a,n)     ((a)<<(n))
 
-#else /* AFS_64BIT_ENV */
+#else /* 0*/
 
 typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
     unsigned int high;
@@ -238,7 +197,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
      (a).low += (int)(i))
 
 #define hadd(a,b) (hadd32(a,(b).low), (a).high += (b).high)
-#endif /* AFS_64BIT_ENV */
+#endif /* 0 */
 
 #if !defined(KERNEL) || defined(UKERNEL)
 #ifndef AFS_NT40_ENV

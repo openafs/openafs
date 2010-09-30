@@ -398,16 +398,11 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    PrintLock(&centry.lock);
 	    printf("\n");
 	}
-#ifdef AFS_64BIT_ENV
 #ifdef AFS_NT40_ENV
 	printf("    %12I64d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #else
 	printf("    %12llu bytes  DV %12d  refcnt %5d\n", centry.Length,
-	       centry.DataVersion, centry.refCount);
-#endif
-#else
-	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #endif
         if (print_ctime) {

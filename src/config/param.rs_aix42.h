@@ -18,7 +18,6 @@
 #define	AFS_AIX41_ENV		1
 #define AFS_AIX42_ENV		1
 
-#define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 
 #ifdef AFS_NAMEI_ENV
@@ -96,7 +95,6 @@
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
-#define AFS_64BIT_ENV           1
 #define AFS_64BIT_CLIENT        1
 
 #define AFS_VFS_ENV	1
