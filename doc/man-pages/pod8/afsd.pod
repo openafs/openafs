@@ -606,7 +606,7 @@ This option is obsolete and no longer has any effect.
 
 =item B<-mem_alloc_sleep>
 
-Allows sleeps when allocating a memory cache.
+This option is obsolete and no longer has any effect.
 
 =item B<-memcache>
 
