@@ -7,7 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-* /
+
 /* usd_test.c: Tests the usd library by opening a tape device,
  *         writing a few blocks of data to it, doing a fsf, bsf
  */
@@ -15,6 +15,8 @@
 #include <afs/param.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include <afs/usd.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>
@@ -149,6 +151,8 @@ main(int argc, char **argv)
 	return 1;
     }
     printf("%s: usd library, all tests passed!\n", whoami);
+
+    return 0;
 }
 
 
