@@ -2418,7 +2418,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	if (mode == V_PEEK) {
 	    vp->needsPutBack = 0;
 	} else {
-	    vp->needsPutBack = 1;
+	    vp->needsPutBack = VOL_PUTBACK;
 	}
 #else /* !AFS_DEMAND_ATTACH_FS */
 	/* duplicate computation in fssync.c about whether the server
@@ -2429,7 +2429,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    || (!VolumeWriteable(vp) && (mode == V_CLONE || mode == V_DUMP)))
 	    vp->needsPutBack = 0;
 	else
-	    vp->needsPutBack = 1;
+	    vp->needsPutBack = VOL_PUTBACK;
 #endif /* !AFS_DEMAND_ATTACH_FS */
     }
 #ifdef FSSYNC_BUILD_CLIENT
@@ -4180,7 +4180,7 @@ VDetachVolume_r(Error * ec, Volume * vp)
     if (VCanUseFSSYNC()) {
 	notifyServer = vp->needsPutBack;
 	if (V_destroyMe(vp) == DESTROY_ME)
-	    useDone = FSYNC_VOL_DONE;
+	    useDone = FSYNC_VOL_LEAVE_OFF;
 #ifdef AFS_DEMAND_ATTACH_FS
 	else if (!V_blessed(vp) || !V_inService(vp))
 	    useDone = FSYNC_VOL_LEAVE_OFF;
@@ -4209,6 +4209,12 @@ VDetachVolume_r(Error * ec, Volume * vp)
      */
 #ifdef FSSYNC_BUILD_CLIENT
     if (VCanUseFSSYNC() && notifyServer) {
+	if (notifyServer == VOL_PUTBACK_DELETE) {
+	    /* Only send FSYNC_VOL_DONE if the volume was actually deleted.
+	     * volserver code will set needsPutBack to VOL_PUTBACK_DELETE
+	     * to signify a deleted volume. */
+	    useDone = FSYNC_VOL_DONE;
+	}
 	/*
 	 * Note:  The server is not notified in the case of a bogus volume
 	 * explicitly to make it possible to create a volume, do a partial

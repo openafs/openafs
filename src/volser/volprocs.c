@@ -633,7 +633,10 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 	Log("%s is executing Delete Volume %u\n", caller, tt->volid);
     TSetRxCall(tt, acid, "DeleteVolume");
     VPurgeVolume(&error, tt->volume);	/* don't check error code, it is not set! */
-    V_destroyMe(tt->volume) = DESTROY_ME; /* so endtrans does the right fssync opcode */
+    V_destroyMe(tt->volume) = DESTROY_ME;
+    if (tt->volume->needsPutBack) {
+	tt->volume->needsPutBack = VOL_PUTBACK_DELETE; /* so endtrans does the right fssync opcode */
+    }
     VTRANS_OBJ_LOCK(tt);
     tt->vflags |= VTDeleted;	/* so we know not to do anything else to it */
     TClearRxCall_r(tt);

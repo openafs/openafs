@@ -654,10 +654,15 @@ typedef struct Volume {
     bit32 cacheCheck;		/* Online sequence number to be used to invalidate vnode cache entries
 				 * that stayed around while a volume was offline */
     short nUsers;		/* Number of users of this volume header */
-    byte needsPutBack;		/* For a volume utility, this flag is set if we need
-				 * to give the volume back when we detach it.  The server has
+#define VOL_PUTBACK 1
+#define VOL_PUTBACK_DELETE 2
+    byte needsPutBack;		/* For a volume utility, this flag is set to VOL_PUTBACK if we
+				 * need to give the volume back when we detach it.  The server has
 				 * certain modes where it doesn't detach the volume, and
-				 * if we give it back spuriously, the server aborts.  This field
+				 * if we give it back spuriously, the server aborts. If set to
+				 * VOL_PUTBACK_DELETE, it indicates that we need to tell the
+				 * fileserver that the volume is gone entirely, instead of just
+				 * giving the volume back to the fileserver. This field
 				 * is meaningless on the file server */
     byte specialStatus;		/* An error code to return on VGetVolume: the
 				 * volume is unavailable for the reason quoted,
