@@ -968,6 +968,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	case VOL_STATE_PREATTACHED:
 	case VOL_STATE_SALVAGING:
 	case VOL_STATE_ERROR:
+	case VOL_STATE_DELETED:
 	    /* register the volume operation metadata with the volume
 	     *
 	     * if the volume is currently pre-attached, attach2()
@@ -995,6 +996,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
             case VOL_STATE_PREATTACHED:
             case VOL_STATE_SALVAGING:
             case VOL_STATE_ERROR:
+            case VOL_STATE_DELETED:
                 /* register the volume operation metadata with the volume
                  *
                  * if the volume is currently pre-attached, attach2()
