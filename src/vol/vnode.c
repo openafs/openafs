@@ -382,7 +382,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    afs_sfsize_t size;
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
-	    off_t off = vnodeIndexOffset(vcp, vnodeNumber);
+	    afs_foff_t off = vnodeIndexOffset(vcp, vnodeNumber);
 
 	    VOL_UNLOCK;
 	    fdP = IH_OPEN(ihP);
@@ -671,7 +671,8 @@ VPutVnode(Error * ec, register Vnode * vnp)
 void
 VPutVnode_r(Error * ec, register Vnode * vnp)
 {
-    int writeLocked, offset;
+    int writeLocked;
+    afs_foff_t offset;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
     int code;
@@ -859,7 +860,7 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 	} else {
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
-	    off_t off = vnodeIndexOffset(vcp, vnp->vnodeNumber);
+	    afs_foff_t off = vnodeIndexOffset(vcp, vnp->vnodeNumber);
 	    VOL_UNLOCK;
 	    fdP = IH_OPEN(ihP);
 	    if (fdP == NULL)
