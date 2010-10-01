@@ -279,7 +279,7 @@ afs_int32 rxwrite_size = sizeof(somebuf);
 afs_int32 rxread_size = sizeof(somebuf);
 
 static int
-readbytes(struct rx_call *call, afs_int32 bytes)
+do_readbytes(struct rx_call *call, afs_int32 bytes)
 {
     afs_int32 size;
 
@@ -295,7 +295,7 @@ readbytes(struct rx_call *call, afs_int32 bytes)
 }
 
 static int
-sendbytes(struct rx_call *call, afs_int32 bytes)
+do_sendbytes(struct rx_call *call, afs_int32 bytes)
 {
     afs_int32 size;
 
@@ -374,7 +374,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	bytes = ntohl(bytes);
 
 	DBFPRINT(("reading(%d) ", bytes));
-	readbytes(call, bytes);
+	do_readbytes(call, bytes);
 
 	data = htonl(RXPERF_MAGIC_COOKIE);
 	if (rx_Write32(call, &data) != 4) {
@@ -399,12 +399,12 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	sendb = ntohl(sendb);
 
 	DBFPRINT(("read(%d) ", recvb));
-	if (readbytes(call, recvb)) {
-	    warnx("readbytes failed");
+	if (do_readbytes(call, recvb)) {
+	    warnx("do_readbytes failed");
 	    return -1;
 	}
 	DBFPRINT(("send(%d) ", sendb));
-	if (sendbytes(call, sendb)) {
+	if (do_sendbytes(call, sendb)) {
 	    warnx("sendbytes failed");
 	    return -1;
 	}
@@ -441,9 +441,9 @@ rxperf_ExecuteRequest(struct rx_call *call)
 
 	    if (readp) {
 		DBFPRINT(("read\n"));
-		readbytes(call, bytes);
+		do_readbytes(call, bytes);
 	    } else {
-		sendbytes(call, bytes);
+		do_sendbytes(call, bytes);
 		DBFPRINT(("send\n"));
 	    }
 	}
@@ -459,7 +459,7 @@ rxperf_ExecuteRequest(struct rx_call *call)
 	bytes = ntohl(bytes);
 
 	DBFPRINT(("sending(%d) ", bytes));
-	sendbytes(call, bytes);
+	do_sendbytes(call, bytes);
 
 	data = htonl(RXPERF_MAGIC_COOKIE);
 	if (rx_Write32(call, &data) != 4) {
@@ -602,8 +602,8 @@ struct client_data {
     int command;
     afs_int32 times;
     afs_int32 bytes;
-    afs_int32 sendtimes;
-    afs_int32 recvtimes;
+    afs_int32 sendbytes;
+    afs_int32 readbytes;
 };
 
 static void *
@@ -651,7 +651,7 @@ client_thread( void *vparams)
 		errx(1, "rx_Write failed to send size (err %d)", rx_Error(call));
 
 	    DBFPRINT(("sending(%d) ", params->bytes));
-	    if (readbytes(call, params->bytes))
+	    if (do_readbytes(call, params->bytes))
 		errx(1, "sendbytes (err %d)", rx_Error(call));
 
 	    if (rx_Read32(call, &data) != 4)
@@ -671,7 +671,7 @@ client_thread( void *vparams)
 		errx(1, "rx_Write failed to send size (err %d)", rx_Error(call));
 
 	    DBFPRINT(("sending(%d) ", params->bytes));
-	    if (sendbytes(call, params->bytes))
+	    if (do_sendbytes(call, params->bytes))
 		errx(1, "sendbytes (err %d)", rx_Error(call));
 
 	    if (rx_Read32(call, &data) != 4)
@@ -686,20 +686,20 @@ client_thread( void *vparams)
 	case RX_PERF_RPC:
 	    DBFPRINT(("commands "));
 
-	    data = htonl(params->sendtimes);
+	    data = htonl(params->sendbytes);
 	    if (rx_Write32(call, &data) != 4)
 		errx(1, "rx_Write failed to send command (err %d)", rx_Error(call));
 
-	    data = htonl(params->recvtimes);
+	    data = htonl(params->readbytes);
 	    if (rx_Write32(call, &data) != 4)
 		errx(1, "rx_Write failed to send command (err %d)", rx_Error(call));
 
-	    DBFPRINT(("send(%d) ", params->sendtimes));
-	    if (sendbytes(call, params->sendtimes))
+	    DBFPRINT(("send(%d) ", params->sendbytes));
+	    if (do_sendbytes(call, params->sendbytes))
 		errx(1, "sendbytes (err %d)", rx_Error(call));
 
-	    DBFPRINT(("recv(%d) ", params->recvtimes));
-	    if (readbytes(call, params->recvtimes))
+	    DBFPRINT(("recv(%d) ", params->readbytes));
+	    if (do_readbytes(call, params->readbytes))
 		errx(1, "sendbytes (err %d)", rx_Error(call));
 
 	    if (rx_Read32(call, &data) != 4)
@@ -730,11 +730,11 @@ client_thread( void *vparams)
 		size = ntohl(readwrite[j]) * sizeof(afs_uint32);
 
 		if (readp) {
-		    if (readbytes(call, size))
+		    if (do_readbytes(call, size))
 			errx(1, "sendbytes (err %d)", rx_Error(call));
 		    DBFPRINT(("read\n"));
 		} else {
-		    if (sendbytes(call, size))
+		    if (do_sendbytes(call, size))
 			errx(1, "sendbytes (err %d)", rx_Error(call));
 		    DBFPRINT(("send\n"));
 		}
@@ -760,7 +760,7 @@ client_thread( void *vparams)
 
 static void
 do_client(const char *server, short port, char *filename, afs_int32 command,
-	  afs_int32 times, afs_int32 bytes, afs_int32 sendtimes, afs_int32 recvtimes,
+	  afs_int32 times, afs_int32 bytes, afs_int32 sendbytes, afs_int32 readbytes,
           int dumpstats, int nojumbo, int maxmtu, int maxwsize, int minpeertimeout,
           int udpbufsz, int nostats, int hotthread, int threads)
 {
@@ -834,13 +834,13 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     params->command = command;
     params->times = times;
     params->bytes = bytes;
-    params->sendtimes = sendtimes;
-    params->recvtimes = recvtimes;
+    params->sendbytes = sendbytes;
+    params->readbytes = readbytes;
 
     switch (command) {
     case RX_PERF_RPC:
-        sprintf(stamp, "RPC: threads\t%d, times\t%d, writes\t%d, reads\t%d",
-                 threads, times, sendtimes, recvtimes);
+        sprintf(stamp, "RPC: threads\t%d, times\t%d, write bytes\t%d, read bytes\t%d",
+                 threads, times, sendbytes, readbytes);
         break;
     case RX_PERF_RECV:
         sprintf(stamp, "RECV: threads\t%d, times\t%d, bytes\t%d",
@@ -1028,8 +1028,8 @@ rxperf_client(int argc, char **argv)
     short port = DEFAULT_PORT;
     char *filename = NULL;
     afs_int32 cmd;
-    int sendtimes = 3;
-    int recvtimes = 30;
+    int sendbytes = 3;
+    int readbytes = 30;
     int times = 100;
     int dumpstats = 0;
     int nojumbo = 0;
@@ -1115,12 +1115,12 @@ rxperf_client(int argc, char **argv)
 		errx(1, "can't resolve number of times to execute rpc");
 	    break;
 	case 'S':
-	    sendtimes = strtol(optarg, &ptr, 0);
+	    sendbytes = strtol(optarg, &ptr, 0);
 	    if (ptr && *ptr != '\0')
 		errx(1, "can't resolve number of bytes to send");
 	    break;
 	case 'R':
-	    recvtimes = strtol(optarg, &ptr, 0);
+	    readbytes = strtol(optarg, &ptr, 0);
 	    if (ptr && *ptr != '\0')
 		errx(1, "can't resolve number of bytes to receive");
 	    break;
@@ -1180,8 +1180,8 @@ rxperf_client(int argc, char **argv)
     if (cmd == RX_PERF_UNKNOWN)
 	errx(1, "no command given to the client");
 
-    do_client(host, port, filename, cmd, times, bytes, sendtimes,
-	      recvtimes, dumpstats, nojumbo, maxmtu, maxwsize, minpeertimeout,
+    do_client(host, port, filename, cmd, times, bytes, sendbytes,
+	      readbytes, dumpstats, nojumbo, maxmtu, maxwsize, minpeertimeout,
               udpbufsz, nostats, hotthreads, threads);
 
     return 0;
