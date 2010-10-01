@@ -12,42 +12,42 @@
 
 
 #ifndef KERNEL
-#ifndef AFS_NT40_ENV
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <sys/ioctl.h>
-#include <string.h>
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#include <sys/sysctl.h>
-#ifndef AFS_ARM_DARWIN_ENV
-#include <net/route.h>
-#endif
-#include <net/if_dl.h>
-#endif
+# ifndef AFS_NT40_ENV
+#  include <sys/types.h>
+#  include <sys/socket.h>
+#  include <sys/time.h>
+#  include <net/if.h>
+#  include <netinet/in.h>
+#  include <sys/ioctl.h>
+#  include <string.h>
+#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#   include <sys/sysctl.h>
+#   ifndef AFS_ARM_DARWIN_ENV
+#    include <net/route.h>
+#   endif
+#   include <net/if_dl.h>
+#  endif
 
 /*
  * By including this, we get any system dependencies. In particular,
  * the pthreads for solaris requires the socket call to be mapped.
  */
-#include "rx.h"
-#include "rx_globals.h"
-#endif /* AFS_NT40_ENV */
+#  include "rx.h"
+#  include "rx_globals.h"
+# endif /* AFS_NT40_ENV */
 #else /* KERNEL */
-#ifdef UKERNEL
-#include "rx/rx_kcommon.h"
-#else /* UKERNEL */
-#include "rx/rx.h"
-#endif /* UKERNEL */
+# ifdef UKERNEL
+#  include "rx/rx_kcommon.h"
+# else /* UKERNEL */
+#  include "rx/rx.h"
+# endif /* UKERNEL */
 #endif /* KERNEL */
 
 #define NIFS		512
 
 #if defined(AFS_USR_DFBSD_ENV)
-#include <net/if.h>
-#include <sys/sockio.h>
+# include <net/if.h>
+# include <sys/sockio.h>
 #endif
 
 #ifdef KERNEL

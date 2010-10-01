@@ -17,7 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #if defined(AFS_NT40_ENV)
 
 #include <winsock2.h>

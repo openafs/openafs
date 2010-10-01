@@ -26,12 +26,6 @@
 #ifdef	KERNEL
 #include "rx_kmutex.h"
 #include "rx_kernel.h"
-#include "rx_clock.h"
-#include "rx_event.h"
-#include "rx_queue.h"
-#include "rx_packet.h"
-#include "rx_misc.h"
-#include "rx_multi.h"
 #if defined (AFS_OBSD_ENV) && !defined (MLEN)
 #include "sys/mbuf.h"
 #endif
@@ -52,18 +46,18 @@
 #include <ws2tcpip.h>
 #endif
 # include "rx_user.h"
-# include "rx_clock.h"
-# include "rx_event.h"
-# include "rx_packet.h"
-# include "rx_misc.h"
-# include "rx_null.h"
-# include "rx_multi.h"
 #ifndef AFS_NT40_ENV
 # include <netinet/in.h>
 # include <sys/socket.h>
 #endif
 #endif /* KERNEL */
 
+#include "rx_clock.h"
+#include "rx_event.h"
+#include "rx_packet.h"
+#include "rx_misc.h"
+#include "rx_null.h"
+#include "rx_multi.h"
 
 /* Configurable parameters */
 #define	RX_IDLE_DEAD_TIME	60	/* default idle dead time */

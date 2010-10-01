@@ -8,86 +8,69 @@
   */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
 
 #ifdef KERNEL
-#ifndef UKERNEL
-#ifdef RX_KERNEL_TRACE
-#include "rx_kcommon.h"
-#endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#include "afs/sysincludes.h"
-#else
-#include "h/types.h"
-#include "h/time.h"
-#include "h/stat.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
-#include "h/systm.h"
-#endif
-#ifdef	AFS_OSF_ENV
-#include <net/net_globals.h>
-#endif /* AFS_OSF_ENV */
-#ifdef AFS_LINUX20_ENV
-#include "h/socket.h"
-#endif
-#include "netinet/in.h"
-#if defined(AFS_SGI_ENV)
-#include "afs/sysincludes.h"
-#endif
-#endif
-#include "afs/afs_args.h"
-#include "afs/afs_osi.h"
-#if	(defined(AFS_AUX_ENV) || defined(AFS_AIX_ENV))
-#include "h/systm.h"
-#endif
-#else /* !UKERNEL */
-#include "afs/sysincludes.h"
-#endif /* !UKERNEL */
-#ifdef RXDEBUG
-#undef RXDEBUG			/* turn off debugging */
-#endif /* RXDEBUG */
+# ifndef UKERNEL
+#  ifdef RX_KERNEL_TRACE
+#   include "rx_kcommon.h"
+#  endif
+#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#   include "afs/sysincludes.h"
+#  else
+#   include "h/types.h"
+#   include "h/time.h"
+#   include "h/stat.h"
+#   if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
+#    include "h/systm.h"
+#   endif
+#   ifdef	AFS_OSF_ENV
+#    include <net/net_globals.h>
+#   endif /* AFS_OSF_ENV */
+#   ifdef AFS_LINUX20_ENV
+#    include "h/socket.h"
+#   endif
+#   include "netinet/in.h"
+#   if defined(AFS_SGI_ENV)
+#    include "afs/sysincludes.h"
+#   endif
+#  endif
+#  include "afs/afs_args.h"
+#  if	(defined(AFS_AUX_ENV) || defined(AFS_AIX_ENV))
+#   include "h/systm.h"
+#  endif
+# else /* !UKERNEL */
+#  include "afs/sysincludes.h"
+# endif /* !UKERNEL */
 
-#include "rx_kmutex.h"
-#include "rx/rx_kernel.h"
-#include "rx/rx_clock.h"
-#include "rx/rx_queue.h"
-#include "rx/rx.h"
-#include "rx/rx_globals.h"
-#include "afs/lock.h"
-#include "afsint.h"
-#ifdef  AFS_OSF_ENV
-#undef kmem_alloc
-#undef kmem_free
-#undef mem_alloc
-#undef mem_free
-#endif /* AFS_OSF_ENV */
+# ifdef RXDEBUG
+#  undef RXDEBUG			/* turn off debugging */
+# endif /* RXDEBUG */
+
+# include "afs/afs_osi.h"
+# include "rx_kmutex.h"
+# include "rx/rx_kernel.h"
+# include "afs/lock.h"
 #else /* KERNEL */
 # include <sys/types.h>
-#ifdef AFS_NT40_ENV
-# include <winsock2.h>
-#else /* !AFS_NT40_ENV */
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <netinet/in.h>
-# include <sys/stat.h>
-# include <sys/time.h>
-#endif /* !AFS_NT40_ENV */
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-# include "rx_user.h"
-# include "rx_clock.h"
-# include "rx_queue.h"
-# include "rx.h"
-# include "rx_globals.h"
+# include <string.h>
+# ifdef AFS_NT40_ENV
+#  include <winsock2.h>
+# else /* !AFS_NT40_ENV */
+#  include <sys/socket.h>
+#  include <sys/file.h>
+#  include <netdb.h>
+#  include <netinet/in.h>
+#  include <sys/stat.h>
+#  include <sys/time.h>
+#  include <unistd.h>
+# endif /* !AFS_NT40_ENV */
 #endif /* KERNEL */
+
+#include "rx.h"
+#include "rx_clock.h"
+#include "rx_queue.h"
+#include "rx_globals.h"
 
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */

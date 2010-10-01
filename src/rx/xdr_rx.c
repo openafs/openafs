@@ -12,11 +12,7 @@
  */
 
 #include <afsconfig.h>
-#ifdef	KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 
 #ifdef KERNEL
@@ -24,41 +20,29 @@
 # ifndef UKERNEL
 #  include "h/types.h"
 #  include "h/uio.h"
-#  ifdef AFS_OSF_ENV
-#   include <net/net_globals.h>
-#  endif /* AFS_OSF_ENV */
 #  ifdef AFS_LINUX20_ENV
 #   include "h/socket.h"
 #  else
 #   include "rpc/types.h"
 #  endif
-#  ifdef  AFS_OSF_ENV
-#   undef kmem_alloc
-#   undef kmem_free
-#   undef mem_alloc
-#   undef mem_free
-#  endif /* AFS_OSF_ENV */
 #  ifdef AFS_LINUX22_ENV
 #   ifndef quad_t
 #    define quad_t __quad_t
 #    define u_quad_t __u_quad_t
 #   endif
 #  endif
-#  include "rx/xdr.h"
 #  include "netinet/in.h"
 # endif /* !UKERNEL */
-# include "rx/xdr.h"
-# include "rx/rx.h"
-
 #else /* KERNEL */
 # include <sys/types.h>
 # include <stdio.h>
 # ifndef AFS_NT40_ENV
 #  include <netinet/in.h>
 # endif
-# include "rx.h"
-# include "xdr.h"
 #endif /* KERNEL */
+
+#include "rx.h"
+#include "xdr.h"
 
 /* Static prototypes */
 #ifdef AFS_XDR_64BITOPS

@@ -13,10 +13,9 @@
 
 #ifdef	KERNEL
 #include "afs/sysincludes.h"
-#include "rx/rx.h"
-#else /* KERNEL */
-# include "rx.h"
-#endif /* KERNEL */
+#endif
+
+#include "rx.h"
 
 /*
  * multi.c and multi.h, together with some rxgen hooks, provide a way of

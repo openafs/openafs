@@ -10,77 +10,53 @@
 /* RX:  Extended Remote Procedure Call */
 
 #include <afsconfig.h>
-#ifdef	KERNEL
 #include "afs/param.h"
-#else
-#include <afs/param.h>
-#endif
-
 
 #ifdef KERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#ifndef UKERNEL
-#include "h/types.h"
-#include "h/time.h"
-#include "h/stat.h"
-#ifdef	AFS_OSF_ENV
-#include <net/net_globals.h>
-#endif /* AFS_OSF_ENV */
-#ifdef AFS_LINUX20_ENV
-#include "h/socket.h"
-#endif
-#include "netinet/in.h"
-#ifdef AFS_SUN57_ENV
-#include "inet/common.h"
-#include "inet/ip.h"
-#include "inet/ip_ire.h"
-#endif
-#include "afs/afs_args.h"
-#include "afs/afs_osi.h"
-#ifdef RX_KERNEL_TRACE
-#include "rx_kcommon.h"
-#endif
-#if	(defined(AFS_AUX_ENV) || defined(AFS_AIX_ENV))
-#include "h/systm.h"
-#endif
-#ifdef RXDEBUG
-#undef RXDEBUG			/* turn off debugging */
-#endif /* RXDEBUG */
-#if defined(AFS_SGI_ENV)
-#include "sys/debug.h"
-#endif
-#include "afsint.h"
-#ifdef	AFS_OSF_ENV
-#undef kmem_alloc
-#undef kmem_free
-#undef mem_alloc
-#undef mem_free
-#endif /* AFS_OSF_ENV */
-#else /* !UKERNEL */
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#endif /* !UKERNEL */
-#include "afs/lock.h"
-#include "rx_kmutex.h"
-#include "rx_kernel.h"
-#include "rx_clock.h"
-#include "rx_queue.h"
-#include "rx.h"
-#include "rx_globals.h"
-#include "rx_trace.h"
-#include "rx_atomic.h"
-#include "rx_internal.h"
-#include "rx_stats.h"
-#define	AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
-#define	AFSOP_STOP_AFS		211	/* Stop AFS process */
-#define	AFSOP_STOP_BKG		212	/* Stop BKG process */
-#include "afsint.h"
+# include "afs/sysincludes.h"
+# include "afsincludes.h"
+# ifndef UKERNEL
+#  include "h/types.h"
+#  include "h/time.h"
+#  include "h/stat.h"
+#  ifdef AFS_LINUX20_ENV
+#   include "h/socket.h"
+#  endif
+#  include "netinet/in.h"
+#  ifdef AFS_SUN57_ENV
+#   include "inet/common.h"
+#   include "inet/ip.h"
+#   include "inet/ip_ire.h"
+#  endif
+#  include "afs/afs_args.h"
+#  include "afs/afs_osi.h"
+#  ifdef RX_KERNEL_TRACE
+#   include "rx_kcommon.h"
+#  endif
+#  if	defined(AFS_AIX_ENV)
+#   include "h/systm.h"
+#  endif
+#  ifdef RXDEBUG
+#   undef RXDEBUG			/* turn off debugging */
+#  endif /* RXDEBUG */
+#  if defined(AFS_SGI_ENV)
+#   include "sys/debug.h"
+#  endif
+# else /* !UKERNEL */
+#  include "afs/sysincludes.h"
+#  include "afsincludes.h"
+# endif /* !UKERNEL */
+# include "afs/lock.h"
+# include "rx_kmutex.h"
+# include "rx_kernel.h"
+# define	AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
+# define	AFSOP_STOP_AFS		211	/* Stop AFS process */
+# define	AFSOP_STOP_BKG		212	/* Stop BKG process */
 extern afs_int32 afs_termState;
-#ifdef AFS_AIX41_ENV
-#include "sys/lockl.h"
-#include "sys/lock_def.h"
-#endif /* AFS_AIX41_ENV */
+# ifdef AFS_AIX41_ENV
+#  include "sys/lockl.h"
+#  include "sys/lock_def.h"
+# endif /* AFS_AIX41_ENV */
 # include "afs/rxgen_consts.h"
 #else /* KERNEL */
 # include <sys/types.h>
@@ -90,30 +66,32 @@ extern afs_int32 afs_termState;
 # ifdef HAVE_STDINT_H
 #  include <stdint.h>
 # endif
-#ifdef AFS_NT40_ENV
-# include <stdlib.h>
-# include <fcntl.h>
-# include <afs/afsutil.h>
-# include <WINNT\afsreg.h>
-#else
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <sys/stat.h>
-# include <netinet/in.h>
-# include <sys/time.h>
-#endif
-# include "rx.h"
+# ifdef AFS_NT40_ENV
+#  include <stdlib.h>
+#  include <fcntl.h>
+#  include <afs/afsutil.h>
+#  include <WINNT\afsreg.h>
+# else
+#  include <sys/socket.h>
+#  include <sys/file.h>
+#  include <netdb.h>
+#  include <sys/stat.h>
+#  include <netinet/in.h>
+#  include <sys/time.h>
+# endif
 # include "rx_user.h"
-# include "rx_clock.h"
-# include "rx_queue.h"
-# include "rx_atomic.h"
-# include "rx_globals.h"
-# include "rx_trace.h"
-# include "rx_internal.h"
-# include "rx_stats.h"
-# include <afs/rxgen_consts.h>
 #endif /* KERNEL */
+
+#include "rx.h"
+#include "rx_clock.h"
+#include "rx_queue.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_trace.h"
+#include "rx_internal.h"
+#include "rx_stats.h"
+
+#include <afs/rxgen_consts.h>
 
 #ifndef KERNEL
 #ifdef AFS_PTHREAD_ENV

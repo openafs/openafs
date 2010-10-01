@@ -8,91 +8,74 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 #ifdef KERNEL
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "rx/rx_kcommon.h"
-#include "rx/rx_clock.h"
-#include "rx/rx_queue.h"
-#include "rx/rx_packet.h"
-#include "rx/rx_atomic.h"
-#include "rx/rx_internal.h"
-#include "rx/rx_stats.h"
-#else /* defined(UKERNEL) */
-#ifdef RX_KERNEL_TRACE
-#include "../rx/rx_kcommon.h"
-#endif
-#include "h/types.h"
-#ifndef AFS_LINUX20_ENV
-#include "h/systm.h"
-#endif
-#if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV) || defined(AFS_NBSD50_ENV)
-#include "afs/sysincludes.h"
-#endif
-#if defined(AFS_OBSD_ENV)
-#include "h/proc.h"
-#endif
-#include "h/socket.h"
-#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
-#if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
-#include "sys/mount.h"		/* it gets pulled in by something later anyway */
-#endif
-#include "h/mbuf.h"
-#endif
-#include "netinet/in.h"
-#include "afs/afs_osi.h"
-#include "rx_kmutex.h"
-#include "rx/rx_clock.h"
-#include "rx/rx_queue.h"
-#include "rx_atomic.h"
-#ifdef	AFS_SUN5_ENV
-#include <sys/sysmacros.h>
-#endif
-#include "rx/rx_packet.h"
-#include "rx_internal.h"
-#include "rx_stats.h"
-#endif /* defined(UKERNEL) */
-#include "rx/rx_globals.h"
+# if defined(UKERNEL)
+#  include "afs/sysincludes.h"
+#  include "afsincludes.h"
+#  include "rx_kcommon.h"
+# else /* defined(UKERNEL) */
+#  ifdef RX_KERNEL_TRACE
+#   include "rx_kcommon.h"
+#  endif
+#  include "h/types.h"
+#  ifndef AFS_LINUX20_ENV
+#   include "h/systm.h"
+#  endif
+#  if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV) || defined(AFS_NBSD50_ENV)
+#   include "afs/sysincludes.h"
+#  endif
+#  if defined(AFS_OBSD_ENV)
+#   include "h/proc.h"
+#  endif
+#  include "h/socket.h"
+#  if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
+#   if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
+#    include "sys/mount.h"		/* it gets pulled in by something later anyway */
+#   endif
+#   include "h/mbuf.h"
+#  endif
+#  include "netinet/in.h"
+#  include "afs/afs_osi.h"
+#  include "rx_kmutex.h"
+# endif /* defined(UKERNEL) */
 #else /* KERNEL */
-#include "sys/types.h"
-#include <sys/stat.h>
-#include <errno.h>
-#if defined(AFS_NT40_ENV)
-#include <winsock2.h>
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
-#include "rx_user.h"
-#include "rx_xmit_nt.h"
-#include <stdlib.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#endif
-#include "rx_clock.h"
-#include "rx.h"
-#include "rx_queue.h"
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <errno.h>
+# include <stdlib.h>
+# include <assert.h>
+# include <string.h>
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
+# if defined(AFS_NT40_ENV)
+#  include <winsock2.h>
+#  ifndef EWOULDBLOCK
+#   define EWOULDBLOCK WSAEWOULDBLOCK
+#  endif
+#  include "rx_user.h"
+#  include "rx_xmit_nt.h"
+# else
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+# endif
+# include <lwp.h>
+#endif /* KERNEL */
+
 #ifdef	AFS_SUN5_ENV
-#include <sys/sysmacros.h>
+# include <sys/sysmacros.h>
 #endif
+
+#include "rx.h"
+#include "rx_clock.h"
+#include "rx_queue.h"
 #include "rx_packet.h"
 #include "rx_atomic.h"
 #include "rx_globals.h"
 #include "rx_internal.h"
 #include "rx_stats.h"
-#include <lwp.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#endif /* KERNEL */
 
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */

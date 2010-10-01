@@ -15,10 +15,10 @@
 #include <afs/param.h>
 
 
-# include <sys/types.h>
-# include <errno.h>
-# include <signal.h>
-# include <string.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <signal.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 # include <WINNT/syscfg.h>
 #else
@@ -32,7 +32,7 @@
 # include <sys/ioctl.h>
 # include <unistd.h>
 #endif
-# include <fcntl.h>
+#include <fcntl.h>
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
 # include <sys/syscall.h>
 #endif
@@ -57,6 +57,7 @@
 #ifndef AFS_NT40_ENV
 # include <sys/time.h>
 #endif
+
 #include "rx.h"
 #include "rx_atomic.h"
 #include "rx_globals.h"

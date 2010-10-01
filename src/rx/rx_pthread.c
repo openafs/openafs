@@ -38,10 +38,11 @@
 # include <assert.h>
 #endif
 #include <sys/stat.h>
-#include <rx/rx.h>
-#include <rx/rx_globals.h>
-#include <rx/rx_pthread.h>
-#include <rx/rx_clock.h>
+
+#include "rx.h"
+#include "rx_globals.h"
+#include "rx_pthread.h"
+#include "rx_clock.h"
 #include "rx_atomic.h"
 
 /* Set rx_pthread_event_rescheduled if event_handler should just try

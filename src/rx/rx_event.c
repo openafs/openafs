@@ -8,65 +8,51 @@
  */
 
 #include <afsconfig.h>
-#ifdef	KERNEL
 #include "afs/param.h"
-#else
-#include <afs/param.h>
-#endif
 
 #ifdef AFS_SUN59_ENV
-#include <sys/time_impl.h>
+# include <sys/time_impl.h>
 #endif
-
 
 #ifdef KERNEL
-#ifndef UKERNEL
-#include "afs/afs_osi.h"
-#else /* !UKERNEL */
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#endif /* !UKERNEL */
-#include "rx/rx_clock.h"
-#include "rx/rx_queue.h"
-#include "rx/rx_event.h"
-#include "rx/rx_kernel.h"
-#include "rx_kmutex.h"
-#ifdef RX_ENABLE_LOCKS
-#include "rx/rx.h"
-#endif /* RX_ENABLE_LOCKS */
-#include "rx/rx_globals.h"
-#if defined(AFS_SGI_ENV)
-#include "sys/debug.h"
+# ifndef UKERNEL
+#  include "afs/afs_osi.h"
+# else /* !UKERNEL */
+#  include "afs/sysincludes.h"
+#  include "afsincludes.h"
+# endif /* !UKERNEL */
+# include "rx_kernel.h"
+# include "rx_kmutex.h"
+# if defined(AFS_SGI_ENV)
+#  include "sys/debug.h"
 /* These are necessary to get curproc (used by GLOCK asserts) to work. */
-#include "h/proc.h"
-#if !defined(AFS_SGI64_ENV) && !defined(UKERNEL)
-#include "h/user.h"
-#endif
+#  include "h/proc.h"
+#  if !defined(AFS_SGI64_ENV) && !defined(UKERNEL)
+#   include "h/user.h"
+#  endif
 extern void *osi_Alloc();
-#endif
-#if defined(AFS_OBSD_ENV)
-#include "h/proc.h"
-#endif
+# endif
+# if defined(AFS_OBSD_ENV)
+#  include "h/proc.h"
+# endif
 #else /* KERNEL */
-#include <stdio.h>
+# include <stdio.h>
+# include "rx_user.h"
+# ifdef AFS_PTHREAD_ENV
+#  include "rx_pthread.h"
+# else
+#  include "rx_lwp.h"
+# endif
+# ifdef AFS_NT40_ENV
+#  include <malloc.h>
+# endif
+#endif /* KERNEL */
+
+#include "rx.h"
 #include "rx_clock.h"
 #include "rx_queue.h"
 #include "rx_event.h"
-#include "rx_user.h"
-#ifdef AFS_PTHREAD_ENV
-#include <rx/rx_pthread.h>
-#else
-#include "rx_lwp.h"
-#endif
-#ifdef RX_ENABLE_LOCKS
-#include "rx.h"
-#endif /* RX_ENABLE_LOCKS */
 #include "rx_globals.h"
-#ifdef AFS_NT40_ENV
-#include <malloc.h>
-#endif
-#endif /* KERNEL */
-
 
 /* All event processing is relative to the apparent current time given by clock_GetTime */
 

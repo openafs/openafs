@@ -22,9 +22,9 @@
 #include <afs/param.h>
 
 
-# include <sys/types.h>		/* fd_set on older platforms */
-# include <errno.h>
-# include <signal.h>
+#include <sys/types.h>		/* fd_set on older platforms */
+#include <errno.h>
+#include <signal.h>
 #ifdef AFS_NT40_ENV
 # include <winsock2.h>
 #else
@@ -42,11 +42,12 @@
 # include <sys/ioctl.h>
 # include <sys/time.h>
 #endif
-# include "rx.h"
-# include "rx_atomic.h"
-# include "rx_globals.h"
-# include "rx_stats.h"
-# include <lwp.h>
+
+#include "rx.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_stats.h"
+#include <lwp.h>
 
 #define MAXTHREADNAMELENGTH 64
 

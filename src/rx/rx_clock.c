@@ -11,39 +11,32 @@
 /* See rx_clock.h for calling conventions */
 
 #include <afsconfig.h>
-#ifdef	KERNEL
 #include "afs/param.h"
-#else
-#include <afs/param.h>
-#endif
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>
 #endif
 
-
 #ifdef KERNEL
-#ifndef UKERNEL
-#include "rx/rx_clock.h"
-#include "h/types.h"
-#include "h/time.h"
-#else /* !UKERNEL */
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "rx/rx.h"
-#include "rx/rx_clock.h"
-#endif /* !UKERNEL */
+# ifndef UKERNEL
+#  include "h/types.h"
+#  include "h/time.h"
+# else /* !UKERNEL */
+#  include "afs/sysincludes.h"
+#  include "afsincludes.h"
+# endif /* !UKERNEL */
 #else /* KERNEL */
-#include <sys/time.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
+# include <sys/time.h>
+# ifdef HAVE_SIGNAL_H
+#  include <signal.h>
+# endif
+# include <stdio.h>
+# include <errno.h>
+# include <stdlib.h>
 #endif
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
+
 #include "rx.h"
 #include "rx_clock.h"
-#endif
 
 #if !defined(AFS_USE_GETTIMEOFDAY)
 /*use this package only if gettimeofday is much much costlier than getitime */

@@ -12,31 +12,31 @@
 
 
 #ifdef	KERNEL
-#include <afs/sysincludes.h>
-#include <afsincludes.h>
+# include <afs/sysincludes.h>
+# include <afsincludes.h>
 #else
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <malloc.h>
-#else
-#include <sys/param.h>
-#endif
-#include <errno.h>
-#include <afs/errors.h>
-#include "xdr.h"
-#ifdef AFS_PTHREAD_ENV
-#include "rx.h"
-#endif /* AFS_PTHREAD_ENV */
-#include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef AFS_NT40_ENV
-#ifndef EDQUOT
-#define EDQUOT WSAEDQUOT
-#endif /* EDQUOT */
-#endif /* AFS_NT40_ENV */
+# ifdef AFS_NT40_ENV
+#  include <winsock2.h>
+#  include <malloc.h>
+# else
+#  include <sys/param.h>
+# endif
+# include <errno.h>
+# include <afs/errors.h>
+# include "xdr.h"
+# ifdef AFS_PTHREAD_ENV
+#  include "rx.h"
+# endif /* AFS_PTHREAD_ENV */
+# include <stdlib.h>
+# include <string.h>
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
+# ifdef AFS_NT40_ENV
+#  ifndef EDQUOT
+#   define EDQUOT WSAEDQUOT
+#  endif /* EDQUOT */
+# endif /* AFS_NT40_ENV */
 #endif
 
 /*

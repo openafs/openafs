@@ -19,11 +19,7 @@
 #endif
 
 #include <afsconfig.h>
-#ifdef KERNEL
 #include "afs/param.h"
-#else
-#include <afs/param.h>
-#endif
 
 
 /* Enable data initialization when the header file is included */
