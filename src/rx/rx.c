@@ -5980,11 +5980,12 @@ rxi_CheckCall(struct rx_call *call)
     }
     return 0;
 mtuout:
-    if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT) {
+    if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT
+	&& call->lastReceiveTime) {
 	int oldMTU = conn->peer->ifMTU;
 
 	/* if we thought we could send more, perhaps things got worse */
-	if (call->conn->peer->maxPacketSize > conn->lastPacketSize)
+	if (conn->peer->maxPacketSize > conn->lastPacketSize)
 	    /* maxpacketsize will be cleared in rxi_SetPeerMtu */
 	    newmtu = MAX(conn->peer->maxPacketSize-RX_IPUDP_SIZE,
 			 conn->lastPacketSize-(128+RX_IPUDP_SIZE));
