@@ -277,18 +277,30 @@ char somebuf[RXPERF_BUFSIZE];
 
 afs_int32 rxwrite_size = sizeof(somebuf);
 afs_int32 rxread_size = sizeof(somebuf);
+afs_int32 use_rx_readv = 0;
 
 static int
 do_readbytes(struct rx_call *call, afs_int32 bytes)
 {
+    struct iovec tiov[RX_MAXIOVECS];
     afs_int32 size;
+    int tnio;
+    int code;
 
     while (bytes > 0) {
 	size = rxread_size;
+
 	if (size > bytes)
 	    size = bytes;
-	if (rx_Read(call, somebuf, size) != size)
-	    return 1;
+	if (use_rx_readv) {
+            if (size > RX_MAX_PACKET_DATA_SIZE)
+                size = RX_MAX_PACKET_DATA_SIZE;
+            code = rx_Readv(call, tiov, &tnio, RX_MAXIOVECS, size);
+        } else
+            code = rx_Read(call, somebuf, size);
+        if (code != size)
+            return 1;
+
 	bytes -= size;
     }
     return 0;
@@ -928,7 +940,7 @@ rxperf_server(int argc, char **argv)
     char *ptr;
     int ch;
 
-    while ((ch = getopt(argc, argv, "r:d:p:P:w:W:HNjm:u:4:s:S")) != -1) {
+    while ((ch = getopt(argc, argv, "r:d:p:P:w:W:HNjm:u:4:s:SV")) != -1) {
 	switch (ch) {
 	case 'd':
 #ifdef RXDEBUG
@@ -994,6 +1006,9 @@ rxperf_server(int argc, char **argv)
 	    if (ptr && *ptr != '\0')
 		errx(1, "can't resolve upd buffer size (Kbytes)");
 	    break;
+	case 'V':
+	    use_rx_readv = 1;
+	    break;
 	case 'W':
 	    maxwsize = strtol(optarg, &ptr, 0);
 	    if (ptr && *ptr != '\0')
@@ -1045,7 +1060,7 @@ rxperf_client(int argc, char **argv)
 
     cmd = RX_PERF_UNKNOWN;
 
-    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:P:r:s:w:W:f:HDNjm:u:4:t:")) != -1) {
+    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:P:r:s:w:W:f:HDNjm:u:4:t:V")) != -1) {
 	switch (ch) {
 	case 'b':
 	    bytes = strtol(optarg, &ptr, 0);
@@ -1095,6 +1110,9 @@ rxperf_client(int argc, char **argv)
 	    host = strdup(optarg);
 	    if (host == NULL)
 		err(1, "strdup");
+	    break;
+	case 'V':
+	    use_rx_readv = 1;
 	    break;
 	case 'w':
 	    rxwrite_size = strtol(optarg, &ptr, 0);
