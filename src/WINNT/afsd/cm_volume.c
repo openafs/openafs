@@ -1145,7 +1145,6 @@ long cm_GetROVolumeID(cm_volume_t *volp)
 void cm_RefreshVolumes(int lifetime)
 {
     cm_volume_t *volp;
-    cm_scache_t *scp;
     afs_int32 refCount;
     time_t now;
 
@@ -1195,12 +1194,16 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
     char motd[256];
     long alldown, alldeleted;
     cm_serverRef_t *serversp;
+    cm_fid_t fid;
 
     Name = volName;
     OfflineMsg = offLineMsg;
     MOTD = motd;
 
     if (statep->ID != 0 && (!volID || volID == statep->ID)) {
+        /* create fid for volume root so that VNOVOL and VMOVED errors can be processed */
+        cm_SetFid(&fid, volp->cellp->cellID, statep->ID, 1, 1);
+
         if (!statep->serversp && !(*volumeUpdatedp)) {
             cm_InitReq(&req);
             code = cm_UpdateVolumeLocation(volp->cellp, cm_rootUserp, &req, volp);
@@ -1242,8 +1245,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                     code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
                                                  &volStat, &Name, &OfflineMsg, &MOTD);
                     rx_PutConnection(rxconnp);            
-
-                } while (cm_Analyze(connp, cm_rootUserp, &req, NULL, NULL, NULL, NULL, code));
+                } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, NULL, NULL, NULL, code));
                 code = cm_MapRPCError(code, &req);
 
                 lock_ObtainWrite(&volp->rw);
