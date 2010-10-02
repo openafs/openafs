@@ -26,84 +26,90 @@
 
 #ifdef AFS_NT40_ENV
 typedef struct {
-   volatile int var;
+    volatile int var;
 } rx_atomic_t;
 
 static_inline void
 rx_atomic_set(rx_atomic_t *atomic, int val) {
-   atomic->var = val;
+    atomic->var = val;
 }
 
 static_inline int
 rx_atomic_read(rx_atomic_t *atomic) {
-   return atomic->var;
+    return atomic->var;
 }
 
 static_inline void
 rx_atomic_inc(rx_atomic_t *atomic) {
-   InterlockedIncrement(&atomic->var);
+    InterlockedIncrement(&atomic->var);
 }
 
 static_inline int
 rx_atomic_inc_and_read(rx_atomic_t *atomic) {
-   return InterlockedIncrement(&atomic->var);
+    return InterlockedIncrement(&atomic->var);
 }
 
 static_inline void
 rx_atomic_add(rx_atomic_t *atomic, int change) {
-   InterlockedExchangeAdd(&atomic->var, change);
+    InterlockedExchangeAdd(&atomic->var, change);
 }
 
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
-   InterlockedDecrement(&atomic->var);
+    InterlockedDecrement(&atomic->var);
 }
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-   InterlockedExchangeAdd(&atomic->var, 0 - change);
+    InterlockedExchangeAdd(&atomic->var, 0 - change);
 }
 
 #elif defined(AFS_DARWIN80_ENV) || defined(AFS_USR_DARWIN80_ENV)
 
 #include <libkern/OSAtomic.h>
+#if defined(KERNEL) && !defined(UKERNEL)
+#define OSAtomicIncrement32 OSIncrementAtomic
+#define OSAtomicAdd32 OSAddAtomic
+#define OSAtomicDecrement32 OSDecrementAtomic
+#endif
+
 typedef struct {
-   volatile int var;
+    volatile int var;
 } rx_atomic_t;
 
 static_inline void
 rx_atomic_set(rx_atomic_t *atomic, int val) {
-   atomic->var = val;
+    atomic->var = val;
 }
 
 static_inline int
 rx_atomic_read(rx_atomic_t *atomic) {
-   return atomic->var;
+    return atomic->var;
 }
 
 static_inline void
 rx_atomic_inc(rx_atomic_t *atomic) {
-   OSAtomicIncrement32(&atomic->var);
+    OSAtomicIncrement32(&atomic->var);
 }
 
 static_inline int
 rx_atomic_inc_and_read(rx_atomic_t *atomic) {
-   return OSAtomicIncrement32(&atomic->var);
+    return OSAtomicIncrement32(&atomic->var);
 }
 
 static_inline void
 rx_atomic_add(rx_atomic_t *atomic, int change) {
-   OSAtomicAdd32(change, &atomic->var);
+    OSAtomicAdd32(change, &atomic->var);
 }
 
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
-   OSAtomicDecrement32(&atomic->var);
+    OSAtomicDecrement32(&atomic->var);
 }
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-   OSAtomicAdd32(0 - change, &atomic->var);
+    OSAtomicAdd32(0 - change, &atomic->var);
 }
 #elif defined(AFS_LINUX20_ENV) && defined(KERNEL)
 #include <asm/atomic.h>
@@ -120,42 +126,42 @@ typedef atomic_t rx_atomic_t;
 
 #elif defined(AFS_SUN58_ENV)
 typedef struct {
-   volatile int var;
+    volatile int var;
 } rx_atomic_t;
 
 static_inline void
 rx_atomic_set(rx_atomic_t *atomic, int val) {
-   atomic->var = val;
+    atomic->var = val;
 }
 
 static_inline int
 rx_atomic_read(rx_atomic_t *atomic) {
-   return atomic->var;
+    return atomic->var;
 }
 
 static_inline void
 rx_atomic_inc(rx_atomic_t *atomic) {
-   atomic_inc_32(&atomic->var);
+    atomic_inc_32(&atomic->var);
 }
 
 static_inline int
 rx_atomic_inc_and_read(rx_atomic_t *atomic) {
-   return atomic_inc_32_nv(&atomic->var);
+    return atomic_inc_32_nv(&atomic->var);
 }
 
 static_inline void
 rx_atomic_add(rx_atomic_t *atomic, int change) {
-   atomic_add_32(&atomic->var, change);
+    atomic_add_32(&atomic->var, change);
 }
 
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
-   atomic_dec_32(&atomic->var);
+    atomic_dec_32(&atomic->var);
 }
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-   atomic_add_32(&object, 0 - change);
+    atomic_add_32(&object, 0 - change);
 }
 
 #elif defined(__GNUC__) && defined(HAVE_SYNC_FETCH_AND_ADD)
@@ -166,37 +172,37 @@ typedef struct {
 
 static_inline void
 rx_atomic_set(rx_atomic_t *atomic, int val) {
-   atomic->var = val;
+    atomic->var = val;
 }
 
 static_inline int
 rx_atomic_read(rx_atomic_t *atomic) {
-   return atomic->var;
+    return atomic->var;
 }
 
 static_inline void
 rx_atomic_inc(rx_atomic_t *atomic) {
-   (void)__sync_fetch_and_add(&atomic->var, 1);
+    (void)__sync_fetch_and_add(&atomic->var, 1);
 }
 
 static_inline int
 rx_atomic_inc_and_read(rx_atomic_t *atomic) {
-   return __sync_add_and_fetch(&atomic->var, 1);
+    return __sync_add_and_fetch(&atomic->var, 1);
 }
 
 static_inline void
 rx_atomic_add(rx_atomic_t *atomic, int change) {
-   (void)__sync_fetch_and_add(&atomic->var, change);
+    (void)__sync_fetch_and_add(&atomic->var, change);
 }
 
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
-   (void)__sync_fetch_and_sub(&atomic->var, 1);
+    (void)__sync_fetch_and_sub(&atomic->var, 1);
 }
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-   (void)__sync_fetch_and_sub(&atomic->var, change);
+    (void)__sync_fetch_and_sub(&atomic->var, change);
 }
 
 #else
