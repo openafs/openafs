@@ -2348,9 +2348,10 @@ rxi_NewCall(struct rx_connection *conn, int channel)
         call->allNextp = rx_allCallsp;
         rx_allCallsp = call;
         call->call_id =
+	    rx_atomic_inc_and_read(&rx_stats.nCallStructs);
+#else /* RXDEBUG_PACKET */
+        rx_atomic_inc(&rx_stats.nCallStructs);
 #endif /* RXDEBUG_PACKET */
-	if (rx_stats_active)
-	    rx_atomic_inc(&rx_stats.nCallStructs);
 
         MUTEX_EXIT(&rx_freeCallQueue_lock);
 	MUTEX_INIT(&call->lock, "call lock", MUTEX_DEFAULT, NULL);
