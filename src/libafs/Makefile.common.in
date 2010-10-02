@@ -152,6 +152,7 @@ AFSAOBJS = \
 	rx_getaddr.o	\
 	rx_packet.o	\
 	rx_multi.o	\
+	rx_stats.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
 	xdr_len.o	\
@@ -223,6 +224,7 @@ AFSPAGOBJS = \
 	rx_getaddr.o	\
 	rx_packet.o	\
 	rx_multi.o	\
+	rx_stats.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
 	xdr_len.o	\
@@ -413,6 +415,8 @@ rx_opaque.o: $(TOP_SRC_RX)/rx_opaque.c
 rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
 	$(CRULE_NOOPT)
 rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
+	$(CRULE_NOOPT)
+rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 	$(CRULE_NOOPT)
 xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE_NOOPT)
