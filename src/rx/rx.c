@@ -2043,6 +2043,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     call->arrivalProc = (void (*)())0;
     if (rc && call->error == 0) {
 	rxi_CallError(call, rc);
+        call->mode = RX_MODE_ERROR;
 	/* Send an abort message to the peer if this error code has
 	 * only just been set.  If it was set previously, assume the
 	 * peer has already been sent the error code or will request it
@@ -2052,10 +2053,14 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     if (conn->type == RX_SERVER_CONNECTION) {
 	/* Make sure reply or at least dummy reply is sent */
 	if (call->mode == RX_MODE_RECEIVING) {
+	    MUTEX_EXIT(&call->lock);
 	    rxi_WriteProc(call, 0, 0);
+	    MUTEX_ENTER(&call->lock);
 	}
 	if (call->mode == RX_MODE_SENDING) {
+            MUTEX_EXIT(&call->lock);
 	    rxi_FlushWrite(call);
+            MUTEX_ENTER(&call->lock);
 	}
 	rxi_calltrace(RX_CALL_END, call);
 	/* Call goes to hold state until reply packets are acknowledged */
@@ -2074,7 +2079,9 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	 * no reply arguments are expected */
 	if ((call->mode == RX_MODE_SENDING)
 	    || (call->mode == RX_MODE_RECEIVING && call->rnext == 1)) {
+	    MUTEX_EXIT(&call->lock);
 	    (void)rxi_ReadProc(call, &dummy, 1);
+	    MUTEX_ENTER(&call->lock);
 	}
 
 	/* If we had an outstanding delayed ack, be nice to the server
@@ -4824,7 +4831,6 @@ rxi_CallError(struct rx_call *call, afs_int32 error)
     rxi_ResetCall(call, 0);
 #endif
     call->error = error;
-    call->mode = RX_MODE_ERROR;
 }
 
 /* Reset various fields in a call structure, and wakeup waiting

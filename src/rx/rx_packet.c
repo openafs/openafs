@@ -2689,25 +2689,36 @@ rxi_DecodePacketHeader(struct rx_packet *p)
     /* Note: top 16 bits of this last word are the security checksum */
 }
 
+/*
+ * LOCKS HELD: called with call->lock held.
+ *
+ * PrepareSendPacket is the only place in the code that
+ * can increment call->tnext.  This could become an atomic
+ * in the future.  Beyond that there is nothing in this
+ * function that requires the call being locked.  This
+ * function can only be called by the application thread.
+ */
 void
 rxi_PrepareSendPacket(struct rx_call *call,
 		      struct rx_packet *p, int last)
 {
     struct rx_connection *conn = call->conn;
+    afs_uint32 seq = call->tnext++;
     unsigned int i;
     afs_int32 len;		/* len must be a signed type; it can go negative */
-
-    p->flags &= ~RX_PKTFLAG_ACKED;
-    p->header.cid = (conn->cid | call->channel);
-    p->header.serviceId = conn->serviceId;
-    p->header.securityIndex = conn->securityIndex;
 
     /* No data packets on call 0. Where do these come from? */
     if (*call->callNumber == 0)
 	*call->callNumber = 1;
 
+    MUTEX_EXIT(&call->lock);
+    p->flags &= ~RX_PKTFLAG_ACKED;
+    p->header.cid = (conn->cid | call->channel);
+    p->header.serviceId = conn->serviceId;
+    p->header.securityIndex = conn->securityIndex;
+
     p->header.callNumber = *call->callNumber;
-    p->header.seq = call->tnext++;
+    p->header.seq = seq;
     p->header.epoch = conn->epoch;
     p->header.type = RX_PACKET_TYPE_DATA;
     p->header.flags = 0;
@@ -2747,6 +2758,7 @@ rxi_PrepareSendPacket(struct rx_call *call,
     if (len)
         p->wirevec[i - 1].iov_len += len;
     RXS_PreparePacket(conn->securityObject, call, p);
+    MUTEX_ENTER(&call->lock);
 }
 
 /* Given an interface MTU size, calculate an adjusted MTU size that
