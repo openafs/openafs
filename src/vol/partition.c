@@ -401,17 +401,33 @@ VCheckPartition(char *part, char *devname)
  * attached (return value 1), or only attached when it is a separately
  * mounted partition (return value 0).  For non-NAMEI environments, it
  * always returns 0.
+ *
+ * *awouldattach will be set to 1 if the given path at least looks like a vice
+ * partition (that is, if we return 0, the only thing preventing this partition
+ * from being attached is the existence of the AlwaysAttach file), or to 0
+ * otherwise. *awouldattach is set regardless of whether or not the partition
+ * should always be attached or not.
  */
 static int
-VIsAlwaysAttach(char *part)
+VIsAlwaysAttach(char *part, int *awouldattach)
 {
 #ifdef AFS_NAMEI_ENV
     struct afs_stat st;
     char checkfile[256];
     int ret;
+#endif /* AFS_NAMEI_ENV */
 
+    if (awouldattach) {
+	*awouldattach = 0;
+    }
+
+#ifdef AFS_NAMEI_ENV
     if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE))
 	return 0;
+
+    if (awouldattach) {
+	*awouldattach = 1;
+    }
 
     strncpy(checkfile, part, 100);
     strcat(checkfile, "/");
@@ -436,6 +452,7 @@ VAttachPartitions2(void)
     DIR *dirp;
     struct dirent *de;
     char pname[32];
+    int wouldattach;
 
     dirp = opendir("/");
     while ((de = readdir(dirp))) {
@@ -445,8 +462,31 @@ VAttachPartitions2(void)
 
 	/* Only keep track of "/vicepx" partitions since automounter
 	 * may hose us */
-	if (VIsAlwaysAttach(pname))
+	if (VIsAlwaysAttach(pname, &wouldattach)) {
 	    VCheckPartition(pname, "");
+	} else {
+	    struct afs_stat st;
+	    if (wouldattach && VGetPartition(pname, 0) == NULL &&
+	        afs_stat(pname, &st) == 0 && S_ISDIR(st.st_mode)) {
+
+		/* This is a /vicep* dir, and it has not been attached as a
+		 * partition. This probably means that this is a /vicep* dir
+		 * that is not a separate partition, so just give a notice so
+		 * admins are not confused as to why their /vicep* dirs are not
+		 * being attached.
+		 *
+		 * It is possible that the dir _is_ a separate partition and we
+		 * failed to attach it earlier, making this message a bit
+		 * confusing. But that should be rare, and an error message
+		 * about the failure will already be logged right before this,
+		 * so it should be clear enough. */
+
+		Log("VAttachPartitions: not attaching %s; either it is not a "
+		    "separate partition, or it failed to attach (create the "
+		    "file %s/" VICE_ALWAYSATTACH_FILE " to force attachment)\n",
+		    pname, pname);
+	    }
+	}
     }
     closedir(dirp);
 #endif /* AFS_NAMEI_ENV */
@@ -480,7 +520,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(mnt.mnt_mountp))
+	if (VIsAlwaysAttach(mnt.mnt_mountp, NULL))
 	    continue;
 
 #ifndef AFS_NAMEI_ENV
@@ -525,7 +565,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(mntent->mnt_dir))
+	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
 
 	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
@@ -628,7 +668,7 @@ VAttachPartitions(void)
 #endif
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(part))
+	if (VIsAlwaysAttach(part, NULL))
 	    continue;
 
 	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT)) < 0)
@@ -658,7 +698,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(fsent->fs_file))
+	if (VIsAlwaysAttach(fsent->fs_file, NULL))
 	    continue;
 
 	if (VCheckPartition(fsent->fs_file, fsent->fs_spec) < 0)
@@ -842,7 +882,7 @@ VAttachPartitions(void)
     }
     while ((mntent = getmntent(mfd))) {
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(mntent->mnt_dir))
+	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
 
 	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
