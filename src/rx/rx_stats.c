@@ -35,7 +35,12 @@
 #include <string.h>
 #endif
 
+#ifdef KERNEL
+/* no kmutex, no atomic emulation...*/
+#include "rx/rx_kcommon.h"
+#else
 #include "rx.h"
+#endif
 #include "rx_atomic.h"
 #include "rx_stats.h"
 
