@@ -156,12 +156,8 @@ main(int argc, char **argv)
     /*
      * Fill in the socket array for bigbird, vice1, and vice2.
      */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    FSSktArray[0].sin_family = AF_INET;		/*Internet family */
-#else
-    FSSktArray[0].sin_family = htons(AF_INET);	/*Internet family */
-#endif
-    FSSktArray[0].sin_port = htons(7000);	/*FileServer port */
+    FSSktArray[0].sin_family = AF_INET;
+    FSSktArray[0].sin_port = htons(7000);	/* FileServer port */
     he = hostutil_GetHostByName("servername1");
     if (he == NULL) {
 	fprintf(stderr, "[%s] Can't get host info for servername1\n", rn);
@@ -169,12 +165,8 @@ main(int argc, char **argv)
     }
     memcpy(&(FSSktArray[0].sin_addr.s_addr), he->h_addr, 4);
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    FSSktArray[1].sin_family = AF_INET;		/*Internet address family */
-#else
-    FSSktArray[1].sin_family = htons(AF_INET);	/*Internet address family */
-#endif
-    FSSktArray[1].sin_port = htons(7000);	/*FileServer port */
+    FSSktArray[1].sin_family = AF_INET;
+    FSSktArray[1].sin_port = htons(7000);	/* FileServer port */
     he = hostutil_GetHostByName("servername2");
     if (he == NULL) {
 	fprintf(stderr, "[%s] Can't get host info for servername2\n", rn);
@@ -182,12 +174,8 @@ main(int argc, char **argv)
     }
     memcpy(&(FSSktArray[1].sin_addr.s_addr), he->h_addr, 4);
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    FSSktArray[2].sin_family = AF_INET;		/*Internet address family */
-#else
-    FSSktArray[2].sin_family = htons(AF_INET);	/*Internet address family */
-#endif
-    FSSktArray[2].sin_port = htons(7000);	/*FileServer port */
+    FSSktArray[2].sin_family = AF_INET;
+    FSSktArray[2].sin_port = htons(7000);	/* FileServer port */
     he = hostutil_GetHostByName("servername3");
     if (he == NULL) {
 	fprintf(stderr, "[%s] Can't get host info for servername3\n", rn);
