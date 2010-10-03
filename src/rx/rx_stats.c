@@ -31,7 +31,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#if !defined(KERNEL)
 #include <string.h>
+#endif
 
 #include "rx.h"
 #include "rx_atomic.h"
