@@ -7,14 +7,13 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-
-CFLAGS=${OPTIMIZE} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
-CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 AFSLIBS = \
 		${TOP_LIBDIR}/libkauth.a \
@@ -85,32 +84,29 @@ afs_dynamic_kerbauth: ${AUTH_KRB_OBJS} ${KAFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
 
 aix_auth_common.o: ${srcdir}/aix_auth_common.c
-	${CCRULE}
 
+CFLAGS_aix_aklog.o = @KRB5_CPPFLAGS@
 aix_aklog.o: ${srcdir}/aix_aklog.c
-	${CCRULE} @KRB5_CPPFLAGS@
 
+CFLAGS_aix_ktc_krb.o = -DAFS_KERBEROS_ENV
 aix_ktc_krb.o: ${srcdir}/aix_ktc.c
-	${CCRULE} -DAFS_KERBEROS_ENV
 
 aix_ktc_null.o: ${srcdir}/aix_ktc.c
-	${CCRULE}
 
 aix_auth.o:
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix4*) \
-		${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
+		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
 	rs_aix5*) \
-		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
+		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	rs_aix6*) \
-		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
+		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	*) \
 		echo "not building aix lam binary for ${SYS_NAME}" ;; \
 	esac
 
 # aix41_ident.c is a null source file for rs_aix5*
 aix_ident.o: ${srcdir}/aix41_ident.c
-	${CCRULE}
 
 dest: afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc 

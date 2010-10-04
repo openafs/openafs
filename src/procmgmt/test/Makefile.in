@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -21,7 +23,7 @@ CFLAGS = $(DBUG) -I${SRCDIR}/include ${XCFLAGS} ${ARCHFLAGS}
 LIBPMGT=DEST/lib/afs/libprocmgmt.a
 
 pmgttest: pmgttest.o $(LIBPMGT)
-	$(CC) $(CFLAGS) -o pmgttest pmgttest.o $(LIBPMGT) -lm $(XLIBS)
+	$(AFS_LDRULE) pmgttest.o $(LIBPMGT) -lm $(XLIBS)
 
 #######################################################################
 test tests: pmgttest

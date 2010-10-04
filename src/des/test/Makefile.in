@@ -1,19 +1,17 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
 #  Test programs
 PROGS = \
 	key_test \
 	testit \
 	verify
-
-LDFLAGS = ${XLDFLAGS} ${ARCHFLAGS}
 
 LIBS=\
 	${TOP_LIBDIR}/libdes.a \
@@ -26,9 +24,9 @@ clean:
 install:
 
 testit: testit.o 
-	${CC} ${CFLAGS} testit.o ${LIBS} ${LDFLAGS} -o testit
+	$(AFS_LDRULE) testit.o ${LIBS}
 verify: verify.o ../libdes.a
-	${CC} ${CFLAGS} verify.o ${LIBS} ${LDFLAGS} -o verify
+	$(AFS_LDRULE) verify.o ${LIBS}
 key_test: key_test.o ../libdes.a
-	${CC} ${CFLAGS} key_test.o ${LIBS} ${LDFLAGS} -o key_test
+	$(AFS_LDRULE) key_test.o ${LIBS}
 

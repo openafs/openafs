@@ -7,14 +7,13 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
 RXKAD = ../../rxkad
 AUTH = ../../auth
 BOZO = ../../bozo
@@ -125,34 +124,34 @@ libafsadminutil.a: ${LIBOBJS}
 afs_utilAdmin.o: afs_utilAdmin.h
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
-	${CCRULE}
+	$(AFS_CCRULE) $(AUTH)/ktc_errors.c
 
 acfg_errors.o: ${AUTH}/acfg_errors.c
-	${CCRULE}
+	$(AFS_CCRULE) $(AUTH)/acfg_errors.c
 
 boserr.o: ${BOZO}/boserr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(BOZO)/boserr.c
 
 cmd_errors.o: ${CMD}/cmd_errors.c
-	${CCRULE}
+	$(AFS_CCRULE) $(CMD)/cmd_errors.c
 
 kaerrors.o: ${KAUTH}/kaerrors.c
-	${CCRULE}
+	$(AFS_CCRULE) $(KAUTH)/kaerrors.c
 
 pterror.o: ${PTSERVER}/pterror.c
-	${CCRULE}
+	$(AFS_CCRULE) $(PTSERVER)/pterror.c
 
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RXKAD)/rxkad_errs.c
 
 uerrors.o: ${UBIK}/uerrors.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UBIK)/uerrors.c
 
 vl_errors.o: ${VLSERVER}/vl_errors.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VLSERVER)/vl_errors.c
 
 volerr.o: ${VOLSER}/volerr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOLSER)/volerr.c
 
 clean:
 	$(RM) -f *.o libafsadminutil*

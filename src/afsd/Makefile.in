@@ -8,12 +8,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-LDFLAGS = ${XLDFLAGS} ${ARCHFLAGS}
 
 #
 # What to make
@@ -27,26 +27,30 @@ all: afsd vsys @ENABLE_FUSE_CLIENT@
 AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
 UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a
 
-UAFS_CFLAGS=${CFLAGS} -I${TOP_SRCDIR}/afs -I${TOP_SRCDIR}/afs/UKERNEL -I${TOP_SRCDIR}/rx/UKERNEL -DUKERNEL @FUSE_CFLAGS@
-UAFS_XLIBS=${XLIBS} @FUSE_LIBS@
+FUSE_LIBS=@FUSE_LIBS@
 
+LDFLAGS_afsd = $(AFSD_LDFLAGS)
 afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
-	${CC} ${CFLAGS} -o afsd afsd.o afsd_kernel.o $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
+	${AFS_LDRULE} afsd.o afsd_kernel.o $(NON_SHARED) \
+		$(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
 
+LDFLAGS_afsd.fuse = $(AFSD_LDFLAGS)
 afsd.fuse: afsd_fuse.o $(UAFSLIBS) $(AFSD_LIBS)
-	${CC} ${UAFS_CFLAGS} -o afsd.fuse afsd_fuse.o $(NON_SHARED) $(LDFLAGS) $(AFSD_LDFLAGS) $(UAFSLIBS) ${UAFS_XLIBS} ${AFSD_LIBS}
+	${AFS_LDRULE} afsd_fuse.o $(NON_SHARED) \
+		$(UAFSLIBS) ${XLIBS} ${FUSE_LIBS} ${AFSD_LIBS}
 
 vsys: vsys.o
-	${CC} ${CFLAGS} -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
+	${AFS_LDRULE} vsys.o ${TOP_LIBDIR}/libsys.a ${XLIBS}
 
 #
 # Objects
 #
-afsd.o: afsd.c AFS_component_version_number.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/afsd.c
+CFLAGS_afsd.o        = @CFLAGS_NOERROR@
+CFLAGS_afsd_kernel.o = @CFLAGS_NOERROR@
+CFLAGS_afsd_fuse.o   = -I${TOP_SRCDIR}/afs -I${TOP_SRCDIR}/afs/UKERNEL \
+		       -I${TOP_SRCDIR}/rx/UKERNEL -DUKERNEL @FUSE_CFLAGS@
 
-afsd_kernel.o: afsd_kernel.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/afsd_kernel.c
+afsd.o: afsd.c AFS_component_version_number.c
 
 afsd_fuse.o: afsd_fuse.c AFS_component_version_number.c
 	$(CC) $(UAFS_CFLAGS) -c ${srcdir}/afsd_fuse.c

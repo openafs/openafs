@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -42,16 +44,16 @@ all: unlog tokens tokens.krb
 # Build targets
 #
 kseal: kseal.o ${LIBRARIES}
-	${CC} -o kseal kseal.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) kseal.o ${LIBRARIES} ${XLIBS}
 
 unlog: unlog.o ${LIBRARIES}
-	${CC} -o unlog unlog.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) unlog.o ${LIBRARIES} ${XLIBS}
 
 tokens: tokens.o ${LIBRARIES}
-	${CC} -o tokens tokens.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) tokens.o ${LIBRARIES} ${XLIBS}
 
 tokens.krb: tokens.o ${KLIBRARIES}
-	${CC} -o tokens.krb tokens.o ${KLIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) tokens.o ${KLIBRARIES} ${XLIBS}
 
 kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
 unlog.o: unlog.c AFS_component_version_number.c

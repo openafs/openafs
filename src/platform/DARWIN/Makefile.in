@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -39,7 +41,7 @@ afscell:
 	xcodebuild -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build
 
 afssettings: afssettings.m 
-	${CC} ${CFLAGS} -o afssettings $? -framework Foundation
+	${CC} ${AFS_CFLAGS} -o afssettings $? -framework Foundation
 
 install: \
 	${DESTDIR}${sbindir}/afssettings

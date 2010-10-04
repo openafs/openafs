@@ -7,12 +7,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-CFLAGS=${DBG} ${OPTMZ} -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
 INST=$(RM) -f $@; $(CP) $? $@
 
@@ -50,16 +50,13 @@ AFS_component_version_number.c: Makefile.version
 # App build/install targets
 #
 config: config.o mc.o
-	$(CC) $(CFLAGS) -o config config.o mc.o
+	$(AFS_LDRULE) config.o mc.o
 
-mkvers: ${srcdir}/mkvers.c
-	$(CC) $(CFLAGS) -o mkvers ${srcdir}/mkvers.c
+mkvers: mkvers.c
+	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
+		-o mkvers ${srcdir}/mkvers.c
 
-mc.o: ${srcdir}/mc.c
-	$(CC) $(CFLAGS) -I. -c ${srcdir}/mc.c
-
-config.o: ${srcdir}/config.c AFS_component_version_number.c
-	$(CC) $(CFLAGS) -I. -c ${srcdir}/config.c
+config.o: config.c AFS_component_version_number.c
 
 #
 # Include installation targets

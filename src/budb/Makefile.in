@@ -8,6 +8,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -96,7 +98,7 @@ struct_ops.o: budb_errs.h ${TOP_INCDIR}/afs/budb_client.h
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
 budb_server: $(SERVER_OBJS) ${LIBS} ${TOP_INCDIR}/afs/budb_client.h
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) $(SERVER_OBJS) ${LIBS} ${XLIBS}
 
 budb.cs.c: budb.rg
 	${RXGEN} -A -u -C -o $@ ${srcdir}/budb.rg

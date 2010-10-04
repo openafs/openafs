@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -21,7 +23,7 @@ FMSLIBS=${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/util.a
 
 fms: fms.o
-	${CC} ${LDFLAGS} -o fms fms.o ${FMSLIBS}
+	$(AFS_LDRULE) fms.o ${FMSLIBS}
 
 fms.o:  fms.c AFS_component_version_number.o
 

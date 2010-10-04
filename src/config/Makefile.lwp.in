@@ -1,0 +1,7 @@
+AFS_CFLAGS = $(LWP_CFLAGS)
+AFS_LDFLAGS = $(LWP_LDFLAGS)
+AFS_CCRULE =$(CCOBJ) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c 
+
+.c.o:
+	$(AFS_CCRULE) $<
+

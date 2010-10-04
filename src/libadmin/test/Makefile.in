@@ -7,13 +7,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-CC = ${MT_CC}
-CFLAGS = ${COMMON_CFLAGS} ${MT_CFLAGS}
 
 ########################################################################
 # build tests
@@ -40,12 +39,10 @@ AFSCPOBJS =\
 
 all test tests: afscp
 
-client.o: client.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/client.c
+CFLAGS_client.o = @CFLAGS_NOERROR@
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
-	$(CC) $(CFLAGS) -o afscp afscp.o $(AFSCPOBJS) \
-	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
+	$(AFS_LDRULE) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
 
 #######################################################################
 install:

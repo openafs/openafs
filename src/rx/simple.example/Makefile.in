@@ -9,21 +9,21 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 # This set of definitions tests the lwp RX library
-#CFLAGS=$(COMMON_CFLAGS) $(XCFLAGS) $(ARCHFLAGS)
-#LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
+#   include @TOP_OBJDIR@/src/config/Makefile.lwp
+#   LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
 
 # This set of definitions tests the pthread one
-CFLAGS=$(COMMON_CFLAGS) $(MT_CFLAGS)
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 LIBS=$(TOP_LIBDIR)/libafsauthent.a $(TOP_LIBDIR)/libafsrpc.a \
      $(TOP_LIBDIR)/util.a
 
 all: sample_client sample_server
 
 sample_client: sample_client.o ${LIBS} sample.cs.o
-	${CC} ${CFLAGS} -o sample_client sample_client.o sample.cs.o ${LIBS}
+	$(AFS_LDRULE) sample_client.o sample.cs.o ${LIBS}
 
 sample_server: sample_server.o sample.ss.o ${LIBS}
-	${CC} ${CFLAGS} -o sample_server sample_server.o sample.ss.o ${LIBS}
+	$(AFS_LDRULE) sample_server.o sample.ss.o ${LIBS}
 
 sample_client.o:	sample.h
 sample_server.o:	sample.h

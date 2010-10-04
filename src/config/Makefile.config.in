@@ -24,7 +24,7 @@ mandir=@mandir@
 prefix=@prefix@
 sbindir=@sbindir@
 sysconfdir=@sysconfdir@
-viceetcdir=@viceetcdir@
+viceetcdir=@viceetcdir@/
 
 
 #
@@ -132,11 +132,27 @@ SHELL = /bin/sh
 # -I. and -I${srcdir} are only needed for objdir builds - we should
 # conditionalise them on that.
 
-COMMON_INCL=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${srcdir} -I.
-COMMON_CFLAGS=${DBG} ${OPTMZ} ${COMMON_INCL} ${INCLUDE_LIBINTL}
+COMMON_INCL=$(MODULE_INCLUDE) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} \
+	    -I${srcdir} -I. 
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} $(CFLAGS_NOERROR)
-LDFLAGS=${XLDFLAGS} ${ARCHFLAGS}
+COMMON_CFLAGS=$(CFLAGS) ${DBG} ${OPTMZ} ${COMMON_INCL} ${INCLUDE_LIBINTL}
 
-.c.o:
-	$(CCOBJ) $(CFLAGS) -c $<
+COMMON_LDFLAGS=$(LDFLAGS) $(DBG) $(OPTMZ)
+
+# LWP Flags
+LWP_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS) $(XCFLAGS) $(ARCHFLAGS)
+LWP_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(XLDFLAGS) $(ARCHFLAGS)
+
+# Pthreaded
+PTH_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS) $(MT_CFLAGS)
+PTH_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(MT_LDFLAGS)
+
+# Shared
+SHD_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS) $(MT_CFLAGS) $(SHLIB_CFLAGS)
+SHD_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(SHLIB_LDFLAGS)
+
+# Default rules. These will be overriden if the module Makefile specifically
+# includes a particular type (lwp, pthread, or shared)
+
+AFS_LDRULE =$(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
+

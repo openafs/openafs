@@ -10,27 +10,25 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
-	-DSALVSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
-SCFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT
+MODULE_CFLAGS = -DNINTERFACE -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
+		-DSALVSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT \
+		-DAFS_DEMAND_ATTACH_FS
 
-CCRULE=${CC} ${CFLAGS} -c $?
-SCCRULE=${CC} ${SCFLAGS} -c $? -o $@
+SCFLAGS=$(COMMON_CFLAGS) -I.. -DNINTERFACE ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT
 
-VICED=../viced
-VLSERVER=../vlserver
-LWP=../lwp
-LIBACL=../libacl
-UTIL=../util
-DIR=../dir
-VOL=../vol
-FSINT=../fsint
+SCCRULE=${MT_CC} ${SCFLAGS} -c $? -o $@
+
+LWP=$(srcdir)/../lwp
+UTIL=$(srcdir)/../util
+DIR=$(srcdir)/../dir
+VOL=$(srcdir)/../vol
 
 SALVAGEDOBJS=salvaged.o vol-salvage.o physio.o
 SALVAGEROBJS=salvager.o svol-salvage.o sphysio.o
@@ -60,132 +58,130 @@ SLIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
 
 all: salvageserver dafssync-debug salvsync-debug dasalvager
 
-salvaged.o: ${VOL}/salvaged.c
-	${CCRULE}
-
 salvager.o: ${VOL}/salvager.c
 	${SCCRULE}
-
-vol-salvage.o: ${VOL}/vol-salvage.c
-	${CCRULE}
 
 svol-salvage.o: ${VOL}/vol-salvage.c
 	${SCCRULE}
 
-physio.o: ${VOL}/physio.c
-	${CCRULE}
-
 sphysio.o: ${VOL}/physio.c
 	${SCCRULE}
 
-fssync-debug.o: ${VOL}/fssync-debug.c
-	${CCRULE}
 
-salvsync-debug.o: salvsync-debug.c
-	${CCRULE}
+salvaged.o: ${VOL}/salvaged.c
+	$(AFS_CCRULE) $(VOL)/salvaged.c
+
+vol-salvage.o: ${VOL}/vol-salvage.c
+	$(AFS_CCRULE) $(VOL)/vol-salvage.c
+
+physio.o: ${VOL}/physio.c
+	$(AFS_CCRULE) $(VOL)/physio.c
+
+fssync-debug.o: ${VOL}/fssync-debug.c
+	$(AFS_CCRULE) $(VOL)/fssync-debug.c
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/uuid.c
 
 serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
 
 volparse.o: ${UTIL}/volparse.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/volparse.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE} -I ../util
+	$(AFS_CCRULE) -I../util $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
 
 softsig.o: ${UTIL}/softsig.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 buffer.o: ${DIR}/buffer.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/buffer.c
 
 dir.o: ${DIR}/dir.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/dir.c
 
 salvage.o: ${DIR}/salvage.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/salvage.c
 
 lock.o: ${LWP}/lock.c
-	${CCRULE}
+	$(AFS_CCRULE) $(LWP)/lock.c
 
 threadname.o: ${LWP}/threadname.c
-	${CCRULE}
+	$(AFS_CCRULE) $(LWP)/threadname.c
 
 vnode.o: ${VOL}/vnode.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vnode.c
 
 volume.o: ${VOL}/volume.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/volume.c
 
 vutil.o: ${VOL}/vutil.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vutil.c
 
 partition.o: ${VOL}/partition.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/partition.c
 
 fssync-client.o: ${VOL}/fssync-client.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
 
 salvsync-server.o: ${VOL}/salvsync-server.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/salvsync-server.c
 
 salvsync-client.o: ${VOL}/salvsync-client.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
 
 daemon_com.o: ${VOL}/daemon_com.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
 
 clone.o: ${VOL}/clone.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/clone.c
 
 nuke.o: ${VOL}/nuke.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/nuke.c
 
 devname.o: ${VOL}/devname.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/devname.c
 
 # only for darwin?
 fstab.o: ${UTIL}/fstab.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/fstab.c
 
 common.o: ${VOL}/common.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/common.c
 
 listinodes.o: ${VOL}/listinodes.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/listinodes.c
 
 ihandle.o: ${VOL}/ihandle.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/ihandle.c
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 salvageserver: ${OBJECTS} ${LIBS}
-	${CC} ${LDFLAGS} -o salvageserver ${OBJECTS} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${OBJECTS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
 dasalvager: ${SOBJECTS} ${SLIBS}
-	${CC} ${LDFLAGS} -o dasalvager ${SOBJECTS} ${SLIBS} ${XLIBS}
+	$(AFS_LDRULE) ${SOBJECTS} ${SLIBS} ${XLIBS}
 
 dafssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
-	${CC} ${LDFLAGS} -o dafssync-debug ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
-	${CC} ${LDFLAGS} -o salvsync-debug ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
 
 install: salvageserver dafssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

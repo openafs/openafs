@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -31,7 +33,6 @@ libprocmgmt.a: procmgmt_unix.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 procmgmt_unix.o: ${srcdir}/procmgmt_unix.c ${srcdir}/procmgmt.h
-	$(CC) $(CFLAGS) -c ${srcdir}/procmgmt_unix.c
 
 #
 # Install targets

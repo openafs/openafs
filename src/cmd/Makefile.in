@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -41,10 +43,12 @@ cmd_errors.o: cmd_errors.c
 cmd.o: cmd.c cmd.h
 
 cmd_errors64.o: cmd_errors.c
-	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
+	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
+		-c -o cmd_errors64.o cmd_errors.c
 
 cmd64.o: cmd.c cmd.h
-	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o ${srcdir}/cmd.c
+	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
+		-c -o cmd64.o ${srcdir}/cmd.c
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
@@ -57,7 +61,9 @@ libcmd.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 AFS_component_version_number64.o: AFS_component_version_number.c
-	${CC} ${OPTMZ} -I${TOP_INCDIR} ${XCFLAGS64} -c -o AFS_component_version_number64.o AFS_component_version_number.c
+	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
+		-c -o AFS_component_version_number64.o \
+		AFS_component_version_number.c
 
 #
 # Install targets

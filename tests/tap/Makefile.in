@@ -2,13 +2,14 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 objects = basic.o
 
 all check test tests: libtap.a
 
 basic.o: $(srcdir)/basic.c $(srcdir)/basic.h
-	$(CCOBJ) $(CFLAGS) -I$(srcdir)/.. -c $(srcdir)/basic.c
+	$(CC) $(AFS_CFLAGS) -I$(srcdir)/.. -c $(srcdir)/basic.c
 
 libtap.a: $(objects)
 	$(RM) -f libtap.a

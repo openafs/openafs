@@ -5,18 +5,19 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-srcdir=@srcdir@/../ubik
+srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
-
-RX=../rx
-UTIL=../util
+UBIK=$(srcdir)/../ubik
+RX=$(srcdir)/../rx
+UTIL=$(srcdir)/../util
 
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
@@ -34,8 +35,7 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
 
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/liblwp.a \
      ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libcmd.a \
-     ${TOP_LIBDIR}/libsys.a ${XLIBS} \
-     ${LDFLAGS} ${MT_LIBS}
+     ${TOP_LIBDIR}/libsys.a ${XLIBS} ${MT_LIBS}
 
 all: depinstall ${TOP_LIBDIR}/libubik_pthread.a udebug utst_server utst_client
 
@@ -48,8 +48,9 @@ depinstall: \
 # get the pthreaded rx stuff compiled here
 #
 
+CFLAGS_rx_pthread.o = -DDPF_FSLOG
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} -DDPF_FSLOG
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 #
 # get the pthreaded util stuff compiled here.  we do this instead of
@@ -58,176 +59,161 @@ rx_pthread.o: ${RX}/rx_pthread.c
 #
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/uuid.c
 
 serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
 
 volparse.o: ${UTIL}/volparse.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/volparse.c
 
 strlcat.o: ${UTIL}/strlcat.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/strlcat.c
 
 strlcpy.o: ${UTIL}/strlcpy.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/strlcpy.c
 
 strnlen.o: ${UTIL}/strnlen.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/strnlen.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
 
 softsig.o: ${UTIL}/softsig.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/hostparse.c
 
 snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/snprintf.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE}
-
+	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
 
 #
 # insert comments here
 #
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a $(LIBS)
+	$(AFS_LDRULE) utst_server.o utst_int.ss.o utst_int.xdr.o \
+		libubik_pthread.a $(LIBS)
 
 utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	${CC} ${CFLAGS} -o utst_client utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a $(LIBS)
+	$(AFS_LDRULE) utst_client.o utst_int.cs.o utst_int.xdr.o \
+		libubik_pthread.a $(LIBS)
 
 udebug: udebug.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	${CC} ${CFLAGS} -o udebug udebug.o libubik_pthread.a $(LIBS)
+	$(AFS_LDRULE) udebug.o libubik_pthread.a $(LIBS)
 
-ubik_int.cs.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -C -o $@ ${srcdir}/ubik_int.xg
+ubik_int.cs.c: ${UBIK}/ubik_int.xg
+	${RXGEN} -A -x -C -o $@ ${UBIK}/ubik_int.xg
 
-ubik_int.ss.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -S -o $@ ${srcdir}/ubik_int.xg
+ubik_int.ss.c: ${UBIK}/ubik_int.xg
+	${RXGEN} -A -x -S -o $@ ${UBIK}/ubik_int.xg
 
-ubik_int.xdr.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -c -o $@ ${srcdir}/ubik_int.xg
+ubik_int.xdr.c: ${UBIK}/ubik_int.xg
+	${RXGEN} -A -x -c -o $@ ${UBIK}/ubik_int.xg
 
-ubik_int.h: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -h -o $@ ${srcdir}/ubik_int.xg
+ubik_int.h: ${UBIK}/ubik_int.xg
+	${RXGEN} -A -x -h -o $@ ${UBIK}/ubik_int.xg
 
 ubik_int.cs.c: ubik_int.h
 ubik_int.ss.c: ubik_int.h
 ubik_int.xdr.c: ubik_int.h
 
-Kubik_int.cs.c: ${srcdir}/ubik_int.xg Kubik_int.h
-	${RXGEN} -A -x -k -C -o Kubik_int.cs.c ${srcdir}/ubik_int.xg
+Kubik_int.cs.c: ${UBIK}/ubik_int.xg Kubik_int.h
+	${RXGEN} -A -x -k -C -o Kubik_int.cs.c ${UBIK}/ubik_int.xg
  
-Kubik_int.xdr.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -k -c -o Kubik_int.xdr.c ${srcdir}/ubik_int.xg
+Kubik_int.xdr.c: ${UBIK}/ubik_int.xg
+	${RXGEN} -A -x -k -c -o Kubik_int.xdr.c ${UBIK}/ubik_int.xg
  
-Kubik_int.h: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
+Kubik_int.h: ${UBIK}/ubik_int.xg
+	${RXGEN} -A -x -k -h -o Kubik_int.h ${UBIK}/ubik_int.xg
 
 utst_int.ss.o: utst_int.ss.c
-	${CCRULE}
-
 utst_int.cs.o: utst_int.cs.c
-	${CCRULE}
-
 utst_int.xdr.o: utst_int.xdr.c
-	${CCRULE}
 
-utst_int.cs.c: ${srcdir}/utst_int.xg
-	${RXGEN} -A -C -u -o $@ ${srcdir}/utst_int.xg
+utst_int.cs.c: ${UBIK}/utst_int.xg
+	${RXGEN} -A -C -u -o $@ ${UBIK}/utst_int.xg
 
-utst_int.ss.c: ${srcdir}/utst_int.xg
-	${RXGEN} -A -S -o $@ ${srcdir}/utst_int.xg
+utst_int.ss.c: ${UBIK}/utst_int.xg
+	${RXGEN} -A -S -o $@ ${UBIK}/utst_int.xg
 
-utst_int.xdr.c: ${srcdir}/utst_int.xg
-	${RXGEN} -A -c -o $@ ${srcdir}/utst_int.xg
+utst_int.xdr.c: ${UBIK}/utst_int.xg
+	${RXGEN} -A -c -o $@ ${UBIK}/utst_int.xg
 
-utst_int.h: ${srcdir}/utst_int.xg
-	${RXGEN} -A -h -u -o $@ ${srcdir}/utst_int.xg
+utst_int.h: ${UBIK}/utst_int.xg
+	${RXGEN} -A -h -u -o $@ ${UBIK}/utst_int.xg
 
 utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h
 utst_int.xdr.c: utst_int.h
 
-utst_server.o: ${srcdir}/utst_server.c
-	${CCRULE}
+utst_server.o: ${UBIK}/utst_server.c
+	${AFS_CCRULE} ${UBIK}/utst_server.c
 
-utst_client.o: ${srcdir}/utst_client.c
-	${CCRULE}
+utst_client.o: ${UBIK}/utst_client.c
+	${AFS_CCRULE} ${UBIK}/utst_client.c
 
-udebug.o: ${srcdir}/udebug.c
-	${CCRULE}
+udebug.o: ${UBIK}/udebug.c
+	${AFS_CCRULE} ${UBIK}/udebug.c
 
-uerrors.o: uerrors.c
-	${CCRULE}
-
-uerrors.c ubik.h: ${srcdir}/uerrors.et ${srcdir}/ubik.p.h
+uerrors.c ubik.h: ${UBIK}/uerrors.et ${UBIK}/ubik.p.h
 	$(RM) -f ubik.h uerrors.c
-	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
+	${COMPILE_ET} -p ${UBIK} uerrors -h ubik
 
 libubik_pthread.a: ${INCLS} ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crc $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
-disk.o: ${srcdir}/disk.c
-	${CCRULE}
+disk.o: ${UBIK}/disk.c
+	$(AFS_CCRULE) $(UBIK)/disk.c
 
-uinit.o: ${srcdir}/uinit.c
-	${CCRULE}
+uinit.o: ${UBIK}/uinit.c
+	$(AFS_CCRULE) $(UBIK)/uinit.c
 
-remote.o: ${srcdir}/remote.c
-	${CCRULE}
+remote.o: ${UBIK}/remote.c
+	$(AFS_CCRULE) $(UBIK)/remote.c
 
-beacon.o: ${srcdir}/beacon.c
-	${CCRULE}
+beacon.o: ${UBIK}/beacon.c
+	$(AFS_CCRULE) $(UBIK)/beacon.c
 
-lock.o: ${srcdir}/lock.c
-	${CCRULE}
+lock.o: ${UBIK}/lock.c
+	$(AFS_CCRULE) $(UBIK)/lock.c
 
-recovery.o: ${srcdir}/recovery.c
-	${CCRULE}
+recovery.o: ${UBIK}/recovery.c
+	$(AFS_CCRULE) $(UBIK)/recovery.c
 
-ubik.o: ${srcdir}/ubik.c
-	${CCRULE}
+ubik.o: ${UBIK}/ubik.c
+	$(AFS_CCRULE) $(UBIK)/ubik.c
 
-phys.o: ${srcdir}/phys.c
-	${CCRULE}
+phys.o: ${UBIK}/phys.c
+	$(AFS_CCRULE) $(UBIK)/phys.c
 
-vote.o: ${srcdir}/vote.c
-	${CCRULE}
+vote.o: ${UBIK}/vote.c
+	$(AFS_CCRULE) $(UBIK)/vote.c
 
-ubikcmd.o: ${srcdir}/ubikcmd.c
-	${CCRULE}
+ubikcmd.o: ${UBIK}/ubikcmd.c
+	$(AFS_CCRULE) $(UBIK)/ubikcmd.c
 
-ubikclient.o: ${srcdir}/ubikclient.c
-	${CCRULE}
-
-ubik_int.ss.o: ubik_int.ss.c
-	${CCRULE}
-
-ubik_int.cs.o: ubik_int.cs.c
-	${CCRULE}
-
+ubikclient.o: ${UBIK}/ubikclient.c
+	$(AFS_CCRULE) $(UBIK)/ubikclient.c
 ubik_int.xdr.o: ubik_int.xdr.c
-	${CCRULE}
 
 #
 # Installation targets

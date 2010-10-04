@@ -9,25 +9,25 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
+MODULE_CFLAGS = -DNINTERFACE -DRXDEBUG -DFSSYNC_BUILD_SERVER \
+		-DSALVSYNC_BUILD_CLIENT
 
-CCRULE=${CC} ${CFLAGS} -c $?
-
-RX=../rx
-VICED=../viced
-VLSERVER=../vlserver
-LWP=../lwp
-LIBACL=../libacl
-UTIL=../util
-DIR=../dir
-VOL=../vol
-FSINT=../fsint
+RX=$(srcdir)/../rx
+VICED=$(srcdir)/../viced
+VLSERVER=$(srcdir)/../vlserver
+LWP=$(srcdir)/../lwp
+LIBACL=$(srcdir)/../libacl
+UTIL=$(srcdir)/../util
+DIR=$(srcdir)/../dir
+VOL=$(srcdir)/../vol
+FSINT=$(srcdir)/../fsint
 
 VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o	
 
@@ -56,157 +56,158 @@ LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.
 
 all: fileserver
 
+CFLAGS_rx_pthread.o = -DDPF_FSLOG
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} -DDPF_FSLOG
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 viced.o: ${VICED}/viced.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/viced.c
 
 afsfileprocs.o: ${VICED}/afsfileprocs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/afsfileprocs.c
 
 host.o: ${VICED}/host.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/host.c
 
 physio.o: ${VICED}/physio.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/physio.c
 
 callback.o: ${VICED}/callback.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/callback.c
 
-serialize_state.o: serialize_state.c
-	${CCRULE}
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/uuid.c
 
 serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
 
 volparse.o: ${UTIL}/volparse.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/volparse.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE} -I../util
+	$(AFS_CCRULE) -I../util $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
 
 softsig.o: ${UTIL}/softsig.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 lock.o: ${LWP}/lock.c
-	${CCRULE}
+	$(AFS_CCRULE) $(LWP)/lock.c
 
 threadname.o: ${LWP}/threadname.c
-	${CCRULE}
+	$(AFS_CCRULE) $(LWP)/threadname.c
 
 aclprocs.o: ${LIBACL}/aclprocs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(LIBACL)/aclprocs.c
 
 netprocs.o: ${LIBACL}/netprocs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(LIBACL)/netprocs.c
 
-vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CCRULE} -I${srcdir}/../vlserver
 
-vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CCRULE} -I${srcdir}/../vlserver
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
+
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.xdr.c
+
 
 buffer.o: ${DIR}/buffer.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/buffer.c
 
 dir.o: ${DIR}/dir.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/dir.c
 
 salvage.o: ${DIR}/salvage.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/salvage.c
 
 vnode.o: ${VOL}/vnode.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vnode.c
 
 volume.o: ${VOL}/volume.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/volume.c
 
 vutil.o: ${VOL}/vutil.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vutil.c
 
 partition.o: ${VOL}/partition.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/partition.c
 
 vg_cache.o: ${VOL}/vg_cache.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vg_cache.c
 
 vg_scan.o: ${VOL}/vg_scan.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vg_scan.c
 
 fssync-server.o: ${VOL}/fssync-server.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/fssync-server.c
 
 fssync-client.o: ${VOL}/fssync-client.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
 
 salvsync-client.o: ${VOL}/salvsync-client.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
 
 daemon_com.o: ${VOL}/daemon_com.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
 
 clone.o: ${VOL}/clone.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/clone.c
 
 nuke.o: ${VOL}/nuke.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/nuke.c
 
 devname.o: ${VOL}/devname.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/devname.c
 
 # only for darwin?
 fstab.o: ${UTIL}/fstab.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/fstab.c
 
 common.o: ${VOL}/common.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/common.c
 
 listinodes.o: ${VOL}/listinodes.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/listinodes.c
 
 ihandle.o: ${VOL}/ihandle.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/ihandle.c
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE} -I../fsint
+	$(AFS_CCRULE) -I../fsint $(FSINT)/afsaux.c
 
-afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CCRULE}
+afscbint.cs.o: ../fsint/afscbint.cs.c
+	$(AFS_CCRULE) ../fsint/afscbint.cs.c
 
-afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${CCRULE}
+afscbint.ss.o: ../fsint/afscbint.ss.c
+	$(AFS_CCRULE) ../fsint/afscbint.ss.c
 
-afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE}
+afsint.cs.o: ../fsint/afsint.cs.c
+	$(AFS_CCRULE) ../fsint/afsint.cs.c
 
-afsint.ss.o: ${FSINT}/afsint.ss.c
-	${CCRULE}
+afsint.ss.o: ../fsint/afsint.ss.c
+	$(AFS_CCRULE) ../fsint/afsint.ss.c
 
-afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
+afsint.xdr.o: ../fsint/afsint.xdr.c
+	$(AFS_CCRULE) ../fsint/afsint.xdr.c
 
 fileserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
-
+	$(AFS_LDRULE) ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	
 install: fileserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}

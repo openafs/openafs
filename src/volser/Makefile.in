@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -84,19 +86,18 @@ ${TOP_INCDIR}/afs/volint.h: volint.h
 ${TOP_LIBDIR}/libvolser.a: libvolser.a
 	${INSTALL_DATA} $? $@
 
-restorevol: restorevol.c
-	${CC} ${CFLAGS} -o restorevol ${srcdir}/restorevol.c \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
+restorevol: restorevol.o
+	$(AFS_LDRULE) restorevol.o ${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/util.a ${XLIBS}
 
 vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
-	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
 
 volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
-	${CC} ${DBUG} -o volserver $(SOBJS) ${TOP_LIBDIR}/libdir.a \
-		${LDFLAGS} $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) $(SOBJS) ${TOP_LIBDIR}/libdir.a $(LIBS) ${XLIBS}
 
 voldump: vol-dump.o ${VOLDUMP_LIBS}
-	${CC} ${CFLAGS} -o voldump vol-dump.o ${VOLDUMP_LIBS} ${XLIBS}
+	$(AFS_LDRULE) vol-dump.o ${VOLDUMP_LIBS} ${XLIBS}
 
 libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
 	-$(RM) -f $@

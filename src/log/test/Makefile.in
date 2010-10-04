@@ -7,18 +7,15 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-
-
-INCDIRS=-I${TOP_INCDIR} -I.. -I${TOP_INCDIR}/afs
 LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 LIBS= -lauth -lrxkad -ldes -lsys -lrx -llwp -lcmd -lafsutil ${XLIBS}
-
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
 
 all: testlog gettoktest
 
@@ -28,10 +25,10 @@ install:
 # Build targets
 #
 testlog: testlog.o 
-	${CC} -o testlog testlog.o ${CFLAGS}
+	$(AFS_LDRULE) testlog.o ${LDIRS} ${LIBS}
 
 gettoktest: gettoktest.o 
-	${CC} -o gettoktest gettoktest.o ${CFLAGS}
+	$(AFS_LDRULE) gettoktest.o ${LDIRS} ${LIBS}
 
 #
 # Misc. targets

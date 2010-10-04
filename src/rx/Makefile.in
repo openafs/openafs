@@ -7,12 +7,14 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} ${RXDEBUG}
+MODULE_CFLAGS=$(RXDEBUG)
 
 #
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).

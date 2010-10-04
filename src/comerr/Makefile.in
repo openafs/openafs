@@ -6,6 +6,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -34,9 +36,9 @@ et_lex.lex.c: et_lex.lex.l
 compile_et:	compile_et.o error_table.o
 	case $(SYS_NAME) in \
 	*_linux* | *_umlinux* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
+	$(AFS_LDRULE) compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
 	* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
+	$(AFS_LDRULE) compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
 	esac
 
 libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
@@ -48,8 +50,7 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 # When we build this file, we're using a .c file that's in the object directory,
 # so we need to add the source directory to the includes to pick up local headers.
 #
-error_table.o: error_table.c
-	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@ -c error_table.c
+CFLAGS_error_table.o= -I${srcdir} @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@
 
 #
 # Installation targets

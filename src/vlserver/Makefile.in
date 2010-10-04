@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -71,22 +73,22 @@ ${TOP_INCDIR}/afs/cnvldb.h: cnvldb.h
 	${INSTALL_DATA} $? $@
 
 vldb_check: vldb_check.o ${LIBS}
-	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${LIBS} ${XLIBS} 
+	$(AFS_LDRULE) vldb_check.o ${LIBS} ${XLIBS} 
 
 vldb_check.o: vldb_check.c AFS_component_version_number.o
 
 cnvldb: cnvldb.o ${LIBS}
-	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) cnvldb.o ${LIBS} ${XLIBS}
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
 sascnvldb: sascnvldb.o ${LIBS}
-	$(CC) ${CFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) sascnvldb.o ${LIBS} ${XLIBS}
 
 sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
-	$(CC) ${CFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
+	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 vlserver.o: vlserver.c ${INCLS} AFS_component_version_number.o
@@ -124,7 +126,8 @@ libvldb.a: $(OBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
 vlclient: vlclient.o libvldb.a $(LIBS)
-	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libcmd.a
+	$(AFS_LDRULE) vlclient.o libvldb.a $(LIBS) ${XLIBS} \
+		${TOP_LIBDIR}/libcmd.a
 
 vlclient.o: vlclient.c ${INCLS} AFS_component_version_number.o
 

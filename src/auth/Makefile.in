@@ -7,6 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -69,8 +70,9 @@ cellconfig.o: cellconfig.c ${INCLS}
 copyauth.o: copyauth.c ${INCLS} AFS_component_version_number.o
 setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
 
+CFLAGS_ktc.krb.o = -DAFS_KERBEROS_ENV
 ktc.krb.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-	${CCOBJ} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/ktc.c -o ktc.krb.o
+	$(AFS_CCRULE) $(srcdir)/ktc.c
 
 libauth.a: $(OBJS) AFS_component_version_number.o
 	-$(RM) -f libauth.a
@@ -83,18 +85,14 @@ libauth.krb.a: $(KOBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
 copyauth: copyauth.o ${LIBS}
-	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) copyauth.o ${LIBS} ${XLIBS}
 
 setkey: setkey.o ${LIBS}
-	${CC} $(CFLAGS) -o setkey setkey.o ${LIBS} ${XLIBS}
-
-acfg_errors.o: acfg_errors.c
+	$(AFS_LDRULE) setkey.o ${LIBS} ${XLIBS}
 
 acfg_errors.c cellconfig.h: acfg_errors.et cellconfig.p.h
 	$(RM) -f cellconfig.h acfg_errors.c
 	${COMPILE_ET} -p ${srcdir} acfg_errors -h cellconfig
-
-ktc_errors.o: ktc_errors.c
 
 ktc.o: token.h
 

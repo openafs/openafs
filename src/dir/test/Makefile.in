@@ -7,6 +7,8 @@
 
 srcdir=../../..
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -25,7 +27,5 @@ clean:
 	$(RM) -f *.o *.a test dtest core
 
 dtest:		dtest.o 
-	$(CC) $(LDFLAGS) -o dtest dtest.o $(LIBS)
+	$(AFS_LDRULE) dtest.o $(LIBS)
 
-dtest.o:	dtest.c 
-	$(CC) $(CFLAGS) -c dtest.c 

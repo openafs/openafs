@@ -16,23 +16,24 @@ LIBAFSRPCMINOR=3
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.shared
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CC=${MT_CC}
-CFLAGS = ${COMMON_CFLAGS} -DRXDEBUG ${MT_CFLAGS} ${SHLIB_CFLAGS}
+MODULE_CFLAGS=-DRXDEBUG
+
 SFLAGS=-P -I${TOP_INCDIR}
 
-RX = ../rx
-CCRULE = ${CC} ${CFLAGS} -c $?
+RX = $(srcdir)/../rx
 RXKAD = $(srcdir)/../rxkad
-RXSTAT = ../rxstat
-FSINT = ../fsint
-DES = ../des
-COMERR = ../comerr
-UTIL = ../util
+RXSTAT = $(srcdir)/../rxstat
+FSINT = $(srcdir)/../fsint
+DES = $(srcdir)/../des
+COMERR = $(srcdir)/../comerr
+UTIL = $(srcdir)/../util
 SYS = ${srcdir}/../sys
 LWP = ${srcdir}/../lwp
 
@@ -173,124 +174,125 @@ libafsrpc_pic.a: ${LIBOBJS}
 	$(RANLIB) $@
 
 rx_event.o: ${RX}/rx_event.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_event.c
 
 rx_user.o: ${RX}/rx_user.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_user.c
 
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
+CFLAGS_rx.o = @CFLAGS_NOERROR@
 rx.o: ${RX}/rx.c
-	${CCRULE} @CFLAGS_NOERROR@
+	$(AFS_CCRULE) $(RX)/rx.c
 
 rx_conncache.o: ${RX}/rx_conncache.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_conncache.c
 
 rx_null.o: ${RX}/rx_null.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_null.c
 
 rx_opaque.o: ${RX}/rx_opaque.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_opaque.c
 
-rx_globals.o: ${RX}/rx_globals.c
-	${CCRULE}
-
-rx_getaddr.o: ${RX}/rx_getaddr.c
-	${CCRULE}
+rx_globals.o: ${RX}/rx_globals.c 
+	$(AFS_CCRULE) $(RX)/rx_globals.c
 
 rx_identity.o: ${RX}/rx_identity.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_identity.c
+
+rx_getaddr.o: ${RX}/rx_getaddr.c
+	$(AFS_CCRULE) $(RX)/rx_getaddr.c
 
 rx_misc.o: ${RX}/rx_misc.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_misc.c
 
 rx_packet.o: ${RX}/rx_packet.c
-	${CCRULE}
-
-rx_rdwr.o: ${RX}/rx_rdwr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_packet.c
 
 rx_stats.o: ${RX}/rx_stats.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_stats.c
+
+rx_rdwr.o: ${RX}/rx_rdwr.c
+	$(AFS_CCRULE) $(RX)/rx_rdwr.c
 
 rx_trace.o: ${RX}/rx_trace.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_trace.c
 
 rx_multi.o: ${RX}/rx_multi.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/rx_multi.c
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
-	${CCRULE} -I../rxkad
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/rxkad_client.c
 
 rxkad_server.o: ${RXKAD}/rxkad_server.c
-	${CCRULE} -I../rxkad
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/rxkad_server.c
 
 rxkad_common.o: ${RXKAD}/rxkad_common.c
-	${CCRULE} -I../rxkad
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/rxkad_common.c
 
 ticket.o: ${RXKAD}/ticket.c
-	${CCRULE} -I ../rxkad
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/ticket.c
 
 ticket5.o: ${RXKAD}/ticket5.c
-	${CCRULE} -I../rxkad -I${RXKAD}
+	$(AFS_CCRULE) -I../rxkad -I$(RXKAD) $(RXKAD)/ticket5.c
 
 crc.o: ${RXKAD}/crc.c
-	${CCRULE}
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/crc.c
 
 md4.o: ${RXKAD}/md4.c
-	${CCRULE}
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/md4.c
 
 md5.o: ${RXKAD}/md5.c
-	${CCRULE}
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/md5.c
 
 fcrypt.o: ${RXKAD}/fcrypt.c
-	${CCRULE} -I../rxkad -I${RXKAD}
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/fcrypt.c
 
 crypt_conn.o: ${RXKAD}/crypt_conn.c
-	${CCRULE} -I../rxkad -I${RXKAD}
+	$(AFS_CCRULE) -I../rxkad $(RXKAD)/crypt_conn.c
 
-AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
-	${CCRULE}
+AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 
 xdr.o: ${RX}/xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr.c
 
 xdr_int32.o: ${RX}/xdr_int32.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_int32.c
 
 xdr_int64.o: ${RX}/xdr_int64.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_int64.c
 
 xdr_array.o: ${RX}/xdr_array.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_array.c
 
 xdr_arrayn.o: ${RX}/xdr_arrayn.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_arrayn.c
 
 xdr_float.o: ${RX}/xdr_float.c
-	${CCRULE}
-
-xdr_mem.o: ${RX}/xdr_mem.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_float.c
 
 xdr_len.o: ${RX}/xdr_len.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_len.c
+
+xdr_mem.o: ${RX}/xdr_mem.c
+	$(AFS_CCRULE) $(RX)/xdr_mem.c
 
 xdr_rec.o: ${RX}/xdr_rec.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_rec.c
 
 xdr_refernce.o: ${RX}/xdr_refernce.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_refernce.c
 
 xdr_rx.o: ${RX}/xdr_rx.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_rx.c
 
 xdr_update.o: ${RX}/xdr_update.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_update.c
 
 xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RX)/xdr_afsuuid.c
 
 # Note that the special case statement for compiling des.c is present
 # simply to work around a compiler bug on HP-UX 11.0.  The symptom of
@@ -322,79 +324,80 @@ des.o: ${DES}/des.c
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux11*) \
-		set X `echo ${CCRULE} | sed s/-g//`; shift; \
+		set X `echo ${AFS_CCRULE} ${DES}/des.c | sed s/-g//`; shift; \
 		"$$@" -I../des \
 		;; \
 	*) \
-		${CCRULE} -I../des \
+		${AFS_CCRULE} -I../des ${DES}/des.c \
 		;; \
 	esac
 
+
 crypt.o: ${DES}/crypt.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/crypt.c
 
 cbc_encrypt.o: ${DES}/cbc_encrypt.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/cbc_encrypt.c
 
 pcbc_encrypt.o: ${DES}/pcbc_encrypt.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/pcbc_encrypt.c
 
 cksum.o: ${DES}/cksum.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/cksum.c
 
 new_rnd_key.o: ${DES}/new_rnd_key.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/new_rnd_key.c
 
 key_sched.o: ${DES}/key_sched.c
-	${CCRULE} -I../des
+	$(AFS_CCRULE) -I../des $(DES)/key_sched.c
 
 debug_decl.o: ${DES}/debug_decl.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/debug_decl.c
 
 quad_cksum.o: ${DES}/quad_cksum.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/quad_cksum.c
 
 key_parity.o: ${DES}/key_parity.c
-	${CCRULE} -I../des
+	$(AFS_CCRULE) -I../des $(DES)/key_parity.c
 
 weak_key.o: ${DES}/weak_key.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/weak_key.c
 
 strng_to_key.o: ${DES}/strng_to_key.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/strng_to_key.c
 
 misc.o: ${DES}/misc.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/misc.c
 
 util.o: ${DES}/util.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DES)/util.c
 
 error_msg.o: ${COMERR}/error_msg.c
-	${CCRULE}
+	$(AFS_CCRULE) $(COMERR)/error_msg.c
 
 et_name.o: ${COMERR}/et_name.c
-	${CCRULE}
+	$(AFS_CCRULE) $(COMERR)/et_name.c
 
 com_err.o: ${COMERR}/com_err.c
-	${CCRULE}
+	$(AFS_CCRULE) $(COMERR)/com_err.c
 
 casestrcpy.o: ${UTIL}/casestrcpy.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/casestrcpy.c
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/assert.c
 
 base64.o: ${UTIL}/base64.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/base64.c
 
 strlcat.o: ${UTIL}/strlcat.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/strlcat.c
 
 strlcpy.o: ${UTIL}/strlcpy.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UTIL)/strlcpy.c
 
 fasttime.o: ${LWP}/fasttime.c
-	${CCRULE} ${LWP}/fasttime.c
+	$(AFS_CCRULE) $(LWP)/fasttime.c
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
@@ -403,14 +406,14 @@ syscall.o: ${SYS}/syscall.s
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* | *_darwin_* ) \
-                ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
+                ${CC} ${AFS_CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
-		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
+		${AS} -P ${AFS_CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
 		$(RM) -f syscall.ss syscall.i;; \
 	 *fbsd* ) \
 		touch syscall.c ; \
-                ${CC} ${CFLAGS} -c syscall.c;; \
+                ${CC} ${AFS_CFLAGS} -c syscall.c;; \
 	 *) \
 		$(PATH_CPP) ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
@@ -418,31 +421,31 @@ syscall.o: ${SYS}/syscall.s
 	esac
 
 rxstat.o: ${RXSTAT}/rxstat.c
-	${CCRULE}
+	$(AFS_CCRULE) $(RXSTAT)/rxstat.c
 
-rxstat.cs.o: ${RXSTAT}/rxstat.cs.c
-	${CCRULE}
+rxstat.cs.o: ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
 
-rxstat.ss.o: ${RXSTAT}/rxstat.ss.c
-	${CCRULE}
+rxstat.ss.o: ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 
-rxstat.xdr.o: ${RXSTAT}/rxstat.xdr.c
-	${CCRULE}
+rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/rxstat/rxstat.xdr.c
 
-afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE}
+afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 
-afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
+afsint.xdr.o: ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
 
-afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CCRULE}
+afscbint.cs.o: ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
 
-afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE}
+afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
+	$(AFS_CCRULE) ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE} -I../fsint
+	$(AFS_CCRULE) -I../fsint ${FSINT}/afsaux.c
 
 clean:
 	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so* \

@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -155,7 +157,7 @@ DEBUG_FLAG=
 AUX_CFLAGS=
 VERSION_CFLAG=
 AFS_INCL=-I${TOP_INCDIR} -I.. -I../config
-CFLAGS=$(OPTF) $(DEFINES) -I. -I.. $(VERSION_CFLAG) $(DEBUG_FLAG)
+XCFLAGS= $(CFLAGS) $(OPTF) $(DEFINES) -I. -I.. $(VERSION_CFLAG) $(DEBUG_FLAG)
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
              ${TOP_INCDIR}/lock.h  \
@@ -187,7 +189,7 @@ LIBOBJS=$(LIBCOMMON_OBJS) $(LIBAPACHE_OBJS)
 OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 
 .c.o:
-	$(CCOBJ) -c $(CFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
+	$(CCOBJ) -c $(XCFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
 
 
 weblog: weblog.o $(APACHE_AFS_COMMON_LIB)
@@ -225,9 +227,9 @@ apache_afs_utils.o: apache_afs_utils.c apache_afs_utils.h
 apache_afs_cache.o: apache_afs_cache.c apache_afs_cache.h
 weblog.o: weblog.c weblog_errors.h $(APACHE_AFS_COMMON_LIB)
 apache_afs_client.o: apache_api.h apache_afs_client.c apache_afs_utils.o apache_afs_cache.o AFS_component_version_number.o
-	$(CC) -c $(CFLAGS) $(AFS_INCL) $(APACHE_INCLUDES) $(AUX_CFLAGS) apache_afs_client.c
+	$(CC) -c $(XCFLAGS) $(AFS_INCL) $(APACHE_INCLUDES) $(AUX_CFLAGS) apache_afs_client.c
 apache_afs_plugin.o: apache_api.h apache_afs_plugin.c apache_afs_client.o apache_afs_utils.o apache_afs_cache.o
-	$(CC) -c $(CFLAGS) $(APACHE_INCLUDES) $(AUX_CFLAGS) apache_afs_plugin.c
+	$(CC) -c $(XCFLAGS) $(APACHE_INCLUDES) $(AUX_CFLAGS) apache_afs_plugin.c
 
 
 clean:

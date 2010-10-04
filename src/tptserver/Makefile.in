@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -14,11 +16,9 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c
-
-RX=../rx
-UTIL=../util
-PTSERVER=../ptserver
+RX=$(srcdir)/../rx
+UTIL=$(srcdir)/../util
+PTSERVER=$(srcdir)/../ptserver
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
@@ -54,10 +54,10 @@ depinstall:
 #
 
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} ${srcdir}/${RX}/rx_pthread.c
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 rxkad_errs.o: ../rxkad/rxkad_errs.c
-	${CCRULE} ../rxkad/rxkad_errs.c
+	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
 
 #
 # get the pthreaded util stuff compiled here.  we do this instead of
@@ -66,65 +66,59 @@ rxkad_errs.o: ../rxkad/rxkad_errs.c
 #
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE} ${srcdir}/${UTIL}/assert.c
+	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
-	${CCRULE} ${srcdir}/${UTIL}/uuid.c
+	$(AFS_CCRULE) $(UTIL)/uuid.c
 
 serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE} ${srcdir}/${UTIL}/serverLog.c
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE} ${srcdir}/${UTIL}/fileutil.c
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
 
 volparse.o: ${UTIL}/volparse.c
-	${CCRULE} ${srcdir}/${UTIL}/volparse.c
+	$(AFS_CCRULE) $(UTIL)/volparse.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE} ${srcdir}/${UTIL}/flipbase64.c
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE} ${srcdir}/${UTIL}/netutils.c
+	$(AFS_CCRULE) $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE} ${srcdir}/${UTIL}/dirpath.c
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
 
 softsig.o: ${UTIL}/softsig.c
-	${CCRULE} ${srcdir}/${UTIL}/softsig.c
+	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE} ${srcdir}/${UTIL}/hostparse.c
+	$(AFS_CCRULE) $(UTIL)/hostparse.c
 
 snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE} ${srcdir}/${UTIL}/snprintf.c
+	$(AFS_CCRULE) $(UTIL)/snprintf.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE} ${srcdir}/${UTIL}/pthread_glock.c
-
+	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
 
 ptserver.o: ${PTSERVER}/ptserver.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptserver.c
+	$(AFS_CCRULE) $(PTSERVER)/ptserver.c
 
 ptutils.o: ${PTSERVER}/ptutils.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptutils.c
+	$(AFS_CCRULE) $(PTSERVER)/ptutils.c
 
 ptprocs.o: ${PTSERVER}/ptprocs.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptprocs.c
+	$(AFS_CCRULE) $(PTSERVER)/ptprocs.c
 
 utils.o: ${PTSERVER}/utils.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/utils.c
+	$(AFS_CCRULE) $(PTSERVER)/utils.c
 
 map.o: ${PTSERVER}/map.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/map.c
+	$(AFS_CCRULE) $(PTSERVER)/map.c
 
 ptint.ss.o: ptint.ss.c
-	${CCRULE} ptint.ss.c
-
 ptint.cs.o: ptint.cs.c
-	${CCRULE} ptint.cs.c
-
 ptint.xdr.o: ptint.xdr.c
-	${CCRULE} ptint.xdr.c
 
 ptint.cs.c: ${PTSERVER}/ptint.xg
 	${RXGEN} -A -x -C -u -o $@ ${srcdir}/${PTSERVER}/ptint.xg
@@ -152,62 +146,70 @@ Kptint.h: ${PTSERVER}/ptint.xg
 	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/${PTSERVER}/ptint.xg
 
 display.o: ${PTSERVER}/display.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/display.c
+	${AFS_CCRULE} ${PTSERVER}/display.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	${CC} ${LDFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o \
+		ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${MT_LIBS} \
+		${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/db_verify.c
+	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(CC) ${LDFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) db_verify.o display.o pterror.o \
+		$(LIBS) ${MT_LIBS} ${XLIBS}
 
-ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o $(LIBS)
-	$(CC) ${LDFLAGS} -o ptclient ptclient.o display.o $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS}
+ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o \
+	AFS_component_version_number.o $(LIBS)
+	$(AFS_LDRULE) ptclient.o display.o $(PTOBJS) \
+		$(LIBS) ${MT_LIBS} ${XLIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptclient.c
+	$(AFS_CCRULE) $(PTSERVER)/ptclient.c
 
 ptuser.o: ${PTSERVER}/ptuser.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptuser.c
+	$(AFS_CCRULE) $(PTSERVER)/ptuser.c
 
 pterror.h pterror.c: ${PTSERVER}/pterror.et
 	$(RM) -f pterror.h pterror.c
 	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
 
 pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
-	$(CC) ${LDFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a \
+		$(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
 
 pts.o: ${PTSERVER}/pts.c
-	${CCRULE} ${srcdir}/${PTSERVER}/pts.c
+	$(AFS_CCRULE) $(PTSERVER)/pts.c
 
 readgroup: readgroup.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o readgroup readgroup.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) readgroup.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/readgroup.c
+	$(AFS_CCRULE) $(PTSERVER)/readgroup.c
 
 readpwd: readpwd.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o readpwd readpwd.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) readpwd.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/readpwd.c
+	$(AFS_CCRULE) $(PTSERVER)/readpwd.c
 
 testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
+		$(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/testpt.c
+	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) \
+		${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
-	${CCRULE} ${srcdir}/${PTSERVER}/pt_util.c
+	$(AFS_CCRULE) $(PTSERVER)/pt_util.c
 
 ubik.o: ${PTSERVER}/ubik.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ubik.c
+	$(AFS_CCRULE) $(PTSERVER)/ubik.c
 
 prerror.h: pterror.h
 	${INSTALL} $? $@

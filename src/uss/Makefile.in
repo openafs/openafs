@@ -7,14 +7,14 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: uss
-
-CFLAGS=${DBUG} ${COMMON_INCL} ${XCFLAGS} ${ARCHFLAGS}
 
 #
 # Build targets
@@ -47,40 +47,18 @@ OBJS =  uss_procs.o \
 	y.tab.o 
 
 uss: uss.o ${OBJS} 
-	${CC} ${CFLAGS} -o uss uss.o ${OBJS} ${LIBS}
+	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS}
 
 uss.o:  uss.c AFS_component_version_number.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss.c
 
-uss_procs.o : uss_procs.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_procs.c
-
-uss_common.o : uss_common.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_common.c
-
-uss_vol.o : uss_vol.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_vol.c
-
-uss_acl.o : uss_acl.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_acl.c
-
-uss_ptserver.o : uss_ptserver.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_ptserver.c
-
-uss_kauth.o : uss_kauth.c
-	${CC} -c ${CFLAGS} @CFLAGS_NOERROR@ ${srcdir}/uss_kauth.c
-
-uss_fs.o : uss_fs.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_fs.c
-
+CFLAGS_uss_kauth.o = @CFLAGS_NOERROR@
+CFLAGS_lex.yy.o = @CFLAGS_NOUNUSED@
 lex.yy.o : lex.yy.c y.tab.c
-	${CC} -c ${CFLAGS} @CFLAGS_NOUNUSED@ lex.yy.c
 
 lex.yy.c : lex.l
 	${LEX} ${srcdir}/lex.l
 
 y.tab.o : y.tab.c
-	${CC} -c ${CFLAGS} y.tab.c
 
 uss.c: uss_common.h uss_procs.h uss_kauth.h uss_fs.h
 

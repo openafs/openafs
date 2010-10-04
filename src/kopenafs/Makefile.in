@@ -9,6 +9,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.shared
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -19,9 +21,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 MAJOR		= 1
 MINOR		= 1
 
-CC		= ${MT_CC}
-INCLUDES	= -I. -I${srcdir} -I../sys
-CFLAGS		= ${COMMON_CFLAGS} ${INCLUDES} ${MT_CFLAGS} ${SHLIB_CFLAGS}
+MODULE_INCLUDE	= -I. -I${srcdir} -I../sys
 
 SFLAGS		= -I${TOP_INCDIR}
 SYS		= ${srcdir}/../sys
@@ -44,20 +44,21 @@ ${TOP_INCDIR}/kopenafs.h: kopenafs.h
 	${INSTALL_DATA} $? $@
 
 glue.o: ${SYS}/glue.c ${SYS}/afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${SYS}/glue.c
+	$(AFS_CCRULE) $(SYS)/glue.c
 
 pioctl.o: ${SYS}/pioctl.c ${SYS}/afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${SYS}/pioctl.c
+	$(AFS_CCRULE) $(SYS)/pioctl.c
 
 setpag.o: ${SYS}/setpag.c ${SYS}/afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${SYS}/setpag.c
+	$(AFS_CCRULE) $(SYS)/setpag.c
 
 # This file is only actually used on SGI and AIX, but some systems can't cope
 # with an empty .o file being included in a link.
+
 syscall.o: ${SYS}/syscall.s
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_*) \
-                ${CC} ${CFLAGS} -c ${SYS}/syscall.s; \
+                $(AFS_CCRULE) ${SYS}/syscall.s; \
 		;; \
 	rs_aix* | hp_ux10*) \
 		$(PATH_CPP) -P ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
@@ -94,10 +95,10 @@ ${LIBKOPENAFS}: ${LIBOBJS} syscall.o libkopenafs.map
 	esac
 
 test-unlog: test-unlog.o libkopenafs.a
-	${CC} -o test-unlog test-unlog.o libkopenafs.a ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) test-unlog.o libkopenafs.a ${XLIBS}
 
 test-setpag: test-setpag.o libkopenafs.a
-	${CC} -o test-setpag test-setpag.o libkopenafs.a ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) test-setpag.o libkopenafs.a ${XLIBS}
 
 #
 # Installation targets

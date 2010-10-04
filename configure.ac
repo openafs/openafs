@@ -131,6 +131,9 @@ src/comerr/Makefile \
 src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
+src/config/Makefile.lwp \
+src/config/Makefile.pthread \
+src/config/Makefile.shared \
 src/config/Makefile.version-CML \
 src/config/Makefile.version-NOCML \
 src/config/shlib-build \

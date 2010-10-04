@@ -9,6 +9,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -70,7 +72,6 @@ librxkad.a: ${OBJS} AFS_component_version_number.o
 rxkad_client.o: fcrypt.h private_data.h rxkad_client.c ${INCLS}
 
 rxkad_server.o: rxkad_server.c fcrypt.h private_data.h  ${INCLS}
-	$(CC) $(CFLAGS) -c ${srcdir}/rxkad_server.c
 
 rxkad_common.o: fcrypt.h private_data.h rxkad_common.c ${INCLS}
 
@@ -81,10 +82,8 @@ rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
 	${COMPILE_ET} -p ${srcdir} rxkad_errs -h rxkad
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
-	$(CC) $(CFLAGS) -c ${srcdir}/ticket.c
 
 ticket5.o: ticket5.c v5gen.c v5der.c v5gen-rewrite.h ${INCLS}
-	$(CC) -I${srcdir} $(CFLAGS) -c ${srcdir}/ticket5.c
 
 crc.o: crc.c ${INCLS}
 
@@ -99,10 +98,10 @@ crypt_conn.o: crypt_conn.c fcrypt.h private_data.h ${INCLS}
 tcrypt.o: tcrypt.c AFS_component_version_number.o
 
 tcrypt: tcrypt.o librxkad.a 
-	${CC} -o tcrypt tcrypt.o librxkad.a
+	$(AFS_LDRULE) tcrypt.o librxkad.a
 
 fc_test: ${fc_test_OBJS} ${fc_test_LIBS}
-	${CC} ${CFLAGS} -o fc_test ${fc_test_OBJS} ${fc_test_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${fc_test_OBJS} ${fc_test_LIBS} ${XLIBS}
 
 fc_test.o: ${INCLS}
 

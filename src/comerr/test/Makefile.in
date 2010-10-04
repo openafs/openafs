@@ -5,12 +5,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-
-
-INCDIRS=-I${TOP_INCDIR} -I..
 LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
-
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} -lcom_err ${XCFLAGS} ${ARCHFLAGS}
 
 all: test
 
@@ -20,7 +15,7 @@ install:
 # Build targets
 #
 test:	test.o test1.o test2.o 
-	$(CC)  ${CFLAGS} -o test test.o test1.o test2.o 
+	$(AFS_LDRULE) ${LDIRS} -lcom_err test.o test1.o test2.o 
 
 test.o:	test1.h test2.h
 test1.o : test1.c

@@ -6,6 +6,8 @@
 #
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -25,10 +27,9 @@ ${TOP_INCDIR}/afs/rxgen_consts.h: rxgen_consts.h
 	${INSTALL_DATA} $? $@
 
 rxgen: $(OBJS) AFS_component_version_number.c $(HDRS)
-	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
+	$(AFS_LDRULE) $(OBJS) $(XLIBS)
 
-rpc_main.o: rpc_main.c
-	$(CCOBJ) $(CFLAGS) -c ${srcdir}/rpc_main.c -DPATH_CPP="\"$(PATH_CPP)\""
+CFLAGS_rpc_main.o= -DPATH_CPP="\"$(PATH_CPP)\""
 
 #
 # Install targets

@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -24,7 +26,7 @@ INCLS=${SRCDIR}/include/afs/param.h ${SRCDIR}/include/afs/usd.h
 
 # build usd_test
 usd_test: usd_test.o ${LIBUSD} $(INCLS)
-	$(CC) ${CFLAGS} -o usd_test usd_test.o ${LIBUSD} ${XLIBS}
+	$(AFS_LDFLAGS) usd_test.o ${LIBUSD} ${XLIBS}
 
 usd_test.o: usd_test.c
 

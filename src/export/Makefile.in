@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -78,63 +80,82 @@ export64.ext.nonfs: export64.nonfs.o symtab64.o
 symtab.o symtab64.o: ${srcdir}/symtab.c
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		${CC} ${CFLAGS} -c ${srcdir}/symtab.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -c ${srcdir}/symtab.c ;; \
 	rs_aix5* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/symtab.c ; \
+		$(CC) $(AFS_CPPFLAGS) ${AFS_CFLAGS} -q64 -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ; \
-		${CC} ${CFLAGS} -DAFS_AIX51_ENV -c ${srcdir}/symtab.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
+			-c ${srcdir}/symtab.c ;; \
 	rs_aix6* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/symtab.c ; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ;; \
 	esac
 
 export.o export64.o: ${srcdir}/export.c
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		${CC} ${CFLAGS} -c ${srcdir}/export.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -c ${srcdir}/export.c ;; \
 	rs_aix5* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.o ; \
-		${CC} ${CFLAGS} -DAFS_AIX51_ENV -c ${srcdir}/export.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ;; \
 	rs_aix6* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 \
+			-D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.o ;; \
 	esac
 
 export.nonfs.o export64.nonfs.o: ${srcdir}/export.c
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		${CC} ${INCS} -DAFS_NONFSTRANS -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) ${INCS} -DAFS_NONFSTRANS \
+			-c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
 	rs_aix5* ) \
-		${CC} -q64 ${INCS} -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ; \
-		${CC} ${INCS} -DAFS_NONFSTRANS -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) ${INCS} -DAFS_NONFSTRANS \
+			-DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
 	rs_aix6* ) \
-		${CC} -q64 ${INCS} -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ;; \
 	esac
 
 cfgexport: cfgexport.o
-	${CC} -g ${INCS} -o cfgexport cfgexport.o
+	$(CC) $(LDFLAGS) -g ${INCS} -o cfgexport cfgexport.o
 
 cfgexport64: cfgexport64.o
-	${CC} -g ${INCS} -q64 -o cfgexport64 cfgexport64.o
+	$(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgexport64 cfgexport64.o
 
 cfgafs: cfgafs.o
-	${CC} ${INCS} -o cfgafs cfgafs.o
+	$(CC) $(LDFLAGS) ${INCS} -o cfgafs cfgafs.o
 
 cfgafs64: cfgafs64.o
-	${CC} -g ${INCS} -q64 -o cfgafs64 cfgafs64.o
+	$(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgafs64 cfgafs64.o
 
+CFLAGS_cfgexport64.o = -g -q64 -D__XCOFF64__ 
 cfgexport64.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
-	${CC} -g -q64 ${CFLAGS} -D__XCOFF64__ -c ${srcdir}/cfgexport.c -o cfgexport64.o
+	$(AFS_CCRULE) $(srcdir)/cfgexport.c
 
 cfgexport.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
 cfgafs.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
+
+CFLAGS_cfgafs64.o = -q64
 cfgafs64.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
-	${CC} -q64 ${CFLAGS} -c ${srcdir}/cfgafs.c -o cfgafs64.o
+	$(AFS_CCRULE) $(srcdir)/cfgafs.c
 
 clean:
 	$(RM) -f *.o *.Zlst *.map *.out AFS_component_version_number.c

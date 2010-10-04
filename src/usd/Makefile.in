@@ -7,14 +7,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-
-
-CFLAGS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
 all: ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
 

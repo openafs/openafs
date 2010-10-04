@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -41,7 +43,7 @@ file_tm.o: file_tm.c ${INCLS} AFS_component_version_number.c
 test_ftm.o: test_ftm.c ${INCLS} AFS_component_version_number.c
 
 test_ftm: test_ftm.o libbutm.a
-	${CC} ${LDFLAGS} -o test_ftm test_ftm.o libbutm.a ${LIBS}
+	$(AFS_LDRULE) test_ftm.o libbutm.a ${LIBS}
 
 test: test_ftm
 	echo 'Usage: ./test_ftm -conf config -tape xxx *'

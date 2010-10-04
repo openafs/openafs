@@ -12,7 +12,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-LDFLAGS = ${SHLIB_LDFLAGS}
    LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
 	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
   KLIBS = ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
@@ -21,32 +20,41 @@ LDFLAGS = ${SHLIB_LDFLAGS}
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
 INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
-CFLAGS =  ${PAM_DBG} ${PAM_OPTMZ} ${INCLUDES} ${PAM_CFLAGS}
+
+
+AFS_CCRULE= $(CC) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_$(@)) \
+	        ${PAM_DBG} ${PAM_OPTMZ} \
+		${INCLUDES} ${PAM_CFLAGS} -c -o $@
+
+.c.o:
+	$(AFS_CCRULE) $<
 
 all: test_pam pam_afs.so.1 pam_afs.krb.so.1
 
+CFLAGS_afs_setcred_krb.o = -DAFS_KERBEROS_ENV
+CFLAGS_afs_auth_krb.o   = -DAFS_KERBEROS_ENV
+CFLAGS_afs_util_krb.o   = -DAFS_KERBEROS_ENV
+CFLAGS_ktc_krb.o        = -DAFS_KERBEROS_ENV -I../auth
+
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -c ${srcdir}/afs_setcred.c -o afs_setcred.o
 
 afs_setcred_krb.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_setcred.c -o afs_setcred_krb.o
+	$(AFS_CCRULE) $(srcdir)/afs_setcred.c
 
 afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -c ${srcdir}/afs_auth.c -o afs_auth.o
 
 afs_auth_krb.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_auth.c -o afs_auth_krb.o
+	$(AFS_CCRULE) $(srcdir)/afs_auth.c
 
 afs_util.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -c ${srcdir}/afs_util.c -o afs_util.o
 
 afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
+	$(AFS_CCRULE) $(srcdir)/afs_util.c
 
 ktc_krb.o: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
 		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
 		${TOP_INCDIR}/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c -I../auth -o $@
+	$(AFS_CCRULE) $(srcdir)/../auth/ktc.c
 
 pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o \
 		${TOP_LIBDIR}/libafsauthent_pic.a \
@@ -67,13 +75,13 @@ test_pam: test_pam.o
 	set -x; \
 	case "$(SYS_NAME)" in \
 	hp_ux* | ia64_hpux*) \
-		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAM_LIBS};; \
+		$(AFS_LDRULE) test_pam.o ${PAM_LIBS};; \
 	sun*_5*) \
-		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAM_LIBS};; \
+		$(AFS_LDRULE) test_pam.o ${PAM_LIBS};; \
 	*linux*) \
-		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam -ldl;; \
+		$(AFS_LDRULE) -rdynamic test_pam.o -lpam -ldl;; \
 	*fbsd*| *nbsd*) \
-		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam ;; \
+		$(AFS_LDRULE) -rdynamic test_pam.o -lpam ;; \
 	*) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac

@@ -9,12 +9,13 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CFLAGS=${DBUG} ${COMMON_INCL} ${XCFLAGS} ${ARCHFLAGS}
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
@@ -106,7 +107,7 @@ tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 syscall.o: syscall.s
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_*) \
-                ${CC} ${CFLAGS} -c ${srcdir}/syscall.s; \
+                ${CC} ${AFS_CFLAGS} -c ${srcdir}/syscall.s; \
 		;; \
 	rs_aix* | hp_ux10*) \
 		$(PATH_CPP) -P ${SFLAGS} ${srcdir}/syscall.s > syscall.ss; \
@@ -119,16 +120,9 @@ syscall.o: syscall.s
 	esac
 
 afssyscalls.o: afssyscalls.c afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/afssyscalls.c
-
 glue.o: glue.c afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/glue.c
-
 setpag.o: setpag.c afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/setpag.c
-
 pioctl.o: pioctl.c afssyscalls.h
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/pioctl.c
 
 rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
@@ -155,49 +149,52 @@ Krmtsys.h: rmtsys.xg
 	${RXGEN} -A -k -h -o Krmtsys.h ${srcdir}/rmtsys.xg
 
 rmtsysd: rmtsysd.o libsys.a
-	${CC} ${CFLAGS} -o rmtsysd rmtsysd.o ${LIBS}
+	$(AFS_LDRULE) rmtsysd.o ${LIBS}
 
-pagsh:	libsys.a AFS_component_version_number.o pagsh.c
-	${CC} ${CFLAGS} -c ${srcdir}/pagsh.c
-	${CC} ${CFLAGS} -o pagsh pagsh.o ${LIBS}
+pagsh:	pagsh.o libsys.a AFS_component_version_number.o
+	$(AFS_LDRULE) pagsh.o ${LIBS}
 
-pagsh.krb: libsys.a pagsh.c ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a
-	${CC} ${CFLAGS} -o pagsh.krb.o -c ${srcdir}/pagsh.c -DAFS_KERBEROS_ENV
-	${CC} ${CFLAGS} -o pagsh.krb pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS}
+CFLAGS_pagsh.krb.o = -DAFS_KERBEROS_ENV
+pagsh.krb.o: pagsh.c
+	$(AFS_CCRULE) $(srcdir)/pagsh.c 
+
+pagsh.krb: libsys.a pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a
+	$(AFS_LDRULE) pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a \
+		${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS}
 
 #
 # Test programs.
 #
 
 iinc:	iinc.c 
-	$(CC) -o iinc ${CFLAGS} ${srcdir}/iinc.c ${LIBS}
+	$(CC) -o iinc $(AFS_CFLAGS) ${srcdir}/iinc.c ${LIBS}
 
 idec:	idec.c  AFS_component_version_number.c
-	$(CC) -o idec ${CFLAGS} ${srcdir}/idec.c ${LIBS}
+	$(CC) -o idec $(AFS_CFLAGS) ${srcdir}/idec.c ${LIBS}
 
 icreate:icreate.c  AFS_component_version_number.c
-	$(CC) -o icreate ${CFLAGS} ${srcdir}/icreate.c ${LIBS}
+	$(CC) -o icreate $(AFS_CFLAGS) ${srcdir}/icreate.c ${LIBS}
 
 iopen:	iopen.c  AFS_component_version_number.c
-	$(CC) -o iopen ${CFLAGS} ${srcdir}/iopen.c ${LIBS}
+	$(CC) -o iopen $(AFS_CFLAGS) ${srcdir}/iopen.c ${LIBS}
 
 iread:	iread.c  AFS_component_version_number.c
-	${CC} -o iread ${CFLAGS} ${srcdir}/iread.c ${LIBS}
+	${CC} -o iread $(AFS_CFLAGS) ${srcdir}/iread.c ${LIBS}
 
 iwrite:	iwrite.c  AFS_component_version_number.c
-	${CC} -o iwrite ${CFLAGS} ${srcdir}/iwrite.c ${LIBS}
+	${CC} -o iwrite $(AFS_CFLAGS) ${srcdir}/iwrite.c ${LIBS}
 
 istat:	istat.c  AFS_component_version_number.c
-	$(CC) -o istat ${CFLAGS} ${srcdir}/istat.c ${LIBS}
+	$(CC) -o istat $(AFS_CFLAGS) ${srcdir}/istat.c ${LIBS}
 
 fixit:	fixit.c AFS_component_version_number.c
-	$(CC) -o fixit ${CFLAGS} ${srcdir}/fixit.c ${LIBS}
+	$(CC) -o fixit $(AFS_CFLAGS) ${srcdir}/fixit.c ${LIBS}
 
 
 xfsinode: xfsinode.c  AFS_component_version_number.c
 	@set -x; case "${SYS_NAME}" in \
 		sgi_62 | sgi_64 ) \
-		$(CC) -o xfsinode ${CFLAGS} ${srcdir}/xfsinode.c ${LIBS}
+		$(CC) -o xfsinode $(AFS_CFLAGS) ${srcdir}/xfsinode.c ${LIBS}
 	esac
 
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp

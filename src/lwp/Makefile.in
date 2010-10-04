@@ -9,12 +9,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${ARCHFLAGS} ${COMMON_INCL}
+# Override the global COMMON_CFLAGS, as we want to be able to override
+# debug and optimization settings for this module
+
+COMMON_CFLAGS = ${CFLAGS} ${LWP_DBG} ${LWP_OPTMZ} ${COMMON_INCL}
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
@@ -132,12 +137,12 @@ process.o	: process.s process.i386.s process.c lwp.o
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
-		${CCOBJ} ${CFLAGS} -c ${srcdir}/process.c;; \
+		$(AFS_CCRULE) -c ${srcdir}/process.c;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.s; \
 		${AS} -v process.i -o process.o;; \
 	ia64_hpux11* | hp_ux11* ) \
-		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
+		$(AFS_CCRULE) -c ${srcdir}/process.c;; \
 	i386_*) \
 		$(PATH_CPP) -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s > process.ss; \
 		${AS} process.ss -o process.o; \
@@ -149,15 +154,13 @@ process.o	: process.s process.i386.s process.c lwp.o
 	esac
 
 iomgr.o		: iomgr.c lwp.h timer.h
-		${CCOBJ} -c ${CFLAGS} ${srcdir}/iomgr.c
-
 preempt.o	: preempt.c lwp.h preempt.h
 lwp.o		: lwp.c lwp.h
 	case "$(SYS_NAME)" in \
 		rs_aix*) \
 			$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -I${srcdir} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -c ${srcdir}/lwp.c;; \
 		*)  \
-			$(CCOBJ) ${CFLAGS} -c ${srcdir}/lwp.c;; \
+			$(AFS_CCRULE) ${srcdir}/lwp.c;; \
 		esac
 lock.o		: lock.c lock.h lwp.h
 timer.o		: timer.c
@@ -170,11 +173,7 @@ exc_handling.o	: exc_handling.c
 # tests
 #
 rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a
-	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(TOP_LIBDIR)/util.a
-
-rw.o: rw.c
-	${CC} ${CFLAGS} -c ${srcdir}/rw.c
-
+	$(AFS_LDRULE) rw.o liblwp.a $(TOP_LIBDIR)/util.a
 
 #
 # Install targets

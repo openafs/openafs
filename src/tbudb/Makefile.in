@@ -8,17 +8,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c
-
-RX=../rx
-UTIL=../util
-BUDB=../budb
+RX=$(srcdir)/../rx
+UTIL=$(srcdir)/../util
+BUDB=$(srcdir)/../budb
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
@@ -73,10 +73,10 @@ budb_errs.h: ${BUDB}/budb_errs.et
 #
 
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} ${srcdir}/${RX}/rx_pthread.c
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 rxkad_errs.o: ../rxkad/rxkad_errs.c
-	${CCRULE} ../rxkad/rxkad_errs.c
+	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
 
 # get the pthreaded util stuff compiled here.  we do this instead of
 # using the non-pthreaded libutil.a.  There probably should be a
@@ -84,78 +84,76 @@ rxkad_errs.o: ../rxkad/rxkad_errs.c
 #
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE} ${srcdir}/${UTIL}/assert.c
+	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
-	${CCRULE} ${srcdir}/${UTIL}/uuid.c
+	$(AFS_CCRULE) $(UTIL)/uuid.c
 
 serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE} ${srcdir}/${UTIL}/serverLog.c
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE} ${srcdir}/${UTIL}/fileutil.c
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
 
 volparse.o: ${UTIL}/volparse.c
-	${CCRULE} ${srcdir}/${UTIL}/volparse.c
+	$(AFS_CCRULE) $(UTIL)/volparse.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE} ${srcdir}/${UTIL}/flipbase64.c
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE} ${srcdir}/${UTIL}/netutils.c
+	$(AFS_CCRULE) $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE} ${srcdir}/${UTIL}/dirpath.c
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
 
 softsig.o: ${UTIL}/softsig.c
-	${CCRULE} ${srcdir}/${UTIL}/softsig.c
+	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE} ${srcdir}/${UTIL}/hostparse.c
+	$(AFS_CCRULE) $(UTIL)/hostparse.c
 
 snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE} ${srcdir}/${UTIL}/snprintf.c
+	$(AFS_CCRULE) $(UTIL)/snprintf.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE} ${srcdir}/${UTIL}/pthread_glock.c
-
+	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
 
 database.o: ${BUDB}/database.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/database.c
+	$(AFS_CCRULE) $(BUDB)/database.c
 
 db_alloc.o: ${BUDB}/db_alloc.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_alloc.c
+	$(AFS_CCRULE) $(BUDB)/db_alloc.c
 
 db_dump.o: ${BUDB}/db_dump.c
-	${CCRULE} ${srcdir}/${BUDB}/db_dump.c
+	$(AFS_CCRULE) $(BUDB)/db_dump.c
 
 dbs_dump.o: ${BUDB}/dbs_dump.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/dbs_dump.c
+	$(AFS_CCRULE) $(BUDB)/dbs_dump.c
 
 db_lock.o:  ${BUDB}/db_lock.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_lock.c
+	$(AFS_CCRULE) $(BUDB)/db_lock.c
 
 db_text.o:  ${BUDB}/db_text.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_text.c
+	$(AFS_CCRULE) $(BUDB)/db_text.c
 
 db_hash.o: ${BUDB}/db_hash.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_hash.c
+	$(AFS_CCRULE) $(BUDB)/db_hash.c
 
 ol_verify.o: ${BUDB}/ol_verify.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/ol_verify.c
+	$(AFS_CCRULE) $(BUDB)/ol_verify.c
 
 procs.o: ${BUDB}/procs.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/procs.c
+	$(AFS_CCRULE) $(BUDB)/procs.c
 
 struct_ops.o: ${BUDB}/struct_ops.c budb_errs.h ${TOP_INCDIR}/afs/budb_client.h
-	${CCRULE} ${srcdir}/${BUDB}/struct_ops.c
+	$(AFS_CCRULE) $(BUDB)/struct_ops.c
 
 server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/server.c
-
+	$(AFS_CCRULE) $(BUDB)/server.c
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
 	${RXGEN} -u -C -o $@ ${srcdir}/${BUDB}/budb.rg

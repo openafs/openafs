@@ -4,19 +4,17 @@ srcdir=@srcdir@
 abs_top_srcdir=@abs_top_srcdir@
 abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-RUNTESTS_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
+MODULE_CFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 
 all: runtests
 	cd tap && $(MAKE) $@
 	cd util && $(MAKE) $@
 
-runtests.o: $(srcdir)/runtests.c
-	$(CCOBJ) $(CFLAGS) $(RUNTESTS_CPPFLAGS) -c $(srcdir)/runtests.c
-
 runtests: runtests.o
-	$(CC) $(LDFLAGS) -o runtests runtests.o
+	$(AFS_LDRULE) runtests.o
 
 check test tests: runtests
 	cd tap && $(MAKE) $@

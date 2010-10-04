@@ -6,6 +6,8 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -96,22 +98,20 @@ ${TOP_INCDIR}/afs/ptserver.h: ptserver.h
 # Build targets
 #
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o \
+		utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
 # When supergroups is enabled, some parts of ptserver cast between
 # incompatible structs.
+CFLAGS_ptutils.o = @CFLAGS_NOSTRICT@
+CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
+
 ptutils.o: ptutils.c ${INCLS}
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/ptutils.c
-
 ptprocs.o: ptprocs.c ${INCLS}
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/ptprocs.c
-
 utils.o: utils.c ${INCLS} 
-
 map.o: map.c ${INCLS}
-
 ptint.ss.o: ptint.ss.c ptint.xdr.c ptint.xg
 ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
 ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
@@ -146,10 +146,10 @@ display.o: display.c ${INCLS}
 db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) db_verify.o display.o pterror.o $(LIBS) ${XLIBS}
 
 ptclient: ptclient.o display.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o ptclient ptclient.o display.o libprot.a $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) ptclient.o display.o libprot.a $(LIBS) ${XLIBS}
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
@@ -165,32 +165,35 @@ libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_numbe
 	$(RANLIB) $@
 
 pts: pts.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS}
 
 pts.o: pts.c ${LINCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 readgroup: readgroup.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o readgroup readgroup.o libprot.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) readgroup.o libprot.a ${LIBS} ${XLIBS}
 
 readgroup.o: readgroup.c ${LINCLS} AFS_component_version_number.c
 
 readpwd: readpwd.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o readpwd readpwd.o libprot.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) readpwd.o libprot.a ${LIBS} ${XLIBS}
 
 readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 
 testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	case "$(SYS_NAME)" in \
 	*_darwin_12 ) \
-		$(CC) ${CFLAGS} -o testpt testpt.o ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ;; \
+		$(AFS_LDRULE) testpt.o ${TOP_LIBDIR}/libcmd.a \
+			libprot.a $(LIBS) ;; \
 	* ) \
-		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${XLIBS} ;; \
+		$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
+			libprot.a $(LIBS) ${XLIBS} ;; \
 	esac
 
 testpt.o: testpt.c ${INCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) pt_util.o ptutils.o ubik.o utils.o map.o libprot.a \
+		${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
 
 ubik.o: ubik.c ${INCLS}
 

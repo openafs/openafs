@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -53,7 +55,7 @@ all: scout
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${XLIBS}
+	$(AFS_LDRULE) scout.o $(LIBS) ${TXLIBS} ${XLIBS}
 
 #
 # Installation targets

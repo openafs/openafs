@@ -2,7 +2,6 @@
 AC_DEFUN([OPENAFS_OSCONF], [
 
 dnl defaults, override in case below as needed
-CFLAGS=
 XCFLAGS='${DBG} ${OPTMZ}'
 RXDEBUG="-DRXDEBUG"
 SHLIB_SUFFIX="so"

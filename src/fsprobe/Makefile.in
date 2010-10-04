@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -50,8 +52,7 @@ fsprobe.o: fsprobe.c ${INCLS} AFS_component_version_number.c
 fsprobe_callback.o: fsprobe_callback.c ${INCLS}
 
 fsprobe_test: fsprobe_test.o libfsprobe.a ${LIBS}
-	${CC} ${CFLAGS} -o fsprobe_test fsprobe_test.o libfsprobe.a \
-		${LIBS} ${XLIBS}
+	$(AFS_LDRULE) fsprobe_test.o libfsprobe.a ${LIBS} ${XLIBS}
 
 #
 # Install targets
