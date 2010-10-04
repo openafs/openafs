@@ -51,9 +51,17 @@ lib/roken/base64.c		roken/base64.c
 lib/roken/base64.h		roken/base64.h
 lib/roken/cloexec.c		roken/cloexec.c
 lib/roken/ct.c			roken/ct.c
+lib/roken/err.c			roken/err.c
+lib/roken/err.hin		roken/err.hin
+lib/roken/errx.c		roken/errx.c
+lib/roken/getprogname.c		roken/getprogname.c
 lib/roken/hex.c			roken/hex.c
 lib/roken/issuid.c		roken/issuid.c
 lib/roken/net_read.c		roken/net_read.c
 lib/roken/net_write.c		roken/net_write.c
 lib/roken/strlcpy.c		roken/strlcpy.c
+lib/roken/verr.c		roken/verr.c
+lib/roken/verrx.c		roken/verrx.c
+lib/roken/warn.c		roken/warnx.c
+lib/roken/warnerr.c		roken/warnerr.c
 
