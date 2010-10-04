@@ -403,3 +403,34 @@ osi_linux_verify_alloced_memory()
     up(&afs_linux_alloc_sem);
     return;
 }
+
+#ifdef AFS_PRIVATE_OSI_ALLOCSPACES
+
+void
+osi_FreeLargeSpace(void *p)
+{
+    kfree(p);
+}
+
+void
+osi_FreeSmallSpace(void *p)
+{
+    kfree(p);
+}
+
+void *
+osi_AllocLargeSpace(size_t size)
+{
+    if (size > AFS_LRALLOCSIZ)
+	osi_Panic("osi_AllocLargeSpace: size=%d\n", (int) size);
+    return kmalloc(AFS_LRALLOCSIZ, GFP_NOFS);
+}
+
+void *
+osi_AllocSmallSpace(size_t size)
+{
+    if (size > AFS_SMALLOCSIZ)
+	osi_Panic("osi_AllocSmallS: size=%d\n", (int)size);
+    return kmalloc(AFS_SMALLOCSIZ, GFP_NOFS);
+}
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */

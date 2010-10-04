@@ -522,7 +522,7 @@ afs_ResourceInit(int preallocs)
     AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
     AFS_RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
-#ifndef AFS_FBSD_ENV
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif

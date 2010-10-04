@@ -33,6 +33,8 @@
 #define AFS_USE_GETTIMEOFDAY	1	/* use gettimeofday to implement rx clock */
 #define AFS_MAXVCOUNT_ENV       1
 
+#define AFS_PRIVATE_OSI_ALLOCSPACES	1
+
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #define AFS_GLOBAL_SUNLOCK
 #endif /* __KERNEL__	&& !DUMP_KERNEL */

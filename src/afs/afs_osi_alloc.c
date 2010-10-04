@@ -24,15 +24,18 @@
 #include "sys/sleep.h"
 #include "sys/syspest.h"
 #include "sys/lock_def.h"
-/*lock_t osi_fsplock = LOCK_AVAIL;*/
 #endif
 
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
+
 afs_lock_t osi_fsplock;
+afs_lock_t osi_flplock;
 
 static struct osi_packet {
     struct osi_packet *next;
-} *freePacketList = NULL, *freeSmallList;
-afs_lock_t osi_flplock;
+} *freePacketList = NULL, *freeSmallList = NULL;
+
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
 
 static char memZero;		/* address of 0 bytes for kmem_alloc */
 
@@ -121,6 +124,10 @@ afs_osi_FreeStr(char *x)
 {
     afs_osi_Free(x, strlen(x) + 1);
 }
+
+#endif /* !AFS_NBSD_ENV && !defined(AFS_NBSD50_ENV) */
+
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
 
 /* free space allocated by AllocLargeSpace.  Also called by mclput when freeing
  * a packet allocated by osi_NetReceive. */
@@ -217,13 +224,13 @@ osi_AllocSmallSpace(size_t size)
     ReleaseWriteLock(&osi_fsplock);
     return (char *)tp;
 }
-
-#endif /* !AFS_NBSD_ENV && !defined(AFS_NBSD50_ENV) */
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
 
 void
 shutdown_osinet(void)
 {
     AFS_STATCNT(shutdown_osinet);
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
     if (afs_cold_shutdown) {
 	struct osi_packet *tp;
 
@@ -245,6 +252,7 @@ shutdown_osinet(void)
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
 	LOCK_INIT(&osi_flplock, "osi_flplock");
     }
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
     if (afs_stats_cmperf.LargeBlocksActive ||
 	afs_stats_cmperf.SmallBlocksActive)
     {
@@ -253,3 +261,4 @@ shutdown_osinet(void)
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
+

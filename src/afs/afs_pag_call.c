@@ -108,10 +108,6 @@ afspag_Init(afs_int32 nfs_server_addr)
     AFS_RWLOCK_INIT(&afs_xpagcell, "afs_xpagcell");
     AFS_RWLOCK_INIT(&afs_xpagsys, "afs_xpagsys");
     AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
-#ifndef AFS_FBSD_ENV
-    LOCK_INIT(&osi_fsplock, "osi_fsplock");
-    LOCK_INIT(&osi_flplock, "osi_flplock");
-#endif
 
     afs_resourceinit_flag = 1;
     afs_nfs_server_addr = nfs_server_addr;

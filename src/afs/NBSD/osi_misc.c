@@ -135,7 +135,7 @@ afs_osi_FreeStr(char *x)
 
 /* XXXX OpenBSD avoids space pool, presumably Rees believed the kernel
  * allocator did as well or better */
-#if 0
+#ifdef AFS_PRIVATE_OSI_ALLOCSPACES
 void
 osi_FreeLargeSpace(void *p)
 {
@@ -144,7 +144,6 @@ osi_FreeLargeSpace(void *p)
 
 /* XXXX OpenBSD avoids space pool, presumably Rees believed the kernel
  * allocator did as well or better */
-#if 0
 void
 osi_FreeSmallSpace(void *p)
 {
@@ -167,9 +166,7 @@ osi_AllocSmallSpace(size_t size)
     return (osi_nbsd_Alloc(size, 1));
 }
 
-#endif /* Space undef */
-
-#endif /* Space undef */
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
 
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
