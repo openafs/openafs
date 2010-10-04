@@ -23,7 +23,11 @@ AC_SUBST(LINUX_PKGREL)
 AC_SUBST(DEB_PKGVER)
 
 AC_USE_SYSTEM_EXTENSIONS
+
+dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
+AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
 AC_PROG_CC
+
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON

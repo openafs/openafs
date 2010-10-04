@@ -14,7 +14,10 @@ AC_SUBST(MACOS_VERSION)
 AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
+dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
+AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
 AC_PROG_CC
+
 OPENAFS_CONFIGURE_COMMON
 
 AC_OUTPUT(             \
