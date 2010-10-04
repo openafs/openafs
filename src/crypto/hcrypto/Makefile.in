@@ -55,8 +55,9 @@ clean:
 
 COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
 	     evp-hcrypto.o evp-cc.o hmac.o md2.o md4.o md5.o pkcs5.o \
-	     rand-egd.o rand-timer.o rand-unix.o rand.o \
-	     rc2.o rc4.o rijndael-alg-fst.o rnd_keys.o sha.o sha256.o ui.o \
+	     rand-egd.o rand-timer.o rand-unix.o rand.o rc2.o rc4.o \
+	     rijndael-alg-fst.o rnd_keys.o sha.o sha256.o sha512.o ui.o \
+	     validate.o \
 	     cloexec.o ct.o issuid.o net_read.o net_write.o strlcpy.o
 
 OBJECTS = $(COMMON_OBJS) rand-fortuna.o
@@ -257,7 +258,13 @@ sha.o: ${UPSTREAM}/hcrypto/sha.c
 sha256.o: ${UPSTREAM}/hcrypto/sha256.c
 	${CCRULE}
 
+sha512.o: ${UPSTREAM}/hcrypto/sha512.c
+	${CCRULE}
+
 ui.o: ${UPSTREAM}/hcrypto/ui.c
+	${CCRULE}
+
+validate.o: ${UPSTREAM}/hcrypto/validate.c
 	${CCRULE}
 
 test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c
