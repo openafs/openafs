@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2002 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -31,43 +31,25 @@
  * SUCH DAMAGE.
  */
 
-#include <config.h>
-#include "roken.h"
+/* $Id$ */
 
-#ifndef HAVE_STRLCPY
+#ifndef _BASE64_H_
+#define _BASE64_H_
 
-#if defined(_MSC_VER) && _MSC_VER >= 1400
-
-ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL
-strlcpy (char *dst, const char *src, size_t dst_cch)
-{
-    errno_t e;
-
-    if (dst_cch > 0)
-        e = strncpy_s(dst, dst_cch, src, _TRUNCATE);
-
-    return strlen (src);
-}
-
+#ifndef ROKEN_LIB_FUNCTION
+#ifdef _WIN32
+#define ROKEN_LIB_FUNCTION
+#define ROKEN_LIB_CALL __cdecl
 #else
-
-ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL
-strlcpy (char *dst, const char *src, size_t dst_sz)
-{
-    size_t n;
-
-    for (n = 0; n < dst_sz; n++) {
-	if ((*dst++ = *src++) == '\0')
-	    break;
-    }
-
-    if (n < dst_sz)
-	return n;
-    if (n > 0)
-	*(dst - 1) = '\0';
-    return n + strlen (src);
-}
-
+#define ROKEN_LIB_FUNCTION
+#define ROKEN_LIB_CALL
 #endif
+#endif
+
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+base64_encode(const void *, int, char **);
+
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+base64_decode(const char *, void *);
 
 #endif
