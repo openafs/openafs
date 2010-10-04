@@ -40,6 +40,7 @@ AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE], [
 		    [int x;],
 		    [openafs_cv_gcc_needs_no_strength_reduce=yes],
 		    [openafs_cv_gcc_needs_no_strength_reduce=no])
+     CFLAGS="$save_CFLAGS"
   ])
   AS_IF([test x$openafs_cv_gcc_needs_no_strength_reduce = xyes],
         [LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fno-strength-reduce"])
