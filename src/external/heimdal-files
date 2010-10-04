@@ -1,4 +1,5 @@
 lib/krb5/config_file.c		krb5/config_file.c
+lib/krb5/n-fold.c		krb5/n-fold.c
 lib/hcrypto/aes.c		hcrypto/aes.c
 lib/hcrypto/aes.h		hcrypto/aes.h
 lib/hcrypto/camellia.c		hcrypto/camellia.c
@@ -41,9 +42,13 @@ lib/hcrypto/rnd_keys.c		hcrypto/rnd_keys.c
 lib/hcrypto/sha.c		hcrypto/sha.c
 lib/hcrypto/sha.h		hcrypto/sha.h
 lib/hcrypto/sha256.c		hcrypto/sha256.c
+lib/hcrypto/sha512.c		hcrypto/sha512.c
 lib/hcrypto/test_cipher.c	hcrypto/test_cipher.c
 lib/hcrypto/ui.c		hcrypto/ui.c
 lib/hcrypto/ui.h		hcrypto/ui.h
+lib/hcrypto/validate.c		hcrypto/validate.c
+lib/roken/base64.c		roken/base64.c
+lib/roken/base64.h		roken/base64.h
 lib/roken/cloexec.c		roken/cloexec.c
 lib/roken/ct.c			roken/ct.c
 lib/roken/hex.c			roken/hex.c
