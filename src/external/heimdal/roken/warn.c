@@ -35,11 +35,11 @@
 
 #include "err.h"
 
-ROKEN_LIB_FUNCTION void ROKEN_LIB_CALL
-warnx(const char *fmt, ...)
+void
+warn(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  vwarnx(fmt, ap);
+  vwarn(fmt, ap);
   va_end(ap);
 }

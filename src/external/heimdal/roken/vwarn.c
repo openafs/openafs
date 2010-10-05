@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -33,13 +33,11 @@
 
 #include <config.h>
 
-#include "err.h"
+#include "roken.h"
+#include <err.h>
 
 ROKEN_LIB_FUNCTION void ROKEN_LIB_CALL
-warnx(const char *fmt, ...)
+vwarn(const char *fmt, va_list ap)
 {
-  va_list ap;
-  va_start(ap, fmt);
-  vwarnx(fmt, ap);
-  va_end(ap);
+    rk_warnerr(1, fmt, ap);
 }
