@@ -129,6 +129,9 @@ int (*swapNameProgram) (PROCESS, const char *, char *) = 0;
 
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(struct rx_connection *conn);
+static void rxi_ComputeRoundTripTime(struct rx_packet *, struct clock *,
+				     struct rx_peer *, struct clock *);
+
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
 #endif
@@ -3858,7 +3861,8 @@ rx_ack_reason(int reason)
  */
 static void
 rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
-			struct rx_ackPacket *ap, struct rx_packet *np)
+			struct rx_ackPacket *ap, struct rx_packet *np,
+			struct clock *now)
 {
     struct rx_peer *peer = call->conn->peer;
 
@@ -3867,7 +3871,7 @@ rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
     if (!(p->flags & RX_PKTFLAG_ACKED) &&
         ap->reason != RX_ACK_DELAY &&
         clock_Eq(&p->timeSent, &p->firstSent))
-	rxi_ComputeRoundTripTime(p, &p->timeSent, peer);
+	rxi_ComputeRoundTripTime(p, &p->timeSent, peer, now);
 #ifdef ADAPT_WINDOW
     rxi_ComputeRate(peer, call, p, np, ap->reason);
 #endif
@@ -3884,6 +3888,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     struct rx_packet *nxp;	/* Next packet pointer for queue_Scan */
     struct rx_connection *conn = call->conn;
     struct rx_peer *peer = conn->peer;
+    struct clock now;		/* Current time, for RTT calculations */
     afs_uint32 first;
     afs_uint32 serial;
     /* because there are CM's that are bogus, sending weird values for this. */
@@ -4017,11 +4022,14 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
      * acknowledged as having been sent to the peer's upper level.
      * All other packets must be retained.  So only packets with
      * sequence numbers < ap->firstPacket are candidates. */
+
+    clock_GetTime(&now);
+
     for (queue_Scan(&call->tq, tp, nxp, rx_packet)) {
 	if (tp->header.seq >= first)
 	    break;
 	call->tfirst = tp->header.seq + 1;
-        rxi_ComputePeerNetStats(call, tp, ap, np);
+        rxi_ComputePeerNetStats(call, tp, ap, np, &now);
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
 	}
@@ -4083,7 +4091,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	if (tp->header.seq >= first)
 #endif /* RX_ENABLE_LOCKS */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-            rxi_ComputePeerNetStats(call, tp, ap, np);
+            rxi_ComputePeerNetStats(call, tp, ap, np, &now);
 
 	/* Set the acknowledge flag per packet based on the
 	 * information in the ack packet. An acknowlegded packet can
@@ -6465,21 +6473,20 @@ rxi_ChallengeOn(struct rx_connection *conn)
 
 /* rxi_ComputeRoundTripTime is called with peer locked. */
 /* sentp and/or peer may be null */
-void
+static void
 rxi_ComputeRoundTripTime(struct rx_packet *p,
 			 struct clock *sentp,
-			 struct rx_peer *peer)
+			 struct rx_peer *peer,
+			 struct clock *now)
 {
     struct clock thisRtt, *rttp = &thisRtt;
-
     int rtt_timeout;
 
-    clock_GetTime(rttp);
+    thisRtt = *now;
 
-    if (clock_Lt(rttp, sentp)) {
-	clock_Zero(rttp);
+    if (clock_Lt(rttp, sentp))
 	return;			/* somebody set the clock back, don't count this time. */
-    }
+
     clock_Sub(rttp, sentp);
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rttp=%d.%06d sec)\n",
           p->header.callNumber, p, rttp->sec, rttp->usec));
