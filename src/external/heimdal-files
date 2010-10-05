@@ -62,6 +62,9 @@ lib/roken/net_write.c		roken/net_write.c
 lib/roken/strlcpy.c		roken/strlcpy.c
 lib/roken/verr.c		roken/verr.c
 lib/roken/verrx.c		roken/verrx.c
-lib/roken/warn.c		roken/warnx.c
+lib/roken/vwarn.c		roken/vwarn.c
+lib/roken/vwarnx.c		roken/vwarnx.c
+lib/roken/warn.c		roken/warn.c
+lib/roken/warnx.c		roken/warnx.c
 lib/roken/warnerr.c		roken/warnerr.c
 
