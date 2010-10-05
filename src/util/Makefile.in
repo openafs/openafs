@@ -22,7 +22,6 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 	 pthread_glock.o daemon.o ${REGEX_OBJ}
 
 includes = \
-	${TOP_INCDIR}/util/base64.h \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
 	${TOP_INCDIR}/afs/assert.h \
@@ -54,9 +53,6 @@ buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
 buildtools_clean: clean
 
 depinstall: ${includes}
-
-${TOP_INCDIR}/util/base64.h: ${TOP_SRCDIR}/external/heimdal/roken/base64.h
-	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
 	${INSTALL_DATA} $? $@
@@ -151,9 +147,6 @@ util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
-
-base64.o: ${TOP_SRCDIR}/external/heimdal/roken/base64.c
-	${CCOBJ} ${CFLAGS} -c ${TOP_SRCDIR}/external/heimdal/roken/base64.c
 
 pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
 	${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c ${srcdir}/pthread_glock.c

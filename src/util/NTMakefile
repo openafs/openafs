@@ -16,7 +16,6 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(INCFILEDIR)\afsutil.h \
 	$(INCFILEDIR)\assert.h \
-	$(DESTDIR)\include\util\base64.h \
 	$(INCFILEDIR)\dirent.h \
 	$(INCFILEDIR)\errors.h \
 	$(INCFILEDIR)\itc.h \
@@ -39,9 +38,6 @@ $(DESTDIR)\include\afs\dirent.h: dirent_nt.h
 $(DESTDIR)\include\afs\dirpath.h: dirpath_nt.h
 	$(COPY) $** $@
 
-$(DESTDIR)\include\util\base64.h: base64.h
-	$(COPY) $** $@
-
 LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
 
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsutil.lib
@@ -49,7 +45,6 @@ MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsutil.lib
 LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
-	$(OUT)\base64.obj \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
@@ -76,7 +71,6 @@ LIBOBJS = \
 MT_LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
-	$(OUT)\base64.obj \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
