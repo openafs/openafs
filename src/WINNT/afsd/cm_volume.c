@@ -968,13 +968,21 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     if (code == 0) {
         *outVolpp = volp;
 		
-        if (!(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
+        if ((volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) &&
+            !(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
             lock_ObtainWrite(&cm_volumeLock);
             cm_AdjustVolumeLRU(volp);
             lock_ReleaseWrite(&cm_volumeLock);
         }
     } else {
+        /*
+         * do not return it to the caller but do insert it in the LRU
+         * otherwise it will be lost
+         */
         lock_ObtainRead(&cm_volumeLock);
+        if (!(volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) ||
+             (flags & CM_GETVOL_FLAG_NO_LRU_UPDATE))
+            cm_AdjustVolumeLRU(volp);
         cm_PutVolume(volp);
         lock_ReleaseRead(&cm_volumeLock);
     }
@@ -1681,14 +1689,13 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 /* must be called with cm_volumeLock write-locked! */
 void cm_AdjustVolumeLRU(cm_volume_t *volp)
 {
-    if (volp == cm_data.volumeLRULastp)
-        cm_data.volumeLRULastp = (cm_volume_t *) osi_QPrev(&volp->q);
+    if (volp == cm_data.volumeLRUFirstp)
+        return;
+
     if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-    osi_QAdd((osi_queue_t **) &cm_data.volumeLRUFirstp, &volp->q);
+    osi_QAddH((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     volp->flags |= CM_VOLUMEFLAG_IN_LRU_QUEUE;
-    if (!cm_data.volumeLRULastp) 
-        cm_data.volumeLRULastp = volp;
 }
 
 /* must be called with cm_volumeLock write-locked! */
@@ -1697,22 +1704,16 @@ void cm_MoveVolumeToLRULast(cm_volume_t *volp)
     if (volp == cm_data.volumeLRULastp)
         return;
 
-    if (volp == cm_data.volumeLRUFirstp)
-        cm_data.volumeLRUFirstp = (cm_volume_t *) osi_QNext(&volp->q);
     if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     osi_QAddT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     volp->flags |= CM_VOLUMEFLAG_IN_LRU_QUEUE;
-    if (!cm_data.volumeLRULastp) 
-        cm_data.volumeLRULastp = volp;
 }
 
 /* must be called with cm_volumeLock write-locked! */
 void cm_RemoveVolumeFromLRU(cm_volume_t *volp)
 {
     if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) {
-        if (volp == cm_data.volumeLRULastp)
-            cm_data.volumeLRULastp = (cm_volume_t *) osi_QPrev(&volp->q);
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
         volp->flags &= ~CM_VOLUMEFLAG_IN_LRU_QUEUE;
     }
