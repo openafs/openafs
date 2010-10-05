@@ -1289,6 +1289,32 @@ AC_CHECK_FUNCS([ \
 	vsyslog \
 ])
 
+dnl Functions that we're going to try and get from libroken
+
+AC_REPLACE_FUNCS([ \
+	err \
+	errx \
+	getprogname \
+	strlcpy \
+	verr \
+	verrx \
+	vwarn \
+	vwarnx \
+	warn \
+	warnx \
+])
+
+dnl Headers that we're going to try and get from libroken
+AC_CHECK_HEADERS([ \
+	err.h \
+])
+
+ROKEN_HEADERS=
+AS_IF([test "$ac_cv_header_err_h" != "yes" ],
+      [ROKEN_HEADERS="$ROKEN_HEADERS err.h"],
+      [])
+AC_SUBST(ROKEN_HEADERS)
+
 AC_MSG_CHECKING([for positional I/O])
 if test "$ac_cv_func_pread" = "yes" && \
         test "$ac_cv_func_pwrite" = "yes"; then

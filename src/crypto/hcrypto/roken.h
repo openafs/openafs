@@ -49,3 +49,7 @@ ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL
 
 /* This is a bodge, but it's only used by the tests */
 #define emalloc(x) malloc(x)
+
+#ifndef HAVE_GETPROGNAME
+ROKEN_LIB_FUNCTION const char * ROKEN_LIB_CALL getprogname(void);
+#endif

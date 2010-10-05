@@ -35,7 +35,7 @@ HEADERS= ${TOP_INCDIR}/hcrypto/aes.h \
 
 SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
-all: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
+all: $(ROKEN_HEADERS) ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
 	${TOP_LIBDIR}/libafshcrypto.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
@@ -58,11 +58,11 @@ COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
 	     rand-egd.o rand-timer.o rand-unix.o rand.o rc2.o rc4.o \
 	     rijndael-alg-fst.o rnd_keys.o sha.o sha256.o sha512.o ui.o \
 	     validate.o \
-	     cloexec.o ct.o issuid.o net_read.o net_write.o strlcpy.o
+	     cloexec.o ct.o issuid.o net_read.o net_write.o warnerr.o
 
-OBJECTS = $(COMMON_OBJS) rand-fortuna.o
+OBJECTS = $(COMMON_OBJS) rand-fortuna.o $(ROKEN_LIBOBJS)
 
-LWP_OBJS = $(COMMON_OBJS) rand-fortuna_lwp.o
+LWP_OBJS = $(COMMON_OBJS) rand-fortuna_lwp.o $(ROKEN_LIBOBJS)
 
 UPSTREAM= ${TOP_SRCDIR}/external/heimdal
 
@@ -270,6 +270,9 @@ validate.o: ${UPSTREAM}/hcrypto/validate.c
 test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c
 	${CCRULE} -I${UPSTREAM}/roken/
 
+# These bits of libroken are new functionality, rather than compatibility
+# code. Where they should go eventually is unclear.
+
 cloexec.o: ${UPSTREAM}/roken/cloexec.c
 	${CCRULE}
 
@@ -288,5 +291,42 @@ net_read.o: ${UPSTREAM}/roken/net_read.c
 net_write.o: ${UPSTREAM}/roken/net_write.c
 	${CCRULE}
 
+# These bits of libroken are compatibility functions. They should get moved
+# out into a new libroken top level target, which allows the use of an
+# existing libroken, if one is available.
+
 strlcpy.o: ${UPSTREAM}/roken/strlcpy.c
+	${CCRULE}
+
+err.h: ${UPSTREAM}/roken/err.hin
+	cp $? $@
+
+err.o: ${UPSTREAM}/roken/err.c
+	${CCRULE}
+
+errx.o: ${UPSTREAM}/roken/errx.c
+	${CCRULE}
+
+getprogname.o: ${UPSTREAM}/roken/getprogname.c
+	${CCRULE}
+
+verr.o: ${UPSTREAM}/roken/verr.c
+	${CCRULE}
+
+verrx.o: ${UPSTREAM}/roken/verrx.c
+	${CCRULE}
+
+vwarn.o: ${UPSTREAM}/roken/vwarn.c
+	${CCRULE}
+
+vwarnx.o: ${UPSTREAM}/roken/vwarnx.c
+	${CCRULE}
+
+warn.o: ${UPSTREAM}/roken/warn.c
+	${CCRULE}
+
+warnerr.o: ${UPSTREAM}/roken/warnerr.c
+	${CCRULE}
+
+warnx.o: ${UPSTREAM}/roken/warnx.c
 	${CCRULE}
