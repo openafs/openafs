@@ -30,15 +30,10 @@ extern void afsi_log(char *pattern, ...);
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
 
-#ifdef AFS_LARGEFILES
 /* we can access connp->serverp without holding a lock because that
    never changes since the connection is made. */
 #define SERVERHAS64BIT(connp) (!((connp)->serverp->flags & CM_SERVERFLAG_NO64BIT))
 #define SET_SERVERHASNO64BIT(connp) (cm_SetServerNo64Bit((connp)->serverp, TRUE))
-#else
-#define SERVERHAS64BIT(connp) (FALSE)
-#define SET_SERVERHASNO64BIT(connp) (FALSE)
-#endif
 
 /* functions called back from the buffer package when reading or writing data,
  * or when holding or releasing a vnode pointer.
@@ -55,9 +50,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     long code, code1;
     cm_scache_t *scp = vscp;
     afs_int32 nbytes;
-#ifdef AFS_LARGEFILES
     afs_int32 save_nbytes;
-#endif
     long temp;
     AFSFetchStatus outStatus;
     AFSStoreStatus inStatus;
@@ -157,9 +150,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     lock_ReleaseWrite(&scp->rw);
 
     /* now we're ready to do the store operation */
-#ifdef AFS_LARGEFILES
     save_nbytes = nbytes;
-#endif
     do {
         code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
@@ -170,7 +161,6 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         rxcallp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
-#ifdef AFS_LARGEFILES
         if (SERVERHAS64BIT(connp)) {
             call_was_64bit = 1;
 
@@ -203,17 +193,6 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 		    osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData SUCCESS");
             }
         }
-#else
-        osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData scp 0x%p, offset 0x%x:%08x, length 0x%x",
-                 scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
-
-        code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
-                                    biod.offset.LowPart, nbytes, truncPos.LowPart);
-	if (code)
-	    osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData FAILURE, code 0x%x", code);
-	else
-	    osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData SUCCESS");
-#endif
 
         if (code == 0) {
             /* write the data from the the list of buffers */
@@ -265,14 +244,13 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
         code1 = rx_EndCall(rxcallp, code);
 
-#ifdef AFS_LARGEFILES
         if ((code == RXGEN_OPCODE || code1 == RXGEN_OPCODE) && SERVERHAS64BIT(connp)) {
             SET_SERVERHASNO64BIT(connp);
             qdp = NULL;
             nbytes = save_nbytes;
             goto retry;
         }
-#endif
+
         /* Prefer StoreData error over rx_EndCall error */
         if (code1 != 0)
             code = code1;
@@ -393,7 +371,6 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         rxcallp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
-#ifdef AFS_LARGEFILES
         if (SERVERHAS64BIT(connp)) {
             call_was_64bit = 1;
 
@@ -409,10 +386,6 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                                             0, 0, truncPos.LowPart);
             }
         }
-#else
-        code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
-                                    0, 0, truncPos.LowPart);
-#endif
 
         if (code == 0) {
             if (call_was_64bit)
@@ -422,12 +395,11 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         }
         code1 = rx_EndCall(rxcallp, code);
 
-#ifdef AFS_LARGEFILES
         if ((code == RXGEN_OPCODE || code1 == RXGEN_OPCODE) && SERVERHAS64BIT(connp)) {
             SET_SERVERHASNO64BIT(connp);
             goto retry;
         }
-#endif
+
         /* prefer StoreData error over rx_EndCall error */
         if (code == 0 && code1 != 0)
             code = code1;
@@ -1738,7 +1710,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         rxcallp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
-#ifdef AFS_LARGEFILES
         nbytes = nbytes_hi = 0;
 
         if (SERVERHAS64BIT(connp)) {
@@ -1809,37 +1780,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         }
         /* for the moment, nbytes_hi will always be 0 if code == 0
            because biod.length is a 32-bit quantity. */
-#else
-        osi_Log3(afsd_logp, "CALL FetchData scp 0x%p, off 0x%x, size 0x%x",
-                 scp, biod.offset.LowPart, biod.length);
-
-        code = StartRXAFS_FetchData(rxcallp, &tfid, biod.offset.LowPart,
-                                    biod.length);
-
-        /* now copy the data out of the pipe and put it in the buffer */
-        if (code == 0) {
-            temp  = rx_Read32(rxcallp, &nbytes);
-            if (temp == sizeof(afs_int32)) {
-                length_found = ntohl(nbytes);
-                if (length_found > biod.length) {
-                    /*
-                     * prior to 1.4.12 and 1.5.65 the file server would return
-                     * (filesize - offset) if the requested offset was greater than
-                     * the filesize.  The correct return value would have been zero.
-                     * Force a retry by returning an RX_PROTOCOL_ERROR.  If the cause
-                     * is a race between two RPCs issues by this cache manager, the
-                     * correct thing will happen the second time.
-                     */
-                    osi_Log0(afsd_logp, "cm_GetBuffer length_found > biod.length");
-                    fs_fetchdata_offset_bug = 1;
-                }
-            }
-            else {
-                osi_Log1(afsd_logp, "cm_GetBuffer rx_Read32 returns %d != 4", temp);
-                code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
-            }
-        }
-#endif
 
         if (code == 0) {
             qdp = biod.bufListEndp;

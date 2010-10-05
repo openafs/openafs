@@ -6982,17 +6982,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     if (*inp->wctp == 14) {
         /* we have a request with 64-bit file offsets */
-#ifdef AFS_LARGEFILES
         offset.HighPart = smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16);
-#else
-        if ((smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16)) != 0) {
-            /* uh oh */
-            osi_Log0(smb_logp, "smb_ReceiveV3WriteX offset requires largefile support");
-            /* we shouldn't have received this op if we didn't specify
-               largefile support */
-            return CM_ERROR_INVAL;
-        }
-#endif
     }
 
     op = inp->data + smb_GetSMBParm(inp, 11);
@@ -7139,7 +7129,6 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     if (*inp->wctp == 12) {
         /* a request with 64-bit offsets */
-#ifdef AFS_LARGEFILES
         offset.HighPart = smb_GetSMBParm(inp, 10) | (smb_GetSMBParm(inp, 11) << 16);
 
         if (LargeIntegerLessThanZero(offset)) {
@@ -7147,14 +7136,6 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                      offset.HighPart, offset.LowPart);
             return CM_ERROR_BADSMB;
         }
-#else
-        if ((smb_GetSMBParm(inp, 10) | (smb_GetSMBParm(inp, 11) << 16)) != 0) {
-            osi_Log0(smb_logp, "smb_ReceiveV3Read offset is 64-bit.  Dropping");
-            return CM_ERROR_BADSMB;
-        } else {
-            offset.HighPart = 0;
-        }
-#endif
     } else {
         offset.HighPart = 0;
     }
