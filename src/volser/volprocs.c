@@ -1887,12 +1887,17 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 	if (dp)
 	    partList.partId[j++] = i;
     }
-    pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
-    if (!pEntries->partEntries_val)
-	return ENOMEM;
-    memcpy((char *)pEntries->partEntries_val, (char *)&partList,
-	   j * sizeof(int));
-    pEntries->partEntries_len = j;
+    if (j > 0) {
+	pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
+	if (!pEntries->partEntries_val)
+	    return ENOMEM;
+	memcpy((char *)pEntries->partEntries_val, (char *)&partList,
+		j * sizeof(int));
+	pEntries->partEntries_len = j;
+    } else {
+	pEntries->partEntries_val = NULL;
+	pEntries->partEntries_len = 0;
+    }
     return 0;
 
 }
