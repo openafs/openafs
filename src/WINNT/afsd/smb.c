@@ -3679,21 +3679,12 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 
     if (*inp->wctp == 10) {
         /* we were sent a request with 64-bit file offsets */
-#ifdef AFS_LARGEFILES
         offset.HighPart = smb_GetSMBParm(inp, 8) | (smb_GetSMBParm(inp, 9) << 16);
 
         if (LargeIntegerLessThanZero(offset)) {
             osi_Log0(smb_logp, "smb_ReceiveCoreReadRaw received negative 64-bit offset");
             goto send1;
         }
-#else
-        if ((smb_GetSMBParm(inp, 8) | (smb_GetSMBParm(inp, 9) << 16)) != 0) {
-            osi_Log0(smb_logp, "smb_ReceiveCoreReadRaw received 64-bit file offset.  Dropping request.");
-            goto send1;
-        } else {
-            offset.HighPart = 0;
-        }
-#endif
     } else {
         /* we were sent a request with 32-bit file offsets */
         offset.HighPart = 0;
@@ -3952,9 +3943,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #ifdef DFS_SUPPORT
                NTNEGOTIATE_CAPABILITY_DFS |
 #endif
-#ifdef AFS_LARGEFILES
                NTNEGOTIATE_CAPABILITY_LARGEFILES |
-#endif
                NTNEGOTIATE_CAPABILITY_NTFIND |
                NTNEGOTIATE_CAPABILITY_RAWMODE |
                NTNEGOTIATE_CAPABILITY_NTSMB;
@@ -7794,7 +7783,6 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     if (*inp->wctp == 14) {
         /* we received a 64-bit file offset */
-#ifdef AFS_LARGEFILES
         offset.HighPart = smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16);
 
         if (LargeIntegerLessThanZero(offset)) {
@@ -7803,15 +7791,6 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                      offset.HighPart, offset.LowPart);
             return CM_ERROR_BADSMB;
         }
-#else
-        if ((smb_GetSMBParm(inp, 12) | (smb_GetSMBParm(inp, 13) << 16)) != 0) {
-            osi_Log0(smb_logp,
-                     "smb_ReceiveCoreWriteRaw received 64-bit file offset, but we don't support large files");
-            return CM_ERROR_BADSMB;
-        }
-
-        offset.HighPart = 0;
-#endif
     } else {
         offset.HighPart = 0;    /* 32-bit file offset */
     }

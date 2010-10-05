@@ -15,11 +15,6 @@
 #define AFS_PTHREAD_ENV 1
 #endif
 
-/* Support largefiles by default */
-#ifndef AFS_LARGEFILES
-#define AFS_LARGEFILES 1
-#endif
-
 #include <rx/rx.h>
 #include <afs/vldbint.h>
 #include <afs/afsint.h>
