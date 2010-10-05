@@ -3418,7 +3418,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           role="bold">admin</emphasis> user to the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. This enables the
           <emphasis role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis
           role="bold">vos</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -noauth</emphasis>
 </programlisting> 
             <indexterm>
               <primary>commands</primary>
