@@ -188,9 +188,6 @@ extern void rxi_ChallengeEvent(struct rxevent *event,
 			       void *conn, /* struct rx_connection *conn */
 			       void *arg1, int atries);
 extern void rxi_ChallengeOn(struct rx_connection *conn);
-extern void rxi_ComputeRoundTripTime(struct rx_packet *p,
-				     struct clock *sentp,
-				     struct rx_peer *peer);
 extern void rxi_ReapConnections(struct rxevent *unused, void *unused1,
 				void *unused2);
 extern int rxs_Release(struct rx_securityClass *aobj);
