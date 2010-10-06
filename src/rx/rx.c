@@ -5964,7 +5964,8 @@ rxi_CheckCall(struct rx_call *call)
 {
     struct rx_connection *conn = call->conn;
     afs_uint32 now;
-    afs_uint32 deadTime;
+    afs_uint32 deadTime, idleDeadTime = 0, hardDeadTime = 0;
+    afs_uint32 fudgeFactor;
     int cerror = 0;
     int newmtu = 0;
 
@@ -5976,11 +5977,11 @@ rxi_CheckCall(struct rx_call *call)
 	return 0;
     }
 #endif
-    /* dead time + RTT + 8*MDEV, rounded up to next second. */
-    deadTime =
-	(((afs_uint32) conn->secondsUntilDead << 10) +
-	 ((afs_uint32) conn->peer->rtt >> 3) +
-	 ((afs_uint32) conn->peer->rtt_dev << 1) + 1023) >> 10;
+    /* RTT + 8*MDEV, rounded up to the next second. */
+    fudgeFactor = (((afs_uint32) conn->peer->rtt >> 3) +
+                   ((afs_uint32) conn->peer->rtt_dev << 1) + 1023) >> 10;
+
+    deadTime = conn->secondsUntilDead + fudgeFactor;
     now = clock_Sec();
     /* These are computed to the second (+- 1 second).  But that's
      * good enough for these values, which should be a significant
@@ -6041,25 +6042,35 @@ rxi_CheckCall(struct rx_call *call)
 	 * to pings; active calls are simply flagged in error, so the
 	 * attached process can die reasonably gracefully. */
     }
+
+    if (conn->idleDeadTime) {
+	idleDeadTime = conn->idleDeadTime + fudgeFactor;
+    }
+
     /* see if we have a non-activity timeout */
-    if (call->startWait && conn->idleDeadTime
-	&& ((call->startWait + conn->idleDeadTime) < now) &&
+    if (call->startWait && idleDeadTime
+	&& ((call->startWait + idleDeadTime) < now) &&
 	(call->flags & RX_CALL_READER_WAIT)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    cerror = RX_CALL_TIMEOUT;
 	    goto mtuout;
 	}
     }
-    if (call->lastSendData && conn->idleDeadTime && (conn->idleDeadErr != 0)
-        && ((call->lastSendData + conn->idleDeadTime) < now)) {
+    if (call->lastSendData && idleDeadTime && (conn->idleDeadErr != 0)
+        && ((call->lastSendData + idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    cerror = conn->idleDeadErr;
 	    goto mtuout;
 	}
     }
+
+    if (hardDeadTime) {
+	hardDeadTime = conn->hardDeadTime + fudgeFactor;
+    }
+
     /* see if we have a hard timeout */
-    if (conn->hardDeadTime
-	&& (now > (conn->hardDeadTime + call->startTime.sec))) {
+    if (hardDeadTime
+	&& (now > (hardDeadTime + call->startTime.sec))) {
 	if (call->state == RX_STATE_ACTIVE)
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
 	return -1;
