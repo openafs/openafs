@@ -46,7 +46,8 @@ afs_posix_test_lock(struct file *fp, struct file_lock *flp) {
     }
 #elif defined(POSIX_TEST_LOCK_RETURNS_CONFLICT)
     struct file_lock *conflict;
-    if (conflict = posix_test_lock(fp, flp)) {
+    conflict = posix_test_lock(fp, flp);
+    if (conflict) {
 	locks_copy_lock(flp, conflict);
 	flp->fl_type = F_UNLCK;
     }
@@ -257,7 +258,7 @@ kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
     int ret;
 
     set_fs(get_ds());
-    ret = sockp->ops->setsockopt(sockp, level, name, val, len);
+    ret = sockp->ops->getsockopt(sockp, level, name, val, len);
     set_fs(old_fs);
 
     return ret;
@@ -279,6 +280,7 @@ afs_try_to_freeze(void) {
 # ifdef CONFIG_PM
     if (current->flags & PF_FREEZE) {
 	refrigerator(PF_FREEZE);
+    }
 # endif
 }
 #endif
@@ -338,8 +340,17 @@ afs_init_sb_export_ops(struct super_block *sb) {
      * decode_fh will call this function.  If not defined for this FS, make
      * sure it points to the default
      */
-    if (!sb->s_export_op->find_exported_dentry)
+    if (!sb->s_export_op->find_exported_dentry) {
+	/* Some kernels (at least 2.6.9) do not prototype find_exported_dentry,
+	 * even though it is exported, so prototype it ourselves. Newer
+	 * kernels do prototype it, but as long as our protoype matches the
+	 * real one (the signature never changed before NEW_EXPORT_OPS came
+	 * into play), there should be no problems. */
+	extern struct dentry * find_exported_dentry(struct super_block *sb, void *obj, void *parent,
+	                                            int (*acceptable)(void *context, struct dentry *de),
+	                                            void *context);
 	sb->s_export_op->find_exported_dentry = find_exported_dentry;
+    }
 #endif
 }
 
