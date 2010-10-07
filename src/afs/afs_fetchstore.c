@@ -93,9 +93,8 @@ rxfs_storeMemPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
     afs_int32 code;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *) r;
 
-    *tlen = (size > AFS_LRALLOCSIZ ?  AFS_LRALLOCSIZ : size);
     RX_AFS_GUNLOCK();
-    code = rx_WritevAlloc(v->call, v->tiov, &v->tnio, RX_MAXIOVECS, *tlen);
+    code = rx_WritevAlloc(v->call, v->tiov, &v->tnio, RX_MAXIOVECS, size);
     RX_AFS_GLOCK();
     if (code <= 0) {
 	code = rx_Error(v->call);
