@@ -22,6 +22,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
 
     /* First, see if we can evict the inode from the dcache */
     if (avc != afs_globalVp && VREFCOUNT(avc) > 1 && avc->opens == 0) {
+	*slept = 1;
+	ReleaseWriteLock(&afs_xvcache);
         AFS_GUNLOCK();
         spin_lock(&dcache_lock);
 	head = &(AFSTOV(avc))->i_dentry;
@@ -49,15 +51,21 @@ restart:
 	spin_unlock(&dcache_lock);
 inuse:
 	AFS_GLOCK();
+	ObtainWriteLock(&afs_xvcache, 733);
     }
 
     /* See if we can evict it from the VLRUQ */
     if (VREFCOUNT_GT(avc,0) && !VREFCOUNT_GT(avc,1) && avc->opens == 0
 	&& (avc->f.states & CUnlinkedDel) == 0) {
+	int didsleep = *slept;
 
 	code = afs_FlushVCache(avc, slept);
+	/* flushvcache wipes slept; restore slept if we did before */
+	if (didsleep)
+	    *slept = didsleep;
+
 	if (code == 0)
-	   return 1;
+	    return 1;
     }
 
     return 0;
