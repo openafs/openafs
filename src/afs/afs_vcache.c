@@ -640,7 +640,7 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
     afs_int32 i, j;
     struct vcache *tvc;
     struct afs_q *tq, *uq;
-    int code, fv_slept;
+    int code, fv_slept, dc_slept = 0;
     afs_int32 target = anumber;
 
     if (
@@ -674,6 +674,8 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) > 1 && tvc->opens == 0) {
                 struct dentry *dentry;
                 struct list_head *cur, *head;
+		dc_slept = 1;
+		ReleaseWriteLock(&afs_xvcache);
                 AFS_GUNLOCK();
 #if defined(AFS_LINUX24_ENV)
                 spin_lock(&dcache_lock);
@@ -709,6 +711,7 @@ restart:
 #endif
 	    inuse:
 		AFS_GLOCK();
+		ObtainWriteLock(&afs_xvcache, 733);
 	    }
 #endif
 
@@ -719,7 +722,8 @@ restart:
 		if (code == 0) {
 		    anumber--;
 		}
-		if (fv_slept) {
+		if (fv_slept || dc_slept) {
+		    dc_slept = 0; /* FlushVCache wipes fv_slept */
 		    uq = VLRU.prev;
 		    i = 0;
 		    continue;	/* start over - may have raced. */
