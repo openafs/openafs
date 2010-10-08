@@ -503,8 +503,10 @@ afs_vop_lookup(ap)
     cnp->cn_flags |= MPSAFE; /* steel */
 #endif
 
+#ifndef AFS_FBSD70_ENV
     if (flags & ISDOTDOT)
 	VOP_UNLOCK(dvp, 0, p);
+#endif
 
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
