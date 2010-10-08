@@ -25,6 +25,8 @@ extern struct rx_connection *rx_NewConnection(register afs_uint32 shost,
 					      int serviceSecurityIndex);
 extern void rx_SetConnDeadTime(register struct rx_connection *conn,
 			       register int seconds);
+extern void rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds);
+extern void rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds);
 extern void rxi_CleanupConnection(struct rx_connection *conn);
 extern void rxi_DestroyConnection(register struct rx_connection *conn);
 extern void rx_GetConnection(register struct rx_connection *conn);

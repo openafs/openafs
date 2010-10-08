@@ -165,9 +165,6 @@ int ntoh_syserr_conv(int error);
 /* Enable or disable asymmetric client checking for a service */
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
 
-/* Set connection hard and idle timeouts for a connection */
-#define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
-#define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
 #define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */

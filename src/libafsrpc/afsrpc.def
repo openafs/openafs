@@ -217,5 +217,6 @@ EXPORTS
 	rxkad_stats_key				@222 DATA
 	rx_InitHost				@224
 	rx_NewServiceHost			@225
-        
+	rx_SetConnHardDeadTime			@272
+	rx_SetConnIdleDeadTime			@273
 
