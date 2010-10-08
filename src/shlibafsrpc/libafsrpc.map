@@ -164,6 +164,7 @@
 	rx_identity_new;
 	rx_identity_freeContents;
 	rx_identity_free;
+	rx_InterruptCall;
     local:
 	*;
 };
