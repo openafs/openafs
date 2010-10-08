@@ -72,6 +72,8 @@
 	rx_nWaiting;
 	rx_SetNoJumbo;
 	rx_SetConnDeadTime;
+	rx_SetConnHardDeadTime;
+	rx_SetConnIdleDeadTime;
 	rx_FlushWrite;
 	rx_thread_id_key;
 	multi_Finalize;

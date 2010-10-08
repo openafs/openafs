@@ -264,6 +264,8 @@ EXPORTS
 	rx_NewThreadId				@269
         rx_GetStatistics                        @270
         rx_FreeStatistics                       @271
+	rx_SetConnHardDeadTime			@272
+	rx_SetConnIdleDeadTime			@273
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
