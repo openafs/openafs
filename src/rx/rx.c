@@ -866,13 +866,61 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     return conn;
 }
 
+/**
+ * Ensure a connection's timeout values are valid.
+ *
+ * @param[in] conn The connection to check
+ *
+ * @post conn->secondUntilDead <= conn->idleDeadTime <= conn->hardDeadTime,
+ *       unless idleDeadTime and/or hardDeadTime are not set
+ * @internal
+ */
+static void
+rxi_CheckConnTimeouts(struct rx_connection *conn)
+{
+    /* a connection's timeouts must have the relationship
+     * deadTime <= idleDeadTime <= hardDeadTime. Otherwise, for example, a
+     * total loss of network to a peer may cause an idle timeout instead of a
+     * dead timeout, simply because the idle timeout gets hit first. Also set
+     * a minimum deadTime of 6, just to ensure it doesn't get set too low. */
+    /* this logic is slightly complicated by the fact that
+     * idleDeadTime/hardDeadTime may not be set at all, but it's not too bad.
+     */
+    conn->secondsUntilDead = MAX(conn->secondsUntilDead, 6);
+    if (conn->idleDeadTime) {
+	conn->idleDeadTime = MAX(conn->idleDeadTime, conn->secondsUntilDead);
+    }
+    if (conn->hardDeadTime) {
+	if (conn->idleDeadTime) {
+	    conn->hardDeadTime = MAX(conn->idleDeadTime, conn->hardDeadTime);
+	} else {
+	    conn->hardDeadTime = MAX(conn->secondsUntilDead, conn->hardDeadTime);
+	}
+    }
+}
+
 void
 rx_SetConnDeadTime(struct rx_connection *conn, int seconds)
 {
     /* The idea is to set the dead time to a value that allows several
      * keepalives to be dropped without timing out the connection. */
-    conn->secondsUntilDead = MAX(seconds, 6);
+    conn->secondsUntilDead = seconds;
+    rxi_CheckConnTimeouts(conn);
     conn->secondsUntilPing = conn->secondsUntilDead / 6;
+}
+
+void
+rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds)
+{
+    conn->hardDeadTime = seconds;
+    rxi_CheckConnTimeouts(conn);
+}
+
+void
+rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds)
+{
+    conn->idleDeadTime = seconds;
+    rxi_CheckConnTimeouts(conn);
 }
 
 int rxi_lowPeerRefCount = 0;

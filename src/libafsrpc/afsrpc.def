@@ -261,6 +261,11 @@ EXPORTS
         rx_SetConnSecondsUntilNatPing           @266
         rx_GetServiceSpecific                   @267
         rx_SetServiceSpecific                   @268
+;	rx_NewThreadId				@269
+;       rx_GetStatistics                        @270
+;       rx_FreeStatistics                       @271
+	rx_SetConnHardDeadTime			@272
+	rx_SetConnIdleDeadTime			@273
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
