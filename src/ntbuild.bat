@@ -123,6 +123,9 @@ set NTDDKDIR=C:\WINDDK\7600.16385.0
 REM Location of Microsoft IDN Normalization SDK
 set MSIDNNLS=C:\progra~1\MI5913~1
 
+REM Location of Secure Endpoints Kerberos Compatibility SDK 1.0
+set KERBEROSCOMPATSDKROOT=c:\progra~2\secure~1\kerber~1
+
 REM Location of the WiX Installer Toolkit
 set WIX=c:\tools\wix.2.0.5325
 

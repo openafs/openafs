@@ -128,7 +128,7 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
-$(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
+$(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -254,7 +254,7 @@ $(OUT)\readpwd.exe: $(OUT)\readpwd.obj $(LIBFILE) $(TEST_LIBS)
         $(SYMSTORE_IMPORT)
 
 $(OUT)\testpt.exe: $(OUT)\testpt.obj $(LIBFILE) $(TEST_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib 
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
@@ -266,4 +266,4 @@ $(OUT)\db_verify.exe: $(OUT)\db_verify.obj $(OUT)\pterror.obj $(OUT)\display.obj
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

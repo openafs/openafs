@@ -96,14 +96,13 @@ VOLSERVER_EXEOBJS = \
 	$(OUT)\voltrans.obj \
 	$(OUT)\vol_split.obj \
 	$(OUT)\volserver.res
-	
 
 VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsdir.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib
 
-$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS) $(HEIMDEPS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
@@ -130,8 +129,8 @@ VOS_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib
 
-$(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+$(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS) $(HEIMDEPS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
@@ -189,4 +188,4 @@ clean::
 	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h
 
 mkdir:
-	
+

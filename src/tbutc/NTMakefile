@@ -85,7 +85,6 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afshcrypto.lib \
 	     $(DESTDIR)\lib\afsroken.lib
 
-
 # rm $(OUT)\tcstatus.obj
 # nmake /nologo /f ntmakefile install
 #----------------------------------------------- BUTC
@@ -162,6 +161,6 @@ install: all
 noversion: install
 
 mkdir:
-	
+
 clean::
 	$(DEL) $(BUTCRES)

@@ -56,9 +56,7 @@
  */
 
 #undef  USE_KRB4
-#ifndef _WIN64
-#define USE_KRB524 1
-#endif
+#undef  USE_KRB524
 #define USE_MS2MIT 1
 
 #include <afsconfig.h>
@@ -77,10 +75,16 @@
 #include "afskfw.h"
 #include "afskfw-int.h"
 #include <userenv.h>
-#include "strsafe.h"
+#include <strsafe.h>
 
 #include <Sddl.h>
 #include <Aclapi.h>
+
+#include <krbcompat_delayload.h>
+
+#ifndef KRB5_TC_OPENCLOSE
+#define KRB5_TC_OPENCLOSE 0x00000001
+#endif
 
 /*
  * TIMING _____________________________________________________________________
@@ -97,297 +101,6 @@
 #define cmsec1MINUTE         60000
 #define csec1MINUTE          60
 
-/* Function Pointer Declarations for Delayed Loading */
-// CCAPI
-DECL_FUNC_PTR(cc_initialize);
-DECL_FUNC_PTR(cc_shutdown);
-DECL_FUNC_PTR(cc_get_NC_info);
-DECL_FUNC_PTR(cc_free_NC_info);
-
-#ifdef USE_LEASH
-// leash functions
-DECL_FUNC_PTR(Leash_get_default_lifetime);
-DECL_FUNC_PTR(Leash_get_default_forwardable);
-DECL_FUNC_PTR(Leash_get_default_renew_till);
-DECL_FUNC_PTR(Leash_get_default_noaddresses);
-DECL_FUNC_PTR(Leash_get_default_proxiable);
-DECL_FUNC_PTR(Leash_get_default_publicip);
-DECL_FUNC_PTR(Leash_get_default_use_krb4);
-DECL_FUNC_PTR(Leash_get_default_life_min);
-DECL_FUNC_PTR(Leash_get_default_life_max);
-DECL_FUNC_PTR(Leash_get_default_renew_min);
-DECL_FUNC_PTR(Leash_get_default_renew_max);
-DECL_FUNC_PTR(Leash_get_default_renewable);
-DECL_FUNC_PTR(Leash_get_default_mslsa_import);
-#endif
-
-// krb5 functions
-DECL_FUNC_PTR(krb5_change_password);
-DECL_FUNC_PTR(krb5_get_init_creds_opt_init);
-DECL_FUNC_PTR(krb5_get_init_creds_opt_set_tkt_life);
-DECL_FUNC_PTR(krb5_get_init_creds_opt_set_renew_life);
-DECL_FUNC_PTR(krb5_get_init_creds_opt_set_forwardable);
-DECL_FUNC_PTR(krb5_get_init_creds_opt_set_proxiable);
-DECL_FUNC_PTR(krb5_get_init_creds_opt_set_address_list);
-DECL_FUNC_PTR(krb5_get_init_creds_password);
-DECL_FUNC_PTR(krb5_build_principal_ext);
-DECL_FUNC_PTR(krb5_cc_get_name);
-DECL_FUNC_PTR(krb5_cc_resolve);
-DECL_FUNC_PTR(krb5_cc_default);
-DECL_FUNC_PTR(krb5_cc_default_name);
-DECL_FUNC_PTR(krb5_cc_set_default_name);
-DECL_FUNC_PTR(krb5_cc_initialize);
-DECL_FUNC_PTR(krb5_cc_destroy);
-DECL_FUNC_PTR(krb5_cc_close);
-DECL_FUNC_PTR(krb5_cc_store_cred);
-DECL_FUNC_PTR(krb5_cc_copy_creds);
-DECL_FUNC_PTR(krb5_cc_retrieve_cred);
-DECL_FUNC_PTR(krb5_cc_get_principal);
-DECL_FUNC_PTR(krb5_cc_start_seq_get);
-DECL_FUNC_PTR(krb5_cc_next_cred);
-DECL_FUNC_PTR(krb5_cc_end_seq_get);
-DECL_FUNC_PTR(krb5_cc_remove_cred);
-DECL_FUNC_PTR(krb5_cc_set_flags);
-DECL_FUNC_PTR(krb5_cc_get_type);
-DECL_FUNC_PTR(krb5_free_context);
-DECL_FUNC_PTR(krb5_free_cred_contents);
-DECL_FUNC_PTR(krb5_free_principal);
-DECL_FUNC_PTR(krb5_get_in_tkt_with_password);
-DECL_FUNC_PTR(krb5_init_context);
-DECL_FUNC_PTR(krb5_parse_name);
-DECL_FUNC_PTR(krb5_timeofday);
-DECL_FUNC_PTR(krb5_timestamp_to_sfstring);
-DECL_FUNC_PTR(krb5_unparse_name);
-DECL_FUNC_PTR(krb5_get_credentials);
-DECL_FUNC_PTR(krb5_mk_req);
-DECL_FUNC_PTR(krb5_sname_to_principal);
-DECL_FUNC_PTR(krb5_get_credentials_renew);
-DECL_FUNC_PTR(krb5_free_data);
-DECL_FUNC_PTR(krb5_free_data_contents);
-DECL_FUNC_PTR(krb5_free_unparsed_name);
-DECL_FUNC_PTR(krb5_os_localaddr);
-DECL_FUNC_PTR(krb5_copy_keyblock_contents);
-DECL_FUNC_PTR(krb5_copy_data);
-DECL_FUNC_PTR(krb5_free_creds);
-DECL_FUNC_PTR(krb5_build_principal);
-DECL_FUNC_PTR(krb5_get_renewed_creds);
-DECL_FUNC_PTR(krb5_get_default_config_files);
-DECL_FUNC_PTR(krb5_free_config_files);
-DECL_FUNC_PTR(krb5_get_default_realm);
-DECL_FUNC_PTR(krb5_free_default_realm);
-DECL_FUNC_PTR(krb5_free_ticket);
-DECL_FUNC_PTR(krb5_decode_ticket);
-DECL_FUNC_PTR(krb5_get_host_realm);
-DECL_FUNC_PTR(krb5_free_host_realm);
-DECL_FUNC_PTR(krb5_free_addresses);
-DECL_FUNC_PTR(krb5_c_random_make_octets);
-
-// Krb5 KFW 3.2 functions
-DECL_FUNC_PTR(krb5_get_error_message);
-DECL_FUNC_PTR(krb5_free_error_message);
-
-#ifdef USE_KRB524
-// Krb524 functions
-DECL_FUNC_PTR(krb524_init_ets);
-DECL_FUNC_PTR(krb524_convert_creds_kdc);
-#endif
-
-#ifdef USE_KRB4
-// krb4 functions
-DECL_FUNC_PTR(krb_get_cred);
-DECL_FUNC_PTR(tkt_string);
-DECL_FUNC_PTR(krb_get_tf_realm);
-DECL_FUNC_PTR(krb_mk_req);
-#endif
-
-// ComErr functions
-DECL_FUNC_PTR(com_err);
-DECL_FUNC_PTR(error_message);
-
-// Profile functions
-DECL_FUNC_PTR(profile_init);
-DECL_FUNC_PTR(profile_release);
-DECL_FUNC_PTR(profile_get_subsection_names);
-DECL_FUNC_PTR(profile_free_list);
-DECL_FUNC_PTR(profile_get_string);
-DECL_FUNC_PTR(profile_release_string);
-
-// Service functions
-DECL_FUNC_PTR(OpenSCManagerA);
-DECL_FUNC_PTR(OpenServiceA);
-DECL_FUNC_PTR(QueryServiceStatus);
-DECL_FUNC_PTR(CloseServiceHandle);
-#ifdef USE_MS2MIT
-DECL_FUNC_PTR(LsaNtStatusToWinError);
-#endif /* USE_MS2MIT */
-
-#ifdef USE_MS2MIT
-// LSA Functions
-DECL_FUNC_PTR(LsaConnectUntrusted);
-DECL_FUNC_PTR(LsaLookupAuthenticationPackage);
-DECL_FUNC_PTR(LsaCallAuthenticationPackage);
-DECL_FUNC_PTR(LsaFreeReturnBuffer);
-DECL_FUNC_PTR(LsaGetLogonSessionData);
-#endif /* USE_MS2MIT */
-
-// CCAPI
-FUNC_INFO ccapi_fi[] = {
-    MAKE_FUNC_INFO(cc_initialize),
-    MAKE_FUNC_INFO(cc_shutdown),
-    MAKE_FUNC_INFO(cc_get_NC_info),
-    MAKE_FUNC_INFO(cc_free_NC_info),
-    END_FUNC_INFO
-};
-
-#ifdef USE_LEASH
-FUNC_INFO leash_fi[] = {
-    MAKE_FUNC_INFO(Leash_get_default_lifetime),
-    MAKE_FUNC_INFO(Leash_get_default_renew_till),
-    MAKE_FUNC_INFO(Leash_get_default_forwardable),
-    MAKE_FUNC_INFO(Leash_get_default_noaddresses),
-    MAKE_FUNC_INFO(Leash_get_default_proxiable),
-    MAKE_FUNC_INFO(Leash_get_default_publicip),
-    MAKE_FUNC_INFO(Leash_get_default_use_krb4),
-    MAKE_FUNC_INFO(Leash_get_default_life_min),
-    MAKE_FUNC_INFO(Leash_get_default_life_max),
-    MAKE_FUNC_INFO(Leash_get_default_renew_min),
-    MAKE_FUNC_INFO(Leash_get_default_renew_max),
-    MAKE_FUNC_INFO(Leash_get_default_renewable),
-    END_FUNC_INFO
-};
-
-FUNC_INFO leash_opt_fi[] = {
-    MAKE_FUNC_INFO(Leash_get_default_mslsa_import),
-    END_FUNC_INFO
-};
-#endif
-
-FUNC_INFO k5_fi[] = {
-    MAKE_FUNC_INFO(krb5_change_password),
-    MAKE_FUNC_INFO(krb5_get_init_creds_opt_init),
-    MAKE_FUNC_INFO(krb5_get_init_creds_opt_set_tkt_life),
-    MAKE_FUNC_INFO(krb5_get_init_creds_opt_set_renew_life),
-    MAKE_FUNC_INFO(krb5_get_init_creds_opt_set_forwardable),
-    MAKE_FUNC_INFO(krb5_get_init_creds_opt_set_proxiable),
-    MAKE_FUNC_INFO(krb5_get_init_creds_opt_set_address_list),
-    MAKE_FUNC_INFO(krb5_get_init_creds_password),
-    MAKE_FUNC_INFO(krb5_build_principal_ext),
-    MAKE_FUNC_INFO(krb5_cc_get_name),
-    MAKE_FUNC_INFO(krb5_cc_resolve),
-    MAKE_FUNC_INFO(krb5_cc_default),
-    MAKE_FUNC_INFO(krb5_cc_default_name),
-    MAKE_FUNC_INFO(krb5_cc_set_default_name),
-    MAKE_FUNC_INFO(krb5_cc_initialize),
-    MAKE_FUNC_INFO(krb5_cc_destroy),
-    MAKE_FUNC_INFO(krb5_cc_close),
-    MAKE_FUNC_INFO(krb5_cc_copy_creds),
-    MAKE_FUNC_INFO(krb5_cc_store_cred),
-    MAKE_FUNC_INFO(krb5_cc_retrieve_cred),
-    MAKE_FUNC_INFO(krb5_cc_get_principal),
-    MAKE_FUNC_INFO(krb5_cc_start_seq_get),
-    MAKE_FUNC_INFO(krb5_cc_next_cred),
-    MAKE_FUNC_INFO(krb5_cc_end_seq_get),
-    MAKE_FUNC_INFO(krb5_cc_remove_cred),
-    MAKE_FUNC_INFO(krb5_cc_set_flags),
-    MAKE_FUNC_INFO(krb5_cc_get_type),
-    MAKE_FUNC_INFO(krb5_free_context),
-    MAKE_FUNC_INFO(krb5_free_cred_contents),
-    MAKE_FUNC_INFO(krb5_free_principal),
-    MAKE_FUNC_INFO(krb5_get_in_tkt_with_password),
-    MAKE_FUNC_INFO(krb5_init_context),
-    MAKE_FUNC_INFO(krb5_parse_name),
-    MAKE_FUNC_INFO(krb5_timeofday),
-    MAKE_FUNC_INFO(krb5_timestamp_to_sfstring),
-    MAKE_FUNC_INFO(krb5_unparse_name),
-    MAKE_FUNC_INFO(krb5_get_credentials),
-    MAKE_FUNC_INFO(krb5_mk_req),
-    MAKE_FUNC_INFO(krb5_sname_to_principal),
-    MAKE_FUNC_INFO(krb5_get_credentials_renew),
-    MAKE_FUNC_INFO(krb5_free_data),
-    MAKE_FUNC_INFO(krb5_free_data_contents),
-    MAKE_FUNC_INFO(krb5_free_unparsed_name),
-    MAKE_FUNC_INFO(krb5_os_localaddr),
-    MAKE_FUNC_INFO(krb5_copy_keyblock_contents),
-    MAKE_FUNC_INFO(krb5_copy_data),
-    MAKE_FUNC_INFO(krb5_free_creds),
-    MAKE_FUNC_INFO(krb5_build_principal),
-    MAKE_FUNC_INFO(krb5_get_renewed_creds),
-    MAKE_FUNC_INFO(krb5_free_addresses),
-    MAKE_FUNC_INFO(krb5_get_default_config_files),
-    MAKE_FUNC_INFO(krb5_free_config_files),
-    MAKE_FUNC_INFO(krb5_get_default_realm),
-    MAKE_FUNC_INFO(krb5_free_default_realm),
-    MAKE_FUNC_INFO(krb5_free_ticket),
-    MAKE_FUNC_INFO(krb5_decode_ticket),
-    MAKE_FUNC_INFO(krb5_get_host_realm),
-    MAKE_FUNC_INFO(krb5_free_host_realm),
-    MAKE_FUNC_INFO(krb5_free_addresses),
-    MAKE_FUNC_INFO(krb5_c_random_make_octets),
-    END_FUNC_INFO
-};
-
-FUNC_INFO k5_kfw_32_fi[] = {
-    MAKE_FUNC_INFO(krb5_get_error_message),
-    MAKE_FUNC_INFO(krb5_free_error_message),
-    END_FUNC_INFO
-};
-
-#ifdef USE_KRB4
-FUNC_INFO k4_fi[] = {
-    MAKE_FUNC_INFO(krb_get_cred),
-    MAKE_FUNC_INFO(krb_get_tf_realm),
-    MAKE_FUNC_INFO(krb_mk_req),
-    MAKE_FUNC_INFO(tkt_string),
-    END_FUNC_INFO
-};
-#endif
-
-#ifdef USE_KRB524
-FUNC_INFO k524_fi[] = {
-    MAKE_FUNC_INFO(krb524_init_ets),
-    MAKE_FUNC_INFO(krb524_convert_creds_kdc),
-    END_FUNC_INFO
-};
-#endif
-
-FUNC_INFO profile_fi[] = {
-        MAKE_FUNC_INFO(profile_init),
-        MAKE_FUNC_INFO(profile_release),
-        MAKE_FUNC_INFO(profile_get_subsection_names),
-        MAKE_FUNC_INFO(profile_free_list),
-        MAKE_FUNC_INFO(profile_get_string),
-        MAKE_FUNC_INFO(profile_release_string),
-        END_FUNC_INFO
-};
-
-FUNC_INFO ce_fi[] = {
-    MAKE_FUNC_INFO(com_err),
-    MAKE_FUNC_INFO(error_message),
-    END_FUNC_INFO
-};
-
-FUNC_INFO service_fi[] = {
-    MAKE_FUNC_INFO(OpenSCManagerA),
-    MAKE_FUNC_INFO(OpenServiceA),
-    MAKE_FUNC_INFO(QueryServiceStatus),
-    MAKE_FUNC_INFO(CloseServiceHandle),
-#ifdef USE_MS2MIT
-    MAKE_FUNC_INFO(LsaNtStatusToWinError),
-#endif /* USE_MS2MIT */
-    END_FUNC_INFO
-};
-
-#ifdef USE_MS2MIT
-FUNC_INFO lsa_fi[] = {
-    MAKE_FUNC_INFO(LsaConnectUntrusted),
-    MAKE_FUNC_INFO(LsaLookupAuthenticationPackage),
-    MAKE_FUNC_INFO(LsaCallAuthenticationPackage),
-    MAKE_FUNC_INFO(LsaFreeReturnBuffer),
-    MAKE_FUNC_INFO(LsaGetLogonSessionData),
-    END_FUNC_INFO
-};
-#endif /* USE_MS2MIT */
-
 /* Static Prototypes */
 char *afs_realm_of_cell(krb5_context, struct afsconf_cell *);
 static long get_cellconfig_callback(void *, struct sockaddr_in *, char *, unsigned short);
@@ -396,31 +109,10 @@ static krb5_error_code KRB5_CALLCONV KRB5_prompter( krb5_context context,
            void *data, const char *name, const char *banner, int num_prompts,
            krb5_prompt prompts[]);
 
-
 /* Static Declarations */
 static int                inited = 0;
 static int                mid_cnt = 0;
 static struct textField * mid_tb = NULL;
-static HINSTANCE hKrb5 = 0;
-static HINSTANCE hKrb5_kfw_32 = 0;
-#ifdef USE_KRB4
-static HINSTANCE hKrb4 = 0;
-#endif /* USE_KRB4 */
-#ifdef USE_KRB524
-static HINSTANCE hKrb524 = 0;
-#endif
-#ifdef USE_MS2MIT
-static HINSTANCE hSecur32 = 0;
-#endif /* USE_MS2MIT */
-static HINSTANCE hAdvApi32 = 0;
-static HINSTANCE hComErr = 0;
-static HINSTANCE hService = 0;
-static HINSTANCE hProfile = 0;
-#ifdef USE_LEASH
-static HINSTANCE hLeash = 0;
-static HINSTANCE hLeashOpt = 0;
-#endif
-static HINSTANCE hCCAPI = 0;
 static struct principal_ccache_data * princ_cc_data = NULL;
 static struct cell_principal_map    * cell_princ_map = NULL;
 
@@ -429,6 +121,20 @@ static struct cell_principal_map    * cell_princ_map = NULL;
 #else
 #define DEFAULT_LIFETIME (24 * 60)
 #endif
+
+void
+DebugPrintf(const char * fmt, ...)
+{
+    if (IsDebuggerPresent()) {
+        va_list vl;
+        char buf[1024];
+
+        va_start(vl, fmt);
+        StringCbVPrintfA(buf, sizeof(buf), fmt, vl);
+        OutputDebugStringA(buf);
+        va_end(vl);
+    }
+}
 
 void
 KFW_initialize(void)
@@ -449,25 +155,8 @@ KFW_initialize(void)
         }
         if ( !inited ) {
             inited = 1;
-            LoadFuncs(KRB5_DLL, k5_fi, &hKrb5, 0, 1, 0, 0);
-            LoadFuncs(KRB5_DLL, k5_kfw_32_fi, &hKrb5_kfw_32, 0, 1, 0, 0);
-            LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
-            LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
-#ifdef USE_KRB4
-            LoadFuncs(KRB4_DLL, k4_fi, &hKrb4, 0, 1, 0, 0);
-#endif /* USE_KRB4 */
-            LoadFuncs(SERVICE_DLL, service_fi, &hService, 0, 1, 0, 0);
-#ifdef USE_MS2MIT
-            LoadFuncs(SECUR32_DLL, lsa_fi, &hSecur32, 0, 1, 1, 1);
-#endif /* USE_MS2MIT */
-#ifdef USE_KRB524
-            LoadFuncs(KRB524_DLL, k524_fi, &hKrb524, 0, 1, 1, 1);
-#endif
-#ifdef USE_LEASH
-            LoadFuncs(LEASH_DLL, leash_fi, &hLeash, 0, 1, 0, 0);
-            LoadFuncs(LEASH_DLL, leash_opt_fi, &hLeashOpt, 0, 1, 0, 0);
-#endif
-            LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
+
+            DelayLoadHeimdal();
 
             if ( KFW_is_available() ) {
                 char rootcell[CELL_MAXNAMELEN+1];
@@ -493,36 +182,6 @@ KFW_initialize(void)
 void
 KFW_cleanup(void)
 {
-#ifdef USE_LEASH
-    if (hLeashOpt)
-        FreeLibrary(hLeashOpt);
-    if (hLeash)
-        FreeLibrary(hLeash);
-#endif
-#ifdef USE_KRB524
-    if (hKrb524)
-        FreeLibrary(hKrb524);
-#endif
-    if (hCCAPI)
-        FreeLibrary(hCCAPI);
-#ifdef USE_MS2MIT
-    if (hSecur32)
-        FreeLibrary(hSecur32);
-#endif /* USE_MS2MIT */
-    if (hService)
-        FreeLibrary(hService);
-    if (hComErr)
-        FreeLibrary(hComErr);
-    if (hProfile)
-        FreeLibrary(hProfile);
-#ifdef USE_KRB4
-    if (hKrb4)
-        FreeLibrary(hKrb4);
-#endif /* USE_KRB4 */
-    if (hKrb5)
-        FreeLibrary(hKrb5);
-    if (hKrb5_kfw_32)
-        FreeLibrary(hKrb5_kfw_32);
 }
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
@@ -562,20 +221,20 @@ KFW_accept_dotted_usernames(void)
     DWORD value = 1;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+                        0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(value);
         code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
-                                (BYTE *) &value, &len);
+                               (BYTE *) &value, &len);
         RegCloseKey(parmKey);
     }
     if (code != ERROR_SUCCESS) {
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+                            0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(value);
             code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
-                                    (BYTE *) &value, &len);
+                                   (BYTE *) &value, &len);
             RegCloseKey (parmKey);
         }
     }
@@ -586,29 +245,7 @@ KFW_accept_dotted_usernames(void)
 int
 KFW_use_krb524(void)
 {
-    HKEY parmKey;
-    DWORD code, len;
-    DWORD use524 = 0;
-
-    code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
-    if (code == ERROR_SUCCESS) {
-        len = sizeof(use524);
-        code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
-                                (BYTE *) &use524, &len);
-        RegCloseKey(parmKey);
-    }
-    if (code != ERROR_SUCCESS) {
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
-        if (code == ERROR_SUCCESS) {
-            len = sizeof(use524);
-            code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
-                                    (BYTE *) &use524, &len);
-            RegCloseKey (parmKey);
-        }
-    }
-    return use524;
+    return 0;
 }
 
 int
@@ -619,21 +256,21 @@ KFW_is_available(void)
     DWORD enableKFW = 1;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
-                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+                        0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(enableKFW);
         code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
-                                (BYTE *) &enableKFW, &len);
+                               (BYTE *) &enableKFW, &len);
         RegCloseKey (parmKey);
     }
 
     if (code != ERROR_SUCCESS) {
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
-                             0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+                            0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(enableKFW);
             code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
-                                    (BYTE *) &enableKFW, &len);
+                                   (BYTE *) &enableKFW, &len);
             RegCloseKey (parmKey);
         }
     }
@@ -642,69 +279,45 @@ KFW_is_available(void)
         return FALSE;
 
     KFW_initialize();
-    if ( hKrb5 && hComErr && hService &&
-#ifdef USE_MS2MIT
-         hSecur32 &&
-#endif /* USE_MS2MIT */
-#ifdef USE_KRB524
-         hKrb524 &&
-#endif
-#ifdef USE_LEASH
-         hLeash &&
-#endif
-         hProfile && hCCAPI )
-        return TRUE;
-    return FALSE;
+
+    /* If this is non-zero, then some Kerberos library was loaded. */
+    return (krb5_init_context != NULL);
 }
 
 int
 KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
-                 int FreeContextFlag, krb5_context * ctx,
-                 krb5_ccache * cache)
+           int FreeContextFlag, krb5_context * context,
+           krb5_ccache * cache)
 {
     char message[256];
     const char *errText;
     int krb5Error = ((int)(rc & 255));
 
-    /*
-    switch (krb5Error)
-    {
-        // Wrong password
-        case 31:
-        case 8:
-            return;
-    }
-    */
-
-    if (pkrb5_get_error_message)
-        errText = pkrb5_get_error_message(*ctx, rc);
-    else
-        errText = perror_message(rc);
+    errText = krb5_get_error_message(*context, rc);
     StringCbPrintf(message, sizeof(message),
-              "%s\n(Kerberos error %ld)\n\n%s failed",
-              errText,
-              krb5Error,
-              FailedFunctionName);
-    if (pkrb5_free_error_message)
-        pkrb5_free_error_message(*ctx, (char *)errText);
+                   "%s\n(Kerberos error %ld)\n\n%s failed",
+                   errText,
+                   krb5Error,
+                   FailedFunctionName);
+    krb5_free_error_message(*context, (char *)errText);
 
-    if ( IsDebuggerPresent() )
-        OutputDebugString(message);
+    DebugPrintf("%s", message);
 
     MessageBox(NULL, message, "Kerberos Five", MB_OK | MB_ICONERROR |
                MB_TASKMODAL |
                MB_SETFOREGROUND);
-    if (FreeContextFlag == 1)
-    {
-        if (ctx && *ctx != NULL)
-        {
+
+    if (FreeContextFlag == 1) {
+
+        if (context && *context != NULL) {
+
             if (cache && *cache != NULL) {
-                pkrb5_cc_close(*ctx, *cache);
+                krb5_cc_close(*context, *cache);
                 *cache = NULL;
             }
 
-            pkrb5_free_context(*ctx);
-            *ctx = NULL;
+            krb5_free_context(*context);
+            *context = NULL;
         }
     }
 
@@ -712,7 +325,7 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
 }
 
 void
-KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
+KFW_AFS_update_princ_ccache_data(krb5_context context, krb5_ccache cc, int lsa)
 {
     struct principal_ccache_data * next = princ_cc_data;
     krb5_principal principal = 0;
@@ -726,26 +339,28 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     krb5_creds creds;
     krb5_flags flags=0;
     krb5_timestamp now;
+    size_t len;
 
-    if (ctx == 0 || cc == 0)
+    if (context == 0 || cc == 0)
         return;
 
-    code = pkrb5_cc_get_principal(ctx, cc, &principal);
+    code = krb5_cc_get_principal(context, cc, &principal);
     if ( code ) return;
 
-    code = pkrb5_unparse_name(ctx, principal, &pname);
+    code = krb5_unparse_name(context, principal, &pname);
     if ( code ) goto cleanup;
 
-    ccname = pkrb5_cc_get_name(ctx, cc);
+    ccname = krb5_cc_get_name(context, cc);
     if (!ccname) goto cleanup;
 
-    cctype = pkrb5_cc_get_type(ctx, cc);
+    cctype = krb5_cc_get_type(context, cc);
     if (!cctype) goto cleanup;
 
-    ccfullname = malloc(strlen(ccname) + strlen(cctype) + 2);
+    len = strlen(ccname) + strlen(cctype) + 2;
+    ccfullname = malloc(len);
     if (!ccfullname) goto cleanup;
 
-    StringCbPrintf(ccfullname, sizeof(ccfullname), "%s:%s", cctype, ccname);
+    StringCbPrintf(ccfullname, len, "%s:%s", cctype, ccname);
 
     // Search the existing list to see if we have a match
     if ( next ) {
@@ -770,16 +385,15 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     }
 
     flags = 0;  // turn off OPENCLOSE mode
-    code = pkrb5_cc_set_flags(ctx, cc, flags);
+    code = krb5_cc_set_flags(context, cc, flags);
     if ( code ) goto cleanup;
 
-    code = pkrb5_timeofday(ctx, &now);
+    code = krb5_timeofday(context, &now);
 
-    cc_code = pkrb5_cc_start_seq_get(ctx, cc, &cur);
-    if (cc_code) goto cleanup;
+    cc_code = krb5_cc_start_seq_get(context, cc, &cur);
 
-    while (!(cc_code = pkrb5_cc_next_cred(ctx, cc, &cur, &creds))) {
-        if ( creds.ticket_flags & TKT_FLG_INITIAL ) {
+    while (!(cc_code = krb5_cc_next_cred(context, cc, &cur, &creds))) {
+        if ( creds.flags.b.initial) {
             int valid;
             // we found the ticket we are looking for
             // check validity of timestamp
@@ -789,7 +403,7 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
             valid = ((creds.times.starttime > 0) &&
                      now >= (creds.times.starttime - 300) &&
                      now < (creds.times.endtime + 300) &&
-                     !(creds.ticket_flags & TKT_FLG_INVALID));
+                     !creds.flags.b.invalid);
 
             if ( next->from_lsa) {
                 next->expired = 0;
@@ -799,39 +413,40 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
                 next->expired = 0;
                 next->expiration_time = creds.times.endtime;
                 next->renew = (creds.times.renew_till > creds.times.endtime) &&
-                               (creds.ticket_flags & TKT_FLG_RENEWABLE);
+                    creds.flags.b.renewable;
             } else {
                 next->expired = 1;
                 next->expiration_time = 0;
                 next->renew = 0;
             }
 
-            pkrb5_free_cred_contents(ctx, &creds);
+            krb5_free_cred_contents(context, &creds);
             cc_code = KRB5_CC_END;
             break;
         }
-        pkrb5_free_cred_contents(ctx, &creds);
+        krb5_free_cred_contents(context, &creds);
     }
 
     if (cc_code == KRB5_CC_END) {
-        code = pkrb5_cc_end_seq_get(ctx, cc, &cur);
+        code = krb5_cc_end_seq_get(context, cc, &cur);
         if (code) goto cleanup;
     }
 
   cleanup:
     flags = KRB5_TC_OPENCLOSE;  //turn on OPENCLOSE
-    code = pkrb5_cc_set_flags(ctx, cc, flags);
+    code = krb5_cc_set_flags(context, cc, flags);
 
     if ( ccfullname)
         free(ccfullname);
     if ( pname )
-        pkrb5_free_unparsed_name(ctx,pname);
+        krb5_free_unparsed_name(context,pname);
     if ( principal )
-        pkrb5_free_principal(ctx,principal);
+        krb5_free_principal(context,principal);
 }
 
 int
-KFW_AFS_find_ccache_for_principal(krb5_context ctx, char * principal, char **ccache, int valid_only)
+KFW_AFS_find_ccache_for_principal(krb5_context context, char * principal,
+                                  char **ccache, int valid_only)
 {
     struct principal_ccache_data * next = princ_cc_data;
     char * response = NULL;
@@ -840,12 +455,12 @@ KFW_AFS_find_ccache_for_principal(krb5_context ctx, char * principal, char **cca
         return 0;
 
     while ( next ) {
-        if ( (!valid_only || !next->expired) && !strcmp(next->principal,principal) ) {
+        if ( (!valid_only || !next->expired) && !strcmp(next->principal, principal) ) {
             if (response) {
                 // we always want to prefer the MS Kerberos LSA cache or
                 // the cache afscreds created specifically for the principal
                 // if the current entry is either one, drop the previous find
-                if ( next->from_lsa || !strcmp(next->ccache_name,principal) )
+                if ( next->from_lsa || !strcmp(next->ccache_name, principal) )
                     free(response);
             }
             response = _strdup(next->ccache_name);
@@ -864,7 +479,7 @@ KFW_AFS_find_ccache_for_principal(krb5_context ctx, char * principal, char **cca
 }
 
 void
-KFW_AFS_delete_princ_ccache_data(krb5_context ctx, char * pname, char * ccname)
+KFW_AFS_delete_princ_ccache_data(krb5_context context, char * pname, char * ccname)
 {
     struct principal_ccache_data ** next = &princ_cc_data;
 
@@ -885,7 +500,7 @@ KFW_AFS_delete_princ_ccache_data(krb5_context ctx, char * pname, char * ccname)
 }
 
 void
-KFW_AFS_update_cell_princ_map(krb5_context ctx, char * cell, char *pname, int active)
+KFW_AFS_update_cell_princ_map(krb5_context context, char * cell, char *pname, int active)
 {
     struct cell_principal_map * next = cell_princ_map;
 
@@ -919,7 +534,7 @@ KFW_AFS_update_cell_princ_map(krb5_context ctx, char * cell, char *pname, int ac
 }
 
 void
-KFW_AFS_delete_cell_princ_maps(krb5_context ctx, char * pname, char * cell)
+KFW_AFS_delete_cell_princ_maps(krb5_context context, char * pname, char * cell)
 {
     struct cell_principal_map ** next = &cell_princ_map;
 
@@ -945,7 +560,7 @@ KFW_AFS_delete_cell_princ_maps(krb5_context ctx, char * pname, char * cell)
 // TODO: Attempt to return one which has not yet expired by checking
 // the principal/ccache data
 int
-KFW_AFS_find_principals_for_cell(krb5_context ctx, char * cell, char **principals[], int active_only)
+KFW_AFS_find_principals_for_cell(krb5_context context, char * cell, char **principals[], int active_only)
 {
     struct cell_principal_map * next_map = cell_princ_map;
     const char * princ = NULL;
@@ -975,7 +590,7 @@ KFW_AFS_find_principals_for_cell(krb5_context ctx, char * cell, char **principal
 }
 
 int
-KFW_AFS_find_cells_for_princ(krb5_context ctx, char * pname, char **cells[], int active_only)
+KFW_AFS_find_cells_for_princ(krb5_context context, char * pname, char **cells[], int active_only)
 {
     int     count = 0, i;
     struct cell_principal_map * next_map = cell_princ_map;
@@ -1004,38 +619,149 @@ KFW_AFS_find_cells_for_princ(krb5_context ctx, char * pname, char **cells[], int
     return count;
 }
 
-/* Given a principal return an existing ccache or create one and return */
-int
-KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
+static void
+escape_unsafe_principal_characters(const char * pname,
+                                   char ** new_name)
 {
-    krb5_context ctx = NULL;
+    const char * src;
+    char * dest;
+    size_t len = 0;
+
+    /* Count first */
+    for (src = pname; *src != '\0'; ++len, ++src) {
+        if (*src == '\\' || *src == '#' || *src == '<' ||
+            *src == '>' || *src == ':' || *src == '"' ||
+            *src == '/' || *src == '|' || *src == '?' ||
+            *src == '*')
+            ++len;
+    }
+
+    ++len;
+
+    *new_name = (char *) malloc(len);
+
+    if (*new_name == NULL)
+        return;
+
+    for (src = pname, dest = *new_name; *src != '\0'; ++src) {
+        switch (*src) {
+        case '\\': *dest++ = '#'; *dest++ = 'b'; break;
+
+        case '#' : *dest++ = '#'; *dest++ = '#'; break;
+
+        case '<' : *dest++ = '#'; *dest++ = 'l'; break;
+
+        case '>' : *dest++ = '#'; *dest++ = 'g'; break;
+
+        case ':' : *dest++ = '#'; *dest++ = 'c'; break;
+
+        case '"' : *dest++ = '#'; *dest++ = 't'; break;
+
+        case '/' : *dest++ = '#'; *dest++ = 'f'; break;
+
+        case '|' : *dest++ = '#'; *dest++ = 'p'; break;
+
+        case '?' : *dest++ = '#'; *dest++ = 'q'; break;
+
+        case '*' : *dest++ = '#'; *dest++ = 'a'; break;
+
+        default: *dest++ = *src;
+        }
+    }
+
+    *dest++ = '\0';
+}
+
+static void
+get_default_ccache_name_for_principal(krb5_context context, krb5_principal principal,
+                                      char ** cc_name)
+{
+    char * pname = NULL;
+    char * epname = NULL;
+    krb5_error_code code;
+    size_t len = 0;
+    char temppath[MAX_PATH]="";
+
+    *cc_name = NULL;
+
+    code = krb5_unparse_name(context, principal, &pname);
+    if (code) goto cleanup;
+
+    escape_unsafe_principal_characters(pname, &epname);
+
+    len = strlen(epname);
+    len += 21;
+    *cc_name = (char *) malloc(len);
+
+    GetTempPathA(MAX_PATH, temppath);
+    StringCbPrintfA(*cc_name, len, "FILE:%skrb5cc_%s", temppath, epname);
+
+cleanup:
+    if (pname)
+        krb5_free_unparsed_name(context, pname);
+
+    if (epname)
+        free(epname);
+
+    return;
+}
+
+static int
+is_default_ccache_for_principal(krb5_context context, krb5_principal principal,
+                                krb5_ccache cc)
+{
+    const char * cc_name;
+    char * def_cc_name = NULL;
+    const char *bs_cc;
+    const char *bs_def_cc;
+    int is_default;
+
+    cc_name = krb5_cc_get_name(context, cc);
+
+    get_default_ccache_name_for_principal(context, principal, &def_cc_name);
+
+    is_default = (cc_name != NULL && def_cc_name != NULL &&
+
+                  (bs_cc = strrchr(cc_name, '\\')) != NULL &&
+
+                  (bs_def_cc = strrchr(def_cc_name, '\\')) != NULL &&
+
+                  !strcmp(bs_cc, bs_def_cc));
+
+    if (def_cc_name)
+        free(def_cc_name);
+
+    return is_default;
+}
+
+/** Given a principal return an existing ccache or create one and return */
+int
+KFW_get_ccache(krb5_context alt_context, krb5_principal principal, krb5_ccache * cc)
+{
+    krb5_context context = NULL;
     char * pname = NULL;
     char * ccname = NULL;
     krb5_error_code code;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
-
-    if ( alt_ctx ) {
-        ctx = alt_ctx;
+    if ( alt_context ) {
+        context = alt_context;
     } else {
-        code = pkrb5_init_context(&ctx);
+        code = krb5_init_context(&context);
         if (code) goto cleanup;
     }
 
     if ( principal ) {
-        code = pkrb5_unparse_name(ctx, principal, &pname);
+        code = krb5_unparse_name(context, principal, &pname);
         if (code) goto cleanup;
 
-        if ( !KFW_AFS_find_ccache_for_principal(ctx,pname,&ccname,TRUE) &&
-             !KFW_AFS_find_ccache_for_principal(ctx,pname,&ccname,FALSE)) {
-            size_t len = strlen(pname) + 5;
-            ccname = (char *)malloc(len);
-            StringCbPrintf(ccname, len, "API:%s", pname);
+        if ( !KFW_AFS_find_ccache_for_principal(context,pname,&ccname,TRUE) &&
+             !KFW_AFS_find_ccache_for_principal(context,pname,&ccname,FALSE)) {
+
+            get_default_ccache_name_for_principal(context, principal, &ccname);
         }
-        code = pkrb5_cc_resolve(ctx, ccname, cc);
+        code = krb5_cc_resolve(context, ccname, cc);
     } else {
-        code = pkrb5_cc_default(ctx, cc);
+        code = krb5_cc_default(context, cc);
         if (code) goto cleanup;
     }
 
@@ -1043,61 +769,50 @@ KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
     if (ccname)
         free(ccname);
     if (pname)
-        pkrb5_free_unparsed_name(ctx,pname);
-    if (ctx && (ctx != alt_ctx))
-        pkrb5_free_context(ctx);
+        krb5_free_unparsed_name(context,pname);
+    if (context && (context != alt_context))
+        krb5_free_context(context);
     return(code);
 }
 
 #ifdef USE_MS2MIT
+
 // Import Microsoft Credentials into a new MIT ccache
 void
 KFW_import_windows_lsa(void)
 {
-    krb5_context ctx = NULL;
+    krb5_context context = NULL;
     krb5_ccache  cc = NULL;
     krb5_principal princ = NULL;
     char * pname = NULL;
-    krb5_data *  princ_realm;
+    const char *  princ_realm;
     krb5_error_code code;
     char cell[128]="", realm[128]="", *def_realm = 0;
-    unsigned int i;
-    DWORD dwMsLsaImport;
+    DWORD dwMsLsaImport = 1;
 
-    if (!pkrb5_init_context)
-        return;
-
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) goto cleanup;
 
-    code = pkrb5_cc_resolve(ctx, LSA_CCNAME, &cc);
+    code = krb5_cc_resolve(context, LSA_CCNAME, &cc);
     if (code) goto cleanup;
 
-    KFW_AFS_update_princ_ccache_data(ctx, cc, TRUE);
+    KFW_AFS_update_princ_ccache_data(context, cc, TRUE);
 
-    code = pkrb5_cc_get_principal(ctx, cc, &princ);
+    code = krb5_cc_get_principal(context, cc, &princ);
     if ( code ) goto cleanup;
 
-#ifdef USE_LEASH
-    dwMsLsaImport = pLeash_get_default_mslsa_import ? pLeash_get_default_mslsa_import() : 1;
-#else
-    dwMsLsaImport = 1;
-#endif
+    dwMsLsaImport = KFW_get_default_mslsa_import(context);
     switch ( dwMsLsaImport ) {
     case 0: /* do not import */
         goto cleanup;
     case 1: /* always import */
         break;
     case 2: { /* matching realm */
-        char ms_realm[128] = "", *r;
-        unsigned int j;
+        const char *ms_realm;
 
-        for ( r=ms_realm, j=0; j<krb5_princ_realm(ctx, princ)->length; r++, j++ ) {
-            *r = krb5_princ_realm(ctx, princ)->data[j];
-        }
-        *r = '\0';
+        ms_realm = krb5_principal_get_realm(context, princ);
 
-        if (code = pkrb5_get_default_realm(ctx, &def_realm))
+        if (code = krb5_get_default_realm(context, &def_realm))
             goto cleanup;
 
         if (strcmp(def_realm, ms_realm))
@@ -1108,40 +823,206 @@ KFW_import_windows_lsa(void)
         break;
     }
 
-    code = pkrb5_unparse_name(ctx,princ,&pname);
+    code = krb5_unparse_name(context,princ,&pname);
     if ( code ) goto cleanup;
 
-    princ_realm = krb5_princ_realm(ctx, princ);
-    for ( i=0; i<princ_realm->length; i++ ) {
-        realm[i] = princ_realm->data[i];
-        cell[i] = tolower(princ_realm->data[i]);
-    }
-    cell[i] = '\0';
-    realm[i] = '\0';
+    princ_realm = krb5_principal_get_realm(context, princ);
+    StringCchCopyA(realm, sizeof(realm), princ_realm);
+    StringCchCopyA(cell, sizeof(cell), princ_realm);
+    strlwr(cell);
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, DEFAULT_LIFETIME, NULL);
-    if ( IsDebuggerPresent() ) {
-        char message[256];
-        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
-        OutputDebugString(message);
-    }
+    code = KFW_AFS_klog(context, cc, "afs", cell, realm,
+                        KFW_get_default_lifetime(context, realm), NULL);
+
+    DebugPrintf("KFW_AFS_klog() returns: %d\n", code);
+
     if ( code ) goto cleanup;
 
-    KFW_AFS_update_cell_princ_map(ctx, cell, pname, TRUE);
+    KFW_AFS_update_cell_princ_map(context, cell, pname, TRUE);
 
   cleanup:
     if (pname)
-        pkrb5_free_unparsed_name(ctx,pname);
+        krb5_free_unparsed_name(context,pname);
     if (princ)
-        pkrb5_free_principal(ctx,princ);
+        krb5_free_principal(context,princ);
     if (def_realm)
-        pkrb5_free_default_realm(ctx, def_realm);
+        krb5_free_default_realm(context, def_realm);
     if (cc)
-        pkrb5_cc_close(ctx,cc);
-    if (ctx)
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context,cc);
+    if (context)
+        krb5_free_context(context);
 }
 #endif /* USE_MS2MIT */
+
+static krb5_boolean
+get_canonical_ccache(krb5_context context, krb5_ccache * pcc)
+{
+    krb5_error_code code;
+    krb5_ccache cc = *pcc;
+    krb5_principal principal = 0;
+
+    code = krb5_cc_get_principal(context, cc, &principal);
+    if (code)
+        return FALSE;
+
+    if ( !is_default_ccache_for_principal(context, principal, cc)
+         && strcmp(krb5_cc_get_type(context, cc), LSA_CCTYPE) != 0) {
+
+        char * def_cc_name = NULL;
+        krb5_ccache def_cc = 0;
+        krb5_principal def_cc_princ = 0;
+
+        do {
+            get_default_ccache_name_for_principal(context, principal, &def_cc_name);
+
+            code = krb5_cc_resolve(context, def_cc_name, &def_cc);
+            if (code) break;
+
+            code = krb5_cc_get_principal(context, def_cc, &def_cc_princ);
+            if (code || !krb5_principal_compare(context, def_cc_princ, principal)) {
+                /* def_cc either doesn't exist or is home to an
+                 * imposter. */
+
+                DebugPrintf("Copying ccache [%s:%s]->[%s:%s]",
+                            krb5_cc_get_type(context, cc), krb5_cc_get_name(context, cc),
+                            krb5_cc_get_type(context, def_cc),
+                            krb5_cc_get_name(context, def_cc));
+
+                code = krb5_cc_initialize(context, def_cc, principal);
+                if (code) break;
+
+                code = krb5_cc_copy_creds(context, cc, def_cc);
+                if (code) {
+                    KRB5_error(code, "krb5_cc_copy_creds", 0, NULL, NULL);
+                    break;
+                }
+
+                code = krb5_cc_close(context, cc);
+
+                cc = def_cc;
+                def_cc = 0;
+            }
+        } while (FALSE);
+
+        if (def_cc)
+            krb5_cc_close(context, def_cc);
+
+        if (def_cc_princ)
+            krb5_free_principal(context, def_cc_princ);
+
+        if (def_cc_name)
+            free(def_cc_name);
+    }
+
+    if (principal)
+        krb5_free_principal(context, principal);
+
+    if (code == 0 && cc != 0) {
+        *pcc = cc;
+        return TRUE;
+    }
+
+    *pcc = cc;
+    return FALSE;
+}
+
+static krb5_error_code
+check_and_get_tokens_for_ccache(krb5_context context, krb5_ccache cc)
+{
+    krb5_error_code code = 0;
+    krb5_error_code cc_code = 0;
+    krb5_cc_cursor  cur;
+    krb5_creds      creds;
+    char * principal_name = NULL;
+
+    {
+        krb5_principal principal = 0;
+        code = krb5_cc_get_principal(context, cc, &principal);
+
+        if (code == 0)
+            code = krb5_unparse_name(context, principal, &principal_name);
+
+        if (principal)
+            krb5_free_principal(context, principal);
+    }
+
+    if (code != 0) {
+        if (principal_name)
+            krb5_free_unparsed_name(context, principal_name);
+        return code;
+    }
+
+    cc_code = krb5_cc_start_seq_get(context, cc, &cur);
+
+    while (!(cc_code = krb5_cc_next_cred(context, cc, &cur, &creds))) {
+
+        const char * sname = krb5_principal_get_comp_string(context, creds.server, 0);
+        const char * cell  = krb5_principal_get_comp_string(context, creds.server, 1);
+        const char * realm = krb5_principal_get_realm(context, creds.server);
+
+        if ( sname && cell && !strcmp("afs",sname) ) {
+
+            struct ktc_principal    aserver;
+            struct ktc_principal    aclient;
+            struct ktc_token	    atoken;
+            int active = TRUE;
+
+            DebugPrintf("Found AFS ticket: %s%s%s@%s\n",
+                        sname, (cell ? "/":""), (cell? cell : ""), realm);
+
+            memset(&aserver, '\0', sizeof(aserver));
+            StringCbCopy(aserver.name, sizeof(aserver.name), sname);
+            StringCbCopy(aserver.cell, sizeof(aserver.cell), cell);
+
+            code = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
+            if (!code) {
+                // Found a token in AFS Client Server which matches
+
+                char pname[128], *p, *q;
+
+                for ( p=pname, q=aclient.name; *q; p++, q++)
+                    *p = *q;
+
+                for ( *p++ = '@', q=aclient.cell; *q; p++, q++)
+                    *p = toupper(*q);
+
+                *p = '\0';
+
+                DebugPrintf("Found AFS token: %s\n", pname);
+
+                if (strcmp(pname, principal_name) != 0)
+                    active = FALSE;
+
+                KFW_AFS_update_cell_princ_map(context, cell, principal_name, active);
+
+            } else {
+                // Attempt to import it
+
+                KFW_AFS_update_cell_princ_map(context, cell, principal_name, active);
+
+                DebugPrintf("Calling KFW_AFS_klog() to obtain token\n");
+
+                code = KFW_AFS_klog(context, cc, "afs", cell, realm,
+                                    KFW_get_default_lifetime(context, realm), NULL);
+
+                DebugPrintf("KFW_AFS_klog() returns: %d\n", code);
+            }
+
+        } else {
+
+            DebugPrintf("Found ticket: %s%s%s@%s\n", sname,
+                        (cell? "/":""), (cell? cell:""), realm);
+        }
+
+        krb5_free_cred_contents(context, &creds);
+    }
+
+    if (cc_code == KRB5_CC_END) {
+        cc_code = krb5_cc_end_seq_get(context, cc, &cur);
+    }
+
+    return code;
+}
 
 // If there are existing MIT credentials, copy them to a new
 // ccache named after the principal
@@ -1154,195 +1035,53 @@ KFW_import_windows_lsa(void)
 void
 KFW_import_ccache_data(void)
 {
-    krb5_context ctx = NULL;
-    krb5_ccache  cc = NULL;
-    krb5_principal principal = NULL;
-    krb5_creds creds;
+    krb5_context context = NULL;
+    krb5_ccache  cc;
     krb5_error_code code;
-    krb5_error_code cc_code;
-    krb5_cc_cursor cur;
-    apiCB * cc_ctx = NULL;
-    struct _infoNC ** pNCi = NULL;
-    int i, j, flags;
-
-    if ( !pcc_initialize )
-        return;
+    krb5_cccol_cursor cccol_cur;
+    int flags;
 
     if ( IsDebuggerPresent() )
         OutputDebugString("KFW_import_ccache_data()\n");
 
-    code = pcc_initialize(&cc_ctx, CC_API_VER_2, NULL, NULL);
+    code = krb5_init_context(&context);
     if (code) goto cleanup;
 
-    code = pcc_get_NC_info(cc_ctx, &pNCi);
+    code = krb5_cccol_cursor_new(context, &cccol_cur);
     if (code) goto cleanup;
 
-    code = pkrb5_init_context(&ctx);
-    if (code) goto cleanup;
+    while ((code = krb5_cccol_cursor_next(context, cccol_cur, &cc)) == 0 && cc != NULL) {
 
-    for ( i=0; pNCi[i]; i++ ) {
-        if ( pNCi[i]->vers != CC_CRED_V5 )
+        if (!get_canonical_ccache(context, &cc)) {
+            if (cc)
+                krb5_cc_close(context, cc);
             continue;
-        if ( IsDebuggerPresent() ) {
-            OutputDebugString("Principal: ");
-            OutputDebugString(pNCi[i]->principal);
-            OutputDebugString(" in ccache ");
-            OutputDebugString(pNCi[i]->name);
-            OutputDebugString("\n");
-        }
-        if ( strcmp(pNCi[i]->name,pNCi[i]->principal)
-             && strcmp(pNCi[i]->name,LSA_CCNAME)
-             ) {
-            int found = 0;
-            for ( j=0; pNCi[j]; j++ ) {
-                if (!strcmp(pNCi[j]->name,pNCi[i]->principal)) {
-                    found = 1;
-                    break;
-                }
-            }
-
-            code = pkrb5_cc_resolve(ctx, pNCi[i]->principal, &cc);
-            if (code) goto loop_cleanup;
-
-            if (!found) {
-                krb5_ccache oldcc = 0;
-
-                if ( IsDebuggerPresent() )
-                    OutputDebugString("copying ccache data to new ccache\n");
-
-                code = pkrb5_parse_name(ctx, pNCi[i]->principal, &principal);
-                if (code) goto loop_cleanup;
-                code = pkrb5_cc_initialize(ctx, cc, principal);
-                if (code) goto loop_cleanup;
-
-                code = pkrb5_cc_resolve(ctx, pNCi[i]->name, &oldcc);
-                if (code) goto loop_cleanup;
-                code = pkrb5_cc_copy_creds(ctx,oldcc,cc);
-                if (code) {
-                    code = pkrb5_cc_close(ctx,cc);
-                    cc = 0;
-                    code = pkrb5_cc_close(ctx,oldcc);
-                    oldcc = 0;
-                    KRB5_error(code, "krb5_cc_copy_creds", 0, NULL, NULL);
-                    continue;
-                }
-                code = pkrb5_cc_close(ctx,oldcc);
-            }
-        } else {
-            code = pkrb5_cc_resolve(ctx, pNCi[i]->name, &cc);
-            if (code) goto loop_cleanup;
         }
 
-        flags = 0;  // turn off OPENCLOSE mode
-        code = pkrb5_cc_set_flags(ctx, cc, flags);
+        /* Turn off OPENCLOSE mode */
+        code = krb5_cc_set_flags(context, cc, 0);
         if ( code ) goto cleanup;
 
-        KFW_AFS_update_princ_ccache_data(ctx, cc, !strcmp(pNCi[i]->name,LSA_CCNAME));
+        KFW_AFS_update_princ_ccache_data(context, cc,
+                                         !strcmp(krb5_cc_get_type(context, cc),
+                                                 LSA_CCTYPE));
 
-        cc_code = pkrb5_cc_start_seq_get(ctx, cc, &cur);
-        if (cc_code) goto cleanup;
+        check_and_get_tokens_for_ccache(context, cc);
 
-        while (!(cc_code = pkrb5_cc_next_cred(ctx, cc, &cur, &creds))) {
-            krb5_data * sname = krb5_princ_name(ctx, creds.server);
-            krb5_data * cell  = krb5_princ_component(ctx, creds.server, 1);
-            krb5_data * realm = krb5_princ_realm(ctx, creds.server);
-            if ( sname && cell && !strcmp("afs",sname->data) ) {
-                struct ktc_principal    aserver;
-                struct ktc_principal    aclient;
-                struct ktc_token	atoken;
-                int active = TRUE;
-
-                if ( IsDebuggerPresent() )  {
-                    OutputDebugString("Found AFS ticket: ");
-                    OutputDebugString(sname->data);
-                    if ( cell->data ) {
-                        OutputDebugString("/");
-                        OutputDebugString(cell->data);
-                    }
-                    OutputDebugString("@");
-                    OutputDebugString(realm->data);
-                    OutputDebugString("\n");
-                }
-
-                memset(&aserver, '\0', sizeof(aserver));
-                StringCbCopyN( aserver.name, sizeof(aserver.name),
-                               sname->data, sizeof(aserver.name) - 1);
-                StringCbCopyN( aserver.cell, sizeof(aserver.cell),
-                               cell->data, sizeof(aserver.cell) - 1);
-
-                code = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
-                if (!code) {
-                    // Found a token in AFS Client Server which matches
-                    char pname[128], *p, *q;
-                    for ( p=pname, q=aclient.name; *q; p++, q++)
-                        *p = *q;
-                    for ( *p++ = '@', q=aclient.cell; *q; p++, q++)
-                        *p = toupper(*q);
-                    *p = '\0';
-
-                    if ( IsDebuggerPresent() )  {
-                        OutputDebugString("Found AFS token: ");
-                        OutputDebugString(pname);
-                        OutputDebugString("\n");
-                    }
-
-                    if ( strcmp(pname,pNCi[i]->principal)  )
-                        active = FALSE;
-                    KFW_AFS_update_cell_princ_map(ctx, cell->data, pNCi[i]->principal, active);
-                } else {
-                    // Attempt to import it
-                    KFW_AFS_update_cell_princ_map(ctx, cell->data, pNCi[i]->principal, active);
-
-                    if ( IsDebuggerPresent() )  {
-                        OutputDebugString("Calling KFW_AFS_klog() to obtain token\n");
-                    }
-
-                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data, DEFAULT_LIFETIME, NULL);
-                    if ( IsDebuggerPresent() ) {
-                        char message[256];
-                        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
-                        OutputDebugString(message);
-                    }
-                }
-            } else if ( IsDebuggerPresent() ) {
-                OutputDebugString("Found ticket: ");
-                OutputDebugString(sname->data);
-                if ( cell && cell->data ) {
-                    OutputDebugString("/");
-                    OutputDebugString(cell->data);
-                }
-                OutputDebugString("@");
-                OutputDebugString(realm->data);
-                OutputDebugString("\n");
-            }
-            pkrb5_free_cred_contents(ctx, &creds);
-        }
-
-        if (cc_code == KRB5_CC_END) {
-            cc_code = pkrb5_cc_end_seq_get(ctx, cc, &cur);
-            if (cc_code) goto loop_cleanup;
-        }
-
-      loop_cleanup:
         flags = KRB5_TC_OPENCLOSE;  //turn on OPENCLOSE
-        code = pkrb5_cc_set_flags(ctx, cc, flags);
+        code = krb5_cc_set_flags(context, cc, flags);
+
         if (cc) {
-            pkrb5_cc_close(ctx,cc);
+            krb5_cc_close(context,cc);
             cc = 0;
-        }
-        if (principal) {
-            pkrb5_free_principal(ctx,principal);
-            principal = 0;
         }
     }
 
+    krb5_cccol_cursor_free(context, &cccol_cur);
+
   cleanup:
-    if (ctx)
-        pkrb5_free_context(ctx);
-    if (pNCi)
-        pcc_free_NC_info(cc_ctx, &pNCi);
-    if (cc_ctx)
-        pcc_shutdown(&cc_ctx);
+    if (context)
+        krb5_free_context(context);
 }
 
 
@@ -1355,7 +1094,7 @@ KFW_AFS_get_cred( char * username,
                   char ** reasonP )
 {
     static char reason[1024]="";
-    krb5_context ctx = NULL;
+    krb5_context context = NULL;
     krb5_ccache cc = NULL;
     char * realm = NULL, * userrealm = NULL;
     krb5_principal principal = NULL;
@@ -1367,26 +1106,17 @@ KFW_AFS_get_cred( char * username,
     struct afsconf_cell cellconfig;
     char * dot;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
-
-    if ( IsDebuggerPresent() ) {
-        OutputDebugString("KFW_AFS_get_cred for token ");
-        OutputDebugString(username);
-        OutputDebugString(" in cell ");
-        OutputDebugString(cell);
-        OutputDebugString("\n");
-    }
+    DebugPrintf("KFW_AFS_get_cred for token %s in cell %s\n", username, cell);
 
     memset(&cellconfig, 0, sizeof(cellconfig));
 
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if ( code ) goto cleanup;
 
     code = KFW_AFS_get_cellconfig( cell, (void*)&cellconfig, local_cell);
     if ( code ) goto cleanup;
 
-    realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+    realm = afs_realm_of_cell(context, &cellconfig);  // do not free
 
     userrealm = strchr(username,'@');
     if ( userrealm ) {
@@ -1429,24 +1159,17 @@ KFW_AFS_get_cred( char * username,
         OutputDebugString("\n");
     }
 
-    code = pkrb5_parse_name(ctx, pname, &principal);
+    code = krb5_parse_name(context, pname, &principal);
     if ( code ) goto cleanup;
 
-    code = KFW_get_ccache(ctx, principal, &cc);
+    code = KFW_get_ccache(context, principal, &cc);
     if ( code ) goto cleanup;
 
     if ( lifetime == 0 )
-        lifetime = DEFAULT_LIFETIME;
+        lifetime = KFW_get_default_lifetime(context, realm);
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime, smbname);
-    if ( IsDebuggerPresent() ) {
-        char message[256];
-        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
-        OutputDebugString(message);
-    }
-
-    if (code && password && password[0] ) {
-        code = KFW_kinit( ctx, cc, HWND_DESKTOP,
+    if ( password && password[0] ) {
+        code = KFW_kinit( context, cc, HWND_DESKTOP,
                           pname,
                           password,
                           lifetime,
@@ -1472,10 +1195,10 @@ KFW_AFS_get_cred( char * username,
         }
         if ( code ) goto cleanup;
 
-        KFW_AFS_update_princ_ccache_data(ctx, cc, FALSE);
+        KFW_AFS_update_princ_ccache_data(context, cc, FALSE);
     }
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime, smbname);
+    code = KFW_AFS_klog(context, cc, "afs", cell, realm, lifetime, smbname);
     if ( IsDebuggerPresent() ) {
         char message[256];
         StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
@@ -1483,11 +1206,11 @@ KFW_AFS_get_cred( char * username,
     }
     if ( code ) goto cleanup;
 
-    KFW_AFS_update_cell_princ_map(ctx, cell, pname, TRUE);
+    KFW_AFS_update_cell_princ_map(context, cell, pname, TRUE);
 
     // Attempt to obtain new tokens for other cells supported by the same
     // principal
-    cell_count = KFW_AFS_find_cells_for_princ(ctx, pname, &cells, TRUE);
+    cell_count = KFW_AFS_find_cells_for_princ(context, pname, &cells, TRUE);
     if ( cell_count > 1 ) {
         while ( cell_count-- ) {
             if ( strcmp(cells[cell_count],cell) ) {
@@ -1505,14 +1228,14 @@ KFW_AFS_get_cred( char * username,
                 code = KFW_AFS_get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
                 if ( code ) continue;
 
-                realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+                realm = afs_realm_of_cell(context, &cellconfig);  // do not free
                 if ( IsDebuggerPresent() ) {
                     OutputDebugString("Realm: ");
                     OutputDebugString(realm);
                     OutputDebugString("\n");
                 }
 
-                code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], realm, lifetime, smbname);
+                code = KFW_AFS_klog(context, cc, "afs", cells[cell_count], realm, lifetime, smbname);
                 if ( IsDebuggerPresent() ) {
                     char message[256];
                     StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
@@ -1531,25 +1254,16 @@ KFW_AFS_get_cred( char * username,
     if ( pname )
         free(pname);
     if ( cc )
-        pkrb5_cc_close(ctx, cc);
+        krb5_cc_close(context, cc);
     if ( cellconfig.linkedCell )
         free(cellconfig.linkedCell);
 
     if ( code && reasonP ) {
-        int freemsg = 0;
-        char *msg = (char *)afs_error_message(code);
-        if (strncmp(msg, "unknown", strlen(msg)) == 0) {
-            if (pkrb5_get_error_message) {
-                msg = pkrb5_get_error_message(ctx, code);
-                freemsg = 1;
-            } else
-                msg = (char *)perror_message(code);
-        }
+        const char *msg = krb5_get_error_message(context, code);
         StringCbCopyN( reason, sizeof(reason),
                        msg, sizeof(reason) - 1);
         *reasonP = reason;
-        if (freemsg)
-            pkrb5_free_error_message(ctx, msg);
+        krb5_free_error_message(context, msg);
     }
     return(code);
 }
@@ -1557,30 +1271,23 @@ KFW_AFS_get_cred( char * username,
 int
 KFW_AFS_destroy_tickets_for_cell(char * cell)
 {
-    krb5_context	ctx = NULL;
+    krb5_context	context = NULL;
     krb5_error_code	code;
     int count;
     char ** principals = NULL;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
+    DebugPrintf("KFW_AFS_destroy_tickets_for_cell: %s\n", cell);
 
-    if ( IsDebuggerPresent() ) {
-        OutputDebugString("KFW_AFS_destroy_tickets_for_cell: ");
-        OutputDebugString(cell);
-        OutputDebugString("\n");
-    }
+    code = krb5_init_context(&context);
+    if (code) context = 0;
 
-    code = pkrb5_init_context(&ctx);
-    if (code) ctx = 0;
-
-    count = KFW_AFS_find_principals_for_cell(ctx, cell, &principals, FALSE);
+    count = KFW_AFS_find_principals_for_cell(context, cell, &principals, FALSE);
     if ( count > 0 ) {
         krb5_principal      princ = 0;
         krb5_ccache			cc  = 0;
 
         while ( count-- ) {
-            int cell_count = KFW_AFS_find_cells_for_princ(ctx, principals[count], NULL, TRUE);
+            int cell_count = KFW_AFS_find_cells_for_princ(context, principals[count], NULL, TRUE);
             if ( cell_count > 1 ) {
                 // TODO - What we really should do here is verify whether or not any of the
                 // other cells which use this principal to obtain its credentials actually
@@ -1590,87 +1297,81 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
                 goto loop_cleanup;
             }
 
-            code = pkrb5_parse_name(ctx, principals[count], &princ);
+            code = krb5_parse_name(context, principals[count], &princ);
             if (code) goto loop_cleanup;
 
-            code = KFW_get_ccache(ctx, princ, &cc);
+            code = KFW_get_ccache(context, princ, &cc);
             if (code) goto loop_cleanup;
 
-            code = pkrb5_cc_destroy(ctx, cc);
+            code = krb5_cc_destroy(context, cc);
             if (!code) cc = 0;
 
           loop_cleanup:
             if ( cc ) {
-                pkrb5_cc_close(ctx, cc);
+                krb5_cc_close(context, cc);
                 cc = 0;
             }
             if ( princ ) {
-                pkrb5_free_principal(ctx, princ);
+                krb5_free_principal(context, princ);
                 princ = 0;
             }
 
-            KFW_AFS_update_cell_princ_map(ctx, cell, principals[count], FALSE);
+            KFW_AFS_update_cell_princ_map(context, cell, principals[count], FALSE);
             free(principals[count]);
         }
         free(principals);
     }
-    if (ctx)
-		pkrb5_free_context(ctx);
+    if (context)
+		krb5_free_context(context);
     return 0;
 }
 
 int
 KFW_AFS_destroy_tickets_for_principal(char * user)
 {
-    krb5_context	ctx = NULL;
+    krb5_context	context = NULL;
     krb5_error_code	code;
     int count;
     char ** cells = NULL;
     krb5_principal      princ = NULL;
     krb5_ccache		cc  = NULL;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
+    DebugPrintf("KFW_AFS_destroy_tickets_for_user: %s\n", user);
 
-    if ( IsDebuggerPresent() ) {
-        OutputDebugString("KFW_AFS_destroy_tickets_for_user: ");
-        OutputDebugString(user);
-        OutputDebugString("\n");
-    }
-
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) return 0;
 
-    code = pkrb5_parse_name(ctx, user, &princ);
+    code = krb5_parse_name(context, user, &princ);
     if (code) goto loop_cleanup;
 
-    code = KFW_get_ccache(ctx, princ, &cc);
+    code = KFW_get_ccache(context, princ, &cc);
     if (code) goto loop_cleanup;
 
-    code = pkrb5_cc_destroy(ctx, cc);
+    code = krb5_cc_destroy(context, cc);
     if (!code) cc = 0;
 
   loop_cleanup:
     if ( cc ) {
-        pkrb5_cc_close(ctx, cc);
+        krb5_cc_close(context, cc);
         cc = 0;
     }
     if ( princ ) {
-        pkrb5_free_principal(ctx, princ);
+        krb5_free_principal(context, princ);
         princ = 0;
     }
 
-    count = KFW_AFS_find_cells_for_princ(ctx, user, &cells, TRUE);
+    count = KFW_AFS_find_cells_for_princ(context, user, &cells, TRUE);
     if ( count >= 1 ) {
         while ( count-- ) {
-            KFW_AFS_update_cell_princ_map(ctx, cells[count], user, FALSE);
+            KFW_AFS_update_cell_princ_map(context, cells[count], user, FALSE);
             free(cells[count]);
         }
         free(cells);
     }
 
-    if (ctx)
-        pkrb5_free_context(ctx);
+    if (context)
+        krb5_free_context(context);
+
     return 0;
 }
 
@@ -1678,7 +1379,7 @@ int
 KFW_AFS_renew_expiring_tokens(void)
 {
     krb5_error_code     code = 0;
-    krb5_context	ctx = NULL;
+    krb5_context	context = NULL;
     krb5_ccache		cc = NULL;
     krb5_timestamp now;
     struct principal_ccache_data * pcc_next = princ_cc_data;
@@ -1687,9 +1388,6 @@ KFW_AFS_renew_expiring_tokens(void)
     const char * realm = NULL;
     char local_cell[CELL_MAXNAMELEN+1]="";
     struct afsconf_cell cellconfig;
-
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
 
     if ( pcc_next == NULL ) // nothing to do
         return 0;
@@ -1700,10 +1398,10 @@ KFW_AFS_renew_expiring_tokens(void)
 
     memset(&cellconfig, 0, sizeof(cellconfig));
 
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) goto cleanup;
 
-    code = pkrb5_timeofday(ctx, &now);
+    code = krb5_timeofday(context, &now);
     if (code) goto cleanup;
 
     for ( ; pcc_next ; pcc_next = pcc_next->next ) {
@@ -1718,22 +1416,22 @@ KFW_AFS_renew_expiring_tokens(void)
         }
 
         if ( pcc_next->renew && now >= (pcc_next->expiration_time - cminRENEW * csec1MINUTE) ) {
-            code = pkrb5_cc_resolve(ctx, pcc_next->ccache_name, &cc);
+            code = krb5_cc_resolve(context, pcc_next->ccache_name, &cc);
             if ( code )
-				goto loop_cleanup;
-            code = KFW_renew(ctx,cc);
+                goto loop_cleanup;
+            code = KFW_renew(context,cc);
 #ifdef USE_MS2MIT
             if ( code && pcc_next->from_lsa)
                 goto loop_cleanup;
 #endif /* USE_MS2MIT */
 
 
-            KFW_AFS_update_princ_ccache_data(ctx, cc, pcc_next->from_lsa);
+            KFW_AFS_update_princ_ccache_data(context, cc, pcc_next->from_lsa);
             if (code) goto loop_cleanup;
 
             // Attempt to obtain new tokens for other cells supported by the same
             // principal
-            cell_count = KFW_AFS_find_cells_for_princ(ctx, pcc_next->principal, &cells, TRUE);
+            cell_count = KFW_AFS_find_cells_for_princ(context, pcc_next->principal, &cells, TRUE);
             if ( cell_count > 0 ) {
                 while ( cell_count-- ) {
                     if ( IsDebuggerPresent() ) {
@@ -1747,13 +1445,13 @@ KFW_AFS_renew_expiring_tokens(void)
                     }
                     code = KFW_AFS_get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
                     if ( code ) continue;
-                    realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+                    realm = afs_realm_of_cell(context, &cellconfig);  // do not free
                     if ( IsDebuggerPresent() ) {
                         OutputDebugString("Realm: ");
                         OutputDebugString(realm);
                         OutputDebugString("\n");
                     }
-                    code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], (char *)realm, 0, NULL);
+                    code = KFW_AFS_klog(context, cc, "afs", cells[cell_count], (char *)realm, 0, NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
                         StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
@@ -1767,16 +1465,16 @@ KFW_AFS_renew_expiring_tokens(void)
 
       loop_cleanup:
         if ( cc ) {
-            pkrb5_cc_close(ctx,cc);
+            krb5_cc_close(context,cc);
             cc = 0;
         }
     }
 
   cleanup:
     if ( cc )
-        pkrb5_cc_close(ctx,cc);
-    if ( ctx )
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context,cc);
+    if ( context )
+        krb5_free_context(context);
     if (cellconfig.linkedCell)
         free(cellconfig.linkedCell);
 
@@ -1788,12 +1486,9 @@ BOOL
 KFW_AFS_renew_token_for_cell(char * cell)
 {
     krb5_error_code     code = 0;
-    krb5_context	ctx = NULL;
+    krb5_context	context = NULL;
     int count;
     char ** principals = NULL;
-
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_renew_token_for_cell:");
@@ -1801,16 +1496,16 @@ KFW_AFS_renew_token_for_cell(char * cell)
         OutputDebugString("\n");
     }
 
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) goto cleanup;
 
-    count = KFW_AFS_find_principals_for_cell(ctx, cell, &principals, TRUE);
+    count = KFW_AFS_find_principals_for_cell(context, cell, &principals, TRUE);
     if ( count == 0 ) {
         // We know we must have a credential somewhere since we are
         // trying to renew a token
 
         KFW_import_ccache_data();
-        count = KFW_AFS_find_principals_for_cell(ctx, cell, &principals, TRUE);
+        count = KFW_AFS_find_principals_for_cell(context, cell, &principals, TRUE);
     }
     if ( count > 0 ) {
         krb5_principal      princ = 0;
@@ -1826,10 +1521,10 @@ KFW_AFS_renew_token_for_cell(char * cell)
         memset(&cellconfig, 0, sizeof(cellconfig));
 
         while ( count-- ) {
-            code = pkrb5_parse_name(ctx, principals[count], &princ);
+            code = krb5_parse_name(context, principals[count], &princ);
             if (code) goto loop_cleanup;
 
-            code = KFW_get_ccache(ctx, princ, &cc);
+            code = KFW_get_ccache(context, princ, &cc);
             if (code) goto loop_cleanup;
 
             if (cellconfig.linkedCell) {
@@ -1839,7 +1534,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
             code = KFW_AFS_get_cellconfig( cell, (void*)&cellconfig, local_cell);
             if ( code ) goto loop_cleanup;
 
-            realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+            realm = afs_realm_of_cell(context, &cellconfig);  // do not free
             if ( IsDebuggerPresent() ) {
                 OutputDebugString("Realm: ");
                 OutputDebugString(realm);
@@ -1850,36 +1545,36 @@ KFW_AFS_renew_token_for_cell(char * cell)
             /* krb5_cc_remove_cred() is not implemented
              * for a single cred
              */
-            code = pkrb5_build_principal(ctx, &service, strlen(realm),
+            code = krb5_build_principal(context, &service, strlen(realm),
                                           realm, "afs", cell, NULL);
             if (!code) {
                 memset(&mcreds, 0, sizeof(krb5_creds));
                 mcreds.client = princ;
                 mcreds.server = service;
 
-                code = pkrb5_cc_retrieve_cred(ctx, cc, 0, &mcreds, &creds);
+                code = krb5_cc_retrieve_cred(context, cc, 0, &mcreds, &creds);
                 if (!code) {
                     if ( IsDebuggerPresent() ) {
                         char * cname, *sname;
-                        pkrb5_unparse_name(ctx, creds.client, &cname);
-                        pkrb5_unparse_name(ctx, creds.server, &sname);
+                        krb5_unparse_name(context, creds.client, &cname);
+                        krb5_unparse_name(context, creds.server, &sname);
                         OutputDebugString("Removing credential for client \"");
                         OutputDebugString(cname);
                         OutputDebugString("\" and service \"");
                         OutputDebugString(sname);
                         OutputDebugString("\"\n");
-                        pkrb5_free_unparsed_name(ctx,cname);
-                        pkrb5_free_unparsed_name(ctx,sname);
+                        krb5_free_unparsed_name(context,cname);
+                        krb5_free_unparsed_name(context,sname);
                     }
 
-                    code = pkrb5_cc_remove_cred(ctx, cc, 0, &creds);
-                    pkrb5_free_principal(ctx, creds.client);
-                    pkrb5_free_principal(ctx, creds.server);
+                    code = krb5_cc_remove_cred(context, cc, 0, &creds);
+                    krb5_free_principal(context, creds.client);
+                    krb5_free_principal(context, creds.server);
                 }
             }
 #endif /* COMMENT */
 
-            code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, 0,NULL);
+            code = KFW_AFS_klog(context, cc, "afs", cell, (char *)realm, 0,NULL);
             if ( IsDebuggerPresent() ) {
                 char message[256];
                 StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
@@ -1888,15 +1583,15 @@ KFW_AFS_renew_token_for_cell(char * cell)
 
           loop_cleanup:
             if (cc) {
-                pkrb5_cc_close(ctx, cc);
+                krb5_cc_close(context, cc);
                 cc = 0;
             }
             if (princ) {
-                pkrb5_free_principal(ctx, princ);
+                krb5_free_principal(context, princ);
                 princ = 0;
             }
             if (service) {
-                pkrb5_free_principal(ctx, service);
+                krb5_free_principal(context, service);
                 princ = 0;
             }
             if (cellconfig.linkedCell) {
@@ -1904,7 +1599,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
                 cellconfig.linkedCell = NULL;
             }
 
-            KFW_AFS_update_cell_princ_map(ctx, cell, principals[count], code ? FALSE : TRUE);
+            KFW_AFS_update_cell_princ_map(context, cell, principals[count], code ? FALSE : TRUE);
             free(principals[count]);
         }
         free(principals);
@@ -1912,8 +1607,8 @@ KFW_AFS_renew_token_for_cell(char * cell)
         code = -1;      // we did not renew the tokens
 
   cleanup:
-    if (ctx)
-        pkrb5_free_context(ctx);
+    if (context)
+        krb5_free_context(context);
     return (code ? FALSE : TRUE);
 
 }
@@ -1923,8 +1618,7 @@ KFW_AFS_renew_tokens_for_all_cells(void)
 {
     struct cell_principal_map * next = cell_princ_map;
 
-    if ( IsDebuggerPresent() )
-        OutputDebugString("KFW_AFS_renew_tokens_for_all()\n");
+    DebugPrintf("KFW_AFS_renew_tokens_for_all()\n");
 
     if ( !next )
         return 0;
@@ -1937,91 +1631,70 @@ KFW_AFS_renew_tokens_for_all_cells(void)
 }
 
 int
-KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
+KFW_renew(krb5_context alt_context, krb5_ccache alt_cc)
 {
     krb5_error_code     code = 0;
-    krb5_context	ctx = NULL;
+    krb5_context	context = NULL;
     krb5_ccache		cc = NULL;
     krb5_principal	me = NULL;
     krb5_principal      server = NULL;
     krb5_creds		my_creds;
-    krb5_data           *realm = NULL;
+    const char          *realm = NULL;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
+    memset(&my_creds, 0, sizeof(krb5_creds));
 
-	memset(&my_creds, 0, sizeof(krb5_creds));
-
-    if ( alt_ctx ) {
-        ctx = alt_ctx;
+    if ( alt_context ) {
+        context = alt_context;
     } else {
-        code = pkrb5_init_context(&ctx);
+        code = krb5_init_context(&context);
         if (code) goto cleanup;
     }
 
     if ( alt_cc ) {
         cc = alt_cc;
     } else {
-        code = pkrb5_cc_default(ctx, &cc);
+        code = krb5_cc_default(context, &cc);
         if (code) goto cleanup;
     }
 
-    code = pkrb5_cc_get_principal(ctx, cc, &me);
+    code = krb5_cc_get_principal(context, cc, &me);
     if (code) goto cleanup;
 
-    realm = krb5_princ_realm(ctx, me);
+    realm = krb5_principal_get_realm(context, me);
 
-    code = pkrb5_build_principal_ext(ctx, &server,
-                                    realm->length,realm->data,
-                                    KRB5_TGS_NAME_SIZE, KRB5_TGS_NAME,
-                                    realm->length,realm->data,
-                                    0);
+    code = krb5_make_principal(context, &server, realm,
+                               KRB5_TGS_NAME, realm, NULL);
     if ( code )
         goto cleanup;
 
     if ( IsDebuggerPresent() ) {
         char * cname, *sname;
-        pkrb5_unparse_name(ctx, me, &cname);
-        pkrb5_unparse_name(ctx, server, &sname);
-        OutputDebugString("Renewing credential for client \"");
-        OutputDebugString(cname);
-        OutputDebugString("\" and service \"");
-        OutputDebugString(sname);
-        OutputDebugString("\"\n");
-        pkrb5_free_unparsed_name(ctx,cname);
-        pkrb5_free_unparsed_name(ctx,sname);
+        krb5_unparse_name(context, me, &cname);
+        krb5_unparse_name(context, server, &sname);
+        DebugPrintf("Renewing credential for client \"%s\" and service\"%s\"\n",
+                    cname, sname);
+        krb5_free_unparsed_name(context,cname);
+        krb5_free_unparsed_name(context,sname);
     }
 
     my_creds.client = me;
     my_creds.server = server;
 
-    code = pkrb5_get_renewed_creds(ctx, &my_creds, me, cc, NULL);
+    code = krb5_get_renewed_creds(context, &my_creds, me, cc, NULL);
     if (code) {
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            StringCbPrintf(message, sizeof(message), "krb5_get_renewed_creds() failed: %d\n", code);
-            OutputDebugString(message);
-        }
+        DebugPrintf("krb5_get_renewed_creds() failed: %d\n", code);
         goto cleanup;
     }
 
-    code = pkrb5_cc_initialize(ctx, cc, me);
+    code = krb5_cc_initialize(context, cc, me);
     if (code) {
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            StringCbPrintf(message, sizeof(message), "krb5_cc_initialize() failed: %d\n", code);
-            OutputDebugString(message);
-        }
+        DebugPrintf("krb5_cc_initialize() failed: %d\n", code);
         goto cleanup;
     }
 
-    code = pkrb5_cc_store_cred(ctx, cc, &my_creds);
+    code = krb5_cc_store_cred(context, cc, &my_creds);
     if (code) {
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            StringCbPrintf(message, sizeof(message), "krb5_cc_store_cred() failed: %d\n", code);
-            OutputDebugString(message);
-        }
+        DebugPrintf("krb5_cc_store_cred() failed: %d\n", code);
         goto cleanup;
     }
 
@@ -2030,151 +1703,113 @@ KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
         my_creds.client = 0;
     if (my_creds.server == server)
         my_creds.server = 0;
-    pkrb5_free_cred_contents(ctx, &my_creds);
+    krb5_free_cred_contents(context, &my_creds);
     if (me)
-        pkrb5_free_principal(ctx, me);
+        krb5_free_principal(context, me);
     if (server)
-        pkrb5_free_principal(ctx, server);
+        krb5_free_principal(context, server);
     if (cc && (cc != alt_cc))
-        pkrb5_cc_close(ctx, cc);
-    if (ctx && (ctx != alt_ctx))
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context, cc);
+    if (context && (context != alt_context))
+        krb5_free_context(context);
     return(code);
 }
 
 int
-KFW_kinit( krb5_context alt_ctx,
-            krb5_ccache  alt_cc,
-            HWND hParent,
-            char *principal_name,
-            char *password,
-            krb5_deltat lifetime,
-            DWORD                       forwardable,
-            DWORD                       proxiable,
-            krb5_deltat                 renew_life,
-            DWORD                       addressless,
-            DWORD                       publicIP
-            )
+KFW_kinit( krb5_context alt_context,
+           krb5_ccache  alt_cc,
+           HWND hParent,
+           char *principal_name,
+           char *password,
+           krb5_deltat lifetime,
+           DWORD                       forwardable,
+           DWORD                       proxiable,
+           krb5_deltat                 renew_life,
+           DWORD                       addressless,
+           DWORD                       publicIP)
 {
     krb5_error_code		code = 0;
-    krb5_context		ctx = NULL;
+    krb5_context		context = NULL;
     krb5_ccache			cc = NULL;
     krb5_principal		me = NULL;
     char*                       name = NULL;
     krb5_creds			my_creds;
-    krb5_get_init_creds_opt     options;
-    krb5_address **             addrs = NULL;
+    krb5_get_init_creds_opt     *options = NULL;
+    krb5_addresses              addrs = {0, NULL};
     int                         i = 0, addr_count = 0;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
-
-    pkrb5_get_init_creds_opt_init(&options);
     memset(&my_creds, 0, sizeof(my_creds));
 
-    if (alt_ctx)
-    {
-        ctx = alt_ctx;
-    }
-    else
-    {
-        code = pkrb5_init_context(&ctx);
+    if (alt_context) {
+        context = alt_context;
+    } else {
+        code = krb5_init_context(&context);
         if (code) goto cleanup;
     }
 
     if ( alt_cc ) {
         cc = alt_cc;
     } else {
-        code = pkrb5_cc_default(ctx, &cc);
+        code = krb5_cc_default(context, &cc);
         if (code) goto cleanup;
     }
 
-    code = pkrb5_parse_name(ctx, principal_name, &me);
-    if (code)
-	goto cleanup;
+    code = krb5_get_init_creds_opt_alloc(context, &options);
+    if (code) goto cleanup;
 
-    code = pkrb5_unparse_name(ctx, me, &name);
-    if (code)
-	goto cleanup;
+    code = krb5_parse_name(context, principal_name, &me);
+    if (code) goto cleanup;
+
+    code = krb5_unparse_name(context, me, &name);
+    if (code) goto cleanup;
 
     if (lifetime == 0)
-        lifetime = DEFAULT_LIFETIME;
+        lifetime = KFW_get_default_lifetime(context,
+                                            krb5_principal_get_realm(context, me));
+
     lifetime *= 60;
 
     if (renew_life > 0)
 	renew_life *= 60;
 
     if (lifetime)
-        pkrb5_get_init_creds_opt_set_tkt_life(&options, lifetime);
-	pkrb5_get_init_creds_opt_set_forwardable(&options,
-                                                 forwardable ? 1 : 0);
-	pkrb5_get_init_creds_opt_set_proxiable(&options,
-                                               proxiable ? 1 : 0);
-	pkrb5_get_init_creds_opt_set_renew_life(&options,
-                                               renew_life);
-    if (addressless)
-        pkrb5_get_init_creds_opt_set_address_list(&options,NULL);
-    else {
-	if (publicIP)
-        {
+        krb5_get_init_creds_opt_set_tkt_life(options, lifetime);
+    krb5_get_init_creds_opt_set_forwardable(options, forwardable ? 1 : 0);
+    krb5_get_init_creds_opt_set_proxiable(options, proxiable ? 1 : 0);
+    krb5_get_init_creds_opt_set_renew_life(options, renew_life);
+    if (addressless) {
+        krb5_get_init_creds_opt_set_addressless(context, options, TRUE);
+    } else {
+	if (publicIP) {
             // we are going to add the public IP address specified by the user
             // to the list provided by the operating system
-            krb5_address ** local_addrs=NULL;
-            DWORD           netIPAddr;
+            struct sockaddr_in     in_addr;
+            krb5_address    addr;
+            krb5_addresses  addr_l;
 
-            pkrb5_os_localaddr(ctx, &local_addrs);
-            while ( local_addrs[i++] );
-            addr_count = i + 1;
+            krb5_get_all_client_addrs(context, &addrs);
 
-            addrs = (krb5_address **) malloc((addr_count+1) * sizeof(krb5_address *));
-            if ( !addrs ) {
-                pkrb5_free_addresses(ctx, local_addrs);
-                goto cleanup;
+            in_addr.sin_family = AF_INET;
+            in_addr.sin_port = 0;
+            in_addr.sin_addr.S_un.S_addr = htonl(publicIP);
+
+            code = krb5_sockaddr2address(context, (struct sockaddr *)&in_addr,
+                                         &addr);
+
+            if (code == 0) {
+                addr_l.len = 1;
+                addr_l.val = &addr;
+
+                code = krb5_append_addresses(context, &addrs, &addr_l);
+
+                krb5_free_address(context, &addr);
             }
-            memset(addrs, 0, sizeof(krb5_address *) * (addr_count+1));
-            i = 0;
-            while ( local_addrs[i] ) {
-                addrs[i] = (krb5_address *)malloc(sizeof(krb5_address));
-                if (addrs[i] == NULL) {
-                    pkrb5_free_addresses(ctx, local_addrs);
-                    goto cleanup;
-                }
 
-                addrs[i]->magic = local_addrs[i]->magic;
-                addrs[i]->addrtype = local_addrs[i]->addrtype;
-                addrs[i]->length = local_addrs[i]->length;
-                addrs[i]->contents = (unsigned char *)malloc(addrs[i]->length);
-                if (!addrs[i]->contents) {
-                    pkrb5_free_addresses(ctx, local_addrs);
-                    goto cleanup;
-                }
-
-                memcpy(addrs[i]->contents,local_addrs[i]->contents,
-                        local_addrs[i]->length);        /* safe */
-                i++;
-            }
-            pkrb5_free_addresses(ctx, local_addrs);
-
-            addrs[i] = (krb5_address *)malloc(sizeof(krb5_address));
-            if (addrs[i] == NULL)
-                goto cleanup;
-
-            addrs[i]->magic = KV5M_ADDRESS;
-            addrs[i]->addrtype = AF_INET;
-            addrs[i]->length = 4;
-            addrs[i]->contents = (unsigned char *)malloc(addrs[i]->length);
-            if (!addrs[i]->contents)
-                goto cleanup;
-
-            netIPAddr = htonl(publicIP);
-            memcpy(addrs[i]->contents,&netIPAddr,4);
-
-            pkrb5_get_init_creds_opt_set_address_list(&options,addrs);
-
+            krb5_get_init_creds_opt_set_address_list(options, &addrs);
         }
     }
 
-    code = pkrb5_get_init_creds_password(ctx,
+    code = krb5_get_init_creds_password(context,
                                        &my_creds,
                                        me,
                                        password, // password
@@ -2182,78 +1817,69 @@ KFW_kinit( krb5_context alt_ctx,
                                        hParent, // prompter data
                                        0, // start time
                                        0, // service name
-                                       &options);
+                                       options);
     if (code)
 	goto cleanup;
 
-    code = pkrb5_cc_initialize(ctx, cc, me);
+    code = krb5_cc_initialize(context, cc, me);
     if (code)
 	goto cleanup;
 
-    code = pkrb5_cc_store_cred(ctx, cc, &my_creds);
+    code = krb5_cc_store_cred(context, cc, &my_creds);
     if (code)
 	goto cleanup;
 
  cleanup:
-    if ( addrs ) {
-        for ( i=0;i<addr_count;i++ ) {
-            if ( addrs[i] ) {
-                if ( addrs[i]->contents )
-                    free(addrs[i]->contents);
-                free(addrs[i]);
-            }
-        }
-    }
+    if ( addrs.len > 0 )
+        krb5_free_addresses(context, &addrs);
+
     if (my_creds.client == me)
 	my_creds.client = 0;
-    pkrb5_free_cred_contents(ctx, &my_creds);
+
+    krb5_free_cred_contents(context, &my_creds);
     if (name)
-        pkrb5_free_unparsed_name(ctx, name);
+        krb5_free_unparsed_name(context, name);
     if (me)
-        pkrb5_free_principal(ctx, me);
+        krb5_free_principal(context, me);
+    if (options)
+        krb5_get_init_creds_opt_free(context, options);
     if (cc && (cc != alt_cc))
-        pkrb5_cc_close(ctx, cc);
-    if (ctx && (ctx != alt_ctx))
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context, cc);
+    if (context && (context != alt_context))
+        krb5_free_context(context);
     return(code);
 }
 
 
 int
-KFW_kdestroy(krb5_context alt_ctx, krb5_ccache alt_cc)
+KFW_kdestroy(krb5_context alt_context, krb5_ccache alt_cc)
 {
-    krb5_context		ctx = NULL;
+    krb5_context		context = NULL;
     krb5_ccache			cc = NULL;
     krb5_error_code		code;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
-
-    if (alt_ctx)
-    {
-        ctx = alt_ctx;
-    }
-    else
-    {
-        code = pkrb5_init_context(&ctx);
+    if (alt_context) {
+        context = alt_context;
+    } else {
+        code = krb5_init_context(&context);
         if (code) goto cleanup;
     }
 
     if ( alt_cc ) {
         cc = alt_cc;
     } else {
-        code = pkrb5_cc_default(ctx, &cc);
+        code = krb5_cc_default(context, &cc);
         if (code) goto cleanup;
     }
 
-    code = pkrb5_cc_destroy(ctx, cc);
+    code = krb5_cc_destroy(context, cc);
     if ( !code ) cc = 0;
 
   cleanup:
     if (cc && (cc != alt_cc))
-        pkrb5_cc_close(ctx, cc);
-    if (ctx && (ctx != alt_ctx))
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context, cc);
+    if (context && (context != alt_context))
+        krb5_free_context(context);
 
     return(code);
 }
@@ -2282,7 +1908,7 @@ GetSecurityLogonSessionData(PSECURITY_LOGON_SESSION_DATA * ppSessionData)
     if ( !Success )
         return FALSE;
 
-    Status = pLsaGetLogonSessionData( &Stats.AuthenticationId, ppSessionData );
+    Status = LsaGetLogonSessionData( &Stats.AuthenticationId, ppSessionData );
     if ( FAILED(Status) || !ppSessionData )
         return FALSE;
 
@@ -2321,7 +1947,7 @@ MSLSA_IsKerberosLogon(VOID)
                     Success = TRUE;
             }
         }
-        pLsaFreeReturnBuffer(pSessionData);
+        LsaFreeReturnBuffer(pSessionData);
     }
     return Success;
 }
@@ -2826,25 +2452,22 @@ ViceIDToUsername(char *username,
 
 static void
 copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_creds *v5cred) {
-    krb5_error_code code;
-    krb5_ticket *ticket;
+    Ticket ticket;
     size_t len;
+    int ret;
 
-    code = pkrb5_decode_ticket(&v5cred->ticket, &ticket);
-    if (code == 0) {
-        len = krb5_princ_realm(context, ticket->server)->length;
-        if (len > destlen - 1)
-            len = destlen - 1;
+    ret = decode_Ticket(v5cred->ticket.data, v5cred->ticket.length,
+                        &ticket, &len);
+    if (ret == 0) {
+        StringCbCopy(dest, destlen, ticket.realm);
 
-        StringCbCopyN(dest, destlen, krb5_princ_realm(context, ticket->server)->data, len);
-
-        pkrb5_free_ticket(context, ticket);
+        free_Ticket(&ticket);
     }
 }
 
 int
 KFW_AFS_klog(
-    krb5_context alt_ctx,
+    krb5_context alt_context,
     krb5_ccache  alt_cc,
     char *service,
     char *cell,
@@ -2854,10 +2477,6 @@ KFW_AFS_klog(
     )
 {
     long	rc = 0;
-    CREDENTIALS	creds;
-#ifdef USE_KRB4
-    KTEXT_ST    ticket;
-#endif /* USE_KRB4 */
     struct ktc_principal	aserver;
     struct ktc_principal	aclient;
     char	realm_of_user[REALM_SZ]; /* Kerberos realm of user */
@@ -2872,15 +2491,14 @@ KFW_AFS_klog(
     char	ServiceName[128];
     DWORD       CurrentState;
     char        HostName[64];
-    BOOL        try_krb5 = 0;
-    krb5_context  ctx = NULL;
+    krb5_context  context = NULL;
     krb5_ccache   cc = NULL;
     krb5_creds increds;
     krb5_creds * k5creds = NULL;
     krb5_error_code code;
     krb5_principal client_principal = NULL;
     krb5_data * k5data = NULL;
-    unsigned int i, retry = 0;
+    unsigned int retry = 0;
 
     CurrentState = 0;
     memset(HostName, '\0', sizeof(HostName));
@@ -2895,9 +2513,6 @@ KFW_AFS_klog(
             OutputDebugString("AFSD Service NOT RUNNING\n");
         return(-2);
     }
-
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
 
     memset(&ak_cellconfig, 0, sizeof(ak_cellconfig));
     memset(RealmName, '\0', sizeof(RealmName));
@@ -2918,69 +2533,50 @@ KFW_AFS_klog(
         return(rc);
     }
 
-    if ( alt_ctx ) {
-        ctx = alt_ctx;
+    if ( alt_context ) {
+        context = alt_context;
     } else {
-        code = pkrb5_init_context(&ctx);
+        code = krb5_init_context(&context);
         if (code) goto cleanup;
     }
 
     if ( alt_cc ) {
         cc = alt_cc;
     } else {
-        code = pkrb5_cc_default(ctx, &cc);
-        if (code) goto skip_krb5_init;
+        code = krb5_cc_default(context, &cc);
+        if (code)
+            goto cleanup;
     }
 
     memset(&increds, 0, sizeof(increds));
 
-    code = pkrb5_cc_get_principal(ctx, cc, &client_principal);
+    code = krb5_cc_get_principal(context, cc, &client_principal);
     if (code) {
         if ( code == KRB5_CC_NOTFOUND && IsDebuggerPresent() )
         {
             OutputDebugString("Principal Not Found for ccache\n");
         }
-        goto skip_krb5_init;
+        goto cleanup;
     }
 
     if (!KFW_accept_dotted_usernames()) {
+        const char * comp;
         /* look for client principals which cannot be distinguished
          * from Kerberos 4 multi-component principal names
          */
-        k5data = krb5_princ_component(ctx,client_principal,0);
-        for ( i=0; i<k5data->length; i++ ) {
-            if ( k5data->data[i] == '.' )
-                break;
-        }
-        if (i != k5data->length)
-        {
+        comp = krb5_principal_get_comp_string(context,client_principal,0);
+        if (strchr(comp, '.') != NULL) {
             OutputDebugString("Illegal Principal name contains dot in first component\n");
             rc = KRB5KRB_ERR_GENERIC;
             goto cleanup;
         }
     }
 
-    i = krb5_princ_realm(ctx, client_principal)->length;
-    if (i > REALM_SZ-1)
-        i = REALM_SZ-1;
-    StringCbCopyN( realm_of_user, sizeof(realm_of_user),
-                   krb5_princ_realm(ctx, client_principal)->data, i);
-    try_krb5 = 1;
+    StringCbCopy(realm_of_user, sizeof(realm_of_user),
+                 krb5_principal_get_realm(context, client_principal));
 
-  skip_krb5_init:
-#ifdef USE_KRB4
-    if ( !try_krb5 || !realm_of_user[0] ) {
-        if ((rc = (*pkrb_get_tf_realm)((*ptkt_string)(), realm_of_user)) != KSUCCESS)
-        {
-            goto cleanup;
-        }
-    }
-#else
-    if (!try_krb5)
-        goto cleanup;
-#endif
     StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
-                   afs_realm_of_cell(ctx, &ak_cellconfig),
+                   afs_realm_of_cell(context, &ak_cellconfig),
                    sizeof(realm_of_cell) - 1);
 
     if (strlen(service) == 0)
@@ -3004,374 +2600,198 @@ KFW_AFS_klog(
         StringCbCopyN( RealmName, sizeof(RealmName),
                        realm, sizeof(RealmName) - 1);
 
-    memset(&creds, '\0', sizeof(creds));
+    code = KRB5KRB_ERR_GENERIC;
 
-    if ( try_krb5 ) {
-        int len;
-        code = KRB5KRB_ERR_GENERIC;
+    increds.client = client_principal;
+    increds.times.endtime = 0;
+    /* Ask for DES since that is what V4 understands */
+    increds.session.keytype = ENCTYPE_DES_CBC_CRC;
 
+    /* ALWAYS first try service/cell@CLIENT_REALM */
+    if (code = krb5_build_principal(context, &increds.server,
+                                    (int)strlen(realm_of_user),
+                                    realm_of_user,
+                                    ServiceName,
+                                    CellName,
+                                    0))
+    {
+        goto cleanup;
+    }
 
-        increds.client = client_principal;
-        increds.times.endtime = 0;
-        /* Ask for DES since that is what V4 understands */
-        increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+    if ( IsDebuggerPresent() ) {
+        char * cname, *sname;
+        krb5_unparse_name(context, increds.client, &cname);
+        krb5_unparse_name(context, increds.server, &sname);
+        OutputDebugString("Getting tickets for \"");
+        OutputDebugString(cname);
+        OutputDebugString("\" and service \"");
+        OutputDebugString(sname);
+        OutputDebugString("\"\n");
+        krb5_free_unparsed_name(context,cname);
+        krb5_free_unparsed_name(context,sname);
+    }
 
-        /* ALWAYS first try service/cell@CLIENT_REALM */
-        if (code = pkrb5_build_principal(ctx, &increds.server,
-                                          (int)strlen(realm_of_user),
-                                          realm_of_user,
-                                          ServiceName,
-                                          CellName,
-                                          0))
-        {
-            goto cleanup;
-        }
+    code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
+    if (code == 0) {
+        /*
+         * The client's realm is a local realm for the cell.
+         * Save it so that later the pts registration will not
+         * be performed.
+         */
+        StringCbCopyN(realm_of_cell, sizeof(realm_of_cell),
+                      realm_of_user, sizeof(realm_of_cell) - 1);
+    }
 
-        if ( IsDebuggerPresent() ) {
-            char * cname, *sname;
-            pkrb5_unparse_name(ctx, increds.client, &cname);
-            pkrb5_unparse_name(ctx, increds.server, &sname);
-            OutputDebugString("Getting tickets for \"");
-            OutputDebugString(cname);
-            OutputDebugString("\" and service \"");
-            OutputDebugString(sname);
-            OutputDebugString("\"\n");
-            pkrb5_free_unparsed_name(ctx,cname);
-            pkrb5_free_unparsed_name(ctx,sname);
-        }
+    if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+        code == KRB5_ERR_HOST_REALM_UNKNOWN ||
+        code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+        code == KRB5KRB_AP_ERR_MSG_TYPE) {
+        /*
+         * If there was a specific realm we are supposed to try
+         * then use it
+         */
+        if (strlen(realm) != 0) {
+            /* service/cell@REALM */
+            increds.server = 0;
+            code = krb5_build_principal(context, &increds.server,
+                                        (int)strlen(realm),
+                                        realm,
+                                        ServiceName,
+                                        0);
 
-        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
-        if (code == 0) {
-            /* The client's realm is a local realm for the cell.
-            * Save it so that later the pts registration will not
-            * be performed.
-            */
-            StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
-                           realm_of_user, sizeof(realm_of_cell) - 1);
-        }
+            if ( IsDebuggerPresent() ) {
+                char * cname, *sname;
+                krb5_unparse_name(context, increds.client, &cname);
+                krb5_unparse_name(context, increds.server, &sname);
+                OutputDebugString("Getting tickets for \"");
+                OutputDebugString(cname);
+                OutputDebugString("\" and service \"");
+                OutputDebugString(sname);
+                OutputDebugString("\"\n");
+                krb5_free_unparsed_name(context,cname);
+                krb5_free_unparsed_name(context,sname);
+            }
 
+            if (!code)
+                code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
 
-        if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-            code == KRB5_ERR_HOST_REALM_UNKNOWN ||
-            code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-            code == KRB5KRB_AP_ERR_MSG_TYPE) {
-            /* If there was a specific realm we are supposed to try
-             * then use it
-             */
-            if (strlen(realm) != 0) {
-                /* service/cell@REALM */
+            if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+                 code == KRB5_ERR_HOST_REALM_UNKNOWN ||
+                 code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+                 code == KRB5KRB_AP_ERR_MSG_TYPE) {
+                /* Or service@REALM */
+                krb5_free_principal(context,increds.server);
                 increds.server = 0;
-                code = pkrb5_build_principal(ctx, &increds.server,
-                                             (int)strlen(realm),
-                                             realm,
-                                             ServiceName,
-                                             CellName,
-                                             0);
+                code = krb5_build_principal(context, &increds.server,
+                                            (int)strlen(realm),
+                                            realm,
+                                            ServiceName,
+                                            0);
+
                 if ( IsDebuggerPresent() ) {
                     char * cname, *sname;
-                    pkrb5_unparse_name(ctx, increds.client, &cname);
-                    pkrb5_unparse_name(ctx, increds.server, &sname);
-                    OutputDebugString("Getting tickets for \"");
+                    krb5_unparse_name(context, increds.client, &cname);
+                    krb5_unparse_name(context, increds.server, &sname);
+                    DebugPrintf("Getting tickets for \"%s\" and service \"%s\"\n", cname, sname);
+                    krb5_free_unparsed_name(context,cname);
+                    krb5_free_unparsed_name(context,sname);
+                }
+
+                if (!code)
+                    code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
+            }
+
+            if (code == 0) {
+                /* we have a local realm for the cell */
+                StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
+                               realm, sizeof(realm_of_cell) - 1);
+            }
+        } else {
+            if (strcmp(realm_of_user, realm_of_cell)) {
+                /* Then service/cell@CELL_REALM */
+                krb5_free_principal(context,increds.server);
+                increds.server = 0;
+                code = krb5_build_principal(context, &increds.server,
+                                            (int)strlen(realm_of_cell),
+                                            realm_of_cell,
+                                            ServiceName,
+                                            CellName,
+                                             0);
+                if ( IsDebuggerPresent()) {
+                    char * cname, *sname;
+                    krb5_unparse_name(context, increds.client, &cname);
+                    krb5_unparse_name(context, increds.server, &sname);
+                    OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
+                    OutputDebugString("Trying again: getting tickets for \"");
                     OutputDebugString(cname);
                     OutputDebugString("\" and service \"");
                     OutputDebugString(sname);
                     OutputDebugString("\"\n");
-                    pkrb5_free_unparsed_name(ctx,cname);
-                    pkrb5_free_unparsed_name(ctx,sname);
+                    krb5_free_unparsed_name(context,cname);
+                    krb5_free_unparsed_name(context,sname);
                 }
 
                 if (!code)
-                    code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                    code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
 
-                if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-                    code == KRB5_ERR_HOST_REALM_UNKNOWN ||
-                    code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-                    code == KRB5KRB_AP_ERR_MSG_TYPE) {
-                    /* Or service@REALM */
-                    pkrb5_free_principal(ctx,increds.server);
-                    increds.server = 0;
-                    code = pkrb5_build_principal(ctx, &increds.server,
-                                                 (int)strlen(realm),
-                                                 realm,
-                                                 ServiceName,
-                                                 0);
-
-                    if ( IsDebuggerPresent() ) {
-                        char * cname, *sname;
-                        pkrb5_unparse_name(ctx, increds.client, &cname);
-                        pkrb5_unparse_name(ctx, increds.server, &sname);
-                        OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
-                        OutputDebugString("Trying again: getting tickets for \"");
-                        OutputDebugString(cname);
-                        OutputDebugString("\" and service \"");
-                        OutputDebugString(sname);
-                        OutputDebugString("\"\n");
-                        pkrb5_free_unparsed_name(ctx,cname);
-                        pkrb5_free_unparsed_name(ctx,sname);
-                    }
-
-                    if (!code)
-                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
-                }
-
-                if (code == 0) {
-                    /* we have a local realm for the cell */
-                    StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
-                                   realm, sizeof(realm_of_cell) - 1);
-                }
-            } else {
-                if (strcmp(realm_of_user, realm_of_cell)) {
-                    /* Then service/cell@CELL_REALM */
-                    pkrb5_free_principal(ctx,increds.server);
-                    increds.server = 0;
-                    code = pkrb5_build_principal(ctx, &increds.server,
-                                                 (int)strlen(realm_of_cell),
-                                                 realm_of_cell,
-                                                 ServiceName,
-                                                 CellName,
-                                                 0);
-                    if ( IsDebuggerPresent() ) {
-                        char * cname, *sname;
-                        pkrb5_unparse_name(ctx, increds.client, &cname);
-                        pkrb5_unparse_name(ctx, increds.server, &sname);
-                        OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
-                        OutputDebugString("Trying again: getting tickets for \"");
-                        OutputDebugString(cname);
-                        OutputDebugString("\" and service \"");
-                        OutputDebugString(sname);
-                        OutputDebugString("\"\n");
-                        pkrb5_free_unparsed_name(ctx,cname);
-                        pkrb5_free_unparsed_name(ctx,sname);
-                    }
-
-                    if (!code)
-                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
-
-                    if (!code && !strlen(realm_of_cell))
-                        copy_realm_of_ticket(ctx, realm_of_cell, sizeof(realm_of_cell), k5creds);
-                }
-
-                if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-                    code == KRB5_ERR_HOST_REALM_UNKNOWN ||
-                    code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-                    code == KRB5KRB_AP_ERR_MSG_TYPE) {
-                    /* Finally service@CELL_REALM */
-                    pkrb5_free_principal(ctx,increds.server);
-                    increds.server = 0;
-                    code = pkrb5_build_principal(ctx, &increds.server,
-                                                 (int)strlen(realm_of_cell),
-                                                 realm_of_cell,
-                                                 ServiceName,
-                                                 0);
-
-                    if ( IsDebuggerPresent() ) {
-                        char * cname, *sname;
-                        pkrb5_unparse_name(ctx, increds.client, &cname);
-                        pkrb5_unparse_name(ctx, increds.server, &sname);
-                        OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
-                        OutputDebugString("Trying again: getting tickets for \"");
-                        OutputDebugString(cname);
-                        OutputDebugString("\" and service \"");
-                        OutputDebugString(sname);
-                        OutputDebugString("\"\n");
-                        pkrb5_free_unparsed_name(ctx,cname);
-                        pkrb5_free_unparsed_name(ctx,sname);
-                    }
-
-                    if (!code)
-                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
-                    if (!code && !strlen(realm_of_cell))
-                        copy_realm_of_ticket(ctx, realm_of_cell, sizeof(realm_of_cell), k5creds);
-                }
+                if (!code && !strlen(realm_of_cell))
+                    copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
             }
         }
 
-        if (code) {
+        if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+             code == KRB5_ERR_HOST_REALM_UNKNOWN ||
+             code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+             code == KRB5KRB_AP_ERR_MSG_TYPE) {
+            /* Finally service@CELL_REALM */
+            krb5_free_principal(context,increds.server);
+            increds.server = 0;
+            code = krb5_build_principal(context, &increds.server,
+                                        (int)strlen(realm_of_cell),
+                                        realm_of_cell,
+                                        ServiceName,
+                                        0);
+
             if ( IsDebuggerPresent() ) {
-                char message[256];
-                StringCbPrintf(message, sizeof(message), "krb5_get_credentials returns: %d\n", code);
-                OutputDebugString(message);
+                char * cname, *sname;
+                krb5_unparse_name(context, increds.client, &cname);
+                krb5_unparse_name(context, increds.server, &sname);
+                DebugPrintf("krb5_get_credentials() returned Service Principal Unknown\n"
+                            "Trying again: getting tickets for \"%s\" and service \"%s\"\n", cname, sname);
+                krb5_free_unparsed_name(context,cname);
+                krb5_free_unparsed_name(context,sname);
             }
-            try_krb5 = 0;
-            goto use_krb4;
+
+            if (!code)
+                code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
+            if (!code && !strlen(realm_of_cell))
+                copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
         }
-
-        /* This code inserts the entire K5 ticket into the token
-         * No need to perform a krb524 translation which is
-         * commented out in the code below
-         */
-        if (KFW_use_krb524() ||
-            k5creds->ticket.length > MAXKTCTICKETLEN) {
-            if ( IsDebuggerPresent() ) {
-                char message[256];
-                StringCbPrintf(message, sizeof(message),
-                               "switching to krb524 .. ticket length %u\n",
-                               k5creds->ticket.length);
-                OutputDebugString(message);
-            }
-            goto try_krb524d;
-        }
-        memset(&aserver, '\0', sizeof(aserver));
-        StringCbCopyN(aserver.name, sizeof(aserver.name),
-                      ServiceName, sizeof(aserver.name) - 1);
-        StringCbCopyN(aserver.cell, sizeof(aserver.cell),
-                      CellName, sizeof(aserver.cell) - 1);
-
-        memset(&atoken, '\0', sizeof(atoken));
-        atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
-        atoken.startTime = k5creds->times.starttime;
-        atoken.endTime = k5creds->times.endtime;
-        memcpy(&atoken.sessionKey, k5creds->keyblock.contents, k5creds->keyblock.length);
-        atoken.ticketLen = k5creds->ticket.length;
-        memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
-
-      retry_gettoken5:
-        rc = ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            StringCbPrintf(message, sizeof(message), "ktc_GetToken returns: %d\n", rc);
-            OutputDebugString(message);
-        }
-        if (rc != 0 && rc != KTC_NOENT && rc != KTC_NOCELL) {
-            if ( rc == KTC_NOCM && retry < 20 ) {
-                Sleep(500);
-                retry++;
-                goto retry_gettoken5;
-            }
-            goto cleanup;
-        }
-
-        if (atoken.kvno == btoken.kvno &&
-             atoken.ticketLen == btoken.ticketLen &&
-             !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
-             !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
-        {
-            /* Success - Nothing to do */
-            goto cleanup;
-        }
-
-        // * Reset the "aclient" structure before we call ktc_SetToken.
-        // * This structure was first set by the ktc_GetToken call when
-        // * we were comparing whether identical tokens already existed.
-
-        len = min(k5creds->client->data[0].length, sizeof(aclient.name) - 1);
-        StringCbCopyN( aclient.name, sizeof(aclient.name),
-                       k5creds->client->data[0].data, len);
-
-        if ( k5creds->client->length > 1 ) {
-            StringCbCat( aclient.name, sizeof(aclient.name), ".");
-            len = min(k5creds->client->data[1].length, (int)(sizeof(aclient.name) - strlen(aclient.name) - 1));
-            StringCbCatN( aclient.name, sizeof(aclient.name),
-                          k5creds->client->data[1].data, len);
-        }
-        aclient.instance[0] = '\0';
-
-        StringCbCopyN( aclient.cell, sizeof(aclient.cell),
-                       realm_of_cell, sizeof(aclient.cell) - 1);
-
-        /* For Khimaira, always append the realm name */
-        StringCbCat( aclient.name, sizeof(aclient.name), "@");
-        len = min(k5creds->client->realm.length, (int)(sizeof(aclient.name) - strlen(aclient.name) - 1));
-        StringCbCatN( aclient.name, sizeof(aclient.name), k5creds->client->realm.data, len);
-
-	GetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL, 0);
-	if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
-	    ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName,
-			     &aclient, &aserver, &atoken);
-
-        if ( smbname ) {
-            StringCbCopyN( aclient.smbname, sizeof(aclient.smbname),
-                           smbname, sizeof(aclient.smbname) - 1);
-        } else {
-            aclient.smbname[0] = '\0';
-        }
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            StringCbPrintf(message, sizeof(message), "aclient.name: %s\n", aclient.name);
-            OutputDebugString(message);
-            StringCbPrintf(message, sizeof(message), "aclient.smbname: %s\n", aclient.smbname);
-            OutputDebugString(message);
-        }
-
-        rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0));
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            StringCbPrintf(message, sizeof(message), "ktc_SetToken returns: %d\n", rc);
-            OutputDebugString(message);
-        }
-        if (!rc)
-            goto cleanup;   /* We have successfully inserted the token */
-
-      try_krb524d:
-#ifndef USE_KRB524
-        goto cleanup;
-#else
-        /* Otherwise, the ticket could have been too large so try to
-         * convert using the krb524d running with the KDC
-         */
-        code = pkrb524_convert_creds_kdc(ctx, k5creds, &creds);
-        pkrb5_free_creds(ctx, k5creds);
-        if (code) {
-            if ( IsDebuggerPresent() ) {
-                char message[256];
-                StringCbPrintf(message, sizeof(message), "krb524_convert_creds_kdc returns: %d\n", code);
-                OutputDebugString(message);
-            }
-            try_krb5 = 0;
-            goto use_krb4;
-        }
-#endif /* USE_KRB524 */
-    } else {
-      use_krb4:
-#ifdef USE_KRB4
-        code = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds);
-        if (code == NO_TKT_FIL) {
-            // if the problem is that we have no krb4 tickets
-            // do not attempt to continue
-            goto cleanup;
-        }
-        if (code != KSUCCESS)
-            code = (*pkrb_get_cred)(ServiceName, "", RealmName, &creds);
-
-        if (code != KSUCCESS)
-        {
-            if ((code = (*pkrb_mk_req)(&ticket, ServiceName, CellName, RealmName, 0)) == KSUCCESS)
-            {
-                if ((code = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds)) != KSUCCESS)
-                {
-                    goto cleanup;
-                }
-            }
-            else if ((code = (*pkrb_mk_req)(&ticket, ServiceName, "", RealmName, 0)) == KSUCCESS)
-            {
-                if ((code = (*pkrb_get_cred)(ServiceName, "", RealmName, &creds)) != KSUCCESS)
-                {
-                    goto cleanup;
-                }
-            }
-            else
-            {
-                goto cleanup;
-            }
-        }
-#else
-        goto cleanup;
-#endif
     }
 
+    if (code) {
+        DebugPrintf("krb5_get_credentials returns: %d\n", code);
+        goto cleanup;
+    }
+
+    /* This code inserts the entire K5 ticket into the token */
     memset(&aserver, '\0', sizeof(aserver));
-    StringCbCopyN( aserver.name, sizeof(aserver.name), ServiceName, sizeof(aserver.name) - 1);
-    StringCbCopyN( aserver.cell, sizeof(aserver.cell), CellName, sizeof(aserver.cell) - 1);
+    StringCbCopyN(aserver.name, sizeof(aserver.name),
+                  ServiceName, sizeof(aserver.name) - 1);
+    StringCbCopyN(aserver.cell, sizeof(aserver.cell),
+                  CellName, sizeof(aserver.cell) - 1);
 
     memset(&atoken, '\0', sizeof(atoken));
-    atoken.kvno = creds.kvno;
-    atoken.startTime = creds.issue_date;
-    atoken.endTime = creds.issue_date + life_to_time(0,creds.lifetime);
-    memcpy(&atoken.sessionKey, creds.session, 8);
-    atoken.ticketLen = creds.ticket_st.length;
-    memcpy(atoken.ticket, creds.ticket_st.dat, atoken.ticketLen);
+    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+    atoken.startTime = k5creds->times.starttime;
+    atoken.endTime = k5creds->times.endtime;
+    memcpy(&atoken.sessionKey,
+            k5creds->session.keyvalue.data,
+            k5creds->session.keyvalue.length);
+    atoken.ticketLen = k5creds->ticket.length;
+    memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
 
-  retry_gettoken:
+  retry_gettoken5:
     rc = ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
     if ( IsDebuggerPresent() ) {
         char message[256];
@@ -3382,18 +2802,17 @@ KFW_AFS_klog(
         if ( rc == KTC_NOCM && retry < 20 ) {
             Sleep(500);
             retry++;
-            goto retry_gettoken;
+            goto retry_gettoken5;
         }
-        KFW_AFS_error(rc, "ktc_GetToken()");
-        code = rc;
         goto cleanup;
     }
 
     if (atoken.kvno == btoken.kvno &&
-        atoken.ticketLen == btoken.ticketLen &&
-        !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
-        !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
+         atoken.ticketLen == btoken.ticketLen &&
+         !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
+         !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
     {
+        /* Success - Nothing to do */
         goto cleanup;
     }
 
@@ -3401,33 +2820,35 @@ KFW_AFS_klog(
     // * This structure was first set by the ktc_GetToken call when
     // * we were comparing whether identical tokens already existed.
 
-    StringCbCopyN( aclient.name, sizeof(aclient.name), creds.pname, sizeof(aclient.name) - 1);
-    if (creds.pinst[0])
-    {
-        strncat(aclient.name, ".", MAXKTCNAMELEN - 1);
-        strncat(aclient.name, creds.pinst, MAXKTCNAMELEN - 1);
+    StringCbCopy(aclient.name, sizeof(aclient.name),
+                 krb5_principal_get_comp_string(context, k5creds->client, 0));
+
+    if ( krb5_principal_get_num_comp(context, k5creds->client) > 1 ) {
+        StringCbCat(aclient.name, sizeof(aclient.name), ".");
+        StringCbCat(aclient.name, sizeof(aclient.name),
+                    krb5_principal_get_comp_string(context, k5creds->client, 1));
     }
     aclient.instance[0] = '\0';
 
-    strncat(aclient.name, "@", MAXKTCNAMELEN - 1);
-    strncat(aclient.name, creds.realm, MAXKTCREALMLEN - 1);
-    aclient.name[MAXKTCREALMLEN-1] = '\0';
+    StringCbCopyN(aclient.cell, sizeof(aclient.cell),
+                  realm_of_cell, sizeof(aclient.cell) - 1);
 
-    StringCbCopyN( aclient.cell, sizeof(aclient.cell),
-                   CellName, sizeof(aclient.cell) - 1);
+    /* For Khimaira, always append the realm name */
+    StringCbCat(aclient.name, sizeof(aclient.name), "@");
+    StringCbCat(aclient.name, sizeof(aclient.name),
+                krb5_principal_get_realm(context, k5creds->client));
 
     GetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL, 0);
     if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
-	ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName,
-			 &aclient, &aserver, &atoken);
+        ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName,
+                         &aclient, &aserver, &atoken);
 
     if ( smbname ) {
-        StringCbCopyN( aclient.smbname, sizeof(aclient.smbname),
-                       smbname, sizeof(aclient.smbname) - 1);
+        StringCbCopyN(aclient.smbname, sizeof(aclient.smbname),
+                      smbname, sizeof(aclient.smbname) - 1);
     } else {
         aclient.smbname[0] = '\0';
     }
-
     if ( IsDebuggerPresent() ) {
         char message[256];
         StringCbPrintf(message, sizeof(message), "aclient.name: %s\n", aclient.name);
@@ -3436,23 +2857,18 @@ KFW_AFS_klog(
         OutputDebugString(message);
     }
 
-    if (rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0)))
-    {
-        KFW_AFS_error(rc, "ktc_SetToken()");
-        code = rc;
-        goto cleanup;
-    }
+    rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0));
 
-  cleanup:
+cleanup:
     if (client_principal)
-        pkrb5_free_principal(ctx,client_principal);
+        krb5_free_principal(context,client_principal);
     /* increds.client == client_principal */
     if (increds.server)
-        pkrb5_free_principal(ctx,increds.server);
+        krb5_free_principal(context,increds.server);
     if (cc && (cc != alt_cc))
-        pkrb5_cc_close(ctx, cc);
-    if (ctx && (ctx != alt_ctx))
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context, cc);
+    if (context && (context != alt_context))
+        krb5_free_context(context);
     if (ak_cellconfig.linkedCell)
         free(ak_cellconfig.linkedCell);
 
@@ -3463,7 +2879,7 @@ KFW_AFS_klog(
 /* afs_realm_of_cell():               */
 /**************************************/
 static char *
-afs_realm_of_cell(krb5_context ctx, struct afsconf_cell *cellconfig)
+afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig)
 {
     static char krbrlm[REALM_SZ+1]="";
     char ** realmlist=NULL;
@@ -3472,11 +2888,11 @@ afs_realm_of_cell(krb5_context ctx, struct afsconf_cell *cellconfig)
     if (!cellconfig)
         return 0;
 
-    r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
+    r = krb5_get_host_realm(context, cellconfig->hostName[0], &realmlist);
     if ( !r && realmlist && realmlist[0] ) {
         StringCbCopyN( krbrlm, sizeof(krbrlm),
                        realmlist[0], sizeof(krbrlm) - 1);
-        pkrb5_free_host_realm(ctx, realmlist);
+        krb5_free_host_realm(context, realmlist);
     }
 
     if ( !krbrlm[0] )
@@ -3515,7 +2931,7 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
     }
 
     if (strlen(cell) == 0)
-        strcpy(cell, local_cell);
+        StringCbCopy(cell, CELL_MAXNAMELEN, local_cell);
 
     rc = cm_SearchCellRegistry(1, cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
     if (rc && rc != CM_ERROR_FORCE_DNS_LOOKUP)
@@ -3647,78 +3063,9 @@ cleanup:
     return(hr);
 }
 
-void
-UnloadFuncs(
-    FUNC_INFO fi[],
-    HINSTANCE h
-    )
-{
-    int n;
-    if (fi)
-        for (n = 0; fi[n].func_ptr_var; n++)
-            *(fi[n].func_ptr_var) = 0;
-    if (h) FreeLibrary(h);
-}
-
-int
-LoadFuncs(
-    const char* dll_name,
-    FUNC_INFO fi[],
-    HINSTANCE* ph,  // [out, optional] - DLL handle
-    int* pindex,    // [out, optional] - index of last func loaded (-1 if none)
-    int cleanup,    // cleanup function pointers and unload on error
-    int go_on,      // continue loading even if some functions cannot be loaded
-    int silent      // do not pop-up a system dialog if DLL cannot be loaded
-    )
-{
-    HINSTANCE h;
-    int i, n, last_i;
-    int error = 0;
-    UINT em;
-
-    if (ph) *ph = 0;
-    if (pindex) *pindex = -1;
-
-    for (n = 0; fi[n].func_ptr_var; n++)
-	*(fi[n].func_ptr_var) = 0;
-
-    if (silent)
-	em = SetErrorMode(SEM_FAILCRITICALERRORS);
-    h = LoadLibrary(dll_name);
-    if (silent)
-        SetErrorMode(em);
-
-    if (!h)
-        return 0;
-
-    last_i = -1;
-    for (i = 0; (go_on || !error) && (i < n); i++)
-    {
-	void* p = (void*)GetProcAddress(h, fi[i].func_name);
-	if (!p)
-	    error = 1;
-        else
-        {
-            last_i = i;
-	    *(fi[i].func_ptr_var) = p;
-        }
-    }
-    if (pindex) *pindex = last_i;
-    if (error && cleanup && !go_on) {
-	for (i = 0; i < n; i++) {
-	    *(fi[i].func_ptr_var) = 0;
-	}
-	FreeLibrary(h);
-	return 0;
-    }
-    if (ph) *ph = h;
-    if (error) return 0;
-    return 1;
-}
-
 BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 {
-    krb5_context ctx = NULL;
+    krb5_context context = NULL;
     krb5_ccache cc = NULL;
     krb5_error_code code;
     krb5_data pwdata;
@@ -3728,32 +3075,30 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
     char   password[PROBE_PASSWORD_LEN+1];
     BOOL serverReachable = 0;
 
-    if (!pkrb5_init_context)
-        return KRB5_CONFIG_CANTOPEN;
-
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) goto cleanup;
 
 
-    realm = afs_realm_of_cell(ctx, cellconfig);  // do not free
+    realm = afs_realm_of_cell(context, cellconfig);  // do not free
 
-    code = pkrb5_build_principal(ctx, &principal, (int)strlen(realm),
+    code = krb5_build_principal(context, &principal, (int)strlen(realm),
                                   realm, PROBE_USERNAME, NULL, NULL);
     if ( code ) goto cleanup;
 
-    code = KFW_get_ccache(ctx, principal, &cc);
+    code = KFW_get_ccache(context, principal, &cc);
     if ( code ) goto cleanup;
 
-    code = pkrb5_unparse_name(ctx, principal, &pname);
+    code = krb5_unparse_name(context, principal, &pname);
     if ( code ) goto cleanup;
 
     pwdata.data = password;
     pwdata.length = PROBE_PASSWORD_LEN;
-    code = pkrb5_c_random_make_octets(ctx, &pwdata);
-    if (code) {
+    krb5_c_random_make_octets(context, &pwdata);
+    {
         int i;
         for ( i=0 ; i<PROBE_PASSWORD_LEN ; i++ )
-            password[i] = 'x';
+            if (password[i] == '\0')
+                password[i] = 'x';
     }
     password[PROBE_PASSWORD_LEN] = '\0';
 
@@ -3781,13 +3126,13 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 
   cleanup:
     if ( pname )
-        pkrb5_free_unparsed_name(ctx,pname);
+        krb5_free_unparsed_name(context,pname);
     if ( principal )
-        pkrb5_free_principal(ctx,principal);
+        krb5_free_principal(context,principal);
     if (cc)
-        pkrb5_cc_close(ctx,cc);
-    if (ctx)
-        pkrb5_free_context(ctx);
+        krb5_cc_close(context,cc);
+    if (context)
+        krb5_free_context(context);
 
     return serverReachable;
 }
@@ -3795,7 +3140,7 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 BOOL
 KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
 {
-    krb5_context   ctx = NULL;
+    krb5_context   context = NULL;
     krb5_error_code code;
     krb5_ccache mslsa_ccache=NULL;
     krb5_principal princ = NULL;
@@ -3805,16 +3150,16 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
     if (!KFW_is_available())
         return FALSE;
 
-    if (code = pkrb5_init_context(&ctx))
+    if (code = krb5_init_context(&context))
         goto cleanup;
 
-    if (code = pkrb5_cc_resolve(ctx, "MSLSA:", &mslsa_ccache))
+    if (code = krb5_cc_resolve(context, "MSLSA:", &mslsa_ccache))
         goto cleanup;
 
-    if (code = pkrb5_cc_get_principal(ctx, mslsa_ccache, &princ))
+    if (code = krb5_cc_get_principal(context, mslsa_ccache, &princ))
         goto cleanup;
 
-    if (code = pkrb5_unparse_name(ctx, princ, &pname))
+    if (code = krb5_unparse_name(context, princ, &pname))
         goto cleanup;
 
     if ( strlen(pname) < *dwSize ) {
@@ -3825,16 +3170,16 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
 
   cleanup:
     if (pname)
-        pkrb5_free_unparsed_name(ctx, pname);
+        krb5_free_unparsed_name(context, pname);
 
     if (princ)
-        pkrb5_free_principal(ctx, princ);
+        krb5_free_principal(context, princ);
 
     if (mslsa_ccache)
-        pkrb5_cc_close(ctx, mslsa_ccache);
+        krb5_cc_close(context, mslsa_ccache);
 
-    if (ctx)
-        pkrb5_free_context(ctx);
+    if (context)
+        krb5_free_context(context);
     return success;
 }
 
@@ -3968,13 +3313,13 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     char filename[MAX_PATH] = "";
     DWORD count;
     char cachename[MAX_PATH + 8] = "FILE:";
-    krb5_context		ctx = NULL;
+    krb5_context		context = NULL;
     krb5_error_code		code;
     krb5_principal              princ = NULL;
     krb5_ccache			cc  = NULL;
     krb5_ccache                 ncc = NULL;
 
-    if (!pkrb5_init_context || !user || !szLogonId)
+    if (!user || !szLogonId)
         return;
 
     count = GetEnvironmentVariable("TEMP", filename, sizeof(filename));
@@ -3992,80 +3337,80 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 
     DeleteFile(filename);
 
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) goto cleanup;
 
-    code = pkrb5_parse_name(ctx, user, &princ);
+    code = krb5_parse_name(context, user, &princ);
     if (code) goto cleanup;
 
-    code = KFW_get_ccache(ctx, princ, &cc);
+    code = KFW_get_ccache(context, princ, &cc);
     if (code) goto cleanup;
 
-    code = pkrb5_cc_resolve(ctx, cachename, &ncc);
+    code = krb5_cc_resolve(context, cachename, &ncc);
     if (code) goto cleanup;
 
-    code = pkrb5_cc_initialize(ctx, ncc, princ);
+    code = krb5_cc_initialize(context, ncc, princ);
     if (code) goto cleanup;
 
     code = KFW_AFS_set_file_cache_dacl(filename, NULL);
     if (code) goto cleanup;
 
-    code = pkrb5_cc_copy_creds(ctx,cc,ncc);
+    code = krb5_cc_copy_creds(context,cc,ncc);
 
   cleanup:
     if ( cc ) {
-        pkrb5_cc_close(ctx, cc);
+        krb5_cc_close(context, cc);
         cc = 0;
     }
     if ( ncc ) {
-        pkrb5_cc_close(ctx, ncc);
+        krb5_cc_close(context, ncc);
         ncc = 0;
     }
     if ( princ ) {
-        pkrb5_free_principal(ctx, princ);
+        krb5_free_principal(context, princ);
         princ = 0;
     }
 
-    if (ctx)
-        pkrb5_free_context(ctx);
+    if (context)
+        krb5_free_context(context);
 }
 
 int
 KFW_AFS_copy_file_cache_to_default_cache(char * filename)
 {
     char cachename[MAX_PATH + 8] = "FILE:";
-    krb5_context		ctx = NULL;
+    krb5_context		context = NULL;
     krb5_error_code		code;
     krb5_principal              princ = NULL;
     krb5_ccache			cc  = NULL;
     krb5_ccache                 ncc = NULL;
     int retval = 1;
 
-    if (!pkrb5_init_context || !filename)
+    if (!filename)
         return 1;
 
     if ( strlen(filename) + sizeof("FILE:") > sizeof(cachename) )
         return 1;
 
-    code = pkrb5_init_context(&ctx);
+    code = krb5_init_context(&context);
     if (code) return 1;
 
     StringCbCat( cachename, sizeof(cachename), filename);
 
-    code = pkrb5_cc_resolve(ctx, cachename, &cc);
+    code = krb5_cc_resolve(context, cachename, &cc);
     if (code) goto cleanup;
 
-    code = pkrb5_cc_get_principal(ctx, cc, &princ);
+    code = krb5_cc_get_principal(context, cc, &princ);
 
-    code = pkrb5_cc_default(ctx, &ncc);
+    code = krb5_cc_default(context, &ncc);
     if (!code) {
-        code = pkrb5_cc_initialize(ctx, ncc, princ);
+        code = krb5_cc_initialize(context, ncc, princ);
 
         if (!code)
-            code = pkrb5_cc_copy_creds(ctx,cc,ncc);
+            code = krb5_cc_copy_creds(context,cc,ncc);
     }
     if ( ncc ) {
-        pkrb5_cc_close(ctx, ncc);
+        krb5_cc_close(context, ncc);
         ncc = 0;
     }
 
@@ -4073,19 +3418,19 @@ KFW_AFS_copy_file_cache_to_default_cache(char * filename)
 
   cleanup:
     if ( cc ) {
-        pkrb5_cc_close(ctx, cc);
+        krb5_cc_close(context, cc);
         cc = 0;
     }
 
     DeleteFile(filename);
 
     if ( princ ) {
-        pkrb5_free_principal(ctx, princ);
+        krb5_free_principal(context, princ);
         princ = 0;
     }
 
-    if (ctx)
-        pkrb5_free_context(ctx);
+    if (context)
+        krb5_free_context(context);
 
     return 0;
 }
@@ -4238,5 +3583,57 @@ time_to_life(afs_uint32 start, afs_uint32 end)
     if (best_i < 0)
 	return 0;
     return best_i + TKTLIFEMINFIXED;
+}
+
+DWORD KFW_get_default_mslsa_import(krb5_context context)
+{
+    static const char * lsh_settings_key = "";
+    static const char * lsh_mslsa_value = "";
+    DWORD import = 0;
+    HKEY hKey;
+    DWORD dwCount;
+    LONG rc;
+
+    rc = RegOpenKeyEx(HKEY_CURRENT_USER, lsh_settings_key, 0, KEY_QUERY_VALUE, &hKey);
+    if (rc)
+        return import;
+
+    dwCount = sizeof(DWORD);
+    rc = RegQueryValueEx(hKey, lsh_mslsa_value, 0, 0, (LPBYTE) &import, &dwCount);
+    RegCloseKey(hKey);
+
+    if (rc == 0)
+        return import;
+
+    rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE, lsh_settings_key, 0, KEY_QUERY_VALUE, &hKey);
+    if (rc)
+        return import;
+
+    dwCount = sizeof(DWORD);
+    rc = RegQueryValueEx(hKey, lsh_mslsa_value, 0, 0, (LPBYTE) &import, &dwCount);
+    RegCloseKey(hKey);
+
+    return import;
+}
+
+DWORD KFW_get_default_lifetime(krb5_context context, const char * realm)
+{
+    static const char * lifetime_val_name = "ticket_lifetime";
+    time_t t = 0;
+
+    krb5_appdefault_time(context, "aklog", realm, lifetime_val_name, 0, &t);
+
+    if (t == 0)
+        t = krb5_config_get_time_default(context, NULL, 0,
+                                         "realms", realm, lifetime_val_name, NULL);
+
+    if (t == 0)
+        t = krb5_config_get_time_default(context, NULL, 0,
+                                         "libdefaults", lifetime_val_name, NULL);
+
+    if (t == 0)
+        t = 10 * 60 * 60;
+
+    return (DWORD) t;
 }
 

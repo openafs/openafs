@@ -51,6 +51,10 @@ khm_int32 KHMAPI
 khm_get_identity_expiration_time(krb5_context ctx, krb5_ccache cc,
                                  khm_handle ident,
                                  krb5_timestamp * pexpiration);
+
+#ifndef MAX_HSTNM
+#define MAX_HSTNM 100
+#endif
 #endif /* NO_KRB5 */
 
 #endif

@@ -47,13 +47,9 @@ INCFILEDIR = $(DESTDIR)\include\WINNT
 
 LIBFILEDIR = $(DESTDIR)\lib
 
-KFWINCDIR = ..\kfw\inc
-
-KFWLIBDIR = ..\kfw\lib\$(CPU)
-
 # Build environment
 
-kfwincflags=-I$(KFWINCDIR)\krb5\KerberosIV -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 -I$(KFWINCDIR)\netidmgr -I$(KFWINCDIR)
+kfwincflags=-I$(HEIMDALSDKDIR)\inc -I$(HEIMDALSDKDIR)\inc\krb5 -I..\kfw\inc\netidmgr
 afsincflags=-I$(DESTDIR)\include -I$(DESTDIR)\include\afs -I$(DESTDIR)\include\rx
 
 incflags=$(kfwincflags) $(afsincflags) -I.
@@ -98,23 +94,24 @@ OBJFILES= 				\
 
 !if "$(CPU)" == "AMD64"
 LIBFILES= 				\
-	$(KFWLIBDIR)\nidmgr64.lib
+	$(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\nidmgr64.lib
 !else
 LIBFILES= 				\
-	$(KFWLIBDIR)\nidmgr32.lib
+	$(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\nidmgr32.lib
 !endif
 
 SDKLIBFILES= 				\
 	$(DESTDIR)\lib\afsauthent.lib 	\
 	$(DESTDIR)\lib\libafsconf.lib 	\
         $(DESTDIR)\lib\afs\mtafsutil.lib\
-	$(KFWLIBDIR)\loadfuncs.lib	\
 	htmlhelp.lib			\
 	shell32.lib			\
 	comctl32.lib			\
 	version.lib			\
 	shlwapi.lib			\
 	psapi.lib
+
+DELAYOPT=/DELAYLOAD:advapi32.dll /DELAYLOAD:secur32.dll /DELAYLOAD:psapi.dll
 
 VERRESFILE=$(OUT)\version.res
 
@@ -151,8 +148,8 @@ $(OUT)\dynimport.obj: dynimport.c
 $(OUT)\krb5common.obj: krb5common.c
 	$(PC2OBJ)
 
-$(DLLFILE): $(OBJFILES) $(VERRESFILE)
-	$(DLLGUILINK) $(LIBFILES) $(SDKLIBFILES)
+$(DLLFILE): $(OBJFILES) $(VERRESFILE) $(HEIMDEPS)
+	$(DLLGUILINK) $(LIBFILES) $(SDKLIBFILES) $(DELAYOPT) $(HEIMLINKOPTS)
 	$(_VC_MANIFEST_EMBED_DLL)
 	$(_VC_MANIFEST_CLEAN)
         $(CODESIGN_USERLAND)

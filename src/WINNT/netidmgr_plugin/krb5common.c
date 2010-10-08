@@ -26,9 +26,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 #include <roken.h>
 
+#include<ws2tcpip.h>
 #include<windows.h>
 #include<netidmgr.h>
 #include<dynimport.h>
@@ -43,8 +43,8 @@
 /**************************************/
 int
 khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
-                 int FreeContextFlag, krb5_context * ctx,
-                 krb5_ccache * cache)
+               int FreeContextFlag, krb5_context * ctx,
+               krb5_ccache * cache)
 {
 #ifdef NO_KRB5
     return 0;
@@ -55,8 +55,8 @@ khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
     const char *errText;
     int krb5Error = ((int)(rc & 255));
 
-    if (pkrb5_get_error_message)
-        errText = pkrb5_get_error_message(rc);
+    if (krb5_get_error_message)
+        errText = krb5_get_error_message(rc);
     else
         errText = perror_message(rc);
     _snprintf(message, sizeof(message),
@@ -64,8 +64,8 @@ khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
         errText,
         krb5Error,
         FailedFunctionName);
-    if (pkrb5_free_error_message)
-        pkrb5_free_error_message(errText);
+    if (krb5_free_error_message)
+        krb5_free_error_message(errText);
 
     MessageBoxA(NULL, message, "Kerberos Five", MB_OK | MB_ICONERROR |
         MB_TASKMODAL |
@@ -77,11 +77,11 @@ khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
         if (*ctx != NULL)
         {
             if (*cache != NULL) {
-                pkrb5_cc_close(*ctx, *cache);
+                krb5_cc_close(*ctx, *cache);
                 *cache = NULL;
             }
 
-            pkrb5_free_context(*ctx);
+            krb5_free_context(*ctx);
             *ctx = NULL;
         }
     }
@@ -105,10 +105,10 @@ khm_krb5_initialize(khm_handle ident,
     krb5_error_code	rc = 0;
     krb5_flags          flags = KRB5_TC_OPENCLOSE;
 
-    if (pkrb5_init_context == NULL)
+    if (krb5_init_context == NULL)
         return 1;
 
-    if (*ctx == 0 && (rc = (*pkrb5_init_context)(ctx))) {
+    if (*ctx == 0 && (rc = krb5_init_context(ctx))) {
         functionName = "krb5_init_context()";
         freeContextFlag = 0;
         goto on_error;
@@ -142,7 +142,7 @@ khm_krb5_initialize(khm_handle ident,
                 if(UnicodeStrToAnsi(ccname, sizeof(ccname), wccname) == 0)
                     break;
 
-                if((*pkrb5_cc_resolve)(*ctx, ccname, cache)) {
+                if((rc = krb5_cc_resolve(*ctx, ccname, cache)) != 0) {
                     functionName = "krb5_cc_resolve()";
                     freeContextFlag = 1;
                     goto on_error;
@@ -155,7 +155,7 @@ khm_krb5_initialize(khm_handle ident,
 #endif
         if (*cache == 0
 #ifdef FAILOVER_TO_DEFAULT_CCACHE
-            && (rc = (*pkrb5_cc_default)(*ctx, cache))
+            && (rc = krb5_cc_default(*ctx, cache))
 #endif
             ) {
             functionName = "krb5_cc_default()";
@@ -168,14 +168,13 @@ khm_krb5_initialize(khm_handle ident,
     flags = KRB5_TC_NOTICKET;
 #endif
 
-    if ((rc = (*pkrb5_cc_set_flags)(*ctx, *cache, flags)))
+    if ((rc = krb5_cc_set_flags(*ctx, *cache, flags)))
     {
         if (rc != KRB5_FCC_NOFILE && rc != KRB5_CC_NOTFOUND)
-            khm_krb5_error(rc, "krb5_cc_set_flags()", 0, ctx,
-            cache);
+            khm_krb5_error(rc, "krb5_cc_set_flags()", 0, ctx, cache);
         else if ((rc == KRB5_FCC_NOFILE || rc == KRB5_CC_NOTFOUND) && *ctx != NULL) {
             if (*cache != NULL)
-                (*pkrb5_cc_close)(*ctx, *cache);
+                krb5_cc_close(*ctx, *cache);
         }
         return rc;
     }
@@ -210,7 +209,7 @@ khm_get_identity_expiration_time(krb5_context ctx, krb5_ccache cc,
     if (!ctx || !cc || !ident || !pexpiration)
         return KHM_ERROR_GENERAL;
 
-    code = pkrb5_cc_get_principal(ctx, cc, &principal);
+    code = krb5_cc_get_principal(ctx, cc, &principal);
 
     if ( code )
         return KHM_ERROR_INVALID_PARAM;
@@ -219,47 +218,46 @@ khm_get_identity_expiration_time(krb5_context ctx, krb5_ccache cc,
     kcdb_identity_get_name(ident, w_ident_name, &cb);
     UnicodeStrToAnsi(ident_name, sizeof(ident_name), w_ident_name);
 
-    code = pkrb5_unparse_name(ctx, principal, &princ_name);
+    code = krb5_unparse_name(ctx, principal, &princ_name);
 
     /* compare principal to ident. */
 
     if ( code || !princ_name ||
          strcmp(princ_name, ident_name) ) {
         if (princ_name)
-            pkrb5_free_unparsed_name(ctx, princ_name);
-        pkrb5_free_principal(ctx, principal);
+            krb5_free_unparsed_name(ctx, princ_name);
+        krb5_free_principal(ctx, principal);
         return KHM_ERROR_UNKNOWN;
     }
 
-    pkrb5_free_unparsed_name(ctx, princ_name);
-    pkrb5_free_principal(ctx, principal);
+    krb5_free_unparsed_name(ctx, princ_name);
+    krb5_free_principal(ctx, principal);
 
-    code = pkrb5_timeofday(ctx, &now);
+    code = krb5_timeofday(ctx, &now);
 
     if (code)
         return KHM_ERROR_UNKNOWN;
 
-    cc_code = pkrb5_cc_start_seq_get(ctx, cc, &cur);
+    cc_code = krb5_cc_start_seq_get(ctx, cc, &cur);
 
-    while (!(cc_code = pkrb5_cc_next_cred(ctx, cc, &cur, &creds))) {
-        krb5_data * c0 = krb5_princ_name(ctx, creds.server);
-        krb5_data * c1  = krb5_princ_component(ctx, creds.server, 1);
-        krb5_data * r = krb5_princ_realm(ctx, creds.server);
+    while (!(cc_code = krb5_cc_next_cred(ctx, cc, &cur, &creds))) {
+        const char * c0 = krb5_principal_get_comp_string(ctx, creds.server, 0);
+        const char * c1 = krb5_principal_get_comp_string(ctx, creds.server, 1);
+        const char * r =  krb5_principal_get_realm(ctx, creds.server);
 
-        if ( c0 && c1 && r && c1->length == r->length &&
-             !strncmp(c1->data,r->data,r->length) &&
-             !strncmp("krbtgt",c0->data,c0->length) ) {
+        if ( c0 && c1 && r && !strcmp(c1, r) &&
+             !strcmp("krbtgt",c0) ) {
 
             /* we have a TGT, check for the expiration time.
              * if it is valid and renewable, use the renew time
              */
 
-            if (!(creds.ticket_flags & TKT_FLG_INVALID) &&
+            if (!creds.flags.b.invalid &&
                 creds.times.starttime < (now + TIMET_TOLERANCE) &&
                 (creds.times.endtime + TIMET_TOLERANCE) > now) {
                 expiration = creds.times.endtime;
 
-                if ((creds.ticket_flags & TKT_FLG_RENEWABLE) &&
+                if (creds.flags.b.renewable &&
                     (creds.times.renew_till > creds.times.endtime)) {
                     expiration = creds.times.renew_till;
                 }
@@ -268,7 +266,7 @@ khm_get_identity_expiration_time(krb5_context ctx, krb5_ccache cc,
     }
 
     if (cc_code == KRB5_CC_END) {
-        cc_code = pkrb5_cc_end_seq_get(ctx, cc, &cur);
+        cc_code = krb5_cc_end_seq_get(ctx, cc, &cur);
         rv = KHM_ERROR_SUCCESS;
         *pexpiration = expiration;
     }
@@ -280,12 +278,9 @@ khm_int32 KHMAPI
 khm_krb5_find_ccache_for_identity(khm_handle ident, krb5_context *pctx,
                                   void * buffer, khm_size * pcbbuf)
 {
-    krb5_context        ctx = 0;
+    krb5_context        context = 0;
     krb5_ccache         cache = 0;
     krb5_error_code     code;
-    apiCB *             cc_ctx = 0;
-    struct _infoNC **   pNCi = NULL;
-    int                 i;
     khm_int32           t;
     wchar_t *           ms = NULL;
     khm_size            cb;
@@ -296,65 +291,49 @@ khm_krb5_find_ccache_for_identity(khm_handle ident, krb5_context *pctx,
     khm_handle          csp_plugins = NULL;
 
     if (!buffer || !pcbbuf)
-    return KHM_ERROR_GENERAL;
+        return KHM_ERROR_GENERAL;
 
-    ctx = *pctx;
+    context = *pctx;
 
-    if (!pcc_initialize ||
-        !pcc_get_NC_info ||
-        !pcc_free_NC_info ||
-        !pcc_shutdown)
-        goto _skip_cc_iter;
+    do {
+        krb5_cccol_cursor cciter = 0;
 
-    code = pcc_initialize(&cc_ctx, CC_API_VER_2, NULL, NULL);
-    if (code)
-        goto _exit;
-
-    code = pcc_get_NC_info(cc_ctx, &pNCi);
-
-    if (code)
-        goto _exit;
-
-    for(i=0; pNCi[i]; i++) {
-        if (pNCi[i]->vers != CC_CRED_V5)
-            continue;
-
-        code = (*pkrb5_cc_resolve)(ctx, pNCi[i]->name, &cache);
+        code = krb5_cccol_cursor_new(context, &cciter);
         if (code)
-            continue;
+            break;
 
-        /* need a function to check the cache for the identity
-         * and determine if it has valid tickets.  If it has
-         * the right identity and valid tickets, store the
-         * expiration time and the cache name.  If it has the
-         * right identity but no valid tickets, store the ccache
-         * name and an expiration time of zero.  if it does not
-         * have the right identity don't save the name.
-         *
-         * Keep searching to find the best cache available.
-         */
+        while (krb5_cccol_cursor_next(context, cciter, &cache) == 0) {
 
-        if (KHM_SUCCEEDED(khm_get_identity_expiration_time(ctx, cache,
-                                                           ident,
-                                                           &expiration))) {
-            if ( expiration > best_match_expiration ) {
-                best_match_expiration = expiration;
-                StringCbCopyA(best_match_ccname,
-                              sizeof(best_match_ccname),
-                              "API:");
-                StringCbCatA(best_match_ccname,
-                             sizeof(best_match_ccname),
-                             pNCi[i]->name);
-                expiration = 0;
+            /* need a function to check the cache for the identity and
+             * determine if it has valid tickets.  If it has the right
+             * identity and valid tickets, store the expiration time
+             * and the cache name.  If it has the right identity but
+             * no valid tickets, store the ccache name and an
+             * expiration time of zero.  if it does not have the right
+             * identity don't save the name.
+             *
+             * Keep searching to find the best cache available.
+             */
+
+            if (KHM_SUCCEEDED(khm_get_identity_expiration_time(context, cache,
+                                                               ident,
+                                                               &expiration))) {
+                if ( expiration > best_match_expiration ) {
+                    best_match_expiration = expiration;
+                    StringCbPrintfA(best_match_ccname, sizeof(best_match_ccname),
+                                    "%s:%s",
+                                    krb5_cc_get_type(context, cache),
+                                    krb5_cc_get_name(context, cache));
+                    expiration = 0;
+                }
             }
+
+            krb5_cc_close(context, cache);
+            cache = 0;
         }
 
-        if(ctx != NULL && cache != NULL)
-            (*pkrb5_cc_close)(ctx, cache);
-        cache = 0;
-    }
-
- _skip_cc_iter:
+        krb5_cccol_cursor_free(context, &cciter);
+    } while (FALSE);
 
     if (KHM_SUCCEEDED(kmm_get_plugins_config(0, &csp_plugins))) {
         khc_open_space(csp_plugins, L"Krb5Cred\\Parameters",  0, &csp_params);
@@ -370,9 +349,9 @@ khm_krb5_find_ccache_for_identity(khm_handle ident, krb5_context *pctx,
 
     if (csp_params &&
         KHM_SUCCEEDED(khc_read_int32(csp_params, L"MsLsaList", &t)) && t) {
-        code = (*pkrb5_cc_resolve)(ctx, "MSLSA:", &cache);
+        code = krb5_cc_resolve(context, "MSLSA:", &cache);
         if (code == 0 && cache) {
-            if (KHM_SUCCEEDED(khm_get_identity_expiration_time(ctx, cache,
+            if (KHM_SUCCEEDED(khm_get_identity_expiration_time(context, cache,
                                                                ident,
                                                                &expiration))) {
                 if ( expiration > best_match_expiration ) {
@@ -384,8 +363,8 @@ khm_krb5_find_ccache_for_identity(khm_handle ident, krb5_context *pctx,
             }
         }
 
-        if (ctx != NULL && cache != NULL)
-            (*pkrb5_cc_close)(ctx, cache);
+        if (context != NULL && cache != NULL)
+            krb5_cc_close(context, cache);
 
         cache = 0;
     }
@@ -409,11 +388,11 @@ khm_krb5_find_ccache_for_identity(khm_handle ident, krb5_context *pctx,
             StringCchPrintfA(ccname, ARRAYLENGTH(ccname),
                              "FILE:%S", t);
 
-            code = (*pkrb5_cc_resolve)(ctx, ccname, &cache);
+            code = krb5_cc_resolve(context, ccname, &cache);
             if (code)
                 continue;
 
-            if (KHM_SUCCEEDED(khm_get_identity_expiration_time(ctx, cache,
+            if (KHM_SUCCEEDED(khm_get_identity_expiration_time(context, cache,
                                                                ident,
                                                                &expiration))) {
                 if ( expiration > best_match_expiration ) {
@@ -425,22 +404,16 @@ khm_krb5_find_ccache_for_identity(khm_handle ident, krb5_context *pctx,
                 }
             }
 
-            if (ctx != NULL && cache != NULL)
-                (*pkrb5_cc_close)(ctx, cache);
+            if (context != NULL && cache != NULL)
+                krb5_cc_close(context, cache);
             cache = 0;
         }
 
         PFREE(ms);
     }
- _exit:
+
     if (csp_params)
         khc_close_space(csp_params);
-
-    if (pNCi)
-        (*pcc_free_NC_info)(cc_ctx, &pNCi);
-
-    if (cc_ctx)
-        (*pcc_shutdown)(&cc_ctx);
 
     if (best_match_ccname[0]) {
 

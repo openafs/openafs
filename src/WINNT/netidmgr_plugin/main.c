@@ -35,6 +35,7 @@
 #ifdef DEBUG
 #include<assert.h>
 #endif
+#include <krbcompat_delayload.h>
 
 #pragma warning (pop)
 
@@ -72,6 +73,8 @@ KHMEXP khm_int32 KHMAPI init_module(kmm_module h_module) {
     } else {
         goto _exit;
     }
+
+    DelayLoadHeimdal();
 
     ZeroMemory(&pi,sizeof(pi));
 

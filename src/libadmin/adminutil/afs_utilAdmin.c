@@ -30,7 +30,9 @@
 #include <afs/afscbint.h>
 
 #ifdef AFS_NT40_ENV
-# include <afs/krb5_nt.h>
+# define EncryptionKey Krb5EncryptionKey
+#  include <krb5/krb5.h>
+# undef EncryptionKey
 #endif
 
 #include "afs_AdminInternal.h"
@@ -74,9 +76,6 @@ init_once(void)
     initialize_AU_error_table();
     initialize_AV_error_table();
     initialize_VOLS_error_table();
-#ifdef AFS_KRB5_ERROR_ENV
-    initialize_krb5();
-#endif
     error_init_done = 1;
 }
 
@@ -103,8 +102,7 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
     *errorTextP = afs_error_message(code);
 #ifdef AFS_KRB5_ERROR_ENV
     if (strncmp(*errorTextP, "unknown", strlen("unknown")) == 0) {
-        const char *msg = fetch_krb5_error_message(NULL, code);
-        *errorTextP = msg ? msg : error_message(code);
+        *errorTextP = krb5_get_error_message(NULL, code);
     }
 #endif
     rc = 1;

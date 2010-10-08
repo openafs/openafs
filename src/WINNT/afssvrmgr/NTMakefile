@@ -7,7 +7,7 @@
 
 # make compiler warnings fatal
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX -I..\afsd -I..\client_config -I..\kfw\inc\krb5
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX -I..\afsd -I..\client_config
 
 # allow the resource compiler to search the dest\include tree
 
@@ -107,8 +107,8 @@ EXELIBS = \
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
-	$(EXEGUILINK) $(VCLIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS) $(HEIMDEPS)
+	$(EXEGUILINK) $(VCLIBS) $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)

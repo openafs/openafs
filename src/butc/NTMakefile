@@ -89,4 +89,4 @@ $(OUT)\butc_test.exe: $(OUT)\test.obj
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

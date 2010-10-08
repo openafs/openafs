@@ -111,7 +111,6 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
-
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
@@ -165,4 +164,3 @@ clean::
 	$(DEL) bnode.h boserr.c bosint.cs.c bosint.h bosint.ss.c bosint.xdr.c
 
 mkdir:
-	

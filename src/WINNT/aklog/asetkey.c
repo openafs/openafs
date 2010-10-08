@@ -33,7 +33,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <winsock.h>
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
+#include <ws2tcpip.h>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -46,6 +50,7 @@
 #include <afs/dirpath.h>
 #endif /* !PRE_AFS35 */
 #include <afs/com_err.h>
+#include <krbcompat_delayload.h>
 
 void
 validate_krb5_availability(void)
@@ -135,13 +140,13 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (key->length != 8) {
+	if (key->keyvalue.length != 8) {
 		printf("Key length should be 8, but is really %d!\n",
-		       key->length);
+		       key->keyvalue.length);
 		exit(1);
 	}
 
-	code = afsconf_AddKey(tdir, kvno, key->contents, 1);
+	code = afsconf_AddKey(tdir, kvno, key->keyvalue.data, 1);
 	if (code) {
 	    printf("asetkey: failed to set key, code %d.\n", code);
 	    exit(1);

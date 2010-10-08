@@ -19,7 +19,7 @@ INCFILES =\
 	$(INCFILEDIR)\budb_errs.h \
 	$(INCFILEDIR)\budb_client.h \
 	$(INCFILEDIR)\budb_prototypes.h
-	
+
 
 
 ############################################################################
@@ -138,4 +138,4 @@ clean::
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
 
 mkdir:
-	
+

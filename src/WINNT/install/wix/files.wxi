@@ -155,6 +155,9 @@
                 <!-- <</LanguageSpecific:1033/en_US>> -->
   <?endif?> <!-- /ifndef BinsOnly -->
 
+  <!-- Dependencies -->
+  <Merge Id="mergeHeimdalCompat" Language="0" DiskId="1" FileCompression="yes" src="$(var.KrbCompatRedistDir)\SecureEndpoints-krbcompat.msm" />
+
                 <!-- Runtime libraries -->
           <?ifndef Debug?>
 

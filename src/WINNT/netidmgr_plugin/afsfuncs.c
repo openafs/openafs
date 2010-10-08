@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005,2006,2007, 2008 Secure Endpoints Inc.
+ * Copyright (c) 2005-2011 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -387,13 +387,13 @@ afs_list_tokens_internal(void)
 
             k5c = (krb5_creds *) atoken.ticket;
 
-            code = pkrb5_unparse_name(ctx, k5c->client, &princ);
+            code = krb5_unparse_name(ctx, k5c->client, &princ);
             if(code)
                 goto _no_krb5;
 
             MultiByteToWideChar(CP_ACP, 0, princ, strlen(princ), idname, sizeof(idname)/sizeof(idname[0]));
 
-            pkrb5_free_unparsed_name(ctx, princ);
+            krb5_free_unparsed_name(ctx, princ);
 _no_krb5:
             ;
         }
@@ -719,19 +719,16 @@ ViceIDToUsername(char *username,
 
 static void
 copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_creds *v5cred) {
-    krb5_error_code code;
-    krb5_ticket *ticket;
+    Ticket ticket;
     size_t len;
+    int ret;
 
-    code = pkrb5_decode_ticket(&v5cred->ticket, &ticket);
-    if (code == 0) {
-        len = krb5_princ_realm(context, ticket->server)->length;
-        if (len > destlen - 1)
-            len = destlen - 1;
+    ret = decode_Ticket(v5cred->ticket.data, v5cred->ticket.length,
+                        &ticket, &len);
+    if (ret == 0) {
+        StringCbCopyA(dest, destlen, ticket.realm);
 
-        StringCbCopyA(dest, len, krb5_princ_realm(context, ticket->server)->data);
-
-        pkrb5_free_ticket(context, ticket);
+        free_Ticket(&ticket);
     }
 }
 
@@ -746,7 +743,9 @@ afs_klog(khm_handle identity,
          char *linkedCell) {
 
     long	rc;
+#ifdef USE_KRB4
     CREDENTIALS	creds;
+#endif
     struct ktc_principal	aserver;
     struct ktc_principal	aclient;
     char	realm_of_user[MAXKTCREALMLEN]; /* Kerberos realm of user */
@@ -760,8 +759,10 @@ afs_klog(khm_handle identity,
     char	CellName[128];
     char	ServiceName[128];
     khm_handle	confighandle = NULL;
+#ifdef USE_KRB4
     khm_int32	supports_krb4 = (pkrb_get_tf_realm == NULL ? 0 : 1);
     khm_int32   got524cred = 0;
+#endif
 
     /* signalling */
     BOOL        bGotCreds = FALSE; /* got creds? */
@@ -822,7 +823,9 @@ afs_klog(khm_handle identity,
     else
         StringCbCopyA(RealmName, sizeof(RealmName), realm);
 
+#ifdef USE_KRB4
     memset(&creds, '\0', sizeof(creds));
+#endif
 
     /*** Kerberos 5 and 524 ***/
 
@@ -849,54 +852,54 @@ afs_klog(khm_handle identity,
 
             memset(&increds, 0, sizeof(increds));
 
-            pkrb5_cc_get_principal(context, k5cc, &client_principal);
-            i = krb5_princ_realm(context, client_principal)->length;
-            if (i > MAXKTCREALMLEN-1)
-                i = MAXKTCREALMLEN-1;
-            StringCchCopyNA(realm_of_user, ARRAYLENGTH(realm_of_user),
-                            krb5_princ_realm(context, client_principal)->data,
-                            i);
+            krb5_cc_get_principal(context, k5cc, &client_principal);
+            StringCchCopyA(realm_of_user, ARRAYLENGTH(realm_of_user),
+                           krb5_principal_get_realm(context, client_principal));
         } else {
             _reportf(L"khm_krb5_initialize returns code %d", r);
+#ifdef USE_KRB4
             goto try_krb4;
+#else
+            goto end_krb5;
+#endif
         }
 
         increds.client = client_principal;
         increds.times.endtime = 0;
         /* Ask for DES since that is what V4 understands */
-        increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+        increds.session.keytype = ENCTYPE_DES_CBC_CRC;
 
 #ifdef KRB5_TC_NOTICKET
         flags = KRB5_TC_OPENCLOSE;
-        r = pkrb5_cc_set_flags(context, k5cc, flags);
+        r = krb5_cc_set_flags(context, k5cc, flags);
 #endif
         if (strlen(realm) != 0) {
-          retry_retcred_1:
+        retry_retcred_1:
             /* First try Service/Cell@REALM */
-            if (r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm),
-                                           realm,
-                                           ServiceName,
-                                           CellName,
-                                           0)) {
+            if (r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm),
+                                         realm,
+                                         ServiceName,
+                                         CellName,
+                                         0)) {
                 _reportf(L"krb5_build_principal returns %d", r);
                 goto end_krb5;
             }
 
-            r = pkrb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
+            r = krb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
             if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                 r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                 r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
                 /* Next try Service@REALM */
-                pkrb5_free_principal(context, increds.server);
-                r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm),
-                                           realm,
-                                           ServiceName,
-                                           0);
+                krb5_free_principal(context, increds.server);
+                r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm),
+                                         realm,
+                                         ServiceName,
+                                         0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc,
-                                               &increds, &k5creds);
+                    r = krb5_get_credentials(context, 0, k5cc,
+                                             &increds, &k5creds);
             }
 
             /* Check to make sure we received a valid ticket; if not remove it
@@ -904,26 +907,26 @@ afs_klog(khm_handle identity,
              * same service in the ccache.
              */
             if (r == 0 && k5creds && k5creds->times.endtime < time(NULL)) {
-                pkrb5_free_principal(context, increds.server);
-                pkrb5_cc_remove_cred(context, k5cc, 0, k5creds);
-                pkrb5_free_creds(context, k5creds);
+                krb5_free_principal(context, increds.server);
+                krb5_cc_remove_cred(context, k5cc, 0, k5creds);
+                krb5_free_creds(context, k5creds);
                 k5creds = NULL;
                 goto retry_retcred_1;
             }
         } else {
           retry_retcred_2:
             /* First try Service/Cell@_CLIENT_REALM */
-            if (r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm_of_user),
-                                           realm_of_user,
-                                           ServiceName,
-                                           CellName,
-                                           0)) {
+            if (r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm_of_user),
+                                         realm_of_user,
+                                         ServiceName,
+                                         CellName,
+                                         0)) {
                 _reportf(L"krb5_build_principal returns %d", r);
                 goto end_krb5;
             }
 
-            r = pkrb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
+            r = krb5_get_credentials(context, 0, k5cc, &increds, &k5creds);
             if (r == 0) {
                 /* the user realm is a valid cell realm */
                 StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), realm_of_user);
@@ -931,96 +934,96 @@ afs_klog(khm_handle identity,
             if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                 r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                 r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
-                pkrb5_free_principal(context, increds.server);
-                r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm_of_cell),
-                                           realm_of_cell,
-                                           ServiceName,
-                                           CellName,
-                                           0);
+                krb5_free_principal(context, increds.server);
+                r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm_of_cell),
+                                         realm_of_cell,
+                                         ServiceName,
+                                         CellName,
+                                         0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc,
-                                               &increds, &k5creds);
+                    r = krb5_get_credentials(context, 0, k5cc,
+                                             &increds, &k5creds);
             }
             if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                  r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                  r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
                  strlen(realm_of_cell) == 0) {
                 StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
-                               afs_realm_of_cell(&ak_cellconfig, TRUE));
+                              afs_realm_of_cell(&ak_cellconfig, TRUE));
 
-                pkrb5_free_principal(context, increds.server);
-                r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm_of_cell),
-                                           realm_of_cell,
-                                           ServiceName,
-                                           CellName,
-                                           0);
+                krb5_free_principal(context, increds.server);
+                r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm_of_cell),
+                                         realm_of_cell,
+                                         ServiceName,
+                                         CellName,
+                                         0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc,
-                                               &increds, &k5creds);
+                    r = krb5_get_credentials(context, 0, k5cc,
+                                             &increds, &k5creds);
             }
             if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                 r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                 r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
                 /* Next try Service@REALM */
                 StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
-                               afs_realm_of_cell(&ak_cellconfig, FALSE));
+                              afs_realm_of_cell(&ak_cellconfig, FALSE));
 
-                pkrb5_free_principal(context, increds.server);
-                r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm_of_cell),
-                                           realm_of_cell,
-                                           ServiceName,
-                                           0);
+                krb5_free_principal(context, increds.server);
+                r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm_of_cell),
+                                         realm_of_cell,
+                                         ServiceName,
+                                         0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc,
-                                               &increds, &k5creds);
+                    r = krb5_get_credentials(context, 0, k5cc,
+                                             &increds, &k5creds);
             }
             if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                  r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                  r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
-                 strlen(realm_of_cell) == 0) {
+                strlen(realm_of_cell) == 0) {
                 /* Next try Service@REALM */
                 StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
-                               afs_realm_of_cell(&ak_cellconfig, TRUE));
+                              afs_realm_of_cell(&ak_cellconfig, TRUE));
 
-                pkrb5_free_principal(context, increds.server);
-                r = pkrb5_build_principal(context, &increds.server,
-                                           (int) strlen(realm_of_cell),
-                                           realm_of_cell,
-                                           ServiceName,
-                                           0);
+                krb5_free_principal(context, increds.server);
+                r = krb5_build_principal(context, &increds.server,
+                                         (int) strlen(realm_of_cell),
+                                         realm_of_cell,
+                                         ServiceName,
+                                         0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc,
-                                               &increds, &k5creds);
+                    r = krb5_get_credentials(context, 0, k5cc,
+                                             &increds, &k5creds);
             }
 
             if (r == 0 && strlen(realm_of_cell) == 0)
                 copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
 
-            /* Check to make sure we received a valid ticket; if not remove it
-             * and try again.  Perhaps there are two service tickets for the
-             * same service in the ccache.
+            /* Check to make sure we received a valid ticket; if not
+             * remove it and try again.  Perhaps there are two service
+             * tickets for the same service in the ccache.
              */
             if (r == 0 && k5creds && k5creds->times.endtime < time(NULL)) {
-                pkrb5_free_principal(context, increds.server);
-                pkrb5_cc_remove_cred(context, k5cc, 0, k5creds);
-                pkrb5_free_creds(context, k5creds);
+                krb5_free_principal(context, increds.server);
+                krb5_cc_remove_cred(context, k5cc, 0, k5creds);
+                krb5_free_creds(context, k5creds);
                 k5creds = NULL;
                 goto retry_retcred_2;
             }
         }
 
-        pkrb5_free_principal(context, increds.server);
-        pkrb5_free_principal(context, client_principal);
+        krb5_free_principal(context, increds.server);
+        krb5_free_principal(context, client_principal);
         client_principal = 0;
 #ifdef KRB5_TC_NOTICKET
         flags = KRB5_TC_OPENCLOSE | KRB5_TC_NOTICKET;
-        pkrb5_cc_set_flags(context, k5cc, flags);
+        krb5_cc_set_flags(context, k5cc, flags);
 #endif
 
-        (void) pkrb5_cc_close(context, k5cc);
+        (void) krb5_cc_close(context, k5cc);
         k5cc = 0;
 
         if (r) {
@@ -1029,10 +1032,12 @@ afs_klog(khm_handle identity,
             goto end_krb5;
         }
 
+#ifdef USE_KRB4
         if ( k5creds->ticket.length > MAXKTCTICKETLEN ||
              method == AFS_TOKEN_KRB524) {
             goto try_krb524d;
         }
+#endif
 
         /* This code inserts the entire K5 ticket into the token */
 
@@ -1047,8 +1052,8 @@ afs_klog(khm_handle identity,
         atoken.startTime = k5creds->times.starttime;
         atoken.endTime = k5creds->times.endtime;
         memcpy(&atoken.sessionKey,
-               k5creds->keyblock.contents,
-               k5creds->keyblock.length);
+               k5creds->session.keyvalue.data,
+               k5creds->session.keyvalue.length);
         atoken.ticketLen = k5creds->ticket.length;
         memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
 
@@ -1063,7 +1068,11 @@ afs_klog(khm_handle identity,
                 retry++;
                 goto retry_gettoken5;
             }
+#ifdef USE_KRB4
             goto try_krb524d;
+#else
+            goto end_krb5;
+#endif
         }
 
         if (atoken.kvno == btoken.kvno &&
@@ -1074,10 +1083,10 @@ afs_klog(khm_handle identity,
 
             /* success */
             if (k5creds && context)
-                pkrb5_free_creds(context, k5creds);
+                krb5_free_creds(context, k5creds);
 
             if (context)
-                pkrb5_free_context(context);
+                krb5_free_context(context);
 
             _reportf(L"Same token already exists");
 
@@ -1089,17 +1098,13 @@ afs_klog(khm_handle identity,
         // * This structure was first set by the ktc_GetToken call when
         // * we were comparing whether identical tokens already existed.
 
-        len = min(k5creds->client->data[0].length,MAXKTCNAMELEN - 1);
-        StringCchCopyNA(aclient.name, MAXKTCNAMELEN,
-                        k5creds->client->data[0].data, len);
+        StringCchCopyA(aclient.name, MAXKTCNAMELEN,
+                       krb5_principal_get_comp_string(context, k5creds->client, 0));
 
-        if ( k5creds->client->length > 1 ) {
+        if ( krb5_principal_get_num_comp(context, k5creds->client) > 1 ) {
             StringCbCatA(aclient.name, sizeof(aclient.name), ".");
-            p = aclient.name + strlen(aclient.name);
-            len = (int) min(k5creds->client->data[1].length,
-                            MAXKTCNAMELEN - strlen(aclient.name) - 1);
-            StringCchCopyNA(p, MAXKTCNAMELEN - strlen(aclient.name),
-                            k5creds->client->data[1].data, len);
+            StringCbCatA(aclient.name, sizeof(aclient.name),
+                         krb5_principal_get_comp_string(context, k5creds->client, 1));
         }
 
         aclient.instance[0] = '\0';
@@ -1107,11 +1112,8 @@ afs_klog(khm_handle identity,
         StringCbCopyA(aclient.cell, sizeof(aclient.cell), realm_of_cell);
 
 	StringCbCatA(aclient.name, sizeof(aclient.name), "@");
-	p = aclient.name + strlen(aclient.name);
-	len = (int) min(k5creds->client->realm.length,
-			 MAXKTCNAMELEN - strlen(aclient.name) - 1);
-        StringCchCopyNA(p, MAXKTCNAMELEN - strlen(aclient.name),
-                        k5creds->client->realm.data, len);
+        StringCbCatA(aclient.name, sizeof(aclient.name),
+                     krb5_principal_get_realm(context, k5creds->client));
 
         ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName,
                          &aclient, &aserver, &atoken);
@@ -1121,24 +1123,25 @@ afs_klog(khm_handle identity,
             /* success */
 
             if (k5creds && context)
-                pkrb5_free_creds(context, k5creds);
+                krb5_free_creds(context, k5creds);
 
             if (context)
-                pkrb5_free_context(context);
+                krb5_free_context(context);
 
             goto cleanup;
         }
 
         _reportf(L"SetToken returns code %d", rc);
 
+#ifdef USE_KRB4
     try_krb524d:
 
         _reportf(L"Trying Krb524");
 
-        if (pkrb524_convert_creds_kdc &&
+        if (krb524_convert_creds_kdc &&
             (method == AFS_TOKEN_AUTO || method == AFS_TOKEN_KRB524)) {
             /* This requires krb524d to be running with the KDC */
-            r = pkrb524_convert_creds_kdc(context, k5creds, &creds);
+            r = krb524_convert_creds_kdc(context, k5creds, &creds);
             if (r) {
                 _reportf(L"Code %d while converting credentials", r);
                 goto end_krb5;
@@ -1147,18 +1150,20 @@ afs_klog(khm_handle identity,
 	    got524cred = 1;
             bGotCreds = TRUE;
         }
+#endif
 
     end_krb5:
         if (client_principal)
-            pkrb5_free_principal(context, client_principal);
+            krb5_free_principal(context, client_principal);
 
         if (k5creds && context)
-            pkrb5_free_creds(context, k5creds);
+            krb5_free_creds(context, k5creds);
 
         if (context)
-            pkrb5_free_context(context);
+            krb5_free_context(context);
     }
 
+#ifdef USE_KRB4
     /* Kerberos 4 */
  try_krb4:
 
@@ -1277,7 +1282,7 @@ afs_klog(khm_handle identity,
         StringCbCopyA(aclient.instance, sizeof(aclient.instance), "");
 
         StringCchCatA(aclient.name, MAXKTCNAMELEN, "@");
-		StringCchCatA(aclient.name, MAXKTCNAMELEN, got524cred ? realm_of_user : creds.realm);
+        StringCchCatA(aclient.name, MAXKTCNAMELEN, got524cred ? realm_of_user : creds.realm);
 
         StringCbCopyA(aclient.cell, sizeof(aclient.cell), CellName);
 
@@ -1288,13 +1293,17 @@ afs_klog(khm_handle identity,
             afs_report_error(rc, "ktc_SetToken()");
             goto cleanup;
         }
-    } else if (method == AFS_TOKEN_AUTO ||
-               method >= AFS_TOKEN_USER) {
-        /* we couldn't get a token using Krb5, Krb524 or Krb4, either
-           because we couldn't get the necessary credentials or
-           because the method was set to not use those.  Now we
-           dispatch to any extensions to see if they have better
-           luck. */
+    }
+#endif
+
+    if (!bGotCreds &&
+        (method == AFS_TOKEN_AUTO ||
+         method >= AFS_TOKEN_USER)) {
+            /* we couldn't get a token using Krb5, Krb524 or Krb4,
+               either because we couldn't get the necessary
+               credentials or because the method was set to not use
+               those.  Now we dispatch to any extensions to see if
+               they have better luck. */
 
         rc = !afs_ext_klog(method,
                            identity,
@@ -1303,7 +1312,7 @@ afs_klog(khm_handle identity,
                            RealmName,
                            &ak_cellconfig,
                            LifeTime);
-    } else {
+    } else if (!bGotCreds) {
         /* if the return code was not set, we should set it now.
            Otherwise we let the code go through. */
         if (!rc) {
@@ -1351,18 +1360,17 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
         _strupr(krbrlm);
 #endif
     } else {
-	if ( pkrb5_init_context ) {
-	    r = pkrb5_init_context(&ctx);
-	    if ( !r )
-		r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
-	    if ( !r && realmlist && realmlist[0] ) {
-		StringCbCopyA(krbrlm, sizeof(krbrlm), realmlist[0]);
-		pkrb5_free_host_realm(ctx, realmlist);
-	    }
-	    if (ctx)
-		pkrb5_free_context(ctx);
-	}
+        r = krb5_init_context(&ctx);
+        if ( !r )
+            r = krb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
+        if ( !r && realmlist && realmlist[0] ) {
+            StringCbCopyA(krbrlm, sizeof(krbrlm), realmlist[0]);
+            krb5_free_host_realm(ctx, realmlist);
+        }
+        if (ctx)
+            krb5_free_context(ctx);
 
+#ifdef USE_KRB4
 	if (r) {
 	    if (pkrb_get_krbhst && pkrb_realmofhost) {
 		StringCbCopyA(krbrlm, sizeof(krbrlm),
@@ -1385,6 +1393,7 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 #endif
 	    }
 	}
+#endif
     }
     return(krbrlm);
 }

@@ -155,6 +155,9 @@
                 
                 <!-- Runtime -->
                 <?include runtime.wxi?>
+
+                <MergeRef Id="mergeHeimdalCompat" />
+
             </Feature>
 
             <?ifndef LiteClient ?>
@@ -398,6 +401,8 @@
                 
                 <!-- Runtime -->
                 <?include runtime.wxi?>
+
+                <MergeRef Id="mergeHeimdalCompat" />
 
             </Feature>
   <?endif?>

@@ -569,3 +569,21 @@ MAKECYGLIB=\
 !ELSE
 MAKECYGLIB=echo Skipping Cygwin archive
 !ENDIF
+
+######### Heimdal compatibility support
+
+!IFNDEF HEIMDALSDKDIR
+!IFDEF KERBEROSCOMPATSDKROOT
+HEIMDALSDKDIR=$(KERBEROSCOMPATSDKROOT)\1.0
+!ELSE
+!ERROR HEIMDALSDKDIR or KERBEROSCOMPATSDKROOT needs to be defined
+!ENDIF
+!ENDIF
+
+HEIMINC=$(HEIMDALSDKDIR)\inc
+HEIMLIB=$(HEIMDALSDKDIR)\lib\$(CPU)
+
+afscdefs=$(afscdefs) -I$(HEIMINC) -I$(HEIMINC)\krb5
+
+HEIMDEPS=$(HEIMLIB)\heimdal.lib $(DESTDIR)\lib\krbcompat_delayload.obj
+HEIMLINKOPTS=/DELAYLOAD:heimdal.dll

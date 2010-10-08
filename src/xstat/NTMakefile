@@ -19,7 +19,7 @@ BINDIR = $(DESTDIR)\bin
 RPCINCLS=$(INCDIR)\lwp.h $(INCDIR)\rx\rx.h
 
 LIBS= \
- 	$(LIBDIR)\afs\afsint.lib \
+	$(LIBDIR)\afs\afsint.lib \
 	$(LIBDIR)\afs\afscmd.lib \
 	$(LIBDIR)\afsrx.lib \
 	$(LIBDIR)\afslwp.lib \
@@ -83,7 +83,7 @@ clean::
 	$(DEL) -f $(OUT)\*.res
 	$(DEL) -f $(OUT)\*.pdb
 	$(DEL) -f $(OUT)\*.ilk
- 	$(DEL) -f $(INCDIR)\afs\xstat_fs.h
+	$(DEL) -f $(INCDIR)\afs\xstat_fs.h
 	$(DEL) -f $(INCDIR)\afs\xstat_cm.h
 	$(DEL) -f $(LIBDIR)\afs_xstat_fs.lib
 	$(DEL) -f $(LIBDIR)\afs_xstat_cm.lib

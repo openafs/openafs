@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # include the primary makefile
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES)  -DHAVE_KRB5_CREDS_KEYBLOCK=1
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES)  -DHAVE_KRB5_CREDS_KEYBLOCK=1 -I$(HEIMINC)
 RELDIR=WINNT\aklog
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
@@ -41,21 +41,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
-!IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
-OTHERLIBS = \
-    ..\kfw\lib\$(CPU)\krb5_64.lib \
-    ..\kfw\lib\$(CPU)\comerr64.lib \
-    dnsapi.lib mpr.lib delayimp.lib
-LINKOPTS = /DELAYLOAD:krb5_64.dll /DELAYLOAD:comerr64.dll
-!else
-OTHERLIBS = \
-    ..\kfw\lib\$(CPU)\krbv4w32.lib \
-    ..\kfw\lib\$(CPU)\krb5_32.lib \
-    ..\kfw\lib\$(CPU)\comerr32.lib \
-    dnsapi.lib mpr.lib delayimp.lib
-LINKOPTS = /DELAYLOAD:krbv4w32.dll /DELAYLOAD:krb5_32.dll /DELAYLOAD:comerr32.dll
-!endif
-afscflags = -I..\kfw\inc\krb5 -I..\kfw\inc\krb4 $(afscflags)
+OTHERLIBS = dnsapi.lib mpr.lib
 
 $(AKLOGOBJS): $$(@B).c
 	$(C2OBJ) $**
@@ -65,15 +51,15 @@ $(ASETKEYOBJS): $$(@B).c
 
 ############################################################################
 
-$(AKLOG) : $(AKLOGOBJS) $(PTERROBJS) $(EXELIBS) $(OUT)\aklog.res
-	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
+$(AKLOG) : $(AKLOGOBJS) $(PTERROBJS) $(EXELIBS) $(OUT)\aklog.res $(HEIMDEPS)
+	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(ASETKEY) : $(ASETKEYOBJS) $(EXELIBS) $(OUT)\asetkey.res
-	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
+$(ASETKEY) : $(ASETKEYOBJS) $(EXELIBS) $(OUT)\asetkey.res $(HEIMDEPS)
+	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)

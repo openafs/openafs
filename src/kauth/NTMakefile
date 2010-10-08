@@ -96,7 +96,7 @@ AFSLIBS =  \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
-	
+
 TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 
 ############################################################################
@@ -148,7 +148,7 @@ KAS_OBJS =\
 	$(OUT)\admin_tools.obj \
 	$(OUT)\kkids.obj \
 	$(OUT)\kas.res
-	
+
 $(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
@@ -253,4 +253,3 @@ clean::
 	$(DEL) kaerrors.c
 
 mkdir:
-	

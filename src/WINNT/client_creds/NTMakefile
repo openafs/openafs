@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\krb5 -DUAC_COMPATIBLE=1
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -DUAC_COMPATIBLE=1
 
 # include the primary makefile
 RELDIR=WINNT\client_creds
@@ -49,7 +49,7 @@ CLIENTOBJS = \
     	$(OUT)\RegistrySupport.obj
 
 VCLIBS =\
-    	iphlpapi.lib \
+	iphlpapi.lib \
 	comctl32.lib \
 	shell32.lib \
 	uuid.lib \
@@ -57,7 +57,8 @@ VCLIBS =\
 	mpr.lib \
 	userenv.lib \
     	netapi32.lib \
-        secur32.lib
+        secur32.lib  \
+	delayimp.lib
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
@@ -73,7 +74,6 @@ EXELIBS = \
         $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
-
 
 ############################################################################
 #
@@ -109,8 +109,8 @@ $(EXECOBJS): $$(@B).c
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS)
-	$(EXEGUILINK) $(VCLIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) $(HEIMDEPS)
+	$(EXEGUILINK) $(VCLIBS) $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
