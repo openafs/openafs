@@ -81,6 +81,7 @@ extern void rx_SetArrivalProc(struct rx_call *call,
 						    int index),
 			      void * handle, int arg);
 extern afs_int32 rx_EndCall(struct rx_call *call, afs_int32 rc);
+extern void rx_InterruptCall(struct rx_call *call, afs_int32 error);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
 extern struct rx_service *rxi_FindService(osi_socket socket,

@@ -4918,6 +4918,21 @@ rxi_ConnectionError(struct rx_connection *conn,
     }
 }
 
+/**
+ * Interrupt an in-progress call with the specified error and wakeup waiters.
+ *
+ * @param[in] call  The call to interrupt
+ * @param[in] error  The error code to send to the peer
+ */
+void
+rx_InterruptCall(struct rx_call *call, afs_int32 error)
+{
+    MUTEX_ENTER(&call->lock);
+    rxi_CallError(call, error);
+    rxi_SendCallAbort(call, NULL, 0, 1);
+    MUTEX_EXIT(&call->lock);
+}
+
 void
 rxi_CallError(struct rx_call *call, afs_int32 error)
 {

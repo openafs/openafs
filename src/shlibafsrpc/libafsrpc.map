@@ -142,6 +142,7 @@
 	afs_xdr_short;
 	afs_xdr_string;
 	afs_xdr_vector;
+	rx_InterruptCall;
     local:
 	*;
 };
