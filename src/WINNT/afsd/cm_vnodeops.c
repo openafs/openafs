@@ -1629,6 +1629,14 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 #endif  
 
     code = cm_Lookup(dscp, cnamep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
+    if (code)
+        goto done;
+
+    /* Check for RO volume */
+    if (dscp->flags & CM_SCACHEFLAG_RO) {
+        code = CM_ERROR_READONLY;
+        goto done;
+    }
 
     /* make sure we don't screw up the dir status during the merge */
     code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE,
@@ -2725,6 +2733,13 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         return cm_SetLength(scp, &attrp->length, userp, reqp);
 
     lock_ObtainWrite(&scp->rw);
+    /* Check for RO volume */
+    if (scp->flags & CM_SCACHEFLAG_RO) {
+        code = CM_ERROR_READONLY;
+	lock_ReleaseWrite(&scp->rw);
+        return code;
+    }
+
     /* otherwise, we have to make an RPC to get the status */
     code = cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_STORESTATUS);
     if (code) {
@@ -2815,6 +2830,10 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
         return CM_ERROR_NOACCESS;
     }
 #endif /* AFS_FREELANCE_CLIENT */
+
+    /* Check for RO volume */
+    if (dscp->flags & CM_SCACHEFLAG_RO)
+        return CM_ERROR_READONLY;
 
     /* before starting the RPC, mark that we're changing the file data, so
      * that someone who does a chmod will know to wait until our call
@@ -2994,6 +3013,10 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
+    /* Check for RO volume */
+    if (dscp->flags & CM_SCACHEFLAG_RO)
+        return CM_ERROR_READONLY;
+
     /* before starting the RPC, mark that we're changing the directory
      * data, so that someone who does a chmod on the dir will wait until
      * our call completes.
@@ -3121,6 +3144,10 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         return CM_ERROR_CROSSDEVLINK;
     }
 
+    /* Check for RO volume */
+    if (dscp->flags & CM_SCACHEFLAG_RO)
+        return CM_ERROR_READONLY;
+
     cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_NONE, CM_DIROP_FLAG_NONE,
                   &dirop);
     lock_ObtainWrite(&dscp->rw);
@@ -3213,6 +3240,10 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t *fnamep = NULL;
+
+    /* Check for RO volume */
+    if (dscp->flags & CM_SCACHEFLAG_RO)
+        return CM_ERROR_READONLY;
 
     memset(&volSync, 0, sizeof(volSync));
 
@@ -3362,6 +3393,12 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     code = cm_Lookup(dscp, cnamep, CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     if (code)
         goto done;
+
+    /* Check for RO volume */
+    if (dscp->flags & CM_SCACHEFLAG_RO) {
+        code = CM_ERROR_READONLY;
+        goto done;
+    }
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -3541,6 +3578,13 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     } else {
         code = 0;
     }
+
+    /* Check for RO volume */
+    if (code == 0 &&
+        (oldDscp->flags & CM_SCACHEFLAG_RO) || (newDscp->flags & CM_SCACHEFLAG_RO)) {
+        code = CM_ERROR_READONLY;
+    }
+
     if (code) 
         goto done;
 
