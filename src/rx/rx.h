@@ -459,6 +459,9 @@ struct rx_peer {
 #define	RX_SERVER_CONNECTION	1
 #endif /* !KDUMP_RX_LOCK */
 
+/* Maximum number of acknowledgements in an acknowledge packet */
+#define	RX_MAXACKS	    255
+
 /* Call structure:  only instantiated for active calls and dallying server calls.  The permanent call state (i.e. the call number as well as state shared with other calls associated with this connection) is maintained in the connection structure. */
 #ifdef KDUMP_RX_LOCK
 struct rx_call_rx_lock {
@@ -583,6 +586,8 @@ struct rx_call {
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
 
+    struct rx_packet *xmitList[RX_MAXACKS]; /* Can't xmit more than we ack */
+                                /* Protected by setting RX_CALL_TQ_BUSY */
 #ifdef ADAPT_WINDOW
     struct clock pingRequestTime;
 #endif
@@ -634,8 +639,6 @@ struct rx_call {
 #define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
 #define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
 
-/* Maximum number of acknowledgements in an acknowledge packet */
-#define	RX_MAXACKS	    255
 
 /* The structure of the data portion of an acknowledge packet: An acknowledge
  * packet is in network byte order at all times.  An acknowledgement is always

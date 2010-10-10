@@ -5552,7 +5552,6 @@ rxi_Start(struct rxevent *event,
     int haveEvent;
     int nXmitPackets;
     int maxXmitPackets;
-    struct rx_packet **xmitList;
     int resending = 0;
 
     /* If rxi_Start is being called as a result of a resend event,
@@ -5654,15 +5653,6 @@ rxi_Start(struct rxevent *event,
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
-		xmitList = (struct rx_packet **)
-#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
-		    /* XXXX else we must drop any mtx we hold */
-		    afs_osi_Alloc_NoSleep(maxXmitPackets * sizeof(struct rx_packet *));
-#else
-		osi_Alloc(maxXmitPackets * sizeof(struct rx_packet *));
-#endif
-		if (xmitList == NULL)
-		    osi_Panic("rxi_Start, failed to allocate xmit list");
 		for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
 		    if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
 			/* We shouldn't be sending packets if a thread is waiting
@@ -5716,11 +5706,9 @@ rxi_Start(struct rxevent *event,
 		    /* Transmit the packet if it needs to be sent. */
 		    if (!clock_Lt(&now, &p->retryTime)) {
 			if (nXmitPackets == maxXmitPackets) {
-			    rxi_SendXmitList(call, xmitList, nXmitPackets,
-					     istack, &now, &retryTime,
-					     resending);
-			    osi_Free(xmitList, maxXmitPackets *
-				     sizeof(struct rx_packet *));
+			    rxi_SendXmitList(call, call->xmitList,
+					     nXmitPackets, istack, &now, 
+					     &retryTime, resending);
 			    goto restart;
 			}
                         dpf(("call %d xmit packet %"AFS_PTR_FMT" now %u.%06u retryTime %u.%06u nextRetry %u.%06u\n",
@@ -5728,18 +5716,16 @@ rxi_Start(struct rxevent *event,
                               now.sec, now.usec,
                               p->retryTime.sec, p->retryTime.usec,
                               retryTime.sec, retryTime.usec));
-			xmitList[nXmitPackets++] = p;
+			call->xmitList[nXmitPackets++] = p;
 		    }
 		}
 
 		/* xmitList now hold pointers to all of the packets that are
 		 * ready to send. Now we loop to send the packets */
 		if (nXmitPackets > 0) {
-		    rxi_SendXmitList(call, xmitList, nXmitPackets, istack,
-				     &now, &retryTime, resending);
+		    rxi_SendXmitList(call, call->xmitList, nXmitPackets,
+				     istack, &now, &retryTime, resending);
 		}
-		osi_Free(xmitList,
-			 maxXmitPackets * sizeof(struct rx_packet *));
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 		/*
