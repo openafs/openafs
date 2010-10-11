@@ -3939,6 +3939,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     struct rx_peer *peer = conn->peer;
     struct clock now;		/* Current time, for RTT calculations */
     afs_uint32 first;
+    afs_uint32 prev;
     afs_uint32 serial;
     /* because there are CM's that are bogus, sending weird values for this. */
     afs_uint32 skew = 0;
@@ -3961,14 +3962,18 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     /* depends on ack packet struct */
     nAcks = MIN((unsigned)nbytes, (unsigned)ap->nAcks);
     first = ntohl(ap->firstPacket);
+    prev = ntohl(ap->previousPacket);
     serial = ntohl(ap->serial);
     /* temporarily disabled -- needs to degrade over time
      * skew = ntohs(ap->maxSkew); */
 
     /* Ignore ack packets received out of order */
-    if (first < call->tfirst) {
+    if (first < call->tfirst ||
+        (first == call->tfirst && prev < call->tprev)) {
 	return np;
     }
+
+    call->tprev = prev;
 
     if (np->header.flags & RX_SLOW_START_OK) {
 	call->flags |= RX_CALL_SLOW_START_OK;
@@ -5043,6 +5048,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     call->nHardAcks = 0;
 
     call->tfirst = call->rnext = call->tnext = 1;
+    call->tprev = 0;
     call->rprev = 0;
     call->lastAcked = 0;
     call->localStatus = call->remoteStatus = 0;
