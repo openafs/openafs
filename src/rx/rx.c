@@ -4171,8 +4171,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		missing = 1;
 	    }
 	} else {
-	    tp->flags &= ~RX_PKTFLAG_ACKED;
-	    missing = 1;
+	    if (tp->flags & RX_PKTFLAG_ACKED) {
+		tp->flags &= ~RX_PKTFLAG_ACKED;
+		missing = 1;
+	    }
 	}
 
         /*
