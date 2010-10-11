@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=auth
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(DESTDIR)\include\afs
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 

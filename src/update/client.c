@@ -22,7 +22,6 @@
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
 #include <sys/utime.h>
-#include <afs/dirent.h>
 #include <direct.h>
 #include <process.h>
 #include <io.h>
@@ -32,8 +31,8 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/time.h>
-#include <dirent.h>
 #endif
+#include <dirent.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

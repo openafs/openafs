@@ -94,7 +94,7 @@ $(CLIENTOBJS): $(CLIENT)\$$(@B).cpp
 	$(C2OBJ) -I$(*D) $**
 
 $(AFSDOBJS): $(AFSD)\$$(@B).c
-	$(C2OBJ) -I$(*D) $**
+	$(C2OBJ) -I$(*D) -I$(DESTDIR)\include\rx $**
 
 $(EXEOBJS): $$(@B).cpp
 	$(C2OBJ) -I$(*D) -I$(AFSAPPLIB) $**

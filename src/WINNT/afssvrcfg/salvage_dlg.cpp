@@ -22,7 +22,7 @@ extern "C" {
 #include "afscfg.h"		// Main header for this application
 #include "resource.h"
 extern "C" {
-#include "afs_bosAdmin.h"
+#include <afs/afs_bosAdmin.h>
 }
 #include "admin_info_dlg.h"
 

@@ -16,7 +16,6 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#include <param.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>

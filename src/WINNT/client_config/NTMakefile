@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I$(DESTDIR)\include\afs
 
 # include the primary makefile
 RELDIR=WINNT\client_config
@@ -39,8 +39,8 @@ EXEOBJS = \
 	$(OUT)\dlg_misc.obj \
 	$(OUT)\isadmin.obj \
 	$(OUT)\dlg_automap.obj \
-    $(OUT)\dlg_binding.obj \
-    $(OUT)\RegistrySupport.obj
+        $(OUT)\dlg_binding.obj \
+        $(OUT)\RegistrySupport.obj
 
 EXEOBJSc = \
 	$(OUT)\cellservdb.obj
@@ -57,7 +57,7 @@ VCLIBS =\
 	comctl32.lib \
 	shell32.lib \
 	mpr.lib \
-    netapi32.lib
+        netapi32.lib
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
@@ -91,7 +91,7 @@ COPYHEADERS = \
 AFSAPPLIB=..\afsapplib
 
 $(AFSDOBJS): $(AFSD)\$$(@B).c
-	$(C2OBJ) -I$(AFSD) $**
+	$(C2OBJ) -I$(AFSD) -I$(DESTDIR)\include\rx $**
 
 $(EXEOBJS): $$(@B).cpp
 	$(C2OBJ) -I$(AFSAPPLIB) $**

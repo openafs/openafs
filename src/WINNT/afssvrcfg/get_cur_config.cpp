@@ -24,8 +24,8 @@ extern "C" {
 #include "resource.h"
 
 extern "C" {
-#include "afs_vosAdmin.h"
-#include "afs\vlserver.h"
+#include <afs\afs_vosAdmin.h>
+#include <afs\vlserver.h>
 }
 
 

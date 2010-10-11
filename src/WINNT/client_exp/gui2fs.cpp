@@ -32,7 +32,7 @@ extern "C" {
 #include <rx/rx_globals.h>
 #include "fs.h"
 #include "fs_utils.h"
-#include <afsint.h>
+#include <afs/afsint.h>
 #include <afs/afs_consts.h>
 #include <afs/cellconfig.h>
 #include <afs/vldbint.h>
