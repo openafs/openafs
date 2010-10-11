@@ -89,7 +89,14 @@ util_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-pthread: util_headers
+hcrypto_headers: util_headers
+     @echo ***** $@
+	$(DOCD) $(SRC)\crypto\hcrypto
+	$(CD) $(SRC)\crypto\hcrypto
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+pthread: hcrypto_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
@@ -159,7 +166,14 @@ des: rxgen
 	$(NTMAKE)
 	$(CD) ..\..
 
-rx: des
+hcrypto: des
+     @echo ***** $@
+	$(DOCD) $(SRC)\crypto\hcrypto
+	$(CD) $(SRC)\crypto\hcrypto
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+rx: hcrypto
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

@@ -1,0 +1,17 @@
+EXPORTS
+	hc_DES_cbc_encrypt                      @1
+	hc_DES_cbc_cksum                        @2
+	hc_DES_ecb_encrypt                      @3
+	hc_DES_init_random_number_generator     @4
+	hc_DES_key_sched                        @5
+	hc_DES_new_random_key                   @6
+	hc_DES_pcbc_encrypt                     @7
+	hc_DES_set_odd_parity                   @8
+	hc_DES_string_to_key                    @9
+	hc_MD4_Final                            @10
+	hc_MD4_Init                             @11
+	hc_MD4_Update                           @12
+	hc_MD5_Final                            @13
+	hc_MD5_Init                             @14
+	hc_MD5_Update                           @15
+	hc_UI_UTIL_read_pw_string               @16

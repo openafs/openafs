@@ -83,6 +83,12 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\config))
 		$(MKDIR) $(OJT)\config
 !	ENDIF
+!	IF (!EXIST($(OJT)\crypto))
+		$(MKDIR) $(OJT)\crypto
+!	ENDIF
+!	IF (!EXIST($(OJT)\crypto\hcrypto))
+		$(MKDIR) $(OJT)\crypto\hcrypto
+!	ENDIF
 !	IF (!EXIST($(OJT)\des))
 		$(MKDIR) $(OJT)\des
 !	ENDIF
@@ -418,6 +424,9 @@ idirs: doclink
 !	ENDIF
 !	IF (!EXIST($(DESTDIR)\include\des))
 		$(MKDIR) $(DESTDIR)\include\des
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\hcrypto))
+		$(MKDIR) $(DESTDIR)\include\hcrypto
 !	ENDIF
 !	IF (!EXIST($(DESTDIR)\include\rx))
 		$(MKDIR) $(DESTDIR)\include\rx
