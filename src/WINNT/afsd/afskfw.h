@@ -38,7 +38,7 @@ extern "C" {
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <cm_config.h>
-#include <rxkad.h>
+#include <rx/rxkad.h>
 
 #define CELL_MAXNAMELEN 256
 #define MAXHOSTCHARS   64

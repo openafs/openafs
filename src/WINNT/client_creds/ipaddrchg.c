@@ -66,7 +66,7 @@
 
 #include <afs/stds.h>
 #include <krb5.h>
-#include <rxkad.h>
+#include <rx\rxkad.h>
 #include <afskfw.h>
 #include "ipaddrchg.h"
 #include "creds.h"

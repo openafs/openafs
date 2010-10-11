@@ -14,9 +14,9 @@ RELDIR=util
 INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
 INCFILES =\
+	$(DESTDIR)\include\dirent.h \
 	$(INCFILEDIR)\afsutil.h \
 	$(INCFILEDIR)\assert.h \
-	$(INCFILEDIR)\dirent.h \
 	$(INCFILEDIR)\errors.h \
 	$(INCFILEDIR)\itc.h \
 	$(INCFILEDIR)\vice.h \
@@ -32,7 +32,7 @@ INCFILES =\
 	$(INCFILEDIR)\secutil_nt.h \
         $(INCFILEDIR)\softsig.h
 
-$(DESTDIR)\include\afs\dirent.h: dirent_nt.h
+$(DESTDIR)\include\dirent.h: dirent_nt.h
 	$(COPY) $** $@
 
 $(DESTDIR)\include\afs\dirpath.h: dirpath_nt.h

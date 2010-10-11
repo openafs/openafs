@@ -30,7 +30,7 @@ extern "C" {
 #include <afs\dirpath.h>
 #include <afs\afs_clientAdmin.h>
 }
-#include <lanahelper.h>
+#include <afs\lanahelper.h>
 
 
 /*

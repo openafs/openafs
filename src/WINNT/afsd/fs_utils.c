@@ -13,17 +13,18 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
-#include <malloc.h>
-#include <string.h>
 #include <winioctl.h>
 #include <winsock2.h>
 #include <nb30.h>
 
+#include <errno.h>
+#include <malloc.h>
+#include <string.h>
+
 #include <osi.h>
-#include "afsd.h"
-#include "smb.h"
-#include "cmd.h"
+#include <afsd.h>
+#include <smb.h>
+#include <afs/cmd.h>
 #include <fs_utils.h>
 #include <WINNT\afsreg.h>
 

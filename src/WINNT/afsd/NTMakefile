@@ -5,7 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" /DSMB_UNICODE -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" /DSMB_UNICODE -I..\kfw\inc\loadfuncs \
+        -I..\kfw\inc\krb5 -I..\kfw\inc\leash -I$(DESTDIR)\include\afs \
+        -I$(DESTDIR)\include\rx
 AFSDEV_NETGUI = 1
 RELDIR=WINNT\afsd
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)

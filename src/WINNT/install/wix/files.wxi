@@ -1401,13 +1401,14 @@
                         </Component>
                     </Directory>
                     <Directory Id="dirInclude" Name="Include">
-                        <Component Id="cmp_SDK_Include" Guid="9B12B216-B104-4E49-BE31-4042F2CBD318">
+                        <Component Id="cmp_SDK_Include" Guid="2229E5F7-1D23-4088-AF85-917CCDB2634D">
                             <File Id="filebasic_H" Name="basic.h" LongName="basic.h" DiskId="1" src="$(var.IncDir)basic.h" /> 
                             <File Id="filecrypt_H" Name="crypt.h" LongName="crypt.h" DiskId="1" src="$(var.IncDir)crypt.h" /> 
                             <File Id="filedbrpc_H" Name="dbrpc.h" LongName="dbrpc.h" DiskId="1" src="$(var.IncDir)dbrpc.h" /> 
                             <File Id="filedes_H" Name="des.h" LongName="des.h" DiskId="1" src="$(var.IncDir)des.h" /> 
                             <File Id="filedes_conf_H" Name="des_conf.h" LongName="des_conf.h" DiskId="1" src="$(var.IncDir)des_conf.h" /> 
                             <File Id="filedes_odd_H" Name="des_odd.h" LongName="des_odd.h" DiskId="1" src="$(var.IncDir)des_odd.h" /> 
+                            <File Id="filedirent_H" Name="dirent.h" LongName="dirent.h" DiskId="1" src="$(var.IncDir)dirent.h" />
                             <File Id="filelargeint_H" Name="largeint.h" LongName="largeint.h" DiskId="1" src="$(var.IncDir)largeint.h" /> 
                             <File Id="filelock_H" Name="lock.h" LongName="lock.h" DiskId="1" src="$(var.IncDir)lock.h" /> 
                             <File Id="filelwp_H" Name="lwp.h" LongName="lwp.h" DiskId="1" src="$(var.IncDir)lwp.h" /> 
@@ -1434,7 +1435,7 @@
                             <File Id="fileubik_int_H" Name="ubik_int.h" LongName="ubik_int.h" DiskId="1" src="$(var.IncDir)ubik_int.h" /> 
                         </Component>
                         <Directory Id="dirIncludeAfs" Name="afs">
-                            <Component Id="cmp_SDK_Include_afs" Guid="692D18AD-4901-4124-8B1F-5D414E65A7D0">
+                            <Component Id="cmp_SDK_Include_afs" Guid="6F1F245C-BDD9-479A-A6D8-00A8F1AE8F86">
                                 <File Id="fileacl_H" Name="acl.h" LongName="acl.h" DiskId="1" src="$(var.IncDir)afs\acl.h" /> 
                                 <File Id="fileafscbint_H" Name="afscbint.h" LongName="afscbint.h" DiskId="1" src="$(var.IncDir)afs\afscbint.h" /> 
                                 <File Id="fileafsconfig_H" Name="AFSCON~1.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afs\afsconfig.h" /> 
@@ -1507,7 +1508,6 @@
                                 <File Id="filecom_err_H" Name="com_err.h" LongName="com_err.h" DiskId="1" src="$(var.IncDir)afs\com_err.h" /> 
                                 <File Id="filedebug_H" Name="debug.h" LongName="debug.h" DiskId="1" src="$(var.IncDir)afs\debug.h" /> 
                                 <File Id="filedir_H" Name="dir.h" LongName="dir.h" DiskId="1" src="$(var.IncDir)afs\dir.h" /> 
-                                <File Id="filedirent_H" Name="dirent.h" LongName="dirent.h" DiskId="1" src="$(var.IncDir)afs\dirent.h" /> 
                                 <File Id="filedirpath_H" Name="dirpath.h" LongName="dirpath.h" DiskId="1" src="$(var.IncDir)afs\dirpath.h" /> 
                                 <File Id="fileerrmap_nt_H" Name="ERRMAP~1.h" LongName="errmap_nt.h" DiskId="1" src="$(var.IncDir)afs\errmap_nt.h" /> 
                                 <File Id="fileerrors_H" Name="errors.h" LongName="errors.h" DiskId="1" src="$(var.IncDir)afs\errors.h" /> 

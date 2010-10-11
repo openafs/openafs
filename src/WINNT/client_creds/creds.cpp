@@ -15,7 +15,7 @@ extern "C" {
 #include <afs\param.h>
 #include <afs\auth.h>
 #include <afs\kautils.h>
-#include <rxkad.h>
+#include <rx\rxkad.h>
 #include <afs\cm_config.h>
 #include <afs\afskfw.h>
 #include "ipaddrchg.h"

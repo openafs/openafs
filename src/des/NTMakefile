@@ -35,7 +35,7 @@ INCFILES =\
         $(INCFILEDIR)\des_prototypes.h \
 	$(INCFILEDIR)\mit-cpyright.h \
 	$(INCFILEDIR)\des_odd.h \
-	$(INCFILEDIR)\crypt.h \
+	$(INCFILEDIR)\crypt.h
 
 $(INCFILEDIR)\des_odd.h: odd.h
 	$(COPY) odd.h $@

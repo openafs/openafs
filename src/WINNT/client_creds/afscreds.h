@@ -32,7 +32,7 @@ extern "C" {
 #include <osithrdnt.h>
 #include <osisleep.h>
 #include <osibasel.h>
-#include <rxkad.h>
+#include <rx/rxkad.h>
 #ifdef __cplusplus
 }
 #endif

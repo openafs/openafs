@@ -15,7 +15,7 @@ extern "C" {
 #include <afs/stds.h>
 #include <osilog.h>
 #include <afs/fs_utils.h>
-#include <rxkad.h>
+#include <rx\rxkad.h>
 #include <afs/afskfw.h>
 #include "ipaddrchg.h"
 }

@@ -10,20 +10,22 @@ RELDIR=config
 
 # Relative path to src directory depends on how we got to current directory.
 
-INCFILEDIR = $(DESTDIR)\include\afs
+INCFILEDIR    = $(DESTDIR)\include
+
+INCFILEAFSDIR = $(INCFILEDIR)\afs
 
 
 INCFILES =\
-	$(INCFILEDIR)\debug.h \
 	$(INCFILEDIR)\afsconfig.h \
-	$(INCFILEDIR)\stds.h \
-	$(INCFILEDIR)\param.h \
-	$(INCFILEDIR)\afs_sysnames.h \
-	$(INCFILEDIR)\afs_args.h \
-	$(INCFILEDIR)\icl.h 
+	$(INCFILEAFSDIR)\debug.h \
+	$(INCFILEAFSDIR)\stds.h \
+	$(INCFILEAFSDIR)\param.h \
+	$(INCFILEAFSDIR)\afs_sysnames.h \
+	$(INCFILEAFSDIR)\afs_args.h \
+	$(INCFILEAFSDIR)\icl.h
 
 
-$(INCFILEDIR)\param.h: param.$(SYS_NAME).h
+$(INCFILEAFSDIR)\param.h: param.$(SYS_NAME).h
 	$(COPY) $? $@
 
 $(INCFILEDIR)\afsconfig.h: afsconfig-windows.h

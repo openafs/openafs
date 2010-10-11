@@ -8,6 +8,7 @@
 # Override default definitions in NTMakefile.$(SYS_NAME) before including.
 
 RELDIR=kauth
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(DESTDIR)\include\afs
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 

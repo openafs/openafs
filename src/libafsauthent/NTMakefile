@@ -8,7 +8,8 @@
 # This is a pthread safe library containing ubikclient, auth, kauth.
 
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DAFS_PTHREAD_ENV -I..\WINNT\kfw\inc\loadfuncs -I..\WINNT\kfw\inc\krb5
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DAFS_PTHREAD_ENV -I..\WINNT\kfw\inc\loadfuncs \
+        -I..\WINNT\kfw\inc\krb5 -I$(DESTDIR)\include\afs -I$(DESTDIR)\include\rx
 
 RELDIR=libafsauthent
 !include ..\config\NTMakefile.$(SYS_NAME)

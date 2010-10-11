@@ -72,11 +72,11 @@
 #ifdef WIN32
 #include <windows.h>
 
-#include <cm_config.h>
-#include <auth.h>
-#include <cellconfig.h>
-#include <pioctl_nt.h>
-#include <smb_iocons.h>
+#include <afs\cm_config.h>
+#include <afs\auth.h>
+#include <afs\cellconfig.h>
+#include <afs\pioctl_nt.h>
+#include <afs\smb_iocons.h>
 
 #define stat _stat
 #define __S_ISTYPE(mode, mask) (((mode) & _S_IFMT) == (mask))

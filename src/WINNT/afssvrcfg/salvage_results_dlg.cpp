@@ -18,7 +18,7 @@
 #include "resource.h"
 #include "salvage_results_dlg.h"
 extern "C" {
-#include "afs_bosAdmin.h"
+#include <afs\afs_bosAdmin.h>
 }
 
 

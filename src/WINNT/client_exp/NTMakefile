@@ -5,7 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd  /D"_WINDOWS" /D"_WINDLL" /D"_AFXDLL" /D"_USRDLL" -DUNICODE -D_UNICODE
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(DESTDIR)\include\afs -I$(DESTDIR)\include\rx \
+        /D"_WINDOWS" /D"_WINDLL" /D"_AFXDLL" /D"_USRDLL" -DUNICODE -D_UNICODE
 
 NO_CRTDBG=1			#define this to disable any CRT_DBG flag
 RELDIR=WINNT\client_exp
@@ -50,7 +51,7 @@ DLLOBJS =\
 AFSD = ..\afsd
 
 $(OUT)\fs_utils.obj: $(AFSD)\fs_utils.c
-	$(C2OBJ) $**
+	$(C2OBJ) -I$(DESTDIR)\include\rx $**
 
 DLLSDKLIBS =\
     mpr.lib
