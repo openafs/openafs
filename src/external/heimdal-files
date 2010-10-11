@@ -31,6 +31,7 @@ lib/hcrypto/rand-egd.c		hcrypto/rand-egd.c
 lib/hcrypto/rand-fortuna.c	hcrypto/rand-fortuna.c
 lib/hcrypto/rand-timer.c	hcrypto/rand-timer.c
 lib/hcrypto/rand-unix.c		hcrypto/rand-unix.c
+lib/hcrypto/rand-w32.c		hcrypto/rand-w32.c
 lib/hcrypto/rand.c		hcrypto/rand.c
 lib/hcrypto/rc2.c		hcrypto/rc2.c
 lib/hcrypto/rc2.h		hcrypto/rc2.h
