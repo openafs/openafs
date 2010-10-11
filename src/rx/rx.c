@@ -3849,33 +3849,6 @@ rx_ack_reason(int reason)
 #endif
 
 
-/* rxi_ComputePeerNetStats
- *
- * Called exclusively by rxi_ReceiveAckPacket to compute network link
- * estimates (like RTT and throughput) based on ack packets.  Caller
- * must ensure that the packet in question is the right one (i.e.
- * serial number matches).
- */
-static void
-rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
-			struct rx_ackPacket *ap, struct rx_packet *np,
-			struct clock *now)
-{
-    struct rx_peer *peer = call->conn->peer;
-
-    /* Use RTT if not delayed by client and
-     * ignore packets that were retransmitted and
-     * ignore all but the last packet of a jumbogram. */
-    if (!(p->flags & RX_PKTFLAG_ACKED) &&
-        ap->reason != RX_ACK_DELAY &&
-        clock_Eq(&p->timeSent, &p->firstSent) &&
-        !(p->header.flags & RX_JUMBO_PACKET))
-	rxi_ComputeRoundTripTime(p, &p->timeSent, peer, now);
-#ifdef ADAPT_WINDOW
-    rxi_ComputeRate(peer, call, p, np, ap->reason);
-#endif
-}
-
 /* The real smarts of the whole thing.  */
 struct rx_packet *
 rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
@@ -4033,10 +4006,20 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	if (tp->header.seq >= first)
 	    break;
 	call->tfirst = tp->header.seq + 1;
-        rxi_ComputePeerNetStats(call, tp, ap, np, &now);
+
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
+	    if (ap->reason != RX_ACK_DELAY &&
+		clock_Eq(&tp->timeSent, &tp->firstSent)) {
+		rxi_ComputeRoundTripTime(tp, &tp->timeSent, call->conn->peer,
+					 &now);
+	    }
 	}
+
+#ifdef ADAPT_WINDOW
+	rxi_ComputeRate(call->conn->peer, call, p, np, ap->reason);
+#endif
+
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* XXX Hack. Because we have to release the global rx lock when sending
 	 * packets (osi_NetSend) we drop all acks while we're traversing the tq
@@ -4088,16 +4071,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     call->nSoftAcked = 0;
     for (missing = 0, queue_Scan(&call->tq, tp, nxp, rx_packet)) {
-	/* Update round trip time if the ack was stimulated on receipt
-	 * of this packet */
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-#ifdef RX_ENABLE_LOCKS
-	if (tp->header.seq >= first)
-#endif /* RX_ENABLE_LOCKS */
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-            rxi_ComputePeerNetStats(call, tp, ap, np, &now);
 
-	/* Set the acknowledge flag per packet based on the
+    	/* Set the acknowledge flag per packet based on the
 	 * information in the ack packet. An acknowlegded packet can
 	 * be downgraded when the server has discarded a packet it
 	 * soacked previously, or when an ack packet is received
@@ -4114,6 +4089,16 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 		    newAckCount++;
 		    tp->flags |= RX_PKTFLAG_ACKED;
+
+		    if (ap->reason != RX_ACK_DELAY &&
+			clock_Eq(&tp->timeSent, &tp->firstSent)) {
+			rxi_ComputeRoundTripTime(tp, &tp->timeSent,
+					   	 call->conn->peer, &now);
+		    }
+#ifdef ADAPT_WINDOW
+		    rxi_ComputeRate(call->conn->peer, call, tp, np,
+				    ap->reason);
+#endif
 		}
 		if (missing) {
 		    nNacked++;
