@@ -283,39 +283,30 @@ err.o: ${UPSTREAM}/roken/err.c
 
 errx.o: ${UPSTREAM}/roken/errx.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/errx.c
-	${CCRULE}
 
 getprogname.o: ${UPSTREAM}/roken/getprogname.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/getprogname.c
-	${CCRULE}
 
 verr.o: ${UPSTREAM}/roken/verr.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/verr.c
-	${CCRULE}
 
 verrx.o: ${UPSTREAM}/roken/verrx.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/verrx.c
-	${CCRULE}
 
 vwarn.o: ${UPSTREAM}/roken/vwarn.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/vwarn.c
-	${CCRULE}
 
 vwarnx.o: ${UPSTREAM}/roken/vwarnx.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/vwarnx.c
-	${CCRULE}
 
 warn.o: ${UPSTREAM}/roken/warn.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/warn.c
-	${CCRULE}
 
 warnerr.o: ${UPSTREAM}/roken/warnerr.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/warnerr.c
-	${CCRULE}
 
 warnx.o: ${UPSTREAM}/roken/warnx.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/warnx.c
-	${CCRULE}
 
 # LWP Targets
 
