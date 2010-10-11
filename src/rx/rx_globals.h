@@ -561,21 +561,21 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 #endif
 
 #ifdef RXDEBUG
-#define rx_Log rx_debugFile
-#ifdef AFS_NT40_ENV
+# define rx_Log rx_debugFile
+# ifdef AFS_NT40_ENV
 EXT int rxdebug_active;
-#define dpf(args) do { if (rxdebug_active) rxi_DebugPrint args; } while (0)
+#  define dpf(args) do { if (rxdebug_active) rxi_DebugPrint args; } while (0)
+# else
+#  ifdef DPF_FSLOG
+#   include <afs/afsutil.h>
+#   define dpf(args) FSLog args
+#  else
+#   define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
+#  endif
+# endif
+# define rx_Log_event rxevent_debugFile
 #else
-#ifdef DPF_FSLOG
-#include <afs/afsutil.h>
-#define dpf(args) FSLog args
-#else
-#define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
-#endif
-#endif
-#define rx_Log_event rxevent_debugFile
-#else
-#define dpf(args)
+# define dpf(args)
 #endif /* RXDEBUG */
 
 EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
