@@ -518,6 +518,7 @@ struct rx_call {
     afs_uint32 rwind;		/* The receive window:  the peer must not send packets with sequence numbers >= rnext+rwind */
     afs_uint32 tfirst;		/* First unacknowledged transmit packet number */
     afs_uint32 tnext;		/* Next transmit sequence number to use */
+    afs_uint32 tprev;		/* Last packet that we saw an ack for */
     u_short twind;		/* The transmit window:  we cannot assign a sequence number to a packet >= tfirst + twind */
     u_short cwind;		/* The congestion window */
     u_short nSoftAcked;		/* Number soft acked transmit packets */
