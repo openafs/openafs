@@ -563,7 +563,9 @@ extern void rxi_PrepareSendPacket(struct rx_call *call,
 extern int rxi_AdjustIfMTU(int mtu);
 extern int rxi_AdjustMaxMTU(int mtu, int peerMaxMTU);
 extern int rxi_AdjustDgramPackets(int frags, int mtu);
-
+#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
+extern void rxi_WaitforTQBusy(struct rx_call *call);
+#endif
 
 /* rxperf.c */
 
@@ -607,6 +609,8 @@ extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 			 int nbytes);
 extern void rxi_FlushWrite(struct rx_call *call);
 extern void rx_FlushWrite(struct rx_call *call);
+
+
 
 /* rx_stats.c */
 extern struct rx_statistics * rx_GetStatistics(void);
