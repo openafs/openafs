@@ -804,8 +804,6 @@ struct volHeader {
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
 extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
-extern Volume *VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
-                               const struct timespec *ts);
 extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
                                   const struct timespec *ts, struct VCallByVol *cbv);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);

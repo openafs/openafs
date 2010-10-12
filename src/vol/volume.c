@@ -3975,20 +3975,6 @@ VGetVolume(Error * ec, Error * client_ec, VolId volumeId)
     return retVal;
 }
 
-/* same as VGetVolume, but if a volume is waiting to go offline, we only wait
- * until time ts. If we have waited longer than that, we return that it is
- * actually offline, instead of waiting for it to go offline */
-Volume *
-VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
-                const struct timespec *ts)
-{
-    Volume *retVal;
-    VOL_LOCK;
-    retVal = GetVolume(ec, client_ec, volumeId, NULL, ts);
-    VOL_UNLOCK;
-    return retVal;
-}
-
 /**
  * Get a volume reference associated with an RX call.
  *

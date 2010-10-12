@@ -402,3 +402,44 @@ other option, whereas others argue that choosing anything besides the C<always>
 option allows for an unacceptable risk of data loss. This may depend on your
 usage patterns, your hardware, your platform and filesystem, and who you talk
 to about this topic.
+
+=item B<-offline-timeout> <I<timeout in seconds>>
+
+Setting this option to I<N> means that if any clients are reading from a
+volume when we want to offline that volume (for example, as part of
+releasing a volume), we will wait I<N> seconds for the clients' request
+to finish. If the clients' requests have not finished, we will then
+interrupt the client requests and send an error to those clients,
+allowing the volume to go offline.
+
+If a client is interrupted, from the client's point of view, it will
+appear as if they had accessed the volume after it had gone offline. For
+RO volumes, this mean the client should fail-over to other valid RO
+sites for that volume. This option may speed up volume releases if
+volumes are being accessed by clients that have slow or unreliable
+network connections.
+
+Setting this option to C<0> means to interrupt clients immediately if a
+volume is waiting to go offline. Setting this option to C<-1> means to
+wait forever for client requests to finish. The default value is C<-1>.
+
+For the LWP fileserver, the only valid value for this option is C<-1>.
+
+=item B<-offline-shutdown-timeout> <I<timeout in seconds>>
+
+This option behaves similarly to B<-offline-timeout> but applies to
+volumes that are going offline as part of the fileserver shutdown
+process. If the value specified is I<N>, we will interrupt any clients
+reading from volumes after I<N> seconds have passed since we first
+needed to wait for a volume to offline during the shutdown process.
+
+Setting this option to C<0> means to interrupt all clients reading from
+volumes immediately during the shutdown process. Setting this option to
+C<-1> means to wait forever for client requests to finish during the
+shutdown process.
+
+If B<-offline-timeout> is specified, the default value of
+B<-offline-shutdown-timeout> is the value specified for
+B<-offline-timeout>. Otherwise, the default value is C<-1>.
+
+For the LWP fileserver, the only valid value for this option is C<-1>.
