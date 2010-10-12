@@ -1358,8 +1358,8 @@ rx_GetConnection(struct rx_connection *conn)
 #ifdef  AFS_GLOBAL_RXLOCK_KERNEL
 /* Wait for the transmit queue to no longer be busy.
  * requires the call->lock to be held */
-static void rxi_WaitforTQBusy(struct rx_call *call) {
-    while (call->flags & RX_CALL_TQ_BUSY) {
+void rxi_WaitforTQBusy(struct rx_call *call) {
+    while (!call->error && (call->flags & RX_CALL_TQ_BUSY)) {
 	call->flags |= RX_CALL_TQ_WAIT;
 	call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
@@ -3338,20 +3338,22 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     * flag is cleared.
 	     */
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
-	    while ((call->state == RX_STATE_ACTIVE)
-		   && (call->flags & RX_CALL_TQ_BUSY)) {
-		call->flags |= RX_CALL_TQ_WAIT;
-		call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-		osirx_AssertMine(&call->lock, "rxi_Start lock3");
-		CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-		osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-		call->tqWaiters--;
-		if (call->tqWaiters == 0)
-		    call->flags &= ~RX_CALL_TQ_WAIT;
-	    }
+            if (call->state == RX_STATE_ACTIVE) {
+                rxi_WaitforTQBusy(call);
+                /*
+                 * If we entered error state while waiting,
+                 * must call rxi_CallError to permit rxi_ResetCall
+                 * to processed when the tqWaiter count hits zero.
+                 */
+                if (call->error) {
+                    rxi_CallError(call, call->error);
+                    MUTEX_EXIT(&call->lock);
+                    MUTEX_ENTER(&rx_refcnt_mutex);
+                    conn->refCount--;
+                    MUTEX_EXIT(&rx_refcnt_mutex);
+                    return np;
+                }
+            }
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	    /* If the new call cannot be taken right now send a busy and set
 	     * the error condition in this call, so that it terminates as
@@ -5974,7 +5976,7 @@ rxi_Start(struct rxevent *event,
           void *arg0, void *arg1, int istack)
 {
     struct rx_call *call = arg0;
-
+    struct rx_peer *peer = call->conn->peer;
     struct rx_packet *p;
     struct rx_packet *nxp;	/* Next pointer for queue_Scan */
     int nXmitPackets;
@@ -6002,12 +6004,42 @@ rxi_Start(struct rxevent *event,
 	     * actually got to run. */
 	    return;
 	}
+#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
+        if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
+	    /* someone else is waiting to start recovery */
+	    return;
+        }
+	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
+	rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+        if (call->error) {
+            if (rx_stats_active)
+		rx_MutexIncrement(rx_tq_debug.rxi_start_in_error, rx_stats_mutex);
+            return;
+        }
+#endif
+        call->flags |= RX_CALL_FAST_RECOVER;
 
-	/* Mark all of the pending packets in the queue as being lost */
-	for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
-	    if (!(p->flags & RX_PKTFLAG_ACKED))
-		p->flags &= ~RX_PKTFLAG_SENT;
-	}
+        if (peer->maxDgramPackets > 1) {
+            call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
+        } else {
+            call->MTU = MIN(peer->natMTU, peer->maxMTU);
+        }
+        call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
+        call->nDgramPackets = 1;
+        call->cwind = 1;
+        call->nextCwind = 1;
+        call->nAcks = 0;
+        call->nNacks = 0;
+        MUTEX_ENTER(&peer->peer_lock);
+        peer->MTU = call->MTU;
+        peer->cwind = call->cwind;
+        peer->nDgramPackets = 1;
+        peer->congestSeq++;
+        call->congestSeq = peer->congestSeq;
+        MUTEX_EXIT(&peer->peer_lock);
     }
 
     if (call->error) {

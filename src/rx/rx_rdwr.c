@@ -730,6 +730,10 @@ rxi_WriteProc(struct rx_call *call, char *buf,
     do {
 	if (call->nFree == 0) {
 	    MUTEX_ENTER(&call->lock);
+#ifdef AFS_GLOBAL_RXLOCK_KERNEL
+            rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+            cp = call->currentPacket;
             if (call->error)
                 call->mode = RX_MODE_ERROR;
 	    if (!call->error && cp) {
@@ -742,23 +746,6 @@ rxi_WriteProc(struct rx_call *call, char *buf,
                 cp->flags &= ~RX_PKTFLAG_CP;
 #endif
 		call->currentPacket = (struct rx_packet *)0;
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-		/* Wait until TQ_BUSY is reset before adding any
-		 * packets to the transmit queue
-		 */
-		while (call->flags & RX_CALL_TQ_BUSY) {
-		    call->flags |= RX_CALL_TQ_WAIT;
-                    call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-		    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-		    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-                    call->tqWaiters--;
-                    if (call->tqWaiters == 0)
-                        call->flags &= ~RX_CALL_TQ_WAIT;
-		}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		clock_NewTime();	/* Bogus:  need new time package */
 		/* The 0, below, specifies that it is not the last packet:
 		 * there will be others. PrepareSendPacket may
@@ -1148,20 +1135,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	call->error = RX_PROTOCOL_ERROR;
     }
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
-    /* Wait until TQ_BUSY is reset before trying to move any
-     * packets to the transmit queue.  */
-    while (!call->error && call->flags & RX_CALL_TQ_BUSY) {
-	call->flags |= RX_CALL_TQ_WAIT;
-        call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-        call->tqWaiters--;
-        if (call->tqWaiters == 0)
-            call->flags &= ~RX_CALL_TQ_WAIT;
-    }
+    rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     cp = call->currentPacket;
 
@@ -1177,6 +1151,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #ifdef RXDEBUG_PACKET
             call->iovqc++;
 #endif /* RXDEBUG_PACKET */
+	    call->currentPacket = (struct rx_packet *)0;
 	}
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
@@ -1384,23 +1359,8 @@ rxi_FlushWrite(struct rx_call *call)
 
         MUTEX_ENTER(&call->lock);
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
-	/* Wait until TQ_BUSY is reset before adding any
-	 * packets to the transmit queue
-	 */
-	while (call->flags & RX_CALL_TQ_BUSY) {
-	    call->flags |= RX_CALL_TQ_WAIT;
-            call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-            call->tqWaiters--;
-            if (call->tqWaiters == 0)
-                call->flags &= ~RX_CALL_TQ_WAIT;
-	}
+        rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-
         if (call->error)
             call->mode = RX_MODE_ERROR;
 
