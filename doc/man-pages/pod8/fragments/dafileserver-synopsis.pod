@@ -54,3 +54,5 @@ B<dafileserver>
     S<<< [B<-vlruinterval> <I<seconds between VLRU scans>>] >>>
     S<<< [B<-vlrumax> <I<max volumes to soft detach in one VLRU scan>>] >>>
     S<<< [B<-unsafe-nosalvage>] >>>
+    S<<< [B<-offline-timeout> <I<timeout in seconds>>] >>>
+    S<<< [B<-offline-shutdown-timeout> <I<timeout in seconds>>] >>>

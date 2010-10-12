@@ -45,3 +45,5 @@ B<fileserver>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
     S<<< [B<-lock>] >>>
+    S<<< [B<-offline-timeout> <I<timeout in seconds>>] >>>
+    S<<< [B<-offline-shutdown-timeout> <I<timeout in seconds>>] >>>

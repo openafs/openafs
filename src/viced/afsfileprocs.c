@@ -470,7 +470,8 @@ CallPostamble(struct rx_connection *aconn, afs_int32 ret,
  * are incremented and they must be eventualy released.
  */
 static afs_int32
-CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
+CheckVnodeWithCall(AFSFid * fid, Volume ** volptr, struct VCallByVol *cbv,
+                   Vnode ** vptr, int lock)
 {
     Error fileCode = 0;
     Error local_errorCode, errorCode = -1;
@@ -497,7 +498,8 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 #endif
 
 	    errorCode = 0;
-	    *volptr = VGetVolumeTimed(&local_errorCode, &errorCode, (afs_int32) fid->Volume, ts);
+	    *volptr = VGetVolumeWithCall(&local_errorCode, &errorCode,
+	                                       fid->Volume, ts, cbv);
 	    if (!errorCode) {
 		osi_Assert(*volptr);
 		break;
@@ -606,6 +608,12 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
     }
     return (0);
 }				/*CheckVnode */
+
+static_inline afs_int32
+CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
+{
+    return CheckVnodeWithCall(fid, volptr, NULL, vptr, lock);
+}
 
 /*
  * This routine returns the ACL associated with the targetptr. If the
@@ -757,16 +765,16 @@ VanillaUser(struct client *client)
  * interface calls.
  */
 static afs_int32
-GetVolumePackage(struct rx_connection *tcon, AFSFid * Fid, Volume ** volptr,
-		 Vnode ** targetptr, int chkforDir, Vnode ** parent,
-		 struct client **client, int locktype, afs_int32 * rights,
-		 afs_int32 * anyrights)
+GetVolumePackageWithCall(struct rx_connection *tcon, struct VCallByVol *cbv,
+                         AFSFid * Fid, Volume ** volptr, Vnode ** targetptr,
+                         int chkforDir, Vnode ** parent, struct client **client,
+                         int locktype, afs_int32 * rights, afs_int32 * anyrights)
 {
     struct acl_accessList *aCL;	/* Internal access List */
     int aCLSize;		/* size of the access list */
     Error errorCode = 0;		/* return code to caller */
 
-    if ((errorCode = CheckVnode(Fid, volptr, targetptr, locktype)))
+    if ((errorCode = CheckVnodeWithCall(Fid, volptr, cbv, targetptr, locktype)))
 	return (errorCode);
     if (chkforDir) {
 	if (chkforDir == MustNOTBeDIR
@@ -807,14 +815,26 @@ GetVolumePackage(struct rx_connection *tcon, AFSFid * Fid, Volume ** volptr,
 
 }				/*GetVolumePackage */
 
+static_inline afs_int32
+GetVolumePackage(struct rx_connection *tcon, AFSFid * Fid, Volume ** volptr,
+		 Vnode ** targetptr, int chkforDir, Vnode ** parent,
+		 struct client **client, int locktype, afs_int32 * rights,
+		 afs_int32 * anyrights)
+{
+    return GetVolumePackageWithCall(tcon, NULL, Fid, volptr, targetptr,
+                                    chkforDir, parent, client, locktype,
+                                    rights, anyrights);
+}
+
 
 /*
  * This is the opposite of GetVolumePackage(), and is always used at the end of
  * AFS calls to put back all used vnodes and the volume in the proper order!
  */
 static void
-PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
-		 Vnode * parentptr, Volume * volptr, struct client **client)
+PutVolumePackageWithCall(Vnode * parentwhentargetnotdir, Vnode * targetptr,
+                         Vnode * parentptr, Volume * volptr,
+                         struct client **client, struct VCallByVol *cbv)
 {
     Error fileCode = 0;		/* Error code returned by the volume package */
 
@@ -831,12 +851,20 @@ PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
 	osi_Assert(!fileCode || (fileCode == VSALVAGE));
     }
     if (volptr) {
-	VPutVolume(volptr);
+	VPutVolumeWithCall(volptr, cbv);
     }
     if (*client) {
 	PutClient(client);
     }
 }				/*PutVolumePackage */
+
+static_inline void
+PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
+		 Vnode * parentptr, Volume * volptr, struct client **client)
+{
+    PutVolumePackageWithCall(parentwhentargetnotdir, targetptr, parentptr,
+                             volptr, client, NULL);
+}
 
 static int
 VolumeOwner(struct client *client, Vnode * targetptr)
@@ -2145,6 +2173,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
+    struct VCallByVol tcbv, *cbv = NULL;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct fs_stats_xferData *xferP;	/* Ptr to this op's byte size struct */
@@ -2184,12 +2213,17 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 	    ("SRXAFS_FetchData, Fid = %u.%u.%u, Host %s:%d, Id %d\n",
 	     Fid->Volume, Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
 	     ntohs(rxr_PortOf(tcon)), t_client->ViceId));
+
+    queue_NodeInit(&tcbv);
+    tcbv.call = acall;
+    cbv = &tcbv;
+
     /*
      * Get volume/vnode for the fetched file; caller's access rights to
      * it are also returned
      */
     if ((errorCode =
-	 GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+	 GetVolumePackageWithCall(tcon, cbv, Fid, &volptr, &targetptr, DONTCHECK,
 			  &parentwhentargetnotdir, &client, READ_LOCK,
 			  &rights, &anyrights)))
 	goto Bad_FetchData;
@@ -2327,8 +2361,8 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 
   Bad_FetchData:
     /* Update and store volume/vnode and parent vnodes back */
-    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
-			   volptr, &client);
+    (void)PutVolumePackageWithCall(parentwhentargetnotdir, targetptr,
+                                   (Vnode *) 0, volptr, &client, cbv);
     ViceLog(2, ("SRXAFS_FetchData returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode, thost);
 
@@ -7141,10 +7175,15 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	(*a_bytesFetchedP) += nBytes;
 #endif /* FS_STATS_DETAILED */
 	if (nBytes != wlen) {
+	    afs_int32 err;
 	    FDH_CLOSE(fdP);
 #ifndef HAVE_PIOV
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* HAVE_PIOV */
+	    err = VIsGoingOffline(volptr);
+	    if (err) {
+		return err;
+	    }
 	    return -31;
 	}
 	Len -= wlen;
