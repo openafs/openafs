@@ -57,9 +57,12 @@
 
 #include "token.h"
 
-#if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
+#if defined(AFS_LINUX26_ENV)
 #include <sys/syscall.h>
+#if defined(SYS_keyctl)
+/* Open code this value to avoid a dependency on keyutils */
 #define KEYCTL_SESSION_TO_PARENT        18
+#endif
 #endif
 
 /* For malloc() */
@@ -310,14 +313,6 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     }
 #else /* NO_AFS_CLIENT */
     code = PIOCTL(0, VIOCSETTOK, &iob, 0);
-#if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
-    /*
-     * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
-     * is available, use it to copy the session keyring to the parent process
-     */
-    if (flags & AFS_SETTOK_SETPAG)
-	syscall(SYS_keyctl, KEYCTL_SESSION_TO_PARENT);
-#endif
 #endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
@@ -383,6 +378,15 @@ ktc_SetTokenEx(struct ktc_setTokenData *token) {
 
     if (code)
 	return KTC_PIOCTLFAIL;
+#if defined(AFS_LINUX26_ENV) && defined(SYS_keyctl)
+    else
+	/*
+	 * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
+	 * is available, use it to copy the session keyring to the parent process
+	 */
+	if (token->flags & AFS_SETTOK_SETPAG)
+	    syscall(SYS_keyctl, KEYCTL_SESSION_TO_PARENT);
+#endif
 
     return 0;
 }

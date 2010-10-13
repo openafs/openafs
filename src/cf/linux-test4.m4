@@ -528,16 +528,6 @@ AC_DEFUN([LINUX_EXPORTS_KEY_TYPE_KEYRING], [
 ])
 
 
-AC_DEFUN([LINUX_KEYS_HAVE_SESSION_TO_PARENT], [
-  AC_CHECK_LINUX_BUILD([for KEYCTL_SESSION_TO_PARENT],
-		       [ac_cv_linux_have_session_to_parent],
-		       [#include <linux/keyctl.h>],
-		       [int i = KEYCTL_SESSION_TO_PARENT;],
-		       [HAVE_SESSION_TO_PARENT],
-		       [define if keyctl has the KEYCTL_SESSION_TO_PARENT function])
-])
-
-
 AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
   AC_CHECK_LINUX_BUILD([for try_to_freeze],
 		       [ac_cv_linux_have_try_to_freeze],
