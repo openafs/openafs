@@ -124,7 +124,7 @@ typedef enum {
     salvageServer       = 4,    /**< dafs online salvager */
     debugUtility        = 5,    /**< fssync-debug or similar utility */
     volumeServer        = 6,    /**< the volserver process */
-    volumeSalvager      = 7,    /**< the standalone single-volume salvager */
+    volumeSalvager      = 7     /**< the standalone single-volume salvager */
 } ProgramType;
 extern ProgramType programType;	/* The type of program using the package */
 
@@ -180,7 +180,7 @@ typedef enum {
     VOL_STATE_DELETED           = 20,   /**< volume has been deleted by the volserver */
     /* please add new states directly above this line */
     VOL_STATE_FREED             = 21,   /**< debugging aid */
-    VOL_STATE_COUNT             = 22,   /**< total number of valid states */
+    VOL_STATE_COUNT             = 22    /**< total number of valid states */
 } VolState;
 
 /**
@@ -195,7 +195,7 @@ enum VolFlags {
     VOL_IS_BUSY           = 0x20,    /**< volume is not to be free()d */
     VOL_ON_VLRU           = 0x40,    /**< volume is on the VLRU */
     VOL_HDR_DONTSALV      = 0x80,    /**< volume header DONTSALVAGE flag is set */
-    VOL_LOCKED            = 0x100,   /**< volume is disk-locked (@see VLockVolumeNB) */
+    VOL_LOCKED            = 0x100    /**< volume is disk-locked (@see VLockVolumeNB) */
 };
 
 /* VPrintExtendedCacheStats flags */
@@ -219,7 +219,7 @@ typedef enum {
     VLRU_QUEUE_CANDIDATE  = 3,  /**< soft detach candidate pool */
     VLRU_QUEUE_HELD       = 4,  /*   volumes which are not allowed
 				 *   to be soft detached */
-    VLRU_QUEUE_INVALID    = 5,  /**< invalid queue id */
+    VLRU_QUEUE_INVALID    = 5   /**< invalid queue id */
 } VLRUQueueName;
 
 /* default scanner timing parameters */
