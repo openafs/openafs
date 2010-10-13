@@ -969,9 +969,6 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
 	/* convert to heavyweight ref */
 	nvp = VGetVolumeByVp_r(&error, vp);
-	VCancelReservation_r(rvp);
-	rvp = NULL;
-
 	if (!nvp) {
             /*
              * It's possible for VGetVolumeByVp_r to have dropped and
@@ -1006,6 +1003,10 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    Log("FSYNC_com_VolOff: warning: potentially dangerous race detected\n");
 	    vp = nvp;
 	}
+
+	/* kill off lightweight ref to ensure we can't deadlock against ourselves later... */
+	VCancelReservation_r(rvp);
+	rvp = NULL;
 
 	/* register the volume operation metadata with the volume */
 	VRegisterVolOp_r(vp, &info);
