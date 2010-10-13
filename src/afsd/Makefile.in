@@ -53,7 +53,7 @@ CFLAGS_afsd_fuse.o   = -I${TOP_SRCDIR}/afs -I${TOP_SRCDIR}/afs/UKERNEL \
 afsd.o: afsd.c AFS_component_version_number.c
 
 afsd_fuse.o: afsd_fuse.c AFS_component_version_number.c
-	$(CC) $(UAFS_CFLAGS) -c ${srcdir}/afsd_fuse.c
+	${AFS_CCRULE} -c ${srcdir}/afsd_fuse.c
 
 vsys.o: vsys.c AFS_component_version_number.c
 
