@@ -65,7 +65,7 @@ afs_get_sb(struct file_system_type *fs_type, int flags,
     return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
 }
 #else
-static struct superblock *
+static struct super_block *
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data) {
     return get_sb_nodev(fs_type, flags, data, afs_fill_super);
