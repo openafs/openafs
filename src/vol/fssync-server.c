@@ -1008,8 +1008,8 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                 break;
             }
 
-	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u\n",
-		vcom->vop->volume);
+	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u (state=%u, flags=0x%x)\n",
+		vcom->vop->volume, V_attachState(vp), V_attachFlags(vp));
 	    res->hdr.reason = FSYNC_VOL_PKG_ERROR;
 	    goto deny;
 	} else if (nvp != vp) {
