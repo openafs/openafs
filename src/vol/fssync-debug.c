@@ -615,7 +615,7 @@ vol_state_to_string(VolState state)
 static char *
 vol_flags_to_string(afs_uint16 flags)
 {
-    static char str[128];
+    static char str[256];
     int count = 0;
     str[0]='\0';
 
@@ -627,6 +627,7 @@ vol_flags_to_string(afs_uint16 flags)
     FLAGCASE(flags, VOL_IS_BUSY, str, count);
     FLAGCASE(flags, VOL_ON_VLRU, str, count);
     FLAGCASE(flags, VOL_HDR_DONTSALV, str, count);
+    FLAGCASE(flags, VOL_LOCKED, str, count);
 
     return str;
 }
