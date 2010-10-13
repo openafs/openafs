@@ -588,7 +588,7 @@ afs_linux_flush(struct file *fp)
     cred_t *credp;
     int code;
 #if defined(AFS_CACHE_BYPASS)
-    int bypasscache;
+    int bypasscache = 0;
 #endif
 
     AFS_GLOCK();
