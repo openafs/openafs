@@ -161,7 +161,7 @@ rx_atomic_dec(rx_atomic_t *atomic) {
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-    atomic_add_32(&object, 0 - change);
+    atomic_add_32(&atomic, 0 - change);
 }
 
 #elif defined(__GNUC__) && defined(HAVE_SYNC_FETCH_AND_ADD)
