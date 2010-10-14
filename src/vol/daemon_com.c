@@ -36,7 +36,7 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
-#include <assert.h>
+#include <afs/afs_assert.h>
 #include <signal.h>
 #include <string.h>
 
@@ -131,7 +131,7 @@ osi_socket
 SYNC_getSock(SYNC_endpoint_t * endpoint)
 {
     osi_socket sd;
-    assert((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
+    osi_Assert((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
     return sd;
 }
 

@@ -19,6 +19,8 @@
 	des_pcbc_encrypt;
 	ktohl;
 	life_to_time;
+	osi_AssertFailU;
+	osi_Panic;
 	rx_DestroyConnection;
 	rx_EndCall;
 	rx_Finalize;
@@ -27,6 +29,7 @@
 	rx_GetIFInfo;
 	rx_GetSpecific;
 	rx_Init;
+	rx_InitHost;
 	rx_KeyCreate;
 	rx_NewCall;
 	rx_NewConnection;

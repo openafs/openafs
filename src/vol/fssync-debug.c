@@ -311,7 +311,7 @@ common_volop_prolog(struct cmd_syndesc * as, struct state * state)
     struct cmd_item *ti;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
-    assert(state->vop != NULL);
+    osi_Assert(state->vop != NULL);
 
     if ((ti = as->parms[COMMON_VOLOP_PARMS_OFFSET].items)) {	/* -volumeid */
 	state->vop->volume = atoi(ti->data);
@@ -903,7 +903,7 @@ vn_prolog(struct cmd_syndesc * as, struct state * state)
     struct cmd_item *ti;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
-    assert(state->vop != NULL);
+    osi_Assert(state->vop != NULL);
 
     if ((ti = as->parms[CUSTOM_PARMS_OFFSET].items)) {	/* -volumeid */
 	state->vop->volume = atoi(ti->data);

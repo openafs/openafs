@@ -10,7 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <assert.h>
 #include <sys/types.h>
 #include <lock.h>
 #include <ubik.h>
@@ -292,7 +291,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
 	return 0;
     if (aid == tentry.id)
 	return entry;
-    assert(entry != tentry.nextID);
+    osi_Assert(entry != tentry.nextID);
     entry = tentry.nextID;
     while (entry != 0) {
 	memset(&tentry, 0, sizeof(tentry));
@@ -301,7 +300,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
 	    return 0;
 	if (aid == tentry.id)
 	    return entry;
-	assert(entry != tentry.nextID);
+	osi_Assert(entry != tentry.nextID);
 	entry = tentry.nextID;
     }
     return 0;
@@ -325,7 +324,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
 	return 0;
     if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
 	return entry;
-    assert(entry != tentryp->nextName);
+    osi_Assert(entry != tentryp->nextName);
     entry = tentryp->nextName;
     while (entry != 0) {
 	memset(tentryp, 0, sizeof(struct prentry));
@@ -334,7 +333,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
 	    return 0;
 	if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
 	    return entry;
-	assert(entry != tentryp->nextName);
+	osi_Assert(entry != tentryp->nextName);
 	entry = tentryp->nextName;
     }
     return 0;
@@ -464,7 +463,7 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
     if (code)
 	return PRDBFAIL;
     while (aid != tentry.id) {
-	assert(trail != current);
+	osi_Assert(trail != current);
 	trail = current;
 	current = tentry.nextID;
 	if (current == 0)
@@ -542,7 +541,7 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
     if (code)
 	return PRDBFAIL;
     while (strcmp(aname, tentry.name)) {
-	assert(trail != current);
+	osi_Assert(trail != current);
 	trail = current;
 	current = tentry.nextName;
 	if (current == 0)

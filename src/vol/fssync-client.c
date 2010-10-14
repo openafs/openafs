@@ -49,11 +49,7 @@
 #include <sys/time.h>
 #endif
 #include <errno.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #include <signal.h>
 #include <string.h>
 
@@ -88,10 +84,8 @@ static SYNC_client_state fssync_state =
 #ifdef AFS_PTHREAD_ENV
 static pthread_mutex_t vol_fsync_mutex;
 static volatile int vol_fsync_mutex_init = 0;
-#define VFSYNC_LOCK \
-    assert(pthread_mutex_lock(&vol_fsync_mutex) == 0)
-#define VFSYNC_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_fsync_mutex) == 0)
+#define VFSYNC_LOCK MUTEX_ENTER(&vol_fsync_mutex)
+#define VFSYNC_UNLOCK MUTEX_EXIT(&vol_fsync_mutex)
 #else
 #define VFSYNC_LOCK
 #define VFSYNC_UNLOCK
@@ -103,7 +97,7 @@ FSYNC_clientInit(void)
 #ifdef AFS_PTHREAD_ENV
     /* this is safe since it gets called with VOL_LOCK held, or before we go multithreaded */
     if (!vol_fsync_mutex_init) {
-	assert(pthread_mutex_init(&vol_fsync_mutex, NULL) == 0);
+	MUTEX_INIT(&vol_fsync_mutex, "vol fsync", MUTEX_DEFAULT, 0);
 	vol_fsync_mutex_init = 1;
     }
 #endif

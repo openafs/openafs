@@ -24,11 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 
 #include <rx/xdr.h>
 #include "rx/rx_queue.h"
@@ -381,7 +377,7 @@ VInitVnodes(VnodeClass class, int nVnodes)
     vcp->cacheSize = nVnodes;
     switch (class) {
     case vSmall:
-	assert(CHECKSIZE_SMALLVNODE);
+	osi_Assert(CHECKSIZE_SMALLVNODE);
 	vcp->lruHead = NULL;
 	vcp->residentSize = SIZEOF_SMALLVNODE;
 	vcp->diskSize = SIZEOF_SMALLDISKVNODE;
@@ -406,13 +402,13 @@ VInitVnodes(VnodeClass class, int nVnodes)
 	return 0;
 
     va = (byte *) calloc(nVnodes, vcp->residentSize);
-    assert(va != NULL);
+    osi_Assert(va != NULL);
     while (nVnodes--) {
 	Vnode *vnp = (Vnode *) va;
 	Vn_refcount(vnp) = 0;	/* no context switches */
 	Vn_stateFlags(vnp) |= VN_ON_LRU;
 #ifdef AFS_DEMAND_ATTACH_FS
-	assert(pthread_cond_init(&Vn_stateCV(vnp), NULL) == 0);
+	CV_INIT(&Vn_stateCV(vnp), "vnode state", CV_DEFAULT, 0);
 	Vn_state(vnp) = VN_STATE_INVALID;
 	Vn_readers(vnp) = 0;
 #else /* !AFS_DEMAND_ATTACH_FS */
@@ -1080,7 +1076,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
     VnChangeState_r(vnp, VN_STATE_ERROR);
     VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 #else
-    assert(1 == 2);
+    osi_Assert(1 == 2);
 #endif
 }
 
@@ -1328,10 +1324,10 @@ VPutVnode_r(Error * ec, Vnode * vnp)
     struct VnodeClassInfo *vcp;
 
     *ec = 0;
-    assert(Vn_refcount(vnp) != 0);
+    osi_Assert(Vn_refcount(vnp) != 0);
     class = vnodeIdToClass(Vn_id(vnp));
     vcp = &VnodeClassInfo[class];
-    assert(vnp->disk.vnodeMagic == vcp->magic);
+    osi_Assert(vnp->disk.vnodeMagic == vcp->magic);
     VNLog(200, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1360,7 +1356,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 	if (vnp->changed_oldTime || vnp->changed_newTime || vnp->delete) {
 	    Volume *vp = Vn_volume(vnp);
 	    afs_uint32 now = FT_ApproxTime();
-	    assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
+	    osi_Assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
 
 	    if (vnp->delete) {
 		/* No longer any directory entries for this vnode. Free the Vnode */
@@ -1382,7 +1378,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 #ifdef AFS_DEMAND_ATTACH_FS
 		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 #else
-		assert(V_needsSalvaged(vp));
+		osi_Assert(V_needsSalvaged(vp));
 		*ec = VSALVAGE;
 #endif
 	    } else {
@@ -1469,10 +1465,10 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
 #endif /* AFS_PTHREAD_ENV */
 
     *ec = 0;
-    assert(Vn_refcount(vnp) != 0);
+    osi_Assert(Vn_refcount(vnp) != 0);
     class = vnodeIdToClass(Vn_id(vnp));
     vcp = &VnodeClassInfo[class];
-    assert(vnp->disk.vnodeMagic == vcp->magic);
+    osi_Assert(vnp->disk.vnodeMagic == vcp->magic);
     VNLog(300, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1506,7 +1502,7 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
     if (vnp->changed_oldTime || vnp->changed_newTime) {
 	Volume *vp = Vn_volume(vnp);
 	afs_uint32 now = FT_ApproxTime();
-	assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
+	osi_Assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
 	if (vnp->changed_newTime)
 	    vnp->disk.serverModifyTime = now;
 	if (vnp->changed_newTime)
@@ -1517,7 +1513,7 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
 #ifdef AFS_DEMAND_ATTACH_FS
 	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 #else
-	    assert(V_needsSalvaged(vp));
+	    osi_Assert(V_needsSalvaged(vp));
 	    *ec = VSALVAGE;
 #endif
 	} else {
@@ -1661,7 +1657,7 @@ VCloseVnodeFiles_r(Volume * vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /* XXX need better error handling here */
-    assert(VInvalidateVnodesByVolume_r(vp,
+    osi_Assert(VInvalidateVnodesByVolume_r(vp,
 				       &ih_vec,
 				       &vec_len) == 0);
 
@@ -1725,7 +1721,7 @@ VReleaseVnodeFiles_r(Volume * vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /* XXX need better error handling here */
-    assert(VInvalidateVnodesByVolume_r(vp,
+    osi_Assert(VInvalidateVnodesByVolume_r(vp,
 				       &ih_vec,
 				       &vec_len) == 0);
 

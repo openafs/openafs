@@ -162,16 +162,16 @@ DumpDB(struct rx_call *call,
 	/* Initialize the condition variables and the mutexes we use
 	 * to signal and synchronize the reader and writer threads.
 	 */
-	assert(pthread_cond_init(&dumpSyncPtr->ds_readerStatus_cond, (const pthread_condattr_t *)0) == 0);
-	assert(pthread_cond_init(&dumpSyncPtr->ds_writerStatus_cond, (const pthread_condattr_t *)0) == 0);
-	assert(pthread_mutex_init(&dumpSyncPtr->ds_readerStatus_mutex, (const pthread_mutexattr_t *)0) == 0);
-	assert(pthread_mutex_init(&dumpSyncPtr->ds_writerStatus_mutex, (const pthread_mutexattr_t *)0) == 0);
+	CV_INIT(&dumpSyncPtr->ds_readerStatus_cond, "reader cond", CV_DEFAULT, 0);
+	CV_INIT(&dumpSyncPtr->ds_writerStatus_cond, "writer cond", CV_DEFAULT, 0);
+	MUTEX_INIT(&dumpSyncPtr->ds_readerStatus_mutex, "reader", MUTEX_DEFAULT, 0);
+	MUTEX_INIT(&dumpSyncPtr->ds_writerStatus_mutex, "writer", MUTEX_DEFAULT, 0);
 
 	/* Initialize the thread attributes and launch the thread */
 
-	assert(pthread_attr_init(&dumperPid_tattr) == 0);
-	assert(pthread_attr_setdetachstate(&dumperPid_tattr, PTHREAD_CREATE_DETACHED) == 0);
-	assert(pthread_create(&dumperPid, &dumperPid_tattr, (void *)setupDbDump, NULL) == 0);
+	osi_Assert(pthread_attr_init(&dumperPid_tattr) == 0);
+	osi_Assert(pthread_attr_setdetachstate(&dumperPid_tattr, PTHREAD_CREATE_DETACHED) == 0);
+	osi_Assert(pthread_create(&dumperPid, &dumperPid_tattr, (void *)setupDbDump, NULL) == 0);
 
 #else
 	code =
@@ -188,9 +188,9 @@ DumpDB(struct rx_call *call,
 #ifdef AFS_PTHREAD_ENV
 	/* Initialize the thread attributes and launch the thread */
 
-	assert(pthread_attr_init(&watcherPid_tattr) == 0);
-	assert(pthread_attr_setdetachstate(&watcherPid_tattr, PTHREAD_CREATE_DETACHED) == 0);
-	assert(pthread_create(&watcherPid, &watcherPid_tattr, (void *)dumpWatcher, NULL) == 0);
+	osi_Assert(pthread_attr_init(&watcherPid_tattr) == 0);
+	osi_Assert(pthread_attr_setdetachstate(&watcherPid_tattr, PTHREAD_CREATE_DETACHED) == 0);
+	osi_Assert(pthread_create(&watcherPid, &watcherPid_tattr, (void *)dumpWatcher, NULL) == 0);
 #else
 	/* now create the watcher thread */
 	code =
@@ -214,7 +214,7 @@ DumpDB(struct rx_call *call,
 	    LogDebug(6, "wakup writer\n");
 	    dumpSyncPtr->ds_writerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_writerStatus_cond) == 0);
+	    CV_BROADCAST(&dumpSyncPtr->ds_writerStatus_cond);
 #else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_writerStatus);
 	    if (code)
@@ -225,9 +225,9 @@ DumpDB(struct rx_call *call,
 	dumpSyncPtr->ds_readerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
-        assert(pthread_mutex_lock(&dumpSyncPtr->ds_readerStatus_mutex) == 0);
-        assert(pthread_cond_wait(&dumpSyncPtr->ds_readerStatus_cond, &dumpSyncPtr->ds_readerStatus_mutex) == 0);
-        assert(pthread_mutex_unlock(&dumpSyncPtr->ds_readerStatus_mutex) == 0);
+        MUTEX_ENTER(&dumpSyncPtr->ds_readerStatus_mutex);
+        CV_WAIT(&dumpSyncPtr->ds_readerStatus_cond, &dumpSyncPtr->ds_readerStatus_mutex);
+        MUTEX_EXIT(&dumpSyncPtr->ds_readerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_readerStatus);
 #endif
@@ -256,7 +256,7 @@ DumpDB(struct rx_call *call,
     if (dumpSyncPtr->ds_writerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_writerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&dumpSyncPtr->ds_writerStatus_cond) == 0);
+	CV_BROADCAST(&dumpSyncPtr->ds_writerStatus_cond);
 #else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_writerStatus);
 	if (code)
@@ -352,7 +352,7 @@ dumpWatcher(void *unused)
 	    close(dumpSyncPtr->pipeFid[0]);
 	    close(dumpSyncPtr->pipeFid[1]);
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cancel(dumpSyncPtr->dumperPid) == 0);
+	    osi_Assert(pthread_cancel(dumpSyncPtr->dumperPid) == 0);
 #else
 	    code = LWP_DestroyProcess(dumpSyncPtr->dumperPid);
 	    if (code)

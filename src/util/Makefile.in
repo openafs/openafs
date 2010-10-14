@@ -37,8 +37,7 @@ includes = \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
-	${TOP_INCDIR}/afs/softsig.h \
-	${TOP_INCDIR}/potpourri.h 
+	${TOP_INCDIR}/afs/softsig.h
 
 all: ${includes} \
 	${TOP_LIBDIR}/util.a \
@@ -96,9 +95,6 @@ ${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/util.a: util.a
@@ -248,7 +244,6 @@ install: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DESTDIR}${includedir}/afs/afs_atomlist.h
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DESTDIR}${includedir}/afs/afs_lhash.h
 	${INSTALL_DATA} ${srcdir}/softsig.h ${DESTDIR}${includedir}/afs/softsig.h
-	${INSTALL_DATA} ${srcdir}/potpourri.h ${DESTDIR}${includedir}/potpourri.h
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
 	${INSTALL_PROGRAM} sys ${DESTDIR}${bindir}/sys
@@ -273,7 +268,6 @@ dest: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DEST}/include/afs/afs_atomlist.h
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DEST}/include/afs/afs_lhash.h
 	${INSTALL_DATA} ${srcdir}/softsig.h ${DEST}/include/afs/softsig.h
-	${INSTALL_DATA} ${srcdir}/potpourri.h ${DEST}/include/potpourri.h
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a
 	${INSTALL_PROGRAM} sys ${DEST}/bin/sys

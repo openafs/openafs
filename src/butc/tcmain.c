@@ -27,11 +27,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <stdio.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else
 #include <afs/afs_assert.h>
-#endif
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <string.h>

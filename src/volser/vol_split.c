@@ -11,11 +11,7 @@
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
 #include <sys/types.h>
 #include <stdio.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <windows.h>

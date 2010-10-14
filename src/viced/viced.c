@@ -52,11 +52,7 @@
 #undef SHARED
 #include <rx/xdr.h>
 #include <afs/nfs.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #include <lwp.h>
 #include <lock.h>
 #include <afs/ptclient.h>
@@ -269,8 +265,8 @@ static int fs_stateInit(void)
     fs_state.options.fs_state_verify_before_save = 1;
     fs_state.options.fs_state_verify_after_restore = 1;
 
-    assert(pthread_cond_init(&fs_state.worker_done_cv, NULL) == 0);
-    assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
+    CV_INIT(&fs_state.worker_done_cv, "worker done", CV_DEFAULT, 0);
+    osi_Assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
 }
 #endif /* AFS_NT40_ENV */
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -511,7 +507,7 @@ FiveMinuteCheckLWP(void *unused)
 #ifdef AFS_DEMAND_ATTACH_FS
     fs_state.FiveMinuteLWP_tranquil = 1;
     FS_LOCK;
-    assert(pthread_cond_broadcast(&fs_state.worker_done_cv)==0);
+    CV_BROADCAST(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
 #endif
@@ -563,7 +559,7 @@ HostCheckLWP(void *unused)
 #ifdef AFS_DEMAND_ATTACH_FS
     fs_state.HostCheckLWP_tranquil = 1;
     FS_LOCK;
-    assert(pthread_cond_broadcast(&fs_state.worker_done_cv)==0);
+    CV_BROADCAST(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
 #endif
@@ -599,9 +595,8 @@ FsyncCheckLWP(void *unused)
 	fsync_next.tv_nsec = 0;
 	fsync_next.tv_sec = time(0) + fiveminutes;
 
-	code =
-	    pthread_cond_timedwait(&fsync_cond, &fsync_glock_mutex,
-				   &fsync_next);
+	code = CV_TIMEDWAIT(&fsync_cond, &fsync_glock_mutex,
+			    &fsync_next);
 	if (code != 0 && code != ETIMEDOUT)
 	    ViceLog(0, ("pthread_cond_timedwait returned %d\n", code));
 #else /* AFS_PTHREAD_ENV */
@@ -630,7 +625,7 @@ FsyncCheckLWP(void *unused)
 #ifdef AFS_DEMAND_ATTACH_FS
     fs_state.FsyncCheckLWP_tranquil = 1;
     FS_LOCK;
-    assert(pthread_cond_broadcast(&fs_state.worker_done_cv)==0);
+    CV_BROADCAST(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -790,7 +785,8 @@ ShutdownWatchdogLWP(void *unused)
     sleep(panic_timeout);
     ViceLog(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
                 "within %d seconds; forcing panic\n", panic_timeout));
-    assert(0);
+    osi_Panic("ShutdownWatchdogLWP: Failed to shutdown and panic "
+	      "within %d seconds; forcing panic\n", panic_timeout);
     return NULL;
 }
 
@@ -804,11 +800,11 @@ ShutDownAndCore(int dopanic)
 #ifdef AFS_PTHREAD_ENV
 	pthread_t watchdogPid;
 	pthread_attr_t tattr;
-	assert(pthread_attr_init(&tattr) == 0);
-	assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
+	osi_Assert(pthread_attr_init(&tattr) == 0);
+	osi_Assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
 #else
 	PROCESS watchdogPid;
-	assert(LWP_CreateProcess
+	osi_Assert(LWP_CreateProcess
 	       (ShutdownWatchdogLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
 	        NULL, "ShutdownWatchdog", &watchdogPid) == LWP_SUCCESS);
 #endif
@@ -866,7 +862,7 @@ ShutDownAndCore(int dopanic)
 		FS_LOCK;
 		FS_STATE_UNLOCK;
 		ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
-		assert(pthread_cond_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex) == 0);
+		CV_WAIT(&fs_state.worker_done_cv, &fileproc_glock_mutex);
 		FS_UNLOCK;
 		FS_STATE_RDLOCK;
 	    }
@@ -895,8 +891,8 @@ ShutDownAndCore(int dopanic)
 	       afs_ctime(&now, tbuffer, sizeof(tbuffer))));
     }
 
-    if (dopanic)
-	assert(0);
+    if (dopanic) /* XXX pass in file and line? */
+	osi_Panic("Panic requested\n");
 
     exit(0);
 }
@@ -1567,7 +1563,7 @@ void
 Die(char *msg)
 {
     ViceLog(0, ("%s\n", msg));
-    assert(0);
+    osi_Panic("%s\n", msg);
 
 }				/*Die */
 
@@ -1589,7 +1585,7 @@ InitPR(void)
     }
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_key_create(&viced_uclient_key, NULL) == 0);
+    osi_Assert(pthread_key_create(&viced_uclient_key, NULL) == 0);
 #endif
 
     SystemId = SYSADMINID;
@@ -1981,7 +1977,7 @@ main(int argc, char *argv[])
 	exit(-1);
     }
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&fileproc_glock_mutex, NULL) == 0);
+    MUTEX_INIT(&fileproc_glock_mutex, "fileproc", MUTEX_DEFAULT, 0);
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -2032,7 +2028,7 @@ main(int argc, char *argv[])
     nice(-5);			/* TODO: */
 #endif
 #endif
-    assert(DInit(buffs) == 0);
+    osi_Assert(DInit(buffs) == 0);
 #ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_INIT;
 #endif
@@ -2085,7 +2081,7 @@ main(int argc, char *argv[])
 		 curLimit, lwps, vol_io_params.fd_max_cachesize));
     }
 #ifndef AFS_PTHREAD_ENV
-    assert(LWP_InitializeProcessSupport(LWP_MAX_PRIORITY - 2, &parentPid) ==
+    osi_Assert(LWP_InitializeProcessSupport(LWP_MAX_PRIORITY - 2, &parentPid) ==
 	   LWP_SUCCESS);
 #endif /* !AFS_PTHREAD_ENV */
 
@@ -2207,10 +2203,8 @@ main(int argc, char *argv[])
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(fs_rxstat_userok);
 
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
-    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
-#endif
+    CV_INIT(&fsync_cond, "fsync", CV_DEFAULT, 0);
+    MUTEX_INIT(&fsync_glock_mutex, "fsync", MUTEX_DEFAULT, 0);
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
     /*
@@ -2296,27 +2290,27 @@ main(int argc, char *argv[])
 
 #ifdef AFS_PTHREAD_ENV
     ViceLog(5, ("Starting pthreads\n"));
-    assert(pthread_attr_init(&tattr) == 0);
-    assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+    osi_Assert(pthread_attr_init(&tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-    assert(pthread_create
+    osi_Assert(pthread_create
 	   (&serverPid, &tattr, FiveMinuteCheckLWP,
 	    &fiveminutes) == 0);
-    assert(pthread_create
+    osi_Assert(pthread_create
 	   (&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
-    assert(pthread_create
+    osi_Assert(pthread_create
 	   (&serverPid, &tattr, FsyncCheckLWP, &fiveminutes) == 0);
 #else /* AFS_PTHREAD_ENV */
     ViceLog(5, ("Starting LWP\n"));
-    assert(LWP_CreateProcess
+    osi_Assert(LWP_CreateProcess
 	   (FiveMinuteCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
 	    (void *)&fiveminutes, "FiveMinuteChecks",
 	    &serverPid) == LWP_SUCCESS);
 
-    assert(LWP_CreateProcess
+    osi_Assert(LWP_CreateProcess
 	   (HostCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
 	    (void *)&fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
-    assert(LWP_CreateProcess
+    osi_Assert(LWP_CreateProcess
 	   (FsyncCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
 	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
@@ -2362,7 +2356,7 @@ main(int argc, char *argv[])
 	sleep(1000);		/* long time */
     }
 #else /* AFS_PTHREAD_ENV */
-    assert(LWP_WaitProcess(&parentPid) == LWP_SUCCESS);
+    osi_Assert(LWP_WaitProcess(&parentPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
     return 0;
 }

@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <time.h>
 #include <signal.h>
-#include <assert.h>
 #include <afs/afsutil.h>
 #include "kauth.h"
 #include "kalog.h"

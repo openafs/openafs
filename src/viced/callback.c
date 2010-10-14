@@ -354,7 +354,8 @@ CDel(struct CallBack *cb, int deletefe)
     for (safety = 0, cbp = &fe->firstcb; *cbp && *cbp != cbi;
 	 cbp = &itocb(*cbp)->cnext, safety++) {
 	if (safety > cbstuff.nblks + 10) {
-	    assert(0);
+	    osi_Panic("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",
+		      cbi, fe->firstcb, *cbp);
 	    ViceLog(0,
 		    ("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",
 		     cbi, fe->firstcb, *cbp));
@@ -422,7 +423,7 @@ FDel(struct FileEntry *fe)
 
     while (*p && *p != fei)
 	p = &itofe(*p)->fnext;
-    assert(*p);
+    osi_Assert(*p);
     *p = fe->fnext;
     FreeFE(fe);
     return 0;
@@ -439,7 +440,7 @@ InitCallBack(int nblks)
     FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
     if (!FE) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
-	assert(0);
+	osi_Panic("Failed malloc in InitCallBack\n");
     }
     FE--;  /* FE[0] is supposed to point to junk */
     cbstuff.nFEs = nblks;
@@ -448,7 +449,7 @@ InitCallBack(int nblks)
     CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack))));
     if (!CB) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
-	assert(0);
+	osi_Panic("Failed malloc in InitCallBack\n");
     }
     CB--;  /* CB[0] is supposed to point to junk */
     cbstuff.nCBs = nblks;
@@ -693,7 +694,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     static struct AFSCBs tc = { 0, 0 };
     int multi_to_cba_map[MAX_CB_HOSTS];
 
-    assert(ncbas <= MAX_CB_HOSTS);
+    osi_Assert(ncbas <= MAX_CB_HOSTS);
 
     /* sort cba list to avoid makecall issues */
     qsort(cba, ncbas, sizeof(struct cbstruct), CompareCBA);
@@ -1146,7 +1147,7 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 	h_Unlock_r(host);
 	return 0;		/* parent will release hold */
     }
-    assert(parms->ncbas <= MAX_CB_HOSTS);
+    osi_Assert(parms->ncbas <= MAX_CB_HOSTS);
 
     /* Do not call MultiBreakCallBack on the current host structure
      ** because it would prematurely release the hold on the host
@@ -1239,7 +1240,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     ViceLog(25, ("Fsync thread wakeup\n"));
 #ifdef AFS_PTHREAD_ENV
     FSYNC_LOCK;
-    assert(pthread_cond_broadcast(&fsync_cond) == 0);
+    CV_BROADCAST(&fsync_cond);
     FSYNC_UNLOCK;
 #else
     LWP_NoYieldSignal(fsync_wait);
@@ -2967,7 +2968,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     if (!interfaces || !conns) {
 	ViceLog(0,
 		("Failed malloc in MultiBreakCallBackAlternateAddress_r\n"));
-	assert(0);
+	osi_Panic("Failed malloc in MultiBreakCallBackAlternateAddress_r\n");
     }
 
     /* initialize alternate rx connections */
@@ -2986,7 +2987,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	j++;
     }
 
-    assert(j);			/* at least one alternate address */
+    osi_Assert(j);			/* at least one alternate address */
     ViceLog(125,
 	    ("Starting multibreakcall back on all addr for host %p (%s:%d)\n",
              host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
@@ -3062,7 +3063,7 @@ MultiProbeAlternateAddress_r(struct host *host)
     conns = calloc(i, sizeof(struct rx_connection *));
     if (!interfaces || !conns) {
 	ViceLog(0, ("Failed malloc in MultiProbeAlternateAddress_r\n"));
-	assert(0);
+	osi_Panic("Failed malloc in MultiProbeAlternateAddress_r\n");
     }
 
     /* initialize alternate rx connections */
@@ -3081,7 +3082,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 	j++;
     }
 
-    assert(j);			/* at least one alternate address */
+    osi_Assert(j);			/* at least one alternate address */
     ViceLog(125,
 	    ("Starting multiprobe on all addr for host %p (%s:%d)\n",
              host, afs_inet_ntoa_r(host->host, hoststr),

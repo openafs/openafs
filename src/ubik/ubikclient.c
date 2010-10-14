@@ -94,9 +94,9 @@ ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers)
     return 0;
 }
 
+#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-#include <assert.h>
 
 static pthread_once_t random_once = PTHREAD_ONCE_INIT;
 static int called_afs_random_once;
@@ -105,7 +105,7 @@ static pthread_key_t random_number_key;
 static void
 afs_random_once(void)
 {
-    assert(pthread_key_create(&random_number_key, NULL) == 0);
+    osi_Assert(pthread_key_create(&random_number_key, NULL) == 0);
     called_afs_random_once = 1;
 }
 
@@ -333,15 +333,16 @@ ubik_RefreshConn(struct rx_connection *tc)
 
 pthread_once_t ubik_client_once = PTHREAD_ONCE_INIT;
 pthread_mutex_t ubik_client_mutex;
-#define LOCK_UCLNT_CACHE \
-    assert(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0 && \
-	   pthread_mutex_lock(&ubik_client_mutex)==0)
-#define UNLOCK_UCLNT_CACHE assert(pthread_mutex_unlock(&ubik_client_mutex)==0)
+#define LOCK_UCLNT_CACHE do { \
+    osi_Assert(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0); \
+    MUTEX_ENTER(&ubik_client_mutex); \
+  } while (0)
+#define UNLOCK_UCLNT_CACHE MUTEX_EXIT(&ubik_client_mutex)
 
 void
 ubik_client_init_mutex(void)
 {
-    assert(pthread_mutex_init(&ubik_client_mutex, NULL) == 0);
+    MUTEX_INIT(&ubik_client_mutex, "client init", MUTEX_DEFAULT, 0);
 }
 
 #else
