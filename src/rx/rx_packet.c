@@ -1485,7 +1485,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
                 rx_atomic_inc(&rx_stats.bogusPacketOnRead);
                 rx_stats.bogusHost = from.sin_addr.s_addr;
             }
-	    dpf(("B: bogus packet from [%x,%d] nb=%d", ntohl(from.sin_addr.s_addr),
+	    dpf(("B: bogus packet from [%x,%d] nb=%d\n", ntohl(from.sin_addr.s_addr),
 		 ntohs(from.sin_port), nbytes));
 	}
 	return 0;
@@ -1498,7 +1498,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
 
-	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d",
+	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d\n",
 	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial,
 	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags,
 	      p->length));
@@ -2342,7 +2342,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
@@ -2547,7 +2547,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));

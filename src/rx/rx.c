@@ -2808,7 +2808,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
  * this is the first time the packet has been seen */
     packetType = (np->header.type > 0 && np->header.type < RX_N_PACKET_TYPES)
 	? rx_packetTypes[np->header.type - 1] : "*UNKNOWN*";
-    dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %"AFS_PTR_FMT,
+    dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %"AFS_PTR_FMT"\n",
 	 np->header.serial, packetType, ntohl(host), ntohs(port), np->header.serviceId,
 	 np->header.epoch, np->header.cid, np->header.callNumber,
 	 np->header.seq, np->header.flags, np));
@@ -2885,7 +2885,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	case RX_PACKET_TYPE_ABORT: {
 	    /* What if the supplied error is zero? */
 	    afs_int32 errcode = ntohl(rx_GetInt32(np, 0));
-	    dpf(("rxi_ReceivePacket ABORT rx_GetInt32 = %d", errcode));
+	    dpf(("rxi_ReceivePacket ABORT rx_GetInt32 = %d\n", errcode));
 	    rxi_ConnectionError(conn, errcode);
             MUTEX_ENTER(&rx_refcnt_mutex);
 	    conn->refCount--;
@@ -2989,7 +2989,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0)
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.06d len %d",
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.06d len %d\n",
                       np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
                       np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
                       np->header.flags, np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
@@ -3060,7 +3060,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0)
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%06d len %d",
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%06d len %d\n",
                       np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
                       np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
                       np->header.flags, np, np->retryTime.sec, np->retryTime.usec, np->length));
@@ -3243,7 +3243,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	/* What if error is zero? */
 	/* What if the error is -1? the application will treat it as a timeout. */
 	afs_int32 errdata = ntohl(*(afs_int32 *) rx_DataOf(np));
-	dpf(("rxi_ReceivePacket ABORT rx_DataOf = %d", errdata));
+	dpf(("rxi_ReceivePacket ABORT rx_DataOf = %d\n", errdata));
 	rxi_CallError(call, errdata);
 	MUTEX_EXIT(&call->lock);
         MUTEX_ENTER(&rx_refcnt_mutex);
@@ -3505,7 +3505,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
             rx_atomic_inc(&rx_stats.noPacketBuffersOnRead);
 	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
-	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems", np));
+	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems\n", np));
 	if (rxi_doreclaim)
 	    rxi_ClearReceiveQueue(call);
 	clock_GetTime(&now);
@@ -3572,7 +3572,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 		&& queue_First(&call->rq, rx_packet)->header.seq == seq) {
                 if (rx_stats_active)
                     rx_atomic_inc(&rx_stats.dupPacketsRead);
-		dpf(("packet %"AFS_PTR_FMT" dropped on receipt - duplicate", np));
+		dpf(("packet %"AFS_PTR_FMT" dropped on receipt - duplicate\n", np));
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
 		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
@@ -4790,7 +4790,7 @@ rxi_ClearReceiveQueue(struct rx_call *call)
 #ifdef RXDEBUG_PACKET
         call->rqc -= count;
         if ( call->rqc != 0 )
-            dpf(("rxi_ClearReceiveQueue call %"AFS_PTR_FMT" rqc %u != 0", call, call->rqc));
+            dpf(("rxi_ClearReceiveQueue call %"AFS_PTR_FMT" rqc %u != 0\n", call, call->rqc));
 #endif
 	call->flags &= ~(RX_CALL_RECEIVE_DONE | RX_CALL_HAVE_LAST);
     }
@@ -4901,7 +4901,7 @@ rxi_ConnectionError(struct rx_connection *conn,
     if (error) {
 	int i;
 
-	dpf(("rxi_ConnectionError conn %"AFS_PTR_FMT" error %d", conn, error));
+	dpf(("rxi_ConnectionError conn %"AFS_PTR_FMT" error %d\n", conn, error));
 
 	MUTEX_ENTER(&conn->conn_data_lock);
 	if (conn->challengeEvent)
@@ -4937,7 +4937,7 @@ rxi_CallError(struct rx_call *call, afs_int32 error)
 #ifdef DEBUG
     osirx_AssertMine(&call->lock, "rxi_CallError");
 #endif
-    dpf(("rxi_CallError call %"AFS_PTR_FMT" error %d call->error %d", call, error, call->error));
+    dpf(("rxi_CallError call %"AFS_PTR_FMT" error %d call->error %d\n", call, error, call->error));
     if (call->error)
 	error = call->error;
 
@@ -6928,7 +6928,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
 	return;
     }
 
-    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %d.%06d, rtt %u, ps %u)",
+    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %d.%06d, rtt %u, ps %u)\n",
           ntohl(peer->host), ntohs(peer->port), (ackReason == RX_ACK_REQUESTED ? "dataack" : "pingack"),
           xferSize, xferMs, peer->timeout.sec, peer->timeout.usec, peer->smRtt, peer->ifMTU));
 
@@ -6976,7 +6976,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
      * one packet exchange */
     if (clock_Gt(&newTO, &peer->timeout)) {
 
-	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u)",
+	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u)\n",
               ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec,
               newTO.sec, newTO.usec, peer->smRtt));
 
@@ -6997,7 +6997,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
     else if (minTime > rx_maxSendWindow)
 	minTime = rx_maxSendWindow;
 /*    if (minTime != peer->maxWindow) {
-      dpf(("CONG peer %lx/%u: windowsize %lu ==> %lu (to %lu.%06lu, rtt %u)",
+      dpf(("CONG peer %lx/%u: windowsize %lu ==> %lu (to %lu.%06lu, rtt %u)\n",
 	     ntohl(peer->host), ntohs(peer->port), peer->maxWindow, minTime,
 	     peer->timeout.sec, peer->timeout.usec, peer->smRtt));
       peer->maxWindow = minTime;
@@ -7012,7 +7012,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
 	/* calculate estimate for transmission interval in milliseconds */
 	minTime = rx_maxSendWindow * peer->smRtt;
 	if (minTime < 1000) {
-	    dpf(("CONG peer %lx/%u: cut TO %d.%06d by 0.5 (rtt %u)",
+	    dpf(("CONG peer %lx/%u: cut TO %d.%06d by 0.5 (rtt %u)\n",
 		 ntohl(peer->host), ntohs(peer->port), peer->timeout.sec,
 		 peer->timeout.usec, peer->smRtt));
 
@@ -7092,13 +7092,8 @@ rxi_DebugPrint(char *format, ...)
 
     if (len > 0) {
 	len = _vsnprintf(msg, sizeof(msg)-2, tformat, ap);
-	if (len > 0) {
-	    if (msg[len-1] != '\n') {
-		msg[len] = '\n';
-		msg[len+1] = '\0';
-	    }
+	if (len > 0)
 	    OutputDebugString(msg);
-	}
     }
     va_end(ap);
 #else
@@ -7110,7 +7105,6 @@ rxi_DebugPrint(char *format, ...)
     fprintf(rx_Log, " %d.%06d:", (unsigned int)now.sec,
 	    (unsigned int)now.usec);
     vfprintf(rx_Log, format, ap);
-    putc('\n', rx_Log);
     va_end(ap);
 #endif
 #endif

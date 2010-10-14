@@ -498,7 +498,7 @@ shutdown_rxkernel(void)
 	    rxk_shutdownPorts();
 	    return;
 	}
-    dpf(("shutdown_rxkernel: no udp proto"));
+    dpf(("shutdown_rxkernel: no udp proto\n"));
 }
 #endif /* !AIX && !SUN && !NCR  && !UKERNEL */
 
@@ -1162,7 +1162,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
                     rx_stats.bogusHost = from.sin_addr.s_addr;
                     MUTEX_EXIT(&rx_stats_mutex);
                 }
-		dpf(("B: bogus packet from [%x,%d] nb=%d",
+		dpf(("B: bogus packet from [%x,%d] nb=%d\n",
 		     from.sin_addr.s_addr, from.sin_port, nbytes));
 	    }
 	    return -1;
