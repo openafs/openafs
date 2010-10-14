@@ -99,12 +99,12 @@ struct rxkad_stats rxkad_stats = { { 0 } };
 	    (ptr)->prev->next = (ptr);		 \
 	else					 \
 	    (head) = (ptr);			 \
-	assert((head) && ((head)->prev == NULL)); \
+	osi_Assert((head) && ((head)->prev == NULL)); \
     } while(0)
 
 void rxkad_global_stats_init(void) {
-    assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
+    osi_Assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
+    osi_Assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
     memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
 }
 
@@ -112,7 +112,7 @@ rxkad_stats_t *
 rxkad_thr_stats_init(void) {
     rxkad_stats_t * rxkad_stats;
     rxkad_stats = (rxkad_stats_t *)malloc(sizeof(rxkad_stats_t));
-    assert(rxkad_stats != NULL && pthread_setspecific(rxkad_stats_key,rxkad_stats) == 0);
+    osi_Assert(rxkad_stats != NULL && pthread_setspecific(rxkad_stats_key,rxkad_stats) == 0);
     memset(rxkad_stats,0,sizeof(rxkad_stats_t));
     RXKAD_GLOBAL_STATS_LOCK;
     DLL_INSERT_TAIL(rxkad_stats, rxkad_global_stats.first, rxkad_global_stats.last, next, prev);
@@ -122,7 +122,7 @@ rxkad_thr_stats_init(void) {
 
 int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
     rxkad_stats_t * thr_stats;
-    assert(rxkad_stats != NULL);
+    osi_Assert(rxkad_stats != NULL);
     memset(rxkad_stats, 0, sizeof(rxkad_stats_t));
     RXKAD_GLOBAL_STATS_LOCK;
     for (thr_stats = rxkad_global_stats.first; thr_stats != NULL; thr_stats = thr_stats->next) {

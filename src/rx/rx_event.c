@@ -106,7 +106,6 @@ afs_kmutex_t rxevent_lock;
  * rxevent_initialized
  */
 
-#include <assert.h>
 afs_kmutex_t rx_event_mutex;
 #define LOCK_EV_INIT MUTEX_ENTER(&rx_event_mutex)
 #define UNLOCK_EV_INIT MUTEX_EXIT(&rx_event_mutex)

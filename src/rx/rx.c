@@ -173,7 +173,6 @@ afs_kmutex_t rx_atomic_mutex;
 #endif
 
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 
 /*
  * Use procedural initialization of mutexes/condition variables
@@ -230,12 +229,12 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
-    assert(pthread_cond_init
+    osi_Assert(pthread_cond_init
 	   (&rx_event_handler_cond, (const pthread_condattr_t *)0) == 0);
-    assert(pthread_cond_init(&rx_listener_cond, (const pthread_condattr_t *)0)
+    osi_Assert(pthread_cond_init(&rx_listener_cond, (const pthread_condattr_t *)0)
 	   == 0);
-    assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
-    assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
+    osi_Assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
+    osi_Assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
 
     rxkad_global_stats_init();
 
@@ -260,8 +259,7 @@ rxi_InitPthread(void)
 }
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
-#define INIT_PTHREAD_LOCKS \
-assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
+#define INIT_PTHREAD_LOCKS osi_Assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
 /*
  * The rx_stats_mutex mutex protects the following global variables:
  * rxi_lowConnRefCount

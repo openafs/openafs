@@ -62,7 +62,6 @@
 #include "rx_globals.h"
 #include "rx_stats.h"
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 
 /*
  * The rx_if_init_mutex mutex protects the following global variables:

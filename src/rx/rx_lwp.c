@@ -42,7 +42,6 @@
 # include <sys/ioctl.h>
 # include <sys/time.h>
 #endif
-# include <assert.h>
 # include "rx.h"
 # include "rx_atomic.h"
 # include "rx_globals.h"
@@ -181,8 +180,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
     nextPollTime = 0;
     code = LWP_CurrentProcess(&pid);
     if (code) {
-	fprintf(stderr, "rxi_Listener: Can't get my pid.\n");
-	assert(0);
+	osi_Panic("rxi_Listener: Can't get my pid.\n");
     }
     rx_listenerPid = pid;
     if (swapNameProgram)
@@ -338,11 +336,11 @@ rx_ListenerProc(void *dummy)
 	newcall = NULL;
 	threadID = -1;
 	rxi_ListenerProc(rfds, &threadID, &newcall);
-	/* assert(threadID != -1); */
-	/* assert(newcall != NULL); */
+	/* osi_Assert(threadID != -1); */
+	/* osi_Assert(newcall != NULL); */
 	sock = OSI_NULLSOCKET;
 	rxi_ServerProc(threadID, newcall, &sock);
-	/* assert(sock != OSI_NULLSOCKET); */
+	/* osi_Assert(sock != OSI_NULLSOCKET); */
     }
     /* not reached */
     return NULL;
@@ -372,11 +370,11 @@ rx_ServerProc(void * unused)
     while (1) {
 	sock = OSI_NULLSOCKET;
 	rxi_ServerProc(threadID, newcall, &sock);
-	/* assert(sock != OSI_NULLSOCKET); */
+	/* osi_Assert(sock != OSI_NULLSOCKET); */
 	newcall = NULL;
 	rxi_ListenerProc(rfds, &threadID, &newcall);
-	/* assert(threadID != -1); */
-	/* assert(newcall != NULL); */
+	/* osi_Assert(threadID != -1); */
+	/* osi_Assert(newcall != NULL); */
     }
     /* not reached */
     return NULL;

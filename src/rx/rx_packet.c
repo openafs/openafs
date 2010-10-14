@@ -88,7 +88,6 @@
 #include "rx_internal.h"
 #include "rx_stats.h"
 #include <lwp.h>
-#include <assert.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -2545,7 +2544,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 #ifdef RXDEBUG
     }
 
-    assert(p != NULL);
+    osi_Assert(p != NULL);
 
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),

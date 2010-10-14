@@ -265,7 +265,7 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 	    }
 	    MUTEX_EXIT(&call->lock);
 	} else
-	    /* assert(cp); */
+	    /* osi_Assert(cp); */
 	    /* MTUXXX  this should be replaced by some error-recovery code before shipping */
 	    /* yes, the following block is allowed to be the ELSE clause (or not) */
 	    /* It's possible for call->nLeft to be smaller than any particular
