@@ -607,19 +607,20 @@ afs_linux_flush(struct file *fp)
     if (code)
 	goto out;
 #if defined(AFS_CACHE_BYPASS)
-	/* If caching is bypassed for this file, or globally, just return 0 */
-	if(cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
-		bypasscache = 1;
-	else {
-		ObtainReadLock(&vcp->lock);
-		if(vcp->cachingStates & FCSBypass)
-			bypasscache = 1;
-		ReleaseReadLock(&vcp->lock);
-	}
-	if(bypasscache) {
-            /* future proof: don't rely on 0 return from afs_InitReq */
-            code = 0; goto out;
-        }
+    /* If caching is bypassed for this file, or globally, just return 0 */
+    if (cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
+	bypasscache = 1;
+    else {
+	ObtainReadLock(&vcp->lock);
+	if (vcp->cachingStates & FCSBypass)
+	    bypasscache = 1;
+	ReleaseReadLock(&vcp->lock);
+    }
+    if (bypasscache) {
+	/* future proof: don't rely on 0 return from afs_InitReq */
+	code = 0;
+	goto out;
+    }
 #endif
 
     ObtainSharedLock(&vcp->lock, 535);
