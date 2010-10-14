@@ -1846,14 +1846,31 @@ _namei_examine_special(char * path1,
 {
     int ret = 0;
     struct ViceInodeInfo info;
+    afs_uint32 inode_vgid;
 
     if (DecodeInode(path1, dname, &info, myIH->ih_vid) < 0) {
 	ret = 0;
 	goto error;
     }
 
+#ifdef AFS_NT40_ENV
+    inode_vgid = myIH->ih_vid;
+#else
+    inode_vgid = (info.inodeNumber >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK;
+#endif
+
     if (info.u.param[2] != VI_LINKTABLE) {
 	info.linkCount = 1;
+    } else if ((info.u.param[0] != myIH->ih_vid) ||
+	       (inode_vgid != myIH->ih_vid)) {
+	/* VGID encoded in linktable filename and/or OGM data isn't
+	 * consistent with VGID encoded in namei path */
+	Log("namei_ListAFSSubDirs: warning: inconsistent linktable "
+	    "filename \"%s/%s\"; salvager will delete it "
+	    "(dir_vgid=%u, inode_vgid=%u, ogm_vgid=%u)\n",
+	    path1, dname, myIH->ih_vid,
+	    (unsigned int)inode_vgid,
+	    info.u.param[0]);
     } else {
 	char path2[512];
 	/* Open this handle */
@@ -2413,6 +2430,11 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
     error = 0;
     ninodes += code;
 #endif
+
+    if (linkHandle.fd_fd == INVALID_FD) {
+	Log("namei_ListAFSSubDirs: warning: VG %u does not have a link table; "
+	    "salvager will recreate it.\n", dirIH->ih_vid);
+    }
 
     /* Now run through all the other subdirs */
     namei_HandleToVolDir(&name, &myIH);
