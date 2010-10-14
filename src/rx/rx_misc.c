@@ -103,7 +103,6 @@ ntoh_syserr_conv(int code)
  * osi_allocsize
  */
 
-#include <assert.h>
 afs_kmutex_t osi_malloc_mutex;
 #define LOCK_MALLOC_STATS MUTEX_ENTER(&osi_malloc_mutex);
 #define UNLOCK_MALLOC_STATS MUTEX_EXIT(&osi_malloc_mutex);
