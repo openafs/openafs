@@ -1187,7 +1187,8 @@ rx_GetConnection(struct rx_connection *conn)
 #ifdef  AFS_GLOBAL_RXLOCK_KERNEL
 /* Wait for the transmit queue to no longer be busy.
  * requires the call->lock to be held */
-void rxi_WaitforTQBusy(struct rx_call *call) {
+void
+rxi_WaitforTQBusy(struct rx_call *call) {
     while (!call->error && (call->flags & RX_CALL_TQ_BUSY)) {
 	call->flags |= RX_CALL_TQ_WAIT;
 	call->tqWaiters++;
