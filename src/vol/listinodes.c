@@ -102,7 +102,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #endif /* AFS_PTHREAD_ENV */
 #if defined(AFS_HPUX101_ENV)
 #include <unistd.h>

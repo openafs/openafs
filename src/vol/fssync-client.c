@@ -52,7 +52,7 @@
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #endif /* AFS_PTHREAD_ENV */
 #include <signal.h>
 #include <string.h>

@@ -27,7 +27,7 @@
 
 #include <afs/stds.h>
 #include <rx/xdr.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afsint.h>

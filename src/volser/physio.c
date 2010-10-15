@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <afs/dir.h>
 #include <afs/ihandle.h>
 #include "vol.h"

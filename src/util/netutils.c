@@ -42,7 +42,11 @@
 
 #include <rx/rx.h>
 
-#include "assert.h"
+#ifdef AFS_PTHREAD_ENV
+#include <assert.h>
+#else
+#include "afs_assert.h"
+#endif
 #include "afsutil.h"
 #include <afs/dirpath.h>
 

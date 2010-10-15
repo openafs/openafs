@@ -31,7 +31,7 @@ extern char *calloc();
 #include "lwp.h"
 #include "lock.h"
 #include "preempt.h"
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 
 #define DEFAULT_READERS	5
 

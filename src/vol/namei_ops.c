@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <string.h>
 #include <sys/file.h>
 #include <sys/param.h>

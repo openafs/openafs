@@ -30,7 +30,7 @@
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #endif
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>

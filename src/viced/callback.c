@@ -97,7 +97,7 @@
 #include <sys/file.h>
 #include <unistd.h>
 #endif
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 
 #include <afs/stds.h>
 

@@ -26,8 +26,8 @@
 #include <afs/param.h>
 
 
-#ifdef AFS_PTHREAD_ENV
-#include <afs/assert.h>
+#ifndef AFS_PTHREAD_ENV
+#include <afs/afs_assert.h>
 #else /* AFS_PTHREAD_ENV */
 #include <assert.h>
 #endif /* AFS_PTHRED_ENV */
