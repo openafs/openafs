@@ -38,7 +38,7 @@
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 
 #include <fcntl.h>
 

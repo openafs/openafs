@@ -16,7 +16,7 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(DESTDIR)\include\dirent.h \
 	$(INCFILEDIR)\afsutil.h \
-	$(INCFILEDIR)\assert.h \
+	$(INCFILEDIR)\afs_assert.h \
 	$(INCFILEDIR)\errors.h \
 	$(INCFILEDIR)\itc.h \
 	$(INCFILEDIR)\vice.h \

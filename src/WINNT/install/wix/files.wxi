@@ -1435,7 +1435,7 @@
                             <File Id="fileubik_int_H" Name="ubik_int.h" LongName="ubik_int.h" DiskId="1" src="$(var.IncDir)ubik_int.h" /> 
                         </Component>
                         <Directory Id="dirIncludeAfs" Name="afs">
-                            <Component Id="cmp_SDK_Include_afs" Guid="6F1F245C-BDD9-479A-A6D8-00A8F1AE8F86">
+                            <Component Id="cmp_SDK_Include_afs" Guid="DDAE87DF-AFA8-4EAF-BE9C-6A32D6D4ED06">
                                 <File Id="fileacl_H" Name="acl.h" LongName="acl.h" DiskId="1" src="$(var.IncDir)afs\acl.h" /> 
                                 <File Id="fileafscbint_H" Name="afscbint.h" LongName="afscbint.h" DiskId="1" src="$(var.IncDir)afs\afscbint.h" /> 
                                 <File Id="fileafsconfig_H" Name="AFSCON~1.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afs\afsconfig.h" /> 
@@ -1468,7 +1468,7 @@
                                 <File Id="fileafs_sysnames_H" Name="AFS_SY~1.h" LongName="afs_sysnames.h" DiskId="1" src="$(var.IncDir)afs\afs_sysnames.h" /> 
                                 <File Id="fileafs_utilAdmin_H" Name="AFS_UT~1.h" LongName="afs_utilAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_utilAdmin.h" /> 
                                 <File Id="fileafs_vosAdmin_H" Name="AFS_VO~1.h" LongName="afs_vosAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_vosAdmin.h" /> 
-                                <File Id="fileassert_H" Name="assert.h" LongName="assert.h" DiskId="1" src="$(var.IncDir)afs\assert.h" /> 
+                                <File Id="fileassert_H" Name="AFS_AS~1.h" LongName="afs_assert.h" DiskId="1" src="$(var.IncDir)afs\afs_assert.h" /> 
                                 <File Id="fileaudit_H" Name="audit.h" LongName="audit.h" DiskId="1" src="$(var.IncDir)afs\audit.h" /> 
                                 <File Id="fileauth_H" Name="auth.h" LongName="auth.h" DiskId="1" src="$(var.IncDir)afs\auth.h" /> 
                                 <File Id="filebnode_H" Name="bnode.h" LongName="bnode.h" DiskId="1" src="$(var.IncDir)afs\bnode.h" /> 

@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <string.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>

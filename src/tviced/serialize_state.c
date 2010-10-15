@@ -27,7 +27,7 @@
 #include <sys/time.h>
 #include <sys/file.h>
 #endif
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <sys/stat.h>
 
 #include <afs/stds.h>

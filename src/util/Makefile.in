@@ -26,7 +26,7 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
-	${TOP_INCDIR}/afs/assert.h \
+	${TOP_INCDIR}/afs/afs_assert.h \
 	${TOP_INCDIR}/afs/errors.h \
 	${TOP_INCDIR}/afs/vice.h \
 	${TOP_INCDIR}/afs/remote.h \
@@ -62,7 +62,7 @@ ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
 ${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/afs/assert.h: ${srcdir}/assert.h
+${TOP_INCDIR}/afs/afs_assert.h: ${srcdir}/afs_assert.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
@@ -175,7 +175,7 @@ install: dirpath.h util.a sys
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL_DATA} dirpath.h ${DESTDIR}${includedir}/afs/dirpath.h
 	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DESTDIR}${includedir}/afs/pthread_nosigs.h
-	${INSTALL_DATA} ${srcdir}/assert.h ${DESTDIR}${includedir}/afs/assert.h
+	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DESTDIR}${includedir}/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DESTDIR}${includedir}/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DESTDIR}${includedir}/afs/vice.h
 	${INSTALL_DATA} ${srcdir}/remote.h ${DESTDIR}${includedir}/afs/remote.h
@@ -204,7 +204,7 @@ dest: dirpath.h util.a sys
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL_DATA} dirpath.h ${DEST}/include/afs/dirpath.h
 	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DEST}/include/afs/pthread_nosigs.h
-	${INSTALL_DATA} ${srcdir}/assert.h ${DEST}/include/afs/assert.h
+	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DEST}/include/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DEST}/include/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DEST}/include/afs/vice.h
 	${INSTALL_DATA} ${srcdir}/remote.h ${DEST}/include/afs/remote.h

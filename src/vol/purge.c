@@ -29,7 +29,7 @@
 #endif
 #include <string.h>
 #include <sys/stat.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <afs/afsutil.h>
 
 #include <rx/xdr.h>

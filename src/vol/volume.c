@@ -128,7 +128,7 @@
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
-#include "afs/assert.h"
+#include "afs/afs_assert.h"
 #endif /* AFS_PTHREAD_ENV */
 #include "vutils.h"
 #ifndef AFS_NT40_ENV

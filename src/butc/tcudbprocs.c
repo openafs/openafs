@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <afs/procmgmt.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <fcntl.h>
 #include <afs/nfs.h>
