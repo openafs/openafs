@@ -1087,9 +1087,7 @@ _VUnlockFd(int fd, afs_uint32 offset)
 void
 VLockFileReinit(struct VLockFile *lf)
 {
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_lock(&lf->mutex) == 0);
-#endif /* AFS_PTHREAD_ENV */
+    AFS_LF_LOCK(lf);
 
     if (lf->fd != INVALID_FD) {
 	_VCloseFd(lf->fd);
@@ -1098,9 +1096,7 @@ VLockFileReinit(struct VLockFile *lf)
 
     lf->refcount = 0;
 
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_unlock(&lf->mutex) == 0);
-#endif /* AFS_PTHREAD_ENV */
+    AFS_LF_UNLOCK(lf);
 }
 
 /**
