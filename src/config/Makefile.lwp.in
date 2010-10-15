@@ -5,3 +5,6 @@ AFS_CCRULE =$(CCOBJ) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 .c.o:
 	$(AFS_CCRULE) $<
 
+.m.o:
+	$(AFS_CCRULE) $<
+

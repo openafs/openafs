@@ -6,3 +6,5 @@ AFS_LDRULE=$(MT_CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
 
 .c.o:
 	$(AFS_CCRULE) $<
+.m.o:
+	$(AFS_CCRULE) $<
