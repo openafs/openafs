@@ -282,16 +282,15 @@ CreateGroup(struct cmd_syndesc *as, void *arock)
 			idi->data);
 		return code;
 	    }
-	    if (id >= 0) {
+	    if (id == 0) {
+		printf("0 isn't a valid group id; aborting\n");
+		return EINVAL;
+	    }
+	    if (id > 0) {
 		code = PRBADARG;
 		afs_com_err(whoami, code, "because group id %d was not negative",
 			id);
 		return code;
-	    }
-
-            if (id == 0) {
-		printf("0 isn't a valid user id; aborting\n");
-		return EINVAL;
 	    }
 
 	    idi = idi->next;
