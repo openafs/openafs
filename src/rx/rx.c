@@ -3864,10 +3864,12 @@ rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
     struct rx_peer *peer = call->conn->peer;
 
     /* Use RTT if not delayed by client and
-     * ignore packets that were retransmitted. */
+     * ignore packets that were retransmitted and
+     * ignore all but the last packet of a jumbogram. */
     if (!(p->flags & RX_PKTFLAG_ACKED) &&
         ap->reason != RX_ACK_DELAY &&
-        clock_Eq(&p->timeSent, &p->firstSent))
+        clock_Eq(&p->timeSent, &p->firstSent) &&
+        !(p->header.flags & RX_JUMBO_PACKET))
 	rxi_ComputeRoundTripTime(p, &p->timeSent, peer, now);
 #ifdef ADAPT_WINDOW
     rxi_ComputeRate(peer, call, p, np, ap->reason);
