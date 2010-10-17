@@ -21,7 +21,7 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o pthread_glock.o \
-	 ${REGEX_OBJ}
+	 tabular_output.o ${REGEX_OBJ}
 
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
@@ -43,7 +43,8 @@ includes = \
 	${TOP_INCDIR}/afs/work_queue.h \
 	${TOP_INCDIR}/afs/work_queue_types.h \
 	${TOP_INCDIR}/afs/thread_pool.h \
-	${TOP_INCDIR}/afs/thread_pool_types.h
+	${TOP_INCDIR}/afs/thread_pool_types.h \
+	${TOP_INCDIR}/afs/tabular_output.h
 
 all: ${includes} \
 	${TOP_LIBDIR}/util.a \
@@ -113,6 +114,8 @@ ${TOP_INCDIR}/afs/thread_pool.h: ${srcdir}/thread_pool.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/thread_pool_types.h: ${srcdir}/thread_pool_types.h
+
+${TOP_INCDIR}/afs/tabular_output.h: ${srcdir}/tabular_output.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/util.a: util.a
@@ -189,6 +192,7 @@ install: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DESTDIR}${includedir}/afs/work_queue_types.h
 	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DESTDIR}${includedir}/afs/thread_pool.h
 	${INSTALL_DATA} ${srcdir}/thread_pool_types.h ${DESTDIR}${includedir}/afs/thread_pool_types.h
+	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DESTDIR}${includedir}/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
 	${INSTALL_PROGRAM} sys ${DESTDIR}${bindir}/sys
@@ -217,6 +221,7 @@ dest: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DEST}/include/afs/work_queue_types.h
 	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DEST}/include/afs/thread_pool.h
 	${INSTALL_DATA} ${srcdir}/thread_pool_types.h ${DEST}/include/afs/thread_pool_types.h
+	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DEST}/include/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a
 	${INSTALL_PROGRAM} sys ${DEST}/bin/sys
