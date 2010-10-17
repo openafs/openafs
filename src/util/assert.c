@@ -43,9 +43,5 @@ AssertionFailed(char *file, int line)
     fprintf(stderr, "%sAssertion failed! file %s, line %d.\n", tdate, file,
 	    line);
     fflush(stderr);
-#ifdef AFS_NT40_ENV
-    afs_NTAbort();
-#else
-    abort();
-#endif
+    afs_abort();
 }
