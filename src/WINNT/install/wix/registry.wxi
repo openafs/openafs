@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <Include>
     <!--
     This file will be included as a child of the root Directory tag.
@@ -93,6 +93,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client\Submounts" Action="createKey" Id="reg_Client53" />
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="AfscredsShortcutParams" Type="string" Value="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Id="reg_Client54" />
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="ShowTrayIcon" Type="integer" Value="1" Id="reg_Client18" />
+        <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="StartAfscredsOnStartup" Type="string" Value="[CREDSSTARTUP]" Id="reg_Client55" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client21" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="AuthentProviderPath" Type="expandable" Value="[AFSDIR]Client\Program\afslogon.dll" Id="reg_Client22" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Id="reg_Client23" />

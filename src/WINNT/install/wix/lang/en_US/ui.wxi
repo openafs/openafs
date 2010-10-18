@@ -37,6 +37,8 @@
 		<Property Id="Setup">Setup</Property>
 		<Property Id="ShowUserRegistrationDlg">0</Property>
 		<Property Id="Wizard">Setup Wizard</Property>
+                <Property Id="RestoreIcon">restore</Property>
+                <Property Id="NewSettingsIcon">newconfig</Property>
 
       <Dialog Id="AdminBrowseDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="PathEdit" Type="PathEdit" X="84" Y="202" Width="261" Height="17" Property="TARGETDIR" />
@@ -229,7 +231,10 @@
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Next]">
           <?ifndef BinsOnly ?>
           <Publish Event="NewDialog" Value="ConfigClientDlg">
-            <![CDATA[ &feaClient = 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
+            <![CDATA[ &feaClient = 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) )) AND NOT SAVED_CONFIG ]]>
+          </Publish>
+          <Publish Event="NewDialog" Value="RestoreConfigDlg">
+            <![CDATA[ &feaClient = 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) )) AND SAVED_CONFIG ]]>
           </Publish>
           <Publish Event="NewDialog" Value="VerifyReadyDlg">
             <![CDATA[ &feaClient <> 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
@@ -287,7 +292,10 @@
           <Publish Event="AddLocal" Value="feaClient"><![CDATA[&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3)]]></Publish>
           <Publish Event="AddLocal" Value="feaControlCenter"><![CDATA[&feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3)]]></Publish>
           <Publish Event="NewDialog" Value="ConfigClientDlg">
-            <![CDATA[ &feaClient = 3 ]]>
+            <![CDATA[ &feaClient = 3 AND NOT SAVED_CONFIG ]]>
+          </Publish>
+          <Publish Event="NewDialog" Value="RestoreConfigDlg">
+            <![CDATA[ &feaClient = 3 AND SAVED_CONFIG ]]>
           </Publish>
           <Publish Event="NewDialog" Value="VerifyReadyDlg">
             <![CDATA[ &feaClient <> 3 ]]>
@@ -690,7 +698,8 @@
           <Publish Property="InstallMode" Value="Typical">1</Publish>
           <Publish Event="SetInstallLevel" Value="100">1</Publish>
           <?ifndef BinsOnly?>
-	  <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+	  <Publish Event="NewDialog" Value="ConfigClientDlg">NOT SAVED_CONFIG</Publish>
+	  <Publish Event="NewDialog" Value="RestoreConfigDlg">SAVED_CONFIG</Publish>
           <?else?>
 	  <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
           <?endif?>
@@ -709,7 +718,8 @@
           <Publish Property="InstallMode" Value="Complete">1</Publish>
           <Publish Event="SetInstallLevel" Value="1000">1</Publish>
           <?ifndef BinsOnly ?>
-          <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">NOT SAVED_CONFIG</Publish>
+          <Publish Event="NewDialog" Value="RestoreConfigDlg">SAVED_CONFIG</Publish>
           <?else?>
           <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
           <?endif?>
@@ -744,10 +754,52 @@
       </Dialog>
 
       <?ifndef BinsOnly ?>
-      <Dialog Id="ConfigClientDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+
+      <Dialog Id="RestoreConfigDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+        <Control Id="RestoreLabel" Type="Text" X="105" Y="65" Width="100" Height="10" TabSkip="no">
+          <Text>[DlgTitleFont]&amp;Restore</Text>
+        </Control>
+        <Control Id="RestoreButton" Type="PushButton" X="50" Y="65" Width="38" Height="38" ToolTip="Restore saved settings" Default="yes" Icon="yes" FixedSize="yes" IconSize="32" Text="[RestoreIcon]">
+          <Publish Property="RESTORE_CONFIG" Value="1">1</Publish>
+	  <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+        </Control>
+        <Control Id="NewSettingsLabel" Type="Text" X="105" Y="118" Width="100" Height="10" TabSkip="no">
+          <Text>[DlgTitleFont]&amp;New settings</Text>
+        </Control>
+        <Control Id="NewSettingsButton" Type="PushButton" X="50" Y="118" Width="38" Height="38" ToolTip="New settings" Icon="yes" FixedSize="yes" IconSize="32" Text="[NewSettingsIcon]">
+          <Publish Property="RESTORE_CONFIG">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+        </Control>
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="CustomizeDlg">InstallMode &lt;&gt; "Typical" AND InstallMode &lt;&gt; "Complete"</Publish>
           <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Next]" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="374" Height="44" FixedSize="yes" TabSkip="no" Text="[BannerBitmap]" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Configuration settings from a prior OpenAFS installation is available.</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>[DlgTitleFont]Restore configuration?</Text>
+        </Control>
+        <Control Id="CustomText" Type="Text" X="105" Y="131" Width="230" Height="30">
+          <Text>Specify new settings.  Basic settings can be set via this installer.  All others will be reset to defaults.</Text>
+        </Control>
+        <Control Id="TypicalText" Type="Text" X="105" Y="78" Width="230" Height="20">
+          <Text>Restore and use the saved configuration settings.</Text>
+        </Control>
+      </Dialog>
+
+      <Dialog Id="ConfigClientDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
+          <Publish Event="NewDialog" Value="CustomizeDlg">InstallMode &lt;&gt; "Typical" AND InstallMode &lt;&gt; "Complete" AND NOT SAVED_CONFIG</Publish>
+          <Publish Event="NewDialog" Value="SetupTypeDlg">( InstallMode = "Typical" OR InstallMode = "Complete" ) AND NOT SAVED_CONFIG</Publish>
+          <Publish Event="NewDialog" Value="RestoreConfigDlg">SAVED_CONFIG</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Next]">
           <Publish Event="NewDialog" Value="ConfigCredsDlg">1</Publish>
@@ -764,16 +816,16 @@
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
           <Text>[DlgTitleFont]Configure AFS Client</Text>
         </Control>
-        <Control Id="CellLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="Default &amp;Cell" />
-        <Control Id="CellEdit" Type="Edit" X="150" Y="73" Width="115" Height="18" Property="AFSCELLNAME" Text="{120}" />
-        <Control Id="LogonOptionsLabel" Type="Text"				X="45"	Y="100"	Width="100" Height="15" Text="Integrated logon" />
-        <Control Id="LogonOptionSel" Type="RadioButtonGroup"	X="150"	Y="100"	Width="120" Height="20" Property="LOGONOPTIONS" />
-        <Control Id="SecurityLevelLabel" Type="Text"			X="45"	Y="120"	Width="100" Height="15" Text="AFS crypt security" />
-        <Control Id="SecurityLevelSel" Type="RadioButtonGroup"	X="150"	Y="120"	Width="120" Height="20" Property="SECURITYLEVEL" />
-        <Control Id="FreelanceLabel" Type="Text"				X="45"	Y="140"	Width="100" Height="15" Text="Freelance mode" />
-        <Control Id="FreelanceSel" Type="RadioButtonGroup"		X="150"	Y="140"	Width="120" Height="20" Property="FREELANCEMODE" />
-        <Control Id="DNSLabel" Type="Text"						X="45"	Y="160"	Width="100" Height="15" Text="Lookup cells in DNS" />
-        <Control Id="DNSSel" Type="RadioButtonGroup"			X="150"	Y="160"	Width="120" Height="20" Property="USEDNS" />
+        <Control Id="CellLabel" Type="Text"                     X="45"  Y="73"  Width="100" Height="15" TabSkip="no" Text="Default &amp;Cell" />
+        <Control Id="CellEdit" Type="Edit"                      X="150" Y="73"  Width="115" Height="18" Property="AFSCELLNAME" Text="{120}" />
+        <Control Id="LogonOptionsLabel" Type="Text"             X="45"  Y="100" Width="100" Height="15" Text="Integrated logon" />
+        <Control Id="LogonOptionSel" Type="RadioButtonGroup"    X="150" Y="100" Width="120" Height="20" Property="LOGONOPTIONS" />
+        <Control Id="SecurityLevelLabel" Type="Text"		X="45"	Y="120"	Width="100" Height="15" Text="AFS crypt security" />
+        <Control Id="SecurityLevelSel" Type="RadioButtonGroup"  X="150"	Y="120"	Width="120" Height="20" Property="SECURITYLEVEL" />
+        <Control Id="FreelanceLabel" Type="Text"		X="45"	Y="140"	Width="100" Height="15" Text="Freelance mode" />
+        <Control Id="FreelanceSel" Type="RadioButtonGroup"	X="150"	Y="140"	Width="120" Height="20" Property="FREELANCEMODE" />
+        <Control Id="DNSLabel" Type="Text"			X="45"	Y="160"	Width="100" Height="15" Text="Lookup cells in DNS" />
+        <Control Id="DNSSel" Type="RadioButtonGroup"		X="150"	Y="160"	Width="120" Height="20" Property="USEDNS" />
       </Dialog>
       <RadioButtonGroup Property="SECURITYLEVEL">
 		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable" Value="0"></RadioButton>
@@ -888,8 +940,10 @@
           <Publish Event="NewDialog" Value="AdminInstallPointDlg">InstallMode = "Server Image"</Publish>
           <?ifndef BinsOnly ?>
           <Publish Event="NewDialog" Value="CustomizeDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient &lt;&gt; 3</Publish>
-          <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3</Publish>
-          <Publish Event="NewDialog" Value="ConfigCredsDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3 AND NOT RESTORE_CONFIG</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Typical" OR InstallMode = "Complete") AND NOT RESTORE_CONFIG</Publish>
+          <Publish Event="NewDialog" Value="RestoreConfigDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3 AND RESTORE_CONFIG</Publish>
+          <Publish Event="NewDialog" Value="RestoreConfigDlg">(InstallMode = "Typical" OR InstallMode = "Complete") AND RESTORE_CONFIG</Publish>
           <?else?>
           <Publish Event="NewDialog" Value="CustomizeDlg">InstallMode = "Custom" OR InstallMode = "Change"</Publish>
           <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
@@ -1088,6 +1142,9 @@
         <Show Dialog="MaintenanceWelcomeDlg" After="ResumeDlg">Installed AND NOT RESUME AND NOT Preselected</Show>
         <Show Dialog="ContinueDlg" After="MaintenanceWelcomeDlg">(NOT Installed) AND AFTERREBOOT</Show>
         <Show Dialog="ProgressDlg" After="ContinueDlg" />
+        <?ifndef BinsOnly?>
+        <Custom Action="DetectSavedConfiguration" Before="CostInitialize" />
+        <?endif?>
       </InstallUISequence>
     </UI>
     <Binary Id="Up" src="Binary\Up.ico" />
@@ -1101,6 +1158,8 @@
     <Binary Id="insticon" src="Binary\insticon.ico" />
     <Binary Id="removico" src="Binary\removico.ico" />
     <Binary Id="repairic" src="Binary\repairic.ico" />
+    <Binary Id="restore" src="Binary\restore.ico" />
+    <Binary Id="newconfig" src="Binary\newconfig.ico" />
     <Icon Id="ico_AcctManager" src="Icon\ico_AcctManager.ico" />
     <Icon Id="ico_afscreds" src="Icon\ico_afscreds.ico" />
     <Icon Id="ico_Help" src="Icon\ico_Help.ico" />
