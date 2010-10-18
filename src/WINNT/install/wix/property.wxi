@@ -31,6 +31,10 @@
     <!-- empty property
     <Property Id="STOREANSIFILENAMES"></Property>
     -->
+    <!-- empty property
+    <Property Id="SAVED_CONFIG" Secure="yes"></Property>
+    -->
+    <Property Id="RESTORE_CONFIG" Secure="yes">1</Property>
 <?endif?>
 
     <!-- Add/remove programs -->

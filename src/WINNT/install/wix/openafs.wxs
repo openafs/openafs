@@ -214,6 +214,29 @@
 		 DllEntry="AbortMsiImmediate"
 		 Execute="immediate" />
                 <CustomAction
+                    Id="BackupAFSClientRegistryKeys"
+                    BinaryKey="BIN_afsCustom"
+                    DllEntry="BackupAFSClientRegistryKeys"
+                    Execute="deferred"
+                    Impersonate="no" />
+                <CustomAction
+                    Id="RestoreAFSClientRegistryKeys"
+                    BinaryKey="BIN_afsCustom"
+                    DllEntry="RestoreAFSClientRegistryKeys"
+                    Execute="deferred"
+                    Impersonate="no" />
+                <CustomAction
+                    Id="RollbackRestoreAFSClientRegistryKeys"
+                    BinaryKey="BIN_afsCustom"
+                    DllEntry="BackupAFSClientRegistryKeys"
+                    Execute="rollback"
+                    Impersonate="no" />
+                <CustomAction
+                    Id="DetectSavedConfiguration"
+                    BinaryKey="BIN_afsCustom"
+                    DllEntry="DetectSavedConfiguration"
+                    Execute="firstSequence" />
+                <CustomAction
                    Id="SetInstallLocation"
                    Property="ARPINSTALLLOCATION"
                    Value="[AFSDIR]" />
@@ -242,10 +265,14 @@
       <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">!feaClient=2 And &amp;feaClient=3 And (VersionNT=501 Or VersionNT=502)</Custom>
 			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
 			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
+                        <Custom Action="RollbackRestoreAFSClientRegistryKeys" After="RemoveNetProvider">!feaClient=2 And &amp;feaClient=3 And RESTORE_CONFIG</Custom>
+                        <Custom Action="RestoreAFSClientRegistryKeys" After="RollbackRestoreAFSClientRegistryKeys">!feaClient=2 And &amp;feaClient=3 And RESTORE_CONFIG</Custom>
+                        <Custom Action="BackupAFSClientRegistryKeys" Before="DeleteServices">!feaClient=3 And &amp;feaClient=2</Custom>
 			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
 			<Custom Action="RollbackAFSAdminGroup" Before="CreateAFSAdminGroup">&amp;feaClient=3</Custom>
 			<Custom Action="CreateAFSAdminGroup" Before="CreateFolders">&amp;feaClient=3</Custom>
                         <Custom Action="SetInstallLocation" Before="RegisterProduct" />
+                        <Custom Action="DetectSavedConfiguration" Before="CostInitialize" />
             <ScheduleReboot After="PublishProduct">&amp;feaClient=3 OR &amp;feaServer=3 OR &amp;feaClient=2 OR &amp;feaServer=2</ScheduleReboot>
         </InstallExecuteSequence>
 
