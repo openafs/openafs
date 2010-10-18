@@ -43,10 +43,12 @@
 #define ENDMAC   } while (0)
 
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
-#define LOCK_LOCK(A) assert(pthread_mutex_lock(&(A)->mutex) == 0)
-#define LOCK_UNLOCK(A) assert(pthread_mutex_unlock(&(A)->mutex) == 0)
+#include <afs/afs_assert.h>
+/* can't include in non-lwp case; rx builds later */
+#include <rx/rx.h>
+#define LOCK_LOCK(A) MUTEX_ENTER(&(A)->mutex);
+#define LOCK_UNLOCK(A) MUTEX_EXIT(&(A)->mutex);
 #else /* AFS_PTHREAD_ENV */
 #define LOCK_LOCK(A)
 #define LOCK_UNLOCK(A)

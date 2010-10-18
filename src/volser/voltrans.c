@@ -40,11 +40,7 @@
 #include <sys/stat.h>
 #include <afs/afsint.h>
 #include <signal.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>

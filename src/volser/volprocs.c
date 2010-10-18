@@ -34,11 +34,7 @@
 #include <rx/rxkad.h>
 #include <afs/afsint.h>
 #include <signal.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -348,14 +344,14 @@ ViceCreateRoot(Volume *vp)
 	IH_CREATE(V_linkHandle(vp), V_device(vp),
 		  VPartitionPath(V_partition(vp)), nearInode, V_parentId(vp),
 		  1, 1, 0);
-    assert(VALID_INO(inodeNumber));
+    osi_Assert(VALID_INO(inodeNumber));
 
     SetSalvageDirHandle(&dir, V_parentId(vp), vp->device, inodeNumber);
     did.Volume = V_id(vp);
     did.Vnode = (VnodeId) 1;
     did.Unique = 1;
 
-    assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
+    osi_Assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
     DFlush();			/* flush all modified dir buffers out */
     DZap((afs_int32 *)&dir);			/* Remove all buffers for this dir */
     length = Length(&dir);	/* Remember size of this directory */
@@ -395,9 +391,9 @@ ViceCreateRoot(Volume *vp)
     IH_INIT(h, vp->device, V_parentId(vp),
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     nBytes = FDH_PWRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE, vnodeIndexOffset(vcp, 1));
-    assert(nBytes == SIZEOF_LARGEDISKVNODE);
+    osi_Assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
     VNDISK_GET_LEN(length, vnode);

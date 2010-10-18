@@ -31,11 +31,7 @@
 #include <afs/afsint.h>
 #include <stdio.h>
 #include <signal.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -478,10 +474,10 @@ main(int argc, char **argv)
 #ifdef AFS_PTHREAD_ENV
 	pthread_t tid;
 	pthread_attr_t tattr;
-	assert(pthread_attr_init(&tattr) == 0);
-	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+	osi_Assert(pthread_attr_init(&tattr) == 0);
+	osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
+	osi_Assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);

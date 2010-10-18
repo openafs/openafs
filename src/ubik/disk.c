@@ -899,7 +899,7 @@ udisk_commit(struct ubik_trans *atrans)
 
 	dbase->version.counter++;	/* bump commit count */
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
+	CV_BROADCAST(&dbase->version_cond);
 #else
 	LWP_NoYieldSignal(&dbase->version);
 #endif
@@ -1023,7 +1023,7 @@ udisk_end(struct ubik_trans *atrans)
 
     /* Wakeup any writers waiting in BeginTrans() */
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&dbase->flags_cond) == 0);
+    CV_BROADCAST(&dbase->flags_cond);
 #else
     LWP_NoYieldSignal(&dbase->flags);
 #endif

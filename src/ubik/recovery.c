@@ -15,7 +15,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
-#include <assert.h>
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -385,7 +384,7 @@ InitializeDB(struct ubik_dbase *adbase)
 	    (*adbase->setlabel) (adbase, 0, &adbase->version);
 	}
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&adbase->version_cond) == 0);
+	CV_BROADCAST(&adbase->version_cond);
 #else
 	LWP_NoYieldSignal(&adbase->version);
 #endif
@@ -726,7 +725,7 @@ urecovery_Interact(void *dummy)
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
+	    CV_BROADCAST(&ubik_dbase->version_cond);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
 #endif
@@ -754,7 +753,7 @@ urecovery_Interact(void *dummy)
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
+	    CV_BROADCAST(&ubik_dbase->version_cond);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
 #endif
@@ -897,7 +896,7 @@ DoProbe(struct ubik_server *server)
 	    break;
 	}
     }
-    assert(i);			/* at least one interface address for this server */
+    osi_Assert(i);			/* at least one interface address for this server */
 
 #ifdef AFS_PTHREAD_ENV
     DBRELE(ubik_dbase);

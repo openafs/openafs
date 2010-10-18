@@ -218,7 +218,7 @@ GetHTBlock(void)
     }
 #ifdef AFS_PTHREAD_ENV
     for (i = 0; i < (h_HTSPERBLOCK); i++)
-	assert(pthread_cond_init(&block->entry[i].cond, NULL) == 0);
+	CV_INIT(&block->entry[i].cond, "block entry", CV_DEFAULT, 0);
 #endif /* AFS_PTHREAD_ENV */
     for (i = 0; i < (h_HTSPERBLOCK); i++)
 	Lock_Init(&block->entry[i].lock);
@@ -241,7 +241,7 @@ GetHT(void)
 
     if (HTFree == NULL)
 	GetHTBlock();
-    assert(HTFree != NULL);
+    osi_Assert(HTFree != NULL);
     entry = HTFree;
     HTFree = entry->next;
     HTs++;
@@ -356,7 +356,7 @@ hpr_GetHostCPS(afs_int32 host, prlist *CPS)
     if (!uclient) {
         code = hpr_Initialize(&uclient);
 	if (!code)
-	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	else
 	    return code;
     }
@@ -390,7 +390,7 @@ hpr_NameToId(namelist *names, idlist *ids)
     if (!uclient) {
         code = hpr_Initialize(&uclient);
 	if (!code)
-	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	else
 	    return code;
     }
@@ -415,7 +415,7 @@ hpr_IdToName(idlist *ids, namelist *names)
     if (!uclient) {
         code = hpr_Initialize(&uclient);
 	if (!code)
-	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	else
 	    return code;
     }
@@ -439,7 +439,7 @@ hpr_GetCPS(afs_int32 id, prlist *CPS)
     if (!uclient) {
         code = hpr_Initialize(&uclient);
 	if (!code)
-	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	else
 	    return code;
     }
@@ -590,7 +590,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
 	slept = 1;		/* I did sleep */
 	host->hostFlags |= HCPS_WAITING;	/* I am sleeping now */
 #ifdef AFS_PTHREAD_ENV
-	pthread_cond_wait(&host->cond, &host_glock_mutex);
+	CV_WAIT(&host->cond, &host_glock_mutex);
 #else /* AFS_PTHREAD_ENV */
 	if ((code = LWP_WaitProcess(&(host->hostFlags))) != LWP_SUCCESS)
 	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
@@ -651,7 +651,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
     if (host->hostFlags & HCPS_WAITING) {	/* somebody is waiting */
 	host->hostFlags &= ~HCPS_WAITING;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&host->cond) == 0);
+	CV_BROADCAST(&host->cond);
 #else /* AFS_PTHREAD_ENV */
 	if ((code = LWP_NoYieldSignal(&(host->hostFlags))) != LWP_SUCCESS)
 	    ViceLog(0, ("LWP_NoYieldSignal returns %d\n", code));
@@ -773,7 +773,7 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, struct host **hostp)
   restart:
     for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
-	assert(host);
+	osi_Assert(host);
 	if (!(host->hostFlags & HOSTDELETED) && chain->addr == haddr
 	    && chain->port == hport) {
 	    if ((host->hostFlags & HWHO_INPROGRESS) &&
@@ -820,7 +820,7 @@ h_LookupUuid_r(afsUUID * uuidp)
 
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
-	assert(host);
+	osi_Assert(host);
 	if (!(host->hostFlags & HOSTDELETED) && host->interface
 	    && afs_uuid_equal(&host->interface->uuid, uuidp)) {
             return host;
@@ -988,12 +988,12 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     list = (struct host **)malloc(hostCount * sizeof(struct host *));
     if (!list) {
 	ViceLog(0, ("Failed malloc in h_Enumerate (list)\n"));
-	assert(0);
+	osi_Panic("Failed malloc in h_Enumerate (list)\n");
     }
     flags = (int *)malloc(hostCount * sizeof(int));
     if (!flags) {
 	ViceLog(0, ("Failed malloc in h_Enumerate (flags)\n"));
-	assert(0);
+	osi_Panic("Failed malloc in h_Enumerate (flags)\n");
     }
     for (totalCount = count = 0, host = hostList;
          host && totalCount < hostCount;
@@ -1153,7 +1153,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
     chain = (struct h_UuidHashChain *)malloc(sizeof(struct h_UuidHashChain));
     if (!chain) {
 	ViceLog(0, ("Failed malloc in h_AddHostToUuidHashTable_r\n"));
-	assert(0);
+	osi_Panic("Failed malloc in h_AddHostToUuidHashTable_r\n");
     }
     chain->hostPtr = host;
     chain->next = hostUuidHashTable[index];
@@ -1185,7 +1185,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
      if (LogLevel >= 125)
 	 afsUUID_to_string(&host->interface->uuid, uuid1, 127);
      for (uhp = &hostUuidHashTable[index]; (uth = *uhp); uhp = &uth->next) {
-         assert(uth->hostPtr);
+         osi_Assert(uth->hostPtr);
 	 if (uth->hostPtr == host) {
 	     ViceLog(125,
 		     ("h_DeleteHostFromUuidHashTable_r: host %" AFS_PTR_FMT " (uuid %s %s:%d)\n",
@@ -1216,8 +1216,8 @@ invalidateInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
-    assert(host);
-    assert(host->interface);
+    osi_Assert(host);
+    osi_Assert(host->interface);
 
     ViceLog(125, ("invalidateInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) addr %s:%d\n",
 		  host, afs_inet_ntoa_r(host->host, hoststr),
@@ -1340,7 +1340,7 @@ createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct ho
     chain = (struct h_AddrHashChain *)malloc(sizeof(struct h_AddrHashChain));
     if (!chain) {
 	ViceLog(0, ("Failed malloc in h_AddHostToAddrHashTable_r\n"));
-	assert(0);
+	osi_Panic("Failed malloc in h_AddHostToAddrHashTable_r\n");
     }
     chain->hostPtr = host;
     chain->next = hostAddrHashTable[index];
@@ -1376,7 +1376,7 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 	     AFS_PTR_FMT, afs_inet_ntoa_r(addr, hoststr), ntohs(port),
 	     newHost, oldHost));
 
-    assert(oldHost != newHost);
+    osi_Assert(oldHost != newHost);
     caps.Capabilities_val = NULL;
 
     if (!sc) {
@@ -1526,8 +1526,8 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
-    assert(host);
-    assert(host->interface);
+    osi_Assert(host);
+    osi_Assert(host->interface);
 
     /*
      * Make sure this address is on the list of known addresses
@@ -1561,7 +1561,7 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 	malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
     if (!interface) {
 	ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
-	assert(0);
+	osi_Panic("Failed malloc in addInterfaceAddr_r\n");
     }
     interface->numberOfInterfaces = number + 1;
     interface->uuid = host->interface->uuid;
@@ -1593,8 +1593,8 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
-    assert(host);
-    assert(host->interface);
+    osi_Assert(host);
+    osi_Assert(host->interface);
 
     ViceLog(125, ("removeInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) addr %s:%d\n",
 		  host, afs_inet_ntoa_r(host->host, hoststr),
@@ -1754,7 +1754,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		assert(0);
+		osi_Panic("Failed malloc in h_GetHost_r\n");
 	    }
 	    identP->valid = 0;
 	    rx_SetSpecific(tcon, rxcon_ident_key, identP);
@@ -1796,7 +1796,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		assert(0);
+		osi_Panic("Failed malloc in h_GetHost_r\n");
 	    }
 	    identP->valid = 1;
 	    identP->uuid = interf.uuid;
@@ -1985,7 +1985,7 @@ h_GetHost_r(struct rx_connection *tcon)
 
 		if (!identP) {
 		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		    assert(0);
+		    osi_Panic("Failed malloc in h_GetHost_r\n");
 		}
 		identP->valid = 0;
 		if (!pident)
@@ -2004,7 +2004,7 @@ h_GetHost_r(struct rx_connection *tcon)
 
 		if (!identP) {
 		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		    assert(0);
+		    osi_Panic("Failed malloc in h_GetHost_r\n");
 		}
 		identP->valid = 1;
 		interfValid = 1;
@@ -2156,7 +2156,7 @@ h_GetHost_r(struct rx_connection *tcon)
 				("InitCallBackState3 success on host %" AFS_PTR_FMT " (%s:%d)\n",
 				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port)));
-			assert(interfValid == 1);
+			osi_Assert(interfValid == 1);
 			initInterfaceAddr_r(host, &interf);
 		    }
 		}
@@ -2230,9 +2230,7 @@ h_InitHostPackage(void)
     }
     rxcon_ident_key = rx_KeyCreate((rx_destructor_t) free);
     rxcon_client_key = rx_KeyCreate((rx_destructor_t) 0);
-#ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&host_glock_mutex, NULL) == 0);
-#endif /* AFS_PTHREAD_ENV */
+    MUTEX_INIT(&host_glock_mutex, "host glock", MUTEX_DEFAULT, 0);
 }
 
 static int
@@ -2271,7 +2269,7 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 	    tname = (char *)malloc(PR_MAXNAMELEN);
 	    if (!tname) {
 		ViceLog(0, ("Failed malloc in MapName_r\n"));
-		assert(0);
+		osi_Panic("Failed malloc in MapName_r\n");
 	    }
 	    strcpy(tname, aname);
 	    tname[anamelen] = '@';
@@ -2541,7 +2539,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	 * possible failure modes that we will disable it again */
 	/* Turn off System:Administrator for safety
 	 * if (AL_IsAMember(SystemId, client->CPS) == 0)
-	 * assert(AL_DisableGroup(SystemId, client->CPS) == 0); */
+	 * osi_Assert(AL_DisableGroup(SystemId, client->CPS) == 0); */
     }
 
     /* Now, tcon may already be set to a rock, since we blocked with no host
@@ -2626,7 +2624,7 @@ h_FindClient_r(struct rx_connection *tcon)
 int
 h_ReleaseClient_r(struct client *client)
 {
-    assert(client->refCount > 0);
+    osi_Assert(client->refCount > 0);
     client->refCount--;
     return 0;
 }
@@ -2704,7 +2702,7 @@ h_UserName(struct client *client)
     lids.idlist_val = (afs_int32 *) malloc(1 * sizeof(afs_int32));
     if (!lids.idlist_val) {
 	ViceLog(0, ("Failed malloc in h_UserName\n"));
-	assert(0);
+	osi_Panic("Failed malloc in h_UserName\n");
     }
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *) 0;
@@ -3239,7 +3237,7 @@ h_stateSaveHost(struct host * host, int flags, void* rock)
 	if_len = sizeof(struct Interface) +
 	    ((host->interface->numberOfInterfaces-1) * sizeof(struct AddrPort));
 	ifp = (struct Interface *) malloc(if_len);
-	assert(ifp != NULL);
+	osi_Assert(ifp != NULL);
 	memcpy(ifp, host->interface, if_len);
 	hdr.interfaces = host->interface->numberOfInterfaces;
 	iov[iovcnt].iov_base = (char *) ifp;
@@ -3250,7 +3248,7 @@ h_stateSaveHost(struct host * host, int flags, void* rock)
 	hdr.hcps = host->hcps.prlist_len;
 	hcps_len = hdr.hcps * sizeof(afs_int32);
 	hcps = (afs_int32 *) malloc(hcps_len);
-	assert(hcps != NULL);
+	osi_Assert(hcps != NULL);
 	memcpy(hcps, host->hcps.prlist_val, hcps_len);
 	iov[iovcnt].iov_base = (char *) hcps;
 	iov[iovcnt].iov_len = hcps_len;
@@ -3322,7 +3320,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
 	ifp_len = sizeof(struct Interface) +
 	    ((hdr.interfaces-1) * sizeof(struct AddrPort));
 	ifp = (struct Interface *) malloc(ifp_len);
-	assert(ifp != NULL);
+	osi_Assert(ifp != NULL);
 	iov[iovcnt].iov_base = (char *) ifp;
 	iov[iovcnt].iov_len = ifp_len;
 	iovcnt++;
@@ -3330,7 +3328,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     if (hdr.hcps) {
 	hcps_len = hdr.hcps * sizeof(afs_int32);
 	hcps = (afs_int32 *) malloc(hcps_len);
-	assert(hcps != NULL);
+	osi_Assert(hcps != NULL);
 	iov[iovcnt].iov_base = (char *) hcps;
 	iov[iovcnt].iov_len = hcps_len;
 	iovcnt++;
@@ -3351,11 +3349,11 @@ h_stateRestoreHost(struct fs_dump_state * state)
     if (!hdr.hcps && hdsk.hcps_valid) {
 	/* valid, zero-length host cps ; does this ever happen? */
 	hcps = (afs_int32 *) malloc(sizeof(afs_int32));
-	assert(hcps != NULL);
+	osi_Assert(hcps != NULL);
     }
 
     host = GetHT();
-    assert(host != NULL);
+    osi_Assert(host != NULL);
 
     if (ifp) {
 	host->interface = ifp;
@@ -3958,8 +3956,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     char uuidstr[128];
     afs_uint16 port7001 = htons(7001);
 
-    assert(host);
-    assert(interf);
+    osi_Assert(host);
+    osi_Assert(interf);
 
     number = interf->numberOfInterfaces;
     myAddr = host->host;	/* current interface address */
@@ -4035,7 +4033,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 		   (sizeof(struct AddrPort) * (count - 1)));
 	if (!interface) {
 	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r 1\n"));
-	    assert(0);
+	    osi_Panic("Failed malloc in initInterfaceAddr_r 1\n");
 	}
 	interface->numberOfInterfaces = count;
     } else {
@@ -4043,7 +4041,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * count));
 	if (!interface) {
 	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r 2\n"));
-	    assert(0);
+	    osi_Panic("Failed malloc in initInterfaceAddr_r 2\n");
 	}
 	interface->numberOfInterfaces = count + 1;
 	interface->interface[count].addr = myAddr;
@@ -4065,7 +4063,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     interface->uuid = interf->uuid;
 
-    assert(!host->interface);
+    osi_Assert(!host->interface);
     host->interface = interface;
 
     if (LogLevel >= 125) {
@@ -4096,7 +4094,7 @@ h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port,
 
     for (hp = &hostAddrHashTable[h_HashIndex(addr)]; (th = *hp);
 	 hp = &th->next) {
-        assert(th->hostPtr);
+        osi_Assert(th->hostPtr);
         if (th->hostPtr == host && th->addr == addr && th->port == port) {
 	    ViceLog(125, ("h_DeleteHostFromAddrHashTable_r: host %" AFS_PTR_FMT " (%s:%d)\n",
 			  host, afs_inet_ntoa_r(host->host, hoststr),

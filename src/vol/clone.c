@@ -21,11 +21,7 @@
 
 #include <sys/types.h>
 #include <stdio.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <windows.h>
@@ -91,7 +87,7 @@ ci_AddItem(struct clone_head *ah, Inode aino)
 	ti = (struct clone_items *)malloc(sizeof(struct clone_items));
 	if (!ti) {
 	    Log("ci_AddItem: malloc failed\n");
-	    assert(0);
+	    osi_Panic("ci_AddItem: malloc failed\n");
 	}
 	ti->nitems = 0;
 	ti->next = (struct clone_items *)0;

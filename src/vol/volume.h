@@ -36,9 +36,9 @@ typedef bit32 FileOffset;	/* Offset in this file */
 
 #ifdef VOL_LOCK_DEBUG
 #define VOL_LOCK_ASSERT_HELD \
-    assert(vol_glock_holder == pthread_self())
+    osi_Assert(vol_glock_holder == pthread_self())
 #define VOL_LOCK_ASSERT_UNHELD \
-    assert(vol_glock_holder == 0)
+    osi_Assert(vol_glock_holder == 0)
 #define _VOL_LOCK_SET_HELD \
     vol_glock_holder = pthread_self()
 #define _VOL_LOCK_SET_UNHELD \
@@ -62,7 +62,6 @@ typedef bit32 FileOffset;	/* Offset in this file */
 
 
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
 extern pthread_mutex_t vol_glock_mutex;
 extern pthread_mutex_t vol_trans_mutex;
@@ -75,37 +74,31 @@ extern int vol_attach_threads;
 extern pthread_t vol_glock_holder;
 #define VOL_LOCK \
     do { \
-        assert(pthread_mutex_lock(&vol_glock_mutex) == 0); \
-        assert(vol_glock_holder == 0); \
-        vol_glock_holder = pthread_self(); \
+	MUTEX_ENTER(&vol_glock_mutex); \
+	VOL_LOCK_ASSERT_UNHELD; \
+	_VOL_LOCK_SET_HELD; \
     } while (0)
 #define VOL_UNLOCK \
     do { \
         VOL_LOCK_ASSERT_HELD; \
-        vol_glock_holder = 0; \
-        assert(pthread_mutex_unlock(&vol_glock_mutex) == 0); \
+	_VOL_LOCK_SET_UNHELD; \
+	MUTEX_EXIT(&vol_glock_mutex); \
     } while (0)
 #define VOL_CV_WAIT(cv) \
     do { \
         VOL_LOCK_DBG_CV_WAIT_BEGIN; \
-        assert(pthread_cond_wait((cv), &vol_glock_mutex) == 0); \
+	CV_WAIT((cv), &vol_glock_mutex); \
         VOL_LOCK_DBG_CV_WAIT_END; \
     } while (0)
 #else /* !VOL_LOCK_DEBUG */
-#define VOL_LOCK \
-    assert(pthread_mutex_lock(&vol_glock_mutex) == 0)
-#define VOL_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_glock_mutex) == 0)
-#define VOL_CV_WAIT(cv) assert(pthread_cond_wait((cv), &vol_glock_mutex) == 0)
+#define VOL_LOCK MUTEX_ENTER(&vol_glock_mutex)
+#define VOL_UNLOCK MUTEX_EXIT(&vol_glock_mutex)
+#define VOL_CV_WAIT(cv) CV_WAIT((cv), &vol_glock_mutex)
 #endif /* !VOL_LOCK_DEBUG */
-#define VSALVSYNC_LOCK \
-    assert(pthread_mutex_lock(&vol_salvsync_mutex) == 0)
-#define VSALVSYNC_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_salvsync_mutex) == 0)
-#define VTRANS_LOCK \
-    assert(pthread_mutex_lock(&vol_trans_mutex) == 0)
-#define VTRANS_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_trans_mutex) == 0)
+#define VSALVSYNC_LOCK MUTEX_ENTER(&vol_salvsync_mutex)
+#define VSALVSYNC_UNLOCK MUTEX_EXIT(&vol_salvsync_mutex)
+#define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
+#define VTRANS_UNLOCK MUTEX_EXIT(&vol_trans_mutex)
 #else /* AFS_PTHREAD_ENV */
 #define VOL_LOCK
 #define VOL_UNLOCK

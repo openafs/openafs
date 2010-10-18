@@ -28,6 +28,10 @@
 #define MUTEX_ISMINE(a)
 #define CV_INIT(a,b,c,d)
 #define CV_DESTROY(a)
+#define CV_WAIT(cv, l)
+#define CV_SIGNAL(cv)
+#define CV_BROADCAST(cv)
+#define CV_TIMEDWAIT(cv, l, t)
 #define osirx_AssertMine(a, b)
 
 #endif /* KERNEL */

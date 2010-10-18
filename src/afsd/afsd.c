@@ -68,8 +68,7 @@
 
 #include "afsd.h"
 
-#include <assert.h>
-#include <potpourri.h>
+#include <afs/afs_assert.h>
 #include <afs/afsutil.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -270,7 +269,7 @@ static int sawBiod = 0;
 static int sawCacheStatEntries = 0;
 char afsd_cacheMountDir[1024];	/*Mount directory for AFS */
 static char rootVolume[64] = "root.afs";	/*AFS root volume name */
-static afs_int32 cacheSetTime = FALSE;	/*Keep checking time to avoid drift? */
+static afs_int32 cacheSetTime = 0;	/*Keep checking time to avoid drift? */
 #ifdef AFS_XBSD_ENV
 static int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
 #else
@@ -1726,7 +1725,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[8].items) {
 	/* -nosettime */
-	cacheSetTime = FALSE;
+	cacheSetTime = 0;
     }
     if (as->parms[9].items) {
 	/* -verbose */
@@ -1858,7 +1857,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[32].items) {
 	/* -settime */
-	cacheSetTime = TRUE;
+	cacheSetTime = 1;
     }
 
     /* set rx_extraPackets */
@@ -1891,7 +1890,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     if (as->parms[35].items) {
 #ifdef AFS_MAXVCOUNT_ENV
        /* -disable-dynamic-vcaches */
-       afsd_dynamic_vcaches = FALSE;
+       afsd_dynamic_vcaches = 0;
 #else
        printf("afsd: Error toggling flag, dynamically allocated vcaches not supported on your platform\n");
        exit(1);
@@ -1900,7 +1899,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #ifdef AFS_MAXVCOUNT_ENV
     else {
        /* -dynamic-vcaches */
-       afsd_dynamic_vcaches = TRUE;
+       afsd_dynamic_vcaches = 1;
     }
 
     if (afsd_verbose)

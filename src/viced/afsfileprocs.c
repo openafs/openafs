@@ -346,7 +346,7 @@ CallPreamble(struct rx_call *acall, int activecall,
 	code = hpr_Initialize(&uclient);
 
 	if (!code)
-	    assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
+	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	H_LOCK;
 #else
 	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
@@ -493,7 +493,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 	    errorCode = 0;
 	    *volptr = VGetVolumeNoWait(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
 	    if (!errorCode) {
-		assert(*volptr);
+		osi_Assert(*volptr);
 		break;
 	    }
 	    if ((errorCode == VOFFLINE) && (VInit < 2)) {
@@ -586,7 +586,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		return (errorCode);
 	}
     }
-    assert(*volptr);
+    osi_Assert(*volptr);
 
     /* get the vnode  */
     *vptr = VGetVnode(&errorCode, *volptr, fid->Vnode, lock);
@@ -594,7 +594,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 	return (errorCode);
     if ((*vptr)->disk.uniquifier != fid->Unique) {
 	VPutVnode(&fileCode, *vptr);
-	assert(fileCode == 0);
+	osi_Assert(fileCode == 0);
 	*vptr = 0;
 	return (VNOVNODE);	/* return the right error code, at least */
     }
@@ -618,7 +618,7 @@ SetAccessList(Vnode ** targetptr, Volume ** volume,
 	*ACLSize = VAclSize(*targetptr);
 	return (0);
     } else {
-	assert(Fid != 0);
+	osi_Assert(Fid != 0);
 	while (1) {
 	    VnodeId parentvnode;
 	    Error errorCode = 0;
@@ -702,7 +702,7 @@ GetRights(struct client *client, struct acl_accessList *ACL,
     while (client->host->hostFlags & HCPS_INPROGRESS) {
 	client->host->hostFlags |= HCPS_WAITING;	/* I am waiting */
 #ifdef AFS_PTHREAD_ENV
-	pthread_cond_wait(&client->host->cond, &host_glock_mutex);
+	CV_WAIT(&client->host->cond, &host_glock_mutex);
 #else /* AFS_PTHREAD_ENV */
 	if ((code =
 	     LWP_WaitProcess(&(client->host->hostFlags))) != LWP_SUCCESS)
@@ -776,7 +776,7 @@ GetVolumePackage(struct rx_connection *tcon, AFSFid * Fid, Volume ** volptr,
 		       (chkforDir == MustBeDIR ? 0 : locktype))) != 0)
 	return (errorCode);
     if (chkforDir == MustBeDIR)
-	assert((*parent) == 0);
+	osi_Assert((*parent) == 0);
     if (!(*client)) {
 	if ((errorCode = GetClient(tcon, client)) != 0)
 	    return (errorCode);
@@ -814,15 +814,15 @@ PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
 
     if (parentwhentargetnotdir) {
 	VPutVnode(&fileCode, parentwhentargetnotdir);
-	assert(!fileCode || (fileCode == VSALVAGE));
+	osi_Assert(!fileCode || (fileCode == VSALVAGE));
     }
     if (targetptr) {
 	VPutVnode(&fileCode, targetptr);
-	assert(!fileCode || (fileCode == VSALVAGE));
+	osi_Assert(!fileCode || (fileCode == VSALVAGE));
     }
     if (parentptr) {
 	VPutVnode(&fileCode, parentptr);
-	assert(!fileCode || (fileCode == VSALVAGE));
+	osi_Assert(!fileCode || (fileCode == VSALVAGE));
     }
     if (volptr) {
 	VPutVolume(volptr);
@@ -1174,7 +1174,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     }
     IH_INIT(newH, V_device(volptr), V_id(volptr), ino);
     newFdP = IH_OPEN(newH);
-    assert(newFdP != NULL);
+    osi_Assert(newFdP != NULL);
 
     done = off;
     while (size > 0) {
@@ -1249,11 +1249,11 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     FDH_REALLYCLOSE(targFdP);
     rc = IH_DEC(V_linkHandle(volptr), VN_GET_INO(targetptr),
 		V_parentId(volptr));
-    assert(!rc);
+    osi_Assert(!rc);
     IH_RELEASE(targetptr->handle);
 
     rc = FDH_SYNC(newFdP);
-    assert(rc == 0);
+    osi_Assert(rc == 0);
     FDH_CLOSE(newFdP);
     targetptr->handle = newH;
     VN_SET_INO(targetptr, ino);
@@ -1354,7 +1354,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
     } else if ((*targetptr)->disk.type == vDirectory)
 	return (EISDIR);
 
-    /*assert((*targetptr)->disk.uniquifier == fileFid->Unique); */
+    /*osi_Assert((*targetptr)->disk.uniquifier == fileFid->Unique); */
     /**
       * If the uniquifiers dont match then instead of asserting
       * take the volume offline and return VSALVAGE
@@ -1946,21 +1946,21 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     *name = malloc(temp);
     if (!*name) {
 	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
     }
     strcpy(*name, V_name(volptr));
     temp = strlen(V_offlineMessage(volptr)) + 1;
     *offMsg = malloc(temp);
     if (!*offMsg) {
 	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
     }
     strcpy(*offMsg, V_offlineMessage(volptr));
 #if OPENAFS_VOL_STATS
     *motd = malloc(1);
     if (!*motd) {
 	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
     }
     strcpy(*motd, nullString);
 #else
@@ -1968,7 +1968,7 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     *motd = malloc(temp);
     if (!*motd) {
 	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
     }
     strcpy(*motd, V_motd(volptr));
 #endif /* FS_STATS_DETAILED */
@@ -2058,7 +2058,7 @@ AllocSendBuffer(void)
 	tmp = malloc(sendBufSize);
 	if (!tmp) {
 	    ViceLog(0, ("Failed malloc in AllocSendBuffer\n"));
-	    assert(0);
+	    osi_Panic("Failed malloc in AllocSendBuffer\n");
 	}
 	return tmp;
     }
@@ -2217,7 +2217,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     if (parentwhentargetnotdir != NULL) {
 	tparentwhentargetnotdir = *parentwhentargetnotdir;
 	VPutVnode(&fileCode, parentwhentargetnotdir);
-	assert(!fileCode || (fileCode == VSALVAGE));
+	osi_Assert(!fileCode || (fileCode == VSALVAGE));
 	parentwhentargetnotdir = NULL;
     }
 #if FS_STATS_DETAILED
@@ -2429,7 +2429,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     AccessList->AFSOpaque_val = malloc(AFSOPAQUEMAX);
     if (!AccessList->AFSOpaque_val) {
 	ViceLog(0, ("Failed malloc in SRXAFS_FetchACL\n"));
-	assert(0);
+	osi_Panic("Failed malloc in SRXAFS_FetchACL\n");
     }
 
     /*
@@ -2619,14 +2619,14 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	malloc(nfiles * sizeof(struct AFSFetchStatus));
     if (!OutStats->AFSBulkStats_val) {
 	ViceLog(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in SRXAFS_BulkStatus\n");
     }
     OutStats->AFSBulkStats_len = nfiles;
     CallBacks->AFSCBs_val = (struct AFSCallBack *)
 	malloc(nfiles * sizeof(struct AFSCallBack));
     if (!CallBacks->AFSCBs_val) {
 	ViceLog(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in SRXAFS_BulkStatus\n");
     }
     CallBacks->AFSCBs_len = nfiles;
 
@@ -2770,14 +2770,14 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	malloc(nfiles * sizeof(struct AFSFetchStatus));
     if (!OutStats->AFSBulkStats_val) {
 	ViceLog(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in SRXAFS_FetchStatus\n");
     }
     OutStats->AFSBulkStats_len = nfiles;
     CallBacks->AFSCBs_val = (struct AFSCallBack *)
 	malloc(nfiles * sizeof(struct AFSCallBack));
     if (!CallBacks->AFSCBs_val) {
 	ViceLog(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
-	assert(0);
+	osi_Panic("Failed malloc in SRXAFS_FetchStatus\n");
     }
     CallBacks->AFSCBs_len = nfiles;
 
@@ -3048,7 +3048,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     if (parentwhentargetnotdir != NULL) {
 	tparentwhentargetnotdir = *parentwhentargetnotdir;
 	VPutVnode(&fileCode, parentwhentargetnotdir);
-	assert(!fileCode || (fileCode == VSALVAGE));
+	osi_Assert(!fileCode || (fileCode == VSALVAGE));
 	parentwhentargetnotdir = NULL;
     }
 #if FS_STATS_DETAILED
@@ -3289,7 +3289,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* break call backs on the directory  */
     BreakCallBack(client->host, Fid, 0);
@@ -3395,7 +3395,7 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* Break call backs on Fid */
     BreakCallBack(client->host, Fid, 0);
@@ -3552,14 +3552,14 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 	DeleteFileCallBacks(&fileFid);
 	/* convert the parent lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, parentptr);
-	assert(!errorCode || errorCode == VSALVAGE);
+	osi_Assert(!errorCode || errorCode == VSALVAGE);
     } else {
 	/* convert the parent lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, parentptr);
-	assert(!errorCode || errorCode == VSALVAGE);
+	osi_Assert(!errorCode || errorCode == VSALVAGE);
 	/* convert the target lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, targetptr);
-	assert(!errorCode || errorCode == VSALVAGE);
+	osi_Assert(!errorCode || errorCode == VSALVAGE);
 	/* tell all the file has changed */
 	BreakCallBack(client->host, &fileFid, 1);
     }
@@ -3724,7 +3724,7 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* break call back on parent dir */
     BreakCallBack(client->host, DirFid, 0);
@@ -4072,7 +4072,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    }
 	    if (testnode == 1) top = 1;
 	    testvptr = VGetVnode(&errorCode, volptr, testnode, READ_LOCK);
-	    assert(errorCode == 0);
+	    osi_Assert(errorCode == 0);
 	    testnode = testvptr->disk.parent;
 	    VPutVnode(&errorCode, testvptr);
 	    if ((top == 1) && (testnode != 0)) {
@@ -4083,7 +4083,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 		errorCode = EIO;
 		goto Bad_Rename;
 	    }
-	    assert(errorCode == 0);
+	    osi_Assert(errorCode == 0);
 	}
     }
 
@@ -4118,7 +4118,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     if (newfileptr) {
 	/* Delete NewName from its directory */
 	code = Delete(&newdir, NewName);
-	assert(code == 0);
+	osi_Assert(code == 0);
 
 	/* Drop the link count */
 	newfileptr->disk.linkCount--;
@@ -4165,7 +4165,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	goto Bad_Rename;
 
     /* Delete the old name */
-    assert(Delete(&olddir, (char *)OldName) == 0);
+    osi_Assert(Delete(&olddir, (char *)OldName) == 0);
 
     /* if the directory length changes, reflect it in the statistics */
 #if FS_STATS_DETAILED
@@ -4191,13 +4191,13 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     /* if we are dealing with a rename of a directory, and we need to
      * update the .. entry of that directory */
     if (updatefile) {
-	assert(!fileptr->disk.cloned);
+	osi_Assert(!fileptr->disk.cloned);
 
 	fileptr->changed_newTime = 1;	/* status change of moved file */
 
 	/* fix .. to point to the correct place */
 	Delete(&filedir, "..");	/* No assert--some directories may be bad */
-	assert(Create(&filedir, "..", NewDirFid) == 0);
+	osi_Assert(Create(&filedir, "..", NewDirFid) == 0);
 	fileptr->disk.dataVersion++;
 
 	/* if the parent directories are different the link counts have to be   */
@@ -4219,15 +4219,15 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 
     /* convert the write locks to a read locks before breaking callbacks */
     VVnodeWriteToRead(&errorCode, newvptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
     if (oldvptr != newvptr) {
 	VVnodeWriteToRead(&errorCode, oldvptr);
-	assert(!errorCode || errorCode == VSALVAGE);
+	osi_Assert(!errorCode || errorCode == VSALVAGE);
     }
     if (newfileptr && !doDelete) {
 	/* convert the write lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, newfileptr);
-	assert(!errorCode || errorCode == VSALVAGE);
+	osi_Assert(!errorCode || errorCode == VSALVAGE);
     }
 
     /* break call back on NewDirFid, OldDirFid, NewDirFid and newFileFid  */
@@ -4257,7 +4257,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
   Bad_Rename:
     if (newfileptr) {
 	VPutVnode(&fileCode, newfileptr);
-	assert(fileCode == 0);
+	osi_Assert(fileCode == 0);
     }
     (void)PutVolumePackage(fileptr, (newvptr && newvptr != oldvptr ?
 				     newvptr : 0), oldvptr, volptr, &client);
@@ -4464,7 +4464,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* break call back on the parent dir */
     BreakCallBack(client->host, DirFid, 0);
@@ -4664,9 +4664,9 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write locks to read locks before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
     VVnodeWriteToRead(&errorCode, parentptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* break call back on DirFid */
     BreakCallBack(client->host, DirFid, 0);
@@ -4844,10 +4844,10 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 #endif /* FS_STATS_DETAILED */
 
     /* Point to target's ACL buffer and copy the parent's ACL contents to it */
-    assert((SetAccessList
+    osi_Assert((SetAccessList
 	    (&targetptr, &volptr, &newACL, &newACLSize,
 	     &parentwhentargetnotdir, (AFSFid *) 0, 0)) == 0);
-    assert(parentwhentargetnotdir == 0);
+    osi_Assert(parentwhentargetnotdir == 0);
     memcpy((char *)newACL, (char *)VVnodeACL(parentptr), VAclSize(parentptr));
 
     /* update the status for the target vnode */
@@ -4856,7 +4856,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* Actually create the New directory in the directory package */
     SetDirHandle(&dir, targetptr);
-    assert(!(MakeDir(&dir, (afs_int32 *)OutFid, (afs_int32 *)DirFid)));
+    osi_Assert(!(MakeDir(&dir, (afs_int32 *)OutFid, (afs_int32 *)DirFid)));
     DFlush();
     VN_SET_LEN(targetptr, (afs_fsize_t) Length(&dir));
 
@@ -4866,7 +4866,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* break call back on DirFid */
     BreakCallBack(client->host, DirFid, 0);
@@ -5032,7 +5032,7 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    assert(!errorCode || errorCode == VSALVAGE);
+    osi_Assert(!errorCode || errorCode == VSALVAGE);
 
     /* break call back on DirFid and fileFid */
     BreakCallBack(client->host, DirFid, 0);
@@ -5417,7 +5417,7 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
     if (targetptr->disk.lock.lockCount <= 0) {
 	/* convert the write lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, targetptr);
-	assert(!errorCode || errorCode == VSALVAGE);
+	osi_Assert(!errorCode || errorCode == VSALVAGE);
 	BreakCallBack(client->host, Fid, 0);
     }
 
@@ -7077,7 +7077,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     {
 	afs_int32 high, low;
 	SplitOffsetOrSize(Len, high, low);
-	assert(Int64Mode || (Len >= 0 && high == 0) || Len < 0);
+	osi_Assert(Int64Mode || (Len >= 0 && high == 0) || Len < 0);
 	if (Int64Mode) {
 	    high = htonl(high);
 	    rx_Write(Call, (char *)&high, sizeof(afs_int32));	/* High order bits */
@@ -7473,7 +7473,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     }
     if (errorCode) {
 	afs_sfsize_t nfSize = FDH_SIZE(fdP);
-	assert(nfSize >= 0);
+	osi_Assert(nfSize >= 0);
 	/* something went wrong: adjust size and return */
 	VN_SET_LEN(targetptr, nfSize);	/* set new file size. */
 	/* changed_newTime is tested in StoreData to detemine if we

@@ -31,7 +31,6 @@
 #include <sys/time.h>
 #endif
 #include <errno.h>
-#include <assert.h>
 #include <signal.h>
 #include <string.h>
 

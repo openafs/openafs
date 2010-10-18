@@ -61,11 +61,7 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #include <signal.h>
 #include <string.h>
 
@@ -222,19 +218,19 @@ FSYNC_fsInit(void)
     Lock_Init(&FSYNC_handler_lock);
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_attr_init(&tattr) == 0);
-    assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    assert(pthread_create(&tid, &tattr, FSYNC_sync, NULL) == 0);
+    osi_Assert(pthread_attr_init(&tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+    osi_Assert(pthread_create(&tid, &tattr, FSYNC_sync, NULL) == 0);
 #else /* AFS_PTHREAD_ENV */
-    assert(LWP_CreateProcess
+    osi_Assert(LWP_CreateProcess
 	   (FSYNC_sync, USUAL_STACK_SIZE, USUAL_PRIORITY, (void *)0,
 	    "FSYNC_sync", &pid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_DEMAND_ATTACH_FS
     queue_Init(&fsync_salv.head);
-    assert(pthread_cond_init(&fsync_salv.cv, NULL) == 0);
-    assert(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
+    CV_INIT(&fsync_salv.cv, "fsync salv", CV_DEFAULT, 0);
+    osi_Assert(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
 
@@ -268,7 +264,7 @@ FSYNC_sync(void * args)
 
     /* we must not be called before vol package initialization, since we use
      * vol package mutexes and conds etc */
-    assert(VInit);
+    osi_Assert(VInit);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -302,7 +298,7 @@ FSYNC_sync(void * args)
 
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
-    assert(!code);
+    osi_Assert(!code);
 
 #ifdef AFS_DEMAND_ATTACH_FS
     /*
@@ -317,10 +313,10 @@ FSYNC_sync(void * args)
     }
     memcpy(thread_opts, &VThread_defaults, sizeof(VThread_defaults));
     thread_opts->disallow_salvsync = 1;
-    assert(pthread_setspecific(VThread_key, thread_opts) == 0);
+    osi_Assert(pthread_setspecific(VThread_key, thread_opts) == 0);
 
     code = VVGCache_PkgInit();
-    assert(code == 0);
+    osi_Assert(code == 0);
 #endif
 
     InitHandler();
@@ -430,7 +426,7 @@ FSYNC_backgroundSalvage(Volume *vp)
     }
 
     queue_Append(&fsync_salv.head, node);
-    assert(pthread_cond_broadcast(&fsync_salv.cv) == 0);
+    CV_BROADCAST(&fsync_salv.cv);
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -448,10 +444,10 @@ FSYNC_newconnection(osi_socket afd)
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == -1) {
 	Log("FSYNC_newconnection:  accept failed, errno==%d\n", errno);
-	assert(1 == 2);
+	osi_Assert(1 == 2);
     } else if (!AddHandler(fd, FSYNC_com)) {
 	AcceptOff();
-	assert(AddHandler(fd, FSYNC_com));
+	osi_Assert(AddHandler(fd, FSYNC_com));
     }
 }
 
@@ -1054,7 +1050,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #ifdef AFS_DEMAND_ATTACH_FS
             VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
             if (error==0) {
-                assert(vp->nUsers==0);
+                osi_Assert(vp->nUsers==0);
                 vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
             }
             else {
@@ -1506,7 +1502,7 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
 
     if (vp && vp->pending_vol_op) {
-	assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
+	osi_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
 	memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
 	res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
     } else {
@@ -1538,7 +1534,7 @@ FSYNC_com_VGQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	goto done;
     }
 
-    assert(sizeof(FSSYNC_VGQry_response_t) <= res->payload.len);
+    osi_Assert(sizeof(FSSYNC_VGQry_response_t) <= res->payload.len);
 
     rc = VVGCache_query_r(dp, vcom->vop->volume, res->payload.buf);
     switch (rc) {
@@ -1950,7 +1946,7 @@ static void
 AcceptOn(void)
 {
     if (AcceptHandler == -1) {
-	assert(AddHandler(fssync_server_state.fd, FSYNC_newconnection));
+	osi_Assert(AddHandler(fssync_server_state.fd, FSYNC_newconnection));
 	AcceptHandler = FindHandler(fssync_server_state.fd);
     }
 }
@@ -1959,7 +1955,7 @@ static void
 AcceptOff(void)
 {
     if (AcceptHandler != -1) {
-	assert(RemoveHandler(fssync_server_state.fd));
+	osi_Assert(RemoveHandler(fssync_server_state.fd));
 	AcceptHandler = -1;
     }
 }
@@ -2044,7 +2040,7 @@ FindHandler(osi_socket afd)
 	    return i;
 	}
     ReleaseReadLock(&FSYNC_handler_lock);	/* just in case */
-    assert(1 == 2);
+    osi_Assert(1 == 2);
     return -1;			/* satisfy compiler */
 }
 
@@ -2056,7 +2052,7 @@ FindHandler_r(osi_socket afd)
 	if (HandlerFD[i] == afd) {
 	    return i;
 	}
-    assert(1 == 2);
+    osi_Assert(1 == 2);
     return -1;			/* satisfy compiler */
 }
 
@@ -2078,7 +2074,7 @@ GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds)
     ObtainReadLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] != -1) {
-	    assert(fdi<maxfds);
+	    osi_Assert(fdi<maxfds);
 	    fds[fdi].fd = HandlerFD[i];
 	    fds[fdi].events = events;
 	    fds[fdi].revents = 0;

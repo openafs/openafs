@@ -99,11 +99,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #if defined (AFS_AIX_ENV) || defined (AFS_HPUX_ENV)
 #include <sys/ino.h>
 #endif
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
 #include <afs/afs_assert.h>
-#endif /* AFS_PTHREAD_ENV */
 #if defined(AFS_HPUX101_ENV)
 #include <unistd.h>
 #endif
@@ -299,7 +295,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
      *      LAST_RSVD_I is a vice inode, with dead beef, and
      *      di_nlink == 2 to indicate the FORCE.
      */
-    assert(p = ginode(LAST_RSVD_I));
+    osi_Assert(p = ginode(LAST_RSVD_I));
 
     if (p->di_vicemagic == VICEMAGIC && p->di_vicep1 == 0xdeadbeef
 	&& p->di_nlink == 2) {
@@ -1171,7 +1167,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		    goto out;
 		}
 #else
-		assert(0);	/* define AFS_3DISPARES in param.h */
+		osi_Panic("Tru64 needs AFS_3DISPARES\n");
 #endif
 #endif
 #if	defined(AFS_SUN56_ENV)

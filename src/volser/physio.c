@@ -157,5 +157,5 @@ void
 Die(char *msg)
 {
     printf("%s\n", msg);
-    assert(1 == 2);
+    osi_Panic("%s\n", msg);
 }

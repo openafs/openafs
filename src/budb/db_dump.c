@@ -74,7 +74,7 @@ canWrite(int fid)
 	if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	    dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_readerStatus_cond) == 0);
+	    CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
 #else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	    if (code)
@@ -84,9 +84,9 @@ canWrite(int fid)
 	dumpSyncPtr->ds_writerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_mutex_lock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
-	assert(pthread_cond_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex) == 0);
-	assert(pthread_mutex_unlock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
+	MUTEX_ENTER(&dumpSyncPtr->ds_writerStatus_mutex);
+	CV_WAIT(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
+	MUTEX_EXIT(&dumpSyncPtr->ds_writerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
 #endif
@@ -115,7 +115,7 @@ haveWritten(afs_int32 nbytes)
     if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&dumpSyncPtr->ds_readerStatus_cond) == 0);
+	CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
 #else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	if (code)
@@ -144,9 +144,9 @@ doneWriting(afs_int32 error)
 	dumpSyncPtr->ds_writerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_mutex_lock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
-	assert(pthread_cond_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex) == 0);
-	assert(pthread_mutex_unlock(&dumpSyncPtr->ds_writerStatus_mutex) == 0);
+	MUTEX_ENTER(&dumpSyncPtr->ds_writerStatus_mutex);
+	CV_WAIT(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
+	MUTEX_EXIT(&dumpSyncPtr->ds_writerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
 #endif
@@ -162,7 +162,7 @@ doneWriting(afs_int32 error)
 	dumpSyncPtr->ds_writerStatus = DS_DONE;
     dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_readerStatus_cond) == 0);
+    CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
 #else
     code = LWP_NoYieldSignal(&dumpSyncPtr->ds_readerStatus);
     if (code)

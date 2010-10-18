@@ -55,8 +55,7 @@ init()
 }
 
 char
-empty(q)
-     queue *q;
+empty(queue *q)
 {
     return (q->prev == q && q->next == q);
 }
@@ -75,15 +74,14 @@ insert(queue * q, char *s)
 }
 
 char *
-Remove(q)
-     queue *q;
+Remove(queue *q)
 {
     queue *old;
     char *s;
 
     if (empty(q)) {
 	printf("Remove from empty queue");
-	assert(0);
+	osi_Assert(0);
     }
 
     old = q->next;
@@ -100,8 +98,7 @@ int asleep;			/* Number of processes sleeping -- used for
 				 * clean termination */
 
 static int
-read_process(id)
-     int *id;
+read_process(int *id)
 {
     printf("\t[Reader %d]\n", *id);
     LWP_DispatchProcess();	/* Just relinquish control for now */
@@ -202,9 +199,8 @@ write_process()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     int nreaders, i;
     PROCESS pid;

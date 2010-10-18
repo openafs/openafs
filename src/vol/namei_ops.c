@@ -984,8 +984,8 @@ namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_foff_t * offset, int *index)
 #ifdef AFS_PTHREAD_ENV
 /* XXX do static initializers work for WINNT/pthread? */
 pthread_mutex_t _namei_glc_lock = PTHREAD_MUTEX_INITIALIZER;
-#define NAMEI_GLC_LOCK assert(pthread_mutex_lock(&_namei_glc_lock) == 0)
-#define NAMEI_GLC_UNLOCK assert(pthread_mutex_unlock(&_namei_glc_lock) == 0)
+#define NAMEI_GLC_LOCK MUTEX_ENTER(&_namei_glc_lock)
+#define NAMEI_GLC_UNLOCK MUTEX_EXIT(&_namei_glc_lock)
 #else /* !AFS_PTHREAD_ENV */
 #define NAMEI_GLC_LOCK
 #define NAMEI_GLC_UNLOCK
@@ -1756,7 +1756,7 @@ static pthread_key_t wq_key;
 static void
 _namei_wq_keycreate(void)
 {
-    assert(pthread_key_create(&wq_key, NULL) == 0);
+    osi_Assert(pthread_key_create(&wq_key, NULL) == 0);
 }
 
 /**
@@ -1770,9 +1770,9 @@ _namei_wq_keycreate(void)
 void
 namei_SetWorkQueue(struct afs_work_queue *wq)
 {
-    assert(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
+    osi_Assert(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
 
-    assert(pthread_setspecific(wq_key, wq) == 0);
+    osi_Assert(pthread_setspecific(wq_key, wq) == 0);
 }
 
 /**
@@ -1948,7 +1948,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
     linkHandle.fd_fd = -1;
 #ifdef AFS_SALSRV_ENV
-    assert(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
+    osi_Assert(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
 
     wq = pthread_getspecific(wq_key);
     if (!wq) {
@@ -2497,7 +2497,7 @@ static zlcList_t *zlcCur = NULL;
 static void
 AddToZLCDeleteList(char dir, char *name)
 {
-    assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
+    osi_Assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
 
     if (!zlcCur || zlcCur->zlc_n >= MAX_ZLC_NAMES) {
 	if (zlcCur && zlcCur->zlc_next)

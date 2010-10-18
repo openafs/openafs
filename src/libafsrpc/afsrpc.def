@@ -267,6 +267,7 @@ EXPORTS
 	rx_SetConnHardDeadTime			@272
 	rx_SetConnIdleDeadTime			@273
 	rx_InterruptCall                        @274
+        osi_Panic				@275
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

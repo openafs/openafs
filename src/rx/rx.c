@@ -229,10 +229,9 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
-    osi_Assert(pthread_cond_init
-	   (&rx_event_handler_cond, (const pthread_condattr_t *)0) == 0);
-    osi_Assert(pthread_cond_init(&rx_listener_cond, (const pthread_condattr_t *)0)
-	   == 0);
+    CV_INIT(&rx_event_handler_cond, "evhand", CV_DEFAULT, 0);
+    CV_INIT(&rx_listener_cond, "rxlisten", CV_DEFAULT, 0);
+
     osi_Assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
     osi_Assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
 

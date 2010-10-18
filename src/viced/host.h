@@ -23,13 +23,11 @@
  * precedence is host_listlock_mutex, host->mutex, host_glock_mutex.
  */
 #include <rx/rx_globals.h>
-#include <assert.h>
+#include <afs/afs_assert.h>
 #include <pthread.h>
 extern pthread_mutex_t host_glock_mutex;
-#define H_LOCK \
-    assert(pthread_mutex_lock(&host_glock_mutex) == 0)
-#define H_UNLOCK \
-    assert(pthread_mutex_unlock(&host_glock_mutex) == 0)
+#define H_LOCK MUTEX_ENTER(&host_glock_mutex);
+#define H_UNLOCK MUTEX_EXIT(&host_glock_mutex);
 extern pthread_key_t viced_uclient_key;
 #else /* AFS_PTHREAD_ENV */
 #define H_LOCK
@@ -193,7 +191,7 @@ do { \
 				hostList ? (hostList->prev = (h)):0; 	\
 				hostList = (h);                         \
 			        hostCount++;
-#define h_DeleteList_r(h)	assert(hostCount>0);                        \
+#define h_DeleteList_r(h)	osi_Assert(hostCount>0);                    \
 				hostCount--;                                \
 				(h)->next ? ((h)->next->prev = (h)->prev):0;\
 				(h)->prev ? ((h)->prev->next = (h)->next):0;\

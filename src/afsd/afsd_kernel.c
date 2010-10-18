@@ -17,7 +17,6 @@
 #include "afsd.h"
 
 #include <assert.h>
-#include <potpourri.h>
 #include <afs/afsutil.h>
 #include <stdlib.h>
 #include <stdio.h>

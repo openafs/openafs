@@ -233,7 +233,7 @@ VVolLockType(int mode, int writeable)
 	    return 0;
 
 	default:
-	    assert(0 /* unknown checkout mode */);
+	    osi_Assert(0 /* unknown checkout mode */);
 	    return 0;
 	}
     }
@@ -382,11 +382,11 @@ VWaitStateChange_r(Volume * vp)
 {
     VolState state_save = V_attachState(vp);
 
-    assert(vp->nWaiters || vp->nUsers);
+    osi_Assert(vp->nWaiters || vp->nUsers);
     do {
 	VOL_CV_WAIT(&V_attachCV(vp));
     } while (V_attachState(vp) == state_save);
-    assert(V_attachState(vp) != VOL_STATE_FREED);
+    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -403,11 +403,11 @@ VWaitStateChange_r(Volume * vp)
 static_inline void
 VWaitExclusiveState_r(Volume * vp)
 {
-    assert(vp->nWaiters || vp->nUsers);
+    osi_Assert(vp->nWaiters || vp->nUsers);
     while (VIsExclusiveState(V_attachState(vp))) {
 	VOL_CV_WAIT(&V_attachCV(vp));
     }
-    assert(V_attachState(vp) != VOL_STATE_FREED);
+    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -435,7 +435,7 @@ VChangeState_r(Volume * vp, VolState new_state)
     VStats.state_levels[new_state]++;
 
     V_attachState(vp) = new_state;
-    assert(pthread_cond_broadcast(&V_attachCV(vp)) == 0);
+    CV_BROADCAST(&V_attachCV(vp));
     return old_state;
 }
 
