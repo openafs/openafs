@@ -39,40 +39,24 @@ static struct osi_packet {
 
 static char memZero;		/* address of 0 bytes for kmem_alloc */
 
-struct osimem {
-    struct osimem *next;
-};
-
 #if !defined(AFS_NBSD_ENV) || defined(AFS_NBSD50_ENV)
 void *
-afs_osi_Alloc(size_t x)
+afs_osi_Alloc(size_t size)
 {
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
-    struct osimem *tm = NULL;
-    int size;
-#endif
-
     AFS_STATCNT(osi_Alloc);
     /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
      * things so that NULL returned iff an error occurred */
-    if (x == 0)
+    if (size == 0)
 	return &memZero;
 
     AFS_STATS(afs_stats_cmperf.OutStandingAllocs++);
-    AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
+    AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += size);
 #ifdef AFS_LINUX20_ENV
-    return osi_linux_alloc(x, 1);
+    return osi_linux_alloc(size, 1);
 #elif defined(AFS_FBSD_ENV)
-    return osi_fbsd_alloc(x, 1);
+    return osi_fbsd_alloc(size, 1);
 #else
-    size = x;
-    tm = (struct osimem *)AFS_KALLOC(size);
-#ifdef	AFS_SUN5_ENV
-    if (!tm)
-	osi_Panic("osi_Alloc: Couldn't allocate %d bytes; out of memory!\n",
-		  size);
-#endif
-    return (void *)tm;
+    return AFS_KALLOC(size);
 #endif
 }
 
@@ -92,7 +76,7 @@ afs_osi_Free(void *x, size_t asize)
 #elif defined(AFS_OBSD_ENV)
     osi_obsd_Free(x, asize);
 #else
-    AFS_KFREE((struct osimem *)x, asize);
+    AFS_KFREE(x, asize);
 #endif
 }
 
