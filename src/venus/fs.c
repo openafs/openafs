@@ -4256,20 +4256,30 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
 {
     struct ViceIoctl blob;
     struct cmd_item *ti;
+
+    afs_int32 code;
+    int error = 0;
+
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-      struct VenusFid vfid;
+        struct VenusFid vfid;
 
-      blob.out_size = sizeof(struct VenusFid);
-      blob.out = (char *) &vfid;
-      blob.in_size = 0;
+        blob.out_size = sizeof(struct VenusFid);
+        blob.out = (char *) &vfid;
+        blob.in_size = 0;
 
-      if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
-	printf("File %s (%u.%u.%u) contained in volume %u\n",
-	       ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
-	       vfid.Fid.Volume);
-      }
+        code = pioctl(ti->data, VIOCGETFID, &blob, 1);
+        if (code) {
+            Die(errno,ti->data);
+            error = 1;
+            continue;
+        }
+
+        printf("File %s (%u.%u.%u) contained in volume %u\n",
+               ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
+               vfid.Fid.Volume);
+
     }
 
-    return 0;
+    return error;
 }
 
