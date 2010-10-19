@@ -273,7 +273,7 @@ static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
     MUTEX_ENTER(&rx_atomic_mutex);
     atomic->var -= change;
-    MUTEX_ENTER(&rx_atomic_mutex);
+    MUTEX_EXIT(&rx_atomic_mutex);
 }
 
 #endif
