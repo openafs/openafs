@@ -1358,22 +1358,27 @@ BypassThresholdCmd(struct cmd_syndesc *as, void *arock)
 
 	tp = as->parms[0].items->data;
 	len = strlen(tp);
-	digit = 1;
-	for(ix = 0; ix < len; ++ix) {
-	    if(!isdigit(tp[0])) {
-		digit = 0;
-		break;
-	    }
-	}
-	if (digit == 0) {
-	    fprintf(stderr, "fs bypassthreshold -size: %s must be an undecorated digit string.\n", tp);
-	    return EINVAL;
-	}
-	threshold_i = atoi(tp);
-	if(ix > 9 && threshold_i < 2147483647)
-	    threshold_i = 2147483647;
-	blob.in = (char *) &threshold_i;
-	blob.in_size = sizeof(threshold_i);
+
+        if (!strcmp(tp,"-1")) {
+            threshold_i = -1;
+        } else {
+            digit = 1;
+            for(ix = 0; ix < len; ++ix) {
+                if(!isdigit(tp[0])) {
+                    digit = 0;
+                    break;
+                }
+            }
+            if (digit == 0) {
+                fprintf(stderr, "fs bypassthreshold -size: %s must be an integer between -1 and 2^31\n", tp);
+                return EINVAL;
+            }
+            threshold_i = atoi(tp);
+            if(ix > 9 && threshold_i < 2147483647)
+                threshold_i = 2147483647;
+        }
+        blob.in = (char *) &threshold_i;
+        blob.in_size = sizeof(threshold_i);
     } else {
 	blob.in = NULL;
 	blob.in_size = 0;
