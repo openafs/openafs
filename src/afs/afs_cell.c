@@ -233,7 +233,8 @@ afs_cellname_new(char *name, afs_int32 cellnum)
     if (cellnum == 0)
 	cellnum = afs_cellnum_next;
 
-    cn = (struct cell_name *)afs_osi_Alloc(sizeof(*cn));
+    cn = afs_osi_Alloc(sizeof(*cn));
+    osi_Assert(cn != NULL);
     cn->next = afs_cellname_head;
     cn->cellnum = cellnum;
     cn->cellname = afs_strdup(name);
@@ -515,7 +516,8 @@ afs_NewCellAlias(char *alias, char *cell)
     }
 
     UpgradeSToWLock(&afs_xcell, 682);
-    tc = (struct cell_alias *)afs_osi_Alloc(sizeof(struct cell_alias));
+    tc = afs_osi_Alloc(sizeof(struct cell_alias));
+    osi_Assert(tc != NULL);
     tc->alias = afs_strdup(alias);
     tc->cell = afs_strdup(cell);
     tc->next = afs_cellalias_head;
@@ -917,7 +919,8 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     if (tc) {
 	aflags &= ~CNoSUID;
     } else {
-	tc = (struct cell *)afs_osi_Alloc(sizeof(struct cell));
+	tc = afs_osi_Alloc(sizeof(struct cell));
+	osi_Assert(tc != NULL);
 	memset(tc, 0, sizeof(*tc));
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;

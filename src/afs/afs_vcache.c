@@ -309,9 +309,8 @@ afs_AllocCBR(void)
 	    afs_stats_cmperf.CallBackFlushes++;
 	} else {
 	    /* try allocating */
-	    tsp =
-		(struct afs_cbr *)afs_osi_Alloc(AFS_NCBRS *
-						sizeof(struct afs_cbr));
+	    tsp = afs_osi_Alloc(AFS_NCBRS * sizeof(struct afs_cbr));
+	    osi_Assert(tsp != NULL);
 	    for (i = 0; i < AFS_NCBRS - 1; i++) {
 		tsp[i].next = &tsp[i + 1];
 	    }
@@ -379,6 +378,7 @@ afs_FlushVCBs(afs_int32 lockit)
 	return code;
     treq.flags |= O_NONBLOCK;
     tfids = afs_osi_Alloc(sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
+    osi_Assert(tfids != NULL);
 
     if (lockit)
 	ObtainWriteLock(&afs_xvcb, 273);
@@ -2897,7 +2897,8 @@ afs_vcacheInit(int astatSize)
 
 #if !defined(AFS_LINUX22_ENV)
     /* Allocate and thread the struct vcache entries */
-    tvp = (struct vcache *)afs_osi_Alloc(astatSize * sizeof(struct vcache));
+    tvp = afs_osi_Alloc(astatSize * sizeof(struct vcache));
+    osi_Assert(tvp != NULL);
     memset(tvp, 0, sizeof(struct vcache) * astatSize);
 
     Initial_freeVCList = tvp;

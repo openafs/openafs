@@ -141,7 +141,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     else if (aVolumes > 32767)
 	aVolumes = 32767;
 
-    tv = (struct volume *)afs_osi_Alloc(aVolumes * sizeof(struct volume));
+    tv = afs_osi_Alloc(aVolumes * sizeof(struct volume));
+    osi_Assert(tv != NULL);
     for (i = 0; i < aVolumes - 1; i++)
 	tv[i].next = &tv[i + 1];
     tv[aVolumes - 1].next = NULL;
@@ -533,8 +534,10 @@ afs_ResourceInit(int preallocs)
 	afs_resourceinit_flag = 1;
 	for (i = 0; i < NFENTRIES; i++)
 	    fvTable[i] = 0;
-	for (i = 0; i < MAXNUMSYSNAMES; i++)
+	for (i = 0; i < MAXNUMSYSNAMES; i++) {
 	    afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
+	    osi_Assert(afs_sysnamelist[i] != NULL);
+	}
 	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
 	afs_sysnamecount = 1;

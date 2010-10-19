@@ -113,8 +113,10 @@ afspag_Init(afs_int32 nfs_server_addr)
 
     afs_resourceinit_flag = 1;
     afs_nfs_server_addr = nfs_server_addr;
-    for (i = 0; i < MAXNUMSYSNAMES; i++)
+    for (i = 0; i < MAXNUMSYSNAMES; i++) {
 	afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
+        osi_Assert(afs_sysnamelist[i] != NULL);
+    }
     afs_sysname = afs_sysnamelist[0];
     strcpy(afs_sysname, SYS_NAME);
     afs_sysnamecount = 1;

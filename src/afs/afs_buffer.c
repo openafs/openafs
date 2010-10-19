@@ -119,8 +119,8 @@ DInit(int abuffers)
     abuffers = ((abuffers - 1) | (NPB - 1)) + 1;
     afs_max_buffers = abuffers << 2;		/* possibly grow up to 4 times as big */
     LOCK_INIT(&afs_bufferLock, "afs_bufferLock");
-    Buffers =
-	(struct buffer *)afs_osi_Alloc(afs_max_buffers * sizeof(struct buffer));
+    Buffers = afs_osi_Alloc(afs_max_buffers * sizeof(struct buffer));
+    osi_Assert(Buffers != NULL);
     timecounter = 1;
     afs_stats_cmperf.bufAlloced = nbuffers = abuffers;
     for (i = 0; i < PHSIZE; i++)
@@ -128,7 +128,8 @@ DInit(int abuffers)
     for (i = 0; i < abuffers; i++) {
 	if ((i & (NPB - 1)) == 0) {
 	    /* time to allocate a fresh buffer */
-	    BufferData = (char *) afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
+	    BufferData = afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
+	    osi_Assert(BufferData != NULL);
 	}
 	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
@@ -337,7 +338,8 @@ afs_newslot(struct dcache *adc, afs_int32 apage, struct buffer *lp)
 	    return 0;
 	}
 
-	BufferData = (char *) afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
+	BufferData = afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
+	osi_Assert(BufferData != NULL);
 	for (i = 0; i< NPB; i++) {
 	    /* Fill in each buffer with an empty indication. */
 	    tp = &Buffers[i + nbuffers];

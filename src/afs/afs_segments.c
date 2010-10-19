@@ -593,7 +593,7 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
     struct dcache *tdc;
     void *zeros;
 
-    zeros = (void *) afs_osi_Alloc(AFS_PAGESIZE);
+    zeros = afs_osi_Alloc(AFS_PAGESIZE);
     if (zeros == NULL)
 	return ENOMEM;
     memset(zeros, 0, AFS_PAGESIZE);

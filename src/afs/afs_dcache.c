@@ -2594,7 +2594,8 @@ afs_MemGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
 	if (!afs_freeDSList) {
 	    /* none free, making one is better than a panic */
 	    afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
-	    tdc = (struct dcache *)afs_osi_Alloc(sizeof(struct dcache));
+	    tdc = afs_osi_Alloc(sizeof(struct dcache));
+	    osi_Assert(tdc != NULL);
 #ifdef	KERNEL_HAVE_PIN
 	    pin((char *)tdc, sizeof(struct dcache));	/* XXX */
 #endif
@@ -2691,7 +2692,8 @@ afs_UFSGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
 	if (!afs_freeDSList) {
 	    /* none free, making one is better than a panic */
 	    afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
-	    tdc = (struct dcache *)afs_osi_Alloc(sizeof(struct dcache));
+	    tdc = afs_osi_Alloc(sizeof(struct dcache));
+	    osi_Assert(tdc != NULL);
 #ifdef	KERNEL_HAVE_PIN
 	    pin((char *)tdc, sizeof(struct dcache));	/* XXX */
 #endif
@@ -3064,37 +3066,41 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     if (aDentries > 512)
 	afs_dhashsize = 2048;
     /* initialize hash tables */
-    afs_dvhashTbl =
-	(afs_int32 *) afs_osi_Alloc(afs_dhashsize * sizeof(afs_int32));
-    afs_dchashTbl =
-	(afs_int32 *) afs_osi_Alloc(afs_dhashsize * sizeof(afs_int32));
+    afs_dvhashTbl = afs_osi_Alloc(afs_dhashsize * sizeof(afs_int32));
+    osi_Assert(afs_dvhashTbl != NULL);
+    afs_dchashTbl = afs_osi_Alloc(afs_dhashsize * sizeof(afs_int32));
+    osi_Assert(afs_dchashTbl != NULL);
     for (i = 0; i < afs_dhashsize; i++) {
 	afs_dvhashTbl[i] = NULLIDX;
 	afs_dchashTbl[i] = NULLIDX;
     }
-    afs_dvnextTbl = (afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_int32));
-    afs_dcnextTbl = (afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_int32));
+    afs_dvnextTbl = afs_osi_Alloc(afiles * sizeof(afs_int32));
+    osi_Assert(afs_dvnextTbl != NULL);
+    afs_dcnextTbl = afs_osi_Alloc(afiles * sizeof(afs_int32));
+    osi_Assert(afs_dcnextTbl != NULL);
     for (i = 0; i < afiles; i++) {
 	afs_dvnextTbl[i] = NULLIDX;
 	afs_dcnextTbl[i] = NULLIDX;
     }
 
     /* Allocate and zero the pointer array to the dcache entries */
-    afs_indexTable = (struct dcache **)
-	afs_osi_Alloc(sizeof(struct dcache *) * afiles);
+    afs_indexTable = afs_osi_Alloc(sizeof(struct dcache *) * afiles);
+    osi_Assert(afs_indexTable != NULL);
     memset(afs_indexTable, 0, sizeof(struct dcache *) * afiles);
-    afs_indexTimes =
-	(afs_hyper_t *) afs_osi_Alloc(afiles * sizeof(afs_hyper_t));
+    afs_indexTimes = afs_osi_Alloc(afiles * sizeof(afs_hyper_t));
+    osi_Assert(afs_indexTimes != NULL);
     memset(afs_indexTimes, 0, afiles * sizeof(afs_hyper_t));
-    afs_indexUnique =
-	(afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_uint32));
+    afs_indexUnique = afs_osi_Alloc(afiles * sizeof(afs_uint32));
+    osi_Assert(afs_indexUnique != NULL);
     memset(afs_indexUnique, 0, afiles * sizeof(afs_uint32));
-    afs_indexFlags = (u_char *) afs_osi_Alloc(afiles * sizeof(u_char));
+    afs_indexFlags = afs_osi_Alloc(afiles * sizeof(u_char));
+    osi_Assert(afs_indexFlags != NULL);
     memset(afs_indexFlags, 0, afiles * sizeof(char));
 
     /* Allocate and thread the struct dcache entries themselves */
     tdp = afs_Initial_freeDSList =
-	(struct dcache *)afs_osi_Alloc(aDentries * sizeof(struct dcache));
+	afs_osi_Alloc(aDentries * sizeof(struct dcache));
+    osi_Assert(tdp != NULL);
     memset(tdp, 0, aDentries * sizeof(struct dcache));
 #ifdef	KERNEL_HAVE_PIN
     pin((char *)afs_indexTable, sizeof(struct dcache *) * afiles);	/* XXX */
@@ -3348,7 +3354,7 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
     ReleaseWriteLock(&afs_xdcache);
 
     /* Alloc a 4k block. */
-    data = (char *) afs_osi_Alloc(4096);
+    data = afs_osi_Alloc(4096);
     if (!data) {
 	afs_warn("afs_MakeShadowDir: could not alloc data\n");
 	ret_code = ENOMEM;

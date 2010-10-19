@@ -76,7 +76,8 @@ afs_GetNfsClientPag(afs_int32 uid, afs_uint32 host)
 	    return np;
 	}
     }
-    np = (struct nfsclientpag *)afs_osi_Alloc(sizeof(struct nfsclientpag));
+    np = afs_osi_Alloc(sizeof(struct nfsclientpag));
+    osi_Assert(np != NULL);
     memset(np, 0, sizeof(struct nfsclientpag));
     /* Copy the necessary afs_exporter fields */
     memcpy((char *)np, (char *)afs_nfsexporter, sizeof(struct afs_exporter));
@@ -479,6 +480,7 @@ afs_nfsclient_sysname(struct nfsclientpag *np, char *inname,
 	    }
 	for(count=0; count < *num;++count) {
 	    np->sysname[count]= afs_osi_Alloc(MAXSYSNAME);
+	    osi_Assert(np->sysname[count] != NULL);
 	}
 	cp = inname;
 	for(count=0; count < *num;++count) {

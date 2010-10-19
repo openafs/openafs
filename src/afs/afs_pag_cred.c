@@ -45,10 +45,10 @@ afspag_GetCell(char *acell)
     }
 
     if (!tcell) {
-	tcell = (struct afspag_cell *)afs_osi_Alloc(sizeof(struct afspag_cell));
+	tcell = afs_osi_Alloc(sizeof(struct afspag_cell));
 	if (!tcell)
 	    goto out;
-	tcell->cellname = (char *)afs_osi_Alloc(strlen(acell) + 1);
+	tcell->cellname = afs_osi_Alloc(strlen(acell) + 1);
 	if (!tcell->cellname) {
 	    afs_osi_Free(tcell, sizeof(struct afspag_cell));
 	    tcell = 0;
@@ -251,8 +251,7 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 	return UAESRCH;
     }
 
-    a_creds->CredInfos_val =
-	(CredInfo *)afs_osi_Alloc(count * sizeof(CredInfo));
+    a_creds->CredInfos_val = afs_osi_Alloc(count * sizeof(CredInfo));
     if (!a_creds->CredInfos_val)
 	goto out;
     a_creds->CredInfos_len = count;

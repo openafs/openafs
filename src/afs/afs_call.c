@@ -664,7 +664,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 		   sizeof(struct afs_uspc_param), code);
 	namebufsz = mvParam->bufSz;
 	param1 = afs_osi_Alloc(namebufsz);
+	osi_Assert(param1 != NULL);
 	param2 = afs_osi_Alloc(namebufsz);
+	osi_Assert(param2 != NULL);
 
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -869,6 +871,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	 * home cell flag (0x1 bit) and the nosuid flag (0x2 bit) */
 	struct afsop_cell *tcell = afs_osi_Alloc(sizeof(struct afsop_cell));
 
+	osi_Assert(tcell != NULL);
 	code = afs_InitDynroot();
 	if (!code) {
 	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts, sizeof(tcell->hosts),
@@ -891,6 +894,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 	int cflags = parm4;
 
+	osi_Assert(tcell != NULL);
+	osi_Assert(tbuffer != NULL);
+	osi_Assert(tbuffer1 != NULL);
 	code = afs_InitDynroot();
 	if (!code) {
 #if 0
@@ -1095,6 +1101,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
 
+	osi_Assert(buffer != NULL);
+	osi_Assert(maskbuffer != NULL);
+	osi_Assert(mtubuffer != NULL);
 	/* This is a refresh */
 	if (count & 0x40000000) {
 	    count &= ~0x40000000;
@@ -1273,6 +1282,8 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_int32 *kmsg = afs_osi_Alloc(kmsgLen);
 	char *cellname = afs_osi_Alloc(cellLen);
 
+	osi_Assert(kmsg != NULL);
+	osi_Assert(cellname != NULL);
 #ifndef UKERNEL
 	afs_osi_MaskUserLoop();
 #endif

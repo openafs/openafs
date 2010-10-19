@@ -563,7 +563,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     old_pdir_fid.Fid.Unique = avc->f.oldParent.unique;
 
     /* Get old name. */
-    old_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
+    old_name = afs_osi_Alloc(AFSNAMEMAX);
     if (!old_name) {
 	/* printf("afs_ProcessOpRename: Couldn't alloc space for old name.\n"); */
 	return ENOMEM;
@@ -575,7 +575,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     }
 
     /* Alloc data first. */
-    new_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
+    new_name = afs_osi_Alloc(AFSNAMEMAX);
     if (!new_name) {
 	/* printf("afs_ProcessOpRename: Couldn't alloc space for new name.\n"); */
 	code = ENOMEM;

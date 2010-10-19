@@ -35,7 +35,8 @@ exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state,
 	LOCK_INIT(&afs_xexp, "afs_xexp");
     }
     length = (size ? size : sizeof(struct afs_exporter));
-    ex = (struct afs_exporter *)afs_osi_Alloc(length);
+    ex = afs_osi_Alloc(length);
+    osi_Assert(ex != NULL);
     memset(ex, 0, length);
     ObtainWriteLock(&afs_xexp, 308);
     for (op = root_exported; op; op = op->exp_next) {
