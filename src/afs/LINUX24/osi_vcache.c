@@ -86,6 +86,7 @@ osi_NewVnode(void)
     tvc = VTOAFS(ip);
 #else
     tvc = afs_osi_Alloc(sizeof(struct vcache));
+    osi_Assert(tvc != NULL);
     ip->u.generic_ip = tvc;
     tvc->v = ip;
 #endif

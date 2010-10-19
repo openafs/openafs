@@ -134,6 +134,7 @@ afs_AddToken(struct tokenJar **tokens, rx_securityIndex type) {
     struct tokenJar *newToken;
 
     newToken = afs_osi_Alloc(sizeof(struct tokenJar));
+    osi_Assert(newToken != NULL);
     memset(newToken, 0, sizeof(*newToken));
 
     newToken->type = type;
@@ -316,6 +317,7 @@ afs_AddRxkadToken(struct tokenJar **tokens, char *ticket, int ticketLen,
     rxkad = &tokenU->rxkad;
 
     rxkad->ticket = afs_osi_Alloc(ticketLen);
+    osi_Assert(rxkad->ticket != NULL);
     rxkad->ticketLen = ticketLen;
     memcpy(rxkad->ticket, ticket, ticketLen);
     rxkad->clearToken = *clearToken;

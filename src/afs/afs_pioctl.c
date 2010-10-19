@@ -1957,6 +1957,8 @@ DECL_PIOCTL(PGetVolumeStatus)
     char *Name;
     XSTATS_DECLS;
 
+    osi_Assert(offLineMsg != NULL);
+    osi_Assert(motd != NULL);
     AFS_STATCNT(PGetVolumeStatus);
     if (!avc) {
 	code = EINVAL;
@@ -3864,7 +3866,8 @@ ReSortCells(int s, afs_int32 * l, int vlonly)
 
     if (vlonly) {
 	afs_int32 *p;
-	p = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * (s + 1));
+	p = afs_osi_Alloc(sizeof(afs_int32) * (s + 1));
+        osi_Assert(p != NULL);
 	p[0] = s;
 	memcpy(p + 1, l, s * sizeof(afs_int32));
 	afs_TraverseCells(&ReSortCells_cb, p);
@@ -5120,6 +5123,7 @@ DECL_PIOCTL(PCallBackAddr)
     }
 
     addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    osi_Assert(addrs != NULL);
     j = 0;
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {

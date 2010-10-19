@@ -505,6 +505,7 @@ ForceAllNewConnections(void)
     }
 
     addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    osi_Assert(addrs != NULL);
     j = 0;
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
@@ -571,6 +572,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     }
 
     addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    osi_Assert(addrs != NULL);
     j = 0;
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
@@ -583,13 +585,19 @@ afs_CheckServers(int adown, struct cell *acellp)
     ReleaseReadLock(&afs_xsrvAddr);
     ReleaseReadLock(&afs_xserver);
 
-    conns = (struct afs_conn **)afs_osi_Alloc(j * sizeof(struct afs_conn *));
-    rxconns = (struct rx_connection **)afs_osi_Alloc(j * sizeof(struct rx_connection *));
-    conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
-    deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
-    results = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
+    conns = afs_osi_Alloc(j * sizeof(struct afs_conn *));
+    osi_Assert(conns != NULL);
+    rxconns = afs_osi_Alloc(j * sizeof(struct rx_connection *));
+    osi_Assert(rxconns != NULL);
+    conntimer = afs_osi_Alloc(j * sizeof (afs_int32));
+    osi_Assert(conntimer != NULL);
+    deltas = afs_osi_Alloc(j * sizeof (afs_int32));
+    osi_Assert(deltas != NULL);
+    results = afs_osi_Alloc(j * sizeof (afs_int32));
+    osi_Assert(results != NULL);
 
-    caps = (Capabilities *)afs_osi_Alloc(j * sizeof (Capabilities));
+    caps = afs_osi_Alloc(j * sizeof (Capabilities));
+    osi_Assert(caps != NULL);
     memset(caps, 0, j * sizeof(Capabilities));
 
     for (i = 0; i < j; i++) {
@@ -1792,7 +1800,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
     if (oldts) {
 	newts = oldts;
     } else {
-	newts = (struct server *)afs_osi_Alloc(sizeof(struct server));
+	newts = afs_osi_Alloc(sizeof(struct server));
 	if (!newts)
 	    panic("malloc of server struct");
 	afs_totalServers++;
@@ -1837,7 +1845,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 	if (oldsa) {
 	    newsa = oldsa;
 	} else {
-	    newsa = (struct srvAddr *)afs_osi_Alloc(sizeof(struct srvAddr));
+	    newsa = afs_osi_Alloc(sizeof(struct srvAddr));
 	    if (!newsa)
 		panic("malloc of srvAddr struct");
 	    afs_totalSrvAddrs++;
@@ -1887,8 +1895,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 
 	    /* Have a srvAddr struct. Now get a server struct (if not already) */
 	    if (!orphts) {
-		orphts =
-		    (struct server *)afs_osi_Alloc(sizeof(struct server));
+		orphts = afs_osi_Alloc(sizeof(struct server));
 		if (!orphts)
 		    panic("malloc of lo server struct");
 		memset(orphts, 0, sizeof(struct server));
