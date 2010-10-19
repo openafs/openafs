@@ -4254,6 +4254,7 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
 
     afs_int32 code;
     int error = 0;
+    char cell[MAXCELLCHARS];
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
         struct VenusFid vfid;
@@ -4269,9 +4270,19 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
             continue;
         }
 
-        printf("File %s (%u.%u.%u) contained in volume %u\n",
+        code = GetCell(ti->data, cell);
+        if (code) {
+	    if (errno == ENOENT)
+		fprintf(stderr, "%s: no such cell as '%s'\n", pn, ti->data);
+	    else
+		Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        printf("File %s (%u.%u.%u) located in cell %s\n",
                ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
-               vfid.Fid.Volume);
+               cell);
 
     }
 
