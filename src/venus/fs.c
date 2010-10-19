@@ -4261,6 +4261,7 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
     int error = 0;
     char cell[MAXCELLCHARS];
 
+    SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
         struct VenusFid vfid;
 
