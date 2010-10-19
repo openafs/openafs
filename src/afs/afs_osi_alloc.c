@@ -76,29 +76,6 @@ afs_osi_Alloc(size_t x)
 #endif
 }
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-
-void *
-afs_osi_Alloc_NoSleep(size_t x)
-{
-    struct osimem *tm;
-    int size;
-
-    AFS_STATCNT(osi_Alloc);
-    /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
-     * things so that NULL returned iff an error occurred */
-    if (x == 0)
-	return &memZero;
-
-    size = x;
-    AFS_STATS(afs_stats_cmperf.OutStandingAllocs++);
-    AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
-    tm = (struct osimem *)AFS_KALLOC_NOSLEEP(size);
-    return (void *)tm;
-}
-
-#endif /* SUN || SGI */
-
 void
 afs_osi_Free(void *x, size_t asize)
 {

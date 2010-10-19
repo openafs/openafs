@@ -556,9 +556,6 @@ extern afs_lock_t osi_flplock;
 #endif
 
 extern void *afs_osi_Alloc_debug(size_t x, char *func, int line);
-#ifndef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t x);
-#endif
 #ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);
 #endif

@@ -124,12 +124,6 @@ struct afs_osi_WaitHandle {
 
 #define	osi_NPACKETS	20	/* number of cluster pkts to alloc */
 
-/*
- * Alloc declarations.
- */
-#if !defined(AFS_OBSD44_ENV) && !defined(AFS_NBSD_ENV)
-#define afs_osi_Alloc_NoSleep afs_osi_Alloc
-#endif
 
 /*
  * Default vnode related macros

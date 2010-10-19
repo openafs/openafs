@@ -54,9 +54,6 @@ local_osi_Time()
 #define osi_Time() (hrestime.tv_sec)
 #endif
 
-#undef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t size);
-
 #ifdef AFS_SUN58_ENV
 # define osi_vnhold(avc, r)  do {    \
     struct vnode *vp = AFSTOV(avc); \

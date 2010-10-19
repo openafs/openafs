@@ -657,9 +657,6 @@ extern void rx_SetMaxMTU(int mtu);
 #ifndef afs_osi_Alloc
 extern void *afs_osi_Alloc(size_t x);
 #endif
-#ifndef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t x);
-#endif
 #ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);
 #endif
