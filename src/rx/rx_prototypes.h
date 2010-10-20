@@ -27,6 +27,7 @@ extern int rx_InitHost(u_int host, u_int port);
 #ifdef AFS_NT40_ENV
 extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
+extern void rx_StartClientThread(void);
 #endif
 #ifndef KERNEL
 extern void rxi_StartServerProcs(int nExistingProcs);
