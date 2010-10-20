@@ -9313,7 +9313,6 @@ void smb_Server(VOID *parmp)
     UCHAR rc;
     smb_vc_t *vcp = NULL;
     smb_t *smbp;
-    extern void rx_StartClientThread(void);
 
     rx_StartClientThread();
 
