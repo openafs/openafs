@@ -6960,9 +6960,7 @@ rx_DebugOnOff(int on)
 void
 rx_StatsOnOff(int on)
 {
-#ifdef RXDEBUG
     rx_stats_active = on;
-#endif
 }
 
 
