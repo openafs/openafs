@@ -4243,7 +4243,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    maxDgramPackets = MIN(maxDgramPackets, rxi_nDgramPackets);
 	    maxDgramPackets =
 		MIN(maxDgramPackets, (int)(peer->ifDgramPackets));
-	    maxDgramPackets = MIN(maxDgramPackets, tSize);
 	    if (maxDgramPackets > 1) {
 		peer->maxDgramPackets = maxDgramPackets;
 		call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
