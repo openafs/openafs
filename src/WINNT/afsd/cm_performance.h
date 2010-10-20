@@ -16,6 +16,8 @@
 
  */
 
+#ifndef CM_PERFORMANCE_H
+#define CM_PERFORMANCE_H
 typedef struct cm_fid_stats {
     cm_fid_t    fid;
     afs_uint32  fileType;
@@ -31,7 +33,9 @@ typedef struct cm_fid_stats {
 #define CM_FIDSTATS_FLAG_PURERO      0x08
 #define CM_FIDSTATS_FLAG_CALLBACK    0x10
 
+extern void cm_PerformanceTuningInit(void);
 extern void cm_PerformanceTuningCheck(void);
-
 extern void cm_PerformancePrintReport(void);
+
+#endif /* CM_PERFORMANCE_H */
 
