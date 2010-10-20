@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "afsd.h"
+#include "smb.h"
 
 #include <rx/rx.h>
 #include <rx/rx_prototypes.h>
@@ -88,9 +89,9 @@ void cm_BkgDaemon(void * parm)
     cm_bkgRequest_t *rp;
     afs_int32 code;
     char name[32] = "";
-    long daemonID = (long)parm;
+    long daemonID = (long)(LONG_PTR)parm;
 
-    snprintf(name, sizeof(name), "cm_BkgDaemon_ShutdownEvent%d", daemonID);
+    snprintf(name, sizeof(name), "cm_BkgDaemon_ShutdownEvent%u", daemonID);
 
     cm_BkgDaemon_ShutdownEvent[daemonID] = thrd_CreateEvent(NULL, FALSE, FALSE, name);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -673,7 +674,7 @@ void cm_InitDaemon(int nDaemons)
 
 	for(i=0; i < cm_nDaemons; i++) {
             phandle = thrd_Create((SecurityAttrib) 0, 0,
-                                   (ThreadFunc) cm_BkgDaemon, (LPVOID)i, 0, &pid,
+                                   (ThreadFunc) cm_BkgDaemon, (LPVOID)(LONG_PTR)i, 0, &pid,
                                    "cm_BkgDaemon");
             osi_assertx(phandle != NULL, "cm_BkgDaemon thread creation failure");
             thrd_CloseHandle(phandle);
