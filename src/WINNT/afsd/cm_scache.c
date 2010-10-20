@@ -1451,7 +1451,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	}
         bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
         if (bufp->flags & CM_BUF_WAITING) {
-            osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
+            osi_Log2(afsd_logp, "CM SyncOpDone FetchData Waking [scp 0x%p] bufp 0x%p", scp, bufp);
             osi_Wakeup((LONG_PTR) &bufp);
         }
         if (release)
@@ -1474,7 +1474,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	}
         bufp->cmFlags &= ~CM_BUF_CMSTORING;
         if (bufp->flags & CM_BUF_WAITING) {
-            osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
+            osi_Log2(afsd_logp, "CM SyncOpDone StoreData Waking [scp 0x%p] bufp 0x%p", scp, bufp);
             osi_Wakeup((LONG_PTR) &bufp);
         }
         if (release)
@@ -1488,7 +1488,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 
     /* and wakeup anyone who is waiting */
     if (scp->flags & CM_SCACHEFLAG_WAITING) {
-        osi_Log1(afsd_logp, "CM SyncOpDone Waking scp 0x%p", scp);
+        osi_Log3(afsd_logp, "CM SyncOpDone 0x%x Waking scp 0x%p bufp 0x%p", flags, scp, bufp);
         osi_Wakeup((LONG_PTR) &scp->flags);
     }
 }       
