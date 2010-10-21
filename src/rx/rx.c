@@ -6633,11 +6633,11 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	peer->rtt = _8THMSEC(rttp) + 8;
 	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
-    /* the timeout is RTT + 4*MDEV but no less than rx_minPeerTimeout msec.
+    /* the timeout is RTT + 4*MDEV + rx_minPeerTimeout msec.
      * This is because one end or the other of these connections is usually
      * in a user process, and can be switched and/or swapped out.  So on fast,
      * reliable networks, the timeout would otherwise be too short. */
-    rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev), rx_minPeerTimeout);
+    rtt_timeout = ((peer->rtt >> 3) + peer->rtt_dev) + rx_minPeerTimeout;
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 
