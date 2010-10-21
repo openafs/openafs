@@ -122,11 +122,11 @@ DOC=$(AFSROOT)\doc
 !IF ("$(AFS_OBJDIR)"=="") 
 #########  AFS_OBJDIR is NOT used use default locations
 !  IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\checked
-OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\checked
+DESTDIR=$(DEST)\$(SYS_NAME)\checked
+OJT=$(OBJ)\$(SYS_NAME)\checked
 !  ELSE
 DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\free
-OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\free
+OJT=$(OBJ)\$(SYS_NAME)\free
 !  ENDIF
 UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !ELSE
