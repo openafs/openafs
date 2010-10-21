@@ -350,7 +350,7 @@ union tokenUnion {
 struct tokenJar {
     struct tokenJar *next;
     int type;
-    union tokenUnion u;
+    union tokenUnion content;
 };
 
 struct unixuser {

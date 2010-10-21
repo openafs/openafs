@@ -46,7 +46,7 @@ union tokenUnion *
 afs_FindToken(struct tokenJar *tokens, rx_securityIndex type) {
     while (tokens != NULL) {
 	if (tokens->type == type) {
-	    return &tokens->u;
+	    return &tokens->content;
 	}
 	tokens = tokens->next;
     }
@@ -76,10 +76,10 @@ afs_FreeOneToken(struct tokenJar *token) {
 
     switch (token->type) {
       case RX_SECIDX_KAD:
-	if (token->u.rxkad.ticket != NULL) {
-		memset(token->u.rxkad.ticket, 0, token->u.rxkad.ticketLen);
-		afs_osi_Free(token->u.rxkad.ticket,
-			     token->u.rxkad.ticketLen);
+	if (token->content.rxkad.ticket != NULL) {
+		memset(token->content.rxkad.ticket, 0, token->content.rxkad.ticketLen);
+		afs_osi_Free(token->content.rxkad.ticket,
+			     token->content.rxkad.ticketLen);
 	}
 	break;
       default:
@@ -140,7 +140,7 @@ afs_AddToken(struct tokenJar **tokens, rx_securityIndex type) {
     newToken->next = *tokens;
     *tokens = newToken;
 
-    return &newToken->u;
+    return &newToken->content;
 }
 
 /*!
@@ -159,7 +159,7 @@ int
 afs_IsTokenExpired(struct tokenJar *token, afs_int32 now) {
     switch (token->type) {
       case RX_SECIDX_KAD:
-	if (token->u.rxkad.clearToken.EndTimestamp < now - NOTOKTIMEOUT)
+	if (token->content.rxkad.clearToken.EndTimestamp < now - NOTOKTIMEOUT)
 	    return 1;
 	break;
       default:
@@ -350,7 +350,7 @@ rxkad_extractTokenForPioctl(struct tokenJar *token,
     struct rxkadToken *rxkadInternal;
 
     rxkadPioctl = &pioctlToken->ktc_tokenUnion_u.at_kad;
-    rxkadInternal = &token->u.rxkad;
+    rxkadInternal = &token->content.rxkad;
 
     rxkadPioctl->rk_kvno = rxkadInternal->clearToken.AuthHandle;
     rxkadPioctl->rk_viceid = rxkadInternal->clearToken.ViceId;
