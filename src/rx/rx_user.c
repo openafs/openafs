@@ -124,10 +124,14 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	goto error;
     }
 #endif
-    socketFd = socket(AF_INET, SOCK_DGRAM, 0);
+    socketFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    if (socketFd < 0) {
+    if (socketFd == OSI_NULLSOCKET) {
+#ifdef AFS_NT40_ENV
+        fprintf(stderr, "socket() failed with error %u\n", WSAGetLastError());
+#else
 	perror("socket");
+#endif
 	goto error;
     }
 
@@ -146,11 +150,9 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (binds)
 	    rxi_Delay(10);
 	code = bind(socketFd, (struct sockaddr *)&taddr, sizeof(taddr));
-	if (!code)
-	    break;
+        break;
     }
     if (code) {
-	perror("bind");
 	(osi_Msg "%sbind failed\n", name);
 	goto error;
     }
@@ -218,10 +220,10 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
   error:
 #ifdef AFS_NT40_ENV
-    if (socketFd >= 0)
+    if (socketFd != OSI_NULLSOCKET)
 	closesocket(socketFd);
 #else
-    if (socketFd >= 0)
+    if (socketFd != OSI_NULLSOCKET)
 	close(socketFd);
 #endif
 
@@ -490,10 +492,9 @@ rx_GetIFInfo(void)
     memset(myNetMTUs, 0, sizeof(myNetMTUs));
     memset(myNetMasks, 0, sizeof(myNetMasks));
     UNLOCK_IF;
-    s = socket(AF_INET, SOCK_DGRAM, 0);
-    if (s < 0)
+    s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (s == OSI_NULLSOCKET)
 	return;
-
 #ifdef	AFS_AIX41_ENV
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
@@ -734,18 +735,22 @@ rxi_InitPeerParams(struct rx_peer *pp)
 #endif /* ADAPT_MTU */
 #if defined(ADAPT_PMTU) && defined(IP_MTU)
     sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sock >= 0) {
-      addr.sin_family = AF_INET;
-      addr.sin_addr.s_addr = pp->host;
-      addr.sin_port = pp->port;
-      if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
-	int mtu=0;
-        socklen_t s = sizeof(mtu);
-	if (getsockopt(sock, SOL_IP, IP_MTU, &mtu, &s)== 0) {
-	  pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
-	}
-      }
-      close(sock);
+    if (sock != OSI_NULLSOCKET) {
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = pp->host;
+        addr.sin_port = pp->port;
+        if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+            int mtu=0;
+            socklen_t s = sizeof(mtu);
+            if (getsockopt(sock, SOL_IP, IP_MTU, &mtu, &s)== 0) {
+                pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
+            }
+        }
+#ifdef AFS_NT40_ENV
+        closesocket(sock);
+#else
+        close(sock);
+#endif
     }
 #endif
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);

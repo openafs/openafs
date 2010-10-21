@@ -209,7 +209,15 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     hostAddr.s_addr = host;
     afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
     printf("Trying %s (port %d):\n", hoststr, ntohs(port));
-    s = socket(AF_INET, SOCK_DGRAM, 0);
+    s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (s == OSI_NULLSOCKET) {
+#ifdef AFS_NT40_ENV
+        fprintf(stderr, "socket() failed with error %u\n", WSAGetLastError());
+#else
+	perror("socket");
+#endif
+	exit(1);
+    }
     taddr.sin_family = AF_INET;
     taddr.sin_port = 0;
     taddr.sin_addr.s_addr = 0;
@@ -218,7 +226,11 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 #endif
     code = bind(s, (struct sockaddr *)&taddr, sizeof(struct sockaddr_in));
     if (code) {
+#ifdef AFS_NT40_ENV
+        fprintf(stderr, "bind() failed with error %u\n", WSAGetLastError());
+#else
 	perror("bind");
+#endif
 	exit(1);
     }
 
