@@ -123,7 +123,7 @@ int (*swapNameProgram) (PROCESS, const char *, char *) = 0;
 
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(struct rx_connection *conn);
-static void rxi_ComputeRoundTripTime(struct rx_packet *, struct clock *,
+static void rxi_ComputeRoundTripTime(struct rx_packet *, struct rx_ackPacket *,
 				     struct rx_peer *, struct clock *);
 
 #ifdef RX_ENABLE_LOCKS
@@ -4009,11 +4009,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
-	    if (ap->reason != RX_ACK_DELAY &&
-		clock_Eq(&tp->timeSent, &tp->firstSent)) {
-		rxi_ComputeRoundTripTime(tp, &tp->timeSent, call->conn->peer,
-					 &now);
-	    }
+
+	    rxi_ComputeRoundTripTime(tp, ap, call->conn->peer, &now);
 	}
 
 #ifdef ADAPT_WINDOW
@@ -4090,11 +4087,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		    newAckCount++;
 		    tp->flags |= RX_PKTFLAG_ACKED;
 
-		    if (ap->reason != RX_ACK_DELAY &&
-			clock_Eq(&tp->timeSent, &tp->firstSent)) {
-			rxi_ComputeRoundTripTime(tp, &tp->timeSent,
-					   	 call->conn->peer, &now);
-		    }
+		    rxi_ComputeRoundTripTime(tp, ap, call->conn->peer, &now);
 #ifdef ADAPT_WINDOW
 		    rxi_ComputeRate(call->conn->peer, call, tp, np,
 				    ap->reason);
@@ -6427,12 +6420,44 @@ rxi_ChallengeOn(struct rx_connection *conn)
 /* sentp and/or peer may be null */
 static void
 rxi_ComputeRoundTripTime(struct rx_packet *p,
-			 struct clock *sentp,
+			 struct rx_ackPacket *ack,
 			 struct rx_peer *peer,
 			 struct clock *now)
 {
-    struct clock thisRtt, *rttp = &thisRtt;
+    struct clock thisRtt, *sentp, *rttp = &thisRtt;
     int rtt_timeout;
+    int serial;
+
+    /* If the ACK is delayed, then do nothing */
+    if (ack->reason == RX_ACK_DELAY)
+	return;
+
+    /* On the wire, jumbograms are a single UDP packet. We shouldn't count
+     * their RTT multiple times, so only include the RTT of the last packet
+     * in a jumbogram */
+    if (p->flags & RX_JUMBO_PACKET)
+	return;
+
+    /* Use the serial number to determine which transmission the ACK is for,
+     * and set the sent time to match this. If we have no serial number, then
+     * only use the ACK for RTT calculations if the packet has not been
+     * retransmitted
+     */
+
+    serial = ntohl(ack->serial);
+    if (serial) {
+	if (serial == p->header.serial) {
+	    sentp = &p->timeSent;
+	} else if (serial == p->firstSerial) {
+	    sentp = &p->firstSent;
+	} else
+	    return;
+    } else {
+	if (clock_Eq(&p->timeSent, &p->firstSent)) {
+	    sentp = &p->firstSent;
+	} else
+	    return;
+    }
 
     thisRtt = *now;
 
