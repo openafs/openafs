@@ -6524,18 +6524,15 @@ rxi_ChallengeOn(struct rx_connection *conn)
 }
 
 
-/* Compute round trip time of the packet provided, in *rttp.
- */
-
 /* rxi_ComputeRoundTripTime is called with peer locked. */
-/* sentp and/or peer may be null */
+/* peer may be null */
 static void
 rxi_ComputeRoundTripTime(struct rx_packet *p,
 			 struct rx_ackPacket *ack,
 			 struct rx_peer *peer,
 			 struct clock *now)
 {
-    struct clock thisRtt, *sentp, *rttp = &thisRtt;
+    struct clock thisRtt, *sentp;
     int rtt_timeout;
     int serial;
 
@@ -6561,6 +6558,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	    sentp = &p->timeSent;
 	} else if (serial == p->firstSerial) {
 	    sentp = &p->firstSent;
+	} else if (clock_Eq(&p->timeSent, &p->firstSent)) {
+	    sentp = &p->firstSent;
 	} else
 	    return;
     } else {
@@ -6572,34 +6571,34 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 
     thisRtt = *now;
 
-    if (clock_Lt(rttp, sentp))
+    if (clock_Lt(&thisRtt, sentp))
 	return;			/* somebody set the clock back, don't count this time. */
 
-    clock_Sub(rttp, sentp);
+    clock_Sub(&thisRtt, sentp);
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rttp=%d.%06d sec)\n",
-          p->header.callNumber, p, rttp->sec, rttp->usec));
+          p->header.callNumber, p, thisRtt.sec, thisRtt.usec));
 
-    if (rttp->sec == 0 && rttp->usec == 0) {
+    if (clock_IsZero(&thisRtt)) {
         /*
          * The actual round trip time is shorter than the
          * clock_GetTime resolution.  It is most likely 1ms or 100ns.
          * Since we can't tell which at the moment we will assume 1ms.
          */
-        rttp->usec = 1000;
+        thisRtt.usec = 1000;
     }
 
     if (rx_stats_active) {
         MUTEX_ENTER(&rx_stats_mutex);
-        if (clock_Lt(rttp, &rx_stats.minRtt))
-            rx_stats.minRtt = *rttp;
-        if (clock_Gt(rttp, &rx_stats.maxRtt)) {
-            if (rttp->sec > 60) {
+        if (clock_Lt(&thisRtt, &rx_stats.minRtt))
+            rx_stats.minRtt = thisRtt;
+        if (clock_Gt(&thisRtt, &rx_stats.maxRtt)) {
+            if (thisRtt.sec > 60) {
                 MUTEX_EXIT(&rx_stats_mutex);
                 return;		/* somebody set the clock ahead */
             }
-            rx_stats.maxRtt = *rttp;
+            rx_stats.maxRtt = thisRtt;
         }
-        clock_Add(&rx_stats.totalRtt, rttp);
+        clock_Add(&rx_stats.totalRtt, &thisRtt);
         rx_atomic_inc(&rx_stats.nRttSamples);
         MUTEX_EXIT(&rx_stats_mutex);
     }
@@ -6622,7 +6621,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
          * srtt' = srtt + (rtt - srtt)/8
 	 */
 
-	delta = _8THMSEC(rttp) - peer->rtt;
+	delta = _8THMSEC(&thisRtt) - peer->rtt;
 	peer->rtt += (delta >> 3);
 
 	/*
@@ -6655,7 +6654,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	 * little, and I set deviance to half the rtt.  In practice,
 	 * deviance tends to approach something a little less than
 	 * half the smoothed rtt. */
-	peer->rtt = _8THMSEC(rttp) + 8;
+	peer->rtt = _8THMSEC(&thisRtt) + 8;
 	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
     /* the timeout is RTT + 4*MDEV + rx_minPeerTimeout msec.
@@ -6670,7 +6669,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     peer->backedOff = 0;
 
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n",
-          p->header.callNumber, p, MSEC(rttp), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
+          p->header.callNumber, p, MSEC(&thisRtt), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
 }
 
 
