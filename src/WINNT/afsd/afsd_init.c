@@ -1061,6 +1061,11 @@ afsd_InitCM(char **reasonP)
         rx_SetMinPeerTimeout(rx_min_peer_timeout);
     afsi_log("Rx Minimum Peer Timeout is %d ms", rx_GetMinPeerTimeout());
 
+    dummyLen = sizeof(rx_pmtu_discovery);
+    code = RegQueryValueEx(parmKey, "RxPMTUDiscovery", NULL, NULL,
+                           (BYTE *) &rx_pmtu_discovery, &dummyLen);
+    afsi_log("Rx PMTU Discovery is %d ms", rx_pmtu_discovery);
+
     dummyLen = sizeof(rx_nojumbo);
     code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
                            (BYTE *) &rx_nojumbo, &dummyLen);
