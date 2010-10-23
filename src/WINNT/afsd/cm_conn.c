@@ -35,6 +35,7 @@ unsigned short NatPingInterval = CM_CONN_NATPINGINTERVAL;
 
 afs_uint32 cryptall = 0;
 afs_uint32 cm_anonvldb = 0;
+afs_uint32 rx_pmtu_discovery = 0;
 
 void cm_PutConn(cm_conn_t *connp)
 {
@@ -1189,7 +1190,9 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
      * Let the Rx library know that we can auto-retry if an
      * RX_MSGSIZE error is returned.
      */
-    rx_SetMsgsizeRetryErr(tcp->rxconnp, RX_MSGSIZE);
+    if (rx_pmtu_discovery)
+        rx_SetMsgsizeRetryErr(tcp->rxconnp, RX_MSGSIZE);
+
     /*
      * Attempt to limit NAT pings to the anonymous file server connections.
      * Only file servers implement client callbacks and we only need one ping
