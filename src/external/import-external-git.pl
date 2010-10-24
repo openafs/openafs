@@ -57,6 +57,24 @@ while (<$fh>) {
 }
 undef $fh;
 
+# Read in our last-sha1 file
+my $last;
+
+$fh = IO::File->new("$externalDir/$module-last");
+if ($fh) {
+  $last = $fh->getline;
+  chomp $last;
+}
+undef $fh;
+
+my $author;
+$fh = IO::File->new("$externalDir/$module-author");
+if ($fh) {
+  $author = $fh->getline;
+  chomp $author;
+}
+undef $fh;
+
 # Create the external directory, if it doesn't exist.
 mkdir "$externalDir/$module" if (! -d "$externalDir/$module");
 
@@ -81,6 +99,14 @@ my $commitSha1 = `git rev-parse $commitish`;
 my $commitDesc = `git describe $commitish`;
 chomp $commitSha1;
 chomp $commitDesc;
+
+# If we know what our last import was, then get a list of all of the changes
+# since that import
+my $changes;
+if ($last) {
+  my $filelist = join(' ', sort keys(%mapping));
+  $changes = `git shortlog $last..$commitish $filelist`;
+}
 
 # Populate our temporary directory with the originals of everything that was
 # listed in the mapping file
@@ -141,15 +167,26 @@ eval {
   }
 
   if (system("git status") == 0) {
-    my $fh=IO::File->new("$tempdir/commit-msg", "w")
+    my $fh=IO::File->new("$externalDir/$module-last", "w");
+    $fh->print($commitSha1."\n");
+    undef $fh;
+    system("git add $externalDir/$module-last") == 0
+       or die "Git add of last file failed with $!\n";
+
+    $fh=IO::File->new("$tempdir/commit-msg", "w")
       or die "Unable to write commit message\n";
     $fh->print("Import of code from $module\n");
     $fh->print("\n");
-    $fh->print("This commit updates the code imported from the external\n");
-    $fh->print("$module git repository to their revision\n$commitSha1\n");
-    $fh->print("which is described as $commitDesc\n");
+    $fh->print("This commit updates the code imported from $module to\n");
+    $fh->print("$commitSha1 ($commitDesc)\n");
+    if ($changes) {
+	$fh->print("\n");
+	$fh->print("Upstream changes are:\n\n");
+	$fh->print($changes);
+    }
     undef $fh;
-    system("git commit -F $tempdir/commit-msg") == 0
+    $author="--author '$author'" if ($author);
+    system("git commit -F $tempdir/commit-msg $author") == 0
       or die "Commit failed : $!\n";
   }
 };
