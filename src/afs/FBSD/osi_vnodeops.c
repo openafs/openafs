@@ -531,7 +531,9 @@ afs_vop_lookup(ap)
      * we also always return the vnode locked. */
 
     if (flags & ISDOTDOT) {
+	MA_VOP_UNLOCK(dvp, 0, p);
 	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
 	if (lockparent && (flags & ISLASTCN)
 	    && (error = ma_vn_lock(dvp, LK_EXCLUSIVE, p))) {
