@@ -260,7 +260,7 @@ Severity=Informational
 Facility=System
 SymbolicName=MSG_SERVICE_START_PENDING
 Language=English
-OpenAFS Start Pending.
+OpenAFS Start Pending.  Version %1.
 .
 
 MessageId=
