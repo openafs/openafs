@@ -5314,12 +5314,12 @@ rxi_SendAck(struct rx_call *call,
 /* Send all of the packets in the list in single datagram */
 static void
 rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
-	     int istack, int moreFlag, struct clock *now,
-	     struct clock *retryTime, int resending)
+	     int istack, int moreFlag, int resending)
 {
     int i;
     int requestAck = 0;
     int lastPacket = 0;
+    struct clock now, retryTime;
     struct rx_connection *conn = call->conn;
     struct rx_peer *peer = conn->peer;
 
@@ -5327,6 +5327,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     peer->nSent += len;
     if (resending)
 	peer->reSends += len;
+    retryTime = peer->timeout;
     MUTEX_EXIT(&peer->peer_lock);
 
     if (rx_stats_active) {
@@ -5336,6 +5337,9 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
             rx_MutexAdd(rx_stats.dataPacketsSent, len, rx_stats_mutex);
     }
 
+    clock_GetTime(&now);
+    clock_Add(&retryTime, &now);
+
     if (list[len - 1]->header.flags & RX_LAST_PACKET) {
 	lastPacket = 1;
     }
@@ -5343,7 +5347,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     /* Set the packet flags and schedule the resend events */
     /* Only request an ack for the last packet in the list */
     for (i = 0; i < len; i++) {
-	list[i]->retryTime = *retryTime;
+	list[i]->retryTime = retryTime;
 	if (list[i]->header.serial) {
 	    /* Exponentially backoff retry times */
 	    if (list[i]->backoff < MAXBACKOFF) {
@@ -5361,7 +5365,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 	}
 
 	/* Record the time sent */
-	list[i]->timeSent = *now;
+	list[i]->timeSent = now;
 
 	/* Ask for an ack on retransmitted packets,  on every other packet
 	 * if the peer doesn't support slow start. Ask for an ack on every
@@ -5370,7 +5374,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 	    requestAck = 1;
 	} else {
 	    /* improved RTO calculation- not Karn */
-	    list[i]->firstSent = *now;
+	    list[i]->firstSent = now;
 	    if (!lastPacket && (call->cwind <= (u_short) (conn->ackRate + 1)
 				|| (!(call->flags & RX_CALL_SLOW_START_OK)
 				    && (list[i]->header.seq & 1)))) {
@@ -5383,10 +5387,6 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 	if (i < len - 1 || moreFlag) {
 	    list[i]->header.flags |= RX_MORE_PACKETS;
 	}
-
-	/* Install the new retransmit time for the packet, and
-	 * record the time sent */
-	list[i]->timeSent = *now;
     }
 
     if (requestAck) {
@@ -5426,8 +5426,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
  */
 static void
 rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
-		 int istack, struct clock *now, struct clock *retryTime,
-		 int resending)
+		 int istack, int resending)
 {
     int i, cnt, lastCnt = 0;
     struct rx_packet **listP, **lastP = 0;
@@ -5440,8 +5439,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	    && (list[i]->header.serial || (list[i]->flags & RX_PKTFLAG_ACKED)
 		|| list[i]->length > RX_JUMBOBUFFERSIZE)) {
 	    if (lastCnt > 0) {
-		rxi_SendList(call, lastP, lastCnt, istack, 1, now, retryTime,
-			     resending);
+		rxi_SendList(call, lastP, lastCnt, istack, 1, resending);
 		/* If the call enters an error state stop sending, or if
 		 * we entered congestion recovery mode, stop sending */
 		if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
@@ -5462,8 +5460,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 		|| list[i]->header.serial
 		|| list[i]->length != RX_JUMBOBUFFERSIZE) {
 		if (lastCnt > 0) {
-		    rxi_SendList(call, lastP, lastCnt, istack, 1, now,
-				 retryTime, resending);
+		    rxi_SendList(call, lastP, lastCnt, istack, 1, resending);
 		    /* If the call enters an error state stop sending, or if
 		     * we entered congestion recovery mode, stop sending */
 		    if (call->error
@@ -5497,20 +5494,18 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	    morePackets = 1;
 	}
 	if (lastCnt > 0) {
-	    rxi_SendList(call, lastP, lastCnt, istack, morePackets, now,
-			 retryTime, resending);
+	    rxi_SendList(call, lastP, lastCnt, istack, morePackets,
+			 resending);
 	    /* If the call enters an error state stop sending, or if
 	     * we entered congestion recovery mode, stop sending */
 	    if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
 		return;
 	}
 	if (morePackets) {
-	    rxi_SendList(call, listP, cnt, istack, 0, now, retryTime,
-			 resending);
+	    rxi_SendList(call, listP, cnt, istack, 0, resending);
 	}
     } else if (lastCnt > 0) {
-	rxi_SendList(call, lastP, lastCnt, istack, 0, now, retryTime,
-		     resending);
+	rxi_SendList(call, lastP, lastCnt, istack, 0, resending);
     }
 }
 
@@ -5570,19 +5565,10 @@ rxi_Start(struct rxevent *event,
     }
 
     if (queue_IsNotEmpty(&call->tq)) {	/* If we have anything to send */
-	/* Get clock to compute the re-transmit time for any packets
-	 * in this burst.  Note, if we back off, it's reasonable to
-	 * back off all of the packets in the same manner, even if
-	 * some of them have been retransmitted more times than more
-	 * recent additions.
-	 * Do a dance to avoid blocking after setting now. */
-	MUTEX_ENTER(&peer->peer_lock);
-        retryTime = peer->timeout;
-	MUTEX_EXIT(&peer->peer_lock);
 
-	clock_GetTime(&now);
-	clock_Add(&retryTime, &now);
+    	clock_GetTime(&now);
 	usenow = now;
+
 	/* Send (or resend) any packets that need it, subject to
 	 * window restrictions and congestion burst control
 	 * restrictions.  Ask for an ack on the last packet sent in
@@ -5663,15 +5649,14 @@ rxi_Start(struct rxevent *event,
 		    if (!clock_Lt(&now, &p->retryTime)) {
 			if (nXmitPackets == maxXmitPackets) {
 			    rxi_SendXmitList(call, call->xmitList,
-					     nXmitPackets, istack, &now, 
-					     &retryTime, resending);
+					     nXmitPackets, istack,
+					     resending);
 			    goto restart;
 			}
-                        dpf(("call %d xmit packet %"AFS_PTR_FMT" now %u.%06u retryTime %u.%06u nextRetry %u.%06u\n",
+                        dpf(("call %d xmit packet %"AFS_PTR_FMT" now %u.%06u retryTime %u.%06u\n",
                               *(call->callNumber), p,
                               now.sec, now.usec,
-                              p->retryTime.sec, p->retryTime.usec,
-                              retryTime.sec, retryTime.usec));
+                              p->retryTime.sec, p->retryTime.usec));
 			call->xmitList[nXmitPackets++] = p;
 		    }
 		}
@@ -5680,7 +5665,7 @@ rxi_Start(struct rxevent *event,
 		 * ready to send. Now we loop to send the packets */
 		if (nXmitPackets > 0) {
 		    rxi_SendXmitList(call, call->xmitList, nXmitPackets,
-				     istack, &now, &retryTime, resending);
+				     istack, resending);
 		}
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
