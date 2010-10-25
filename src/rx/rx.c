@@ -1186,6 +1186,21 @@ static void rxi_WaitforTQBusy(struct rx_call *call) {
 }
 #endif
 
+static void
+rxi_WakeUpTransmitQueue(struct rx_call *call)
+{
+    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
+	dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
+	     call, call->tqWaiters, call->flags));
+#ifdef RX_ENABLE_LOCKS
+	osirx_AssertMine(&call->lock, "rxi_Start start");
+	CV_BROADCAST(&call->cv_tq);
+#else /* RX_ENABLE_LOCKS */
+	osi_rxWakeup(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
+    }
+}
+
 /* Start a new rx remote procedure call, on the specified connection.
  * If wait is set to 1, wait for a free call channel; otherwise return
  * 0.  Maxtime gives the maximum number of seconds this call may take,
@@ -4678,13 +4693,7 @@ rxi_ClearTransmitQueue(struct rx_call *call, int force)
         call->tqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->tq);
-	if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-#ifdef RX_ENABLE_LOCKS
-	    CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	}
+	rxi_WakeUpTransmitQueue(call);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	call->flags &= ~RX_CALL_TQ_CLEARME;
     }
@@ -5719,16 +5728,7 @@ rxi_Start(struct rxevent *event,
 		 */
 		if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
 		    call->flags &= ~RX_CALL_TQ_BUSY;
-		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-			dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
-                             call, call->tqWaiters, call->flags));
-#ifdef RX_ENABLE_LOCKS
-			osirx_AssertMine(&call->lock, "rxi_Start start");
-			CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-			osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-		    }
+		    rxi_WakeUpTransmitQueue(call);
 		    return;
 		}
 		if (call->error) {
@@ -5739,16 +5739,7 @@ rxi_Start(struct rxevent *event,
                     if (rx_stats_active)
                         rx_MutexIncrement(rx_tq_debug.rxi_start_aborted, rx_stats_mutex);
 		    call->flags &= ~RX_CALL_TQ_BUSY;
-		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-			dpf(("call error %d while xmit %p has %d waiters and flags %d\n",
-                             call->error, call, call->tqWaiters, call->flags));
-#ifdef RX_ENABLE_LOCKS
-			osirx_AssertMine(&call->lock, "rxi_Start middle");
-			CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-			osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-		    }
+		    rxi_WakeUpTransmitQueue(call);
 		    rxi_CallError(call, call->error);
 		    return;
 		}
@@ -5835,16 +5826,7 @@ rxi_Start(struct rxevent *event,
 	     * protected by the global lock.
 	     */
 	    call->flags &= ~RX_CALL_TQ_BUSY;
-	    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-		dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
-                      call, call->tqWaiters, call->flags));
-#ifdef RX_ENABLE_LOCKS
-		osirx_AssertMine(&call->lock, "rxi_Start end");
-		CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-		osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-	    }
+	    rxi_WakeUpTransmitQueue(call);
 	} else {
 	    call->flags |= RX_CALL_NEED_START;
 	}
