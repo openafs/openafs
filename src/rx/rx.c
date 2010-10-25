@@ -5990,52 +5990,16 @@ rxi_Start(struct rxevent *event,
         MUTEX_EXIT(&rx_refcnt_mutex);
 	call->resendEvent = NULL;
 
-	if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
-	    rxi_CheckBusy(call);
-	}
-
 	if (queue_IsEmpty(&call->tq)) {
 	    /* Nothing to do. This means that we've been raced, and that an
 	     * ACK has come in between when we were triggered, and when we
 	     * actually got to run. */
 	    return;
 	}
-#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
-        if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-	    /* someone else is waiting to start recovery */
-	    return;
-        }
-	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	rxi_WaitforTQBusy(call);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-        if (call->error) {
-            if (rx_stats_active)
-		rx_MutexIncrement(rx_tq_debug.rxi_start_in_error, rx_stats_mutex);
-            return;
-        }
-#endif
-        call->flags |= RX_CALL_FAST_RECOVER;
 
-        if (peer->maxDgramPackets > 1) {
-            call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
-        } else {
-            call->MTU = MIN(peer->natMTU, peer->maxMTU);
-        }
-        call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
-        call->nDgramPackets = 1;
-        call->cwind = 1;
-        call->nextCwind = 1;
-        call->nAcks = 0;
-        call->nNacks = 0;
-        MUTEX_ENTER(&peer->peer_lock);
-        peer->MTU = call->MTU;
-        peer->cwind = call->cwind;
-        peer->nDgramPackets = 1;
-        peer->congestSeq++;
-        call->congestSeq = peer->congestSeq;
-        MUTEX_EXIT(&peer->peer_lock);
+	if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
+	    rxi_CheckBusy(call);
+	}
     }
 
     if (call->error) {
