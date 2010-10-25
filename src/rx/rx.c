@@ -5541,7 +5541,6 @@ rxi_Start(struct rxevent *event,
 
     struct rx_packet *p;
     struct rx_packet *nxp;	/* Next pointer for queue_Scan */
-    struct rx_peer *peer = call->conn->peer;
     struct clock now, usenow, retryTime;
     int haveEvent;
     int nXmitPackets;
@@ -5560,45 +5559,8 @@ rxi_Start(struct rxevent *event,
 	    /* Nothing to do */
 	    return;
 	}
-	/* Timeouts trigger congestion recovery */
-#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
-	if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-	    /* someone else is waiting to start recovery */
-	    return;
-	}
-	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	rxi_WaitforTQBusy(call);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
-	call->flags |= RX_CALL_FAST_RECOVER;
-	if (peer->maxDgramPackets > 1) {
-	    call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
-	} else {
-	    call->MTU = MIN(peer->natMTU, peer->maxMTU);
-	}
-	call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
-	call->nDgramPackets = 1;
-	call->cwind = 1;
-	call->nextCwind = 1;
-	call->nAcks = 0;
-	call->nNacks = 0;
-	MUTEX_ENTER(&peer->peer_lock);
-	peer->MTU = call->MTU;
-	peer->cwind = call->cwind;
-	peer->nDgramPackets = 1;
-	peer->congestSeq++;
-	call->congestSeq = peer->congestSeq;
-	MUTEX_EXIT(&peer->peer_lock);
-	/* Clear retry times on packets. Otherwise, it's possible for
-	 * some packets in the queue to force resends at rates faster
-	 * than recovery rates.
-	 */
-	for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
-	    if (!(p->flags & RX_PKTFLAG_ACKED)) {
-		clock_Zero(&p->retryTime);
-	    }
-	}
     }
+
     if (call->error) {
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
         if (rx_stats_active)
