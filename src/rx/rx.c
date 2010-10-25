@@ -5741,12 +5741,13 @@ rxi_SendAck(struct rx_call *call,
 struct xmitlist {
    struct rx_packet **list;
    int len;
+   int resending;
 };
 
 /* Send all of the packets in the list in single datagram */
 static void
 rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
-	     int istack, int moreFlag, int resending)
+	     int istack, int moreFlag)
 {
     int i;
     int requestAck = 0;
@@ -5757,12 +5758,12 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
 
     MUTEX_ENTER(&peer->peer_lock);
     peer->nSent += xmit->len;
-    if (resending)
+    if (xmit->resending)
 	peer->reSends += xmit->len;
     MUTEX_EXIT(&peer->peer_lock);
 
     if (rx_stats_active) {
-        if (resending)
+        if (xmit->resending)
             rx_MutexAdd(rx_stats.dataPacketsReSent, xmit->len, rx_stats_mutex);
         else
             rx_MutexAdd(rx_stats.dataPacketsSent, xmit->len, rx_stats_mutex);
@@ -5839,7 +5840,7 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
     /* Let a set of retransmits trigger an idle timeout */
-    if (!resending)
+    if (!xmit->resending)
 	call->lastSendData = call->lastSendTime;
 }
 
@@ -5854,11 +5855,11 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
 
 static void
 rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
-		 int istack, int resending)
+		 int istack)
 {
     int i;
     struct xmitlist working;
-    struct xmitlist last = {NULL, 0};
+    struct xmitlist last;
 
     struct rx_peer *peer = call->conn->peer;
     int morePackets = 0;
@@ -5866,6 +5867,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
     memset(&last, 0, sizeof(struct xmitlist));
     working.list = &list[0];
     working.len = 0;
+    working.resending = 0;
 
     for (i = 0; i < len; i++) {
 	/* Does the current packet force us to flush the current list? */
@@ -5877,7 +5879,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	     * set into the 'last' one, and resets the working set */
 
 	    if (last.len > 0) {
-		rxi_SendList(call, &last, istack, 1, resending);
+		rxi_SendList(call, &last, istack, 1);
 		/* If the call enters an error state stop sending, or if
 		 * we entered congestion recovery mode, stop sending */
 		if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
@@ -5885,12 +5887,17 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	    }
 	    last = working;
 	    working.len = 0;
+	    working.resending = 0;
 	    working.list = &list[i];
 	}
 	/* Add the current packet to the list if it hasn't been acked.
 	 * Otherwise adjust the list pointer to skip the current packet.  */
 	if (!(list[i]->flags & RX_PKTFLAG_ACKED)) {
 	    working.len++;
+
+	    if (list[i]->header.serial)
+		working.resending = 1;
+
 	    /* Do we need to flush the list? */
 	    if (working.len >= (int)peer->maxDgramPackets
 		|| working.len >= (int)call->nDgramPackets 
@@ -5898,7 +5905,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 		|| list[i]->header.serial
 		|| list[i]->length != RX_JUMBOBUFFERSIZE) {
 		if (last.len > 0) {
-		    rxi_SendList(call, &last, istack, 1, resending);
+		    rxi_SendList(call, &last, istack, 1);
 		    /* If the call enters an error state stop sending, or if
 		     * we entered congestion recovery mode, stop sending */
 		    if (call->error
@@ -5907,6 +5914,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 		}
 		last = working;
 		working.len = 0;
+		working.resending = 0;
 		working.list = &list[i + 1];
 	    }
 	} else {
@@ -5931,18 +5939,17 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	    morePackets = 1;
 	}
 	if (last.len > 0) {
-	    rxi_SendList(call, &last, istack, morePackets,
-			 resending);
+	    rxi_SendList(call, &last, istack, morePackets);
 	    /* If the call enters an error state stop sending, or if
 	     * we entered congestion recovery mode, stop sending */
 	    if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
 		return;
 	}
 	if (morePackets) {
-	    rxi_SendList(call, &working, istack, 0, resending);
+	    rxi_SendList(call, &working, istack, 0);
 	}
     } else if (last.len > 0) {
-	rxi_SendList(call, &last, istack, 0, resending);
+	rxi_SendList(call, &last, istack, 0);
 	/* Packets which are in 'working' are not sent by this call */
     }
 }
@@ -5976,7 +5983,6 @@ rxi_Start(struct rxevent *event,
     struct rx_packet *nxp;	/* Next pointer for queue_Scan */
     int nXmitPackets;
     int maxXmitPackets;
-    int resending = 0;
 
     /* If rxi_Start is being called as a result of a resend event,
      * then make sure that the event pointer is removed from the call
@@ -5987,7 +5993,6 @@ rxi_Start(struct rxevent *event,
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
         MUTEX_EXIT(&rx_refcnt_mutex);
 	call->resendEvent = NULL;
-	resending = 1;
 
 	if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
 	    rxi_CheckBusy(call);
@@ -6126,8 +6131,7 @@ rxi_Start(struct rxevent *event,
 		    if (!(p->flags & RX_PKTFLAG_SENT)) {
 			if (nXmitPackets == maxXmitPackets) {
 			    rxi_SendXmitList(call, call->xmitList,
-					     nXmitPackets, istack,
-					     resending);
+					     nXmitPackets, istack);
 			    goto restart;
 			}
                         dpf(("call %d xmit packet %"AFS_PTR_FMT"\n",
@@ -6140,7 +6144,7 @@ rxi_Start(struct rxevent *event,
 		 * ready to send. Now we loop to send the packets */
 		if (nXmitPackets > 0) {
 		    rxi_SendXmitList(call, call->xmitList, nXmitPackets,
-				     istack, resending);
+				     istack);
 		}
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
