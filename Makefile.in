@@ -109,7 +109,7 @@ packages: dest
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR} ${TOP_JLIBDIR}:
+${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_INCDIR}/opr ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -135,7 +135,7 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
-prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_LIBDIR}
+prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_INCDIR}/opr ${TOP_LIBDIR}
 
 project: cmd comerr 
 

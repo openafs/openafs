@@ -9,7 +9,7 @@ MODULE_CFLAGS = -I$(srcdir)/..
 
 LIBS = ../tap/libtap.a $(abs_top_builddir)/lib/util.a
 
-tests = ktime-t exec-alt-t
+tests = ktime-t exec-alt-t queues-t
 
 all check test tests: $(tests)
 
@@ -18,6 +18,9 @@ ktime-t: ktime-t.o $(LIBS)
 
 exec-alt-t: exec-alt-t.o $(LIBS)
 	$(AFS_LDRULE) exec-alt-t.o $(LIBS) $(XLIBS)
+
+queues-t: queues-t.o
+	$(AFS_LDRULE) queues-t.o ../tap/libtap.a $(XLIBS)
 
 install:
 

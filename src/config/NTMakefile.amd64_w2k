@@ -407,6 +407,9 @@ CPP2OBJ = $(C2OBJ)
 .h.{$(DESTDIR)\include\rx}.h:
 	$(COPY) $< $(DESTDIR)\include\rx
 
+.h.{$(DESTDIR)\include\opr}.h:
+	$(COPY) $< $(DESTDIR)\include\opr
+
 .h.{$(DESTDIR)\include\des}.h:
 	$(COPY) $< $(DESTDIR)\include
 
@@ -427,6 +430,9 @@ CPP2OBJ = $(C2OBJ)
 
 .h.{$(DESTDIR)\include\rx}.h:
 	$(COPY) $(*B).h $(DESTDIR)\include\rx
+
+.h.{$(DESTDIR)\include\opr}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include\opr
 
 .h.{$(DESTDIR)\include\des}.h:
 	$(COPY) $(*B).h $(DESTDIR)\include

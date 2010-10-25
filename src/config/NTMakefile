@@ -424,6 +424,9 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\include\hcrypto))
 		$(MKDIR) $(DESTDIR)\include\hcrypto
 !	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\opr))
+		$(MKDIR) $(DESTDIR)\include\opr
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\include\rx))
 		$(MKDIR) $(DESTDIR)\include\rx
 !	ENDIF
