@@ -86,6 +86,6 @@ test:
 	cd test; $(MAKE)
 
 compile_et.o:  AFS_component_version_number.c
-error_table.o: et_lex.lex.c
+error_table.o: et_lex.lex.c error_table.c
 
 include ../config/Makefile.version
