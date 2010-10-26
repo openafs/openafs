@@ -550,7 +550,7 @@ extern const afs_ucred_t *afs_osi_proc2cred(afs_proc_t * pr);
 #endif
 
 /* afs_osi_alloc.c */
-#ifndef AFS_FBSD_ENV
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
 extern afs_lock_t osi_fsplock;
 extern afs_lock_t osi_flplock;
 #endif
