@@ -374,7 +374,29 @@
 
           <para>The <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> directories must reside in the file server
           machine's root directory, not in one of its subdirectories (for example, <emphasis role="bold">/usr/vicepa</emphasis> is
-          not an acceptable directory location).</para>
+          not an acceptable directory location).
+
+          The <emphasis role="bold">fileserver</emphasis> will refuse to
+          mount
+          any <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
+          folders that are not separate partitions. </para>
+
+          <warning>
+            <para>The separate partition requirement may be overridden by
+              creating a file named
+              <emphasis role="bold">/vicep<replaceable>xx</replaceable>/AlwaysAttach</emphasis>;
+              however, mixed-use partitions, whether cache or fileserver,
+              have the risk that a non-AFS use will fill the partition and
+              not leave enough free space for AFS.  Even though it is
+              allowed, be wary of configuring a mixed-use partition
+              without understanding the ramifications of doing so with the
+              workload on your filesystem.
+              <indexterm>
+                <primary>AFS server partition</primary>
+                <secondary>AlwaysAttach</secondary>
+              </indexterm>
+            </para>
+          </warning>
 
           <para>You can also add or remove server partitions on an existing file server machine. For instructions, see the chapter
           in the <emphasis>OpenAFS Administration Guide</emphasis> about maintaining server machines.</para>
