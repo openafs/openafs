@@ -83,6 +83,11 @@ static void afsd_notifier(char *msgp, char *filep, long line)
         afsd_printStack(GetCurrentThread(), &context);
     }
 
+#ifdef DEBUG
+    if (IsDebuggerPresent())
+        DebugBreak();
+#endif
+
     afsi_log("--- begin dump ---");
     cm_MemDumpDirStats(afsi_file, "a", 0);
     cm_MemDumpBPlusStats(afsi_file, "a", 0);
@@ -96,11 +101,6 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     rx_DumpCalls(afsi_file, "a");
     afsi_log("--- end   dump ---");
     
-#ifdef DEBUG
-    if (IsDebuggerPresent())
-        DebugBreak();	
-#endif
-
     GenerateMiniDump(NULL);
 
     SetEvent(WaitToTerminate);
