@@ -1,3 +1,91 @@
+Since 1.5.77
+ * Reimplement FetchData and StoreData operations to make
+   use of rx_Writev and rx_Readv which is faster than than
+   multiple calls to rx_Write and rx_Read.  Throughput
+   improvements of up to 20% are possible.
+
+ * Many improvements to the rx rpc stack:
+
+   - RTT measurements
+
+   - Fast recovery is not triggered by packet resend timeouts
+
+   - Socket errors are now detected and reported
+
+   - avoid repetitive memory allocations
+
+   - avoid calling gettimeofday() for every packet
+
+   - reduced dependency on the call->lock
+
+   - When a call receive is completed, ack all of the packets
+     immediately.  Do not wait for the first response packet
+     to be sent.
+
+   - Do not hold the call->lock during rx_Write* and rx_Read*
+     operations when the call fields in use can only be accessed
+     by the application thread.
+
+   - Reduce the default window size from 128 back to 32 because
+     the current overhead from walking packet queues in the rx
+     listener thread significantly hampers the ability to
+     process incoming packets from the network.
+
+   - Only backoff the peer timeout once for a series of naks.
+
+   - Release builds are lean and mean.  All debugging and
+     packet tracking code is disabled.
+
+ * Version number is logged to the Windows Application Event
+   Log as part of the start pending message.
+
+ * MSI installers now backup and restore configuration
+   data during upgrades.
+
+ * Rx pmtu discovery has been disabled by default.  Use
+     HKLM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+       RxPMTUDiscovery "DWORD"
+   value to re-activate.
+
+ * cm_BkgDaemon event evaluation has been optimized to avoid
+   unnecessary overhead.
+
+ * If a volume is known to be readonly, then locally fail any
+   change request without sending it to the file server.  This
+   avoids triggering the file server's abort threshold.
+
+ * Do not leak cm_volume_t objects from the volume LRU queue.
+
+ * Ensure that cm_NameI errors are acted upon promptly.
+   There are many cases in the SMB server where an error from cm_NameI()
+   was either ignored or not acted upon until several other operations
+   are performed that could result in the same error being repeated.
+   This is a mistake which did not have negative side effects until
+   additional checks for callback status were added recently.
+
+   At present, if a CM_ERROR_ACCESS error is returned and ignored,
+   subsequent attempts to operate on the same cm_scache_t will result
+   in additional queries to the file server that will also end in an
+   abort response.  This can trigger the file server to delay responses
+   to the client.
+
+ * Fix fs mount point and symlink create operations which were
+   failing due to improper directory separator termination.
+
+ * RXAFS_GetVolumeStatus can return VNOVOL, VMOVED, etc.  In
+   order to process them and update volume state a fid must
+   be passed to cm_Analyze().  Use the volume root fid.
+
+ * Negative caching for volume lookups that fail with either
+   VL_NOENT or VL_BADNAME.  The expiration time is five minutes.
+   This prevents volume lookup storms.
+
+ * Provide each volume lookup its own two hour lifetime instead
+   of reseting all volume location information every two hours.
+   This prevents the first smb path evaluation after the volume
+   location data has been discarded from potentially causing an
+   smb client timeout.
+
 Since 1.5.76
  * When the SYSTEM account is in use, the SMB connection is
    not always established as S-1-5-18.  Sometimes it uses an
