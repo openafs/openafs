@@ -194,7 +194,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         }
 
         if (code == 0) {
-            afs_uint32 buf_offset;
+            afs_uint32 buf_offset = 0, bytes_copied = 0;
 
             /* write the data from the the list of buffers */
             qdp = NULL;
@@ -210,7 +210,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                     break;
                 }
 
-                for ( iov = voffset = vlen = 0; vlen < vbytes; vlen += wbytes) {
+                for ( iov = voffset = vlen = 0;
+                      vlen < vbytes && iov < tnio; vlen += wbytes) {
                     if (qdp == NULL) {
                         qdp = biod.bufListEndp;
                         buf_offset = offsetp->LowPart % cm_data.buf_blockSize;
@@ -227,28 +228,41 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                         wbytes = cm_data.buf_blockSize - buf_offset;
 
                     vleft = tiov[iov].iov_len - voffset;
-                    while (wbytes > vleft) {
+                    while (wbytes > vleft && iov < tnio) {
                         memcpy(tiov[iov].iov_base + voffset, bufferp, vleft);
+                        bytes_copied += vleft;
                         vlen += vleft;
                         wbytes -= vleft;
                         bufferp += vleft;
+                        buf_offset += vleft;
 
                         iov++;
                         voffset = 0;
                         vleft = tiov[iov].iov_len;
                     }
 
-                    memcpy(tiov[iov].iov_base + voffset, bufferp, wbytes);
-                    if (tiov[iov].iov_len == voffset + wbytes) {
-                        iov++;
-                        voffset = 0;
-                        vleft = tiov[iov].iov_len;
+                    if (iov < tnio) {
+                        memcpy(tiov[iov].iov_base + voffset, bufferp, wbytes);
+                        bytes_copied += wbytes;
+                        if (tiov[iov].iov_len == voffset + wbytes) {
+                            iov++;
+                            voffset = 0;
+                            vleft = (iov < tnio) ? tiov[iov].iov_len : 0;
+                        } else {
+                            voffset += wbytes;
+                            vleft -= wbytes;
+                        }
+                        bufferp += wbytes;
+                        buf_offset += wbytes;
                     } else {
-                        voffset += wbytes;
-                        vleft -= wbytes;
+                        voffset = vleft = 0;
                     }
-                    buf_offset += wbytes;
                 }
+
+                osi_assertx(iov == tnio, "incorrect iov count");
+                osi_assertx(vlen == vbytes, "bytes_copied != vbytes");
+                osi_assertx(bufp->offset.QuadPart + buf_offset == biod.offset.QuadPart + bytes_copied,
+                            "begin and end offsets don't match");
 
                 temp = rx_Writev(rxcallp, tiov, tnio, vbytes);
                 if (temp != vbytes) {
