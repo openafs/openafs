@@ -1678,8 +1678,8 @@
     instructions are provided for those building from source.</para>
 
     <para>Begin by running the AFS client startup scripts, which call the
-    <emphasis role="bold">modprobe</emphasis> program, which dynamically
-    loads AFS modifications into the kernel. Then create partitions for
+    <emphasis role="bold">modprobe</emphasis> program to dynamically
+    load the AFS modifications into the kernel. Then create partitions for
     storing AFS volumes. You do not need to replace the Linux <emphasis
     role="bold">fsck</emphasis> program. If the machine is to remain an
     AFS client machine, incorporate AFS into the machine's Pluggable
@@ -1725,26 +1725,44 @@
       <para>The procedure for starting up OpenAFS depends upon your distribution</para>
       <sect3>
         <title>Fedora and RedHat Enterprise Linux</title>
-        <para>OpenAFS ship RPMS for all current Fedora and RHEL releases.
+        <para>OpenAFS provides RPMS for all current Fedora and RedHat Enterprise Linux (RHEL) releases on the OpenAFS web site and the OpenAFS yum repository.
         <orderedlist>
           <listitem>
-            <para>Download and install the RPM set for your operating system.
-            RPMs are available from the OpenAFS web site. You will need the 
-            <emphasis role="bold">openafs</emphasis>
-            <emphasis role="bold">openafs-client></emphasis>
-            <emphasis role="bold">openafs-server</emphasis> packages, along with
-            an <emphasis role="bold">openafs-kernel</emphasis> package matching
-            your current, running, kernel.</para>
-            <para>You can find the version of your current kernel by running
-<programlisting>
-  # uname -r
-<replaceable>2.6.20-1.2933.fc6</replaceable>
-</programlisting></para>
-            <para>Once downloaded, the packages may be installed with the
-            <emphasis role="bold">rpm</emphasis> command
-<programlisting>
-  # rpm -U openafs-* openafs-client-* openafs-server-* openafs-kernel-*
-</programlisting></para>
+            <para>Browse to
+            http://dl.openafs.org/dl/openafs/<replaceable>VERSION</replaceable>,
+            where VERSION is the latest stable release of
+            OpenAFS. Download the
+            openafs-repository-<replaceable>VERSION</replaceable>.noarch.rpm
+            file for Fedora systems or the
+            openafs-repository-rhel-<replaceable>VERSION</replaceable>.noarch.rpm
+            file for RedHat-based systems.
+            </para>
+          </listitem>
+          <listitem>
+            <para>Install the downloaded RPM file using the following command:
+              <programlisting>
+                # rpm -U openafs-repository*.rpm
+              </programlisting>
+            </para>
+          </listitem>
+          <listitem>
+            <para>Install the RPM set for your operating system using the yum command as follows:
+              <programlisting>
+                # yum -y install openafs-client openafs-server openafs-krb5 kmod-openafs
+              </programlisting>
+
+            </para>
+            <para>Alternatively, you may use dynamically-compiled kernel
+              modules if you have the kernel headers, a compiler, and the
+              dkms package from
+              <ulink url="http://fedoraproject.org/wiki/EPEL"><citetitle>EPEL</citetitle></ulink> installed. 
+
+            </para>
+            <para>To use dynamically-compiled kernel modules instead of statically compiled modules, use the following command instead of the kmod-openafs as shown above:
+              <programlisting>
+                # yum install openafs-client openafs-server openafs-krb5 dkms-openafs
+              </programlisting>
+            </para>
           </listitem>
 <!-- If you do this with current RHEL and Fedora releases you end up with
      a dynroot'd client running - this breaks setting up the root.afs volume
