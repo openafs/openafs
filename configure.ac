@@ -204,6 +204,7 @@ src/rxdebug/Makefile \
 src/rxgen/Makefile \
 src/rxkad/Makefile \
 src/rxkad/test/Makefile \
+src/rxosd/Makefile \
 src/rxstat/Makefile \
 src/scout/Makefile \
 src/sgistuff/Makefile \
