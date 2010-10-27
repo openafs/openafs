@@ -95,6 +95,37 @@ extern pthread_t vol_glock_holder;
 #define VOL_UNLOCK MUTEX_EXIT(&vol_glock_mutex)
 #define VOL_CV_WAIT(cv) CV_WAIT((cv), &vol_glock_mutex)
 #endif /* !VOL_LOCK_DEBUG */
+
+/**
+ * @param[in] cv cond var
+ * @param[in] ts deadline, or NULL to wait forever
+ * @param[out] timedout  set to 1 if we returned due to the deadline, 0 if we
+ *                       returned due to the cond var getting signalled. If
+ *                       NULL, it is ignored.
+ */
+static_inline void
+VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
+{
+    int code;
+    if (timedout) {
+	*timedout = 0;
+    }
+    if (!ts) {
+	VOL_CV_WAIT(cv);
+	return;
+    }
+    VOL_LOCK_DBG_CV_WAIT_BEGIN;
+    code = CV_TIMEDWAIT(cv, &vol_glock_mutex, ts);
+    VOL_LOCK_DBG_CV_WAIT_END;
+    if (code == ETIMEDOUT) {
+	code = 0;
+	if (timedout) {
+	    *timedout = 1;
+	}
+    }
+    osi_Assert(code == 0);
+}
+
 #define VSALVSYNC_LOCK MUTEX_ENTER(&vol_salvsync_mutex)
 #define VSALVSYNC_UNLOCK MUTEX_EXIT(&vol_salvsync_mutex)
 #define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
@@ -767,7 +798,8 @@ struct volHeader {
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
 extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
-extern Volume *VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId);
+extern Volume *VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
+                               const struct timespec *ts);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolume_r(Volume *);
