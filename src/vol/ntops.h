@@ -25,6 +25,8 @@ extern FD_t nt_open(char *name, int flags, int mode);
 extern int nt_close(FD_t fd);
 extern int nt_write(FD_t fd, char *buf, size_t size);
 extern int nt_read(FD_t fd, char *buf, size_t size);
+extern int nt_pread(FD_t fd, void * buf, size_t count, afs_foff_t offset);
+extern int nt_pwrite(FD_t fd, const void * buf, size_t count, afs_foff_t offset);
 extern int nt_size(FD_t fd);
 extern int nt_getFileCreationTime(FD_t fd, FILETIME * ftime);
 extern int nt_setFileCreationTime(FD_t fd, FILETIME * ftime);

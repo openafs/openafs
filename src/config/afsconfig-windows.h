@@ -33,6 +33,7 @@
 /* Define as the return type of signal handlers (int or void).  */
 #undef RETSIGTYPE
 
+
 /* The size of `long', as computed by sizeof. */
 #define SIZEOF_LONG 4
 
@@ -161,6 +162,9 @@
 
 /* define if struct ufsvfs has vfs_dqrwlock */
 #undef HAVE_VFS_DQRWLOCK
+
+/* define if you have pread() and pwrite() */
+#define HAVE_PIO 1
 
 #undef PACKAGE
 #undef VERSION
