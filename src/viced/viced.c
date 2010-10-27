@@ -2317,9 +2317,6 @@ main(int argc, char *argv[])
 
     FT_GetTimeOfDay(&tp, 0);
 
-    ViceLog(0, ("File server has started at %s",
-		afs_ctime((time_t *)&(tp.tv_sec), tbuffer, sizeof(tbuffer))));
-
     /*
      * Figure out the FileServer's name and primary address.
      */
