@@ -205,7 +205,7 @@
         </listitem>
 
         <listitem>
-          <para>Start the server portion of the Update Server</para>
+          <para>Optionally, start the server portion of the Update Server</para>
         </listitem>
 
       </orderedlist></para>
@@ -408,7 +408,7 @@
         </listitem>
 
         <listitem>
-          <para>On some system types, install and configure a modified <emphasis role="bold">fsck</emphasis> program which
+          <para>On system types using the <emphasis role="bold">inode</emphasis> storage format, install and configure a modified <emphasis role="bold">fsck</emphasis> program which
           recognizes the structures that the File Server uses to organize volume data on AFS server partitions. The <emphasis
           role="bold">fsck</emphasis> program provided with the operating system does not understand the AFS data structures, and so
           removes them to the <emphasis role="bold">lost+found</emphasis> directory.</para>
@@ -1812,7 +1812,7 @@
           <listitem>
             <para>Unpack the distribution tarball. The examples below assume
             that you have unpacked the files into the
-            <emphasis role="bold">/tmp/afsdist</emphasis>directory. If you
+            <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you
             pick a different location, substitute this in all of the following
             examples. Once you have unpacked the distribution,
             change directory as indicated.
