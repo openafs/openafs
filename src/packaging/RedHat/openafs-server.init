@@ -72,7 +72,16 @@ case "$1" in
         rhstatus
         ;;
   condrestart)
-        [ -f /var/lock/subsys/openafs-server ] && restart || :
+	if [ "x$AFS_USE_BINARY_RESTART" = "xyes" ]; then
+	    # this is what never shows up as
+	    if [ `grep -c 'checkbintime 16 0 0 0 0' /usr/afs/local/BosConfig` = 1]; then
+		[ -f /var/lock/subsys/openafs-server ] && restart || :
+	    else
+		echo $"deferring for newbinary restart"
+	    fi
+	else
+	    [ -f /var/lock/subsys/openafs-server ] && restart || :
+	fi
         ;;
   *)
         echo $"Usage: $0 {start|stop|status|restart|condrestart}"
