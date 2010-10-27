@@ -1334,7 +1334,10 @@ echo before the one for pwdb.
 echo
 
 %post server
-chkconfig --add openafs-server
+#on an upgrade, don't enable if we were disabled
+if [ $1 = 1 ] ; then
+  chkconfig --add openafs-server
+fi
 %{initdir}/openafs-server condrestart
 
 %if %{build_authlibs}
