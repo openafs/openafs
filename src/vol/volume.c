@@ -199,7 +199,8 @@ static void VCloseVolumeHandles_r(Volume * vp);
 static void LoadVolumeHeader(Error * ec, Volume * vp);
 static int VCheckOffline(Volume * vp);
 static int VCheckDetach(Volume * vp);
-static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags);
+static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId,
+                          Volume * hint, const struct timespec *ts);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
@@ -3501,6 +3502,46 @@ VHold_r(Volume * vp)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+/**** volume timeout-related stuff ****/
+
+#ifdef AFS_PTHREAD_ENV
+
+static_inline int
+VTimedOut(const struct timespec *ts)
+{
+    struct timeval tv;
+    int code;
+
+    if (ts->tv_sec == 0) {
+	/* short-circuit; this will have always timed out */
+	return 1;
+    }
+
+    code = gettimeofday(&tv, NULL);
+    if (code) {
+	Log("Error %d from gettimeofday, assuming we have not timed out\n", errno);
+	/* assume no timeout; failure mode is we just wait longer than normal
+	 * instead of returning errors when we shouldn't */
+	return 0;
+    }
+
+    if (tv.tv_sec < ts->tv_sec ||
+        (tv.tv_sec == ts->tv_sec && tv.tv_usec*1000 < ts->tv_nsec)) {
+
+	return 0;
+    }
+
+    return 1;
+}
+
+#else /* AFS_PTHREAD_ENV */
+
+/* Waiting a certain amount of time for offlining volumes is not supported
+ * for LWP due to a lack of primitives. So, we never time out */
+# define VTimedOut(x) (0)
+
+#endif /* !AFS_PTHREAD_ENV */
+
 #if 0
 static int
 VHold(Volume * vp)
@@ -3571,14 +3612,16 @@ VGetVolume(Error * ec, Error * client_ec, VolId volumeId)
     return retVal;
 }
 
-/* same as VGetVolume, but if a volume is waiting to go offline, we return
- * that it is actually offline, instead of waiting for it to go offline */
+/* same as VGetVolume, but if a volume is waiting to go offline, we only wait
+ * until time ts. If we have waited longer than that, we return that it is
+ * actually offline, instead of waiting for it to go offline */
 Volume *
-VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId)
+VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
+                const struct timespec *ts)
 {
     Volume *retVal;
     VOL_LOCK;
-    retVal = GetVolume(ec, client_ec, volumeId, NULL, 1);
+    retVal = GetVolume(ec, client_ec, volumeId, NULL, ts);
     VOL_UNLOCK;
     return retVal;
 }
@@ -3586,7 +3629,7 @@ VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId)
 Volume *
 VGetVolume_r(Error * ec, VolId volumeId)
 {
-    return GetVolume(ec, NULL, volumeId, NULL, 0);
+    return GetVolume(ec, NULL, volumeId, NULL, NULL);
 }
 
 /* try to get a volume we've previously looked up */
@@ -3594,7 +3637,7 @@ VGetVolume_r(Error * ec, VolId volumeId)
 Volume *
 VGetVolumeByVp_r(Error * ec, Volume * vp)
 {
-    return GetVolume(ec, NULL, vp->hashid, vp, 0);
+    return GetVolume(ec, NULL, vp->hashid, vp, NULL);
 }
 
 /**
@@ -3604,17 +3647,24 @@ VGetVolumeByVp_r(Error * ec, Volume * vp)
  * @param[out] client_ec  wire error code to be given to clients
  * @param[in]  volumeId   ID of the volume we want
  * @param[in]  hint       optional hint for hash lookups, or NULL
- * @param[in]  nowait     0 to wait for a 'goingOffline' volume to go offline
- *                        before returning, 1 to return immediately
+ * @param[in]  timeout    absolute deadline for waiting for the volume to go
+ *                        offline, if it is going offline. NULL to wait forever.
  *
  * @return a volume handle for the specified volume
  *  @retval NULL an error occurred, or the volume is in such a state that
  *               we cannot load a header or return any volume struct
  *
  * @note for DAFS, caller must NOT hold a ref count on 'hint'
+ *
+ * @note 'timeout' is only checked if the volume is actually going offline; so
+ *       if you pass timeout->tv_sec = 0, this will exhibit typical
+ *       nonblocking behavior.
+ *
+ * @note for LWP builds, 'timeout' must be NULL
  */
 static Volume *
-GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowait)
+GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
+          const struct timespec *timeout)
 {
     Volume *vp = hint;
     /* pull this profiling/debugging code out of regular builds */
@@ -3869,19 +3919,26 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 
 	if (programType == fileServer) {
 	    VGET_CTR_INC(V9);
-	    if (vp->goingOffline && !nowait) {
-		VGET_CTR_INC(V10);
+	    if (vp->goingOffline) {
+		if (timeout && VTimedOut(timeout)) {
+		    /* we've timed out; don't wait for the vol */
+		} else {
+		    VGET_CTR_INC(V10);
 #ifdef AFS_DEMAND_ATTACH_FS
-		/* wait for the volume to go offline */
-		if (V_attachState(vp) == VOL_STATE_GOING_OFFLINE) {
-		    VWaitStateChange_r(vp);
-		}
+		    /* wait for the volume to go offline */
+		    if (V_attachState(vp) == VOL_STATE_GOING_OFFLINE) {
+			VTimedWaitStateChange_r(vp, timeout, NULL);
+		    }
 #elif defined(AFS_PTHREAD_ENV)
-		VOL_CV_WAIT(&vol_put_volume_cond);
+		    VOL_CV_TIMEDWAIT(&vol_put_volume_cond, timeout, NULL);
 #else /* AFS_PTHREAD_ENV */
-		LWP_WaitProcess(VPutVolume);
+		    /* LWP has no timed wait, so the caller better not be
+		     * expecting one */
+		    osi_Assert(!timeout);
+		    LWP_WaitProcess(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
-		continue;
+		    continue;
+		}
 	    }
 	    if (vp->specialStatus) {
 		VGET_CTR_INC(V11);

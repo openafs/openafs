@@ -489,9 +489,15 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		VRESTARTING
 #endif
 		;
+#ifdef AFS_PTHREAD_ENV
+	    static const struct timespec timeout_ts = { 0, 0 };
+	    static const struct timespec * const ts = &timeout_ts;
+#else
+	    static const struct timespec * const ts = NULL;
+#endif
 
 	    errorCode = 0;
-	    *volptr = VGetVolumeNoWait(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolumeTimed(&local_errorCode, &errorCode, (afs_int32) fid->Volume, ts);
 	    if (!errorCode) {
 		osi_Assert(*volptr);
 		break;

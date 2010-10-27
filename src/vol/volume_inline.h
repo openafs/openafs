@@ -422,6 +422,47 @@ VWaitStateChange_r(Volume * vp)
 }
 
 /**
+ * wait for the volume to change states within a certain amount of time
+ *
+ * @param[in] vp  volume object pointer
+ * @param[in] ts  deadline (absolute time) or NULL to wait forever
+ *
+ * @pre VOL_LOCK held; ref held on volume
+ * @post VOL_LOCK held; volume state has changed and/or it is after the time
+ *       specified in ts
+ *
+ * @note DEMAND_ATTACH_FS only
+ * @note if ts is NULL, this is identical to VWaitStateChange_r
+ */
+static_inline void
+VTimedWaitStateChange_r(Volume * vp, const struct timespec *ts, int *atimedout)
+{
+    VolState state_save;
+    int timeout;
+
+    if (atimedout) {
+	*atimedout = 0;
+    }
+
+    if (!ts) {
+	VWaitStateChange_r(vp);
+	return;
+    }
+
+    state_save = V_attachState(vp);
+
+    assert(vp->nWaiters || vp->nUsers);
+    do {
+	VOL_CV_TIMEDWAIT(&V_attachCV(vp), ts, &timeout);
+    } while (V_attachState(vp) == state_save && !timeout);
+    assert(V_attachState(vp) != VOL_STATE_FREED);
+
+    if (atimedout && timeout) {
+	*atimedout = 1;
+    }
+}
+
+/**
  * wait for blocking ops to end.
  *
  * @pre VOL_LOCK held; ref held on volume
