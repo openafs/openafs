@@ -157,6 +157,31 @@ nt_write(FD_t fd, char *buf, size_t size)
 }
 
 int
+nt_pwrite(FD_t fd, const void * buf, size_t count, afs_foff_t offset)
+{
+    /*
+     * same comment as read
+     */
+
+    DWORD nbytes;
+    BOOL code;
+    OVERLAPPED overlap = {0};
+    LARGE_INTEGER liOffset;
+
+    liOffset.QuadPart = offset;
+    overlap.Offset = liOffset.LowPart;
+    overlap.OffsetHigh = liOffset.HighPart;
+
+    code = WriteFile((HANDLE) fd, (void *)buf, (DWORD) count, &nbytes, &overlap);
+
+    if (!code) {
+	errno = nterr_nt2unix(GetLastError(), EBADF);
+	return -1;
+    }
+    return (ssize_t)nbytes;
+}
+
+int
 nt_read(FD_t fd, char *buf, size_t size)
 {
     BOOL code;
@@ -169,6 +194,33 @@ nt_read(FD_t fd, char *buf, size_t size)
 	return -1;
     }
     return (int)nbytes;
+}
+
+int
+nt_pread(FD_t fd, void * buf, size_t count, afs_foff_t offset)
+{
+    /*
+     * This really ought to call NtReadFile
+     */
+    DWORD nbytes;
+    BOOL code;
+    OVERLAPPED overlap = {0};
+    LARGE_INTEGER liOffset;
+    /*
+     * Cast through a LARGE_INTEGER - make no assumption about
+     * byte ordering and leave that to the compiler..
+     */
+    liOffset.QuadPart = offset;
+    overlap.Offset = liOffset.LowPart;
+    overlap.OffsetHigh = liOffset.HighPart;
+
+    code = ReadFile((HANDLE) fd, (void *)buf, (DWORD) count, &nbytes, &overlap);
+
+    if (!code) {
+	errno = nterr_nt2unix(GetLastError(), EBADF);
+	return -1;
+    }
+    return (ssize_t)nbytes;
 }
 
 int
