@@ -7194,11 +7194,7 @@ GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc,
     lhp = IH_OPEN(V_linkHandle(vp));
     if (!lhp)
 	return EIO;
-#ifdef AFS_NT40_ENV
-    *lc = nt_GetLinkCount(lhp, fdP->fd_ih->ih_ino, 0);
-#else
-    *lc = namei_GetLinkCount(lhp, fdP->fd_ih->ih_ino, 0);
-#endif
+    *lc = namei_GetLinkCount(lhp, fdP->fd_ih->ih_ino, 0, 0, 1);
     FDH_CLOSE(lhp);
     if (*lc < 0)
 	return -1;

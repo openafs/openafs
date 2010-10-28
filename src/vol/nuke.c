@@ -117,12 +117,9 @@ nuke(char *aname, afs_int32 avolid)
     char *lastDevComp;
     struct DiskPartition64 *dp;
 #ifdef AFS_NAMEI_ENV
-#ifdef AFS_NT40_ENV
-    char path[MAX_PATH];
-#else
     char *path;
+
     namei_t ufs_name;
-#endif
 #endif /* AFS_NAMEI_ENV */
 #ifndef AFS_NAMEI_ENV
     char devName[64];
@@ -186,15 +183,14 @@ nuke(char *aname, afs_int32 avolid)
 #ifdef AFS_NT40_ENV
 		IH_INIT(fileH, (int)(*lastDevComp - 'A'), avolid,
 			ti->inode[i]);
-		nt_HandleToName(path, fileH);
 #else
 		IH_INIT(fileH, (int)volutil_GetPartitionID(aname), avolid,
 			ti->inode[i]);
+#endif /* AFS_NT40_ENV */
 		namei_HandleToName(&ufs_name, fileH);
 		path = ufs_name.n_path;
-#endif /* AFS_NT40_ENV */
 		IH_RELEASE(fileH);
-		if (unlink(path) < 0) {
+		if (OS_UNLINK(path) < 0) {
 		    Log("Nuke: Failed to remove %s\n", path);
 		}
 #else /* AFS_NAMEI_ENV */
