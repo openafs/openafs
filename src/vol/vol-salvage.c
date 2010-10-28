@@ -1905,11 +1905,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
             	for (i = 0; i < nVols; i++) {
             		ip = allInodes + isp[i].index;
 		         for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
-#ifdef AFS_NT40_ENV
-			         nt_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
-#else
 				 namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
-#endif
 		    }
             	}
 	    }

@@ -1034,17 +1034,21 @@ ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1, int p2,
 }
 #endif /* AFS_NAMEI_ENV */
 
-
-#ifndef AFS_NT40_ENV
 afs_sfsize_t
-ih_size(int fd)
+ih_size(FD_t fd)
 {
+#ifdef AFS_NT40_ENV
+    LARGE_INTEGER size;
+    if (!GetFileSizeEx(fd, &size))
+	return -1;
+    return size.QuadPart;
+#else
     struct afs_stat status;
     if (afs_fstat(fd, &status) < 0)
 	return -1;
     return status.st_size;
-}
 #endif
+}
 
 #ifndef HAVE_PIO
 ssize_t

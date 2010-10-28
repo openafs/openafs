@@ -20,6 +20,7 @@ INCFILES =\
 	$(INCFILEDIR)\afs\fssync.h \
 	$(INCFILEDIR)\afs\ihandle.h \
 	$(INCFILEDIR)\afs\nfs.h \
+	$(INCFILEDIR)\afs\namei_ops.h \
 	$(INCFILEDIR)\afs\ntops.h \
 	$(INCFILEDIR)\afs\partition.h \
 	$(INCFILEDIR)\afs\viceinode.h \
@@ -46,6 +47,7 @@ LIBOBJS =\
 	$(OUT)\fssync-client.obj \
 	$(OUT)\fssync-server.obj \
 	$(OUT)\daemon_com.obj \
+	$(OUT)\namei_ops.obj \
 	$(OUT)\ntops.obj \
 	$(OUT)\nuke.obj \
 	$(OUT)\partition.obj \
@@ -62,6 +64,7 @@ MT_LIBOBJS =\
 	$(OUT)\fssync-client_mt.obj \
 	$(OUT)\fssync-server_mt.obj \
 	$(OUT)\daemon_com_mt.obj \
+	$(OUT)\namei_ops.obj \
 	$(OUT)\ntops.obj \
 	$(OUT)\nuke_mt.obj \
 	$(OUT)\partition_mt.obj \
@@ -114,6 +117,7 @@ DAFS_LIBOBJS =\
 	$(OUT)\fssync-client_dafs.obj \
 	$(OUT)\fssync-server_dafs.obj \
 	$(OUT)\daemon_com_dafs.obj \
+	$(OUT)\namei_ops.obj \
 	$(OUT)\ntops.obj \
 	$(OUT)\nuke_dafs.obj \
 	$(OUT)\partition_dafs.obj \

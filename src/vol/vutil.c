@@ -221,11 +221,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 		IHandle_t *lh;
 		int code;
 
-#ifdef AFS_NT40_ENV
-		*(p->inode) = nt_MakeSpecIno(VI_LINKTABLE);
-#else
 		*(p->inode) = namei_MakeSpecIno(vol.parentId, VI_LINKTABLE);
-#endif
 		IH_INIT(lh, device, parentId, *(p->inode));
 		fdP = IH_OPEN(lh);
 		if (fdP == NULL) {
