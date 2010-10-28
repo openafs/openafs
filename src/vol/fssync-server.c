@@ -114,7 +114,7 @@ static struct offlineInfo OfflineVolumes[MAXHANDLERS][MAXOFFLINEVOLUMES];
  * fssync server socket handle.
  */
 static SYNC_server_state_t fssync_server_state =
-    { -1,                       /* file descriptor */
+    { OSI_NULLSOCKET,                       /* file descriptor */
       FSSYNC_ENDPOINT_DECL,     /* server endpoint */
       FSYNC_PROTO_VERSION,      /* protocol version */
       5,                        /* bind() retry limit */
@@ -442,7 +442,7 @@ FSYNC_newconnection(osi_socket afd)
     socklen_t junk;
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
-    if (fd == -1) {
+    if (fd == OSI_NULLSOCKET) {
 	Log("FSYNC_newconnection:  accept failed, errno==%d\n", errno);
 	osi_Assert(1 == 2);
     } else if (!AddHandler(fd, FSYNC_com)) {
@@ -1971,7 +1971,7 @@ InitHandler(void)
     int i;
     ObtainWriteLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++) {
-	HandlerFD[i] = -1;
+	HandlerFD[i] = OSI_NULLSOCKET;
 	HandlerProc[i] = 0;
     }
     ReleaseWriteLock(&FSYNC_handler_lock);
@@ -2017,7 +2017,7 @@ AddHandler(osi_socket afd, void (*aproc) (osi_socket))
     int i;
     ObtainWriteLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
-	if (HandlerFD[i] == -1)
+	if (HandlerFD[i] == OSI_NULLSOCKET)
 	    break;
     if (i >= MAXHANDLERS) {
 	ReleaseWriteLock(&FSYNC_handler_lock);
@@ -2060,7 +2060,7 @@ static int
 RemoveHandler(osi_socket afd)
 {
     ObtainWriteLock(&FSYNC_handler_lock);
-    HandlerFD[FindHandler_r(afd)] = -1;
+    HandlerFD[FindHandler_r(afd)] = OSI_NULLSOCKET;
     ReleaseWriteLock(&FSYNC_handler_lock);
     return 1;
 }
@@ -2073,7 +2073,7 @@ GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds)
     int fdi = 0;
     ObtainReadLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
-	if (HandlerFD[i] != -1) {
+	if (HandlerFD[i] != OSI_NULLSOCKET) {
 	    osi_Assert(fdi<maxfds);
 	    fds[fdi].fd = HandlerFD[i];
 	    fds[fdi].events = events;
@@ -2092,7 +2092,7 @@ GetHandler(fd_set * fdsetp, int *maxfdp)
     FD_ZERO(fdsetp);
     ObtainReadLock(&FSYNC_handler_lock);	/* just in case */
     for (i = 0; i < MAXHANDLERS; i++)
-	if (HandlerFD[i] != -1) {
+	if (HandlerFD[i] != OSI_NULLSOCKET) {
 	    FD_SET(HandlerFD[i], fdsetp);
 #ifndef AFS_NT40_ENV
             /* On Windows the nfds parameter to select() is ignored */

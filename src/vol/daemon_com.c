@@ -156,7 +156,7 @@ SYNC_connect(SYNC_client_state * state)
 	{ 3, 3, 3, 5, 5, 5, 7, 15, 16, 24, 32, 40, 48, 0 };
     time_t *timeout = &backoff[0];
 
-    if (state->fd >= 0) {
+    if (state->fd != OSI_NULLSOCKET) {
 	return 1;
     }
 
@@ -194,7 +194,7 @@ SYNC_disconnect(SYNC_client_state * state)
 #else
     close(state->fd);
 #endif
-    state->fd = -1;
+    state->fd = OSI_NULLSOCKET;
     return 0;
 }
 
@@ -213,7 +213,7 @@ SYNC_closeChannel(SYNC_client_state * state)
     SYNC_response res;
     SYNC_PROTO_BUF_DECL(ores);
 
-    if (state->fd == -1)
+    if (state->fd == OSI_NULLSOCKET)
 	return SYNC_OK;
 
     memset(&com, 0, sizeof(com));
@@ -279,11 +279,11 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
 	return SYNC_COM_ERROR;
     }
 
-    if (state->fd == -1) {
+    if (state->fd == OSI_NULLSOCKET) {
 	SYNC_connect(state);
     }
 
-    if (state->fd == -1) {
+    if (state->fd == OSI_NULLSOCKET) {
 	state->fatal_error = 1;
 	return SYNC_COM_ERROR;
     }
@@ -352,7 +352,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
     struct iovec iov[2];
 #endif
 
-    if (state->fd == -1) {
+    if (state->fd == OSI_NULLSOCKET) {
 	Log("SYNC_ask:  invalid sync file descriptor on circuit '%s'\n",
 	    state->proto_name);
 	res->hdr.response = SYNC_COM_ERROR;
