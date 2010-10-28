@@ -269,6 +269,21 @@ EXPORTS
 ;	rx_InterruptCall                        @274
         osi_Panic				@275
 
+; lwp functions
+        Afs_Lock_Obtain                         @276
+        Afs_Lock_ReleaseR                       @277
+        Afs_Lock_ReleaseW                       @278
+        Afs_Lock_WakeupR                        @279
+        Lock_Init                               @280
+        Lock_Destroy                            @281
+        FT_Init                                 @282
+        FT_GetTimeOfDay                         @283
+        FT_AGetTimeOfDay                        @284
+        FT_ApproxTime                           @285
+        threadname                              @286
+        registerthread                          @287
+        swapthreadname                          @288
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
