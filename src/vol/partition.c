@@ -1227,7 +1227,7 @@ VLockPartition_r(char *name)
 
     if (!dp)
 	return;			/* no partition, will fail later */
-    if (dp->lock_fd != -1)
+    if (dp->lock_fd != INVALID_FD)
 	return;
 
 #if    defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV)
@@ -1250,7 +1250,7 @@ VLockPartition_r(char *name)
 	else
 	    dp->lock_fd = afs_open(partitionName, code);
 
-	if (dp->lock_fd != -1)
+	if (dp->lock_fd != INVALID_FD)
 	    break;
 	if (errno == ENOENT)
 	    code |= O_CREAT;
@@ -1314,7 +1314,7 @@ VUnlockPartition_r(char *name)
     if (!dp)
 	return;			/* no partition, will fail later */
     close(dp->lock_fd);
-    dp->lock_fd = -1;
+    dp->lock_fd = INVALID_FD;
 }
 
 #endif /* AFS_NT40_ENV */
