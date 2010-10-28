@@ -3098,7 +3098,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     if (*ec == VNOVOL) {
 	/* if the volume doesn't exist, skip straight to 'error' so we don't
 	 * request a salvage */
-	goto error;
+	goto unlocked_error;
     }
 
     if (!*ec) {
@@ -3185,17 +3185,15 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	vp->nUsers = 0;
 
-	goto error;
+	goto locked_error;
     } else if (*ec) {
 	/* volume operation in progress */
-	VOL_LOCK;
-	goto error;
+	goto unlocked_error;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
-        VOL_LOCK;
-	goto error;
+	goto unlocked_error;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -3214,7 +3212,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-	goto error;
+	goto locked_error;
     }
 
     VOL_LOCK;
@@ -3237,7 +3235,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-	goto error;
+	goto locked_error;
     }
 
     if (programType == fileServer && V_destroyMe(vp) == DESTROY_ME) {
@@ -3258,7 +3256,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
 	*ec = VNOVOL;
 	forcefree = 1;
-	goto error;
+	goto locked_error;
     }
 
     vp->vnodeIndex[vSmall].bitmap = vp->vnodeIndex[vLarge].bitmap = NULL;
@@ -3274,7 +3272,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
 		    path);
-		goto error;
+		goto locked_error;
 	    }
 	}
     }
@@ -3322,7 +3320,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    *ec = VSALVAGE;
 #endif /* !AFS_DEMAND_ATTACh_FS */
-	    goto error;
+	    goto locked_error;
 	}
     }
 
@@ -3362,7 +3360,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 	    vp->nUsers = 0;
 #endif
-	    goto error;
+	    goto locked_error;
 	}
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3389,7 +3387,9 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
     return vp;
 
- error:
+unlocked_error:
+    VOL_LOCK;
+locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
 	VChangeState_r(vp, error_state);
