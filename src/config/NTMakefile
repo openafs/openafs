@@ -17,7 +17,6 @@ INCFILEAFSDIR = $(INCFILEDIR)\afs
 
 INCFILES =\
 	$(INCFILEDIR)\afsconfig.h \
-	$(INCFILEAFSDIR)\debug.h \
 	$(INCFILEAFSDIR)\stds.h \
 	$(INCFILEAFSDIR)\param.h \
 	$(INCFILEAFSDIR)\afs_sysnames.h \

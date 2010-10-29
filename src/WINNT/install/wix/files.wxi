@@ -1506,7 +1506,6 @@
                                 <File Id="filecm_vnodeops_H" Name="CM_VNO~1.h" LongName="cm_vnodeops.h" DiskId="1" src="$(var.IncDir)afs\cm_vnodeops.h" /> 
                                 <File Id="filecm_volume_H" Name="CM_VOL~1.h" LongName="cm_volume.h" DiskId="1" src="$(var.IncDir)afs\cm_volume.h" /> 
                                 <File Id="filecom_err_H" Name="com_err.h" LongName="com_err.h" DiskId="1" src="$(var.IncDir)afs\com_err.h" /> 
-                                <File Id="filedebug_H" Name="debug.h" LongName="debug.h" DiskId="1" src="$(var.IncDir)afs\debug.h" /> 
                                 <File Id="filedir_H" Name="dir.h" LongName="dir.h" DiskId="1" src="$(var.IncDir)afs\dir.h" /> 
                                 <File Id="filedirpath_H" Name="dirpath.h" LongName="dirpath.h" DiskId="1" src="$(var.IncDir)afs\dirpath.h" /> 
                                 <File Id="fileerrmap_nt_H" Name="ERRMAP~1.h" LongName="errmap_nt.h" DiskId="1" src="$(var.IncDir)afs\errmap_nt.h" /> 
