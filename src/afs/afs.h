@@ -670,6 +670,9 @@ struct SimpleLocks {
 
 #if defined(AFS_DARWIN80_ENV)
 #define VREFCOUNT_GT(v, y)    vnode_isinuse(AFSTOV(v), (y))
+#elif defined(AFS_FBSD_ENV)
+#define VREFCOUNT(v)		(vrefcnt(AFSTOV(v)))
+#define VREFCOUNT_GT(v, y)	(vrefcnt(AFSTOV(v)) > y)
 #elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define VREFCOUNT(v)          ((v)->vrefCount)
 #define VREFCOUNT_GT(v, y)    (AFSTOV(v)->v_usecount > (y))
