@@ -609,7 +609,7 @@ StringArrayToMultiString(char *strArray[])
 		    bufp += strLen + 1;
 		}
 	    }
-	    bufp = '\0';	/* terminate multistring */
+	    *bufp = '\0';	/* terminate multistring */
 	}
     }
 
