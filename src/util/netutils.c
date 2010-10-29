@@ -13,32 +13,22 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#ifdef KERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
+#if defined(AFS_NT40_ENV)
+# include <winsock2.h>
 #else
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#ifdef __FreeBSD__
-#include <sys/types.h>
-#endif
-#include <netinet/in.h>
-#include <sys/errno.h>
+# if defined(__FreeBSD__)
+#  include <sys/types.h>
+# endif
+# include <netinet/in.h>
+# include <sys/errno.h>
 #endif
 #include <errno.h>
-#endif
 
 #include <rx/rx.h>
 
