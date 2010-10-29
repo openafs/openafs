@@ -42,22 +42,9 @@ extern struct dentry_operations afs_dentry_operations;
 /* Forward declarations */
 static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp);
 static int afs_root(struct super_block *afsp);
-struct super_block *afs_read_super(struct super_block *sb, void *data, int silent);
 int afs_fill_super(struct super_block *sb, void *data, int silent);
 
-/* afs_file_system
- * VFS entry for Linux - installed in init_module
- * Linux mounts file systems by:
- * 1) register_filesystem(&afs_file_system) - done in init_module
- * 2) Mount call comes to us via do_mount -> read_super -> afs_read_super.
- *    We are expected to setup the super_block. See afs_read_super.
- */
 
-
-/* afs_read_super
- * read the "super block" for AFS - roughly eguivalent to struct vfs.
- * dev, covered, s_rd_only, s_dirt, and s_type will be set by read_super.
- */
 #ifdef GET_SB_HAS_STRUCT_VFSMOUNT
 static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
