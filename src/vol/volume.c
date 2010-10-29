@@ -168,6 +168,11 @@ pthread_mutex_t vol_salvsync_mutex;
 static volatile sig_atomic_t vol_disallow_salvsync = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+/**
+ * has VShutdown_r been called / is VShutdown_r running?
+ */
+static int vol_shutting_down = 0;
+
 #ifdef	AFS_OSF_ENV
 extern void *calloc(), *realloc();
 #endif
@@ -525,6 +530,8 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     opts->canUseSALVSYNC = 0;
 
     opts->interrupt_rxcall = NULL;
+    opts->offline_timeout = -1;
+    opts->offline_shutdown_timeout = -1;
     opts->usage_threshold = 128;
     opts->usage_rate_limit = 5;
 
@@ -572,6 +579,21 @@ VSetVInit_r(int value)
     CV_BROADCAST(&vol_vinit_cond);
 }
 
+static_inline void
+VLogOfflineTimeout(const char *type, afs_int32 timeout)
+{
+    if (timeout < 0) {
+	return;
+    }
+    if (timeout == 0) {
+	Log("VInitVolumePackage: Interrupting clients accessing %s "
+	    "immediately\n", type);
+    } else {
+	Log("VInitVolumePackage: Interrupting clients accessing %s "
+	    "after %ld second%s\n", type, (long)timeout, timeout==1?"":"s");
+    }
+}
+
 int
 VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 {
@@ -579,6 +601,18 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 
     programType = pt;
     vol_opts = *opts;
+
+#ifndef AFS_PTHREAD_ENV
+    if (opts->offline_timeout != -1 || opts->offline_shutdown_timeout != -1) {
+	Log("VInitVolumePackage: offline_timeout and/or "
+	    "offline_shutdown_timeout was specified, but the volume package "
+	    "does not support these for LWP builds\n");
+	return -1;
+    }
+#endif
+    VLogOfflineTimeout("volumes going offline", opts->offline_timeout);
+    VLogOfflineTimeout("volumes going offline during shutdown",
+                       opts->offline_shutdown_timeout);
 
     memset(&VStats, 0, sizeof(VStats));
     VStats.hdr_cache_size = 200;
@@ -1236,6 +1270,8 @@ VShutdown_r(void)
     Log("VShutdown:  shutting down on-line volumes on %d partition%s...\n",
 	params.n_parts, params.n_parts > 1 ? "s" : "");
 
+    vol_shutting_down = 1;
+
     if (vol_attach_threads > 1) {
 	/* prepare for parallel shutdown */
 	params.n_threads = vol_attach_threads;
@@ -1358,6 +1394,7 @@ VShutdown_r(void)
     }
 
     Log("VShutdown:  shutting down on-line volumes...\n");
+    vol_shutting_down = 1;
     for (i = 0; i < VolumeHashTable.Size; i++) {
 	/* try to hold first volume in the hash table */
 	for (queue_Scan(&VolumeHashTable.Table[i],vp,np,Volume)) {
@@ -3624,6 +3661,9 @@ VHold_r(Volume * vp)
 
 #ifdef AFS_PTHREAD_ENV
 
+static struct timespec *shutdown_timeout;
+static pthread_once_t shutdown_timeout_once = PTHREAD_ONCE_INIT;
+
 static_inline int
 VTimedOut(const struct timespec *ts)
 {
@@ -3652,11 +3692,93 @@ VTimedOut(const struct timespec *ts)
     return 1;
 }
 
+/**
+ * Calculate an absolute timeout.
+ *
+ * @param[out] ts  A timeout that is "timeout" seconds from now, if we return
+ *                 NULL, the memory is not touched
+ * @param[in]  timeout  How long the timeout should be from now
+ *
+ * @return timeout to use
+ *  @retval NULL      no timeout; wait forever
+ *  @retval non-NULL  the given value for "ts"
+ *
+ * @internal
+ */
+static struct timespec *
+VCalcTimeout(struct timespec *ts, afs_int32 timeout)
+{
+    struct timeval now;
+    int code;
+
+    if (timeout < 0) {
+	return NULL;
+    }
+
+    if (timeout == 0) {
+	ts->tv_sec = ts->tv_nsec = 0;
+	return ts;
+    }
+
+    code = gettimeofday(&now, NULL);
+    if (code) {
+	Log("Error %d from gettimeofday, falling back to 'forever' timeout\n", errno);
+	return NULL;
+    }
+
+    ts->tv_sec = now.tv_sec + timeout;
+    ts->tv_nsec = now.tv_usec * 1000;
+
+    return ts;
+}
+
+/**
+ * Initialize the shutdown_timeout global.
+ */
+static void
+VShutdownTimeoutInit(void)
+{
+    struct timespec *ts;
+
+    ts = malloc(sizeof(*ts));
+
+    shutdown_timeout = VCalcTimeout(ts, vol_opts.offline_shutdown_timeout);
+
+    if (!shutdown_timeout) {
+	free(ts);
+    }
+}
+
+/**
+ * Figure out the timeout that should be used for waiting for offline volumes.
+ *
+ * @param[out] ats  Storage space for a local timeout value if needed
+ *
+ * @return The timeout value that should be used
+ *   @retval NULL      No timeout; wait forever for offlining volumes
+ *   @retval non-NULL  A pointer to the absolute time that should be used as
+ *                     the deadline for waiting for offlining volumes.
+ *
+ * @note If we return non-NULL, the pointer we return may or may not be the
+ *       same as "ats"
+ */
+static const struct timespec *
+VOfflineTimeout(struct timespec *ats)
+{
+    if (vol_shutting_down) {
+	osi_Assert(pthread_once(&shutdown_timeout_once, VShutdownTimeoutInit) == 0);
+	return shutdown_timeout;
+    } else {
+	return VCalcTimeout(ats, vol_opts.offline_timeout);
+    }
+}
+
 #else /* AFS_PTHREAD_ENV */
 
 /* Waiting a certain amount of time for offlining volumes is not supported
  * for LWP due to a lack of primitives. So, we never time out */
 # define VTimedOut(x) (0)
+# define VOfflineTimeout(x) (NULL)
 
 #endif /* !AFS_PTHREAD_ENV */
 
@@ -4397,6 +4519,160 @@ VForceOffline(Volume * vp)
     VOL_UNLOCK;
 }
 
+/**
+ * Iterate over the RX calls associated with a volume, and interrupt them.
+ *
+ * @param[in] vp The volume whose RX calls we want to scan
+ *
+ * @pre VOL_LOCK held
+ */
+static void
+VScanCalls_r(struct Volume *vp)
+{
+    struct VCallByVol *cbv, *ncbv;
+    afs_int32 err;
+#ifdef AFS_DEMAND_ATTACH_FS
+    VolState state_save;
+#endif
+
+    if (queue_IsEmpty(&vp->rx_call_list))
+	return; /* no calls to interrupt */
+    if (!vol_opts.interrupt_rxcall)
+	return; /* we have no function with which to interrupt calls */
+    err = VIsGoingOffline_r(vp);
+    if (!err)
+	return; /* we're not going offline anymore */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VWaitExclusiveState_r(vp);
+    state_save = VChangeState_r(vp, VOL_STATE_SCANNING_RXCALLS);
+    VOL_UNLOCK;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    for(queue_Scan(&vp->rx_call_list, cbv, ncbv, VCallByVol)) {
+	if (LogLevel > 0) {
+	    struct rx_peer *peer;
+	    char hoststr[16];
+	    peer = rx_PeerOf(rx_ConnectionOf(cbv->call));
+
+	    Log("Offlining volume %lu while client %s:%u is trying to read "
+	        "from it; kicking client off with error %ld\n",
+	        (long unsigned) vp->hashid,
+	        afs_inet_ntoa_r(rx_HostOf(peer), hoststr),
+	        (unsigned) ntohs(rx_PortOf(peer)),
+	        (long) err);
+	}
+	(*vol_opts.interrupt_rxcall) (cbv->call, err);
+    }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+    VChangeState_r(vp, state_save);
+#endif /* AFS_DEMAND_ATTACH_FS */
+}
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * Wait for a vp to go offline.
+ *
+ * @param[out] ec 1 if a salvage on the volume has been requested and
+ *                salvok == 0, 0 otherwise
+ * @param[in] vp  The volume to wait for
+ * @param[in] salvok  If 0, we return immediately with *ec = 1 if the volume
+ *                    has been requested to salvage. Otherwise we keep waiting
+ *                    until the volume has gone offline.
+ *
+ * @pre VOL_LOCK held
+ * @pre caller holds a lightweight ref on vp
+ *
+ * @note DAFS only
+ */
+static void
+VWaitForOfflineByVp_r(Error *ec, struct Volume *vp, int salvok)
+{
+    struct timespec timeout_ts;
+    const struct timespec *ts;
+    int timedout = 0;
+
+    ts = VOfflineTimeout(&timeout_ts);
+
+    *ec = 0;
+
+    while (!VIsOfflineState(V_attachState(vp)) && !timedout) {
+	if (!salvok && vp->salvage.requested) {
+	    *ec = 1;
+	    return;
+	}
+	VTimedWaitStateChange_r(vp, ts, &timedout);
+    }
+    if (!timedout) {
+	/* we didn't time out, so the volume must be offline, so we're done */
+	return;
+    }
+
+    /* If we got here, we timed out waiting for the volume to go offline.
+     * Kick off the accessing RX calls and wait again */
+
+    VScanCalls_r(vp);
+
+    while (!VIsOfflineState(V_attachState(vp))) {
+	if (!salvok && vp->salvage.requested) {
+	    *ec = 1;
+	    return;
+	}
+
+	VWaitStateChange_r(vp);
+    }
+}
+
+#else /* AFS_DEMAND_ATTACH_FS */
+
+/**
+ * Wait for a volume to go offline.
+ *
+ * @pre VOL_LOCK held
+ *
+ * @note non-DAFS only (for DAFS, use @see WaitForOfflineByVp_r)
+ */
+static void
+VWaitForOffline_r(Error *ec, VolumeId volid)
+{
+    struct Volume *vp;
+    const struct timespec *ts;
+#ifdef AFS_PTHREAD_ENV
+    struct timespec timeout_ts;
+#endif
+
+    ts = VOfflineTimeout(&timeout_ts);
+
+    vp = GetVolume(ec, NULL, volid, NULL, ts);
+    if (!vp) {
+	/* error occurred so bad that we can't even get a vp; we have no
+	 * information on the vol so we don't know whether to wait, so just
+	 * return */
+	return;
+    }
+    if (!VIsGoingOffline_r(vp)) {
+	/* volume is no longer going offline, so we're done */
+	VPutVolume_r(vp);
+	return;
+    }
+
+    /* If we got here, we timed out waiting for the volume to go offline.
+     * Kick off the accessing RX calls and wait again */
+
+    VScanCalls_r(vp);
+    VPutVolume_r(vp);
+    vp = NULL;
+
+    vp = VGetVolume_r(ec, volid);
+    if (vp) {
+	/* In case it was reattached... */
+	VPutVolume_r(vp);
+    }
+}
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
 /* The opposite of VAttachVolume.  The volume header is written to disk, with
    the inUse bit turned off.  A copy of the header is maintained in memory,
    however (which is why this is VOffline, not VDetach).
@@ -4404,8 +4680,8 @@ VForceOffline(Volume * vp)
 void
 VOffline_r(Volume * vp, char *message)
 {
-#ifndef AFS_DEMAND_ATTACH_FS
     Error error;
+#ifndef AFS_DEMAND_ATTACH_FS
     VolumeId vid = V_id(vp);
 #endif
 
@@ -4423,17 +4699,11 @@ VOffline_r(Volume * vp, char *message)
     VChangeState_r(vp, VOL_STATE_GOING_OFFLINE);
     VCreateReservation_r(vp);
     VPutVolume_r(vp);
-
-    /* wait for the volume to go offline */
-    if (V_attachState(vp) == VOL_STATE_GOING_OFFLINE) {
-	VWaitStateChange_r(vp);
-    }
+    VWaitForOfflineByVp_r(&error, vp, 1);
     VCancelReservation_r(vp);
 #else /* AFS_DEMAND_ATTACH_FS */
     VPutVolume_r(vp);
-    vp = VGetVolume_r(&error, vid);	/* Wait for it to go offline */
-    if (vp)			/* In case it was reattached... */
-	VPutVolume_r(vp);
+    VWaitForOffline_r(&error, vid);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
 
@@ -4468,6 +4738,7 @@ VOffline_r(Volume * vp, char *message)
 void
 VOfflineForVolOp_r(Error *ec, Volume *vp, char *message)
 {
+    int salvok = 1;
     osi_Assert(vp->pending_vol_op);
     if (!V_inUse(vp)) {
 	VPutVolume_r(vp);
@@ -4483,17 +4754,14 @@ VOfflineForVolOp_r(Error *ec, Volume *vp, char *message)
     VCreateReservation_r(vp);
     VPutVolume_r(vp);
 
-    /* Wait for the volume to go offline */
-    while (!VIsOfflineState(V_attachState(vp))) {
+    if (vp->pending_vol_op->com.programType != salvageServer) {
         /* do not give corrupted volumes to the volserver */
-        if (vp->salvage.requested && vp->pending_vol_op->com.programType != salvageServer) {
-           *ec = 1;
-	   goto error;
-        }
-	VWaitStateChange_r(vp);
+	salvok = 0;
     }
+
     *ec = 0;
- error:
+    VWaitForOfflineByVp_r(ec, vp, salvok);
+
     VCancelReservation_r(vp);
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
