@@ -46,8 +46,8 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
 	${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libusd.a \
+	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libprocmgmt.a
 
 TESTOBJS=test.o
@@ -85,8 +85,8 @@ tcstatus.o: tcstatus.c ${INCLS}
 read_tape: read_tape.c
 	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
 		-o read_tape ${srcdir}/read_tape.c \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
-		${TOP_LIBDIR}/libusd.a
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libusd.a \
+		${TOP_LIBDIR}/util.a
 
 # Errors
 CFLAGS_tcudbprocs.o=@CFLAGS_NOERROR@
