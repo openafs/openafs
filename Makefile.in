@@ -336,7 +336,7 @@ dvolser: project tviced usd libafsrpc libafsauthent volser
 	esac
 
 rxosdsrc: rxgen
-	${COMPILE_PART1} rxosd ${COMPILE_PART2A} source
+	+${COMPILE_PART1} rxosd ${COMPILE_PART2A} source
 
 venus: cmd comerr volser ptserver
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
