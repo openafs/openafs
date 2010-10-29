@@ -302,6 +302,7 @@ VIsExclusiveState(VolState state)
     case VOL_STATE_VNODE_CLOSE:
     case VOL_STATE_VNODE_RELEASE:
     case VOL_STATE_VLRU_ADD:
+    case VOL_STATE_SCANNING_RXCALLS:
 	return 1;
     default:
 	return 0;

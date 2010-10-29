@@ -511,6 +511,8 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     opts->canUseFSSYNC = 0;
     opts->canUseSALVSYNC = 0;
 
+    opts->interrupt_rxcall = NULL;
+
 #ifdef FAST_RESTART
     opts->unsafe_attach = 1;
 #else /* !FAST_RESTART */
@@ -938,6 +940,7 @@ VInitVolumePackageThread(void *args)
             vp->partition = partition;
             vp->hashid = vid;
             queue_Init(&vp->vnode_list);
+            queue_Init(&vp->rx_call_list);
 	    CV_INIT(&V_attachCV(vp), "partattach", CV_DEFAULT, 0);
 
             vb->batch[vb->size++] = vp;
@@ -2170,6 +2173,7 @@ VPreAttachVolumeByVp_r(Error * ec,
 	osi_Assert(vp != NULL);
 	memset(vp, 0, sizeof(Volume));
 	queue_Init(&vp->vnode_list);
+	queue_Init(&vp->rx_call_list);
 	CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
     }
 
@@ -2399,6 +2403,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
       vp->device = partp->device;
       vp->partition = partp;
       queue_Init(&vp->vnode_list);
+      queue_Init(&vp->rx_call_list);
 #ifdef AFS_DEMAND_ATTACH_FS
       CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -3053,8 +3058,8 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  * @param[in] path     full path to the volume header .vol file
  * @param[in] partp    disk partition object for the attaching partition
  * @param[in] vp       volume object; vp->hashid, vp->device, vp->partition,
- *                     vp->vnode_list, and V_attachCV (for DAFS) should already
- *                     be initialized
+ *                     vp->vnode_list, vp->rx_call_list, and V_attachCV (for
+ *                     DAFS) should already be initialized
  * @param[in] isbusy   1 if vp->specialStatus should be set to VBUSY; that is,
  *                     if there is a volume operation running for this volume
  *                     that should set the volume to VBUSY during its run. 0
@@ -3557,6 +3562,113 @@ VHold(Volume * vp)
 }
 #endif
 
+static afs_int32
+VIsGoingOffline_r(struct Volume *vp)
+{
+    afs_int32 code = 0;
+
+    if (vp->goingOffline) {
+	if (vp->specialStatus) {
+	    code = vp->specialStatus;
+	} else if (V_inService(vp) == 0 || V_blessed(vp) == 0) {
+	    code = VNOVOL;
+	} else {
+	    code = VOFFLINE;
+	}
+    }
+
+    return code;
+}
+
+/**
+ * Tell the caller if a volume is waiting to go offline.
+ *
+ * @param[in] vp  The volume we want to know about
+ *
+ * @return volume status
+ *   @retval 0 volume is not waiting to go offline, go ahead and use it
+ *   @retval nonzero volume is waiting to offline, and give the returned code
+ *           as an error to anyone accessing the volume
+ *
+ * @pre VOL_LOCK is NOT held
+ * @pre caller holds a heavyweight reference on vp
+ */
+afs_int32
+VIsGoingOffline(struct Volume *vp)
+{
+    afs_int32 code;
+
+    VOL_LOCK;
+    code = VIsGoingOffline_r(vp);
+    VOL_UNLOCK;
+
+    return code;
+}
+
+/**
+ * Register an RX call with a volume.
+ *
+ * @param[inout] ec        Error code; if unset when passed in, may be set if
+ *                         the volume starts going offline
+ * @param[out]   client_ec @see GetVolume
+ * @param[in] vp   Volume struct
+ * @param[in] cbv  VCallByVol struct containing the RX call to register
+ *
+ * @pre VOL_LOCK held
+ * @pre caller holds heavy ref on vp
+ *
+ * @internal
+ */
+static void
+VRegisterCall_r(Error *ec, Error *client_ec, Volume *vp, struct VCallByVol *cbv)
+{
+    if (vp && cbv) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (!*ec) {
+	    /* just in case the volume started going offline after we got the
+	     * reference to it... otherwise, if the volume started going
+	     * offline right at the end of GetVolume(), we might race with the
+	     * RX call scanner, and return success and add our cbv to the
+	     * rx_call_list _after_ the scanner has scanned the list. */
+	    *ec = VIsGoingOffline_r(vp);
+	    if (client_ec) {
+		*client_ec = *ec;
+	    }
+	}
+
+	while (V_attachState(vp) == VOL_STATE_SCANNING_RXCALLS) {
+	    VWaitStateChange_r(vp);
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+	queue_Prepend(&vp->rx_call_list, cbv);
+    }
+}
+
+/**
+ * Deregister an RX call with a volume.
+ *
+ * @param[in] vp   Volume struct
+ * @param[in] cbv  VCallByVol struct containing the RX call to deregister
+ *
+ * @pre VOL_LOCK held
+ * @pre caller holds heavy ref on vp
+ *
+ * @internal
+ */
+static void
+VDeregisterCall_r(Volume *vp, struct VCallByVol *cbv)
+{
+    if (cbv && queue_IsOnQueue(cbv)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	while (V_attachState(vp) == VOL_STATE_SCANNING_RXCALLS) {
+	    VWaitStateChange_r(vp);
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+	queue_Remove(cbv);
+    }
+}
 
 /***************************************************/
 /* get and put volume routines                     */
@@ -3601,6 +3713,22 @@ VPutVolume(Volume * vp)
     VOL_UNLOCK;
 }
 
+/**
+ * Puts a volume reference obtained with VGetVolumeWithCall.
+ *
+ * @param[in] vp  Volume struct
+ * @param[in] cbv VCallByVol struct given to VGetVolumeWithCall, or NULL if none
+ *
+ * @pre VOL_LOCK is NOT held
+ */
+void
+VPutVolumeWithCall(Volume *vp, struct VCallByVol *cbv)
+{
+    VOL_LOCK;
+    VDeregisterCall_r(vp, cbv);
+    VPutVolume_r(vp);
+    VOL_UNLOCK;
+}
 
 /* Get a pointer to an attached volume.  The pointer is returned regardless
    of whether or not the volume is in service or on/off line.  An error
@@ -3625,6 +3753,39 @@ VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
     Volume *retVal;
     VOL_LOCK;
     retVal = GetVolume(ec, client_ec, volumeId, NULL, ts);
+    VOL_UNLOCK;
+    return retVal;
+}
+
+/**
+ * Get a volume reference associated with an RX call.
+ *
+ * @param[out] ec @see GetVolume
+ * @param[out] client_ec @see GetVolume
+ * @param[in] volumeId @see GetVolume
+ * @param[in] ts  How long to wait for going-offline volumes (absolute time).
+ *                If NULL, wait forever. If ts->tv_sec == 0, return immediately
+ *                with an error if the volume is going offline.
+ * @param[in] cbv Contains an RX call to be associated with this volume
+ *                reference. This call may be interrupted if the volume is
+ *                requested to go offline while we hold a ref on it. Give NULL
+ *                to not associate an RX call with this reference.
+ *
+ * @return @see GetVolume
+ *
+ * @note for LWP builds, ts must be NULL
+ *
+ * @note A reference obtained with this function MUST be put back with
+ *       VPutVolumeWithCall
+ */
+Volume *
+VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
+                   const struct timespec *ts, struct VCallByVol *cbv)
+{
+    Volume *retVal;
+    VOL_LOCK;
+    retVal = GetVolume(ec, client_ec, volumeId, NULL, ts);
+    VRegisterCall_r(ec, client_ec, retVal, cbv);
     VOL_UNLOCK;
     return retVal;
 }
