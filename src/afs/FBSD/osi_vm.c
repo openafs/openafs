@@ -20,12 +20,8 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
-#ifdef AFS_FBSD70_ENV
 #include <sys/param.h>
 #include <sys/vnode.h>
-     void
-     vgonel(struct vnode *vp, struct thread *td);
-#endif
 
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -58,9 +54,11 @@
 
 #if defined(AFS_FBSD80_ENV)
 #define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY)
+#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY);
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0)
 #else
 #define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY, curthread)
+#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY, curthread);
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
 #endif
 
@@ -78,18 +76,18 @@
  * is not dropped and re-acquired for any platform.  It may be that *slept is
  * therefore obsolescent.
  *
- * OSF/1 Locking:  VN_LOCK has been called.
- * We do not lock the vnode here, but instead require that it be exclusive
- * locked by code calling osi_VM_StoreAllSegments directly, or scheduling it
- * from the bqueue - Matt
- * Maybe better to just call vnode_pager_setsize()?
  */
 int
 osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct vm_object *obj;
-    struct vnode *vp;
-    if (VREFCOUNT(avc) > 1) {
+    struct vnode *vp = AFSTOV(avc);
+
+    if (!VI_TRYLOCK(vp)) /* need interlock to check usecount */
+	return EBUSY;
+
+    if (vp->v_usecount > 0) {
+	VI_UNLOCK(vp);
 	return EBUSY;
     }
 
@@ -98,39 +96,33 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
      * typically -1.  This was caused by incorrectly performing afs_close
      * processing on vnodes being recycled */
     if (avc->opens) {
+	VI_UNLOCK(vp);
 	return EBUSY;
     }
 
     /* if a lock is held, give up */
     if (CheckLock(&avc->lock)) {
+	VI_UNLOCK(vp);
 	return EBUSY;
     }
 
-    return(0);
-
-    AFS_GUNLOCK();
-    vp = AFSTOV(avc);
-#ifndef AFS_FBSD70_ENV
-    lock_vnode(vp);
-#endif
-    if (VOP_GETVOBJECT(vp, &obj) == 0) {
-	VM_OBJECT_LOCK(obj);
-	vm_object_page_remove(obj, 0, 0, FALSE);
-#if 1
-	if (obj->ref_count == 0) {
-	    simple_lock(&vp->v_interlock);
-	    vgonel(vp, curthread);
-	    vp->v_tag = VT_AFS;
-	    SetAfsVnode(vp);
-	}
-#endif
-	VM_OBJECT_UNLOCK(obj);
+    if ((vp->v_iflag & VI_DOOMED) != 0) {
+	VI_UNLOCK(vp);
+	return (0);
     }
-#ifndef AFS_FBSD70_ENV
-    unlock_vnode(vp);
-#endif
-    AFS_GLOCK();
 
+    /* must hold the vnode before calling vgone()
+     * This code largely copied from vfs_subr.c:vlrureclaim() */
+    vholdl(vp);
+    AFS_GUNLOCK();
+    *slept = 1;
+    /* use the interlock while locking, so no one else can DOOM this */
+    ilock_vnode(vp);
+    vgone(vp);
+    unlock_vnode(vp);
+    vdrop(vp);
+
+    AFS_GLOCK();
     return 0;
 }
 
