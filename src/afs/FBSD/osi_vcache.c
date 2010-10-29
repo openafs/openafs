@@ -17,44 +17,18 @@ int
 osi_TryEvictVCache(struct vcache *avc, int *slept) {
     struct vnode *vp = AFSTOV(avc);
 
-    if (!VREFCOUNT_GT(avc,0)
-        && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
-	/*
-         * vgone() reclaims the vnode, which calls afs_FlushVCache(),
-         * then it puts the vnode on the free list.
-         * If we don't do this we end up with a cleaned vnode that's
-         * not on the free list.
-         * XXX assume FreeBSD is the same for now.
-         */
-	/*
-	 * We only have one caller (afs_ShakeLooseVCaches), which already
-	 * holds the write lock.  vgonel() sometimes calls VOP_CLOSE(),
-	 * so we must drop the write lock around our call to vgone().
-	 */
-	ReleaseWriteLock(&afs_xvcache);
-        AFS_GUNLOCK();
-	*slept = 1;
-
-#if defined(AFS_FBSD80_ENV)
-	/* vgone() is correct, but vgonel() panics if v_usecount is 0--
-         * this is particularly confusing since vgonel() will trigger
-         * vop_reclaim, in the call path of which we'll check v_usecount
-         * and decide that the vnode is busy.  Splat. */
-	if (vrefcnt(vp) < 1)
-	    vref(vp);
-
-	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
-#endif
-        vgone(vp);
-#if defined(AFS_FBSD80_ENV)
-	VOP_UNLOCK(vp, 0);
-#endif
-
-	AFS_GLOCK();
-	ObtainWriteLock(&afs_xvcache, 340);
+    /*
+     * essentially all we want to do here is check that the
+     * vcache is not in use, then call vgone() (which will call
+     * inactive and reclaim as needed).  This requires some
+     * kind of complicated locking, which we already need to implement
+     * for FlushVCache, so just call that routine here and check
+     * its return value for whether the vcache was evict-able.
+     */
+    if (osi_VM_FlushVCache(avc, slept) != 0)
+	return 0;
+    else
 	return 1;
-    }
-    return 0;
 }
 
 struct vcache *
