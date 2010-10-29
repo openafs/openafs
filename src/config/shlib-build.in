@@ -22,6 +22,7 @@ sysname="@AFS_SYSNAME@"
 library=
 major=
 minor=
+unused=
 srcdir=.
 done=
 while [ -z "$done" ] && [ $# -gt 0 ] ; do
@@ -51,18 +52,22 @@ while [ -z "$done" ] && [ $# -gt 0 ] ; do
         minor="$1"
         shift
         ;;
+    -i)
+	ignore=yes
+	shift
+	;;
     --)
         shift
         done=yes
         ;;
     *)
-        echo 'Usage: shlib-build -l <lib> -M <major> -m <minor> -- ...' >&2
+        echo 'Usage: shlib-build [-i] -l <lib> -M <major> -m <minor> -- ...' >&2
         exit 1
         ;;
     esac
 done
 if [ -z "$library" ] ; then
-    echo 'Usage: shlib-install -l <lib> -M <major> -m <minor>' >&2
+    echo 'Usage: shlib-install [-i] -l <lib> -M <major> -m <minor>' >&2
     exit 1
 fi
 
@@ -132,6 +137,9 @@ hp_ux*)
 	     /global:/ { inglobal=1};' \
 	> $library.exp
 	export="-Wl,-exported_symbols_list,$library.exp"
+	if [ ! -z "$ignore" ] ; then
+	    export="$export,-flat_namespace,-undefined,suppress"
+	fi
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"
