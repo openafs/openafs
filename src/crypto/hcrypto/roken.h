@@ -95,4 +95,8 @@ ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL
 ROKEN_LIB_FUNCTION const char * ROKEN_LIB_CALL getprogname(void);
 #endif
 
+#ifndef _PATH_DEVNULL
+#define _PATH_DEVNULL "/dev/null"
+#endif
+
 #endif /* OPENAFS_ROKEN_H */

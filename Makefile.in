@@ -148,7 +148,7 @@ config: prelude
 procmgmt: config
 	+${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: procmgmt des lwp_depinstall rx_depinstall
+util: $(DIR_roken) procmgmt des lwp_depinstall rx_depinstall
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
 audit: util rx rxkad fsint
@@ -165,11 +165,14 @@ cmd: comerr
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
-hcrypto: config
+hcrypto: config $(DIR_roken)
 	+${COMPILE_PART1} crypto/hcrypto ${COMPILE_PART2}
 
 lwp: util lwp_depinstall
 	+${COMPILE_PART1} lwp ${COMPILE_PART2}
+
+roken: config
+	+${COMPILE_PART1} roken ${COMPILE_PART2}
 
 rxgen: config
 	+${COMPILE_PART1} rxgen ${COMPILE_PART2}
@@ -656,7 +659,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 	dviced dvolser \
 	venus update xstat afsmonitor rxdebug libafsrpc hcrypto \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform kopenafs authtools
+	platform kopenafs authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
@@ -664,7 +667,7 @@ finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth lo
 	dviced dvolser \
 	venus update xstat afsmonitor rxdebug libafsrpc hcrypto \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
-	platform kopenafs authtools
+	platform kopenafs authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 check test: finale
@@ -779,6 +782,7 @@ clean2:
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-${COMPILE_PART1} crypto/hcrypto ${COMPILE_CLEAN}
+	-${COMPILE_PART1} roken ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
@@ -878,6 +882,7 @@ distclean: clean
 	src/procmgmt/test/Makefile \
 	src/ptserver/Makefile \
 	src/tptserver/Makefile \
+	src/roken/Makefile \
 	src/rx/Makefile \
 	src/rx/bulk.example/Makefile \
 	src/rx/bulktest/Makefile \

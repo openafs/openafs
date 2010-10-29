@@ -1206,12 +1206,13 @@ dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
+AC_CHECK_HEADERS(stdlib.h stdint.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h sys/pag.h)
 AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
+AC_CHECK_HEADERS(sys/socket.h sys/ioctl.h errno.h time.h syslog.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h)
 
@@ -1254,7 +1255,6 @@ AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS([ \
 	arc4random \
-	daemon \
 	flock \
 	fseeko64 \
 	ftello64 \
@@ -1281,19 +1281,48 @@ AC_CHECK_FUNCS([ \
 	snprintf \
 	strcasestr \
 	strerror \
-	strlcat \
-	strlcpy \
 	timegm \
 	vsnprintf \
 	vsyslog \
 ])
 
+OPENAFS_ROKEN()
+OPENAFS_C_ATTRIBUTE()
+
+dnl Functions that Heimdal's libroken provides, but that we
+dnl haven't found a need for yet, and so haven't imported
+AC_CHECK_FUNCS([ \
+	chown \
+	fchown \
+	getdtablesize \
+	gethostname \
+	gettimeofday \
+	localtime_r \
+	lstat \
+	inet_aton \
+	inet_ntop \
+	inet_pton \
+	readv \
+	strdup \
+	strftime \
+	strndup \
+	strsep \
+])
+
 dnl Functions that we're going to try and get from libroken
 
 AC_REPLACE_FUNCS([ \
+	daemon \
+	ecalloc \
+	emalloc \
+	erealloc \
 	err \
 	errx \
+	getopt \
 	getprogname \
+	strcasecmp \
+	strlcat \
+	strnlen \
 	strlcpy \
 	verr \
 	verrx \
@@ -1308,9 +1337,18 @@ AC_CHECK_HEADERS([ \
 	err.h \
 ])
 
+AC_CHECK_DECLS([h_errno], [], [], [
+#include <sys/types.h>
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+])
+
+AC_HEADER_TIME
+
 ROKEN_HEADERS=
 AS_IF([test "$ac_cv_header_err_h" != "yes" ],
-      [ROKEN_HEADERS="$ROKEN_HEADERS err.h"],
+      [ROKEN_HEADERS="$ROKEN_HEADERS \$(TOP_INCDIR)/err.h"],
       [])
 AC_SUBST(ROKEN_HEADERS)
 
@@ -1362,6 +1400,27 @@ AC_CHECK_TYPE([socklen_t],[],
 [#include <sys/types.h>
 #include <sys/socket.h>])
 AC_CHECK_TYPES(off64_t)
+AC_CHECK_TYPES([ssize_t], [], [], [#include <unistd.h>])
+AC_CHECK_TYPES([struct winsize], [], [], [
+#include <sys/termios.h>
+#include <sys/ioctl.h>])
+AC_CHECK_TYPES([sa_family_t, socklen_t, struct sockaddr,
+		struct sockaddr_storage],
+	       [], [], [
+#include <sys/types.h>
+#include <sys/socket.h>
+])
+AC_CHECK_TYPES([sa_family_t], [], [], [
+#include <sys/types.h>
+#include <sys/socket.h>
+])
+AC_CHECK_TYPES([struct addrinfo], [], [], [
+#include <sys/types.h>
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+])
+
 AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST

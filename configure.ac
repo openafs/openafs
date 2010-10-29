@@ -194,6 +194,7 @@ src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
 src/tptserver/Makefile \
+src/roken/Makefile \
 src/rx/Makefile \
 src/rx/bulk.example/Makefile \
 src/rx/bulktest/Makefile \

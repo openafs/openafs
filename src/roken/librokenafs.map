@@ -1,0 +1,33 @@
+{
+    global:
+		ct_memcmp;
+		daemon;
+		err;
+		errx;
+		getopt;
+		getprogname;
+		issuid;
+		net_read;
+		net_write;
+		rk_cloexec;
+		rk_cloexec_file;
+		rk_ecalloc;
+		rk_emalloc;
+		rk_erealloc;
+		rk_hex_encode;
+		rk_print_version;
+		rk_socket;
+		rk_strcasecmp;
+		rk_strlcat;
+		rk_strnlen;
+		rk_strlcpy;
+		strcasecmp;
+		verr;
+		verrx;
+		vwarn;
+		vwarnx;
+		warn;
+		warnx;
+    local:
+		*;
+};

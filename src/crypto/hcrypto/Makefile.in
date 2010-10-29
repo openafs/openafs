@@ -33,7 +33,7 @@ HEADERS= ${TOP_INCDIR}/hcrypto/aes.h \
 
 UPSTREAM= ${TOP_SRCDIR}/external/heimdal
 
-MODULE_INCLUDE=-I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto 
+MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto 
 
 SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
@@ -272,8 +272,18 @@ net_write.o: ${UPSTREAM}/roken/net_write.c
 # out into a new libroken top level target, which allows the use of an
 # existing libroken, if one is available.
 
-strlcpy.o: ${UPSTREAM}/roken/strlcpy.c
-	$(AFS_CCRULE) $(UPSTREAM)/roken/strlcpy.c
+
+daemon.o: ${UPSTREAM}/roken/daemon.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/daemon.c
+
+ecalloc.o: ${UPSTREAM}/roken/ecalloc.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/ecalloc.c
+
+emalloc.o: ${UPSTREAM}/roken/emalloc.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/emalloc.c
+
+erealloc.o: ${UPSTREAM}/roken/erealloc.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/erealloc.c
 
 err.h: ${UPSTREAM}/roken/err.hin
 	cp $? $@
@@ -284,8 +294,23 @@ err.o: ${UPSTREAM}/roken/err.c
 errx.o: ${UPSTREAM}/roken/errx.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/errx.c
 
+getopt.o: ${UPSTREAM}/roken/getopt.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/getopt.c
+
 getprogname.o: ${UPSTREAM}/roken/getprogname.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/getprogname.c
+
+socket.o: ${UPSTREAM}/roken/socket.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/socket.c
+
+strlcat.o: ${UPSTREAM}/roken/strlcat.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/strlcat.c
+
+strlcpy.o: ${UPSTREAM}/roken/strlcpy.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/strlcpy.c
+
+strnlen.o: ${UPSTREAM}/roken/strnlen.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/strnlen.c
 
 verr.o: ${UPSTREAM}/roken/verr.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/verr.c

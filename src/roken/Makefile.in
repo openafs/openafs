@@ -1,0 +1,143 @@
+# A roken library for AFS
+
+LIBMAJOR=1
+LIBMINOR=1
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.shared
+
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+
+HEADERS = ${TOP_INCDIR}/roken.h \
+	  ${TOP_INCDIR}/roken-common.h
+
+UPSTREAM = $(TOP_SRCDIR)/external/heimdal/roken
+
+SHLIBOBJ = librokenafs.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
+
+all: $(ROKEN_HEADERS) $(HEADERS) \
+	$(TOP_LIBDIR)/$(SHLIBOBJ) \
+	$(TOP_LIBDIR)/librokenafs.a
+
+install: librokenafs.a $(SHLIBOBJ)
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(DESTDIR)$(libdir) \
+		-l librokenafs -M $(LIBMAJOR) -m $(LIBMINOR)
+	$(INSTALL_DATA) librokenafs.a $(DESTDIR)$(libdir)/librokenafs.a
+
+dest: librokenafs.a $(SHLIBOBJ)
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(DEST)/lib \
+		-l librokenafs -M $(LIBMAJOR) -m $(LIBMINOR)
+	$(INSTALL_DATA) librokenafs.a $(DEST)/lib/librokenafs.a
+
+clean:
+	$(RM) -f $(OBJECTS) $(SHLIBOBJ) librokenafs.a librokenafs.exp
+
+OBJECTS = $(ROKEN_LIBOBJS) \
+	  cloexec.o ct.o hex.o issuid.o net_read.o net_write.o socket.o \
+	  warnerr.o
+
+$(TOP_LIBDIR)/$(SHLIBOBJ): $(SHLIBOBJ)
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(TOP_LIBDIR) \
+		-l librokenafs -M $(LIBMAJOR) -m $(LIBMINOR)
+
+$(SHLIBOBJ): $(OBJECTS) librokenafs.map
+	$(TOP_OBJDIR)/src/config/shlib-build -i -d $(srcdir) -l librokenafs \
+		-M $(LIBMAJOR) -m $(LIBMINOR) -- \
+		$(OBJECTS) $(MT_LIBS)
+
+$(TOP_LIBDIR)/librokenafs.a: librokenafs.a
+	$(INSTALL_DATA) $? $@
+
+librokenafs.a: $(OBJECTS)
+	$(RM) -f $@
+	$(AR) crv $@ $(OBJECTS)
+	$(RANLIB) $@
+
+$(TOP_INCDIR)/err.h: ${UPSTREAM}/err.hin
+	cp $? $@
+
+$(TOP_INCDIR)/roken.h: $(UPSTREAM)/roken.h.in
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
+	$(INSTALL_DATA) $? $@
+
+err.h: ${UPSTREAM}/err.hin
+	cp $? $@
+
+cloexec.o: ${UPSTREAM}/cloexec.c
+	$(AFS_CCRULE) $(UPSTREAM)/cloexec.c
+
+ct.o: ${UPSTREAM}/ct.c
+	$(AFS_CCRULE) $(UPSTREAM)/ct.c
+
+daemon.o: ${UPSTREAM}/daemon.c
+	$(AFS_CCRULE) $(UPSTREAM)/daemon.c
+
+ecalloc.o: ${UPSTREAM}/ecalloc.c
+	$(AFS_CCRULE) $(UPSTREAM)/ecalloc.c
+
+emalloc.o: ${UPSTREAM}/emalloc.c
+	$(AFS_CCRULE) $(UPSTREAM)/emalloc.c
+
+erealloc.o: ${UPSTREAM}/erealloc.c
+	$(AFS_CCRULE) $(UPSTREAM)/erealloc.c
+
+err.o: ${UPSTREAM}/err.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/err.c
+
+errx.o: ${UPSTREAM}/errx.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/errx.c
+
+getopt.o: ${UPSTREAM}/getopt.c
+	$(AFS_CCRULE) $(UPSTREAM)/getopt.c
+
+getprogname.o: ${UPSTREAM}/getprogname.c
+	$(AFS_CCRULE) $(UPSTREAM)/getprogname.c
+
+hex.o: ${UPSTREAM}/hex.c
+	$(AFS_CCRULE) $(UPSTREAM)/hex.c
+
+issuid.o: ${UPSTREAM}/issuid.c
+	$(AFS_CCRULE) $(UPSTREAM)/issuid.c
+
+net_read.o: ${UPSTREAM}/net_read.c
+	$(AFS_CCRULE) $(UPSTREAM)/net_read.c
+
+net_write.o: ${UPSTREAM}/net_write.c
+	$(AFS_CCRULE) $(UPSTREAM)/net_write.c
+
+socket.o: ${UPSTREAM}/socket.c
+	$(AFS_CCRULE) $(UPSTREAM)/socket.c
+
+strlcat.o: ${UPSTREAM}/strlcat.c
+	$(AFS_CCRULE) $(UPSTREAM)/strlcat.c
+
+strlcpy.o: ${UPSTREAM}/strlcpy.c
+	$(AFS_CCRULE) $(UPSTREAM)/strlcpy.c
+
+strnlen.o: ${UPSTREAM}/strnlen.c
+	$(AFS_CCRULE) $(UPSTREAM)/strnlen.c
+
+verr.o: ${UPSTREAM}/verr.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/verr.c
+
+verrx.o: ${UPSTREAM}/verrx.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/verrx.c
+
+vwarn.o: ${UPSTREAM}/vwarn.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/vwarn.c
+
+vwarnx.o: ${UPSTREAM}/vwarnx.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/vwarnx.c
+
+warn.o: ${UPSTREAM}/warn.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/warn.c
+
+warnerr.o: ${UPSTREAM}/warnerr.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/warnerr.c
+
+warnx.o: ${UPSTREAM}/warnx.c err.h
+	$(AFS_CCRULE) $(UPSTREAM)/warnx.c
