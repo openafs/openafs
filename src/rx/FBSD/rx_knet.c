@@ -89,9 +89,10 @@ osi_StopListener(void)
     soshutdown(rx_socket, SHUT_RDWR);
     p = pfind(rxk_ListenerPid);
     afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
-    if (p)
+    if (p) {
 	psignal(p, SIGUSR1);
-    PROC_UNLOCK(p);
+	PROC_UNLOCK(p);
+    }
 #ifdef AFS_FBSD70_ENV
     {
       /* Avoid destroying socket until osi_NetReceive has
