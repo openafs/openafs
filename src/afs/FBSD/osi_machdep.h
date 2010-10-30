@@ -143,11 +143,11 @@ extern struct thread *afs_global_owner;
 # endif
 
 #undef SPLVAR
-#define SPLVAR int splvar
+#define SPLVAR
 #undef NETPRI
-#define NETPRI splvar=splnet()
+#define NETPRI
 #undef USERPRI
-#define USERPRI splx(splvar)
+#define USERPRI
 
 #define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 

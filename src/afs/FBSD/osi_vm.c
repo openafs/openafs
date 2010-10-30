@@ -80,7 +80,6 @@
 int
 osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
-    struct vm_object *obj;
     struct vnode *vp = AFSTOV(avc);
 
     if (!VI_TRYLOCK(vp)) /* need interlock to check usecount */
@@ -186,14 +185,11 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     int tries, code;
     int islocked;
 
-    SPLVAR;
-
     vp = AFSTOV(avc);
 
     VI_LOCK(vp);
     if (vp->v_iflag & VI_DOOMED) {
 	VI_UNLOCK(vp);
-	USERPRI;
 	return;
     }
     VI_UNLOCK(vp);
@@ -238,7 +234,6 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	vn_lock(vp, LK_DOWNGRADE);
     else if (!islocked)
 	VOP_UNLOCK(vp, 0);
-    USERPRI;
 }
 
 /* Purge VM for a file when its callback is revoked.

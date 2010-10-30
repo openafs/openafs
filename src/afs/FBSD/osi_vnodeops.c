@@ -481,7 +481,9 @@ afs_vop_lookup(ap)
     int flags = ap->a_cnp->cn_flags;
     int lockparent;		/* 1 => lockparent flag is set */
     int wantparent;		/* 1 => wantparent or lockparent flag */
+#ifndef AFS_FBSD80_ENV
     struct thread *p = ap->a_cnp->cn_thread;
+#endif
 
     dvp = ap->a_dvp;
     if (dvp->v_type != VDIR) {
@@ -575,7 +577,9 @@ afs_vop_create(ap)
     int error = 0;
     struct vcache *vcp;
     struct vnode *dvp = ap->a_dvp;
+#ifndef AFS_FBSD80_ENV
     struct thread *p = ap->a_cnp->cn_thread;
+#endif
     GETNAME();
 
     AFS_GLOCK();
@@ -1153,7 +1157,9 @@ afs_vop_link(ap)
     int error = 0;
     struct vnode *dvp = ap->a_tdvp;
     struct vnode *vp = ap->a_vp;
+#ifndef AFS_FBSD80_ENV
     struct thread *p = ap->a_cnp->cn_thread;
+#endif
 
     GETNAME();
     if (dvp->v_mount != vp->v_mount) {
@@ -1197,7 +1203,9 @@ afs_vop_rename(ap)
     struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
     struct vnode *fdvp = ap->a_fdvp;
+#ifndef AFS_FBSD80_ENV
     struct thread *p = fcnp->cn_thread;
+#endif
 
     /*
      * Check for cross-device rename.
@@ -1299,7 +1307,9 @@ afs_vop_mkdir(ap)
     struct vattr *vap = ap->a_vap;
     int error = 0;
     struct vcache *vcp;
+#ifndef AFS_FBSD80_ENV
     struct thread *p = ap->a_cnp->cn_thread;
+#end
 
     GETNAME();
 #ifdef DIAGNOSTIC
