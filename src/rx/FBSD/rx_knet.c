@@ -88,11 +88,13 @@ osi_StopListener(void)
 	AFS_GUNLOCK();
     soshutdown(rx_socket, SHUT_RDWR);
     p = pfind(rxk_ListenerPid);
-    afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
     if (p) {
+	afs_warn("osi_StopListener: rxk_ListenerPid %u\n", rxk_ListenerPid);
 	psignal(p, SIGUSR1);
 	PROC_UNLOCK(p);
-    }
+    } else
+	afs_warn("osi_StopListener: rxk_Listener not found (pid %u)\n",
+	    rxk_ListenerPid);
 #ifdef AFS_FBSD70_ENV
     {
       /* Avoid destroying socket until osi_NetReceive has

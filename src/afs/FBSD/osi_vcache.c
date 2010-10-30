@@ -15,7 +15,6 @@
 
 int
 osi_TryEvictVCache(struct vcache *avc, int *slept) {
-    struct vnode *vp = AFSTOV(avc);
 
     /*
      * essentially all we want to do here is check that the

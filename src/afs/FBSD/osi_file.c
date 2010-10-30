@@ -158,7 +158,7 @@ int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-    unsigned int resid;
+    int resid;
     afs_int32 code;
     AFS_STATCNT(osi_Read);
 
