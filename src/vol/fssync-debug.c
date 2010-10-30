@@ -18,6 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -938,7 +939,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 
 	printf("\tvop = {\n");
 	printf("\t\tvolume         = %u\n", vop.vop.volume);
-	if (afs_strnlen(vop.vop.partName, sizeof(vop.vop.partName)) <
+	if (strnlen(vop.vop.partName, sizeof(vop.vop.partName)) <
 	    sizeof(vop.vop.partName)) {
 	    printf("\t\tpartName       = '%s'\n", vop.vop.partName);
 	} else {

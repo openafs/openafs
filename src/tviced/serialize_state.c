@@ -28,10 +28,10 @@
 #include <sys/time.h>
 #include <sys/file.h>
 #endif
-#include <afs/afs_assert.h>
 #include <sys/stat.h>
 
 #include <afs/stds.h>
+#include <afs/afs_assert.h>
 
 #include <rx/xdr.h>
 #include <lwp.h>

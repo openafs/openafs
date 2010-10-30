@@ -151,14 +151,6 @@ extern int re_exec(const char *p1);
 /* b64_string_t is 8 bytes, in stds.h */
      typedef char lb64_string_t[12];
 
-#ifndef HAVE_STRLCAT
-extern size_t strlcat(char *dst, const char *src, size_t siz);
-#endif
-
-#ifndef HAVE_STRLCPY
-extern size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
-
 #include <afs/ktime.h>
 #include "afsutil_prototypes.h"
 

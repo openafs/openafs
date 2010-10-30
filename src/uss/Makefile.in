@@ -33,8 +33,7 @@ LIBS=${TOP_LIBDIR}/libvolser.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a\
-	${TOP_LIBDIR}/util.a \
-	${XLIBS}
+	${TOP_LIBDIR}/util.a
 
 OBJS =  uss_procs.o \
 	uss_common.o \
@@ -47,7 +46,7 @@ OBJS =  uss_procs.o \
 	y.tab.o 
 
 uss: uss.o ${OBJS} 
-	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS} $(LIB_roken)
+	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS} $(LIB_roken) $(XLIBS)
 
 uss.o:  uss.c AFS_component_version_number.c
 

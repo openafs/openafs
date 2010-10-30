@@ -71,8 +71,6 @@ UTILOBJS = \
 	dirpath.o \
 	serverLog.o \
 	snprintf.o \
-	strlcat.o \
-	strlcpy.o \
 	fileutil.o
 
 RXKADOBJS = \
@@ -135,7 +133,10 @@ dest: ${LIBAFSAUTHENT} libafsauthent_pic.a
 ${LIBAFSAUTHENT}: ${LIBOBJS} libafsauthent.map
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
-		-L${TOP_LIBDIR} -lafsrpc ${LIB_crypt} ${LIBOBJS} ${LIB_AFSDB} ${MT_LIBS}
+		-L${TOP_LIBDIR} $(LDFLAGS_roken) \
+		$(LIBOBJS) \
+		-lafsrpc $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) \
+		${MT_LIBS}
 
 libafsauthent_pic.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -226,7 +227,6 @@ ubik_int.cs.o: ../ubik/ubik_int.cs.c
 ubik_int.xdr.o: ../ubik/ubik_int.xdr.c
 	${AFS_CCRULE} ../ubik/ubik_int.xdr.c
 
-
 get_krbrlm.o: ${UTIL}/get_krbrlm.c
 	${AFS_CCRULE} ${UTIL}/get_krbrlm.c
 
@@ -238,12 +238,6 @@ serverLog.o: ${UTIL}/serverLog.c
 
 snprintf.o: ${UTIL}/snprintf.c
 	${AFS_CCRULE} ${UTIL}/snprintf.c
-
-strlcat.o: ${UTIL}/strlcat.c
-	${AFS_CCRULE} ${UTIL}/strlcat.c
-
-strlcpy.o: ${UTIL}/strlcpy.c
-	${AFS_CCRULE} ${UTIL}/strlcpy.c
 
 fileutil.o: ${UTIL}/fileutil.c
 	${AFS_CCRULE} ${UTIL}/fileutil.c

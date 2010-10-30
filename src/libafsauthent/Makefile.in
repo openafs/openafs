@@ -64,8 +64,6 @@ UTILOBJS = \
 	dirpath.o \
 	serverLog.o \
 	snprintf.o \
-	strlcat.o \
-	strlcpy.o \
 	fileutil.o
 
 RXKADOBJS = \
@@ -205,12 +203,6 @@ serverLog.o: ${UTIL}/serverLog.c
 
 snprintf.o: ${UTIL}/snprintf.c
 	${AFS_CCRULE} ${UTIL}/snprintf.c
-
-strlcat.o: ${UTIL}/strlcat.c
-	${AFS_CCRULE} ${UTIL}/strlcat.c
-
-strlcpy.o: ${UTIL}/strlcpy.c
-	${AFS_CCRULE} ${UTIL}/strlcpy.c
 
 fileutil.o: ${UTIL}/fileutil.c
 	${AFS_CCRULE} ${UTIL}/fileutil.c

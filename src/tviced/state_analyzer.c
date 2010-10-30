@@ -17,7 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <stdio.h>
 #include <errno.h>
 #include <sys/file.h>
@@ -25,6 +24,8 @@
 #include <netinet/in.h>
 #include <time.h>
 #include <string.h>
+
+#include <roken.h>
 
 #include <afs/stds.h>
 #include <rx/xdr.h>

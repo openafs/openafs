@@ -31,7 +31,7 @@ RXOBJS = rx_pthread.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
        volparse.o flipbase64.o softsig.o hostparse.o snprintf.o \
-       pthread_glock.o strlcat.o strlcpy.o strnlen.o
+       pthread_glock.o
 
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/liblwp.a \
      ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libcmd.a \
@@ -72,15 +72,6 @@ fileutil.o: ${UTIL}/fileutil.c
 
 volparse.o: ${UTIL}/volparse.c
 	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-strlcat.o: ${UTIL}/strlcat.c
-	$(AFS_CCRULE) $(UTIL)/strlcat.c
-
-strlcpy.o: ${UTIL}/strlcpy.c
-	$(AFS_CCRULE) $(UTIL)/strlcpy.c
-
-strnlen.o: ${UTIL}/strnlen.c
-	$(AFS_CCRULE) $(UTIL)/strnlen.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
 	$(AFS_CCRULE) $(UTIL)/flipbase64.c

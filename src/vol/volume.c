@@ -5734,7 +5734,7 @@ static int
 VScheduleSalvage_r(Volume * vp)
 {
     int ret=0;
-    int code;
+    int code = 0;
     VolState state_save;
     VThreadOptions_t * thread_opts;
     char partName[16];

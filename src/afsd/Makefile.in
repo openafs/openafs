@@ -32,7 +32,7 @@ FUSE_LIBS=@FUSE_LIBS@
 LDFLAGS_afsd = $(AFSD_LDFLAGS)
 afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
 	${AFS_LDRULE} afsd.o afsd_kernel.o $(NON_SHARED) \
-		$(AFSLIBS) $(LIB_roken) ${XLIBS} ${AFSD_LIBS}
+		$(AFSLIBS) ${AFSD_LIBS} $(LIB_roken) $(XLIBS)
 
 LDFLAGS_afsd.fuse = $(AFSD_LDFLAGS)
 afsd.fuse: afsd_fuse.o $(UAFSLIBS) $(AFSD_LIBS)

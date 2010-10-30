@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #endif
 
+#include <roken.h>
+
 #include "afsutil.h"
 
 /* maximum number of partitions - must match vol/voldefs.h */

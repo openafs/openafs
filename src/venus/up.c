@@ -10,8 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-/* missing type from C language */
+#include <roken.h>
 
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV

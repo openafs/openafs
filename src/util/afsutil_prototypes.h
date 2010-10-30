@@ -44,11 +44,6 @@ extern const char* fs_config_get_string(const afs_config_section *, ...);
 extern int afs_config_get_bool(const afs_config_section *, ...);
 extern int afs_config_get_int(const afs_config_section *c, ...);
 
-/* daemon.c */
-#ifndef HAVE_DAEMON
-int daemon(int nochdir, int noclose);
-#endif
-
 /* dirpath.c */
 extern unsigned int initAFSDirPath(void);
 extern const char *getDirPath(afsdir_id_t string_id);
@@ -174,18 +169,6 @@ extern void LogCommandLine(int argc, char **argv, const char *progname,
 			   void (*log) (const char *format, ...));
 
 /* snprintf.c */
-
-
-/* strl */
-#ifndef HAVE_STRLCPY
-extern size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
-#ifndef HAVE_STRLCAT
-extern size_t strlcat(char *dst, const char *src, size_t siz);
-#endif
-
-/* strn */
-extern size_t afs_strnlen(char * buf, size_t len);
 
 
 /* sys.c */

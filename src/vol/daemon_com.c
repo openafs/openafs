@@ -631,7 +631,7 @@ SYNC_verifyProtocolString(char * buf, size_t len)
 {
     size_t s_len;
 
-    s_len = afs_strnlen(buf, len);
+    s_len = strnlen(buf, len);
 
     return (s_len == len) ? 1 : 0;
 }

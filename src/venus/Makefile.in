@@ -113,7 +113,7 @@ fstrace: fstrace.o
 		* ) \
 			$(AFS_LDRULE) fstrace.o ${TOP_LIBDIR}/libsys.a \
 				${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
-				${XLIBS} ;; \
+				${XLIBS} $(LIB_roken);; \
 	esac
 
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
@@ -125,8 +125,6 @@ dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
 
 dedebug: dedebug.o ${CMLIBS}
 	$(AFS_LDRULE) dedebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
-
-
 
 #
 # Kernel info dumper - these are done with submakes so that

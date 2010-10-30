@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #define VFS 1
 
 #include <afs/cmd.h>

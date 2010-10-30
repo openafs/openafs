@@ -82,7 +82,6 @@ linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
 		${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a \
 		$(LIB_roken) $(TEST_LIBS) $(XLIBS)
 
-
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 

@@ -44,8 +44,6 @@ UTILOBJS =\
 	assert.o \
 	casestrcpy.o \
 	base64.o \
-	strlcat.o \
-	strlcpy.o
 
 COMERROBJS =\
 	error_msg.o \
@@ -166,7 +164,7 @@ dest: ${LIBAFSRPC} libafsrpc_pic.a
 ${LIBAFSRPC}: ${LIBOBJS} libafsrpc.map
 	../config/shlib-build -d $(srcdir) -l libafsrpc \
 		-M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR} -- \
-		${LIBOBJS} ${MT_LIBS}
+		$(LDFLAGS_roken) ${LIBOBJS} ${MT_LIBS} $(LIB_roken)
 
 libafsrpc_pic.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -389,12 +387,6 @@ assert.o: ${UTIL}/assert.c
 
 base64.o: ${UTIL}/base64.c
 	$(AFS_CCRULE) $(UTIL)/base64.c
-
-strlcat.o: ${UTIL}/strlcat.c
-	$(AFS_CCRULE) $(UTIL)/strlcat.c
-
-strlcpy.o: ${UTIL}/strlcpy.c
-	$(AFS_CCRULE) $(UTIL)/strlcpy.c
 
 fasttime.o: ${LWP}/fasttime.c
 	$(AFS_CCRULE) $(LWP)/fasttime.c

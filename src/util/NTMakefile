@@ -57,14 +57,11 @@ LIBOBJS = \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog.obj \
     	$(OUT)\snprintf.obj \
-    	$(OUT)\strlcat.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \
 	$(OUT)\errmap_nt.obj \
 	$(OUT)\dirpath.obj \
-	$(OUT)\strnlen.obj \
-	$(OUT)\strlcpy.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\secutil_nt.obj
 
@@ -83,14 +80,11 @@ MT_LIBOBJS = \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog_mt.obj \
     	$(OUT)\snprintf.obj \
-    	$(OUT)\strlcat.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \
 	$(OUT)\errmap_nt.obj \
 	$(OUT)\dirpath_mt.obj \
-	$(OUT)\strnlen.obj \
-	$(OUT)\strlcpy.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\secutil_nt.obj
 

@@ -20,8 +20,8 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 	 hostparse.o exec.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
-	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o strnlen.o \
-	 pthread_glock.o daemon.o ${REGEX_OBJ}
+	 afs_atomlist.o afs_lhash.o snprintf.o pthread_glock.o \
+	 ${REGEX_OBJ}
 
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \

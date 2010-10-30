@@ -12,9 +12,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NAMEI_ENV
-#include <roken.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef AFS_NT40_ENV

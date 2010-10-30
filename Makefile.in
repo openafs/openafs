@@ -154,7 +154,7 @@ util: $(DIR_roken) procmgmt des lwp_depinstall rx_depinstall
 audit: util rx rxkad fsint
 	+${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
-comerr: util
+comerr: util $(DIR_roken)
 	+${COMPILE_PART1} comerr ${COMPILE_PART2}
 
 cmd: comerr
@@ -213,7 +213,7 @@ sys: cmd comerr afs des rx rxstat fsint auth sys_depinstall
 rxkad: cmd comerr des rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr comerr des lwp rx rxkad audit sys_depinstall auth_depinstall
+auth: cmd comerr des lwp rx rxkad audit sys_depinstall auth_depinstall
 	+${COMPILE_PART1} auth ${COMPILE_PART2}
 
 ubik: cmd comerr auth ubik_depinstall sys
@@ -267,7 +267,7 @@ sgiefs:
 		echo No efs stuff for ${SYS_NAME};; \
 	esac
 
-vol: cmd comerr dir afs sgiefs
+vol: cmd comerr dir afs sgiefs $(DIR_roken)
 	+${COMPILE_PART1} vol ${COMPILE_PART2}
 
 tsalvaged: vol libafsrpc libafsauthent cmd util

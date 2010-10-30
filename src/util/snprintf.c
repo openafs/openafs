@@ -913,23 +913,6 @@ afs_asnprintf (char **ret, size_t max_sz, const char *format, ...)
     return val;
 }
 
-#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_VSNPRINTF) || defined(TEST_SNPRINTF)
-
-#if defined(AFS_AIX51_ENV) || defined(AFS_NT40_ENV)
-int
-vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
-#else
-void
-vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
-#endif
-{
-    int result;
-    result = afs_vsnprintf(p, avail, fmt, ap);
-#if defined(AFS_AIX51_ENV) || defined(AFS_NT40_ENV)
-    return result;
-#endif
-}
-#endif /* AFS_OSF20_ENV || AFS_AIX32_ENV */
 
 #ifndef AFS_NT40_ENV
 #ifndef HAVE_VSYSLOG
@@ -941,26 +924,4 @@ vsyslog(int priority, const char *format, va_list args)
   syslog(priority, "%s", buf);
 }
 #endif
-
-#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_SNPRINTF)
-
-#ifdef AFS_AIX51_ENV
-int
-snprintf(char *p, size_t avail, const char *fmt, ...)
-#else
-void
-snprintf(char *p, unsigned int avail, char *fmt, ...)
 #endif
-{
-    va_list ap;
-    int result;
-
-    va_start(ap, fmt);
-    result = afs_vsnprintf(p, avail, fmt, ap);
-    va_end(ap);
-#ifdef AFS_AIX51_ENV
-    return result;
-#endif
-}
-#endif /* AFS_OSF20_ENV || AFS_AIX32_ENV */
-#endif /* AFS_NT40_ENV */

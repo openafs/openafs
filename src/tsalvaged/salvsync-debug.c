@@ -18,7 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +35,9 @@
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif
+
+#include <roken.h>
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/afs_assert.h>
