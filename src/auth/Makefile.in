@@ -36,6 +36,7 @@ depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/ktc.h \
 	${TOP_INCDIR}/afs/token.h \
 	token.h \
+	Ktoken.xdr.c \
 	token.xdr.c
 
 ${TOP_INCDIR}/afs/token.h: token.h
@@ -99,6 +100,9 @@ ktc.o: token.h
 ktc_errors.c auth.h: ktc_errors.et auth.p.h
 	$(RM) -f auth.h ktc_errors.c
 	${COMPILE_ET} -p ${srcdir} ktc_errors -h auth
+
+Ktoken.xdr.c: token.xg
+	$(RXGEN) -A -x -k -c -o $@ $(srcdir)/token.xg
 
 token.xdr.c: token.xg
 	$(RXGEN) -A -x -c -o $@ ${srcdir}/token.xg
