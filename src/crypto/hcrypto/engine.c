@@ -6,6 +6,7 @@
 
 #include <config.h>
 #include <engine.h>
+#include <stdlib.h>
 
 int
 ENGINE_finish(const ENGINE *dummy) {

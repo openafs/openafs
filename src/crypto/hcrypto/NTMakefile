@@ -7,17 +7,14 @@
 RELDIR=crypto\hcrypto
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(SRC)\external\heimdal\hcrypto -DHAVE_CONFIG_H=1
-
-ROKEN = $(SRC)\external\heimdal\roken
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(SRC)\external\heimdal\hcrypto -DHAVE_CONFIG_H=1 -DKRB5
 
 HCRYPTO = $(SRC)\external\heimdal\hcrypto
 
 INCFILEDIR = $(DESTDIR)\include\hcrypto
 
 INCFILES = \
-	$(INCFILEDIR)\engine.h \
-        $(INCFILEDIR)\err.h
+	$(INCFILEDIR)\engine.h
 
 HCRYPTO_INCFILES = \
         $(INCFILEDIR)\aes.h \
@@ -65,22 +62,6 @@ HCRYPTO_OBJS = $(OUT)\aes.obj \
         $(OUT)\ui.obj \
         $(OUT)\validate.obj
 
-ROKEN_OBJS = \
-        $(OUT)\cloexec.obj \
-        $(OUT)\ct.obj \
-        $(OUT)\err.obj \
-        $(OUT)\errx.obj \
-        $(OUT)\getprogname.obj \
-        $(OUT)\issuid.obj \
-	$(OUT)\snprintf.obj \
-        $(OUT)\verr.obj \
-        $(OUT)\verrx.obj \
-        $(OUT)\vwarn.obj \
-        $(OUT)\vwarnx.obj \
-        $(OUT)\warn.obj \
-        $(OUT)\warnerr.obj \
-        $(OUT)\warnx.obj
-
 # This is a horrible hack that is required to get
 # around the fact that the OpenAFS build system copies
 # its own des.h into the top-level OpenAFS include
@@ -88,9 +69,6 @@ ROKEN_OBJS = \
 # removed, this hack can be removed as well
 des.h: $(HCRYPTO)\des.h
         $(COPY) $** $@
-
-$(ROKEN_OBJS):$(ROKEN)\$$(@B).c
-	$(C2OBJ) $** -I$(ROKEN) 
 
 $(HCRYPTO_OBJS):$(HCRYPTO)\$$(@B).c
 	$(C2OBJ) $** -I$(HCRYPTO) 
@@ -101,17 +79,14 @@ $(HCRYPTO_INCFILES):$(HCRYPTO)\$$(@B).h
 $(INCFILES):$$(@B).h
 	$(COPY) $** $(INCFILEDIR)
 
-err.h: $(ROKEN)\err.hin
-        $(COPY) $** $@
-
 !if !defined(NMAKE)
 NTMAKE = nmake /nologo /f ntmakefile
 !endif
 
 DLLLIBS = \
-#	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afsroken.lib
 
-$(LIBFILE): $(LOCAL_OBJS) $(HCRYPTO_OBJS) $(ROKEN_OBJS) $(DLLLIBS)
+$(LIBFILE): $(LOCAL_OBJS) $(HCRYPTO_OBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afshcrypto.def shell32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)

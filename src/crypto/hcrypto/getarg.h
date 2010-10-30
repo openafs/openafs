@@ -32,6 +32,6 @@ arg_printusage (struct getargs *args,
 }
 
 static inline void
-print_version(const char *str) {
+rk_print_version(const char *str) {
   return;
 }

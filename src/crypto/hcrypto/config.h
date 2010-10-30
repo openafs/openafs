@@ -25,29 +25,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
-#include <fcntl.h>
-#include <signal.h>
-
-#ifndef AFS_NT40_ENV
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <inttypes.h>
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-
-#ifdef HAVE_TERMIOS_H
-#include <termios.h>
-#endif
-
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
+#if HAVE_STDINT_H
+#include <stdint.h>
 #endif
 
 #if defined(AFS_NT40_ENV)
@@ -62,4 +41,3 @@
 # define inline __inline __attribute__((always_inline))
 #endif
 
-#include "roken.h"
