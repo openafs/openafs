@@ -1,3 +1,8 @@
+
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <windows.h>
 #include <tchar.h>
 #include "afsd.h"

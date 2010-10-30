@@ -73,7 +73,8 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 
 ############################################################################

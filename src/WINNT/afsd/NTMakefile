@@ -230,7 +230,8 @@ CONF_DLLFILE = $(DESTDIR)\lib\libafsconf.dll
 
 CONF_DLLLIBS = \
     $(DESTDIR)\lib\afs\afsutil.lib \
-    $(DESTDIR)\lib\afs\afsreg.lib
+    $(DESTDIR)\lib\afs\afsreg.lib \
+    $(DESTDIR)\lib\afsroken.lib
 
 $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
 	$(DLLGUILINK) -def:libafsconf.def  $(AFSD_SDKLIBS)
@@ -362,7 +363,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 EXELIBS2 = \
         $(DESTDIR)\lib\afsrpc.lib \
@@ -376,7 +378,8 @@ EXELIBS2 = \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 EXELIBS3 = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -429,6 +432,7 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afsroken.lib \
         $(LANAHELPERLIB)
 
 $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_EXELIBS)

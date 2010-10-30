@@ -94,7 +94,7 @@ kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kaut
 	$(AFS_LDRULE) kaserver.o kautils.o kalocalcell.o kadatabase.o \
 		krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o \
 		kaauxdb.o \
-		$(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		$(LIBS) $(LIB_roken) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 
@@ -175,19 +175,23 @@ kkids.o: kkids.c ${INCLS}
 krb_tf.o: krb_tf.c ${INCLS}
 
 kas: kauth.h kautils.h admin_tools.o libkauth.a $(LIBS) kas.o kkids.o
-	$(AFS_LDRULE) kas.o admin_tools.o kkids.o libkauth.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) kas.o admin_tools.o kkids.o libkauth.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 klog: AFS_component_version_number.o kauth.h kautils.h libkauth.a $(LIBS) \
 	klog.o
-	$(AFS_LDRULE) klog.o libkauth.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) klog.o libkauth.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 klog.o: klog.c kauth.h kautils.h AFS_component_version_number.o
 
 klog.krb: kauth.h kautils.h libkauth.krb.a $(KLIBS) klog.o
-	$(AFS_LDRULE) klog.o libkauth.krb.a ${KLIBS} ${XLIBS}
+	$(AFS_LDRULE) klog.o libkauth.krb.a \
+		${KLIBS} $(LIB_roken) ${XLIBS}
 
 knfs: kauth.h kautils.h libkauth.a $(LIBS) knfs.o
-	$(AFS_LDRULE) knfs.o libkauth.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) knfs.o libkauth.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 knfs.o: knfs.c AFS_component_version_number.o
 
@@ -195,20 +199,24 @@ CFLAGS_klogin.o = -DKAUTH
 klogin.o: klogin.c ${INCLS} AFS_component_version_number.o
 
 klogin: libkauth.a $(LIBS) klogin.o
-	$(AFS_LDRULE) klogin.o libkauth.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) klogin.o libkauth.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 klogin.krb: libkauth.a $(KLIBS) klogin.o
-	$(AFS_LDRULE) klogin.o libkauth.krb.a ${KLIBS} ${XLIBS}
+	$(AFS_LDRULE) klogin.o libkauth.krb.a \
+		${KLIBS} $(LIB_roken) ${XLIBS}
 
 kpasswd.o: kauth.h kautils.h ${INCLS} kpasswd.c AFS_component_version_number.o
 
 kpasswd: kauth.h kautils.h libkauth.a $(LIBS) kpasswd.o kkids.o
-	$(AFS_LDRULE) kpasswd.o kkids.o libkauth.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) kpasswd.o kkids.o libkauth.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 kpwvalid.o: kpwvalid.c AFS_component_version_number.o
 
 kpwvalid: kpwvalid.o $(LIBS)
-	$(AFS_LDRULE) kpwvalid.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) kpwvalid.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 CFLAGS_user.krb.o = -DAFS_KERBEROS_ENV
 user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
@@ -217,24 +225,28 @@ user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 user.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 
 kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
-	$(AFS_LDRULE) kdb.o libkauth.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) kdb.o libkauth.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 kdb.o: kdb.c AFS_component_version_number.o
 
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS_component_version_number.o
 
 krb_udp: krb_udp.o libkauth.a $(KLIBS)
-	$(AFS_LDRULE) krb_udp.o libkauth.a $(KLIBS)
+	$(AFS_LDRULE) krb_udp.o libkauth.a \
+		$(KLIBS) $(LIB_roken)
 
 ka-forwarder.o: ka-forwarder.c
 
 ka-forwarder: ka-forwarder.o
-	$(AFS_LDRULE) ka-forwarder.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) ka-forwarder.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
 rebuild: rebuild.o kautils.o $(LIBS)
-	$(AFS_LDRULE) rebuild.o kautils.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) rebuild.o kautils.o \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 #
 # Install targets

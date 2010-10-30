@@ -14,6 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "client.h"
 #include <afs/cellconfig.h>

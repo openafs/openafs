@@ -7,7 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
 #include <afs/stds.h>
 
 #include <afs/auth.h>

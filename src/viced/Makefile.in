@@ -77,24 +77,24 @@ fileserver: ${objects} ${headers} ${LIBS}
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	    ${CC} -K ${AFS_LDFLAGS} -o fileserver ${objects} \
-	    	${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
+		${TOP_LIBDIR}/libaudit.a ${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	*) \
 	    $(AFS_LDRULE) ${objects} ${TOP_LIBDIR}/libaudit.a \
-	    	${LIBS} ${XLIBS} ;; \
+		${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	esac
 
 CFLAGS_fsprobe.o = @CFLAGS_NOERROR@ -DINTERPRET_DUMP
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 
 fsprobe: fsprobe.o
-	$(AFS_LDRULE) fsprobe.o ${LIBS} ${XLIBS} 
+	$(AFS_LDRULE) fsprobe.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 CFLAGS_cbd.o = -DINTERPRET_DUMP
 cbd.o: callback.c AFS_component_version_number.c
 	$(AFS_CCRULE) $(srcdir)/callback.c
 
 cbd: cbd.o
-	$(AFS_LDRULE) cbd.o ${LIBS} ${XLIBS} 
+	$(AFS_LDRULE) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 install: fileserver fs_stats.h
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

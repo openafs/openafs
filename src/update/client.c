@@ -11,6 +11,9 @@
 #include <afs/param.h>
 
 
+#include <afs/procmgmt.h>
+#include <roken.h>
+
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

@@ -16,6 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #ifdef AFS_DEMAND_ATTACH_FS
 
 #include <stdio.h>

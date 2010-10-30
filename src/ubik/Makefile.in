@@ -50,14 +50,14 @@ ${TOP_INCDIR}/ubik_int.h: ubik_int.h
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
 	$(AFS_LDRULE) utst_server.o utst_int.ss.o utst_int.xdr.o \
-		libubik.a $(LIBS)
+		libubik.a $(LIBS) $(LIB_roken)
 
 utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik.a 
 	$(AFS_LDRULE) utst_client.o utst_int.cs.o utst_int.xdr.o \
-		libubik.a $(LIBS)
+		libubik.a $(LIBS) $(LIB_roken)
 
 udebug: udebug.o libubik.a 
-	$(AFS_LDRULE) udebug.o libubik.a $(LIBS)
+	$(AFS_LDRULE) udebug.o libubik.a $(LIBS) $(LIB_roken)
 
 ubik_int.cs.c: ubik_int.xg
 	${RXGEN} -A -x -C -o $@ ${srcdir}/ubik_int.xg

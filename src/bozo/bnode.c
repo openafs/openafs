@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
 #include <stddef.h>
 #include <stdlib.h>

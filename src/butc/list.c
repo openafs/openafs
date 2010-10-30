@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifndef AFS_NT40_ENV
 #include <sys/time.h>

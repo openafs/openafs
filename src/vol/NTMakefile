@@ -182,7 +182,8 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 ############################################################################
 # build salvager

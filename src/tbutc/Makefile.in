@@ -71,7 +71,8 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
-	$(AFS_LDRULE) ${BUTCOBJS} ${BUTCLIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${BUTCOBJS} ${BUTCLIBS} \
+		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a

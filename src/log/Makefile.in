@@ -44,16 +44,16 @@ all: unlog tokens tokens.krb
 # Build targets
 #
 kseal: kseal.o ${LIBRARIES}
-	$(AFS_LDRULE) kseal.o ${LIBRARIES} ${XLIBS}
+	$(AFS_LDRULE) kseal.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
 
 unlog: unlog.o ${LIBRARIES}
-	$(AFS_LDRULE) unlog.o ${LIBRARIES} ${XLIBS}
+	$(AFS_LDRULE) unlog.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
 
 tokens: tokens.o ${LIBRARIES}
-	$(AFS_LDRULE) tokens.o ${LIBRARIES} ${XLIBS}
+	$(AFS_LDRULE) tokens.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
 
 tokens.krb: tokens.o ${KLIBRARIES}
-	$(AFS_LDRULE) tokens.o ${KLIBRARIES} ${XLIBS}
+	$(AFS_LDRULE) tokens.o ${KLIBRARIES} $(LIB_roken) ${XLIBS}
 
 kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
 unlog.o: unlog.c AFS_component_version_number.c

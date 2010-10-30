@@ -47,6 +47,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>

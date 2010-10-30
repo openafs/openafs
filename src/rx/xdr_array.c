@@ -28,10 +28,14 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
-#include "rx.h"
-
 
 #ifndef	NeXT
+
+#ifndef KERNEL
+# include <roken.h>
+#endif
+
+#include "rx.h"
 
 /*
  * xdr_array.c, Generic XDR routines impelmentation.

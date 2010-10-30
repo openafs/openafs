@@ -36,6 +36,7 @@ extern void *osi_Alloc();
 #  include "h/proc.h"
 # endif
 #else /* KERNEL */
+# include <roken.h>
 # include <stdio.h>
 # include "rx_user.h"
 # ifdef AFS_PTHREAD_ENV

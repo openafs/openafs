@@ -2,7 +2,11 @@
  *  Copyright (c) 2008 - Secure Endpoints Inc.
  */
 
+
+#include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
+
 #include <afs/stds.h>
 
 #include <windows.h>

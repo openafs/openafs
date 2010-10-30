@@ -1,0 +1,26 @@
+EXPORTS
+	ct_memcmp		@1
+	err			@3
+	errx			@4
+	getopt			@5
+	issuid			@9
+	net_read		@10
+	net_write		@11
+	rk_cloexec		@12
+	rk_cloexec_file		@13
+	rk_ecalloc		@14
+	rk_emalloc		@15
+	rk_erealloc		@16
+	rk_hex_encode		@17
+	rk_localtime_r		@18
+	rk_snprintf		@19
+	rk_socket		@20
+	rk_strlcat		@21
+	rk_strnlen		@22
+	rk_strlcpy		@23
+	verr			@25
+	verrx			@26
+	vwarn			@27
+	vwarnx			@28
+	warn			@29
+	warnx			@30

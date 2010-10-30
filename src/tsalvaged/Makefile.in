@@ -50,7 +50,10 @@ FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROB
 
 SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libcmd.a
 
 SLIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/libvlib.a ${TOP_LIBDIR}/librx.a \
@@ -173,16 +176,20 @@ namei_ops.o: ${VOL}/namei_ops.c
 	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 salvageserver: ${OBJECTS} ${LIBS}
-	$(AFS_LDRULE) ${OBJECTS} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${OBJECTS} ${LIBS} \
+		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 dasalvager: ${SOBJECTS} ${SLIBS}
-	$(AFS_LDRULE) ${SOBJECTS} ${SLIBS} ${XLIBS}
+	$(AFS_LDRULE) ${SOBJECTS} ${SLIBS} \
+		$(LIB_roken) ${XLIBS}
 
 dafssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
-	$(AFS_LDRULE) ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${FSSDEBUG_OBJS} ${LIBS} \
+		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
-	$(AFS_LDRULE) ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${SSSDEBUG_OBJS} ${LIBS} \
+		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: salvageserver dafssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

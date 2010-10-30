@@ -145,7 +145,8 @@ DLLLIBS =\
         $(DESTDIR)\lib\afs\afsprocmgmt.lib \
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\lanahelper.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
 	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib shell32.lib

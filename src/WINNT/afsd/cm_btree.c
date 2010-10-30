@@ -10,6 +10,10 @@
  * Thanks to Jan Jannink for B+ tree algorithms.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>

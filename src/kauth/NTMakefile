@@ -92,7 +92,8 @@ AFSLIBS =  \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afsroken.lib
 	
 TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 

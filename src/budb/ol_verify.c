@@ -12,6 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV

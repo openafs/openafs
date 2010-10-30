@@ -55,7 +55,7 @@ all: scout
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	$(AFS_LDRULE) scout.o $(LIBS) ${TXLIBS} ${XLIBS}
+	$(AFS_LDRULE) scout.o $(LIBS) $(LIB_roken) ${TXLIBS} ${XLIBS}
 
 #
 # Installation targets

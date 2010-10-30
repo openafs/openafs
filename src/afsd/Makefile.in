@@ -32,15 +32,16 @@ FUSE_LIBS=@FUSE_LIBS@
 LDFLAGS_afsd = $(AFSD_LDFLAGS)
 afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
 	${AFS_LDRULE} afsd.o afsd_kernel.o $(NON_SHARED) \
-		$(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
+		$(AFSLIBS) $(LIB_roken) ${XLIBS} ${AFSD_LIBS}
 
 LDFLAGS_afsd.fuse = $(AFSD_LDFLAGS)
 afsd.fuse: afsd_fuse.o $(UAFSLIBS) $(AFSD_LIBS)
 	${AFS_LDRULE} afsd_fuse.o $(NON_SHARED) \
-		$(UAFSLIBS) ${XLIBS} ${FUSE_LIBS} ${AFSD_LIBS}
+		$(UAFSLIBS) $(LIB_roken) ${XLIBS} ${FUSE_LIBS} ${AFSD_LIBS}
 
 vsys: vsys.o
-	${AFS_LDRULE} vsys.o ${TOP_LIBDIR}/libsys.a ${XLIBS}
+	${AFS_LDRULE} vsys.o ${TOP_LIBDIR}/libsys.a \
+		$(LIB_roken) ${XLIBS}
 
 #
 # Objects

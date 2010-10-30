@@ -206,7 +206,7 @@ afsint.xdr.o: ../fsint/afsint.xdr.c
 	$(AFS_CCRULE) ../fsint/afsint.xdr.c
 
 fileserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${objects} ${LIBS} $(LIB_roken) ${MT_LIBS} ${XLIBS}
 	
 install: fileserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

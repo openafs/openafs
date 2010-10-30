@@ -107,7 +107,7 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
         if (path[tlen-1] != '\\') {
             char * newPath = malloc(tlen+2);
             if (newPath) {
-                snprintf(newPath,tlen+2,"%s\\",path);
+                _snprintf(newPath,tlen+2,"%s\\",path);
                 free(path);
                 path = newPath;
             }

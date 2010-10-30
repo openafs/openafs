@@ -17,6 +17,9 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #define MAXINT     (~(1<<((sizeof(int)*8)-1)))
 
 

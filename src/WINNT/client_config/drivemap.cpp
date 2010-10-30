@@ -35,7 +35,9 @@
 #include <ws2tcpip.h>
 
 extern "C" {
+#include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 #include <afs/stds.h>
 #include <rx/rxkad.h>
 #include <afs/fs_utils.h>

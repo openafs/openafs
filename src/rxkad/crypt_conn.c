@@ -16,6 +16,7 @@
 #include "afs/param.h"
 #else
 #include <afs/param.h>
+#include <roken.h>
 #endif
 
 

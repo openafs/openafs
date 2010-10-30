@@ -59,7 +59,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)

@@ -33,6 +33,9 @@
 #include <syslog.h>
 #endif
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
+
+#include <roken.h>		/* Must come after procmgmt.h */
+
 #include <fcntl.h>
 #include <afs/stds.h>
 #include <stdlib.h>

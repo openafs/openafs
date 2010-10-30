@@ -70,7 +70,8 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 !IF (("$(SYS_NAME)"!="i386_win95" ) && ("$(SYS_NAME)"!="I386_WIN95" ))
 PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
@@ -121,7 +122,8 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib

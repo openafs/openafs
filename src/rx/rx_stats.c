@@ -32,6 +32,7 @@
 #include <afs/param.h>
 
 #if !defined(KERNEL)
+#include <roken.h>
 #include <string.h>
 #endif
 

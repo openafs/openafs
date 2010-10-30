@@ -206,9 +206,8 @@ typedef unsigned int fsblkcnt_t;
 
 #ifdef UKERNEL
 
-#ifdef AFS_USR_SGI_ENV
 #undef socket
-#endif /* AFS_USR_SGI_ENV */
+#undef flock
 
 #if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
 #undef if_mtu

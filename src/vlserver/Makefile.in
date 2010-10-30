@@ -73,23 +73,24 @@ ${TOP_INCDIR}/afs/cnvldb.h: cnvldb.h
 	${INSTALL_DATA} $? $@
 
 vldb_check: vldb_check.o ${LIBS}
-	$(AFS_LDRULE) vldb_check.o ${LIBS} ${XLIBS} 
+	$(AFS_LDRULE) vldb_check.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 vldb_check.o: vldb_check.c AFS_component_version_number.o
 
 cnvldb: cnvldb.o ${LIBS}
-	$(AFS_LDRULE) cnvldb.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) cnvldb.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
 sascnvldb: sascnvldb.o ${LIBS}
-	$(AFS_LDRULE) sascnvldb.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) sascnvldb.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
 	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		vldbint.xdr.o \
+		$(LIBS) $(LIB_roken) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 vlserver.o: vlserver.c ${INCLS} AFS_component_version_number.o
 vlutils.o: vlutils.c ${INCLS}
@@ -126,8 +127,8 @@ libvldb.a: $(OBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
 vlclient: vlclient.o libvldb.a $(LIBS)
-	$(AFS_LDRULE) vlclient.o libvldb.a $(LIBS) ${XLIBS} \
-		${TOP_LIBDIR}/libcmd.a
+	$(AFS_LDRULE) vlclient.o libvldb.a \
+		$(LIBS) ${TOP_LIBDIR}/libcmd.a $(LIB_roken) ${XLIBS}
 
 vlclient.o: vlclient.c ${INCLS} AFS_component_version_number.o
 

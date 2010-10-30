@@ -10,11 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #ifdef	KERNEL
 # include <afs/sysincludes.h>
 # include <afsincludes.h>
 #else
+# include <roken.h>
 # ifdef AFS_NT40_ENV
 #  include <winsock2.h>
 #  include <malloc.h>

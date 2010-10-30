@@ -82,10 +82,17 @@ rx_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-util_headers:
+util_headers: roken_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\util
 	$(CD) $(SRC)\util
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+roken_headers:
+     @echo ***** $@
+	$(DOCD) $(SRC)\roken
+	$(CD) $(SRC)\roken
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
@@ -166,12 +173,19 @@ des: rxgen
 	$(NTMAKE)
 	$(CD) ..\..
 
-hcrypto: des
+hcrypto: roken
      @echo ***** $@
 	$(DOCD) $(SRC)\crypto\hcrypto
 	$(CD) $(SRC)\crypto\hcrypto
 	$(NTMAKE)
 	$(CD) ..\..\..
+
+roken: des
+     @echo ***** $@
+        $(DOCD) $(SRC)\roken
+	$(CD) $(SRC)\roken
+	$(NTMAKE)
+	$(CD) ..\..
 
 rx: hcrypto
      @echo ***** $@

@@ -89,16 +89,19 @@ ${TOP_LIBDIR}/libvolser.a: libvolser.a
 
 restorevol: restorevol.o
 	$(AFS_LDRULE) restorevol.o ${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/util.a ${XLIBS}
+		${TOP_LIBDIR}/util.a $(LIB_roken) ${XLIBS}
 
 vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
-	$(AFS_LDRULE) vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) vos.o $(VSOBJS) libvolser.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
-	$(AFS_LDRULE) $(SOBJS) ${TOP_LIBDIR}/libdir.a $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) $(SOBJS) ${TOP_LIBDIR}/libdir.a \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 voldump: vol-dump.o ${VOLDUMP_LIBS}
-	$(AFS_LDRULE) vol-dump.o ${VOLDUMP_LIBS} ${XLIBS}
+	$(AFS_LDRULE) vol-dump.o ${VOLDUMP_LIBS} \
+		$(LIB_roken) ${XLIBS}
 
 libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
 	-$(RM) -f $@

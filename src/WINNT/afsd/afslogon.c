@@ -7,6 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include "afslogon.h"
 
 #include <io.h>
@@ -18,7 +22,6 @@
 #include <lm.h>
 #include <nb30.h>
 
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/pioctl_nt.h>
 #include <afs/kautils.h>

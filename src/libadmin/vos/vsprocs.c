@@ -21,6 +21,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "vsprocs.h"
 #include "vosutils.h"

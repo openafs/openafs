@@ -1,0 +1,94 @@
+# Copyright 2010, Your File System Inc
+# All rights reserved
+#
+# This software has been released under the terms of the BSD License
+# For details, see the LICENSE file in the top level source directory
+
+RELDIR=roken
+!include ..\config\NTMakefile.$(SYS_NAME)
+!include ..\config\NTMakefile.version
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DHAVE_CONFIG_H=1
+
+ROKEN = $(SRC)\external\heimdal\roken
+
+INCFILEDIR = $(DESTDIR)\include
+
+INCFILES = \
+	$(INCFILEDIR)\err.h \
+	$(INCFILEDIR)\roken.h
+
+ROKEN_INCFILES = \
+	$(INCFILEDIR)\roken-common.h
+
+LIBFILE = $(DESTDIR)\lib\afsroken.dll
+
+ROKEN_OBJS = \
+        $(OUT)\cloexec.obj \
+        $(OUT)\ct.obj \
+	$(OUT)\ecalloc.obj \
+	$(OUT)\emalloc.obj \
+	$(OUT)\erealloc.obj \
+        $(OUT)\err.obj \
+        $(OUT)\errx.obj \
+	$(OUT)\getopt.obj \
+        $(OUT)\getprogname.obj \
+	$(OUT)\hex.obj \
+        $(OUT)\issuid.obj \
+	$(OUT)\localtime_r.obj \
+	$(OUT)\net_read.obj \
+	$(OUT)\net_write.obj \
+	$(OUT)\snprintf.obj \
+	$(OUT)\socket.obj \
+	$(OUT)\strerror_r.obj \
+	$(OUT)\strlcat.obj \
+	$(OUT)\strlcpy.obj \
+	$(OUT)\strnlen.obj \
+        $(OUT)\verr.obj \
+        $(OUT)\verrx.obj \
+        $(OUT)\vwarn.obj \
+        $(OUT)\vwarnx.obj \
+        $(OUT)\warn.obj \
+        $(OUT)\warnerr.obj \
+        $(OUT)\warnx.obj
+
+$(ROKEN_OBJS):$(ROKEN)\$$(@B).c
+	$(C2OBJ) $** -I$(ROKEN)
+
+$(ROKEN_INCFILES):$(ROKEN)\$$(@B).h
+	$(COPY) $** $(INCFILEDIR)
+
+$(INCFILES):$$(@B).h
+	$(COPY) $** $(INCFILEDIR)
+
+roken.h: $(ROKEN)\roken.h.in
+	$(COPY) $** $@
+
+err.h: $(ROKEN)\err.hin
+	$(COPY) $** $@
+
+!if !defined(NMAKE)
+NTMAKE = nmake /nologo /f ntmakefile
+!endif
+
+DLLLIBS = \
+#       $(DESTDIR)\lib\afs\afsreg.lib
+
+$(LIBFILE): $(ROKEN_OBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:afsroken.def shell32.lib
+	$(_VC_MANIFEST_EMBED_DLL)
+	$(DLLPREP)
+	$(CODESIGN_USERLAND)
+	$(SYMSTORE_IMPORT)
+	$(MAKECYGLIB) --input-def afsroken.def
+
+# Definitions for generating versioninfo resources
+$(OUT)\afsroken.res: AFS_component_version_number.h
+
+install_headers: $(INCFILES) $(ROKEN_INCFILES)
+
+install: install_headers $(LIBFILE)
+
+clean::
+	$(DEL) $(INCFILES)
+	$(DEL) err.h
+	$(DEL) $(LIBFILE) $(DESTDIR)\lib\afsroken.lib $(DESTDIR)\lib\afsroken.exp

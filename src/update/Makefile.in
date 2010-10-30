@@ -32,10 +32,12 @@ generated: update.cs.c update.ss.c update.xdr.c update.h
 # Build targets
 #
 upclient: client.o update.cs.o utils.o ${LIBS} 
-	$(AFS_LDRULE) client.o update.cs.o utils.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) client.o update.cs.o utils.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 upserver: server.o utils.o update.ss.o ${LIBS}
-	$(AFS_LDRULE) server.o utils.o update.ss.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) server.o utils.o update.ss.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 utils.o: utils.c update.h global.h
 

@@ -16,6 +16,8 @@
 # else /* !UKERNEL */
 #  include "afs/sysincludes.h"
 # endif /* !UKERNEL */
+#else /* KERNEL */
+# include <roken.h>
 #endif /* KERNEL */
 
 #include "rx.h"

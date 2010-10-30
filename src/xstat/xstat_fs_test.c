@@ -15,6 +15,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */

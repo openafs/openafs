@@ -149,10 +149,10 @@ Krmtsys.h: rmtsys.xg
 	${RXGEN} -A -k -h -o Krmtsys.h ${srcdir}/rmtsys.xg
 
 rmtsysd: rmtsysd.o libsys.a
-	$(AFS_LDRULE) rmtsysd.o ${LIBS}
+	$(AFS_LDRULE) rmtsysd.o ${LIBS} $(LIB_roken)
 
 pagsh:	pagsh.o libsys.a AFS_component_version_number.o
-	$(AFS_LDRULE) pagsh.o ${LIBS}
+	$(AFS_LDRULE) pagsh.o ${LIBS} $(LIB_roken)
 
 CFLAGS_pagsh.krb.o = -DAFS_KERBEROS_ENV
 pagsh.krb.o: pagsh.c
@@ -160,7 +160,7 @@ pagsh.krb.o: pagsh.c
 
 pagsh.krb: libsys.a pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a
 	$(AFS_LDRULE) pagsh.krb.o ${TOP_LIBDIR}/libauth.krb.a \
-		${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS}
+		${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS} $(LIB_roken)
 
 #
 # Test programs.

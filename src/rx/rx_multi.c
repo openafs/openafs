@@ -10,10 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #ifdef	KERNEL
 #include "afs/sysincludes.h"
-#endif
+#else /* KERNEL */
+# include <roken.h>
+#endif /* KERNEL */
 
 #include "rx.h"
 

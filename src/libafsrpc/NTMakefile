@@ -103,7 +103,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
 	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsrpc.def iphlpapi.lib

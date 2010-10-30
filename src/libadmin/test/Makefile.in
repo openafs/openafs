@@ -42,7 +42,8 @@ all test tests: afscp
 CFLAGS_client.o = @CFLAGS_NOERROR@
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
-	$(AFS_LDRULE) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
+	$(AFS_LDRULE) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) \
+		$(LIB_roken) ${MT_LIBS} $(XLIBS)
 
 #######################################################################
 install:

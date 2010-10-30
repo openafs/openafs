@@ -36,6 +36,14 @@ typedef int ssize_t;
 #endif
 #endif
 
+/* The MSVC implementation of snprintf is not C99 compliant.  */
+#define snprintf    rk_snprintf
+#define vsnprintf   rk_vsnprintf
+#define vasnprintf  rk_vasnprintf
+#define vasprintf   rk_vasprintf
+#define asnprintf   rk_asnprintf
+#define asprintf    rk_asprintf
+
 #endif /* _MSC_VER */
 #endif /* AFS_NT40_ENV */
 

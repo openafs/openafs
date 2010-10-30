@@ -14,7 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #ifdef KERNEL
 # include "afs/sysincludes.h"
 # ifndef UKERNEL
@@ -34,6 +33,7 @@
 #  include "netinet/in.h"
 # endif /* !UKERNEL */
 #else /* KERNEL */
+# include <roken.h>
 # include <sys/types.h>
 # include <stdio.h>
 # ifndef AFS_NT40_ENV

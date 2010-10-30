@@ -209,8 +209,8 @@ struct rx_jumboHeader {
 };
 
 /* For most Unixes, maximum elements in an iovec is 16 */
-#define RX_MAXIOVECS 16		/* limit for ReadvProc/WritevProc */
-#define RX_MAXWVECS RX_MAXIOVECS-1	/* need one iovec for packet header */
+#define RX_MAXIOVECS 16		        /* limit for ReadvProc/WritevProc */
+#define RX_MAXWVECS (RX_MAXIOVECS-1)	/* need one iovec for packet header */
 
 /*
  * The values for the RX buffer sizes are calculated to ensure efficient
@@ -248,6 +248,10 @@ struct rx_jumboHeader {
  * Add an extra four bytes of slop at the end of each buffer.
  */
 #define RX_EXTRABUFFERSIZE 4
+
+#ifndef RX_MAXWVECS
+#error RX_MAXWVECS not defined
+#endif
 
 struct rx_packet {
     struct rx_queue queueItemHeader;	/* Packets are chained using the queue.h package */

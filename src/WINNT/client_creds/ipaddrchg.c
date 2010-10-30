@@ -62,6 +62,11 @@
 #include <time.h>
 #include <winsock2.h>
 
+
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #define USE_MS2MIT 1
 
 #include <afs/stds.h>

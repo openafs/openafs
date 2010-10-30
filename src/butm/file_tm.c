@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

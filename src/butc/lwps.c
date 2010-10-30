@@ -11,6 +11,9 @@
 #include <afs/param.h>
 
 
+#include <afs/procmgmt.h>
+#include <roken.h>
+
 #include <sys/types.h>
 #include <string.h>
 #ifdef AFS_NT40_ENV

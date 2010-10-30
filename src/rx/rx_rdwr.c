@@ -52,6 +52,7 @@
 # include "rx/rx_kernel.h"
 # include "afs/lock.h"
 #else /* KERNEL */
+# include <roken.h>
 # include <sys/types.h>
 # include <string.h>
 # ifdef AFS_NT40_ENV

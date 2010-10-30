@@ -21,6 +21,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifndef KERNEL
+# include <roken.h>
+#endif /* KERNEL */
 
 #include <sys/types.h>		/* fd_set on older platforms */
 #include <errno.h>

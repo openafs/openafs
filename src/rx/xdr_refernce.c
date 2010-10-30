@@ -28,6 +28,11 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#ifndef KERNEL
+# include <roken.h>
+#endif
+
 #include "rx.h"
 
 

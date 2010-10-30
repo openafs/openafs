@@ -26,10 +26,10 @@ rxdumptrace.o: ../rx/rx_trace.c
 	$(AFS_CCRULE) $(srcdir)/../rx/rx_trace.c
 
 rxdumptrace: rxdumptrace.o ${LIBS}
-	$(AFS_LDRULE) rxdumptrace.o  ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) rxdumptrace.o  ${LIBS} $(LIB_roken) ${XLIBS}
 
 rxdebug: rxdebug.o ${LIBS}
-	$(AFS_LDRULE) rxdebug.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) rxdebug.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Install targets

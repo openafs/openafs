@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifndef KERNEL
+# include <roken.h>
+#endif /* KERNEL */
 
 #ifndef RXDEBUG
 char rxi_tracename[80] = "\0Tracing not compiled in";

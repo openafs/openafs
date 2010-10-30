@@ -50,10 +50,11 @@ afsmonitor.o: afsmonitor.c ${INCLS} AFS_component_version_number.c
 
 afsmonitor: afsmonitor.o afsmon-win.o afsmon-output.o ${LIBS}
 	$(AFS_LDRULE) afsmonitor.o afsmon-win.o afsmon-output.o \
-		${LIBS} ${EXTRA_LIBS}
+		${LIBS} $(LIB_roken) ${EXTRA_LIBS}
 
 afsmon-parselog:  afsmon-parselog.o ${LIBS}
-	$(AFS_LDRULE) afsmon-parselog.c ${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) afsmon-parselog.c \
+		${LIBS} $(LIB_roken) ${EXTRA_LIBS}
 
 install: afsmonitor
 	${INSTALL} -d ${DESTDIR}${bindir}

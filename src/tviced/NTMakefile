@@ -86,7 +86,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afs\mtafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
@@ -102,4 +103,3 @@ mkdir:
 clean::
 	$(DEL) $(TVICEDRES)
 
-	

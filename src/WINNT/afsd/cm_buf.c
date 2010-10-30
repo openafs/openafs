@@ -9,7 +9,10 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
+#include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
+
 #include <afs/stds.h>
 
 #include <windows.h>

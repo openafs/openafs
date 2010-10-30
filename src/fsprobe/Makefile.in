@@ -52,7 +52,8 @@ fsprobe.o: fsprobe.c ${INCLS} AFS_component_version_number.c
 fsprobe_callback.o: fsprobe_callback.c ${INCLS}
 
 fsprobe_test: fsprobe_test.o libfsprobe.a ${LIBS}
-	$(AFS_LDRULE) fsprobe_test.o libfsprobe.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) fsprobe_test.o libfsprobe.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Install targets

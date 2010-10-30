@@ -72,6 +72,7 @@ ROKEN_OBJS = \
         $(OUT)\errx.obj \
         $(OUT)\getprogname.obj \
         $(OUT)\issuid.obj \
+	$(OUT)\snprintf.obj \
         $(OUT)\verr.obj \
         $(OUT)\verrx.obj \
         $(OUT)\vwarn.obj \

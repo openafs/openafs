@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
+#include <roken.h>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -55,7 +58,6 @@
 
 /* for UV_MoveVolume() recovery */
 
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <setjmp.h>
 
 #include "volser_internal.h"

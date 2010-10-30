@@ -31,7 +31,8 @@
 #include <afs/param.h>
 
 #ifndef KERNEL
-#include <string.h>
+# include <roken.h>
+# include <string.h>
 #endif
 
 

@@ -11,6 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 /*
  *                      (3) Define a structure, idused, instead of an

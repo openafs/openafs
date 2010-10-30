@@ -23,7 +23,8 @@ LIBS = \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 ############################################################################
 # Definitions for generating files via RXGEN

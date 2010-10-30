@@ -58,9 +58,6 @@
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
 
-/* Define if you have the snprintf function.  */
-#undef HAVE_SNPRINTF
-
 /* Define if you have the socket function.  */
 #define HAVE_SOCKET
 
@@ -145,11 +142,7 @@
 /* Define if you have the <winsock2.h> header file.  */
 #define HAVE_WINSOCK2_H
 
-/* Define if you have vsnprintf */
-#define HAVE_VSNPRINTF 1
-
-/* Define if you have snprintf */
-#define HAVE_SNPRINTF 1
+#define HAVE_WINSOCK
 
 /* Name of package */
 #undef PACKAGE
@@ -214,4 +207,26 @@ typedef int errno_t;
 #define S_IRUSR _S_IREAD
 #define S_IWUSR _S_IWRITE
 
+
 #define HAVE_CONIO_H 1
+
+#define HAVE_FSYNC 1
+
+/* param.h overrides lstat, so stop roken getting involved */
+#define HAVE_LSTAT 1
+
+#define HAVE_STRCASECMP 1
+
+#define HAVE_STRUCT_SOCKADDR_STORAGE 1
+
+#define HAVE_DECL_H_ERRNO 1
+
+#define HAVE_STRUCT_ADDRINFO 1
+#define HAVE_GAI_STRERROR 1
+#define HAVE_STRERROR 1
+#define HAVE_STRLWR 1
+#define HAVE_STRDUP 1
+#define HAVE_GETHOSTNAME 1
+#define HAVE_STRFTIME 1
+#define HAVE_GETCWD 1
+#define HAVE_STRUPR 1

@@ -21,6 +21,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>

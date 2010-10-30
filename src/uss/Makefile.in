@@ -47,7 +47,7 @@ OBJS =  uss_procs.o \
 	y.tab.o 
 
 uss: uss.o ${OBJS} 
-	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS}
+	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS} $(LIB_roken)
 
 uss.o:  uss.c AFS_component_version_number.c
 

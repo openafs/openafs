@@ -22,6 +22,10 @@
  * SOFTWARE.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <malloc.h>
 #include "ms-wkssvc.h"
 #include "ms-srvsvc.h"

@@ -84,7 +84,8 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
 	     $(DESTDIR)\lib\afsdes.lib \
-	     $(DESTDIR)\lib\libafsconf.lib
+	     $(DESTDIR)\lib\libafsconf.lib \
+	     $(DESTDIR)\lib\afsroken.lib
 
 
 # rm $(OUT)\tcstatus.obj

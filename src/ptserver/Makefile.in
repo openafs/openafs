@@ -99,7 +99,7 @@ ${TOP_INCDIR}/afs/ptserver.h: ptserver.h
 #
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
 	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o \
-		utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		utils.o map.o $(LIBS) $(LIB_roken) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
@@ -146,10 +146,12 @@ display.o: display.c ${INCLS}
 db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(AFS_LDRULE) db_verify.o display.o pterror.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) db_verify.o display.o pterror.o \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 ptclient: ptclient.o display.o libprot.a $(LIBS)
-	$(AFS_LDRULE) ptclient.o display.o libprot.a $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) ptclient.o display.o libprot.a \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
@@ -165,17 +167,20 @@ libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_numbe
 	$(RANLIB) $@
 
 pts: pts.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a libprot.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 pts.o: pts.c ${LINCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 readgroup: readgroup.o libprot.a $(LIBS)
-	$(AFS_LDRULE) readgroup.o libprot.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) readgroup.o libprot.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 readgroup.o: readgroup.c ${LINCLS} AFS_component_version_number.c
 
 readpwd: readpwd.o libprot.a $(LIBS)
-	$(AFS_LDRULE) readpwd.o libprot.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) readpwd.o libprot.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 
@@ -183,17 +188,17 @@ testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	case "$(SYS_NAME)" in \
 	*_darwin_12 ) \
 		$(AFS_LDRULE) testpt.o ${TOP_LIBDIR}/libcmd.a \
-			libprot.a $(LIBS) ;; \
+			libprot.a $(LIBS) $(LIB_roken) ;; \
 	* ) \
 		$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
-			libprot.a $(LIBS) ${XLIBS} ;; \
+			libprot.a $(LIBS) $(LIB_roken) ${XLIBS} ;; \
 	esac
 
 testpt.o: testpt.c ${INCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
 	$(AFS_LDRULE) pt_util.o ptutils.o ubik.o utils.o map.o libprot.a \
-		${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
+		${TOP_LIBDIR}/libcmd.a $(LIBS) $(LIB_roken) ${XLIBS}
 
 ubik.o: ubik.c ${INCLS}
 

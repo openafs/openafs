@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <stdio.h>

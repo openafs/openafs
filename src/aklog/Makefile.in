@@ -26,13 +26,14 @@ OBJS=   aklog.o krb_util.o linked_list.o
 all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
-	$(AFS_LDRULE) ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	$(AFS_LDRULE) ${OBJS} ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${XLIBS}
 
 asetkey: asetkey.o ${AFSLIBS}
-	$(AFS_LDRULE) asetkey.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	$(AFS_LDRULE) asetkey.o ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${XLIBS}
 
 klog:	klog.o skipwrap.o ${AFSLIBS}
-	$(AFS_LDRULE) klog.o skipwrap.o ${AKLIBS} ${AFSLIBS} ${XLIBS}
+	$(AFS_LDRULE) klog.o skipwrap.o \
+		${AKLIBS} ${AFSLIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Installation targets

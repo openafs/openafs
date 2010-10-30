@@ -12,6 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -445,7 +446,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 {
     struct ViceIoctl iob;
     char tbuffer[TBUFFERSIZE];
-    int len;
+    size_t len;
     char *tp, *cp;
     char *ticketP;
     int ticketLen, temp;

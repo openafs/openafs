@@ -213,10 +213,12 @@ state_analyzer.o: ${TVICED}/state_analyzer.c
 	$(AFS_CCRULE) $(TVICED)/state_analyzer.c
 
 dafileserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${objects} \
+		${LIBS} $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 state_analyzer: ${SDBGOBJS}
-	$(AFS_LDRULE) ${SDBGOBJS} ${MT_LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${SDBGOBJS} \
+		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: dafileserver state_analyzer
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

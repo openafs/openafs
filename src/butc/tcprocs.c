@@ -12,6 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
 #include <sys/types.h>
 #include <errno.h>

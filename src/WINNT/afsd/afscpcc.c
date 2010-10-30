@@ -5,6 +5,10 @@
  * This software has been released under the terms of the MIT License.  
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <windows.h>
 #include <afskfw.h>
 

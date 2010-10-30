@@ -12,15 +12,16 @@
 #include <ws2tcpip.h>
 
 extern "C" {
+#include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <roken.h>
 }
 
 #include "klog_dlg.h"
 #include "hourglass.h"
 
 extern "C" {
-#include <afs/param.h>
 #include <afs/kautils.h>
 #include "cm_config.h"
 }

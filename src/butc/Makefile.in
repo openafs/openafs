@@ -58,7 +58,7 @@ SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 all: butc read_tape
 
 butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
-	$(AFS_LDRULE) ${TESTOBJS} ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) ${TESTOBJS} ${LIBS} $(LIB_roken) ${XLIBS}
 
 tdump: tdump.c AFS_component_version_number.c
 	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
@@ -66,9 +66,9 @@ tdump: tdump.c AFS_component_version_number.c
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
-	  rs_aix*) $(AFS_LDRULE) ${SOBJS} ${LIBS} ${XLIBS} \
+	  rs_aix*) $(AFS_LDRULE) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} \
 	  	/usr/lib/libc_r.a ;; \
-	  *)       $(AFS_LDRULE) ${SOBJS} ${LIBS} ${XLIBS} ;; \
+	  *)       $(AFS_LDRULE) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	esac
 
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c

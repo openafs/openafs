@@ -20,6 +20,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -101,7 +103,6 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #ifndef AFS_NT40_ENV
 #include <syslog.h>
 #endif

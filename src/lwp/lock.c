@@ -28,6 +28,8 @@
 #ifdef AFS_PTHREAD_ENV
 #include <afs/afs_assert.h>
 /* can't include this in lwp, rx hasn't built yet */
+
+#include <roken.h>
 #include <rx/rx.h>
 #else
 #include <assert.h>

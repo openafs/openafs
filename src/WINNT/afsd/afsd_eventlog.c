@@ -7,6 +7,10 @@
 ////////////////////////////////////////////////////////////////////
 
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <windows.h>
 #include <stdarg.h>
 #include <string.h>

@@ -86,6 +86,8 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
 #ifndef AFS_NT40_ENV
 #include <sys/param.h>

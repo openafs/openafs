@@ -26,6 +26,7 @@
 #include <afs/param.h>
 
 #ifndef KERNEL
+# include <roken.h>
 # include <sys/types.h>
 # include <string.h>
 #else

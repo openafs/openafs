@@ -16,6 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
 #include <afs/cmd.h>		/*Command line interpreter */

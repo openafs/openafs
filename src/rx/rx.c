@@ -59,6 +59,7 @@ extern afs_int32 afs_termState;
 # endif /* AFS_AIX41_ENV */
 # include "afs/rxgen_consts.h"
 #else /* KERNEL */
+# include <roken.h>
 # include <sys/types.h>
 # include <string.h>
 # include <stdarg.h>

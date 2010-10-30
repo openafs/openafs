@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/stds.h>
 #if defined(AFS_LINUX24_ENV)

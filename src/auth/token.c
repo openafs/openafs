@@ -24,6 +24,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/auth.h>
 #include <rx/rxkad.h>
 #include <errno.h>

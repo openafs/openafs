@@ -63,8 +63,6 @@ typedef __int64 ssize_t;
 #define strcasecmp(s1,s2)       _stricmp(s1,s2)
 #define strncasecmp(s1,s2,n)    _strnicmp(s1,s2,n)
 #define sleep(seconds)          Sleep((seconds) * 1000)
-#define fsync(fileno)           _commit(fileno)
-#define ftruncate(fd, size)     _chsize((fd), (long)(size))
 #define strtoll(str, cp, base)  strtoi64((str), (cp), (base))
 #define strtoull(str, cp, base) strtoui64((str), (cp), (base))
 
@@ -75,9 +73,6 @@ typedef __int64 ssize_t;
 #define pclose(stream)          _pclose(stream)
 typedef char *caddr_t;
 
-#define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
-
-#define snprintf                _snprintf
 #endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */

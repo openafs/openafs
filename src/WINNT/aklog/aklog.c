@@ -45,6 +45,10 @@
 #define HAVE_KRB4
 #endif
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

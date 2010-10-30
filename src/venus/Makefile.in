@@ -53,7 +53,7 @@ all: fs up fstrace cmdebug livesys kdump-build cacheout
 # Build targets
 #
 cacheout: cacheout.o
-	$(AFS_LDRULE) cacheout.o ${LIBS} ${XLIBS} ${CMLIBS}
+	$(AFS_LDRULE) cacheout.o ${LIBS} $(LIB_roken) ${XLIBS} ${CMLIBS}
 
 cacheout.o: cacheout.c
 
@@ -61,34 +61,36 @@ cacheout.o: cacheout.c
 up.o: up.c AFS_component_version_number.c
 
 up: up.o
-	$(AFS_LDRULE) up.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) up.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
-	$(AFS_LDRULE) fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) \
+		$(LIB_roken) ${XLIBS}
 
 afsio.o: afsio.c ${INCLS} AFS_component_version_number.c
 
 afsio: afsio.o $(LIBS)
 	$(AFS_LDRULE) afsio.o ${TOP_LIBDIR}/libprot.a \
-		${TOP_LIBDIR}/libafsint.a $(LIBS) ${XLIBS}
+		${TOP_LIBDIR}/libafsint.a $(LIBS) \
+		$(LIB_roken) ${XLIBS}
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
 livesys: livesys.o $(LIBS)
-	$(AFS_LDRULE) livesys.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) livesys.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 twiddle: twiddle.o $(LIBS)
-	$(AFS_LDRULE) twiddle.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) twiddle.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 gcpags: gcpags.o $(LIBS)
-	$(AFS_LDRULE) gcpags.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) gcpags.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
 
 whatfid: whatfid.o ${LIBS}
-	$(AFS_LDRULE) whatfid.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) whatfid.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
@@ -117,12 +119,12 @@ fstrace: fstrace.o
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 
 cmdebug: cmdebug.o ${CMLIBS}
-	$(AFS_LDRULE) cmdebug.o ${CMLIBS} ${XLIBS}
+	$(AFS_LDRULE) cmdebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
 
 dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
 
 dedebug: dedebug.o ${CMLIBS}
-	$(AFS_LDRULE) dedebug.o ${CMLIBS} ${XLIBS}
+	$(AFS_LDRULE) dedebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
 
 
 

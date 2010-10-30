@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
+#include <roken.h>
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

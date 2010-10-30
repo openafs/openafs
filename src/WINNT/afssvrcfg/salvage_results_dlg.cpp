@@ -14,6 +14,12 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+extern "C" {
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+}
+
 #include "afscfg.h"		// Main header for this application
 #include "resource.h"
 #include "salvage_results_dlg.h"

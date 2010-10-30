@@ -29,6 +29,11 @@
 #pragma warning (push)
 #pragma warning (disable: 4005)
 
+
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include<afscred.h>
 #include<kmm.h>
 #include<dynimport.h>

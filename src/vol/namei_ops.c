@@ -14,6 +14,7 @@
 
 
 #ifdef AFS_NAMEI_ENV
+#include <roken.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef AFS_NT40_ENV
@@ -24,6 +25,7 @@
 #include <windows.h>
 #include <winnt.h>
 #include <winbase.h>
+#include <winsock2.h>
 #endif
 #include <errno.h>
 #include <fcntl.h>

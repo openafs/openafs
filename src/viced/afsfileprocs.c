@@ -28,6 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <stdio.h>
 #include <stdlib.h>

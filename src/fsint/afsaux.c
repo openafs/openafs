@@ -39,6 +39,7 @@
 #endif /* defined(UKERNEL) */
 #include "afsint.h"
 #else /* KERNEL */
+# include <roken.h>
 # include <rx/xdr.h>
 # include "afsint.h"
 #endif /* KERNEL */

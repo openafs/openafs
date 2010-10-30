@@ -21,7 +21,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-
 /* Enable data initialization when the header file is included */
 #define GLOBALSINIT(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
@@ -33,11 +32,13 @@
 #endif
 
 #ifdef KERNEL
-#ifndef UKERNEL
-#include "h/types.h"
-#else /* !UKERNEL */
-#include	"afs/sysincludes.h"
-#endif /* UKERNEL */
+# ifndef UKERNEL
+#  include "h/types.h"
+# else /* !UKERNEL */
+#  include	"afs/sysincludes.h"
+# endif /* UKERNEL */
+#else /* KERNEL */
+# include <roken.h>
 #endif /* KERNEL */
 
 #include "rx_globals.h"

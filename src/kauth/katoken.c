@@ -14,6 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #ifdef UKERNEL
 # include "afsincludes.h"
 #endif

@@ -11,6 +11,10 @@
  *		     output of this program to be valid.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/time.h>

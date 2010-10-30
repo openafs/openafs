@@ -66,6 +66,10 @@
 /* Prevent inclusion of des.h to avoid conflicts with des types */
 #define NO_DES_H_INCLUDE
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <osilog.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
