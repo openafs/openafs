@@ -833,9 +833,6 @@ struct vcache {
     struct dcache *dchint;
     struct dcache *dcreaddir;	/* dcache for in-progress readdir */
     unsigned int readdir_pid;   /* pid of the thread in readdir */
-#ifdef AFS_LINUX22_ENV
-    u_short mapcnt;		/* Number of mappings of this file. */
-#endif
 #if defined(AFS_SGI_ENV)
     daddr_t lastr;		/* for read-ahead */
 #ifdef AFS_SGI64_ENV
