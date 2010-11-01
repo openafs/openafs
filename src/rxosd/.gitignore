@@ -3,5 +3,6 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /rxosd
+/rxosd.h
 /readabyte
 /osd

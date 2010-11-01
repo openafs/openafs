@@ -5,3 +5,6 @@
 /rxperf
 /testclient
 /testserver
+/generator
+/tableGen
+/th_rxperf
