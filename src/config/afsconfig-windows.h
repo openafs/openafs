@@ -49,6 +49,9 @@
 /* Define if you have the connect function.  */
 #undef HAVE_CONNECT
 
+/* Define if you have the error_message function.  */
+#define HAVE_ERROR_MESSAGE
+
 /* Define if you have the gethostbyname function.  */
 #define HAVE_GETHOSTBYNAME
 
