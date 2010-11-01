@@ -622,6 +622,11 @@ rxkad_get_ticket(krb5_context context, char *realm,
 	fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		progname, cell->name);
 	afs_com_err(progname, status, "while getting AFS tickets");
+#ifdef KRB5_CC_NOT_KTYPE
+	if (status == KRB5_CC_NOT_KTYPE) {
+	    fprintf(stderr, "allow_weak_enctypes may be required in the Kerberos configuration\n");
+	}
+#endif
 	status = AKLOG_KERBEROS;
 	goto out;
     }
