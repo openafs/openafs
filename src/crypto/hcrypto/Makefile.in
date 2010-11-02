@@ -52,8 +52,9 @@ dest: libafshcrypto.a ${SHLIBOBJ}
 	${INSTALL_DATA} libafshcrypto.a ${DEST}/lib/libafshcrypto.a
 
 clean:
-	$(RM) -f ${OBJECTS} ${SHLIBOBJ} libafshcrypto.a libafshcrypto.exp \
-		 test_cipher test_cipher.o
+	$(RM) -f ${OBJECTS} ${SHLIBOBJ} rand-fortuna_lwp.o \
+		libafshcrypto.a libafshcrypto.exp \
+		test_cipher test_cipher.o
 
 COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
 	     evp-hcrypto.o evp-cc.o hmac.o md2.o md4.o md5.o pkcs5.o \
