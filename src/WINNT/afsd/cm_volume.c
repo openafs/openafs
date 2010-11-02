@@ -900,6 +900,11 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
             osi_Log2(afsd_logp, "Recycling Volume %s:%s",
                      volp->cellp->name, volp->namep);
 
+            /* The volp is removed from the LRU queue in order to
+             * prevent two threads from attempting to recycle the
+             * same object.  This volp must be re-inserted back into
+             * the LRU queue before this function exits.
+             */
             if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
                 cm_RemoveVolumeFromLRU(volp);
             if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
@@ -968,12 +973,11 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     if (code == 0) {
         *outVolpp = volp;
 		
-        if ((volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) &&
-            !(flags & CM_GETVOL_FLAG_NO_LRU_UPDATE)) {
-            lock_ObtainWrite(&cm_volumeLock);
+        lock_ObtainRead(&cm_volumeLock);
+        if (!(volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) ||
+             (flags & CM_GETVOL_FLAG_NO_LRU_UPDATE))
             cm_AdjustVolumeLRU(volp);
-            lock_ReleaseWrite(&cm_volumeLock);
-        }
+        lock_ReleaseRead(&cm_volumeLock);
     } else {
         /*
          * do not return it to the caller but do insert it in the LRU
