@@ -2474,9 +2474,18 @@ rxi_FreeCall(struct rx_call *call, int haveCTLock)
 
     if (call->state == RX_STATE_DALLY || call->state == RX_STATE_HOLD)
 	(*call->callNumber)++;
+    /*
+     * We are setting the state to RX_STATE_RESET to
+     * ensure that no one else will attempt to use this
+     * call once we drop the refcnt lock. We must drop
+     * the refcnt lock before calling rxi_ResetCall
+     * because it cannot be held across acquiring the
+     * freepktQ lock. NewCall does the same.
+     */
+    call->state = RX_STATE_RESET;
+    MUTEX_EXIT(&rx_refcnt_mutex);
     rxi_ResetCall(call, 0);
     call->conn->call[channel] = (struct rx_call *)0;
-    MUTEX_EXIT(&rx_refcnt_mutex);
 
     MUTEX_ENTER(&rx_freeCallQueue_lock);
     SET_CALL_QUEUE_LOCK(call, &rx_freeCallQueue_lock);
