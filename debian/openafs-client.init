@@ -49,6 +49,17 @@ is_on() {
     fi
 }
 
+# Determine if kernel module loading is disabled.  If it's not, don't attempt
+# to stop or restart AFS, since we'll end up in a bad inconsistent state.
+is_loading_disabled() {
+    disabled=`cat /proc/sys/kernel/modules_disabled`
+    if [ "$loading" == 1 ] ; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 # Load the AFS client module if it's not already loaded.  Set $MODULEDIR and
 # $LIBAFS to override the default location and module name.  Also check before
 # loading whether the module is listed in the module dependencies so that we
@@ -204,6 +215,10 @@ force-start)
     ;;
 
 stop|force-stop)
+    if is_loading_disabled ; then
+        echo "Module loading disabled, cannot stop AFS" >&2
+        exit 1
+    fi
     $AFS_PRE_SHUTDOWN
     echo -n "Stopping AFS services:"
     if grep -q '^AFS ' /etc/mtab ; then
