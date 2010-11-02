@@ -1387,38 +1387,25 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 
 struct buf;
 
-struct rxfs_storeVariables {
-    struct rx_call *call;
-    struct vcache *vcache;
-    char *tbuffer;
-    struct iovec *tiov;
-    afs_int32 tnio;
-    afs_int32 hasNo64bit;
-    struct AFSStoreStatus InStatus;
-};
-
 struct storeOps {
-    int (*prepare)(void *rock, afs_uint32 size, afs_uint32 *bytestoxfer);
-    int (*read)(void *rock, struct osi_file *tfile, afs_uint32 offset,
-        afs_uint32 tlen, afs_uint32 *bytesread);
-    int (*write)(void *rock, afs_uint32 tlen, afs_uint32 *byteswritten);
-    int (*status)(void *rock);
-    int (*padd)(void *rock, afs_uint32 tlen);
-    int (*close)(void *rock, struct AFSFetchStatus *OutStatus,
-        afs_int32 *doProcessFS);
-    int (*destroy)(void **rock, afs_int32 error);
-    int (*storeproc)(struct storeOps *, void *, struct dcache *, int *,
-		     afs_size_t *);
+    int (*prepare)(void *, afs_uint32, afs_uint32 *);
+    int (*read)(void *, struct osi_file *, afs_uint32, afs_uint32,
+        	afs_uint32 *, char **);
+    int (*write)(void *, char *, afs_uint32, afs_uint32 *);
+    int (*status)(void *);
+    int (*padd)(void *, afs_uint32);
+    int (*close)(void *, struct AFSFetchStatus *, afs_int32 *);
+    int (*destroy)(void **, afs_int32);
+    int (*storeproc)(struct vcache *, struct storeOps *, void *,
+		     struct dcache *, int *, afs_size_t *);
 };
 
 struct fetchOps {
-    int (*more)(void *rock, afs_int32 *length, afs_uint32 *moredata);
-    int (*read)(void *rock, afs_uint32 tlen, afs_uint32 *bytesread);
-    int (*write)(void *rock, struct osi_file *fp, afs_uint32 offset,
-        afs_uint32 tlen, afs_uint32 *byteswritten);
-    int (*close)(void *rock, struct vcache *avc, struct dcache *adc,
-        struct afs_FetchOutput *Outputs);
-    int (*destroy)(void **rock, afs_int32 error);
+    int (*more)(void *, afs_int32 *, afs_uint32 *);
+    int (*read)(void *, afs_uint32, afs_uint32 *);
+    int (*write)(void *, struct osi_file *, afs_uint32, afs_uint32, afs_uint32 *);
+    int (*close)(void *, struct vcache *, struct dcache *, struct afs_FetchOutput *);
+    int (*destroy)(void **, afs_int32);
 };
 
 /* fakestat support: opaque storage for afs_EvalFakeStat to remember
