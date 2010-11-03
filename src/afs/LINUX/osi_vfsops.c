@@ -45,7 +45,19 @@ static int afs_root(struct super_block *afsp);
 int afs_fill_super(struct super_block *sb, void *data, int silent);
 
 
-#ifdef GET_SB_HAS_STRUCT_VFSMOUNT
+/*
+ * afs_mount (2.6.37+) and afs_get_sb (2.6.36-) are the entry
+ * points from the vfs when mounting afs.  The super block
+ * structure is setup in the afs_fill_super callback function.
+ */
+
+#if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+static struct dentry *
+afs_mount(struct file_system_type *fs_type, int flags,
+           const char *dev_name, void *data) {
+    return mount_nodev(fs_type, flags, data, afs_fill_super);
+}
+#elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
 static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data, struct vfsmount *mnt) {
@@ -62,7 +74,11 @@ afs_get_sb(struct file_system_type *fs_type, int flags,
 struct file_system_type afs_fs_type = {
     .owner = THIS_MODULE,
     .name = "afs",
+#if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+    .mount = afs_mount,
+#else
     .get_sb = afs_get_sb,
+#endif
     .kill_sb = kill_anon_super,
     .fs_flags = FS_BINARY_MOUNTDATA,
 };
