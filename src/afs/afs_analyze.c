@@ -45,7 +45,6 @@
 #include <inet/ip.h>
 #endif
 
-
 /* shouldn't do it this way, but for now will do */
 #ifndef ERROR_TABLE_BASE_U
 #define ERROR_TABLE_BASE_U	(5376L)
@@ -119,12 +118,12 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
 			     &treq, SHARED_LOCK);
 	if (tconn) {
-	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
+	    if ( tconn->parent->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
 		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameO(tconn->id, bp, &v->tve);
 		RX_AFS_GLOCK();
-	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
+	    } else if (tconn->parent->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
 		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameN(tconn->id, bp, &v->ntve);
@@ -134,7 +133,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameU(tconn->id, bp, &v->utve);
 		RX_AFS_GLOCK();
-		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
+		if (!(tconn->parent->srvr->server->flags & SVLSRV_UUID)) {
 		    if (i == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
@@ -142,14 +141,14 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 			RX_AFS_GLOCK();
 			if (i == RXGEN_OPCODE) {
 			    type = 0;
-			    tconn->srvr->server->flags |= SNO_LHOSTS;
+			    tconn->parent->srvr->server->flags |= SNO_LHOSTS;
 			    RX_AFS_GUNLOCK();
 			    i = VL_GetEntryByNameO(tconn->id, bp, &v->tve);
 			    RX_AFS_GLOCK();
 			} else if (!i)
-			    tconn->srvr->server->flags |= SYES_LHOSTS;
+			    tconn->parent->srvr->server->flags |= SYES_LHOSTS;
 		    } else if (!i)
-			tconn->srvr->server->flags |= SVLSRV_UUID;
+			tconn->parent->srvr->server->flags |= SVLSRV_UUID;
 		}
 		lastcode = i;
 	    }
@@ -383,7 +382,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 	return shouldRetry;	/* should retry */
     }
 
-    if (!aconn || !aconn->srvr) {
+    if (!aconn || !aconn->parent->srvr) {
 	if (!areq->volumeError) {
 	    if (aerrP)
 		(aerrP->err_Network)++;
@@ -425,7 +424,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
     }
 
     /* Find server associated with this connection. */
-    sa = aconn->srvr;
+    sa = aconn->parent->srvr;
     tsp = sa->server;
     address = ntohl(sa->sa_ip);
 
@@ -542,11 +541,11 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 		aconn->forceConnectFS = 1;
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
+		aconn->parent->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired (server %d.%d.%d.%d)\n",
-		     tu->viceId, aconn->srvr->server->cell->cellName,
+		     tu->viceId, aconn->parent->srvr->server->cell->cellName,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
@@ -556,18 +555,18 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 		if (serversleft) {
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s: rxkad error=%d (server %d.%d.%d.%d)\n",
-			 tu->viceId, aconn->srvr->server->cell->cellName, acode,
+			 tu->viceId, aconn->parent->srvr->server->cell->cellName, acode,
 			 (address >> 24), (address >> 16) & 0xff,
 			 (address >> 8) & 0xff, (address) & 0xff);
 		    shouldRetry = 1;
 		} else {
 		    areq->tokenError = 0;
 		    aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		    aconn->user->states |= UTokensBad;
+		    aconn->parent->user->states |= UTokensBad;
 		    afs_NotifyUser(tu, UTokensDropped);
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d, server %d.%d.%d.%d)\n",
-			 tu->viceId, aconn->srvr->server->cell->cellName, acode,
+			 tu->viceId, aconn->parent->srvr->server->cell->cellName, acode,
 			 (address >> 24), (address >> 16) & 0xff,
 			 (address >> 8) & 0xff, (address) & 0xff);
 		}
@@ -579,20 +578,21 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 		aconn->forceConnectFS = 1;
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
+		aconn->parent->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s have expired (server %d.%d.%d.%d)\n",
-		     areq->uid, aconn->srvr->server->cell->cellName,
+		     areq->uid, aconn->parent->srvr->server->cell->cellName,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
+		aconn->parent->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d, server %d.%d.%d.%d)\n",
-		     areq->uid, aconn->srvr->server->cell->cellName, acode,
+		     areq->uid, aconn->parent->srvr->server->cell->cellName,
+                     acode,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 

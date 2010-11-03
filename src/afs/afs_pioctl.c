@@ -2626,7 +2626,7 @@ DECL_PIOCTL(PCheckAuth)
 {
     int i;
     struct srvAddr *sa;
-    struct afs_conn *tc;
+    struct sa_conn_vector *tcv;
     struct unixuser *tu;
     afs_int32 retValue;
 
@@ -2649,8 +2649,8 @@ DECL_PIOCTL(PCheckAuth)
 	/* all connections in cell 1 working? */
 	for (i = 0; i < NSERVERS; i++) {
 	    for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-		for (tc = sa->conns; tc; tc = tc->next) {
-		    if (tc->user == tu && (tu->states & UTokensBad))
+		for (tcv = sa->conns; tcv; tcv = tcv->next) {
+		    if (tcv->user == tu && (tu->states & UTokensBad))
 			retValue = EACCES;
 		}
 	    }

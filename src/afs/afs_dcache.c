@@ -2216,9 +2216,9 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 
 #endif /* AFS_NOSTATS */
 		    if (!setLocks || slowPass) {
-			avc->callback = tc->srvr->server;
+			avc->callback = tc->parent->srvr->server;
 		    } else {
-			newCallback = tc->srvr->server;
+			newCallback = tc->parent->srvr->server;
 			setNewCallback = 1;
 		    }
 		    i = osi_Time();

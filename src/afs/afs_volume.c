@@ -765,12 +765,12 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
 			     &treq, SHARED_LOCK);
 	if (tconn) {
-	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
+	    if (tconn->parent->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
 		RX_AFS_GUNLOCK();
 		code = VL_GetEntryByNameO(tconn->id, aname, tve);
 		RX_AFS_GLOCK();
-	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
+	    } else if (tconn->parent->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
 		RX_AFS_GUNLOCK();
 		code = VL_GetEntryByNameN(tconn->id, aname, ntve);
@@ -780,7 +780,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 		RX_AFS_GUNLOCK();
 		code = VL_GetEntryByNameU(tconn->id, aname, utve);
 		RX_AFS_GLOCK();
-		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
+		if (!(tconn->parent->srvr->server->flags & SVLSRV_UUID)) {
 		    if (code == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
@@ -788,14 +788,14 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 			RX_AFS_GLOCK();
 			if (code == RXGEN_OPCODE) {
 			    type = 0;
-			    tconn->srvr->server->flags |= SNO_LHOSTS;
+			    tconn->parent->srvr->server->flags |= SNO_LHOSTS;
 			    RX_AFS_GUNLOCK();
 			    code = VL_GetEntryByNameO(tconn->id, aname, tve);
 			    RX_AFS_GLOCK();
 			} else if (!code)
-			    tconn->srvr->server->flags |= SYES_LHOSTS;
+			    tconn->parent->srvr->server->flags |= SYES_LHOSTS;
 		    } else if (!code)
-			tconn->srvr->server->flags |= SVLSRV_UUID;
+			tconn->parent->srvr->server->flags |= SVLSRV_UUID;
 		}
 		lastnvcode = code;
 	    }

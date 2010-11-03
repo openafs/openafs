@@ -299,7 +299,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	do {
 	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
 	    if (tc) {
-	    	hostp = tc->srvr->server;	/* remember for callback processing */
+	    	hostp = tc->parent->srvr->server; /* remember for callback processing */
 	    	now = osi_Time();
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
 	    	RX_AFS_GUNLOCK();

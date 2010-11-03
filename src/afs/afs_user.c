@@ -52,39 +52,6 @@ struct unixuser *afs_users[NUSERS];
 #ifndef AFS_PAG_MANAGER
 /* Forward declarations */
 void afs_ResetAccessCache(afs_int32 uid, int alock);
-
-/*
- * Called with afs_xuser, afs_xserver and afs_xconn locks held, to delete
- * appropriate conn structures for au
- */
-static void
-RemoveUserConns(struct unixuser *au)
-{
-    int i;
-    struct server *ts;
-    struct srvAddr *sa;
-    struct afs_conn *tc, **lc;
-
-    AFS_STATCNT(RemoveUserConns);
-    for (i = 0; i < NSERVERS; i++) {
-	for (ts = afs_servers[i]; ts; ts = ts->next) {
-	    for (sa = ts->addr; sa; sa = sa->next_sa) {
-		lc = &sa->conns;
-		for (tc = *lc; tc; lc = &tc->next, tc = *lc) {
-		    if (tc->user == au && tc->refCount == 0) {
-			*lc = tc->next;
-			AFS_GUNLOCK();
-			rx_DestroyConnection(tc->id);
-			AFS_GLOCK();
-			afs_osi_Free(tc, sizeof(struct afs_conn));
-			break;	/* at most one instance per server */
-		    }		/*Found unreferenced connection for user */
-		}		/*For each connection on the server */
-	    }
-	}			/*For each server on chain */
-    }				/*For each chain */
-
-}				/*RemoveUserConns */
 #endif /* !AFS_PAG_MANAGER */
 
 
@@ -130,7 +97,7 @@ afs_GCUserData(int aforce)
 	    if (delFlag) {
 		*lu = tu->next;
 #ifndef AFS_PAG_MANAGER
-		RemoveUserConns(tu);
+                afs_ReleaseConnsUser(tu);
 #endif
 		afs_FreeTokens(&tu->tokens);
 
@@ -231,9 +198,9 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
 void
 afs_ResetUserConns(struct unixuser *auser)
 {
-    int i;
+    int i, j;
     struct srvAddr *sa;
-    struct afs_conn *tc;
+    struct sa_conn_vector *tcv;
 
     AFS_STATCNT(afs_ResetUserConns);
     ObtainReadLock(&afs_xsrvAddr);
@@ -241,9 +208,11 @@ afs_ResetUserConns(struct unixuser *auser)
 
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-	    for (tc = sa->conns; tc; tc = tc->next) {
-		if (tc->user == auser) {
-		    tc->forceConnectFS = 1;
+	    for (tcv = sa->conns; tcv; tcv = tcv->next) {
+		if (tcv->user == auser) {
+		    for(j = 0; j < CVEC_LEN; ++j) {
+		    	(tcv->cvec[j]).forceConnectFS = 1;
+		    }
 		}
 	    }
 	}

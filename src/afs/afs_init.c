@@ -751,7 +751,6 @@ static void
 shutdown_server(void)
 {
     int i;
-    struct afs_conn *tc, *ntc;
     struct afs_cbr *tcbrp, *tbrp;
     struct srvAddr *sa;
 
@@ -763,22 +762,11 @@ shutdown_server(void)
 	    next = ts->next;
 	    for (sa = ts->addr; sa; sa = sa->next_sa) {
 		if (sa->conns) {
-		    /*
-		     * Free all server's connection structs
-		     */
-		    tc = sa->conns;
-		    while (tc) {
-			ntc = tc->next;
-#if 0
-			/* we should destroy all connections
-			   when shutting down Rx, not here */
-			AFS_GUNLOCK();
-			rx_DestroyConnection(tc->id);
-			AFS_GLOCK();
-#endif
-			afs_osi_Free(tc, sizeof(struct afs_conn));
-			tc = ntc;
-		    }
+                    /* afs_ReleaseConns has been updated to
+                     * defer rx_DestroyConnection to Rx
+                     * shutdown, as most recently was done
+                     * here */
+                    afs_ReleaseConns(sa->conns);
 		}
 	    }
 	    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {

@@ -48,6 +48,145 @@ afs_rwlock_t afs_xconn;		/* allocation lock for new things */
 afs_rwlock_t afs_xinterface;	/* for multiple client address */
 afs_int32 cryptall = 0;		/* encrypt all communications */
 
+/* some connection macros */
+
+/* a constructor */
+#define new_conn_vector(xcv) \
+do { \
+	xcv = (struct sa_conn_vector *) \
+	afs_osi_Alloc(sizeof(struct sa_conn_vector)); \
+	if (xcv) { \
+		memset((char *)xcv, 0, sizeof(struct sa_conn_vector)); \
+	} \
+} while (0);
+
+/* select a connection to return (if no connection has lower utilization
+ * than any other) */
+#define conn_vec_select_conn(xcv, bix, conn) \
+do { \
+    (bix) = ((xcv)->select_index)++ % CVEC_LEN; \
+    (conn) = &((xcv)->cvec[bix]); \
+} while (0);
+
+#define struct_conn(s) ((struct afs_conn *)(s))
+
+#define REPORT_CONNECTIONS_ISSUED 0 /* enable to see utilization */
+
+/**
+ * Find a connection with call slots available, allocating one
+ * if nothing is available and we find an allocated slot
+ * @param xcv  A connection vector
+ * @param create  If set, a new connection may be created
+ */
+static struct afs_conn *
+find_preferred_connection(struct sa_conn_vector *xcv, int create)
+{
+    afs_int32 cix, bix;
+    struct afs_conn *tc = NULL;
+
+    bix = -1;
+    for(cix = 0; cix < CVEC_LEN; ++cix) {
+        tc = &(xcv->cvec[cix]);
+        if (!tc->id) {
+            if (create) {
+                tc->parent = xcv;
+                tc->forceConnectFS = 1;
+                tc->activated = 1;
+                bix = cix;
+                break;
+            } /* create */
+        } else {
+            if (tc->refCount < (RX_MAXCALLS-1)) {
+                bix = cix;
+                goto f_conn;
+            } else if (cix == (CVEC_LEN-1))
+                conn_vec_select_conn(xcv, bix, tc);
+        } /* tc->id */
+    } /* for cix < CVEC_LEN */
+
+    if (bix < 0) {
+        afs_warn("find_preferred_connection: no connection and !create\n");
+        tc = NULL;
+        goto out;
+    }
+
+f_conn:
+    tc->refCount++;
+    xcv->refCount++;
+
+#if REPORT_CONNECTIONS_ISSUED
+    afs_warn("Issuing conn %d refCount=%d parent refCount=%d\n", bix,
+             tc->refCount, xcv->refCount);
+#endif
+
+out:
+    return (tc);
+
+}        /* find_preferred_connection */
+
+
+/**
+ * Release all connections for unix user xu at server xs
+ * @param xu
+ * @param xs
+ */
+static void
+release_conns_user_server(struct unixuser *xu, struct server *xs)
+{
+    int cix, glocked;
+    struct srvAddr *sa;
+    struct afs_conn *tc;
+    struct sa_conn_vector *tcv, **lcv;
+    for (sa = (xs)->addr; sa; sa = sa->next_sa) {
+        lcv = &sa->conns;
+        for (tcv = *lcv; tcv; lcv = &tcv->next, tcv = *lcv) {
+            if (tcv->user == (xu) && tcv->refCount == 0) {
+                *lcv = tcv->next;
+                /* our old friend, the GLOCK */
+                glocked = ISAFS_GLOCK();
+                if (glocked)
+                    AFS_GUNLOCK();
+                for(cix = 0; cix < CVEC_LEN; ++cix) {
+                    tc = &(tcv->cvec[cix]);
+                    if (tc->activated)
+                        rx_DestroyConnection(tc->id);
+                }
+                if (glocked)
+                    AFS_GLOCK();
+                afs_osi_Free(tcv, sizeof(struct sa_conn_vector));
+                break;    /* at most one instance per server */
+            } /*Found unreferenced connection for user */
+        }
+    } /*For each connection on the server */
+
+}        /* release_conns_user_server */
+
+
+static void
+release_conns_vector(struct sa_conn_vector *xcv)
+{
+    int cix, glocked;
+    struct afs_conn *tc;
+    struct sa_conn_vector *tcv = NULL;
+    struct sa_conn_vector **lcv = NULL;
+    for (tcv = xcv; tcv; lcv = &tcv->next, tcv = *lcv) {
+        *lcv = tcv->next;
+        /* you know it, you love it, the GLOCK */
+        glocked = ISAFS_GLOCK();
+        if (glocked)
+            AFS_GUNLOCK(); \
+        for(cix = 0; cix < CVEC_LEN; ++cix) {
+            tc = &(tcv->cvec[cix]);
+            if (tc->activated)
+                rx_DestroyConnection( tc->id );
+        }
+        if (glocked)
+            AFS_GLOCK();
+        afs_osi_Free(tcv, sizeof(struct sa_conn_vector));
+    }
+
+}        /* release_conns_vector */
+
 
 unsigned int VNOSERVERS = 0;
 
@@ -72,8 +211,8 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
     union tokenUnion *token;
 
     /* Do we have tokens ? */
-    if (conn->user->states & UHasTokens) {
-	token = afs_FindToken(conn->user->tokens, RX_SECIDX_KAD);
+    if (conn->parent->user->states & UHasTokens) {
+	token = afs_FindToken(conn->parent->user->tokens, RX_SECIDX_KAD);
 	if (token) {
 	    *secLevel = RX_SECIDX_KAD;
 	    /* kerberos tickets on channel 2 */
@@ -84,7 +223,7 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
 		         token->rxkad.clearToken.AuthHandle,
 		         token->rxkad.ticketLen, token->rxkad.ticket);
 	    /* We're going to use this token, so populate the viced */
-	    conn->user->viceId = token->rxkad.clearToken.ViceId;
+	    conn->parent->user->viceId = token->rxkad.clearToken.ViceId;
 	}
      }
      if (secObj == NULL) {
@@ -205,28 +344,32 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	     struct unixuser *tu, int force_if_down, afs_int32 create,
 	     afs_int32 locktype)
 {
-    struct afs_conn *tc = 0;
-    struct rx_securityClass *csec;	/*Security class object */
-    int isec;			/*Security index */
+    int glocked, foundvec;
+    struct afs_conn *tc = NULL;
+    struct sa_conn_vector *tcv = NULL;
+    struct rx_securityClass *csec; /*Security class object */
+    int isec; /*Security index */
     int service;
 
-    if (!sap || ((sap->sa_flags & SRVR_ISDOWN) && !force_if_down)) {
-	/* sa is known down, and we don't want to force it.  */
-	return NULL;
-    }
-
+    /* find cached connection */
     ObtainSharedLock(&afs_xconn, 15);
-    /* Get conn by port and user. */
-    for (tc = sap->conns; tc; tc = tc->next) {
-	if (tc->user == tu && tc->port == aport) {
-	    break;
-	}
+    foundvec = 0;
+    for (tcv = sap->conns; tcv; tcv = tcv->next) {
+        if (tcv->user == tu && tcv->port == aport) {
+            /* return most eligible conn */
+            if (!foundvec)
+                foundvec = 1;
+            UpgradeSToWLock(&afs_xconn, 37);
+            tc = find_preferred_connection(tcv, create);
+            ConvertWToSLock(&afs_xconn);
+            break;
+        }
     }
 
     if (!tc && !create) {
-	/* Not found and can't create a new one. */
-	ReleaseSharedLock(&afs_xconn);
-	return NULL;
+        /* Not found and can't create a new one. */
+        ReleaseSharedLock(&afs_xconn);
+        return NULL;
     }
 
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
@@ -235,31 +378,35 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
         return NULL;
     }
 
-    if (!tc) {
-	/* No such connection structure exists.  Create one and splice it in.
+    if (!foundvec && create) {
+	/* No such connection vector exists.  Create one and splice it in.
 	 * Make sure the server record has been marked as used (for the purposes
 	 * of calculating up & down times, it's now considered to be an
 	 * ``active'' server).  Also make sure the server's lastUpdateEvalTime
 	 * gets set, marking the time of its ``birth''.
 	 */
 	UpgradeSToWLock(&afs_xconn, 37);
-	tc = afs_osi_Alloc(sizeof(struct afs_conn));
-	osi_Assert(tc != NULL);
-	memset(tc, 0, sizeof(struct afs_conn));
+        new_conn_vector(tcv);
 
-	tc->user = tu;
-	tc->port = aport;
-	tc->srvr = sap;
-	tc->refCount = 0;	/* bumped below */
-	tc->forceConnectFS = 1;
-	tc->id = (struct rx_connection *)0;
-	tc->next = sap->conns;
-	sap->conns = tc;
+        tcv->user = tu;
+        tcv->port = aport;
+        tcv->srvr = sap;
+        tcv->next = sap->conns;
+        sap->conns = tcv;
+
+        /* all struct afs_conn ptrs come from here */
+        tc = find_preferred_connection(tcv, create);
+
 	afs_ActivateServer(sap);
 
 	ConvertWToSLock(&afs_xconn);
-    } /* end of if (!tc) */
-    tc->refCount++;
+    } /* end of if (!tcv) */
+
+    if (!tc) {
+        /* Not found and no alternatives. */
+        ReleaseSharedLock(&afs_xconn);
+        return NULL;
+    }
 
     if (tu->states & UTokensBad) {
 	/* we may still have an authenticated RPC connection here,
@@ -275,13 +422,16 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	tu->states &= ~UHasTokens;      /* remove the authentication info */
     }
 
+    glocked = ISAFS_GLOCK();
     if (tc->forceConnectFS) {
 	UpgradeSToWLock(&afs_xconn, 38);
 	csec = (struct rx_securityClass *)0;
 	if (tc->id) {
-	    AFS_GUNLOCK();
+	    if (glocked)
+                AFS_GUNLOCK();
 	    rx_DestroyConnection(tc->id);
-	    AFS_GLOCK();
+	    if (glocked)
+                AFS_GLOCK();
 	}
 	/*
 	 * Stupid hack to determine if using vldb service or file system
@@ -295,9 +445,11 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 
 	csec = afs_pickSecurityObject(tc, &isec);
 
-	AFS_GUNLOCK();
+	if (glocked)
+            AFS_GUNLOCK();
 	tc->id = rx_NewConnection(sap->sa_ip, aport, service, csec, isec);
-	AFS_GLOCK();
+	if (glocked)
+            AFS_GLOCK();
 	if (service == 52) {
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
@@ -345,8 +497,8 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 	       struct vrequest *areq, int aforce, afs_int32 locktype)
 {
     struct unixuser *tu;
-    struct afs_conn *tc = 0;
-    struct srvAddr *sa = 0;
+    struct afs_conn *tc = NULL;
+    struct srvAddr *sa = NULL;
 
     AFS_STATCNT(afs_ConnByHost);
 
@@ -433,7 +585,37 @@ afs_PutConn(struct afs_conn *ac, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
+    ac->parent->refCount--;
 }				/*afs_PutConn */
+
+
+/**
+ * Free up a connection vector, allowing, eg, code in afs_user.c
+ * to ignore how connections are stored/pooled
+ * @param tcv
+ */
+void
+afs_ReleaseConns(struct sa_conn_vector *tcv) {
+    release_conns_vector(tcv);
+}
+
+
+/**
+ * Free connection vector(s) for a user
+ * @param au
+ */
+void
+afs_ReleaseConnsUser(struct unixuser *au) {
+
+    int i;
+    struct server *ts;
+
+    for (i = 0; i < NSERVERS; i++) {
+        for (ts = afs_servers[i]; ts; ts = ts->next) {
+            release_conns_user_server(au, ts);
+        }	/*For each server on chain */
+    } /*For each chain */
+}
 
 
 /**
@@ -446,13 +628,22 @@ afs_PutConn(struct afs_conn *ac, afs_int32 locktype)
 void
 ForceNewConnections(struct srvAddr *sap)
 {
-    struct afs_conn *tc = 0;
+    int cix;
+    struct afs_conn *tc = NULL;
+    struct sa_conn_vector *tcv = NULL;
 
     if (!sap)
-	return;			/* defensive check */
+	return; /* defensive check */
 
     ObtainWriteLock(&afs_xconn, 413);
-    for (tc = sap->conns; tc; tc = tc->next)
-	tc->forceConnectFS = 1;
+    for (tcv = sap->conns; tcv; tcv = tcv->next) {
+        for(cix = 0; cix < CVEC_LEN; ++cix) {
+            tc = &(tcv->cvec[cix]);
+            if (tc->activated)
+                tc->forceConnectFS = 1;
+        }
+    }
     ReleaseWriteLock(&afs_xconn);
 }
+
+

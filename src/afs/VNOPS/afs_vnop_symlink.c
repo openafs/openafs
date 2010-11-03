@@ -158,7 +158,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	do {
 	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
 	    if (tc) {
-		hostp = tc->srvr->server;
+		hostp = tc->parent->srvr->server;
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
 		if (adp->f.states & CForeign) {
 		    now = osi_Time();

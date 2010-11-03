@@ -928,10 +928,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK);
 	if (tcp) {
-	    hostp = tcp->srvr->server;
+	    hostp = tcp->parent->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
 
-	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
+	    if (!(tcp->parent->srvr->server->flags & SNO_INLINEBULK)) {
 	    retryonce:
 		RX_AFS_GUNLOCK();
 		code =
@@ -939,7 +939,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 					   &cbParm, &volSync);
 		RX_AFS_GLOCK();
 		if (code == RXGEN_OPCODE) {
-		    tcp->srvr->server->flags |= SNO_INLINEBULK;
+		    tcp->parent->srvr->server->flags |= SNO_INLINEBULK;
 		    inlinebulk = 0;
 		    RX_AFS_GUNLOCK();
 		    code =

@@ -1177,7 +1177,7 @@ afs_ResyncDisconFiles(struct vrequest *areq, afs_ucred_t *acred)
 	do {
 	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
-	    	tvc->callback = tc->srvr->server;
+	    	tvc->callback = tc->parent->srvr->server;
 		start = osi_Time();
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
 		RX_AFS_GUNLOCK();

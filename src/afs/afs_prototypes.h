@@ -190,6 +190,8 @@ extern struct afs_conn *afs_ConnByHost(struct server *aserver,
 				   struct vrequest *areq, int aforce,
 				   afs_int32 locktype);
 extern void afs_PutConn(struct afs_conn *ac, afs_int32 locktype);
+extern void afs_ReleaseConns(struct sa_conn_vector *tcv);
+extern void afs_ReleaseConnsUser(register struct unixuser *au);
 extern void ForceNewConnections(struct srvAddr *sap);
 
 

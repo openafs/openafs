@@ -270,15 +270,15 @@ afs_CheckLocks(void)
     {
 	struct srvAddr *sa;
 	struct server *ts;
-	struct afs_conn *tc;
+        struct sa_conn_vector *tcv;
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
 		    afs_warn("Server entry %p is marked down\n", ts);
 		for (sa = ts->addr; sa; sa = sa->next_sa) {
-		    for (tc = sa->conns; tc; tc = tc->next) {
-			if (tc->refCount)
-			    afs_warn("conn at %p (server %x) is held\n", tc,
+                    for (tcv = sa->conns; tcv; tcv = tcv->next) {
+                        if (tcv->refCount)
+                            afs_warn("conn at %p (server %x) is held\n", tcv,
 				     sa->sa_ip);
 		    }
 		}

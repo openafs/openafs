@@ -313,7 +313,7 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
      * with old vlsevers), then we treat this server as running again
      */
     if (code == 0 || (code <= -450 && code >= -470)) {
-	if (tc->srvr == sa) {
+	if (tc->parent->srvr == sa) {
 	    afs_MarkServerUpOrDown(sa, 0);
 	    print_internet_address("afs: volume location server ", sa,
 				   " is back up", 2);
@@ -635,7 +635,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	    continue;
 
 	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
-	    || (tc->srvr->server == afs_setTimeHost)) {
+	    || (tc->parent->srvr->server == afs_setTimeHost)) {
 	    conns[nconns]=tc;
 	    rxconns[nconns]=tc->id;
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {
@@ -687,7 +687,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 		multi_RXAFS_GetTime(
 			(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
 		tc = conns[multi_i];
-		sa = tc->srvr;
+		sa = tc->parent->srvr;
 		if (conntimer[multi_i] == 1)
 		  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
 		end = osi_Time();
@@ -699,9 +699,9 @@ afs_CheckServers(int adown, struct cell *acellp)
 	    }
 	else {			/* find and query setTimeHost only */
 	    for ( i = 0 ; i < j ; i++ ) {
-		if ( conns[i] == NULL || conns[i]->srvr == NULL )
+		if ( conns[i] == NULL || conns[i]->parent->srvr == NULL )
 		    continue;
-		if ( conns[i]->srvr->server == afs_setTimeHost ) {
+		if ( conns[i]->parent->srvr->server == afs_setTimeHost ) {
 		    tv.tv_sec = tv.tv_usec = 0;
 		    results[i] = RXAFS_GetTime(rxconns[i],
 				(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
@@ -717,9 +717,9 @@ afs_CheckServers(int adown, struct cell *acellp)
 
     for(i=0;i<nconns;i++){
       tc = conns[i];
-      sa = tc->srvr;
+      sa = tc->parent->srvr;
 
-      if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
+      if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->parent->srvr == sa)) {
 	/* server back up */
 	print_internet_address("afs: file server ", sa, " is back up", 2);
 
@@ -751,9 +751,9 @@ afs_CheckServers(int adown, struct cell *acellp)
 	for (i=0; i<nconns; i++) {
 	    delta = deltas[i];
 	    tc = conns[i];
-	    sa = tc->srvr;
+	    sa = tc->parent->srvr;
 
-	    if ((tc->srvr->server == afs_setTimeHost ||
+	    if ((tc->parent->srvr->server == afs_setTimeHost ||
 		 /* Sync only to a server in the local cell */
 		 (afs_setTimeHost == (struct server *)0 &&
 		  afs_IsPrimaryCell(sa->server->cell)))) {
@@ -761,7 +761,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
 		delta = end - tv.tv_sec;   /* how many secs fast we are */
 
-		afs_setTimeHost = tc->srvr->server;
+		afs_setTimeHost = tc->parent->srvr->server;
 		/* see if clock has changed enough to make it worthwhile */
 		if (delta >= AFS_MINCHANGE || delta <= -AFS_MINCHANGE) {
 		    end = osi_Time();
@@ -1981,7 +1981,6 @@ afs_RemoveAllConns(void)
     int i;
     struct server *ts, *nts;
     struct srvAddr *sa;
-    struct afs_conn *tc, *ntc;
 
     ObtainReadLock(&afs_xserver);
     ObtainWriteLock(&afs_xconn, 1001);
@@ -1992,15 +1991,7 @@ afs_RemoveAllConns(void)
             nts = ts->next;
             for (sa = ts->addr; sa; sa = sa->next_sa) {
                 if (sa->conns) {
-                    tc = sa->conns;
-                    while (tc) {
-                        ntc = tc->next;
-                        AFS_GUNLOCK();
-                        rx_DestroyConnection(tc->id);
-                        AFS_GLOCK();
-                        afs_osi_Free(tc, sizeof(struct afs_conn));
-                        tc = ntc;
-                    }
+                    afs_ReleaseConns(sa->conns);
                     sa->conns = NULL;
                 }
             }

@@ -1477,7 +1477,7 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	if (tc) {
 	    if (serverp)
-		*serverp = tc->srvr->server;
+		*serverp = tc->parent->srvr->server;
 	    start = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_XLOOKUP);
 	    RX_AFS_GUNLOCK();
@@ -2260,7 +2260,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	avc->dchint = NULL;	/* invalidate hints */
 	if (tc) {
-	    avc->callback = tc->srvr->server;
+	    avc->callback = tc->parent->srvr->server;
 	    start = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
 	    RX_AFS_GUNLOCK();

@@ -535,7 +535,7 @@ afs_PrefetchNoCache(struct vcache *avc,
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */);
 	if (tc) {
-	    avc->callback = tc->srvr->server;
+	    avc->callback = tc->parent->srvr->server;
 	    i = osi_Time();
 	    tcall = rx_NewCall(tc->id);
 #ifdef AFS_64BIT_CLIENT

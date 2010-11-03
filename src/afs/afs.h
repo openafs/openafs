@@ -366,17 +366,41 @@ struct unixuser {
     void *cellinfo;             /* pointer to cell info (PAG manager only) */
 };
 
+#define CVEC_LEN 3 /* per-user connection pool */
+
+struct sa_conn_vector;
+typedef struct sa_conn_vector * p_sa_conn_vector; /* forward decl */
+
 struct afs_conn {
-    /* Per-connection block. */
-    struct afs_conn *next;		/* Next dude same server. */
+    int refCount;
+    int activated;
+    char forceConnectFS; /* Should we try again with these tokens? */
+    struct rx_connection *id; /* RPC connid */
+    struct sa_conn_vector *parent; /* the con_vector which contains us */
+};
+
+/* An sa_conn_vector replaces the erstwhile list of conn
+   structures maintained by the cache manager.  The sa_conn_vector
+   contains a C array of connections which, if non-zero, represent
+   connections to AFS servers.
+*/
+
+struct sa_conn_vector {
+    /* linked-list machinery */
+    struct sa_conn_vector *next;
+
+    /* AFS conn-identifying info */
     struct unixuser *user;	/* user validated with respect to. */
-    struct rx_connection *id;	/* RPC connid. */
     struct srvAddr *srvr;	/* server associated with this conn */
     short refCount;		/* reference count for allocation */
     unsigned short port;	/* port associated with this connection */
-    char forceConnectFS;	/* Should we try again with these tokens? */
-};
 
+    /* next connection to return when all in cvec are fully utilized */
+    int select_index; 
+    
+    /* connections vector */
+    struct afs_conn cvec[CVEC_LEN];
+};
 
 #define SQNULL -1
 
@@ -396,11 +420,12 @@ struct afs_conn {
 #define	SRVADDR_MH	1
 #define	SRVADDR_ISDOWN	0x20	/* same as SRVR_ISDOWN */
 #define  SRVADDR_NOUSE    0x40	/* Don't use this srvAddr */
+
 struct srvAddr {
     struct srvAddr *next_bkt;	/* next item in hash bucket */
     struct srvAddr *next_sa;	/* another interface on same host */
     struct server *server;	/* back to parent */
-    struct afs_conn *conns;		/* All user connections to this server */
+    struct sa_conn_vector *conns;   /* All user connections to this server */
     afs_int32 sa_ip;		/* Host addr in network byte order */
     u_short sa_iprank;		/* indiv ip address priority */
     u_short sa_portal;		/* port addr in network byte order */
@@ -427,8 +452,8 @@ struct srvAddr {
 #define SRV_CAPABILITIES(ts) \
 { if ( !(ts->flags & SCAPS_KNOWN)) afs_GetCapabilities(ts); ts->capabilities; }
 
-#define afs_serverSetNo64Bit(s) ((s)->srvr->server->flags |= SNO_64BIT)
-#define afs_serverHasNo64Bit(s) ((s)->srvr->server->flags & SNO_64BIT)
+#define afs_serverSetNo64Bit(s) (((struct sa_conn_vector*)(s)->parent)->srvr->server->flags |= SNO_64BIT)
+#define afs_serverHasNo64Bit(s) (((struct sa_conn_vector*)(s)->parent)->srvr->server->flags & SNO_64BIT)
 
 struct server {
     union {
