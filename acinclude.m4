@@ -1318,6 +1318,7 @@ AC_CHECK_HEADERS([ \
 	search.h \
 	security/pam_modules.h \
 	signal.h \
+	stdio_ext.h \
 	stdlib.h \
 	string.h \
 	strings.h \
