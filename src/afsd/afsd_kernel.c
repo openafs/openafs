@@ -275,7 +275,7 @@ afsd_call_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
 
 #define	ROUNDUP(x)  (((x) + 3) & ~3)
 
-aix_vmount()
+aix_vmount(const char *cacheMountDir)
 {
     struct vmount *vmountp;
     int size, error;
@@ -479,7 +479,7 @@ afsd_mount_afs(const char *rn, const char *cacheMountDir)
 #elif defined(AFS_FBSD_ENV)
     if ((mount("AFS", cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
 #elif defined(AFS_AIX_ENV)
-    if (aix_vmount()) {
+    if (aix_vmount(cacheMountDir)) {
 #elif defined(AFS_HPUX100_ENV)
     if ((mount("", cacheMountDir, mountFlags, "afs", NULL, 0)) < 0) {
 #elif defined(AFS_SUN5_ENV)
