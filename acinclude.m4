@@ -1403,7 +1403,11 @@ AC_CHECK_TYPE([socklen_t],[],
 AC_CHECK_TYPES(off64_t)
 AC_CHECK_TYPES([ssize_t], [], [], [#include <unistd.h>])
 AC_CHECK_TYPES([struct winsize], [], [], [
-#include <sys/termios.h>
+#ifdef HAVE_TERMIOS_H
+# include <termios.h>
+#else
+# include <sys/termios.h>
+#endif
 #include <sys/ioctl.h>])
 AC_CHECK_TYPES([sa_family_t, socklen_t, struct sockaddr,
 		struct sockaddr_storage],
