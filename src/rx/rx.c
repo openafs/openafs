@@ -2481,7 +2481,6 @@ rxi_FreeCall(struct rx_call *call)
     MUTEX_EXIT(&rx_refcnt_mutex);
     rxi_ResetCall(call, 0);
     call->conn->call[channel] = (struct rx_call *)0;
-    MUTEX_EXIT(&rx_refcnt_mutex);
 
     MUTEX_ENTER(&rx_freeCallQueue_lock);
     SET_CALL_QUEUE_LOCK(call, &rx_freeCallQueue_lock);
