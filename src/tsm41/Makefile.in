@@ -90,8 +90,10 @@ aix_aklog.o: ${srcdir}/aix_aklog.c
 
 CFLAGS_aix_ktc_krb.o = -DAFS_KERBEROS_ENV
 aix_ktc_krb.o: ${srcdir}/aix_ktc.c
+	$(AFS_CCRULE) ${srcdir}/aix_ktc.c
 
 aix_ktc_null.o: ${srcdir}/aix_ktc.c
+	$(AFS_CCRULE) ${srcdir}/aix_ktc.c
 
 aix_auth.o:
 	@set -e; set -x; case "$(SYS_NAME)" in \
@@ -107,6 +109,7 @@ aix_auth.o:
 
 # aix41_ident.c is a null source file for rs_aix5*
 aix_ident.o: ${srcdir}/aix41_ident.c
+	$(AFS_CCRULE) ${srcdir}/aix41_ident.c
 
 dest: afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc 
