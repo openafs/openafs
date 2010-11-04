@@ -304,9 +304,7 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 		rxi_FreePacket(tp);
 		tp = NULL;
                 if (rx_stats_active) {
-                    MUTEX_ENTER(&rx_stats_mutex);
-                    rx_stats.noPacketBuffersOnRead++;
-                    MUTEX_EXIT(&rx_stats_mutex);
+		    rx_atomic_inc(&rx_stats.noPacketBuffersOnRead);
                 }
 	    }
 	}
@@ -317,9 +315,7 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 	 * end know we're losing.
 	 */
         if (rx_stats_active) {
-            MUTEX_ENTER(&rx_stats_mutex);
-            rx_stats.bogusPacketOnRead++;
-            MUTEX_EXIT(&rx_stats_mutex);
+	    rx_atomic_inc(&rx_stats.bogusPacketOnRead);
         }
 	/* I DON"T LIKE THIS PRINTF -- PRINTFS MAKE THINGS VERY VERY SLOOWWW */
 	dpf(("rx: packet dropped: bad ulen=%d\n", asize));
