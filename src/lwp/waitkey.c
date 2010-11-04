@@ -24,6 +24,9 @@
 
 
 #include <stdio.h>
+#ifdef HAVE_STDIO_EXT_H
+#include <stdio_ext.h>
+#endif
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <time.h>
@@ -75,7 +78,11 @@ LWP_WaitForKeystroke(int seconds)
 
 	/* sleep for  LWP_KEYSTROKE_DELAY ms and let other
 	 * process run some*/
+#ifdef AFS_PTHREAD_ENV
+	select(0, 0, 0, 0, &twait);
+#else
 	IOMGR_Select(0, 0, 0, 0, &twait);
+#endif
 
 	if (seconds > 0) {	/* we only worry about elapsed time if
 				 * not looping forever (seconds < 0) */
@@ -158,12 +165,13 @@ LWP_WaitForKeystroke(int seconds)
     struct timeval twait;
     struct timeval *tp = NULL;
 
-#ifdef AFS_LINUX20_ENV
+#if defined(HAVE_STDIO_EXT_H)
+    if (__fbufsize(stdin) > 0)
+        return 1;
+#elif defined(AFS_LINUX20_ENV)
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_DFBSD_ENV)
+#elif (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(AFS_DFBSD_ENV)
     struct appx_sbuf {
       unsigned char *_base;
       int     _size;
@@ -176,14 +184,12 @@ LWP_WaitForKeystroke(int seconds)
     struct APPX_FILE *appx_stdin = (struct APPX_FILE *) stdin;
     if (appx_stdin->_bf._size > 0)
 	return 1;
-#else
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (stdin->_bf._size > 0)
 	return 1;
-#endif
 #else
     if (stdin->_cnt > 0)
 	return 1;
-#endif
 #endif
 
     FD_ZERO(&rdfds);
@@ -195,7 +201,11 @@ LWP_WaitForKeystroke(int seconds)
 	tp = &twait;
     }
 
+#ifdef AFS_PTHREAD_ENV
+    code = select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
+#else
     code = IOMGR_Select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
+#endif
 
     return (code == 1) ? 1 : 0;
 }

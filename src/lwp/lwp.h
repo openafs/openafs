@@ -358,9 +358,6 @@ extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
 extern int IOMGR_SoftSig(void *(*aproc) (void *), void *arock);
 
-extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
-extern int LWP_GetResponseKey(int seconds, char *key);
-extern int LWP_GetLine(char *linebuf, int len);
 #ifdef AFS_NT40_ENV
 /* lwp.c */
 extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
@@ -402,7 +399,11 @@ extern void returnto(struct lwp_context *savearea);
 /* max time we spend on a select in a Win95 DOS box */
 #define IOMGR_WIN95WAITTIME 5000	/* microseconds */
 
-#endif
-#endif /* __LWP_INCLUDE_ */
+#endif /* !AFS_PTHREAD_ENV */
+
+extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
+extern int LWP_GetResponseKey(int seconds, char *key);
+extern int LWP_GetLine(char *linebuf, int len);
 
 #endif /* !KERNEL && !_KMEMUSER */
+#endif /* __LWP_INCLUDE_ */

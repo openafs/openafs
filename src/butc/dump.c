@@ -1422,11 +1422,7 @@ retryPrompt(char *volumeName, afs_int32 volumeId, afs_uint32 taskId)
 
 	start = time(0);
 	while (1) {
-#ifdef AFS_PTHREAD_ENV
-	    code = GetResponseKey(5, &ch);	/* ch stores key pressed */
-#else
 	    code = LWP_GetResponseKey(5, &ch);	/* ch stores key pressed */
-#endif
 	    if (code == 1)
 		break;		/* input is available */
 

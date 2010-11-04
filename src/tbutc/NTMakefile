@@ -37,7 +37,7 @@ BUCOORDOBJS = $(OUT)\ubik_db_if.obj \
 	$(OUT)\$(BUCOORD)\status.obj \
     $(OUT)\$(BUCOORD)\bucoord_errs.obj
 
-LWPOBJS     = $(OUT)\lock.obj
+LWPOBJS     = $(OUT)\lock.obj $(OUT)\waitkey.obj
 
 BUTMOBJS    = $(OUT)\file_tm.obj \
               $(OUT)\AFS_component_version_number.obj
@@ -141,6 +141,9 @@ $(OUT)\ubik_db_if.obj: $(BUCOORD)/ubik_db_if.c
 #----------------------------------------------- LWP
 
 $(OUT)\lock.obj: $(LWP)/lock.c
+	$(C2OBJ) $**
+
+$(OUT)\waitkey.obj: $(LWP)/waitkey.c
 	$(C2OBJ) $**
 
 #----------------------------------------------- BUTC

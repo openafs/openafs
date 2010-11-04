@@ -32,7 +32,7 @@ BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
 VOLSEROBJS=vsprocs.o vsutils.o lockprocs.o
 VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
 
-LWPOBJS     =lock.o
+LWPOBJS     =lock.o waitkey.o
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o afsxbsa.o \
@@ -128,6 +128,9 @@ lockprocs.o: ${VOLSER}/lockprocs.c
 
 lock.o: ${LWP}/lock.c
 	$(AFS_CCRULE) ${LWP}/lock.c
+
+waitkey.o: ${LWP}/waitkey.c
+	$(AFS_CCRULE) ${LWP}/waitkey.c
 
 file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
 	$(AFS_CCRULE) ${BUTM}/file_tm.c

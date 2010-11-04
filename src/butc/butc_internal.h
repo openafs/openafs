@@ -38,8 +38,6 @@ extern int FindVolTrailer(char *, afs_int32, afs_int32 *,
 			  struct volumeHeader *);
 extern int FindVolTrailer2(char *, afs_int32, afs_int32 *, char *, afs_int32,
 			   afs_int32 *, struct volumeHeader *);
-extern int GetResponseKey(int, char *);
-
 
 /* recoverDb.c */
 extern afs_int32 Ask(char *);

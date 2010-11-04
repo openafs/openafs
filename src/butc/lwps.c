@@ -324,122 +324,6 @@ LeaveDeviceQueue(struct deviceSyncNode *devLatch)
 #define BELLTIME 60		/* 60 seconds before a bell rings */
 #define BELLCHAR 7		/* ascii for bell */
 
-
-#ifdef AFS_PTHREAD_ENV
-#ifdef AFS_NT40_ENV
-/* WaitForKeystroke : Wait until a key has been struck or time (secconds)
- * runs out and return to caller. The NT version of this function will return
- * immediately after a key has been pressed (doesn't wait for cr).
- * Input:
- *   seconds: wait for <seconds> seconds before returning. If seconds < 0,
- *            wait infinitely.
- * Return Value:
- *    1:  Keyboard input available
- *    0:  seconds elapsed. Timeout.
- *
- * STOLEN FROM LWP_WaitForKeystroke()
- */
-int
-WaitForKeystroke(int seconds)
-{
-    time_t startTime, nowTime;
-    double timeleft = 1;
-    struct timeval twait;
-
-    time(&startTime);
-    twait.tv_sec = 0;
-    twait.tv_usec = 250;
-    if (seconds >= 0)
-	timeleft = seconds;
-
-    do {
-	/* check if we have a keystroke */
-	if (_kbhit())
-	    return 1;
-	if (timeleft == 0)
-	    break;
-
-	/* sleep for  LWP_KEYSTROKE_DELAY ms and let other
-	 * process run some*/
-	select(0, 0, 0, 0, &twait);
-
-	if (seconds > 0) {	/* we only worry about elapsed time if
-				 * not looping forever (seconds < 0) */
-	    time(&nowTime);
-	    timeleft = seconds - difftime(nowTime, startTime);
-	}
-    } while (timeleft > 0);
-    return 0;
-}
-#else /* AFS_NT40)ENV */
-extern int WaitForKeystroke(int);
-/*
- *      STOLEN FROM LWP_WaitForKeystroke()
- */
-int
-WaitForKeystroke(int seconds)
-{
-    fd_set rdfds;
-    int code;
-    struct timeval twait;
-    struct timeval *tp = NULL;
-
-#ifdef AFS_LINUX20_ENV
-    if (stdin->_IO_read_ptr < stdin->_IO_read_end)
-	return 1;
-#else
-    if (stdin->_cnt > 0)
-	return 1;
-#endif
-    FD_ZERO(&rdfds);
-    FD_SET(fileno(stdin), &rdfds);
-
-    if (seconds >= 0) {
-	twait.tv_sec = seconds;
-	twait.tv_usec = 0;
-	tp = &twait;
-    }
-    code = select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
-    return (code == 1) ? 1 : 0;
-}
-#endif
-
-/* GetResponseKey() - Waits for a specified period of time and
- * returns a char when one has been typed by the user.
- * Input:
- *    seconds - how long to wait for a key press.
- *    *key    - char entered by user
- * Return Values:
- *    0 - Time ran out before the user typed a key.
- *    1 - Valid char is being returned.
- *
- *    STOLEN FROM LWP_GetResponseKey();
- */
-int
-GetResponseKey(int seconds, char *key)
-{
-    int rc;
-
-    if (key == NULL)
-	return 0;		/* need space to store char */
-    fflush(stdin);		/* flush all existing data and start anew */
-
-    rc = WaitForKeystroke(seconds);
-    if (rc == 0) {		/* time ran out */
-	*key = 0;
-	return rc;
-    }
-
-    /* now read the char. */
-#ifdef AFS_NT40_ENV
-    *key = getche();		/* get char and echo it to screen */
-#else
-    *key = getchar();
-#endif
-    return rc;
-}
-#endif /* AFS_PTHREAD_ENV */
-
 /*
  * FFlushInput
  *     flush all input
@@ -454,12 +338,7 @@ FFlushInput(void)
     fflush(stdin);
 
     while (1) {
-#ifdef AFS_PTHREAD_ENV
-	w = WaitForKeystroke(0);
-#else
 	w = LWP_WaitForKeystroke(0);
-#endif /* AFS_PTHREAD_ENV */
-
 	if (w) {
 #ifdef AFS_NT40_ENV
 	    getche();
@@ -807,11 +686,7 @@ PromptForTape(int flag, char *name, afs_uint32 dbDumpId, afs_uint32 taskId,
 		putchar(BELLCHAR);
 		fflush(stdout);
 	    }
-#ifdef AFS_PTHREAD_ENV
-	    wcode = GetResponseKey(5, &inchr);	/* inchr stores key read */
-#else
 	    wcode = LWP_GetResponseKey(5, &inchr);	/* inchr stores key read */
-#endif
 	    if (wcode == 1) {	/* keyboard input is available */
 
 		if ((inchr == 'a') || (inchr == 'A')) {

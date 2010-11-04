@@ -1215,7 +1215,7 @@ AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
 AC_CHECK_HEADERS(sys/socket.h sys/ioctl.h errno.h time.h syslog.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
-AC_CHECK_HEADERS(et/com_err.h)
+AC_CHECK_HEADERS(et/com_err.h stdio_ext.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
