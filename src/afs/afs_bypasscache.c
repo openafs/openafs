@@ -143,9 +143,6 @@ afs_TransitionToBypass(struct vcache *avc,
     if (!avc)
 	return;
 
-    if (avc->f.states & FCSBypass)
-	osi_Panic("afs_TransitionToBypass: illegal transition to bypass--already FCSBypass\n");
-
     if (aflags & TRANSChangeDesiredBit)
 	setDesire = 1;
     if (aflags & TRANSSetManualBit)
@@ -156,7 +153,14 @@ afs_TransitionToBypass(struct vcache *avc,
 #else
     AFS_GLOCK();
 #endif
+
     ObtainWriteLock(&avc->lock, 925);
+    /*
+     * Someone may have beat us to doing the transition - we had no lock
+     * when we checked the flag earlier.  No cause to panic, just return.
+     */
+    if (avc->f.states & FCSBypass)
+	goto done;
 
     /* If we never cached this, just change state */
     if (setDesire && (!(avc->cachingStates & FCSBypass))) {
@@ -220,9 +224,6 @@ afs_TransitionToCaching(struct vcache *avc,
     if (!avc)
 	return;
 
-    if (!(avc->f.states & FCSBypass))
-	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");
-
     if (aflags & TRANSChangeDesiredBit)
 	resetDesire = 1;
     if (aflags & TRANSSetManualBit)
@@ -234,6 +235,12 @@ afs_TransitionToCaching(struct vcache *avc,
     AFS_GLOCK();
 #endif
     ObtainWriteLock(&avc->lock, 926);
+    /*
+     * Someone may have beat us to doing the transition - we had no lock
+     * when we checked the flag earlier.  No cause to panic, just return.
+     */
+    if (!(avc->f.states & FCSBypass))
+	goto done;
 
     /* Ok, we actually do need to flush */
     ObtainWriteLock(&afs_xcbhash, 957);
@@ -255,6 +262,7 @@ afs_TransitionToCaching(struct vcache *avc,
 	avc->cachingStates |= FCSManuallySet;
     avc->cachingTransitions++;
 
+done:
     ReleaseWriteLock(&avc->lock);
 #ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&avc->pvnLock, avc);
