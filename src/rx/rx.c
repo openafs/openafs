@@ -2994,11 +2994,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	return np;
     }
 
-    MUTEX_ENTER(&conn->conn_data_lock);
-    if (conn->maxSerial < np->header.serial)
-	conn->maxSerial = np->header.serial;
-    MUTEX_EXIT(&conn->conn_data_lock);
-
     /* If the connection is in an error state, send an abort packet and ignore
      * the incoming packet */
     if (conn->error) {

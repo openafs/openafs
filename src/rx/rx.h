@@ -246,7 +246,6 @@ struct rx_connection {
                                        * call slot, or 0 if the slot is not busy */
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
-    afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
     afs_int32 lastPacketSize; /* last >max attempt */
     afs_int32 lastPacketSizeSeq; /* seq number of attempt */
     afs_int32 lastPingSize; /* last MTU ping attempt */
