@@ -271,7 +271,11 @@ get_hash_stats(void)
 
 /************** Linux memory allocator interface functions **********/
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+DEFINE_MUTEX(afs_linux_alloc_sem);
+#else
 DECLARE_MUTEX(afs_linux_alloc_sem);
+#endif
 
 void *
 osi_linux_alloc(unsigned int asize, int drop_glock)
@@ -286,7 +290,7 @@ osi_linux_alloc(unsigned int asize, int drop_glock)
 	return new;
     }
 
-    down(&afs_linux_alloc_sem);
+    mutex_lock(&afs_linux_alloc_sem);
 
     /* allocator hasn't been initialized yet */
     if (allocator_init == 0) {
@@ -316,7 +320,7 @@ osi_linux_alloc(unsigned int asize, int drop_glock)
 	get_hash_stats();
     }
   error:
-    up(&afs_linux_alloc_sem);
+    mutex_unlock(&afs_linux_alloc_sem);
     return MEMADDR(new);
 
   free_error:
@@ -336,7 +340,7 @@ osi_linux_free(void *addr)
 {
     struct osi_linux_mem lmem, *lmp;
 
-    down(&afs_linux_alloc_sem);
+    mutex_lock(&afs_linux_alloc_sem);
 
     lmem.chunk = addr;
     /* remove this chunk from our hash table */
@@ -351,7 +355,7 @@ osi_linux_free(void *addr)
 	BUG();
     }
 
-    up(&afs_linux_alloc_sem);
+    mutex_unlock(&afs_linux_alloc_sem);
 }
 
 /* osi_linux_free_afs_memory() - free all chunks of memory allocated.
@@ -359,7 +363,7 @@ osi_linux_free(void *addr)
 void
 osi_linux_free_afs_memory(void)
 {
-    down(&afs_linux_alloc_sem);
+    mutex_lock(&afs_linux_alloc_sem);
 
     if (allocator_init) {
 	/* iterate through all elements in the hash table and free both 
@@ -376,7 +380,7 @@ osi_linux_free_afs_memory(void)
 	/* change the state so that the allocator is now uninitialized. */
 	allocator_init = 0;
     }
-    up(&afs_linux_alloc_sem);
+    mutex_unlock(&afs_linux_alloc_sem);
 }
 
 /* osi_linux_verify_alloced_memory(): verify all chunks of alloced memory in
@@ -385,7 +389,7 @@ osi_linux_free_afs_memory(void)
 void
 osi_linux_verify_alloced_memory()
 {
-    down(&afs_linux_alloc_sem);
+    mutex_lock(&afs_linux_alloc_sem);
 
     /* count of times hash_verify was called. reset it to 0 before iteration */
     afs_linux_hash_verify_count = 0;
@@ -400,6 +404,6 @@ osi_linux_verify_alloced_memory()
 	     afs_linux_hash_verify_count - afs_linux_cur_allocs);
     }
 
-    up(&afs_linux_alloc_sem);
+    mutex_unlock(&afs_linux_alloc_sem);
     return;
 }
