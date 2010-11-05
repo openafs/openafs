@@ -1576,7 +1576,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_includedir}/lock.h
 %{_includedir}/lwp.h
 %{_includedir}/mit-cpyright.h
-%{_includedir}/potpourri.h
 %{_includedir}/preempt.h
 %{_includedir}/rx
 %{_includedir}/timer.h
