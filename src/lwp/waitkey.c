@@ -58,12 +58,14 @@ LWP_WaitForKeystroke(int seconds)
 {
     time_t startTime, nowTime;
     double timeleft = 1;
+#ifndef AFS_PTHREAD_ENV
     struct timeval twait;
-
-    time(&startTime);
 
     twait.tv_sec = 0;
     twait.tv_usec = LWP_KEYSTROKE_DELAY;
+#endif
+
+    time(&startTime);
 
     if (seconds >= 0)
 	timeleft = seconds;
@@ -79,11 +81,10 @@ LWP_WaitForKeystroke(int seconds)
 	/* sleep for  LWP_KEYSTROKE_DELAY ms and let other
 	 * process run some*/
 #ifdef AFS_PTHREAD_ENV
-	select(0, 0, 0, 0, &twait);
+	Sleep(LWP_KEYSTROKE_DELAY);
 #else
 	IOMGR_Select(0, 0, 0, 0, &twait);
 #endif
-
 	if (seconds > 0) {	/* we only worry about elapsed time if
 				 * not looping forever (seconds < 0) */
 	    /* now check elapsed time */
