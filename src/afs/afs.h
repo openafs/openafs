@@ -530,6 +530,7 @@ struct chservinfo {
 #define VResort         16	/* server order was rearranged, sort when able */
 #define VMoreReps       32	/* This volume has more replicas than we are   */
 			     /* keeping track of now -- check with VLDB     */
+#define VPartVisible	64	/* Volume's partition is visible on the client */
 
 enum repstate { not_busy, end_not_busy = 6, rd_busy, rdwr_busy, offline };
 
@@ -621,6 +622,7 @@ struct SimpleLocks {
 #define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
 #define CVInit          0x10000000      /* being initialized */
 #define CMetaDirty	0x20000000	/* vnode meta-data needs to be flushed */
+#define CPartVisible	0x40000000	/* fileserver partition visible on client */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1
@@ -876,6 +878,10 @@ struct vcache {
     int asynchrony;		/* num kbytes to store behind */
 #ifdef AFS_SUN5_ENV
     short multiPage;		/* count of multi-page getpages in progress */
+#endif
+    int protocol;		/* RX_FILESERVER, RX_OSD, ... defined in afsint.xg */
+#if !defined(UKERNEL)
+    void *vpacRock;		/* used to read or write in visible partitions */
 #endif
 };
 
@@ -1309,6 +1315,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 
 #define	AFS_FSPORT	    ((unsigned short) htons(7000))
 #define	AFS_VLPORT	    ((unsigned short) htons(7003))
+#define AFS_RXOSDPORT	    ((unsigned short) htons(7011))
 
 #define	afs_read(avc, uio, acred, albn, abpp, nolock) \
         (*(afs_cacheType->vread))(avc, uio, acred, albn, abpp, nolock)
