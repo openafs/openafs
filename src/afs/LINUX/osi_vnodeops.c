@@ -700,6 +700,7 @@ struct file_operations afs_dir_fops = {
 #endif
   .open =	afs_linux_open,
   .release =	afs_linux_release,
+  .llseek =	default_llseek,
 };
 
 struct file_operations afs_file_fops = {
@@ -733,6 +734,7 @@ struct file_operations afs_file_fops = {
 #ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
   .flock =	afs_linux_flock,
 #endif
+  .llseek = 	default_llseek,
 };
 
 
