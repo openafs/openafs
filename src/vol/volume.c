@@ -4952,6 +4952,10 @@ VOfflineForSalvage_r(struct Volume *vp)
  *
  * @note this is one of the event handlers called by VCancelReservation_r
  *
+ * @note the caller must check if the volume needs to be freed after calling
+ *       this; the volume may not have any references or be on any lists after
+ *       we return, and we do not free it
+ *
  * @see VCancelReservation_r
  *
  * @internal volume package internal use only.
@@ -5226,6 +5230,10 @@ try_FSSYNC(Volume *vp, char *partName, int *code) {
  * server over SALVSYNC. If we are not the fileserver, the request will be
  * sent to the fileserver over FSSYNC (FSYNC_VOL_FORCE_ERROR/FSYNC_SALVAGE).
  *
+ * @note the caller must check if the volume needs to be freed after calling
+ *       this; the volume may not have any references or be on any lists after
+ *       we return, and we do not free it
+ *
  * @note DAFS only
  *
  * @internal volume package internal use only.
@@ -5318,7 +5326,14 @@ VScheduleSalvage_r(Volume * vp)
 	    }
 	}
     }
-    VCancelReservation_r(vp);
+
+    /* NB: this is cancelling the reservation we obtained above, but we do
+     * not call VCancelReservation_r, since that may trigger the vp dtor,
+     * possibly free'ing the vp. We need to keep the vp around after
+     * this, as the caller may reference vp without any refs. Instead, it
+     * is the duty of the caller to inspect 'vp' after we return to see if
+     * needs to be freed. */
+    osi_Assert(--vp->nWaiters >= 0);
     return ret;
 }
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
