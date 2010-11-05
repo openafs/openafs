@@ -174,7 +174,7 @@ extern void *calloc(), *realloc();
 /* Forward declarations */
 static Volume *attach2(Error * ec, VolId volumeId, char *path,
 		       struct DiskPartition64 *partp, Volume * vp,
-		       int isbusy, int mode);
+		       int isbusy, int mode, int *acheckedOut);
 static void ReallyFreeVolume(Volume * vp);
 #ifdef AFS_DEMAND_ATTACH_FS
 static void FreeVolume(Volume * vp);
@@ -2234,6 +2234,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     char path[64];
     int isbusy = 0;
     VolId volumeId;
+    int checkedOut;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolumeStats stats_save;
     Volume *svp = NULL;
@@ -2398,7 +2399,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     /* attach2 is entered without any locks, and returns
      * with vol_glock_mutex held */
-    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
+    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode, &checkedOut);
 
     if (VCanUseFSSYNC() && vp) {
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -2426,20 +2427,11 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    vp->needsPutBack = 1;
 #endif /* !AFS_DEMAND_ATTACH_FS */
     }
-    /* OK, there's a problem here, but one that I don't know how to
-     * fix right now, and that I don't think should arise often.
-     * Basically, we should only put back this volume to the server if
-     * it was given to us by the server, but since we don't have a vp,
-     * we can't run the VolumeWriteable function to find out as we do
-     * above when computing vp->needsPutBack.  So we send it back, but
-     * there's a path in VAttachVolume on the server which may abort
-     * if this volume doesn't have a header.  Should be pretty rare
-     * for all of that to happen, but if it does, probably the right
-     * fix is for the server to allow the return of readonly volumes
-     * that it doesn't think are really checked out. */
 #ifdef FSSYNC_BUILD_CLIENT
-    if (VCanUseFSSYNC() && vp == NULL &&
-	mode != V_SECRETLY && mode != V_PEEK) {
+    /* Only give back the vol to the fileserver if we checked it out; attach2
+     * will set checkedOut only if we successfully checked it out from the
+     * fileserver. */
+    if (VCanUseFSSYNC() && vp == NULL && checkedOut) {
 
 #ifdef AFS_DEMAND_ATTACH_FS
         /* If we couldn't attach but we scheduled a salvage, we already
@@ -2527,6 +2519,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     VolId volumeId;
     Volume * nvp = NULL;
     VolumeStats stats_save;
+    int checkedOut;
     *ec = 0;
 
     /* volume utility should never call AttachByVp */
@@ -2594,7 +2587,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
      *
      * NOTE: attach2 is entered without any locks, and returns
      * with vol_glock_mutex held */
-    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
+    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode, &checkedOut);
 
     /*
      * the event that an error was encountered, or
@@ -2717,6 +2710,9 @@ VUnlockVolume(Volume *vp)
  *                    we don't try to lock the vol, or check it out from
  *                    FSSYNC or anything like that; 0 otherwise, for 'normal'
  *                    operation
+ * @param[out] acheckedOut   If we successfully checked-out the volume from
+ *                           the fileserver (if we needed to), this is set
+ *                           to 1, otherwise it is untouched.
  *
  * @note As part of DAFS volume attachment, the volume header may be either
  *       read- or write-locked to ensure mutual exclusion of certain volume
@@ -2729,7 +2725,7 @@ VUnlockVolume(Volume *vp)
  */
 static void
 attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
-                     int mode, int peek)
+                     int mode, int peek, int *acheckedOut)
 {
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader header;
@@ -2791,6 +2787,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
             }
 	    goto done;
 	}
+	*acheckedOut = 1;
     }
 #endif
 
@@ -2956,7 +2953,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 static void
 attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
-                 Volume *vp)
+                 Volume *vp, int *acheckedOut)
 {
     *ec = 0;
 
@@ -2981,7 +2978,7 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
 		/* attach header with peek=1 to avoid checking out the volume
 		 * or locking it; we just want the header info, we're not
 		 * messing with the volume itself at all */
-		attach_volume_header(ec, vp, partp, V_PEEK, 1);
+		attach_volume_header(ec, vp, partp, V_PEEK, 1, acheckedOut);
 		if (*ec) {
 		    return;
 		}
@@ -3053,6 +3050,9 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  *                     otherwise. (see VVolOpSetVBusy_r)
  * @param[in] mode     attachment mode such as V_VOLUPD, V_DUMP, etc (see
  *                     volume.h)
+ * @param[out] acheckedOut   If we successfully checked-out the volume from
+ *                           the fileserver (if we needed to), this is set
+ *                           to 1, otherwise it is 0.
  *
  * @return pointer to the semi-attached volume pointer
  *  @retval NULL an error occurred (check value of *ec)
@@ -3064,7 +3064,7 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  */
 static Volume *
 attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
-        Volume * vp, int isbusy, int mode)
+        Volume * vp, int isbusy, int mode, int *acheckedOut)
 {
     /* have we read in the header successfully? */
     int read_header = 0;
@@ -3086,13 +3086,15 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     vp->diskDataHandle = NULL;
     vp->linkHandle = NULL;
 
+    *acheckedOut = 0;
+
 #ifdef AFS_DEMAND_ATTACH_FS
-    attach_check_vop(ec, volumeId, partp, vp);
+    attach_check_vop(ec, volumeId, partp, vp, acheckedOut);
     if (!*ec) {
-	attach_volume_header(ec, vp, partp, mode, 0);
+	attach_volume_header(ec, vp, partp, mode, 0, acheckedOut);
     }
 #else
-    attach_volume_header(ec, vp, partp, mode, 0);
+    attach_volume_header(ec, vp, partp, mode, 0, acheckedOut);
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
     if (*ec == VNOVOL) {
