@@ -247,12 +247,6 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 
     osi_Panic("%s", buf);
 }
-#else
-void
-osi_AssertFailK(const char *expr, const char *file, int line)
-{
-    printk(KERN_CRIT "assertion failed: %s, file: %s, line: %d\n", expr, file, line);
-}
 #endif
 
 #ifndef UKERNEL
