@@ -199,7 +199,8 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
 
 #if defined(AFS_LINUX24_ENV)
 /* Intercept the standard uid32 system call. */
-extern asmlinkage long (*sys_setgroups32p) (int gidsetsize, gid_t * grouplist);
+extern asmlinkage int (*sys_setgroups32p) (int gidsetsize,
+					   __kernel_gid32_t * grouplist);
 asmlinkage long
 afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 {
@@ -235,7 +236,7 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 
 #if defined(AFS_PPC64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
-extern long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
+extern asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
 asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
     long code;
@@ -269,7 +270,13 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
 
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
-extern long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
+#ifdef AFS_AMD64_LINUX20_ENV
+extern asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
+#endif /* AFS_AMD64_LINUX20_ENV */
+#ifdef AFS_SPARC64_LINUX26_ENV
+extern asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
+					   __kernel_gid32_t * grouplist);
+#endif /* AFS_SPARC64_LINUX26_ENV */
 asmlinkage long
 afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 {
@@ -303,7 +310,13 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 
 #ifdef AFS_LINUX24_ENV
 /* Intercept the uid32 system call as used by 32bit programs. */
-extern long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
+#ifdef AFS_AMD64_LINUX20_ENV
+extern asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
+#endif /* AFS_AMD64_LINUX20_ENV */
+#ifdef AFS_SPARC64_LINUX26_ENV
+extern asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
+					     __kernel_gid_t32 * grouplist);
+#endif /* AFS_SPARC64_LINUX26_ENV */
 asmlinkage long
 afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
 {
