@@ -384,7 +384,7 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 # define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
 # undef osi_Assert
 # define osi_Assert(expr) \
-    do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
+    do { if (!(expr)) osi_Panic("assertion failed: %s, file: %s, line: %d\n", #expr, __FILE__, __LINE__); } while (0)
 # elif defined(AFS_AIX_ENV)
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 # else
@@ -410,7 +410,9 @@ extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 # ifdef UKERNEL
 extern void *rx_ServerProc(void *);
 # endif
+# ifndef AFS_LINUX26_ENV
 extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
+# endif
 extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 # ifndef UKERNEL
