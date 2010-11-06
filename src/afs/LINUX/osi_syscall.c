@@ -142,16 +142,16 @@ extern int afs32_xsetgroups();
 asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
 asmlinkage long sys_close(unsigned int fd);
-static void sys_setgroups_stub() 
+static void sys_setgroups_stub(void)
 	__attribute__ ((pure,const,no_instrument_function));
-static void sys_setgroups_stub() 
+static void sys_setgroups_stub(void)
 { 
 	printf("*** error! sys_setgroups_stub called\n");
 }
 
-static void sys32_setgroups_stub() 
+static void sys32_setgroups_stub(void)
 	__attribute__ ((pure,const,no_instrument_function));
-static void sys32_setgroups_stub() 
+static void sys32_setgroups_stub(void)
 { 
 	printf("*** error! sys32_setgroups_stub called\n");
 }
