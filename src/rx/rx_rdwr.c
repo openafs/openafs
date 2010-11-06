@@ -713,9 +713,6 @@ rxi_WriteProc(struct rx_call *call, char *buf,
     do {
 	if (call->nFree == 0) {
 	    MUTEX_ENTER(&call->lock);
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-            rxi_WaitforTQBusy(call);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
             cp = call->currentPacket;
             if (call->error)
                 call->mode = RX_MODE_ERROR;
@@ -736,6 +733,10 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		 * conn->securityMaxTrailerSize */
 		hadd32(call->bytesSent, cp->length);
 		rxi_PrepareSendPacket(call, cp, 0);
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+                /* PrepareSendPacket drops the call lock */
+                rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 #ifdef RX_TRACK_PACKETS
 		cp->flags |= RX_PKTFLAG_TQ;
 #endif
@@ -1162,6 +1163,10 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	     * conn->securityMaxTrailerSize */
 	    hadd32(call->bytesSent, cp->length);
 	    rxi_PrepareSendPacket(call, cp, 0);
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+            /* PrepareSendPacket drops the call lock */
+            rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	    queue_Append(&tmpq, cp);
 #ifdef RXDEBUG_PACKET
             tmpqc++;
@@ -1341,9 +1346,6 @@ rxi_FlushWrite(struct rx_call *call)
 #endif
 
         MUTEX_ENTER(&call->lock);
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-        rxi_WaitforTQBusy(call);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
         if (call->error)
             call->mode = RX_MODE_ERROR;
 
@@ -1373,6 +1375,10 @@ rxi_FlushWrite(struct rx_call *call)
 	/* The 1 specifies that this is the last packet */
 	hadd32(call->bytesSent, cp->length);
 	rxi_PrepareSendPacket(call, cp, 1);
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+        /* PrepareSendPacket drops the call lock */
+        rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 #ifdef RX_TRACK_PACKETS
 	cp->flags |= RX_PKTFLAG_TQ;
 #endif
