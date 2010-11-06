@@ -228,6 +228,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     int error;
     struct vrequest treq;
     struct vcache *tvp = 0;
+    struct vcache *gvp;
 #if !defined(AFS_FBSD53_ENV) || defined(AFS_FBSD80_ENV)
     struct thread *td = curthread;
 #endif
@@ -236,22 +237,26 @@ afs_root(struct mount *mp, struct vnode **vpp)
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
     crhold(cr);
+tryagain:
     if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
     } else {
-tryagain:
-	if (afs_globalVp) {
-	    afs_PutVCache(afs_globalVp);
-	    /* vrele() needed here or not? */
-	    afs_globalVp = NULL;
-	}
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
-	    if (tvp)
+	    if (tvp) {
+		gvp = afs_globalVp;
 		afs_globalVp = tvp;
-	    else
+		if (gvp) {
+		    afs_PutVCache(gvp);
+		    if (tvp != afs_globalVp) {
+			/* someone raced us and won */
+			afs_PutVCache(tvp);
+			goto tryagain;
+		    }
+		}
+	    } else
 		error = ENOENT;
 	}
     }
@@ -260,16 +265,23 @@ tryagain:
 
 	ASSERT_VI_UNLOCKED(vp, "afs_root");
 	AFS_GUNLOCK();
+	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
+	AFS_GLOCK();
+	/* we dropped the glock, so re-check everything it had serialized */
+	if (!afs_globalVp || !(afs_globalVp->f.states & CStatd) ||
+		tvp != afs_globalVp) {
+	    vput(vp);
+	    afs_PutVCache(tvp);
+	    goto tryagain;
+	}
+	if (error != 0)
+	    goto tryagain;
 	/*
 	 * I'm uncomfortable about this.  Shouldn't this happen at a
 	 * higher level, and shouldn't we busy the top-level directory
 	 * to prevent recycling?
 	 */
-	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
 	vp->v_vflag |= VV_ROOT;
-	AFS_GLOCK();
-	if (error != 0)
-		goto tryagain;
 
 	afs_globalVFS = mp;
 	*vpp = vp;
