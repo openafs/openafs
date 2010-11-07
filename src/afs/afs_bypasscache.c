@@ -284,18 +284,18 @@ done:
 	ciov = auio->uio_iov; \
 	iovmax = auio->uio_iovcnt - 1;	\
 	pp = (struct page*) ciov->iov_base;	\
-	afs_warn("BYPASS: Unlocking pages...");	\
 	while(1) { \
-	    if(pp != NULL && PageLocked(pp)) \
-		UnlockPage(pp);	\
-            put_page(pp); /* decrement refcount */ \
+	    if (pp) { \
+		if (PageLocked(pp)) \
+		    UnlockPage(pp);	\
+		put_page(pp); /* decrement refcount */ \
+	    } \
 	    iovno++; \
 	    if(iovno > iovmax) \
 		break; \
 	    ciov = (auio->uio_iov + iovno);	\
 	    pp = (struct page*) ciov->iov_base;	\
 	} \
-	afs_warn("Pages Unlocked.\n"); \
     } while(0)
 #else
 #ifdef UKERNEL
@@ -347,6 +347,13 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    afs_warn("Preread error. Got length %d, which is greater than size %d\n",
 	             length, size);
 	    unlock_and_release_pages(auio);
+	    goto done;
+	}
+
+	/* If we get a 0 length reply, time to cleanup and return */
+	if (length == 0) {
+	    unlock_and_release_pages(auio);
+	    result = 0;
 	    goto done;
 	}
 
