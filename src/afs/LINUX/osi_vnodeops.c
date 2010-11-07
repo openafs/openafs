@@ -1809,6 +1809,17 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     struct nocache_read_request *ancr;
     int code;
 
+    /*
+     * Special case: if page is at or past end of file, just zero it and set
+     * it as up to date.
+     */
+    if (page_offset(pp) >=  i_size_read(fp->f_mapping->host)) {
+	zero_user_segment(pp, 0, PAGE_CACHE_SIZE);
+	SetPageUptodate(pp);
+	unlock_page(pp);
+	return 0;
+    }
+
     ClearPageError(pp);
 
     /* receiver frees */
