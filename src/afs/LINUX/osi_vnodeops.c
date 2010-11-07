@@ -1748,7 +1748,8 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
             page_cache_release(pp);
 	    iovecp[page_ix].iov_base = (void *) 0;
 	    base_index++;
-            continue;
+	    ancr->length -= PAGE_SIZE;
+	    continue;
         }
         base_index++;
         if(code) {
