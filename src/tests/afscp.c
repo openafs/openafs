@@ -525,7 +525,7 @@ main(int argc, char **argv)
     } else {
 	fetchcode = rx_EndCall(scall, fetchcode);
     }
-    if (fetchcode && printcallerrs)
+    if (fetchcode)
 	printf("Error returned from fetch: %s\n", afs_error_message(fetchcode));
 
     if (dlcl) {
@@ -534,7 +534,7 @@ main(int argc, char **argv)
     } else if (!unlock) {
 	storecode = rx_EndCall(dcall, storecode);
     }
-    if (storecode && printcallerrs)
+    if (storecode)
 	printf("Error returned from store: %s\n", afs_error_message(storecode));
 Finish:
     gettimeofday(&finish, &tz);
