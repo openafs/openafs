@@ -559,7 +559,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 {
     int code = 0, failed_seek = 0, failed_write = 0;
     afs_int32 pad = 0;
-    afs_int32 offset = 0;
+    afs_foff_t offset = 0;
     afs_sfsize_t nbytes, howBig;
     ssize_t n;
     size_t howMany;
@@ -633,8 +633,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	 * amount that we had null padded.
 	 */
 	if ((n > 0) && pad) {
-	    fprintf(stderr, "Null padding file %d bytes at offset %u\n", pad,
-		    offset);
+	    fprintf(stderr, "Null padding file %d bytes at offset %lld\n", pad,
+		    (long long)offset);
 	    pad = 0;
 	}
 
@@ -692,8 +692,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     }
 
     if (pad) {			/* Any padding we hadn't reported yet */
-	fprintf(stderr, "Null padding file: %d bytes at offset %u\n", pad,
-		offset);
+	fprintf(stderr, "Null padding file: %d bytes at offset %lld\n", pad,
+		(long long)offset);
     }
 
     free(p);
@@ -784,7 +784,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
     FdHandle_t *fdP;
     afs_sfsize_t size;
     int flag;
-    int offset = 0;
+    afs_foff_t offset = 0;
     int vnodeIndex, nVnodes = 0;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
@@ -804,9 +804,9 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
 	 * a serverModifyTime.  For an epoch dump, this results in 0>=0 test, which
 	 * does dump the file! */
 	if (verbose)
-	    fprintf(stderr, "about to dump %s vnode %u (vnode offset = %u)\n",
+	    fprintf(stderr, "about to dump %s vnode %u (vnode offset = %lld)\n",
 			class == vSmall ? "vSmall" : "vLarge",
-		    bitNumberToVnodeNumber(vnodeIndex, class), offset);
+		    bitNumberToVnodeNumber(vnodeIndex, class), (long long)offset);
 	if (!code)
 	    code =
 		DumpVnode(dumpfd, vnode, V_id(vp),

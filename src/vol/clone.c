@@ -167,7 +167,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     Inode clinode;
     struct clone_head decHead;
     struct clone_rock decRock;
-    afs_int32 offset = 0;
+    afs_foff_t offset = 0;
     afs_int32 dircloned, inodeinced;
     afs_int32 filecount = 0, diskused = 0;
 
