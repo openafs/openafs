@@ -93,7 +93,7 @@ ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class,
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct VnodeExtract *e;
     afs_sfsize_t size;
-    afs_uint32 offset;
+    afs_foff_t offset;
 
     *length = 0;
     if (parent)

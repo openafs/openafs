@@ -1396,7 +1396,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct VolumeDiskHeader h;
     IHandle_t *ih, *ih2;
     FdHandle_t *fdP, *fdP2;
-    ssize_t offset;
+    afs_foff_t offset;
     char wpath[100];
     char tmpDevName[100];
     char buffer[128];
