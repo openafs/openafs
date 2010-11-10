@@ -96,7 +96,7 @@ static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
 		     int volid, int vnodeNumber, int dumpEverything);
 static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp);
 static int ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
-		      afs_int32 * Lbuf, afs_int32 s1, afs_int32 * Sbuf,
+		      afs_foff_t * Lbuf, afs_int32 s1, afs_foff_t * Sbuf,
 		      afs_int32 s2, afs_int32 delo);
 static afs_fsize_t volser_WriteFile(int vn, struct iod *iodp,
 				    FdHandle_t * handleP, int tag,
@@ -723,7 +723,8 @@ static int
 DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 {
     int code = 0, error = 0;
-    afs_int32 pad = 0, offset;
+    afs_int32 pad = 0;
+    afs_foff_t offset = 0;
     afs_sfsize_t n, nbytes, howMany, howBig;
     afs_foff_t lcode = 0;
     byte *p;
@@ -804,7 +805,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	 * amount that we had null padded.
 	 */
 	if ((n > 0) && pad) {
-	    Log("1 Volser: DumpFile: Null padding file %d bytes at offset %u\n", pad, offset);
+	    Log("1 Volser: DumpFile: Null padding file %d bytes at offset %lld\n", pad, (long long)offset);
 	    pad = 0;
 	}
 
@@ -854,8 +855,8 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     }
 
     if (pad) {			/* Any padding we hadn't reported yet */
-	Log("1 Volser: DumpFile: Null padding file: %d bytes at offset %u\n",
-	    pad, offset);
+	Log("1 Volser: DumpFile: Null padding file: %d bytes at offset %lld\n",
+	    pad, (long long)offset);
     }
 
     free(p);
@@ -1132,11 +1133,12 @@ DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v, int volid,
 
 
 int
-ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
+ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	     int del)
 {
-    int i, nVnodes, offset, code, index = 0;
-    afs_int32 *Buf;
+    int i, nVnodes, code, index = 0;
+    afs_foff_t offset;
+    afs_foff_t *Buf;
     int cnt = 0;
     afs_sfsize_t size;
     StreamHandle_t *afile;
@@ -1189,13 +1191,13 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
-	    Buf = (afs_int32 *) malloc(nVnodes * sizeof(afs_int32));
+	    Buf = malloc(nVnodes * sizeof(afs_foff_t));
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
 		FDH_CLOSE(fdP);
 		return -1;
 	    }
-	    memset((char *)Buf, 0, nVnodes * sizeof(afs_int32));
+	    memset(Buf, 0, nVnodes * sizeof(afs_foff_t));
 	    STREAM_SEEK(afile, offset = vcp->diskSize, 0);
 	    while (1) {
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
@@ -1229,7 +1231,7 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
     register Volume *vp;
     struct iod iod;
     register struct iod *iodp = &iod;
-    afs_int32 *b1 = NULL, *b2 = NULL;
+    afs_foff_t *b1 = NULL, *b2 = NULL;
     int s1 = 0, s2 = 0, delo = 0, tdelo;
     int tag;
 
@@ -1323,7 +1325,7 @@ RestoreVolume(register struct rx_call *call, Volume * avp, int incremental,
 
 static int
 ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
-	   afs_int32 * Lbuf, afs_int32 s1, afs_int32 * Sbuf, afs_int32 s2,
+	   afs_foff_t * Lbuf, afs_int32 s1, afs_foff_t * Sbuf, afs_int32 s2,
 	   afs_int32 delo)
 {
     afs_int32 vnodeNumber;

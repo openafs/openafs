@@ -91,10 +91,10 @@ struct DiskPartition64 *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     register struct VolumeHeader *header);
 #if defined(AFS_NAMEI_ENV)
-void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
 #else
-void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino);
 #endif
 void PrintVnodes(Volume * vp, VnodeClass class);
@@ -746,7 +746,8 @@ PrintVnodes(Volume * vp, VnodeClass class)
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
-    register int vnodeIndex, nVnodes, offset = 0;
+    register int vnodeIndex, nVnodes;
+    afs_foff_t offset = 0;
     Inode ino;
     IHandle_t *ih = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
@@ -857,11 +858,11 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
 #if defined(AFS_NAMEI_ENV)
 void
-PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 	   Inode ino, Volume * vp)
 #else
 void
-PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 	   Inode ino)
 #endif
 {
@@ -883,8 +884,8 @@ PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
     if (orphaned && (fileLength == 0 || vnode->parent || !offset))
 	return;
     printf
-	("%10d Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
-	 offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
+	("%10lld Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
+	 (long long)offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
 	 vnode->cloned, (afs_uintmax_t) fileLength, vnode->linkCount,
 	 vnode->parent);
     if (DumpInodeNumber)

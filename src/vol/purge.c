@@ -83,12 +83,12 @@ VPurgeVolume(Error * ec, Volume * vp)
    and otherwise doesn't touch it */
 static int
 ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
-		 afs_int32 * aoffset)
+		 afs_foff_t * aoffset)
 {
     register struct VnodeClassInfo *vcp;
     Inode inodes[MAXOBLITATONCE];
     register afs_int32 iindex, nscanned;
-    afs_int32 offset;
+    afs_foff_t offset;
     char buf[SIZEOF_LARGEDISKVNODE];
     int hitEOF;
     register int i;
@@ -161,7 +161,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
 {
     StreamHandle_t *ifile;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
-    afs_int32 offset;
+    afs_foff_t offset;
     register afs_int32 code;
     FdHandle_t *fdP;
 
