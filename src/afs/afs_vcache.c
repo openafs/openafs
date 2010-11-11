@@ -205,7 +205,8 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     vn_reinit(AFSTOV(avc));
 #endif
     afs_FreeAllAxs(&(avc->Access));
-    afs_QueueVCB(avc);
+    if (!afs_shuttingdown)
+	afs_QueueVCB(avc);
     ObtainWriteLock(&afs_xcbhash, 460);
     afs_DequeueCallback(avc);	/* remove it from queued callbacks list */
     avc->f.states &= ~(CStatd | CUnique);
