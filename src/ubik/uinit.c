@@ -125,6 +125,8 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
 	    return -1;
 	}
 	for (i = 0; i < info.numServers; i++) {
+	    if (!info.hostAddr[i].sin_port && port)
+		info.hostAddr[i].sin_port = port;
 	    serverconns[i] =
 		rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
 				 info.hostAddr[i].sin_port, usrvid,
