@@ -174,7 +174,8 @@ static int DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
 		  afs_int32 flags);
 static int GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 		    struct rx_connection **connPtr, afs_int32 * transPtr,
-		    afs_uint32 * crtimePtr, afs_uint32 * uptimePtr);
+		    afs_uint32 * crtimePtr, afs_uint32 * uptimePtr,
+		    afs_int32 *origflags);
 static int SimulateForwardMultiple(struct rx_connection *fromconn,
 				   afs_int32 fromtid, afs_int32 fromdate,
 				   manyDests * tr, afs_int32 flags,
@@ -3222,7 +3223,8 @@ DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
 static int
 GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 	 struct rx_connection **connPtr, afs_int32 * transPtr,
-	 afs_uint32 * crtimePtr, afs_uint32 * uptimePtr)
+	 afs_uint32 * crtimePtr, afs_uint32 * uptimePtr,
+	 afs_int32 *origflags)
 {
     afs_uint32 volid;
     struct volser_status tstatus;
@@ -3247,7 +3249,7 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 			      vldbEntryPtr->serverPartition[index], ITOffline,
 			      transPtr);
 
-	if (!code && (vldbEntryPtr->serverFlags[index] & RO_DONTUSE)) {
+	if (!code && (origflags[index] & RO_DONTUSE)) {
 	    /* If RO_DONTUSE is set, this is supposed to be an entirely new
 	     * site. Don't trust any data on it, since it is possible we
 	     * have encountered some temporary volume from some other
@@ -3436,9 +3438,11 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     int releasecount = 0;
     struct volser_status volstatus;
     char hoststr[16];
+    afs_int32 origflags[NMAXNSERVERS];
 
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
+    memset(origflags, 0, sizeof(origflags));
 
     vcode = ubik_VL_SetLock(cstruct, 0, afromvol, RWVOL, VLOP_RELEASE);
     if (vcode != VL_RERELEASE)
@@ -3497,6 +3501,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    m++;
 	    if (entry.serverFlags[i] & NEW_REPSITE) s++;
 	}
+	origflags[i] = entry.serverFlags[i];
     }
     if ((forceflag && !fullrelease) || (s == m) || (s == 0))
 	fullrelease = 1;
@@ -3784,7 +3789,8 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		GetTrans(&entry, vldbindex, &(toconns[volcount]),
 			 &(replicas[volcount].trans),
 			 &(times[volcount].crtime),
-			 &(times[volcount].uptime));
+			 &(times[volcount].uptime),
+			 origflags);
 	    if (code)
 		continue;
 
