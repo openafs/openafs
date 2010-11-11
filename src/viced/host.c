@@ -1014,7 +1014,9 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     H_UNLOCK;
     for (i = 0; i < count; i++) {
 	flags[i] = (*proc) (list[i], flags[i], param);
+	H_LOCK;
 	h_Release_r(list[i]);
+	H_UNLOCK;
 	/* bail out of the enumeration early */
 	if (H_ENUMERATE_ISSET_BAIL(flags[i]))
 	    break;
