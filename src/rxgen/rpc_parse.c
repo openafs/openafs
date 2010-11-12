@@ -921,7 +921,7 @@ generate_code(definition * defp, int proc_split_flag, int multi_flag)
 	if (Sflag || cflag)
 	    ss_Proc_CodeGeneration(defp);
     }
-    if (Sflag)
+    if (Sflag || (cflag && xflag && !proc_split_flag))
 	STOREVAL(&proc_defined[PackageIndex], defp);
 }
 
@@ -2031,6 +2031,9 @@ er_ProcDeclExterns_setup(void)
     list *listp;
     definition *defp;
 
+    if ( !Sflag )
+	return;
+
     f_print(fout, "\n");
     for (listp = proc_defined[PackageIndex]; listp != NULL;
 	 listp = listp->next) {
@@ -2050,25 +2053,36 @@ er_ProcProcsArray_setup(void)
 
     if ((listp = proc_defined[PackageIndex])) {
 	defp = (definition *) listp->val;
-	if (defp->pc.proc_serverstub) {
-	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])() = {%s",
-		    PackageIndex, defp->pc.proc_serverstub);
-	} else {
-	    f_print(fout,
-		    "\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s",
-		    PackageIndex, prefix, defp->pc.proc_prefix,
-		    ((definition *) listp->val)->pc.proc_name);
-	    defp = (definition *) listp->val;
+	if ( cflag )  {
+	    f_print(fout, "\nstatic char *opnames%d[] = {\"%s%s\"",
+			PackageIndex, defp->pc.proc_prefix, defp->pc.proc_name);
+	}
+	else {
+	    if (defp->pc.proc_serverstub) {
+		f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])() = {%s",
+			PackageIndex, defp->pc.proc_serverstub);
+	    } else {
+		f_print(fout,
+			"\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s",
+			PackageIndex, prefix, defp->pc.proc_prefix,
+			((definition *) listp->val)->pc.proc_name);
+		defp = (definition *) listp->val;
+	    }
 	}
 	listp = listp->next;
     }
     for (; listp != NULL; listp = listp->next) {
 	defp = (definition *) listp->val;
-	if (defp->pc.proc_serverstub) {
-	    f_print(fout, ",%s", defp->pc.proc_serverstub);
-	} else {
-	    f_print(fout, ", _%s%s%s", prefix, defp->pc.proc_prefix,
-		    defp->pc.proc_name);
+	if ( cflag ) {
+	    f_print(fout, ", \"%s%s\"",defp->pc.proc_prefix,defp->pc.proc_name);
+	}
+	else {
+	    if (defp->pc.proc_serverstub) {
+		f_print(fout, ",%s", defp->pc.proc_serverstub);
+	    } else {
+		f_print(fout, ", _%s%s%s", prefix, defp->pc.proc_prefix,
+			defp->pc.proc_name);
+	    }
 	}
     }
     f_print(fout, "};\n\n");
@@ -2078,6 +2092,15 @@ er_ProcProcsArray_setup(void)
 static void
 er_ProcMainBody_setup(void)
 {
+    if ( cflag ) {
+	f_print(fout, "char *%sTranslateOpCode(int op)\n{\n",
+		PackagePrefix[PackageIndex]);
+	f_print(fout, "\tif (op < %sLOWEST_OPCODE || op > %sHIGHEST_OPCODE)\n\t\treturn NULL;\n",
+		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
+	f_print(fout, "\treturn opnames%d[op - %sLOWEST_OPCODE];\n}\n",
+		PackageIndex, PackagePrefix[PackageIndex]);
+	return;
+    }
     f_print(fout, "int %s%sExecuteRequest(struct rx_call *z_call)\n",
 	    prefix, PackagePrefix[PackageIndex]);
     f_print(fout, "{\n\tint op;\n");
@@ -2099,17 +2122,23 @@ er_ProcMainBody_setup(void)
 static void
 er_HeadofOldStyleProc_setup(void)
 {
-    f_print(fout,
-	    "\nint %s%sExecuteRequest (struct rx_call *z_call)\n",
-	    prefix,
+    if ( cflag ) {
+	f_print(fout, "char *%sTranslateOpCode(int op)\n{\n",
 	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
-    f_print(fout, "{\n");
-    f_print(fout, "\tint op;\n");
-    f_print(fout, "\tXDR z_xdrs;\n");
-    f_print(fout, "\t" "afs_int32 z_result;\n\n");
-    f_print(fout, "\txdrrx_create(&z_xdrs, z_call, XDR_DECODE);\n");
-    f_print(fout, "\tz_result = RXGEN_DECODE;\n");
-    f_print(fout, "\tif (!xdr_int(&z_xdrs, &op)) goto fail;\n");
+    }
+    else {
+	f_print(fout,
+		"\nint %s%sExecuteRequest (struct rx_call *z_call)\n",
+		prefix,
+		(combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+	f_print(fout, "{\n");
+	f_print(fout, "\tint op;\n");
+	f_print(fout, "\tXDR z_xdrs;\n");
+	f_print(fout, "\t" "afs_int32 z_result;\n\n");
+	f_print(fout, "\txdrrx_create(&z_xdrs, z_call, XDR_DECODE);\n");
+	f_print(fout, "\tz_result = RXGEN_DECODE;\n");
+	f_print(fout, "\tif (!xdr_int(&z_xdrs, &op)) goto fail;\n");
+    }
     f_print(fout, "\tswitch (op) {\n");
 }
 
@@ -2137,6 +2166,12 @@ er_BodyofOldStyleProc_setup(void)
 static void
 proc_er_case(definition * defp)
 {
+    if ( cflag ) {
+	f_print(fout, "\t\tcase %d:", defp->pc.proc_opcodenum);
+	f_print(fout, "\treturn \"%s%s\";\n",
+		defp->pc.proc_prefix, defp->pc.proc_name);
+	return;
+    }
     if (opcodesnotallowed[PackageIndex]) {
 	f_print(fout, "\t\tcase %d:\n", defp->pc.proc_opcodenum);
     } else {
@@ -2157,6 +2192,10 @@ static void
 er_TailofOldStyleProc_setup(void)
 {
     f_print(fout, "\t\tdefault:\n");
+    if ( cflag ) {
+	f_print(fout, "\t\t\treturn NULL;\n\t}\n}\n");
+	return;
+    }
     f_print(fout, "\t\t\tz_result = RXGEN_OPCODE;\n");
     f_print(fout, "\t\t\tbreak;\n\t}\n");
     f_print(fout, "fail:\n");
