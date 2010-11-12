@@ -424,8 +424,10 @@ c_output(char *infile, char *define, int extend, char *outfile, int append)
 		}
 	    }
 
+
 	    f_print(fout, "\n};\n");
 	}
+	er_Proc_CodeGeneration();
     }
 
     if (extend && tell == ftell(fout)) {
