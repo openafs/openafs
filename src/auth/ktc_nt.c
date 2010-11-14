@@ -983,7 +983,7 @@ ForgetOneLocalToken(struct ktc_principal *aserver)
 
 int
 ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
-    *cellName == NULL;
+    *cellName = NULL;
     return KTC_PIOCTLFAIL;
 }
 
