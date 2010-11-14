@@ -136,6 +136,7 @@ clean::
 	$(DEL) acfg_errors.c ktc_errors.c
 	$(DEL) $(INCFILES) $(AFSAUTH_LIBFILE)
 	$(DEL) auth.h  cellconfig.h
+        $(DEL) token.h token.xdr.c
 
 setkey: $(SETKEY_EXEFILE)
 
