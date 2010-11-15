@@ -77,6 +77,7 @@ lib/roken/strlcpy.c		roken/strlcpy.c
 lib/roken/strnlen.c		roken/strnlen.c
 lib/roken/verr.c		roken/verr.c
 lib/roken/verrx.c		roken/verrx.c
+lib/roken/vsyslog.c		roken/vsyslog.c
 lib/roken/vwarn.c		roken/vwarn.c
 lib/roken/vwarnx.c		roken/vwarnx.c
 lib/roken/warn.c		roken/warn.c
