@@ -103,11 +103,11 @@ uint32_t syscall_jump_code[] = {
 };
 #endif
 
-extern long afs_xsetgroups();
+extern asmlinkage long afs_xsetgroups(int gidsetsize, gid_t * grouplist);
 asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
 
 #ifdef AFS_LINUX24_ENV
-extern int afs_xsetgroups32();
+extern asmlinkage long afs_xsetgroups32(int gidsetsize, gid_t * grouplist);
 asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 				    __kernel_gid32_t * grouplist);
 #endif
@@ -122,10 +122,10 @@ asmlinkage int (*sys_settimeofdayp) (struct timeval * tv, struct timezone * tz);
 static SYSCALLTYPE *afs_ia32_sys_call_table;
 static SYSCALLTYPE ia32_ni_syscall = 0;
 
-extern int afs32_xsetgroups();
+extern asmlinkage long afs32_xsetgroups(int gidsetsize, u16 * grouplist);
 asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
 #ifdef AFS_LINUX24_ENV
-extern int afs32_xsetgroups32();
+extern asmlinkage long afs32_xsetgroups32(int gidsetsize, gid_t * grouplist);
 asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 #endif /* __NR_ia32_setgroups32 */
 #endif /* AFS_AMD64_LINUX20_ENV */
@@ -138,7 +138,7 @@ static SYSCALLTYPE afs_ni_syscall32 = 0;
 static SYSCALLTYPE old_sys_setgroupsp = 0;
 static SYSCALLTYPE old_sys32_setgroupsp = 0;
 
-extern int afs32_xsetgroups();
+asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
 asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
 asmlinkage long sys_close(unsigned int fd);
@@ -168,7 +168,7 @@ extern SYSCALLTYPE *afs_sys_call_table32;
 #endif
 static SYSCALLTYPE afs_ni_syscall32 = 0;
 
-extern int afs32_xsetgroups();
+extern asmlinkage long afs32_xsetgroups(int gidsetsize, u16 * grouplist);
 #ifdef AFS_SPARC64_LINUX26_ENV
 asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 				    __kernel_gid32_t * grouplist);
@@ -179,7 +179,7 @@ asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 #ifdef AFS_LINUX24_ENV
 /* This number is not exported for some bizarre reason. */
 #define __NR_setgroups32      82
-extern int afs32_xsetgroups32();
+extern asmlinkage long afs32_xsetgroups32(int gidsetsize, gid_t * grouplist);
 #ifdef AFS_SPARC64_LINUX26_ENV
 asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
 				      __kernel_gid32_t * grouplist);
