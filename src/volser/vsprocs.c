@@ -217,21 +217,6 @@ MapPartIdIntoName(afs_int32 partId, char *partName)
 }
 
 int
-yesprompt(char *str)
-{
-    int response, c;
-    int code;
-
-    fprintf(STDERR, "Do you want to %s? [yn](n): ", str);
-    response = c = getchar();
-    while (!(c == EOF || c == '\n'))
-	c = getchar();		/*skip to end of line */
-    code = (response == 'y' || response == 'Y');
-    return code;
-}
-
-
-int
 PrintError(char *msg, afs_int32 errcode)
 {
     fprintf(STDERR, "%s", msg);
