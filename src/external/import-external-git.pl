@@ -21,7 +21,9 @@ use Cwd;
 my $help;
 my $man;
 my $externalDir;
+my $nowhitespace;
 my $result = GetOptions("help|?" => \$help,
+			"nofixwhitespace" => \$nowhitespace,
 			"man" => \$man,
 			"externaldir=s" => \$externalDir);
 		
@@ -208,6 +210,12 @@ eval {
     $author="--author '$author'" if ($author);
     system("git commit -F $tempdir/commit-msg $author") == 0
       or die "Commit failed : $!\n";
+    if ($nowhitespace) {
+	print STDERR "WARNING: not fixing whitespace errors.\n";
+    } else {
+	system("git rebase --whitespace=fix HEAD^") == 0
+	    or print STDERR "WARNING: Fixing whitespace errors failed.\n";
+    }
   }
 };
 
@@ -242,6 +250,7 @@ import-external-git [options] <module> <repository> [<commitish>]
     --help		brief help message
     --man		full documentation
     --externalDir	exact path to import into
+    --nofixwhitespace   don't apply whitespace fixes
 
 =head1 DESCRIPTION
 
