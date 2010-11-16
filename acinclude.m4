@@ -1327,6 +1327,7 @@ AC_REPLACE_FUNCS([ \
 	strlcpy \
 	verr \
 	verrx \
+	vsyslog \
 	vwarn \
 	vwarnx \
 	warn \

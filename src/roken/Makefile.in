@@ -127,6 +127,9 @@ verr.o: ${UPSTREAM}/verr.c err.h
 verrx.o: ${UPSTREAM}/verrx.c err.h
 	$(AFS_CCRULE) $(UPSTREAM)/verrx.c
 
+vsyslog.o: ${UPSTREAM}/vsyslog.c
+	$(AFS_CCRULE) $(UPSTREAM)/vsyslog.c
+
 vwarn.o: ${UPSTREAM}/vwarn.c err.h
 	$(AFS_CCRULE) $(UPSTREAM)/vwarn.c
 

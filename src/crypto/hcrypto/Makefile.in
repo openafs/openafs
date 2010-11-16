@@ -318,6 +318,9 @@ verr.o: ${UPSTREAM}/roken/verr.c
 verrx.o: ${UPSTREAM}/roken/verrx.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/verrx.c
 
+vsyslog.o: ${UPSTREAM}/roken/vsyslog.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/vsyslog.c
+
 vwarn.o: ${UPSTREAM}/roken/vwarn.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/vwarn.c
 
