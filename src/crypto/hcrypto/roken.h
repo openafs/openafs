@@ -55,6 +55,10 @@ typedef int ssize_t;
 #endif
 #endif
 
+#ifndef HAVE___ATTRIBUTE__
+#define __attribute__(x)
+#endif
+
 typedef int rk_socket_t;
 
 ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
@@ -71,6 +75,60 @@ ROKEN_LIB_FUNCTION ssize_t ROKEN_LIB_CALL
     net_read (rk_socket_t, void *, size_t);
 
 ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL issuid(void);
+
+#if !defined(HAVE_SNPRINTF) || defined(NEED_SNPRINTF_PROTO)
+#ifndef HAVE_SNPRINTF
+#define snprintf rk_snprintf
+#endif
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+     rk_snprintf (char *, size_t, const char *, ...)
+     __attribute__ ((format (printf, 3, 4)));
+#endif
+
+#if !defined(HAVE_VSNPRINTF) || defined(NEED_VSNPRINTF_PROTO)
+#ifndef HAVE_VSNPRINTF
+#define vsnprintf rk_vsnprintf
+#endif
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL 
+     rk_vsnprintf (char *, size_t, const char *, va_list)
+     __attribute__((format (printf, 3, 0)));
+#endif
+
+#if !defined(HAVE_ASPRINTF) || defined(NEED_ASPRINTF_PROTO)
+#ifndef HAVE_ASPRINTF
+#define asprintf rk_asprintf
+#endif
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+     rk_asprintf (char **, const char *, ...)
+     __attribute__ ((format (printf, 2, 3)));
+#endif
+
+#if !defined(HAVE_VASPRINTF) || defined(NEED_VASPRINTF_PROTO)
+#ifndef HAVE_VASPRINTF
+#define vasprintf rk_vasprintf
+#endif
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+    rk_vasprintf (char **, const char *, va_list)
+     __attribute__((format (printf, 2, 0)));
+#endif
+
+#if !defined(HAVE_ASNPRINTF) || defined(NEED_ASNPRINTF_PROTO)
+#ifndef HAVE_ASNPRINTF
+#define asnprintf rk_asnprintf
+#endif
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+    rk_asnprintf (char **, size_t, const char *, ...)
+     __attribute__ ((format (printf, 3, 4)));
+#endif
+
+#if !defined(HAVE_VASNPRINTF) || defined(NEED_VASNPRINTF_PROTO)
+#ifndef HAVE_VASNPRINTF
+#define vasnprintf rk_vasnprintf
+#endif
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+    vasnprintf (char **, size_t, const char *, va_list)
+     __attribute__((format (printf, 3, 0)));
+#endif
 
 #ifndef HAVE_STRLCPY
 #define strlcpy rk_strlcpy
@@ -98,5 +156,6 @@ ROKEN_LIB_FUNCTION const char * ROKEN_LIB_CALL getprogname(void);
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "/dev/null"
 #endif
+
 
 #endif /* OPENAFS_ROKEN_H */

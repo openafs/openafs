@@ -60,7 +60,8 @@ COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
 	     rand-egd.o rand-timer.o rand-unix.o rand.o rc2.o rc4.o \
 	     rijndael-alg-fst.o rnd_keys.o sha.o sha256.o sha512.o ui.o \
 	     validate.o \
-	     cloexec.o ct.o issuid.o net_read.o net_write.o warnerr.o
+	     cloexec.o ct.o issuid.o net_read.o net_write.o snprintf.o \
+	     warnerr.o
 
 OBJECTS = $(COMMON_OBJS) rand-fortuna.o $(ROKEN_LIBOBJS)
 
@@ -267,6 +268,12 @@ net_read.o: ${UPSTREAM}/roken/net_read.c
 
 net_write.o: ${UPSTREAM}/roken/net_write.c
 	$(AFS_CCRULE) $(UPSTREAM)/roken/net_write.c
+
+# The upstream snprintf.c has some pointer warnings in it
+CFLAGS_snprintf.o = @CFLAGS_NOERROR@
+
+snprintf.o: ${UPSTREAM}/roken/snprintf.c
+	$(AFS_CCRULE) $(UPSTREAM)/roken/snprintf.c
 
 # These bits of libroken are compatibility functions. They should get moved
 # out into a new libroken top level target, which allows the use of an

@@ -36,7 +36,7 @@ clean:
 
 OBJECTS = $(ROKEN_LIBOBJS) \
 	  cloexec.o ct.o hex.o issuid.o net_read.o net_write.o socket.o \
-	  warnerr.o
+	  snprintf.o warnerr.o
 
 $(TOP_LIBDIR)/$(SHLIBOBJ): $(SHLIBOBJ)
 	$(TOP_OBJDIR)/src/config/shlib-install -d $(TOP_LIBDIR) \
@@ -111,6 +111,12 @@ net_write.o: ${UPSTREAM}/net_write.c
 
 socket.o: ${UPSTREAM}/socket.c
 	$(AFS_CCRULE) $(UPSTREAM)/socket.c
+
+# The upstream snprintf.c has some pointer warnings in it
+CFLAGS_snprintf.o = @CFLAGS_NOERROR@
+
+snprintf.o: ${UPSTREAM}/snprintf.c
+	$(AFS_CCRULE) $(UPSTREAM)/snprintf.c
 
 strlcat.o: ${UPSTREAM}/strlcat.c
 	$(AFS_CCRULE) $(UPSTREAM)/strlcat.c

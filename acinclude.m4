@@ -1279,12 +1279,9 @@ AC_CHECK_FUNCS([ \
 	setprogname \
 	setvbuf \
 	sigaction \
-	snprintf \
 	strcasestr \
 	strerror \
 	timegm \
-	vsnprintf \
-	vsyslog \
 ])
 
 OPENAFS_ROKEN()
@@ -1310,8 +1307,17 @@ AC_CHECK_FUNCS([ \
 	strsep \
 ])
 
-dnl Functions that we're going to try and get from libroken
+dnl Functions that are in objects that we always build from libroken
+AC_CHECK_FUNCS([ \
+	asprintf \
+	asnprintf \
+	vasprintf \
+	vasnprintf \
+	vsnprintf \
+	snprintf \
+])
 
+dnl Functions that we're going to try and get from libroken
 AC_REPLACE_FUNCS([ \
 	daemon \
 	ecalloc \
@@ -1426,6 +1432,7 @@ AC_CHECK_TYPES([struct addrinfo], [], [], [
 #include <netdb.h>
 #endif
 ])
+AC_CHECK_TYPES([long long], [], [], [])
 
 AC_SIZEOF_TYPE(long)
 
