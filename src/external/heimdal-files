@@ -1,5 +1,12 @@
 lib/krb5/config_file.c		krb5/config_file.c
+lib/krb5/crypto.c		krb5/crypto.c
+lib/krb5/crypto.h		krb5/crypto.h
+lib/krb5/crypto-aes.c		krb5/crypto-aes.c
+lib/krb5/crypto-evp.c		krb5/crypto-evp.c
+lib/krb5/data.c			krb5/data.c
+lib/krb5/keyblock.c		krb5/keyblock.c
 lib/krb5/n-fold.c		krb5/n-fold.c
+lib/krb5/store-int.c		krb5/store-int.c
 lib/hcrypto/aes.c		hcrypto/aes.c
 lib/hcrypto/aes.h		hcrypto/aes.h
 lib/hcrypto/camellia.c		hcrypto/camellia.c
