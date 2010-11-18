@@ -90,5 +90,5 @@ install: install_headers $(LIBFILE)
 
 clean::
 	$(DEL) $(INCFILES)
-	$(DEL) err.h
+	$(DEL) err.h roken.h
 	$(DEL) $(LIBFILE) $(DESTDIR)\lib\afsroken.lib $(DESTDIR)\lib\afsroken.exp
