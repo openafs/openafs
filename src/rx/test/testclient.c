@@ -11,7 +11,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
+#include <roken.h>
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -27,10 +27,10 @@
 #endif
 #include <sys/stat.h>
 #include <signal.h>
-#include "rx_clock.h"
-#include "rx.h"
-#include "rx_globals.h"
-#include "rx_null.h"
+#include <rx/rx_clock.h>
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
+#include <rx/rx_null.h>
 #include <errno.h>
 #include <afs/afsutil.h>
 
@@ -48,7 +48,10 @@ FILE *debugFile;
 int timeout;
 struct clock waitTime, computeTime;
 
-void OpenFD();
+void OpenFD(int n);
+void Abort(const char *msg, ...);
+void Quit(char *msg);
+int SendFile(char *file, struct rx_connection *conn);
 
 void
 intSignal(int ignore)
@@ -310,9 +313,8 @@ main(argc, argv)
     Quit("testclient: done!\n");
 }
 
-int SendFile(file, conn)
-     char *file;
-     struct rx_connection *conn;
+int
+SendFile(char *file, struct rx_connection *conn)
 {
     struct rx_call *call;
     int fd;
@@ -402,9 +404,15 @@ int SendFile(file, conn)
     return(0);
 }
 
-Abort(msg, a, b, c, d, e)
+void
+Abort(char *msg, ...)
 {
-    printf((char *)msg, a, b, c, d, e);
+    va_list args;
+
+    va_start(args, msg);
+    printf((char *)msg, args);
+    va_end(args);
+
     printf("\n");
     if (debugFile) {
 	rx_PrintStats(debugFile);
@@ -414,10 +422,10 @@ Abort(msg, a, b, c, d, e)
     exit(1);
 }
 
-Quit(char *msg, int a, int b, int c, int d, int e)
+void
+Quit(char *msg)
 {
-    printf((char *)msg, a, b, c, d, e);
-    printf("\n");
+    printf("%s\n", msg);
     if (debugFile) {
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
@@ -432,8 +440,7 @@ Quit(char *msg, int a, int b, int c, int d, int e)
  */
 #include <sys/stat.h>
 void
-OpenFD(n)
-     int n;
+OpenFD(int n)
 {
     int i;
     struct stat sbuf;

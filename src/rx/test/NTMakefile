@@ -18,14 +18,17 @@ LIBS = \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+        $(DESTDIR)\lib\afsroken.lib
 
 
 RXTESTOBJS = $(OUT)\testclient.obj $(OUT)\testserver.obj
 
 tests: $(OUT)\rxperf.exe $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
 
-$(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(LIBS)
+$(OUT)\rxperf.res: rxperf.rc AFS_component_version_number.h
+
+$(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(OUT)\rxperf.res $(LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
@@ -61,7 +64,5 @@ mkdir:
 	
 install: tests
 
-install9x: tests
-
 clean::
-    $(DEL) $(TESTS)
+    $(DEL) $(TESTS) $(OUT)\rxperf.res
