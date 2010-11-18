@@ -368,7 +368,14 @@ libafsrpc: dir
 	$(NTMAKE)
 	$(CD) ..\..
 
-vol: libafsrpc
+rxtests: libafsrpc
+     @echo ***** $@
+	$(DOCD) $(SRC)\rx\test
+	$(CD) $(SRC)\rx\test
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+vol: rxtests
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

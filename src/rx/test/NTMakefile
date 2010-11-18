@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DHAVE_WARNX -DHAVE_ERRX -DHAVE_WARN -DHAVE_ERR
 !IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG
 !ENDIF
