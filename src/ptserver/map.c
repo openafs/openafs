@@ -36,6 +36,9 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include "map.h"
 
 #undef PRINT_MAP_ERROR
@@ -51,10 +54,10 @@ struct bitmap {
     int m_data[MDATA];
 };
 
-#define MAP(p)	((struct bitmap*)((int)(p)&~1))
-#define NEGMAP(p)	(((int)(p))&1)
+#define MAP(p)	((struct bitmap*)((intptr_t)(p)&~1))
+#define NEGMAP(p)	(((intptr_t)(p))&1)
 #define POSMAP(p)	(!NEGMAP(p))
-#define NOT_MAP(mp)	((struct map *) (((int)(mp)) ^ 1))
+#define NOT_MAP(mp)	((struct map *) (((intptr_t)(mp)) ^ 1))
 
 #define NUMBERTOBIT(n)	((n) & ((1<<LSHIFT)-1))
 #define NUMBERTOINDEX(n)	((n>>LSHIFT) & ((1<<MSHIFT)-1))
