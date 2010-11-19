@@ -50,6 +50,9 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsrpc_DLL" Guid="$(var.cmf_afsrpc_DLL_guid)">
                     <File Id="fileafsrpc_DLL" Name="afsrpc.dll" LongName="afsrpc.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.dll"/>
                 </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afshcrypto_DLL" Guid="$(var.cmf_afshcrypto_DLL_guid)">
+                    <File Id="fileafshcrypto_DLL" Name="afshcryp.dll" LongName="afshcrypto.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afshcrypto.dll"/>
+                </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_libafsconf_DLL" Guid="$(var.cmf_libafsconf_DLL_guid)">
                     <File Id="filelibafsconf_DLL" Name="libafscf.dll" LongName="libafsconf.dll" KeyPath="yes" DiskId="1"  src="$(var.LibDir)\libafsconf.dll"/>
                 </Component>
@@ -82,6 +85,7 @@
               <?endif?>
                 <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
+                    <File Id="fileafshcrypto_PDB" Name="afshcryp.pdb" LongName="afshcrypto.pdb" DiskId="1" src="$(var.LibDir)\afshcrypto.pdb"/>
                     <File Id="filelibafsconf_PDB" Name="libafscf.pdb" LongName="libafsconf.pdb" DiskId="1" src="$(var.LibDir)\libafsconf.pdb"/>
                     <File Id="fileafsauthent_PDB" Name="afsauth.pdb" LongName="afsauthent.pdb" DiskId="1" src="$(var.LibDir)\afsauthent.pdb"/>
                     <File Id="fileafspthread_PDB" Name="afspthrd.pdb" LongName="afspthread.pdb" DiskId="1" src="$(var.LibDir)\afspthread.pdb"/>
@@ -1562,6 +1566,27 @@
                                 <File Id="filevolume_H" Name="volume.h" LongName="volume.h" DiskId="1" src="$(var.IncDir)afs\volume.h" />
                             </Component>
                         </Directory>
+
+                        <Directory Id="dirIncludeHcrypto" Name="hcrypto">
+                            <Component Id="cmp_SDK_Include_hcrypto" Guid="726B86EF-3431-4DF2-83EC-E4CFA379AE34">
+                                <File Id="file_hcrypto_aes_H" Name="aes.h" LongName="aes.h" DiskId="1" src="$(var.IncDir)hcrypto\aes.h" />
+                                <File Id="file_hcrypto_des_H" Name="des.h" LongName="des.h" DiskId="1" src="$(var.IncDir)hcrypto\des.h" />
+                                <File Id="file_hcrypto_engine_H" Name="engine.h" LongName="engine.h" DiskId="1" src="$(var.IncDir)hcrypto\engine.h" />
+                                <File Id="file_hcrypto_evp_cc_H" Name="evp-cc.h" LongName="evp-cc.h" DiskId="1" src="$(var.IncDir)hcrypto\evp-cc.h" />
+                                <File Id="file_hcrypto_evp_hcrypto_H" Name="evp-hcry.h" LongName="evp-hcrypto.h" DiskId="1" src="$(var.IncDir)hcrypto\evp-hcrypto.h" />
+                                <File Id="file_hcrypto_evp_H" Name="evp.h" LongName="evp.h" DiskId="1" src="$(var.IncDir)hcrypto\evp.h" />
+                                <File Id="file_hcrypto_hmac_H" Name="hmac.h" LongName="hmac.h" DiskId="1" src="$(var.IncDir)hcrypto\hmac.h" />
+                                <File Id="file_hcrypto_md2_H" Name="md2.h" LongName="md2.h" DiskId="1" src="$(var.IncDir)hcrypto\md2.h" />
+                                <File Id="file_hcrypto_md4_H" Name="md4.h" LongName="md4.h" DiskId="1" src="$(var.IncDir)hcrypto\md4.h" />
+                                <File Id="file_hcrypto_md5_H" Name="md5.h" LongName="md5.h" DiskId="1" src="$(var.IncDir)hcrypto\md5.h" />
+                                <File Id="file_hcrypto_rand_H" Name="rand.h" LongName="rand.h" DiskId="1" src="$(var.IncDir)hcrypto\rand.h" />
+                                <File Id="file_hcrypto_rc2_H" Name="rc2.h" LongName="rc2.h" DiskId="1" src="$(var.IncDir)hcrypto\rc2.h" />
+                                <File Id="file_hcrypto_rc4_H" Name="rc4.h" LongName="rc4.h" DiskId="1" src="$(var.IncDir)hcrypto\rc4.h" />
+                                <File Id="file_hcrypto_sha_H" Name="sha.h" LongName="sha.h" DiskId="1" src="$(var.IncDir)hcrypto\sha.h" />
+                                <File Id="file_hcrypto_ui_H" Name="ui.h" LongName="ui.h" DiskId="1" src="$(var.IncDir)hcrypto\ui.h" />
+                            </Component>
+                        </Directory>
+
                         <Directory Id="dirIncludeRx" Name="rx">
                             <Component Id="cmp_SDK_Include_rx" Guid="2E215D10-C080-42A3-B692-AFF94C7A1A2B">
                                 <File Id="fileasn1_err_H" Name="asn1_err.h" LongName="asn1_err.h" DiskId="1" src="$(var.IncDir)rx\asn1_err.h" /> 
@@ -1648,6 +1673,7 @@
                             <File Id="fileafslwp_LIB" Name="afslwp.lib" LongName="afslwp.lib" DiskId="1" src="$(var.LibDir)afslwp.lib" /> 
                             <File Id="fileafspthread_LIB" Name="AFSPTH~1.lib" LongName="afspthread.lib" DiskId="1" src="$(var.LibDir)afspthread.lib" /> 
                             <File Id="fileafsrpc_LIB" Name="afsrpc.lib" LongName="afsrpc.lib" DiskId="1" src="$(var.LibDir)afsrpc.lib" /> 
+                            <File Id="fileafshcrypto_LIB" Name="afshcryp.lib" LongName="afshcrypto.lib" DiskId="1" src="$(var.LibDir)afshcrypto.lib" /> 
                             <File Id="fileafsrx_LIB" Name="afsrx.lib" LongName="afsrx.lib" DiskId="1" src="$(var.LibDir)afsrx.lib" /> 
                             <File Id="fileafsrxkad_LIB" Name="afsrxkad.lib" LongName="afsrxkad.lib" DiskId="1" src="$(var.LibDir)afsrxkad.lib" /> 
                             <File Id="fileafsrxstat_LIB" Name="AFSRXS~1.lib" LongName="afsrxstat.lib" DiskId="1" src="$(var.LibDir)afsrxstat.lib" /> 
@@ -1661,6 +1687,7 @@
                           <File Id="fileafsauthent_A" Name="afsauth.a" LongName="afsauthent.a" DiskId="1" src="$(var.LibDir)afsauthent.a" />
                           <File Id="fileafspthread_A" Name="afspthrd.a" LongName="afspthread.a" DiskId="1" src="$(var.LibDir)afspthread.a" />
                           <File Id="fileafsrpc_A" Name="afsrpc.a" LongName="afsrpc.a" DiskId="1" src="$(var.LibDir)afsrpc.a" />
+                          <File Id="fileafshcrypto_A" Name="afshcryp.a" LongName="afshcrypto.a" DiskId="1" src="$(var.LibDir)afshcrypto.a" />
                           <File Id="filelibafsconf_A" Name="libafscf.a" LongName="libafsconf.a" DiskId="1" src="$(var.LibDir)libafsconf.a" />
                           <File Id="filelibosi_A" Name="libosi.a" LongName="libosi.a" DiskId="1" src="$(var.ClientDir)libosi.a" /> 
                         </Component>
