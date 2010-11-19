@@ -266,11 +266,12 @@ BOOL GeneralTab_OnApply (HWND hDlg, BOOL fForce, BOOL fComplainIfInvalid)
    BOOL fLogonAuthent = IsDlgButtonChecked (hDlg, IDC_LOGON);
    if (fLogonAuthent != g.Configuration.fLogonAuthent)
       {
-	   SetBitLogonOption(fLogonAuthent,LOGON_OPTION_INTEGRATED);
+      SetBitLogonOption(fLogonAuthent,LOGON_OPTION_INTEGRATED);
       g.Configuration.fLogonAuthent = fLogonAuthent;
       }
 
-   Config_SetTrayIconFlag (IsDlgButtonChecked (hDlg, IDC_TRAYICON));
+  if (GetDlgItem(hDlg, IDC_TRAYICON) != NULL)
+      Config_SetTrayIconFlag (IsDlgButtonChecked(hDlg, IDC_TRAYICON));
 
    if (g.fIsWinNT)
       {
