@@ -134,7 +134,11 @@ if (system("git diff-index --quiet --cached HEAD --ignore-submodules") != 0 ||
   $stashed = 1;
 }
 
+
 eval {
+  my @addedFiles;
+  my @deletedFiles;
+
   # Use git-ls-files to get the list of currently committed files for the module
   my $lspipe = IO::Pipe->new();
   $lspipe->reader(qw(git ls-files));
@@ -148,6 +152,9 @@ eval {
   foreach my $source (sort keys(%mapping)) {
     if (-f "$tempdir/source/$source") {
       File::Path::make_path(File::Basename::dirname($mapping{$source}));
+      if (!-f "$externalDir/$module/".$mapping{$source}) {
+	 push @addedFiles, $mapping{$source};
+      }
       system("cp $tempdir/source/$source ".
 	     "   $externalDir/$module/".$mapping{$source}) == 0
          or die "Copy failed with $!\n";
@@ -164,6 +171,7 @@ eval {
   foreach my $missing (keys(%filesInTree)) {
     system("git rm $missing") == 0
       or die "Couldn't git rm $missing : $!\n";
+    push @deletedFiles, $missing;
   }
 
   if (system("git status") == 0) {
@@ -183,6 +191,18 @@ eval {
 	$fh->print("\n");
 	$fh->print("Upstream changes are:\n\n");
 	$fh->print($changes);
+    }
+    if (@addedFiles) {
+	$fh->print("\n");
+	$fh->print("New files are:\n");
+	$fh->print(join("\n", map { "\t".$_  } sort @addedFiles));
+	$fh->print("\n");
+    }
+    if (@deletedFiles) {
+	$fh->print("\n");
+	$fh->print("Deleted files are:\n");
+	$fh->print(join("\n", map { "\t".$_  } sort @deletedFiles));
+	$fh->print("\n");
     }
     undef $fh;
     $author="--author '$author'" if ($author);
