@@ -42,7 +42,7 @@
  */
 
 #ifndef _WIN64
-#define HAVE_KRB4
+#define HAVE_KRB4 1
 #endif
 
 #include <afsconfig.h>
@@ -81,10 +81,6 @@
 #include <afs\cellconfig.h>
 #include <afs\pioctl_nt.h>
 #include <afs\smb_iocons.h>
-
-#define stat _stat
-#define __S_ISTYPE(mode, mask) (((mode) & _S_IFMT) == (mask))
-#define S_ISDIR(mode)          __S_ISTYPE((mode), _S_IFDIR)
 
 #define DONT_HAVE_GET_AD_TKT
 #define MAXSYMLINKS 255

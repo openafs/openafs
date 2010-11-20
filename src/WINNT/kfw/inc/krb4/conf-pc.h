@@ -42,7 +42,7 @@ typedef unsigned char u_char;
 typedef unsigned long u_long;
 typedef unsigned short u_short;
 typedef unsigned int u_int;
-#define NO_UIDGID_T
+/* #define NO_UIDGID_T */
 
 #if !defined(WINDOWS) && !defined(DWORD)
 typedef long DWORD;
