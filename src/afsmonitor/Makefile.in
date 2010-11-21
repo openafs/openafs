@@ -40,7 +40,7 @@ LIBS=${TOP_LIBDIR}/libxstat_fs.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS=${TXLIBS} ${XLIBS}
+EXTRA_LIBS=${LIB_curses} ${XLIBS}
 
 all: afsmonitor
 

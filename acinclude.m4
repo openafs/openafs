@@ -1216,6 +1216,7 @@ AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/sta
 AC_CHECK_HEADERS(sys/socket.h sys/ioctl.h errno.h time.h syslog.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h stdio_ext.h)
+AC_CHECK_HEADERS(ncurses.h curses.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
@@ -1229,6 +1230,14 @@ AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/statvfs.h>
 #endif
 ])
+
+dnl check for curses-lib
+save_LIBS=$LIBS
+AC_CHECK_LIB( [ncurses], [setupterm],
+[LIB_curses=-lncurses],
+[AC_CHECK_LIB([curses], [setupterm], [LIB_curses=-lcurses])])
+LIBS=$save_LIBS
+AC_SUBST(LIB_curses)
 
 OPENAFS_TEST_PACKAGE(libintl,[#include <libintl.h>],[-lintl],,,INTL)
 
@@ -1583,4 +1592,18 @@ OPENAFS_HAVE_STRUCT_FIELD(DIR, dd_fd, [#include <sys/types.h>
 dnl Eventually, this will look for the system one, or for OpenSSL
 LIB_hcrypto="-lafshcrypto"
 AC_SUBST(LIB_hcrypto)
+])
+
+AC_DEFUN([SUMMARY], [
+    # Print a configuration summary
+echo 
+echo "**************************************"
+echo configure summary
+echo
+AS_IF([test $LIB_curses],[
+echo "LIB_curses :                $LIB_curses" ],[
+echo "XXX LIB_curses  not found! not building scout and afsmonitor!"
+])
+echo 
+echo "**************************************"
 ])
