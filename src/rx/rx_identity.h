@@ -43,7 +43,8 @@ struct rx_identity *rx_identity_new(rx_identity_kind, char *, void *,
 int rx_identity_match(struct rx_identity *a, struct rx_identity *b);
 void rx_identity_populate(struct rx_identity *, rx_identity_kind, char *,
 			  void *, size_t);
-void rx_identity_copy(struct rx_identity *to, struct rx_identity *from);
+struct rx_identity *rx_identity_copy(struct rx_identity *from);
+void rx_identity_copyContents(struct rx_identity *to, struct rx_identity *from);
 void rx_identity_freeContents(struct rx_identity *identity);
 void rx_identity_free(struct rx_identity **identity);
 

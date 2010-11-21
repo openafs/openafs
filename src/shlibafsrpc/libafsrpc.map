@@ -154,6 +154,7 @@
 	rx_identity_match;
 	rx_identity_populate;
 	rx_identity_copy;
+	rx_identity_copyContents;
 	rx_identity_new;
 	rx_identity_freeContents;
 	rx_identity_free;

@@ -86,9 +86,26 @@ rx_identity_populate(struct rx_identity *identity, rx_identity_kind kind,
     rx_opaque_populate(&identity->exportedName, enameData, enameLength);
 }
 
-
 /*!
  * Copy an identity
+ *
+ * Create a new identity as a copy of an existing one.
+ *
+ * @param from
+ *	The identity to copy from
+ * @return
+ *	The new identity
+ */
+struct rx_identity *
+rx_identity_copy(struct rx_identity *from)
+{
+   return rx_identity_new(from->kind, from->displayName,
+		          from->exportedName.val, from->exportedName.len);
+}
+
+
+/*!
+ * Copy an identity's contents
  *
  * Copy the contents of one identity into another one. This will replace
  * (without freeing) any existing identity contents
@@ -100,7 +117,7 @@ rx_identity_populate(struct rx_identity *identity, rx_identity_kind kind,
  */
 
 void
-rx_identity_copy(struct rx_identity *to, struct rx_identity *from)
+rx_identity_copyContents(struct rx_identity *to, struct rx_identity *from)
 {
     rx_identity_populate(to, from->kind, from->displayName,
 		         from->exportedName.val, from->exportedName.len);
