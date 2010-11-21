@@ -20,13 +20,6 @@
 
 
 
-#if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
-#define __HP_CURSES
-#endif
-
-#ifndef	AFS_SUN5_ENV
-#include <curses.h>		/*Curses library */
-#endif
 #include <sys/types.h>
 #include <sys/file.h>
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD80_ENV)

@@ -340,13 +340,22 @@ afsd: cmd comerr sys kauth @CLIENT_UAFS_DEP@
 	+${COMPILE_PART1} afsd ${COMPILE_PART2}
 
 gtx: cmd comerr auth kauth
-	+${COMPILE_PART1} gtx ${COMPILE_PART2}
+	+set -x; \
+	if test "@LIB_curses@"; then \
+		${COMPILE_PART1} gtx ${COMPILE_PART2} ; \
+	else \
+		echo Not building gtx, because no curses-headers found. ; \
+	fi
 
 fsprobe: cmd comerr util fsint volser
 	+${COMPILE_PART1} fsprobe ${COMPILE_PART2}
 
 scout: cmd comerr gtx fsprobe
-	+${COMPILE_PART1} scout ${COMPILE_PART2}
+	if test "@LIB_curses@"; then \
+		${COMPILE_PART1} scout ${COMPILE_PART2} ; \
+	else \
+		echo Not building scout, because no curses-headers found. ; \
+	fi
 
 uss: des kauth cmd comerr rx vlserver vol volser
 	+${COMPILE_PART1} uss ${COMPILE_PART2}
@@ -555,7 +564,12 @@ xstat: cmd comerr fsint viced
 	+${COMPILE_PART1} xstat ${COMPILE_PART2}
 
 afsmonitor: cmd comerr gtx xstat
-	+${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
+	+set -x; \
+	if test "@LIB_curses@"; then \
+		${COMPILE_PART1} afsmonitor ${COMPILE_PART2} ; \
+	else \
+		echo Not building afsmonitor, because no curses-headers found. ; \
+	fi
 
 tests: rxtests ubiktests rpctestlib
 
