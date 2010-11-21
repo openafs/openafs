@@ -18,11 +18,13 @@ INCFILES = \
 	$(INCFILEDIR)\roken.h
 
 ROKEN_INCFILES = \
-	$(INCFILEDIR)\roken-common.h
+	$(INCFILEDIR)\roken-common.h \
+	$(INCFILEDIR)\base64.h
 
 LIBFILE = $(DESTDIR)\lib\afsroken.dll
 
 ROKEN_OBJS = \
+	$(OUT)\base64.obj \
         $(OUT)\cloexec.obj \
         $(OUT)\ct.obj \
 	$(OUT)\ecalloc.obj \

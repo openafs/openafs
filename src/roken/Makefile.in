@@ -10,7 +10,8 @@ include @TOP_OBJDIR@/src/config/Makefile.shared
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 
-HEADERS = ${TOP_INCDIR}/roken.h \
+HEADERS = ${TOP_INCDIR}/base64.h \
+	  ${TOP_INCDIR}/roken.h \
 	  ${TOP_INCDIR}/roken-common.h
 
 UPSTREAM = $(TOP_SRCDIR)/external/heimdal/roken
@@ -35,6 +36,7 @@ clean:
 	$(RM) -f $(OBJECTS) $(SHLIBOBJ) librokenafs.a librokenafs.exp
 
 OBJECTS = $(ROKEN_LIBOBJS) \
+	  base64.o \
 	  cloexec.o ct.o hex.o issuid.o net_read.o net_write.o socket.o \
 	  snprintf.o warnerr.o
 
@@ -55,6 +57,9 @@ librokenafs.a: $(OBJECTS)
 	$(AR) crv $@ $(OBJECTS)
 	$(RANLIB) $@
 
+$(TOP_INCDIR)/base64.h: ${UPSTREAM}/base64.h
+	$(INSTALL_DATA) $? $@
+
 $(TOP_INCDIR)/err.h: ${UPSTREAM}/err.hin
 	cp $? $@
 
@@ -66,6 +71,9 @@ $(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
 
 err.h: ${UPSTREAM}/err.hin
 	cp $? $@
+
+base64.o: $(UPSTREAM)/base64.c
+	$(AFS_CCRULE) $(UPSTREAM)/base64.c
 
 cloexec.o: ${UPSTREAM}/cloexec.c
 	$(AFS_CCRULE) $(UPSTREAM)/cloexec.c

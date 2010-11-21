@@ -24,3 +24,5 @@ EXPORTS
 	vwarnx			@28
 	warn			@29
 	warnx			@30
+	base64_decode		@31
+	base64_encode		@32

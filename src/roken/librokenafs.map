@@ -1,5 +1,7 @@
 {
     global:
+		base64_decode;
+		base64_encode;
 		ct_memcmp;
 		daemon;
 		err;
