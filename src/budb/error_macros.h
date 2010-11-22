@@ -7,20 +7,17 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define ERROR(evalue)                                           \
-	{                                                       \
+#define ERROR(evalue) do {                                      \
             code = evalue;                                      \
             goto error_exit;                                    \
-        }
+        } while (0)
 
-#define ABORT(evalue)                                           \
-	{                                                       \
+#define ABORT(evalue) do {                                      \
             code = evalue;                                      \
             goto abort_exit;                                    \
-        }
+        } while (0)
 
-#define BUDB_EXIT(evalue)                                       \
-	{                                                       \
+#define BUDB_EXIT(evalue) do {                                  \
             osi_audit(BUDB_ExitEvent, evalue, AUD_END);         \
 	    exit(evalue);                                       \
-        }
+        } while (0)

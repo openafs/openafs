@@ -53,7 +53,10 @@
 
 int (*vol_PollProc) (void) = 0;	/* someone must init this */
 
-#define ERROR_EXIT(code) {error = code; goto error_exit;}
+#define ERROR_EXIT(code) do { \
+    error = code; \
+    goto error_exit; \
+} while (0)
 
 /* parameters for idec call - this could just be an IHandle_t, but leaving
  * open the possibility of decrementing the special files as well.

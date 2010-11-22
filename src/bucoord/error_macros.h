@@ -8,15 +8,13 @@
  */
 
 #undef ERROR
-#define ERROR(evalue)                                           \
-	{                                                       \
+#define ERROR(evalue) do {                                      \
             code = evalue;                                      \
             goto error_exit;                                    \
-        }
+        } while (0)
 
 #undef ABORT
-#define ABORT(evalue)                                           \
-	{                                                       \
+#define ABORT(evalue) do {                                      \
             code = evalue;                                      \
             goto abort_exit;                                    \
-        }
+        } while (0)

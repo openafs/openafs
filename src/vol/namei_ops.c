@@ -1527,7 +1527,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     FDH_SYNC(fdP);
     FDH_UNLOCKFILE(fdP, offset);
     FDH_REALLYCLOSE(fdP);
-    return col;;
+    return col;
 
   badGetFreeTag:
     FDH_UNLOCKFILE(fdP, offset);

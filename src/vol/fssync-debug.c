@@ -384,9 +384,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 
 #define ENUMTOSTRING(en)  #en
 #define ENUMCASE(en) \
-    case en: \
-        return ENUMTOSTRING(en); \
-        break
+    case en: return ENUMTOSTRING(en)
 
 #define FLAGTOSTRING(fl)  #fl
 #define FLAGCASE(bitstr, fl, str, count) \

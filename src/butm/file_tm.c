@@ -586,7 +586,7 @@ Rewind(usd_handle_t fid)
 	return (USD_SEEK(fid, startOff, SEEK_SET, &stopOff));
     } else {
 	return (ForkIoctl(fid, USDTAPE_REW, 0));
-    };
+    }
 }
 
 /* prepare tape drive for access */

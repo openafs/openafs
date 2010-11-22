@@ -163,7 +163,10 @@ do { \
 
 
 /* getting rid of this */
-#define ERROR_EXIT(code) {error=(code); goto error_exit;}
+#define ERROR_EXIT(code) do { \
+    error = (code); \
+    goto error_exit; \
+} while (0)
 
 
 /* Protos for static routines */
@@ -3304,9 +3307,24 @@ DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
     return acode;
 }
 
-#define ONERROR(ec, ep, es) if (ec) { fprintf(STDERR, (es), (ep)); error = (ec); goto rfail; }
-#define ONERROR0(ec, es) if (ec) { fprintf(STDERR, (es)); error = (ec); goto rfail; }
-#define ERROREXIT(ec) { error = (ec); goto rfail; }
+#define ONERROR(ec, ep, es) do { \
+    if (ec) { \
+        fprintf(STDERR, (es), (ep)); \
+        error = (ec); \
+        goto rfail; \
+    } \
+} while (0)
+#define ONERROR0(ec, es) do { \
+    if (ec) { \
+        fprintf(STDERR, (es)); \
+        error = (ec); \
+        goto rfail; \
+    } \
+} while (0)
+#define ERROREXIT(ec) do { \
+    error = (ec); \
+    goto rfail; \
+} while (0)
 
 /* Get a "transaction" on this replica.  Create the volume
  * if necessary.  Return the time from which a dump should

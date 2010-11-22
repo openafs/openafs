@@ -7,14 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define ERROR_EXIT(evalue)                                      \
-	{                                                       \
+#define ERROR_EXIT(evalue) do {                                 \
             code = evalue;                                      \
             goto error_exit;                                    \
-        }
+        } while (0)
 
-#define ABORT_EXIT(evalue)                                      \
-	{                                                       \
+#define ABORT_EXIT(evalue) do {                                 \
             code = evalue;                                      \
             goto abort_exit;                                    \
-        }
+        } while (0)

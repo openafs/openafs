@@ -946,7 +946,6 @@ bnode_ParseLine(char *aline, struct bnode_token **alist)
 	    return 0;
 	}
     }
-    return 0;
 }
 
 #define	MAXVARGS	    128

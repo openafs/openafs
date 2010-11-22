@@ -7,23 +7,20 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define ERROR_EXIT(evalue)                                      \
-	{                                                       \
+#define ERROR_EXIT(evalue) do {                                 \
             code = evalue;                                      \
             goto error_exit;                                    \
-        }
+        } while (0)
 
-#define ERROR_EXIT2(evalue)                                     \
-	{                                                       \
+#define ERROR_EXIT2(evalue) do {                                \
             code = evalue;                                      \
             goto error_exit2;                                   \
-        }
+        } while (0)
 
-#define ABORT_EXIT(evalue)                                      \
-	{                                                       \
+#define ABORT_EXIT(evalue) do {                                 \
             code = evalue;                                      \
             goto abort_exit;                                    \
-        }
+        } while (0)
 
 extern void ErrorLog(int debug, afs_int32 task, afs_int32 error1,
 		     afs_int32 error2, char *fmt, ...)
