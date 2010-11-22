@@ -228,11 +228,6 @@ struct in_addr_42 {
 	} S_un_w;
 	afs_uint32 S_addr;
     } S_un;
-#define	s_host	S_un.S_un_b.s_b2	/* host on imp */
-#define	s_net	S_un.S_un_b.s_b1	/* network */
-#define	s_imp	S_un.S_un_w.s_w2	/* imp */
-#define	s_impno	S_un.S_un_b.s_b4	/* imp # */
-#define	s_lh	S_un.S_un_b.s_b3	/* logical host */
 };
 
 #define	mPrintIPAddr(ipaddr)  printf("[%d.%d.%d.%d] ",		\
