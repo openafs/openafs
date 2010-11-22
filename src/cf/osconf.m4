@@ -1065,6 +1065,22 @@ if test "x$GCC" = "xyes"; then
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
     fi
   fi
+else
+  case $AFS_SYSNAME in
+    sun*_51?)
+      # Solaris Studio
+      warn_common="-v -errfmt=error -errtags=yes -erroff=E_ATTRIBUTE_UNKNOWN,E_END_OF_LOOP_CODE_NOT_REACHED"
+      if test "x$enable_warnings" = "xyes" ; then
+        XCFLAGS="${XCFLAGS} $warn_common"
+      fi
+      if test "x$enable_checking" != "xno" ; then
+        XCFLAGS="${XCFLAGS} $warn_common -errwarn=%all"
+        if test "x$enable_checking" != "xall" ; then
+          CFLAGS_NOERROR="-errwarn=%none"
+        fi
+      fi
+      ;;
+  esac
 fi
 
 dnl horribly cheating, assuming double / is ok.
