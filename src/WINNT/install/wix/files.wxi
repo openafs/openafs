@@ -53,6 +53,9 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afshcrypto_DLL" Guid="$(var.cmf_afshcrypto_DLL_guid)">
                     <File Id="fileafshcrypto_DLL" Name="afshcryp.dll" LongName="afshcrypto.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afshcrypto.dll"/>
                 </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afsroken_DLL" Guid="$(var.cmf_afsroken_DLL_guid)">
+                    <File Id="fileafsroken_DLL" Name="afsroken.dll" LongName="afsroken.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsroken.dll"/>
+                </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_libafsconf_DLL" Guid="$(var.cmf_libafsconf_DLL_guid)">
                     <File Id="filelibafsconf_DLL" Name="libafscf.dll" LongName="libafsconf.dll" KeyPath="yes" DiskId="1"  src="$(var.LibDir)\libafsconf.dll"/>
                 </Component>
@@ -86,6 +89,7 @@
                 <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
                     <File Id="fileafshcrypto_PDB" Name="afshcryp.pdb" LongName="afshcrypto.pdb" DiskId="1" src="$(var.LibDir)\afshcrypto.pdb"/>
+                    <File Id="fileafsroken_PDB" Name="afsroken.pdb" LongName="afsroken.pdb" DiskId="1" src="$(var.LibDir)\afsroken.pdb"/>
                     <File Id="filelibafsconf_PDB" Name="libafscf.pdb" LongName="libafsconf.pdb" DiskId="1" src="$(var.LibDir)\libafsconf.pdb"/>
                     <File Id="fileafsauthent_PDB" Name="afsauth.pdb" LongName="afsauthent.pdb" DiskId="1" src="$(var.LibDir)\afsauthent.pdb"/>
                     <File Id="fileafspthread_PDB" Name="afspthrd.pdb" LongName="afspthread.pdb" DiskId="1" src="$(var.LibDir)\afspthread.pdb"/>
@@ -1432,6 +1436,7 @@
                             <File Id="filetrylock_H" Name="trylock.h" LongName="trylock.h" DiskId="1" src="$(var.IncDir)trylock.h" /> 
                             <File Id="fileubik_H" Name="ubik.h" LongName="ubik.h" DiskId="1" src="$(var.IncDir)ubik.h" /> 
                             <File Id="fileubik_int_H" Name="ubik_int.h" LongName="ubik_int.h" DiskId="1" src="$(var.IncDir)ubik_int.h" /> 
+                            <File Id="fileroken_H" Name="roken.h" LongName="roken.h" DiskId="1" src="$(var.IncDir)roken.h" /> 
                         </Component>
                         <Directory Id="dirIncludeAfs" Name="afs">
                             <Component Id="cmp_SDK_Include_afs" Guid="DDAE87DF-AFA8-4EAF-BE9C-6A32D6D4ED06">
@@ -1674,6 +1679,7 @@
                             <File Id="fileafspthread_LIB" Name="AFSPTH~1.lib" LongName="afspthread.lib" DiskId="1" src="$(var.LibDir)afspthread.lib" /> 
                             <File Id="fileafsrpc_LIB" Name="afsrpc.lib" LongName="afsrpc.lib" DiskId="1" src="$(var.LibDir)afsrpc.lib" /> 
                             <File Id="fileafshcrypto_LIB" Name="afshcryp.lib" LongName="afshcrypto.lib" DiskId="1" src="$(var.LibDir)afshcrypto.lib" /> 
+                            <File Id="fileafsroken_LIB" Name="afsroken.lib" LongName="afsroken.lib" DiskId="1" src="$(var.LibDir)afsroken.lib" /> 
                             <File Id="fileafsrx_LIB" Name="afsrx.lib" LongName="afsrx.lib" DiskId="1" src="$(var.LibDir)afsrx.lib" /> 
                             <File Id="fileafsrxkad_LIB" Name="afsrxkad.lib" LongName="afsrxkad.lib" DiskId="1" src="$(var.LibDir)afsrxkad.lib" /> 
                             <File Id="fileafsrxstat_LIB" Name="AFSRXS~1.lib" LongName="afsrxstat.lib" DiskId="1" src="$(var.LibDir)afsrxstat.lib" /> 
