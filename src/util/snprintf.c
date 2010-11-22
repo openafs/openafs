@@ -43,6 +43,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #ifndef AFS_NT40_ENV
 #include <netinet/in.h>
 #include <netdb.h>
@@ -88,7 +91,7 @@
  *     of 100 digits.
  *
  *   - The 'p' specifier for printing pointers is implemented using
- *     compile time knowledge.  (AFS_64BITUSERPOINTER_ENV)
+ *     intptr_t (C99-standard).
  *
  *   - Floating-point specifier (%e, %f, %g) are implemented by
  *     calling the standard sprintf, and thus may be unsafe.
@@ -707,11 +710,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
 	    case 'p' : {
-#ifdef AFS_64BITUSERPOINTER_ENV
-		afs_uint64 arg = (afs_uint64)va_arg(ap, void*);
-#else
-                afs_uint64 arg = (unsigned long)va_arg(ap, void*);
-#endif
+		afs_uint64 arg = (intptr_t)va_arg(ap, void*);
 		len += append_number (state, arg, 0x10, "0123456789ABCDEF",
 				      width, prec, flags, 0);
 		break;
