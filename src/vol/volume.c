@@ -8873,9 +8873,7 @@ VVLRUExtStats_r(struct VLRUExtStats * stats, afs_uint32 nvols)
 
 #define ENUMTOSTRING(en)  #en
 #define ENUMCASE(en) \
-    case en: \
-        return ENUMTOSTRING(en); \
-        break
+    case en: return ENUMTOSTRING(en)
 
 static char *
 vlru_idx_to_string(int idx)

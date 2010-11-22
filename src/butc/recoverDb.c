@@ -191,7 +191,7 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 
     tcode = NextFile(curTapePtr);	/* guarantees we are at a filemark */
     if (tcode)
-	ERROR_EXIT(tcode)
+	ERROR_EXIT(tcode);
 
 	    /* Read the FileBegin FileMark */
 	    code = butm_ReadFileBegin(curTapePtr);
@@ -248,7 +248,7 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 
 	    ErrorLog(0, taskId, rcode, curTapePtr->error,
 		     "Can't read FileData on tape\n");
-	    ERROR_EXIT(rcode)
+	    ERROR_EXIT(rcode);
 	}
 	hasdata[curr] = 1;
 	*bytesRead += nbytes;

@@ -4362,7 +4362,6 @@ DECL_PIOCTL(PGetInitParams)
 
     return afs_pd_putBytes(aout, &cm_initParams,
 			   sizeof(struct cm_initparams));
-    return 0;
 }
 
 #ifdef AFS_SGI65_ENV

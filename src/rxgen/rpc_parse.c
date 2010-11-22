@@ -182,7 +182,6 @@ get_definition(void)
 	break;
     case TOK_EOF:
 	return (NULL);
-	break;
     case TOK_PACKAGE:
 	def_package(defp);
 	break;

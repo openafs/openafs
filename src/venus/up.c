@@ -777,5 +777,4 @@ isMountPoint(char *name, struct ViceIoctl *blob)
 	     */
 	}
     }
-    return 4;
 }

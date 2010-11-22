@@ -548,9 +548,7 @@ VChangeState_r(Volume * vp, VolState new_state)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #define VENUMCASE(en) \
-    case en: \
-        return #en; \
-        break
+    case en: return #en
 
 /**
  * translate a ProgramType code to a string.

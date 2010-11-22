@@ -43,9 +43,15 @@ extern int extent_mod;
 extern struct afsconf_dir *vldb_confdir;
 extern struct ubik_dbase *VL_dbase;
 int maxnservers;
-#define ABORT(c) { errorcode = (c); goto abort; }
+#define ABORT(c) do { \
+    errorcode = (c); \
+    goto abort; \
+} while (0)
 #undef END
-#define END(c) { errorcode = (c); goto end; }
+#define END(c) do { \
+    errorcode = (c); \
+    goto end; \
+} while (0)
 
 #define VLDBALLOCLIMIT	10000
 #define VLDBALLOCINCR	2048

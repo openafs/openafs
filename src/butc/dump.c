@@ -160,11 +160,9 @@ calcExpirationDate(afs_int32 expType, afs_int32 expDate, afs_int32 createTime)
 	 */
 	Int32To_ktimeRelDate(expDate, &kd);
 	return (Add_RelDate_to_Time(&kd, createTime));
-	break;
 
     case BC_ABS_EXPDATE:
 	return (expDate);
-	break;
 
     case BC_NO_EXPDATE:
     default:
@@ -932,7 +930,6 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 			 curDump->name, curDump->vid);
 		curDump->hostAddr = 0;
 		continue;
-		break;
 	    }
 
 	    if (e >= vldbEntry.nServers) {
@@ -1024,7 +1021,6 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 		case 'r':	/* retry */
 		    dparamsPtr->curVolume--;	/* redump this volume */
 		    continue;
-		    break;
 		case 'o':	/* omit */
 		    ErrorLog(1, taskId, 0, 0, "Volume %s (%u) omitted\n",
 			     curDump->name, curDump->vid);
@@ -1056,7 +1052,6 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 	    dparamsPtr->curVolume--;	/* redump this volume */
 	    continue;
-	    break;
 
 	case DUMP_NORETRYEOT:
 	    ErrorLog(1, taskId, 0, 0,
