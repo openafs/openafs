@@ -61,7 +61,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-#if defined(AFS_CACHE_BYPASS)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
 
 #include "afs/afs_bypasscache.h"
 
@@ -74,11 +74,6 @@
 #include "afs/afs_stats.h"   /* statistics */
 #include "afs/nfsclient.h"
 #include "rx/rx_globals.h"
-
-#if defined(AFS_LINUX26_ENV)
-#define LockPage(pp) lock_page(pp)
-#define UnlockPage(pp) unlock_page(pp)
-#endif
 
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
@@ -274,7 +269,6 @@ done:
  * afs_PrefetchNoCache, all of the pages they've been passed need
  * to be unlocked.
  */
-#if defined(AFS_LINUX24_ENV)
 #define unlock_and_release_pages(auio) \
     do { \
 	struct iovec *ciov;	\
@@ -287,7 +281,7 @@ done:
 	while(1) { \
 	    if (pp) { \
 		if (PageLocked(pp)) \
-		    UnlockPage(pp);	\
+		    unlock_page(pp);	\
 		put_page(pp); /* decrement refcount */ \
 	    } \
 	    iovno++; \
@@ -297,14 +291,6 @@ done:
 	    pp = (struct page*) ciov->iov_base;	\
 	} \
     } while(0)
-#else
-#ifdef UKERNEL
-#define unlock_and_release_pages(auio) \
-	 do { } while(0)
-#else
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif
 
 /* no-cache prefetch routine */
 static afs_int32
@@ -377,13 +363,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 
 	    clen = ciov->iov_len - iovoff;
 	    tlen = afs_min(length, clen);
-#ifdef AFS_LINUX24_ENV
 	    address = page_buffer;
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif /* LINUX24 */
 	    COND_GUNLOCK(locked);
 	    code = rx_Read(acall, address, tlen);
 	    COND_RE_GLOCK(locked);
@@ -406,33 +386,21 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		iovoff += code;
 		address += code;
 	    } else {
-#ifdef AFS_LINUX24_ENV
 		if(pp) {
 		    address = kmap_atomic(pp, KM_USER0);
 		    memcpy(address, page_buffer, PAGE_SIZE);
 		    kunmap_atomic(address, KM_USER0);
 		}
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif /* LINUX 24 */
 		/* we filled a page, conditionally release it */
 		if (release_pages && ciov->iov_base) {
 		    /* this is appropriate when no caller intends to unlock
 		     * and release the page */
-#ifdef AFS_LINUX24_ENV
                     SetPageUptodate(pp);
                     if(PageLocked(pp))
-                        UnlockPage(pp);
+                        unlock_page(pp);
                     else
                         afs_warn("afs_NoCacheFetchProc: page not locked at iovno %d!\n", iovno);
                     put_page(pp); /* decrement refcount */
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif /* LINUX24 */
 		}
 		/* and carry uio_iov */
 		iovno++;
@@ -515,13 +483,7 @@ cleanup:
      * do everything that would normally happen when the request was
      * processed, like unlocking the pages and freeing memory.
      */
-#ifdef AFS_LINUX24_ENV
     unlock_and_release_pages(bparms->auio);
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(bparms->auio->uio_iov,
 	     bparms->auio->uio_iovcnt * sizeof(struct iovec));
@@ -629,13 +591,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 	} else {
 	    afs_warn("BYPASS: No connection.\n");
 	    code = -1;
-#ifdef AFS_LINUX24_ENV
 	    unlock_and_release_pages(auio);
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif
 	    goto done;
 	}
     } while (afs_Analyze(tc, code, &avc->f.fid, areq,
@@ -656,4 +612,4 @@ done:
     return code;
 }
 
-#endif /* AFS_CACHE_BYPASS */
+#endif /* AFS_CACHE_BYPASS && AFS_LINUX24_ENV */
