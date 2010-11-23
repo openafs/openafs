@@ -33,10 +33,8 @@
 #include <linux/smp_lock.h>
 #include <linux/writeback.h>
 #include <linux/pagevec.h>
-#if defined(AFS_CACHE_BYPASS)
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
-#endif
 
 #include "osi_compat.h"
 #include "osi_pagecopy.h"
@@ -587,9 +585,7 @@ afs_linux_flush(struct file *fp)
     struct vcache *vcp;
     cred_t *credp;
     int code;
-#if defined(AFS_CACHE_BYPASS)
     int bypasscache = 0;
-#endif
 
     AFS_GLOCK();
 
@@ -606,7 +602,6 @@ afs_linux_flush(struct file *fp)
     code = afs_InitReq(&treq, credp);
     if (code)
 	goto out;
-#if defined(AFS_CACHE_BYPASS)
 	/* If caching is bypassed for this file, or globally, just return 0 */
 	if(cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
 		bypasscache = 1;
@@ -620,7 +615,6 @@ afs_linux_flush(struct file *fp)
             /* future proof: don't rely on 0 return from afs_InitReq */
             code = 0; goto out;
         }
-#endif
 
     ObtainSharedLock(&vcp->lock, 535);
     if ((vcp->execsOrWriters > 0) && (file_count(fp) == 1)) {
@@ -1388,9 +1382,6 @@ out:
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
-#if defined(AFS_CACHE_BYPASS)
-#endif /* defined(AFS_CACHE_BYPASS */
-
 /* Populate a page by filling it from the cache file pointed at by cachefp
  * (which contains indicated chunk)
  * If task is NULL, the page copy occurs syncronously, and the routine
@@ -1691,8 +1682,6 @@ afs_linux_prefetch(struct file *fp, struct page *pp)
 
 }
 
-#if defined(AFS_CACHE_BYPASS)
-
 static int
 afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 			   struct list_head *page_list, unsigned num_pages)
@@ -1877,21 +1866,6 @@ afs_linux_bypass_check(struct inode *ip) {
     return bypass;
 }
 
-#else
-static inline int
-afs_linux_bypass_check(struct inode *ip) {
-    return 0;
-}
-static inline int
-afs_linux_bypass_readpage(struct file *fp, struct page *pp) {
-    return 0;
-}
-static inline int
-afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
-		    struct list_head *page_list, unsigned int num_pages) {
-    return 0;
-}
-#endif
 
 static int
 afs_linux_readpage(struct file *fp, struct page *pp)
