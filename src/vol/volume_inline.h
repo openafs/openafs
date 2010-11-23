@@ -17,6 +17,38 @@
 # include "lock.h"
 #endif
 
+#ifdef AFS_PTHREAD_ENV
+/**
+ * @param[in] cv cond var
+ * @param[in] ts deadline, or NULL to wait forever
+ * @param[out] timedout  set to 1 if we returned due to the deadline, 0 if we
+ *                       returned due to the cond var getting signalled. If
+ *                       NULL, it is ignored.
+ */
+static_inline void
+VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
+{
+    int code;
+    if (timedout) {
+	*timedout = 0;
+    }
+    if (!ts) {
+	VOL_CV_WAIT(cv);
+	return;
+    }
+    VOL_LOCK_DBG_CV_WAIT_BEGIN;
+    code = CV_TIMEDWAIT(cv, &vol_glock_mutex, ts);
+    VOL_LOCK_DBG_CV_WAIT_END;
+    if (code == ETIMEDOUT) {
+	code = 0;
+	if (timedout) {
+	    *timedout = 1;
+	}
+    }
+    osi_Assert(code == 0);
+}
+#endif /* AFS_PTHREAD_ENV */
+
 /**
  * tell caller whether the given program type represents a salvaging
  * program.
