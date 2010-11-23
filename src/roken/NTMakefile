@@ -45,6 +45,7 @@ ROKEN_OBJS = \
 	$(OUT)\strlcat.obj \
 	$(OUT)\strlcpy.obj \
 	$(OUT)\strnlen.obj \
+	$(OUT)\strsep.obj \
         $(OUT)\verr.obj \
         $(OUT)\verrx.obj \
         $(OUT)\vwarn.obj \

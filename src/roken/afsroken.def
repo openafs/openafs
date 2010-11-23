@@ -26,3 +26,4 @@ EXPORTS
 	warnx			@30
 	base64_decode		@31
 	base64_encode		@32
+	rk_strsep		@33

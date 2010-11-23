@@ -1331,6 +1331,7 @@ AC_REPLACE_FUNCS([ \
 	strlcat \
 	strnlen \
 	strlcpy \
+	strsep \
 	verr \
 	verrx \
 	vsyslog \

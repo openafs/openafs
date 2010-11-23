@@ -23,6 +23,7 @@
 		rk_strlcat;
 		rk_strnlen;
 		rk_strlcpy;
+		rk_strsep;
 		strcasecmp;
 		verr;
 		verrx;

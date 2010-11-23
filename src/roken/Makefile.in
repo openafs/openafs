@@ -135,6 +135,9 @@ strlcpy.o: ${UPSTREAM}/strlcpy.c
 strnlen.o: ${UPSTREAM}/strnlen.c
 	$(AFS_CCRULE) $(UPSTREAM)/strnlen.c
 
+strsep.o: ${UPSTREAM}/strsep.c
+	$(AFS_CCRULE) $(UPSTREAM)/strsep.c
+
 verr.o: ${UPSTREAM}/verr.c err.h
 	$(AFS_CCRULE) $(UPSTREAM)/verr.c
 
