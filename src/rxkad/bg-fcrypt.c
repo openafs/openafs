@@ -99,12 +99,12 @@
 
 /* Rotate 32 bit word left */
 #define ROT32L(x, n) ((((afs_uint32) x) << (n)) | (((afs_uint32) x) >> (32-(n))))
-#define bswap32(x) (((ROT32L(x, 16) & 0x00ff00ff)<<8) | ((ROT32L(x, 16)>>8) & 0x00ff00ff))
+#define octetswap32(x) (((ROT32L(x, 16) & 0x00ff00ff)<<8) | ((ROT32L(x, 16)>>8) & 0x00ff00ff))
 
 #if WORDS_BIGENDIAN
 #define NTOH(x) (x)
 #else
-#define NTOH(x) bswap32(x)
+#define NTOH(x) octetswap32(x)
 #endif
 
 /*
