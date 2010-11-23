@@ -79,7 +79,6 @@
 #define LockPage(pp) lock_page(pp)
 #define UnlockPage(pp) unlock_page(pp)
 #endif
-#define AFS_KMAP_ATOMIC
 
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
@@ -322,11 +321,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
     struct iovec *ciov;
     struct page *pp;
     char *address;
-#ifdef AFS_KMAP_ATOMIC
     char *page_buffer = osi_Alloc(PAGE_SIZE);
-#else
-    char *page_buffer = NULL;
-#endif
 
     ciov = auio->uio_iov;
     pp = (struct page*) ciov->iov_base;
@@ -376,21 +371,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    clen = ciov->iov_len - iovoff;
 	    tlen = afs_min(length, clen);
 #ifdef AFS_LINUX24_ENV
-#ifndef AFS_KMAP_ATOMIC
-	    if(pp)
-		address = kmap(pp);
-	    else {
-		/* rx doesn't provide an interface to simply advance
-		   or consume n bytes.  for now, allocate a PAGE_SIZE
-		   region of memory to receive bytes in the case that
-		   there were holes in readpages */
-		if(page_buffer == NULL)
-		    page_buffer = osi_Alloc(PAGE_SIZE);
-		    address = page_buffer;
-		}
-#else
 	    address = page_buffer;
-#endif
 #else
 #ifndef UKERNEL
 #error AFS_CACHE_BYPASS not implemented on this platform
@@ -419,13 +400,11 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		address += code;
 	    } else {
 #ifdef AFS_LINUX24_ENV
-#ifdef AFS_KMAP_ATOMIC
 		if(pp) {
 		    address = kmap_atomic(pp, KM_USER0);
 		    memcpy(address, page_buffer, PAGE_SIZE);
 		    kunmap_atomic(address, KM_USER0);
 		}
-#endif
 #else
 #ifndef UKERNEL
 #error AFS_CACHE_BYPASS not implemented on this platform
@@ -442,9 +421,6 @@ afs_NoCacheFetchProc(struct rx_call *acall,
                     else
                         afs_warn("afs_NoCacheFetchProc: page not locked at iovno %d!\n", iovno);
                     put_page(pp); /* decrement refcount */
-#ifndef AFS_KMAP_ATOMIC
-                    kunmap(pp);
-#endif
 #else
 #ifndef UKERNEL
 #error AFS_CACHE_BYPASS not implemented on this platform
