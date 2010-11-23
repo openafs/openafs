@@ -602,19 +602,20 @@ afs_linux_flush(struct file *fp)
     code = afs_InitReq(&treq, credp);
     if (code)
 	goto out;
-	/* If caching is bypassed for this file, or globally, just return 0 */
-	if(cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
-		bypasscache = 1;
-	else {
-		ObtainReadLock(&vcp->lock);
-		if(vcp->cachingStates & FCSBypass)
-			bypasscache = 1;
-		ReleaseReadLock(&vcp->lock);
-	}
-	if(bypasscache) {
-            /* future proof: don't rely on 0 return from afs_InitReq */
-            code = 0; goto out;
-        }
+    /* If caching is bypassed for this file, or globally, just return 0 */
+    if (cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
+	bypasscache = 1;
+    else {
+	ObtainReadLock(&vcp->lock);
+	if (vcp->cachingStates & FCSBypass)
+	    bypasscache = 1;
+	ReleaseReadLock(&vcp->lock);
+    }
+    if (bypasscache) {
+	/* future proof: don't rely on 0 return from afs_InitReq */
+	code = 0;
+	goto out;
+    }
 
     ObtainSharedLock(&vcp->lock, 535);
     if ((vcp->execsOrWriters > 0) && (file_count(fp) == 1)) {
