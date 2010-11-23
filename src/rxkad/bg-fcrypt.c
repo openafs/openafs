@@ -635,14 +635,14 @@ rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
 
     memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
     for (frag = &packet->wirevec[1]; len; frag++) {
-	int iov_len = frag->iov_len;
-	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
-	if (iov_len == 0)
+	int ilen = frag->iov_len;
+	afs_uint32 *ibas = (afs_uint32 *) frag->iov_base;
+	if (ilen == 0)
 	    return RXKADDATALEN;	/* Length mismatch */
-	if (len < iov_len)
-	    iov_len = len;	/* Don't process to much data */
-	fc_cbc_enc(iov_bas, iov_bas, iov_len, sched, ivec);
-	len -= iov_len;
+	if (len < ilen)
+	    ilen = len;	/* Don't process to much data */
+	fc_cbc_enc(ibas, ibas, ilen, sched, ivec);
+	len -= ilen;
     }
     return 0;
 }
@@ -662,14 +662,14 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
     ADD_RXKAD_STATS(bytesDecrypted[rxkad_TypeIndex(tp->type)],len);
     memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
     for (frag = &packet->wirevec[1]; len > 0; frag++) {
-	int iov_len = frag->iov_len;
-	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
-	if (iov_len == 0)
+	int ilen = frag->iov_len;
+	afs_uint32 *ibas = (afs_uint32 *) frag->iov_base;
+	if (ilen == 0)
 	    return RXKADDATALEN;	/* Length mismatch */
-	if (len < iov_len)
-	    iov_len = len;	/* Don't process to much data */
-	fc_cbc_dec(iov_bas, iov_bas, iov_len, sched, ivec);
-	len -= iov_len;
+	if (len < ilen)
+	    ilen = len;	/* Don't process to much data */
+	fc_cbc_dec(ibas, ibas, ilen, sched, ivec);
+	len -= ilen;
     }
     return 0;
 }
