@@ -288,6 +288,9 @@ ReplayLog(struct ubik_dbase *adbase)
 		code = (*adbase->setlabel) (adbase, 0, &version);
 		if (code)
 		    return code;
+		ubik_print("Successfully replayed log for interrupted "
+		           "transaction; db version is now %ld.%ld\n",
+		           (long) version.epoch, (long) version.counter);
 		logIsGood = 1;
 		break;		/* all done now */
 	    } else if (opcode == LOGTRUNCATE) {
