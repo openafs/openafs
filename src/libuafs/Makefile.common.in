@@ -80,7 +80,7 @@ linktest: UAFS/$(LIBUAFS)
 		${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL \
 		UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafsutil.a \
-		$(LIB_hcrypto) $(LIB_roken) $(TEST_LIBS) $(XLIBS)
+		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(TEST_LIBS) $(XLIBS)
 
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
