@@ -43,6 +43,8 @@ int bnode_Deactivate(struct bnode *abnode);
 void bozo_Log(char *format, ... );
 int bozo_ReBozo(void);
 int WriteBozoFile(char *aname);
+int bozo_CreatePidFile(char *ainst, char *aname, pid_t apid);
+int bozo_DeletePidFile(char *ainst, char *aname);
 
 /* bosoprocs.c */
 int GetRequiredDirPerm(const char *path);

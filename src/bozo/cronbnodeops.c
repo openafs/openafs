@@ -33,6 +33,7 @@ static int cron_delete(struct bnode *bnode);
 static int cron_timeout(struct bnode *bnode);
 static int cron_getstat(struct bnode *bnode, afs_int32 *status);
 static int cron_setstat(struct bnode *bnode, afs_int32 status);
+static int cron_procstarted(struct bnode *bnode, struct bnode_proc *proc);
 static int cron_procexit(struct bnode *bnode, struct bnode_proc *proc);
 static int cron_getstring(struct bnode *bnode, char *abuffer, afs_int32 alen);
 static int cron_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
@@ -50,6 +51,7 @@ struct bnode_ops cronbnode_ops = {
     cron_getparm,
     cron_restartp,
     cron_hascore,
+    cron_procstarted,
 };
 
 struct cronbnode {
@@ -269,6 +271,12 @@ cron_setstat(struct bnode *bn, afs_int32 astatus)
 	ScheduleCronBnode(abnode);
     }
     return 0;
+}
+
+static int
+cron_procstarted(struct bnode *bn, struct bnode_proc *aproc)
+{
+    return 0;	/* no op */
 }
 
 static int

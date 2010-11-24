@@ -21,6 +21,7 @@
 #include "bnode.h"
 #include "bosprototypes.h"
 
+extern char *DoPidFiles;
 static int emergency = 0;
 
 /* if this file exists, then we have to salvage the file system */
@@ -95,6 +96,7 @@ static int fs_delete(struct bnode *abnode);
 static int fs_timeout(struct bnode *abnode);
 static int fs_getstat(struct bnode *abnode, afs_int32 * astatus);
 static int fs_setstat(struct bnode *abnode, afs_int32 astatus);
+static int fs_procstarted(struct bnode *abnode, struct bnode_proc *aproc);
 static int fs_procexit(struct bnode *abnode, struct bnode_proc *aproc);
 static int fs_getstring(struct bnode *abnode, char *abuffer, afs_int32 alen);
 static int fs_getparm(struct bnode *abnode, afs_int32 aindex,
@@ -124,6 +126,7 @@ struct bnode_ops fsbnode_ops = {
     fs_getparm,
     fs_restartp,
     fs_hascore,
+    fs_procstarted,
 };
 
 /* demand attach fs bnode ops */
@@ -138,6 +141,7 @@ struct bnode_ops dafsbnode_ops = {
     dafs_getparm,
     fs_restartp,
     fs_hascore,
+    fs_procstarted,
 };
 
 /* Quick inline function to safely convert a fsbnode to a bnode without
@@ -698,11 +702,26 @@ fs_setstat(struct bnode *abnode, afs_int32 astatus)
 }
 
 static int
+fs_procstarted(struct bnode *bn, struct bnode_proc *aproc)
+{
+    int code = 0;
+
+    if (DoPidFiles) {
+	code = bozo_CreatePidFile(bn->name, aproc->coreName, aproc->pid);
+    }
+    return code;
+}
+
+static int
 fs_procexit(struct bnode *bn, struct bnode_proc *aproc)
 {
    struct fsbnode *abnode = (struct fsbnode *)bn;
 
     /* process has exited */
+
+    if (DoPidFiles) {
+	bozo_DeletePidFile(bn->name, aproc->coreName);
+    }
 
     if (aproc == abnode->volProc) {
 	abnode->volProc = 0;
