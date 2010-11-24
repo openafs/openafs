@@ -234,3 +234,6 @@ typedef int errno_t;
 #define HAVE_STRFTIME 1
 #define HAVE_GETCWD 1
 #define HAVE_STRUPR 1
+
+/* Build afsroken.dll as a dynamic library */
+#define ROKEN_LIB_DYNAMIC 1
