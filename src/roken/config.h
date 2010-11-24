@@ -35,3 +35,13 @@
 #elif defined(AFS_NBSD_ENV)
 # define inline __inline __attribute__((always_inline))
 #endif
+
+#ifdef AFS_NT40_ENV
+#define ROKEN_LIB_FUNCTION
+#define ROKEN_LIB_CALL     __cdecl
+#define ROKEN_LIB_VARIABLE __declspec(dllexport)
+#else
+#define ROKEN_LIB_FUNCTION
+#define ROKEN_LIB_CALL
+#define ROKEN_LIB_VARIABLE
+#endif
