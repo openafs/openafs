@@ -277,13 +277,16 @@ ReplayLog(struct ubik_dbase *adbase)
 	    } else if (opcode == LOGABORT)
 		panic("log abort\n");
 	    else if (opcode == LOGEND) {
+		struct ubik_version version;
 		tpos += 4;
 		code =
 		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     2 * sizeof(afs_int32));
 		if (code != 2 * sizeof(afs_int32))
 		    return UBADLOG;
-		code = (*adbase->setlabel) (adbase, 0, (ubik_version *)buffer);
+		version.epoch = ntohl(buffer[0]);
+		version.counter = ntohl(buffer[1]);
+		code = (*adbase->setlabel) (adbase, 0, &version);
 		if (code)
 		    return code;
 		logIsGood = 1;
