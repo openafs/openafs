@@ -302,23 +302,26 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 {
     afs_int32 length;
     afs_int32 code;
-    int tlen;
-    int moredata, iovno, iovoff, iovmax, clen, result, locked;
+    int moredata, iovno, iovoff, iovmax, result, locked;
     struct iovec *ciov;
+    struct iovec *rxiov;
+    int nio;
     struct page *pp;
     char *address;
-    char *page_buffer = osi_Alloc(PAGE_SIZE);
 
+    int curpage, bytes;
+    int pageoff;
+
+    rxiov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
     ciov = auio->uio_iov;
     pp = (struct page*) ciov->iov_base;
     iovmax = auio->uio_iovcnt - 1;
     iovno = iovoff = result = 0;
-    do {
 
+    do {
 	COND_GUNLOCK(locked);
 	code = rx_Read(acall, (char *)&length, sizeof(afs_int32));
 	COND_RE_GLOCK(locked);
-
 	if (code != sizeof(afs_int32)) {
 	    result = 0;
 	    afs_warn("Preread error. code: %d instead of %d\n",
@@ -359,64 +362,71 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    moredata = 0;
 	}
 
-	while (length > 0) {
-
-	    clen = ciov->iov_len - iovoff;
-	    tlen = afs_min(length, clen);
-	    address = page_buffer;
-	    COND_GUNLOCK(locked);
-	    code = rx_Read(acall, address, tlen);
-	    COND_RE_GLOCK(locked);
-
-	    if (code < 0) {
-	        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", code);
-		result = 0;
-		unlock_and_release_pages(auio);
-		goto done;
-	    } else if (code == 0) {
-		result = 0;
-		afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
-		unlock_and_release_pages(auio);
-		goto done;
-	    }
-	    length -= code;
-	    tlen -= code;
-
-	    if(tlen > 0) {
-		iovoff += code;
-		address += code;
-	    } else {
-		if(pp) {
-		    address = kmap_atomic(pp, KM_USER0);
-		    memcpy(address, page_buffer, PAGE_SIZE);
-		    kunmap_atomic(address, KM_USER0);
+	for (curpage = 0; curpage <= iovmax; curpage++) {
+	    pageoff = 0;
+	    while (pageoff < 4096) {
+		/* If no more iovs, issue new read. */
+		if (iovno >= nio) {
+		    COND_GUNLOCK(locked);
+		    bytes = rx_Readv(acall, rxiov, &nio, RX_MAXIOVECS, length);
+		    COND_RE_GLOCK(locked);
+		    if (bytes < 0) {
+		        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", bytes);
+			result = 0;
+			unlock_and_release_pages(auio);
+			goto done;
+		    } else if (bytes == 0) {
+			result = 0;
+			afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
+			unlock_and_release_pages(auio);
+			goto done;
+		    }
+		    length -= bytes;
+		    iovno = 0;
 		}
-		/* we filled a page, conditionally release it */
-		if (release_pages && ciov->iov_base) {
+		pp = (struct page *)auio->uio_iov[curpage].iov_base;
+		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= PAGE_CACHE_SIZE) {
+		    /* Copy entire (or rest of) current iovec into current page */
+		    if (pp) {
+			address = kmap_atomic(pp, KM_USER0);
+			memcpy(address + pageoff, rxiov[iovno].iov_base + iovoff,
+				rxiov[iovno].iov_len - iovoff);
+			kunmap_atomic(address, KM_USER0);
+		    }
+		    pageoff += rxiov[iovno].iov_len - iovoff;
+		    iovno++;
+		    iovoff = 0;
+		} else {
+		    /* Copy only what's needed to fill current page */
+		    if (pp) {
+			address = kmap_atomic(pp, KM_USER0);
+			memcpy(address + pageoff, rxiov[iovno].iov_base + iovoff,
+				PAGE_CACHE_SIZE - pageoff);
+			kunmap_atomic(address, KM_USER0);
+		    }
+		    iovoff += PAGE_CACHE_SIZE - pageoff;
+		    pageoff = PAGE_CACHE_SIZE;
+		}
+		/* we filled a page, or this is the last page.  conditionally release it */
+		if (pp && ((pageoff == PAGE_CACHE_SIZE && release_pages)
+				|| (length == 0 && iovno >= nio))) {
 		    /* this is appropriate when no caller intends to unlock
 		     * and release the page */
                     SetPageUptodate(pp);
                     if(PageLocked(pp))
                         unlock_page(pp);
                     else
-                        afs_warn("afs_NoCacheFetchProc: page not locked at iovno %d!\n", iovno);
+                        afs_warn("afs_NoCacheFetchProc: page not locked!\n");
                     put_page(pp); /* decrement refcount */
 		}
-		/* and carry uio_iov */
-		iovno++;
-		if (iovno > iovmax)
+		if (length == 0 && iovno >= nio)
 		    goto done;
-
-		ciov = (auio->uio_iov + iovno);
-		pp = (struct page*) ciov->iov_base;
-		iovoff = 0;
 	    }
 	}
     } while (moredata);
 
 done:
-    if(page_buffer)
-    	osi_Free(page_buffer, PAGE_SIZE);
+    osi_FreeSmallSpace(rxiov);
     return result;
 }
 
