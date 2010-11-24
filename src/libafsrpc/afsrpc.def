@@ -277,6 +277,23 @@ EXPORTS
         registerthread                          @287
         swapthreadname                          @288
 
+	rx_opaque_new                           @289
+	rx_opaque_alloc                         @290
+	rx_opaque_populate                      @291
+	rx_opaque_copy                          @292
+	rx_opaque_freeContents                  @293
+	rx_opaque_zeroFreeContents              @294
+	rx_opaque_free                          @295
+	rx_opaque_zeroFree                      @296
+	rx_identity_match                       @297
+	rx_identity_populate                    @298
+	rx_identity_copy                        @299
+	rx_identity_copyContents                @300
+	rx_identity_new                         @301
+	rx_identity_freeContents                @302
+	rx_identity_free                        @303
+
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
