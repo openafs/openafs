@@ -2,7 +2,7 @@ EXPORTS
 	ct_memcmp		@1
 	err			@3
 	errx			@4
-	getopt			@5
+	rk_getopt		@5
 	issuid			@9
 	net_read		@10
 	net_write		@11
@@ -27,3 +27,6 @@ EXPORTS
 	base64_decode		@31
 	base64_encode		@32
 	rk_strsep		@33
+        rk_optarg               @34 DATA
+        rk_optind               @35 DATA
+        rk_opterr               @36 DATA
