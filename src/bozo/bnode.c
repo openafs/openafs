@@ -41,6 +41,7 @@ static struct bnode_stats {
 } bnode_stats;
 
 extern const char *DoCore;
+extern const char *DoPidFiles;
 #ifndef AFS_NT40_ENV
 extern char **environ;		/* env structure */
 #endif
@@ -976,6 +977,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     tp->pid = cpid;
     tp->flags = BPROC_STARTED;
     tp->flags &= ~BPROC_EXITED;
+    BOP_PROCSTARTED(abnode, tp);
     bnode_Check(abnode);
     return 0;
 }

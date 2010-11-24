@@ -58,6 +58,7 @@ FILE *bozo_logFile;
 const char *DoCore;
 int DoLogging = 0;
 int DoSyslog = 0;
+const char *DoPidFiles = NULL;
 #ifndef AFS_NT40_ENV
 int DoSyslogFacility = LOG_DAEMON;
 #endif
@@ -714,6 +715,90 @@ background(void)
 #endif /* ! AFS_NT40_ENV */
 #endif
 
+static char *
+make_pid_filename(char *ainst, char *aname)
+{
+    char *buffer = NULL;
+    int length;
+
+    length = strlen(DoPidFiles) + strlen(ainst) + 6;
+    if (aname && *aname) {
+	length += strlen(aname) + 1;
+    }
+    buffer = malloc(length * sizeof(char));
+    if (!buffer) {
+	if (aname) {
+	    bozo_Log("Failed to alloc pid filename buffer for %s.%s.\n",
+		     ainst, aname);
+	} else {
+	    bozo_Log("Failed to alloc pid filename buffer for %s.\n", ainst);
+	}
+    } else {
+	if (aname && *aname) {
+	    snprintf(buffer, length, "%s/%s.%s.pid", DoPidFiles, ainst,
+		     aname);
+	} else {
+	    snprintf(buffer, length, "%s/%s.pid", DoPidFiles, ainst);
+	}
+    }
+    return buffer;
+}
+
+/**
+ * Write a file containing the pid of the named process.
+ *
+ * @param ainst instance name
+ * @param aname sub-process name of the instance, may be null
+ * @param apid  process id of the newly started process
+ *
+ * @returns status
+ */
+int
+bozo_CreatePidFile(char *ainst, char *aname, pid_t apid)
+{
+    int code = 0;
+    char *pidfile = NULL;
+    FILE *fp;
+
+    pidfile = make_pid_filename(ainst, aname);
+    if (!pidfile) {
+	return ENOMEM;
+    }
+    if ((fp = fopen(pidfile, "w")) == NULL) {
+	bozo_Log("Failed to open pidfile %s; errno=%d\n", pidfile, errno);
+	free(pidfile);
+	return errno;
+    }
+    if (fprintf(fp, "%ld\n", afs_printable_int32_ld(apid)) < 0) {
+	code = errno;
+    }
+    if (fclose(fp) != 0) {
+	code = errno;
+    }
+    free(pidfile);
+    return code;
+}
+
+/**
+ * Clean a pid file for a process which just exited.
+ *
+ * @param ainst instance name
+ * @param aname sub-process name of the instance, may be null
+ *
+ * @returns status
+ */
+int
+bozo_DeletePidFile(char *ainst, char *aname)
+{
+    char *pidfile = NULL;
+    pidfile = make_pid_filename(ainst, aname);
+    if (pidfile) {
+	unlink(pidfile);
+	free(pidfile);
+    }
+    return 0;
+}
+
 /* start a process and monitor it */
 
 #include "AFS_component_version_number.c"
@@ -858,6 +943,10 @@ main(int argc, char **argv, char **envp)
 		printf("Invalid audit interface '%s'\n", interface);
 		exit(1);
 	    }
+	} else if (strncmp(argv[code], "-pidfiles=", 10) == 0) {
+	    DoPidFiles = (argv[code]+10);
+	} else if (strncmp(argv[code], "-pidfiles", 9) == 0) {
+	    DoPidFiles = AFSDIR_BOSCONFIG_DIR;
 	}
 	else {
 
@@ -871,6 +960,7 @@ main(int argc, char **argv, char **envp)
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-cores=<none|path>] \n"
+		   "[-pidfiles[=path]] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
@@ -879,6 +969,7 @@ main(int argc, char **argv, char **envp)
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-cores=<none|path>] \n"
+		   "[-pidfiles[=path]] "
 		   "[-help]\n");
 #endif
 	    fflush(stdout);
@@ -1059,6 +1150,10 @@ main(int argc, char **argv, char **envp)
 
     afsconf_SetNoAuthFlag(tdir, noAuth);
     afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
+
+    if (DoPidFiles) {
+	bozo_CreatePidFile("bosserver", NULL, getpid());
+    }
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
