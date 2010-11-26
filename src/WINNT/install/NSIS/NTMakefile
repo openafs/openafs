@@ -53,19 +53,25 @@ $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
 !IF ("$(AFSDEV_BUILDTYPE)"=="FREE")
 !IF ("$(CPU)" == "i386")
 MSI_PLATFORM=Intel
+ARCH=x86
 !ELSE IF ("$(CPU)" == "amd64")
 MSI_PLATFORM=x64
+ARCH=x64
 !ELSE
 MSI_PLATFORM=$(CPU)
+ARCH=$(CPU)
 !ENDIF
 MSI_CONFIG=Retail
 !ELSE
 !IF ("$(CPU)" == "i386")
 MSI_PLATFORM=Intel
+ARCH=x86
 !ELSE IF ("$(CPU)" == "amd64")
 MSI_PLATFORM=x64
+ARCH=x64
 !ELSE
 MSI_PLATFORM=$(CPU)
+ARCH=$(CPU)
 !ENDIF
 MSI_CONFIG=Debug
 !ENDIF
