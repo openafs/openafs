@@ -1309,7 +1309,7 @@ afs_vop_mkdir(ap)
     struct vcache *vcp;
 #ifndef AFS_FBSD80_ENV
     struct thread *p = ap->a_cnp->cn_thread;
-#end
+#endif
 
     GETNAME();
 #ifdef DIAGNOSTIC
