@@ -70,13 +70,15 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
     return code;
 }
 
-#define so_is_disconn(so) ((so)->so_state & SS_ISDISCONNECTED)
-
 extern int rxk_ListenerPid;
 void
 osi_StopListener(void)
 {
+    struct sockaddr_in taddr;
+    struct iovec dvec;
     struct proc *p;
+    char c;
+    c = '\0';
 
     /*
      * Have to drop global lock to safely do this.
@@ -95,27 +97,25 @@ osi_StopListener(void)
     } else
 	afs_warn("osi_StopListener: rxk_Listener not found (pid %u)\n",
 	    rxk_ListenerPid);
-#ifdef AFS_FBSD70_ENV
-    {
-      /* Avoid destroying socket until osi_NetReceive has
-       * had a chance to clean up */
-      int tries;
-      struct mtx s_mtx;
 
-      MUTEX_INIT(&s_mtx, "rx_shutdown_mutex", MUTEX_DEFAULT, 0);
-      MUTEX_ENTER(&s_mtx);
-      tries = 3;
-      while ((tries > 0) && (!so_is_disconn(rx_socket))) {
-          afs_warn("osi_StopListener: waiting (%d) ", tries);
-	msleep(&osi_StopListener, &s_mtx, PSOCK | PCATCH,
-	       "rx_shutdown_timedwait", 1 * hz);
-	--tries;
-      }
-      soclose(rx_socket);
-      MUTEX_EXIT(&s_mtx);
-      MUTEX_DESTROY(&s_mtx);
+    /* Avoid destroying socket until osi_NetReceive has
+    * had a chance to clean up.  Otherwise we can't restart. */
+    bzero(&taddr, sizeof(taddr));
+    taddr.sin_len = sizeof(struct sockaddr_in);
+    taddr.sin_family = AF_INET;
+    taddr.sin_port = rx_port;
+    taddr.sin_addr.s_addr = htonl(0x7f000001);	/* no place like localhost */
+    bzero(&dvec, sizeof(dvec));
+    dvec.iov_base = &c;
+    dvec.iov_len = 1;
+    while(rxk_ListenerPid) {
+	afs_warn("waiting for rxk_ListenerPid to die\n");
+	osi_NetSend(rx_socket, &taddr, &dvec, 1, 1, 0);
+	afs_osi_Sleep(&rxk_ListenerPid);
     }
-#endif
+    /* in theory, we are now the only people doing anything with rx_socket */
+    soclose(rx_socket);
+
     if (haveGlock)
 	AFS_GLOCK();
 }
