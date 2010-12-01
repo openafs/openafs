@@ -1307,6 +1307,11 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define IS_SLOCK 4
 #define IS_WLOCK 8
 
+/* values for adown value of afs_LoopServers */
+#define AFS_LS_UP 0
+#define AFS_LS_DOWN 1
+#define AFS_LS_ALL 2
+
 /* values for flag param of afs_CheckVolumeNames */
 #define AFS_VOLCHECK_EXPIRED	0x1	/* volumes whose callbacks have expired */
 #define AFS_VOLCHECK_BUSY	0x2	/* volumes which were marked busy */

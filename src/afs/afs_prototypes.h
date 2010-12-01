@@ -856,6 +856,15 @@ extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
 extern afs_int32 afs_ServerDown(struct srvAddr *sa);
 extern void afs_CountServers(void);
 extern void afs_CheckServers(int adown, struct cell *acellp);
+extern void afs_LoopServers(int adown, struct cell *acellp, int vlalso,
+			    void (*func1) (struct rx_connection **rxconns,
+					   int nconns, int nservers,
+					   struct afs_conn **conns,
+					   struct srvAddr **addrs),
+			    void (*func2) (struct rx_connection **rxconns,
+					   int nconns, int nservers,
+					   struct afs_conn **conns,
+					   struct srvAddr **addrs));
 extern unsigned int afs_random(void);
 extern int afs_randomMod15(void);
 extern int afs_randomMod127(void);
