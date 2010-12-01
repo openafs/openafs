@@ -65,6 +65,7 @@ lib/roken/hex.c			roken/hex.c
 lib/roken/hex.h			roken/hex.h
 lib/roken/issuid.c		roken/issuid.c
 lib/roken/localtime_r.c		roken/localtime_r.c
+lib/roken/mkstemp.c		roken/mkstemp.c
 lib/roken/net_read.c		roken/net_read.c
 lib/roken/net_write.c		roken/net_write.c
 lib/roken/roken.h.in		roken/roken.h.in
