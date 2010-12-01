@@ -17,6 +17,7 @@
 		rk_emalloc;
 		rk_erealloc;
 		rk_hex_encode;
+		rk_mkstemp;
 		rk_print_version;
 		rk_socket;
 		rk_strcasecmp;

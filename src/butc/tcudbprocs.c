@@ -1455,11 +1455,7 @@ restoreText(struct butm_tapeInfo *tapeInfo,
 
     /* open the text file */
     sprintf(filename, "%s/bu_XXXXXX", gettmpdir());
-#if defined (HAVE_MKSTEMP)
     fid = mkstemp(filename);
-#else
-    fid = open(mktemp(filename), O_RDWR | O_CREAT | O_EXCL, 0600);
-#endif
     if (fid < 0) {
 	ErrorLog(0, rstTapeInfoPtr->taskId, errno, 0,
 		 "Can't open temporary text file: %s\n", filename);

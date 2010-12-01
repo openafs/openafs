@@ -1336,6 +1336,7 @@ AC_REPLACE_FUNCS([ \
 	errx \
 	getopt \
 	getprogname \
+	mkstemp \
 	strcasecmp \
 	strlcat \
 	strnlen \

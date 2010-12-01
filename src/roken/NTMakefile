@@ -37,6 +37,7 @@ ROKEN_OBJS = \
 	$(OUT)\hex.obj \
         $(OUT)\issuid.obj \
 	$(OUT)\localtime_r.obj \
+	$(OUT)\mkstemp.obj \
 	$(OUT)\net_read.obj \
 	$(OUT)\net_write.obj \
 	$(OUT)\snprintf.obj \

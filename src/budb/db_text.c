@@ -486,31 +486,3 @@ saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
     printf("wrote debug file %s\n", filename);
 }
 
-
-#if (defined(AFS_HPUX_ENV)) || defined(AFS_NT40_ENV)
-
-/* mkstemp
- * entry:
- *	st - string containing template for a tmp file name
- * exit:
- *	-1 - failed
- *	0-n - open file descriptor
- * notes:
- *	1) missing in Ultrix, HP/UX and AIX 221 environment
- *      2) iterate some number of times to alleviate the race?
- */
-
-int
-mkstemp(char *st)
-{
-    int retval = -1;
-
-#ifdef AFS_LINUX20_ENV
-    retval = open(mkstemp(st), O_RDWR | O_CREAT | O_EXCL, 0600);
-#else
-    retval = open(mktemp(st), O_RDWR | O_CREAT | O_EXCL, 0600);
-#endif
-
-    return (retval);
-}
-#endif

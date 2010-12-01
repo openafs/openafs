@@ -111,6 +111,9 @@ hex.o: ${UPSTREAM}/hex.c
 issuid.o: ${UPSTREAM}/issuid.c
 	$(AFS_CCRULE) $(UPSTREAM)/issuid.c
 
+mkstemp.o: ${UPSTREAM}/mkstemp.c
+	$(AFS_CCRULE) $(UPSTREAM)/mkstemp.c
+
 net_read.o: ${UPSTREAM}/net_read.c
 	$(AFS_CCRULE) $(UPSTREAM)/net_read.c
 

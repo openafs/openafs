@@ -30,3 +30,5 @@ EXPORTS
         rk_optarg               @34 DATA
         rk_optind               @35 DATA
         rk_opterr               @36 DATA
+	rk_mkstemp		@37
+
