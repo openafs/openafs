@@ -1199,7 +1199,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
     return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && (! defined(AFS_DARWIN_ENV)) && (! defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
@@ -1236,7 +1236,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 #endif /* IFF_POINTTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
-#if defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
+#if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
