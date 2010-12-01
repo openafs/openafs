@@ -26,6 +26,8 @@
 # define FALSE 0
 #endif
 
+#define KRB5_BUFSIZ 1024
+
 #define KRB5_LIB_FUNCTION static AFS_UNUSED
 #define KRB5_LIB_CALL
 
