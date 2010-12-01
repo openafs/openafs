@@ -249,10 +249,6 @@ struct sockaddr_dl;
 #include <time.h>
 #endif
 
-#ifdef HAVE_WS2TCPIP_H
-#include <ws2tcpip.h>
-#endif
-
 #ifdef HAVE_PATHS_H
 #include <paths.h>
 #endif
@@ -1087,6 +1083,15 @@ rk_timegm(struct tm *tm);
 void
 rk_qsort(void *, size_t, size_t, int (*)(const void *, const void *));
 #endif
+
+#if defined(HAVE_ARC4RANDOM)
+#define rk_random() arc4random()
+#elif defined(HAVE_RANDOM)
+#define rk_random() random()
+#else
+#define rk_random() rand()
+#endif
+
 
 #if defined(__linux__) && defined(SOCK_CLOEXEC) && !defined(SOCKET_WRAPPER_REPLACE) && !defined(__SOCKET_WRAPPER_H__)
 #undef socket
