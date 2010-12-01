@@ -1207,7 +1207,7 @@ afsi_SetServerIPRank(sa, ifa)
     t = ifaddr_dstaddress(ifa, &sout, sizeof(sout));
     if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
-	myDstaddr = sin->sin_addr.s_addr;
+	myDstaddr = ntohl(sin->sin_addr.s_addr);
     } else {
 	myDstaddr = 0;
     }
