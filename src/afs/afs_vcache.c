@@ -350,6 +350,39 @@ afs_FreeCBR(struct afs_cbr *asp)
     return 0;
 }
 
+static void
+FlushAllVCBs(int nconns, struct rx_connection **rxconns,
+	     struct afs_conn **conns)
+{
+    afs_int32 *results;
+    afs_int32 i;
+
+    results = afs_osi_Alloc(nconns * sizeof (afs_int32));
+    osi_Assert(results != NULL);
+
+    AFS_GUNLOCK();
+    multi_Rx(rxconns,nconns)
+    {
+        multi_RXAFS_GiveUpAllCallBacks();
+        results[multi_i] = multi_error;
+    } multi_End;
+    AFS_GLOCK();
+
+    /*
+     * Freeing the CBR will unlink it from the server's CBR list
+     * do it here, not in the loop, because a dynamic CBR will call
+     * into the memory management routines.
+     */
+    for ( i = 0 ; i < nconns ; i++ ) {
+	if (results[i] == 0) {
+	    /* Unchain all of them */
+	    while (conns[i]->srvr->server->cbrs)
+		afs_FreeCBR(conns[i]->srvr->server->cbrs);
+	}
+    }
+    afs_osi_Free(results, nconns * sizeof(afs_int32));
+}
+
 /*!
  *   Flush all queued callbacks to all servers.
  *
@@ -374,6 +407,10 @@ afs_FlushVCBs(afs_int32 lockit)
     struct afs_conn *tc;
     int safety1, safety2, safety3;
     XSTATS_DECLS;
+
+    if (AFS_IS_DISCONNECTED)
+	return ENETDOWN;
+
     if ((code = afs_InitReq(&treq, afs_osi_credp)))
 	return code;
     treq.flags |= O_NONBLOCK;
@@ -382,6 +419,15 @@ afs_FlushVCBs(afs_int32 lockit)
 
     if (lockit)
 	ObtainWriteLock(&afs_xvcb, 273);
+    /*
+     * Shutting down.
+     * First, attempt a multi across everything, all addresses
+     * for all servers we know of.
+     */
+
+    if (lockit == 2)
+	afs_LoopServers(2, NULL, 0, FlushAllVCBs, NULL);
+
     ObtainReadLock(&afs_xserver);
     for (i = 0; i < NSERVERS; i++) {
 	for (safety1 = 0, tsp = afs_servers[i];
@@ -3116,7 +3162,7 @@ afs_DisconGiveUpCallbacks(void)
 
     ReleaseWriteLock(&afs_xvcache);
 
-    afs_FlushVCBs(1);
+    afs_FlushVCBs(2);
 }
 
 /*!
