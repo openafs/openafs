@@ -1498,6 +1498,12 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
 	ObtainWriteLock(&afs_xvcache, 901);
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
     code = afs_FlushVCache(avc, &slept);
+
+    if (avc->f.states & CVInit) {
+	avc->f.states &= ~CVInit;
+	afs_osi_Wakeup(&avc->f.states);
+    }
+
     if (!haveVlock)
 	ReleaseWriteLock(&afs_xvcache);
     if (!haveGlock)
