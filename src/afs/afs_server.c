@@ -683,18 +683,17 @@ afs_CheckServers(int adown, struct cell *acellp)
 	if ( afs_setTimeHost == NULL ) {
 	    multi_Rx(rxconns,nconns)
 	      {
-		tv.tv_sec = tv.tv_usec = 0;
-		multi_RXAFS_GetTime(
-			(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
-		tc = conns[multi_i];
-		sa = tc->parent->srvr;
-		if (conntimer[multi_i] == 1)
-		  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
-		end = osi_Time();
-		results[multi_i]=multi_error;
-		if ((start == end) && !multi_error)
-		  deltas[multi_i] = end - tv.tv_sec;
-
+		  tv.tv_sec = tv.tv_usec = 0;
+		  multi_RXAFS_GetTime(
+		      (afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
+		  tc = conns[multi_i];
+		  sa = tc->parent->srvr;
+		  if (conntimer[multi_i] == 1)
+		      rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
+		  end = osi_Time();
+		  results[multi_i]=multi_error;
+		  if ((start == end) && !multi_error)
+		      deltas[multi_i] = end - tv.tv_sec;
 	      } multi_End;
 	    }
 	else {			/* find and query setTimeHost only */
@@ -716,29 +715,29 @@ afs_CheckServers(int adown, struct cell *acellp)
     }
 
     for(i=0;i<nconns;i++){
-      tc = conns[i];
-      sa = tc->parent->srvr;
+	tc = conns[i];
+	sa = tc->parent->srvr;
 
-      if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->parent->srvr == sa)) {
-	/* server back up */
-	print_internet_address("afs: file server ", sa, " is back up", 2);
+	if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->parent->srvr == sa)) {
+	    /* server back up */
+	    print_internet_address("afs: file server ", sa, " is back up", 2);
 
-	ObtainWriteLock(&afs_xserver, 244);
-	ObtainWriteLock(&afs_xsrvAddr, 245);
-	afs_MarkServerUpOrDown(sa, 0);
-	ReleaseWriteLock(&afs_xsrvAddr);
-	ReleaseWriteLock(&afs_xserver);
+	    ObtainWriteLock(&afs_xserver, 244);
+	    ObtainWriteLock(&afs_xsrvAddr, 245);
+	    afs_MarkServerUpOrDown(sa, 0);
+	    ReleaseWriteLock(&afs_xsrvAddr);
+	    ReleaseWriteLock(&afs_xserver);
 
-	if (afs_waitForeverCount) {
-	  afs_osi_Wakeup(&afs_waitForever);
+	    if (afs_waitForeverCount) {
+		afs_osi_Wakeup(&afs_waitForever);
+	    }
+	} else {
+	    if ((results[i] < 0) && (results[i] != RXGEN_OPCODE)) {
+		/* server crashed */
+		afs_ServerDown(sa);
+		ForceNewConnections(sa);  /* multi homed clients */
+	    }
 	}
-      } else {
-	if (results[i] < 0) {
-	  /* server crashed */
-	  afs_ServerDown(sa);
-	  ForceNewConnections(sa);  /* multi homed clients */
-	}
-      }
     }
 
     /*
@@ -1722,6 +1721,11 @@ afs_GetCapabilities(struct server *ts)
     ReleaseWriteLock(&afs_xserver);
     code = RXAFS_GetCapabilities(tc->id, &caps);
     ObtainWriteLock(&afs_xserver, 723);
+    /* we forced a conn above; important we mark it down if needed */
+    if ((code < 0) && (code != RXGEN_OPCODE)) {
+	afs_ServerDown(tc->parent->srvr);
+	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
+    }
     afs_PutConn(tc, SHARED_LOCK);
     if ( code && code != RXGEN_OPCODE ) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
