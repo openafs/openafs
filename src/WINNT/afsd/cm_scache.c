@@ -543,7 +543,7 @@ cm_SuspendSCache(void)
     cm_scache_t * scp;
     time_t now;
 
-    cm_GiveUpAllCallbacksAllServers(TRUE);
+    cm_GiveUpAllCallbacksAllServersMulti(TRUE);
 
     /* 
      * After this call all servers are marked down.
@@ -610,7 +610,7 @@ cm_ShutdownSCache(void)
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
-    cm_GiveUpAllCallbacksAllServers(FALSE);
+    cm_GiveUpAllCallbacksAllServersMulti(FALSE);
 
     return cm_dnlcShutdown();
 }

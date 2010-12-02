@@ -2090,4 +2090,110 @@ cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
     lock_ReleaseWrite(&cm_serverLock);
 }
 
+void
+cm_GiveUpAllCallbacksAllServersMulti(afs_int32 markDown)
+{
+    long code;
+    cm_conn_t **conns = NULL;
+    struct rx_connection **rxconns = NULL;
+    afs_int32 i, nconns = 0, maxconns;
+    cm_server_t ** serversp, *tsp;
+    afs_int32 *results;
+    time_t start, *deltas;
+
+    maxconns = cm_numFileServers;
+    if (maxconns == 0)
+        return;
+
+    conns = (cm_conn_t **)malloc(maxconns * sizeof(cm_conn_t *));
+    rxconns = (struct rx_connection **)malloc(maxconns * sizeof(struct rx_connection *));
+    deltas = (time_t *)malloc(maxconns * sizeof (time_t));
+    results = (afs_int32 *)malloc(maxconns * sizeof (afs_int32));
+    serversp = (cm_server_t **)malloc(maxconns * sizeof(cm_server_t *));
+
+    lock_ObtainRead(&cm_serverLock);
+    for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
+        if (tsp->type != CM_SERVER_FILE ||
+            (tsp->flags & CM_SERVERFLAG_DOWN) ||
+            tsp->cellp == NULL          /* SetPrefs only */)
+            continue;
+
+        cm_GetServerNoLock(tsp);
+        lock_ReleaseRead(&cm_serverLock);
+
+        serversp[nconns] = tsp;
+        code = cm_ConnByServer(tsp, cm_rootUserp, &conns[nconns]);
+        if (code) {
+            lock_ObtainRead(&cm_serverLock);
+            cm_PutServerNoLock(tsp);
+            continue;
+        }
+        lock_ObtainRead(&cm_serverLock);
+        rxconns[nconns] = cm_GetRxConn(conns[nconns]);
+        rx_SetConnDeadTime(rxconns[nconns], 10);
+
+        nconns++;
+    }
+    lock_ReleaseRead(&cm_serverLock);
+
+    if (nconns) {
+        /* Perform the multi call */
+        start = time(NULL);
+        multi_Rx(rxconns,nconns)
+        {
+            multi_RXAFS_GiveUpAllCallBacks();
+            results[multi_i]=multi_error;
+        } multi_End;
+    }
+
+    /* Process results of servers that support RXAFS_GetCapabilities */
+    for (i=0; i<nconns; i++) {
+        rx_SetConnDeadTime(rxconns[i], ConnDeadtimeout);
+        rx_PutConnection(rxconns[i]);
+        cm_PutConn(conns[i]);
+
+        tsp = serversp[i];
+        cm_GCConnections(tsp);
+
+        if (markDown) {
+            cm_server_vols_t * tsrvp;
+            cm_volume_t * volp;
+            int i;
+
+            cm_ForceNewConnections(tsp);
+
+            lock_ObtainMutex(&tsp->mx);
+            if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+                tsp->flags |= CM_SERVERFLAG_DOWN;
+                tsp->downTime = time(NULL);
+            }
+            /* Now update the volume status */
+            for (tsrvp = tsp->vols; tsrvp; tsrvp = tsrvp->nextp) {
+                for (i=0; i<NUM_SERVER_VOLS; i++) {
+                    if (tsrvp->ids[i] != 0) {
+                        cm_req_t req;
+
+                        cm_InitReq(&req);
+                        lock_ReleaseMutex(&tsp->mx);
+                        code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
+                                                 &req, CM_GETVOL_FLAG_NO_LRU_UPDATE | CM_GETVOL_FLAG_NO_RESET, &volp);
+                        lock_ObtainMutex(&tsp->mx);
+                        if (code == 0) {
+                            cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
+                            cm_PutVolume(volp);
+                        }
+                    }
+                }
+            }
+            lock_ReleaseMutex(&tsp->mx);
+        }
+    }
+
+    free(conns);
+    free(rxconns);
+    free(deltas);
+    free(results);
+    free(serversp);
+}
+
 
