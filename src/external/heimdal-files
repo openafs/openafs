@@ -85,4 +85,5 @@ lib/roken/vwarnx.c		roken/vwarnx.c
 lib/roken/warn.c		roken/warn.c
 lib/roken/warnx.c		roken/warnx.c
 lib/roken/warnerr.c		roken/warnerr.c
+lib/roken/write_pid.c		roken/write_pid.c
 
