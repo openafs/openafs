@@ -150,4 +150,9 @@ extern int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host o
 extern int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
 extern int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
 extern int cm_LanAdapterChangeDetected;
+
+/* Protected by cm_serverLock */
+extern cm_server_t *cm_allServersp;
+extern afs_uint32   cm_numFileServers;
+extern afs_uint32   cm_numVldbServers;
 #endif /*  OPENAFS_WINNT_AFSD_CM_SERVER_H */
