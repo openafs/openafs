@@ -8,7 +8,7 @@ SHLIB_SUFFIX="so"
 CCOBJ="$CC"
 MT_CC="$CC"
 XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} ${LIB_libintl}"
-MT_LIBS="-lpthread ${XLIBS}"
+MT_LIBS='-lpthread ${XLIBS}'
 
 dnl debugging and optimization flag defaults
 dnl Note, these are all the defaults for if debug/optimize turned on, and
@@ -144,7 +144,7 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O"
 		MT_CC="/opt/ansic/bin/cc -Ae"
 		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
-		MT_LIBS="-L/opt/dce/lib -ldce ${XLIBS}"
+		MT_LIBS='-L/opt/dce/lib -ldce ${XLIBS}'
 		MV="/bin/mv"
 		OPTMZ="-O"
 		PAM_CFLAGS="+DA1.0 +z -Wl,+k"
@@ -185,7 +185,6 @@ case $AFS_SYSNAME in
 		XCFLAGS64="${XCFLAGS0} +DA2.0W"
 		XCFLAGS="${XCFLAGS0} +DA1.0"
 		XLIBELFA="-lelf"
-		#XLIBS="${LIB_AFSDB} -lnsl"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -214,7 +213,6 @@ case $AFS_SYSNAME in
 		XCFLAGS64="${XCFLAGS0} +DD64"
 		XCFLAGS="${XCFLAGS0}"
 		XLIBELFA="-lelf"
-		#XLIBS="${LIB_AFSDB} -lnsl"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -257,7 +255,7 @@ case $AFS_SYSNAME in
 
 	*nbsd15|*nbsd16)
 		MT_CFLAGS='${XCFLAGS}'
-		MT_LIBS="${XLIBS}"
+		MT_LIBS='${XLIBS}'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
@@ -445,7 +443,7 @@ case $AFS_SYSNAME in
 	*_darwin_100)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
-		MT_LIBS="${XLIBS}"
+		MT_LIBS='${XLIBS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
