@@ -817,6 +817,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 	tvc = freeVCList;	/* take from free list */
 	freeVCList = tvc->nextfree;
 	tvc->nextfree = NULL;
+	afs_vcount++; /* balanced by FlushVCache */
     } /* end of if (!freeVCList) */
 
 #endif /* AFS_LINUX22_ENV */
