@@ -58,20 +58,6 @@ TOP_SRCDIR = ../..
 
 include Makefile.common
 
-COMMON_INCLUDE = \
-	-I.. \
-	-I../nfs \
-	-I${TOP_SRCDIR} \
-	-I${TOP_SRCDIR}/afs \
-	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
-	-I${TOP_SRCDIR}/config \
-	-I${TOP_SRCDIR}/rx \
-	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
-	-I${TOP_SRCDIR}/rxkad \
-	-I${TOP_SRCDIR}/util \
-	-I${TOP_SRCDIR}/../include \
-	-I${TOP_SRCDIR}/../include/afs
-
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) -f  $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
