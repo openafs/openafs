@@ -698,7 +698,7 @@ STDMETHODIMP CShellExt::XIconExt::GetOverlayInfo(LPWSTR pwszIconFile
     _tcsncpy(pwszIconFile, szModule, cchMax);
 #endif
     *pIndex = 30;
-    *pdwFlags = ISIOI_ICONFILE | ISIOI_ICONINDEX;
+    *pdwFlags = ISIOI_ICONFILE|ISIOI_ICONINDEX;
     return S_OK;
 }
 
@@ -718,8 +718,9 @@ STDMETHODIMP CShellExt::XIconExt::IsMemberOf(LPCWSTR pwszPath,DWORD dwAttrib)
 #else
     WideCharToMultiByte( CP_ACP,0,pwszPath,-1,szPath,MAX_PATH,NULL,NULL);
 #endif
-    if (IsSymlink(szPath))
-	return S_OK;
+    if (IsSymlink(szPath) || IsMountPoint(szPath)) {
+        return S_OK;
+    }
     return S_FALSE;
 }	
 
