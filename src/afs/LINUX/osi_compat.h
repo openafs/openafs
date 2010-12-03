@@ -233,6 +233,12 @@ zero_user_segments(struct page *pp, unsigned int from1, unsigned int to1,
     flush_dcache_page(pp);
     kunmap_atomic(base, KM_USER0);
 }
+
+static inline void
+zero_user_segment(struct page *pp, unsigned int from1, unsigned int to1)
+{
+    zero_user_segments(pp, from1, to1, 0, 0);
+}
 #endif
 
 #ifndef HAVE_LINUX_KERNEL_SETSOCKOPT
