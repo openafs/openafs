@@ -1383,16 +1383,21 @@ static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
     AFS_GUNLOCK();
 
     if (code < 0) {
-	goto out;
+	return code;
     }
 
     name[code] = '\0';
-    code = vfs_follow_link(nd, name);
+    nd_set_link(nd, name);
+    return 0;
+}
 
-out:
-    osi_Free(name, PATH_MAX);
-
-    return code;
+static int
+afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
+{
+    char *name = nd_get_link(nd);
+    if (name && !IS_ERR(name)) {
+	osi_Free(name, PATH_MAX);
+    }
 }
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
@@ -2426,6 +2431,7 @@ static struct inode_operations afs_symlink_iops = {
 #else /* !defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE) */
   .readlink = 		afs_linux_readlink,
   .follow_link =	afs_linux_follow_link,
+  .put_link =		afs_linux_put_link,
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
   .setattr =		afs_notify_change,
 };
