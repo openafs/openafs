@@ -223,6 +223,12 @@ STDAPI DllRegisterServer(void)
     wsprintf(szSubKey, TEXT("Folder\\shellex\\ContextMenuHandlers\\%s"),STR_EXT_TITLE);
     if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
         return lResult;
+    wsprintf(szSubKey, TEXT("Directory\\Background\\shellex\\ContextMenuHandlers\\%s"),STR_EXT_TITLE);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
+        return lResult;
+    wsprintf(szSubKey, TEXT("LibraryFolder\\background\\shellex\\ContextMenuHandlers\\%s"),STR_EXT_TITLE);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
+        return lResult;
 
     /*
     Register InfoTip
