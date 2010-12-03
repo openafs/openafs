@@ -11,6 +11,8 @@
 #include "stdafx.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <shtypes.h>
+#include <shlwapi.h>
 
 extern "C" {
 #include <afs/param.h>
@@ -571,58 +573,87 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
     STGMEDIUM medium;
 
     // We must have a data object
-    if (pdobj == NULL)
-	    return E_FAIL;
+    if ((pdobj == NULL) && (pidlFolder == NULL))
+        return E_FAIL;
 
-    //  Use the given IDataObject to get a list of filenames (CF_HDROP)
-    hres = pdobj->GetData(&fmte, &medium);
-    if (FAILED(hres)) {
-	return E_FAIL;
+    if (pdobj) {
+        //  Use the given IDataObject to get a list of filenames (CF_HDROP)
+        hres = pdobj->GetData(&fmte, &medium);
+        if (FAILED(hres)) {
+        return E_FAIL;
+        }
+
+        int nNumFiles = DragQueryFile((HDROP)medium.hGlobal, 0xFFFFFFFF, NULL, 0);
+        if (nNumFiles == 0)
+            hres = E_FAIL;
+        else {
+            pThis->m_bDirSelected = FALSE;
+
+            for (int ii = 0; ii < nNumFiles; ii++) {
+                CString strFileName;
+
+                // Get the size of the file name string
+                int nNameLen = DragQueryFile((HDROP)medium.hGlobal, ii, 0, 0);
+
+                // Make room for it in our string object
+                LPTSTR pszFileNameBuf = strFileName.GetBuffer(nNameLen + 1);	// +1 for the terminating NULL
+                ASSERT(pszFileNameBuf);
+
+                // Get the file name
+                DragQueryFile((HDROP)medium.hGlobal, ii, pszFileNameBuf, nNameLen + 1);
+
+                strFileName.ReleaseBuffer();
+                if (!IsPathInAfs(strFileName)) {
+                pThis->m_astrFileNames.RemoveAll();
+                break;
+                } else {
+                pThis->m_bIsSymlink=IsSymlink(strFileName);
+                }
+
+                if (IsADir(strFileName))
+                pThis->m_bDirSelected = TRUE;
+
+                pThis->m_astrFileNames.Add(strFileName);
+            }
+            //	Release the data
+            ReleaseStgMedium(&medium);
+        }
     }
+    if ((pThis->m_astrFileNames.GetSize() == 0)&&(pidlFolder)) {
+        // if there are no valid files selected, try the folder background
+        IShellFolder *parentFolder = NULL;
+        STRRET name;
+        TCHAR * szDisplayName = NULL;
 
-    int nNumFiles = DragQueryFile((HDROP)medium.hGlobal, 0xFFFFFFFF, NULL, 0);
-    if (nNumFiles == 0)
-	hres = E_FAIL;
-    else {
-	pThis->m_bDirSelected = FALSE;
+        hres = ::SHGetDesktopFolder(&parentFolder);
+        if (FAILED(hres))
+            return hres;
 
-	for (int ii = 0; ii < nNumFiles; ii++) {
-	    CString strFileName;
+        hres = parentFolder->GetDisplayNameOf(pidlFolder, SHGDN_NORMAL | SHGDN_FORPARSING, &name);
+        if (FAILED(hres)) {
+            parentFolder->Release();
+            return hres;
+        }
 
-	    // Get the size of the file name string
-	    int nNameLen = DragQueryFile((HDROP)medium.hGlobal, ii, 0, 0);
-
-	    // Make room for it in our string object
-	    LPTSTR pszFileNameBuf = strFileName.GetBuffer(nNameLen + 1);	// +1 for the terminating NULL
-	    ASSERT(pszFileNameBuf);
-
-	    // Get the file name
-	    DragQueryFile((HDROP)medium.hGlobal, ii, pszFileNameBuf, nNameLen + 1);
-
-	    strFileName.ReleaseBuffer();
-
-	    if (!IsPathInAfs(strFileName)) {
-		pThis->m_astrFileNames.RemoveAll();
-		break;
-	    } else {
-		pThis->m_bIsSymlink=IsSymlink(strFileName);
-	    }
-
-	    if (IsADir(strFileName))
-		pThis->m_bDirSelected = TRUE;
-
-	    pThis->m_astrFileNames.Add(strFileName);
-	}
-
+        hres = StrRetToStr (&name, pidlFolder, &szDisplayName);
+        if (FAILED(hres))
+            return hres;
+        parentFolder->Release();
+        if (szDisplayName) {
+            pThis->m_bDirSelected = TRUE;
+            CString strFileName = CString(szDisplayName);
+            if (IsPathInAfs(strFileName)) {
+                pThis->m_bIsSymlink=IsSymlink(strFileName);
+                pThis->m_astrFileNames.Add(strFileName);
+            }
+            CoTaskMemFree(szDisplayName);
+        }
+    }
 	if (pThis->m_astrFileNames.GetSize() > 0)
 	    hres = NOERROR;
 	else
 	    hres = E_FAIL;
-    }
  
-    //	Release the data
-    ReleaseStgMedium(&medium);
-
     return hres;
 }
 
