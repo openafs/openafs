@@ -481,8 +481,8 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
-		AIX32=""
-		AIX64="#"
+		AIX32="yes"
+		AIX64="no"
 		;;
 
 
@@ -497,8 +497,8 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
-		AIX32=""
-		AIX64=""
+		AIX32="yes"
+		AIX64="yes"
 		;;
 
 	rs_aix52)	
@@ -512,8 +512,8 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
-		AIX32=""
-		AIX64=""
+		AIX32="yes"
+		AIX64="yes"
 		;;
 
 	rs_aix53)	
@@ -527,8 +527,8 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
-		AIX32=""
-		AIX64=""
+		AIX32="yes"
+		AIX64="yes"
 		;;
 
 	rs_aix61)	
@@ -542,8 +542,8 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
-		AIX32="#"
-		AIX64=""
+		AIX32="no"
+		AIX64="yes"
 		;;
 
 	s390_linux22)

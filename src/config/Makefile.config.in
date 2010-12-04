@@ -112,6 +112,8 @@ YACC = @YACC@
 dest_XFS_SIZE_CHECK = @dest_XFS_SIZE_CHECK@
 install_XFS_SIZE_CHECK = @install_XFS_SIZE_CHECK@
 XFS_SIZE_CHECK = @XFS_SIZE_CHECK@
+AIX32 = @AIX32@
+AIX64 = @AIX64@
 
 #
 # Paths to build dirs
