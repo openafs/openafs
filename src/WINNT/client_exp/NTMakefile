@@ -69,7 +69,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\libosi.lib \
         $(DESTDIR)\lib\afs\afsreg.lib  \
-	$(DESTDIR)\lib\afs\TaLocale.lib \
+	$(DESTDIR)\lib\afs\TaLocaleU.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)

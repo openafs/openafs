@@ -24,8 +24,10 @@ extern ULONG nICRefCount;	// IContextMenu ref count
 extern ULONG nTPRefCount;	// IQueryInfo ref count
 extern ULONG nXPRefCount;	// IPersistFile ref count
 
-#define STR_EXT_TITLE   "AfsClientContextMenu"
-#define STR_EXT_TITLE2  "AfsClientOverlayHandler"
+#define _STR_EXT_TITLE   "AfsClientContextMenu"
+#define _STR_EXT_TITLE2  "AfsClientOverlayHandler"
+#define STR_EXT_TITLE   TEXT(_STR_EXT_TITLE)
+#define STR_EXT_TITLE2  TEXT(_STR_EXT_TITLE2)
 #define STR_REG_PATH    TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers")
 
 /////////////////////////////////////////////////////////////////////////////
