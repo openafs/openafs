@@ -66,6 +66,7 @@ static BOOL IsADir(const CString& strName)
 // CShellExt
 
 IMPLEMENT_DYNCREATE(CShellExt, CCmdTarget)
+IMPLEMENT_DYNCREATE(CShellExt2, CCmdTarget)
 #define REG_CLIENT_PARMS_KEY    "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
 #define OVERLAYENABLED 1
 
@@ -77,6 +78,7 @@ CShellExt::CShellExt()
     HRESULT hr;
     UINT code;
     DWORD ShellOption,LSPsize,LSPtype;
+    m_overlayObject = 0;
     hr = SHGetMalloc(&m_pAlloc);
     m_bIsOverlayEnabled=FALSE;
     if (FAILED(hr))
@@ -131,11 +133,15 @@ END_DISPATCH_MAP()
 // {DC515C27-6CAC-11D1-BAE7-00C04FD140D2}
 static const IID IID_IShellExt =
 { 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2 } };
+static const IID IID_IShellExt2 =
+{ 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd3 } };
 #else
 // 64-bit
 // {5f820ca1-3dde-11db-b2ce-001558092db5}
 static const IID IID_IShellExt =
 { 0x5f820ca1, 0x3dde, 0x11db, {0xb2, 0xce, 0x00, 0x15, 0x58, 0x09, 0x2d, 0xb5 } };
+static const IID IID_IShellExt2 =
+{ 0x5f820ca1, 0x3dde, 0x11db, {0xb2, 0xce, 0x00, 0x15, 0x58, 0x09, 0x2d, 0xb6 } };
 #endif
 
 BEGIN_INTERFACE_MAP(CShellExt, CCmdTarget)
@@ -150,9 +156,11 @@ END_INTERFACE_MAP()
 #ifndef _WIN64
     // 32-bit
 IMPLEMENT_OLECREATE(CShellExt, STR_EXT_TITLE, 0xdc515c27, 0x6cac, 0x11d1, 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2)
+IMPLEMENT_OLECREATE(CShellExt2, STR_EXT_TITLE, 0xdc515c27, 0x6cac, 0x11d1, 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd3)
 #else
     // 64-bit
 IMPLEMENT_OLECREATE(CShellExt, STR_EXT_TITLE, 0x5f820ca1, 0x3dde, 0x11db, 0xb2, 0xce, 0x0, 0x15, 0x58, 0x09, 0x2d, 0xb5)
+IMPLEMENT_OLECREATE(CShellExt2, STR_EXT_TITLE, 0x5f820ca1, 0x3dde, 0x11db, 0xb2, 0xce, 0x0, 0x15, 0x58, 0x09, 0x2d, 0xb6)
 #endif
 
 
@@ -684,21 +692,35 @@ STDMETHODIMP_(ULONG) CShellExt::XIconExt::Release(void)
 STDMETHODIMP CShellExt::XIconExt::GetOverlayInfo(LPWSTR pwszIconFile
 	,int cchMax,int* pIndex,DWORD* pdwFlags)
 {
+    METHOD_PROLOGUE(CShellExt, IconExt);
     if(IsBadWritePtr(pIndex, sizeof(int)))
 	return E_INVALIDARG;
     if(IsBadWritePtr(pdwFlags, sizeof(DWORD)))
 	return E_INVALIDARG;
 
-    HMODULE hModule=GetModuleHandle(_T("shell32.dll"));
+    // The icons must reside in the same path as this dll
     TCHAR szModule[MAX_PATH];
-    DWORD z=GetModuleFileName(hModule,szModule,sizeof(szModule));
+    GetModuleFileName(theApp.m_hInstance, szModule, MAX_PATH);
+    TCHAR * slash = _tcsrchr(szModule, '\\');
+    if (slash) {
+        *slash = 0;
+        switch (pThis->GetOverlayObject())
+        {
+            case 0:
+                _tcscat(szModule, _T("\\link.ico"));
+            break;
+            case 1:
+                _tcscat(szModule, _T("\\mount.ico"));
+            break;
+        }
+    }
 #ifndef UNICODE
     MultiByteToWideChar( CP_ACP,0,szModule,-1,pwszIconFile,cchMax); 
 #else
     _tcsncpy(pwszIconFile, szModule, cchMax);
 #endif
-    *pIndex = 30;
-    *pdwFlags = ISIOI_ICONFILE|ISIOI_ICONINDEX;
+    *pIndex = 0;
+    *pdwFlags = ISIOI_ICONFILE;
     return S_OK;
 }
 
@@ -712,13 +734,17 @@ STDMETHODIMP CShellExt::XIconExt::GetPriority(int* pPriority)
 
 STDMETHODIMP CShellExt::XIconExt::IsMemberOf(LPCWSTR pwszPath,DWORD dwAttrib)
 {
+    METHOD_PROLOGUE(CShellExt, IconExt);
     TCHAR szPath[MAX_PATH];
 #ifdef UNICODE
     _tcscpy(szPath, pwszPath);
 #else
     WideCharToMultiByte( CP_ACP,0,pwszPath,-1,szPath,MAX_PATH,NULL,NULL);
 #endif
-    if (IsSymlink(szPath) || IsMountPoint(szPath)) {
+    if ((pThis->GetOverlayObject() == 0)&&(IsSymlink(szPath))) {
+        return S_OK;
+    }
+    if ((pThis->GetOverlayObject() == 1)&&(IsMountPoint(szPath))) {
         return S_OK;
     }
     return S_FALSE;

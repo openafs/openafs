@@ -38,12 +38,16 @@ static char THIS_FILE[] = __FILE__;
 // 32-bit
 static const IID IID_IShellExt =
     { 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2 } };
+static const IID IID_IShellExt2 =
+    { 0xdc515c27, 0x6cac, 0x11d1, { 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd3 } };
 
 #else
 
 // 64-bit
 static const IID IID_IShellExt =
     { 0x5f820ca1, 0x3dde, 0x11db, {0xb2, 0xce, 0x00, 0x15, 0x58, 0x09, 0x2d, 0xb5} };
+static const IID IID_IShellExt2 =
+    { 0x5f820ca1, 0x3dde, 0x11db, {0xb2, 0xce, 0x00, 0x15, 0x58, 0x09, 0x2d, 0xb6} };
 
 #endif
 
@@ -302,7 +306,65 @@ STDAPI DllRegisterServer(void)
 	    RegCloseKey(hKey);
 	} else
 	    return SELFREG_E_CLASS;
-    }	
+    }
+
+    StringFromIID(IID_IShellExt2, &pwsz);
+    if(pwsz)
+    {
+#ifdef UNICODE
+        StringCbCopy(szCLSID, sizeof(szCLSID), pwsz);
+#else
+	WideCharToMultiByte( CP_ACP, 0,pwsz, -1, szCLSID, sizeof(szCLSID), NULL, NULL);
+#endif
+        CoTaskMemFree(pwsz);
+    } else {
+	return E_FAIL;
+    }
+
+    /*
+    [HKEY_CLASSES_ROOT\CLSID\{$CLSID}\InprocServer32]
+    @="Y:\\DEST\\root.client\\usr\\vice\\etc\\afs_shl_ext.dll"
+    "ThreadingModel"="Apartment"
+    */
+    hModule=GetModuleHandle(TEXT("afs_shl_ext.dll"));
+    z=GetModuleFileName(hModule,szModule,sizeof(szModule));
+    wsprintf(szSubKey, TEXT("CLSID\\%s\\InprocServer32"),szCLSID);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szModule))!=NOERROR)
+	return lResult;
+
+    wsprintf(szSubKey, TEXT("CLSID\\%s\\InprocServer32"),szCLSID);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,
+                            TEXT("Apartment"),TEXT("ThreadingModel")))!=NOERROR)
+	return lResult;
+
+    /*
+    [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Client Shell Extension]
+    @="{EA3775F2-28BE-11D3-9C8D-00105A24ED29}"
+    */
+
+    wsprintf(szSubKey, TEXT("%s\\%s"), STR_REG_PATH, STR_EXT_TITLE2);
+    if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,szCLSID))!=NOERROR)
+	return lResult;
+
+    //If running on NT, register the extension as approved.
+    /*
+    [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
+    "{$(CLSID)}"="AFS Client Shell Extension"
+
+    [HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\AFS Client Shell Extension]
+    @="{$(CLSID)}"
+    */
+
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx(&osvi);
+    if(VER_PLATFORM_WIN32_NT == osvi.dwPlatformId)
+    {
+        wsprintf(szSubKey, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"));
+        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,_TEXT(STR_EXT_TITLE2),szCLSID))!=NOERROR)
+            return lResult;
+    }
+
+
     return S_OK;
 }
 
@@ -358,6 +420,22 @@ STDAPI DllUnregisterServer(void)
     DoValueDelete(HKEY_CLASSES_ROOT, szSubKey);
     wsprintf(szSubKey, TEXT("%s\\%s"), STR_REG_PATH, STR_EXT_TITLE);
     DoValueDelete(HKEY_LOCAL_MACHINE, szSubKey);
+
+    StringFromIID(IID_IShellExt2, &pwsz);
+    if(pwsz)
+    {
+#ifdef UNICODE
+        StringCbCopy(szCLSID, sizeof(szCLSID), pwsz);
+#else
+	WideCharToMultiByte( CP_ACP, 0,pwsz, -1, szCLSID, sizeof(szCLSID), NULL, NULL);
+#endif
+        CoTaskMemFree(pwsz);
+    } else {
+	return E_FAIL;
+    }
+    wsprintf(szSubKey, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"));
+    DoValueDelete(HKEY_LOCAL_MACHINE,szSubKey,szCLSID);
+
     return S_OK;
 }	
 
