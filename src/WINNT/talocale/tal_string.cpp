@@ -823,8 +823,8 @@ BOOL FormatTime (LPTSTR pszTarget, LPTSTR pszFormatUser, SYSTEMTIME *pst, BOOL f
       }
    else
       {
-      GetTimeFormat (LOCALE_USER_DEFAULT, 0, &lt, "HH:mm:ss", szTime, cchRESOURCE);
-      GetDateFormat (LOCALE_USER_DEFAULT, 0, &lt, "yyyy-MM-dd", szDate, cchRESOURCE);
+      GetTimeFormat (LOCALE_USER_DEFAULT, 0, &lt, TEXT("HH:mm:ss"), szTime, cchRESOURCE);
+      GetDateFormat (LOCALE_USER_DEFAULT, 0, &lt, TEXT("yyyy-MM-dd"), szDate, cchRESOURCE);
 
       if (fShowTime && fShowDate)
          {
@@ -1423,7 +1423,7 @@ void CopyUnicodeToAnsi (LPSTR pszTargetA, LPCWSTR pszOriginalW, size_t cchMax)
 
    UINT cpTarget = CP_ACP;
    BOOL fDefault = FALSE;
-   size_t cchOut = WideCharToMultiByte (cpTarget, 0, pszOriginalW, (INT)cchSource-1, pszTargetA, (INT)cchMax * 2, TEXT(" "), &fDefault);
+   size_t cchOut = WideCharToMultiByte (cpTarget, 0, pszOriginalW, (INT)cchSource-1, pszTargetA, (INT)cchMax * 2, " ", &fDefault);
    pszTargetA[ cchOut ] = 0;
 }
 
@@ -1549,7 +1549,7 @@ LPTSTR UnicodeToString (LPCWSTR pszOriginalW)
     LPTSTR pszTarget;
     if ((pszTarget = AllocateString (1+lstrlenW(pszOriginalW))) != NULL) {
 #ifdef UNICODE
-        lstrcpyW ((LPWSTR)pszTargetW, (LPWSTR)pszOriginal);
+        lstrcpyW ((LPWSTR)pszTarget, (LPWSTR)pszOriginalW);
 #else
         CopyUnicodeToAnsi (pszTarget, pszOriginalW);
 #endif

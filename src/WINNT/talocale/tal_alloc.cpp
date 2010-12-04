@@ -70,8 +70,8 @@ typedef struct
    {
    PVOID pData;
    size_t cbData;
-   LPSTR pszExpr;
-   LPSTR pszFile;
+   LPTSTR pszExpr;
+   LPTSTR pszFile;
    DWORD dwLine;
    DWORD dwTick;
    DWORD dwEndSig;
@@ -355,7 +355,7 @@ void SetDlgItemBytes (HWND hDlg, int idc, double lfValue)
 }
 
 
-void MemMgr_ShowWarning (PMEMCHUNK pChunk, LPSTR pszFile, DWORD dwLine, LPTSTR pszDesc)
+void MemMgr_ShowWarning (PMEMCHUNK pChunk, LPTSTR pszFile, DWORD dwLine, LPTSTR pszDesc)
 {
    TCHAR szMessage[ 1024 ];
    wsprintf (szMessage, TEXT("%s\n\n   Address: 0x%08p (%s)\n   Allocated: %s line %ld\n   Freed: %s line %ld\n\nClick OK for memory details."), pszDesc, pChunk->pData, pChunk->pszExpr, pChunk->pszFile, pChunk->dwLine, pszFile, dwLine);
@@ -1142,7 +1142,7 @@ BOOL MemMgr_Initialize (void)
 }
 
 
-void MemMgr_TrackAllocation (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine, BOOL fSig)
+void MemMgr_TrackAllocation (PVOID pData, size_t cb, LPTSTR pszExpr, LPTSTR pszFile, DWORD dwLine, BOOL fSig)
 {
    if (!pData)
       return;
@@ -1269,7 +1269,7 @@ void MemMgr_TrackAllocation (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFil
 }
 
 
-BOOL MemMgr_TrackDestruction (PVOID pData, LPSTR pszFile, DWORD dwLine)
+BOOL MemMgr_TrackDestruction (PVOID pData, LPTSTR pszFile, DWORD dwLine)
 {
    if (MemMgr_Initialize())
       {
@@ -1299,8 +1299,8 @@ BOOL MemMgr_TrackDestruction (PVOID pData, LPSTR pszFile, DWORD dwLine)
          MEMCHUNK Sim;
          memset (&Sim, 0x00, sizeof(MEMCHUNK));
          Sim.pData = pData;
-         Sim.pszExpr = "(unknown)";
-         Sim.pszFile = "(unknown)";
+         Sim.pszExpr = TEXT("(unknown)");
+         Sim.pszFile = TEXT("(unknown)");
          MemMgr_ShowWarning (&Sim, pszFile, dwLine, TEXT("An invalid memory address was freed."));
          }
       else if (pChunk->dwEndSig && (*(DWORD*)((PBYTE)pData + pChunk->cbData) != pChunk->dwEndSig))
@@ -1459,7 +1459,7 @@ BOOL MEMMGR_CALLCONV IsMemoryManagerMessage (MSG *pMsg)
 }
 
 
-PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine)
+PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPTSTR pszExpr, LPTSTR pszFile, DWORD dwLine)
 {
    PVOID pData = GlobalAlloc (GMEM_FIXED, cb + sizeof(DWORD));
    MemMgr_TrackAllocation (pData, cb, pszExpr, pszFile, dwLine, TRUE);
@@ -1467,7 +1467,7 @@ PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPSTR pszExpr, LPSTR psz
 }
 
 
-void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPSTR pszFile, DWORD dwLine)
+void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPTSTR pszFile, DWORD dwLine)
 {
    if (MemMgr_TrackDestruction (pData, pszFile, dwLine))
       {
@@ -1476,14 +1476,14 @@ void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPSTR pszFile, DWORD dwLine
 }
 
 
-PVOID MEMMGR_CALLCONV MemMgr_TrackNew (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine)
+PVOID MEMMGR_CALLCONV MemMgr_TrackNew (PVOID pData, size_t cb, LPTSTR pszExpr, LPTSTR pszFile, DWORD dwLine)
 {
    MemMgr_TrackAllocation (pData, cb, pszExpr, pszFile, dwLine, FALSE);
    return pData;
 }
 
 
-void MEMMGR_CALLCONV MemMgr_TrackDelete (PVOID pData, LPSTR pszFile, DWORD dwLine)
+void MEMMGR_CALLCONV MemMgr_TrackDelete (PVOID pData, LPTSTR pszFile, DWORD dwLine)
 {
    MemMgr_TrackDestruction (pData, pszFile, dwLine);
 }

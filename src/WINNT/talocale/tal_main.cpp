@@ -60,8 +60,8 @@ void TaLocale_Initialize (void)
     static BOOL fInitialized = FALSE;
 
     if (!fInitialized) {
-        char mutexName[256];
-        sprintf(mutexName, "TaLocale_Initialize pid=%d", getpid());
+        TCHAR mutexName[256];
+        wsprintf(mutexName, TEXT("TaLocale_Initialize pid=%d"), getpid());
         HANDLE hMutex = CreateMutex(NULL, TRUE, mutexName);
         if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
             if ( WaitForSingleObject( hMutex, INFINITE ) != WAIT_OBJECT_0 ) {
