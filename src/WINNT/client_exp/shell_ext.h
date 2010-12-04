@@ -25,6 +25,7 @@ extern ULONG nTPRefCount;	// IQueryInfo ref count
 extern ULONG nXPRefCount;	// IPersistFile ref count
 
 #define STR_EXT_TITLE   "AfsClientContextMenu"
+#define STR_EXT_TITLE2  "AfsClientOverlayHandler"
 #define STR_REG_PATH    TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers")
 
 /////////////////////////////////////////////////////////////////////////////
@@ -38,6 +39,7 @@ class CShellExt : public CCmdTarget
     BOOL m_bIsSymlink;	// is symbolic link!
     TCHAR m_szFile[MAX_PATH];
     BOOL m_bIsOverlayEnabled;
+    int  m_overlayObject;
     BOOL IsOverlayEnabled(){return m_bIsOverlayEnabled;}
 
     CStringArray m_astrFileNames;
@@ -50,7 +52,7 @@ public:
 
 // Operations
 public:
-
+    int GetOverlayObject() {return m_overlayObject;}
 // Overrides
     // ClassWizard generated virtual function overrides
     //{{AFX_VIRTUAL(CShellExt)
@@ -111,6 +113,20 @@ protected:
     END_INTERFACE_PART(PersistFileExt)
 
     DECLARE_INTERFACE_MAP()
+};
+
+class CShellExt2 : public CShellExt
+{
+public:
+    DECLARE_DYNCREATE(CShellExt2)
+    CShellExt2() : CShellExt()
+    {
+        m_overlayObject = 1;
+    }
+    ~CShellExt2()
+    {
+    }
+    DECLARE_OLECREATE(CShellExt2)
 };
 
 /////////////////////////////////////////////////////////////////////////////
