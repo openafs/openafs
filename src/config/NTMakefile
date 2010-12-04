@@ -406,6 +406,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\talocale))
 		$(MKDIR) $(OJT)\WINNT\talocale
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\talocale_unicode))
+		$(MKDIR) $(OJT)\WINNT\talocale_unicode
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\win9xpanel))
 		$(MKDIR) $(OJT)\WINNT\win9xpanel
 !	ENDIF

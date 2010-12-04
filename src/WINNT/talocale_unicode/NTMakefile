@@ -1,0 +1,43 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX -DUNICODE=1
+
+# include the primary makefile
+RELDIR=WINNT\talocale_unicode
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+############################################################################
+
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+LIBOBJS = \
+	$(OUT)\tal_alloc.obj \
+	$(OUT)\tal_main.obj \
+	$(OUT)\tal_string.obj \
+	$(OUT)\tal_dialog.obj
+
+$(LIBOBJS): ..\talocale\$$(@B).cpp
+        $(CPP2OBJ) -I(..\talocale) $**
+
+LIBFILE = $(DESTDIR)\lib\afs\talocaleU.lib
+
+############################################################################
+
+install: $(LIBFILE)
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+
+clean::
+	$(DEL) $(LIBINCLUDES)
+
+mkdir:
+	

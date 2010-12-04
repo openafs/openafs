@@ -487,7 +487,14 @@ talocale: tbutc
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-license: talocale
+talocale_unicode: talocale
+     @echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+license: talocale_unicode
      @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
