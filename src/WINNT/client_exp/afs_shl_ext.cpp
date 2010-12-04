@@ -24,6 +24,7 @@ extern "C" {
 extern "C" {
 #include "WINNT\afsreg.h"
 }
+#include "WINNT\talocale.h"
 #define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
 
@@ -82,10 +83,8 @@ HINSTANCE g_hInstance;
 
 BOOL CAfsShlExt::InitInstance()
 {
-    extern EXPORTED HINSTANCE TaLocale_LoadCorrespondingModuleByName (HINSTANCE hInstance, LPSTR pszFilename, WORD wSearchPriority = MODULE_PRIORITY_BOOSTED);
-
     // Load our translated resources
-    TaLocale_LoadCorrespondingModuleByName (m_hInstance, "afs_shl_ext.dll");
+    TaLocale_LoadCorrespondingModuleByName (m_hInstance, TEXT("afs_shl_ext.dll"));
 
     // Register all OLE server (factories) as running.  This enables the
     //  OLE libraries to create objects from other applications.
@@ -218,7 +217,7 @@ STDAPI DllRegisterServer(void)
     if(VER_PLATFORM_WIN32_NT == osvi.dwPlatformId)
     {
         wsprintf(szSubKey, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"));
-        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,_TEXT(STR_EXT_TITLE),szCLSID))!=NOERROR)
+        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,STR_EXT_TITLE,szCLSID))!=NOERROR)
             return lResult;
     }
     wsprintf(szSubKey, TEXT("*\\shellex\\ContextMenuHandlers\\%s"),STR_EXT_TITLE);
@@ -294,7 +293,7 @@ STDAPI DllRegisterServer(void)
 	    TCHAR szData[MAX_PATH];
 
 	    //Create the value string.
-	    lstrcpy(szData, _TEXT(STR_EXT_TITLE));
+	    lstrcpy(szData, STR_EXT_TITLE);
 
 	    lResult = RegSetValueEx( hKey,
 				     szCLSID,
@@ -360,7 +359,7 @@ STDAPI DllRegisterServer(void)
     if(VER_PLATFORM_WIN32_NT == osvi.dwPlatformId)
     {
         wsprintf(szSubKey, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"));
-        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,_TEXT(STR_EXT_TITLE2),szCLSID))!=NOERROR)
+        if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,STR_EXT_TITLE2,szCLSID))!=NOERROR)
             return lResult;
     }
 

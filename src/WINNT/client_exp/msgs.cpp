@@ -20,6 +20,7 @@ extern "C" {
 #include <stdarg.h>
 
 #include "msgs.h"
+#include <WINNT\talocale.h>
 
 
 
@@ -404,9 +405,7 @@ CString GetMessageString(UINT Id, ...)
 
 void LoadString (CString &Str, UINT id)
 {
-    extern EXPORTED void GetString (LPSTR pszTarget, int idsSource, int cchMax = cchRESOURCE);
-
-    char szString[ 256 ];
+    TCHAR szString[ 256 ];
     GetString (szString, id);
 #ifdef UNICODE
     CString wstr(szString);
