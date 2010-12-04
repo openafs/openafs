@@ -13,10 +13,17 @@ RELDIR=WINNT\client_exp
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
+ETC = $(DESTDIR)\root.client\usr\vice\etc
+
 ############################################################################
 # afs_shl_ext.dll
 
-DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext.dll
+
+DLLFILE = $(ETC)\afs_shl_ext.dll
+
+ICONS =\
+        $(ETC)\link.ico \
+        $(ETC)\mount.ico
 
 DLLOBJS =\
 	$(OUT)\add_acl_entry_dlg.obj \
@@ -73,6 +80,15 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
         $(SYMSTORE_IMPORT)
 
 ############################################################################
+# Install Icon files
+
+$(ETC)\mount.ico: mount.ico
+        $(COPY) $** $@
+
+$(ETC)\link.ico: link.ico
+        $(COPY) $** $@
+
+############################################################################
 # Definitions for generating versioninfo resources
 
 $(OUT)\afs_shl_ext_stub.res: AFS_component_version_number.h
@@ -80,9 +96,7 @@ $(OUT)\afs_shl_ext_stub.res: AFS_component_version_number.h
 ############################################################################
 # Install target; primary makefile target
 
-install: $(DLLFILE) lang
-install9x: install
-
+install: $(DLLFILE) $(ICONS) lang
 
 ############################################################################
 # Language target
