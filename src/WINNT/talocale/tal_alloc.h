@@ -105,11 +105,11 @@
 
 #else /* NO_DEBUG_ALLOC */
 
-#define Allocate(_s)   MemMgr_AllocateMemory (_s, #_s, __FILE__, __LINE__)
-#define Free(_p)       MemMgr_FreeMemory (_p, __FILE__, __LINE__)
-#define New(_t)        (_t*)MemMgr_TrackNew (new _t, sizeof(_t), #_t, __FILE__, __LINE__)
-#define New2(_t,_a)    (_t*)MemMgr_TrackNew (new _t _a, sizeof(_t), #_t, __FILE__, __LINE__)
-#define Delete(_p)     do { MemMgr_TrackDelete (_p, __FILE__, __LINE__); delete _p; } while(0)
+#define Allocate(_s)   MemMgr_AllocateMemory (_s, TEXT(#_s), TEXT(__FILE__), __LINE__)
+#define Free(_p)       MemMgr_FreeMemory (_p, TEXT(__FILE__), __LINE__)
+#define New(_t)        (_t*)MemMgr_TrackNew (new _t, sizeof(_t), TEXT(#_t), TEXT(__FILE__), __LINE__)
+#define New2(_t,_a)    (_t*)MemMgr_TrackNew (new _t _a, sizeof(_t), TEXT(#_t), TEXT(__FILE__), __LINE__)
+#define Delete(_p)     do { MemMgr_TrackDelete (_p, TEXT(__FILE__), __LINE__); delete _p; } while(0)
 
 #endif /* NO_DEBUG_ALLOC */
 
@@ -133,11 +133,11 @@ EXPORTED BOOL MEMMGR_CALLCONV IsMemoryManagerMessage (MSG *pMsg);
 
 #ifndef NO_DEBUG_ALLOC
 
-EXPORTED PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine);
-EXPORTED void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPSTR pszFile, DWORD dwLine);
+EXPORTED PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPTSTR pszExpr, LPTSTR pszFile, DWORD dwLine);
+EXPORTED void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPTSTR pszFile, DWORD dwLine);
 
-EXPORTED PVOID MEMMGR_CALLCONV MemMgr_TrackNew (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine);
-EXPORTED void MEMMGR_CALLCONV MemMgr_TrackDelete (PVOID pData, LPSTR pszFile, DWORD dwLine);
+EXPORTED PVOID MEMMGR_CALLCONV MemMgr_TrackNew (PVOID pData, size_t cb, LPTSTR pszExpr, LPTSTR pszFile, DWORD dwLine);
+EXPORTED void MEMMGR_CALLCONV MemMgr_TrackDelete (PVOID pData, LPTSTR pszFile, DWORD dwLine);
 
 #endif /* NO_DEBUG_ALLOC */
 
