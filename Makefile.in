@@ -216,7 +216,7 @@ auth: cmd comerr hcrypto lwp rx rxkad audit sys_depinstall auth_depinstall
 ubik: cmd comerr auth ubik_depinstall sys
 	+${COMPILE_PART1} ubik ${COMPILE_PART2}
 
-tubik: ubik libafsrpc
+tubik: ubik libafsrpc libafsauthent
 	+[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tubik ${COMPILE_PART2} ;; \

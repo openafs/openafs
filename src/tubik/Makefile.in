@@ -33,7 +33,7 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
        volparse.o flipbase64.o softsig.o hostparse.o snprintf.o \
        pthread_glock.o
 
-LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/liblwp.a \
+LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libcmd.a \
      ${TOP_LIBDIR}/libsys.a ${XLIBS} ${MT_LIBS}
 
