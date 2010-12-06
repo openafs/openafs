@@ -3,7 +3,7 @@
 		base64_decode;
 		base64_encode;
 		ct_memcmp;
-		daemon;
+		rk_daemon;
 		err;
 		errx;
 		getopt;
