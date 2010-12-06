@@ -725,11 +725,11 @@ afs_CheckServers(int adown, struct cell *acellp)
 	  afs_osi_Wakeup(&afs_waitForever);
 	}
       } else {
-	if (results[i] < 0) {
-	  /* server crashed */
-	  afs_ServerDown(sa);
-	  ForceNewConnections(sa);  /* multi homed clients */
-	}
+	  if ((results[i] < 0) && (results[i] != RXGEN_OPCODE)) {
+	      /* server crashed */
+	      afs_ServerDown(sa);
+	      ForceNewConnections(sa);  /* multi homed clients */
+	  }
       }
     }
 
@@ -1714,7 +1714,13 @@ afs_GetCapabilities(struct server *ts)
     ReleaseWriteLock(&afs_xserver);
     code = RXAFS_GetCapabilities(tc->id, &caps);
     ObtainWriteLock(&afs_xserver, 723);
-    afs_PutConn(tc, SHARED_LOCK);
+    /* we forced a conn above; important we mark it down if needed */
+    if ((code < 0) && (code != RXGEN_OPCODE)) {
+	afs_PutConn(tc, SHARED_LOCK);
+	afs_ServerDown(tc->parent->srvr);
+	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
+    }
+
     if ( code && code != RXGEN_OPCODE ) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
 	/* better not be anything to free. we failed! */
