@@ -825,12 +825,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
-	parent = dget_parent(dp);
-	pvcp = VTOAFS(parent->d_inode);
 	vcp = VTOAFS(dp->d_inode);
 
 	if (vcp == afs_globalVp)
 	    goto good_dentry;
+
+	parent = dget_parent(dp);
+	pvcp = VTOAFS(parent->d_inode);
 
 	if ((vcp->mvstat == 1) || (vcp->mvstat == 2)) {	/* need to lock */
 	    credp = crref();
