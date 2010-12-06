@@ -120,7 +120,7 @@ ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class,
 	sprintf(m->line, "Couldn't stream open %s Index of volume %u\n",
 		class ? "small":"large", V_id(vol));
 	rx_Write(m->call, m->line, strlen(m->line));
-	return EIO;
+	code = EIO;
 	goto Bad_Extract;
     }
     code = STREAM_ASEEK(stream, vcp->diskSize);
