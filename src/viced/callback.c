@@ -799,8 +799,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 {
     struct FileEntry *fe;
     struct CallBack *cb, *nextcb;
-    struct cbstruct cba[MAX_CB_HOSTS];
-    int ncbas;
+    struct cbstruct cbaDef[MAX_CB_HOSTS], *cba = cbaDef;
+    unsigned int ncbas, cbaAlloc = MAX_CB_HOSTS;
     struct AFSCBFids tf;
     int hostindex;
     char hoststr[16];
@@ -825,8 +825,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     tf.AFSCBFids_len = 1;
     tf.AFSCBFids_val = fid;
 
-    for (; cb;) {
-	for (ncbas = 0; cb && ncbas < MAX_CB_HOSTS; cb = nextcb) {
+	for (ncbas = 0; cb ; cb = nextcb) {
 	    nextcb = itocb(cb->cnext);
 	    if ((cb->hhead != hostindex || flag)
 		&& (cb->status == CB_BULK || cb->status == CB_NORMAL
@@ -843,6 +842,21 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 		} else {
 		    if (!(thishost->hostFlags & HOSTDELETED)) {
 			h_Hold_r(thishost);
+			if (ncbas == cbaAlloc) {	/* Need more space */
+			    int curLen = cbaAlloc*sizeof(cba[0]);
+			    struct cbstruct *cbaOld = (cba == cbaDef) ? NULL : cba;
+
+			    /* There are logical contraints elsewhere that the number of hosts
+			       (i.e. h_HTSPERBLOCK*h_MAXHOSTTABLES) remains in the realm of a signed "int".
+			       cbaAlloc is defined unsigned int hence doubling below cannot overflow
+			    */
+			    cbaAlloc = cbaAlloc<<1;	/* double */
+			    cba = realloc(cbaOld, cbaAlloc * sizeof(cba[0]));
+
+			    if (cbaOld == NULL)	{	/* realloc wouldn't have copied from cbaDef */
+				memcpy(cba, cbaDef, curLen);
+			    }
+			}
 			cba[ncbas].hp = thishost;
 			cba[ncbas].thead = cb->thead;
 			ncbas++;
@@ -856,20 +870,16 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 	}
 
 	if (ncbas) {
-	    MultiBreakCallBack_r(cba, ncbas, &tf, xhost);
+	    struct cbstruct *cba2;
+	    int num;
 
-	    /* we need to to all these initializations again because MultiBreakCallBack may block */
-	    fe = FindFE(fid);
-	    if (!fe) {
-		goto done;
-	    }
-	    cb = itocb(fe->firstcb);
-	    if (!cb || ((fe->ncbs == 1) && (cb->hhead == hostindex) && !flag)) {
-		/* the most common case is what follows the || */
-		goto done;
+	    for (cba2 = cba, num = ncbas; ncbas > 0; cba2 += num, ncbas -= num) {
+		num = (ncbas > MAX_CB_HOSTS) ? MAX_CB_HOSTS : ncbas;
+		MultiBreakCallBack_r(cba2, num, &tf, xhost);
 	    }
 	}
-    }
+
+	if (cba != cbaDef) free(cba);
 
   done:
     H_UNLOCK;

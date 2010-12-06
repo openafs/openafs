@@ -19,7 +19,8 @@
  * thereby swamping the file server.  As a result, something like
  * 10 or 15 might be a better bet.
  */
-#define MAX_CB_HOSTS	10
+/* With revised multi_Rx, responses get handled as early as they tickle in, so try big */
+#define MAX_CB_HOSTS	1024
 
 /* max time to break a callback, otherwise client is dead or net is hosed */
 #define MAXCBT 25
