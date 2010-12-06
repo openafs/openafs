@@ -125,8 +125,11 @@ typedef atomic_t rx_atomic_t;
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
 
 #elif defined(AFS_SUN58_ENV)
+
+# include <atomic.h>
+
 typedef struct {
-    volatile int var;
+    volatile unsigned int var;
 } rx_atomic_t;
 
 static_inline void
@@ -161,7 +164,7 @@ rx_atomic_dec(rx_atomic_t *atomic) {
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-    atomic_add_32(&atomic, 0 - change);
+    atomic_add_32(&atomic->var, 0 - change);
 }
 
 #elif defined(__GNUC__) && defined(HAVE_SYNC_FETCH_AND_ADD)
