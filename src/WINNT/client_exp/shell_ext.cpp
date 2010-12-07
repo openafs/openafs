@@ -741,6 +741,9 @@ STDMETHODIMP CShellExt::XIconExt::IsMemberOf(LPCWSTR pwszPath,DWORD dwAttrib)
 #else
     WideCharToMultiByte( CP_ACP,0,pwszPath,-1,szPath,MAX_PATH,NULL,NULL);
 #endif
+	if (!IsPathInAfs(szPath))
+		return S_FALSE;
+
     if ((pThis->GetOverlayObject() == 0)&&(IsSymlink(szPath))) {
         return S_OK;
     }
