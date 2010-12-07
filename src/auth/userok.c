@@ -48,6 +48,11 @@
 #include "keys.h"
 #include "afs/audit.h"
 
+/* The display names for localauth and noauth identities; they aren't used
+ * inside tickets or anything, but just serve as something to display in logs,
+ * etc. */
+#define AFS_LOCALAUTH_NAME "<LocalAuth>"
+#define AFS_LOCALAUTH_LEN  (sizeof(AFS_LOCALAUTH_NAME)-1)
 #define AFS_NOAUTH_NAME "<NoAuth>"
 #define AFS_NOAUTH_LEN  (sizeof(AFS_NOAUTH_NAME)-1)
 
@@ -605,10 +610,6 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 {
     char tcell_l[MAXKTCREALMLEN] = "";
     char *tmp;
-
-    /* keep track of which one actually authorized request */
-    char uname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
-
     static char lcell[MAXCELLCHARS] = "";
     static char lrealms[AFS_NUM_LREALMS][AFS_REALM_SZ];
     static int  num_lrealms = -1;
@@ -659,6 +660,7 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
     /* If yes, then make sure that the name is not present in
      * an exclusion list */
     if (lrealm_match) {
+	char uname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
 	if (tinst && tinst[0])
 	    snprintf(uname,sizeof(uname),"%s.%s@%s",tname,tinst,tcell);
 	else
@@ -668,15 +670,15 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 	    lrealm_match = 0;
     }
 
-    /* start with no uname and no authorization */
-    strcpy(uname, "");
+    /* start with no authorization */
     flag = 0;
 
     /* localauth special case */
     if ((tinst == NULL || strlen(tinst) == 0) &&
 	(tcell == NULL || strlen(tcell) == 0)
 	&& !strcmp(tname, AUTH_SUPERUSER)) {
-	strcpy(uname, "<LocalAuth>");
+	*identity = rx_identity_new(RX_ID_KRB4, AFS_LOCALAUTH_NAME,
+	                            AFS_LOCALAUTH_NAME, AFS_LOCALAUTH_LEN);
 	flag = 1;
 
 	/* cell of connection matches local cell or one of the realms */
