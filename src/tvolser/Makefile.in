@@ -54,9 +54,9 @@ vosobjects= ${VOSOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} ${UTILOBJS} ${DIROBJS} \
 
 LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsauthent.a   \
-	${TOP_LIBDIR}/libafsrpc.a       \
 	${TOP_LIBDIR}/libafsutil.a      \
-	${TOP_LIBDIR}/libusd.a
+	${TOP_LIBDIR}/libusd.a          \
+	${TOP_LIBDIR}/libafsrpc.a
 
 all: volserver 
 
