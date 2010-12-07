@@ -51,6 +51,9 @@ static char AFSConfigKeyName[] =
 static char AFSGlobalKTCMutexName[] = "Global\\AFS_KTC_Mutex";
 static char AFSKTCMutexName[] = "AFS_KTC_Mutex";
 
+#define MAXPIOCTLTOKENLEN \
+(3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
+
 /*
  * Support for RPC's to send and receive session keys
  *
@@ -629,7 +632,107 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
  */
 int
 ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
-    return KTC_PIOCTLFAIL;
+    struct ViceIoctl iob;
+    char tbuffer[MAXPIOCTLTOKENLEN];
+    char *tp;
+    afs_int32 code;
+    XDR xdrs;
+    HANDLE ktcMutex = NULL;
+
+    tp = tbuffer;
+
+    /* If we have a cellName, write it out here */
+    if (cellName) {
+	memcpy(tp, cellName, strlen(cellName) +1);
+	tp += strlen(cellName)+1;
+    }
+
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
+
+#ifndef AFS_WIN95_ENV
+    ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+	    CloseHandle(ktcMutex);
+	    return KTC_PIOCTLFAIL;
+	}
+    }
+#endif /* AFS_WIN95_ENV */
+
+#if 0
+    code = pioctl(0, VIOC_GETTOK2, &iob, 0);
+#else
+    code = -1;   /* not yet implemented */
+	errno = EINVAL;
+#endif
+
+#ifndef AFS_WIN95_ENV
+    ReleaseMutex(ktcMutex);
+    CloseHandle(ktcMutex);
+#endif /* AFS_WIN95_ENV */
+
+    /* If we can't use the new pioctl, the fall back to the old one. We then
+     * need to convert the rxkad token we get back into the new format
+     */
+    if (code == -1 && errno == EINVAL) {
+	struct ktc_principal server;
+	struct ktc_principal client;
+	struct ktc_tokenUnion token;
+	struct ktc_token *ktcToken; /* too huge for the stack */
+
+	memset(&server, 0, sizeof(server));
+	ktcToken = malloc(sizeof(struct ktc_token));
+	if (ktcToken == NULL)
+	    return ENOMEM;
+	memset(ktcToken, 0, sizeof(struct ktc_token));
+
+	strcpy(server.name, "afs");
+	strcpy(server.cell, cellName);
+	code = ktc_GetToken(&server, ktcToken, sizeof(struct ktc_token),
+			    &client);
+	if (code == 0) {
+	    *tokenSet = token_buildTokenJar(cellName);
+	    token.at_type = AFSTOKEN_UNION_KAD;
+	    token.ktc_tokenUnion_u.at_kad.rk_kvno = ktcToken->kvno;
+	    memcpy(token.ktc_tokenUnion_u.at_kad.rk_key,
+		   ktcToken->sessionKey.data, 8);
+
+	    token.ktc_tokenUnion_u.at_kad.rk_begintime = ktcToken->startTime;
+	    token.ktc_tokenUnion_u.at_kad.rk_endtime   = ktcToken->endTime;
+	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len
+		= ktcToken->ticketLen;
+	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val
+		= ktcToken->ticket;
+
+	    token_addToken(*tokenSet, &token);
+
+	    memset(ktcToken, 0, sizeof(struct ktc_token));
+	}
+	free(ktcToken);
+	return 0;
+    }
+    if (code)
+	return KTC_PIOCTLFAIL;
+
+    *tokenSet = malloc(sizeof(struct ktc_setTokenData));
+    if (*tokenSet == NULL)
+	return ENOMEM;
+    memset(*tokenSet, 0, sizeof(struct ktc_setTokenData));
+
+    xdrmem_create(&xdrs, iob.out, iob.out_size, XDR_DECODE);
+    if (!xdr_ktc_setTokenData(&xdrs, *tokenSet)) {
+	free(*tokenSet);
+	*tokenSet = NULL;
+	xdr_destroy(&xdrs);
+	return EINVAL;
+    }
+    xdr_destroy(&xdrs);
+    return 0;
 }
 
 int
@@ -984,7 +1087,64 @@ ForgetOneLocalToken(struct ktc_principal *aserver)
 
 int
 ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
+    struct ViceIoctl iob;
+    char tbuffer[MAXPIOCTLTOKENLEN];
+    afs_int32 code;
+    afs_int32 index;
+    struct ktc_setTokenData tokenSet;
+    XDR xdrs;
+    HANDLE ktcMutex = NULL;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
     *cellName = NULL;
+    *newIndex = prevIndex;
+
+    index = prevIndex;
+
+    while (index<100) { /* Safety, incase of pioctl failure */
+	memset(tbuffer, 0, sizeof(tbuffer));
+	iob.in = tbuffer;
+	memcpy(tbuffer, &index, sizeof(afs_int32));
+	iob.in_size = sizeof(afs_int32);
+	iob.out = tbuffer;
+	iob.out_size = sizeof(tbuffer);
+
+#if 0
+	code = pioctl(0, VIOC_GETTOK2, &iob, 0);
+#else
+    code = -1;      /* not yet implemented */
+	errno = EINVAL;
+#endif
+
+	/* Can't use new pioctl, so must use old one */
+	if (code == -1 && errno == EINVAL) {
+	    struct ktc_principal server;
+
+	    code = ktc_ListTokens(index, newIndex, &server);
+	    if (code == 0)
+		*cellName = strdup(server.cell);
+	    return code;
+	}
+
+	if (code == 0) {
+	    /* Got a token from the pioctl. Now we throw it away,
+	     * so we can return just a cellname. This is rather wasteful,
+	     * but it's what the old API does. Ho hum.  */
+
+	    xdrmem_create(&xdrs, iob.out, iob.out_size, XDR_DECODE);
+	    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+		xdr_destroy(&xdrs);
+		return EINVAL;
+	    }
+	    xdr_destroy(&xdrs);
+	    *cellName = strdup(tokenSet.cell);
+	    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+	    *newIndex = index + 1;
+	    return 0;
+	}
+	index++;
+    }
     return KTC_PIOCTLFAIL;
 }
 
