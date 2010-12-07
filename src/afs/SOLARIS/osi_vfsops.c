@@ -71,6 +71,30 @@ afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
     return 0;
 }
 
+static void
+afs_freevfs(void)
+{
+    int i;
+    struct vcache *vc, *nvc;
+    extern struct vcache *afs_vhashT[VCSIZE];
+
+    afs_globalVFS = 0;
+
+    /* free mappings for all vcaches */
+    for (i = 0; i < VCSIZE; i++) {
+	for (vc = afs_vhashT[i]; vc; vc = nvc) {
+	    int fv_slept;
+	    nvc = vc->hnext;
+	    if (afs_FlushVCache(vc, &fv_slept)) {
+		afs_warn("afs_FlushVCache failed on 0x%llx\n",
+		         (unsigned long long)vc);
+	    }
+	}
+    }
+
+    afs_shutdown();
+}
+
 #if defined(AFS_SUN58_ENV)
 int
 afs_unmount(struct vfs *afsp, int flag, afs_ucred_t *credp)
@@ -123,9 +147,8 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
     AFS_RELE(rootvp);
 
 #ifndef AFS_SUN58_ENV
-    /* shutdown now, since afs_freevfs() will not be called */
-    afs_globalVFS = 0;
-    afs_shutdown();
+    /* shutdown now, since gafs_freevfs() will not be called */
+    afs_freevfs();
 #endif /* !AFS_SUN58_ENV */
 
     AFS_GUNLOCK();
@@ -134,12 +157,11 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
 
 #ifdef AFS_SUN58_ENV
 void
-afs_freevfs(struct vfs *afsp)
+gafs_freevfs(struct vfs *afsp)
 {
     AFS_GLOCK();
 
-    afs_globalVFS = 0;
-    afs_shutdown();
+    afs_freevfs();
 
     AFS_GUNLOCK();
 }
@@ -315,7 +337,7 @@ static const fs_operation_def_t afs_vfsops_template[] = {
     VFSNAME_SYNC,		{ .vfs_sync = afs_sync },
     VFSNAME_VGET,		{ .vfs_vget = afs_vget },
     VFSNAME_MOUNTROOT,  	{ .vfs_mountroot = afs_mountroot },
-    VFSNAME_FREEVFS,		{ .vfs_freevfs = afs_freevfs },
+    VFSNAME_FREEVFS,		{ .vfs_freevfs = gafs_freevfs },
     NULL,			NULL
 };
 struct vfsops *afs_vfsopsp;
@@ -329,7 +351,7 @@ const fs_operation_def_t afs_vfsops_template[] = {
     VFSNAME_SYNC,		afs_sync,
     VFSNAME_VGET,		afs_vget,
     VFSNAME_MOUNTROOT,  	afs_mountroot,
-    VFSNAME_FREEVFS,		afs_freevfs,
+    VFSNAME_FREEVFS,		gafs_freevfs,
     NULL,			NULL
 };
 struct vfsops *afs_vfsopsp;
@@ -344,7 +366,7 @@ struct vfsops Afs_vfsops = {
     afs_mountroot,
     afs_swapvp,
 #if defined(AFS_SUN58_ENV)
-    afs_freevfs,
+    gafs_freevfs,
 #endif
 };
 #endif
