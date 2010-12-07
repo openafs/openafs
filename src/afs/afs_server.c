@@ -1190,7 +1190,7 @@ afsi_SetServerIPRank(sa, ifa)
     if (ifaddr_address_family(ifa) != AF_INET)
 	return;
     t = ifaddr_address(ifa, &sout, sizeof(sout));
-    if (t == 0) {
+    if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
 	myAddr = ntohl(sin->sin_addr.s_addr);	/* one of my IP addr in host order */
     } else {
@@ -1198,14 +1198,14 @@ afsi_SetServerIPRank(sa, ifa)
     }
     serverAddr = ntohl(sa->sa_ip);	/* server's IP addr in host order */
     t = ifaddr_netmask(ifa, &sout, sizeof(sout));
-    if (t == 0) {
+    if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
 	subnetmask = ntohl(sin->sin_addr.s_addr);	/* subnet mask in host order */
     } else {
 	subnetmask = 0;
     }
     t = ifaddr_dstaddress(ifa, &sout, sizeof(sout));
-    if (t == 0) {
+    if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
 	myDstaddr = sin->sin_addr.s_addr;
     } else {
