@@ -1717,8 +1717,8 @@ afs_GetCapabilities(struct server *ts)
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
 	afs_PutConn(tc, SHARED_LOCK);
-	afs_ServerDown(tc->parent->srvr);
-	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
+	afs_ServerDown(tc->srvr);
+	ForceNewConnections(tc->srvr); /* multi homed clients */
     }
 
     if ( code && code != RXGEN_OPCODE ) {
