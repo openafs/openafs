@@ -48,6 +48,9 @@
 #include "keys.h"
 #include "afs/audit.h"
 
+#define AFS_NOAUTH_NAME "<NoAuth>"
+#define AFS_NOAUTH_LEN  (sizeof(AFS_NOAUTH_NAME)-1)
+
 static int ParseLine(char *buffer, struct rx_identity *user);
 
 static void
@@ -744,7 +747,8 @@ afsconf_SuperIdentity(struct afsconf_dir *adir, struct rx_call *acall,
 
     if (afsconf_GetNoAuthFlag(adir)) {
 	if (identity)
-	    *identity = rx_identity_new(RX_ID_KRB4, "<NoAuth>", "<NoAuth>", 8);
+	    *identity = rx_identity_new(RX_ID_KRB4, AFS_NOAUTH_NAME,
+	                                AFS_NOAUTH_NAME, AFS_NOAUTH_LEN);
 	UNLOCK_GLOBAL_MUTEX;
 	return 1;
     }
