@@ -795,15 +795,17 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall,
     int code;
 
     code = afsconf_SuperIdentity(adir, acall, &identity);
-    if (namep) {
-	if (identity->kind == RX_ID_KRB4) {
-	    strlcpy(namep, identity->displayName, MAXKTCNAMELEN-1);
-	} else {
-	    snprintf(namep, MAXKTCNAMELEN-1, "eName: %s",
-		     identity->displayName);
+    if (code) {
+	if (namep) {
+	    if (identity->kind == RX_ID_KRB4) {
+		strlcpy(namep, identity->displayName, MAXKTCNAMELEN-1);
+	    } else {
+		snprintf(namep, MAXKTCNAMELEN-1, "eName: %s",
+			 identity->displayName);
+	    }
 	}
+	rx_identity_free(&identity);
     }
-    rx_identity_free(&identity);
 
     return code;
 }
