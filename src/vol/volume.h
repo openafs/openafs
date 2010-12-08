@@ -100,6 +100,8 @@ extern pthread_t vol_glock_holder;
 #define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
 #define VTRANS_UNLOCK MUTEX_EXIT(&vol_trans_mutex)
 #else /* AFS_PTHREAD_ENV */
+#define VOL_CV_WAIT(cv)
+#define VOL_CV_TIMEDWAIT(cv, ts, to)
 #define VOL_LOCK
 #define VOL_UNLOCK
 #define VSALVSYNC_LOCK

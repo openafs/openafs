@@ -165,9 +165,11 @@ handleit(struct cmd_syndesc *as, void *arock)
 	char *msg =
 	    "Exiting immediately without salvage. Look into the FileLog to find volumes which really need to be salvaged!";
 
+#ifndef AFS_NT40_ENV
 	if (useSyslog)
 	    Log(msg);
 	else
+#endif
 	    printf("%s\n", msg);
 
 	Exit(0);
@@ -192,7 +194,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	Testing = 1;
     if (as->parms[4].items)	/* -inodes */
 	ListInodeOption = 1;
-    if (as->parms[5].items || as->parms[20].items)	/* -force, -f */
+    if (as->parms[5].items || as->parms[21].items)	/* -force, -f */
 	ForceSalvage = 1;
     if (as->parms[6].items)	/* -oktozap */
 	OKToZap = 1;
@@ -273,22 +275,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 	char *msg =
 	    "Exiting immediately without salvage. Look into the FileLog to find volumes which really need to be salvaged!";
 
+#ifndef AFS_NT40_ENV
 	if (useSyslog)
 	    Log(msg);
 	else
+#endif
 	    printf("%s\n", msg);
 	Exit(0);
-    }
-#elif defined(DEMAND_ATTACH_ENABLE)
-    if (seenvol && !as->parms[19].items) {
-	char * msg =
-	    "The standalone salvager cannot be run concurrently with a Demand Attach Fileserver.  Please use 'salvageserver -client <partition> <volume id>' to manually schedule volume salvages with the salvageserver (new versions of 'bos salvage' automatically do this for you).  Or, if you insist on using the standalone salvager, add the -forceDAFS flag to your salvager command line.";
-
-	if (useSyslog)
-	    Log(msg);
-	else
-	    printf("%s\n", msg);
-	Exit(1);
     }
 #endif
 
@@ -322,6 +315,40 @@ handleit(struct cmd_syndesc *as, void *arock)
 	Log("errors encountered initializing volume package; salvage aborted\n");
 	Exit(1);
     }
+
+    /*
+     * Ok to defer this as Exit will clean up and no real work is done
+     * init'ing volume package
+     */
+    if (seenvol) {
+	char *msg = NULL;
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (!AskDAFS()) {
+	    msg =
+		"The DAFS dasalvager cannot be run with a non-DAFS fileserver.  Please use 'salvager'.";
+	}
+	if (!msg && !as->parms[20].items) {
+	    msg =
+		"The standalone salvager cannot be run concurrently with a Demand Attach Fileserver.  Please use 'salvageserver -client <partition> <volume id>' to manually schedule volume salvages with the salvageserver (new versions of 'bos salvage' automatically do this for you).  Or, if you insist on using the standalone salvager, add the -forceDAFS flag to your salvager command line.";
+	}
+#else
+	if (AskDAFS()) {
+	    msg =
+		"The non-DAFS salvager cannot be run with a Demand Attach Fileserver.  Please use 'salvageserver -client <partition> <volume id>' to manually schedule volume salvages with the salvageserver (new versions of 'bos salvage' automatically do this for you).  Or, if you insist on using the standalone salvager, run dasalvager with the -forceDAFS flag.";
+	}
+#endif
+
+	if (msg) {
+#ifndef AFS_NT40_ENV
+	    if (useSyslog)
+		Log("%s", msg);
+	    else
+#endif
+		printf("%s\n", msg);
+	    Exit(1);
+	}
+    }
+
     DInit(10);
 #ifdef AFS_NT40_ENV
     if (myjob.cj_number != NOT_CHILD) {
@@ -489,11 +516,12 @@ main(int argc, char **argv)
 #ifdef FAST_RESTART
     cmd_AddParm(ts, "-DontSalvage", CMD_FLAG, CMD_OPTIONAL,
 		"Don't salvage. This my be set in BosConfig to let the fileserver restart immediately after a crash. Bad volumes will be taken offline");
-#elif defined(DEMAND_ATTACH_ENABLE)
+#elif defined(AFS_DEMAND_ATTACH_FS)
+    cmd_Seek(ts, 20); /* skip DontSalvage */
     cmd_AddParm(ts, "-forceDAFS", CMD_FLAG, CMD_OPTIONAL,
 		"For Demand Attach Fileserver, permit a manual volume salvage outside of the salvageserver");
 #endif /* FAST_RESTART */
-    cmd_Seek(ts, 20);
+    cmd_Seek(ts, 21); /* skip DontSalvage and forceDAFS if needed */
     cmd_AddParm(ts, "-f", CMD_FLAG, CMD_OPTIONAL, "Alias for -force");
     err = cmd_Dispatch(argc, argv);
     Exit(err);
