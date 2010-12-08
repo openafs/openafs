@@ -527,8 +527,8 @@ FSYNC_com(osi_socket fd)
     case FSYNC_VOL_DONE:
     case FSYNC_VOL_QUERY:
     case FSYNC_VOL_QUERY_HDR:
-    case FSYNC_VOL_QUERY_VOP:
 #ifdef AFS_DEMAND_ATTACH_FS
+    case FSYNC_VOL_QUERY_VOP:
     case FSYNC_VG_QUERY:
     case FSYNC_VG_SCAN:
     case FSYNC_VG_SCAN_ALL:
