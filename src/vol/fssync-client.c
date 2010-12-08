@@ -249,9 +249,11 @@ FSYNC_VerifyCheckout(VolumeId volume, char * partition,
 	    return SYNC_DENIED;
 	}
 
-	if (res.hdr.reason == FSYNC_UNKNOWN_VOLID) {
-	    /* if the fileserver does not know about this volume, there's no
-	     * way it could have attached it, so we're fine */
+	if (res.hdr.reason == FSYNC_UNKNOWN_VOLID ||
+	    res.hdr.reason == FSYNC_WRONG_PART) {
+	    /* if the fileserver does not know about this volume on this
+	     * partition, there's no way it could have attached it, so we're
+	     * fine */
 	    return SYNC_OK;
 	}
 
