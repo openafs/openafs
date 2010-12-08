@@ -1507,10 +1507,12 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
 	res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
     } else {
-	if (vp) {
-	    res->hdr.reason = FSYNC_NO_PENDING_VOL_OP;
-	} else {
+	if (!vp || V_attachState(vp) == VOL_STATE_DELETED) {
 	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
+	} else if (!FSYNC_partMatch(vcom, vp, 1)) {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	} else {
+	    res->hdr.reason = FSYNC_NO_PENDING_VOL_OP;
 	}
 	code = SYNC_FAILED;
     }
