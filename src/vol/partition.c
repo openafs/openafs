@@ -229,9 +229,9 @@ VerifyXFSInodeSize(char *part, char *fstype)
 int
 VInitPartitionPackage(void)
 {
-#ifdef AFS_DEMAND_ATTACH_ENV
+#ifdef AFS_DEMAND_ATTACH_FS
     memset(&DiskPartitionTable, 0, sizeof(DiskPartitionTable));
-#endif /* AFS_DEMAND_ATTACH_ENV */
+#endif /* AFS_DEMAND_ATTACH_FS */
     return 0;
 }
 
