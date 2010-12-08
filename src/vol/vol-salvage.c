@@ -4322,20 +4322,27 @@ AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	if (code == SYNC_OK) {
 	    break;
 	} else if (code == SYNC_DENIED) {
-#ifdef DEMAND_ATTACH_ENABLE
-	    Log("AskOffline:  file server denied offline request; a general salvage may be required.\n");
-#else
-	    Log("AskOffline:  file server denied offline request; a general salvage is required.\n");
-#endif
+	    if (AskDAFS())
+		Log("AskOffline:  file server denied offline request; a general salvage may be required.\n");
+	    else
+		Log("AskOffline:  file server denied offline request; a general salvage is required.\n");
 	    Abort("Salvage aborted\n");
 	} else if (code == SYNC_BAD_COMMAND) {
 	    Log("AskOffline:  fssync protocol mismatch (bad command word '%d'); salvage aborting.\n",
 		FSYNC_VOL_OFF);
-#ifdef DEMAND_ATTACH_ENABLE
-	    Log("AskOffline:  please make sure fileserver, volserver, salvageserver and salvager binaries are same version.\n");
+	    if (AskDAFS()) {
+#ifdef AFS_DEMAND_ATTACH_FS
+		Log("AskOffline:  please make sure dafileserver, davolserver, salvageserver and dasalvager binaries are same version.\n");
 #else
-	    Log("AskOffline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
+		Log("AskOffline:  fileserver is DAFS but we are not.\n");
 #endif
+	    } else {
+#ifdef AFS_DEMAND_ATTACH_FS
+		Log("AskOffline:  fileserver is not DAFS but we are.\n");
+#else
+		Log("AskOffline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
+#endif
+	    }
 	    Abort("Salvage aborted\n");
 	} else if (i < 2) {
 	    /* try it again */
@@ -4348,6 +4355,50 @@ AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	Log("AskOffline:  request for fileserver to take volume offline failed; salvage aborting.\n");
 	Abort("Salvage aborted\n");
     }
+}
+
+/* don't want to pass around state; remember it here */
+static int isDAFS = -1;
+int
+AskDAFS(void)
+{
+    afs_int32 code, i, ret = 0;
+    SYNC_response res;
+
+    /* we don't care if we race. the answer shouldn't change */
+    if (isDAFS != -1)
+	return isDAFS;
+
+    memset(&res, 0, sizeof(res));
+
+    for (i = 0; i < 3; i++) {
+	code = FSYNC_VolOp(1, NULL,
+	                   FSYNC_VOL_QUERY_VOP, FSYNC_SALVAGE, &res);
+
+	if (code == SYNC_OK) {
+	    ret = 1;
+	    break;
+	} else if (code == SYNC_DENIED) {
+	    ret = 1;
+	    break;
+	} else if (code == SYNC_BAD_COMMAND) {
+	    ret = 0;
+	    break;
+	} else if (code == SYNC_FAILED) {
+	    if (res.hdr.reason == FSYNC_UNKNOWN_VOLID)
+		ret = 1;
+	    else
+		ret = 0;
+	} else if (i < 2) {
+	    /* try it again */
+	    Log("AskDAFS:  request to query fileserver failed; trying again...\n");
+	    FSYNC_clientFinis();
+	    FSYNC_clientInit();
+	}
+    }
+
+    isDAFS = ret;
+    return ret;
 }
 
 void
@@ -4366,11 +4417,7 @@ AskOnline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	} else if (code == SYNC_BAD_COMMAND) {
 	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
 		FSYNC_VOL_ON);
-#ifdef DEMAND_ATTACH_ENABLE
-	    Log("AskOnline:  please make sure fileserver, volserver, salvageserver and salvager binaries are same version.\n");
-#else
-	    Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
-#endif
+	    Log("AskOnline:  please make sure file server binaries are same version.\n");
 	    break;
 	} else if (i < 2) {
 	    /* try it again */
@@ -4397,11 +4444,19 @@ AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
 	} else if (code == SYNC_BAD_COMMAND) {
 	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
 		FSYNC_VOL_DONE);
-#ifdef DEMAND_ATTACH_ENABLE
-	    Log("AskOnline:  please make sure fileserver, volserver, salvageserver and salvager binaries are same version.\n");
+	    if (AskDAFS()) {
+#ifdef AFS_DEMAND_ATTACH_FS
+		Log("AskOnline:  please make sure dafileserver, davolserver, salvageserver and dasalvager binaries are same version.\n");
 #else
-	    Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
+		Log("AskOnline:  fileserver is DAFS but we are not.\n");
 #endif
+	    } else {
+#ifdef AFS_DEMAND_ATTACH_FS
+		Log("AskOnline:  fileserver is not DAFS but we are.\n");
+#else
+		Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
+#endif
+	    }
 	    break;
 	} else if (i < 2) {
 	    /* try it again */
