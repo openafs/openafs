@@ -6076,7 +6076,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
 {
     struct rx_connection *conn = arg1;
     struct rx_header theader;
-    char tbuffer[1500];
+    char tbuffer[1 + sizeof(struct rx_header)];
     struct sockaddr_in taddr;
     char *tp;
     char a[1] = { 0 };
