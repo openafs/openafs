@@ -734,7 +734,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		res->hdr.reason = FSYNC_WRONG_PART;
 	    }
 	} else {
-	    code = SYNC_DENIED;
+	    code = SYNC_FAILED;
 	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
 	}
 #endif
