@@ -1238,7 +1238,7 @@ SAFSVolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     code =
 	VolForward(acid, fromTrans, fromDate, destination, destTrans, cookie);
     osi_auditU(acid, VS_ForwardEvent, code, AUD_LONG, fromTrans, AUD_HOST,
-	       destination->destHost, AUD_LONG, destTrans, AUD_END);
+	       htonl(destination->destHost), AUD_LONG, destTrans, AUD_END);
     return code;
 }
 
@@ -1441,7 +1441,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
 	}
 
 	osi_auditU(acid, VS_ForwardEvent, (code ? code : codes[i]), AUD_LONG,
-		   fromTrans, AUD_HOST, dest->server.destHost, AUD_LONG,
+		   fromTrans, AUD_HOST, htonl(dest->server.destHost), AUD_LONG,
 		   dest->trans, AUD_END);
     }
     free(tcons);
@@ -1591,7 +1591,7 @@ SAFSVolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 
     code = VolSetForwarding(acid, atid, anewsite);
     osi_auditU(acid, VS_SetForwEvent, code, AUD_LONG, atid, AUD_HOST,
-	       anewsite, AUD_END);
+	       htonl(anewsite), AUD_END);
     return code;
 }
 

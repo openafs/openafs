@@ -1176,7 +1176,7 @@ SPR_GetCPS2(struct rx_call *call, afs_int32 aid, afs_int32 ahost,
     afs_int32 cid = ANONYMOUSID;
 
     code = getCPS2(call, aid, ahost, alist, over, &cid);
-    osi_auditU(call, PTS_GetCPS2Event, code, AUD_ID, aid, AUD_HOST, ahost,
+    osi_auditU(call, PTS_GetCPS2Event, code, AUD_ID, aid, AUD_HOST, htonl(ahost),
 	       AUD_END);
     ViceLog(125, ("PTS_GetCPS2: code %d cid %d aid %d ahost %d\n", code, cid, aid, ahost));
     return code;
@@ -1259,7 +1259,7 @@ SPR_GetHostCPS(struct rx_call *call, afs_int32 ahost, prlist *alist,
     afs_int32 code;
 
     code = getHostCPS(call, ahost, alist, over);
-    osi_auditU(call, PTS_GetHCPSEvent, code, AUD_HOST, ahost, AUD_END);
+    osi_auditU(call, PTS_GetHCPSEvent, code, AUD_HOST, htonl(ahost), AUD_END);
     ViceLog(125, ("PTS_GetHostCPS: code %d ahost %d\n", code, ahost));
     return code;
 }
