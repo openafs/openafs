@@ -285,10 +285,6 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-    if (get_salvage_lock) {
-	ObtainSalvageLock();
-    }
-
     /* Note:  if seenvol we initialize this as a standard volume utility:  this has the
      * implication that the file server may be running; negotations have to be made with
      * the file server in this case to take the read write volume and associated read-only
@@ -314,6 +310,14 @@ handleit(struct cmd_syndesc *as, void *arock)
     if (VInitVolumePackage2(pt, &opts)) {
 	Log("errors encountered initializing volume package; salvage aborted\n");
 	Exit(1);
+    }
+
+    /* defer lock until we init volume package */
+    if (get_salvage_lock) {
+	if (seenvol && AskDAFS()) /* support forceDAFS */
+	    ObtainSharedSalvageLock();
+	else
+	    ObtainSalvageLock();
     }
 
     /*
