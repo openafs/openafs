@@ -17,6 +17,10 @@ extern int proc_afs_syscall(long, long, long, long, long, int *);
 #ifdef AFS_DARWIN80_ENV
 extern int ioctl_afs_syscall(long, long, long, long, long, long, long, int *);
 #endif
+#ifdef AFS_SUN511_ENV
+extern int ioctl_sun_afs_syscall(long, uintptr_t, uintptr_t, uintptr_t,
+                                 uintptr_t, uintptr_t, uintptr_t, int*);
+#endif
 
 /* pioctl.c */
 extern int lpioctl(char *, int, void *, int);

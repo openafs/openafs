@@ -225,6 +225,15 @@ afsd_call_syscall(long param1, long param2, long param3, long param4, long param
 #endif
             error=syscall_data.retval;
     }
+# elif defined(AFS_SUN511_ENV)
+	{
+	    int rval;
+	    rval = ioctl_sun_afs_syscall(AFSCALL_CALL, param1, param2, param3,
+	                                 param4, param5, param6, &error);
+	    if (rval) {
+		error = rval;
+	    }
+	}
 # else /* AFS_DARWIN80_ENV */
 	error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
