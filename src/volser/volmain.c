@@ -205,7 +205,21 @@ BKGSleep(void *unused)
 }
 #endif
 
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+/* no volser_syscall */
+#elif defined(AFS_SUN511_ENV)
+int
+volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
+{
+    int err, code;
+    code = ioctl_sun_afs_syscall(28 /* AFSCALL_CALL */, a3, a4, a5, 0, 0, 0,
+                                 &err);
+    if (code) {
+	err = code;
+    }
+    return err;
+}
+#else
 int
 volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {

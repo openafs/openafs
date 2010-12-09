@@ -37,21 +37,6 @@ killproc() {            # kill the named process(es)
 case $1 in
 'start')
 
-#
-# Make sure afs exists in /etc/name_to_sysnum
-#
-if grep -s "afs" /etc/name_to_sysnum > /dev/null; then
-    echo "Entry for afs already exists in /etc/name_to_sysnum"
-else
-    echo "Creating entry for afs in /etc/name_to_sysnum"
-    cp /etc/name_to_sysnum /etc/name_to_sysnum.orig
-    sed '/nfs/i\
-afs			65' /etc/name_to_sysnum > /tmp/name_to_sysnum
-    mv /tmp/name_to_sysnum /etc/name_to_sysnum
-    echo "Rebooting now for new /etc/name_to_sysnum to take effect"
-    reboot
-fi
-
 ## Check to see that /bin/isalist exists and is executable
 if [ ! -x /bin/isalist ] ;then
       echo "/bin/isalist not executable"
@@ -64,13 +49,13 @@ fi
 case `/bin/isalist` in
     *amd64* )
               nfssrv=/kernel/misc/amd64/nfssrv
-              afs=/kernel/fs/amd64/afs ;;
+              afs=/kernel/drv/amd64/afs ;;
     *sparcv9* )
               nfssrv=/kernel/misc/sparcv9/nfssrv
-              afs=/kernel/fs/sparcv9/afs ;;
+              afs=/kernel/drv/sparcv9/afs ;;
           * )
               nfssrv=/kernel/misc/nfssrv
-              afs=/kernel/fs/afs ;;
+              afs=/kernel/drv/afs ;;
 esac
 
 
@@ -91,8 +76,33 @@ fi
 ## Load AFS kernel extensions
 
 if [ -f $afs ]; then
-      echo "Loading AFS kernel extensions"
-      modload $afs
+      if [ -f /kernel/drv/afs.conf ] ; then
+          echo "Kernel afs.conf already exists"
+      else
+          echo "Creating kernel afs.conf"
+          echo 'name="afs" parent="pseudo";' > /kernel/drv/afs.conf
+      fi
+
+      # load the module
+      if grep '^afs ' /etc/name_to_major >/dev/null ; then
+          echo "Loading AFS kernel extensions"
+          modload $afs
+	  # this can sometimes be necessary to get the /devices afs device to
+	  # attach
+	  update_drv afs
+      else
+          echo "Installing AFS driver and loading kernel extensions"
+          add_drv -m '* 0666 root root' afs
+      fi
+
+      # Create the /dev/afs link
+      if grep name=afs /etc/devlink.tab >/dev/null ; then
+          echo "Entry for afs already exists in /etc/devlink.tab"
+      else
+          echo "Adding entry for afs in /etc/devlink.tab"
+          echo "type=ddi_pseudo;name=afs;addr=0;minor=afs	\D" >> /dev/devlink.tab
+	  devfsadm
+      fi
 else
       echo "$afs does not exist. Skipping AFS startup."
       exit 1
@@ -174,7 +184,9 @@ echo ;;
 
 #
 # Stop the AFS inetd and server processes
-# Note that the afsd processes cannot be killed
+# We do not kill the afsd process here. It should be possible to do now, but we
+# don't do it yet. Note that you need to parse 'modinfo | grep afs' output and
+# give the id to modunload, in order to unload the kernel module.
 #
 
 echo "Killing inetd.afs"
