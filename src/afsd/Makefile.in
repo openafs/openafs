@@ -107,6 +107,9 @@ dest: afsd vsys @ENABLE_FUSE_CLIENT@
 		sun*_59 | sun*_510 ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.9 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+		sun*_511 ) \
+			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
+			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.11 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
                 sun4x_5? ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
