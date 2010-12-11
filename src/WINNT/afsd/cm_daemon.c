@@ -343,6 +343,10 @@ cm_DaemonCheckInit(void)
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonPerformanceTuningInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonPerformanceTuningInterval = dummy;
+    afsi_log("daemonPerformanceTuningInterval is %d", cm_daemonPerformanceTuningInterval);
+
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonRankServerInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
@@ -350,10 +354,6 @@ cm_DaemonCheckInit(void)
 	cm_daemonRankServerInterval = dummy;
     afsi_log("daemonRankServerInterval is %d", cm_daemonRankServerInterval);
 
-    if (code == ERROR_SUCCESS)
-	cm_daemonPerformanceTuningInterval = dummy;
-    afsi_log("daemonPerformanceTuningInterval is %d", cm_daemonPerformanceTuningInterval);
-    
     RegCloseKey(parmKey);
 
     if (cm_daemonPerformanceTuningInterval)
