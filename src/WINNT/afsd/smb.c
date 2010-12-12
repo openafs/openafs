@@ -10295,7 +10295,16 @@ void smb_SetLanAdapterChangeDetected(void)
     if (!powerStateSuspended) {
         phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_LanAdapterChangeThread,
                               NULL, 0, &lpid, "smb_LanAdapterChange");
-        osi_assertx(phandle != NULL, "smb_LanAdapterChangeThread thread creation failure");
+        if (phandle == NULL) {
+            DWORD gle;
+            char msg[128];
+
+            gle = GetLastError();
+            StringCchPrintf( msg, sizeof(msg)/sizeof(msg[0]),
+                             "smb_LanAdapterChangeThread thread creation failure - gle 0x%x",
+                             gle);
+            osi_assertx(TRUE, msg);
+        }
         thrd_CloseHandle(phandle);
     }
 
