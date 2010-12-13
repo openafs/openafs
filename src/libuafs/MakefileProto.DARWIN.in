@@ -35,6 +35,10 @@ $(LIBUAFS): $(UAFSOBJ)
 	-$(RM) -f $(LIBUAFS)
 	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
 
+libuafs_pic.a: $(PICUAFSOBJ)
+	-$(RM) -f libuafs_pic.a
+	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ)
+
 $(LIBJUAFS): $(JUAFSOBJ)
 	-$(RM) -f $(LIBJUAFS)
 	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)

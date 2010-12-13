@@ -23,6 +23,33 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o pthread_glock.o \
 	 tabular_output.o ${REGEX_OBJ}
 
+objects_pic = \
+	pic_assert.o \
+	pic_base64.o \
+	pic_casestrcpy.o \
+	pic_config_file.o \
+	pic_ktime.o \
+	pic_volparse.o \
+	pic_hostparse.o \
+	pic_exec.o \
+	pic_hputil.o \
+	pic_kreltime.o \
+	pic_isathing.o \
+	pic_get_krbrlm.o \
+	pic_uuid.o \
+	pic_serverLog.o \
+	pic_dirpath.o \
+	pic_fileutil.o \
+	pic_netutils.o \
+	pic_flipbase64.o \
+	pic_fstab.o \
+	pic_afs_atomlist.o \
+	pic_afs_lhash.o \
+	pic_snprintf.o \
+	pic_pthread_glock.o \
+	pic_tabular_output.o \
+	${REGEX_OBJ_PIC}
+
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
@@ -50,6 +77,7 @@ includes = \
 all: ${includes} \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libafsutil_pic.a \
 	sys
 
 buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
@@ -132,6 +160,9 @@ ${TOP_LIBDIR}/util.a: util.a
 ${TOP_LIBDIR}/libafsutil.a: util.a
 	${INSTALL_DATA} $? $@
 
+${TOP_LIBDIR}/libafsutil_pic.a: util_pic.a
+	${INSTALL_DATA} $? $@
+
 # Use " as the sed boundary character because we lose anyway if that occurs
 # in path names.
 dirpath.h: ${srcdir}/dirpath.hin Makefile
@@ -157,10 +188,19 @@ util.a: ${objects} AFS_component_version_number.o
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
+util_pic.a: ${objects_pic} AFS_component_version_number_pic.o
+	$(RM) -f util_pic.a
+	$(AR) crv util_pic.a ${objects_pic} AFS_component_version_number_pic.o
+	$(RANLIB) util_pic.a
+
 pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
 	${MT_CC} $(COMMON_CFLAGS) ${MT_CFLAGS} -c ${srcdir}/pthread_glock.c
 
 ${objects}: ${includes}
+
+CFLAGS_AFS_component_version_number_pic.o = -fPIC
+AFS_component_version_number_pic.o: AFS_component_version_number.c
+	$(AFS_CCRULE) AFS_component_version_number.c
 
 config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
 	$(AFS_CCRULE) -c ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c 
@@ -170,13 +210,115 @@ sys.o: sys.c AFS_component_version_number.c ${includes}
 sys: sys.o 
 	$(AFS_LDRULE) sys.o
 
+# PIC objects build rules
+PICFLAGS = -fPIC
+CFLAGS_assert.o = $(PICFLAGS)
+pic_assert.o: ${srcdir}/assert.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/assert.c
+
+CFLAGS_base64.o = $(PICFLAGS)
+pic_base64.o: ${srcdir}/base64.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/base64.c
+
+CFLAGS_casestrcpy.o = $(PICFLAGS)
+pic_casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/casestrcpy.c
+
+CFLAGS_config_file.o = $(PICFLAGS)
+pic_config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
+	$(AFS_CCRULE) ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
+
+CFLAGS_ktime.o = $(PICFLAGS)
+pic_ktime.o: ${srcdir}/ktime.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/ktime.c
+
+CFLAGS_volparse.o = $(PICFLAGS)
+pic_volparse.o: ${srcdir}/volparse.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/volparse.c
+
+CFLAGS_hostparse.o = $(PICFLAGS)
+pic_hostparse.o: ${srcdir}/hostparse.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/hostparse.c
+
+CFLAGS_exec.o = $(PICFLAGS)
+pic_exec.o: ${srcdir}/exec.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/exec.c
+
+CFLAGS_hputil.o = $(PICFLAGS)
+pic_hputil.o: ${srcdir}/hputil.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/hputil.c
+
+CFLAGS_kreltime.o = $(PICFLAGS)
+pic_kreltime.o: ${srcdir}/kreltime.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/kreltime.c
+
+CFLAGS_isathing.o = $(PICFLAGS)
+pic_isathing.o: ${srcdir}/isathing.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/isathing.c
+
+CFLAGS_get_krbrlm.o = $(PICFLAGS)
+pic_get_krbrlm.o: ${srcdir}/get_krbrlm.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/get_krbrlm.c
+
+CFLAGS_uuid.o = $(PICFLAGS)
+pic_uuid.o: ${srcdir}/uuid.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/uuid.c
+
+CFLAGS_serverLog.o = $(PICFLAGS)
+pic_serverLog.o: ${srcdir}/serverLog.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/serverLog.c
+
+CFLAGS_dirpath.o = $(PICFLAGS)
+pic_dirpath.o: ${srcdir}/dirpath.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/dirpath.c
+
+CFLAGS_fileutil.o = $(PICFLAGS)
+pic_fileutil.o: ${srcdir}/fileutil.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/fileutil.c
+
+CFLAGS_netutils.o = $(PICFLAGS)
+pic_netutils.o: ${srcdir}/netutils.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/netutils.c
+
+CFLAGS_flipbase64.o = $(PICFLAGS)
+pic_flipbase64.o: ${srcdir}/flipbase64.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/flipbase64.c
+
+CFLAGS_fstab.o = $(PICFLAGS)
+pic_fstab.o: ${srcdir}/fstab.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/fstab.c
+
+CFLAGS_afs_atomlist.o = $(PICFLAGS)
+pic_afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/afs_atomlist.c
+
+CFLAGS_afs_lhash.o = $(PICFLAGS)
+pic_afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/afs_lhash.c
+
+CFLAGS_snprintf.o = $(PICFLAGS)
+pic_snprintf.o: ${srcdir}/snprintf.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/snprintf.c
+
+CFLAGS_pthread_glock.o = $(PICFLAGS)
+pic_pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/pthread_glock.c
+
+CFLAGS_tabular_output.o = $(PICFLAGS)
+pic_tabular_output.o: ${srcdir}/tabular_output.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/tabular_output.c
+
+CFLAGS_regex.o = $(PICFLAGS)
+pic_regex.o: ${srcdir}/regex.c ${includes}
+	$(AFS_CCRULE) ${srcdir}/regex.c
+
 #
 # Install targets
 #
 KDIR=../libafs/afs
 UKDIR=../libuafs/afs
 
-install: dirpath.h util.a sys
+install: dirpath.h util.a util_pic.a sys
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${bindir}
@@ -203,9 +345,10 @@ install: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DESTDIR}${includedir}/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
+	${INSTALL_DATA} util_pic.a ${DESTDIR}${libdir}/afs/libafsutil_pic.a
 	${INSTALL_PROGRAM} sys ${DESTDIR}${bindir}/sys
 
-dest: dirpath.h util.a sys
+dest: dirpath.h util.a util_pic.a sys
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/bin
@@ -232,6 +375,7 @@ dest: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DEST}/include/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a
+	${INSTALL_DATA} util_pic.a ${DEST}/lib/afs/libafsutil_pic.a
 	${INSTALL_PROGRAM} sys ${DEST}/bin/sys
 
 #
@@ -240,7 +384,7 @@ dest: dirpath.h util.a sys
 
 clean:
 	$(RM) -f ${objects} sys dirpath.h
-	$(RM) -f util.a *.o core AFS_component_version_number.c
+	$(RM) -f util.a util_pic.a *.o core AFS_component_version_number.c
 
 test:
 	cd test; $(MAKE)

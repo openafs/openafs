@@ -400,6 +400,7 @@ case $AFS_SYSNAME in
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
+		REGEX_OBJ_PIC="pic_regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
@@ -419,6 +420,7 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-Os"
 		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
+		REGEX_OBJ_PIC="pic_regex.o"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
@@ -436,6 +438,7 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-Os"
 		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
+		REGEX_OBJ_PIC="pic_regex.o"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
@@ -455,6 +458,7 @@ case $AFS_SYSNAME in
 		OPTMZ="-Os"
 		PAM_LIBS="-lpam"
 		REGEX_OBJ="regex.o"
+		REGEX_OBJ_PIC="pic_regex.o"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
@@ -1021,6 +1025,7 @@ AC_SUBST(PAM_DBG)
 AC_SUBST(PAM_OPTMZ)
 AC_SUBST(RANLIB)
 AC_SUBST(REGEX_OBJ)
+AC_SUBST(REGEX_OBJ_PIC)
 AC_SUBST(RM)
 AC_SUBST(RXDEBUG)
 AC_SUBST(SHLIB_CFLAGS)

@@ -15,15 +15,19 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 LIBOBJS=cmd_errors.o cmd.o 
+LIBPICOBJS=cmd_errors_pic.o cmd_pic.o
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
+all: ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcmd_pic.a ${TOP_INCDIR}/afs/cmd.h
 
 all64: all ${TOP_LIBDIR}/libcmd64.a
 
 generated: cmd.h cmd_errors.c
 
 ${TOP_LIBDIR}/libcmd.a: libcmd.a
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libcmd_pic.a: libcmd_pic.a
 	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libcmd64.a: libcmd64.a
@@ -50,6 +54,14 @@ cmd64.o: cmd.c cmd.h
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
 		-c -o cmd64.o ${srcdir}/cmd.c
 
+CFLAGS_cmd_errors_pic.o = -fPIC
+cmd_errors_pic.o: cmd_errors.c
+	$(AFS_CCRULE) cmd_errors.c
+
+CFLAGS_cmd_pic.o = -fPIC
+cmd_pic.o: cmd.c cmd.h
+	$(AFS_CCRULE) cmd.c
+
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
@@ -60,28 +72,40 @@ libcmd.a: ${LIBOBJS} AFS_component_version_number.o
 	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
+libcmd_pic.a: ${LIBPICOBJS} AFS_component_version_number_pic.o
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBPICOBJS} AFS_component_version_number_pic.o
+	$(RANLIB) $@
+
 AFS_component_version_number64.o: AFS_component_version_number.c
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
 		-c -o AFS_component_version_number64.o \
 		AFS_component_version_number.c
 
+AFS_component_version_number_pic.o: AFS_component_version_number.c
+	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) -fPIC \
+		-c -o AFS_component_version_number_pic.o \
+		AFS_component_version_number.c
+
 #
 # Install targets
 #
-install: libcmd.a cmd.h
+install: libcmd.a libcmd_pic.a cmd.h
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libcmd.a ${DESTDIR}${libdir}/afs/libcmd.a
+	${INSTALL_DATA} libcmd_pic.a ${DESTDIR}${libdir}/afs/libcmd_pic.a
 	${INSTALL_DATA} cmd.h ${DESTDIR}${includedir}/afs/cmd.h
 
 install64: install libcmd64.a
 	${INSTALL_DATA} libcmd64.a ${DESTDIR}${libdir}/afs/libcmd64.a
 
-dest: libcmd.a cmd.h
+dest: libcmd.a cmd.h libcmd_pic.a
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libcmd.a ${DEST}/lib/afs/libcmd.a
 	${INSTALL_DATA} cmd.h ${DEST}/include/afs/cmd.h
+	${INSTALL_DATA} libcmd_pic.a ${DEST}/lib/afs/libcmd_pic.a
 
 dest64: dest libcmd64.a
 	${INSTALL_DATA} libcmd64.a ${DEST}/lib/afs/libcmd64.a
