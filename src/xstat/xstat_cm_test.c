@@ -1290,6 +1290,19 @@ CM_Handler(void)
 	return (0);
     }
 
+    if (debugging_on) {
+        int i;
+        int numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
+        afs_int32 *entry = xstat_cm_Results.data.AFSCB_CollData_val;
+
+        printf("debug: got collection number %d\n", xstat_cm_Results.collectionNumber);
+        printf("debug: collection data length is %d\n", numInt32s);
+        for (i = 0; i < numInt32s; i++) {
+            printf("debug: entry %d %u\n", i, entry[i]);
+        }
+        printf("\n");
+    }
+
     switch (xstat_cm_Results.collectionNumber) {
     case AFSCB_XSTATSCOLL_CALL_INFO:
 	/* Why was this commented out in 3.3 ? */
