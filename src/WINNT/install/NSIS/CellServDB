@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 29 Jun 2009
+>grand.central.org      #GCO Public CellServDB 13 Dec 2010
 18.9.48.14                      #grand.mit.edu
 128.2.203.61                    #penn.central.org
 130.237.48.87                   #andrew.e.kth.se
@@ -21,6 +21,10 @@
 >sums.math.mcgill.ca    #Society of Undergraduate Mathematics Students of McGill Universi
 132.216.24.122                  #germain.sums.math.mcgill.ca
 132.216.24.125                  #turing.sums.math.mcgill.ca
+>ualberta.ca            #University of Alberta
+129.128.1.131                   #file13.ucs.ualberta.ca
+129.128.98.17                   #mystery.ucs.ualberta.ca
+129.128.125.40                  #drake.ucs.ualberta.ca
 >cern.ch                #European Laboratory for Particle Physics, Geneva
 137.138.128.148                 #afsdb1.cern.ch
 137.138.246.50                  #afsdb3.cern.ch
@@ -47,8 +51,8 @@
 130.85.24.11                    #weasel
 130.85.24.13                    #straykitten
 >setfilepointer.com     #SetFilePointer.com
-63.224.10.2                     #hamlet.SetFilePointer.com
-63.224.10.4                     #troilus.SetFilePointer.com
+69.164.193.174                  #alpha.setfilepointer.com
+174.143.159.53                  #beta.setfilepointer.com
 >sodre.cx               #Sodre.cx
 128.8.140.165                   #greed.sodre.cx
 >ruk.cuni.cz            #Charles University Computer Centre, Prague, CR
@@ -79,17 +83,22 @@
 141.34.22.10                    #romulus.ifh.de
 141.34.22.11                    #remus.ifh.de
 141.34.22.29                    #hekate.ifh.de
+>integra-ev.de          #INTEGRA e.V.
+134.155.48.8                    #afsdb2.integra-ev.de
+134.155.48.63                   #afsdb1.integra-ev.de
 >lrz-muenchen.de        #Leibniz Computing Centre, Germany
 129.187.10.36                   #afs1.lrz-muenchen.de
 129.187.10.56                   #afs3.lrz-muenchen.de
 129.187.10.57                   #afs2.lrz-muenchen.de
 >ipp-garching.mpg.de    #Institut fuer Plasmaphysik
 130.183.9.5                     #afs-db1.rzg.mpg.de
+130.183.14.14                   #afs-db3.bc.rzg.mpg.de
 130.183.100.10                  #afs-db2.aug.ipp-garching.mpg.de
-130.183.100.23                  #afs-db3.aug.ipp-garching.mpg.de
 >mpe.mpg.de             #MPE cell
 130.183.130.7                   #irafs1.mpe-garching.mpg.de
 130.183.134.20                  #irafs2.mpe-garching.mpg.de
+>nicsys.de              #NICsys GbR
+213.187.80.3                    #attila.nicsys.de
 >i1.informatik.rwth-aachen.de #Informatik I, RWTH Aachen
 137.226.244.79                  #remus.informatik.rwth-aachen.de
 >combi.tfh-wildau.de    #Philips Research Lab
@@ -100,9 +109,10 @@
 134.169.1.6                     #rzafs3.rz.tu-bs.de
 >tu-chemnitz.de         #Technische Universitaet Chemnitz, Germany
 134.109.2.1                     #zuse.hrz.tu-chemnitz.de
+134.109.2.2                     #andrew.hrz.tu-chemnitz.de
 134.109.2.15                    #phoenix.hrz.tu-chemnitz.de
-134.109.200.7                   #aetius.hrz.tu-chemnitz.de
 >e18.ph.tum.de          #Experimental Physics, TU Munich, Germany
+129.187.154.165                 #dionysos.e18.physik.tu-muenchen.de
 129.187.154.223                 #hamlet.e18.physik.tu-muenchen.de
 >atlass01.physik.uni-bonn.de #Bonn ATLAS
 131.220.165.43                  #atlass01.physik.uni-bonn.de
@@ -125,6 +135,7 @@
 129.206.119.17                  #afsdb2.urz.uni-heidelberg.de
 >ziti.uni-heidelberg.de #Institute of Computer Science at the University of Heidelberg
 147.142.42.246                  #mp-sun.ziti.uni-heidelberg.de
+147.142.42.252                  #mp-pizza.ziti.uni-heidelberg.de
 >uni-hohenheim.de       #University of Hohenheim
 144.41.2.2                      #rs13.serv.uni-hohenheim.de
 144.41.2.3                      #rs14.serv.uni-hohenheim.de
@@ -201,10 +212,9 @@
 128.2.40.134                    #afs.chem.cmu.edu
 128.2.40.140                    #afs2.chem.cmu.edu
 >cs.cmu.edu             #Carnegie Mellon University - School of Comp. Sci.
-128.2.184.215                   #pumpkin.srv.cs.cmu.edu
+128.2.172.58                    #date.srv.cs.cmu.edu
+128.2.172.60                    #fig.srv.cs.cmu.edu
 128.2.200.97                    #watermelon.srv.cs.cmu.edu
-128.2.201.46                    #strawberry.srv.cs.cmu.edu
-128.2.201.48                    #cherry.srv.cs.cmu.edu
 >ece.cmu.edu            #Carnegie Mellon University - Elec. Comp. Eng. Dept.
 128.2.129.7                     #porok.ece.cmu.edu
 128.2.129.8                     #vicio.ece.cmu.edu
@@ -247,9 +257,9 @@
 129.186.6.243                   #afsdb-2.iastate.edu
 129.186.142.243                 #afsdb-3.iastate.edu
 >athena.mit.edu         #MIT/Athena cell
-18.7.1.66                       #paris.mit.edu.
+18.3.48.11                      #aether.mit.edu
 18.9.48.11                      #castor.mit.edu
-18.9.48.12                      #pollux.mit.edu.
+18.9.48.12                      #pollux.mit.edu
 >dev.mit.edu            #MIT/IS Development cell
 18.9.48.13                      #saw.mit.edu.
 18.9.60.110                     #hammer.mit.edu.
@@ -264,9 +274,9 @@
 18.181.0.22                     #rosebud.mit.edu
 18.181.0.23                     #ronald-ann.mit.edu
 >soap.mit.edu           #MIT School Of Architecture & Planning
-18.89.1.204                     #CRYPT.MIT.EDU
-18.89.3.46                      #SOAP.MIT.EDU
-18.89.4.9                       #ARCH.MIT.EDU
+18.89.1.204                     #crypt.mit.edu
+18.89.3.46                      #soap.mit.edu
+18.89.4.9                       #arch.mit.edu
 >msu.edu                #Michigan State University Main Cell
 35.9.7.10                       #afsdb0.cl.msu.edu
 >nd.edu                 #University of Notre Dame
@@ -358,8 +368,8 @@
 141.211.43.102                  #linat02.grid.umich.edu
 141.211.43.103                  #linat03.grid.umich.edu
 141.211.43.104                  #linat04.grid.umich.edu
->citi.umich.edu         #Center for Information Technology Integration
-141.211.133.5                   #babylon.citi.umich.edu
+>citi.umich.edu         #University of Michigan - Center for Information Technology Integ
+141.212.112.5                   #babylon.citi.umich.edu
 >sph.umich.edu          #University of Michigan -- School of Public  Health
 141.211.51.137                  #afssph7.sph.umich.edu
 141.211.51.139                  #afssph0.sph.umich.edu
@@ -487,8 +497,9 @@
 193.206.84.121                  #afs1.lnf.infn.it
 193.206.84.122                  #afs2.lnf.infn.it
 193.206.84.123                  #afs3.lnf.infn.it
->lngs.infn.it           #INFN, Laboratori Nazionali di Gran Sasso
-192.84.135.21                   #rsgs05.lngs.infn.it
+>lngs.infn.it           #INFN, Laboratori Nazionali del Gran Sasso
+192.84.135.21                   #afs1.lngs.infn.it
+192.84.135.133                  #afs2.lngs.infn.it
 >pi.infn.it             #INFN, Sezione di Pisa
 192.84.133.50                   #aix1.pi.infn.it
 212.189.152.6                   #afs1.pi.infn.it
@@ -512,14 +523,16 @@
 193.204.161.138                 #gamma.dia.uniroma3.it
 >italia                 #Italian public AFS cell
 193.204.5.9                     #afs.caspur.it
->cmf.nrl.navy.mil       #Naval Research Lab - CCS
-134.207.10.68                   #picard.cmf.nrl.navy.mil
-134.207.10.69                   #riker.cmf.nrl.navy.mil
-134.207.10.70                   #kirk.cmf.nrl.navy.mil
+>cmf.nrl.navy.mil       #Naval Research Laboratory - Center for Computational Science
+134.207.12.68                   #picard.cmf.nrl.navy.mil
+134.207.12.69                   #riker.cmf.nrl.navy.mil
+134.207.12.70                   #kirk.cmf.nrl.navy.mil
 >lcp.nrl.navy.mil       #Naval Research Lab - Lab for Computational Physics
 132.250.114.2                   #afs1.lcp.nrl.navy.mil
 132.250.114.4                   #afs2.lcp.nrl.navy.mil
 132.250.114.6                   #afs3.lcp.nrl.navy.mil
+>crossproduct.net       #crossproduct.net
+207.114.88.164                  #enigma.crossproduct.net
 >epitech.net            #EPITECH, France
 163.5.255.41                    #afs-db-1.epitech.net
 163.5.255.42                    #afs-db-2.epitech.net
@@ -527,11 +540,14 @@
 198.128.3.21                    #fs1.es.net
 198.128.3.22                    #fs2.es.net
 198.128.3.23                    #fs3.es.net
+>gorlaeus.net           #Gorlaeus Laboratories, Leiden University
+132.229.170.27                  #fwncisafs1.gorlaeus.net
 >laroia.net             #Laroia Networks
 66.66.102.254                   #supercore.laroia.net
 >sinenomine.net         #Sine Nomine Associates
-66.135.48.108                   #tx2srv03.sinenomine.net
-72.73.30.42                     #va.sinenomine.net
+72.73.25.18                     #afsdb2.sinenomine.net
+72.73.30.74                     #afsdb3.sinenomine.net
+74.121.192.42                   #afsdb1.sinenomine.net
 >slackers.net           #The Slackers' Network
 199.4.150.159                   #alexandria.slackers.net
 >tproa.net              #The People's Republic of Ames
@@ -545,7 +561,7 @@
 192.16.185.26                   #afs1.nikhef.nl
 192.16.185.27                   #afs2.nikhef.nl
 >1ts.org                #1TS.ORG, Cambridge, MA
-69.25.196.51                    #pancake.1ts.org
+69.25.196.126                   #neuromancer.1ts.org
 >acm-csuf.org           #California State Univerisity Fullerton ACM
 137.151.29.193                  #afs1.acm-csuf.org
 >adrake.org             #adrake.org
@@ -557,15 +573,12 @@
 128.237.157.35                  #vice3.coed.org
 >dementia.org           #Dementia Unlimited
 128.2.13.209                    #dedlock.dementia.org
-128.2.120.216                   #meredith.dementia.org
->dsrw.org               #The DSRW
-65.103.82.83                    #straylight.dsrw.org
-65.103.82.84                    #chiba.dsrw.org
-65.103.82.85                    #freeside.dsrw.org
->hackish.org            #Hackish.org
-98.210.160.157                  #kurma.sys.hackish.org
+128.2.235.26                    #meredith.dementia.org
 >idahofuturetruck.org   #University of Idaho hybrid vehicle development
 12.18.238.210                   #dsle210.fsr.net
+>jeaton.org             #jeaton.org (Jeffrey Eaton, jeaton@jeaton.org)
+128.2.234.89                    #jeaton-org-01.jeaton.org
+128.2.234.92                    #jeaton-org-02.jeaton.org
 >mrow.org               #MROW.ORG and RITLUG Cell
 88.198.46.111                   #mrow.org
 129.21.205.119                  #mirror.rit.edu
@@ -573,10 +586,7 @@
 66.207.133.1                    #sanber.mrph.org
 128.2.99.209                    #hernandarias.mrph.org
 >mstacm.org             #Missouri Science & Technology - ACM
-131.151.88.2                    #acmwork.device.mst.edu
->nimlabs.org            #Nimlabs, Ink. Cell.
-18.238.1.103                    #olfin.nimlabs.org
-18.238.1.105                    #caerbanog.nimlabs.org
+131.151.249.193                 #acm.mst.edu
 >nomh.org               #nomh.org
 204.29.154.12                   #iota.nomh.org
 204.29.154.32                   #adversity.xi.nomh.org
@@ -592,8 +602,9 @@
 130.237.48.7                    #anden.e.kth.se
 130.237.48.244                  #fadern.e.kth.se
 >isk.kth.se             #Royal Institute of Technology, ISK
-130.237.209.5                   #afsdb2.isk.kth.se
 130.237.216.17                  #afsdb1.isk.kth.se
+130.237.216.82                  #afsdb2.isk.kth.se
+130.237.216.83                  #afsdb3.isk.kth.se
 >it.kth.se              #Royal Institute of Technology, IT
 130.237.212.15                  #ptah.it.kth.se
 130.237.212.16                  #toth.it.kth.se
@@ -635,10 +646,12 @@
 194.249.156.1                   #brenta.ijs.si
 >p-ng.si                #Nova Gorica Polytechnic
 193.2.120.2                     #solkan.p-ng.si
+>ihep.su                #Institute for High-Energy Physics
+194.190.165.195                 #afssrv00.ihep.su
 >hep-ex.physics.metu.edu.tr #METU Department of Physics, Experimental HEP group, Ankara/Turke
 144.122.31.131                  #neutrino.physics.metu.edu.tr
->phy.bris.ac.uk         #Bristol University - phyics
-137.222.58.9                    #afs1.phy.bris.ac.uk
+>phy.bris.ac.uk         #Bristol University - physics
+137.222.74.18                   #zen.phy.bris.ac.uk
 >inf.ed.ac.uk           #School of Informatics, University of Edinburgh
 129.215.64.16                   #afsdb0.inf.ed.ac.uk
 129.215.64.17                   #afsdb1.inf.ed.ac.uk
