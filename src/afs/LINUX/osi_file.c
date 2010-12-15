@@ -239,6 +239,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = inode_change_ok(inode, &newattrs);
     if (!code)
 	code = afs_inode_setattr(afile, &newattrs);
+    unlock_kernel();
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
 #else
