@@ -2790,6 +2790,7 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
     tvc = found_tvc;
     /* should I have a read lock on the vnode here? */
     if (tvc) {
+#ifndef AFS_DARWIN80_ENV
 #if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	afs_int32 retry = 0;
 	osi_vnhold(tvc, &retry);
@@ -2802,6 +2803,7 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	}
 #else
 	osi_vnhold(tvc, (int *)0);	/* already held, above */
+#endif
 #endif
 	/*
 	 * We obtained the xvcache lock above.
