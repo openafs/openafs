@@ -90,6 +90,7 @@ includes: \
 	${TOP_INCDIR}/rx/rx_packet.h \
 	${TOP_INCDIR}/rx/rx_prototypes.h \
 	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/rx_atomic.h \
 	${TOP_INCDIR}/rx/rx_user.h \
 	${TOP_INCDIR}/rx/rx_event.h \
 	${TOP_INCDIR}/rx/rx_queue.h \
@@ -115,6 +116,9 @@ ${TOP_INCDIR}/rx/rx_prototypes.h: rx_prototypes.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx.h: rx.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/rx/rx_atomic.h: rx_atomic.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/rx/rx_user.h: rx_user.h
