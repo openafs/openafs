@@ -22,6 +22,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OPENAFS_RX_ATOMIC_H
+#define OPENAFS_RX_ATOMIC_H 1
+
 #define RX_ATOMIC_INIT(i) { (i) }
 
 #ifdef AFS_NT40_ENV
@@ -278,5 +281,7 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
     atomic->var -= change;
     MUTEX_EXIT(&rx_atomic_mutex);
 }
+
+#endif
 
 #endif
