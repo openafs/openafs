@@ -62,6 +62,11 @@ rx_atomic_dec(rx_atomic_t *atomic) {
     InterlockedDecrement(&atomic->var);
 }
 
+static_inline int
+rx_atomic_dec_and_read(rx_atomic_t *atomic) {
+    return InterlockedDecrement(&atomic->var);
+}
+
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
     InterlockedExchangeAdd(&atomic->var, 0 - change);
@@ -108,6 +113,11 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
     OSAtomicDecrement32(&atomic->var);
+}
+
+static_inline int
+rx_atomic_dec_and_read(rx_atomic_t *atomic) {
+    return OSAtomicDecrement32(&atomic->var);
 }
 
 static_inline void
@@ -165,6 +175,11 @@ rx_atomic_dec(rx_atomic_t *atomic) {
     atomic_dec_32(&atomic->var);
 }
 
+static_inline int
+rx_atomic_dec_and_read(rx_atomic_t *atomic) {
+    return atomic_dec_32_nv(&atomic->var);
+}
+
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
     atomic_add_32(&atomic->var, 0 - change);
@@ -204,6 +219,11 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
     (void)__sync_fetch_and_sub(&atomic->var, 1);
+}
+
+static_inline int
+rx_atomic_dec_and_read(rx_atomic_t *atomic) {
+    return __sync_sub_and_fetch(&atomic->var, 1);
 }
 
 static_inline void
@@ -274,6 +294,17 @@ rx_atomic_dec(rx_atomic_t *atomic) {
     atomic->var--;
     MUTEX_EXIT(&rx_atomic_mutex);
 }
+
+static_inline int
+rx_atomic_dec_and_read(rx_atomic_t *atomic) {
+    int retval;
+    MUTEX_ENTER(&rx_atomic_mutex);
+    atomic->var--;
+    retval = atomic->var;
+    MUTEX_EXIT(&rx_atomic_mutex);
+    return retval;
+}
+
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
