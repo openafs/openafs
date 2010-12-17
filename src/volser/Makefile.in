@@ -68,7 +68,7 @@ vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
 	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
 
 volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
-	${CC} ${DBUG} -o volserver $(SOBJS) ${TOP_LIBDIR}/libdir.a \
+	${CC} ${DBG} -o volserver $(SOBJS) ${TOP_LIBDIR}/libdir.a \
 		${LDFLAGS} $(LIBS) ${XLIBS}
 
 voldump: vol-dump.o ${VOLDUMP_LIBS}

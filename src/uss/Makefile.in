@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 all: uss
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config \
+CFLAGS=-I. -I${srcdir} ${DBG} -I${TOP_OBJDIR}/src/config \
 	-I${TOP_INCDIR} -I. ${XCFLAGS} ${ARCHFLAGS}
 
 #

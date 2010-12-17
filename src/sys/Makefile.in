@@ -15,7 +15,7 @@ LIBAFSSETPAGMINOR=0
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS} ${ARCHFLAGS}
+CFLAGS=-I. -I${srcdir} ${DBG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS} ${ARCHFLAGS}
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
