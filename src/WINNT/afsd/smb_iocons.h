@@ -99,6 +99,8 @@ struct sbstruct {
 #define VIOC_SETGROUP                   0x35
 #define VIOC_FS_CMD                     0x36
 #define VIOCNEWCELL2                    0x37
+#define VIOC_GETUNIXMODE                0x38
+#define VIOC_SETUNIXMODE                0x39
 
 #define VIOC_VOLSTAT_TEST               0x3F
 

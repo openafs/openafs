@@ -281,6 +281,10 @@ extern afs_int32 cm_IoctlUnicodeControl(struct cm_ioctl *ioctlp, struct cm_user 
 
 extern void TranslateExtendedChars(char *str);
 
+extern afs_int32 cm_IoctlGetUnixMode(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
+
+extern afs_int32 cm_IoctlSetUnixMode(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
+
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  __CM_IOCTL_H_ENV__ */

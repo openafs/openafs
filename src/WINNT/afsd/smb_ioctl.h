@@ -207,4 +207,8 @@ extern afs_int32 smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *use
 
 extern afs_int32 smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
 
+extern afs_int32 smb_IoctlGetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
+
+extern afs_int32 smb_IoctlSetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
+
 #endif /*  __SMB_IOCTL_H_ENV__ */
