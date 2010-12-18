@@ -523,6 +523,7 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
 	    memset(ktcToken, 0, sizeof(struct ktc_token));
 	}
 	free(ktcToken);
+        return code;
     }
     if (code)
 	return KTC_PIOCTLFAIL;
