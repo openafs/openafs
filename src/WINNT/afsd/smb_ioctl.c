@@ -91,6 +91,8 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOC_SETOWNER] = smb_IoctlSetOwner;
     smb_ioctlProcsp[VIOC_SETGROUP] = smb_IoctlSetGroup;
     smb_ioctlProcsp[VIOCNEWCELL2] = smb_IoctlNewCell2;
+    smb_ioctlProcsp[VIOC_SETUNIXMODE] = smb_IoctlSetUnixMode;
+    smb_ioctlProcsp[VIOC_GETUNIXMODE] = smb_IoctlSetUnixMode;
 }       
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -2086,4 +2088,81 @@ smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 }
 
 
+afs_int32
+smb_IoctlGetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    afs_int32 code;
+    cm_scache_t *scp;
+    cm_req_t req;
+    cm_ioctlQueryOptions_t *optionsp;
+    afs_uint32 flags = 0;
+
+    smb_InitReq(&req);
+
+    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
+    if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
+        flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
+
+    if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
+        cm_SkipIoctlPath(&ioctlp->ioctl);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, &scp, userp, &req);
+    } else {
+        code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+    }
+    if (code)
+        return code;
+
+    code = cm_IoctlGetUnixMode(&ioctlp->ioctl, userp, scp, &req);
+
+    cm_ReleaseSCache(scp);
+
+    return code;
+}
+
+
+/*
+ * VIOC_SETUNIXMODE
+ *
+ * This pioctl requires the use of the cm_ioctlQueryOptions_t structure.
+ */
+afs_int32
+smb_IoctlSetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    afs_int32 code;
+    cm_scache_t *scp;
+    cm_req_t req;
+    cm_ioctlQueryOptions_t *optionsp;
+    afs_uint32 flags = 0;
+
+    smb_InitReq(&req);
+
+    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
+    if (optionsp) {
+        if (CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
+            flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
+
+        if (CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+            cm_fid_t fid;
+            cm_SkipIoctlPath(&ioctlp->ioctl);
+            cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+                       optionsp->fid.vnode, optionsp->fid.unique);
+            code = cm_GetSCache(&fid, &scp, userp, &req);
+        } else {
+            code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        }
+        if (code)
+            return code;
+
+        cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
+    }
+
+    code = cm_IoctlSetUnixMode(&ioctlp->ioctl, userp, scp, &req);
+
+    cm_ReleaseSCache(scp);
+
+    return code;
+}
 

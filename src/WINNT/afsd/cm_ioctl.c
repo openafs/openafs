@@ -3414,3 +3414,73 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *re
 
     return code;
 }       
+
+/*
+ * VIOC_GETUNIXMODE internals.
+ *
+ * Assumes that pioctl path has been parsed or skipped.
+ * scp is held but not locked.
+ */
+afs_int32
+cm_IoctlGetUnixMode(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
+{
+    afs_int32 code = 0;
+    char *cp;
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0)
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+
+    if (code == 0) {
+        /* Copy all this junk into msg->im_data, keeping track of the lengths. */
+        cp = ioctlp->outDatap;
+        memcpy(cp, (char *)&scp->unixModeBits, sizeof(afs_uint32));
+        cp += sizeof(afs_uint32);
+
+        /* return new size */
+        ioctlp->outDatap = cp;
+    }
+    return code;
+}
+
+
+/*
+ * VIOC_SETUNIXMODE internals.
+ *
+ * Assumes that pioctl path has been parsed or skipped
+ * and that cm_ioctlQueryOptions_t have been parsed and skipped.
+ *
+ * scp is held but not locked.
+ */
+afs_int32
+cm_IoctlSetUnixMode(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
+{
+    afs_int32 code = 0;
+    char *cp;
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0)
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+
+    if (code == 0) {
+        afs_uint32 unixModeBits;
+        cm_attr_t attr;
+
+        memset(&attr, 0, sizeof(attr));
+
+        cp = ioctlp->inDatap;
+        memcpy((char *)&unixModeBits, cp, sizeof(afs_uint32));
+
+        attr.mask = CM_ATTRMASK_UNIXMODEBITS;
+        attr.unixModeBits = unixModeBits;
+
+        code = cm_SetAttr(scp, &attr, userp, reqp);
+    }
+    return code;
+}
