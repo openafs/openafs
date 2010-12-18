@@ -13,6 +13,7 @@
 
 #include <windows.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <malloc.h>
 #include <string.h>
 #include <strsafe.h>
@@ -20,7 +21,7 @@
 #include <time.h>
 #include <winsock2.h>
 #include <errno.h>
-#include <assert.h>
+#include <afs/afs_assert.h>
 #include <rx/rx_globals.h>
 
 #include <osi.h>
@@ -1766,6 +1767,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         cm_fid_t fid;
         afs_uint32 filetype;
 	afs_int32 owner[2];
+        afs_uint32 unixModeBits;
 	char cell[CELL_MAXNAMELEN];
 
         /* once per file */
@@ -1826,6 +1828,13 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 	    pr_SIdToName(owner[0], oname);
 	    pr_SIdToName(owner[1], gname);
 	    printf("Owner %s (%d) Group %s (%d)\n", oname, owner[0], gname, owner[1]);
+        }
+
+	blob.out_size = sizeof(afs_uint32);
+        blob.out = (char *) &unixModeBits;
+	if (0 == pioctl_utf8(ti->data, VIOC_GETUNIXMODE, &blob, 1) &&
+            blob.out_size == sizeof(afs_uint32)) {
+	    printf("UNIX mode 0%o\n", unixModeBits);
         }
 
 	blob.out = space;
@@ -5540,6 +5549,236 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
+
+#define USR_MODES (S_ISUID|S_IRWXU)
+#define GRP_MODES (S_ISGID|S_IRWXG)
+#define EXE_MODES (S_IXUSR|S_IXGRP|S_IXOTH)
+#ifdef S_ISVTX
+#define ALL_MODES (USR_MODES|GRP_MODES|S_IRWXO|S_ISVTX)
+#else
+#define ALL_MODES (USR_MODES|GRP_MODES|S_IRWXO)
+#endif
+
+/*
+ * parsemode() is Copyright 1991 by Vincent Archer.
+ *    You may freely redistribute this software, in source or binary
+ *    form, provided that you do not alter this copyright mention in any
+ *    way.
+ */
+static afs_uint32
+parsemode(char *symbolic, afs_uint32 oldmode)
+{
+    afs_uint32 who, mask, u_mask = 022, newmode, tmpmask;
+    char action;
+
+    newmode = oldmode & ALL_MODES;
+    while (*symbolic) {
+        who = 0;
+        for (; *symbolic; symbolic++) {
+                if (*symbolic == 'a') {
+                        who |= ALL_MODES;
+                        continue;
+                }
+                if (*symbolic == 'u') {
+                        who |= USR_MODES;
+                        continue;
+                }
+                if (*symbolic == 'g') {
+                        who |= GRP_MODES;
+                        continue;
+                }
+                if (*symbolic == 'o') {
+                        who |= S_IRWXO;
+                        continue;
+                }
+                break;
+        }
+        if (!*symbolic || *symbolic == ',') {
+            Die(EINVAL, "invalid mode");
+            exit(1);
+        }
+        while (*symbolic) {
+            if (*symbolic == ',')
+                break;
+            switch (*symbolic) {
+            default:
+                Die(EINVAL, "invalid mode");
+                exit(1);
+            case '+':
+            case '-':
+            case '=':
+                action = *symbolic++;
+            }
+            mask = 0;
+            for (; *symbolic; symbolic++) {
+                if (*symbolic == 'u') {
+                    tmpmask = newmode & S_IRWXU;
+                    mask |= tmpmask | (tmpmask << 3) | (tmpmask << 6);
+                    symbolic++;
+                    break;
+                }
+                if (*symbolic == 'g') {
+                    tmpmask = newmode & S_IRWXG;
+                    mask |= tmpmask | (tmpmask >> 3) | (tmpmask << 3);
+                    symbolic++;
+                    break;
+                }
+                if (*symbolic == 'o') {
+                    tmpmask = newmode & S_IRWXO;
+                    mask |= tmpmask | (tmpmask >> 3) | (tmpmask >> 6);
+                    symbolic++;
+                    break;
+                }
+                if (*symbolic == 'r') {
+                    mask |= S_IRUSR | S_IRGRP | S_IROTH;
+                    continue;
+                }
+                if (*symbolic == 'w') {
+                    mask |= S_IWUSR | S_IWGRP | S_IWOTH;
+                    continue;
+                }
+                if (*symbolic == 'x') {
+                    mask |= EXE_MODES;
+                    continue;
+                }
+                if (*symbolic == 's') {
+                    mask |= S_ISUID | S_ISGID;
+                    continue;
+                }
+                if (*symbolic == 'X') {
+                    if (S_ISDIR(oldmode) || (oldmode & EXE_MODES))
+                        mask |= EXE_MODES;
+                    continue;
+                }
+                if (*symbolic == 't') {
+                    mask |= S_ISVTX;
+                    who |= S_ISVTX;
+                    continue;
+                }
+                break;
+            }
+            switch (action) {
+            case '=':
+                if (who)
+                    newmode &= ~who;
+                else
+                    newmode = 0;
+            case '+':
+                if (who)
+                    newmode |= who & mask;
+                else
+                    newmode |= mask & (~u_mask);
+                break;
+            case '-':
+                if (who)
+                    newmode &= ~(who & mask);
+                else
+                    newmode &= ~mask | u_mask;
+            }
+        }
+        if (*symbolic)
+            symbolic++;
+  }
+  return(newmode);
+}
+
+
+static int
+ChModCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    int error = 0;
+    int literal = 0;
+    struct {
+        cm_ioctlQueryOptions_t options;
+        afs_uint32 unixModeBits;
+    } inData;
+    afs_uint32 unixModeBits;
+    afs_int32  absolute = 0;
+    char * unixModeStr;
+    char confDir[257];
+
+    cm_GetConfigDir(confDir, sizeof(confDir));
+
+    if (as->parms[2].items)
+        literal = 1;
+
+    unixModeStr = as->parms[0].items->data;
+    if (*unixModeStr >= '0' && *unixModeStr <= '7') {
+        unixModeBits = 0;
+        absolute = 1;
+        while (*unixModeStr >= '0' && *unixModeStr <= '7')
+            unixModeBits = (unixModeBits << 3) | (*unixModeStr++ & 07);
+        if (*unixModeStr) {
+            Die(EINVAL, "invalid mode");
+            return(1);
+        }
+        unixModeBits &= ALL_MODES;
+    }
+
+    SetDotDefault(&as->parms[1].items);
+    for(ti=as->parms[1].items; ti; ti=ti->next) {
+        cm_fid_t fid;
+        afs_uint32 filetype;
+	char cell[CELL_MAXNAMELEN];
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&inData, 0, sizeof(inData));
+        filetype = 0;
+        inData.options.size = sizeof(inData.options);
+        inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        inData.options.literal = literal;
+	blob.in_size = inData.options.size;    /* no variable length data */
+        blob.in = &inData;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
+            inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            inData.options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        /*
+         * if the mode was specified as an absolute numeric,
+         * value we can simply apply it to all of the listed
+         * file paths.  Otherwise, we must obtain the old mode
+         * value in order to compute the new value from the
+         * symbolic representation.
+         */
+        if (!absolute) {
+            blob.in_size = 0;
+            blob.out_size = sizeof(afs_uint32);
+            blob.out = (char *)&unixModeBits;
+            if (pioctl_utf8(ti->data, VIOC_GETUNIXMODE, &blob, 1) != 0)
+            {
+                Die(errno, ti->data);
+                error = 1;
+                continue;
+            }
+            inData.unixModeBits = parsemode(unixModeStr, unixModeBits);
+        } else {
+            inData.unixModeBits = unixModeBits;
+        }
+
+        blob.in_size = sizeof(inData);
+	blob.out = NULL;
+	blob.out_size = 0;
+	code = pioctl_utf8(ti->data, VIOC_SETUNIXMODE, &blob, 1);
+	if (code) {
+            Die(errno, ti->data);
+        }
+    }
+    return error;
+}
+
 #ifndef WIN32
 #include "AFS_component_version_number.c"
 #endif
@@ -5908,6 +6147,11 @@ int wmain(int argc, wchar_t **wargv)
 
     ts = cmd_CreateSyntax("chgrp", ChGrpCmd, NULL, "set owner for object(s) in afs");
     cmd_AddParm(ts, "-group", CMD_SINGLE, 0, "user/group name or id");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
+
+    ts = cmd_CreateSyntax("chmod", ChModCmd, NULL, "set UNIX mode for object(s) in afs");
+    cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "UNIX mode bits");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 

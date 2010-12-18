@@ -203,8 +203,43 @@
 typedef int errno_t;
 #endif
 
-/* Windows only supports BSD variants */
-#define S_IRUSR _S_IREAD
-#define S_IWUSR _S_IWRITE
+/*
+ * UNIX mode symbol definitions
+ */
+#ifndef S_IRWXU
+#define S_IRWXU 00700
+#define S_IRUSR 00400
+#define S_IWUSR 00200
+#define S_IXUSR 00100
+#endif
+
+#ifndef S_IRWXG
+#define S_IRWXG 00070
+#define S_IRGRP 00040
+#define S_IWGRP 00020
+#define S_IXGRP 00010
+#endif
+
+#ifndef S_IRWXO
+#define S_IRWXO 00007
+#define S_IROTH 00004
+#define S_IWOTH 00002
+#define S_IXOTH 00001
+#endif
+
+#ifndef S_ISUID
+#define S_ISUID  0004000
+#define S_ISGID  0002000
+#define S_ISVTX  0001000
+#endif
+
+#ifndef S_IFMT
+#define S_IFMT   0170000
+#define S_IFDIR  0040000
+#endif
+
+#ifndef S_ISDIR
+#define S_ISDIR(m)      (((m)&(S_IFMT)) == (S_IFDIR))
+#endif
 
 #define HAVE_CONIO_H 1
