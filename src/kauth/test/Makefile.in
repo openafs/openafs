@@ -14,7 +14,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCDIRS= -I${DESTDIR}/include -I..
 LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
-LIBS= -llwp -ldes -lrxkad -lauth -lcmd -lubik -lprot -lsys -lrx -lcom_err -lkauth
+LIBS= -llwp -ldes -lrxkad -lauth -lcmd -lubik -lprot -lsys -lrx -lafscom_err -lkauth
 
 # the only tests _known_ to work are multiklog and the tcl scripts.
 

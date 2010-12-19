@@ -33,7 +33,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(DBM) \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
@@ -50,7 +50,7 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 

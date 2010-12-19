@@ -41,7 +41,7 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/vlib.a \
 	 ${TOP_LIBDIR}/libauth.a \
 	 ${TOP_LIBDIR}/librxkad.a \
-	 ${TOP_LIBDIR}/libcom_err.a \
+	 ${TOP_LIBDIR}/libafscom_err.a \
 	 ${TOP_LIBDIR}/libcmd.a \
 	 ${TOP_LIBDIR}/libkauth.a \
 	 ${TOP_LIBDIR}/librx.a \
@@ -55,7 +55,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafsint.a \
 	 ${TOP_LIBDIR}/librxkad.a \
 	 ${TOP_LIBDIR}/libauth.a \
-	 ${TOP_LIBDIR}/libcom_err.a \
+	 ${TOP_LIBDIR}/libafscom_err.a \
 	 ${TOP_LIBDIR}/libcmd.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \

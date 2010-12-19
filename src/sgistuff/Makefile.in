@@ -32,7 +32,7 @@ AFSLIBS=${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/util.a
 
 KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a \
@@ -45,7 +45,7 @@ KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/util.a
 
 AUTHFILES=ta-rauth.o rcmd.o herror.o

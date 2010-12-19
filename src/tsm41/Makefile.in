@@ -26,7 +26,7 @@ AFSLIBS = \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/libcom_err.a \
+		${TOP_LIBDIR}/libafscom_err.a \
 		${TOP_LIBDIR}/util.a \
 		${TOP_LIBDIR}/libaudit.a
 
@@ -41,7 +41,7 @@ KAFSLIBS = \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/libcom_err.a \
+		${TOP_LIBDIR}/libafscom_err.a \
 		${TOP_LIBDIR}/util.a \
 		${TOP_LIBDIR}/libaudit.a
 
