@@ -53,13 +53,15 @@
 #endif
 
 #if defined(AFS_FBSD80_ENV)
-#define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY)
+#define	lock_vnode(v, f)	vn_lock((v), (f))
 #define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY);
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0)
+#define islocked_vnode(v)	VOP_ISLOCKED((v))
 #else
-#define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY, curthread)
+#define	lock_vnode(v, f)	vn_lock((v), (f), curthread)
 #define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY, curthread);
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
+#define islocked_vnode(v)	VOP_ISLOCKED((v), curthread)
 #endif
 
 /* Try to discard pages, in order to recycle a vcache entry.
@@ -194,14 +196,14 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     }
     VI_UNLOCK(vp);
 
-    islocked = VOP_ISLOCKED(vp);
+    islocked = islocked_vnode(vp);
     if (islocked == LK_EXCLOTHER)
 	panic("Trying to Smush over someone else's lock");
     else if (islocked == LK_SHARED) {
 	afs_warn("Trying to Smush with a shared lock");
-	vn_lock(vp, LK_UPGRADE);
+	lock_vnode(vp, LK_UPGRADE);
     } else if (!islocked)
-	vn_lock(vp, LK_EXCLUSIVE);
+	lock_vnode(vp, LK_EXCLUSIVE);
 
     if (vp->v_bufobj.bo_object != NULL) {
 	VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
@@ -231,9 +233,9 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	--tries;
     }
     if (islocked == LK_SHARED)
-	vn_lock(vp, LK_DOWNGRADE);
+	lock_vnode(vp, LK_DOWNGRADE);
     else if (!islocked)
-	VOP_UNLOCK(vp, 0);
+	unlock_vnode(vp);
 }
 
 /* Purge VM for a file when its callback is revoked.

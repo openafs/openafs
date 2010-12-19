@@ -890,12 +890,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * Read operation filled a partial page.
 	     */
 	    m->valid = 0;
-	    vm_page_set_valid(m, 0, size - toff);
-#ifndef AFS_FBSD80_ENV
-	    vm_page_undirty(m);
-#else
+	    vm_page_set_validclean(m, 0, size - toff);
 	    KASSERT(m->dirty == 0, ("afs_getpages: page %p is dirty", m));
-#endif
 	}
 
 	if (i != ap->a_reqpage) {
