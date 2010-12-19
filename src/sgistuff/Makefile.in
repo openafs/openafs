@@ -25,7 +25,7 @@ LIBDIR=${TOP_LIBDIR}/
 AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/util.a
 KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \

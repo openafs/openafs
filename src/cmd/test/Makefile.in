@@ -14,7 +14,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 
 LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
-LIBS=-lcmd -lcom_err -lafsutil
+LIBS=-lcmd -lafscom_err -lafsutil
 
 INCDIRS=  -I${SRCDIR}/include -I${SRCDIR}/include/afs -I..
 
