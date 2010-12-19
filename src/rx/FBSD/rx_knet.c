@@ -108,11 +108,14 @@ osi_StopListener(void)
     bzero(&dvec, sizeof(dvec));
     dvec.iov_base = &c;
     dvec.iov_len = 1;
+    /* afs_osi_Sleep requires the GLOCK */
+    AFS_GLOCK();
     while(rxk_ListenerPid) {
 	afs_warn("waiting for rxk_ListenerPid to die\n");
 	osi_NetSend(rx_socket, &taddr, &dvec, 1, 1, 0);
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
+    AFS_GUNLOCK();
     /* in theory, we are now the only people doing anything with rx_socket */
     soclose(rx_socket);
 
