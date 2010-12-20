@@ -1516,6 +1516,21 @@ afs_linux_follow_link(struct dentry *dp, struct dentry *basep,
 #endif /* AFS_LINUX24_ENV */
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
+static inline int
+afs_linux_can_bypass(struct inode *ip) {
+    switch(cache_bypass_strategy) {
+	case NEVER_BYPASS_CACHE:
+	    return 0;
+	case ALWAYS_BYPASS_CACHE:
+	    return 1;
+	case LARGE_FILES_BYPASS_CACHE:
+	    if(i_size_read(ip) > cache_bypass_threshold)
+		return 1;
+	default:
+	    return 0;
+     }
+}
+
 /* afs_linux_readpage
  * all reads come through here. A strategy-like read call.
  */
