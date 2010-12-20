@@ -42,6 +42,7 @@ multi_Init(struct rx_connection **conns, int nConns)
     mh = (struct multi_handle *)osi_Alloc(sizeof(struct multi_handle));
     if (!calls || !ready || !mh)
 	osi_Panic("multi_Rx: no mem\n");
+    memset(mh, 0, sizeof(struct multi_handle));
     mh->calls = calls;
     mh->nextReady = mh->firstNotReady = mh->ready = ready;
     mh->nReady = 0;
