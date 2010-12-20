@@ -1646,7 +1646,9 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 	iheldthelock = VOP_ISLOCKED(vp, curthread);
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
+	AFS_GUNLOCK();
 	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
+	AFS_GLOCK();
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
 #elif defined(AFS_FBSD_ENV)
