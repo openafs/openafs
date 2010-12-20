@@ -250,7 +250,7 @@ bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname,
 {
     int i;
     afs_int32 code;
-    void *junk = NULL;
+    PROCESS junk;
 
     for (i = 0; i < BC_MAXSIMDUMPS; i++)
 	if (!(bc_dumpTasks[i].flags & BC_DI_INUSE))
@@ -293,7 +293,7 @@ bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname,
 
     code =
 	LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY,
-			  (void *)(intptr_t)i, "helper", junk);
+			  (void *)(intptr_t)i, "helper", &junk);
     if (code) {
 	bc_HandleMisc(code);
 	afs_com_err(whoami, code, "; Can't start thread");
