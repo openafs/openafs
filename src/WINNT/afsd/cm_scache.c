@@ -1744,6 +1744,15 @@ void cm_MergeStatus(cm_scache_t *dscp,
         lock_ReleaseWrite(&buf_globalLock);
     }
 
+    /*
+     * If the dataVersion has changed, the mountPointStringp must be cleared
+     * in order to force a re-evaluation by cm_HandleLink().  The Windows CM
+     * does not update a mountpoint or symlink by altering the contents of
+     * the file data; but the Unix CM does.
+     */
+    if (scp->dataVersion != dataVersion)
+        scp->mountPointStringp[0] = '\0';
+
     /* We maintain a range of buffer dataVersion values which are considered 
      * valid.  This avoids the need to update the dataVersion on each buffer
      * object during an uncontested storeData operation.  As a result this 
