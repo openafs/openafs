@@ -53,6 +53,21 @@
 
 #include "des_prototypes.h"
 
+#ifdef AFS_HPUX_ENV
+/* When compiling with '-g -O', the HP-UX compiler can get confused with
+ * including ip.c and fp.c below. The result is that the compiler spins on
+ * the CPU and never compiles the file. As a workaround, we can avoid this if
+ * R1 and L1 are declared 'register' (I'm guessing this has to do with the
+ * fact that they are used in ip.c/fp.c, and declaring them register avoids
+ * creating debugging information, and it's that debugging information that
+ * the compiler is flipping out over since they're in multiple .c files). So
+ * declare them as 'register' on HP-UX; only do it on HP-UX to minimize the
+ * scope of such a change, so we don't impact other platforms. */
+# define HPUX_REGISTER register
+#else
+# define HPUX_REGISTER
+#endif
+
 #define XPRT_DES
 
 #ifdef DEBUG
@@ -71,8 +86,8 @@ des_ecb_encrypt(void * clear, void * cipher,
 {
     /* better pass 8 bytes, length not checked here */
 
-    afs_uint32 R1 = 0;
-    afs_uint32 L1 = 0;	/* R1 = r10, L1 = r9 */
+    HPUX_REGISTER afs_uint32 R1 = 0;
+    HPUX_REGISTER afs_uint32 L1 = 0;	/* R1 = r10, L1 = r9 */
     afs_uint32 R2 = 0, L2 = 0;	/* R2 = r8, L2 = r7 */
     afs_int32 i;
     /* one more registers left on VAX, see below P_temp_p */
