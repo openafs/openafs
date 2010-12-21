@@ -61,29 +61,6 @@ extern void lwp_abort(void);
 #include <fcntl.h>
 #endif
 
-#if	defined(USE_PTHREADS) || defined(USE_SOLARIS_THREADS)
-
-void IOMGR_Initialize()	/* noop */
-{ }
-
-void IOMGR_Sleep (seconds)
-  unsigned seconds;
-{
-    struct timespec itv;
-
-    itv.tv_sec = seconds;
-    itv.tv_nsec = 0;
-    MUTEX_EXIT(&lwp_mutex);
-    osi_Assert(pthread_delay_np(&itv) == 0);
-    MUTEX_ENTER(&lwp_mutex);
-}
-
-#else
-
-#ifdef	AFS_DECOSF_ENV
-extern void *malloc();
-#endif	/* AFS_DECOSF_ENV */
-
 typedef unsigned char bool;
 #define FALSE	0
 #define TRUE	1
@@ -1020,4 +997,3 @@ void IOMGR_Sleep (int seconds)
     timeout.tv_usec = 0;
     IOMGR_Select(0, 0, 0, 0, &timeout);
 }
-#endif	/* USE_PTHREADS */
