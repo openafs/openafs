@@ -797,7 +797,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     afs_FlushReclaimedVcaches();
 
 #if defined(AFS_LINUX22_ENV)
-    if(!afsd_dynamic_vcaches) {
+    if(!afsd_dynamic_vcaches && afs_vcount >= afs_maxvcount) {
 	afs_ShakeLooseVCaches(anumber);
 	if (afs_vcount >= afs_maxvcount) {
 	    afs_warn("afs_NewVCache - none freed\n");
