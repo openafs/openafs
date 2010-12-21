@@ -9,24 +9,26 @@ OBJS=main.o CFGrowlAdditions.o
 
 all: growlagent-openafs
 
-growlagent-openafs: ${OBJS}
+_growlagent-openafs: ${OBJS}
 	${CC} ${CFLAGS} -o $@ ${OBJS} -framework Security -framework AppKit -framework CoreFoundation
+
+growlagent-openafs: _growlagent-openafs
+	${CP} $? $@
+	Ro $@ growlagent.r
+	SetFile C" $@
 
 CFGrowlAdditions.o: CFGrowlAdditions.h
 main.o: GrowlDefines.h GrowlPathway.h CFGrowlAdditions.h
 
 clean:
-	$(RM) -f *.o growlagent-openafs
+	$(RM) -f *.o growlagent-openafs _growlagent-openafs
 
 install:
 
 dest: \
-	${DEST}/tools/growlagent-openafs \
-	${DEST}/tools/._growlagent-openafs
+	${DEST}/tools/growlagent-openafs
 
 ${DEST}/tools/growlagent-openafs: growlagent-openafs
-	${INSTALL} $? $@
-${DEST}/tools/._growlagent-openafs: ${srcdir}/._growlagent-openafs
 	${INSTALL} $? $@
 
 include ../../../config/Makefile.version
