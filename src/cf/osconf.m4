@@ -399,7 +399,7 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} ${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
@@ -409,7 +409,7 @@ case $AFS_SYSNAME in
 		CCOBJ="cc"
 		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS="-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} \${ARCHFLAGS}"
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		KERN_OPTMZ="-Os"
@@ -417,7 +417,7 @@ case $AFS_SYSNAME in
 		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} ${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
@@ -425,7 +425,7 @@ case $AFS_SYSNAME in
 
 	*_darwin_90)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS="-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} \${ARCHFLAGS}"
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
@@ -434,7 +434,7 @@ case $AFS_SYSNAME in
 		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} ${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
@@ -442,7 +442,7 @@ case $AFS_SYSNAME in
 
 	*_darwin_100)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_CFLAGS="-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} \${ARCHFLAGS}"
 		MT_LIBS='${XLIBS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
@@ -453,7 +453,7 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lpam"
 		REGEX_OBJ="regex.o"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} ${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
