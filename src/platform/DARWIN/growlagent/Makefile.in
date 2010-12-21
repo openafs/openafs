@@ -14,7 +14,7 @@ _growlagent-openafs: ${OBJS}
 
 growlagent-openafs: _growlagent-openafs
 	${CP} $? $@
-	Ro $@ growlagent.r
+	Rez -o $@ growlagent.r
 	SetFile C" $@
 
 CFGrowlAdditions.o: CFGrowlAdditions.h
