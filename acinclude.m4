@@ -1231,7 +1231,10 @@ dnl check for curses-lib
 save_LIBS=$LIBS
 AC_CHECK_LIB( [ncurses], [setupterm],
 [LIB_curses=-lncurses],
-[AC_CHECK_LIB([curses], [setupterm], [LIB_curses=-lcurses])])
+    [AC_CHECK_LIB([Hcurses], [setupterm], [LIB_curses=-lHcurses],
+        [AC_CHECK_LIB([curses], [setupterm], [LIB_curses=-lcurses])
+    ])
+])
 LIBS=$save_LIBS
 AC_SUBST(LIB_curses)
 
