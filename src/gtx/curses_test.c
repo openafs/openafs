@@ -14,6 +14,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
+# define __HP_CURSES
+#endif
+
 #if defined(HAVE_NCURSES_H)
 # include <ncurses.h>
 #elif defined(HAVE_CURSES_H)
