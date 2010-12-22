@@ -42,7 +42,7 @@ SYSOBJS =\
 UTILOBJS =\
 	assert.o \
 	casestrcpy.o \
-	base64.o \
+	base64.o
 
 COMERROBJS =\
 	error_msg.o \

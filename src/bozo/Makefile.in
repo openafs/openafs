@@ -40,7 +40,7 @@ LIBS=   ${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libprocmgmt.a \
-	${TOP_LIBDIR}/libafshcrypto_lwp.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
