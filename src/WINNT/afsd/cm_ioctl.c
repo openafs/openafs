@@ -1265,10 +1265,20 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
         if (cellp && tsp->cellp != cellp) 
             continue;	/* cell spec'd and wrong */
-        if ((tsp->flags & CM_SERVERFLAG_DOWN)
-            && tsp->type == CM_SERVER_FILE) {
-            memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
-            cp += sizeof(long);
+        if (tsp->flags & CM_SERVERFLAG_DOWN) {
+            /*
+             * all server types are being reported by ipaddr.  only report
+             * a server once regardless of how many services are down.
+             */
+            for (tp = ioctlp->outDatap; tp < cp; tp += sizeof(long)) {
+                if (!memcmp(tp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long)))
+                    break;
+            }
+
+            if (tp == cp) {
+                memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
+                cp += sizeof(long);
+            }
         }
     }
     lock_ReleaseRead(&cm_serverLock);
