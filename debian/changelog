@@ -3,6 +3,9 @@ openafs (1.5.77-3) UNRELEASED; urgency=low
   * In the openafs-client init script, don't attempt to stop or restart
     the AFS client if module loading is disabled.  Stopping afsd without
     unloading the module would leave the system in an inconsistent state.
+  * Add $named to Should-Start in the openafs-client init script since the
+    client may do DNS lookups for the VLDB and file servers during startup
+    in some situations.  (Closes: #586226)
 
  -- Russ Allbery <rra@debian.org>  Tue, 02 Nov 2010 10:15:15 -0700
 
