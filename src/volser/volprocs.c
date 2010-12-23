@@ -2229,7 +2229,10 @@ GetVolInfo(afs_uint32 partId,
     }
 
     /* Get volume from volserver */
-    tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
+    if (mode == VOL_INFO_LIST_MULTIPLE)
+	tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+    else
+	tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n",
 	    volumeId, pname, volname, error);
