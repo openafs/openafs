@@ -3,6 +3,7 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /afsio
+/cacheout
 /cmdebug
 /fs
 /fstrace

@@ -34,11 +34,7 @@
 #include <rx/rxkad.h>
 #include <afs/afsint.h>
 #include <signal.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
-#endif /* AFS_PTHREAD_ENV */
+#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -349,14 +345,14 @@ ViceCreateRoot(Volume *vp)
 	IH_CREATE(V_linkHandle(vp), V_device(vp),
 		  VPartitionPath(V_partition(vp)), nearInode, V_parentId(vp),
 		  1, 1, 0);
-    assert(VALID_INO(inodeNumber));
+    osi_Assert(VALID_INO(inodeNumber));
 
     SetSalvageDirHandle(&dir, V_parentId(vp), vp->device, inodeNumber);
     did.Volume = V_id(vp);
     did.Vnode = (VnodeId) 1;
     did.Unique = 1;
 
-    assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
+    osi_Assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
     DFlush();			/* flush all modified dir buffers out */
     DZap((afs_int32 *)&dir);			/* Remove all buffers for this dir */
     length = Length(&dir);	/* Remember size of this directory */
@@ -396,11 +392,11 @@ ViceCreateRoot(Volume *vp)
     IH_INIT(h, vp->device, V_parentId(vp),
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     off = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
-    assert(off >= 0);
+    osi_Assert(off >= 0);
     nBytes = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
-    assert(nBytes == SIZEOF_LARGEDISKVNODE);
+    osi_Assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
     VNDISK_GET_LEN(length, vnode);
@@ -640,7 +636,10 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 	Log("%s is executing Delete Volume %u\n", caller, tt->volid);
     TSetRxCall(tt, acid, "DeleteVolume");
     VPurgeVolume(&error, tt->volume);	/* don't check error code, it is not set! */
-    V_destroyMe(tt->volume) = DESTROY_ME; /* so endtrans does the right fssync opcode */
+    V_destroyMe(tt->volume) = DESTROY_ME;
+    if (tt->volume->needsPutBack) {
+	tt->volume->needsPutBack = VOL_PUTBACK_DELETE; /* so endtrans does the right fssync opcode */
+    }
     VTRANS_OBJ_LOCK(tt);
     tt->vflags |= VTDeleted;	/* so we know not to do anything else to it */
     TClearRxCall_r(tt);
@@ -1887,12 +1886,17 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 	if (dp)
 	    partList.partId[j++] = i;
     }
-    pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
-    if (!pEntries->partEntries_val)
-	return ENOMEM;
-    memcpy((char *)pEntries->partEntries_val, (char *)&partList,
-	   j * sizeof(int));
-    pEntries->partEntries_len = j;
+    if (j > 0) {
+	pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
+	if (!pEntries->partEntries_val)
+	    return ENOMEM;
+	memcpy((char *)pEntries->partEntries_val, (char *)&partList,
+		j * sizeof(int));
+	pEntries->partEntries_len = j;
+    } else {
+	pEntries->partEntries_val = NULL;
+	pEntries->partEntries_len = 0;
+    }
     return 0;
 
 }
@@ -2331,7 +2335,6 @@ static afs_int32
 VolListOneVolume(struct rx_call *acid, afs_int32 partid,
                  afs_uint32 volumeId, volEntries *volumeInfo)
 {
-    volintInfo *pntr;
     struct DiskPartition64 *partP;
     char pname[9], volname[20];
     DIR *dirp;
@@ -2345,7 +2348,6 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
 	return ENOMEM;
     memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
 
-    pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 1;
     if (GetPartName(partid, pname))
 	return VOLSERILLEGAL_PARTITION;
@@ -2431,7 +2433,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
                   afs_uint32 a_volID, volXEntries *a_volumeXInfoP)
 {				/*SAFSVolXListOneVolume */
 
-    volintXInfo *xInfoP;	/*Ptr to the extended vol info */
     struct DiskPartition64 *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
     DIR *dirp;			/*Partition directory ptr */
@@ -2450,7 +2451,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	return ENOMEM;
     memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
 
-    xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 1;
     code = ENODEV;
 

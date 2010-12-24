@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=libafsrpc
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
@@ -17,9 +17,12 @@ DES = ..\des
 UTIL = ..\util
 FSINT = ..\fsint
 COMERR = ..\comerr
+LWP = ..\lwp
 
 # Additional debugging flag for RX.
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG -DAFS_PTHREAD_ENV
+!IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG -DRXDEBUG_PACKET -DRX_TRACK_PACKETS -DRX_REFCOUNT_CHECK
+!ENDIF
 
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
@@ -51,12 +54,14 @@ UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj
 
 COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj
 
+LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
+
 FSINTBJS = $(OUT)\afsint.cs.obj $(OUT)\afsint.xdr.obj $(OUT)\afscbint.cs.obj $(OUT)\afscbint.xdr.obj \
 	$(OUT)\afsaux.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
 	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
-	$(FSINTBJS) $(OUT)\afsrpc.res
+	$(FSINTBJS) $(LWPOBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
 	$(C2OBJ) $** -I$(RX) 
@@ -81,6 +86,9 @@ $(FSINTBJS):$(FSINT)\$$(@B).c
 
 $(UTILOBJS):$(UTIL)\$$(@B).c
 	$(C2OBJ) $** -I$(UTIL)
+
+$(LWPOBJS): $(LWP)\$$(@B).C
+	$(C2OBJ) $** -I$(LWP)
 
 NTMAKE = nmake /nologo /f ntmakefile
 

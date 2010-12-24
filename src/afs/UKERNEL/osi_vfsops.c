@@ -125,7 +125,13 @@ afs_statvfs(struct vfs *afsp, struct statvfs *abp)
     abp->f_bsize = afsp->vfs_bsize;
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
       abp->f_ffree = 9000000;
+
+#ifdef AFS_USR_AIX_ENV
+    abp->f_fsid.val[0] = AFS_VFSMAGIC;
+    abp->f_fsid.val[1] = AFS_VFSFSID;
+#else
     abp->f_fsid = (AFS_VFSMAGIC << 16) || AFS_VFSFSID;
+#endif
 
     return 0;
 }

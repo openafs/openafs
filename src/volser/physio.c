@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <afs/dir.h>
 #include <afs/ihandle.h>
 #include "vol.h"
@@ -167,5 +167,5 @@ void
 Die(char *msg)
 {
     printf("%s\n", msg);
-    assert(1 == 2);
+    osi_Panic("%s\n", msg);
 }

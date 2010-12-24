@@ -340,7 +340,14 @@ dir: butm
 	$(NTMAKE)
 	$(CD) ..\..
 
-vol: dir
+libafsrpc: dir
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+vol: libafsrpc
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -403,14 +410,7 @@ bu_utils: bosctlsvc
 	$(NTMAKE)
 	$(CD) ..\..
 
-libafsrpc: bu_utils
-     @echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-libafsauthent: libafsrpc
+libafsauthent: bu_utils
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

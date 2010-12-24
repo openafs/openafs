@@ -1162,7 +1162,7 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		memcpy(&ipaddr, he->h_addr, he->h_length);
 		cellHostAddrs[server_num] = ipaddr;
 		ipRanks[server_num] = (p[0] << 8) | p[1];
-		ports[server_num] = (p[4] << 8) | p[5];
+		ports[server_num] = htons((p[4] << 8) | p[5]);
 		/* weight = (p[2] << 8) | p[3]; */
 		strncpy(cellHostNames[server_num], host,
 			sizeof(cellHostNames[server_num]));

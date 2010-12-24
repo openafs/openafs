@@ -71,6 +71,12 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
 			     follow, 0, 0, &errcode);
     if (rval)
 	errcode = rval;
+#elif defined(AFS_SUN511_ENV)
+    rval = ioctl_sun_afs_syscall(AFSCALL_PIOCTL, (uintptr_t)path, cmd,
+                                 (uintptr_t)cmarg, follow, 0, 0, &errcode);
+    if (rval) {
+	errcode = rval;
+    }
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
 #endif

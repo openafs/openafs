@@ -38,7 +38,7 @@
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 
 #include <fcntl.h>
 
@@ -311,7 +311,7 @@ common_volop_prolog(struct cmd_syndesc * as, struct state * state)
     struct cmd_item *ti;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
-    assert(state->vop != NULL);
+    osi_Assert(state->vop != NULL);
 
     if ((ti = as->parms[COMMON_VOLOP_PARMS_OFFSET].items)) {	/* -volumeid */
 	state->vop->volume = atoi(ti->data);
@@ -555,6 +555,7 @@ vol_state_to_string(VolState state)
 	ENUMCASE(VOL_STATE_VNODE_RELEASE);
 	ENUMCASE(VOL_STATE_VLRU_ADD);
 	ENUMCASE(VOL_STATE_DELETED);
+	ENUMCASE(VOL_STATE_SALVAGE_REQ);
 	ENUMCASE(VOL_STATE_FREED);
     default:
 	return "**UNKNOWN**";
@@ -564,7 +565,7 @@ vol_state_to_string(VolState state)
 static char *
 vol_flags_to_string(afs_uint16 flags)
 {
-    static char str[128];
+    static char str[256];
     int count = 0;
     str[0]='\0';
 
@@ -576,6 +577,7 @@ vol_flags_to_string(afs_uint16 flags)
     FLAGCASE(flags, VOL_IS_BUSY, str, count);
     FLAGCASE(flags, VOL_ON_VLRU, str, count);
     FLAGCASE(flags, VOL_HDR_DONTSALV, str, count);
+    FLAGCASE(flags, VOL_LOCKED, str, count);
 
     return str;
 }
@@ -902,7 +904,7 @@ vn_prolog(struct cmd_syndesc * as, struct state * state)
     struct cmd_item *ti;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
-    assert(state->vop != NULL);
+    osi_Assert(state->vop != NULL);
 
     if ((ti = as->parms[CUSTOM_PARMS_OFFSET].items)) {	/* -volumeid */
 	state->vop->volume = atoi(ti->data);

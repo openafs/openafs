@@ -51,6 +51,9 @@ kstest: ../librx.a kstest.o
 kctest: ../librx.a kctest.o
 	-${LINK}
 
+rxperf: rxperf.o ../librx.a
+	-${LINK}
+
 # th_ versions only have link lines for Solaris now.
 th_testclient: th_testclient.o ../../libafsrpc/libafsrpc.so 
 	${CC} ${CFLAGS} -mt -o th_testclient th_testclient.o \
@@ -67,6 +70,14 @@ th_testserver: th_testserver.o ../../libafsrpc/libafsrpc.so
 th_testserver.o: testserver.c
 	${CC} ${CFLAGS} -DAFS_PTHREAD_ENV -mt -c -o th_testserver.o \
 		${srcdir}/testserver.c
+
+th_rxperf: th_rxperf.o ${TOP_LIBDIR}/libafsrpc.a
+	${MT_CC} ${MT_CFLAGS} -o th_rxperf th_rxperf.o \
+		${TOP_LIBDIR}/libafsrpc.a ${MT_LIBS} ${XLIBS}
+
+th_rxperf.o: rxperf.c
+	${MT_CC} ${MT_CFLAGS} ${CFLAGS} -c $(srcdir)/rxperf.c \
+		-o th_rxperf.o
 
 testqueue: ../librx.a testqueue.o
 	-${LINK}

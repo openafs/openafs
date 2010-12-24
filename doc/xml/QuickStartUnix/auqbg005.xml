@@ -374,7 +374,29 @@
 
           <para>The <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> directories must reside in the file server
           machine's root directory, not in one of its subdirectories (for example, <emphasis role="bold">/usr/vicepa</emphasis> is
-          not an acceptable directory location).</para>
+          not an acceptable directory location).
+
+          The <emphasis role="bold">fileserver</emphasis> will refuse to
+          mount
+          any <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
+          folders that are not separate partitions. </para>
+
+          <warning>
+            <para>The separate partition requirement may be overridden by
+              creating a file named
+              <emphasis role="bold">/vicep<replaceable>xx</replaceable>/AlwaysAttach</emphasis>;
+              however, mixed-use partitions, whether cache or fileserver,
+              have the risk that a non-AFS use will fill the partition and
+              not leave enough free space for AFS.  Even though it is
+              allowed, be wary of configuring a mixed-use partition
+              without understanding the ramifications of doing so with the
+              workload on your filesystem.
+              <indexterm>
+                <primary>AFS server partition</primary>
+                <secondary>AlwaysAttach</secondary>
+              </indexterm>
+            </para>
+          </warning>
 
           <para>You can also add or remove server partitions on an existing file server machine. For instructions, see the chapter
           in the <emphasis>OpenAFS Administration Guide</emphasis> about maintaining server machines.</para>
@@ -3139,22 +3161,19 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       </indexterm> <orderedlist>
         <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Backup Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  \
- <emphasis role="bold">                 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  <emphasis role="bold">-noauth</emphasis>
 </programlisting></para>
         </listitem>
 
         <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Protection Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis>  \
- <emphasis role="bold">                 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis> <emphasis role="bold">-noauth</emphasis>
 </programlisting></para>
         </listitem>
 
         <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the VL Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis>  \
- <emphasis role="bold">                 -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis> <emphasis role="bold">-noauth</emphasis>
 </programlisting></para>
         </listitem>
       </orderedlist></para>
@@ -3421,8 +3440,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           role="bold">admin</emphasis> user to the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. This enables the
           <emphasis role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis
           role="bold">vos</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-                role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -noauth</emphasis>
 </programlisting> 
             <indexterm>
               <primary>commands</primary>
@@ -3488,8 +3506,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           <emphasis role="bold">afs/<replaceable>cell name</replaceable></emphasis> 
           entry, which you displayed in Step <link linkend="LIWQ55">3</link>. 
 <programlisting>
-   # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-                role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
    key 0 has cksum <replaceable>checksum</replaceable>    
 </programlisting></para>
 
@@ -3532,7 +3549,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           to accept the default.</para>
 
           <programlisting>
-   # <emphasis role="bold">pts createuser -name admin -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; [<emphasis
+   # <emphasis role="bold">pts createuser -name admin</emphasis> [<emphasis
               role="bold">-id</emphasis> &lt;<replaceable>AFS UID</replaceable>&gt;]  <emphasis role="bold">-noauth</emphasis>
    User admin has id <replaceable>AFS UID</replaceable>
 </programlisting>
@@ -3564,10 +3581,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           membership</emphasis> command to verify the new membership. Membership in the group enables the <emphasis
           role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">pts</emphasis> commands and some privileged
           <emphasis role="bold">fs</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./pts adduser admin system:administrators -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-                role="bold">-noauth</emphasis>
-   # <emphasis role="bold">./pts membership admin -cell</emphasis>  &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-                role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./pts adduser admin system:administrators</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./pts membership admin</emphasis> <emphasis role="bold">-noauth</emphasis>
    Groups admin (id: 1) is a member of:
      system:administrators
 </programlisting> <indexterm>
@@ -3591,8 +3606,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
         <listitem>
           <para>Issue the <emphasis role="bold">bos restart</emphasis> command with the <emphasis role="bold">-all</emphasis> flag
           to restart the database server processes, so that they start using the new server encryption key. <programlisting>
-   # <emphasis role="bold">./bos restart</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-all -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-                role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos restart</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-all</emphasis>
+   <emphasis role="bold">-noauth</emphasis>
 </programlisting></para>
         </listitem>
       </orderedlist>
@@ -3699,16 +3714,16 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 	          <programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs fs /usr/afs/bin/fileserver</emphasis>   \
                    <emphasis role="bold">/usr/afs/bin/volserver /usr/afs/bin/salvager</emphasis>  \
-                   <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">-noauth</emphasis>   
 </programlisting></para>
              </listitem>
 	     <listitem>
 	       <para>If you are planning on running the Demand-Attach File Server, create the <emphasis
 	       role="bold">dafs</emphasis> process:
 	          <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs fs /usr/afs/bin/dafileserver</emphasis>   \
+   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs /usr/afs/bin/dafileserver</emphasis>   \
                    <emphasis role="bold">/usr/afs/bin/davolserver /usr/afs/bin/salvageserver</emphasis> \
-                   <emphasis role="bold">/usr/afs/bin/salvager -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">/usr/afs/bin/dasalvager</emphasis> <emphasis role="bold">-noauth</emphasis>   
 </programlisting></para>
              </listitem>
 	    </itemizedlist>
@@ -3802,7 +3817,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
                 <programlisting>
    # <emphasis role="bold">./vos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <emphasis
                     role="bold">root.afs</emphasis>   \
-                   <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">-noauth</emphasis>   
 </programlisting>
 
                 <para>The Volume Server produces a message confirming that it created the volume on the specified partition. You can
@@ -3830,9 +3845,9 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
                 syncvldb</emphasis> and <emphasis role="bold">vos syncserv</emphasis> commands to synchronize the VLDB with the
                 actual state of volumes on the local machine. To follow the progress of the synchronization operation, which can
                 take several minutes, use the <emphasis role="bold">-verbose</emphasis> flag. <programlisting>
-   # <emphasis role="bold">./vos syncvldb</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
+   # <emphasis role="bold">./vos syncvldb</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis
                       role="bold">-verbose  -noauth</emphasis>
-   # <emphasis role="bold">./vos syncserv</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt; <emphasis
+   # <emphasis role="bold">./vos syncserv</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis
                       role="bold">-verbose  -noauth</emphasis>   
 </programlisting></para>
 
@@ -3940,8 +3955,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           process. <programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name&gt;</replaceable> <emphasis role="bold">upserver simple</emphasis>  \ 
              <emphasis role="bold">"/usr/afs/bin/upserver  -crypt /usr/afs/etc</emphasis>    \
-             <emphasis role="bold">-clear /usr/afs/bin" -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
-                role="bold">-noauth</emphasis> 
+             <emphasis role="bold">-clear /usr/afs/bin"</emphasis> <emphasis role="bold">-noauth</emphasis> 
 </programlisting></para>
         </listitem>
       </orderedlist></para>

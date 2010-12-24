@@ -18,7 +18,6 @@ EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\dafileserver.exe
 
 VICED = ..\viced
 TVICED = ..\tviced
-LWP = ..\lwp
 LIBACL = ..\libacl
 DIR = ..\dir
 FSINT = ..\fsint
@@ -33,15 +32,13 @@ TVICEDOBJS = $(OUT)\serialize_state.obj
 
 DAFS_VICEDRES =  $(OUT)\dafileserver.res
 
-LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
-
 LIBACLOBJS = $(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
 DIROBJS = $(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
-EXEOBJS = $(VICEDOBJS) $(TVICEDOBJS) $(DAFS_VICEDRES) $(LWPOBJS) $(LIBACLOBJS) \
+EXEOBJS = $(VICEDOBJS) $(TVICEDOBJS) $(DAFS_VICEDRES) $(LIBACLOBJS) \
 	  $(DIROBJS) $(FSINTOBJS) $(RXOBJS)
 
 noversion: install
@@ -59,9 +56,6 @@ $(DAFS_VICEDRES): dafileserver.rc AFS_component_version_number.h
 
 $(TVICEDOBJS): $(TVICED)\$$(@B).c
 	$(C2OBJ) -I$(TVICED) $**
-
-$(LWPOBJS): $(LWP)\$$(@B).C
-	$(C2OBJ) -I$(LWP) $**
 
 $(LIBACLOBJS): $(LIBACL)\$$(@B).C
 	$(C2OBJ) -I$(LIBACL) $**

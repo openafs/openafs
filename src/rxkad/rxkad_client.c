@@ -96,10 +96,9 @@ static struct rx_securityOps rxkad_client_ops = {
  * counter
  * rxkad_EpochWasSet
  */
-#include <assert.h>
 pthread_mutex_t rxkad_client_uid_mutex;
-#define LOCK_CUID assert(pthread_mutex_lock(&rxkad_client_uid_mutex)==0)
-#define UNLOCK_CUID assert(pthread_mutex_unlock(&rxkad_client_uid_mutex)==0)
+#define LOCK_CUID osi_Assert(pthread_mutex_lock(&rxkad_client_uid_mutex)==0)
+#define UNLOCK_CUID osi_Assert(pthread_mutex_unlock(&rxkad_client_uid_mutex)==0)
 #else
 #define LOCK_CUID
 #define UNLOCK_CUID

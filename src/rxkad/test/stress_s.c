@@ -33,14 +33,11 @@
 #include "stress_internal.h"
 
 struct ktc_encryptionKey serviceKey =
-    { 0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f };
+    { { 0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f } };
 long serviceKeyVersion = 7;
 
-static long
-GetKey(rock, kvno, key)
-     IN char *rock;
-     IN long kvno;
-     OUT struct ktc_encryptionKey *key;
+static int
+GetKey(void *rock, int kvno, struct ktc_encryptionKey *key)
 {
     struct serverParms *parms = (struct serverParms *)rock;
     struct afsconf_keys tstr;
@@ -78,10 +75,10 @@ GetKey(rock, kvno, key)
 
 static int minAuth;
 
-long
-rxkst_StartServer(parms)
-     INOUT struct serverParms *parms;
+void *
+rxkst_StartServer(void * rock)
 {
+    struct serverParms *parms = rock;
     extern int rx_stackSize;
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
@@ -117,8 +114,7 @@ static char test_client_inst[MAXKTCNAMELEN];
 static char test_client_cell[MAXKTCREALMLEN];
 static int got_client_id = 0;
 static long
-CheckAuth(call)
-     IN struct rx_call *call;
+CheckAuth(struct rx_call *call)
 {
     long code;
     int si;
@@ -126,8 +122,8 @@ CheckAuth(call)
     char name[MAXKTCNAMELEN];
     char inst[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
-    long kvno;
-    u_long expiration;		/* checked by Security Module */
+    int kvno;
+    unsigned int expiration;		/* checked by Security Module */
 
     si = rx_SecurityClassOf(rx_ConnectionOf(call));
     if (si == 1) {
@@ -170,8 +166,7 @@ CheckAuth(call)
 /* Stop the server.  There isn't a graceful way to do this so just exit. */
 
 afs_int32
-SRXKST_Kill(call)
-     IN struct rx_call *call;
+SRXKST_Kill(struct rx_call *call)
 {
     long code;
     code = CheckAuth(call);
@@ -189,22 +184,17 @@ SRXKST_Kill(call)
 }
 
 afs_int32
-SRXKST_Fast(call, n, inc_nP)
-     IN struct rx_call *call;
-     IN u_long n;
-     OUT u_long *inc_nP;
+SRXKST_Fast(struct rx_call *call, u_long n, u_long *inc_nP)
 {
     *inc_nP = n + 1;
     return 0;
 }
 
 afs_int32
-SRXKST_Slow(call, tag, nowP)
-     IN struct rx_call *call;
-     IN u_long tag;
-     OUT u_long *nowP;
+SRXKST_Slow(struct rx_call *call, u_long tag, u_long *nowP)
 {
     long code;
+    time_t now;
     code = CheckAuth(call);
     if (code)
 	return code;
@@ -213,7 +203,8 @@ SRXKST_Slow(call, tag, nowP)
 #else
     IOMGR_Sleep(1);
 #endif
-    time(nowP);
+    time(&now);
+    *nowP = now;
     return 0;
 }
 
@@ -223,23 +214,22 @@ static struct buflist {
 } *buflist = 0;
 static int bufAllocs = 0;
 
-static u_char *
-GetBuffer()
+static char *
+GetBuffer(void)
 {
-    u_char *ret;
+    char *ret;
     if (buflist) {
-	ret = (u_char *) buflist;
+	ret = (char *) buflist;
 	buflist = buflist->next;
     } else {
-	ret = (u_char *) osi_Alloc(COPBUFSIZE);
+	ret = osi_Alloc(COPBUFSIZE);
 	bufAllocs++;
     }
     return ret;
 }
 
 static void
-PutBuffer(b)
-     IN u_char *b;
+PutBuffer(char *b)
 {
     struct buflist *bl = (struct buflist *)b;
     bl->next = buflist;
@@ -247,16 +237,12 @@ PutBuffer(b)
 }
 
 afs_int32
-SRXKST_Copious(call, inlen, insum, outlen, outsum)
-     IN struct rx_call *call;
-     IN u_long inlen;
-     IN u_long insum;
-     IN u_long outlen;
-     OUT u_long *outsum;
+SRXKST_Copious(struct rx_call *call, u_long inlen, u_long insum,
+	       u_long outlen, u_long *outsum)
 {
     long code;
     long mysum;
-    u_char *buf;
+    char *buf;
     int i;
     long b;
     long bytesTransfered;

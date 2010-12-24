@@ -25,6 +25,8 @@
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <afs/afsutil.h>
+#include <afs/auth.h>
 #include <afs/com_err.h>
 #include <afs/cmd.h>
 
@@ -42,8 +44,7 @@ int maxSkew = 5;
 static char *whoami;
 
 static int
-StringToAuth(authname)
-     IN char *authname;
+StringToAuth(const char *authname)
 {
     int nonoauth = 0;
     if (strcmp(authname, "rxkad") == 0)
@@ -268,16 +269,14 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* donate this LWP to server-side */
-	rx_ServerProc();
+	rx_ServerProc(NULL);
     }
 
     return 0;
 }
 
-void
-main(argc, argv)
-     IN int argc;
-     IN char *argv[];
+int
+main(int argc, char **argv)
 {
     long code;
 #ifndef AFS_PTHREAD_ENV

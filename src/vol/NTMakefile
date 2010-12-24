@@ -170,10 +170,10 @@ $(DAFS_LIBFILE): $(DAFS_LIBOBJS)
 
 EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afs\afsvol.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\mtafsvol.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+        $(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afsdir.lib \
-	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
@@ -183,6 +183,15 @@ EXEC_LIBS = \
 ############################################################################
 # build salvager
 SALVAGER = $(DESTDIR)\root.server\usr\afs\bin\salvager.exe
+
+$(OUT)\salvager.obj: salvager.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\vol-salvage.obj: vol-salvage.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\physio.obj: physio.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 SALVAGER_EXEOBJS =\
 	$(OUT)\salvager.obj \
@@ -203,6 +212,9 @@ $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
 # build fssync-debug
 FSSYNC_DEBUG = $(DESTDIR)\root.server\usr\afs\bin\fssync-debug.exe
 
+$(OUT)\fssync-debug.obj: fssync-debug.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
 FSSYNC_DEBUG_EXEOBJS =\
 	$(OUT)\fssync-debug.obj \
 	$(OUT)\AFS_component_version_number.obj \
@@ -219,6 +231,9 @@ $(FSSYNC_DEBUG): $(FSSYNC_DEBUG_EXEOBJS) $(EXEC_LIBS)
 # build volinfo
 VOLINFO = $(DESTDIR)\root.server\usr\afs\bin\volinfo.exe
 
+$(OUT)\vol-info.obj: vol-info.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
 $(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS)
 	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
@@ -229,6 +244,9 @@ $(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS
 ############################################################################
 # build volinfo
 VOLBLESS = $(DESTDIR)\root.server\usr\afs\bin\vol-bless.exe
+
+$(OUT)\vol-bless.obj: vol-bless.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(VOLBLESS): $(OUT)\vol-bless.obj $(OUT)\physio.obj $(OUT)\vol-bless.res $(EXEC_LIBS)
 	$(EXECONLINK) shell32.lib

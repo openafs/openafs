@@ -28,13 +28,11 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a
 
-LIBRPC = ../../librpc/libafsrpc.so
-THLIBS= ${LDIR}/afs/libcmd.a  ${LDIR}/afs/libcom_err.a \
-	${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
+THLIBS= ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
+	${MT_LIBS} ${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
 
-THFLAGS = -mt -DAFS_PTHREAD_ENV
-
-THRULE = ${CC} ${CFLAGS} ${THFLAGS} -c $?
+THRULE = ${MT_CC} ${CFLAGS} ${MT_CFLAGS}
 
 noversion all test system: stress
 
@@ -47,45 +45,56 @@ stress.cs.o: stress.cs.c
 stress.xdr.o: stress.xdr.c stress.h
 
 th_stress.ss.o: stress.ss.c
-	${THRULE} -o th_stress.ss.o
+	${THRULE} -c stress.ss.c -o th_stress.ss.o
 
 th_stress.cs.o: stress.cs.c
-	${THRULE} -o th_stress.cs.o
+	${THRULE} -c stress.cs.c -o th_stress.cs.o
 	
 th_stress.xdr.o: stress.xdr.c stress.h
-	${THRULE} -o th_stress.xdr.o
+	${THRULE} -c stress.xdr.c -o th_stress.xdr.o
 
-stress.ss.c stress.cs.c stress.xdr.c stress.h: stress.rg
-	${RXGEN} stress.rg
+stress.ss.c: stress.rg
+	${RXGEN} -A -x -S -o stress.ss.c $(srcdir)/stress.rg
+
+stress.cs.c: stress.rg
+	${RXGEN} -A -x -C -o stress.cs.c $(srcdir)/stress.rg
+
+stress.xdr.c: stress.rg
+	${RXGEN} -A -x -c -o stress.xdr.c $(srcdir)/stress.rg
+
+stress.h: stress.rg
+	${RXGEN} -A -x -h -o stress.h $(srcdir)/stress.rg
 
 stress_errs.o: stress_errs.c
 
 th_stress_errs.o: stress_errs.c
-	${THRULE} -o th_stress_errs.o
+	${THRULE} -c $(srcdir)/stress_errs.c -o th_stress_errs.o
 
 stress_errs.c stress_errs.h: stress_errs.et
 	$(RM) -f stress_errs.h stress_errs.c; ${COMPILE_ET} -p ${srcdir} stress_errs -h stress_errs
 
-stress.o stress_c.o stress_s.o: ${HEADERS}
+stress.o: ${HEADERS}
+stress_c.o: ${HEADERS}
+stress_s.o: ${HEADERS}
 
 th_stress.o: stress.c ${HEADERS}
-	${THRULE} -o th_stress.o
+	${THRULE} -c $(srcdir)/stress.c -o th_stress.o
 
 th_stress_c.o: stress_c.c ${HEADERS}
-	${THRULE} -o th_stress_c.o
+	${THRULE} -c $(srcdir)/stress_c.c -o th_stress_c.o
 
 th_stress_s.o: stress_s.c ${HEADERS}
-	${THRULE} -o th_stress_s.o
+	${THRULE} -c $(srcdir)/stress_s.c -o th_stress_s.o
 
 stress: stress.o stress.xdr.o stress_c.o stress_s.o stress.cs.o \
 		stress.ss.o stress_errs.o 
 	$(CC) $(CFLAGS) -o stress stress.o stress.xdr.o stress_c.o \
-		stress_s.o stress.cs.o stress.ss.o stress_errs.o ${LIBS}
+		stress_s.o stress.cs.o stress.ss.o stress_errs.o ${LIBS} ${XLIBS}
 
 th_stress: th_stress.o th_stress.xdr.o th_stress_c.o th_stress_s.o \
 		th_stress.cs.o th_stress.ss.o stress_errs.o \
 		${LIBRPC}
 	${CC} ${CFLAGS} ${THFLAGS} -o th_stress th_stress.o th_stress.xdr.o \
 		th_stress_c.o th_stress_s.o th_stress.cs.o th_stress.ss.o \
-		stress_errs.o ${THLIBS}
+		stress_errs.o ${THLIBS} ${XLIBS}
 

@@ -73,9 +73,9 @@ void IOMGR_Sleep (seconds)
 
     itv.tv_sec = seconds;
     itv.tv_nsec = 0;
-    assert(pthread_mutex_unlock(&lwp_mutex) == 0);
-    assert(pthread_delay_np(&itv) == 0);
-    assert(pthread_mutex_lock(&lwp_mutex) == 0);
+    MUTEX_EXIT(&lwp_mutex);
+    osi_Assert(pthread_delay_np(&itv) == 0);
+    MUTEX_ENTER(&lwp_mutex);
 }
 
 #else

@@ -1358,22 +1358,27 @@ BypassThresholdCmd(struct cmd_syndesc *as, void *arock)
 
 	tp = as->parms[0].items->data;
 	len = strlen(tp);
-	digit = 1;
-	for(ix = 0; ix < len; ++ix) {
-	    if(!isdigit(tp[0])) {
-		digit = 0;
-		break;
-	    }
-	}
-	if (digit == 0) {
-	    fprintf(stderr, "fs bypassthreshold -size: %s must be an undecorated digit string.\n", tp);
-	    return EINVAL;
-	}
-	threshold_i = atoi(tp);
-	if(ix > 9 && threshold_i < 2147483647)
-	    threshold_i = 2147483647;
-	blob.in = (char *) &threshold_i;
-	blob.in_size = sizeof(threshold_i);
+
+        if (!strcmp(tp,"-1")) {
+            threshold_i = -1;
+        } else {
+            digit = 1;
+            for(ix = 0; ix < len; ++ix) {
+                if(!isdigit(tp[0])) {
+                    digit = 0;
+                    break;
+                }
+            }
+            if (digit == 0) {
+                fprintf(stderr, "fs bypassthreshold -size: %s must be an integer between -1 and 2^31\n", tp);
+                return EINVAL;
+            }
+            threshold_i = atoi(tp);
+            if(ix > 9 && threshold_i < 2147483647)
+                threshold_i = 2147483647;
+        }
+        blob.in = (char *) &threshold_i;
+        blob.in_size = sizeof(threshold_i);
     } else {
 	blob.in = NULL;
 	blob.in_size = 0;
@@ -4251,20 +4256,42 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
 {
     struct ViceIoctl blob;
     struct cmd_item *ti;
+
+    afs_int32 code;
+    int error = 0;
+    char cell[MAXCELLCHARS];
+
+    SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-      struct VenusFid vfid;
+        struct VenusFid vfid;
 
-      blob.out_size = sizeof(struct VenusFid);
-      blob.out = (char *) &vfid;
-      blob.in_size = 0;
+        blob.out_size = sizeof(struct VenusFid);
+        blob.out = (char *) &vfid;
+        blob.in_size = 0;
 
-      if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
-	printf("File %s (%u.%u.%u) contained in volume %u\n",
-	       ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
-	       vfid.Fid.Volume);
-      }
+        code = pioctl(ti->data, VIOCGETFID, &blob, 1);
+        if (code) {
+            Die(errno,ti->data);
+            error = 1;
+            continue;
+        }
+
+        code = GetCell(ti->data, cell);
+        if (code) {
+	    if (errno == ENOENT)
+		fprintf(stderr, "%s: no such cell as '%s'\n", pn, ti->data);
+	    else
+		Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        printf("File %s (%u.%u.%u) located in cell %s\n",
+               ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
+               cell);
+
     }
 
-    return 0;
+    return error;
 }
 

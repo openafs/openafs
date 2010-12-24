@@ -48,9 +48,6 @@ struct fileMark {		/* also in file_tm.c */
     afs_uint32 nBytes;
 };
 
-/* Forward declarations */
-int writeData(char *data, afs_int32 size);
-
 /* Read a tape block of size 16K */
 afs_int32
 readblock(char *buffer)
@@ -284,10 +281,25 @@ openOutFile(struct volumeHeader *headerPtr)
     return 0;
 }
 
+static void
+writeData(char *data, afs_int32 size)
+{
+    int rc;
+    u_int nwritten;
+
+    if (!ofdIsOpen)
+	return;
+    rc = USD_WRITE(ofd, data, (u_int) size, &nwritten);
+    if (rc != 0) {
+	fprintf(stderr, "Unable to write volume data to file. Code = %d\n",
+		rc);
+    }
+    return;
+}
+
 int
 writeLastBlocks(char *lastblock, char *lastblock2)
 {
-    int rc;
     char trailer[12];
     struct blockMark *bmark, *bmark2;
     char *data;
@@ -349,10 +361,10 @@ writeLastBlocks(char *lastblock, char *lastblock2)
 	fprintf(stderr, "Failed to strip off volume trailer (2).\n");
     } else {
 	if (count2 - tlen > 0) {
-	    rc = writeData(data2, count2 - tlen);
+	    writeData(data2, count2 - tlen);
 	}
 	if ((tlen == 0) && (count > 12 - pos)) {
-	    rc = writeData(data, count - (12 - pos));
+	    writeData(data, count - (12 - pos));
 	}
     }
     return 0;
@@ -369,22 +381,6 @@ closeOutFile(void)
 
     /* Decrement the number of volumes to restore */
     nrestore--;
-    return 0;
-}
-
-int
-writeData(char *data, afs_int32 size)
-{
-    int rc;
-    u_int nwritten;
-
-    if (!ofdIsOpen)
-	return 0;
-    rc = USD_WRITE(ofd, data, (u_int) size, &nwritten);
-    if (rc != 0) {
-	fprintf(stderr, "Unable to write volume data to file. Code = %d\n",
-		rc);
-    }
     return 0;
 }
 
@@ -479,7 +475,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		if (lastblock2 != NULL) {
 		    data = &lastblock2[sizeof(struct blockMark)];
 		    bmark = (struct blockMark *)lastblock2;
-		    code = writeData(data, ntohl(bmark->count));
+		    writeData(data, ntohl(bmark->count));
 		    tblock = lastblock2;
 		} else if (lastblock != NULL) {
 		    tblock = tapeblock2;

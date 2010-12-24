@@ -35,11 +35,11 @@
 # include <sys/ioctl.h>
 # include <sys/time.h>
 # include <unistd.h>
+# include <assert.h>
 #endif
 #include <sys/stat.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#include <assert.h>
 #include <rx/rx_pthread.h>
 #include <rx/rx_clock.h>
 
@@ -108,14 +108,11 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
     AFS_SIGSET_DECL;
 
     if (pthread_attr_init(&tattr) != 0) {
-	dpf(("Unable to Create Rx server thread (pthread_attr_init)\n"));
-	assert(0);
+	osi_Panic("Unable to Create Rx server thread (pthread_attr_init)\n");
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
-	dpf
-	    (("Unable to Create Rx server thread (pthread_attr_setdetachstate)\n"));
-	assert(0);
+	osi_Panic("Unable to Create Rx server thread (pthread_attr_setdetachstate)\n");
     }
 
     /*
@@ -123,8 +120,7 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
      */
     AFS_SIGSET_CLEAR();
     if (pthread_create(&thread, &tattr, server_entry, (void *)proc) != 0) {
-	dpf(("Unable to Create Rx server thread\n"));
-	assert(0);
+	osi_Panic("Unable to Create Rx server thread\n");
     }
     AFS_SIGSET_RESTORE();
 }
@@ -228,8 +224,7 @@ rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
 	} else {
 	    if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE))) {
 		/* Could this happen with multiple socket listeners? */
-		dpf(("rxi_Listener: no packets!"));	/* Shouldn't happen */
-		assert(0);
+		osi_Panic("rxi_Listener: no packets!");	/* Shouldn't happen */
 	    }
 	}
 
@@ -260,12 +255,12 @@ rx_ListenerProc(void *argp)
 	newcall = NULL;
 	threadID = -1;
 	rxi_ListenerProc(sock, &threadID, &newcall);
-	/* assert(threadID != -1); */
-	/* assert(newcall != NULL); */
+	/* osi_Assert(threadID != -1); */
+	/* osi_Assert(newcall != NULL); */
 	sock = OSI_NULLSOCKET;
-	assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
+	osi_Assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
 	rxi_ServerProc(threadID, newcall, &sock);
-	/* assert(sock != OSI_NULLSOCKET); */
+	/* osi_Assert(sock != OSI_NULLSOCKET); */
     }
     /* not reached */
     return NULL;
@@ -307,13 +302,13 @@ rx_ServerProc(void * dummy)
 
     while (1) {
 	sock = OSI_NULLSOCKET;
-	assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
+	osi_Assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
 	rxi_ServerProc(threadID, newcall, &sock);
-	/* assert(sock != OSI_NULLSOCKET); */
+	/* osi_Assert(sock != OSI_NULLSOCKET); */
 	newcall = NULL;
 	rxi_ListenerProc(sock, &threadID, &newcall);
-	/* assert(threadID != -1); */
-	/* assert(newcall != NULL); */
+	/* osi_Assert(threadID != -1); */
+	/* osi_Assert(newcall != NULL); */
     }
     /* not reached */
     return NULL;
@@ -338,22 +333,17 @@ rxi_StartListener(void)
 		return;
 
     if (pthread_attr_init(&tattr) != 0) {
-	dpf
-	    (("Unable to create Rx event handling thread (pthread_attr_init)\n"));
-	assert(0);
+	osi_Panic("Unable to create Rx event handling thread (pthread_attr_init)\n");
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
-	dpf
-	    (("Unable to create Rx event handling thread (pthread_attr_setdetachstate)\n"));
-	assert(0);
+	osi_Panic("Unable to create Rx event handling thread (pthread_attr_setdetachstate)\n");
     }
 
     AFS_SIGSET_CLEAR();
     if (pthread_create(&event_handler_thread, &tattr, event_handler, NULL) !=
 	0) {
-	dpf(("Unable to create Rx event handling thread\n"));
-	assert(0);
+	osi_Panic("Unable to create Rx event handling thread\n");
     }
     MUTEX_ENTER(&rx_pthread_mutex);
     ++rxi_pthread_hinum;
@@ -378,21 +368,16 @@ rxi_Listen(osi_socket sock)
     AFS_SIGSET_DECL;
 
     if (pthread_attr_init(&tattr) != 0) {
-	dpf
-	    (("Unable to create socket listener thread (pthread_attr_init)\n"));
-	assert(0);
+	osi_Panic("Unable to create socket listener thread (pthread_attr_init)\n");
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
-	dpf
-	    (("Unable to create socket listener thread (pthread_attr_setdetachstate)\n"));
-	assert(0);
+	osi_Panic("Unable to create socket listener thread (pthread_attr_setdetachstate)\n");
     }
 
     AFS_SIGSET_CLEAR();
     if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)(intptr_t)sock) != 0) {
-	dpf(("Unable to create socket listener thread\n"));
-	assert(0);
+	osi_Panic("Unable to create socket listener thread\n");
     }
     MUTEX_ENTER(&rx_pthread_mutex);
     ++rxi_pthread_hinum;
@@ -451,7 +436,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 struct rx_ts_info_t * rx_ts_info_init(void) {
     struct rx_ts_info_t * rx_ts_info;
     rx_ts_info = (rx_ts_info_t *) malloc(sizeof(rx_ts_info_t));
-    assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
+    osi_Assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
     memset(rx_ts_info, 0, sizeof(rx_ts_info_t));
 #ifdef RX_ENABLE_TSFPQ
     queue_Init(&rx_ts_info->_FPQ);

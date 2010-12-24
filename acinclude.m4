@@ -770,6 +770,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([inode], [i_security], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
@@ -927,7 +928,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 ])
 
 		 dnl Packaging and SMP build
-		 if test "x$with_linux_kernel_packaging" = "xno" ; then
+		 if test "x$with_linux_kernel_packaging" != "xyes" ; then
 		   LINUX_WHICH_MODULES
 		 else
 		   AC_SUBST(MPS,'SP')

@@ -416,7 +416,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     memset(&tdb->version, 0, sizeof(struct ubik_version));
     memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&tdb->versionLock, NULL) == 0);
+    MUTEX_INIT(&tdb->versionLock, "version lock", MUTEX_DEFAULT, 0);
 #else
     Lock_Init(&tdb->versionLock);
 #endif
@@ -437,8 +437,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     ubik_dbase = tdb;		/* for now, only one db per server; can fix later when we have names for the other dbases */
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_init(&tdb->version_cond, NULL) == 0);
-    assert(pthread_cond_init(&tdb->flags_cond, NULL) == 0);
+    CV_INIT(&tdb->version_cond, "version", CV_DEFAULT, 0);
+    CV_INIT(&tdb->flags_cond, "flags", CV_DEFAULT, 0);
 #endif /* AFS_PTHREAD_ENV */
 
     /* initialize RX */
@@ -502,11 +502,11 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
      */
 #ifdef AFS_PTHREAD_ENV
 /* do assert stuff */
-    assert(pthread_attr_init(&rxServer_tattr) == 0);
-    assert(pthread_attr_setdetachstate(&rxServer_tattr, PTHREAD_CREATE_DETACHED) == 0);
-/*    assert(pthread_attr_setstacksize(&rxServer_tattr, rx_stackSize) == 0); */
+    osi_Assert(pthread_attr_init(&rxServer_tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(&rxServer_tattr, PTHREAD_CREATE_DETACHED) == 0);
+/*    osi_Assert(pthread_attr_setstacksize(&rxServer_tattr, rx_stackSize) == 0); */
 
-    assert(pthread_create(&rxServerThread, &rxServer_tattr, (void *)rx_ServerProc, NULL) == 0);
+    osi_Assert(pthread_create(&rxServerThread, &rxServer_tattr, (void *)rx_ServerProc, NULL) == 0);
 #else
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
               NULL, "rx_ServerProc", &junk);
@@ -529,12 +529,12 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     /* now start up async processes */
 #ifdef AFS_PTHREAD_ENV
 /* do assert stuff */
-    assert(pthread_attr_init(&ubeacon_Interact_tattr) == 0);
-    assert(pthread_attr_setdetachstate(&ubeacon_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
-/*    assert(pthread_attr_setstacksize(&ubeacon_Interact_tattr, 16384) == 0); */
+    osi_Assert(pthread_attr_init(&ubeacon_Interact_tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(&ubeacon_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
+/*    osi_Assert(pthread_attr_setstacksize(&ubeacon_Interact_tattr, 16384) == 0); */
     /*  need another attr set here for priority???  - klm */
 
-    assert(pthread_create(&ubeacon_InteractThread, &ubeacon_Interact_tattr,
+    osi_Assert(pthread_create(&ubeacon_InteractThread, &ubeacon_Interact_tattr,
            (void *)ubeacon_Interact, NULL) == 0);
 #else
     code = LWP_CreateProcess(ubeacon_Interact, 16384 /*8192 */ ,
@@ -546,12 +546,12 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
 #ifdef AFS_PTHREAD_ENV
 /* do assert stuff */
-    assert(pthread_attr_init(&urecovery_Interact_tattr) == 0);
-    assert(pthread_attr_setdetachstate(&urecovery_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
-/*    assert(pthread_attr_setstacksize(&urecovery_Interact_tattr, 16384) == 0); */
+    osi_Assert(pthread_attr_init(&urecovery_Interact_tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(&urecovery_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
+/*    osi_Assert(pthread_attr_setstacksize(&urecovery_Interact_tattr, 16384) == 0); */
     /*  need another attr set here for priority???  - klm */
 
-    assert(pthread_create(&urecovery_InteractThread, &urecovery_Interact_tattr,
+    osi_Assert(pthread_create(&urecovery_InteractThread, &urecovery_Interact_tattr,
            (void *)urecovery_Interact, NULL) == 0);
 
     return 0;  /* is this correct?  - klm */
@@ -666,7 +666,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	/* if we're writing already, wait */
 	while (dbase->flags & DBWRITING) {
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_cond_wait(&dbase->flags_cond, &dbase->versionLock) == 0);
+	    CV_WAIT(&dbase->flags_cond, &dbase->versionLock);
 #else
 	    DBRELE(dbase);
 	    LWP_WaitProcess(&dbase->flags);
@@ -1231,7 +1231,7 @@ ubik_WaitVersion(struct ubik_dbase *adatabase,
 	    return 0;
 	}
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_wait(&adatabase->version_cond, &adatabase->versionLock) == 0);
+	CV_WAIT(&adatabase->version_cond, &adatabase->versionLock);
 #else
 	DBRELE(adatabase);
 	LWP_WaitProcess(&adatabase->version);	/* same vers, just wait */

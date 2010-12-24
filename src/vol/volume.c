@@ -124,12 +124,7 @@
 #include "partition.h"
 #include "volume_inline.h"
 #include "common.h"
-
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include "afs/assert.h"
-#endif /* AFS_PTHREAD_ENV */
+#include "afs/afs_assert.h"
 #include "vutils.h"
 #ifndef AFS_NT40_ENV
 #include <afs/dir.h>
@@ -179,7 +174,7 @@ extern void *calloc(), *realloc();
 /* Forward declarations */
 static Volume *attach2(Error * ec, VolId volumeId, char *path,
 		       struct DiskPartition64 *partp, Volume * vp,
-		       int isbusy, int mode);
+		       int isbusy, int mode, int *acheckedOut);
 static void ReallyFreeVolume(Volume * vp);
 #ifdef AFS_DEMAND_ATTACH_FS
 static void FreeVolume(Volume * vp);
@@ -563,15 +558,15 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     } else {
 	VLRU_SetOptions(VLRU_SET_ENABLED, 0);
     }
-    assert(pthread_key_create(&VThread_key, NULL) == 0);
+    osi_Assert(pthread_key_create(&VThread_key, NULL) == 0);
 #endif
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&vol_glock_mutex, NULL) == 0);
-    assert(pthread_mutex_init(&vol_trans_mutex, NULL) == 0);
-    assert(pthread_cond_init(&vol_put_volume_cond, NULL) == 0);
-    assert(pthread_cond_init(&vol_sleep_cond, NULL) == 0);
-    assert(pthread_cond_init(&vol_init_attach_cond, NULL) == 0);
+    MUTEX_INIT(&vol_glock_mutex, "vol glock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&vol_trans_mutex, "vol trans", MUTEX_DEFAULT, 0);
+    CV_INIT(&vol_put_volume_cond, "vol put", CV_DEFAULT, 0);
+    CV_INIT(&vol_sleep_cond, "vol sleep", CV_DEFAULT, 0);
+    CV_INIT(&vol_init_attach_cond, "vol init attach", CV_DEFAULT, 0);
 #else /* AFS_PTHREAD_ENV */
     IOMGR_Initialize();
 #endif /* AFS_PTHREAD_ENV */
@@ -580,7 +575,7 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     srandom(time(0));		/* For VGetVolumeInfo */
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    assert(pthread_mutex_init(&vol_salvsync_mutex, NULL) == 0);
+    MUTEX_INIT(&vol_salvsync_mutex, "salvsync", MUTEX_DEFAULT, 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /* Ok, we have done enough initialization that fileserver can
@@ -602,7 +597,7 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 #if defined(AFS_DEMAND_ATTACH_FS) && defined(SALVSYNC_BUILD_CLIENT)
     if (VCanUseSALVSYNC()) {
 	/* establish a connection to the salvager at this point */
-	assert(VConnectSALV() != 0);
+	osi_Assert(VConnectSALV() != 0);
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -656,13 +651,13 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 int
 VInitAttachVolumes(ProgramType pt)
 {
-    assert(VInit==1);
+    osi_Assert(VInit==1);
     if (pt == fileServer) {
 	struct DiskPartition64 *diskP;
 	/* Attach all the volumes in this partition */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
 	    int nAttached = 0, nUnattached = 0;
-	    assert(VAttachVolumesByPartition(diskP, &nAttached, &nUnattached) == 0);
+	    osi_Assert(VAttachVolumesByPartition(diskP, &nAttached, &nUnattached) == 0);
 	}
     }
     VOL_LOCK;
@@ -687,7 +682,7 @@ VInitAttachVolumes(ProgramType pt)
 int
 VInitAttachVolumes(ProgramType pt)
 {
-    assert(VInit==1);
+    osi_Assert(VInit==1);
     if (pt == fileServer) {
 	struct DiskPartition64 *diskP;
 	struct vinitvolumepackage_thread_t params;
@@ -696,14 +691,14 @@ VInitAttachVolumes(ProgramType pt)
 	pthread_t tid;
 	pthread_attr_t attrs;
 
-	assert(pthread_cond_init(&params.thread_done_cv,NULL) == 0);
+	CV_INIT(&params.thread_done_cv, "thread done", CV_DEFAULT, 0);
 	queue_Init(&params);
 	params.n_threads_complete = 0;
 
 	/* create partition work queue */
 	for (parts=0, diskP = DiskPartitionList; diskP; diskP = diskP->next, parts++) {
 	    dpq = (diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
-	    assert(dpq != NULL);
+	    osi_Assert(dpq != NULL);
 	    dpq->diskP = diskP;
 	    queue_Append(&params,dpq);
 	}
@@ -712,8 +707,8 @@ VInitAttachVolumes(ProgramType pt)
 
 	if (threads > 1) {
 	    /* spawn off a bunch of initialization threads */
-	    assert(pthread_attr_init(&attrs) == 0);
-	    assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+	    osi_Assert(pthread_attr_init(&attrs) == 0);
+	    osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
 
 	    Log("VInitVolumePackage: beginning parallel fileserver startup\n");
 	    Log("VInitVolumePackage: using %d threads to attach volumes on %d partitions\n",
@@ -723,7 +718,7 @@ VInitAttachVolumes(ProgramType pt)
 	    for (i=0; i < threads; i++) {
                 AFS_SIGSET_DECL;
                 AFS_SIGSET_CLEAR();
-		assert(pthread_create
+		osi_Assert(pthread_create
 		       (&tid, &attrs, &VInitVolumePackageThread,
 			&params) == 0);
                 AFS_SIGSET_RESTORE();
@@ -734,7 +729,7 @@ VInitAttachVolumes(ProgramType pt)
 	    }
 	    VOL_UNLOCK;
 
-	    assert(pthread_attr_destroy(&attrs) == 0);
+	    osi_Assert(pthread_attr_destroy(&attrs) == 0);
 	} else {
 	    /* if we're only going to run one init thread, don't bother creating
 	     * another LWP */
@@ -745,11 +740,11 @@ VInitAttachVolumes(ProgramType pt)
 	    VInitVolumePackageThread(&params);
 	}
 
-	assert(pthread_cond_destroy(&params.thread_done_cv) == 0);
+	CV_DESTROY(&params.thread_done_cv);
     }
     VOL_LOCK;
     VInit = 2;			/* Initialized, and all volumes have been attached */
-    assert(pthread_cond_broadcast(&vol_init_attach_cond) == 0);
+    CV_BROADCAST(&vol_init_attach_cond);
     VOL_UNLOCK;
     return 0;
 }
@@ -780,14 +775,14 @@ VInitVolumePackageThread(void * args) {
 	diskP = dpq->diskP;
 	free(dpq);
 
-	assert(VAttachVolumesByPartition(diskP, &nAttached, &nUnattached) == 0);
+	osi_Assert(VAttachVolumesByPartition(diskP, &nAttached, &nUnattached) == 0);
 
 	VOL_LOCK;
     }
 
 done:
     params->n_threads_complete++;
-    pthread_cond_signal(&params->thread_done_cv);
+    CV_SIGNAL(&params->thread_done_cv);
     VOL_UNLOCK;
     return NULL;
 }
@@ -807,7 +802,7 @@ done:
 int
 VInitAttachVolumes(ProgramType pt)
 {
-    assert(VInit==1);
+    osi_Assert(VInit==1);
     if (pt == fileServer) {
 
 	struct DiskPartition64 *diskP;
@@ -820,12 +815,12 @@ VInitAttachVolumes(ProgramType pt)
 
 	/* create partition work queue */
         queue_Init(&pq);
-        assert(pthread_cond_init(&(pq.cv), NULL) == 0);
-        assert(pthread_mutex_init(&(pq.mutex), NULL) == 0);
+	CV_INIT(&(pq.cv), "partq", CV_DEFAULT, 0);
+	MUTEX_INIT(&(pq.mutex), "partq", MUTEX_DEFAULT, 0);
 	for (parts = 0, diskP = DiskPartitionList; diskP; diskP = diskP->next, parts++) {
 	    struct diskpartition_queue_t *dp;
 	    dp = (struct diskpartition_queue_t*)malloc(sizeof(struct diskpartition_queue_t));
-	    assert(dp != NULL);
+	    osi_Assert(dp != NULL);
 	    dp->diskP = diskP;
 	    queue_Append(&pq, dp);
 	}
@@ -835,11 +830,11 @@ VInitAttachVolumes(ProgramType pt)
 
         /* create volume work queue */
         queue_Init(&vq);
-        assert(pthread_cond_init(&(vq.cv), NULL) == 0);
-        assert(pthread_mutex_init(&(vq.mutex), NULL) == 0);
+	CV_INIT(&(vq.cv), "volq", CV_DEFAULT, 0);
+	MUTEX_INIT(&(vq.mutex), "volq", MUTEX_DEFAULT, 0);
 
-        assert(pthread_attr_init(&attrs) == 0);
-        assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+        osi_Assert(pthread_attr_init(&attrs) == 0);
+        osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
 
         Log("VInitVolumePackage: beginning parallel fileserver startup\n");
         Log("VInitVolumePackage: using %d threads to pre-attach volumes on %d partitions\n",
@@ -851,29 +846,29 @@ VInitAttachVolumes(ProgramType pt)
             AFS_SIGSET_DECL;
 
             params = (struct vinitvolumepackage_thread_param *)malloc(sizeof(struct vinitvolumepackage_thread_param));
-            assert(params);
+            osi_Assert(params);
             params->pq = &pq;
             params->vq = &vq;
             params->nthreads = threads;
             params->thread = i+1;
 
             AFS_SIGSET_CLEAR();
-	    assert(pthread_create (&tid, &attrs, &VInitVolumePackageThread, (void*)params) == 0);
+	    osi_Assert(pthread_create (&tid, &attrs, &VInitVolumePackageThread, (void*)params) == 0);
             AFS_SIGSET_RESTORE();
 	}
 
         VInitPreAttachVolumes(threads, &vq);
 
-        assert(pthread_attr_destroy(&attrs) == 0);
-        assert(pthread_cond_destroy(&pq.cv) == 0);
-        assert(pthread_mutex_destroy(&pq.mutex) == 0);
-        assert(pthread_cond_destroy(&vq.cv) == 0);
-        assert(pthread_mutex_destroy(&vq.mutex) == 0);
+        osi_Assert(pthread_attr_destroy(&attrs) == 0);
+	CV_DESTROY(&pq.cv);
+	MUTEX_DESTROY(&pq.mutex);
+	CV_DESTROY(&vq.cv);
+	MUTEX_DESTROY(&vq.mutex);
     }
 
     VOL_LOCK;
     VInit = 2;			/* Initialized, and all volumes have been attached */
-    assert(pthread_cond_broadcast(&vol_init_attach_cond) == 0);
+    CV_BROADCAST(&vol_init_attach_cond);
     VOL_UNLOCK;
 
     return 0;
@@ -894,15 +889,15 @@ VInitVolumePackageThread(void *args)
     struct volume_init_queue *vq;
     struct volume_init_batch *vb;
 
-    assert(args);
+    osi_Assert(args);
     params = (struct vinitvolumepackage_thread_param *)args;
     pq = params->pq;
     vq = params->vq;
-    assert(pq);
-    assert(vq);
+    osi_Assert(pq);
+    osi_Assert(vq);
 
     vb = (struct volume_init_batch*)malloc(sizeof(struct volume_init_batch));
-    assert(vb);
+    osi_Assert(vb);
     vb->thread = params->thread;
     vb->last = 0;
     vb->size = 0;
@@ -920,23 +915,23 @@ VInitVolumePackageThread(void *args)
         }
         while ((vid = VInitNextVolumeId(dirp))) {
             Volume *vp = (Volume*)malloc(sizeof(Volume));
-            assert(vp);
+            osi_Assert(vp);
             memset(vp, 0, sizeof(Volume));
             vp->device = partition->device;
             vp->partition = partition;
             vp->hashid = vid;
             queue_Init(&vp->vnode_list);
-            assert(pthread_cond_init(&V_attachCV(vp), NULL) == 0);
+	    CV_INIT(&V_attachCV(vp), "partattach", CV_DEFAULT, 0);
 
             vb->batch[vb->size++] = vp;
             if (vb->size == VINIT_BATCH_MAX_SIZE) {
-                assert(pthread_mutex_lock(&vq->mutex) == 0);
+		MUTEX_ENTER(&vq->mutex);
                 queue_Append(vq, vb);
-                assert(pthread_cond_broadcast(&vq->cv) == 0);
-                assert(pthread_mutex_unlock(&vq->mutex) == 0);
+		CV_BROADCAST(&vq->cv);
+		MUTEX_EXIT(&vq->mutex);
 
                 vb = (struct volume_init_batch*)malloc(sizeof(struct volume_init_batch));
-                assert(vb);
+                osi_Assert(vb);
                 vb->thread = params->thread;
                 vb->size = 0;
                 vb->last = 0;
@@ -946,10 +941,10 @@ VInitVolumePackageThread(void *args)
     }
 
     vb->last = 1;
-    assert(pthread_mutex_lock(&vq->mutex) == 0);
+    MUTEX_ENTER(&vq->mutex);
     queue_Append(vq, vb);
-    assert(pthread_cond_broadcast(&vq->cv) == 0);
-    assert(pthread_mutex_unlock(&vq->mutex) == 0);
+    CV_BROADCAST(&vq->cv);
+    MUTEX_EXIT(&vq->mutex);
 
     Log("Partition scan thread %d of %d ended\n", params->thread, params->nthreads);
     free(params);
@@ -971,17 +966,17 @@ VInitNextPartition(struct partition_queue *pq)
     }
 
     /* get next partition to scan */
-    assert(pthread_mutex_lock(&pq->mutex) == 0);
+    MUTEX_ENTER(&pq->mutex);
     if (queue_IsEmpty(pq)) {
-        assert(pthread_mutex_unlock(&pq->mutex) == 0);
+	MUTEX_EXIT(&pq->mutex);
         return NULL;
     }
     dp = queue_First(pq, diskpartition_queue_t);
     queue_Remove(dp);
-    assert(pthread_mutex_unlock(&pq->mutex) == 0);
+    MUTEX_EXIT(&pq->mutex);
 
-    assert(dp);
-    assert(dp->diskP);
+    osi_Assert(dp);
+    osi_Assert(dp->diskP);
 
     partition = dp->diskP;
     free(dp);
@@ -1026,13 +1021,13 @@ VInitPreAttachVolumes(int nthreads, struct volume_init_queue *vq)
 
     while (nthreads) {
         /* dequeue next volume */
-        pthread_mutex_lock(&vq->mutex);
+	MUTEX_ENTER(&vq->mutex);
         if (queue_IsEmpty(vq)) {
-            pthread_cond_wait(&vq->cv, &vq->mutex);
+	    CV_WAIT(&vq->cv, &vq->mutex);
         }
         vb = queue_First(vq, volume_init_batch);
         queue_Remove(vb);
-        pthread_mutex_unlock(&vq->mutex);
+	MUTEX_EXIT(&vq->mutex);
 
         if (vb->size) {
             VOL_LOCK;
@@ -1209,11 +1204,11 @@ VShutdown_r(void)
     if (vol_attach_threads > 1) {
 	/* prepare for parallel shutdown */
 	params.n_threads = vol_attach_threads;
-	assert(pthread_mutex_init(&params.lock, NULL) == 0);
-	assert(pthread_cond_init(&params.cv, NULL) == 0);
-	assert(pthread_cond_init(&params.master_cv, NULL) == 0);
-	assert(pthread_attr_init(&attrs) == 0);
-	assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+	MUTEX_INIT(&params.lock, "params", MUTEX_DEFAULT, 0);
+	CV_INIT(&params.cv, "params", CV_DEFAULT, 0);
+	CV_INIT(&params.master_cv, "params master", CV_DEFAULT, 0);
+	osi_Assert(pthread_attr_init(&attrs) == 0);
+	osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
 	queue_Init(&params);
 
 	/* setup the basic partition information structures for
@@ -1239,7 +1234,7 @@ VShutdown_r(void)
 
 	    /* build up the pass 0 shutdown work queue */
 	    dpq = (struct diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
-	    assert(dpq != NULL);
+	    osi_Assert(dpq != NULL);
 	    dpq->diskP = diskP;
 	    queue_Prepend(&params, dpq);
 
@@ -1251,21 +1246,21 @@ VShutdown_r(void)
 	    vol_attach_threads, params.n_parts, params.n_parts > 1 ? "s" : "" );
 
 	/* do pass 0 shutdown */
-	assert(pthread_mutex_lock(&params.lock) == 0);
+	MUTEX_ENTER(&params.lock);
 	for (i=0; i < params.n_threads; i++) {
-	    assert(pthread_create
+	    osi_Assert(pthread_create
 		   (&tid, &attrs, &VShutdownThread,
 		    &params) == 0);
 	}
 
 	/* wait for all the pass 0 shutdowns to complete */
 	while (params.n_threads_complete < params.n_threads) {
-	    assert(pthread_cond_wait(&params.master_cv, &params.lock) == 0);
+	    CV_WAIT(&params.master_cv, &params.lock);
 	}
 	params.n_threads_complete = 0;
 	params.pass = 1;
-	assert(pthread_cond_broadcast(&params.cv) == 0);
-	assert(pthread_mutex_unlock(&params.lock) == 0);
+	CV_BROADCAST(&params.cv);
+	MUTEX_EXIT(&params.lock);
 
 	Log("VShutdown:  pass 0 completed using the 1 thread per partition algorithm\n");
 	Log("VShutdown:  starting passes 1 through 3 using finely-granular mp-fast algorithm\n");
@@ -1278,10 +1273,10 @@ VShutdown_r(void)
 	    VOL_CV_WAIT(&params.cv);
 	}
 
-	assert(pthread_attr_destroy(&attrs) == 0);
-	assert(pthread_cond_destroy(&params.cv) == 0);
-	assert(pthread_cond_destroy(&params.master_cv) == 0);
-	assert(pthread_mutex_destroy(&params.lock) == 0);
+	osi_Assert(pthread_attr_destroy(&attrs) == 0);
+	CV_DESTROY(&params.cv);
+	CV_DESTROY(&params.master_cv);
+	MUTEX_DESTROY(&params.lock);
 
 	/* drop the VByPList exclusive reservations */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
@@ -1350,7 +1345,7 @@ VShutdown_r(void)
 void
 VShutdown(void)
 {
-    assert(VInit>0);
+    osi_Assert(VInit>0);
     VOL_LOCK;
     VShutdown_r();
     VOL_UNLOCK;
@@ -1557,14 +1552,14 @@ VShutdownThread(void * args)
     params = (vshutdown_thread_t *) args;
 
     /* acquire the shutdown pass 0 lock */
-    assert(pthread_mutex_lock(&params->lock) == 0);
+    MUTEX_ENTER(&params->lock);
 
     /* if there's still pass 0 work to be done,
      * get a work entry, and do a pass 0 shutdown */
     if (queue_IsNotEmpty(params)) {
 	dpq = queue_First(params, diskpartition_queue_t);
 	queue_Remove(dpq);
-	assert(pthread_mutex_unlock(&params->lock) == 0);
+	MUTEX_EXIT(&params->lock);
 	diskP = dpq->diskP;
 	free(dpq);
 	id = diskP->index;
@@ -1573,24 +1568,24 @@ VShutdownThread(void * args)
 	while (ShutdownVolumeWalk_r(diskP, 0, &params->part_pass_head[id]))
 	    count++;
 	params->stats[0][diskP->index] = count;
-	assert(pthread_mutex_lock(&params->lock) == 0);
+	MUTEX_ENTER(&params->lock);
     }
 
     params->n_threads_complete++;
     if (params->n_threads_complete == params->n_threads) {
-      /* notify control thread that all workers have completed pass 0 */
-      assert(pthread_cond_signal(&params->master_cv) == 0);
+	/* notify control thread that all workers have completed pass 0 */
+	CV_SIGNAL(&params->master_cv);
     }
     while (params->pass == 0) {
-      assert(pthread_cond_wait(&params->cv, &params->lock) == 0);
+	CV_WAIT(&params->cv, &params->lock);
     }
 
     /* switch locks */
-    assert(pthread_mutex_unlock(&params->lock) == 0);
+    MUTEX_EXIT(&params->lock);
     VOL_LOCK;
 
     pass = params->pass;
-    assert(pass > 0);
+    osi_Assert(pass > 0);
 
     /* now escalate through the more complicated shutdowns */
     while (pass <= 3) {
@@ -1670,7 +1665,7 @@ VShutdownThread(void * args)
 		    ShutdownCreateSchedule(params);
 
 		    /* wake up all the workers */
-		    assert(pthread_cond_broadcast(&params->cv) == 0);
+		    CV_BROADCAST(&params->cv);
 
 		    VOL_UNLOCK;
 		    Log("VShutdown:  pass %d completed using %d threads on %d partitions\n",
@@ -1824,7 +1819,7 @@ VShutdownVolume_r(Volume * vp)
     /* wait for other blocking ops to finish */
     VWaitExclusiveState_r(vp);
 
-    assert(VIsValidState(V_attachState(vp)));
+    osi_Assert(VIsValidState(V_attachState(vp)));
 
     switch(V_attachState(vp)) {
     case VOL_STATE_SALVAGING:
@@ -2081,7 +2076,7 @@ VPreAttachVolumeById_r(Error * ec,
 
     *ec = 0;
 
-    assert(programType == fileServer);
+    osi_Assert(programType == fileServer);
 
     if (!(partp = VGetPartition_r(partition, 0))) {
 	*ec = VNOVOL;
@@ -2165,10 +2160,10 @@ VPreAttachVolumeByVp_r(Error * ec,
 
 	/* allocate the volume structure */
 	vp = nvp = (Volume *) malloc(sizeof(Volume));
-	assert(vp != NULL);
+	osi_Assert(vp != NULL);
 	memset(vp, 0, sizeof(Volume));
 	queue_Init(&vp->vnode_list);
-	assert(pthread_cond_init(&V_attachCV(vp), NULL) == 0);
+	CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
     }
 
     /* link the volume with its associated vice partition */
@@ -2239,6 +2234,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     char path[64];
     int isbusy = 0;
     VolId volumeId;
+    int checkedOut;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolumeStats stats_save;
     Volume *svp = NULL;
@@ -2255,7 +2251,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     }
 
     if (VRequiresPartLock()) {
-	assert(VInit == 3);
+	osi_Assert(VInit == 3);
 	VLockPartition_r(partition);
     } else if (programType == fileServer) {
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -2330,7 +2326,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    }
 	}
 
-	assert(vp != NULL);
+	osi_Assert(vp != NULL);
 
 	/* handle pre-attach races
 	 *
@@ -2391,19 +2387,19 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     if (!vp) {
       vp = (Volume *) calloc(1, sizeof(Volume));
-      assert(vp != NULL);
+      osi_Assert(vp != NULL);
       vp->hashid = volumeId;
       vp->device = partp->device;
       vp->partition = partp;
       queue_Init(&vp->vnode_list);
 #ifdef AFS_DEMAND_ATTACH_FS
-      assert(pthread_cond_init(&V_attachCV(vp), NULL) == 0);
+      CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
     }
 
     /* attach2 is entered without any locks, and returns
      * with vol_glock_mutex held */
-    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
+    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode, &checkedOut);
 
     if (VCanUseFSSYNC() && vp) {
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -2417,7 +2413,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	if (mode == V_PEEK) {
 	    vp->needsPutBack = 0;
 	} else {
-	    vp->needsPutBack = 1;
+	    vp->needsPutBack = VOL_PUTBACK;
 	}
 #else /* !AFS_DEMAND_ATTACH_FS */
 	/* duplicate computation in fssync.c about whether the server
@@ -2428,23 +2424,14 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    || (!VolumeWriteable(vp) && (mode == V_CLONE || mode == V_DUMP)))
 	    vp->needsPutBack = 0;
 	else
-	    vp->needsPutBack = 1;
+	    vp->needsPutBack = VOL_PUTBACK;
 #endif /* !AFS_DEMAND_ATTACH_FS */
     }
-    /* OK, there's a problem here, but one that I don't know how to
-     * fix right now, and that I don't think should arise often.
-     * Basically, we should only put back this volume to the server if
-     * it was given to us by the server, but since we don't have a vp,
-     * we can't run the VolumeWriteable function to find out as we do
-     * above when computing vp->needsPutBack.  So we send it back, but
-     * there's a path in VAttachVolume on the server which may abort
-     * if this volume doesn't have a header.  Should be pretty rare
-     * for all of that to happen, but if it does, probably the right
-     * fix is for the server to allow the return of readonly volumes
-     * that it doesn't think are really checked out. */
 #ifdef FSSYNC_BUILD_CLIENT
-    if (VCanUseFSSYNC() && vp == NULL &&
-	mode != V_SECRETLY && mode != V_PEEK) {
+    /* Only give back the vol to the fileserver if we checked it out; attach2
+     * will set checkedOut only if we successfully checked it out from the
+     * fileserver. */
+    if (VCanUseFSSYNC() && vp == NULL && checkedOut) {
 
 #ifdef AFS_DEMAND_ATTACH_FS
         /* If we couldn't attach but we scheduled a salvage, we already
@@ -2532,10 +2519,11 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     VolId volumeId;
     Volume * nvp = NULL;
     VolumeStats stats_save;
+    int checkedOut;
     *ec = 0;
 
     /* volume utility should never call AttachByVp */
-    assert(programType == fileServer);
+    osi_Assert(programType == fileServer);
 
     volumeId = vp->hashid;
     partp = vp->partition;
@@ -2579,7 +2567,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 	}
     }
 
-    assert(vp != NULL);
+    osi_Assert(vp != NULL);
     VChangeState_r(vp, VOL_STATE_ATTACHING);
 
     /* restore monotonically increasing stats */
@@ -2599,7 +2587,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
      *
      * NOTE: attach2 is entered without any locks, and returns
      * with vol_glock_mutex held */
-    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode);
+    vp = attach2(ec, volumeId, path, partp, vp, isbusy, mode, &checkedOut);
 
     /*
      * the event that an error was encountered, or
@@ -2677,8 +2665,8 @@ VLockVolumeNB(Volume *vp, int locktype)
 {
     int code;
 
-    assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
-    assert(!(V_attachFlags(vp) & VOL_LOCKED));
+    osi_Assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
+    osi_Assert(!(V_attachFlags(vp) & VOL_LOCKED));
 
     code = VLockVolumeByIdNB(vp->hashid, vp->partition, locktype);
     if (code == 0) {
@@ -2700,8 +2688,8 @@ VLockVolumeNB(Volume *vp, int locktype)
 static void
 VUnlockVolume(Volume *vp)
 {
-    assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
-    assert((V_attachFlags(vp) & VOL_LOCKED));
+    osi_Assert(programType != fileServer || VIsExclusiveState(V_attachState(vp)));
+    osi_Assert((V_attachFlags(vp) & VOL_LOCKED));
 
     VUnlockVolumeById(vp->hashid, vp->partition);
 
@@ -2722,6 +2710,9 @@ VUnlockVolume(Volume *vp)
  *                    we don't try to lock the vol, or check it out from
  *                    FSSYNC or anything like that; 0 otherwise, for 'normal'
  *                    operation
+ * @param[out] acheckedOut   If we successfully checked-out the volume from
+ *                           the fileserver (if we needed to), this is set
+ *                           to 1, otherwise it is untouched.
  *
  * @note As part of DAFS volume attachment, the volume header may be either
  *       read- or write-locked to ensure mutual exclusion of certain volume
@@ -2734,7 +2725,7 @@ VUnlockVolume(Volume *vp)
  */
 static void
 attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
-                     int mode, int peek)
+                     int mode, int peek, int *acheckedOut)
 {
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader header;
@@ -2796,6 +2787,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
             }
 	    goto done;
 	}
+	*acheckedOut = 1;
     }
 #endif
 
@@ -2961,7 +2953,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 static void
 attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
-                 Volume *vp)
+                 Volume *vp, int *acheckedOut)
 {
     *ec = 0;
 
@@ -2986,7 +2978,7 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
 		/* attach header with peek=1 to avoid checking out the volume
 		 * or locking it; we just want the header info, we're not
 		 * messing with the volume itself at all */
-		attach_volume_header(ec, vp, partp, V_PEEK, 1);
+		attach_volume_header(ec, vp, partp, V_PEEK, 1, acheckedOut);
 		if (*ec) {
 		    return;
 		}
@@ -3010,12 +3002,12 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
 	switch (vp->pending_vol_op->vol_op_state) {
 	case FSSYNC_VolOpPending:
 	    /* this should never happen */
-	    assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpPending);
+	    osi_Assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpPending);
 	    break;
 
 	case FSSYNC_VolOpRunningUnknown:
 	    /* this should never happen; we resolved 'unknown' above */
-	    assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
+	    osi_Assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
 	    break;
 
 	case FSSYNC_VolOpRunningOffline:
@@ -3058,6 +3050,9 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  *                     otherwise. (see VVolOpSetVBusy_r)
  * @param[in] mode     attachment mode such as V_VOLUPD, V_DUMP, etc (see
  *                     volume.h)
+ * @param[out] acheckedOut   If we successfully checked-out the volume from
+ *                           the fileserver (if we needed to), this is set
+ *                           to 1, otherwise it is 0.
  *
  * @return pointer to the semi-attached volume pointer
  *  @retval NULL an error occurred (check value of *ec)
@@ -3069,7 +3064,7 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  */
 static Volume *
 attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
-        Volume * vp, int isbusy, int mode)
+        Volume * vp, int isbusy, int mode, int *acheckedOut)
 {
     /* have we read in the header successfully? */
     int read_header = 0;
@@ -3091,19 +3086,21 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     vp->diskDataHandle = NULL;
     vp->linkHandle = NULL;
 
+    *acheckedOut = 0;
+
 #ifdef AFS_DEMAND_ATTACH_FS
-    attach_check_vop(ec, volumeId, partp, vp);
+    attach_check_vop(ec, volumeId, partp, vp, acheckedOut);
     if (!*ec) {
-	attach_volume_header(ec, vp, partp, mode, 0);
+	attach_volume_header(ec, vp, partp, mode, 0, acheckedOut);
     }
 #else
-    attach_volume_header(ec, vp, partp, mode, 0);
+    attach_volume_header(ec, vp, partp, mode, 0, acheckedOut);
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
     if (*ec == VNOVOL) {
 	/* if the volume doesn't exist, skip straight to 'error' so we don't
 	 * request a salvage */
-	goto error;
+	goto unlocked_error;
     }
 
     if (!*ec) {
@@ -3187,20 +3184,19 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                          VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
-	goto error;
+	goto locked_error;
     } else if (*ec) {
 	/* volume operation in progress */
-	VOL_LOCK;
-	goto error;
+	goto unlocked_error;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
 	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
-        VOL_LOCK;
-	goto error;
+	goto unlocked_error;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -3212,14 +3208,15 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume salvage flag is ON for %s; volume needs salvage\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                           VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-	goto error;
+	goto locked_error;
     }
 
     VOL_LOCK;
@@ -3234,7 +3231,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                           VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3242,7 +3240,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	*ec = VSALVAGE;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-	goto error;
+	goto locked_error;
     }
 
     if (programType == fileServer && V_destroyMe(vp) == DESTROY_ME) {
@@ -3256,14 +3254,15 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
 #if defined(AFS_DEMAND_ATTACH_FS)
 	/* schedule a salvage so the volume goes away on disk */
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                          VOL_SALVAGE_NO_OFFLINE);
 	VChangeState_r(vp, VOL_STATE_ERROR);
 	vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 	Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
 	*ec = VNOVOL;
 	forcefree = 1;
-	goto error;
+	goto locked_error;
     }
 
     vp->vnodeIndex[vSmall].bitmap = vp->vnodeIndex[vLarge].bitmap = NULL;
@@ -3274,12 +3273,13 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    VGetBitmap_r(ec, vp, i);
 	    if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+		                                          VOL_SALVAGE_NO_OFFLINE);
 		vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
 		    path);
-		goto error;
+		goto locked_error;
 	    }
 	}
     }
@@ -3322,12 +3322,13 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	        "%lu; needs salvage\n", (int)*ec,
 	        afs_printable_uint32_lu(V_id(vp)));
 #ifdef AFS_DEMAND_ATTACH_FS
-	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
+	                                              VOL_SALVAGE_NO_OFFLINE);
 	    vp->nUsers = 0;
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    *ec = VSALVAGE;
 #endif /* !AFS_DEMAND_ATTACh_FS */
-	    goto error;
+	    goto locked_error;
 	}
     }
 
@@ -3367,7 +3368,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 	    vp->nUsers = 0;
 #endif
-	    goto error;
+	    goto locked_error;
 	}
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3394,7 +3395,9 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
     return vp;
 
- error:
+unlocked_error:
+    VOL_LOCK;
+locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
 	VChangeState_r(vp, error_state);
@@ -3443,7 +3446,7 @@ VAttachVolume_r(Error * ec, VolumeId volumeId, int mode)
 	Error error;
 	vp = VGetVolume_r(&error, volumeId);
 	if (vp) {
-	    assert(V_inUse(vp) == 0);
+	    osi_Assert(V_inUse(vp) == 0);
 	    VDetachVolume_r(ec, vp);
 	}
 	return NULL;
@@ -3526,7 +3529,7 @@ VHold(Volume * vp)
 void
 VPutVolume_r(Volume * vp)
 {
-    assert(--vp->nUsers >= 0);
+    osi_Assert(--vp->nUsers >= 0);
     if (vp->nUsers == 0) {
 	VCheckOffline(vp);
 	ReleaseVolumeHeader(vp->header);
@@ -3725,6 +3728,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	 *   - PREATTACHED
 	 *   - ATTACHED
 	 *   - SALVAGING
+	 *   - SALVAGE_REQ
 	 */
 
 	if (vp->salvage.requested) {
@@ -3767,8 +3771,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	    }
 	}
 
-	if ((V_attachState(vp) == VOL_STATE_SALVAGING) ||
-	    (*ec == VSALVAGING)) {
+	if (VIsSalvaging(vp) || (*ec == VSALVAGING)) {
 	    if (client_ec) {
 		/* see CheckVnode() in afsfileprocs.c for an explanation
 		 * of this error code logic */
@@ -3793,7 +3796,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	 */
 
          /* only valid before/during demand attachment */
-         assert(!vp->pending_vol_op || vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
+         osi_Assert(!vp->pending_vol_op || vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
 
          /* deny getvolume due to running mutually exclusive vol op */
          if (vp->pending_vol_op && vp->pending_vol_op->vol_op_state==FSSYNC_VolOpRunningOffline) {
@@ -3916,7 +3919,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 #endif /* AFS_DEMAND_ATTACH_FS */
 
  not_inited:
-    assert(vp || *ec);
+    osi_Assert(vp || *ec);
     return vp;
 }
 
@@ -3932,8 +3935,8 @@ VTakeOffline_r(Volume * vp)
 {
     Error error;
 
-    assert(vp->nUsers > 0);
-    assert(programType == fileServer);
+    osi_Assert(vp->nUsers > 0);
+    osi_Assert(programType == fileServer);
 
     VCreateReservation_r(vp);
     VWaitExclusiveState_r(vp);
@@ -3948,8 +3951,8 @@ VTakeOffline_r(Volume * vp)
 void
 VTakeOffline_r(Volume * vp)
 {
-    assert(vp->nUsers > 0);
-    assert(programType == fileServer);
+    osi_Assert(vp->nUsers > 0);
+    osi_Assert(programType == fileServer);
 
     vp->goingOffline = 1;
     V_needsSalvaged(vp) = 1;
@@ -4021,7 +4024,7 @@ VForceOffline_r(Volume * vp, int flags)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_cond_broadcast(&vol_put_volume_cond) == 0);
+    CV_BROADCAST(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
     LWP_NoYieldSignal(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -4056,7 +4059,7 @@ VOffline_r(Volume * vp, char *message)
     VolumeId vid = V_id(vp);
 #endif
 
-    assert(programType != volumeUtility && programType != volumeServer);
+    osi_Assert(programType != volumeUtility && programType != volumeServer);
     if (!V_inUse(vp)) {
 	VPutVolume_r(vp);
 	return;
@@ -4115,7 +4118,7 @@ VOffline_r(Volume * vp, char *message)
 void
 VOfflineForVolOp_r(Error *ec, Volume *vp, char *message)
 {
-    assert(vp->pending_vol_op);
+    osi_Assert(vp->pending_vol_op);
     if (!V_inUse(vp)) {
 	VPutVolume_r(vp);
         *ec = 1;
@@ -4172,7 +4175,7 @@ VDetachVolume_r(Error * ec, Volume * vp)
     if (VCanUseFSSYNC()) {
 	notifyServer = vp->needsPutBack;
 	if (V_destroyMe(vp) == DESTROY_ME)
-	    useDone = FSYNC_VOL_DONE;
+	    useDone = FSYNC_VOL_LEAVE_OFF;
 #ifdef AFS_DEMAND_ATTACH_FS
 	else if (!V_blessed(vp) || !V_inService(vp))
 	    useDone = FSYNC_VOL_LEAVE_OFF;
@@ -4198,6 +4201,12 @@ VDetachVolume_r(Error * ec, Volume * vp)
      */
 #ifdef FSSYNC_BUILD_CLIENT
     if (VCanUseFSSYNC() && notifyServer) {
+	if (notifyServer == VOL_PUTBACK_DELETE) {
+	    /* Only send FSYNC_VOL_DONE if the volume was actually deleted.
+	     * volserver code will set needsPutBack to VOL_PUTBACK_DELETE
+	     * to signify a deleted volume. */
+	    useDone = FSYNC_VOL_DONE;
+	}
 	/*
 	 * Note:  The server is not notified in the case of a bogus volume
 	 * explicitly to make it possible to create a volume, do a partial
@@ -4412,9 +4421,9 @@ VSyncVolume_r(Error * ec, Volume * vp, int flags)
 	VOL_UNLOCK;
 #endif
 	fdP = IH_OPEN(V_diskDataHandle(vp));
-	assert(fdP != NULL);
+	osi_Assert(fdP != NULL);
 	code = FDH_SYNC(fdP);
-	assert(code == 0);
+	osi_Assert(code == 0);
 	FDH_CLOSE(fdP);
 #ifdef AFS_DEMAND_ATTACH_FS
 	VOL_LOCK;
@@ -4506,7 +4515,7 @@ VCheckDetach(Volume * vp)
 	VCheckSalvage(vp);
 	ReallyFreeVolume(vp);
 	if (programType == fileServer) {
-	    assert(pthread_cond_broadcast(&vol_put_volume_cond) == 0);
+	    CV_BROADCAST(&vol_put_volume_cond);
 	}
     }
     return ret;
@@ -4540,7 +4549,7 @@ VCheckDetach(Volume * vp)
 	ReallyFreeVolume(vp);
 	if (programType == fileServer) {
 #if defined(AFS_PTHREAD_ENV)
-	    assert(pthread_cond_broadcast(&vol_put_volume_cond) == 0);
+	    CV_BROADCAST(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_NoYieldSignal(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -4560,8 +4569,8 @@ VCheckOffline(Volume * vp)
 
     if (vp->goingOffline && !vp->nUsers) {
 	Error error;
-	assert(programType == fileServer);
-	assert((V_attachState(vp) != VOL_STATE_ATTACHED) &&
+	osi_Assert(programType == fileServer);
+	osi_Assert((V_attachState(vp) != VOL_STATE_ATTACHED) &&
 	       (V_attachState(vp) != VOL_STATE_FREED) &&
 	       (V_attachState(vp) != VOL_STATE_PREATTACHED) &&
 	       (V_attachState(vp) != VOL_STATE_UNATTACHED) &&
@@ -4621,7 +4630,7 @@ VCheckOffline(Volume * vp)
 
     if (vp->goingOffline && !vp->nUsers) {
 	Error error;
-	assert(programType == fileServer);
+	osi_Assert(programType == fileServer);
 
 	ret = 1;
 	vp->goingOffline = 0;
@@ -4637,7 +4646,7 @@ VCheckOffline(Volume * vp)
 	}
 	FreeVolumeHeader(vp);
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_cond_broadcast(&vol_put_volume_cond) == 0);
+	CV_BROADCAST(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -4688,7 +4697,7 @@ VCheckOffline(Volume * vp)
 void
 VCancelReservation_r(Volume * vp)
 {
-    assert(--vp->nWaiters >= 0);
+    osi_Assert(--vp->nWaiters >= 0);
     if (vp->nWaiters == 0) {
 	VCheckOffline(vp);
 	if (!VCheckDetach(vp)) {
@@ -4745,7 +4754,7 @@ VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 
     /* attach a vol op info node to the volume struct */
     info = (FSSYNC_VolOp_info *) malloc(sizeof(FSSYNC_VolOp_info));
-    assert(info != NULL);
+    osi_Assert(info != NULL);
     memcpy(info, vopinfo, sizeof(FSSYNC_VolOp_info));
     vp->pending_vol_op = info;
 
@@ -4879,6 +4888,62 @@ VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 /* online salvager routines                        */
 /***************************************************/
 #if defined(AFS_DEMAND_ATTACH_FS)
+
+/**
+ * offline a volume to let it be salvaged.
+ *
+ * @param[in] vp  Volume to offline
+ *
+ * @return whether we offlined the volume successfully
+ *  @retval 0 volume was not offlined
+ *  @retval 1 volume is now offline
+ *
+ * @note This is similar to VCheckOffline, but slightly different. We do not
+ *       deal with vp->goingOffline, and we try to avoid touching the volume
+ *       header except just to set needsSalvaged
+ *
+ * @pre VOL_LOCK held
+ * @pre vp->nUsers == 0
+ * @pre V_attachState(vp) == VOL_STATE_SALVAGE_REQ
+ */
+static int
+VOfflineForSalvage_r(struct Volume *vp)
+{
+    Error error;
+
+    VCreateReservation_r(vp);
+    VWaitExclusiveState_r(vp);
+
+    if (vp->nUsers || V_attachState(vp) == VOL_STATE_SALVAGING) {
+	/* Someone's using the volume, or someone got to scheduling the salvage
+	 * before us. I don't think either of these should be possible, as we
+	 * should gain no new heavyweight references while we're trying to
+	 * salvage, but just to be sure... */
+	VCancelReservation_r(vp);
+	return 0;
+    }
+
+    VChangeState_r(vp, VOL_STATE_OFFLINING);
+
+    VLRU_Delete_r(vp);
+    if (vp->header) {
+	V_needsSalvaged(vp) = 1;
+	/* ignore error; updating needsSalvaged is just best effort */
+	VUpdateVolume_r(&error, vp, VOL_UPDATE_NOFORCEOFF);
+    }
+    VCloseVolumeHandles_r(vp);
+
+    FreeVolumeHeader(vp);
+
+    /* volume has been effectively offlined; we can mark it in the SALVAGING
+     * state now, which lets FSSYNC give it away */
+    VChangeState_r(vp, VOL_STATE_SALVAGING);
+
+    VCancelReservation_r(vp);
+
+    return 1;
+}
+
 /**
  * check whether a salvage needs to be performed on this volume.
  *
@@ -4895,6 +4960,10 @@ VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
  *
  * @note this is one of the event handlers called by VCancelReservation_r
  *
+ * @note the caller must check if the volume needs to be freed after calling
+ *       this; the volume may not have any references or be on any lists after
+ *       we return, and we do not free it
+ *
  * @see VCancelReservation_r
  *
  * @internal volume package internal use only.
@@ -4904,12 +4973,31 @@ VCheckSalvage(Volume * vp)
 {
     int ret = 0;
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
-    if (vp->nUsers || vp->nWaiters)
+    if (vp->nUsers)
 	return ret;
+    if (!vp->salvage.requested) {
+	return ret;
+    }
+
+    /* prevent recursion; some of the code below creates and removes
+     * lightweight refs, which can call VCheckSalvage */
+    if (vp->salvage.scheduling) {
+	return ret;
+    }
+    vp->salvage.scheduling = 1;
+
+    if (V_attachState(vp) == VOL_STATE_SALVAGE_REQ) {
+	if (!VOfflineForSalvage_r(vp)) {
+	    vp->salvage.scheduling = 0;
+	    return ret;
+	}
+    }
+
     if (vp->salvage.requested) {
 	VScheduleSalvage_r(vp);
 	ret = 1;
     }
+    vp->salvage.scheduling = 0;
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
     return ret;
 }
@@ -4979,7 +5067,24 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	 * fear of a salvage already running for this volume. */
 
 	if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
-	    VChangeState_r(vp, VOL_STATE_SALVAGING);
+
+	    /* if we don't need to offline the volume, we can go directly
+	     * to SALVAGING. SALVAGING says the volume is offline and is
+	     * either salvaging or ready to be handed to the salvager.
+	     * SALVAGE_REQ says that we want to salvage the volume, but we
+	     * are waiting for it to go offline first. */
+	    if (flags & VOL_SALVAGE_NO_OFFLINE) {
+		VChangeState_r(vp, VOL_STATE_SALVAGING);
+	    } else {
+		VChangeState_r(vp, VOL_STATE_SALVAGE_REQ);
+		if (vp->nUsers == 0) {
+		    /* normally VOfflineForSalvage_r would be called from
+		     * PutVolume et al when nUsers reaches 0, but if
+		     * it's already 0, just do it ourselves, since PutVolume
+		     * isn't going to get called */
+		    VOfflineForSalvage_r(vp);
+		}
+	    }
 	    *ec = VSALVAGING;
 	} else {
 	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
@@ -5133,6 +5238,10 @@ try_FSSYNC(Volume *vp, char *partName, int *code) {
  * server over SALVSYNC. If we are not the fileserver, the request will be
  * sent to the fileserver over FSSYNC (FSYNC_VOL_FORCE_ERROR/FSYNC_SALVAGE).
  *
+ * @note the caller must check if the volume needs to be freed after calling
+ *       this; the volume may not have any references or be on any lists after
+ *       we return, and we do not free it
+ *
  * @note DAFS only
  *
  * @internal volume package internal use only.
@@ -5146,7 +5255,7 @@ VScheduleSalvage_r(Volume * vp)
     VThreadOptions_t * thread_opts;
     char partName[16];
 
-    assert(VCanUseSALVSYNC() || VCanUseFSSYNC());
+    osi_Assert(VCanUseSALVSYNC() || VCanUseFSSYNC());
 
     if (vp->nWaiters || vp->nUsers) {
 	return 1;
@@ -5167,6 +5276,13 @@ VScheduleSalvage_r(Volume * vp)
 	return 1;
     }
 
+    if (vp->salvage.scheduled) {
+	return ret;
+    }
+
+    VCreateReservation_r(vp);
+    VWaitExclusiveState_r(vp);
+
     /*
      * XXX the scheduling process should really be done asynchronously
      *     to avoid fssync deadlocks
@@ -5176,15 +5292,12 @@ VScheduleSalvage_r(Volume * vp)
 	 *
 	 * set the volume to an exclusive state and drop the lock
 	 * around the SALVSYNC call
-	 *
-	 * note that we do NOT acquire a reservation here -- doing so
-	 * could result in unbounded recursion
 	 */
 	strlcpy(partName, VPartitionPath(vp->partition), sizeof(partName));
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	VOL_UNLOCK;
 
-	assert(try_SALVSYNC(vp, partName, &code) ||
+	osi_Assert(try_SALVSYNC(vp, partName, &code) ||
 	       try_FSSYNC(vp, partName, &code));
 
 	VOL_LOCK;
@@ -5221,6 +5334,14 @@ VScheduleSalvage_r(Volume * vp)
 	    }
 	}
     }
+
+    /* NB: this is cancelling the reservation we obtained above, but we do
+     * not call VCancelReservation_r, since that may trigger the vp dtor,
+     * possibly free'ing the vp. We need to keep the vp around after
+     * this, as the caller may reference vp without any refs. Instead, it
+     * is the duty of the caller to inspect 'vp' after we return to see if
+     * needs to be freed. */
+    osi_Assert(--vp->nWaiters >= 0);
     return ret;
 }
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
@@ -5436,7 +5557,7 @@ int
 VConnectFS_r(void)
 {
     int rc;
-    assert((VInit == 2) &&
+    osi_Assert((VInit == 2) &&
 	   (programType != fileServer) &&
 	   (programType != salvager));
     rc = FSYNC_clientInit();
@@ -5464,7 +5585,7 @@ VConnectFS_r(void)
 void
 VDisconnectFS_r(void)
 {
-    assert((programType != fileServer) &&
+    osi_Assert((programType != fileServer) &&
 	   (programType != salvager));
     FSYNC_clientFinis();
     VInit = 2;
@@ -5672,7 +5793,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
     /* No bit map entry--must grow bitmap */
     bp = (byte *)
 	realloc(index->bitmap, index->bitmapSize + VOLUME_BITMAP_GROWSIZE);
-    assert(bp != NULL);
+    osi_Assert(bp != NULL);
     index->bitmap = bp;
     bp += index->bitmapSize;
     memset(bp, 0, VOLUME_BITMAP_GROWSIZE);
@@ -5764,13 +5885,13 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
     VOL_UNLOCK;
 
     fdP = IH_OPEN(vip->handle);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r");
-    assert(file != NULL);
+    osi_Assert(file != NULL);
     vnode = (VnodeDiskObject *) malloc(vcp->diskSize);
-    assert(vnode != NULL);
+    osi_Assert(vnode != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    assert(size != -1);
+    osi_Assert(size != -1);
     nVnodes = (size <= vcp->diskSize ? 0 : size - vcp->diskSize)
 	>> vcp->logSize;
     vip->bitmapSize = ((nVnodes / 8) + 10) / 4 * 4;	/* The 10 is a little extra so
@@ -5780,10 +5901,10 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
 							 * it that way */
 #ifdef BITMAP_LATER
     BitMap = (byte *) calloc(1, vip->bitmapSize);
-    assert(BitMap != NULL);
+    osi_Assert(BitMap != NULL);
 #else /* BITMAP_LATER */
     vip->bitmap = (byte *) calloc(1, vip->bitmapSize);
-    assert(vip->bitmap != NULL);
+    osi_Assert(vip->bitmap != NULL);
     vip->bitmapOffset = 0;
 #endif /* BITMAP_LATER */
     if (STREAM_SEEK(file, vcp->diskSize, 0) != -1) {
@@ -6180,7 +6301,7 @@ VAddToVolumeUpdateList_r(Error * ec, Volume * vp)
 				     sizeof(VolumeId) * updateSize);
 	}
     }
-    assert(UpdateList != NULL);
+    osi_Assert(UpdateList != NULL);
     UpdateList[nUpdatedVolumes++] = V_id(vp);
 #endif /* !AFS_DEMAND_ATTACH_FS */
 }
@@ -6436,7 +6557,7 @@ VInitVLRU(void)
 	queue_Init(&volume_LRU.q[i]);
 	volume_LRU.q[i].len = 0;
 	volume_LRU.q[i].busy = 0;
-	assert(pthread_cond_init(&volume_LRU.q[i].cv, NULL) == 0);
+	CV_INIT(&volume_LRU.q[i].cv, "vol lru", CV_DEFAULT, 0);
     }
 
     /* setup the timing constants */
@@ -6454,10 +6575,10 @@ VInitVLRU(void)
     /* start up the VLRU scanner */
     volume_LRU.scanner_state = VLRU_SCANNER_STATE_OFFLINE;
     if (programType == fileServer) {
-	assert(pthread_cond_init(&volume_LRU.cv, NULL) == 0);
-	assert(pthread_attr_init(&attrs) == 0);
-	assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
-	assert(pthread_create(&tid, &attrs, &VLRU_ScannerThread, NULL) == 0);
+	CV_INIT(&volume_LRU.cv, "vol lru", CV_DEFAULT, 0);
+	osi_Assert(pthread_attr_init(&attrs) == 0);
+	osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+	osi_Assert(pthread_create(&tid, &attrs, &VLRU_ScannerThread, NULL) == 0);
     }
 }
 
@@ -6483,7 +6604,7 @@ VLRU_Init_Node_r(Volume * vp)
     if (!VLRU_enabled)
 	return;
 
-    assert(queue_IsNotOnQueue(&vp->vlru));
+    osi_Assert(queue_IsNotOnQueue(&vp->vlru));
     vp->vlru.idx = VLRU_QUEUE_INVALID;
 }
 
@@ -6627,7 +6748,7 @@ VLRU_UpdateAccess_r(Volume * vp)
     if (queue_IsNotOnQueue(&vp->vlru))
 	return;
 
-    assert(V_attachFlags(vp) & VOL_ON_VLRU);
+    osi_Assert(V_attachFlags(vp) & VOL_ON_VLRU);
 
     /* update the access timestamp */
     vp->stats.last_get = FT_ApproxTime();
@@ -6760,7 +6881,7 @@ VLRU_ScannerThread(void * args)
 	/* check to see if we've been asked to pause */
 	if (volume_LRU.scanner_state == VLRU_SCANNER_STATE_PAUSING) {
 	    volume_LRU.scanner_state = VLRU_SCANNER_STATE_PAUSED;
-	    assert(pthread_cond_broadcast(&volume_LRU.cv) == 0);
+	    CV_BROADCAST(&volume_LRU.cv);
 	    do {
 		VOL_CV_WAIT(&volume_LRU.cv);
 	    } while (volume_LRU.scanner_state == VLRU_SCANNER_STATE_PAUSED);
@@ -6836,7 +6957,7 @@ VLRU_ScannerThread(void * args)
 
     /* signal that scanner is down */
     volume_LRU.scanner_state = VLRU_SCANNER_STATE_OFFLINE;
-    assert(pthread_cond_broadcast(&volume_LRU.cv) == 0);
+    CV_BROADCAST(&volume_LRU.cv);
     VOL_UNLOCK;
     return NULL;
 }
@@ -6939,7 +7060,7 @@ VLRU_Demote_r(int idx)
     Volume ** salv_flag_vec = NULL;
     int salv_vec_offset = 0;
 
-    assert(idx == VLRU_QUEUE_MID || idx == VLRU_QUEUE_OLD);
+    osi_Assert(idx == VLRU_QUEUE_MID || idx == VLRU_QUEUE_OLD);
 
     /* get exclusive access to two chains, and drop the glock */
     VLRU_Wait_r(&volume_LRU.q[idx-1]);
@@ -7038,7 +7159,7 @@ VLRU_Scan_r(int idx)
     Volume * vp;
     int i, locked = 1;
 
-    assert(idx == VLRU_QUEUE_NEW || idx == VLRU_QUEUE_CANDIDATE);
+    osi_Assert(idx == VLRU_QUEUE_NEW || idx == VLRU_QUEUE_CANDIDATE);
 
     /* gain exclusive access to the idx VLRU */
     VLRU_Wait_r(&volume_LRU.q[idx]);
@@ -7129,7 +7250,7 @@ VCheckSoftDetachCandidate(Volume * vp, afs_uint32 thresh)
 
     idx = vp->vlru.idx;
 
-    assert(idx == VLRU_QUEUE_NEW);
+    osi_Assert(idx == VLRU_QUEUE_NEW);
 
     if (vp->stats.last_get <= thresh) {
 	/* move to candidate pool */
@@ -7149,7 +7270,7 @@ VCheckSoftDetachCandidate(Volume * vp, afs_uint32 thresh)
 static void
 VLRU_BeginExclusive_r(struct VLRU_q * q)
 {
-    assert(q->busy == 0);
+    osi_Assert(q->busy == 0);
     q->busy = 1;
 }
 
@@ -7157,9 +7278,9 @@ VLRU_BeginExclusive_r(struct VLRU_q * q)
 static void
 VLRU_EndExclusive_r(struct VLRU_q * q)
 {
-    assert(q->busy);
+    osi_Assert(q->busy);
     q->busy = 0;
-    assert(pthread_cond_broadcast(&q->cv) == 0);
+    CV_BROADCAST(&q->cv);
 }
 
 /* wait for another thread to end exclusive access on VLRU */
@@ -7181,7 +7302,7 @@ VSoftDetachVolume_r(Volume * vp, afs_uint32 thresh)
     afs_uint32 ts_save;
     int ret = 0;
 
-    assert(vp->vlru.idx == VLRU_QUEUE_CANDIDATE);
+    osi_Assert(vp->vlru.idx == VLRU_QUEUE_CANDIDATE);
 
     ts_save = vp->stats.last_get;
     if (ts_save > thresh)
@@ -7236,7 +7357,7 @@ VSoftDetachVolume_r(Volume * vp, afs_uint32 thresh)
 	    vp = NULL;
 	} else {
 	    /* pull it off the VLRU */
-	    assert(vp->vlru.idx == VLRU_QUEUE_CANDIDATE);
+	    osi_Assert(vp->vlru.idx == VLRU_QUEUE_CANDIDATE);
 	    volume_LRU.q[VLRU_QUEUE_CANDIDATE].len--;
 	    queue_Remove(&vp->vlru);
 	    vp->vlru.idx = VLRU_QUEUE_INVALID;
@@ -7298,7 +7419,7 @@ VInitVolumeHeaderCache(afs_uint32 howMany)
     volume_hdr_LRU.stats.used = howMany;
     volume_hdr_LRU.stats.attached = 0;
     hp = (struct volHeader *)(calloc(howMany, sizeof(struct volHeader)));
-    assert(hp != NULL);
+    osi_Assert(hp != NULL);
 
     while (howMany--)
 	/* We are using ReleaseVolumeHeader to initialize the values on the header list
@@ -7356,7 +7477,7 @@ GetVolumeHeader(Volume * vp)
 	/* for volume utilities, we allocate volHeaders as needed */
 	if (!vp->header) {
 	    hd = (struct volHeader *)calloc(1, sizeof(*vp->header));
-	    assert(hd != NULL);
+	    osi_Assert(hd != NULL);
 	    vp->header = hd;
 	    hd->back = vp;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -7370,7 +7491,7 @@ GetVolumeHeader(Volume * vp)
 	     * still available. pull it off the lru and return */
 	    hd = vp->header;
 	    queue_Remove(hd);
-	    assert(hd->back == vp);
+	    osi_Assert(hd->back == vp);
 #ifdef AFS_DEMAND_ATTACH_FS
             V_attachFlags(vp) &= ~(VOL_HDR_IN_LRU);
 #endif
@@ -7384,7 +7505,7 @@ GetVolumeHeader(Volume * vp)
 		/* LRU is empty, so allocate a new volHeader
 		 * this is probably indicative of a leak, so let the user know */
 		hd = (struct volHeader *)calloc(1, sizeof(struct volHeader));
-		assert(hd != NULL);
+		osi_Assert(hd != NULL);
 		if (!everLogged) {
 		    Log("****Allocated more volume headers, probably leak****\n");
 		    everLogged = 1;
@@ -7399,7 +7520,7 @@ GetVolumeHeader(Volume * vp)
 #ifdef AFS_DEMAND_ATTACH_FS
 		/* if hd->back were in an exclusive state, then
 		 * its volHeader would not be on the LRU... */
-		assert(!VIsExclusiveState(V_attachState(hd->back)));
+		osi_Assert(!VIsExclusiveState(V_attachState(hd->back)));
 #endif
 
 		if (hd->diskstuff.inUse) {
@@ -7629,12 +7750,12 @@ VInitVolumeHash(void)
 
     VolumeHashTable.Table = (VolumeHashChainHead *) calloc(VolumeHashTable.Size,
 							   sizeof(VolumeHashChainHead));
-    assert(VolumeHashTable.Table != NULL);
+    osi_Assert(VolumeHashTable.Table != NULL);
 
     for (i=0; i < VolumeHashTable.Size; i++) {
 	queue_Init(&VolumeHashTable.Table[i]);
 #ifdef AFS_DEMAND_ATTACH_FS
-	assert(pthread_cond_init(&VolumeHashTable.Table[i].chain_busy_cv, NULL) == 0);
+	CV_INIT(&VolumeHashTable.Table[i].chain_busy_cv, "vhash busy", CV_DEFAULT, 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
     }
 }
@@ -7903,7 +8024,7 @@ VReorderHash_r(VolumeHashChainHead * head, Volume * pp, Volume * vp)
 static void
 VHashBeginExclusive_r(VolumeHashChainHead * head)
 {
-    assert(head->busy == 0);
+    osi_Assert(head->busy == 0);
     head->busy = 1;
 }
 
@@ -7927,9 +8048,9 @@ VHashBeginExclusive_r(VolumeHashChainHead * head)
 static void
 VHashEndExclusive_r(VolumeHashChainHead * head)
 {
-    assert(head->busy);
+    osi_Assert(head->busy);
     head->busy = 0;
-    assert(pthread_cond_broadcast(&head->chain_busy_cv) == 0);
+    CV_BROADCAST(&head->chain_busy_cv);
 }
 
 /**
@@ -8067,7 +8188,7 @@ DeleteVolumeFromVByPList_r(Volume * vp)
 static void
 VVByPListBeginExclusive_r(struct DiskPartition64 * dp)
 {
-    assert(dp->vol_list.busy == 0);
+    osi_Assert(dp->vol_list.busy == 0);
     dp->vol_list.busy = 1;
 }
 
@@ -8091,9 +8212,9 @@ VVByPListBeginExclusive_r(struct DiskPartition64 * dp)
 static void
 VVByPListEndExclusive_r(struct DiskPartition64 * dp)
 {
-    assert(dp->vol_list.busy);
+    osi_Assert(dp->vol_list.busy);
     dp->vol_list.busy = 0;
-    assert(pthread_cond_broadcast(&dp->vol_list.cv) == 0);
+    CV_BROADCAST(&dp->vol_list.cv);
 }
 
 /**

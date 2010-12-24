@@ -17,18 +17,17 @@
 #include "sample.h"
 
 /* Bogus procedure to get internet address of host */
-static u_long
-GetIpAddress(hostname)
-     char *hostname;
+static unsigned int
+GetIpAddress(char *hostname)
 {
     struct hostent *hostent;
-    u_long host;
+    unsigned int host;
     hostent = gethostbyname(hostname);
     if (!hostent) {
 	printf("host %s not found", hostname);
 	exit(1);
     }
-    if (hostent->h_length != sizeof(u_long)) {
+    if (hostent->h_length != sizeof(unsigned int)) {
 	printf("host address is disagreeable length (%d)", hostent->h_length);
 	exit(1);
     }
@@ -36,8 +35,8 @@ GetIpAddress(hostname)
     return host;
 }
 
-main(argc, argv)
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct rx_connection *conn;
     u_long host;
@@ -59,4 +58,6 @@ main(argc, argv)
 	error = TEST_Sub(conn, i, i * 2, &result);
 	printf(" ==> %d, error %d\n", result, error);
     }
+
+    return 0;
 }

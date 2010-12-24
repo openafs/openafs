@@ -656,6 +656,9 @@ struct SimpleLocks {
 
 #if defined(AFS_DARWIN80_ENV)
 #define VREFCOUNT_GT(v, y)    vnode_isinuse(AFSTOV(v), (y))
+#elif defined(AFS_FBSD_ENV)
+#define VREFCOUNT(v)		(vrefcnt(AFSTOV(v)))
+#define VREFCOUNT_GT(v, y)	(vrefcnt(AFSTOV(v)) > y)
 #elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define VREFCOUNT(v)          ((v)->vrefCount)
 #define VREFCOUNT_GT(v, y)    (AFSTOV(v)->v_usecount > (y))
@@ -833,9 +836,6 @@ struct vcache {
     struct dcache *dchint;
     struct dcache *dcreaddir;	/* dcache for in-progress readdir */
     unsigned int readdir_pid;   /* pid of the thread in readdir */
-#ifdef AFS_LINUX22_ENV
-    u_short mapcnt;		/* Number of mappings of this file. */
-#endif
 #if defined(AFS_SGI_ENV)
     daddr_t lastr;		/* for read-ahead */
 #ifdef AFS_SGI64_ENV
@@ -1453,4 +1453,36 @@ afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_rgid = gid;
 }
 #endif
+
+#ifdef AFS_SUN5_ENV
+
+/** The 32 bit OS expects the members of this structure to be 32 bit
+ * quantities and the 64 bit OS expects them as 64 bit quanties. Hence
+ * to accomodate both, *long* is used instead of afs_int32
+ */
+
+# ifdef AFS_SUN57_ENV
+struct afssysa {
+    long syscall;
+    long parm1;
+    long parm2;
+    long parm3;
+    long parm4;
+    long parm5;
+    long parm6;
+};
+# else
+struct afssysa {
+    afs_int32 syscall;
+    afs_int32 parm1;
+    afs_int32 parm2;
+    afs_int32 parm3;
+    afs_int32 parm4;
+    afs_int32 parm5;
+    afs_int32 parm6;
+};
+# endif
+extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
+#endif /* AFS_SUN5_ENV */
+
 #endif /* _AFS_H_ */

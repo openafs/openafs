@@ -89,7 +89,7 @@ AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
 !ENDIF
 !IF !DEFINED(AFSPRODUCT_VER_PATCH)
-AFSPRODUCT_VER_PATCH=7700
+AFSPRODUCT_VER_PATCH=9900
 !ENDIF
 !IF !DEFINED(AFSPRODUCT_VER_BUILD)
 AFSPRODUCT_VER_BUILD=0
@@ -106,18 +106,27 @@ CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
 TARGETOS = WINNT
 
 # Define defaults folder locations
-DEST=dest
-SRC=src
-OBJ=obj
+!if !defined(DEST)
+DEST=$(AFSROOT)\dest
+!endif
+!if !defined(SRC)
+SRC=$(AFSROOT)\src
+!endif
+!if !defined(OBJ)
+OBJ=$(AFSROOT)\obj
+!endif
+!if !defined(DOC)
+DOC=$(AFSROOT)\doc
+!endif
 
 !IF ("$(AFS_OBJDIR)"=="") 
 #########  AFS_OBJDIR is NOT used use default locations
 !  IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\checked
-OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\checked
+DESTDIR=$(DEST)\$(SYS_NAME)\checked
+OJT=$(OBJ)\$(SYS_NAME)\checked
 !  ELSE
 DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\free
-OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\free
+OJT=$(OBJ)\$(SYS_NAME)\free
 !  ENDIF
 UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !ELSE
@@ -238,13 +247,12 @@ lang::
 afscdefs =\
 	-I. \
 	-I$(DESTDIR)\include \
-	-I$(DESTDIR)\include\afs \
-	-I$(DESTDIR)\include\rx \
 	-DWIN32_LEAN_AND_MEAN \
 	-DSTRICT \
 	-D_WIN32_IE=0x0500 \
 	-D_WIN32_WINNT=0x0500 \
 	-DWINVER=0x0500 \
+	-DNTDDI_VERSION=0x05000000 \
     	-DREGISTER_POWER_NOTIFICATIONS \
     	-DAFS_FREELANCE_CLIENT \
     	-DAFS_64BIT_ENV \
@@ -360,6 +368,12 @@ CPP2OBJ = $(C2OBJ)
 .h.{$(DESTDIR)\include\rx}.h:
 	$(COPY) $< $(DESTDIR)\include\rx
 
+.h.{$(DESTDIR)\include\des}.h:
+	$(COPY) $< $(DESTDIR)\include
+
+.h.{$(DESTDIR)\include\hcrypto}.h:
+	$(COPY) $< $(DESTDIR)\include\hcrypto
+
 .h.{$(DESTDIR)\include}.h:
 	$(COPY) $< $(DESTDIR)\include
 
@@ -374,6 +388,12 @@ CPP2OBJ = $(C2OBJ)
 
 .h.{$(DESTDIR)\include\rx}.h:
 	$(COPY) $(*B).h $(DESTDIR)\include\rx
+
+.h.{$(DESTDIR)\include\des}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include
+
+.h.{$(DESTDIR)\include\hcrypto}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include\hcrypto
 
 .h.{$(DESTDIR)\include\WINNT}.h:
 	$(COPY) $(*B).h $(DESTDIR)\include\WINNT

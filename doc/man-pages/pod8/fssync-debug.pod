@@ -1,20 +1,19 @@
 =head1 NAME
 
-fssync-debug - Introduction to the fssync-debug command suite
+fssync-debug, dafssync-debug - Introduction to the fssync-debug command suite
 
 =head1 DESCRIPTION
 
-B<fssync-debug> command suite allows low-level inspection and
-control of the file server volume packages.
+The B<fssync-debug> command suite allows low-level inspection and control
+of the file server volume packages.  The B<dafssync-debug> command suite
+is identical to B<fssync-debug>, but is built with demand-attach support.
 
-This command suite is only supported on the demand-attach file server.
-It operates at an extremely low-level and hence requires detailed
-knowledge of the OpenAFS architecture and code.
-
-An understanding of the OpenAFS volume finite-state machine is
-required before the state of a volume should be manipulated.
-Indiscriminate use of B<fssync-debug> in control mode can lead to
-extremely bad things occurring. Use with care.
+This command suite operates at an extremely low-level and hence requires
+detailed knowledge of the OpenAFS architecture and code.  An understanding
+of the OpenAFS volume finite-state machine is required before the state of
+a volume should be manipulated.  Indiscriminate use of B<fssync-debug> or
+B<dafssync-debug> in control mode can lead to extremely bad things
+occurring. Use with care.
 
 =head1 OPTIONS
 

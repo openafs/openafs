@@ -17,7 +17,6 @@
 
 
 #include <afs/stds.h>
-#include <afs/debug.h>
 #include <ctype.h>
 #include <string.h>
 

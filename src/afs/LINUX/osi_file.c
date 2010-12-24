@@ -50,7 +50,7 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
 
     dp = afs_get_dentry_from_fh(afs_cacheSBp, ainode, cache_fh_len, cache_fh_type,
 		afs_fh_acceptable);
-    if (!dp)
+    if ((!dp) || IS_ERR(dp))
            osi_Panic("Can't get dentry\n");
     tip = dp->d_inode;
     tip->i_flags |= S_NOATIME;	/* Disable updating access times. */

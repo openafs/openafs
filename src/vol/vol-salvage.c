@@ -110,7 +110,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
 #if defined(AFS_VFSINCL_ENV)
 #include <sys/vnode.h>
@@ -394,7 +394,7 @@ IsPartitionMounted(char *part)
     FILE *mntfp;
     struct mntent *mntent;
 
-    assert(mntfp = setmntent(MOUNTED, "r"));
+    osi_Assert(mntfp = setmntent(MOUNTED, "r"));
     while (mntent = getmntent(mntfp)) {
 	if (!strcmp(part, mntent->mnt_dir))
 	    break;
@@ -573,12 +573,12 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 	     * job to finish. When it's done, clean up after it.
 	     */
 	    pid = wait(&wstatus);
-	    assert(pid != -1);
+	    osi_Assert(pid != -1);
 	    for (j = 0; j < numjobs; j++) {	/* Find which job it is */
 		if (pid == jobs[j]->pid)
 		    break;
 	    }
-	    assert(j < numjobs);
+	    osi_Assert(j < numjobs);
 	    if (WCOREDUMP(wstatus)) {	/* Say if the job core dumped */
 		Log("Salvage of %s core dumped!\n", jobs[j]->partP->name);
 	    }
@@ -808,7 +808,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	DIR *dirp;
 	struct dirent *dp;
 
-	assert((dirp = opendir(fileSysPath)) != NULL);
+	osi_Assert((dirp = opendir(fileSysPath)) != NULL);
 	while ((dp = readdir(dirp))) {
 	    if (!strncmp(dp->d_name, "salvage.inodes.", 15)
 		|| !strncmp(dp->d_name, "salvage.temp.", 13)) {
@@ -1242,16 +1242,16 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 	    Exit(1);		/* salvage of this partition aborted */
 	}
     }
-    assert(afs_fstat(fileno(summaryFile), &status) != -1);
+    osi_Assert(afs_fstat(fileno(summaryFile), &status) != -1);
     if (status.st_size != 0) {
 	int ret;
 	unsigned long st_status=(unsigned long)status.st_size;
 	inodeSummary = (struct InodeSummary *)malloc(st_status);
-	assert(inodeSummary != NULL);
+	osi_Assert(inodeSummary != NULL);
 	/* For GNU we need to do lseek to get the file pointer moved. */
-	assert(afs_lseek(fileno(summaryFile), 0, SEEK_SET) == 0);
+	osi_Assert(afs_lseek(fileno(summaryFile), 0, SEEK_SET) == 0);
 	ret = read(fileno(summaryFile), inodeSummary, st_status);
-	assert(ret == st_status);
+	osi_Assert(ret == st_status);
     }
     nVolumesInInodeFile =(unsigned long)(status.st_size) / sizeof(struct InodeSummary);
     Log("%d nVolumesInInodeFile %lu \n",nVolumesInInodeFile,(unsigned long)(status.st_size));
@@ -1373,7 +1373,7 @@ AskVolumeSummary(VolumeId singleVolumeNumber)
 	    }
 
 	    volumeSummaryp = malloc(VOL_VG_MAX_VOLS * sizeof(struct VolumeSummary));
-	    assert(volumeSummaryp != NULL);
+	    osi_Assert(volumeSummaryp != NULL);
 
 	    nVolumes = 0;
 	    vsp = volumeSummaryp;
@@ -1686,7 +1686,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
     }
 
     volumeSummaryp = malloc(nvols * sizeof(struct VolumeSummary));
-    assert(volumeSummaryp != NULL);
+    osi_Assert(volumeSummaryp != NULL);
 
     params.singleVolumeNumber = singleVolumeNumber;
     params.vsp = volumeSummaryp;
@@ -1854,10 +1854,10 @@ DoSalvageVolumeGroup(struct InodeSummary *isp, int nVols)
     allInodes = inodes - isp->index;	/* this would the base of all the inodes
 					 * for the partition, if all the inodes
 					 * had been read into memory */
-    assert(afs_lseek
+    osi_Assert(afs_lseek
 	   (inodeFd, isp->index * sizeof(struct ViceInodeInfo),
 	    SEEK_SET) != -1);
-    assert(read(inodeFd, inodes, size) == size);
+    osi_Assert(read(inodeFd, inodes, size) == size);
 
     /* Don't try to salvage a read write volume if there isn't one on this
      * partition */
@@ -2519,16 +2519,16 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
     volumeNumber = volSummary->header.id;
     IH_INIT(handle, fileSysDevice, volSummary->header.parent, ino);
     fdP = IH_OPEN(handle);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    assert(file != NULL);
+    osi_Assert(file != NULL);
     vcp = &VnodeClassInfo[class];
     size = OS_SIZE(fdP->fd_fd);
-    assert(size != -1);
+    osi_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	assert((nVnodes + 1) * vcp->diskSize == size);
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
+	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
     } else {
 	nVnodes = 0;
     }
@@ -2741,9 +2741,9 @@ SalvageIndex(Inode ino, VnodeClass class, int RW,
 		}
 	    }			/* VNDISK_GET_INO(vnode) != 0 */
 	  vnodeDone:
-	    assert(!(vnodeChanged && check));
+	    osi_Assert(!(vnodeChanged && check));
 	    if (vnodeChanged && !Testing) {
-		assert(IH_IWRITE
+		osi_Assert(IH_IWRITE
 		       (handle, vnodeIndexOffset(vcp, vnodeNumber),
 			(char *)vnode, vcp->diskSize)
 		       == vcp->diskSize);
@@ -2790,7 +2790,7 @@ CopyOnWrite(struct DirSummary *dir)
 	IH_IREAD(vnodeInfo[vLarge].handle,
 		 vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		 sizeof(vnode));
-    assert(code == sizeof(vnode));
+    osi_Assert(code == sizeof(vnode));
     oldinode = VNDISK_GET_INO(&vnode);
     /* Increment the version number by a whole lot to avoid problems with
      * clients that were promised new version numbers--but the file server
@@ -2800,15 +2800,15 @@ CopyOnWrite(struct DirSummary *dir)
 	IH_CREATE(dir->ds_linkH, fileSysDevice, fileSysPath, 0, dir->rwVid,
 		  dir->vnodeNumber, vnode.uniquifier, vnode.dataVersion +=
 		  200);
-    assert(VALID_INO(newinode));
-    assert(CopyInode(fileSysDevice, oldinode, newinode, dir->rwVid) == 0);
+    osi_Assert(VALID_INO(newinode));
+    osi_Assert(CopyInode(fileSysDevice, oldinode, newinode, dir->rwVid) == 0);
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
     code =
 	IH_IWRITE(vnodeInfo[vLarge].handle,
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		  sizeof(vnode));
-    assert(code == sizeof(vnode));
+    osi_Assert(code == sizeof(vnode));
 
     SetSalvageDirHandle(&dir->dirHandle, dir->dirHandle.dirh_handle->ih_vid,
 			fileSysDevice, newinode);
@@ -2845,7 +2845,7 @@ CopyAndSalvage(struct DirSummary *dir)
 	IH_IREAD(vnodeInfo[vLarge].handle,
 		 vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		 sizeof(vnode));
-    assert(lcode == sizeof(vnode));
+    osi_Assert(lcode == sizeof(vnode));
     oldinode = VNDISK_GET_INO(&vnode);
     /* Increment the version number by a whole lot to avoid problems with
      * clients that were promised new version numbers--but the file server
@@ -2855,7 +2855,7 @@ CopyAndSalvage(struct DirSummary *dir)
 	IH_CREATE(dir->ds_linkH, fileSysDevice, fileSysPath, 0, dir->rwVid,
 		  dir->vnodeNumber, vnode.uniquifier, vnode.dataVersion +=
 		  200);
-    assert(VALID_INO(newinode));
+    osi_Assert(VALID_INO(newinode));
     SetSalvageDirHandle(&newdir, dir->rwVid, fileSysDevice, newinode);
 
     /* Assign . and .. vnode numbers from dir and vnode.parent.
@@ -2880,14 +2880,14 @@ CopyAndSalvage(struct DirSummary *dir)
 	if (code) {
 	    Log("also failed to decrement link count on new inode");
 	}
-	assert(1 == 2);
+	osi_Assert(1 == 2);
     }
     Log("Checking the results of the directory salvage...\n");
     if (!DirOK(&newdir)) {
 	Log("Directory salvage failed!!!; restoring old version of the directory.\n");
 	code = IH_DEC(dir->ds_linkH, newinode, dir->rwVid);
-	assert(code == 0);
-	assert(1 == 2);
+	osi_Assert(code == 0);
+	osi_Assert(1 == 2);
     }
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
@@ -2897,7 +2897,7 @@ CopyAndSalvage(struct DirSummary *dir)
 	IH_IWRITE(vnodeInfo[vLarge].handle,
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		  sizeof(vnode));
-    assert(lcode == sizeof(vnode));
+    osi_Assert(lcode == sizeof(vnode));
 #if 0
 #ifdef AFS_NT40_ENV
     nt_sync(fileSysDevice);
@@ -2914,7 +2914,7 @@ CopyAndSalvage(struct DirSummary *dir)
     FDH_REALLYCLOSE(fdP);
 
     code = IH_DEC(dir->ds_linkH, oldinode, dir->rwVid);
-    assert(code == 0);
+    osi_Assert(code == 0);
     dir->dirHandle = newdir;
 }
 
@@ -2935,7 +2935,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	}
 	if (!Testing) {
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
 	}
 	return 0;
     }
@@ -2949,7 +2949,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	Log("dir vnode %d: invalid entry: %s/%s has no inode (vnode %d, unique %d)%s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "-- would have deleted" : " -- deleted"));
 	if (!Testing) {
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
 	}
 	return 0;
     }
@@ -2967,7 +2967,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	if (!unique) {
 	    if (!Testing) {
 		CopyOnWrite(dir);
-		assert(Delete(&dir->dirHandle, name) == 0);
+		osi_Assert(Delete(&dir->dirHandle, name) == 0);
 	    }
 	    return 0;
 	}
@@ -2997,9 +2997,9 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    fid.Vnode = vnodeNumber;
 	    fid.Unique = vnodeEssence->unique;
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
 	    if (!todelete)
-		assert(Create(&dir->dirHandle, name, &fid) == 0);
+		osi_Assert(Create(&dir->dirHandle, name, &fid) == 0);
 	}
 	if (todelete)
 	    return 0;		/* no need to continue */
@@ -3012,10 +3012,10 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		Log("directory vnode %u.%u: bad '.' entry (was %u.%u); fixed\n", dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(dir);
-		assert(Delete(&dir->dirHandle, ".") == 0);
+		osi_Assert(Delete(&dir->dirHandle, ".") == 0);
 		fid.Vnode = dir->vnodeNumber;
 		fid.Unique = dir->unique;
-		assert(Create(&dir->dirHandle, ".", &fid) == 0);
+		osi_Assert(Create(&dir->dirHandle, ".", &fid) == 0);
 	    }
 
 	    vnodeNumber = fid.Vnode;	/* Get the new Essence */
@@ -3029,7 +3029,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    struct VnodeEssence *dotdot;
 	    pa.Vnode = dir->parent;
 	    dotdot = CheckVnodeNumber(pa.Vnode);
-	    assert(dotdot != NULL);	/* XXX Should not be assert */
+	    osi_Assert(dotdot != NULL);	/* XXX Should not be assert */
 	    pa.Unique = dotdot->unique;
 	} else {
 	    pa.Vnode = dir->vnodeNumber;
@@ -3040,8 +3040,8 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		Log("directory vnode %u.%u: bad '..' entry (was %u.%u); fixed\n", dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(dir);
-		assert(Delete(&dir->dirHandle, "..") == 0);
-		assert(Create(&dir->dirHandle, "..", &pa) == 0);
+		osi_Assert(Delete(&dir->dirHandle, "..") == 0);
+		osi_Assert(Create(&dir->dirHandle, "..", &pa) == 0);
 	    }
 
 	    vnodeNumber = pa.Vnode;	/* Get the new Essence */
@@ -3055,7 +3055,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	}
 	if (!Testing) {
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
 	}
 	vnodeEssence->claimed = 0;	/* Not claimed: Orphaned */
 	vnodeEssence->todelete = 1;	/* Will later delete vnode and decr inode */
@@ -3149,7 +3149,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 		}
 		if (!Testing) {
 		    CopyOnWrite(dir);
-		    assert(Delete(&dir->dirHandle, name) == 0);
+		    osi_Assert(Delete(&dir->dirHandle, name) == 0);
 		}
 		return 0;
 	    }
@@ -3176,19 +3176,19 @@ DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino, Unique * maxu)
 
     IH_INIT(vip->handle, fileSysDevice, rwVId, ino);
     fdP = IH_OPEN(vip->handle);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    assert(file != NULL);
+    osi_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    assert(size != -1);
+    osi_Assert(size != -1);
     vip->nVnodes = (size / vcp->diskSize) - 1;
     if (vip->nVnodes > 0) {
-	assert((vip->nVnodes + 1) * vcp->diskSize == size);
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
-	assert((vip->vnodes = (struct VnodeEssence *)
+	osi_Assert((vip->nVnodes + 1) * vcp->diskSize == size);
+	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert((vip->vnodes = (struct VnodeEssence *)
 		calloc(vip->nVnodes, sizeof(struct VnodeEssence))) != NULL);
 	if (class == vLarge) {
-	    assert((vip->inodes = (Inode *)
+	    osi_Assert((vip->inodes = (Inode *)
 		    calloc(vip->nVnodes, sizeof(Inode))) != NULL);
 	} else {
 	    vip->inodes = NULL;
@@ -3342,7 +3342,7 @@ SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
 	/* If enumeration failed for random reasons, we will probably delete
 	 * too much stuff, so we guard against this instead.
 	 */
-	assert(EnumerateDir(&dirHandle, JudgeEntry, &dir) == 0);
+	osi_Assert(EnumerateDir(&dirHandle, JudgeEntry, &dir) == 0);
     }
 
     /* Delete the old directory if it was copied in order to salvage.
@@ -3353,7 +3353,7 @@ SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
     DFlush();
     if (dir.copied && !Testing) {
 	code = IH_DEC(dir.ds_linkH, dirHandle.dirh_handle->ih_ino, rwVid);
-	assert(code == 0);
+	osi_Assert(code == 0);
 	dirVnodeInfo->inodes[i] = dir.dirHandle.dirh_inode;
     }
 
@@ -3590,8 +3590,8 @@ CreateRootDir(VolumeDiskData *volHeader, IHandle_t *alinkH, VolumeId vid,
 	vnodeInfo[vLarge].vnodes = calloc(1, sizeof(struct VnodeEssence));
 	vnodeInfo[vLarge].inodes = calloc(1, sizeof(Inode));
 
-	assert(vnodeInfo[vLarge].vnodes);
-	assert(vnodeInfo[vLarge].inodes);
+	osi_Assert(vnodeInfo[vLarge].vnodes);
+	osi_Assert(vnodeInfo[vLarge].inodes);
     }
 
     vep = &vnodeInfo[vLarge].vnodes[vnodeIdToBitNumber(1)];
@@ -3760,9 +3760,9 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
     vid = rwIsp->volSummary->header.id;
     IH_INIT(h, fileSysDevice, vid, rwIsp->volSummary->header.volumeInfo);
     nBytes = IH_IREAD(h, 0, (char *)&volHeader, sizeof(volHeader));
-    assert(nBytes == sizeof(volHeader));
-    assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
-    assert(volHeader.destroyMe != DESTROY_ME);
+    osi_Assert(nBytes == sizeof(volHeader));
+    osi_Assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
+    osi_Assert(volHeader.destroyMe != DESTROY_ME);
     /* (should not have gotten this far with DESTROY_ME flag still set!) */
 
     DistilVnodeEssence(vid, vLarge, rwIsp->volSummary->header.largeVnodeIndex,
@@ -3869,8 +3869,8 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 					vnodeInfo[class].inodes[v]);
 		    pa.Vnode = LFVnode;
 		    pa.Unique = LFUnique;
-		    assert(Delete(&dh, "..") == 0);
-		    assert(Create(&dh, "..", &pa) == 0);
+		    osi_Assert(Delete(&dh, "..") == 0);
+		    osi_Assert(Create(&dh, "..", &pa) == 0);
 
 		    /* The original parent's link count was decremented above.
 		     * Here we increment the new parent's link count.
@@ -3900,7 +3900,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 
 		    ThisUnique += 50;	/* Try creating a different file */
 		}
-		assert(code == 0);
+		osi_Assert(code == 0);
 		Log("Attaching orphaned %s to volume's root dir as %s\n",
 		    ((class == vLarge) ? "directory" : "file"), npath);
 	    }
@@ -3913,7 +3913,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 	code =
 	    IH_DEC(oldrootdir.ds_linkH, oldrootdir.dirHandle.dirh_inode,
 		   oldrootdir.rwVid);
-	assert(code == 0);
+	osi_Assert(code == 0);
 	/* dirVnodeInfo->inodes[?] is not updated with new inode number */
     }
 
@@ -3951,7 +3951,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 		    IH_IREAD(vnodeInfo[class].handle,
 			     vnodeIndexOffset(vcp, vnodeNumber),
 			     (char *)&vnode, sizeof(vnode));
-		assert(nBytes == sizeof(vnode));
+		osi_Assert(nBytes == sizeof(vnode));
 
 		vnode.parent = vnp->parent;
 		oldCount = vnode.linkCount;
@@ -3962,7 +3962,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 		if (orphaned) {
 		    if (!vnp->todelete) {
 			/* Orphans should have already been attached (if requested) */
-			assert(orphans != ORPH_ATTACH);
+			osi_Assert(orphans != ORPH_ATTACH);
 			oblocks += vnp->blockCount;
 			ofiles++;
 		    }
@@ -3973,7 +3973,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 			if (VNDISK_GET_INO(&vnode)) {
 			    code =
 				IH_DEC(alinkH, VNDISK_GET_INO(&vnode), vid);
-			    assert(code == 0);
+			    osi_Assert(code == 0);
 			}
 			memset(&vnode, 0, sizeof(vnode));
 		    }
@@ -3991,7 +3991,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
 			IH_IWRITE(vnodeInfo[class].handle,
 				  vnodeIndexOffset(vcp, vnodeNumber),
 				  (char *)&vnode, sizeof(vnode));
-		    assert(nBytes == sizeof(vnode));
+		    osi_Assert(nBytes == sizeof(vnode));
 		}
 		VolumeChanged = 1;
 	    }
@@ -4061,7 +4061,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
     VolumeChanged = 0;
     if (!Testing) {
 	nBytes = IH_IWRITE(h, 0, (char *)&volHeader, sizeof(volHeader));
-	assert(nBytes == sizeof(volHeader));
+	osi_Assert(nBytes == sizeof(volHeader));
     }
     if (!Showmode) {
 	Log("%sSalvaged %s (%u): %d files, %d blocks\n",
@@ -4083,15 +4083,15 @@ ClearROInUseBit(struct VolumeSummary *summary)
     VolumeDiskData volHeader;
 
     nBytes = IH_IREAD(h, 0, (char *)&volHeader, sizeof(volHeader));
-    assert(nBytes == sizeof(volHeader));
-    assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
+    osi_Assert(nBytes == sizeof(volHeader));
+    osi_Assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
     volHeader.inUse = 0;
     volHeader.needsSalvaged = 0;
     volHeader.inService = 1;
     volHeader.dontSalvage = DONT_SALVAGE;
     if (!Testing) {
 	nBytes = IH_IWRITE(h, 0, (char *)&volHeader, sizeof(volHeader));
-	assert(nBytes == sizeof(volHeader));
+	osi_Assert(nBytes == sizeof(volHeader));
     }
 }
 
@@ -4223,7 +4223,7 @@ LockVolume(VolumeId volumeId)
         * case). But if it's there enough that we can read it, but
         * somehow we cannot write to it to signify we're salvaging it,
         * we've got a big problem and we cannot continue. */
-       assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
+       osi_Assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
 
        IH_RELEASE(h);
     }
@@ -4317,12 +4317,12 @@ CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume)
 
     IH_INIT(srcH, device, rwvolume, inode1);
     srcFdP = IH_OPEN(srcH);
-    assert(srcFdP != NULL);
+    osi_Assert(srcFdP != NULL);
     IH_INIT(destH, device, rwvolume, inode2);
     destFdP = IH_OPEN(destH);
     while ((nBytes = FDH_READ(srcFdP, buf, sizeof(buf))) > 0)
-	assert(FDH_WRITE(destFdP, buf, nBytes) == nBytes);
-    assert(nBytes == 0);
+	osi_Assert(FDH_WRITE(destFdP, buf, nBytes) == nBytes);
+    osi_Assert(nBytes == 0);
     FDH_REALLYCLOSE(srcFdP);
     FDH_REALLYCLOSE(destFdP);
     IH_RELEASE(srcH);
@@ -4338,11 +4338,11 @@ PrintInodeList(void)
     struct afs_stat status;
     int nInodes;
 
-    assert(afs_fstat(inodeFd, &status) == 0);
+    osi_Assert(afs_fstat(inodeFd, &status) == 0);
     buf = (struct ViceInodeInfo *)malloc(status.st_size);
-    assert(buf != NULL);
+    osi_Assert(buf != NULL);
     nInodes = status.st_size / sizeof(struct ViceInodeInfo);
-    assert(read(inodeFd, buf, status.st_size) == status.st_size);
+    osi_Assert(read(inodeFd, buf, status.st_size) == status.st_size);
     for (ip = buf; nInodes--; ip++) {
 	Log("Inode:%s, linkCount=%d, size=%#llx, p=(%u,%u,%u,%u)\n",
 	    PrintInode(NULL, ip->inodeNumber), ip->linkCount,
@@ -4381,10 +4381,10 @@ Fork(void)
     int f;
 #ifdef AFS_NT40_ENV
     f = 0;
-    assert(0);			/* Fork is never executed in the NT code path */
+    osi_Assert(0);			/* Fork is never executed in the NT code path */
 #else
     f = fork();
-    assert(f >= 0);
+    osi_Assert(f >= 0);
 #ifdef AFS_DEMAND_ATTACH_FS
     if ((f == 0) && (programType == salvageServer)) {
 	/* we are a salvageserver child */
@@ -4433,7 +4433,7 @@ Wait(char *prog)
     int status;
     int pid;
     pid = wait(&status);
-    assert(pid != -1);
+    osi_Assert(pid != -1);
     if (WCOREDUMP(status))
 	Log("\"%s\" core dumped!\n", prog);
     if (WIFSIGNALED(status) != 0 || WEXITSTATUS(status) != 0)
@@ -4587,7 +4587,7 @@ ToString(const char *s)
 {
     char *p;
     p = (char *)malloc(strlen(s) + 1);
-    assert(p != NULL);
+    osi_Assert(p != NULL);
     strcpy(p, s);
     return p;
 }

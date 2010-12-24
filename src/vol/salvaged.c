@@ -41,7 +41,7 @@
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
 #if defined(AFS_VFSINCL_ENV)
 #include <sys/vnode.h>
@@ -508,7 +508,7 @@ SalvageServer(int argc, char **argv)
     ObtainSharedSalvageLock();
 
     child_slot = (int *) malloc(Parallel * sizeof(int));
-    assert(child_slot != NULL);
+    osi_Assert(child_slot != NULL);
     memset(child_slot, 0, Parallel * sizeof(int));
 
     /* initialize things */
@@ -520,22 +520,22 @@ SalvageServer(int argc, char **argv)
     DInit(10);
     queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);
-    assert(pthread_mutex_init(&worker_lock, NULL) == 0);
-    assert(pthread_cond_init(&worker_cv, NULL) == 0);
-    assert(pthread_cond_init(&log_cleanup_queue.queue_change_cv, NULL) == 0);
-    assert(pthread_attr_init(&attrs) == 0);
+    MUTEX_INIT(&worker_lock, "worker", MUTEX_DEFAULT, 0);
+    CV_INIT(&worker_cv, "worker", CV_DEFAULT, 0);
+    CV_INIT(&log_cleanup_queue.queue_change_cv, "queuechange", CV_DEFAULT, 0);
+    osi_Assert(pthread_attr_init(&attrs) == 0);
 
     /* start up the reaper and log cleaner threads */
-    assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
-    assert(pthread_create(&tid,
+    osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+    osi_Assert(pthread_create(&tid,
 			  &attrs,
 			  &SalvageChildReaperThread,
 			  NULL) == 0);
-    assert(pthread_create(&tid,
+    osi_Assert(pthread_create(&tid,
 			  &attrs,
 			  &SalvageLogCleanupThread,
 			  NULL) == 0);
-    assert(pthread_create(&tid,
+    osi_Assert(pthread_create(&tid,
 			  &attrs,
 			  &SalvageLogScanningThread,
 			  NULL) == 0);
@@ -543,7 +543,7 @@ SalvageServer(int argc, char **argv)
     /* loop forever serving requests */
     while (1) {
 	node = SALVSYNC_getWork();
-	assert(node != NULL);
+	osi_Assert(node != NULL);
 
 	Log("dispatching child to salvage volume %u...\n",
 	    node->command.sop.parent);
@@ -554,7 +554,7 @@ SalvageServer(int argc, char **argv)
 	  if (!child_slot[slot])
 	    break;
 	}
-	assert (slot < Parallel);
+	osi_Assert (slot < Parallel);
 
     do_fork:
 	pid = Fork();
@@ -571,17 +571,17 @@ SalvageServer(int argc, char **argv)
 	    node->pid = pid;
 	    VOL_UNLOCK;
 
-	    assert(pthread_mutex_lock(&worker_lock) == 0);
+	    MUTEX_ENTER(&worker_lock);
 	    current_workers++;
 
 	    /* let the reaper thread know another worker was spawned */
-	    assert(pthread_cond_broadcast(&worker_cv) == 0);
+	    CV_BROADCAST(&worker_cv);
 
 	    /* if we're overquota, wait for the reaper */
 	    while (current_workers >= Parallel) {
-		assert(pthread_cond_wait(&worker_cv, &worker_lock) == 0);
+		CV_WAIT(&worker_cv, &worker_lock);
 	    }
-	    assert(pthread_mutex_unlock(&worker_lock) == 0);
+	    MUTEX_EXIT(&worker_lock);
 	}
     }
 }
@@ -639,17 +639,17 @@ SalvageChildReaperThread(void * args)
     int slot, pid, status;
     struct log_cleanup_node * cleanup;
 
-    assert(pthread_mutex_lock(&worker_lock) == 0);
+    MUTEX_ENTER(&worker_lock);
 
     /* loop reaping our children */
     while (1) {
 	/* wait() won't block unless we have children, so
 	 * block on the cond var if we're childless */
 	while (current_workers == 0) {
-	    assert(pthread_cond_wait(&worker_cv, &worker_lock) == 0);
+	    CV_WAIT(&worker_cv, &worker_lock);
 	}
 
-	assert(pthread_mutex_unlock(&worker_lock) == 0);
+	MUTEX_EXIT(&worker_lock);
 
 	cleanup = (struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
 
@@ -663,23 +663,23 @@ SalvageChildReaperThread(void * args)
 	    if (child_slot[slot] == pid)
 		break;
 	}
-	assert(slot < Parallel);
+	osi_Assert(slot < Parallel);
 	child_slot[slot] = 0;
 	VOL_UNLOCK;
 
 	SALVSYNC_doneWorkByPid(pid, status);
 
-	assert(pthread_mutex_lock(&worker_lock) == 0);
+	MUTEX_ENTER(&worker_lock);
 
 	if (cleanup) {
 	    cleanup->pid = pid;
 	    queue_Append(&log_cleanup_queue, cleanup);
-	    assert(pthread_cond_signal(&log_cleanup_queue.queue_change_cv) == 0);
+	    CV_SIGNAL(&log_cleanup_queue.queue_change_cv);
 	}
 
 	/* ok, we've reaped a child */
 	current_workers--;
-	assert(pthread_cond_broadcast(&worker_cv) == 0);
+	CV_BROADCAST(&worker_cv);
     }
 
     return NULL;
@@ -714,24 +714,24 @@ SalvageLogCleanupThread(void * arg)
 {
     struct log_cleanup_node * cleanup;
 
-    assert(pthread_mutex_lock(&worker_lock) == 0);
+    MUTEX_ENTER(&worker_lock);
 
     while (1) {
 	while (queue_IsEmpty(&log_cleanup_queue)) {
-	    assert(pthread_cond_wait(&log_cleanup_queue.queue_change_cv, &worker_lock) == 0);
+	    CV_WAIT(&log_cleanup_queue.queue_change_cv, &worker_lock);
 	}
 
 	while (queue_IsNotEmpty(&log_cleanup_queue)) {
 	    cleanup = queue_First(&log_cleanup_queue, log_cleanup_node);
 	    queue_Remove(cleanup);
-	    assert(pthread_mutex_unlock(&worker_lock) == 0);
+	    MUTEX_EXIT(&worker_lock);
 	    SalvageLogCleanup(cleanup->pid);
 	    free(cleanup);
-	    assert(pthread_mutex_lock(&worker_lock) == 0);
+	    MUTEX_ENTER(&worker_lock);
 	}
     }
 
-    assert(pthread_mutex_unlock(&worker_lock) == 0);
+    MUTEX_EXIT(&worker_lock);
     return NULL;
 }
 
@@ -793,7 +793,7 @@ SalvageLogScanningThread(void * arg)
 	prefix_len = strlen(prefix);
 
 	dp = opendir(AFSDIR_LOGS_DIR);
-	assert(dp);
+	osi_Assert(dp);
 
 	while ((dirp = readdir(dp)) != NULL) {
 	    pid_t pid;
@@ -859,7 +859,7 @@ ScanLogs(struct rx_queue *log_watch_queue)
 {
     struct log_cleanup_node *cleanup, *next;
 
-    assert(pthread_mutex_lock(&worker_lock) == 0);
+    MUTEX_ENTER(&worker_lock);
 
     for (queue_Scan(log_watch_queue, cleanup, next, log_cleanup_node)) {
 	/* if a process is still running, assume it's the salvage process
@@ -867,9 +867,9 @@ ScanLogs(struct rx_queue *log_watch_queue)
 	if (kill(cleanup->pid, 0) < 0 && errno == ESRCH) {
 	    queue_Remove(cleanup);
 	    queue_Append(&log_cleanup_queue, cleanup);
-	    assert(pthread_cond_signal(&log_cleanup_queue.queue_change_cv) == 0);
+	    CV_SIGNAL(&log_cleanup_queue.queue_change_cv);
 	}
     }
 
-    assert(pthread_mutex_unlock(&worker_lock) == 0);
+    MUTEX_EXIT(&worker_lock);
 }

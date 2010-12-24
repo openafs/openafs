@@ -278,6 +278,33 @@ struct afssysargs64 {
 #define SYSCALL_DEV_FNAME "/dev/openafs_ioctl"
 #endif
 
+#ifdef AFS_SUN511_ENV
+# define VIOC_SYSCALL_TYPE 'C'
+# define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE, 1, struct afssysargs)
+# define VIOC_SYSCALL32 _IOW(VIOC_SYSCALL_TYPE, 2, struct afssysargs32)
+# define SYSCALL_DEV_FNAME "/dev/afs"
+
+struct afssysargs {
+    afs_uint64 param6;
+    afs_uint64 param5;
+    afs_uint64 param4;
+    afs_uint64 param3;
+    afs_uint64 param2;
+    afs_uint64 param1;
+    afs_uint32 syscall;
+};
+
+struct afssysargs32 {
+    afs_uint32 param6;
+    afs_uint32 param5;
+    afs_uint32 param4;
+    afs_uint32 param3;
+    afs_uint32 param2;
+    afs_uint32 param1;
+    afs_uint32 syscall;
+};
+#endif /* AFS_SUN511_ENV */
+
 #ifdef AFS_CACHE_VNODE_PATH
 #define AFS_CACHE_CELLS_INODE -2
 #define AFS_CACHE_ITEMS_INODE -3

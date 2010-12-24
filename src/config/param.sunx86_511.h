@@ -53,7 +53,8 @@
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #endif /* AFS_NAMEI_ENV */
 
-#define	AFS_SYSCALL		65
+/* so we get _IOW() when we include sys/ioctl.h */
+#define BSD_COMP
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS		"afs"
@@ -150,7 +151,9 @@
 #endif
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
-#define	AFS_SYSCALL		65
+
+/* so we get _IOW() when we include sys/ioctl.h */
+#define BSD_COMP
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS		1

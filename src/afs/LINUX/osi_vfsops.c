@@ -42,30 +42,29 @@ extern struct dentry_operations afs_dentry_operations;
 /* Forward declarations */
 static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp);
 static int afs_root(struct super_block *afsp);
-struct super_block *afs_read_super(struct super_block *sb, void *data, int silent);
 int afs_fill_super(struct super_block *sb, void *data, int silent);
 
-/* afs_file_system
- * VFS entry for Linux - installed in init_module
- * Linux mounts file systems by:
- * 1) register_filesystem(&afs_file_system) - done in init_module
- * 2) Mount call comes to us via do_mount -> read_super -> afs_read_super.
- *    We are expected to setup the super_block. See afs_read_super.
+
+/*
+ * afs_mount (2.6.37+) and afs_get_sb (2.6.36-) are the entry
+ * points from the vfs when mounting afs.  The super block
+ * structure is setup in the afs_fill_super callback function.
  */
 
-
-/* afs_read_super
- * read the "super block" for AFS - roughly eguivalent to struct vfs.
- * dev, covered, s_rd_only, s_dirt, and s_type will be set by read_super.
- */
-#ifdef GET_SB_HAS_STRUCT_VFSMOUNT
+#if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+static struct dentry *
+afs_mount(struct file_system_type *fs_type, int flags,
+           const char *dev_name, void *data) {
+    return mount_nodev(fs_type, flags, data, afs_fill_super);
+}
+#elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
 static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data, struct vfsmount *mnt) {
     return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
 }
 #else
-static struct superblock *
+static struct super_block *
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data) {
     return get_sb_nodev(fs_type, flags, data, afs_fill_super);
@@ -75,7 +74,11 @@ afs_get_sb(struct file_system_type *fs_type, int flags,
 struct file_system_type afs_fs_type = {
     .owner = THIS_MODULE,
     .name = "afs",
+#if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+    .mount = afs_mount,
+#else
     .get_sb = afs_get_sb,
+#endif
     .kill_sb = kill_anon_super,
     .fs_flags = FS_BINARY_MOUNTDATA,
 };

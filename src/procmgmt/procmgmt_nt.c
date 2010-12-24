@@ -882,6 +882,7 @@ pmgt_ProcessSpawnVEB(const char *spath, char *sargv[], char *senvp[],
     DWORD monitorId, createFlags;
     BOOL passingBuffer = (sdatap != NULL && sdatalen > 0);
     BOOL fsuccess;
+    int lasterror;
 
     /* verify arguments */
     if (!spath || !sargv) {
@@ -982,13 +983,14 @@ pmgt_ProcessSpawnVEB(const char *spath, char *sargv[], char *senvp[],
 			     &startInfo,	/* startup info block */
 			     &procInfo);
 
+    lasterror = GetLastError();
     free(pathbuf);
     free(argbuf);
     free(envbuf);
 
     if (!fsuccess) {
 	/* failed to spawn process */
-	errno = nterr_nt2unix(GetLastError(), ENOENT);
+	errno = nterr_nt2unix(lasterror, ENOENT);
 
 	(void)pthread_mutex_lock(&procTableLock);
 	procTable[tidx].p_reserved = FALSE;	/* mark entry as not reserved */

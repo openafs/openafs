@@ -118,7 +118,7 @@ $(INCFILEDIR)\budb_errs.h : budb_errs.et
 	$(COPY) budb_errs.h $(INCFILEDIR)\budb_errs.h
 
 budb_errs.c $(INCFILEDIR)\budb_client.h: budb_errs.et budb_client.p.h
-	$(DEL) budb_client.h budb_errs.c;
+	$(DEL) budb_client.h budb_errs.c
 	$(COMPILE_ET) budb_errs -h budb_client
 	$(COPY) budb_client.h $(INCFILEDIR)\budb_client.h
 
@@ -132,6 +132,7 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 # Local clean target; augments predefined clean target
 
 clean::
+        $(DEL) $(INCFILES)
 	$(DEL) budb_errs.c budb_errs.h budb.h budb_client.h	
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
 

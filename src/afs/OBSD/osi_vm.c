@@ -102,7 +102,7 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 	return;
     cache_purge(vp);
     uvm_vnp_uncache(vp);
-    uvm_vnp_setsize(vp, avc->m.Length);
+    uvm_vnp_setsize(vp, avc->f.m.Length);
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.

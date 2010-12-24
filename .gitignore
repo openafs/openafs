@@ -20,6 +20,7 @@
 *.sl
 *.so.*
 *.dylib.*
+*.dSYM
 *.xdr.c
 *.cs.c
 *.ss.c
@@ -33,6 +34,7 @@ AFS_component_version_number.c
 AFS_component_version_number.h
 vc*.pdb
 rs_state.ini
+config.log
 
 !.gitignore
 !.cvsignore
@@ -40,7 +42,6 @@ rs_state.ini
 
 # Top level files
 /aclocal.m4
-/config.log
 /config.cache
 /config.status
 /configure

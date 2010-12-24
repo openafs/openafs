@@ -725,11 +725,11 @@ afs_CheckServers(int adown, struct cell *acellp)
 	  afs_osi_Wakeup(&afs_waitForever);
 	}
       } else {
-	if (results[i] < 0) {
-	  /* server crashed */
-	  afs_ServerDown(sa);
-	  ForceNewConnections(sa);  /* multi homed clients */
-	}
+	  if ((results[i] < 0) && (results[i] != RXGEN_OPCODE)) {
+	      /* server crashed */
+	      afs_ServerDown(sa);
+	      ForceNewConnections(sa);  /* multi homed clients */
+	  }
       }
     }
 
@@ -1191,7 +1191,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
     return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && (! defined(AFS_DARWIN_ENV)) && (! defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
@@ -1228,7 +1228,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 #endif /* IFF_POINTTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
-#if defined(AFS_DARWIN_ENV) && defined(USEIFADDR)
+#if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
@@ -1245,7 +1245,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, rx_ifaddr_t ifa)
     if (rx_ifaddr_address_family(ifa) != AF_INET)
 	return;
     t = rx_ifaddr_address(ifa, &sout, sizeof(sout));
-    if (t == 0) {
+    if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
 	myAddr = ntohl(sin->sin_addr.s_addr);	/* one of my IP addr in host order */
     } else {
@@ -1253,16 +1253,16 @@ afsi_SetServerIPRank(struct srvAddr *sa, rx_ifaddr_t ifa)
     }
     serverAddr = ntohl(sa->sa_ip);	/* server's IP addr in host order */
     t = rx_ifaddr_netmask(ifa, &sout, sizeof(sout));
-    if (t == 0) {
+    if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
 	subnetmask = ntohl(sin->sin_addr.s_addr);	/* subnet mask in host order */
     } else {
 	subnetmask = 0;
     }
     t = rx_ifaddr_dstaddress(ifa, &sout, sizeof(sout));
-    if (t == 0) {
+    if (t != 0) {
 	sin = (struct sockaddr_in *)&sout;
-	myDstaddr = sin->sin_addr.s_addr;
+	myDstaddr = ntohl(sin->sin_addr.s_addr);
     } else {
 	myDstaddr = 0;
     }
@@ -1714,7 +1714,13 @@ afs_GetCapabilities(struct server *ts)
     ReleaseWriteLock(&afs_xserver);
     code = RXAFS_GetCapabilities(tc->id, &caps);
     ObtainWriteLock(&afs_xserver, 723);
-    afs_PutConn(tc, SHARED_LOCK);
+    /* we forced a conn above; important we mark it down if needed */
+    if ((code < 0) && (code != RXGEN_OPCODE)) {
+	afs_PutConn(tc, SHARED_LOCK);
+	afs_ServerDown(tc->srvr);
+	ForceNewConnections(tc->srvr); /* multi homed clients */
+    }
+
     if ( code && code != RXGEN_OPCODE ) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
 	/* better not be anything to free. we failed! */

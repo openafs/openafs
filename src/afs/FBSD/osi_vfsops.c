@@ -20,14 +20,14 @@ int afs_pbuf_freecnt = -1;
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
-#if !defined(AFS_FBSD90_ENV)
+#if !defined(AFS_FBSD90_ENV) && !defined(AFS_FBSD82_ENV)
 static sy_call_t *old_handler;
 #else
 static struct sysent old_sysent;
 
 static struct sysent afs_sysent = {
     5,			/* int sy_narg */
-    afs3_syscall,	/* sy_call_t *sy_call */
+    (sy_call_t *) afs3_syscall,	/* sy_call_t *sy_call */
 #ifdef AFS_FBSD60_ENV
     AUE_NULL,		/* au_event_t sy_auevent */
 #ifdef AFS_FBSD70_ENV
@@ -48,7 +48,7 @@ afs_init(struct vfsconf *vfc)
 {
     int code;
     int offset = AFS_SYSCALL;
-#if defined(AFS_FBSD90_ENV)
+#if defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
     code = syscall_register(&offset, &afs_sysent, &old_sysent);
     if (code) {
 	printf("AFS_SYSCALL in use, error %i. aborting\n", code);
@@ -63,7 +63,7 @@ afs_init(struct vfsconf *vfc)
 #endif
     osi_Init();
     afs_pbuf_freecnt = nswbuf / 2 + 1;
-#if !defined(AFS_FBSD90_ENV)
+#if !defined(AFS_FBSD90_ENV) && !defined(AFS_FBSD82_ENV)
     old_handler = sysent[AFS_SYSCALL].sy_call;
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
     sysent[AFS_SYSCALL].sy_narg = 5;
@@ -74,13 +74,13 @@ afs_init(struct vfsconf *vfc)
 int
 afs_uninit(struct vfsconf *vfc)
 {
-#if defined(AFS_FBSD90_ENV)
+#if defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
     int offset = AFS_SYSCALL;
 #endif
 
     if (afs_globalVFS)
 	return EBUSY;
-#if defined(AFS_FBSD90_ENV)
+#if defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
     syscall_deregister(&offset, &old_sysent);
 #else
     sysent[AFS_SYSCALL].sy_narg = 0;
@@ -189,19 +189,33 @@ afs_unmount(struct mount *mp, int flags, struct thread *p)
 {
     int error = 0;
 
+    AFS_GLOCK();
+    if (afs_globalVp &&
+	((flags & MNT_FORCE) || !VREFCOUNT_GT(afs_globalVp, 1))) {
+	/* Put back afs_root's ref */
+	struct vcache *gvp = afs_globalVp;
+	afs_globalVp = NULL;
+	afs_PutVCache(gvp);
+    }
+    if (afs_globalVp)
+	error = EBUSY;
+    AFS_GUNLOCK();
+
     /*
      * Release any remaining vnodes on this mount point.
      * The `1' means that we hold one extra reference on
      * the root vnode (this is just a guess right now).
      * This has to be done outside the global lock.
      */
+    if (!error) {
 #if defined(AFS_FBSD80_ENV)
-    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, curthread);
+	error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, curthread);
 #elif defined(AFS_FBSD53_ENV)
-    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
+	error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
 #else
-    error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
+	error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
 #endif
+    }
     if (error)
 	goto out;
     AFS_GLOCK();

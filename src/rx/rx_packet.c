@@ -14,7 +14,6 @@
 #include <afs/param.h>
 #endif
 
-
 #ifdef KERNEL
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -80,7 +79,6 @@
 #include "rx_packet.h"
 #include "rx_globals.h"
 #include <lwp.h>
-#include <assert.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -603,7 +601,9 @@ rxi_MorePackets(int apackets)
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
+#ifdef RX_TRACK_PACKETS
 	p->flags |= RX_PKTFLAG_FREE;
+#endif
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
@@ -711,7 +711,9 @@ rxi_MorePacketsNoLock(int apackets)
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
+#ifdef RX_TRACK_PACKETS
 	p->flags |= RX_PKTFLAG_FREE;
+#endif
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
@@ -1362,7 +1364,9 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 	 * just wait.  */
 	NETPRI;
 	call->flags |= RX_CALL_WAIT_PACKETS;
+        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_PACKET);
+        MUTEX_EXIT(&rx_refcnt_mutex);
 	MUTEX_EXIT(&call->lock);
 	rx_waitingForPackets = 1;
 
@@ -1373,7 +1377,9 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 #endif
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	MUTEX_ENTER(&call->lock);
+        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_PACKET);
+        MUTEX_EXIT(&rx_refcnt_mutex);
 	call->flags &= ~RX_CALL_WAIT_PACKETS;
 	USERPRI;
     }
@@ -1501,30 +1507,31 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
 	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-	    struct rx_peer *peer;
-            if (rx_stats_active)
+            if (rx_stats_active) {
+                struct rx_peer *peer;
                 rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
-	    /*
-	     * Try to look up this peer structure.  If it doesn't exist,
-	     * don't create a new one -
-	     * we don't keep count of the bytes sent/received if a peer
-	     * structure doesn't already exist.
-	     *
-	     * The peer/connection cleanup code assumes that there is 1 peer
-	     * per connection.  If we actually created a peer structure here
-	     * and this packet was an rxdebug packet, the peer structure would
-	     * never be cleaned up.
-	     */
-	    peer = rxi_FindPeer(*host, *port, 0, 0);
-	    /* Since this may not be associated with a connection,
-	     * it may have no refCount, meaning we could race with
-	     * ReapConnections
-	     */
-	    if (peer && (peer->refCount > 0)) {
-		MUTEX_ENTER(&peer->peer_lock);
-		hadd32(peer->bytesReceived, p->length);
-		MUTEX_EXIT(&peer->peer_lock);
-	    }
+                /*
+                 * Try to look up this peer structure.  If it doesn't exist,
+                 * don't create a new one -
+                 * we don't keep count of the bytes sent/received if a peer
+                 * structure doesn't already exist.
+                 *
+                 * The peer/connection cleanup code assumes that there is 1 peer
+                 * per connection.  If we actually created a peer structure here
+                 * and this packet was an rxdebug packet, the peer structure would
+                 * never be cleaned up.
+                 */
+                peer = rxi_FindPeer(*host, *port, 0, 0);
+                /* Since this may not be associated with a connection,
+                 * it may have no refCount, meaning we could race with
+                 * ReapConnections
+                 */
+                if (peer && (peer->refCount > 0)) {
+                    MUTEX_ENTER(&peer->peer_lock);
+                    hadd32(peer->bytesReceived, p->length);
+                    MUTEX_EXIT(&peer->peer_lock);
+                }
+            }
 	}
 
 #ifdef RX_TRIMDATABUFS
@@ -2332,11 +2339,12 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
-    if (rx_stats_active)
+    if (rx_stats_active) {
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
-    MUTEX_ENTER(&peer->peer_lock);
-    hadd32(peer->bytesSent, p->length);
-    MUTEX_EXIT(&peer->peer_lock);
+        MUTEX_ENTER(&peer->peer_lock);
+        hadd32(peer->bytesSent, p->length);
+        MUTEX_EXIT(&peer->peer_lock);
+    }
 }
 
 /* Send a list of packets to appropriate destination for the specified
@@ -2529,7 +2537,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 #ifdef RXDEBUG
     }
 
-    assert(p != NULL);
+    osi_Assert(p != NULL);
 
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
@@ -2537,11 +2545,12 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
           p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
-    if (rx_stats_active)
+    if (rx_stats_active) {
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
-    MUTEX_ENTER(&peer->peer_lock);
-    hadd32(peer->bytesSent, p->length);
-    MUTEX_EXIT(&peer->peer_lock);
+        MUTEX_ENTER(&peer->peer_lock);
+        hadd32(peer->bytesSent, p->length);
+        MUTEX_EXIT(&peer->peer_lock);
+    }
 }
 
 
@@ -2683,25 +2692,36 @@ rxi_DecodePacketHeader(struct rx_packet *p)
     /* Note: top 16 bits of this last word are the security checksum */
 }
 
+/*
+ * LOCKS HELD: called with call->lock held.
+ *
+ * PrepareSendPacket is the only place in the code that
+ * can increment call->tnext.  This could become an atomic
+ * in the future.  Beyond that there is nothing in this
+ * function that requires the call being locked.  This
+ * function can only be called by the application thread.
+ */
 void
 rxi_PrepareSendPacket(struct rx_call *call,
 		      struct rx_packet *p, int last)
 {
     struct rx_connection *conn = call->conn;
+    afs_uint32 seq = call->tnext++;
     unsigned int i;
     afs_int32 len;		/* len must be a signed type; it can go negative */
-
-    p->flags &= ~RX_PKTFLAG_ACKED;
-    p->header.cid = (conn->cid | call->channel);
-    p->header.serviceId = conn->serviceId;
-    p->header.securityIndex = conn->securityIndex;
 
     /* No data packets on call 0. Where do these come from? */
     if (*call->callNumber == 0)
 	*call->callNumber = 1;
 
+    MUTEX_EXIT(&call->lock);
+    p->flags &= ~RX_PKTFLAG_ACKED;
+    p->header.cid = (conn->cid | call->channel);
+    p->header.serviceId = conn->serviceId;
+    p->header.securityIndex = conn->securityIndex;
+
     p->header.callNumber = *call->callNumber;
-    p->header.seq = call->tnext++;
+    p->header.seq = seq;
     p->header.epoch = conn->epoch;
     p->header.type = RX_PACKET_TYPE_DATA;
     p->header.flags = 0;
@@ -2741,6 +2761,7 @@ rxi_PrepareSendPacket(struct rx_call *call,
     if (len)
         p->wirevec[i - 1].iov_len += len;
     RXS_PreparePacket(conn->securityObject, call, p);
+    MUTEX_ENTER(&call->lock);
 }
 
 /* Given an interface MTU size, calculate an adjusted MTU size that

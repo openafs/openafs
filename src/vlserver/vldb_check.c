@@ -1219,11 +1219,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     if (verbose)
 	quiet_println("Verify each volume entry\n");
     for (i = 0; i < maxentries; i++) {
-	int nextp = 0;
-	int reft = 0;
 	int hash = 0;
         int nexthash = 0;
-	afs_uint32 *nextpp = NULL;
 	char *which = NULL;
 
 	if (record[i].type == 0)
@@ -1244,40 +1241,28 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		       vlentry.name, record[i].addr);
 
 	    if (!(record[i].type & NH)) {
-		nextp = ADDR(vlentry.nextNameHash);
-		reft = REFN;
 		hash = NameHash(vlentry.name);
-		nextpp = &vlentry.nextNameHash;
 		which = "name";
 		volidbuf[0]='\0';
 		foundbad = 1;
 	    }
 
 	    if (vlentry.volumeId[0] && !(record[i].type & RWH)) {
-		nextp = ADDR(vlentry.nextIdHash[0]);
-		reft = REFRW;
 		hash = IdHash(vlentry.volumeId[0]);
-		nextpp = &(vlentry.nextIdHash[0]);
 		which = "RW";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
 		foundbad = 1;
 	    }
 
 	    if (vlentry.volumeId[1] && !(record[i].type & ROH)) {
-		nextp = ADDR(vlentry.nextIdHash[1]);
-		reft = REFRO;
 		hash = IdHash(vlentry.volumeId[1]);
-		nextpp = &(vlentry.nextIdHash[1]);
 		which = "RO";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
 		foundbad = 1;
 	    }
 
 	    if (vlentry.volumeId[2] && !(record[i].type & BKH)) {
-		nextp = ADDR(vlentry.nextIdHash[2]);
-		reft = REFBK;
 		hash = IdHash(vlentry.volumeId[2]);
-		nextpp = &(vlentry.nextIdHash[2]);
 		which = "BK";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
 		foundbad = 1;
@@ -1285,10 +1270,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
 	    if (!validVolumeAddr(vlentry.nextNameHash) ||
 		record[ADDR(vlentry.nextNameHash)].type & MULTN) {
-		nextp = ADDR(vlentry.nextNameHash);
-		reft = REFN;
 		hash = NameHash(vlentry.name);
-		nextpp = &vlentry.nextNameHash;
 		which = "name";
 		volidbuf[0]='\0';
 		if (validVolumeAddr(vlentry.nextNameHash)) {
@@ -1303,10 +1285,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
 	    if (!validVolumeAddr(vlentry.nextIdHash[0]) ||
 		record[ADDR(vlentry.nextIdHash[0])].type & MULTRW) {
-		nextp = ADDR(vlentry.nextIdHash[0]);
-		reft = REFRW;
 		hash = IdHash(vlentry.volumeId[0]);
-		nextpp = &(vlentry.nextIdHash[0]);
 		which = "RW";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
 		if (validVolumeAddr(vlentry.nextIdHash[0])) {
@@ -1321,10 +1300,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
 	    if (!validVolumeAddr(vlentry.nextIdHash[1]) ||
 		record[ADDR(vlentry.nextIdHash[1])].type & MULTRO) {
-		nextp = ADDR(vlentry.nextIdHash[1]);
-		reft = REFRO;
 		hash = IdHash(vlentry.volumeId[1]);
-		nextpp = &(vlentry.nextIdHash[1]);
 		which = "RO";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
 		if (validVolumeAddr(vlentry.nextIdHash[1])) {
@@ -1339,10 +1315,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
 	    if (!validVolumeAddr(vlentry.nextIdHash[2]) ||
 		record[ADDR(vlentry.nextIdHash[2])].type & MULTBK) {
-		nextp = ADDR(vlentry.nextIdHash[2]);
-		reft = REFBK;
 		hash = IdHash(vlentry.volumeId[2]);
-		nextpp = &(vlentry.nextIdHash[2]);
 		which = "BK";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
 		if (validVolumeAddr(vlentry.nextIdHash[2])) {

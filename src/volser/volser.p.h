@@ -10,8 +10,8 @@
 #ifndef _VOLSER_
 #define _VOLSER_ 1
 
+#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
 #endif
 
@@ -71,13 +71,13 @@ struct volser_trans {
 
 #ifdef AFS_PTHREAD_ENV
 #define VTRANS_OBJ_LOCK_INIT(tt) \
-  assert(pthread_mutex_init(&((tt)->lock),NULL) == 0)
+  MUTEX_INIT(&((tt)->lock), "vtrans obj", MUTEX_DEFAULT, 0);
 #define VTRANS_OBJ_LOCK_DESTROY(tt) \
-  assert(pthread_mutex_destroy(&((tt)->lock)) == 0)
+  MUTEX_DESTROY(&((tt)->lock))
 #define VTRANS_OBJ_LOCK(tt) \
-  assert(pthread_mutex_lock(&((tt)->lock)) == 0)
+  MUTEX_ENTER(&((tt)->lock))
 #define VTRANS_OBJ_UNLOCK(tt) \
-  assert(pthread_mutex_unlock(&((tt)->lock)) == 0)
+  MUTEX_EXIT(&((tt)->lock))
 #else
 #define VTRANS_OBJ_LOCK_INIT(tt)
 #define VTRANS_OBJ_LOCK_DESTROY(tt)

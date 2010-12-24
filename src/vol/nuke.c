@@ -14,11 +14,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <stdio.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
-#endif /* AFS_PTHREAD_ENV */
+#include <afs/afs_assert.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>

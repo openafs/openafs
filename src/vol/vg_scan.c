@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <string.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>
@@ -431,7 +431,7 @@ _VVGC_scan_start(struct DiskPartition64 * dp)
 	ViceLog(0, ("_VVGC_scan_start: pthread_create failed with %d\n", code));
 
 	old_state = _VVGC_state_change(dp, VVGC_PART_STATE_INVALID);
-	assert(old_state == VVGC_PART_STATE_UPDATING);
+	osi_Assert(old_state == VVGC_PART_STATE_UPDATING);
     }
 
  error:

@@ -19,6 +19,8 @@
 	des_pcbc_encrypt;
 	ktohl;
 	life_to_time;
+	osi_AssertFailU;
+	osi_Panic;
 	rx_DestroyConnection;
 	rx_EndCall;
 	rx_Finalize;
@@ -27,6 +29,7 @@
 	rx_GetIFInfo;
 	rx_GetSpecific;
 	rx_Init;
+	rx_InitHost;
 	rx_KeyCreate;
 	rx_NewCall;
 	rx_NewConnection;
@@ -73,6 +76,8 @@
 	rx_stats;
 	rx_SetNoJumbo;
 	rx_SetConnDeadTime;
+	rx_SetConnHardDeadTime;
+	rx_SetConnIdleDeadTime;
 	rx_FlushWrite;
 	rx_thread_id_key;
 	multi_Finalize;
@@ -137,6 +142,7 @@
 	afs_xdr_short;
 	afs_xdr_string;
 	afs_xdr_vector;
+	rx_InterruptCall;
     local:
 	*;
 };

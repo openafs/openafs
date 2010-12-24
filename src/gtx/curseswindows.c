@@ -578,6 +578,7 @@ gator_cursesgwin_drawchar(struct gwin *gwp, struct gwin_charparams *params)
     static char rn[] = "gator_cursesgwin_drawchar";	/*Routine name */
     struct gator_cursesgwin *cwp;	/*Ptr to curses private area */
     int curses_x, curses_y;	/*Mapped x,y positions */
+    int code=0;
 
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
     curses_x = GATOR_MAP_X_TO_COL(cwp, params->x);
@@ -589,10 +590,14 @@ gator_cursesgwin_drawchar(struct gwin *gwp, struct gwin_charparams *params)
 		curses_x, (params->highlight ? ", using standout mode" : ""));
     wmove(cwp->wp, curses_y, curses_x);
     if (params->highlight)
-	wstandout(cwp->wp);
+	code=wstandout(cwp->wp);
+        if (code)
+	    return (code);
     waddch(cwp->wp, params->c);
     if (params->highlight)
-	wstandend(cwp->wp);
+	code=wstandend(cwp->wp);
+        if (code)
+            return (code);
 
     return (0);
 
@@ -627,6 +632,7 @@ gator_cursesgwin_drawstring(struct gwin *gwp, struct gwin_strparams *params)
     static char rn[] = "gator_cursesgwin_drawstring";	/*Routine name */
     struct gator_cursesgwin *cwp;	/*Ptr to curses private area */
     int curses_x, curses_y;	/*Mapped x,y positions */
+    int code=0;
 
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
     curses_x = GATOR_MAP_X_TO_COL(cwp, params->x);
@@ -638,12 +644,16 @@ gator_cursesgwin_drawstring(struct gwin *gwp, struct gwin_strparams *params)
 		curses_x, (params->highlight ? ", using standout mode" : ""));
     wmove(cwp->wp, curses_y, curses_x);
     if (params->highlight)
-	wstandout(cwp->wp);
+	code=wstandout(cwp->wp);
+	if (code)
+	    return (code);
     waddstr(cwp->wp, params->s);
     if (params->highlight)
-	wstandend(cwp->wp);
+	code=wstandend(cwp->wp);
+	if (code)
+	    return (code);
 
-    return (0);
+    return (code);
 
 }				/*gator_cursesgwin_drawstring */
 

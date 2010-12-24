@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <string.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>
@@ -110,7 +110,7 @@ VVGCache_PkgInit(void)
     for (i = 0; i <= VOLMAXPARTS; i++) {
 	VVGCache.part[i].state = VVGC_PART_STATE_INVALID;
 	VVGCache.part[i].dlist_hash_buckets = NULL;
-	code = pthread_cond_init(&VVGCache.part[i].cv, NULL);
+	CV_INIT(&VVGCache.part[i].cv, "cache part", CV_DEFAULT, 0);
 	if (code) {
 	    goto error;
 	}
@@ -142,7 +142,7 @@ VVGCache_PkgShutdown(void)
     /* destroy per-partition VVGC state */
     for (i = 0; i <= VOLMAXPARTS; i++) {
 	VVGCache.part[i].state = VVGC_PART_STATE_INVALID;
-	pthread_cond_destroy(&VVGCache.part[i].cv);
+	CV_DESTROY(&VVGCache.part[i].cv);
     }
 
     return EOPNOTSUPP;
@@ -191,7 +191,7 @@ _VVGC_entry_free(VVGCache_entry_t * entry)
 {
     int code = 0;
 
-    assert(entry->refcnt == 0);
+    osi_Assert(entry->refcnt == 0);
     free(entry);
 
     return code;
@@ -380,7 +380,7 @@ _VVGC_entry_put(struct DiskPartition64 * dp, VVGCache_entry_t * entry)
 {
     int code = 0;
 
-    assert(entry->refcnt > 0);
+    osi_Assert(entry->refcnt > 0);
 
     if (--entry->refcnt == 0) {
 	VVGCache_entry_t *nentry;
@@ -772,7 +772,7 @@ VVGCache_entry_add_r(struct DiskPartition64 * dp,
 	}
     }
 
-    assert(!child_ent);
+    osi_Assert(!child_ent);
     child_ent = parent_ent;
     code = _VVGC_hash_entry_add(dp,
 				child,
@@ -1185,7 +1185,7 @@ _VVGC_state_change(struct DiskPartition64 * part,
     VVGCache.part[part->index].state = state;
 
     if (old_state != state) {
-	pthread_cond_broadcast(&VVGCache.part[part->index].cv);
+	CV_BROADCAST(&VVGCache.part[part->index].cv);
     }
 
     return old_state;

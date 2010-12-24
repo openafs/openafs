@@ -5,10 +5,10 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.5.77
-LINUX_PKGVER=1.5.77
-#LINUX_PKGREL=0.pre3
-LINUX_PKGREL=1.1
+MACOS_VERSION=1.6.0fc1
+LINUX_PKGVER=1.6.0
+LINUX_PKGREL=0.pre1
+#LINUX_PKGREL=1.1
 
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.

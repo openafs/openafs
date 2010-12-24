@@ -64,8 +64,8 @@ EXT struct clock rx_hardAckDelay;
  * Normally we wait and send a hard ack when the receiver consumes the packet */
 EXT struct clock rx_softAckDelay;
 
-/* Variable to allow introduction of network unreliability */
-#ifdef RXDEBUG
+#if defined(RXDEBUG) || defined(AFS_NT40_ENV)
+/* Variable to allow introduction of network unreliability; exported from libafsrpc */
 EXT int rx_intentionallyDroppedPacketsPer100 GLOBALSINIT(0);	/* Dropped on Send */
 EXT int rx_intentionallyDroppedOnReadPer100  GLOBALSINIT(0);	/* Dropped on Read */
 #endif
@@ -124,13 +124,13 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 #define RX_FAST_ACK_RATE 1	/* as of 3.4, ask for an ack every
 				 * other packet. */
 
-EXT int rx_minPeerTimeout GLOBALSINIT(350); /* in milliseconds */
+EXT int rx_minPeerTimeout GLOBALSINIT(20);      /* in milliseconds */
 EXT int rx_minWindow GLOBALSINIT(1);
-EXT int rx_maxWindow GLOBALSINIT(65535);        /* twind is u_short */
+EXT int rx_maxWindow GLOBALSINIT(RX_MAXACKS);   /* must ack what we receive */
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
-EXT int rx_maxReceiveWindow GLOBALSINIT(128);	/* how much to accept */
+EXT int rx_maxReceiveWindow GLOBALSINIT(32);	/* how much to accept */
 EXT int rx_initSendWindow GLOBALSINIT(16);
-EXT int rx_maxSendWindow GLOBALSINIT(128);
+EXT int rx_maxSendWindow GLOBALSINIT(32);
 EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
 EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
                                                  * packets per datagram */
@@ -196,7 +196,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
     do { \
         ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
         if (ts_info_p == NULL) { \
-            assert((ts_info_p = rx_ts_info_init()) != NULL); \
+            osi_Assert((ts_info_p = rx_ts_info_init()) != NULL); \
         } \
     } while(0)
 #endif /* AFS_PTHREAD_ENV */
@@ -207,6 +207,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
  * in which the first tier is thread-specific, and the second tier is
  * a global free packet queue */
 EXT struct rx_queue rx_freePacketQueue;
+#ifdef RX_TRACK_PACKETS
 #define RX_FPQ_MARK_FREE(p) \
     do { \
         if ((p)->flags & RX_PKTFLAG_FREE) \
@@ -223,6 +224,18 @@ EXT struct rx_queue rx_freePacketQueue;
         (p)->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */ \
         (p)->header.flags = 0; \
     } while(0)
+#else
+#define RX_FPQ_MARK_FREE(p) \
+    do { \
+        (p)->length = 0; \
+        (p)->niovecs = 0; \
+    } while(0)
+#define RX_FPQ_MARK_USED(p) \
+    do { \
+        (p)->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */ \
+        (p)->header.flags = 0; \
+    } while(0)
+#endif
 #define RX_PACKET_IOV_INIT(p) \
     do { \
 	(p)->wirevec[0].iov_base = (char *)((p)->wirehead); \
@@ -249,9 +262,6 @@ EXT afs_kmutex_t rx_freePktQ_lock;
 EXT int rx_TSFPQGlobSize GLOBALSINIT(3); /* number of packets to transfer between global and local queues in one op */
 EXT int rx_TSFPQLocalMax GLOBALSINIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
 EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
-EXT void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
-EXT void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
-EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
 #define RX_TS_FPQ_FLUSH_GLOBAL 1
 #define RX_TS_FPQ_PULL_GLOBAL 1
 #define RX_TS_FPQ_ALLOW_OVERCOMMIT 1
@@ -568,11 +578,11 @@ EXT int rxdebug_active;
 #endif
 #endif
 #define rx_Log_event rxevent_debugFile
-
-EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
 #else
 #define dpf(args)
 #endif /* RXDEBUG */
+
+EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
 
 #ifndef KERNEL
 /*
@@ -619,6 +629,7 @@ EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
 EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
 EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
 EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
+EXT afs_kmutex_t rx_refcnt_mutex;       /* used to protect conn/call ref counts */
 #endif
 
 EXT int rx_enable_stats GLOBALSINIT(0);

@@ -178,8 +178,8 @@ struct rock {			/* to hide things associated with this LWP under */
  * program. They simply acquire/release the global LWP mutex .
  */
 extern pthread_mutex_t lwp_mutex;
-#define LWP_EXIT_LWP_CONTEXT() pthread_mutex_unlock(&lwp_mutex)
-#define LWP_ENTER_LWP_CONTEXT() pthread_mutex_lock(&lwp_mutex)
+#define LWP_EXIT_LWP_CONTEXT() MUTEX_EXIT(&lwp_mutex)
+#define LWP_ENTER_LWP_CONTEXT() MUTEX_ENTER(&lwp_mutex)
 #else
 #ifndef AFS_NT40_ENV
 #define lwp_abort() abort()

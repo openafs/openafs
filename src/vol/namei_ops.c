@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <string.h>
 #include <sys/file.h>
 #include <sys/param.h>
@@ -966,7 +966,6 @@ namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_foff_t * offset, int *index)
     *index = (tindex << 1) + tindex;
 }
 
-
 /* namei_GetLinkCount
  * If lockit is set, lock the file and leave it locked upon a successful
  * return.
@@ -1338,8 +1337,6 @@ namei_ListAFSFiles(char *dev,
 #endif
     return ninodes;
 }
-
-
 
 /* namei_ListAFSSubDirs
  *
@@ -1862,7 +1859,7 @@ static zlcList_t *zlcCur = NULL;
 static void
 AddToZLCDeleteList(char dir, char *name)
 {
-    assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
+    osi_Assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
 
     if (!zlcCur || zlcCur->zlc_n >= MAX_ZLC_NAMES) {
 	if (zlcCur && zlcCur->zlc_next)

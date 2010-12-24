@@ -261,12 +261,40 @@ EXPORTS
         rx_SetConnSecondsUntilNatPing           @266
         rx_GetServiceSpecific                   @267
         rx_SetServiceSpecific                   @268
+;	rx_NewThreadId				@269
+;       rx_GetStatistics                        @270
+;       rx_FreeStatistics                       @271
+	rx_SetConnHardDeadTime			@272
+	rx_SetConnIdleDeadTime			@273
+	rx_InterruptCall                        @274
+        osi_Panic				@275
+
+; lwp functions
+        Afs_Lock_Obtain                         @276
+        Afs_Lock_ReleaseR                       @277
+        Afs_Lock_ReleaseW                       @278
+        Afs_Lock_WakeupR                        @279
+        Lock_Init                               @280
+        Lock_Destroy                            @281
+        FT_Init                                 @282
+        FT_GetTimeOfDay                         @283
+        FT_AGetTimeOfDay                        @284
+        FT_ApproxTime                           @285
+        threadname                              @286
+        registerthread                          @287
+        swapthreadname                          @288
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
         rx_TSFPQMaxProcs                        @2003 DATA
         rxi_MorePackets                         @2007
+        rxi_nRecvFrags                          @2008 DATA
+        rxi_nSendFrags                          @2009 DATA
+        rx_initReceiveWindow                    @2010 DATA
+        rx_initSendWindow                       @2011 DATA
+        rx_intentionallyDroppedPacketsPer100    @2012 DATA
+        rx_intentionallyDroppedOnReadPer100     @2013 DATA
 
 ; for debugging
         rx_DumpCalls                            @9998

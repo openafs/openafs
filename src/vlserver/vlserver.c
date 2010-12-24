@@ -46,6 +46,7 @@
 #include <afs/keys.h>
 #include <afs/auth.h>
 #include <afs/audit.h>
+#include <afs/com_err.h>
 #include <lock.h>
 #include <ubik.h>
 #include <afs/afsutil.h>
@@ -352,7 +353,7 @@ main(int argc, char **argv)
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,
 			      vl_dbaseName, &VL_dbase);
     if (code) {
-	printf("vlserver: Ubik init failed with code %d\n", code);
+	printf("vlserver: Ubik init failed: %s\n", afs_error_message(code));
 	exit(2);
     }
     if (!rxJumbograms) {

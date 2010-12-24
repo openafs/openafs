@@ -19,6 +19,7 @@ corruption as it initializes, it sometimes refuses to attach the volume or
 bring it online. In this case, it is simplest to remove the volume by
 issuing the B<vos remove> or B<vos zap> command. Then issue the B<vos
 release> or B<vos backup> command to create it again.
+
 =back
 
 Unlike other server process initialization commands, the Salvager

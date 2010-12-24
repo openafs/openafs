@@ -25,6 +25,14 @@ usage()
     exit(1);
 }
 
+/*
+ * Construct the mask explicitly.  Later versions of windows start filling
+ * in higher bits and that doesn't affect the operation
+ */
+
+#define ATTRIBUTE_MASK (_A_RDONLY | _A_HIDDEN | _A_SYSTEM | _A_SUBDIR)
+
+
 int
 main(int argc, char *argv[])
 {
@@ -40,7 +48,7 @@ main(int argc, char *argv[])
 	return 0;
     do {
 
-	if ((finfo.attrib & ~_A_ARCH) != _A_NORMAL)
+	if ((finfo.attrib & ATTRIBUTE_MASK) != _A_NORMAL)
 	    continue;
 	fh = _open(finfo.name, _S_IWRITE | _O_BINARY | _S_IREAD | _O_RDWR);
 	pos = _lseek(fh, 0L, SEEK_END);
