@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_CONN_H_ENV__
-#define __CM_CONN_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_CONN_H
+#define OPENAFS_WINNT_AFSD_CM_CONN_H 1
 
 #define	CM_CONN_DEFAULTRDRTIMEOUT	45
 #ifndef CM_CONN_CONNDEADTIME
@@ -152,4 +152,4 @@ extern void cm_ForceNewConnections(cm_server_t *serverp);
 
 extern long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp);
 
-#endif /*  __CM_CONN_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_CONN_H */

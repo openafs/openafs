@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef __OSIDB_H_ENV_
-#define __OSIDB_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSIDB_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSIDB_H 1
 
 /* mapped over remote debugging integer array for rwlock and mutexes
  * mutexes only have writers
@@ -57,5 +57,5 @@ extern long osi_maxCalls;
 /* use this from outside of the OSI package */
 extern long *osi_maxCallsp;
 
-#endif /* __OSIDB_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSIDB_H */
 

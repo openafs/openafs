@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __SMB3_H_ENV__
-#define __SMB3_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_SMB3_H
+#define OPENAFS_WINNT_AFSD_SMB3_H 1
 
 typedef struct smb_tran2Packet {
 	osi_queue_t q;			/* queue of all packets */
@@ -449,4 +449,4 @@ extern afs_uint32 smb_GetLogonSID(HANDLE hToken, PSID *ppsid);
 extern afs_uint32 smb_GetUserSID(HANDLE hToken, PSID *ppsid);
 extern void smb_FreeSID (PSID psid);
 
-#endif /*  __SMB3_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_SMB3_H */

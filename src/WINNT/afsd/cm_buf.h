@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _BUF_H__ENV_
-#define _BUF_H__ENV_ 1
+#ifndef OPENAFS_WINNT_AFSD_BUF_H
+#define OPENAFS_WINNT_AFSD_BUF_H 1
 
 #include <osi.h>
 #ifdef DISKCACHE95
@@ -222,4 +222,4 @@ extern int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */
-#endif /*  _BUF_H__ENV_ */
+#endif /* OPENAFS_WINNT_AFSD_BUF_H */

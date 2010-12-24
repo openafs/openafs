@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_IOCTL_H_ENV__
-#define __CM_IOCTL_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_IOCTL_H
+#define OPENAFS_WINNT_AFSD_CM_IOCTL_H 1
 
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
 #include "cm_user.h"
@@ -287,4 +287,4 @@ extern afs_int32 cm_IoctlSetUnixMode(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_sc
 
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
-#endif /*  __CM_IOCTL_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_IOCTL_H */

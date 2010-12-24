@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __AFSD_H_ENV__
-#define __AFSD_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_AFSD_H
+#define OPENAFS_WINNT_AFSD_AFSD_H 1
 
 #define USE_BPLUS 1
 
@@ -141,4 +141,4 @@ typedef BOOL ( APIENTRY * AfsdStoppingHook )(void);
 typedef BOOL ( APIENTRY * AfsdStoppedHook )(void);
 
 #define SERVICE_CONTROL_CUSTOM_DUMP 128
-#endif /* AFSD_H_ENV */
+#endif /* OPENAFS_WINNT_AFSD_AFSD_H */

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_SCACHE_H_ENV__
-#define __CM_SCACHE_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_SCACHE_H
+#define OPENAFS_WINNT_AFSD_CM_SCACHE_H 1
 
 #define MOUNTPOINTLEN   1024    /* max path length for symlink; same as AFSPATHMAX */
 
@@ -432,4 +432,4 @@ extern int cm_DumpSCache(FILE *outputFile, char *cookie, int lock);
 extern void cm_ResetSCacheDirectory(cm_scache_t *scp, afs_int32 locked);
 
 extern cm_scache_t * cm_RootSCachep(cm_user_t *userp, cm_req_t *reqp);
-#endif /*  __CM_SCACHE_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_SCACHE_H */

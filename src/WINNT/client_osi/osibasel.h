@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSIBASEL_H_ENV_
-#define _OSIBASEL_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSIBASEL_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSIBASEL_H 1
 
 /* flags for osi_mutex_t and osi_rwlock_t flags fields.  Some bits
  * are used only in one structure or another.
@@ -155,4 +155,4 @@ extern void osi_SetLockOrderValidation(int);
 
 #define lock_AssertMutex(x) osi_assertx(lock_GetMutexState(x) & OSI_MUTEX_HELD, "!OSI_MUTEX_HELD")
 
-#endif /*_OSIBASEL_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSIBASEL_H */

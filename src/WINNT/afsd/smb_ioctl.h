@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __SMB_IOCTL_H_ENV__
-#define __SMB_IOCTL_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_SMB_IOCTL_H
+#define OPENAFS_WINNT_AFSD_SMB_IOCTL_H 1
 
 #include <cm_ioctl.h>
 #include <smb_iocons.h>
@@ -211,4 +211,4 @@ extern afs_int32 smb_IoctlGetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *
 
 extern afs_int32 smb_IoctlSetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
 
-#endif /*  __SMB_IOCTL_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_SMB_IOCTL_H */

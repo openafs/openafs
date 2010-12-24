@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_DCACHE_ENV__
-#define __CM_DCACHE_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_DCACHE_H
+#define OPENAFS_WINNT_AFSD_CM_DCACHE_H 1
 
 /* bulk I/O descriptor */
 typedef struct cm_bulkIO {
@@ -60,4 +60,4 @@ extern long cm_ShutdownDCache(void);
 extern long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                  cm_user_t *userp, cm_req_t *reqp);
 
-#endif /*  __CM_DCACHE_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_DCACHE_H */

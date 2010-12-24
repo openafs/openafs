@@ -233,11 +233,6 @@ typedef int errno_t;
 #define S_ISVTX  0001000
 #endif
 
-#ifndef S_IFMT
-#define S_IFMT   0170000
-#define S_IFDIR  0040000
-#endif
-
 #ifndef S_ISDIR
 #define S_ISDIR(m)      (((m)&(S_IFMT)) == (S_IFDIR))
 #endif

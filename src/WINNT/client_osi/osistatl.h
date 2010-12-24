@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSISTATL_H_ENV_
-#define _OSISTATL_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSISTATL_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSISTATL_H 1
 
 #include "osibasel.h"
 #if !defined(_MSC_VER) || (_MSC_VER < 1300)
@@ -117,4 +117,4 @@ extern void osi_SetStatLog(struct osi_log *logp);
 
 extern void osi_SetWatchProc(long ms, osi_watchProc_t *procp, void *rockp);
 
-#endif /*_OSISTATL_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSISTATL_H */

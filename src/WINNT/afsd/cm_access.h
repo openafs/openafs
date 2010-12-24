@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef _CM_ACCESS_H_ENV__
-#define _CM_ACCESS_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_ACCESS_H
+#define OPENAFS_WINNT_AFSD_CM_ACCESS_H 1
 
 #include "cm_user.h"
 
@@ -19,4 +19,4 @@ extern long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *up,
 	struct cm_req *reqp);
 
 extern int cm_accessPerFileCheck;
-#endif /*  _CM_ACCESS_H_ENV__ */
+#endif /* OPENAFS_WINNT_AFSD_CM_ACCESS_H */

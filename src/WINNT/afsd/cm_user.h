@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_USER_H_ENV__
-#define __CM_USER_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_USER_H
+#define OPENAFS_WINNT_AFSD_CM_USER_H 1
 
 #include <osi.h>
 #include <rx/rxkad.h>
@@ -72,4 +72,4 @@ extern void cm_CheckTokenCache(time_t now);
 
 extern cm_user_t *cm_rootUserp;
 
-#endif /*  __CM_USER_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_USER_H */

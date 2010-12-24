@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_UTILS_H_ENV__
-#define __CM_UTILS_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_UTILS_H
+#define OPENAFS_WINNT_AFSD_CM_UTILS_H 1
 
 #define CM_UTILS_SPACESIZE		8192	/* space to allocate */
 typedef struct cm_space {
@@ -110,4 +110,4 @@ extern void cm_utilsInit(void);
 
 extern void cm_utilsCleanup(void);
 
-#endif /*  __CM_UTILS_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_UTILS_H */
