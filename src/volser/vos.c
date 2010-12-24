@@ -4425,8 +4425,8 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
     fprintf(STDOUT,
 	    "Total VLDB entries deleted: %lu; failed to delete: %lu\n",
 	    (unsigned long)totalBack, (unsigned long)totalFail);
-    if (arrayEntries.ubulkentries_val)
-	free(arrayEntries.ubulkentries_val);
+
+    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     return 0;
 }
 
@@ -4621,10 +4621,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* Free the bulk array */
-	if (arrayEntries.ubulkentries_val) {
-	    free(arrayEntries.ubulkentries_val);
-	    arrayEntries.ubulkentries_val = 0;
-	}
+        xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     }
 
     /* Here is where we now sort all the entries and print them */
@@ -4976,8 +4973,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
     fprintf(STDOUT, "Total volumes backed up: %lu; failed to backup: %lu\n",
 	    (unsigned long)totalBack, (unsigned long)totalFail);
     fflush(STDOUT);
-    if (arrayEntries.ubulkentries_val)
-	free(arrayEntries.ubulkentries_val);
+    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     return 0;
 }
 
@@ -5078,8 +5074,7 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (arrayEntries.ubulkentries_val)
-	free(arrayEntries.ubulkentries_val);
+    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     return 0;
 }
 
