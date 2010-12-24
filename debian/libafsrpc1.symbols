@@ -120,3 +120,9 @@ libafsrpc.so.1 libafsrpc1 #MINVER#
  rx_SetMaxSendWindow@Base 1.5.75
  rx_GetMinPeerTimeout@Base 1.5.75
  rx_SetMinPeerTimeout@Base 1.5.75
+ osi_AssertFailU@Base 1.5.78
+ osi_Panic@Base 1.5.78
+ rx_InitHost@Base 1.5.78
+ rx_InterruptCall@Base 1.5.78
+ rx_SetConnHardDeadTime@Base 1.5.78
+ rx_SetConnIdleDeadTime@Base 1.5.78
