@@ -160,7 +160,8 @@ $(OUT)\cm_conn.obj: cm_conn.c
 
 FSOBJS=$(OUT)\fs.obj \
        $(OUT)\fs_utils.obj \
-       $(OUT)\cm_nls.obj
+       $(OUT)\cm_nls.obj \
+       $(OUT)\parsemode.obj
 
 CMDBGOBJS=$(OUT)\cmdebug.obj
 

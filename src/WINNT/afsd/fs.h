@@ -10,18 +10,6 @@
 #ifndef __FS_H_ENV__
 #define __FS_H_ENV__ 1
 
-/* some forward references */
-static void ZapList (struct AclEntry *alist);
+void Die(int code, char *filename);
 
-static int PruneList (struct AclEntry **ae, int dfs);
-
-static int CleanAcl(struct Acl *aa, char *fname);
-
-static int SetVolCmd(struct cmd_syndesc *as, void *arock);
-
-static int GetCellName(char *cellNamep, struct afsconf_cell *infop);
-
-static int VLDBInit(int noAuthFlag, struct afsconf_cell *infop);
-
-static void Die(int code, char *filename);
 #endif /* FS_H_ENV */
