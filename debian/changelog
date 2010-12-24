@@ -27,6 +27,7 @@ openafs (1.6.0~pre1-1) UNRELEASED; urgency=low
     it correctly.
   * Now that upstream has renamed compile_et to afs_compile_et, include it
     in libopenafs-dev.
+  * Update CellServDB to the 2010-12-13 version.
 
  -- Russ Allbery <rra@debian.org>  Tue, 02 Nov 2010 10:15:15 -0700
 
