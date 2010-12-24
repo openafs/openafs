@@ -10,13 +10,29 @@ MODULE_CFLAGS=-I$(srcdir)/..
 
 all check test tests: $(TESTS)
 
-superuser-t: superuser-t.o
-	$(AFS_LDRULE) superuser-t.o ../tap/libtap.a \
+superuser-t: superuser-t.o test.cs.o test.ss.o test.xdr.o
+	$(AFS_LDRULE) superuser-t.o test.cs.o test.ss.o test.xdr.o \
+		../tap/libtap.a \
 		$(abs_top_builddir)/lib/libafsauthent.a \
 		$(abs_top_builddir)/lib/librxgk.a \
 		$(abs_top_builddir)/lib/libafsrpc.a \
 		$(abs_top_builddir)/lib/libafshcrypto.a \
 		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
 		$(XLIBS)
+
+test.cs.c: test.xg
+	$(RXGEN) -A -x -C -o $@ $(srcdir)/test.xg
+
+test.ss.c: test.xg
+	$(RXGEN) -A -x -S -o $@ $(srcdir)/test.xg
+
+test.xdr.c: test.xg
+	$(RXGEN) -A -x -c -o $@ $(srcdir)/test.xg
+
+test.h: test.xg
+	$(RXGEN) -A -x -h -o $@ $(srcdir)/test.xg
+
+superuser-t.o: test.h
+
 clean:
-	rm -f *.o superuser-t
+	rm -f *.o *.cs.c *.ss.c *.xdr.c test.h superuser-t

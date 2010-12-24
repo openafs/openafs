@@ -593,7 +593,7 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
 
     testId = rx_identity_new(RX_ID_KRB4, fullname, fullname, strlen(fullname));
     if (afsconf_IsSuperIdentity(adir, testId)) {
-	if (*identity)
+	if (identity)
 	     *identity = testId;
 	else
 	     rx_identity_free(&testId);
@@ -677,8 +677,9 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
     if ((tinst == NULL || strlen(tinst) == 0) &&
 	(tcell == NULL || strlen(tcell) == 0)
 	&& !strcmp(tname, AUTH_SUPERUSER)) {
-	*identity = rx_identity_new(RX_ID_KRB4, AFS_LOCALAUTH_NAME,
-	                            AFS_LOCALAUTH_NAME, AFS_LOCALAUTH_LEN);
+	if (identity)
+	    *identity = rx_identity_new(RX_ID_KRB4, AFS_LOCALAUTH_NAME,
+	                                AFS_LOCALAUTH_NAME, AFS_LOCALAUTH_LEN);
 	flag = 1;
 
 	/* cell of connection matches local cell or one of the realms */
@@ -798,20 +799,22 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall,
 		  char *namep)
 {
     struct rx_identity *identity;
-    int code;
+    int ret;
 
-    code = afsconf_SuperIdentity(adir, acall, &identity);
-    if (code) {
-	if (namep) {
+    if (namep) {
+	ret = afsconf_SuperIdentity(adir, acall, &identity);
+	if (ret) {
 	    if (identity->kind == RX_ID_KRB4) {
 		strlcpy(namep, identity->displayName, MAXKTCNAMELEN-1);
 	    } else {
 		snprintf(namep, MAXKTCNAMELEN-1, "eName: %s",
 			 identity->displayName);
 	    }
+	    rx_identity_free(&identity);
 	}
-	rx_identity_free(&identity);
+    } else {
+	ret = afsconf_SuperIdentity(adir, acall, NULL);
     }
 
-    return code;
+    return ret;
 }

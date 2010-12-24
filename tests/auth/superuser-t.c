@@ -26,11 +26,22 @@
 
 #include <roken.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
+
+#include <rx/rxkad.h>
 #include <rx/rx_identity.h>
 
 #include <tap/basic.h>
+
+#include "test.h"
+
+#define TEST_PORT 1234
 
 static void
 testOriginalIterator(struct afsconf_dir *dir, int num, char *user) {
@@ -55,39 +66,65 @@ testNewIterator(struct afsconf_dir *dir, int num, struct rx_identity *id) {
     rx_identity_free(&fileId);
 }
 
-int main(int argc, char **argv)
+struct rx_securityClass *
+fakeRXKADClass(struct afsconf_dir *dir,
+	       char *name, char *instance, char *realm,
+	       afs_uint32 startTime, afs_uint32 endTime)
+{
+    int code;
+    char buffer[256];
+    struct ktc_encryptionKey key, session;
+    afs_int32 kvno;
+    afs_int32 ticketLen;
+    struct rx_securityClass *class = NULL;
+
+    code = afsconf_GetLatestKey(dir, &kvno, &key);
+    if (code)
+	goto out;
+
+    DES_init_random_number_generator((DES_cblock *) &key);
+    code = DES_new_random_key((DES_cblock *) &session);
+    if (code)
+	goto out;
+
+    ticketLen = sizeof(buffer);
+    memset(buffer, 0, sizeof(buffer));
+    startTime = time(NULL);
+    endTime = startTime + 60 * 60;
+
+    code = tkt_MakeTicket(buffer, &ticketLen, &key, name, instance, realm,
+			  startTime, endTime, &session, 0, "afs", "");
+    if (code)
+	goto out;
+
+    class = rxkad_NewClientSecurityObject(rxkad_clear, &session, kvno,
+					  ticketLen, buffer);
+out:
+    return class;
+}
+
+
+void
+startClient(char *configPath)
 {
     struct afsconf_dir *dir;
-    char buffer[1024];
-    char ubuffer[256];
-    char *dirEnd;
-    FILE *file;
     struct rx_identity *testId, *anotherId, *extendedId, *dummy;
+    struct rx_securityClass *class;
+    struct rx_connection *conn;
+    afs_uint32 startTime;
+    char ubuffer[256];
+    afs_int32 classIndex;
+    int code;
+    struct hostent *he;
+    afs_uint32 addr;
+    afs_int32 result;
+    char *string;
 
-    plan(36);
+    plan(63);
 
-    snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
-    mkdtemp(buffer);
-    dirEnd = buffer + strlen(buffer);
-
-    /* Create a CellServDB file */
-    strcpy(dirEnd, "/CellServDB");
-    file = fopen(buffer, "w");
-    fprintf(file, ">example.org # An example cell\n");
-    fprintf(file, "127.0.0.1 #test.example.org\n");
-    fclose(file);
-
-    /* Create a ThisCell file */
-    strcpy(dirEnd, "/ThisCell");
-    file = fopen(buffer, "w");
-    fprintf(file, "example.org\n");
-    fclose(file);
-
-    *dirEnd='\0';
-    /* Start with a blank configuration directory */
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(configPath);
     ok(dir!=NULL,
-       "Configuration directory opened sucessfully");
+       "Configuration directory opened sucessfully by client");
 
     /* Add a normal user to the super user file */
     ok(afsconf_AddUser(dir, "test") == 0,
@@ -112,7 +149,7 @@ int main(int argc, char **argv)
        "Adding an identity that already exists fails");
 
     anotherId = rx_identity_new(RX_ID_KRB4, "another",
-					   "another", strlen("another"));
+					    "another", strlen("another"));
 
     /* Add another normal user, but using the extended interface */
     ok(afsconf_AddIdentity(dir, anotherId) == 0,
@@ -184,6 +221,295 @@ int main(int argc, char **argv)
     ok(!afsconf_IsSuperIdentity(dir, extendedId),
        "Deleted identity is no longer special");
 
+    /* Now, what happens if we're doing something over the network instead */
+
+    /* Fake up an rx ticket. Note that this will be for the magic 'superuser' */
+    code = afsconf_ClientAuth(dir, &class, &classIndex);
+    is_int(code, 0, "Can successfully create superuser token");
+
+    /* Start a connection to our test service with it */
+    code = rx_Init(0);
+    is_int(code, 0, "Started RX");
+
+    he = gethostbyname("localhost");
+    if (!he) {
+        printf("Couldn't look up server hostname");
+        exit(1);
+    }
+
+    memcpy(&addr, he->h_addr, sizeof(afs_uint32));
+
+    conn = rx_NewConnection(addr, htons(TEST_PORT), TEST_SERVICE_ID,
+			    class, classIndex);
+
+    /* There's nothing in the list, so this just succeeds because we can */
+    code = TEST_CanI(conn, &result);
+    is_int(0, code, "Can run a simple RPC");
+
+    code = TEST_WhoAmI(conn, &string);
+    is_int(0, code, "Can get identity back");
+    is_string("<LocalAuth>", string, "Forged token is super user");
+
+    /* Throw away this connection and security class */
+    rx_DestroyConnection(conn);
+    rxs_Release(class);
+
+    /* Now fake an rx ticket for a normal user. We have to do more work by hand
+     * here, sadly */
+
+    startTime = time(NULL);
+    class = fakeRXKADClass(dir, "rpctest", "", "", startTime, startTime + 60* 60);
+
+    conn = rx_NewConnection(addr, htons(TEST_PORT), TEST_SERVICE_ID, class,
+			    RX_SECIDX_KAD);
+
+    code = TEST_CanI(conn, &result);
+    is_int(EPERM, code,
+	   "Running RPC as non-super user fails as expected");
+    code = TEST_NewCanI(conn, &result);
+    is_int(EPERM, code,
+	   "Running new interface RPC as non-super user fails as expected");
+    code = TEST_WhoAmI(conn, &string);
+    is_int(EPERM, code,
+	   "Running RPC returning string fails as expected");
+    code = TEST_NewWhoAmI(conn, &string);
+    is_int(EPERM, code,
+	   "Running new interface RPC returning string fails as expected");
+    ok(afsconf_AddUser(dir, "rpctest") == 0,
+       "Adding %s user works", "rpctest");
+    code = TEST_CanI(conn, &result);
+    is_int(0, code, "Running RPC as rpctest works");
+    code = TEST_NewCanI(conn, &result);
+    is_int(0, code, "Running new interface RPC as rpctest works");
+    code = TEST_WhoAmI(conn, &string);
+    is_int(0, code, "Running RPC returning string as %s works", "rpctest");
+    is_string("rpctest", string, "Returned user string matches");
+    code = TEST_NewWhoAmI(conn, &string);
+    is_int(0, code, "Running new RPC returning string as %s works", "rpctest");
+    is_string("rpctest", string, "Returned user string for new interface matches");
+    rx_DestroyConnection(conn);
+    rxs_Release(class);
+
+    /* Now try with an admin principal */
+    startTime = time(NULL);
+    class = fakeRXKADClass(dir, "rpctest", "admin", "", startTime,
+		      startTime + 60* 60);
+
+    conn = rx_NewConnection(addr, htons(TEST_PORT), TEST_SERVICE_ID, class,
+			    RX_SECIDX_KAD);
+
+    code = TEST_CanI(conn, &result);
+    is_int(EPERM, code,
+	   "Running RPC as non-super user fails as expected");
+    code = TEST_NewCanI(conn, &result);
+    is_int(EPERM, code,
+	   "Running new interface RPC as non-super user fails as expected");
+    code = TEST_WhoAmI(conn, &string);
+    is_int(EPERM, code,
+	   "Running RPC returning string fails as expected");
+    code = TEST_NewWhoAmI(conn, &string);
+    is_int(EPERM, code,
+	   "Running new interface RPC returning string fails as expected");
+
+    ok(afsconf_AddUser(dir, "rpctest.admin") == 0,
+       "Adding %s user works", "rpctest.admin");
+
+    code = TEST_CanI(conn, &result);
+    is_int(0, code, "Running RPC as %s works", "rpctest/admin");
+    code = TEST_NewCanI(conn, &result);
+    is_int(0, code, "Running new interface RPC as %s works", "rpctest/admin");
+    code = TEST_WhoAmI(conn, &string);
+    is_int(0, code, "Running RPC returning string as %s works", "rpctest/admin");
+    is_string("rpctest.admin", string, "Returned user string matches");
+    code = TEST_NewWhoAmI(conn, &string);
+    is_int(0, code, "Running new interface RPC returning string as %s works",
+	   "rpctest/admin");
+    is_string("rpctest.admin", string,
+	      "Returned user string from new interface matches");
+
+    rx_DestroyConnection(conn);
+    rxs_Release(class);
+}
+
+/**********************************************************************
+ * Server
+ **********************************************************************/
+
+struct afsconf_dir *globalDir;
+
+int
+STEST_CanI(struct rx_call *call, afs_int32 *result)
+{
+    *result = 0;
+    if (!afsconf_SuperUser(globalDir, call, NULL)) {
+	return EPERM;
+    }
+    return 0;
+}
+
+int
+STEST_NewCanI(struct rx_call *call, afs_int32 *result)
+{
+    *result = 0;
+    if (!afsconf_SuperIdentity(globalDir, call, NULL)) {
+	return EPERM;
+    }
+    return 0;
+}
+
+int
+STEST_WhoAmI(struct rx_call *call, char **result)
+{
+   char string[MAXKTCNAMELEN];
+
+   if (!afsconf_SuperUser(globalDir, call, string)) {
+	*result = strdup("");
+	return EPERM;
+   }
+   *result = strdup(string);
+
+   return 0;
+}
+
+int
+STEST_NewWhoAmI(struct rx_call *call, char **result)
+{
+   struct rx_identity *id;
+
+   if (!afsconf_SuperIdentity(globalDir, call, &id)) {
+	*result = strdup("");
+	return EPERM;
+   }
+   *result = strdup(id->displayName);
+
+   return 0;
+}
+
+void
+startServer(char *configPath)
+{
+    struct rx_securityClass **classes;
+    afs_int32 numClasses;
+    int code;
+    struct rx_service *service;
+
+    globalDir = afsconf_Open(configPath);
+    if (globalDir == NULL) {
+	fprintf(stderr, "Server: Unable to open config directory\n");
+	exit(1);
+    }
+
+    code = rx_Init(htons(TEST_PORT));
+    if (code != 0) {
+	fprintf(stderr, "Server: Unable to initialise RX\n");
+        exit(1);
+    }
+
+    afsconf_BuildServerSecurityObjects(globalDir, 0, &classes, &numClasses);
+    service = rx_NewService(0, TEST_SERVICE_ID, "test", classes, numClasses,
+			    TEST_ExecuteRequest);
+    if (service == NULL) {
+	fprintf(stderr, "Server: Unable to start to test service\n");
+	exit(1);
+    }
+
+    rx_StartServer(1);
+}
+
+int main(int argc, char **argv)
+{
+    struct afsconf_dir *dir;
+    char buffer[1024];
+    int serverPid, clientPid, waited, stat;
+    char keymaterial[]="\x19\x17\xff\xe6\xbb\x77\x2e\xfc";
+    char *dirEnd;
+    FILE *file;
+    int code;
+
+    /* Start the client and the server if requested */
+
+    if (argc == 3 ) {
+        if (strcmp(argv[1], "-server") == 0) {
+            startServer(argv[2]);
+            exit(0);
+        } else if (strcmp(argv[1], "-client") == 0) {
+            startClient(argv[2]);
+            exit(0);
+        } else {
+            printf("Bad option %s\n", argv[1]);
+            exit(1);
+        }
+    }
+
+    /* Otherwise, do the basic configuration, then start the client and
+     * server */
+
+    snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
+    mkdtemp(buffer);
+    dirEnd = buffer + strlen(buffer);
+
+    /* Create a CellServDB file */
+    strcpy(dirEnd, "/CellServDB");
+    file = fopen(buffer, "w");
+    fprintf(file, ">example.org # An example cell\n");
+    fprintf(file, "127.0.0.1 #test.example.org\n");
+    fclose(file);
+
+    /* Create a ThisCell file */
+    strcpy(dirEnd, "/ThisCell");
+    file = fopen(buffer, "w");
+    fprintf(file, "example.org\n");
+    fclose(file);
+
+    *dirEnd='\0';
+    /* Start with a blank configuration directory */
+    dir = afsconf_Open(strdup(buffer));
+    if (dir == NULL) {
+	fprintf(stderr, "Unable to configure directory.\n");
+	exit(1);
+    }
+
+    DES_set_odd_parity((DES_cblock *)keymaterial);
+
+    /* Add a key to it so we can use it for connection tests */
+    code = afsconf_AddKey(dir, 1, keymaterial, 1);
+    if (code) {
+	afs_com_err("superuser-t", code, "while adding new key\n");
+	exit(1);
+    }
+
+    printf("Config directory is %s\n", buffer);
+    serverPid = fork();
+    if (serverPid == -1) {
+        /* Bang */
+    } else if (serverPid == 0) {
+        execl(argv[0], argv[0], "-server", buffer, NULL);
+        exit(1);
+    }
+    clientPid = fork();
+    if (clientPid == -1) {
+        kill(serverPid, SIGTERM);
+        waitpid(serverPid, &stat, 0);
+        exit(1);
+    } else if (clientPid == 0) {
+        execl(argv[0], argv[0], "-client", buffer, NULL);
+    }
+
+    do {
+        waited = waitpid(0, &stat, 0);
+    } while(waited == -1 && errno == EINTR);
+
+    if (waited == serverPid) {
+        kill(clientPid, SIGTERM);
+    } else if (waited == clientPid) {
+        kill(serverPid, SIGTERM);
+    }
+    waitpid(0, &stat, 0);
+
+    /* Client and server are both done, so cleanup after everything */
+
+    strcpy(dirEnd, "/KeyFile");
+    unlink(buffer);
     strcpy(dirEnd, "/CellServDB");
     unlink(buffer);
     strcpy(dirEnd, "/ThisCell");

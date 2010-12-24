@@ -1,0 +1,9 @@
+package TEST_
+prefix S
+
+const TEST_SERVICE_ID = 4;
+
+CanI(OUT int *result) = 1;
+WhoAmI(OUT string name<>) = 2;
+NewCanI(OUT int *result) = 3;
+NewWhoAmI(OUT string name<>) = 4;
