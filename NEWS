@@ -1,5 +1,126 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.0 (in progress)
+
+  All platforms
+
+    * vos now properly deals with matching sites when servers are
+      multihomed.
+
+  All server platforms
+
+    * Fix ptserver supergroups support on 64 bit platforms.
+
+    * Demand attach salvaging doesn't use freed volume pointers.
+
+    * Properly hold host lock during host enumeration in fileserver.
+
+  All UNIX client platforms
+
+    * Servers now marked down when GetCapabilities returns error.
+
+    * In-use vcache count is now properly tracked.
+
+  FreeBSD
+
+    * Fix socket termination on shutdown.
+
+    * Support for 7.2, 7.3, 7.4 and 8.2 included.
+
+    * References to vcaches are no longer leaked during root or reclaim.
+
+  Linux
+
+    * Define llseek handler to avoid ESPIPE error in 2.6.37.
+
+    * Mount interface replaces get_sb (new for 2.6.37, not yet required).
+
+    * RedHat init script allows deferring for a new binary restart.
+
+    * DEFINE_MUTEX replaces DECLARE_MUTEX for 2.6.37.
+
+  MacOS
+
+    * Correct return value from setpag syscall.
+
+  OpenBSD
+
+    * Bug fixes for issues introduced previously in 1.5 series.
+
+  Solaris
+
+    * Switch to ioctl() syscall replacement for Solaris 11 since syscall
+      65 is not safe.
+
+
+OpenAFS 1.5.78 (2010-11-04)
+
+  All platforms
+
+    * Revisions to Rx to fix performance issues.
+
+    * Make fs getfid behave consistently across all platforms. (128372)
+
+    * Properly check IDs handed to pts when creating users or groups so
+      useful error messages can be provided. (128343)
+
+    * Correct byte order handling of port in afsconf_LookupServer for SRV
+      records.
+
+    * Force a full dump when releasing to a site which was previously
+      marked "don't use", in case the previous clone was out of date.
+
+  All server platforms
+
+    * Demand salvage of attached volumes now correctly track attachment
+      state.
+
+    * Avoid a potential crash due to failure to hold a lock when attaching
+      a volume fails.
+
+  Microsoft Windows
+
+    * Track SMB connections by SID rather than username.
+
+    * Error write attempts to known-readonly volumes earlier.
+
+    * Validate directory buffers to avoid potential crashes.
+
+    * Handle VIO errors from bulkstatus.
+
+    * Make PMTU discovery configurable and register error handlers for it.
+
+  All UNIX client platforms
+
+    * Use larger I/O sizes in memcache to improve performance.
+
+    * Avoid potential alignment issues doing I/O for pioctl calls.
+
+  FreeBSD
+
+    * Avoid panicing if the listener process is not findable.
+
+    * Avoid deadlock issues while performing lookups.
+
+  Linux
+
+    * Handle stale file handle errors for some cache partition types.
+
+    * Avoid blocking with xvcache lock when attempting to free in-use
+      vcaches.
+
+    * Build fixes for older kernels.
+
+    * Properly configure LWP to use ucontext() on platforms where it
+      should.
+
+    * Eliminate spurious errors from AFS system call returns. (126230)
+
+  MacOS
+
+    * Attempt to honor configured Kerberos defaults in Preferences Pane.
+
+
 OpenAFS 1.5.77 (2010-09-08)
 
   All platforms
