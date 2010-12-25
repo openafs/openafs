@@ -36,10 +36,8 @@ AFS_OS_NONFSOBJS = \
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
-<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80 amd64_fbsd_81 amd64_fbsd_90>
-KOPTS = -fPIC
 <amd64>
-KOPTS += -mno-red-zone
+KOPTS = -fPIC -mno-red-zone
 <all>
 
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
@@ -76,9 +74,9 @@ setup:
 	-ln -fs ${KSRC}/@HOST_CPU@/include machine
 	-ln -fs ${KSRC}/netinet netinet
 	-ln -fs ${KSRC}/nfs nfs
-<all -fbsd_71 -fbsd_80 -fbsd_81 -fbsd_90>
+<all -fbsd_71 -fbsd_72 -fbsd_72 -fbsd_73 -fbsd_74 -fbsd_80 -fbsd_81 -fbsd_82 -fbsd_90>
 	-ln -fs /usr/include/rpc rpc
-<fbsd_71 fbsd_80 fbsd_81 fbsd_90>
+<fbsd_71 fbsd_72 fbsd_73 fbsd_74 fbsd_80 fbsd_81 fbsd_82 fbsd_90>
 	-ln -fs ${KSRC}/rpc rpc
 <all>
 	-ln -fs ${KSRC}/sys sys

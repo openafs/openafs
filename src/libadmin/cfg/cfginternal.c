@@ -24,17 +24,16 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <io.h>
-#include <afs/dirent.h>
 #include <WINNT/afsreg.h>
 #else
 #include <unistd.h>
-#include <dirent.h>
 #include <math.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/param.h>
 #endif /* AFS_NT40_ENV */
+#include <dirent.h>
 
 #include <pthread.h>
 

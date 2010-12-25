@@ -127,11 +127,7 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
-#endif /* AFS_PTHREAD_ENV */
+#include <afs/afs_assert.h>
 
 #if defined(AFS_HPUX_ENV)
 #include <sys/types.h>
@@ -284,7 +280,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
 #ifdef AFS_DEMAND_ATTACH_FS
     AddPartitionToTable_r(dp);
     queue_Init(&dp->vol_list.head);
-    assert(pthread_cond_init(&dp->vol_list.cv, NULL) == 0);
+    CV_INIT(&dp->vol_list.cv, "vol list", CV_DEFAULT, 0);
     dp->vol_list.len = 0;
     dp->vol_list.busy = 0;
     {
@@ -362,7 +358,7 @@ VCheckPartition(char *part, char *devname)
 	struct dirent *dp;
 
 	dirp = opendir(part);
-	assert(dirp);
+	osi_Assert(dirp);
 	while ((dp = readdir(dirp))) {
 	    if (dp->d_name[0] == 'V') {
 		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
@@ -401,17 +397,33 @@ VCheckPartition(char *part, char *devname)
  * attached (return value 1), or only attached when it is a separately
  * mounted partition (return value 0).  For non-NAMEI environments, it
  * always returns 0.
+ *
+ * *awouldattach will be set to 1 if the given path at least looks like a vice
+ * partition (that is, if we return 0, the only thing preventing this partition
+ * from being attached is the existence of the AlwaysAttach file), or to 0
+ * otherwise. *awouldattach is set regardless of whether or not the partition
+ * should always be attached or not.
  */
 static int
-VIsAlwaysAttach(char *part)
+VIsAlwaysAttach(char *part, int *awouldattach)
 {
 #ifdef AFS_NAMEI_ENV
     struct afs_stat st;
     char checkfile[256];
     int ret;
+#endif /* AFS_NAMEI_ENV */
 
+    if (awouldattach) {
+	*awouldattach = 0;
+    }
+
+#ifdef AFS_NAMEI_ENV
     if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE))
 	return 0;
+
+    if (awouldattach) {
+	*awouldattach = 1;
+    }
 
     strncpy(checkfile, part, 100);
     strcat(checkfile, "/");
@@ -436,6 +448,7 @@ VAttachPartitions2(void)
     DIR *dirp;
     struct dirent *de;
     char pname[32];
+    int wouldattach;
 
     dirp = opendir("/");
     while ((de = readdir(dirp))) {
@@ -445,8 +458,31 @@ VAttachPartitions2(void)
 
 	/* Only keep track of "/vicepx" partitions since automounter
 	 * may hose us */
-	if (VIsAlwaysAttach(pname))
+	if (VIsAlwaysAttach(pname, &wouldattach)) {
 	    VCheckPartition(pname, "");
+	} else {
+	    struct afs_stat st;
+	    if (wouldattach && VGetPartition(pname, 0) == NULL &&
+	        afs_stat(pname, &st) == 0 && S_ISDIR(st.st_mode)) {
+
+		/* This is a /vicep* dir, and it has not been attached as a
+		 * partition. This probably means that this is a /vicep* dir
+		 * that is not a separate partition, so just give a notice so
+		 * admins are not confused as to why their /vicep* dirs are not
+		 * being attached.
+		 *
+		 * It is possible that the dir _is_ a separate partition and we
+		 * failed to attach it earlier, making this message a bit
+		 * confusing. But that should be rare, and an error message
+		 * about the failure will already be logged right before this,
+		 * so it should be clear enough. */
+
+		Log("VAttachPartitions: not attaching %s; either it is not a "
+		    "separate partition, or it failed to attach (create the "
+		    "file %s/" VICE_ALWAYSATTACH_FILE " to force attachment)\n",
+		    pname, pname);
+	    }
+	}
     }
     closedir(dirp);
 #endif /* AFS_NAMEI_ENV */
@@ -480,7 +516,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(mnt.mnt_mountp))
+	if (VIsAlwaysAttach(mnt.mnt_mountp, NULL))
 	    continue;
 
 #ifndef AFS_NAMEI_ENV
@@ -525,7 +561,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(mntent->mnt_dir))
+	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
 
 	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
@@ -628,7 +664,7 @@ VAttachPartitions(void)
 #endif
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(part))
+	if (VIsAlwaysAttach(part, NULL))
 	    continue;
 
 	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT)) < 0)
@@ -658,7 +694,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(fsent->fs_file))
+	if (VIsAlwaysAttach(fsent->fs_file, NULL))
 	    continue;
 
 	if (VCheckPartition(fsent->fs_file, fsent->fs_spec) < 0)
@@ -842,7 +878,7 @@ VAttachPartitions(void)
     }
     while ((mntent = getmntent(mfd))) {
 	/* If we're going to always attach this partition, do it later. */
-	if (VIsAlwaysAttach(mntent->mnt_dir))
+	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
 
 	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
@@ -884,7 +920,7 @@ VGetPartition_r(char *name, int abortp)
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
     if (abortp)
-	assert(dp != NULL);
+	osi_Assert(dp != NULL);
     return dp;
 }
 
@@ -1132,12 +1168,12 @@ VLockPartition_r(char *name)
 	    (FD_t)CreateFile(path, GENERIC_WRITE,
 			    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
-	assert(dp->lock_fd != INVALID_FD);
+	osi_Assert(dp->lock_fd != INVALID_FD);
 
 	memset(&lap, 0, sizeof(lap));
 	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
 			0, &lap);
-	assert(rc);
+	osi_Assert(rc);
     }
 }
 
@@ -1222,11 +1258,11 @@ VLockPartition_r(char *name)
 	pausing.tv_usec = 500000;
 	select(0, NULL, NULL, NULL, &pausing);
     }
-    assert(retries != 0);
+    osi_Assert(retries != 0);
 
 #if defined (AFS_HPUX_ENV)
 
-    assert(getprivgrp(privGrpList) == 0);
+    osi_Assert(getprivgrp(privGrpList) == 0);
 
     /*
      * In general, it will difficult and time-consuming ,if not impossible,
@@ -1247,26 +1283,26 @@ VLockPartition_r(char *name)
     if (((*globalMask) & privmask(PRIV_LOCKRDONLY)) == 0) {
 	/* allow everybody to set a lock on a read-only file descriptor */
 	(*globalMask) |= privmask(PRIV_LOCKRDONLY);
-	assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
+	osi_Assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
 	       == 0);
 
 	lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
 
 	/* remove the privilege granted to everybody to lock a read-only fd */
 	(*globalMask) &= ~(privmask(PRIV_LOCKRDONLY));
-	assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
+	osi_Assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
 	       == 0);
     } else {
 	/* in this case, we should be able to do this with impunity, anyway */
 	lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
     }
 
-    assert(lockfRtn != -1);
+    osi_Assert(lockfRtn != -1);
 #else
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
-    assert(lockf(dp->lock_fd, F_LOCK, 0) != -1);
+    osi_Assert(lockf(dp->lock_fd, F_LOCK, 0) != -1);
 #else
-    assert(flock(dp->lock_fd, LOCK_EX) == 0);
+    osi_Assert(flock(dp->lock_fd, LOCK_EX) == 0);
 #endif /* defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) */
 #endif
 }
@@ -1373,7 +1409,7 @@ VGetPartitionById_r(afs_int32 id, int abortp)
     }
 
     if (abortp) {
-	assert(dp != NULL);
+	osi_Assert(dp != NULL);
     }
     return dp;
 }
@@ -1417,7 +1453,7 @@ VLookupPartition_r(char * path)
 static void
 AddPartitionToTable_r(struct DiskPartition64 *dp)
 {
-    assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    osi_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
     DiskPartitionTable[dp->index] = dp;
 }
 
@@ -1425,7 +1461,7 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
 static void
 DeletePartitionFromTable_r(struct DiskPartition64 *dp)
 {
-    assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    osi_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
     DiskPartitionTable[dp->index] = NULL;
 }
 #endif

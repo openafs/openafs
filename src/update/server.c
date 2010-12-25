@@ -21,14 +21,13 @@
 #include <WINNT/afsevent.h>
 #include <fcntl.h>
 #include <io.h>
-#include <afs/dirent.h>
 #include <afs/procmgmt.h>
 #else
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/file.h>
-#include <dirent.h>
 #endif
+#include <dirent.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

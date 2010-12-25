@@ -32,7 +32,7 @@
 #include <rx/rxstat.h>
 #ifdef AFS_NT40_ENV
 # include <winsock2.h>
-# include <krb5_nt.h>
+# include <afs/krb5_nt.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>

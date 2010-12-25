@@ -28,7 +28,7 @@
 #include <unistd.h>
 #endif
 #include <afs/nfs.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <lwp.h>
 #include <lock.h>
 #include <time.h>

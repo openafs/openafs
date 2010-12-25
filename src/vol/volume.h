@@ -36,9 +36,9 @@ typedef bit32 FileOffset;	/* Offset in this file */
 
 #ifdef VOL_LOCK_DEBUG
 #define VOL_LOCK_ASSERT_HELD \
-    assert(vol_glock_holder == pthread_self())
+    osi_Assert(vol_glock_holder == pthread_self())
 #define VOL_LOCK_ASSERT_UNHELD \
-    assert(vol_glock_holder == 0)
+    osi_Assert(vol_glock_holder == 0)
 #define _VOL_LOCK_SET_HELD \
     vol_glock_holder = pthread_self()
 #define _VOL_LOCK_SET_UNHELD \
@@ -62,7 +62,6 @@ typedef bit32 FileOffset;	/* Offset in this file */
 
 
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
 extern pthread_mutex_t vol_glock_mutex;
 extern pthread_mutex_t vol_trans_mutex;
@@ -74,37 +73,31 @@ extern int vol_attach_threads;
 extern pthread_t vol_glock_holder;
 #define VOL_LOCK \
     do { \
-        assert(pthread_mutex_lock(&vol_glock_mutex) == 0); \
-        assert(vol_glock_holder == 0); \
-        vol_glock_holder = pthread_self(); \
+	MUTEX_ENTER(&vol_glock_mutex); \
+	VOL_LOCK_ASSERT_UNHELD; \
+	_VOL_LOCK_SET_HELD; \
     } while (0)
 #define VOL_UNLOCK \
     do { \
         VOL_LOCK_ASSERT_HELD; \
-        vol_glock_holder = 0; \
-        assert(pthread_mutex_unlock(&vol_glock_mutex) == 0); \
+	_VOL_LOCK_SET_UNHELD; \
+	MUTEX_EXIT(&vol_glock_mutex); \
     } while (0)
 #define VOL_CV_WAIT(cv) \
     do { \
         VOL_LOCK_DBG_CV_WAIT_BEGIN; \
-        assert(pthread_cond_wait((cv), &vol_glock_mutex) == 0); \
+	CV_WAIT((cv), &vol_glock_mutex); \
         VOL_LOCK_DBG_CV_WAIT_END; \
     } while (0)
 #else /* !VOL_LOCK_DEBUG */
-#define VOL_LOCK \
-    assert(pthread_mutex_lock(&vol_glock_mutex) == 0)
-#define VOL_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_glock_mutex) == 0)
-#define VOL_CV_WAIT(cv) assert(pthread_cond_wait((cv), &vol_glock_mutex) == 0)
+#define VOL_LOCK MUTEX_ENTER(&vol_glock_mutex)
+#define VOL_UNLOCK MUTEX_EXIT(&vol_glock_mutex)
+#define VOL_CV_WAIT(cv) CV_WAIT((cv), &vol_glock_mutex)
 #endif /* !VOL_LOCK_DEBUG */
-#define VSALVSYNC_LOCK \
-    assert(pthread_mutex_lock(&vol_salvsync_mutex) == 0)
-#define VSALVSYNC_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_salvsync_mutex) == 0)
-#define VTRANS_LOCK \
-    assert(pthread_mutex_lock(&vol_trans_mutex) == 0)
-#define VTRANS_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_trans_mutex) == 0)
+#define VSALVSYNC_LOCK MUTEX_ENTER(&vol_salvsync_mutex)
+#define VSALVSYNC_UNLOCK MUTEX_EXIT(&vol_salvsync_mutex)
+#define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
+#define VTRANS_UNLOCK MUTEX_EXIT(&vol_trans_mutex)
 #else /* AFS_PTHREAD_ENV */
 #define VOL_LOCK
 #define VOL_UNLOCK
@@ -124,7 +117,7 @@ typedef enum {
     salvageServer       = 4,    /**< dafs online salvager */
     debugUtility        = 5,    /**< fssync-debug or similar utility */
     volumeServer        = 6,    /**< the volserver process */
-    volumeSalvager      = 7,    /**< the standalone single-volume salvager */
+    volumeSalvager      = 7     /**< the standalone single-volume salvager */
 } ProgramType;
 extern ProgramType programType;	/* The type of program using the package */
 
@@ -178,9 +171,12 @@ typedef enum {
     VOL_STATE_VNODE_RELEASE     = 18,   /**< volume is busy releasing vnodes */
     VOL_STATE_VLRU_ADD          = 19,   /**< volume is busy being added to a VLRU queue */
     VOL_STATE_DELETED           = 20,   /**< volume has been deleted by the volserver */
+    VOL_STATE_SALVAGE_REQ       = 21,   /**< volume has been requested to be salvaged,
+                                         *   but is waiting for other users to go away
+                                         *   so it can be offlined */
     /* please add new states directly above this line */
-    VOL_STATE_FREED             = 21,   /**< debugging aid */
-    VOL_STATE_COUNT             = 22,   /**< total number of valid states */
+    VOL_STATE_FREED             = 22,   /**< debugging aid */
+    VOL_STATE_COUNT             = 23    /**< total number of valid states */
 } VolState;
 
 /**
@@ -195,7 +191,7 @@ enum VolFlags {
     VOL_IS_BUSY           = 0x20,    /**< volume is not to be free()d */
     VOL_ON_VLRU           = 0x40,    /**< volume is on the VLRU */
     VOL_HDR_DONTSALV      = 0x80,    /**< volume header DONTSALVAGE flag is set */
-    VOL_LOCKED            = 0x100,   /**< volume is disk-locked (@see VLockVolumeNB) */
+    VOL_LOCKED            = 0x100    /**< volume is disk-locked (@see VLockVolumeNB) */
 };
 
 /* VPrintExtendedCacheStats flags */
@@ -219,7 +215,7 @@ typedef enum {
     VLRU_QUEUE_CANDIDATE  = 3,  /**< soft detach candidate pool */
     VLRU_QUEUE_HELD       = 4,  /*   volumes which are not allowed
 				 *   to be soft detached */
-    VLRU_QUEUE_INVALID    = 5,  /**< invalid queue id */
+    VLRU_QUEUE_INVALID    = 5   /**< invalid queue id */
 } VLRUQueueName;
 
 /* default scanner timing parameters */
@@ -610,7 +606,11 @@ typedef struct VolumeOnlineSalvage {
     int reason;                 /**< reason for requesting online salvage */
     byte requested;             /**< flag specifying that salvage should be scheduled */
     byte scheduled;             /**< flag specifying whether online salvage scheduled */
-    byte reserved[2];           /**< padding */
+    byte scheduling;            /**< if nonzero, this volume has entered
+                                 *   VCheckSalvage(), so if we recurse into
+                                 *   VCheckSalvage() with this set, exit immediately
+                                 *   to avoid recursing forever */
+    byte reserved[1];           /**< padding */
 } VolumeOnlineSalvage;
 
 /**
@@ -653,10 +653,15 @@ typedef struct Volume {
     bit32 cacheCheck;		/* Online sequence number to be used to invalidate vnode cache entries
 				 * that stayed around while a volume was offline */
     short nUsers;		/* Number of users of this volume header */
-    byte needsPutBack;		/* For a volume utility, this flag is set if we need
-				 * to give the volume back when we detach it.  The server has
+#define VOL_PUTBACK 1
+#define VOL_PUTBACK_DELETE 2
+    byte needsPutBack;		/* For a volume utility, this flag is set to VOL_PUTBACK if we
+				 * need to give the volume back when we detach it.  The server has
 				 * certain modes where it doesn't detach the volume, and
-				 * if we give it back spuriously, the server aborts.  This field
+				 * if we give it back spuriously, the server aborts. If set to
+				 * VOL_PUTBACK_DELETE, it indicates that we need to tell the
+				 * fileserver that the volume is gone entirely, instead of just
+				 * giving the volume back to the fileserver. This field
 				 * is meaningless on the file server */
     byte specialStatus;		/* An error code to return on VGetVolume: the
 				 * volume is unavailable for the reason quoted,
@@ -984,6 +989,8 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 
 /* VRequestSalvage_r flags */
 #define VOL_SALVAGE_INVALIDATE_HEADER 0x1 /* for demand attach fs, invalidate volume header cache */
+#define VOL_SALVAGE_NO_OFFLINE        0x2 /* we do not need to wait to offline the volume; it has
+                                           * not been fully attached */
 
 
 #if	defined(NEARINODE_HINT)

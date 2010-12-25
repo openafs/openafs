@@ -31,7 +31,6 @@
 
 
 #include <stdio.h>
-#include <potpourri.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif

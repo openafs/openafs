@@ -233,10 +233,41 @@ VVolLockType(int mode, int writeable)
 	    return 0;
 
 	default:
-	    assert(0 /* unknown checkout mode */);
+	    osi_Assert(0 /* unknown checkout mode */);
 	    return 0;
 	}
     }
+}
+
+/**
+ * tells caller whether or not the volume is effectively salvaging.
+ *
+ * @param vp  volume pointer
+ *
+ * @return whether volume is salvaging or not
+ *  @retval 0 no, volume is not salvaging
+ *  @retval 1 yes, volume is salvaging
+ *
+ * @note The volume may not actually be getting salvaged at the moment if
+ *       this returns 1, but may have just been requested or scheduled to be
+ *       salvaged. Callers should treat these cases as pretty much the same
+ *       anyway, since we should not touch a volume that is busy salvaging or
+ *       waiting to be salvaged.
+ */
+static_inline int
+VIsSalvaging(struct Volume *vp)
+{
+    /* these tests are a bit redundant, but to be safe... */
+    switch(V_attachState(vp)) {
+    case VOL_STATE_SALVAGING:
+    case VOL_STATE_SALVAGE_REQ:
+	return 1;
+    default:
+	if (vp->salvage.requested || vp->salvage.scheduled) {
+	    return 1;
+	}
+    }
+    return 0;
 }
 
 /**
@@ -291,6 +322,7 @@ VIsErrorState(VolState state)
     switch (state) {
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
+    case VOL_STATE_SALVAGE_REQ:
 	return 1;
     default:
 	return 0;
@@ -382,11 +414,11 @@ VWaitStateChange_r(Volume * vp)
 {
     VolState state_save = V_attachState(vp);
 
-    assert(vp->nWaiters || vp->nUsers);
+    osi_Assert(vp->nWaiters || vp->nUsers);
     do {
 	VOL_CV_WAIT(&V_attachCV(vp));
     } while (V_attachState(vp) == state_save);
-    assert(V_attachState(vp) != VOL_STATE_FREED);
+    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -403,11 +435,11 @@ VWaitStateChange_r(Volume * vp)
 static_inline void
 VWaitExclusiveState_r(Volume * vp)
 {
-    assert(vp->nWaiters || vp->nUsers);
+    osi_Assert(vp->nWaiters || vp->nUsers);
     while (VIsExclusiveState(V_attachState(vp))) {
 	VOL_CV_WAIT(&V_attachCV(vp));
     }
-    assert(V_attachState(vp) != VOL_STATE_FREED);
+    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -435,7 +467,7 @@ VChangeState_r(Volume * vp, VolState new_state)
     VStats.state_levels[new_state]++;
 
     V_attachState(vp) = new_state;
-    assert(pthread_cond_broadcast(&V_attachCV(vp)) == 0);
+    CV_BROADCAST(&V_attachCV(vp));
     return old_state;
 }
 

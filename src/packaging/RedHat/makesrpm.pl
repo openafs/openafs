@@ -31,6 +31,7 @@ my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
 
 system("tar -C $tmpdir -xvjf $srcball '\*/configure.ac' ".
        "'\*/src/packaging/RedHat' ".
+       "'\*/.version' ".
        "'\*/build-tools' > /dev/null")==0
   or die "Unable to unpack src tar ball\n";
 

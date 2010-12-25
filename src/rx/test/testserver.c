@@ -35,20 +35,21 @@
 
 int error;			/* Return this error number on a call */
 int print = 0, eventlog = 0, rxlog = 0;
-extern rx_intentionallyDroppedPacketsPer100;
-extern char rxi_tracename[];
-extern int rx_initSendWindow, rx_initReceiveWindow;
-extern int rxi_nSendFrags, rxi_nRecvFrags;
-extern int (*rxi_syscallp) ();
 struct clock computeTime, waitTime;
 FILE *debugFile;
 char *rcvFile;
 int logstdout = 0;
 
+void Abort(char *msg, int a, int b, int c, int d, int e);
+void Quit(char *msg, int a, int b, int c, int d, int e);
+void OpenFD(int n);
+int  FileRequest(struct rx_call *call);
+int  SimpleRequest(struct rx_call *call);
+
 void
 intSignal(int ignore)
 {
-    Quit("Interrupted");
+    Quit("Interrupted",0,0,0,0,0);
 }
 
 void
@@ -56,13 +57,11 @@ quitSignal(int ignore)
 {
     static int quitCount = 0;
     if (++quitCount > 1)
-	Quit("rx_ctest: second quit signal, aborting");
+	Quit("rx_ctest: second quit signal, aborting",0,0,0,0,0);
     rx_debugFile = debugFile = fopen("rx_stest.db", "w");
     if (debugFile)
 	rx_PrintStats(debugFile);
 }
-
-int SimpleRequest(), FileRequest();
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
 int
@@ -89,6 +88,7 @@ main(argc, argv)
     struct rx_securityClass *(secobjs[1]);
     int err = 0;
     int setFD = 0;
+    int jumbo = 0;
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
     setlinebuf(stdout);
@@ -99,10 +99,14 @@ main(argc, argv)
     while (argc && **argv == '-') {
 	if (strcmp(*argv, "-verbose") == 0)
 	    print = 1;
+        else if (strcmp(*argv, "-jumbo") == 0)
+	    jumbo = 1;
 	else if (strcmp(*argv, "-rxlog") == 0)
 	    rxlog = 1;
+#if defined(RXDEBUG) && !defined(AFS_NT40_ENV)
 	else if (strcmp(*argv, "-trace") == 0)
 	    strcpy(rxi_tracename, *(++argv)), argc--;
+#endif
 	else if (strcmp(*argv, "-logstdout") == 0)
 	    logstdout = 1;
 	else if (strcmp(*argv, "-eventlog") == 0)
@@ -119,8 +123,13 @@ main(argc, argv)
 	    rx_initReceiveWindow = atoi(*++argv), argc--;
 	else if (strcmp(*argv, "-file") == 0)
 	    rcvFile = *++argv, argc--;
-	else if (strcmp(*argv, "-drop") == 0)
+	else if (strcmp(*argv, "-drop") == 0) {
+#ifdef RXDEBUG
 	    rx_intentionallyDroppedPacketsPer100 = atoi(*++argv), argc--;
+#else
+            fprintf(stderr, "ERROR: Compiled without RXDEBUG\n");
+#endif
+        }
 	else if (strcmp(*argv, "-err") == 0)
 	    error = atoi(*++argv), argc--;
 	else if (strcmp(*argv, "-compute") == 0) {
@@ -141,7 +150,7 @@ main(argc, argv)
 	argv++, argc--;
     }
     if (err || argc != 0)
-	Quit("usage: rx_stest [-silent] [-rxlog] [-eventlog]");
+	Quit("usage: rx_stest [-silent] [-rxlog] [-eventlog]",0,0,0,0,0);
 
     if (rxlog || eventlog) {
 	if (logstdout)
@@ -149,7 +158,7 @@ main(argc, argv)
 	else
 	    debugFile = fopen("rx_stest.db", "w");
 	if (debugFile == NULL)
-	    Quit("Couldn't open rx_stest.db");
+	    Quit("Couldn't open rx_stest.db",0,0,0,0,0);
 	if (rxlog)
 	    rx_debugFile = debugFile;
 	if (eventlog)
@@ -163,6 +172,16 @@ main(argc, argv)
 
     if (setFD > 0)
 	OpenFD(setFD);
+
+#ifdef AFS_NT40_ENV
+    rx_EnableHotThread();
+#endif
+
+    if (!jumbo)
+        rx_SetNoJumbo();
+
+    rx_SetUdpBufSize(256 * 1024);
+
     if (rx_Init(htons(2500)) != 0) {
 	printf("RX initialization failed, exiting.\n");
 	exit(1);
@@ -176,41 +195,56 @@ main(argc, argv)
 			    1,	/*Execute request */
 			    rcvFile ? FileRequest : SimpleRequest);
     if (!service)
-	Abort("rx_NewService returned 0!\n");
+	Abort("rx_NewService returned 0!\n",0,0,0,0,0);
+
+    rx_SetMinProcs(service, 2);
+    rx_SetMaxProcs(service, 100);
+    rx_SetCheckReach(service, 1);
+
     printf("Using %d packet buffers\n", rx_nPackets);
     rx_StartServer(1);
 }
 
-SimpleRequest(call)
-     struct rx_call *call;
+static char buf[2000000];
+
+int SimpleRequest(struct rx_call *call)
 {
     int n;
-    int nbytes = 1000;
-    char buf[1000];
+    int nbytes = sizeof(buf);
     while ((n = rx_Read(call, buf, nbytes)) > 0)
 	if (print)
 	    printf("stest: Received %d bytes\n", n);
     if (!rx_Error(call)) {
 	/* Fake compute time (use select to lock out everything) */
-	struct timeval t;
+#ifndef AFS_NT40_ENV
+        struct timeval t;
+#endif
 	if (!clock_IsZero(&computeTime)) {
+#ifdef AFS_NT40_ENV
+	    Sleep(computeTime.sec * 1000 + 100 * computeTime.usec);
+#else
 	    t.tv_sec = computeTime.sec;
 	    t.tv_usec = computeTime.usec;
-#ifdef AFS_NT40_ENV
-	    Sleep(t.tv_sec);
-#else
+#ifdef AFS_PTHREAD_ENV
 	    if (select(0, 0, 0, 0, &t) != 0)
-		Quit("Select didn't return 0");
+		Quit("Select didn't return 0",0,0,0,0,0);
+#else
+	    IOMGR_Sleep(t.tv_sec);
+#endif
 #endif
 	}
 	/* Then wait time (use iomgr_select to allow rx to run) */
 	if (!clock_IsZero(&waitTime)) {
+#ifdef AFS_NT40_ENV
+	    Sleep(waitTime.sec * 1000 + 100 * waitTime.usec);
+#else
 	    t.tv_sec = waitTime.sec;
 	    t.tv_usec = waitTime.usec;
 #ifdef AFS_PTHREAD_ENV
 	    select(0, 0, 0, 0, &t);
 #else
 	    IOMGR_Sleep(t.tv_sec);
+#endif
 #endif
 	}
 	rx_Write(call, "So long, and thanks for all the fish!\n",
@@ -222,8 +256,8 @@ SimpleRequest(call)
     return 0;
 }
 
-FileRequest(call)
-     struct rx_call *call;
+int
+FileRequest(struct rx_call *call)
 {
     int fd;
     struct stat status;
@@ -237,7 +271,7 @@ FileRequest(call)
     fd = open(rcvFile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
 	perror("open");
-	return;
+	return -1;
     }
     fstat(fd, &status);
 #ifdef AFS_NT40_ENV
@@ -257,7 +291,7 @@ FileRequest(call)
     while (nbytes = rx_Read(call, buffer, blockSize)) {
 	if (write(fd, buffer, nbytes) != nbytes) {
 	    perror("writev");
-	    Abort("Write Failed.\n");
+	    Abort("Write Failed.\n",0,0,0,0,0);
 	    break;
 	}
     }
@@ -271,7 +305,8 @@ FileRequest(call)
     return 0;
 }
 
-Abort(msg, a, b, c, d, e)
+void
+Abort(char *msg, int a, int b, int c, int d, int e)
 {
     printf((char *)msg, a, b, c, d, e);
     printf("\n");
@@ -282,7 +317,8 @@ Abort(msg, a, b, c, d, e)
     abort();
 }
 
-Quit(msg, a, b, c, d, e)
+void
+Quit(char *msg, int a, int b, int c, int d, int e)
 {
     printf((char *)msg, a, b, c, d, e);
     printf("\n");
@@ -300,8 +336,8 @@ Quit(msg, a, b, c, d, e)
  * Open file descriptors until file descriptor n or higher is returned.
  */
 #include <sys/stat.h>
-OpenFD(n)
-     int n;
+void
+OpenFD(int n)
 {
     int i;
     struct stat sbuf;

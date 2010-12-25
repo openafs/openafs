@@ -31,11 +31,7 @@
 #include <afs/afsint.h>
 #include <stdio.h>
 #include <signal.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
-#endif /* AFS_PTHREAD_ENV */
+#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -209,7 +205,21 @@ BKGSleep(void *unused)
 }
 #endif
 
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+/* no volser_syscall */
+#elif defined(AFS_SUN511_ENV)
+int
+volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
+{
+    int err, code;
+    code = ioctl_sun_afs_syscall(28 /* AFSCALL_CALL */, a3, a4, a5, 0, 0, 0,
+                                 &err);
+    if (code) {
+	err = code;
+    }
+    return err;
+}
+#else
 int
 volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
@@ -478,10 +488,10 @@ main(int argc, char **argv)
 #ifdef AFS_PTHREAD_ENV
 	pthread_t tid;
 	pthread_attr_t tattr;
-	assert(pthread_attr_init(&tattr) == 0);
-	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+	osi_Assert(pthread_attr_init(&tattr) == 0);
+	osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
+	osi_Assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);

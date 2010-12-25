@@ -64,7 +64,7 @@
 #undef HAVE_DIRECT_H
 
 /* Define if you have the <dirent.h> header file.  */
-#undef HAVE_DIRENT_H
+#define HAVE_DIRENT_H 1
 
 /* Define if you have the <fcntl.h> header file.  */
 #define HAVE_FCNTL_H
@@ -206,3 +206,5 @@ typedef int errno_t;
 /* Windows only supports BSD variants */
 #define S_IRUSR _S_IREAD
 #define S_IWUSR _S_IWRITE
+
+#define HAVE_CONIO_H 1

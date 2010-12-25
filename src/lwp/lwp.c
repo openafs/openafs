@@ -1354,13 +1354,15 @@ static PROCESS
 lwp_alloc_process(char *name, pthread_startroutine_t ep, pthread_addr_t arg)
 {
     PROCESS lp;
-    assert(lp = (PROCESS) malloc(sizeof(*lp)));
+    lp = (PROCESS) malloc(sizeof(*lp));
+    assert(lp);
     memset(lp, 0, sizeof(*lp));
     if (!name) {
 	char temp[100];
 	static procnum;
 	sprintf(temp, "unnamed_process_%04d", ++procnum);
-	assert(name = (char *)malloc(strlen(temp) + 1));
+	name = (char *)malloc(strlen(temp) + 1);
+	assert(name);
 	strcpy(name, temp);
     }
     lp->name = name;
@@ -1377,7 +1379,8 @@ lwp_thread_process(PROCESS lp)
 {
     lp->next = lwp_process_list;
     lwp_process_list = lp;
-    assert(!pthread_setspecific(lwp_process_key, (pthread_addr_t) lp));
+    if (pthread_setspecific(lwp_process_key, (pthread_addr_t) lp) != 0)
+	assert(0);
 }
 
 /* The top-level routine used as entry point to explicitly created LWP
@@ -1388,10 +1391,10 @@ lwp_top_level(pthread_addr_t argp)
 {
     PROCESS lp = (PROCESS) argp;
 
-    assert(!pthread_mutex_lock(&lwp_mutex));
+    MUTEX_ENTER(&lwp_mutex);
     lwp_thread_process(lp);
     (lp->ep) (lp->arg);
-    assert(!pthread_mutex_unlock(&lwp_mutex));
+    MUTEX_EXIT(&lwp_mutex);
     /* Should cleanup state */
 }
 
@@ -1408,10 +1411,13 @@ LWP_CreateProcess(pthread_startroutine_t ep, int stacksize, int priority,
     if (!cmalwp_pri_inrange(priority))
 	return LWP_EBADPRI;
 #endif
-    assert(!pthread_attr_create(&attr));
-    assert(!pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
+    if (pthread_attr_create(&attr))
+	assert(0);
+    if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED))
+	assert(0);
     if (stacksize)
-	assert(!pthread_attr_setstacksize(&attr, stacksize));
+	if (pthread_attr_setstacksize(&attr, stacksize))
+	    assert(0);
 #ifndef BDE_THREADS
     (void)pthread_attr_setinheritsched(&attr, PTHREAD_DEFAULT_SCHED);
     (void)pthread_attr_setsched(&attr, SCHED_FIFO);
@@ -1423,14 +1429,16 @@ LWP_CreateProcess(pthread_startroutine_t ep, int stacksize, int priority,
 			   (pthread_addr_t) parm);
 
     /* allow new thread to run if higher priority */
-    assert(!pthread_mutex_unlock(&lwp_mutex));
+    MUTEX_EXIT(&lwp_mutex);
     /* process is only added to active list after first time it runs (it adds itself) */
     status =
 	pthread_create(&lp->handle, attr,
 		       (pthread_startroutine_t) lwp_top_level,
 		       (pthread_addr_t) lp);
-    assert(!pthread_attr_delete(&attr));
-    assert(!pthread_mutex_lock(&lwp_mutex));
+    if (pthread_attr_delete(&attr))
+	assert(0);
+    if (pthread_mutex_lock(&lwp_mutex))
+	assert(0);
     if (status != 0) {
 	free(lp);
 	return LWP_ENOMEM;
@@ -1443,14 +1451,16 @@ PROCESS
 LWP_ActiveProcess(void)
 {				/* returns pid of current process */
     PROCESS pid;
-    assert(!pthread_getspecific(lwp_process_key, (pthread_addr_t *) & pid));
+    if (pthread_getspecific(lwp_process_key, (pthread_addr_t *) & pid))
+	assert(0);
     return pid;
 }
 
 int
 LWP_CurrentProcess(PROCESS * pid)
 {				/* get pid of current process */
-    assert(!pthread_getspecific(lwp_process_key, (pthread_addr_t *) pid));
+    if (pthread_getspecific(lwp_process_key, (pthread_addr_t *) pid))
+	assert(0);
     return LWP_SUCCESS;
 }
 
@@ -1463,9 +1473,9 @@ LWP_DestroyProcess(PROCESS pid)
 int
 LWP_DispatchProcess(void)
 {				/* explicit voluntary preemption */
-    assert(!pthread_mutex_unlock(&lwp_mutex));
+    MUTEX_EXIT(&lwp_mutex);
     pthread_yield();
-    assert(!pthread_mutex_lock(&lwp_mutex));
+    MUTEX_ENTER(&lwp_mutex);
     return LWP_SUCCESS;
 }
 
@@ -1494,8 +1504,9 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
 
     /* Create pthread key to associate LWP process descriptor with each
      * LWP-created thread */
-    assert(!pthread_keycreate(&lwp_process_key, (pthread_destructor_t)
-			      lwp_process_key_destructor));
+    if (pthread_keycreate(&lwp_process_key, (pthread_destructor_t)
+			  lwp_process_key_destructor))
+	assert(0);
 
     lp = lwp_alloc_process("main process", main, 0);
     lp->handle = pthread_self();
@@ -1505,8 +1516,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
 			       cmalwp_lwppri_to_cmapri(priority));
 
 #endif
-    assert(pthread_mutex_init(&lwp_mutex, MUTEX_FAST_NP) == 0);
-    assert(pthread_mutex_lock(&lwp_mutex) == 0);
+    MUTEX_INIT(&lwp_mutex, "lwp", MUTEX_DEFAULT, 0);
+    MUTEX_ENTER(&lwp_mutex);
     initialized = 1;
     *pid = lp;
     return LWP_SUCCESS;
@@ -1542,7 +1553,8 @@ getevent(void *event)
 	assert(newp);
 	newp->next = hashtable[hashcode];
 	hashtable[hashcode] = newp;
-	assert(!pthread_cond_init(&newp->cond, ((pthread_condattr_t) 0)));
+	if (pthread_cond_init(&newp->cond, ((pthread_condattr_t) 0)))
+	    assert(0);
 	newp->seq = 0;
     }
     newp->event = event;
@@ -1564,7 +1576,8 @@ LWP_WaitProcess(void *event)
     ev = getevent(event);
     seq = ev->seq;
     while (seq == ev->seq) {
-	assert(pthread_cond_wait(&ev->cond, &lwp_mutex) == 0);
+	if (pthread_cond_wait(&ev->cond, &lwp_mutex))
+	    assert(0);
     }
     debugf(("%s: Woken up (%x)\n", lwp_process_string(), event));
     relevent(ev);
@@ -1587,7 +1600,8 @@ LWP_NoYieldSignal(void *event)
     ev = getevent(event);
     if (ev->refcount > 1) {
 	ev->seq++;
-	assert(pthread_cond_broadcast(&ev->cond) == 0);
+	if (pthread_cond_broadcast(&ev->cond))
+	    assert(0);
     }
     relevent(ev);
     return LWP_SUCCESS;
@@ -1603,10 +1617,10 @@ LWP_SignalProcess(void *event)
     ev = getevent(event);
     if (ev->refcount > 1) {
 	ev->seq++;
-	assert(!pthread_mutex_unlock(&lwp_mutex));
-	assert(!pthread_cond_broadcast(&ev->cond));
+	MUTEX_EXIT(&lwp_mutex);
+	CV_BROADCAST(&ev->cond);
 	pthread_yield();
-	assert(!pthread_mutex_lock(&lwp_mutex));
+	MUTEX_ENTER(&lwp_mutex);
     }
     relevent(ev);
     return LWP_SUCCESS;

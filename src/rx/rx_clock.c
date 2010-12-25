@@ -41,7 +41,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "rx.h"
 #include "rx_clock.h"
 #endif
@@ -74,10 +73,8 @@ clock_Sync(void)
 
     signal(SIGALRM, SIG_IGN);
     if (setitimer(ITIMER_REAL, &itimer, &otimer) != 0) {
-	fprintf(stderr, "clock:  could not set interval timer; \
-				aborted(errno=%d)\n", errno);
-	fflush(stderr);
-	assert(0);
+	osi_Panic("clock:  could not set interval timer; aborted(errno=%d)\n",
+                  errno);
     }
     if (relclock_epoch.usec + startvalue.usec >= otimer.it_value.tv_usec) {
 	relclock_epoch.sec = relclock_epoch.sec +

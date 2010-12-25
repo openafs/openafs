@@ -560,7 +560,7 @@ afsmonitor: cmd comerr gtx xstat
 tests: rxtests ubiktests rpctestlib
 
 # pthread based user space RX library
-libafsrpc: rx rxkad des
+libafsrpc: rx rxkad rxstat fsint des
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \

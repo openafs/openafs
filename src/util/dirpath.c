@@ -18,7 +18,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <stdio.h>
-#include "assert.h"
+#include "afs_assert.h"
 #include "afsutil.h"
 #include "fileutil.h"
 #ifdef AFS_PTHREAD_ENV

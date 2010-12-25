@@ -106,23 +106,6 @@ afs_pd_skip(struct afs_pdata *apd, size_t skip)
 }
 
 static_inline int
-afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val)
-{
-    if (apd == NULL || apd->remaining < sizeof(afs_int32))
-	return EINVAL;
-    apd->remaining -= sizeof(afs_int32);
-    *val = *(afs_int32 *)apd->ptr;
-    apd->ptr += sizeof(afs_int32);
-    return 0;
-}
-
-static_inline int
-afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val)
-{
-    return afs_pd_getInt(apd, (afs_int32 *)val);
-}
-
-static_inline int
 afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes)
 {
     if (apd == NULL || apd->remaining < bytes)
@@ -131,6 +114,18 @@ afs_pd_getBytes(struct afs_pdata *apd, void *dest, size_t bytes)
     memcpy(dest, apd->ptr, bytes);
     apd->ptr += bytes;
     return 0;
+}
+
+static_inline int
+afs_pd_getInt(struct afs_pdata *apd, afs_int32 *val)
+{
+    return afs_pd_getBytes(apd, val, sizeof(*val));
+}
+
+static_inline int
+afs_pd_getUint(struct afs_pdata *apd, afs_uint32 *val)
+{
+    return afs_pd_getBytes(apd, val, sizeof(*val));
 }
 
 static_inline void *
@@ -180,18 +175,6 @@ afs_pd_getStringPtr(struct afs_pdata *apd, char **str)
 }
 
 static_inline int
-afs_pd_putInt(struct afs_pdata *apd, afs_int32 val)
-{
-    if (apd == NULL || apd->remaining < sizeof(afs_int32))
-	return E2BIG;
-    *(afs_int32 *)apd->ptr = val;
-    apd->ptr += sizeof(afs_int32);
-    apd->remaining -= sizeof(afs_int32);
-
-    return 0;
-}
-
-static_inline int
 afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len)
 {
     if (apd == NULL || apd->remaining < len)
@@ -200,6 +183,12 @@ afs_pd_putBytes(struct afs_pdata *apd, const void *bytes, size_t len)
     apd->ptr += len;
     apd->remaining -= len;
     return 0;
+}
+
+static_inline int
+afs_pd_putInt(struct afs_pdata *apd, afs_int32 val)
+{
+    return afs_pd_putBytes(apd, &val, sizeof(val));
 }
 
 static_inline int

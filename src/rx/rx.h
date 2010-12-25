@@ -173,9 +173,6 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 /* Enable or disable asymmetric client checking for a service */
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
 
-/* Set connection hard and idle timeouts for a connection */
-#define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
-#define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
 #define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */
@@ -264,7 +261,7 @@ struct rx_connection {
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
-    afs_uint32 refCount;		/* Reference count */
+    afs_uint32 refCount;	/* Reference count (rx_refcnt_mutex) */
     u_char flags;		/* Defined below - (conn_data_lock) */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
@@ -391,7 +388,7 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    afs_uint32 refCount;	/* Reference count for this structure */
+    afs_uint32 refCount;	/* Reference count for this structure (rx_peerHashTable_lock) */
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
@@ -401,6 +398,7 @@ struct rx_peer {
     int rtt;			/* Smoothed round trip time, measured in milliseconds/8 */
     int rtt_dev;		/* Smoothed rtt mean difference, in milliseconds/4 */
     struct clock timeout;	/* Current retransmission delay */
+    int backedOff;              /* Has the timeout been backed off due to a missing packet? */
     int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
     int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
 
@@ -438,6 +436,11 @@ struct rx_peer {
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
     afs_int32 maxPacketSize;    /* peer packetsize hint */
+
+#ifdef ADAPT_WINDOW
+    afs_int32 smRtt;
+    afs_int32 countDown;
+#endif
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -455,6 +458,9 @@ struct rx_peer {
 #define	RX_CLIENT_CONNECTION	0
 #define	RX_SERVER_CONNECTION	1
 #endif /* !KDUMP_RX_LOCK */
+
+/* Maximum number of acknowledgements in an acknowledge packet */
+#define	RX_MAXACKS	    255
 
 /* Call structure:  only instantiated for active calls and dallying server calls.  The permanent call state (i.e. the call number as well as state shared with other calls associated with this connection) is maintained in the connection structure. */
 #ifdef KDUMP_RX_LOCK
@@ -512,6 +518,7 @@ struct rx_call {
     afs_uint32 rwind;		/* The receive window:  the peer must not send packets with sequence numbers >= rnext+rwind */
     afs_uint32 tfirst;		/* First unacknowledged transmit packet number */
     afs_uint32 tnext;		/* Next transmit sequence number to use */
+    afs_uint32 tprev;		/* Last packet that we saw an ack for */
     u_short twind;		/* The transmit window:  we cannot assign a sequence number to a packet >= tfirst + twind */
     u_short cwind;		/* The congestion window */
     u_short nSoftAcked;		/* Number soft acked transmit packets */
@@ -546,8 +553,8 @@ struct rx_call {
     u_short MTU;		/* size of packets currently sending */
 #ifdef RX_ENABLE_LOCKS
     short refCount;		/* Used to keep calls from disappearring
-				 * when we get them from a queue. */
-#endif				/* RX_ENABLE_LOCKS */
+				 * when we get them from a queue. (rx_refcnt_lock) */
+#endif                          /* RX_ENABLE_LOCKS */
 /* Call refcount modifiers */
 #define RX_CALL_REFCOUNT_BEGIN  0	/* GetCall/NewCall/EndCall */
 #define RX_CALL_REFCOUNT_RESEND 1	/* resend event */
@@ -580,6 +587,11 @@ struct rx_call {
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
 
+    struct rx_packet *xmitList[RX_MAXACKS]; /* Can't xmit more than we ack */
+                                /* Protected by setting RX_CALL_TQ_BUSY */
+#ifdef ADAPT_WINDOW
+    struct clock pingRequestTime;
+#endif
 #ifdef RXDEBUG_PACKET
     u_short tqc;                /* packet count in tq */
     u_short rqc;                /* packet count in rq */
@@ -628,8 +640,6 @@ struct rx_call {
 #define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
 #define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
 
-/* Maximum number of acknowledgements in an acknowledge packet */
-#define	RX_MAXACKS	    255
 
 /* The structure of the data portion of an acknowledge packet: An acknowledge
  * packet is in network byte order at all times.  An acknowledgement is always

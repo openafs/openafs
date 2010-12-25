@@ -18,6 +18,9 @@ AFS_OS_OBJS = \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \
+<sunx86_511 sun4x_511>
+	osi_ioctl.o \
+<all>
 	osi_file.o \
 	osi_sleep.o \
 	osi_vcache.o \

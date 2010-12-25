@@ -7,18 +7,15 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+# This set of definitions tests the lwp RX library
+#CFLAGS=$(COMMON_CFLAGS) $(XCFLAGS) $(ARCHFLAGS)
+#LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
 
-SRCDIR=/usr/andy/
-LIBRX=${SRCDIR}/lib/librx.a
-DESTDIR=/usr/andy/
-INSTALL=${SRCDIR}/bin/install
-LIBS=${LIBRX} ${SRCDIR}/lib/liblwp.a
-CFLAGS=${DBG} -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS} ${ARCHFLAGS}
+# This set of definitions tests the pthread one
+CFLAGS=$(COMMON_CFLAGS) $(MT_CFLAGS)
+LIBS=$(TOP_LIBDIR)/libafsauthent.a $(TOP_LIBDIR)/libafsrpc.a \
+     $(TOP_LIBDIR)/util.a
 
 all: sample_client sample_server
 
@@ -30,5 +27,12 @@ sample_server: sample_server.o sample.ss.o ${LIBS}
 
 sample_client.o:	sample.h
 sample_server.o:	sample.h
-sample.cs.c sample.ss.c sample.er.c sample.h: sample.xg
-	rxgen sample.xg
+sample.cs.c: sample.xg
+	$(RXGEN) -A -x -C -o $@ sample.xg
+sample.ss.c: sample.xg
+	$(RXGEN) -A -x -S -o $@ sample.xg
+sample.h: sample.xg
+	$(RXGEN) -A -x -h -o $@ sample.xg
+
+clean:
+	rm -f *.o sample.cs.c sample.ss.c sample_client sample_server

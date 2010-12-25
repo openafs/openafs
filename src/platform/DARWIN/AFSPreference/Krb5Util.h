@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Kerberos/Kerberos.h>
+#import <Kerberos/KerberosLogin.h>
 
 @interface Krb5Util : NSObject {
 

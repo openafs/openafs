@@ -43,8 +43,6 @@
 #define RXK_LISTENER_ENV	1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 
-#define	AFS_SYSCALL		65
-
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"
 
@@ -122,6 +120,9 @@
 #define AFS_USERSPACE_IP_ADDR	1
 #define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
+/* so we get _IOW() when we include sys/ioctl.h */
+#define BSD_COMP
+
 #define UKERNEL			1	/* user space kernel */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
 #define AFS_ENV			1
@@ -140,7 +141,9 @@
 #endif
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
-#define	AFS_SYSCALL		65
+
+/* so we get _IOW() when we include sys/ioctl.h */
+#define BSD_COMP
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS		1

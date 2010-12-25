@@ -61,6 +61,6 @@ osi_AttachVnode(struct vcache *avc, int seq) {
 void
 osi_PostPopulateVCache(struct vcache *avc) {
     AFSTOV(avc)->v_mount = afs_globalVFS;
-    vSetType(vc, VREG);
+    vSetType(avc, VREG);
 }
 

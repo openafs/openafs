@@ -75,9 +75,9 @@
 #define	CFLastFailed	    1	/*!< last call failed to this guy (to detect down hosts) */
 /*\}*/
 
+#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-#include <assert.h>
 #else
 #include <lwp.h>
 #endif
@@ -96,8 +96,8 @@ struct ubik_client {
 };
 
 #ifdef AFS_PTHREAD_ENV
-#define LOCK_UBIK_CLIENT(client) assert(pthread_mutex_lock(&client->cm)==0)
-#define UNLOCK_UBIK_CLIENT(client) assert(pthread_mutex_unlock(&client->cm)==0)
+#define LOCK_UBIK_CLIENT(client) MUTEX_ENTER(&client->cm)
+#define UNLOCK_UBIK_CLIENT(client) MUTEX_EXIT(&client->cm)
 #else
 #define LOCK_UBIK_CLIENT(client)
 #define UNLOCK_UBIK_CLIENT(client)
@@ -307,8 +307,8 @@ struct ubik_server {
 
 /*! \name hold and release functions on a database */
 #ifdef AFS_PTHREAD_ENV
-# define	DBHOLD(a)	assert(pthread_mutex_lock(&((a)->versionLock)) == 0)
-# define	DBRELE(a)	assert(pthread_mutex_unlock(&((a)->versionLock)) == 0)
+# define	DBHOLD(a)	MUTEX_ENTER(&((a)->versionLock))
+# define	DBRELE(a)	MUTEX_EXIT(&((a)->versionLock))
 #else /* !AFS_PTHREAD_ENV */
 # define	DBHOLD(a)	ObtainWriteLock(&((a)->versionLock))
 # define	DBRELE(a)	ReleaseWriteLock(&((a)->versionLock))

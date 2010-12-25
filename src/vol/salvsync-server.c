@@ -40,7 +40,7 @@
 #include <sys/time.h>
 #endif
 #include <errno.h>
-#include <assert.h>
+#include <afs/afs_assert.h>
 #include <signal.h>
 #include <string.h>
 
@@ -274,27 +274,27 @@ SALVSYNC_salvInit(void)
 
     /* initialize the queues */
     Lock_Init(&SALVSYNC_handler_lock);
-    assert(pthread_cond_init(&salvageQueue.cv, NULL) == 0);
+    CV_INIT(&salvageQueue.cv, "sq", CV_DEFAULT, 0);
     for (i = 0; i <= VOLMAXPARTS; i++) {
 	queue_Init(&salvageQueue.part[i]);
 	salvageQueue.len[i] = 0;
     }
-    assert(pthread_cond_init(&pendingQueue.queue_change_cv, NULL) == 0);
+    CV_INIT(&pendingQueue.queue_change_cv, "queuechange", CV_DEFAULT, 0);
     queue_Init(&pendingQueue);
     salvageQueue.total_len = pendingQueue.len = 0;
     salvageQueue.last_insert = -1;
     memset(partition_salvaging, 0, sizeof(partition_salvaging));
 
     for (i = 0; i < VSHASH_SIZE; i++) {
-	assert(pthread_cond_init(&SalvageHashTable[i].queue_change_cv, NULL) == 0);
+	CV_INIT(&SalvageHashTable[i].queue_change_cv, "queuechange", CV_DEFAULT, 0);
 	SalvageHashTable[i].len = 0;
 	queue_Init(&SalvageHashTable[i]);
     }
 
     /* start the salvsync thread */
-    assert(pthread_attr_init(&tattr) == 0);
-    assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
+    osi_Assert(pthread_attr_init(&tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+    osi_Assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
 }
 
 static void
@@ -324,7 +324,7 @@ SALVSYNC_syncThread(void * args)
     /* when we fork, the child needs to close the salvsync server sockets,
      * otherwise, it may get salvsync requests, instead of the parent
      * salvageserver */
-    assert(pthread_atfork(NULL, NULL, CleanFDs) == 0);
+    osi_Assert(pthread_atfork(NULL, NULL, CleanFDs) == 0);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -335,7 +335,7 @@ SALVSYNC_syncThread(void * args)
 
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
-    assert(!code);
+    osi_Assert(!code);
 
     InitHandler();
     AcceptOn();
@@ -367,11 +367,10 @@ SALVSYNC_newconnection(int afd)
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == -1) {
-	Log("SALVSYNC_newconnection:  accept failed, errno==%d\n", errno);
-	assert(1 == 2);
+	osi_Panic("SALVSYNC_newconnection:  accept failed, errno==%d\n", errno);
     } else if (!AddHandler(fd, SALVSYNC_com)) {
 	AcceptOff();
-	assert(AddHandler(fd, SALVSYNC_com));
+	osi_Assert(AddHandler(fd, SALVSYNC_com));
     }
 }
 
@@ -777,7 +776,7 @@ static void
 AcceptOn(void)
 {
     if (AcceptHandler == -1) {
-	assert(AddHandler(salvsync_server_state.fd, SALVSYNC_newconnection));
+	osi_Assert(AddHandler(salvsync_server_state.fd, SALVSYNC_newconnection));
 	AcceptHandler = FindHandler(salvsync_server_state.fd);
     }
 }
@@ -786,7 +785,7 @@ static void
 AcceptOff(void)
 {
     if (AcceptHandler != -1) {
-	assert(RemoveHandler(salvsync_server_state.fd));
+	osi_Assert(RemoveHandler(salvsync_server_state.fd));
 	AcceptHandler = -1;
     }
 }
@@ -849,7 +848,7 @@ FindHandler(osi_socket afd)
 	    return i;
 	}
     ReleaseReadLock(&SALVSYNC_handler_lock);	/* just in case */
-    assert(1 == 2);
+    osi_Panic("Failed to find handler\n");
     return -1;			/* satisfy compiler */
 }
 
@@ -861,7 +860,7 @@ FindHandler_r(osi_socket afd)
 	if (HandlerFD[i] == afd) {
 	    return i;
 	}
-    assert(1 == 2);
+    osi_Panic("Failed to find handler\n");
     return -1;			/* satisfy compiler */
 }
 
@@ -1066,7 +1065,7 @@ AddToSalvageQueue(struct SalvageQueueNode * node)
 	UpdateCommandPrio(node);
     }
 
-    assert(pthread_cond_broadcast(&salvageQueue.cv) == 0);
+    CV_BROADCAST(&salvageQueue.cv);
     return 0;
 }
 
@@ -1078,7 +1077,7 @@ DeleteFromSalvageQueue(struct SalvageQueueNode * node)
 	salvageQueue.len[node->partition_id]--;
 	salvageQueue.total_len--;
 	node->state = SALVSYNC_STATE_UNKNOWN;
-	assert(pthread_cond_broadcast(&salvageQueue.cv) == 0);
+	CV_BROADCAST(&salvageQueue.cv);
     }
 }
 
@@ -1088,7 +1087,7 @@ AddToPendingQueue(struct SalvageQueueNode * node)
     queue_Append(&pendingQueue, node);
     pendingQueue.len++;
     node->state = SALVSYNC_STATE_SALVAGING;
-    assert(pthread_cond_broadcast(&pendingQueue.queue_change_cv) == 0);
+    CV_BROADCAST(&pendingQueue.queue_change_cv);
 }
 
 static void
@@ -1098,7 +1097,7 @@ DeleteFromPendingQueue(struct SalvageQueueNode * node)
 	queue_Remove(node);
 	pendingQueue.len--;
 	node->state = SALVSYNC_STATE_UNKNOWN;
-	assert(pthread_cond_broadcast(&pendingQueue.queue_change_cv) == 0);
+	CV_BROADCAST(&pendingQueue.queue_change_cv);
     }
 }
 
@@ -1145,7 +1144,7 @@ UpdateCommandPrio(struct SalvageQueueNode * node)
     afs_int32 id;
     afs_uint32 prio;
 
-    assert(queue_IsOnQueue(node));
+    osi_Assert(queue_IsOnQueue(node));
 
     prio = node->command.sop.prio;
     id = node->partition_id;
@@ -1234,10 +1233,10 @@ SALVSYNC_getWork(void)
     }
 
     /* we should never reach this line */
-    assert(1==2);
+    osi_Panic("Node not found\n");
 
  have_node:
-    assert(node != NULL);
+    osi_Assert(node != NULL);
     node->pid = 0;
     partition_salvaging[node->partition_id]++;
     DeleteFromSalvageQueue(node);

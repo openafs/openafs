@@ -104,10 +104,7 @@ afs_ctime(const time_t *C, char *B, size_t S) {
     strncpy(B, ctime(C), (S-1));
     B[S-1] = '\0';
 #else
-    char buf[32];
-    if (ctime_s(buf, sizeof(buf), C) ||
-        strncpy_s(B, S, buf, _TRUNCATE))
-         B[0] = '\0';
+    ctime_s(B, S, C);
 #endif
     return B;
 }

@@ -989,9 +989,10 @@
           <listitem>
             <para>Download and install the RPM set for your operating system.
             RPMs are available from the OpenAFS web site. You will need the
-            <emphasis role="bold">openafs</emphasis> and
-            <emphasis role="bold">openfs-client</emphasis> packages, along
-            with an <emphasis role="bold">openafs-kernel</emphasis> package
+            <emphasis role="bold">openafs</emphasis>, <emphasis role="bold">openafs-server</emphasis>, 
+            <emphasis role="bold">openafs-client</emphasis> and
+            <emphasis role="bold">openafs-krb5</emphasis> packages, along
+            with an <emphasis role="bold">kmod-openafs</emphasis> package
             matching your current, running ,kernel.</para>
 
             <para>You can find the version of your current kernel by running
@@ -1003,7 +1004,7 @@
             <para>Once downloaded, the packages may be installed with the
             <emphasis role="bold">rpm</emphasis> command
 <programlisting>
-  # rpm -U openafs-* openafs-client-* openafs-server-* openafs-kernel-*
+  # rpm -U openafs-* openafs-client-* openafs-server-* openafs-krb5-* kmod-openafs-*
 </programlisting></para>
           </listitem>
         </orderedlist>

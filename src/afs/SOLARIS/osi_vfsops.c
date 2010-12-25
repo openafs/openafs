@@ -490,11 +490,13 @@ static struct vfssw afs_vfw = {
 };
 #endif
 
+#ifndef AFS_SUN511_ENV
 static struct sysent afssysent = {
     6,
     0,
     Afs_syscall
 };
+#endif /* AFS_SUN511_ENV */
 
 /* inter-module dependencies */
 char _depends_on[] = "drv/ip drv/udp strmod/rpcmod";
@@ -503,7 +505,6 @@ char _depends_on[] = "drv/ip drv/udp strmod/rpcmod";
  * Info/Structs to link the afs module into the kernel
  */
 extern struct mod_ops mod_fsops;
-extern struct mod_ops mod_syscallops;
 
 static struct modlfs afsmodlfs = {
     &mod_fsops,
@@ -515,6 +516,13 @@ static struct modlfs afsmodlfs = {
 #endif
 };
 
+#ifdef AFS_SUN511_ENV
+
+extern struct modldrv afs_modldrv;
+
+#else /* AFS_SUN511_ENV */
+
+extern struct mod_ops mod_syscallops;
 static struct modlsys afsmodlsys = {
     &mod_syscallops,
     "afs syscall interface",
@@ -530,7 +538,7 @@ static struct modlsys afsmodlsys = {
   * land here from sysent or sysent32
   */
 
-#if defined(AFS_SUN57_64BIT_ENV)
+# if defined(AFS_SUN57_64BIT_ENV)
 extern struct mod_ops mod_syscallops32;
 
 static struct modlsys afsmodlsys32 = {
@@ -538,16 +546,21 @@ static struct modlsys afsmodlsys32 = {
     "afs syscall interface(32 bit)",
     &afssysent
 };
-#endif
+# endif
+#endif /* !AFS_SUN511_ENV */
 
 
 static struct modlinkage afs_modlinkage = {
     MODREV_1,
-    (void *)&afsmodlsys,
-#ifdef AFS_SUN57_64BIT_ENV
-    (void *)&afsmodlsys32,
-#endif
     (void *)&afsmodlfs,
+#ifdef AFS_SUN511_ENV
+    (void *)&afs_modldrv,
+#else
+    (void *)&afsmodlsys,
+# ifdef AFS_SUN57_64BIT_ENV
+    (void *)&afsmodlsys32,
+# endif
+#endif /* !AFS_SUN511_ENV */
     NULL
 };
 
@@ -605,7 +618,11 @@ _init()
 #endif /* AFS_SUN52_ENV */
 #endif /* AFS_SUN55_ENV */
 #endif /* !AFS_NONFSTRANS */
-#if !defined(AFS_SUN58_ENV)
+
+#ifndef AFS_SUN511_ENV
+    /* syscall initialization stff */
+
+# if !defined(AFS_SUN58_ENV)
     /* 
      * Re-read the /etc/name_to_sysnum file to make sure afs isn't added after
      * reboot.  Ideally we would like to call modctl_read_sysbinding_file() but
@@ -615,14 +632,14 @@ _init()
      * proper slot entry and we also actually have to properly initialize the
      * global sysent[AFS_SYSCALL] entry!
      */
-#ifdef	AFS_SUN53_ENV
-#ifndef	SYSBINDFILE
-#define	SYSBINDFILE	"/etc/name_to_sysnum"
-#endif /* SYSBINDFILE */
+#  ifdef	AFS_SUN53_ENV
+#   ifndef	SYSBINDFILE
+#    define	SYSBINDFILE	"/etc/name_to_sysnum"
+#   endif /* SYSBINDFILE */
     read_binding_file(SYSBINDFILE, sb_hashtab);
-#else /* !AFS_SUN53_ENV */
+#  else /* !AFS_SUN53_ENV */
     read_binding_file(sysbind, sb_hashtab);
-#endif /* AFS_SUN53_ENV */
+#  endif /* AFS_SUN53_ENV */
     make_syscallname("afs", AFS_SYSCALL);
 
     if (sysent[AFS_SYSCALL].sy_call == nosys) {
@@ -630,14 +647,15 @@ _init()
 	    sysent[AFS_SYSCALL].sy_lock =
 		(krwlock_t *) kobj_zalloc(sizeof(krwlock_t), KM_SLEEP);
 	    rw_init(sysent[AFS_SYSCALL].sy_lock, "afs_syscall",
-#ifdef AFS_SUN57_ENV
+#  ifdef AFS_SUN57_ENV
 		    RW_DEFAULT, NULL);
-#else /* !AFS_SUN57_ENV */
+#  else /* !AFS_SUN57_ENV */
 		    RW_DEFAULT, DEFAULT_WT);
-#endif /* AFS_SUN57_ENV */
+#  endif /* AFS_SUN57_ENV */
 	}
     }
-#endif /* !AFS_SUN58_ENV */
+# endif /* !AFS_SUN58_ENV */
+#endif /* !AFS_SUN511_ENV */
 
     osi_Init();			/* initialize global lock, etc */
 

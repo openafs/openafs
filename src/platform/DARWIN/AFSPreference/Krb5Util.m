@@ -14,13 +14,77 @@
 	KLStatus		kstatus = noErr;
 	char			*princName = 0L;
 	KLBoolean       outFoundValidTickets = false;
+	KLLoginOptions  inLoginOptions = nil;
+
 	@try{
 		kstatus = KLCacheHasValidTickets(nil, kerberosVersion_All, &outFoundValidTickets, nil, nil);
 		if(!outFoundValidTickets) {
-			kstatus = KLAcquireNewInitialTickets(nil, nil, &princ, &princName);
-			if(kstatus != noErr && kstatus != klUserCanceledErr) @throw [NSException exceptionWithName:@"Krb5Util"
-																								reason:@"getNewTicketIfNotPresent"
-																							  userInfo:nil];
+		    kstatus = KLCreateLoginOptions(&inLoginOptions);
+		    if (kstatus != noErr)
+			@throw [NSException exceptionWithName:@"Krb5Util"
+					    reason:@"getNewTicketIfNotPresent"
+					    userInfo:nil];
+		    else {
+			KLLifetime valuel;
+			KLSize sizel = sizeof (valuel);
+			KLBoolean value;
+			KLSize size = sizeof (value);
+			kstatus = KLGetDefaultLoginOption (loginOption_DefaultTicketLifetime, &valuel, &sizel);
+
+			if (kstatus == noErr)
+			    kstatus = KLLoginOptionsSetTicketLifetime
+				(inLoginOptions, valuel);
+
+			kstatus = KLGetDefaultLoginOption
+			    (loginOption_DefaultRenewableTicket, &value,
+			     &size);
+			if (kstatus == noErr)
+			    if ((value != 0) &&
+				((kstatus = KLGetDefaultLoginOption
+				  (loginOption_DefaultRenewableLifetime,
+				   &value, &size)) == noErr))
+				kstatus = KLLoginOptionsSetRenewableLifetime
+				(inLoginOptions, value);
+			    else {
+				kstatus = KLLoginOptionsSetRenewableLifetime(inLoginOptions, 0L);
+			}
+			kstatus = KLGetDefaultLoginOption
+			    (loginOption_DefaultForwardableTicket, &value,
+			     &size);
+
+			if (kstatus == noErr)
+			    kstatus = KLLoginOptionsSetForwardable
+				(inLoginOptions, value);
+
+			kstatus = KLGetDefaultLoginOption
+			    (loginOption_DefaultProxiableTicket, &value,
+			     &size);
+
+			if (kstatus == noErr)
+			    kstatus = KLLoginOptionsSetProxiable
+				(inLoginOptions, value);
+
+			kstatus = KLGetDefaultLoginOption
+			    (loginOption_DefaultAddresslessTicket, &value,
+			     &size);
+
+			if (kstatus == noErr)
+			    kstatus = KLLoginOptionsSetAddressless
+				(inLoginOptions, value);
+		    }
+
+		    if (kstatus == noErr)
+			kstatus = KLAcquireNewInitialTickets(nil,
+							     inLoginOptions,
+							     &princ,
+							     &princName);
+		    if(kstatus != noErr && kstatus != klUserCanceledErr)
+			@throw [NSException exceptionWithName:@"Krb5Util"
+					    reason:@"getNewTicketIfNotPresent"
+					    userInfo:nil];
+		    if (inLoginOptions != NULL) {
+			KLDisposeLoginOptions (inLoginOptions);
+		    }
 		}
 	}
 	@catch (NSException * e) {

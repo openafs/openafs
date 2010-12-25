@@ -53,7 +53,7 @@ struct clientParms {
 };
 
 long rxkst_StartClient(INOUT struct clientParms *parms);
-long rxkst_StartServer(INOUT struct serverParms *parms);
+void *rxkst_StartServer(void *rock);
 
 /* For backward compatibility with AFS3.0 release. */
 
@@ -78,10 +78,4 @@ typedef char *opaque;
 #define rxs_Release(a) RXS_Close(a)
 #endif
 
-/* to keep GCC happy */
 
-extern int LWP_CreateProcess();
-extern char *lcstring();
-extern void exit();
-extern int cmd_AddParm();
-extern int cmd_Dispatch();

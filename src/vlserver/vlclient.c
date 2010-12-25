@@ -436,8 +436,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    ("Volumes not found in main hash tables in vldb will be fixed...\n");
 		memset(&updateentry, 0, sizeof(updateentry));
 		for (index = 0; 1; index = next_index) {
-		    /* FIXME: n2 is never changed for some reason */
-		    int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
 		    memset(&entry, 0, sizeof(entry));
 		    code =
 			ubik_VL_ListEntry(cstruct, 0, index, &count,
@@ -454,7 +452,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 				  &tentry);
 		    if (code == VL_NOENT) {
 			num1++;
-			n1 = 1;
 			updateentry.Mask = VLUPDATE_VOLNAMEHASH;
 			printf("\tVolume %s %d (not in namehash)\n",
 			       entry.name, entry.volumeId[RWVOL]);
@@ -488,13 +485,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 			}
 			x++;
 		    }
-		    if (entry.volumeId[BACKVOL] && !n2) {
+		    if (entry.volumeId[BACKVOL]) {
 			code =
 			    ubik_VL_GetEntryByID(cstruct, 0,
 				      entry.volumeId[BACKVOL], BACKVOL,
 				      &tentry);
 			if (code == VL_NOENT) {
-			    n3 = 1;
 			    num1++;
 			    updateentry.Mask = VLUPDATE_BACKUPID;
 			    updateentry.BackupId = entry.volumeId[BACKVOL];
@@ -512,12 +508,11 @@ handleit(struct cmd_syndesc *as, void *arock)
 			    }
 			}
 		    }
-		    if (entry.volumeId[ROVOL && !n2]) {
+		    if (entry.volumeId[ROVOL]) {
 			code =
 			    ubik_VL_GetEntryByID(cstruct, 0,
 				      entry.volumeId[ROVOL], ROVOL, &tentry);
 			if (code == VL_NOENT) {
-			    n4 = 1;
 			    num1++;
 			    updateentry.Mask = VLUPDATE_READONLYID;
 			    updateentry.ReadOnlyId = entry.volumeId[ROVOL];

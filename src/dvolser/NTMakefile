@@ -14,7 +14,6 @@ RELDIR=dvolser
 VOLSER = ..\volser
 DVOLSER = .
 VLSERVER = ..\vlserver
-LWP = ..\lwp
 LIBACL = ..\libacl
 UTIL = ..\util
 DIR = ..\dir
@@ -68,15 +67,12 @@ VOLSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\davolserver.exe
 
 VOLSEROBJS=$(OUT)\volmain.obj $(OUT)\volprocs.obj $(OUT)\physio.obj $(OUT)\voltrans.obj $(OUT)\dumpstuff.obj
 
-LWPOBJS=$(OUT)\lock.obj $(OUT)\threadname.obj $(OUT)\fasttime.obj
-
 LIBACLOBJS=$(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
 DIROBJS=$(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
 VOLSERVER_EXEOBJS = $(VOLSEROBJS) \
         $(VLSERVEROBJS) \
-        $(LWPOBJS) \
         $(LIBACLOBJS) \
         $(DIROBJS) \
         $(FSINTOBJS) \
@@ -109,9 +105,6 @@ $(OUT)\vscommon.obj: $(VOLSER)\common.c
 
 $(VOLSEROBJS): $(VOLSER)\$$(@B).c
         $(C2OBJ) -I$(VOLSER) -I$(UTIL) $**
-
-$(LWPOBJS): $(LWP)\$$(@B).C
-	$(C2OBJ) -I$(LWP) $**
 
 $(LIBACLOBJS): $(LIBACL)\$$(@B).C
 	$(C2OBJ) -I$(LIBACL) $**

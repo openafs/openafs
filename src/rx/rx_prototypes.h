@@ -27,6 +27,7 @@ extern int rx_InitHost(u_int host, u_int port);
 #ifdef AFS_NT40_ENV
 extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
+extern void rx_StartClientThread(void);
 #endif
 #ifndef KERNEL
 extern void rxi_StartServerProcs(int nExistingProcs);
@@ -39,6 +40,8 @@ extern struct rx_connection *rx_NewConnection(afs_uint32 shost,
 					      int serviceSecurityIndex);
 extern void rx_SetConnDeadTime(struct rx_connection *conn,
 			       int seconds);
+extern void rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds);
+extern void rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds);
 extern void rxi_CleanupConnection(struct rx_connection *conn);
 extern void rxi_DestroyConnection(struct rx_connection *conn);
 extern void rx_GetConnection(struct rx_connection *conn);
@@ -78,6 +81,7 @@ extern void rx_SetArrivalProc(struct rx_call *call,
 						    int index),
 			      void * handle, int arg);
 extern afs_int32 rx_EndCall(struct rx_call *call, afs_int32 rc);
+extern void rx_InterruptCall(struct rx_call *call, afs_int32 error);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
 extern struct rx_service *rxi_FindService(osi_socket socket,
@@ -188,9 +192,6 @@ extern void rxi_ChallengeEvent(struct rxevent *event,
 			       void *conn, /* struct rx_connection *conn */
 			       void *arg1, int atries);
 extern void rxi_ChallengeOn(struct rx_connection *conn);
-extern void rxi_ComputeRoundTripTime(struct rx_packet *p,
-				     struct clock *sentp,
-				     struct rx_peer *peer);
 extern void rxi_ReapConnections(struct rxevent *unused, void *unused1,
 				void *unused2);
 extern int rxs_Release(struct rx_securityClass *aobj);
@@ -383,7 +384,7 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 # define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
 # undef osi_Assert
 # define osi_Assert(expr) \
-    do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
+    do { if (!(expr)) osi_Panic("assertion failed: %s, file: %s, line: %d\n", #expr, __FILE__, __LINE__); } while (0)
 # elif defined(AFS_AIX_ENV)
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 # else
@@ -409,7 +410,9 @@ extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 # ifdef UKERNEL
 extern void *rx_ServerProc(void *);
 # endif
+# ifndef AFS_LINUX26_ENV
 extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
+# endif
 extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 # ifndef UKERNEL
@@ -518,6 +521,11 @@ extern int rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb);
 extern int rxi_AllocDataBuf(struct rx_packet *p, int nb, int cla_ss);
 extern void rxi_MorePackets(int apackets);
 extern void rxi_MorePacketsNoLock(int apackets);
+#if defined(AFS_PTHREAD_ENV)
+extern void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
+extern void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
+extern void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
+#endif
 extern void rxi_FreeAllPackets(void);
 extern void rx_CheckPackets(void);
 extern void rxi_FreePacketNoLock(struct rx_packet *p);

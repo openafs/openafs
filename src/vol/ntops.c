@@ -34,7 +34,7 @@
 #include "volume.h"
 #include "viceinode.h"
 #include <dirent.h>
-#include <afs/assert.h>
+#include <afs/afs_assert.h>
 #include <afs/errmap_nt.h>
 
 #define BASEFILEATTRIBUTE FILE_ATTRIBUTE_NORMAL
@@ -1295,7 +1295,7 @@ static zlcList_t *zlcCur = NULL;
 static void
 AddToZLCDeleteList(char dir, char *name)
 {
-    assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
+    osi_Assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
 
     if (!zlcCur || zlcCur->zlc_n >= MAX_ZLC_NAMES) {
 	if (zlcCur && zlcCur->zlc_next)

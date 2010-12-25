@@ -10,7 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -37,8 +36,8 @@
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
+#include <afs/afs_assert.h>
 
-#include <afs/debug.h>
 #include "usd.h"
 
 #ifdef O_LARGEFILE

@@ -26,11 +26,7 @@
 #include <unistd.h>
 #endif
 #include <sys/stat.h>
-#ifdef AFS_PTHREAD_ENV
-#include <assert.h>
-#else /* AFS_PTHREAD_ENV */
-#include <afs/assert.h>
-#endif /* AFS_PTHREAD_ENV */
+#include <afs/afs_assert.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
@@ -177,7 +173,7 @@ iod_Write(struct iod *iodp, char *buf, int nbytes)
     int code, i;
     int one_success = 0;
 
-    assert((iodp->call && iodp->ncalls == 1 && !iodp->calls)
+    osi_Assert((iodp->call && iodp->ncalls == 1 && !iodp->calls)
 	   || (!iodp->call && iodp->ncalls >= 1 && iodp->calls));
 
     if (iodp->call) {
@@ -664,6 +660,8 @@ DumpStandardTag(struct iod *iodp, char tag, afs_uint32 section)
         return VOLSERDUMPERROR;
     }
     code = iod_Write(iodp, &tag, 1);
+    if (code != 1)
+	return VOLSERDUMPERROR;
     return 0;
 }
 
@@ -997,15 +995,15 @@ DumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    assert(file != NULL);
+    osi_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    assert(size != -1);
+    osi_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	assert((nVnodes + 1) * vcp->diskSize == size);
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
+	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;
@@ -1164,7 +1162,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	OS_SYNC(afile->str_fd);
     } else {
 	size = OS_SIZE(fdP->fd_fd);
-	assert(size != -1);
+	osi_Assert(size != -1);
 	nVnodes =
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
@@ -1885,15 +1883,15 @@ SizeDumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
-    assert(fdP != NULL);
+    osi_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    assert(file != NULL);
+    osi_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    assert(size != -1);
+    osi_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	assert((nVnodes + 1) * vcp->diskSize == size);
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
+	osi_Assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;

@@ -59,7 +59,7 @@
 #endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
-#include <rx_prototypes.h>
+#include <rx/rx_prototypes.h>
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #endif

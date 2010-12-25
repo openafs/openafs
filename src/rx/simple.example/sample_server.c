@@ -18,7 +18,10 @@
 
 #define N_SECURITY_OBJECTS 1
 
-main()
+static void Quit(char *);
+
+int
+main(int argc, char **argv)
 {
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);
     struct rx_service *service;
@@ -41,13 +44,12 @@ main()
 
     rx_StartServer(1);		/* Donate this process to the server process pool */
     Quit("StartServer returned?");
+
+    return 0;
 }
 
 int
-TEST_Add(call, a, b, result)
-     struct rx_call *call;
-     int a, b;
-     int *result;
+STEST_Add(struct rx_call *call, int a, int b, int *result)
 {
     printf("TEST_Add(%d,%d)\n", a, b);
     *result = a + b;
@@ -55,19 +57,16 @@ TEST_Add(call, a, b, result)
 }
 
 int
-TEST_Sub(call, a, b, result)
-     struct rx_call *call;
-     int a, b;
-     int *result;
+STEST_Sub(struct rx_call *call, int a, int b, int *result)
 {
     printf("TEST_Sub(%d,%d)\n", a, b);
     *result = a - b;
     return 0;
 }
 
-Quit(msg, a, b)
-     char *msg;
+static void
+Quit(char *msg)
 {
-    fprintf(stderr, msg, a, b);
+    fprintf(stderr, "%s", msg);
     exit(1);
 }
