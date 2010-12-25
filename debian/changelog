@@ -1,5 +1,22 @@
-openafs (1.5.77-3) UNRELEASED; urgency=low
+openafs (1.6.0~pre1-1) UNRELEASED; urgency=low
 
+  * New upstream prerelease.
+    - Rx performance improvements.
+    - Correct byte order handling of port in SRV record lookups.
+    - More robust vos release to sites previously marked "don't use."
+    - vos properly matches sites with multihomed servers.
+    - Fix ptserver supergroups support on 64-bit platforms.
+    - Bug fixes for demand-attach salvaging.
+    - Avoid potential crash when attaching a volume fails.
+    - Properly hold the host lock during host enumeration in fileserver.
+    - Use larger I/O sizes in memcache to improve performance.
+    - Avoid potential alignment issues in pioctl calls.
+    - Servers now marked down when GetCapabilities returns an error.
+    - Avoid blocking xvcache lock when freeing in-use vcaches.
+    - In-use vcache count now properly tracked.
+    - Properly configure LWP to use ucontext on appropriate platforms.
+    - Eliminate spurious AFS system call errors.
+    - Linux 2.6.37 support.
   * In the openafs-client init script, don't attempt to stop or restart
     the AFS client if module loading is disabled.  Stopping afsd without
     unloading the module would leave the system in an inconsistent state.
