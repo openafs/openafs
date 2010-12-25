@@ -25,6 +25,8 @@ openafs (1.6.0~pre1-1) UNRELEASED; urgency=low
     in some situations.  (Closes: #586226)
   * Drop --enable-reduced-depends for right now.  aklog doesn't deal with
     it correctly.
+  * Now that upstream has renamed compile_et to afs_compile_et, include it
+    in libopenafs-dev.
 
  -- Russ Allbery <rra@debian.org>  Tue, 02 Nov 2010 10:15:15 -0700
 

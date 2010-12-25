@@ -1,3 +1,4 @@
+debian/tmp/usr/bin/afs_compile_et       usr/bin
 debian/tmp/usr/bin/rxgen                usr/bin
 
 debian/tmp/usr/include                  usr
@@ -6,4 +7,5 @@ debian/tmp/usr/lib/*.a                  usr/lib
 debian/tmp/usr/lib/*.so                 usr/lib
 debian/tmp/usr/lib/afs                  usr/lib
 
-debian/tmp/usr/share/man/man1/rxgen.1   usr/share/man/man1
+debian/tmp/usr/share/man/man1/afs_compile_et.1  usr/share/man/man1
+debian/tmp/usr/share/man/man1/rxgen.1           usr/share/man/man1
