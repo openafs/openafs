@@ -52,7 +52,7 @@ is_on() {
 # Determine if kernel module loading is disabled.  If it's not, don't attempt
 # to stop or restart AFS, since we'll end up in a bad inconsistent state.
 is_loading_disabled() {
-    loading=`cat /proc/sys/kernel/modules_disabled`
+    loading=`cat /proc/sys/kernel/modules_disabled 2>/dev/null`
     if [ "$loading" = 1 ] ; then
         return 0
     else
