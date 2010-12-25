@@ -54,9 +54,9 @@ is_on() {
 is_loading_disabled() {
     loading=`cat /proc/sys/kernel/modules_disabled`
     if [ "$loading" = 1 ] ; then
-        return 1
-    else
         return 0
+    else
+        return 1
     fi
 }
 
