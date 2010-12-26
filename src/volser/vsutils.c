@@ -418,37 +418,49 @@ VLDB_ReplaceEntryU(afs_uint32 volid, afs_int32 voltype, struct uvldbentry *entry
 }
 
 static void
-convertBulkToNBulk(bulkentries *bulk, nbulkentries *nbulk, int *entriesp) {
+convertBulkToNBulk(bulkentries *bulk, nbulkentries *nbulk) {
     int i;
 
-    nbulk->nbulkentries_val =
-	(nvldbentry *) xdr_alloc(*entriesp * sizeof(struct nvldbentry));
+    if (bulk->bulkentries_len == 0)
+	return;
 
-    for (i = 0; i < *entriesp; i++) {	/* process each entry */
+    nbulk->nbulkentries_len = bulk->bulkentries_len;
+    nbulk->nbulkentries_val =
+	xdr_alloc(bulk->bulkentries_len * sizeof(struct nvldbentry));
+
+    for (i = 0; i < bulk->bulkentries_len; i++) {
 	ovlentry_to_nvlentry(&bulk->bulkentries_val[i],
 			     &nbulk->nbulkentries_val[i]);
     }
 }
 
 static void
-convertBulkToUBulk(bulkentries *bulk, ubulkentries *ubulk, int *entriesp) {
+convertBulkToUBulk(bulkentries *bulk, ubulkentries *ubulk) {
     int i;
 
+    if (bulk->bulkentries_len == 0)
+	return;
+
+    ubulk->ubulkentries_len = bulk->bulkentries_len;
     ubulk->ubulkentries_val =
-	(uvldbentry *) xdr_alloc(*entriesp * sizeof(struct uvldbentry));
-    for (i = 0; i < *entriesp; i++) {	/* process each entry */
+	xdr_alloc(bulk->bulkentries_len * sizeof(struct uvldbentry));
+    for (i = 0; i < bulk->bulkentries_len; i++) {
 	ovlentry_to_uvlentry(&bulk->bulkentries_val[i],
 			     &ubulk->ubulkentries_val[i]);
     }
 }
 
 static void
-convertNBulkToUBulk(nbulkentries *nbulk, ubulkentries *ubulk, int *entriesp) {
+convertNBulkToUBulk(nbulkentries *nbulk, ubulkentries *ubulk) {
     int i;
 
+    if (nbulk->nbulkentries_len == 0)
+	return;
+
+    ubulk->ubulkentries_len = nbulk->nbulkentries_len;
     ubulk->ubulkentries_val =
-        (uvldbentry *) xdr_alloc(*entriesp * sizeof(struct uvldbentry));
-    for (i = 0; i < *entriesp; i++) {	/* process each entry */
+        xdr_alloc(nbulk->nbulkentries_len * sizeof(struct uvldbentry));
+    for (i = 0; i < nbulk->nbulkentries_len; i++) {	/* process each entry */
         nvlentry_to_uvlentry(&nbulk->nbulkentries_val[i],
                              &ubulk->ubulkentries_val[i]);
     }
@@ -464,16 +476,17 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
     if (newvlserver == vltype_old) {
         bulkentries arrayEntries;
       tryold:
-	memset(&arrayEntries, 0, sizeof(arrayEntries));	/*initialize to hint the stub  to alloc space */
+	memset(&arrayEntries, 0, sizeof(arrayEntries));
 	code =
 	    ubik_VL_ListAttributes(cstruct, 0, attrp, entriesp,
 		      &arrayEntries);
 
-	if (!code)
-	    convertBulkToNBulk(&arrayEntries, blkentriesp, entriesp);
+	if (code)
+	    return code;
 
-	if (arrayEntries.bulkentries_val)
-	    xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
+	convertBulkToNBulk(&arrayEntries, blkentriesp);
+
+	xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
 	return code;
     }
 
@@ -497,31 +510,33 @@ VLDB_ListAttributesU(VldbListByAttributes *attrp,
     if (newvlserver == vltype_old) {
         bulkentries arrayEntries;
       tryold:
-	memset(&arrayEntries, 0, sizeof(arrayEntries));	/*initialize to hint the stub  to alloc space */
+	memset(&arrayEntries, 0, sizeof(arrayEntries));
 	code =
 	    ubik_VL_ListAttributes(cstruct, 0, attrp, entriesp,
 		      &arrayEntries);
-	if (!code)
-	    convertBulkToUBulk(&arrayEntries, blkentriesp, entriesp);
+	if (code)
+	    return code;
 
-	if (arrayEntries.bulkentries_val)
-	    xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
+	convertBulkToUBulk(&arrayEntries, blkentriesp);
+
+	xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
 	return code;
     }
 
-    memset(&narrayEntries, 0, sizeof(narrayEntries));	/*initialize to hint the stub  to alloc space */
+    memset(&narrayEntries, 0, sizeof(narrayEntries));
     code =
         ubik_VL_ListAttributesN(cstruct, 0, attrp, entriesp, &narrayEntries);
     if (code == RXGEN_OPCODE) {
         newvlserver = vltype_old;	/* Doesn't support new interface */
         goto tryold;
     }
-    if (!code) {
-	convertNBulkToUBulk(&narrayEntries, blkentriesp, entriesp);
 
-    }
-    if (narrayEntries.nbulkentries_val)
-        xdr_free((xdrproc_t) xdr_bulkentries, &narrayEntries);
+    if (code)
+	return code;
+
+    convertNBulkToUBulk(&narrayEntries, blkentriesp);
+
+    xdr_free((xdrproc_t) xdr_bulkentries, &narrayEntries);
     return code;
 }
 
@@ -560,11 +575,12 @@ VLDB_ListAttributesN2U(VldbListByAttributes *attrp,
         code =
             ubik_VL_ListAttributesN2(cstruct, 0, attrp, (name ? name : ""),
                                      thisindex, nentriesp, &narrayEntries, nextindexp);
-        if (!code)
-	    convertNBulkToUBulk(&narrayEntries, blkentriesp, nentriesp);
+        if (code)
+	    return code;
 
-	if (narrayEntries.nbulkentries_val)
-	    xdr_free((xdrproc_t) xdr_bulkentries, &narrayEntries);
+	convertNBulkToUBulk(&narrayEntries, blkentriesp);
+
+	xdr_free((xdrproc_t) xdr_bulkentries, &narrayEntries);
 	return code;
     }
     return code;
