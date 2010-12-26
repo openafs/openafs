@@ -416,6 +416,42 @@ VLDB_ReplaceEntryU(afs_uint32 volid, afs_int32 voltype, struct uvldbentry *entry
     return code;
 }
 
+static void
+convertBulkToNBulk(bulkentries *bulk, nbulkentries *nbulk, int *entriesp) {
+    int i;
+
+    nbulk->nbulkentries_val =
+	(nvldbentry *) xdr_alloc(*entriesp * sizeof(struct nvldbentry));
+
+    for (i = 0; i < *entriesp; i++) {	/* process each entry */
+	ovlentry_to_nvlentry(&bulk->bulkentries_val[i],
+			     &nbulk->nbulkentries_val[i]);
+    }
+}
+
+static void
+convertBulkToUBulk(bulkentries *bulk, ubulkentries *ubulk, int *entriesp) {
+    int i;
+
+    ubulk->ubulkentries_val =
+	(uvldbentry *) xdr_alloc(*entriesp * sizeof(struct uvldbentry));
+    for (i = 0; i < *entriesp; i++) {	/* process each entry */
+	ovlentry_to_uvlentry(&bulk->bulkentries_val[i],
+			     &ubulk->ubulkentries_val[i]);
+    }
+}
+
+static void
+convertNBulkToUBulk(nbulkentries *nbulk, ubulkentries *ubulk, int *entriesp) {
+    int i;
+
+    ubulk->ubulkentries_val =
+        (uvldbentry *) xdr_alloc(*entriesp * sizeof(struct uvldbentry));
+    for (i = 0; i < *entriesp; i++) {	/* process each entry */
+        nvlentry_to_uvlentry(&nbulk->nbulkentries_val[i],
+                             &ubulk->ubulkentries_val[i]);
+    }
+}
 
 int
 VLDB_ListAttributes(VldbListByAttributes *attrp,
@@ -425,21 +461,16 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
     int code;
 
     if (newvlserver == vltype_old) {
-        int i;
         bulkentries arrayEntries;
       tryold:
 	memset(&arrayEntries, 0, sizeof(arrayEntries));	/*initialize to hint the stub  to alloc space */
 	code =
 	    ubik_VL_ListAttributes(cstruct, 0, attrp, entriesp,
 		      &arrayEntries);
-	if (!code) {
-	    blkentriesp->nbulkentries_val =
-		(nvldbentry *) xdr_alloc(*entriesp * sizeof(struct nvldbentry));
-	    for (i = 0; i < *entriesp; i++) {	/* process each entry */
-		ovlentry_to_nvlentry(&arrayEntries.bulkentries_val[i],
-				     &blkentriesp->nbulkentries_val[i]);
-	    }
-	}
+
+	if (!code)
+	    convertBulkToNBulk(&arrayEntries, blkentriesp, entriesp);
+
 	if (arrayEntries.bulkentries_val)
 	    xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
 	return code;
@@ -460,7 +491,7 @@ VLDB_ListAttributesU(VldbListByAttributes *attrp,
                     ubulkentries *blkentriesp)
 {
     nbulkentries narrayEntries;
-    int code, i;
+    int code;
 
     if (newvlserver == vltype_old) {
         bulkentries arrayEntries;
@@ -469,14 +500,9 @@ VLDB_ListAttributesU(VldbListByAttributes *attrp,
 	code =
 	    ubik_VL_ListAttributes(cstruct, 0, attrp, entriesp,
 		      &arrayEntries);
-	if (!code) {
-	    blkentriesp->ubulkentries_val =
-		(uvldbentry *) xdr_alloc(*entriesp * sizeof(struct uvldbentry));
-	    for (i = 0; i < *entriesp; i++) {	/* process each entry */
-		ovlentry_to_uvlentry(&arrayEntries.bulkentries_val[i],
-				     &blkentriesp->ubulkentries_val[i]);
-	    }
-	}
+	if (!code)
+	    convertBulkToUBulk(&arrayEntries, blkentriesp, entriesp);
+
 	if (arrayEntries.bulkentries_val)
 	    xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
 	return code;
@@ -490,12 +516,8 @@ VLDB_ListAttributesU(VldbListByAttributes *attrp,
         goto tryold;
     }
     if (!code) {
-        blkentriesp->ubulkentries_val =
-            (uvldbentry *) xdr_alloc(*entriesp * sizeof(struct uvldbentry));
-        for (i = 0; i < *entriesp; i++) {	/* process each entry */
-            nvlentry_to_uvlentry(&narrayEntries.nbulkentries_val[i],
-                                 &blkentriesp->ubulkentries_val[i]);
-        }
+	convertNBulkToUBulk(&narrayEntries, blkentriesp, entriesp);
+
     }
     if (narrayEntries.nbulkentries_val)
         xdr_free((xdrproc_t) xdr_bulkentries, &narrayEntries);
@@ -529,7 +551,6 @@ VLDB_ListAttributesN2U(VldbListByAttributes *attrp,
                       afs_int32 *nextindexp)
 {
     afs_int32 code = RXGEN_OPCODE;
-    int i;
 
     if (newvlserver != vltype_old) {
         nbulkentries narrayEntries;
@@ -538,14 +559,9 @@ VLDB_ListAttributesN2U(VldbListByAttributes *attrp,
         code =
             ubik_VL_ListAttributesN2(cstruct, 0, attrp, (name ? name : ""),
                                      thisindex, nentriesp, &narrayEntries, nextindexp);
-        if (!code) {
-	    blkentriesp->ubulkentries_val =
-		(uvldbentry *) xdr_alloc(*nentriesp * sizeof(struct uvldbentry));
-	    for (i = 0; i < *nentriesp; i++) {	/* process each entry */
-		nvlentry_to_uvlentry(&narrayEntries.nbulkentries_val[i],
-				     &blkentriesp->ubulkentries_val[i]);
-	    }
-	}
+        if (!code)
+	    convertNBulkToUBulk(&narrayEntries, blkentriesp, nentriesp);
+
 	if (narrayEntries.nbulkentries_val)
 	    xdr_free((xdrproc_t) xdr_bulkentries, &narrayEntries);
 	return code;
