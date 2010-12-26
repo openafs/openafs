@@ -484,6 +484,12 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
 	if (code)
 	    return code;
 
+	/* Ensure the number of entries claimed matches the no. returned */
+	if (*entriesp < 0)
+	    *entriesp = 0;
+	if (*entriesp > arrayEntries.bulkentries_len)
+	    *entriesp = arrayEntries.bulkentries_len;
+
 	convertBulkToNBulk(&arrayEntries, blkentriesp);
 
 	xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
@@ -496,6 +502,16 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
         newvlserver = vltype_old;	/* Doesn't support new interface */
         goto tryold;
     }
+
+    if (code)
+	return code;
+
+    /* Ensure the number of entries claimed matches the no. returned */
+    if (*entriesp < 0)
+	*entriesp = 0;
+    if (*entriesp > blkentriesp->nbulkentries_len)
+	*entriesp = blkentriesp->nbulkentries_len;
+
     return code;
 }
 
@@ -517,6 +533,12 @@ VLDB_ListAttributesU(VldbListByAttributes *attrp,
 	if (code)
 	    return code;
 
+	/* Ensure the number of entries claimed matches the no. returned */
+	if (*entriesp < 0)
+	    *entriesp = 0;
+	if (*entriesp > arrayEntries.bulkentries_len)
+	    *entriesp = arrayEntries.bulkentries_len;
+
 	convertBulkToUBulk(&arrayEntries, blkentriesp);
 
 	xdr_free((xdrproc_t) xdr_bulkentries, &arrayEntries);
@@ -530,9 +552,14 @@ VLDB_ListAttributesU(VldbListByAttributes *attrp,
         newvlserver = vltype_old;	/* Doesn't support new interface */
         goto tryold;
     }
-
     if (code)
 	return code;
+
+    /* Ensure the number of entries claimed matches the no. returned */
+    if (*entriesp < 0)
+	*entriesp = 0;
+    if (*entriesp > narrayEntries.nbulkentries_len)
+	*entriesp = narrayEntries.nbulkentries_len;
 
     convertNBulkToUBulk(&narrayEntries, blkentriesp);
 
@@ -554,6 +581,14 @@ VLDB_ListAttributesN2(VldbListByAttributes *attrp,
         code =
             ubik_VL_ListAttributesN2(cstruct, 0, attrp, (name ? name : ""),
                                      thisindex, nentriesp, blkentriesp, nextindexp);
+	if (code)
+	    return code;
+
+	/* Ensure the number of entries claimed matches the no. returned */
+	if (*nentriesp < 0)
+	    *nentriesp = 0;
+	if (*nentriesp > blkentriesp->nbulkentries_len)
+	    *nentriesp = blkentriesp->nbulkentries_len;
     }
     return code;
 }
@@ -577,6 +612,12 @@ VLDB_ListAttributesN2U(VldbListByAttributes *attrp,
                                      thisindex, nentriesp, &narrayEntries, nextindexp);
         if (code)
 	    return code;
+
+	/* Ensure the number of entries claimed matches the no. returned */
+	if (*nentriesp < 0)
+	    *nentriesp = 0;
+	if (*nentriesp > narrayEntries.nbulkentries_len)
+	    *nentriesp = narrayEntries.nbulkentries_len;
 
 	convertNBulkToUBulk(&narrayEntries, blkentriesp);
 

@@ -259,6 +259,11 @@ EvalVolumeSet2(struct bc_config *aconfig,
 	    if (nentries == 0)
 		ERROR(RXGEN_OPCODE);	/* Use EvalVolumeSet1 */
 
+	    if (nentries < 0)
+		nentries = 0;
+	    if (nentries > bulkentries.nbulkentries_len)
+		nentries = bulkentries.nbulkentries_len;
+
 	    /* Step through each entry and add it to the list of volumes */
 	    entries = bulkentries.nbulkentries_val;
 	    for (e = 0; e < nentries; e++) {
