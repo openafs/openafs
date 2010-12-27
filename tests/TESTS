@@ -1,4 +1,5 @@
 util/ktime
 util/exec-alt
 util/queues
+auth/keys
 auth/superuser
