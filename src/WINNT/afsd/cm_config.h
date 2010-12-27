@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CONFIG_H_ENV_
-#define __CONFIG_H_ENV_ 1
+#ifndef OPENAFS_WINNT_AFSD_CONFIG_H
+#define OPENAFS_WINNT_AFSD_CONFIG_H 1
 
 #define CM_CONFIGDEFAULT_CACHESIZE	98304
 #define CM_CONFIGDEFAULT_BLOCKSIZE	4096
@@ -87,4 +87,4 @@ extern void cm_GetConfigDir(char *dir, afs_uint32 len);
 
 #endif /* __CM_CONFIG_INTERFACES_ONLY__ */
 
-#endif /* __CONFIG_H_ENV_ */
+#endif /* OPENAFS_WINNT_AFSD_CONFIG_H */

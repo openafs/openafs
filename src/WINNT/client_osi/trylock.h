@@ -9,9 +9,9 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef __TRYLOCK_H_ENV_
-#define __TRYLOCK_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_TRYLOCK_H
+#define OPENAFS_WINNT_CLIENT_OSI_TRYLOCK_H 1
 
 extern int main_TryLockTest(HANDLE);
 
-#endif /* __TRYLOCK_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_TRYLOCK_H */

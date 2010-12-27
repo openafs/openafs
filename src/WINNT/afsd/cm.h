@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_H_ENV__
-#define __CM_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_H
+#define OPENAFS_WINNT_AFSD_CM_H 1
 
 /* We use pthreads in the cache manager (not LWP) */
 #ifndef AFS_PTHREAD_ENV
@@ -150,5 +150,5 @@
 #define LOCK_HIERARCHY_AFSDBSBMT_GLOBAL       1000
 #define LOCK_HIERARCHY_TOKEN_EVENT_GLOBAL     2000
 #define LOCK_HIERARCHY_SYSCFG_GLOBAL          3000
-#endif /*  __CM_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_H */
 

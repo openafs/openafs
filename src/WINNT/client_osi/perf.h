@@ -9,9 +9,9 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef __PERF_H_ENV_
-#define __PERF_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_PERF_H
+#define OPENAFS_WINNT_CLIENT_OSI_PERF_H 1
 
 extern int main_PerfTest(HANDLE);
 
-#endif /* __PERF_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_PERF_H */

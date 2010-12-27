@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_VOLUME_H_ENV__
-#define __CM_VOLUME_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_VOLUME_H
+#define OPENAFS_WINNT_AFSD_CM_VOLUME_H 1
 
 #define VL_MAXNAMELEN                   65
 
@@ -151,4 +151,4 @@ extern cm_vol_state_t * cm_VolumeStateByName(cm_volume_t *volp, char *volname);
 extern afs_int32 cm_VolumeType(cm_volume_t *volp, afs_uint32 id);
 
 extern osi_rwlock_t cm_volumeLock;
-#endif /*  __CM_VOLUME_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_VOLUME_H */

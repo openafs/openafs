@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_VNODEOPS_H_ENV__
-#define __CM_VNODEOPS_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_VNODEOPS_H
+#define OPENAFS_WINNT_AFSD_CM_VNODEOPS_H 1
 
 extern unsigned int cm_mountRootGen;
 
@@ -259,4 +259,4 @@ typedef struct cm_bulkStat {
 extern afs_int32 cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp,
                                    cm_user_t *userp, cm_req_t *reqp);
 
-#endif /*  __CM_VNODEOPS_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_VNODEOPS_H */

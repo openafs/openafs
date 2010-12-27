@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_DIR_ENV__
-#define __CM_DIR_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_DIR_H
+#define OPENAFS_WINNT_AFSD_CM_DIR_H 1
 
 /* These data structures are derived from src/dir/dir.h and should not
  * be changed as they describe AFS3 wire protocol.
@@ -193,4 +193,4 @@ cm_MemDumpDirStats(FILE *outputFile, char *cookie, int lock);
 
 extern afs_uint64 dir_enums;
 
-#endif /*  __CM_DIR_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_DIR_H */

@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSIFD_H_ENV_
-#define _OSIFD_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSIFD_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSIFD_H 1
 
 #include "dbrpc.h"
 #include "osiqueue.h"
@@ -92,5 +92,5 @@ extern long osi_FDTypeGetInfo(osi_fd_t *, osi_remGetInfoParms_t *);
 
 extern long osi_FDTypeClose(osi_fd_t *);
 
-#endif /* _OSIFD_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSIFD_H */
 

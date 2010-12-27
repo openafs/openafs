@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSISLEEP_H_ENV_
-#define _OSISLEEP_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSISLEEP_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSISLEEP_H 1
 
 /*#include "osi.h"*/
 #include "osifd.h"
@@ -157,4 +157,4 @@ extern void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, Crit
 
 #define osi_TEmpty(t)	((t)->firstp == NULL)
 
-#endif /*_OSISLEEP_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSISLEEP_H */

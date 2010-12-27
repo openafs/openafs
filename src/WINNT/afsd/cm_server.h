@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_SERVER_H_ENV__
-#define __CM_SERVER_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_SERVER_H
+#define OPENAFS_WINNT_AFSD_CM_SERVER_H 1
 
 #include <winsock2.h>
 #include <osi.h>
@@ -150,4 +150,4 @@ extern int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host o
 extern int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
 extern int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
 extern int cm_LanAdapterChangeDetected;
-#endif /*  __CM_SERVER_H_ENV__ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_SERVER_H */

@@ -8,8 +8,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSILTYPE_H_ENV_
-#define _OSILTYPE_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSILTYPE_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSILTYPE_H 1
 
 /* number of dynamic lock types we permit */
 #define OSI_NLOCKTYPES		32	/* should be enough */
@@ -55,4 +55,4 @@ int osi_LockTypeSetDefault(char *);
 #define OSI_RWLOCK_READHELD	1		/* locked for read */
 #define OSI_RWLOCK_WRITEHELD	2		/* locked for write */
 
-#endif /* _OSILTYPE_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSILTYPE_H */

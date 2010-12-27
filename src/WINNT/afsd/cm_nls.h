@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __CM_NLS_H_ENV__
-#define __CM_NLS_H_ENV__
+#ifndef OPENAFS_WINNT_AFSD_CM_NLS_H
+#define OPENAFS_WINNT_AFSD_CM_NLS_H 1
 
 /* Character types
 

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __FS_UTILS_H_ENV__
-#define __FS_UTILS_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_FS_UTILS_H
+#define OPENAFS_WINNT_AFSD_FS_UTILS_H 1
 
 
 /* pioctl opcode constants */
@@ -43,4 +43,4 @@ extern char *cm_mount_root;             /*"afs"*/
 extern char *cm_slash_mount_root;       /*"/afs"*/
 extern char *cm_back_slash_mount_root;  /*"\\afs"*/
 extern void fs_utils_InitMountRoot();
-#endif /* FS_UTILS_H_ENV */
+#endif /* OPENAFS_WINNT_AFSD_FS_UTILS_H */

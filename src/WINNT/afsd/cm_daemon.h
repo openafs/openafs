@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CM_DAEMON_H_ENV_
-#define __CM_DAEMON_H_ENV_ 1
+#ifndef OPENAFS_WINNT_AFSD_CM_DAEMON_H
+#define OPENAFS_WINNT_AFSD_CM_DAEMON_H 1
 
 /* externs */
 extern long cm_daemonCheckDownInterval;
@@ -43,4 +43,4 @@ extern void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32
 
 #define CM_MAX_DAEMONS 64
 
-#endif /*  __CM_DAEMON_H_ENV_ */
+#endif /*  OPENAFS_WINNT_AFSD_CM_DAEMON_H */

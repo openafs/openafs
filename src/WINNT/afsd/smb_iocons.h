@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __SMB_IOCONS_H_ENV_
-#define __SMB_IOCONS_H_ENV_ 1
+#ifndef OPENAFS_WINNT_AFSD_SMB_IOCONS_H
+#define OPENAFS_WINNT_AFSD_SMB_IOCONS_H 1
 
 /* included in both AFSD and fs commands */
 
@@ -116,4 +116,4 @@ struct sbstruct {
 #define CM_IOCTL_MAXDATA	        8192*2
 #define CM_IOCTL_MAXPROCS               64
 
-#endif /*  __SMB_IOCONS_H_ENV_ */
+#endif /*  OPENAFS_WINNT_AFSD_SMB_IOCONS_H */

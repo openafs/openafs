@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __SMB_H_ENV__
-#define __SMB_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_SMB_H
+#define OPENAFS_WINNT_AFSD_SMB_H 1
 
 /* #define DEBUG_SMB_REFCOUNT 1 */
 

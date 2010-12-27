@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSI_H_ENV_
-#define _OSI_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSI_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSI_H 1
 
 #include <afs/param.h>
 
@@ -86,4 +86,4 @@ typedef int int32;
 /* log stuff */
 #include "osilog.h"
 
-#endif /*_OSI_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSI_H */

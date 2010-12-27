@@ -9,10 +9,10 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef __BASIC_H_ENV_
-#define __BASIC_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_BASIC_H
+#define OPENAFS_WINNT_CLIENT_OSI_BASIC_H 1
 
 extern int main_BasicTest(HANDLE);
 
-#endif /* __BASIC_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_BASIC_H */
 

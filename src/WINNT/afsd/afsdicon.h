@@ -7,9 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __AFSDICON_H_ENV__
-#define __AFSDICON_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_AFSDICON_H
+#define OPENAFS_WINNT_AFSD_AFSDICON_H 1
 
 #define IDM_HELP 100
 
-#endif /* __AFSDICON_H_ENV */
+#endif /* OPENAFS_WINNT_AFSD_AFSDICON_H */

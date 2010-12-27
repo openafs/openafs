@@ -7,9 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __FS_H_ENV__
-#define __FS_H_ENV__ 1
+#ifndef OPENAFS_WINNT_AFSD_FS_H
+#define OPENAFS_WINNT_AFSD_FS_H 1
 
 void Die(int code, char *filename);
 
-#endif /* FS_H_ENV */
+#endif /* OPENAFS_WINNT_AFSD_FS_H */

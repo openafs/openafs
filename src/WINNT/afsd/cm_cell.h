@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef __CELL_H_ENV_
-#define __CELL_H_ENV_ 1
+#ifndef OPENAFS_WINNT_AFSD_CELL_H
+#define OPENAFS_WINNT_AFSD_CELL_H 1
 
 #define CELL_MAXNAMELEN                 256
 
@@ -86,4 +86,4 @@ extern long cm_CreateCellWithInfo( char * cellname,
                                    unsigned short vlport, afs_uint32 host_count,
                                    char *hostname[], afs_uint32 flags);
 
-#endif /* __CELL_H_ENV_ */
+#endif /* OPENAFS_WINNT_AFSD_CELL_H */

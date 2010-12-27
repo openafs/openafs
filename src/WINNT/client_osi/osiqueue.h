@@ -9,8 +9,8 @@
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
 
-#ifndef _OSI_QUEUE_H_ENV_
-#define _OSI_QUEUE_H_ENV_ 1
+#ifndef OPENAFS_WINNT_CLIENT_OSI_OSI_QUEUE_H
+#define OPENAFS_WINNT_CLIENT_OSI_OSI_QUEUE_H 1
 
 /* this package implements a doubly linked queue of elements.
  * Each element starts with an osi_queue_t element.
@@ -88,4 +88,4 @@ extern void osi_QDFree(osi_queueData_t *);
 /* find out if a queue is empty */
 #define osi_QIsEmpty(x)	((*x) == ((osi_queue_t *) 0))
 
-#endif /* _OSI_QUEUE_H_ENV_ */
+#endif /* OPENAFS_WINNT_CLIENT_OSI_OSI_QUEUE_H */
