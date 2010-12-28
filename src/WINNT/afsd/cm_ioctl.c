@@ -1205,7 +1205,7 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
     char *tp;
     char *cp;
     long temp;
-    cm_server_t *tsp;
+    cm_server_t *tsp, *csp;
     int haveCell;
         
     tp = ioctlp->inDatap;
@@ -1266,6 +1266,22 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
         if (cellp && tsp->cellp != cellp) 
             continue;	/* cell spec'd and wrong */
         if (tsp->flags & CM_SERVERFLAG_DOWN) {
+            /*
+             * for a multi-homed file server, if one of the interfaces
+             * is up, do not report the server as down.
+             */
+            if (tsp->type == CM_SERVER_FILE) {
+                for (csp = cm_allServersp; csp; csp=csp->allNextp) {
+                    if (csp->type == CM_SERVER_FILE &&
+                        !(csp->flags & CM_SERVERFLAG_DOWN) &&
+                        afs_uuid_equal(&tsp->uuid, &csp->uuid)) {
+                        break;
+                    }
+                }
+                if (csp)    /* found alternate up interface */
+                    continue;
+            }
+
             /*
              * all server types are being reported by ipaddr.  only report
              * a server once regardless of how many services are down.
