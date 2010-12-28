@@ -4601,10 +4601,15 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	 */
 	else if (centries > 0) {
 	    if (!tarray) {
-		/* steal away the first bulk entries array */
-		tarray = (struct uvldbentry *)arrayEntries.ubulkentries_val;
-		tarraysize = centries * sizeof(struct uvldbentry);
-		arrayEntries.ubulkentries_val = 0;
+		/* malloc the first bulk entries array */
+                tarraysize = centries * sizeof(struct uvldbentry);
+                tarray = malloc(tarraysize);
+		if (!tarray) {
+		    fprintf(STDERR,
+			    "Could not allocate enough space for the VLDB entries\n");
+		    goto bypass;
+		}
+                memcpy((char*)tarray, arrayEntries.ubulkentries_val, tarraysize);
 	    } else {
 		/* Grow the tarray to keep the extra entries */
 		parraysize = (centries * sizeof(struct uvldbentry));
