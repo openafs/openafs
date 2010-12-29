@@ -17,6 +17,8 @@ openafs (1.6.0~pre1-1) UNRELEASED; urgency=low
     - Properly configure LWP to use ucontext on appropriate platforms.
     - Eliminate spurious AFS system call errors.
     - Linux 2.6.37 support.
+  * Apply upstream deltas:
+    - [4a3e5291] Update NEWS for 1.5.78 and 1.6.0pre1
   * In the openafs-client init script, don't attempt to stop or restart
     the AFS client if module loading is disabled.  Stopping afsd without
     unloading the module would leave the system in an inconsistent state.
