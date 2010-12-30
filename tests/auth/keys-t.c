@@ -79,8 +79,9 @@ int main(int argc, char **argv)
     FILE *file;
     afs_int32 kvno;
     int code;
+    int i;
 
-    plan(47);
+    plan(61);
 
     /* Create a temporary afs configuration directory */
     snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
@@ -110,11 +111,9 @@ int main(int argc, char **argv)
 
     /* Start with a blank configuration directory */
     dir = afsconf_Open(strdup(buffer));
-    if (dir == NULL) {
-        fprintf(stderr, "Unable to open configuration directory.\n");
-        exit(1);
-    }
-
+    ok(dir != NULL, "Sucessfully re-opened config directory");
+    if (dir == NULL)
+	goto out;
 
     /* Verify that GetKeys returns the entire set of keys correctly */
     code = afsconf_GetKeys(dir, &keys);
@@ -211,6 +210,32 @@ int main(int argc, char **argv)
     is_int(4, keys.key[1].kvno, " ... second key number is correct");
     is_int(5, keys.key[2].kvno, " ... third key number is correct");
 
+    /* Make sure that if we drop the dir structure, and then rebuild it, we
+     * still have the same KeyFile */
+    afsconf_Close(dir);
+
+    *dirEnd='\0';
+    dir = afsconf_Open(strdup(buffer));
+    ok(dir != NULL, "Sucessfully re-opened config directory");
+    if (dir == NULL)
+	goto out;
+
+    code = afsconf_GetKeys(dir, &keys);
+    is_int(0, code, "afsconf_GetKeys still works");
+    is_int(3, keys.nkeys, "... and returns the right number of keys");
+    is_int(1, keys.key[0].kvno, " ... first key number is correct");
+    is_int(4, keys.key[1].kvno, " ... second key number is correct");
+    is_int(5, keys.key[2].kvno, " ... third key number is correct");
+
+    /* Now check that we're limited to 8 keys */
+    for (i=0; i<5; i++) {
+	code = afsconf_AddKey(dir, 10+i, "\x10\x10\x10\x10\x10\x10\x10\x10",
+			      0);
+	is_int(0, code, "Adding %dth key with AddKey works", i+4);
+    }
+    code = afsconf_AddKey(dir, 20, "\x10\x10\x10\x10\x10\x10\x10\x10",0);
+    is_int(AFSCONF_FULL, code, "afsconf_AddKey fails once we've got 8 keys");
+
     /* Unlink the KeyFile */
     strcpy(dirEnd, "/KeyFile");
     unlink(buffer);
@@ -220,10 +245,9 @@ int main(int argc, char **argv)
 
     *dirEnd='\0';
     dir = afsconf_Open(strdup(buffer));
-    if (dir == NULL) {
-        fprintf(stderr, "Unable to open configuration directory.\n");
-        goto out;
-    }
+    ok(dir != NULL, "Sucessfully re-opened config directory");
+    if (dir == NULL)
+	goto out;
 
     /* Check that all of the various functions work properly if the file
      * isn't there */
