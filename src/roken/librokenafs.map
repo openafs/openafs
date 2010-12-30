@@ -11,6 +11,8 @@
 		issuid;
 		net_read;
 		net_write;
+		rk_asnprintf;
+		rk_asprintf;
 		rk_cloexec;
 		rk_cloexec_file;
 		rk_ecalloc;
@@ -19,12 +21,16 @@
 		rk_hex_encode;
 		rk_mkstemp;
 		rk_print_version;
+		rk_snprintf;
 		rk_socket;
 		rk_strcasecmp;
 		rk_strlcat;
 		rk_strnlen;
 		rk_strlcpy;
 		rk_strsep;
+		rk_vasprintf;
+		rk_vasnprintf;
+	        rk_vsnprintf;
 		strcasecmp;
 		verr;
 		verrx;
