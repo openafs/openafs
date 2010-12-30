@@ -15,7 +15,6 @@ EXPORTS
 	afsconf_GetLocalCell				@14
 	afsconf_GetNoAuthFlag				@15
 	afsconf_GetNthUser				@16
-	afsconf_IntGetKeys				@17
 	afsconf_Open					@18
 	afsconf_ServerAuth				@19
 	afsconf_SetCellInfo				@20

@@ -14,9 +14,9 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
+OBJS= cellconfig.o keys.o ktc.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o token.xdr.o token.o
-KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
+KOBJS= cellconfig.o keys.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o token.xdr.o token.o
 
 LIBS=libauth.a \
@@ -26,7 +26,7 @@ LIBS=libauth.a \
       ${TOP_LIBDIR}/liblwp.a \
       ${TOP_LIBDIR}/util.a
 
-INCLS=cellconfig.h auth.h keys.h
+INCLS=cellconfig.h auth.h keys.h internal.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
        ktc.c authcon.c ktc_errors.c
@@ -66,6 +66,7 @@ ${TOP_LIBDIR}/libauth.krb.a: libauth.krb.a
 	${INSTALL_DATA} libauth.krb.a $@
 
 cellconfig.o: cellconfig.c ${INCLS}
+keys.o: keys.c ${INCLS}
 ktc.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 writeconfig.o: writeconfig.c ${INCLS}
 authcon.o: authcon.c ${INCLS}

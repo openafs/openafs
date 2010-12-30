@@ -37,6 +37,7 @@ AFSD = ..\WINNT\afsd
 
 AFSAUTH_LIBOBJS =\
 	$(OUT)\cellconfig.obj \
+	$(OUT)\keys.obj \
 	$(OUT)\userok.obj \
 	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \

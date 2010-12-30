@@ -37,6 +37,7 @@ AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
 AUTHOBJS = \
 	cellconfig.o \
 	ktc.o \
+	keys.o \
 	userok.o \
 	writeconfig.o \
 	authcon.o \
@@ -156,6 +157,9 @@ cellconfig.o: ${AUTH}/cellconfig.c
 
 ktc.o: ${AUTH}/ktc.c
 	${AFS_CCRULE} -I../auth ${AUTH}/ktc.c
+
+keys.o: ${AUTH}/keys.c
+	${AFS_CCRULE} -I../auth ${AUTH}/keys.c
 
 token.o: ${AUTH}/token.c
 	${AFS_CCRULE} -I../auth ${AUTH}/token.c

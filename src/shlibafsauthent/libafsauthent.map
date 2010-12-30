@@ -23,7 +23,6 @@
 	afsconf_GetLocalCell;
 	afsconf_GetNoAuthFlag;
 	afsconf_GetNthUser;
-	afsconf_IntGetKeys;
 	afsconf_Open;
 	afsconf_ServerAuth;
 	afsconf_SetCellInfo;

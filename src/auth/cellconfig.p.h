@@ -112,7 +112,6 @@ extern int afsconf_GetLocalCell(struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_UpToDate(struct afsconf_dir *adir);
-extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
 struct ktc_encryptionKey;
