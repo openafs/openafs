@@ -98,6 +98,7 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 		    afs_status_p st)
 {				/* completion status */
     int rc = 1;
+    struct afsconf_keys keys;
     afs_status_t tst2, tst = 0;
     afs_status_t serverSt = 0;
     char *serverCellName = NULL;
@@ -168,7 +169,8 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 	    if (confdir->cellName == NULL || *confdir->cellName == '\0') {
 		/* no cell set for server */
 		serverSt = ADMCFGSERVERNOTINCELL;
-	    } else if (confdir->keystr == NULL || confdir->keystr->nkeys == 0) {
+	    } else if ((afsconf_GetKeys(confdir, &keys) != 0)
+		       || (keys.nkeys == 0)) {
 		/* no server keys */
 		serverSt = ADMCFGSERVERNOKEYS;
 	    } else {
