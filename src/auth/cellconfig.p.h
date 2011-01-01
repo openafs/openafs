@@ -37,6 +37,8 @@ Creation date:
 #include <netinet/in.h>
 #endif
 #endif
+#include <rx/rx_opaque.h>
+#include <opr/queue.h>
 
 #define	MAXCELLCHARS	64
 #define	MAXHOSTCHARS	64
@@ -81,7 +83,7 @@ struct afsconf_dir {
     char *name;			/* pointer to dir prefix */
     char *cellName;		/* cell name, if any, we're in */
     struct afsconf_entry *entries;	/* list of cell entries */
-    struct afsconf_keys *keystr;	/* structure containing keys */
+    struct opr_queue keyList;		/* list of keys */
     afs_int32 timeRead;		/* time stamp of file last read */
     struct afsconf_aliasentry *alias_entries;	/* cell aliases */
 };
@@ -112,8 +114,11 @@ extern int afsconf_GetLocalCell(struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_UpToDate(struct afsconf_dir *adir);
+
+struct afsconf_keys;
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
+
 struct ktc_encryptionKey;
 extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir,
 				      afs_int32 * avno,
@@ -123,6 +128,53 @@ extern int afsconf_GetKey(void *rock, int avno,
 extern int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno,
 			  char akey[8], afs_int32 overwrite);
 extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);
+
+struct afsconf_typedKey;
+struct afsconf_typedKeyList {
+    int nkeys;
+    struct afsconf_typedKey **keys;
+};
+
+typedef enum {
+    afsconf_rxkad = 0,
+    afsconf_rxgk  =1
+} afsconf_keyType;
+
+extern struct afsconf_typedKey *
+	afsconf_typedKey_get(struct afsconf_typedKey *);
+extern void afsconf_typedKey_put(struct afsconf_typedKey **);
+extern struct afsconf_typedKey *
+	afsconf_typedKey_new(afsconf_keyType type, int kvno,
+			     int subType, struct rx_opaque *key);
+extern void afsconf_typedKey_free(struct afsconf_typedKey **);
+
+extern void afsconf_typedKey_values(struct afsconf_typedKey *key,
+				  afsconf_keyType *type,
+				  int *kvno,
+				  int *minorType,
+				  struct rx_opaque **keyMaterial);
+
+extern int afsconf_GetKeysByType(struct afsconf_dir *dir,
+				 afsconf_keyType type, int kvno,
+				 struct afsconf_typedKeyList **);
+extern int afsconf_GetKeyByTypes(struct afsconf_dir *dir,
+				 afsconf_keyType type, int kvno, int subType,
+				 struct afsconf_typedKey **);
+extern int afsconf_GetLatestKeysByType(struct afsconf_dir *dir,
+				       afsconf_keyType type,
+				       struct afsconf_typedKeyList **);
+extern int afsconf_GetLatestKeyByTypes(struct afsconf_dir *dir,
+				       afsconf_keyType type, int subType,
+				       struct afsconf_typedKey **);
+extern void afsconf_PutTypedKeyList(struct afsconf_typedKeyList **keys);
+extern int afsconf_AddTypedKey(struct afsconf_dir *dir,
+			       struct afsconf_typedKey *key,
+			       int overwrite);
+extern int afsconf_DeleteKeyByType(struct afsconf_dir *dir,
+				   afsconf_keyType type, int kvno);
+extern int afsconf_DeleteKeyBySubType(struct afsconf_dir *dir,
+				      afsconf_keyType type, int kvno,
+				      int subType);
 
 /* authcon.c */
 struct rx_securityClass;

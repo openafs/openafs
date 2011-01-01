@@ -846,10 +846,11 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     if (tf != NULL)
 	fclose(tf);
     /* now read the fs keys, if possible */
-    adir->keystr = (struct afsconf_keys *)0;
-    _afsconf_IntGetKeys(adir);
 
-    return 0;
+    _afsconf_InitKeys(adir);
+    code = _afsconf_LoadKeys(adir);
+
+    return code;
 }
 
 /* parse a line of the form
@@ -1564,8 +1565,8 @@ afsconf_CloseInternal(struct afsconf_dir *adir)
 	na = ta->next;
 	free(ta);
     }
-    if (adir->keystr)
-	free(adir->keystr);
+
+    _afsconf_FreeAllKeys(adir);
 
     /* reinit */
     memset(adir, 0, sizeof(struct afsconf_dir));

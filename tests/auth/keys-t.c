@@ -36,11 +36,12 @@
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
 
+#include <tap/basic.h>
+
 static int
 copy(char *inFile, char *outFile)
 {
     int in, out;
-    int code, written;
     char *block;
     size_t len;
 
@@ -69,11 +70,34 @@ copy(char *inFile, char *outFile)
     return 0;
 }
 
+int
+keyMatches(struct afsconf_typedKey *typedKey,
+	   afsconf_keyType type, int kvno, int subType,
+	   void *keyMaterial, size_t keyLen)
+{
+    afsconf_keyType keyType;
+    int keyKvno;
+    int keySubType;
+    struct rx_opaque *buffer;
+
+    afsconf_typedKey_values(typedKey, &keyType, &keyKvno, &keySubType,
+			    &buffer);
+
+    return (keyType == type && keyKvno == kvno && keySubType == subType &&
+	    buffer->len == keyLen &&
+	    memcmp(keyMaterial, buffer->val, buffer->len) == 0);
+}
+
+
 int main(int argc, char **argv)
 {
     struct afsconf_dir *dir;
     struct afsconf_keys keys;
     struct ktc_encryptionKey key;
+    struct rx_opaque *keyMaterial;
+    struct afsconf_typedKey *typedKey;
+    struct afsconf_typedKeyList *typedKeyList;
+
     char buffer[1024];
     char *dirEnd;
     FILE *file;
@@ -81,7 +105,7 @@ int main(int argc, char **argv)
     int code;
     int i;
 
-    plan(61);
+    plan(122);
 
     /* Create a temporary afs configuration directory */
     snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
@@ -236,6 +260,81 @@ int main(int argc, char **argv)
     code = afsconf_AddKey(dir, 20, "\x10\x10\x10\x10\x10\x10\x10\x10",0);
     is_int(AFSCONF_FULL, code, "afsconf_AddKey fails once we've got 8 keys");
 
+    /* Check that the new interface also fails when we've got too many
+     * keys */
+    keyMaterial = rx_opaque_new("\x10\x10\x10\x10\x10\x10\x10\x10", 8);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 20, 0, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(AFSCONF_FULL, code,
+	   "afsconf_AddTypedKey fails for rxkad once we've got 8 keys");
+
+    /* Check the new accessors work for rxkad keys */
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 4, 0, &typedKey);
+    is_int(0, code,
+	   "afsconf_GetKeyByTypes works for rxkad");
+    ok(keyMatches(typedKey, afsconf_rxkad, 4, 0,
+		  "\x19\x16\xfe\xe6\xba\x77\x2f\xfd", 8),
+       " ... and returned key matches");
+
+    afsconf_typedKey_put(&typedKey);
+
+    code = afsconf_GetKeysByType(dir, afsconf_rxkad, 4, &typedKeyList);
+    is_int(0, code,
+	   "afsconf_GetKeysByType works for rxkad");
+    is_int(1, typedKeyList->nkeys,
+	   " ... and returns 1 key, as expected");
+    ok(keyMatches(typedKeyList->keys[0], afsconf_rxkad, 4, 0,
+		  "\x19\x16\xfe\xe6\xba\x77\x2f\xfd", 8),
+       " ... and returned key matches");
+
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+    code = afsconf_GetLatestKeyByTypes(dir, afsconf_rxkad, 0, &typedKey);
+    is_int(0, code,
+	   "afsconf_GetLatestKeyByTypes works for rxkad");
+    ok(keyMatches(typedKey, afsconf_rxkad, 14, 0,
+		  "\x10\x10\x10\x10\x10\x10\x10\x10", 8),
+       " ... and returned key matches");
+
+    afsconf_typedKey_put(&typedKey);
+
+    code = afsconf_GetLatestKeysByType(dir, afsconf_rxkad, &typedKeyList);
+    is_int(0, code,
+	   "afsconf_GetLatestKeysByType works for rxkad");
+    is_int(1, typedKeyList->nkeys,
+	   " ... and returns 1 key, as expected");
+    ok(keyMatches(typedKeyList->keys[0], afsconf_rxkad, 14, 0,
+		 "\x10\x10\x10\x10\x10\x10\x10\x10", 8),
+       " ... and returned key matches");
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+    /* Check that we can't delete a key that doesn't exist */
+    code = afsconf_DeleteKeyByType(dir, afsconf_rxkad, 6);
+    is_int(AFSCONF_NOTFOUND, code,
+	   "afsconf_DeleteKeyByType returns NOTFOUND if key doesn't exist");
+    code = afsconf_DeleteKeyBySubType(dir, afsconf_rxkad, 6, 0);
+    is_int(AFSCONF_NOTFOUND, code,
+           "afsconf_DeleteKeyBySubType returns NOTFOUND if key doesn't exist");
+    code = afsconf_DeleteKeyBySubType(dir, afsconf_rxkad, 14, 1);
+    is_int(AFSCONF_NOTFOUND, code,
+           "afsconf_DeleteKeyBySubType doesn't delete with wrong subtype");
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 14, 0, &typedKey);
+    is_int(0, code, " ... and key is still there!");
+    afsconf_typedKey_put(&typedKey);
+
+    /* Check that we can delete a key that does */
+    code = afsconf_DeleteKeyByType(dir, afsconf_rxkad, 13);
+    is_int(0, code, "afsconf_DeleteKeyByType works");
+    code = afsconf_GetKeysByType(dir, afsconf_rxkad, 13, &typedKeyList);
+    is_int(AFSCONF_NOTFOUND, code, " ... and is really gone");
+
+    code = afsconf_DeleteKeyBySubType(dir, afsconf_rxkad, 14, 0);
+    is_int(0, code, "afsconf_DeleteKeyBySubType works");
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 14, 0, &typedKey);
+    is_int(AFSCONF_NOTFOUND, code, " ... and is really gone");
+
     /* Unlink the KeyFile */
     strcpy(dirEnd, "/KeyFile");
     unlink(buffer);
@@ -263,6 +362,18 @@ int main(int argc, char **argv)
     code = afsconf_GetLatestKey(dir, &kvno, &key);
     is_int(AFSCONF_NOTFOUND, code,
 	   "afsconf_GetLatestKey returns NOTFOUND with an empty KeyFile");
+    code = afsconf_GetKeysByType(dir, afsconf_rxkad, 1, &typedKeyList);
+    is_int(AFSCONF_NOTFOUND, code,
+	   "afsconf_GetKeysByType returns NOTFOUND with an empty KeyFile");
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 1, 0, &typedKey);
+    is_int(AFSCONF_NOTFOUND, code,
+	   "afsconf_GetKeyByTypes returns NOTFOUND with an empty KeyFile");
+    code = afsconf_GetLatestKeysByType(dir, afsconf_rxkad, &typedKeyList);
+    is_int(AFSCONF_NOTFOUND, code,
+	   "afsconf_GetLatestKeysByType returns NOTFOUND with empty KeyFile");
+    code = afsconf_GetLatestKeyByTypes(dir, afsconf_rxkad, 0, &typedKey);
+    is_int(AFSCONF_NOTFOUND, code,
+	   "afsconf_GetLatestKeyByTypes returns NOTFOUND with empty KeyFile");
 
     /* Now try adding a key to an empty file */
     code = afsconf_AddKey(dir, 1, "\x10\x10\x10\x10\x10\x10\x10\x10", 1);
@@ -272,6 +383,163 @@ int main(int argc, char **argv)
     is_int(1, kvno, " ... with correct kvno");
     ok(memcmp(&key, "\x10\x10\x10\x10\x10\x10\x10\x10", 8) == 0,
        " ... and key");
+
+    /* And adding a key using the new interface */
+
+    keyMaterial = rx_opaque_new("\x20\x20\x20\x20\x20\x20\x20\x20", 8);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 2, 0, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(0, code, "afsconf_AddTypedKey works");
+    code = afsconf_GetLatestKey(dir, &kvno, &key);
+    is_int(0, code, " ... and afsconf_GetLatestKey succeeds");
+    is_int(2, kvno, " ... with correct kvno");
+    ok(memcmp(&key, "\x20\x20\x20\x20\x20\x20\x20\x20", 8) == 0,
+       " ... and key");
+    code = afsconf_GetLatestKeyByTypes(dir, afsconf_rxkad, 0, &typedKey);
+    is_int(0, code, " ... and so does afsconf_GetLatestKeyByTypes");
+    ok(keyMatches(typedKey, afsconf_rxkad, 2, 0,
+		  "\x20\x20\x20\x20\x20\x20\x20\x20", 8),
+       " ... with correct key");
+    afsconf_typedKey_put(&typedKey);
+
+    /* And that we can't add a key to an existing kvno and type */
+    keyMaterial = rx_opaque_new("\x30\x30\x30\x30\x30\x30\x30\x30", 8);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 2, 0, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(AFSCONF_KEYINUSE, code,
+	   "afsconf_AddTypedKey won't overwrite without being told to");
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 2, 0, &typedKey);
+    is_int(0, code, " ... and key still exists");
+    ok(keyMatches(typedKey, afsconf_rxkad, 2, 0,
+	          "\x20\x20\x20\x20\x20\x20\x20\x20", 8),
+       " ... and hasn't changed");
+    afsconf_typedKey_put(&typedKey);
+
+    /* But we can if we force */
+    keyMaterial = rx_opaque_new("\x30\x30\x30\x30\x30\x30\x30\x30", 8);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 2, 0, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 1);
+    afsconf_typedKey_put(&typedKey);
+    is_int(0, code,  "afsconf_AddTypedKey overwrites when asked");
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 2, 0, &typedKey);
+    is_int(0, code, " ... and GetKeyByTypes retrieves new key");
+    ok(keyMatches(typedKey, afsconf_rxkad, 2, 0,
+	          "\x30\x30\x30\x30\x30\x30\x30\x30", 8),
+       " ... and it is the new key");
+
+    /* Check that we can't add bad rxkad keys */
+    keyMaterial = rx_opaque_new("\x30\x30\x30\x30\x30\x30\x30", 7);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 3, 0, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 1);
+    afsconf_typedKey_put(&typedKey);
+    is_int(AFSCONF_BADKEY, code,
+	   "afsconf_AddTypedKey won't add short rxkad keys");
+    keyMaterial = rx_opaque_new("\x30\x30\x30\x30\x30\x30\x30\x30\x30", 9);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 3, 0, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 1);
+    afsconf_typedKey_put(&typedKey);
+    is_int(AFSCONF_BADKEY, code,
+	   "afsconf_AddTypedKey won't add long rxkad keys");
+    keyMaterial = rx_opaque_new("\x30\x30\x30\x30\x30\x30\x30\x30", 8);
+    typedKey = afsconf_typedKey_new(afsconf_rxkad, 3, 1, keyMaterial);
+    rx_opaque_free(&keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 1);
+    afsconf_typedKey_put(&typedKey);
+    is_int(AFSCONF_BADKEY, code,
+	   "afsconf_AddTypedKey won't add rxkad keys with non-zero subtype");
+
+    /* Now, test things with other key types. */
+
+    /* Add a different key type, but with same kvno as rxkad */
+    keyMaterial = rx_opaque_new("\x01", 1);
+    typedKey = afsconf_typedKey_new(1, 2, 0, keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(0, code,
+	   "afsconf_AddTypedKey can add keys with different key type");
+
+    /* Add a different subtype, with same kvno */
+    keyMaterial = rx_opaque_new("\x02\x03", 2);
+    typedKey = afsconf_typedKey_new(1, 2, 1, keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(0, code,
+	   "afsconf_AddTypedKey can add keys with different sub type");
+
+    /* Check the GetKeyByTypes returns one of the keys */
+    code = afsconf_GetKeyByTypes(dir, 1, 2, 1, &typedKey);
+    is_int(0, code, "afsconf_GetKeyByTypes returns");
+    ok(keyMatches(typedKey, 1, 2, 1, "\x02\x03", 2),
+       " ... with the right key");
+
+    /* Check that GetKeysByType returns both of the keys */
+    code = afsconf_GetKeysByType(dir, 1, 2, &typedKeyList);
+    is_int(0, code, "afsconf_GetKeysByType returns");
+    is_int(2, typedKeyList->nkeys, " ... with correct number of keys");
+    ok(keyMatches(typedKeyList->keys[0], 1, 2, 0, "\x01", 1),
+       " ... with the right key in slot 0");
+    ok(keyMatches(typedKeyList->keys[1], 1, 2, 1, "\x02\x03", 2),
+       " ... with the right key in slot 1");
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+    /* Add another key, before these ones, so we can check that
+     * latest really works */
+    keyMaterial = rx_opaque_new("\x03", 1);
+    typedKey = afsconf_typedKey_new(1, 1, 0, keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(0, code, "afsconf_AddTypedKey worked again");
+
+    /* Check that GetLatestKeyByTypes returns one */
+    code = afsconf_GetLatestKeyByTypes(dir, 1, 1, &typedKey);
+    is_int(0, code, "afsconf_GetLatestKeyByTypes returns");
+    ok(keyMatches(typedKey, 1, 2, 1, "\x02\x03", 2),
+       " ... with the right key");
+
+    /* Check that GetLatestKeysByType returns both */
+    code = afsconf_GetLatestKeysByType(dir, 1, &typedKeyList);
+    is_int(0, code, "afsconf_GetLatestKeysByType returns");
+        is_int(2, typedKeyList->nkeys, " ... with correct number of keys");
+    ok(keyMatches(typedKeyList->keys[0], 1, 2, 0, "\x01", 1),
+       " ... with the right key in slot 0");
+    ok(keyMatches(typedKeyList->keys[1], 1, 2, 1, "\x02\x03", 2),
+       " ... with the right key in slot 1");
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+    /* Check that closing this instance, and reopening, still has all of
+     * the required keys
+     */
+    afsconf_Close(dir);
+
+    *dirEnd='\0';
+    dir = afsconf_Open(strdup(buffer));
+    ok(dir != NULL, "Sucessfully re-opened config directory");
+    if (dir == NULL)
+	goto out;
+
+    /* Check that GetKeysByType returns all of the keys */
+    code = afsconf_GetKeysByType(dir, 1, 1, &typedKeyList);
+    is_int(0, code, "afsconf_GetKeysByType returns after reopening");
+    is_int(1, typedKeyList->nkeys, " ... First kvno has correct number of keys");
+    ok(keyMatches(typedKeyList->keys[0], 1, 1, 0, "\x03", 1),
+       " ... and key material is correct");
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+    code = afsconf_GetKeysByType(dir, 1, 2, &typedKeyList);
+    is_int(0, code, "afsconf_GetKeysByType returns after reopening");
+    is_int(2, typedKeyList->nkeys, " ... with correct number of keys");
+    ok(keyMatches(typedKeyList->keys[0], 1, 2, 0, "\x01", 1),
+       " ... with the right key in slot 0");
+    ok(keyMatches(typedKeyList->keys[1], 1, 2, 1, "\x02\x03", 2),
+       " ... with the right key in slot 1");
+    afsconf_PutTypedKeyList(&typedKeyList);
 
 out:
     strcpy(dirEnd, "/KeyFile");
@@ -284,4 +552,6 @@ out:
     unlink(buffer);
     *dirEnd='\0';
     rmdir(buffer);
+
+    return 0;
 }

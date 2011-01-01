@@ -111,6 +111,7 @@ extern int
 #define AFSDIR_CELLSERVDB_FILE  "CellServDB"
 #define AFSDIR_CELLALIAS_FILE   "CellAlias"
 #define AFSDIR_KEY_FILE         "KeyFile"
+#define AFSDIR_EXT_KEY_FILE	"KeyFileExt"
 #define AFSDIR_ULIST_FILE       "UserList"
 #define AFSDIR_NOAUTH_FILE      "NoAuth"
 #define AFSDIR_BUDBLOG_FILE     "BackupLog"

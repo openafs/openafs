@@ -12,7 +12,6 @@ all check test tests: $(TESTS)
 
 MODULE_LIBS = 	../tap/libtap.a \
 		$(abs_top_builddir)/lib/libafsauthent.a \
-		$(abs_top_builddir)/lib/librxgk.a \
 		$(abs_top_builddir)/lib/libafsrpc.a \
 		$(abs_top_builddir)/lib/libafshcrypto.a \
 		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
