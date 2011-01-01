@@ -159,6 +159,8 @@ afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
     struct rx_identity identity;
     afs_int32 code;
 
+    memset(&identity, 0, sizeof(struct rx_identity));
+
     LOCK_GLOBAL_MUTEX;
     UserListFileName(adir, tbuffer, sizeof tbuffer);
 #ifndef AFS_NT40_ENV
