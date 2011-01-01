@@ -164,8 +164,11 @@ rx_identity_new(rx_identity_kind kind, char *displayName, void *enameData,
 void
 rx_identity_freeContents(struct rx_identity *identity)
 {
-    rxi_Free(identity->displayName, strlen(identity->displayName));
-    identity->displayName = NULL;
+    if (identity->displayName) {
+	rxi_Free(identity->displayName, strlen(identity->displayName));
+	identity->displayName = NULL;
+    }
+
     rx_opaque_freeContents(&identity->exportedName);
 }
 
