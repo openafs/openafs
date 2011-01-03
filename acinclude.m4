@@ -1207,16 +1207,53 @@ dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h stdint.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
-AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
-AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h sys/pag.h)
-AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h sys/un.h)
-AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
-AC_CHECK_HEADERS(sys/socket.h sys/ioctl.h errno.h time.h syslog.h)
+AC_CHECK_HEADERS([ \
+		   curses.h\
+		   direct.h \
+		   et/com_err.h \
+		   errno.h \
+		   fcntl.h \
+		   grp.h \
+		   mntent.h \
+		   ncurses.h \
+		   netdb.h \
+		   netinet/in.h \
+		   regex.h \
+		   security/pam_modules.h \
+		   signal.h \
+		   stdint.h \
+		   stdio_ext.h \
+		   stdlib.h \
+		   string.h \
+		   strings.h \
+		   sys/bitypes.h \
+		   sys/fcntl.h \
+		   sys/file.h \
+		   sys/fs_types.h \
+		   sys/fstyp.h \
+		   sys/ioctl.h \
+		   sys/ipc.h \
+		   sys/mount.h \
+		   sys/mntent.h \
+		   sys/mnttab.h \
+		   sys/pag.h \
+		   sys/param.h \
+		   sys/resource.h \
+		   sys/statfs.h \
+		   sys/statvfs.h \
+		   sys/socket.h \
+		   sys/time.h \
+		   sys/un.h \
+		   sys/vfs.h \
+		   syslog.h \
+		   termios.h \
+		   time.h \
+		   ucontext.h \
+		   unistd.h \
+		   windows.h \
+		])
+
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
-AC_CHECK_HEADERS(et/com_err.h stdio_ext.h)
-AC_CHECK_HEADERS(ncurses.h curses.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
