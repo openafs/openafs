@@ -1227,6 +1227,7 @@ AC_CHECK_HEADERS([ \
 		   string.h \
 		   strings.h \
 		   sys/bitypes.h \
+		   sys/bswap.h \
 		   sys/fcntl.h \
 		   sys/file.h \
 		   sys/fs_types.h \
@@ -1243,6 +1244,7 @@ AC_CHECK_HEADERS([ \
 		   sys/statvfs.h \
 		   sys/socket.h \
 		   sys/time.h \
+		   sys/types.h \
 		   sys/un.h \
 		   sys/vfs.h \
 		   syslog.h \
@@ -1410,6 +1412,36 @@ AS_IF([test "$ac_cv_header_err_h" != "yes" ],
       [ROKEN_HEADERS="$ROKEN_HEADERS \$(TOP_INCDIR)/err.h"],
       [])
 AC_SUBST(ROKEN_HEADERS)
+
+dnl Stuff that's harder ...
+AC_MSG_CHECKING([for bswap16])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+],
+[short a, b; b = bswap16(a); ])],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_BSWAP16, 1, [Define to 1 if you have the bswap16 function])
+],
+[AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING([for bswap32])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+],
+[int a, b; b = bswap32(a); ])],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_BSWAP32, 1, [Define to 1 if you have the bswap32 function])
+],
+[AC_MSG_RESULT(no)])
 
 AC_MSG_CHECKING([for positional I/O])
 if test "$ac_cv_func_pread" = "yes" && \
