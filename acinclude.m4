@@ -1294,16 +1294,47 @@ dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
-AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
-AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h sys/pag.h)
-AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h)
-AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
+AC_CHECK_HEADERS([ \
+	curses.h \
+	direct.h \
+	et/com_err.h \
+	fcntl.h \
+	grp.h \
+	mntent.h \
+	ncurses.h \
+	ncurses/ncurses.h \
+	netinet/in.h \
+	netdb.h \
+	regex.h \
+	search.h \
+	security/pam_modules.h \
+	signal.h \
+	stdlib.h \
+	string.h \
+	strings.h \
+	sys/bitypes.h \
+	sys/fcntl.h \
+	sys/file.h \
+	sys/fs_types.h \
+	sys/fstyp.h \
+	sys/ipc.h \
+	sys/mntent.h \
+	sys/mnttab.h \
+	sys/mount.h \
+	sys/pag.h \
+	sys/param.h \
+	sys/resource.h \
+	sys/statfs.h \
+	sys/statvfs.h \
+	sys/time.h \
+	sys/vfs.h \
+	termios.h \
+	ucontext.h \
+	unistd.h \
+	windows.h \
+])
+
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
-AC_CHECK_HEADERS(et/com_err.h)
-AC_CHECK_HEADERS(ncurses.h ncurses/ncurses.h curses.h)
-AC_CHECK_HEADERS(search.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
