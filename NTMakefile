@@ -701,11 +701,11 @@ install: finale
 # Clean target for obj tree
 clean:
 	$(CD) $(SRC)\config
-	nmake /nologo /f ntmakefile version
+	nmake /nologo /f ntmakefile version langsetup
 	$(CD) ..\..
 	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" media
 	$(CD) $(SRC)\config
-	nmake /nologo /f ntmakefile clean_version
+	nmake /nologo /f ntmakefile clean_final
 	$(CD) ..\..
 
 # Language-only build target
