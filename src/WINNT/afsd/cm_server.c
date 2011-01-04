@@ -117,8 +117,6 @@ cm_PingServer(cm_server_t *tsp)
     int wasDown = 0;
     cm_conn_t *connp;
     struct rx_connection * rxconnp;
-    long secs;
-    long usecs;
     Capabilities caps = {0, 0};
     char hoststr[16];
     cm_req_t req;
@@ -363,15 +361,13 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
     cm_conn_t **conns = NULL;
     struct rx_connection **rxconns = NULL;
     cm_req_t req;
-    afs_int32 i, j, nconns = 0, maxconns;
+    afs_int32 i, nconns = 0, maxconns;
     afs_int32 *conntimer, *results;
     Capabilities *caps = NULL;
     cm_server_t ** serversp, *tsp;
     afs_uint32 isDown, wasDown;
     afs_uint32 code;
-    time_t start, end, *deltas;
-    afs_int32 secs;
-    afs_int32 usecs;
+    time_t start, *deltas;
     char hoststr[16];
 
     cm_InitReq(&req);
