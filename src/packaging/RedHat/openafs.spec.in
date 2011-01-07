@@ -104,7 +104,7 @@
 %define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
 
 # Define the location of your init.d directory
-%define initdir /etc/init.d
+%define initdir /etc/rc.d/init.d
 
 #determine if the kernel provides an arch-specific Provides
 %define kprovidesarch %(%{kversis} provideskernelarch %{ksrcdir} %{_target_cpu})
