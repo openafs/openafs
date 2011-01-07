@@ -23,17 +23,24 @@ Introduction
 
 DKMS
 
-  DKMS is relatively new and untested compared to the other mechanisms for
-  building kernel modules, but if it works for you, it's the easiest.
-  DKMS stands for Dynamic Kernel Module Support.  It provides
-  infrastructure that will automatically rebuild kernel modules when the
-  source package or the kernel has been upgraded.
+  DKMS has some caveats, but it's the easiest method of building modules.
+  It provides infrastructure that will automatically rebuild kernel
+  modules when the source package or the kernel has been upgraded.
 
-  To build OpenAFS kernel modules via DKMS, just install the
-  openafs-modules-dkms package.  This depends on DKMS and will install it
-  as well.  The OpenAFS kernel modules should then be built automatically
-  and will be installed under updates/dkms in the module tree for your
-  kernel.
+  To build OpenAFS kernel modules via DKMS, install the linux-headers
+  package corresponding to the version of the kernel that you have
+  installed and then install the openafs-modules-dkms package.  This
+  depends on DKMS and will install it as well.  The OpenAFS kernel modules
+  should then be built automatically and will be installed under
+  updates/dkms in the module tree for your kernel.
+
+  Please note that DKMS will only build modules for kernels that have the
+  Linux headers installed.  When you upgrade your kernel, you need to
+  install the new linux-headers package at the same time, or you'll end up
+  without an OpenAFS module for the new kernel.  If you're using the
+  tracking packages for the kernel (linux-image-2.6-686 or the like), also
+  install the tracking package for the kernel headers
+  (linux-headers-2.6-686 in that example).
 
 module-assistant
 
@@ -67,6 +74,15 @@ module-assistant
   module-assistant will take care of naming the openafs-modules package
   correctly so that it matches the name of the kernel-image package and
   installs its modules into the correct directory.
+
+  If you have ever previously built a module with module-assistant, always
+  run:
+
+      module-assistant clean openafs
+
+  before building a new module.  module-assistant doesn't always properly
+  clean up after itself, and the mix of files from old and new versions of
+  OpenAFS can cause serious problems with the resulting module.
 
 make-kpkg
 

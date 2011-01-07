@@ -1,3 +1,11 @@
+openafs (1.6.0~pre1-2) UNRELEASED; urgency=low
+
+  * In README.modules, document the need to install the Linux headers
+    package in the DKMS instructions and the need for module-assistant
+    clean openafs in the module-assitant instructions.  (Closes: #606235)
+
+ -- Russ Allbery <rra@debian.org>  Thu, 06 Jan 2011 20:03:48 -0800
+
 openafs (1.6.0~pre1-1) experimental; urgency=low
 
   * New upstream prerelease.
