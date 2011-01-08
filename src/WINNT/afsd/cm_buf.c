@@ -1151,7 +1151,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
     created = 0;
     pageOffset.HighPart = offsetp->HighPart;
     pageOffset.LowPart = offsetp->LowPart & ~(cm_data.buf_blockSize-1);
-    while (1) {
+    while (!created) {
         lcount++;
 #ifdef TESTING
         buf_ValidateBufQueues();
@@ -1171,25 +1171,28 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
 
         /* otherwise, we have to create a page */
         code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
-	/* bp->mx is now held */
-
-        /* check if the buffer was created in a race condition branch.
-         * If so, go around so we can hold a reference to it. 
-         */
-        if (code == CM_BUF_EXISTS) 
-            continue;
-
-        /* something else went wrong */
-        if (code != 0) { 
+        switch (code) {
+        case 0:
+            /* the requested buffer was created */
+            created = 1;
+            break;
+        case CM_BUF_EXISTS:
+            /*
+             * the requested buffer existed by the time the
+             * scp->bufCreateLock and buf_globalLock could be obtained.
+             * loop again and permit buf_Find() to obtain a reference.
+             */
+            break;
+        default:
+            /*
+             * the requested buffer could not be created.
+             * return the error to the caller.
+             */
 #ifdef TESTING
             buf_ValidateBufQueues();
 #endif /* TESTING */
             return code;
         }
-                
-        /* otherwise, we have a locked buffer that we just created */
-        created = 1;
-        break;
     } /* big while loop */
 
     /* if we get here, we have a locked buffer that may have just been
@@ -1199,7 +1202,11 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
         /* load the page; freshly created pages should be idle */
         osi_assertx(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)), "incorrect cm_buf_t flags");
 
-        /* start the I/O; may drop lock */
+        /*
+         * start the I/O; may drop lock.  as of this writing, the only
+         * implementation of Readp is cm_BufRead() which simply sets
+         * tcount to 0 and returns success.
+         */
         bp->flags |= CM_BUF_READING;
         code = (*cm_buf_opsp->Readp)(bp, cm_data.buf_blockSize, &tcount, NULL);
 
@@ -1226,7 +1233,8 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
                 return code;
             }
         } else {
-            /* otherwise, I/O completed instantly and we're done, except
+            /*
+             * otherwise, I/O completed instantly and we're done, except
              * for padding the xfr out with 0s and checking for EOF
              */
             if (tcount < (unsigned long) cm_data.buf_blockSize) {
@@ -1240,7 +1248,6 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
                 osi_Wakeup((LONG_PTR) bp);
             }
         }
-
     } /* if created */
 
     /* wait for reads, either that which we started above, or that someone
