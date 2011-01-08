@@ -15,8 +15,8 @@ else
     git_version=`git describe --abbrev=4 HEAD 2>/dev/null`
     if [ $? = 0 ]; then
       # Is the working tree dirty?
-      if git diff-index --quiet --cached HEAD --ignore-submodules && \
-         git diff-files --quiet --ignore-submodules ; then
+      if git diff-index --quiet --cached HEAD && \
+         git diff-files --quiet ; then
 	 :
       else
         git_version="$git_version-dirty"
