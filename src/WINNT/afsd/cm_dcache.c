@@ -78,7 +78,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     memset(&volSync, 0, sizeof(volSync));
 
-    /* now, the buffer may or may not be filled with good data (buf_GetNew
+    /* now, the buffer may or may not be filled with good data (buf_GetNewLocked
      * drops lots of locks, and may indeed return a properly initialized
      * buffer, although more likely it will just return a new, empty, buffer.
      */
@@ -1611,7 +1611,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
     memset(&volSync, 0, sizeof(volSync));
 
-    /* now, the buffer may or may not be filled with good data (buf_GetNew
+    /* now, the buffer may or may not be filled with good data (buf_GetNewLocked
      * drops lots of locks, and may indeed return a properly initialized
      * buffer, although more likely it will just return a new, empty, buffer.
      */

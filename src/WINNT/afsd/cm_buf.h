@@ -173,8 +173,6 @@ extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_b
 
 extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
-extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
-
 extern afs_uint32 buf_CleanAsyncLocked(cm_scache_t *, cm_buf_t *, cm_req_t *, afs_uint32 flags, afs_uint32 *);
 
 extern afs_uint32 buf_CleanAsync(cm_scache_t *, cm_buf_t *, cm_req_t *, afs_uint32 flags, afs_uint32 *);

@@ -1133,61 +1133,12 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
     /* not reached */
 } /* the proc */
 
-/* get a page, returning it held but unlocked.  Doesn't fill in the page
- * with I/O, since we're going to write the whole thing new.
+/*
+ * get a page, returning it held but unlocked.  the page may or may not
+ * contain valid data.
+ *
+ * The scp must be unlocked when passed in unlocked.
  */
-long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
-{
-    cm_buf_t *bp;
-    long code;
-    osi_hyper_t pageOffset;
-    int created;
-
-    created = 0;
-    pageOffset.HighPart = offsetp->HighPart;
-    pageOffset.LowPart = offsetp->LowPart & ~(cm_data.buf_blockSize-1);
-    while (1) {
-        bp = buf_Find(scp, &pageOffset);
-        if (bp) {
-            /* lock it and break out */
-            lock_ObtainMutex(&bp->mx);
-            break;
-        }
-
-        /* otherwise, we have to create a page */
-        code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
-
-        /* check if the buffer was created in a race condition branch.
-         * If so, go around so we can hold a reference to it. 
-         */
-        if (code == CM_BUF_EXISTS) 
-            continue;
-
-        /* something else went wrong */
-        if (code != 0) 
-            return code;
-
-        /* otherwise, we have a locked buffer that we just created */
-        created = 1;
-        break;
-    } /* big while loop */
-
-    /* wait for reads */
-    if (bp->flags & CM_BUF_READING)
-        buf_WaitIO(scp, bp);
-
-    /* once it has been read once, we can unlock it and return it, still
-     * with its refcount held.
-     */
-    lock_ReleaseMutex(&bp->mx);
-    *bufpp = bp;
-    osi_Log4(buf_logp, "buf_GetNew returning bp 0x%p for scp 0x%p, offset 0x%x:%08x",
-              bp, scp, offsetp->HighPart, offsetp->LowPart);
-    return 0;
-}
-
-/* get a page, returning it held but unlocked.  Make sure it is complete */
-/* The scp must be unlocked when passed to this function */
 long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
