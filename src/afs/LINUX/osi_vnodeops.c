@@ -1391,7 +1391,7 @@ static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
     return 0;
 }
 
-static int
+static void
 afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
 {
     char *name = nd_get_link(nd);
