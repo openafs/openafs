@@ -137,9 +137,13 @@ typedef atomic_t rx_atomic_t;
 #define rx_atomic_dec(X)	  atomic_dec(X)
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
 
-#elif defined(AFS_SUN58_ENV)
+#elif defined(AFS_SUN510_ENV) || (defined(AFS_SUN58_ENV) && defined(KERNEL) && !defined(UKERNEL))
 
-# include <atomic.h>
+# if defined(KERNEL) && !defined(UKERNEL)
+#  include <sys/atomic.h>
+# else
+#  include <atomic.h>
+# endif
 
 typedef struct {
     volatile unsigned int var;
