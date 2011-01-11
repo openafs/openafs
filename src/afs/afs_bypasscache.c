@@ -159,12 +159,12 @@ afs_TransitionToBypass(struct vcache *avc,
      * Someone may have beat us to doing the transition - we had no lock
      * when we checked the flag earlier.  No cause to panic, just return.
      */
-    if (avc->f.states & FCSBypass)
+    if (avc->cachingStates & FCSBypass)
 	goto done;
 
     /* If we never cached this, just change state */
     if (setDesire && (!(avc->cachingStates & FCSBypass))) {
-	avc->f.states |= FCSBypass;
+	avc->cachingStates |= FCSBypass;
 	goto done;
     }
 
@@ -239,7 +239,7 @@ afs_TransitionToCaching(struct vcache *avc,
      * Someone may have beat us to doing the transition - we had no lock
      * when we checked the flag earlier.  No cause to panic, just return.
      */
-    if (!(avc->f.states & FCSBypass))
+    if (!(avc->cachingStates & FCSBypass))
 	goto done;
 
     /* Ok, we actually do need to flush */
