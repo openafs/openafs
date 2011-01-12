@@ -2302,10 +2302,12 @@ afsd_run(void)
      * Pass the kernel the name of the workstation cache file holding the
      * cell information.
      */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
-	       fullpn_CellInfoFile);
-    afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	if (afsd_debug)
+	    printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
+		   fullpn_CellInfoFile);
+	afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+    }
 
     if (rxmaxmtu) {
 	if (afsd_verbose)
