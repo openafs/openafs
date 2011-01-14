@@ -501,9 +501,7 @@ afs_vop_lookup(ap)
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT | WANTPARENT);
 
-#ifdef AFS_FBSD80_ENV
     cnp->cn_flags |= MPSAFE; /* steel */
-#endif
 
 #ifndef AFS_FBSD70_ENV
     if (flags & ISDOTDOT)

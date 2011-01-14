@@ -564,13 +564,6 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
     afs_uint32 maxVictimPtr;	/* where it is */
     int discard;
     int curbucket;
-#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
-    int vfslocked;
-#endif
-
-#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
-    vfslocked = VFS_LOCK_GIANT(afs_globalVFS);
-#endif
 
     AFS_STATCNT(afs_GetDownD);
 
@@ -582,9 +575,6 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
     if (!aneedSpace || *aneedSpace <= 0) {
 	anumber -= afs_freeDCCount;
 	if (anumber <= 0) {
-#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
-	  VFS_UNLOCK_GIANT(vfslocked);
-#endif
 	    return;		/* enough already free */
 	}
     }
@@ -861,10 +851,6 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 		break;
 	}
     }				/* big while loop */
-
-#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
-    VFS_UNLOCK_GIANT(vfslocked);
-#endif
 
     return;
 

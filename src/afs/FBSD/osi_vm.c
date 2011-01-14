@@ -43,9 +43,9 @@
  * way.
  *
  * The locking protocol for vnodes is defined in
- * kern/vnode_if.src and sys/vnode.h; the locking is still a work in 
- * progress, so some fields are (as of 5.1) still protected by Giant
- * rather than an explicit lock.
+ * kern/vnode_if.src and sys/vnode.h; unfortunately, it is not *quite*
+ * constant from version to version so to be properly correct we must
+ * check the VCS history of those files.
  */
 
 #ifdef AFS_FBSD60_ENV

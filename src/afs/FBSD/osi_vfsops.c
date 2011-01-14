@@ -123,11 +123,26 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     afs_globalVFS = mp;
     mp->vfs_bsize = 8192;
     vfs_getnewfsid(mp);
-#ifdef AFS_FBSD70_ENV /* XXX 70? */
+    /*
+     * This is kind of ugly, as the interlock has grown to encompass
+     * more fields over time and there's not a good way to group the
+     * code without duplication.
+     */
+#ifdef AFS_FBSD62_ENV
     MNT_ILOCK(mp);
-    mp->mnt_flag &= ~MNT_LOCAL;
-    mp->mnt_kern_flag |= MNTK_MPSAFE; /* solid steel */
 #endif
+    mp->mnt_flag &= ~MNT_LOCAL;
+#if defined(AFS_FBSD61_ENV) && !defined(AFS_FBSD62_ENV)
+    MNT_ILOCK(mp);
+#endif
+    mp->mnt_kern_flag |= MNTK_MPSAFE; /* solid steel */
+#ifndef AFS_FBSD61_ENV
+    MNT_ILOCK(mp);
+#endif
+    /*
+     * XXX mnt_stat "is considered stable as long as a ref is held".
+     * We should check that we hold the only ref.
+     */
     mp->mnt_stat.f_iosize = 8192;
 
     if (path != NULL)
@@ -139,9 +154,7 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, "afs");
-#ifdef AFS_FBSD70_ENV
     MNT_IUNLOCK(mp);
-#endif
     AFS_GUNLOCK();
 #ifdef AFS_FBSD80_ENV
     afs_statfs(mp, &mp->mnt_stat);
