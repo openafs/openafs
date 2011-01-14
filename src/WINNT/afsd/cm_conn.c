@@ -528,7 +528,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         switch ( errorCode ) {
         case VNOVOL:
 	    msgID = MSG_SERVER_REPORTS_VNOVOL;
-            format = "Server %s reported volume %d in cell %s as not attached (does not exist).";
+            format = "Server %s reported volume %d in cell %s as not attached (may have been moved or deleted).";
             break;
         case VMOVED:
 	    msgID = MSG_SERVER_REPORTS_VMOVED;
@@ -554,7 +554,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         if (fidp) { /* File Server query */
             if (serverp) {
-                /* Log server being offline for this volume */
+                /* Log server being unavailable for this volume */
                 sprintf(addr, "%d.%d.%d.%d",
                          ((serverp->addr.sin_addr.s_addr & 0xff)),
                          ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
@@ -622,7 +622,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                      ((tsrp->server->addr.sin_addr.s_addr & 0xff0000)>> 16),
                      ((tsrp->server->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
-            if (tsrp->server == serverp) {
+            if (cm_ServerEqual(tsrp->server, serverp)) {
                 /* REDIRECT */
                 if (errorCode == VMOVED || errorCode == VNOVOL) {
                     osi_Log2(afsd_logp, "volume %d not present on server %s",
