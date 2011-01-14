@@ -23,6 +23,9 @@
 #   include "h/socket.h"
 #  endif
 #  include "netinet/in.h"
+#  ifdef AFS_SUN58_ENV
+#   include "netinet/ip6.h"
+#  endif
 #  ifdef AFS_SUN57_ENV
 #   include "inet/common.h"
 #   include "inet/ip.h"
