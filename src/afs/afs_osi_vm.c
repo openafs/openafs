@@ -47,9 +47,6 @@ osi_Active(struct vcache *avc)
 void
 osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
-#ifdef AFS_FBSD70_ENV
-    int vfslocked;
-#endif
     afs_hyper_t origDV;
 #if defined(AFS_CACHE_BYPASS)
     /* The optimization to check DV under read lock below is identical a
@@ -90,18 +87,12 @@ osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->f.m.Length);
 
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_FBSD70_ENV
-    vfslocked = VFS_LOCK_GIANT(AFSTOV(avc)->v_mount);
-#endif
 #ifndef AFS_FBSD70_ENV
     AFS_GUNLOCK();
 #endif
     osi_VM_FlushPages(avc, credp);
 #ifndef AFS_FBSD70_ENV
     AFS_GLOCK();
-#endif
-#ifdef AFS_FBSD70_ENV
-    VFS_UNLOCK_GIANT(vfslocked);
 #endif
     ObtainWriteLock(&avc->lock, 88);
 

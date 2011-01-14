@@ -37,9 +37,7 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
-#ifdef AFS_FBSD80_ENV
-    flags |= MPSAFE; /* namei must take GIANT if needed */
-#endif
+    flags |= MPSAFE; /* namei must take Giant if needed */
     NDINIT(&n, LOOKUP, flags, seg, aname, curthread);
     if ((error = namei(&n)) != 0) {
 	if (glocked)
