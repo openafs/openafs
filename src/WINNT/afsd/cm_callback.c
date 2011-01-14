@@ -36,7 +36,7 @@ osi_rwlock_t cm_callbackLock;
 
 afs_int32 cm_OfflineROIsValid = 0;
 
-afs_int32 cm_giveUpAllCBs = 0;
+afs_int32 cm_giveUpAllCBs = 1;
 
 afs_int32 cm_shutdown = 0;
 
