@@ -145,6 +145,13 @@ typedef atomic_t rx_atomic_t;
 #  include <atomic.h>
 # endif
 
+#ifndef AFS_SUN510_ENV
+# define atomic_inc_32(X)    atomic_add_32((X), 1)
+# define atomic_inc_32_nv(X) atomic_add_32_nv((X), 1)
+# define atomic_dec_32(X)    atomic_add_32((X), -1)
+# define atomic_dec_32_nv(X) atomic_add_32_nv((X), -1)
+#endif
+
 typedef struct {
     volatile unsigned int var;
 } rx_atomic_t;
