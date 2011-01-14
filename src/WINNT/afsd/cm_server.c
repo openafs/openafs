@@ -1355,7 +1355,16 @@ int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2)
         /* Both support UUID */
         if (UuidEqual((UUID *)&srv1->uuid, (UUID *)&srv2->uuid, &status))
             return 1;
-    } 
+    } else {
+        if (srv1->flags & CM_SERVERFLAG_UUID)
+            return 0;
+
+        /* Neither support UUID so perform an addr/port comparison */
+        if ( srv1->addr.sin_family == srv2->addr.sin_family &&
+             srv1->addr.sin_addr.s_addr == srv2->addr.sin_addr.s_addr &&
+             srv1->addr.sin_port == srv2->addr.sin_port )
+            return 1;
+    }
     
     return 0;
 }
