@@ -24,7 +24,7 @@ typedef struct osi_logEntry {
 	size_t tid;			/* thread ID */
         unsigned long micros;		/* microsecond-based time stamp */
         char *formatp;			/* format string */
-        long parms[OSI_LOG_MAXPARMS];	/* parms */
+        size_t parms[OSI_LOG_MAXPARMS];	/* parms */
 } osi_logEntry_t;
 
 typedef struct osi_log {
