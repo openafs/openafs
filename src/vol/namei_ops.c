@@ -1153,7 +1153,7 @@ namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget)
     namei_HandleToName(&nameLink, hLink);
     namei_HandleToName(&nameTarget, hTarget);
 
-    unlink(nameLink.n_path);
+    OS_UNLINK(nameLink.n_path);
     code = link(nameTarget.n_path, nameLink.n_path);
     return code;
 }
@@ -1188,7 +1188,7 @@ namei_copy_on_write(IHandle_t *h)
 	buf = malloc(8192);
 	if (!buf) {
 	    close(fd);
-	    unlink(path);
+	    OS_UNLINK(path);
 	    FDH_CLOSE(fdP);
 	    return ENOMEM;
 	}
@@ -1209,7 +1209,7 @@ namei_copy_on_write(IHandle_t *h)
 	if (size)
 	    code = EIO;
 	else {
-	    unlink(name.n_path);
+	    OS_UNLINK(name.n_path);
 	    code = rename(path, name.n_path);
 	}
     }
@@ -2954,7 +2954,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     MoveFileEx(n.n_path, newpath, MOVEFILE_WRITE_THROUGH);
 #else
     link(newpath, n.n_path);
-    unlink(newpath);
+    OS_UNLINK(newpath);
 #endif
 
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_LARGEINDEX);
@@ -2973,7 +2973,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     MoveFileEx(n.n_path, newpath, MOVEFILE_WRITE_THROUGH);
 #else
     link(newpath, n.n_path);
-    unlink(newpath);
+    OS_UNLINK(newpath);
 #endif
 
     OS_UNLINK(oldpath);
