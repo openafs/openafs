@@ -378,8 +378,8 @@ extern ssize_t ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offs
 #define OS_PWRITE(FD, B, S, O) ih_pwrite(FD, B, S, O)
 #endif /* !HAVE_PIO */
 #ifdef AFS_NT40_ENV
-#define OS_LOCKFILE(FD, O) LockFile(FD, (O & 0xFFFFFFFF), (O >> 32), 2, 0)
-#define OS_UNLOCKFILE(FD, O) UnlockFile(FD, (O & 0xFFFFFFFF), (O >> 32), 2, 0)
+#define OS_LOCKFILE(FD, O) (!LockFile(FD, (O & 0xFFFFFFFF), (O >> 32), 2, 0))
+#define OS_UNLOCKFILE(FD, O) (!UnlockFile(FD, (O & 0xFFFFFFFF), (O >> 32), 2, 0))
 #define OS_ERROR(X) nterr_nt2unix(GetLastError(), X)
 #define OS_UNLINK(X) nt_unlink(X)
 #define OS_DIRSEP "\\"
