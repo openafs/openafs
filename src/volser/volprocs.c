@@ -136,7 +136,7 @@ VPFullUnlock_r(void)
     struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
 	if (tp->lock_fd != INVALID_FD) {
-	    close(tp->lock_fd);	/* releases flock held on this partition */
+            OS_CLOSE(tp->lock_fd);
 	    tp->lock_fd = INVALID_FD;
 	}
     }
