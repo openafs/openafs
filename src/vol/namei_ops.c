@@ -375,12 +375,12 @@ namei_ViceREADME(char *partition)
     int fd;
 
     /* Create the inode directory if we're starting for the first time */
-    (void)afs_snprintf(filename, sizeof filename, "%s/%s", partition,
+    (void)afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s", partition,
 		       INODEDIR);
     mkdir(filename, 0700);
 
-    (void)afs_snprintf(filename, sizeof filename, "%s/%s/README", partition,
-		       INODEDIR);
+    (void)afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s" OS_DIRSEP "README",
+                       partition, INODEDIR);
     fd = afs_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
     if (fd >= 0) {
 	(void)write(fd, VICE_README, strlen(VICE_README));
@@ -1777,7 +1777,7 @@ namei_ListAFSFiles(char *dev,
 #else
 	    if (*dp1->d_name == '.')
 		continue;
-	    afs_snprintf(path2, sizeof(path2), "%s/%s", name.n_path,
+	    afs_snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s", name.n_path,
 			 dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
@@ -1870,7 +1870,7 @@ _namei_examine_special(char * path1,
 	/* VGID encoded in linktable filename and/or OGM data isn't
 	 * consistent with VGID encoded in namei path */
 	Log("namei_ListAFSSubDirs: warning: inconsistent linktable "
-	    "filename \"%s/%s\"; salvager will delete it "
+	    "filename \"%s" OS_DIRSEP "%s\"; salvager will delete it "
 	    "(dir_vgid=%u, inode_vgid=%u, ogm_vgid=%u)\n",
 	    path1, dname, myIH->ih_vid,
 	    (unsigned int)inode_vgid,
@@ -1879,7 +1879,7 @@ _namei_examine_special(char * path1,
 	char path2[512];
 	/* Open this handle */
 	(void)afs_snprintf(path2, sizeof(path2),
-			   "%s/%s", path1, dname);
+			   "%s" OS_DIRSEP "%s", path1, dname);
 	linkHandle->fd_fd = afs_open(path2, Testing ? O_RDONLY : O_RDWR, 0666);
 	info.linkCount =
 	    namei_GetLinkCount(linkHandle, (Inode) 0, 1, 1, Testing);
@@ -1952,7 +1952,7 @@ _namei_examine_reg(char * path3,
 			    info.inodeNumber, 1, 1, Testing);
     if (info.linkCount == 0) {
 #ifdef DELETE_ZLC
-	Log("Found 0 link count file %s/%s, deleting it.\n", path3, dname);
+	Log("Found 0 link count file %s" OS_DIRSEP "%s, deleting it.\n", path3, dname);
 #ifdef AFS_SALSRV_ENV
 	/* defer -- the AddToZLCDeleteList() interface is not MT-safe */
 	ret = -2;
@@ -1960,7 +1960,7 @@ _namei_examine_reg(char * path3,
 	AddToZLCDeleteList((char)i, dname);
 #endif /* !AFS_SALSRV_ENV */
 #else /* !DELETE_ZLC */
-	Log("Found 0 link count file %s/%s.\n", path3,
+	Log("Found 0 link count file %s" OS_DIRSEP "%s.\n", path3,
 	    dname);
 #endif
 	goto error;
@@ -2458,7 +2458,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
 #ifndef AFS_NT40_ENV /* This level missing on Windows */
 	    /* Now we've got a next level subdir. */
-	    afs_snprintf(path2, sizeof(path2), "%s/%s", path1, dp1->d_name);
+	    afs_snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s", path1, dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
 		while ((dp2 = readdir(dirp2))) {
@@ -2466,7 +2466,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 			continue;
 
 		    /* Now we've got to the actual data */
-		    afs_snprintf(path3, sizeof(path3), "%s/%s", path2,
+		    afs_snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s", path2,
 				 dp2->d_name);
 #else
 		    /* Now we've got to the actual data */
@@ -2680,7 +2680,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     int parm, tag;
     lb64_string_t check;
 
-    afs_snprintf(fpath, sizeof(fpath), "%s/%s", dpath, name);
+    afs_snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
     if (afs_stat(fpath, &status) < 0) {
 	return -1;
@@ -2850,14 +2850,14 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    continue;
 #endif
 	if (DecodeInode(dir_name, dp->d_name, &info, ih->ih_vid) < 0) {
-	    Log("1 namei_ConvertROtoRWvolume: DecodeInode failed for %s/%s\n",
+	    Log("1 namei_ConvertROtoRWvolume: DecodeInode failed for %s" OS_DIRSEP "%s\n",
 		dir_name, dp->d_name);
 	    closedir(dirp);
 	    code = -1;
 	    goto done;
 	}
 	if (info.u.param[1] != -1) {
-	    Log("1 namei_ConvertROtoRWvolume: found other than volume special file %s/%s\n", dir_name, dp->d_name);
+	    Log("1 namei_ConvertROtoRWvolume: found other than volume special file %s" OS_DIRSEP "%s\n", dir_name, dp->d_name);
 	    closedir(dirp);
 	    code = -1;
 	    goto done;
@@ -2869,7 +2869,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 		    continue;
 		}
 	    }
-	    Log("1 namei_ConvertROtoRWvolume: found special file %s/%s"
+	    Log("1 namei_ConvertROtoRWvolume: found special file %s" OS_DIRSEP "%s"
 		" for volume %lu\n", dir_name, dp->d_name,
 		afs_printable_uint32_lu(info.u.param[0]));
 	    closedir(dirp);
@@ -2887,7 +2887,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    largeSeen = 1;
 	} else {
 	    closedir(dirp);
-	    Log("1 namei_ConvertROtoRWvolume: unknown type %d of special file found : %s/%s\n", info.u.param[2], dir_name, dp->d_name);
+	    Log("1 namei_ConvertROtoRWvolume: unknown type %d of special file found : %s" OS_DIRSEP "%s\n", info.u.param[2], dir_name, dp->d_name);
 	    code = -1;
 	    goto done;
 	}

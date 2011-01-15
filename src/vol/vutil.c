@@ -190,7 +190,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
     (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(vol.id));
-    (void)afs_snprintf(volumePath, sizeof volumePath, "%s/%s",
+    (void)afs_snprintf(volumePath, sizeof volumePath, "%s" OS_DIRSEP "%s",
 		       VPartitionPath(partition), headerName);
     rc = stat(volumePath, &st);
     if (rc == 0 || errno != ENOENT) {
@@ -270,7 +270,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	}
 	if (FDH_PWRITE(fdP, (char *)&p->stamp, sizeof(p->stamp), 0) !=
 	    sizeof(p->stamp)) {
-	    Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
+	    Log("VCreateVolume:  Problem writing to inode %s (err=%d)\n",
 		PrintInode(stmp, *(p->inode)), errno);
 	    FDH_REALLYCLOSE(fdP);
 	    goto bad;
@@ -418,7 +418,7 @@ VReadVolumeDiskHeader(VolumeId volid,
     char path[MAXPATHLEN];
 
     (void)afs_snprintf(path, sizeof(path),
-		       "%s/" VFORMAT,
+		       "%s" OS_DIRSEP VFORMAT,
 		       VPartitionPath(dp), afs_printable_uint32_lu(volid));
     fd = open(path, O_RDONLY);
     if (fd < 0) {
@@ -474,7 +474,7 @@ _VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
     flags |= O_RDWR;
 
     (void)afs_snprintf(path, sizeof(path),
-		       "%s/" VFORMAT,
+		       "%s" OS_DIRSEP VFORMAT,
 		       VPartitionPath(dp), afs_printable_uint32_lu(hdr->id));
     fd = open(path, flags, 0644);
     if (fd < 0) {
@@ -654,7 +654,7 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     (void)afs_snprintf(path, sizeof(path),
-                       "%s/" VFORMAT,
+                       "%s" OS_DIRSEP VFORMAT,
                        VPartitionPath(dp), afs_printable_uint32_lu(volid));
     code = unlink(path);
     if (code) {
@@ -825,7 +825,7 @@ VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    char name[VMAXPATHLEN];
 
-	    sprintf(name, "%s/%s", partpath, dentry->d_name);
+	    sprintf(name, "%s" OS_DIRSEP "%s", partpath, dentry->d_name);
 
 	    code = _VHandleVolumeHeader(dp, volfunc, name, &diskHeader, -1, rock);
 	    if (code < 0) {

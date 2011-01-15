@@ -958,7 +958,7 @@ void
 DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp)
 {
     char path[64];
-    sprintf(path, "%s/%s", salvinfo->fileSysPath, vsp->fileName);
+    sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, vsp->fileName);
 
     if (!Showmode)
 	Log("The volume header file %s is not associated with any actual data (%sdeleted)\n", path, (Testing ? "would have been " : ""));
@@ -2275,7 +2275,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	char path[64];
 	char headerName[64];
 	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
-	(void)afs_snprintf(path, sizeof path, "%s/%s", salvinfo->fileSysPath, headerName);
+	(void)afs_snprintf(path, sizeof path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, headerName);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
 	    return -1;
@@ -2306,7 +2306,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
 		isp->volSummary->fileName = ToString(headerName);
 	    }
-	    (void)afs_snprintf(path, sizeof path, "%s/%s", salvinfo->fileSysPath, headerName);
+	    (void)afs_snprintf(path, sizeof path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, headerName);
 
 	    Log("Header file %s is damaged or no longer valid%s\n", path,
 		(check ? "" : "; repairing"));
@@ -2958,7 +2958,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
     vnodeEssence = CheckVnodeNumber(salvinfo, vnodeNumber);
     if (vnodeEssence == NULL) {
 	if (!Showmode) {
-	    Log("dir vnode %u: invalid entry deleted: %s/%s (vnode %u, unique %u)\n", dir->vnodeNumber, dir->name ? dir->name : "??", name, vnodeNumber, unique);
+	    Log("dir vnode %u: invalid entry deleted: %s" OS_DIRSEP "%s (vnode %u, unique %u)\n", dir->vnodeNumber, dir->name ? dir->name : "??", name, vnodeNumber, unique);
 	}
 	if (!Testing) {
 	    CopyOnWrite(salvinfo, dir);
@@ -2973,7 +2973,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
      * the machine.
      */
     if (vnodeEssence->InodeNumber == 0) {
-	Log("dir vnode %d: invalid entry: %s/%s has no inode (vnode %d, unique %d)%s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "-- would have deleted" : " -- deleted"));
+	Log("dir vnode %d: invalid entry: %s" OS_DIRSEP "%s has no inode (vnode %d, unique %d)%s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "-- would have deleted" : " -- deleted"));
 	if (!Testing) {
 	    CopyOnWrite(salvinfo, dir);
 	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
@@ -2986,7 +2986,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
     if (!(vnodeNumber & 1) && !Showmode
 	&& !(vnodeEssence->count || vnodeEssence->unique
 	     || vnodeEssence->modeBits)) {
-	Log("dir vnode %u: invalid entry: %s/%s (vnode %u, unique %u)%s\n",
+	Log("dir vnode %u: invalid entry: %s" OS_DIRSEP "%s (vnode %u, unique %u)%s\n",
 	    dir->vnodeNumber, (dir->name ? dir->name : "??"), name,
 	    vnodeNumber, unique,
 	    ((!unique) ? (Testing ? "-- would have deleted" : " -- deleted") :
@@ -3017,7 +3017,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	todelete = ((!vnodeEssence->unique || dirOrphaned) ? 1 : 0);
 
 	if (!Showmode) {
-	    Log("dir vnode %u: %s/%s (vnode %u): unique changed from %u to %u %s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
+	    Log("dir vnode %u: %s" OS_DIRSEP "%s (vnode %u): unique changed from %u to %u %s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
 	}
 	if (!Testing) {
 	    AFSFid fid;
@@ -3089,7 +3089,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	return 0;
     } else {
 	if (ShowSuid && (vnodeEssence->modeBits & 06000))
-	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
+	    Log("FOUND suid/sgid file: %s" OS_DIRSEP "%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (/* ShowMounts && */ (vnodeEssence->type == vSymlink)
 	    && !(vnodeEssence->modeBits & 0111)) {
 	    ssize_t nBytes;
@@ -3120,12 +3120,12 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	    if (nBytes == size) {
 		buf[size] = '\0';
 		if ( (*buf != '#' && *buf != '%') || buf[strlen(buf)-1] != '.' ) {
-		    Log("Volume %u (%s) mount point %s/%s to '%s' invalid, %s to symbolic link\n",
+		    Log("Volume %u (%s) mount point %s" OS_DIRSEP "%s to '%s' invalid, %s to symbolic link\n",
 			dir->dirHandle.dirh_handle->ih_vid, dir->vname, dir->name ? dir->name : "??", name, buf,
 			Testing ? "would convert" : "converted");
 		    vnodeEssence->modeBits |= 0111;
 		    vnodeEssence->changed = 1;
-		} else if (ShowMounts) Log("In volume %u (%s) found mountpoint %s/%s to '%s'\n",
+		} else if (ShowMounts) Log("In volume %u (%s) found mountpoint %s" OS_DIRSEP "%s to '%s'\n",
 		    dir->dirHandle.dirh_handle->ih_vid, dir->vname,
 		    dir->name ? dir->name : "??", name, buf);
 	    } else {
@@ -3136,7 +3136,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	    IH_RELEASE(ihP);
 	}
 	if (ShowRootFiles && vnodeEssence->owner == 0 && vnodeNumber != 1)
-	    Log("FOUND root file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
+	    Log("FOUND root file: %s" OS_DIRSEP "%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (vnodeIdToClass(vnodeNumber) == vLarge
 	    && vnodeEssence->name == NULL) {
 	    char *n;
@@ -3159,7 +3159,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 		 * another non-orphaned dir).
 		 */
 		if (!Showmode) {
-		    Log("dir vnode %u: %s/%s (vnode %u, unique %u) -- parent vnode %schanged from %u to %u\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "would have been " : ""), vnodeEssence->parent, dir->vnodeNumber);
+		    Log("dir vnode %u: %s" OS_DIRSEP "%s (vnode %u, unique %u) -- parent vnode %schanged from %u to %u\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "would have been " : ""), vnodeEssence->parent, dir->vnodeNumber);
 		}
 		vnodeEssence->parent = dir->vnodeNumber;
 		vnodeEssence->changed = 1;
@@ -3167,11 +3167,11 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 		/* Vnode was claimed by another directory */
 		if (!Showmode) {
 		    if (dirOrphaned) {
-			Log("dir vnode %u: %s/%s parent vnode is %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
+			Log("dir vnode %u: %s" OS_DIRSEP "%s parent vnode is %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    } else if (vnodeNumber == 1) {
-			Log("dir vnode %d: %s/%s is invalid (vnode %d, unique %d) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "would have been " : ""));
+			Log("dir vnode %d: %s" OS_DIRSEP "%s is invalid (vnode %d, unique %d) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    } else {
-			Log("dir vnode %u: %s/%s already claimed by directory vnode %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
+			Log("dir vnode %u: %s" OS_DIRSEP "%s already claimed by directory vnode %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    }
 		}
 		if (!Testing) {
@@ -4174,7 +4174,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    if (!Testing) {
 		afs_int32 code;
 		char path[64];
-		sprintf(path, "%s/%s", salvinfo->fileSysPath, isp->volSummary->fileName);
+		sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, isp->volSummary->fileName);
 
 		code = VDestroyVolumeDiskHeader(salvinfo->fileSysPartition, isp->volumeId, isp->RWvolumeId);
 		if (code) {
