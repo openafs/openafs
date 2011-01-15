@@ -303,6 +303,8 @@ fdHandleAllocateChunk(void)
 	fdP[i].fd_refcnt = 0;
 	fdP[i].fd_ih = NULL;
 	fdP[i].fd_fd = INVALID_FD;
+        fdP[i].fd_ihnext = NULL;
+        fdP[i].fd_ihprev = NULL;
 	DLL_INSERT_TAIL(&fdP[i], fdAvailHead, fdAvailTail, fd_next, fd_prev);
     }
 }
