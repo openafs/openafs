@@ -260,7 +260,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
 
     afs_int32 n;
 
-    (void)afs_snprintf(headerName, sizeof headerName, "%s/%s",
+    (void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
 		       VPartitionPath(dp), name);
     if ((fd = afs_open(headerName, O_RDONLY)) == -1
 	|| afs_fstat(fd, &status) == -1) {
