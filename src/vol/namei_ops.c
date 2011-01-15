@@ -269,7 +269,7 @@ namei_HandleToVolDir(namei_t * name, IHandle_t * ih)
     char *namep;
 
     namei_HandleToInodeDir(name, ih);
-    addtoname(name, name->n_drive);
+    /* nt_drive added to name by namei_HandleToInodeDir() */
     namep = name->n_voldir;
     (void)memcpy(namep, "\\Vol_", 5);
     namep += 5;
