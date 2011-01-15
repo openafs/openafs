@@ -396,6 +396,9 @@ main(int argc, char **argv)
 	exit(2);
     }
 #ifdef AFS_NT40_ENV
+    /* Default to binary mode for fopen() */
+    _set_fmode(_O_BINARY);
+
     main_thread = pthread_self();
     if (spawnDatap && spawnDataLen) {
 	/* This is a child per partition salvager. Don't setup log or
