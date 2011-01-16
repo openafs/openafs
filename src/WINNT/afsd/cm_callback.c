@@ -1857,43 +1857,74 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 }
 
 
-/* called with cm_scacheLock held */
-long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
+/*
+ * cm_CBServersDownTime() returns 1 if the downTime parameter is valid.
+ *
+ * Servers with multiple interfaces have multiple cm_server_t objects
+ * which share the same UUID.  If one interface is down but others are up,
+ * the server should not be considered down.  The returned downTime should
+ * be the largest non-zero value if down or zero if up.  If the cbServerp
+ * is down, it is updated to refer to an interface that is up (if one exists).
+ *
+ * called with cm_scacheLock held
+ */
+static long
+cm_CBServersDownTime(cm_scache_t *scp, cm_volume_t *volp, time_t * pdownTime)
 {
     cm_vol_state_t *statep;
-    cm_volume_t * volp;
-    afs_uint32 volID = scp->fid.volume;
     cm_serverRef_t *tsrp;
-    int found;
+    int alldown = 1;
+    time_t downTime = 0;
+    cm_server_t * upserver = NULL;
+    cm_server_t * downserver;
 
-    *downTime = 0;
+    *pdownTime = 0;
 
     if (scp->cbServerp == NULL)
         return 1;
 
-    volp = cm_GetVolumeByFID(&scp->fid);
-    if (!volp)
+    if (!(scp->cbServerp->flags & CM_SERVERFLAG_DOWN))
         return 1;
 
-    statep = cm_VolumeStateByID(volp, volID);
-    cm_PutVolume(volp);
-    if (statep->state == vl_online)
-        return 1;
+    statep = cm_VolumeStateByID(volp, scp->fid.volume);
+    if (statep) {
+        for (tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
+            if (tsrp->status == srv_deleted)
+                continue;
 
-    for (found = 0,tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
-        if (tsrp->status == srv_deleted)
-            continue;
-        if (cm_ServerEqual(tsrp->server, scp->cbServerp))
-            found = 1;
-        if (tsrp->server->downTime > *downTime)
-            *downTime = tsrp->server->downTime;
+            if (!cm_ServerEqual(tsrp->server, scp->cbServerp))
+                continue;
+
+            if (!(tsrp->server->flags & CM_SERVERFLAG_DOWN)) {
+                alldown = 0;
+                if (!upserver) {
+                    upserver = tsrp->server;
+                    cm_GetServer(upserver);
+                }
+            }
+
+            if (tsrp->server->downTime > downTime)
+                downTime = tsrp->server->downTime;
+        }
+    } else {
+        downTime = scp->cbServerp->downTime;
     }
 
     /* if the cbServerp does not match the current volume server list
      * we report the callback server as up so the callback can be 
      * expired.
      */
-    return(found ? 0 : 1);
+
+    if (alldown) {
+        *pdownTime = downTime;
+    } else {
+        lock_ObtainWrite(&scp->rw);
+        downserver = scp->cbServerp;
+        scp->cbServerp = upserver;
+        lock_ReleaseWrite(&scp->rw);
+        cm_PutServer(downserver);
+    }
+    return 1;
 }
 
 /* called periodically by cm_daemon to shut down use of expired callbacks */
@@ -1901,6 +1932,8 @@ void cm_CheckCBExpiration(void)
 {
     afs_uint32 i;
     cm_scache_t *scp;
+    cm_volume_t *volp = NULL;
+    enum volstatus volstate;
     time_t now, downTime;
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
@@ -1909,41 +1942,77 @@ void cm_CheckCBExpiration(void)
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
-            downTime = 0;
-            if (scp->flags & CM_SCACHEFLAG_PURERO) {
-                cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
-                if (volp) {
-                    if (volp->cbExpiresRO > scp->cbExpires &&
-                        scp->cbExpires > 0) 
-                    {
-                        scp->cbExpires = volp->cbExpiresRO;
-                        if (volp->cbServerpRO != scp->cbServerp) {
-                            if (scp->cbServerp)
-		                cm_PutServer(scp->cbServerp);
-			    cm_GetServer(volp->cbServerpRO);
-			    scp->cbServerp = volp->cbServerpRO;
-                        }
-                    }        
-                    cm_PutVolume(volp);
-                }
+            if (volp) {
+                cm_PutVolume(volp);
+                volp = NULL;
             }
-            if (scp->cbServerp && scp->cbExpires > 0 && now > scp->cbExpires && 
-                 (cm_CBServersUp(scp, &downTime) || downTime == 0 || downTime >= scp->cbExpires)) 
-            {
-                cm_HoldSCacheNoLock(scp);
-                lock_ReleaseWrite(&cm_scacheLock);
-                
-                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u",
-                          scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
-                lock_ObtainWrite(&scp->rw);
-                cm_DiscardSCache(scp);
-                lock_ReleaseWrite(&scp->rw);
-                cm_CallbackNotifyChange(scp);
 
-                lock_ObtainWrite(&cm_scacheLock);
-                cm_ReleaseSCacheNoLock(scp);
+            /*
+             * If this is not a PURERO object and there is no callback
+             * or it hasn't expired, there is nothing to do
+             */
+            if (!(scp->flags & CM_SCACHEFLAG_PURERO) &&
+                (scp->cbServerp == NULL || scp->cbExpires == 0 || now < scp->cbExpires))
+                continue;
+
+            /*
+             * Determine the volume state and update the callback info
+             * to the latest if it is a PURERO object.
+             */
+            volp = cm_GetVolumeByFID(&scp->fid);
+            volstate = vl_unknown;
+            downTime = 0;
+            if (volp) {
+                if ((scp->flags & CM_SCACHEFLAG_PURERO) &&
+                    volp->cbExpiresRO > scp->cbExpires && scp->cbExpires > 0)
+                {
+                    lock_ObtainWrite(&scp->rw);
+                    scp->cbExpires = volp->cbExpiresRO;
+                    if (volp->cbServerpRO != scp->cbServerp) {
+                        if (scp->cbServerp)
+                            cm_PutServer(scp->cbServerp);
+                        cm_GetServer(volp->cbServerpRO);
+                        scp->cbServerp = volp->cbServerpRO;
+                    }
+                    lock_ReleaseWrite(&scp->rw);
+                }
+                volstate = cm_GetVolumeStatus(volp, scp->fid.volume);
             }
+
+            /* If there is no callback or it hasn't expired, there is nothing to do */
+            if (scp->cbServerp == NULL || scp->cbExpires == 0 || now < scp->cbExpires)
+                continue;
+
+            /* If the volume is known not to be online, do not expire the callback */
+            if (volstate != vl_online)
+                continue;
+
+            /*
+             * If all the servers are down and the callback expired after the
+             * issuing server went down, do not expire the callback
+             */
+            if (cm_CBServersDownTime(scp, volp, &downTime) && downTime && downTime < scp->cbExpires)
+                continue;
+
+            /* The callback has expired, discard the status info */
+            cm_HoldSCacheNoLock(scp);
+            lock_ReleaseWrite(&cm_scacheLock);
+
+            osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u",
+                     scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+            lock_ObtainWrite(&scp->rw);
+            cm_DiscardSCache(scp);
+            lock_ReleaseWrite(&scp->rw);
+
+            cm_CallbackNotifyChange(scp);
+
+            lock_ObtainWrite(&cm_scacheLock);
+            cm_ReleaseSCacheNoLock(scp);
         }
+    }
+    if (volp) {
+        cm_PutVolume(volp);
+        volp = NULL;
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
