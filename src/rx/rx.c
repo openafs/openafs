@@ -5541,7 +5541,7 @@ rxi_CheckCall(register struct rx_call *call)
 	}
     }
 
-    if (hardDeadTime) {
+    if (conn->hardDeadTime) {
 	hardDeadTime = conn->hardDeadTime + fudgeFactor;
     }
 
