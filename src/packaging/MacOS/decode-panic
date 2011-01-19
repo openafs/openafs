@@ -83,6 +83,8 @@ if ( -x $kextutil ) {
 
 croak "Can't find panic file: $panic_file!\n" if ( ! -r $panic_file );
 
+$crash_info{"warning"} = "";
+
 read_panic( $panic_file, \%crash_info );
 
 if ($crash_info{"kernel_version"} =~ /X86_64/ ) {
@@ -207,7 +209,6 @@ sub read_panic {
     my $line;
     my @panic_section_positions = ( 0 );
 
-    
     my $panic_fh = IO::File->new( $filename, '<' )
         or croak "Can't open backtrace file $filename: $OS_ERROR\n";
 
@@ -274,6 +275,7 @@ sub read_panic {
     # now we need the address for the afs kernel module
     while ( $line = <$panic_fh> ) {
         chomp $line;
+	last if ($line =~ /^BSD\s+process/ );
         next if ( $line !~ /org\.openafs\.filesystems\.afs/ );
 
         $kernel_line = $line;
@@ -290,8 +292,23 @@ sub read_panic {
         chomp $line;
         next if ( $line !~ /^Darwin Kernel Version/ );
         $hash_ref->{ "kernel_version" } = $line;
+	last;
     }
     
+    if (! $kernel_line ) {
+	#unloaded?
+	while ( $line = <$panic_fh> ) {
+	    chomp $line;
+	    last if ( $line =~ /^loaded\s+kexts:/ );
+	    next if ( $line !~ /org\.openafs\.filesystems\.afs/ );
+	    $kernel_line = $line;
+	    $line =~ /org\.openafs\.filesystems\.afs\s+([^@]+)\s+\(addr\s+(0x[0-9a-fA-F]+),/;
+	    $hash_ref->{ "afs_kernel_address" } = $2;
+	    $hash_ref->{ "afs_info" } = "org.openafs.filesystems.afs(" . $1 . ")\@0x" . $2;
+	    $hash_ref->{ "warning" } = "MODULE WAS UNLOADED!\n";
+	}
+    }
+
     $panic_fh->close()
         or croak "Can't close file $filename: $OS_ERROR\n";
     
@@ -412,6 +429,7 @@ sub write_dump_file {
     print $fh "Panic Date:      ", $hash_ref->{ "date" }, "\n";
     print $fh "Kernel Version:  ", $hash_ref->{ "kernel_version" }, "\n";
     print $fh "OpenAFS Version: ", $hash_ref->{ "afs_info" }, "\n";
+    print $fh $hash_ref->{ "warning" };
     print $fh "=============\n";
     print $fh $output;
     
