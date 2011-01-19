@@ -66,13 +66,13 @@ extern void osi_obsd_Free(void *p, size_t asize);
 
 #ifdef AFS_KALLOC
 #undef AFS_KALLOC
-#define AFS_KALLOC(s) osi_obsd_Alloc((s), 1 /* cansleep */)
 #endif
+#define AFS_KALLOC(s) osi_obsd_Alloc((s), 1 /* cansleep */)
 
 #ifdef AFS_KFREE
 #undef AFS_KFREE
-#define AFS_KFREE(p, s) (osi_obsd_Free((p), (s)))
 #endif
+#define AFS_KFREE(p, s) (osi_obsd_Free((p), (s)))
 
 #ifdef AFS_OBSD42_ENV
 /* removed, live with it */
