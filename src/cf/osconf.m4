@@ -367,7 +367,10 @@ case $AFS_SYSNAME in
 		;;
 
 	*_obsd*)
+		KERN_OPTMZ=-O2
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		LWP_OPTMZ=-O2
+		OPTMZ=-O2
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
