@@ -109,8 +109,6 @@ afs_osi_Free(void *x, size_t asize)
     osi_linux_free(x);
 #elif defined(AFS_FBSD_ENV)
     osi_fbsd_free(x);
-#elif defined(AFS_OBSD_ENV)
-    osi_obsd_Free(x, asize);
 #else
     AFS_KFREE((struct osimem *)x, asize);
 #endif
