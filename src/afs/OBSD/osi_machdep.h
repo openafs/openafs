@@ -64,11 +64,6 @@ inline void afs_osi_FreeStr(char *x);
 extern void *osi_obsd_Alloc(size_t asize, int cansleep);
 extern void osi_obsd_Free(void *p, size_t asize);
 
-#define afs_osi_Alloc_NoSleep(asize) osi_obsd_Alloc((asize), 0)
-#define afs_osi_Alloc(asize) osi_obsd_Alloc((asize), 1)
-#define afs_osi_FreeStr(s) afs_osi_Free((s), strlen((s)) + 1)
-#define afs_osi_Free(buf, asize) osi_obsd_Free((buf), (asize))
-
 #ifdef AFS_KALLOC
 #undef AFS_KALLOC
 #define AFS_KALLOC(s) osi_obsd_Alloc((s), 1 /* cansleep */)
