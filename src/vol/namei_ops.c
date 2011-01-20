@@ -309,13 +309,14 @@ void
 namei_HandleToName(namei_t * name, IHandle_t * ih)
 {
     int vno = (int)(ih->ih_ino & NAMEI_VNODEMASK);
+    int special = (ih->ih_ino & NAMEI_INODESPECIAL)?1:0;
     int tag = (int)((ih->ih_ino >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
     b32_string_t str1;
     char *namep;
     namei_HandleToVolDir(name, ih);
 
-    if (vno == NAMEI_VNODESPECIAL) {
-	name->n_dir[0] = 'R';
+    if (special) {
+	name->n_dir[0] = NAMEI_SPECDIRC;
     } else {
 	if (vno & 0x1)
             name->n_dir[0] = 'Q';
@@ -420,7 +421,7 @@ namei_CreateDataDirectories(namei_t * name, int *created)
 
     *s++ = OS_DIRSEPC;
     *(s + 1) = '\0';
-    for (i = 'A'; i <= 'R'; i++) {
+    for (i = 'A'; i <= NAMEI_SPECDIRC; i++) {
         *s = (char)i;
         if (mkdir(tmp) < 0 && errno != EEXIST)
             return -1;
@@ -571,7 +572,7 @@ namei_RemoveDataDirectories(namei_t * name)
     path += strlen(path);
     *path++ = OS_DIRSEPC;
     *(path + 1) = '\0';
-    for (i = 'A'; i <= 'R'; i++) {
+    for (i = 'A'; i <= NAMEI_SPECDIRC; i++) {
         *path = (char)i;
         if (rmdir(name->n_path) < 0 && errno != ENOENT)
             code = -1;
@@ -654,6 +655,7 @@ namei_MakeSpecIno(int volid, int type)
     ino = NAMEI_INODESPECIAL;
 #ifdef AFS_NT40_ENV
     ino |= type;
+    /* tag is always 0 for special */
 #else
     type &= NAMEI_TAGMASK;
     ino |= ((Inode) type) << NAMEI_TAGSHIFT;
@@ -756,7 +758,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     IHandle_t tmp;
     FdHandle_t *fdP;
     FdHandle_t tfd;
-    int tag, i;
+    int type, tag;
     FILETIME ftime;
     char *p;
     b32_string_t str1;
@@ -770,16 +772,16 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 	return -1;
     }
 
-    if (p2 == -1) {
+    if (p2 == INODESPECIAL) {
 	/* Parameters for special file:
 	 * p1 - volume id - goes into owner/group/mode
-	 * p2 - vnode == -1
+	 * p2 - vnode == INODESPECIAL
 	 * p3 - type
 	 * p4 - parent volume id
 	 */
         ftime.dwHighDateTime = p1;
         ftime.dwLowDateTime = p2;
-	tag = p3;
+	type = p3;
 	tmp.ih_vid = p4;	/* Use parent volume id, where this file will be. */
 	tmp.ih_ino = namei_MakeSpecIno(p1, p3);
     } else {
@@ -806,20 +808,27 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     namei_HandleToName(&name, &tmp);
     p = strrchr((char *)&name.n_path, '.');
     p++;
-    for (i = 0; i < NAMEI_MAXVOLS; i++) {
-        *p = *int_to_base32(str1, i);
-        fd = nt_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+    for (tag = 0; tag < NAMEI_MAXVOLS; tag++) {
+        *p = *int_to_base32(str1, tag);
+        fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+        if (fd == INVALID_FD) {
+            if (errno == ENOTDIR || errno == ENOENT) {
+                if (namei_CreateDataDirectories(&name, &created_dir) == 0)
+                    fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+            }
+        }
+
         if (fd != INVALID_FD)
             break;
-        if (p2 == -1 && p3 == VI_LINKTABLE)
+        if (p2 == INODESPECIAL && p3 == VI_LINKTABLE)
             break;
     }
     if (fd == INVALID_FD) {
         code = -1;
         goto bad;
     }
-    tmp.ih_ino &= ~((Inode) NAMEI_TAGMASK << NAMEI_TAGSHIFT);
-    tmp.ih_ino |= ((Inode) i << NAMEI_TAGSHIFT);
+    tmp.ih_ino &= ~(((Inode) NAMEI_TAGMASK) << NAMEI_TAGSHIFT);
+    tmp.ih_ino |= (((Inode) tag) << NAMEI_TAGSHIFT);
 
     if (!code) {
         if (!SetFileTime((HANDLE) fd, &ftime, NULL, NULL)) {
@@ -829,7 +838,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
 
     if (!code) {
-        if (p2 != -1) {
+        if (p2 != INODESPECIAL) {
             if (fd == INVALID_FD) {
                 errno = ENOENT;
                 code = nt_unlink((char *)&name.n_path);
@@ -843,7 +852,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
             }
             code = namei_SetLinkCount(fdP, tmp.ih_ino, 1, 0);
             FDH_CLOSE(fdP);
-        } else if (p2 == -1 && p3 == VI_LINKTABLE) {
+        } else if (p2 == INODESPECIAL && p3 == VI_LINKTABLE) {
             if (fd == INVALID_FD)
                 goto bad;
             /* hack at tmp to setup for set link count call. */
@@ -857,7 +866,7 @@ bad:
         nt_close(fd);
 
     if (code || (fd == INVALID_FD)) {
-	if (p2 != -1) {
+	if (p2 != INODESPECIAL) {
             fdP = IH_OPEN(lh);
             if (fdP) {
                 namei_SetLinkCount(fdP, tmp.ih_ino, 0, 0);
@@ -871,14 +880,14 @@ bad:
 	    errno = save_errno;
 	}
     }
-    return (code || (fd == INVALID_FD)) ? (Inode) - 1 : tmp.ih_ino;
+    return (code || (fd == INVALID_FD)) ? (Inode) -1 : tmp.ih_ino;
 }
-#else
+#else /* !AFS_NT40_ENV */
 Inode
 namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
 {
     namei_t name;
-    int fd = -1;
+    int fd = INVALID_FD;
     int code = 0;
     int created_dir = 0;
     IHandle_t tmp;
@@ -952,11 +961,11 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
     if (SetOGM(fd, ogm_parm, tag) < 0) {
 	close(fd);
-	fd = -1;
+	fd = INVALID_FD;
 	goto bad;
     }
 
-    if (p2 == -1 && p3 == VI_LINKTABLE) {
+    if (p2 == (afs_uint32)-1 && p3 == VI_LINKTABLE) {
 	/* hack at tmp to setup for set link count call. */
 	memset((void *)&tfd, 0, sizeof(FdHandle_t));	/* minimalistic still, but a little cleaner */
 	tfd.fd_ih = &tmp;
@@ -2635,20 +2644,20 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
         return -1;
 
     *t = '\0';
-    vno = base32_to_int(s);
+    vno = base32_to_int(s);     /* type for special files */
     tag = base32_to_int(t+1);
-    info->inodeNumber = (Inode) tag << NAMEI_TAGSHIFT;
-    info->inodeNumber |= (Inode) vno;
+    info->inodeNumber = ((Inode) tag) << NAMEI_TAGSHIFT;
+    info->inodeNumber |= vno;
     info->byteCount = data.nFileSizeLow;
 
     dirl = dpath[strlen(dpath)-1];
-    if (dirl == 'R') { /* Special inode. */
+    if (dirl == NAMEI_SPECDIRC) { /* Special inode. */
 	info->inodeNumber |= NAMEI_INODESPECIAL;
 	info->u.param[0] = data.ftCreationTime.dwHighDateTime;
 	info->u.param[1] = data.ftCreationTime.dwLowDateTime;
-	info->u.param[2] = tag;
+	info->u.param[2] = vno; /* type */
 	info->u.param[3] = volid;
-	if (tag != VI_LINKTABLE)
+	if (vno != VI_LINKTABLE)
 	    info->linkCount = 1;
 	else {
 	    /* Open this handle */
