@@ -201,12 +201,13 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 				 * group at once.
 				 */
 
-
+#ifndef AFS_NT40_ENV
 typedef struct {
     int ogm_owner;
     int ogm_group;
     int ogm_mode;
 } namei_ogm_t;
+#endif
 
 static int GetFreeTag(IHandle_t * ih, int vno);
 
