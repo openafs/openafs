@@ -650,7 +650,7 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 		ShowLog = 0;
 		for (fd = 0; fd < 16; fd++)
 		    close(fd);
-		open("/", 0);
+		open(OS_DIRSEP, 0);
 		dup2(0, 1);
 		dup2(0, 2);
 #ifndef AFS_NT40_ENV
@@ -715,13 +715,13 @@ get_DevName(char *pbuffer, char *wpath)
 {
     char pbuf[128], *ptr;
     strcpy(pbuf, pbuffer);
-    ptr = (char *)strrchr(pbuf, '/');
+    ptr = (char *)strrchr(pbuf, OS_DIRSEPC);
     if (ptr) {
 	*ptr = '\0';
 	strcpy(wpath, pbuf);
     } else
 	return NULL;
-    ptr = (char *)strrchr(pbuffer, '/');
+    ptr = (char *)strrchr(pbuffer, OS_DIRSEPC);
     if (ptr) {
 	strcpy(pbuffer, ptr + 1);
 	return pbuffer;
@@ -770,7 +770,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
 #ifdef AFS_NT40_ENV
     /* Opendir can fail on "C:" but not on "C:\" if C is empty! */
-    (void)sprintf(salvinfo->fileSysPath, "%s\\", salvinfo->fileSysPathName);
+    (void)sprintf(salvinfo->fileSysPath, "%s" OS_DIRSEP, salvinfo->fileSysPathName);
     name = partP->devName;
 #else
     strlcpy(salvinfo->fileSysPath, salvinfo->fileSysPathName, sizeof(salvinfo->fileSysPath));
@@ -833,7 +833,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 		char npath[1024];
 		Log("Removing old salvager temp files %s\n", dp->d_name);
 		strcpy(npath, salvinfo->fileSysPath);
-		strcat(npath, "/");
+		strcat(npath, OS_DIRSEP);
 		strcat(npath, dp->d_name);
 		unlink(npath);
 	    }
@@ -845,7 +845,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     (void)_putenv("TMP=");	/* If "TMP" is set, then that overrides tdir. */
     (void)strncpy(inodeListPath, _tempnam(tdir, "salvage.inodes."), 255);
 #else
-    snprintf(inodeListPath, 255, "%s/salvage.inodes.%s.%d", tdir, name,
+    snprintf(inodeListPath, 255, "%s" OS_DIRSEP "salvage.inodes.%s.%d", tdir, name,
 	     getpid());
 #endif
 
@@ -1169,7 +1169,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     (void)strcpy(summaryFileName, _tempnam(tdir, "salvage.temp"));
 #else
     (void)afs_snprintf(summaryFileName, sizeof summaryFileName,
-		       "%s/salvage.temp.%d", tdir, getpid());
+		       "%s" OS_DIRSEP "salvage.temp.%d", tdir, getpid());
 #endif
     summaryFile = afs_fopen(summaryFileName, "a+");
     if (summaryFile == NULL) {
@@ -1545,7 +1545,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 
 	/* check if the header file is incorrectly named */
 	int badname = 0;
-	const char *base = strrchr(name, '/');
+	const char *base = strrchr(name, OS_DIRSEPC);
 	if (base) {
 	    base++;
 	} else {
@@ -3278,7 +3278,7 @@ GetDirName(struct SalvInfo *salvinfo, VnodeId vnode, struct VnodeEssence *vp,
     }
     if (vp->parent && vp->name && (parentvp = CheckVnodeNumber(salvinfo, vp->parent))
 	&& GetDirName(salvinfo, vp->parent, parentvp, path)) {
-	strcat(path, "/");
+	strcat(path, OS_DIRSEP);
 	strcat(path, vp->name);
 	return path;
     }

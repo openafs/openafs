@@ -1366,13 +1366,13 @@ getDevName(char *pbuffer, char *wpath)
 {
     char pbuf[128], *ptr;
     strcpy(pbuf, pbuffer);
-    ptr = (char *)strrchr(pbuf, '/');
+    ptr = (char *)strrchr(pbuf, OS_DIRSEPC);
     if (ptr) {
         *ptr = '\0';
         strcpy(wpath, pbuf);
     } else
         return NULL;
-    ptr = (char *)strrchr(pbuffer, '/');
+    ptr = (char *)strrchr(pbuffer, OS_DIRSEPC);
     if (ptr) {
         strcpy(pbuffer, ptr + 1);
         return pbuffer;
