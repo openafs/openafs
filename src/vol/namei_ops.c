@@ -158,36 +158,37 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 
 #ifdef AFS_NT40_ENV
 /* Inode number format:
- * low 32 bits - if a regular file or directory, the vnode. Else the type.
- * 32-36 - unquifier tag and index into counts array for this vnode. Only
+ * low 32 bits - if a regular file or directory, the vnode; else the type.
+ * 32-36 - uniquifier tag and index into counts array for this vnode. Only
  *         two of the available bits are currently used. The rest are
  *         present in case we ever increase the number of types of volumes
  *         in the volume group.
  * bit 37 : 1  == special, 0 == regular
  */
-#define NAMEI_VNODEMASK    0x00ffffffff
-#define NAMEI_TAGSHIFT     32
-#define NAMEI_INODESPECIAL 0x2000000000
-#define NAMEI_SPECDIR "R"
-#else
+# define NAMEI_VNODEMASK    0x00ffffffff
+# define NAMEI_TAGSHIFT     32
+# define NAMEI_INODESPECIAL 0x2000000000
+# define NAMEI_SPECDIR "R"
+# define NAMEI_SPECDIRC 'R'
+#else /* !AFS_NT40_ENV */
 /* Inode number format:
  * low 26 bits - vnode number - all 1's if volume special file.
  * next 3 bits - tag
  * next 3 bits spare (0's)
  * high 32 bits - uniquifier (regular) or type if spare
  */
-#define NAMEI_VNODEMASK    0x003ffffff
-#define NAMEI_TAGSHIFT     26
-#define NAMEI_UNIQMASK     0xffffffff
-#define NAMEI_UNIQSHIFT    32
-#define NAMEI_INODESPECIAL ((Inode)NAMEI_VNODEMASK)
+# define NAMEI_VNODEMASK    0x003ffffff
+# define NAMEI_TAGSHIFT     26
+# define NAMEI_UNIQMASK     0xffffffff
+# define NAMEI_UNIQSHIFT    32
+# define NAMEI_INODESPECIAL ((Inode)NAMEI_VNODEMASK)
 /* dir1 is the high 8 bits of the 26 bit vnode */
-#define VNO_DIR1(vno) ((vno >> 14) & 0xff)
+# define VNO_DIR1(vno) ((vno >> 14) & 0xff)
 /* dir2 is the next 9 bits */
-#define VNO_DIR2(vno) ((vno >> 9) & 0x1ff)
+# define VNO_DIR2(vno) ((vno >> 9) & 0x1ff)
 /* "name" is the low 9 bits of the vnode, the 3 bit tag and the uniq */
-#define NAMEI_SPECDIR "special"
-#endif
+# define NAMEI_SPECDIR "special"
+#endif /* !AFS_NT40_ENV */
 #define NAMEI_TAGMASK      0x7
 #define NAMEI_VNODESPECIAL NAMEI_VNODEMASK
 
