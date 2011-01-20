@@ -423,6 +423,19 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     udisk_Init(ubik_nBuffers);
     ulock_Init();
 
+    code = uvote_Init();
+    if (code)
+	return code;
+    code = urecovery_Initialize(tdb);
+    if (code)
+	return code;
+    if (info)
+	code = ubeacon_InitServerListByInfo(myHost, info, clones);
+    else
+	code = ubeacon_InitServerList(myHost, serverList);
+    if (code)
+	return code;
+
     ubik_callPortal = myPort;
     /* try to get an additional security object */
     ubik_sc[0] = rxnull_NewServerSecurityObject();
@@ -485,20 +498,6 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
               NULL, "rx_ServerProc", &junk);
 #endif
-
-    /* do basic initialization */
-    code = uvote_Init();
-    if (code)
-	return code;
-    code = urecovery_Initialize(tdb);
-    if (code)
-	return code;
-    if (info)
-	code = ubeacon_InitServerListByInfo(myHost, info, clones);
-    else
-	code = ubeacon_InitServerList(myHost, serverList);
-    if (code)
-	return code;
 
     /* now start up async processes */
 #ifdef AFS_PTHREAD_ENV
