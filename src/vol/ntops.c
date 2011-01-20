@@ -45,20 +45,21 @@
  *
  * This nt_unlink has the delete on last close semantics of the Unix unlink
  * with a minor twist. Subsequent CreateFile calls on this file can succeed
- * if they open for delete. It's also unclear what happens if a CreateFile
- * call tries to create a new file with the same name. Fortunately, neither
- * case should occur as part of nt_dec.
+ * if they open for delete. If a CreateFile call tries to create a new file
+ * with the same name it will fail. Fortunately, neither case should occur
+ * as part of nt_dec.
  */
 int
 nt_unlink(char *name)
 {
     HANDLE fh;
 
-    fh = CreateFile(name, GENERIC_READ | GENERIC_WRITE,
+    fh = CreateFile(name,
+                    GENERIC_READ | GENERIC_WRITE | DELETE,
 		    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		    NULL, OPEN_EXISTING,
-		    BASEFILEATTRIBUTE | FILE_FLAG_DELETE_ON_CLOSE |
-		    FILE_FLAG_POSIX_SEMANTICS, NULL);
+		    BASEFILEATTRIBUTE | FILE_FLAG_DELETE_ON_CLOSE | FILE_FLAG_POSIX_SEMANTICS,
+                    NULL);
     if (fh != INVALID_HANDLE_VALUE)
 	CloseHandle(fh);
     else {
@@ -78,14 +79,16 @@ nt_open(char *name, int flags, int mode)
 {
     HANDLE fh;
     DWORD nt_access = 0;
-    DWORD nt_share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    DWORD nt_share = FILE_SHARE_READ;
     DWORD nt_create = 0;
     /* Really use the sequential one for data files, random for meta data. */
     DWORD FandA = BASEFILEATTRIBUTE | FILE_FLAG_SEQUENTIAL_SCAN;
 
     /* set access */
-    if ((flags & O_RDWR) || (flags & O_WRONLY))
+    if ((flags & O_RDWR) || (flags & O_WRONLY)) {
 	nt_access |= GENERIC_WRITE;
+        nt_share  |= FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    }
     if ((flags & O_RDWR) || (flags == O_RDONLY))
 	nt_access |= GENERIC_READ;
 
