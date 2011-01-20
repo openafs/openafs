@@ -22,7 +22,6 @@ VICED = ..\viced
 TVICED = .
 LWP = ..\lwp
 LIBACL = ..\libacl
-DIR = ..\dir
 FSINT = ..\fsint
 RX = ..\rx
 
@@ -39,12 +38,10 @@ LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 
 LIBACLOBJS = $(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
-DIROBJS = $(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
-
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
 EXEOBJS = $(VICEDOBJS) $(TVICEDRES) $(LWPOBJS) $(LIBACLOBJS) \
-	  $(DIROBJS) $(FSINTOBJS) $(RXOBJS) #$(TVICEDOBJS)
+	  $(FSINTOBJS) $(RXOBJS) #$(TVICEDOBJS)
 
 noversion: install
 
@@ -68,9 +65,6 @@ $(LWPOBJS): $(LWP)\$$(@B).C
 $(LIBACLOBJS): $(LIBACL)\$$(@B).C
 	$(C2OBJ) -I$(LIBACL) $**
 
-$(DIROBJS): $(DIR)\$$(@B).C
-	$(C2OBJ) -I$(DIR) $**
-
 $(FSINTOBJS): $(FSINT)\$$(@B).C
 	$(C2OBJ) -I$(FSINT) $**
 
@@ -86,6 +80,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afs\mtafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
+        $(DESTDIR)\lib\afs\mtafsdir.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

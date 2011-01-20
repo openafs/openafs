@@ -177,7 +177,7 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\mtafsvol.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afs\mtafsdir.lib \
 	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \

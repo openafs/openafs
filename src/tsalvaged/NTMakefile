@@ -33,15 +33,9 @@ SSD_RES = $(OUT)\salvsync-debug.res
 LWP = ..\lwp
 LIBACL = ..\libacl
 UTIL = ..\util
-DIR = ..\dir
 VLIB = ..\vol
 
 noversion: install
-
-DIROBJS =\
-        $(OUT)\buffer.obj \
-        $(OUT)\dir.obj \
-        $(OUT)\salvage.obj
 
 LWPOBJS =\
         $(OUT)\lock.obj \
@@ -86,7 +80,7 @@ SALVAGEROBJS =\
         $(OUT)\svol-salvage.obj \
         $(OUT)\sphysio.obj
 
-OBJECTS= $(SALVAGEDOBJS) $(VLIBOBJS) $(DIROBJS) $(LWPOBJS)
+OBJECTS= $(SALVAGEDOBJS) $(VLIBOBJS) $(LWPOBJS)
 SOBJECTS= $(SALVAGEROBJS)
 
 FSSDEBUG_OBJS =\
@@ -106,9 +100,6 @@ SSSDEBUG_OBJS =\
         $(VLIBOBJS) \
         $(DIROBJS) \
         $(LWPOBJS)
-
-$(DIROBJS): $(DIR)\$$(@B).c
-	$(C2OBJ) -I$(DIR) $**
 
 $(LWPOBJS): $(LWP)\$$(@B).c
 	$(C2OBJ) -I$(LWP) $**
@@ -143,6 +134,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afs\daafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
+        $(DESTDIR_\lib\afs\mtafsdir.lib \
 	$(DESTDIR)\lib\afspthread.lib
 
 $(SS_EXEFILE): $(OBJECTS) $(SS_RES) $(EXELIBS)
