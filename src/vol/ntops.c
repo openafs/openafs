@@ -119,39 +119,6 @@ nt_open(char *name, int flags, int mode)
     fh = CreateFile(name, nt_access, nt_share, NULL, nt_create, FandA, NULL);
     if (fh == INVALID_HANDLE_VALUE) {
         DWORD gle = GetLastError();
-
-        if (gle == ERROR_PATH_NOT_FOUND) {
-            /*
-             * one or more of the directories in the path
-             * does not exist.  We must create them and
-             * try again to create the file.
-             */
-            char * p;
-
-            for (p=name; *p && *p != OS_DIRSEPC; p++);
-            while (*p == OS_DIRSEPC) p++;    /* ignore the first dirsep */
-            for (; *p; p++) {
-                if (*p == OS_DIRSEPC) {
-                    *p = '\0';
-                    if (CreateDirectory(name, NULL))
-                        gle = 0;
-                    else
-                        gle = GetLastError();
-                    *p = OS_DIRSEPC;
-                    if (gle != ERROR_SUCCESS &&
-                         gle != ERROR_ALREADY_EXISTS) {
-                        /* The directory creation failed. */
-                        fh = INVALID_FD;
-                        break;
-                    } else {
-                        while (*(p+1) == OS_DIRSEPC) p++;
-                    }
-                }
-            }
-
-            if (!*p) /* successful creation of the path */
-                goto retry;
-        }
         errno = nterr_nt2unix(gle, EBADF);
     }
     return fh;
