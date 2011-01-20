@@ -54,7 +54,15 @@
   ((((lock)->excl_locked & WRITE_LOCK) || (lock)->readers_reading) ? 0 : 1)
 
 struct Lock rwlock;
-int rwlockinit = 1;
+
+/*!
+ * \Initialize locks
+ */
+void
+ulock_Init(void)
+{
+    Lock_Init(&rwlock);
+}
 
 /*!
  * \brief Set a transaction lock.
@@ -68,12 +76,6 @@ extern int
 ulock_getLock(struct ubik_trans *atrans, int atype, int await)
 {
     struct ubik_dbase *dbase = atrans->dbase;
-
-    /* On first pass, initialize the lock */
-    if (rwlockinit) {
-	Lock_Init(&rwlock);
-	rwlockinit = 0;
-    }
 
     if ((atype != LOCKREAD) && (atype != LOCKWRITE))
 	return EINVAL;
@@ -135,9 +137,6 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
 void
 ulock_relLock(struct ubik_trans *atrans)
 {
-    if (rwlockinit)
-	return;
-
     if (atrans->locktype == LOCKWRITE && (atrans->flags & TRREADWRITE)) {
 	ubik_print("Ubik: Internal Error: unlocking write lock with "
 	           "TRREADWRITE?\n");
@@ -167,11 +166,6 @@ ulock_relLock(struct ubik_trans *atrans)
 void
 ulock_Debug(struct ubik_debug *aparm)
 {
-    if (rwlockinit) {
-	aparm->anyReadLocks = 0;
-	aparm->anyWriteLocks = 0;
-    } else {
-	aparm->anyReadLocks = rwlock.readers_reading;
-	aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
-    }
+    aparm->anyReadLocks = rwlock.readers_reading;
+    aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
 }

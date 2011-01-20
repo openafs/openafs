@@ -437,6 +437,7 @@ extern int udisk_end(struct ubik_trans *atrans);
 /*\}*/
 
 /*! \name lock.c */
+extern void ulock_Init(void);
 extern int  ulock_getLock(struct ubik_trans *atrans, int atype, int await);
 extern void ulock_relLock(struct ubik_trans *atrans);
 extern void ulock_Debug(struct ubik_debug *aparm);
