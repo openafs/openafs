@@ -1903,7 +1903,7 @@ _namei_examine_special(char * path1,
 /**
  * examine a namei file.
  *
- * @param[in] path1               volume special directory path
+ * @param[in] path3               volume special directory path
  * @param[in] dname               directory entry name
  * @param[in] myIH                inode handle to volume directory
  * @param[in] linkHandle          namei link count fd handle.
@@ -1943,7 +1943,7 @@ _namei_examine_reg(char * path3,
     int ret = 0;
     struct ViceInodeInfo info;
 #ifdef DELETE_ZLC
-    int i; /* Windows-only (one level hash dir) */
+    int dirl; /* Windows-only (one level hash dir) */
 #endif
 
     if (DecodeInode(path3, dname, &info, myIH->ih_vid) < 0) {
@@ -1960,7 +1960,8 @@ _namei_examine_reg(char * path3,
 	/* defer -- the AddToZLCDeleteList() interface is not MT-safe */
 	ret = -2;
 #else /* !AFS_SALSRV_ENV */
-	AddToZLCDeleteList((char)i, dname);
+        dirl = path3[strlen(path3)-1];
+	AddToZLCDeleteList((char)dirl, dname);
 #endif /* !AFS_SALSRV_ENV */
 #else /* !DELETE_ZLC */
 	Log("Found 0 link count file %s" OS_DIRSEP "%s.\n", path3,
