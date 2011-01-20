@@ -835,7 +835,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 		strcpy(npath, salvinfo->fileSysPath);
 		strcat(npath, OS_DIRSEP);
 		strcat(npath, dp->d_name);
-		unlink(npath);
+		OS_UNLINK(npath);
 	    }
 	}
 	closedir(dirp);
