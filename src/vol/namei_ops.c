@@ -405,7 +405,7 @@ namei_CreateDataDirectories(namei_t * name, int *created)
     int i;
 
     *created = 0;
-    afs_snprintf(tmp, 256, "%s\\%s", name->n_drive, name->n_voldir);
+    afs_snprintf(tmp, 256, "%s" OS_DIRSEP "%s", name->n_drive, name->n_voldir);
 
     if (mkdir(tmp) < 0) {
         if (errno != EEXIST)
@@ -416,7 +416,7 @@ namei_CreateDataDirectories(namei_t * name, int *created)
     s = tmp;
     s += strlen(tmp);
 
-    *s++ = '\\';
+    *s++ = OS_DIRSEPC;
     *(s + 1) = '\0';
     for (i = 'A'; i <= 'R'; i++) {
         *s = (char)i;
@@ -439,7 +439,7 @@ do { \
 
 #define create_nextdir(A) \
 do { \
-	 strcat(tmp, "/"); strcat(tmp, A); create_dir();  \
+	 strcat(tmp, OS_DIRSEP); strcat(tmp, A); create_dir();  \
 } while(0)
 
 static int
@@ -492,7 +492,7 @@ delTree(char *root, char *tree, int *errp)
 
     if (*tree) {
 	/* delete the children first */
-	cp = strchr(tree, '/');
+	cp = strchr(tree, OS_DIRSEPC);
 	if (cp) {
 	    delTree(root, cp + 1, errp);
 	    *cp = '\0';
@@ -509,7 +509,7 @@ delTree(char *root, char *tree, int *errp)
 		/* since root is big enough, we reuse the space to
 		 * concatenate the dirname to the current tree
 		 */
-		strcat(root, "/");
+		strcat(root, OS_DIRSEP);
 		strcat(root, dirp->d_name);
 		if (afs_stat(root, &st) == 0 && S_ISDIR(st.st_mode)) {
 		    /* delete this subtree */
@@ -563,11 +563,11 @@ namei_RemoveDataDirectories(namei_t * name)
     char tmp[256];
     int i;
 
-    afs_snprintf(tmp, 256, "%s\\%s", name->n_drive, name->n_voldir);
+    afs_snprintf(tmp, 256, "%s" OS_DIRSEP "%s", name->n_drive, name->n_voldir);
 
     path = tmp;
     path += strlen(path);
-    *path++ = '\\';
+    *path++ = OS_DIRSEPC;
     *(path + 1) = '\0';
     for (i = 'A'; i <= 'R'; i++) {
         *path = (char)i;
@@ -2476,7 +2476,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 				 dp2->d_name);
 #else
 		    /* Now we've got to the actual data */
-		    afs_snprintf(path3, sizeof(path3), "%s\\%s", path1,
+		    afs_snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s", path1,
 				 dp1->d_name);
 #endif
 		    dirp3 = opendir(path3);
@@ -2614,7 +2614,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     FdHandle_t linkHandle;
     char dirl;
 
-    afs_snprintf(fpath, sizeof(fpath), "%s\\%s", dpath, name);
+    afs_snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
     dirH = FindFirstFileEx(fpath, FindExInfoStandard, &data,
 			   FindExSearchNameMatch, NULL,
@@ -2650,8 +2650,8 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 	else {
 	    /* Open this handle */
 	    char lpath[1024];
-	    (void)sprintf(lpath, "%s\\%s", fpath, data.cFileName);
-	    linkHandle.fd_fd = nt_open(lpath, O_RDONLY, 0666);
+	    (void)sprintf(lpath, "%s" OS_DIRSEP "%s", fpath, data.cFileName);
+	    linkHandle.fd_fd = afs_open(lpath, O_RDONLY, 0666);
 	    info->linkCount =
 		namei_GetLinkCount(&linkHandle, (Inode) 0, 0, 0, 0);
 	}
@@ -2660,11 +2660,11 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 	    namei_GetLinkCount(&linkHandle, info->inodeNumber, 0, 0, 0);
 	if (info->linkCount == 0) {
 #ifdef DELETE_ZLC
-	    Log("Found 0 link count file %s\\%s, deleting it.\n",
+	    Log("Found 0 link count file %s" OS_DIRSEP "%s, deleting it.\n",
 		fpath, data.cFileName);
 	    AddToZLCDeleteList(dirl, data.cFileName);
 #else
-	    Log("Found 0 link count file %s\\%s.\n", path,
+	    Log("Found 0 link count file %s" OS_DIRSEP "%s.\n", path,
 		data.cFileName);
 #endif
 	} else {
@@ -3070,7 +3070,7 @@ AddToZLCDeleteList(char dir, char *name)
     }
 
     if (dir)
-	(void)sprintf(zlcCur->zlc_names[zlcCur->zlc_n], "%c\\%s", dir, name);
+	(void)sprintf(zlcCur->zlc_names[zlcCur->zlc_n], "%c" OS_DIRSEP "%s", dir, name);
     else
 	(void)sprintf(zlcCur->zlc_names[zlcCur->zlc_n], "%s", name);
 
@@ -3087,7 +3087,7 @@ DeleteZLCFiles(char *path)
     for (z = zlcAnchor; z; z = z->zlc_next) {
 	for (i = 0; i < z->zlc_n; i++) {
 	    if (path)
-		(void)sprintf(fname, "%s\\%s", path, z->zlc_names[i]);
+		(void)sprintf(fname, "%s" OS_DIRSEP "%s", path, z->zlc_names[i]);
 	    else
 		(void)sprintf(fname, "%s", z->zlc_names[i]);
 	    if (namei_unlink(fname) < 0) {

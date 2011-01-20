@@ -258,7 +258,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
     dp->devName = (char *)malloc(2 * strlen(path) + 6);
     strcpy(dp->devName, path);
-    strcat(dp->devName, "/");
+    strcat(dp->devName, OS_DIRSEP);
     strcat(dp->devName, "Lock");
     mkdir(dp->devName, 0700);
     strcat(dp->devName, path);
@@ -426,7 +426,7 @@ VIsAlwaysAttach(char *part, int *awouldattach)
     }
 
     strncpy(checkfile, part, 100);
-    strcat(checkfile, "/");
+    strcat(checkfile, OS_DIRSEP);
     strcat(checkfile, VICE_ALWAYSATTACH_FILE);
 
     ret = afs_stat(checkfile, &st);
@@ -450,9 +450,9 @@ VAttachPartitions2(void)
     char pname[32];
     int wouldattach;
 
-    dirp = opendir("/");
+    dirp = opendir(OS_DIRSEP);
     while ((de = readdir(dirp))) {
-	strcpy(pname, "/");
+	strcpy(pname, OS_DIRSEP);
 	strncat(pname, de->d_name, 20);
 	pname[sizeof(pname) - 1] = '\0';
 

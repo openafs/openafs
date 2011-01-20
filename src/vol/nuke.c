@@ -154,7 +154,7 @@ nuke(char *aname, afs_int32 avolid)
 	strcpy(devName, tfile);	/* save this from the static buffer */
     }
     /* aim lastDevComp at the 'foo' of '/dev/foo' */
-    lastDevComp = strrchr(devName, '/');
+    lastDevComp = strrchr(devName, OS_DIRSEPC);
     /* either points at slash, or there is no slash; adjust appropriately */
     if (lastDevComp)
 	lastDevComp++;

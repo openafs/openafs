@@ -2372,7 +2372,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     VOL_UNLOCK;
 
-    strcat(path, "/");
+    strcat(path, OS_DIRSEP);
     strcat(path, name);
 
     if (!vp) {
@@ -2570,7 +2570,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 
     VOL_UNLOCK;
 
-    strcat(path, "/");
+    strcat(path, OS_DIRSEP);
     strcat(path, name);
 
     /* do volume attach
@@ -5985,7 +5985,7 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     struct DiskPartition64 *dp;
 
     *ec = 0;
-    name[0] = '/';
+    name[0] = OS_DIRSEPC;
     (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, afs_printable_uint32_lu(volumeId));
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	struct afs_stat status;
@@ -6014,14 +6014,14 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
  * @return volume number
  *
  * @note the string must be of the form VFORMAT.  the only permissible
- *       deviation is a leading '/' character.
+ *       deviation is a leading OS_DIRSEPC character.
  *
  * @see VFORMAT
  */
 int
 VolumeNumber(char *name)
 {
-    if (*name == '/')
+    if (*name == OS_DIRSEPC)
 	name++;
     return atoi(name + 1);
 }

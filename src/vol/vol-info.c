@@ -361,7 +361,7 @@ FindCurrentPartition(void)
 	perror("pwd");
 	exit(1);
     }
-    p = strchr(&partName[1], '/');
+    p = strchr(&partName[1], OS_DIRSEPC);
     if (p) {
 	tmp = *p;
 	*p = '\0';
