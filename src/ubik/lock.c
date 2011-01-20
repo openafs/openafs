@@ -107,23 +107,10 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
     }
 
     /* Create new lock record and add to spec'd transaction:
-     * #if defined(UBIK_PAUSE)
-     * * locktype.  Before doing that, set TRSETLOCK,
-     * * to tell udisk_end that another thread (us) is waiting.
-     * #else
-     * * locktype. This field also tells us if the thread is
-     * * waiting for a lock: It will be equal to LOCKWAIT.
-     * #endif
+     * locktype. This field also tells us if the thread is
+     * waiting for a lock: It will be equal to LOCKWAIT.
      */
-#if defined(UBIK_PAUSE)
-    if (atrans->flags & TRSETLOCK) {
-	printf("Ubik: Internal Error: TRSETLOCK already set?\n");
-	return EBUSY;
-    }
-    atrans->flags |= TRSETLOCK;
-#else
     atrans->locktype = LOCKWAIT;
-#endif /* UBIK_PAUSE */
     DBRELE(dbase);
     if (atrans->flags & TRREADWRITE) {
 	/* noop; don't actually lock anything for TRREADWRITE */
@@ -134,18 +121,6 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
     }
     DBHOLD(dbase);
     atrans->locktype = atype;
-#if defined(UBIK_PAUSE)
-    atrans->flags &= ~TRSETLOCK;
-#if 0
-    /* We don't do this here, because this can only happen in SDISK_Lock,
-     *  and there's already code there to catch this condition.
-     */
-    if (atrans->flags & TRSTALE) {
-	udisk_end(atrans);
-	return UINTERNAL;
-    }
-#endif
-#endif /* UBIK_PAUSE */
 
 /*
  *ubik_print("Ubik: DEBUG: Thread 0x%x took %s lock\n", lwp_cpptr,

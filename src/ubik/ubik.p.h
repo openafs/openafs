@@ -22,9 +22,7 @@
 /*! \name ubik_lock types */
 #define	LOCKREAD	    1
 #define	LOCKWRITE	    2
-#if !defined(UBIK_PAUSE)
 #define	LOCKWAIT	    3
-#endif /* UBIK_PAUSE */
 /*\}*/
 
 /*! \name ubik client flags */
@@ -227,19 +225,12 @@ extern int (*ubik_SyncWriterCacheProc) (void);
 
 /*! \name ubik_dbase flags */
 #define	DBWRITING	    1	/*!< are any write trans. in progress */
-#if defined(UBIK_PAUSE)
-#define DBVOTING            2	/*!< the beacon task is polling */
-#endif /* UBIK_PAUSE */
 /*\}*/
 
 /*!\name ubik trans flags */
 #define	TRDONE		    1	/*!< commit or abort done */
 #define	TRABORT		    2	/*!< if #TRDONE, tells if aborted */
 #define TRREADANY	    4	/*!< read any data available in trans */
-#if defined(UBIK_PAUSE)
-#define TRSETLOCK           8	/*!< SetLock is using trans */
-#define TRSTALE             16	/*!< udisk_end during getLock */
-#endif /* UBIK_PAUSE */
 #define TRCACHELOCKED       32  /*!< this trans has locked dbase->cache_lock
                                  *   (meaning, this trans has called
                                  *   ubik_CheckCache at some point */

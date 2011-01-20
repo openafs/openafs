@@ -153,13 +153,9 @@ SDISK_ReleaseLocks(struct rx_call *rxcall, struct ubik_tid *atid)
     }
 
     /* If the thread is not waiting for lock - ok to end it */
-#if !defined(UBIK_PAUSE)
     if (ubik_currentTrans->locktype != LOCKWAIT) {
-#endif /* UBIK_PAUSE */
 	udisk_end(ubik_currentTrans);
-#if !defined(UBIK_PAUSE)
     }
-#endif /* UBIK_PAUSE */
     ubik_currentTrans = (struct ubik_trans *)0;
     DBRELE(dbase);
     return 0;
@@ -193,13 +189,9 @@ SDISK_Abort(struct rx_call *rxcall, struct ubik_tid *atid)
 
     code = udisk_abort(ubik_currentTrans);
     /* If the thread is not waiting for lock - ok to end it */
-#if !defined(UBIK_PAUSE)
     if (ubik_currentTrans->locktype != LOCKWAIT) {
-#endif /* UBIK_PAUSE */
 	udisk_end(ubik_currentTrans);
-#if !defined(UBIK_PAUSE)
     }
-#endif /* UBIK_PAUSE */
     ubik_currentTrans = (struct ubik_trans *)0;
     DBRELE(dbase);
     return code;

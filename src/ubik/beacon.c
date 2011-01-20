@@ -446,9 +446,6 @@ ubeacon_Interact(void *dummy)
 	    ttid.counter = ubik_dbase->writeTidCounter;
 	} else
 	    ttid.counter = ubik_dbase->tidCounter + 1;
-#if defined(UBIK_PAUSE)
-	ubik_dbase->flags |= DBVOTING;
-#endif /* UBIK_PAUSE */
 
 	/* now analyze return codes, counting up our votes */
 	yesVotes = 0;		/* count how many to ensure we have quorum */
@@ -519,9 +516,6 @@ ubeacon_Interact(void *dummy)
 	    if (i < oldestYesVote)
 		oldestYesVote = i;
 	}
-#if defined(UBIK_PAUSE)
-	ubik_dbase->flags &= ~DBVOTING;
-#endif /* UBIK_PAUSE */
 
 	/* now decide if we have enough votes to become sync site.
 	 * Note that we can still get enough votes even if we didn't for ourself. */

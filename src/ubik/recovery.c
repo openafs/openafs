@@ -168,13 +168,9 @@ urecovery_CheckTid(struct ubik_tid *atid, int abortalways)
 	    || atid->counter > ubik_currentTrans->tid.counter || abortalways) {
 	    /* don't match, abort it */
 	    /* If the thread is not waiting for lock - ok to end it */
-#if !defined(UBIK_PAUSE)
 	    if (ubik_currentTrans->locktype != LOCKWAIT) {
-#endif /* UBIK_PAUSE */
 		udisk_end(ubik_currentTrans);
-#if !defined(UBIK_PAUSE)
 	    }
-#endif /* UBIK_PAUSE */
 	    ubik_currentTrans = (struct ubik_trans *)0;
 	}
     }
@@ -566,17 +562,8 @@ urecovery_Interact(void *dummy)
 	    urecovery_state |= UBIK_RECFOUNDDB;
 	    urecovery_state &= ~UBIK_RECSENTDB;
 	}
-#if defined(UBIK_PAUSE)
-	/* it's not possible for UBIK_RECFOUNDDB not to be set here.
-	 * However, we might have lost UBIK_RECSYNCSITE, and that
-	 * IS important.
-	 */
-	if (!(urecovery_state & UBIK_RECSYNCSITE))
-	    continue;		/* lost sync */
-#else
 	if (!(urecovery_state & UBIK_RECFOUNDDB))
 	    continue;		/* not ready */
-#endif /* UBIK_PAUSE */
 
 	/* If we, the sync site, do not have the best db version, then
 	 * go and get it from the server that does.
@@ -709,10 +696,6 @@ urecovery_Interact(void *dummy)
 #endif
 	    DBRELE(ubik_dbase);
 	}
-#if defined(UBIK_PAUSE)
-	if (!(urecovery_state & UBIK_RECSYNCSITE))
-	    continue;		/* lost sync */
-#endif /* UBIK_PAUSE */
 	if (!(urecovery_state & UBIK_RECHAVEDB))
 	    continue;		/* not ready */
 

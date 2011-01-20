@@ -1000,19 +1000,6 @@ udisk_end(struct ubik_trans *atrans)
 {
     struct ubik_dbase *dbase;
 
-#if defined(UBIK_PAUSE)
-    /* Another thread is trying to lock this transaction.
-     * That can only be an RPC doing SDISK_Lock.
-     * Unlock the transaction, 'cause otherwise the other
-     * thread will never wake up.  Don't free it because
-     * the caller will do that already.
-     */
-    if (atrans->flags & TRSETLOCK) {
-	atrans->flags |= TRSTALE;
-	ulock_relLock(atrans);
-	return UINTERNAL;
-    }
-#endif /* UBIK_PAUSE */
     if (!(atrans->flags & TRDONE))
 	udisk_abort(atrans);
     dbase = atrans->dbase;
