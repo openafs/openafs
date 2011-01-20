@@ -662,32 +662,14 @@ namei_MakeSpecIno(int volid, int type)
     return ino;
 }
 
-/* SetOGM - set owner group and mode bits from parm and tag */
+#ifdef AFS_NT40_ENV
+/* SetOGM */
 static int
 SetOGM(FD_t fd, int parm, int tag)
 {
-#ifndef AFS_NT40_ENV
-/*
- * owner - low 15 bits of parm.
- * group - next 15 bits of parm.
- * mode - 2 bits of parm, then lowest = 3 bits of tag.
- */
-    int owner, group, mode;
-
-    owner = parm & 0x7fff;
-    group = (parm >> 15) & 0x7fff;
-    if (fchown(fd, owner, group) < 0)
-	return -1;
-
-    mode = (parm >> 27) & 0x18;
-    mode |= tag & 0x7;
-    if (fchmod(fd, mode) < 0)
-	return -1;
-#endif
-    return 0;
+    return -1;
 }
 
-#ifdef AFS_NT40_ENV
 static int
 CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
 {
@@ -709,7 +691,30 @@ CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
 
     return 0;
 }
-#else
+#else /* AFS_NT40_ENV */
+/* SetOGM - set owner group and mode bits from parm and tag */
+static int
+SetOGM(FD_t fd, int parm, int tag)
+{
+/*
+ * owner - low 15 bits of parm.
+ * group - next 15 bits of parm.
+ * mode - 2 bits of parm, then lowest = 3 bits of tag.
+ */
+    int owner, group, mode;
+
+    owner = parm & 0x7fff;
+    group = (parm >> 15) & 0x7fff;
+    if (fchown(fd, owner, group) < 0)
+	return -1;
+
+    mode = (parm >> 27) & 0x18;
+    mode |= tag & 0x7;
+    if (fchmod(fd, mode) < 0)
+	return -1;
+    return 0;
+}
+
 /* GetOGM - get parm and tag from owner, group and mode bits. */
 static void
 GetOGMFromStat(struct afs_stat *status, int *parm, int *tag)
@@ -733,7 +738,7 @@ CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
 
     return 0;
 }
-#endif
+#endif /* !AFS_NT40_ENV */
 
 int big_vno = 0;		/* Just in case we ever do 64 bit vnodes. */
 
