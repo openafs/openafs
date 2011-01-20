@@ -2343,8 +2343,9 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
     IHandle_t myIH = *dirIH;
     namei_t name;
     char path1[512], path3[512];
-    DIR *dirp1, *dirp2, *dirp3;
+    DIR *dirp1, *dirp3;
 #ifndef AFS_NT40_ENV
+    DIR *dirp2;
     struct dirent *dp2;
     char path2[512];
 #endif
@@ -2357,11 +2358,6 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
     struct afs_work_queue *wq;
     int wq_up = 0;
     struct rx_queue resultlist;
-#endif
-#ifdef DELETE_ZLC
-    int i;
-    static void AddToZLCDeleteList(char dir, char *name);
-    static void DeleteZLCFiles(char *path);
 #endif
 
     namei_HandleToVolDir(&name, &myIH);
@@ -2493,7 +2489,9 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 #ifdef AFS_SALSRV_ENV
 			    if (error) {
 				closedir(dirp3);
+#ifndef AFS_NT40_ENV
 				closedir(dirp2);
+#endif
 				closedir(dirp1);
 				ret = -1;
 				goto error;
@@ -2507,7 +2505,9 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 			    switch (code) {
 			    case -1:
 				closedir(dirp3);
+#ifndef AFS_NT40_ENV
 				closedir(dirp2);
+#endif
 				closedir(dirp1);
 				ret = -1;
 				goto error;
