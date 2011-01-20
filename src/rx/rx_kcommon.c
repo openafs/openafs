@@ -1273,7 +1273,7 @@ rxk_Listener(void)
     rxk_ListenerTask = 0;
     osi_rxWakeup(&rxk_ListenerTask);
 #endif
-#if defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
     osi_rxWakeup(&rxk_ListenerPid);
 #endif
 #ifdef AFS_SUN5_ENV
