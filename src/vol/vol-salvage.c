@@ -840,6 +840,12 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * semantics of unlink. In most places in the salvager, we really do
      * mean to unlink the file at that point. Those places have been
      * modified to actually do that so that the NT crt can be used there.
+     *
+     * jaltman - On NT delete on close cannot be applied to a file while the
+     * process has an open file handle that does not have DELETE file
+     * access and FILE_SHARE_DELETE.  fopen() calls CreateFile() without
+     * delete privileges.  As a result the nt_unlink() call will always
+     * fail.
      */
     code = nt_unlink(inodeListPath);
 #else
@@ -1162,6 +1168,9 @@ GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
      * semantics of unlink. In most places in the salvager, we really do
      * mean to unlink the file at that point. Those places have been
      * modified to actually do that so that the NT crt can be used there.
+     *
+     * jaltman - As commented elsewhere, this cannot work because fopen()
+     * does not open files with DELETE and FILE_SHARE_DELETE.
      */
     code = nt_unlink(summaryFileName);
 #else
