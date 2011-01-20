@@ -248,17 +248,18 @@ namei_HandleToInodeDir(namei_t * name, IHandle_t * ih)
      */
     volutil_PartitionName_r(ih->ih_dev, name->n_base, sizeof(name->n_base));
     offset = VICE_PREFIX_SIZE + (ih->ih_dev > 25 ? 2 : 1);
-    name->n_base[offset] = '/';
+    name->n_base[offset] = OS_DIRSEPC;
     offset++;
     strlcpy(name->n_base + offset, INODEDIR, sizeof(name->n_base) - offset);
     strlcpy(name->n_path, name->n_base, sizeof(name->n_path));
 }
 #endif
 
-#define addtoname(N, C)                                 \
-do {                                                    \
-    strlcat((N)->n_path, OS_DIRSEP, sizeof((N)->n_path));     \
-    strlcat((N)->n_path, (C), sizeof((N)->n_path));     \
+#define addtoname(N, C)                                         \
+do {                                                            \
+    if ((N)->n_path[strlen((N)->n_path)-1] != OS_DIRSEPC)       \
+        strlcat((N)->n_path, OS_DIRSEP, sizeof((N)->n_path));   \
+    strlcat((N)->n_path, (C), sizeof((N)->n_path));             \
 } while(0)
 
 
