@@ -171,7 +171,7 @@ nt_close(FD_t fd)
 }
 
 int
-nt_write(FD_t fd, char *buf, size_t size)
+nt_write(FD_t fd, char *buf, afs_sfsize_t size)
 {
     BOOL code;
     DWORD nbytes;
@@ -186,7 +186,7 @@ nt_write(FD_t fd, char *buf, size_t size)
 }
 
 int
-nt_pwrite(FD_t fd, const void * buf, size_t count, afs_foff_t offset)
+nt_pwrite(FD_t fd, const void * buf, afs_sfsize_t count, afs_foff_t offset)
 {
     /*
      * same comment as read
@@ -211,7 +211,7 @@ nt_pwrite(FD_t fd, const void * buf, size_t count, afs_foff_t offset)
 }
 
 int
-nt_read(FD_t fd, char *buf, size_t size)
+nt_read(FD_t fd, char *buf, afs_sfsize_t size)
 {
     BOOL code;
     DWORD nbytes;
@@ -229,7 +229,7 @@ nt_read(FD_t fd, char *buf, size_t size)
 }
 
 int
-nt_pread(FD_t fd, void * buf, size_t count, afs_foff_t offset)
+nt_pread(FD_t fd, void * buf, afs_sfsize_t count, afs_foff_t offset)
 {
     /*
      * This really ought to call NtReadFile
@@ -258,15 +258,18 @@ nt_pread(FD_t fd, void * buf, size_t count, afs_foff_t offset)
     return (ssize_t)nbytes;
 }
 
-int
+afs_sfsize_t
 nt_size(FD_t fd)
 {
     BY_HANDLE_FILE_INFORMATION finfo;
+    LARGE_INTEGER FileSize;
 
     if (!GetFileInformationByHandle(fd, &finfo))
 	return -1;
 
-    return finfo.nFileSizeLow;
+    FileSize.HighPart = finfo.nFileSizeHigh;
+    FileSize.LowPart = finfo.nFileSizeLow;
+    return FileSize.QuadPart;
 }
 
 
@@ -321,10 +324,14 @@ nt_sync(int cdrive)
 
 /* Currently nt_ftruncate only tested to shrink a file. */
 int
-nt_ftruncate(FD_t fd, int len)
+nt_ftruncate(FD_t fd, afs_foff_t len)
 {
-    if (SetFilePointer(fd, (LONG) len, NULL, FILE_BEGIN)
-	== 0xffffffff) {
+    LARGE_INTEGER length;
+
+    length.QuadPart = len;
+
+    if (SetFilePointerEx(fd, length, NULL, FILE_BEGIN)
+        == 0xffffffff) {
 	errno = nterr_nt2unix(GetLastError(), EBADF);
 	return -1;
     }
@@ -345,9 +352,14 @@ nt_fsync(FD_t fd)
 
 
 int
-nt_seek(FD_t fd, int off, int where)
+nt_seek(FD_t fd, afs_foff_t off, int where)
 {
-    int code = SetFilePointer(fd, off, NULL, where);
+    int code;
+    LARGE_INTEGER offset;
+
+    offset.QuadPart = off;
+
+    code = SetFilePointerEx(fd, offset, NULL, where);
     return code;
 }
 
