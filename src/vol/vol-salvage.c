@@ -1166,7 +1166,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     tdir = (tmpdir ? tmpdir : part);
 #ifdef AFS_NT40_ENV
     (void)_putenv("TMP=");	/* If "TMP" is set, then that overrides tdir. */
-    (void)strcpy(summaryFileName, _tempnam(tdir, "salvage.temp"));
+    (void)strcpy(summaryFileName, _tempnam(tdir, "salvage.temp."));
 #else
     (void)afs_snprintf(summaryFileName, sizeof summaryFileName,
 		       "%s" OS_DIRSEP "salvage.temp.%d", tdir, getpid());
