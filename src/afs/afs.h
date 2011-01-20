@@ -1329,6 +1329,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define IS_SLOCK 4
 #define IS_WLOCK 8
 #define FIND_CDEAD 16
+#define FIND_BULKDEAD 32
 
 /* values for adown value of afs_LoopServers */
 #define AFS_LS_UP 0

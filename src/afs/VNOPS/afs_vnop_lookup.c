@@ -816,7 +816,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 130);
-		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK /* no stats | LRU */ );
+		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK|FIND_BULKDEAD /* no stats | LRU */ );
 		if (tvcp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(tvcp);
