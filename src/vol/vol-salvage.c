@@ -3051,7 +3051,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    Log("FOUND suid/sgid file: %s" OS_DIRSEP "%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (/* ShowMounts && */ (vnodeEssence->type == vSymlink)
 	    && !(vnodeEssence->modeBits & 0111)) {
-	    ssize_t nBytes;
+	    afs_sfsize_t nBytes;
 	    afs_sfsize_t size;
 	    char buf[1025];
 	    IHandle_t *ihP;
@@ -3913,7 +3913,7 @@ SalvageVolume(struct InodeSummary *rwIsp, IHandle_t * alinkH)
      * will get removed here also (if requested).
      */
     for (class = 0; class < nVNODECLASSES; class++) {
-	int nVnodes = vnodeInfo[class].nVnodes;
+	afs_sfsize_t nVnodes = vnodeInfo[class].nVnodes;
 	struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
 	struct VnodeEssence *vnodes = vnodeInfo[class].vnodes;
 	FilesInVolume += vnodeInfo[class].nAllocatedVnodes;
