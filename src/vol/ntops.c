@@ -376,5 +376,7 @@ nt_DriveToDev(char *drive)
 	dev = toupper(*drive) - 'A';
     if ((dev < 2) || (dev > 25))
 	return -1;
+
+    return dev;
 }
 #endif
