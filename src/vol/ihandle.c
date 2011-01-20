@@ -870,6 +870,7 @@ ih_reallyclose(IHandle_t * ihP)
     ihP->ih_refcnt++;   /* must not disappear over unlock */
     if (ihP->ih_synced) {
 	FdHandle_t *fdP;
+        ihP->ih_synced = 0;
 	IH_UNLOCK;
 
 	fdP = IH_OPEN(ihP);
@@ -882,7 +883,6 @@ ih_reallyclose(IHandle_t * ihP)
     }
 
     osi_Assert(ihP->ih_refcnt > 0);
-    ihP->ih_synced = 0;
 
     ih_fdclose(ihP);
 
