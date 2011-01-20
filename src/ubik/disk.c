@@ -57,7 +57,6 @@ static int calls = 0, ios = 0, lastb = 0;
 static char *BufferData;
 static struct buffer *newslot(struct ubik_dbase *adbase, afs_int32 afid,
 			      afs_int32 apage);
-static int initd = 0;
 #define	BADFID	    0xffffffff
 
 static int DTrunc(struct ubik_trans *atrans, afs_int32 fid, afs_int32 length);
@@ -247,8 +246,8 @@ udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
     return 0;
 }
 
-static int
-DInit(int abuffers)
+int
+udisk_Init(int abuffers)
 {
     /* Initialize the venus buffer system. */
     int i;
@@ -847,11 +846,6 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
     struct ubik_trans *tt;
 
     *atrans = (struct ubik_trans *)NULL;
-    /* Make sure system is initialized before doing anything */
-    if (!initd) {
-	initd = 1;
-	DInit(ubik_nBuffers);
-    }
     if (atype == UBIK_WRITETRANS) {
 	if (adbase->flags & DBWRITING)
 	    return USYNC;

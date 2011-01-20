@@ -423,6 +423,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     if (code < 0)
 	return code;
 
+    udisk_Init(ubik_nBuffers);
+
     ubik_callPortal = myPort;
     /* try to get an additional security object */
     ubik_sc[0] = rxnull_NewServerSecurityObject();
