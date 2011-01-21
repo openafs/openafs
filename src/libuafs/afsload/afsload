@@ -1,0 +1,63 @@
+#!/bin/bash
+
+ALDIR="/usr/local/lib/afsload"
+ALCHECK="$ALDIR/afsload_check.pl"
+ALRUN="$ALDIR/afsload_run.pl"
+ALPERL="perl -I$ALDIR/perl"
+
+if [ "x$MPIRUN" = "x" ] ; then
+	MPIRUN="mpirun"
+fi
+if [ "x$LIBMPI" = "x" ] ; then
+	LIBMPI="/usr/lib/libmpi.so"
+fi
+
+usage() {
+	echo "Usage: $0 [-q] -p <nprocs> -t <test.conf>" >&2
+	echo -e "\t-q\tquiet/quick (do not test conf consistency)" >&2
+	echo -e "\t-p\tnumber of nodes/processes to run" >&2
+	echo -e "\t-t\ttest configuration" >&2
+	echo >&2
+	exit 1
+}
+
+while getopts qp:t: opt ; do
+	case "$opt" in
+	q)	quiet=1;;
+	p)	procs="$OPTARG";;
+	t)	conf="$OPTARG";;
+	[?])	usage;;
+	esac
+done
+
+if [ "x$procs" = "x" ] || [ "x$conf" = "x" ] ; then
+	usage
+fi
+
+procs=$((procs + 1))
+
+if [ "x$quiet" = "x" ] ; then
+	if $ALPERL "$ALCHECK" -p "$procs" "$conf" ; then
+		:
+	else
+		exit 2
+	fi
+fi
+
+if which "$MPIRUN" >/dev/null 2>&1 ; then
+	:
+else
+	echo >&2
+	echo "Cannot find $MPIRUN; set the MPIRUN environment variable to " >&2
+	echo "the mpirun command we should use." >&2
+	exit 1
+fi
+
+if [ ! -f "$LIBMPI" ] ; then
+	echo >&2
+	echo "Cannot find $LIBMPI; set the LIBMPI environment variable to " >&2
+	echo "the libmpi.so that we should run against." >&2
+	exit 1
+fi
+
+"$MPIRUN" -np "$procs" /bin/sh -c "LD_PRELOAD=$LIBMPI $ALPERL $ALRUN $conf"
