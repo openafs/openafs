@@ -712,6 +712,7 @@ case $AFS_SYSNAME in
     *_obsd44)   AFS_PARAM_COMMON=param.obsd44.h  ;;
     *_obsd45)   AFS_PARAM_COMMON=param.obsd45.h  ;;
     *_obsd46)   AFS_PARAM_COMMON=param.obsd46.h  ;;
+    *_obsd47)   AFS_PARAM_COMMON=param.obsd47.h  ;;
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
