@@ -684,6 +684,12 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
         if (dep->flag != CM_DIR_FFIRST ||
             strlen(dep->name) > 256) {
             code = CM_ERROR_INVAL;
+            osi_Log2(afsd_logp,
+                     "cm_ApplyDir invalid directory entry for scp %p bufp %p",
+                     scp, bufferp);
+            osi_Log4(afsd_logp,"... cell %u vol %u vnode %u uniq %u",
+                     scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+            bufferp->dataVersion = CM_BUF_VERSION_BAD;
             break;
         }
 
