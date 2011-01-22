@@ -411,7 +411,7 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR; i++)
 	aparm->interfaceAddr[i] = ntohl(ubik_host[i]);
 
-    aparm->amSyncSite = ubik_amSyncSite;
+    aparm->amSyncSite = beacon_globals.ubik_amSyncSite;
     ubeacon_Debug(aparm);
 
     udisk_Debug(aparm);
@@ -494,7 +494,7 @@ SVOTE_DebugOld(struct rx_call * rxcall,
     aparm->syncHost = ntohl(syncHost);
     aparm->syncTime = syncTime;
 
-    aparm->amSyncSite = ubik_amSyncSite;
+    aparm->amSyncSite = beacon_globals.ubik_amSyncSite;
     ubeacon_Debug((ubik_debug *)aparm);
 
     udisk_Debug((ubik_debug *)aparm);

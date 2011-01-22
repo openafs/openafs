@@ -480,16 +480,20 @@ urecovery_Interact(void *dummy)
 #endif
 
 	    for (ts = ubik_servers, doingRPC = 0; ts; ts = ts->next) {
+		UBIK_BEACON_LOCK;
 		if (!ts->up) {
+		    UBIK_BEACON_UNLOCK;
 		    doingRPC = 1;
 		    code = DoProbe(ts);
 		    if (code == 0) {
+			UBIK_BEACON_LOCK;
 			ts->up = 1;
 			urecovery_state &= ~UBIK_RECFOUNDDB;
 		    }
 		} else if (!ts->currentDB) {
 		    urecovery_state &= ~UBIK_RECFOUNDDB;
 		}
+		UBIK_BEACON_UNLOCK;
 	    }
 
 #ifdef AFS_PTHREAD_ENV
@@ -516,8 +520,12 @@ urecovery_Interact(void *dummy)
 	    bestDBVersion.epoch = 0;
 	    bestDBVersion.counter = 0;
 	    for (ts = ubik_servers; ts; ts = ts->next) {
-		if (!ts->up)
+		UBIK_BEACON_LOCK;
+		if (!ts->up) {
+		    UBIK_BEACON_UNLOCK;
 		    continue;	/* don't bother with these guys */
+		}
+		UBIK_BEACON_UNLOCK;
 		if (ts->isClone)
 		    continue;
 		code = DISK_GetVersion(ts->disk_rxcid, &ts->version);
@@ -754,12 +762,15 @@ urecovery_Interact(void *dummy)
 
 	    for (ts = ubik_servers; ts; ts = ts->next) {
 		inAddr.s_addr = ts->addr[0];
+		UBIK_BEACON_LOCK;
 		if (!ts->up) {
+		    UBIK_BEACON_UNLOCK;
 		    ubik_dprint("recovery cannot send version to %s\n",
 				afs_inet_ntoa_r(inAddr.s_addr, hoststr));
 		    dbok = 0;
 		    continue;
 		}
+		UBIK_BEACON_UNLOCK;
 		ubik_dprint("recovery sending version to %s\n",
 			    afs_inet_ntoa_r(inAddr.s_addr, hoststr));
 		if (vcmp(ts->version, ubik_dbase->version) != 0) {

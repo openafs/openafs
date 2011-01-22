@@ -149,8 +149,10 @@ ContactQuorum_iterate(struct ubik_trans *atrans, int aflags, struct ubik_server 
 	    *conn = NULL;
 	    if (code) {		/* failure */
 		*rcode = code;
+		UBIK_BEACON_LOCK;
 		(*ts)->up = 0;		/* mark as down now; beacons will no longer be sent */
 		(*ts)->beaconSinceDown = 0;
+		UBIK_BEACON_UNLOCK;
 		(*ts)->currentDB = 0;
 		urecovery_LostServer(*ts);	/* tell recovery to try to resend dbase later */
 	    } else {		/* success */
@@ -165,10 +167,13 @@ ContactQuorum_iterate(struct ubik_trans *atrans, int aflags, struct ubik_server 
     }
     if (!(*ts))
 	return 1;
+    UBIK_BEACON_LOCK;
     if (!(*ts)->up || !(*ts)->currentDB) {
+	UBIK_BEACON_UNLOCK;
 	(*ts)->currentDB = 0;	/* db is no longer current; we just missed an update */
 	return 0;		/* not up-to-date, don't bother.  NULL conn will tell caller not to use */
     }
+    UBIK_BEACON_UNLOCK;
     *conn = Quorum_StartIO(atrans, *ts);
     return 0;
 }
@@ -400,6 +405,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));
 #ifdef AFS_PTHREAD_ENV
     MUTEX_INIT(&tdb->versionLock, "version lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&beacon_globals.beacon_lock, "beacon lock", MUTEX_DEFAULT, 0);
 #else
     Lock_Init(&tdb->versionLock);
 #endif
@@ -867,7 +873,9 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 	    break;
 	}
 	for (ts = ubik_servers; ts; ts = ts->next) {
+	    UBIK_BEACON_LOCK;
 	    if (!ts->beaconSinceDown && now <= ts->lastBeaconSent + BIGTIME) {
+		UBIK_BEACON_UNLOCK;
 
 		/* this guy could have some damaged data, wait for him */
 		code = 1;
@@ -887,6 +895,7 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 
 		break;
 	    }
+	    UBIK_BEACON_UNLOCK;
 	}
 	if (code == 0)
 	    break;		/* no down ones still pseudo-active */
