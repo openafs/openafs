@@ -66,13 +66,6 @@
 #include <strings.h>
 #endif
 
-#ifdef O_LARGEFILE
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
-
 /* Note:  the volume creation functions herein leave the destroyMe flag in the
    volume header ON:  this means that the volumes will not be attached by the
    file server and WILL BE DESTROYED the next time a system salvage is performed */
@@ -717,17 +710,17 @@ _VHandleVolumeHeader(struct DiskPartition64 *dp, VWalkVolFunc volfunc,
                      int locked, void *rock)
 {
     int error = 0;
-    int fd;
+    FD_t fd;
 
-    if ((fd = afs_open(name, O_RDONLY)) == -1
-        || read(fd, hdr, sizeof(*hdr))
+    if ((fd = OS_OPEN(name, O_RDONLY, 0)) == INVALID_FD
+        || OS_READ(fd, hdr, sizeof(*hdr))
         != sizeof(*hdr)
         || hdr->stamp.magic != VOLUMEHEADERMAGIC) {
         error = 1;
     }
 
-    if (fd >= 0) {
-	close(fd);
+    if (fd != INVALID_FD) {
+	OS_CLOSE(fd);
     }
 
 #ifdef AFSFS_DEMAND_ATTACH_FS
