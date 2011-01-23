@@ -22,10 +22,10 @@ extern char *PrintInode(char *, Inode);
 #endif
 
 /* Basic file operations */
-extern FD_t nt_open(char *name, int flags, int mode);
+extern FD_t nt_open(const char *name, int flags, int mode);
 extern int nt_close(FD_t fd);
-extern int nt_write(FD_t fd, char *buf, afs_sfsize_t size);
-extern int nt_read(FD_t fd, char *buf, afs_sfsize_t size);
+extern int nt_write(FD_t fd, void *buf, afs_sfsize_t size);
+extern int nt_read(FD_t fd, void *buf, afs_sfsize_t size);
 extern int nt_pread(FD_t fd, void * buf, afs_sfsize_t count, afs_foff_t offset);
 extern int nt_pwrite(FD_t fd, const void * buf, afs_sfsize_t count, afs_foff_t offset);
 extern afs_sfsize_t nt_size(FD_t fd);
