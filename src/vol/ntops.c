@@ -75,7 +75,7 @@ nt_unlink(char *name)
  *	the handle or -1 on error.
  */
 FD_t
-nt_open(char *name, int flags, int mode)
+nt_open(const char *name, int flags, int mode)
 {
     HANDLE fh;
     DWORD nt_access = 0;
@@ -140,12 +140,12 @@ nt_close(FD_t fd)
 }
 
 int
-nt_write(FD_t fd, char *buf, afs_sfsize_t size)
+nt_write(FD_t fd, void *buf, afs_sfsize_t size)
 {
     BOOL code;
     DWORD nbytes;
 
-    code = WriteFile((HANDLE) fd, (void *)buf, (DWORD) size, &nbytes, NULL);
+    code = WriteFile((HANDLE) fd, buf, (DWORD) size, &nbytes, NULL);
 
     if (!code) {
 	errno = nterr_nt2unix(GetLastError(), EBADF);
@@ -180,12 +180,12 @@ nt_pwrite(FD_t fd, const void * buf, afs_sfsize_t count, afs_foff_t offset)
 }
 
 int
-nt_read(FD_t fd, char *buf, afs_sfsize_t size)
+nt_read(FD_t fd, void *buf, afs_sfsize_t size)
 {
     BOOL code;
     DWORD nbytes;
 
-    code = ReadFile((HANDLE) fd, (void *)buf, (DWORD) size, &nbytes, NULL);
+    code = ReadFile((HANDLE) fd, buf, (DWORD) size, &nbytes, NULL);
 
     if (!code) {
         DWORD gle = GetLastError();

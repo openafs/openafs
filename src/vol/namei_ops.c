@@ -2739,7 +2739,7 @@ convertVolumeInfo(FD_t fdr, FD_t fdw, afs_uint32 vid)
     struct VolumeDiskData vd;
     char *p;
 
-    if (OS_READ(fdr, (char *)&vd, sizeof(struct VolumeDiskData)) !=
+    if (OS_READ(fdr, &vd, sizeof(struct VolumeDiskData)) !=
 	sizeof(struct VolumeDiskData)) {
 	Log("1 convertVolumeInfo: read failed for %lu with code %d\n",
 	    afs_printable_uint32_lu(vid),
@@ -2758,7 +2758,7 @@ convertVolumeInfo(FD_t fdr, FD_t fdw, afs_uint32 vid)
     if (p && !strcmp(p, ".readonly")) {
 	memset(p, 0, 9);
     }
-    if (OS_WRITE(fdw, (char *)&vd, sizeof(struct VolumeDiskData)) !=
+    if (OS_WRITE(fdw, &vd, sizeof(struct VolumeDiskData)) !=
 	sizeof(struct VolumeDiskData)) {
 	Log("1 convertVolumeInfo: write failed for %lu with code %d\n",
 	    afs_printable_uint32_lu(vid),
