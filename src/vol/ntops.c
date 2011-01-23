@@ -119,7 +119,6 @@ nt_open(char *name, int flags, int mode)
 	break;
     }
 
-  retry:
     fh = CreateFile(name, nt_access, nt_share, NULL, nt_create, FandA, NULL);
     if (fh == INVALID_HANDLE_VALUE) {
         DWORD gle = GetLastError();
