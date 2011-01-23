@@ -457,35 +457,31 @@ int
 SameDisk(struct DiskPartition64 *p1, struct DiskPartition64 *p2)
 {
 #define RES_LEN 256
-    char res[RES_LEN];
-    int d1, d2;
+    char res1[RES_LEN];
+    char res2[RES_LEN];
+
     static int dowarn = 1;
 
-    if (!QueryDosDevice(p1->devName, res, RES_LEN - 1))
+    if (!QueryDosDevice(p1->devName, res1, RES_LEN - 1))
 	return 1;
-    if (strncmp(res, HDSTR, HDLEN)) {
+    if (strncmp(res1, HDSTR, HDLEN)) {
 	if (dowarn) {
 	    dowarn = 0;
 	    Log("WARNING: QueryDosDevice is returning %s, not %s for %s\n",
-		res, HDSTR, p1->devName);
+		res1, HDSTR, p1->devName);
 	}
-	return 1;
     }
-    d1 = atoi(&res[HDLEN]);
-
-    if (!QueryDosDevice(p2->devName, res, RES_LEN - 1))
+    if (!QueryDosDevice(p2->devName, res2, RES_LEN - 1))
 	return 1;
-    if (strncmp(res, HDSTR, HDLEN)) {
+    if (strncmp(res2, HDSTR, HDLEN)) {
 	if (dowarn) {
 	    dowarn = 0;
 	    Log("WARNING: QueryDosDevice is returning %s, not %s for %s\n",
-		res, HDSTR, p2->devName);
+		res2, HDSTR, p2->devName);
 	}
-	return 1;
     }
-    d2 = atoi(&res[HDLEN]);
 
-    return d1 == d2;
+    return (0 == _strnicmp(res1, res2, RES_LEN - 1));
 }
 #else
 #define SameDisk(P1, P2) ((P1)->device/PartsPerDisk == (P2)->device/PartsPerDisk)
