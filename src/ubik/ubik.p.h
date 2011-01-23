@@ -393,6 +393,24 @@ struct vote_data {
 #define UBIK_VOTE_LOCK MUTEX_ENTER(&vote_globals.vote_lock)
 #define UBIK_VOTE_UNLOCK MUTEX_EXIT(&vote_globals.vote_lock)
 
+/*!
+ * \brief Server address data.  All values are protected by addr_lock
+ *
+ * This lock also protects:
+ *     ubik_server: addr[], vote_rxcid, disk_rxcid
+ *
+ */
+struct addr_data {
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t addr_lock;
+#endif
+    afs_int32 ubikSecIndex;
+    struct rx_securityClass *ubikSecClass;
+};
+
+#define UBIK_ADDR_LOCK MUTEX_ENTER(&addr_globals.addr_lock)
+#define UBIK_ADDR_UNLOCK MUTEX_EXIT(&addr_globals.addr_lock)
+
 /* phys.c */
 extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid,
 		      struct ubik_stat *astat);
@@ -477,6 +495,7 @@ extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
 extern int ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[]);
 extern void *ubeacon_Interact(void *);
 extern struct beacon_data beacon_globals;
+extern struct addr_data addr_globals;
 
 /*\}*/
 

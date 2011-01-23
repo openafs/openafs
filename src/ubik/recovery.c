@@ -528,7 +528,9 @@ urecovery_Interact(void *dummy)
 		UBIK_BEACON_UNLOCK;
 		if (ts->isClone)
 		    continue;
+		UBIK_ADDR_LOCK;
 		code = DISK_GetVersion(ts->disk_rxcid, &ts->version);
+		UBIK_ADDR_UNLOCK;
 		if (code == 0) {
 		    /* perhaps this is the best version */
 		    if (vcmp(ts->version, bestDBVersion) > 0) {
@@ -571,10 +573,12 @@ urecovery_Interact(void *dummy)
 	    /* Rx code to do the Bulk fetch */
 	    file = 0;
 	    offset = 0;
+	    UBIK_ADDR_LOCK;
 	    rxcall = rx_NewCall(bestServer->disk_rxcid);
 
 	    ubik_print("Ubik: Synchronize database with server %s\n",
 		       afs_inet_ntoa_r(bestServer->addr[0], hoststr));
+	    UBIK_ADDR_UNLOCK;
 
 	    code = StartDISK_GetFile(rxcall, file);
 	    if (code) {
@@ -761,7 +765,9 @@ urecovery_Interact(void *dummy)
 	    }
 
 	    for (ts = ubik_servers; ts; ts = ts->next) {
+		UBIK_ADDR_LOCK;
 		inAddr.s_addr = ts->addr[0];
+		UBIK_ADDR_UNLOCK;
 		UBIK_BEACON_LOCK;
 		if (!ts->up) {
 		    UBIK_BEACON_UNLOCK;
@@ -781,7 +787,9 @@ urecovery_Interact(void *dummy)
 		    if (!code) {
 			length = ubikstat.size;
 			file = offset = 0;
+			UBIK_ADDR_LOCK;
 			rxcall = rx_NewCall(ts->disk_rxcid);
+			UBIK_ADDR_UNLOCK;
 			code =
 			    StartDISK_SendFile(rxcall, file, length,
 					       &ubik_dbase->version);
@@ -848,14 +856,13 @@ DoProbe(struct ubik_server *server)
     afs_uint32 addr;
     char buffer[32];
     char hoststr[16];
-    extern afs_int32 ubikSecIndex;
-    extern struct rx_securityClass *ubikSecClass;
 
+    UBIK_ADDR_LOCK;
     for (i = 0; (addr = server->addr[i]) && (i < UBIK_MAX_INTERFACE_ADDR);
 	 i++) {
 	conns[i] =
 	    rx_NewConnection(addr, ubik_callPortal, DISK_SERVICE_ID,
-			     ubikSecClass, ubikSecIndex);
+			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 
 	/* user requirement to use only the primary interface */
 	if (ubikPrimaryAddrOnly) {
@@ -863,6 +870,7 @@ DoProbe(struct ubik_server *server)
 	    break;
 	}
     }
+    UBIK_ADDR_UNLOCK;
     osi_Assert(i);			/* at least one interface address for this server */
 
 #ifdef AFS_PTHREAD_ENV
@@ -883,6 +891,7 @@ DoProbe(struct ubik_server *server)
 #endif
 
     if (success_i >= 0) {
+	UBIK_ADDR_LOCK;
 	addr = server->addr[success_i];	/* successful interface addr */
 
 	if (server->disk_rxcid)	/* destroy existing conn */
@@ -893,14 +902,15 @@ DoProbe(struct ubik_server *server)
 	/* make new connections */
 	server->disk_rxcid = conns[success_i];
 	server->vote_rxcid = rx_NewConnection(addr, ubik_callPortal,
-	                                      VOTE_SERVICE_ID, ubikSecClass,
-	                                      ubikSecIndex);
+	                                      VOTE_SERVICE_ID, addr_globals.ubikSecClass,
+	                                      addr_globals.ubikSecIndex);
 
 	connSuccess = conns[success_i];
 	strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
 
 	ubik_print("ubik:server %s is back up: will be contacted through %s\n",
 	     buffer, afs_inet_ntoa_r(addr, hoststr));
+	UBIK_ADDR_UNLOCK;
     }
 
     /* Destroy all connections except the one on which we succeeded */

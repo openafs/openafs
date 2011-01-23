@@ -50,6 +50,9 @@ static void * securityRock = NULL;
 afs_int32 ubikSecIndex;
 struct rx_securityClass *ubikSecClass;
 
+/* Values protected by the address lock */
+struct addr_data addr_globals;
+
 /* Values protected by the beacon lock */
 struct beacon_data beacon_globals;
 
@@ -172,22 +175,23 @@ ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[])
     return code;
 }
 
+/* Must be called with address lock held */
 void
 ubeacon_InitSecurityClass(void)
 {
     int i;
     /* get the security index to use, if we can */
     if (secLayerProc) {
-	i = (*secLayerProc) (securityRock, &ubikSecClass, &ubikSecIndex);
+	i = (*secLayerProc) (securityRock, &addr_globals.ubikSecClass, &addr_globals.ubikSecIndex);
     } else if (ubik_CRXSecurityProc) {
-	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &ubikSecClass,
-				     &ubikSecIndex);
+	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &addr_globals.ubikSecClass,
+				     &addr_globals.ubikSecIndex);
     } else
 	i = 1;
     if (i) {
 	/* don't have sec module yet */
-	ubikSecIndex = 0;
-	ubikSecClass = rxnull_NewClientSecurityObject();
+	addr_globals.ubikSecIndex = 0;
+	addr_globals.ubikSecClass = rxnull_NewClientSecurityObject();
     }
 }
 
@@ -198,11 +202,12 @@ ubeacon_ReinitServer(struct ubik_server *ts)
 	struct rx_connection *disk_rxcid;
 	struct rx_connection *vote_rxcid;
 	struct rx_connection *tmp;
+	UBIK_ADDR_LOCK;
 	ubeacon_InitSecurityClass();
 	disk_rxcid =
 	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->disk_rxcid)),
 			     ubik_callPortal, DISK_SERVICE_ID,
-			     ubikSecClass, ubikSecIndex);
+			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	if (disk_rxcid) {
 	    tmp = ts->disk_rxcid;
 	    ts->disk_rxcid = disk_rxcid;
@@ -211,12 +216,13 @@ ubeacon_ReinitServer(struct ubik_server *ts)
 	vote_rxcid =
 	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)),
 			     ubik_callPortal, VOTE_SERVICE_ID,
-			     ubikSecClass, ubikSecIndex);
+			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	if (vote_rxcid) {
 	    tmp = ts->vote_rxcid;
 	    ts->vote_rxcid = vote_rxcid;
 	    rx_PutConnection(tmp);
 	}
+	UBIK_ADDR_UNLOCK;
     }
 }
 
@@ -300,12 +306,12 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ts->vote_rxcid =
 		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
 				 ubik_callPortal, VOTE_SERVICE_ID,
-				 ubikSecClass, ubikSecIndex);
+				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    /* for disk reqs */
 	    ts->disk_rxcid =
 		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
 				 ubik_callPortal, DISK_SERVICE_ID,
-				 ubikSecClass, ubikSecIndex);
+				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    ts->up = 1;
 	}
     } else {
@@ -318,8 +324,10 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
 	    ts->addr[0] = servAddr;	/* primary address in  net byte order */
-	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, VOTE_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for vote reqs */
-	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, DISK_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for disk reqs */
+	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, VOTE_SERVICE_ID,
+			addr_globals.ubikSecClass, addr_globals.ubikSecIndex);	/* for vote reqs */
+	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, DISK_SERVICE_ID,
+			addr_globals.ubikSecClass, addr_globals.ubikSecIndex);	/* for disk reqs */
 	    ts->isClone = 0;	/* don't know about clones */
 	    ts->up = 1;
 	    if (ntohl((afs_uint32) servAddr) < (afs_uint32) magicHost) {
@@ -425,12 +433,14 @@ ubeacon_Interact(void *dummy)
 	 * prepare to send them an r multi-call containing the beacon message */
 	i = 0;			/* collect connections */
 	UBIK_BEACON_LOCK;
+	UBIK_ADDR_LOCK;
 	for (ts = ubik_servers; ts; ts = ts->next) {
 	    if (ts->up && ts->addr[0] != ubik_host[0]) {
 		servers[i] = ts;
 		connections[i++] = ts->vote_rxcid;
 	    }
 	}
+	UBIK_ADDR_UNLOCK;
 	UBIK_BEACON_UNLOCK;
 	servers[i] = (struct ubik_server *)0;	/* end of list */
 	/* note that we assume in the vote module that we'll always get at least BIGTIME
@@ -721,10 +731,12 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
     char buffer[32];
     char hoststr[16];
 
+    UBIK_ADDR_LOCK;
     for (count = 0, ts = ubik_servers; ts; count++, ts = ts->next) {
 	conns[count] = ts->disk_rxcid;
 	server[count] = ts;
     }
+    UBIK_ADDR_UNLOCK;
 
 
     /* inform all other servers only if there are more than one
@@ -741,6 +753,7 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	    multi_DISK_UpdateInterfaceAddr(&inAddr, &outAddr);
 	    ts = server[multi_i];	/* reply received from this server */
 	    if (!multi_error) {
+		UBIK_ADDR_LOCK;
 		if (ts->addr[0] != htonl(outAddr.hostAddr[0])) {
 		    code = UBADHOST;
 		    strcpy(buffer, afs_inet_ntoa_r(ts->addr[0], hoststr));
@@ -751,15 +764,20 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		    for (j = 1; j < UBIK_MAX_INTERFACE_ADDR; j++)
 			ts->addr[j] = htonl(outAddr.hostAddr[j]);
 		}
+		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == RXGEN_OPCODE) {	/* pre 3.5 remote server */
+		UBIK_ADDR_LOCK;
 		ubik_print
 		    ("ubik server %s does not support UpdateInterfaceAddr RPC\n",
 		     afs_inet_ntoa_r(ts->addr[0], hoststr));
+		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == UBADHOST) {
 		code = UBADHOST;	/* remote CellServDB inconsistency */
 		ubik_print("Inconsistent Cell Info on server: ");
+		UBIK_ADDR_LOCK;
 		for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
 		    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[j], hoststr));
+		UBIK_ADDR_UNLOCK;
 		ubik_print("\n");
 	    } else {
 		UBIK_BEACON_LOCK;
