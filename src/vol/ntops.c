@@ -321,15 +321,30 @@ nt_fsync(FD_t fd)
 
 
 int
-nt_seek(FD_t fd, afs_foff_t off, int where)
+nt_seek(FD_t fd, afs_foff_t off, int whence)
 {
     int code;
     LARGE_INTEGER offset;
+    int where;
 
+    if (SEEK_SET == whence) {
+	where = FILE_BEGIN;
+    } else if (SEEK_END == whence) {
+	where = FILE_END;
+    } else if (SEEK_CUR == whence) {
+	where = FILE_CURRENT;
+    } else {
+	errno = EINVAL;
+	return -1;
+    }
     offset.QuadPart = off;
 
     code = SetFilePointerEx(fd, offset, NULL, where);
-    return code;
+    if (0 == code) {
+	errno = nterr_nt2unix(GetLastError(), EBADF);
+	return -1;
+    }
+    return 0;
 }
 
 /* nt_DevToDrive
