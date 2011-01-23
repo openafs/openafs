@@ -406,6 +406,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 #ifdef AFS_PTHREAD_ENV
     MUTEX_INIT(&tdb->versionLock, "version lock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&beacon_globals.beacon_lock, "beacon lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&vote_globals.vote_lock, "vote lock", MUTEX_DEFAULT, 0);
 #else
     Lock_Init(&tdb->versionLock);
 #endif

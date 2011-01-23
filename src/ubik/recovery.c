@@ -119,7 +119,7 @@ urecovery_AllBetter(struct ubik_dbase *adbase, int areadAny)
      * that the sync site is still the sync site, 'cause it won't talk
      * to us until a timeout period has gone by.  When we recover, we
      * leave this clear until we get a new dbase */
-    else if ((uvote_GetSyncSite() && (vcmp(ubik_dbVersion, ubik_dbase->version) == 0))) {	/* && order is important */
+    else if ((uvote_GetSyncSite() && uvote_eq_dbVersion(ubik_dbase->version))) {	/* && order is important */
 	rcode = 1;
     }
 

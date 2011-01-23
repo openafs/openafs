@@ -343,7 +343,6 @@ extern struct ubik_stats {	/* random stats */
 extern afs_int32 ubik_epochTime;	/* time when this site started */
 extern afs_int32 urecovery_state;	/* sync site recovery process state */
 extern struct ubik_trans *ubik_currentTrans;	/* current trans */
-extern struct ubik_version ubik_dbVersion;	/* sync site's dbase version */
 extern afs_int32 ubik_debugFlag;	/* ubik debug flag */
 extern int ubikPrimaryAddrOnly;	/* use only primary address */
 
@@ -368,6 +367,31 @@ struct beacon_data {
 
 #define UBIK_BEACON_LOCK MUTEX_ENTER(&beacon_globals.beacon_lock)
 #define UBIK_BEACON_UNLOCK MUTEX_EXIT(&beacon_globals.beacon_lock)
+
+/*!
+ * \brief Global vote data.  All values are protected by vote_lock
+ */
+struct vote_data {
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t vote_lock;
+#endif
+    struct ubik_version ubik_dbVersion;	/* sync site's dbase version */
+    struct ubik_tid ubik_dbTid;		/* sync site's tid, or 0 if none */
+    /* Used by all sites in nominating new sync sites */
+    afs_int32 ubik_lastYesTime;		/* time we sent the last yes vote */
+    afs_uint32 lastYesHost;		/* host to which we sent yes vote */
+    /* Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
+    afs_int32 lastYesClaim;
+    int lastYesState;			/* did last site we voted for claim to be sync site? */
+    /* Used to guarantee that nomination process doesn't loop */
+    afs_int32 lowestTime;
+    afs_uint32 lowestHost;
+    afs_int32 syncTime;
+    afs_int32 syncHost;
+};
+
+#define UBIK_VOTE_LOCK MUTEX_ENTER(&vote_globals.vote_lock)
+#define UBIK_VOTE_UNLOCK MUTEX_EXIT(&vote_globals.vote_lock)
 
 /* phys.c */
 extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid,
@@ -495,6 +519,9 @@ extern void ubik_dprint(const char *format, ...)
 
 extern void ubik_dprint_25(const char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern struct vote_data vote_globals;
+extern void uvote_set_dbVersion(struct ubik_version);
+extern int uvote_eq_dbVersion(struct ubik_version);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */

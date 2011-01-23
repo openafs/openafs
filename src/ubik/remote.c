@@ -95,7 +95,7 @@ SDISK_Commit(struct rx_call *rxcall, struct ubik_tid *atid)
     code = udisk_commit(ubik_currentTrans);
     if (code == 0) {
 	/* sync site should now match */
-	ubik_dbVersion = ubik_dbase->version;
+	uvote_set_dbVersion(ubik_dbase->version);
     }
     DBRELE(dbase);
     ReleaseWriteLock(&dbase->cache_lock);
@@ -711,12 +711,11 @@ SDISK_SetVersion(struct rx_call *rxcall, struct ubik_tid *atid,
     }
 
     /* Set the label if its version matches the sync-site's */
-    if ((oldversionp->epoch == ubik_dbVersion.epoch)
-	&& (oldversionp->counter == ubik_dbVersion.counter)) {
+    if (uvote_eq_dbVersion(*oldversionp)) {
 	code = (*dbase->setlabel) (ubik_dbase, 0, newversionp);
 	if (!code) {
 	    ubik_dbase->version = *newversionp;
-	    ubik_dbVersion = *newversionp;
+	    uvote_set_dbVersion(*newversionp);
 	}
     } else {
 	code = USYNC;

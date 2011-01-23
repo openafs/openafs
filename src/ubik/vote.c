@@ -86,26 +86,8 @@
 
 afs_int32 ubik_debugFlag = 0;	/*!< print out debugging messages? */
 
-/*! \name these statics are used by all sites in nominating new sync sites */
-afs_int32 ubik_lastYesTime = 0;	/*!< time we sent the last \b yes vote */
-static afs_uint32 lastYesHost = 0xffffffff;	/*!< host to which we sent \b yes vote */
-/*\}*/
-/*! \name Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
-static afs_int32 lastYesClaim = 0;
-static int lastYesState = 0;	/*!< did last site we voted for claim to be sync site? */
-/*\}*/
+struct vote_data vote_globals;
 
-/*! \name used to guarantee that nomination process doesn't loop */
-static afs_int32 lowestTime = 0;
-static afs_uint32 lowestHost = 0xffffffff;
-static afs_int32 syncTime = 0;
-static afs_int32 syncHost = 0;
-/*\}*/
-
-/*! \name used to remember which dbase version is the one at the sync site (for non-sync sites) */
-struct ubik_version ubik_dbVersion;	/*!< sync site's dbase version */
-struct ubik_tid ubik_dbTid;	/*!< sync site's tid, or 0 if none */
-/*\}*/
 
 /*!
  * \brief Decide if we should try to become sync site.
@@ -123,16 +105,24 @@ int
 uvote_ShouldIRun(void)
 {
     afs_int32 now;
+    int code = 1; /* default to yes */
 
+    UBIK_VOTE_LOCK;
     now = FT_ApproxTime();
-    if (BIGTIME + ubik_lastYesTime < now)
-	return 1;		/* no valid guy even trying */
-    if (lastYesState && lastYesHost != ubik_host[0])
-	return 0;		/* other guy is sync site, leave him alone */
-    if (ntohl((afs_uint32) lastYesHost) < ntohl((afs_uint32) ubik_host[0]))
-	return 0;		/* if someone is valid and better than us, don't run */
-    /* otherwise we should run */
-    return 1;
+    if (BIGTIME + vote_globals.ubik_lastYesTime < now)
+	goto done;
+    if (vote_globals.lastYesState && vote_globals.lastYesHost != ubik_host[0]) {
+	code = 0;		/* other guy is sync site, leave him alone */
+	goto done;
+    }
+    if (ntohl((afs_uint32)vote_globals.lastYesHost) < ntohl((afs_uint32)ubik_host[0])) {
+	code = 0;		/* if someone is valid and better than us, don't run */
+	goto done;
+    }
+
+done:
+    UBIK_VOTE_UNLOCK;
+    return code;
 }
 
 /*!
@@ -157,15 +147,17 @@ uvote_GetSyncSite(void)
     afs_int32 now;
     afs_int32 code;
 
-    if (!lastYesState)
+    UBIK_VOTE_LOCK;
+    if (!vote_globals.lastYesState)
 	code = 0;
     else {
 	now = FT_ApproxTime();
-	if (SMALLTIME + lastYesClaim < now)
+	if (SMALLTIME + vote_globals.lastYesClaim < now)
 	    code = 0;		/* last guy timed out */
 	else
-	    code = lastYesHost;
+	    code = vote_globals.lastYesHost;
     }
+    UBIK_VOTE_UNLOCK;
     return code;
 }
 
@@ -191,7 +183,6 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
     int isClone = 0;
     char hoststr[16];
 
-    now = FT_ApproxTime();	/* close to current time */
     if (rxcall) {		/* caller's host */
 	aconn = rx_ConnectionOf(rxcall);
 	rxp = rx_PeerOf(aconn);
@@ -240,11 +231,13 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
      * lower than them, 'cause we know we're up. */
     /* But do not consider clones for lowesHost since they never may become
      * sync site */
+    UBIK_VOTE_LOCK;
+    now = FT_ApproxTime();	/* close to current time */
     if (!isClone
-	&& (ntohl((afs_uint32) otherHost) <= ntohl((afs_uint32) lowestHost)
-	    || lowestTime + BIGTIME < now)) {
-	lowestTime = now;
-	lowestHost = otherHost;
+	&& (ntohl((afs_uint32)otherHost) <= ntohl((afs_uint32)vote_globals.lowestHost)
+	    || vote_globals.lowestTime + BIGTIME < now)) {
+	vote_globals.lowestTime = now;
+	vote_globals.lowestHost = otherHost;
     }
     /* why do we need this next check?  Consider the case where each of two
      * servers decides the other is lowestHost.  Each stops sending beacons
@@ -254,24 +247,24 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
      * he's lowest, these loops don't occur.  because if someone knows he's
      * lowest, he will send out beacons telling others to vote for him. */
     if (!amIClone
-	&& (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32) lowestHost)
-	    || lowestTime + BIGTIME < now)) {
-	lowestTime = now;
-	lowestHost = ubik_host[0];
+	&& (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32)vote_globals.lowestHost)
+	    || vote_globals.lowestTime + BIGTIME < now)) {
+	vote_globals.lowestTime = now;
+	vote_globals.lowestHost = ubik_host[0];
     }
 
     /* tell if we've heard from a sync site recently (even if we're not voting
      * for this dude yet).  After a while, time the guy out. */
     if (astate) {		/* this guy is a sync site */
-	syncHost = otherHost;
-	syncTime = now;
-    } else if (syncTime + BIGTIME < now) {
-	if (syncHost) {
+	vote_globals.syncHost = otherHost;
+	vote_globals.syncTime = now;
+    } else if (vote_globals.syncTime + BIGTIME < now) {
+	if (vote_globals.syncHost) {
 	    ubik_dprint
 		("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
-		 afs_inet_ntoa_r(syncHost, hoststr));
+		 afs_inet_ntoa_r(vote_globals.syncHost, hoststr));
 	}
-	syncHost = 0;
+	vote_globals.syncHost = 0;
     }
 
     /* decide how to vote */
@@ -284,19 +277,15 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	/* in here only if this guy doesn't claim to be a sync site */
 
 	/* lowestHost is also trying for our votes, then just say no. */
-	if (ntohl(lowestHost) != ntohl(otherHost)) {
-	    return 0;
+	if (ntohl(vote_globals.lowestHost) != ntohl(otherHost)) {
+	    goto done_zero;
 	}
 
 	/* someone else *is* a sync site, just say no */
-	if (syncHost && syncHost != otherHost)
-	    return 0;
-    } else /* fast startup if this is the only non-clone */ if (lastYesHost ==
-								0xffffffff
-								&& otherHost
-								==
-								ubik_host[0])
-    {
+	if (vote_globals.syncHost && vote_globals.syncHost != otherHost)
+	    goto done_zero;
+    } else if (vote_globals.lastYesHost == 0xffffffff && otherHost == ubik_host[0]) {
+	/* fast startup if this is the only non-clone */
 	int i = 0;
 	for (ts = ubik_servers; ts; ts = ts->next) {
 	    if (ts->addr[0] == otherHost)
@@ -305,18 +294,18 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 		i++;
 	}
 	if (!i)
-	    lastYesHost = otherHost;
+	    vote_globals.lastYesHost = otherHost;
     }
 
 
     if (isClone)
-	return 0;		/* clone never can become sync site */
+	goto done_zero;		/* clone never can become sync site */
 
     /* Don't promise sync site support to more than one host every BIGTIME
      * seconds.  This is the heart of our invariants in this system. */
-    if (ubik_lastYesTime + BIGTIME < now || otherHost == lastYesHost) {
-	if ((ubik_lastYesTime + BIGTIME < now) || (otherHost != lastYesHost)
-	    || (lastYesState != astate)) {
+    if (vote_globals.ubik_lastYesTime + BIGTIME < now || otherHost == vote_globals.lastYesHost) {
+	if ((vote_globals.ubik_lastYesTime + BIGTIME < now) || (otherHost != vote_globals.lastYesHost)
+	    || (vote_globals.lastYesState != astate)) {
 	    /* A new vote or a change in the vote or changed quorum */
 	    ubik_dprint("Ubik: vote 'yes' for %s %s\n",
 			afs_inet_ntoa_r(otherHost, hoststr),
@@ -324,15 +313,21 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	}
 
 	vote = now;		/* vote yes */
-	ubik_lastYesTime = now;	/* remember when we voted yes */
-	lastYesClaim = astart;	/* remember for computing when sync site expires */
-	lastYesHost = otherHost;	/* and who for */
-	lastYesState = astate;	/* remember if site is a sync site */
-	ubik_dbVersion = *avers;	/* resync value */
-	ubik_dbTid = *atid;	/* transaction id, if any, of active trans */
+	vote_globals.ubik_lastYesTime = now;	/* remember when we voted yes */
+	vote_globals.lastYesClaim = astart;	/* remember for computing when sync site expires */
+	vote_globals.lastYesHost = otherHost;	/* and who for */
+	vote_globals.lastYesState = astate;	/* remember if site is a sync site */
+	vote_globals.ubik_dbVersion = *avers;	/* resync value */
+	vote_globals.ubik_dbTid = *atid;	/* transaction id, if any, of active trans */
+	UBIK_VOTE_UNLOCK;
 	urecovery_CheckTid(atid, 0);	/* check if current write trans needs aborted */
+    } else {
+	UBIK_VOTE_UNLOCK;
     }
     return vote;
+done_zero:
+    UBIK_VOTE_UNLOCK;
+    return 0;
 }
 
 /*!
@@ -398,14 +393,16 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
      * integers in host order. */
 
     aparm->now = FT_ApproxTime();
-    aparm->lastYesTime = ubik_lastYesTime;
-    aparm->lastYesHost = ntohl(lastYesHost);
-    aparm->lastYesState = lastYesState;
-    aparm->lastYesClaim = lastYesClaim;
-    aparm->lowestHost = ntohl(lowestHost);
-    aparm->lowestTime = lowestTime;
-    aparm->syncHost = ntohl(syncHost);
-    aparm->syncTime = syncTime;
+    aparm->lastYesTime = vote_globals.ubik_lastYesTime;
+    aparm->lastYesHost = ntohl(vote_globals.lastYesHost);
+    aparm->lastYesState = vote_globals.lastYesState;
+    aparm->lastYesClaim = vote_globals.lastYesClaim;
+    aparm->lowestHost = ntohl(vote_globals.lowestHost);
+    aparm->lowestTime = vote_globals.lowestTime;
+    aparm->syncHost = ntohl(vote_globals.syncHost);
+    aparm->syncTime = vote_globals.syncTime;
+    memcpy(&aparm->syncVersion, &vote_globals.ubik_dbVersion, sizeof(struct ubik_version));
+    memcpy(&aparm->syncTid, &vote_globals.ubik_dbTid, sizeof(struct ubik_tid));
 
     /* fill in all interface addresses of myself in hostbyte order */
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR; i++)
@@ -428,8 +425,6 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
 	&& (urecovery_state & UBIK_RECHAVEDB)) {
 	aparm->recoveryState |= UBIK_RECLABELDB;
     }
-    memcpy(&aparm->syncVersion, &ubik_dbVersion, sizeof(struct ubik_version));
-    memcpy(&aparm->syncTid, &ubik_dbTid, sizeof(struct ubik_tid));
     aparm->activeWrite = (ubik_dbase->flags & DBWRITING);
     aparm->tidCounter = ubik_dbase->tidCounter;
 
@@ -485,14 +480,16 @@ SVOTE_DebugOld(struct rx_call * rxcall,
      * integers in host order. */
 
     aparm->now = FT_ApproxTime();
-    aparm->lastYesTime = ubik_lastYesTime;
-    aparm->lastYesHost = ntohl(lastYesHost);
-    aparm->lastYesState = lastYesState;
-    aparm->lastYesClaim = lastYesClaim;
-    aparm->lowestHost = ntohl(lowestHost);
-    aparm->lowestTime = lowestTime;
-    aparm->syncHost = ntohl(syncHost);
-    aparm->syncTime = syncTime;
+    aparm->lastYesTime = vote_globals.ubik_lastYesTime;
+    aparm->lastYesHost = ntohl(vote_globals.lastYesHost);
+    aparm->lastYesState = vote_globals.lastYesState;
+    aparm->lastYesClaim = vote_globals.lastYesClaim;
+    aparm->lowestHost = ntohl(vote_globals.lowestHost);
+    aparm->lowestTime = vote_globals.lowestTime;
+    aparm->syncHost = ntohl(vote_globals.syncHost);
+    aparm->syncTime = vote_globals.syncTime;
+    memcpy(&aparm->syncVersion, &vote_globals.ubik_dbVersion, sizeof(struct ubik_version));
+    memcpy(&aparm->syncTid, &vote_globals.ubik_dbTid, sizeof(struct ubik_tid));
 
     aparm->amSyncSite = beacon_globals.ubik_amSyncSite;
     ubeacon_Debug((ubik_debug *)aparm);
@@ -511,8 +508,6 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 	&& (urecovery_state & UBIK_RECHAVEDB)) {
 	aparm->recoveryState |= UBIK_RECLABELDB;
     }
-    memcpy(&aparm->syncVersion, &ubik_dbVersion, sizeof(struct ubik_version));
-    memcpy(&aparm->syncTid, &ubik_dbTid, sizeof(struct ubik_tid));
     aparm->activeWrite = (ubik_dbase->flags & DBWRITING);
     aparm->tidCounter = ubik_dbase->tidCounter;
 
@@ -588,7 +583,40 @@ ubik_print(const char *format, ...)
 int
 uvote_Init(void)
 {
+    UBIK_VOTE_LOCK;
     /* pretend we just voted for someone else, since we just restarted */
-    ubik_lastYesTime = FT_ApproxTime();
+    vote_globals.ubik_lastYesTime = FT_ApproxTime();
+
+    /* Initialize globals */
+    vote_globals.ubik_lastYesTime = 0;
+    vote_globals.lastYesHost = 0xffffffff;
+    vote_globals.lastYesClaim = 0;
+    vote_globals.lastYesState = 0;
+    vote_globals.lowestTime = 0;
+    vote_globals.lowestHost = 0xffffffff;
+    vote_globals.syncTime = 0;
+    vote_globals.syncHost = 0;
+    UBIK_VOTE_UNLOCK;
+
     return 0;
+}
+
+void
+uvote_set_dbVersion(struct ubik_version version) {
+    UBIK_VOTE_LOCK;
+    vote_globals.ubik_dbVersion = version;
+    UBIK_VOTE_UNLOCK;
+}
+
+/* Compare given version to current DB version.  Return true if equal. */
+int
+uvote_eq_dbVersion(struct ubik_version version) {
+    int ret = 0;
+
+    UBIK_VOTE_LOCK;
+    if (vote_globals.ubik_dbVersion.epoch == version.epoch && vote_globals.ubik_dbVersion.counter == version.counter) {
+	ret = 1;
+    }
+    UBIK_VOTE_UNLOCK;
+    return ret;
 }
