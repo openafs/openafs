@@ -33,7 +33,11 @@
 extern void *osi_Alloc();
 # endif
 # if defined(AFS_OBSD_ENV)
-#  include "h/proc.h"
+#  if defined(AFS_OBSD48_ENV)
+#   include "h/systm.h"
+#  else
+#   include "h/proc.h"
+#  endif
 # endif
 #else /* KERNEL */
 # include <roken.h>
