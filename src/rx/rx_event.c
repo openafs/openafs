@@ -45,7 +45,11 @@
 extern void *osi_Alloc();
 #endif
 #if defined(AFS_OBSD_ENV)
+#if defined(AFS_OBSD48_ENV)
+#include "h/systm.h"
+#else
 #include "h/proc.h"
+#endif
 #endif
 #else /* KERNEL */
 #include <stdio.h>
