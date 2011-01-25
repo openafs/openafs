@@ -1029,7 +1029,9 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
 	insert_inode_hash(ip);
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
+#endif
 	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
@@ -1067,7 +1069,9 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	if (hlist_unhashed(&ip->i_hash))
 	    insert_inode_hash(ip);
     }
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     dp->d_op = &afs_dentry_operations;
+#endif
     dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
     AFS_GUNLOCK();
 
@@ -1251,7 +1255,9 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	afs_getattr(tvcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
 
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
+#endif
 	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
