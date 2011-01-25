@@ -865,10 +865,16 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     int valid;
     struct afs_fakestat_state fakestate;
 
+#ifdef LOOKUP_RCU
+    /* We don't support RCU path walking */
+    if (nd->flags & LOOKUP_RCU)
+       return -ECHILD;
+#endif
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
     AFS_GLOCK();
+
     afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
