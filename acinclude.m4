@@ -774,6 +774,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_block], [s_d_op], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
 				       [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_operations], [evict_inode],
