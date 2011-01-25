@@ -2572,6 +2572,14 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 	    } else {
 		if (vcp->magic != vnode->vnodeMagic) {
 		    /* bad magic #, probably partially created vnode */
+		    if (check) {
+		       Log("Partially allocated vnode %d: bad magic (is %lx should be %lx)\n",
+		           vnodeNumber, afs_printable_uint32_lu(vnode->vnodeMagic),
+		           afs_printable_uint32_lu(vcp->magic));
+		       memset(vnode, 0, vcp->diskSize);
+		       err = -1;
+		       goto zooks;
+		    }
 		    Log("Partially allocated vnode %d deleted.\n",
 			vnodeNumber);
 		    memset(vnode, 0, vcp->diskSize);
