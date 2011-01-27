@@ -461,7 +461,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             osi_Log2(afsd_logp, "cm_UpdateVolume name %s -> %s", 
                      osi_LogSaveString(afsd_logp,volp->namep), osi_LogSaveString(afsd_logp,name));
 
-            if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromNameHashTable(volp);
 
             strcpy(volp->namep, name);
@@ -477,37 +477,37 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
         if (flags & VLF_RWEXISTS) {
             if (volp->vol[RWVOL].ID != rwID) {
-                if (volp->vol[RWVOL].flags & CM_VOLUMEFLAG_IN_HASH)
+                if (volp->vol[RWVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
                 volp->vol[RWVOL].ID = rwID;
                 cm_AddVolumeToIDHashTable(volp, RWVOL);
             }
         } else {
-            if (volp->vol[RWVOL].flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[RWVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, RWVOL);
             volp->vol[RWVOL].ID = 0;
         }
         if (flags & VLF_ROEXISTS) {
             if (volp->vol[ROVOL].ID != roID) {
-                if (volp->vol[ROVOL].flags & CM_VOLUMEFLAG_IN_HASH)
+                if (volp->vol[ROVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
                 volp->vol[ROVOL].ID = roID;
                 cm_AddVolumeToIDHashTable(volp, ROVOL);
             }
         } else {
-            if (volp->vol[ROVOL].flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[ROVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
             volp->vol[ROVOL].ID = 0;
         }
         if (flags & VLF_BACKEXISTS) {
             if (volp->vol[BACKVOL].ID != bkID) {
-                if (volp->vol[BACKVOL].flags & CM_VOLUMEFLAG_IN_HASH)
+                if (volp->vol[BACKVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
                 volp->vol[BACKVOL].ID = bkID;
                 cm_AddVolumeToIDHashTable(volp, BACKVOL);
             }
         } else {
-            if (volp->vol[BACKVOL].flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->vol[BACKVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, BACKVOL);
             volp->vol[BACKVOL].ID = 0;
         }
@@ -908,13 +908,13 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
              * same object.  This volp must be re-inserted back into
              * the LRU queue before this function exits.
              */
-            if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
+            if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE)
                 cm_RemoveVolumeFromLRU(volp);
-            if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
+            if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromNameHashTable(volp);
 
             for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
-                if (volp->vol[volType].flags & CM_VOLUMEFLAG_IN_HASH)
+                if (volp->vol[volType].qflags & CM_VOLUME_QFLAG_IN_HASH)
                     cm_RemoveVolumeFromIDHashTable(volp, volType);
                 if (volp->vol[volType].ID)
                     cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_unknown);
@@ -976,22 +976,22 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     if (code == 0) {
         *outVolpp = volp;
 		
-        lock_ObtainRead(&cm_volumeLock);
-        if (!(volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) ||
+        lock_ObtainWrite(&cm_volumeLock);
+        if (!(volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE) ||
              (flags & CM_GETVOL_FLAG_NO_LRU_UPDATE))
             cm_AdjustVolumeLRU(volp);
-        lock_ReleaseRead(&cm_volumeLock);
+        lock_ReleaseWrite(&cm_volumeLock);
     } else {
         /*
          * do not return it to the caller but do insert it in the LRU
          * otherwise it will be lost
          */
-        lock_ObtainRead(&cm_volumeLock);
-        if (!(volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) ||
+        lock_ObtainWrite(&cm_volumeLock);
+        if (!(volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE) ||
              (flags & CM_GETVOL_FLAG_NO_LRU_UPDATE))
             cm_AdjustVolumeLRU(volp);
         cm_PutVolume(volp);
-        lock_ReleaseRead(&cm_volumeLock);
+        lock_ReleaseWrite(&cm_volumeLock);
     }
 
     if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] && 
@@ -1327,7 +1327,7 @@ void cm_CheckOfflineVolumes(void)
     for (volp = cm_data.volumeLRULastp; 
          volp && !daemon_ShutdownFlag && !powerStateSuspended; 
          volp=(cm_volume_t *) osi_QPrev(&volp->q)) {
-        if (volp->flags & CM_VOLUMEFLAG_IN_HASH) {
+        if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH) {
             InterlockedIncrement(&volp->refCount);
             lock_ReleaseRead(&cm_volumeLock);
             cm_CheckOfflineVolume(volp, 0);
@@ -1529,10 +1529,10 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
         }
 
         sprintf(output,
-                "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x "
+                "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x:%x "
                 "cbServerpRO='%s' cbExpiresRO='%s' creationDateRO='%s' refCount=%u\r\n",
                  cookie, volp, volp->cellp->name, volp->namep, volp->vol[RWVOL].ID,
-                 volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags,
+                 volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags, volp->qflags,
                  srvStr ? srvStr : "<none>", cbt ? cbt : "<none>", cdrot ? cdrot : "<none>",
                  volp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
@@ -1585,14 +1585,14 @@ void cm_AddVolumeToNameHashTable(cm_volume_t *volp)
 {
     int i;
     
-    if (volp->flags & CM_VOLUMEFLAG_IN_HASH)
+    if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH)
         return;
 
     i = CM_VOLUME_NAME_HASH(volp->namep);
 
     volp->nameNextp = cm_data.volumeNameHashTablep[i];
     cm_data.volumeNameHashTablep[i] = volp;
-    volp->flags |= CM_VOLUMEFLAG_IN_HASH;
+    volp->qflags |= CM_VOLUME_QFLAG_IN_HASH;
 }
 
 /* call with volume write-locked and mutex held */
@@ -1602,7 +1602,7 @@ void cm_RemoveVolumeFromNameHashTable(cm_volume_t *volp)
     cm_volume_t *tvolp;
     int i;
 	
-    if (volp->flags & CM_VOLUMEFLAG_IN_HASH) {
+    if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH) {
 	/* hash it out first */
 	i = CM_VOLUME_NAME_HASH(volp->namep);
 	for (lvolpp = &cm_data.volumeNameHashTablep[i], tvolp = cm_data.volumeNameHashTablep[i];
@@ -1610,7 +1610,7 @@ void cm_RemoveVolumeFromNameHashTable(cm_volume_t *volp)
 	     lvolpp = &tvolp->nameNextp, tvolp = tvolp->nameNextp) {
 	    if (tvolp == volp) {
 		*lvolpp = volp->nameNextp;
-		volp->flags &= ~CM_VOLUMEFLAG_IN_HASH;
+		volp->qflags &= ~CM_VOLUME_QFLAG_IN_HASH;
                 volp->nameNextp = NULL;
 		break;
 	    }
@@ -1626,7 +1626,7 @@ void cm_AddVolumeToIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 
     statep = cm_VolumeStateByType(volp, volType);
 
-    if (statep->flags & CM_VOLUMEFLAG_IN_HASH)
+    if (statep->qflags & CM_VOLUME_QFLAG_IN_HASH)
         return;
 
     i = CM_VOLUME_ID_HASH(statep->ID);
@@ -1645,7 +1645,7 @@ void cm_AddVolumeToIDHashTable(cm_volume_t *volp, afs_uint32 volType)
         cm_data.volumeBKIDHashTablep[i] = volp;
         break;
     }
-    statep->flags |= CM_VOLUMEFLAG_IN_HASH;
+    statep->qflags |= CM_VOLUME_QFLAG_IN_HASH;
 }
 
 
@@ -1659,7 +1659,7 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 	
     statep = cm_VolumeStateByType(volp, volType);
 
-    if (statep->flags & CM_VOLUMEFLAG_IN_HASH) {
+    if (statep->qflags & CM_VOLUME_QFLAG_IN_HASH) {
 	/* hash it out first */
         i = CM_VOLUME_ID_HASH(statep->ID);
 
@@ -1682,7 +1682,7 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 	do {
 	    if (tvolp == volp) {
 		*lvolpp = statep->nextp;
-                statep->flags &= ~CM_VOLUMEFLAG_IN_HASH;
+                statep->qflags &= ~CM_VOLUME_QFLAG_IN_HASH;
                 statep->nextp = NULL;
 		break;
 	    }
@@ -1696,34 +1696,46 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 /* must be called with cm_volumeLock write-locked! */
 void cm_AdjustVolumeLRU(cm_volume_t *volp)
 {
+    lock_AssertWrite(&cm_volumeLock);
+
     if (volp == cm_data.volumeLRUFirstp)
         return;
 
-    if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
+    if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     osi_QAddH((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-    volp->flags |= CM_VOLUMEFLAG_IN_LRU_QUEUE;
+    volp->qflags |= CM_VOLUME_QFLAG_IN_LRU_QUEUE;
+
+    osi_assertx(cm_data.volumeLRULastp != NULL, "null cm_data.volumeLRULastp");
 }
 
 /* must be called with cm_volumeLock write-locked! */
 void cm_MoveVolumeToLRULast(cm_volume_t *volp)
 {
+    lock_AssertWrite(&cm_volumeLock);
+
     if (volp == cm_data.volumeLRULastp)
         return;
 
-    if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE)
+    if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     osi_QAddT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-    volp->flags |= CM_VOLUMEFLAG_IN_LRU_QUEUE;
+    volp->qflags |= CM_VOLUME_QFLAG_IN_LRU_QUEUE;
+
+    osi_assertx(cm_data.volumeLRULastp != NULL, "null cm_data.volumeLRULastp");
 }
 
 /* must be called with cm_volumeLock write-locked! */
 void cm_RemoveVolumeFromLRU(cm_volume_t *volp)
 {
-    if (volp->flags & CM_VOLUMEFLAG_IN_LRU_QUEUE) {
+    lock_AssertWrite(&cm_volumeLock);
+
+    if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE) {
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-        volp->flags &= ~CM_VOLUMEFLAG_IN_LRU_QUEUE;
+        volp->qflags &= ~CM_VOLUME_QFLAG_IN_LRU_QUEUE;
     }
+
+    osi_assertx(cm_data.volumeLRULastp != NULL, "null cm_data.volumeLRULastp");
 }
 
 static char * volstatus_str(enum volstatus vs)
