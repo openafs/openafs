@@ -484,14 +484,6 @@ main(int argc, char **argv)
 	bytesremaining = ntohl(bytesremaining);
     }
 
-    if (sleeptime > 0) {
-#ifdef AFS_PTHREAD_ENV
-	sleep(sleeptime);
-#else
-	IOMGR_Sleep(sleeptime);
-#endif
-    }
-
     while (bytesremaining > 0) {
 	/*printf("%d bytes remaining\n",bytesremaining); */
 	if (slcl) {
@@ -515,6 +507,17 @@ main(int argc, char **argv)
 	    if (rx_Write(dcall, databuffer, bytes) != bytes)
 		break;
 	}
+
+	if (sleeptime > 0) {
+#ifdef AFS_PTHREAD_ENV
+	    sleep(sleeptime);
+#else
+	    IOMGR_Sleep(sleeptime);
+#endif
+	    /* only sleep once */
+	    sleeptime = 0;
+	}
+
 	bytesremaining -= bytes;
 	/*printf("%d bytes copied\n",bytes); */
     }
