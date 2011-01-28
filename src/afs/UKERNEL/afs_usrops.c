@@ -1213,6 +1213,63 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     usr_assert(code == 0);
 }
 
+/**
+ * Calculate the cacheMountDir used for a specified dir.
+ *
+ * @param[in]  dir      Desired mount dir
+ * @param[out] mountdir On success, contains the literal string that should
+ *                      be used as the cache mount dir.
+ * @param[in]  size     The number of bytes allocated in mountdir
+ *
+ * @post On success, mountdir begins with a slash, and does not contain two
+ * slashes adjacent to each other
+ *
+ * @return operation status
+ *  @retval 0 success
+ *  @retval ENAMETOOLONG the specified dir is too long to fix in the given
+ *                       mountdir buffer
+ *  @retval EINVAL the specified dir does not actually specify any meaningful
+ *                 mount directory
+ */
+static int
+calcMountDir(const char *dir, char *mountdir, size_t size)
+{
+    char buf[1024];
+    char lastchar;
+    char *p;
+    int len;
+
+    if (dir && strlen(dir) > size-1) {
+	return ENAMETOOLONG;
+    }
+
+    /*
+     * Initialize the AFS mount point, default is '/afs'.
+     * Strip duplicate/trailing slashes from mount point string.
+     * afs_mountDirLen is set to strlen(afs_mountDir).
+     */
+    if (!dir) {
+	dir = "afs";
+    }
+    sprintf(buf, "%s", dir);
+
+    mountdir[0] = '/';
+    len = 1;
+    for (lastchar = '/', p = &buf[0]; *p != '\0'; p++) {
+        if (lastchar != '/' || *p != '/') {
+            mountdir[len++] = lastchar = *p;
+        }
+    }
+    if (lastchar == '/' && len > 1)
+        len--;
+    mountdir[len] = '\0';
+    if (len <= 1) {
+	return EINVAL;
+    }
+
+    return 0;
+}
+
 void
 uafs_mount(void) {
     int rc;
@@ -1234,6 +1291,28 @@ uafs_mount(void) {
     VN_HOLD(afs_CurrentDir);
 
     return;
+}
+
+void
+uafs_mountWithDir(const char *dir)
+{
+    if (dir) {
+	int rc;
+	char tmp_mountDir[1024];
+
+	rc = calcMountDir(dir, tmp_mountDir, sizeof(tmp_mountDir));
+	if (rc) {
+	    afs_warn("Invalid mount dir specification (error %d): %s\n", rc, dir);
+	} else {
+	    if (strcmp(tmp_mountDir, afs_mountDir) != 0) {
+		/* mount dir changed */
+		strcpy(afs_mountDir, tmp_mountDir);
+		afs_mountDirLen = strlen(afs_mountDir);
+	    }
+	}
+    }
+
+    uafs_mount();
 }
 
 int
@@ -1395,9 +1474,7 @@ call_syscall(long syscall, long afscall, long param1, long param2,
 int
 uafs_Setup(const char *mount)
 {
-    char buf[1024];
-    char lastchar;
-    char *p;
+    int rc;
     static int inited = 0;
 
     if (inited) {
@@ -1405,33 +1482,11 @@ uafs_Setup(const char *mount)
     }
     inited = 1;
 
-    if (mount && strlen(mount) > 1023) {
-	return ENAMETOOLONG;
+    rc = calcMountDir(mount, afs_mountDir, sizeof(afs_mountDir));
+    if (rc) {
+	return rc;
     }
-
-    /*
-     * Initialize the AFS mount point, default is '/afs'.
-     * Strip duplicate/trailing slashes from mount point string.
-     * afs_mountDirLen is set to strlen(afs_mountDir).
-     */
-    if (!mount) {
-	mount = "afs";
-    }
-    sprintf(buf, "%s", mount);
-
-    afs_mountDir[0] = '/';
-    afs_mountDirLen = 1;
-    for (lastchar = '/', p = &buf[0]; *p != '\0'; p++) {
-        if (lastchar != '/' || *p != '/') {
-            afs_mountDir[afs_mountDirLen++] = lastchar = *p;
-        }
-    }
-    if (lastchar == '/' && afs_mountDirLen > 1)
-        afs_mountDirLen--;
-    afs_mountDir[afs_mountDirLen] = '\0';
-    if (afs_mountDirLen <= 1) {
-	return EINVAL;
-    }
+    afs_mountDirLen = strlen(afs_mountDir);
 
     /* initialize global vars and such */
     osi_Init();

@@ -28,7 +28,7 @@ extern int call_syscall(long, long, long, long, long, long);
 void
 afsd_mount_afs(const char *rn, const char *mountdir)
 {
-    uafs_mount();
+    uafs_mountWithDir(mountdir);
 }
 
 void

@@ -149,6 +149,7 @@ extern int uafs_statmountpoint_r(char *path);
 extern int uafs_statvfs(struct statvfs *buf);
 extern void uafs_Shutdown(void);
 extern void uafs_mount(void);
+extern void uafs_mountWithDir(const char *dir);
 extern int uafs_fork(int wait, void* (*cbf) (void *), void *rock);
 
 #endif /* __AFS_USROPS_H__ */
