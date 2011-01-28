@@ -677,7 +677,7 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
     */
 
     if (pkrb5_get_error_message)
-        errText = pkrb5_get_error_message(ctx, rc);
+        errText = pkrb5_get_error_message(*ctx, rc);
     else
         errText = perror_message(rc);
     StringCbPrintf(message, sizeof(message),
@@ -686,7 +686,7 @@ KRB5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
               krb5Error,
               FailedFunctionName);
     if (pkrb5_free_error_message)
-        pkrb5_free_error_message(ctx, (char *)errText);
+        pkrb5_free_error_message(*ctx, (char *)errText);
 
     if ( IsDebuggerPresent() )
         OutputDebugString(message);
@@ -2554,7 +2554,7 @@ MultiInputDialog( HINSTANCE hinst, HWND hwndOwner,
 
     GlobalUnlock(hgbl);
     ret = DialogBoxIndirect(hinst, (LPDLGTEMPLATE) hgbl,
-							hwndOwner, (DLGPROC) MultiInputDialogProc);
+                            hwndOwner, (DLGPROC) MultiInputDialogProc);
     GlobalFree(hgbl);
 
     switch ( ret ) {
@@ -2580,9 +2580,9 @@ static int
 multi_field_dialog(HWND hParent, char * preface, int n, struct textField tb[])
 {
     HINSTANCE hInst = 0;
-    int maxwidth = 0;
+    size_t maxwidth = 0;
     int numlines = 0;
-    int len;
+    size_t len;
     char * plines[16], *p = preface ? preface : "";
     int i;
 
@@ -2599,7 +2599,7 @@ multi_field_dialog(HWND hParent, char * preface, int n, struct textField tb[])
             *p++ = '\0';
         }
         if ( strlen(plines[numlines-1]) > maxwidth )
-            maxwidth = (int)strlen(plines[numlines-1]);
+            maxwidth = strlen(plines[numlines-1]);
     }
 
     for ( i=0;i<n;i++ ) {
