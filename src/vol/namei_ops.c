@@ -154,8 +154,6 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
     return nBytes;
 }
 
-
-
 #ifdef AFS_NT40_ENV
 /* Inode number format:
  * low 32 bits - if a regular file or directory, the vnode; else the type.
@@ -2927,7 +2925,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s" OS_DIRSEP "%s", dir_name,
 		       infoName);
     fd = afs_open(oldpath, O_RDWR, 0);
-    if (fd < 0) {
+    if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
 	    oldpath);
 	code = -1;
@@ -2936,7 +2934,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_VOLINFO);
     namei_HandleToName(&n, &t_ih);
     fd2 = afs_open(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
-    if (fd2 < 0) {
+    if (fd2 == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not create RW info file: %s\n", n.n_path);
 	OS_CLOSE(fd);
 	code = -1;
@@ -2958,7 +2956,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     (void)afs_snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
 		       smallName);
     fd = afs_open(newpath, O_RDWR, 0);
-    if (fd < 0) {
+    if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
 	code = -1;
 	goto done;
@@ -2977,7 +2975,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     (void)afs_snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
 		       largeName);
     fd = afs_open(newpath, O_RDWR, 0);
-    if (fd < 0) {
+    if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
 	code = -1;
 	goto done;
