@@ -23,7 +23,7 @@ TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
 
 COMMON_INCLUDE = -I. -I.. -I../nfs \
-	-I$(TOP_SRCDIR)/crypto/kernel \
+	-I$(TOP_SRCDIR)/crypto/hcrypto/kernel \
 	-I${TOP_SRCDIR} \
 	-I${TOP_SRCDIR}/afs \
 	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
