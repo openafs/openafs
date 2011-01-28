@@ -346,14 +346,16 @@ static char *
 DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
 {
     /* Read a page from the disk. */
-    struct buffer *tb, *lastbuffer;
+    struct buffer *tb, *lastbuffer, *found_tb = NULL;
     afs_int32 code;
     struct ubik_dbase *dbase = atrans->dbase;
 
     calls++;
     lastbuffer = LruBuffer->lru_prev;
 
-    if (MatchBuffer(lastbuffer, page, fid, atrans)) {
+    /* Skip for write transactions for a clean page - this may not be the right page to use */
+    if (MatchBuffer(lastbuffer, page, fid, atrans)
+		&& (atrans->type == UBIK_READTRANS || lastbuffer->dirty)) {
 	tb = lastbuffer;
 	tb->lockers++;
 	lastb++;
@@ -361,11 +363,21 @@ DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
     }
     for (tb = phTable[pHash(page)]; tb; tb = tb->hashNext) {
 	if (MatchBuffer(tb, page, fid, atrans)) {
-	    Dmru(tb);
-	    tb->lockers++;
-	    return tb->data;
+	    if (tb->dirty || atrans->type == UBIK_READTRANS) {
+		found_tb = tb;
+		break;
+	    }
+	    /* Remember this clean page - we might use it */
+	    found_tb = tb;
 	}
     }
+    /* For a write transaction, use a matching clean page if no dirty one was found */
+    if (found_tb) {
+	Dmru(found_tb);
+	found_tb->lockers++;
+	return found_tb->data;
+    }
+
     /* can't find it */
     tb = newslot(dbase, fid, page);
     if (!tb)
