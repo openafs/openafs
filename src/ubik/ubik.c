@@ -981,11 +981,14 @@ ubik_Flush(struct ubik_trans *transPtr)
 
     if (transPtr->type != UBIK_WRITETRANS)
 	return UBADTYPE;
-    if (!transPtr->iovec_info.iovec_wrt_len
-	|| !transPtr->iovec_info.iovec_wrt_val)
-	return 0;
 
     DBHOLD(transPtr->dbase);
+    if (!transPtr->iovec_info.iovec_wrt_len
+	|| !transPtr->iovec_info.iovec_wrt_val) {
+	DBRELE(transPtr->dbase);
+	return 0;
+    }
+
     if (!urecovery_AllBetter(transPtr->dbase, transPtr->flags & TRREADANY))
 	ERROR_EXIT(UNOQUORUM);
     if (!ubeacon_AmSyncSite())	/* only sync site can write */
@@ -1036,6 +1039,7 @@ ubik_Write(struct ubik_trans *transPtr, void *vbuffer,
 	return 0;
     }
 
+    DBHOLD(transPtr->dbase);
     if (!transPtr->iovec_info.iovec_wrt_val) {
 	transPtr->iovec_info.iovec_wrt_len = 0;
 	transPtr->iovec_info.iovec_wrt_val =
@@ -1051,6 +1055,7 @@ ubik_Write(struct ubik_trans *transPtr, void *vbuffer,
 	    if (transPtr->iovec_data.iovec_buf_val)
 		free(transPtr->iovec_data.iovec_buf_val);
 	    transPtr->iovec_data.iovec_buf_val = 0;
+	    DBRELE(transPtr->dbase);
 	    return UNOMEM;
 	}
     }
@@ -1058,12 +1063,14 @@ ubik_Write(struct ubik_trans *transPtr, void *vbuffer,
     /* If this write won't fit in the structure, then flush it out and start anew */
     if ((transPtr->iovec_info.iovec_wrt_len >= IOVEC_MAXWRT)
 	|| ((length + transPtr->iovec_data.iovec_buf_len) > IOVEC_MAXBUF)) {
+	/* Can't hold the DB lock over ubik_Flush */
+	DBRELE(transPtr->dbase);
 	code = ubik_Flush(transPtr);
 	if (code)
 	    return (code);
+	DBHOLD(transPtr->dbase);
     }
 
-    DBHOLD(transPtr->dbase);
     if (!urecovery_AllBetter(transPtr->dbase, transPtr->flags & TRREADANY))
 	ERROR_EXIT(UNOQUORUM);
     if (!ubeacon_AmSyncSite())	/* only sync site can write */
