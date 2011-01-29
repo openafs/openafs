@@ -85,13 +85,16 @@ AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
     CPPFLAGS="$save_CPPFLAGS"
     AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
 
-dnl AC_CHECK_LINUX_BUILD([msg], [var], [includes], [code], [define])
+dnl AC_CHECK_LINUX_BUILD([msg], [var], [includes], [code], [define], [CFLAGS])
 AC_DEFUN([AC_CHECK_LINUX_BUILD],
  [AS_VAR_PUSHDEF([ac_linux_build], [$2])dnl
   AC_CACHE_CHECK([$1], [ac_linux_build],
-   [AC_TRY_KBUILD([$3], [$4],
+   [save_CPPFLAGS="$CPPFLAGS"
+     CPPFLAGS="$CPPFLAGS $7"
+     AC_TRY_KBUILD([$3], [$4],
 		  AS_VAR_SET([ac_linux_build], [yes]),
 		  AS_VAR_SET([ac_linux_build], [no]))
+     CPPFLAGS="$save_CPPFLAGS"
    ])
   AS_IF([test AS_VAR_GET([ac_linux_build]) = yes],
         [AC_DEFINE([$5],1,[$6])])

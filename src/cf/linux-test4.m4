@@ -684,7 +684,8 @@ struct dentry _dentry;
 struct nameidata _nameidata;
 (void)_inode.i_op->permission(&_inode, 0, &_nameidata);],
 		       [IOP_PERMISSION_TAKES_NAMEIDATA],
-		       [define if your iops.permission takes a nameidata argument])
+		       [define if your iops.permission takes a nameidata argument],
+		       [])
 ])
 
 
