@@ -395,10 +395,13 @@ urecovery_Initialize(struct ubik_dbase *adbase)
 {
     afs_int32 code;
 
+    DBHOLD(adbase);
     code = ReplayLog(adbase);
     if (code)
-	return code;
+	goto done;
     code = InitializeDB(adbase);
+done:
+    DBRELE(adbase);
     return code;
 }
 
@@ -477,10 +480,6 @@ urecovery_Interact(void *dummy)
 	 */
 	if ((now = FT_ApproxTime()) > 30 + lastProbeTime) {
 
-#ifdef AFS_PTHREAD_ENV
-	    DBHOLD(ubik_dbase);
-#endif
-
 	    for (ts = ubik_servers, doingRPC = 0; ts; ts = ts->next) {
 		UBIK_BEACON_LOCK;
 		if (!ts->up) {
@@ -490,17 +489,19 @@ urecovery_Interact(void *dummy)
 		    if (code == 0) {
 			UBIK_BEACON_LOCK;
 			ts->up = 1;
+			UBIK_BEACON_UNLOCK;
+			DBHOLD(ubik_dbase);
 			urecovery_state &= ~UBIK_RECFOUNDDB;
+			DBRELE(ubik_dbase);
 		    }
-		} else if (!ts->currentDB) {
-		    urecovery_state &= ~UBIK_RECFOUNDDB;
+		} else {
+		    UBIK_BEACON_UNLOCK;
+		    DBHOLD(ubik_dbase);
+		    if (!ts->currentDB)
+			urecovery_state &= ~UBIK_RECFOUNDDB;
+		    DBRELE(ubik_dbase);
 		}
-		UBIK_BEACON_UNLOCK;
 	    }
-
-#ifdef AFS_PTHREAD_ENV
-	    DBRELE(ubik_dbase);
-#endif
 
 	    if (doingRPC)
 		now = FT_ApproxTime();
@@ -508,6 +509,7 @@ urecovery_Interact(void *dummy)
 	}
 
 	/* Mark whether we are the sync site */
+	DBHOLD(ubik_dbase);
 	if (!ubeacon_AmSyncSite()) {
 	    urecovery_state &= ~UBIK_RECSYNCSITE;
 	    DBRELE(ubik_dbase);
@@ -519,6 +521,7 @@ urecovery_Interact(void *dummy)
 	 * most current database, then go find the most current db.
 	 */
 	if (!(urecovery_state & UBIK_RECFOUNDDB)) {
+	    DBRELE(ubik_dbase);
 	    bestServer = (struct ubik_server *)0;
 	    bestDBVersion.epoch = 0;
 	    bestDBVersion.counter = 0;
@@ -547,6 +550,7 @@ urecovery_Interact(void *dummy)
 	     * the sync site, have the best version. Also note that
 	     * we may need to send the best version out.
 	     */
+	    DBHOLD(ubik_dbase);
 	    if (vcmp(ubik_dbase->version, bestDBVersion) >= 0) {
 		bestDBVersion = ubik_dbase->version;
 		bestServer = (struct ubik_server *)0;
@@ -711,7 +715,6 @@ urecovery_Interact(void *dummy)
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
 #endif
-	    DBRELE(ubik_dbase);
 	}
 	if (!(urecovery_state & UBIK_RECHAVEDB)) {
 	    DBRELE(ubik_dbase);
@@ -885,10 +888,6 @@ DoProbe(struct ubik_server *server)
     UBIK_ADDR_UNLOCK;
     osi_Assert(i);			/* at least one interface address for this server */
 
-#ifdef AFS_PTHREAD_ENV
-    DBRELE(ubik_dbase);
-#endif
-
     multi_Rx(conns, i) {
 	multi_DISK_Probe();
 	if (!multi_error) {	/* first success */
@@ -897,10 +896,6 @@ DoProbe(struct ubik_server *server)
 	    multi_Abort;
 	}
     } multi_End_Ignore;
-
-#ifdef AFS_PTHREAD_ENV
-    DBHOLD(ubik_dbase);
-#endif
 
     if (success_i >= 0) {
 	UBIK_ADDR_LOCK;
