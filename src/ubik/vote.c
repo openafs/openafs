@@ -320,7 +320,9 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	vote_globals.ubik_dbVersion = *avers;	/* resync value */
 	vote_globals.ubik_dbTid = *atid;	/* transaction id, if any, of active trans */
 	UBIK_VOTE_UNLOCK;
+	DBHOLD(ubik_dbase);
 	urecovery_CheckTid(atid, 0);	/* check if current write trans needs aborted */
+	DBRELE(ubik_dbase);
     } else {
 	UBIK_VOTE_UNLOCK;
     }
