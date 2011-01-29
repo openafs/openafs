@@ -581,3 +581,14 @@ AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
                        [])
 ])
 
+
+AC_DEFUN([LINUX_HAVE_DCACHE_LOCK], [
+  AC_CHECK_LINUX_BUILD([for dcache_lock],
+			[ac_cv_linux_have_dcache_lock],
+			[#include <linux/dcache.h> ],
+			[printk("%p", &dcache_lock);],
+			[HAVE_DCACHE_LOCK],
+			[define if dcache_lock exists],
+			[])
+])
+
