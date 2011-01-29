@@ -468,11 +468,9 @@ urecovery_Interact(void *dummy)
     struct ubik_stat ubikstat;
     struct in_addr inAddr;
     char hoststr[16];
-#ifndef OLD_URECOVERY
     char pbuffer[1028];
     int fd = -1;
     afs_int32 pass;
-#endif
 
     /* otherwise, begin interaction */
     urecovery_state = 0;
@@ -611,15 +609,6 @@ urecovery_Interact(void *dummy)
 		goto FetchEndCall;
 	    }
 
-#ifdef OLD_URECOVERY
-	    /* Truncate the file first */
-	    code = (*ubik_dbase->truncate) (ubik_dbase, file, 0);
-	    if (code) {
-		ubik_dprint("truncate io error=%d\n", code);
-		goto FetchEndCall;
-	    }
-	    tversion.counter = 0;
-#endif
 	    /* give invalid label during file transit */
 	    tversion.epoch = 0;
 	    code = (*ubik_dbase->setlabel) (ubik_dbase, file, &tversion);
@@ -627,7 +616,6 @@ urecovery_Interact(void *dummy)
 		ubik_dprint("setlabel io error=%d\n", code);
 		goto FetchEndCall;
 	    }
-#ifndef OLD_URECOVERY
 	    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 	    fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	    if (fd < 0) {
@@ -639,7 +627,6 @@ urecovery_Interact(void *dummy)
 		close(fd);
 		goto FetchEndCall;
 	    }
-#endif
 
 	    pass = 0;
 	    while (length > 0) {
@@ -655,14 +642,8 @@ urecovery_Interact(void *dummy)
 		    close(fd);
 		    goto FetchEndCall;
 		}
-#ifdef OLD_URECOVERY
-		nbytes =
-		    (*ubik_dbase->write) (ubik_dbase, file, tbuffer, offset,
-					  tlen);
-#else
 		nbytes = write(fd, tbuffer, tlen);
 		pass++;
-#endif
 		if (nbytes != tlen) {
 		    code = UIOERROR;
 		    close(fd);
@@ -671,11 +652,9 @@ urecovery_Interact(void *dummy)
 		offset += tlen;
 		length -= tlen;
 	    }
-#ifndef OLD_URECOVERY
 	    code = close(fd);
 	    if (code)
 		goto FetchEndCall;
-#endif
 	    code = EndDISK_GetFile(rxcall, &tversion);
 	  FetchEndCall:
 	    tcode = rx_EndCall(rxcall, code);
@@ -686,9 +665,6 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECHAVEDB;
 		memcpy(&ubik_dbase->version, &tversion,
 		       sizeof(struct ubik_version));
-#ifdef OLD_URECOVERY
-		(*ubik_dbase->sync) (ubik_dbase, 0);	/* get data out first */
-#else
 		afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
 		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
@@ -701,27 +677,22 @@ urecovery_Interact(void *dummy)
 		    code = rename(pbuffer, tbuffer);
 		if (!code) {
 		    (*ubik_dbase->open) (ubik_dbase, file);
-#endif
 		    /* after data is good, sync disk with correct label */
 		    code =
 			(*ubik_dbase->setlabel) (ubik_dbase, 0,
 						 &ubik_dbase->version);
-#ifndef OLD_URECOVERY
 		}
 #ifdef AFS_NT40_ENV
 		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 		unlink(pbuffer);
 #endif
-#endif
 	    }
 	    if (code) {
-#ifndef OLD_URECOVERY
 		unlink(pbuffer);
 		/*
 		 * We will effectively invalidate the old data forever now.
 		 * Unclear if we *should* but we do.
 		 */
-#endif
 		ubik_dbase->version.epoch = 0;
 		ubik_dbase->version.counter = 0;
 		ubik_print("Ubik: Synchronize database failed (error = %d)\n",
