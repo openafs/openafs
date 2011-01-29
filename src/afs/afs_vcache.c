@@ -684,14 +684,17 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 #if defined(AFS_LINUX22_ENV)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) > 1 && tvc->opens == 0) {
                 struct dentry *dentry;
+		struct inode *inode = AFSTOV(tvc);
                 struct list_head *cur, *head;
 		dc_slept = 1;
 		ReleaseWriteLock(&afs_xvcache);
                 AFS_GUNLOCK();
+
+#if defined(HAVE_DCACHE_LOCK)
 #if defined(AFS_LINUX24_ENV)
                 spin_lock(&dcache_lock);
 #endif
-		head = &(AFSTOV(tvc))->i_dentry;
+		head = &inode->i_dentry;
 
 restart:
                 cur = head;
@@ -700,7 +703,6 @@ restart:
 
 		    if (d_unhashed(dentry))
 			continue;
-
 		    dget_locked(dentry);
 
 #if defined(AFS_LINUX24_ENV)
@@ -720,6 +722,35 @@ restart:
 #if defined(AFS_LINUX24_ENV)
 		spin_unlock(&dcache_lock);
 #endif
+#else /* HAVE_DCACHE_LOCK */
+		spin_lock(&inode->i_lock);
+		head = &inode->i_dentry;
+
+restart:
+		cur = head;
+		while ((cur = cur->next) != head) {
+		    dentry = list_entry(cur, struct dentry, d_alias);
+
+		    spin_lock(&dentry->d_lock);
+		    if (d_unhashed(dentry)) {
+			spin_unlock(&dentry->d_lock);
+			continue;
+		    }
+		    spin_unlock(&dentry->d_lock);
+		    dget(dentry);
+
+		    spin_unlock(&inode->i_lock);
+		    if (d_invalidate(dentry) == -EBUSY) {
+			dput(dentry);
+			/* perhaps lock and try to continue? (use cur as head?) */
+			goto inuse;
+		    }
+		    dput(dentry);
+		    spin_lock(&inode->i_lock);
+		    goto restart;
+		}
+		spin_unlock(&inode->i_lock);
+#endif /* HAVE_DCACHE_LOCK */
 	    inuse:
 		AFS_GLOCK();
 		ObtainWriteLock(&afs_xvcache, 733);
