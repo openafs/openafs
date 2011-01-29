@@ -474,7 +474,10 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 
     /* send the file back to the requester */
 
+    dbase = ubik_dbase;
+
     if ((code = ubik_CheckAuth(rxcall))) {
+	DBHOLD(dbase);
 	goto failed;
     }
 
@@ -495,10 +498,10 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     if (offset && offset != otherHost) {
 	/* we *know* this is the wrong guy */
 	code = USYNC;
+	DBHOLD(dbase);
 	goto failed;
     }
 
-    dbase = ubik_dbase;
     DBHOLD(dbase);
 
     /* abort any active trans that may scribble over the database */
@@ -531,7 +534,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #endif
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
-	    DBRELE(dbase);
 	    ubik_dprint("Rx-read length error=%d\n", code);
 	    code = BULK_ERROR;
 	    close(fd);
@@ -540,7 +542,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	code = write(fd, tbuffer, tlen);
 	pass++;
 	if (code != tlen) {
-	    DBRELE(dbase);
 	    ubik_dprint("write failed error=%d\n", code);
 	    code = UIOERROR;
 	    close(fd);
@@ -580,8 +581,8 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #else
     LWP_NoYieldSignal(&dbase->version);
 #endif
-    DBRELE(dbase);
-  failed:
+
+failed:
     if (code) {
 	unlink(pbuffer);
 	/* Failed to sync. Allow reads again for now. */
@@ -595,6 +596,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     } else {
 	ubik_print("Ubik: Synchronize database completed\n");
     }
+    DBRELE(dbase);
     return code;
 }
 
