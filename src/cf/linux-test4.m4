@@ -236,12 +236,24 @@ AC_DEFUN([LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA], [
 [#include <linux/fs.h>
 #include <linux/namei.h>],
 [struct inode _inode;
-struct dentry _dentry;
 struct nameidata _nameidata;
 (void)_inode.i_op->permission(&_inode, 0, &_nameidata);],
 		       [IOP_PERMISSION_TAKES_NAMEIDATA],
 		       [define if your iops.permission takes a nameidata argument],
-		       [])
+		       [-Werror])
+])
+
+
+AC_DEFUN([LINUX_IOP_I_PERMISSION_TAKES_FLAGS], [
+  AC_CHECK_LINUX_BUILD([whether inode_operations.permission takes flags],
+			[ac_cv_linux_func_i_permission_takes_flags],
+			[#include <linux/fs.h>],
+			[struct inode _inode;
+			unsigned int flags = 0;
+			(void)_inode.i_op->permission(&_inode, 0, flags);],
+		       [IOP_PERMISSION_TAKES_FLAGS],
+		       [define if your iops.permission takes a flags argument],
+		       [-Werror])
 ])
 
 

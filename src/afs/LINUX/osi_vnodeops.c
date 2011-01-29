@@ -2238,16 +2238,25 @@ done:
  * Check access rights - returns error if can't check or permission denied.
  */
 static int
-#ifdef IOP_PERMISSION_TAKES_NAMEIDATA
+#if defined(IOP_PERMISSION_TAKES_FLAGS)
+afs_linux_permission(struct inode *ip, int mode, unsigned int flags)
+#elif defined(IOP_PERMISSION_TAKES_NAMEIDATA)
 afs_linux_permission(struct inode *ip, int mode, struct nameidata *nd)
 #else
 afs_linux_permission(struct inode *ip, int mode)
 #endif
 {
     int code;
-    cred_t *credp = crref();
+    cred_t *credp;
     int tmp = 0;
 
+#if defined(IOP_PERMISSION_TAKES_FLAGS)
+    /* We don't support RCU path walking */
+    if (flags & IPERM_FLAG_RCU)
+       return -ECHILD;
+#endif
+
+    credp = crref();
     AFS_GLOCK();
     if (mode & MAY_EXEC)
 	tmp |= VEXEC;
