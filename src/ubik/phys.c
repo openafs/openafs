@@ -133,7 +133,7 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
 /*!
  * \brief Close the file, maintaining ref count in cache structure.
  */
-int
+static int
 uphys_close(int afd)
 {
     int i;
