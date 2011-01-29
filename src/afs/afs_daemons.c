@@ -409,7 +409,11 @@ afs_CheckRootVolume(void)
 		    dp = d_find_alias(AFSTOV(afs_globalVp));
 
 #if defined(AFS_LINUX24_ENV)
+#if defined(HAVE_DCACHE_LOCK)
 		    spin_lock(&dcache_lock);
+#else
+		    spin_lock(&AFSTOV(vcp)->i_lock);
+#endif
 #if defined(AFS_LINUX26_ENV)
 		    spin_lock(&dp->d_lock);
 #endif
@@ -421,7 +425,11 @@ afs_CheckRootVolume(void)
 #if defined(AFS_LINUX26_ENV)
 		    spin_unlock(&dp->d_lock);
 #endif
+#if defined(HAVE_DCACHE_LOCK)
 		    spin_unlock(&dcache_lock);
+#else
+		    spin_unlock(&AFSTOV(vcp)->i_lock);
+#endif
 #endif
 		    dput(dp);
 

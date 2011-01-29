@@ -903,6 +903,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KEY_ALLOC_NEEDS_CRED
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
+		 LINUX_HAVE_DCACHE_LOCK
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
