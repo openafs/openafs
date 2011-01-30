@@ -45,6 +45,7 @@ INCFILEDIR = $(DESTDIR)\include\rx
 
 INCFILES  = \
 	$(INCFILEDIR)\rx.h \
+	$(INCFILEDIR)\rx_atomic.h \
 	$(INCFILEDIR)\rx_packet.h \
 	$(INCFILEDIR)\rx_user.h \
 	$(INCFILEDIR)\rx_event.h \
