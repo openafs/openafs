@@ -129,12 +129,13 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
 
 typedef atomic_t rx_atomic_t;
 
-#define rx_atomic_set(X)	  atomic_set(X)
+#define rx_atomic_set(X, V)	  atomic_set(X, V)
 #define rx_atomic_read(X)	  atomic_read(X)
 #define rx_atomic_inc(X)	  atomic_inc(X)
 #define rx_atomic_inc_and_read(X) atomic_inc_return(X)
 #define rx_atomic_add(X, V)	  atomic_add(V, X)
 #define rx_atomic_dec(X)	  atomic_dec(X)
+#define rx_atomic_dec_and_read(X) atomic_dec_return(X)
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
 
 #elif defined(AFS_SUN510_ENV) || (defined(AFS_SUN58_ENV) && defined(KERNEL) && !defined(UKERNEL))
