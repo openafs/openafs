@@ -1932,7 +1932,7 @@ void cm_CheckCBExpiration(void)
 {
     afs_uint32 i;
     cm_scache_t *scp;
-    cm_volume_t *volp = NULL;
+    cm_volume_t *volp;
     enum volstatus volstate;
     time_t now, downTime;
         
@@ -1942,10 +1942,9 @@ void cm_CheckCBExpiration(void)
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
         for (scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
-            if (volp) {
-                cm_PutVolume(volp);
-                volp = NULL;
-            }
+            volp = NULL;
+            cm_HoldSCacheNoLock(scp);
+            lock_ReleaseWrite(&cm_scacheLock);
 
             /*
              * If this is not a PURERO object and there is no callback
@@ -1953,7 +1952,7 @@ void cm_CheckCBExpiration(void)
              */
             if (!(scp->flags & CM_SCACHEFLAG_PURERO) &&
                 (scp->cbServerp == NULL || scp->cbExpires == 0 || now < scp->cbExpires))
-                continue;
+                goto scp_complete;
 
             /*
              * Determine the volume state and update the callback info
@@ -1981,23 +1980,20 @@ void cm_CheckCBExpiration(void)
 
             /* If there is no callback or it hasn't expired, there is nothing to do */
             if (scp->cbServerp == NULL || scp->cbExpires == 0 || now < scp->cbExpires)
-                continue;
+                goto scp_complete;
 
             /* If the volume is known not to be online, do not expire the callback */
             if (volstate != vl_online)
-                continue;
+                goto scp_complete;
 
             /*
              * If all the servers are down and the callback expired after the
              * issuing server went down, do not expire the callback
              */
             if (cm_CBServersDownTime(scp, volp, &downTime) && downTime && downTime < scp->cbExpires)
-                continue;
+                goto scp_complete;
 
             /* The callback has expired, discard the status info */
-            cm_HoldSCacheNoLock(scp);
-            lock_ReleaseWrite(&cm_scacheLock);
-
             osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             lock_ObtainWrite(&scp->rw);
@@ -2006,13 +2002,13 @@ void cm_CheckCBExpiration(void)
 
             cm_CallbackNotifyChange(scp);
 
+          scp_complete:
+            if (volp)
+                cm_PutVolume(volp);
+
             lock_ObtainWrite(&cm_scacheLock);
             cm_ReleaseSCacheNoLock(scp);
         }
-    }
-    if (volp) {
-        cm_PutVolume(volp);
-        volp = NULL;
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
