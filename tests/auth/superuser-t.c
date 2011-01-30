@@ -26,6 +26,10 @@
 
 #include <roken.h>
 
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
@@ -223,14 +227,14 @@ startClient(char *configPath)
 
     /* Now, what happens if we're doing something over the network instead */
 
+    code = rx_Init(0);
+    is_int(code, 0, "Initialised RX");
+
     /* Fake up an rx ticket. Note that this will be for the magic 'superuser' */
     code = afsconf_ClientAuth(dir, &class, &classIndex);
     is_int(code, 0, "Can successfully create superuser token");
 
     /* Start a connection to our test service with it */
-    code = rx_Init(0);
-    is_int(code, 0, "Started RX");
-
     he = gethostbyname("localhost");
     if (!he) {
         printf("Couldn't look up server hostname");
