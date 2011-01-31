@@ -10331,7 +10331,7 @@ void smb_LanAdapterChange(int locked) {
 
     if (!powerStateSuspended && 
         SUCCEEDED(lana_GetUncServerNameEx(NetbiosName, &lanaNum, &bGateway, 
-                                          LANA_NETBIOS_NAME_FULL)) &&
+                                          LANA_NETBIOS_NAME_FULL | LANA_NETBIOS_NO_RESET)) &&
         lanaNum != LANA_INVALID && smb_LANadapter != lanaNum) {
         if ( isGateway != bGateway ) {
             afsi_log("Lan Adapter Change detected (%d != %d): gateway %d != %d",
@@ -10399,7 +10399,10 @@ int smb_NetbiosInit(int locked)
     /* setup the NCB system */
     ncbp = smb_GetNCB();
 
-    /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
+    /*
+     * Call lanahelper to get Netbios name, lan adapter number and gateway flag
+     * This will reset all of the network adapter's netbios state.
+     */
     if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
         smb_LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
 
