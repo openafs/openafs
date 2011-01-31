@@ -365,7 +365,7 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
     return lanainfo;
 }
 
-extern "C" lana_number_t lana_FindLoopback(void)
+extern "C" lana_number_t lana_FindLoopback(BOOL reset)
 {
     NCB ncb;
     LANA_ENUM lana_list;
@@ -384,7 +384,7 @@ extern "C" lana_number_t lana_FindLoopback(void)
         return LANA_INVALID;
     }
     for (i = 0; i < lana_list.length; i++) {
-	if (lana_IsLoopback(lana_list.lana[i],TRUE)) {
+	if (lana_IsLoopback(lana_list.lana[i], reset)) {
 	    // Found one, return it.
 #ifndef NOLOGGING
 	    afsi_log("lana_FindLoopback: Found LAN adapter %d",
@@ -528,6 +528,7 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana, BOOL reset)
 //      LANA_NETBIOS_NAME_IN : Use the values of *pLana and *pIsGateway as [in] parameters.
 //      LANA_NETBIOS_NAME_SUFFIX : Only return the suffix of netbios name
 //      LANA_NETBIOS_NAME_FULL : Return full netbios name
+//      LANA_NETBIOS_NO_RESET : Do not reset the netbios adapter state when finding the loopback
 extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int * pIsGateway, int flags) {
     HKEY hkConfig;
     DWORD dummyLen;
@@ -610,14 +611,14 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	    nLana = LANA_INVALID;
 
 	if(nLana == LANA_INVALID && !regGateway) {
-	    nLana = lana_FindLoopback();
+	    nLana = lana_FindLoopback(!(flags & LANA_NETBIOS_NO_RESET));
 	}
 	if(nLana != LANA_INVALID) 
             regLana = nLana;
-	}	
+    }
 
     if(regNbName[0] &&
-	(regLana >=0 && lana_IsLoopback((lana_number_t) regLana,FALSE))) 	
+	(regLana >=0 && lana_IsLoopback((lana_number_t) regLana, FALSE)))
     {
         strncpy(nbName,regNbName,14);
         nbName[14] = 0;

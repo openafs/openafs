@@ -49,11 +49,13 @@ extern "C" {
 
 #define LANA_NETBIOS_NAME_IN 2
 
+#define LANA_NETBIOS_NO_RESET 4
+
     int lana_GetNameFromGuid(char *Guid, char **Name);
 
     struct LANAINFO * lana_FindLanaByName(const char *LanaName);
 
-    lana_number_t lana_FindLoopback(void);
+    lana_number_t lana_FindLoopback(BOOL reset);
 
     BOOL lana_OnlyLoopback(void);
 
