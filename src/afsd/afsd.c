@@ -1952,13 +1952,15 @@ afsd_run(void)
 	exit(1);
     }
 
-    if (stat(afsd_cacheMountDir, &statbuf)) {
-	printf("afsd: Mountpoint %s missing.\n", afsd_cacheMountDir);
-        exit(1);
-    } else {
-	if (!S_ISDIR(statbuf.st_mode)) {
-	    printf("afsd: Mountpoint %s is not a directory.\n", afsd_cacheMountDir);
+    if (!enable_nomount) {
+	if (stat(afsd_cacheMountDir, &statbuf)) {
+	    printf("afsd: Mountpoint %s missing.\n", afsd_cacheMountDir);
 	    exit(1);
+	} else {
+	    if (!S_ISDIR(statbuf.st_mode)) {
+		printf("afsd: Mountpoint %s is not a directory.\n", afsd_cacheMountDir);
+		exit(1);
+	    }
 	}
     }
 
