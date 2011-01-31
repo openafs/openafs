@@ -137,7 +137,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * in the dynamic mount directory.
      */
     if (volid && !avolpp) {
-	if (*cpos)
+	if (cpos)
 	    *cpos = ':';
 	goto done;
     }
