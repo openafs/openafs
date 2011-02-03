@@ -73,7 +73,7 @@ There are two ways to call B<fs newalias>:
    % fs newalias -alias openafs -name openafs.org
 
 Both of the above examples create an alias C<openafs> for the cell
-C<openafs.org>. Two links wil be created in F</afs>:
+C<openafs.org>. Two links will be created in F</afs>:
 
    /afs/openafs   ->  /afs/openafs.org
    /afs/.openafs  ->  /afs/.openafs.org

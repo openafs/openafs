@@ -36,7 +36,7 @@ A clone is a copy of a volume that only stores the changes from the
 parent volume. Cloning is a primitive operation that is used by the B<vos
 move>, B<vos backup>, and B<vos release> commands. A clone functions using
 the same mechanism as a backup volume, but it is persistent. Clone volumes
-can be used as point-in-time copies of the parent vollume, but they must be
+can be used as point-in-time copies of the parent volume, but they must be
 used with care.
 
 =head1 CAUTIONS

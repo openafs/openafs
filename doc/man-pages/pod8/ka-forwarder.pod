@@ -58,7 +58,7 @@ B<-p> option.
 
 =head1 EXAMPLES
 
-Forward AFS Authentication Server reqests to the B<fakeka> servers on
+Forward AFS Authentication Server requests to the B<fakeka> servers on
 kdc1.example.com and kdc2.example.com:
 
     % ka-forwarder kdc1.example.com kdc2.example.com &
