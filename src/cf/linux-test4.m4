@@ -582,3 +582,15 @@ AC_DEFUN([LINUX_HAVE_DCACHE_LOCK], [
 			[])
 ])
 
+
+AC_DEFUN([LINUX_D_COUNT_IS_INT], [
+  AC_CHECK_LINUX_BUILD([if dentry->d_count is an int],
+			[ac_cv_linux_d_count_int],
+			[#include <linux/dcache.h> ],
+			[struct dentry _d;
+			dget(&_d);
+			_d.d_count = 1;],
+			[D_COUNT_INT],
+			[define if dentry->d_count is an int],
+			[-Werror])
+])
