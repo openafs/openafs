@@ -33,7 +33,7 @@ B<sys> command displays a single value hard-coded at compile time.  It
 does not query the Cache Manager for the current value and it does not
 report sysname lists.  If you have changed the local system type with B<fs
 sysname>, or if you run a version of B<sys> compiled differently than the
-Cache Manager running on the system, the value retured will not match the
+Cache Manager running on the system, the value returned will not match the
 behavior of the Cache Manager.  The only reason to use B<sys> is that
 B<livesys> wasn't available in older versions of AFS.
 

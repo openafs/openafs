@@ -63,7 +63,7 @@ or using an unambiguous abbreviation). For details, see L<vos(1)>.
 =item B<-partition> <I<partition name>>
 
 Specifies the partition where the VLDB should believe the volume resides.
-entries. Provide the B<-server> argument along with this one. Provide the
+Provide the B<-server> argument along with this one. Provide the
 partition's complete name with preceding slash (for example, C</vicepa>)
 or use one of the three acceptable abbreviated forms. For details, see
 L<vos(1)>.

@@ -57,7 +57,7 @@ is negative.
 
 List the groups to which each group specified by the B<-nameorid>
 argument belongs, in addition to user and machine members. Group
-membership may be nested when B<ptserver> is compilied with the
+membership may be nested when B<ptserver> is compiled with the
 SUPERGROUPS option enabled.
 
 =item B<-expandgroups>
@@ -72,7 +72,7 @@ machine which is a member of a group, including the users and machines which
 are members due to nested groups, for each group specified by the B<-nameorid>
 argument.
 
-Group membership may be nested when B<ptserver> is compilied with the
+Group membership may be nested when B<ptserver> is compiled with the
 SUPERGROUPS option enabled.
 
 =include fragments/pts-common.pod

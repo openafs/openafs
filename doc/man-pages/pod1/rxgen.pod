@@ -720,7 +720,7 @@ core-leaks).  Another drawback is that since it's a recursive call, the C
 stack will grow linearly with respect to the number of nodes in the list
 (so it's wise to increase the Rx LWP stack if huge amounts of data are
 expected back -- default stack size is 4K).  The advantages should
-outweight the disadvantages here.
+outweigh the disadvantages here.
 
 It's important to pay attention to the comments of the three array
 examples above particularly when they're references to when the user

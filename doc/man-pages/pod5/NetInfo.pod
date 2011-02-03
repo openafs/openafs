@@ -83,7 +83,7 @@ is not significant.
 Optionally, the File Server can be forced to use an IP address that does
 not belong to one of the server interfaces. To do this, add a line to the
 F<NetInfo> file with the IP address prefixed with "f" and a space. This is
-useful when the File Server is on the interal side of a NAT firewall.
+useful when the File Server is on the internal side of a NAT firewall.
 
 To display the File Server interface addresses registered in the VLDB, use
 the B<vos listaddrs> command.

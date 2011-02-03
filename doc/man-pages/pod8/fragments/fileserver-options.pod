@@ -276,7 +276,7 @@ Number of file handles set aside for I/O in the cache. Defaults to 128.
 =item B<-vattachpar> <I<number of volume attach threads>>
 
 The number of threads assigned to attach and detach volumes.  The default
-is 1.  Warning: many of the I/O parallism features of Demand-Attach
+is 1.  Warning: many of the I/O parallelism features of Demand-Attach
 Fileserver are turned off when the number of volume attach threads is only
 1.
 

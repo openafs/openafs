@@ -207,7 +207,7 @@ Names the Authentication Database account for which to change settings.
 
 Sets one or more of four toggling flags, adding them to any flags
 currently set. Either specify one or more of the following strings, or
-specify a hexidecimal number that combines the indicated values. To return
+specify a hexadecimal number that combines the indicated values. To return
 all four flags to their defaults, provide a value of C<0> (zero). To set
 more than one flag at once using the strings, connect them with plus signs
 (example: C<NOTGS+ADMIN+CPW>). To remove all the current flag settings
