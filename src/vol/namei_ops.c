@@ -64,22 +64,12 @@
 #endif /*S_SPLINT_S */
 #define afs_stat		stat64
 #define afs_fstat		fstat64
-#ifdef AFS_NT40_ENV
-#define afs_open                nt_open
-#else
-#define afs_open		open64
-#endif
 #define afs_fopen		fopen64
 #else /* !O_LARGEFILE */
 #ifdef S_SPLINT_S
 #endif /*S_SPLINT_S */
 #define afs_stat		stat
 #define afs_fstat		fstat
-#ifdef AFS_NT40_ENV
-#define afs_open                nt_open
-#else
-#define afs_open		open
-#endif
 #define afs_fopen		fopen
 #endif /* !O_LARGEFILE */
 /*@=fcnmacros =macrofcndecl@*/
@@ -383,10 +373,10 @@ namei_ViceREADME(char *partition)
 
     (void)afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s" OS_DIRSEP "README",
                        partition, INODEDIR);
-    fd = afs_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
-    if (fd >= 0) {
-	(void)write(fd, VICE_README, strlen(VICE_README));
-	close(fd);
+    fd = OS_OPEN(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
+    if (fd != INVALID_FD) {
+	(void)OS_WRITE(fd, VICE_README, strlen(VICE_README));
+	OS_CLOSE(fd);
     }
     return (errno);
 }
@@ -808,11 +798,11 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     p++;
     for (tag = 0; tag < NAMEI_MAXVOLS; tag++) {
         *p = *int_to_base32(str1, tag);
-        fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+        fd = OS_OPEN((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
         if (fd == INVALID_FD) {
             if (errno == ENOTDIR || errno == ENOENT) {
                 if (namei_CreateDataDirectories(&name, &created_dir) == 0)
-                    fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+                    fd = OS_OPEN((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
             }
         }
 
@@ -861,7 +851,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 
 bad:
     if (fd != INVALID_FD)
-        nt_close(fd);
+        OS_CLOSE(fd);
 
     if (code || (fd == INVALID_FD)) {
 	if (p2 != INODESPECIAL) {
@@ -944,21 +934,21 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
 
     namei_HandleToName(&name, &tmp);
-    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
-    if (fd < 0) {
+    fd = OS_OPEN(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+    if (fd == INVALID_FD) {
 	if (errno == ENOTDIR || errno == ENOENT) {
 	    if (namei_CreateDataDirectories(&name, &created_dir) < 0)
 		goto bad;
-	    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR,
+	    fd = OS_OPEN(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR,
 			  0);
-	    if (fd < 0)
+	    if (fd == INVALID_FD)
 		goto bad;
 	} else {
 	    goto bad;
 	}
     }
     if (SetOGM(fd, ogm_parm, tag) < 0) {
-	close(fd);
+	OS_CLOSE(fd);
 	fd = INVALID_FD;
 	goto bad;
     }
@@ -972,11 +962,11 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
 
   bad:
-    if (fd >= 0)
-	close(fd);
+    if (fd != INVALID_FD)
+	OS_CLOSE(fd);
 
 
-    if (code || (fd < 0)) {
+    if (code || (fd == INVALID_FD)) {
 	if (p2 != -1) {
 	    fdP = IH_OPEN(lh);
 	    if (fdP) {
@@ -985,7 +975,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 	    }
 	}
     }
-    return (code || (fd < 0)) ? (Inode) - 1 : tmp.ih_ino;
+    return (code || (fd == INVALID_FD)) ? (Inode) - 1 : tmp.ih_ino;
 }
 #endif
 
@@ -998,7 +988,7 @@ namei_iopen(IHandle_t * h)
 
     /* Convert handle to file name. */
     namei_HandleToName(&name, h);
-    fd = afs_open((char *)&name.n_path, O_RDWR, 0666);
+    fd = OS_OPEN((char *)&name.n_path, O_RDWR, 0666);
     return fd;
 }
 
@@ -1176,7 +1166,8 @@ namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget)
 int
 namei_copy_on_write(IHandle_t *h)
 {
-    afs_int32 fd, code = 0;
+    afs_int32 code = 0;
+    FD_t fd;
     namei_t name;
     FdHandle_t *fdP;
     struct afs_stat tstat;
@@ -1195,14 +1186,14 @@ namei_copy_on_write(IHandle_t *h)
 	if (!fdP)
 	    return EIO;
 	afs_snprintf(path, sizeof(path), "%s-tmp", name.n_path);
-	fd = afs_open(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
-	if (fd < 0) {
+	fd = OS_OPEN(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+	if (fd == INVALID_FD) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
 	buf = malloc(8192);
 	if (!buf) {
-	    close(fd);
+	    OS_CLOSE(fd);
 	    OS_UNLINK(path);
 	    FDH_CLOSE(fdP);
 	    return ENOMEM;
@@ -1213,12 +1204,12 @@ namei_copy_on_write(IHandle_t *h)
 	    tlen = size > 8192 ? 8192 : size;
 	    if (FDH_PREAD(fdP, buf, tlen, offset) != tlen)
 		break;
-	    if (write(fd, buf, tlen) != tlen)
+	    if (OS_WRITE(fd, buf, tlen) != tlen)
 		break;
 	    size -= tlen;
 	    offset += tlen;
 	}
-	close(fd);
+	OS_CLOSE(fd);
 	FDH_REALLYCLOSE(fdP);
 	free(buf);
 	if (size)
@@ -1895,7 +1886,7 @@ _namei_examine_special(char * path1,
 	/* Open this handle */
 	(void)afs_snprintf(path2, sizeof(path2),
 			   "%s" OS_DIRSEP "%s", path1, dname);
-	linkHandle->fd_fd = afs_open(path2, Testing ? O_RDONLY : O_RDWR, 0666);
+	linkHandle->fd_fd = OS_OPEN(path2, Testing ? O_RDONLY : O_RDWR, 0666);
 	info.linkCount =
 	    namei_GetLinkCount(linkHandle, (Inode) 0, 1, 1, Testing);
     }
@@ -2661,7 +2652,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 	    /* Open this handle */
 	    char lpath[1024];
 	    (void)sprintf(lpath, "%s" OS_DIRSEP "%s", fpath, data.cFileName);
-	    linkHandle.fd_fd = afs_open(lpath, O_RDONLY, 0666);
+	    linkHandle.fd_fd = OS_OPEN(lpath, O_RDONLY, 0666);
 	    info->linkCount =
 		namei_GetLinkCount(&linkHandle, (Inode) 0, 0, 0, 0);
 	}
@@ -2941,7 +2932,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s" OS_DIRSEP "%s", dir_name,
 		       infoName);
-    fd = afs_open(oldpath, O_RDWR, 0);
+    fd = OS_OPEN(oldpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
 	    oldpath);
@@ -2950,7 +2941,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     }
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_VOLINFO);
     namei_HandleToName(&n, &t_ih);
-    fd2 = afs_open(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+    fd2 = OS_OPEN(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
     if (fd2 == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not create RW info file: %s\n", n.n_path);
 	OS_CLOSE(fd);
@@ -2972,7 +2963,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     namei_HandleToName(&n, &t_ih);
     (void)afs_snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
 		       smallName);
-    fd = afs_open(newpath, O_RDWR, 0);
+    fd = OS_OPEN(newpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
 	code = -1;
@@ -2991,7 +2982,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     namei_HandleToName(&n, &t_ih);
     (void)afs_snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
 		       largeName);
-    fd = afs_open(newpath, O_RDWR, 0);
+    fd = OS_OPEN(newpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
 	code = -1;
