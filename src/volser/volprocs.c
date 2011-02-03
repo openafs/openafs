@@ -985,15 +985,16 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     }
     /* don't do strcpy onto diskstuff.name, it's still OK from 1st clone */
 
-    /* pretend recloned volume is a totally new instance */
-    V_copyDate(clonevp) = time(0);
-    V_creationDate(clonevp) = V_copyDate(clonevp);
+    /* update the creationDate, since this represents the last cloning date
+     * for ROs. But do not update copyDate; let it stay so we can identify
+     * when the clone was first created. */
+    V_creationDate(clonevp) = time(0);
     ClearVolumeStats(&V_disk(clonevp));
     V_destroyMe(clonevp) = 0;
     V_inService(clonevp) = 0;
     if (newType == backupVolume) {
-	V_backupDate(originalvp) = V_copyDate(clonevp);
-	V_backupDate(clonevp) = V_copyDate(clonevp);
+	V_backupDate(originalvp) = V_creationDate(clonevp);
+	V_backupDate(clonevp) = V_creationDate(clonevp);
     }
     V_inUse(clonevp) = 0;
     VUpdateVolume(&error, clonevp);
