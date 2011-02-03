@@ -1306,8 +1306,17 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 	rehash = newdp;
     }
 
+#if defined(D_COUNT_INT)
+    spin_lock(&olddp->d_lock);
+    if (olddp->d_count > 1) {
+	spin_unlock(&olddp->d_lock);
+	shrink_dcache_parent(olddp);
+    } else
+	spin_unlock(&olddp->d_lock);
+#else
     if (atomic_read(&olddp->d_count) > 1)
 	shrink_dcache_parent(olddp);
+#endif
 
     AFS_GLOCK();
     code = afs_rename(VTOAFS(oldip), (char *)oldname, VTOAFS(newip), (char *)newname, credp);
