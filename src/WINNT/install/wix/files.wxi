@@ -510,6 +510,11 @@
                             <File Id="file_CmdRef_1_xstat_fs_test_html"  Name="xstat_fs.htm"  LongName="xstat_fs_test.html"  DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_1 -->
+                        <Directory Id="dirCmdRef3_en_US" Name="3" src="$(var.DocDir)\man-pages\html\3\">
+                            <Component Id="cmp_Cmd_Ref_3_en_US" Guid="$(var.DocHtmlCmdRef3Guid)">
+                            <File Id="file_CmdRef_3_AFS_ukernel_html"  Name="AFS_uker.htm"  LongName="AFS.ukernel.html"  KeyPath="yes"  DiskId="1"  />
+                            </Component>
+                        </Directory> <!-- CmdRef_3 -->
                         <Directory Id="dirCmdRef5_en_US" Name="5" src="$(var.DocDir)\man-pages\html\5\">
                             <Component Id="cmp_Cmd_Ref_5_en_US" Guid="$(var.DocHtmlCmdRef5Guid)">
                             <File Id="file_CmdRef_5_afs_html"  Name="afs.htm"  LongName="afs.html"  KeyPath="yes"  DiskId="1"  />

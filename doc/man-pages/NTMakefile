@@ -172,6 +172,7 @@ PODS = \
         pod1\vos_zap.pod               \
         pod1\xstat_cm_test.pod         \
         pod1\xstat_fs_test.pod         \
+        pod3\AFS.ukernel.pod           \
         pod5\afs.pod                   \
         pod5\afsmonitor.pod            \
         pod5\afszcm.cat.pod            \
