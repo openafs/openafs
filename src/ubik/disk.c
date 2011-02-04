@@ -847,8 +847,11 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
     tt->type = atype;
     if (atype == UBIK_READTRANS)
 	adbase->readers++;
-    else if (atype == UBIK_WRITETRANS)
+    else if (atype == UBIK_WRITETRANS) {
+	UBIK_VERSION_LOCK;
 	adbase->flags |= DBWRITING;
+	UBIK_VERSION_UNLOCK;
+    }
     *atrans = tt;
     return 0;
 }
@@ -871,6 +874,7 @@ udisk_commit(struct ubik_trans *atrans)
 
 	/* On the first write to the database. We update the versions */
 	if (ubeacon_AmSyncSite() && !(urecovery_state & UBIK_RECLABELDB)) {
+	    UBIK_VERSION_LOCK;
 	    oldversion = dbase->version;
 	    newversion.epoch = FT_ApproxTime();;
 	    newversion.counter = 1;
@@ -878,8 +882,9 @@ udisk_commit(struct ubik_trans *atrans)
 	    code = (*dbase->setlabel) (dbase, 0, &newversion);
 	    if (code)
 		return (code);
-	    ubik_epochTime = newversion.epoch;
+	    version_globals.ubik_epochTime = newversion.epoch;
 	    dbase->version = newversion;
+	    UBIK_VERSION_UNLOCK;
 
 	    /* Ignore the error here. If the call fails, the site is
 	     * marked down and when we detect it is up again, we will
@@ -890,6 +895,7 @@ udisk_commit(struct ubik_trans *atrans)
 	    urecovery_state |= UBIK_RECLABELDB;
 	}
 
+	UBIK_VERSION_LOCK;
 	dbase->version.counter++;	/* bump commit count */
 #ifdef AFS_PTHREAD_ENV
 	CV_BROADCAST(&dbase->version_cond);
@@ -901,6 +907,7 @@ udisk_commit(struct ubik_trans *atrans)
 	    dbase->version.counter--;
 	    return (code);
 	}
+	UBIK_VERSION_UNLOCK;
 
 	/* If we fail anytime after this, then panic and let the
 	 * recovery replay the log.
@@ -991,7 +998,9 @@ udisk_end(struct ubik_trans *atrans)
      * we could be unsetting someone else's bit.
      */
     if (atrans->type == UBIK_WRITETRANS && dbase->flags & DBWRITING) {
+	UBIK_VERSION_LOCK;
 	dbase->flags &= ~DBWRITING;
+	UBIK_VERSION_UNLOCK;
     } else {
 	dbase->readers--;
     }

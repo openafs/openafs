@@ -365,6 +365,7 @@ InitializeDB(struct ubik_dbase *adbase)
     code = (*adbase->getlabel) (adbase, 0, &adbase->version);
     if (code) {
 	/* try setting the label to a new value */
+	UBIK_VERSION_LOCK;
 	adbase->version.epoch = 1;	/* value for newly-initialized db */
 	adbase->version.counter = 1;
 	code = (*adbase->setlabel) (adbase, 0, &adbase->version);
@@ -379,6 +380,7 @@ InitializeDB(struct ubik_dbase *adbase)
 #else
 	LWP_NoYieldSignal(&adbase->version);
 #endif
+	UBIK_VERSION_UNLOCK;
     }
     return 0;
 }
@@ -508,6 +510,7 @@ urecovery_Interact(void *dummy)
 	/* Mark whether we are the sync site */
 	if (!ubeacon_AmSyncSite()) {
 	    urecovery_state &= ~UBIK_RECSYNCSITE;
+	    DBRELE(ubik_dbase);
 	    continue;		/* nothing to do */
 	}
 	urecovery_state |= UBIK_RECSYNCSITE;
@@ -557,8 +560,10 @@ urecovery_Interact(void *dummy)
 	    urecovery_state |= UBIK_RECFOUNDDB;
 	    urecovery_state &= ~UBIK_RECSENTDB;
 	}
-	if (!(urecovery_state & UBIK_RECFOUNDDB))
+	if (!(urecovery_state & UBIK_RECFOUNDDB)) {
+	    DBRELE(ubik_dbase);
 	    continue;		/* not ready */
+	}
 
 	/* If we, the sync site, do not have the best db version, then
 	 * go and get it from the server that does.
@@ -567,7 +572,6 @@ urecovery_Interact(void *dummy)
 	    urecovery_state |= UBIK_RECHAVEDB;
 	} else {
 	    /* we don't have the best version; we should fetch it. */
-	    DBHOLD(ubik_dbase);
 	    urecovery_AbortAll(ubik_dbase);
 
 	    /* Rx code to do the Bulk fetch */
@@ -594,8 +598,10 @@ urecovery_Interact(void *dummy)
 	    }
 
 	    /* give invalid label during file transit */
+	    UBIK_VERSION_LOCK;
 	    tversion.epoch = 0;
 	    code = (*ubik_dbase->setlabel) (ubik_dbase, file, &tversion);
+	    UBIK_VERSION_UNLOCK;
 	    if (code) {
 		ubik_dprint("setlabel io error=%d\n", code);
 		goto FetchEndCall;
@@ -649,6 +655,7 @@ urecovery_Interact(void *dummy)
 	    if (!code) {
 		/* we got a new file, set up its header */
 		urecovery_state |= UBIK_RECHAVEDB;
+		UBIK_VERSION_LOCK;
 		memcpy(&ubik_dbase->version, &tversion,
 		       sizeof(struct ubik_version));
 		snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d",
@@ -674,6 +681,7 @@ urecovery_Interact(void *dummy)
 			(*ubik_dbase->setlabel) (ubik_dbase, 0,
 						 &ubik_dbase->version);
 		}
+		UBIK_VERSION_UNLOCK;
 #ifdef AFS_NT40_ENV
 		snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD",
 			 ubik_dbase->pathName, (file<0)?"SYS":"",
@@ -687,8 +695,10 @@ urecovery_Interact(void *dummy)
 		 * We will effectively invalidate the old data forever now.
 		 * Unclear if we *should* but we do.
 		 */
+		UBIK_VERSION_LOCK;
 		ubik_dbase->version.epoch = 0;
 		ubik_dbase->version.counter = 0;
+		UBIK_VERSION_UNLOCK;
 		ubik_print("Ubik: Synchronize database failed (error = %d)\n",
 			   code);
 	    } else {
@@ -703,8 +713,10 @@ urecovery_Interact(void *dummy)
 #endif
 	    DBRELE(ubik_dbase);
 	}
-	if (!(urecovery_state & UBIK_RECHAVEDB))
+	if (!(urecovery_state & UBIK_RECHAVEDB)) {
+	    DBRELE(ubik_dbase);
 	    continue;		/* not ready */
+	}
 
 	/* If the database was newly initialized, then when we establish quorum, write
 	 * a new label. This allows urecovery_AllBetter() to allow access for reads.
@@ -712,20 +724,20 @@ urecovery_Interact(void *dummy)
 	 * database and overwrite this one.
 	 */
 	if (ubik_dbase->version.epoch == 1) {
-	    DBHOLD(ubik_dbase);
 	    urecovery_AbortAll(ubik_dbase);
-	    ubik_epochTime = 2;
-	    ubik_dbase->version.epoch = ubik_epochTime;
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = 2;
+	    ubik_dbase->version.epoch = version_globals.ubik_epochTime;
 	    ubik_dbase->version.counter = 1;
 	    code =
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);
+	    UBIK_VERSION_UNLOCK;
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
 #ifdef AFS_PTHREAD_ENV
 	    CV_BROADCAST(&ubik_dbase->version_cond);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
 #endif
-	    DBRELE(ubik_dbase);
 	}
 
 	/* Check the other sites and send the database to them if they
@@ -735,7 +747,6 @@ urecovery_Interact(void *dummy)
 	    /* now propagate out new version to everyone else */
 	    dbok = 1;		/* start off assuming they all worked */
 
-	    DBHOLD(ubik_dbase);
 	    /*
 	     * Check if a write transaction is in progress. We can't send the
 	     * db when a write is in progress here because the db would be
@@ -834,10 +845,10 @@ urecovery_Interact(void *dummy)
 		    ts->currentDB = 1;
 		}
 	    }
-	    DBRELE(ubik_dbase);
 	    if (dbok)
 		urecovery_state |= UBIK_RECSENTDB;
 	}
+	DBRELE(ubik_dbase);
     }
     return NULL;
 }

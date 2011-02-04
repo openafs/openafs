@@ -438,7 +438,7 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
 	aparm->currentTrans = 0;
     }
 
-    aparm->epochTime = ubik_epochTime;
+    aparm->epochTime = version_globals.ubik_epochTime;
 
     return 0;
 }
@@ -521,7 +521,7 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 	aparm->currentTrans = 0;
     }
 
-    aparm->epochTime = ubik_epochTime;
+    aparm->epochTime = version_globals.ubik_epochTime;
 
     return 0;
 }

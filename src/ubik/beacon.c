@@ -396,6 +396,7 @@ ubeacon_Interact(void *dummy)
     struct ubik_server *ts;
     afs_int32 temp, yesVotes, lastWakeupTime, oldestYesVote, syncsite;
     struct ubik_tid ttid;
+    struct ubik_version tversion;
     afs_int32 startTime;
 
     /* loop forever getting votes */
@@ -448,7 +449,8 @@ ubeacon_Interact(void *dummy)
 	 * assume we'll be fine until SMALLTIME seconds after we start collecting votes */
 	/* this next is essentially an expansion of rgen's ServBeacon routine */
 
-	ttid.epoch = ubik_epochTime;
+	UBIK_VERSION_LOCK;
+	ttid.epoch = version_globals.ubik_epochTime;
 	if (ubik_dbase->flags & DBWRITING) {
 	    /*
 	     * if a write is in progress, we have to send the writeTidCounter
@@ -459,6 +461,8 @@ ubeacon_Interact(void *dummy)
 	    ttid.counter = ubik_dbase->writeTidCounter;
 	} else
 	    ttid.counter = ubik_dbase->tidCounter + 1;
+	tversion.epoch = ubik_dbase->version.epoch;
+	tversion.counter = ubik_dbase->version.counter;
 
 	/* now analyze return codes, counting up our votes */
 	yesVotes = 0;		/* count how many to ensure we have quorum */
@@ -468,10 +472,11 @@ ubeacon_Interact(void *dummy)
 	/*
 	 * Don't waste time using mult Rx calls if there are no connections out there
 	 */
+	UBIK_VERSION_UNLOCK;
 	if (i > 0) {
 	    char hoststr[16];
 	    multi_Rx(connections, i) {
-		multi_VOTE_Beacon(syncsite, startTime, &ubik_dbase->version,
+		multi_VOTE_Beacon(syncsite, startTime, &tversion,
 				  &ttid);
 		temp = FT_ApproxTime();	/* now, more or less */
 		ts = servers[multi_i];
@@ -523,7 +528,7 @@ ubeacon_Interact(void *dummy)
 	 * the same restrictions apply for our voting for ourself as for our voting
 	 * for anyone else. */
 	i = SVOTE_Beacon((struct rx_call *)0, ubeacon_AmSyncSite(), startTime,
-			 &ubik_dbase->version, &ttid);
+			 &tversion, &ttid);
 	if (i) {
 	    yesVotes += 2;
 	    if (amIMagic)
