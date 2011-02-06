@@ -52,6 +52,10 @@ DoKasPrincipalCreate(struct cmd_syndesc *as, void *arock)
     kas_identity_t user;
     const char *password;
 
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
+
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
     if (as->parms[INSTANCE].items) {
@@ -75,6 +79,10 @@ DoKasPrincipalDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
     afs_status_t st = 0;
     kas_identity_t user;
+
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
@@ -163,6 +171,10 @@ DoKasPrincipalGet(struct cmd_syndesc *as, void *arock)
     kas_identity_t user;
     kas_principalEntry_t principal;
 
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
+
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
     if (as->parms[INSTANCE].items) {
@@ -186,6 +198,10 @@ DoKasPrincipalList(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     void *iter;
     kas_identity_t prin;
+
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
 
     if (!kas_PrincipalGetBegin(cellHandle, 0, &iter, &st)) {
 	ERR_ST_EXT("kas_PrincipalGetBegin", st);
@@ -225,6 +241,10 @@ DoKasPrincipalKeySet(struct cmd_syndesc *as, void *arock)
     const char *cell;
     const char *password;
 
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
+
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
     if (as->parms[INSTANCE].items) {
@@ -260,6 +280,10 @@ DoKasPrincipalLockStatusGet(struct cmd_syndesc *as, void *arock)
     kas_identity_t user;
     unsigned int lock_end_time = 0;
 
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
+
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
     if (as->parms[INSTANCE].items) {
@@ -284,6 +308,10 @@ DoKasPrincipalUnlock(struct cmd_syndesc *as, void *arock)
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalUnlock_parm_t;
     afs_status_t st = 0;
     kas_identity_t user;
+
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
@@ -341,6 +369,10 @@ DoKasPrincipalFieldsSet(struct cmd_syndesc *as, void *arock)
     unsigned int failed_password_lock_time;
     unsigned int *failed_password_lock_time_ptr = NULL;
     int have_failed_password_lock_time = 0;
+
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
@@ -551,6 +583,10 @@ DoKasServerStatsGet(struct cmd_syndesc *as, void *arock)
     void *kas_server = NULL;
     kas_serverStats_t stats;
 
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
+
     if (as->parms[SERVER].items) {
 	server_list[0] = as->parms[SERVER].items->data;
     }
@@ -636,6 +672,10 @@ DoKasServerDebugGet(struct cmd_syndesc *as, void *arock)
     void *kas_server = NULL;
     kas_serverDebugInfo_t debug;
 
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
+
     if (as->parms[SERVER].items) {
 	server_list[0] = as->parms[SERVER].items->data;
     }
@@ -661,6 +701,10 @@ DoKasServerRandomKeyGet(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     kas_encryptionKey_t key;
     int i;
+
+    if (existing_tokens) {
+	ERR_EXT("can't use -usetokens with kas functions");
+    }
 
     if (!kas_ServerRandomKeyGet(cellHandle, 0, &key, &st)) {
 	ERR_ST_EXT("kas_ServerRandomKeyGet", st);

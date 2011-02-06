@@ -31,7 +31,8 @@ typedef enum {
     PASSWORD_PARAM,
     AUTHCELL_PARAM,
     EXECCELL_PARAM,
-    NOAUTH_PARAM
+    NOAUTH_PARAM,
+    USEEXISTTOKENS_PARAM
 } CommonParm_t;
 
 extern void

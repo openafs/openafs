@@ -33,5 +33,10 @@
 #include <afs/cmd.h>
 #include "common.h"
 
+extern int existing_tokens; /* set in afscp.c, means we got tokens
+			     * from afsclient_TokenGetExisting, which
+			     * is incompatable with kas operations
+			     */
+
 void
   SetupKasAdminCmd(void);

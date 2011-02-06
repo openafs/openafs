@@ -43,6 +43,7 @@
 
 void *cellHandle;
 void *tokenHandle;
+int existing_tokens = 0;
 #ifdef AFS_DARWIN_ENV
 pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -81,6 +82,23 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 	if (as->parms[AUTHCELL_PARAM].items) {
 	    ERR_EXT("you can't specify both -noauth and -authcell");
+	}
+	if (as->parms[USEEXISTTOKENS_PARAM].items) {
+	    ERR_EXT("you can't specify both -noauth and -usetokens");
+	}
+    }
+
+    /*
+     * Check for usetokens
+     */
+
+    if (as->parms[USEEXISTTOKENS_PARAM].items) {
+	existing_tokens = 1;
+	if (as->parms[USER_PARAM].items) {
+	    ERR_EXT("you can't specify both -usetokens and -authuser");
+	}
+	if (as->parms[PASSWORD_PARAM].items) {
+	    ERR_EXT("you can't specify both -usetokens and -authpassword");
 	}
     }
 
@@ -127,6 +145,18 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	     &st)) {
 	    ERR_ST_EXT("can't get noauth tokens", st);
 	}
+    } else if (existing_tokens) {
+	if (as->parms[AUTHCELL_PARAM].items) {
+	    /* Look for existing tokens for this cell */
+	    strcpy(auth_cell, as->parms[AUTHCELL_PARAM].items->data);
+	} else {
+	    if (!afsclient_LocalCellGet(auth_cell, &st)) {
+		ERR_ST_EXT("can't get local cell name", st);
+	    }
+	}
+	if (!afsclient_TokenGetExisting((const char*)auth_cell, &tokenHandle, &st)) {
+	    ERR_ST_EXT("can't find existing tokens", st);
+	}
     } else {
 	if (!afsclient_TokenGetNew
 	    (auth_cell, (const char *)as->parms[USER_PARAM].items->data,
@@ -168,6 +198,8 @@ SetupCommonCmdArgs(struct cmd_syndesc *as)
 		"cell where command will execute");
     cmd_AddParm(as, "-noauth", CMD_FLAG, CMD_OPTIONAL,
 		"run this command unauthenticated");
+    cmd_AddParm(as, "-usetokens", CMD_FLAG, CMD_OPTIONAL,
+		"use already existing tokens");
 }
 
 int
