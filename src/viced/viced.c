@@ -1089,6 +1089,7 @@ ParseArgs(int argc, char *argv[])
     int Sawbusy = 0;
     int i;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
+    int lwps_max;
     char *auditFileName = NULL;
 
     for (i = 1; i < argc; i++) {
@@ -1116,18 +1117,12 @@ ParseArgs(int argc, char *argv[])
 	} else if (!strcmp(argv[i], "-S")) {
 	    SawS = 1;
 	} else if (!strcmp(argv[i], "-p")) {
-	    int lwps_max =
-		max_fileserver_thread() - FILESERVER_HELPER_THREADS;
 	    Sawlwps = 1;
             if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -p\n");
 		return -1;
 	    }
 	    lwps = atoi(argv[++i]);
-	    if (lwps > lwps_max)
-		lwps = lwps_max;
-	    else if (lwps < 6)
-		lwps = 6;
 	} else if (!strcmp(argv[i], "-b")) {
 	    Sawbufs = 1;
             if ((i + 1) >= argc) {
@@ -1532,6 +1527,12 @@ ParseArgs(int argc, char *argv[])
 	busy_threshold = 3 * rxpackets / 2;
     if (auditFileName)
 	osi_audit_file(auditFileName);
+
+    lwps_max = max_fileserver_thread() - FILESERVER_HELPER_THREADS;
+    if (lwps > lwps_max)
+	lwps = lwps_max;
+    else if (lwps < 6)
+	lwps = 6;
 
     return (0);
 
