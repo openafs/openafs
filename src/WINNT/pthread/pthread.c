@@ -77,6 +77,7 @@ int pthread_mutex_init(pthread_mutex_t *mp, const pthread_mutexattr_t *attr) {
     int rc = 0;
 
     if ((mp != NULL) && (attr == NULL)) {
+        memset(mp, 0, sizeof(*mp));
 	InitializeCriticalSection(&mp->cs);
 	mp->isLocked = 0;
 	mp->tid = 0;
@@ -922,6 +923,7 @@ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
      * attr parameter.
      */
     if ((attr == NULL) && (cond != NULL)) {
+        memset(cond, 0, sizeof(*cond));
 	InitializeCriticalSection(&cond->cs);
 	queue_Init(&cond->waiting_threads);
     } else {
@@ -945,6 +947,10 @@ static int waiter_cache_init;
 static pthread_once_t waiter_cache_once = PTHREAD_ONCE_INIT;
  
 static void init_waiter_cache(void) {
+    if (waiter_cache_init)
+        return;
+
+    memset(&waiter_cache_cs, 0, sizeof(waiter_cache_cs));
     InitializeCriticalSection(&waiter_cache_cs);
     queue_Init(&waiter_cache);
     waiter_cache_init = 1;
