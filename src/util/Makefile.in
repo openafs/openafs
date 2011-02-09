@@ -115,6 +115,7 @@ ${TOP_INCDIR}/afs/thread_pool.h: ${srcdir}/thread_pool.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/thread_pool_types.h: ${srcdir}/thread_pool_types.h
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/tabular_output.h: ${srcdir}/tabular_output.h
 	${INSTALL_DATA} $? $@
