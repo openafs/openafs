@@ -1,3 +1,77 @@
+Since 1.5.78
+ [there was no 1.6pre1 for Windows]
+
+ * vos commands now manipulate servers by UUID and can
+   recognize multi-homed servers.
+
+ * afs_config will not longer set the Tray Icon State
+   in the registry if the checkbox is not present in
+   the dialog. [RT 128591]
+
+ * Heimdal's roken utility library has been added
+   as \Program Files\Common\afsroken.dll
+
+ * When probing servers to determine if they are up or down
+   no longer issue an RXAFS_GetTime RPC to servers that indicated
+   that they do not understand the RXAFS_GetCapabilities RPC.
+   Since they responded it is known that they are up.
+
+ * AFS Explorer Shell Extension now works from folder
+   backgrounds.  Overlays for mount points and symlinks
+   are present in the dll, but are not registered at present
+   by the installers.
+
+ * Do not use RankServerInterval registry value as the value for
+   PerformanceTuningInterval.
+
+ * CellServDB updated to 13 Dec 2010 release from grand.central.org
+
+ * Add "fs chmod" command and display current mode as part
+   of "fs examine" output.
+
+ * When the data version of a mountpoint or symlink changes,
+   the target string in the cm_scache_t object must be cleared.
+   Otherwise, the new target will not be queried.
+
+ * "fs checkservers" now includes vldb servers in the output
+   and only lists multi-homed servers once.  A multi-homed
+   server that has at least one up interface is no longer
+   considered to be down.
+
+ * When asynchronously storing dirty data buffers to the
+   file server ensure that (a) the cm_scache_t object and
+   the cm_buf_t object are for the same File ID so that
+   locking and signalling work properly; and (b) if the
+   FID no longer exists on the file server, do not panic,
+   just discard the buffer.
+
+ * When processing VNOVOL, VMOVED and VOFFLINE errors perform
+   server comparisons by UUID or address and not simply by
+   cm_server_t pointer.  Otherwise, server failover may not
+   succeed.
+
+ * Do not preserve status information for cm_scache_t objects
+   when the issuing server is multi-homed.
+
+ * Giving up all callbacks when shutting down or suspending
+   the machine is now significantly faster due to the use
+   of an rx_multi implementation.  (This functionality is
+   still off by default and must be activated by a registry
+   value.)
+
+ * Race conditions were possible when updating the state
+   of the cm_volume_t flags and when moving the volumes
+   within the least recently used list.
+
+ * Ensure that the lanahelper library does not perform a
+   NCBRESET of each lan adapter when enumerating the
+   current network bindings.  Correcting this permits OpenAFS
+   to work on Windows 7 when the network adapter settings
+   change.
+
+ * Fix creation of mount points and symlinks as \\AFS\xxxx
+
+
 Since 1.5.77
  * Reimplement FetchData and StoreData operations to make
    use of rx_Writev and rx_Readv which is faster than than
