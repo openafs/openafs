@@ -445,11 +445,11 @@ static MakeLinkCmd(struct cmd_syndesc *as, void *arock)
 	int len = (int)strlen(nbname);
 
 	if (parent[0] == '\\' && parent[1] == '\\' &&
-	    parent[len+2] == '\\' &&
-	    parent[len+3] == '\0' &&
+	    (parent[len+2] == '\\' && parent[len+3] == '\0' || parent[len+2] == '\0') &&
 	    !strnicmp(nbname,&parent[2],len))
 	{
-	    sprintf(path,"%sall\\%s", parent, &as->parms[0].items->data[strlen(parent)]);
+	    sprintf(path,"%s%sall%s", parent, parent[len+2]?"":"\\",
+                    &as->parms[0].items->data[strlen(parent)]);
 	    parent = Parent(path);
 	    if (!InAFS(parent)) {
 		fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);

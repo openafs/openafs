@@ -2314,11 +2314,12 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
 	if (parent[0] == '\\' && parent[1] == '\\' &&
-	    parent[len+2] == '\\' &&
-	    parent[len+3] == '\0' &&
+	    (parent[len+2] == '\\' && parent[len+3] == '\0' || parent[len+2] == '\0') &&
 	    !strnicmp(nbname,&parent[2],len))
 	{
-	    if( FAILED(StringCbPrintf(path, sizeof(path),"%sall\\%s", parent, &as->parms[0].items->data[len+2]))) {
+	    if( FAILED(StringCbPrintf(path, sizeof(path),"%s%sall%s", parent,
+                                      parent[len+2]?"":"\\",
+                                      &as->parms[0].items->data[len+2]))) {
 	        fprintf (stderr, "path - cannot be populated");
                 exit(1);
             }
