@@ -16,7 +16,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 .PHONY: all afscell
 
-all: OpenAFS.prefPane afssettings afscell growlagent
+all: OpenAFS.prefPane afssettings afscell growlagent aklog.bundle
 
 AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
 afscell/build/Release/afscell.bundle: afscell
@@ -32,6 +32,18 @@ OpenAFS.prefPane:
 		xcodebuild -sdk macosx10.4 -project ${srcdor}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
 	* ) \
 		echo Not building AFS prefPane for ${SYS_NAME} ;; \
+	esac
+
+aklog.bundle:
+	@case ${SYS_NAME} in \
+	*_darwin_100 ) \
+		xcodebuild -sdk macosx10.6 -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
+	*_darwin_90 ) \
+		xcodebuild -sdk macosx10.5 -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
+	*_darwin_80 ) \
+		xcodebuild -sdk macosx10.4 -project ${srcdor}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
+	* ) \
+		echo Not building AklogAuthPlugin for ${SYS_NAME} ;; \
 	esac
 
 growlagent:
@@ -51,7 +63,8 @@ dest: \
 	${DEST}/etc/afssettings \
 	${DEST}/installer/afscell.bundle \
 	${DEST}/installer/InstallerSections.plist \
-	${DEST}/tools/OpenAFS.prefPane
+	${DEST}/tools/OpenAFS.prefPane \
+	${DEST}/tools/aklog.bundle
 	cd growlagent && $(MAKE) dest
 
 ${DESTDIR}${sbindir}/afssettings: afssettings
@@ -60,8 +73,13 @@ ${DESTDIR}${sbindir}/afssettings: afssettings
 ${DEST}/etc/afssettings: afssettings
 	${INSTALL} $? $@
 
+${DEST}/tools/aklog.bundle: AklogAuthPlugin/build/Release/aklog.bundle
+	-mkdir -p ${DEST}/tools
+	rm -rf ${DEST}/tools/aklog.bundle
+	cp -R $? $@
+
 ${DEST}/installer/afscell.bundle: afscell/build/Release/afscell.bundle
-	mkdir -p ${DEST}/installer
+	-mkdir -p ${DEST}/installer
 	rm -rf ${DEST}/installer/afscell.bundle
 	cp -R $? $@
 
@@ -69,13 +87,14 @@ ${DEST}/installer/InstallerSections.plist: afscell/InstallerSections.plist
 	${INSTALL} $? $@
 
 ${DEST}/tools/OpenAFS.prefPane: AFSPreference/build/Release/OpenAFS.prefPane
-	mkdir -p ${DEST}/tools
+	-mkdir -p ${DEST}/tools
 	rm -rf ${DEST}/tools/OpenAFS.prefPane
 	cp -R $? $@
 
 clean:
 	$(RM) -rf OpenAFS.prefPane
 	$(RM) -rf AFSPreference/build
+	$(RM) -rf AklogAuthPlugin/build
 	$(RM) -rf afscell/build
 	$(RM) -f *.o core afssettings AFS_component_version_number.c
 	cd growlagent && $(MAKE) clean

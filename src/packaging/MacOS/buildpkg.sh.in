@@ -109,9 +109,11 @@ if [ $firstpass = yes ]; then
 
     mkdir -p $PKGROOT/Library
     mkdir -p $PKGROOT/Library/PreferencePanes
+    mkdir -p $PKGROOT/Library/Security/SecurityAgentPlugins
     chown root${SEP}admin $PKGROOT
-    chmod 775 $PKGROOT $PKGROOT/Library $PKGROOT/Library/PreferencePanes
+    chmod 755 $PKGROOT $PKGROOT/Library $PKGROOT/Library/PreferencePanes $PKGROOT/Library/Security/SecurityAgentPlugins
     (cd $BINDEST/tools && pax -rw OpenAFS.prefPane $PKGROOT/Library/PreferencePanes)
+    (cd $BINDEST/tools && pax -rw aklog.bundle $PKGROOT/Library/Security/SecurityAgentPlugins)
     mkdir -p $PKGROOT/Library/OpenAFS/Tools
     (cd $BINDEST && pax -rw * $PKGROOT/Library/OpenAFS/Tools)
     cd $RESSRC
