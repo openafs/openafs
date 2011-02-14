@@ -1449,22 +1449,29 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([#ifdef HAVE_SYS_TYPES_H
 ],
 [AC_MSG_RESULT(no)])
 
-AC_MSG_CHECKING([for positional I/O])
-if test "$ac_cv_func_pread" = "yes" && \
-        test "$ac_cv_func_pwrite" = "yes"; then
-   AC_DEFINE(HAVE_PIO, 1, [define if you have pread() and pwrite()])
-   AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING([for vectored positional I/O])
-if test "$ac_cv_func_preadv" = "yes" && \
-        test "$ac_cv_func_pwritev" = "yes"; then
-   AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
-   AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+case $AFS_SYSNAME in
+*hp_ux* | *hpux*)
+   AC_MSG_WARN([Some versions of HP-UX have a buggy positional I/O implementation. Forcing no positional I/O.])
+   ;;
+*)
+   AC_MSG_CHECKING([for positional I/O])
+   if test "$ac_cv_func_pread" = "yes" && \
+           test "$ac_cv_func_pwrite" = "yes"; then
+      AC_DEFINE(HAVE_PIO, 1, [define if you have pread() and pwrite()])
+      AC_MSG_RESULT(yes)
+   else
+     AC_MSG_RESULT(no)
+   fi
+   AC_MSG_CHECKING([for vectored positional I/O])
+   if test "$ac_cv_func_preadv" = "yes" && \
+           test "$ac_cv_func_pwritev" = "yes"; then
+      AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
+      AC_MSG_RESULT(yes)
+   else
+     AC_MSG_RESULT(no)
+   fi
+   ;;
+esac
 
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
