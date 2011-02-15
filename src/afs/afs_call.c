@@ -1245,7 +1245,6 @@ afs_shutdown(void)
 
     if (afs_shuttingdown)
 	return;
-    afs_FlushVCBs(2);       /* Reasonable effort to free dynamically allocated callback returns */
 
     afs_shuttingdown = 1;
     if (afs_cold_shutdown)
