@@ -491,6 +491,8 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 #define OS_OPEN(F, M, P) open(F, M, P)
 #define OS_CLOSE(FD) close(FD)
 
+#define OS_READ(FD, B, S) read(FD, B, S)
+#define OS_WRITE(FD, B, S) write(FD, B, S)
 #ifdef O_LARGEFILE
 #define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) (O), F)
 #define OS_TRUNC(FD, L) ftruncate64(FD, (off64_t) (L))
