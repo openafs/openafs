@@ -260,7 +260,6 @@ struct afs_cbr {
     struct afs_cbr *hash_next;
 
     struct AFSFid fid;
-    unsigned int dynalloc:1;
 };
 
 #ifdef AFS_LINUX22_ENV

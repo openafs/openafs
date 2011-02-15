@@ -83,7 +83,7 @@ static int afs_nextVcacheSlot = 0;
 static struct afs_slotlist *afs_freeSlotList = NULL;
 
 /* Forward declarations */
-static afs_int32 afs_QueueVCB(struct vcache *avc);
+static afs_int32 afs_QueueVCB(struct vcache *avc, int *slept);
 
 /*!
  * Generate an index into the hash table for a given Fid.
@@ -206,7 +206,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 #endif
     afs_FreeAllAxs(&(avc->Access));
     if (!afs_shuttingdown)
-	afs_QueueVCB(avc);
+	afs_QueueVCB(avc, slept);
     ObtainWriteLock(&afs_xcbhash, 460);
     afs_DequeueCallback(avc);	/* remove it from queued callbacks list */
     avc->f.states &= ~(CStatd | CUnique);
@@ -301,14 +301,10 @@ afs_AllocCBR(void)
     struct afs_cbr *tsp;
     int i;
 
-    if (!afs_cbrSpace) {
-	afs_osi_CancelWait(&AFS_WaitHandler);	/* trigger FlushVCBs asap */
-
+    while (!afs_cbrSpace) {
 	if (afs_stats_cmperf.CallBackAlloced >= sizeof(afs_cbrHeads)/sizeof(afs_cbrHeads[0])) {
 	    /* don't allocate more than 16 * AFS_NCBRS for now */
-	    tsp = (struct afs_cbr *)osi_AllocSmallSpace(sizeof(*tsp));
-	    tsp->dynalloc = 1;
-	    tsp->next = NULL;
+	    afs_FlushVCBs(0);
 	    afs_stats_cmperf.CallBackFlushes++;
 	} else {
 	    /* try allocating */
@@ -316,18 +312,15 @@ afs_AllocCBR(void)
 	    osi_Assert(tsp != NULL);
 	    for (i = 0; i < AFS_NCBRS - 1; i++) {
 		tsp[i].next = &tsp[i + 1];
-		tsp[i].dynalloc = 0;
 	    }
 	    tsp[AFS_NCBRS - 1].next = 0;
-	    tsp[AFS_NCBRS - 1].dynalloc = 0;
-	    afs_cbrSpace = tsp->next;
+	    afs_cbrSpace = tsp;
 	    afs_cbrHeads[afs_stats_cmperf.CallBackAlloced] = tsp;
 	    afs_stats_cmperf.CallBackAlloced++;
 	}
-    } else {
-	tsp = afs_cbrSpace;
-	afs_cbrSpace = tsp->next;
     }
+    tsp = afs_cbrSpace;
+    afs_cbrSpace = tsp->next;
     return tsp;
 }
 
@@ -351,12 +344,8 @@ afs_FreeCBR(struct afs_cbr *asp)
     if (asp->hash_next)
 	asp->hash_next->hash_pprev = asp->hash_pprev;
 
-    if (asp->dynalloc) {
-	osi_FreeSmallSpace(asp);
-    } else {
-	asp->next = afs_cbrSpace;
-	afs_cbrSpace = asp;
-    }
+    asp->next = afs_cbrSpace;
+    afs_cbrSpace = asp;
     return 0;
 }
 
@@ -533,17 +522,20 @@ afs_FlushVCBs(afs_int32 lockit)
  * Environment:
  *	Locks the xvcb lock.
  *	Called when the xvcache lock is already held.
+ * RACE: afs_xvcache may be dropped and reacquired
  *
  * \param avc vcache entry
+ * \param slep Set to 1 if we dropped afs_xvcache
  * \return 1 if queued, 0 otherwise
  */
 
 static afs_int32
-afs_QueueVCB(struct vcache *avc)
+afs_QueueVCB(struct vcache *avc, int *slept)
 {
     int queued = 0;
     struct server *tsp;
     struct afs_cbr *tcbp;
+    int reacquire = 0;
 
     AFS_STATCNT(afs_QueueVCB);
 
@@ -559,6 +551,15 @@ afs_QueueVCB(struct vcache *avc)
 
     /* The callback is really just a struct server ptr. */
     tsp = (struct server *)(avc->callback);
+
+    if (!afs_cbrSpace) {
+	/* If we don't have CBR space, AllocCBR may block or hit the net for
+	 * clearing up CBRs. Hitting the net may involve a fileserver
+	 * needing to contact us, so we must drop xvcache so we don't block
+	 * those requests from going through. */
+	reacquire = *slept = 1;
+	ReleaseWriteLock(&afs_xvcache);
+    }
 
     /* we now have a pointer to the server, so we just allocate
      * a queue entry and queue it.
@@ -579,6 +580,11 @@ afs_QueueVCB(struct vcache *avc)
  done:
     /* now release locks and return */
     ReleaseWriteLock(&afs_xvcb);
+
+    if (reacquire) {
+	/* make sure this is after dropping xvcb, for locking order */
+	ObtainWriteLock(&afs_xvcache, 279);
+    }
     return queued;
 }
 
@@ -3114,13 +3120,18 @@ afs_DisconGiveUpCallbacks(void)
 
     ObtainWriteLock(&afs_xvcache, 1002); /* XXX - should be a unique number */
 
+ retry:
     /* Somehow, walk the set of vcaches, with each one coming out as tvc */
     for (i = 0; i < VCSIZE; i++) {
         for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-            if (afs_QueueVCB(tvc)) {
+	    int slept = 0;
+            if (afs_QueueVCB(tvc, &slept)) {
                 tvc->callback = NULL;
                 nq++;
             }
+	    if (slept) {
+		goto retry;
+	    }
         }
     }
 

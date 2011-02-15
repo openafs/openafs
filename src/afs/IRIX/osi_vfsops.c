@@ -216,11 +216,12 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
      * EBUSY if any still in use
      */
     ObtainWriteLock(&afs_xvcache, 172);
+ retry:
     for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	tvc = QTOV(tq);
 	uq = QPrev(tq);
 	vp = (vnode_t *) tvc;
-	if (error = afs_FlushVCache(tvc, &fv_slept))
+	if (error = afs_FlushVCache(tvc, &fv_slept)) {
 	    if (vp->v_flag & VROOT) {
 		rootvp = vp;
 		continue;
@@ -228,6 +229,10 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
 		ReleaseWriteLock(&afs_xvcache);
 		return error;
 	    }
+	}
+	if (fv_slept) {
+	    goto retry;
+	}
     }
 
     /*
