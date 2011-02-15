@@ -488,6 +488,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     char tmpName[32];
     b64_string_t stmp;
     int tag;
+    afs_ino_str_t stmp;
 
     *rename = 0;
     (void)sprintf(path, "%s/%s", dir, name);
@@ -495,7 +496,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     if (info->ili_magic != XFS_VICEMAGIC) {
 	Log("%s  magic for %s/%s (inode %s) from %d to %d\n",
 	    Testing ? "Would have changed" : "Changing", dir, name,
-	    PrintInode(NULL, info->ili_info.inodeNumber), info->ili_magic,
+	    PrintInode(stmp, info->ili_info.inodeNumber), info->ili_magic,
 	    XFS_VICEMAGIC);
 	if (!Testing)
 	    update_chown = 1;
@@ -505,7 +506,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     if (info->ili_vno != AFS_XFS_VNO_CLIP(vno)) {
 	Log("%s volume id for %s/%s (inode %s) from %d to %d\n",
 	    Testing ? "Would have changed" : "Changing", dir, name,
-	    PrintInode(NULL, info->ili_info.inodeNumber), info->ili_vno,
+	    PrintInode(stmp, info->ili_info.inodeNumber), info->ili_vno,
 	    AFS_XFS_VNO_CLIP(vno));
 	if (!Testing)
 	    update_chown = 1;
@@ -538,7 +539,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     if (strncmp(name, tmpName, strlen(tmpName))) {
 	Log("%s name %s (inode %s) in directory %s, unique=%d, tag=%d\n",
 	    Testing ? "Would have returned bad" : "Bad", name,
-	    PrintInode(NULL, info->ili_info.inodeNumber), dir,
+	    PrintInode(stmp, info->ili_info.inodeNumber), dir,
 	    info->ili_info.param[2], info->ili_tag);
 	if (!Testing)
 	    *rename = 1;
@@ -554,7 +555,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
 	    p = strchr(tmpName + 1, '.');
 	    if (!p) {
 		Log("No tag found on name %s (inode %s)in directory, %s.\n",
-		    name, PrintInode(NULL, info->ili_info.inodeNumber), dir,
+		    name, PrintInode(stmp, info->ili_info.inodeNumber), dir,
 		    Testing ? "would have renamed" : "will rename");
 		if (!Testing)
 		    *rename = 1;
@@ -562,7 +563,7 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
 		tag = base64_to_int(p + 1);
 		Log("%s the tag for %s (inode %s) from %d to %d.\n",
 		    Testing ? "Would have changed" : "Will change", path,
-		    PrintInode(NULL, info->ili_info.inodeNumber), dir, tag,
+		    PrintInode(stmp, info->ili_info.inodeNumber), dir, tag,
 		    info->ili_tag);
 		if (!Testing)
 		    update_tag = 1;
@@ -1306,12 +1307,12 @@ bread(int fd, char *buf, daddr_t blk, afs_int32 size)
 
 #endif /* AFS_LINUX20_ENV */
 static afs_int32
-convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
+convertVolumeInfo(FdHandle_t *fdhr, FdHandle_t *fdhw, afs_uint32 vid)
 {
     struct VolumeDiskData vd;
     char *p;
 
-    if (read(fdr, &vd, sizeof(struct VolumeDiskData)) !=
+    if (FDH_PREAD(fdhr, &vd, sizeof(struct VolumeDiskData), 0) !=
         sizeof(struct VolumeDiskData)) {
         Log("1 convertiVolumeInfo: read failed for %lu with code %d\n", vid,
             errno);
@@ -1331,7 +1332,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
         memset(p, 0, 9);
     }
 
-    if (write(fdw, &vd, sizeof(struct VolumeDiskData)) !=
+    if (FDH_PWRITE(fdhw, &vd, sizeof(struct VolumeDiskData), 0) !=
         sizeof(struct VolumeDiskData)) {
         Log("1 convertiVolumeInfo: write failed for %lu with code %d\n", vid,
             errno);
@@ -1365,13 +1366,13 @@ getDevName(char *pbuffer, char *wpath)
 {
     char pbuf[128], *ptr;
     strcpy(pbuf, pbuffer);
-    ptr = (char *)strrchr(pbuf, '/');
+    ptr = (char *)strrchr(pbuf, OS_DIRSEPC);
     if (ptr) {
         *ptr = '\0';
         strcpy(wpath, pbuf);
     } else
         return NULL;
-    ptr = (char *)strrchr(pbuffer, '/');
+    ptr = (char *)strrchr(pbuffer, OS_DIRSEPC);
     if (ptr) {
         strcpy(pbuffer, ptr + 1);
         return pbuffer;
@@ -1395,6 +1396,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct VolumeDiskHeader h;
     IHandle_t *ih, *ih2;
     FdHandle_t *fdP, *fdP2;
+    afs_foff_t offset;
     char wpath[100];
     char tmpDevName[100];
     char buffer[128];
@@ -1475,19 +1477,21 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    }
 
 	    if (j == VI_VOLINFO)
-		convertVolumeInfo(fdP->fd_fd, fdP2->fd_fd, ih2->ih_vid);
+		convertVolumeInfo(fdP, fdP2, ih2->ih_vid);
 	    else {
+	        offset = 0;
 		while (1) {
-		    len = read(fdP->fd_fd, buffer, sizeof(buffer));
+		    len = FDH_PREAD(fdP, buffer, sizeof(buffer), offset);
 		    if (len < 0)
 			return errno;
 		    if (len == 0)
 			break;
-		    nBytes = write(fdP2->fd_fd, buffer, len);
+		    nBytes = FDH_PWRITE(fdP2, buffer, len, offset);
 		    if (nBytes != len) {
 			code = -1;
 			goto done;
 		    }
+		    offset += len;
 		}
 	    }
 
@@ -1497,8 +1501,9 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    /* Unlink the old special inode; otherwise we will get duplicate
 	     * special inodes if we recreate the RO again */
 	    if (IH_DEC(ih, specinos[j].inodeNumber, volumeId) == -1) {
+		afs_ino_str_t stmp;
 		Log("IH_DEC failed: %x, %s, %u errno %d\n", ih,
-		    PrintInode(NULL, specinos[j].inodeNumber), volumeId, errno);
+		    PrintInode(stmp, specinos[j].inodeNumber), volumeId, errno);
 	    }
 
 	    IH_RELEASE(ih);

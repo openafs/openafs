@@ -20,9 +20,14 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 
 #if !defined(UKERNEL)
+
 #if !defined(AFS_LINUX20_ENV)
-#include <net/if.h>
-#include "stdarg.h"
+# include <net/if.h>
+# if defined(AFS_SUN58_ENV)
+#  include <sys/varargs.h>
+# else
+#  include <stdarg.h>
+# endif
 #endif
 #include <netinet/in.h>
 

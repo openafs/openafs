@@ -23,7 +23,7 @@ B<vos st> S<<< B<-s> <I<machine name>> >>>
 
 =head1 DESCRIPTION
 
-Ths B<vos endtrans> command ends a specific transaction on the Volume
+The B<vos endtrans> command ends a specific transaction on the Volume
 Server for a specific volume. Under normal operation this command should
 never need to be used, but it can be useful to reduce the amount of time
 a volume is offline after an accidental command, or a L<B<vos>|vos(1)>

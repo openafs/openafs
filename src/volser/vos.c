@@ -95,7 +95,10 @@ cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
 cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
 cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
 
-#define ERROR_EXIT(code) {error=(code); goto error_exit;}
+#define ERROR_EXIT(code) do { \
+    error = (code); \
+    goto error_exit; \
+} while (0)
 
 int rxInitDone = 0;
 struct rx_connection *tconn;
@@ -4425,8 +4428,8 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
     fprintf(STDOUT,
 	    "Total VLDB entries deleted: %lu; failed to delete: %lu\n",
 	    (unsigned long)totalBack, (unsigned long)totalFail);
-    if (arrayEntries.ubulkentries_val)
-	free(arrayEntries.ubulkentries_val);
+
+    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     return 0;
 }
 
@@ -4596,10 +4599,15 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	 */
 	else if (centries > 0) {
 	    if (!tarray) {
-		/* steal away the first bulk entries array */
-		tarray = (struct uvldbentry *)arrayEntries.ubulkentries_val;
-		tarraysize = centries * sizeof(struct uvldbentry);
-		arrayEntries.ubulkentries_val = 0;
+		/* malloc the first bulk entries array */
+                tarraysize = centries * sizeof(struct uvldbentry);
+                tarray = malloc(tarraysize);
+		if (!tarray) {
+		    fprintf(STDERR,
+			    "Could not allocate enough space for the VLDB entries\n");
+		    goto bypass;
+		}
+                memcpy((char*)tarray, arrayEntries.ubulkentries_val, tarraysize);
 	    } else {
 		/* Grow the tarray to keep the extra entries */
 		parraysize = (centries * sizeof(struct uvldbentry));
@@ -4621,10 +4629,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* Free the bulk array */
-	if (arrayEntries.ubulkentries_val) {
-	    free(arrayEntries.ubulkentries_val);
-	    arrayEntries.ubulkentries_val = 0;
-	}
+        xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     }
 
     /* Here is where we now sort all the entries and print them */
@@ -4976,8 +4981,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
     fprintf(STDOUT, "Total volumes backed up: %lu; failed to backup: %lu\n",
 	    (unsigned long)totalBack, (unsigned long)totalFail);
     fflush(STDOUT);
-    if (arrayEntries.ubulkentries_val)
-	free(arrayEntries.ubulkentries_val);
+    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     return 0;
 }
 
@@ -5078,8 +5082,7 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (arrayEntries.ubulkentries_val)
-	free(arrayEntries.ubulkentries_val);
+    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
     return 0;
 }
 

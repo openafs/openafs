@@ -183,7 +183,7 @@ user's login attempts after the limit on consecutive unsuccessful
 authentication attempts is exceeded, following the string C<The lock time
 for this user is>. Use the B<kas> command's B<-locktime> argument to set
 the lockout time. This line appears only if a limit on the number of
-unsuccessful authentication attempts has been set with the the B<kas
+unsuccessful authentication attempts has been set with the B<kas
 setfields> command's B<-attempts> argument.
 
 =item *

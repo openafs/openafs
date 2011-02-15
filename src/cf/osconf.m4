@@ -412,8 +412,11 @@ case $AFS_SYSNAME in
 		;;
 
 	*_obsd*)
+		KERN_OPTMZ=-O2
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
+		LWP_OPTMZ=-O2
+		OPTMZ=-O2
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
@@ -1048,6 +1051,9 @@ else
 fi
 
 CFLAGS_NOERROR=
+CFLAGS_NOSTRICT=
+CFLAGS_NOUNUSED=
+CFLAGS_NOOLDSTYLE=
 
 if test "x$GCC" = "xyes"; then
   if test "x$enable_warnings" = "xyes"; then
@@ -1057,27 +1063,12 @@ if test "x$GCC" = "xyes"; then
     XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith"
     if test "x$enable_checking" != "xall"; then
       CFLAGS_NOERROR="-Wno-error"
+      CFLAGS_NOSTRICT="-fno-strict-aliasing"
+      CFLAGS_NOUNUSED="-Wno-unused"
+      CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
     fi
   fi
-fi
-
-CFLAGS_NOSTRICT=
-
-if test "x$GCC" = "xyes"; then
-  CFLAGS_NOSTRICT="-fno-strict-aliasing"
-fi
-
-if test "x$GCC" = "xyes"; then
-  CFLAGS_NOUNUSED="-Wno-unused"
-else
-  CFLAGS_NOUNUSED=
-fi
-
-if test "x$GCC" = "xyes"; then
-  CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
-else
-  CFLAGS_NOOLDSTYLE=
 fi
 
 dnl horribly cheating, assuming double / is ok.

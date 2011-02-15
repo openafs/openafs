@@ -108,6 +108,11 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+
+#if defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+    sb->s_d_op = &afs_dentry_operations;
+#endif
+
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
 #if defined(HAVE_LINUX_BDI_INIT)
@@ -182,7 +187,9 @@ afs_root(struct super_block *afsp)
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
 		afsp->s_root = d_alloc_root(ip);
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 		afsp->s_root->d_op = &afs_dentry_operations;
+#endif
 	    } else
 		code = ENOENT;
 	}

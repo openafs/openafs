@@ -6,8 +6,8 @@
 #ifndef	AFS_I386_PARAM_H
 #define	AFS_I386_PARAM_H
 
-#define SYS_NAME		"i386_obsd47"
-#define SYS_NAME_ID		SYS_NAME_ID_i386_obsd47
+#define SYS_NAME		"i386_obsd48"
+#define SYS_NAME_ID		SYS_NAME_ID_i386_obsd48
 
 #define AFS_X86_XBSD_ENV	1
 #define AFS_X86_ENV	        1

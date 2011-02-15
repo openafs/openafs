@@ -712,6 +712,8 @@ case $AFS_SYSNAME in
     *_obsd44)   AFS_PARAM_COMMON=param.obsd44.h  ;;
     *_obsd45)   AFS_PARAM_COMMON=param.obsd45.h  ;;
     *_obsd46)   AFS_PARAM_COMMON=param.obsd46.h  ;;
+    *_obsd47)   AFS_PARAM_COMMON=param.obsd47.h  ;;
+    *_obsd48)   AFS_PARAM_COMMON=param.obsd48.h  ;;
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
@@ -774,6 +776,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([super_block], [s_d_op], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
 				       [fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_operations], [evict_inode],
@@ -875,6 +878,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
 		 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
+		 LINUX_IOP_I_PERMISSION_TAKES_FLAGS
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PUT_LINK_TAKES_COOKIE
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
@@ -900,6 +904,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KEY_ALLOC_NEEDS_CRED
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
+		 LINUX_HAVE_DCACHE_LOCK
+		 LINUX_D_COUNT_IS_INT
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
@@ -1248,7 +1254,25 @@ AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64)
+AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev)
+
+AC_MSG_CHECKING([for positional I/O])
+if test "$ac_cv_func_pread" = "yes" && \
+        test "$ac_cv_func_pwrite" = "yes"; then
+   AC_DEFINE(HAVE_PIO, 1, [define if you have pread() and pwrite()])
+   AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING([for vectored positional I/O])
+if test "$ac_cv_func_preadv" = "yes" && \
+        test "$ac_cv_func_pwritev" = "yes"; then
+   AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
+   AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
 	test "$ac_cv_func_regcomp" = "yes" && \

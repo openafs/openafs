@@ -13,9 +13,7 @@
 #include "fssync.h"
 
 #define FSYNC_ENUMCASE(en) \
-    case en: \
-        return #en; \
-        break
+    case en: return #en
 
 static_inline char *
 FSYNC_com2string(afs_int32 command)

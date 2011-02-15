@@ -80,9 +80,6 @@ afs_init(void)
 #endif
     osi_proc_init();
     osi_ioctl_init();
-#if defined(AFS_CACHE_BYPASS)
-    afs_warn("Cache bypass patched libafs module init.\n");
-#endif
     afs_init_pagecopy();
 
     return 0;
@@ -91,10 +88,6 @@ afs_init(void)
 void __exit
 afs_cleanup(void)
 {
-#if defined(AFS_CACHE_BYPASS)
-    afs_warn("Cache bypass patched libafs module cleaning up.\n");
-#endif
-
     afs_shutdown_pagecopy();
 
 #ifdef LINUX_KEYRING_SUPPORT

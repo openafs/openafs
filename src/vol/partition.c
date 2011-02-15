@@ -229,9 +229,9 @@ VerifyXFSInodeSize(char *part, char *fstype)
 int
 VInitPartitionPackage(void)
 {
-#ifdef AFS_DEMAND_ATTACH_ENV
+#ifdef AFS_DEMAND_ATTACH_FS
     memset(&DiskPartitionTable, 0, sizeof(DiskPartitionTable));
-#endif /* AFS_DEMAND_ATTACH_ENV */
+#endif /* AFS_DEMAND_ATTACH_FS */
     return 0;
 }
 
@@ -258,7 +258,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
     dp->devName = (char *)malloc(2 * strlen(path) + 6);
     strcpy(dp->devName, path);
-    strcat(dp->devName, "/");
+    strcat(dp->devName, OS_DIRSEP);
     strcat(dp->devName, "Lock");
     mkdir(dp->devName, 0700);
     strcat(dp->devName, path);
@@ -426,7 +426,7 @@ VIsAlwaysAttach(char *part, int *awouldattach)
     }
 
     strncpy(checkfile, part, 100);
-    strcat(checkfile, "/");
+    strcat(checkfile, OS_DIRSEP);
     strcat(checkfile, VICE_ALWAYSATTACH_FILE);
 
     ret = afs_stat(checkfile, &st);
@@ -450,9 +450,9 @@ VAttachPartitions2(void)
     char pname[32];
     int wouldattach;
 
-    dirp = opendir("/");
+    dirp = opendir(OS_DIRSEP);
     while ((de = readdir(dirp))) {
-	strcpy(pname, "/");
+	strcpy(pname, OS_DIRSEP);
 	strncat(pname, de->d_name, 20);
 	pname[sizeof(pname) - 1] = '\0';
 
@@ -1227,7 +1227,7 @@ VLockPartition_r(char *name)
 
     if (!dp)
 	return;			/* no partition, will fail later */
-    if (dp->lock_fd != -1)
+    if (dp->lock_fd != INVALID_FD)
 	return;
 
 #if    defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV)
@@ -1250,7 +1250,7 @@ VLockPartition_r(char *name)
 	else
 	    dp->lock_fd = afs_open(partitionName, code);
 
-	if (dp->lock_fd != -1)
+	if (dp->lock_fd != INVALID_FD)
 	    break;
 	if (errno == ENOENT)
 	    code |= O_CREAT;
@@ -1314,7 +1314,7 @@ VUnlockPartition_r(char *name)
     if (!dp)
 	return;			/* no partition, will fail later */
     close(dp->lock_fd);
-    dp->lock_fd = -1;
+    dp->lock_fd = INVALID_FD;
 }
 
 #endif /* AFS_NT40_ENV */

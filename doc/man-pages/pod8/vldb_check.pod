@@ -86,7 +86,7 @@ additional information as described for each option in L<OPTIONS>.  The
 output is intended for debugging purposes and is meaningful to someone
 familiar with the internal structure of the VLDB.
 
-The B<-quiet> option can be used to supress the standard output stream
+The B<-quiet> option can be used to suppress the standard output stream
 so that the command can be used more easily inside scripts. 
 
 The command exits with one of the following completion codes:

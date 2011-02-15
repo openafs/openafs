@@ -282,7 +282,7 @@ DECL_PIOCTL(PNFSNukeCreds);
 DECL_PIOCTL(PNewUuid);
 DECL_PIOCTL(PPrecache);
 DECL_PIOCTL(PGetPAG);
-#if defined(AFS_CACHE_BYPASS)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
 DECL_PIOCTL(PSetCachingThreshold);
 #endif
 
@@ -405,7 +405,7 @@ static pioctlFunction CpioctlSw[] = {
 static pioctlFunction OpioctlSw[]  = {
     PBogus,			/* 0 */
     PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
-#if defined(AFS_CACHE_BYPASS)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
     PSetCachingThreshold        /* 2 -- get/set cache-bypass size threshold */
 #else
     PNoop                       /* 2 -- get/set cache-bypass size threshold */
@@ -4309,7 +4309,6 @@ DECL_PIOCTL(PGetInitParams)
 
     return afs_pd_putBytes(aout, &cm_initParams,
 			   sizeof(struct cm_initparams));
-    return 0;
 }
 
 #ifdef AFS_SGI65_ENV
@@ -4988,7 +4987,7 @@ DECL_PIOCTL(PNewUuid)
     return 0;
 }
 
-#if defined(AFS_CACHE_BYPASS)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
 
 DECL_PIOCTL(PSetCachingThreshold)
 {

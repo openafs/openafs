@@ -135,7 +135,7 @@ VPFullUnlock_r(void)
     struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
 	if (tp->lock_fd != INVALID_FD) {
-	    close(tp->lock_fd);	/* releases flock held on this partition */
+            OS_CLOSE(tp->lock_fd);
 	    tp->lock_fd = INVALID_FD;
 	}
     }
@@ -333,7 +333,6 @@ ViceCreateRoot(Volume *vp)
     FdHandle_t *fdP;
     afs_fsize_t length;
     ssize_t nBytes;
-    afs_foff_t off;
 
     vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
     if (!vnode)
@@ -393,9 +392,7 @@ ViceCreateRoot(Volume *vp)
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
     osi_Assert(fdP != NULL);
-    off = FDH_SEEK(fdP, vnodeIndexOffset(vcp, 1), SEEK_SET);
-    osi_Assert(off >= 0);
-    nBytes = FDH_WRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE);
+    nBytes = FDH_PWRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE, vnodeIndexOffset(vcp, 1));
     osi_Assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
@@ -1240,7 +1237,7 @@ SAFSVolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     code =
 	VolForward(acid, fromTrans, fromDate, destination, destTrans, cookie);
     osi_auditU(acid, VS_ForwardEvent, code, AUD_LONG, fromTrans, AUD_HOST,
-	       destination->destHost, AUD_LONG, destTrans, AUD_END);
+	       htonl(destination->destHost), AUD_LONG, destTrans, AUD_END);
     return code;
 }
 
@@ -1443,7 +1440,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
 	}
 
 	osi_auditU(acid, VS_ForwardEvent, (code ? code : codes[i]), AUD_LONG,
-		   fromTrans, AUD_HOST, dest->server.destHost, AUD_LONG,
+		   fromTrans, AUD_HOST, htonl(dest->server.destHost), AUD_LONG,
 		   dest->trans, AUD_END);
     }
     free(tcons);
@@ -1593,7 +1590,7 @@ SAFSVolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 
     code = VolSetForwarding(acid, atid, anewsite);
     osi_auditU(acid, VS_SetForwEvent, code, AUD_LONG, atid, AUD_HOST,
-	       anewsite, AUD_END);
+	       htonl(anewsite), AUD_END);
     return code;
 }
 

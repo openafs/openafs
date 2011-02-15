@@ -58,6 +58,7 @@ extern char *OutFileFlag;
 extern char OutFile[];
 extern char Sflag, Cflag, hflag, cflag, kflag, uflag;
 extern char ansic_flag;
+extern char brief_flag;
 extern char zflag;
 extern char xflag;
 extern char yflag;

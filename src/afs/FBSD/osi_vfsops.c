@@ -123,11 +123,26 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     afs_globalVFS = mp;
     mp->vfs_bsize = 8192;
     vfs_getnewfsid(mp);
-#ifdef AFS_FBSD70_ENV /* XXX 70? */
+    /*
+     * This is kind of ugly, as the interlock has grown to encompass
+     * more fields over time and there's not a good way to group the
+     * code without duplication.
+     */
+#ifdef AFS_FBSD62_ENV
     MNT_ILOCK(mp);
-    mp->mnt_flag &= ~MNT_LOCAL;
-    mp->mnt_kern_flag |= MNTK_MPSAFE; /* solid steel */
 #endif
+    mp->mnt_flag &= ~MNT_LOCAL;
+#if defined(AFS_FBSD61_ENV) && !defined(AFS_FBSD62_ENV)
+    MNT_ILOCK(mp);
+#endif
+    mp->mnt_kern_flag |= MNTK_MPSAFE; /* solid steel */
+#ifndef AFS_FBSD61_ENV
+    MNT_ILOCK(mp);
+#endif
+    /*
+     * XXX mnt_stat "is considered stable as long as a ref is held".
+     * We should check that we hold the only ref.
+     */
     mp->mnt_stat.f_iosize = 8192;
 
     if (path != NULL)
@@ -139,9 +154,7 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, "afs");
-#ifdef AFS_FBSD70_ENV
     MNT_IUNLOCK(mp);
-#endif
     AFS_GUNLOCK();
 #ifdef AFS_FBSD80_ENV
     afs_statfs(mp, &mp->mnt_stat);
@@ -242,6 +255,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     int error;
     struct vrequest treq;
     struct vcache *tvp = 0;
+    struct vcache *gvp;
 #if !defined(AFS_FBSD53_ENV) || defined(AFS_FBSD80_ENV)
     struct thread *td = curthread;
 #endif
@@ -250,22 +264,26 @@ afs_root(struct mount *mp, struct vnode **vpp)
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
     crhold(cr);
+tryagain:
     if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
     } else {
-tryagain:
-	if (afs_globalVp) {
-	    afs_PutVCache(afs_globalVp);
-	    /* vrele() needed here or not? */
-	    afs_globalVp = NULL;
-	}
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
-	    if (tvp)
+	    if (tvp) {
+		gvp = afs_globalVp;
 		afs_globalVp = tvp;
-	    else
+		if (gvp) {
+		    afs_PutVCache(gvp);
+		    if (tvp != afs_globalVp) {
+			/* someone raced us and won */
+			afs_PutVCache(tvp);
+			goto tryagain;
+		    }
+		}
+	    } else
 		error = ENOENT;
 	}
     }
@@ -274,16 +292,23 @@ tryagain:
 
 	ASSERT_VI_UNLOCKED(vp, "afs_root");
 	AFS_GUNLOCK();
+	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
+	AFS_GLOCK();
+	/* we dropped the glock, so re-check everything it had serialized */
+	if (!afs_globalVp || !(afs_globalVp->f.states & CStatd) ||
+		tvp != afs_globalVp) {
+	    vput(vp);
+	    afs_PutVCache(tvp);
+	    goto tryagain;
+	}
+	if (error != 0)
+	    goto tryagain;
 	/*
 	 * I'm uncomfortable about this.  Shouldn't this happen at a
 	 * higher level, and shouldn't we busy the top-level directory
 	 * to prevent recycling?
 	 */
-	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
 	vp->v_vflag |= VV_ROOT;
-	AFS_GLOCK();
-	if (error != 0)
-		goto tryagain;
 
 	afs_globalVFS = mp;
 	*vpp = vp;

@@ -140,7 +140,7 @@ extern pthread_mutex_t vol_salvsync_mutex;
  * salvsync server socket handle.
  */
 static SYNC_server_state_t salvsync_server_state =
-    { -1,                       /* file descriptor */
+    { OSI_NULLSOCKET,                       /* file descriptor */
       SALVSYNC_ENDPOINT_DECL,   /* server endpoint */
       SALVSYNC_PROTO_VERSION,   /* protocol version */
       5,                        /* bind() retry limit */
@@ -310,7 +310,7 @@ CleanFDs(void)
     /* just in case we were in AcceptOff mode, and thus this fd wouldn't
      * have a handler */
     close(salvsync_server_state.fd);
-    salvsync_server_state.fd = -1;
+    salvsync_server_state.fd = OSI_NULLSOCKET;
 }
 
 static fd_set SALVSYNC_readfds;
@@ -366,7 +366,7 @@ SALVSYNC_newconnection(int afd)
 
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
-    if (fd == -1) {
+    if (fd == OSI_NULLSOCKET) {
 	osi_Panic("SALVSYNC_newconnection:  accept failed, errno==%d\n", errno);
     } else if (!AddHandler(fd, SALVSYNC_com)) {
 	AcceptOff();
@@ -798,7 +798,7 @@ InitHandler(void)
     int i;
     ObtainWriteLock(&SALVSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++) {
-	HandlerFD[i] = -1;
+	HandlerFD[i] = OSI_NULLSOCKET;
 	HandlerProc[i] = NULL;
     }
     ReleaseWriteLock(&SALVSYNC_handler_lock);
@@ -825,7 +825,7 @@ AddHandler(osi_socket afd, void (*aproc) (int))
     int i;
     ObtainWriteLock(&SALVSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
-	if (HandlerFD[i] == -1)
+	if (HandlerFD[i] == OSI_NULLSOCKET)
 	    break;
     if (i >= MAXHANDLERS) {
 	ReleaseWriteLock(&SALVSYNC_handler_lock);
@@ -868,7 +868,7 @@ static int
 RemoveHandler(osi_socket afd)
 {
     ObtainWriteLock(&SALVSYNC_handler_lock);
-    HandlerFD[FindHandler_r(afd)] = -1;
+    HandlerFD[FindHandler_r(afd)] = OSI_NULLSOCKET;
     ReleaseWriteLock(&SALVSYNC_handler_lock);
     return 1;
 }
@@ -881,10 +881,13 @@ GetHandler(fd_set * fdsetp, int *maxfdp)
     FD_ZERO(fdsetp);
     ObtainReadLock(&SALVSYNC_handler_lock);	/* just in case */
     for (i = 0; i < MAXHANDLERS; i++)
-	if (HandlerFD[i] != -1) {
+	if (HandlerFD[i] != OSI_NULLSOCKET) {
 	    FD_SET(HandlerFD[i], fdsetp);
-	    if (maxfd < HandlerFD[i])
+#ifndef AFS_NT40_ENV
+            /* On Windows the nfds parameter to select() is ignored */
+	    if (maxfd < HandlerFD[i] || maxfd == (int)-1)
 		maxfd = HandlerFD[i];
+#endif
 	}
     *maxfdp = maxfd;
     ReleaseReadLock(&SALVSYNC_handler_lock);	/* just in case */

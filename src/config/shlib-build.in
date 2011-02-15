@@ -92,7 +92,15 @@ rs_aix*)
     ;;
 sun*_5*)
     if [ -f "$srcdir/$library.map" ] ; then
-        export="-Wl,-M$srcdir/$library.map"
+        if [ -z "$ignore" ] ; then
+            export="-Wl,-M$srcdir/$library.map"
+        else
+            # add "= EXTERN" to every symbol, so we don't get errors about
+            # undefined symbols
+            cat "$srcdir/$library.map" | \
+                sed -e 's/\([a-zA-Z_]\);$/\1 = EXTERN;/' > "$library.real.map"
+            export="-Wl,-M$library.real.map"
+        fi
     fi
     if [ -z "$soname" ] ; then
         echo "$linker $export -o $filename $*"

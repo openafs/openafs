@@ -39,11 +39,10 @@ static int tt_fileMarkSize(struct cmd_syndesc *as, void *arock);
 afs_int32 rewindTape(usd_handle_t hTape);
 int dataBlock(usd_handle_t, afs_int32);
 
-#define ERROR(evalue)                                           \
-        {                                                       \
+#define ERROR(evalue) do {                                      \
             code = evalue;                                      \
             goto error_exit;                                    \
-        }
+        } while (0)
 
 #define MAXV	100
 

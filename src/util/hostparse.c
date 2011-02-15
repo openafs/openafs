@@ -253,11 +253,11 @@ gettmpdir(void)
 
     if (saveTmpDir == NULL) {
 	/* initialize global temporary directory string */
-	char *dirp = (char *)malloc(MAX_PATH);
+	char *dirp = (char *)malloc(MAX_PATH+1);
 	int freeDirp = 1;
 
 	if (dirp != NULL) {
-	    DWORD pathLen = GetTempPath(MAX_PATH, dirp);
+	    DWORD pathLen = GetTempPath(MAX_PATH+1, dirp);
 
 	    if (pathLen == 0 || pathLen > MAX_PATH) {
 		/* can't get tmp path; get cur work dir */
@@ -279,7 +279,7 @@ gettmpdir(void)
 		}
 	    }
 	}
-	/* dirp != NULL */
+
 	if (dirp != NULL) {
 	    FilepathNormalize(dirp);
 	} else {
@@ -288,28 +288,12 @@ gettmpdir(void)
 	    freeDirp = 0;
 	}
 
-	/* atomically initialize shared buffer pointer IF still null */
-
-#if 0
-	if (InterlockedCompareExchange(&saveTmpDir, dirp, NULL) != NULL) {
-	    /* shared buffer pointer already initialized by another thread */
-	    if (freeDirp) {
-		free(dirp);
-	    }
-	}			/* interlock xchng */
-#endif
-
-	/* Above is what we really want to do, but Windows 95 does not have
-	 * InterlockedCompareExchange().  So we just atomically swap
-	 * the buffer pointer values but we do NOT deallocate the
-	 * previously installed buffer, if any, in case it is in use.
-	 */
-#ifdef _WIN64
-	InterlockedExchange64((LONGLONG)(INT_PTR)&saveTmpDir, (LONGLONG) dirp);
-#else
-	InterlockedExchange((LONG) & saveTmpDir, (LONG) dirp);
-#endif
-
+        /* atomically initialize shared buffer pointer IF still null */
+        if (InterlockedCompareExchangePointer(&saveTmpDir, dirp, NULL) != NULL) {
+            /* shared buffer pointer already initialized by another thread */
+            if (freeDirp)
+                free(dirp);
+        }
     }
     /* if (!saveTmpDir) */
     tmpdirp = saveTmpDir;

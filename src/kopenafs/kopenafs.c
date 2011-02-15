@@ -13,6 +13,7 @@
  */
 
 #include <errno.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -23,7 +24,6 @@
 # endif
 #endif
 #include <sys/param.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <afsconfig.h>

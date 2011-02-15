@@ -41,8 +41,10 @@ typedef struct proc afs_proc_t;
 #define iodone biodone
 #endif
 
+#ifdef AFS_FBSD80_ENV
 #define VSUID           S_ISUID
 #define VSGID           S_ISGID
+#endif
 
 #define osi_vnhold(avc,r)	vref(AFSTOV(avc))
 

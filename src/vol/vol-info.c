@@ -92,10 +92,10 @@ struct DiskPartition64 *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     struct VolumeHeader *header);
 #if defined(AFS_NAMEI_ENV)
-void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
 #else
-void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino);
 #endif
 void PrintVnodes(Volume * vp, VnodeClass class);
@@ -361,7 +361,7 @@ FindCurrentPartition(void)
 	perror("pwd");
 	exit(1);
     }
-    p = strchr(&partName[1], '/');
+    p = strchr(&partName[1], OS_DIRSEPC);
     if (p) {
 	tmp = *p;
 	*p = '\0';
@@ -456,7 +456,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     } else {
 	afs_int32 n;
 
-	(void)afs_snprintf(headerName, sizeof headerName, "%s/%s",
+	(void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
 			   VPartitionPath(dp), name);
 	if ((fd = afs_open(headerName, O_RDONLY)) == -1
 	    || afs_fstat(fd, &status) == -1) {
@@ -748,7 +748,8 @@ PrintVnodes(Volume * vp, VnodeClass class)
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file;
-    int vnodeIndex, nVnodes, offset = 0;
+    int vnodeIndex, nVnodes;
+    afs_foff_t offset = 0;
     Inode ino;
     IHandle_t *ih = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
@@ -779,7 +780,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
     nVnodes = (size / diskSize) - 1;
     if (nVnodes > 0) {
-	STREAM_SEEK(file, diskSize, 0);
+	STREAM_ASEEK(file, diskSize);
     } else
 	nVnodes = 0;
 
@@ -810,7 +811,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		total = bad = 0;
 		while (1) {
 		    ssize_t nBytes;
-		    len = FDH_READ(fdP1, buffer, sizeof(buffer));
+		    len = FDH_PREAD(fdP1, buffer, sizeof(buffer), total);
 		    if (len < 0) {
 			FDH_REALLYCLOSE(fdP1);
 			IH_RELEASE(ih1);
@@ -862,21 +863,17 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
 #if defined(AFS_NAMEI_ENV)
 void
-PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 	   Inode ino, Volume * vp)
 #else
 void
-PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 	   Inode ino)
 #endif
 {
 #if defined(AFS_NAMEI_ENV)
     IHandle_t *ihtmpp;
-#if !defined(AFS_NT40_ENV)
     namei_t filename;
-#else
-    char filename[MAX_PATH];
-#endif
 #endif
     afs_fsize_t fileLength;
 
@@ -888,8 +885,8 @@ PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
     if (orphaned && (fileLength == 0 || vnode->parent || !offset))
 	return;
     printf
-	("%10d Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
-	 offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
+	("%10lld Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
+	 (long long)offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
 	 vnode->cloned, (afs_uintmax_t) fileLength, vnode->linkCount,
 	 vnode->parent);
     if (DumpInodeNumber)
@@ -899,12 +896,11 @@ PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 #if defined(AFS_NAMEI_ENV)
     if (PrintFileNames) {
 	IH_INIT(ihtmpp, V_device(vp), V_parentId(vp), ino);
-#if !defined(AFS_NT40_ENV)
 	namei_HandleToName(&filename, ihtmpp);
+#if !defined(AFS_NT40_ENV)
 	printf(" UFS-Filename: %s", filename.n_path);
 #else
-	nt_HandleToName(filename, ihtmpp);
-	printf(" NTFS-Filename: %s", filename);
+	printf(" NTFS-Filename: %s", filename.n_path);
 #endif
     }
 #endif

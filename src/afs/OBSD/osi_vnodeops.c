@@ -394,7 +394,7 @@ afs_obsd_close(void *v)
     int code;
 
     AFS_GLOCK();
-    code = afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred, ap->a_p);
+    code = afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }

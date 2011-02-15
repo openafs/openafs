@@ -403,6 +403,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\talocale))
 		$(MKDIR) $(OJT)\WINNT\talocale
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\talocale_unicode))
+		$(MKDIR) $(OJT)\WINNT\talocale_unicode
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\win9xpanel))
 		$(MKDIR) $(OJT)\WINNT\win9xpanel
 !	ENDIF
@@ -541,12 +544,11 @@ langsetup: $(DESTDIR)\bin\NTLang.bat
 
 install: idirs $(INCFILES) $(INCTOOLS) $(INCCOPY) version $(DESTDIR)\NTDllmap.txt langsetup
 
-install9x: install
-
 # This clean target must be named something different than the universal
-# 'clean' so that the version file can be removed last.
-clean_version:
+# 'clean' so that the version and NTLang.bat files can be removed last.
+clean_final:
 	-$(DEL) NTMakefile.version
+        -$(DEL) $(DESTDIR)\bin\NTLang.bat
 
 clean::
         -$(DEL) $(INCFILES)

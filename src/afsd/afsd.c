@@ -1923,6 +1923,7 @@ afsd_run(void)
 {
     static char rn[] = "afsd";	/*Name of this routine */
     struct afsconf_dir *cdir;	/* config dir */
+    struct stat statbuf;
     int lookupResult;		/*Result of GetLocalCellName() */
     int i;
     afs_int32 code;		/*Result of fork() */
@@ -1954,6 +1955,18 @@ afsd_run(void)
     /* parse cacheinfo file if this is a diskcache */
     if (ParseCacheInfoFile()) {
 	exit(1);
+    }
+
+    if (!enable_nomount) {
+	if (stat(afsd_cacheMountDir, &statbuf)) {
+	    printf("afsd: Mountpoint %s missing.\n", afsd_cacheMountDir);
+	    exit(1);
+	} else {
+	    if (!S_ISDIR(statbuf.st_mode)) {
+		printf("afsd: Mountpoint %s is not a directory.\n", afsd_cacheMountDir);
+		exit(1);
+	    }
+	}
     }
 
     /* do some random computations in memcache case to get things to work
@@ -2302,10 +2315,12 @@ afsd_run(void)
      * Pass the kernel the name of the workstation cache file holding the
      * cell information.
      */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
-	       fullpn_CellInfoFile);
-    afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	if (afsd_debug)
+	    printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
+		   fullpn_CellInfoFile);
+	afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+    }
 
     if (rxmaxmtu) {
 	if (afsd_verbose)
