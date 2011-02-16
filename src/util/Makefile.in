@@ -24,30 +24,30 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 	 tabular_output.o ${REGEX_OBJ}
 
 objects_pic = \
-	pic_assert.o \
-	pic_base64.o \
-	pic_casestrcpy.o \
-	pic_config_file.o \
-	pic_ktime.o \
-	pic_volparse.o \
-	pic_hostparse.o \
-	pic_exec.o \
-	pic_hputil.o \
-	pic_kreltime.o \
-	pic_isathing.o \
-	pic_get_krbrlm.o \
-	pic_uuid.o \
-	pic_serverLog.o \
-	pic_dirpath.o \
-	pic_fileutil.o \
-	pic_netutils.o \
-	pic_flipbase64.o \
-	pic_fstab.o \
-	pic_afs_atomlist.o \
-	pic_afs_lhash.o \
-	pic_snprintf.o \
-	pic_pthread_glock.o \
-	pic_tabular_output.o \
+	assert_pic.o \
+	base64_pic.o \
+	casestrcpy_pic.o \
+	config_file_pic.o \
+	ktime_pic.o \
+	volparse_pic.o \
+	hostparse_pic.o \
+	exec_pic.o \
+	hputil_pic.o \
+	kreltime_pic.o \
+	isathing_pic.o \
+	get_krbrlm_pic.o \
+	uuid_pic.o \
+	serverLog_pic.o \
+	dirpath_pic.o \
+	fileutil_pic.o \
+	netutils_pic.o \
+	flipbase64_pic.o \
+	fstab_pic.o \
+	afs_atomlist_pic.o \
+	afs_lhash_pic.o \
+	snprintf_pic.o \
+	pthread_glock_pic.o \
+	tabular_output_pic.o \
 	${REGEX_OBJ_PIC}
 
 includes = \
@@ -210,79 +210,79 @@ sys: sys.o
 	$(AFS_LDRULE) sys.o
 
 # PIC objects build rules
-pic_assert.o: ${srcdir}/assert.c ${includes}
+assert_pic.o: ${srcdir}/assert.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/assert.c
 
-pic_base64.o: ${srcdir}/base64.c ${includes}
+base64_pic.o: ${srcdir}/base64.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/base64.c
 
-pic_casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
+casestrcpy_pic.o: ${srcdir}/casestrcpy.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/casestrcpy.c
 
-pic_config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
+config_file_pic.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
 	$(SHD_CCRULE) ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
 
-pic_ktime.o: ${srcdir}/ktime.c ${includes}
+ktime_pic.o: ${srcdir}/ktime.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/ktime.c
 
-pic_volparse.o: ${srcdir}/volparse.c ${includes}
+volparse_pic.o: ${srcdir}/volparse.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/volparse.c
 
-pic_hostparse.o: ${srcdir}/hostparse.c ${includes}
+hostparse_pic.o: ${srcdir}/hostparse.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/hostparse.c
 
-pic_exec.o: ${srcdir}/exec.c ${includes}
+exec_pic.o: ${srcdir}/exec.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/exec.c
 
-pic_hputil.o: ${srcdir}/hputil.c ${includes}
+hputil_pic.o: ${srcdir}/hputil.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/hputil.c
 
-pic_kreltime.o: ${srcdir}/kreltime.c ${includes}
+kreltime_pic.o: ${srcdir}/kreltime.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/kreltime.c
 
-pic_isathing.o: ${srcdir}/isathing.c ${includes}
+isathing_pic.o: ${srcdir}/isathing.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/isathing.c
 
-pic_get_krbrlm.o: ${srcdir}/get_krbrlm.c ${includes}
+get_krbrlm_pic.o: ${srcdir}/get_krbrlm.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/get_krbrlm.c
 
-pic_uuid.o: ${srcdir}/uuid.c ${includes}
+uuid_pic.o: ${srcdir}/uuid.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/uuid.c
 
-pic_serverLog.o: ${srcdir}/serverLog.c ${includes}
+serverLog_pic.o: ${srcdir}/serverLog.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/serverLog.c
 
-pic_dirpath.o: ${srcdir}/dirpath.c ${includes}
+dirpath_pic.o: ${srcdir}/dirpath.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/dirpath.c
 
-pic_fileutil.o: ${srcdir}/fileutil.c ${includes}
+fileutil_pic.o: ${srcdir}/fileutil.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/fileutil.c
 
-pic_netutils.o: ${srcdir}/netutils.c ${includes}
+netutils_pic.o: ${srcdir}/netutils.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/netutils.c
 
-pic_flipbase64.o: ${srcdir}/flipbase64.c ${includes}
+flipbase64_pic.o: ${srcdir}/flipbase64.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/flipbase64.c
 
-pic_fstab.o: ${srcdir}/fstab.c ${includes}
+fstab_pic.o: ${srcdir}/fstab.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/fstab.c
 
-pic_afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
+afs_atomlist_pic.o: ${srcdir}/afs_atomlist.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/afs_atomlist.c
 
-pic_afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
+afs_lhash_pic.o: ${srcdir}/afs_lhash.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/afs_lhash.c
 
-pic_snprintf.o: ${srcdir}/snprintf.c ${includes}
+snprintf_pic.o: ${srcdir}/snprintf.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/snprintf.c
 
-pic_pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
+pthread_glock_pic.o: ${srcdir}/pthread_glock.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/pthread_glock.c
 
-pic_tabular_output.o: ${srcdir}/tabular_output.c ${includes}
+tabular_output_pic.o: ${srcdir}/tabular_output.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/tabular_output.c
 
-pic_regex.o: ${srcdir}/regex.c ${includes}
+regex_pic.o: ${srcdir}/regex.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/regex.c
 
 #
