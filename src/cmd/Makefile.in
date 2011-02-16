@@ -54,13 +54,11 @@ cmd64.o: cmd.c cmd.h
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
 		-c -o cmd64.o ${srcdir}/cmd.c
 
-CFLAGS_cmd_errors_pic.o = -fPIC
 cmd_errors_pic.o: cmd_errors.c
-	$(AFS_CCRULE) cmd_errors.c
+	$(SHD_CCRULE) cmd_errors.c
 
-CFLAGS_cmd_pic.o = -fPIC
 cmd_pic.o: cmd.c cmd.h
-	$(AFS_CCRULE) cmd.c
+	$(SHD_CCRULE) cmd.c
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
@@ -83,9 +81,7 @@ AFS_component_version_number64.o: AFS_component_version_number.c
 		AFS_component_version_number.c
 
 AFS_component_version_number_pic.o: AFS_component_version_number.c
-	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) -fPIC \
-		-c -o AFS_component_version_number_pic.o \
-		AFS_component_version_number.c
+	$(SHD_CCRULE) AFS_component_version_number.c
 
 #
 # Install targets

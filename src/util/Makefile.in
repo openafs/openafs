@@ -198,9 +198,8 @@ pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
 
 ${objects}: ${includes}
 
-CFLAGS_AFS_component_version_number_pic.o = -fPIC
 AFS_component_version_number_pic.o: AFS_component_version_number.c
-	$(AFS_CCRULE) AFS_component_version_number.c
+	$(SHD_CCRULE) AFS_component_version_number.c
 
 config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
 	$(AFS_CCRULE) -c ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c 
@@ -211,106 +210,80 @@ sys: sys.o
 	$(AFS_LDRULE) sys.o
 
 # PIC objects build rules
-PICFLAGS = -fPIC
-CFLAGS_assert.o = $(PICFLAGS)
 pic_assert.o: ${srcdir}/assert.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/assert.c
+	$(SHD_CCRULE) ${srcdir}/assert.c
 
-CFLAGS_base64.o = $(PICFLAGS)
 pic_base64.o: ${srcdir}/base64.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/base64.c
+	$(SHD_CCRULE) ${srcdir}/base64.c
 
-CFLAGS_casestrcpy.o = $(PICFLAGS)
 pic_casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/casestrcpy.c
+	$(SHD_CCRULE) ${srcdir}/casestrcpy.c
 
-CFLAGS_config_file.o = $(PICFLAGS)
 pic_config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
-	$(AFS_CCRULE) ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
+	$(SHD_CCRULE) ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
 
-CFLAGS_ktime.o = $(PICFLAGS)
 pic_ktime.o: ${srcdir}/ktime.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/ktime.c
+	$(SHD_CCRULE) ${srcdir}/ktime.c
 
-CFLAGS_volparse.o = $(PICFLAGS)
 pic_volparse.o: ${srcdir}/volparse.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/volparse.c
+	$(SHD_CCRULE) ${srcdir}/volparse.c
 
-CFLAGS_hostparse.o = $(PICFLAGS)
 pic_hostparse.o: ${srcdir}/hostparse.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/hostparse.c
+	$(SHD_CCRULE) ${srcdir}/hostparse.c
 
-CFLAGS_exec.o = $(PICFLAGS)
 pic_exec.o: ${srcdir}/exec.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/exec.c
+	$(SHD_CCRULE) ${srcdir}/exec.c
 
-CFLAGS_hputil.o = $(PICFLAGS)
 pic_hputil.o: ${srcdir}/hputil.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/hputil.c
+	$(SHD_CCRULE) ${srcdir}/hputil.c
 
-CFLAGS_kreltime.o = $(PICFLAGS)
 pic_kreltime.o: ${srcdir}/kreltime.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/kreltime.c
+	$(SHD_CCRULE) ${srcdir}/kreltime.c
 
-CFLAGS_isathing.o = $(PICFLAGS)
 pic_isathing.o: ${srcdir}/isathing.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/isathing.c
+	$(SHD_CCRULE) ${srcdir}/isathing.c
 
-CFLAGS_get_krbrlm.o = $(PICFLAGS)
 pic_get_krbrlm.o: ${srcdir}/get_krbrlm.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/get_krbrlm.c
+	$(SHD_CCRULE) ${srcdir}/get_krbrlm.c
 
-CFLAGS_uuid.o = $(PICFLAGS)
 pic_uuid.o: ${srcdir}/uuid.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/uuid.c
+	$(SHD_CCRULE) ${srcdir}/uuid.c
 
-CFLAGS_serverLog.o = $(PICFLAGS)
 pic_serverLog.o: ${srcdir}/serverLog.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/serverLog.c
+	$(SHD_CCRULE) ${srcdir}/serverLog.c
 
-CFLAGS_dirpath.o = $(PICFLAGS)
 pic_dirpath.o: ${srcdir}/dirpath.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/dirpath.c
+	$(SHD_CCRULE) ${srcdir}/dirpath.c
 
-CFLAGS_fileutil.o = $(PICFLAGS)
 pic_fileutil.o: ${srcdir}/fileutil.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/fileutil.c
+	$(SHD_CCRULE) ${srcdir}/fileutil.c
 
-CFLAGS_netutils.o = $(PICFLAGS)
 pic_netutils.o: ${srcdir}/netutils.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/netutils.c
+	$(SHD_CCRULE) ${srcdir}/netutils.c
 
-CFLAGS_flipbase64.o = $(PICFLAGS)
 pic_flipbase64.o: ${srcdir}/flipbase64.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/flipbase64.c
+	$(SHD_CCRULE) ${srcdir}/flipbase64.c
 
-CFLAGS_fstab.o = $(PICFLAGS)
 pic_fstab.o: ${srcdir}/fstab.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/fstab.c
+	$(SHD_CCRULE) ${srcdir}/fstab.c
 
-CFLAGS_afs_atomlist.o = $(PICFLAGS)
 pic_afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/afs_atomlist.c
+	$(SHD_CCRULE) ${srcdir}/afs_atomlist.c
 
-CFLAGS_afs_lhash.o = $(PICFLAGS)
 pic_afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/afs_lhash.c
+	$(SHD_CCRULE) ${srcdir}/afs_lhash.c
 
-CFLAGS_snprintf.o = $(PICFLAGS)
 pic_snprintf.o: ${srcdir}/snprintf.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/snprintf.c
+	$(SHD_CCRULE) ${srcdir}/snprintf.c
 
-CFLAGS_pthread_glock.o = $(PICFLAGS)
 pic_pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/pthread_glock.c
+	$(SHD_CCRULE) ${srcdir}/pthread_glock.c
 
-CFLAGS_tabular_output.o = $(PICFLAGS)
 pic_tabular_output.o: ${srcdir}/tabular_output.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/tabular_output.c
+	$(SHD_CCRULE) ${srcdir}/tabular_output.c
 
-CFLAGS_regex.o = $(PICFLAGS)
 pic_regex.o: ${srcdir}/regex.c ${includes}
-	$(AFS_CCRULE) ${srcdir}/regex.c
+	$(SHD_CCRULE) ${srcdir}/regex.c
 
 #
 # Install targets
