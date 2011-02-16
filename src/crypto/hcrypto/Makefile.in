@@ -66,9 +66,6 @@ OBJECTS = $(COMMON_OBJS) rand-fortuna.o
 
 LWP_OBJS = $(COMMON_OBJS) rand-fortuna_lwp.o
 
-LWPRULE=$(CC) $(AFS_CPPFLAGS) $(COMMON_CFLAGS) $(XCFLAGS) $(ARCHFLAGS) \
-	-I$(TOP_INCDIR)/hcrypto -I$(UPSTREAM)/hcrypto -c $?
-
 ${TOP_LIBDIR}/${SHLIBOBJ}: ${SHLIBOBJ}
 	${TOP_OBJDIR}/src/config/shlib-install -d ${TOP_LIBDIR} \
 	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
@@ -250,5 +247,5 @@ test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c
 # LWP Targets
 
 rand-fortuna_lwp.o: ${UPSTREAM}/hcrypto/rand-fortuna.c
-	${LWPRULE} -o rand-fortuna_lwp.o
+	$(LWP_CCRULE) $(UPSTREAM)/hcrypto/rand-fortuna.c
 
