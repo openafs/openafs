@@ -113,7 +113,7 @@ tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 syscall.o: syscall.s
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_*) \
-                ${CC} ${AFS_CFLAGS} -c ${srcdir}/syscall.s; \
+	        ${CC} ${AFS_CFLAGS} -c ${srcdir}/syscall.s; \
 		;; \
 	rs_aix* | hp_ux10*) \
 		$(PATH_CPP) -P ${SFLAGS} ${srcdir}/syscall.s > syscall.ss; \

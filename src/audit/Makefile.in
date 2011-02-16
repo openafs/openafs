@@ -58,8 +58,8 @@ dest: libaudit.a audit.h
 	   ${INSTALL_DATA} ${srcdir}/objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
 	   ${INSTALL_DATA} ${srcdir}/events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
 	   ${INSTALL_DATA} ${srcdir}/config.aix.sample  ${DEST}/root.server/usr/afs/local/audit/config.sample  ;; \
-        *) ;; \
-        esac ;
+	*) ;; \
+	esac ;
 
 clean:
 	$(RM) -f *.a *.o core AFS_component_version_number.c

@@ -127,7 +127,7 @@ libafsrpc.a: ${LIBOBJS}
 	case "${SYS_NAME}" in \
 	    rs_aix*) \
 		$(AR) crv $@ ../sys/afsl.exp;; \
-        esac
+	esac
 
 rx_event.o: ${RX}/rx_event.c
 	$(AFS_CCRULE) $(RX)/rx_event.c
@@ -285,7 +285,7 @@ syscall.o: ${SYS}/syscall.s
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* | *_darwin_* ) \
-                ${CC} ${AFS_CFLAGS} -c ${SYS}/syscall.s;;          \
+	        ${CC} ${AFS_CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
 		${AS} -P ${AFS_CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
