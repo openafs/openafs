@@ -28,20 +28,6 @@
 
 #include <linux/smp_lock.h>
 
-#if defined(LINUX_KEYRING_SUPPORT)
-# include <linux/rwsem.h>
-# include <linux/key.h>
-# if defined(HAVE_LINUX_KEY_TYPE_H)
-#  include <linux/key-type.h>
-# endif
-# ifndef KEY_ALLOC_IN_QUOTA
-/* Before these flags were added in Linux commit v2.6.18-rc1~816,
- * key_alloc just took a boolean not_in_quota */
-#  define KEY_ALLOC_IN_QUOTA 0
-#  define KEY_ALLOC_NOT_IN_QUOTA 1
-# endif
-#endif
-
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 # define NUMPAGGROUPS 1
 
