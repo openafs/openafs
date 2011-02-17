@@ -539,6 +539,21 @@ afsd_daemon(int nochdir, int noclose)
 }
 
 int
+afsd_check_mount(const char *rn, const char *mountdir)
+{
+    struct stat statbuf;
+
+    if (stat(mountdir, &statbuf)) {
+	printf("%s: Mountpoint %s missing.\n", rn, mountdir);
+	return -1;
+    } else if (!S_ISDIR(statbuf.st_mode)) {
+	printf("%s: Mountpoint %s is not a directory.\n", rn, mountdir);
+	return -1;
+    }
+    return 0;
+}
+
+int
 main(int argc, char **argv)
 {
     int code;
