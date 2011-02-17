@@ -67,7 +67,7 @@ while [ -z "$done" ] && [ $# -gt 0 ] ; do
     esac
 done
 if [ -z "$library" ] ; then
-    echo 'Usage: shlib-install [-i] -l <lib> -M <major> -m <minor>' >&2
+    echo 'Usage: shlib-build [-i] -l <lib> -M <major> -m <minor> -- ...' >&2
     exit 1
 fi
 
