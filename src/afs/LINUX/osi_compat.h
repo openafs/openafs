@@ -207,7 +207,6 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 #  define KEY_ALLOC_IN_QUOTA 0
 # endif
 #endif
-#endif
 
 #ifndef HAVE_LINUX_PAGE_OFFSET
 static inline loff_t
@@ -395,3 +394,5 @@ afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
 #endif
     return code;
 }
+
+#endif /* AFS_LINUX_OSI_COMPAT_H */
