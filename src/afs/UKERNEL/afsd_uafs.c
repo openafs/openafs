@@ -44,6 +44,15 @@ afsd_set_afsd_rtpri(void)
 }
 
 int
+afsd_check_mount(const char *rn, const char *mountdir)
+{
+    /* libuafs could provide a callback of some kind to let the user code
+     * specify a "is this mount point valid?" function, but for now there's
+     * no need for it. */
+    return 0;
+}
+
+int
 afsd_call_syscall(long param1, long param2, long param3, long param4,
                   long param5)
 {
