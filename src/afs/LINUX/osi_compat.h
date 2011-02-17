@@ -13,6 +13,20 @@
 # include <linux/freezer.h>
 #endif
 
+#if defined(LINUX_KEYRING_SUPPORT)
+# include <linux/rwsem.h>
+# include <linux/key.h>
+# if defined(HAVE_LINUX_KEY_TYPE_H)
+#  include <linux/key-type.h>
+# endif
+# ifndef KEY_ALLOC_IN_QUOTA
+/* Before these flags were added in Linux commit v2.6.18-rc1~816,
+ * key_alloc just took a boolean not_in_quota */
+#  define KEY_ALLOC_IN_QUOTA 0
+#  define KEY_ALLOC_NOT_IN_QUOTA 1
+# endif
+#endif
+
 #ifndef HAVE_LINUX_DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
@@ -147,20 +161,21 @@ init_once_func(void * foo) {
 #define KALLOC_TYPE GFP_KERNEL
 #endif
 
+#ifdef LINUX_KEYRING_SUPPORT
 static inline struct key *
 afs_linux_key_alloc(struct key_type *type, const char *desc, uid_t uid,
 		    gid_t gid, key_perm_t perm, unsigned long flags)
 {
-#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
+# if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
     return key_alloc(type, desc, uid, gid, current, perm, flags);
-#elif defined(KEY_ALLOC_NEEDS_CRED)
+# elif defined(KEY_ALLOC_NEEDS_CRED)
     return key_alloc(type, desc, uid, gid, current_cred(), perm, flags);
-#else
+# else
     return key_alloc(type, desc, uid, gid, perm, flags);
-#endif
+# endif
 }
 
-#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
+# if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 static inline struct key*
 afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 {
@@ -178,20 +193,22 @@ afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 
     return ERR_PTR(-ENOKEY);
 }
-
-static inline int
-afs_linux_cred_is_current(afs_ucred_t *cred)
-{
-    return (cred == current_cred());
-}
-
-#else
+# else
 static inline struct key*
 afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 {
     return request_key(type, "_pag", NULL);
 }
+# endif /* STRUCT_TASK_STRUCT_HAS_CRED */
+#endif /* LINUX_KEYRING_SUPPORT */
 
+#ifdef STRUCT_TASK_STRUCT_HAS_CRED
+static inline int
+afs_linux_cred_is_current(afs_ucred_t *cred)
+{
+    return (cred == current_cred());
+}
+#else
 static inline int
 afs_linux_cred_is_current(afs_ucred_t *cred)
 {
