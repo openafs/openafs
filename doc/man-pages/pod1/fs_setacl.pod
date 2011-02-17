@@ -168,6 +168,11 @@ It is acceptable to mix entries that combine the individual letters with
 entries that use the shorthand words, but not use both types of notation
 within an individual pairing of user or group and permissions.
 
+Granting the C<l> (lookup) and C<i> (insert) permissions without
+granting the C<w> (write) and/or C<r> (read) permissions is a special
+case, and grants rights approrpriate for "dropbox" directories. See the
+L<DROPBOXES> section for details.
+
 If setting ACLs on a pathname in DFS filespace, see the DFS documentation
 for the proper format and acceptable values for DFS ACL entries.
 
@@ -202,6 +207,38 @@ Prints the online help for this command. All other valid options are
 ignored.
 
 =back
+
+=head1 DROPBOXES
+
+If an accessing user has the C<l> (read) and C<i> (insert) permissions
+on a directory, but not the C<w> (write) and/or C<r> (read) permissions,
+the user is implicitly granted the ability to write and/or read any file
+they create in that directory, until they close the file. This is to
+allow "dropbox"-style directories to exist, where users can deposit
+files, but cannot modify them later nor can they modify or read any
+files deposited in the directory by other users.
+
+Note, however, that the dropbox functionality is not perfect. The
+fileserver does not have knowledge of when a file is opened or closed on
+the client, and so the fileserver always allows an accessing user to
+read or write to a file in a "dropbox" directory if they own the file.
+While the client prevents the user from reading or modifying their
+deposited file later, this is not enforced on the fileserver, and so
+should not be relied on for security.
+
+Additionally, if "dropbox" permissions are granted to C<system:anyuser>,
+unauthenticated users may deposit files in the directory. If an
+unauthenticated user deposits a file in the directory, the new file will
+be owned by the unauthenticated user ID, and is thus potentially
+modifiable by anyone.
+
+In an effort to try and reduce accidentally publicizing private data, the
+fileserver may refuse read requests for "dropbox" files from unauthenticated
+users. As a result, depositing files as an unauthenticated user may arbitrarily
+fail if C<system:anyuser> has been granted dropbox permissions. While this
+should be rare, it is not completely preventable, and so for this reason
+relying on unauthenticated users to be able to deposit files in a dropbox is
+B<NOT RECOMMENDED>.
 
 =head1 EXAMPLES
 

@@ -448,6 +448,40 @@
       the ACLs on DFS directories and files that you own. However, DFS uses a slightly different set of permissions and a different
       syntax for ACL entries. See the DFS documentation or ask your system administrator.</para>
     </sect2>
+
+    <sect2>
+      <title>Dropbox Permissions</title>
+
+      <para>If a user or group is granted the <emphasis
+      role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) and
+      <emphasis role="bold">i</emphasis> (<emphasis
+      role="bold">insert</emphasis>) permissions, but not the <emphasis
+      role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) and/or
+      <emphasis role="bold">w</emphasis> (<emphasis
+      role="bold">write</emphasis>) permissions, this is commonly referred to
+      as a "dropbox" for that user or group. What this means is that that user
+      or group may deposit files in the directory, but they may not read or
+      modify their file later, nor any other file in the directory.</para>
+
+      <para>Know, however, that some of these restrictions are enforced on the
+      client and not on the fileserver, and so should not be relied on for
+      security. In particular, the fileserver does not know when a file is
+      opened or closed on the client, and and so read and write permissions are
+      granted to any user with "dropbox" permissions that owns the accessed
+      file.</para>
+
+      <para>Additionally, granting "dropbox" permissons to <emphasis
+      role="bold">system:anyuser</emphasis> raises additional problems, if you
+      want the dropbox to work for unauthenticated users. Any file deposited by
+      an unauthenticated user will be owned by the unauthenticated user ID, and
+      so would be readable and modifiable by anyone. In order to try and
+      prevent accidentally revealing private information, the fileserver does
+      not grant the implicit read permission to unauthenticated users, even if
+      they have dropbox permissions. This may cause depositing files as an
+      unauthenticated user to arbitrarily fail, and so you should not depend on
+      granting dropbox permissions to unauthenticated users to work
+      reliably.</para>
+    </sect2>
   </sect1>
 
   <sect1 id="HDRWQ50">
