@@ -1294,7 +1294,7 @@ uafs_mount(void) {
 }
 
 void
-uafs_mountWithDir(const char *dir)
+uafs_setMountDir(const char *dir)
 {
     if (dir) {
 	int rc;
@@ -1311,8 +1311,6 @@ uafs_mountWithDir(const char *dir)
 	    }
 	}
     }
-
-    uafs_mount();
 }
 
 int
