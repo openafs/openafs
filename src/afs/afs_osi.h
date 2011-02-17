@@ -140,7 +140,7 @@ extern struct vnodeops *afs_ops;
 #endif
 
 struct vcache;
-extern int osi_TryEvictVCache(struct vcache *, int *);
+extern int osi_TryEvictVCache(struct vcache *, int *, int);
 extern struct vcache *osi_NewVnode(void);
 extern void osi_PrePopulateVCache(struct vcache *);
 extern void osi_PostPopulateVCache(struct vcache *);

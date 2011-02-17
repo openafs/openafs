@@ -27,9 +27,10 @@ osi_NewVnode(void) {
 
 #if defined(AFS_DARWIN80_ENV)
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     *slept = 0;
 
+    /* we ignore defersleep, as we *always* need to sleep */
     if (!VREFCOUNT_GT(avc, 0) && avc->opens == 0 &&
 	(avc->f.states & CUnlinkedDel) == 0) {
 
@@ -64,7 +65,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
 }
 #else
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     if (!VREFCOUNT_GT(avc,0)
         || ((VREFCOUNT(avc) == 1) && (UBCINFOEXISTS(AFSTOV(avc))))
         && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0)

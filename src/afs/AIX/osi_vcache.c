@@ -16,7 +16,7 @@
 extern struct vnodeops *afs_ops;
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
      int code;
      if (!VREFCOUNT_GT(avc,0)
          && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {

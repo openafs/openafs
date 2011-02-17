@@ -14,9 +14,10 @@
 #include "afsincludes.h"        /*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     int code;
 
+    /* we can't control whether we sleep */
     if (!VREFCOUNT_GT(avc,0)
         && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
 	code = afs_FlushVCache(avc, slept);

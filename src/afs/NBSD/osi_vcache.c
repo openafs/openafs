@@ -14,7 +14,7 @@
 #include "afsincludes.h"	/*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     *slept = 0;
 
     if (!VREFCOUNT_GT(avc,0)
