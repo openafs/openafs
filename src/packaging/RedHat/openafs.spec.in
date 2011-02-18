@@ -2,14 +2,9 @@
 
 %define afsvers @VERSION@
 %define pkgvers @LINUX_PKGVER@
-# for beta/rc releases make pkgrel 0.X.<tag>
+# for beta/rc releases make pkgrel 0.<tag>
 # for real releases make pkgrel 1 (or more for extra releases)
-#%define pkgrel 0.1.rc1
 %define pkgrel @LINUX_PKGREL@
-
-%if %{?osvers:0}%{!?osvers:1}
-%define osvers 1
-%endif
 
 %{!?fedorakmod: %define fedorakmod 1}
 %{!?build_dkmspkg: %define build_dkmspkg 1}
@@ -87,7 +82,7 @@
 # End legacy kernel build stuff
 %endif 
 
-%define dkms_version %{osvers}.%{pkgrel}
+%define dkms_version %{pkgrel}%{?dist}
 
 # Set 'debugspec' to 1 if you want to debug the spec file.  This will
 # not remove the installed tree as part of the %clean operation
@@ -240,7 +235,7 @@
 Summary: OpenAFS distributed filesystem
 Name: openafs
 Version: %{pkgvers}
-Release: %{osvers}.%{pkgrel}
+Release: %{pkgrel}%{?dist}
 License: IBM Public License
 URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
@@ -321,7 +316,7 @@ what gets built:
                                   or kdump 
 
 To a kernel module for your running kernel, just run:
-  rpmbuild --rebuild --target=`uname -m` openafs-%{pkgvers}-%{osvers}.%{pkgrel}.src.rpm
+  rpmbuild --rebuild --target=`uname -m` openafs-%{pkgvers}-%{pkgrel}%{?dist}.src.rpm
 
 ##############################################################################
 #
