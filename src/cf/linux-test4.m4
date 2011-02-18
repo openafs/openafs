@@ -492,7 +492,7 @@ AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
 AC_DEFUN([LINUX_D_PATH_TAKES_STRUCT_PATH], [
   AC_CHECK_LINUX_BUILD([if d_path() takes a struct path argument],
 		       [ac_cv_linux_d_path_takes_struct_path],
-		       [#include <linux/dcache.h>],
+		       [#include <linux/fs.h>],
 		       [struct path *p; d_path(p, NULL, 0);],
 		       [D_PATH_TAKES_STRUCT_PATH],
 		       [define if d_path() takes a struct path argument],
@@ -575,7 +575,7 @@ AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
 AC_DEFUN([LINUX_HAVE_DCACHE_LOCK], [
   AC_CHECK_LINUX_BUILD([for dcache_lock],
 			[ac_cv_linux_have_dcache_lock],
-			[#include <linux/dcache.h> ],
+			[#include <linux/fs.h> ],
 			[printk("%p", &dcache_lock);],
 			[HAVE_DCACHE_LOCK],
 			[define if dcache_lock exists],
@@ -586,7 +586,7 @@ AC_DEFUN([LINUX_HAVE_DCACHE_LOCK], [
 AC_DEFUN([LINUX_D_COUNT_IS_INT], [
   AC_CHECK_LINUX_BUILD([if dentry->d_count is an int],
 			[ac_cv_linux_d_count_int],
-			[#include <linux/dcache.h> ],
+			[#include <linux/fs.h> ],
 			[struct dentry _d;
 			dget(&_d);
 			_d.d_count = 1;],

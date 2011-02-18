@@ -813,7 +813,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 			             [struct timespec s;
 				      s = current_kernel_time();])
 		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
-				     [#include <linux/dcache.h>],
+				     [#include <linux/fs.h>],
 				     [d_alloc_anon(NULL);])
 		 AC_CHECK_LINUX_FUNC([do_sync_read],
 				     [#include <linux/fs.h>],
