@@ -4,5 +4,5 @@
 
 int
 krb5_init_context(krb5_context *ctx) {
-    return;
+    return 0;
 }
