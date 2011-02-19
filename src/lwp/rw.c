@@ -23,7 +23,6 @@ Created: 11/1/83, J. Rosenberg
 #include <stdlib.h>
 #else
 #include <sys/time.h>
-extern char *calloc();
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +30,6 @@ extern char *calloc();
 #include "lwp.h"
 #include "lock.h"
 #include "preempt.h"
-#include <afs/afs_assert.h>
 
 #define DEFAULT_READERS	5
 
@@ -81,7 +79,7 @@ Remove(queue *q)
 
     if (empty(q)) {
 	printf("Remove from empty queue");
-	osi_Assert(0);
+	exit(0);
     }
 
     old = q->next;
@@ -97,9 +95,10 @@ queue *q;
 int asleep;			/* Number of processes sleeping -- used for
 				 * clean termination */
 
-static int
-read_process(int *id)
+static void *
+read_process(void *arg)
 {
+    int *id = (int *) arg;
     printf("\t[Reader %d]\n", *id);
     LWP_DispatchProcess();	/* Just relinquish control for now */
 
@@ -126,8 +125,8 @@ read_process(int *id)
     return 0;
 }
 
-static int
-write_process()
+static void *
+write_process(void *dummy)
 {
     static char *messages[] = {
 	"Mary had a little lamb,",
