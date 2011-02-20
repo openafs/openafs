@@ -612,6 +612,7 @@ osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
 	$(CRULE_NOOPT)
 osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
 	$(CRULE_NOOPT)
+CFLAGS-osi_debug.o = -I${TOP_SRCDIR}/rxkad
 osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 	$(CRULE_OPT)
 osi_ioctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_ioctl.c

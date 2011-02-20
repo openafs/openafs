@@ -20,7 +20,7 @@
 #include "afs_trace.h"
 #include "afs.h"
 #include "exporter.h"
-#include "fcrypt.h"
+#include <rx/fcrypt.h>
 #include "nfsclient.h"
 #include "private_data.h"
 #include "vice.h"
