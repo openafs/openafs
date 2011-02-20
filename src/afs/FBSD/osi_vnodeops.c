@@ -1448,8 +1448,6 @@ afs_vop_readlink(ap)
     return error;
 }
 
-extern int prtactive;
-
 int
 afs_vop_inactive(ap)
      struct vop_inactive_args	/* {
@@ -1458,9 +1456,6 @@ afs_vop_inactive(ap)
 				 * } */ *ap;
 {
     struct vnode *vp = ap->a_vp;
-
-    if (prtactive && vp->v_usecount != 0)
-	vprint("afs_vop_inactive(): pushing active", vp);
 
     AFS_GLOCK();
     afs_InactiveVCache(VTOAFS(vp), 0);	/* decrs ref counts */
