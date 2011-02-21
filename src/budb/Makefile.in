@@ -136,7 +136,7 @@ install: libbudb.a budb.h budb_errs.h budb_client.h budb_server
 	${INSTALL_DATA} libbudb.a ${DESTDIR}${libdir}/afs/libbudb.a
 	${INSTALL_DATA} budb.h ${DESTDIR}${includedir}/afs/budb.h
 	${INSTALL_DATA} budb_errs.h ${DESTDIR}${includedir}/afs/budb_errs.h
-	${INSTALL_DATA} budb_client.h ${DESTDIR}${includedir}/afs/budb_client.h
+	${INSTALL_DATA} ${srcdir}/budb_client.h ${DESTDIR}${includedir}/afs/budb_client.h
 	${INSTALL_PROGRAM} budb_server ${DESTDIR}${afssrvlibexecdir}/buserver
 
 dest: libbudb.a budb.h budb_errs.h budb_client.h budb_server
@@ -146,7 +146,7 @@ dest: libbudb.a budb.h budb_errs.h budb_client.h budb_server
 	${INSTALL_DATA} libbudb.a ${DEST}/lib/afs/libbudb.a
 	${INSTALL_DATA} budb.h ${DEST}/include/afs/budb.h
 	${INSTALL_DATA} budb_errs.h ${DEST}/include/afs/budb_errs.h
-	${INSTALL_DATA} budb_client.h ${DEST}/include/afs/budb_client.h
+	${INSTALL_DATA} ${srcdir}/budb_client.h ${DEST}/include/afs/budb_client.h
 	${INSTALL_PROGRAM} budb_server ${DEST}/root.server/usr/afs/bin/buserver
 
 #
