@@ -58,7 +58,7 @@ cmd_errors_pic.o: cmd_errors.c
 	$(SHD_CCRULE) cmd_errors.c
 
 cmd_pic.o: cmd.c cmd.h
-	$(SHD_CCRULE) cmd.c
+	$(SHD_CCRULE) ${srcdir}/cmd.c
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
