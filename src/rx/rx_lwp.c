@@ -475,6 +475,8 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	while ((err = select(socket + 1, 0, sfds, 0, 0)) != 1) {
 	    if (err >= 0 || errno != EINTR)
 		osi_Panic("rxi_sendmsg: select error %d.%d", err, errno);
+	    FD_ZERO(sfds);
+	    FD_SET(socket, sfds);
 	}
     }
     if (sfds)
