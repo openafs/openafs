@@ -3,7 +3,6 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /budb.h
-/budb_client.h
 /budb_errs.c
 /budb_errs.h
 /budb_server
