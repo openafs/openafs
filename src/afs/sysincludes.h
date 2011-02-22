@@ -79,7 +79,10 @@
 #include <linux/key-type.h>
 #endif
 #ifndef KEY_ALLOC_IN_QUOTA
-#define KEY_ALLOC_IN_QUOTA 1
+/* Before these flags were added in Linux commit v2.6.18-rc1~816,
+ * key_alloc just took a boolean not_in_quota */
+#define KEY_ALLOC_IN_QUOTA 0
+#define KEY_ALLOC_NOT_IN_QUOTA 1
 #endif
 #endif
 #endif

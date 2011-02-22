@@ -109,15 +109,6 @@ init_once_func(void * foo) {
 #else
 #define KALLOC_TYPE GFP_KERNEL
 #endif
-
-#ifdef LINUX_KEYRING_SUPPORT
-# ifndef KEY_ALLOC_NOT_IN_QUOTA
-#  define KEY_ALLOC_NOT_IN_QUOTA 1
-# endif
-# ifndef KEY_ALLOC_IN_QUOTA
-#  define KEY_ALLOC_IN_QUOTA 0
-# endif
-#endif
 #endif
 
 static inline int
