@@ -199,15 +199,6 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 }
 #endif
 
-#ifdef LINUX_KEYRING_SUPPORT
-# ifndef KEY_ALLOC_NOT_IN_QUOTA
-#  define KEY_ALLOC_NOT_IN_QUOTA 1
-# endif
-# ifndef KEY_ALLOC_IN_QUOTA
-#  define KEY_ALLOC_IN_QUOTA 0
-# endif
-#endif
-
 #ifndef HAVE_LINUX_PAGE_OFFSET
 static inline loff_t
 page_offset(struct page *pp)
