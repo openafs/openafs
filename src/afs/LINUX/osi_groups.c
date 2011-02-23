@@ -230,7 +230,7 @@ install_session_keyring(struct key *keyring)
 {
     struct key *old;
     char desc[20];
-    int flags;
+    unsigned long flags;
     int code = -EINVAL;
 
     if (!__key_type_keyring)
