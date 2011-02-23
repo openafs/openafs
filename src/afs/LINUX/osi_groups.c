@@ -185,7 +185,7 @@ install_session_keyring(struct key *keyring)
     struct key *old;
     char desc[20];
     int code = -EINVAL;
-    int flags;
+    unsigned long flags;
 
     if (!__key_type_keyring)
 	return code;
