@@ -44,6 +44,7 @@
 #include <tap/basic.h>
 
 #include "test.h"
+#include "common.h"
 
 #define TEST_PORT 1234
 
@@ -423,11 +424,9 @@ startServer(char *configPath)
 int main(int argc, char **argv)
 {
     struct afsconf_dir *dir;
-    char buffer[1024];
+    char *dirname;
     int serverPid, clientPid, waited, stat;
     char keymaterial[]="\x19\x17\xff\xe6\xbb\x77\x2e\xfc";
-    char *dirEnd;
-    FILE *file;
     int code;
 
     /* Start the client and the server if requested */
@@ -448,26 +447,9 @@ int main(int argc, char **argv)
     /* Otherwise, do the basic configuration, then start the client and
      * server */
 
-    snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
-    mkdtemp(buffer);
-    dirEnd = buffer + strlen(buffer);
+    dirname = buildTestConfig();
 
-    /* Create a CellServDB file */
-    strcpy(dirEnd, "/CellServDB");
-    file = fopen(buffer, "w");
-    fprintf(file, ">example.org # An example cell\n");
-    fprintf(file, "127.0.0.1 #test.example.org\n");
-    fclose(file);
-
-    /* Create a ThisCell file */
-    strcpy(dirEnd, "/ThisCell");
-    file = fopen(buffer, "w");
-    fprintf(file, "example.org\n");
-    fclose(file);
-
-    *dirEnd='\0';
-    /* Start with a blank configuration directory */
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
 	exit(1);
@@ -482,12 +464,12 @@ int main(int argc, char **argv)
 	exit(1);
     }
 
-    printf("Config directory is %s\n", buffer);
+    printf("Config directory is %s\n", dirname);
     serverPid = fork();
     if (serverPid == -1) {
         /* Bang */
     } else if (serverPid == 0) {
-        execl(argv[0], argv[0], "-server", buffer, NULL);
+        execl(argv[0], argv[0], "-server", dirname, NULL);
         exit(1);
     }
     clientPid = fork();
@@ -496,7 +478,7 @@ int main(int argc, char **argv)
         waitpid(serverPid, &stat, 0);
         exit(1);
     } else if (clientPid == 0) {
-        execl(argv[0], argv[0], "-client", buffer, NULL);
+        execl(argv[0], argv[0], "-client", dirname, NULL);
     }
 
     do {
@@ -512,16 +494,7 @@ int main(int argc, char **argv)
 
     /* Client and server are both done, so cleanup after everything */
 
-    strcpy(dirEnd, "/KeyFile");
-    unlink(buffer);
-    strcpy(dirEnd, "/CellServDB");
-    unlink(buffer);
-    strcpy(dirEnd, "/ThisCell");
-    unlink(buffer);
-    strcpy(dirEnd, "/UserList");
-    unlink(buffer);
-    *dirEnd='\0';
-    rmdir(buffer);
+    /* unlinkTestConfig(dirname); */
 
     return 0;
 }

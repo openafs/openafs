@@ -38,6 +38,9 @@
 
 #include <tap/basic.h>
 
+#include "test.h"
+#include "common.h"
+
 static int
 copy(char *inFile, char *outFile)
 {
@@ -88,7 +91,6 @@ keyMatches(struct afsconf_typedKey *typedKey,
 	    memcmp(keyMaterial, buffer->val, buffer->len) == 0);
 }
 
-
 int main(int argc, char **argv)
 {
     struct afsconf_dir *dir;
@@ -97,10 +99,8 @@ int main(int argc, char **argv)
     struct rx_opaque *keyMaterial;
     struct afsconf_typedKey *typedKey;
     struct afsconf_typedKeyList *typedKeyList;
-
-    char buffer[1024];
-    char *dirEnd;
-    FILE *file;
+    char *dirname;
+    char *keyfile;
     afs_int32 kvno;
     int code;
     int i;
@@ -108,33 +108,19 @@ int main(int argc, char **argv)
     plan(122);
 
     /* Create a temporary afs configuration directory */
-    snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
-    mkdtemp(buffer);
-    dirEnd = buffer + strlen(buffer);
 
-    /* Create a CellServDB file */
-    strcpy(dirEnd, "/CellServDB");
-    file = fopen(buffer, "w");
-    fprintf(file, ">example.org # An example cell\n");
-    fprintf(file, "127.0.0.1 #test.example.org\n");
-    fclose(file);
+    dirname = buildTestConfig();
 
-    /* Create a ThisCell file */
-    strcpy(dirEnd, "/ThisCell");
-    file = fopen(buffer, "w");
-    fprintf(file, "example.org\n");
-    fclose(file);
+    if (asprintf(&keyfile, "%s/KeyFile", dirname) == -1)
+	goto out;
 
-    /* Firstly, copy in a known keyfile. */
-    strcpy(dirEnd, "/KeyFile");
-    code = copy("KeyFile", buffer);
+    /* First, copy in a known keyfile */
+    code = copy("KeyFile", keyfile);
     if (code)
 	goto out;
 
-    *dirEnd='\0';
-
     /* Start with a blank configuration directory */
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(dirname);
     ok(dir != NULL, "Sucessfully re-opened config directory");
     if (dir == NULL)
 	goto out;
@@ -238,8 +224,7 @@ int main(int argc, char **argv)
      * still have the same KeyFile */
     afsconf_Close(dir);
 
-    *dirEnd='\0';
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(dirname);
     ok(dir != NULL, "Sucessfully re-opened config directory");
     if (dir == NULL)
 	goto out;
@@ -336,14 +321,12 @@ int main(int argc, char **argv)
     is_int(AFSCONF_NOTFOUND, code, " ... and is really gone");
 
     /* Unlink the KeyFile */
-    strcpy(dirEnd, "/KeyFile");
-    unlink(buffer);
+    unlink(keyfile);
 
     /* Force a rebuild of the directory structure, just in case */
     afsconf_Close(dir);
 
-    *dirEnd='\0';
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(dirname);
     ok(dir != NULL, "Sucessfully re-opened config directory");
     if (dir == NULL)
 	goto out;
@@ -518,8 +501,7 @@ int main(int argc, char **argv)
      */
     afsconf_Close(dir);
 
-    *dirEnd='\0';
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(dirname);
     ok(dir != NULL, "Sucessfully re-opened config directory");
     if (dir == NULL)
 	goto out;
@@ -542,16 +524,7 @@ int main(int argc, char **argv)
     afsconf_PutTypedKeyList(&typedKeyList);
 
 out:
-    strcpy(dirEnd, "/KeyFile");
-    unlink(buffer);
-    strcpy(dirEnd, "/CellServDB");
-    unlink(buffer);
-    strcpy(dirEnd, "/ThisCell");
-    unlink(buffer);
-    strcpy(dirEnd, "/UserList");
-    unlink(buffer);
-    *dirEnd='\0';
-    rmdir(buffer);
+    unlinkTestConfig(dirname);
 
     return 0;
 }
