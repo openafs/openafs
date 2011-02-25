@@ -1407,7 +1407,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     if (atomic_read(&olddp->d_count) > 1)
 	shrink_dcache_parent(olddp);
 #endif
-
+#endif
 
     AFS_GLOCK();
     code = afs_rename(VTOAFS(oldip), oldname, VTOAFS(newip), newname, credp);
