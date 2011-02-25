@@ -310,7 +310,7 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
     *sc = NULL;
     *scIndex = RX_SECIDX_NULL;
     if (expires)
-	expires = 0;
+	*expires = 0;
 
     if ( !(flags & AFSCONF_SECOPTS_NOAUTH) ) {
 	if (!dir)
