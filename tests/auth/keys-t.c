@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     int code;
     int i;
 
-    plan(123);
+    plan(127);
 
     /* Create a temporary afs configuration directory */
 
@@ -526,6 +526,33 @@ int main(int argc, char **argv)
     ok(keyMatches(typedKeyList->keys[1], 1, 2, 1, "\x02\x03", 2),
        " ... with the right key in slot 1");
     afsconf_PutTypedKeyList(&typedKeyList);
+
+    afsconf_Close(dir);
+
+    unlinkTestConfig(dirname);
+    free(dirname);
+    free(keyfile);
+
+    /* Start a new test configuration */
+    dirname = buildTestConfig();
+    dir = afsconf_Open(dirname);
+    ok(dir != NULL, "Sucessfully opened brand new config directory");
+    if (dir == NULL)
+	goto out;
+
+    /* Check that directories with just new style keys work */
+    keyMaterial = rx_opaque_new("\x02\x03", 2);
+    typedKey = afsconf_typedKey_new(1, 2, 1, keyMaterial);
+    code = afsconf_AddTypedKey(dir, typedKey, 0);
+    afsconf_typedKey_put(&typedKey);
+    is_int(0, code,
+	   "afsconf_AddTypedKey can add keys with different sub type");
+
+    /* Check the GetKeyByTypes returns one of the keys */
+    code = afsconf_GetKeyByTypes(dir, 1, 2, 1, &typedKey);
+    is_int(0, code, "afsconf_GetKeyByTypes returns it");
+    ok(keyMatches(typedKey, 1, 2, 1, "\x02\x03", 2),
+       " ... with the right key");
 
 out:
     unlinkTestConfig(dirname);

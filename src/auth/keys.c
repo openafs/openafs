@@ -415,13 +415,16 @@ _writeOriginalKeyFile(struct afsconf_dir *dir, char *fileName)
 	return AFSCONF_FAILURE;
 
     typeEntry = findByType(dir, afsconf_rxkad);
-    if (typeEntry == NULL)
-	goto out;
-
-    nkeys = opr_queue_Count(&typeEntry->kvnoList);
+    if (typeEntry)
+	nkeys = opr_queue_Count(&typeEntry->kvnoList);
+    else
+	nkeys = 0;
 
     if (writeWord(fd, nkeys))
 	goto fail;
+
+    if (typeEntry == NULL)
+	goto out;
 
     for (opr_queue_Scan(&typeEntry->kvnoList, cursor)) {
 	struct kvnoList *kvnoEntry;
