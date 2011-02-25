@@ -822,10 +822,10 @@ extern int VAllocBitmapEntry(Error * ec, Volume * vp,
 			     struct vnodeIndex *index);
 extern int VAllocBitmapEntry_r(Error * ec, Volume * vp,
 			       struct vnodeIndex *index, int flags);
-extern void VFreeBitMapEntry(Error * ec, struct vnodeIndex *index,
+extern void VFreeBitMapEntry(Error * ec, Volume *vp, struct vnodeIndex *index,
 			     unsigned bitNumber);
-extern void VFreeBitMapEntry_r(Error * ec, struct vnodeIndex *index,
-			       unsigned bitNumber);
+extern void VFreeBitMapEntry_r(Error * ec, Volume *vp, struct vnodeIndex *index,
+			       unsigned bitNumber, int flags);
 extern int VolumeNumber(char *name);
 extern char *VolumeExternalName(VolumeId volumeId);
 extern int VolumeExternalName_r(VolumeId volumeId, char *name, size_t len);
@@ -1022,6 +1022,9 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 
 /* VAllocBitmapEntry_r flags */
 #define VOL_ALLOC_BITMAP_WAIT    0x1  /* for demand attach, wait for other exclusive ops to end */
+
+/* VFreeBitMapEntry_r flags */
+#define VOL_FREE_BITMAP_WAIT     0x1  /* for demand attach, wait for other exclusive ops to end */
 
 /* VRequestSalvage_r flags */
 #define VOL_SALVAGE_INVALIDATE_HEADER 0x1 /* for demand attach fs, invalidate volume header cache */
