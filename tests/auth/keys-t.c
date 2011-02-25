@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     int code;
     int i;
 
-    plan(122);
+    plan(123);
 
     /* Create a temporary afs configuration directory */
 
@@ -145,6 +145,10 @@ int main(int argc, char **argv)
     is_int(4, kvno, " ... with correct key number");
     ok(memcmp(&key, "\x19\x16\xfe\xe6\xba\x77\x2f\xfd", 8) == 0,
        " ... and correct key");
+
+    /* Check that GetLatestKey works if called with NULL parameters */
+    code = afsconf_GetLatestKey(dir, NULL, NULL);
+    is_int(0, code, "afsconf_GetLatestKey works if parameters are NULL");
 
     /* Verify that random access using GetKey works properly */
     code = afsconf_GetKey(dir, 2, &key);

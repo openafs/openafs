@@ -729,8 +729,11 @@ afsconf_GetLatestKey(struct afsconf_dir *dir, afs_int32 *kvno,
     /* XXX - Should check that the key is of the correct length */
 
     /* Copy out the relevant details */
-    *kvno = typedKey->kvno;
-    memcpy(key, typedKey->key.val, 8);
+    if (kvno != NULL)
+	*kvno = typedKey->kvno;
+
+    if (key != NULL)
+	memcpy(key, typedKey->key.val, 8);
 
     afsconf_typedKey_put(&typedKey);
 
