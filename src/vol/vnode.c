@@ -703,6 +703,28 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    }
 	}
 
+	/* sanity check: vnode should be blank if it was deleted. If it's
+	 * not blank, it is still in use somewhere; but the bitmap told us
+	 * this vnode number was free, so something is wrong. */
+	if (vnp->disk.type != vNull) {
+	    Error tmp;
+	    Log("VAllocVnode:  addled bitmap or vnode object! (vol %ld, "
+		"vnode %p, number %ld, type %ld)\n", (long)vp->hashid, vnp,
+		(long)Vn_id(vnp), (long)vnp->disk.type);
+	    *ec = EIO;
+	    VFreeBitMapEntry_r(&tmp, vp, &vp->vnodeIndex[class], bitNumber,
+		               VOL_FREE_BITMAP_WAIT);
+	    VInvalidateVnode_r(vnp);
+	    VnUnlock(vnp, WRITE_LOCK);
+	    VnCancelReservation_r(vnp);
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
+#else
+	    VForceOffline_r(vp, 0);
+#endif
+	    return NULL;
+	}
+
     } else {
 	/* no such vnode in the cache */
 
