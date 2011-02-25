@@ -5833,32 +5833,50 @@ VAllocBitmapEntry(Error * ec, Volume * vp, struct vnodeIndex * index)
 }
 
 void
-VFreeBitMapEntry_r(Error * ec, struct vnodeIndex *index,
-		   unsigned bitNumber)
+VFreeBitMapEntry_r(Error * ec, Volume *vp, struct vnodeIndex *index,
+		   unsigned bitNumber, int flags)
 {
     unsigned int offset;
 
     *ec = 0;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (flags & VOL_FREE_BITMAP_WAIT) {
+	/* VAllocBitmapEntry_r allocs bitmap entries under an exclusive volume
+	 * state, so ensure we're not in an exclusive volume state when we update
+	 * the bitmap */
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+    }
+#endif
+
 #ifdef BITMAP_LATER
     if (!index->bitmap)
-	return;
+	goto done;
 #endif /* BITMAP_LATER */
+
     offset = bitNumber >> 3;
     if (offset >= index->bitmapSize) {
 	*ec = VNOVNODE;
-	return;
+	goto done;
     }
     if (offset < index->bitmapOffset)
 	index->bitmapOffset = offset & ~3;	/* Truncate to nearest bit32 */
     *(index->bitmap + offset) &= ~(1 << (bitNumber & 0x7));
+
+ done:
+#ifdef AFS_DEMAND_ATTACH_FS
+    VCancelReservation_r(vp);
+#endif
+    return; /* make the compiler happy for non-DAFS */
 }
 
 void
-VFreeBitMapEntry(Error * ec, struct vnodeIndex *index,
+VFreeBitMapEntry(Error * ec, Volume *vp, struct vnodeIndex *index,
 		 unsigned bitNumber)
 {
     VOL_LOCK;
-    VFreeBitMapEntry_r(ec, index, bitNumber);
+    VFreeBitMapEntry_r(ec, vp, index, bitNumber, VOL_FREE_BITMAP_WAIT);
     VOL_UNLOCK;
 }
 
