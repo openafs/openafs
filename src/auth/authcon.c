@@ -317,10 +317,6 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
 	    return AFSCONF_NOCELLDB;
 
 	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
-	    code = afsconf_GetLatestKey(dir, 0, 0);
-	    if (code)
-		goto out;
-
 	    if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
 		code = afsconf_ClientAuthSecure(dir, sc, scIndex);
 	    else
@@ -328,6 +324,17 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
 
 	    if (code)
 		goto out;
+
+	    /* The afsconf_ClientAuth functions will fall back to giving
+	     * a rxnull object, which we don't want if localauth has been
+	     * explicitly requested. Check for this, and bail out if we
+	     * get one. Note that this leaks a security object at present
+	     */
+	    if (scIndex == RX_SECIDX_NULL) {
+		sc = NULL;
+		code = AFSCONF_NOTFOUND;
+		goto out;
+	    }
 
 	    if (expires)
 		*expires = NEVERDATE;
