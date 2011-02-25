@@ -666,9 +666,6 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    /* This won't block */
 	    VnLock(vnp, WRITE_LOCK, VOL_LOCK_HELD, WILL_NOT_DEADLOCK);
 	} else {
-	    /* other users present; follow locking hierarchy */
-	    VnLock(vnp, WRITE_LOCK, VOL_LOCK_HELD, MIGHT_DEADLOCK);
-
 #ifdef AFS_DEMAND_ATTACH_FS
 	    /*
 	     * DAFS:
@@ -685,6 +682,9 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		return NULL;
 	    }
 #endif
+
+	    /* other users present; follow locking hierarchy */
+	    VnLock(vnp, WRITE_LOCK, VOL_LOCK_HELD, MIGHT_DEADLOCK);
 
 	    /*
 	     * verify state of the world hasn't changed
