@@ -390,6 +390,9 @@ syscall.o: ${SYS}/syscall.s
 		$(PATH_CPP)  ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
+	 arm_darwin_* ) \
+		touch syscall.c ; \
+	        ${CC} ${AFS_CFLAGS} -c syscall.c;; \
 	 sgi_* | *_darwin_* ) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
