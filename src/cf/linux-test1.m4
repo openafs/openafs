@@ -64,7 +64,7 @@ AC_DEFUN([AC_TRY_KBUILD], [
   fi])
 
 AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
-  AC_MSG_CHECKING([for linux kernel module build works])
+  AC_MSG_CHECKING([if linux kernel module build works])
   AC_TRY_KBUILD(
 [#include <linux/sched.h>
 #include <linux/fs.h>],
