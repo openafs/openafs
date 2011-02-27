@@ -25,6 +25,9 @@ all: config mkvers \
 	${TOP_INCDIR}/afs/venus.h \
 	${TOP_INCDIR}/afs/vioc.h
 
+generated_clean:
+	${RM} -f ${TOP_INCDIR}/afs/param.h
+
 buildtools: \
 	config \
 	mkvers \

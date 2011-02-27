@@ -67,6 +67,7 @@ generated: force buildtools
 	+${COMPILE_PART1} update ${COMPILE_GENERATED}
 	+${COMPILE_PART1} vlserver ${COMPILE_GENERATED}
 	+${COMPILE_PART1} volser ${COMPILE_GENERATED}
+	+${COMPILE_PART1} config ${COMPILE_PART2A} generated_clean
 
 install: all install_dirs
 	$(MAKE) build COMPILE_PART2B=install
