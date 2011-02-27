@@ -284,6 +284,9 @@ syscall.o: ${SYS}/syscall.s
 		$(PATH_CPP)  ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
+	 arm_darwin_* ) \
+		touch syscall.c ; \
+	        ${CC} ${AFS_CFLAGS} -c syscall.c;; \
 	 sgi_* | *_darwin_* ) \
 	        ${CC} ${AFS_CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
@@ -291,7 +294,8 @@ syscall.o: ${SYS}/syscall.s
 		${AS} -o syscall.o syscall.i; \
 		$(RM) -f syscall.ss syscall.i;; \
 	 *bsd* ) \
-		touch syscall.o ;; \
+		touch syscall.c ; \
+	        ${CC} ${AFS_CFLAGS} -c syscall.c;; \
 	 *) \
 		$(PATH_CPP) ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\

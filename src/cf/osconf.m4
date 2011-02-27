@@ -446,6 +446,26 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
+	arm_darwin_100)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LD="cc"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
+		PAM_LIBS="-lpam"
+		REGEX_OBJ="regex.o"
+		TXLIBS="-lncurses"
+		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		;;
+
 	*_darwin_100)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} \${ARCHFLAGS}"

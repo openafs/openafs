@@ -9,7 +9,7 @@
 #
 
 SHELL=/bin/sh
-INCLUDE=  -I. -I/usr/include -I${TOP_OBJDIR}/src/config
+INCLUDE=  -I. -I${ISYSROOT}/usr/include -I${TOP_OBJDIR}/src/config
 UOBJ	=../UAFS
 PICOBJ  =../UAFS.pic
 JUAFS	=../JUAFS
@@ -2022,14 +2022,14 @@ AFSWEB:
 
 setup_common:
 	-$(RM) -f h net netinet rpc ufs nfs machine sys inet nsapi afsd
-	-ln -s /usr/include/sys h
-	-ln -s /usr/include/net net 
-	-ln -s /usr/include/netinet netinet
-	-ln -s /usr/include/rpc rpc
-	-ln -s /usr/include/sys sys
-	-ln -s /usr/include/nfs nfs
-	-ln -s /usr/include/inet inet
-	-ln -s /usr/include/ufs ufs
+	-ln -s ${ISYSROOT}/usr/include/sys h
+	-ln -s ${ISYSROOT}/usr/include/net net
+	-ln -s ${ISYSROOT}/usr/include/netinet netinet
+	-ln -s ${ISYSROOT}/usr/include/rpc rpc
+	-ln -s ${ISYSROOT}/usr/include/sys sys
+	-ln -s ${ISYSROOT}/usr/include/nfs nfs
+	-ln -s ${ISYSROOT}/usr/include/inet inet
+	-ln -s ${ISYSROOT}/usr/include/ufs ufs
 	-ln -s $(TOP_SRCDIR)/afsd afsd
 	-ln -s $(NS_INCL) nsapi
 
