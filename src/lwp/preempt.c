@@ -40,9 +40,6 @@ PRE_EndPreempt(void)
 #else
 #include <sys/time.h>
 #include <signal.h>
-#ifdef HAVE_UCONTEXT_H
-#include <ucontext.h>
-#endif
 
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 int PRE_Block = 0;		/* used in lwp.c and process.s */
