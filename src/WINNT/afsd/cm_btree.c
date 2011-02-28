@@ -2397,6 +2397,114 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
     return code;
 }
 
+/*
+ * Similar to cm_BPlusDirEnumBulkStat() except that only
+ * one RPC is issued containing the provided scp FID and up to
+ * AFSCBMAX - 1 other FIDs for which the status info has yet
+ * to be obtained.
+ */
+long
+cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
+{
+    cm_scache_t *dscp = enump->dscp;
+    cm_user_t   *userp = enump->userp;
+    cm_bulkStat_t *bsp;
+    afs_uint32 code = 0;
+    afs_uint32 i;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+    req.flags = enump->reqFlags;
+
+    if ( dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID )
+        return 0;
+
+    bsp = malloc(sizeof(cm_bulkStat_t));
+    if (!bsp)
+        return ENOMEM;
+    memset(bsp, 0, sizeof(cm_bulkStat_t));
+
+     /*
+      * In order to prevent the directory callback from expiring
+      * on really large directories with many symlinks to mount
+      * points such as /afs/andrew.cmu.edu/usr/, always include
+      * the directory fid in the search.
+      */
+    if (lock_TryWrite(&dscp->rw)) {
+        bsp->fids[bsp->counter].Volume = dscp->fid.volume;
+        bsp->fids[bsp->counter].Vnode = dscp->fid.vnode;
+        bsp->fids[bsp->counter].Unique = dscp->fid.unique;
+        bsp->counter++;
+        lock_ReleaseWrite(&dscp->rw);
+    }
+
+    /* First process the requested scp if we can */
+    if (lock_TryWrite(&scp->rw)) {
+        bsp->fids[bsp->counter].Volume = scp->fid.volume;
+        bsp->fids[bsp->counter].Vnode = scp->fid.vnode;
+        bsp->fids[bsp->counter].Unique = scp->fid.unique;
+        bsp->counter++;
+        lock_ReleaseWrite(&scp->rw);
+    }
+
+    if (enump->count <= AFSCBMAX - 1) {
+        i = 0;
+    } else {
+        /*
+         * Find the requested FID in the enumeration
+         * and start from there.
+         */
+        for (i=0; i < enump->count && cm_FidCmp(&scp->fid, &enump->entry[i].fid); i++);
+    }
+
+    for ( ; bsp->counter < AFSCBMAX && i < enump->count; i++) {
+        cm_scache_t   *tscp;
+        int count = bsp->counter;
+
+        if ( !wcscmp(L".", enump->entry[i].name) || !wcscmp(L"..", enump->entry[i].name) ) {
+            continue;
+        } else {
+            tscp = cm_FindSCache(&enump->entry[i].fid);
+            if (scp == tscp) {
+                enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                cm_ReleaseSCache(tscp);
+                continue;
+            }
+        }
+
+        if (tscp) {
+            if (lock_TryWrite(&tscp->rw)) {
+                /* we have an entry that we can look at */
+                if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                    /* we have a callback on it.  Don't bother
+                     * fetching this stat entry, since we're happy
+                     * with the info we have.
+                     */
+                    lock_ReleaseWrite(&tscp->rw);
+                    cm_ReleaseSCache(tscp);
+                    enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    continue;
+                }
+                lock_ReleaseWrite(&tscp->rw);
+            }	/* got lock */
+            if (scp != tscp)
+                cm_ReleaseSCache(tscp);
+        } /* found entry */
+
+        bsp->fids[count].Volume = enump->entry[i].fid.volume;
+        bsp->fids[count].Vnode = enump->entry[i].fid.vnode;
+        bsp->fids[count].Unique = enump->entry[i].fid.unique;
+        bsp->counter++;
+        enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+    }
+
+    if (bsp->counter > 0)
+        code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+
+    free(bsp);
+    return code;
+}
+
 static long
 cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
 {
