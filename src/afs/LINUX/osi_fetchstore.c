@@ -47,21 +47,15 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 
-struct rockops {
-    void *rock;
-    struct storeOps *ops;
-};
-
 #if defined(HAVE_LINUX_SPLICE_DIRECT_TO_ACTOR)
 static int
 afs_linux_splice_actor(struct pipe_inode_info *pipe,
 		       struct pipe_buffer *buf,
 		       struct splice_desc *sd)
 {
-    struct rockops *rockops = (struct rockops *) (sd->u.data);
+    struct rxfs_storeVariables *svar = sd->u.data;
     size_t size;
     int code;
-    afs_uint32 byteswritten = 0;
 
     code = buf->ops->confirm(pipe, buf);
     if (code)
@@ -69,10 +63,10 @@ afs_linux_splice_actor(struct pipe_inode_info *pipe,
 
     size = sd->len;
 
-    /* Eventually, this could be rx_WritePage or better rockops->ops->writepage */
-    code = (rockops->ops->write)(rockops->rock, kmap(buf->page), size,
-				 &byteswritten);
-    if (byteswritten != size)
+    /* Eventually, this could be rx_WritePage */
+    code = rx_Write(svar->call, kmap(buf->page), size);
+
+    if (code != size)
 	size = -33; /* Can't get a proper rx error out from here */
 
     kunmap(buf->page);
@@ -89,19 +83,16 @@ afs_linux_ds_actor(struct pipe_inode_info *pipe, struct splice_desc *sd)
 /* This is a store proc which uses splice to reduce the number
  * of page copies. */
 afs_int32
-afs_linux_storeproc(struct vcache *avc, struct storeOps *ops, void *rock,
-		    struct dcache *tdc, int *shouldwake, afs_size_t *bytesXferred)
+afs_linux_storeproc(struct storeOps *ops, void *rock, struct dcache *tdc,
+		    int *shouldwake, afs_size_t *bytesXferred)
 {
+    struct rxfs_storeVariables *svar = rock;
     struct file *cacheFp;
-    struct rockops rockops = {
-	.rock = rock,
-	.ops = ops
-    };
     struct splice_desc sd = {
 	.len	= 0,
 	.total_len = tdc->f.chunkBytes,
 	.pos	= 0,
-	.u.data = &rockops
+	.u.data = rock
     };
     int code;
 
@@ -118,7 +109,7 @@ afs_linux_storeproc(struct vcache *avc, struct storeOps *ops, void *rock,
      * GLOCK in the middle of our actor */
     if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
 	*shouldwake = 0;
-	afs_wakeup(avc);
+	afs_wakeup(svar->vcache);
     }
 
     if (code > 0) {
@@ -135,20 +126,18 @@ static int
 afs_linux_read_actor(read_descriptor_t *desc, struct page *page,
 		     unsigned long offset, unsigned long size)
 {
-    struct rockops *rockops = (struct rockops *) desc->arg.data;
+    struct rxfs_storeVariables *svar = desc->arg.data;
     unsigned long count = desc->count;
     int code;
-    afs_uint32 byteswritten = 0;
 
     if (size > count)
 	size = count;
 
-    /* Eventually, this could be rx_WritePage or better rockops->ops->writepage */
-    code = (rockops->ops->write)(rockops->rock, kmap(page) + offset, size,
-				 &byteswritten);
+    /* Eventually, this could be rx_WritePage */
+    code = rx_Write(svar->call, kmap(page) + offset, size);
     kunmap(page);
 
-    if (byteswritten != size) {
+    if (code != size) {
         return -33; /* Can't get a proper rx error out from here */
     }
 
@@ -159,22 +148,19 @@ afs_linux_read_actor(read_descriptor_t *desc, struct page *page,
 }
 
 afs_int32
-afs_linux_storeproc(struct vcache *avc, struct storeOps *ops, void *rock,
-		    struct dcache *tdc, int *shouldwake, afs_size_t *bytesXferred)
+afs_linux_storeproc(struct storeOps *ops, void *rock, struct dcache *tdc,
+                    int *shouldwake, afs_size_t *bytesXferred)
 {
+    struct rxfs_storeVariables *svar = rock;
     struct file *cacheFp;
     int code;
     loff_t offset = 0;
-    struct rockops rockops = {
-	.rock = rock,
-	.ops = ops
-    };
 
     /* Open the file, splice its contents */
     AFS_GUNLOCK();
     cacheFp = afs_linux_raw_open(&tdc->f.inode);
     code = cacheFp->f_op->sendfile(cacheFp, &offset, tdc->f.chunkBytes,
-				   afs_linux_read_actor, &rockops);
+				   afs_linux_read_actor, rock);
     filp_close(cacheFp, NULL);
     AFS_GLOCK();
 
@@ -184,7 +170,7 @@ afs_linux_storeproc(struct vcache *avc, struct storeOps *ops, void *rock,
      * GLOCK in the middle of our actor */
     if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
 	*shouldwake = 0;
-	afs_wakeup(avc);
+	afs_wakeup(svar->vcache);
     }
 
     if (code > 0) {
