@@ -305,17 +305,17 @@ hpr_Initialize(struct ubik_client **uclient)
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
-    if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
-        code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
-        if (code)
-	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
-        if (code)
-            scIndex = RX_SECIDX_NULL;
+    code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
+    if (code) {
+	ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s "
+		    "(so trying noauth)", code, afs_error_message(code)));
+	scIndex = RX_SECIDX_NULL;
+	sc = rxnull_NewClientSecurityObject();
     }
-    if ((scIndex == RX_SECIDX_NULL) && (sc == NULL))
-        sc = rxnull_NewClientSecurityObject();
+
     if (scIndex == RX_SECIDX_NULL)
-	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, running unauthenticated. [%d]", code));
+	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, "
+		    "running unauthenticated. [%d]", code));
 
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
     for (i = 0; i < info.numServers; i++) {

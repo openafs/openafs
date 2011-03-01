@@ -294,16 +294,11 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
     if (secLevel == 2) {
-	code = afsconf_GetLatestKey(tdir, 0, 0);
-	if (code) {
-	    afs_com_err(whoami, code, "(getting key from local KeyFile)\n");
-	} else {
-	    /* If secLevel is two assume we're on a file server and use
-	     * ClientAuthSecure if possible. */
-	    code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
-	    if (code)
-		afs_com_err(whoami, code, "(calling client secure)\n");
-        }
+	/* If secLevel is two assume we're on a file server and use
+	 * ClientAuthSecure if possible. */
+	code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
+	if (code)
+	    afs_com_err(whoami, code, "(calling client secure)\n");
     } else if (secLevel > 0) {
 	secFlags = 0;
 	if (secLevel > 1)
