@@ -53,7 +53,7 @@ dest: libafshcrypto.a ${SHLIBOBJ}
 
 clean:
 	$(RM) -f ${OBJECTS} ${SHLIBOBJ} rand-fortuna_lwp.o \
-		libafshcrypto.a libafshcrypto.exp \
+		libafshcrypto.a libafshcrypto_lwp.a libafshcrypto.exp \
 		test_cipher test_cipher.o
 
 COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \

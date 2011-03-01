@@ -33,7 +33,8 @@ dest: librokenafs.a $(SHLIBOBJ)
 	$(INSTALL_DATA) librokenafs.a $(DEST)/lib/librokenafs.a
 
 clean:
-	$(RM) -f $(OBJECTS) $(SHLIBOBJ) librokenafs.a librokenafs.exp
+	$(RM) -f $(OBJECTS) $(SHLIBOBJ) librokenafs.a librokenafs.exp \
+		err.h
 
 OBJECTS = $(ROKEN_LIBOBJS) \
 	  base64.o \
