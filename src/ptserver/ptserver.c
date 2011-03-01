@@ -211,7 +211,6 @@ main(int argc, char **argv)
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
-    int kerberosKeys;		/* set if found some keys */
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = htonl(INADDR_ANY);
@@ -455,25 +454,14 @@ main(int argc, char **argv)
     }
     pr_realmName = info.name;
 
-    {
-	afs_int32 kvno;		/* see if there is a KeyFile here */
-	struct ktc_encryptionKey key;
-	code = afsconf_GetLatestKey(prdir, &kvno, &key);
-	kerberosKeys = (code == 0);
-	if (!kerberosKeys)
-	    printf
-		("ptserver: can't find any Kerberos keys, code = %d, ignoring\n",
-		 code);
-    }
-    if (kerberosKeys) {
-	/* initialize ubik */
-	ubik_CRXSecurityProc = afsconf_ClientAuth;
-	ubik_CRXSecurityRock = prdir;
-	ubik_SRXSecurityProc = afsconf_ServerAuth;
-	ubik_SRXSecurityRock = prdir;
-	ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-	ubik_CheckRXSecurityRock = prdir;
-    }
+    /* initialize ubik */
+    ubik_CRXSecurityProc = afsconf_ClientAuth;
+    ubik_CRXSecurityRock = prdir;
+    ubik_SRXSecurityProc = afsconf_ServerAuth;
+    ubik_SRXSecurityRock = prdir;
+    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
+    ubik_CheckRXSecurityRock = prdir;
+
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry
      * being deleted in one of its CoEntries.  If a CoEntry is freed its
