@@ -1677,7 +1677,9 @@ OPENAFS_HAVE_STRUCT_FIELD(DIR, dd_fd, [#include <sys/types.h>
 
 dnl Eventually, this will look for the system one, or for OpenSSL
 LIB_hcrypto="-lafshcrypto"
+LDFLAGS_hcrypto="-L\$(TOP_LIBDIR)"
 AC_SUBST(LIB_hcrypto)
+AC_SUBST(LDFLAGS_hcrypto)
 ])
 
 AC_DEFUN([SUMMARY], [

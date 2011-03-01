@@ -73,7 +73,7 @@ ${TOP_LIBDIR}/${SHLIBOBJ}: ${SHLIBOBJ}
 ${SHLIBOBJ}: ${OBJECTS} libafshcrypto.map
 	${TOP_OBJDIR}/src/config/shlib-build -d $(srcdir) -l libafshcrypto \
 		-M ${LIBMAJOR} -m ${LIBMINOR} -- \
-		${OBJECTS} -L$(TOP_LIBDIR) -lrokenafs ${MT_LIBS}
+		${OBJECTS} $(LDFLAGS_roken) $(LIB_roken) ${MT_LIBS}
 
 libafshcrypto.a: ${OBJECTS}
 	$(RM) -f $@

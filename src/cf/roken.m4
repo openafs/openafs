@@ -28,15 +28,16 @@ AC_DEFUN([_OPENAFS_ROKEN_CHECK], [
 
   dnl Need to be careful what we check for here, as libroken contains
   dnl different symbols on different platforms.
-  AC_CHECK_LIB([roken], [ct_memcmp], [found_foundlib=true])
-  AC_CHECK_HEADER([roken], [roken_foundheader=true])
+  AC_CHECK_LIB([roken], [ct_memcmp], [roken_foundlib=true])
+  AC_CHECK_HEADER([roken.h], [roken_foundheader=true])
   CPPFLAGS=$save_CPPFLAGS
   LDFLAGS=$save_LDFLAGS
+  LIBS=$save_LIBS
 
-  AS_IF([test x"$roken_foundlib" = xtrue && test x"roken_foundheader" = xtrue],
-	[AS_IF([test x"$roken_path" != x],
-	       [CPPFLAGS_roken = "-I$roken_path/include"
-		LDFLAGS_roken="-I$roken_path/lib"
+  AS_IF([test x"$roken_foundlib" = xtrue && test x"$roken_foundheader" = xtrue],
+	 [AS_IF([test x"$roken_path" != x],
+	       [CPPFLAGS_roken="-I$roken_path/include"
+		LDFLAGS_roken="-L$roken_path/lib"
 		LIB_roken="-lroken"])
 	 $2],
 	[$3])
@@ -64,6 +65,7 @@ AC_DEFUN([OPENAFS_ROKEN], [
 	[AS_IF([test x"$roken_root" = x],
 	    [_OPENAFS_ROKEN_CHECK([], [], [_OPENAFS_ROKEN_INTERNAL()])],
 	    [_OPENAFS_ROKEN_CHECK($roken_root,
+		[],
 		[AC_MSG_ERROR([Cannot find roken at that location])])
 	    ])
 	])
