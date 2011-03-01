@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     int code;
     int i;
 
-    plan(127);
+    plan(134);
 
     /* Create a temporary afs configuration directory */
 
@@ -526,6 +526,23 @@ int main(int argc, char **argv)
     ok(keyMatches(typedKeyList->keys[1], 1, 2, 1, "\x02\x03", 2),
        " ... with the right key in slot 1");
     afsconf_PutTypedKeyList(&typedKeyList);
+
+    /* Check that GetAllKeys works as expected */
+    code = afsconf_GetAllKeys(dir, &typedKeyList);
+    is_int(0, code, "afsconf_GetAllKeys returns success");
+    is_int(5, typedKeyList->nkeys, " ... with the correct number of keys");
+    ok(keyMatches(typedKeyList->keys[0], afsconf_rxkad, 1, 0,
+		  "\x10\x10\x10\x10\x10\x10\x10\x10", 8),
+       " ... with right key in slot 0");
+    ok(keyMatches(typedKeyList->keys[1], afsconf_rxkad, 2, 0,
+		   "\x30\x30\x30\x30\x30\x30\x30\x30", 8),
+       " ... with right key in slot 1");
+    ok(keyMatches(typedKeyList->keys[2], 1, 1, 0, "\x03", 1),
+       " ... with right key in slot 2");
+    ok(keyMatches(typedKeyList->keys[3], 1, 2, 0, "\x01", 1),
+       " ... with right key in slot 3");
+    ok(keyMatches(typedKeyList->keys[4], 1, 2, 1, "\x02\03", 2),
+       " ... with right key in slot 4");
 
     afsconf_Close(dir);
 

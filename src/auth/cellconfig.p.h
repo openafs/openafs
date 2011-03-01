@@ -154,6 +154,8 @@ extern void afsconf_typedKey_values(struct afsconf_typedKey *key,
 				  int *minorType,
 				  struct rx_opaque **keyMaterial);
 
+extern int afsconf_GetAllKeys(struct afsconf_dir *,
+			      struct afsconf_typedKeyList **);
 extern int afsconf_GetKeysByType(struct afsconf_dir *dir,
 				 afsconf_keyType type, int kvno,
 				 struct afsconf_typedKeyList **);

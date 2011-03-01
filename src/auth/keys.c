@@ -814,6 +814,64 @@ out:
 }
 
 int
+afsconf_GetAllKeys(struct afsconf_dir *dir, struct afsconf_typedKeyList **keys)
+{
+    int code;
+    struct afsconf_typedKeyList *retval;
+    struct opr_queue *typeCursor;
+    struct keyTypeList *typeEntry;
+    struct opr_queue *kvnoCursor;
+    struct kvnoList *kvnoEntry;
+    struct opr_queue *subCursor;
+    struct subTypeList *subEntry;
+    int count;
+
+    LOCK_GLOBAL_MUTEX;
+
+    code = _afsconf_Check(dir);
+    if (code)
+	goto out;
+
+    count = 0;
+    /* First, work out how many keys we have in total */
+    for (opr_queue_Scan(&dir->keyList, typeCursor)) {
+	typeEntry = opr_queue_Entry(typeCursor, struct keyTypeList, link);
+	for (opr_queue_Scan(&typeEntry->kvnoList, kvnoCursor)) {
+	    kvnoEntry = opr_queue_Entry(kvnoCursor, struct kvnoList, link);
+	    for (opr_queue_Scan(&kvnoEntry->subTypeList, subCursor)) {
+		subEntry = opr_queue_Entry(subCursor, struct subTypeList, link);
+		count++;
+	    }
+	}
+    }
+
+    /* Allocate space for all of these */
+    retval = malloc(sizeof(struct afsconf_typedKeyList));
+    retval->nkeys = count;
+    retval->keys = calloc(retval->nkeys, sizeof(struct afsconf_typedKey *));
+
+    /* Populate the key list */
+    count = 0;
+    for (opr_queue_Scan(&dir->keyList, typeCursor)) {
+	typeEntry = opr_queue_Entry(typeCursor, struct keyTypeList, link);
+	for (opr_queue_Scan(&typeEntry->kvnoList, kvnoCursor)) {
+	    kvnoEntry = opr_queue_Entry(kvnoCursor, struct kvnoList, link);
+	    for (opr_queue_Scan(&kvnoEntry->subTypeList, subCursor)) {
+		subEntry = opr_queue_Entry(subCursor, struct subTypeList, link);
+		retval->keys[count] = afsconf_typedKey_get(subEntry->key);
+		count++;
+	    }
+	}
+    }
+
+    *keys = retval;
+
+out:
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
+}
+
+int
 afsconf_GetKeyByTypes(struct afsconf_dir *dir, afsconf_keyType type,
 		      int kvno, int subType, struct afsconf_typedKey **key)
 {
