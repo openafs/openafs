@@ -12,7 +12,6 @@ MODULE_CFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 all: runtests
 	cd tap && $(MAKE) $@
 	cd auth && $(MAKE) $@
-	cd rxgk && $(MAKE) $@
 	cd util && $(MAKE) $@
 
 runtests: runtests.o
