@@ -27,9 +27,17 @@
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"
-#include "afsincludes.h"
 
+/* Asserting is a mess - we need the RX headers in order to get a definition
+ * for osi_Assert */
 #define assert osi_Assert
+#include <rx/rx.h>
+
+/* hcrypto uses "static inline", which isn't supported by some of our
+ * compilers */
+#if !defined(inline) && !defined(__GNUC__)
+#define inline
+#endif
 
 /* We need wrappers for the various memory management functions */
 #define calloc _afscrypto_calloc
@@ -46,3 +54,7 @@ char * _afscrypto_strdup(const char *);
 
 #define realloc _afscrypto_realloc
 void * _afscrypto_realloc(void *, size_t);
+
+/* osi_readRandom is also prototyped in afs_prototypes.h, but pulling that in
+ * here creates loads of additional dependencies */
+extern int osi_readRandom(void *, afs_size_t);
