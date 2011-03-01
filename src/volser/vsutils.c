@@ -198,9 +198,10 @@ nvlentry_to_uvlentry(struct nvldbentry *nentryp,
                                &uentryp->serverNumber[i],
                                &m_uniq, &m_nentries,
                                &m_addrs);
-	uentryp->serverUnique[i] = nentryp->serverNumber[i];
+	uentryp->serverUnique[i] = m_uniq;
 	uentryp->serverPartition[i] = nentryp->serverPartition[i];
 	uentryp->serverFlags[i] = nentryp->serverFlags[i];
+	uentryp->serverFlags[i] |= VLSERVER_FLAG_UUID;
     }
     uentryp->nServers = nentryp->nServers;
     for (i = 0; i < MAXTYPES; i++)
