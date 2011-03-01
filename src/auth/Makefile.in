@@ -145,7 +145,7 @@ test:
 
 clean:
 	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c \
-		ktc_errors.c token.h token.xdr.c core \
+		ktc_errors.c token.h token.xdr.c core Ktoken.xdr.c \
 		AFS_component_version_number.c
 
 include ../config/Makefile.version
