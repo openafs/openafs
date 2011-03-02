@@ -4479,7 +4479,7 @@ AskOnline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	    break;
 	} else if (i < 2) {
 	    /* try it again */
-	    Log("AskOnline:  request for fileserver to take volume offline failed; trying again...\n");
+	    Log("AskOnline:  request for fileserver to put volume online failed; trying again...\n");
 	    FSYNC_clientFinis();
 	    FSYNC_clientInit();
 	}
