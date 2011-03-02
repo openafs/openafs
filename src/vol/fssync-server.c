@@ -1219,7 +1219,8 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (FSYNC_partMatch(vcom, vp, 1)) {
 #ifdef AFS_DEMAND_ATTACH_FS
 	    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
-		(V_attachState(vp) == VOL_STATE_PREATTACHED)) {
+		(V_attachState(vp) == VOL_STATE_PREATTACHED) ||
+		VIsErrorState(V_attachState(vp))) {
 
 		/* Change state to DELETED, not UNATTACHED, so clients get
 		 * a VNOVOL error when they try to access from now on. */

@@ -934,18 +934,41 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	RemoveTheForce(salvinfo->fileSysPath);
 
     if (!Testing && singleVolumeNumber) {
+	int foundSVN = 0;
 #ifdef AFS_DEMAND_ATTACH_FS
 	/* unlock vol headers so the fs can attach them when we AskOnline */
 	VLockFileReinit(&salvinfo->fileSysPartition->volLockFile);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-	AskOnline(salvinfo, singleVolumeNumber);
-
 	/* Step through the volumeSummary list and set all volumes on-line.
-	 * The volumes were taken off-line in GetVolumeSummary.
+	 * Most volumes were taken off-line in GetVolumeSummary.
+	 * If a volume was deleted, don't tell the fileserver anything, since
+	 * we already told the fileserver the volume was deleted back when we
+	 * we destroyed the volume header.
+	 * Also, make sure we bring the singleVolumeNumber back online first.
 	 */
+
 	for (j = 0; j < salvinfo->nVolumes; j++) {
-	    AskOnline(salvinfo, salvinfo->volumeSummaryp[j].header.id);
+	    if (salvinfo->volumeSummaryp[j].header.id == singleVolumeNumber) {
+		foundSVN = 1;
+		if (!salvinfo->volumeSummaryp[j].deleted) {
+		    AskOnline(salvinfo, singleVolumeNumber);
+		}
+	    }
+	}
+
+	if (!foundSVN) {
+	    /* singleVolumeNumber generally should always be in the constructed
+	     * volumeSummary, but just in case it's not... */
+	    AskOnline(salvinfo, singleVolumeNumber);
+	}
+
+	for (j = 0; j < salvinfo->nVolumes; j++) {
+	    if (salvinfo->volumeSummaryp[j].header.id != singleVolumeNumber) {
+		if (!salvinfo->volumeSummaryp[j].deleted) {
+		    AskOnline(salvinfo, salvinfo->volumeSummaryp[j].header.id);
+		}
+	    }
 	}
     } else {
 	if (!Showmode)
@@ -979,6 +1002,10 @@ DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp
 	if (unlink(path) && errno != ENOENT) {
 	    Log("Unable to unlink %s (errno = %d)\n", path, errno);
 	}
+	if (salvinfo->useFSYNC) {
+	    AskDelete(salvinfo, vsp->header.id);
+	}
+	vsp->deleted = 1;
     }
     vsp->fileName = 0;
 }
@@ -4201,6 +4228,10 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		if (unlink(path) && errno != ENOENT) {
 		    Log("Unable to unlink %s (errno = %d)\n", path, errno);
 		}
+		if (salvinfo->useFSYNC) {
+		    AskDelete(salvinfo, isp->volumeId);
+		}
+		isp->volSummary->deleted = 1;
 	    }
 	}
     } else if (!check) {
@@ -4366,6 +4397,37 @@ AskOnline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	} else if (i < 2) {
 	    /* try it again */
 	    Log("AskOnline:  request for fileserver to put volume online failed; trying again...\n");
+	    FSYNC_clientFinis();
+	    FSYNC_clientInit();
+	}
+    }
+}
+
+void
+AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
+{
+    afs_int32 code, i;
+
+    for (i = 0; i < 3; i++) {
+	code = FSYNC_VolOp(volumeId, salvinfo->fileSysPartition->name,
+	                   FSYNC_VOL_DONE, FSYNC_SALVAGE, NULL);
+
+	if (code == SYNC_OK) {
+	    break;
+	} else if (code == SYNC_DENIED) {
+	    Log("AskOnline:  file server denied DONE request to volume %u partition %s; trying again...\n", volumeId, salvinfo->fileSysPartition->name);
+	} else if (code == SYNC_BAD_COMMAND) {
+	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
+		FSYNC_VOL_DONE);
+#ifdef DEMAND_ATTACH_ENABLE
+	    Log("AskOnline:  please make sure fileserver, volserver, salvageserver and salvager binaries are same version.\n");
+#else
+	    Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
+#endif
+	    break;
+	} else if (i < 2) {
+	    /* try it again */
+	    Log("AskOnline:  request for fileserver to delete volume failed; trying again...\n");
 	    FSYNC_clientFinis();
 	    FSYNC_clientInit();
 	}
