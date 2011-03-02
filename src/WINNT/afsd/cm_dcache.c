@@ -2112,7 +2112,356 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     cm_ReleaseBIOD(&biod, 0, code, 1);
 
     if (code == 0) 
-        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
+        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
     
+    return code;
+}
+
+/*
+ * Similar to cm_GetBuffer but doesn't use an allocated cm_buf_t object.
+ * Instead the data is read from the file server and copied directly into
+ * a provided buffer.  Called with scp locked. The scp is locked on return.
+ */
+long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_length,
+                cm_user_t *userp, cm_req_t *reqp)
+{
+    long code=0, code1=0;
+    afs_uint32 nbytes;			/* bytes in transfer */
+    afs_uint32 nbytes_hi = 0;           /* high-order 32 bits of bytes in transfer */
+    afs_uint64 length_found = 0;
+    char *bufferp = datap;
+    afs_uint32 buffer_offset = 0;
+    long rbytes;			/* bytes in rx_Read call */
+    long temp;
+    AFSFetchStatus afsStatus;
+    AFSCallBack callback;
+    AFSVolSync volSync;
+    AFSFid tfid;
+    struct rx_call *rxcallp;
+    struct rx_connection *rxconnp;
+    cm_conn_t *connp;
+    int getroot;
+    afs_int32 t1,t2;
+    int require_64bit_ops = 0;
+    int call_was_64bit = 0;
+    int fs_fetchdata_offset_bug = 0;
+    int first_read = 1;
+    int scp_locked = 1;
+
+    memset(&volSync, 0, sizeof(volSync));
+
+    /* now, the buffer may or may not be filled with good data (buf_GetNewLocked
+     * drops lots of locks, and may indeed return a properly initialized
+     * buffer, although more likely it will just return a new, empty, buffer.
+     */
+
+#ifdef AFS_FREELANCE_CLIENT
+
+    // yj: if they're trying to get the /afs directory, we need to
+    // handle it differently, since it's local rather than on any
+    // server
+
+    getroot = (scp==cm_data.rootSCachep);
+    if (getroot)
+        osi_Log1(afsd_logp,"GetBuffer returns cm_data.rootSCachep=%x",cm_data.rootSCachep);
+#endif
+
+    cm_AFSFidFromFid(&tfid, &scp->fid);
+
+    if (LargeIntegerGreaterThan(LargeIntegerAdd(*offsetp,
+                                                ConvertLongToLargeInteger(data_length)),
+                                ConvertLongToLargeInteger(LONG_MAX))) {
+        require_64bit_ops = 1;
+    }
+
+    osi_Log2(afsd_logp, "cm_GetData: fetching data scp %p DV 0x%x", scp, scp->dataVersion);
+
+#ifdef AFS_FREELANCE_CLIENT
+
+    // yj code
+    // if getroot then we don't need to make any calls
+    // just return fake data
+
+    if (cm_freelanceEnabled && getroot) {
+        // setup the fake status
+        afsStatus.InterfaceVersion = 0x1;
+        afsStatus.FileType = 0x2;
+        afsStatus.LinkCount = scp->linkCount;
+        afsStatus.Length = cm_fakeDirSize;
+        afsStatus.DataVersion = (afs_uint32)(cm_data.fakeDirVersion & 0xFFFFFFFF);
+        afsStatus.Author = 0x1;
+        afsStatus.Owner = 0x0;
+        afsStatus.CallerAccess = 0x9;
+        afsStatus.AnonymousAccess = 0x9;
+        afsStatus.UnixModeBits = 0x1ff;
+        afsStatus.ParentVnode = 0x1;
+        afsStatus.ParentUnique = 0x1;
+        afsStatus.ResidencyMask = 0;
+        afsStatus.ClientModTime = (afs_uint32)FakeFreelanceModTime;
+        afsStatus.ServerModTime = (afs_uint32)FakeFreelanceModTime;
+        afsStatus.Group = 0;
+        afsStatus.SyncCounter = 0;
+        afsStatus.dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
+        afsStatus.lockCount = 0;
+        afsStatus.Length_hi = 0;
+        afsStatus.errorCode = 0;
+	memset(&volSync, 0, sizeof(volSync));
+
+        // once we're done setting up the status info,
+        // we just fill the buffer pages with fakedata
+        // from cm_FakeRootDir. Extra pages are set to
+        // 0.
+
+        lock_ObtainMutex(&cm_Freelance_Lock);
+        t1 = offsetp->LowPart;
+        memset(datap, 0, data_length);
+        t2 = cm_fakeDirSize - t1;
+        if (t2 > data_length)
+            t2 = data_length;
+        if (t2 > 0)
+            memcpy(datap, cm_FakeRootDir+t1, t2);
+        lock_ReleaseMutex(&cm_Freelance_Lock);
+
+        // once we're done, we skip over the part of the
+        // code that does the ACTUAL fetching of data for
+        // real files
+
+        goto fetchingcompleted;
+    }
+
+#endif /* AFS_FREELANCE_CLIENT */
+
+    if (scp_locked) {
+        lock_ReleaseWrite(&scp->rw);
+        scp_locked = 0;
+    }
+
+    /* now make the call */
+    do {
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
+        if (code)
+            continue;
+
+        rxconnp = cm_GetRxConn(connp);
+        rxcallp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
+
+        nbytes = nbytes_hi = 0;
+
+        if (SERVERHAS64BIT(connp)) {
+            call_was_64bit = 1;
+
+            osi_Log4(afsd_logp, "CALL FetchData64 scp 0x%p, off 0x%x:%08x, size 0x%x",
+                     scp, offsetp->HighPart, offsetp->LowPart, data_length);
+
+            code = StartRXAFS_FetchData64(rxcallp, &tfid, offsetp->QuadPart, data_length);
+
+            if (code == 0) {
+                temp = rx_Read32(rxcallp, &nbytes_hi);
+                if (temp == sizeof(afs_int32)) {
+                    nbytes_hi = ntohl(nbytes_hi);
+                } else {
+                    nbytes_hi = 0;
+		    code = rxcallp->error;
+                    code1 = rx_EndCall(rxcallp, code);
+                    rxcallp = NULL;
+                }
+            }
+        } else {
+            call_was_64bit = 0;
+        }
+
+        if (code == RXGEN_OPCODE || !SERVERHAS64BIT(connp)) {
+            if (require_64bit_ops) {
+                osi_Log0(afsd_logp, "Skipping FetchData.  Operation requires FetchData64");
+                code = CM_ERROR_TOOBIG;
+            } else {
+                if (!rxcallp) {
+                    rxconnp = cm_GetRxConn(connp);
+                    rxcallp = rx_NewCall(rxconnp);
+                    rx_PutConnection(rxconnp);
+                }
+
+                osi_Log3(afsd_logp, "CALL FetchData scp 0x%p, off 0x%x, size 0x%x",
+                         scp, offsetp->LowPart, data_length);
+
+                code = StartRXAFS_FetchData(rxcallp, &tfid, offsetp->LowPart, data_length);
+
+                SET_SERVERHASNO64BIT(connp);
+            }
+        }
+
+        if (code == 0) {
+            temp  = rx_Read32(rxcallp, &nbytes);
+            if (temp == sizeof(afs_int32)) {
+                nbytes = ntohl(nbytes);
+                FillInt64(length_found, nbytes_hi, nbytes);
+                if (length_found > data_length) {
+                    /*
+                     * prior to 1.4.12 and 1.5.65 the file server would return
+                     * (filesize - offset) if the requested offset was greater than
+                     * the filesize.  The correct return value would have been zero.
+                     * Force a retry by returning an RX_PROTOCOL_ERROR.  If the cause
+                     * is a race between two RPCs issues by this cache manager, the
+                     * correct thing will happen the second time.
+                     */
+                    osi_Log0(afsd_logp, "cm_GetData length_found > data_length");
+                    fs_fetchdata_offset_bug = 1;
+                }
+            } else {
+                osi_Log1(afsd_logp, "cm_GetData rx_Read32 returns %d != 4", temp);
+                code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+            }
+        }
+        /* for the moment, nbytes_hi will always be 0 if code == 0
+           because data_length is a 32-bit quantity. */
+
+        if (code == 0) {
+            /* fill length_found of data from the pipe into the pages.
+             * When we stop, qdp will point at the last page we're
+             * dealing with, and bufferp will tell us where we
+             * stopped.  We'll need this info below when we clear
+             * the remainder of the last page out (and potentially
+             * clear later pages out, if we fetch past EOF).
+             */
+            while (length_found > 0) {
+#ifdef USE_RX_IOVEC
+                struct iovec tiov[RX_MAXIOVECS];
+                afs_int32 tnio, iov, iov_offset;
+
+                temp = rx_Readv(rxcallp, tiov, &tnio, RX_MAXIOVECS, length_found);
+                osi_Log1(afsd_logp, "cm_GetData rx_Readv returns %d", temp);
+                if (temp != length_found && temp < data_length) {
+                    /*
+                     * If the file server returned (filesize - offset),
+                     * then the first rx_Read will return zero octets of data.
+                     * If it does, do not treat it as an error.  Correct the
+                     * length_found and continue as if the file server said
+                     * it was sending us zero octets of data.
+                     */
+                    if (fs_fetchdata_offset_bug && first_read)
+                        length_found = 0;
+                    else
+                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                    break;
+                }
+
+                iov = 0;
+                iov_offset = 0;
+                rbytes = temp;
+
+                while (rbytes > 0) {
+                    afs_int32 len;
+
+                    osi_assertx(bufferp != NULL, "null cm_buf_t");
+
+                    len = MIN(tiov[iov].iov_len - iov_offset, data_length - buffer_offset);
+                    memcpy(bufferp + buffer_offset, tiov[iov].iov_base + iov_offset, len);
+                    iov_offset += len;
+                    buffer_offset += len;
+                    rbytes -= len;
+
+                    if (iov_offset == tiov[iov].iov_len) {
+                        iov++;
+                        iov_offset = 0;
+                    }
+                }
+
+                length_found -= temp;
+#else /* USE_RX_IOVEC */
+                /* assert that there are still more buffers;
+                 * our check above for length_found being less than
+                 * data_length should ensure this.
+                 */
+                osi_assertx(bufferp != NULL, "null cm_buf_t");
+
+                /* read rbytes of data */
+                rbytes = (afs_uint32)(length_found > data_length ? data_length : length_found);
+                temp = rx_Read(rxcallp, bufferp, rbytes);
+                if (temp < rbytes) {
+                    /*
+                     * If the file server returned (filesize - offset),
+                     * then the first rx_Read will return zero octets of data.
+                     * If it does, do not treat it as an error.  Correct the
+                     * length_found and continue as if the file server said
+                     * it was sending us zero octets of data.
+                     */
+                    if (fs_fetchdata_offset_bug && first_read)
+                        length_found = 0;
+                    else
+                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                    break;
+                }
+                first_read = 0;
+
+                /* and adjust counters */
+                length_found -= temp;
+#endif /* USE_RX_IOVEC */
+            }
+
+            /* zero out remainder of last pages, in case we are
+             * fetching past EOF.  We were fetching an integral #
+             * of pages, but stopped, potentially in the middle of
+             * a page.  Zero the remainder of that page, and then
+             * all of the rest of the pages.
+             */
+#ifdef USE_RX_IOVEC
+            rbytes = data_length - buffer_offset;
+            bufferp = datap + buffer_offset;
+#else /* USE_RX_IOVEC */
+            /* bytes fetched */
+	    osi_assertx((bufferp - datap) < LONG_MAX, "data >= LONG_MAX");
+            rbytes = (long) (bufferp - datap);
+
+            /* bytes left to zero */
+            rbytes = data_length - rbytes;
+#endif /* USE_RX_IOVEC */
+            if (rbytes != 0)
+                memset(bufferp, 0, rbytes);
+        }
+
+        if (code == 0) {
+            if (call_was_64bit)
+                code = EndRXAFS_FetchData64(rxcallp, &afsStatus, &callback, &volSync);
+            else
+                code = EndRXAFS_FetchData(rxcallp, &afsStatus, &callback, &volSync);
+        } else {
+            if (call_was_64bit)
+                osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData64 skipped due to error %d", code);
+            else
+                osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData skipped due to error %d", code);
+        }
+
+        if (rxcallp)
+            code1 = rx_EndCall(rxcallp, code);
+
+        if (code1 == RXKADUNKNOWNKEY)
+            osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
+
+        /* If we are avoiding a file server bug, ignore the error state */
+        if (fs_fetchdata_offset_bug && first_read && length_found == 0 && code == -451) {
+            /* Clone the current status info and clear the error state */
+            scp_locked = cm_CloneStatus(scp, userp, scp_locked, &afsStatus, &volSync);
+            if (scp_locked) {
+                lock_ReleaseWrite(&scp->rw);
+                scp_locked = 0;
+            }
+            code = 0;
+        /* Prefer the error value from FetchData over rx_EndCall */
+        } else if (code == 0 && code1 != 0)
+            code = code1;
+        osi_Log0(afsd_logp, "CALL FetchData DONE");
+
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
+
+  fetchingcompleted:
+    code = cm_MapRPCError(code, reqp);
+
+    if (!scp_locked)
+        lock_ObtainWrite(&scp->rw);
+
+    if (code == 0)
+        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+
     return code;
 }

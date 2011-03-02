@@ -834,9 +834,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
-    cm_buf_t *bufp = NULL;
     osi_hyper_t thyper;
-    int tlen;
 
     if (scp->mountPointStringp[0]) 
         return 0;
@@ -852,61 +850,22 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 #endif /* AFS_FREELANCE_CLIENT */        
     {
         /* otherwise, we have to read it in */
-        lock_ReleaseWrite(&scp->rw);
-
         thyper.LowPart = thyper.HighPart = 0;
-        code = buf_Get(scp, &thyper, reqp, &bufp);
-
-        lock_ObtainWrite(&scp->rw);
+        code = cm_GetData(scp, &thyper, scp->mountPointStringp, MOUNTPOINTLEN, userp, reqp);
         if (code)
             return code;
 
-        while (1) {
-            code = cm_SyncOp(scp, bufp, userp, reqp, 0,
-                              CM_SCACHESYNC_READ | CM_SCACHESYNC_NEEDCALLBACK);
-            if (code)
-                goto done;
+        scp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* nul terminate */
 
-            cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
-
-            if (cm_HaveBuffer(scp, bufp, 0)) 
-                break;
-
-            /* otherwise load buffer */
-            code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
-            if (code)
-                goto done;
-        }
-        /* locked, has callback, has valid data in buffer */
-        if ((tlen = scp->length.LowPart) > MOUNTPOINTLEN - 1) 
+        if (scp->length.LowPart > MOUNTPOINTLEN - 1)
             return CM_ERROR_TOOBIG;
-        if (tlen <= 0) {
-            code = CM_ERROR_INVAL;
-            goto done;
-        }
+        if (scp->length.LowPart == 0)
+            return CM_ERROR_INVAL;
 
-        /* someone else did the work while we were out */
-        if (scp->mountPointStringp[0]) {
-            code = 0;
-            goto done;
-        }
-
-        /* otherwise, copy out the link */
-        memcpy(scp->mountPointStringp, bufp->datap, tlen);
-
-        /* now make it null-terminated.  Note that the original contents of a
-         * link that is a mount point is "#volname." where "." is there just to
-         * be turned into a null.  That is, we can trash the last char of the
-         * link without damaging the vol name.  This is a stupid convention,
-         * but that's the protocol.
-         */
-        scp->mountPointStringp[tlen-1] = 0;
-        code = 0;
-
-      done:
-        if (bufp) 
-            buf_Release(bufp);
+        /* convert the terminating dot to a NUL */
+        scp->mountPointStringp[scp->length.LowPart - 1] = 0;
     }
+
     return code;
 }
 
@@ -1303,14 +1262,26 @@ notfound:
     /* tscp is now held */
 
     lock_ObtainWrite(&tscp->rw);
-    code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
-                      CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-    if (code) { 
-        lock_ReleaseWrite(&tscp->rw);
-        cm_ReleaseSCache(tscp);
-        goto done;
+
+    /*
+     * Do not get status if we do not already have a callback.
+     * The process of reading the mount point string will obtain status information
+     * in a single RPC.  No reason to add a second round trip.
+     *
+     * If we do have a callback, use cm_SyncOp to get status in case the
+     * current cm_user_t is not the same as the one that obtained the
+     * mount point string contents.
+     */
+    if (cm_HaveCallback(tscp)) {
+        code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
+                          CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
+        if (code) {
+            lock_ReleaseWrite(&tscp->rw);
+            cm_ReleaseSCache(tscp);
+            goto done;
+        }
+        cm_SyncOpDone(tscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     }
-    cm_SyncOpDone(tscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     /* tscp is now locked */
 
     if (!(flags & CM_FLAG_NOMOUNTCHASE)
@@ -1733,9 +1704,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
  */
 long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
 {
-    long code;
-    cm_buf_t *bufp;
-    long temp;
+    long code = 0;
     osi_hyper_t thyper;
 
     lock_AssertWrite(&linkScp->rw);
@@ -1751,56 +1720,26 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         } else 
 #endif /* AFS_FREELANCE_CLIENT */        
         {
-            /* read the link data from the file server*/
-            lock_ReleaseWrite(&linkScp->rw);
+            /* read the link data from the file server */
             thyper.LowPart = thyper.HighPart = 0;
-            code = buf_Get(linkScp, &thyper, reqp, &bufp);
-            lock_ObtainWrite(&linkScp->rw);
-            if (code) 
+            code = cm_GetData(linkScp, &thyper, linkScp->mountPointStringp, MOUNTPOINTLEN, userp, reqp);
+            if (code)
                 return code;
-            while (1) {
-                code = cm_SyncOp(linkScp, bufp, userp, reqp, 0,
-                                  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
-                if (code) {
-                    buf_Release(bufp);
-                    return code;
-                }
-                cm_SyncOpDone(linkScp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
-                if (cm_HaveBuffer(linkScp, bufp, 0)) 
-                    break;
+            linkScp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* null terminate */
 
-                code = cm_GetBuffer(linkScp, bufp, NULL, userp, reqp);
-                if (code) {
-                    buf_Release(bufp);
-                    return code;
-                }
-            } /* while loop to get the data */
-
-            /* now if we still have no link read in,
-             * copy the data from the buffer */
-            if ((temp = linkScp->length.LowPart) >= MOUNTPOINTLEN) {
-                buf_Release(bufp);
+            if (linkScp->length.LowPart > MOUNTPOINTLEN - 1)
                 return CM_ERROR_TOOBIG;
-            }       
-
-            /* otherwise, it fits; make sure it is still null (could have
-             * lost race with someone else referencing this link above),
-             * and if so, copy in the data.
-             */
-            if (!linkScp->mountPointStringp[0]) {
-                strncpy(linkScp->mountPointStringp, bufp->datap, temp);
-                linkScp->mountPointStringp[temp] = 0;	/* null terminate */
-            }
-            buf_Release(bufp);
+            if (linkScp->length.LowPart == 0)
+                return CM_ERROR_INVAL;
         }
         
         if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
             linkScp->fileType = CM_SCACHETYPE_DFSLINK;
 
-    }	/* don't have sym link contents cached */
+    }	/* don't have symlink contents cached */
 
-    return 0;
+    return code;
 }       
 
 /* called with a held vnode and a path suffix, with the held vnode being a
@@ -1822,6 +1761,25 @@ long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
     *newSpaceBufferp = NULL;
 
     lock_ObtainWrite(&linkScp->rw);
+    /*
+     * Do not get status if we do not already have a callback.
+     * The process of reading the symlink string will obtain status information
+     * in a single RPC.  No reason to add a second round trip.
+     *
+     * If we do have a callback, use cm_SyncOp to get status in case the
+     * current cm_user_t is not the same as the one that obtained the
+     * symlink string contents.
+     */
+    if (cm_HaveCallback(linkScp)) {
+        code = cm_SyncOp(linkScp, NULL, userp, reqp, 0,
+                          CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
+        if (code) {
+            lock_ReleaseWrite(&linkScp->rw);
+            cm_ReleaseSCache(linkScp);
+            goto done;
+        }
+        cm_SyncOpDone(linkScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    }
     code = cm_HandleLink(linkScp, userp, reqp);
     if (code)
         goto done;
