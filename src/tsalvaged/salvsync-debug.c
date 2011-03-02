@@ -199,7 +199,10 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
 	state->reason = atoi(ti->data);
+    } else {
+	state->reason = SALVSYNC_REASON_WHATEVER;
     }
+
     if ((ti = as->parms[COMMON_PARMS_OFFSET+1].items)) {	/* -programtype */
 	if (!strcmp(ti->data, "fileServer")) {
 	    programType = fileServer;

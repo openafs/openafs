@@ -333,7 +333,10 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
 	state->reason = atoi(ti->data);
+    } else {
+	state->reason = FSYNC_WHATEVER;
     }
+
     if ((ti = as->parms[COMMON_PARMS_OFFSET+1].items)) {	/* -programtype */
 	if (!strcmp(ti->data, "fileServer")) {
 	    programType = fileServer;
@@ -1492,8 +1495,6 @@ VGCDel(struct cmd_syndesc * as, void * rock)
 	return -1;
     }
     child = atoi(ti->data);
-
-    state.reason = FSYNC_WHATEVER;
 
     common_prolog(as, &state);
     fprintf(stderr, "calling FSYNC_VCGDel\n");
