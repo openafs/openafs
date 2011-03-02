@@ -1227,6 +1227,9 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		VChangeState_r(vp, VOL_STATE_DELETED);
 		VDeregisterVolOp_r(vp);
 
+		/* Volume is gone; clear out old salvage stats */
+		memset(&vp->salvage, 0, sizeof(vp->salvage));
+
 		/* Someday we should free the vp, too, after about 2 hours,
 		 * possibly by putting the vp back on the VLRU. */
 
