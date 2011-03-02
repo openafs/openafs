@@ -59,6 +59,7 @@ struct VolumeSummary {		/* Volume summary an entry for each
      * numbers of each major component of
      * the volume */
     IHandle_t *volumeInfoHandle;
+    char deleted;               /* did we delete this volume? */
     byte wouldNeedCallback;	/* set if the file server should issue
 				 * call backs for all the files in this volume when
 				 * the volume goes back on line */
@@ -194,6 +195,7 @@ extern int Wait(char *prog);
 extern char *ToString(const char *s);
 extern void AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId);
 extern void AskOnline(struct SalvInfo *salvinfo, VolumeId volumeId);
+extern void AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId);
 extern void CheckLogFile(char * log_path);
 #ifndef AFS_NT40_ENV
 extern void TimeStampLogFile(char * log_path);
