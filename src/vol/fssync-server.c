@@ -727,7 +727,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vcom->hdr->command == FSYNC_VOL_LEAVE_OFF) {
 	/* nothing much to do if we're leaving the volume offline */
 #ifdef AFS_DEMAND_ATTACH_FS
-	if (vp) {
+	if (vp && V_attachState(vp) != VOL_STATE_DELETED) {
 	    if (FSYNC_partMatch(vcom, vp, 1)) {
 		if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 		    (V_attachState(vp) == VOL_STATE_PREATTACHED)) {
