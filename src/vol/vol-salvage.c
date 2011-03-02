@@ -1399,7 +1399,7 @@ AskVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
 		Exit(SALSRV_EXIT_VOLGROUP_LINK);
 	    }
 
-	    salvinfo->volumeSummaryp = malloc(VOL_VG_MAX_VOLS * sizeof(struct VolumeSummary));
+	    salvinfo->volumeSummaryp = calloc(VOL_VG_MAX_VOLS, sizeof(struct VolumeSummary));
 	    osi_Assert(salvinfo->volumeSummaryp != NULL);
 
 	    salvinfo->nVolumes = 0;
@@ -1715,7 +1715,7 @@ GetVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
 	nvols = VOL_VG_MAX_VOLS;
     }
 
-    salvinfo->volumeSummaryp = malloc(nvols * sizeof(struct VolumeSummary));
+    salvinfo->volumeSummaryp = calloc(nvols, sizeof(struct VolumeSummary));
     osi_Assert(salvinfo->volumeSummaryp != NULL);
 
     params.singleVolumeNumber = singleVolumeNumber;
@@ -2289,8 +2289,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    Log("No header file for volume %u; %screating %s\n",
 		isp->volumeId, (Testing ? "it would have been " : ""),
 		path);
-	isp->volSummary = (struct VolumeSummary *)
-	    malloc(sizeof(struct VolumeSummary));
+	isp->volSummary = calloc(1, sizeof(struct VolumeSummary));
 	isp->volSummary->fileName = ToString(headerName);
 
 	writefunc = VCreateVolumeDiskHeader;
