@@ -5121,6 +5121,10 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	call->arrivalProc = (void (*)())0;
     }
 
+    if (call->growMTUEvent)
+	rxevent_Cancel(call->growMTUEvent, call,
+		       RX_CALL_REFCOUNT_ALIVE);
+
     if (call->delayedAbortEvent) {
 	rxevent_Cancel(call->delayedAbortEvent, call, RX_CALL_REFCOUNT_ABORT);
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
@@ -6141,6 +6145,9 @@ rxi_CheckCall(struct rx_call *call)
 	    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
 	    rxevent_Cancel(call->keepAliveEvent, call,
 			   RX_CALL_REFCOUNT_ALIVE);
+	    if (call->growMTUEvent)
+		rxevent_Cancel(call->growMTUEvent, call,
+			       RX_CALL_REFCOUNT_ALIVE);
             MUTEX_ENTER(&rx_refcnt_mutex);
 	    if (call->refCount == 0) {
 		rxi_FreeCall(call, haveCTLock);
