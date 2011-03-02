@@ -1750,7 +1750,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * does not update a mountpoint or symlink by altering the contents of
      * the file data; but the Unix CM does.
      */
-    if (scp->dataVersion != dataVersion)
+    if (scp->dataVersion != dataVersion && !(flags & CM_MERGEFLAG_FETCHDATA))
         scp->mountPointStringp[0] = '\0';
 
     /* We maintain a range of buffer dataVersion values which are considered 

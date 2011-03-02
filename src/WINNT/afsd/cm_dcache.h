@@ -31,6 +31,9 @@ extern int cm_HaveBuffer(struct cm_scache *, struct cm_buf *, int haveBufLocked)
 extern long cm_GetBuffer(struct cm_scache *, struct cm_buf *, int *,
 	struct cm_user *, struct cm_req *);
 
+extern long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_length,
+                       cm_user_t *userp, cm_req_t *reqp);
+
 extern afs_int32 cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep,
                                     osi_hyper_t *length, cm_user_t *up,
                                     cm_req_t *reqp, osi_hyper_t *realBasep);
