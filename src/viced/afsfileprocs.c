@@ -288,6 +288,25 @@ SetVolumeSync(struct AFSVolSync *async, Volume * avol)
     FS_UNLOCK;
 }				/*SetVolumeSync */
 
+static int
+CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
+{
+    afs_sfsize_t vlen;
+    VN_GET_LEN(vlen, vnp);
+    if (alen != vlen) {
+	afs_int64 alen64 = alen, vlen64 = vlen;
+	ViceLog(0, ("Fid %lu.%lu.%lu has inconsistent length (index "
+	            "%" AFS_INT64_FMT ", inode %" AFS_INT64_FMT "); volume "
+	            "must be salvaged\n",
+	            afs_printable_uint32_lu(vp->hashid),
+	            afs_printable_uint32_lu(Vn_id(vnp)),
+	            afs_printable_uint32_lu(vnp->disk.uniquifier),
+	            vlen64, alen64));
+	return -1;
+    }
+    return 0;
+}
+
 /*
  * Note that this function always returns a held host, so
  * that CallPostamble can block without the host's disappearing.
@@ -7109,6 +7128,11 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 		    volptr->hashid));
 	return EIO;
     }
+    if (CheckLength(volptr, targetptr, tlen)) {
+	FDH_CLOSE(fdP);
+	VTakeOffline(volptr);
+	return VSALVAGE;
+    }
     if (Pos > tlen) {
 	Len = 0;
     }
@@ -7344,6 +7368,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
 			volptr->hashid));
 	    return EIO;
+	}
+	if (CheckLength(volptr, targetptr, DataLength)) {
+	    FDH_CLOSE(fdP);
+	    VTakeOffline(volptr);
+	    return VSALVAGE;
 	}
 
 	if (linkCount != 1) {
