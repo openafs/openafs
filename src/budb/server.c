@@ -503,8 +503,7 @@ main(int argc, char **argv)
     }
 
     /* initialize ubik */
-    ubik_CRXSecurityProc = afsconf_ClientAuth;
-    ubik_CRXSecurityRock = BU_conf;
+    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, BU_conf);
 
     ubik_SRXSecurityProc = afsconf_ServerAuth;
     ubik_SRXSecurityRock = BU_conf;

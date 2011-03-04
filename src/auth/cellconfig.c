@@ -1499,8 +1499,9 @@ afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname,
 }
 
 int
-afsconf_UpToDate(struct afsconf_dir *adir)
+afsconf_UpToDate(void *rock)
 {
+    struct afsconf_dir *adir = rock;
     char tbuffer[256];
 #ifdef AFS_NT40_ENV
     char *p;

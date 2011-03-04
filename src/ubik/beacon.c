@@ -43,6 +43,15 @@
 #include "ubik.h"
 #include "ubik_int.h"
 
+/* These global variables were used to set the function to use to initialise
+ * the client security layer. They are retained for backwards compatiblity with
+ * legacy callers - the ubik_SetClientSecurityProcs() interface should be used
+ * instead
+ */
+int (*ubik_CRXSecurityProc) (void *rock, struct rx_securityClass **,
+                             afs_int32 *);
+void *ubik_CRXSecurityRock;
+
 /*! \name statics used to determine if we're the sync site */
 static afs_int32 syncSiteUntil = 0;	/*!< valid only if amSyncSite */
 int ubik_amSyncSite = 0;	/*!< flag telling if I'm sync site */
@@ -51,9 +60,11 @@ static char amIMagic = 0;	/*!< is this host the magic host */
 char amIClone = 0;		/*!< is this a clone which doesn't vote */
 static char ubik_singleServer = 0;
 /*\}*/
-int (*ubik_CRXSecurityProc) (void *rock, struct rx_securityClass **,
-			     afs_int32 *);
-void *ubik_CRXSecurityRock;
+static int (*secLayerProc) (void *rock, struct rx_securityClass **,
+			    afs_int32 *) = NULL;
+static int (*tokenCheckProc) (void *rock) = NULL;
+static void * securityRock = NULL;
+
 afs_int32 ubikSecIndex;
 struct rx_securityClass *ubikSecClass;
 static int ubeacon_InitServerListCommon(afs_uint32 ame,
@@ -178,7 +189,9 @@ ubeacon_InitSecurityClass(void)
 {
     int i;
     /* get the security index to use, if we can */
-    if (ubik_CRXSecurityProc) {
+    if (secLayerProc) {
+	i = (*secLayerProc) (securityRock, &ubikSecClass, &ubikSecIndex);
+    } else if (ubik_CRXSecurityProc) {
 	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &ubikSecClass,
 				     &ubikSecIndex);
     } else
@@ -193,7 +206,7 @@ ubeacon_InitSecurityClass(void)
 void
 ubeacon_ReinitServer(struct ubik_server *ts)
 {
-    if (!afsconf_UpToDate(ubik_CRXSecurityRock)) {
+    if (tokenCheckProc && !(*tokenCheckProc) (securityRock)) {
 	struct rx_connection *disk_rxcid;
 	struct rx_connection *vote_rxcid;
 	struct rx_connection *tmp;
@@ -759,4 +772,16 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	multi_End;
     }
     return code;
+}
+
+void
+ubik_SetClientSecurityProcs(int (*secproc) (void *,
+					    struct rx_securityClass **,
+					    afs_int32 *),
+			    int (*checkproc) (void *),
+			    void *rock)
+{
+    secLayerProc = secproc;
+    tokenCheckProc = checkproc;
+    securityRock = rock;
 }

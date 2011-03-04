@@ -346,9 +346,11 @@ main(int argc, char *argv[])
 
     /* initialize ubik */
     if (level == rxkad_clear)
-	ubik_CRXSecurityProc = afsconf_ClientAuth;
+	ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate,
+				    KA_conf);
     else if (level == rxkad_crypt)
-	ubik_CRXSecurityProc = afsconf_ClientAuthSecure;
+	ubik_SetClientSecurityProcs(afsconf_ClientAuthSecure,
+				    afsconf_UpToDate, KA_conf);
     else {
 	ViceLog(0, ("Unsupported security level %d\n", level));
 	exit(5);
@@ -356,7 +358,6 @@ main(int argc, char *argv[])
     ViceLog(0,
 	    ("Using level %s for Ubik connections.\n",
 	     (level == rxkad_crypt ? "crypt" : "clear")));
-    ubik_CRXSecurityRock = (char *)KA_conf;
     ubik_SRXSecurityProc = afsconf_ServerAuth;
     ubik_SRXSecurityRock = (char *)KA_conf;
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;

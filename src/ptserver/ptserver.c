@@ -455,8 +455,7 @@ main(int argc, char **argv)
     pr_realmName = info.name;
 
     /* initialize ubik */
-    ubik_CRXSecurityProc = afsconf_ClientAuth;
-    ubik_CRXSecurityRock = prdir;
+    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, prdir);
     ubik_SRXSecurityProc = afsconf_ServerAuth;
     ubik_SRXSecurityRock = prdir;
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;

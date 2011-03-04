@@ -195,6 +195,13 @@ extern int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **,
 extern void *ubik_SRXSecurityRock;
 extern int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
 extern void *ubik_CheckRXSecurityRock;
+
+extern void ubik_SetClientSecurityProcs(int (*scproc)(void *,
+						      struct rx_securityClass **,
+						      afs_int32 *),
+					int (*checkproc) (void *),
+					void *rock);
+
 /*\}*/
 
 /*

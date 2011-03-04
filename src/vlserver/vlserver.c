@@ -345,8 +345,7 @@ main(int argc, char **argv)
     }
 
     ubik_nBuffers = 512;
-    ubik_CRXSecurityProc = afsconf_ClientAuth;
-    ubik_CRXSecurityRock = (char *)tdir;
+    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
     ubik_SRXSecurityProc = afsconf_ServerAuth;
     ubik_SRXSecurityRock = (char *)tdir;
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
