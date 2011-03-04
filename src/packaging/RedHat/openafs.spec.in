@@ -1424,7 +1424,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %docdir %{_docdir}/openafs-%{afsvers}
 %dir %{_docdir}/openafs-%{afsvers}
-%{_docdir}/openafs-%{afsvers}/ChangeLog-%{afsvers}
+%{_docdir}/openafs-%{afsvers}/ChangeLog
 %{_docdir}/openafs-%{afsvers}/RELNOTES-%{afsvers}
 %{_docdir}/openafs-%{afsvers}/pdf
 
