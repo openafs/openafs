@@ -3838,6 +3838,7 @@ CheckHost_r(struct host *host, int flags, void *dummy)
     if (host->LastCall < checktime) {
 	h_Lock_r(host);
 	if (!(host->hostFlags & HOSTDELETED)) {
+	    host->hostFlags |= HWHO_INPROGRESS;
 	    cb_conn = host->callback_rxcon;
 	    rx_GetConnection(cb_conn);
 	    if (host->LastCall < clientdeletetime) {
@@ -3905,6 +3906,7 @@ CheckHost_r(struct host *host, int flags, void *dummy)
 	    rx_PutConnection(cb_conn);
 	    cb_conn=NULL;
 	    H_LOCK;
+	    host->hostFlags &= ~HWHO_INPROGRESS;
 	}
 	h_Unlock_r(host);
     }
