@@ -61,7 +61,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-#if defined(AFS_CACHE_BYPASS)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
 
 #include "afs/afs_bypasscache.h"
 
@@ -74,12 +74,6 @@
 #include "afs/afs_stats.h"   /* statistics */
 #include "afs/nfsclient.h"
 #include "rx/rx_globals.h"
-
-#if defined(AFS_LINUX26_ENV)
-#define LockPage(pp) lock_page(pp)
-#define UnlockPage(pp) unlock_page(pp)
-#endif
-#define AFS_KMAP_ATOMIC
 
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
@@ -143,9 +137,6 @@ afs_TransitionToBypass(struct vcache *avc,
     if (!avc)
 	return;
 
-    if (avc->f.states & FCSBypass)
-	osi_Panic("afs_TransitionToBypass: illegal transition to bypass--already FCSBypass\n");
-
     if (aflags & TRANSChangeDesiredBit)
 	setDesire = 1;
     if (aflags & TRANSSetManualBit)
@@ -156,11 +147,18 @@ afs_TransitionToBypass(struct vcache *avc,
 #else
     AFS_GLOCK();
 #endif
+
     ObtainWriteLock(&avc->lock, 925);
+    /*
+     * Someone may have beat us to doing the transition - we had no lock
+     * when we checked the flag earlier.  No cause to panic, just return.
+     */
+    if (avc->cachingStates & FCSBypass)
+	goto done;
 
     /* If we never cached this, just change state */
     if (setDesire && (!(avc->cachingStates & FCSBypass))) {
-	avc->f.states |= FCSBypass;
+	avc->cachingStates |= FCSBypass;
 	goto done;
     }
 
@@ -220,9 +218,6 @@ afs_TransitionToCaching(struct vcache *avc,
     if (!avc)
 	return;
 
-    if (!(avc->f.states & FCSBypass))
-	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");
-
     if (aflags & TRANSChangeDesiredBit)
 	resetDesire = 1;
     if (aflags & TRANSSetManualBit)
@@ -234,6 +229,12 @@ afs_TransitionToCaching(struct vcache *avc,
     AFS_GLOCK();
 #endif
     ObtainWriteLock(&avc->lock, 926);
+    /*
+     * Someone may have beat us to doing the transition - we had no lock
+     * when we checked the flag earlier.  No cause to panic, just return.
+     */
+    if (!(avc->cachingStates & FCSBypass))
+	goto done;
 
     /* Ok, we actually do need to flush */
     ObtainWriteLock(&afs_xcbhash, 957);
@@ -255,6 +256,7 @@ afs_TransitionToCaching(struct vcache *avc,
 	avc->cachingStates |= FCSManuallySet;
     avc->cachingTransitions++;
 
+done:
     ReleaseWriteLock(&avc->lock);
 #ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&avc->pvnLock, avc);
@@ -267,7 +269,6 @@ afs_TransitionToCaching(struct vcache *avc,
  * afs_PrefetchNoCache, all of the pages they've been passed need
  * to be unlocked.
  */
-#if defined(AFS_LINUX24_ENV)
 #define unlock_and_release_pages(auio) \
     do { \
 	struct iovec *ciov;	\
@@ -277,27 +278,19 @@ afs_TransitionToCaching(struct vcache *avc,
 	ciov = auio->uio_iov; \
 	iovmax = auio->uio_iovcnt - 1;	\
 	pp = (struct page*) ciov->iov_base;	\
-	afs_warn("BYPASS: Unlocking pages...");	\
 	while(1) { \
-	    if(pp != NULL && PageLocked(pp)) \
-		UnlockPage(pp);	\
-            put_page(pp); /* decrement refcount */ \
+	    if (pp) { \
+		if (PageLocked(pp)) \
+		    unlock_page(pp);	\
+		put_page(pp); /* decrement refcount */ \
+	    } \
 	    iovno++; \
 	    if(iovno > iovmax) \
 		break; \
 	    ciov = (auio->uio_iov + iovno);	\
 	    pp = (struct page*) ciov->iov_base;	\
 	} \
-	afs_warn("Pages Unlocked.\n"); \
     } while(0)
-#else
-#ifdef UKERNEL
-#define unlock_and_release_pages(auio) \
-	 do { } while(0)
-#else
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif
 
 /* no-cache prefetch routine */
 static afs_int32
@@ -309,27 +302,26 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 {
     afs_int32 length;
     afs_int32 code;
-    int tlen;
-    int moredata, iovno, iovoff, iovmax, clen, result, locked;
+    int moredata, iovno, iovoff, iovmax, result, locked;
     struct iovec *ciov;
+    struct iovec *rxiov;
+    int nio;
     struct page *pp;
     char *address;
-#ifdef AFS_KMAP_ATOMIC
-    char *page_buffer = osi_Alloc(PAGE_SIZE);
-#else
-    char *page_buffer = NULL;
-#endif
 
+    int curpage, bytes;
+    int pageoff;
+
+    rxiov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
     ciov = auio->uio_iov;
     pp = (struct page*) ciov->iov_base;
     iovmax = auio->uio_iovcnt - 1;
     iovno = iovoff = result = 0;
-    do {
 
+    do {
 	COND_GUNLOCK(locked);
 	code = rx_Read(acall, (char *)&length, sizeof(afs_int32));
 	COND_RE_GLOCK(locked);
-
 	if (code != sizeof(afs_int32)) {
 	    result = 0;
 	    afs_warn("Preread error. code: %d instead of %d\n",
@@ -344,6 +336,13 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    afs_warn("Preread error. Got length %d, which is greater than size %d\n",
 	             length, size);
 	    unlock_and_release_pages(auio);
+	    goto done;
+	}
+
+	/* If we get a 0 length reply, time to cleanup and return */
+	if (length == 0) {
+	    unlock_and_release_pages(auio);
+	    result = 0;
 	    goto done;
 	}
 
@@ -363,101 +362,71 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    moredata = 0;
 	}
 
-	while (length > 0) {
-
-	    clen = ciov->iov_len - iovoff;
-	    tlen = afs_min(length, clen);
-#ifdef AFS_LINUX24_ENV
-#ifndef AFS_KMAP_ATOMIC
-	    if(pp)
-		address = kmap(pp);
-	    else {
-		/* rx doesn't provide an interface to simply advance
-		   or consume n bytes.  for now, allocate a PAGE_SIZE
-		   region of memory to receive bytes in the case that
-		   there were holes in readpages */
-		if(page_buffer == NULL)
-		    page_buffer = osi_Alloc(PAGE_SIZE);
-		    address = page_buffer;
+	for (curpage = 0; curpage <= iovmax; curpage++) {
+	    pageoff = 0;
+	    while (pageoff < 4096) {
+		/* If no more iovs, issue new read. */
+		if (iovno >= nio) {
+		    COND_GUNLOCK(locked);
+		    bytes = rx_Readv(acall, rxiov, &nio, RX_MAXIOVECS, length);
+		    COND_RE_GLOCK(locked);
+		    if (bytes < 0) {
+		        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", bytes);
+			result = 0;
+			unlock_and_release_pages(auio);
+			goto done;
+		    } else if (bytes == 0) {
+			result = 0;
+			afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
+			unlock_and_release_pages(auio);
+			goto done;
+		    }
+		    length -= bytes;
+		    iovno = 0;
 		}
-#else
-	    address = page_buffer;
-#endif
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif /* LINUX24 */
-	    COND_GUNLOCK(locked);
-	    code = rx_Read(acall, address, tlen);
-	    COND_RE_GLOCK(locked);
-
-	    if (code < 0) {
-	        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", code);
-		result = 0;
-		unlock_and_release_pages(auio);
-		goto done;
-	    } else if (code == 0) {
-		result = 0;
-		afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
-		unlock_and_release_pages(auio);
-		goto done;
-	    }
-	    length -= code;
-	    tlen -= code;
-
-	    if(tlen > 0) {
-		iovoff += code;
-		address += code;
-	    } else {
-#ifdef AFS_LINUX24_ENV
-#ifdef AFS_KMAP_ATOMIC
-		if(pp) {
-		    address = kmap_atomic(pp, KM_USER0);
-		    memcpy(address, page_buffer, PAGE_SIZE);
-		    kunmap_atomic(address, KM_USER0);
+		pp = (struct page *)auio->uio_iov[curpage].iov_base;
+		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= PAGE_CACHE_SIZE) {
+		    /* Copy entire (or rest of) current iovec into current page */
+		    if (pp) {
+			address = kmap_atomic(pp, KM_USER0);
+			memcpy(address + pageoff, rxiov[iovno].iov_base + iovoff,
+				rxiov[iovno].iov_len - iovoff);
+			kunmap_atomic(address, KM_USER0);
+		    }
+		    pageoff += rxiov[iovno].iov_len - iovoff;
+		    iovno++;
+		    iovoff = 0;
+		} else {
+		    /* Copy only what's needed to fill current page */
+		    if (pp) {
+			address = kmap_atomic(pp, KM_USER0);
+			memcpy(address + pageoff, rxiov[iovno].iov_base + iovoff,
+				PAGE_CACHE_SIZE - pageoff);
+			kunmap_atomic(address, KM_USER0);
+		    }
+		    iovoff += PAGE_CACHE_SIZE - pageoff;
+		    pageoff = PAGE_CACHE_SIZE;
 		}
-#endif
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif /* LINUX 24 */
-		/* we filled a page, conditionally release it */
-		if (release_pages && ciov->iov_base) {
+		/* we filled a page, or this is the last page.  conditionally release it */
+		if (pp && ((pageoff == PAGE_CACHE_SIZE && release_pages)
+				|| (length == 0 && iovno >= nio))) {
 		    /* this is appropriate when no caller intends to unlock
 		     * and release the page */
-#ifdef AFS_LINUX24_ENV
                     SetPageUptodate(pp);
                     if(PageLocked(pp))
-                        UnlockPage(pp);
+                        unlock_page(pp);
                     else
-                        afs_warn("afs_NoCacheFetchProc: page not locked at iovno %d!\n", iovno);
+                        afs_warn("afs_NoCacheFetchProc: page not locked!\n");
                     put_page(pp); /* decrement refcount */
-#ifndef AFS_KMAP_ATOMIC
-                    kunmap(pp);
-#endif
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif /* LINUX24 */
 		}
-		/* and carry uio_iov */
-		iovno++;
-		if (iovno > iovmax)
+		if (length == 0 && iovno >= nio)
 		    goto done;
-
-		ciov = (auio->uio_iov + iovno);
-		pp = (struct page*) ciov->iov_base;
-		iovoff = 0;
 	    }
 	}
     } while (moredata);
 
 done:
-    if(page_buffer)
-    	osi_Free(page_buffer, PAGE_SIZE);
+    osi_FreeSmallSpace(rxiov);
     return result;
 }
 
@@ -524,13 +493,7 @@ cleanup:
      * do everything that would normally happen when the request was
      * processed, like unlocking the pages and freeing memory.
      */
-#ifdef AFS_LINUX24_ENV
     unlock_and_release_pages(bparms->auio);
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(bparms->auio->uio_iov,
 	     bparms->auio->uio_iovcnt * sizeof(struct iovec));
@@ -638,13 +601,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 	} else {
 	    afs_warn("BYPASS: No connection.\n");
 	    code = -1;
-#ifdef AFS_LINUX24_ENV
 	    unlock_and_release_pages(auio);
-#else
-#ifndef UKERNEL
-#error AFS_CACHE_BYPASS not implemented on this platform
-#endif
-#endif
 	    goto done;
 	}
     } while (afs_Analyze(tc, code, &avc->f.fid, areq,
@@ -665,4 +622,4 @@ done:
     return code;
 }
 
-#endif /* AFS_CACHE_BYPASS */
+#endif /* AFS_CACHE_BYPASS && AFS_LINUX24_ENV */

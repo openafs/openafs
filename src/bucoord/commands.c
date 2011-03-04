@@ -1127,7 +1127,6 @@ bc_KillCmd(struct cmd_syndesc *as, void *arock)
 	}
 	statusPtr->flags |= ABORT_REQUEST;
 	unlock_Status();
-	return (0);
     }
     return 0;
 }

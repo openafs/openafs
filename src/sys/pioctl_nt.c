@@ -641,10 +641,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                     count++;
 		i++;
             }
-            if (fileNamep[i] == 0)
+            if (fileNamep[i] == 0 || (fileNamep[i-1] != '\\' && fileNamep[i-1] != '/'))
                 tbuffer[i++] = '\\';
             tbuffer[i] = 0;
-            strcat(tbuffer, SMB_IOCTL_FILENAME);
+            strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);
         } else {
             char curdir[MAX_PATH]="";
 
@@ -682,7 +682,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 			count++;
 		    i++;
                 }
-                if (tbuffer[i] == 0)
+                if (curdir[i] == 0 || (curdir[i-1] != '\\' && curdir[i-1] != '/'))
                     tbuffer[i++] = '\\';
                 tbuffer[i] = 0;
                 strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);

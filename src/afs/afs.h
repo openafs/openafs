@@ -1433,8 +1433,10 @@ extern int afsd_dynamic_vcaches;
 #elif !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 #define afs_cr_uid(cred) ((cred)->cr_uid)
 #define afs_cr_gid(cred) ((cred)->cr_gid)
+#if !defined(AFS_OBSD_ENV)
 #define afs_cr_ruid(cred) ((cred)->cr_ruid)
 #define afs_cr_rgid(cred) ((cred)->cr_rgid)
+#endif
 
 static_inline void
 afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
@@ -1444,6 +1446,7 @@ static_inline void
 afs_set_cr_gid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_gid = gid;
 }
+#if !defined(AFS_OBSD_ENV)
 static_inline void
 afs_set_cr_ruid(afs_ucred_t *cred, uid_t uid) {
     cred->cr_ruid = uid;
@@ -1452,6 +1455,7 @@ static_inline void
 afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_rgid = gid;
 }
+#endif
 #endif
 
 #ifdef AFS_SUN5_ENV

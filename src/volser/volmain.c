@@ -149,7 +149,11 @@ BKGLoop(void *unused)
 	tv.tv_sec = GCWAKEUP;
 	tv.tv_usec = 0;
 #ifdef AFS_PTHREAD_ENV
+#ifdef AFS_NT40_ENV
+        Sleep(GCWAKEUP * 1000);
+#else
         select(0, 0, 0, 0, &tv);
+#endif
 #else
 	(void)IOMGR_Select(0, 0, 0, 0, &tv);
 #endif

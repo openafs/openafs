@@ -33,10 +33,8 @@
 #include <linux/smp_lock.h>
 #include <linux/writeback.h>
 #include <linux/pagevec.h>
-#if defined(AFS_CACHE_BYPASS)
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
-#endif
 
 #include "osi_compat.h"
 #include "osi_pagecopy.h"
@@ -587,9 +585,7 @@ afs_linux_flush(struct file *fp)
     struct vcache *vcp;
     cred_t *credp;
     int code;
-#if defined(AFS_CACHE_BYPASS)
     int bypasscache = 0;
-#endif
 
     AFS_GLOCK();
 
@@ -606,21 +602,20 @@ afs_linux_flush(struct file *fp)
     code = afs_InitReq(&treq, credp);
     if (code)
 	goto out;
-#if defined(AFS_CACHE_BYPASS)
-	/* If caching is bypassed for this file, or globally, just return 0 */
-	if(cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
-		bypasscache = 1;
-	else {
-		ObtainReadLock(&vcp->lock);
-		if(vcp->cachingStates & FCSBypass)
-			bypasscache = 1;
-		ReleaseReadLock(&vcp->lock);
-	}
-	if(bypasscache) {
-            /* future proof: don't rely on 0 return from afs_InitReq */
-            code = 0; goto out;
-        }
-#endif
+    /* If caching is bypassed for this file, or globally, just return 0 */
+    if (cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
+	bypasscache = 1;
+    else {
+	ObtainReadLock(&vcp->lock);
+	if (vcp->cachingStates & FCSBypass)
+	    bypasscache = 1;
+	ReleaseReadLock(&vcp->lock);
+    }
+    if (bypasscache) {
+	/* future proof: don't rely on 0 return from afs_InitReq */
+	code = 0;
+	goto out;
+    }
 
     ObtainSharedLock(&vcp->lock, 535);
     if ((vcp->execsOrWriters > 0) && (file_count(fp) == 1)) {
@@ -828,7 +823,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     int valid;
     struct afs_fakestat_state fakestate;
 
+#ifdef LOOKUP_RCU
+    /* We don't support RCU path walking */
+    if (nd->flags & LOOKUP_RCU)
+       return -ECHILD;
+#endif
     AFS_GLOCK();
+
     afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
@@ -1020,7 +1021,9 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
 	insert_inode_hash(ip);
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
+#endif
 	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
@@ -1058,7 +1061,9 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	if (hlist_unhashed(&ip->i_hash))
 	    insert_inode_hash(ip);
     }
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     dp->d_op = &afs_dentry_operations;
+#endif
     dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
     AFS_GUNLOCK();
 
@@ -1242,7 +1247,9 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	afs_getattr(tvcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
 
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
+#endif
 	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
@@ -1299,8 +1306,17 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 	rehash = newdp;
     }
 
+#if defined(D_COUNT_INT)
+    spin_lock(&olddp->d_lock);
+    if (olddp->d_count > 1) {
+	spin_unlock(&olddp->d_lock);
+	shrink_dcache_parent(olddp);
+    } else
+	spin_unlock(&olddp->d_lock);
+#else
     if (atomic_read(&olddp->d_count) > 1)
 	shrink_dcache_parent(olddp);
+#endif
 
     AFS_GLOCK();
     code = afs_rename(VTOAFS(oldip), (char *)oldname, VTOAFS(newip), (char *)newname, credp);
@@ -1387,9 +1403,6 @@ out:
 }
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
-
-#if defined(AFS_CACHE_BYPASS)
-#endif /* defined(AFS_CACHE_BYPASS */
 
 /* Populate a page by filling it from the cache file pointed at by cachefp
  * (which contains indicated chunk)
@@ -1691,8 +1704,6 @@ afs_linux_prefetch(struct file *fp, struct page *pp)
 
 }
 
-#if defined(AFS_CACHE_BYPASS)
-
 static int
 afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 			   struct list_head *page_list, unsigned num_pages)
@@ -1759,7 +1770,8 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
             page_cache_release(pp);
 	    iovecp[page_ix].iov_base = (void *) 0;
 	    base_index++;
-            continue;
+	    ancr->length -= PAGE_SIZE;
+	    continue;
         }
         base_index++;
         if(code) {
@@ -1820,6 +1832,17 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     struct nocache_read_request *ancr;
     int code;
 
+    /*
+     * Special case: if page is at or past end of file, just zero it and set
+     * it as up to date.
+     */
+    if (page_offset(pp) >=  i_size_read(fp->f_mapping->host)) {
+	zero_user_segment(pp, 0, PAGE_CACHE_SIZE);
+	SetPageUptodate(pp);
+	unlock_page(pp);
+	return 0;
+    }
+
     ClearPageError(pp);
 
     /* receiver frees */
@@ -1877,21 +1900,6 @@ afs_linux_bypass_check(struct inode *ip) {
     return bypass;
 }
 
-#else
-static inline int
-afs_linux_bypass_check(struct inode *ip) {
-    return 0;
-}
-static inline int
-afs_linux_bypass_readpage(struct file *fp, struct page *pp) {
-    return 0;
-}
-static inline int
-afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
-		    struct list_head *page_list, unsigned int num_pages) {
-    return 0;
-}
-#endif
 
 static int
 afs_linux_readpage(struct file *fp, struct page *pp)
@@ -2220,16 +2228,25 @@ done:
  * Check access rights - returns error if can't check or permission denied.
  */
 static int
-#ifdef IOP_PERMISSION_TAKES_NAMEIDATA
+#if defined(IOP_PERMISSION_TAKES_FLAGS)
+afs_linux_permission(struct inode *ip, int mode, unsigned int flags)
+#elif defined(IOP_PERMISSION_TAKES_NAMEIDATA)
 afs_linux_permission(struct inode *ip, int mode, struct nameidata *nd)
 #else
 afs_linux_permission(struct inode *ip, int mode)
 #endif
 {
     int code;
-    cred_t *credp = crref();
+    cred_t *credp;
     int tmp = 0;
 
+#if defined(IOP_PERMISSION_TAKES_FLAGS)
+    /* We don't support RCU path walking */
+    if (flags & IPERM_FLAG_RCU)
+       return -ECHILD;
+#endif
+
+    credp = crref();
     AFS_GLOCK();
     if (mode & MAY_EXEC)
 	tmp |= VEXEC;

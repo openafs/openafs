@@ -128,7 +128,7 @@ authentication level. Provide one of the following values:
 
 =item auth
 
-Cconnections at authentication level rxkad_auth
+Connections at authentication level rxkad_auth
 
 =item clear
 

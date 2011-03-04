@@ -61,7 +61,7 @@ lsetpag(void)
 
     rval = ioctl_afs_syscall(AFSCALL_SETPAG,0,0,0,0,0,0,&errcode);
     if (rval) {
-	errorcode = rval;
+	errcode = rval;
     }
 #elif defined(AFS_SUN511_ENV)
     int rval;

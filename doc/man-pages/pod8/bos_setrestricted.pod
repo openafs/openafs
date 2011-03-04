@@ -80,7 +80,7 @@ L<bos(8)>
 
 =head1 COPYRIGHT
 
-Copyright 2009 Simon wilkinson <simon@sxw.org.uk>
+Copyright 2009 Simon Wilkinson <simon@sxw.org.uk>
 
 This documentation is covered by the BSD License as written in the
 doc/LICENSE file. This man page was written by Simon Wilkinson for

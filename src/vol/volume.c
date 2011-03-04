@@ -151,6 +151,7 @@ pthread_mutex_t vol_trans_mutex;
 pthread_cond_t vol_put_volume_cond;
 pthread_cond_t vol_sleep_cond;
 pthread_cond_t vol_init_attach_cond;
+pthread_cond_t vol_vinit_cond;
 int vol_attach_threads = 1;
 #endif /* AFS_PTHREAD_ENV */
 
@@ -539,6 +540,20 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     }
 }
 
+/**
+ * Set VInit to a certain value, and signal waiters.
+ *
+ * @param[in] value  the value to set VInit to
+ *
+ * @pre VOL_LOCK held
+ */
+static void
+VSetVInit_r(int value)
+{
+    VInit = value;
+    CV_BROADCAST(&vol_vinit_cond);
+}
+
 int
 VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 {
@@ -567,6 +582,7 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     CV_INIT(&vol_put_volume_cond, "vol put", CV_DEFAULT, 0);
     CV_INIT(&vol_sleep_cond, "vol sleep", CV_DEFAULT, 0);
     CV_INIT(&vol_init_attach_cond, "vol init attach", CV_DEFAULT, 0);
+    CV_INIT(&vol_vinit_cond, "vol vinit", CV_DEFAULT, 0);
 #else /* AFS_PTHREAD_ENV */
     IOMGR_Initialize();
 #endif /* AFS_PTHREAD_ENV */
@@ -661,7 +677,7 @@ VInitAttachVolumes(ProgramType pt)
 	}
     }
     VOL_LOCK;
-    VInit = 2;			/* Initialized, and all volumes have been attached */
+    VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
     LWP_NoYieldSignal(VInitAttachVolumes);
     VOL_UNLOCK;
     return 0;
@@ -743,7 +759,7 @@ VInitAttachVolumes(ProgramType pt)
 	CV_DESTROY(&params.thread_done_cv);
     }
     VOL_LOCK;
-    VInit = 2;			/* Initialized, and all volumes have been attached */
+    VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
     CV_BROADCAST(&vol_init_attach_cond);
     VOL_UNLOCK;
     return 0;
@@ -867,7 +883,7 @@ VInitAttachVolumes(ProgramType pt)
     }
 
     VOL_LOCK;
-    VInit = 2;			/* Initialized, and all volumes have been attached */
+    VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
     CV_BROADCAST(&vol_init_attach_cond);
     VOL_UNLOCK;
 
@@ -1885,13 +1901,8 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
 	return;
     }
 
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	*ec = VSALVAGE;
-	FDH_REALLYCLOSE(fdP);
-	return;
-    }
     vsn = (struct versionStamp *)to;
-    if (FDH_READ(fdP, to, size) != size || vsn->magic != magic) {
+    if (FDH_PREAD(fdP, to, size, 0) != size || vsn->magic != magic) {
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
 	return;
@@ -1917,12 +1928,7 @@ WriteVolumeHeader_r(Error * ec, Volume * vp)
 	*ec = VSALVAGE;
 	return;
     }
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	*ec = VSALVAGE;
-	FDH_REALLYCLOSE(fdP);
-	return;
-    }
-    if (FDH_WRITE(fdP, (char *)&V_disk(vp), sizeof(V_disk(vp)))
+    if (FDH_PWRITE(fdP, (char *)&V_disk(vp), sizeof(V_disk(vp)), 0)
 	!= sizeof(V_disk(vp))) {
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
@@ -2382,7 +2388,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     VOL_UNLOCK;
 
-    strcat(path, "/");
+    strcat(path, OS_DIRSEP);
     strcat(path, name);
 
     if (!vp) {
@@ -2580,7 +2586,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 
     VOL_UNLOCK;
 
-    strcat(path, "/");
+    strcat(path, OS_DIRSEP);
     strcat(path, name);
 
     /* do volume attach
@@ -5561,8 +5567,9 @@ VConnectFS_r(void)
 	   (programType != fileServer) &&
 	   (programType != salvager));
     rc = FSYNC_clientInit();
-    if (rc)
-	VInit = 3;
+    if (rc) {
+	VSetVInit_r(3);
+    }
     return rc;
 }
 
@@ -5588,7 +5595,7 @@ VDisconnectFS_r(void)
     osi_Assert((programType != fileServer) &&
 	   (programType != salvager));
     FSYNC_clientFinis();
-    VInit = 2;
+    VSetVInit_r(2);
 }
 
 /**
@@ -5907,7 +5914,7 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
     osi_Assert(vip->bitmap != NULL);
     vip->bitmapOffset = 0;
 #endif /* BITMAP_LATER */
-    if (STREAM_SEEK(file, vcp->diskSize, 0) != -1) {
+    if (STREAM_ASEEK(file, vcp->diskSize) != -1) {
 	int bitNumber = 0;
 	for (bitNumber = 0; bitNumber < nVnodes + 100; bitNumber++) {
 	    if (STREAM_READ(vnode, vcp->diskSize, 1, file) != 1)
@@ -5995,7 +6002,7 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     struct DiskPartition64 *dp;
 
     *ec = 0;
-    name[0] = '/';
+    name[0] = OS_DIRSEPC;
     (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, afs_printable_uint32_lu(volumeId));
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	struct afs_stat status;
@@ -6024,14 +6031,14 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
  * @return volume number
  *
  * @note the string must be of the form VFORMAT.  the only permissible
- *       deviation is a leading '/' character.
+ *       deviation is a leading OS_DIRSEPC character.
  *
  * @see VFORMAT
  */
 int
 VolumeNumber(char *name)
 {
-    if (*name == '/')
+    if (*name == OS_DIRSEPC)
 	name++;
     return atoi(name + 1);
 }
@@ -6225,7 +6232,7 @@ VSetDiskUsage_r(void)
 	 * initialization level indicates that all volumes are attached,
 	 * which implies that all partitions are initialized. */
 #ifdef AFS_PTHREAD_ENV
-	sleep(10);
+	VOL_CV_WAIT(&vol_vinit_cond);
 #else /* AFS_PTHREAD_ENV */
 	IOMGR_Sleep(10);
 #endif /* AFS_PTHREAD_ENV */
@@ -8388,9 +8395,7 @@ VVLRUExtStats_r(struct VLRUExtStats * stats, afs_uint32 nvols)
 
 #define ENUMTOSTRING(en)  #en
 #define ENUMCASE(en) \
-    case en: \
-        return ENUMTOSTRING(en); \
-        break
+    case en: return ENUMTOSTRING(en)
 
 static char *
 vlru_idx_to_string(int idx)

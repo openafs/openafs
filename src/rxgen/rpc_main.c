@@ -59,6 +59,7 @@
 
 struct commandline {
     int ansic_flag;
+    int brief_flag;
     int cflag;
     int hflag;
     int lflag;
@@ -87,6 +88,7 @@ char *OutFileFlag = "";
 char OutFile[256];
 char Sflag = 0, Cflag = 0, hflag = 0, cflag = 0, kflag = 0, uflag = 0;
 char ansic_flag = 0;		/* If set, build ANSI C style prototypes */
+char brief_flag = 0;		/* If set, shorten names */
 char zflag = 0;			/* If set, abort server stub if rpc call returns non-zero */
 char xflag = 0;			/* if set, add stats code to stubs */
 char yflag = 0;			/* if set, only emit function name arrays to xdr file */
@@ -173,7 +175,7 @@ main(int argc, char *argv[])
     if (!parseargs(argc, argv, &cmd)) {
 	f_print(stderr, "usage: %s infile\n", cmdname);
 	f_print(stderr,
-		"       %s [-c | -h | -l | -m | -C | -S | -r | -k | -R | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
+		"       %s [-c | -h | -l | -m | -C | -S | -r | -b | -k | -R | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
 		cmdname);
 	f_print(stderr, "       %s [-s udp|tcp]* [-o outfile] [infile]\n",
 		cmdname);
@@ -471,6 +473,9 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     if (xflag) {
 	f_print(fout, "#include \"rx/rx_globals.h\"\n");
     }
+    if (brief_flag) {
+	f_print(fout, "#include \"rx/rx_opaque.h\"\n");
+    }
     if (uflag)
 	f_print(fout, "#include <ubik.h>\n");
     f_print(fout, "#else	/* UKERNEL */\n");
@@ -515,6 +520,9 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     if (xflag) {
 	f_print(fout, "#include \"rx/rx_globals.h\"\n");
     }
+    if (brief_flag) {
+	f_print(fout, "#include \"rx/rx_opaque.h\"\n");
+    }
     f_print(fout, "#else	/* KERNEL */\n");
     f_print(fout, "#include <afs/param.h>\n");
     f_print(fout, "#include <afs/stds.h>\n");
@@ -523,6 +531,9 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     f_print(fout, "#include <rx/rx.h>\n");
     if (xflag) {
 	f_print(fout, "#include <rx/rx_globals.h>\n");
+    }
+    if (brief_flag) {
+	f_print(fout, "#include <rx/rx_opaque.h>\n");
     }
     f_print(fout, "#include <afs/rxgen_consts.h>\n");
     if (uflag)
@@ -675,12 +686,18 @@ C_output(char *infile, char *define, int extend, char *outfile, int append)
 	    if (xflag) {
 		f_print(fout, "#include \"rx/rx_globals.h\"\n");
 	    }
+	    if (brief_flag) {
+		f_print(fout, "#include \"rx/rx_opaque.h\"\n");
+	    }
 	} else {
 	    f_print(fout, "#include <sys/types.h>\n");
 	    f_print(fout, "#include <rx/xdr.h>\n");
 	    f_print(fout, "#include <rx/rx.h>\n");
 	    if (xflag) {
 		f_print(fout, "#include <rx/rx_globals.h>\n");
+	    }
+	    if (brief_flag) {
+		f_print(fout, "#include <rx/rx_opaque.h\"\n");
 	    }
 	    f_print(fout, "#include <afs/rxgen_consts.h>\n");
 	}
@@ -740,12 +757,18 @@ S_output(char *infile, char *define, int extend, char *outfile, int append)
 	    if (xflag) {
 		f_print(fout, "#include \"rx/rx_globals.h\"\n");
 	    }
+	    if (brief_flag) {
+		f_print(fout, "#include \"rx/rx_opaque.h\"\n");
+	    }
 	} else {
 	    f_print(fout, "#include <sys/types.h>\n");
 	    f_print(fout, "#include <rx/xdr.h>\n");
 	    f_print(fout, "#include <rx/rx.h>\n");
 	    if (xflag) {
 		f_print(fout, "#include <rx/rx_globals.h>\n");
+	    }
+	    if (brief_flag) {
+		f_print(fout, "#include <rx/rx_opaque.h>\n");
 	    }
 	    f_print(fout, "#include <afs/rxgen_consts.h>\n");
 	}
@@ -816,6 +839,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		case 'm':
 		case 'C':
 		case 'S':
+		case 'b':
 		case 'r':
 		case 'R':
 		case 'k':
@@ -869,6 +893,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 	}
     }
     cmd->ansic_flag = ansic_flag = flag['A'];
+    cmd->brief_flag = brief_flag = flag['b'];
     cmd->cflag = cflag = flag['c'];
     cmd->hflag = hflag = flag['h'];
     cmd->sflag = flag['s'];

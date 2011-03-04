@@ -42,7 +42,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
 The B<afsd> command initializes the Cache Manager on an AFS client machine
 by transferring AFS-related configuration information into kernel memory
 and starting several daemons. B<afsd.fuse> is an experimental variant that
-inititalizes a FUSE-based Cache Manager instead of one based on a kernel
+initializes a FUSE-based Cache Manager instead of one based on a kernel
 module.
 
 The B<afsd> command performs the following actions:

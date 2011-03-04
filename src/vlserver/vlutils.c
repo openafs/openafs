@@ -35,7 +35,10 @@ int vldbversion = 0;
 
 static int index_OK(struct ubik_trans *trans, afs_int32 blockindex);
 
-#define ERROR_EXIT(code) {error=(code); goto error_exit;}
+#define ERROR_EXIT(code) do { \
+    error = (code); \
+    goto error_exit; \
+} while (0)
 
 /* Hashing algorithm based on the volume id; HASHSIZE must be prime */
 afs_int32

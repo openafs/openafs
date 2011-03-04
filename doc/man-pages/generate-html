@@ -109,7 +109,7 @@ sub scan_names {
         my $section = $dir;
         $section =~ s/^pod//;
         opendir (D, $dir) or die "Cannot open $dir: $!\n";
-        for my $file (sort grep { !/^\./ && !/CVS/ && !/fragments/ } readdir D) {
+        for my $file (sort grep { !/^\./ && /\.pod$/ } readdir D) {
             open (F, "$dir/$file") or die "Cannot open $dir/$file: $!\n";
             my ($name, $desc);
             local $_;

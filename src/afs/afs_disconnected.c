@@ -185,7 +185,6 @@ afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
 	break;
     default:
 	return -1;
-	break;
     }
 
     return 0;

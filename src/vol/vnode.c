@@ -760,13 +760,8 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		*ec = EIO;
 		goto error_encountered;
 	    }
-	    if (FDH_SEEK(fdP, off, SEEK_SET) < 0) {
-		Log("VAllocVnode: can't seek on index file!\n");
-		*ec = EIO;
-		goto error_encountered;
-	    }
 	    if (off + vcp->diskSize <= size) {
-		if (FDH_READ(fdP, &vnp->disk, vcp->diskSize) != vcp->diskSize) {
+	      if (FDH_PREAD(fdP, &vnp->disk, vcp->diskSize, off) != vcp->diskSize) {
 		    Log("VAllocVnode: can't read index file!\n");
 		    *ec = EIO;
 		    goto error_encountered;
@@ -785,7 +780,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		    goto error_encountered;
 		}
 		memset(buf, 0, 16 * 1024);
-		if ((FDH_WRITE(fdP, buf, 16 * 1024)) != 16 * 1024) {
+		if ((FDH_PWRITE(fdP, buf, 16 * 1024, off)) != 16 * 1024) {
 		    Log("VAllocVnode: can't grow vnode index: write failed\n");
 		    *ec = EIO;
 		    free(buf);
@@ -879,6 +874,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
     ssize_t nBytes;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 
     *ec = 0;
     vcp->reads++;
@@ -894,21 +890,16 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) {
 	Log("VnLoad: can't open index dev=%u, i=%s\n", vp->device,
-	    PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
+	    PrintInode(stmp, vp->vnodeIndex[class].handle->ih_ino));
 	*ec = VIO;
 	goto error_encountered_nolock;
-    } else if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, Vn_id(vnp)), SEEK_SET)
-	       < 0) {
-	Log("VnLoad: can't seek on index file vn=%u\n", Vn_id(vnp));
-	*ec = VIO;
-	goto error_encountered_nolock;
-    } else if ((nBytes = FDH_READ(fdP, (char *)&vnp->disk, vcp->diskSize))
+    } else if ((nBytes = FDH_PREAD(fdP, (char *)&vnp->disk, vcp->diskSize, vnodeIndexOffset(vcp, Vn_id(vnp))))
 	       != vcp->diskSize) {
 	/* Don't take volume off line if the inumber is out of range
 	 * or the inode table is full. */
 	if (nBytes == BAD_IGET) {
 	    Log("VnLoad: bad inumber %s\n",
-		PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
+		PrintInode(stmp, vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
 	    dosalv = 0;
 	} else if (nBytes == -1 && errno == EIO) {
@@ -1006,6 +997,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
     afs_foff_t offset;
     IHandle_t *ihP = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 #ifdef AFS_DEMAND_ATTACH_FS
     VnState vn_state_save;
 #endif
@@ -1023,14 +1015,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	Log("VnStore: can't open index file!\n");
 	goto error_encountered;
     }
-    if (FDH_SEEK(fdP, offset, SEEK_SET) < 0) {
-	Log("VnStore: can't seek on index file! fdp=%"AFS_PTR_FMT
-	    " offset=%d, errno=%d\n",
-	    fdP, (int) offset, errno);
-	goto error_encountered;
-    }
-
-    nBytes = FDH_WRITE(fdP, &vnp->disk, vcp->diskSize);
+    nBytes = FDH_PWRITE(fdP, &vnp->disk, vcp->diskSize, offset);
     if (nBytes != vcp->diskSize) {
 	/* Don't force volume offline if the inumber is out of
 	 * range or the inode table is full.
@@ -1038,7 +1023,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	FDH_REALLYCLOSE(fdP);
 	if (nBytes == BAD_IGET) {
 	    Log("VnStore: bad inumber %s\n",
-		PrintInode(NULL,
+		PrintInode(stmp,
 			   vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
 	    VOL_LOCK;

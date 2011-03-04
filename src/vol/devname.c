@@ -198,14 +198,14 @@ vol_DevName(dev_t adev, char *wpath)
 #endif
 	    if (wpath) {
 		strcpy(pbuf, pbuffer);
-		ptr = (char *)strrchr(pbuf, '/');
+		ptr = (char *)strrchr(pbuf, OS_DIRSEPC);
 		if (ptr) {
 		    *ptr = '\0';
 		    strcpy(wpath, pbuf);
 		} else
 		    return NULL;
 	    }
-	    ptr = (char *)strrchr(pbuffer, '/');
+	    ptr = (char *)strrchr(pbuffer, OS_DIRSEPC);
 	    if (ptr) {
 		strcpy(pbuffer, ptr + 1);
 		return pbuffer;
@@ -241,7 +241,7 @@ afs_rawname(char *devfile)
     i = strlen(devfile);
     while (i >= 0) {
 	strcpy(rawname, devfile);
-	if (devfile[i] == '/') {
+	if (devfile[i] == OS_DIRSEPC) {
 	    rawname[i + 1] = 'r';
 	    rawname[i + 2] = 0;
 	    strcat(rawname, &devfile[i + 1]);
@@ -251,7 +251,7 @@ afs_rawname(char *devfile)
 	if (!code && S_ISCHR(statbuf.st_mode))
 	    return rawname;
 
-	while ((--i >= 0) && (devfile[i] != '/'));
+	while ((--i >= 0) && (devfile[i] != OS_DIRSEPC));
     }
 
     return NULL;

@@ -24,7 +24,7 @@ The B<bos_util> command manipulates the AFS server B<Keyfile>. It can take
 a password from standard input, convert it to a key, and add it to the
 F<KeyFile>; list the keys in the F<KeyFile>; or remove a key from thet
 F<KeyFile>. It is very similar in function to B<asetkey>, but B<asetkey>
-works with keytab files wheras B<bos_util> works with passwords directly.
+works with keytab files whereas B<bos_util> works with passwords directly.
 
 B<bos_util> expects one of the following subcommands:
 

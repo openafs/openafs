@@ -12,7 +12,7 @@
 #import "TaskUtil.h"
 
 #define BACKGROUNDER_AGENT_NAME					@"AFSBackgrounder.app/Contents/MacOS/AFSBackgrounder"
-
+#define AD_CONF_FILE @"/Library/Preferences/DirectoryService/ActiveDirectory.plist"
 @implementation PListManager
 // -------------------------------------------------------------------------------
 //  krb5TiketAtLoginTime:
@@ -29,28 +29,35 @@
 	FileUtil				*futil = nil;
 	SInt32                                  object_index = 0;
 
-	//check system 
-	if (Gestalt(gestaltSystemVersionMajor, &osxMJVers) != noErr || Gestalt(gestaltSystemVersionMinor, &osxMnVers) != noErr) @throw [NSException exceptionWithName:@"PListManager:krb5TiketAtLoginTime" 
-																																						   reason:@"Error getting system version"
-																																						 userInfo:nil];
-	//get auth plist file
-	plistData = [NSData dataWithContentsOfFile:AUTH_FILE];
-	
-	//Get plist for updating with NSPropertyListMutableContainersAndLeaves
-	plist = [NSPropertyListSerialization propertyListFromData:plistData
-											 mutabilityOption:NSPropertyListMutableContainersAndLeaves
-													   format:&format
-											 errorDescription:&error];
-	if(!plist) {
-		@throw [NSException exceptionWithName:@"PListManager:krb5TiketAtLoginTime" 
-									   reason:error
-									 userInfo:nil];
-		
+	// check system
+	if (Gestalt(gestaltSystemVersionMajor, &osxMJVers) != noErr || Gestalt(gestaltSystemVersionMinor, &osxMnVers) != noErr) @throw [NSException exceptionWithName:@"PListManager:krb5TiketAtLoginTime" reason:@"Error getting system version" userInfo:nil];
+
+	// are we eligible to run?
+	plistData = [NSData dataWithContentsOfFile:AD_CONF_FILE];
+
+	// Get plist for updating with NSPropertyListMutableContainersAndLeaves
+	plist = [NSPropertyListSerialization propertyListFromData:plistData mutabilityOption:NSPropertyListMutableContainersAndLeaves format:&format errorDescription:&error];
+
+	if(plist) {
+		// Get "AD Advanced Options" dic
+		NSMutableDictionary *rightsDic = [plist objectForKey:@"AD Advanced Options"];
+		if ([[rightsDic objectForKey:@"AD Generate AuthAuthority"] boolValue])
+			return;
 	}
-	
-	//Get "rights" dic
+
+	// get auth plist file
+	plistData = [NSData dataWithContentsOfFile:AUTH_FILE];
+
+	// Get plist for updating with NSPropertyListMutableContainersAndLeaves
+	plist = [NSPropertyListSerialization propertyListFromData:plistData mutabilityOption:NSPropertyListMutableContainersAndLeaves format:&format errorDescription:&error];
+
+	if(!plist) {
+		@throw [NSException exceptionWithName:@"PListManager:krb5TiketAtLoginTime" reason:error userInfo:nil];
+	}
+
+	// Get "rights" dic
 	NSMutableDictionary *rightsDic = [plist objectForKey:@"rights"];
-	
+
 	//Get "system.login.console" dic
 	NSMutableDictionary *loginConsoleDic = [rightsDic objectForKey:@"system.login.console"];
 	

@@ -250,11 +250,20 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
                 print_ifarg("(caddr_t *)");
 	    }
 	    if (*objname == '&') {
-		f_print(fout, "%s.%s_val, (u_int *)%s.%s_len", objname, name,
-			objname, name);
+		if (brief_flag) {
+		    f_print(fout, "%s.val, (u_int *)%s.len", objname, objname);
+		} else {
+		    f_print(fout, "%s.%s_val, (u_int *)%s.%s_len",
+			    objname, name, objname, name);
+		}
 	    } else {
-		f_print(fout, "&%s->%s_val, (u_int *)&%s->%s_len", objname,
-			name, objname, name);
+		if (brief_flag) {
+		    f_print(fout, "&%s->val, (u_int *)&%s->len",
+			    objname, objname);
+		} else {
+		    f_print(fout, "&%s->%s_val, (u_int *)&%s->%s_len",
+			    objname, name, objname, name);
+		}
 	    }
 	}
 	print_ifarg(amax);
@@ -288,6 +297,7 @@ emit_union(definition * def)
     declaration *cs;
     char *object;
     char *format = "&objp->%s_u.%s";
+    char *briefformat = "&objp->u.%s";
 
     print_stat(&def->def.un.enum_decl);
     f_print(fout, "\tswitch (objp->%s) {\n", def->def.un.enum_decl.name);
@@ -298,7 +308,12 @@ emit_union(definition * def)
 	    object =
 		alloc(strlen(def->def_name) + strlen(format) +
 		      strlen(cs->name) + 1);
-	    s_print(object, format, def->def_name, cs->name);
+
+	    if (brief_flag)
+		s_print(object, briefformat, cs->name);
+	    else
+		s_print(object, format, def->def_name, cs->name);
+
 	    print_ifstat(2, cs->prefix, cs->type, cs->rel, cs->array_max,
 			 object, cs->name);
 	    free(object);
@@ -386,8 +401,15 @@ print_hout(declaration * dec)
 	switch (dec->rel) {
 	case REL_ARRAY:
 	    f_print(fout, "struct %s {\n", dec->name);
-	    f_print(fout, "\tu_int %s_len;\n", dec->name);
-	    f_print(fout, "\t%s%s *%s_val;\n", prefix, dec->type, dec->name);
+	    if (brief_flag) {
+		f_print(fout, "\tu_int %s_len;\n", dec->name);
+		f_print(fout, "\t%s%s *%s_val;\n", prefix,
+			dec->type, dec->name);
+	    } else {
+		f_print(fout, "\tu_int %s_len;\n", dec->name);
+		f_print(fout, "\t%s%s *%s_val;\n", prefix,
+			dec->type, dec->name);
+	    }
 	    f_print(fout, "} %s", dec->name);
 	    break;
 	default:

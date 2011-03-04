@@ -501,9 +501,7 @@ afs_vop_lookup(ap)
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT | WANTPARENT);
 
-#ifdef AFS_FBSD80_ENV
     cnp->cn_flags |= MPSAFE; /* steel */
-#endif
 
 #ifndef AFS_FBSD70_ENV
     if (flags & ISDOTDOT)
@@ -533,7 +531,9 @@ afs_vop_lookup(ap)
      * we also always return the vnode locked. */
 
     if (flags & ISDOTDOT) {
+	MA_VOP_UNLOCK(dvp, 0, p);
 	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
 	if (lockparent && (flags & ISLASTCN)
 	    && (error = ma_vn_lock(dvp, LK_EXCLUSIVE, p))) {
@@ -888,12 +888,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * Read operation filled a partial page.
 	     */
 	    m->valid = 0;
-	    vm_page_set_valid(m, 0, size - toff);
-#ifndef AFS_FBSD80_ENV
-	    vm_page_undirty(m);
-#else
+	    vm_page_set_validclean(m, 0, size - toff);
 	    KASSERT(m->dirty == 0, ("afs_getpages: page %p is dirty", m));
-#endif
 	}
 
 	if (i != ap->a_reqpage) {

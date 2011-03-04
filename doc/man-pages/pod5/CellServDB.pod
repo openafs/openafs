@@ -150,7 +150,7 @@ The first line begins at the left margin with the greater-than character
 (C<< > >>), followed immediately by the cell's name without an intervening
 space. Optionally, a comment can follow any number of spaces and a octothorpe
 (C<#>), perhaps to identify the organization associated with the
-cell. A variant of this allows the defintion of a linked cell: after the 
+cell. A variant of this allows the definition of a linked cell: after the 
 leading (C<< > >>) and cell name, a space and a second cell name may be
 listed before the optional spaces, octothorpe and comment.
 

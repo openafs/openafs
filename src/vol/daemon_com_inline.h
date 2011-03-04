@@ -13,9 +13,7 @@
 #include "daemon_com.h"
 
 #define SYNC_ENUMCASE(en) \
-    case en: \
-        return #en; \
-        break
+    case en: return #en
 
 static_inline char *
 SYNC_res2string(afs_int32 response)

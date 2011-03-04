@@ -73,7 +73,7 @@ F</afs/I<cellname>> directories, respectively.
 
 If a mount point resides in a read/write volume and the volume name does
 not have a C<.readonly> or a C<.backup> extension, the Cache Manager
-attempts to access only the a read/write version of the volume. The access
+attempts to access only the read/write version of the volume. The access
 attempt fails with an error if the read/write version is inaccessible,
 even if a read-only version is accessible. In this situation the Cache
 Manager is said to be on a I<read/write path> and cannot switch back to

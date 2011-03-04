@@ -18,6 +18,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
     int code;
 
     struct dentry *dentry;
+    struct inode *inode = AFSTOV(avc);
     struct list_head *cur, *head;
 
     /* First, see if we can evict the inode from the dcache */
@@ -25,8 +26,10 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
 	*slept = 1;
 	ReleaseWriteLock(&afs_xvcache);
         AFS_GUNLOCK();
+
+#if defined(HAVE_DCACHE_LOCK)
         spin_lock(&dcache_lock);
-	head = &(AFSTOV(avc))->i_dentry;
+	head = &inode->i_dentry;
 
 restart:
         cur = head;
@@ -35,7 +38,6 @@ restart:
 
 	    if (d_unhashed(dentry))
 		continue;
-
 	    dget_locked(dentry);
 
 	    spin_unlock(&dcache_lock);
@@ -49,6 +51,35 @@ restart:
 	    goto restart;
 	}
 	spin_unlock(&dcache_lock);
+#else /* HAVE_DCACHE_LOCK */
+	spin_lock(&inode->i_lock);
+	head = &inode->i_dentry;
+
+restart:
+	cur = head;
+	while ((cur = cur->next) != head) {
+	    dentry = list_entry(cur, struct dentry, d_alias);
+
+	    spin_lock(&dentry->d_lock);
+	    if (d_unhashed(dentry)) {
+		spin_unlock(&dentry->d_lock);
+		continue;
+	    }
+	    spin_unlock(&dentry->d_lock);
+	    dget(dentry);
+
+	    spin_unlock(&inode->i_lock);
+	    if (d_invalidate(dentry) == -EBUSY) {
+		dput(dentry);
+		/* perhaps lock and try to continue? (use cur as head?) */
+		goto inuse;
+	    }
+	    dput(dentry);
+	    spin_lock(&inode->i_lock);
+	    goto restart;
+	}
+	spin_unlock(&inode->i_lock);
+#endif /* HAVE_DCACHE_LOCK */
 inuse:
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache, 733);

@@ -57,7 +57,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     struct volume *tvp = 0;
     struct VenusFid tfid;
     struct cell *tcell;
-    char *cpos, *volnamep;
+    char *cpos, *volnamep = NULL;
     char *buf, *endptr;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
     afs_int32 mtptCell, assocCell = 0, hac = 0;
@@ -137,7 +137,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * in the dynamic mount directory.
      */
     if (volid && !avolpp) {
-	if (*cpos)
+	if (cpos)
 	    *cpos = ':';
 	goto done;
     }

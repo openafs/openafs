@@ -33,10 +33,8 @@
 #if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
 #endif
-#if defined(AFS_CACHE_BYPASS)
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
-#endif
 
 #ifdef pgoff2loff
 #define pageoff(pp) pgoff2loff((pp)->index)
@@ -118,7 +116,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
     ssize_t code = 0;
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     afs_size_t isize, offindex;
 #endif
 
@@ -129,7 +127,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     code = afs_linux_VerifyVCache(vcp, NULL);
 
     if (code == 0) {
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
         offindex = *offp >> PAGE_CACHE_SHIFT;
         if(offindex > isize) {
@@ -152,7 +150,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
 	       code);
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 done:
 #endif
     AFS_GUNLOCK();
@@ -671,9 +669,7 @@ afs_linux_flush(struct file *fp)
     struct vcache *vcp;
     cred_t *credp;
     int code;
-#if defined(AFS_CACHE_BYPASS)
     int bypasscache;
-#endif
 
     AFS_GLOCK();
 
@@ -690,7 +686,6 @@ afs_linux_flush(struct file *fp)
     code = afs_InitReq(&treq, credp);
     if (code)
 	goto out;
-#if defined(AFS_CACHE_BYPASS)
 	/* If caching is bypassed for this file, or globally, just return 0 */
 	if(cache_bypass_strategy == ALWAYS_BYPASS_CACHE)
 		bypasscache = 1;
@@ -704,7 +699,6 @@ afs_linux_flush(struct file *fp)
             /* future proof: don't rely on 0 return from afs_InitReq */
             code = 0; goto out;
         }
-#endif
 
     ObtainSharedLock(&vcp->lock, 535);
     if ((vcp->execsOrWriters > 0) && (file_count(fp) == 1)) {
@@ -1516,6 +1510,21 @@ afs_linux_follow_link(struct dentry *dp, struct dentry *basep,
 #endif /* AFS_LINUX24_ENV */
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
+static inline int
+afs_linux_can_bypass(struct inode *ip) {
+    switch(cache_bypass_strategy) {
+	case NEVER_BYPASS_CACHE:
+	    return 0;
+	case ALWAYS_BYPASS_CACHE:
+	    return 1;
+	case LARGE_FILES_BYPASS_CACHE:
+	    if(i_size_read(ip) > cache_bypass_threshold)
+		return 1;
+	default:
+	    return 0;
+     }
+}
+
 /* afs_linux_readpage
  * all reads come through here. A strategy-like read call.
  */
@@ -1530,12 +1539,10 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     ulong address = afs_linux_page_address(pp);
     afs_offs_t offset = pageoff(pp);
 #endif
-#if defined(AFS_CACHE_BYPASS)
     afs_int32 bypasscache = 0; /* bypass for this read */
     struct nocache_read_request *ancr;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     afs_int32 isize;
-#endif
 #endif
     uio_t *auio;
     struct iovec *iovecp;
@@ -1560,7 +1567,6 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
 	      AFS_UIOSYS);
 
-#if defined(AFS_CACHE_BYPASS)
     bypasscache = afs_linux_can_bypass(ip);
 
     /* In the new incarnation of selective caching, a file's caching policy
@@ -1584,7 +1590,6 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 
 	goto done; /* skips release page, doing it in bg thread */
     }
-#endif 
 		  
 #ifdef AFS_LINUX24_ENV
     maybe_lock_kernel();
@@ -1629,11 +1634,9 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     free_page(address);
 #endif
 
-#if defined(AFS_CACHE_BYPASS)
     /* do not call afs_GetDCache if cache is bypassed */
     if(bypasscache)
 	goto done;
-#endif
 
     /* free if not bypassing cache */
     osi_Free(auio, sizeof(uio_t));
@@ -1657,9 +1660,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	AFS_GUNLOCK();
     }
 
-#if defined(AFS_CACHE_BYPASS)
 done:
-#endif
     crfree(credp);
     return afs_convert_code(code);
 }

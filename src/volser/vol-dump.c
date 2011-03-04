@@ -260,7 +260,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
 
     afs_int32 n;
 
-    (void)afs_snprintf(headerName, sizeof headerName, "%s/%s",
+    (void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
 		       VPartitionPath(dp), name);
     if ((fd = afs_open(headerName, O_RDONLY)) == -1
 	|| afs_fstat(fd, &status) == -1) {
@@ -559,12 +559,14 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 {
     int code = 0, failed_seek = 0, failed_write = 0;
     afs_int32 pad = 0;
-    afs_int32 offset = 0;
+    afs_foff_t offset = 0;
     afs_sfsize_t nbytes, howBig;
     ssize_t n;
     size_t howMany;
+    afs_foff_t howFar = 0;
     byte *p;
     afs_uint32 hi, lo;
+    afs_ino_str_t stmp;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
@@ -627,14 +629,15 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	    howMany = nbytes;
 
 	/* Read the data - unless we know we can't */
-	n = (failed_seek ? 0 : FDH_READ(handleP, p, howMany));
+	n = (failed_seek ? 0 : FDH_PREAD(handleP, p, howMany, howFar));
+	howFar += n;
 
 	/* If read any good data and we null padded previously, log the
 	 * amount that we had null padded.
 	 */
 	if ((n > 0) && pad) {
-	    fprintf(stderr, "Null padding file %d bytes at offset %u\n", pad,
-		    offset);
+	    fprintf(stderr, "Null padding file %d bytes at offset %lld\n", pad,
+		    (long long)offset);
 	    pad = 0;
 	}
 
@@ -650,11 +653,11 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	    if (n < 0) {
 		n = 0;
 		fprintf(stderr, "Error %d reading inode %s for vnode %d\n",
-			errno, PrintInode(NULL, handleP->fd_ih->ih_ino),
+			errno, PrintInode(stmp, handleP->fd_ih->ih_ino),
 			vnode);
 	    } else if (!pad) {
 		fprintf(stderr, "Error reading inode %s for vnode %d\n",
-			PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
+			PrintInode(stmp, handleP->fd_ih->ih_ino), vnode);
 	    }
 
 	    /* Pad the rest of the buffer with zeros. Remember offset we started
@@ -668,22 +671,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	    /* Now seek over the data we could not get. An error here means we
 	     * can't do the next read.
 	     */
-	    failed_seek = FDH_SEEK(handleP, ((size - nbytes) + howMany), SEEK_SET);
-	    if (failed_seek != ((size - nbytes) + howMany)) {
-		if (failed_seek < 0) {
-		    fprintf(stderr,
-			    "Error %d seeking in inode %s for vnode %d\n",
-			    errno, PrintInode(NULL, handleP->fd_ih->ih_ino),
-			    vnode);
-		} else {
-		    fprintf(stderr,
-			    "Error seeking in inode %s for vnode %d\n",
-			    PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
-		    failed_seek = -1;
-		}
-	    } else {
-		failed_seek = 0;
-	    }
+	    howFar = ((size - nbytes) + howMany);
 	}
 
 	/* Now write the data out */
@@ -692,8 +680,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     }
 
     if (pad) {			/* Any padding we hadn't reported yet */
-	fprintf(stderr, "Null padding file: %d bytes at offset %u\n", pad,
-		offset);
+	fprintf(stderr, "Null padding file: %d bytes at offset %lld\n", pad,
+		(long long)offset);
     }
 
     free(p);
@@ -708,6 +696,7 @@ DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
     int code = 0;
     IHandle_t *ihP;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 
     if (verbose)
 	fprintf(stderr, "dumping vnode %d\n", vnodeNumber);
@@ -752,14 +741,14 @@ DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
 	if (fdP == NULL) {
 	    fprintf(stderr,
 		    "Unable to open inode %s for vnode %u (volume %i); not dumped, error %d\n",
-		    PrintInode(NULL, VNDISK_GET_INO(v)), vnodeNumber, volid,
+		    PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber, volid,
 		    errno);
 	}
 	else
 	{
 		if (verbose)
 		    fprintf(stderr, "about to dump inode %s for vnode %u\n",
-			    PrintInode(NULL, VNDISK_GET_INO(v)), vnodeNumber);
+			    PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber);
 		code = DumpFile(dumpfd, vnodeNumber, fdP, v);
 		FDH_CLOSE(fdP);
 	}
@@ -784,7 +773,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
     FdHandle_t *fdP;
     afs_sfsize_t size;
     int flag;
-    int offset = 0;
+    afs_foff_t offset = 0;
     int vnodeIndex, nVnodes = 0;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
@@ -793,7 +782,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
     nVnodes = (size / vcp->diskSize) - 1;
 
     if (nVnodes > 0) {
-	STREAM_SEEK(file, vcp->diskSize, 0);
+	STREAM_ASEEK(file, vcp->diskSize);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;
@@ -804,9 +793,9 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
 	 * a serverModifyTime.  For an epoch dump, this results in 0>=0 test, which
 	 * does dump the file! */
 	if (verbose)
-	    fprintf(stderr, "about to dump %s vnode %u (vnode offset = %u)\n",
+	    fprintf(stderr, "about to dump %s vnode %u (vnode offset = %lld)\n",
 			class == vSmall ? "vSmall" : "vLarge",
-		    bitNumberToVnodeNumber(vnodeIndex, class), offset);
+		    bitNumberToVnodeNumber(vnodeIndex, class), (long long)offset);
 	if (!code)
 	    code =
 		DumpVnode(dumpfd, vnode, V_id(vp),

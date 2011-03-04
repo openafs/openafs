@@ -797,7 +797,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     afs_FlushReclaimedVcaches();
 
 #if defined(AFS_LINUX22_ENV)
-    if(!afsd_dynamic_vcaches) {
+    if(!afsd_dynamic_vcaches && afs_vcount >= afs_maxvcount) {
 	afs_ShakeLooseVCaches(anumber);
 	if (afs_vcount >= afs_maxvcount) {
 	    afs_warn("afs_NewVCache - none freed\n");
@@ -1645,7 +1645,9 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 	iheldthelock = VOP_ISLOCKED(vp, curthread);
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
+	AFS_GUNLOCK();
 	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
+	AFS_GLOCK();
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
 #elif defined(AFS_FBSD_ENV)

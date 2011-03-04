@@ -45,9 +45,15 @@ struct vlheader cheader;	/* kept in network byte order */
 extern afs_uint32 HostAddress[];	/* host addresses kept in host byte order */
 int maxnservers;
 struct extentaddr *ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
-#define ABORT(c) { errorcode = (c); goto abort; }
+#define ABORT(c) do { \
+    errorcode = (c); \
+    goto abort; \
+} while (0)
 #undef END
-#define END(c) { errorcode = (c); goto end; }
+#define END(c) do { \
+    errorcode = (c); \
+    goto end; \
+} while (0)
 
 #define VLDBALLOCLIMIT	10000
 #define VLDBALLOCINCR	2048

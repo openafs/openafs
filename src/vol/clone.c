@@ -53,7 +53,10 @@
 
 int (*vol_PollProc) (void) = 0;	/* someone must init this */
 
-#define ERROR_EXIT(code) {error = code; goto error_exit;}
+#define ERROR_EXIT(code) do { \
+    error = code; \
+    goto error_exit; \
+} while (0)
 
 /* parameters for idec call - this could just be an IHandle_t, but leaving
  * open the possibility of decrementing the special files as well.
@@ -167,9 +170,10 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     Inode clinode;
     struct clone_head decHead;
     struct clone_rock decRock;
-    afs_int32 offset = 0;
+    afs_foff_t offset = 0;
     afs_int32 dircloned, inodeinced;
     afs_int32 filecount = 0, diskused = 0;
+    afs_ino_str_t stmp;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
@@ -189,7 +193,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     rwfile = FDH_FDOPEN(rwFd, ReadWriteOriginal ? "r+" : "r");
     if (!rwfile)
 	ERROR_EXIT(EIO);
-    STREAM_SEEK(rwfile, vcp->diskSize, 0);	/* Will fail if no vnodes */
+    STREAM_ASEEK(rwfile, vcp->diskSize);	/* Will fail if no vnodes */
 
     /* Open the clone volume's index file and seek to beginning */
     IH_COPY(clHout, clvp->vnodeIndex[class].handle);
@@ -199,7 +203,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     clfileout = FDH_FDOPEN(clFdOut, "a");
     if (!clfileout)
 	ERROR_EXIT(EIO);
-    code = STREAM_SEEK(clfileout, vcp->diskSize, 0);
+    code = STREAM_ASEEK(clfileout, vcp->diskSize);
     if (code)
 	ERROR_EXIT(EIO);
 
@@ -215,7 +219,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	clfilein = FDH_FDOPEN(clFdIn, "r");
 	if (!clfilein)
 	    ERROR_EXIT(EIO);
-	STREAM_SEEK(clfilein, vcp->diskSize, 0);	/* Will fail if no vnodes */
+	STREAM_ASEEK(clfilein, vcp->diskSize);	/* Will fail if no vnodes */
     }
 
     /* Initialize list of inodes to nuke */
@@ -256,7 +260,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
 		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
-			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
+			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
@@ -282,14 +286,14 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		rwvnode->dataVersion++;
 #endif /* DVINC */
 		rwvnode->cloned = 1;
-		code = STREAM_SEEK(rwfile, offset, 0);
+		code = STREAM_ASEEK(rwfile, offset);
 		if (code == -1)
 		    goto clonefailed;
 		code = STREAM_WRITE(rwvnode, vcp->diskSize, 1, rwfile);
 		if (code != 1)
 		    goto clonefailed;
 		dircloned = 1;
-		code = STREAM_SEEK(rwfile, offset + vcp->diskSize, 0);
+		code = STREAM_ASEEK(rwfile, offset + vcp->diskSize);
 		if (code == -1)
 		    goto clonefailed;
 #ifdef DVINC
@@ -309,7 +313,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
 		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
-			V_linkHandle(rwvp), PrintInode(NULL, rwinode),
+			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
 			V_parentId(rwvp), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
@@ -318,7 +322,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    /* And if the directory was marked clone, unmark it */
 	    if (dircloned) {
 		rwvnode->cloned = 0;
-		if (STREAM_SEEK(rwfile, offset, 0) != -1)
+		if (STREAM_ASEEK(rwfile, offset) != -1)
 		    (void)STREAM_WRITE(rwvnode, vcp->diskSize, 1, rwfile);
 	    }
 	    ERROR_EXIT(EIO);
@@ -336,7 +340,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 
     /* Clean out any junk at end of clone file */
     if (reclone) {
-	STREAM_SEEK(clfilein, offset, 0);
+	STREAM_ASEEK(clfilein, offset);
 	while (STREAM_READ(clvnode, vcp->diskSize, 1, clfilein) == 1) {
 	    if (clvnode->type != vNull && VNDISK_GET_INO(clvnode) != 0) {
 		ci_AddItem(&decHead, VNDISK_GET_INO(clvnode));

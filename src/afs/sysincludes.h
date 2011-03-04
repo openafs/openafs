@@ -186,6 +186,9 @@ struct xfs_inode_info {
 # if defined(HAVE_LINUX_EXPORTFS_H)
 #  include <linux/exportfs.h>
 # endif
+# ifdef AFS_LINUX24_ENV
+#  include <linux/pagemap.h>
+# endif
 
 #else /* AFS_LINUX22_ENV */
 # if defined(AFS_DARWIN_ENV)
