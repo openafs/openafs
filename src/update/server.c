@@ -299,7 +299,7 @@ main(int argc, char *argv[])
     if (rx_InitHost(host, htons(AFSCONF_UPDATEPORT)) < 0)
 	Quit("rx_init");
 
-    afsconf_BuildServerSecurityObjects(cdir, 0, &securityClasses, &numClasses);
+    afsconf_BuildServerSecurityObjects(cdir, &securityClasses, &numClasses);
 
     if (securityClasses[2] == NULL)
 	Quit("rxkad_NewServerSecurityObject");

@@ -235,17 +235,28 @@ out:
 }
 
 /*!
+ * Set the security flags to be used for a particular configuration
+ */
+void
+afsconf_SetSecurityFlags(struct afsconf_dir *dir,
+			 afsconf_secflags flags)
+{
+    dir->securityFlags = flags;
+}
+
+/*!
  * Build a set of security classes suitable for a server accepting
  * incoming connections
  */
 #if !defined(UKERNEL)
 void
-afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
-				   afs_uint32 flags,
+afsconf_BuildServerSecurityObjects(void *rock,
 			           struct rx_securityClass ***classes,
 			           afs_int32 *numClasses)
 {
-    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+    struct afsconf_dir *dir = rock;
+
+    if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
 	*numClasses = 4;
     else
 	*numClasses = 3;
@@ -256,7 +267,8 @@ afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
     (*classes)[1] = NULL;
     (*classes)[2] = rxkad_NewServerSecurityObject(0, dir,
 						  afsconf_GetKey, NULL);
-    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+
+    if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
 	(*classes)[3] = rxkad_NewServerSecurityObject(rxkad_crypt, dir,
 						      afsconf_GetKey, NULL);
 }

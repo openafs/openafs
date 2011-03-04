@@ -2173,8 +2173,8 @@ main(int argc, char *argv[])
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);
-    afsconf_BuildServerSecurityObjects(confDir, AFSCONF_SEC_OBJS_RXKAD_CRYPT,
-				       &securityClasses, &numClasses);
+    afsconf_SetSecurityFlags(confDir, AFSCONF_SECOPTS_ALWAYSENCRYPT);
+    afsconf_BuildServerSecurityObjects(confDir, &securityClasses, &numClasses);
 
     tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */
 				 1,	/*service name */

@@ -410,7 +410,7 @@ startServer(char *configPath)
         exit(1);
     }
 
-    afsconf_BuildServerSecurityObjects(globalDir, 0, &classes, &numClasses);
+    afsconf_BuildServerSecurityObjects(globalDir, &classes, &numClasses);
     service = rx_NewService(0, TEST_SERVICE_ID, "test", classes, numClasses,
 			    TEST_ExecuteRequest);
     if (service == NULL) {

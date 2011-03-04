@@ -28,6 +28,7 @@
 	afsconf_SetCellInfo;
 	afsconf_SetNoAuthFlag;
 	afsconf_SuperUser;
+	afsconf_SetSecurityFlags;
 	ka_AuthServerConn;
 	ka_Authenticate;
 	ka_CellConfig;

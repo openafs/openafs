@@ -513,7 +513,7 @@ main(int argc, char **argv)
 	VS_EXIT(1);
     }
     afsconf_GetKey(tdir, 999, &tkey);
-    afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
+    afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
     if (securityClasses[0] == NULL)
 	Abort("rxnull_NewServerSecurityObject");
     service =

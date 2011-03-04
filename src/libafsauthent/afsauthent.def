@@ -151,3 +151,4 @@ EXPORTS
         pr_SIdToName                                    @150
         afsconf_GetExtendedCellInfo                     @151
         afsconf_UpToDate                                @152
+	afsconf_SetSecurityFlags			@153

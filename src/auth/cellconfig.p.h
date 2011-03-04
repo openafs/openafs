@@ -79,6 +79,15 @@ struct afsconf_aliasentry {
     struct afsconf_cellalias aliasInfo;
 };
 
+/*!
+ * A set of bit flags to control the selection of a security object
+ */
+#define AFSCONF_SECOPTS_NOAUTH        0x1
+#define AFSCONF_SECOPTS_LOCALAUTH     0x2
+#define AFSCONF_SECOPTS_ALWAYSENCRYPT 0x4
+#define AFSCONF_SECOPTS_FALLBACK_NULL 0x8
+typedef afs_uint32 afsconf_secflags;
+
 struct afsconf_dir {
     char *name;			/* pointer to dir prefix */
     char *cellName;		/* cell name, if any, we're in */
@@ -86,6 +95,7 @@ struct afsconf_dir {
     struct opr_queue keyList;		/* list of keys */
     afs_int32 timeRead;		/* time stamp of file last read */
     struct afsconf_aliasentry *alias_entries;	/* cell aliases */
+    afsconf_secflags securityFlags;
 };
 
 extern afs_int32 afsconf_FindService(const char *aname);
@@ -190,14 +200,6 @@ extern afs_int32 afsconf_ClientAuthSecure(void *arock,
 				          struct rx_securityClass **astr,
 				          afs_int32 * aindex);
 
-/*!
- * A set of bit flags to control the selection of a security object
- */
-#define AFSCONF_SECOPTS_NOAUTH        0x1
-#define AFSCONF_SECOPTS_LOCALAUTH     0x2
-#define AFSCONF_SECOPTS_ALWAYSENCRYPT 0x4
-#define AFSCONF_SECOPTS_FALLBACK_NULL 0x8
-typedef afs_uint32 afsconf_secflags;
 
 extern afs_int32 afsconf_ClientAuthToken(struct afsconf_cell *info,
 					 afsconf_secflags flags,
@@ -214,10 +216,10 @@ extern afs_int32 afsconf_PickClientSecObj(struct afsconf_dir *dir,
 					  afs_int32 *scIndex,
 					  time_t *expires);
 
-/* Flags for this function */
-#define AFSCONF_SEC_OBJS_RXKAD_CRYPT 1
-extern void afsconf_BuildServerSecurityObjects(struct afsconf_dir *,
-					       afs_uint32,
+extern void afsconf_SetSecurityFlags(struct afsconf_dir *dir,
+				     afsconf_secflags flags);
+
+extern void afsconf_BuildServerSecurityObjects(void *,
 					       struct rx_securityClass ***,
 					       afs_int32 *);
 

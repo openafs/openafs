@@ -560,8 +560,7 @@ main(int argc, char **argv)
 	ERROR(code);
     }
 
-    afsconf_BuildServerSecurityObjects(BU_conf, 0,
-				       &securityClasses, &numClasses);
+    afsconf_BuildServerSecurityObjects(BU_conf, &securityClasses, &numClasses);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();

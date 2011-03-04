@@ -505,8 +505,7 @@ main(int argc, char **argv)
     pt_hook_write();
 #endif
 
-    afsconf_BuildServerSecurityObjects(prdir, 0, &securityClasses,
-				       &numClasses);
+    afsconf_BuildServerSecurityObjects(prdir, &securityClasses, &numClasses);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
