@@ -1,4 +1,4 @@
-openafs (1.6.0~pre2-1) UNRELEASED; urgency=low
+openafs (1.6.0~pre2-1) experimental; urgency=low
 
   * New upstream prerelease.
     - Avoid spurious Rx connection timeouts.
@@ -20,7 +20,7 @@ openafs (1.6.0~pre2-1) UNRELEASED; urgency=low
     package in the DKMS instructions and the need for module-assistant
     clean openafs in the module-assitant instructions.  (Closes: #606235)
 
- -- Russ Allbery <rra@debian.org>  Thu, 06 Jan 2011 20:03:48 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 03 Mar 2011 17:49:27 -0800
 
 openafs (1.6.0~pre1-1) experimental; urgency=low
 
