@@ -587,9 +587,9 @@ long cm_InitLocalMountPoints() {
             code = cm_GetRootCellName(&rootCellName[1]);
             if (code == 0) {
                 lock_ReleaseMutex(&cm_Freelance_Lock);
-                cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
-                cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
-                cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs.", 1, NULL);
+                cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell", 0, NULL);
+                cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell", 1, NULL);
+                cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs", 1, NULL);
                 lock_ObtainMutex(&cm_Freelance_Lock);
                 dwMountPoints = 3;
             }
@@ -788,9 +788,9 @@ long cm_InitLocalMountPoints() {
       	code = cm_GetRootCellName(&rootCellName[1]);
         if (code == 0) {
             lock_ReleaseMutex(&cm_Freelance_Lock);
-            cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
-            cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
-            cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs.", 1, NULL);
+            cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell", 0, NULL);
+            cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell", 1, NULL);
+            cm_FreelanceAddMount(".root", &rootCellName[1], "root.afs", 1, NULL);
             lock_ObtainMutex(&cm_Freelance_Lock);
         }
         return 0;
@@ -1114,9 +1114,9 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
                          );
 
         if (rw)
-            sprintf(line, "%s%%%s:%s", filename, fullname, volume);
+            sprintf(line, "%s%%%s:%s.", filename, fullname, volume);
         else
-            sprintf(line, "%s#%s:%s", filename, fullname, volume);
+            sprintf(line, "%s#%s:%s.", filename, fullname, volume);
 
         /* If we are adding a new value, there must be an unused name
          * within the range 0 to dwMountPoints 
@@ -1160,9 +1160,9 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         fprintf(fp, "%d", n);
         fseek(fp, 0, SEEK_END);
         if (rw)
-            fprintf(fp, "%s%%%s:%s\n", filename, fullname, volume);
+            fprintf(fp, "%s%%%s:%s.\n", filename, fullname, volume);
         else
-            fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
+            fprintf(fp, "%s#%s:%s.\n", filename, fullname, volume);
         fclose(fp);
     }
 
