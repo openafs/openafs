@@ -346,10 +346,9 @@ main(int argc, char **argv)
 
     ubik_nBuffers = 512;
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = (char *)tdir;
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = (char *)tdir;
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth, tdir);
+
     ubik_SyncWriterCacheProc = vlsynccache;
     code =
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,

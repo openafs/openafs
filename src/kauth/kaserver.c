@@ -358,10 +358,10 @@ main(int argc, char *argv[])
     ViceLog(0,
 	    ("Using level %s for Ubik connections.\n",
 	     (level == rxkad_crypt ? "crypt" : "clear")));
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = (char *)KA_conf;
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = (char *)KA_conf;
+
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth,
+				KA_conf);
 
     ubik_nBuffers = 80;
 

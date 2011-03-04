@@ -85,16 +85,31 @@ struct ubik_stats ubik_stats;
 afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
 afs_int32 ubik_epochTime = 0;
 afs_int32 urecovery_state = 0;
-int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
-void *ubik_SRXSecurityRock;
 int (*ubik_SyncWriterCacheProc) (void);
 struct ubik_server *ubik_servers;
 short ubik_callPortal;
 
+/* These global variables were used to control the server security layers.
+ * They are retained for backwards compatibility with legacy callers.
+ *
+ * The ubik_SetServerSecurityProcs() interface should be used instead.
+ */
+
+int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
+void *ubik_SRXSecurityRock;
+int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
+void *ubik_CheckRXSecurityRock;
+
+
+
 static int BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	   	      struct ubik_trans **transPtr, int readAny);
 
-struct rx_securityClass *ubik_sc[3];
+static struct rx_securityClass **ubik_sc = NULL;
+static void (*buildSecClassesProc)(void *, struct rx_securityClass ***,
+				   afs_int32 *) = NULL;
+static int (*checkSecurityProc)(void *, struct rx_call *) = NULL;
+static void *securityRock = NULL;
 
 #define	CStampVersion	    1	/* meaning set ts->version */
 
@@ -384,6 +399,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
     afs_int32 secIndex;
     struct rx_securityClass *secClass;
+    int numClasses;
 
     struct rx_service *tservice;
 
@@ -447,22 +463,26 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
     ubik_callPortal = myPort;
     /* try to get an additional security object */
-    ubik_sc[0] = rxnull_NewServerSecurityObject();
-    ubik_sc[1] = 0;
-    ubik_sc[2] = 0;
-    if (ubik_SRXSecurityProc) {
-	code =
-	    (*ubik_SRXSecurityProc) (ubik_SRXSecurityRock, &secClass,
-				     &secIndex);
-	if (code == 0) {
-	    ubik_sc[secIndex] = secClass;
+    if (buildSecClassesProc == NULL) {
+	numClasses = 3;
+	ubik_sc = calloc(numClasses, sizeof(struct rx_securityClass *));
+	ubik_sc[0] = rxnull_NewServerSecurityObject();
+	if (ubik_SRXSecurityProc) {
+	    code = (*ubik_SRXSecurityProc) (ubik_SRXSecurityRock,
+					    &secClass,
+					    &secIndex);
+	    if (code == 0) {
+		 ubik_sc[secIndex] = secClass;
+	    }
 	}
+    } else {
+        (*buildSecClassesProc) (securityRock, &ubik_sc, &numClasses);
     }
     /* for backwards compat this should keep working as it does now
        and not host bind */
 
     tservice =
-	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, 3,
+	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, numClasses,
 		      VOTE_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ubik_dprint("Could not create VOTE rx service!\n");
@@ -472,7 +492,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     rx_SetMaxProcs(tservice, 3);
 
     tservice =
-	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, 3,
+	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, numClasses,
 		      DISK_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	ubik_dprint("Could not create DISK rx service!\n");
@@ -1356,4 +1376,27 @@ ubikGetPrimaryInterfaceAddr(afs_uint32 addr)
 	    if (ts->addr[j] == addr)
 		return ts->addr[0];	/* net byte order */
     return 0;			/* if not in server database, return error */
+}
+
+int
+ubik_CheckAuth(struct rx_call *acall)
+{
+    if (checkSecurityProc)
+	return (*checkSecurityProc) (securityRock, acall);
+    else if (ubik_CheckRXSecurityProc) {
+	return (*ubik_CheckRXSecurityProc) (ubik_CheckRXSecurityRock, acall);
+    } else
+	return 0;
+}
+
+void
+ubik_SetServerSecurityProcs(void (*buildproc) (void *,
+					       struct rx_securityClass ***,
+					       afs_int32 *),
+			    int (*checkproc) (void *, struct rx_call *),
+			    void *rock)
+{
+    buildSecClassesProc = buildproc;
+    checkSecurityProc = checkproc;
+    securityRock = rock;
 }

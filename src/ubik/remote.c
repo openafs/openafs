@@ -34,9 +34,6 @@
 #include "ubik.h"
 #include "ubik_int.h"
 
-int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
-void *ubik_CheckRXSecurityRock;
-
 static void printServerInfo(void);
 
 /*! \file
@@ -47,16 +44,7 @@ static void printServerInfo(void);
 
 struct ubik_trans *ubik_currentTrans = 0;
 
-int
-ubik_CheckAuth(struct rx_call *acall)
-{
-    afs_int32 code;
-    if (ubik_CheckRXSecurityProc) {
-	code = (*ubik_CheckRXSecurityProc) (ubik_CheckRXSecurityRock, acall);
-	return code;
-    } else
-	return 0;
-}
+
 
 /* the rest of these guys handle remote execution of write
  * transactions: this is the code executed on the other servers when a

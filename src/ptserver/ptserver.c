@@ -456,10 +456,8 @@ main(int argc, char **argv)
 
     /* initialize ubik */
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, prdir);
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = prdir;
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = prdir;
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth, prdir);
 
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry

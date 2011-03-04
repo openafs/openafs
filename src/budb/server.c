@@ -504,12 +504,8 @@ main(int argc, char **argv)
 
     /* initialize ubik */
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, BU_conf);
-
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = BU_conf;
-
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = BU_conf;
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth, BU_conf);
 
     if (ubik_nBuffers == 0)
 	ubik_nBuffers = 400;

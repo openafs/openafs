@@ -201,6 +201,12 @@ extern void ubik_SetClientSecurityProcs(int (*scproc)(void *,
 						      afs_int32 *),
 					int (*checkproc) (void *),
 					void *rock);
+extern void ubik_SetServerSecurityProcs
+		(void (*buildproc) (void *,
+                                    struct rx_securityClass ***,
+                                    afs_int32 *),
+                 int (*checkproc) (void *, struct rx_call *),
+                 void *rock);
 
 /*\}*/
 
@@ -410,6 +416,9 @@ extern void panic(char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
 extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
+
+extern int ubik_CheckAuth(struct rx_call *);
+
 /*\}*/
 
 /*! \name beacon.c */
