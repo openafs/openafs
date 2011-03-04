@@ -1,5 +1,21 @@
-openafs (1.6.0~pre1-2) UNRELEASED; urgency=low
+openafs (1.6.0~pre2-1) UNRELEASED; urgency=low
 
+  * New upstream prerelease.
+    - Avoid spurious Rx connection timeouts.
+    - Do not retry Rx calls on channels returning busy errors.
+    - Fix double-free error in the vos command-line utility.
+    - Properly enable Rx connection hard timeouts.
+    - Fix lock initialization in Rx.
+    - Check for /afs existence before starting unless -nomount given.
+    - Fix panic when using /afs/.:mount syntax.
+    - Avoid a panic in memcache mode due to missing CellItems file.
+    - Attempt to recover more quickly from timed-out volume releases.
+    - Improve speed of volume removal.
+    - Improve CPU utilization during demand-attach volume attachment.
+    - Fix various error handling problems.
+    - Linux 2.6.38 support.
+    - Improve correctness and performance in cache bypass mode.
+    - Avoid extra runs of the vcache freeing routine.
   * In README.modules, document the need to install the Linux headers
     package in the DKMS instructions and the need for module-assistant
     clean openafs in the module-assitant instructions.  (Closes: #606235)
