@@ -451,17 +451,6 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     }
     /* for backwards compat this should keep working as it does now
        and not host bind */
-#if 0
-    /* This really needs to be up above, where I have put it.  It works
-     * here when we're non-pthreaded, but the code above, when using
-     * pthreads may (and almost certainly does) end up calling on a
-     * pthread resource which gets initialized by rx_Init.  The end
-     * result is that an assert fails and the program dies. -- klm
-     */
-    code = rx_Init(myPort);
-    if (code < 0)
-	return code;
-#endif
 
     tservice =
 	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, 3,
