@@ -44,7 +44,7 @@
  * If server is zero, will match first index of ANY server and partition
  * Zero is a valid partition field.
  */
-int
+static int
 FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32 type)
 {
     int e;
@@ -76,7 +76,7 @@ FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
 }
 
 /* Changes the rw site only */
-void
+static void
 SetAValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
           afs_uint32 nserver, afs_int32 npart, afs_int32 type)
 {
