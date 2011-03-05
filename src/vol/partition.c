@@ -139,42 +139,6 @@
 #include <jfs/filsys.h>
 #endif
 
-#ifdef O_LARGEFILE
-
-#define afs_stat	stat64
-#define afs_open	open64
-#define afs_fopen	fopen64
-#ifndef AFS_NT40_ENV
-#if AFS_HAVE_STATVFS64
-# define afs_statvfs	statvfs64
-#else
-# if AFS_HAVE_STATFS64
-#  define afs_statfs	statfs64
-#else
-#  if AFS_HAVE_STATVFS
-#   define afs_statvfs	statvfs
-#  else
-#   define afs_statfs	statfs
-#  endif /* !AFS_HAVE_STATVFS */
-# endif	/* !AFS_HAVE_STATFS64 */
-#endif /* !AFS_HAVE_STATVFS64 */
-#endif /* !AFS_NT40_ENV */
-
-#else /* !O_LARGEFILE */
-
-#define afs_stat	stat
-#define afs_open	open
-#define afs_fopen	fopen
-#ifndef AFS_NT40_ENV
-#if AFS_HAVE_STATVFS
-#define afs_statvfs	statvfs
-#else /* !AFS_HAVE_STATVFS */
-#define afs_statfs	statfs
-#endif /* !AFS_HAVE_STATVFS */
-#endif /* !AFS_NT40_ENV */
-
-#endif /* !O_LARGEFILE */
-
 int aixlow_water = 8;		/* default 8% */
 struct DiskPartition64 *DiskPartitionList;
 

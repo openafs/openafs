@@ -136,16 +136,6 @@
 #include <stddef.h>
 #endif
 
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t vol_glock_mutex;
 pthread_mutex_t vol_trans_mutex;

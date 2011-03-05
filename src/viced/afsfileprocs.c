@@ -119,17 +119,6 @@ extern void FidZero(DirHandle * file);
 pthread_mutex_t fileproc_glock_mutex;
 #endif /* AFS_PTHREAD_ENV */
 
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
-
 /* Useful local defines used by this module */
 
 #define	DONTCHECK	0

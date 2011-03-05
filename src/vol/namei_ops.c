@@ -58,22 +58,6 @@
 #include <afs/errmap_nt.h>
 #endif
 
-/*@+fcnmacros +macrofcndecl@*/
-#ifdef O_LARGEFILE
-#ifdef S_SPLINT_S
-#endif /*S_SPLINT_S */
-#define afs_stat		stat64
-#define afs_fstat		fstat64
-#define afs_fopen		fopen64
-#else /* !O_LARGEFILE */
-#ifdef S_SPLINT_S
-#endif /*S_SPLINT_S */
-#define afs_stat		stat
-#define afs_fstat		fstat
-#define afs_fopen		fopen
-#endif /* !O_LARGEFILE */
-/*@=fcnmacros =macrofcndecl@*/
-
 #ifndef LOCK_SH
 #define   LOCK_SH   1    /* shared lock */
 #define   LOCK_EX   2    /* exclusive lock */

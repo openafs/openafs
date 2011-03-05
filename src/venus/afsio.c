@@ -104,15 +104,6 @@
 #include <rx/rx_prototypes.h>
 #include <hcrypto/md5.h>
 
-#ifdef O_LARGEFILE
-#define afs_stat        stat64
-#define afs_fstat       fstat64
-#define afs_open        open64
-#else /* !O_LARGEFILE */
-#define afs_stat        stat
-#define afs_fstat       fstat
-#define afs_open        open
-#endif /* !O_LARGEFILE */
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 pthread_key_t uclient_key;

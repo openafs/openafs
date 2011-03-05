@@ -55,12 +55,6 @@
 #include "vg_cache.h"
 #include "vg_cache_impl.h"
 
-#ifdef O_LARGEFILE
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
 static int _VVGC_scan_table_init(VVGCache_scan_table_t * tbl);
 static int _VVGC_scan_table_add(VVGCache_scan_table_t * tbl,
 				struct DiskPartition64 * dp,

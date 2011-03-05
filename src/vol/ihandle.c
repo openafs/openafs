@@ -42,16 +42,6 @@
 #include "afs/afs_assert.h"
 #include <limits.h>
 
-#ifndef AFS_NT40_ENV
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#else /* !O_LARGEFILE */
-#define	afs_stat	stat
-#define	afs_fstat	fstat
-#endif /* !O_LARGEFILE */
-#endif /* AFS_NT40_ENV */
-
 #ifdef AFS_PTHREAD_ENV
 pthread_once_t ih_glock_once = PTHREAD_ONCE_INIT;
 pthread_mutex_t ih_glock_mutex;

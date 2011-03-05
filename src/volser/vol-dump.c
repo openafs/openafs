@@ -79,16 +79,6 @@
 #define putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
 #define putshort(p, v) *p++ = v>>8, *p++ = v
 
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
 int VolumeChanged;		/* needed by physio - leave alone */
 int verbose = 0;
 

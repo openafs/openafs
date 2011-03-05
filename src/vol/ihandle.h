@@ -549,4 +549,55 @@ extern afs_sfsize_t ih_size(FD_t);
 #define FDH_LOCKFILE(H, O) OS_LOCKFILE((H)->fd_fd, O)
 #define FDH_UNLOCKFILE(H, O) OS_UNLOCKFILE((H)->fd_fd, O)
 
+#ifdef AFS_NT40_ENV
+#define afs_stat_st     __stat64
+#define afs_stat	_stat64
+#define afs_fstat	_fstat64
+#define afs_fopen	fopen
+#define afs_open	open
+#define afs_lseek(FD, O, F)	_lseeki64(FD, O, F)
+#else
+#ifdef O_LARGEFILE
+#define afs_stat_st     stat64
+#define afs_stat	stat64
+#define afs_fstat	fstat64
+#define afs_fopen	fopen64
+#define afs_open	open64
+#ifdef S_SPLINT_S
+extern off64_t afs_lseek(int FD, off64_t O, int F);
+#endif /*S_SPLINT_S */
+#define afs_lseek(FD, O, F)	lseek64(FD, (off64_t) (O), F)
+#define afs_ftruncate           ftruncate64
+#define afs_mmap                mmap64
+#ifdef AFS_AIX_ENV
+extern void * mmap64();  /* ugly hack since aix build env appears to be somewhat broken */
+#endif
+#else /* !O_LARGEFILE */
+#define afs_stat_st     stat
+#define	afs_stat	stat
+#define	afs_fstat	fstat
+#define afs_fopen	fopen
+#define afs_open	open
+#ifdef S_SPLINT_S
+extern off_t afs_lseek(int FD, off_t O, int F);
+#endif /*S_SPLINT_S */
+#define afs_lseek(FD, O, F)	lseek(FD, (off_t) (O), F)
+#define afs_ftruncate           ftruncate
+#define afs_mmap                mmap
+#endif /* !O_LARGEFILE */
+#if AFS_HAVE_STATVFS64
+# define afs_statvfs	statvfs64
+#else
+# if AFS_HAVE_STATFS64
+#  define afs_statfs	statfs64
+#else
+#  if AFS_HAVE_STATVFS
+#   define afs_statvfs	statvfs
+#  else
+#   define afs_statfs	statfs
+#  endif /* !AFS_HAVE_STATVFS */
+# endif	/* !AFS_HAVE_STATFS64 */
+#endif /* !AFS_HAVE_STATVFS64 */
+#endif /* AFS_NT40_ENV */
+
 #endif /* _IHANDLE_H_ */

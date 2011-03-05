@@ -57,16 +57,6 @@
 
 #include <dirent.h>
 
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
 int DumpVnodes = 0;		/* Dump everything, i.e. summary of all vnodes */
 int DumpInodeNumber = 0;	/* Dump inode numbers with vnodes */
 int DumpDate = 0;		/* Dump vnode date (server modify date) with vnode */

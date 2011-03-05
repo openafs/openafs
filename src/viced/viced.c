@@ -94,18 +94,6 @@
 #endif
 #include <rx/rx_globals.h>
 
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#define afs_fopen	fopen64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#define afs_fopen	fopen
-#endif /* !O_LARGEFILE */
-
 extern int etext;
 
 void *ShutDown(void *);

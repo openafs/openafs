@@ -44,12 +44,6 @@
 #include "fssync.h"
 #include "common.h"
 
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#endif /* !O_LARGEFILE */
-
 struct Lock localLock;
 
 #define MAXATONCE	100

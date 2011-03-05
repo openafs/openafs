@@ -204,28 +204,6 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <pthread.h>
 #endif
 
-/*@+fcnmacros +macrofcndecl@*/
-#ifdef O_LARGEFILE
-#ifdef S_SPLINT_S
-extern off64_t afs_lseek(int FD, off64_t O, int F);
-#endif /*S_SPLINT_S */
-#define afs_lseek(FD, O, F)	lseek64(FD, (off64_t) (O), F)
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#define afs_fopen	fopen64
-#else /* !O_LARGEFILE */
-#ifdef S_SPLINT_S
-extern off_t afs_lseek(int FD, off_t O, int F);
-#endif /*S_SPLINT_S */
-#define afs_lseek(FD, O, F)	lseek(FD, (off_t) (O), F)
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#define afs_fopen	fopen
-#endif /* !O_LARGEFILE */
-/*@=fcnmacros =macrofcndecl@*/
-
 #ifdef	AFS_OSF_ENV
 extern void *calloc();
 #endif
