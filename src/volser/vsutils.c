@@ -217,7 +217,7 @@ VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp
 
 static void
 convertBulkToNBulk(bulkentries *bulk, nbulkentries *nbulk) {
-    int i;
+    unsigned int i;
 
     if (bulk->bulkentries_len == 0)
 	return;
@@ -309,7 +309,7 @@ VLDB_ListAttributesN2(VldbListByAttributes *attrp,
 
 struct cacheips {
     afs_uint32 server;
-    afs_int32 count;
+    afs_uint32 count;
     afs_uint32 addrs[16];
 };
 /*
@@ -327,8 +327,8 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
     int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp, i, j, f1, f2;
-    afs_int32 unique, nentries;
+    afs_uint32 *addrp, j, f1, f2;
+    afs_int32 unique, nentries, i;
     afsUUID uuid;
     static int initcache = 0;
 
@@ -443,7 +443,7 @@ int
 vsu_ExtractName(char rname[], char name[])
 {
     char sname[VOLSER_OLDMAXVOLNAME + 1];
-    int total;
+    size_t total;
 
     strncpy(sname, name, sizeof(sname));
     sname[sizeof(sname) - 1] = '\0';
@@ -472,7 +472,7 @@ vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
     char volname[VOLSER_OLDMAXVOLNAME + 1];
     struct nvldbentry entry;
     afs_int32 vcode = 0;
-    int total;
+    size_t total;
 
     *errp = 0;
 

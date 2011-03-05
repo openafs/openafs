@@ -170,7 +170,7 @@ FileExists(char *filename)
 static int
 VolNameOK(char *name)
 {
-    int total;
+    size_t total;
 
 
     total = strlen(name);
@@ -187,7 +187,8 @@ VolNameOK(char *name)
 static int
 IsNumeric(char *name)
 {
-    int result, len, i;
+    int result, i;
+    size_t len;
     char *ptr;
 
     result = 1;
