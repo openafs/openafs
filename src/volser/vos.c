@@ -77,7 +77,7 @@
 /* Local Prototypes */
 int PrintDiagnostics(char *astring, afs_int32 acode);
 int GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part,
-                  afs_int32 *voltype, struct uvldbentry *rentry);
+                  afs_int32 *voltype, struct nvldbentry *rentry);
 
 struct tqElem {
     afs_uint32 volid;
@@ -170,7 +170,8 @@ FileExists(char *filename)
 static int
 VolNameOK(char *name)
 {
-    size_t total;
+    int total;
+
 
     total = strlen(name);
     if (!strcmp(&name[total - 9], ".readonly")) {
@@ -186,8 +187,7 @@ VolNameOK(char *name)
 static int
 IsNumeric(char *name)
 {
-    int result, i;
-    size_t len;
+    int result, len, i;
     char *ptr;
 
     result = 1;
@@ -1382,7 +1382,7 @@ XDisplayVolumes2(afs_uint32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
 /* set <server> and <part> to the correct values depending on
  * <voltype> and <entry> */
 static void
-GetServerAndPart(struct uvldbentry *entry, int voltype, afs_uint32 *server,
+GetServerAndPart(struct nvldbentry *entry, int voltype, afs_uint32 *server,
 		 afs_int32 *part, int *previdx)
 {
     int i, istart, vtype;
@@ -1400,10 +1400,9 @@ GetServerAndPart(struct uvldbentry *entry, int voltype, afs_uint32 *server,
 	istart = ((*previdx < 0) ? 0 : *previdx + 1);
     }
 
-    for (i = istart; i < entry->nServers && i < NMAXNSERVERS; i++) {
+    for (i = istart; i < entry->nServers; i++) {
 	if (entry->serverFlags[i] & vtype) {
-            /* *uuid = entry->serverNumber[i]; */
-	    *server = entry->serverUnique[i];
+	    *server = entry->serverNumber[i];
 	    *part = entry->serverPartition[i];
 	    *previdx = i;
 	    return;
@@ -1442,9 +1441,9 @@ PrintLocked(afs_int32 aflags)
 }
 
 static void
-PostVolumeStats(struct uvldbentry *entry)
+PostVolumeStats(struct nvldbentry *entry)
 {
-    SubEnumerateEntryU(entry);
+    SubEnumerateEntry(entry);
     /* Check for VLOP_ALLOPERS */
     PrintLocked(entry->flags);
     return;
@@ -1474,7 +1473,7 @@ PostVolumeStats(struct uvldbentry *entry)
  *------------------------------------------------------------------------*/
 
 static void
-XVolumeStats(volintXInfo *a_xInfoP, struct uvldbentry *a_entryP,
+XVolumeStats(volintXInfo *a_xInfoP, struct nvldbentry *a_entryP,
 	     afs_int32 a_srvID, afs_int32 a_partID, int a_volType)
 {				/*XVolumeStats */
 
@@ -1494,7 +1493,7 @@ XVolumeStats(volintXInfo *a_xInfoP, struct uvldbentry *a_entryP,
 }				/*XVolumeStats */
 
 static void
-VolumeStats_int(volintInfo *pntr, struct uvldbentry *entry, afs_uint32 server,
+VolumeStats_int(volintInfo *pntr, struct nvldbentry *entry, afs_uint32 server,
 	     afs_int32 part, int voltype)
 {
     int totalOK, totalNotOK, totalBusy;
@@ -1574,7 +1573,7 @@ NukeVolume(struct cmd_syndesc *as)
 static int
 ExamineVolume(struct cmd_syndesc *as, void *arock)
 {
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     afs_int32 vcode = 0;
     volintInfo *pntr = (volintInfo *) 0;
     volintXInfo *xInfoP = (volintXInfo *) 0;
@@ -1603,7 +1602,7 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 		(unsigned long)volid);
 	fflush(STDOUT);
     }
-    vcode = VLDB_GetEntryByIDU(volid, -1, &entry);
+    vcode = VLDB_GetEntryByID(volid, -1, &entry);
     if (vcode) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume number %lu from VLDB \n",
@@ -1612,7 +1611,7 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
     }
     if (verbose)
 	fprintf(STDOUT, "done\n");
-    MapHostToNetworkU(&entry);
+    MapHostToNetwork(&entry);
 
     if (entry.volumeId[RWVOL] == volid)
 	voltype = RWVOL;
@@ -1674,7 +1673,7 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 		XVolumeStats(xInfoP, &entry, aserver, apart, voltype);
 	    else if (as->parms[2].items) {
 		DisplayFormat2(aserver, apart, pntr);
-		EnumerateEntryU(&entry);
+		EnumerateEntry(&entry);
 		isSubEnum = 1;
 	    } else
 		VolumeStats_int(pntr, &entry, aserver, apart, voltype);
@@ -1727,7 +1726,7 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 static int
 SetFields(struct cmd_syndesc *as, void *arock)
 {
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     volintInfo info;
     afs_uint32 volid;
     afs_int32 code, err;
@@ -1745,14 +1744,14 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	return -1;
     }
 
-    code = VLDB_GetEntryByIDU(volid, RWVOL, &entry);
+    code = VLDB_GetEntryByID(volid, RWVOL, &entry);
     if (code) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume number %lu from VLDB \n",
 		(unsigned long)volid);
 	return (code);
     }
-    MapHostToNetworkU(&entry);
+    MapHostToNetwork(&entry);
 
     GetServerAndPart(&entry, RWVOL, &aserver, &apart, &previdx);
     if (previdx == -1) {
@@ -1929,7 +1928,7 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
     afs_uint32 volid = 0, rovolid = 0, bkvolid = 0;
     afs_uint32 *arovolid;
     afs_int32 code;
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     afs_int32 vcode;
     afs_int32 quota;
 
@@ -1974,7 +1973,7 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[2].items->data);
 	return EINVAL;
     }
-    vcode = VLDB_GetEntryByNameU(as->parms[2].items->data, &entry);
+    vcode = VLDB_GetEntryByName(as->parms[2].items->data, &entry);
     if (!vcode) {
 	fprintf(STDERR, "Volume %s already exists\n",
 		as->parms[2].items->data);
@@ -2038,16 +2037,16 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
 
 #if 0
 static afs_int32
-DeleteAll(struct uvldbentry *entry)
+DeleteAll(struct nvldbentry *entry)
 {
     int i;
     afs_int32 error, code, curserver, curpart;
     afs_uint32 volid;
 
-    MapHostToNetworkU(entry);
+    MapHostToNetwork(entry);
     error = 0;
     for (i = 0; i < entry->nServers; i++) {
-	curserver = entry->serverUnique[i];
+	curserver = entry->serverNumber[i];
 	curpart = entry->serverPartition[i];
 	if (entry->serverFlags[i] & ITSROVOL) {
 	    volid = entry->volumeId[ROVOL];
@@ -2115,9 +2114,9 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
      * them in from the VLDB entry.
      */
     if ((partition == -1) || !server) {
-	struct uvldbentry entry;
+	struct nvldbentry entry;
 
-	code = VLDB_GetEntryByIDU(volid, -1, &entry);
+	code = VLDB_GetEntryByID(volid, -1, &entry);
 	if (code) {
 	    fprintf(STDERR,
 		    "Could not fetch the entry for volume %lu from VLDB\n",
@@ -2129,8 +2128,8 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	if (((volid == entry.volumeId[RWVOL]) && (entry.flags & RW_EXISTS))
 	    || ((volid == entry.volumeId[BACKVOL])
 		&& (entry.flags & BACK_EXISTS))) {
-	    idx = Lp_GetRwIndexU(&entry);
-	    if ((idx == -1) || (server && (server != entry.serverUnique[idx]))
+	    idx = Lp_GetRwIndex(&entry);
+	    if ((idx == -1) || (server && (server != entry.serverNumber[idx]))
 		|| ((partition != -1)
 		    && (partition != entry.serverPartition[idx]))) {
 		fprintf(STDERR, "VLDB: Volume '%s' no match\n",
@@ -2143,7 +2142,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 		if (entry.serverFlags[j] != ITSROVOL)
 		    continue;
 
-		if (((server == 0) || (server == entry.serverUnique[j]))
+		if (((server == 0) || (server == entry.serverNumber[j]))
 		    && ((partition == -1)
 			|| (partition == entry.serverPartition[j]))) {
 		    if (idx != -1) {
@@ -2166,7 +2165,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	    return ENOENT;
 	}
 
-	server = htonl(entry.serverUnique[idx]);
+	server = htonl(entry.serverNumber[idx]);
 	partition = entry.serverPartition[idx];
     }
 
@@ -2320,7 +2319,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
     afs_uint32 fromserver, toserver;
     afs_int32 frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     struct diskPartition64 partition;	/* for space check */
     volintInfo *p;
 
@@ -2365,7 +2364,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
 		tovolume);
 	return EINVAL;
     }
-    code = VLDB_GetEntryByNameU(tovolume, &entry);
+    code = VLDB_GetEntryByName(tovolume, &entry);
     if (!code) {
 	fprintf(STDERR, "Volume %s already exists\n", tovolume);
 	PrintDiagnostics("copy", code);
@@ -2666,7 +2665,7 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
     afs_int32 part, voltype;
     char partName[10], *volname;
     afs_int32 code, err, flags;
-    struct uvldbentry entry;
+    struct nvldbentry entry;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (volid == 0) {
@@ -2779,12 +2778,12 @@ BackupVolume(struct cmd_syndesc *as, void *arock)
     afs_uint32 avolid;
     afs_uint32 aserver;
     afs_int32 apart, vtype, code, err;
-    struct uvldbentry entry;
+    struct nvldbentry entry;
 
     afs_uint32 buvolid;
     afs_uint32 buserver;
     afs_int32 bupart, butype;
-    struct uvldbentry buentry;
+    struct nvldbentry buentry;
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (avolid == 0) {
@@ -2849,7 +2848,7 @@ static int
 ReleaseVolume(struct cmd_syndesc *as, void *arock)
 {
 
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     afs_uint32 avolid;
     afs_uint32 aserver;
     afs_int32 apart, vtype, code, err;
@@ -2899,7 +2898,7 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
     afs_uint32 aserver;
     afs_int32 apart, voltype, fromdate = 0, code, err, i, flags;
     char filename[MAXPATHLEN];
-    struct uvldbentry entry;
+    struct nvldbentry entry;
 
     rx_SetRxDeadTime(60 * 10);
     for (i = 0; i < MAXSERVERS; i++) {
@@ -3006,7 +3005,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     int readonly = 0, offline = 0, voltype = RWVOL;
     char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
-    struct uvldbentry entry;
+    struct nvldbentry entry;
 
     aparentid = 0;
     if (as->parms[4].items) {
@@ -3128,7 +3127,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     /* Check if volume exists or not */
 
     vsu_ExtractName(volname, avolname);
-    vcode = VLDB_GetEntryByNameU(volname, &entry);
+    vcode = VLDB_GetEntryByName(volname, &entry);
     if (vcode) {		/* no volume - do a full restore */
 	restoreflags = RV_FULLRST;
 	if ((aoverwrite == INC) || (aoverwrite == ABORT))
@@ -3136,8 +3135,8 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 		    "Volume does not exist; Will perform a full restore\n");
     }
 
-    else if ((!readonly && Lp_GetRwIndexU(&entry) == -1)	/* RW volume does not exist - do a full */
-	     ||(readonly && !Lp_ROMatchU(0, 0, &entry))) {	/* RO volume does not exist - do a full */
+    else if ((!readonly && Lp_GetRwIndex(&entry) == -1)	/* RW volume does not exist - do a full */
+	     ||(readonly && !Lp_ROMatch(0, 0, &entry))) {	/* RO volume does not exist - do a full */
 	restoreflags = RV_FULLRST;
 	if ((aoverwrite == INC) || (aoverwrite == ABORT))
 	    fprintf(STDERR,
@@ -3156,7 +3155,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     else {			/* volume exists - do we do a full incremental or abort */
 	afs_uint32 Oserver;
 	afs_int32 Opart, Otype, vol_elsewhere = 0;
-	struct uvldbentry Oentry;
+	struct nvldbentry Oentry;
 	int c, dc;
 
 	if (avolid == 0) {
@@ -3933,19 +3932,19 @@ SyncServer(struct cmd_syndesc *as, void *arock)
 static int
 VolumeInfoCmd(char *name)
 {
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     afs_int32 vcode;
 
     /* The vlserver will handle names with the .readonly
      * and .backup extension as well as volume ids.
      */
-    vcode = VLDB_GetEntryByNameU(name, &entry);
+    vcode = VLDB_GetEntryByName(name, &entry);
     if (vcode) {
 	PrintError("", vcode);
 	exit(1);
     }
-    MapHostToNetworkU(&entry);
-    EnumerateEntryU(&entry);
+    MapHostToNetwork(&entry);
+    EnumerateEntry(&entry);
 
     /* Defect #3027: grubby check to handle locked volume.
      * If VLOP_ALLOPERS is set, the entry is locked.
@@ -3959,7 +3958,7 @@ VolumeInfoCmd(char *name)
 static int
 VolumeZap(struct cmd_syndesc *as, void *arock)
 {
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     afs_uint32 volid, zapbackupid = 0, backupid = 0;
     afs_int32 code, server, part, err;
 
@@ -4002,7 +4001,7 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	exit(1);
     }
-    code = VLDB_GetEntryByIDU(volid, -1, &entry);
+    code = VLDB_GetEntryByID(volid, -1, &entry);
     if (!code) {
 	if (volid == entry.volumeId[RWVOL])
 	    backupid = entry.volumeId[BACKVOL];
@@ -4144,15 +4143,15 @@ static int
 RenameVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code1, code2, code;
-    struct uvldbentry entry;
+    struct nvldbentry entry;
 
-    code1 = VLDB_GetEntryByNameU(as->parms[0].items->data, &entry);
+    code1 = VLDB_GetEntryByName(as->parms[0].items->data, &entry);
     if (code1) {
 	fprintf(STDERR, "vos: Could not find entry for volume %s\n",
 		as->parms[0].items->data);
 	exit(1);
     }
-    code2 = VLDB_GetEntryByNameU(as->parms[1].items->data, &entry);
+    code2 = VLDB_GetEntryByName(as->parms[1].items->data, &entry);
     if ((!code1) && (!code2)) {	/*the newname already exists */
 	fprintf(STDERR, "vos: volume %s already exists\n",
 		as->parms[1].items->data);
@@ -4187,10 +4186,10 @@ RenameVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[1].items->data);
 	exit(1);
     }
-    MapHostToNetworkU(&entry);
+    MapHostToNetwork(&entry);
     code =
-	UV_RenameVolumeU(&entry, as->parms[0].items->data,
-			 as->parms[1].items->data);
+	UV_RenameVolume(&entry, as->parms[0].items->data,
+			as->parms[1].items->data);
     if (code) {
 	PrintDiagnostics("rename", code);
 	exit(1);
@@ -4202,12 +4201,12 @@ RenameVolume(struct cmd_syndesc *as, void *arock)
 
 int
 GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *voltype,
-              struct uvldbentry *rentry)
+              struct nvldbentry *rentry)
 {
     afs_int32 vcode;
     int i, index = -1;
 
-    vcode = VLDB_GetEntryByIDU(volid, -1, rentry);
+    vcode = VLDB_GetEntryByID(volid, -1, rentry);
     if (vcode) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume %lu from VLDB \n",
@@ -4215,7 +4214,7 @@ GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *
 	PrintError("", vcode);
 	return (vcode);
     }
-    MapHostToNetworkU(rentry);
+    MapHostToNetwork(rentry);
     if (volid == rentry->volumeId[ROVOL]) {
 	*voltype = ROVOL;
 	for (i = 0; i < rentry->nServers; i++) {
@@ -4230,12 +4229,12 @@ GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *
 	    return -1;
 	}
 
-	*server = rentry->serverUnique[index];
+	*server = rentry->serverNumber[index];
 	*part = rentry->serverPartition[index];
 	return 0;
     }
 
-    index = Lp_GetRwIndexU(rentry);
+    index = Lp_GetRwIndex(rentry);
     if (index == -1) {
 	fprintf(STDERR,
 		"RW Volume is not found in VLDB entry for volume %lu\n",
@@ -4244,13 +4243,13 @@ GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *
     }
     if (volid == rentry->volumeId[RWVOL]) {
 	*voltype = RWVOL;
-	*server = rentry->serverUnique[index];
+	*server = rentry->serverNumber[index];
 	*part = rentry->serverPartition[index];
 	return 0;
     }
     if (volid == rentry->volumeId[BACKVOL]) {
 	*voltype = BACKVOL;
-	*server = rentry->serverUnique[index];
+	*server = rentry->serverNumber[index];
 	*part = rentry->serverPartition[index];
 	return 0;
     }
@@ -4267,8 +4266,8 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
     afs_uint32 avolid;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
-    ubulkentries arrayEntries;
-    struct uvldbentry *vllist;
+    nbulkentries arrayEntries;
+    struct nvldbentry *vllist;
     struct cmd_item *itp;
     afs_int32 nentries;
     int j;
@@ -4379,7 +4378,7 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
 
     /* Get all the VLDB entries on a server and/or partition */
     memset(&arrayEntries, 0, sizeof(arrayEntries));
-    vcode = VLDB_ListAttributesU(&attributes, &nentries, &arrayEntries);
+    vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
 	fprintf(STDERR, "Could not access the VLDB for attributes\n");
 	PrintError("", vcode);
@@ -4388,7 +4387,7 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
 
     /* Process each entry */
     for (j = 0; j < nentries; j++) {
-	vllist = &arrayEntries.ubulkentries_val[j];
+	vllist = &arrayEntries.nbulkentries_val[j];
 	if (seenprefix) {
 	    /* It only deletes the RW volumes */
 	    if (strncmp(vllist->name, prefix, strlen(prefix))) {
@@ -4431,7 +4430,7 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
 	    "Total VLDB entries deleted: %lu; failed to delete: %lu\n",
 	    (unsigned long)totalBack, (unsigned long)totalFail);
 
-    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
+    xdr_free((xdrproc_t) xdr_nbulkentries, &arrayEntries);
     return 0;
 }
 
@@ -4439,24 +4438,24 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
 static int
 CompareVldbEntryByName(const void *p1, const void *p2)
 {
-    struct uvldbentry *arg1, *arg2;
+    struct nvldbentry *arg1, *arg2;
 
-    arg1 = (struct uvldbentry *)p1;
-    arg2 = (struct uvldbentry *)p2;
+    arg1 = (struct nvldbentry *)p1;
+    arg2 = (struct nvldbentry *)p2;
     return (strcmp(arg1->name, arg2->name));
 }
 
 /*
 static int CompareVldbEntry(char *p1, char *p2)
 {
-    struct uvldbentry *arg1,*arg2;
+    struct nvldbentry *arg1,*arg2;
     int i;
     int pos1, pos2;
     char comp1[100],comp2[100];
     char temp1[20],temp2[20];
 
-    arg1 = (struct uvldbentry *)p1;
-    arg2 = (struct uvldbentry *)p2;
+    arg1 = (struct nvldbentry *)p1;
+    arg2 = (struct nvldbentry *)p2;
     pos1 = -1;
     pos2 = -1;
 
@@ -4468,8 +4467,8 @@ static int CompareVldbEntry(char *p1, char *p2)
 	pos1 = 0;
 	pos2 = 0;
     }
-    sprintf(comp1,"%10u",arg1->serverUnique[pos1]);
-    sprintf(comp2,"%10u",arg2->serverUnique[pos2]);
+    sprintf(comp1,"%10u",arg1->serverNumber[pos1]);
+    sprintf(comp2,"%10u",arg2->serverNumber[pos2]);
     sprintf(temp1,"%10u",arg1->serverPartition[pos1]);
     sprintf(temp2,"%10u",arg2->serverPartition[pos2]);
     strcat(comp1,temp1);
@@ -4489,8 +4488,8 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
-    ubulkentries arrayEntries;
-    struct uvldbentry *vllist, *tarray = 0, *ttarray;
+    nbulkentries arrayEntries;
+    struct nvldbentry *vllist, *tarray = 0, *ttarray;
     afs_int32 centries, nentries = 0;
     afs_int32 tarraysize = 0;
     afs_int32 parraysize;
@@ -4570,12 +4569,12 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	nextindex = -1;
 
 	vcode =
-	    VLDB_ListAttributesN2U(&attributes, 0, thisindex, &centries,
+	    VLDB_ListAttributesN2(&attributes, 0, thisindex, &centries,
 				  &arrayEntries, &nextindex);
 	if (vcode == RXGEN_OPCODE) {
 	    /* Vlserver not running with ListAttributesN2. Fall back */
 	    vcode =
-		VLDB_ListAttributesU(&attributes, &centries, &arrayEntries);
+		VLDB_ListAttributes(&attributes, &centries, &arrayEntries);
 	    nextindex = -1;
 	}
 	if (vcode) {
@@ -4588,9 +4587,9 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	/* We don't sort, so just print the entries now */
 	if (!sort) {
 	    for (j = 0; j < centries; j++) {	/* process each entry */
-		vllist = &arrayEntries.ubulkentries_val[j];
-		MapHostToNetworkU(vllist);
-		EnumerateEntryU(vllist);
+		vllist = &arrayEntries.nbulkentries_val[j];
+		MapHostToNetwork(vllist);
+		EnumerateEntry(vllist);
 
 		PrintLocked(vllist->flags);
 	    }
@@ -4602,19 +4601,19 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	else if (centries > 0) {
 	    if (!tarray) {
 		/* malloc the first bulk entries array */
-                tarraysize = centries * sizeof(struct uvldbentry);
+                tarraysize = centries * sizeof(struct nvldbentry);
                 tarray = malloc(tarraysize);
 		if (!tarray) {
 		    fprintf(STDERR,
 			    "Could not allocate enough space for the VLDB entries\n");
 		    goto bypass;
 		}
-                memcpy((char*)tarray, arrayEntries.ubulkentries_val, tarraysize);
+                memcpy((char*)tarray, arrayEntries.nbulkentries_val, tarraysize);
 	    } else {
 		/* Grow the tarray to keep the extra entries */
-		parraysize = (centries * sizeof(struct uvldbentry));
+		parraysize = (centries * sizeof(struct nvldbentry));
 		ttarray =
-		    (struct uvldbentry *)realloc(tarray,
+		    (struct nvldbentry *)realloc(tarray,
 						 tarraysize + parraysize);
 		if (!ttarray) {
 		    fprintf(STDERR,
@@ -4625,22 +4624,22 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 
 		/* Copy them in */
 		memcpy(((char *)tarray) + tarraysize,
-		       (char *)arrayEntries.ubulkentries_val, parraysize);
+		       (char *)arrayEntries.nbulkentries_val, parraysize);
 		tarraysize += parraysize;
 	    }
 	}
 
 	/* Free the bulk array */
-        xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
+        xdr_free((xdrproc_t) xdr_nbulkentries, &arrayEntries);
     }
 
     /* Here is where we now sort all the entries and print them */
     if (sort && (nentries > 0)) {
-	qsort((char *)tarray, nentries, sizeof(struct uvldbentry),
+	qsort((char *)tarray, nentries, sizeof(struct nvldbentry),
 	      CompareVldbEntryByName);
 	for (vllist = tarray, j = 0; j < nentries; j++, vllist++) {
-	    MapHostToNetworkU(vllist);
-	    EnumerateEntryU(vllist);
+	    MapHostToNetwork(vllist);
+	    EnumerateEntry(vllist);
 
 	    PrintLocked(vllist->flags);
 	}
@@ -4663,8 +4662,8 @@ BackSys(struct cmd_syndesc *as, void *arock)
     afs_int32 code, apart1;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
-    ubulkentries arrayEntries;
-    struct uvldbentry *vllist;
+    nbulkentries arrayEntries;
+    struct nvldbentry *vllist;
     afs_int32 nentries;
     int j;
     char pname[10];
@@ -4769,7 +4768,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
     }
 
     memset(&arrayEntries, 0, sizeof(arrayEntries));	/* initialize to hint the stub to alloc space */
-    vcode = VLDB_ListAttributesU(&attributes, &nentries, &arrayEntries);
+    vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
 	fprintf(STDERR, "Could not access the VLDB for attributes\n");
 	PrintError("", vcode);
@@ -4823,7 +4822,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
     }
 
     for (j = 0; j < nentries; j++) {	/* process each vldb entry */
-	vllist = &arrayEntries.ubulkentries_val[j];
+	vllist = &arrayEntries.nbulkentries_val[j];
 
 	if (seenprefix) {
 	    for (ti = as->parms[0].items; ti; ti = ti->next) {
@@ -4935,7 +4934,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
 	}
 
 	avolid = vllist->volumeId[RWVOL];
-	MapHostToNetworkU(vllist);
+	MapHostToNetwork(vllist);
 	GetServerAndPart(vllist, RWVOL, &aserver1, &apart1, &previdx);
 	if (aserver1 == -1 || apart1 == -1) {
 	    fprintf(STDOUT, "could not backup %s, invalid VLDB entry\n",
@@ -4983,7 +4982,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
     fprintf(STDOUT, "Total volumes backed up: %lu; failed to backup: %lu\n",
 	    (unsigned long)totalBack, (unsigned long)totalFail);
     fflush(STDOUT);
-    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
+    xdr_free((xdrproc_t) xdr_nbulkentries, &arrayEntries);
     return 0;
 }
 
@@ -4995,8 +4994,8 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
-    ubulkentries arrayEntries;
-    struct uvldbentry *vllist;
+    nbulkentries arrayEntries;
+    struct nvldbentry *vllist;
     afs_int32 nentries;
     int j;
     afs_uint32 volid;
@@ -5039,14 +5038,14 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
     attributes.flag = VLOP_ALLOPERS;
     attributes.Mask |= VLLIST_FLAG;
     memset(&arrayEntries, 0, sizeof(arrayEntries));	/*initialize to hint the stub  to alloc space */
-    vcode = VLDB_ListAttributesU(&attributes, &nentries, &arrayEntries);
+    vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
 	fprintf(STDERR, "Could not access the VLDB for attributes\n");
 	PrintError("", vcode);
 	exit(1);
     }
     for (j = 0; j < nentries; j++) {	/* process each entry */
-	vllist = &arrayEntries.ubulkentries_val[j];
+	vllist = &arrayEntries.nbulkentries_val[j];
 	volid = vllist->volumeId[RWVOL];
 	vcode =
 	    ubik_VL_ReleaseLock(cstruct, 0, volid, -1,
@@ -5084,7 +5083,7 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    xdr_free((xdrproc_t) xdr_ubulkentries, &arrayEntries);
+    xdr_free((xdrproc_t) xdr_nbulkentries, &arrayEntries);
     return 0;
 }
 
@@ -5561,7 +5560,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     afs_uint32 volid;
     afs_uint32 server;
     afs_int32 code, i, same;
-    struct uvldbentry entry, storeEntry;
+    struct nvldbentry entry, storeEntry;
     afs_int32 vcode;
     afs_int32 rwindex = 0;
     afs_uint32 rwserver = 0;
@@ -5606,7 +5605,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     if (as->parms[3].items)
 	force = 1;
 
-    vcode = VLDB_GetEntryByIDU(volid, -1, &entry);
+    vcode = VLDB_GetEntryByID(volid, -1, &entry);
     if (vcode) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume %lu from VLDB\n",
@@ -5620,15 +5619,15 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     if (volid != entry.volumeId[ROVOL])
 	volid = entry.volumeId[ROVOL];
 
-    MapHostToNetworkU(&entry);
+    MapHostToNetwork(&entry);
     for (i = 0; i < entry.nServers; i++) {
 	if (entry.serverFlags[i] & ITSRWVOL) {
 	    rwindex = i;
-	    rwserver = entry.serverUnique[i];
+	    rwserver = entry.serverNumber[i];
 	    rwpartition = entry.serverPartition[i];
 	}
 	if (entry.serverFlags[i] & ITSROVOL) {
-	    same = VLDB_IsSameAddrs(server, entry.serverUnique[i], &code);
+	    same = VLDB_IsSameAddrs(server, entry.serverNumber[i], &code);
 	    if (code) {
 		fprintf(STDERR,
 			"Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
@@ -5637,7 +5636,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	    }
 	    if (same) {
 		roindex = i;
-		roserver = entry.serverUnique[i];
+		roserver = entry.serverNumber[i];
 		ropartition = entry.serverPartition[i];
 		break;
 	    }
@@ -5687,11 +5686,11 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     if (rwserver) {
 	(entry.nServers)--;
 	if (rwindex != entry.nServers) {
-	    entry.serverUnique[rwindex] = entry.serverUnique[entry.nServers];
+	    entry.serverNumber[rwindex] = entry.serverNumber[entry.nServers];
 	    entry.serverPartition[rwindex] =
 		entry.serverPartition[entry.nServers];
 	    entry.serverFlags[rwindex] = entry.serverFlags[entry.nServers];
-	    entry.serverUnique[entry.nServers] = 0;
+	    entry.serverNumber[entry.nServers] = 0;
 	    entry.serverPartition[entry.nServers] = 0;
 	    entry.serverFlags[entry.nServers] = 0;
 	}
@@ -5703,9 +5702,9 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		entry.flags |= RO_EXISTS;
 	}
     }
-    MapNetworkToHostU(&entry, &storeEntry);
+    MapNetworkToHost(&entry, &storeEntry);
     code =
-	VLDB_ReplaceEntryU(entry.volumeId[RWVOL], RWVOL, &storeEntry,
+	VLDB_ReplaceEntry(entry.volumeId[RWVOL], RWVOL, &storeEntry,
 			  (LOCKREL_OPCODE | LOCKREL_AFSID |
 			   LOCKREL_TIMESTAMP));
     if (code) {
@@ -5726,7 +5725,7 @@ Sizes(struct cmd_syndesc *as, void *arock)
     afs_uint32 avolid;
     afs_uint32 aserver;
     afs_int32 apart, voltype, fromdate = 0, code, err, i;
-    struct uvldbentry entry;
+    struct nvldbentry entry;
     volintSize vol_size;
 
     rx_SetRxDeadTime(60 * 10);
