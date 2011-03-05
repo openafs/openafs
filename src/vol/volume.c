@@ -127,8 +127,8 @@
 #include "common.h"
 #include "afs/afs_assert.h"
 #include "vutils.h"
-#ifndef AFS_NT40_ENV
 #include <afs/dir.h>
+#ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
 
