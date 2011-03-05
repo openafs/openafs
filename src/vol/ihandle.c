@@ -1036,7 +1036,7 @@ ih_size(FD_t fd)
 	return -1;
     return size.QuadPart;
 #else
-    struct afs_stat status;
+    struct afs_stat_st status;
     if (afs_fstat(fd, &status) < 0)
 	return -1;
     return status.st_size;

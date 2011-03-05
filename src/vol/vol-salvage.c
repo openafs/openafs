@@ -274,7 +274,7 @@ struct SalvInfo {
                               *   header dealt with */
 
     int nVolumesInInodeFile; /**< Number of read-write volumes summarized */
-    int inodeFd;             /**< File descriptor for inode file */
+    FD_t inodeFd;             /**< File descriptor for inode file */
 
     struct VolumeSummary *volumeSummaryp; /**< Holds all the volumes in a part */
     int nVolumes;            /**< Number of volumes (read-write and read-only)
@@ -397,7 +397,7 @@ IsPartitionMounted(char *part)
 /* Check if the given inode is the root of the filesystem. */
 #ifndef AFS_SGI_XFS_IOPS_ENV
 int
-IsRootInode(struct afs_stat *status)
+IsRootInode(struct afs_stat_st *status)
 {
     /*
      * The root inode is not a fixed value in XFS partitions. So we need to
@@ -708,7 +708,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
     char inodeListPath[256];
-    FILE *inodeFile = NULL;
+    FD_t inodeFile = INVALID_FD;
     static char tmpDevName[100];
     static char wpath[100];
     struct VolumeSummary *vsp, *esp;
@@ -722,9 +722,9 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     memset(salvinfo, 0, sizeof(*salvinfo));
 
     tries++;
-    if (inodeFile) {
-	fclose(inodeFile);
-	inodeFile = NULL;
+    if (inodeFile != INVALID_FD) {
+	OS_CLOSE(inodeFile);
+	inodeFile = INVALID_FD;
     }
     if (tries > VOL_MAX_CHECKOUT_RETRIES) {
 	Abort("Raced too many times with fileserver restarts while trying to "
@@ -823,8 +823,8 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	     getpid());
 #endif
 
-    inodeFile = fopen(inodeListPath, "w+b");
-    if (!inodeFile) {
+    inodeFile = OS_OPEN(inodeListPath, O_RDWR|O_TRUNC, 0666);
+    if (inodeFile == INVALID_FD) {
 	Abort("Error %d when creating inode description file %s; not salvaged\n", errno, inodeListPath);
     }
 #ifdef AFS_NT40_ENV
@@ -848,13 +848,13 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     }
 
     if (GetInodeSummary(salvinfo, inodeFile, singleVolumeNumber) < 0) {
-	fclose(inodeFile);
+	OS_CLOSE(inodeFile);
 	return;
     }
-    salvinfo->inodeFd = fileno(inodeFile);
-    if (salvinfo->inodeFd == -1)
+    salvinfo->inodeFd = inodeFile;
+    if (salvinfo->inodeFd == INVALID_FD)
 	Abort("Temporary file %s is missing...\n", inodeListPath);
-    afs_lseek(salvinfo->inodeFd, 0L, SEEK_SET);
+    OS_SEEK(salvinfo->inodeFd, 0L, SEEK_SET);
     if (ListInodeOption) {
 	PrintInodeList(salvinfo);
 	return;
@@ -954,7 +954,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 		salvinfo->fileSysPartition->name, (Testing ? " (READONLY mode)" : ""));
     }
 
-    fclose(inodeFile);		/* SalvageVolumeGroup was the last which needed it. */
+    OS_CLOSE(inodeFile);		/* SalvageVolumeGroup was the last which needed it. */
 }
 
 void
@@ -1130,15 +1130,14 @@ OnlyOneVolume(struct ViceInodeInfo *inodeinfo, afs_uint32 singleVolumeNumber, vo
  * be unlinked by the caller.
  */
 int
-GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolumeNumber)
+GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile, VolumeId singleVolumeNumber)
 {
-    struct afs_stat status;
     int forceSal, err;
     int code;
     struct ViceInodeInfo *ip, *ip_save;
     struct InodeSummary summary;
     char summaryFileName[50];
-    FILE *summaryFile;
+    FD_t summaryFile = INVALID_FD;
 #ifdef AFS_NT40_ENV
     char *dev = salvinfo->fileSysPath;
     char *wpath = salvinfo->fileSysPath;
@@ -1149,6 +1148,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     char *part = salvinfo->fileSysPath;
     char *tdir;
     int i;
+    afs_sfsize_t st_size;
 
     /* This file used to come from vfsck; cobble it up ourselves now... */
     if ((err =
@@ -1165,9 +1165,10 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	Log("***Forced salvage of all volumes on this partition***\n");
 	ForceSalvage = 1;
     }
-    fseek(inodeFile, 0L, SEEK_SET);
-    salvinfo->inodeFd = fileno(inodeFile);
-    if (salvinfo->inodeFd == -1 || afs_fstat(salvinfo->inodeFd, &status) == -1) {
+    OS_SEEK(inodeFile, 0L, SEEK_SET);
+    salvinfo->inodeFd = inodeFile;
+    if (salvinfo->inodeFd == INVALID_FD ||
+        (st_size = OS_SIZE(salvinfo->inodeFd)) == -1) {
 	Abort("No inode description file for \"%s\"; not salvaged\n", dev);
     }
     tdir = (tmpdir ? tmpdir : part);
@@ -1178,8 +1179,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     (void)afs_snprintf(summaryFileName, sizeof summaryFileName,
 		       "%s" OS_DIRSEP "salvage.temp.%d", tdir, getpid());
 #endif
-    summaryFile = afs_fopen(summaryFileName, "a+");
-    if (summaryFile == NULL) {
+    summaryFile = OS_OPEN(summaryFileName, O_RDWR|O_APPEND, 0666);
+    if (summaryFile == INVALID_FD) {
 	Abort("Unable to create inode summary file\n");
     }
 
@@ -1201,11 +1202,9 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     }
 
     if (!canfork || debug || Fork() == 0) {
-	int nInodes;
-	unsigned long st_size=(unsigned long) status.st_size;
-	nInodes = st_size / sizeof(struct ViceInodeInfo);
+	int nInodes = st_size / sizeof(struct ViceInodeInfo);
 	if (nInodes == 0) {
-	    fclose(summaryFile);
+	    OS_CLOSE(summaryFile);
 	    if (!singleVolumeNumber)	/* Remove the FORCESALVAGE file */
 		RemoveTheForce(salvinfo->fileSysPath);
 	    else {
@@ -1225,28 +1224,28 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	}
 	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
-	    fclose(summaryFile);
+	    OS_CLOSE(summaryFile);
 	    Abort
 		("Unable to allocate enough space to read inode table; %s not salvaged\n",
 		 dev);
 	}
-	if (read(salvinfo->inodeFd, ip, st_size) != st_size) {
-	    fclose(summaryFile);
+	if (OS_READ(salvinfo->inodeFd, ip, st_size) != st_size) {
+	    OS_CLOSE(summaryFile);
 	    Abort("Unable to read inode table; %s not salvaged\n", dev);
 	}
 	qsort(ip, nInodes, sizeof(struct ViceInodeInfo), CompareInodes);
-	if (afs_lseek(salvinfo->inodeFd, 0, SEEK_SET) == -1
-	    || write(salvinfo->inodeFd, ip, st_size) != st_size) {
-	    fclose(summaryFile);
+	if (OS_SEEK(salvinfo->inodeFd, 0, SEEK_SET) == -1
+	    || OS_WRITE(salvinfo->inodeFd, ip, st_size) != st_size) {
+	    OS_CLOSE(summaryFile);
 	    Abort("Unable to rewrite inode table; %s not salvaged\n", dev);
 	}
 	summary.index = 0;
 	ip_save = ip;
 	while (nInodes) {
 	    CountVolumeInodes(ip, nInodes, &summary);
-	    if (fwrite(&summary, sizeof(summary), 1, summaryFile) != 1) {
+	    if (OS_WRITE(summaryFile, &summary, sizeof(summary)) != sizeof(summary)) {
 		Log("Difficulty writing summary file (errno = %d); %s not salvaged\n", errno, dev);
-		fclose(summaryFile);
+		OS_CLOSE(summaryFile);
 		return -1;
 	    }
 	    summary.index += (summary.nInodes);
@@ -1256,9 +1255,9 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	free(ip_save);
 	ip = ip_save = NULL;
 	/* Following fflush is not fclose, because if it was debug mode would not work */
-	if (fflush(summaryFile) == EOF || fsync(fileno(summaryFile)) == -1) {
+	if (OS_SYNC(summaryFile) == -1) {
 	    Log("Unable to write summary file (errno = %d); %s not salvaged\n", errno, dev);
-	    fclose(summaryFile);
+	    OS_CLOSE(summaryFile);
 	    return -1;
 	}
 	if (canfork && !debug) {
@@ -1267,27 +1266,28 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	}
     } else {
 	if (Wait("Inode summary") == -1) {
-	    fclose(summaryFile);
+	    OS_CLOSE(summaryFile);
 	    Exit(1);		/* salvage of this partition aborted */
 	}
     }
-    osi_Assert(afs_fstat(fileno(summaryFile), &status) != -1);
-    if (status.st_size != 0) {
+
+    st_size = OS_SIZE(summaryFile);
+    osi_Assert(st_size >= 0);
+    if (st_size != 0) {
 	int ret;
-	unsigned long st_status=(unsigned long)status.st_size;
-	salvinfo->inodeSummary = (struct InodeSummary *)malloc(st_status);
+	salvinfo->inodeSummary = (struct InodeSummary *)malloc(st_size);
 	osi_Assert(salvinfo->inodeSummary != NULL);
 	/* For GNU we need to do lseek to get the file pointer moved. */
-	osi_Assert(afs_lseek(fileno(summaryFile), 0, SEEK_SET) == 0);
-	ret = read(fileno(summaryFile), salvinfo->inodeSummary, st_status);
-	osi_Assert(ret == st_status);
+	osi_Assert(OS_SEEK(summaryFile, 0, SEEK_SET) == 0);
+	ret = OS_READ(summaryFile, salvinfo->inodeSummary, st_size);
+	osi_Assert(ret == st_size);
     }
-    salvinfo->nVolumesInInodeFile =(unsigned long)(status.st_size) / sizeof(struct InodeSummary);
+    salvinfo->nVolumesInInodeFile = st_size / sizeof(struct InodeSummary);
     for (i = 0; i < salvinfo->nVolumesInInodeFile; i++) {
 	salvinfo->inodeSummary[i].volSummary = NULL;
     }
-    Log("%d nVolumesInInodeFile %lu \n",salvinfo->nVolumesInInodeFile,(unsigned long)(status.st_size));
-    fclose(summaryFile);
+    Log("%d nVolumesInInodeFile %lu \n",salvinfo->nVolumesInInodeFile,(unsigned long)st_size);
+    OS_CLOSE(summaryFile);
     return 0;
 }
 
@@ -1891,10 +1891,10 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
     allInodes = inodes - isp->index;	/* this would the base of all the inodes
 					 * for the partition, if all the inodes
 					 * had been read into memory */
-    osi_Assert(afs_lseek
+    osi_Assert(OS_SEEK
 	   (salvinfo->inodeFd, isp->index * sizeof(struct ViceInodeInfo),
 	    SEEK_SET) != -1);
-    osi_Assert(read(salvinfo->inodeFd, inodes, size) == size);
+    osi_Assert(OS_READ(salvinfo->inodeFd, inodes, size) == size);
 
     /* Don't try to salvage a read write volume if there isn't one on this
      * partition */
@@ -4446,15 +4446,16 @@ PrintInodeList(struct SalvInfo *salvinfo)
 {
     struct ViceInodeInfo *ip;
     struct ViceInodeInfo *buf;
-    struct afs_stat status;
     int nInodes;
     afs_ino_str_t stmp;
+    afs_sfsize_t st_size;
 
-    osi_Assert(afs_fstat(salvinfo->inodeFd, &status) == 0);
-    buf = (struct ViceInodeInfo *)malloc(status.st_size);
+    st_size = OS_SIZE(salvinfo->inodeFd);
+    osi_Assert(st_size >= 0);
+    buf = (struct ViceInodeInfo *)malloc(st_size);
     osi_Assert(buf != NULL);
-    nInodes = status.st_size / sizeof(struct ViceInodeInfo);
-    osi_Assert(read(salvinfo->inodeFd, buf, status.st_size) == status.st_size);
+    nInodes = st_size / sizeof(struct ViceInodeInfo);
+    osi_Assert(OS_READ(salvinfo->inodeFd, buf, st_size) == st_size);
     for (ip = buf; nInodes--; ip++) {
 	Log("Inode:%s, linkCount=%d, size=%#llx, p=(%u,%u,%u,%u)\n",
 	    PrintInode(stmp, ip->inodeNumber), ip->linkCount,
@@ -4709,7 +4710,7 @@ void
 RemoveTheForce(char *path)
 {
     char target[1024];
-    struct afs_stat force; /* so we can use afs_stat to find it */
+    struct afs_stat_st force; /* so we can use afs_stat to find it */
     strcpy(target,path);
     strcat(target,"/FORCESALVAGE");
     if (!Testing && ForceSalvage) {
@@ -4724,7 +4725,7 @@ RemoveTheForce(char *path)
 int
 UseTheForceLuke(char *path)
 {
-    struct afs_stat force;
+    struct afs_stat_st force;
     char target[1024];
     strcpy(target,path);
     strcat(target,"/FORCESALVAGE");

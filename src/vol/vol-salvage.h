@@ -210,7 +210,7 @@ extern void DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo,
                                         struct VolumeSummary *vsp);
 extern void DistilVnodeEssence(struct SalvInfo *salvinfo, VolumeId vid,
                                VnodeClass class, Inode ino, Unique * maxu);
-extern int GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile,
+extern int GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile,
                            VolumeId singleVolumeNumber);
 extern int GetVolumeSummary(struct SalvInfo *salvinfo,
 			    VolumeId singleVolumeNumber);

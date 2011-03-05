@@ -288,7 +288,7 @@ typedef struct IHashBucket_s {
 extern void ih_clear(IHandle_t * h);
 extern Inode ih_create(IHandle_t * h, int dev, char *part, Inode nI, int p1,
 		       int p2, int p3, int p4);
-extern FILE *ih_fdopen(FdHandle_t * h, char *fdperms);
+extern FD_t *ih_fdopen(FdHandle_t * h, char *fdperms);
 #endif /* AFS_NAMEI_ENV */
 
 /*
@@ -372,8 +372,8 @@ extern int ih_condsync(IHandle_t * ihP);
 #endif /* !O_LARGEFILE */
 #endif /* AFS_NT40_ENV */
 #else /* !HAVE_PIO */
-extern ssize_t ih_pread(int fd, void * buf, size_t count, afs_foff_t offset);
-extern ssize_t ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offset);
+extern ssize_t ih_pread(FD_t fd, void * buf, size_t count, afs_foff_t offset);
+extern ssize_t ih_pwrite(FD_t fd, const void * buf, size_t count, afs_foff_t offset);
 #define OS_PREAD(FD, B, S, O) ih_pread(FD, B, S, O)
 #define OS_PWRITE(FD, B, S, O) ih_pwrite(FD, B, S, O)
 #endif /* !HAVE_PIO */
@@ -419,13 +419,13 @@ extern Inode IH_CREATE(IHandle_t * H, int /*@alt Device @ */ D,
 		       int /*@alt unsigned @ */ P4);
 extern FD_t OS_IOPEN(IHandle_t * H);
 extern int OS_OPEN(const char *F, int M, mode_t P);
-extern int OS_CLOSE(int FD);
-extern ssize_t OS_READ(int FD, void *B, size_t S);
-extern ssize_t OS_WRITE(int FD, void *B, size_t S);
-extern ssize_t OS_PREAD(int FD, void *B, size_t S, afs_foff_t O);
-extern ssize_t OS_PWRITE(int FD, void *B, size_t S, afs_foff_t O);
-extern int OS_SYNC(int FD);
-extern afs_sfsize_t OS_SIZE(int FD);
+extern int OS_CLOSE(FD_t FD);
+extern ssize_t OS_READ(FD_t FD, void *B, size_t S);
+extern ssize_t OS_WRITE(FD_t FD, void *B, size_t S);
+extern ssize_t OS_PREAD(FD_t FD, void *B, size_t S, afs_foff_t O);
+extern ssize_t OS_PWRITE(FD_t FD, void *B, size_t S, afs_foff_t O);
+extern int OS_SYNC(FD_t FD);
+extern afs_sfsize_t OS_SIZE(FD_t FD);
 extern int IH_INC(IHandle_t * H, Inode I, int /*@alt VolId, VolumeId @ */ P);
 extern int IH_DEC(IHandle_t * H, Inode I, int /*@alt VolId, VolumeId @ */ P);
 extern afs_sfsize_t IH_IREAD(IHandle_t * H, afs_foff_t O, void *B,
@@ -438,8 +438,8 @@ extern afs_sfsize_t IH_IWRITE(IHandle_t * H, afs_foff_t O, void *B,
 #define OFFT off_t
 #endif
 
-extern OFFT OS_SEEK(int FD, OFFT O, int F);
-extern int OS_TRUNC(int FD, OFFT L);
+extern OFFT OS_SEEK(FD_t FD, OFFT O, int F);
+extern int OS_TRUNC(FD_t FD, OFFT L);
 #endif /*S_SPLINT_S */
 
 #ifdef O_LARGEFILE

@@ -104,7 +104,7 @@ int
 nuke(char *aname, afs_int32 avolid)
 {
     /* first process the partition containing this junk */
-    struct afs_stat tstat;
+    struct afs_stat_st tstat;
     struct ilist *ti, *ni, *li=NULL;
     afs_int32 code;
     int i, forceSal;
@@ -164,7 +164,7 @@ nuke(char *aname, afs_int32 avolid)
      * volume we're nuking.
      */
     code =
-	ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid, &forceSal,
+	ListViceInodes(lastDevComp, aname, INVALID_FD, NukeProc, avolid, &forceSal,
 		       0, wpath, &allInodes);
     if (code == 0) {
 	/* actually do the idecs now */

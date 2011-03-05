@@ -35,7 +35,7 @@ extern int nt_sync(int cdrive);
 extern int nt_ftruncate(FD_t fd, afs_foff_t len);
 extern int nt_fsync(FD_t fd);
 extern int nt_seek(FD_t fd, afs_foff_t off, int whence);
-extern FILE *nt_fdopen(IHandle_t * h, char *fdperms);
+extern FD_t nt_fdopen(IHandle_t * h, char *fdperms);
 extern int nt_unlink(char *name);
 
 extern void nt_DevToDrive(char *drive, int dev);

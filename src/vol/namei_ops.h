@@ -15,7 +15,7 @@
 #ifdef AFS_NAMEI_ENV
 
 /* Basic file operations */
-extern FILE *namei_fdopen(IHandle_t * h, char *fdperms);
+extern FD_t namei_fdopen(IHandle_t * h, char *fdperms);
 extern int namei_unlink(char *name);
 
 /* Inode operations */
@@ -36,13 +36,13 @@ extern int namei_ViceREADME(char *partition);
 #include "nfs.h"
 #include "viceinode.h"
 int namei_ListAFSFiles(char *dev,
-		       int (*write_fun) (FILE * fp,
+		       int (*write_fun) (FD_t fp,
 					 struct ViceInodeInfo * info,
-					 char *dir, char *file), FILE * fp,
+					 char *dir, char *file), FD_t fp,
 		       int (*judge_fun) (struct ViceInodeInfo * info,
 					 afs_uint32 vid, void *rock),
 		       afs_uint32 singleVolumeNumber, void *rock);
-int ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+int ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 		   int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid,
 				      void *rock),
 		   afs_uint32 singleVolumeNumber, int *forcep, int forceR,

@@ -435,8 +435,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
-    struct afs_stat status, stat;
-    int fd;
+    FD_t fd = INVALID_FD;
     Volume *vp;
     IHandle_t *ih;
     char headerName[1024];
@@ -445,17 +444,17 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	printf("volinfo: -online not supported\n");
 	exit(1);
     } else {
-	afs_int32 n;
+	afs_sfsize_t n;
 
 	(void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
 			   VPartitionPath(dp), name);
-	if ((fd = afs_open(headerName, O_RDONLY)) == -1
-	    || afs_fstat(fd, &status) == -1) {
+	if ((fd = OS_OPEN(headerName, O_RDONLY, 0666)) == INVALID_FD
+	    || OS_SIZE(fd) < 0) {
 	    printf("Volinfo: Cannot read volume header %s\n", name);
-	    close(fd);
+	    OS_CLOSE(fd);
 	    exit(1);
 	}
-	n = read(fd, &diskHeader, sizeof(diskHeader));
+	n = OS_READ(fd, &diskHeader, sizeof(diskHeader));
 
 	if (n != sizeof(diskHeader)
 	    || diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
@@ -475,12 +474,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    afs_sfsize_t size = 0;
 	    afs_sfsize_t code;
 
-	    if (afs_fstat(fd, &stat) == -1) {
-		perror("stat");
-		exit(1);
-	    }
 	    if (!dsizeOnly && !saveinodes) {
-		size = stat.st_size;
+		size = OS_SIZE(fd);
 		printf("Volume header (size = %d):\n", (int)size);
 		printf("\tstamp\t= 0x%x\n", header.stamp.version);
 		printf("\tVolId\t= %u\n", header.id);
@@ -570,7 +565,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    Vauxsize = size;
 	    Vauxsize_k = size / 1024;
 	}
-	close(fd);
+	OS_CLOSE(fd);
 	vp = AttachVolume(dp, name, &header);
 	if (!vp) {
 	    printf("Volinfo: Error attaching volume header %s\n", name);
@@ -719,7 +714,7 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
     *mtime = NT_date(&fi.ftLastWriteTime);
     *atime = NT_date(&fi.ftLastAccessTime);
 #else
-    struct afs_stat status;
+    struct afs_stat_st status;
     if (afs_fstat(fd, &status) == -1) {
 	printf("fstat failed %d\n", errno);
 	exit(1);

@@ -26,6 +26,8 @@
 #include <winnt.h>
 #include <winbase.h>
 #include <winsock2.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 #include <errno.h>
 #include <fcntl.h>
@@ -691,7 +693,7 @@ SetOGM(FD_t fd, int parm, int tag)
 
 /* GetOGM - get parm and tag from owner, group and mode bits. */
 static void
-GetOGMFromStat(struct afs_stat *status, int *parm, int *tag)
+GetOGMFromStat(struct afs_stat_st *status, int *parm, int *tag)
 {
     *parm = status->st_uid | (status->st_gid << 15);
     *parm |= (status->st_mode & 0x18) << 27;
@@ -701,7 +703,7 @@ GetOGMFromStat(struct afs_stat *status, int *parm, int *tag)
 static int
 CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
 {
-    struct afs_stat status;
+    struct afs_stat_st status;
     int parm, tag;
     if (afs_fstat(fdP->fd_fd, &status) < 0)
 	return -1;
@@ -1154,7 +1156,7 @@ namei_copy_on_write(IHandle_t *h)
     FD_t fd;
     namei_t name;
     FdHandle_t *fdP;
-    struct afs_stat tstat;
+    struct afs_stat_st tstat;
     afs_foff_t offset;
 
     namei_HandleToName(&name, h);
@@ -1572,9 +1574,9 @@ static int DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 		       unsigned int volid);
 static int DecodeVolumeName(char *name, unsigned int *vid);
 static int namei_ListAFSSubDirs(IHandle_t * dirIH,
-				int (*write_fun) (FILE *,
+				int (*write_fun) (FD_t,
 						  struct ViceInodeInfo *,
-						  char *, char *), FILE * fp,
+						  char *, char *), FD_t fp,
 				int (*judgeFun) (struct ViceInodeInfo *,
 						 afs_uint32 vid, void *),
 				afs_uint32 singleVolumeNumber, void *rock);
@@ -1590,10 +1592,10 @@ static int namei_ListAFSSubDirs(IHandle_t * dirIH,
  * can use the same inode reading code.
  */
 static int
-WriteInodeInfo(FILE * fp, struct ViceInodeInfo *info, char *dir, char *name)
+WriteInodeInfo(FD_t fp, struct ViceInodeInfo *info, char *dir, char *name)
 {
     size_t n;
-    n = fwrite(info, sizeof(*info), 1, fp);
+    n = OS_WRITE(fp, info, sizeof(*info));
     return (n == 1) ? 0 : -2;
 }
 
@@ -1602,7 +1604,7 @@ int mode_errors;		/* Number of errors found in mode bits on directories. */
 void
 VerifyDirPerms(char *path)
 {
-    struct afs_stat status;
+    struct afs_stat_st status;
 
     if (afs_stat(path, &status) < 0) {
 	Log("Unable to stat %s. Please manually verify mode bits for this"
@@ -1640,13 +1642,12 @@ VerifyDirPerms(char *path)
  *                for this.
  */
 int
-ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
 	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath,
 	       void *rock)
 {
     int ninodes;
-    struct afs_stat status;
 
     *forcep = 0; /* no need to salvage until further notice */
 
@@ -1658,18 +1659,14 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	namei_ListAFSFiles(mountedOn, WriteInodeInfo, inodeFile, judgeInode,
 			   singleVolumeNumber, rock);
 
-    if (!inodeFile)
+    if (inodeFile == INVALID_FD)
 	return ninodes;
 
     if (ninodes < 0) {
 	return ninodes;
     }
 
-    if (fflush(inodeFile) == EOF) {
-	Log("Unable to successfully flush inode file for %s\n", mountedOn);
-	return -2;
-    }
-    if (fsync(fileno(inodeFile)) == -1) {
+    if (OS_SYNC(inodeFile) == -1) {
 	Log("Unable to successfully fsync inode file for %s\n", mountedOn);
 	return -2;
     }
@@ -1677,13 +1674,9 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     /*
      * Paranoia:  check that the file is really the right size
      */
-    if (afs_fstat(fileno(inodeFile), &status) == -1) {
-	Log("Unable to successfully stat inode file for %s\n", mountedOn);
-	return -2;
-    }
-    if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+    if (OS_SIZE(inodeFile) * sizeof(struct ViceInodeInfo)) {
 	Log("Wrong size (%d instead of %lu) in inode file for %s\n",
-	    (int) status.st_size,
+	    (int) OS_SIZE(inodeFile),
 	    (long unsigned int) ninodes * sizeof(struct ViceInodeInfo),
 	    mountedOn);
 	return -2;
@@ -1714,9 +1707,9 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
  */
 int
 namei_ListAFSFiles(char *dev,
-		   int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
+		   int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 				    char *),
-		   FILE * fp,
+		   FD_t fp,
 		   int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
 		   afs_uint32 singleVolumeNumber, void *rock)
 {
@@ -1831,9 +1824,9 @@ _namei_examine_special(char * path1,
 		       char * dname,
 		       IHandle_t * myIH,
 		       FdHandle_t * linkHandle,
-		       int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
+		       int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 					char *),
-		       FILE * fp,
+		       FD_t fp,
 		       int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
 		       int singleVolumeNumber,
 		       void *rock)
@@ -1920,9 +1913,9 @@ _namei_examine_reg(char * path3,
 		   char * dname,
 		   IHandle_t * myIH,
 		   FdHandle_t * linkHandle,
-		   int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
+		   int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 				    char *),
-		   FILE * fp,
+		   FD_t fp,
 		   int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
 		   int singleVolumeNumber,
 		   void *rock)
@@ -1985,10 +1978,10 @@ struct listsubdirs_work_node {
                                          *   inode, this will be pointed at the
                                          *   link table
                                          */
-    FILE * fp;                          /**< file pointer for writeFun */
+    FD_t fp;                            /**< file pointer for writeFun */
 
     /** function which will write inode metadata to fp */
-    int (*writeFun) (FILE *, struct ViceInodeInfo *, char *, char *);
+    int (*writeFun) (FD_t, struct ViceInodeInfo *, char *, char *);
 
     /** inode filter function */
     int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *);
@@ -2315,9 +2308,9 @@ _namei_examine_file_spawn(const struct listsubdirs_work_node *work,
  */
 static int
 namei_ListAFSSubDirs(IHandle_t * dirIH,
-		     int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
+		     int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 				      char *),
-		     FILE * fp,
+		     FD_t fp,
 		     int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
 		     afs_uint32 singleVolumeNumber, void *rock)
 {
@@ -2667,7 +2660,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 	    unsigned int volid)
 {
     char fpath[512];
-    struct afs_stat status;
+    struct afs_stat_st status;
     int parm, tag;
     lb64_string_t check;
 

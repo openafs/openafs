@@ -6491,7 +6491,7 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     name[0] = OS_DIRSEPC;
     (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, afs_printable_uint32_lu(volumeId));
     for (dp = DiskPartitionList; dp; dp = dp->next) {
-	struct afs_stat status;
+	struct afs_stat_st status;
 	strcpy(path, VPartitionPath(dp));
 	strcat(path, name);
 	if (afs_stat(path, &status) == 0) {

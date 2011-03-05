@@ -288,7 +288,7 @@ VInitPartition(char *path, char *devname, Device dev)
 int
 VCheckPartition(char *part, char *devname)
 {
-    struct afs_stat status;
+    struct afs_stat_st status;
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
     char AFSIDatPath[MAXPATHLEN];
 #endif
@@ -373,7 +373,7 @@ static int
 VIsAlwaysAttach(char *part, int *awouldattach)
 {
 #ifdef AFS_NAMEI_ENV
-    struct afs_stat st;
+    struct afs_stat_st st;
     char checkfile[256];
     int ret;
 #endif /* AFS_NAMEI_ENV */
@@ -426,7 +426,7 @@ VAttachPartitions2(void)
 	if (VIsAlwaysAttach(pname, &wouldattach)) {
 	    VCheckPartition(pname, "");
 	} else {
-	    struct afs_stat st;
+	    struct afs_stat_st st;
 	    if (wouldattach && VGetPartition(pname, 0) == NULL &&
 	        afs_stat(pname, &st) == 0 && S_ISDIR(st.st_mode)) {
 
@@ -796,7 +796,7 @@ VAttachPartitions(void)
 	 * doing this for us.
 	 */
 	if (programType == fileServer) {
-	    struct afs_stat status;
+	    struct afs_stat_st status;
 	    char salvpath[MAXPATHLEN];
 	    strcpy(salvpath, entry.vp_dev);
 	    strcat(salvpath, "\\FORCESALVAGE");

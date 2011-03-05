@@ -33,7 +33,7 @@
  * -2 - Unable to completely write temp file. Produces warning message in log.
  */
 int
-ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	       afs_uint32 (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
@@ -117,7 +117,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #define	ROOTINODE	2
 static char *partition;
 int Testing=0;
-int pfd;
+FD_t pfd;
 
 #ifdef	AFS_AIX32_ENV
 #include <jfs/filsys.h>
@@ -165,7 +165,7 @@ struct dinode *ginode();
 
 
 int
-ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
@@ -176,7 +176,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     struct stat root_inode;
     int ninodes = 0, err = 0;
 
-    pfd = -1;			/* initialize so we don't close on error output below. */
+    pfd = INVALID_FD;			/* initialize so we don't close on error output below. */
     *forcep = 0;
     sync();
     sleep(1);			/* simulate operator    */
@@ -250,8 +250,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 
     fmax = fs.s_fsize / (FSBSIZE / 512);	/* first invalid blk num */
 
-    pfd = afs_open(rdev, O_RDONLY);
-    if (pfd < 0) {
+    pfd = OS_OPEN(rdev, O_RDONLY, 0666);
+    if (pfd == INVALID_FD) {
 	Log("Unable to open `%s' inode for reading\n", rdev);
 	return -1;
     }
@@ -297,8 +297,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 	    continue;
 
-	if (inodeFile) {
-	    if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
+	if (inodeFile != INVALID_FD) {
+	    if (OS_WRITE(inodeFile, &info, sizeof(info) * 1) != 1) {
 		Log("Error writing inode file for partition %s\n", partition);
 		goto out;
 	    }
@@ -306,13 +306,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	++ninodes;
     }
 
-    if (inodeFile) {
-	if (fflush(inodeFile) == EOF) {
-	    Log("Unable to successfully flush inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (fsync(fileno(inodeFile)) == -1) {
+    if (inodeFile != INVALID_FD) {
+	if (OS_SYNC(inodeFile) == -1) {
 	    Log("Unable to successfully fsync inode file for %s\n", partition);
 	    err = -2;
 	    goto out1;
@@ -321,12 +316,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
-	if (fstat(fileno(inodeFile), &status) == -1) {
-	    Log("Unable to successfully stat inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+	if (OS_SIZE(inodeFile) != ninodes * sizeof(struct ViceInodeInfo)) {
 	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
 		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
 		partition);
@@ -334,14 +324,14 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	    goto out1;
 	}
     }
-    close(pfd);
+    OS_CLOSE(pfd);
     return 0;
 
   out:
     err = -1;
   out1:
-    if (pfd >= 0)
-	close(pfd);
+    if (pfd != INVALID_FD)
+	OS_CLOSE(pfd);
 
     return err;
 }
@@ -350,10 +340,10 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 int
 ReadSuper(struct superblock *fs, char *devName)
 {
-    int pfd;
+    FD_t pfd;
 
-    pfd = afs_open(devName, O_RDONLY);
-    if (pfd < 0) {
+    pfd = OS_OPEN(devName, O_RDONLY, 0666);
+    if (pfd == INVALID_FD) {
 	Log("Unable to open inode on %s for reading superblock.\n", devName);
 	return -1;
     }
@@ -362,7 +352,7 @@ ReadSuper(struct superblock *fs, char *devName)
 	Log("Unable to read superblock on %s.\n", devName);
 	return -1;
     }
-    close(pfd);
+    OS_CLOSE(pfd);
     return (0);
 }
 
@@ -617,7 +607,7 @@ xfs_RenameFiles(char *dir, xfs_Rename_t * renames, int n_renames)
 
 
 int
-xfs_ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 		   int (*judgeInode) (), afs_uint32 judgeParam, int *forcep,
 		   int forceR, char *wpath, void *rock)
 {
@@ -642,7 +632,6 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     int n_renames = 0;
     int n_avail = 0;
     uint64_t pino;
-    struct stat status;
     int errors = 0;
 
     *forcep = 0;
@@ -753,9 +742,9 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		n_renames++;
 	    }
 
-	    if (inodeFile) {
-		if (fwrite
-		    (&info.ili_info, sizeof(vice_inode_info_t), 1, inodeFile)
+	    if (inodeFile != INVALID_FD) {
+		if (OS_WRITE
+		    (inodeFile, &info.ili_info, sizeof(vice_inode_info_t))
 		    != 1) {
 		    Log("Error writing inode file for partition %s\n", mountedOn);
 		    goto err1_exit;
@@ -778,25 +767,17 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     closedir(top_dirp);
     if (renames)
 	free((char *)renames);
-    if (inodeFile) {
-	if (fflush(inodeFile) == EOF) {
-	    ("Unable to successfully flush inode file for %s\n", mountedOn);
-	    return errors ? -1 : -2;
-	}
-	if (fsync(fileno(inodeFile)) == -1) {
+    if (inodeFile != INVALID_FD) {
+	if (OS_SYNC(inodeFile) == -1) {
 	    Log("Unable to successfully fsync inode file for %s\n", mountedOn);
 	    return errors ? -1 : -2;
 	}
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
-	if (fstat(fileno(inodeFile), &status) == -1) {
-	    Log("Unable to successfully stat inode file for %s\n", partition);
-	    return errors ? -1 : -2;
-	}
-	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+	if (OS_SIZE(inodeFile) != ninodes * sizeof(struct ViceInodeInfo)) {
 	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
-		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
+		OS_SIZE(inodeFile), ninodes * sizeof(struct ViceInodeInfo),
 		partition);
 	    return errors ? -1 : -2;
 	}
@@ -822,7 +803,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #endif
 
 int
-ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
@@ -887,7 +868,7 @@ BUFAREA sblk;
 
 extern char *afs_rawname();
 int
-ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
+ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
@@ -903,7 +884,6 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     int i, c, e, bufsize, code, err = 0;
     char dev[50], rdev[100], err1[512], *ptr1;
     struct dinode *inodes = NULL, *einodes, *dptr;
-    struct stat status;
     int ninodes = 0;
     struct dinode *p;
     struct ViceInodeInfo info;
@@ -922,8 +902,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     sleep(10);
 #endif
 
-    pfd = afs_open(rdev, O_RDONLY);
-    if (pfd <= 0) {
+    pfd = OS_OPEN(rdev, O_RDONLY, 0666);
+    if (pfd == INVALID_FD) {
 	sprintf(err1, "Could not open device %s to get inode list\n", rdev);
 	perror(err1);
 	return -1;
@@ -983,8 +963,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	info.u.param[3] = auxp->aux_param4;
 	if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 	    continue;
-	if (inodeFile) {
-	    if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
+	if (inodeFile != INVALID_FD) {
+	    if (OS_WRITE(inodeFile, &info, sizeof(info)) != 1) {
 		Log("Error writing inode file for partition %s\n", partition);
 		goto out;
 	    }
@@ -1060,10 +1040,10 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	i = c * sblock.fs_ipg;
 	e = i + sblock.fs_ipg;
 #if	defined(AFS_HPUX102_ENV)
-	if (afs_lseek(pfd, dbtoo(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
+	if (OS_SEEK(pfd, dbtoo(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
 	    -1) {
 #else
-	if (afs_lseek(pfd, dbtob(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
+	if (OS_SEEK(pfd, dbtob(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
 	    -1) {
 #endif
 #else
@@ -1081,14 +1061,14 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	e = i + super.fs.fs_ipg;
 #ifdef	AFS_OSF_ENV
 	dblk1 = fsbtodb(&super.fs, itod(&super.fs, i));
-	if (afs_lseek(pfd, (off_t) ((off_t) dblk1 * DEV_BSIZE), L_SET) == -1) {
+	if (OS_SEEK(pfd, (off_t) ((off_t) dblk1 * DEV_BSIZE), L_SET) == -1) {
 #else
 #if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
 	f1 = fsbtodb(&super.fs, itod(&super.fs, i));
 	off = (offset_t) f1 << DEV_BSHIFT;
-	if (llseek(pfd, off, L_SET) == -1) {
+	if (OS_SEEK(pfd, off, L_SET) == -1) {
 #else
-	if (afs_lseek(pfd, dbtob(fsbtodb(&super.fs, itod(&super.fs, i))), L_SET)
+	if (OS_SEEK(pfd, dbtob(fsbtodb(&super.fs, itod(&super.fs, i))), L_SET)
 	    == -1) {
 #endif /* AFS_SUN5_ENV */
 #endif /* AFS_OSF_ENV */
@@ -1099,7 +1079,7 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	}
 	while (i < e) {
 	    if (!forceR) {
-		if (read(pfd, inodes, bufsize) != bufsize) {
+		if (OS_READ(pfd, inodes, bufsize) != bufsize) {
 		    Log("Error reading inodes for partition %s; run vfsck\n",
 			partition);
 		    goto out;
@@ -1108,10 +1088,10 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		int bj, bk;
 		dptr = inodes;
 		for (bj = bk = 0; bj < bufsize; bj = bj + 512, bk++) {
-		    if ((code = read(pfd, dptr, 512)) != 512) {
+		    if ((code = OS_READ(pfd, dptr, 512)) != 512) {
 			Log("Error reading inode %d? for partition %s (errno = %d); run vfsck\n", bk + i, partition, errno);
-			if (afs_lseek(pfd, 512, L_SET) == -1) {
-			    Log("Lseek failed\n");
+			if (OS_SEEK(pfd, 512, L_SET) == -1) {
+			    Log("OS_SEEK failed\n");
 			    goto out;
 			}
 			dptr->di_mode = 0;
@@ -1194,8 +1174,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		    info.linkCount = p->di_nlink;
 		    if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 			continue;
-		    if (inodeFile) {
-			if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
+		    if (inodeFile != INVALID_FD) {
+			if (OS_WRITE(inodeFile, &info, sizeof(info)) != 1) {
 			    Log("Error writing inode file for partition %s\n",
 				partition);
 			    goto out;
@@ -1209,13 +1189,8 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
     if (inodes)
 	free(inodes);
 #endif
-    if (inodeFile) {
-	if (fflush(inodeFile) == EOF) {
-	    Log("Unable to successfully flush inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (fsync(fileno(inodeFile)) == -1) {
+    if (inodeFile != INVALID_FD) {
+	if (OS_SYNC(inodeFile) == -1) {
 	    Log("Unable to successfully fsync inode file for %s\n", partition);
 	    err = -2;
 	    goto out1;
@@ -1224,26 +1199,21 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
-	if (fstat(fileno(inodeFile), &status) == -1) {
-	    Log("Unable to successfully stat inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
+	if (OS_SIZE(inodeFile) != ninodes * sizeof(struct ViceInodeInfo)) {
 	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
-		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
+		OS_SIZE(inodeFile), ninodes * sizeof(struct ViceInodeInfo),
 		partition);
 	    err = -2;
 	    goto out1;
 	}
     }
-    close(pfd);
+    OS_CLOSE(pfd);
     return 0;
 
   out:
     err = -1;
   out1:
-    close(pfd);
+    OS_CLOSE(pfd);
     if (inodes)
 	free(inodes);
     return err;
@@ -1257,26 +1227,26 @@ ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 #endif
 
 int
-bread(int fd, char *buf, daddr_t blk, afs_int32 size)
+bread(FD_t fd, char *buf, daddr_t blk, afs_int32 size)
 {
 #ifdef	AFS_AIX_ENV
 #ifdef  AFS_AIX41_ENV
     offset_t off = (offset_t) blk << FSBSHIFT;
-    if (llseek(fd, off, 0) < 0) {
+    if (OS_SEEK(fd, off, 0) < 0) {
 	Log("Unable to seek to offset %llu for block %u\n", off, blk);
 	return -1;
     }
 #else /* AFS_AIX41_ENV */
-    if (afs_lseek(fd, blk * Bsize, 0) < 0) {
+    if (OS_SEEK(fd, blk * Bsize, 0) < 0) {
 	Log("Unable to seek to offset %u for block %u\n", blk * Bsize, blk);
     }
 #endif /* AFS_AIX41_ENV */
 #else
-    if (afs_lseek(fd, (off_t) dbtob(blk), L_SET) < 0) {
+    if (OS_SEEK(fd, (off_t) dbtob(blk), L_SET) < 0) {
 	Log("Unable to seek to offset %u for block %u\n", dbtob(blk), blk);
     }
 #endif
-    if (read(fd, buf, size) != size) {
+    if (OS_READ(fd, buf, size) != size) {
 	Log("Unable to read block %d, partition %s\n", blk, partition);
 	return -1;
     }
