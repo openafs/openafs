@@ -298,9 +298,6 @@ ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 		bulkdata tcbs;
 		afs_int32 i, offset;
 
-		Quorum_EndIO(atrans, conn);
-		conn = Quorum_StartIO(atrans, ts);
-
 		for (i = 0, offset = 0; i < io_vector->iovec_wrt_len; i++) {
 		    /* Sanity check for going off end of buffer */
 		    if ((offset + iovec[i].length) > io_buffer->iovec_buf_len) {
