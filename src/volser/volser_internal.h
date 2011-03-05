@@ -32,12 +32,10 @@ extern int VPFullUnlock(void);
 extern afs_int32 GCTrans(void);
 
 /* vsprocs.c */
-struct uvldbentry;
 struct nvldbentry;
+extern int yesprompt(char *str);
 extern int PrintError(char *msg, afs_int32 errcode);
 extern void init_volintInfo(struct volintInfo *vinfo);
-extern void SubEnumerateEntryU(struct uvldbentry *entry);
-extern void EnumerateEntryU(struct uvldbentry *entry);
 extern void SubEnumerateEntry(struct nvldbentry *entry);
 extern void EnumerateEntry(struct nvldbentry *entry);
 extern int UV_NukeVolume(afs_uint32 server, afs_int32 partid, afs_uint32 volid);
@@ -64,6 +62,7 @@ extern int UV_BackupVolume(afs_uint32 aserver, afs_int32 apart,
 			   afs_uint32 avolid);
 extern int UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 			    afs_int32 afrompart, int forceflag);
+extern void dump_sig_handler(int x);
 extern int UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 			 afs_int32 afrompart, afs_int32 fromdate,
 			 afs_int32(*DumpFunction) (struct rx_call *, void *),
@@ -97,15 +96,21 @@ extern int UV_XListVolumes(afs_uint32 a_serverID, afs_int32 a_partID,
 extern int UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID,
 			     afs_uint32 a_volID,
 			     struct volintXInfo **a_resultPP);
+extern int sortVolumes(const void *a, const void *b);
 extern int UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname,
 			 int flags);
 extern int UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags,
 		       int force);
+extern afs_int32 VolumeExists(afs_uint32 server, afs_int32 partition,
+			      afs_uint32 volumeid);
+extern afs_int32 CheckVldbRWBK(struct nvldbentry *entry,
+			       afs_int32 * modified);
+extern int CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified);
+extern afs_int32 CheckVldb(struct nvldbentry *entry, afs_int32 * modified,
+                           afs_int32 *deleted);
 extern int UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags,
 			 int force);
 extern int UV_RenameVolume(struct nvldbentry *entry, char oldname[],
-			   char newname[]);
-extern int UV_RenameVolumeU(struct uvldbentry *entry, char oldname[],
 			   char newname[]);
 extern int UV_VolserStatus(afs_uint32 server, transDebugInfo ** rpntr,
 			   afs_int32 * rcount);
@@ -115,7 +120,6 @@ extern int UV_SetVolume(afs_uint32 server, afs_int32 partition,
 			afs_int32 setflag, int sleeptime);
 extern int UV_SetVolumeInfo(afs_uint32 server, afs_int32 partition,
 			    afs_uint32 volid, volintInfo * infop);
-extern void MapNetworkToHostU(struct uvldbentry *old, struct uvldbentry *new);
 extern void MapNetworkToHost(struct nvldbentry *old, struct nvldbentry *new);
 extern int UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver,
                           afs_int32 afrompart, char *atovolname,
