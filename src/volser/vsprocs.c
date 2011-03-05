@@ -188,6 +188,15 @@ static int SimulateForwardMultiple(struct rx_connection *fromconn,
 static afs_int32 CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver,
 			     afs_int32 apart, afs_int32 * modentry,
 			     afs_uint32 * maxvolid, struct nvldbentry *aentry);
+static afs_int32 VolumeExists(afs_uint32 server, afs_int32 partition,
+                              afs_uint32 volumeid);
+static afs_int32 CheckVldbRWBK(struct nvldbentry * entry,
+                               afs_int32 * modified);
+static afs_int32 CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified);
+static afs_int32 CheckVldb(struct nvldbentry *entry, afs_int32 * modified,
+                           afs_int32 *deleted);
+static void dump_sig_handler(int x);
+static int sortVolumes(const void *a, const void *b);
 
 
 /*map the partition <partId> into partition name <partName>*/
@@ -4178,7 +4187,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 }
 
 
-void
+static void
 dump_sig_handler(int x)
 {
     fprintf(STDERR, "\nSignal handler: vos dump operation\n");
@@ -6115,7 +6124,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     return (error);
 }
 
-int
+static int
 sortVolumes(const void *a, const void *b)
 {
     volintInfo *v1 = (volintInfo *) a;
@@ -6530,7 +6539,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
  *      Some error codes mean the volume is unavailable but
  *      still exists - so we catch these error codes.
  */
-afs_int32
+static afs_int32
 VolumeExists(afs_uint32 server, afs_int32 partition, afs_uint32 volumeid)
 {
     struct rx_connection *conn = (struct rx_connection *)0;
@@ -6554,7 +6563,7 @@ VolumeExists(afs_uint32 server, afs_int32 partition, afs_uint32 volumeid)
 /* CheckVldbRWBK()
  *
  */
-afs_int32
+static afs_int32
 CheckVldbRWBK(struct nvldbentry * entry, afs_int32 * modified)
 {
     int modentry = 0;
@@ -6661,7 +6670,7 @@ CheckVldbRWBK(struct nvldbentry * entry, afs_int32 * modified)
     return (error);
 }
 
-int
+static afs_int32
 CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified)
 {
     int idx;
@@ -6725,7 +6734,7 @@ CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified)
 /* CheckVldb()
  *      Ensure that <entry> matches with the info on file servers
  */
-afs_int32
+static afs_int32
 CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
 {
     afs_int32 code, error = 0;
