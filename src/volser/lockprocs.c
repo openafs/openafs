@@ -32,15 +32,12 @@
 #include <afs/vlserver.h>
 #include <afs/nfs.h>
 #include <afs/afsint.h>
-#include <ubik.h>
 #include "volint.h"
 #include "volser.h"
 #include "lockdata.h"
 
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"
-
-struct ubik_client *cstruct;
 
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
@@ -52,34 +49,13 @@ FindIndex(struct uvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
 {
     int e;
     afs_int32 error = 0;
-    afsUUID m_uuid;
-    int uuid_valid = 0;
-
-    if (server && !afs_uuid_is_nil(&entry->serverNumber[0])) {
-        afs_int32 vcode, m_uniq=0;
-        bulkaddrs m_addrs;
-        ListAddrByAttributes m_attrs;
-        afs_int32 m_nentries;
-
-        m_attrs.Mask = VLADDR_IPADDR;
-        m_attrs.ipaddr = htonl(server);
-        m_nentries = 0;
-        m_addrs.bulkaddrs_val = 0;
-        m_addrs.bulkaddrs_len = 0;
-        vcode =
-            ubik_VL_GetAddrsU( cstruct, 0, &m_attrs,
-                               &m_uuid,
-                               &m_uniq, &m_nentries,
-                               &m_addrs);
-        uuid_valid = (vcode == 0);
-    }
 
     for (e = 0; (e < entry->nServers) && !error; e++) {
 	if (!type || (entry->serverFlags[e] & type)) {
 	    if ((!server || (entry->serverPartition[e] == part))
 		&& (!server
-                    || (uuid_valid && afs_uuid_equal(&m_uuid, &entry->serverNumber[e]))
-		    || VLDB_IsSameAddrs(entry->serverUnique[e], server,	&error)))
+		    || VLDB_IsSameAddrs(entry->serverUnique[e], server,
+					&error)))
 		break;
 	    if (type == ITSRWVOL)
 		return -1;	/* quit when we are looking for RW entry (there's only 1) */
