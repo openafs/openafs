@@ -336,9 +336,8 @@ _afsconf_IsClientConfigDirectory(const char *path)
     return 1;
 }
 
-
 int
-_afsconf_Check(struct afsconf_dir *adir)
+_afsconf_UpToDate(struct afsconf_dir *adir)
 {
     char tbuffer[256];
 #ifdef AFS_NT40_ENV
@@ -374,13 +373,36 @@ _afsconf_Check(struct afsconf_dir *adir)
 #endif /* AFS_NT40_ENV */
 
     code = stat(tbuffer, &tstat);
-    if (code < 0) {
-	return code;
-    }
+    if (code < 0)
+	return 0; /* Can't throw the error, so just say we're not up to date */
+
     /* did file change? */
-    if (tstat.st_mtime == adir->timeRead) {
+    if (tstat.st_mtime == adir->timeRead)
+	return 1;
+
+    /* otherwise file has changed */
+    return 0;
+}
+
+int
+afsconf_UpToDate(void *rock)
+{
+    int code;
+
+    LOCK_GLOBAL_MUTEX;
+    code = _afsconf_UpToDate(rock);
+    UNLOCK_GLOBAL_MUTEX;
+
+    return code;
+}
+
+int
+_afsconf_Check(struct afsconf_dir *adir)
+{
+    /* did configuration change? */
+    if (_afsconf_UpToDate(adir))
 	return 0;
-    }
+
     /* otherwise file has changed, so reopen it */
     return afsconf_Reopen(adir);
 }
@@ -1496,40 +1518,6 @@ afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname,
 
     UNLOCK_GLOBAL_MUTEX;
     return (code);
-}
-
-int
-afsconf_UpToDate(void *rock)
-{
-    struct afsconf_dir *adir = rock;
-    char tbuffer[256];
-#ifdef AFS_NT40_ENV
-    char *p;
-#endif
-    struct stat tstat;
-    afs_int32 code = 0; /* default to not up to date */
-    LOCK_GLOBAL_MUTEX;
-#ifdef AFS_NT40_ENV
-    /* NT client config dir has no KeyFile; don't risk attempting open
-     * because there might be a random file of this name if dir is shared.
-     */
-    if (_afsconf_IsClientConfigDirectory(adir->name)) {
-	/* Not a server, nothing to reread */
-	code = 1;
-    } else {
-#endif
-	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_KEY_FILE, NULL);
-
-	/* did file change? */
-	code = stat(tbuffer, &tstat);
-	if ((code == 0) && (tstat.st_mtime <= adir->timeRead)) {
-	    code = 1;
-	}
-#ifdef AFS_NT40_ENV
-    }
-#endif
-    UNLOCK_GLOBAL_MUTEX;
-    return code;
 }
 
 int

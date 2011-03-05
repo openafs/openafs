@@ -45,9 +45,12 @@ main(int argc, char **argv)
     struct afsconf_dir *dir;
     char *dirname;
     struct rx_securityClass **classes;
+    struct rx_securityClass *secClass;
+    int secIndex;
     int numClasses;
+    struct afsconf_typedKey *key;
 
-    plan(3);
+    plan(9);
     dirname = buildTestConfig();
 
     dir = afsconf_Open(dirname);
@@ -69,6 +72,20 @@ main(int argc, char **argv)
 
     afsconf_BuildServerSecurityObjects(dir, &classes, &numClasses);
     is_int(4, numClasses, "When encryption is enabled, 4 classes are returned");
+
+    /* Up to date checks */
+
+    ok(afsconf_UpToDate(dir), "Newly opened directory is up to date");
+    is_int(0, afsconf_AddKey(dir,
+			     1, "\x19\x16\xfe\xe6\xba\x77\x2f\xfd", 0),
+	   "Adding key worked");
+    ok(!afsconf_UpToDate(dir), "Directory with newly added key isn't");
+    afsconf_ClientAuth(dir, &secClass, &secIndex);
+    ok(afsconf_UpToDate(dir), "afsconf_ClientAuth() resets UpToDate check");
+    afsconf_DeleteKey(dir, 1);
+    ok(!afsconf_UpToDate(dir), "Directory with newly deleted key isn't");
+    afsconf_GetLatestKeyByTypes(dir, afsconf_rxkad, 0, &key);
+    ok(afsconf_UpToDate(dir), "afsconf_GetLatestKeyByTypes resest UpToDate");
 
     return 0;
 }
