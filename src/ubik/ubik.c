@@ -339,6 +339,15 @@ ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
     return ContactQuorum_rcode(okcalls, rcode);
 }
 
+#if defined(AFS_PTHREAD_ENV)
+static int
+ubik_thread_create(pthread_attr_t *tattr, pthread_t *thread, void *proc) {
+    osi_Assert(pthread_attr_init(tattr) == 0);
+    osi_Assert(pthread_attr_setdetachstate(tattr, PTHREAD_CREATE_DETACHED) == 0);
+    osi_Assert(pthread_create(thread, tattr, proc, NULL) == 0);
+    return 0;
+}
+#endif
 
 /*!
  * \brief This routine initializes the ubik system for a set of servers.
@@ -477,12 +486,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
      * the "steplock" problem in ubik initialization. Defect 11037.
      */
 #ifdef AFS_PTHREAD_ENV
-/* do assert stuff */
-    osi_Assert(pthread_attr_init(&rxServer_tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&rxServer_tattr, PTHREAD_CREATE_DETACHED) == 0);
-/*    osi_Assert(pthread_attr_setstacksize(&rxServer_tattr, rx_stackSize) == 0); */
-
-    osi_Assert(pthread_create(&rxServerThread, &rxServer_tattr, (void *)rx_ServerProc, NULL) == 0);
+    ubik_thread_create(&rxServer_tattr, &rxServerThread, (void *)rx_ServerProc);
 #else
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
               NULL, "rx_ServerProc", &junk);
@@ -490,14 +494,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
     /* now start up async processes */
 #ifdef AFS_PTHREAD_ENV
-/* do assert stuff */
-    osi_Assert(pthread_attr_init(&ubeacon_Interact_tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&ubeacon_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
-/*    osi_Assert(pthread_attr_setstacksize(&ubeacon_Interact_tattr, 16384) == 0); */
-    /*  need another attr set here for priority???  - klm */
-
-    osi_Assert(pthread_create(&ubeacon_InteractThread, &ubeacon_Interact_tattr,
-           (void *)ubeacon_Interact, NULL) == 0);
+    ubik_thread_create(&ubeacon_Interact_tattr, &ubeacon_InteractThread,
+		(void *)ubeacon_Interact);
 #else
     code = LWP_CreateProcess(ubeacon_Interact, 16384 /*8192 */ ,
 			     LWP_MAX_PRIORITY - 1, (void *)0, "beacon",
@@ -507,15 +505,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 #endif
 
 #ifdef AFS_PTHREAD_ENV
-/* do assert stuff */
-    osi_Assert(pthread_attr_init(&urecovery_Interact_tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&urecovery_Interact_tattr, PTHREAD_CREATE_DETACHED) == 0);
-/*    osi_Assert(pthread_attr_setstacksize(&urecovery_Interact_tattr, 16384) == 0); */
-    /*  need another attr set here for priority???  - klm */
-
-    osi_Assert(pthread_create(&urecovery_InteractThread, &urecovery_Interact_tattr,
-           (void *)urecovery_Interact, NULL) == 0);
-
+    ubik_thread_create(&urecovery_Interact_tattr, &urecovery_InteractThread,
+		(void *)urecovery_Interact);
     return 0;  /* is this correct?  - klm */
 #else
     code = LWP_CreateProcess(urecovery_Interact, 16384 /*8192 */ ,
