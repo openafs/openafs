@@ -53,22 +53,49 @@ $(LIBFILE): $(LIBOBJS)
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsubik.lib
 
 MT_LIBOBJS =\
-	$(OUT)\disk.obj \
-	$(OUT)\remote.obj \
-	$(OUT)\beacon.obj \
-	$(OUT)\recovery.obj \
-	$(OUT)\ubik.obj \
-	$(OUT)\uinit.obj \
-	$(OUT)\vote.obj \
-	$(OUT)\lock.obj \
-	$(OUT)\phys.obj \
+	$(OUT)\disk_mt.obj \
+	$(OUT)\remote_mt.obj \
+	$(OUT)\beacon_mt.obj \
+	$(OUT)\recovery_mt.obj \
+	$(OUT)\ubik_mt.obj \
+	$(OUT)\uinit_mt.obj \
+	$(OUT)\vote_mt.obj \
+	$(OUT)\lock_mt.obj \
+	$(OUT)\phys_mt.obj \
 	$(OUT)\ubik_int_mt.cs.obj \
 	$(OUT)\ubik_int_mt.ss.obj \
 	$(OUT)\ubik_int_mt.xdr.obj \
-	$(OUT)\ubikcmd.obj \
-	$(OUT)\ubikclient.obj \
+	$(OUT)\ubikcmd_mt.obj \
+	$(OUT)\ubikclient_mt.obj \
 	$(OUT)\uerrors_mt.obj	\
 	$(OUT)\AFS_component_version_number.obj
+
+$(OUT)\disk_mt.obj:disk.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\remote_mt.obj:remote.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\beacon_mt.obj:beacon.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\recovery_mt.obj:recovery.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubik_mt.obj:ubik.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\uinit_mt.obj:uinit.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\vote_mt.obj:vote.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\lock_mt.obj:lock.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\phys_mt.obj:phys.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\uerrors_mt.obj:uerrors.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
@@ -80,6 +107,12 @@ $(OUT)\ubik_int_mt.ss.obj:ubik_int.ss.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\ubik_int_mt.xdr.obj:ubik_int.xdr.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubikcmd_mt.obj:ubikcmd.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubikclient_mt.obj:ubikclient.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(MT_LIBFILE): $(MT_LIBOBJS)  
@@ -149,10 +182,7 @@ uerrors.c ubik.h: uerrors.et ubik.p.h
 ############################################################################
 # Install target; primary makefile target
 
-install9X: $(INCFILES) $(LIBFILE)
-
 install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(CL_UDBG_EXEFILE)
-
 
 clean::
 	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c 

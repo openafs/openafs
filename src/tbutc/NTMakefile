@@ -34,7 +34,7 @@ VOLSER  = ..\tvolser
 BUCOORDOBJS = $(OUT)\ubik_db_if.obj \
     $(OUT)\$(BUCOORD)\volstub.obj \
     $(OUT)\$(BUCOORD)\dlq.obj \
-	$(OUT)\$(BUCOORD)\status.obj \
+    $(OUT)\$(BUCOORD)\status.obj \
     $(OUT)\$(BUCOORD)\bucoord_errs.obj
 
 LWPOBJS     = $(OUT)\lock.obj $(OUT)\waitkey.obj
@@ -50,7 +50,7 @@ BUTCOBJS   = $(OUT)\dbentries.obj \
          $(OUT)\tcmain.obj \
          $(OUT)\list.obj \
          $(OUT)\recoverDb.obj \
-	     $(OUT)\tcudbprocs.obj \
+	 $(OUT)\tcudbprocs.obj \
          $(OUT)\dump.obj \
          $(OUT)\tcstatus.obj \
          $(OUT)\butc_xbsa.obj \
@@ -78,11 +78,8 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afsreg.lib \
 	     $(DESTDIR)\lib\afs\afsprocmgmt.lib \
              $(DESTDIR)\lib\afs\afseventlog.lib \
-!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
-	$(DESTDIR)\lib\win95\afspthread.lib \
-!ELSE
-	$(DESTDIR)\lib\afspthread.lib \
-!ENDIF
+	     $(DESTDIR)\lib\afspthread.lib \
+             $(DESTDIR)\lib\afsauthent.lib \
 	     $(DESTDIR)\lib\libafsconf.lib \
 	     $(DESTDIR)\lib\afshcrypto.lib \
 	     $(DESTDIR)\lib\afsroken.lib
