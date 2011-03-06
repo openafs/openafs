@@ -130,9 +130,13 @@ typedef struct krb5_crypto_iov {
 
 /* Currently, we just disable localised error strings. We'll get the error
  * numbers out, but no meaningful text */
-#define N_(...) ""
-#define krb5_set_error_message(...)
-#define krb5_abortx(...)
+#define N_(X, Y) X
+
+/* These have to be real functions, because IRIX doesn't seem to support
+ * variadic macros */
+void krb5_set_error_message(krb5_context, krb5_error_code, const char *, ...);
+krb5_error_code krb5_abortx(krb5_context, const char *, ...);
+
 #define krb5_clear_error_message(ctx)
 
 /* Local prototypes. These are functions that we aren't admitting to in the
