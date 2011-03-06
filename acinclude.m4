@@ -1327,8 +1327,10 @@ AC_CHECK_FUNCS([ \
 	mkstemp \
 	pread \
 	preadv \
+	preadv64 \
 	pwrite \
 	pwritev \
+	pwritev64 \
 	regcomp \
 	regerror \
 	regexec \
@@ -1463,13 +1465,13 @@ case $AFS_SYSNAME in
      AC_MSG_RESULT(no)
    fi
    AC_MSG_CHECKING([for vectored positional I/O])
-   if test "$ac_cv_func_preadv" = "yes" && \
-           test "$ac_cv_func_pwritev" = "yes"; then
-      AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
-      AC_MSG_RESULT(yes)
-   else
-     AC_MSG_RESULT(no)
-   fi
+   AS_IF([test "$ac_cv_func_preadv" = "yes" -a \
+               "$ac_cv_func_pwritev" = "yes" -a \
+	       "$ac_cv_func_preadv64" = "yes" -a \
+	       "$ac_cv_func_pwritev64" = "yes"],
+	 [AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
+  	  AC_MSG_RESULT(yes)],
+	 [AC_MSG_RESULT(no)])
    ;;
 esac
 
