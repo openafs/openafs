@@ -528,8 +528,13 @@ extern afs_sfsize_t ih_size(FD_t);
 #endif
 
 #ifdef HAVE_PIOV
+#ifdef O_LARGEFILE
+#define FDH_PREADV(H, I, N, O) preadv64((H)->fd_fd, I, N, O)
+#define FDH_PWRITEV(H, I, N, O) pwritev64((H)->fd_fd, I, N, O)
+#else /* !O_LARGEFILE */
 #define FDH_PREADV(H, I, N, O) preadv((H)->fd_fd, I, N, O)
 #define FDH_PWRITEV(H, I, N, O) pwritev((H)->fd_fd, I, N, O)
+#endif /* !O_LARGEFILE */
 #endif
 
 #define FDH_PREAD(H, B, S, O) OS_PREAD((H)->fd_fd, B, S, O)
