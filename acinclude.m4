@@ -1266,7 +1266,7 @@ AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev)
+AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev preadv64 pwritev64)
 
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)
@@ -1282,13 +1282,13 @@ case $AFS_SYSNAME in
      AC_MSG_RESULT(no)
    fi
    AC_MSG_CHECKING([for vectored positional I/O])
-   if test "$ac_cv_func_preadv" = "yes" && \
-           test "$ac_cv_func_pwritev" = "yes"; then
-      AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
-      AC_MSG_RESULT(yes)
-   else
-     AC_MSG_RESULT(no)
-   fi
+   AS_IF([test "$ac_cv_func_preadv" = "yes" -a \
+               "$ac_cv_func_pwritev" = "yes" -a \
+	       "$ac_cv_func_preadv64" = "yes" -a \
+	       "$ac_cv_func_pwritev64" = "yes"],
+	 [AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
+  	  AC_MSG_RESULT(yes)],
+	 [AC_MSG_RESULT(no)])
    ;;
 esac
 
