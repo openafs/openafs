@@ -97,7 +97,6 @@ case $AFS_SYSNAME in
 
 	alpha_linux_26)
 		CCOBJ="${CC} -fPIC"
-		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
@@ -119,7 +118,6 @@ case $AFS_SYSNAME in
 
 	arm_linux26)
 		CCOBJ="${CC} -fPIC"
-		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
@@ -289,7 +287,6 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc64_linux26)
-		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
@@ -338,10 +335,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux26)
-		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		DBG=-g
-		KERN_DBG=-g
 		LWP_DBG=-g
 		LWP_OPTMZ=-O2
 		OPTMZ=-O2
