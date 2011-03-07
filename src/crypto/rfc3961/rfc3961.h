@@ -125,6 +125,14 @@ krb5_error_code krb5_crypto_prf(krb5_context context,
 				const krb5_data *input,
 				krb5_data *output);
 
+krb5_error_code krb5_crypto_fx_cf2(krb5_context context,
+				   const krb5_crypto crypto1,
+				   const krb5_crypto crypto2,
+				   krb5_data *pepper1,
+				   krb5_data *pepper2,
+				   krb5_enctype enctype,
+				   krb5_keyblock *res);
+
 krb5_error_code krb5_generate_random_block(void *buf, size_t len);
 
 krb5_error_code krb5_random_to_key(krb5_context context,
