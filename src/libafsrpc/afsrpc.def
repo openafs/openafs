@@ -293,6 +293,7 @@ EXPORTS
 	rx_identity_freeContents                @302
 	rx_identity_free                        @303
 
+	rx_SetBusyChannelError                  @304
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

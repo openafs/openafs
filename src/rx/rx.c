@@ -143,6 +143,16 @@ static unsigned int rxi_rpc_peer_stat_cnt;
 
 static unsigned int rxi_rpc_process_stat_cnt;
 
+/*
+ * rxi_busyChannelError is the error to return to the application when a call
+ * channel appears busy (inferred from the receipt of RX_PACKET_TYPE_BUSY
+ * packets on the channel), and there are other call channels in the
+ * connection that are not busy. If 0, we do not return errors upon receiving
+ * busy packets; we just keep trying on the same call channel until we hit a
+ * timeout.
+ */
+static afs_int32 rxi_busyChannelError = 0;
+
 rx_atomic_t rx_nWaiting = RX_ATOMIC_INIT(0);
 rx_atomic_t rx_nWaited = RX_ATOMIC_INIT(0);
 
@@ -598,6 +608,20 @@ int
 rx_Init(u_int port)
 {
     return rx_InitHost(htonl(INADDR_ANY), port);
+}
+
+/**
+ * Sets the error generated when a busy call channel is detected.
+ *
+ * @param[in] error The error to return for a call on a busy channel.
+ *
+ * @pre Neither rx_Init nor rx_InitHost have been called yet
+ */
+void
+rx_SetBusyChannelError(afs_int32 error)
+{
+    osi_Assert(rxinit_status != 0);
+    rxi_busyChannelError = error;
 }
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
@@ -2818,6 +2842,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
  *      call->conn->lastBusy[call->channel] != 0)
  *
  * @pre call->lock is held
+ * @pre rxi_busyChannelError is nonzero
  *
  * @note call->lock is dropped and reacquired
  */
@@ -2882,10 +2907,10 @@ rxi_CheckBusy(struct rx_call *call)
 	 * rx_conn that the application thread might be able to use. We know
 	 * that we have the correct call since callNumber is unchanged, and we
 	 * know that the call is still busy. So, set the call error state to
-	 * RX_CALL_TIMEOUT so the application can retry the request, presumably
-	 * on a less-busy call channel. */
+	 * rxi_busyChannelError so the application can retry the request,
+	 * presumably on a less-busy call channel. */
 
-	rxi_CallError(call, RX_CALL_TIMEOUT);
+	rxi_CallError(call, rxi_busyChannelError);
     }
 }
 
@@ -5789,7 +5814,7 @@ rxi_Start(struct rxevent *event,
         MUTEX_EXIT(&rx_refcnt_mutex);
 	call->resendEvent = NULL;
 
-	if ((call->flags & RX_CALL_PEER_BUSY)) {
+	if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
 	    rxi_CheckBusy(call);
 	}
 

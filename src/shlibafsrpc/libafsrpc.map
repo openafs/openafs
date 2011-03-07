@@ -159,6 +159,7 @@
 	rx_identity_freeContents;
 	rx_identity_free;
 	rx_InterruptCall;
+	rx_SetBusyChannelError;
     local:
 	*;
 };

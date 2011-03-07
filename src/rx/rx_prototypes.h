@@ -24,6 +24,7 @@ extern int (*rx_almostSent) (struct rx_packet *, struct sockaddr_in *);
 extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
+extern void rx_SetBusyChannelError(afs_int32 error);
 #ifdef AFS_NT40_ENV
 extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
