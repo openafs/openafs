@@ -284,6 +284,8 @@ EXPORTS
         registerthread                          @287
         swapthreadname                          @288
 
+	rx_SetBusyChannelError                  @304
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
