@@ -345,7 +345,18 @@ extern struct ubik_trans *ubik_currentTrans;	/* current trans */
 extern afs_int32 ubik_debugFlag;	/* ubik debug flag */
 extern int ubikPrimaryAddrOnly;	/* use only primary address */
 
-/* this extern gives the sync site's db version, with epoch of 0 if none yet */
+/*
+ * Lock ordering
+ *
+ * Any of the locks may be acquired singly; when acquiring multiple locks, they
+ * should be acquired in the listed order:
+ * 	application cache lock	(dbase->cache_lock)
+ * 	database lock		DBHOLD/DBRELE
+ * 	beacon lock		UBIK_BEACON_LOCK/UNLOCK
+ * 	vote lock		UBIK_VOTE_LOCK/UNLOCK
+ * 	version lock		UBIK_VERSION_LOCK/UNLOCK
+ * 	server address lock	UBIK_ADDR_LOCK/UNLOCK
+ */
 
 /*!
  * \brief Global beacon data.  All values are protected by beacon_lock
