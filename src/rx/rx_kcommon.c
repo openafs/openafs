@@ -1199,27 +1199,8 @@ int rxk_ListenerPid;		/* Used to signal process to wakeup at shutdown */
 struct task_struct *rxk_ListenerTask;
 #endif
 
-#ifdef AFS_SUN5_ENV
-/*
- * Run the listener as a kernel thread.
- */
 void
 rxk_Listener(void)
-{
-    extern id_t syscid;
-    void rxk_ListenerProc(void);
-    if (thread_create
-	(NULL, DEFAULTSTKSZ, rxk_ListenerProc, 0, 0, &p0, TS_RUN,
-	 minclsyspri) == NULL)
-	osi_Panic("rxk_Listener: failed to start listener thread!\n");
-}
-
-void
-rxk_ListenerProc(void)
-#else /* AFS_SUN5_ENV */
-void
-rxk_Listener(void)
-#endif				/* AFS_SUN5_ENV */
 {
     struct rx_packet *rxp = NULL;
     int code;
@@ -1240,9 +1221,9 @@ rxk_Listener(void)
 #elif defined(AFS_DARWIN_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
-#if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
+#ifdef RX_ENABLE_LOCKS
     AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
+#endif /* RX_ENABLE_LOCKS */
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
         /* See if a check for additional packets was issued */
         rx_CheckPackets();
@@ -1278,9 +1259,6 @@ rxk_Listener(void)
 #if defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
     osi_rxWakeup(&rxk_ListenerPid);
 #endif
-#ifdef AFS_SUN5_ENV
-    AFS_GUNLOCK();
-#endif /* AFS_SUN5_ENV */
 }
 
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
