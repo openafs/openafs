@@ -303,9 +303,9 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
 struct afsd_thread_info {
-#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
-#endif
+# endif
     unsigned long parm;
     struct completion *complete;
 };
@@ -315,20 +315,20 @@ afsd_thread(void *rock)
 {
     struct afsd_thread_info *arg = rock;
     unsigned long parm = arg->parm;
-#ifdef SYS_SETPRIORITY_EXPORTED
+# ifdef SYS_SETPRIORITY_EXPORTED
     int (*sys_setpriority) (int, int, int) = sys_call_table[__NR_setpriority];
-#endif
-#if defined(AFS_LINUX26_ENV)
+# endif
+# if defined(AFS_LINUX26_ENV)
     daemonize("afsd");
-#else
+# else
     daemonize();
-#endif
+# endif
 				/* doesn't do much, since we were forked from keventd, but
 				 * does call mm_release, which wakes up our parent (since it
 				 * used CLONE_VFORK) */
-#if !defined(AFS_LINUX26_ENV)
+# if !defined(AFS_LINUX26_ENV)
     reparent_to_init();
-#endif
+# endif
     afs_osi_MaskSignals();
     switch (parm) {
     case AFSOP_START_RXCALLBACK:
@@ -393,13 +393,13 @@ afsd_thread(void *rock)
 	break;
     case AFSOP_RXEVENT_DAEMON:
 	sprintf(current->comm, "afs_evtstart");
-#ifdef SYS_SETPRIORITY_EXPORTED
+# ifdef SYS_SETPRIORITY_EXPORTED
 	sys_setpriority(PRIO_PROCESS, 0, -10);
-#else
-#ifdef CURRENT_INCLUDES_NICE
+# else
+#  ifdef CURRENT_INCLUDES_NICE
 	current->nice = -10;
-#endif
-#endif
+#  endif
+# endif
 	AFS_GLOCK();
 	complete(arg->complete);
 	while (afs_initState < AFSOP_START_BKG)
@@ -411,13 +411,13 @@ afsd_thread(void *rock)
 	break;
     case AFSOP_RXLISTENER_DAEMON:
 	sprintf(current->comm, "afs_lsnstart");
-#ifdef SYS_SETPRIORITY_EXPORTED
+# ifdef SYS_SETPRIORITY_EXPORTED
 	sys_setpriority(PRIO_PROCESS, 0, -10);
-#else
-#ifdef CURRENT_INCLUDES_NICE
+# else
+#  ifdef CURRENT_INCLUDES_NICE
 	current->nice = -10;
-#endif
-#endif
+#  endif
+# endif
 	AFS_GLOCK();
 	complete(arg->complete);
 	afs_initState = AFSOP_START_AFS;
@@ -438,15 +438,15 @@ afsd_thread(void *rock)
 }
 
 void
-#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
 afsd_launcher(struct work_struct *work)
-#else
+# else
 afsd_launcher(void *rock)
-#endif
+# endif
 {
-#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
-#endif
+# endif
 
     if (!kernel_thread(afsd_thread, (void *)rock, CLONE_VFORK | SIGCHLD))
 	printf("kernel_thread failed. afs startup will not complete\n");
@@ -458,11 +458,11 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 {
     int code;
     DECLARE_COMPLETION(c);
-#if defined(AFS_LINUX26_ENV)
+# if defined(AFS_LINUX26_ENV)
     struct work_struct tq;
-#else
+# else
     struct tq_struct tq;
-#endif
+# endif
     struct afsd_thread_info info;
     if (parm == AFSOP_START_RXCALLBACK) {
 	if (afs_CB_Running)
@@ -486,21 +486,21 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     }				/* other functions don't need setup in the parent */
     info.complete = &c;
     info.parm = parm;
-#if defined(AFS_LINUX26_ENV)
-#if !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV)
+#  if !defined(INIT_WORK_HAS_DATA)
     INIT_WORK(&info.tq, afsd_launcher);
     schedule_work(&info.tq);
-#else
+#  else
     INIT_WORK(&tq, afsd_launcher, &info);
     schedule_work(&tq);
-#endif
-#else
+#  endif
+# else
     tq.sync = 0;
     INIT_LIST_HEAD(&tq.list);
     tq.routine = afsd_launcher;
     tq.data = &info;
     schedule_task(&tq);
-#endif
+# endif
     AFS_GUNLOCK();
     /* we need to wait cause we passed stack pointers around.... */
     wait_for_completion(&c);
@@ -521,7 +521,7 @@ wait_for_cachedefs(void) {
 }
 
 #ifdef AFS_DARWIN100_ENV
-#define AFSKPTR(X) k ## X
+# define AFSKPTR(X) k ## X
 int
 afs_syscall_call(long parm, long parm2, long parm3,
 		 long parm4, long parm5, long parm6)
@@ -534,7 +534,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 			      CAST_USER_ADDR_T((parm6)));
 }
 #else
-#define AFSKPTR(X) ((caddr_t)X)
+# define AFSKPTR(X) ((caddr_t)X)
 #endif
 int
 #ifdef AFS_DARWIN100_ENV
@@ -571,9 +571,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 		    && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
 #if defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
         setuerror(EACCES);
-#endif
+# endif
 	code = EACCES;
 #else
 	code = EPERM;
@@ -598,28 +598,28 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	if (afs_CB_Running)
 	    goto out;
 	afs_CB_Running = 1;
-#ifndef RXK_LISTENER_ENV
+# ifndef RXK_LISTENER_ENV
 	code = afs_InitSetup(parm2);
 	if (!code)
-#endif /* !RXK_LISTENER_ENV */
+# endif /* !RXK_LISTENER_ENV */
 	{
-#ifdef RXK_LISTENER_ENV
+# ifdef RXK_LISTENER_ENV
 	    while (afs_RX_Running != 2)
 		afs_osi_Sleep(&afs_RX_Running);
-#else /* !RXK_LISTENER_ENV */
+# else /* !RXK_LISTENER_ENV */
 	    afs_initState = AFSOP_START_AFS;
 	    afs_osi_Wakeup(&afs_initState);
-#endif /* RXK_LISTENER_ENV */
+# endif /* RXK_LISTENER_ENV */
 	    afs_osi_Invisible();
 	    afs_RXCallBackServer();
 	    afs_osi_Visible();
 	}
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, code);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     }
-#ifdef RXK_LISTENER_ENV
+# ifdef RXK_LISTENER_ENV
     else if (parm == AFSOP_RXLISTENER_DAEMON) {
 	if (afs_RX_Running)
 	    goto out;
@@ -637,18 +637,18 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_osi_Invisible();
 	    afs_RX_Running = 2;
 	    afs_osi_Wakeup(&afs_RX_Running);
-#ifndef UKERNEL
+#  ifndef UKERNEL
 	    afs_osi_RxkRegister();
-#endif /* !UKERNEL */
+#  endif /* !UKERNEL */
 	    rxk_Listener();
 	    afs_osi_Visible();
 	}
-#ifdef	AFS_SGI_ENV
+#  ifdef	AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, code);
-#endif /* AFS_SGI_ENV */
+#  endif /* AFS_SGI_ENV */
     }
-#endif /* RXK_LISTENER_ENV */
+# endif /* RXK_LISTENER_ENV */
     else if (parm == AFSOP_START_AFS) {
 	/* afs daemon */
 	if (AFS_Running)
@@ -662,18 +662,18 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Invisible();
 	afs_Daemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     } else if (parm == AFSOP_START_CS) {
 	afs_osi_Invisible();
 	afs_CheckServerDaemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     } else if (parm == AFSOP_START_BKG) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -683,17 +683,17 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
 	/* start the bkg daemon */
 	afs_osi_Invisible();
-#ifdef AFS_AIX32_ENV
+# ifdef AFS_AIX32_ENV
 	if (parm2)
 	    afs_BioDaemon(parm2);
 	else
-#endif /* AFS_AIX32_ENV */
+# endif /* AFS_AIX32_ENV */
 	    afs_BackgroundDaemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     } else if (parm == AFSOP_START_TRUNCDAEMON) {
 	while (afs_initState < AFSOP_GO)
 	    afs_osi_Sleep(&afs_initState);
@@ -701,24 +701,24 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Invisible();
 	afs_CacheTruncateDaemon();
 	afs_osi_Visible();
-#ifdef	AFS_SGI_ENV
+# ifdef	AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     }
-#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+# if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
     else if (parm == AFSOP_RXEVENT_DAEMON) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
 	afs_osi_Invisible();
 	afs_rxevent_daemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+#  ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+#  endif /* AFS_SGI_ENV */
     }
-#endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV */
+# endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV */
 #endif /* AFS_LINUX24_ENV && !UKERNEL */
     else if (parm == AFSOP_BASIC_INIT) {
 	afs_int32 temp;
@@ -1060,25 +1060,25 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	nfs_rfsdisptab_v2 = (int (*)())parm2;
     } else if (parm == AFSOP_NFSSTATICADDR2) {
 	extern int (*nfs_rfsdisptab_v2) ();
-#ifdef _K64U64
+# ifdef _K64U64
 	nfs_rfsdisptab_v2 = (int (*)())((parm2 << 32) | (parm3 & 0xffffffff));
-#else /* _K64U64 */
+# else /* _K64U64 */
 	nfs_rfsdisptab_v2 = (int (*)())(parm3 & 0xffffffff);
-#endif /* _K64U64 */
+# endif /* _K64U64 */
     }
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
+# if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
     else if (parm == AFSOP_SBLOCKSTATICADDR2) {
 	extern int (*afs_sblockp) ();
 	extern void (*afs_sbunlockp) ();
-#ifdef _K64U64
+#  ifdef _K64U64
 	afs_sblockp = (int (*)())((parm2 << 32) | (parm3 & 0xffffffff));
 	afs_sbunlockp = (void (*)())((parm4 << 32) | (parm5 & 0xffffffff));
-#else
+#  else
 	afs_sblockp = (int (*)())(parm3 & 0xffffffff);
 	afs_sbunlockp = (void (*)())(parm5 & 0xffffffff);
-#endif /* _K64U64 */
+#  endif /* _K64U64 */
     }
-#endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
+# endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
 #endif /* AFS_SGI53_ENV */
     else if (parm == AFSOP_SHUTDOWN) {
 	afs_cold_shutdown = 0;
@@ -1095,27 +1095,27 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef	AFS_HPUX_ENV
 	vfsmount(parm2, parm3, parm4, parm5);
 #else /* defined(AFS_HPUX_ENV) */
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
 	setuerror(EINVAL);
-#else
+# else
 	code = EINVAL;
-#endif
+# endif
 #endif /* defined(AFS_HPUX_ENV) */
     } else if (parm == AFSOP_CLOSEWAIT) {
 	afs_SynchronousCloses = 'S';
     } else if (parm == AFSOP_GETMTU) {
 	afs_uint32 mtu = 0;
 #if	!defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
-#ifdef AFS_USERSPACE_IP_ADDR
+# ifdef AFS_USERSPACE_IP_ADDR
 	afs_int32 i;
 	i = rxi_Findcbi(parm2);
 	mtu = ((i == -1) ? htonl(1500) : afs_cb_interface.mtu[i]);
-#else /* AFS_USERSPACE_IP_ADDR */
+# else /* AFS_USERSPACE_IP_ADDR */
 	AFS_IFNET_T tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, NULL);	/*  make iterative */
 	mtu = (tifnp ? ifnet_mtu(tifnp) : htonl(1500));
-#endif /* else AFS_USERSPACE_IP_ADDR */
+# endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mtu, AFSKPTR(parm3),
@@ -1139,7 +1139,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
     } else if (parm == AFSOP_GETMASK) {	/* parm2 == addr in net order */
 	afs_uint32 mask = 0;
 #if	!defined(AFS_SUN5_ENV)
-#ifdef AFS_USERSPACE_IP_ADDR
+# ifdef AFS_USERSPACE_IP_ADDR
 	afs_int32 i;
 	i = rxi_Findcbi(parm2);
 	if (i != -1) {
@@ -1147,13 +1147,13 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	} else {
 	    code = -1;
 	}
-#else /* AFS_USERSPACE_IP_ADDR */
+# else /* AFS_USERSPACE_IP_ADDR */
 	AFS_IFNET_T tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)
 	    code = -1;
-#endif /* else AFS_USERSPACE_IP_ADDR */
+# endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mask, AFSKPTR(parm3),
@@ -1315,7 +1315,7 @@ lpioctl(path, cmd, cmarg, follow)
 
 #else /* !AFS_AIX32_ENV       */
 
-#if defined(AFS_SGI_ENV)
+# if defined(AFS_SGI_ENV)
 struct afsargs {
     sysarg_t syscall;
     sysarg_t parm1;
@@ -1343,7 +1343,7 @@ Afs_syscall(struct afsargs *uap, rval_t * rvp)
 	AFS_GUNLOCK();
 	rvp->r_val1 = retval;
 	break;
-#ifdef AFS_SGI_XFS_IOPS_ENV
+#  ifdef AFS_SGI_XFS_IOPS_ENV
     case AFSCALL_IDEC64:
 	error =
 	    afs_syscall_idec64(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
@@ -1364,12 +1364,12 @@ Afs_syscall(struct afsargs *uap, rval_t * rvp)
 	    afs_syscall_icreatename64(uap->parm1, uap->parm2, uap->parm3,
 				      uap->parm4, uap->parm5);
 	break;
-#endif
-#ifdef AFS_SGI_VNODE_GLUE
+#  endif
+#  ifdef AFS_SGI_VNODE_GLUE
     case AFSCALL_INIT_KERNEL_CONFIG:
 	error = afs_init_kernel_config(uap->parm1);
 	break;
-#endif
+#  endif
     default:
 	error =
 	    afs_syscall_call(uap->syscall, uap->parm1, uap->parm2, uap->parm3,
@@ -1378,7 +1378,7 @@ Afs_syscall(struct afsargs *uap, rval_t * rvp)
     return error;
 }
 
-#else /* AFS_SGI_ENV */
+# else /* AFS_SGI_ENV */
 
 struct iparam {
     iparmtype param1;
@@ -1395,16 +1395,16 @@ struct iparam32 {
 };
 
 
-#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
-#if SIZEOF_VOID_P == SIZEOF_UNSIGNED_INT
-# define uintptrsz unsigned int
-#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG
-# define uintptrsz unsigned long
-#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG_LONG
-# define uintptrsz unsigned long long
-#else
-# error "Unable to determine casting for pointers"
-#endif
+#  if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
+#   if SIZEOF_VOID_P == SIZEOF_UNSIGNED_INT
+#    define uintptrsz unsigned int
+#   elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG
+#    define uintptrsz unsigned long
+#   elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG_LONG
+#    define uintptrsz unsigned long long
+#   else
+#    error "Unable to determine casting for pointers"
+#   endif
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -1413,7 +1413,7 @@ iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
     dst->param3 = (iparmtype)(uintptrsz)src->param3;
     dst->param4 = (iparmtype)(uintptrsz)src->param4;
 }
-#endif
+#  endif
 
 /*
  * If you need to change copyin_iparam(), you may also need to change
@@ -1428,7 +1428,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 {
     int code;
 
-#if defined(AFS_HPUX_64BIT_ENV)
+#  if defined(AFS_HPUX_64BIT_ENV)
     struct iparam32 dst32;
 
     if (is_32bit(u.u_procp)) {	/* is_32bit() in proc_iface.h */
@@ -1437,9 +1437,9 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	    iparam32_to_iparam(&dst32, dst);
 	return code;
     }
-#endif /* AFS_HPUX_64BIT_ENV */
+#  endif /* AFS_HPUX_64BIT_ENV */
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#  if defined(AFS_SUN57_64BIT_ENV)
     struct iparam32 dst32;
 
     if (get_udatamodel() == DATAMODEL_ILP32) {
@@ -1448,54 +1448,54 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	    iparam32_to_iparam(&dst32, dst);
 	return code;
     }
-#endif /* AFS_SUN57_64BIT_ENV */
+#  endif /* AFS_SUN57_64BIT_ENV */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#  if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
     struct iparam32 dst32;
 
-#ifdef AFS_SPARC64_LINUX26_ENV
+#   ifdef AFS_SPARC64_LINUX26_ENV
     if (test_thread_flag(TIF_32BIT))
-#elif defined(AFS_SPARC64_LINUX24_ENV)
+#   elif defined(AFS_SPARC64_LINUX24_ENV)
     if (current->thread.flags & SPARC_FLAG_32BIT)
-#elif defined(AFS_SPARC64_LINUX20_ENV)
+#   elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
 
-#elif defined(AFS_AMD64_LINUX26_ENV)
+#   elif defined(AFS_AMD64_LINUX26_ENV)
     if (test_thread_flag(TIF_IA32))
-#elif defined(AFS_AMD64_LINUX20_ENV)
+#   elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
 
-#elif defined(AFS_PPC64_LINUX26_ENV)
-#if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
+#   elif defined(AFS_PPC64_LINUX26_ENV)
+#    if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
     if (current->thread_info->flags & _TIF_32BIT) 
-#else
+#    else
     if (task_thread_info(current)->flags & _TIF_32BIT) 
-#endif      
-#elif defined(AFS_PPC64_LINUX20_ENV)
+#    endif
+#   elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT) 
 
-#elif defined(AFS_S390X_LINUX26_ENV)
+#   elif defined(AFS_S390X_LINUX26_ENV)
     if (test_thread_flag(TIF_31BIT))
-#elif defined(AFS_S390X_LINUX20_ENV)
+#   elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT) 
 
-#else
-#error iparam32 not done for this linux platform
-#endif
+#   else
+#    error iparam32 not done for this linux platform
+#   endif
     {
 	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
 	if (!code)
 	    iparam32_to_iparam(&dst32, dst);
 	return code;
     }
-#endif /* AFS_LINUX_64BIT_KERNEL */
+#  endif /* AFS_LINUX_64BIT_KERNEL */
 
     AFS_COPYIN(cmarg, (caddr_t) dst, sizeof *dst, code);
     return code;
 }
 
 /* Main entry of all afs system calls */
-#ifdef	AFS_SUN5_ENV
+#  ifdef	AFS_SUN5_ENV
 extern int afs_sinited;
 
 /** The 32 bit OS expects the members of this structure to be 32 bit
@@ -1503,7 +1503,7 @@ extern int afs_sinited;
  * to accomodate both, *long* is used instead of afs_int32
  */
 
-#ifdef AFS_SUN57_ENV
+#   ifdef AFS_SUN57_ENV
 struct afssysa {
     long syscall;
     long parm1;
@@ -1513,7 +1513,7 @@ struct afssysa {
     long parm5;
     long parm6;
 };
-#else
+#   else
 struct afssysa {
     afs_int32 syscall;
     afs_int32 parm1;
@@ -1523,13 +1523,13 @@ struct afssysa {
     afs_int32 parm5;
     afs_int32 parm6;
 };
-#endif
+#   endif
 
 Afs_syscall(register struct afssysa *uap, rval_t * rvp)
 {
     int *retval = &rvp->r_val1;
-#else /* AFS_SUN5_ENV */
-#ifdef AFS_DARWIN100_ENV
+#  else /* AFS_SUN5_ENV */
+#   ifdef AFS_DARWIN100_ENV
 struct afssysa {
     afs_int32 syscall;
     afs_int32 parm1;
@@ -1553,14 +1553,14 @@ afs3_syscall(struct proc *p, void *args, unsigned int *retval)
 {
     struct afssysa64 *uap64 = NULL;
     struct afssysa *uap = NULL;
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#   elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs3_syscall(p, args, retval)
-#ifdef AFS_FBSD50_ENV
+#    ifdef AFS_FBSD50_ENV
      struct thread *p;
-#else
+#    else
      struct proc *p;
-#endif
+#    endif
      void *args;
      long *retval;
 {
@@ -1573,8 +1573,8 @@ afs3_syscall(p, args, retval)
 	long parm5;
 	long parm6;
     } *uap = (struct a *)args;
-#else /* AFS_OSF_ENV */
-#ifdef AFS_LINUX20_ENV
+#   else /* AFS_OSF_ENV */
+#    ifdef AFS_LINUX20_ENV
 struct afssysargs {
     long syscall;
     long parm1;
@@ -1592,12 +1592,12 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
     long linux_ret = 0;
     long *retval = &linux_ret;
     long eparm[4];		/* matches AFSCALL_ICL in fstrace.c */
-#ifdef AFS_SPARC64_LINUX24_ENV
+#     ifdef AFS_SPARC64_LINUX24_ENV
     afs_int32 eparm32[4];
-#endif
+#     endif
     /* eparm is also used by AFSCALL_CALL in afsd.c */
-#else
-#if defined(UKERNEL)
+#    else
+#     if defined(UKERNEL)
 Afs_syscall()
 {
     register struct a {
@@ -1609,7 +1609,7 @@ Afs_syscall()
 	long parm5;
 	long parm6;
     } *uap = (struct a *)u.u_ap;
-#else /* UKERNEL */
+#     else /* UKERNEL */
 int
 Afs_syscall()
 {
@@ -1622,25 +1622,25 @@ Afs_syscall()
 	long parm5;
 	long parm6;
     } *uap = (struct a *)u.u_ap;
-#endif /* UKERNEL */
-#if defined(AFS_HPUX_ENV)
+#     endif /* UKERNEL */
+#    if defined(AFS_HPUX_ENV)
     long *retval = &u.u_rval1;
-#else
+#    else
     int *retval = &u.u_rval1;
-#endif
-#endif /* AFS_LINUX20_ENV */
-#endif /* AFS_OSF_ENV */
-#endif /* AFS_SUN5_ENV */
+#    endif
+#   endif /* AFS_LINUX20_ENV */
+#  endif /* AFS_OSF_ENV */
+# endif /* AFS_SUN5_ENV */
     register int code = 0;
 
     AFS_STATCNT(afs_syscall);
-#ifdef        AFS_SUN5_ENV
+# ifdef        AFS_SUN5_ENV
     rvp->r_vals = 0;
     if (!afs_sinited) {
 	return (ENODEV);
     }
-#endif
-#ifdef AFS_LINUX20_ENV
+# endif
+# ifdef AFS_LINUX20_ENV
     lock_kernel();
     /* setup uap for use below - pull out the magic decoder ring to know
      * which syscalls have folded argument lists.
@@ -1650,9 +1650,9 @@ Afs_syscall()
     uap->parm2 = parm2;
     uap->parm3 = parm3;
     if (syscall == AFSCALL_ICL || syscall == AFSCALL_CALL) {
-#ifdef AFS_SPARC64_LINUX24_ENV
+#  ifdef AFS_SPARC64_LINUX24_ENV
 /* from arch/sparc64/kernel/sys_sparc32.c */
-#define AA(__x)                                \
+#   define AA(__x)                                \
 ({     unsigned long __ret;            \
        __asm__ ("srl   %0, 0, %0"      \
                 : "=r" (__ret)         \
@@ -1661,19 +1661,19 @@ Afs_syscall()
 })
 
 
-#ifdef AFS_SPARC64_LINUX26_ENV
+#   ifdef AFS_SPARC64_LINUX26_ENV
 	if (test_thread_flag(TIF_32BIT))
-#else
+#   else
 	if (current->thread.flags & SPARC_FLAG_32BIT)
-#endif
+#   endif
 	{
 	    AFS_COPYIN((char *)parm4, (char *)eparm32, sizeof(eparm32), code);
 	    eparm[0] = AA(eparm32[0]);
 	    eparm[1] = AA(eparm32[1]);
 	    eparm[2] = AA(eparm32[2]);
-#undef AA
+#   undef AA
 	} else
-#endif
+#  endif
 	    AFS_COPYIN((char *)parm4, (char *)eparm, sizeof(eparm), code);
 	uap->parm4 = eparm[0];
 	uap->parm5 = eparm[1];
@@ -1683,11 +1683,11 @@ Afs_syscall()
 	uap->parm5 = 0;
 	uap->parm6 = 0;
     }
-#endif
-#if defined(AFS_DARWIN80_ENV)
+# endif
+# if defined(AFS_DARWIN80_ENV)
     get_vfs_context();
     osi_Assert(*retval == 0);
-#ifdef AFS_DARWIN100_ENV
+#  ifdef AFS_DARWIN100_ENV
     if (proc_is64bit(p)) {
 	uap64 = (struct afssysa64 *)args;
 	if (uap64->syscall == AFSCALL_CALL) {
@@ -1716,10 +1716,10 @@ Afs_syscall()
 	if (uap64->syscall != AFSCALL_CALL)
 	    put_vfs_context();
     } else { /* and the default case for 32 bit procs */
-#endif
+#  endif
        uap = (struct afssysa *)args;
-#endif
-#if defined(AFS_HPUX_ENV)
+# endif
+# if defined(AFS_HPUX_ENV)
        /*
 	* There used to be code here (duplicated from osi_Init()) for
 	* initializing the semaphore used by AFS_GLOCK().  Was the
@@ -1727,94 +1727,94 @@ Afs_syscall()
 	* module?
 	*/
        osi_InitGlock();
-#endif
+# endif
        if (uap->syscall == AFSCALL_CALL) {
 	   code =
 	       afs_syscall_call(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
 				uap->parm5, uap->parm6);
        } else if (uap->syscall == AFSCALL_SETPAG) {
-#ifdef	AFS_SUN5_ENV
+# ifdef	AFS_SUN5_ENV
 	   register proc_t *procp;
 	   
 	   procp = ttoproc(curthread);
 	   AFS_GLOCK();
 	   code = afs_setpag(&procp->p_cred);
 	   AFS_GUNLOCK();
-#else
+# else
 	   AFS_GLOCK();
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#  if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	   code = afs_setpag(p, args, retval);
-#else /* AFS_OSF_ENV */
+#  else /* AFS_OSF_ENV */
 	   code = afs_setpag();
-#endif
+#  endif
 	   AFS_GUNLOCK();
-#endif
+# endif
        } else if (uap->syscall == AFSCALL_PIOCTL) {
 	   AFS_GLOCK();
-#if defined(AFS_SUN5_ENV)
+# if defined(AFS_SUN5_ENV)
 	   code =
 	       afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, 
 				  uap->parm4, rvp, CRED());
-#elif defined(AFS_FBSD50_ENV)
+# elif defined(AFS_FBSD50_ENV)
 	   code =
 	       afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, 
 				  uap->parm4, p->td_ucred);
-#elif defined(AFS_DARWIN80_ENV)
+# elif defined(AFS_DARWIN80_ENV)
 	   code =
 	       afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, 
 				  uap->parm4, kauth_cred_get());
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+# elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	   code =
 	       afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, 
 				  uap->parm4, p->p_cred->pc_ucred);
-#else
+# else
 	   code =
                afs_syscall_pioctl((char *) uap->parm1,(unsigned int) uap->parm2,
                                   (caddr_t) uap->parm3,(int) uap->parm4);
-#endif
+# endif
 	   AFS_GUNLOCK();
        } else if (uap->syscall == AFSCALL_ICREATE) {
 	   struct iparam iparams;
 	   
 	   code = copyin_iparam((char *)uap->parm3, &iparams);
 	   if (code) {
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
 	       setuerror(code);
-#endif
+# endif
 	   } else {
 	       code =
 		   afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1,
 				       iparams.param2, iparams.param3, 
 				       iparams.param4
-#ifdef AFS_SUN5_ENV
+# ifdef AFS_SUN5_ENV
 				   , rvp, CRED()
-#elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+# elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 				   , retval
-#endif
+# endif
 		   );
 	   }
        } else if (uap->syscall == AFSCALL_IOPEN) {
 	   code =
 	       afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3
-#ifdef	AFS_SUN5_ENV
+# ifdef	AFS_SUN5_ENV
 				 , rvp, CRED()
-#elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+# elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 				 , retval
-#endif
+# endif
 		   );
        } else if (uap->syscall == AFSCALL_IDEC) {
 	   code =
 	       afs_syscall_iincdec(uap->parm1, uap->parm2, uap->parm3, -1
-#ifdef	AFS_SUN5_ENV
+# ifdef	AFS_SUN5_ENV
 				   , rvp, CRED()
-#endif
+# endif
 		   );
        } else if (uap->syscall == AFSCALL_IINC) {
 	   code =
 	       afs_syscall_iincdec(uap->parm1, uap->parm2, uap->parm3, 1
-#ifdef	AFS_SUN5_ENV
+# ifdef	AFS_SUN5_ENV
 				   , rvp, CRED()
-#endif
+# endif
 		   );
        } else if (uap->syscall == AFSCALL_ICL) {
 	   AFS_GLOCK();
@@ -1822,40 +1822,40 @@ Afs_syscall()
 	       Afscall_icl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
 			   uap->parm5, retval);
 	   AFS_GUNLOCK();
-#ifdef AFS_LINUX20_ENV
+# ifdef AFS_LINUX20_ENV
 	   if (!code) {
 	       /* ICL commands can return values. */
 	       code = -linux_ret;	/* Gets negated again at exit below */
 	   }
-#else
+# else
 	   if (code) {
-#if defined(KERNEL_HAVE_UERROR)
+#  if defined(KERNEL_HAVE_UERROR)
 	       setuerror(code);
-#endif
+#  endif
 	   }
-#endif /* !AFS_LINUX20_ENV */
+# endif /* !AFS_LINUX20_ENV */
        } else {
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
 	   setuerror(EINVAL);
-#else
+# else
 	   code = EINVAL;
-#endif
+# endif
        }
        
-#if defined(AFS_DARWIN80_ENV)
+# if defined(AFS_DARWIN80_ENV)
        if (uap->syscall != AFSCALL_CALL)
 	   put_vfs_context();
-#ifdef AFS_DARWIN100_ENV
+#  ifdef AFS_DARWIN100_ENV
     } /* 32 bit procs */
-#endif
-#endif
-#ifdef AFS_LINUX20_ENV
+#  endif
+# endif
+# ifdef AFS_LINUX20_ENV
     code = -code;
     unlock_kernel();
-#endif
+# endif
     return code;
 }
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
 #endif /* !AFS_AIX32_ENV       */
 
 /*
@@ -1951,11 +1951,11 @@ afs_shutdown(void)
     /* cancel rx event daemon */
     while (afs_termState == AFSOP_STOP_RXEVENT)
 	afs_osi_Sleep(&afs_termState);
-#if defined(RXK_LISTENER_ENV)
-#ifndef UKERNEL
+# if defined(RXK_LISTENER_ENV)
+#  ifndef UKERNEL
     afs_warn("UnmaskRxkSignals... ");
     afs_osi_UnmaskRxkSignals();
-#endif
+#  endif
     /* cancel rx listener */
     afs_warn("RxListener... ");
     osi_StopListener();		/* This closes rx_socket. */
@@ -1963,7 +1963,7 @@ afs_shutdown(void)
 	afs_warn("Sleep... ");
 	afs_osi_Sleep(&afs_termState);
     }
-#endif
+# endif
 #endif
 
 #ifdef AFS_SUN510_ENV
@@ -2049,17 +2049,17 @@ afs_shutdown_BKG(void)
 
 #if defined(AFS_OSF_ENV) || defined(AFS_SGI61_ENV)
 /* For SGI 6.2, this can is changed to 1 if it's a 32 bit kernel. */
-#if defined(AFS_SGI62_ENV) && defined(KERNEL) && !defined(_K64U64)
+# if defined(AFS_SGI62_ENV) && defined(KERNEL) && !defined(_K64U64)
 int afs_icl_sizeofLong = 1;
-#else
+# else
 int afs_icl_sizeofLong = 2;
-#endif /* SGI62 */
+# endif /* SGI62 */
 #else
-#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
+# if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
 int afs_icl_sizeofLong = 2;
-#else
+# else
 int afs_icl_sizeofLong = 1;
-#endif
+# endif
 #endif
 
 int afs_icl_inited = 0;
@@ -2077,7 +2077,7 @@ extern struct afs_icl_set *afs_icl_FindSet();
 
 
 #ifdef AFS_DARWIN100_ENV
-#define AFSKPTR(X) k ## X
+# define AFSKPTR(X) k ## X
 static int
 Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 {
@@ -2089,7 +2089,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 			 retval);
 }
 #else
-#define AFSKPTR(X) ((caddr_t)X)
+# define AFSKPTR(X) ((caddr_t)X)
 #endif
 
 static int
@@ -2106,11 +2106,11 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 #if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t temp;
 #else /* AFS_SGI61_ENV */
-#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
+# if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     afs_uint64 temp;
-#else
+# else
     afs_uint32 temp;
-#endif
+# endif
 #endif /* AFS_SGI61_ENV */
     char tname[65];
     afs_int32 startCookie;
@@ -2129,12 +2129,12 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     }
 #else
     if (!afs_suser(NULL)) {	/* only root can run this code */
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 	return EACCES;
-#else
+# else
 	return EPERM;
-#endif
+# endif
     }
 #endif
     switch (opcode) {
@@ -2509,14 +2509,14 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
     MACRO_END
 
 #if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-#define ICL_APPENDLONG(lp, x) \
+# define ICL_APPENDLONG(lp, x) \
     MACRO_BEGIN \
 	ICL_APPENDINT32((lp), ((x) >> 32) & 0xffffffffL); \
 	ICL_APPENDINT32((lp), (x) & 0xffffffffL); \
     MACRO_END
 
 #else /* AFS_OSF_ENV */
-#define ICL_APPENDLONG(lp, x) ICL_APPENDINT32((lp), (x))
+# define ICL_APPENDLONG(lp, x) ICL_APPENDINT32((lp), (x))
 #endif /* AFS_OSF_ENV */
 
 /* routine to tell whether we're dealing with the address or the
@@ -2640,21 +2640,21 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 			    (afs_int32) ((struct afs_hyper_t *)p1)->low);
 	} else if (t1 == ICL_TYPE_INT64) {
 #ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) p1);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p1);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #endif /* AFSLITTLE_ENDIAN */
 	} else if (t1 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
@@ -2680,21 +2680,21 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 			    (afs_int32) ((struct afs_hyper_t *)p2)->low);
 	} else if (t2 == ICL_TYPE_INT64) {
 #ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) p2);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p2);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #endif /* AFSLITTLE_ENDIAN */
 	} else if (t2 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
@@ -2720,21 +2720,21 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 			    (afs_int32) ((struct afs_hyper_t *)p3)->low);
 	} else if (t3 == ICL_TYPE_INT64) {
 #ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) p3);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p3);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #endif /* AFSLITTLE_ENDIAN */
 	} else if (t3 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
@@ -2760,21 +2760,21 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 			    (afs_int32) ((struct afs_hyper_t *)p4)->low);
 	} else if (t4 == ICL_TYPE_INT64) {
 #ifndef WORDS_BIGENDIAN
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) p4);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #else /* AFSLITTLE_ENDIAN */
-#ifdef AFS_64BIT_CLIENT
+# ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
-#else /* AFS_64BIT_CLIENT */
+# else /* AFS_64BIT_CLIENT */
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p4);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #endif /* AFSLITTLE_ENDIAN */
 	} else if (t4 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
