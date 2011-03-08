@@ -35,7 +35,7 @@
 #define	AFS_MINBUFFERS	50
 #endif
 
-#if ((defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#if (defined(AFS_SUN5_ENV) || (defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
 /* If AFS_DAEMONOP_ENV is defined, it indicates we run "daemon" AFS syscalls by
  * spawning a kernel thread to do the work, instead of running them in the
  * calling process. */
@@ -468,6 +468,115 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     AFS_GLOCK();
 }
 #endif
+
+#ifdef AFS_SUN5_ENV
+struct afs_daemonop_args {
+    kcondvar_t cv;
+    long parm;
+};
+
+static void
+afsd_thread(struct afs_daemonop_args *args)
+{
+    long parm = args->parm;
+
+    AFS_GLOCK();
+    cv_signal(&args->cv);
+
+    switch (parm) {
+    case AFSOP_START_RXCALLBACK:
+	if (afs_CB_Running)
+	    goto out;
+	afs_CB_Running = 1;
+	while (afs_RX_Running != 2)
+	    afs_osi_Sleep(&afs_RX_Running);
+	afs_RXCallBackServer();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_AFS:
+	if (AFS_Running)
+	    goto out;
+	AFS_Running = 1;
+	while (afs_initState < AFSOP_START_AFS)
+	    afs_osi_Sleep(&afs_initState);
+	afs_initState = AFSOP_START_BKG;
+	afs_osi_Wakeup(&afs_initState);
+	afs_Daemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_BKG:
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	if (afs_initState < AFSOP_GO) {
+	    afs_initState = AFSOP_GO;
+	    afs_osi_Wakeup(&afs_initState);
+	}
+	afs_BackgroundDaemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_TRUNCDAEMON:
+	while (afs_initState < AFSOP_GO)
+	    afs_osi_Sleep(&afs_initState);
+	afs_CacheTruncateDaemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_CS:
+	afs_CheckServerDaemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_RXEVENT_DAEMON:
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	afs_rxevent_daemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_RXLISTENER_DAEMON:
+	afs_initState = AFSOP_START_AFS;
+	afs_osi_Wakeup(&afs_initState);
+	afs_RX_Running = 2;
+	afs_osi_Wakeup(&afs_RX_Running);
+	afs_osi_RxkRegister();
+	rxk_Listener();
+	AFS_GUNLOCK();
+	return;
+    default:
+	AFS_GUNLOCK();
+	afs_warn("Unknown op %ld in afsd_thread()\n", parm);
+	return;
+    }
+ out:
+    AFS_GUNLOCK();
+    return;
+}
+
+static void
+afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
+	     long parm6)
+{
+    struct afs_daemonop_args args;
+
+    if (daemonOp_common(parm, parm2, parm3, parm4, parm5, parm6)) {
+	return;
+    }
+
+    args.parm = parm;
+
+    cv_init(&args.cv, "AFS DaemonOp cond var", CV_DEFAULT, NULL);
+
+    if (thread_create(NULL, 0, afsd_thread, &args, 0, &p0, TS_RUN,
+        minclsyspri) == NULL) {
+
+	afs_warn("thread_create failed: AFS startup will not complete\n");
+    }
+
+    /* we passed &args to the new thread, which is on the stack. wait until
+     * it has read the arguments so it doesn't try to read the args after we
+     * have returned */
+    cv_wait(&args.cv, &afs_global_lock);
+
+    cv_destroy(&args.cv);
+}
+#endif /* AFS_SUN5_ENV */
 
 #ifdef AFS_DARWIN100_ENV
 # define AFSKPTR(X) k ## X
