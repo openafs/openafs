@@ -38,6 +38,13 @@
 #define	AFS_MINBUFFERS	50
 #endif
 
+#if ((defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+/* If AFS_DAEMONOP_ENV is defined, it indicates we run "daemon" AFS syscalls by
+ * spawning a kernel thread to do the work, instead of running them in the
+ * calling process. */
+# define AFS_DAEMONOP_ENV
+#endif
+
 struct afsop_cell {
     afs_int32 hosts[AFS_MAXCELLHOSTS];
     char cellName[100];
@@ -129,6 +136,39 @@ afs_InitSetup(int preallocs)
 
     return code;
 }
+
+#ifdef AFS_DAEMONOP_ENV
+static int
+daemonOp_common(long parm, long parm2, long parm3, long parm4, long parm5,
+                long parm6)
+{
+    int code;
+    if (parm == AFSOP_START_RXCALLBACK) {
+	if (afs_CB_Running)
+	    return -1;
+# ifdef RXK_LISTENER_ENV
+    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
+	if (afs_RX_Running)
+	    return -1;
+	afs_RX_Running = 1;
+# endif
+	code = afs_InitSetup(parm2);
+	if (parm3) {
+	    rx_enablePeerRPCStats();
+	}
+	if (parm4) {
+	    rx_enableProcessRPCStats();
+	}
+	if (code)
+	    return -1;
+    } else if (parm == AFSOP_START_AFS) {
+	if (AFS_Running)
+	    return -1;
+    }				/* other functions don't need setup in the parent */
+    return 0;
+}
+#endif /* AFS_DAEMONOP_ENV */
+
 #if defined(AFS_DARWIN80_ENV)
 struct afsd_thread_info {
     unsigned long parm;
@@ -220,31 +260,11 @@ void
 afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {
-    int code;
     struct afsd_thread_info info;
     thread_t thread;
-    if (parm == AFSOP_START_RXCALLBACK) {
-	if (afs_CB_Running)
-	    return;
-#ifdef RXK_LISTENER_ENV
-    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
-	if (afs_RX_Running)
-	    return;
-	afs_RX_Running = 1;
-#endif
-	code = afs_InitSetup(parm2);
-	if (parm3) {
-	    rx_enablePeerRPCStats();
-	}
-	if (parm4) {
-	    rx_enableProcessRPCStats();
-	}
-	if (code)
-	    return;
-    } else if (parm == AFSOP_START_AFS) {
-	if (AFS_Running)
-	    return;
-    }				/* other functions don't need setup in the parent */
+    if (daemonOp_common(parm, parm2, parm3, parm4, parm5, parm6)) {
+	return;
+    }
     info.parm = parm;
     kernel_thread_start((thread_continue_t)afsd_thread, &info, &thread);
     AFS_GUNLOCK();
@@ -418,7 +438,6 @@ void
 afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {
-    int code;
     DECLARE_COMPLETION(c);
 # if defined(AFS_LINUX26_ENV)
 #  if defined(INIT_WORK_HAS_DATA)
@@ -428,28 +447,9 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     struct tq_struct tq;
 # endif
     struct afsd_thread_info info;
-    if (parm == AFSOP_START_RXCALLBACK) {
-	if (afs_CB_Running)
-	    return;
-#ifdef RXK_LISTENER_ENV
-    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
-	if (afs_RX_Running)
-	    return;
-	afs_RX_Running = 1;
-#endif
-	code = afs_InitSetup(parm2);
-	if (parm3) {
-	    rx_enablePeerRPCStats();
-	}
-	if (parm4) {
-	    rx_enableProcessRPCStats();
-	}
-	if (code)
-	    return;
-    } else if (parm == AFSOP_START_AFS) {
-	if (AFS_Running)
-	    return;
-    }				/* other functions don't need setup in the parent */
+    if (daemonOp_common(parm, parm2, parm3, parm4, parm5, parm6)) {
+	return;
+    }
     info.complete = &c;
     info.parm = parm;
 # if defined(AFS_LINUX26_ENV)
@@ -542,7 +542,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef AFS_DARWIN80_ENV
     put_vfs_context();
 #endif
-#if ((defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#ifdef AFS_DAEMONOP_ENV
 # if defined(AFS_DARWIN80_ENV)
     if (parm == AFSOP_BKG_HANDLER) {
 	/* if afs_uspc_param grows this should be checked */
@@ -591,7 +591,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
     }
-#else /* !(AFS_LINUX24_ENV && !UKERNEL) */
+#else /* !AFS_DAEMONOP_ENV */
     if (parm == AFSOP_START_RXCALLBACK) {
 	if (afs_CB_Running)
 	    goto out;
@@ -725,7 +725,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #  endif /* AFS_SGI_ENV */
     }
 # endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV */
-#endif /* AFS_LINUX24_ENV && !UKERNEL */
+#endif /* AFS_DAEMONOP_ENV */
     else if (parm == AFSOP_BASIC_INIT) {
 	afs_int32 temp;
 
