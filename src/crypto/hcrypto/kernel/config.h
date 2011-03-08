@@ -26,7 +26,8 @@
 #include "afs/param.h"
 
 #include "afs/stds.h"
-#include "afs/sysincludes.h"
+/* struct key_type conflicts with linux, and this includes linux/security.h */
+/* #include "afs/sysincludes.h" */
 
 /* Asserting is a mess - we need the RX headers in order to get a definition
  * for osi_Assert */
