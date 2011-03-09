@@ -430,4 +430,12 @@ Language=English
 Path MTU may have been exceeded when communicating with server %1, retrying ...
 .
 
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_RX_BUSY_CALL_CHANNEL
+Language=English
+Busy call channel when communicating with server %1, retrying ...
+.
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */
