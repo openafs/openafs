@@ -732,18 +732,35 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
          * with a smaller mtu size.
          */
 
-        if (serverp) {
+        if (serverp)
             sprintf(addr, "%d.%d.%d.%d",
                     ((serverp->addr.sin_addr.s_addr & 0xff)),
                     ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
                     ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
                     ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
-            LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_MSGSIZE_EXCEEDED, addr);
-            osi_Log1(afsd_logp, "cm_Analyze: Path MTU may have been exceeded addr[%s]",
-                     osi_LogSaveString(afsd_logp,addr));
-        }
+        LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_MSGSIZE_EXCEEDED, addr);
+        osi_Log1(afsd_logp, "cm_Analyze: Path MTU may have been exceeded addr[%s]",
+                 osi_LogSaveString(afsd_logp,addr));
 
+        retry = 1;
+    }
+    else if (errorCode == CM_RX_RETRY_BUSY_CALL) {
+        /*
+         * RPC failed because the selected call channel
+         * is currently busy on the server.  Unconditionally
+         * retry the request so an alternate call channel can be used.
+         */
+        if (serverp)
+            sprintf(addr, "%d.%d.%d.%d",
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+        LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_BUSY_CALL_CHANNEL, addr);
+        osi_Log1(afsd_logp, "cm_Analyze: Retry RPC due to busy call channel addr[%s]",
+                 osi_LogSaveString(afsd_logp,addr));
         retry = 1;
     }
     else if (errorCode >= -64 && errorCode < 0) {
@@ -970,7 +987,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* If not allowed to retry, don't */
-    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY) && (errorCode != RX_MSGSIZE))
+    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY) &&
+        (errorCode != RX_MSGSIZE && errorCode != CM_RX_RETRY_BUSY_CALL))
 	retry = 0;
     else if (retry && dead_session)
         retry = 0;

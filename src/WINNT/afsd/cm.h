@@ -100,6 +100,9 @@
 #define CM_ERROR_RPC_MOREDATA		(CM_ERROR_BASE+63)
 #define CM_ERROR_BUFFER_OVERFLOW        (CM_ERROR_BASE+64)
 
+/* Private RX Errors */
+#define CM_RX_RETRY_BUSY_CALL           (-13)
+
 /* Used by cm_FollowMountPoint and cm_FindVolumeByName */
 /* And as an index in cm_volume_t */
 #define RWVOL	0

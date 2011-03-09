@@ -223,6 +223,7 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SMB_SEND_PACKET_FAILURE:
     case MSG_UNEXPECTED_SMB_SESSION_CLOSE:
     case MSG_RX_MSGSIZE_EXCEEDED:
+    case MSG_RX_BUSY_CALL_CHANNEL:
 	wNumArgs = 1;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
     	break;
