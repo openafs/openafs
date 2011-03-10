@@ -912,20 +912,20 @@ _VLockFd(FD_t handle, afs_uint32 offset, int locktype, int nonblock)
 }
 
 static_inline void
-_VUnlockFd(struct VLockFile *lf, afs_uint32 offset)
+_VUnlockFd(FD_t handle, afs_uint32 offset)
 {
     OVERLAPPED lap;
 
     memset(&lap, 0, sizeof(lap));
     lap.Offset = offset;
 
-    UnlockFileEx(lf->fd, 0, 1, 0, &lap);
+    UnlockFileEx(handle, 0, 1, 0, &lap);
 }
 
 static_inline void
-_VCloseFd(struct VLockFile *lf)
+_VCloseFd(FD_t handle)
 {
-    CloseHandle(lf->fd);
+    CloseHandle(handle);
 }
 
 #else /* !AFS_NT40_ENV */
@@ -938,7 +938,7 @@ _VCloseFd(struct VLockFile *lf)
  * @return file descriptor
  *  @retval INVALID_FD failure opening file
  */
-static_inline int
+static_inline FD_t
 _VOpenPath(const char *path)
 {
     int fd;
@@ -965,7 +965,7 @@ _VOpenPath(const char *path)
  *  @retval EIO   error acquiring file lock
  */
 static_inline int
-_VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
+_VLockFd(FD_t fd, afs_uint32 offset, int locktype, int nonblock)
 {
     int l_type = F_WRLCK;
     int cmd = F_SETLKW;
@@ -1015,7 +1015,7 @@ _VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
  * @param[in] fd file descriptor to close
  */
 static_inline void
-_VCloseFd(int fd)
+_VCloseFd(FD_t fd)
 {
     if (close(fd)) {
 	Log("_VCloseFd: error %d closing fd %d\n",
@@ -1030,7 +1030,7 @@ _VCloseFd(int fd)
  * @param[in] offset offset to unlock
  */
 static_inline void
-_VUnlockFd(int fd, afs_uint32 offset)
+_VUnlockFd(FD_t fd, afs_uint32 offset)
 {
     struct flock sf;
 
