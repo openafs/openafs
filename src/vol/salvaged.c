@@ -185,7 +185,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    afs_int32 seenpart = 0, seenvol = 0;
+    VolumeId vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -272,8 +273,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    strlcpy(pname, ti->data, sizeof(pname));
 	}
 	if ((ti = as->parms[1].items)) {	/* -volumeid */
+	    char *end;
 	    seenvol = 1;
-	    vid = atoi(ti->data);
+	    vid = strtoul(ti->data, &end, 10);
+	    if (vid == ULONG_MAX || *end != '\0') {
+		printf("Invalid volume id specified; salvage aborted\n");
+		exit(-1);
+	    }
 	}
 
 	if (ShowLog) {
