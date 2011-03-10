@@ -507,7 +507,8 @@ handleit(struct cmd_syndesc *as)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
+    afs_int32 seenpart = 0, seenvol = 0, seenany = 0;
+    VolumeId vid = 0;
     struct DiskPartition64 *partP;
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -545,13 +546,18 @@ handleit(struct cmd_syndesc *as)
 	strncpy(pname, ti->data, 100);
     }
     if ((ti = as->parms[1].items)) {	/* -volumeid */
+	char *end;
 	if (!seenpart) {
 	    printf
 		("You must also specify '-partition' option with the '-volumeid' option\n");
 	    exit(-1);
 	}
 	seenvol = 1;
-	vid = atoi(ti->data);
+	vid = strtoul(ti->data, &end, 10);
+	if (vid == ULONG_MAX || *end != '\0') {
+	    Log("salvage: invalid volume id specified; salvage aborted\n");
+	    Exit(1);
+	}
     }
     if (as->parms[2].items)	/* -debug */
 	debug = 1;
@@ -688,10 +694,6 @@ handleit(struct cmd_syndesc *as)
 	    SalvageFileSys(partP, 0);
 	else {
 	    /* Salvage individual volume */
-	    if (vid <= 0) {
-		Log("salvage: invalid volume id specified; salvage aborted\n");
-		Exit(1);
-	    }
 	    SalvageFileSys(partP, vid);
 	}
     }
