@@ -39,6 +39,10 @@
 #define inline
 #endif
 
+/* Both Linux and hcrypto want to use 'struct key_type', so we rename our
+ * local version */
+#define key_type hc_key_type
+
 /* We need wrappers for the various memory management functions */
 #define calloc _afscrypto_calloc
 void * _afscrypto_calloc(int, size_t);
