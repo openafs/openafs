@@ -6532,7 +6532,7 @@ VolumeNumber(char *name)
 {
     if (*name == OS_DIRSEPC)
 	name++;
-    return atoi(name + 1);
+    return strtoul(name + 1, NULL, 10);
 }
 
 /**
