@@ -100,7 +100,7 @@ if [ -f $afs ]; then
           echo "Entry for afs already exists in /etc/devlink.tab"
       else
           echo "Adding entry for afs in /etc/devlink.tab"
-          echo "type=ddi_pseudo;name=afs;addr=0;minor=afs	\D" >> /dev/devlink.tab
+          echo "type=ddi_pseudo;name=afs;addr=0;minor=afs	\D" >> /etc/devlink.tab
 	  devfsadm
       fi
 else
