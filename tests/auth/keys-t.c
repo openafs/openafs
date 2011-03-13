@@ -101,6 +101,7 @@ int main(int argc, char **argv)
     struct afsconf_typedKeyList *typedKeyList;
     char *dirname;
     char *keyfile;
+    char *keyfilesrc;
     afs_int32 kvno;
     int code;
     int i;
@@ -114,8 +115,18 @@ int main(int argc, char **argv)
     if (asprintf(&keyfile, "%s/KeyFile", dirname) == -1)
 	goto out;
 
+    /* Work out the path to our KeyFile. If the test harness hasn't set
+     * the SOURCE environment variable, then assume it is in our CWD */
+    if (getenv("SOURCE") == NULL) {
+	keyfilesrc = strdup("KeyFile");
+    } else {
+	if (asprintf(&keyfilesrc, "%s/auth/KeyFile", getenv("SOURCE")) == -1)
+	    goto out;
+    }
+
     /* First, copy in a known keyfile */
-    code = copy("KeyFile", keyfile);
+    code = copy(keyfilesrc, keyfile);
+    free(keyfilesrc);
     if (code)
 	goto out;
 
