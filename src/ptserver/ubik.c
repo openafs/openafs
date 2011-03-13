@@ -102,7 +102,7 @@ ubik_WaitVersion(struct ubik_dbase *adatabase,
 int
 ubik_CheckCache(struct ubik_trans *atrans, ubik_updatecache_func cbf, void *rock)
 {
-    return (0);
+    return (*cbf)(atrans, rock);
 }
 
 void
