@@ -56,6 +56,8 @@ main(int argc, char **argv)
         exit(1);
     }
 
+    rx_Init(0);
+
     /* Server Security objects */
 
     afsconf_BuildServerSecurityObjects(dir, &classes, &numClasses);
