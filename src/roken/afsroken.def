@@ -32,4 +32,5 @@ EXPORTS
         rk_opterr               @36 DATA
 	rk_mkstemp		@37
 	rk_asnprintf		@38
+	rk_asprintf		@39
 
