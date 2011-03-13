@@ -336,43 +336,46 @@ _afsconf_IsClientConfigDirectory(const char *path)
     return 1;
 }
 
-int
-_afsconf_UpToDate(struct afsconf_dir *adir)
+#ifdef AFS_NT40_ENV
+static void
+_afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
 {
-    char tbuffer[256];
-#ifdef AFS_NT40_ENV
     char *p;
-#endif
-    struct stat tstat;
-    afs_int32 code;
 
-#ifdef AFS_NT40_ENV
     /* NT client CellServDB has different file name than NT server or Unix */
     if (_afsconf_IsClientConfigDirectory(adir->name)) {
 	if (!afssw_GetClientCellServDBDir(&p)) {
-	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
-		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+	    asprintf(path, "%s/%s", p, AFSDIR_CELLSERVDB_FILE_NTCLIENT);
 	    free(p);
 	} else {
-	    int len;
-	    strncpy(tbuffer, adir->name, sizeof(tbuffer));
-	    len = (int)strlen(tbuffer);
-	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
-		strncat(tbuffer, "\\", sizeof(tbuffer));
-	    }
-	    strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT,
-		    sizeof(tbuffer));
-	    tbuffer[sizeof(tbuffer) - 1] = '\0';
+	    asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE_NTCLIENT);
 	}
     } else {
-	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
-		   NULL);
+	asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE);
     }
+    return;
+}
 #else
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE, NULL);
+static void
+_afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
+{
+    asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE);
+}
 #endif /* AFS_NT40_ENV */
 
-    code = stat(tbuffer, &tstat);
+int
+_afsconf_UpToDate(struct afsconf_dir *adir)
+{
+    char *cellservDB;
+    struct stat tstat;
+    int code;
+
+    _afsconf_CellServDBPath(adir, &cellservDB);
+    if (cellservDB == NULL)
+	return 0;
+
+    code = stat(cellservDB, &tstat);
+    free(cellservDB);
     if (code < 0)
 	return 0; /* Can't throw the error, so just say we're not up to date */
 
@@ -411,45 +414,28 @@ _afsconf_Check(struct afsconf_dir *adir)
 int
 _afsconf_Touch(struct afsconf_dir *adir)
 {
-    char tbuffer[256];
+    char *cellservDB;
+    int code;
 #ifndef AFS_NT40_ENV
     struct timeval tvp[2];
-#else
-    char *p;
 #endif
 
     adir->timeRead = 0;		/* just in case */
 
+    _afsconf_CellServDBPath(adir, &cellservDB);
+    if (cellservDB == NULL)
+	return ENOMEM;
+
 #ifdef AFS_NT40_ENV
-    /* NT client CellServDB has different file name than NT server or Unix */
-
-    if (_afsconf_IsClientConfigDirectory(adir->name)) {
-	if (!afssw_GetClientCellServDBDir(&p)) {
-	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
-		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
-	    free(p);
-	} else {
-	    int len = (int)strlen(tbuffer);
-	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
-		strncat(tbuffer, "\\", sizeof(tbuffer));
-	    }
-	    strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT,
-		    sizeof(tbuffer));
-	    tbuffer[sizeof(tbuffer) - 1] = '\0';
-	}
-    } else {
-	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
-		   NULL);
-    }
-
-    return _utime(tbuffer, NULL);
-
+    code = _utime(cellservDB, NULL);
 #else
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE, NULL);
     gettimeofday(&tvp[0], NULL);
     tvp[1] = tvp[0];
-    return utimes(tbuffer, tvp);
+    code = utimes(cellservDB, tvp);
 #endif /* AFS_NT40_ENV */
+    free(cellservDB);
+
+    return code;
 }
 
 struct afsconf_dir *
@@ -648,8 +634,10 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     struct afsconf_aliasentry *curAlias;
     afs_int32 code;
     afs_int32 i;
-    char tbuffer[256], tbuf1[256];
+    char tbuffer[256];
     struct stat tstat;
+    char *cellservDB;
+
 #ifdef AFS_NT40_ENV
     cm_enumCellRegistry_t enumCellRegistry = {0, 0};
 #endif /* AFS_NT40_ENV */
@@ -671,48 +659,20 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     /* now parse the individual lines */
     curEntry = 0;
 
+    _afsconf_CellServDBPath(adir, &cellservDB);
+
 #ifdef AFS_NT40_ENV
-    /* NT client/server have a CellServDB that is the same format as Unix.
-     * However, the NT client uses a different file name
-     */
-    if (_afsconf_IsClientConfigDirectory(adir->name)) {
-	/* NT client config dir */
-	char *p;
-
+    if (_afsconf_IsClientConfigDirectory(adir->name))
         enumCellRegistry.client = 1;
-
-	if (!afssw_GetClientCellServDBDir(&p)) {
-	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
-		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
-	    free(p);
-	} else {
-	    int len;
-	    strncpy(tbuffer, adir->name, sizeof(tbuffer));
-	    len = (int)strlen(tbuffer);
-	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
-		strncat(tbuffer, "\\", sizeof(tbuffer));
-	    }
-	    strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT,
-		    sizeof(tbuffer));
-	    tbuffer[sizeof(tbuffer) - 1] = '\0';
-	}
-    } else {
-	/* NT server config dir */
-	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
-		   NULL);
-    }
-#else
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE, NULL);
 #endif /* AFS_NT40_ENV */
 
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(cellservDB, &tstat)) {
 	adir->timeRead = tstat.st_mtime;
     } else {
 	adir->timeRead = 0;
     }
 
-    strlcpy(tbuf1, tbuffer, sizeof tbuf1);
-    tf = fopen(tbuffer, "r");
+    tf = fopen(cellservDB, "r");
     if (!tf) {
 	return -1;
     }
@@ -788,7 +748,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 			*bp = '\0';
 			fprintf(stderr,
 				"Can't properly parse host line \"%s\" in configuration file %s\n",
-				tbuffer, tbuf1);
+				tbuffer, cellservDB);
 		    }
 		    free(curEntry);
 		    fclose(tf);
@@ -799,11 +759,12 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	    } else {
 		fprintf(stderr,
 			"Too many hosts for cell %s in configuration file %s\n",
-			curEntry->cellInfo.name, tbuf1);
+			curEntry->cellInfo.name, cellservDB);
 	    }
 	}
     }
     fclose(tf);			/* close the file now */
+    free(cellservDB);
 
     /* end the last partially-completed cell */
     if (curEntry) {
