@@ -481,8 +481,7 @@ afsconf_IsSuperIdentity(struct afsconf_dir *adir,
     int match;
     afs_int32 code;
 
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/", AFSDIR_ULIST_FILE,
-	       NULL);
+    UserListFileName(adir, tbuffer, sizeof tbuffer);
     bp = BufioOpen(tbuffer, O_RDONLY, 0);
     if (!bp)
 	return 0;
@@ -519,8 +518,7 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 	return EEXIST;		/* already in the list */
     }
 
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/", AFSDIR_ULIST_FILE,
-	       NULL);
+    UserListFileName(adir, tbuffer, sizeof tbuffer);
     tf = fopen(tbuffer, "a+");
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;
