@@ -115,7 +115,7 @@ A  Configuring
    "default mode":
 
    - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
-     by putting client configuaration files in /usr/vice/etc, and server
+     by putting client configuration files in /usr/vice/etc, and server
      files in /usr/afs under the traditional directory layout.
    - In default mode, files are located in standardized locations, usually
      under $(prefix), which defaults to /usr/local.
@@ -141,7 +141,7 @@ A  Configuring
    /usr/local/lib/openafs instead of /usr/local/libexec/openafs, pass the
    --libexecdir=/usr/local/lib flag to configure.
 
-   For additional options, see section H below.
+   For additional options, see section I below.
 
 B  Building
 
