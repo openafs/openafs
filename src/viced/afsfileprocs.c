@@ -277,11 +277,52 @@ SetVolumeSync(struct AFSVolSync *async, Volume * avol)
     FS_UNLOCK;
 }				/*SetVolumeSync */
 
+/**
+ * Verify that the on-disk size for a vnode matches the length in the vnode
+ * index.
+ *
+ * @param[in] vp   Volume pointer
+ * @param[in] vnp  Vnode pointer
+ * @param[in] alen Size of the vnode on disk, if known. If unknown, give -1,
+ *                 and CheckLength itself will determine the on-disk size.
+ *
+ * @return operation status
+ *  @retval 0 lengths match
+ *  @retval nonzero Error; either the lengths do not match or there was an
+ *                  error determining the on-disk size. The volume should be
+ *                  taken offline and salvaged.
+ */
 static int
 CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
 {
     afs_sfsize_t vlen;
     VN_GET_LEN(vlen, vnp);
+
+    if (alen < 0) {
+	FdHandle_t *fdP;
+
+	fdP = IH_OPEN(vnp->handle);
+	if (fdP == NULL) {
+	    ViceLog(0, ("CheckLength: cannot open inode for fid %lu.%lu.%lu\n",
+	                afs_printable_uint32_lu(vp->hashid),
+	                afs_printable_uint32_lu(Vn_id(vnp)),
+	                afs_printable_uint32_lu(vnp->disk.uniquifier)));
+	    return -1;
+	}
+	alen = FDH_SIZE(fdP);
+	FDH_CLOSE(fdP);
+	if (alen < 0) {
+	    afs_int64 alen64 = alen;
+	    ViceLog(0, ("CheckLength: cannot get size for inode for fid "
+	                "%lu.%lu.%lu; FDH_SIZE returned %" AFS_INT64_FMT "\n",
+	                afs_printable_uint32_lu(vp->hashid),
+	                afs_printable_uint32_lu(Vn_id(vnp)),
+	                afs_printable_uint32_lu(vnp->disk.uniquifier),
+	                alen64));
+	    return -1;
+	}
+    }
+
     if (alen != vlen) {
 	afs_int64 alen64 = alen, vlen64 = vlen;
 	ViceLog(0, ("Fid %lu.%lu.%lu has inconsistent length (index "
@@ -1368,6 +1409,12 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
     /* watch for invalid names */
     if (!strcmp(Name, ".") || !strcmp(Name, ".."))
 	return (EINVAL);
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VTakeOffline_r(volptr);
+	return VSALVAGE;
+    }
+
     if (parentptr->disk.cloned) {
 	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
 	if ((errorCode = CopyOnWrite(parentptr, volptr, 0, MAXFSIZE))) {
@@ -1777,6 +1824,12 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 		("Insufficient space to allocate %" AFS_INT64_FMT " blocks\n",
 		 (afs_intmax_t) BlocksPreallocatedForVnode));
 	return (errorCode);
+    }
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
+	VTakeOffline_r(volptr);
+	return VSALVAGE;
     }
 
     *targetptr = VAllocVnode(&errorCode, volptr, FileType);
