@@ -168,6 +168,7 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 extern struct key_type key_type_keyring __attribute__((weak));
 static struct key_type *__key_type_keyring = &key_type_keyring;
 
+/* install_session_keyring returns negative error values */
 static int
 install_session_keyring(struct key *keyring)
 {
@@ -225,6 +226,12 @@ out:
 }
 #endif /* LINUX_KEYRING_SUPPORT */
 
+/* Error codes from setpag must be positive, otherwise they don't
+ * make it back into userspace properly. Error codes from the
+ * Linux keyring utilities, and from install_session_keyring()
+ * are negative. So we need to be careful to convert them correctly
+ * here
+ */
 int
 setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
        int change_parent)
@@ -255,6 +262,8 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 		code = PTR_ERR(key);
 	    }
 	}
+	if (code)
+	    code = -code;
     }
 #endif /* LINUX_KEYRING_SUPPORT */
 
