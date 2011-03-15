@@ -138,7 +138,7 @@ static SYSCALLTYPE afs_ni_syscall32 = 0;
 static SYSCALLTYPE old_sys_setgroupsp = 0;
 static SYSCALLTYPE old_sys32_setgroupsp = 0;
 
-asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
+asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist);
 asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
 asmlinkage long sys_close(unsigned int fd);
