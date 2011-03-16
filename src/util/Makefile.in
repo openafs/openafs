@@ -55,7 +55,6 @@ includes = \
 	${TOP_INCDIR}/afs/afs_assert.h \
 	${TOP_INCDIR}/afs/errors.h \
 	${TOP_INCDIR}/afs/vice.h \
-	${TOP_INCDIR}/afs/remote.h \
 	${TOP_INCDIR}/afs/ktime.h \
 	${TOP_INCDIR}/afs/fileutil.h \
 	${TOP_INCDIR}/afs/netutils.h \
@@ -96,9 +95,6 @@ ${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/vice.h: ${srcdir}/vice.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/remote.h: ${srcdir}/remote.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/ktime.h: ${srcdir}/ktime.h
@@ -292,7 +288,6 @@ install: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DESTDIR}${includedir}/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DESTDIR}${includedir}/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DESTDIR}${includedir}/afs/vice.h
-	${INSTALL_DATA} ${srcdir}/remote.h ${DESTDIR}${includedir}/afs/remote.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DESTDIR}${includedir}/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DESTDIR}${includedir}/afs/fileutil.h
 	${INSTALL_DATA} ${srcdir}/netutils.h ${DESTDIR}${includedir}/afs/netutils.h
@@ -321,7 +316,6 @@ dest: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DEST}/include/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DEST}/include/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DEST}/include/afs/vice.h
-	${INSTALL_DATA} ${srcdir}/remote.h ${DEST}/include/afs/remote.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DEST}/include/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DEST}/include/afs/fileutil.h
 	${INSTALL_DATA} ${srcdir}/netutils.h ${DEST}/include/afs/netutils.h
