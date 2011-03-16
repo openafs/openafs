@@ -49,7 +49,6 @@ LIBOBJS = \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
-	$(OUT)\isathing.obj \
         $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
@@ -72,7 +71,6 @@ MT_LIBOBJS = \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
-	$(OUT)\isathing.obj \
         $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \

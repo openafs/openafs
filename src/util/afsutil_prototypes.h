@@ -101,9 +101,6 @@ extern void setlinebuf(FILE * file);
 extern void psignal(unsigned int sig, char *s);
 #endif
 
-/* isathing.c */
-extern int util_isint(char *str);
-
 /* kreltime.c */
 struct ktime;
 struct ktime_date;
