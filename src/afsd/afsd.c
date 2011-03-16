@@ -334,9 +334,7 @@ int PartSizeOverflow(char *path, int cs);
 #if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
 static void fork_rx_syscall_wait();
 #endif
-#if defined(AFS_SUN510_ENV) || defined(RXK_LISTENER_ENV)
 static void fork_rx_syscall();
-#endif
 static void fork_syscall();
 
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
@@ -2206,8 +2204,13 @@ afsd_run(void)
 #endif
     if (afsd_verbose)
 	printf("%s: Forking rx callback listener.\n", rn);
+#ifndef RXK_LISTENER_ENV
+    fork_rx_syscall(rn, AFSOP_START_RXCALLBACK, preallocs, enable_peer_stats,
+                    enable_process_stats);
+#else
     fork_syscall(rn, AFSOP_START_RXCALLBACK, preallocs);
-#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+#endif
+#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
     if (afsd_verbose)
 	printf("%s: Forking rxevent daemon.\n", rn);
     fork_rx_syscall(rn, AFSOP_RXEVENT_DAEMON);
@@ -3160,7 +3163,6 @@ fork_syscall(const char *rn, long syscall, long param1, long param2,
     fork_syscall_impl(0, 0, rn, syscall, param1, param2, param3, param4, param5);
 }
 
-#if defined(AFS_SUN510_ENV) || defined(RXK_LISTENER_ENV)
 /**
  * call a syscall in another process or thread, and give it RX priority.
  */
@@ -3170,7 +3172,6 @@ fork_rx_syscall(const char *rn, long syscall, long param1, long param2,
 {
     fork_syscall_impl(1, 0, rn, syscall, param1, param2, param3, param4, param5);
 }
-#endif /* AFS_SUN510_ENV || RXK_LISTENER_ENV */
 
 #if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
 /**
