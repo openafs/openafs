@@ -46,7 +46,8 @@
  * arrays.  See xdr.h for more info on the interface to xdr.
  */
 
-#ifdef	KERNEL
+#if defined(KERNEL) && !defined(UKERNEL)
+
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
