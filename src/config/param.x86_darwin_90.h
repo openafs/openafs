@@ -64,6 +64,7 @@
 
 #define AFS_GCPAGS               0
 #define RXK_LISTENER_ENV         1
+#define RXK_TIMEDSLEEP_ENV       1
 
 #ifdef KERNEL
 #undef MACRO_BEGIN
